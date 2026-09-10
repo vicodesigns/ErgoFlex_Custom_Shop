@@ -10,7 +10,9 @@ const server = http.createServer((req, res) => {
   if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }
   fs.readFile(file, (error, data) => {
     if (error) { res.writeHead(404).end(); return; }
-    res.setHeader('Content-Type', ({ '.html': 'text/html', '.css': 'text/css', '.jpg': 'image/jpeg' })[path.extname(file)] || 'application/octet-stream');
+    res.setHeader('Content-Type', ({ '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript',
+       '.json': 'application/json', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml',
+       '.glb': 'model/gltf-binary' })[path.extname(file)] || 'application/octet-stream');
     res.end(data);
   });
 });
@@ -24,6 +26,13 @@ const server = http.createServer((req, res) => {
     page.on('console', message => { if (message.type() === 'error') console.log('Browser:', message.text()); });
     await page.setViewport({ width: 1440, height: 1000 });
     const url = `http://127.0.0.1:${server.address().port}/`;
+    // Modules are refused unless the server sends a JavaScript MIME type, and the
+    // failure is a silent blank viewer rather than an assertion, so check it first.
+    for (const module of ['studio.js', 'catalog.mjs']) {
+      const type = await new Promise((resolve, reject) => require('node:http')
+        .get(url + module, r => resolve(`${r.statusCode} ${r.headers['content-type']}`)).on('error', reject));
+      assert.equal(type, '200 text/javascript', `${module} is served as JavaScript`);
+    }
     await page.goto(url + '?setup');
     await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4, { timeout: 90000 });
     await page.waitForFunction(() => getComputedStyle(document.querySelector('#loader')).display === 'none');

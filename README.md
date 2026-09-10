@@ -9,7 +9,16 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:3000** for the store preview or **http://localhost:3000/?setup** for the studio. Serving over HTTP allows the local wood texture and image capture to work consistently; browsers may restrict these when opening `index.html` directly. The model, Three.js, Tailwind, and AR viewer currently load from external hosts, so an internet connection is required.
+Open **http://localhost:3000** for the store preview or **http://localhost:3000/?setup** for the studio.
+
+**Serving over HTTP is required, not just preferred.** The application code lives in `studio.js`, loaded as an ES module; browsers refuse to load modules over `file://`, so opening `index.html` directly leaves a blank viewer. Serving over HTTP is also what lets the local wood texture and image capture work. The model, Three.js, Tailwind, and AR viewer load from external hosts, so an internet connection is required.
+
+## Layout
+
+- `index.html` — markup, base styles, and the import map.
+- `studio.js` — the application: scene, editor, rigs, and UI wiring. Owns all mutable state.
+- `catalog.mjs` — pure catalog and pricing functions, with no DOM or Three.js dependency. Imported by `studio.js` in the browser and by the tests in Node, so pricing and validation can be tested without a headless browser.
+- `studio.css` — studio and responsive styles.
 
 ## Studio
 
