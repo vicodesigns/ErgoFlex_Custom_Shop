@@ -3305,7 +3305,9 @@ function generateGrainTexture(name, role) {
 
     if (role === 'edge') {
         // Plywood edge: stacked laminations across the thickness, not rings.
-        const plies = 11;
+        // Even, so the light/dark alternation still alternates across the tile
+        // seam - an odd count put two warm plies next to each other there.
+        const plies = 12;
         for (let i = 0; i < plies; i++) {
             const t = i / plies;
             context.fillStyle = i % 2 ? spec.dark : spec.warm;
@@ -3319,13 +3321,34 @@ function generateGrainTexture(name, role) {
         const image = context.getImageData(0, 0, size, size);
         const data = image.data;
         const warm = hexToRgb(spec.warm), dark = hexToRgb(spec.dark);
+        // Every term below is an integer number of cycles across the tile, in
+        // normalized coordinates, so the pattern meets itself exactly at the edges.
+        // The old version stepped in pixels with periods that did not divide 512 -
+        // 512/36 rings across, 512/440 for the wobble - so RepeatWrapping put a
+        // hard discontinuity at every tile boundary.
+        const TAU = Math.PI * 2;
+        const rings = Math.max(1, Math.round(spec.ringsPerTile));
+        const waves = Math.max(1, Math.round(spec.figureWaves));
         for (let y = 0; y < size; y++) {
+            const v = y / size;
+            // Bow the rings so they are not straight lines. Amplitude is a fraction
+            // of the tile rather than a pixel count, which previously exceeded a
+            // whole ring period and scrambled the pattern instead of bending it.
+            const wobble = (Math.sin(TAU * waves * v) * 0.65
+                          + Math.sin(TAU * waves * 2 * v + 1.7) * 0.35) * spec.figure * 0.11;
+            const fibreY = Math.sin(TAU * 37 * v);
             for (let x = 0; x < size; x++) {
-                // Wobble the ring position so growth rings are not straight lines.
-                const wobble = Math.sin(y / 70) * 26 * spec.figure + Math.sin(y / 23 + 1.7) * 9 * spec.figure;
-                const ring = Math.sin((x + wobble) / spec.ringSpacing * Math.PI);
-                const fibre = (Math.sin(y * 3.7 + x * 0.3) + Math.sin(y * 11.3)) * 0.02;
-                const mix = Math.min(1, Math.max(0, 0.5 + (ring * 0.5 + fibre) * (spec.contrast * 3.2)));
+                const u = x / size;
+                const ring = Math.sin(TAU * rings * (u + wobble));
+                const fibre = (Math.sin(TAU * 53 * v + TAU * 3 * u) + fibreY) * 0.02;
+                // Slow tonal drift across the board. Rings alone, at a realistic
+                // spacing, read as even corduroy; real boards vary in tone over
+                // distances much larger than the ring spacing. Integer cycles, so
+                // this stays tileable like everything else here.
+                const blotch = (Math.sin(TAU * 2 * v + TAU * u) * 0.6
+                              + Math.sin(TAU * 3 * v + 2.1) * 0.4) * 0.09;
+                const mix = Math.min(1, Math.max(0,
+                    0.5 + (ring * 0.5 + fibre + blotch) * (spec.contrast * 2.0)));
                 const i = (y * size + x) * 4;
                 data[i]     = warm.r + (dark.r - warm.r) * mix;
                 data[i + 1] = warm.g + (dark.g - warm.g) * mix;
@@ -3351,9 +3374,12 @@ function hexToRgb(hex) {
 
 function getOrCreateWoodMaterial(role) {
     if (!woodMaterials.has(role)) {
-        const finish = PRODUCT_CONFIG.woodFinishes.find(f => f.name === currentConfig.woodFinish);
+        // The species tint, the same value applyWoodSpecies sets. Using the
+        // swatch colour here instead meant a role created before the first
+        // finish change was tinted differently from every role after it.
+        const tint = woodSpecies(currentConfig.woodFinish).tint || '#ffffff';
         woodMaterials.set(role, new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color(finish ? finish.color : '#ffffff'),
+            color: new THREE.Color(tint),
             metalness: 0.0,
             ior: 1.5,
             clearcoatRoughness: 0.35,
@@ -3405,17 +3431,30 @@ function woodRoleFor(mesh) {
 // the two could drift.
 function frameMetalness(finish) { return finish?.name === 'Silver' ? 0.75 : 0.1; }
 
-// The photographed birch surface, loaded once. Other species are generated.
-function loadBirchPhoto() {
-    if (woodTexture) return;
-    textureLoader.load('./bir.jpg', (texture) => {
+// Species photographs, loaded once each and kept by path so two finishes drawn
+// from the same image - Black Ash is birch tinted to a satin black - share one
+// upload. Returns undefined until the image arrives; callers fall back to the
+// generated grain for that frame and applySurfaceFinish re-runs on load.
+function loadSpeciesPhoto(path) {
+    if (!path) return undefined;
+    if (speciesPhotos.has(path)) return speciesPhotos.get(path);
+    speciesPhotos.set(path, undefined);
+    textureLoader.load(path, (texture) => {
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
         texture.anisotropy = renderer ? renderer.capabilities.getMaxAnisotropy() : 4;
-        woodTexture = texture;
+        speciesPhotos.set(path, texture);
         applySurfaceFinish();
-    }, undefined, (err) => console.error('[ErgoFlex] Failed to load birch texture:', err));
+    }, undefined, () => {
+        // Leave it unset: woodTextureFor falls back to generated grain, so a
+        // missing file degrades to the old look rather than an untextured slab.
+        console.warn('[ErgoFlex] Wood texture failed to load, using generated grain:', path);
+        speciesPhotos.delete(path);
+    });
+    return undefined;
 }
+
+function loadBirchPhoto() { loadSpeciesPhoto(woodSpecies('Natural Birch').photo); }
 
 function getOrCreateBasePaintMaterial() {
     if (!sharedBasePaintMaterial) {
@@ -5379,7 +5418,7 @@ function animate() {
 }
 
 // Studio presentation, customer configuration, and accessible controls.
-let woodTexture = null;
+const speciesPhotos = new Map(); // image path -> THREE.Texture (undefined while loading)
 let surfaceFinish = 'satin';
 let grainEnabled = true;
 let studioGrid = null;
@@ -5464,26 +5503,29 @@ function applySurfaceFinish() {
 // keeps its photographic albedo unmodulated; the generated species already carry
 // their own colour, so they are tinted only lightly to preserve the swatch
 // relationship without washing the grain out.
+// The photograph carries the grain; the tint carries the species. Multiplying a
+// light birch surface by a near-black tint is what makes Black Ash read as satin
+// black wood while keeping the grain visible in it.
 function applyWoodSpecies(finish) {
-    woodMaterials.forEach(material => {
-        material.color.set(finish.name === 'Natural Birch' ? finish.color : '#ffffff');
-    });
+    const tint = woodSpecies(finish.name).tint || '#ffffff';
+    woodMaterials.forEach(material => material.color.set(tint));
     applySurfaceFinish();
 }
 
-// Natural Birch keeps the photographed texture; every other species is generated.
+// Face veneer is photographic for every species. The edge stays generated: it is
+// stacked plywood laminations, which is not what a face photograph shows.
 function woodTextureFor(name, role) {
     const spec = woodSpecies(name);
     if (spec.photo && role !== 'edge') {
-        if (!woodTexture) return generateGrainTexture(name, role);
-        // Generated species already cache per name|role, but the photograph was a
-        // single shared Texture handed to every wood role. One Texture carries one
-        // repeat, so each role's applyGrainScale overwrote the last and whichever
-        // ran last set the grain scale for all of them - the physical scaling this
-        // function exists to provide silently did not hold for Natural Birch.
-        const key = name + '|photo|' + role;
+        const base = loadSpeciesPhoto(spec.photo);
+        if (!base) return generateGrainTexture(name, role);
+        // One Texture carries one repeat, so each role needs its own view of the
+        // image or whichever role ran last would set the grain scale for all of
+        // them and the physical scaling would silently not hold. Keyed by path,
+        // so finishes sharing an image share these clones too.
+        const key = spec.photo + '|photo|' + role;
         if (!speciesTextures.has(key)) {
-            const perRole = woodTexture.clone();
+            const perRole = base.clone();
             perRole.needsUpdate = true;
             speciesTextures.set(key, perRole);
         }
@@ -6066,6 +6108,7 @@ window.ErgoFlex = {
     get inspectedPart() { return inspectorTarget(); },
     get woodMaterials() { return Object.fromEntries([...woodMaterials].map(([role, m]) => [role, {
         roughness: m.roughness, clearcoat: m.clearcoat, metalness: m.metalness,
+        color: '#' + m.color.getHexString(),
         mapId: m.map ? m.map.uuid : null,
         repeat: m.map ? [m.map.repeat.x, m.map.repeat.y] : null
     }])); },

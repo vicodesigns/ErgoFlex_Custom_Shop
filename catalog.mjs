@@ -42,14 +42,26 @@ export const PRODUCT_CONFIG = {
 // the number of texture repeats has to be derived from the surface's size in
 // inches. A fixed repeat makes the grain grow with the desk.
 export const WOOD_SPECIES = {
-    'Natural Birch': { photo: './bir.jpg', repeatsPerInch: 1 / 32, ringSpacing: 26, contrast: 0.10, warm: '#e8d9bd', dark: '#cbb894', figure: 0.35 },
-    'White Oak':     { repeatsPerInch: 1 / 30, ringSpacing: 20, contrast: 0.20, warm: '#d8c49c', dark: '#a98f63', figure: 0.85 },
-    'Walnut':        { repeatsPerInch: 1 / 34, ringSpacing: 30, contrast: 0.26, warm: '#7a5334', dark: '#4a3220', figure: 0.55 },
-    'Black Ash':     { repeatsPerInch: 1 / 28, ringSpacing: 18, contrast: 0.30, warm: '#4a4441', dark: '#241f1d', figure: 0.75 },
-    'Cherry':        { repeatsPerInch: 1 / 36, ringSpacing: 34, contrast: 0.14, warm: '#b16a45', dark: '#8a4c2e', figure: 0.30 },
-    'Maple':         { repeatsPerInch: 1 / 38, ringSpacing: 40, contrast: 0.08, warm: '#e6d3ae', dark: '#cdb68d', figure: 0.20 },
-    'Mahogany':      { repeatsPerInch: 1 / 34, ringSpacing: 28, contrast: 0.18, warm: '#7d3f2c', dark: '#57271a', figure: 0.45 },
-    'Bamboo':        { repeatsPerInch: 1 / 20, ringSpacing: 12, contrast: 0.16, warm: '#d9c391', dark: '#b39b66', figure: 0.05 }
+    // Every species is a photograph now, not generated grain. `photo` is the
+    // source image and `tint` multiplies it, which is how one photograph serves
+    // more than one finish: Black Ash is the birch surface pulled down to a satin
+    // black rather than a separate image.
+    //
+    // All photographs are CC0 (ambientCG and Poly Haven); see docs/wood-textures.md.
+    // `repeatsPerInch` keeps grain scale physical: one tile covers 1/repeatsPerInch
+    // inches of desk, so grain stays the same size as the desk changes size.
+    //
+    // warm/dark/contrast/ringsPerTile/figureWaves are still used for the plywood
+    // edge, which is generated laminations rather than a face veneer, and as the
+    // fallback if an image fails to load.
+    'Natural Birch': { photo: './assets/wood/birch.jpg',    tint: '#f2e2c4', repeatsPerInch: 1 / 26, ringsPerTile: 36, figureWaves: 2, contrast: 0.10, warm: '#e8d9bd', dark: '#cbb894', figure: 0.35 },
+    'White Oak':     { photo: './assets/wood/white-oak.jpg', tint: '#e9d9b8', repeatsPerInch: 1 / 28, ringsPerTile: 40, figureWaves: 3, contrast: 0.20, warm: '#d8c49c', dark: '#a98f63', figure: 0.85 },
+    'Walnut':        { photo: './assets/wood/walnut.jpg',    tint: '#c9a882', repeatsPerInch: 1 / 28, ringsPerTile: 32, figureWaves: 2, contrast: 0.26, warm: '#7a5334', dark: '#4a3220', figure: 0.55 },
+    'Black Ash':     { photo: './assets/wood/birch.jpg',    tint: '#332f2c', repeatsPerInch: 1 / 26, ringsPerTile: 44, figureWaves: 2, contrast: 0.26, warm: '#4a4441', dark: '#241f1d', figure: 0.75 },
+    'Cherry':        { photo: './assets/wood/cherry.jpg',    tint: '#d98c62', repeatsPerInch: 1 / 30, ringsPerTile: 30, figureWaves: 2, contrast: 0.14, warm: '#b16a45', dark: '#8a4c2e', figure: 0.30 },
+    'Maple':         { photo: './assets/wood/maple.jpg',     tint: '#f0dcb8', repeatsPerInch: 1 / 26, ringsPerTile: 26, figureWaves: 1, contrast: 0.08, warm: '#e6d3ae', dark: '#cdb68d', figure: 0.20 },
+    'Mahogany':      { photo: './assets/wood/mahogany.jpg',  tint: '#c98c6a', repeatsPerInch: 1 / 28, ringsPerTile: 32, figureWaves: 2, contrast: 0.18, warm: '#7d3f2c', dark: '#57271a', figure: 0.45 },
+    'Bamboo':        { photo: './assets/wood/bamboo.jpg',    tint: '#e2cb96', repeatsPerInch: 1 / 24, ringsPerTile: 50, figureWaves: 1, contrast: 0.16, warm: '#d9c391', dark: '#b39b66', figure: 0.05 }
 };
 
 export function woodSpecies(name) {

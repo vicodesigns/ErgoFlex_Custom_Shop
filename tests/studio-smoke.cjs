@@ -331,7 +331,9 @@ const server = http.createServer((req, res) => {
       const walnut = ErgoFlex.woodMaterials.desktop;
       pick('Bamboo');
       const bamboo = ErgoFlex.woodMaterials.desktop;
-      return { birch, walnut, bamboo };
+      pick('Black Ash');
+      const ash = ErgoFlex.woodMaterials.desktop;
+      return { birch, walnut, bamboo, ash };
     });
     assert.ok(species.birch.mapId && species.walnut.mapId, 'both species have a texture');
     assert.notEqual(species.birch.mapId, species.walnut.mapId, 'walnut is a different map, not a tinted birch');
@@ -340,6 +342,16 @@ const server = http.createServer((req, res) => {
     // same surface. That is the physical-scale table doing its job.
     assert.ok(species.bamboo.repeat[0] > species.walnut.repeat[0],
       'grain repeats are derived per species from repeats-per-inch');
+    // Black Ash is deliberately the birch surface tinted to a satin black, so it
+    // is the one pair that shares an image - and it must still be a different
+    // colour, or selecting it would do nothing visible.
+    assert.equal(species.ash.mapId, species.birch.mapId,
+      'Black Ash reuses the birch grain rather than carrying its own image');
+    assert.notEqual(species.ash.color, species.birch.color,
+      'and is tinted to a different colour');
+    // and dark enough to actually read as black rather than a dimmed birch.
+    const ashLuma = parseInt(species.ash.color.slice(1, 3), 16);
+    assert.ok(ashLuma < 80, 'the Black Ash tint is genuinely dark, got ' + species.ash.color);
 
     // Each material role gets its own treatment; they used to share one pair.
     const treatments = await page.evaluate(() => {
