@@ -331,7 +331,7 @@ const server = http.createServer((req, res) => {
       const walnut = ErgoFlex.woodMaterials.desktop;
       pick('Bamboo');
       const bamboo = ErgoFlex.woodMaterials.desktop;
-      pick('Black Ash');
+      pick('Black Birch');
       const ash = ErgoFlex.woodMaterials.desktop;
       return { birch, walnut, bamboo, ash };
     });
@@ -342,16 +342,22 @@ const server = http.createServer((req, res) => {
     // same surface. That is the physical-scale table doing its job.
     assert.ok(species.bamboo.repeat[0] > species.walnut.repeat[0],
       'grain repeats are derived per species from repeats-per-inch');
-    // Black Ash is deliberately the birch surface tinted to a satin black, so it
-    // is the one pair that shares an image - and it must still be a different
-    // colour, or selecting it would do nothing visible.
-    assert.equal(species.ash.mapId, species.birch.mapId,
-      'Black Ash reuses the birch grain rather than carrying its own image');
-    assert.notEqual(species.ash.color, species.birch.color,
-      'and is tinted to a different colour');
-    // and dark enough to actually read as black rather than a dimmed birch.
-    const ashLuma = parseInt(species.ash.color.slice(1, 3), 16);
-    assert.ok(ashLuma < 80, 'the Black Ash tint is genuinely dark, got ' + species.ash.color);
+    // Black Birch is the birch photograph reprocessed, not a separate source
+    // image: a grayscale, contrast-stretched duplicate. So it must be its own
+    // texture object rather than birch's, or the processing did not happen.
+    assert.notEqual(species.ash.mapId, species.birch.mapId,
+      'Black Birch uses its own processed copy of the birch photograph');
+    // Neutral, because any surviving warmth from the birch tone turns the black
+    // brown - which is exactly what a plain dark tint on the original did.
+    const [r, g, bl] = [1, 3, 5].map(i => parseInt(species.ash.color.slice(i, i + 2), 16));
+    assert.ok(Math.max(r, g, bl) - Math.min(r, g, bl) <= 6,
+      'the Black Birch tint is neutral, got ' + species.ash.color);
+    assert.ok(r < 60, 'and genuinely dark, got ' + species.ash.color);
+    // Grain on a near-black surface has to come from relief and gloss, since its
+    // albedo variation is scaled away with everything else.
+    assert.ok(species.ash.bumpScale > species.birch.bumpScale,
+      'Black Birch carries more relief than the untinted birch');
+    assert.equal(species.ash.roughnessMapped, true, 'and varies its gloss with the grain');
 
     // Each material role gets its own treatment; they used to share one pair.
     const treatments = await page.evaluate(() => {

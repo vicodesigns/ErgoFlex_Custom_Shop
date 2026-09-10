@@ -15,7 +15,7 @@ export const PRODUCT_CONFIG = {
         { name: "Natural Birch", color: "#e6c998", price: 0, isDefault: true },
         { name: "White Oak", color: "#e0d6c8", price: 50 },
         { name: "Walnut", color: "#5c4033", price: 100 },
-        { name: "Black Ash", color: "#2a2a2a", price: 75 },
+        { name: "Black Birch", color: "#1a1a1a", price: 75 },
         { name: "Cherry", color: "#a45a31", price: 125 },
         { name: "Maple", color: "#e8cda1", price: 75 },
         { name: "Mahogany", color: "#8b3a20", price: 150 },
@@ -44,20 +44,32 @@ export const PRODUCT_CONFIG = {
 export const WOOD_SPECIES = {
     // Every species is a photograph now, not generated grain. `photo` is the
     // source image and `tint` multiplies it, which is how one photograph serves
-    // more than one finish: Black Ash is the birch surface pulled down to a satin
+    // more than one finish: Black Birch is the birch surface pulled down to a satin
     // black rather than a separate image.
     //
-    // All photographs are CC0 (ambientCG and Poly Haven); see docs/wood-textures.md.
+    // Natural Birch is the supplied photograph, bir.jpg. The other species are CC0
+    // from ambientCG; see docs/wood-textures.md.
+    //
+    // `bumpScale` and `grainSheen` are optional and exist for Black Birch. Multiplying
+    // a pale surface
+    // down to black shrinks the grain's albedo variation along with everything else,
+    // so at that tint the grain must be carried by relief and by sheen rather than
+    // by colour. `grainSheen` drives the roughness from the same image, which is how
+    // black-stained timber actually reads: the grain shows as varying gloss.
+    // `grayscale` and `contrastBoost` build a duplicate of the photograph for this
+    // finish: reduced to luminance so none of birch's warm colour survives the tint
+    // and turns the black brown, and contrast stretched because bir.jpg is pale and
+    // low contrast, so multiplying it toward black left nothing to carry the grain.
     // `repeatsPerInch` keeps grain scale physical: one tile covers 1/repeatsPerInch
     // inches of desk, so grain stays the same size as the desk changes size.
     //
     // warm/dark/contrast/ringsPerTile/figureWaves are still used for the plywood
     // edge, which is generated laminations rather than a face veneer, and as the
     // fallback if an image fails to load.
-    'Natural Birch': { photo: './assets/wood/birch.jpg',    tint: '#f2e2c4', repeatsPerInch: 1 / 26, ringsPerTile: 36, figureWaves: 2, contrast: 0.10, warm: '#e8d9bd', dark: '#cbb894', figure: 0.35 },
+    'Natural Birch': { photo: './bir.jpg',                  tint: '#e6c998', repeatsPerInch: 1 / 32, ringsPerTile: 36, figureWaves: 2, contrast: 0.10, warm: '#e8d9bd', dark: '#cbb894', figure: 0.35 },
     'White Oak':     { photo: './assets/wood/white-oak.jpg', tint: '#e9d9b8', repeatsPerInch: 1 / 28, ringsPerTile: 40, figureWaves: 3, contrast: 0.20, warm: '#d8c49c', dark: '#a98f63', figure: 0.85 },
     'Walnut':        { photo: './assets/wood/walnut.jpg',    tint: '#c9a882', repeatsPerInch: 1 / 28, ringsPerTile: 32, figureWaves: 2, contrast: 0.26, warm: '#7a5334', dark: '#4a3220', figure: 0.55 },
-    'Black Ash':     { photo: './assets/wood/birch.jpg',    tint: '#332f2c', repeatsPerInch: 1 / 26, ringsPerTile: 44, figureWaves: 2, contrast: 0.26, warm: '#4a4441', dark: '#241f1d', figure: 0.75 },
+    'Black Birch':   { photo: './bir.jpg',                  tint: '#1b1b1b', bumpScale: 0.06, grainSheen: true, grayscale: true, contrastBoost: 3.2, repeatsPerInch: 1 / 32, ringsPerTile: 44, figureWaves: 2, contrast: 0.26, warm: '#4a4441', dark: '#241f1d', figure: 0.75 },
     'Cherry':        { photo: './assets/wood/cherry.jpg',    tint: '#d98c62', repeatsPerInch: 1 / 30, ringsPerTile: 30, figureWaves: 2, contrast: 0.14, warm: '#b16a45', dark: '#8a4c2e', figure: 0.30 },
     'Maple':         { photo: './assets/wood/maple.jpg',     tint: '#f0dcb8', repeatsPerInch: 1 / 26, ringsPerTile: 26, figureWaves: 1, contrast: 0.08, warm: '#e6d3ae', dark: '#cdb68d', figure: 0.20 },
     'Mahogany':      { photo: './assets/wood/mahogany.jpg',  tint: '#c98c6a', repeatsPerInch: 1 / 28, ringsPerTile: 32, figureWaves: 2, contrast: 0.18, warm: '#7d3f2c', dark: '#57271a', figure: 0.45 },
@@ -201,7 +213,7 @@ export function priceBreakdown(config) {
 // strict: it is the only thing standing between a URL and the rendered config.
 export function validConfig(value) {
     if (!value || !Object.hasOwn(PRODUCT_CONFIG.sizes, value.size)) return false;
-    if (!PRODUCT_CONFIG.woodFinishes.some(f => f.name === value.woodFinish)) return false;
+    if (!PRODUCT_CONFIG.woodFinishes.some(f => f.name === migrateWoodFinish(value.woodFinish))) return false;
     if (!PRODUCT_CONFIG.baseFinishes.some(f => f.name === value.baseFinish)) return false;
     // Accessories are optional, but if present must be an array of known ids.
     // A V1 payload has no accessories key at all and is still valid.
@@ -214,6 +226,12 @@ export function validConfig(value) {
 
 // The whitelist, and the only place a stored or shared configuration is
 // normalised. A V1 payload becomes a valid V2 with an empty accessory list.
+// Finishes that have been renamed. Without this a stored build naming the old
+// finish fails validation and silently falls back to the default, quietly
+// discarding a choice the customer made.
+const RENAMED_WOOD = { 'Black Ash': 'Black Birch' };
+export function migrateWoodFinish(name) { return RENAMED_WOOD[name] || name; }
+
 export function cleanConfig(value) {
     const accessories = Array.isArray(value.accessories)
         ? [...new Set(value.accessories.filter(id => accessory(id)))]
@@ -224,7 +242,7 @@ export function cleanConfig(value) {
         const group = accessory(id).exclusiveGroup;
         return !group || !accessories.slice(index + 1).some(other => accessory(other).exclusiveGroup === group);
     });
-    return { size: value.size, woodFinish: value.woodFinish, baseFinish: value.baseFinish, accessories: selected };
+    return { size: value.size, woodFinish: migrateWoodFinish(value.woodFinish), baseFinish: value.baseFinish, accessories: selected };
 }
 
 // Accessories that no longer fit the chosen size. Returned rather than silently

@@ -20,7 +20,7 @@ because knowing where an asset came from matters when replacing it.
 
 | File | Species | Source | Asset |
 | --- | --- | --- | --- |
-| `assets/wood/birch.jpg` | Natural Birch, and Black Ash tinted | [Poly Haven](https://polyhaven.com/a/white_maple_veneer) | `white_maple_veneer` |
+| `bir.jpg` | Natural Birch, and Black Birch reprocessed | Supplied with the project | — |
 | `assets/wood/white-oak.jpg` | White Oak | [ambientCG](https://ambientcg.com/a/Wood049) | `Wood049` |
 | `assets/wood/walnut.jpg` | Walnut | [ambientCG](https://ambientcg.com/a/Wood051) | `Wood051` |
 | `assets/wood/cherry.jpg` | Cherry | [ambientCG](https://ambientcg.com/a/Wood092) | `Wood092` |
@@ -32,15 +32,26 @@ Each is the Color/Diffuse map only, at 1K, recompressed to quality 80 — about
 670KB for the set. Normal, roughness and displacement maps were not taken; the
 material's own roughness and clearcoat come from `SURFACE_TREATMENTS`.
 
-`bir.jpg` is the original birch photograph and is no longer referenced.
+`bir.jpg` is the supplied birch photograph and is the source for both birch finishes.
 
 ## How they are applied
 
 `photo` names the image and `tint` multiplies it, which is how one photograph
-serves two finishes: **Black Ash is the birch surface pulled down to a satin
-black**, so it keeps birch's grain rather than needing its own image. Tints also
-correct hue where a generic photograph is close but not exact — the oak reads
-slightly grey and the cherry slightly pine-like on their own.
+serves two finishes: **Black Birch is the birch surface pulled down to black**, so
+it keeps birch's grain rather than needing its own image. Tints also correct hue
+where a generic photograph is close but not exact — the oak reads slightly grey
+and the cherry slightly pine-like on their own.
+
+Black Birch needs more than a tint, and `processGrainPhoto` builds it a duplicate:
+
+- **grayscale**, because the photograph's own warmth survives a dark tint and the
+  result reads as brown rather than black;
+- **contrast stretched**, because multiplying a pale, low-contrast surface toward
+  black scales its grain variation away to nothing;
+- **relief and gloss**, via `bumpScale` and `grainSheen`, since at that tone the
+  grain cannot be carried by colour at all. That is how stained black timber reads.
+
+The source photograph is untouched and still used at full tone by Natural Birch.
 
 `repeatsPerInch` keeps grain scale physical: one tile covers
 `1 / repeatsPerInch` inches of desk, and each surface derives its own repeat from

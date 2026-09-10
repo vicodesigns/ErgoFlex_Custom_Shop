@@ -3432,7 +3432,7 @@ function woodRoleFor(mesh) {
 function frameMetalness(finish) { return finish?.name === 'Silver' ? 0.75 : 0.1; }
 
 // Species photographs, loaded once each and kept by path so two finishes drawn
-// from the same image - Black Ash is birch tinted to a satin black - share one
+// from the same image - Black Birch is birch tinted to a satin black - share one
 // upload. Returns undefined until the image arrives; callers fall back to the
 // generated grain for that frame and applySurfaceFinish re-runs on load.
 function loadSpeciesPhoto(path) {
@@ -5475,7 +5475,12 @@ function applySurfaceFinish() {
         if (texture) applyGrainScale(texture, role, species);
         material.map = texture;
         material.bumpMap = texture;
-        material.bumpScale = role === 'edge' ? 0.0016 : 0.0006;
+        // Species may raise their own relief, and drive roughness from the same
+        // image. A near-black finish has its albedo variation scaled away with
+        // everything else, so its grain has to be carried by shading and by
+        // varying gloss - which is how black-stained timber reads in the first place.
+        material.bumpScale = role === 'edge' ? 0.0016 : (species.bumpScale || 0.0006);
+        material.roughnessMap = (species.grainSheen && role !== 'edge') ? texture : null;
         material.needsUpdate = true;
     });
 
@@ -5504,12 +5509,57 @@ function applySurfaceFinish() {
 // their own colour, so they are tinted only lightly to preserve the swatch
 // relationship without washing the grain out.
 // The photograph carries the grain; the tint carries the species. Multiplying a
-// light birch surface by a near-black tint is what makes Black Ash read as satin
+// light birch surface by a near-black tint is what makes Black Birch read as satin
 // black wood while keeping the grain visible in it.
 function applyWoodSpecies(finish) {
     const tint = woodSpecies(finish.name).tint || '#ffffff';
     woodMaterials.forEach(material => material.color.set(tint));
     applySurfaceFinish();
+}
+
+// A duplicate of the photograph, processed for a finish that the original tone
+// would fight. Two problems, both from tinting a warm cream surface toward black:
+//
+//   grayscale - the photograph's own colour survives the tint and the result
+//               reads as dark brown. Reducing the duplicate to luminance first
+//               leaves a neutral base, so the tint alone decides the colour.
+//   boost     - multiplying down scales the grain variation down with it, and on
+//               a surface this pale there was nothing left to see. Stretching
+//               contrast about the image's own mean keeps the grain legible.
+//
+// The source photograph is untouched; light finishes still use it at full tone.
+function processGrainPhoto(base, { grayscale = false, boost = 1 } = {}) {
+    const image = base.image;
+    if (!image || !image.width) return base;
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width; canvas.height = image.height;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    const data = context.getImageData(0, 0, canvas.width, canvas.height);
+    const px = data.data;
+
+    if (grayscale) {
+        for (let i = 0; i < px.length; i += 4) {
+            const luma = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+            px[i] = px[i + 1] = px[i + 2] = luma;
+        }
+    }
+    if (boost !== 1) {
+        let mean = 0;
+        for (let i = 0; i < px.length; i += 4) mean += (px[i] + px[i + 1] + px[i + 2]) / 3;
+        mean /= (px.length / 4);
+        for (let i = 0; i < px.length; i += 4) {
+            for (let c = 0; c < 3; c++) {
+                px[i + c] = Math.max(0, Math.min(255, mean + (px[i + c] - mean) * boost));
+            }
+        }
+    }
+    context.putImageData(data, 0, 0);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.anisotropy = base.anisotropy;
+    return texture;
 }
 
 // Face veneer is photographic for every species. The edge stays generated: it is
@@ -5523,9 +5573,14 @@ function woodTextureFor(name, role) {
         // image or whichever role ran last would set the grain scale for all of
         // them and the physical scaling would silently not hold. Keyed by path,
         // so finishes sharing an image share these clones too.
-        const key = spec.photo + '|photo|' + role;
+        const boost = spec.contrastBoost || 1;
+        const grayscale = !!spec.grayscale;
+        const key = spec.photo + '|photo|' + boost + (grayscale ? '|bw' : '') + '|' + role;
         if (!speciesTextures.has(key)) {
-            const perRole = base.clone();
+            const source = (boost === 1 && !grayscale)
+                ? base
+                : processGrainPhoto(base, { grayscale, boost });
+            const perRole = source.clone();
             perRole.needsUpdate = true;
             speciesTextures.set(key, perRole);
         }
@@ -5804,7 +5859,7 @@ function initStudio() {
     document.getElementById('surface-finish').onchange = e => { surfaceFinish = e.target.value; applySurfaceFinish(); };
     document.getElementById('wood-grain').onchange = e => { grainEnabled = e.target.checked; applySurfaceFinish(); };
     const looks = document.createElement('div'); looks.className = 'look-presets';
-    looks.innerHTML = `<div class="eyebrow">A LITTLE INSPIRATION</div><div><button data-look="Natural Birch|White">Light & natural</button><button data-look="Walnut|Forest">Warm & grounded</button><button data-look="Black Ash|Black">All in black</button></div>`;
+    looks.innerHTML = `<div class="eyebrow">A LITTLE INSPIRATION</div><div><button data-look="Natural Birch|White">Light & natural</button><button data-look="Walnut|Forest">Warm & grounded</button><button data-look="Black Birch|Black">All in black</button></div>`;
     document.getElementById('config-column').children[0].after(looks);
     looks.querySelectorAll('[data-look]').forEach(b => b.onclick = () => b.dataset.look.split('|').forEach((name, i) => {
         const type = i ? 'base' : 'wood';
@@ -6109,6 +6164,7 @@ window.ErgoFlex = {
     get woodMaterials() { return Object.fromEntries([...woodMaterials].map(([role, m]) => [role, {
         roughness: m.roughness, clearcoat: m.clearcoat, metalness: m.metalness,
         color: '#' + m.color.getHexString(),
+        bumpScale: m.bumpScale, roughnessMapped: !!m.roughnessMap,
         mapId: m.map ? m.map.uuid : null,
         repeat: m.map ? [m.map.repeat.x, m.map.repeat.y] : null
     }])); },
