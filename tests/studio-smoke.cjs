@@ -586,6 +586,22 @@ const server = http.createServer((req, res) => {
     assert.ok(/removed/i.test(shrunk.toast), 'and the removal is reported rather than silent');
     assert.ok(shrunk.disabled > 0, 'incompatible accessories are disabled in the list');
 
+    // Cart ids must be unique even for items added in the same millisecond;
+    // Date.now() collided, and remove() filters by id, so one removal deleted two.
+    const cartIds = await page.evaluate(async () => {
+      const before = JSON.parse(localStorage.getItem('ergoflexCartV2') || '[]').length;
+      // The modal opens over the page, so close it between adds.
+      for (let i = 0; i < 3; i++) {
+        document.getElementById('add-to-cart').click();
+        document.getElementById('continue-shopping').click();
+        await new Promise(r => setTimeout(r, 20));
+      }
+      const stored = JSON.parse(localStorage.getItem('ergoflexCartV2') || '[]');
+      return { added: stored.length - before, unique: new Set(stored.map(i => i.id)).size, total: stored.length };
+    });
+    assert.equal(cartIds.added, 3, 'three rapid adds produce three items');
+    assert.equal(cartIds.unique, cartIds.total, 'and every cart id is distinct');
+
     // Hiding the options column must actually widen the viewer. Found in the
     // browser: the first version toggled a Tailwind class the CDN JIT never
     // generated, because lg:col-span-4 appears nowhere in the markup.

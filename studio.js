@@ -47,6 +47,8 @@ let cartItems = [];
 // once, as a migration, and never written again.
 const SAVED_BUILD_KEY = 'ergoflexSavedBuildV2';
 const CART_KEY = 'ergoflexCartV2';
+let cartIdCounter = 0;
+const nextCartId = () => `item-${Date.now()}-${cartIdCounter++}`;
 
 // Constants for mathematically mapping 3D space to physical inches
 const LIFT_MIN = -19.25;
@@ -3478,7 +3480,9 @@ function updatePrice() {
 }
 
 function addToCart() {
-    cartItems.push({ id: Date.now(), ...currentConfig, price: configurationPrice(currentConfig), quantity: 1 });
+    // Date.now() collided for two items added in the same millisecond, and
+    // remove() filters by id — so removing one deleted both.
+    cartItems.push({ id: nextCartId(), ...cleanConfig(currentConfig), price: configurationPrice(currentConfig), quantity: 1 });
     persistCart();
     showCartModal();
 }
@@ -5570,7 +5574,7 @@ function initStudio() {
     } catch { notifyUser('Saved configuration could not be read. Showing the default build.'); }
     try {
         const saved = readStored(CART_KEY, 'ergoflexCartV1') || [];
-        if (Array.isArray(saved)) cartItems = saved.filter(validConfig).slice(0, 100).map((item, index) => ({ ...cleanConfig(item), id: index, quantity: Math.max(1, Math.min(20, Math.round(Number(item.quantity) || 1))), price: configurationPrice(cleanConfig(item)) }));
+        if (Array.isArray(saved)) cartItems = saved.filter(validConfig).slice(0, 100).map((item, index) => ({ ...cleanConfig(item), id: `restored-${index}`, quantity: Math.max(1, Math.min(20, Math.round(Number(item.quantity) || 1))), price: configurationPrice(cleanConfig(item)) }));
     } catch {}
     // An accessory can become incompatible if the stored size no longer suits it.
     const dropped = incompatibleAccessories(currentConfig);
