@@ -114,6 +114,21 @@ export const PRESETS = [
       accessories: ['monitor-arm', 'foot-rest', 'cable-tray'], cameraPreset: 'front' }
 ];
 
+// The starting configuration, derived from the catalog itself. The finishes
+// already carried isDefault, but nothing read it - the real default was a second
+// hardcoded copy in studio.js, so the flag and the actual behaviour could
+// disagree without anything failing.
+export function defaultConfig() {
+    const pick = (list) => (list.find(f => f.isDefault) || list[0]).name;
+    const sizeIds = Object.keys(PRODUCT_CONFIG.sizes);
+    return {
+        size: sizeIds.find(id => PRODUCT_CONFIG.sizes[id].isDefault) || sizeIds[0],
+        woodFinish: pick(PRODUCT_CONFIG.woodFinishes),
+        baseFinish: pick(PRODUCT_CONFIG.baseFinishes),
+        accessories: []
+    };
+}
+
 export const money = value => '$' + value.toLocaleString('en-US');
 
 // Every price in the app comes from here. Callers must pass a config explicitly;

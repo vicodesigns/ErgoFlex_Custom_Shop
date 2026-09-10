@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { PRODUCT_CONFIG, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
+import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
          ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
@@ -36,12 +36,7 @@ const INITIAL_ANIMATED_PARTS = [
     "Power", "Power_1", "Power_2", "Desktop", "Desktop_1", "Desktop_2", "Desktop_3", "Power_3", "Power_4", "Power_5", "Power_6", "Power_7", "Lift_Column_Top", "Lift_Column_Top_1", "Lift_Column_Top_2", "Lift_Column_Top_3", "Lift_Column_Top_4", "Lift_Column_Top_5", "Lift_Column_Top_6", "Lift_Column_Top_7", "Lift_Column_Top_8", "Lift_Column_Top_9", "Lift_Column_Top_10", "Lift_Column_Top_11", "Lift_Column_Top_12", "Lift_Column_Top_13", "Lift_Column_Top_14", "Lift_Column_Top_15", "L_A_Hardware_Top", "L_A_Hardware_Top_1", "L_A_Hardware_Top_2", "L_A_Hardware_Top_3", "Linear_Actuators", "Linear_Actuators_1", "Linear_Actuators_2", "Linear_Actuators_3", "Linear_Actuators_4", "Linear_Actuators_5", "Linear_Actuators_6", "Linear_Actuators_7", "Linear_Actuators_8", "Linear_Actuators_9", "Lift_Column_Top_16", "Lift_Column_Top_17", "L_A_Hardware_Top_4", "L_A_Hardware_Top_5", "L_A_Hardware_Top_6", "L_A_Hardware_Top_7", "Leds", "Leds_1", "Leds_2", "Revolve2", "Plates_Hardware", "Plates_Hardware_1", "Plates_Hardware_2", "Plates_Hardware_3", "Plates_Hardware_4", "Plates_Hardware_5", "Plates_Hardware_6", "Plates_Hardware_7", "Plates_Hardware_8", "Plates_Hardware_9", "Plates_Hardware_10", "Plates_Hardware_11", "Plates_Hardware_12", "Plates_Hardware_13", "Plates_Hardware_14", "Plates_Hardware_15", "Plates_Hardware_16", "Plates_Hardware_17", "Plates_Hardware_18", "Plates_Hardware_19", "Plates_Hardware_20", "Plates_Hardware_21", "Plates_Hardware_22", "Plates_Hardware_23", "Plates_Hardware_24", "Plates_Hardware_25", "Plates_Hardware_26", "Plates_Hardware_27", "Plates_Hardware_28", "Plates_Hardware_29", "Plates_Hardware_30", "Plates_Hardware_31", "Plates_Hardware_32", "Plates_Hardware_33", "Plates_Hardware_34", "Plates_Hardware_35", "Plates_Hardware_36", "Plates_Hardware_37", "Plates_Hardware_38", "Plates_Hardware_39", "Plates_Hardware_40", "Plates_Hardware_41", "Plates_Hardware_42", "Plates_Hardware_43", "Plates_Hardware_44", "Plates_Hardware_45", "Plates_Hardware_46", "Plates_Hardware_47", "Plates_Hardware_48", "Plates_Hardware_49", "Plates_Hardware_50", "Plates_Hardware_51", "Plates_Hardware_52", "Plates_Hardware_53", "Plates_Hardware_54", "Plates_Hardware_55", "Plates_Hardware_56", "Plates_Hardware_57", "Plates_Hardware_58", "Plates_Hardware_59", "Plates_Hardware_60", "Plates_Hardware_61", "Plates_Hardware_62", "Plates_Hardware_63", "Plates_Hardware_64", "Plates_Hardware_65", "Plates_Hardware_66", "Plates_Hardware_67", "Plates_Hardware_68", "Plates_Hardware_69", "Plates_Hardware_70", "Plates_Hardware_71", "Plates_Hardware_72", "Plates_Hardware_73", "Plates_Hardware_74", "Plates_Hardware_75", "Plates_Hardware_76", "Plates_Hardware_77", "Plates_Hardware_78", "Plates_Hardware_79", "Plates_Hardware_80", "Plates_Hardware_81", "Plates_Hardware_82", "Plates_Hardware_83", "Plates_Hardware_84", "Plates_Hardware_85", "Plates_Hardware_86", "Plates_Hardware_87", "Plates_Hardware_88", "Plates_Hardware_89", "Plates_Hardware_90", "Plates_Hardware_91", "Plates_Hardware_92", "Plates_Hardware_93", "Plates_Hardware_94", "Plates_Hardware_95", "Plates_Hardware_96", "Plates_Hardware_97", "Plates_Hardware_98", "Plates_Hardware_99", "Plates_Hardware_100", "Plates_Hardware_101", "Plates_Hardware_102", "Plates_Hardware_103", "Plates_Hardware_104", "Plates_Hardware_105", "Plates_Hardware_106", "Plates_Hardware_107", "Plates_Hardware_108", "Plates_Hardware_109", "Plates_Hardware_110", "Plates_Hardware_111", "Plates_Hardware_112", "Plates_Hardware_113", "Plates_Hardware_114", "Plates_Hardware_115", "Plates_Hardware_116", "Plates_Hardware_117", "Plates_Hardware_118", "Plates_Hardware_119", "Plates_Hardware_120", "Plates_Hardware_121", "Plates_Hardware_122", "Plates_Hardware_123", "Plates_Hardware_124", "Plates_Hardware_125", "Plates_Hardware_126", "Plates_Hardware_127", "Plates_Hardware_128", "Plates_Hardware_129", "Plates_Hardware_130", "Plates_Hardware_131", "Plates_Hardware_132", "Plates_Hardware_133", "Plates_Hardware_134", "Plates_Hardware_135", "Plates_Hardware_136", "Plates_Hardware_137", "Plates_Hardware_138", "Plates_Hardware_139", "Plates_Hardware_140", "Plates_Hardware_141", "Plates_Hardware_142", "Plates_Hardware_143", "Plates_Hardware_144", "Plates_Hardware_145", "Plates_Hardware_146", "Plates_Hardware_147", "Plates_Hardware_148", "Plates_Hardware_149", "Plates_Hardware_150", "Plates_Hardware_151", "Plates_Hardware_152", "Plates_Hardware_153", "Plates_Hardware_154", "Plates_Hardware_155", "Plates_Hardware_156", "Plates_Hardware_157", "Plates_Hardware_158", "Plates_Hardware_159", "Plates_Hardware_160", "Plates_Hardware_161", "Plates_Hardware_162", "Plates_Hardware_163", "Plates_Hardware_164", "Plates_Hardware_165", "Plates_Hardware_166", "Plates_Hardware_167", "Plates_Hardware_168", "Plates_Hardware_169", "Plates_Hardware_170", "Plates_Hardware_171", "Plates_Hardware_172", "Plates_Hardware_173", "Plates_Hardware_174", "Plates_Hardware_175", "Plates_Hardware_176", "Plates_Hardware_177", "Plates_Hardware_178", "Plates_Hardware_179", "Plates_Hardware_180", "Plates_Hardware_181", "Plates_Hardware_182", "Plates_Hardware_183", "Plates_Hardware_184", "Plates_Hardware_185", "Plates_Hardware_186", "Plates_Hardware_187", "Plates_Hardware_188", "Plates_Hardware_189", "Plates_Hardware_190", "Plates_Hardware_191", "Plates_Hardware_192", "Plates_Hardware_193", "Plates_Hardware_194", "Plates_Hardware_195", "Plates_Hardware_196", "Plates_Hardware_197", "Plates_Hardware_198", "Plates_Hardware_199", "Plates_Hardware_200", "Combine1", "Revolve2_1", "Combine1_1", "mesh_471", "mesh_472", "mesh_473", "mesh_474", "mesh_475", "mesh_476", "mesh_477", "Leds_3", "Combine1_2", "Revolve2_2", "mesh_481", "mesh_482", "mesh_483", "mesh_484", "Combine1_3", "Revolve2_3", "mesh_487", "mesh_488", "mesh_489", "mesh_490", "Plates_Hardware_201", "Plates_Hardware_202", "Plates_Hardware_203", "Plates_Hardware_204", "Plates_Hardware_205", "Plates_Hardware_206", "Plates_Hardware_207", "Plates_Hardware_208", "Plates_Hardware_209", "Plates_Hardware_210", "Plates_Hardware_211", "Plates_Hardware_212", "Plates_Hardware_213", "Plates_Hardware_214", "Plates_Hardware_215", "Plates_Hardware_216", "Plates_Hardware_217", "Plates_Hardware_218", "Plates_Hardware_219", "Plates_Hardware_220", "Plates_Hardware_221", "Plates_Hardware_222", "Plates_Hardware_223", "Plates_Hardware_224", "Plates_Hardware_225", "Plates_Hardware_226", "Plates_Hardware_227", "Plates_Hardware_228", "Plates_Hardware_229", "Plates_Hardware_230", "Plates_Hardware_231", "Plates_Hardware_232", "Plates_Hardware_233", "Plates_Hardware_234", "Plates_Hardware_235", "Plates_Hardware_236", "Plates_Hardware_237", "Plates_Hardware_238", "Plates_Hardware_239", "Plates_Hardware_240", "Plates_Hardware_241", "Plates_Hardware_242", "Plates_Hardware_243", "Plates_Hardware_244", "Plates_Hardware_245", "Plates_Hardware_246", "Plates_Hardware_247", "Plates_Hardware_248", "Plates_Hardware_249", "Plates_Hardware_250", "Plates_Hardware_251", "Plates_Hardware_252", "Plates_Hardware_253", "Plates_Hardware_254", "Plates_Hardware_255", "Plates_Hardware_256", "Plates_Hardware_257", "Plates_Hardware_258", "Plates_Hardware_259", "Plates_Hardware_260", "Plates_Hardware_261", "Plates_Hardware_262", "Plates_Hardware_263", "Plates_Hardware_264", "Plates_Hardware_265", "Plates_Hardware_266", "Plates_Hardware_267", "Plates_Hardware_268", "Plates_Hardware_269", "Plates_Hardware_270", "Plates_Hardware_271", "Plates_Hardware_272", "Plates_Hardware_273", "Plates_Hardware_274", "Plates_Hardware_275", "Plates_Hardware_276", "Plates_Hardware_277", "Plates_Hardware_278", "Plates_Hardware_279", "Plates_Hardware_280", "Plates_Hardware_281", "Plates_Hardware_282", "Plates_Hardware_283", "Plates_Hardware_284", "Plates_Hardware_285", "Plates_Hardware_286", "Plates_Hardware_287", "Plates_Hardware_288", "Plates_Hardware_289", "Plates_Hardware_290", "Plates_Hardware_291", "Touch_Screen", "Touch_Screen_1", "Touch_Screen_2", "Touch_Screen_3", "mesh_624", "mesh_625", "mesh_626", "Leds_4", "Leds_5", "Leds_6", "Leds_7", "Leds_8", "Leds_9", "Leds_10", "Leds_11", "Leds_12", "Leds_13", "Leds_14", "Leds_15", "Leds_16", "Leds_17", "Leds_18", "Leds_19", "Leds_20", "Leds_21", "Leds_22", "Leds_23", "Leds_24", "Leds_25", "Leds_26", "Leds_27", "Leds_28", "Leds_29", "Leds_30", "Leds_31", "Leds_32", "Leds_33", "Leds_34", "Leds_35", "Leds_36", "Leds_37", "Leds_38", "Joinery_6", "Joinery_7", "Joinery_8", "Joinery_9", "Joinery_10", "Joinery_11", "Joinery_12", "Joinery_13", "Joinery_14", "Joinery_15", "Joinery_16", "Joinery_17", "Joinery_18", "Plates_Hardware_292", "Plates_Hardware_293", "Plates_Hardware_294", "Plates_Hardware_295", "mesh_679", "mesh_680", "mesh_681", "mesh_682", "Touch_Screen_4", "Touch_Screen_5", "Touch_Screen_6", "Touch_Screen_7", "Leds_40", "Leds_41", "Leds_42", "Leds_43", "mesh_692", "Screws_24", "Screws_25", "Screws_26", "Screws_27", "Screws_28", "Screws_29", "Screws_30", "Screws_31", "Screws_32", "Screws_33", "Screws_34", "Screws_35", "Screws_36", "Screws_37", "Screws_38", "Screws_39", "Screws_40", "Screws_41", "Screws_42", "Screws_43", "Screws_44", "Screws_45", "Screws_46", "Screws_47", "Screws_48", "Screws_49", "Screws_50", "Screws_51", "Screws_52", "Screws_53", "Screws_54", "Screws_55", "Screws_56", "Screws_57", "Screws_58", "Screws_59", "Screws_60", "Screws_61", "Screws_62", "Screws_63", "Screws_64", "Screws_65", "Screws_66", "Screws_67", "Screws_68", "Screws_69", "Screws_70", "Screws_71", "Screws_72", "Screws_73", "Screws_74", "Screws_75", "Screws_76", "Screws_77", "Screws_78", "Screws_79", "Screws_80", "Screws_81", "Screws_82", "Screws_83", "Screws_84", "Screws_85", "Screws_86", "Screws_87", "Screws_88", "Screws_89", "Screws_90", "Screws_91", "Screws_92", "Screws_93", "Screws_94", "Screws_95", "Screws_96", "Screws_97", "Screws_98", "Screws_99", "Screws_100", "Screws_101", "Screws_102", "Screws_103", "Screws_104", "Screws_105", "Screws_106", "Screws_107", "Screws_108", "Screws_109", "Screws_110", "Screws_111", "Screws_112", "Screws_113", "Screws_114", "Screws_115", "Screws_116", "Screws_117", "Screws_118", "Screws_119", "Screws_120", "Screws_121", "Screws_122", "Screws_123", "Screws_124", "Screws_125", "Screws_126", "Screws_127", "Top_Shelf", "Top_Shelf_1", "Top_Shelf_2", "Top_Shelf_3", "Top_Shelf_4"
 ];
 
-let currentConfig = {
-    size: '48x30',
-    woodFinish: 'Natural Birch',
-    baseFinish: 'White',
-    accessories: []
-};
+let currentConfig = defaultConfig();
 let cartItems = [];
 // V2 keys: the configuration gained an accessories list. V1 keys are still read
 // once, as a migration, and never written again.
@@ -3346,10 +3341,27 @@ function getOrCreateBirchMaterial() {
 // Which wood role a mesh plays. Measured, not guessed: Desktop_3 is the top
 // slab, Desktop/Desktop_1/Desktop_2 are the edge and side pieces
 // (see docs/sizing-gate.md).
+// An edge strip is thin in cross-section: its middle dimension is a small
+// fraction of its longest. The shaped side panels are not - they are 35 x 18in
+// faces only 0.7in thick, so two of their three dimensions are broad. Matching
+// on the name prefix alone sent those panels to the plywood-lamination
+// material, which banded 11 stripes across a 646 sq in visible face.
+const EDGE_ASPECT_MAX = 0.2;
+function isEdgeStrip(mesh) {
+    const geom = mesh.geometry;
+    if (!geom) return false;
+    if (!geom.boundingBox) geom.computeBoundingBox();
+    const bb = geom.boundingBox;
+    if (!bb) return false;
+    const dims = [bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z]
+        .sort((a, b) => b - a);
+    return dims[0] > 0 && dims[1] / dims[0] <= EDGE_ASPECT_MAX;
+}
+
 function woodRoleFor(mesh) {
     const name = mesh.name || '';
     if (name === 'Desktop_3') return 'desktop';
-    if (name.startsWith('Desktop')) return 'edge';
+    if (name.startsWith('Desktop')) return isEdgeStrip(mesh) ? 'edge' : 'wing';
     if (name.startsWith('Top_Shelf')) return 'shelf';
     return 'desktop';
 }
@@ -5379,7 +5391,21 @@ function applyWoodSpecies(finish) {
 // Natural Birch keeps the photographed texture; every other species is generated.
 function woodTextureFor(name, role) {
     const spec = woodSpecies(name);
-    if (spec.photo && role !== 'edge') return woodTexture || generateGrainTexture(name, role);
+    if (spec.photo && role !== 'edge') {
+        if (!woodTexture) return generateGrainTexture(name, role);
+        // Generated species already cache per name|role, but the photograph was a
+        // single shared Texture handed to every wood role. One Texture carries one
+        // repeat, so each role's applyGrainScale overwrote the last and whichever
+        // ran last set the grain scale for all of them - the physical scaling this
+        // function exists to provide silently did not hold for Natural Birch.
+        const key = name + '|photo|' + role;
+        if (!speciesTextures.has(key)) {
+            const perRole = woodTexture.clone();
+            perRole.needsUpdate = true;
+            speciesTextures.set(key, perRole);
+        }
+        return speciesTextures.get(key);
+    }
     return generateGrainTexture(name, role);
 }
 
@@ -5395,10 +5421,12 @@ function applyGrainScale(texture, role, species) {
 // The measured dimensions of each wood surface, in inches. Falls back to the
 // reference assembly's numbers before the model has loaded.
 function surfaceInches(role) {
-    const fallback = { desktop: { w: 44, d: 32 }, shelf: { w: 43, d: 15 }, edge: { w: 44, d: 3.5 } }[role]
+    const fallback = { desktop: { w: 44, d: 32 }, shelf: { w: 43, d: 15 }, edge: { w: 44, d: 3.5 },
+                       wing: { w: 35, d: 18 } }[role]
         || { w: 44, d: 32 };
     if (!loadedModel) return fallback;
-    const names = { desktop: ['Desktop_3'], shelf: ['Top_Shelf_3'], edge: ['Desktop'] }[role] || [];
+    const names = { desktop: ['Desktop_3'], shelf: ['Top_Shelf_3'], edge: ['Desktop'],
+                    wing: ['Desktop_1'] }[role] || [];
     const box = new THREE.Box3();
     let found = false;
     partRegistry.forEach(entry => {
@@ -5409,6 +5437,10 @@ function surfaceInches(role) {
     if (!found || box.isEmpty()) return fallback;
     const size = box.getSize(new THREE.Vector3());
     const perWorld = worldToInches();
+    // The side panels stand upright, so their visible face is spanned by Z and Y.
+    // Measuring them on the horizontal Z-by-X plane would read the 0.7in
+    // thickness as the depth and smear the grain up the panel.
+    if (role === 'wing') return { w: size.z * perWorld, d: size.y * perWorld };
     // Z is the width axis in this asset and X the depth (docs/sizing-gate.md).
     return { w: size.z * perWorld, d: size.x * perWorld };
 }
@@ -5548,6 +5580,29 @@ function focusObjects(objects, { animate = false } = {}) {
         controls.target.copy(center); camera.position.copy(position); controls.update();
     }
 }
+// The lift, tilt and glide panels are different heights (202 / 166 / 283px on a
+// desktop viewport), and syncViewerSize feeds the dock's offsetHeight into the
+// canvas height and camera.aspect. So merely switching tabs resized the canvas
+// by up to 117px and the desk visibly jumped. Reserve the tallest panel once so
+// the dock is one fixed size and changing tabs no longer touches the camera.
+//
+// Reserved as a custom property consumed only by .expanded: setting min-height
+// on the element directly would beat the collapse's max-height: 0 and the dock
+// could never close.
+function stabilizeMotionDock() {
+    const content = document.getElementById('motion-dock-content');
+    if (!content) return;
+    const panels = [...content.querySelectorAll('[data-motion-panel]')];
+    if (!panels.length) return;
+    const wasHidden = panels.map(panel => panel.hidden);
+    content.style.setProperty('--motion-dock-reserve', '0px');
+    let tallest = 0;
+    panels.forEach(panel => { panel.hidden = false; });
+    panels.forEach(panel => { tallest = Math.max(tallest, panel.offsetHeight); });
+    panels.forEach((panel, i) => { panel.hidden = wasHidden[i]; });
+    if (tallest > 0) content.style.setProperty('--motion-dock-reserve', tallest + 'px');
+}
+
 function setMotionTab(tab) {
     document.getElementById('motion-dock').dataset.tab = tab;
     document.querySelectorAll('[data-motion-tab]').forEach(b => { b.setAttribute('aria-selected', String(b.dataset.motionTab === tab)); b.tabIndex = b.dataset.motionTab === tab ? 0 : -1; });
@@ -5594,6 +5649,18 @@ function initStudio() {
         try { localStorage.setItem(SAVED_BUILD_KEY, JSON.stringify(currentConfig)); notifyUser('Build saved. Your finishes and size will return on your next visit.'); }
         catch { notifyUser('Browser storage is unavailable. Download an estimate to keep your build.'); }
     };
+    // A saved build outranks the catalog default on every later visit, and there
+    // was no way to take that back from the page - clearing it meant editing
+    // localStorage by hand.
+    document.getElementById('reset-build').onclick = () => {
+        try { localStorage.removeItem(SAVED_BUILD_KEY); localStorage.removeItem('ergoflexSavedBuildV1'); } catch {}
+        currentConfig = defaultConfig();
+        applyConfigToUI();
+        applyAccessoryVisibility();
+        renderAccessories();
+        updatePrice();
+        notifyUser('Back to the standard build: ' + currentConfig.woodFinish + ' on ' + currentConfig.baseFinish + '.');
+    };
     document.getElementById('share-build').onclick = async () => {
         const url = new URL(location.href); url.search = ''; url.searchParams.set('build', JSON.stringify(currentConfig));
         try { await navigator.clipboard.writeText(url.href); notifyUser('Configuration link copied.'); }
@@ -5618,16 +5685,23 @@ function initStudio() {
     const top = document.createElement('div'); top.className = 'viewer-heading';
     top.innerHTML = `<div class="eyebrow" id="scene-status">LOADING YOUR WORKSPACE</div><h2>Designed to move you.</h2><p id="build-summary"></p>`; viewer.append(top);
     const toolbar = document.createElement('div'); toolbar.className = 'studio-toolbar';
-    toolbar.innerHTML = `<label><span>Environment</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate">Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><label>Exposure<input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
+    toolbar.innerHTML = `<label><span>Environment</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><label>Exposure<input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
     viewer.append(toolbar);
-    document.getElementById('studio-environment').onchange = e => {
-        document.getElementById('viewer-shell').dataset.environment = e.target.value;
-        const settings = { gallery: [1.02, 1.15, 0.24], warm: [1.08, 1.0, 0.2], slate: [0.95, 1.3, 0.36] }[e.target.value];
+    // Slate is the default. The settings used to be applied only from the change
+    // handler, so the opening view was whatever the renderer happened to be
+    // constructed with - picking a default in the markup alone would have shown
+    // "Slate studio" in the dropdown over a gallery-lit scene.
+    const ENVIRONMENTS = { gallery: [1.02, 1.15, 0.24], warm: [1.08, 1.0, 0.2], slate: [0.95, 1.3, 0.36] };
+    const applyEnvironment = (value) => {
+        const settings = ENVIRONMENTS[value] || ENVIRONMENTS.slate;
+        document.getElementById('viewer-shell').dataset.environment = value;
         if (renderer) renderer.toneMappingExposure = settings[0];
         if (scene) scene.environmentIntensity = settings[1];
         if (floorMesh) floorMesh.material.opacity = settings[2];
         document.getElementById('studio-exposure').value = settings[0];
     };
+    document.getElementById('studio-environment').onchange = e => applyEnvironment(e.target.value);
+    applyEnvironment(document.getElementById('studio-environment').value);
     document.getElementById('studio-exposure').oninput = e => { if (renderer) renderer.toneMappingExposure = Number(e.target.value); };
     document.getElementById('render-quality').onchange = e => {
         if (!renderer) return;
@@ -5717,7 +5791,11 @@ function initStudio() {
     dockBody.addEventListener('transitionend', event => {
         if (event.propertyName === 'max-height') syncViewerSize();
     });
+    // Panel heights depend on the viewport width, so the reservation has to be
+    // remeasured when it changes or the dock keeps a stale size.
+    window.addEventListener('resize', () => { stabilizeMotionDock(); syncViewerSize(); });
 
+    stabilizeMotionDock();
     setMotionTab('lift'); setupGlideControls();
     const editorTools = document.createElement('div'); editorTools.className = 'precision-tools';
     editorTools.innerHTML = `<div class="eyebrow">PRECISION & VISIBILITY</div><div><button id="focus-selected">Focus selection <kbd>F</kbd></button><button id="isolate-parts" aria-pressed="false">Isolate</button><button id="show-all-parts">Show all</button></div><div><label>Coordinates <select id="transform-space"><option value="world">World</option><option value="local">Local</option></select></label><label class="check-label"><input type="checkbox" id="transform-snap"> Snap transforms</label></div><p class="studio-note">Q Select · W Move · E Rotate · R Scale · F Focus<br>Snap: 0.05 scene units / 15° / 10% scale</p>`;

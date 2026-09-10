@@ -492,6 +492,57 @@ const server = http.createServer((req, res) => {
 
     await page.evaluate(() => { document.getElementById('clear-parts-btn').click(); ErgoFlex.setHeight(28); });
 
+    // syncViewerSize derives the canvas height from the motion dock's height, and
+    // the three panels are different sizes - so switching tabs resized the canvas
+    // and shifted camera.aspect, making the desk jump for no reason the user asked
+    // for. The dock now reserves the tallest panel.
+    const tabHeights = [];
+    for (const tab of ['lift', 'tilt', 'glide', 'lift']) {
+      await page.click(`[data-motion-tab="${tab}"]`);
+      await new Promise(r => setTimeout(r, 260));
+      tabHeights.push(await page.evaluate(() => document.querySelector('canvas').height));
+    }
+    assert.equal(new Set(tabHeights).size, 1,
+      'the canvas keeps one height across lift/tilt/glide: ' + tabHeights.join(', '));
+    // The reservation is a min-height, which would beat the collapse's max-height:0
+    // if it were set on the element rather than only in the expanded state.
+    const collapsedGrowth = await page.evaluate(async () => {
+      const before = document.querySelector('canvas').height;
+      document.getElementById('motion-dock-toggle').click();
+      await new Promise(r => setTimeout(r, 600));
+      const after = document.querySelector('canvas').height;
+      document.getElementById('motion-dock-toggle').click();
+      await new Promise(r => setTimeout(r, 600));
+      return after - before;
+    });
+    assert.ok(collapsedGrowth > 100, 'collapsing still hands its height back, got ' + collapsedGrowth);
+    await page.click('[data-motion-tab="lift"]');
+
+    // The shaped side panels are Desktop_1/Desktop_2: 35x18in faces only 0.7in
+    // thick. Matching wood roles on the name prefix alone classified every
+    // Desktop* mesh except Desktop_3 as an edge, so those two visible faces were
+    // painted with the plywood lamination texture - 11 stripes across 646 sq in.
+    const woodMaps = await page.evaluate(() => {
+      const out = {};
+      const seen = new Set();
+      window.ErgoFlex.partRegistry.forEach(entry => {
+        if (!entry.name.startsWith('Desktop') || seen.has(entry.name)) return;
+        seen.add(entry.name);
+        const mat = Array.isArray(entry.obj.material) ? entry.obj.material[0] : entry.obj.material;
+        out[entry.name] = mat && mat.map ? mat.map.uuid : null;
+      });
+      return out;
+    });
+    assert.ok(woodMaps.Desktop_1 && woodMaps.Desktop_3, 'the desktop meshes carry a texture');
+    assert.notEqual(woodMaps.Desktop_1, woodMaps.Desktop, 'a side panel is not given the edge strip texture');
+    assert.notEqual(woodMaps.Desktop_2, woodMaps.Desktop, 'and neither is the other one');
+    assert.equal(woodMaps.Desktop_1, woodMaps.Desktop_2, 'the mirrored pair shares one role');
+    // Natural Birch is photographed, and the photo used to be one shared Texture
+    // handed to every role. A Texture carries one repeat, so each role's grain
+    // scaling overwrote the last and the physical scale silently did not hold.
+    assert.notEqual(woodMaps.Desktop_1, woodMaps.Desktop_3,
+      'each wood role gets its own texture so it can carry its own grain repeat');
+
     // Opening index.html directly is a common mistake: browsers refuse ES modules over
     // file://, so studio.js never runs. Without the guard the loader spins forever with
     // no explanation, which reads as a broken app rather than a wrong URL.

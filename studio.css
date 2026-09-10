@@ -178,7 +178,7 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .motion-dock-toggle:hover { opacity: 1; }
 #motion-dock.collapsed { padding-bottom: 4px; }
 #motion-dock-content { max-height: 0; overflow: hidden; transition: max-height .28s ease; }
-#motion-dock-content.expanded { max-height: 420px; }
+#motion-dock-content.expanded { max-height: 420px; min-height: var(--motion-dock-reserve, 0px); }
 @media (prefers-reduced-motion: reduce) { #motion-dock-content { transition: none; } }
 
 /* Options panel collapse. The viewer column takes the freed grid track. */
