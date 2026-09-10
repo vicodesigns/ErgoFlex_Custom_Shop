@@ -349,7 +349,143 @@ const server = http.createServer((req, res) => {
       'plastic is rougher than the machined metal');
     await page.evaluate(() => { ErgoFlex.setSurfaceFinish('satin'); document.querySelector('#wood-finishes [data-finish="Natural Birch"]').click(); });
 
-    console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, neutral pose, project round trip, presentation, and materials passed.');
+
+    // --- precision editing ---------------------------------------------------
+    // A typed value and a gizmo drag must produce the same kind of undo entry
+    // and the same bookkeeping, because they go through one commit path.
+    const numeric = await page.evaluate(() => {
+      document.getElementById('clear-parts-btn').click();
+      ErgoFlex.selectByNames([ErgoFlex.liftObjects[0].obj.name]);
+      ErgoFlex.refreshTransformInspector();
+      // Ask the app which part the fields describe rather than assuming: a name
+      // can match more than one mesh, and the inspector follows the last selected.
+      const obj = ErgoFlex.inspectedPart;
+      window.__inspected = obj.userData.editorId;
+      const field = document.querySelector('#transform-inspector input[data-field="position"][data-axis="y"]');
+      const shown = Number(field.value);
+      const actual = ErgoFlex.canonicalTransform(obj).p.y;
+      const undosBefore = ErgoFlex.undoCount;
+      field.value = (shown + 0.2).toFixed(4);
+      field.dispatchEvent(new Event('change'));
+      return { shown, actual, undosBefore, undosAfter: ErgoFlex.undoCount,
+               moved: ErgoFlex.canonicalTransform(obj).p.y - actual };
+    });
+    assert.ok(Math.abs(numeric.shown - numeric.actual) < 1e-3, 'the field shows the canonical value');
+    assert.equal(numeric.undosAfter, numeric.undosBefore + 1, 'a typed edit pushes exactly one undo entry');
+    assert.ok(Math.abs(numeric.moved - 0.2) < 1e-3, 'the typed value is applied');
+
+    // That typed edit must survive a height change, like a gizmo edit does.
+    const typedSurvives = await page.evaluate(() => {
+      const obj = ErgoFlex.partRegistry.get(window.__inspected).obj;
+      const before = ErgoFlex.canonicalTransform(obj).p.y;
+      ErgoFlex.setHeight(46); ErgoFlex.setHeight(28);
+      return ErgoFlex.canonicalTransform(obj).p.y - before;
+    });
+    assert.ok(Math.abs(typedSurvives) < 1e-6, 'a typed edit updates the lift baseline too');
+
+    // Redo.
+    const redo = await page.evaluate(() => {
+      const obj = ErgoFlex.partRegistry.get(window.__inspected).obj;
+      const edited = ErgoFlex.canonicalTransform(obj).p.y;
+      ErgoFlex.undo();
+      const undone = ErgoFlex.canonicalTransform(obj).p.y;
+      const redoAvailable = ErgoFlex.redoCount;
+      ErgoFlex.redo();
+      const redone = ErgoFlex.canonicalTransform(obj).p.y;
+      ErgoFlex.setHeight(46); ErgoFlex.setHeight(28);
+      return { edited, undone, redoAvailable, redone, settled: ErgoFlex.canonicalTransform(obj).p.y };
+    });
+    assert.ok(Math.abs(redo.undone - redo.edited) > 0.1, 'undo moved it back');
+    assert.equal(redo.redoAvailable, 1, 'undo makes a redo available');
+    assert.ok(Math.abs(redo.redone - redo.edited) < 1e-6, 'redo restores the edit');
+    assert.ok(Math.abs(redo.settled - redo.redone) < 1e-6, 'redo restores the lift baseline too');
+
+    // A new edit must discard the redo branch.
+    const branch = await page.evaluate(() => {
+      ErgoFlex.undo();
+      const before = ErgoFlex.redoCount;
+      const obj = ErgoFlex.liftObjects[1].obj;
+      obj.updateWorldMatrix(true, false);
+      const snap = [{ obj, before: obj.matrixWorld.clone() }];
+      obj.position.x += 0.05; obj.updateMatrixWorld(true);
+      ErgoFlex.commitTransform(snap);
+      return { before, after: ErgoFlex.redoCount };
+    });
+    assert.equal(branch.before, 1);
+    assert.equal(branch.after, 0, 'a new edit clears the redo branch');
+
+    // Alignment: one undo entry for the whole action.
+    const align = await page.evaluate(() => {
+      document.getElementById('clear-parts-btn').click();
+      const names = ErgoFlex.liftObjects.slice(0, 3).map(i => i.obj.name);
+      ErgoFlex.selectByNames(names);
+      const undosBefore = ErgoFlex.undoCount;
+      const selected = ErgoFlex.movingObjects.length;
+      // Highest world-space corner of each part: that is what align-max equalises.
+      // Computed here from the geometry bounds and the world matrix, rather than
+      // widening the app's test surface just to read a bounding box.
+      const topY = obj => {
+        obj.updateWorldMatrix(true, false);
+        obj.geometry.computeBoundingBox();
+        const b = obj.geometry.boundingBox, m = obj.matrixWorld.elements;
+        let max = -Infinity;
+        for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) {
+          max = Math.max(max, m[1] * x + m[5] * y + m[9] * z + m[13]);
+        }
+        return max;
+      };
+      const tops = () => ErgoFlex.movingObjects.map(i => topY(i.obj));
+      const before = tops();
+      ErgoFlex.alignSelection('y', 'max');
+      const after = tops();
+      return { undosBefore, undosAfter: ErgoFlex.undoCount, selected,
+               spreadBefore: Math.max(...before) - Math.min(...before),
+               spreadAfter: Math.max(...after) - Math.min(...after) };
+    });
+    assert.ok(align.selected >= 2, 'several parts were selected');
+    assert.equal(align.undosAfter, align.undosBefore + 1, 'aligning many parts is one undo step');
+    assert.ok(align.spreadAfter < 1e-6, 'align-max puts every top face on the same plane');
+    assert.ok(align.spreadBefore > align.spreadAfter, 'and they were not already aligned');
+
+    // Locking must block selection at the choke point, not just grey a button.
+    const locking = await page.evaluate(() => {
+      document.getElementById('clear-parts-btn').click();
+      const name = ErgoFlex.liftObjects[0].obj.name;
+      // Lock the whole selection, which is what the Lock button does. A model
+      // name can cover more than one mesh, so locking a single object would
+      // leave its namesakes selectable and prove nothing.
+      ErgoFlex.selectByNames([name]);
+      const parts = ErgoFlex.movingObjects.map(i => i.obj);
+      parts.forEach(o => ErgoFlex.setLocked(o, true));
+      document.getElementById('clear-parts-btn').click();
+      ErgoFlex.selectByNames([name]);
+      const selectedWhileLocked = ErgoFlex.movingObjects.length;
+      parts.forEach(o => ErgoFlex.setLocked(o, false));
+      ErgoFlex.selectByNames([name]);
+      const selectedAfterUnlock = ErgoFlex.movingObjects.length;
+      document.getElementById('clear-parts-btn').click();
+      return { selectedWhileLocked, selectedAfterUnlock };
+    });
+    assert.equal(locking.selectedWhileLocked, 0, 'a locked part cannot be selected');
+    assert.ok(locking.selectedAfterUnlock > 0, 'unlocking restores selection');
+
+    // Locks travel with the project.
+    const lockRoundTrip = await page.evaluate(() => {
+      const obj = ErgoFlex.liftObjects[2].obj;
+      ErgoFlex.setLocked(obj, true);
+      const saved = ErgoFlex.lockedParts.length;
+      const project = ErgoFlex.serializeProject();
+      ErgoFlex.setLocked(obj, false);
+      const clearedBefore = ErgoFlex.lockedParts.length;
+      ErgoFlex.applyProject(project);
+      return { saved, clearedBefore, restored: ErgoFlex.lockedParts.length };
+    });
+    assert.equal(lockRoundTrip.saved, 1, 'the lock is saved');
+    assert.equal(lockRoundTrip.clearedBefore, 0, 'and was genuinely cleared before the import');
+    assert.equal(lockRoundTrip.restored, 1, 'and comes back with the project');
+
+    await page.evaluate(() => { document.getElementById('clear-parts-btn').click(); ErgoFlex.setHeight(28); });
+    console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, neutral pose, project round trip, presentation, materials, and precision editing passed.');
     if (process.argv.includes('--editor-only')) { assert.deepEqual(errors, []); return; }
     await page.click('[data-motion-tab="glide"]');
     const before = await page.evaluate(() => ErgoFlex.wheelRigs.map(r => r.spin));

@@ -484,12 +484,15 @@ function initThreeJS() {
 // --- Undo system for setup edits ---
 // Undoable: transform gizmo drags, part clones, tilt config saves.
 const undoStack = [];
+const redoStack = [];
 const UNDO_LIMIT = 50;
 let pendingTransformSnapshot = null;
 
 function pushUndo(entry) {
     undoStack.push(entry);
     if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+    // A new edit invalidates the redo branch, as everywhere else.
+    redoStack.length = 0;
     updateUndoBtn();
 }
 
@@ -499,6 +502,12 @@ function updateUndoBtn() {
         btn.disabled = undoStack.length === 0;
         btn.textContent = undoStack.length ? 'Undo (' + undoStack.length + ')' : 'Undo';
     }
+    const redoBtn = document.getElementById('redo-btn');
+    if (redoBtn) {
+        redoBtn.disabled = redoStack.length === 0;
+        redoBtn.textContent = redoStack.length ? 'Redo (' + redoStack.length + ')' : 'Redo';
+    }
+    refreshTransformInspector();
 }
 
 // Restores a world-space matrix onto an object regardless of its current parent
@@ -672,10 +681,34 @@ function withNeutralPose(fn) {
     }
 }
 
-function performUndo() {
-    const entry = undoStack.pop();
-    if (!entry) return;
+// Undo and redo run the same code in opposite directions. Each entry knows how
+// to reverse itself and returns the entry that would reverse THAT, which is
+// pushed onto the other stack — so a redo is just an undo of an undo.
+function invertEntry(entry) {
+    switch (entry.type) {
+        case 'transform':
+            return { ...entry, items: entry.items.map(i => ({ obj: i.obj, before: i.after, after: i.before })) };
+        case 'clone':
+            return { ...entry, type: 'clone-restore' };
+        case 'clone-restore':
+            return { ...entry, type: 'clone' };
+        case 'tilt-save':
+            return { type: 'rig-restore', kind: 'tilt', definition: entry.definition };
+        case 'rig-save':
+            return { type: 'rig-restore', kind: 'actuator', definition: entry.definition };
+        case 'rig-restore':
+            return { type: entry.kind === 'tilt' ? 'tilt-save' : 'rig-save',
+                     name: entry.definition?.name, definition: entry.definition };
+        case 'lift-membership':
+            return { ...entry, added: !entry.added };
+        case 'tilt-parts':
+            return { ...entry, added: !entry.added };
+        default:
+            return null;
+    }
+}
 
+function applyEntry(entry) {
     if (entry.type === 'transform') {
         // Restoring the world matrix alone would leave baseY holding the value
         // derived from the undone edit, reintroducing the same overwrite one step
@@ -685,25 +718,45 @@ function performUndo() {
         boxHelpers.forEach(h => h.update());
         updateTransformProxy();
     } else if (entry.type === 'clone') {
+        // Detach, but keep the objects: redo re-adds these very instances, so the
+        // editorIds that groups, rigs and later undo entries refer to stay valid.
         entry.clones.forEach(clone => {
             liftObjects.delete(clone);
             toggleMovingObject(clone, false, true);
             const idx = interactableObjects.indexOf(clone);
             if (idx > -1) interactableObjects.splice(idx, 1);
             if (clone.userData.editorId) partRegistry.delete(clone.userData.editorId);
-            if (clone.parent) clone.parent.remove(clone);
+            entry.parents = entry.parents || new Map();
+            if (clone.parent) { entry.parents.set(clone, clone.parent); clone.parent.remove(clone); }
         });
         updateTransformProxy();
         if (selectedPartsCount) selectedPartsCount.innerText = movingObjects.length;
         buildSceneTree();
+    } else if (entry.type === 'clone-restore') {
+        entry.clones.forEach(clone => {
+            const parent = entry.parents?.get(clone) || loadedModel || scene;
+            parent.add(clone);
+            partRegistry.set(clone.userData.editorId,
+                { obj: clone, name: clone.name, editorId: clone.userData.editorId, isClone: true });
+            interactableObjects.push(clone);
+        });
+        updateTransformProxy();
+        buildSceneTree();
+        markEdited();
     } else if (entry.type === 'tilt-save') {
         const idx = tiltConfigs.findIndex(c => c.name === entry.name);
-        if (idx > -1) removeTiltConfig(idx, { recordUndo: false });
+        if (idx > -1) {
+            // Capture the definition before removing, so redo can rebuild it.
+            entry.definition = entry.definition || serializeTiltConfigs()[idx];
+            removeTiltConfig(idx, { recordUndo: false });
+        }
     } else if (entry.type === 'rig-save') {
         const idx = actuatorRigs.findIndex(r => r.name === entry.name);
-        if (idx > -1) removeActuatorRig(idx, { recordUndo: false });
+        if (idx > -1) {
+            entry.definition = entry.definition || serializeActuatorRigs()[idx];
+            removeActuatorRig(idx, { recordUndo: false });
+        }
     } else if (entry.type === 'rig-restore') {
-        // Rebuild the rig that was deleted, from the definition captured at delete time.
         if (entry.definition) deletedBakedRigs[entry.kind]?.delete(entry.definition.name);
         if (entry.definition && entry.kind === 'tilt') {
             const parts = entry.definition.groupEditorIds.map(eid => partRegistry.get(eid)?.obj).filter(Boolean);
@@ -718,9 +771,13 @@ function performUndo() {
         markEdited();
     } else if (entry.type === 'lift-membership') {
         if (entry.added) {
-            entry.objects.forEach(obj => liftObjects.delete(obj));
+            entry.objects.forEach(item => liftObjects.delete(item.obj || item));
         } else {
-            entry.objects.forEach(({ obj, baseY }) => liftObjects.set(obj, { obj, baseY }));
+            entry.objects.forEach(item => {
+                const obj = item.obj || item;
+                const canon = canonicalTransform(obj);
+                liftObjects.set(obj, { obj, baseY: item.baseY ?? (canon ? canon.p.y - (currentLift - LIFT_MIN) : obj.position.y) });
+            });
         }
         markEdited();
     } else if (entry.type === 'tilt-parts') {
@@ -735,6 +792,31 @@ function performUndo() {
             rebuildTiltUI();
         }
     }
+}
+
+function performUndo() {
+    const entry = undoStack.pop();
+    if (!entry) return;
+    const wasSuppressed = suppressTransactions;
+    suppressTransactions = true;
+    try {
+        applyEntry(entry);
+        const inverse = invertEntry(entry);
+        if (inverse) redoStack.push(inverse);
+    } finally { suppressTransactions = wasSuppressed; }
+    updateUndoBtn();
+}
+
+function performRedo() {
+    const entry = redoStack.pop();
+    if (!entry) return;
+    const wasSuppressed = suppressTransactions;
+    suppressTransactions = true;
+    try {
+        applyEntry(entry);
+        const inverse = invertEntry(entry);
+        if (inverse) undoStack.push(inverse);
+    } finally { suppressTransactions = wasSuppressed; }
     updateUndoBtn();
 }
 
@@ -837,6 +919,8 @@ function updateTransformProxy() {
 function toggleMovingObject(obj, forceState = null, skipUpdate = false) {
     const existingIndex = movingObjects.findIndex(item => item.obj === obj);
     const currentlySelected = existingIndex > -1;
+    // A locked part can always be deselected, never selected.
+    if (!currentlySelected && forceState !== false && isLocked(obj)) return;
 
     let shouldSelect = forceState !== null ? forceState : !currentlySelected;
 
@@ -1987,6 +2071,218 @@ function initConfigColumnCollapse() {
     button.onclick = toggle;
 }
 
+// --- Precision editing ------------------------------------------------------
+//
+// Numeric fields, alignment and locking all commit through commitTransform, so
+// a typed value and a gizmo drag produce the same undo entry and the same
+// canonical-transform bookkeeping. Anything editing geometry without going
+// through it would not be saved.
+
+// Snapshots world matrices, runs a mutation, then commits it as one edit.
+function editSelection(mutate) {
+    const objects = movingObjects.map(item => item.obj).filter(obj => !isLocked(obj));
+    if (!objects.length) { notifyUser('Select at least one unlocked part first.'); return false; }
+    const snapshot = objects.map(obj => {
+        obj.updateWorldMatrix(true, false);
+        return { obj, before: obj.matrixWorld.clone() };
+    });
+    mutate(objects);
+    objects.forEach(obj => obj.updateMatrixWorld(true));
+    const committed = commitTransform(snapshot);
+    boxHelpers.forEach(h => h.update());
+    updateTransformProxy();
+    refreshTransformInspector();
+    return committed;
+}
+
+function isLocked(obj) {
+    const editorId = obj?.userData?.editorId;
+    return Boolean(editorId && lockedParts.has(editorId));
+}
+
+function setLocked(obj, locked) {
+    const editorId = obj?.userData?.editorId;
+    if (!editorId) return;
+    if (locked) {
+        lockedParts.add(editorId);
+        toggleMovingObject(obj, false, true);   // a locked part leaves the gizmo's grip
+    } else {
+        lockedParts.delete(editorId);
+    }
+    markEdited();
+}
+
+// The part the numeric fields describe: the last one selected, if it is still
+// in the selection.
+function inspectorTarget() {
+    const entry = lastSelectedEditorId ? partRegistry.get(lastSelectedEditorId) : null;
+    if (entry && movingObjects.some(item => item.obj === entry.obj)) return entry.obj;
+    return movingObjects.length ? movingObjects[movingObjects.length - 1].obj : null;
+}
+
+let inspectorSuspended = false;
+
+function refreshTransformInspector() {
+    const panel = document.getElementById('transform-inspector');
+    if (!panel || inspectorSuspended) return;
+    const obj = inspectorTarget();
+    const fields = panel.querySelectorAll('input[data-axis]');
+    const lockButton = document.getElementById('lock-selected');
+    if (!obj) {
+        panel.dataset.empty = 'true';
+        fields.forEach(input => { input.value = ''; input.disabled = true; });
+        if (lockButton) lockButton.disabled = true;
+        return;
+    }
+    panel.dataset.empty = 'false';
+    const canon = canonicalTransform(obj);
+    if (!canon) return;
+    const euler = new THREE.Euler().setFromQuaternion(canon.q, 'XYZ');
+    const values = {
+        position: { x: canon.p.x, y: canon.p.y, z: canon.p.z },
+        rotation: { x: THREE.MathUtils.radToDeg(euler.x), y: THREE.MathUtils.radToDeg(euler.y), z: THREE.MathUtils.radToDeg(euler.z) },
+        scale: { x: canon.s.x, y: canon.s.y, z: canon.s.z }
+    };
+    const locked = isLocked(obj);
+    fields.forEach(input => {
+        if (document.activeElement === input) return;   // do not fight a typist
+        const value = values[input.dataset.field][input.dataset.axis];
+        input.value = input.dataset.field === 'rotation' ? value.toFixed(2) : value.toFixed(4);
+        input.disabled = locked;
+    });
+    if (lockButton) {
+        lockButton.disabled = false;
+        lockButton.setAttribute('aria-pressed', String(locked));
+        lockButton.textContent = locked ? 'Unlock' : 'Lock';
+    }
+}
+
+function commitInspectorField(input) {
+    const obj = inspectorTarget();
+    if (!obj || isLocked(obj)) return;
+    const value = Number(input.value);
+    if (!Number.isFinite(value)) { refreshTransformInspector(); return; }
+    const parent = canonicalParent(obj);
+    if (!parent) return;
+
+    editSelection(() => {
+        const canon = canonicalTransform(obj);
+        const euler = new THREE.Euler().setFromQuaternion(canon.q, 'XYZ');
+        if (input.dataset.field === 'position') canon.p[input.dataset.axis] = value;
+        else if (input.dataset.field === 'scale') canon.s[input.dataset.axis] = value || 1e-6;
+        else euler[input.dataset.axis] = THREE.MathUtils.degToRad(value);
+
+        // The fields are in canonical parent space, but the object may be
+        // parented to the proxy or a rig wrapper, so go via a world matrix.
+        parent.updateWorldMatrix(true, false);
+        const local = new THREE.Matrix4().compose(canon.p,
+            input.dataset.field === 'rotation' ? new THREE.Quaternion().setFromEuler(euler) : canon.q,
+            canon.s);
+        setWorldMatrix(obj, new THREE.Matrix4().multiplyMatrices(parent.matrixWorld, local));
+    });
+}
+
+// Bounding boxes are world space, but obj.position is parent space, and the
+// model carries a fit-to-view scale — so adding a world delta straight onto
+// position moves the part by the wrong amount. Go via the world matrix.
+function nudgeWorld(obj, axis, delta) {
+    if (!delta) return;
+    obj.updateWorldMatrix(true, false);
+    const translation = new THREE.Vector3();
+    translation[axis] = delta;
+    const target = obj.matrixWorld.clone().premultiply(
+        new THREE.Matrix4().makeTranslation(translation.x, translation.y, translation.z));
+    setWorldMatrix(obj, target);
+}
+
+// Align and distribute over the selection's world bounding boxes. One
+// transaction per action, so a whole alignment undoes in a single step.
+function alignSelection(axis, mode) {
+    return editSelection(objects => {
+        const boxes = objects.map(obj => new THREE.Box3().setFromObject(obj));
+        const bounds = new THREE.Box3();
+        boxes.forEach(box => bounds.union(box));
+        const anchor = mode === 'min' ? bounds.min[axis]
+            : mode === 'max' ? bounds.max[axis]
+            : (bounds.min[axis] + bounds.max[axis]) / 2;
+        objects.forEach((obj, i) => {
+            const box = boxes[i];
+            const current = mode === 'min' ? box.min[axis]
+                : mode === 'max' ? box.max[axis]
+                : (box.min[axis] + box.max[axis]) / 2;
+            nudgeWorld(obj, axis, anchor - current);
+        });
+    });
+}
+
+function distributeSelection(axis) {
+    if (movingObjects.length < 3) { notifyUser('Select three or more parts to distribute them.'); return false; }
+    return editSelection(objects => {
+        const entries = objects
+            .map(obj => ({ obj, centre: new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3())[axis] }))
+            .sort((a, b) => a.centre - b.centre);
+        const first = entries[0].centre, last = entries[entries.length - 1].centre;
+        const step = (last - first) / (entries.length - 1);
+        entries.forEach((entry, i) => nudgeWorld(entry.obj, axis, (first + step * i) - entry.centre));
+    });
+}
+
+function buildPrecisionTools(anchorElement) {
+    if (!anchorElement || document.getElementById('transform-inspector')) return;
+    const panel = document.createElement('div');
+    panel.id = 'transform-inspector';
+    panel.className = 'precision-tools transform-inspector';
+    panel.dataset.empty = 'true';
+    const row = (field, label, step) => `<div class="inspector-row"><span>${label}</span>` +
+        ['x', 'y', 'z'].map(axis =>
+            `<label><em>${axis.toUpperCase()}</em><input type="number" step="${step}" data-field="${field}" data-axis="${axis}" disabled></label>`).join('') +
+        `</div>`;
+    panel.innerHTML = `<div class="eyebrow">TRANSFORM</div>
+        ${row('position', 'Pos', '0.001')}
+        ${row('rotation', 'Rot', '0.5')}
+        ${row('scale', 'Scale', '0.01')}
+        <div class="inspector-actions">
+            <button id="lock-selected" aria-pressed="false" disabled title="Lock the selected parts so they cannot be selected or moved">Lock</button>
+            <button id="align-menu-toggle" aria-expanded="false" aria-controls="align-tools">Align…</button>
+        </div>
+        <div id="align-tools" hidden>
+            ${['x', 'y', 'z'].map(axis => `<div class="inspector-row"><span>${axis.toUpperCase()}</span>` +
+                ['min', 'center', 'max'].map(mode =>
+                    `<button data-align-axis="${axis}" data-align-mode="${mode}">${mode === 'center' ? 'Mid' : mode}</button>`).join('') +
+                `<button data-distribute-axis="${axis}" title="Space three or more parts evenly">Even</button></div>`).join('')}
+        </div>
+        <p class="studio-note">Values are in the part's own parent space, with animation removed. Rotation is in degrees. Typed edits, alignment, and gizmo drags share one undo history.</p>`;
+    anchorElement.after(panel);
+
+    panel.querySelectorAll('input[data-axis]').forEach(input => {
+        input.addEventListener('focus', () => { inspectorSuspended = true; });
+        input.addEventListener('blur', () => { inspectorSuspended = false; refreshTransformInspector(); });
+        input.addEventListener('change', () => commitInspectorField(input));
+        input.addEventListener('keydown', event => { if (event.key === 'Enter') input.blur(); });
+    });
+    document.getElementById('lock-selected').onclick = () => {
+        const obj = inspectorTarget();
+        if (!obj) return;
+        const locking = !isLocked(obj);
+        movingObjects.map(item => item.obj).forEach(target => setLocked(target, locking));
+        if (locking) updateTransformProxy();
+        refreshTransformInspector();
+        notifyUser(locking ? 'Selection locked.' : 'Selection unlocked.');
+    };
+    const alignToggle = document.getElementById('align-menu-toggle');
+    alignToggle.onclick = () => {
+        const tools = document.getElementById('align-tools');
+        tools.hidden = !tools.hidden;
+        alignToggle.setAttribute('aria-expanded', String(!tools.hidden));
+    };
+    panel.querySelectorAll('[data-align-axis]').forEach(button => {
+        button.onclick = () => alignSelection(button.dataset.alignAxis, button.dataset.alignMode);
+    });
+    panel.querySelectorAll('[data-distribute-axis]').forEach(button => {
+        button.onclick = () => distributeSelection(button.dataset.distributeAxis);
+    });
+}
+
 // --- Project panel ----------------------------------------------------------
 
 // Sits beside the rigs-only "Export Animations" button, which keeps working —
@@ -2370,12 +2666,25 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelMarquee();
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
             e.preventDefault();
-            performUndo();
+            if (e.shiftKey) performRedo(); else performUndo();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+            e.preventDefault();
+            performRedo();
         }
     });
 
     const undoBtn = document.getElementById('undo-btn');
-    if (undoBtn) undoBtn.addEventListener('click', performUndo);
+    if (undoBtn) {
+        undoBtn.addEventListener('click', performUndo);
+        const redoBtn = document.createElement('button');
+        redoBtn.id = 'redo-btn';
+        redoBtn.className = undoBtn.className.replace('ml-auto', '');
+        redoBtn.disabled = true;
+        redoBtn.title = 'Redo (Ctrl+Shift+Z / Ctrl+Y)';
+        redoBtn.textContent = 'Redo';
+        redoBtn.addEventListener('click', performRedo);
+        undoBtn.after(redoBtn);
+    }
 
     const glideBtn = document.getElementById('glide-btn');
     if (glideBtn) glideBtn.addEventListener('click', () => {
@@ -2530,6 +2839,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     buildProjectTools(exportTiltBtn);
+    buildPrecisionTools(document.getElementById('part-search-input')?.parentElement);
     initConfigColumnCollapse();
 
     const pickPivotBtn = document.getElementById('pick-pivot-btn');
@@ -5121,6 +5431,9 @@ window.ErgoFlex = {
     // representation — there is no element whose value reflects a part's
     // canonical transform or the lift baseline derived from it.
     get editRevision() { return editRevision; },
+    get undoCount2() { return undoStack.length; },
+    get redoCount() { return redoStack.length; },
+    redo: performRedo,
     get deskHeight() { return liftToHeight(currentLift); },
     commitTransform,
     canonicalTransform,
@@ -5129,6 +5442,12 @@ window.ErgoFlex = {
     get lockedParts() { return [...lockedParts]; },
     get deletedBakedRigs() { return { tilt: [...deletedBakedRigs.tilt], actuator: [...deletedBakedRigs.actuator] }; },
     focusCameraShortcut,
+    alignSelection,
+    distributeSelection,
+    setLocked,
+    isLocked,
+    refreshTransformInspector,
+    get inspectedPart() { return inspectorTarget(); },
     get woodMaterials() { return Object.fromEntries([...woodMaterials].map(([role, m]) => [role, {
         roughness: m.roughness, clearcoat: m.clearcoat, metalness: m.metalness,
         mapId: m.map ? m.map.uuid : null,

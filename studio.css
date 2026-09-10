@@ -185,3 +185,15 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .config-collapse { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: #666; background: none; border: 0; padding: 2px 0 10px; cursor: pointer; }
 .config-collapse:hover { color: #111; }
 #config-column.collapsed { align-self: start; }
+
+/* Numeric transform inspector, alignment tools, and the lock toggle. */
+.transform-inspector .inspector-row { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+.transform-inspector .inspector-row > span { width: 34px; font-size: 10px; letter-spacing: .04em; color: #777; text-transform: uppercase; }
+.transform-inspector label { display: flex; align-items: center; gap: 3px; flex: 1; min-width: 0; }
+.transform-inspector label em { font-style: normal; font-size: 10px; color: #999; }
+.transform-inspector input[type="number"] { width: 100%; min-width: 0; font-size: 11px; padding: 3px 4px; border: 1px solid rgba(0,0,0,.14); border-radius: 4px; font-variant-numeric: tabular-nums; }
+.transform-inspector input:disabled { background: rgba(0,0,0,.04); color: #999; }
+.transform-inspector[data-empty="true"] .inspector-row input { opacity: .5; }
+.transform-inspector .inspector-actions { display: flex; gap: 6px; margin-top: 8px; }
+#align-tools .inspector-row button { flex: 1; font-size: 10px; padding: 3px 4px; text-transform: capitalize; }
+#redo-btn { margin-left: 6px; }
