@@ -3896,7 +3896,7 @@
         const glideDemoOrigin = new THREE.Vector3();
         const glideKeys = new Set();
         let glidePointer = null;
-        let glideSpeed = 0.5;
+        let glideSpeed = 0.51;
         let glideUIPrev = '';
         function releaseGlideInput() {
             glideKeys.clear(); glideInput.set(0, 0); glidePointer = null;
@@ -3947,7 +3947,7 @@
             document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); } });
             document.getElementById('glide-x').oninput = e => setGlidePosition(Number(e.target.value), glideTarget.z);
             document.getElementById('glide-z').oninput = e => setGlidePosition(glideTarget.x, Number(e.target.value));
-            document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.5;
+            document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.51;
             document.getElementById('glide-home').onclick = () => setGlidePosition(0, 0);
             document.getElementById('glide-demo').onclick = () => {
                 if (glideActive) { glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); }
@@ -4651,7 +4651,7 @@
             document.getElementById('fit-view').onclick = () => loadedModel && focusObjects([loadedModel]);
             document.getElementById('camera-view').onchange = e => {
                 if (!camera || !loadedModel) return;
-                const direction = { hero: [4.8, 2.3, 4.2], front: [0, 0.2, 6], side: [6, 0.2, 0], top: [0, 6, 0.001] }[e.target.value];
+                const direction = { hero: [4.8, 2.3, 4.2], front: [6, 0.2, 0], side: [0, 0.2, 6], top: [0, 6, 0.001] }[e.target.value];
                 camera.position.copy(controls.target).add(new THREE.Vector3(...direction)); focusObjects([loadedModel]);
             };
             document.getElementById('rotate-scene').onclick = e => {
@@ -4683,7 +4683,7 @@
             liftPanel.append(presets);
             presets.querySelectorAll('button').forEach(b => b.onclick = () => { if (!loadedModel) return; manualLiftOverride = false; targetLift = heightToLift(Number(b.dataset.height)); });
             const glidePanel = document.createElement('div'); glidePanel.dataset.motionPanel = 'glide'; glidePanel.className = 'glide-panel';
-            glidePanel.innerHTML = `<div class="glide-main"><div id="glide-pad" tabindex="0" role="group" aria-label="Glide joystick. Drag in any direction or use arrow keys while focused." aria-describedby="glide-help"><span class="pad-axis axis-x"></span><span class="pad-axis axis-z"></span><span class="pad-arrow up">↑</span><span class="pad-arrow down">↓</span><span class="pad-arrow left">←</span><span class="pad-arrow right">→</span><span id="glide-knob"></span></div><div class="glide-sliders"><label>Sideways <output id="glide-x-value">0.00</output><input id="glide-x" aria-label="Glide sideways position" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Forward / back <output id="glide-z-value">0.00</output><input id="glide-z" aria-label="Glide forward and back position" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Speed <select id="glide-speed"><option value="0.25">Gentle</option><option value="0.5" selected>Natural</option><option value="0.85">Brisk</option></select></label></div></div><div class="glide-actions"><span id="glide-status">Ready to move</span><button id="glide-demo" aria-pressed="false">Play demo</button><button id="glide-home">Recenter</button></div><p id="glide-help">Drag the pad or focus it and use arrow keys. Release to stop.</p>`;
+            glidePanel.innerHTML = `<div class="glide-main"><div id="glide-pad" tabindex="0" role="group" aria-label="Glide joystick. Drag in any direction or use arrow keys while focused." aria-describedby="glide-help"><span class="pad-axis axis-x"></span><span class="pad-axis axis-z"></span><span class="pad-arrow up">↑</span><span class="pad-arrow down">↓</span><span class="pad-arrow left">←</span><span class="pad-arrow right">→</span><span id="glide-knob"></span></div><div class="glide-sliders"><label>Forward / back <output id="glide-x-value">0.00</output><input id="glide-x" aria-label="Glide forward and back position" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Sideways <output id="glide-z-value">0.00</output><input id="glide-z" aria-label="Glide sideways position" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Speed <select id="glide-speed"><option value="0.17">Crawl</option><option value="0.34">Ninja</option><option value="0.51" selected>Slow</option><option value="0.68">Medium</option><option value="0.85">Fast</option></select></label></div></div><div class="glide-actions"><span id="glide-status">Ready to move</span><button id="glide-demo" aria-pressed="false">Play demo</button><button id="glide-home">Recenter</button></div><p id="glide-help">Drag the pad or focus it and use arrow keys. Release to stop.</p>`;
             dock.append(glidePanel);
             document.querySelectorAll('[data-motion-panel]').forEach(panel => {
                 panel.id = panel.id || 'motion-panel-' + panel.dataset.motionPanel;
