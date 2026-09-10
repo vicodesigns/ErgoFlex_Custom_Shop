@@ -71,6 +71,49 @@ export const SURFACE_TREATMENTS = {
     plastic:   { matte: { roughness: 0.62, clearcoat: 0.0 },  satin: { roughness: 0.45, clearcoat: 0.0 },  gloss: { roughness: 0.28, clearcoat: 0.2 } }
 };
 
+// Accessories.
+//
+// These prices are PROVISIONAL. They are marked as such and shown as
+// "indicative" in the UI, because this is a design prototype and no accessory
+// pricing has been confirmed by the manufacturer. Do not silently drop the flag
+// to make the estimate look firmer than it is.
+//
+// `node` names a mesh family in the GLB. Where none exists the accessory is a
+// priced line item and the UI says it is not shown in 3D, rather than pretending.
+export const ACCESSORIES = [
+    { id: 'cable-tray',    name: 'Under-desk cable tray',   price: 89,  provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
+    { id: 'monitor-arm',   name: 'Single monitor arm',      price: 179, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
+    { id: 'monitor-arm-2', name: 'Dual monitor arm',        price: 289, provisional: true, compatibleSizes: ['60x30', '72x30'], node: null,
+      note: 'Needs a 60in or wider top for the mounting spread.' },
+    { id: 'cpu-holder',    name: 'CPU holder',              price: 129, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
+    { id: 'led-strip',     name: 'Under-surface LED strip', price: 69,  provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: 'Leds' },
+    { id: 'foot-rest',     name: 'Adjustable foot rest',    price: 99,  provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: 'Foot_Rest' }
+];
+
+export function accessory(id) { return ACCESSORIES.find(a => a.id === id) || null; }
+
+export function accessoryFits(id, size) {
+    const item = accessory(id);
+    return Boolean(item && item.compatibleSizes.includes(size));
+}
+
+// Curated starting points. Each is a complete configuration, so applying one
+// leaves nothing half-set.
+export const PRESETS = [
+    { id: 'compact', name: 'Compact workspace',
+      blurb: 'The smallest top, a light frame, and just the cable management.',
+      size: '48x30', woodFinish: 'Maple', baseFinish: 'White',
+      accessories: ['cable-tray'], cameraPreset: 'hero' },
+    { id: 'creative', name: 'Creative studio',
+      blurb: 'A wide walnut surface with dual monitors and task lighting.',
+      size: '72x30', woodFinish: 'Walnut', baseFinish: 'Space Gray',
+      accessories: ['monitor-arm-2', 'led-strip', 'cable-tray'], cameraPreset: 'hero' },
+    { id: 'standing', name: 'Standing workstation',
+      blurb: 'Mid-width oak set up for a full day on your feet.',
+      size: '60x30', woodFinish: 'White Oak', baseFinish: 'Navy',
+      accessories: ['monitor-arm', 'foot-rest', 'cable-tray'], cameraPreset: 'front' }
+];
+
 export const money = value => '$' + value.toLocaleString('en-US');
 
 // Every price in the app comes from here. Callers must pass a config explicitly;
@@ -79,21 +122,60 @@ export const money = value => '$' + value.toLocaleString('en-US');
 // Unknown finish or size names contribute nothing rather than throwing, so a
 // stale saved build degrades to a low estimate instead of a blank page.
 export function configurationPrice(config) {
-    if (!config) return PRODUCT_CONFIG.basePrice;
+    return priceBreakdown(config).reduce((total, line) => total + line.price, 0);
+}
+
+// Itemised, so the headline price, the cart row, and the estimate can all show
+// the same lines rather than three views of one opaque number.
+export function priceBreakdown(config) {
+    const lines = [{ label: 'ErgoFlex desk', price: PRODUCT_CONFIG.basePrice }];
+    if (!config) return lines;
+
     const size = PRODUCT_CONFIG.sizes[config.size];
+    if (size && size.price) lines.push({ label: size.name, price: size.price });
+
     const wood = PRODUCT_CONFIG.woodFinishes.find(f => f.name === config.woodFinish);
+    if (wood && wood.price) lines.push({ label: wood.name + ' desktop', price: wood.price });
+
     const base = PRODUCT_CONFIG.baseFinishes.find(f => f.name === config.baseFinish);
-    return PRODUCT_CONFIG.basePrice + (size ? size.price : 0) + (wood ? wood.price : 0) + (base ? base.price : 0);
+    if (base && base.price) lines.push({ label: base.name + ' frame', price: base.price });
+
+    for (const id of config.accessories || []) {
+        const item = accessory(id);
+        if (item) lines.push({ label: item.name, price: item.price, provisional: item.provisional });
+    }
+    return lines;
 }
 
 // The validation boundary for share links and restored local storage. Keep it
 // strict: it is the only thing standing between a URL and the rendered config.
 export function validConfig(value) {
-    return Boolean(value && Object.hasOwn(PRODUCT_CONFIG.sizes, value.size)
-        && PRODUCT_CONFIG.woodFinishes.some(f => f.name === value.woodFinish)
-        && PRODUCT_CONFIG.baseFinishes.some(f => f.name === value.baseFinish));
+    if (!value || !Object.hasOwn(PRODUCT_CONFIG.sizes, value.size)) return false;
+    if (!PRODUCT_CONFIG.woodFinishes.some(f => f.name === value.woodFinish)) return false;
+    if (!PRODUCT_CONFIG.baseFinishes.some(f => f.name === value.baseFinish)) return false;
+    // Accessories are optional, but if present must be an array of known ids.
+    // A V1 payload has no accessories key at all and is still valid.
+    if (value.accessories !== undefined) {
+        if (!Array.isArray(value.accessories)) return false;
+        if (!value.accessories.every(id => typeof id === 'string' && accessory(id))) return false;
+    }
+    return true;
 }
 
+// The whitelist, and the only place a stored or shared configuration is
+// normalised. A V1 payload becomes a valid V2 with an empty accessory list.
 export function cleanConfig(value) {
-    return { size: value.size, woodFinish: value.woodFinish, baseFinish: value.baseFinish };
+    const accessories = Array.isArray(value.accessories)
+        ? [...new Set(value.accessories.filter(id => accessory(id)))]
+        : [];
+    return { size: value.size, woodFinish: value.woodFinish, baseFinish: value.baseFinish, accessories };
+}
+
+// Accessories that no longer fit the chosen size. Returned rather than silently
+// dropped, so the UI can say what it removed and why.
+export function incompatibleAccessories(config) {
+    return (config.accessories || [])
+        .filter(id => !accessoryFits(id, config.size))
+        .map(id => accessory(id))
+        .filter(Boolean);
 }

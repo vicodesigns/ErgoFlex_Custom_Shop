@@ -49,7 +49,13 @@ Open **http://localhost:3000** for the store preview or **http://localhost:3000/
 
 ## Customer configuration
 
-Finishes and sizes update estimates. All prices come from a single function in `catalog.mjs`, so the headline price, the cart rows, and the downloaded estimate cannot disagree. Saved builds and the build list persist locally in the browser; shared links encode a validated finish/size configuration. The build list supports quantities, removal, and estimate downloads. Surface sheen and presentation settings are visualization controls, not priced options.
+Finishes, sizes, and accessories update estimates. All prices come from a single function in `catalog.mjs`, so the headline price, the cart rows, and the downloaded estimate cannot disagree.
+
+**Start from** offers three curated configurations — Compact workspace, Creative studio, Standing workstation — each a complete build with compatible accessories. The estimate is itemised: base desk, size, desktop, frame, and each accessory.
+
+**Accessory pricing is provisional** and is marked with an asterisk wherever it appears. Nothing here has been confirmed by a manufacturer. Accessories that need a wider top are disabled at smaller sizes, and narrowing the desk removes an incompatible accessory and says which — it never leaves a charge in the estimate for something that cannot ship. Accessories that map to a mesh in the model are shown or hidden in 3D; the rest are labelled as priced options that are not rendered.
+
+Saved builds and the build list use `ergoflexSavedBuildV2` / `ergoflexCartV2`. V1 data is read once as a migration (a V1 payload is a valid V2 with no accessories) and never written again. Saved builds and the build list persist locally in the browser; shared links encode a validated finish/size configuration. The build list supports quantities, removal, and estimate downloads. Surface sheen and presentation settings are visualization controls, not priced options.
 
 **This is a design/storefront prototype:** the size selector updates the estimate but does not resize the reference CAD assembly. See [docs/sizing-gate.md](docs/sizing-gate.md) for why, measured rather than assumed: the model's width axis is Z (not X), the desktop is a four-mesh assembly whose parts carry 3,000-4,600 vertices each (so it has real edge features that a stretch would distort), and its 44 x 32 in footprint matches none of the three catalog SKUs. Run `node tools/measure-asset.cjs` to reproduce the measurements. Checkout, payment, inventory, tax, shipping, and order submission are not connected. Estimates state that final specifications and availability need confirmation. No fabricated reviews or unverified delivery promises are displayed.
 

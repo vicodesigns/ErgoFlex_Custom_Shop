@@ -53,8 +53,9 @@ const assert = require('node:assert/strict');
   // --- cleanConfig: the whitelist ---
   const dirty = { ...defaultConfig, evil: 'payload', __proto__: { polluted: true }, price: 0 };
   const clean = cleanConfig(dirty);
-  assert.deepEqual(Object.keys(clean).sort(), ['baseFinish', 'size', 'woodFinish'],
-    'only the three known keys survive');
+  assert.deepEqual(Object.keys(clean).sort(), ['accessories', 'baseFinish', 'size', 'woodFinish'],
+    'only the known keys survive');
+  assert.deepEqual(clean.accessories, [], 'a V1 payload normalises to an empty accessory list');
   assert.equal(clean.evil, undefined, 'unknown keys are dropped');
   assert.equal({}.polluted, undefined, 'no prototype pollution');
 
@@ -63,5 +64,50 @@ const assert = require('node:assert/strict');
   assert.equal(money(0), '$0', 'zero formats');
   assert.equal(money(1299999), '$1,299,999', 'large values format');
 
-  console.log('Catalog pricing, validation, and formatting passed.');
+  // --- accessories, presets, and the breakdown ---
+  const { ACCESSORIES, PRESETS, priceBreakdown, accessoryFits, incompatibleAccessories } =
+    await import('../catalog.mjs');
+
+  // The breakdown must always sum to the price. That is the whole contract.
+  for (const preset of PRESETS) {
+    const config = cleanConfig(preset);
+    assert.equal(validConfig(config), true, `${preset.id} is a valid configuration`);
+    const lines = priceBreakdown(config);
+    assert.equal(lines.reduce((n, l) => n + l.price, 0), configurationPrice(config),
+      `${preset.id}: the breakdown sums to the price`);
+    assert.ok(lines.length > 1, `${preset.id} itemises more than the base desk`);
+    // A preset must not ship an accessory its own size cannot take.
+    assert.deepEqual(incompatibleAccessories(config), [], `${preset.id} has no incompatible accessories`);
+  }
+
+  // The base configuration is still exactly the base price.
+  assert.equal(configurationPrice({ ...defaultConfig, accessories: [] }), base);
+
+  // Accessories add their price.
+  const withAccessory = { ...defaultConfig, accessories: ['cable-tray'] };
+  assert.equal(configurationPrice(withAccessory), base + 89, 'an accessory adds its price');
+  assert.ok(priceBreakdown(withAccessory).some(l => l.provisional),
+    'provisional pricing is flagged all the way to the breakdown');
+
+  // Compatibility is enforced, not advisory, at the validation boundary.
+  assert.equal(accessoryFits('monitor-arm-2', '48x30'), false, 'the dual arm needs a wider top');
+  assert.equal(accessoryFits('monitor-arm-2', '72x30'), true);
+  assert.deepEqual(incompatibleAccessories({ size: '48x30', accessories: ['monitor-arm-2', 'cable-tray'] })
+    .map(a => a.id), ['monitor-arm-2'], 'incompatible accessories are reported, not silently dropped');
+
+  // Unknown accessory ids must not survive a share link.
+  assert.equal(validConfig({ ...defaultConfig, accessories: ['not-a-thing'] }), false);
+  assert.equal(validConfig({ ...defaultConfig, accessories: 'cable-tray' }), false, 'a string is not a list');
+  assert.deepEqual(cleanConfig({ ...defaultConfig, accessories: ['cable-tray', 'cable-tray', 'nope'] }).accessories,
+    ['cable-tray'], 'duplicates and unknowns are stripped');
+
+  // Every accessory must price and fit at least one size.
+  for (const item of ACCESSORIES) {
+    assert.ok(Number.isFinite(item.price) && item.price > 0, `${item.id} has a price`);
+    assert.ok(item.compatibleSizes.length > 0, `${item.id} fits at least one size`);
+    assert.ok(item.compatibleSizes.every(size => Object.hasOwn(PRODUCT_CONFIG.sizes, size)),
+      `${item.id} only lists real sizes`);
+  }
+
+  console.log('Catalog pricing, accessories, presets, validation, and formatting passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

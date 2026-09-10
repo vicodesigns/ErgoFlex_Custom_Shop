@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { PRODUCT_CONFIG, money, configurationPrice, validConfig, cleanConfig,
-         WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS } from './catalog.mjs';
+import { PRODUCT_CONFIG, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
+         WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 
 // Configuration
@@ -37,9 +38,14 @@ const INITIAL_ANIMATED_PARTS = [
 let currentConfig = {
     size: '48x30',
     woodFinish: 'Natural Birch',
-    baseFinish: 'White'
+    baseFinish: 'White',
+    accessories: []
 };
 let cartItems = [];
+// V2 keys: the configuration gained an accessories list. V1 keys are still read
+// once, as a migration, and never written again.
+const SAVED_BUILD_KEY = 'ergoflexSavedBuildV2';
+const CART_KEY = 'ergoflexCartV2';
 
 // Constants for mathematically mapping 3D space to physical inches
 const LIFT_MIN = -19.25;
@@ -1995,6 +2001,20 @@ function applyProjectMotion(motion) {
 // Pushes currentConfig into the DOM and the shared materials. The swatch grids
 // are rebuilt by populateFinishOptions, which reads currentConfig, so a project
 // import can reuse exactly the path a page load takes.
+// The markup's <option> labels and data-price attributes were hardcoded and
+// unread, so they could disagree with PRODUCT_CONFIG. Generate them instead.
+function populateSizeOptions() {
+    if (!sizeSelect) return;
+    sizeSelect.replaceChildren();
+    for (const [key, size] of Object.entries(PRODUCT_CONFIG.sizes)) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = size.name + (size.price ? ` · +${money(size.price)}` : '');
+        sizeSelect.append(option);
+    }
+    sizeSelect.value = currentConfig.size;
+}
+
 function applyConfigToUI() {
     if (sizeSelect) sizeSelect.value = currentConfig.size;
     const woodName = document.getElementById('selected-wood-name');
@@ -2020,6 +2040,8 @@ function applyProjectPresentation(project) {
     if (validConfig(project.customerConfig)) {
         currentConfig = cleanConfig(project.customerConfig);
         applyConfigToUI();
+        applyAccessoryVisibility();
+        renderAccessories();
     }
     if (presentation.surfaceFinish) {
         surfaceFinish = presentation.surfaceFinish;
@@ -2069,6 +2091,144 @@ function initConfigColumnCollapse() {
         }
     });
     button.onclick = toggle;
+}
+
+// --- Guided configurations --------------------------------------------------
+
+function toggleAccessory(id) {
+    if (!accessoryFits(id, currentConfig.size)) {
+        const item = accessory(id);
+        return notifyUser(item?.note || `${item?.name || 'That accessory'} is not available for this size.`);
+    }
+    const index = currentConfig.accessories.indexOf(id);
+    if (index > -1) currentConfig.accessories.splice(index, 1);
+    else currentConfig.accessories.push(id);
+    applyAccessoryVisibility();
+    renderAccessories();
+    updatePrice();
+}
+
+// Accessories that name a mesh family are shown or hidden; the rest are priced
+// line items and the UI says so rather than pretending they are in the render.
+function applyAccessoryVisibility() {
+    for (const item of ACCESSORIES) {
+        if (!item.node) continue;
+        const on = currentConfig.accessories.includes(item.id);
+        partRegistry.forEach(entry => {
+            if (entry.name === item.node || entry.name.startsWith(item.node + '_')) entry.obj.visible = on;
+        });
+    }
+}
+
+function renderAccessories() {
+    const list = document.getElementById('accessory-list');
+    if (!list) return;
+    list.replaceChildren();
+    for (const item of ACCESSORIES) {
+        const fits = accessoryFits(item.id, currentConfig.size);
+        const on = currentConfig.accessories.includes(item.id);
+        const row = document.createElement('label');
+        row.className = 'accessory-row' + (fits ? '' : ' unavailable');
+        const box = document.createElement('input');
+        box.type = 'checkbox';
+        box.checked = on && fits;
+        box.disabled = !fits;
+        box.onchange = () => toggleAccessory(item.id);
+        const name = document.createElement('span');
+        name.className = 'accessory-name';
+        name.textContent = item.name;
+        const price = document.createElement('span');
+        price.className = 'accessory-price';
+        price.textContent = money(item.price) + (item.provisional ? '*' : '');
+        row.append(box, name, price);
+        if (!fits && item.note) {
+            const note = document.createElement('small');
+            note.textContent = item.note;
+            row.append(note);
+        } else if (!item.node) {
+            const note = document.createElement('small');
+            note.textContent = 'Priced option; not shown in the 3D view.';
+            row.append(note);
+        }
+        list.append(row);
+    }
+}
+
+function renderPriceBreakdown() {
+    const container = document.getElementById('price-breakdown');
+    if (!container) return;
+    container.replaceChildren();
+    const lines = priceBreakdown(currentConfig);
+    let provisional = false;
+    for (const line of lines) {
+        const row = document.createElement('div');
+        row.className = 'breakdown-row';
+        const label = document.createElement('span');
+        label.textContent = line.label + (line.provisional ? '*' : '');
+        if (line.provisional) provisional = true;
+        const value = document.createElement('span');
+        value.textContent = money(line.price);
+        row.append(label, value);
+        container.append(row);
+    }
+    const total = document.createElement('div');
+    total.className = 'breakdown-row breakdown-total';
+    const label = document.createElement('span');
+    label.textContent = 'Estimate';
+    const value = document.createElement('span');
+    value.textContent = money(lines.reduce((n, l) => n + l.price, 0));
+    total.append(label, value);
+    container.append(total);
+    if (provisional) {
+        const note = document.createElement('p');
+        note.className = 'studio-note';
+        note.textContent = '* Accessory pricing is indicative and needs confirmation.';
+        container.append(note);
+    }
+}
+
+function applyPreset(preset) {
+    currentConfig = cleanConfig(preset);
+    applyConfigToUI();
+    applyAccessoryVisibility();
+    renderAccessories();
+    if (preset.cameraPreset) {
+        const select = document.getElementById('camera-view');
+        if (select) { select.value = preset.cameraPreset; select.dispatchEvent(new Event('change')); }
+    }
+    notifyUser(`${preset.name} applied.`);
+}
+
+function buildGuidedConfiguration() {
+    const anchorEl = document.getElementById('size-select')?.closest('.config-content') || document.getElementById('config-column-content');
+    if (!anchorEl || document.getElementById('preset-list')) return;
+
+    const presets = document.createElement('div');
+    presets.id = 'preset-list';
+    presets.className = 'preset-list';
+    presets.innerHTML = '<div class="eyebrow">START FROM</div>';
+    for (const preset of PRESETS) {
+        const card = document.createElement('button');
+        card.className = 'preset-card';
+        card.dataset.preset = preset.id;
+        card.innerHTML = `<strong>${preset.name}</strong><small>${preset.blurb}</small><em>${money(configurationPrice(cleanConfig(preset)))}</em>`;
+        card.onclick = () => applyPreset(preset);
+        presets.append(card);
+    }
+    anchorEl.prepend(presets);
+
+    const accessories = document.createElement('div');
+    accessories.className = 'accessory-block';
+    accessories.innerHTML = '<div class="eyebrow">ACCESSORIES</div><div id="accessory-list"></div>';
+    anchorEl.append(accessories);
+
+    const breakdown = document.createElement('div');
+    breakdown.id = 'price-breakdown';
+    breakdown.className = 'price-breakdown';
+    (document.getElementById('total-price')?.parentElement || anchorEl).after(breakdown);
+
+    renderAccessories();
+    renderPriceBreakdown();
 }
 
 // --- Precision editing ------------------------------------------------------
@@ -3112,6 +3272,7 @@ function updatePrice() {
     const total = money(configurationPrice(currentConfig));
     totalPrice.textContent = total;
     cartPrice.textContent = total;
+    renderPriceBreakdown();
     syncBuildSummary();
 }
 
@@ -3157,6 +3318,15 @@ function showCartModal() {
 
 sizeSelect.addEventListener('change', (e) => {
     currentConfig.size = e.target.value;
+    // Some accessories need a wider top. Drop the ones that no longer fit and
+    // say which, rather than quietly charging for something that cannot ship.
+    const dropped = incompatibleAccessories(currentConfig);
+    if (dropped.length) {
+        currentConfig.accessories = currentConfig.accessories.filter(id => accessoryFits(id, currentConfig.size));
+        notifyUser(`${dropped.map(a => a.name).join(', ')} removed: not available at this size.`);
+    }
+    renderAccessories();
+    applyAccessoryVisibility();
     updatePrice();
 });
 
@@ -4922,7 +5092,7 @@ function notifyUser(message) {
     clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.hidden = true, 4500);
 }
 function persistCart() {
-    try { localStorage.setItem('ergoflexCartV1', JSON.stringify(cartItems)); }
+    try { localStorage.setItem(CART_KEY, JSON.stringify(cartItems)); }
     catch { notifyUser('Build list is available for this visit. Browser storage is unavailable.'); }
     updateCartUI();
 }
@@ -5151,24 +5321,41 @@ function setMotionTab(tab) {
 }
 function initStudio() {
     const toast = document.createElement('div'); toast.id = 'studio-toast'; toast.role = 'status'; toast.hidden = true; document.body.append(toast);
+    // V2 adds the accessories axis. A V1 payload is a valid V2 with an empty
+    // accessory list, so migration is a read of the old key when the new one is
+    // absent — no separate conversion step, and V1 data is left untouched.
+    const readStored = (v2Key, v1Key) => {
+        try {
+            const raw = localStorage.getItem(v2Key) ?? localStorage.getItem(v1Key);
+            return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+    };
     try {
         const shared = new URLSearchParams(location.search).get('build');
-        const stored = shared ? JSON.parse(shared) : JSON.parse(localStorage.getItem('ergoflexSavedBuildV1') || 'null');
+        const stored = shared ? JSON.parse(shared) : readStored(SAVED_BUILD_KEY, 'ergoflexSavedBuildV1');
         if (validConfig(stored)) currentConfig = cleanConfig(stored);
         if (shared && !validConfig(stored)) notifyUser('This build link is invalid. Showing the default configuration.');
     } catch { notifyUser('Saved configuration could not be read. Showing the default build.'); }
     try {
-        const saved = JSON.parse(localStorage.getItem('ergoflexCartV1') || '[]');
-        if (Array.isArray(saved)) cartItems = saved.filter(validConfig).slice(0, 100).map((item, index) => ({ ...cleanConfig(item), id: index, quantity: Math.max(1, Math.min(20, Math.round(Number(item.quantity) || 1))), price: configurationPrice(item) }));
+        const saved = readStored(CART_KEY, 'ergoflexCartV1') || [];
+        if (Array.isArray(saved)) cartItems = saved.filter(validConfig).slice(0, 100).map((item, index) => ({ ...cleanConfig(item), id: index, quantity: Math.max(1, Math.min(20, Math.round(Number(item.quantity) || 1))), price: configurationPrice(cleanConfig(item)) }));
     } catch {}
+    // An accessory can become incompatible if the stored size no longer suits it.
+    const dropped = incompatibleAccessories(currentConfig);
+    if (dropped.length) {
+        currentConfig.accessories = currentConfig.accessories.filter(id => accessoryFits(id, currentConfig.size));
+        notifyUser(`${dropped.map(a => a.name).join(', ')} removed: not available for this size.`);
+    }
+    populateSizeOptions();
     applyConfigToUI();
+    buildGuidedConfiguration();
     updateCartUI();
     document.getElementById('open-editor').onclick = () => setSetupLayout(true);
     document.getElementById('cart-btn').onclick = showCartModal;
     document.getElementById('export-cart').onclick = () => cartItems.length ? downloadEstimate(cartItems) : notifyUser('Add a configuration first.');
     document.getElementById('download-quote').onclick = () => downloadEstimate([{ ...currentConfig, price: configurationPrice(currentConfig), quantity: 1 }]);
     document.getElementById('save-build').onclick = () => {
-        try { localStorage.setItem('ergoflexSavedBuildV1', JSON.stringify(currentConfig)); notifyUser('Build saved. Your finishes and size will return on your next visit.'); }
+        try { localStorage.setItem(SAVED_BUILD_KEY, JSON.stringify(currentConfig)); notifyUser('Build saved. Your finishes and size will return on your next visit.'); }
         catch { notifyUser('Browser storage is unavailable. Download an estimate to keep your build.'); }
     };
     document.getElementById('share-build').onclick = async () => {
@@ -5442,6 +5629,10 @@ window.ErgoFlex = {
     get lockedParts() { return [...lockedParts]; },
     get deletedBakedRigs() { return { tilt: [...deletedBakedRigs.tilt], actuator: [...deletedBakedRigs.actuator] }; },
     focusCameraShortcut,
+    applyPreset,
+    toggleAccessory,
+    get priceLines() { return priceBreakdown(currentConfig); },
+    validConfigForTest: validConfig,
     alignSelection,
     distributeSelection,
     setLocked,

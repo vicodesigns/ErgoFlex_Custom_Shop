@@ -197,3 +197,20 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .transform-inspector .inspector-actions { display: flex; gap: 6px; margin-top: 8px; }
 #align-tools .inspector-row button { flex: 1; font-size: 10px; padding: 3px 4px; text-transform: capitalize; }
 #redo-btn { margin-left: 6px; }
+
+/* Guided configurations: preset cards, accessories, and the itemised estimate. */
+.preset-list { display: grid; gap: 8px; margin-bottom: 18px; }
+.preset-card { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border: 1px solid rgba(0,0,0,.12); border-radius: 10px; background: #fff; cursor: pointer; }
+.preset-card:hover { border-color: rgba(0,0,0,.3); background: rgba(0,0,0,.02); }
+.preset-card strong { font-size: 13px; }
+.preset-card small { font-size: 11px; color: #666; line-height: 1.35; }
+.preset-card em { font-style: normal; font-size: 12px; font-weight: 600; }
+.accessory-block { margin-top: 18px; }
+.accessory-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,.06); }
+.accessory-row small { grid-column: 2 / -1; font-size: 11px; color: #777; }
+.accessory-row.unavailable { color: #999; }
+.accessory-price { font-variant-numeric: tabular-nums; font-size: 12px; }
+.price-breakdown { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,.1); }
+.breakdown-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; padding: 3px 0; color: #444; }
+.breakdown-row span:last-child { font-variant-numeric: tabular-nums; }
+.breakdown-total { font-weight: 600; color: #111; border-top: 1px solid rgba(0,0,0,.1); margin-top: 5px; padding-top: 7px; }

@@ -539,7 +539,71 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.evaluate(() => document.body.classList.contains('setup-layout')), false);
     await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(1); ErgoFlex.renderer.shadowMap.enabled = true; });
     await page.screenshot({ path: '/tmp/ergoflex-store.png', fullPage: true });
-    console.log('Store pricing and build list passed.');
+
+    // --- guided configurations ----------------------------------------------
+    // Drive these through the real UI: a customer clicks preset cards and
+    // accessory checkboxes, so that is what the test does.
+    const preset = await page.evaluate(async () => {
+      document.querySelector('[data-preset="creative"]').click();
+      await new Promise(r => setTimeout(r, 50));
+      return {
+        size: document.getElementById('size-select').value,
+        wood: ErgoFlex.currentConfig.woodFinish,
+        accessories: ErgoFlex.currentConfig.accessories,
+        headline: document.getElementById('total-price').textContent,
+        lines: ErgoFlex.priceLines
+      };
+    });
+    assert.equal(preset.size, '72x30', 'the preset set the size');
+    assert.equal(preset.wood, 'Walnut', 'and the finish');
+    assert.ok(preset.accessories.length >= 2, 'and the accessories');
+    const sum = preset.lines.reduce((n, l) => n + l.price, 0);
+    assert.equal(preset.headline, '$' + sum.toLocaleString('en-US'),
+      'the headline price equals the sum of the breakdown lines');
+
+    // The breakdown must be on screen, not just in memory.
+    const rows = await page.$$eval('#price-breakdown .breakdown-row', els => els.map(e => e.textContent));
+    assert.ok(rows.length === preset.lines.length + 1, 'every line is rendered, plus a total');
+    assert.ok(rows[rows.length - 1].includes('Estimate'), 'the last row is the estimate');
+
+    // Narrowing the desk must remove an accessory that no longer fits, and say so.
+    const shrunk = await page.evaluate(async () => {
+      const select = document.getElementById('size-select');
+      select.value = '48x30';
+      select.dispatchEvent(new Event('change'));
+      return { accessories: ErgoFlex.currentConfig.accessories,
+               toast: document.getElementById('studio-toast').textContent,
+               disabled: [...document.querySelectorAll('#accessory-list input')].filter(i => i.disabled).length };
+    });
+    assert.ok(!shrunk.accessories.includes('monitor-arm-2'),
+      'the dual monitor arm is dropped when the top is too narrow');
+    assert.ok(/removed/i.test(shrunk.toast), 'and the removal is reported rather than silent');
+    assert.ok(shrunk.disabled > 0, 'incompatible accessories are disabled in the list');
+
+    // Accessories survive a share link, and unknown ids do not.
+    const shareRoundTrip = await page.evaluate(() => {
+      const good = JSON.stringify(ErgoFlex.currentConfig);
+      return { valid: ErgoFlex.validConfigForTest(JSON.parse(good)),
+               rejected: ErgoFlex.validConfigForTest({ ...JSON.parse(good), accessories: ['evil'] }) };
+    });
+    assert.equal(shareRoundTrip.valid, true, 'the current configuration is shareable');
+    assert.equal(shareRoundTrip.rejected, false, 'an unknown accessory id is refused at the boundary');
+
+    // A V1 cart must migrate rather than be discarded.
+    const migrated = await page.evaluate(() => {
+      localStorage.removeItem('ergoflexCartV2');
+      localStorage.setItem('ergoflexCartV1', JSON.stringify([
+        { size: '48x30', woodFinish: 'Walnut', baseFinish: 'White', quantity: 2 }
+      ]));
+      return true;
+    });
+    assert.equal(migrated, true);
+    await page.reload();
+    await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4, { timeout: 90000 });
+    const afterMigration = await page.evaluate(() => document.getElementById('cart-count').textContent);
+    assert.equal(afterMigration, '2', 'a V1 cart is read once and its quantities survive');
+
+    console.log('Store pricing, presets, accessories, and the V1 to V2 migration passed.');
     await page.goto(url);
     await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4, { timeout: 90000 });
     assert.equal(await page.evaluate(() => ErgoFlex.currentConfig.woodFinish), 'Walnut');
