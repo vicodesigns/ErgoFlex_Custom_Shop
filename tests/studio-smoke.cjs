@@ -491,6 +491,22 @@ const server = http.createServer((req, res) => {
     assert.equal(lockRoundTrip.restored, 1, 'and comes back with the project');
 
     await page.evaluate(() => { document.getElementById('clear-parts-btn').click(); ErgoFlex.setHeight(28); });
+
+    // Opening index.html directly is a common mistake: browsers refuse ES modules over
+    // file://, so studio.js never runs. Without the guard the loader spins forever with
+    // no explanation, which reads as a broken app rather than a wrong URL.
+    const filePage = await browser.newPage();
+    await filePage.goto('file://' + path.join(__dirname, '..', 'index.html') + '?setup',
+                        { waitUntil: 'domcontentloaded', timeout: 30000 });
+    const fileLoader = await filePage.$eval('#loader', el => ({
+      text: el.innerText.replace(/\s+/g, ' ').trim(),
+      spinning: !!el.querySelector('.loader'),
+    }));
+    await filePage.close();
+    assert.match(fileLoader.text, /served over HTTP/, 'file:// explains the real problem');
+    assert.match(fileLoader.text, /npm run dev/, 'and says how to fix it');
+    assert.equal(fileLoader.spinning, false, 'and stops pretending it is still loading');
+
     console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, neutral pose, project round trip, presentation, materials, and precision editing passed.');
     if (process.argv.includes('--editor-only')) { assert.deepEqual(errors, []); return; }
     await page.click('[data-motion-tab="glide"]');

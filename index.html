@@ -787,5 +787,21 @@
     </script>
 
     <script type="module" src="./studio.js"></script>
+    <script>
+        // Classic script: runs before the deferred module above. Browsers refuse to
+        // load ES modules over file://, so studio.js never executes and the loader
+        // would otherwise spin forever with no explanation. Say what is wrong instead.
+        if (location.protocol === 'file:') {
+            var el = document.getElementById('loader');
+            if (el) {
+                el.innerHTML = '<div style="max-width:34rem;padding:1.5rem;text-align:center;font:14px/1.5 system-ui,sans-serif;color:#1f2937">'
+                    + '<p style="font-weight:600;margin:0 0 .5rem">This page needs to be served over HTTP.</p>'
+                    + '<p style="margin:0 0 .75rem">The app loads as an ES module, which browsers block on <code>file://</code>, so the 3D workspace cannot start.</p>'
+                    + '<p style="margin:0">Run <code style="background:#e8e9ec;padding:.1rem .35rem;border-radius:.2rem">npm run dev</code> and open '
+                    + '<a href="http://localhost:3000/" style="color:#1d4ed8;text-decoration:underline">http://localhost:3000/</a> '
+                    + '(add <code>?setup</code> for the studio).</p></div>';
+            }
+        }
+    </script>
 </body>
 </html>

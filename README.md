@@ -11,7 +11,7 @@ npm run dev
 
 Open **http://localhost:3000** for the store preview or **http://localhost:3000/?setup** for the studio.
 
-**Serving over HTTP is required, not just preferred.** The application code lives in `studio.js`, loaded as an ES module; browsers refuse to load modules over `file://`, so opening `index.html` directly leaves a blank viewer. Serving over HTTP is also what lets the local wood texture and image capture work. The model, Three.js, Tailwind, and AR viewer load from external hosts, so an internet connection is required.
+**Serving over HTTP is required, not just preferred.** The application code lives in `studio.js`, loaded as an ES module; browsers refuse to load modules over `file://`, so opening `index.html` directly cannot start the 3D workspace — the page says so in place of the loading spinner rather than spinning forever. Serving over HTTP is also what lets the local wood texture and image capture work. The model, Three.js, Tailwind, and AR viewer load from external hosts, so an internet connection is required.
 
 ## Layout
 
