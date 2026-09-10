@@ -2086,9 +2086,13 @@ function initConfigColumnCollapse() {
             button.textContent = collapsed ? 'Show options' : 'Hide options';
             button.setAttribute('aria-expanded', String(!collapsed));
             document.getElementById('config-column')?.classList.toggle('collapsed', collapsed);
-            column.classList.toggle('lg:col-span-3', !collapsed);
-            column.classList.toggle('lg:col-span-4', collapsed);
+            // Not a Tailwind class swap: the CDN JIT only generates classes it
+            // finds in the markup, and lg:col-span-4 appears nowhere, so adding
+            // it did nothing. Toggle a real rule in studio.css instead.
+            grid.classList.toggle('options-hidden', collapsed);
+            syncViewerSize();
             requestAnimationFrame(syncViewerSize);
+            setTimeout(syncViewerSize, 60);
         }
     });
     button.onclick = toggle;
@@ -2390,8 +2394,11 @@ function applyPreset(preset) {
 }
 
 function buildGuidedConfiguration() {
-    const anchorEl = document.getElementById('size-select')?.closest('.config-content') || document.getElementById('config-column-content');
-    if (!anchorEl || document.getElementById('preset-list')) return;
+    const column = document.getElementById('config-column-content');
+    if (!column || document.getElementById('preset-list')) return;
+    // Top level, not inside an accordion: these are how you START a
+    // configuration, and they must not disappear when Desk Size is collapsed.
+    const anchorEl = column;
 
     const presets = document.createElement('div');
     presets.id = 'preset-list';
@@ -2405,7 +2412,9 @@ function buildGuidedConfiguration() {
         card.onclick = () => applyPreset(preset);
         presets.append(card);
     }
-    anchorEl.prepend(presets);
+    // Above the accordions, below the product header.
+    const header = column.querySelector('.mb-8');
+    if (header) header.after(presets); else column.prepend(presets);
 
     const accessories = document.createElement('div');
     accessories.className = 'accessory-block';
@@ -4068,7 +4077,6 @@ function restoreTiltConfigs() {
             .map(eid => {
                 const entry = partRegistry.get(eid);
                 if (!entry) console.warn('[ErgoFlex] Tilt config "' + baked.name + '": part [' + eid + '] not found in model.');
-                    reportSceneWarning('tilt-part-missing', `Tilt rig "${baked.name}" refers to a part that is not in this model.`, [eid]);
                 return entry ? entry.obj : null;
             })
             .filter(obj => obj && !isInTiltWrapper(obj));
@@ -4085,6 +4093,17 @@ function restoreTiltConfigs() {
     });
     if (selectedPartsCount) selectedPartsCount.innerText = movingObjects.length;
     if (tiltConfigs.length > 0) rebuildTiltUI();
+    // Report only on the rigs that were actually built. Warning inside the
+    // restore loop cried wolf: a saved copy whose ids no longer resolve is
+    // skipped and the baked definition takes over, leaving a sound rig.
+    tiltConfigs.forEach(config => {
+        const missing = (config.groupEditorIds || []).filter(eid => !partRegistry.get(eid));
+        if (missing.length) {
+            reportSceneWarning('tilt-parts-missing',
+                `Tilt rig "${config.name}" is missing ${missing.length} of its ${config.groupEditorIds.length} parts.`,
+                missing);
+        }
+    });
 }
 
 function setPivotPart(editorId) {
@@ -5207,7 +5226,13 @@ function syncViewerSize() {
     const container = canvas.parentElement;
     const w = container.clientWidth;
     const top = w < 500 ? 188 : 168;
-    const dockHeight = document.getElementById('motion-dock')?.offsetHeight || 180;
+    const dock = document.getElementById('motion-dock');
+    // Read the intended state, not the animated height: a collapsed dock is its
+    // tab strip. Measuring offsetHeight mid-transition (or in a tab whose frames
+    // are throttled, where the transition never advances) left the canvas short.
+    const dockHeight = !dock ? 180
+        : dock.classList.contains('collapsed') ? (dock.querySelector('.motion-tabs')?.offsetHeight || 40)
+        : dock.offsetHeight;
     const bottom = dockHeight + (window.innerWidth <= 760 ? 26 : 50);
     const h = Math.max(160, container.clientHeight - top - bottom);
     if (w === 0 || container.clientHeight === 0) return;
@@ -5416,7 +5441,7 @@ function showAllParts() {
 }
 // A short eased move instead of a jump. The presets and every shortcut go
 // through this, so framing is consistent wherever it is triggered from.
-const cameraTween = { active: false, t: 0, duration: 0.4,
+const cameraTween = { active: false, t: 0, duration: 0.4, fallback: null,
     fromPos: new THREE.Vector3(), toPos: new THREE.Vector3(),
     fromTarget: new THREE.Vector3(), toTarget: new THREE.Vector3() };
 
@@ -5427,6 +5452,18 @@ function startCameraTween(toPos, toTarget) {
     cameraTween.toTarget.copy(toTarget);
     cameraTween.t = 0;
     cameraTween.active = true;
+    // The tween advances in the render loop. A throttled or hidden tab stops
+    // delivering frames, and the camera would simply never arrive — so promise
+    // the end state on a timer, which keeps running, and snap to it if the
+    // animation has not finished on its own.
+    clearTimeout(cameraTween.fallback);
+    cameraTween.fallback = setTimeout(() => {
+        if (!cameraTween.active) return;
+        cameraTween.active = false;
+        camera.position.copy(cameraTween.toPos);
+        controls.target.copy(cameraTween.toTarget);
+        controls.update();
+    }, cameraTween.duration * 1000 + 250);
 }
 
 function updateCameraTween(dt) {
@@ -5663,6 +5700,11 @@ function initStudio() {
             dockToggle.textContent = collapsed ? '▲' : '▼';
             dockToggle.setAttribute('aria-label', collapsed ? 'Expand movement panel' : 'Collapse movement panel');
             requestAnimationFrame(syncViewerSize);
+            // transitionend is not guaranteed (frozen or interrupted transitions),
+            // and syncViewerSize now reads the collapsed state rather than the
+            // animated height, so this is safe to run immediately as well.
+            syncViewerSize();
+            setTimeout(syncViewerSize, 320);
         }
     });
     dockToggle.onclick = toggleDock;

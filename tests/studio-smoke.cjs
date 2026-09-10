@@ -308,6 +308,12 @@ const server = http.createServer((req, res) => {
     });
     assert.equal(reset, 2, 'reset restores the default orbit floor');
 
+    // Each shortcut must frame its OWN assembly. Found in the browser: all four
+    // reported the same distance because the tween never advanced.
+    assert.ok(shortcuts.wheels.target[1] < 0.4, 'the wheels shortcut looks at floor level');
+    assert.ok(new Set(Object.values(shortcuts).map(s => s.distance.toFixed(2))).size >= 3,
+      'the shortcuts frame at genuinely different distances');
+
 
     // --- materials -----------------------------------------------------------
     // Each wood surface gets its own material, so the desktop and the plywood
@@ -579,6 +585,25 @@ const server = http.createServer((req, res) => {
       'the dual monitor arm is dropped when the top is too narrow');
     assert.ok(/removed/i.test(shrunk.toast), 'and the removal is reported rather than silent');
     assert.ok(shrunk.disabled > 0, 'incompatible accessories are disabled in the list');
+
+    // Hiding the options column must actually widen the viewer. Found in the
+    // browser: the first version toggled a Tailwind class the CDN JIT never
+    // generated, because lg:col-span-4 appears nowhere in the markup.
+    const optionsCollapse = await page.evaluate(async () => {
+      const w = () => parseFloat(document.getElementById('model-canvas').style.width);
+      const before = w();
+      document.getElementById('config-collapse').click();
+      await new Promise(r => setTimeout(r, 300));
+      const collapsed = w();
+      const label = document.getElementById('config-collapse').textContent;
+      document.getElementById('config-collapse').click();
+      await new Promise(r => setTimeout(r, 300));
+      return { before, collapsed, restored: w(), label };
+    });
+    assert.ok(optionsCollapse.collapsed > optionsCollapse.before + 100,
+      'hiding the options column gives the viewer its width');
+    assert.equal(optionsCollapse.label, 'Show options', 'and the button says how to get it back');
+    assert.ok(Math.abs(optionsCollapse.restored - optionsCollapse.before) < 2, 'showing them restores the layout');
 
     // Accessories survive a share link, and unknown ids do not.
     const shareRoundTrip = await page.evaluate(() => {

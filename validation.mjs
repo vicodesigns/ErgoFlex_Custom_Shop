@@ -35,6 +35,14 @@ export const INTENDED_CONTACT = [
     ['wheel', 'hardware'],
     ['desktop', 'shelf'],
     ['desktop', 'desktop'],
+    // Observed on the reference assembly and correct: the desktop is bolted to
+    // the lift columns, and the actuator's top clevis mounts beneath it. Both
+    // showed up as candidates on a clean build, which is what an exclusion list
+    // is for. Deliberately NOT excluded: desktop-to-wheel, which would be real.
+    ['desktop', 'column'],
+    ['desktop', 'actuator'],
+    ['shelf', 'column'],
+    ['shelf', 'actuator'],
     ['shelf', 'shelf'],
     ['wheel', 'wheel'],
     ['actuator', 'actuator']

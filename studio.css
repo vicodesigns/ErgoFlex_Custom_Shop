@@ -224,3 +224,12 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .validation-row.severity-error { background: rgba(220, 38, 38, .07); color: #7f1d1d; }
 .validation-row.severity-warning { background: rgba(217, 119, 6, .08); color: #78350f; }
 .validation-row.severity-info { background: rgba(0, 0, 0, .04); color: #555; }
+
+/* Hiding the options panel hands its grid track to the viewer. A Tailwind class
+   swap cannot do this: the CDN JIT only generates classes present in the
+   markup, and lg:col-span-4 appears nowhere. */
+@media (min-width: 1024px) {
+  #store-grid.options-hidden { grid-template-columns: minmax(0, 1fr); }
+  #store-grid.options-hidden #viewer-column { grid-column: 1 / -1; }
+  #store-grid.options-hidden #config-column { grid-column: 1 / -1; }
+}
