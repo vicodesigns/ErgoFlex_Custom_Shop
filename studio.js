@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { PRODUCT_CONFIG, money, configurationPrice, validConfig, cleanConfig } from './catalog.mjs';
+import { PRODUCT_CONFIG, money, configurationPrice, validConfig, cleanConfig,
+         WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS } from './catalog.mjs';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 
 // Configuration
@@ -1382,6 +1383,8 @@ function loadModel() {
         if (loadedModel) scene.remove(loadedModel);
 
         sharedBirchMaterial = null;
+        woodMaterials.clear();
+        loadBirchPhoto();
         sharedBasePaintMaterial = null;
         sharedPolishedAluminumMaterial = null;
         sharedBlackPlasticMaterial = null;
@@ -1415,7 +1418,7 @@ function loadModel() {
                     const colorHex = mat.color ? mat.color.getHexString().toLowerCase() : 'ffffff';
                     let newMaterial = mat;
 
-                    if (BIRCH_COLORS.includes(colorHex)) newMaterial = getOrCreateBirchMaterial();
+                    if (BIRCH_COLORS.includes(colorHex)) newMaterial = getOrCreateWoodMaterial(woodRoleFor(child));
                     else if (BASE_PAINT_COLORS.includes(colorHex)) newMaterial = getOrCreateBasePaintMaterial();
                     else if (POLISHED_ALUMINUM_COLORS.includes(colorHex)) newMaterial = getOrCreatePolishedAluminumMaterial();
                     else if (BLACK_PLASTIC_COLORS.includes(colorHex)) newMaterial = getOrCreateBlackPlasticMaterial();
@@ -1518,15 +1521,15 @@ function loadModel() {
         // Auto-rig the omni wheels from part naming, remember the home position
         buildWheelRigs();
         glideBase.copy(loadedModel.position);
-        applySurfaceFinish();
+        applySurfaceFinish();   // now that surfaceInches can measure the real model
         syncBuildSummary();
         document.getElementById('scene-status').textContent = 'LIVE 3D · READY';
         syncViewerSize();
         focusObjects([loadedModel]);
 
         // Phase 1.4: Material smoke check
-        if (!sharedBirchMaterial) {
-            console.warn('[ErgoFlex] sharedBirchMaterial is null after model load — wood finish swatches will not work.');
+        if (!woodMaterials.size) {
+            console.warn('[ErgoFlex] No wood materials after model load — wood finish swatches will not work.');
         }
         if (!sharedBasePaintMaterial) {
             console.warn('[ErgoFlex] sharedBasePaintMaterial is null after model load — base finish swatches will not work.');
@@ -1916,7 +1919,7 @@ function applyConfigToUI() {
     if (baseName) baseName.textContent = currentConfig.baseFinish;
     const wood = PRODUCT_CONFIG.woodFinishes.find(f => f.name === currentConfig.woodFinish);
     const base = PRODUCT_CONFIG.baseFinishes.find(f => f.name === currentConfig.baseFinish);
-    if (wood && sharedBirchMaterial) sharedBirchMaterial.color.set(wood.color);
+    if (wood) applyWoodSpecies(wood);
     if (base && sharedBasePaintMaterial) {
         sharedBasePaintMaterial.color.set(base.color);
         sharedBasePaintMaterial.metalness = frameMetalness(base);
@@ -2577,37 +2580,124 @@ function updateMovingObjectsPosition() {
 
 // --- Materials & UI Setup ---
 
-function getOrCreateBirchMaterial() {
-    if (!sharedBirchMaterial) {
-        const defaultFinish = PRODUCT_CONFIG.woodFinishes.find(f => f.name === currentConfig.woodFinish);
-        sharedBirchMaterial = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color(defaultFinish.color),
+// Wood is no longer one shared material. The desktop, the shelf and the plywood
+// edge each need their own map — the desktop because its grain repeat is derived
+// from its own size in inches, the edge because plywood laminations look nothing
+// like a face veneer.
+const woodMaterials = new Map();   // role -> MeshPhysicalMaterial
+const speciesTextures = new Map(); // `${species}|${role}` -> THREE.Texture
+
+// Procedural grain. Real tileable photography per species is still the right
+// answer; this at least gives each species its own ring spacing, contrast and
+// colour instead of tinting one birch photograph eight different ways.
+function generateGrainTexture(name, role) {
+    const key = name + '|' + role;
+    if (speciesTextures.has(key)) return speciesTextures.get(key);
+    const spec = woodSpecies(name);
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const context = canvas.getContext('2d');
+
+    context.fillStyle = spec.warm;
+    context.fillRect(0, 0, size, size);
+
+    if (role === 'edge') {
+        // Plywood edge: stacked laminations across the thickness, not rings.
+        const plies = 11;
+        for (let i = 0; i < plies; i++) {
+            const t = i / plies;
+            context.fillStyle = i % 2 ? spec.dark : spec.warm;
+            context.globalAlpha = 0.55;
+            context.fillRect(0, t * size, size, size / plies);
+        }
+        context.globalAlpha = 1;
+    } else {
+        // Face veneer: cathedral-ish rings running along the length, with the
+        // ring spacing and figure amplitude coming from the species.
+        const image = context.getImageData(0, 0, size, size);
+        const data = image.data;
+        const warm = hexToRgb(spec.warm), dark = hexToRgb(spec.dark);
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                // Wobble the ring position so growth rings are not straight lines.
+                const wobble = Math.sin(y / 70) * 26 * spec.figure + Math.sin(y / 23 + 1.7) * 9 * spec.figure;
+                const ring = Math.sin((x + wobble) / spec.ringSpacing * Math.PI);
+                const fibre = (Math.sin(y * 3.7 + x * 0.3) + Math.sin(y * 11.3)) * 0.02;
+                const mix = Math.min(1, Math.max(0, 0.5 + (ring * 0.5 + fibre) * (spec.contrast * 3.2)));
+                const i = (y * size + x) * 4;
+                data[i]     = warm.r + (dark.r - warm.r) * mix;
+                data[i + 1] = warm.g + (dark.g - warm.g) * mix;
+                data[i + 2] = warm.b + (dark.b - warm.b) * mix;
+                data[i + 3] = 255;
+            }
+        }
+        context.putImageData(image, 0, 0);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.anisotropy = renderer ? renderer.capabilities.getMaxAnisotropy() : 4;
+    speciesTextures.set(key, texture);
+    return texture;
+}
+
+function hexToRgb(hex) {
+    const n = parseInt(hex.replace('#', ''), 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+function getOrCreateWoodMaterial(role) {
+    if (!woodMaterials.has(role)) {
+        const finish = PRODUCT_CONFIG.woodFinishes.find(f => f.name === currentConfig.woodFinish);
+        woodMaterials.set(role, new THREE.MeshPhysicalMaterial({
+            color: new THREE.Color(finish ? finish.color : '#ffffff'),
             metalness: 0.0,
-            roughness: 0.34,
             ior: 1.5,
-            clearcoat: 0.4,
             clearcoatRoughness: 0.35,
             envMapIntensity: 1.0
-        });
-        textureLoader.load('./bir.jpg', (texture) => {
-            texture.colorSpace = THREE.SRGBColorSpace;
-            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(1.5, 1.5);
-            texture.anisotropy = renderer ? renderer.capabilities.getMaxAnisotropy() : 4;
-            woodTexture = texture;
-            applySurfaceFinish();
-            sharedBirchMaterial.needsUpdate = true;
-        }, undefined, (err) => {
-            console.error('[ErgoFlex] Failed to load birch texture:', err);
-        });
+        }));
+        applySurfaceFinish();
     }
-    return sharedBirchMaterial;
+    return woodMaterials.get(role);
+}
+
+// Kept for the material smoke check and the swatch handler, which both want
+// "the" wood material; the desktop is the representative one.
+function getOrCreateBirchMaterial() {
+    const material = getOrCreateWoodMaterial('desktop');
+    sharedBirchMaterial = material;
+    return material;
+}
+
+// Which wood role a mesh plays. Measured, not guessed: Desktop_3 is the top
+// slab, Desktop/Desktop_1/Desktop_2 are the edge and side pieces
+// (see docs/sizing-gate.md).
+function woodRoleFor(mesh) {
+    const name = mesh.name || '';
+    if (name === 'Desktop_3') return 'desktop';
+    if (name.startsWith('Desktop')) return 'edge';
+    if (name.startsWith('Top_Shelf')) return 'shelf';
+    return 'desktop';
 }
 
 // Silver is the one frame finish that reads as bare metal. Kept in one place:
 // this used to be spelled out at the constructor and at the swatch handler, and
 // the two could drift.
 function frameMetalness(finish) { return finish?.name === 'Silver' ? 0.75 : 0.1; }
+
+// The photographed birch surface, loaded once. Other species are generated.
+function loadBirchPhoto() {
+    if (woodTexture) return;
+    textureLoader.load('./bir.jpg', (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.anisotropy = renderer ? renderer.capabilities.getMaxAnisotropy() : 4;
+        woodTexture = texture;
+        applySurfaceFinish();
+    }, undefined, (err) => console.error('[ErgoFlex] Failed to load birch texture:', err));
+}
 
 function getOrCreateBasePaintMaterial() {
     if (!sharedBasePaintMaterial) {
@@ -2696,7 +2786,7 @@ function selectFinish(finish, type, element) {
     if (type === 'wood') {
         currentConfig.woodFinish = finish.name;
         document.getElementById('selected-wood-name').textContent = finish.name + (finish.price ? ' · +$' + finish.price : ' · Included');
-        if (sharedBirchMaterial) sharedBirchMaterial.color.set(finish.color);
+        applyWoodSpecies(finish);
     } else {
         currentConfig.baseFinish = finish.name;
         document.getElementById('selected-base-name').textContent = finish.name + (finish.price ? ' · +$' + finish.price : ' · Included');
@@ -4532,14 +4622,98 @@ function syncBuildSummary() {
     const size = document.getElementById('size-preview-note');
     if (size) size.textContent = `Selected: ${PRODUCT_CONFIG.sizes[currentConfig.size].name}. 3D shows the reference assembly; size options update your estimate.`;
 }
+// Applies the current sheen to every material role, and derives each wood
+// surface's texture repeat from its own size in inches so grain scale stays
+// physically constant as the desk changes size.
 function applySurfaceFinish() {
-    if (!sharedBirchMaterial) return;
-    const finish = { matte: [0.68, 0.08], satin: [0.4, 0.25], gloss: [0.2, 0.65] }[surfaceFinish];
-    sharedBirchMaterial.roughness = finish[0]; sharedBirchMaterial.clearcoat = finish[1];
-    sharedBirchMaterial.map = grainEnabled ? woodTexture : null;
-    sharedBirchMaterial.bumpMap = grainEnabled ? woodTexture : null;
-    sharedBirchMaterial.bumpScale = 0.0006;
-    sharedBirchMaterial.needsUpdate = true;
+    const treatment = key => SURFACE_TREATMENTS[key][surfaceFinish] || SURFACE_TREATMENTS[key].satin;
+    const species = woodSpecies(currentConfig.woodFinish);
+
+    woodMaterials.forEach((material, role) => {
+        const { roughness, clearcoat } = treatment('wood');
+        material.roughness = roughness;
+        material.clearcoat = clearcoat;
+        const texture = grainEnabled ? woodTextureFor(currentConfig.woodFinish, role) : null;
+        if (texture) applyGrainScale(texture, role, species);
+        material.map = texture;
+        material.bumpMap = texture;
+        material.bumpScale = role === 'edge' ? 0.0016 : 0.0006;
+        material.needsUpdate = true;
+    });
+
+    if (sharedBasePaintMaterial) {
+        const { roughness, clearcoat } = treatment('powder');
+        sharedBasePaintMaterial.roughness = roughness;
+        sharedBasePaintMaterial.clearcoat = clearcoat;
+        sharedBasePaintMaterial.needsUpdate = true;
+    }
+    if (sharedPolishedAluminumMaterial) {
+        const { roughness } = treatment('aluminium');
+        sharedPolishedAluminumMaterial.roughness = roughness;
+        sharedPolishedAluminumMaterial.metalness = 1.0;
+        sharedPolishedAluminumMaterial.needsUpdate = true;
+    }
+    if (sharedBlackPlasticMaterial) {
+        const { roughness, clearcoat } = treatment('plastic');
+        sharedBlackPlasticMaterial.roughness = roughness;
+        sharedBlackPlasticMaterial.clearcoat = clearcoat;
+        sharedBlackPlasticMaterial.needsUpdate = true;
+    }
+}
+
+// A species change swaps the map on every wood role and retints. Natural Birch
+// keeps its photographic albedo unmodulated; the generated species already carry
+// their own colour, so they are tinted only lightly to preserve the swatch
+// relationship without washing the grain out.
+function applyWoodSpecies(finish) {
+    woodMaterials.forEach(material => {
+        material.color.set(finish.name === 'Natural Birch' ? finish.color : '#ffffff');
+    });
+    applySurfaceFinish();
+}
+
+// Natural Birch keeps the photographed texture; every other species is generated.
+function woodTextureFor(name, role) {
+    const spec = woodSpecies(name);
+    if (spec.photo && role !== 'edge') return woodTexture || generateGrainTexture(name, role);
+    return generateGrainTexture(name, role);
+}
+
+// Grain scale is physical: a 72in top gets 1.5x the repeats of a 48in top, so
+// the grain stays the same size rather than stretching with the surface.
+function applyGrainScale(texture, role, species) {
+    const size = surfaceInches(role);
+    texture.repeat.set(Math.max(0.25, size.w * species.repeatsPerInch),
+                       Math.max(0.25, size.d * species.repeatsPerInch));
+    texture.needsUpdate = true;
+}
+
+// The measured dimensions of each wood surface, in inches. Falls back to the
+// reference assembly's numbers before the model has loaded.
+function surfaceInches(role) {
+    const fallback = { desktop: { w: 44, d: 32 }, shelf: { w: 43, d: 15 }, edge: { w: 44, d: 3.5 } }[role]
+        || { w: 44, d: 32 };
+    if (!loadedModel) return fallback;
+    const names = { desktop: ['Desktop_3'], shelf: ['Top_Shelf_3'], edge: ['Desktop'] }[role] || [];
+    const box = new THREE.Box3();
+    let found = false;
+    partRegistry.forEach(entry => {
+        if (!names.includes(entry.name)) return;
+        box.expandByObject(entry.obj);
+        found = true;
+    });
+    if (!found || box.isEmpty()) return fallback;
+    const size = box.getSize(new THREE.Vector3());
+    const perWorld = worldToInches();
+    // Z is the width axis in this asset and X the depth (docs/sizing-gate.md).
+    return { w: size.z * perWorld, d: size.x * perWorld };
+}
+
+// Inches per world unit, derived from the lift calibration the rest of the app
+// already trusts.
+function worldToInches() {
+    const scale = loadedModel ? loadedModel.scale.x : 1;
+    return (HEIGHT_MAX - HEIGHT_MIN) / ((LIFT_MAX - LIFT_MIN) * scale);
 }
 function downloadFile(name, text, type = 'text/plain') {
     const url = URL.createObjectURL(new Blob([text], { type }));
@@ -4955,6 +5129,16 @@ window.ErgoFlex = {
     get lockedParts() { return [...lockedParts]; },
     get deletedBakedRigs() { return { tilt: [...deletedBakedRigs.tilt], actuator: [...deletedBakedRigs.actuator] }; },
     focusCameraShortcut,
+    get woodMaterials() { return Object.fromEntries([...woodMaterials].map(([role, m]) => [role, {
+        roughness: m.roughness, clearcoat: m.clearcoat, metalness: m.metalness,
+        mapId: m.map ? m.map.uuid : null,
+        repeat: m.map ? [m.map.repeat.x, m.map.repeat.y] : null
+    }])); },
+    get frameMaterial() { return sharedBasePaintMaterial && { roughness: sharedBasePaintMaterial.roughness, clearcoat: sharedBasePaintMaterial.clearcoat, metalness: sharedBasePaintMaterial.metalness }; },
+    get metalMaterial() { return sharedPolishedAluminumMaterial && { roughness: sharedPolishedAluminumMaterial.roughness, metalness: sharedPolishedAluminumMaterial.metalness }; },
+    get plasticMaterial() { return sharedBlackPlasticMaterial && { roughness: sharedBlackPlasticMaterial.roughness, clearcoat: sharedBlackPlasticMaterial.clearcoat }; },
+    setSurfaceFinish(value) { surfaceFinish = value; applySurfaceFinish(); },
+    focusCameraShortcutTargets: cameraShortcutTargets,
     get cameraState() { return { position: camera.position.toArray(), target: controls.target.toArray(), minDistance: controls.minDistance }; },
     serializeProject,
     applyProject,

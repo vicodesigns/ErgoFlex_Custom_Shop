@@ -33,6 +33,44 @@ export const PRODUCT_CONFIG = {
     ]
 };
 
+// Per-species grain description. Real tileable photography is the right answer
+// and is still a content dependency; until it exists these drive a procedural
+// generator, which at least gives each species its own ring spacing, contrast
+// and colour rather than tinting one birch photograph eight ways.
+//
+// `repeatsPerInch` is the point of the whole table: grain scale is physical, so
+// the number of texture repeats has to be derived from the surface's size in
+// inches. A fixed repeat makes the grain grow with the desk.
+export const WOOD_SPECIES = {
+    'Natural Birch': { photo: './bir.jpg', repeatsPerInch: 1 / 32, ringSpacing: 26, contrast: 0.10, warm: '#e8d9bd', dark: '#cbb894', figure: 0.35 },
+    'White Oak':     { repeatsPerInch: 1 / 30, ringSpacing: 20, contrast: 0.20, warm: '#d8c49c', dark: '#a98f63', figure: 0.85 },
+    'Walnut':        { repeatsPerInch: 1 / 34, ringSpacing: 30, contrast: 0.26, warm: '#7a5334', dark: '#4a3220', figure: 0.55 },
+    'Black Ash':     { repeatsPerInch: 1 / 28, ringSpacing: 18, contrast: 0.30, warm: '#4a4441', dark: '#241f1d', figure: 0.75 },
+    'Cherry':        { repeatsPerInch: 1 / 36, ringSpacing: 34, contrast: 0.14, warm: '#b16a45', dark: '#8a4c2e', figure: 0.30 },
+    'Maple':         { repeatsPerInch: 1 / 38, ringSpacing: 40, contrast: 0.08, warm: '#e6d3ae', dark: '#cdb68d', figure: 0.20 },
+    'Mahogany':      { repeatsPerInch: 1 / 34, ringSpacing: 28, contrast: 0.18, warm: '#7d3f2c', dark: '#57271a', figure: 0.45 },
+    'Bamboo':        { repeatsPerInch: 1 / 20, ringSpacing: 12, contrast: 0.16, warm: '#d9c391', dark: '#b39b66', figure: 0.05 }
+};
+
+export function woodSpecies(name) {
+    return WOOD_SPECIES[name] || WOOD_SPECIES['Natural Birch'];
+}
+
+// Surface treatments, by material role rather than one set for everything.
+// applySurfaceFinish used to apply a single roughness/clearcoat pair to wood and
+// silently overwrite the constructor's values; these are the values it applies
+// per role, so the constructor and the runtime cannot drift apart.
+export const SURFACE_TREATMENTS = {
+    wood:      { matte: { roughness: 0.68, clearcoat: 0.08 }, satin: { roughness: 0.40, clearcoat: 0.25 }, gloss: { roughness: 0.20, clearcoat: 0.65 } },
+    // Powder coat is a baked polymer: no clearcoat, and it stays fairly matte
+    // even in the "gloss" option.
+    powder:    { matte: { roughness: 0.72, clearcoat: 0.0 },  satin: { roughness: 0.55, clearcoat: 0.05 }, gloss: { roughness: 0.38, clearcoat: 0.15 } },
+    // Brushed aluminium: fully metallic, and the brushing direction is what
+    // makes it read as brushed rather than polished.
+    aluminium: { matte: { roughness: 0.46, clearcoat: 0.0 },  satin: { roughness: 0.30, clearcoat: 0.0 },  gloss: { roughness: 0.14, clearcoat: 0.0 } },
+    plastic:   { matte: { roughness: 0.62, clearcoat: 0.0 },  satin: { roughness: 0.45, clearcoat: 0.0 },  gloss: { roughness: 0.28, clearcoat: 0.2 } }
+};
+
 export const money = value => '$' + value.toLocaleString('en-US');
 
 // Every price in the app comes from here. Callers must pass a config explicitly;

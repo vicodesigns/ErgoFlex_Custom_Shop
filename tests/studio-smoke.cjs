@@ -308,7 +308,48 @@ const server = http.createServer((req, res) => {
     });
     assert.equal(reset, 2, 'reset restores the default orbit floor');
 
-    console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, neutral pose, project round trip, and presentation passed.');
+
+    // --- materials -----------------------------------------------------------
+    // Each wood surface gets its own material, so the desktop and the plywood
+    // edge can differ. They used to share one instance.
+    const roles = await page.evaluate(() => Object.keys(ErgoFlex.woodMaterials));
+    assert.ok(roles.includes('desktop') && roles.includes('edge'),
+      'the desktop and the plywood edge have separate materials');
+
+    // Switching species must swap the map, not just the tint.
+    const species = await page.evaluate(async () => {
+      const pick = name => document.querySelector(`#wood-finishes [data-finish="${name}"]`).click();
+      pick('Natural Birch');
+      const birch = ErgoFlex.woodMaterials.desktop;
+      pick('Walnut');
+      const walnut = ErgoFlex.woodMaterials.desktop;
+      pick('Bamboo');
+      const bamboo = ErgoFlex.woodMaterials.desktop;
+      return { birch, walnut, bamboo };
+    });
+    assert.ok(species.birch.mapId && species.walnut.mapId, 'both species have a texture');
+    assert.notEqual(species.birch.mapId, species.walnut.mapId, 'walnut is a different map, not a tinted birch');
+    assert.notEqual(species.walnut.mapId, species.bamboo.mapId, 'each species has its own map');
+    // Bamboo's grain is much finer than walnut's, so it repeats more over the
+    // same surface. That is the physical-scale table doing its job.
+    assert.ok(species.bamboo.repeat[0] > species.walnut.repeat[0],
+      'grain repeats are derived per species from repeats-per-inch');
+
+    // Each material role gets its own treatment; they used to share one pair.
+    const treatments = await page.evaluate(() => {
+      ErgoFlex.setSurfaceFinish('gloss');
+      return { wood: ErgoFlex.woodMaterials.desktop, frame: ErgoFlex.frameMaterial,
+               metal: ErgoFlex.metalMaterial, plastic: ErgoFlex.plasticMaterial };
+    });
+    assert.ok(treatments.frame, 'the frame material exists');
+    assert.notEqual(treatments.wood.roughness, treatments.frame.roughness,
+      'powder coat does not take the wood roughness');
+    assert.equal(treatments.metal.metalness, 1, 'brushed aluminium is fully metallic');
+    assert.equal(treatments.plastic.clearcoat > 0 && treatments.plastic.roughness > treatments.metal.roughness, true,
+      'plastic is rougher than the machined metal');
+    await page.evaluate(() => { ErgoFlex.setSurfaceFinish('satin'); document.querySelector('#wood-finishes [data-finish="Natural Birch"]').click(); });
+
+    console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, neutral pose, project round trip, presentation, and materials passed.');
     if (process.argv.includes('--editor-only')) { assert.deepEqual(errors, []); return; }
     await page.click('[data-motion-tab="glide"]');
     const before = await page.evaluate(() => ErgoFlex.wheelRigs.map(r => r.spin));

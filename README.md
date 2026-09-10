@@ -39,7 +39,10 @@ Open **http://localhost:3000** for the store preview or **http://localhost:3000/
 - Gallery, Warm, and Slate backgrounds, exposure, quality, camera presets, orbit, grid, fit, and transparent PNG capture support product presentation.
 - **Camera shortcuts** frame the Desktop, Wheels, Actuators, and Columns. Close-ups temporarily lower the orbit minimum distance, which otherwise clamps small assemblies to a mid shot; **Reset view** restores it. All camera moves ease over ~400 ms rather than jumping.
 - The movement dock collapses, which hands its height straight back to the canvas. On the storefront, **Hide options** collapses the configuration column and the viewer takes the full width. Both states persist.
-- Wood colors preview stains over the reference birch texture, with grain and matte/satin/gloss visualization controls. Frame finishes include the original neutrals plus Forest, Sand, Navy, and Terracotta.
+- Each wood species has its own grain, ring spacing, contrast, and colour rather than one birch photograph tinted eight ways. Natural Birch keeps the photographed surface; the rest are generated procedurally from a per-species table in `catalog.mjs`. **Real tileable photography per species is still the right answer and remains a content dependency** — the generated grain is a stand-in, not a substitute.
+- Grain scale is physical. The table gives repeats *per inch*, and each surface's repeat is derived from its own measured size, so grain stays the same size instead of stretching with the desk.
+- The desktop, the shelf, and the plywood edge have separate materials; the edge gets stacked laminations rather than a face veneer.
+- Matte/satin/gloss applies per material role: wood, powder coat, brushed aluminium, and plastic each have their own roughness and clearcoat values. Frame finishes include the original neutrals plus Forest, Sand, Navy, and Terracotta.
 
 ## Customer configuration
 
