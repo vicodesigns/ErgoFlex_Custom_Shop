@@ -1,0 +1,25 @@
+{
+  "name": "ergoflex_custom_shop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "live-server --port=3000 --no-browser",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vicodesigns/ErgoFlex_Custom_Shop.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/vicodesigns/ErgoFlex_Custom_Shop/issues"
+  },
+  "homepage": "https://github.com/vicodesigns/ErgoFlex_Custom_Shop#readme",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
