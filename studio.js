@@ -7,6 +7,8 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
          ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
+import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES } from './workspace-3d.mjs';
+import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
 
@@ -181,6 +183,8 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 let scene, camera, renderer, controls, transformControl, transformProxy, loadedModel, floorMesh;
+let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
+let accessoryCategory = 'Desktop';
 let sharedBirchMaterial = null;
 let sharedBasePaintMaterial = null;
 let sharedPolishedAluminumMaterial = null;
@@ -1468,6 +1472,8 @@ async function fetchModelWithFingerprint(url) {
 
 function loadModel() {
     const onLoaded = (gltf) => {
+        workspaceAccessories?.dispose();
+        workspaceAccessories = null;
         if (loadedModel) scene.remove(loadedModel);
 
         sharedBirchMaterial = null;
@@ -1609,6 +1615,11 @@ function loadModel() {
         // Auto-rig the omni wheels from part naming, remember the home position
         buildWheelRigs();
         glideBase.copy(loadedModel.position);
+        const millimetreScale = loadedModel.scale.x * (LIFT_MAX - LIFT_MIN) / (HEIGHT_MAX - HEIGHT_MIN) / 25.4;
+        withNeutralPose(() => { workspaceAccessories = new WorkspaceAccessories(scene, partRegistry, millimetreScale, loadedModel); });
+        applyAccessoryVisibility();
+        if (!workspaceRoom) workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
+        setRoomScene(selectedRoomScene, false);
         applySurfaceFinish();   // now that surfaceInches can measure the real model
         syncBuildSummary();
         document.getElementById('scene-status').textContent = 'LIVE 3D · READY';
@@ -1784,6 +1795,7 @@ function serializeProject() {
                 surfaceFinish,
                 grainEnabled,
                 environment: document.getElementById('studio-environment')?.value || 'gallery',
+                roomScene: selectedRoomScene,
                 exposure: renderer ? renderer.toneMappingExposure : 1.02,
                 camera: camera && controls
                     ? { position: v3(camera.position), target: v3(controls.target) }
@@ -2052,6 +2064,7 @@ function applyProjectPresentation(project) {
         if (el) el.checked = grainEnabled;
     }
     applySurfaceFinish();
+    setRoomScene(presentation.roomScene || 'product', false);
     const environment = document.getElementById('studio-environment');
     if (environment && presentation.environment) {
         environment.value = presentation.environment;
@@ -2277,9 +2290,9 @@ function buildValidationPanel() {
     if (document.getElementById('validation-panel')) return;
     const anchorEl = document.getElementById('price-breakdown');
     if (!anchorEl) return;
-    const wrapper = document.createElement('div');
+    const wrapper = document.createElement('details');
     wrapper.className = 'validation-block';
-    wrapper.innerHTML = '<div class="eyebrow">BUILD CHECKS</div><div id="validation-panel"></div>';
+    wrapper.innerHTML = '<summary>Build checks <span>Design preview</span></summary><div id="validation-panel"></div>';
     anchorEl.after(wrapper);
     scheduleValidation();
 }
@@ -2293,14 +2306,18 @@ function toggleAccessory(id) {
     }
     const index = currentConfig.accessories.indexOf(id);
     if (index > -1) currentConfig.accessories.splice(index, 1);
-    else currentConfig.accessories.push(id);
+    else {
+        const group = accessory(id).exclusiveGroup;
+        const previous = group && currentConfig.accessories.find(other => accessory(other)?.exclusiveGroup === group);
+        currentConfig = cleanConfig({ ...currentConfig, accessories: [...currentConfig.accessories, id] });
+        if (previous) notifyUser(`${accessory(id).name} replaces ${accessory(previous).name.toLowerCase()}.`);
+    }
     applyAccessoryVisibility();
     renderAccessories();
     updatePrice();
 }
 
-// Accessories that name a mesh family are shown or hidden; the rest are priced
-// line items and the UI says so rather than pretending they are in the render.
+// Native options and generated reference models share the same selected IDs.
 function applyAccessoryVisibility() {
     for (const item of ACCESSORIES) {
         if (!item.node) continue;
@@ -2309,39 +2326,55 @@ function applyAccessoryVisibility() {
             if (entry.name === item.node || entry.name.startsWith(item.node + '_')) entry.obj.visible = on;
         });
     }
+    workspaceAccessories?.sync(currentConfig);
 }
 
 function renderAccessories() {
     const list = document.getElementById('accessory-list');
     if (!list) return;
+    const focusedId = list.contains(document.activeElement) ? document.activeElement.id : null;
     list.replaceChildren();
+    document.querySelectorAll('[data-accessory-category]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.accessoryCategory === accessoryCategory));
+        if (button.dataset.accessoryCategory === 'Selected') button.textContent = `Selected (${currentConfig.accessories.length})`;
+    });
     for (const item of ACCESSORIES) {
         const fits = accessoryFits(item.id, currentConfig.size);
         const on = currentConfig.accessories.includes(item.id);
-        const row = document.createElement('label');
-        row.className = 'accessory-row' + (fits ? '' : ' unavailable');
-        const box = document.createElement('input');
-        box.type = 'checkbox';
-        box.checked = on && fits;
-        box.disabled = !fits;
+        const row = document.createElement('article');
+        row.className = 'accessory-row' + (fits ? '' : ' unavailable') + (on ? ' is-selected' : '');
+        row.hidden = accessoryCategory === 'Selected' ? !on : item.category !== accessoryCategory;
+        row.dataset.accessory = item.id;
+        const illustration = document.createElement('div'); illustration.className = 'accessory-art';
+        illustration.innerHTML = accessoryIllustration(item.visual || (item.id === 'led-strip' ? 'led' : 'foot'));
+        const info = document.createElement('div'); info.className = 'accessory-info';
+        const brand = document.createElement('span'); brand.className = 'accessory-brand'; brand.textContent = item.brand || 'ERGOFLEX · ACCESSORIES';
+        const name = document.createElement('label'); name.className = 'accessory-name'; name.htmlFor = `accessory-${item.id}`; name.textContent = item.name;
+        const detail = document.createElement('p'); detail.className = 'accessory-description'; detail.textContent = !fits ? item.note : item.description;
+        info.append(brand, name, detail);
+        const action = document.createElement('label'); action.className = 'accessory-add';
+        const box = document.createElement('input'); box.type = 'checkbox'; box.id = name.htmlFor;
+        box.checked = on && fits; box.disabled = !fits;
+        box.setAttribute('aria-label', `${item.name}, ${money(item.price)} estimated`);
         box.onchange = () => toggleAccessory(item.id);
-        const name = document.createElement('span');
-        name.className = 'accessory-name';
-        name.textContent = item.name;
-        const price = document.createElement('span');
-        price.className = 'accessory-price';
-        price.textContent = money(item.price) + (item.provisional ? '*' : '');
-        row.append(box, name, price);
-        if (!fits && item.note) {
-            const note = document.createElement('small');
-            note.textContent = item.note;
-            row.append(note);
-        } else if (!item.node) {
-            const note = document.createElement('small');
-            note.textContent = 'Priced option; not shown in the 3D view.';
-            row.append(note);
+        const label = document.createElement('span'); label.textContent = on ? 'Added' : 'Add to build';
+        const price = document.createElement('span'); price.className = 'accessory-price'; price.textContent = money(item.price) + '*';
+        action.append(box, label, price);
+        row.append(illustration, info, action);
+        if (item.source) {
+            const source = document.createElement('a'); source.href = item.source; source.target = '_blank'; source.rel = 'noopener noreferrer';
+            source.className = 'accessory-source'; source.textContent = 'Product specifications ↗'; source.setAttribute('aria-label', `${item.name} manufacturer specifications (opens a new tab)`); row.append(source);
         }
         list.append(row);
+    }
+    if (accessoryCategory === 'Selected' && !currentConfig.accessories.length) {
+        const empty = document.createElement('p'); empty.className = 'accessory-empty'; empty.textContent = 'Your workspace starts here. Explore Desktop or Support to add accessories.'; list.append(empty);
+    }
+    if (focusedId) {
+        const input = document.getElementById(focusedId);
+        const target = input?.closest('.accessory-row')?.hidden
+            ? document.querySelector('[data-accessory-category="Selected"]') : input;
+        target?.focus({ preventScroll: true });
     }
 }
 
@@ -2415,13 +2448,14 @@ function buildGuidedConfiguration() {
 
     const accessories = document.createElement('div');
     accessories.className = 'accessory-block';
-    accessories.innerHTML = '<div class="eyebrow">ACCESSORIES</div><div id="accessory-list"></div>';
-    anchorEl.append(accessories);
+    accessories.innerHTML = `<div class="eyebrow">MAKE IT YOURS</div><h2>Complete your workspace.</h2><p class="accessory-intro">Add a little comfort. See it on your desk.</p><div class="accessory-filters" role="group" aria-label="Accessory categories"><button data-accessory-category="Desktop" aria-pressed="true">Desktop</button><button data-accessory-category="Support" aria-pressed="false">Support</button><button data-accessory-category="Selected" aria-pressed="false">Selected (0)</button></div><div id="accessory-list"></div><p class="studio-note">Original 3D approximations; branded products use manufacturer dimensions. Mounting fit needs confirmation. * Estimated accessory prices; availability unconfirmed.</p>`;
+    (document.getElementById('build-actions') || anchorEl.lastElementChild).before(accessories);
+    accessories.querySelectorAll('[data-accessory-category]').forEach(button => button.onclick = () => { accessoryCategory = button.dataset.accessoryCategory; renderAccessories(); });
 
     const breakdown = document.createElement('div');
     breakdown.id = 'price-breakdown';
     breakdown.className = 'price-breakdown';
-    (document.getElementById('total-price')?.parentElement || anchorEl).after(breakdown);
+    document.getElementById('build-actions').prepend(breakdown);
 
     renderAccessories();
     renderPriceBreakdown();
@@ -3513,6 +3547,25 @@ function showCartModal() {
         row.className = 'cart-row';
         const description = document.createElement('div');
         description.textContent = `${PRODUCT_CONFIG.sizes[item.size].name} · ${item.woodFinish} · ${item.baseFinish}`;
+        const additions = document.createElement('ul'); additions.className = 'cart-accessories';
+        for (const id of item.accessories || []) {
+            const product = accessory(id);
+            if (!product) continue;
+            const line = document.createElement('li');
+            const name = document.createElement('span'); name.textContent = product.name;
+            const amount = document.createElement('span'); amount.textContent = money(product.price) + '*';
+            line.append(name, amount); additions.append(line);
+        }
+        description.append(additions);
+        const preview = document.createElement('button'); preview.className = 'cart-preview'; preview.textContent = 'View this build in 3D ↗';
+        preview.onclick = () => {
+            currentConfig = cleanConfig(item); applyConfigToUI(); applyAccessoryVisibility(); renderAccessories();
+            closeDialog(document.getElementById('cart-modal'));
+            if (loadedModel) focusObjects([loadedModel], { animate: true });
+            canvas.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            notifyUser('Build loaded with its selected accessories.');
+        };
+        description.append(preview);
         const price = document.createElement('strong');
         price.textContent = money(item.price * item.quantity);
         const quantity = document.createElement('input');
@@ -3530,6 +3583,9 @@ function showCartModal() {
     const total = document.createElement('p'); total.className = 'cart-total';
     total.textContent = 'Estimated total ' + money(cartItems.reduce((n, i) => n + i.price * i.quantity, 0));
     content.append(total);
+    if (cartItems.some(item => item.accessories?.length)) {
+        const note = document.createElement('p'); note.className = 'studio-note'; note.textContent = '* Accessory estimates shown per desk. Final pricing and availability need confirmation.'; content.append(note);
+    }
     openDialog(document.getElementById('cart-modal'));
 }
 
@@ -4867,6 +4923,11 @@ async function prepareARModel() {
     const exportRoot = new THREE.Group();
     exportRoot.scale.setScalar(0.0254 * inchesPerWorld); // glTF units are meters
     exportRoot.add(clone);
+    for (const group of workspaceAccessories?.exportGroups() || []) {
+        group.matrix.elements[12] -= glideOffset.x;
+        group.matrix.elements[14] -= glideOffset.z;
+        exportRoot.add(group);
+    }
 
     const glb = await new Promise((resolve, reject) =>
         new GLTFExporter().parse(exportRoot, resolve, reject, { binary: true }));
@@ -5241,7 +5302,8 @@ function syncViewerSize() {
     if (!renderer || !camera || !canvas.parentElement) return;
     const container = canvas.parentElement;
     const w = container.clientWidth;
-    const top = w < 500 ? 188 : 168;
+    const viewerControls = container.querySelector('.viewer-controls');
+    const top = viewerControls ? viewerControls.offsetTop + viewerControls.offsetHeight + 12 : (w < 500 ? 188 : 168);
     const dock = document.getElementById('motion-dock');
     // Read the intended state, not the animated height: a collapsed dock is its
     // tab strip. Measuring offsetHeight mid-transition (or in a tab whose frames
@@ -5311,6 +5373,8 @@ function animate() {
         const orbitButton = document.getElementById('rotate-scene');
         if (orbitButton && orbitButton.getAttribute('aria-pressed') !== String(controls.autoRotate)) orbitButton.setAttribute('aria-pressed', String(controls.autoRotate));
     }
+    workspaceAccessories?.update();
+    if (camera) workspaceRoom?.update(camera);
     if (renderer && scene && camera) renderer.render(scene, camera);
 }
 
@@ -5322,6 +5386,25 @@ let studioGrid = null;
 let isolatedVisibility = null;
 let dialogReturnFocus = null;
 let toastTimer;
+function setRoomScene(id, persist = true) {
+    const choice = ROOM_SCENES.find(s => s.id === id) || ROOM_SCENES[0];
+    selectedRoomScene = choice.id;
+    workspaceRoom?.set(choice.id);
+    if (floorMesh) floorMesh.visible = choice.id === 'product';
+    const shell = document.getElementById('viewer-shell');
+    if (shell) shell.dataset.roomScene = choice.id;
+    document.querySelectorAll('[data-room-scene]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.roomScene === choice.id)));
+    const caption = document.getElementById('room-scene-caption');
+    if (caption) caption.textContent = choice.id === 'product' ? 'Explore your desk from every angle.' : 'Room furnishings are for inspiration; your build stays the same.';
+    const heading = document.querySelector('.viewer-heading h2');
+    if (heading) heading.textContent = choice.id === 'product' ? 'Designed to move you.' : choice.caption;
+    if (persist) {
+        const environment = document.getElementById('studio-environment');
+        if (environment) { environment.value = choice.tone; environment.dispatchEvent(new Event('change')); }
+        try { localStorage.setItem('ergoflex.roomScene', choice.id); } catch {}
+    }
+    requestAnimationFrame(syncViewerSize);
+}
 function notifyUser(message) {
     const toast = document.getElementById('studio-toast');
     toast.textContent = message; toast.hidden = false;
@@ -5458,7 +5541,12 @@ function downloadFile(name, text, type = 'text/plain') {
 }
 function downloadEstimate(items) {
     const lines = ['ERGOFLEX — CUSTOM SHOP', 'Configuration estimate · ' + new Date().toLocaleDateString(), ''];
-    items.forEach((item, i) => lines.push(`${i + 1}. ErgoFlex · ${PRODUCT_CONFIG.sizes[item.size].name}`, `   ${item.woodFinish} desktop / ${item.baseFinish} frame`, `   Quantity ${item.quantity} × ${money(item.price)} = ${money(item.quantity * item.price)}`, ''));
+    items.forEach((item, i) => {
+        lines.push(`${i + 1}. ErgoFlex · ${PRODUCT_CONFIG.sizes[item.size].name}`, `   ${item.woodFinish} desktop / ${item.baseFinish} frame`);
+        for (const line of priceBreakdown(item)) lines.push(`   ${line.label}${line.provisional ? '*' : ''}: ${money(line.price)}`);
+        lines.push(`   Quantity ${item.quantity} × ${money(item.price)} = ${money(item.quantity * item.price)}`, '');
+    });
+    if (items.some(item => item.accessories?.length)) lines.push('* Accessory prices are provisional estimates per desk; availability and mounting fit need confirmation.', '');
     lines.push('Estimated total: ' + money(items.reduce((sum, i) => sum + i.price * i.quantity, 0)), '', 'Design preview only. Taxes, delivery, availability, and final specifications require confirmation.');
     downloadFile('ErgoFlex-estimate.txt', lines.join('\n'));
     notifyUser('Your configuration estimate has been downloaded.');
@@ -5557,6 +5645,7 @@ function focusCameraShortcut(key) {
 
 function focusObjects(objects, { animate = false } = {}) {
     if (!camera || !controls || !objects.length) return;
+    if (loadedModel && objects.includes(loadedModel)) objects = [...objects, ...(workspaceAccessories?.objects() || [])];
     const box = new THREE.Box3(); objects.forEach(obj => box.expandByObject(obj));
     if (box.isEmpty()) return;
     const center = box.getCenter(new THREE.Vector3());
@@ -5646,7 +5735,7 @@ function initStudio() {
     document.getElementById('export-cart').onclick = () => cartItems.length ? downloadEstimate(cartItems) : notifyUser('Add a configuration first.');
     document.getElementById('download-quote').onclick = () => downloadEstimate([{ ...currentConfig, price: configurationPrice(currentConfig), quantity: 1 }]);
     document.getElementById('save-build').onclick = () => {
-        try { localStorage.setItem(SAVED_BUILD_KEY, JSON.stringify(currentConfig)); notifyUser('Build saved. Your finishes and size will return on your next visit.'); }
+        try { localStorage.setItem(SAVED_BUILD_KEY, JSON.stringify(currentConfig)); notifyUser('Build saved with your finishes, size and accessories.'); }
         catch { notifyUser('Browser storage is unavailable. Download an estimate to keep your build.'); }
     };
     // A saved build outranks the catalog default on every later visit, and there
@@ -5686,7 +5775,16 @@ function initStudio() {
     top.innerHTML = `<div class="eyebrow" id="scene-status">LOADING YOUR WORKSPACE</div><h2>Designed to move you.</h2><p id="build-summary"></p>`; viewer.append(top);
     const toolbar = document.createElement('div'); toolbar.className = 'studio-toolbar';
     toolbar.innerHTML = `<label><span>Environment</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><label>Exposure<input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
-    viewer.append(toolbar);
+    const viewerControls = document.createElement('div'); viewerControls.className = 'viewer-controls';
+    viewerControls.append(toolbar);
+    const scenes = document.createElement('div'); scenes.className = 'scene-switcher';
+    scenes.innerHTML = `<span class="scenes-label">Scenes</span><div class="scene-options" role="group" aria-label="Workspace scenes">${ROOM_SCENES.map(s => `<button type="button" data-room-scene="${s.id}" aria-pressed="${s.id === 'product'}"><span class="scene-dot scene-${s.id}" aria-hidden="true"></span>${s.name}</button>`).join('')}</div>`;
+    const roomCaption = document.createElement('p'); roomCaption.id = 'room-scene-caption'; roomCaption.setAttribute('aria-live', 'polite');
+    viewerControls.append(scenes, roomCaption); viewer.append(viewerControls);
+    scenes.querySelectorAll('button').forEach(button => button.onclick = () => setRoomScene(button.dataset.roomScene));
+    new ResizeObserver(syncViewerSize).observe(viewerControls);
+    try { selectedRoomScene = localStorage.getItem('ergoflex.roomScene') || 'product'; } catch {}
+    setRoomScene(selectedRoomScene, false);
     // Slate is the default. The settings used to be applied only from the change
     // handler, so the opening view was whatever the renderer happened to be
     // constructed with - picking a default in the markup alone would have shown
@@ -5701,6 +5799,7 @@ function initStudio() {
         document.getElementById('studio-exposure').value = settings[0];
     };
     document.getElementById('studio-environment').onchange = e => applyEnvironment(e.target.value);
+    document.getElementById('studio-environment').value = (ROOM_SCENES.find(s => s.id === selectedRoomScene) || ROOM_SCENES[0]).tone;
     applyEnvironment(document.getElementById('studio-environment').value);
     document.getElementById('studio-exposure').oninput = e => { if (renderer) renderer.toneMappingExposure = Number(e.target.value); };
     document.getElementById('render-quality').onchange = e => {
@@ -5728,11 +5827,12 @@ function initStudio() {
     };
     document.getElementById('capture-view').onclick = () => {
         if (!renderer || !loadedModel) return notifyUser('Wait for the desk to finish loading.');
+        workspaceAccessories?.update();
         renderer.render(scene, camera);
         try { canvas.toBlob(blob => {
             if (!blob) return notifyUser('Capture is unavailable in this browser.');
             const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'ErgoFlex-design.png'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-            notifyUser('Desk image downloaded with a transparent background.');
+            notifyUser(selectedRoomScene === 'product' ? 'Desk image downloaded with a transparent background.' : 'Workspace scene image downloaded.');
         }); } catch { notifyUser('Image capture is unavailable. Try serving the project with npm run dev.'); }
     };
     document.querySelectorAll('#viewer-shell button[title]').forEach(b => b.setAttribute('aria-label', b.title));
@@ -5755,7 +5855,7 @@ function initStudio() {
         tab.id = 'motion-tab-' + panel.dataset.motionPanel; tab.setAttribute('aria-controls', panel.id);
     });
     tabs.querySelectorAll('button').forEach((b, index, buttons) => {
-        b.onclick = () => setMotionTab(b.dataset.motionTab);
+        b.onclick = () => { if (dock.classList.contains('collapsed')) toggleDock(); setMotionTab(b.dataset.motionTab); };
         b.onkeydown = e => { if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return; e.preventDefault(); const next = buttons[(index + (e.key === 'ArrowRight' ? 1 : 2)) % 3]; next.click(); next.focus(); };
     });
     // Collapsing the dock hands its height straight back to the canvas, because
@@ -5870,6 +5970,10 @@ function initStudio() {
 
 // Small console API for setup & testing (open DevTools and type `ErgoFlex.`)
 window.ErgoFlex = {
+    get workspaceAccessories() { return workspaceAccessories; },
+    get workspaceRoom() { return workspaceRoom; },
+    get roomScene() { return selectedRoomScene; },
+    setRoomScene,
     get tiltConfigs() { return tiltConfigs; },
     get partRegistry() { return partRegistry; },
     get movingObjects() { return movingObjects; },

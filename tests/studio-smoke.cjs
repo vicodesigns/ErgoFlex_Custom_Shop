@@ -786,6 +786,7 @@ const server = http.createServer((req, res) => {
     await page.click('[data-motion-tab="glide"]');
     await page.screenshot({ path: '/tmp/ergoflex-mobile.png', fullPage: true });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'No mobile horizontal overflow');
+    await require('./workspace-checks.cjs')(page, url);
     assert.deepEqual(errors, [], 'No uncaught browser exceptions');
     console.log('PASS: rigs, glide, wheel pairing, bounds, keyboard stop, demo, lift, tilt, finishes, pricing, cart, persistence, mobile layout.');
   } finally { await browser.close(); server.close(); }

@@ -19,6 +19,8 @@ Open **http://localhost:3000** for the store preview or **http://localhost:3000/
 - `studio.js` — the application: scene, editor, rigs, and UI wiring. Owns all mutable state.
 - `catalog.mjs` — pure catalog and pricing functions, with no DOM or Three.js dependency. Imported by `studio.js` in the browser and by the tests in Node, so pricing and validation can be tested without a headless browser.
 - `studio.css` — studio and responsive styles.
+- `workspace-3d.mjs` — accessory geometry, mounting surfaces and 3D rooms.
+- `workspace-icons.mjs` — original accessory card illustrations.
 
 ## Studio
 
@@ -39,6 +41,7 @@ Open **http://localhost:3000** for the store preview or **http://localhost:3000/
 - **Lift:** continuous height slider and Sit / Perch / Stand presets.
 - **Tilt:** the existing rig sliders, with a non-destructive reset to zero (or the closest permitted angle).
 - **Glide:** drag the joystick in any direction, or focus it and hold arrow keys. Joystick directions follow the current camera on the floor plane. Release, focus loss, or hiding the tab stops manual input. Position sliders use model/world X and Z and are bounded to ±1 scene unit. Crawl / Ninja / Slow / Medium / Fast controls speed. Recenter smoothly returns home; Play demo runs the original figure-eight relative to the current position. Wheel rotation comes from actual displacement, including diagonal pair cancellation. Turn the transform tool Off before gliding.
+- **Scenes** switches between Product, Office, Home office, Music studio and Gaming. Rooms have actual geometry and stay separate from purchased accessories. The chosen scene persists locally and in project files. Captures include the selected room; AR includes purchased accessories without room scenery.
 - Gallery, Warm, and **Slate (the default)** backgrounds, exposure, quality, camera presets, orbit, grid, fit, and transparent PNG capture support product presentation. The environment is applied at startup, not only on change.
 - **Camera shortcuts** frame the Desktop, Wheels, Actuators, and Columns. Close-ups temporarily lower the orbit minimum distance, which otherwise clamps small assemblies to a mid shot; **Reset view** restores it. All camera moves ease over ~400 ms rather than jumping.
 - The movement dock reserves the height of its tallest panel, so switching between lift, tilt, and glide no longer resizes the canvas and shifts the camera. It still collapses, which hands that height straight back to the canvas. On the storefront, **Hide options** collapses the configuration column and the viewer takes the full width. Both states persist.
@@ -53,7 +56,7 @@ Finishes, sizes, and accessories update estimates. All prices come from a single
 
 **Start from** offers three curated configurations — Compact workspace, Creative studio, Standing workstation — each a complete build with compatible accessories. The estimate is itemised: base desk, size, desktop, frame, and each accessory.
 
-**Accessory pricing is provisional** and is marked with an asterisk wherever it appears. Nothing here has been confirmed by a manufacturer. Accessories that need a wider top are disabled at smaller sizes, and narrowing the desk removes an incompatible accessory and says which — it never leaves a charge in the estimate for something that cannot ship. Accessories that map to a mesh in the model are shown or hidden in 3D; the rest are labelled as priced options that are not rendered.
+**Accessory pricing is provisional** and is marked with an asterisk wherever it appears. Nothing here has been confirmed by a manufacturer. Accessories that need a wider top are disabled at smaller sizes, and narrowing the desk removes an incompatible accessory and says which — it never leaves a charge in the estimate for something that cannot ship. Selected accessories appear in 3D, including original dimension-based reference models of a Dell UltraSharp 27, Logitech Lift and Logitech ERGO K860. Product cards link to manufacturer specifications. Keyboard, mouse and task accessories follow the desktop; monitor and arms follow the upper shelf. The build list itemises accessories and can reopen each configuration in 3D. See [workspace preview details](docs/workspace-previews.md) for sources and mounting behavior.
 
 Saved builds and the build list use `ergoflexSavedBuildV2` / `ergoflexCartV2`. V1 data is read once as a migration (a V1 payload is a valid V2 with no accessories) and never written again. **Start Over** clears a saved build and returns to the catalog default, which is Natural Birch on White - a saved build otherwise outranks that default on every later visit with no way back from the page. The default comes from the `isDefault` flags in `catalog.mjs` rather than a second copy in the app. Saved builds and the build list persist locally in the browser; shared links encode a validated finish/size configuration. The build list supports quantities, removal, and estimate downloads. Surface sheen and presentation settings are visualization controls, not priced options.
 

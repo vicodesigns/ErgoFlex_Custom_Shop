@@ -78,16 +78,39 @@ export const SURFACE_TREATMENTS = {
 // pricing has been confirmed by the manufacturer. Do not silently drop the flag
 // to make the estimate look firmer than it is.
 //
-// `node` names a mesh family in the GLB. Where none exists the accessory is a
-// priced line item and the UI says it is not shown in 3D, rather than pretending.
+// `visual` selects an original, lightweight visualization in workspace-3d.mjs.
+// Branded dimensions come from the linked manufacturer specification. These
+// are reference models, not manufacturer CAD or an assertion of stock/partnership.
 export const ACCESSORIES = [
-    { id: 'cable-tray',    name: 'Under-desk cable tray',   price: 89,  provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
-    { id: 'monitor-arm',   name: 'Single monitor arm',      price: 179, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
-    { id: 'monitor-arm-2', name: 'Dual monitor arm',        price: 289, provisional: true, compatibleSizes: ['60x30', '72x30'], node: null,
+    { id: 'dell-u2724d', name: 'Dell UltraSharp 27', brand: 'DELL · U2724D', category: 'Desktop', visual: 'monitor',
+      description: '27″ QHD display with a height-adjustable stand.', dimensionsMm: { width: 612.24, depth: 192.28, height: 450 },
+      source: 'https://www.delltechnologies.com/asset/en-us/products/electronics-and-accessories/technical-support/dell-ultrasharp-27-monitor-u2724d-datasheet.pdf',
+      price: 399, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'] },
+    { id: 'logitech-lift', name: 'Logitech Lift', brand: 'LOGITECH · LIFT', category: 'Desktop', visual: 'mouse',
+      description: 'A vertical grip for small to medium right hands.', dimensionsMm: { width: 70, depth: 108, height: 71 },
+      source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/ergo-lift-b2b-data-sheet.pdf',
+      price: 79, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'] },
+    { id: 'logitech-k860', name: 'Logitech ERGO K860', brand: 'LOGITECH · ERGO', category: 'Desktop', visual: 'keyboard',
+      description: 'Split keys, a curved profile and a cushioned palm rest.', dimensionsMm: { width: 456, depth: 233, height: 48 },
+      source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/ergo-k860-for-business-data-sheet-w11.pdf',
+      price: 149, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'] },
+    { id: 'desk-mat', name: 'Wool felt desk mat', category: 'Desktop', visual: 'mat', description: 'A soft landing for your keyboard and mouse.',
+      price: 49, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'] },
+    { id: 'task-light', name: 'Adjustable task light', category: 'Desktop', visual: 'lamp', description: 'Articulating task lighting, within easy reach.',
+      price: 119, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'] },
+    { id: 'cable-tray', name: 'Under-desk cable tray', category: 'Support', visual: 'tray', description: 'Keep cables tucked beneath the work surface.',
+      price: 89, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
+    { id: 'monitor-arm', name: 'Single monitor arm', category: 'Support', visual: 'arm', exclusiveGroup: 'monitor-mount', description: 'Shelf-mounted arm. Display sold separately.',
+      price: 179, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
+    { id: 'monitor-arm-2', name: 'Dual monitor arm', category: 'Support', visual: 'dual-arm', exclusiveGroup: 'monitor-mount', description: 'Two mounting heads. Displays sold separately.',
+      price: 289, provisional: true, compatibleSizes: ['60x30', '72x30'], node: null,
       note: 'Needs a 60in or wider top for the mounting spread.' },
-    { id: 'cpu-holder',    name: 'CPU holder',              price: 129, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
-    { id: 'led-strip',     name: 'Under-surface LED strip', price: 69,  provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: 'Leds' },
-    { id: 'foot-rest',     name: 'Adjustable foot rest',    price: 99,  provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: 'Foot_Rest' }
+    { id: 'cpu-holder', name: 'CPU holder', category: 'Support', visual: 'holder', description: 'An open cradle beneath the desk. Computer not included.',
+      price: 129, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
+    { id: 'led-strip', name: 'Under-surface LED strip', category: 'Support', description: 'Integrated accent lighting beneath the surface.',
+      price: 69, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: 'Leds' },
+    { id: 'foot-rest', name: 'Adjustable foot rest', category: 'Support', visual: 'footrest', description: 'A gently angled foot support in front of your desk.',
+      price: 99, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null }
 ];
 
 export function accessory(id) { return ACCESSORIES.find(a => a.id === id) || null; }
@@ -105,13 +128,13 @@ export const PRESETS = [
       size: '48x30', woodFinish: 'Maple', baseFinish: 'White',
       accessories: ['cable-tray'], cameraPreset: 'hero' },
     { id: 'creative', name: 'Creative studio',
-      blurb: 'A wide walnut surface with dual monitors and task lighting.',
+      blurb: 'Walnut, a 27″ display, split keyboard and soft task lighting.',
       size: '72x30', woodFinish: 'Walnut', baseFinish: 'Space Gray',
-      accessories: ['monitor-arm-2', 'led-strip', 'cable-tray'], cameraPreset: 'hero' },
+      accessories: ['dell-u2724d', 'logitech-k860', 'logitech-lift', 'monitor-arm-2', 'task-light', 'led-strip', 'cable-tray'], cameraPreset: 'hero' },
     { id: 'standing', name: 'Standing workstation',
       blurb: 'Mid-width oak set up for a full day on your feet.',
       size: '60x30', woodFinish: 'White Oak', baseFinish: 'Navy',
-      accessories: ['monitor-arm', 'foot-rest', 'cable-tray'], cameraPreset: 'front' }
+      accessories: ['dell-u2724d', 'logitech-lift', 'monitor-arm', 'foot-rest', 'cable-tray'], cameraPreset: 'front' }
 ];
 
 // The starting configuration, derived from the catalog itself. The finishes
@@ -183,7 +206,13 @@ export function cleanConfig(value) {
     const accessories = Array.isArray(value.accessories)
         ? [...new Set(value.accessories.filter(id => accessory(id)))]
         : [];
-    return { size: value.size, woodFinish: value.woodFinish, baseFinish: value.baseFinish, accessories };
+    // Resolve mutually exclusive mounts on every entry path (saved builds,
+    // links, projects, presets), keeping the last selected mount.
+    const selected = accessories.filter((id, index) => {
+        const group = accessory(id).exclusiveGroup;
+        return !group || !accessories.slice(index + 1).some(other => accessory(other).exclusiveGroup === group);
+    });
+    return { size: value.size, woodFinish: value.woodFinish, baseFinish: value.baseFinish, accessories: selected };
 }
 
 // Accessories that no longer fit the chosen size. Returned rather than silently

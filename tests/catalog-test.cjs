@@ -100,6 +100,8 @@ const assert = require('node:assert/strict');
   assert.equal(validConfig({ ...defaultConfig, accessories: 'cable-tray' }), false, 'a string is not a list');
   assert.deepEqual(cleanConfig({ ...defaultConfig, accessories: ['cable-tray', 'cable-tray', 'nope'] }).accessories,
     ['cable-tray'], 'duplicates and unknowns are stripped');
+  assert.deepEqual(cleanConfig({ ...defaultConfig, size: '72x30', accessories: ['monitor-arm', 'logitech-lift', 'monitor-arm-2'] }).accessories,
+    ['logitech-lift', 'monitor-arm-2'], 'restored builds replace the old monitor mount while preserving other accessories');
 
   // Every accessory must price and fit at least one size.
   for (const item of ACCESSORIES) {

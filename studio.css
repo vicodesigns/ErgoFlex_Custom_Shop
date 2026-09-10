@@ -63,7 +63,7 @@ header h1 { letter-spacing: -.7px; }
 .render-settings > div { position: absolute; top: 40px; right: 0; width: 210px; border: 1px solid var(--line); border-radius: 10px; background: white; padding: 15px; box-shadow: 0 10px 30px #1c302522; display: grid; gap: 14px; }
 .render-settings label { display: grid; gap: 6px; font-size: 12px; }
 #motion-dock { max-width: 390px; bottom: 43px; padding: 8px; gap: 0; border: 1px solid #ffffffc9; border-radius: 16px; background: #fffffff0; backdrop-filter: blur(18px); box-shadow: 0 12px 36px #263d321a; }
-.motion-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; background: #eff2eb; padding: 4px; border-radius: 9px; }
+.motion-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: center; gap: 5px; background: #eff2eb; padding: 4px; border-radius: 9px; }
 .motion-tabs button { padding: 7px; font-size: 12px; color: #77847a; border-radius: 6px; }
 .motion-tabs button[aria-selected=true] { color: var(--ink); background: #fff; box-shadow: 0 1px 4px #21382c12; font-weight: 600; }
 #motion-dock [data-motion-panel=lift] { padding: 18px 14px 9px; flex-wrap: wrap; background: transparent; border: 0; box-shadow: none; gap: 16px; }
@@ -224,6 +224,75 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .validation-row.severity-error { background: rgba(220, 38, 38, .07); color: #7f1d1d; }
 .validation-row.severity-warning { background: rgba(217, 119, 6, .08); color: #78350f; }
 .validation-row.severity-info { background: rgba(0, 0, 0, .04); color: #555; }
+
+/* Shopping and room controls use the same quiet green palette as the studio. */
+.viewer-controls { position: absolute; top: 118px; left: 24px; right: 78px; z-index: 16; }
+.viewer-controls .studio-toolbar { position: static; gap: 5px; }
+.scene-switcher { display: flex; align-items: center; gap: 12px; margin-top: 12px; min-width: 0; }
+.scenes-label { font-size: 10px; font-weight: 650; letter-spacing: 1.1px; text-transform: uppercase; color: var(--ink); }
+.scene-options { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: thin; padding: 3px; }
+.scene-options button { display: inline-flex; align-items: center; flex-shrink: 0; gap: 6px; border: 1px solid #ffffff60; border-radius: 7px; background: #ffffffa8; padding: 7px 9px; color: #304a3d; font-size: 11px; transition: background .18s, border-color .18s; }
+.scene-options button:hover { background: #ffffffed; }
+.scene-options button[aria-pressed=true] { background: #233d34; color: #fff; border-color: #233d34; box-shadow: 0 2px 6px #1a302322; }
+.scene-dot { width: 13px; height: 13px; border-radius: 3px; border: 1px solid #ffffff80; background: linear-gradient(145deg, #aab7b5 50%, #687d75 50%); }
+.scene-office { background: linear-gradient(135deg, #e3eee6 45%, #8ca799 46%); }
+.scene-home { background: linear-gradient(135deg, #e9dbc5 45%, #a99c72 46%); }
+.scene-music { background: repeating-linear-gradient(90deg, #343b47 0 3px, #a5977e 3px 5px); }
+.scene-gaming { background: linear-gradient(135deg, #555181 30%, #9ec8e7 46%, #293646 60%); }
+#room-scene-caption { color: #536b5d; font-size: 10px; line-height: 1.4; margin-top: 6px; min-height: 14px; }
+#viewer-shell[data-environment=slate] .scenes-label, #viewer-shell[data-environment=slate] #room-scene-caption { color: #f0f4f0; }
+body:not(.setup-layout) .camera-shortcuts { display: none; }
+.accessory-block { margin: 28px 0; padding-top: 24px; border-top: 1px solid var(--line); }
+.accessory-block > h2 { font-size: 23px; line-height: 1.2; letter-spacing: -.8px; font-weight: 500; color: var(--ink); }
+.accessory-intro { font-size: 12px; color: #64796c; margin: 8px 0 16px; }
+.accessory-filters { display: flex; gap: 3px; padding: 4px; border-radius: 8px; background: #edf1e9; margin-bottom: 12px; }
+.accessory-filters button { flex: 1; padding: 8px 3px; border-radius: 5px; font-size: 11px; color: #64766a; }
+.accessory-filters button[aria-pressed=true] { background: white; color: var(--ink); box-shadow: 0 1px 5px #1a321610; font-weight: 600; }
+#accessory-list { display: grid; gap: 9px; }
+.accessory-row { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; padding: 12px; border: 1px solid #dfe5dc; border-radius: 11px; background: #fff; transition: border-color .2s; }
+.accessory-row.is-selected { border-color: #6d957e; background: #f6f9f3; }
+.accessory-art { display: flex; align-items: center; align-self: stretch; border-radius: 7px; background: #eff2eb; min-height: 74px; }
+.accessory-art svg { width: 100%; }
+.accessory-info { min-width: 0; align-self: center; }
+.accessory-brand { display: block; font-size: 8px; letter-spacing: .7px; color: #697f71; margin-bottom: 4px; }
+.accessory-name { display: block; font-size: 13px; font-weight: 600; line-height: 1.35; color: var(--ink); cursor: pointer; }
+.accessory-description { font-size: 10px; line-height: 1.5; color: #6c7a70; margin-top: 5px; }
+.accessory-add { display: flex; align-items: center; grid-column: 1 / -1; gap: 6px; font-size: 11px; cursor: pointer; padding-top: 9px; border-top: 1px solid #e5eadf; }
+.accessory-add input { width: 15px; height: 15px; flex-shrink: 0; }
+.accessory-price { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--ink); }
+.accessory-source { grid-column: 1 / -1; font-size: 9px; color: #62796a; text-decoration: underline; text-underline-offset: 3px; justify-self: end; }
+.accessory-row.unavailable { background: #f5f5f2; }
+.accessory-row.unavailable .accessory-art { opacity: .5; }
+.accessory-empty { font-size: 12px; line-height: 1.6; color: #6c7a70; padding: 20px 12px; background: #f0f3ed; border-radius: 9px; }
+.cart-accessories { margin-top: 10px; display: grid; gap: 4px; font-size: 11px; color: #607466; }
+.cart-accessories li { display: flex; justify-content: space-between; gap: 15px; }
+.cart-accessories li span:last-child { white-space: nowrap; }
+.cart-row .cart-preview { display: block; margin-top: 12px; color: #326451; text-decoration: underline; text-underline-offset: 3px; padding: 4px 0; }
+#build-actions { border-top: 1px solid var(--line); padding-top: 22px; }
+.validation-block > summary { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 10px 0; font-size: 12px; color: #647668; }
+.validation-block > summary span { font-size: 10px; }
+.validation-block > summary::before { content: '+'; margin-right: 7px; }
+.validation-block[open] > summary::before { content: '−'; }
+.validation-block > summary span { margin-left: auto; }
+#add-to-cart { font-size: 14px; }
+.preset-card:hover, .preset-card:focus-visible { border-color: #75947e; background: #f5f8f1; }
+@media (min-width: 1024px) {
+    body:not(.setup-layout) #store-grid { grid-template-columns: minmax(290px, 330px) minmax(0, 1fr); gap: 28px; }
+    body:not(.setup-layout) #viewer-column { grid-column: 2; }
+}
+@media (max-width: 760px) {
+    .viewer-controls { top: 110px; left: 16px; right: 16px; }
+    .viewer-controls .studio-toolbar { padding-right: 46px; }
+    .camera-shortcuts { display: none; }
+    .scene-switcher { gap: 7px; margin-top: 18px; align-items: flex-start; }
+    .scenes-label { padding-top: 12px; }
+    .scene-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); flex: 1; gap: 4px; overflow: visible; }
+    .scene-options button { padding: 7px 5px; font-size: 10px; min-height: 34px; justify-content: center; }
+    #viewer-shell, body.setup-layout #viewer-shell { height: 760px !important; min-height: 760px !important; }
+    .scene-dot { display: none; }
+    #room-scene-caption { font-size: 9px; }
+    #accessory-list { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+}
 
 /* Hiding the options panel hands its grid track to the viewer. A Tailwind class
    swap cannot do this: the CDN JIT only generates classes present in the
