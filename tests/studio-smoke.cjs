@@ -77,7 +77,69 @@ const server = http.createServer((req, res) => {
     await page.evaluate(() => ErgoFlex.undo());
     assert.equal(await page.evaluate(() => ErgoFlex.partRegistry.size), cloneState.size);
     await page.evaluate(() => document.getElementById('clear-parts-btn').click());
-    console.log('Editor selection, lift independence, isolation, snapping, box selection, and clone undo passed.');
+
+    // baseY regression. updateMovingObjectsPosition writes position.y = baseY +
+    // liftOffset, and the drag commit used to leave baseY at its load-time value,
+    // so a vertical edit to a lift member was silently overwritten by the next
+    // height change. Edit, change height, and check the offset survived.
+    const liftEdit = await page.evaluate(() => {
+      ErgoFlex.setHeight(28);
+      const obj = ErgoFlex.liftObjects[0].obj;
+      obj.updateWorldMatrix(true, false);
+      const before = [{ obj, before: obj.matrixWorld.clone() }];
+      const baseline = ErgoFlex.canonicalTransform(obj).p.y;
+      obj.position.y += 0.25;
+      obj.updateMatrixWorld(true);
+      ErgoFlex.commitTransform(before);
+      const afterEdit = ErgoFlex.canonicalTransform(obj).p.y;
+      ErgoFlex.setHeight(46);
+      const raised = ErgoFlex.canonicalTransform(obj).p.y;
+      ErgoFlex.setHeight(28);
+      const lowered = ErgoFlex.canonicalTransform(obj).p.y;
+      return { baseline, afterEdit, raised, lowered };
+    });
+    assert.ok(Math.abs(liftEdit.afterEdit - liftEdit.baseline - 0.25) < 1e-6, 'the edit applied');
+    assert.ok(Math.abs(liftEdit.lowered - liftEdit.afterEdit) < 1e-6,
+      'a vertical edit to a lift member survives a height round trip');
+    assert.ok(liftEdit.raised > liftEdit.afterEdit + 0.1, 'the part still rides the lift after the edit');
+
+    // Undo has to restore the canonical state, not just the world matrix, or the
+    // stale baseY reappears one step into the past.
+    const undone = await page.evaluate(() => {
+      ErgoFlex.undo();
+      const restored = ErgoFlex.canonicalTransform(ErgoFlex.liftObjects[0].obj).p.y;
+      ErgoFlex.setHeight(46);
+      ErgoFlex.setHeight(28);
+      return { restored, settled: ErgoFlex.canonicalTransform(ErgoFlex.liftObjects[0].obj).p.y };
+    });
+    assert.ok(Math.abs(undone.restored - liftEdit.baseline) < 1e-6, 'undo restores the original position');
+    assert.ok(Math.abs(undone.settled - undone.restored) < 1e-6, 'undo also restores the lift baseline');
+
+    // withNeutralPose must put every motion source back, including on a throw.
+    const neutral = await page.evaluate(() => {
+      ErgoFlex.setHeight(44);
+      ErgoFlex.setTilt('tilting', -20);
+      ErgoFlex.setGlidePosition(0.3, -0.2);
+      const before = { height: ErgoFlex.deskHeight, tilt: ErgoFlex.tiltConfigs[0].currentDeg, glide: ErgoFlex.glidePosition };
+      let insideHeight = null, insideTilt = null;
+      ErgoFlex.withNeutralPose(() => {
+        insideHeight = ErgoFlex.deskHeight;
+        insideTilt = ErgoFlex.tiltConfigs[0].currentDeg;
+      });
+      let threw = false;
+      try { ErgoFlex.withNeutralPose(() => { throw new Error('boom'); }); } catch { threw = true; }
+      return { before, insideHeight, insideTilt, threw,
+               after: { height: ErgoFlex.deskHeight, tilt: ErgoFlex.tiltConfigs[0].currentDeg, glide: ErgoFlex.glidePosition } };
+    });
+    assert.ok(Math.abs(neutral.insideHeight - 28) < 0.01, 'neutral pose drops the lift to the 28in reference');
+    assert.equal(neutral.insideTilt, 0, 'neutral pose zeroes tilt');
+    assert.ok(Math.abs(neutral.after.height - neutral.before.height) < 0.01, 'height restored');
+    assert.equal(neutral.after.tilt, neutral.before.tilt, 'tilt restored');
+    assert.ok(Math.abs(neutral.after.glide.x - neutral.before.glide.x) < 1e-6
+           && Math.abs(neutral.after.glide.z - neutral.before.glide.z) < 1e-6, 'glide restored');
+    assert.equal(neutral.threw, true, 'the throw propagated');
+    await page.evaluate(() => { ErgoFlex.setGlidePosition(0, 0); ErgoFlex.setTilt('tilting', 0); ErgoFlex.setHeight(28); });
+    console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, and neutral pose passed.');
     if (process.argv.includes('--editor-only')) { assert.deepEqual(errors, []); return; }
     await page.click('[data-motion-tab="glide"]');
     const before = await page.evaluate(() => ErgoFlex.wheelRigs.map(r => r.spin));

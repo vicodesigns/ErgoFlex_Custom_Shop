@@ -313,21 +313,17 @@ function initThreeJS() {
         controls.enabled = !event.value;
         isDraggingTransform = event.value;
 
-        // We do NOT update baseY here because parts are moved physically by the user
-        // for setup/tilt purposes, not just height-slider animation tracking.
-
-        // Undo bookkeeping: snapshot world matrices at drag start, commit at drag end
+        // Snapshot world matrices at drag start, commit at drag end. commitTransform
+        // is the single place an edit is recorded — it pushes the undo entry, stores
+        // the canonical transform, and re-derives the lift baseline. Numeric fields
+        // and alignment tools go through the same call.
         if (event.value) {
             pendingTransformSnapshot = [...transformProxy.children].map(obj => {
                 obj.updateWorldMatrix(true, false);
                 return { obj: obj, before: obj.matrixWorld.clone() };
             });
         } else if (pendingTransformSnapshot) {
-            const changed = pendingTransformSnapshot.some(item => {
-                item.obj.updateWorldMatrix(true, false);
-                return !item.obj.matrixWorld.equals(item.before);
-            });
-            if (changed) pushUndo({ type: 'transform', items: pendingTransformSnapshot });
+            commitTransform(pendingTransformSnapshot);
             pendingTransformSnapshot = null;
         }
     });
@@ -474,12 +470,164 @@ function setWorldMatrix(obj, matrix) {
     obj.updateMatrixWorld(true);
 }
 
+// --- Canonical edit transforms ---------------------------------------------
+//
+// A part's canonical transform is its local TRS in the parent it actually
+// belongs to in the model, independent of where the editor has temporarily
+// parented it. Selection reparents onto transformProxy and rigs reparent into
+// wrapper groups, so obj.position is routinely expressed in some other space.
+//
+// This matters most for baseY. updateMovingObjectsPosition writes
+//   obj.position.y = baseY + liftOffset
+// so baseY has to be a local Y in the part's settled parent. Reading
+// obj.position.y at drag-commit time would read a proxy-local value, which is
+// why the old code declined to update baseY at all — and why a vertical edit to
+// a lift member used to be silently overwritten by the stale baseY on the next
+// height change.
+
+const editTransforms = new Map();  // editorId -> canonical TRS after user edits
+let editRevision = 0;              // bumped by every edit; a validation cache key
+let suppressTransactions = false;  // set while neutralising, so housekeeping is not an edit
+
+const _canonM = new THREE.Matrix4();
+const _canonP = new THREE.Vector3();
+const _canonQ = new THREE.Quaternion();
+const _canonS = new THREE.Vector3();
+
+// Walks out through the transform proxy and any animation wrapper. The anim
+// entry wins when both exist: a selected part inside a tilt wrapper has
+// proxyOriginalParents pointing at the wrapper and animOriginalParents pointing
+// at the model parent, and the model parent is the canonical one.
+function canonicalParent(obj) {
+    const parent = animOriginalParents.get(obj)
+        || proxyOriginalParents.get(obj)
+        || (obj.parent === transformProxy ? null : obj.parent);
+    return parent || loadedModel || obj.parent;
+}
+
+function canonicalTransform(obj) {
+    const parent = canonicalParent(obj);
+    if (!parent) return null;
+    obj.updateWorldMatrix(true, false);
+    parent.updateWorldMatrix(true, false);
+    _canonM.copy(parent.matrixWorld).invert().multiply(obj.matrixWorld);
+    _canonM.decompose(_canonP, _canonQ, _canonS);
+    return { p: _canonP.clone(), q: _canonQ.clone(), s: _canonS.clone() };
+}
+
+// Re-derives the lift baseline from the canonical transform. Mutates the entry
+// in place: movingObjects and liftObjects share entry objects for parts that
+// joined at load time, and replacing one would desynchronise the other.
+function refreshLiftBaseline(obj) {
+    const canon = canonicalTransform(obj);
+    if (!canon) return;
+    const liftOffset = currentLift - LIFT_MIN;
+    const lift = liftObjects.get(obj);
+    if (lift) lift.baseY = canon.p.y - liftOffset;
+    const tele = telescopingObjects.find(item => item.obj === obj);
+    if (tele) tele.baseY = canon.p.y - liftOffset * TELESCOPING_RATIO;
+}
+
+// Records one part's edit. Every edit path ends here.
+function recordCanonicalEdit(obj) {
+    const editorId = obj.userData?.editorId;
+    if (editorId) editTransforms.set(editorId, canonicalTransform(obj));
+    refreshLiftBaseline(obj);
+}
+
+// The single commit point for transform edits: gizmo drags, numeric fields and
+// alignment tools all call this, so they produce identical undo entries and
+// identical bookkeeping. Returns whether anything actually moved.
+function commitTransform(items) {
+    if (!items || !items.length) return false;
+    const changed = items.filter(item => {
+        item.obj.updateWorldMatrix(true, false);
+        return !item.obj.matrixWorld.equals(item.before);
+    });
+    if (!changed.length) return false;
+    changed.forEach(item => { item.after = item.obj.matrixWorld.clone(); });
+    transaction({ type: 'transform', items: changed });
+    changed.forEach(item => recordCanonicalEdit(item.obj));
+    return true;
+}
+
+// Undoable mutation. pushUndo is the raw stack push; this is what callers use,
+// so that every recorded edit also advances the revision counter.
+function transaction(entry) {
+    if (suppressTransactions) return;
+    editRevision++;
+    pushUndo(entry);
+}
+
+// A mutation that changed the scene without pushing its own undo entry
+// (undo and redo themselves, imports, resizes).
+function markEdited() {
+    if (suppressTransactions) return;
+    editRevision++;
+}
+
+// --- Neutral pose ----------------------------------------------------------
+//
+// Lift, tilt, glide and wheel spin all write into part transforms, so anything
+// that captures or compares geometry has to establish a rest pose first.
+// buildActuatorRig already does this for tilt when capturing rest state; this
+// generalises it to every motion source.
+//
+// Two guards matter. Motion is paused so a requestAnimationFrame tick cannot
+// advance the lift mid-capture, and transactions are suppressed so neutralising
+// does not register as a user edit. Restore runs in a finally block: a
+// half-neutralised scene left behind by a throw is worse than a failed save.
+let motionPaused = false;
+
+function withNeutralPose(fn) {
+    const saved = {
+        currentLift, targetLift, manualLiftOverride,
+        tilt: tiltConfigs.map(c => c.currentDeg),
+        glide: glideOffset.clone(),
+        glideTarget: glideTarget.clone(),
+        spins: wheelRigs.map(r => r.spin),
+        suppressed: suppressTransactions,
+        paused: motionPaused
+    };
+    motionPaused = true;
+    suppressTransactions = true;
+    try {
+        if (glideOffset.lengthSq() > 0) applyGlideOffset(new THREE.Vector3(0, 0, 0));
+        wheelRigs.forEach(rig => { rig.spin = 0; rig.wrapper.rotation.z = 0; });
+        tiltConfigs.forEach(config => { config.currentDeg = 0; applyTiltConfig(config); });
+        manualLiftOverride = true;
+        currentLift = LIFT_MIN;
+        targetLift = LIFT_MIN;
+        updateMovingObjectsPosition();
+        return fn();
+    } finally {
+        currentLift = saved.currentLift;
+        targetLift = saved.targetLift;
+        manualLiftOverride = saved.manualLiftOverride;
+        updateMovingObjectsPosition();
+        tiltConfigs.forEach((config, i) => {
+            if (saved.tilt[i] !== undefined) { config.currentDeg = saved.tilt[i]; applyTiltConfig(config); }
+        });
+        applyGlideOffset(saved.glide);
+        glideTarget.copy(saved.glideTarget);
+        wheelRigs.forEach((rig, i) => {
+            if (saved.spins[i] !== undefined) { rig.spin = saved.spins[i]; rig.wrapper.rotation.z = rig.spin; }
+        });
+        suppressTransactions = saved.suppressed;
+        motionPaused = saved.paused;
+    }
+}
+
 function performUndo() {
     const entry = undoStack.pop();
     if (!entry) return;
 
     if (entry.type === 'transform') {
-        entry.items.forEach(item => setWorldMatrix(item.obj, item.before));
+        // Restoring the world matrix alone would leave baseY holding the value
+        // derived from the undone edit, reintroducing the same overwrite one step
+        // into the past. Re-record the canonical state exactly as a fresh commit does.
+        entry.items.forEach(item => { setWorldMatrix(item.obj, item.before); recordCanonicalEdit(item.obj); });
+        markEdited();
         boxHelpers.forEach(h => h.update());
         updateTransformProxy();
     } else if (entry.type === 'clone') {
@@ -496,10 +644,30 @@ function performUndo() {
         buildSceneTree();
     } else if (entry.type === 'tilt-save') {
         const idx = tiltConfigs.findIndex(c => c.name === entry.name);
-        if (idx > -1) removeTiltConfig(idx);
+        if (idx > -1) removeTiltConfig(idx, { recordUndo: false });
     } else if (entry.type === 'rig-save') {
         const idx = actuatorRigs.findIndex(r => r.name === entry.name);
-        if (idx > -1) removeActuatorRig(idx);
+        if (idx > -1) removeActuatorRig(idx, { recordUndo: false });
+    } else if (entry.type === 'rig-restore') {
+        // Rebuild the rig that was deleted, from the definition captured at delete time.
+        if (entry.definition && entry.kind === 'tilt') {
+            const parts = entry.definition.groupEditorIds.map(eid => partRegistry.get(eid)?.obj).filter(Boolean);
+            createTiltConfig({ ...entry.definition, parts });
+            persistTiltConfigs();
+            rebuildTiltUI();
+        } else if (entry.definition && entry.kind === 'actuator') {
+            buildActuatorRig(entry.definition);
+            persistActuatorRigs();
+            rebuildRigUI();
+        }
+        markEdited();
+    } else if (entry.type === 'lift-membership') {
+        if (entry.added) {
+            entry.objects.forEach(obj => liftObjects.delete(obj));
+        } else {
+            entry.objects.forEach(({ obj, baseY }) => liftObjects.set(obj, { obj, baseY }));
+        }
+        markEdited();
     } else if (entry.type === 'tilt-parts') {
         const config = tiltConfigs.find(c => c.name === entry.name);
         if (config) {
@@ -2274,7 +2442,7 @@ function cloneSelectedParts() {
         interactableObjects.push(clone);
         newClones.push(clone);
     });
-    pushUndo({ type: 'clone', clones: newClones });
+    transaction({ type: 'clone', clones: newClones });
     buildSceneTree();
 }
 
@@ -2399,7 +2567,7 @@ function addSelectedToTiltConfig(idx) {
         });
     if (parts.length === 0) return;
     attachPartsToTilt(config, parts);
-    pushUndo({ type: 'tilt-parts', name: config.name, editorIds: parts.map(o => o.userData.editorId).filter(Boolean), added: true });
+    transaction({ type: 'tilt-parts', name: config.name, editorIds: parts.map(o => o.userData.editorId).filter(Boolean), added: true });
     if (selectedPartsCount) selectedPartsCount.innerText = movingObjects.length;
     updateTransformProxy();
     persistTiltConfigs();
@@ -2415,7 +2583,7 @@ function removeSelectedFromTiltConfig(idx) {
         return;
     }
     detachPartsFromTilt(config, parts);
-    pushUndo({ type: 'tilt-parts', name: config.name, editorIds: parts.map(o => o.userData.editorId).filter(Boolean), added: false });
+    transaction({ type: 'tilt-parts', name: config.name, editorIds: parts.map(o => o.userData.editorId).filter(Boolean), added: false });
     if (selectedPartsCount) selectedPartsCount.innerText = movingObjects.length;
     updateTransformProxy();
     persistTiltConfigs();
@@ -2621,7 +2789,7 @@ function saveTiltConfig() {
     pivotLocal.y -= (currentLift - LIFT_MIN);
 
     createTiltConfig({ name, axis, minDeg, maxDeg, parts, pivotLocal, groupEditorIds });
-    pushUndo({ type: 'tilt-save', name: name });
+    transaction({ type: 'tilt-save', name: name });
 
     if (selectedPartsCount) selectedPartsCount.innerText = movingObjects.length;
     updateTransformProxy();
@@ -2700,9 +2868,13 @@ function rebuildTiltUI() {
     });
 }
 
-function removeTiltConfig(idx) {
+function removeTiltConfig(idx, { recordUndo = true } = {}) {
     const config = tiltConfigs[idx];
     if (!config) return;
+    // Deleting a rig used to be unrecoverable. Capture the serialized definition
+    // first so undo can rebuild it. recordUndo is false when performUndo itself is
+    // the caller, so undoing a tilt-save does not push a new entry.
+    if (recordUndo) transaction({ type: 'rig-restore', kind: 'tilt', definition: serializeTiltConfigs()[idx] });
     // Reset rotation so world transforms are clean before re-parenting
     config.wrapperGroup.rotation.set(0, 0, 0);
     config.wrapperGroup.updateMatrixWorld(true);
@@ -2944,9 +3116,10 @@ function buildActuatorRig({ name, baseLocal, targetEditorId, cylinderEditorIds, 
     return rig;
 }
 
-function removeActuatorRig(idx) {
+function removeActuatorRig(idx, { recordUndo = true } = {}) {
     const rig = actuatorRigs[idx];
     if (!rig) return;
+    if (recordUndo) transaction({ type: 'rig-restore', kind: 'actuator', definition: serializeActuatorRigs()[idx] });
     // Reset wrappers to rest pose so parts land cleanly
     const liftOffset = currentLift - LIFT_MIN;
     [rig.cylWrapper, rig.rodWrapper].forEach(w => {
@@ -3572,7 +3745,7 @@ function saveActuatorRigFromUI() {
         rodEditorIds: rigDraft.rodEditorIds
     });
     if (!rig) return;
-    pushUndo({ type: 'rig-save', name: name });
+    transaction({ type: 'rig-save', name: name });
     persistActuatorRigs();
     clearRigPickHelpers();
     closePivotEditor();
@@ -3627,11 +3800,14 @@ let _loggedMaxHeight = false;
 function animate() {
     requestAnimationFrame(animate);
 
-    // Glide demo: move the desk, spin the omni wheels
-    updateGlide(clock.getDelta());
+    // withNeutralPose sets motionPaused while it captures or applies geometry, so
+    // a frame cannot advance the lift or the glide mid-capture. Rendering still
+    // runs, so the viewer does not freeze.
+    const dt = clock.getDelta();
+    if (!motionPaused) updateGlide(dt);
 
     // Handle smooth animation if not manually scrubbing
-    if (loadedModel && !manualLiftOverride) {
+    if (loadedModel && !manualLiftOverride && !motionPaused) {
         if (Math.abs(targetLift - currentLift) > 0.001) {
             currentLift += (targetLift - currentLift) * 0.08;
             updateMovingObjectsPosition();
@@ -3874,16 +4050,28 @@ function initStudio() {
     document.getElementById('clone-parts-btn').parentElement.after(liftTools);
     document.getElementById('assign-lift').onclick = () => {
         if (transformControl?.object) return notifyUser('Set Transform Tool to Off before assigning lift parts.');
-        let count = 0;
+        const added = [];
         movingObjects.forEach(({ obj }) => {
-            if (isInTiltWrapper(obj) || TELESCOPING_PARTS.includes(obj.name)) return;
-            liftObjects.set(obj, { obj, baseY: obj.position.y - (currentLift - LIFT_MIN) }); count++;
+            if (isInTiltWrapper(obj) || TELESCOPING_PARTS.includes(obj.name) || liftObjects.has(obj)) return;
+            // baseY comes from the canonical transform, not obj.position, because the
+            // part may still be parented to the transform proxy.
+            const canon = canonicalTransform(obj);
+            liftObjects.set(obj, { obj, baseY: (canon ? canon.p.y : obj.position.y) - (currentLift - LIFT_MIN) });
+            added.push(obj);
         });
-        notifyUser(count ? `${count} parts assigned to lift for this session.` : 'Select unrigged parts first. Tilt, actuator, and wheel rigs keep their own motion.');
+        if (added.length) transaction({ type: 'lift-membership', objects: added, added: true });
+        notifyUser(added.length ? `${added.length} parts assigned to lift for this session.` : 'Select unrigged parts first. Tilt, actuator, and wheel rigs keep their own motion.');
     };
     document.getElementById('unassign-lift').onclick = () => {
-        let count = 0; movingObjects.forEach(({ obj }) => { if (liftObjects.delete(obj)) count++; });
-        notifyUser(`${count} parts removed from lift for this session.`);
+        const removed = [];
+        movingObjects.forEach(({ obj }) => {
+            const entry = liftObjects.get(obj);
+            if (!entry) return;
+            removed.push({ obj, baseY: entry.baseY });
+            liftObjects.delete(obj);
+        });
+        if (removed.length) transaction({ type: 'lift-membership', objects: removed, added: false });
+        notifyUser(`${removed.length} parts removed from lift for this session.`);
     };
     document.getElementById('focus-selected').onclick = () => movingObjects.length ? focusObjects(movingObjects.map(i => i.obj)) : notifyUser('Select parts to focus on them.');
     document.getElementById('isolate-parts').onclick = e => {
@@ -3990,6 +4178,14 @@ window.ErgoFlex = {
     get currentConfig() { return { ...currentConfig }; },
     get renderer() { return renderer; },
     get loadedModel() { return loadedModel; },
+    // Edit machinery. Exposed because it is scene state with no DOM
+    // representation — there is no element whose value reflects a part's
+    // canonical transform or the lift baseline derived from it.
+    get editRevision() { return editRevision; },
+    get deskHeight() { return liftToHeight(currentLift); },
+    commitTransform,
+    canonicalTransform,
+    withNeutralPose,
     prepareARModel,
     launchAR
 };
