@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { PRODUCT_CONFIG, money, configurationPrice, validConfig, cleanConfig } from './catalog.mjs';
+import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 
 // Configuration
 
@@ -485,6 +486,11 @@ function setWorldMatrix(obj, matrix) {
 // a lift member used to be silently overwritten by the stale baseY on the next
 // height change.
 
+// The pristine local TRS of every part, captured once at load before any rig
+// builds. Sizing recomputes from this, never from the live scene, so repeated
+// resizes cannot accumulate drift. User edits are composed on top of it.
+const assetBaseline = new Map();   // editorId -> canonical TRS as authored
+
 const editTransforms = new Map();  // editorId -> canonical TRS after user edits
 let editRevision = 0;              // bumped by every edit; a validation cache key
 let suppressTransactions = false;  // set while neutralising, so housekeeping is not an edit
@@ -529,6 +535,13 @@ function refreshLiftBaseline(obj) {
 }
 
 // Records one part's edit. Every edit path ends here.
+function captureAssetBaseline(obj) {
+    const editorId = obj.userData?.editorId;
+    if (!editorId || assetBaseline.has(editorId)) return;
+    const canon = canonicalTransform(obj);
+    if (canon) assetBaseline.set(editorId, canon);
+}
+
 function recordCanonicalEdit(obj) {
     const editorId = obj.userData?.editorId;
     if (editorId) editTransforms.set(editorId, canonicalTransform(obj));
@@ -557,6 +570,7 @@ function transaction(entry) {
     if (suppressTransactions) return;
     editRevision++;
     pushUndo(entry);
+    scheduleAutosave();
 }
 
 // A mutation that changed the scene without pushing its own undo entry
@@ -650,6 +664,7 @@ function performUndo() {
         if (idx > -1) removeActuatorRig(idx, { recordUndo: false });
     } else if (entry.type === 'rig-restore') {
         // Rebuild the rig that was deleted, from the definition captured at delete time.
+        if (entry.definition) deletedBakedRigs[entry.kind]?.delete(entry.definition.name);
         if (entry.definition && entry.kind === 'tilt') {
             const parts = entry.definition.groupEditorIds.map(eid => partRegistry.get(eid)?.obj).filter(Boolean);
             createTiltConfig({ ...entry.definition, parts });
@@ -1273,8 +1288,58 @@ function onCanvasClick(event) {
     }
 }
 
+// The identity of the asset a project was authored against. Hashing the GLB
+// bytes is the only check that catches a mesh whose geometry changed under an
+// unchanged name — a summary of names, vertex counts and bounding boxes misses
+// a moved hole or a retopologised surface, which is exactly when restored
+// transforms and rig pivots go quietly wrong.
+let modelFingerprint = null;
+
+async function fetchModelWithFingerprint(url) {
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) throw new Error(`Model request failed: ${response.status}`);
+
+    // Stream so the existing percentage readout keeps working.
+    const total = Number(response.headers.get('content-length')) || 0;
+    const statusEl = document.getElementById('loader-status');
+    const chunks = [];
+    let loaded = 0;
+    const reader = response.body?.getReader();
+    if (reader) {
+        for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            loaded += value.length;
+            if (statusEl && total) {
+                statusEl.textContent = 'Loading 3D workspace... ' + Math.min(100, Math.round((loaded / total) * 100)) + '%';
+            }
+        }
+    }
+    let buffer;
+    if (reader) {
+        const bytes = new Uint8Array(loaded);
+        let offset = 0;
+        for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+        buffer = bytes.buffer;
+    } else {
+        buffer = await response.arrayBuffer();
+    }
+
+    let fingerprint = null;
+    try {
+        const digest = await crypto.subtle.digest('SHA-256', buffer);
+        fingerprint = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (error) {
+        // crypto.subtle is unavailable over plain HTTP on some origins. A project
+        // saved without a fingerprint imports with a weaker check rather than none.
+        console.warn('[ErgoFlex] Could not fingerprint the model:', error);
+    }
+    return { buffer, fingerprint };
+}
+
 function loadModel() {
-    gltfLoader.load(PRODUCT_CONFIG.modelUrl, (gltf) => {
+    const onLoaded = (gltf) => {
         if (loadedModel) scene.remove(loadedModel);
 
         sharedBirchMaterial = null;
@@ -1396,6 +1461,13 @@ function loadModel() {
         // Apply initial position at LIFT_MIN (28") so model doesn't start at raw ~45"
         updateMovingObjectsPosition();
 
+        // Pristine baseline, captured after PART_BAKE_DATA and before any rig
+        // reparents anything. Sizing and project restore both recompute from
+        // this rather than from the live scene.
+        assetBaseline.clear();
+        editTransforms.clear();
+        partRegistry.forEach(entry => captureAssetBaseline(entry.obj));
+
         restorePartLabels();
 
         // Rebuild tilt rigs: baked production configs + any saved this session
@@ -1460,13 +1532,9 @@ function loadModel() {
         loader.style.opacity = '0';
         setTimeout(() => loader.style.display = 'none', 400);
 
-    }, (xhr) => {
-        const statusEl = document.getElementById('loader-status');
-        if (statusEl && xhr.total) {
-            const pct = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
-            statusEl.textContent = 'Loading 3D workspace... ' + pct + '%';
-        }
-    }, (error) => {
+    };
+
+    const onError = (error) => {
         console.error('Error loading model:', error);
         if (loader) {
             loader.innerHTML = `
@@ -1476,7 +1544,521 @@ function loadModel() {
                 </div>
             `;
         }
+    };
+
+    // Fetch the bytes ourselves so they can be hashed, then hand the same buffer
+    // to the parser — one download, not two.
+    const url = PRODUCT_CONFIG.modelUrl;
+    fetchModelWithFingerprint(url).then(({ buffer, fingerprint }) => {
+        modelFingerprint = fingerprint;
+        const basePath = url.slice(0, url.lastIndexOf('/') + 1);
+        gltfLoader.parse(buffer, basePath, onLoaded, onError);
+    }).catch(error => {
+        // A CORS-restricted host will not hand over the body. Fall back to the
+        // loader's own request; the project fingerprint is simply absent.
+        console.warn('[ErgoFlex] Falling back to unhashed model load:', error);
+        modelFingerprint = null;
+        gltfLoader.load(url, onLoaded, (xhr) => {
+            const statusEl = document.getElementById('loader-status');
+            if (statusEl && xhr.total) {
+                statusEl.textContent = 'Loading 3D workspace... ' + Math.min(100, Math.round((xhr.loaded / xhr.total) * 100)) + '%';
+            }
+        }, onError);
     });
+}
+
+// --- Project save and restore ----------------------------------------------
+
+const PROJECT_AUTOSAVE_KEY = 'ergoflexProjectAutosaveV1';
+const PROJECT_AUTOSAVE_SLOTS = 5;
+const PROJECT_AUTOSAVE_BUDGET = 4 * 1024 * 1024;
+
+const v3 = v => ({ x: v.x, y: v.y, z: v.z });
+const v4 = v => ({ x: v.x, y: v.y, z: v.z, w: v.w });
+
+// The transform a part would have at the current size with no user edits.
+// Sizing (Phase 2) will compose its own transformation here; until then a part's
+// sized baseline is its asset baseline. Edits are stored as a delta against this
+// value, never as an absolute, so that a part edited at one size keeps its edit
+// relative to wherever a different size puts it rather than snapping back.
+function sizedBaseline(editorId) {
+    return assetBaseline.get(editorId) || null;
+}
+
+// Delta from `base` to `edited`, in the part's canonical parent space.
+function transformDelta(base, edited) {
+    return {
+        p: { x: edited.p.x - base.p.x, y: edited.p.y - base.p.y, z: edited.p.z - base.p.z },
+        q: v4(base.q.clone().invert().multiply(edited.q)),
+        s: { x: edited.s.x / base.s.x, y: edited.s.y / base.s.y, z: edited.s.z / base.s.z }
+    };
+}
+
+// Recompose in a fixed order — scale, then rotation, then translation. TRS
+// composition does not commute, so both ends must agree on one order.
+function applyTransformDelta(obj, base, delta) {
+    obj.scale.set(base.s.x * delta.s.x, base.s.y * delta.s.y, base.s.z * delta.s.z);
+    obj.quaternion.copy(base.q).multiply(new THREE.Quaternion(delta.q.x, delta.q.y, delta.q.z, delta.q.w));
+    obj.position.set(base.p.x + delta.p.x, base.p.y + delta.p.y, base.p.z + delta.p.z);
+    obj.updateMatrixWorld(true);
+}
+
+function serializeProject() {
+    // Motion is read BEFORE neutralising, or it would record the rest pose the
+    // capture itself just imposed rather than the pose the desk is actually in.
+    const motion = {
+        heightInches: liftToHeight(currentLift),
+        tilt: Object.fromEntries(tiltConfigs.map(c => [c.name, c.currentDeg])),
+        // The target, not the current offset: glide eases toward its target over
+        // several frames, so saving the offset would capture wherever the desk
+        // happened to be mid-transit rather than the position that was asked for.
+        glide: { x: glideTarget.x, z: glideTarget.z }
+    };
+
+    return withNeutralPose(() => {
+        const clones = [];
+        partRegistry.forEach(entry => {
+            if (!entry.isClone) return;
+            const canon = canonicalTransform(entry.obj);
+            const parent = canonicalParent(entry.obj);
+            clones.push({
+                editorId: entry.editorId,
+                sourceEditorId: entry.obj.userData?.sourceEditorId || null,
+                parentEditorId: parent?.userData?.editorId || 'model',
+                transform: canon ? { p: v3(canon.p), q: v4(canon.q), s: v3(canon.s) } : undefined
+            });
+        });
+
+        const transforms = [];
+        editTransforms.forEach((edited, editorId) => {
+            const base = sizedBaseline(editorId);
+            if (!base || !partRegistry.has(editorId)) return;
+            const delta = transformDelta(base, edited);
+            // Only record edits that actually moved something.
+            const moved = Math.abs(delta.p.x) + Math.abs(delta.p.y) + Math.abs(delta.p.z) > 1e-9
+                || Math.abs(1 - delta.q.w) > 1e-9
+                || Math.abs(delta.s.x - 1) + Math.abs(delta.s.y - 1) + Math.abs(delta.s.z - 1) > 1e-9;
+            if (moved) transforms.push({ editorId, delta });
+        });
+
+        const liftMembers = [];
+        liftObjects.forEach((_, obj) => { if (obj.userData?.editorId) liftMembers.push(obj.userData.editorId); });
+
+        return {
+            formatVersion: PROJECT_FORMAT_VERSION,
+            savedAt: new Date().toISOString(),
+            model: {
+                url: PRODUCT_CONFIG.modelUrl,
+                partCount: partRegistry.size,
+                contentFingerprint: modelFingerprint
+            },
+            customerConfig: cleanConfig(currentConfig),
+            // Only what affects the rendered product. Sidebar width and panel
+            // collapse are this browser's preferences and stay in their own keys —
+            // a project shared between machines should not rearrange the editor.
+            presentation: {
+                surfaceFinish,
+                grainEnabled,
+                environment: document.getElementById('studio-environment')?.value || 'gallery',
+                exposure: renderer ? renderer.toneMappingExposure : 1.02,
+                camera: camera && controls
+                    ? { position: v3(camera.position), target: v3(controls.target) }
+                    : null
+            },
+            motion,
+            parts: {
+                labels: [...partLabels],
+                clones,
+                transforms,
+                liftMembers,
+                locked: [...lockedParts],
+                groups: JSON.parse(JSON.stringify(savedGroups))
+            },
+            rigs: {
+                tilt: serializeTiltConfigs(),
+                actuator: serializeActuatorRigs(),
+                // Wheel rigs are derived from part naming and bounding boxes, so they
+                // are rebuilt rather than restored. Recorded for diagnosis only.
+                wheels: wheelRigs.map(r => ({ prefix: r.prefix, latSign: r.latSign, radius: r.radius }))
+            },
+            deletedBaked: {
+                tilt: [...deletedBakedRigs.tilt],
+                actuator: [...deletedBakedRigs.actuator]
+            }
+        };
+    });
+}
+
+// Which baked rigs the user has deliberately deleted. Without this a baked
+// default resurrects itself on the next load and the deletion looks like a bug.
+const deletedBakedRigs = { tilt: new Set(), actuator: new Set() };
+const lockedParts = new Set();
+
+// A snapshot of everything applyProject is about to overwrite, so a failed
+// import can be undone. Held in memory rather than only in the autosave ring,
+// because recovery has to work when the storage write is what failed.
+function captureRollback() {
+    try { return serializeProject(); } catch (error) {
+        console.warn('[ErgoFlex] Could not capture a rollback snapshot:', error);
+        return null;
+    }
+}
+
+function assetEditorIds() {
+    const ids = new Set();
+    partRegistry.forEach(entry => { if (!entry.isClone) ids.add(entry.editorId); });
+    return ids;
+}
+
+/**
+ * Apply a validated project. Returns { ok, problems }.
+ *
+ * Nothing is mutated until validation has passed, and on any failure the
+ * pre-import snapshot is restored. An import REPLACES project state: rigs,
+ * groups, labels, clones, lift membership and edits. Legacy per-key localStorage
+ * merging is a separate path, not folded in here, so a rig the user deleted
+ * stays deleted.
+ */
+function applyProject(project, { confirmSoft = null, isRollback = false } = {}) {
+    const result = validateProjectFile(project, {
+        assetIds: assetEditorIds(),
+        modelUrl: PRODUCT_CONFIG.modelUrl,
+        modelFingerprint
+    });
+    const hard = hardProblems(result.problems);
+    if (!result.ok || hard.length) {
+        return { ok: false, problems: result.problems };
+    }
+    const soft = softProblems(result.problems);
+    if (soft.length && confirmSoft && !confirmSoft(soft)) {
+        return { ok: false, cancelled: true, problems: result.problems };
+    }
+
+    const rollback = isRollback ? null : captureRollback();
+    try {
+        withNeutralPose(() => {
+            clearProjectState();
+            const parts = project.parts || {};
+
+            // 1. labels
+            partLabels.clear();
+            for (const [editorId, label] of parts.labels || []) partLabels.set(editorId, label);
+
+            // 2. clones, in dependency order, before anything resolves ids
+            for (const clone of result.cloneOrder) {
+                const source = partRegistry.get(clone.sourceEditorId);
+                if (!source) continue;
+                const parent = clone.parentEditorId && clone.parentEditorId !== 'model'
+                    ? partRegistry.get(clone.parentEditorId)?.obj : null;
+                const made = makeClone(source.obj, clone.editorId, { parent, offsetX: 0, joinLift: false });
+                if (clone.transform) {
+                    made.position.set(clone.transform.p.x, clone.transform.p.y, clone.transform.p.z);
+                    made.quaternion.set(clone.transform.q.x, clone.transform.q.y, clone.transform.q.z, clone.transform.q.w);
+                    made.scale.set(clone.transform.s.x, clone.transform.s.y, clone.transform.s.z);
+                    made.updateMatrixWorld(true);
+                }
+                if (/_clone_(\d+)$/.test(clone.editorId)) {
+                    editorIdCounter = Math.max(editorIdCounter, Number(RegExp.$1) + 1);
+                }
+            }
+
+            // 3. edits, composed onto the sized baseline
+            for (const { editorId, delta } of parts.transforms || []) {
+                const entry = partRegistry.get(editorId);
+                const base = sizedBaseline(editorId);
+                if (!entry || !base) continue;
+                applyTransformDelta(entry.obj, base, delta);
+                editTransforms.set(editorId, canonicalTransform(entry.obj));
+            }
+
+            // 4. groups and locks
+            savedGroups = Object.assign({}, parts.groups || {});
+            for (const editorId of parts.locked || []) lockedParts.add(editorId);
+
+            // 5. lift membership, after edits so baseY derives from the edited pose
+            liftObjects.clear();
+            for (const editorId of parts.liftMembers || []) {
+                const entry = partRegistry.get(editorId);
+                if (!entry) continue;
+                const canon = canonicalTransform(entry.obj);
+                liftObjects.set(entry.obj, { obj: entry.obj, baseY: canon ? canon.p.y : entry.obj.position.y });
+            }
+
+            // 6. rigs. Wrappers use attach(), which preserves world transform, so
+            //    they pick up the edited positions applied in step 3.
+            const rigs = project.rigs || {};
+            for (const config of rigs.tilt || []) {
+                const rigParts = (config.groupEditorIds || []).map(id => partRegistry.get(id)?.obj).filter(Boolean);
+                if (rigParts.length) createTiltConfig({ ...config, parts: rigParts });
+            }
+            for (const rig of rigs.actuator || []) buildActuatorRig(rig);
+            buildWheelRigs();
+            if (loadedModel) glideBase.copy(loadedModel.position);
+
+            deletedBakedRigs.tilt = new Set(project.deletedBaked?.tilt || []);
+            deletedBakedRigs.actuator = new Set(project.deletedBaked?.actuator || []);
+        });
+
+        // 7. motion, applied AFTER the neutral-pose scope — inside it, the restore
+        //    in the finally block would immediately overwrite whatever we set.
+        applyProjectMotion(project.motion);
+        applyProjectPresentation(project);
+
+        rebuildTiltUI();
+        rebuildRigUI();
+        rebuildGroupDropdown();
+        buildSceneTree();
+        markEdited();
+        return { ok: true, problems: result.problems };
+    } catch (error) {
+        console.error('[ErgoFlex] Import failed, rolling back:', error);
+        if (rollback) {
+            try { applyProject(rollback, { isRollback: true }); }
+            catch (rollbackError) { console.error('[ErgoFlex] Rollback also failed:', rollbackError); }
+        }
+        return { ok: false, problems: [...result.problems, { severity: 'hard', code: 'apply-failed', message: error.message }] };
+    }
+}
+
+// Tear down everything an import replaces, so nothing from the previous project
+// survives into the new one.
+function clearProjectState() {
+    for (let i = tiltConfigs.length - 1; i >= 0; i--) removeTiltConfig(i, { recordUndo: false });
+    for (let i = actuatorRigs.length - 1; i >= 0; i--) removeActuatorRig(i, { recordUndo: false });
+
+    // Clones are the previous project's, and the incoming file brings its own.
+    [...partRegistry.values()].filter(entry => entry.isClone).forEach(entry => {
+        liftObjects.delete(entry.obj);
+        toggleMovingObject(entry.obj, false, true);
+        const idx = interactableObjects.indexOf(entry.obj);
+        if (idx > -1) interactableObjects.splice(idx, 1);
+        if (entry.obj.parent) entry.obj.parent.remove(entry.obj);
+        partRegistry.delete(entry.editorId);
+        assetBaseline.delete(entry.editorId);
+    });
+
+    // Reset every asset part to its pristine baseline before the incoming edits
+    // are composed on top.
+    editTransforms.forEach((_, editorId) => {
+        const entry = partRegistry.get(editorId);
+        const base = assetBaseline.get(editorId);
+        if (!entry || !base) return;
+        entry.obj.position.copy(base.p);
+        entry.obj.quaternion.copy(base.q);
+        entry.obj.scale.copy(base.s);
+        entry.obj.updateMatrixWorld(true);
+    });
+    editTransforms.clear();
+    lockedParts.clear();
+    savedGroups = {};
+}
+
+function applyProjectMotion(motion) {
+    if (!motion) return;
+    if (Number.isFinite(motion.heightInches)) {
+        manualLiftOverride = true;
+        currentLift = targetLift = heightToLift(THREE.MathUtils.clamp(motion.heightInches, HEIGHT_MIN, HEIGHT_MAX));
+        updateMovingObjectsPosition();
+        if (deskHeightSlider) deskHeightSlider.value = liftToHeight(currentLift);
+        if (deskHeightDisplay) deskHeightDisplay.innerText = liftToHeight(currentLift).toFixed(1) + '"';
+    }
+    for (const [name, deg] of Object.entries(motion.tilt || {})) {
+        const config = tiltConfigs.find(c => c.name === name);
+        if (config) { config.currentDeg = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg); applyTiltConfig(config); }
+    }
+    if (motion.glide && Number.isFinite(motion.glide.x) && Number.isFinite(motion.glide.z)) {
+        glideTarget.set(THREE.MathUtils.clamp(motion.glide.x, -1, 1), 0, THREE.MathUtils.clamp(motion.glide.z, -1, 1));
+        applyGlideOffset(glideTarget);
+    }
+}
+
+// Pushes currentConfig into the DOM and the shared materials. The swatch grids
+// are rebuilt by populateFinishOptions, which reads currentConfig, so a project
+// import can reuse exactly the path a page load takes.
+function applyConfigToUI() {
+    if (sizeSelect) sizeSelect.value = currentConfig.size;
+    const woodName = document.getElementById('selected-wood-name');
+    const baseName = document.getElementById('selected-base-name');
+    if (woodName) woodName.textContent = currentConfig.woodFinish;
+    if (baseName) baseName.textContent = currentConfig.baseFinish;
+    const wood = PRODUCT_CONFIG.woodFinishes.find(f => f.name === currentConfig.woodFinish);
+    const base = PRODUCT_CONFIG.baseFinishes.find(f => f.name === currentConfig.baseFinish);
+    if (wood && sharedBirchMaterial) sharedBirchMaterial.color.set(wood.color);
+    if (base && sharedBasePaintMaterial) {
+        sharedBasePaintMaterial.color.set(base.color);
+        sharedBasePaintMaterial.metalness = frameMetalness(base);
+    }
+    document.querySelectorAll('#wood-finishes [data-finish], #base-finishes [data-material]').forEach(el => {
+        const selected = el.dataset.finish === currentConfig.woodFinish || el.dataset.material === currentConfig.baseFinish;
+        el.classList.toggle('selected', selected);
+    });
+    updatePrice();
+}
+
+function applyProjectPresentation(project) {
+    const presentation = project.presentation || {};
+    if (validConfig(project.customerConfig)) {
+        currentConfig = cleanConfig(project.customerConfig);
+        applyConfigToUI();
+    }
+    if (presentation.surfaceFinish) {
+        surfaceFinish = presentation.surfaceFinish;
+        const el = document.getElementById('surface-finish');
+        if (el) el.value = surfaceFinish;
+    }
+    if (typeof presentation.grainEnabled === 'boolean') {
+        grainEnabled = presentation.grainEnabled;
+        const el = document.getElementById('wood-grain');
+        if (el) el.checked = grainEnabled;
+    }
+    applySurfaceFinish();
+    const environment = document.getElementById('studio-environment');
+    if (environment && presentation.environment) {
+        environment.value = presentation.environment;
+        environment.dispatchEvent(new Event('change'));
+    }
+    if (renderer && Number.isFinite(presentation.exposure)) {
+        renderer.toneMappingExposure = presentation.exposure;
+        const slider = document.getElementById('studio-exposure');
+        if (slider) slider.value = presentation.exposure;
+    }
+    if (presentation.camera && camera && controls) {
+        camera.position.set(presentation.camera.position.x, presentation.camera.position.y, presentation.camera.position.z);
+        controls.target.set(presentation.camera.target.x, presentation.camera.target.y, presentation.camera.target.z);
+        controls.update();
+    }
+}
+
+// --- Project panel ----------------------------------------------------------
+
+// Sits beside the rigs-only "Export Animations" button, which keeps working —
+// that exports a definition for baking back into source, this saves the whole
+// edited project.
+function buildProjectTools(anchorButton) {
+    if (!anchorButton || document.getElementById('project-tools')) return;
+    const panel = document.createElement('div');
+    panel.id = 'project-tools';
+    panel.className = 'project-tools';
+    panel.innerHTML = `<div class="eyebrow">PROJECT</div>
+        <div>
+            <button id="project-save">Save project</button>
+            <button id="project-load">Load project…</button>
+            <button id="project-recover">Recover…</button>
+        </div>
+        <input id="project-file" type="file" accept="application/json,.json" hidden>
+        <p class="studio-note">Saves the whole edited scene: part positions, clones, groups, lift assignments, rigs, finishes, and camera. Autosaves keep the last ${PROJECT_AUTOSAVE_SLOTS} states.</p>
+        <div id="project-recovery-list" hidden></div>`;
+    anchorButton.parentElement.after(panel);
+
+    document.getElementById('project-save').onclick = () => {
+        try {
+            const project = serializeProject();
+            const stamp = project.savedAt.slice(0, 19).replace(/[:T]/g, '-');
+            downloadFile(`ErgoFlex-project-${stamp}.json`, JSON.stringify(project, null, 2), 'application/json');
+            notifyUser('Project saved.');
+        } catch (error) {
+            console.error('[ErgoFlex] Save failed:', error);
+            notifyUser('Project could not be saved. See the console for details.');
+        }
+    };
+
+    const fileInput = document.getElementById('project-file');
+    document.getElementById('project-load').onclick = () => fileInput.click();
+    fileInput.onchange = async () => {
+        const file = fileInput.files?.[0];
+        fileInput.value = '';
+        if (!file) return;
+        let parsed;
+        try { parsed = JSON.parse(await file.text()); }
+        catch { return notifyUser('That file is not readable JSON.'); }
+        importProject(parsed);
+    };
+
+    document.getElementById('project-recover').onclick = () => {
+        const list = document.getElementById('project-recovery-list');
+        const ring = readAutosaveRing();
+        list.hidden = false;
+        list.replaceChildren();
+        if (!ring.length) {
+            const empty = document.createElement('p');
+            empty.className = 'studio-note';
+            empty.textContent = 'No autosaves yet. They are written as you edit, and before anything destructive.';
+            list.append(empty);
+            return;
+        }
+        ring.forEach((snapshot, index) => {
+            const row = document.createElement('div');
+            row.className = 'project-recovery-row';
+            const when = document.createElement('span');
+            when.textContent = new Date(snapshot.savedAt).toLocaleString() + ' · ' + snapshot.label;
+            const restore = document.createElement('button');
+            restore.textContent = 'Restore';
+            restore.dataset.recoverIndex = String(index);
+            restore.onclick = () => importProject(snapshot.project);
+            row.append(when, restore);
+            list.append(row);
+        });
+    };
+}
+
+// Applies a parsed project and reports what happened. Soft problems are put to
+// the user before anything is touched; the default is to cancel.
+function importProject(parsed) {
+    const outcome = applyProject(parsed, {
+        confirmSoft: soft => confirm(
+            'This project does not match the current model exactly:\n\n' +
+            soft.map(p => '• ' + p.message).join('\n') +
+            '\n\nImport anyway?')
+    });
+    if (outcome.ok) {
+        const soft = softProblems(outcome.problems);
+        notifyUser(soft.length ? `Project loaded with ${soft.length} warning${soft.length === 1 ? '' : 's'}.` : 'Project loaded.');
+    } else if (outcome.cancelled) {
+        notifyUser('Import cancelled. Nothing was changed.');
+    } else {
+        const first = hardProblems(outcome.problems)[0];
+        notifyUser(first ? first.message : 'That project could not be loaded.');
+    }
+    return outcome;
+}
+
+// --- Versioned recovery -----------------------------------------------------
+
+let autosaveTimer = null;
+
+function readAutosaveRing() {
+    try {
+        const raw = localStorage.getItem(PROJECT_AUTOSAVE_KEY);
+        const ring = raw ? JSON.parse(raw) : [];
+        return Array.isArray(ring) ? ring : [];
+    } catch { return []; }
+}
+
+// Returns whether the write actually happened. Callers must not report a save
+// that did not occur.
+function writeAutosave(label) {
+    let project;
+    try { project = serializeProject(); }
+    catch (error) { console.warn('[ErgoFlex] Autosave skipped:', error); return false; }
+
+    const ring = [{ savedAt: new Date().toISOString(), label, project }, ...readAutosaveRing()]
+        .slice(0, PROJECT_AUTOSAVE_SLOTS);
+    while (ring.length) {
+        try {
+            const payload = JSON.stringify(ring);
+            if (payload.length > PROJECT_AUTOSAVE_BUDGET) { ring.pop(); continue; }
+            localStorage.setItem(PROJECT_AUTOSAVE_KEY, payload);
+            return true;
+        } catch {
+            ring.pop();   // quota or private mode: shed the oldest and retry
+        }
+    }
+    return false;
+}
+
+function scheduleAutosave(label = 'edit') {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(() => writeAutosave(label), 2000);
 }
 
 // --- UI Events ---
@@ -1889,6 +2471,8 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => exportTiltBtn.innerText = orig, 2000);
         });
     }
+    buildProjectTools(exportTiltBtn);
+
     const pickPivotBtn = document.getElementById('pick-pivot-btn');
     if (pickPivotBtn) {
         pickPivotBtn.addEventListener('click', () => {
@@ -1964,12 +2548,17 @@ function getOrCreateBirchMaterial() {
     return sharedBirchMaterial;
 }
 
+// Silver is the one frame finish that reads as bare metal. Kept in one place:
+// this used to be spelled out at the constructor and at the swatch handler, and
+// the two could drift.
+function frameMetalness(finish) { return finish?.name === 'Silver' ? 0.75 : 0.1; }
+
 function getOrCreateBasePaintMaterial() {
     if (!sharedBasePaintMaterial) {
         const defaultFinish = PRODUCT_CONFIG.baseFinishes.find(f => f.name === currentConfig.baseFinish);
         sharedBasePaintMaterial = new THREE.MeshPhysicalMaterial({
             color: new THREE.Color(defaultFinish.color),
-            metalness: defaultFinish.name === 'Silver' ? 0.75 : 0.1,
+            metalness: frameMetalness(defaultFinish),
             roughness: 0.45,
             ior: 1.5,
             clearcoat: 0.1,
@@ -2055,7 +2644,7 @@ function selectFinish(finish, type, element) {
     } else {
         currentConfig.baseFinish = finish.name;
         document.getElementById('selected-base-name').textContent = finish.name + (finish.price ? ' · +$' + finish.price : ' · Included');
-        if (sharedBasePaintMaterial) { sharedBasePaintMaterial.color.set(finish.color); sharedBasePaintMaterial.metalness = finish.name === 'Silver' ? 0.75 : 0.1; }
+        if (sharedBasePaintMaterial) { sharedBasePaintMaterial.color.set(finish.color); sharedBasePaintMaterial.metalness = frameMetalness(finish); }
     }
     updatePrice();
 }
@@ -2418,30 +3007,32 @@ function toggleDebugPanel() {
 }
 
 // --- Phase 2.6: Clone/Duplicate Parts ---
+// One clone, one place. cloneSelectedParts uses it with a fresh id; project
+// import uses it with the id recorded in the file, so a restored clone keeps the
+// identity that the saved groups and rigs refer to.
+function makeClone(original, editorId, { parent = null, offsetX = 0.05, joinLift = null } = {}) {
+    const clone = original.clone(true);
+    clone.userData.editorId = editorId;
+    clone.userData.sourceEditorId = original.userData?.editorId || null;
+    partRegistry.set(editorId, { obj: clone, name: original.name, editorId, isClone: true });
+
+    clone.position.x += offsetX;
+    (parent || original.parent || scene).add(clone);
+
+    const shouldJoinLift = joinLift === null ? liftObjects.has(original) : joinLift;
+    if (shouldJoinLift) liftObjects.set(clone, { obj: clone, baseY: clone.position.y - (currentLift - LIFT_MIN) });
+    interactableObjects.push(clone);
+
+    // A clone participates in sizing like any other part, so it needs its own
+    // pristine baseline captured at creation.
+    captureAssetBaseline(clone);
+    return clone;
+}
+
 function cloneSelectedParts() {
     if (movingObjects.length === 0) return;
-    const toClone = movingObjects.map(item => item.obj);
-    const newClones = [];
-    toClone.forEach(original => {
-        const clone = original.clone(true);
-        const editorId = original.name + '_clone_' + (editorIdCounter++);
-        clone.userData.editorId = editorId;
-
-        partRegistry.set(editorId, { obj: clone, name: original.name, editorId: editorId, isClone: true });
-
-        // Offset slightly on X for visibility
-        clone.position.x += 0.05;
-
-        if (original.parent) {
-            original.parent.add(clone);
-        } else {
-            scene.add(clone);
-        }
-
-        if (liftObjects.has(original)) liftObjects.set(clone, { obj: clone, baseY: clone.position.y - (currentLift - LIFT_MIN) });
-        interactableObjects.push(clone);
-        newClones.push(clone);
-    });
+    const newClones = movingObjects.map(item =>
+        makeClone(item.obj, item.obj.name + '_clone_' + (editorIdCounter++)));
     transaction({ type: 'clone', clones: newClones });
     buildSceneTree();
 }
@@ -2637,6 +3228,9 @@ function persistTiltConfigs() {
 }
 
 function restoreTiltConfigs() {
+    // A baked default that the user deleted stays deleted; without this the
+    // deletion silently undoes itself on the next load.
+    const isDeleted = name => deletedBakedRigs.tilt.has(name);
     let saved = [];
     try { saved = JSON.parse(localStorage.getItem('ergoflexTiltConfigs') || '[]'); } catch (e) {}
     // Locally-saved configs FIRST so your latest edits (added/removed parts)
@@ -2650,7 +3244,7 @@ function restoreTiltConfigs() {
     }
     const all = [...saved, ...BAKED_TILT_CONFIGS];
     all.forEach(baked => {
-        if (!baked || !baked.name || tiltConfigs.some(c => c.name === baked.name)) return;
+        if (!baked || !baked.name || isDeleted(baked.name) || tiltConfigs.some(c => c.name === baked.name)) return;
         const parts = (baked.groupEditorIds || [])
             .map(eid => {
                 const entry = partRegistry.get(eid);
@@ -2874,7 +3468,11 @@ function removeTiltConfig(idx, { recordUndo = true } = {}) {
     // Deleting a rig used to be unrecoverable. Capture the serialized definition
     // first so undo can rebuild it. recordUndo is false when performUndo itself is
     // the caller, so undoing a tilt-save does not push a new entry.
-    if (recordUndo) transaction({ type: 'rig-restore', kind: 'tilt', definition: serializeTiltConfigs()[idx] });
+    if (recordUndo) {
+        writeAutosave('before deleting tilt rig ' + config.name);
+        transaction({ type: 'rig-restore', kind: 'tilt', definition: serializeTiltConfigs()[idx] });
+        deletedBakedRigs.tilt.add(config.name);
+    }
     // Reset rotation so world transforms are clean before re-parenting
     config.wrapperGroup.rotation.set(0, 0, 0);
     config.wrapperGroup.updateMatrixWorld(true);
@@ -3119,7 +3717,11 @@ function buildActuatorRig({ name, baseLocal, targetEditorId, cylinderEditorIds, 
 function removeActuatorRig(idx, { recordUndo = true } = {}) {
     const rig = actuatorRigs[idx];
     if (!rig) return;
-    if (recordUndo) transaction({ type: 'rig-restore', kind: 'actuator', definition: serializeActuatorRigs()[idx] });
+    if (recordUndo) {
+        writeAutosave('before deleting actuator rig ' + rig.name);
+        transaction({ type: 'rig-restore', kind: 'actuator', definition: serializeActuatorRigs()[idx] });
+        deletedBakedRigs.actuator.add(rig.name);
+    }
     // Reset wrappers to rest pose so parts land cleanly
     const liftOffset = currentLift - LIFT_MIN;
     [rig.cylWrapper, rig.rodWrapper].forEach(w => {
@@ -3155,6 +3757,7 @@ function persistActuatorRigs() {
 }
 
 function restoreActuatorRigs() {
+    const isDeleted = name => deletedBakedRigs.actuator.has(name);
     let saved = [];
     try { saved = JSON.parse(localStorage.getItem('ergoflexActuatorRigs') || '[]'); } catch (e) {}
     // Local edits first, baked fills in the rest (same policy as tilt configs)
@@ -3166,7 +3769,7 @@ function restoreActuatorRigs() {
             '"Reset saved animation data" in the Actuator Rigs panel.');
     }
     [...saved, ...BAKED_ACTUATOR_RIGS].forEach(data => {
-        if (!data || !data.name || actuatorRigs.some(r => r.name === data.name)) return;
+        if (!data || !data.name || isDeleted(data.name) || actuatorRigs.some(r => r.name === data.name)) return;
         buildActuatorRig(data);
     });
     if (actuatorRigs.length > 0) rebuildRigUI();
@@ -3943,9 +4546,7 @@ function initStudio() {
         const saved = JSON.parse(localStorage.getItem('ergoflexCartV1') || '[]');
         if (Array.isArray(saved)) cartItems = saved.filter(validConfig).slice(0, 100).map((item, index) => ({ ...cleanConfig(item), id: index, quantity: Math.max(1, Math.min(20, Math.round(Number(item.quantity) || 1))), price: configurationPrice(item) }));
     } catch {}
-    sizeSelect.value = currentConfig.size;
-    document.getElementById('selected-wood-name').textContent = currentConfig.woodFinish;
-    document.getElementById('selected-base-name').textContent = currentConfig.baseFinish;
+    applyConfigToUI();
     updateCartUI();
     document.getElementById('open-editor').onclick = () => setSetupLayout(true);
     document.getElementById('cart-btn').onclick = showCartModal;
@@ -4186,6 +4787,13 @@ window.ErgoFlex = {
     commitTransform,
     canonicalTransform,
     withNeutralPose,
+    get modelFingerprint() { return modelFingerprint; },
+    get lockedParts() { return [...lockedParts]; },
+    get deletedBakedRigs() { return { tilt: [...deletedBakedRigs.tilt], actuator: [...deletedBakedRigs.actuator] }; },
+    serializeProject,
+    applyProject,
+    readAutosaveRing,
+    writeAutosave,
     prepareARModel,
     launchAR
 };

@@ -157,3 +157,13 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
     body > .max-w-7xl { padding-left: 16px; padding-right: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; } }
+
+/* Project panel: save, load, and versioned recovery. Matches the lift-tools
+   block it sits beside rather than introducing a second control style. */
+.project-tools { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(0, 0, 0, .08); }
+.project-tools > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.project-tools button { font-size: 12px; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(0, 0, 0, .16); background: #fff; cursor: pointer; }
+.project-tools button:hover { background: rgba(0, 0, 0, .04); }
+#project-recovery-list { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.project-recovery-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: #444; }
+.project-recovery-row button { font-size: 11px; padding: 3px 8px; }

@@ -139,7 +139,132 @@ const server = http.createServer((req, res) => {
            && Math.abs(neutral.after.glide.z - neutral.before.glide.z) < 1e-6, 'glide restored');
     assert.equal(neutral.threw, true, 'the throw propagated');
     await page.evaluate(() => { ErgoFlex.setGlidePosition(0, 0); ErgoFlex.setTilt('tilting', 0); ErgoFlex.setHeight(28); });
-    console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, and neutral pose passed.');
+
+    // --- project save / restore ---------------------------------------------
+    assert.ok(await page.evaluate(() => typeof ErgoFlex.modelFingerprint === 'string' && ErgoFlex.modelFingerprint.length === 64),
+      'the GLB was fetched and hashed, so projects can record which asset they were built against');
+
+    // Edit, clone, assign to lift, then round trip through a saved project.
+    const roundTrip = await page.evaluate(() => {
+      ErgoFlex.setHeight(28);
+      const obj = ErgoFlex.liftObjects[0].obj;
+      obj.updateWorldMatrix(true, false);
+      const snapshot = [{ obj, before: obj.matrixWorld.clone() }];
+      obj.position.y += 0.3;
+      obj.position.x += 0.15;
+      obj.updateMatrixWorld(true);
+      ErgoFlex.commitTransform(snapshot);
+
+      ErgoFlex.selectByNames([obj.name]);
+      document.getElementById('clone-parts-btn').click();
+      document.getElementById('clear-parts-btn').click();
+
+      // Save at a deliberately non-neutral pose: raised, tilted, and glided.
+      ErgoFlex.setHeight(45);
+      ErgoFlex.setTilt('tilting', -18);
+      ErgoFlex.setGlidePosition(0.2, 0.1);
+      const project = ErgoFlex.serializeProject();
+      return {
+        project,
+        edited: ErgoFlex.canonicalTransform(obj).p,
+        editorId: obj.userData.editorId,
+        cloneCount: [...ErgoFlex.partRegistry.values()].filter(e => e.isClone).length,
+        liftCount: ErgoFlex.liftObjects.length,
+        savedHeight: project.motion.heightInches
+      };
+    });
+    assert.equal(roundTrip.project.formatVersion, 1);
+    assert.equal(roundTrip.cloneCount, 1, 'the clone exists before saving');
+    assert.ok(roundTrip.project.parts.transforms.some(t => t.editorId === roundTrip.editorId),
+      'the edit was recorded as a delta');
+    assert.ok(Math.abs(roundTrip.savedHeight - 45) < 0.2, 'motion records the pose at save time');
+
+    // The transform delta must be captured at the neutral pose, not at the
+    // raised/tilted pose the desk happened to be in.
+    const delta = roundTrip.project.parts.transforms.find(t => t.editorId === roundTrip.editorId).delta;
+    assert.ok(Math.abs(delta.p.y - 0.3) < 1e-6 && Math.abs(delta.p.x - 0.15) < 1e-6,
+      'the saved delta is the edit itself, with lift and tilt removed');
+
+    // Now discard everything and import it back.
+    const restored = await page.evaluate(project => {
+      ErgoFlex.setHeight(28); ErgoFlex.setTilt('tilting', 0); ErgoFlex.setGlidePosition(0, 0);
+      const outcome = ErgoFlex.applyProject(project);
+      const entry = ErgoFlex.partRegistry.get(project.parts.transforms[0].editorId);
+      return {
+        outcome: { ok: outcome.ok, problems: outcome.problems.map(p => p.code) },
+        position: ErgoFlex.canonicalTransform(entry.obj).p,
+        cloneCount: [...ErgoFlex.partRegistry.values()].filter(e => e.isClone).length,
+        liftCount: ErgoFlex.liftObjects.length,
+        height: ErgoFlex.deskHeight,
+        tilt: ErgoFlex.tiltConfigs[0].currentDeg,
+        glide: ErgoFlex.glidePosition
+      };
+    }, roundTrip.project);
+    assert.deepEqual(restored.outcome, { ok: true, problems: [] }, 'a project of the current model imports cleanly');
+    assert.equal(restored.cloneCount, 1, 'the clone came back');
+    assert.equal(restored.liftCount, roundTrip.liftCount, 'lift membership came back');
+    assert.ok(Math.abs(restored.height - 45) < 0.2, 'motion is applied after the neutral-pose scope, not swallowed by it');
+    assert.equal(restored.tilt, -18, 'tilt came back');
+    assert.ok(Math.abs(restored.glide.x - 0.2) < 1e-6, 'glide came back');
+
+    // Importing the same project again must not collide with its own clones.
+    const twice = await page.evaluate(project => {
+      const outcome = ErgoFlex.applyProject(project);
+      return { ok: outcome.ok, codes: outcome.problems.map(p => p.code),
+               cloneCount: [...ErgoFlex.partRegistry.values()].filter(e => e.isClone).length };
+    }, roundTrip.project);
+    assert.equal(twice.ok, true, 'the same project imports twice');
+    assert.deepEqual(twice.codes, [], 'and reports nothing');
+    assert.equal(twice.cloneCount, 1, 'without accumulating duplicate clones');
+
+    // Failed imports must leave the scene exactly as it was.
+    const failures = await page.evaluate(() => {
+      const before = {
+        clones: [...ErgoFlex.partRegistry.values()].filter(e => e.isClone).length,
+        lift: ErgoFlex.liftObjects.length,
+        tilts: ErgoFlex.tiltConfigs.length
+      };
+      const results = {};
+      for (const [label, file] of [
+        ['garbage', { nope: true }],
+        ['version', { formatVersion: 99, model: { url: 'x' } }],
+        ['model', { formatVersion: 1, model: { url: 'https://elsewhere.test/other.glb' }, parts: {} }]
+      ]) {
+        results[label] = ErgoFlex.applyProject(file).ok;
+      }
+      return { before, results, after: {
+        clones: [...ErgoFlex.partRegistry.values()].filter(e => e.isClone).length,
+        lift: ErgoFlex.liftObjects.length,
+        tilts: ErgoFlex.tiltConfigs.length
+      } };
+    });
+    assert.deepEqual(failures.results, { garbage: false, version: false, model: false }, 'bad files are refused');
+    assert.deepEqual(failures.after, failures.before, 'a refused import changes nothing');
+
+    // A deleted rig must stay deleted across a save and reload.
+    const deletion = await page.evaluate(() => {
+      const name = ErgoFlex.tiltConfigs[0].name;
+      ErgoFlex.removeTiltConfig(0);
+      const project = ErgoFlex.serializeProject();
+      return { name, tombstones: project.deletedBaked.tilt, rigsAfter: ErgoFlex.tiltConfigs.length, project };
+    });
+    assert.equal(deletion.rigsAfter, 0, 'the rig was deleted');
+    assert.ok(deletion.tombstones.includes(deletion.name), 'the deletion is recorded so a baked default cannot resurrect');
+    const undeleted = await page.evaluate(() => { ErgoFlex.undo(); return ErgoFlex.tiltConfigs.length; });
+    assert.equal(undeleted, 1, 'rig deletion is undoable');
+
+    // Autosave must not claim a save that did not happen.
+    const storage = await page.evaluate(() => {
+      const real = Storage.prototype.setItem;
+      Storage.prototype.setItem = () => { throw new Error('quota'); };
+      const wrote = ErgoFlex.writeAutosave('test');
+      Storage.prototype.setItem = real;
+      return wrote;
+    });
+    assert.equal(storage, false, 'a failed storage write reports failure rather than success');
+
+    await page.evaluate(() => { ErgoFlex.setGlidePosition(0, 0); ErgoFlex.setTilt('tilting', 0); ErgoFlex.setHeight(28); });
+    console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, neutral pose, and project round trip passed.');
     if (process.argv.includes('--editor-only')) { assert.deepEqual(errors, []); return; }
     await page.click('[data-motion-tab="glide"]');
     const before = await page.evaluate(() => ErgoFlex.wheelRigs.map(r => r.spin));
