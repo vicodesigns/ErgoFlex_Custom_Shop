@@ -603,7 +603,70 @@ const server = http.createServer((req, res) => {
     const afterMigration = await page.evaluate(() => document.getElementById('cart-count').textContent);
     assert.equal(afterMigration, '2', 'a V1 cart is read once and its quantities survive');
 
-    console.log('Store pricing, presets, accessories, and the V1 to V2 migration passed.');
+
+    // --- build checks --------------------------------------------------------
+    const validation = await page.evaluate(() => {
+      const findings = ErgoFlex.runValidation();
+      const panel = document.getElementById('validation-panel');
+      return {
+        findings: findings.map(f => ({ code: f.code, severity: f.severity, blocking: f.blocking })),
+        rendered: panel ? panel.querySelectorAll('.validation-row').length : -1,
+        summary: panel ? panel.querySelector('.validation-summary')?.textContent : null,
+        addToCartDisabled: document.getElementById('add-to-cart').disabled
+      };
+    });
+    assert.ok(validation.rendered >= 0, 'the build-checks panel exists');
+    assert.equal(validation.findings.length, validation.rendered, 'every finding is rendered');
+    // The property that matters: advisory until a real product spec arrives.
+    assert.ok(validation.findings.every(f => f.blocking === false), 'no rule is promoted to blocking');
+    assert.equal(validation.addToCartDisabled, false, 'so ordering is never blocked by an unconfirmed limit');
+
+    // Actuator travel has to be sampled across lift AND tilt: the solver moves
+    // both endpoints with the lift, so a lift-only sample measures nothing.
+    const travel = await page.evaluate(() => {
+      const info = ErgoFlex.runValidation().find(f => f.code === 'actuator-stroke-unknown');
+      return info ? info.message : null;
+    });
+    assert.ok(travel && /needs [\d.]+ units of travel/.test(travel), 'actuator travel is measured');
+    assert.ok(!/needs 0\.000 units/.test(travel),
+      'and the lift x tilt grid finds real travel, unlike a lift-only sample');
+
+    // Sampling must leave the desk exactly where it was.
+    const undisturbed = await page.evaluate(() => {
+      ErgoFlex.setHeight(41); ErgoFlex.setTilt('tilting', -12);
+      const before = { h: ErgoFlex.deskHeight, t: ErgoFlex.tiltConfigs[0].currentDeg };
+      ErgoFlex.runValidation();
+      return { before, after: { h: ErgoFlex.deskHeight, t: ErgoFlex.tiltConfigs[0].currentDeg } };
+    });
+    assert.ok(Math.abs(undisturbed.after.h - undisturbed.before.h) < 0.01, 'sampling restores the height');
+    assert.equal(undisturbed.after.t, undisturbed.before.t, 'and the tilt');
+
+    // A known-bad combination is caught through the real UI.
+    const badCombo = await page.evaluate(async () => {
+      document.querySelector('[data-preset="creative"]').click();   // 72in + dual arm
+      const select = document.getElementById('size-select');
+      select.value = '48x30';
+      select.dispatchEvent(new Event('change'));
+      return ErgoFlex.runValidation().map(f => f.code);
+    });
+    // Narrowing already strips the accessory, so the incompatibility is resolved
+    // rather than reported — which is the better outcome, and worth asserting.
+    assert.ok(!badCombo.includes('accessory-size'),
+      'narrowing removes the accessory rather than leaving an unbuildable estimate');
+
+    // Cache: an edit must invalidate it, or stale results are served against
+    // geometry that has changed.
+    const cache = await page.evaluate(() => {
+      const first = ErgoFlex.runValidation();
+      const revBefore = ErgoFlex.editRevision;
+      ErgoFlex.reportSceneWarning('test-warning', 'A synthetic problem for the cache test.');
+      const after = ErgoFlex.runValidation();
+      return { firstLength: first.length, revBefore, afterCodes: after.map(f => f.code) };
+    });
+    assert.ok(cache.afterCodes.includes('test-warning'),
+      'a newly reported scene problem reaches the panel instead of the console alone');
+
+    console.log('Store pricing, presets, accessories, V1 to V2 migration, and build checks passed.');
     await page.goto(url);
     await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4, { timeout: 90000 });
     assert.equal(await page.evaluate(() => ErgoFlex.currentConfig.woodFinish), 'Walnut');

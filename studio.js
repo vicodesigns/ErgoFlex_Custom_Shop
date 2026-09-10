@@ -6,6 +6,7 @@ import { PRODUCT_CONFIG, money, configurationPrice, priceBreakdown, validConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
          ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
+import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 
 // Configuration
 
@@ -2093,6 +2094,195 @@ function initConfigColumnCollapse() {
     button.onclick = toggle;
 }
 
+// --- Build validation -------------------------------------------------------
+//
+// Advisory. Findings are shown, never enforced, until a rule's limit comes from
+// a real product specification. blockingFindings returns nothing today, and the
+// order button is only disabled if that changes.
+
+// Problems the app detects while building rigs. These used to go to the console
+// only, where nobody saw them.
+const sceneWarnings = [];
+function reportSceneWarning(code, message, parts) {
+    if (sceneWarnings.some(w => w.code === code && w.message === message)) return;
+    sceneWarnings.push({ code, message, parts });
+    scheduleValidation();
+}
+
+let validationCache = { key: null, findings: [] };
+let validationTimer = null;
+
+function rigSignature() {
+    return tiltConfigs.map(c => c.name).join(',') + '|' + actuatorRigs.map(r => r.name).join(',');
+}
+
+// Measures the scene for the rules. Sampling the lift alone would measure almost
+// nothing, because the solver moves the actuator base with the lift and the
+// target is itself a lift member — so both endpoints travel together. Tilt is
+// what changes the geometry, so this walks the lift x tilt grid.
+function sampleSceneForValidation() {
+    if (!loadedModel || !actuatorRigs.length) return { actuators: [], overlaps: [], warnings: sceneWarnings };
+
+    const heights = [HEIGHT_MIN, (HEIGHT_MIN + HEIGHT_MAX) / 2, HEIGHT_MAX];
+    const tiltSteps = tiltConfigs.length
+        ? [tiltConfigs[0].minDeg, (tiltConfigs[0].minDeg + tiltConfigs[0].maxDeg) / 2, tiltConfigs[0].maxDeg]
+        : [0];
+    const lengths = new Map(actuatorRigs.map(rig => [rig.name, []]));
+
+    const savedLift = currentLift, savedTarget = targetLift, savedOverride = manualLiftOverride;
+    const savedTilts = tiltConfigs.map(c => c.currentDeg);
+    const wasSuppressed = suppressTransactions;
+    const wasPaused = motionPaused;
+    suppressTransactions = true;
+    motionPaused = true;
+    try {
+        for (const height of heights) {
+            manualLiftOverride = true;
+            currentLift = targetLift = heightToLift(height);
+            for (const deg of tiltSteps) {
+                tiltConfigs.forEach(config => {
+                    config.currentDeg = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg);
+                });
+                updateMovingObjectsPosition();
+                tiltConfigs.forEach(applyTiltConfig);
+                updateActuatorRigs();
+                for (const rig of actuatorRigs) {
+                    const base = new THREE.Vector3(rig.baseLocal.x, rig.baseLocal.y + (currentLift - LIFT_MIN), rig.baseLocal.z);
+                    const tip = rig.targetLocalCenter.clone();
+                    rig.targetObj.updateWorldMatrix(true, false);
+                    rig.targetObj.localToWorld(tip);
+                    loadedModel.worldToLocal(tip);
+                    lengths.get(rig.name).push(tip.sub(base).length());
+                }
+            }
+        }
+    } finally {
+        currentLift = savedLift; targetLift = savedTarget; manualLiftOverride = savedOverride;
+        tiltConfigs.forEach((config, i) => { config.currentDeg = savedTilts[i] ?? 0; });
+        updateMovingObjectsPosition();
+        tiltConfigs.forEach(applyTiltConfig);
+        updateActuatorRigs();
+        suppressTransactions = wasSuppressed;
+        motionPaused = wasPaused;
+    }
+
+    return {
+        actuators: actuatorRigs.map(rig => ({ name: rig.name, lengths: lengths.get(rig.name) })),
+        overlaps: sampleCoarseOverlaps(),
+        warnings: sceneWarnings
+    };
+}
+
+// Per-assembly boxes, not per-mesh: 830 meshes cannot be pair-tested
+// interactively, and the result is a candidate list either way.
+function assemblyRole(name) {
+    if (/^Desktop/.test(name)) return 'desktop';
+    if (/^Top_Shelf/.test(name)) return 'shelf';
+    if (/^Lift_Column/.test(name)) return 'column';
+    if (/^(Linear_Actuators|L_A_Hardware)/.test(name)) return 'actuator';
+    if (/^Wheel_/.test(name)) return 'wheel';
+    if (/^(Plates_Hardware|Screws|Joinery|Power|Leds|Touch_Screen|Foot_Rest)/.test(name)) return 'hardware';
+    return 'other';
+}
+
+function sampleCoarseOverlaps() {
+    const boxes = new Map();
+    partRegistry.forEach(entry => {
+        const role = assemblyRole(entry.name);
+        if (role === 'other' || !entry.obj.visible) return;
+        entry.obj.updateWorldMatrix(true, false);
+        const box = new THREE.Box3().setFromObject(entry.obj);
+        if (boxes.has(role)) boxes.get(role).union(box);
+        else boxes.set(role, box);
+    });
+    const roles = [...boxes.keys()];
+    const overlaps = [];
+    for (let i = 0; i < roles.length; i++) {
+        for (let j = i + 1; j < roles.length; j++) {
+            const a = boxes.get(roles[i]), b = boxes.get(roles[j]);
+            if (!a.intersectsBox(b)) continue;
+            const overlap = a.clone().intersect(b).getSize(new THREE.Vector3());
+            overlaps.push({ a: roles[i], b: roles[j], aRole: roles[i], bRole: roles[j],
+                            amount: Math.min(overlap.x, overlap.y, overlap.z) });
+        }
+    }
+    return overlaps;
+}
+
+function runValidation() {
+    const key = validationCacheKey({
+        fingerprint: modelFingerprint, size: currentConfig.size,
+        editRevision, rigSignature: rigSignature(), accessories: currentConfig.accessories,
+        warningRevision: sceneWarnings.length
+    });
+    if (validationCache.key === key) return validationCache.findings;
+    const findings = validateBuild(currentConfig, sampleSceneForValidation());
+    validationCache = { key, findings };
+    renderValidation(findings);
+    return findings;
+}
+
+function scheduleValidation() {
+    clearTimeout(validationTimer);
+    const run = () => runValidation();
+    validationTimer = setTimeout(() =>
+        (window.requestIdleCallback || window.setTimeout)(run, { timeout: 1500 }), 300);
+}
+
+function renderValidation(findings) {
+    const panel = document.getElementById('validation-panel');
+    if (!panel) return;
+    panel.replaceChildren();
+
+    const blocking = blockingFindings(findings);
+    const errors = findings.filter(f => f.severity === 'error');
+    const warnings = findings.filter(f => f.severity === 'warning');
+
+    const summary = document.createElement('p');
+    summary.className = 'validation-summary';
+    summary.textContent = findings.length
+        ? `${errors.length} to resolve · ${warnings.length} to check`
+        : 'No issues found in this configuration.';
+    panel.append(summary);
+
+    for (const item of findings) {
+        const row = document.createElement('div');
+        row.className = 'validation-row severity-' + item.severity;
+        const label = document.createElement('span');
+        label.textContent = item.message;
+        row.append(label);
+        panel.append(row);
+    }
+
+    if (findings.length) {
+        const note = document.createElement('p');
+        note.className = 'studio-note';
+        note.textContent = blocking.length
+            ? 'Ordering is blocked until the items above are resolved.'
+            : 'These are geometric checks against unconfirmed limits, so they are advisory and do not block ordering.';
+        panel.append(note);
+    }
+
+    // Only a promoted rule can disable the order button, and none are promoted
+    // while the product specification is missing.
+    const addToCart = document.getElementById('add-to-cart');
+    if (addToCart) {
+        addToCart.disabled = blocking.length > 0;
+        addToCart.title = blocking.length ? blocking[0].message : '';
+    }
+}
+
+function buildValidationPanel() {
+    if (document.getElementById('validation-panel')) return;
+    const anchorEl = document.getElementById('price-breakdown');
+    if (!anchorEl) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'validation-block';
+    wrapper.innerHTML = '<div class="eyebrow">BUILD CHECKS</div><div id="validation-panel"></div>';
+    anchorEl.after(wrapper);
+    scheduleValidation();
+}
+
 // --- Guided configurations --------------------------------------------------
 
 function toggleAccessory(id) {
@@ -2229,6 +2419,7 @@ function buildGuidedConfiguration() {
 
     renderAccessories();
     renderPriceBreakdown();
+    buildValidationPanel();
 }
 
 // --- Precision editing ------------------------------------------------------
@@ -3273,6 +3464,7 @@ function updatePrice() {
     totalPrice.textContent = total;
     cartPrice.textContent = total;
     renderPriceBreakdown();
+    scheduleValidation();
     syncBuildSummary();
 }
 
@@ -3328,6 +3520,7 @@ sizeSelect.addEventListener('change', (e) => {
     renderAccessories();
     applyAccessoryVisibility();
     updatePrice();
+    scheduleValidation();
 });
 
 addToCartBtn.addEventListener('click', addToCart);
@@ -3875,6 +4068,7 @@ function restoreTiltConfigs() {
             .map(eid => {
                 const entry = partRegistry.get(eid);
                 if (!entry) console.warn('[ErgoFlex] Tilt config "' + baked.name + '": part [' + eid + '] not found in model.');
+                    reportSceneWarning('tilt-part-missing', `Tilt rig "${baked.name}" refers to a part that is not in this model.`, [eid]);
                 return entry ? entry.obj : null;
             })
             .filter(obj => obj && !isInTiltWrapper(obj));
@@ -4212,6 +4406,7 @@ function buildActuatorRig({ name, baseLocal, targetEditorId, cylinderEditorIds, 
     const targetEntry = partRegistry.get(targetEditorId);
     if (!targetEntry) {
         console.warn('[ErgoFlex] Actuator rig "' + name + '": target part [' + targetEditorId + '] not found.');
+        reportSceneWarning('rig-target-missing', `Actuator rig \"${name}\" cannot find its target part.`, [targetEditorId]);
         return null;
     }
     // A part can only live in one animation wrapper, so whichever rig builds first
@@ -5632,6 +5827,8 @@ window.ErgoFlex = {
     applyPreset,
     toggleAccessory,
     get priceLines() { return priceBreakdown(currentConfig); },
+    runValidation,
+    reportSceneWarning,
     validConfigForTest: validConfig,
     alignSelection,
     distributeSelection,

@@ -59,6 +59,17 @@ Saved builds and the build list use `ergoflexSavedBuildV2` / `ergoflexCartV2`. V
 
 **This is a design/storefront prototype:** the size selector updates the estimate but does not resize the reference CAD assembly. See [docs/sizing-gate.md](docs/sizing-gate.md) for why, measured rather than assumed: the model's width axis is Z (not X), the desktop is a four-mesh assembly whose parts carry 3,000-4,600 vertices each (so it has real edge features that a stretch would distort), and its 44 x 32 in footprint matches none of the three catalog SKUs. Run `node tools/measure-asset.cjs` to reproduce the measurements. Checkout, payment, inventory, tax, shipping, and order submission are not connected. Estimates state that final specifications and availability need confirmation. No fabricated reviews or unverified delivery promises are displayed.
 
+## Build checks
+
+A **Build checks** panel reports geometric problems with the current configuration: actuator travel, coarse collision candidates, incompatible option combinations, and problems the app detects while building rigs that previously only reached the console.
+
+**These are advisory and do not block ordering.** A rule may only be promoted to blocking when its limit comes from a confirmed product specification and it has a passing test on a known-bad and a known-good configuration. `LIMITS` in `validation.mjs` currently holds `null` for actuator stroke, minimum clearance, and the mounting-point budget, all marked `unconfirmed` — **supplying those is a prerequisite for enforcement**, and until then the panel says so in as many words.
+
+Two things worth knowing about how the checks work:
+
+- **Actuator travel is sampled across lift × tilt, not lift alone.** The solver offsets the actuator base by the lift and the target is itself a lift member, so both endpoints translate together and a lift-only sample measures almost no travel. Tilt is what actually changes it.
+- **Collisions are candidates, not verdicts.** They come from coarse per-assembly bounding boxes — 830 meshes cannot be pair-tested interactively — and are filtered against a list of intended contacts, since a fastener sits inside its hole and a column sits inside a column. Without that list every configuration would report as one large collision.
+
 ## Verify
 
 ```sh
