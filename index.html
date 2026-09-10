@@ -307,9 +307,11 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-6 pb-12">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div id="store-grid" class="grid grid-cols-1 lg:grid-cols-4 gap-10">
             <!-- Configuration Panel -->
             <div id="config-column" class="lg:col-span-1 order-2 lg:order-1">
+                <button id="config-collapse" class="config-collapse" aria-expanded="true" aria-controls="config-column-content" title="Collapse the options panel to give the desk more room">Hide options</button>
+                <div id="config-column-content">
                 <!-- Product Header -->
                 <div class="mb-8">
                     <div class="eyebrow">BUILT AROUND YOU</div>
@@ -450,11 +452,12 @@
                         Design preview · Final specifications, availability, and delivery confirmed before ordering.
                     </div>
                 </div>
+                </div>
             </div>
 
             <!-- 3D Viewer -->
-            <div class="lg:col-span-2 order-1 lg:order-2">
-                <div id="viewer-shell" class="product-viewer rounded-xl overflow-hidden" style="height: min(900px, calc(100vh - 170px)); min-height: 520px;">
+            <div id="viewer-column" class="lg:col-span-3 order-1 lg:order-2">
+                <div id="viewer-shell" class="product-viewer rounded-xl overflow-hidden" style="height: min(1040px, calc(100vh - 140px)); min-height: 520px;">
                     <div class="relative w-full h-full">
                         <div id="loader" class="absolute inset-0 flex items-center justify-center z-10" style="background: radial-gradient(115% 85% at 50% 28%, #ffffff 0%, #f5f5f7 40%, #e8e9ec 75%, #dcdde1 100%);">
                             <div class="flex flex-col items-center">

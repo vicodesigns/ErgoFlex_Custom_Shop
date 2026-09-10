@@ -166,7 +166,6 @@ const BAKED_GROUPS = {
 let savedGroups = {}; // groupName -> array of editorIds
 
 // Phase 2.5: Debug panel collapse state
-let debugPanelCollapsed = false;
 
 // Use vector distance to separate precise clicks from mouse movements
 let mouseDownPos = new THREE.Vector2();
@@ -214,16 +213,56 @@ function heightToLift(h) {
     return LIFT_MIN + ((h - HEIGHT_MIN) / (HEIGHT_MAX - HEIGHT_MIN)) * (LIFT_MAX - LIFT_MIN);
 }
 
-window.toggleSection = function(sectionId) {
-    const content = document.getElementById(`${sectionId}-content`);
-    const arrow = document.getElementById(`${sectionId}-arrow`);
-    if (content.classList.contains('expanded')) {
-        content.classList.remove('expanded');
-        arrow.style.transform = 'rotate(-90deg)';
-    } else {
-        content.classList.add('expanded');
-        arrow.style.transform = 'rotate(0deg)';
+// One collapse mechanism. The app had four — this accordion, the debug panel's
+// display:none toggle, the scene tree's inline style toggle, and a native
+// <details> — so a fifth for the motion dock would have been the wrong move.
+//
+// `storageKey` is optional; when given, the state is remembered per section.
+// `onToggle` lets a caller react, which the motion dock needs because
+// syncViewerSize derives the canvas height from the dock's height.
+const collapsibles = new Map();
+
+function setCollapsed(sectionId, collapsed, { persist = true } = {}) {
+    const entry = collapsibles.get(sectionId);
+    const content = document.getElementById(entry?.contentId || `${sectionId}-content`);
+    const arrow = document.getElementById(entry?.arrowId || `${sectionId}-arrow`);
+    if (!content) return;
+    // Two modes on purpose. The store accordion animates a max-height, which is
+    // right for short sections; a tall panel like the debug tools would be
+    // clipped by that ceiling, so it toggles display instead.
+    if (entry?.mode === 'display') content.style.display = collapsed ? 'none' : '';
+    else content.classList.toggle('expanded', !collapsed);
+    if (arrow) arrow.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+    const header = document.querySelector(`[aria-controls="${sectionId}-content"]`);
+    if (header) header.setAttribute('aria-expanded', String(!collapsed));
+    if (entry) {
+        entry.collapsed = collapsed;
+        if (persist && entry.storageKey) {
+            try { localStorage.setItem(entry.storageKey, String(collapsed)); } catch {}
+        }
+        entry.onToggle?.(collapsed);
     }
+}
+
+function makeCollapsible(sectionId, { storageKey = null, defaultCollapsed = false, onToggle = null,
+                                      mode = 'max-height', contentId = null, arrowId = null } = {}) {
+    let collapsed = defaultCollapsed;
+    if (storageKey) {
+        try {
+            const stored = localStorage.getItem(storageKey);
+            if (stored !== null) collapsed = stored === 'true';
+        } catch {}
+    }
+    collapsibles.set(sectionId, { storageKey, onToggle, collapsed, mode, contentId, arrowId });
+    setCollapsed(sectionId, collapsed, { persist: false });
+    return () => setCollapsed(sectionId, !collapsibles.get(sectionId).collapsed);
+}
+
+window.toggleSection = function(sectionId) {
+    const entry = collapsibles.get(sectionId);
+    const content = document.getElementById(`${sectionId}-content`);
+    const collapsed = entry ? entry.collapsed : content?.classList.contains('expanded');
+    setCollapsed(sectionId, !collapsed);
 }
 
 // Custom studio environment: softbox panels around a dark shell.
@@ -1513,14 +1552,8 @@ function loadModel() {
         } catch(e) { savedGroups = Object.assign({}, BAKED_GROUPS); }
         rebuildGroupDropdown();
 
-        // Restore debug panel collapse state
-        try {
-            const collapsed = localStorage.getItem('ergoflexDebugCollapsed');
-            if (collapsed === 'true') {
-                debugPanelCollapsed = true;
-                applyDebugPanelCollapse();
-            }
-        } catch(e) {}
+        // Debug panel collapse state (read from localStorage by makeCollapsible)
+        initDebugPanelCollapse();
 
         // Selecting parts never changes the production lift assembly.
         if (clearPartsBtn) clearPartsBtn.click();
@@ -1929,6 +1962,28 @@ function applyProjectPresentation(project) {
     }
 }
 
+// Collapsing the options panel hands the whole grid row to the viewer. Uses the
+// same makeCollapsible mechanism as the store accordion and the movement dock.
+function initConfigColumnCollapse() {
+    const button = document.getElementById('config-collapse');
+    const grid = document.getElementById('store-grid');
+    const column = document.getElementById('viewer-column');
+    if (!button || !grid || !column) return;
+    const toggle = makeCollapsible('config-column', {
+        storageKey: 'ergoflex.configColumnCollapsed',
+        mode: 'display',
+        onToggle: collapsed => {
+            button.textContent = collapsed ? 'Show options' : 'Hide options';
+            button.setAttribute('aria-expanded', String(!collapsed));
+            document.getElementById('config-column')?.classList.toggle('collapsed', collapsed);
+            column.classList.toggle('lg:col-span-3', !collapsed);
+            column.classList.toggle('lg:col-span-4', collapsed);
+            requestAnimationFrame(syncViewerSize);
+        }
+    });
+    button.onclick = toggle;
+}
+
 // --- Project panel ----------------------------------------------------------
 
 // Sits beside the rigs-only "Export Animations" button, which keeps working —
@@ -2291,7 +2346,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Phase 2.5: Collapsible Debug Panel ---
     const debugHeader = document.getElementById('debug-panel-header');
     if (debugHeader) {
-        debugHeader.addEventListener('click', toggleDebugPanel);
+        debugHeader.addEventListener('click', () => toggleDebugPanel());
     }
 
     // Keyboard shortcuts with input-focus guard:
@@ -2472,6 +2527,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     buildProjectTools(exportTiltBtn);
+    initConfigColumnCollapse();
 
     const pickPivotBtn = document.getElementById('pick-pivot-btn');
     if (pickPivotBtn) {
@@ -2713,6 +2769,9 @@ document.getElementById('continue-shopping').addEventListener('click', () => {
 document.getElementById('reset-view').addEventListener('click', () => {
     if (controls) {
         controls.autoRotate = false;
+        // A close-up shortcut lowers the orbit floor; put it back.
+        controls.minDistance = DEFAULT_MIN_DISTANCE;
+        cameraTween.active = false;
         camera.position.set(STARTING_POS.x, STARTING_POS.y, STARTING_POS.z);
         controls.target.set(STARTING_TARGET.x, STARTING_TARGET.y, STARTING_TARGET.z);
         controls.update();
@@ -2986,24 +3045,21 @@ function buildTreeNode(parentEl, obj, depth) {
     parentEl.appendChild(div);
 }
 
-// --- Phase 2.5: Collapsible Debug Panel ---
-function applyDebugPanelCollapse() {
-    const content = document.getElementById('debug-panel-content');
-    const icon = document.getElementById('debug-collapse-icon');
-    if (!content) return;
-    if (debugPanelCollapsed) {
-        content.style.display = 'none';
-        if (icon) icon.innerHTML = '&#9654;'; // right arrow
-    } else {
-        content.style.display = '';
-        if (icon) icon.innerHTML = '&#9660;'; // down arrow
-    }
-}
+// --- Collapsible debug panel ---
+// Migrated onto makeCollapsible. The localStorage key is unchanged, so an
+// existing preference carries over. It uses display rather than a max-height
+// transition, because this panel is tall enough that a ceiling would clip it.
+let toggleDebugPanel = () => {};
 
-function toggleDebugPanel() {
-    debugPanelCollapsed = !debugPanelCollapsed;
-    applyDebugPanelCollapse();
-    try { localStorage.setItem('ergoflexDebugCollapsed', debugPanelCollapsed.toString()); } catch(e) {}
+function initDebugPanelCollapse() {
+    toggleDebugPanel = makeCollapsible('debug-panel', {
+        storageKey: 'ergoflexDebugCollapsed',
+        mode: 'display',
+        onToggle: collapsed => {
+            const icon = document.getElementById('debug-collapse-icon');
+            if (icon) icon.innerHTML = collapsed ? '&#9654;' : '&#9660;';
+        }
+    });
 }
 
 // --- Phase 2.6: Clone/Duplicate Parts ---
@@ -4444,6 +4500,7 @@ function animate() {
     }
 
     if (controls) {
+        updateCameraTween(dt);
         controls.update();
         const orbitButton = document.getElementById('rotate-scene');
         if (orbitButton && orbitButton.getAttribute('aria-pressed') !== String(controls.autoRotate)) orbitButton.setAttribute('aria-pressed', String(controls.autoRotate));
@@ -4508,7 +4565,75 @@ function showAllParts() {
     isolatedVisibility = null;
     document.getElementById('isolate-parts')?.setAttribute('aria-pressed', 'false');
 }
-function focusObjects(objects) {
+// A short eased move instead of a jump. The presets and every shortcut go
+// through this, so framing is consistent wherever it is triggered from.
+const cameraTween = { active: false, t: 0, duration: 0.4,
+    fromPos: new THREE.Vector3(), toPos: new THREE.Vector3(),
+    fromTarget: new THREE.Vector3(), toTarget: new THREE.Vector3() };
+
+function startCameraTween(toPos, toTarget) {
+    cameraTween.fromPos.copy(camera.position);
+    cameraTween.fromTarget.copy(controls.target);
+    cameraTween.toPos.copy(toPos);
+    cameraTween.toTarget.copy(toTarget);
+    cameraTween.t = 0;
+    cameraTween.active = true;
+}
+
+function updateCameraTween(dt) {
+    if (!cameraTween.active) return;
+    cameraTween.t = Math.min(1, cameraTween.t + dt / cameraTween.duration);
+    const e = cameraTween.t < 0.5
+        ? 4 * cameraTween.t ** 3
+        : 1 - Math.pow(-2 * cameraTween.t + 2, 3) / 2;   // ease-in-out cubic
+    camera.position.lerpVectors(cameraTween.fromPos, cameraTween.toPos, e);
+    controls.target.lerpVectors(cameraTween.fromTarget, cameraTween.toTarget, e);
+    controls.update();
+    if (cameraTween.t >= 1) cameraTween.active = false;
+}
+
+// The named sub-assemblies a viewer actually wants to look at. Resolved live,
+// because rigs reparent their parts and the wrappers are the right thing to
+// frame once they exist.
+const DEFAULT_MIN_DISTANCE = 2;
+const CLOSEUP_MIN_DISTANCE = 0.35;
+
+function cameraShortcutTargets(key) {
+    if (!loadedModel) return [];
+    const byPrefix = prefixes => {
+        const out = [];
+        partRegistry.forEach(entry => {
+            if (prefixes.some(p => entry.name === p || entry.name.startsWith(p))) out.push(entry.obj);
+        });
+        return out;
+    };
+    switch (key) {
+        case 'desk': return [loadedModel];
+        case 'desktop': {
+            const tilt = tiltConfigs.find(c => c.wrapperGroup);
+            return tilt ? [tilt.wrapperGroup] : byPrefix(['Desktop', 'Top_Shelf']);
+        }
+        case 'wheels': return wheelRigs.length ? wheelRigs.map(r => r.wrapper) : byPrefix(['Wheel_']);
+        case 'actuators': return actuatorRigs.length
+            ? actuatorRigs.flatMap(r => [r.cylWrapper, r.rodWrapper, r.targetObj].filter(Boolean))
+            : byPrefix(['Linear_Actuators', 'L_A_Hardware_Top']);
+        case 'columns': return byPrefix(['Lift_Column']);
+        default: return [loadedModel];
+    }
+}
+
+// Sub-assemblies are small. OrbitControls clamps to minDistance 2 and
+// focusObjects respects that clamp, so a wheel or a clevis would be framed no
+// closer than 2 world units — not a close-up at all. Drop the floor while a
+// close-up is active and restore it on reset.
+function focusCameraShortcut(key) {
+    const objects = cameraShortcutTargets(key);
+    if (!objects.length) return notifyUser('That assembly is not in the current model.');
+    controls.minDistance = key === 'desk' ? DEFAULT_MIN_DISTANCE : CLOSEUP_MIN_DISTANCE;
+    focusObjects(objects, { animate: true });
+}
+
+function focusObjects(objects, { animate = false } = {}) {
     if (!camera || !controls || !objects.length) return;
     const box = new THREE.Box3(); objects.forEach(obj => box.expandByObject(obj));
     if (box.isEmpty()) return;
@@ -4524,8 +4649,14 @@ function focusObjects(objects) {
         distance = Math.max(distance, depth + Math.abs(point.dot(up)) / tanV, depth + Math.abs(point.dot(right)) / tanH);
     }
     distance = Math.min(controls.maxDistance, distance * 1.12);
-    controls.target.copy(center); camera.position.copy(center).addScaledVector(direction, distance);
-    controls.autoRotate = false; controls.update();
+    const position = center.clone().addScaledVector(direction, distance);
+    controls.autoRotate = false;
+    if (animate) {
+        startCameraTween(position, center);
+    } else {
+        cameraTween.active = false;
+        controls.target.copy(center); camera.position.copy(position); controls.update();
+    }
 }
 function setMotionTab(tab) {
     document.getElementById('motion-dock').dataset.tab = tab;
@@ -4580,7 +4711,7 @@ function initStudio() {
     const top = document.createElement('div'); top.className = 'viewer-heading';
     top.innerHTML = `<div class="eyebrow" id="scene-status">LOADING YOUR WORKSPACE</div><h2>Designed to move you.</h2><p id="build-summary"></p>`; viewer.append(top);
     const toolbar = document.createElement('div'); toolbar.className = 'studio-toolbar';
-    toolbar.innerHTML = `<label><span>Environment</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate">Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><label>Exposure<input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
+    toolbar.innerHTML = `<label><span>Environment</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate">Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><label>Exposure<input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
     viewer.append(toolbar);
     document.getElementById('studio-environment').onchange = e => {
         document.getElementById('viewer-shell').dataset.environment = e.target.value;
@@ -4595,11 +4726,15 @@ function initStudio() {
         if (!renderer) return;
         renderer.setPixelRatio(Math.min(devicePixelRatio, Number(e.target.value))); syncViewerSize();
     };
-    document.getElementById('fit-view').onclick = () => loadedModel && focusObjects([loadedModel]);
+    document.getElementById('fit-view').onclick = () => { controls.minDistance = DEFAULT_MIN_DISTANCE; if (loadedModel) focusObjects([loadedModel], { animate: true }); };
+    document.querySelectorAll('[data-camera-focus]').forEach(button => {
+        button.onclick = () => focusCameraShortcut(button.dataset.cameraFocus);
+    });
     document.getElementById('camera-view').onchange = e => {
         if (!camera || !loadedModel) return;
         const direction = { hero: [4.8, 2.3, 4.2], front: [6, 0.2, 0], side: [0, 0.2, 6], top: [0, 6, 0.001] }[e.target.value];
-        camera.position.copy(controls.target).add(new THREE.Vector3(...direction)); focusObjects([loadedModel]);
+        controls.minDistance = DEFAULT_MIN_DISTANCE;
+        camera.position.copy(controls.target).add(new THREE.Vector3(...direction)); focusObjects([loadedModel], { animate: true });
     };
     document.getElementById('rotate-scene').onclick = e => {
         if (!controls) return;
@@ -4642,6 +4777,35 @@ function initStudio() {
         b.onclick = () => setMotionTab(b.dataset.motionTab);
         b.onkeydown = e => { if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return; e.preventDefault(); const next = buttons[(index + (e.key === 'ArrowRight' ? 1 : 2)) % 3]; next.click(); next.focus(); };
     });
+    // Collapsing the dock hands its height straight back to the canvas, because
+    // syncViewerSize derives the bottom inset from the dock's offsetHeight.
+    const dockBody = document.createElement('div');
+    dockBody.id = 'motion-dock-content';
+    dockBody.className = 'config-content expanded';
+    [...dock.children].filter(child => child !== tabs).forEach(child => dockBody.append(child));
+    dock.append(dockBody);
+    const dockToggle = document.createElement('button');
+    dockToggle.id = 'motion-dock-toggle';
+    dockToggle.className = 'motion-dock-toggle';
+    dockToggle.setAttribute('aria-controls', 'motion-dock-content');
+    dockToggle.title = 'Collapse the movement panel to give the desk more room';
+    tabs.append(dockToggle);
+    const toggleDock = makeCollapsible('motion-dock', {
+        storageKey: 'ergoflex.motionDockCollapsed',
+        onToggle: collapsed => {
+            dock.classList.toggle('collapsed', collapsed);
+            dockToggle.textContent = collapsed ? '▲' : '▼';
+            dockToggle.setAttribute('aria-label', collapsed ? 'Expand movement panel' : 'Collapse movement panel');
+            requestAnimationFrame(syncViewerSize);
+        }
+    });
+    dockToggle.onclick = toggleDock;
+    // The dock's height animates, so the rAF sync above still reads the old
+    // offsetHeight. Re-sync when the transition actually lands.
+    dockBody.addEventListener('transitionend', event => {
+        if (event.propertyName === 'max-height') syncViewerSize();
+    });
+
     setMotionTab('lift'); setupGlideControls();
     const editorTools = document.createElement('div'); editorTools.className = 'precision-tools';
     editorTools.innerHTML = `<div class="eyebrow">PRECISION & VISIBILITY</div><div><button id="focus-selected">Focus selection <kbd>F</kbd></button><button id="isolate-parts" aria-pressed="false">Isolate</button><button id="show-all-parts">Show all</button></div><div><label>Coordinates <select id="transform-space"><option value="world">World</option><option value="local">Local</option></select></label><label class="check-label"><input type="checkbox" id="transform-snap"> Snap transforms</label></div><p class="studio-note">Q Select · W Move · E Rotate · R Scale · F Focus<br>Snap: 0.05 scene units / 15° / 10% scale</p>`;
@@ -4674,7 +4838,7 @@ function initStudio() {
         if (removed.length) transaction({ type: 'lift-membership', objects: removed, added: false });
         notifyUser(`${removed.length} parts removed from lift for this session.`);
     };
-    document.getElementById('focus-selected').onclick = () => movingObjects.length ? focusObjects(movingObjects.map(i => i.obj)) : notifyUser('Select parts to focus on them.');
+    document.getElementById('focus-selected').onclick = () => movingObjects.length ? focusObjects(movingObjects.map(i => i.obj), { animate: true }) : notifyUser('Select parts to focus on them.');
     document.getElementById('isolate-parts').onclick = e => {
         if (isolatedVisibility) return showAllParts();
         if (!movingObjects.length) return notifyUser('Select parts to isolate first.');
@@ -4790,6 +4954,8 @@ window.ErgoFlex = {
     get modelFingerprint() { return modelFingerprint; },
     get lockedParts() { return [...lockedParts]; },
     get deletedBakedRigs() { return { tilt: [...deletedBakedRigs.tilt], actuator: [...deletedBakedRigs.actuator] }; },
+    focusCameraShortcut,
+    get cameraState() { return { position: camera.position.toArray(), target: controls.target.toArray(), minDistance: controls.minDistance }; },
     serializeProject,
     applyProject,
     readAutosaveRing,

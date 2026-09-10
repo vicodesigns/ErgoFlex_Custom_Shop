@@ -37,6 +37,8 @@ Open **http://localhost:3000** for the store preview or **http://localhost:3000/
 - **Tilt:** the existing rig sliders, with a non-destructive reset to zero (or the closest permitted angle).
 - **Glide:** drag the joystick in any direction, or focus it and hold arrow keys. Joystick directions follow the current camera on the floor plane. Release, focus loss, or hiding the tab stops manual input. Position sliders use model/world X and Z and are bounded to ±1 scene unit. Crawl / Ninja / Slow / Medium / Fast controls speed. Recenter smoothly returns home; Play demo runs the original figure-eight relative to the current position. Wheel rotation comes from actual displacement, including diagonal pair cancellation. Turn the transform tool Off before gliding.
 - Gallery, Warm, and Slate backgrounds, exposure, quality, camera presets, orbit, grid, fit, and transparent PNG capture support product presentation.
+- **Camera shortcuts** frame the Desktop, Wheels, Actuators, and Columns. Close-ups temporarily lower the orbit minimum distance, which otherwise clamps small assemblies to a mid shot; **Reset view** restores it. All camera moves ease over ~400 ms rather than jumping.
+- The movement dock collapses, which hands its height straight back to the canvas. On the storefront, **Hide options** collapses the configuration column and the viewer takes the full width. Both states persist.
 - Wood colors preview stains over the reference birch texture, with grain and matte/satin/gloss visualization controls. Frame finishes include the original neutrals plus Forest, Sand, Navy, and Terracotta.
 
 ## Customer configuration

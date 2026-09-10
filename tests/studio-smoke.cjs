@@ -264,7 +264,51 @@ const server = http.createServer((req, res) => {
     assert.equal(storage, false, 'a failed storage write reports failure rather than success');
 
     await page.evaluate(() => { ErgoFlex.setGlidePosition(0, 0); ErgoFlex.setTilt('tilting', 0); ErgoFlex.setHeight(28); });
-    console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, neutral pose, and project round trip passed.');
+
+    // --- presentation --------------------------------------------------------
+    // Collapsing the dock must return its height to the canvas, since
+    // syncViewerSize derives the bottom inset from the dock's offsetHeight.
+    const dock = await page.evaluate(async () => {
+      const canvas = document.getElementById('model-canvas');
+      const settle = () => new Promise(r => setTimeout(r, 450));
+      const before = canvas.getBoundingClientRect().height;
+      document.getElementById('motion-dock-toggle').click();
+      await settle();
+      const collapsed = canvas.getBoundingClientRect().height;
+      const persisted = localStorage.getItem('ergoflex.motionDockCollapsed');
+      document.getElementById('motion-dock-toggle').click();
+      await settle();
+      return { before, collapsed, restored: canvas.getBoundingClientRect().height, persisted };
+    });
+    assert.ok(dock.collapsed > dock.before + 20, 'collapsing the movement dock gives the canvas its height back');
+    assert.equal(dock.persisted, 'true', 'the collapse state is remembered');
+    assert.ok(Math.abs(dock.restored - dock.before) < 2, 'expanding restores the original canvas height');
+
+    // Each camera shortcut must frame its own assembly, and close-ups need the
+    // orbit floor lowered or minDistance 2 clamps them to a mid shot.
+    const shortcuts = {};
+    for (const key of ['desktop', 'wheels', 'actuators', 'columns']) {
+      shortcuts[key] = await page.evaluate(async k => {
+        ErgoFlex.focusCameraShortcut(k);
+        await new Promise(r => setTimeout(r, 600));
+        const s = ErgoFlex.cameraState;
+        const d = Math.hypot(s.position[0] - s.target[0], s.position[1] - s.target[1], s.position[2] - s.target[2]);
+        return { target: s.target, distance: d, minDistance: s.minDistance };
+      }, key);
+    }
+    assert.ok(shortcuts.wheels.minDistance < 1, 'a close-up lowers the orbit floor');
+    assert.ok(shortcuts.wheels.distance < shortcuts.desktop.distance,
+      'the wheels frame closer than the desktop');
+    assert.ok(shortcuts.desktop.target[1] > shortcuts.wheels.target[1] + 0.2,
+      'the desktop shortcut looks higher up than the wheels shortcut');
+    const reset = await page.evaluate(async () => {
+      document.getElementById('reset-view').click();
+      await new Promise(r => setTimeout(r, 200));
+      return ErgoFlex.cameraState.minDistance;
+    });
+    assert.equal(reset, 2, 'reset restores the default orbit floor');
+
+    console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, neutral pose, project round trip, and presentation passed.');
     if (process.argv.includes('--editor-only')) { assert.deepEqual(errors, []); return; }
     await page.click('[data-motion-tab="glide"]');
     const before = await page.evaluate(() => ErgoFlex.wheelRigs.map(r => r.spin));

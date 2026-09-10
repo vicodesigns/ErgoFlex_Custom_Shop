@@ -167,3 +167,21 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 #project-recovery-list { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
 .project-recovery-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: #444; }
 .project-recovery-row button { font-size: 11px; padding: 3px 8px; }
+
+/* Camera shortcuts sit inside the studio toolbar and inherit its button style. */
+.camera-shortcuts { display: inline-flex; gap: 4px; }
+.camera-shortcuts button { font-size: 11px; padding: 4px 8px; }
+
+/* Collapsing the movement dock returns its height to the canvas, because
+   syncViewerSize derives the bottom inset from the dock's offsetHeight. */
+.motion-dock-toggle { margin-left: auto; border: 0; background: none; cursor: pointer; font-size: 11px; line-height: 1; padding: 4px 6px; color: inherit; opacity: .7; }
+.motion-dock-toggle:hover { opacity: 1; }
+#motion-dock.collapsed { padding-bottom: 4px; }
+#motion-dock-content { max-height: 0; overflow: hidden; transition: max-height .28s ease; }
+#motion-dock-content.expanded { max-height: 420px; }
+@media (prefers-reduced-motion: reduce) { #motion-dock-content { transition: none; } }
+
+/* Options panel collapse. The viewer column takes the freed grid track. */
+.config-collapse { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: #666; background: none; border: 0; padding: 2px 0 10px; cursor: pointer; }
+.config-collapse:hover { color: #111; }
+#config-column.collapsed { align-self: start; }
