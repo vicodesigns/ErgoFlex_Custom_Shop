@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ErgoFlex Standing Desk Builder</title>
-    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=SF+Pro+Text:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
@@ -269,6 +268,7 @@
             transform: scale(1.1);
         }
     </style>
+    <link rel="stylesheet" href="studio.css">
 </head>
 <body class="bg-white">
     <!-- Header -->
@@ -276,20 +276,19 @@
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-8">
-                    <h1 class="text-xl font-semibold text-gray-900">ErgoFlex</h1>
+                    <h1 class="text-xl font-semibold text-gray-900">ErgoFlex<span class="brand-dot">®</span></h1>
                     <nav class="hidden md:flex space-x-6">
-                        <a href="#" class="text-gray-600 hover:text-gray-900 text-sm">Products</a>
-                        <a href="#" class="text-gray-600 hover:text-gray-900 text-sm">Support</a>
-                        <a href="#" class="text-gray-600 hover:text-gray-900 text-sm">About</a>
+                        <a href="#config-column" class="text-gray-600 hover:text-gray-900 text-sm">Configure your desk</a>
+                        <button id="open-editor" class="text-gray-600 hover:text-gray-900 text-sm">Open studio ↗</button>
                     </nav>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button class="text-gray-600 hover:text-gray-900">
+                    <button id="share-build" title="Copy a link to this configuration" aria-label="Share configuration" class="text-gray-600 hover:text-gray-900">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16V3m-4 4 4-4 4 4M5 12v8a1 1 0 001 1h12a1 1 0 001-1v-8"></path>
                         </svg>
                     </button>
-                    <button id="cart-btn" class="relative text-gray-600 hover:text-gray-900">
+                    <button id="cart-btn" aria-label="Open your build list" class="relative text-gray-600 hover:text-gray-900">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                         </svg>
@@ -303,7 +302,7 @@
     <!-- Breadcrumb -->
     <div class="max-w-7xl mx-auto px-6 py-4">
         <div class="breadcrumb">
-            <a href="#">Home</a> > <a href="#">Desks</a> > <span class="text-gray-900">Standing Desk Builder</span>
+            CUSTOM SHOP <span aria-hidden="true"> / </span> <span class="text-gray-900">Your workspace, your way</span>
         </div>
     </div>
 
@@ -313,22 +312,20 @@
             <div id="config-column" class="lg:col-span-1 order-2 lg:order-1">
                 <!-- Product Header -->
                 <div class="mb-8">
-                    <h1 class="heading-font text-3xl font-semibold text-gray-900 mb-2">ErgoFlex™ Standing Desk</h1>
-                    <p class="text-gray-600 mb-4">Premium Height-Adjustable Workspace</p>
+                    <div class="eyebrow">BUILT AROUND YOU</div>
+                    <h1 class="heading-font text-3xl font-semibold text-gray-900 mb-2">Make room<br>for your best work.</h1>
+                    <p class="text-gray-600 mb-4">Meet your ErgoFlex. A workspace that lifts, tilts, and moves with you.</p>
 
                     <!-- Rating -->
                     <div class="flex items-center mb-4">
-                        <div class="rating-stars flex">
-                            ★★★★★
-                        </div>
-                        <span class="ml-2 text-sm text-gray-600">4.8 (127 Reviews)</span>
+                        <span class="collection-badge">ErgoFlex / Custom Series</span>
                     </div>
 
                     <!-- Price -->
                     <div class="mb-6">
                         <div class="text-sm text-gray-600 mb-1">As configured:</div>
                         <div class="price-display text-3xl heading-font" id="total-price">$1,299</div>
-                        <div class="text-sm text-green-600 font-medium">FREE SHIPPING</div>
+                        <div class="text-sm text-gray-500">Estimated configuration price</div>
                     </div>
                 </div>
 
@@ -410,23 +407,23 @@
                                 <ul class="space-y-3 text-sm">
                                     <li class="flex items-center">
                                         <span class="feature-check mr-3">✓</span>
-                                        <span>Dual-motor height adjustment (28" - 48")</span>
+                                        <span>Explore 28" – 52.5" height adjustment</span>
                                     </li>
                                     <li class="flex items-center">
                                         <span class="feature-check mr-3">✓</span>
-                                        <span>Memory presets with LED display</span>
+                                        <span>Independent desktop tilt</span>
                                     </li>
                                     <li class="flex items-center">
                                         <span class="feature-check mr-3">✓</span>
-                                        <span>Anti-collision technology</span>
+                                        <span>Omnidirectional wheel movement</span>
                                     </li>
                                     <li class="flex items-center">
                                         <span class="feature-check mr-3">✓</span>
-                                        <span>300 lb weight capacity</span>
+                                        <span>Custom wood tones and frame finishes</span>
                                     </li>
                                     <li class="flex items-center">
                                         <span class="feature-check mr-3">✓</span>
-                                        <span>10-year manufacturer warranty</span>
+                                        <span>Save and compare your configurations</span>
                                     </li>
                                 </ul>
                             </div>
@@ -437,20 +434,20 @@
                 <!-- Action Buttons -->
                 <div class="mt-8 space-y-4">
                     <button id="add-to-cart" class="btn-primary w-full py-4 text-lg font-medium">
-                        Add to Cart — <span id="cart-price">$1,299</span>
+                        Add to build list — <span id="cart-price">$1,299</span>
                     </button>
 
                     <div class="grid grid-cols-2 gap-3">
-                        <button class="btn-secondary py-3 text-sm">
+                        <button id="save-build" class="btn-secondary py-3 text-sm">
                             Save for Later
                         </button>
-                        <button class="btn-secondary py-3 text-sm">
-                            Get Quote
+                        <button id="download-quote" class="btn-secondary py-3 text-sm">
+                            Download estimate
                         </button>
                     </div>
 
                     <div class="text-center text-sm text-gray-500 mt-4">
-                        Ships in 2-3 weeks • Free white-glove delivery
+                        Design preview · Final specifications, availability, and delivery confirmed before ordering.
                     </div>
                 </div>
             </div>
@@ -466,7 +463,7 @@
                             </div>
                         </div>
 
-                        <canvas id="model-canvas" class="w-full h-full"></canvas>
+                        <canvas id="model-canvas" role="img" aria-label="Interactive ErgoFlex desk. Drag to rotate; scroll or pinch to zoom." class="w-full h-full"></canvas>
 
                         <!-- Box-select rubber band (Shift/Alt + drag) -->
                         <div id="marquee-box" class="hidden"><div id="marquee-count">0</div></div>
@@ -475,14 +472,14 @@
                         <div id="pick-hover-label" class="hidden absolute z-20 pointer-events-none bg-gray-900/85 text-white text-[11px] font-medium px-2 py-1 rounded shadow-lg whitespace-nowrap"></div>
 
                         <!-- Desk Height + Tilt Controls -->
-                        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 w-11/12 max-w-sm flex flex-col gap-2">
+                        <div id="motion-dock" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 w-11/12 max-w-sm flex flex-col gap-2">
                             <div id="tilt-sliders-overlay" class="flex flex-col gap-2 hidden"></div>
                             <div class="bg-white/80 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/50 flex items-center gap-5">
                                 <div class="flex flex-col items-center min-w-[50px]">
                                     <span class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-0.5">Height</span>
                                     <span class="text-lg font-bold text-gray-900 heading-font" id="desk-height-display">28.0"</span>
                                 </div>
-                                <input type="range" id="desk-height-slider" min="28" max="52.5" step="0.1" value="28" class="height-slider flex-1">
+                                <input type="range" id="desk-height-slider" aria-label="Desk height in inches" min="28" max="52.5" step="0.1" value="28" class="height-slider flex-1">
                             </div>
                         </div>
 
@@ -753,7 +750,7 @@
     </div>
 
     <!-- Cart Success Modal -->
-    <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-25 z-50 hidden flex items-center justify-center p-4">
+    <div id="cart-modal" role="dialog" aria-modal="true" aria-labelledby="cart-title" tabindex="-1" class="fixed inset-0 bg-black bg-opacity-25 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-xl">
             <div class="text-center">
                 <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -761,14 +758,14 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">Added to Cart</h3>
+                <h3 id="cart-title" class="text-xl font-semibold text-gray-900 mb-2">Your build list</h3>
                 <div id="cart-content" class="text-gray-600 mb-6"></div>
                 <div class="flex space-x-3">
                     <button id="continue-shopping" class="flex-1 btn-secondary py-3">
                         Continue Building
                     </button>
-                    <button class="flex-1 btn-primary py-3">
-                        View Cart
+                    <button id="export-cart" class="flex-1 btn-primary py-3">
+                        Export estimate
                     </button>
                 </div>
             </div>
@@ -815,12 +812,16 @@
                 { name: "White", color: "#f8f8f8", price: 0, isDefault: true },
                 { name: "Black", color: "#1C1C1E", price: 0 },
                 { name: "Silver", color: "#a0a0a5", price: 25 },
-                { name: "Space Gray", color: "#5c5c60", price: 25 }
+                { name: "Space Gray", color: "#5c5c60", price: 25 },
+                { name: "Forest", color: "#344b40", price: 50 },
+                { name: "Sand", color: "#c5b59c", price: 50 },
+                { name: "Navy", color: "#273c55", price: 50 },
+                { name: "Terracotta", color: "#a45c47", price: 50 }
             ]
         };
 
-        const STARTING_POS = { x: 4.1, y: 3.1, z: 3.4 };
-        const STARTING_TARGET = { x: -0.1, y: 1.1, z: 0.0 };
+        const STARTING_POS = { x: 4.8, y: 3.4, z: 4.2 };
+        const STARTING_TARGET = { x: -0.1, y: 0.9, z: 0.0 };
 
         const TELESCOPING_PARTS = [
             "Lift_Column_Center_1",
@@ -866,7 +867,8 @@
         let currentLift = LIFT_MIN;
         let targetLift = LIFT_MIN;
         let manualLiftOverride = false;
-        let movingObjects = [];
+        let movingObjects = []; // Editor selection; independent of lift membership.
+        const liftObjects = new Map();
         let telescopingObjects = [];
         let interactableObjects = [];
         let boxHelpers = new Map();
@@ -1101,6 +1103,7 @@
             controls.minDistance = 2;
             controls.maxDistance = 15;
             controls.maxPolarAngle = Math.PI * 0.49;
+            controls.minPolarAngle = 0.001;
             controls.target.set(STARTING_TARGET.x, STARTING_TARGET.y, STARTING_TARGET.z);
 
             // Gentle idle spin (enabled once the model loads), stops on first interaction
@@ -1173,6 +1176,7 @@
             keyLight.shadow.camera.top = 5;
             keyLight.shadow.camera.bottom = -5;
             keyLight.shadow.bias = -0.0002;
+            keyLight.shadow.normalBias = 0.004;
             keyLight.shadow.radius = 8;
             keyLight.shadow.blurSamples = 16;
             scene.add(keyLight);
@@ -1294,6 +1298,7 @@
                 updateTransformProxy();
             } else if (entry.type === 'clone') {
                 entry.clones.forEach(clone => {
+                    liftObjects.delete(clone);
                     toggleMovingObject(clone, false, true);
                     const idx = interactableObjects.indexOf(clone);
                     if (idx > -1) interactableObjects.splice(idx, 1);
@@ -1571,8 +1576,8 @@
         function drawMarquee() {
             if (!marqueeBoxEl) return;
             const r = marqueeRect();
-            marqueeBoxEl.style.left = r.left + 'px';
-            marqueeBoxEl.style.top = r.top + 'px';
+            marqueeBoxEl.style.left = (r.left + canvas.offsetLeft) + 'px';
+            marqueeBoxEl.style.top = (r.top + canvas.offsetTop) + 'px';
             marqueeBoxEl.style.width = (r.right - r.left) + 'px';
             marqueeBoxEl.style.height = (r.bottom - r.top) + 'px';
             if (marqueeCountEl) {
@@ -1702,6 +1707,9 @@
 
             const sidebar = document.createElement('aside');
             sidebar.id = 'setup-sidebar';
+            sidebar.dataset.tab = 'editor';
+            sidebar.innerHTML = `<div class="studio-sidebar-header"><div class="eyebrow">ERGOFLEX / DESIGN STUDIO</div><h2>Your workspace. Refined.</h2><div class="studio-tabs"><button data-sidebar-tab="editor" aria-pressed="true">Editor tools</button><button data-sidebar-tab="finishes" aria-pressed="false">Product & finishes</button></div></div>`;
+            sidebar.querySelectorAll('[data-sidebar-tab]').forEach(button => button.addEventListener('click', () => { sidebar.dataset.tab = button.dataset.sidebarTab; sidebar.querySelectorAll('[data-sidebar-tab]').forEach(b => b.setAttribute('aria-pressed', String(b === button))); }));
 
             const resizer = document.createElement('div');
             resizer.id = 'setup-resizer';
@@ -1710,7 +1718,7 @@
             const exitBtn = document.createElement('button');
             exitBtn.id = 'setup-exit-btn';
             exitBtn.className = 'bg-white/90 hover:bg-white border border-gray-200 shadow-sm text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg';
-            exitBtn.textContent = 'Exit Setup (`)';
+            exitBtn.textContent = 'Store preview ↗';
             exitBtn.addEventListener('click', () => setSetupLayout(false));
 
             document.body.append(backdrop, sidebar, resizer, exitBtn);
@@ -1790,7 +1798,17 @@
                 });
             }
 
+            if (!on) {
+                isSelectionMode = false;
+                if (selectionModeToggle) selectionModeToggle.checked = false;
+                document.querySelector('input[name="transform_mode"][value="none"]').checked = true;
+                if (transformProxy) updateTransformProxy();
+                boxHelpers.forEach(helper => helper.visible = false);
+                showAllParts();
+                updateBoxSelectHint();
+            }
             setupLayoutOn = on;
+            controls && (controls.autoRotate = false);
             requestAnimationFrame(syncViewerSize);
         }
 
@@ -1912,6 +1930,7 @@
                 sharedBlackMetalMaterial = null;
 
                 movingObjects = [];
+                liftObjects.clear();
                 telescopingObjects = [];
                 interactableObjects = [];
                 boxHelpers.forEach(h => scene.remove(h));
@@ -2009,6 +2028,7 @@
                                 obj: child,
                                 baseY: child.position.y + LIFT_MIN
                             });
+                            liftObjects.set(child, movingObjects[movingObjects.length - 1]);
                             const helper = new THREE.BoxHelper(child, 0x30d158);
                             scene.add(helper);
                             boxHelpers.set(child.uuid, helper);
@@ -2033,6 +2053,11 @@
                 // Auto-rig the omni wheels from part naming, remember the home position
                 buildWheelRigs();
                 glideBase.copy(loadedModel.position);
+                applySurfaceFinish();
+                syncBuildSummary();
+                document.getElementById('scene-status').textContent = 'LIVE 3D · READY';
+                syncViewerSize();
+                focusObjects([loadedModel]);
 
                 // Phase 1.4: Material smoke check
                 if (!sharedBirchMaterial) {
@@ -2071,10 +2096,12 @@
                     }
                 } catch(e) {}
 
+                // Selecting parts never changes the production lift assembly.
+                if (clearPartsBtn) clearPartsBtn.click();
                 // Build scene tree
                 buildSceneTree();
 
-                controls.autoRotate = true;
+                controls.autoRotate = false;
 
                 loader.style.opacity = '0';
                 setTimeout(() => loader.style.display = 'none', 400);
@@ -2334,9 +2361,13 @@
             // Keyboard shortcuts with input-focus guard:
             // ` shows/hides the setup panel, Ctrl/Cmd+Z undoes the last setup edit
             document.addEventListener('keydown', (e) => {
+                // A drag can start while a checkbox still has focus; Escape must
+                // cancel the gesture before the text-editing shortcut guard.
+                if (e.key === 'Escape' && marquee.active) { e.preventDefault(); cancelMarquee(); return; }
                 const tag = document.activeElement?.tagName?.toLowerCase();
                 const isEditable = document.activeElement?.isContentEditable;
                 if (tag === 'input' || tag === 'textarea' || tag === 'select' || isEditable) return;
+                if (!document.getElementById('cart-modal').classList.contains('hidden')) return;
                 if (e.key === '`') {
                     e.preventDefault();
                     setSetupLayout(!setupLayoutOn);
@@ -2354,8 +2385,7 @@
 
             const glideBtn = document.getElementById('glide-btn');
             if (glideBtn) glideBtn.addEventListener('click', () => {
-                if (glideActive) stopGlide();
-                else startGlide();
+                setMotionTab('glide');
             });
 
             const arBtn = document.getElementById('ar-btn');
@@ -2498,7 +2528,8 @@
                     el.select();
                     document.execCommand('copy');
                     document.body.removeChild(el);
-                    console.log('[ErgoFlex] Animation payload (arrays map to the BAKED_* constants):\n' + json);
+                    downloadFile('ErgoFlex-animation-rigs.json', json, 'application/json');
+                    notifyUser('Animation rigs downloaded.');
                     const orig = exportTiltBtn.innerText;
                     exportTiltBtn.innerText = 'COPIED TO CLIPBOARD!';
                     setTimeout(() => exportTiltBtn.innerText = orig, 2000);
@@ -2522,7 +2553,7 @@
         function updateMovingObjectsPosition() {
             const liftOffset = currentLift - LIFT_MIN;
 
-            movingObjects.forEach(item => {
+            liftObjects.forEach(item => {
                 // Ignore height slider updates for parts currently locked in the 3D custom
                 // transform tool, and for parts riding inside a tilt wrapper (the wrapper
                 // itself is translated below, so its children must keep their local offsets).
@@ -2554,7 +2585,7 @@
 
         function getOrCreateBirchMaterial() {
             if (!sharedBirchMaterial) {
-                const defaultFinish = PRODUCT_CONFIG.woodFinishes.find(f => f.isDefault);
+                const defaultFinish = PRODUCT_CONFIG.woodFinishes.find(f => f.name === currentConfig.woodFinish);
                 sharedBirchMaterial = new THREE.MeshPhysicalMaterial({
                     color: new THREE.Color(defaultFinish.color),
                     metalness: 0.0,
@@ -2569,7 +2600,8 @@
                     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
                     texture.repeat.set(1.5, 1.5);
                     texture.anisotropy = renderer ? renderer.capabilities.getMaxAnisotropy() : 4;
-                    sharedBirchMaterial.map = texture;
+                    woodTexture = texture;
+                    applySurfaceFinish();
                     sharedBirchMaterial.needsUpdate = true;
                 }, undefined, (err) => {
                     console.error('[ErgoFlex] Failed to load birch texture:', err);
@@ -2580,10 +2612,10 @@
 
         function getOrCreateBasePaintMaterial() {
             if (!sharedBasePaintMaterial) {
-                const defaultFinish = PRODUCT_CONFIG.baseFinishes.find(f => f.isDefault);
+                const defaultFinish = PRODUCT_CONFIG.baseFinishes.find(f => f.name === currentConfig.baseFinish);
                 sharedBasePaintMaterial = new THREE.MeshPhysicalMaterial({
                     color: new THREE.Color(defaultFinish.color),
-                    metalness: 0.1,
+                    metalness: defaultFinish.name === 'Silver' ? 0.75 : 0.1,
                     roughness: 0.45,
                     ior: 1.5,
                     clearcoat: 0.1,
@@ -2643,27 +2675,33 @@
         }
 
         function createFinishSwatch(finish, type) {
-            const swatch = document.createElement('div');
+            const swatch = document.createElement('button');
+            swatch.type = 'button';
             swatch.className = 'finish-swatch';
+            swatch.dataset.finish = finish.name;
+            swatch.dataset.material = type;
+            swatch.setAttribute('aria-label', `${finish.name}, ${finish.price ? '+$' + finish.price : 'included'}`);
+            swatch.setAttribute('aria-pressed', String(finish.name === currentConfig[type === 'wood' ? 'woodFinish' : 'baseFinish']));
             swatch.style.backgroundColor = finish.color;
             swatch.title = `${finish.name}${finish.price > 0 ? ` (+${finish.price})` : ''}`;
-            if (finish.isDefault) swatch.classList.add('selected');
+            if (finish.name === currentConfig[type === 'wood' ? 'woodFinish' : 'baseFinish']) swatch.classList.add('selected');
             swatch.addEventListener('click', () => selectFinish(finish, type, swatch));
             return swatch;
         }
 
         function selectFinish(finish, type, element) {
             const container = type === 'wood' ? woodFinishesGrid : baseFinishesGrid;
-            container.querySelectorAll('.finish-swatch').forEach(el => el.classList.remove('selected'));
+            container.querySelectorAll('.finish-swatch').forEach(el => { el.classList.remove('selected'); el.setAttribute('aria-pressed', 'false'); });
+            element.setAttribute('aria-pressed', 'true');
             element.classList.add('selected');
             if (type === 'wood') {
                 currentConfig.woodFinish = finish.name;
-                document.getElementById('selected-wood-name').textContent = finish.name;
+                document.getElementById('selected-wood-name').textContent = finish.name + (finish.price ? ' · +$' + finish.price : ' · Included');
                 if (sharedBirchMaterial) sharedBirchMaterial.color.set(finish.color);
             } else {
                 currentConfig.baseFinish = finish.name;
-                document.getElementById('selected-base-name').textContent = finish.name;
-                if (sharedBasePaintMaterial) sharedBasePaintMaterial.color.set(finish.color);
+                document.getElementById('selected-base-name').textContent = finish.name + (finish.price ? ' · +$' + finish.price : ' · Included');
+                if (sharedBasePaintMaterial) { sharedBasePaintMaterial.color.set(finish.color); sharedBasePaintMaterial.metalness = finish.name === 'Silver' ? 0.75 : 0.1; }
             }
             updatePrice();
         }
@@ -2677,37 +2715,47 @@
             if (baseFinish) total += baseFinish.price;
             totalPrice.textContent = `$${total.toLocaleString()}`;
             cartPrice.textContent = `$${total.toLocaleString()}`;
+            syncBuildSummary();
         }
 
         function addToCart() {
-            const total = parseInt(cartPrice.textContent.replace(/[$,]/g, ''));
-            const item = {
-                id: Date.now(),
-                name: 'ErgoFlex Standing Desk',
-                size: PRODUCT_CONFIG.sizes[currentConfig.size].name,
-                woodFinish: currentConfig.woodFinish,
-                baseFinish: currentConfig.baseFinish,
-                price: total,
-                quantity: 1
-            };
-            cartItems.push(item);
-            updateCartUI();
-            showCartModal(item);
+            cartItems.push({ id: Date.now(), ...currentConfig, price: configurationPrice(), quantity: 1 });
+            persistCart();
+            showCartModal();
         }
 
         function updateCartUI() {
-            cartCount.textContent = cartItems.length;
+            cartCount.textContent = cartItems.reduce((sum, item) => sum + item.quantity, 0);
             cartCount.classList.toggle('hidden', cartItems.length === 0);
         }
 
-        function showCartModal(item) {
-            const cartContent = document.getElementById('cart-content');
-            cartContent.innerHTML = `
-                <p class="mb-2"><strong>${item.name}</strong></p>
-                <p class="text-sm">${item.size} • ${item.woodFinish} • ${item.baseFinish}</p>
-                <p class="text-lg font-semibold text-blue-600 mt-2">$${item.price.toLocaleString()}</p>
-            `;
-            document.getElementById('cart-modal').classList.remove('hidden');
+        function showCartModal() {
+            const content = document.getElementById('cart-content');
+            content.replaceChildren();
+            if (!cartItems.length) content.textContent = 'Your build list is empty. Customize a desk to get started.';
+            cartItems.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'cart-row';
+                const description = document.createElement('div');
+                description.textContent = `${PRODUCT_CONFIG.sizes[item.size].name} · ${item.woodFinish} · ${item.baseFinish}`;
+                const price = document.createElement('strong');
+                price.textContent = money(item.price * item.quantity);
+                const quantity = document.createElement('input');
+                quantity.type = 'number'; quantity.min = '1'; quantity.max = '20'; quantity.value = item.quantity;
+                quantity.setAttribute('aria-label', 'Quantity for ' + description.textContent);
+                quantity.addEventListener('change', () => {
+                    item.quantity = Math.max(1, Math.min(20, Math.round(Number(quantity.value) || 1)));
+                    persistCart(); showCartModal();
+                });
+                const remove = document.createElement('button');
+                remove.textContent = 'Remove';
+                remove.addEventListener('click', () => { cartItems = cartItems.filter(i => i.id !== item.id); persistCart(); showCartModal(); });
+                row.append(description, price, quantity, remove); content.append(row);
+            });
+            const total = document.createElement('p'); total.className = 'cart-total';
+            total.textContent = 'Estimated total ' + money(cartItems.reduce((n, i) => n + i.price * i.quantity, 0));
+            content.append(total);
+            openDialog(document.getElementById('cart-modal'));
         }
 
         sizeSelect.addEventListener('change', (e) => {
@@ -2718,20 +2766,23 @@
         addToCartBtn.addEventListener('click', addToCart);
 
         document.getElementById('continue-shopping').addEventListener('click', () => {
-            document.getElementById('cart-modal').classList.add('hidden');
+            closeDialog(document.getElementById('cart-modal'));
         });
 
         document.getElementById('reset-view').addEventListener('click', () => {
             if (controls) {
+                controls.autoRotate = false;
                 camera.position.set(STARTING_POS.x, STARTING_POS.y, STARTING_POS.z);
                 controls.target.set(STARTING_TARGET.x, STARTING_TARGET.y, STARTING_TARGET.z);
                 controls.update();
+                if (loadedModel) focusObjects([loadedModel]);
+                document.getElementById('camera-view').value = 'hero';
             }
         });
 
         document.getElementById('cart-modal').addEventListener('click', (e) => {
             if (e.target.id === 'cart-modal') {
-                document.getElementById('cart-modal').classList.add('hidden');
+                closeDialog(document.getElementById('cart-modal'));
             }
         });
 
@@ -3035,6 +3086,7 @@
                     scene.add(clone);
                 }
 
+                if (liftObjects.has(original)) liftObjects.set(clone, { obj: clone, baseY: clone.position.y - (currentLift - LIFT_MIN) });
                 interactableObjects.push(clone);
                 newClones.push(clone);
             });
@@ -3087,6 +3139,7 @@
         }
 
         function removeFromLift(obj) {
+            liftObjects.delete(obj);
             const i = movingObjects.findIndex(item => item.obj === obj);
             if (i > -1) movingObjects.splice(i, 1);
             if (boxHelpers.has(obj.uuid)) {
@@ -3101,6 +3154,7 @@
         function rejoinLift(obj) {
             toggleMovingObject(obj, false, true);
             toggleMovingObject(obj, true, true);
+            liftObjects.set(obj, { obj, baseY: obj.position.y - (currentLift - LIFT_MIN) });
         }
 
         // Attach/detach parts on an EXISTING tilt rig. Both zero the rotation first so
@@ -3314,7 +3368,7 @@
 
         function saveTiltConfig() {
             const name = document.getElementById('tilt-name-input')?.value?.trim();
-            if (!name || movingObjects.length === 0 || !loadedModel) return;
+            if (!name || movingObjects.length === 0 || !loadedModel) { notifyUser('Name your tilt and select its parts first.'); return; }
             if (tiltConfigs.some(c => c.name === name)) {
                 console.warn('[ErgoFlex] A tilt config named "' + name + '" already exists — remove it first or pick another name.');
                 return;
@@ -3322,8 +3376,9 @@
 
             const axisRadio = document.querySelector('input[name="tilt_axis"]:checked');
             const axis = axisRadio ? axisRadio.value : 'z';
-            const minDeg = parseFloat(document.getElementById('tilt-min-deg')?.value || -15);
-            const maxDeg = parseFloat(document.getElementById('tilt-max-deg')?.value || 15);
+            const minDeg = Number(document.getElementById('tilt-min-deg').value);
+            const maxDeg = Number(document.getElementById('tilt-max-deg').value);
+            if (!Number.isFinite(minDeg) || !Number.isFinite(maxDeg) || minDeg >= maxDeg || minDeg < -90 || maxDeg > 90) { notifyUser('Enter a tilt range between −90° and 90°, with minimum below maximum.'); return; }
 
             // Release any parts held by the transform gizmo so world transforms are clean
             if (transformControl) transformControl.detach();
@@ -3428,7 +3483,7 @@
                     '<span class="text-lg font-bold text-gray-900 heading-font" id="tilt-overlay-val-' + idx + '">' + config.currentDeg.toFixed(1) + '°</span>' +
                     '</div>' +
                     '<input type="range" min="' + config.minDeg + '" max="' + config.maxDeg + '" step="0.1" value="' + config.currentDeg + '" class="height-slider flex-1" data-tilt-idx="' + idx + '">' +
-                    '<button class="text-gray-400 hover:text-red-500 text-sm font-bold leading-none px-1" data-remove-tilt="' + idx + '" title="Remove tilt config">✕</button>';
+                    '<button class="tilt-reset" data-reset-tilt="' + idx + '" title="Reset tilt">↺</button>';
                 if (overlay) overlay.appendChild(overlayDiv);
 
                 // Sync both sliders
@@ -3436,7 +3491,7 @@
                 const overlaySlider = overlayDiv.querySelector('input[type="range"]');
 
                 function onTiltInput(deg, source) {
-                    config.currentDeg = deg;
+                    config.currentDeg = THREE.MathUtils.clamp(Number(deg) || 0, config.minDeg, config.maxDeg);
                     const valSpan = document.getElementById('tilt-val-' + idx);
                     if (valSpan) valSpan.textContent = deg.toFixed(1) + ' deg';
                     const overlayVal = document.getElementById('tilt-overlay-val-' + idx);
@@ -3451,7 +3506,9 @@
 
                 // Delete buttons
                 div.querySelector('[data-remove-tilt]')?.addEventListener('click', () => removeTiltConfig(idx));
-                overlayDiv.querySelector('[data-remove-tilt]')?.addEventListener('click', () => removeTiltConfig(idx));
+                overlayDiv.querySelector('[data-reset-tilt]')?.addEventListener('click', () => onTiltInput(THREE.MathUtils.clamp(0, config.minDeg, config.maxDeg), null));
+                overlaySlider.setAttribute('aria-label', config.name + ' angle in degrees');
+                panelSlider.setAttribute('aria-label', config.name + ' angle in degrees');
 
                 // Add/remove selected parts on the existing rig
                 div.querySelector('[data-add-parts-tilt]')?.addEventListener('click', () => addSelectedToTiltConfig(idx));
@@ -3776,7 +3833,6 @@
         let glideActive = false;
         let glideT = 0;
         const _glidePos = new THREE.Vector3();
-        const _glideLast = new THREE.Vector3();
         const clock = new THREE.Clock();
 
         function buildWheelRigs() {
@@ -3834,42 +3890,131 @@
             return out;
         }
 
+        const glideOffset = new THREE.Vector3();
+        const glideTarget = new THREE.Vector3();
+        const glideInput = new THREE.Vector2();
+        const glideDemoOrigin = new THREE.Vector3();
+        const glideKeys = new Set();
+        let glidePointer = null;
+        let glideSpeed = 0.5;
+        let glideUIPrev = '';
+        function releaseGlideInput() {
+            glideKeys.clear(); glideInput.set(0, 0); glidePointer = null;
+            const knob = document.getElementById('glide-knob'); if (knob) knob.style.transform = 'translate(-50%, -50%)';
+        }
+        function manualGlideReady() {
+            if (!loadedModel) { notifyUser('Wait for the desk to finish loading.'); return false; }
+            if (transformControl?.object || isDraggingTransform) {
+                notifyUser('Set Transform Tool to Off before moving the entire desk.'); return false;
+            }
+            glideActive = false; controls.autoRotate = false; return true;
+        }
+        function setGlidePosition(x, z) {
+            if (!Number.isFinite(x) || !Number.isFinite(z) || !manualGlideReady()) return false;
+            releaseGlideInput();
+            glideTarget.set(THREE.MathUtils.clamp(x, -1, 1), 0, THREE.MathUtils.clamp(z, -1, 1));
+            syncGlideUI(); return true;
+        }
+        function setupGlideControls() {
+            const pad = document.getElementById('glide-pad');
+            const updatePointer = e => {
+                const rect = pad.getBoundingClientRect();
+                glideInput.set((e.clientX - rect.left - rect.width / 2) / (rect.width * 0.35), (e.clientY - rect.top - rect.height / 2) / (rect.height * 0.35));
+                if (glideInput.length() > 1) glideInput.normalize();
+                document.getElementById('glide-knob').style.transform = `translate(calc(-50% + ${glideInput.x * 30}px), calc(-50% + ${glideInput.y * 30}px))`;
+            };
+            pad.onpointerdown = e => {
+                if (e.button !== 0 || !manualGlideReady()) return;
+                e.preventDefault(); pad.focus(); glideTarget.copy(glideOffset); glidePointer = e.pointerId;
+                pad.setPointerCapture(e.pointerId); updatePointer(e);
+            };
+            pad.onpointermove = e => { if (glidePointer === e.pointerId) updatePointer(e); };
+            ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => pad.addEventListener(type, releaseGlideInput));
+            pad.onkeydown = e => {
+                if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+                e.preventDefault(); if (!manualGlideReady()) return;
+                glideTarget.copy(glideOffset); glideKeys.add(e.key);
+                glideInput.set(Number(glideKeys.has('ArrowRight')) - Number(glideKeys.has('ArrowLeft')), Number(glideKeys.has('ArrowDown')) - Number(glideKeys.has('ArrowUp')));
+                if (glideInput.length() > 1) glideInput.normalize();
+            };
+            pad.onkeyup = e => {
+                glideKeys.delete(e.key);
+                glideInput.set(Number(glideKeys.has('ArrowRight')) - Number(glideKeys.has('ArrowLeft')), Number(glideKeys.has('ArrowDown')) - Number(glideKeys.has('ArrowUp')));
+                if (glideInput.length() > 1) glideInput.normalize();
+            };
+            pad.onblur = releaseGlideInput;
+            window.addEventListener('blur', () => { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); });
+            document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); } });
+            document.getElementById('glide-x').oninput = e => setGlidePosition(Number(e.target.value), glideTarget.z);
+            document.getElementById('glide-z').oninput = e => setGlidePosition(glideTarget.x, Number(e.target.value));
+            document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.5;
+            document.getElementById('glide-home').onclick = () => setGlidePosition(0, 0);
+            document.getElementById('glide-demo').onclick = () => {
+                if (glideActive) { glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); }
+                else startGlide();
+            };
+        }
+        function syncGlideUI() {
+            const state = `${glideOffset.x.toFixed(2)},${glideOffset.z.toFixed(2)},${glideActive},${glideInput.lengthSq() > 0}`;
+            if (state === glideUIPrev) return; glideUIPrev = state;
+            for (const axis of ['x', 'z']) {
+                const input = document.getElementById('glide-' + axis);
+                if (input && document.activeElement !== input) input.value = glideOffset[axis];
+                const output = document.getElementById('glide-' + axis + '-value');
+                if (output) output.textContent = (Math.abs(glideOffset[axis]) < 0.005 ? 0 : glideOffset[axis]).toFixed(2);
+            }
+            const demo = document.getElementById('glide-demo');
+            if (demo) { demo.textContent = glideActive ? 'Pause demo' : 'Play demo'; demo.setAttribute('aria-pressed', String(glideActive)); }
+            const status = document.getElementById('glide-status');
+            if (status) status.textContent = glideActive ? 'Demo playing' : glideInput.lengthSq() > 0 ? 'Gliding' : glideOffset.distanceTo(glideTarget) > 0.005 ? 'Moving to position' : 'Ready to move';
+        }
         function startGlide() {
-            if (!loadedModel || wheelRigs.length === 0) return false;
-            glideActive = true;
-            glideT = 0;
-            _glideLast.set(0, 0, 0);
-            const btn = document.getElementById('glide-btn');
-            if (btn) { btn.style.color = '#007aff'; btn.style.borderColor = '#007aff'; }
-            return true;
+            if (!manualGlideReady()) return false;
+            releaseGlideInput(); glideDemoOrigin.copy(glideOffset); glideActive = true; glideT = 0;
+            syncGlideUI(); return true;
         }
-
+        // Export uses an immediate home reset; customer Recenter uses setGlidePosition.
         function stopGlide() {
-            glideActive = false;
-            if (loadedModel) {
-                loadedModel.position.x = glideBase.x;
-                loadedModel.position.z = glideBase.z;
-            }
-            const btn = document.getElementById('glide-btn');
-            if (btn) { btn.style.color = '#374151'; btn.style.borderColor = '#e5e7eb'; }
+            glideActive = false; releaseGlideInput(); glideTarget.set(0, 0, 0);
+            applyGlideOffset(glideTarget); syncGlideUI();
         }
-
+        function applyGlideOffset(next) {
+            if (!loadedModel) return;
+            const dx = next.x - glideOffset.x, dz = next.z - glideOffset.z;
+            wheelRigs.forEach(rig => {
+                rig.spin -= (dx + rig.latSign * dz) / rig.radius;
+                rig.wrapper.rotation.z = rig.spin;
+            });
+            glideOffset.copy(next);
+            loadedModel.position.x = glideBase.x + next.x; loadedModel.position.z = glideBase.z + next.z;
+            loadedModel.updateMatrixWorld(true);
+            if (isSelectionMode) boxHelpers.forEach(helper => helper.update());
+        }
         function updateGlide(dt) {
-            if (!glideActive || !loadedModel) return;
-            glideT += dt / GLIDE_DURATION;
-            if (glideT >= 1) { stopGlide(); return; }
-            glidePath(glideT, _glidePos);
-            loadedModel.position.x = glideBase.x + _glidePos.x;
-            loadedModel.position.z = glideBase.z + _glidePos.z;
-            if (dt > 0) {
-                const vx = (_glidePos.x - _glideLast.x) / dt;
-                const vz = (_glidePos.z - _glideLast.z) / dt;
-                wheelRigs.forEach(rig => {
-                    rig.spin -= ((vx + rig.latSign * vz) / rig.radius) * dt;
-                    rig.wrapper.rotation.z = rig.spin;
-                });
+            if (!loadedModel) return;
+            dt = Math.min(Math.max(dt, 0), 0.05);
+            if (transformControl?.object || isDraggingTransform) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); return; }
+            if (glideActive) {
+                glideT = Math.min(1, glideT + dt / GLIDE_DURATION);
+                glidePath(glideT, _glidePos).add(glideDemoOrigin);
+                _glidePos.x = THREE.MathUtils.clamp(_glidePos.x, -1, 1); _glidePos.z = THREE.MathUtils.clamp(_glidePos.z, -1, 1);
+                applyGlideOffset(_glidePos); glideTarget.copy(glideOffset);
+                if (glideT >= 1) glideActive = false;
+            } else {
+                if (glideInput.lengthSq() > 0) {
+                    // Camera-relative floor motion keeps the pad intuitive after orbiting.
+                    const forward = camera.getWorldDirection(new THREE.Vector3()); forward.y = 0; forward.normalize();
+                    const right = new THREE.Vector3(-forward.z, 0, forward.x);
+                    glideTarget.copy(glideOffset).addScaledVector(right, glideInput.x * glideSpeed * dt).addScaledVector(forward, -glideInput.y * glideSpeed * dt);
+                    glideTarget.x = THREE.MathUtils.clamp(glideTarget.x, -1, 1); glideTarget.z = THREE.MathUtils.clamp(glideTarget.z, -1, 1);
+                    applyGlideOffset(glideTarget);
+                } else if (glideOffset.distanceToSquared(glideTarget) > 0.000001) {
+                    _glidePos.copy(glideTarget).sub(glideOffset);
+                    const step = Math.min(_glidePos.length(), glideSpeed * dt);
+                    _glidePos.setLength(step).add(glideOffset); applyGlideOffset(_glidePos);
+                }
             }
-            _glideLast.copy(_glidePos);
+            syncGlideUI();
         }
 
         // --- Phase 6: AR "See in your space" ---
@@ -4029,8 +4174,8 @@
                 const custom = partLabels.get(eid);
                 label.textContent = custom ? custom + '  ·  ' + eid : (eid || obj.name);
                 label.classList.remove('hidden');
-                label.style.left = (event.clientX - rect.left + 14) + 'px';
-                label.style.top = (event.clientY - rect.top + 14) + 'px';
+                label.style.left = (event.clientX - rect.left + canvas.offsetLeft + 14) + 'px';
+                label.style.top = (event.clientY - rect.top + canvas.offsetTop + 14) + 'px';
             }
         }
 
@@ -4280,9 +4425,14 @@
             if (!renderer || !camera || !canvas.parentElement) return;
             const container = canvas.parentElement;
             const w = container.clientWidth;
-            const h = container.clientHeight;
-            if (w === 0 || h === 0) return;
+            const top = w < 500 ? 188 : 168;
+            const dockHeight = document.getElementById('motion-dock')?.offsetHeight || 180;
+            const bottom = dockHeight + (window.innerWidth <= 760 ? 26 : 50);
+            const h = Math.max(160, container.clientHeight - top - bottom);
+            if (w === 0 || container.clientHeight === 0) return;
+            canvas.style.position = 'absolute'; canvas.style.top = top + 'px';
             camera.aspect = w / h;
+            camera.clearViewOffset();
             camera.updateProjectionMatrix();
             renderer.setSize(w, h);
         }
@@ -4297,7 +4447,7 @@
             updateGlide(clock.getDelta());
 
             // Handle smooth animation if not manually scrubbing
-            if (movingObjects.length > 0 && !manualLiftOverride) {
+            if (loadedModel && !manualLiftOverride) {
                 if (Math.abs(targetLift - currentLift) > 0.001) {
                     currentLift += (targetLift - currentLift) * 0.08;
                     updateMovingObjectsPosition();
@@ -4332,8 +4482,277 @@
 
             if (controls) {
                 controls.update();
+                const orbitButton = document.getElementById('rotate-scene');
+                if (orbitButton && orbitButton.getAttribute('aria-pressed') !== String(controls.autoRotate)) orbitButton.setAttribute('aria-pressed', String(controls.autoRotate));
             }
             if (renderer && scene && camera) renderer.render(scene, camera);
+        }
+
+        // Studio presentation, customer configuration, and accessible controls.
+        let woodTexture = null;
+        let surfaceFinish = 'satin';
+        let grainEnabled = true;
+        let studioGrid = null;
+        let isolatedVisibility = null;
+        let dialogReturnFocus = null;
+        let toastTimer;
+        const money = value => '$' + value.toLocaleString('en-US');
+        function notifyUser(message) {
+            const toast = document.getElementById('studio-toast');
+            toast.textContent = message; toast.hidden = false;
+            clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.hidden = true, 4500);
+        }
+        function configurationPrice(config = currentConfig) {
+            return PRODUCT_CONFIG.basePrice + PRODUCT_CONFIG.sizes[config.size].price
+                + PRODUCT_CONFIG.woodFinishes.find(f => f.name === config.woodFinish).price
+                + PRODUCT_CONFIG.baseFinishes.find(f => f.name === config.baseFinish).price;
+        }
+        function validConfig(value) {
+            return value && Object.hasOwn(PRODUCT_CONFIG.sizes, value.size)
+                && PRODUCT_CONFIG.woodFinishes.some(f => f.name === value.woodFinish)
+                && PRODUCT_CONFIG.baseFinishes.some(f => f.name === value.baseFinish);
+        }
+        function cleanConfig(value) {
+            return { size: value.size, woodFinish: value.woodFinish, baseFinish: value.baseFinish };
+        }
+        function persistCart() {
+            try { localStorage.setItem('ergoflexCartV1', JSON.stringify(cartItems)); }
+            catch { notifyUser('Build list is available for this visit. Browser storage is unavailable.'); }
+            updateCartUI();
+        }
+        function syncBuildSummary() {
+            const el = document.getElementById('build-summary');
+            if (el) el.textContent = `${currentConfig.woodFinish} / ${currentConfig.baseFinish}`;
+            const size = document.getElementById('size-preview-note');
+            if (size) size.textContent = `Selected: ${PRODUCT_CONFIG.sizes[currentConfig.size].name}. 3D shows the reference assembly; size options update your estimate.`;
+        }
+        function applySurfaceFinish() {
+            if (!sharedBirchMaterial) return;
+            const finish = { matte: [0.68, 0.08], satin: [0.4, 0.25], gloss: [0.2, 0.65] }[surfaceFinish];
+            sharedBirchMaterial.roughness = finish[0]; sharedBirchMaterial.clearcoat = finish[1];
+            sharedBirchMaterial.map = grainEnabled ? woodTexture : null;
+            sharedBirchMaterial.bumpMap = grainEnabled ? woodTexture : null;
+            sharedBirchMaterial.bumpScale = 0.0006;
+            sharedBirchMaterial.needsUpdate = true;
+        }
+        function downloadFile(name, text, type = 'text/plain') {
+            const url = URL.createObjectURL(new Blob([text], { type }));
+            const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+        function downloadEstimate(items) {
+            const lines = ['ERGOFLEX — CUSTOM SHOP', 'Configuration estimate · ' + new Date().toLocaleDateString(), ''];
+            items.forEach((item, i) => lines.push(`${i + 1}. ErgoFlex · ${PRODUCT_CONFIG.sizes[item.size].name}`, `   ${item.woodFinish} desktop / ${item.baseFinish} frame`, `   Quantity ${item.quantity} × ${money(item.price)} = ${money(item.quantity * item.price)}`, ''));
+            lines.push('Estimated total: ' + money(items.reduce((sum, i) => sum + i.price * i.quantity, 0)), '', 'Design preview only. Taxes, delivery, availability, and final specifications require confirmation.');
+            downloadFile('ErgoFlex-estimate.txt', lines.join('\n'));
+            notifyUser('Your configuration estimate has been downloaded.');
+        }
+        function openDialog(modal) {
+            if (modal.classList.contains('hidden')) dialogReturnFocus = document.activeElement;
+            modal.classList.remove('hidden'); modal.focus();
+        }
+        function closeDialog(modal) {
+            modal.classList.add('hidden'); dialogReturnFocus?.focus();
+        }
+        function showAllParts() {
+            if (isolatedVisibility) isolatedVisibility.forEach((visible, obj) => obj.visible = visible);
+            isolatedVisibility = null;
+            document.getElementById('isolate-parts')?.setAttribute('aria-pressed', 'false');
+        }
+        function focusObjects(objects) {
+            if (!camera || !controls || !objects.length) return;
+            const box = new THREE.Box3(); objects.forEach(obj => box.expandByObject(obj));
+            if (box.isEmpty()) return;
+            const center = box.getCenter(new THREE.Vector3());
+            const direction = camera.position.clone().sub(controls.target).normalize();
+            const right = new THREE.Vector3().crossVectors(camera.up, direction).normalize();
+            const up = new THREE.Vector3().crossVectors(direction, right).normalize();
+            const tanV = Math.tan(camera.fov * Math.PI / 360), tanH = tanV * camera.aspect;
+            let distance = controls.minDistance;
+            for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
+                const point = new THREE.Vector3(x, y, z).sub(center);
+                const depth = point.dot(direction);
+                distance = Math.max(distance, depth + Math.abs(point.dot(up)) / tanV, depth + Math.abs(point.dot(right)) / tanH);
+            }
+            distance = Math.min(controls.maxDistance, distance * 1.12);
+            controls.target.copy(center); camera.position.copy(center).addScaledVector(direction, distance);
+            controls.autoRotate = false; controls.update();
+        }
+        function setMotionTab(tab) {
+            document.getElementById('motion-dock').dataset.tab = tab;
+            document.querySelectorAll('[data-motion-tab]').forEach(b => { b.setAttribute('aria-selected', String(b.dataset.motionTab === tab)); b.tabIndex = b.dataset.motionTab === tab ? 0 : -1; });
+            document.querySelectorAll('[data-motion-panel]').forEach(p => p.hidden = p.dataset.motionPanel !== tab);
+            if (tab !== 'glide') releaseGlideInput();
+            requestAnimationFrame(syncViewerSize);
+        }
+        function initStudio() {
+            const toast = document.createElement('div'); toast.id = 'studio-toast'; toast.role = 'status'; toast.hidden = true; document.body.append(toast);
+            try {
+                const shared = new URLSearchParams(location.search).get('build');
+                const stored = shared ? JSON.parse(shared) : JSON.parse(localStorage.getItem('ergoflexSavedBuildV1') || 'null');
+                if (validConfig(stored)) currentConfig = cleanConfig(stored);
+                if (shared && !validConfig(stored)) notifyUser('This build link is invalid. Showing the default configuration.');
+            } catch { notifyUser('Saved configuration could not be read. Showing the default build.'); }
+            try {
+                const saved = JSON.parse(localStorage.getItem('ergoflexCartV1') || '[]');
+                if (Array.isArray(saved)) cartItems = saved.filter(validConfig).slice(0, 100).map((item, index) => ({ ...cleanConfig(item), id: index, quantity: Math.max(1, Math.min(20, Math.round(Number(item.quantity) || 1))), price: configurationPrice(item) }));
+            } catch {}
+            sizeSelect.value = currentConfig.size;
+            document.getElementById('selected-wood-name').textContent = currentConfig.woodFinish;
+            document.getElementById('selected-base-name').textContent = currentConfig.baseFinish;
+            updateCartUI();
+            document.getElementById('open-editor').onclick = () => setSetupLayout(true);
+            document.getElementById('cart-btn').onclick = showCartModal;
+            document.getElementById('export-cart').onclick = () => cartItems.length ? downloadEstimate(cartItems) : notifyUser('Add a configuration first.');
+            document.getElementById('download-quote').onclick = () => downloadEstimate([{ ...currentConfig, price: configurationPrice(), quantity: 1 }]);
+            document.getElementById('save-build').onclick = () => {
+                try { localStorage.setItem('ergoflexSavedBuildV1', JSON.stringify(currentConfig)); notifyUser('Build saved. Your finishes and size will return on your next visit.'); }
+                catch { notifyUser('Browser storage is unavailable. Download an estimate to keep your build.'); }
+            };
+            document.getElementById('share-build').onclick = async () => {
+                const url = new URL(location.href); url.search = ''; url.searchParams.set('build', JSON.stringify(currentConfig));
+                try { await navigator.clipboard.writeText(url.href); notifyUser('Configuration link copied.'); }
+                catch { downloadFile('ErgoFlex-build-link.txt', url.href); notifyUser('Configuration link downloaded.'); }
+            };
+            const sizeNote = document.createElement('p'); sizeNote.id = 'size-preview-note'; sizeNote.className = 'studio-note'; sizeSelect.after(sizeNote);
+            const materialOptions = document.createElement('div'); materialOptions.className = 'material-options';
+            materialOptions.innerHTML = `<label>Surface sheen <select id="surface-finish"><option value="matte">Matte</option><option value="satin" selected>Satin</option><option value="gloss">Gloss</option></select></label><label class="check-label"><input id="wood-grain" type="checkbox" checked> Show wood grain</label><p class="studio-note">Wood tones preview stains on the reference birch surface. Sheen is a visualization setting.</p>`;
+            document.getElementById('selected-wood-name').after(materialOptions);
+            document.getElementById('surface-finish').onchange = e => { surfaceFinish = e.target.value; applySurfaceFinish(); };
+            document.getElementById('wood-grain').onchange = e => { grainEnabled = e.target.checked; applySurfaceFinish(); };
+            const looks = document.createElement('div'); looks.className = 'look-presets';
+            looks.innerHTML = `<div class="eyebrow">A LITTLE INSPIRATION</div><div><button data-look="Natural Birch|White">Light & natural</button><button data-look="Walnut|Forest">Warm & grounded</button><button data-look="Black Ash|Black">All in black</button></div>`;
+            document.getElementById('config-column').children[0].after(looks);
+            looks.querySelectorAll('[data-look]').forEach(b => b.onclick = () => b.dataset.look.split('|').forEach((name, i) => {
+                const type = i ? 'base' : 'wood';
+                const finish = PRODUCT_CONFIG[i ? 'baseFinishes' : 'woodFinishes'].find(f => f.name === name);
+                const swatch = [...document.querySelectorAll(`[data-material="${type}"]`)].find(el => el.dataset.finish === name);
+                selectFinish(finish, type, swatch);
+            }));
+            const viewer = canvas.parentElement;
+            const top = document.createElement('div'); top.className = 'viewer-heading';
+            top.innerHTML = `<div class="eyebrow" id="scene-status">LOADING YOUR WORKSPACE</div><h2>Designed to move you.</h2><p id="build-summary"></p>`; viewer.append(top);
+            const toolbar = document.createElement('div'); toolbar.className = 'studio-toolbar';
+            toolbar.innerHTML = `<label><span>Environment</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate">Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><label>Exposure<input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
+            viewer.append(toolbar);
+            document.getElementById('studio-environment').onchange = e => {
+                document.getElementById('viewer-shell').dataset.environment = e.target.value;
+                const settings = { gallery: [1.02, 1.15, 0.24], warm: [1.08, 1.0, 0.2], slate: [0.95, 1.3, 0.36] }[e.target.value];
+                if (renderer) renderer.toneMappingExposure = settings[0];
+                if (scene) scene.environmentIntensity = settings[1];
+                if (floorMesh) floorMesh.material.opacity = settings[2];
+                document.getElementById('studio-exposure').value = settings[0];
+            };
+            document.getElementById('studio-exposure').oninput = e => { if (renderer) renderer.toneMappingExposure = Number(e.target.value); };
+            document.getElementById('render-quality').onchange = e => {
+                if (!renderer) return;
+                renderer.setPixelRatio(Math.min(devicePixelRatio, Number(e.target.value))); syncViewerSize();
+            };
+            document.getElementById('fit-view').onclick = () => loadedModel && focusObjects([loadedModel]);
+            document.getElementById('camera-view').onchange = e => {
+                if (!camera || !loadedModel) return;
+                const direction = { hero: [4.8, 2.3, 4.2], front: [0, 0.2, 6], side: [6, 0.2, 0], top: [0, 6, 0.001] }[e.target.value];
+                camera.position.copy(controls.target).add(new THREE.Vector3(...direction)); focusObjects([loadedModel]);
+            };
+            document.getElementById('rotate-scene').onclick = e => {
+                if (!controls) return;
+                controls.autoRotate = !controls.autoRotate; e.target.setAttribute('aria-pressed', String(controls.autoRotate));
+            };
+            document.getElementById('grid-toggle').onclick = e => {
+                if (!scene) return;
+                if (!studioGrid) { studioGrid = new THREE.GridHelper(12, 48, 0x9aa9a2, 0xc6ceca); studioGrid.position.y = 0.002; studioGrid.material.transparent = true; studioGrid.material.opacity = 0.35; studioGrid.visible = false; scene.add(studioGrid); }
+                studioGrid.visible = !studioGrid.visible; e.target.setAttribute('aria-pressed', String(studioGrid.visible));
+            };
+            document.getElementById('capture-view').onclick = () => {
+                if (!renderer || !loadedModel) return notifyUser('Wait for the desk to finish loading.');
+                renderer.render(scene, camera);
+                try { canvas.toBlob(blob => {
+                    if (!blob) return notifyUser('Capture is unavailable in this browser.');
+                    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'ErgoFlex-design.png'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    notifyUser('Desk image downloaded with a transparent background.');
+                }); } catch { notifyUser('Image capture is unavailable. Try serving the project with npm run dev.'); }
+            };
+            document.querySelectorAll('#viewer-shell button[title]').forEach(b => b.setAttribute('aria-label', b.title));
+            const dock = document.getElementById('motion-dock');
+            const liftPanel = dock.lastElementChild; liftPanel.dataset.motionPanel = 'lift';
+            const tiltPanel = document.getElementById('tilt-sliders-overlay'); tiltPanel.dataset.motionPanel = 'tilt';
+            const tabs = document.createElement('div'); tabs.className = 'motion-tabs'; tabs.role = 'tablist'; tabs.setAttribute('aria-label', 'Desk movement');
+            tabs.innerHTML = `<button role="tab" data-motion-tab="lift">↕ Lift</button><button role="tab" data-motion-tab="tilt">∠ Tilt</button><button role="tab" data-motion-tab="glide">✥ Glide</button>`; dock.prepend(tabs);
+            const presets = document.createElement('div'); presets.className = 'height-presets';
+            presets.innerHTML = `<button data-height="28">Sit · 28″</button><button data-height="40">Perch · 40″</button><button data-height="48">Stand · 48″</button>`;
+            liftPanel.append(presets);
+            presets.querySelectorAll('button').forEach(b => b.onclick = () => { if (!loadedModel) return; manualLiftOverride = false; targetLift = heightToLift(Number(b.dataset.height)); });
+            const glidePanel = document.createElement('div'); glidePanel.dataset.motionPanel = 'glide'; glidePanel.className = 'glide-panel';
+            glidePanel.innerHTML = `<div class="glide-main"><div id="glide-pad" tabindex="0" role="group" aria-label="Glide joystick. Drag in any direction or use arrow keys while focused." aria-describedby="glide-help"><span class="pad-axis axis-x"></span><span class="pad-axis axis-z"></span><span class="pad-arrow up">↑</span><span class="pad-arrow down">↓</span><span class="pad-arrow left">←</span><span class="pad-arrow right">→</span><span id="glide-knob"></span></div><div class="glide-sliders"><label>Sideways <output id="glide-x-value">0.00</output><input id="glide-x" aria-label="Glide sideways position" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Forward / back <output id="glide-z-value">0.00</output><input id="glide-z" aria-label="Glide forward and back position" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Speed <select id="glide-speed"><option value="0.25">Gentle</option><option value="0.5" selected>Natural</option><option value="0.85">Brisk</option></select></label></div></div><div class="glide-actions"><span id="glide-status">Ready to move</span><button id="glide-demo" aria-pressed="false">Play demo</button><button id="glide-home">Recenter</button></div><p id="glide-help">Drag the pad or focus it and use arrow keys. Release to stop.</p>`;
+            dock.append(glidePanel);
+            document.querySelectorAll('[data-motion-panel]').forEach(panel => {
+                panel.id = panel.id || 'motion-panel-' + panel.dataset.motionPanel;
+                panel.role = 'tabpanel'; panel.setAttribute('aria-labelledby', 'motion-tab-' + panel.dataset.motionPanel);
+                const tab = tabs.querySelector(`[data-motion-tab="${panel.dataset.motionPanel}"]`);
+                tab.id = 'motion-tab-' + panel.dataset.motionPanel; tab.setAttribute('aria-controls', panel.id);
+            });
+            tabs.querySelectorAll('button').forEach((b, index, buttons) => {
+                b.onclick = () => setMotionTab(b.dataset.motionTab);
+                b.onkeydown = e => { if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return; e.preventDefault(); const next = buttons[(index + (e.key === 'ArrowRight' ? 1 : 2)) % 3]; next.click(); next.focus(); };
+            });
+            setMotionTab('lift'); setupGlideControls();
+            const editorTools = document.createElement('div'); editorTools.className = 'precision-tools';
+            editorTools.innerHTML = `<div class="eyebrow">PRECISION & VISIBILITY</div><div><button id="focus-selected">Focus selection <kbd>F</kbd></button><button id="isolate-parts" aria-pressed="false">Isolate</button><button id="show-all-parts">Show all</button></div><div><label>Coordinates <select id="transform-space"><option value="world">World</option><option value="local">Local</option></select></label><label class="check-label"><input type="checkbox" id="transform-snap"> Snap transforms</label></div><p class="studio-note">Q Select · W Move · E Rotate · R Scale · F Focus<br>Snap: 0.05 scene units / 15° / 10% scale</p>`;
+            document.getElementById('part-search-input').parentElement.after(editorTools);
+            const liftTools = document.createElement('div'); liftTools.className = 'precision-tools';
+            liftTools.innerHTML = `<div class="eyebrow">LIFT ASSEMBLY</div><div><button id="assign-lift">Assign selected</button><button id="unassign-lift">Remove selected</button></div><p class="studio-note">Selection is independent of animation. Assign unrigged parts here to make them follow the lift. Changes apply to this session.</p>`;
+            document.getElementById('clone-parts-btn').parentElement.after(liftTools);
+            document.getElementById('assign-lift').onclick = () => {
+                if (transformControl?.object) return notifyUser('Set Transform Tool to Off before assigning lift parts.');
+                let count = 0;
+                movingObjects.forEach(({ obj }) => {
+                    if (isInTiltWrapper(obj) || TELESCOPING_PARTS.includes(obj.name)) return;
+                    liftObjects.set(obj, { obj, baseY: obj.position.y - (currentLift - LIFT_MIN) }); count++;
+                });
+                notifyUser(count ? `${count} parts assigned to lift for this session.` : 'Select unrigged parts first. Tilt, actuator, and wheel rigs keep their own motion.');
+            };
+            document.getElementById('unassign-lift').onclick = () => {
+                let count = 0; movingObjects.forEach(({ obj }) => { if (liftObjects.delete(obj)) count++; });
+                notifyUser(`${count} parts removed from lift for this session.`);
+            };
+            document.getElementById('focus-selected').onclick = () => movingObjects.length ? focusObjects(movingObjects.map(i => i.obj)) : notifyUser('Select parts to focus on them.');
+            document.getElementById('isolate-parts').onclick = e => {
+                if (isolatedVisibility) return showAllParts();
+                if (!movingObjects.length) return notifyUser('Select parts to isolate first.');
+                const selected = new Set(movingObjects.map(i => i.obj)); isolatedVisibility = new Map();
+                interactableObjects.forEach(obj => { isolatedVisibility.set(obj, obj.visible); obj.visible = selected.has(obj); });
+                e.target.setAttribute('aria-pressed', 'true');
+            };
+            document.getElementById('show-all-parts').onclick = showAllParts;
+            document.getElementById('transform-space').onchange = e => transformControl?.setSpace(e.target.value);
+            document.getElementById('transform-snap').onchange = e => {
+                transformControl?.setTranslationSnap(e.target.checked ? 0.05 : null);
+                transformControl?.setRotationSnap(e.target.checked ? Math.PI / 12 : null);
+                transformControl?.setScaleSnap(e.target.checked ? 0.1 : null);
+            };
+            document.querySelectorAll('.config-header').forEach(header => {
+                const id = header.nextElementSibling.id; header.role = 'button'; header.tabIndex = 0;
+                header.setAttribute('aria-controls', id); header.setAttribute('aria-expanded', String(header.nextElementSibling.classList.contains('expanded')));
+                header.addEventListener('click', () => header.setAttribute('aria-expanded', String(header.nextElementSibling.classList.contains('expanded'))));
+                header.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); header.click(); } };
+            });
+            document.addEventListener('keydown', e => {
+                const modal = document.getElementById('cart-modal');
+                if (!modal.classList.contains('hidden')) {
+                    if (e.key === 'Escape') { e.preventDefault(); closeDialog(modal); }
+                    if (e.key === 'Tab') {
+                        const elements = [...modal.querySelectorAll('button,input')].filter(el => !el.disabled);
+                        if (e.shiftKey && (document.activeElement === elements[0] || document.activeElement === modal)) { e.preventDefault(); elements.at(-1).focus(); }
+                        else if (!e.shiftKey && document.activeElement === elements.at(-1)) { e.preventDefault(); elements[0].focus(); }
+                    }
+                    return;
+                }
+                if (e.key === 'Escape') { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); }
+                if (!setupLayoutOn || e.ctrlKey || e.metaKey || e.altKey || e.target.closest('input,select,textarea,[contenteditable],#glide-pad')) return;
+                const mode = { q: 'none', w: 'translate', e: 'rotate', r: 'scale' }[e.key.toLowerCase()];
+                if (mode) { e.preventDefault(); document.querySelector(`input[name="transform_mode"][value="${mode}"]`).click(); }
+                if (e.key.toLowerCase() === 'f') { e.preventDefault(); document.getElementById('focus-selected').click(); }
+            });
         }
 
         // Small console API for setup & testing (open DevTools and type `ErgoFlex.`)
@@ -4341,6 +4760,7 @@
             get tiltConfigs() { return tiltConfigs; },
             get partRegistry() { return partRegistry; },
             get movingObjects() { return movingObjects; },
+            get liftObjects() { return [...liftObjects.values()]; },
             selectByNames(names) {
                 const set = new Set(names);
                 let count = 0;
@@ -4356,6 +4776,7 @@
             },
             setHeight(h) {
                 manualLiftOverride = true;
+                h = THREE.MathUtils.clamp(Number(h) || HEIGHT_MIN, HEIGHT_MIN, HEIGHT_MAX);
                 currentLift = targetLift = heightToLift(h);
                 updateMovingObjectsPosition();
                 if (deskHeightSlider) deskHeightSlider.value = h;
@@ -4364,7 +4785,7 @@
             setTilt(name, deg) {
                 const config = tiltConfigs.find(c => c.name === name);
                 if (!config) return false;
-                config.currentDeg = deg;
+                config.currentDeg = THREE.MathUtils.clamp(Number(deg) || 0, config.minDeg, config.maxDeg);
                 applyTiltConfig(config);
                 rebuildTiltUI(); // keep sliders/labels in sync
                 return true;
@@ -4394,11 +4815,17 @@
             get glideActive() { return glideActive; },
             startGlide,
             stopGlide,
+            setGlidePosition,
+            get glidePosition() { return { x: glideOffset.x, z: glideOffset.z }; },
+            get currentConfig() { return { ...currentConfig }; },
+            get renderer() { return renderer; },
+            get loadedModel() { return loadedModel; },
             prepareARModel,
             launchAR
         };
 
         // Populate the configurator UI first so it works even if 3D init fails
+        initStudio();
         populateFinishOptions();
         updatePrice();
         initThreeJS();
