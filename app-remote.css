@@ -1,0 +1,365 @@
+/* The ErgoFlex Desk app's motion surface, ported to the web.
+ *
+ * Values are taken from the Flutter source, not eyeballed from a screenshot:
+ *   palette          lib/theme/light_family_ramp.dart:166-172   (blue family, light)
+ *   depth            lib/theme/app_depth.dart:78-101
+ *   sphere knob      lib/widgets/common/glide_core_thumb.dart
+ *   compass          lib/widgets/movement_and_rotation_joystick.dart:1055-1320
+ *   inner disc/star  lib/widgets/movement_joystick.dart:954-1270
+ *   lift slider      lib/widgets/centered_control_slider.dart
+ *   tilt arc         lib/widgets/arc_control_slider.dart
+ *   readout field    lib/widgets/panels/lift_tilt_readout_frame.dart
+ *   form cards       lib/widgets/ergo_form_card_surface.dart
+ *   preset chips     lib/widgets/swipe_up_position_button.dart
+ *
+ * This is the app's MOTION surface only. The phone also carries menu, info,
+ * mic, shield, logout and a wellness bar; none of those mean anything against a
+ * 3D model, so none are drawn.
+ */
+
+.app-remote {
+    /* The five-colour family ramp. Everything else is derived from these. */
+    --fill:   #2F55D4;   /* filled marks, rims, thumbs */
+    --ink:    #1E3FB0;   /* the accent used as text, so it clears 4.5:1 */
+    --wash:   #E2E7F9;   /* the "set" surface: fill at 14% over white */
+    --ground: #E7EAF2;   /* page paper */
+    --hub:    #F5F6FD;   /* raised bar */
+
+    --text:      #141824;
+    --text-2:    #5B6273;
+    --rim:       #0C82B6;   /* bespoke, deliberately off-ramp */
+    --rim-empty: #696969;
+    --status-ok: #007815;
+
+    /* deepen(fill) = mix(fill, black, 45%) - the sphere's dark pole. */
+    --fill-deep: #15265F;
+    /* lerp(fill, white, .82) - its highlight. */
+    --fill-lite: #E1E7F8;
+
+    --lift1: 0 1px 1px rgba(16,24,40,.05), 0 2px 4px -2px rgba(16,24,40,.10);
+    --lift2: 0 1px 2px rgba(16,24,40,.05), 0 8px 20px -10px rgba(16,24,40,.20);
+    --pressed: 0 1px 4px rgba(16,24,40,.14);
+
+    font-family: Poppins, "Noto Sans JP", "Noto Sans KR", "Noto Sans SC", system-ui, sans-serif;
+    color: var(--text);
+}
+
+/* ── Panel shell ─────────────────────────────────────────────────────────── */
+
+#motion-dock.app-remote {
+    position: absolute;
+    /* Parked bottom-centre until dragged. Setting className wholesale drops the
+       Tailwind positioning utilities that used to do this, so it lives here. */
+    left: 50%;
+    bottom: 16px;
+    top: auto;
+    transform: translateX(-50%);
+    /* Above .viewer-controls (16), which otherwise paints its scene chips over
+       the panel, and below the cart modal (100) and toasts (200). */
+    z-index: 20;
+    /* Never wider than the viewer, and never edge-to-edge inside it. */
+    width: min(600px, calc(100% - 24px));
+    max-width: none;
+    padding: 0;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,.65);
+    /* Translucent: the panel floats over the desk rather than displacing it,
+       so the desk has to remain readable underneath. */
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter: blur(18px);
+    box-shadow: var(--lift2);
+    overflow: hidden;
+}
+
+/* The drag handle. Only this strip initiates a move, and only where the
+   pointer did not land on something interactive. */
+.remote-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    background: var(--hub);
+    border-bottom: 1px solid rgba(20,24,36,.06);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+.remote-header.dragging { cursor: grabbing; }
+.remote-header :is(button, a, input, select) { cursor: default; }
+.remote-logo { height: 17px; width: auto; display: block; }
+.remote-status {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--status-ok);
+    border: 1px solid rgba(20,24,36,.7);
+    box-shadow: 0 0 4px rgba(0,120,21,.5);
+    flex: none;
+}
+.remote-spacer { flex: 1; }
+
+/* STOP. Sized as a real target because it is the one control that matters
+   under pressure. */
+#remote-stop {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 0; padding: 0; cursor: pointer;
+    background: none;
+    display: grid; place-items: center;
+    flex: none;
+}
+#remote-stop img { width: 34px; height: 34px; display: block; }
+#remote-stop:active { transform: translateY(1px); }
+
+.remote-body { padding: 10px 12px 12px; }
+
+/* ── Section headings ────────────────────────────────────────────────────── */
+/* letter-spacing: 3px is the app's signature. shift_motion_panel.dart:991 */
+
+.remote-heading {
+    font-size: 15px; font-weight: 500; letter-spacing: 3px;
+    line-height: 1.1; color: var(--text);
+    text-shadow: 0 1px 2px rgba(0,0,0,.08);
+    margin: 0 0 6px;
+}
+
+/* ── The glossy sphere, shared by all three controls ─────────────────────── */
+/* glide_core_thumb.dart: focal 38%/34%, stops .82 white / fill / deepen. */
+
+.remote-sphere {
+    --r: 14px;
+    width: calc(var(--r) * 2); height: calc(var(--r) * 2);
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%,
+        var(--fill-lite) 0%, var(--fill) 50%, var(--fill-deep) 100%);
+    border: max(1px, calc(var(--r) * .055)) solid rgba(255,255,255,.30);
+    box-shadow: 0 0 0 calc(var(--r) * .12) rgba(47,85,212,.20),
+                0 0 0 calc(var(--r) * .30) rgba(47,85,212,.14);
+    box-sizing: border-box;
+}
+.remote-sphere.active {
+    border-color: rgba(255,255,255,.45);
+    box-shadow: 0 0 0 calc(var(--r) * .20) rgba(47,85,212,.32),
+                0 0 0 calc(var(--r) * .42) rgba(47,85,212,.24);
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+/* A container query on the viewer, not a window media query: in setup mode the
+   viewer is far narrower than the window, so a window-level breakpoint would
+   pick the wide layout for a narrow panel. This is the box the panel floats in
+   and is already the containing block for it. */
+
+#viewer-shell > .relative { container: viewer / inline-size; }
+
+.remote-grid {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr auto;
+    gap: 12px;
+    align-items: start;
+}
+.remote-col { min-width: 0; }
+/* A column, not a row underneath: the panel floats over the desk, so height is
+   the expensive dimension and width is the cheap one. */
+.remote-forms { margin-top: 0; min-width: 104px; }
+.remote-forms-row { flex-direction: column; }
+
+@container viewer (max-width: 760px) {
+    .remote-grid { grid-template-columns: auto 1fr 1fr; }
+    .remote-forms { grid-column: 1 / -1; margin-top: 8px; }
+    .remote-forms-row { flex-direction: row; }
+}
+@container viewer (max-width: 560px) {
+    .remote-grid { grid-template-columns: 1fr; gap: 12px; }
+    /* Bounded and scrollable: the panel must never grow taller than the
+       viewer it floats inside. */
+    .remote-body { max-height: min(60vh, 420px); overflow-y: auto; }
+    .remote-heading { font-size: 17px; letter-spacing: 2px; }
+}
+
+/* ── Glide compass ───────────────────────────────────────────────────────── */
+
+.remote-compass { position: relative; width: 108px; height: 108px; touch-action: none; cursor: grab; }
+.remote-compass:active { cursor: grabbing; }
+.remote-compass svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.remote-compass .remote-sphere {
+    --r: 12px;
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+/* The star breathes 0.9 -> 1.1 over 1s in the app. */
+.compass-star { transform-origin: center; animation: compass-pulse 1s ease-in-out infinite alternate; }
+@keyframes compass-pulse { from { transform: scale(.9); } to { transform: scale(1.1); } }
+
+/* ── Speed words ─────────────────────────────────────────────────────────── */
+/* speed_dial.dart: only the selected word is visible (unselected opacity 0),
+   tracking 5. Here the neighbours are dimmed rather than hidden, so the control
+   still reads as a list you can move through. */
+
+.remote-speed { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.remote-speed select {
+    font: inherit; font-size: 15px; font-weight: 700; letter-spacing: 5px;
+    color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer;
+    appearance: none; text-align: center;
+}
+.remote-speed select:focus-visible { outline: 2px solid var(--fill); outline-offset: 3px; border-radius: 4px; }
+
+/* ── Height / Tilt readout ───────────────────────────────────────────────── */
+/* lift_tilt_readout_frame.dart - a direct port of the app's .field CSS. */
+
+.remote-readout {
+    display: flex; align-items: baseline; gap: 4px;
+    position: relative;
+    border-radius: 14px;
+    border: 1px solid rgba(20,24,36,.10);
+    background:
+        linear-gradient(rgba(255,255,255,.10) 0%, rgba(255,255,255,.05) 4%, rgba(255,255,255,.015) 100%),
+        #FFFFFF;
+    box-shadow: 0 3px 10px rgba(0,0,0,.10);
+    padding: 6px 26px 6px 10px;
+}
+.remote-readout input {
+    font: inherit; font-size: 19px; font-weight: 600; letter-spacing: 2px;
+    color: var(--ink); background: none; border: 0; padding: 0;
+    /* Sized to its content rather than the flex line: at width:100% the number
+       input's spinner buttons claimed the space and "28.0" rendered as "2". */
+    width: 4.4ch; flex: 0 0 auto; min-width: 0;
+    appearance: textfield; -moz-appearance: textfield;
+}
+.remote-readout input::-webkit-outer-spin-button,
+.remote-readout input::-webkit-inner-spin-button { appearance: none; margin: 0; }
+.remote-readout input:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; border-radius: 4px; }
+.remote-readout input:invalid { color: #C90105; }
+.remote-readout .unit { font-size: 15px; font-weight: 400; letter-spacing: 3px; color: var(--ink); }
+.remote-readout .pencil {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 12px; height: 12px; opacity: .6; color: var(--fill); pointer-events: none;
+}
+
+/* ── Lift slider: vertical pill ──────────────────────────────────────────── */
+/* centered_control_slider.dart: width 48, radius 13, 1.6px border, white fill. */
+
+.remote-vslider {
+    position: relative;
+    width: 40px; height: 104px;
+    border-radius: 13px;
+    border: 1.6px solid var(--fill);
+    background: #fff;
+    box-shadow: var(--lift1);
+    margin: 0 auto;
+}
+.remote-vslider input[type=range] {
+    position: absolute; left: 50%; top: 50%;
+    width: 104px; height: 40px;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    margin: 0; background: none; appearance: none; cursor: ns-resize;
+}
+.remote-vslider input::-webkit-slider-runnable-track { background: none; }
+.remote-vslider input::-moz-range-track { background: none; }
+.remote-vslider input::-webkit-slider-thumb {
+    appearance: none; width: 24px; height: 24px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, var(--fill-lite) 0%, var(--fill) 50%, var(--fill-deep) 100%);
+    border: 1.6px solid rgba(255,255,255,.30);
+    box-shadow: 0 0 0 4px rgba(47,85,212,.20), 0 0 0 9px rgba(47,85,212,.14);
+}
+.remote-vslider input::-moz-range-thumb {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, var(--fill-lite) 0%, var(--fill) 50%, var(--fill-deep) 100%);
+    border: 1.6px solid rgba(255,255,255,.30);
+}
+.remote-vslider input:focus-visible { outline: 2px solid var(--fill); outline-offset: 4px; border-radius: 13px; }
+/* The travelling arrow pairs, two per side. */
+.remote-vslider .vs-arrows { position: absolute; inset: 0; pointer-events: none; }
+.remote-vslider .vs-arrows span {
+    position: absolute; left: 50%; translate: -50% 0;
+    border-left: 7px solid transparent; border-right: 7px solid transparent;
+    opacity: .55;
+}
+.remote-vslider .vs-arrows .up { border-bottom: 8px solid var(--fill); }
+.remote-vslider .vs-arrows .down { border-top: 8px solid var(--fill); }
+.remote-vslider .vs-arrows .u1 { top: 12px; } .remote-vslider .vs-arrows .u2 { top: 26px; scale: .88; }
+.remote-vslider .vs-arrows .d1 { bottom: 12px; } .remote-vslider .vs-arrows .d2 { bottom: 26px; scale: .88; }
+
+/* ── Tilt slider: 120° arc ───────────────────────────────────────────────── */
+/* arc_control_slider.dart: start -pi/3, sweep 2pi/3, round caps, rim under white. */
+
+.remote-arc { position: relative; width: 100%; max-width: 150px; margin: 0 auto; }
+.remote-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
+.remote-arc .arc-rim { fill: none; stroke: var(--fill); stroke-linecap: round; }
+.remote-arc .arc-face { fill: none; stroke: #fff; stroke-linecap: round; }
+.remote-arc input[type=range] {
+    position: absolute; inset: auto 0 0; width: 100%;
+    margin: 0; appearance: none; background: none; height: 28px; cursor: ew-resize;
+}
+.remote-arc input::-webkit-slider-thumb { appearance: none; width: 26px; height: 26px; opacity: 0; }
+.remote-arc input::-moz-range-thumb { width: 26px; height: 26px; opacity: 0; border: 0; }
+.remote-arc input:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; border-radius: 8px; }
+.remote-arc .remote-sphere { --r: 13px; position: absolute; pointer-events: none; translate: -50% -50%; }
+
+/* ── Ergo Form cards ─────────────────────────────────────────────────────── */
+/* ergo_form_card_surface.dart: radius 17; saved gradient; rim carries state. */
+
+.remote-forms-row { display: flex; gap: 8px; }
+.remote-form {
+    flex: 1; min-width: 0;
+    border-radius: 17px;
+    padding: 7px 5px;
+    font: inherit; font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: #1D1D1F;
+    cursor: pointer;
+    box-shadow: var(--lift1);
+    background: #fff;
+    border: 1.5px solid var(--rim-empty);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.remote-form[data-set="true"] {
+    background: linear-gradient(#F2F4FC, var(--wash));
+    border-color: color-mix(in srgb, var(--rim) 90%, black);
+}
+.remote-form:active { box-shadow: var(--pressed); transform: translateY(1px); }
+.remote-form:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
+
+/* ── Preset chips ────────────────────────────────────────────────────────── */
+/* swipe_up_position_button.dart: radius 11, height 30, state in the rim. */
+
+.remote-chips { display: flex; gap: 6px; margin-top: 8px; justify-content: center; }
+.remote-chip {
+    height: 24px; min-width: 34px;
+    border-radius: 11px;
+    border: 1.5px solid var(--rim-empty);
+    background: rgba(255,255,255,.55);
+    font: inherit; font-size: 12px; font-weight: 600; color: var(--text);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+}
+.remote-chip[data-saved="true"] {
+    border-color: color-mix(in srgb, var(--rim) 90%, black);
+    box-shadow: 0 0 6px rgba(12,130,182,.30);
+    background: linear-gradient(#F2F4FC, var(--wash));
+}
+.remote-chip:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
+.remote-chip .caret { font-size: 9px; opacity: .65; }
+
+.remote-hint { font-size: 9px; color: var(--text-2); text-align: center; margin: 8px 0 0; }
+
+/* Motion is decoration here; the controls work identically without it. */
+@media (prefers-reduced-motion: reduce) {
+    .compass-star { animation: none; transform: none; }
+    .app-remote * { transition: none !important; }
+}
+
+/* Labels that exist for screen readers only. The readouts are inputs, so they
+   need a real label even though the heading above them says what they are. */
+.app-remote .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* The per-rig tilt sliders are an editor tool: with a single primary tilt in the
+   panel above, showing them on the storefront just duplicates that control. */
+body:not(.setup-layout) .remote-body #tilt-sliders-overlay { display: none; }
+.remote-body #tilt-sliders-overlay { margin-top: 10px; }
+
+/* Glide's status line and its two buttons, on one row. */
+.app-remote .glide-actions { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.app-remote .glide-actions #glide-status { flex: 1 0 100%; font-size: 10px; color: var(--text-2); }
+.app-remote .glide-actions button {
+    font: inherit; font-size: 10px; padding: 4px 8px; border-radius: 8px;
+    border: 1px solid rgba(20,24,36,.14); background: #fff; color: var(--text); cursor: pointer;
+}
+.app-remote .glide-actions button:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }

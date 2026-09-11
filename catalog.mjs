@@ -4,7 +4,7 @@
 // studio.js instead.
 
 export const PRODUCT_CONFIG = {
-    basePrice: 1299,
+    basePrice: 4999,
     modelUrl: 'https://ergoflexdesk.com/Store/model/full.glb',
     sizes: {
         '48x30': { price: 0, name: '48" × 30"' },
@@ -12,18 +12,18 @@ export const PRODUCT_CONFIG = {
         '72x30': { price: 400, name: '72" × 30"' }
     },
     woodFinishes: [
-        { name: "Natural Birch", color: "#e6c998", price: 0, isDefault: true },
+        { name: "Natural Birch", color: "#e6c998", price: 0 },
         { name: "White Oak", color: "#e0d6c8", price: 50 },
         { name: "Walnut", color: "#5c4033", price: 100 },
-        { name: "Black Birch", color: "#1a1a1a", price: 75 },
+        { name: "Black Birch", color: "#1a1a1a", price: 75, isDefault: true },
         { name: "Cherry", color: "#a45a31", price: 125 },
         { name: "Maple", color: "#e8cda1", price: 75 },
         { name: "Mahogany", color: "#8b3a20", price: 150 },
         { name: "Bamboo", color: "#d2b875", price: 100 }
     ],
     baseFinishes: [
-        { name: "White", color: "#f8f8f8", price: 0, isDefault: true },
-        { name: "Black", color: "#1C1C1E", price: 0 },
+        { name: "White", color: "#f8f8f8", price: 0 },
+        { name: "Black", color: "#1C1C1E", price: 0, isDefault: true },
         { name: "Silver", color: "#a0a0a5", price: 25 },
         { name: "Space Gray", color: "#5c5c60", price: 25 },
         { name: "Forest", color: "#344b40", price: 50 },

@@ -2,8 +2,14 @@
 
 The storefront and Studio now preview selected accessories on the reference
 desk. `workspace-3d.mjs` owns original geometry and mounting;
-`workspace-icons.mjs` supplies original SVG card illustrations. No third-party
-model files or product photographs are redistributed.
+`workspace-icons.mjs` supplies original SVG card illustrations.
+
+**No third-party model files or product photographs are redistributed as
+purchasable accessories.** That statement covers this document's subject: every
+priced accessory is original geometry built from published dimensions. It does
+**not** cover the room prop library in `assets/props/`, which is converted from
+third-party Sketchfab and Rhino files under unconfirmed licences. Read
+[scene-assets.md](scene-assets.md) before publishing any of it.
 
 ## Product references
 
@@ -52,10 +58,19 @@ browser preference. Older projects default to Product.
 
 ## Scenes
 
-Product, Office, Home office, Music studio and Gaming are actual 3D environments.
-Rooms include floors, rugs, walls and scene-specific furnishings. Walls hide
-when the camera orbits behind them. Room furnishings are for inspiration, do
-not affect the estimate and never add hidden products to a build.
+Product, Office, Home office, Music studio, Gaming, Creative studio, Lounge,
+Kitchen, Home gym, Sci-fi bay, Bedroom, Workshop, Study and Gallery are actual
+3D environments. Rooms include
+floors, rugs, walls, scene-specific procedural furnishings, and props from the
+converted library placed on the floor, on the walls, on the ceiling, on the
+desktop and on the upper shelf. Walls hide when the camera orbits behind them.
+Desk dressing follows the desktop and shelf through lift, tilt and glide, using
+the same mounting surfaces as purchased accessories but its own groups.
+
+Room furnishings and desk dressing are for inspiration, do not affect the
+estimate, never add hidden products to a build, and are excluded from the AR
+export. Scene asset edits made in the studio are stored per room, separately
+from the build.
 
 The [sizing limitation](sizing-gate.md) still applies: reference CAD does not
 change width when the priced size changes. This implementation does not certify

@@ -64,6 +64,23 @@ const assert = require('node:assert/strict');
   assert.equal(money(0), '$0', 'zero formats');
   assert.equal(money(1299999), '$1,299,999', 'large values format');
 
+  // --- catalog defaults and the advertised price ---
+  // These assert the product decision, unlike the money() checks above, which
+  // assert the thousands separator and happen to use 1299 as a sample number.
+  const { defaultConfig: catalogDefault } = await import('../catalog.mjs');
+  assert.equal(PRODUCT_CONFIG.basePrice, 4999, 'the base desk is 4999');
+  const fresh = catalogDefault();
+  assert.equal(fresh.woodFinish, 'Black Birch', 'Black Birch is the default surface');
+  assert.equal(fresh.baseFinish, 'Black', 'on a black frame');
+  assert.equal(configurationPrice(fresh), 5074, 'a fresh configuration prices at 5074');
+  assert.equal(money(configurationPrice(fresh)), '$5,074', 'and reads as $5,074');
+  // Exactly one default per group, or defaultConfig() silently depends on list
+  // order to break the tie and the flag stops meaning anything.
+  for (const group of ['woodFinishes', 'baseFinishes']) {
+    assert.equal(PRODUCT_CONFIG[group].filter(f => f.isDefault).length, 1,
+      'exactly one default in ' + group);
+  }
+
   // --- accessories, presets, and the breakdown ---
   const { ACCESSORIES, PRESETS, priceBreakdown, accessoryFits, incompatibleAccessories } =
     await import('../catalog.mjs');

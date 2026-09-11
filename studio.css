@@ -62,38 +62,20 @@ header h1 { letter-spacing: -.7px; }
 .render-settings summary { cursor: pointer; list-style: none; }
 .render-settings > div { position: absolute; top: 40px; right: 0; width: 210px; border: 1px solid var(--line); border-radius: 10px; background: white; padding: 15px; box-shadow: 0 10px 30px #1c302522; display: grid; gap: 14px; }
 .render-settings label { display: grid; gap: 6px; font-size: 12px; }
-#motion-dock { max-width: 390px; bottom: 43px; padding: 8px; gap: 0; border: 1px solid #ffffffc9; border-radius: 16px; background: #fffffff0; backdrop-filter: blur(18px); box-shadow: 0 12px 36px #263d321a; }
-.motion-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: center; gap: 5px; background: #eff2eb; padding: 4px; border-radius: 9px; }
-.motion-tabs button { padding: 7px; font-size: 12px; color: #77847a; border-radius: 6px; }
-.motion-tabs button[aria-selected=true] { color: var(--ink); background: #fff; box-shadow: 0 1px 4px #21382c12; font-weight: 600; }
-#motion-dock [data-motion-panel=lift] { padding: 18px 14px 9px; flex-wrap: wrap; background: transparent; border: 0; box-shadow: none; gap: 16px; }
-.height-presets { display: flex; width: 100%; justify-content: space-between; gap: 8px; }
-.height-presets button { font-size: 10px; color: #617869; padding: 5px 10px; background: #f1f4ef; border-radius: 5px; }
+.render-settings #scene-light-name { margin: 0; font-size: 13px; font-weight: 650; color: #36584c; }
+.render-settings output { font-variant-numeric: tabular-nums; color: #607268; }
+.render-settings input[type=range] { width: 100%; accent-color: #3c7562; }
+.render-settings > div { max-height: min(520px, 65vh); overflow-y: auto; }
+/* The movement panel is now the app remote; its styles live in app-remote.css.
+   The old #glide-pad and #glide-knob rules were not merely dead - as ids they
+   beat the new classes and painted the compass dish and its glossy sphere a
+   flat green. */
 .height-slider::-webkit-slider-thumb { border-color: var(--accent); width: 20px; height: 20px; }
 .height-slider::-moz-range-thumb { border-color: var(--accent); width: 17px; height: 17px; background: white; border-radius: 50%; }
 #tilt-sliders-overlay { max-height: 210px; overflow: auto; }
 #tilt-sliders-overlay > div { background: none; box-shadow: none; border: 0; padding: 16px 10px; gap: 12px; }
 #tilt-sliders-overlay:empty::after { content: 'Create a tilt rig in the editor to preview its motion.'; font-size: 12px; padding: 20px; color: #758173; }
 #tilt-sliders-overlay .tilt-reset { color: #567662; padding: 7px; font-size: 19px; }
-.glide-panel { padding: 14px 6px 3px; }
-.glide-main { display: flex; gap: 18px; align-items: center; }
-#glide-pad { position: relative; flex: 0 0 112px; height: 112px; background: radial-gradient(circle, #e6eee5, #f3f5ef); border: 1px solid #d5dfd2; border-radius: 50%; touch-action: none; cursor: grab; }
-#glide-pad:active { cursor: grabbing; }
-.pad-axis { position: absolute; background: #d5dfd0; }
-.axis-x { left: 10%; right: 10%; height: 1px; top: 50%; }
-.axis-z { top: 10%; bottom: 10%; width: 1px; left: 50%; }
-#glide-knob { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; border: 4px solid white; border-radius: 50%; background: #47735b; box-shadow: 0 3px 8px #30442a35; pointer-events: none; }
-.pad-arrow { position: absolute; color: #7e967f; font-size: 12px; pointer-events: none; }
-.pad-arrow.up { top: 4px; left: 47%; }.pad-arrow.down { bottom: 4px; left: 47%; }.pad-arrow.left { left: 6px; top: 42%; }.pad-arrow.right { right: 6px; top: 42%; }
-.glide-sliders { flex: 1; display: grid; gap: 9px; font-size: 10px; color: #687c6e; }
-.glide-sliders input { width: 100%; height: 4px; display: block; margin-top: 7px; }
-.glide-sliders output { float: right; font-variant-numeric: tabular-nums; color: var(--ink); }
-.glide-sliders select { float: right; background: transparent; color: var(--ink); }
-.glide-actions { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
-.glide-actions > span { flex: 1; font-size: 10px; color: #69816d; }
-.glide-actions button { border: 1px solid #d6e0d2; border-radius: 6px; padding: 6px 9px; font-size: 10px; }
-.glide-actions button[aria-pressed=true] { background: var(--accent); color: white; }
-#glide-help { font-size: 9px; color: #839181; margin-top: 10px; text-align: center; }
 body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-sidebar-w, 420px) + 4px); }
 #setup-backdrop { background: #f5f6f1; }
 #setup-exit-btn { top: 12px; right: 22px; background: var(--ink); border: none; color: white; border-radius: 6px; padding: 7px 15px; box-shadow: none; }
@@ -128,6 +110,26 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .precision-tools > div:not(.eyebrow) { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 10px; }
 .precision-tools button { background: #f1f4ed; border: 1px solid #dce5d6; }
 .precision-tools kbd { font-size: 9px; padding: 1px 3px; margin-left: 5px; border: 1px solid #d3decd; border-radius: 3px; }
+.scene-asset-tools { display: grid; gap: 10px; }
+.scene-library-heading, .scene-current-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.scene-library-heading .eyebrow { margin-bottom: 2px; }
+#scene-library-status { color: #728075; font-size: 10px; text-align: right; }
+.scene-library-filters { display: grid !important; grid-template-columns: minmax(0, 1fr) 130px; margin: 0 !important; }
+.scene-library-filters input, .scene-library-filters select { min-width: 0 !important; width: 100% !important; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; background: #f8faf5; font-size: 11px; }
+.scene-library-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px !important; max-height: 286px; overflow: auto; padding-right: 3px; margin: 0 !important; }
+.scene-library-card { min-width: 0; display: grid; grid-template-rows: 66px auto auto; text-align: left; gap: 3px; padding: 5px !important; background: #f8faf5 !important; border: 1px solid #e2e8dc !important; }
+.scene-library-card:hover { border-color: #8eaa8c !important; background: #f1f6ed !important; }
+.scene-library-card img { width: 100%; height: 66px; object-fit: contain; border-radius: 4px; background: #ecefe8; }
+.scene-library-card span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #34453b; font-size: 10px; font-weight: 600; }
+.scene-library-card small { color: #849087; font-size: 8px; text-transform: uppercase; }
+.scene-current-heading { border-top: 1px solid var(--line); padding-top: 9px; font-size: 11px; }
+#delete-scene-assets { color: #9b5147; background: #f8eeea; border-color: #ead3cc; }
+.scene-assets-current { display: flex !important; gap: 5px !important; flex-wrap: wrap; max-height: 116px; overflow: auto; margin: 0 !important; }
+.scene-current-item { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 5px 8px !important; font-size: 10px !important; }
+.scene-current-item[aria-pressed=true] { background: #47694d !important; color: #fff; border-color: #47694d !important; }
+.scene-tree-asset-row { display: flex; align-items: center; gap: 6px; padding: 3px 4px; cursor: pointer; color: #3d5d48; }
+.scene-tree-asset-row:hover { background: #eef4ea; }
+.scene-tree-asset-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #cart-modal { z-index: 100; backdrop-filter: blur(6px); background: #233d344f; }
 #cart-modal > div { max-height: 85vh; overflow-y: auto; max-width: 540px; }
 #cart-modal .w-16.h-16 { display: none; }
@@ -177,9 +179,8 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .motion-dock-toggle { margin-left: auto; border: 0; background: none; cursor: pointer; font-size: 11px; line-height: 1; padding: 4px 6px; color: inherit; opacity: .7; }
 .motion-dock-toggle:hover { opacity: 1; }
 #motion-dock.collapsed { padding-bottom: 4px; }
-#motion-dock-content { max-height: 0; overflow: hidden; transition: max-height .28s ease; }
-#motion-dock-content.expanded { max-height: 420px; min-height: var(--motion-dock-reserve, 0px); }
-@media (prefers-reduced-motion: reduce) { #motion-dock-content { transition: none; } }
+/* Collapse toggles display. There is no animated height ceiling to clip a tall
+   panel, no reserve to keep the tabs equal, and nothing for the canvas to wait on. */
 
 /* Options panel collapse. The viewer column takes the freed grid track. */
 .config-collapse { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: #666; background: none; border: 0; padding: 2px 0 10px; cursor: pointer; }
@@ -239,6 +240,15 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .scene-home { background: linear-gradient(135deg, #e9dbc5 45%, #a99c72 46%); }
 .scene-music { background: repeating-linear-gradient(90deg, #343b47 0 3px, #a5977e 3px 5px); }
 .scene-gaming { background: linear-gradient(135deg, #555181 30%, #9ec8e7 46%, #293646 60%); }
+.scene-creative { background: linear-gradient(135deg, #f2ede2 45%, #c3a271 46%); }
+.scene-lounge { background: linear-gradient(135deg, #f0cfa2 40%, #9d7d5c 46%); }
+.scene-kitchen { background: linear-gradient(135deg, #f1f4f1 45%, #9fb3ac 46%); }
+.scene-gym { background: linear-gradient(135deg, #e3ecf2 42%, #4e545a 46%); }
+.scene-scifi { background: linear-gradient(135deg, #2b3340 35%, #60ffe4 46%, #1c232f 62%); }
+.scene-bedroom { background: linear-gradient(135deg, #efe2d6 45%, #b39b7f 46%); }
+.scene-workshop { background: repeating-linear-gradient(45deg, #c8cbcc 0 4px, #6f7377 4px 7px); }
+.scene-study { background: linear-gradient(135deg, #d8cdb6 42%, #7d5c3c 46%); }
+.scene-gallery { background: linear-gradient(135deg, #ffffff 45%, #cfccc6 46%); }
 #room-scene-caption { color: #536b5d; font-size: 10px; line-height: 1.4; margin-top: 6px; min-height: 14px; }
 #viewer-shell[data-environment=slate] .scenes-label, #viewer-shell[data-environment=slate] #room-scene-caption { color: #f0f4f0; }
 body:not(.setup-layout) .camera-shortcuts { display: none; }

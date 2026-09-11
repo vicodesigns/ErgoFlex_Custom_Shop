@@ -7,7 +7,7 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
          ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES } from './workspace-3d.mjs';
+import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs';
 import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
@@ -71,6 +71,66 @@ let isSelectionMode = false;
 // Phase 2.0: Stable Editor IDs + Part Registry
 let editorIdCounter = 0;
 const partRegistry = new Map(); // editorId -> { obj, name, editorId, isClone }
+const sceneAssetRegistry = new Map(); // editorId -> one whole room/desk-dressing prop
+const sceneAssetStates = new Map();   // room id -> removed defaults, additions and local transforms
+let sceneAssetCounter = 0;
+let sceneAssetHydrationToken = 0;
+const SCENE_ASSET_STATE_KEY = 'ergoflex.sceneAssets.v1';
+
+function editorEntry(editorId) {
+    return partRegistry.get(editorId) || sceneAssetRegistry.get(editorId);
+}
+
+function sceneAssetState(sceneId = selectedRoomScene) {
+    if (!sceneAssetStates.has(sceneId)) {
+        sceneAssetStates.set(sceneId, { removed: new Set(), added: new Map(), transforms: new Map() });
+    }
+    return sceneAssetStates.get(sceneId);
+}
+
+function plainLocalTransform(obj) {
+    return {
+        p: { x: obj.position.x, y: obj.position.y, z: obj.position.z },
+        q: { x: obj.quaternion.x, y: obj.quaternion.y, z: obj.quaternion.z, w: obj.quaternion.w },
+        s: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z }
+    };
+}
+
+function applyPlainLocalTransform(obj, transform) {
+    if (!transform) return;
+    obj.position.set(transform.p.x, transform.p.y, transform.p.z);
+    obj.quaternion.set(transform.q.x, transform.q.y, transform.q.z, transform.q.w);
+    obj.scale.set(transform.s.x, transform.s.y, transform.s.z);
+    obj.updateMatrixWorld(true);
+}
+
+function serializeSceneAssetStates() {
+    captureActiveSceneAssetTransforms();
+    return Object.fromEntries([...sceneAssetStates].map(([sceneId, state]) => [sceneId, {
+        removed: [...state.removed],
+        added: [...state.added.values()],
+        transforms: Object.fromEntries(state.transforms)
+    }]));
+}
+
+function restoreSceneAssetStates(value) {
+    sceneAssetStates.clear();
+    if (!value || typeof value !== 'object') return;
+    for (const [sceneId, saved] of Object.entries(value)) {
+        const state = sceneAssetState(sceneId);
+        for (const id of saved.removed || []) state.removed.add(id);
+        for (const addition of saved.added || []) {
+            if (addition?.editorId && addition?.propId) state.added.set(addition.editorId, addition);
+        }
+        for (const [id, transform] of Object.entries(saved.transforms || {})) state.transforms.set(id, transform);
+    }
+}
+
+function persistSceneAssetStates() {
+    try { localStorage.setItem(SCENE_ASSET_STATE_KEY, JSON.stringify(serializeSceneAssetStates())); } catch (_) {}
+}
+
+try { restoreSceneAssetStates(JSON.parse(localStorage.getItem(SCENE_ASSET_STATE_KEY) || '{}')); } catch (_) {}
 
 // --- Custom part names ---------------------------------------------------------
 // editorId is immutable — baked tilt configs, actuator rigs and saved groups all key
@@ -82,7 +142,7 @@ let lastSelectedEditorId = null;
 
 function partLabel(eid) {
     if (!eid) return '';
-    return partLabels.get(eid) || partRegistry.get(eid)?.name || eid;
+    return partLabels.get(eid) || editorEntry(eid)?.name || eid;
 }
 
 function objLabel(obj) {
@@ -103,7 +163,7 @@ function restorePartLabels() {
 function setPartLabel(eid, label) {
     if (!eid) return;
     const clean = (label || '').trim();
-    const modelName = partRegistry.get(eid)?.name;
+    const modelName = editorEntry(eid)?.name;
     if (clean && clean !== modelName) partLabels.set(eid, clean);
     else partLabels.delete(eid);
     persistPartLabels();
@@ -112,6 +172,106 @@ function setPartLabel(eid, label) {
     const search = document.getElementById('part-search-input');
     if (search && search.value) onPartSearch(search.value);
     rebuildRigUI();
+}
+
+function sceneAssetEditorId(obj) {
+    const key = obj?.userData?.sceneAssetKey;
+    return key ? `scene:${key}` : null;
+}
+
+function sceneAssetName(obj) {
+    const catalogName = PROP_LIBRARY.entry(obj?.userData?.propId)?.name;
+    return catalogName || obj?.userData?.propId || obj?.name || 'Scene asset';
+}
+
+function selectionTarget(obj) {
+    for (let node = obj; node; node = node.parent) {
+        if (node.userData?.sceneAsset) return node;
+    }
+    return obj;
+}
+
+function registerSceneAsset(obj) {
+    const editorId = sceneAssetEditorId(obj);
+    if (!editorId || sceneAssetRegistry.has(editorId)) return;
+    obj.userData.editorId = editorId;
+    const entry = {
+        obj, editorId, name: sceneAssetName(obj), kind: 'sceneAsset',
+        propId: obj.userData.propId, isCustom: Boolean(obj.userData.sceneAssetCustom)
+    };
+    sceneAssetRegistry.set(editorId, entry);
+    obj.traverse(child => {
+        if (child.isMesh && !interactableObjects.includes(child)) interactableObjects.push(child);
+    });
+}
+
+function unregisterSceneAsset(obj) {
+    toggleMovingObject(obj, false, true);
+    obj.traverse(child => {
+        const index = interactableObjects.indexOf(child);
+        if (index > -1) interactableObjects.splice(index, 1);
+    });
+    const editorId = obj.userData?.editorId || sceneAssetEditorId(obj);
+    if (editorId) sceneAssetRegistry.delete(editorId);
+}
+
+function clearSceneAssetRegistration() {
+    // Deselect first so the transform proxy returns assets to their real parent
+    // before the old room and its mount groups are removed.
+    [...sceneAssetRegistry.values()].forEach(entry => unregisterSceneAsset(entry.obj));
+    sceneAssetRegistry.clear();
+    updateTransformProxy();
+    refreshSelectedPartUI();
+}
+
+function discardSceneAssetUndoEntries() {
+    const clean = stack => stack.flatMap(entry => {
+        if (entry.type === 'scene-assets') return [];
+        if (entry.type !== 'transform') return [entry];
+        const items = entry.items.filter(item => !item.obj.userData?.sceneAsset);
+        return items.length ? [{ ...entry, items }] : [];
+    });
+    undoStack.splice(0, undoStack.length, ...clean(undoStack));
+    redoStack.splice(0, redoStack.length, ...clean(redoStack));
+    updateUndoBtn();
+}
+
+function canonicalTransformPlain(obj) {
+    const transform = canonicalTransform(obj);
+    return transform ? {
+        p: { x: transform.p.x, y: transform.p.y, z: transform.p.z },
+        q: { x: transform.q.x, y: transform.q.y, z: transform.q.z, w: transform.q.w },
+        s: { x: transform.s.x, y: transform.s.y, z: transform.s.z }
+    } : plainLocalTransform(obj);
+}
+
+function captureActiveSceneAssetTransforms() {
+    if (!sceneAssetRegistry.size) return;
+    const state = sceneAssetState();
+    sceneAssetRegistry.forEach(entry => state.transforms.set(entry.editorId, canonicalTransformPlain(entry.obj)));
+}
+
+async function hydrateSceneAssets(sceneId, token = sceneAssetHydrationToken) {
+    if (sceneId !== selectedRoomScene || token !== sceneAssetHydrationToken) return;
+    const state = sceneAssetState(sceneId);
+    const defaults = [...(workspaceRoom?.assets() || []), ...(workspaceAccessories?.dressAssets() || [])];
+    for (const obj of defaults) {
+        const editorId = sceneAssetEditorId(obj);
+        if (state.removed.has(editorId)) { obj.removeFromParent(); continue; }
+        applyPlainLocalTransform(obj, state.transforms.get(editorId));
+        registerSceneAsset(obj);
+    }
+    for (const addition of state.added.values()) {
+        if (sceneId !== selectedRoomScene || token !== sceneAssetHydrationToken) return;
+        const key = addition.editorId.replace(/^scene:/, '');
+        const object = await workspaceRoom?.addAsset(addition.propId, key, addition.position || [0, 0, 800]);
+        if (!object || sceneId !== selectedRoomScene || token !== sceneAssetHydrationToken) continue;
+        applyPlainLocalTransform(object, state.transforms.get(addition.editorId));
+        registerSceneAsset(object);
+    }
+    buildSceneTree();
+    renderSceneAssetList();
+    updateSceneLibraryStatus();
 }
 
 let selectedPartUIQueued = false;
@@ -129,7 +289,7 @@ function refreshSelectedPartUI() {
 
     // Fall back to whatever is still selected if the tracked part was deselected
     let eid = lastSelectedEditorId;
-    if (!eid || !partRegistry.has(eid) || !movingObjects.some(i => i.obj.userData.editorId === eid)) {
+    if (!eid || !editorEntry(eid) || !movingObjects.some(i => i.obj.userData.editorId === eid)) {
         const last = movingObjects[movingObjects.length - 1];
         eid = last ? last.obj.userData.editorId : null;
         lastSelectedEditorId = eid;
@@ -143,7 +303,7 @@ function refreshSelectedPartUI() {
         return;
     }
 
-    const entry = partRegistry.get(eid);
+    const entry = editorEntry(eid);
     idEl.textContent = eid;
     emptyEl.classList.add('hidden');
     bodyEl.classList.remove('hidden');
@@ -184,6 +344,8 @@ const mouse = new THREE.Vector2();
 
 let scene, camera, renderer, controls, transformControl, transformProxy, loadedModel, floorMesh;
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
+let sceneLights = null;
+const roomLightSettings = {};
 let accessoryCategory = 'Desktop';
 let sharedBirchMaterial = null;
 let sharedBasePaintMaterial = null;
@@ -212,7 +374,7 @@ const addToCartBtn = document.getElementById('add-to-cart');
 const cartCount = document.getElementById('cart-count');
 
 // Desk Height Slider Elements
-let deskHeightSlider, deskHeightDisplay, toggleHeightBtn, selectionModeToggle, selectedPartsCount, copyPartsBtn, clearPartsBtn;
+let deskHeightSlider, toggleHeightBtn, selectionModeToggle, selectedPartsCount, copyPartsBtn, clearPartsBtn;
 
 function liftToHeight(l) {
     return HEIGHT_MIN + ((l - LIFT_MIN) / (LIFT_MAX - LIFT_MIN)) * (HEIGHT_MAX - HEIGHT_MIN);
@@ -300,6 +462,133 @@ function createStudioEnvironment() {
     return envScene;
 }
 
+// Three.js renders translate, rotate and scale as separate gizmos. This wrapper
+// layers the three handle families around one object, arbitrates overlapping
+// hit targets, and exposes the same small API the rest of the editor already
+// uses. A gesture can therefore move, rotate OR scale while producing one undo
+// transaction, without a mode switch in between.
+class UnifiedTransformGumball extends THREE.Group {
+    constructor(camera, domElement) {
+        super();
+        this.type = 'UnifiedTransformGumball';
+        this.mode = 'unified';
+        this._object = undefined;
+        this._active = null;
+        this._sizes = { translate: 1.45, rotate: 1.05, scale: 0.78 };
+        // Scale pickers get first refusal where their cubes cross a translation
+        // shaft; the longer arrowheads remain an unambiguous move target.
+        this.controls = ['scale', 'rotate', 'translate'].map(mode => {
+            const control = new TransformControls(camera, domElement);
+            control.setMode(mode);
+            control.setSize(this._sizes[mode]);
+            control.addEventListener('objectChange', () => {
+                if (!this._active || this._active === control) this.dispatchEvent({ type: 'objectChange', mode });
+            });
+            control.addEventListener('dragging-changed', event => this.onDraggingChanged(control, mode, event.value));
+            this.add(control);
+            return control;
+        });
+        this._capturePointerDown = event => {
+            if (!this._object || this._active || this.mode !== 'unified' || event.button !== 0) return;
+            const rect = domElement.getBoundingClientRect();
+            const pointer = {
+                x: (event.clientX - rect.left) / rect.width * 2 - 1,
+                y: -(event.clientY - rect.top) / rect.height * 2 + 1,
+                button: event.button
+            };
+            this.controls.forEach(control => { control.enabled = true; control.pointerHover(pointer); });
+            const winner = this.controls.find(control => control.axis !== null);
+            if (winner) this.controls.forEach(control => {
+                if (control !== winner) { control.enabled = false; control.axis = null; }
+            });
+        };
+        domElement.addEventListener('pointerdown', this._capturePointerDown, true);
+        this._resolveHover = () => {
+            if (this._active || this.mode !== 'unified') return;
+            const hovered = this.controls.find(control => control.enabled && control.axis !== null);
+            if (hovered) this.controls.forEach(control => { if (control !== hovered) control.axis = null; });
+        };
+        // Runs after the child controls' hover listeners, leaving exactly one
+        // highlighted handle when invisible picker volumes overlap.
+        domElement.addEventListener('pointermove', this._resolveHover);
+        this.domElement = domElement;
+    }
+
+    onDraggingChanged(control, mode, dragging) {
+        if (dragging) {
+            if (this._active && this._active !== control) return;
+            this._active = control;
+            this.controls.forEach(other => {
+                if (other !== control) { other.enabled = false; other.axis = null; }
+            });
+            this.dispatchEvent({ type: 'dragging-changed', value: true, mode });
+            return;
+        }
+        if (this._active !== control) return;
+        this.dispatchEvent({ type: 'dragging-changed', value: false, mode });
+        this._active = null;
+        // Defer until every TransformControls pointerup listener on the shared
+        // canvas has finished handling the current event.
+        setTimeout(() => this.syncEnabledModes(), 0);
+    }
+
+    syncEnabledModes() {
+        const enabledModes = this.mode === 'unified' ? new Set(['translate', 'rotate', 'scale']) : new Set([this.mode]);
+        this.controls.forEach(control => {
+            const on = Boolean(this._object) && enabledModes.has(control.mode);
+            control.enabled = on;
+            control.visible = on;
+            if (!on) control.axis = null;
+        });
+    }
+
+    attach(object) {
+        this._object = object;
+        this.controls.forEach(control => control.attach(object));
+        this.syncEnabledModes();
+        return this;
+    }
+
+    detach() {
+        this._object = undefined;
+        this._active = null;
+        this.controls.forEach(control => { control.detach(); control.enabled = false; });
+        return this;
+    }
+
+    setMode(mode) {
+        this.mode = ['translate', 'rotate', 'scale'].includes(mode) ? mode : 'unified';
+        this.syncEnabledModes();
+        return this;
+    }
+
+    setSize(size) {
+        const factor = size / 1.5;
+        this.controls.forEach(control => control.setSize(this._sizes[control.mode] * factor));
+        return this;
+    }
+
+    setSpace(space) { this.controls.forEach(control => control.setSpace(space)); return this; }
+    setTranslationSnap(value) { this.controls.forEach(control => control.setTranslationSnap(value)); return this; }
+    setRotationSnap(value) { this.controls.forEach(control => control.setRotationSnap(value)); return this; }
+    setScaleSnap(value) { this.controls.forEach(control => control.setScaleSnap(value)); return this; }
+
+    controlFor(mode) { return this.controls.find(control => control.mode === mode); }
+    get object() { return this._object; }
+    get dragging() { return Boolean(this._active?.dragging); }
+    get axis() { return this._active?.axis || this.controls.find(control => control.axis !== null)?.axis || null; }
+    get space() { return this.controlFor('translate').space; }
+    get translationSnap() { return this.controlFor('translate').translationSnap; }
+    get rotationSnap() { return this.controlFor('rotate').rotationSnap; }
+    get scaleSnap() { return this.controlFor('scale').scaleSnap; }
+
+    dispose() {
+        this.domElement.removeEventListener('pointermove', this._resolveHover);
+        this.domElement.removeEventListener('pointerdown', this._capturePointerDown, true);
+        this.controls.forEach(control => control.dispose());
+    }
+}
+
 function initThreeJS() {
     const container = canvas.parentElement;
     scene = new THREE.Scene();
@@ -336,7 +625,7 @@ function initThreeJS() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.minDistance = 2;
-    controls.maxDistance = 15;
+    controls.maxDistance = 30;
     controls.maxPolarAngle = Math.PI * 0.49;
     controls.minPolarAngle = 0.001;
     controls.target.set(STARTING_TARGET.x, STARTING_TARGET.y, STARTING_TARGET.z);
@@ -350,7 +639,7 @@ function initThreeJS() {
     scene.add(transformProxy);
 
     // Initialize TransformControls
-    transformControl = new TransformControls(camera, renderer.domElement);
+    transformControl = new UnifiedTransformGumball(camera, renderer.domElement);
     transformControl.setSize(1.5); // Make the gizmo large and easy to grab
     transformControl.addEventListener('objectChange', () => {
         if (pivotGizmoOn && transformControl.object === pivotMarker) {
@@ -419,6 +708,7 @@ function initThreeJS() {
     const rimLight = new THREE.DirectionalLight(0xffffff, 0.55);
     rimLight.position.set(-4, 5.5, -7.5);
     scene.add(rimLight);
+    sceneLights = { key: keyLight, fill: fillLight, rim: rimLight, hemi: hemiLight };
 
     // Pointer events for ultra-reliable click detection
     renderer.domElement.addEventListener('pointerdown', (e) => {
@@ -483,7 +773,9 @@ function initThreeJS() {
     // The viewer changes size without a window resize (entering/leaving setup
     // mode, dragging the sidebar splitter), so watch the container directly.
     if (typeof ResizeObserver !== 'undefined' && canvas.parentElement) {
-        new ResizeObserver(() => syncViewerSize()).observe(canvas.parentElement);
+        // The panel floats inside this box, so a change in its shape is exactly
+        // when a saved panel position can fall outside the usable area.
+        new ResizeObserver(() => { syncViewerSize(); clampDockPosition(); }).observe(canvas.parentElement);
     }
 
     animate();
@@ -594,14 +886,19 @@ function refreshLiftBaseline(obj) {
 // Records one part's edit. Every edit path ends here.
 function captureAssetBaseline(obj) {
     const editorId = obj.userData?.editorId;
-    if (!editorId || assetBaseline.has(editorId)) return;
+    if (!editorId || obj.userData?.sceneAsset || assetBaseline.has(editorId)) return;
     const canon = canonicalTransform(obj);
     if (canon) assetBaseline.set(editorId, canon);
 }
 
 function recordCanonicalEdit(obj) {
     const editorId = obj.userData?.editorId;
-    if (editorId) editTransforms.set(editorId, canonicalTransform(obj));
+    if (editorId && obj.userData?.sceneAsset) {
+        sceneAssetState().transforms.set(editorId, canonicalTransformPlain(obj));
+        persistSceneAssetStates();
+    } else if (editorId) {
+        editTransforms.set(editorId, canonicalTransform(obj));
+    }
     refreshLiftBaseline(obj);
 }
 
@@ -711,6 +1008,8 @@ function invertEntry(entry) {
             return { ...entry, added: !entry.added };
         case 'tilt-parts':
             return { ...entry, added: !entry.added };
+        case 'scene-assets':
+            return { ...entry, present: !entry.present };
         default:
             return null;
     }
@@ -799,6 +1098,14 @@ function applyEntry(entry) {
             persistTiltConfigs();
             rebuildTiltUI();
         }
+    } else if (entry.type === 'scene-assets') {
+        entry.records.forEach(record => setSceneAssetPresence(record, entry.present));
+        persistSceneAssetStates();
+        updateTransformProxy();
+        buildSceneTree();
+        renderSceneAssetList();
+        updateSceneLibraryStatus();
+        markEdited();
     }
 }
 
@@ -954,6 +1261,7 @@ function toggleMovingObject(obj, forceState = null, skipUpdate = false) {
     if (shouldSelect && obj.userData.editorId) lastSelectedEditorId = obj.userData.editorId;
     if (selectedPartsCount) selectedPartsCount.innerText = movingObjects.length;
     queueSelectedPartUI();
+    if (obj.userData?.sceneAsset) renderSceneAssetList();
     if (!skipUpdate) updateTransformProxy();
 }
 
@@ -1005,7 +1313,8 @@ function buildMarqueeCandidates() {
 
     camera.updateMatrixWorld();
 
-    for (const obj of interactableObjects) {
+    const selectionObjects = new Set(interactableObjects.map(selectionTarget));
+    for (const obj of selectionObjects) {
         if (!obj.parent || !isRenderable(obj)) continue;
 
         obj.updateWorldMatrix(true, false);
@@ -1155,7 +1464,7 @@ function applyMarqueeSelection(hits) {
     const targets = new Set();
 
     hits.forEach(obj => {
-        if (mode === 'parent') {
+        if (mode === 'parent' && !obj.userData?.sceneAsset) {
             const parent = resolveSelectionParent(obj);
             if (parent && parent.type !== 'Scene') {
                 parent.traverse(child => {
@@ -1388,7 +1697,7 @@ function onCanvasClick(event) {
     const intersects = raycaster.intersectObjects(interactableObjects, false);
 
     if (intersects.length > 0) {
-        const clickedObj = intersects[0].object;
+        const clickedObj = selectionTarget(intersects[0].object);
 
         const modeInput = document.querySelector('input[name="select_mode"]:checked');
         const mode = modeInput ? modeInput.value : 'single';
@@ -1401,7 +1710,7 @@ function onCanvasClick(event) {
         if (action === 'deselect') targetState = false;
 
         const clickedParent = resolveSelectionParent(clickedObj);
-        if (mode === 'parent' && clickedParent && clickedParent.type !== 'Scene') {
+        if (mode === 'parent' && !clickedObj.userData?.sceneAsset && clickedParent && clickedParent.type !== 'Scene') {
             const parent = clickedParent;
             const isSelected = movingObjects.some(item => item.obj === clickedObj);
             const finalState = action === 'toggle' ? !isSelected : targetState;
@@ -1796,6 +2105,9 @@ function serializeProject() {
                 grainEnabled,
                 environment: document.getElementById('studio-environment')?.value || 'gallery',
                 roomScene: selectedRoomScene,
+                sceneAssets: serializeSceneAssetStates(),
+                sceneAssetLabels: [...partLabels].filter(([editorId]) => editorId.startsWith('scene:')),
+                sceneAssetLocked: [...lockedParts].filter(editorId => editorId.startsWith('scene:')),
                 exposure: renderer ? renderer.toneMappingExposure : 1.02,
                 camera: camera && controls
                     ? { position: v3(camera.position), target: v3(controls.target) }
@@ -1803,11 +2115,11 @@ function serializeProject() {
             },
             motion,
             parts: {
-                labels: [...partLabels],
+                labels: [...partLabels].filter(([editorId]) => partRegistry.has(editorId)),
                 clones,
                 transforms,
                 liftMembers,
-                locked: [...lockedParts],
+                locked: [...lockedParts].filter(editorId => partRegistry.has(editorId)),
                 groups: JSON.parse(JSON.stringify(savedGroups))
             },
             rigs: {
@@ -1995,8 +2307,7 @@ function applyProjectMotion(motion) {
         manualLiftOverride = true;
         currentLift = targetLift = heightToLift(THREE.MathUtils.clamp(motion.heightInches, HEIGHT_MIN, HEIGHT_MAX));
         updateMovingObjectsPosition();
-        if (deskHeightSlider) deskHeightSlider.value = liftToHeight(currentLift);
-        if (deskHeightDisplay) deskHeightDisplay.innerText = liftToHeight(currentLift).toFixed(1) + '"';
+        showHeight(liftToHeight(currentLift));
     }
     for (const [name, deg] of Object.entries(motion.tilt || {})) {
         const config = tiltConfigs.find(c => c.name === name);
@@ -2064,6 +2375,11 @@ function applyProjectPresentation(project) {
         if (el) el.checked = grainEnabled;
     }
     applySurfaceFinish();
+    clearSceneAssetRegistration();
+    restoreSceneAssetStates(presentation.sceneAssets || {});
+    for (const [editorId, label] of presentation.sceneAssetLabels || []) partLabels.set(editorId, label);
+    for (const editorId of presentation.sceneAssetLocked || []) lockedParts.add(editorId);
+    persistSceneAssetStates();
     setRoomScene(presentation.roomScene || 'product', false);
     const environment = document.getElementById('studio-environment');
     if (environment && presentation.environment) {
@@ -2071,9 +2387,8 @@ function applyProjectPresentation(project) {
         environment.dispatchEvent(new Event('change'));
     }
     if (renderer && Number.isFinite(presentation.exposure)) {
-        renderer.toneMappingExposure = presentation.exposure;
-        const slider = document.getElementById('studio-exposure');
-        if (slider) slider.value = presentation.exposure;
+        (roomLightSettings[selectedRoomScene] ||= {}).exposure = presentation.exposure;
+        applyRoomLighting();
     }
     if (presentation.camera && camera && controls) {
         camera.position.set(presentation.camera.position.x, presentation.camera.position.y, presentation.camera.position.z);
@@ -2506,7 +2821,7 @@ function setLocked(obj, locked) {
 // The part the numeric fields describe: the last one selected, if it is still
 // in the selection.
 function inspectorTarget() {
-    const entry = lastSelectedEditorId ? partRegistry.get(lastSelectedEditorId) : null;
+    const entry = lastSelectedEditorId ? editorEntry(lastSelectedEditorId) : null;
     if (entry && movingObjects.some(item => item.obj === entry.obj)) return entry.obj;
     return movingObjects.length ? movingObjects[movingObjects.length - 1].obj : null;
 }
@@ -2618,6 +2933,180 @@ function distributeSelection(axis) {
     });
 }
 
+function sceneAssetRecord(entry) {
+    return {
+        sceneId: selectedRoomScene,
+        obj: entry.obj,
+        parent: canonicalParent(entry.obj),
+        entry: { ...entry },
+        addition: sceneAssetState().added.get(entry.editorId) || null,
+        transform: canonicalTransformPlain(entry.obj)
+    };
+}
+
+function setSceneAssetPresence(record, present) {
+    if (record.sceneId !== selectedRoomScene) return;
+    const state = sceneAssetState(record.sceneId);
+    const { entry, obj } = record;
+    if (present) {
+        (record.parent || workspaceRoom?.ensureAssetRoot()).add(obj);
+        applyPlainLocalTransform(obj, record.transform);
+        if (record.addition) state.added.set(entry.editorId, record.addition);
+        else state.removed.delete(entry.editorId);
+        state.transforms.set(entry.editorId, record.transform);
+        registerSceneAsset(obj);
+    } else {
+        unregisterSceneAsset(obj);
+        obj.removeFromParent();
+        if (record.addition) state.added.delete(entry.editorId);
+        else state.removed.add(entry.editorId);
+    }
+}
+
+function deleteSelectedSceneAssets() {
+    const entries = movingObjects
+        .map(item => sceneAssetRegistry.get(item.obj.userData?.editorId))
+        .filter(Boolean);
+    if (!entries.length) return notifyUser('Select one or more scene assets to delete.');
+    const records = entries.map(sceneAssetRecord);
+    records.forEach(record => setSceneAssetPresence(record, false));
+    updateTransformProxy();
+    persistSceneAssetStates();
+    transaction({ type: 'scene-assets', records, present: true });
+    buildSceneTree();
+    renderSceneAssetList();
+    updateSceneLibraryStatus();
+    notifyUser(`${records.length} scene asset${records.length === 1 ? '' : 's'} deleted.`);
+}
+
+async function addSceneAsset(propId) {
+    if (!workspaceRoom) return;
+    const entry = PROP_LIBRARY.entry(propId);
+    if (!entry) return notifyUser('That library asset is unavailable.');
+    const key = `${selectedRoomScene}:custom:${Date.now()}-${sceneAssetCounter++}:${propId}`;
+    const editorId = `scene:${key}`;
+    const addition = { editorId, propId, position: [0, 0, 800] };
+    const state = sceneAssetState();
+    state.added.set(editorId, addition);
+    updateSceneLibraryStatus('Loading…');
+    try {
+        const obj = await workspaceRoom.addAsset(propId, key, addition.position);
+        if (!obj || !state.added.has(editorId)) return;
+        registerSceneAsset(obj);
+        state.transforms.set(editorId, plainLocalTransform(obj));
+        const record = sceneAssetRecord(sceneAssetRegistry.get(editorId));
+        transaction({ type: 'scene-assets', records: [record], present: false });
+        persistSceneAssetStates();
+        toggleMovingObject(obj, true);
+        buildSceneTree();
+        renderSceneAssetList();
+        updateSceneLibraryStatus();
+        notifyUser(`${entry.name} added to ${ROOM_SCENES.find(scene => scene.id === selectedRoomScene)?.name || 'scene'}.`);
+    } catch (error) {
+        state.added.delete(editorId);
+        updateSceneLibraryStatus('Could not load asset');
+        console.error('[ErgoFlex] Scene asset could not be added:', error);
+    }
+}
+
+let sceneAssetLibraryEntries = [];
+
+function updateSceneLibraryStatus(message = '') {
+    const status = document.getElementById('scene-library-status');
+    if (!status) return;
+    status.textContent = message || `${sceneAssetRegistry.size} asset${sceneAssetRegistry.size === 1 ? '' : 's'} in ${ROOM_SCENES.find(scene => scene.id === selectedRoomScene)?.name || 'scene'}`;
+}
+
+function renderSceneAssetList() {
+    const list = document.getElementById('scene-assets-current');
+    if (!list) return;
+    list.replaceChildren();
+    if (!sceneAssetRegistry.size) {
+        const empty = document.createElement('p');
+        empty.className = 'studio-note';
+        empty.textContent = 'This scene has no placed assets yet.';
+        list.append(empty);
+        return;
+    }
+    sceneAssetRegistry.forEach(entry => {
+        const button = document.createElement('button');
+        button.className = 'scene-current-item';
+        button.setAttribute('aria-pressed', String(movingObjects.some(item => item.obj === entry.obj)));
+        button.textContent = partLabel(entry.editorId);
+        button.title = `Select ${entry.name}`;
+        button.onclick = () => { toggleMovingObject(entry.obj); renderSceneAssetList(); buildSceneTree(); };
+        list.append(button);
+    });
+}
+
+function renderSceneAssetLibrary() {
+    const grid = document.getElementById('scene-library-grid');
+    if (!grid) return;
+    const query = (document.getElementById('scene-library-search')?.value || '').trim().toLowerCase();
+    const category = document.getElementById('scene-library-category')?.value || 'all';
+    const entries = sceneAssetLibraryEntries.filter(entry =>
+        (category === 'all' || entry.category === category) &&
+        (!query || entry.name.toLowerCase().includes(query) || entry.id.includes(query)));
+    grid.replaceChildren();
+    entries.forEach(entry => {
+        const card = document.createElement('button');
+        card.className = 'scene-library-card';
+        card.type = 'button';
+        const image = document.createElement('img');
+        image.src = `./assets/props/thumbs/${entry.id}.png`;
+        image.alt = '';
+        image.loading = 'lazy';
+        const name = document.createElement('span');
+        name.textContent = entry.name;
+        const meta = document.createElement('small');
+        meta.textContent = entry.category;
+        card.append(image, name, meta);
+        card.onclick = () => addSceneAsset(entry.id);
+        grid.append(card);
+    });
+    if (!entries.length) {
+        const empty = document.createElement('p');
+        empty.className = 'studio-note';
+        empty.textContent = 'No assets match that search.';
+        grid.append(empty);
+    }
+}
+
+async function buildSceneAssetTools(anchorElement) {
+    if (!anchorElement || document.getElementById('scene-asset-tools')) return;
+    const panel = document.createElement('section');
+    panel.id = 'scene-asset-tools';
+    panel.className = 'precision-tools scene-asset-tools';
+    panel.innerHTML = `<div class="scene-library-heading"><div><div class="eyebrow">SCENE ASSETS</div><strong>Prop library</strong></div><span id="scene-library-status">Loading library…</span></div>
+        <div class="scene-library-filters"><input id="scene-library-search" type="search" placeholder="Search 3D assets…" aria-label="Search scene assets"><select id="scene-library-category" aria-label="Scene asset category"><option value="all">All categories</option></select></div>
+        <div id="scene-library-grid" class="scene-library-grid" aria-label="Available scene assets"></div>
+        <div class="scene-current-heading"><strong>In this scene</strong><button id="delete-scene-assets" type="button">Delete selected</button></div>
+        <div id="scene-assets-current" class="scene-assets-current"></div>
+        <p class="studio-note">Click any prop in the viewer or list, then use Move, Rotate, Scale, rename, precision fields, alignment, focus, isolate, lock, undo, and redo.</p>`;
+    anchorElement.after(panel);
+    panel.querySelector('#scene-library-search').oninput = renderSceneAssetLibrary;
+    panel.querySelector('#scene-library-category').onchange = renderSceneAssetLibrary;
+    panel.querySelector('#delete-scene-assets').onclick = deleteSelectedSceneAssets;
+    try {
+        const index = await PROP_LIBRARY.loadIndex();
+        sceneAssetLibraryEntries = [...index.props].sort((a, b) => a.name.localeCompare(b.name));
+        const categories = [...new Set(sceneAssetLibraryEntries.map(entry => entry.category))].sort();
+        const select = panel.querySelector('#scene-library-category');
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category[0].toUpperCase() + category.slice(1);
+            select.append(option);
+        });
+        renderSceneAssetLibrary();
+        renderSceneAssetList();
+        updateSceneLibraryStatus();
+    } catch (error) {
+        updateSceneLibraryStatus('Library unavailable');
+        console.error('[ErgoFlex] Prop library could not be loaded:', error);
+    }
+}
+
 function buildPrecisionTools(anchorElement) {
     if (!anchorElement || document.getElementById('transform-inspector')) return;
     const panel = document.createElement('div');
@@ -2644,6 +3133,7 @@ function buildPrecisionTools(anchorElement) {
         </div>
         <p class="studio-note">Values are in the part's own parent space, with animation removed. Rotation is in degrees. Typed edits, alignment, and gizmo drags share one undo history.</p>`;
     anchorElement.after(panel);
+    buildSceneAssetTools(panel);
 
     panel.querySelectorAll('input[data-axis]').forEach(input => {
         input.addEventListener('focus', () => { inspectorSuspended = true; });
@@ -2809,8 +3299,7 @@ function scheduleAutosave(label = 'edit') {
 // --- UI Events ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    deskHeightSlider = document.getElementById('desk-height-slider');
-    deskHeightDisplay = document.getElementById('desk-height-display');
+
     toggleHeightBtn = document.getElementById('toggle-height-btn');
     selectionModeToggle = document.getElementById('selection-mode-toggle');
     selectedPartsCount = document.getElementById('selected-parts-count');
@@ -2858,6 +3347,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedPartsCount) selectedPartsCount.innerText = "0";
             lastSelectedEditorId = null;
             refreshSelectedPartUI();
+            renderSceneAssetList();
+            buildSceneTree();
         });
     }
 
@@ -2872,23 +3363,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (deskHeightSlider) {
-        deskHeightSlider.addEventListener('input', (e) => {
-            manualLiftOverride = true;
-            isStanding = false;
-            if(toggleHeightBtn) {
-                toggleHeightBtn.style.color = '#374151';
-                toggleHeightBtn.style.borderColor = '#e5e7eb';
-            }
-
-            const h = parseFloat(e.target.value);
-            if(deskHeightDisplay) deskHeightDisplay.innerText = h.toFixed(1) + '"';
-            currentLift = heightToLift(h);
-
-            targetLift = currentLift;
-            updateMovingObjectsPosition();
-        });
-    }
+    wireHeightSlider();
 
     if(copyPartsBtn) {
         copyPartsBtn.addEventListener('click', () => {
@@ -3159,7 +3634,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyNamedBtn = document.getElementById('selected-part-copy-named-btn');
     if (copyNamedBtn) copyNamedBtn.addEventListener('click', () => {
         const rows = [...partLabels].map(([eid, label]) => ({
-            label, editorId: eid, modelName: partRegistry.get(eid)?.name || '(missing)'
+            label, editorId: eid, modelName: editorEntry(eid)?.name || '(missing)'
         }));
         const json = JSON.stringify({ renamedParts: rows.length, parts: rows }, null, 2);
         console.log('[ErgoFlex] Renamed parts:\n' + json);
@@ -3672,7 +4147,8 @@ document.getElementById('cart-modal').addEventListener('click', (e) => {
 // --- Phase 2.1: Named Groups ---
 function saveCurrentGroup(name) {
     if (!name || movingObjects.length === 0) return;
-    const editorIds = movingObjects.map(item => item.obj.userData.editorId).filter(Boolean);
+    const editorIds = movingObjects.map(item => item.obj.userData.editorId).filter(editorId => partRegistry.has(editorId));
+    if (!editorIds.length) return notifyUser('Named groups are for desk parts. Scene assets stay organized in the scene list.');
     savedGroups[name] = editorIds;
     try { localStorage.setItem('ergoflexGroups', JSON.stringify(savedGroups)); } catch(e) {}
     rebuildGroupDropdown();
@@ -3773,7 +4249,8 @@ function onPartSearch(query) {
     }
     const lowerQuery = query.toLowerCase();
     const matches = [];
-    partRegistry.forEach((entry) => {
+    const searchableEntries = [...partRegistry.values(), ...sceneAssetRegistry.values()];
+    searchableEntries.forEach((entry) => {
         const custom = partLabels.get(entry.editorId) || '';
         if (entry.name.toLowerCase().includes(lowerQuery) ||
             custom.toLowerCase().includes(lowerQuery) ||
@@ -3795,7 +4272,8 @@ function onPartSearch(query) {
         const custom = partLabels.get(entry.editorId);
         div.innerHTML = '<span>' + (custom ? '<b>' + custom + '</b> <span class="text-gray-400 text-xs">' + entry.name + '</span>' : entry.name) + '</span>' +
             (isSelected ? '<span class="text-green-500 text-xs font-bold">SEL</span>' : '') +
-            (entry.isClone ? '<span class="text-purple-500 text-xs font-bold ml-1">CLONE</span>' : '');
+            (entry.isClone ? '<span class="text-purple-500 text-xs font-bold ml-1">CLONE</span>' : '') +
+            (entry.kind === 'sceneAsset' ? '<span class="text-blue-500 text-xs font-bold ml-1">SCENE</span>' : '');
         div.addEventListener('click', () => {
             toggleMovingObject(entry.obj, null);
             lastSelectedEditorId = entry.editorId;
@@ -3818,6 +4296,25 @@ function buildSceneTree() {
     if (!container || !loadedModel) return;
     container.innerHTML = '';
     buildTreeNode(container, loadedModel, 0);
+    if (sceneAssetRegistry.size) {
+        const heading = document.createElement('div');
+        heading.className = 'font-semibold text-blue-700 border-t border-gray-200 mt-2 pt-2 px-1';
+        heading.textContent = `Scene assets (${sceneAssetRegistry.size})`;
+        container.appendChild(heading);
+        sceneAssetRegistry.forEach(entry => {
+            const row = document.createElement('label');
+            row.className = 'scene-tree-asset-row';
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.checked = movingObjects.some(item => item.obj === entry.obj);
+            input.onchange = () => { toggleMovingObject(entry.obj, input.checked); renderSceneAssetList(); };
+            const name = document.createElement('span');
+            name.textContent = partLabel(entry.editorId);
+            name.title = entry.editorId;
+            row.append(input, name);
+            container.appendChild(row);
+        });
+    }
 }
 
 function buildTreeNode(parentEl, obj, depth) {
@@ -3970,8 +4467,10 @@ function makeClone(original, editorId, { parent = null, offsetX = 0.05, joinLift
 
 function cloneSelectedParts() {
     if (movingObjects.length === 0) return;
-    const newClones = movingObjects.map(item =>
+    const deskParts = movingObjects.filter(item => !item.obj.userData?.sceneAsset);
+    const newClones = deskParts.map(item =>
         makeClone(item.obj, item.obj.name + '_clone_' + (editorIdCounter++)));
+    if (!newClones.length) return notifyUser('Use Add again in the scene library to duplicate a scene asset.');
     transaction({ type: 'clone', clones: newClones });
     buildSceneTree();
 }
@@ -4410,6 +4909,9 @@ function rebuildTiltUI() {
         div.querySelector('[data-add-parts-tilt]')?.addEventListener('click', () => addSelectedToTiltConfig(idx));
         div.querySelector('[data-del-parts-tilt]')?.addEventListener('click', () => removeSelectedFromTiltConfig(idx));
     });
+    // The remote's primary tilt control reads from these rigs, and at first build
+    // there were none to read.
+    syncTiltUI();
 }
 
 function removeTiltConfig(idx, { recordUndo = true } = {}) {
@@ -4856,8 +5358,6 @@ function setupGlideControls() {
     pad.onblur = releaseGlideInput;
     window.addEventListener('blur', () => { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); });
     document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); } });
-    document.getElementById('glide-x').oninput = e => setGlidePosition(Number(e.target.value), glideTarget.z);
-    document.getElementById('glide-z').oninput = e => setGlidePosition(glideTarget.x, Number(e.target.value));
     document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.51;
     document.getElementById('glide-home').onclick = () => setGlidePosition(0, 0);
     document.getElementById('glide-demo').onclick = () => {
@@ -4865,15 +5365,566 @@ function setupGlideControls() {
         else startGlide();
     };
 }
+// Lift and tilt speeds, in real units per second rather than per-frame
+// fractions. 'auto' is the app's default: the speed the desk picks for itself.
+let liftSpeed = 'auto';
+let tiltSpeed = 'auto';
+let tiltTarget = null;
+const LIFT_SPEEDS = { auto: 2.6, slow: 1.3, medium: 2.6, fast: 5.2 };
+const TILT_SPEEDS = { auto: 14, slow: 7, medium: 14, fast: 28 };
+function liftUnitsPerSecond() { return LIFT_SPEEDS[liftSpeed] ?? LIFT_SPEEDS.auto; }
+function tiltDegreesPerSecond() { return TILT_SPEEDS[tiltSpeed] ?? TILT_SPEEDS.auto; }
+
+// The desktop tilt, by name. Never tiltConfigs[0]: restoreTiltConfigs loads saved
+// rigs before the baked one, so index 0 is whatever happened to load first and
+// changes between sessions.
+function primaryTiltConfig() {
+    return tiltConfigs.find(c => c.name === 'tilting') || tiltConfigs[0] || null;
+}
+
+// Re-resolves the slider and re-attaches its handler. The element is rebuilt
+// with the panel, so caching it once at startup left both this listener and
+// showHeight() writing to a detached input - the slider did nothing and the
+// readout silently stopped tracking.
+function wireHeightSlider() {
+    deskHeightSlider = document.getElementById('desk-height-slider');
+    if (!deskHeightSlider) return;
+    deskHeightSlider.addEventListener('input', (e) => {
+        manualLiftOverride = true;
+        isStanding = false;
+        if (toggleHeightBtn) {
+            toggleHeightBtn.style.color = '#374151';
+            toggleHeightBtn.style.borderColor = '#e5e7eb';
+        }
+        const h = parseFloat(e.target.value);
+        showHeight(h);
+        currentLift = targetLift = heightToLift(h);
+        updateMovingObjectsPosition();
+    });
+}
+
+function showHeight(inches) {
+    if (deskHeightSlider) deskHeightSlider.value = inches;
+    const readout = document.getElementById('desk-height-display');
+    if (readout && document.activeElement !== readout) {
+        if ('value' in readout) readout.value = inches.toFixed(1);
+        else readout.innerText = inches.toFixed(1) + '"';
+    }
+}
+
+function syncTiltUI() {
+    const config = primaryTiltConfig();
+    const readout = document.getElementById('tilt-value');
+    const slider = document.getElementById('tilt-slider');
+    if (!config) return;
+    if (readout && document.activeElement !== readout) readout.value = config.currentDeg.toFixed(1);
+    if (slider && document.activeElement !== slider) {
+        slider.min = config.minDeg; slider.max = config.maxDeg; slider.value = config.currentDeg;
+    }
+    positionArcThumb();
+}
+
+// Emergency stop: hold everything exactly where it is. stopGlide() is not this -
+// it sends the desk back to its home position, which is the opposite of what a
+// stop button must do.
+function haltAllMotion() {
+    glideActive = false;
+    releaseGlideInput();
+    glideTarget.copy(glideOffset);
+    targetLift = currentLift;
+    manualLiftOverride = false;
+    tiltTarget = null;
+    const status = document.getElementById('glide-status');
+    if (status) status.textContent = 'Stopped';
+}
+
+// ── The motion remote ────────────────────────────────────────────────────────
+//
+// A port of the ErgoFlex Desk app's motion surface: Glide, Height, Tilt, their
+// speeds and preset banks, Ergo Forms, and a stop. Geometry and colour come from
+// the Flutter source rather than from a screenshot - see app-remote.css.
+//
+// The phone stacks these vertically because it is a phone. Transcribing that
+// here would make the panel taller, which is the opposite of what it is for, so
+// the same blocks are laid out wide and fall back to the phone's order only when
+// the viewer is genuinely narrow.
+
+const SPEED_WORDS = [['auto', 'Auto'], ['slow', 'Slow'], ['medium', 'Medium'], ['fast', 'Fast']];
+
+// Versioned and validated. A key written by a future build, hand-edited, or
+// truncated must not take the panel down with it.
+function readStore(key, version, fallback) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object' || parsed.v !== version) return fallback;
+        return parsed;
+    } catch { return fallback; }
+}
+// Reported, not swallowed. A quota or private-mode failure here means a preset
+// the user thought they saved is gone on reload, and the existing save paths in
+// this app already say so rather than claiming a save that did not happen. Once
+// per session, because a full quota fails on every write.
+let storageWarned = false;
+function writeStore(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+    } catch {
+        if (!storageWarned) {
+            storageWarned = true;
+            notifyUser('Browser storage is unavailable, so presets will not survive a reload.');
+        }
+        return false;
+    }
+}
+
+const LIFT_PRESET_KEY = 'ergoflex.liftPresetsV1';
+const TILT_PRESET_KEY = 'ergoflex.tiltPresetsV1';
+const ERGO_FORMS_KEY  = 'ergoflex.ergoFormsV1';
+const DOCK_POS_KEY    = 'ergoflex.dockPosV1';
+
+const numberOrNull = (value, lo, hi) =>
+    (typeof value === 'number' && isFinite(value) && value >= lo && value <= hi) ? value : null;
+
+function loadLiftPresets() {
+    const stored = readStore(LIFT_PRESET_KEY, 1, null);
+    const slots = Array.isArray(stored?.slots) ? stored.slots : [];
+    return [0, 1, 2].map(i => numberOrNull(slots[i], HEIGHT_MIN, HEIGHT_MAX));
+}
+function loadTiltPresets() {
+    const stored = readStore(TILT_PRESET_KEY, 1, null);
+    const slots = Array.isArray(stored?.slots) ? stored.slots : [];
+    return [0, 1, 2].map(i => numberOrNull(slots[i], -90, 90));
+}
+function loadErgoForms() {
+    const fallback = [
+        { name: 'Sitting', lift: 28, tilt: 0 },
+        { name: 'Stool', lift: 40, tilt: -5 },
+        { name: 'Standing', lift: 48, tilt: 0 }
+    ];
+    const stored = readStore(ERGO_FORMS_KEY, 1, null);
+    if (!Array.isArray(stored?.forms) || stored.forms.length !== 3) return fallback;
+    return stored.forms.map((form, i) => ({
+        name: typeof form?.name === 'string' && form.name.trim() ? form.name.slice(0, 24) : fallback[i].name,
+        lift: numberOrNull(form?.lift, HEIGHT_MIN, HEIGHT_MAX),
+        tilt: numberOrNull(form?.tilt, -90, 90)
+    }));
+}
+
+let liftPresets = [null, null, null];
+let tiltPresets = [null, null, null];
+let ergoForms = [];
+
+// The compass, drawn to the app's numbers: 8 capsule ticks at R*0.915 spanning
+// 19 degrees with round caps, an inner dish, and an eight-point star.
+function compassSvg() {
+    const R = 66, C = 66;
+    const at = (r, a) => [C + r * Math.cos(a), C - r * Math.sin(a)];
+    const tickR = R * 0.915, half = 9.5 * Math.PI / 180;
+    let ticks = '';
+    for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI / 4;
+        const [x1, y1] = at(tickR, a - half), [x2, y2] = at(tickR, a + half);
+        ticks += `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${tickR.toFixed(2)} ${tickR.toFixed(2)} 0 0 0 ${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" stroke="#2F55D4" stroke-width="${(R * 0.115).toFixed(2)}" stroke-linecap="round"/>`;
+    }
+    const Rin = 40, base = Rin * 0.40, len = Rin * 0.26, wide = Rin * 0.12;
+    let star = '';
+    for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI / 4;
+        const dx = Math.cos(a), dy = -Math.sin(a);
+        const tip = [C + dx * (base + len), C + dy * (base + len)];
+        const p1 = [C + dx * base - dy * wide, C + dy * base + dx * wide];
+        const p2 = [C + dx * base + dy * wide, C + dy * base - dx * wide];
+        star += `<polygon points="${tip[0].toFixed(1)},${tip[1].toFixed(1)} ${p1[0].toFixed(1)},${p1[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}" fill="#2F55D4" fill-opacity=".92"/>`;
+    }
+    return `<svg viewBox="0 0 132 132" aria-hidden="true" focusable="false">
+      <defs><radialGradient id="glide-dish" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#C8D2F1"/><stop offset=".55" stop-color="#FFFFFF"/><stop offset="1" stop-color="#D0D9F2"/>
+      </radialGradient></defs>
+      <circle cx="66" cy="66" r="64" fill="#fff"/>
+      <circle cx="66" cy="66" r="${(R * 0.82).toFixed(1)}" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="${(R * 0.055).toFixed(1)}"/>
+      <circle cx="66" cy="66" r="${(R * 0.745).toFixed(1)}" fill="none" stroke="#2F55D4" stroke-opacity=".16" stroke-width="${(R * 0.008).toFixed(2)}"/>
+      ${ticks}
+      <circle cx="66" cy="66" r="${Rin}" fill="url(#glide-dish)"/>
+      <circle cx="66" cy="66" r="${Rin - 1}" fill="none" stroke="#2F55D4" stroke-opacity=".42" stroke-width="1.6"/>
+      <g class="compass-star">${star}</g>
+    </svg>`;
+}
+
+// A 120 degree arc, the app's start of -60 degrees and sweep of 120.
+const ARC = { cx: 95, cy: 95, r: 70, from: 150, to: 30 };
+function arcSvg() {
+    const pt = deg => [ARC.cx + ARC.r * Math.cos(deg * Math.PI / 180),
+                       ARC.cy - ARC.r * Math.sin(deg * Math.PI / 180)];
+    const [x1, y1] = pt(ARC.from), [x2, y2] = pt(ARC.to);
+    const d = `M${x1.toFixed(1)} ${y1.toFixed(1)} A${ARC.r} ${ARC.r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+    return `<svg viewBox="0 30 190 90" aria-hidden="true" focusable="false">
+      <path class="arc-rim" d="${d}" stroke-width="33.2"/>
+      <path class="arc-face" d="${d}" stroke-width="30"/>
+      <circle cx="${ARC.cx}" cy="${(ARC.cy - ARC.r).toFixed(1)}" r="4" fill="#2F55D4" fill-opacity=".6"/>
+    </svg>`;
+}
+
+function positionArcThumb() {
+    const box = document.querySelector('.remote-arc');
+    const slider = document.getElementById('tilt-slider');
+    const thumb = box?.querySelector('.remote-sphere');
+    if (!box || !slider || !thumb) return;
+    const min = Number(slider.min), max = Number(slider.max);
+    const t = max === min ? 0.5 : (Number(slider.value) - min) / (max - min);
+    const deg = ARC.from - (ARC.from - ARC.to) * t;
+    const x = ARC.cx + ARC.r * Math.cos(deg * Math.PI / 180);
+    const y = ARC.cy - ARC.r * Math.sin(deg * Math.PI / 180);
+    // The SVG viewBox is 190 wide and starts at y=30 with a height of 90.
+    thumb.style.left = (x / 190 * 100) + '%';
+    thumb.style.top = ((y - 30) / 90 * 100) + '%';
+}
+
+function speedSelect(id, label, value) {
+    const options = SPEED_WORDS.map(([v, text]) =>
+        `<option value="${v}"${v === value ? ' selected' : ''}>${text}</option>`).join('');
+    return `<div class="remote-speed"><select id="${id}" aria-label="${label}">${options}</select></div>`;
+}
+
+function chipRow(kind) {
+    return `<div class="remote-chips" data-preset-bank="${kind}">` +
+        [1, 2, 3].map(n => `<button class="remote-chip" data-slot="${n - 1}" type="button">${n}<span class="caret">^</span></button>`).join('') +
+        `</div>`;
+}
+
+function buildMotionRemote() {
+    const dock = document.getElementById('motion-dock');
+    if (!dock) return;
+    liftPresets = loadLiftPresets();
+    tiltPresets = loadTiltPresets();
+    ergoForms = loadErgoForms();
+
+    const tiltOverlay = document.getElementById('tilt-sliders-overlay');
+    dock.className = 'app-remote';
+    dock.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.className = 'remote-header';
+    header.innerHTML = `<img class="remote-logo" src="./assets/app-icons/ergoflexwidelogonoslogan.svg" alt="ErgoFlex Desk">
+        <span class="remote-status" role="img" aria-label="Desk connected"></span>
+        <span class="remote-spacer"></span>
+        <button id="remote-stop" type="button" title="Stop all movement" aria-label="Stop all movement"><img src="./assets/app-icons/e-stop.svg" alt=""></button>
+        <button id="motion-dock-toggle" class="motion-dock-toggle" type="button" aria-controls="motion-dock-content" title="Collapse the movement panel">▼</button>`;
+    dock.append(header);
+
+    const body = document.createElement('div');
+    body.id = 'motion-dock-content';
+    body.className = 'motion-dock-body';
+    body.innerHTML = `<div class="remote-body">
+      <div class="remote-grid">
+        <div class="remote-col" data-motion-panel="glide">
+          <h3 class="remote-heading">Glide</h3>
+          <div id="glide-pad" class="remote-compass" tabindex="0" role="group"
+               aria-label="Glide joystick. Drag in any direction or use arrow keys while focused."
+               aria-describedby="glide-help">${compassSvg()}<span id="glide-knob" class="remote-sphere"></span></div>
+          <div class="remote-speed"><select id="glide-speed" aria-label="Glide speed">
+            <option value="0.17">Crawl</option><option value="0.34">Ninja</option>
+            <option value="0.51" selected>Slow</option><option value="0.68">Medium</option>
+            <option value="0.85">Fast</option></select></div>
+          <div class="glide-actions">
+            <span id="glide-status">Ready to move</span>
+            <button id="glide-demo" type="button" aria-pressed="false">Play demo</button>
+            <button id="glide-home" type="button">Recenter</button>
+          </div>
+        </div>
+        <div class="remote-col" data-motion-panel="lift">
+          <h3 class="remote-heading">Height</h3>
+          <label class="remote-readout"><span class="sr-only">Desk height in inches</span>
+            <input id="desk-height-display" type="number" inputmode="decimal"
+                   min="${HEIGHT_MIN}" max="${HEIGHT_MAX}" step="0.1" value="${HEIGHT_MIN.toFixed(1)}">
+            <span class="unit">in</span>
+            <svg class="pencil" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
+          </label>
+          <div class="remote-vslider">
+            <div class="vs-arrows"><span class="up u1"></span><span class="up u2"></span><span class="down d1"></span><span class="down d2"></span></div>
+            <input type="range" id="desk-height-slider" min="${HEIGHT_MIN}" max="${HEIGHT_MAX}" step="0.1" value="${HEIGHT_MIN}" aria-label="Desk height">
+          </div>
+          ${speedSelect('lift-speed', 'Lift speed', 'auto')}
+          ${chipRow('lift')}
+        </div>
+        <div class="remote-col" data-motion-panel="tilt">
+          <h3 class="remote-heading">Tilt</h3>
+          <label class="remote-readout"><span class="sr-only">Desktop tilt in degrees</span>
+            <input id="tilt-value" type="number" inputmode="decimal" step="0.1" value="0.0">
+            <span class="unit">&deg;</span>
+            <svg class="pencil" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
+          </label>
+          <div class="remote-arc">${arcSvg()}
+            <input type="range" id="tilt-slider" min="-30" max="30" step="0.1" value="0" aria-label="Desktop tilt">
+            <span class="remote-sphere"></span>
+          </div>
+          ${speedSelect('tilt-speed', 'Tilt speed', 'auto')}
+          ${chipRow('tilt')}
+        </div>
+        <div class="remote-col remote-forms">
+          <h3 class="remote-heading">Forms</h3>
+          <div class="remote-forms-row"></div>
+        </div>
+      </div>
+      <p id="glide-help" class="remote-hint">Drag the compass or use arrow keys. Tap a preset to recall it, press and hold to save.</p>
+    </div>`;
+    dock.append(body);
+    if (tiltOverlay) body.querySelector('.remote-body').append(tiltOverlay);
+
+    renderErgoForms();
+    renderPresetChips();
+    wireRemote(dock, header);
+    // The glide compass, demo and recenter buttons are part of this panel, so
+    // they are re-wired here. Wiring them once at startup left them pointing at
+    // elements a rebuild had already replaced.
+    setupGlideControls();
+    wireHeightSlider();
+    syncTiltUI();
+}
+
+function renderErgoForms() {
+    const row = document.querySelector('.remote-forms-row');
+    if (!row) return;
+    row.innerHTML = ergoForms.map((form, i) =>
+        `<button class="remote-form" type="button" data-form="${i}" data-set="${form.lift !== null && form.tilt !== null}"
+                 title="Tap to recall. Press and hold to save the current pose. Double-click to rename.">${form.name}</button>`).join('');
+}
+
+function renderPresetChips() {
+    for (const [kind, bank] of [['lift', liftPresets], ['tilt', tiltPresets]]) {
+        document.querySelectorAll(`[data-preset-bank="${kind}"] .remote-chip`).forEach(chip => {
+            const value = bank[Number(chip.dataset.slot)];
+            chip.dataset.saved = String(value !== null);
+            chip.title = value === null
+                ? 'Empty. Press and hold to save the current ' + (kind === 'lift' ? 'height' : 'tilt') + '.'
+                : (kind === 'lift' ? value.toFixed(1) + '"' : value.toFixed(1) + '°') + ' — tap to recall, hold to overwrite.';
+        });
+    }
+}
+
+// Tap recalls, press-and-hold saves - the app's gesture, and the reason the two
+// banks are separate: lift and tilt are stored independently there.
+function bindHold(el, onTap, onHold) {
+    let timer = null, held = false;
+    const start = () => { held = false; timer = setTimeout(() => { held = true; onHold(); }, 550); };
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    el.addEventListener('pointerdown', start);
+    el.addEventListener('pointerup', () => { cancel(); if (!held) onTap(); });
+    el.addEventListener('pointerleave', cancel);
+    el.addEventListener('pointercancel', cancel);
+    el.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        if (e.shiftKey) onHold(); else onTap();   // Shift+Enter is the keyboard's "hold"
+    });
+}
+
+function goToHeight(inches) {
+    if (!loadedModel) return;
+    manualLiftOverride = false;
+    targetLift = heightToLift(THREE.MathUtils.clamp(inches, HEIGHT_MIN, HEIGHT_MAX));
+}
+function goToTilt(deg) {
+    const config = primaryTiltConfig();
+    if (!config) return;
+    tiltTarget = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg);
+}
+
+// Keep the panel inside the canvas's usable rectangle, not merely the viewer:
+// a position saved at one window size, in one layout, must not strand it.
+function clampDockPosition() {
+    const dock = document.getElementById('motion-dock');
+    const container = canvas?.parentElement;
+    if (!dock || !container || dock.dataset.floating !== 'true') return;
+    const pad = 8;
+    const top = parseFloat(canvas.style.top) || 0;
+    const maxX = Math.max(pad, container.clientWidth - dock.offsetWidth - pad);
+    const maxY = Math.max(top + pad, container.clientHeight - dock.offsetHeight - pad);
+    const x = THREE.MathUtils.clamp(parseFloat(dock.style.left) || 0, pad, maxX);
+    const y = THREE.MathUtils.clamp(parseFloat(dock.style.top) || 0, top + pad, maxY);
+    dock.style.left = x + 'px';
+    dock.style.top = y + 'px';
+    return { x, y };
+}
+
+function placeDockFromStorage() {
+    const dock = document.getElementById('motion-dock');
+    const container = canvas?.parentElement;
+    if (!dock || !container) return;
+    const stored = readStore(DOCK_POS_KEY, 1, null);
+    const x = numberOrNull(stored?.x, -1e4, 1e4);
+    const y = numberOrNull(stored?.y, -1e4, 1e4);
+    if (x === null || y === null) return;   // never moved: leave it parked by CSS
+    dock.dataset.floating = 'true';
+    dock.style.left = x + 'px';
+    dock.style.top = y + 'px';
+    dock.style.bottom = 'auto';
+    dock.style.transform = 'none';
+    clampDockPosition();
+}
+
+function wireRemote(dock, header) {
+    // ---- drag ----
+    let dragging = null;
+    header.addEventListener('pointerdown', e => {
+        // Only the bare strip drags. A pointerdown on the stop button, the
+        // collapse toggle, or anything else operable belongs to that control.
+        if (e.button !== 0 || e.target.closest('button, a, input, select, [tabindex]')) return;
+        const rect = dock.getBoundingClientRect();
+        const container = canvas.parentElement.getBoundingClientRect();
+        dragging = { dx: e.clientX - rect.left, dy: e.clientY - rect.top };
+        dock.dataset.floating = 'true';
+        dock.style.bottom = 'auto';
+        dock.style.transform = 'none';
+        dock.style.left = (rect.left - container.left) + 'px';
+        dock.style.top = (rect.top - container.top) + 'px';
+        header.classList.add('dragging');
+        try { header.setPointerCapture(e.pointerId); } catch {}
+        e.preventDefault();
+    });
+    header.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        const container = canvas.parentElement.getBoundingClientRect();
+        dock.style.left = (e.clientX - container.left - dragging.dx) + 'px';
+        dock.style.top = (e.clientY - container.top - dragging.dy) + 'px';
+        clampDockPosition();
+    });
+    const endDrag = e => {
+        if (!dragging) return;
+        dragging = null;
+        header.classList.remove('dragging');
+        try { header.releasePointerCapture(e.pointerId); } catch {}
+        const at = clampDockPosition();
+        if (at) writeStore(DOCK_POS_KEY, { v: 1, x: at.x, y: at.y });
+    };
+    header.addEventListener('pointerup', endDrag);
+    header.addEventListener('pointercancel', endDrag);
+
+    // ---- collapse ----
+    const dockToggle = document.getElementById('motion-dock-toggle');
+    const toggleDock = makeCollapsible('motion-dock', {
+        mode: 'display',
+        storageKey: 'ergoflex.motionDockCollapsed',
+        onToggle: collapsed => {
+            dock.classList.toggle('collapsed', collapsed);
+            dockToggle.textContent = collapsed ? '▲' : '▼';
+            dockToggle.setAttribute('aria-label', collapsed ? 'Expand movement panel' : 'Collapse movement panel');
+            // The canvas is not involved; only the panel's own footprint changed.
+            clampDockPosition();
+        }
+    });
+    dockToggle.onclick = toggleDock;
+
+    // ---- stop ----
+    document.getElementById('remote-stop').onclick = () => { haltAllMotion(); notifyUser('Movement stopped.'); };
+
+    // ---- height ----
+    const heightField = document.getElementById('desk-height-display');
+    const commitHeight = () => {
+        const value = Number(heightField.value);
+        if (!isFinite(value)) { showHeight(liftToHeight(currentLift)); return; }
+        const clamped = THREE.MathUtils.clamp(value, HEIGHT_MIN, HEIGHT_MAX);
+        heightField.value = clamped.toFixed(1);
+        goToHeight(clamped);
+    };
+    heightField.addEventListener('change', commitHeight);
+    heightField.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commitHeight(); heightField.blur(); } });
+    document.getElementById('lift-speed').onchange = e => { liftSpeed = e.target.value; };
+
+    // ---- tilt ----
+    const tiltField = document.getElementById('tilt-value');
+    const tiltSlider = document.getElementById('tilt-slider');
+    const commitTilt = () => {
+        const config = primaryTiltConfig();
+        if (!config) return;
+        const value = Number(tiltField.value);
+        if (!isFinite(value)) { syncTiltUI(); return; }
+        const clamped = THREE.MathUtils.clamp(value, config.minDeg, config.maxDeg);
+        tiltField.value = clamped.toFixed(1);
+        goToTilt(clamped);
+    };
+    tiltField.addEventListener('change', commitTilt);
+    tiltField.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commitTilt(); tiltField.blur(); } });
+    tiltSlider.addEventListener('input', () => {
+        const config = primaryTiltConfig();
+        if (!config) return;
+        tiltTarget = null;                     // dragging is direct, not eased
+        config.currentDeg = Number(tiltSlider.value);
+        applyTiltConfig(config);
+        tiltField.value = config.currentDeg.toFixed(1);
+        positionArcThumb();
+    });
+    document.getElementById('tilt-speed').onchange = e => { tiltSpeed = e.target.value; };
+
+    // ---- preset banks ----
+    document.querySelectorAll('[data-preset-bank] .remote-chip').forEach(chip => {
+        const kind = chip.closest('[data-preset-bank]').dataset.presetBank;
+        const slot = Number(chip.dataset.slot);
+        bindHold(chip,
+            () => {
+                const value = (kind === 'lift' ? liftPresets : tiltPresets)[slot];
+                if (value === null) { notifyUser('That preset is empty. Press and hold to save the current position.'); return; }
+                if (kind === 'lift') goToHeight(value); else goToTilt(value);
+            },
+            () => {
+                if (kind === 'lift') {
+                    liftPresets[slot] = Number(liftToHeight(currentLift).toFixed(1));
+                    writeStore(LIFT_PRESET_KEY, { v: 1, slots: liftPresets });
+                    notifyUser('Height ' + liftPresets[slot].toFixed(1) + '" saved to preset ' + (slot + 1) + '.');
+                } else {
+                    const config = primaryTiltConfig();
+                    if (!config) { notifyUser('No tilt rig in this model to save.'); return; }
+                    tiltPresets[slot] = Number(config.currentDeg.toFixed(1));
+                    writeStore(TILT_PRESET_KEY, { v: 1, slots: tiltPresets });
+                    notifyUser('Tilt ' + tiltPresets[slot].toFixed(1) + '° saved to preset ' + (slot + 1) + '.');
+                }
+                renderPresetChips();
+            });
+    });
+
+    // ---- ergo forms ----
+    document.querySelector('.remote-forms-row').addEventListener('dblclick', e => {
+        const button = e.target.closest('[data-form]');
+        if (!button) return;
+        const form = ergoForms[Number(button.dataset.form)];
+        const name = prompt('Name this Ergo Form', form.name);
+        if (name && name.trim()) {
+            form.name = name.trim().slice(0, 24);
+            writeStore(ERGO_FORMS_KEY, { v: 1, forms: ergoForms });
+            renderErgoForms();
+            wireErgoForms();
+        }
+    });
+    wireErgoForms();
+}
+
+// Re-bound whenever the row is re-rendered, since renaming replaces the buttons.
+function wireErgoForms() {
+    document.querySelectorAll('.remote-form').forEach(button => {
+        const form = ergoForms[Number(button.dataset.form)];
+        bindHold(button,
+            () => {
+                if (form.lift === null || form.tilt === null) { notifyUser('That form is empty. Press and hold to save the current pose.'); return; }
+                goToHeight(form.lift);
+                goToTilt(form.tilt);
+            },
+            () => {
+                form.lift = Number(liftToHeight(currentLift).toFixed(1));
+                const config = primaryTiltConfig();
+                form.tilt = config ? Number(config.currentDeg.toFixed(1)) : 0;
+                writeStore(ERGO_FORMS_KEY, { v: 1, forms: ergoForms });
+                renderErgoForms();
+                wireErgoForms();
+                notifyUser(form.name + ' saved: ' + form.lift.toFixed(1) + '" at ' + form.tilt.toFixed(1) + '°.');
+            });
+    });
+}
+
 function syncGlideUI() {
     const state = `${glideOffset.x.toFixed(2)},${glideOffset.z.toFixed(2)},${glideActive},${glideInput.lengthSq() > 0}`;
     if (state === glideUIPrev) return; glideUIPrev = state;
-    for (const axis of ['x', 'z']) {
-        const input = document.getElementById('glide-' + axis);
-        if (input && document.activeElement !== input) input.value = glideOffset[axis];
-        const output = document.getElementById('glide-' + axis + '-value');
-        if (output) output.textContent = (Math.abs(glideOffset[axis]) < 0.005 ? 0 : glideOffset[axis]).toFixed(2);
-    }
     const demo = document.getElementById('glide-demo');
     if (demo) { demo.textContent = glideActive ? 'Pause demo' : 'Play demo'; demo.setAttribute('aria-pressed', String(glideActive)); }
     const status = document.getElementById('glide-status');
@@ -5343,15 +6394,11 @@ function syncViewerSize() {
     const w = container.clientWidth;
     const viewerControls = container.querySelector('.viewer-controls');
     const top = viewerControls ? viewerControls.offsetTop + viewerControls.offsetHeight + 12 : (w < 500 ? 188 : 168);
-    const dock = document.getElementById('motion-dock');
-    // Read the intended state, not the animated height: a collapsed dock is its
-    // tab strip. Measuring offsetHeight mid-transition (or in a tab whose frames
-    // are throttled, where the transition never advances) left the canvas short.
-    const dockHeight = !dock ? 180
-        : dock.classList.contains('collapsed') ? (dock.querySelector('.motion-tabs')?.offsetHeight || 40)
-        : dock.offsetHeight;
-    const bottom = dockHeight + (window.innerWidth <= 760 ? 26 : 50);
-    const h = Math.max(160, container.clientHeight - top - bottom);
+    // The movement panel floats over the canvas rather than displacing it, so its
+    // size no longer reaches the camera at all. Coupling them is what made the
+    // panel cost the desk ~283px of height, and what forced every tab to reserve
+    // the tallest panel's height so switching tabs would not move the camera.
+    const h = Math.max(160, container.clientHeight - top);
     if (w === 0 || container.clientHeight === 0) return;
     canvas.style.position = 'absolute'; canvas.style.top = top + 'px';
     camera.aspect = w / h;
@@ -5375,15 +6422,14 @@ function animate() {
     // Handle smooth animation if not manually scrubbing
     if (loadedModel && !manualLiftOverride && !motionPaused) {
         if (Math.abs(targetLift - currentLift) > 0.001) {
-            currentLift += (targetLift - currentLift) * 0.08;
+            // Units per second, integrated against the real frame time. The old
+            // `* 0.08` was a per-frame fraction, so the desk genuinely moved at
+            // different speeds on different displays and stalled under load.
+            const step = liftUnitsPerSecond() * dt;
+            const remaining = targetLift - currentLift;
+            currentLift += Math.abs(remaining) <= step ? remaining : Math.sign(remaining) * step;
             updateMovingObjectsPosition();
-
-            // Sync with official user height slider
-            if(deskHeightSlider && deskHeightDisplay) {
-                const h = liftToHeight(currentLift);
-                deskHeightSlider.value = h;
-                deskHeightDisplay.innerText = h.toFixed(1) + '"';
-            }
+            showHeight(liftToHeight(currentLift));
 
             // Temp instrumentation: log column positions at max height once
             if (!_loggedMaxHeight && Math.abs(currentLift - LIFT_MAX) < 0.05) {
@@ -5398,6 +6444,21 @@ function animate() {
             if (currentLift < LIFT_MIN + 1) {
                 _loggedMaxHeight = false; // reset when back near min
             }
+        }
+    }
+
+    // Tilt eases toward its target the same way. applyTiltConfig is immediate, so
+    // without this a speed control would have nothing to act on.
+    if (loadedModel && !motionPaused && tiltTarget !== null) {
+        const config = primaryTiltConfig();
+        if (!config) tiltTarget = null;
+        else if (Math.abs(tiltTarget - config.currentDeg) <= 0.01) {
+            config.currentDeg = tiltTarget; applyTiltConfig(config); tiltTarget = null; syncTiltUI();
+        } else {
+            const step = tiltDegreesPerSecond() * dt;
+            const remaining = tiltTarget - config.currentDeg;
+            config.currentDeg += Math.abs(remaining) <= step ? remaining : Math.sign(remaining) * step;
+            applyTiltConfig(config); syncTiltUI();
         }
     }
 
@@ -5425,24 +6486,79 @@ let studioGrid = null;
 let isolatedVisibility = null;
 let dialogReturnFocus = null;
 let toastTimer;
+function applyRoomLighting() {
+    const profile = ROOM_ATMOSPHERES[selectedRoomScene];
+    const settings = roomLightSettings[selectedRoomScene] || {};
+    const exposure = settings.exposure ?? profile.exposure;
+    const daylight = settings.daylight ?? 1;
+    const accent = settings.accent ?? 1;
+    if (renderer) renderer.toneMappingExposure = exposure;
+    if (scene) scene.environmentIntensity = profile.bounce;
+    if (sceneLights) {
+        sceneLights.key.color.set(profile.key); sceneLights.key.intensity = profile.power * daylight;
+        sceneLights.key.position.set(selectedRoomScene === 'home' || selectedRoomScene === 'lounge' ? -5 : -3, 7, 5);
+        if (selectedRoomScene === 'product') sceneLights.key.position.set(4.5, 8, 5.5);
+        sceneLights.fill.color.set(profile.fill); sceneLights.fill.intensity = .45 * daylight;
+        sceneLights.rim.color.set(profile.accent); sceneLights.rim.intensity = .8 * accent;
+        sceneLights.hemi.color.set(profile.fill); sceneLights.hemi.groundColor.set('#746b61'); sceneLights.hemi.intensity = profile.ambient;
+    }
+    for (const [id, value] of [['studio-exposure', exposure], ['studio-daylight', daylight], ['studio-accent', accent]]) {
+        const input = document.getElementById(id); if (input) input.value = value;
+        const output = document.getElementById(`${id}-value`); if (output) output.textContent = `${Number(value).toFixed(2)}×`;
+    }
+    const label = document.getElementById('scene-light-name'); if (label) label.textContent = profile.label;
+}
+
 function setRoomScene(id, persist = true) {
     const choice = ROOM_SCENES.find(s => s.id === id) || ROOM_SCENES[0];
+    const hydrationToken = ++sceneAssetHydrationToken;
+    if (choice.id !== selectedRoomScene || sceneAssetRegistry.size) {
+        persistSceneAssetStates();
+        discardSceneAssetUndoEntries();
+        clearSceneAssetRegistration();
+    }
     selectedRoomScene = choice.id;
     workspaceRoom?.set(choice.id);
+    // Room props and desk dressing load over the network. A failure leaves the
+    // procedural room standing and is reported in Build checks rather than
+    // only in the console.
+    const roomReady = workspaceRoom?.ready || Promise.resolve();
+    const dressReady = workspaceAccessories?.dress(choice.id) || Promise.resolve();
+    const assetsReady = Promise.allSettled([roomReady, dressReady]).then(results => {
+        if (results[0].status === 'rejected') {
+            reportSceneWarning('room-props', `Scene props for ${choice.name} could not be loaded (${results[0].reason.message}). The room is shown without them.`);
+        }
+        if (results[1].status === 'rejected') {
+            reportSceneWarning('desk-dressing', `Desk dressing for ${choice.name} could not be loaded (${results[1].reason.message}).`);
+        }
+        return hydrateSceneAssets(choice.id, hydrationToken);
+    });
+    if (workspaceRoom) workspaceRoom.ready = assetsReady;
     if (floorMesh) floorMesh.visible = choice.id === 'product';
     const shell = document.getElementById('viewer-shell');
     if (shell) shell.dataset.roomScene = choice.id;
     document.querySelectorAll('[data-room-scene]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.roomScene === choice.id)));
     const caption = document.getElementById('room-scene-caption');
-    if (caption) caption.textContent = choice.id === 'product' ? 'Explore your desk from every angle.' : 'Room furnishings are for inspiration; your build stays the same.';
+    if (caption) {
+        const [wide, rear, front] = ROOM_ATMOSPHERES[choice.id].space;
+        caption.textContent = choice.id === 'product' ? 'Explore your desk from every angle.' : `${((4200 + wide * 2) / 1000).toFixed(1)} × ${((4000 + rear + front) / 1000).toFixed(1)} m · ${ROOM_ATMOSPHERES[choice.id].label} · Furnishings for inspiration`;
+    }
     const heading = document.querySelector('.viewer-heading h2');
     if (heading) heading.textContent = choice.id === 'product' ? 'Designed to move you.' : choice.caption;
+    const environment = document.getElementById('studio-environment');
+    if (environment) environment.value = choice.tone;
+    if (shell) shell.dataset.environment = choice.tone;
+    applyRoomLighting();
+    updateSceneLibraryStatus();
     if (persist) {
-        const environment = document.getElementById('studio-environment');
-        if (environment) { environment.value = choice.tone; environment.dispatchEvent(new Event('change')); }
         try { localStorage.setItem('ergoflex.roomScene', choice.id); } catch {}
     }
-    requestAnimationFrame(syncViewerSize);
+    requestAnimationFrame(() => {
+        syncViewerSize();
+        const view = document.getElementById('camera-view');
+        if (view && persist) view.value = choice.id === 'product' ? 'hero' : 'room';
+        if (view && (persist || view.value === 'room')) view.dispatchEvent(new Event('change'));
+    });
 }
 function notifyUser(message) {
     const toast = document.getElementById('studio-toast');
@@ -5766,35 +6882,18 @@ function focusObjects(objects, { animate = false } = {}) {
         controls.target.copy(center); camera.position.copy(position); controls.update();
     }
 }
-// The lift, tilt and glide panels are different heights (202 / 166 / 283px on a
-// desktop viewport), and syncViewerSize feeds the dock's offsetHeight into the
-// canvas height and camera.aspect. So merely switching tabs resized the canvas
-// by up to 117px and the desk visibly jumped. Reserve the tallest panel once so
-// the dock is one fixed size and changing tabs no longer touches the camera.
-//
-// Reserved as a custom property consumed only by .expanded: setting min-height
-// on the element directly would beat the collapse's max-height: 0 and the dock
-// could never close.
-function stabilizeMotionDock() {
-    const content = document.getElementById('motion-dock-content');
-    if (!content) return;
-    const panels = [...content.querySelectorAll('[data-motion-panel]')];
-    if (!panels.length) return;
-    const wasHidden = panels.map(panel => panel.hidden);
-    content.style.setProperty('--motion-dock-reserve', '0px');
-    let tallest = 0;
-    panels.forEach(panel => { panel.hidden = false; });
-    panels.forEach(panel => { tallest = Math.max(tallest, panel.offsetHeight); });
-    panels.forEach((panel, i) => { panel.hidden = wasHidden[i]; });
-    if (tallest > 0) content.style.setProperty('--motion-dock-reserve', tallest + 'px');
-}
 
+// Every section is visible at once now, so there is nothing to switch between.
+// Kept because the viewer's Glide button and the debug surface both ask for a
+// section by name: bring it into view and focus it instead.
 function setMotionTab(tab) {
-    document.getElementById('motion-dock').dataset.tab = tab;
-    document.querySelectorAll('[data-motion-tab]').forEach(b => { b.setAttribute('aria-selected', String(b.dataset.motionTab === tab)); b.tabIndex = b.dataset.motionTab === tab ? 0 : -1; });
-    document.querySelectorAll('[data-motion-panel]').forEach(p => p.hidden = p.dataset.motionPanel !== tab);
+    const dock = document.getElementById('motion-dock');
+    if (dock?.classList.contains('collapsed')) document.getElementById('motion-dock-toggle')?.click();
+    const panel = document.querySelector(`[data-motion-panel="${tab}"]`);
+    if (!panel) return;
+    panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (tab === 'glide') document.getElementById('glide-pad')?.focus();
     if (tab !== 'glide') releaseGlideInput();
-    requestAnimationFrame(syncViewerSize);
 }
 function initStudio() {
     const toast = document.createElement('div'); toast.id = 'studio-toast'; toast.role = 'status'; toast.hidden = true; document.body.append(toast);
@@ -5871,7 +6970,7 @@ function initStudio() {
     const top = document.createElement('div'); top.className = 'viewer-heading';
     top.innerHTML = `<div class="eyebrow" id="scene-status">LOADING YOUR WORKSPACE</div><h2>Designed to move you.</h2><p id="build-summary"></p>`; viewer.append(top);
     const toolbar = document.createElement('div'); toolbar.className = 'studio-toolbar';
-    toolbar.innerHTML = `<label><span>Environment</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><label>Exposure<input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
+    toolbar.innerHTML = `<label><span>Backdrop</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="room">Whole room</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><p id="scene-light-name"></p><label>Exposure <output id="studio-exposure-value"></output><input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Main light <output id="studio-daylight-value"></output><input id="studio-daylight" type="range" min="0.2" max="2" step="0.05" value="1"></label><label>Accent light <output id="studio-accent-value"></output><input id="studio-accent" type="range" min="0" max="2" step="0.05" value="1"></label><button id="reset-scene-light" type="button">Reset scene lighting</button><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
     const viewerControls = document.createElement('div'); viewerControls.className = 'viewer-controls';
     viewerControls.append(toolbar);
     const scenes = document.createElement('div'); scenes.className = 'scene-switcher';
@@ -5882,23 +6981,30 @@ function initStudio() {
     new ResizeObserver(syncViewerSize).observe(viewerControls);
     try { selectedRoomScene = localStorage.getItem('ergoflex.roomScene') || 'product'; } catch {}
     setRoomScene(selectedRoomScene, false);
-    // Slate is the default. The settings used to be applied only from the change
-    // handler, so the opening view was whatever the renderer happened to be
-    // constructed with - picking a default in the markup alone would have shown
-    // "Slate studio" in the dropdown over a gallery-lit scene.
-    const ENVIRONMENTS = { gallery: [1.02, 1.15, 0.24], warm: [1.08, 1.0, 0.2], slate: [0.95, 1.3, 0.36] };
     const applyEnvironment = (value) => {
-        const settings = ENVIRONMENTS[value] || ENVIRONMENTS.slate;
         document.getElementById('viewer-shell').dataset.environment = value;
-        if (renderer) renderer.toneMappingExposure = settings[0];
-        if (scene) scene.environmentIntensity = settings[1];
-        if (floorMesh) floorMesh.material.opacity = settings[2];
-        document.getElementById('studio-exposure').value = settings[0];
+        if (floorMesh) floorMesh.material.opacity = value === 'slate' ? .36 : .24;
     };
     document.getElementById('studio-environment').onchange = e => applyEnvironment(e.target.value);
     document.getElementById('studio-environment').value = (ROOM_SCENES.find(s => s.id === selectedRoomScene) || ROOM_SCENES[0]).tone;
     applyEnvironment(document.getElementById('studio-environment').value);
-    document.getElementById('studio-exposure').oninput = e => { if (renderer) renderer.toneMappingExposure = Number(e.target.value); };
+    try {
+        const saved = JSON.parse(localStorage.getItem('ergoflex.sceneLights') || '{}');
+        for (const id of Object.keys(ROOM_ATMOSPHERES)) {
+            const settings = saved?.[id]; if (!settings) continue;
+            roomLightSettings[id] = {};
+            for (const [key, min, max] of [['exposure', .6, 1.6], ['daylight', .2, 2], ['accent', 0, 2]]) {
+                if (Number.isFinite(settings[key])) roomLightSettings[id][key] = Math.max(min, Math.min(max, settings[key]));
+            }
+        }
+    } catch {}
+    const saveLighting = () => { try { localStorage.setItem('ergoflex.sceneLights', JSON.stringify(roomLightSettings)); } catch {} };
+    for (const key of ['exposure', 'daylight', 'accent']) document.getElementById(`studio-${key}`).oninput = e => {
+        (roomLightSettings[selectedRoomScene] ||= {})[key] = Number(e.target.value);
+        applyRoomLighting(); saveLighting();
+    };
+    document.getElementById('reset-scene-light').onclick = () => { delete roomLightSettings[selectedRoomScene]; applyRoomLighting(); saveLighting(); };
+    applyRoomLighting();
     document.getElementById('render-quality').onchange = e => {
         if (!renderer) return;
         renderer.setPixelRatio(Math.min(devicePixelRatio, Number(e.target.value))); syncViewerSize();
@@ -5909,6 +7015,14 @@ function initStudio() {
     });
     document.getElementById('camera-view').onchange = e => {
         if (!camera || !loadedModel) return;
+        if (e.target.value === 'room') {
+            const dock = document.getElementById('motion-dock');
+            if (dock && !dock.classList.contains('collapsed')) document.getElementById('motion-dock-toggle')?.click();
+            controls.minDistance = DEFAULT_MIN_DISTANCE;
+            camera.position.copy(controls.target).add(new THREE.Vector3(5, 4, 5));
+            focusObjects(workspaceRoom?.root ? [loadedModel, workspaceRoom.root] : [loadedModel], { animate: true });
+            return;
+        }
         const direction = { hero: [4.8, 2.3, 4.2], front: [6, 0.2, 0], side: [0, 0.2, 6], top: [0, 6, 0.001] }[e.target.value];
         controls.minDistance = DEFAULT_MIN_DISTANCE;
         camera.position.copy(controls.target).add(new THREE.Vector3(...direction)); focusObjects([loadedModel], { animate: true });
@@ -5933,67 +7047,12 @@ function initStudio() {
         }); } catch { notifyUser('Image capture is unavailable. Try serving the project with npm run dev.'); }
     };
     document.querySelectorAll('#viewer-shell button[title]').forEach(b => b.setAttribute('aria-label', b.title));
-    const dock = document.getElementById('motion-dock');
-    const liftPanel = dock.lastElementChild; liftPanel.dataset.motionPanel = 'lift';
-    const tiltPanel = document.getElementById('tilt-sliders-overlay'); tiltPanel.dataset.motionPanel = 'tilt';
-    const tabs = document.createElement('div'); tabs.className = 'motion-tabs'; tabs.role = 'tablist'; tabs.setAttribute('aria-label', 'Desk movement');
-    tabs.innerHTML = `<button role="tab" data-motion-tab="lift">↕ Lift</button><button role="tab" data-motion-tab="tilt">∠ Tilt</button><button role="tab" data-motion-tab="glide">✥ Glide</button>`; dock.prepend(tabs);
-    const presets = document.createElement('div'); presets.className = 'height-presets';
-    presets.innerHTML = `<button data-height="28">Sit · 28″</button><button data-height="40">Perch · 40″</button><button data-height="48">Stand · 48″</button>`;
-    liftPanel.append(presets);
-    presets.querySelectorAll('button').forEach(b => b.onclick = () => { if (!loadedModel) return; manualLiftOverride = false; targetLift = heightToLift(Number(b.dataset.height)); });
-    const glidePanel = document.createElement('div'); glidePanel.dataset.motionPanel = 'glide'; glidePanel.className = 'glide-panel';
-    glidePanel.innerHTML = `<div class="glide-main"><div id="glide-pad" tabindex="0" role="group" aria-label="Glide joystick. Drag in any direction or use arrow keys while focused." aria-describedby="glide-help"><span class="pad-axis axis-x"></span><span class="pad-axis axis-z"></span><span class="pad-arrow up">↑</span><span class="pad-arrow down">↓</span><span class="pad-arrow left">←</span><span class="pad-arrow right">→</span><span id="glide-knob"></span></div><div class="glide-sliders"><label>Forward / back <output id="glide-x-value">0.00</output><input id="glide-x" aria-label="Glide forward and back position" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Sideways <output id="glide-z-value">0.00</output><input id="glide-z" aria-label="Glide sideways position" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Speed <select id="glide-speed"><option value="0.17">Crawl</option><option value="0.34">Ninja</option><option value="0.51" selected>Slow</option><option value="0.68">Medium</option><option value="0.85">Fast</option></select></label></div></div><div class="glide-actions"><span id="glide-status">Ready to move</span><button id="glide-demo" aria-pressed="false">Play demo</button><button id="glide-home">Recenter</button></div><p id="glide-help">Drag the pad or focus it and use arrow keys. Release to stop.</p>`;
-    dock.append(glidePanel);
-    document.querySelectorAll('[data-motion-panel]').forEach(panel => {
-        panel.id = panel.id || 'motion-panel-' + panel.dataset.motionPanel;
-        panel.role = 'tabpanel'; panel.setAttribute('aria-labelledby', 'motion-tab-' + panel.dataset.motionPanel);
-        const tab = tabs.querySelector(`[data-motion-tab="${panel.dataset.motionPanel}"]`);
-        tab.id = 'motion-tab-' + panel.dataset.motionPanel; tab.setAttribute('aria-controls', panel.id);
-    });
-    tabs.querySelectorAll('button').forEach((b, index, buttons) => {
-        b.onclick = () => { if (dock.classList.contains('collapsed')) toggleDock(); setMotionTab(b.dataset.motionTab); };
-        b.onkeydown = e => { if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return; e.preventDefault(); const next = buttons[(index + (e.key === 'ArrowRight' ? 1 : 2)) % 3]; next.click(); next.focus(); };
-    });
-    // Collapsing the dock hands its height straight back to the canvas, because
-    // syncViewerSize derives the bottom inset from the dock's offsetHeight.
-    const dockBody = document.createElement('div');
-    dockBody.id = 'motion-dock-content';
-    dockBody.className = 'config-content expanded';
-    [...dock.children].filter(child => child !== tabs).forEach(child => dockBody.append(child));
-    dock.append(dockBody);
-    const dockToggle = document.createElement('button');
-    dockToggle.id = 'motion-dock-toggle';
-    dockToggle.className = 'motion-dock-toggle';
-    dockToggle.setAttribute('aria-controls', 'motion-dock-content');
-    dockToggle.title = 'Collapse the movement panel to give the desk more room';
-    tabs.append(dockToggle);
-    const toggleDock = makeCollapsible('motion-dock', {
-        storageKey: 'ergoflex.motionDockCollapsed',
-        onToggle: collapsed => {
-            dock.classList.toggle('collapsed', collapsed);
-            dockToggle.textContent = collapsed ? '▲' : '▼';
-            dockToggle.setAttribute('aria-label', collapsed ? 'Expand movement panel' : 'Collapse movement panel');
-            requestAnimationFrame(syncViewerSize);
-            // transitionend is not guaranteed (frozen or interrupted transitions),
-            // and syncViewerSize now reads the collapsed state rather than the
-            // animated height, so this is safe to run immediately as well.
-            syncViewerSize();
-            setTimeout(syncViewerSize, 320);
-        }
-    });
-    dockToggle.onclick = toggleDock;
-    // The dock's height animates, so the rAF sync above still reads the old
-    // offsetHeight. Re-sync when the transition actually lands.
-    dockBody.addEventListener('transitionend', event => {
-        if (event.propertyName === 'max-height') syncViewerSize();
-    });
-    // Panel heights depend on the viewport width, so the reservation has to be
-    // remeasured when it changes or the dock keeps a stale size.
-    window.addEventListener('resize', () => { stabilizeMotionDock(); syncViewerSize(); });
-
-    stabilizeMotionDock();
-    setMotionTab('lift'); setupGlideControls();
+    buildMotionRemote();
+    placeDockFromStorage();
+    // A saved position is only valid against the layout it was saved in, so
+    // re-check it whenever the box it lives in could have changed shape.
+    window.addEventListener('resize', clampDockPosition);
+    if (document.fonts?.ready) document.fonts.ready.then(clampDockPosition).catch(() => {});
     const editorTools = document.createElement('div'); editorTools.className = 'precision-tools';
     editorTools.innerHTML = `<div class="eyebrow">PRECISION & VISIBILITY</div><div><button id="focus-selected">Focus selection <kbd>F</kbd></button><button id="isolate-parts" aria-pressed="false">Isolate</button><button id="show-all-parts">Show all</button></div><div><label>Coordinates <select id="transform-space"><option value="world">World</option><option value="local">Local</option></select></label><label class="check-label"><input type="checkbox" id="transform-snap"> Snap transforms</label></div><p class="studio-note">Q Select · W Move · E Rotate · R Scale · F Focus<br>Snap: 0.05 scene units / 15° / 10% scale</p>`;
     document.getElementById('part-search-input').parentElement.after(editorTools);
@@ -6025,12 +7084,12 @@ function initStudio() {
         if (removed.length) transaction({ type: 'lift-membership', objects: removed, added: false });
         notifyUser(`${removed.length} parts removed from lift for this session.`);
     };
-    document.getElementById('focus-selected').onclick = () => movingObjects.length ? focusObjects(movingObjects.map(i => i.obj), { animate: true }) : notifyUser('Select parts to focus on them.');
+    document.getElementById('focus-selected').onclick = () => movingObjects.length ? focusObjects(movingObjects.map(i => i.obj), { animate: true }) : notifyUser('Select objects to focus on them.');
     document.getElementById('isolate-parts').onclick = e => {
         if (isolatedVisibility) return showAllParts();
         if (!movingObjects.length) return notifyUser('Select parts to isolate first.');
         const selected = new Set(movingObjects.map(i => i.obj)); isolatedVisibility = new Map();
-        interactableObjects.forEach(obj => { isolatedVisibility.set(obj, obj.visible); obj.visible = selected.has(obj); });
+        interactableObjects.forEach(obj => { isolatedVisibility.set(obj, obj.visible); obj.visible = selected.has(selectionTarget(obj)); });
         e.target.setAttribute('aria-pressed', 'true');
     };
     document.getElementById('show-all-parts').onclick = showAllParts;
@@ -6062,6 +7121,10 @@ function initStudio() {
         const mode = { q: 'none', w: 'translate', e: 'rotate', r: 'scale' }[e.key.toLowerCase()];
         if (mode) { e.preventDefault(); document.querySelector(`input[name="transform_mode"][value="${mode}"]`).click(); }
         if (e.key.toLowerCase() === 'f') { e.preventDefault(); document.getElementById('focus-selected').click(); }
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            const hasSceneAssets = movingObjects.some(item => item.obj.userData?.sceneAsset);
+            if (hasSceneAssets) { e.preventDefault(); deleteSelectedSceneAssets(); }
+        }
     });
 }
 
@@ -6070,9 +7133,14 @@ window.ErgoFlex = {
     get workspaceAccessories() { return workspaceAccessories; },
     get workspaceRoom() { return workspaceRoom; },
     get roomScene() { return selectedRoomScene; },
+    roomScenes: ROOM_SCENES,
     setRoomScene,
+    addSceneAsset,
+    deleteSelectedSceneAssets,
     get tiltConfigs() { return tiltConfigs; },
     get partRegistry() { return partRegistry; },
+    get sceneAssetRegistry() { return sceneAssetRegistry; },
+    get sceneAssetStates() { return sceneAssetStates; },
     get movingObjects() { return movingObjects; },
     get liftObjects() { return [...liftObjects.values()]; },
     selectByNames(names) {
@@ -6093,8 +7161,7 @@ window.ErgoFlex = {
         h = THREE.MathUtils.clamp(Number(h) || HEIGHT_MIN, HEIGHT_MIN, HEIGHT_MAX);
         currentLift = targetLift = heightToLift(h);
         updateMovingObjectsPosition();
-        if (deskHeightSlider) deskHeightSlider.value = h;
-        if (deskHeightDisplay) deskHeightDisplay.innerText = h.toFixed(1) + '"';
+        showHeight(h);
     },
     setTilt(name, deg) {
         const config = tiltConfigs.find(c => c.name === name);
@@ -6105,6 +7172,13 @@ window.ErgoFlex = {
         return true;
     },
     setAutoRotate(v) { if (controls) controls.autoRotate = !!v; },
+    setMotionTab,
+    haltAllMotion,
+    get heightInches() { return liftToHeight(currentLift); },
+    placeDockFromStorage,
+    // Rebuilding is how the panel is exercised against corrupt storage without
+    // a full page reload.
+    rebuildMotionRemote() { buildMotionRemote(); placeDockFromStorage(); },
     resetView() { const btn = document.getElementById('reset-view'); if (btn) btn.click(); },
     setPivotByName(name) {
         let done = false;

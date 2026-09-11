@@ -38,6 +38,31 @@ const server = http.createServer((req, res) => {
     await page.waitForFunction(() => getComputedStyle(document.querySelector('#loader')).display === 'none');
     assert.equal(await page.evaluate(() => ErgoFlex.actuatorRigs.length), 2);
     console.log('Loaded model and rigs.');
+    const lighting = await page.evaluate(async () => {
+      const { ROOM_ATMOSPHERES } = await import('/workspace-3d.mjs');
+      ErgoFlex.setRoomScene('music', false);
+      const input = document.getElementById('studio-accent');
+      input.value = '1.65'; input.dispatchEvent(new Event('input'));
+      ErgoFlex.setRoomScene('office', false);
+      const officeAccent = Number(input.value);
+      const officeExposure = ErgoFlex.renderer.toneMappingExposure;
+      ErgoFlex.setRoomScene('music', false);
+      const remembered = Number(input.value);
+      document.getElementById('reset-scene-light').click();
+      const reset = Number(input.value);
+      const names = new Set(Object.values(ROOM_ATMOSPHERES).map(p => p.label)).size;
+      const scenes = Object.keys(ROOM_ATMOSPHERES).length;
+      ErgoFlex.setRoomScene('product', false);
+      return { officeAccent, officeExposure, remembered, reset, names, scenes };
+    });
+    assert.equal(lighting.officeAccent, 1, 'Lighting adjustments stay in their scene');
+    assert.equal(lighting.officeExposure, 1.02, 'Switching scenes applies its exposure');
+    assert.equal(lighting.remembered, 1.65, 'Returning to a scene restores its lighting');
+    assert.equal(lighting.reset, 1, 'Reset restores the scene preset');
+    // Counted from the table rather than written out: the point is that no two
+    // scenes share a lighting label, which stays true however many scenes exist.
+    assert.equal(lighting.names, lighting.scenes,
+      `Every scene has a distinct atmosphere (${lighting.names} labels for ${lighting.scenes} scenes)`);
     await page.screenshot({ path: '/tmp/ergoflex-studio.png' });
     // Exercise mechanics cheaply under software WebGL after the full-quality visual check.
     await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(0.6); ErgoFlex.renderer.shadowMap.enabled = false; });
@@ -280,9 +305,14 @@ const server = http.createServer((req, res) => {
       await settle();
       return { before, collapsed, restored: canvas.getBoundingClientRect().height, persisted };
     });
-    assert.ok(dock.collapsed > dock.before + 20, 'collapsing the movement dock gives the canvas its height back');
+    // The panel floats over the canvas instead of displacing it, so collapsing it
+    // must NOT resize anything. This is the inverse of what it used to assert: the
+    // canvas was sized by subtracting the dock, which cost the desk ~283px and
+    // forced every tab to reserve the tallest panel's height.
+    assert.ok(Math.abs(dock.collapsed - dock.before) < 2,
+      'collapsing the movement panel leaves the canvas alone, got ' + dock.before + ' -> ' + dock.collapsed);
+    assert.ok(Math.abs(dock.restored - dock.before) < 2, 'and so does expanding it again');
     assert.equal(dock.persisted, 'true', 'the collapse state is remembered');
-    assert.ok(Math.abs(dock.restored - dock.before) < 2, 'expanding restores the original canvas height');
 
     // Each camera shortcut must frame its own assembly, and close-ups need the
     // orbit floor lowered or minDistance 2 clamps them to a mid shot.
@@ -510,31 +540,140 @@ const server = http.createServer((req, res) => {
 
     await page.evaluate(() => { document.getElementById('clear-parts-btn').click(); ErgoFlex.setHeight(28); });
 
-    // syncViewerSize derives the canvas height from the motion dock's height, and
-    // the three panels are different sizes - so switching tabs resized the canvas
-    // and shifted camera.aspect, making the desk jump for no reason the user asked
-    // for. The dock now reserves the tallest panel.
-    const tabHeights = [];
-    for (const tab of ['lift', 'tilt', 'glide', 'lift']) {
-      await page.click(`[data-motion-tab="${tab}"]`);
+    // Nothing the movement panel does may reach the camera - not switching between
+    // its sections, not collapsing it, not moving it. The panel floats; the canvas
+    // is sized from the viewer alone.
+    const panelHeights = [];
+    for (const section of ['lift', 'tilt', 'glide', 'lift']) {
+      await page.evaluate(name => ErgoFlex.setMotionTab(name), section);
       await new Promise(r => setTimeout(r, 260));
-      tabHeights.push(await page.evaluate(() => document.querySelector('canvas').height));
+      panelHeights.push(await page.evaluate(() => document.querySelector('canvas').height));
     }
-    assert.equal(new Set(tabHeights).size, 1,
-      'the canvas keeps one height across lift/tilt/glide: ' + tabHeights.join(', '));
-    // The reservation is a min-height, which would beat the collapse's max-height:0
-    // if it were set on the element rather than only in the expanded state.
-    const collapsedGrowth = await page.evaluate(async () => {
-      const before = document.querySelector('canvas').height;
+    const afterToggle = await page.evaluate(async () => {
       document.getElementById('motion-dock-toggle').click();
-      await new Promise(r => setTimeout(r, 600));
-      const after = document.querySelector('canvas').height;
+      await new Promise(r => setTimeout(r, 400));
+      const collapsed = document.querySelector('canvas').height;
       document.getElementById('motion-dock-toggle').click();
-      await new Promise(r => setTimeout(r, 600));
-      return after - before;
+      await new Promise(r => setTimeout(r, 400));
+      return { collapsed, expanded: document.querySelector('canvas').height };
     });
-    assert.ok(collapsedGrowth > 100, 'collapsing still hands its height back, got ' + collapsedGrowth);
-    await page.click('[data-motion-tab="lift"]');
+    panelHeights.push(afterToggle.collapsed, afterToggle.expanded);
+    assert.equal(new Set(panelHeights).size, 1,
+      'the canvas keeps one height through every panel state: ' + panelHeights.join(', '));
+
+    // --- the remote: dragging, presets, forms, and stop -------------------------
+
+    // Drag by the header, and only from the bare strip - a pointerdown on the
+    // stop button or the collapse toggle belongs to that control, not the drag.
+    const header = await page.$('.remote-header');
+    const hb = await header.boundingBox();
+    const canvasBefore = await page.evaluate(() => document.querySelector('canvas').height);
+    await page.mouse.move(hb.x + 30, hb.y + hb.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(hb.x + 30 - 120, hb.y + hb.height / 2 - 90, { steps: 8 });
+    await page.mouse.up();
+    await new Promise(r => setTimeout(r, 200));
+    const moved = await page.evaluate(() => ({
+      left: document.getElementById('motion-dock').style.left,
+      stored: localStorage.getItem('ergoflex.dockPosV1'),
+      canvas: document.querySelector('canvas').height
+    }));
+    assert.ok(moved.left && parseFloat(moved.left) >= 0, 'dragging moves the panel');
+    assert.ok(moved.stored && JSON.parse(moved.stored).v === 1, 'and the position is persisted with a schema version');
+    assert.equal(moved.canvas, canvasBefore, 'and dragging never resizes the canvas');
+
+    // A position saved against one layout must not strand the panel in another.
+    const clamped = await page.evaluate(() => {
+      localStorage.setItem('ergoflex.dockPosV1', JSON.stringify({ v: 1, x: 99999, y: 99999 }));
+      ErgoFlex.placeDockFromStorage();
+      const dock = document.getElementById('motion-dock').getBoundingClientRect();
+      const box = document.querySelector('canvas').parentElement.getBoundingClientRect();
+      return { fitsRight: dock.right <= box.right + 1, fitsBottom: dock.bottom <= box.bottom + 1 };
+    });
+    assert.ok(clamped.fitsRight && clamped.fitsBottom, 'an off-screen saved position is clamped back into the viewer');
+
+    // Corrupt or foreign data must not take the panel down with it.
+    const survived = await page.evaluate(() => {
+      for (const key of ['ergoflex.dockPosV1', 'ergoflex.liftPresetsV1', 'ergoflex.tiltPresetsV1', 'ergoflex.ergoFormsV1']) {
+        localStorage.setItem(key, '{"v":99,"slots":"not-an-array"');   // truncated AND wrong version
+      }
+      ErgoFlex.rebuildMotionRemote();
+      return {
+        forms: document.querySelectorAll('.remote-form').length,
+        empty: [...document.querySelectorAll('.remote-chip')].every(c => c.dataset.saved === 'false')
+      };
+    });
+    assert.equal(survived.forms, 3, 'corrupt storage falls back to the default Ergo Forms');
+    assert.ok(survived.empty, 'and to empty preset banks');
+    // Clear up after ourselves: the corrupt values would otherwise still be there
+    // for the next assertion to read.
+    await page.evaluate(() => {
+      for (const key of ['ergoflex.dockPosV1', 'ergoflex.liftPresetsV1', 'ergoflex.tiltPresetsV1', 'ergoflex.ergoFormsV1']) localStorage.removeItem(key);
+      ErgoFlex.rebuildMotionRemote();
+    });
+
+    // Hold saves, tap recalls - in that order, because a tap on an empty slot
+    // has nothing to recall.
+    await page.evaluate(() => { ErgoFlex.setHeight(41.5); });
+    // The gesture is dispatched directly rather than driven through the mouse.
+    // Synthetic mouse input here depends on scroll position and hit-testing, which
+    // made this flaky for reasons that had nothing to do with the behaviour under
+    // test: what matters is that pointerdown, a wait past the threshold, and
+    // pointerup add up to a save.
+    const press = (selector, ms) => page.evaluate(async ([sel, hold]) => {
+      const el = document.querySelector(sel);
+      el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 }));
+      await new Promise(r => setTimeout(r, hold));
+      el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, button: 0 }));
+    }, [selector, ms]);
+    await press('[data-preset-bank="lift"] .remote-chip', 750);   // past the 550ms threshold
+    const savedRaw = await page.evaluate(() => localStorage.getItem('ergoflex.liftPresetsV1'));
+    assert.ok(savedRaw, 'holding a preset writes the bank, got ' + savedRaw);
+    assert.equal(JSON.parse(savedRaw).slots[0], 41.5, 'and stores the current height');
+    await page.evaluate(() => { ErgoFlex.setHeight(30); });
+    await press('[data-preset-bank="lift"] .remote-chip', 60);    // a tap: well under it
+    await page.waitForFunction(() => Math.abs(ErgoFlex.heightInches - 41.5) < 0.2, { timeout: 15000 });
+    assert.ok(true, 'and tapping it recalls that height');
+
+    // An Ergo Form carries a pose: both height and tilt.
+    await page.evaluate(() => { ErgoFlex.setHeight(33); ErgoFlex.setTilt('tilting', -12); });
+    await press('.remote-form', 750);
+    const pose = await page.evaluate(() => JSON.parse(localStorage.getItem('ergoflex.ergoFormsV1')).forms[0]);
+    assert.equal(pose.lift, 33, 'an Ergo Form saves the height');
+    assert.equal(pose.tilt, -12, 'and the tilt alongside it');
+
+    // Stop must freeze in place. stopGlide() sends the desk home, which is the
+    // opposite, so this is the one control that cannot reuse it.
+    const stopped = await page.evaluate(async () => {
+      ErgoFlex.setGlidePosition(0, 0);
+      ErgoFlex.setHeight(28);
+      ErgoFlex.setTilt('tilting', 0);
+      ErgoFlex.setGlidePosition(20, -20);           // a far target: glide is in motion
+      document.getElementById('desk-height-display').value = '50';
+      document.getElementById('desk-height-display').dispatchEvent(new Event('change'));
+      document.getElementById('tilt-value').value = '-40';
+      document.getElementById('tilt-value').dispatchEvent(new Event('change'));
+      await new Promise(r => setTimeout(r, 400));   // let all three actually be moving
+      document.getElementById('remote-stop').click();
+      const at = { glide: ErgoFlex.glidePosition, height: ErgoFlex.heightInches, tilt: ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg };
+      await new Promise(r => setTimeout(r, 700));
+      const after = { glide: ErgoFlex.glidePosition, height: ErgoFlex.heightInches, tilt: ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg };
+      return { at, after };
+    });
+    assert.ok(Math.hypot(stopped.after.glide.x - stopped.at.glide.x, stopped.after.glide.z - stopped.at.glide.z) < 0.01,
+      'stop freezes glide where it is rather than sending it home');
+    assert.ok(Math.abs(stopped.after.height - stopped.at.height) < 0.2, 'stop freezes the lift');
+    assert.ok(Math.abs(stopped.after.tilt - stopped.at.tilt) < 0.5, 'stop freezes the tilt');
+
+    // Put the desk back where the later movement tests expect to find it. Stop
+    // deliberately leaves it frozen part-way through a glide, and the diagonal
+    // pairing check downstream needs to start from home or its move is not a
+    // pure diagonal.
+    await page.evaluate(() => { ErgoFlex.setGlidePosition(0, 0); ErgoFlex.setHeight(28); ErgoFlex.setTilt('tilting', 0); });
+    await page.waitForFunction(() => Math.abs(ErgoFlex.glidePosition.x) < 0.005 && Math.abs(ErgoFlex.glidePosition.z) < 0.005,
+      { timeout: 30000 });
+    console.log('Motion remote: drag, clamping, corrupt storage, presets, forms and stop passed.');
+
 
     // The shaped side panels are Desktop_1/Desktop_2: 35x18in faces only 0.7in
     // thick. Matching wood roles on the name prefix alone classified every
@@ -578,7 +717,7 @@ const server = http.createServer((req, res) => {
 
     console.log('Editor selection, lift independence, isolation, snapping, box selection, clone undo, baseY, neutral pose, project round trip, presentation, materials, and precision editing passed.');
     if (process.argv.includes('--editor-only')) { assert.deepEqual(errors, []); return; }
-    await page.click('[data-motion-tab="glide"]');
+    await page.evaluate(() => ErgoFlex.setMotionTab('glide'));
     const before = await page.evaluate(() => ErgoFlex.wheelRigs.map(r => r.spin));
     await page.evaluate(() => ErgoFlex.setGlidePosition(0.15, 0.15));
     await page.waitForFunction(() => ErgoFlex.glidePosition.x > .14 && ErgoFlex.glidePosition.z > .14);
@@ -615,15 +754,22 @@ const server = http.createServer((req, res) => {
     await page.click('[data-sidebar-tab="finishes"]');
     await page.click('[data-look="Walnut|Forest"]');
     assert.equal(await page.evaluate(() => ErgoFlex.currentConfig.woodFinish), 'Walnut');
-    assert.equal(await page.$eval('#total-price', el => el.textContent), '$1,449');
+    // Derived from the catalog rather than written out, so a price change is a
+    // one-place edit instead of a test that fails with a stale magic number.
+    const { money: fmt, configurationPrice: priceOf } = await import('../catalog.mjs');
+    const walnutForest = { size: '48x30', woodFinish: 'Walnut', baseFinish: 'Forest', accessories: [] };
+    assert.equal(await page.$eval('#total-price', el => el.textContent), fmt(priceOf(walnutForest)));
     await page.select('#size-select', '60x30');
-    assert.equal(await page.$eval('#total-price', el => el.textContent), '$1,649');
+    assert.equal(await page.$eval('#total-price', el => el.textContent),
+      fmt(priceOf({ ...walnutForest, size: '60x30' })));
     await page.click('#save-build');
     await page.click('#add-to-cart');
     assert.equal(await page.$eval('#cart-count', el => el.textContent), '1');
     await page.$eval('.cart-row input', el => { el.value = '2'; el.dispatchEvent(new Event('change')); });
     assert.equal(await page.$eval('#cart-count', el => el.textContent), '2');
-    assert.match(await page.$eval('.cart-total', el => el.textContent), /3,298/);
+    // Two of the 60x30 build, derived rather than written out for the same reason.
+    const twoUp = fmt(priceOf({ ...walnutForest, size: '60x30' }) * 2).replace('$', '');
+    assert.match(await page.$eval('.cart-total', el => el.textContent), new RegExp(twoUp.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     await page.keyboard.press('Escape');
     assert.equal(await page.$eval('#cart-modal', el => el.classList.contains('hidden')), true);
     await page.click('#setup-exit-btn');
@@ -801,7 +947,7 @@ const server = http.createServer((req, res) => {
     await page.setViewport({ width: 390, height: 844 });
     await page.goto(url + '?setup');
     await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4, { timeout: 90000 });
-    await page.click('[data-motion-tab="glide"]');
+    await page.evaluate(() => ErgoFlex.setMotionTab('glide'));
     await page.screenshot({ path: '/tmp/ergoflex-mobile.png', fullPage: true });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'No mobile horizontal overflow');
     await require('./workspace-checks.cjs')(page, url);

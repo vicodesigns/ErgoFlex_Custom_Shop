@@ -3,3 +3,4 @@ node_modules/
 # Local 3D asset library for populating scenes. Large binaries, and not
 # referenced by the app - kept out of history deliberately.
 models/
+scene-shots/

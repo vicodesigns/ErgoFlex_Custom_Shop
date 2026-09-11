@@ -268,7 +268,11 @@
             transform: scale(1.1);
         }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="studio.css">
+    <link rel="stylesheet" href="app-remote.css">
 </head>
 <body class="bg-white">
     <!-- Header -->
@@ -536,7 +540,7 @@
                     <div id="debug-panel-content">
                         <!-- Part Search/Filter -->
                         <div class="mb-4">
-                            <input type="text" id="part-search-input" placeholder="Search parts by name..." class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <input type="text" id="part-search-input" placeholder="Search desk parts and scene assets..." class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <div id="part-search-results" class="mt-1 max-h-[200px] overflow-y-auto bg-white border border-gray-200 rounded-lg text-sm hidden"></div>
                         </div>
 
@@ -546,7 +550,7 @@
                                 <span class="font-medium text-sm text-gray-700">Enable Click Selection</span>
                             </label>
                             <div class="flex items-center gap-2 bg-white border border-gray-200 px-3 py-2 rounded-lg text-sm shadow-sm">
-                                <span class="text-gray-500">Selected Parts:</span>
+                                <span class="text-gray-500">Selected Objects:</span>
                                 <span id="selected-parts-count" class="font-bold text-green-600">0</span>
                             </div>
                         </div>
@@ -554,10 +558,10 @@
                         <!-- Which part did I just click, and what do I want to call it? -->
                         <div class="bg-white border border-gray-200 p-3 rounded-lg text-sm shadow-sm mt-4">
                             <div class="flex items-center justify-between gap-2 mb-2">
-                                <span class="font-medium text-gray-700">Selected Part</span>
+                                <span class="font-medium text-gray-700">Selected Object</span>
                                 <span id="selected-part-id" class="text-[11px] font-mono text-gray-400">—</span>
                             </div>
-                            <div id="selected-part-empty" class="text-xs text-gray-400">Click a part in the viewer to see and rename it.</div>
+                            <div id="selected-part-empty" class="text-xs text-gray-400">Click a desk part or scene asset to inspect and rename it.</div>
                             <div id="selected-part-body" class="hidden flex-col gap-2">
                                 <div class="text-xs text-gray-500">Model name: <span id="selected-part-modelname" class="font-mono text-gray-700"></span></div>
                                 <div class="flex gap-2">
@@ -651,7 +655,7 @@
                         <!-- Clone Button -->
                         <div class="mt-4">
                             <button id="clone-parts-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg transition-colors font-medium text-sm shadow-sm">
-                                Clone Selected Parts
+                                Clone Selected Desk Parts
                             </button>
                         </div>
 
