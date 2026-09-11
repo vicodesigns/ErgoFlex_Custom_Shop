@@ -1,0 +1,10574 @@
+{
+ "props": [
+  {
+   "id": "apple",
+   "name": "Apple",
+   "category": "food",
+   "scenes": [
+    "home",
+    "kitchen"
+   ],
+   "file": "assets/props/apple.glb",
+   "anchor": "floor",
+   "size": [
+    72,
+    75,
+    77.5
+   ],
+   "min": [
+    -36,
+    0,
+    -38.7
+   ],
+   "max": [
+    36,
+    75,
+    38.7
+   ],
+   "tris": 1558,
+   "bytes": 70068,
+   "source": "models/Apple.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "orange",
+   "name": "Orange slice",
+   "category": "food",
+   "scenes": [
+    "home",
+    "kitchen"
+   ],
+   "file": "assets/props/orange.glb",
+   "anchor": "floor",
+   "size": [
+    95.8,
+    75,
+    92.6
+   ],
+   "min": [
+    -47.9,
+    0,
+    -46.3
+   ],
+   "max": [
+    47.9,
+    75,
+    46.3
+   ],
+   "tris": 10946,
+   "bytes": 101208,
+   "source": "models/Orange.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "airtag",
+   "name": "Apple AirTag",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/airtag.glb",
+   "anchor": "floor",
+   "size": [
+    31.6,
+    31.7,
+    8.5
+   ],
+   "min": [
+    -15.8,
+    0.2,
+    -4.2
+   ],
+   "max": [
+    15.8,
+    31.8,
+    4.2
+   ],
+   "tris": 4390,
+   "bytes": 36504,
+   "source": "models/Apple_AirTag.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "earbuds",
+   "name": "Apple Earbuds",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "music"
+   ],
+   "file": "assets/props/earbuds.glb",
+   "anchor": "floor",
+   "size": [
+    23.5,
+    60,
+    56
+   ],
+   "min": [
+    -11.7,
+    0,
+    -28
+   ],
+   "max": [
+    11.7,
+    60,
+    28
+   ],
+   "tris": 14276,
+   "bytes": 61360,
+   "source": "models/Apple_Earbuds.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "apple-keyboard",
+   "name": "Apple Magic Keyboard",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ],
+   "file": "assets/props/apple-keyboard.glb",
+   "anchor": "floor",
+   "size": [
+    279,
+    30.3,
+    127.8
+   ],
+   "min": [
+    -139.5,
+    0,
+    -63.9
+   ],
+   "max": [
+    139.5,
+    30.3,
+    63.9
+   ],
+   "tris": 5088,
+   "bytes": 47488,
+   "source": "models/Apple_Keyboard.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "mac-studio",
+   "name": "Apple Mac Studio",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "creative",
+    "music"
+   ],
+   "file": "assets/props/mac-studio.glb",
+   "anchor": "floor",
+   "size": [
+    197,
+    101.4,
+    197
+   ],
+   "min": [
+    -98.5,
+    0,
+    -98.5
+   ],
+   "max": [
+    98.5,
+    101.4,
+    98.5
+   ],
+   "tris": 14458,
+   "bytes": 139980,
+   "source": "models/Apple_Mac_Studio.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "apple-pencil",
+   "name": "Apple Pencil",
+   "category": "desk",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/apple-pencil.glb",
+   "anchor": "floor",
+   "size": [
+    166,
+    8.5,
+    9.2
+   ],
+   "min": [
+    -83,
+    0.4,
+    -4.6
+   ],
+   "max": [
+    83,
+    9,
+    4.6
+   ],
+   "tris": 8060,
+   "bytes": 62644,
+   "source": "models/Apple_Pencil.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "magic-mouse",
+   "name": "Apple Magic Mouse",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ],
+   "file": "assets/props/magic-mouse.glb",
+   "anchor": "floor",
+   "size": [
+    113,
+    22.2,
+    61.6
+   ],
+   "min": [
+    -56.5,
+    0,
+    -30.8
+   ],
+   "max": [
+    56.5,
+    22.2,
+    30.8
+   ],
+   "tris": 21073,
+   "bytes": 49448,
+   "source": "models/apple_magic_mouse.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "barber-scissors",
+   "name": "Barber scissors",
+   "category": "desk",
+   "scenes": [],
+   "file": "assets/props/barber-scissors.glb",
+   "anchor": "floor",
+   "size": [
+    128.5,
+    150.1,
+    5.1
+   ],
+   "min": [
+    -46.4,
+    3.6,
+    -2.6
+   ],
+   "max": [
+    82.1,
+    153.8,
+    2.6
+   ],
+   "tris": 6727,
+   "bytes": 58244,
+   "source": "models/Barbers_scissors.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "beer-can",
+   "name": "Beer can",
+   "category": "food",
+   "scenes": [
+    "gaming",
+    "lounge"
+   ],
+   "file": "assets/props/beer-can.glb",
+   "anchor": "floor",
+   "size": [
+    62.2,
+    122,
+    62.2
+   ],
+   "min": [
+    -31.1,
+    0,
+    -31.1
+   ],
+   "max": [
+    31.1,
+    122,
+    31.1
+   ],
+   "tris": 900,
+   "bytes": 144280,
+   "source": "models/Beer_can.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "ottoman",
+   "name": "Black leather ottoman",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "file": "assets/props/ottoman.glb",
+   "anchor": "floor",
+   "size": [
+    798.5,
+    430,
+    604.4
+   ],
+   "min": [
+    -399.3,
+    0,
+    -302.2
+   ],
+   "max": [
+    399.3,
+    430,
+    302.2
+   ],
+   "tris": 22438,
+   "bytes": 49708,
+   "source": "models/Black_Leather_Ottoman.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "office-keyboard",
+   "name": "Black office keyboard",
+   "category": "desk",
+   "scenes": [
+    "office"
+   ],
+   "file": "assets/props/office-keyboard.glb",
+   "anchor": "floor",
+   "size": [
+    440,
+    13.4,
+    182.9
+   ],
+   "min": [
+    -220,
+    0,
+    -91.4
+   ],
+   "max": [
+    220,
+    13.4,
+    91.4
+   ],
+   "tris": 1000,
+   "bytes": 32084,
+   "source": "models/Black_Office_Keyboard.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "briefcase",
+   "name": "Briefcase",
+   "category": "decor",
+   "scenes": [
+    "office"
+   ],
+   "file": "assets/props/briefcase.glb",
+   "anchor": "floor",
+   "size": [
+    140.3,
+    242.5,
+    450
+   ],
+   "min": [
+    -70.1,
+    0,
+    -225
+   ],
+   "max": [
+    70.1,
+    242.5,
+    225
+   ],
+   "tris": 3903,
+   "bytes": 100940,
+   "source": "models/Brief_Case.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "beef-protein",
+   "name": "Beef protein isolate",
+   "category": "food",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/beef-protein.glb",
+   "anchor": "floor",
+   "size": [
+    208.8,
+    300,
+    64.8
+   ],
+   "min": [
+    -104.4,
+    0,
+    -40.6
+   ],
+   "max": [
+    104.4,
+    300,
+    24.2
+   ],
+   "tris": 14230,
+   "bytes": 151452,
+   "source": "models/Bulk_Supplements_Beef_Protein_Isolate.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cardboard-boxes",
+   "name": "Cardboard box set",
+   "category": "decor",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/cardboard-boxes.glb",
+   "anchor": "floor",
+   "size": [
+    600,
+    276.2,
+    426.5
+   ],
+   "min": [
+    -300,
+    0,
+    -213.2
+   ],
+   "max": [
+    300,
+    276.2,
+    213.2
+   ],
+   "tris": 110,
+   "bytes": 128960,
+   "source": "models/Cardboard_Box_Set-_Low_Poly.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cat-sitting",
+   "name": "Cat, sitting",
+   "category": "pets",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/cat-sitting.glb",
+   "anchor": "floor",
+   "size": [
+    437.2,
+    320,
+    120.4
+   ],
+   "min": [
+    -218.6,
+    0,
+    -60.2
+   ],
+   "max": [
+    218.6,
+    320,
+    60.2
+   ],
+   "tris": 13564,
+   "bytes": 113336,
+   "source": "models/Cat_Sitting.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cat",
+   "name": "Cat",
+   "category": "pets",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/cat.glb",
+   "anchor": "floor",
+   "size": [
+    284.6,
+    280,
+    372.5
+   ],
+   "min": [
+    -145,
+    0,
+    -173.9
+   ],
+   "max": [
+    139.5,
+    280,
+    198.6
+   ],
+   "tris": 31758,
+   "bytes": 266816,
+   "source": "models/cat.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cat-walk",
+   "name": "Cat, walking",
+   "category": "pets",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/cat-walk.glb",
+   "anchor": "floor",
+   "size": [
+    100.9,
+    278.2,
+    391.1
+   ],
+   "min": [
+    -50.5,
+    1.8,
+    -196.3
+   ],
+   "max": [
+    50.5,
+    280,
+    194.8
+   ],
+   "tris": 3914,
+   "bytes": 189536,
+   "source": "models/cat_Walk.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "chandelier",
+   "name": "Ceiling chandelier",
+   "category": "lighting",
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "file": "assets/props/chandelier.glb",
+   "anchor": "ceiling",
+   "size": [
+    622.3,
+    133.1,
+    650
+   ],
+   "min": [
+    -311.2,
+    -133.1,
+    -325
+   ],
+   "max": [
+    311.2,
+    0,
+    325
+   ],
+   "tris": 5203,
+   "bytes": 31148,
+   "source": "models/Ceiling_chandelier.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hand-fan",
+   "name": "Chinese hand fan",
+   "category": "decor",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/hand-fan.glb",
+   "anchor": "wall",
+   "size": [
+    182.1,
+    330,
+    17.2
+   ],
+   "min": [
+    -91.1,
+    -165,
+    0
+   ],
+   "max": [
+    91.1,
+    165,
+    17.2
+   ],
+   "tris": 4048,
+   "bytes": 235984,
+   "source": "models/Chinese_Hand_Fan.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "takeout-boxes",
+   "name": "Chinese take-out boxes",
+   "category": "food",
+   "scenes": [
+    "gaming",
+    "kitchen"
+   ],
+   "file": "assets/props/takeout-boxes.glb",
+   "anchor": "floor",
+   "size": [
+    255.1,
+    97.6,
+    300
+   ],
+   "min": [
+    -127.6,
+    0,
+    -150
+   ],
+   "max": [
+    127.6,
+    97.6,
+    150
+   ],
+   "tris": 102,
+   "bytes": 70908,
+   "source": "models/Chinese_take_Out_Boxes.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "clipboard",
+   "name": "Clipboard",
+   "category": "desk",
+   "scenes": [
+    "office"
+   ],
+   "file": "assets/props/clipboard.glb",
+   "anchor": "floor",
+   "size": [
+    236.7,
+    10.9,
+    330
+   ],
+   "min": [
+    -118.4,
+    0,
+    -165
+   ],
+   "max": [
+    118.4,
+    10.9,
+    165
+   ],
+   "tris": 124,
+   "bytes": 28448,
+   "source": "models/Clipboard.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "wheelchair",
+   "name": "Combat wheelchair (iron and brass)",
+   "category": "decor",
+   "scenes": [],
+   "file": "assets/props/wheelchair.glb",
+   "anchor": "floor",
+   "size": [
+    1242.5,
+    950,
+    1019.2
+   ],
+   "min": [
+    -621.3,
+    0,
+    -509.6
+   ],
+   "max": [
+    621.3,
+    950,
+    509.6
+   ],
+   "tris": 12404,
+   "bytes": 122856,
+   "source": "models/Combat_Wheelchair_Base_Model_-_Iron_and_Brass.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cutting-board",
+   "name": "Cutting board with meat",
+   "category": "food",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/cutting-board.glb",
+   "anchor": "floor",
+   "size": [
+    400,
+    54.8,
+    228.8
+   ],
+   "min": [
+    -200,
+    0,
+    -114.4
+   ],
+   "max": [
+    200,
+    54.8,
+    114.4
+   ],
+   "tris": 708,
+   "bytes": 74304,
+   "source": "models/Cutting_board_with_raw_meat_HandPainted_FREE.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "drawing-tablet",
+   "name": "Drawing tablet",
+   "category": "desk",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/drawing-tablet.glb",
+   "anchor": "floor",
+   "size": [
+    192.7,
+    14,
+    300
+   ],
+   "min": [
+    -96.4,
+    0,
+    -150
+   ],
+   "max": [
+    96.4,
+    14,
+    150
+   ],
+   "tris": 518,
+   "bytes": 60148,
+   "source": "models/DP_2_HW_10_Drawing_tablet.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "desk-lamp",
+   "name": "Desk lamp",
+   "category": "lighting",
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ],
+   "file": "assets/props/desk-lamp.glb",
+   "anchor": "floor",
+   "size": [
+    345.1,
+    446.3,
+    874
+   ],
+   "min": [
+    -172.5,
+    0,
+    -429.8
+   ],
+   "max": [
+    172.5,
+    446.4,
+    444.1
+   ],
+   "tris": 10040,
+   "bytes": 168908,
+   "source": "models/Desk_Lamp.usdz",
+   "sizeNote": "The source carries an 850 mm ground disc (mesh Object_3), removed here.",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "letter-tray",
+   "name": "Document letter tray",
+   "category": "desk",
+   "scenes": [
+    "office"
+   ],
+   "file": "assets/props/letter-tray.glb",
+   "anchor": "floor",
+   "size": [
+    303,
+    237.6,
+    350
+   ],
+   "min": [
+    -151.5,
+    0,
+    -175
+   ],
+   "max": [
+    151.5,
+    237.6,
+    175
+   ],
+   "tris": 11428,
+   "bytes": 71596,
+   "source": "models/Document_Letter_Tray__Documents_Organizer.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "full-length-mirror",
+   "name": "Full-length mirror",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "gym"
+   ],
+   "file": "assets/props/full-length-mirror.glb",
+   "anchor": "wall-floor",
+   "size": [
+    533.3,
+    1600,
+    23.9
+   ],
+   "min": [
+    -266.7,
+    0,
+    0
+   ],
+   "max": [
+    266.7,
+    1600,
+    23.9
+   ],
+   "tris": 28,
+   "bytes": 3532,
+   "source": "models/Espejo_Cuerpo_Entero_-__Full_Length_Mirror.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "exercise-equipment",
+   "name": "Exercise equipment",
+   "category": "fitness",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/exercise-equipment.glb",
+   "anchor": "floor",
+   "size": [
+    1000,
+    544.8,
+    544.8
+   ],
+   "min": [
+    -500,
+    0,
+    -272.4
+   ],
+   "max": [
+    500,
+    544.8,
+    272.4
+   ],
+   "tris": 288,
+   "bytes": 16972,
+   "source": "models/Exercise_equipment.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "tesla-tequila",
+   "name": "Tequila bottle on stand",
+   "category": "decor",
+   "scenes": [
+    "lounge"
+   ],
+   "file": "assets/props/tesla-tequila.glb",
+   "anchor": "floor",
+   "size": [
+    52.5,
+    300,
+    151.8
+   ],
+   "min": [
+    -26.2,
+    0,
+    -75.9
+   ],
+   "max": [
+    26.2,
+    300,
+    75.9
+   ],
+   "tris": 3000,
+   "bytes": 157364,
+   "source": "models/FREE_Tesla_Tequila.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "foosball",
+   "name": "Foosball table",
+   "category": "furniture",
+   "scenes": [
+    "gaming",
+    "lounge"
+   ],
+   "file": "assets/props/foosball.glb",
+   "anchor": "floor",
+   "size": [
+    1450,
+    929.4,
+    1076.6
+   ],
+   "min": [
+    -725,
+    0,
+    -538.3
+   ],
+   "max": [
+    725,
+    929.4,
+    538.3
+   ],
+   "tris": 73636,
+   "bytes": 381408,
+   "source": "models/Foosball_table.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "trash-can-futuristic",
+   "name": "Futuristic trash can",
+   "category": "decor",
+   "scenes": [
+    "scifi",
+    "gaming"
+   ],
+   "file": "assets/props/trash-can-futuristic.glb",
+   "anchor": "floor",
+   "size": [
+    311.1,
+    700,
+    269.9
+   ],
+   "min": [
+    -155.6,
+    0,
+    -134.9
+   ],
+   "max": [
+    155.6,
+    700,
+    134.9
+   ],
+   "tris": 646,
+   "bytes": 70004,
+   "source": "models/Futuristic_Trash_Can.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gaming-laptop",
+   "name": "Gaming laptop",
+   "category": "desk",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/gaming-laptop.glb",
+   "anchor": "floor",
+   "size": [
+    380,
+    271.1,
+    312.3
+   ],
+   "min": [
+    -190,
+    0,
+    -156.3
+   ],
+   "max": [
+    190,
+    271.1,
+    156
+   ],
+   "tris": 7332,
+   "bytes": 76652,
+   "source": "models/Gaming_Laptop.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "glasses",
+   "name": "Glasses",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/glasses.glb",
+   "anchor": "floor",
+   "size": [
+    129.6,
+    39.8,
+    145
+   ],
+   "min": [
+    -64.8,
+    0,
+    -72.5
+   ],
+   "max": [
+    64.8,
+    39.8,
+    72.5
+   ],
+   "tris": 1004,
+   "bytes": 85408,
+   "source": "models/Glasses (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "heart-glasses",
+   "name": "Heart-shaped glasses",
+   "category": "desk",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/heart-glasses.glb",
+   "anchor": "floor",
+   "size": [
+    145,
+    55.3,
+    109.3
+   ],
+   "min": [
+    -72.5,
+    0,
+    -53.4
+   ],
+   "max": [
+    72.5,
+    55.3,
+    55.9
+   ],
+   "tris": 5836,
+   "bytes": 32608,
+   "source": "models/Heart-shaped_glasses.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "binoculars",
+   "name": "Binoculars",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "office"
+   ],
+   "file": "assets/props/binoculars.glb",
+   "anchor": "floor",
+   "size": [
+    166.9,
+    65,
+    179.7
+   ],
+   "min": [
+    -83.4,
+    0,
+    -89.9
+   ],
+   "max": [
+    83.4,
+    65,
+    89.8
+   ],
+   "tris": 3970,
+   "bytes": 42620,
+   "source": "models/HW6.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "printer-3d",
+   "name": "Desktop 3D printer",
+   "category": "electronics",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/printer-3d.glb",
+   "anchor": "floor",
+   "size": [
+    402.1,
+    450,
+    315.7
+   ],
+   "min": [
+    -201,
+    0,
+    -157.9
+   ],
+   "max": [
+    201,
+    450,
+    157.9
+   ],
+   "tris": 38939,
+   "bytes": 123980,
+   "source": "models/HW_XYZ_School_detailing_2.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hanging-led-lamp",
+   "name": "Hanging LED lamp",
+   "category": "lighting",
+   "scenes": [
+    "home",
+    "creative",
+    "lounge"
+   ],
+   "file": "assets/props/hanging-led-lamp.glb",
+   "anchor": "ceiling",
+   "size": [
+    400,
+    436.4,
+    400
+   ],
+   "min": [
+    -200,
+    -436.4,
+    -200
+   ],
+   "max": [
+    200,
+    0,
+    200
+   ],
+   "tris": 18092,
+   "bytes": 56380,
+   "source": "models/Hanging_LED_Lamp.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hemp-protein",
+   "name": "Hemp protein",
+   "category": "food",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/hemp-protein.glb",
+   "anchor": "floor",
+   "size": [
+    186.4,
+    250,
+    64.2
+   ],
+   "min": [
+    -93.2,
+    0,
+    -32.1
+   ],
+   "max": [
+    93.2,
+    250,
+    32.1
+   ],
+   "tris": 3224,
+   "bytes": 121076,
+   "source": "models/Hemp_protein.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "insulated-mug",
+   "name": "Insulated mug",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/insulated-mug.glb",
+   "anchor": "floor",
+   "size": [
+    111.8,
+    150,
+    111.6
+   ],
+   "min": [
+    -55.9,
+    0,
+    -55.8
+   ],
+   "max": [
+    55.9,
+    150,
+    55.8
+   ],
+   "tris": 14032,
+   "bytes": 68576,
+   "source": "models/Insulated_Mug.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "tea-cup",
+   "name": "Japanese tea cup",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "creative"
+   ],
+   "file": "assets/props/tea-cup.glb",
+   "anchor": "floor",
+   "size": [
+    49.4,
+    70,
+    49.4
+   ],
+   "min": [
+    -24.7,
+    0,
+    -24.7
+   ],
+   "max": [
+    24.7,
+    70,
+    24.7
+   ],
+   "tris": 5504,
+   "bytes": 164568,
+   "source": "models/Japanese_Tea_Cup.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "knife-set",
+   "name": "Kitchen knife set",
+   "category": "food",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/knife-set.glb",
+   "anchor": "floor",
+   "size": [
+    136.6,
+    348.1,
+    229.5
+   ],
+   "min": [
+    -68.3,
+    0,
+    -144.2
+   ],
+   "max": [
+    68.3,
+    348.1,
+    85.3
+   ],
+   "tris": 12314,
+   "bytes": 184944,
+   "source": "models/Kitchen_Knife_Set.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "kitchen-scissors",
+   "name": "Kitchen scissors",
+   "category": "food",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/kitchen-scissors.glb",
+   "anchor": "floor",
+   "size": [
+    214.7,
+    132.3,
+    4.4
+   ],
+   "min": [
+    -109.3,
+    0.2,
+    -2.2
+   ],
+   "max": [
+    105.4,
+    132.5,
+    2.2
+   ],
+   "tris": 7840,
+   "bytes": 54568,
+   "source": "models/Kitchen_Scissors.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "led-ceiling-light",
+   "name": "LED ceiling light",
+   "category": "lighting",
+   "scenes": [
+    "office",
+    "gaming",
+    "scifi"
+   ],
+   "file": "assets/props/led-ceiling-light.glb",
+   "anchor": "ceiling",
+   "size": [
+    519.6,
+    85.6,
+    600
+   ],
+   "min": [
+    -259.8,
+    -85.6,
+    -300
+   ],
+   "max": [
+    259.8,
+    0,
+    300
+   ],
+   "tris": 26112,
+   "bytes": 131580,
+   "source": "models/LED_Ceiling_Light.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "lava-lamp",
+   "name": "Lava lamp",
+   "category": "lighting",
+   "scenes": [
+    "gaming",
+    "music",
+    "lounge"
+   ],
+   "file": "assets/props/lava-lamp.glb",
+   "anchor": "floor",
+   "size": [
+    140.6,
+    400,
+    140.6
+   ],
+   "min": [
+    -70.3,
+    0,
+    -70.3
+   ],
+   "max": [
+    70.3,
+    400,
+    70.3
+   ],
+   "tris": 6384,
+   "bytes": 33408,
+   "source": "models/Lava_Lamp.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sofa",
+   "name": "Black leather sofa",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "lounge",
+    "gaming"
+   ],
+   "file": "assets/props/sofa.glb",
+   "anchor": "floor",
+   "size": [
+    2600,
+    1010.6,
+    1079.1
+   ],
+   "min": [
+    -1300,
+    0,
+    -498.2
+   ],
+   "max": [
+    1300,
+    1010.6,
+    580.9
+   ],
+   "tris": 5028,
+   "bytes": 127632,
+   "source": "models/Leather_Black_Sofa.usdz",
+   "sizeNote": "The source includes a square floor slab, removed here.",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "lego",
+   "name": "Lego",
+   "category": "toys",
+   "scenes": [
+    "gaming",
+    "home"
+   ],
+   "file": "assets/props/lego.glb",
+   "anchor": "floor",
+   "size": [
+    63.5,
+    100,
+    25.6
+   ],
+   "min": [
+    -31.7,
+    0,
+    -12.8
+   ],
+   "max": [
+    31.7,
+    100,
+    12.8
+   ],
+   "tris": 1386,
+   "bytes": 53400,
+   "source": "models/Lego.usdz",
+   "sizeNote": "Shown at 100 mm, larger than a real minifigure, so it reads at desk scale.",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "lego-bricks",
+   "name": "Lego bricks",
+   "category": "toys",
+   "scenes": [
+    "gaming",
+    "home"
+   ],
+   "file": "assets/props/lego-bricks.glb",
+   "anchor": "floor",
+   "size": [
+    400,
+    29.5,
+    81.6
+   ],
+   "min": [
+    -200,
+    0,
+    -40.8
+   ],
+   "max": [
+    200,
+    29.5,
+    40.8
+   ],
+   "tris": 133872,
+   "bytes": 459760,
+   "source": "models/Lego_Bricks.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "recessed-light",
+   "name": "Recessed light",
+   "category": "lighting",
+   "scenes": [
+    "office",
+    "scifi"
+   ],
+   "file": "assets/props/recessed-light.glb",
+   "anchor": "ceiling",
+   "size": [
+    150,
+    80,
+    150
+   ],
+   "min": [
+    -75,
+    -80,
+    -75
+   ],
+   "max": [
+    75,
+    0,
+    75
+   ],
+   "tris": 1362,
+   "bytes": 10044,
+   "source": "models/Lighting_Fixture_-_3D_Recessed_Light.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "long-scissors",
+   "name": "Long scissors",
+   "category": "desk",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/long-scissors.glb",
+   "anchor": "floor",
+   "size": [
+    81.4,
+    10,
+    250
+   ],
+   "min": [
+    -40.7,
+    0,
+    -125
+   ],
+   "max": [
+    40.7,
+    10,
+    125
+   ],
+   "tris": 60604,
+   "bytes": 123108,
+   "source": "models/Long_Scissors.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "pen",
+   "name": "Luxury pen",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "creative"
+   ],
+   "file": "assets/props/pen.glb",
+   "anchor": "floor",
+   "size": [
+    9.8,
+    12,
+    139.9
+   ],
+   "min": [
+    -4.7,
+    0.6,
+    -69.9
+   ],
+   "max": [
+    5.1,
+    12.6,
+    69.9
+   ],
+   "tris": 19830,
+   "bytes": 41464,
+   "source": "models/Luxury_Pen.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "marble-table-lamp",
+   "name": "Marble and metal table lamp",
+   "category": "lighting",
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "file": "assets/props/marble-table-lamp.glb",
+   "anchor": "floor",
+   "size": [
+    394.7,
+    550,
+    394.7
+   ],
+   "min": [
+    -197.3,
+    0,
+    -197.3
+   ],
+   "max": [
+    197.3,
+    550,
+    197.3
+   ],
+   "tris": 1830,
+   "bytes": 15688,
+   "source": "models/Marble_And_Metal_Table_Lamp.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "metal-ruler",
+   "name": "Metal ruler",
+   "category": "desk",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/metal-ruler.glb",
+   "anchor": "floor",
+   "size": [
+    27.4,
+    3.3,
+    300
+   ],
+   "min": [
+    -13.7,
+    0,
+    -150
+   ],
+   "max": [
+    13.7,
+    3.3,
+    150
+   ],
+   "tris": 128,
+   "bytes": 60448,
+   "source": "models/Metal_Ruler.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "mickey-ears",
+   "name": "Mouse-ear hat",
+   "category": "toys",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/mickey-ears.glb",
+   "anchor": "floor",
+   "size": [
+    250,
+    129.6,
+    150.2
+   ],
+   "min": [
+    -125,
+    0,
+    -75.1
+   ],
+   "max": [
+    125,
+    129.6,
+    75.1
+   ],
+   "tris": 27040,
+   "bytes": 47928,
+   "source": "models/Mickey_Mouse_Ear_Hat.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "fridge",
+   "name": "Modern fridge",
+   "category": "furniture",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/fridge.glb",
+   "anchor": "floor",
+   "size": [
+    1185.9,
+    1800,
+    710.6
+   ],
+   "min": [
+    -593,
+    0,
+    -355.3
+   ],
+   "max": [
+    593,
+    1800,
+    355.3
+   ],
+   "tris": 4614,
+   "bytes": 25652,
+   "source": "models/Modern_Fridge.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "modern-lamp",
+   "name": "Modern lamp",
+   "category": "lighting",
+   "scenes": [
+    "home",
+    "office"
+   ],
+   "file": "assets/props/modern-lamp.glb",
+   "anchor": "floor",
+   "size": [
+    301.2,
+    500,
+    324.4
+   ],
+   "min": [
+    -150.6,
+    0,
+    -162.2
+   ],
+   "max": [
+    150.6,
+    500,
+    162.2
+   ],
+   "tris": 3092,
+   "bytes": 18620,
+   "source": "models/Modern_Lamp.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "table-lamps",
+   "name": "Modern table lamps",
+   "category": "lighting",
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "file": "assets/props/table-lamps.glb",
+   "anchor": "floor",
+   "size": [
+    854.3,
+    550,
+    329.4
+   ],
+   "min": [
+    -427.1,
+    0,
+    -164.7
+   ],
+   "max": [
+    427.1,
+    550,
+    164.7
+   ],
+   "tris": 3756,
+   "bytes": 91796,
+   "source": "models/Modern_Table_Lamps.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "villa",
+   "name": "Modern luxury villa",
+   "category": "environment",
+   "scenes": [],
+   "file": "assets/props/villa.glb",
+   "anchor": "floor",
+   "size": [
+    15459.4,
+    5593.2,
+    20000
+   ],
+   "min": [
+    -7729.7,
+    0,
+    -10000
+   ],
+   "max": [
+    7729.7,
+    5593.2,
+    10000
+   ],
+   "tris": 133529,
+   "bytes": 314304,
+   "source": "models/Modern_luxury_villa_house_building_with_pool.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "modern-mirror",
+   "name": "Modern mirror",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "gym"
+   ],
+   "file": "assets/props/modern-mirror.glb",
+   "anchor": "wall-floor",
+   "size": [
+    222.9,
+    1700,
+    772.3
+   ],
+   "min": [
+    -111.5,
+    0,
+    0
+   ],
+   "max": [
+    111.5,
+    1700,
+    772.3
+   ],
+   "tris": 200,
+   "bytes": 7200,
+   "source": "models/Modern_mirror.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "monitor",
+   "name": "Monitor",
+   "category": "desk",
+   "scenes": [
+    "gaming",
+    "office"
+   ],
+   "file": "assets/props/monitor.glb",
+   "anchor": "floor",
+   "size": [
+    800,
+    186.2,
+    366
+   ],
+   "min": [
+    -400,
+    0,
+    -183
+   ],
+   "max": [
+    400,
+    186.2,
+    183
+   ],
+   "tris": 922,
+   "bytes": 92796,
+   "source": "models/Monitor.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "nasa-mug",
+   "name": "NASA mug",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "creative",
+    "gaming"
+   ],
+   "file": "assets/props/nasa-mug.glb",
+   "anchor": "floor",
+   "size": [
+    121.3,
+    90,
+    91.9
+   ],
+   "min": [
+    -60.6,
+    0,
+    -45.9
+   ],
+   "max": [
+    60.6,
+    90,
+    45.9
+   ],
+   "tris": 844,
+   "bytes": 53480,
+   "source": "models/NASA_Mug.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "office-lamp",
+   "name": "Office lamp",
+   "category": "lighting",
+   "scenes": [
+    "office"
+   ],
+   "file": "assets/props/office-lamp.glb",
+   "anchor": "floor",
+   "size": [
+    297.4,
+    450,
+    181.7
+   ],
+   "min": [
+    -148.7,
+    0,
+    -90.8
+   ],
+   "max": [
+    148.7,
+    450,
+    90.8
+   ],
+   "tris": 3122,
+   "bytes": 98064,
+   "source": "models/Office_Lamp.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "office-phone",
+   "name": "Office phone",
+   "category": "desk",
+   "scenes": [
+    "office"
+   ],
+   "file": "assets/props/office-phone.glb",
+   "anchor": "floor",
+   "size": [
+    172.3,
+    91.7,
+    220
+   ],
+   "min": [
+    -86.1,
+    0,
+    -110
+   ],
+   "max": [
+    86.1,
+    91.7,
+    110
+   ],
+   "tris": 4786,
+   "bytes": 57856,
+   "source": "models/Office_Phone.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "oval-mirror",
+   "name": "Oval mirror",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "file": "assets/props/oval-mirror.glb",
+   "anchor": "wall",
+   "size": [
+    471.1,
+    900,
+    8.6
+   ],
+   "min": [
+    -235.6,
+    -450,
+    0
+   ],
+   "max": [
+    235.6,
+    450,
+    8.6
+   ],
+   "tris": 576,
+   "bytes": 10596,
+   "source": "models/Oval_mirror.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "painted-mug",
+   "name": "Painted mug",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "creative"
+   ],
+   "file": "assets/props/painted-mug.glb",
+   "anchor": "floor",
+   "size": [
+    237.6,
+    90,
+    204
+   ],
+   "min": [
+    -127.8,
+    0,
+    -117.7
+   ],
+   "max": [
+    109.8,
+    90,
+    86.3
+   ],
+   "tris": 50944,
+   "bytes": 223228,
+   "source": "models/Painted_Mug.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "paper-bin",
+   "name": "Paper waste bin",
+   "category": "decor",
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ],
+   "file": "assets/props/paper-bin.glb",
+   "anchor": "floor",
+   "size": [
+    293.7,
+    300,
+    293.7
+   ],
+   "min": [
+    -146.8,
+    0,
+    -146.8
+   ],
+   "max": [
+    146.8,
+    300,
+    146.8
+   ],
+   "tris": 11460,
+   "bytes": 178636,
+   "source": "models/Paper_Waste_Bin.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "paper-drawer",
+   "name": "Paper drawer",
+   "category": "desk",
+   "scenes": [
+    "office"
+   ],
+   "file": "assets/props/paper-drawer.glb",
+   "anchor": "floor",
+   "size": [
+    239.1,
+    142.1,
+    350
+   ],
+   "min": [
+    -119.6,
+    0,
+    -175
+   ],
+   "max": [
+    119.6,
+    142.1,
+    175
+   ],
+   "tris": 320,
+   "bytes": 91100,
+   "source": "models/Paper_drawer.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "papers-envelopes",
+   "name": "Papers and envelopes",
+   "category": "desk",
+   "scenes": [
+    "office"
+   ],
+   "file": "assets/props/papers-envelopes.glb",
+   "anchor": "floor",
+   "size": [
+    450,
+    16,
+    277.1
+   ],
+   "min": [
+    -225,
+    0,
+    -138.5
+   ],
+   "max": [
+    225,
+    16,
+    138.5
+   ],
+   "tris": 460,
+   "bytes": 116120,
+   "source": "models/Papers__Envelopes.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "papers",
+   "name": "Papers",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "creative"
+   ],
+   "file": "assets/props/papers.glb",
+   "anchor": "floor",
+   "size": [
+    300,
+    8.7,
+    213.4
+   ],
+   "min": [
+    -150,
+    0,
+    -106.7
+   ],
+   "max": [
+    150,
+    8.7,
+    106.7
+   ],
+   "tris": 10,
+   "bytes": 2036,
+   "source": "models/Papers_from_Poly_by_Google.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gaming-pc",
+   "name": "Gaming PC",
+   "category": "desk",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/gaming-pc.glb",
+   "anchor": "floor",
+   "size": [
+    181,
+    500,
+    423.9
+   ],
+   "min": [
+    -90.5,
+    0,
+    -212
+   ],
+   "max": [
+    90.5,
+    500,
+    212
+   ],
+   "tris": 184,
+   "bytes": 38984,
+   "source": "models/Pc_Gamer.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "picture-frame",
+   "name": "Picture frame",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "office"
+   ],
+   "file": "assets/props/picture-frame.glb",
+   "anchor": "wall",
+   "size": [
+    250,
+    152.4,
+    92.1
+   ],
+   "min": [
+    -125,
+    -73.6,
+    16.5
+   ],
+   "max": [
+    125,
+    78.7,
+    108.7
+   ],
+   "tris": 64,
+   "bytes": 20312,
+   "source": "models/Picture_Frame_-_Cat.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "razer-keyboard",
+   "name": "Razer Huntsman keyboard",
+   "category": "desk",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/razer-keyboard.glb",
+   "anchor": "floor",
+   "size": [
+    445,
+    42.2,
+    138.2
+   ],
+   "min": [
+    -222.5,
+    0,
+    -69.1
+   ],
+   "max": [
+    222.5,
+    42.2,
+    69.1
+   ],
+   "tris": 19287,
+   "bytes": 85864,
+   "source": "models/RAZER_HUNTSMAN.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hugo-mirror",
+   "name": "Round mirror",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "file": "assets/props/hugo-mirror.glb",
+   "anchor": "wall",
+   "size": [
+    800,
+    800,
+    46
+   ],
+   "min": [
+    -400,
+    -400,
+    0
+   ],
+   "max": [
+    400,
+    400,
+    46
+   ],
+   "tris": 5760,
+   "bytes": 27448,
+   "source": "models/RUSTA_Hugo_Mirror.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sitting-person",
+   "name": "Seated figure",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/sitting-person.glb",
+   "anchor": "floor",
+   "size": [
+    579.5,
+    1300,
+    821
+   ],
+   "min": [
+    -289.8,
+    0,
+    -410.5
+   ],
+   "max": [
+    289.8,
+    1300,
+    410.5
+   ],
+   "tris": 9250,
+   "bytes": 224436,
+   "source": "models/Rpm2_sitting_erks.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "ruler-set-square",
+   "name": "Ruler and set square",
+   "category": "desk",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/ruler-set-square.glb",
+   "anchor": "floor",
+   "size": [
+    300,
+    18.2,
+    121.4
+   ],
+   "min": [
+    -150,
+    0,
+    -60.7
+   ],
+   "max": [
+    150,
+    18.2,
+    60.7
+   ],
+   "tris": 2044,
+   "bytes": 73652,
+   "source": "models/Ruler_and_Set_Square.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "samsung-oled-tv",
+   "name": "Samsung OLED 4K TV (65\")",
+   "category": "electronics",
+   "scenes": [
+    "lounge",
+    "gaming",
+    "home"
+   ],
+   "file": "assets/props/samsung-oled-tv.glb",
+   "anchor": "floor",
+   "size": [
+    1444,
+    892.3,
+    265.2
+   ],
+   "min": [
+    -722,
+    0,
+    -132.6
+   ],
+   "max": [
+    722,
+    892.3,
+    132.6
+   ],
+   "tris": 38092,
+   "bytes": 129016,
+   "source": "models/SAMSUNG_OLED_4K_Smart_TV_S90C.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sf-hallway",
+   "name": "Sci-fi hallway",
+   "category": "environment",
+   "scenes": [
+    "scifi"
+   ],
+   "file": "assets/props/sf-hallway.glb",
+   "anchor": "floor",
+   "size": [
+    9186.6,
+    3000,
+    9652.8
+   ],
+   "min": [
+    -4593.3,
+    0,
+    -4826.4
+   ],
+   "max": [
+    4593.3,
+    3000,
+    4826.4
+   ],
+   "tris": 31108,
+   "bytes": 318000,
+   "source": "models/SF_Hallway.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "dog-snacks",
+   "name": "Dog snacks bag",
+   "category": "food",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/dog-snacks.glb",
+   "anchor": "floor",
+   "size": [
+    232.4,
+    300,
+    149.5
+   ],
+   "min": [
+    -116.2,
+    0,
+    -74.7
+   ],
+   "max": [
+    116.2,
+    300,
+    74.7
+   ],
+   "tris": 25088,
+   "bytes": 95188,
+   "source": "models/Sacred_Snacks_Dog_-_3D.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "samsung-neo-tv",
+   "name": "Samsung Neo QLED TV (50\")",
+   "category": "electronics",
+   "scenes": [
+    "lounge",
+    "gaming",
+    "home"
+   ],
+   "file": "assets/props/samsung-neo-tv.glb",
+   "anchor": "floor",
+   "size": [
+    1117,
+    671.1,
+    186.8
+   ],
+   "min": [
+    -558.5,
+    0,
+    -93.4
+   ],
+   "max": [
+    558.5,
+    671.1,
+    93.4
+   ],
+   "tris": 42463,
+   "bytes": 109400,
+   "source": "models/Samsung_NEO_QN50QN90CAF.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sci-fi-hangar",
+   "name": "Sci-fi hangar",
+   "category": "environment",
+   "scenes": [
+    "scifi"
+   ],
+   "file": "assets/props/sci-fi-hangar.glb",
+   "anchor": "floor",
+   "size": [
+    36527,
+    8000,
+    36161.7
+   ],
+   "min": [
+    -18263.5,
+    0,
+    -18080.9
+   ],
+   "max": [
+    18263.5,
+    8000,
+    18080.9
+   ],
+   "tris": 4530,
+   "bytes": 288264,
+   "source": "models/Sci-Fi_Hanger.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "tron-studio",
+   "name": "Tron studio (baked)",
+   "category": "environment",
+   "scenes": [
+    "scifi"
+   ],
+   "file": "assets/props/tron-studio.glb",
+   "anchor": "floor",
+   "size": [
+    6428.3,
+    1156.2,
+    6428.3
+   ],
+   "min": [
+    -3214.1,
+    1233.2,
+    -3214.1
+   ],
+   "max": [
+    3214.1,
+    2389.4,
+    3214.1
+   ],
+   "tris": 1114,
+   "bytes": 298564,
+   "source": "models/Scifi_Tron_Studio__Baked.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "shelving",
+   "name": "Shelving",
+   "category": "furniture",
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ],
+   "file": "assets/props/shelving.glb",
+   "anchor": "floor",
+   "size": [
+    1219.1,
+    1800,
+    409.8
+   ],
+   "min": [
+    -609.5,
+    0,
+    -204.9
+   ],
+   "max": [
+    609.5,
+    1800,
+    204.9
+   ],
+   "tris": 14836,
+   "bytes": 49980,
+   "source": "models/Shelving_2.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sonic-statue",
+   "name": "Classic Sonic statue",
+   "category": "toys",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/sonic-statue.glb",
+   "anchor": "floor",
+   "size": [
+    242.2,
+    250,
+    242.2
+   ],
+   "min": [
+    -121.1,
+    0,
+    -121.1
+   ],
+   "max": [
+    121.1,
+    250,
+    121.1
+   ],
+   "tris": 19939,
+   "bytes": 204216,
+   "source": "models/Sonic_Generations_-_Classic_Sonic_Statue.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "space-music",
+   "name": "Space music collage",
+   "category": "unsorted",
+   "scenes": [],
+   "file": "assets/props/space-music.glb",
+   "anchor": "floor",
+   "size": [
+    1000,
+    424.1,
+    832.4
+   ],
+   "min": [
+    -500,
+    0,
+    -416.2
+   ],
+   "max": [
+    500,
+    424.1,
+    416.2
+   ],
+   "tris": 2199,
+   "bytes": 287832,
+   "source": "models/Space_Music.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "spiderman-lego",
+   "name": "Spider-Man LEGO model",
+   "category": "toys",
+   "scenes": [
+    "gaming",
+    "home"
+   ],
+   "file": "assets/props/spiderman-lego.glb",
+   "anchor": "floor",
+   "size": [
+    94.5,
+    150,
+    50.7
+   ],
+   "min": [
+    -47.3,
+    0,
+    -25.4
+   ],
+   "max": [
+    47.3,
+    150,
+    25.4
+   ],
+   "tris": 7328,
+   "bytes": 140672,
+   "source": "models/Spider-Man_Homecoming_LEGO_Model.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "survival-props",
+   "name": "Survival prop pack",
+   "category": "unsorted",
+   "scenes": [],
+   "file": "assets/props/survival-props.glb",
+   "anchor": "floor",
+   "size": [
+    1500,
+    335.4,
+    669.8
+   ],
+   "min": [
+    -750,
+    33.6,
+    -334.9
+   ],
+   "max": [
+    750,
+    369,
+    334.9
+   ],
+   "tris": 19383,
+   "bytes": 184144,
+   "source": "models/Survival_Game_PropAsset_Pack.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "coffee-table",
+   "name": "Table",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "file": "assets/props/coffee-table.glb",
+   "anchor": "floor",
+   "size": [
+    1200,
+    391.2,
+    706.1
+   ],
+   "min": [
+    -600,
+    0,
+    -353.1
+   ],
+   "max": [
+    600,
+    391.2,
+    353.1
+   ],
+   "tris": 1145,
+   "bytes": 79160,
+   "source": "models/Table.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "table-mirror",
+   "name": "Table mirror",
+   "category": "decor",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/table-mirror.glb",
+   "anchor": "floor",
+   "size": [
+    217.7,
+    300,
+    173.9
+   ],
+   "min": [
+    -108.9,
+    0,
+    -86.9
+   ],
+   "max": [
+    108.9,
+    300,
+    86.9
+   ],
+   "tris": 3024,
+   "bytes": 51968,
+   "source": "models/Table_Mirror.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "tablet-folder",
+   "name": "Tablet folder",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "creative"
+   ],
+   "file": "assets/props/tablet-folder.glb",
+   "anchor": "floor",
+   "size": [
+    260,
+    13.2,
+    199.1
+   ],
+   "min": [
+    -130,
+    0,
+    -99.5
+   ],
+   "max": [
+    130,
+    13.2,
+    99.5
+   ],
+   "tris": 360,
+   "bytes": 70492,
+   "source": "models/Tablet_folder.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "trash-basket",
+   "name": "Trash basket",
+   "category": "decor",
+   "scenes": [
+    "office"
+   ],
+   "file": "assets/props/trash-basket.glb",
+   "anchor": "floor",
+   "size": [
+    992.1,
+    300,
+    316.8
+   ],
+   "min": [
+    -496.1,
+    0,
+    -158.4
+   ],
+   "max": [
+    496.1,
+    300,
+    158.4
+   ],
+   "tris": 11316,
+   "bytes": 89976,
+   "source": "models/Trash_basket.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "backpack",
+   "name": "Traveller's backpack",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "gaming"
+   ],
+   "file": "assets/props/backpack.glb",
+   "anchor": "floor",
+   "size": [
+    461.3,
+    500,
+    347.3
+   ],
+   "min": [
+    -230.7,
+    0,
+    -173.7
+   ],
+   "max": [
+    230.7,
+    500,
+    173.7
+   ],
+   "tris": 3772,
+   "bytes": 106816,
+   "source": "models/Travelers_backpack_Dnd.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sports-bottle",
+   "name": "Sports drink bottle",
+   "category": "food",
+   "scenes": [
+    "gym",
+    "gaming"
+   ],
+   "file": "assets/props/sports-bottle.glb",
+   "anchor": "floor",
+   "size": [
+    89.5,
+    240,
+    89.5
+   ],
+   "min": [
+    -44.8,
+    0,
+    -44.8
+   ],
+   "max": [
+    44.8,
+    240,
+    44.8
+   ],
+   "tris": 3609,
+   "bytes": 28076,
+   "source": "models/Umph_Sports_Drink_Bottle.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "water-bottle",
+   "name": "Water bottle",
+   "category": "food",
+   "scenes": [
+    "office",
+    "gym",
+    "home"
+   ],
+   "file": "assets/props/water-bottle.glb",
+   "anchor": "floor",
+   "size": [
+    65.9,
+    250,
+    65.9
+   ],
+   "min": [
+    -32.9,
+    0,
+    -32.9
+   ],
+   "max": [
+    32.9,
+    250,
+    32.9
+   ],
+   "tris": 17856,
+   "bytes": 96452,
+   "source": "models/WaterBottle001B.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "coffee-cups",
+   "name": "Coffee cups",
+   "category": "food",
+   "scenes": [
+    "kitchen",
+    "office"
+   ],
+   "file": "assets/props/coffee-cups.glb",
+   "anchor": "floor",
+   "size": [
+    527.4,
+    100,
+    134.6
+   ],
+   "min": [
+    -263.7,
+    0,
+    -67.3
+   ],
+   "max": [
+    263.7,
+    100,
+    67.3
+   ],
+   "tris": 2056,
+   "bytes": 117432,
+   "source": "models/coffee_cups_low_poly.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "football",
+   "name": "World Cup football",
+   "category": "toys",
+   "scenes": [
+    "gaming",
+    "home",
+    "gym"
+   ],
+   "file": "assets/props/football.glb",
+   "anchor": "floor",
+   "size": [
+    220.7,
+    220,
+    220.3
+   ],
+   "min": [
+    -110.4,
+    0,
+    -110.1
+   ],
+   "max": [
+    110.4,
+    220,
+    110.1
+   ],
+   "tris": 5039,
+   "bytes": 96516,
+   "source": "models/fifa_world_cup_ball.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "curved-monitor",
+   "name": "Curved gaming monitor",
+   "category": "electronics",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/curved-monitor.glb",
+   "anchor": "floor",
+   "size": [
+    900,
+    376.1,
+    181.7
+   ],
+   "min": [
+    -450,
+    0,
+    -90.9
+   ],
+   "max": [
+    450,
+    376.1,
+    90.9
+   ],
+   "tris": 4764,
+   "bytes": 77164,
+   "source": "models/screen.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "skateboard",
+   "name": "Skateboard",
+   "category": "toys",
+   "scenes": [
+    "gaming",
+    "home"
+   ],
+   "file": "assets/props/skateboard.glb",
+   "anchor": "floor",
+   "size": [
+    810,
+    124.1,
+    162.8
+   ],
+   "min": [
+    -405,
+    0,
+    -81.4
+   ],
+   "max": [
+    405,
+    124.1,
+    81.4
+   ],
+   "tris": 2900,
+   "bytes": 75424,
+   "source": "models/skateboard.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "wall-lamp",
+   "name": "Wall lamp",
+   "category": "lighting",
+   "scenes": [
+    "home",
+    "lounge",
+    "music"
+   ],
+   "file": "assets/props/wall-lamp.glb",
+   "anchor": "wall",
+   "size": [
+    300,
+    232.5,
+    118.1
+   ],
+   "min": [
+    -150,
+    -116.2,
+    0
+   ],
+   "max": [
+    150,
+    116.2,
+    118.1
+   ],
+   "tris": 4728,
+   "bytes": 31736,
+   "source": "models/wall_lamp.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "canvas",
+   "name": "Canvas (36 x 48 in)",
+   "category": "decor",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/canvas.glb",
+   "anchor": "wall",
+   "size": [
+    914.2,
+    1219,
+    25.3
+   ],
+   "min": [
+    -457.1,
+    -609.5,
+    0
+   ],
+   "max": [
+    457.1,
+    609.5,
+    25.3
+   ],
+   "tris": 40,
+   "bytes": 2480,
+   "source": "models/Canvas.3dm",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "easel-bar",
+   "name": "Easel bar",
+   "category": "decor",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/easel-bar.glb",
+   "anchor": "floor",
+   "size": [
+    78.5,
+    109,
+    1530
+   ],
+   "min": [
+    -39.3,
+    0,
+    -765
+   ],
+   "max": [
+    39.3,
+    109,
+    765
+   ],
+   "tris": 8642,
+   "bytes": 17632,
+   "source": "models/EaselBar.3dm",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "glass-of-water",
+   "name": "Glass of water",
+   "category": "food",
+   "scenes": [
+    "office",
+    "home",
+    "kitchen"
+   ],
+   "file": "assets/props/glass-of-water.glb",
+   "anchor": "floor",
+   "size": [
+    81.7,
+    150,
+    81.7
+   ],
+   "min": [
+    -40.9,
+    0,
+    -40.8
+   ],
+   "max": [
+    40.9,
+    150,
+    40.8
+   ],
+   "tris": 2434,
+   "bytes": 15796,
+   "source": "models/GlassOfWater.3dm",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "led-wall",
+   "name": "LED backdrop wall (16:9)",
+   "category": "environment",
+   "scenes": [
+    "music",
+    "scifi"
+   ],
+   "file": "assets/props/led-wall.glb",
+   "anchor": "floor",
+   "size": [
+    4877,
+    2743.3,
+    917.6
+   ],
+   "min": [
+    -2438.5,
+    0,
+    -458.8
+   ],
+   "max": [
+    2438.5,
+    2743.3,
+    458.8
+   ],
+   "tris": 24,
+   "bytes": 2384,
+   "source": "models/LEDBG.3dm",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "paper-holder",
+   "name": "Paper holder",
+   "category": "desk",
+   "scenes": [
+    "office"
+   ],
+   "file": "assets/props/paper-holder.glb",
+   "anchor": "floor",
+   "size": [
+    244,
+    89.9,
+    199.1
+   ],
+   "min": [
+    -122,
+    0,
+    -99.5
+   ],
+   "max": [
+    122,
+    89.9,
+    99.5
+   ],
+   "tris": 1512,
+   "bytes": 10540,
+   "source": "models/PaperHolder.3dm",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "triangle-table",
+   "name": "Triangle table",
+   "category": "furniture",
+   "scenes": [],
+   "file": "assets/props/triangle-table.glb",
+   "anchor": "floor",
+   "size": [
+    596.5,
+    750,
+    688.7
+   ],
+   "min": [
+    -298.2,
+    0,
+    -344.4
+   ],
+   "max": [
+    298.2,
+    750,
+    344.4
+   ],
+   "tris": 5754,
+   "bytes": 39884,
+   "source": "models/TriangleTable.3dm",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "soda-can",
+   "name": "Soda can",
+   "category": "food",
+   "scenes": [
+    "gaming",
+    "lounge",
+    "kitchen"
+   ],
+   "file": "assets/props/soda-can.glb",
+   "anchor": "floor",
+   "size": [
+    62.4,
+    122,
+    62.4
+   ],
+   "min": [
+    -31.2,
+    0,
+    -31.2
+   ],
+   "max": [
+    31.2,
+    122,
+    31.2
+   ],
+   "tris": 1208,
+   "bytes": 9956,
+   "source": "models/pepsi.3dm",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "luxury-chair",
+   "name": "Luxury chair",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "gallery"
+   ],
+   "file": "assets/props/luxury-chair.glb",
+   "anchor": "floor",
+   "size": [
+    850.3,
+    1049.9,
+    776.7
+   ],
+   "min": [
+    -428.4,
+    0.1,
+    -384.7
+   ],
+   "max": [
+    421.9,
+    1050,
+    392
+   ],
+   "tris": 41930,
+   "bytes": 494188,
+   "sourceTris": 132240,
+   "source": "models/A_Luxury_Chair.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "armchair-leather",
+   "name": "Leather armchair",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "home",
+    "study"
+   ],
+   "file": "assets/props/armchair-leather.glb",
+   "anchor": "floor",
+   "size": [
+    900,
+    1219.5,
+    1009.1
+   ],
+   "min": [
+    -450,
+    0,
+    -504.6
+   ],
+   "max": [
+    450,
+    1219.5,
+    504.6
+   ],
+   "tris": 16408,
+   "bytes": 233876,
+   "source": "models/Armchair_Leather_BOK.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "armchair-poppi",
+   "name": "Poppi armchair",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "file": "assets/props/armchair-poppi.glb",
+   "anchor": "floor",
+   "size": [
+    880,
+    675.8,
+    906.8
+   ],
+   "min": [
+    -440,
+    0,
+    -453.4
+   ],
+   "max": [
+    440,
+    675.8,
+    453.4
+   ],
+   "tris": 2144,
+   "bytes": 419932,
+   "source": "models/Armchair_Poppi.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sofa-fabric",
+   "name": "Fabric sofa",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "file": "assets/props/sofa-fabric.glb",
+   "anchor": "floor",
+   "size": [
+    2200,
+    765.6,
+    912.4
+   ],
+   "min": [
+    -1100,
+    -0.1,
+    -456.2
+   ],
+   "max": [
+    1100,
+    765.5,
+    456.2
+   ],
+   "tris": 39990,
+   "bytes": 772040,
+   "sourceTris": 199188,
+   "source": "models/Beautiful_Sofa.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sofa-leather-couch",
+   "name": "Leather couch",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "file": "assets/props/sofa-leather-couch.glb",
+   "anchor": "floor",
+   "size": [
+    2100,
+    1078.1,
+    1058.3
+   ],
+   "min": [
+    -1050,
+    0,
+    -538
+   ],
+   "max": [
+    1050,
+    1078.1,
+    520.3
+   ],
+   "tris": 5112,
+   "bytes": 229044,
+   "source": "models/Leather_Sofacouch.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sofa-leather-wood",
+   "name": "Leather and wood sofa",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "study"
+   ],
+   "file": "assets/props/sofa-leather-wood.glb",
+   "anchor": "floor",
+   "size": [
+    2000,
+    533.8,
+    694.2
+   ],
+   "min": [
+    -1000,
+    0,
+    -347.1
+   ],
+   "max": [
+    1000,
+    533.8,
+    347.1
+   ],
+   "tris": 40000,
+   "bytes": 388792,
+   "sourceTris": 47166,
+   "source": "models/Leather_Wood_Sofa__Game_Ready__4K.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sofa-plain",
+   "name": "Sofa",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "file": "assets/props/sofa-plain.glb",
+   "anchor": "floor",
+   "size": [
+    2050,
+    1536.5,
+    1490.2
+   ],
+   "min": [
+    -1025,
+    0,
+    -745.1
+   ],
+   "max": [
+    1025,
+    1536.5,
+    745.1
+   ],
+   "tris": 30008,
+   "bytes": 325648,
+   "source": "models/Sofa.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "lounge-chair-metal",
+   "name": "Metal lounge chair",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "gallery"
+   ],
+   "file": "assets/props/lounge-chair-metal.glb",
+   "anchor": "floor",
+   "size": [
+    65774.5,
+    1004,
+    66743.5
+   ],
+   "min": [
+    -32885.9,
+    -223.8,
+    -33627.2
+   ],
+   "max": [
+    32888.6,
+    780.2,
+    33116.3
+   ],
+   "tris": 39961,
+   "bytes": 373516,
+   "sourceTris": 218331,
+   "source": "models/Metal_Lounge_Chair.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "modern-chair",
+   "name": "Modern chair",
+   "category": "furniture",
+   "scenes": [
+    "office",
+    "creative"
+   ],
+   "file": "assets/props/modern-chair.glb",
+   "anchor": "floor",
+   "size": [
+    695.6,
+    830,
+    708.5
+   ],
+   "min": [
+    -347.8,
+    0,
+    -354.2
+   ],
+   "max": [
+    347.8,
+    830,
+    354.2
+   ],
+   "tris": 16508,
+   "bytes": 768996,
+   "source": "models/Modern_Chair.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "round-chair",
+   "name": "Round chair",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "bedroom"
+   ],
+   "file": "assets/props/round-chair.glb",
+   "anchor": "floor",
+   "size": [
+    706.9,
+    800.5,
+    706.1
+   ],
+   "min": [
+    -358.2,
+    -0.1,
+    -358.2
+   ],
+   "max": [
+    348.7,
+    800.4,
+    347.9
+   ],
+   "tris": 39988,
+   "bytes": 183900,
+   "sourceTris": 680576,
+   "source": "models/Round_chair.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gaming-chair",
+   "name": "Gaming chair",
+   "category": "furniture",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/gaming-chair.glb",
+   "anchor": "floor",
+   "size": [
+    696.4,
+    1280,
+    760.6
+   ],
+   "min": [
+    -348.2,
+    0.1,
+    -380.4
+   ],
+   "max": [
+    348.2,
+    1280.1,
+    380.2
+   ],
+   "tris": 39999,
+   "bytes": 411684,
+   "sourceTris": 185494,
+   "source": "models/Red_Gaming_Chair_HighQuality.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "bar-stool-leather",
+   "name": "Leather bar stool",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "kitchen"
+   ],
+   "file": "assets/props/bar-stool-leather.glb",
+   "anchor": "floor",
+   "size": [
+    632,
+    1050,
+    491.1
+   ],
+   "min": [
+    -316,
+    0,
+    -245.5
+   ],
+   "max": [
+    316,
+    1050,
+    245.5
+   ],
+   "tris": 39999,
+   "bytes": 393656,
+   "sourceTris": 73216,
+   "source": "models/Leather_High_Bar_Stool.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "bar-stool-brass",
+   "name": "Brass bar stool",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "kitchen"
+   ],
+   "file": "assets/props/bar-stool-brass.glb",
+   "anchor": "floor",
+   "size": [
+    355.3,
+    760,
+    355.3
+   ],
+   "min": [
+    -177.7,
+    0,
+    -177.7
+   ],
+   "max": [
+    177.7,
+    760,
+    177.7
+   ],
+   "tris": 1128,
+   "bytes": 229204,
+   "source": "models/Pub_Bar_Rose_Gold_Metal_Stool__Wood_Top.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "leather-pouffe",
+   "name": "Leather pouffe",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "file": "assets/props/leather-pouffe.glb",
+   "anchor": "floor",
+   "size": [
+    442,
+    420,
+    458.4
+   ],
+   "min": [
+    -221,
+    0,
+    -229.2
+   ],
+   "max": [
+    221,
+    420,
+    229.2
+   ],
+   "tris": 11272,
+   "bytes": 240992,
+   "source": "models/Leather_Puff.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hall-bench",
+   "name": "Hall bench",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "bedroom"
+   ],
+   "file": "assets/props/hall-bench.glb",
+   "anchor": "floor",
+   "size": [
+    1200.4,
+    1521.5,
+    450.2
+   ],
+   "min": [
+    -600.4,
+    0,
+    -224.9
+   ],
+   "max": [
+    600,
+    1521.5,
+    225.3
+   ],
+   "tris": 40109,
+   "bytes": 802672,
+   "sourceTris": 135426,
+   "source": "models/Hall_bench.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gold-cushion",
+   "name": "Gold cushion",
+   "category": "decor",
+   "scenes": [
+    "lounge",
+    "bedroom"
+   ],
+   "file": "assets/props/gold-cushion.glb",
+   "anchor": "floor",
+   "size": [
+    450,
+    150,
+    450
+   ],
+   "min": [
+    -225,
+    0,
+    -225
+   ],
+   "max": [
+    225,
+    150,
+    225
+   ],
+   "tris": 20000,
+   "bytes": 164772,
+   "sourceTris": 27984,
+   "source": "models/Golden_Pillow.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "electric-wheelchair",
+   "name": "Electric wheelchair",
+   "category": "furniture",
+   "scenes": [],
+   "file": "assets/props/electric-wheelchair.glb",
+   "anchor": "floor",
+   "size": [
+    1055.8,
+    1101.2,
+    622.5
+   ],
+   "min": [
+    -528.1,
+    -1,
+    -311.3
+   ],
+   "max": [
+    527.8,
+    1100.2,
+    311.3
+   ],
+   "tris": 40164,
+   "bytes": 1658812,
+   "sourceTris": 146847,
+   "source": "models/Compact_electric_wheelchair__rigg_-_100_free.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "antique-table",
+   "name": "Antique table",
+   "category": "furniture",
+   "scenes": [
+    "study",
+    "gallery"
+   ],
+   "file": "assets/props/antique-table.glb",
+   "anchor": "floor",
+   "size": [
+    1399.4,
+    1194.9,
+    1403.5
+   ],
+   "min": [
+    -701.3,
+    0,
+    -699.5
+   ],
+   "max": [
+    698.1,
+    1194.9,
+    704.1
+   ],
+   "tris": 39998,
+   "bytes": 804524,
+   "sourceTris": 169744,
+   "source": "models/Antique_Table.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "coffee-table-2",
+   "name": "Coffee table",
+   "category": "furniture",
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "file": "assets/props/coffee-table-2.glb",
+   "anchor": "floor",
+   "size": [
+    1099.7,
+    1832.9,
+    1100
+   ],
+   "min": [
+    -549.8,
+    0,
+    -550
+   ],
+   "max": [
+    549.8,
+    1832.9,
+    550
+   ],
+   "tris": 39998,
+   "bytes": 372300,
+   "sourceTris": 125296,
+   "source": "models/Coffee_Table.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "drafting-desk",
+   "name": "Art drafting desk",
+   "category": "furniture",
+   "scenes": [
+    "creative",
+    "study"
+   ],
+   "file": "assets/props/drafting-desk.glb",
+   "anchor": "floor",
+   "size": [
+    1199.9,
+    817,
+    732.6
+   ],
+   "min": [
+    -599.9,
+    11.4,
+    -385.7
+   ],
+   "max": [
+    600,
+    828.5,
+    346.9
+   ],
+   "tris": 40566,
+   "bytes": 1306180,
+   "sourceTris": 52188,
+   "source": "models/Art_Drafting_Desk.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "drafting-table",
+   "name": "Drafting table",
+   "category": "furniture",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/drafting-table.glb",
+   "anchor": "floor",
+   "size": [
+    1100.2,
+    765.8,
+    632.5
+   ],
+   "min": [
+    -550.1,
+    -0.2,
+    -316.4
+   ],
+   "max": [
+    550,
+    765.6,
+    316.1
+   ],
+   "tris": 40000,
+   "bytes": 417460,
+   "sourceTris": 81092,
+   "source": "models/Sophia_Drafting_Table_by_BigTurntables.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "study-desk",
+   "name": "Study desk",
+   "category": "furniture",
+   "scenes": [
+    "study"
+   ],
+   "file": "assets/props/study-desk.glb",
+   "anchor": "floor",
+   "size": [
+    1300,
+    823.8,
+    590
+   ],
+   "min": [
+    -650,
+    0,
+    -295
+   ],
+   "max": [
+    650,
+    823.8,
+    295
+   ],
+   "tris": 39993,
+   "bytes": 946092,
+   "sourceTris": 44023,
+   "source": "models/Study_Desk.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "garage-desk",
+   "name": "Garage workbench",
+   "category": "furniture",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/garage-desk.glb",
+   "anchor": "floor",
+   "size": [
+    1589.3,
+    1069.7,
+    1667.2
+   ],
+   "min": [
+    -789.3,
+    11.1,
+    -841.3
+   ],
+   "max": [
+    800,
+    1080.8,
+    825.9
+   ],
+   "tris": 41696,
+   "bytes": 1795184,
+   "sourceTris": 50649,
+   "source": "models/Garage_Desk.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cabinet",
+   "name": "Cabinet",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "study"
+   ],
+   "file": "assets/props/cabinet.glb",
+   "anchor": "floor",
+   "size": [
+    563.3,
+    1900,
+    1461.2
+   ],
+   "min": [
+    -281.7,
+    0,
+    -730.6
+   ],
+   "max": [
+    281.7,
+    1900,
+    730.6
+   ],
+   "tris": 5008,
+   "bytes": 174900,
+   "source": "models/Cabinet.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "books-cabinet",
+   "name": "Bookcase",
+   "category": "furniture",
+   "scenes": [
+    "study",
+    "home"
+   ],
+   "file": "assets/props/books-cabinet.glb",
+   "anchor": "floor",
+   "size": [
+    1114.4,
+    2000,
+    445.2
+   ],
+   "min": [
+    -557.2,
+    0,
+    -222.6
+   ],
+   "max": [
+    557.2,
+    2000,
+    222.6
+   ],
+   "tris": 2544,
+   "bytes": 564608,
+   "source": "models/Books_Cabinet.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "dresser",
+   "name": "Dresser",
+   "category": "furniture",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/dresser.glb",
+   "anchor": "floor",
+   "size": [
+    1100,
+    1089.6,
+    748.5
+   ],
+   "min": [
+    -550,
+    0,
+    -374.2
+   ],
+   "max": [
+    550,
+    1089.6,
+    374.2
+   ],
+   "tris": 640,
+   "bytes": 222712,
+   "source": "models/Dresser.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "paper-stand",
+   "name": "Paper stand",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "study"
+   ],
+   "file": "assets/props/paper-stand.glb",
+   "anchor": "floor",
+   "size": [
+    360.1,
+    300,
+    314.2
+   ],
+   "min": [
+    -180,
+    0,
+    -157.1
+   ],
+   "max": [
+    180,
+    300,
+    157.1
+   ],
+   "tris": 1752,
+   "bytes": 221124,
+   "source": "models/Paper_Stand.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "filing-tray-wood",
+   "name": "Wooden filing tray",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "study"
+   ],
+   "file": "assets/props/filing-tray-wood.glb",
+   "anchor": "floor",
+   "size": [
+    346.9,
+    73.6,
+    242.3
+   ],
+   "min": [
+    -173,
+    -2.6,
+    -120.9
+   ],
+   "max": [
+    173.9,
+    71,
+    121.4
+   ],
+   "tris": 12128,
+   "bytes": 202152,
+   "sourceTris": 164346,
+   "source": "models/Wooden_flat_filing_tray.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "case-boxes",
+   "name": "Storage cases",
+   "category": "decor",
+   "scenes": [
+    "workshop",
+    "office"
+   ],
+   "file": "assets/props/case-boxes.glb",
+   "anchor": "floor",
+   "size": [
+    696.1,
+    233.4,
+    416.9
+   ],
+   "min": [
+    -348,
+    0,
+    -209.2
+   ],
+   "max": [
+    348.1,
+    233.4,
+    207.7
+   ],
+   "tris": 7757,
+   "bytes": 316636,
+   "source": "models/Case_boxes.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "pallet",
+   "name": "Wooden pallet",
+   "category": "decor",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/pallet.glb",
+   "anchor": "floor",
+   "size": [
+    1200,
+    150,
+    1200
+   ],
+   "min": [
+    -600,
+    0,
+    -600
+   ],
+   "max": [
+    600,
+    150,
+    600
+   ],
+   "tris": 228,
+   "bytes": 66320,
+   "source": "models/Wooden_palette_Game_ready.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "wood-pillar",
+   "name": "Wooden pillar",
+   "category": "decor",
+   "scenes": [
+    "gallery",
+    "workshop"
+   ],
+   "file": "assets/props/wood-pillar.glb",
+   "anchor": "floor",
+   "size": [
+    1624.6,
+    2400,
+    658.6
+   ],
+   "min": [
+    -812.3,
+    0,
+    -329.3
+   ],
+   "max": [
+    812.3,
+    2400,
+    329.3
+   ],
+   "tris": 2094,
+   "bytes": 76448,
+   "source": "models/Wood_Pillar.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "bed",
+   "name": "Double bed",
+   "category": "furniture",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/bed.glb",
+   "anchor": "floor",
+   "size": [
+    1978.7,
+    844.9,
+    2049.5
+   ],
+   "min": [
+    -988.3,
+    0,
+    -1025.2
+   ],
+   "max": [
+    990.4,
+    844.9,
+    1024.4
+   ],
+   "tris": 40566,
+   "bytes": 622204,
+   "sourceTris": 126412,
+   "source": "models/BED (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "bed-2",
+   "name": "Bed",
+   "category": "furniture",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/bed-2.glb",
+   "anchor": "floor",
+   "size": [
+    1285.5,
+    767.8,
+    1606.4
+   ],
+   "min": [
+    -642.6,
+    651.3,
+    -903.3
+   ],
+   "max": [
+    642.9,
+    1419.1,
+    703.1
+   ],
+   "tris": 39999,
+   "bytes": 274680,
+   "sourceTris": 161010,
+   "source": "models/Bed (2).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "bunk-bed",
+   "name": "Bunk bed",
+   "category": "furniture",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/bunk-bed.glb",
+   "anchor": "floor",
+   "size": [
+    2211.1,
+    1701,
+    2120.2
+   ],
+   "min": [
+    -1105.4,
+    0,
+    -1060.1
+   ],
+   "max": [
+    1105.7,
+    1701,
+    1060.1
+   ],
+   "tris": 41439,
+   "bytes": 904852,
+   "sourceTris": 110385,
+   "source": "models/bunk_bed.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "carpet-nain",
+   "name": "Persian Nain carpet",
+   "category": "decor",
+   "scenes": [
+    "lounge",
+    "study"
+   ],
+   "file": "assets/props/carpet-nain.glb",
+   "anchor": "floor",
+   "size": [
+    2999,
+    28.8,
+    2234.2
+   ],
+   "min": [
+    -1499.5,
+    -9,
+    -1119.7
+   ],
+   "max": [
+    1499.5,
+    19.8,
+    1114.5
+   ],
+   "tris": 69749,
+   "bytes": 807748,
+   "sourceTris": 628216,
+   "source": "models/Persian_Nain_Carpet.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "carpet-runner",
+   "name": "Persian runner carpet",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "study"
+   ],
+   "file": "assets/props/carpet-runner.glb",
+   "anchor": "floor",
+   "size": [
+    2399.3,
+    11.6,
+    649.3
+   ],
+   "min": [
+    -1199.9,
+    -3.1,
+    -323.8
+   ],
+   "max": [
+    1199.5,
+    8.6,
+    325.5
+   ],
+   "tris": 104231,
+   "bytes": 885428,
+   "sourceTris": 612684,
+   "source": "models/Persian_Malayer_Runner_Carpet.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "monstera",
+   "name": "Monstera in pot",
+   "category": "plants",
+   "scenes": [
+    "home",
+    "creative",
+    "lounge",
+    "office"
+   ],
+   "file": "assets/props/monstera.glb",
+   "anchor": "floor",
+   "size": [
+    798.8,
+    1250,
+    726.7
+   ],
+   "min": [
+    -399.4,
+    0,
+    -363.4
+   ],
+   "max": [
+    399.4,
+    1250,
+    363.4
+   ],
+   "tris": 9310,
+   "sourceTris": 9310,
+   "bytes": 620624,
+   "source": "models/Monstera_Deliciosa_Potted_Mid-Century_plant.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "ficus",
+   "name": "Ficus",
+   "category": "plants",
+   "scenes": [
+    "home",
+    "office",
+    "lounge"
+   ],
+   "file": "assets/props/ficus.glb",
+   "anchor": "floor",
+   "size": [
+    498.3,
+    1502.5,
+    542
+   ],
+   "min": [
+    -249.6,
+    -2.6,
+    -271.3
+   ],
+   "max": [
+    248.7,
+    1499.9,
+    270.7
+   ],
+   "tris": 20000,
+   "bytes": 549688,
+   "sourceTris": 287416,
+   "source": "models/ficus.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "ivy",
+   "name": "Ivy",
+   "category": "plants",
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "file": "assets/props/ivy.glb",
+   "anchor": "floor",
+   "size": [
+    899.9,
+    320.8,
+    85.7
+   ],
+   "min": [
+    -450,
+    2.4,
+    -45
+   ],
+   "max": [
+    449.9,
+    323.2,
+    40.7
+   ],
+   "tris": 39997,
+   "bytes": 799124,
+   "sourceTris": 176048,
+   "source": "models/Ivy_High_Poly.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "potted-tree",
+   "name": "Potted tree",
+   "category": "plants",
+   "scenes": [
+    "office",
+    "lounge"
+   ],
+   "file": "assets/props/potted-tree.glb",
+   "anchor": "floor",
+   "size": [
+    955.9,
+    1899.4,
+    911.8
+   ],
+   "min": [
+    -478,
+    0,
+    -455.9
+   ],
+   "max": [
+    477.9,
+    1899.4,
+    455.9
+   ],
+   "tris": 20016,
+   "bytes": 844668,
+   "sourceTris": 51328,
+   "source": "models/Potted_Tree.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "fan-palm",
+   "name": "Fan palm",
+   "category": "plants",
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "file": "assets/props/fan-palm.glb",
+   "anchor": "floor",
+   "size": [
+    1570.7,
+    1500.2,
+    1427.9
+   ],
+   "min": [
+    -785.4,
+    0.1,
+    -714.3
+   ],
+   "max": [
+    785.3,
+    1500.3,
+    713.6
+   ],
+   "tris": 19998,
+   "bytes": 410060,
+   "sourceTris": 61856,
+   "source": "models/FREE__Livistona_Chinensis_-_Fan_Palm.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "rose",
+   "name": "Red rose",
+   "category": "plants",
+   "scenes": [
+    "home",
+    "bedroom"
+   ],
+   "file": "assets/props/rose.glb",
+   "anchor": "floor",
+   "size": [
+    181.9,
+    300,
+    185.3
+   ],
+   "min": [
+    -90.9,
+    0,
+    -92.5
+   ],
+   "max": [
+    91,
+    300,
+    92.8
+   ],
+   "tris": 19998,
+   "bytes": 285196,
+   "sourceTris": 214660,
+   "source": "models/Red_rose.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "strat-guitar",
+   "name": "Stratocaster guitar",
+   "category": "music",
+   "scenes": [
+    "music"
+   ],
+   "file": "assets/props/strat-guitar.glb",
+   "anchor": "floor",
+   "size": [
+    471.3,
+    980.6,
+    441.1
+   ],
+   "min": [
+    -235.3,
+    0,
+    -220.5
+   ],
+   "max": [
+    236,
+    980.6,
+    220.5
+   ],
+   "tris": 20000,
+   "sourceTris": 206344,
+   "bytes": 407416,
+   "source": "models/FENDER_Stratocaster__Guitar.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "les-paul-guitar",
+   "name": "Les Paul guitar",
+   "category": "music",
+   "scenes": [
+    "music"
+   ],
+   "file": "assets/props/les-paul-guitar.glb",
+   "anchor": "floor",
+   "size": [
+    1000.8,
+    531.1,
+    590.9
+   ],
+   "min": [
+    -500.4,
+    28.6,
+    -299.5
+   ],
+   "max": [
+    500.4,
+    559.7,
+    291.3
+   ],
+   "tris": 19997,
+   "bytes": 325024,
+   "sourceTris": 35736,
+   "source": "models/Les_Paul_Tribute_To_one_of_The_Greats (2).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "rose-neck-guitar",
+   "name": "Engraved guitar",
+   "category": "music",
+   "scenes": [
+    "music"
+   ],
+   "file": "assets/props/rose-neck-guitar.glb",
+   "anchor": "floor",
+   "size": [
+    1000.4,
+    310.9,
+    72
+   ],
+   "min": [
+    -500.2,
+    0.2,
+    -36
+   ],
+   "max": [
+    500.3,
+    311.1,
+    36
+   ],
+   "tris": 19995,
+   "bytes": 135468,
+   "sourceTris": 312799,
+   "source": "models/Silver_Rose_Neck_Guitar.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "upright-piano",
+   "name": "Upright piano, 1896",
+   "category": "music",
+   "scenes": [
+    "music",
+    "study"
+   ],
+   "file": "assets/props/upright-piano.glb",
+   "anchor": "floor",
+   "size": [
+    1520.6,
+    2352.2,
+    2596.6
+   ],
+   "min": [
+    -759.7,
+    0.4,
+    -1296.9
+   ],
+   "max": [
+    760.8,
+    2352.6,
+    1299.6
+   ],
+   "tris": 20007,
+   "bytes": 310468,
+   "sourceTris": 284900,
+   "source": "models/Hallet_And_Davis_Piano_1896_3DST19.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "chorus-pedal",
+   "name": "Chorus pedal",
+   "category": "music",
+   "scenes": [
+    "music"
+   ],
+   "file": "assets/props/chorus-pedal.glb",
+   "anchor": "floor",
+   "size": [
+    129.7,
+    58,
+    71.7
+   ],
+   "min": [
+    -65.5,
+    -0.7,
+    -36
+   ],
+   "max": [
+    64.1,
+    57.3,
+    35.8
+   ],
+   "tris": 19998,
+   "bytes": 256748,
+   "sourceTris": 200034,
+   "source": "models/BOSS_CH-1_Super_Chorus_.RAWscan.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "jukebox",
+   "name": "Jukebox",
+   "category": "music",
+   "scenes": [
+    "music",
+    "lounge"
+   ],
+   "file": "assets/props/jukebox.glb",
+   "anchor": "floor",
+   "size": [
+    650.9,
+    1550,
+    934.7
+   ],
+   "min": [
+    -325.4,
+    0,
+    -467.4
+   ],
+   "max": [
+    325.4,
+    1550,
+    467.4
+   ],
+   "tris": 20003,
+   "bytes": 407104,
+   "sourceTris": 26830,
+   "source": "models/Jukebox.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gramophone",
+   "name": "Gramophone",
+   "category": "music",
+   "scenes": [
+    "music",
+    "study",
+    "gallery"
+   ],
+   "file": "assets/props/gramophone.glb",
+   "anchor": "floor",
+   "size": [
+    455.8,
+    700,
+    557.4
+   ],
+   "min": [
+    -227.9,
+    0,
+    -278.7
+   ],
+   "max": [
+    227.9,
+    700,
+    278.7
+   ],
+   "tris": 8250,
+   "bytes": 190856,
+   "source": "models/Deutch_gramophone.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sheet-music",
+   "name": "Sheet music",
+   "category": "music",
+   "scenes": [
+    "music"
+   ],
+   "file": "assets/props/sheet-music.glb",
+   "anchor": "floor",
+   "size": [
+    300,
+    17.9,
+    187.5
+   ],
+   "min": [
+    -150,
+    0,
+    -93.7
+   ],
+   "max": [
+    150,
+    17.9,
+    93.7
+   ],
+   "tris": 212,
+   "bytes": 135108,
+   "source": "models/Sheet_Music.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "headset-stand",
+   "name": "Headset stand",
+   "category": "desk",
+   "scenes": [
+    "music",
+    "gaming"
+   ],
+   "file": "assets/props/headset-stand.glb",
+   "anchor": "floor",
+   "size": [
+    190.2,
+    280,
+    172.8
+   ],
+   "min": [
+    -95.1,
+    0,
+    -86.4
+   ],
+   "max": [
+    95.1,
+    280,
+    86.4
+   ],
+   "tris": 11997,
+   "bytes": 309712,
+   "sourceTris": 27910,
+   "source": "models/Kashmir_headset_stand.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "boombox",
+   "name": "Boombox",
+   "category": "music",
+   "scenes": [
+    "music",
+    "lounge"
+   ],
+   "file": "assets/props/boombox.glb",
+   "anchor": "floor",
+   "size": [
+    583.3,
+    248.5,
+    186.2
+   ],
+   "min": [
+    -291.2,
+    31.3,
+    -94
+   ],
+   "max": [
+    292.1,
+    279.9,
+    92.2
+   ],
+   "tris": 14680,
+   "bytes": 159420,
+   "source": "models/Sony_Boombox_Photoscan_MEDPOLY.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "walkman",
+   "name": "Walkman",
+   "category": "music",
+   "scenes": [
+    "music",
+    "bedroom"
+   ],
+   "file": "assets/props/walkman.glb",
+   "anchor": "floor",
+   "size": [
+    95.9,
+    47.9,
+    107.4
+   ],
+   "min": [
+    -48.2,
+    4.5,
+    -57
+   ],
+   "max": [
+    47.6,
+    52.4,
+    50.3
+   ],
+   "tris": 19125,
+   "bytes": 499108,
+   "source": "models/Sony_Walkman.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "party-speaker",
+   "name": "Party speaker",
+   "category": "music",
+   "scenes": [
+    "music",
+    "lounge"
+   ],
+   "file": "assets/props/party-speaker.glb",
+   "anchor": "floor",
+   "size": [
+    296,
+    570,
+    340.6
+   ],
+   "min": [
+    -148,
+    0,
+    -170.3
+   ],
+   "max": [
+    148,
+    570,
+    170.3
+   ],
+   "tris": 19991,
+   "bytes": 482440,
+   "sourceTris": 169886,
+   "source": "models/JBL_Partybox_110.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "headphones",
+   "name": "Over-ear headphones",
+   "category": "music",
+   "scenes": [
+    "music",
+    "gaming",
+    "creative"
+   ],
+   "file": "assets/props/headphones.glb",
+   "anchor": "floor",
+   "size": [
+    180.6,
+    200,
+    83.3
+   ],
+   "min": [
+    -90.3,
+    0,
+    -41.7
+   ],
+   "max": [
+    90.3,
+    200,
+    41.6
+   ],
+   "tris": 20274,
+   "bytes": 472628,
+   "sourceTris": 132665,
+   "source": "models/JBL_Tour_One_M2.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "earbuds-case",
+   "name": "Earbud case",
+   "category": "music",
+   "scenes": [
+    "music",
+    "desk"
+   ],
+   "file": "assets/props/earbuds-case.glb",
+   "anchor": "floor",
+   "size": [
+    70,
+    65.8,
+    60.3
+   ],
+   "min": [
+    -35,
+    0,
+    -30.1
+   ],
+   "max": [
+    35,
+    65.8,
+    30.2
+   ],
+   "tris": 20295,
+   "bytes": 327280,
+   "sourceTris": 133589,
+   "source": "models/JBL_Tour_Pro_2.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "space-age-radio",
+   "name": "Space-age radio",
+   "category": "music",
+   "scenes": [
+    "lounge",
+    "scifi"
+   ],
+   "file": "assets/props/space-age-radio.glb",
+   "anchor": "floor",
+   "size": [
+    194.8,
+    300,
+    184
+   ],
+   "min": [
+    -97.4,
+    0,
+    -92
+   ],
+   "max": [
+    97.4,
+    300,
+    92
+   ],
+   "tris": 8064,
+   "bytes": 128072,
+   "source": "models/Space_Age_Radio.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "wind-up-radio",
+   "name": "Wind-up radio",
+   "category": "music",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/wind-up-radio.glb",
+   "anchor": "floor",
+   "size": [
+    136.8,
+    200,
+    50.2
+   ],
+   "min": [
+    -68.4,
+    0,
+    -23.2
+   ],
+   "max": [
+    68.4,
+    200,
+    27
+   ],
+   "tris": 15221,
+   "bytes": 219812,
+   "source": "models/Grundig_Radio_FR-250_Free_AM_FM_SW.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "site-radio",
+   "name": "Site radio",
+   "category": "music",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/site-radio.glb",
+   "anchor": "floor",
+   "size": [
+    123.9,
+    300,
+    227.1
+   ],
+   "min": [
+    -62,
+    0,
+    -111.8
+   ],
+   "max": [
+    62,
+    300,
+    115.3
+   ],
+   "tris": 9772,
+   "bytes": 218672,
+   "source": "models/Makita_Radio.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "walkie-talkie",
+   "name": "Walkie talkie",
+   "category": "decor",
+   "scenes": [
+    "workshop",
+    "scifi"
+   ],
+   "file": "assets/props/walkie-talkie.glb",
+   "anchor": "floor",
+   "size": [
+    60.3,
+    230,
+    36.7
+   ],
+   "min": [
+    -30.1,
+    0,
+    -18.4
+   ],
+   "max": [
+    30.1,
+    230,
+    18.4
+   ],
+   "tris": 16760,
+   "bytes": 257512,
+   "source": "models/Handheld_Portable_Radio__Walkie_Talkie.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "radio-gadget",
+   "name": "Radio gadget",
+   "category": "decor",
+   "scenes": [
+    "workshop",
+    "scifi"
+   ],
+   "file": "assets/props/radio-gadget.glb",
+   "anchor": "floor",
+   "size": [
+    250,
+    154.8,
+    89
+   ],
+   "min": [
+    -125,
+    0,
+    -44.5
+   ],
+   "max": [
+    125,
+    154.8,
+    44.5
+   ],
+   "tris": 20161,
+   "bytes": 274980,
+   "sourceTris": 23898,
+   "source": "models/Gadget_-_Radio_-_Flashlight_-_Radar.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "ps5",
+   "name": "Games console",
+   "category": "electronics",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/ps5.glb",
+   "anchor": "floor",
+   "size": [
+    188.7,
+    344.5,
+    125.5
+   ],
+   "min": [
+    -88.8,
+    16.1,
+    -62.2
+   ],
+   "max": [
+    99.9,
+    360.6,
+    63.2
+   ],
+   "tris": 30562,
+   "bytes": 429728,
+   "sourceTris": 179078,
+   "source": "models/Playstation_5.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "ps5-slim",
+   "name": "Games console, slim",
+   "category": "electronics",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/ps5-slim.glb",
+   "anchor": "floor",
+   "size": [
+    288.7,
+    358.1,
+    193.3
+   ],
+   "min": [
+    -154.1,
+    -0.1,
+    -99.6
+   ],
+   "max": [
+    134.6,
+    358,
+    93.7
+   ],
+   "tris": 33858,
+   "bytes": 294908,
+   "sourceTris": 206042,
+   "source": "models/Free_3D_PS5_medpoly.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "ps1",
+   "name": "Retro games console",
+   "category": "electronics",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/ps1.glb",
+   "anchor": "floor",
+   "size": [
+    259.9,
+    57.2,
+    182.5
+   ],
+   "min": [
+    -130,
+    0,
+    -91.3
+   ],
+   "max": [
+    130,
+    57.2,
+    91.3
+   ],
+   "tris": 19995,
+   "bytes": 157188,
+   "sourceTris": 283464,
+   "source": "models/Playstation_1.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "handheld-console",
+   "name": "Handheld console",
+   "category": "electronics",
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "file": "assets/props/handheld-console.glb",
+   "anchor": "floor",
+   "size": [
+    164.3,
+    148,
+    79.2
+   ],
+   "min": [
+    -82,
+    0,
+    -40
+   ],
+   "max": [
+    82.2,
+    148,
+    39.2
+   ],
+   "tris": 18182,
+   "bytes": 385308,
+   "source": "models/Nintendo_Game_Boy_Original_1989.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "graphics-card",
+   "name": "Graphics card",
+   "category": "electronics",
+   "scenes": [
+    "gaming",
+    "workshop"
+   ],
+   "file": "assets/props/graphics-card.glb",
+   "anchor": "floor",
+   "size": [
+    331.9,
+    52.9,
+    147.6
+   ],
+   "min": [
+    -163.9,
+    0,
+    -67.9
+   ],
+   "max": [
+    168,
+    52.9,
+    79.7
+   ],
+   "tris": 19992,
+   "bytes": 186732,
+   "sourceTris": 77338,
+   "source": "models/Nvidia_Ge_Force_RTX_4090.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gaming-desktop",
+   "name": "Gaming desktop",
+   "category": "electronics",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/gaming-desktop.glb",
+   "anchor": "floor",
+   "size": [
+    461.5,
+    316.5,
+    915.1
+   ],
+   "min": [
+    -230.7,
+    127,
+    -457.5
+   ],
+   "max": [
+    230.7,
+    443.5,
+    457.5
+   ],
+   "tris": 42026,
+   "bytes": 866020,
+   "sourceTris": 86272,
+   "source": "models/Gaming_Desktop_PC.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gaming-case",
+   "name": "Gaming PC case",
+   "category": "electronics",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/gaming-case.glb",
+   "anchor": "floor",
+   "size": [
+    589.3,
+    500,
+    222.9
+   ],
+   "min": [
+    -294.6,
+    0,
+    -111.5
+   ],
+   "max": [
+    294.7,
+    500,
+    111.5
+   ],
+   "tris": 29997,
+   "bytes": 216648,
+   "sourceTris": 378700,
+   "source": "models/Gaming_PC_Case.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "pc-setup",
+   "name": "Desktop PC setup",
+   "category": "electronics",
+   "scenes": [
+    "gaming",
+    "office"
+   ],
+   "file": "assets/props/pc-setup.glb",
+   "anchor": "floor",
+   "size": [
+    1385,
+    2008.9,
+    1128.1
+   ],
+   "min": [
+    -692.5,
+    1,
+    -563.6
+   ],
+   "max": [
+    692.5,
+    2009.9,
+    564.5
+   ],
+   "tris": 19985,
+   "bytes": 345968,
+   "sourceTris": 215192,
+   "source": "models/PC_Setup_FInal.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "rgb-keyboard",
+   "name": "Mechanical RGB keyboard",
+   "category": "desk",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/rgb-keyboard.glb",
+   "anchor": "floor",
+   "size": [
+    440,
+    38.2,
+    133.7
+   ],
+   "min": [
+    -220,
+    -0.3,
+    -66.9
+   ],
+   "max": [
+    220,
+    37.9,
+    66.9
+   ],
+   "tris": 11999,
+   "bytes": 242848,
+   "sourceTris": 16120,
+   "source": "models/Mechanical_RGB_Keyboard.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gaming-mouse",
+   "name": "Gaming mouse",
+   "category": "desk",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/gaming-mouse.glb",
+   "anchor": "floor",
+   "size": [
+    128.1,
+    57,
+    185.8
+   ],
+   "min": [
+    -64,
+    0,
+    -92.8
+   ],
+   "max": [
+    64.1,
+    57,
+    92.9
+   ],
+   "tris": 11996,
+   "bytes": 124064,
+   "sourceTris": 136520,
+   "source": "models/Computer_mouse_A4Tech_bloody_V7.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "game-controller",
+   "name": "Game controller",
+   "category": "desk",
+   "scenes": [
+    "gaming",
+    "lounge"
+   ],
+   "file": "assets/props/game-controller.glb",
+   "anchor": "floor",
+   "size": [
+    160.2,
+    81.3,
+    173.6
+   ],
+   "min": [
+    -80.1,
+    0.1,
+    -86.6
+   ],
+   "max": [
+    80.1,
+    81.4,
+    86.9
+   ],
+   "tris": 11998,
+   "bytes": 328368,
+   "sourceTris": 95190,
+   "source": "models/radio_controller.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "monitor-slim",
+   "name": "Slim monitor",
+   "category": "electronics",
+   "scenes": [
+    "office",
+    "gaming"
+   ],
+   "file": "assets/props/monitor-slim.glb",
+   "anchor": "floor",
+   "size": [
+    620,
+    1047.8,
+    1753.4
+   ],
+   "min": [
+    -310,
+    0,
+    -876.7
+   ],
+   "max": [
+    310,
+    1047.8,
+    876.7
+   ],
+   "tris": 20109,
+   "bytes": 247572,
+   "sourceTris": 59367,
+   "source": "models/Monitor (3).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "tablet-pc",
+   "name": "Tablet PC",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "creative"
+   ],
+   "file": "assets/props/tablet-pc.glb",
+   "anchor": "floor",
+   "size": [
+    292,
+    184.4,
+    273.9
+   ],
+   "min": [
+    -146,
+    20.6,
+    -107.3
+   ],
+   "max": [
+    146,
+    205,
+    166.6
+   ],
+   "tris": 30158,
+   "bytes": 207200,
+   "sourceTris": 343660,
+   "source": "models/Microsoft_Surface_Pro_3__Touch_Cover.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "headset-xr",
+   "name": "Mixed-reality headset",
+   "category": "electronics",
+   "scenes": [
+    "gaming",
+    "scifi",
+    "creative"
+   ],
+   "file": "assets/props/headset-xr.glb",
+   "anchor": "floor",
+   "size": [
+    197.6,
+    68.8,
+    132.5
+   ],
+   "min": [
+    -99,
+    0.3,
+    -66.4
+   ],
+   "max": [
+    98.7,
+    69,
+    66
+   ],
+   "tris": 23734,
+   "bytes": 1098500,
+   "sourceTris": 151469,
+   "source": "models/Apple_Vision_Pro.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "smart-watch",
+   "name": "Smart watch",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "gym"
+   ],
+   "file": "assets/props/smart-watch.glb",
+   "anchor": "floor",
+   "size": [
+    28.8,
+    49,
+    49.5
+   ],
+   "min": [
+    -14.5,
+    0,
+    -24.7
+   ],
+   "max": [
+    14.3,
+    49,
+    24.7
+   ],
+   "tris": 12820,
+   "bytes": 1257496,
+   "sourceTris": 140916,
+   "source": "models/Apple_Watch_Ultra_2.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "wireless-charger",
+   "name": "Wireless charger",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "bedroom"
+   ],
+   "file": "assets/props/wireless-charger.glb",
+   "anchor": "floor",
+   "size": [
+    100,
+    11.7,
+    67.3
+   ],
+   "min": [
+    -50,
+    0,
+    -33.7
+   ],
+   "max": [
+    50,
+    11.7,
+    33.7
+   ],
+   "tris": 12023,
+   "bytes": 120324,
+   "sourceTris": 184536,
+   "source": "models/Wireless_Charger_USB_QC.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "calculator",
+   "name": "Calculator",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "study"
+   ],
+   "file": "assets/props/calculator.glb",
+   "anchor": "floor",
+   "size": [
+    156.4,
+    28.8,
+    160
+   ],
+   "min": [
+    -78.2,
+    0,
+    -80
+   ],
+   "max": [
+    78.2,
+    28.8,
+    80
+   ],
+   "tris": 11967,
+   "bytes": 135972,
+   "sourceTris": 122000,
+   "source": "models/Calculator_02.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "retro-computer",
+   "name": "Retro home computer",
+   "category": "electronics",
+   "scenes": [
+    "study",
+    "workshop"
+   ],
+   "file": "assets/props/retro-computer.glb",
+   "anchor": "floor",
+   "size": [
+    480.1,
+    302.4,
+    677.2
+   ],
+   "min": [
+    -240,
+    0,
+    -338.6
+   ],
+   "max": [
+    240.1,
+    302.4,
+    338.6
+   ],
+   "tris": 39995,
+   "bytes": 596108,
+   "sourceTris": 307282,
+   "source": "models/IBM_PCjr_4863_Computer-Freepoly.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "rotary-phone",
+   "name": "Rotary phone",
+   "category": "decor",
+   "scenes": [
+    "study",
+    "lounge"
+   ],
+   "file": "assets/props/rotary-phone.glb",
+   "anchor": "floor",
+   "size": [
+    153.1,
+    230,
+    81.3
+   ],
+   "min": [
+    -76.5,
+    0,
+    -40.6
+   ],
+   "max": [
+    76.5,
+    230,
+    40.7
+   ],
+   "tris": 19998,
+   "bytes": 253144,
+   "sourceTris": 255758,
+   "source": "models/Old_Phone-Freepoly.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "oscilloscope",
+   "name": "Oscilloscope",
+   "category": "electronics",
+   "scenes": [
+    "workshop",
+    "scifi"
+   ],
+   "file": "assets/props/oscilloscope.glb",
+   "anchor": "floor",
+   "size": [
+    300,
+    541.3,
+    227.6
+   ],
+   "min": [
+    -150,
+    21.2,
+    -70.2
+   ],
+   "max": [
+    150,
+    562.6,
+    157.4
+   ],
+   "tris": 3997,
+   "bytes": 88320,
+   "source": "models/Oscilloscope_U1602B.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "voltage-regulator",
+   "name": "Voltage regulator",
+   "category": "electronics",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/voltage-regulator.glb",
+   "anchor": "floor",
+   "size": [
+    199.8,
+    213.5,
+    260
+   ],
+   "min": [
+    -99.9,
+    0,
+    -130
+   ],
+   "max": [
+    99.9,
+    213.5,
+    130
+   ],
+   "tris": 3742,
+   "bytes": 121484,
+   "source": "models/Autotransformer_voltage_regulator.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "fpv-drone",
+   "name": "FPV drone",
+   "category": "electronics",
+   "scenes": [
+    "workshop",
+    "gaming"
+   ],
+   "file": "assets/props/fpv-drone.glb",
+   "anchor": "floor",
+   "size": [
+    198.7,
+    204.2,
+    251.3
+   ],
+   "min": [
+    -102.9,
+    5.7,
+    -123.7
+   ],
+   "max": [
+    95.7,
+    209.9,
+    127.6
+   ],
+   "tris": 33264,
+   "bytes": 466764,
+   "sourceTris": 325470,
+   "source": "models/DJI_FVP_-_SDC_PERFORMANCE_EDITION.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "robotic-arm",
+   "name": "Robotic arm",
+   "category": "electronics",
+   "scenes": [
+    "scifi",
+    "workshop"
+   ],
+   "file": "assets/props/robotic-arm.glb",
+   "anchor": "floor",
+   "size": [
+    1710,
+    901.1,
+    2101
+   ],
+   "min": [
+    -967.1,
+    -11.5,
+    -1056.4
+   ],
+   "max": [
+    742.9,
+    889.6,
+    1044.6
+   ],
+   "tris": 40646,
+   "bytes": 275028,
+   "sourceTris": 670224,
+   "source": "models/Sci_Fi_Robotic_Arm.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "mars-rover",
+   "name": "Mars rover model",
+   "category": "decor",
+   "scenes": [
+    "scifi",
+    "study"
+   ],
+   "file": "assets/props/mars-rover.glb",
+   "anchor": "floor",
+   "size": [
+    416.6,
+    331.5,
+    600.1
+   ],
+   "min": [
+    -208.3,
+    0.5,
+    -300
+   ],
+   "max": [
+    208.3,
+    331.9,
+    300.1
+   ],
+   "tris": 20090,
+   "bytes": 561552,
+   "sourceTris": 48383,
+   "source": "models/Mars_Curiosity_Rover.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "robot-dog",
+   "name": "Robot dog",
+   "category": "pets",
+   "scenes": [
+    "scifi",
+    "gaming"
+   ],
+   "file": "assets/props/robot-dog.glb",
+   "anchor": "floor",
+   "size": [
+    248.4,
+    287.8,
+    593.4
+   ],
+   "min": [
+    -120.7,
+    5.9,
+    -324.6
+   ],
+   "max": [
+    127.7,
+    293.7,
+    268.7
+   ],
+   "tris": 19995,
+   "bytes": 273088,
+   "sourceTris": 46744,
+   "source": "models/Robot_Dog__4KRiggedAsset.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "chop-saw",
+   "name": "Chop saw",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/chop-saw.glb",
+   "anchor": "floor",
+   "size": [
+    437.3,
+    596.7,
+    297
+   ],
+   "min": [
+    -219.2,
+    3,
+    -148.5
+   ],
+   "max": [
+    218.1,
+    599.6,
+    148.5
+   ],
+   "tris": 11999,
+   "bytes": 168596,
+   "sourceTris": 39817,
+   "source": "models/Makita_Chop_Saw.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "impact-wrench",
+   "name": "Impact wrench",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/impact-wrench.glb",
+   "anchor": "floor",
+   "size": [
+    78.6,
+    251,
+    225.8
+   ],
+   "min": [
+    -39.3,
+    -0.8,
+    -113
+   ],
+   "max": [
+    39.3,
+    250.2,
+    112.8
+   ],
+   "tris": 11998,
+   "bytes": 175164,
+   "sourceTris": 295702,
+   "source": "models/Makita_DTW1002.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hammer-drill",
+   "name": "Hammer drill",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/hammer-drill.glb",
+   "anchor": "floor",
+   "size": [
+    330,
+    179.5,
+    63.8
+   ],
+   "min": [
+    -165,
+    0,
+    -31.9
+   ],
+   "max": [
+    165,
+    179.5,
+    31.9
+   ],
+   "tris": 11999,
+   "bytes": 161080,
+   "sourceTris": 13200,
+   "source": "models/Hammer_drill.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hand-drill",
+   "name": "Hand drill",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/hand-drill.glb",
+   "anchor": "floor",
+   "size": [
+    300,
+    109.7,
+    82.7
+   ],
+   "min": [
+    -150,
+    0,
+    -41.4
+   ],
+   "max": [
+    150,
+    109.7,
+    41.4
+   ],
+   "tris": 11999,
+   "bytes": 196104,
+   "sourceTris": 31205,
+   "source": "models/Old_School_Drill.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cutter-machine",
+   "name": "Cutting machine",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/cutter-machine.glb",
+   "anchor": "floor",
+   "size": [
+    899.8,
+    638.9,
+    818
+   ],
+   "min": [
+    -449.8,
+    -0.1,
+    -408.7
+   ],
+   "max": [
+    450,
+    638.8,
+    409.3
+   ],
+   "tris": 11996,
+   "bytes": 260456,
+   "sourceTris": 128812,
+   "source": "models/Cutter_Machine.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "toolbox-industrial",
+   "name": "Industrial toolbox",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/toolbox-industrial.glb",
+   "anchor": "floor",
+   "size": [
+    600,
+    922.1,
+    1163.9
+   ],
+   "min": [
+    -300,
+    0,
+    -582
+   ],
+   "max": [
+    300,
+    922.1,
+    582
+   ],
+   "tris": 4572,
+   "bytes": 93812,
+   "source": "models/Industrial_Toolbox.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "toolbox",
+   "name": "Toolbox",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/toolbox.glb",
+   "anchor": "floor",
+   "size": [
+    450.7,
+    383.8,
+    248.4
+   ],
+   "min": [
+    -225.3,
+    -0.2,
+    -124.2
+   ],
+   "max": [
+    225.3,
+    383.6,
+    124.2
+   ],
+   "tris": 11998,
+   "bytes": 195304,
+   "sourceTris": 76813,
+   "source": "models/Toolbox.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "tool-cart",
+   "name": "Tool cart",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/tool-cart.glb",
+   "anchor": "floor",
+   "size": [
+    1111.3,
+    950.3,
+    614.3
+   ],
+   "min": [
+    -555.6,
+    -0.3,
+    -307.2
+   ],
+   "max": [
+    555.6,
+    950,
+    307.1
+   ],
+   "tris": 20940,
+   "bytes": 193272,
+   "sourceTris": 80112,
+   "source": "models/Tool_Cart.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "multi-tool",
+   "name": "Multi-tool",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/multi-tool.glb",
+   "anchor": "floor",
+   "size": [
+    92.2,
+    10,
+    113.2
+   ],
+   "min": [
+    -44.4,
+    0,
+    -56.4
+   ],
+   "max": [
+    47.8,
+    10,
+    56.8
+   ],
+   "tris": 12136,
+   "bytes": 274828,
+   "sourceTris": 73284,
+   "source": "models/Leatherman_Signal_Tool.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "multi-tool-open",
+   "name": "Multi-tool, open",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/multi-tool-open.glb",
+   "anchor": "floor",
+   "size": [
+    56.4,
+    150,
+    10.3
+   ],
+   "min": [
+    -28.2,
+    0,
+    -5.1
+   ],
+   "max": [
+    28.3,
+    150,
+    5.1
+   ],
+   "tris": 13556,
+   "bytes": 124228,
+   "sourceTris": 178436,
+   "source": "models/Rigged_Multi_Tool_Animated.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "rubber-mallet",
+   "name": "Rubber mallet",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/rubber-mallet.glb",
+   "anchor": "floor",
+   "size": [
+    98,
+    65.7,
+    330
+   ],
+   "min": [
+    -49,
+    0,
+    -165
+   ],
+   "max": [
+    49,
+    65.7,
+    165
+   ],
+   "tris": 12000,
+   "bytes": 205924,
+   "sourceTris": 15279,
+   "source": "models/Rubber_Mallet_Photoscan.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "caliper",
+   "name": "Outside caliper",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/caliper.glb",
+   "anchor": "floor",
+   "size": [
+    107.1,
+    15.2,
+    199.9
+   ],
+   "min": [
+    -53.6,
+    2.9,
+    -100
+   ],
+   "max": [
+    53.6,
+    18.1,
+    99.9
+   ],
+   "tris": 11994,
+   "bytes": 154700,
+   "sourceTris": 102580,
+   "source": "models/outside_caliper.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "painters-tape",
+   "name": "Painter's tape",
+   "category": "tools",
+   "scenes": [
+    "workshop",
+    "creative"
+   ],
+   "file": "assets/props/painters-tape.glb",
+   "anchor": "floor",
+   "size": [
+    73.3,
+    73.7,
+    31.6
+   ],
+   "min": [
+    -36.7,
+    13.1,
+    -15.8
+   ],
+   "max": [
+    36.6,
+    86.8,
+    15.8
+   ],
+   "tris": 9996,
+   "bytes": 102072,
+   "source": "models/Black_Painters_Tape.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "polish-bottle",
+   "name": "Polish bottle",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/polish-bottle.glb",
+   "anchor": "floor",
+   "size": [
+    149.3,
+    250,
+    50.5
+   ],
+   "min": [
+    -74.7,
+    0,
+    -25.3
+   ],
+   "max": [
+    74.7,
+    250,
+    25.3
+   ],
+   "tris": 11997,
+   "bytes": 112420,
+   "sourceTris": 29632,
+   "source": "models/3M_Finesse-It_Polish_-_Extra_Fine.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gas-can",
+   "name": "Fuel can",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/gas-can.glb",
+   "anchor": "floor",
+   "size": [
+    184.3,
+    380,
+    313.8
+   ],
+   "min": [
+    -92.1,
+    0,
+    -156.9
+   ],
+   "max": [
+    92.1,
+    380,
+    156.9
+   ],
+   "tris": 3582,
+   "bytes": 66480,
+   "source": "models/Plastic_Gas_Can_Scan_2_LOWPOLY.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sewing-machine",
+   "name": "Sewing machine",
+   "category": "tools",
+   "scenes": [
+    "creative",
+    "workshop"
+   ],
+   "file": "assets/props/sewing-machine.glb",
+   "anchor": "floor",
+   "size": [
+    420,
+    234,
+    137.8
+   ],
+   "min": [
+    -210,
+    0,
+    -68.9
+   ],
+   "max": [
+    210,
+    234,
+    68.9
+   ],
+   "tris": 9960,
+   "bytes": 182164,
+   "source": "models/Sewing_Machine.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "shop-machine",
+   "name": "Shop machine",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/shop-machine.glb",
+   "anchor": "floor",
+   "size": [
+    774.5,
+    1400,
+    1138.6
+   ],
+   "min": [
+    -387.2,
+    0,
+    -569.3
+   ],
+   "max": [
+    387.2,
+    1400,
+    569.3
+   ],
+   "tris": 8783,
+   "bytes": 201716,
+   "source": "models/machine.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "laser-sight",
+   "name": "Laser sight module",
+   "category": "tools",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/laser-sight.glb",
+   "anchor": "floor",
+   "size": [
+    93.7,
+    50.8,
+    120
+   ],
+   "min": [
+    -46.9,
+    -0.1,
+    -60
+   ],
+   "max": [
+    46.8,
+    50.8,
+    60
+   ],
+   "tris": 12138,
+   "bytes": 178412,
+   "sourceTris": 104584,
+   "source": "models/Steiner_Dbal.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "welder-figure",
+   "name": "Welder",
+   "category": "people",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/welder-figure.glb",
+   "anchor": "floor",
+   "size": [
+    1325.3,
+    1780,
+    708
+   ],
+   "min": [
+    -662.6,
+    0,
+    -362.9
+   ],
+   "max": [
+    662.6,
+    1780,
+    345.1
+   ],
+   "tris": 4240,
+   "bytes": 209756,
+   "source": "models/Human_welder.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "antique-book",
+   "name": "Antique book with quill",
+   "category": "decor",
+   "scenes": [
+    "study"
+   ],
+   "file": "assets/props/antique-book.glb",
+   "anchor": "floor",
+   "size": [
+    313.3,
+    93.1,
+    253.5
+   ],
+   "min": [
+    -153.7,
+    50.1,
+    -127.9
+   ],
+   "max": [
+    159.6,
+    143.1,
+    125.6
+   ],
+   "tris": 826,
+   "bytes": 162896,
+   "source": "models/Antique_Book_with_Quill_and_Key.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "ink-quill",
+   "name": "Ink bottle and quill",
+   "category": "desk",
+   "scenes": [
+    "study"
+   ],
+   "file": "assets/props/ink-quill.glb",
+   "anchor": "floor",
+   "size": [
+    137.9,
+    207.9,
+    129.7
+   ],
+   "min": [
+    -69,
+    0,
+    -56.9
+   ],
+   "max": [
+    68.9,
+    207.9,
+    72.8
+   ],
+   "tris": 1288,
+   "bytes": 133020,
+   "source": "models/Ink_Bottle_with_Quill.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "bookwheel",
+   "name": "Bookwheel",
+   "category": "furniture",
+   "scenes": [
+    "study",
+    "gallery"
+   ],
+   "file": "assets/props/bookwheel.glb",
+   "anchor": "floor",
+   "size": [
+    4506.1,
+    1871.7,
+    3644.8
+   ],
+   "min": [
+    -2253.1,
+    0,
+    -1822.4
+   ],
+   "max": [
+    2253.1,
+    1871.7,
+    1822.4
+   ],
+   "tris": 29079,
+   "bytes": 1154916,
+   "source": "models/The_Bookwheel.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "journal",
+   "name": "Journal",
+   "category": "desk",
+   "scenes": [
+    "study",
+    "creative"
+   ],
+   "file": "assets/props/journal.glb",
+   "anchor": "floor",
+   "size": [
+    141.5,
+    55.1,
+    230
+   ],
+   "min": [
+    -70.8,
+    0,
+    -115
+   ],
+   "max": [
+    70.8,
+    55.1,
+    115
+   ],
+   "tris": 11987,
+   "bytes": 148976,
+   "sourceTris": 30120,
+   "source": "models/Journal_3.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sketchbook",
+   "name": "Sketchbook",
+   "category": "desk",
+   "scenes": [
+    "creative",
+    "study"
+   ],
+   "file": "assets/props/sketchbook.glb",
+   "anchor": "floor",
+   "size": [
+    300,
+    29.6,
+    197.7
+   ],
+   "min": [
+    -150,
+    0,
+    -98.8
+   ],
+   "max": [
+    150,
+    29.6,
+    98.8
+   ],
+   "tris": 1026,
+   "bytes": 132932,
+   "source": "models/sketchbook.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "comics",
+   "name": "Comics collection",
+   "category": "decor",
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "file": "assets/props/comics.glb",
+   "anchor": "floor",
+   "size": [
+    189.5,
+    53.6,
+    279.9
+   ],
+   "min": [
+    -94.7,
+    0,
+    -140
+   ],
+   "max": [
+    94.7,
+    53.6,
+    140
+   ],
+   "tris": 17640,
+   "bytes": 444588,
+   "source": "models/TEX_COMICS_COLLECTION (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "magazines",
+   "name": "Magazines",
+   "category": "decor",
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "file": "assets/props/magazines.glb",
+   "anchor": "floor",
+   "size": [
+    300,
+    2,
+    126.7
+   ],
+   "min": [
+    -150,
+    0,
+    -63.4
+   ],
+   "max": [
+    150,
+    2,
+    63.4
+   ],
+   "tris": 1296,
+   "bytes": 284564,
+   "source": "models/Harpers_Bazaar_Magazines.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "globe",
+   "name": "Antique globe",
+   "category": "decor",
+   "scenes": [
+    "study",
+    "gallery"
+   ],
+   "file": "assets/props/globe.glb",
+   "anchor": "floor",
+   "size": [
+    424.9,
+    570.9,
+    385.4
+   ],
+   "min": [
+    -194.3,
+    0,
+    -192.7
+   ],
+   "max": [
+    230.7,
+    570.9,
+    192.7
+   ],
+   "tris": 6786,
+   "bytes": 213924,
+   "source": "models/Antique_Globe.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "heliograph",
+   "name": "Sunshine recorder",
+   "category": "decor",
+   "scenes": [
+    "study",
+    "gallery"
+   ],
+   "file": "assets/props/heliograph.glb",
+   "anchor": "floor",
+   "size": [
+    270.8,
+    300,
+    275.9
+   ],
+   "min": [
+    -135.4,
+    0,
+    -137.9
+   ],
+   "max": [
+    135.4,
+    300,
+    137.9
+   ],
+   "tris": 13372,
+   "bytes": 183896,
+   "source": "models/Classic_heliograph__Sunshine_Recorder.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "pencil-case",
+   "name": "Leather pencil case",
+   "category": "desk",
+   "scenes": [
+    "creative",
+    "study"
+   ],
+   "file": "assets/props/pencil-case.glb",
+   "anchor": "floor",
+   "size": [
+    210,
+    88.8,
+    70.7
+   ],
+   "min": [
+    -105,
+    0,
+    -35.4
+   ],
+   "max": [
+    105,
+    88.8,
+    35.4
+   ],
+   "tris": 8518,
+   "bytes": 177040,
+   "source": "models/Designer_Leather_Pencil_Case.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cork-board",
+   "name": "Cork board",
+   "category": "decor",
+   "scenes": [
+    "creative",
+    "office"
+   ],
+   "file": "assets/props/cork-board.glb",
+   "anchor": "wall",
+   "size": [
+    900,
+    450,
+    11.3
+   ],
+   "min": [
+    -450,
+    -225,
+    0
+   ],
+   "max": [
+    450,
+    225,
+    11.3
+   ],
+   "tris": 20000,
+   "bytes": 156520,
+   "sourceTris": 41684,
+   "source": "models/Cork_Board (2).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "photo-frame",
+   "name": "Photo frame",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "study"
+   ],
+   "file": "assets/props/photo-frame.glb",
+   "anchor": "wall",
+   "size": [
+    250,
+    185.8,
+    75.4
+   ],
+   "min": [
+    -125,
+    -92.9,
+    0
+   ],
+   "max": [
+    125,
+    92.9,
+    75.4
+   ],
+   "tris": 1958,
+   "bytes": 48112,
+   "source": "models/Photo_Frame.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "photo-frame-dog",
+   "name": "Photo frame, dog",
+   "category": "decor",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/photo-frame-dog.glb",
+   "anchor": "wall",
+   "size": [
+    112.4,
+    220,
+    164.4
+   ],
+   "min": [
+    -56.2,
+    -110,
+    0
+   ],
+   "max": [
+    56.2,
+    110,
+    164.4
+   ],
+   "tris": 2342,
+   "bytes": 65032,
+   "source": "models/Photo_Frame_of_Dog.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "photo-frames",
+   "name": "Framed photographs",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "study"
+   ],
+   "file": "assets/props/photo-frames.glb",
+   "anchor": "wall",
+   "size": [
+    600,
+    412.8,
+    14.1
+   ],
+   "min": [
+    -300,
+    -206.4,
+    0
+   ],
+   "max": [
+    300,
+    206.4,
+    14.1
+   ],
+   "tris": 15320,
+   "bytes": 246728,
+   "source": "models/Frames_With_Photographs_2.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gallery-poster",
+   "name": "Gallery poster",
+   "category": "decor",
+   "scenes": [
+    "gallery",
+    "lounge"
+   ],
+   "file": "assets/props/gallery-poster.glb",
+   "anchor": "wall",
+   "size": [
+    900,
+    234,
+    16.6
+   ],
+   "min": [
+    -450,
+    -117,
+    0
+   ],
+   "max": [
+    450,
+    117,
+    16.6
+   ],
+   "tris": 9572,
+   "bytes": 154280,
+   "source": "models/RICHARD_AVEDON___The_Beatles.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "mosaic-art",
+   "name": "Mosaic artwork",
+   "category": "decor",
+   "scenes": [
+    "gallery"
+   ],
+   "file": "assets/props/mosaic-art.glb",
+   "anchor": "wall",
+   "size": [
+    1200,
+    369.9,
+    4.8
+   ],
+   "min": [
+    -600,
+    -185,
+    0
+   ],
+   "max": [
+    600,
+    185,
+    4.8
+   ],
+   "tris": 36,
+   "bytes": 447252,
+   "source": "models/Mosaic_Art_for_Cities_Skylines.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "carved-emblem",
+   "name": "Carved emblem",
+   "category": "decor",
+   "scenes": [
+    "gallery"
+   ],
+   "file": "assets/props/carved-emblem.glb",
+   "anchor": "wall",
+   "size": [
+    283.3,
+    683.3,
+    391.6
+   ],
+   "min": [
+    -141.6,
+    -339,
+    11.9
+   ],
+   "max": [
+    141.6,
+    344.2,
+    403.5
+   ],
+   "tris": 39993,
+   "bytes": 290260,
+   "sourceTris": 347564,
+   "source": "models/Emblem_of_The_Golden_Head_pharmacy_in_Kraków.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "the-thinker",
+   "name": "The Thinker, cast",
+   "category": "decor",
+   "scenes": [
+    "gallery",
+    "study"
+   ],
+   "file": "assets/props/the-thinker.glb",
+   "anchor": "floor",
+   "size": [
+    588.7,
+    693.4,
+    413.2
+   ],
+   "min": [
+    -292.8,
+    2.5,
+    -205.8
+   ],
+   "max": [
+    295.8,
+    695.8,
+    207.4
+   ],
+   "tris": 19999,
+   "bytes": 576364,
+   "sourceTris": 50974,
+   "source": "models/The_Thinker_by_Auguste_Rodin (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "aphrodite",
+   "name": "Aphrodite of Milos, cast",
+   "category": "decor",
+   "scenes": [
+    "gallery"
+   ],
+   "file": "assets/props/aphrodite.glb",
+   "anchor": "floor",
+   "size": [
+    558.7,
+    1683.4,
+    513.2
+   ],
+   "min": [
+    -272.5,
+    256.1,
+    -262.6
+   ],
+   "max": [
+    286.2,
+    1939.5,
+    250.6
+   ],
+   "tris": 19997,
+   "bytes": 268400,
+   "sourceTris": 238904,
+   "source": "models/Aphrodite_of_Milos_a_plaster_cast.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "mercury-statue",
+   "name": "Mercury, cast",
+   "category": "decor",
+   "scenes": [
+    "gallery"
+   ],
+   "file": "assets/props/mercury-statue.glb",
+   "anchor": "floor",
+   "size": [
+    624.6,
+    1628.1,
+    756.7
+   ],
+   "min": [
+    -337.3,
+    49.7,
+    -374.4
+   ],
+   "max": [
+    287.3,
+    1677.8,
+    382.3
+   ],
+   "tris": 39998,
+   "bytes": 453464,
+   "sourceTris": 292385,
+   "source": "models/Mercury_about_to_kill_Argos_by_B.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "crown",
+   "name": "Crown, prop",
+   "category": "decor",
+   "scenes": [
+    "gallery"
+   ],
+   "file": "assets/props/crown.glb",
+   "anchor": "floor",
+   "size": [
+    239,
+    184.8,
+    250.3
+   ],
+   "min": [
+    -119.3,
+    0,
+    -125.4
+   ],
+   "max": [
+    119.7,
+    184.8,
+    124.9
+   ],
+   "tris": 29996,
+   "bytes": 465600,
+   "sourceTris": 453775,
+   "source": "models/A_royal_crown__a_prop.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gold-award",
+   "name": "Golden ball award",
+   "category": "decor",
+   "scenes": [
+    "gallery",
+    "lounge"
+   ],
+   "file": "assets/props/gold-award.glb",
+   "anchor": "floor",
+   "size": [
+    262,
+    350,
+    257.4
+   ],
+   "min": [
+    -131,
+    0,
+    -128.7
+   ],
+   "max": [
+    131,
+    350,
+    128.7
+   ],
+   "tris": 19998,
+   "bytes": 245424,
+   "sourceTris": 75634,
+   "source": "models/Golden_Ball_Award.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "music-award",
+   "name": "Music award",
+   "category": "decor",
+   "scenes": [
+    "music",
+    "lounge"
+   ],
+   "file": "assets/props/music-award.glb",
+   "anchor": "floor",
+   "size": [
+    191.7,
+    281,
+    136.4
+   ],
+   "min": [
+    -77.9,
+    35.2,
+    -73.6
+   ],
+   "max": [
+    113.8,
+    316.2,
+    62.9
+   ],
+   "tris": 19997,
+   "bytes": 200040,
+   "sourceTris": 121932,
+   "source": "models/MTV_Award (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "skull",
+   "name": "Human skull, cast",
+   "category": "decor",
+   "scenes": [
+    "study",
+    "gallery"
+   ],
+   "file": "assets/props/skull.glb",
+   "anchor": "floor",
+   "size": [
+    131.9,
+    200,
+    191.1
+   ],
+   "min": [
+    -65.9,
+    0,
+    -95.6
+   ],
+   "max": [
+    65.9,
+    200,
+    95.6
+   ],
+   "tris": 29770,
+   "bytes": 271712,
+   "source": "models/Human_Skull_high_detailed.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "skeleton",
+   "name": "Skeleton, teaching model",
+   "category": "decor",
+   "scenes": [
+    "study"
+   ],
+   "file": "assets/props/skeleton.glb",
+   "anchor": "floor",
+   "size": [
+    440.1,
+    1700,
+    273.5
+   ],
+   "min": [
+    -220,
+    0,
+    -136.6
+   ],
+   "max": [
+    220,
+    1700,
+    136.8
+   ],
+   "tris": 60000,
+   "bytes": 482112,
+   "sourceTris": 99799,
+   "source": "models/Human_Skeleton_high_detailed.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "antique-vase",
+   "name": "Antique vase",
+   "category": "decor",
+   "scenes": [
+    "gallery",
+    "lounge"
+   ],
+   "file": "assets/props/antique-vase.glb",
+   "anchor": "floor",
+   "size": [
+    231.7,
+    450,
+    231.7
+   ],
+   "min": [
+    -115.8,
+    0,
+    -115.8
+   ],
+   "max": [
+    115.8,
+    450,
+    115.8
+   ],
+   "tris": 4736,
+   "bytes": 125704,
+   "source": "models/Antique_Vase.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "katana",
+   "name": "Katana",
+   "category": "decor",
+   "scenes": [
+    "gallery",
+    "gaming"
+   ],
+   "file": "assets/props/katana.glb",
+   "anchor": "floor",
+   "size": [
+    84.9,
+    84.9,
+    1000
+   ],
+   "min": [
+    -42.4,
+    0,
+    -500
+   ],
+   "max": [
+    42.4,
+    84.9,
+    500
+   ],
+   "tris": 19997,
+   "bytes": 208276,
+   "sourceTris": 66237,
+   "source": "models/Katana.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-sitting-1",
+   "name": "Seated figure",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-sitting-1.glb",
+   "anchor": "floor",
+   "size": [
+    860.4,
+    1238.5,
+    374
+   ],
+   "min": [
+    -434.1,
+    21.9,
+    -207.5
+   ],
+   "max": [
+    426.3,
+    1260.4,
+    166.4
+   ],
+   "tris": 19988,
+   "bytes": 229584,
+   "source": "models/Carla_-_Sitting_Idle.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-sitting-2",
+   "name": "Seated figure, reading",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-sitting-2.glb",
+   "anchor": "floor",
+   "size": [
+    417.9,
+    1300,
+    755.7
+   ],
+   "min": [
+    -208.9,
+    0,
+    -377.8
+   ],
+   "max": [
+    208.9,
+    1300,
+    377.8
+   ],
+   "tris": 39998,
+   "bytes": 1171436,
+   "sourceTris": 103111,
+   "source": "models/Sitting_Girl.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-sitting-3",
+   "name": "Seated figure, man",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-sitting-3.glb",
+   "anchor": "floor",
+   "size": [
+    1400.5,
+    1300,
+    268.1
+   ],
+   "min": [
+    -700.2,
+    0,
+    -134
+   ],
+   "max": [
+    700.2,
+    1300,
+    134
+   ],
+   "tris": 33920,
+   "bytes": 440908,
+   "source": "models/Man_Sitting.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-sitting-4",
+   "name": "Seated figure, casual",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-sitting-4.glb",
+   "anchor": "floor",
+   "size": [
+    2886.2,
+    1300,
+    3161.1
+   ],
+   "min": [
+    -1443.1,
+    0,
+    -1580.5
+   ],
+   "max": [
+    1443.1,
+    1300,
+    1580.5
+   ],
+   "tris": 39983,
+   "bytes": 183256,
+   "sourceTris": 720624,
+   "source": "models/Sit_pose.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-standing-1",
+   "name": "Standing figure, business",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-standing-1.glb",
+   "anchor": "floor",
+   "size": [
+    617.4,
+    1799.9,
+    432.7
+   ],
+   "min": [
+    -308.7,
+    0,
+    -216.5
+   ],
+   "max": [
+    308.7,
+    1800,
+    216.2
+   ],
+   "tris": 40000,
+   "bytes": 268732,
+   "sourceTris": 99964,
+   "source": "models/Dennis_Posed_004_-_Male_Standing_Business_Model.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-standing-2",
+   "name": "Standing figure",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-standing-2.glb",
+   "anchor": "floor",
+   "size": [
+    641,
+    1699.9,
+    1247.6
+   ],
+   "min": [
+    -329.5,
+    0,
+    -510.9
+   ],
+   "max": [
+    311.5,
+    1699.9,
+    736.7
+   ],
+   "tris": 39997,
+   "bytes": 369216,
+   "sourceTris": 108134,
+   "source": "models/Female (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-standing-3",
+   "name": "Standing figure, rigged",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-standing-3.glb",
+   "anchor": "floor",
+   "size": [
+    1616.6,
+    1700,
+    332
+   ],
+   "min": [
+    -808.3,
+    0,
+    -166
+   ],
+   "max": [
+    808.3,
+    1700,
+    166
+   ],
+   "tris": 27259,
+   "bytes": 224908,
+   "source": "models/Female_Standing_Character_-_human_riged_model (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-standing-4",
+   "name": "Standing figure",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-standing-4.glb",
+   "anchor": "floor",
+   "size": [
+    670.8,
+    1699.9,
+    531.5
+   ],
+   "min": [
+    -335.4,
+    0,
+    -265.6
+   ],
+   "max": [
+    335.4,
+    1700,
+    265.9
+   ],
+   "tris": 39999,
+   "bytes": 284040,
+   "sourceTris": 100004,
+   "source": "models/FREE_DOWNLOAD_Attractive_African_woman_236.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-standing-5",
+   "name": "Standing figure, suit",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-standing-5.glb",
+   "anchor": "floor",
+   "size": [
+    1729.8,
+    1780,
+    318.1
+   ],
+   "min": [
+    -864.9,
+    0,
+    -159.1
+   ],
+   "max": [
+    864.9,
+    1780,
+    158.9
+   ],
+   "tris": 39990,
+   "bytes": 456908,
+   "sourceTris": 78492,
+   "source": "models/Indian_Man_in_suit.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-standing-6",
+   "name": "Standing figure, casual",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-standing-6.glb",
+   "anchor": "floor",
+   "size": [
+    1629.3,
+    1651.9,
+    360.3
+   ],
+   "min": [
+    -814.9,
+    -0.1,
+    -180.2
+   ],
+   "max": [
+    814.5,
+    1651.8,
+    180.1
+   ],
+   "tris": 39989,
+   "bytes": 917880,
+   "sourceTris": 119866,
+   "source": "models/Indian_Teen_In_Shorts_Female.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-standing-7",
+   "name": "Standing figure",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-standing-7.glb",
+   "anchor": "floor",
+   "size": [
+    515.9,
+    1750.1,
+    658.9
+   ],
+   "min": [
+    -258.1,
+    0,
+    -329.4
+   ],
+   "max": [
+    257.7,
+    1750.1,
+    329.4
+   ],
+   "tris": 39998,
+   "bytes": 354596,
+   "sourceTris": 200546,
+   "source": "models/Person.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-standing-8",
+   "name": "Standing figure, rock",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-standing-8.glb",
+   "anchor": "floor",
+   "size": [
+    679.1,
+    1700,
+    21241.8
+   ],
+   "min": [
+    -339.5,
+    0,
+    -10620.9
+   ],
+   "max": [
+    339.5,
+    1700,
+    10620.9
+   ],
+   "tris": 40028,
+   "bytes": 515860,
+   "sourceTris": 42808,
+   "source": "models/Redhead_Rock_Girl.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-standing-9",
+   "name": "Standing figure, scanned",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-standing-9.glb",
+   "anchor": "floor",
+   "size": [
+    530.4,
+    1650,
+    959.1
+   ],
+   "min": [
+    -265.2,
+    0,
+    -479.6
+   ],
+   "max": [
+    265.2,
+    1650,
+    479.6
+   ],
+   "tris": 39998,
+   "bytes": 1171352,
+   "sourceTris": 103111,
+   "source": "models/Free_091_Aya_OBJ.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-tech",
+   "name": "Technician figure",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-tech.glb",
+   "anchor": "floor",
+   "size": [
+    1920.2,
+    1800,
+    356.4
+   ],
+   "min": [
+    -960.1,
+    0,
+    -178.2
+   ],
+   "max": [
+    960.1,
+    1800,
+    178.2
+   ],
+   "tris": 20368,
+   "bytes": 186872,
+   "source": "models/Army_Tech_Guy_Ready_for_Unreal_Engine.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-animated",
+   "name": "Animated figure",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-animated.glb",
+   "anchor": "floor",
+   "size": [
+    8609.9,
+    1780,
+    8714.9
+   ],
+   "min": [
+    -4305,
+    0,
+    -4357.4
+   ],
+   "max": [
+    4305,
+    1780,
+    4357.4
+   ],
+   "tris": 14490,
+   "bytes": 166484,
+   "source": "models/Facial__Body_Animated_Party_M_0001_-_ActorCore.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "person-seated-desk",
+   "name": "Seated figure at a desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/person-seated-desk.glb",
+   "anchor": "floor",
+   "size": [
+    5034.5,
+    1153.5,
+    5143.3
+   ],
+   "min": [
+    -2517.8,
+    0,
+    -2580.6
+   ],
+   "max": [
+    2516.8,
+    1153.5,
+    2562.6
+   ],
+   "tris": 53800,
+   "bytes": 790844,
+   "sourceTris": 184064,
+   "source": "models/Mindhunter.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "dog-labradoodle",
+   "name": "Labradoodle",
+   "category": "pets",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/dog-labradoodle.glb",
+   "anchor": "floor",
+   "size": [
+    183.5,
+    422.8,
+    707.6
+   ],
+   "min": [
+    -91.7,
+    0,
+    -350
+   ],
+   "max": [
+    91.7,
+    422.8,
+    357.6
+   ],
+   "tris": 19998,
+   "bytes": 338128,
+   "sourceTris": 43718,
+   "source": "models/Riley_the_Labradoodle.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "dog-detailed",
+   "name": "Dog",
+   "category": "pets",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/dog-detailed.glb",
+   "anchor": "floor",
+   "size": [
+    152.3,
+    356.7,
+    650
+   ],
+   "min": [
+    -76.2,
+    0,
+    -325
+   ],
+   "max": [
+    76.2,
+    356.7,
+    325
+   ],
+   "tris": 39999,
+   "bytes": 322916,
+   "sourceTris": 52847,
+   "source": "models/high_detailed_dog.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "dog-a",
+   "name": "Dog, sitting",
+   "category": "pets",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/dog-a.glb",
+   "anchor": "floor",
+   "size": [
+    789.9,
+    550.8,
+    454.6
+   ],
+   "min": [
+    -394.9,
+    -0.8,
+    -227.3
+   ],
+   "max": [
+    395,
+    549.9,
+    227.2
+   ],
+   "tris": 20000,
+   "bytes": 198940,
+   "sourceTris": 33766,
+   "source": "models/DOG_A_-_1of6_-_for_free__happy_new_year_2022.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "dog-b",
+   "name": "Dog, standing",
+   "category": "pets",
+   "scenes": [
+    "home"
+   ],
+   "file": "assets/props/dog-b.glb",
+   "anchor": "floor",
+   "size": [
+    597.9,
+    225.2,
+    434.2
+   ],
+   "min": [
+    -299.1,
+    3.7,
+    -217
+   ],
+   "max": [
+    298.8,
+    228.9,
+    217.2
+   ],
+   "tris": 19999,
+   "bytes": 237796,
+   "sourceTris": 49851,
+   "source": "models/DOG_B_-_1of13_-_for_free.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "tin-cat",
+   "name": "Tin cat ornament",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "study"
+   ],
+   "file": "assets/props/tin-cat.glb",
+   "anchor": "floor",
+   "size": [
+    198.7,
+    200,
+    64.7
+   ],
+   "min": [
+    -99.3,
+    0,
+    -32.3
+   ],
+   "max": [
+    99.3,
+    200,
+    32.3
+   ],
+   "tris": 18904,
+   "bytes": 225724,
+   "source": "models/Tin_Cat_photogrammetry.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "salmon",
+   "name": "Salmon",
+   "category": "food",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/salmon.glb",
+   "anchor": "floor",
+   "size": [
+    385.7,
+    352.4,
+    534.7
+   ],
+   "min": [
+    -183.1,
+    0,
+    -256.3
+   ],
+   "max": [
+    202.6,
+    352.4,
+    278.4
+   ],
+   "tris": 12000,
+   "bytes": 178484,
+   "sourceTris": 12028,
+   "source": "models/salmon_Fish.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cabbage",
+   "name": "Cabbage",
+   "category": "food",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/cabbage.glb",
+   "anchor": "floor",
+   "size": [
+    172.1,
+    130,
+    181
+   ],
+   "min": [
+    -86.3,
+    -0.7,
+    -90.6
+   ],
+   "max": [
+    85.8,
+    129.4,
+    90.4
+   ],
+   "tris": 12000,
+   "bytes": 299812,
+   "sourceTris": 41474,
+   "source": "models/Cabbage.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "peach",
+   "name": "Peach",
+   "category": "food",
+   "scenes": [
+    "kitchen",
+    "home"
+   ],
+   "file": "assets/props/peach.glb",
+   "anchor": "floor",
+   "size": [
+    62.3,
+    59.6,
+    63.8
+   ],
+   "min": [
+    -31.5,
+    0,
+    -31.7
+   ],
+   "max": [
+    30.8,
+    59.6,
+    32.1
+   ],
+   "tris": 11999,
+   "bytes": 132340,
+   "sourceTris": 125726,
+   "source": "models/Peach_-_PhotoCatch.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "pear",
+   "name": "Pear",
+   "category": "food",
+   "scenes": [
+    "kitchen",
+    "home"
+   ],
+   "file": "assets/props/pear.glb",
+   "anchor": "floor",
+   "size": [
+    67.5,
+    95,
+    66.9
+   ],
+   "min": [
+    -33.8,
+    0,
+    -33.5
+   ],
+   "max": [
+    33.8,
+    95,
+    33.5
+   ],
+   "tris": 2578,
+   "bytes": 137416,
+   "source": "models/Pear_-_Photoscan.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "pomegranate",
+   "name": "Pomegranate",
+   "category": "food",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/pomegranate.glb",
+   "anchor": "floor",
+   "size": [
+    63.4,
+    70.1,
+    63.9
+   ],
+   "min": [
+    -31.6,
+    11.4,
+    -34
+   ],
+   "max": [
+    31.8,
+    81.4,
+    29.8
+   ],
+   "tris": 12000,
+   "bytes": 157016,
+   "sourceTris": 100000,
+   "source": "models/PhotoCatch_Pomegranate.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cookie",
+   "name": "Chocolate chip cookie",
+   "category": "food",
+   "scenes": [
+    "kitchen",
+    "home"
+   ],
+   "file": "assets/props/cookie.glb",
+   "anchor": "floor",
+   "size": [
+    63.1,
+    18.5,
+    70
+   ],
+   "min": [
+    -31.6,
+    0,
+    -35
+   ],
+   "max": [
+    31.5,
+    18.5,
+    35
+   ],
+   "tris": 14997,
+   "bytes": 180136,
+   "sourceTris": 413216,
+   "source": "models/Chocolate_Chip_Cookie.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cookies",
+   "name": "Cookies",
+   "category": "food",
+   "scenes": [
+    "kitchen",
+    "home"
+   ],
+   "file": "assets/props/cookies.glb",
+   "anchor": "floor",
+   "size": [
+    93.2,
+    17.3,
+    134.8
+   ],
+   "min": [
+    -48.8,
+    1.8,
+    -66.3
+   ],
+   "max": [
+    44.3,
+    19.1,
+    68.6
+   ],
+   "tris": 11408,
+   "bytes": 210032,
+   "source": "models/Scanned_Low_Poly__Cookies.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "fruitcake-tin",
+   "name": "Fruitcake tin",
+   "category": "food",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/fruitcake-tin.glb",
+   "anchor": "floor",
+   "size": [
+    180.2,
+    54.3,
+    180.1
+   ],
+   "min": [
+    -90,
+    -0.2,
+    -90
+   ],
+   "max": [
+    90.2,
+    54.1,
+    90
+   ],
+   "tris": 11999,
+   "bytes": 139840,
+   "sourceTris": 159995,
+   "source": "models/Hawaiian_Fruitcake_Tin.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cereal-box",
+   "name": "Cereal box",
+   "category": "food",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/cereal-box.glb",
+   "anchor": "floor",
+   "size": [
+    206.5,
+    299.8,
+    85.3
+   ],
+   "min": [
+    -103.5,
+    0,
+    -42.8
+   ],
+   "max": [
+    102.9,
+    299.8,
+    42.5
+   ],
+   "tris": 11997,
+   "bytes": 270504,
+   "sourceTris": 222110,
+   "source": "models/Miss_America_Corn_Flakes_Box.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "soda-bottle",
+   "name": "Soda bottle",
+   "category": "food",
+   "scenes": [
+    "kitchen",
+    "lounge"
+   ],
+   "file": "assets/props/soda-bottle.glb",
+   "anchor": "floor",
+   "size": [
+    93.2,
+    210.3,
+    94.5
+   ],
+   "min": [
+    -46.6,
+    -0.2,
+    -47.2
+   ],
+   "max": [
+    46.7,
+    210.1,
+    47.3
+   ],
+   "tris": 24995,
+   "bytes": 544276,
+   "sourceTris": 318730,
+   "source": "models/Bundaberg_bottle.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "bottle-set",
+   "name": "Bottle set",
+   "category": "food",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/bottle-set.glb",
+   "anchor": "floor",
+   "size": [
+    300.1,
+    125.2,
+    27.9
+   ],
+   "min": [
+    -150,
+    0,
+    -14
+   ],
+   "max": [
+    150.1,
+    125.2,
+    13.9
+   ],
+   "tris": 29954,
+   "bytes": 156896,
+   "sourceTris": 687664,
+   "source": "models/Multiple_types_of_bottle_plastic_glass.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sports-bottle-2",
+   "name": "Sports bottle",
+   "category": "food",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/sports-bottle-2.glb",
+   "anchor": "floor",
+   "size": [
+    141.9,
+    250,
+    356.7
+   ],
+   "min": [
+    -72.3,
+    0,
+    -178.7
+   ],
+   "max": [
+    69.6,
+    250,
+    178
+   ],
+   "tris": 19997,
+   "bytes": 194096,
+   "sourceTris": 385588,
+   "source": "models/High-Poly_Yellow_Sports_Bottle.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "percolator",
+   "name": "Tea percolator",
+   "category": "food",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/percolator.glb",
+   "anchor": "floor",
+   "size": [
+    423.9,
+    300,
+    311.7
+   ],
+   "min": [
+    -211.9,
+    0,
+    -155.7
+   ],
+   "max": [
+    212,
+    300,
+    156
+   ],
+   "tris": 11990,
+   "bytes": 192788,
+   "sourceTris": 179122,
+   "source": "models/Tea-percolator.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "mug-set",
+   "name": "Mug set",
+   "category": "food",
+   "scenes": [
+    "kitchen",
+    "office"
+   ],
+   "file": "assets/props/mug-set.glb",
+   "anchor": "floor",
+   "size": [
+    53.4,
+    118.6,
+    250
+   ],
+   "min": [
+    -26.7,
+    0,
+    -125
+   ],
+   "max": [
+    26.7,
+    118.6,
+    125
+   ],
+   "tris": 12016,
+   "bytes": 358544,
+   "sourceTris": 19316,
+   "source": "models/Coffee__Tea_Mugs_FREE (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gas-stove",
+   "name": "Gas stove",
+   "category": "furniture",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/gas-stove.glb",
+   "anchor": "floor",
+   "size": [
+    600,
+    701.4,
+    442.5
+   ],
+   "min": [
+    -300,
+    0,
+    -221.2
+   ],
+   "max": [
+    300,
+    701.4,
+    221.2
+   ],
+   "tris": 6009,
+   "bytes": 553372,
+   "source": "models/Old_Soviet_Gas_Stove.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "electric-stove",
+   "name": "Electric stove",
+   "category": "furniture",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/electric-stove.glb",
+   "anchor": "floor",
+   "size": [
+    600,
+    884.7,
+    969
+   ],
+   "min": [
+    -300,
+    0,
+    -484.5
+   ],
+   "max": [
+    300,
+    884.7,
+    484.5
+   ],
+   "tris": 2996,
+   "bytes": 266024,
+   "source": "models/Old_electric_stove.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "kitchen-run",
+   "name": "Kitchen run",
+   "category": "environment",
+   "scenes": [
+    "kitchen"
+   ],
+   "file": "assets/props/kitchen-run.glb",
+   "anchor": "floor",
+   "size": [
+    3000,
+    1882.4,
+    5176.1
+   ],
+   "min": [
+    -1500,
+    0,
+    -2588
+   ],
+   "max": [
+    1500,
+    1882.4,
+    2588
+   ],
+   "tris": 80150,
+   "bytes": 1923984,
+   "sourceTris": 129722,
+   "source": "models/Small_Modern_Kitchen.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "dumbbell",
+   "name": "Dumbbell",
+   "category": "fitness",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/dumbbell.glb",
+   "anchor": "floor",
+   "size": [
+    350,
+    214.8,
+    350
+   ],
+   "min": [
+    -175,
+    0,
+    -175
+   ],
+   "max": [
+    175,
+    214.8,
+    175
+   ],
+   "tris": 40000,
+   "bytes": 279972,
+   "sourceTris": 216050,
+   "source": "models/Dumbbell.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "dumbbell-weights",
+   "name": "Dumbbells and weights",
+   "category": "fitness",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/dumbbell-weights.glb",
+   "anchor": "floor",
+   "size": [
+    754.4,
+    65.7,
+    302.2
+   ],
+   "min": [
+    -385.3,
+    0,
+    -166.6
+   ],
+   "max": [
+    369,
+    65.7,
+    135.6
+   ],
+   "tris": 39994,
+   "bytes": 595548,
+   "sourceTris": 207612,
+   "source": "models/Dumbbell_and_Weights.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gym-props",
+   "name": "Gym props",
+   "category": "fitness",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/gym-props.glb",
+   "anchor": "floor",
+   "size": [
+    900,
+    45.4,
+    282.6
+   ],
+   "min": [
+    -450,
+    0,
+    -141.3
+   ],
+   "max": [
+    450,
+    45.4,
+    141.3
+   ],
+   "tris": 39989,
+   "bytes": 658000,
+   "sourceTris": 95073,
+   "source": "models/Gym_Props.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gym-props-2",
+   "name": "Gym props, set two",
+   "category": "fitness",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/gym-props-2.glb",
+   "anchor": "floor",
+   "size": [
+    899.9,
+    49.8,
+    518.2
+   ],
+   "min": [
+    -449.9,
+    0.3,
+    -259.1
+   ],
+   "max": [
+    449.9,
+    50.1,
+    259.1
+   ],
+   "tris": 33943,
+   "bytes": 418616,
+   "source": "models/Gym_Props (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "gym-props-3",
+   "name": "Gym props, set three",
+   "category": "fitness",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/gym-props-3.glb",
+   "anchor": "floor",
+   "size": [
+    899.4,
+    429,
+    854.7
+   ],
+   "min": [
+    -450,
+    0.7,
+    -427.4
+   ],
+   "max": [
+    449.4,
+    429.7,
+    427.4
+   ],
+   "tris": 10436,
+   "bytes": 301000,
+   "source": "models/Gym_Props (2).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "basketball",
+   "name": "Basketball",
+   "category": "toys",
+   "scenes": [
+    "gym",
+    "gaming"
+   ],
+   "file": "assets/props/basketball.glb",
+   "anchor": "floor",
+   "size": [
+    177.9,
+    177.9,
+    177.3
+   ],
+   "min": [
+    -89,
+    32,
+    -88.6
+   ],
+   "max": [
+    89,
+    210,
+    88.6
+   ],
+   "tris": 20000,
+   "bytes": 210744,
+   "sourceTris": 20784,
+   "source": "models/BASKETBALL_AND1_XCELERATE.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "baseball",
+   "name": "Baseball",
+   "category": "toys",
+   "scenes": [
+    "gym",
+    "bedroom"
+   ],
+   "file": "assets/props/baseball.glb",
+   "anchor": "floor",
+   "size": [
+    139.8,
+    52.7,
+    139.8
+   ],
+   "min": [
+    -69.9,
+    8.5,
+    -69.9
+   ],
+   "max": [
+    69.9,
+    61.2,
+    69.9
+   ],
+   "tris": 20015,
+   "bytes": 267292,
+   "sourceTris": 52370,
+   "source": "models/Baseball_ball.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "football-worn",
+   "name": "Worn football",
+   "category": "toys",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/football-worn.glb",
+   "anchor": "floor",
+   "size": [
+    223.5,
+    220,
+    223.3
+   ],
+   "min": [
+    -111.8,
+    0,
+    -111.7
+   ],
+   "max": [
+    111.8,
+    220,
+    111.7
+   ],
+   "tris": 974,
+   "bytes": 100756,
+   "source": "models/Dirty_Soccer_Ball.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "football-match",
+   "name": "Match football",
+   "category": "toys",
+   "scenes": [
+    "gym",
+    "gaming"
+   ],
+   "file": "assets/props/football-match.glb",
+   "anchor": "floor",
+   "size": [
+    219.9,
+    220,
+    219
+   ],
+   "min": [
+    -109.9,
+    0,
+    -109.5
+   ],
+   "max": [
+    110,
+    220,
+    109.5
+   ],
+   "tris": 19999,
+   "bytes": 219376,
+   "sourceTris": 73216,
+   "source": "models/Al_Rihla_-_FIFA_World_Cup_Qatar_2022.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cap",
+   "name": "Sports cap",
+   "category": "decor",
+   "scenes": [
+    "gym",
+    "bedroom"
+   ],
+   "file": "assets/props/cap.glb",
+   "anchor": "floor",
+   "size": [
+    176.2,
+    107.8,
+    255.7
+   ],
+   "min": [
+    -93.5,
+    0,
+    -128.2
+   ],
+   "max": [
+    82.7,
+    107.8,
+    127.5
+   ],
+   "tris": 19995,
+   "bytes": 145068,
+   "sourceTris": 256992,
+   "source": "models/Nike_Dri-FIT_Club.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "ski-goggles",
+   "name": "Ski goggles",
+   "category": "decor",
+   "scenes": [
+    "gym",
+    "bedroom"
+   ],
+   "file": "assets/props/ski-goggles.glb",
+   "anchor": "floor",
+   "size": [
+    166,
+    74.1,
+    200
+   ],
+   "min": [
+    -83,
+    0,
+    -100
+   ],
+   "max": [
+    83,
+    74.1,
+    100
+   ],
+   "tris": 2398,
+   "bytes": 96004,
+   "source": "models/Ski_Goggle.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "skateboard-2",
+   "name": "Skateboard",
+   "category": "toys",
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "file": "assets/props/skateboard-2.glb",
+   "anchor": "floor",
+   "size": [
+    800,
+    151.3,
+    202.1
+   ],
+   "min": [
+    -400,
+    0,
+    -101.1
+   ],
+   "max": [
+    400,
+    151.3,
+    101.1
+   ],
+   "tris": 7592,
+   "bytes": 105064,
+   "source": "models/Low_Poly__Skateboard.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "scooter",
+   "name": "Scooter",
+   "category": "decor",
+   "scenes": [
+    "scifi",
+    "workshop"
+   ],
+   "file": "assets/props/scooter.glb",
+   "anchor": "floor",
+   "size": [
+    535.1,
+    1103.2,
+    1200.3
+   ],
+   "min": [
+    -267.6,
+    -0.3,
+    -600.3
+   ],
+   "max": [
+    267.6,
+    1102.9,
+    600
+   ],
+   "tris": 20000,
+   "bytes": 393384,
+   "sourceTris": 65414,
+   "source": "models/Cyberpunk_Scooter.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sports-car",
+   "name": "Sports car",
+   "category": "environment",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/sports-car.glb",
+   "anchor": "floor",
+   "size": [
+    2145,
+    1287.4,
+    4290
+   ],
+   "min": [
+    -1010.8,
+    87.9,
+    -2145
+   ],
+   "max": [
+    1134.2,
+    1375.4,
+    2145
+   ],
+   "tris": 80978,
+   "bytes": 1731160,
+   "sourceTris": 241260,
+   "source": "models/FREE_1975_Porsche_911_930_Turbo.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "race-car-model",
+   "name": "Race car model",
+   "category": "toys",
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "file": "assets/props/race-car-model.glb",
+   "anchor": "floor",
+   "size": [
+    159.1,
+    97,
+    400.6
+   ],
+   "min": [
+    -79.5,
+    -1.4,
+    -200.4
+   ],
+   "max": [
+    79.5,
+    95.6,
+    200.2
+   ],
+   "tris": 21770,
+   "bytes": 403776,
+   "sourceTris": 114782,
+   "source": "models/RaceCar_RC-09_Re-imagined_model.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "biplane-model",
+   "name": "Biplane model",
+   "category": "toys",
+   "scenes": [
+    "study",
+    "bedroom"
+   ],
+   "file": "assets/props/biplane-model.glb",
+   "anchor": "floor",
+   "size": [
+    500,
+    100.7,
+    500
+   ],
+   "min": [
+    -250,
+    42.6,
+    -250
+   ],
+   "max": [
+    250,
+    143.3,
+    250
+   ],
+   "tris": 5964,
+   "bytes": 231960,
+   "source": "models/Red_Baron.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "sneaker-1",
+   "name": "Sneaker",
+   "category": "decor",
+   "scenes": [
+    "bedroom",
+    "gaming"
+   ],
+   "file": "assets/props/sneaker-1.glb",
+   "anchor": "floor",
+   "size": [
+    300,
+    144.9,
+    243
+   ],
+   "min": [
+    -150,
+    -0.2,
+    -121.5
+   ],
+   "max": [
+    150,
+    144.7,
+    121.4
+   ],
+   "tris": 19999,
+   "bytes": 389484,
+   "sourceTris": 59512,
+   "source": "models/Air_Jordan_1.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "running-shoe",
+   "name": "Running shoe",
+   "category": "decor",
+   "scenes": [
+    "gym",
+    "bedroom"
+   ],
+   "file": "assets/props/running-shoe.glb",
+   "anchor": "floor",
+   "size": [
+    106.9,
+    135.1,
+    300
+   ],
+   "min": [
+    -53.4,
+    0,
+    -150
+   ],
+   "max": [
+    53.4,
+    135,
+    150
+   ],
+   "tris": 19998,
+   "bytes": 226328,
+   "sourceTris": 71085,
+   "source": "models/Nike_Air_Zoom_Pegasus_36.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "skate-shoes",
+   "name": "Skate shoes",
+   "category": "decor",
+   "scenes": [
+    "bedroom",
+    "gaming"
+   ],
+   "file": "assets/props/skate-shoes.glb",
+   "anchor": "floor",
+   "size": [
+    254.9,
+    111.4,
+    309.9
+   ],
+   "min": [
+    -127.4,
+    0,
+    -155.2
+   ],
+   "max": [
+    127.5,
+    111.4,
+    154.8
+   ],
+   "tris": 19999,
+   "bytes": 247832,
+   "sourceTris": 168674,
+   "source": "models/Shoes_Mockup_Asset_-_VANS_SKATE_OLD_SKOOL_SHOES.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "leather-shoes",
+   "name": "Leather shoes",
+   "category": "decor",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/leather-shoes.glb",
+   "anchor": "floor",
+   "size": [
+    300,
+    106.4,
+    210.8
+   ],
+   "min": [
+    -150,
+    0,
+    -105.4
+   ],
+   "max": [
+    150,
+    106.4,
+    105.4
+   ],
+   "tris": 20000,
+   "bytes": 264680,
+   "sourceTris": 39364,
+   "source": "models/Leather_shoes.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "work-boot",
+   "name": "Work boot",
+   "category": "decor",
+   "scenes": [
+    "workshop"
+   ],
+   "file": "assets/props/work-boot.glb",
+   "anchor": "floor",
+   "size": [
+    258.4,
+    186.6,
+    193
+   ],
+   "min": [
+    -130.8,
+    0,
+    -91.6
+   ],
+   "max": [
+    127.5,
+    186.6,
+    101.5
+   ],
+   "tris": 19999,
+   "bytes": 207712,
+   "sourceTris": 24896,
+   "source": "models/Caterpillar_Work_Boot.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hiking-boot",
+   "name": "Hiking boot",
+   "category": "decor",
+   "scenes": [
+    "workshop",
+    "bedroom"
+   ],
+   "file": "assets/props/hiking-boot.glb",
+   "anchor": "floor",
+   "size": [
+    260.6,
+    208.5,
+    175.7
+   ],
+   "min": [
+    -127.5,
+    0,
+    -90.3
+   ],
+   "max": [
+    133.1,
+    208.5,
+    85.4
+   ],
+   "tris": 19900,
+   "bytes": 420568,
+   "source": "models/Old_Lowa_Gore-Tex_Boot_2021__FREE.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "riding-boot",
+   "name": "Riding boot",
+   "category": "decor",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/riding-boot.glb",
+   "anchor": "floor",
+   "size": [
+    238.5,
+    450,
+    202.1
+   ],
+   "min": [
+    -124.1,
+    0,
+    -96.3
+   ],
+   "max": [
+    114.4,
+    450,
+    105.8
+   ],
+   "tris": 19999,
+   "bytes": 168292,
+   "sourceTris": 29902,
+   "source": "models/Coraline_Riding_Boot.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "worn-shoe",
+   "name": "Worn shoe",
+   "category": "decor",
+   "scenes": [],
+   "file": "assets/props/worn-shoe.glb",
+   "anchor": "floor",
+   "size": [
+    118.4,
+    105.3,
+    290
+   ],
+   "min": [
+    -59.2,
+    0,
+    -145
+   ],
+   "max": [
+    59.2,
+    105.3,
+    145
+   ],
+   "tris": 19999,
+   "bytes": 190164,
+   "sourceTris": 46706,
+   "source": "models/Zapatilla_vieja.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "wallet",
+   "name": "Leather wallet",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/wallet.glb",
+   "anchor": "floor",
+   "size": [
+    110.2,
+    31.2,
+    102.5
+   ],
+   "min": [
+    -55.1,
+    0,
+    -51.2
+   ],
+   "max": [
+    55,
+    31.2,
+    51.3
+   ],
+   "tris": 12000,
+   "bytes": 153888,
+   "sourceTris": 53822,
+   "source": "models/Brown_Leather_Wallet.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "crossbody-bag",
+   "name": "Crossbody bag",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "bedroom"
+   ],
+   "file": "assets/props/crossbody-bag.glb",
+   "anchor": "floor",
+   "size": [
+    185.6,
+    300,
+    165.6
+   ],
+   "min": [
+    -92.8,
+    0,
+    -82.5
+   ],
+   "max": [
+    92.8,
+    300,
+    83
+   ],
+   "tris": 20083,
+   "bytes": 270408,
+   "sourceTris": 31951,
+   "source": "models/Crossbody_Bag_Final.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "backpack-large",
+   "name": "Large backpack",
+   "category": "decor",
+   "scenes": [
+    "gym",
+    "bedroom"
+   ],
+   "file": "assets/props/backpack-large.glb",
+   "anchor": "floor",
+   "size": [
+    469.6,
+    550,
+    478.2
+   ],
+   "min": [
+    -234.8,
+    0,
+    -239.1
+   ],
+   "max": [
+    234.8,
+    550,
+    239.1
+   ],
+   "tris": 20000,
+   "bytes": 194364,
+   "sourceTris": 81679,
+   "source": "models/Large_Backpack_-_White_Texture_Mockup.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "backpack-leather",
+   "name": "Leather backpack",
+   "category": "decor",
+   "scenes": [
+    "office",
+    "study"
+   ],
+   "file": "assets/props/backpack-leather.glb",
+   "anchor": "floor",
+   "size": [
+    466,
+    450,
+    359.2
+   ],
+   "min": [
+    -233,
+    0,
+    -179.6
+   ],
+   "max": [
+    233,
+    450,
+    179.6
+   ],
+   "tris": 19995,
+   "bytes": 217592,
+   "sourceTris": 76740,
+   "source": "models/Leather_backpack.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "backpack-daypack",
+   "name": "Daypack",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "gym"
+   ],
+   "file": "assets/props/backpack-daypack.glb",
+   "anchor": "floor",
+   "size": [
+    366.5,
+    480.1,
+    357
+   ],
+   "min": [
+    -183.3,
+    -0.1,
+    -178.5
+   ],
+   "max": [
+    183.2,
+    480,
+    178.5
+   ],
+   "tris": 20000,
+   "bytes": 187468,
+   "sourceTris": 104368,
+   "source": "models/Backpack_-_July_Daybreak_-_Game_Ready.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "duffel-bag",
+   "name": "Duffel bag",
+   "category": "decor",
+   "scenes": [
+    "gym"
+   ],
+   "file": "assets/props/duffel-bag.glb",
+   "anchor": "floor",
+   "size": [
+    298.2,
+    600,
+    379.4
+   ],
+   "min": [
+    -148.8,
+    0,
+    -190
+   ],
+   "max": [
+    149.4,
+    600,
+    189.4
+   ],
+   "tris": 7076,
+   "bytes": 118276,
+   "source": "models/Mountain_Track_Bag.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "camera-bag",
+   "name": "Camera bag",
+   "category": "decor",
+   "scenes": [
+    "creative",
+    "study"
+   ],
+   "file": "assets/props/camera-bag.glb",
+   "anchor": "floor",
+   "size": [
+    314.7,
+    186.4,
+    199.1
+   ],
+   "min": [
+    -156.6,
+    6.5,
+    -99.5
+   ],
+   "max": [
+    158.1,
+    192.9,
+    99.6
+   ],
+   "tris": 19999,
+   "bytes": 275948,
+   "sourceTris": 138038,
+   "source": "models/Old_Camera_Bag_.RAWscan.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "cape-coat",
+   "name": "Cape coat",
+   "category": "decor",
+   "scenes": [
+    "bedroom",
+    "gallery"
+   ],
+   "file": "assets/props/cape-coat.glb",
+   "anchor": "floor",
+   "size": [
+    413.9,
+    1200.1,
+    531.3
+   ],
+   "min": [
+    -206.8,
+    0,
+    -265.8
+   ],
+   "max": [
+    207.1,
+    1200.1,
+    265.5
+   ],
+   "tris": 20339,
+   "bytes": 689020,
+   "sourceTris": 145537,
+   "source": "models/Cape_coat.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "leather-cap",
+   "name": "Leather cap",
+   "category": "decor",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/leather-cap.glb",
+   "anchor": "floor",
+   "size": [
+    206.4,
+    113.4,
+    280
+   ],
+   "min": [
+    -103.2,
+    0,
+    -140
+   ],
+   "max": [
+    103.2,
+    113.4,
+    140
+   ],
+   "tris": 408,
+   "bytes": 63636,
+   "source": "models/The_cap_is_leather.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "designer-bag",
+   "name": "Designer bag",
+   "category": "decor",
+   "scenes": [
+    "bedroom",
+    "lounge"
+   ],
+   "file": "assets/props/designer-bag.glb",
+   "anchor": "floor",
+   "size": [
+    319.8,
+    264.1,
+    120.5
+   ],
+   "min": [
+    -159.9,
+    -0.1,
+    -60.2
+   ],
+   "max": [
+    159.9,
+    264.1,
+    60.3
+   ],
+   "tris": 19988,
+   "bytes": 324492,
+   "sourceTris": 156942,
+   "source": "models/Gucci.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "glasses-2",
+   "name": "Glasses",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/glasses-2.glb",
+   "anchor": "floor",
+   "size": [
+    145,
+    49.7,
+    137.6
+   ],
+   "min": [
+    -72.5,
+    0,
+    -68.8
+   ],
+   "max": [
+    72.5,
+    49.7,
+    68.8
+   ],
+   "tris": 11996,
+   "bytes": 146052,
+   "sourceTris": 120640,
+   "source": "models/Glasses.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "glasses-3",
+   "name": "Reading glasses",
+   "category": "desk",
+   "scenes": [
+    "study",
+    "home"
+   ],
+   "file": "assets/props/glasses-3.glb",
+   "anchor": "floor",
+   "size": [
+    118.9,
+    35.8,
+    145
+   ],
+   "min": [
+    -59.4,
+    0,
+    -72.5
+   ],
+   "max": [
+    59.4,
+    35.8,
+    72.5
+   ],
+   "tris": 11999,
+   "bytes": 177456,
+   "sourceTris": 32152,
+   "source": "models/Glasses (2).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "retro-camera",
+   "name": "Retro camera",
+   "category": "decor",
+   "scenes": [
+    "creative",
+    "study"
+   ],
+   "file": "assets/props/retro-camera.glb",
+   "anchor": "floor",
+   "size": [
+    140,
+    87.3,
+    115
+   ],
+   "min": [
+    -70,
+    0,
+    -57.5
+   ],
+   "max": [
+    70,
+    87.3,
+    57.5
+   ],
+   "tris": 17984,
+   "bytes": 239736,
+   "source": "models/Canon_AT-1_Retro_Camera.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "rangefinder-camera",
+   "name": "Rangefinder camera",
+   "category": "decor",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/rangefinder-camera.glb",
+   "anchor": "floor",
+   "size": [
+    75.8,
+    84.1,
+    140
+   ],
+   "min": [
+    -37.9,
+    0,
+    -70
+   ],
+   "max": [
+    37.9,
+    84.1,
+    70
+   ],
+   "tris": 17459,
+   "bytes": 316156,
+   "source": "models/Digital_Rangefinder_camera.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "droid-figure",
+   "name": "Droid figure",
+   "category": "toys",
+   "scenes": [
+    "scifi",
+    "gaming"
+   ],
+   "file": "assets/props/droid-figure.glb",
+   "anchor": "floor",
+   "size": [
+    484.4,
+    1090,
+    705.1
+   ],
+   "min": [
+    -242.2,
+    0,
+    -352.5
+   ],
+   "max": [
+    242.2,
+    1090,
+    352.5
+   ],
+   "tris": 20063,
+   "bytes": 358716,
+   "sourceTris": 30422,
+   "source": "models/R2-D2.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "green-child-figure",
+   "name": "Small alien figure",
+   "category": "toys",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/green-child-figure.glb",
+   "anchor": "floor",
+   "size": [
+    363.5,
+    399.7,
+    377.5
+   ],
+   "min": [
+    -181.8,
+    -0.4,
+    -189.1
+   ],
+   "max": [
+    181.7,
+    399.3,
+    188.5
+   ],
+   "tris": 29987,
+   "bytes": 534140,
+   "sourceTris": 334399,
+   "source": "models/Mandalorian_-_Grogu__The_force.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hero-figure",
+   "name": "Superhero figure",
+   "category": "toys",
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "file": "assets/props/hero-figure.glb",
+   "anchor": "floor",
+   "size": [
+    268.5,
+    300,
+    68.6
+   ],
+   "min": [
+    -134.3,
+    0,
+    -34.3
+   ],
+   "max": [
+    134.3,
+    300,
+    34.3
+   ],
+   "tris": 19997,
+   "bytes": 632152,
+   "sourceTris": 37798,
+   "source": "models/Spiderman.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "turtle-figure",
+   "name": "Turtle figure",
+   "category": "toys",
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "file": "assets/props/turtle-figure.glb",
+   "anchor": "floor",
+   "size": [
+    200.3,
+    280,
+    260.5
+   ],
+   "min": [
+    -100.1,
+    0,
+    -130.3
+   ],
+   "max": [
+    100.2,
+    280,
+    130.2
+   ],
+   "tris": 19998,
+   "bytes": 199820,
+   "sourceTris": 289720,
+   "source": "models/Ninja_Turtles_Leonardo_Toy.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "virtual-pet",
+   "name": "Virtual pet toy",
+   "category": "toys",
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "file": "assets/props/virtual-pet.glb",
+   "anchor": "floor",
+   "size": [
+    43.7,
+    57.5,
+    33.5
+   ],
+   "min": [
+    -22.9,
+    1.7,
+    -16.8
+   ],
+   "max": [
+    20.8,
+    59.2,
+    16.8
+   ],
+   "tris": 4250,
+   "bytes": 136600,
+   "source": "models/Tamagotchi_Pet_Sailor_Moon.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "toy-train",
+   "name": "Toy train",
+   "category": "toys",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/toy-train.glb",
+   "anchor": "floor",
+   "size": [
+    285.5,
+    248,
+    299.9
+   ],
+   "min": [
+    -142.8,
+    0,
+    -149.9
+   ],
+   "max": [
+    142.7,
+    247.9,
+    149.9
+   ],
+   "tris": 19999,
+   "bytes": 218236,
+   "sourceTris": 61906,
+   "source": "models/Painted_Toy_Train_Model.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "figure-misc",
+   "name": "Collectible figure",
+   "category": "toys",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/figure-misc.glb",
+   "anchor": "floor",
+   "size": [
+    179,
+    300,
+    42.9
+   ],
+   "min": [
+    -89.5,
+    0,
+    -21.4
+   ],
+   "max": [
+    89.5,
+    300,
+    21.4
+   ],
+   "tris": 29995,
+   "bytes": 179924,
+   "sourceTris": 318128,
+   "source": "models/FF.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "table-lamp-plain",
+   "name": "Table lamp",
+   "category": "lighting",
+   "scenes": [
+    "home",
+    "bedroom"
+   ],
+   "file": "assets/props/table-lamp-plain.glb",
+   "anchor": "floor",
+   "size": [
+    531.9,
+    450,
+    583.2
+   ],
+   "min": [
+    -265.9,
+    0,
+    -291.6
+   ],
+   "max": [
+    265.9,
+    450,
+    291.6
+   ],
+   "tris": 39996,
+   "bytes": 341932,
+   "sourceTris": 117996,
+   "source": "models/Lamp.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "retro-light",
+   "name": "Retro light",
+   "category": "lighting",
+   "scenes": [
+    "study",
+    "lounge"
+   ],
+   "file": "assets/props/retro-light.glb",
+   "anchor": "floor",
+   "size": [
+    306,
+    400,
+    85.5
+   ],
+   "min": [
+    -153,
+    0,
+    -42.7
+   ],
+   "max": [
+    153,
+    400,
+    42.7
+   ],
+   "tris": 39995,
+   "bytes": 433852,
+   "sourceTris": 130792,
+   "source": "models/Retro_Light_-_oldclean_model.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "chandelier-2",
+   "name": "Ceiling chandelier, small",
+   "category": "lighting",
+   "scenes": [
+    "bedroom",
+    "lounge"
+   ],
+   "file": "assets/props/chandelier-2.glb",
+   "anchor": "ceiling",
+   "size": [
+    526.6,
+    112.6,
+    550
+   ],
+   "min": [
+    -263.3,
+    -112.6,
+    -275
+   ],
+   "max": [
+    263.3,
+    0,
+    275
+   ],
+   "tris": 5203,
+   "bytes": 34856,
+   "source": "models/Ceiling_chandelier (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "room-bedroom-minimal",
+   "name": "Minimal bedroom set",
+   "category": "environment",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/room-bedroom-minimal.glb",
+   "anchor": "floor",
+   "size": [
+    4500,
+    2571.4,
+    3268.7
+   ],
+   "min": [
+    -2250,
+    0,
+    -1634.4
+   ],
+   "max": [
+    2250,
+    2571.4,
+    1634.4
+   ],
+   "tris": 79997,
+   "bytes": 1101396,
+   "sourceTris": 83902,
+   "source": "models/Minimalistic_Modern_Bedroom.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "room-bedroom-modern",
+   "name": "Modern bedroom set",
+   "category": "environment",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/room-bedroom-modern.glb",
+   "anchor": "floor",
+   "size": [
+    2575.9,
+    2160,
+    4500
+   ],
+   "min": [
+    -1287.9,
+    0,
+    -2250
+   ],
+   "max": [
+    1287.9,
+    2160,
+    2250
+   ],
+   "tris": 56226,
+   "bytes": 1005220,
+   "source": "models/Modern_Bedroom.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "room-bedroom-modern-2",
+   "name": "Modern bedroom set, two",
+   "category": "environment",
+   "scenes": [],
+   "file": "assets/props/room-bedroom-modern-2.glb",
+   "anchor": "floor",
+   "size": [
+    4500,
+    1910.9,
+    3453.5
+   ],
+   "min": [
+    -2250,
+    0,
+    -1726.8
+   ],
+   "max": [
+    2250,
+    1910.9,
+    1726.8
+   ],
+   "tris": 59174,
+   "bytes": 1874220,
+   "source": "models/Modern_Bedroom (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "room-bedroom-scifi",
+   "name": "Sci-fi bedroom set",
+   "category": "environment",
+   "scenes": [
+    "scifi"
+   ],
+   "file": "assets/props/room-bedroom-scifi.glb",
+   "anchor": "floor",
+   "size": [
+    4109.1,
+    2935,
+    4500
+   ],
+   "min": [
+    -2054.5,
+    0,
+    -2250
+   ],
+   "max": [
+    2054.5,
+    2935,
+    2250
+   ],
+   "tris": 80212,
+   "bytes": 946884,
+   "sourceTris": 430915,
+   "source": "models/Sci-Fi_Bedroom.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "room-living",
+   "name": "Living room set",
+   "category": "environment",
+   "scenes": [
+    "lounge"
+   ],
+   "file": "assets/props/room-living.glb",
+   "anchor": "floor",
+   "size": [
+    4786.4,
+    2907.4,
+    4999.8
+   ],
+   "min": [
+    -2394.3,
+    0,
+    -2500
+   ],
+   "max": [
+    2392.1,
+    2907.4,
+    2499.8
+   ],
+   "tris": 73497,
+   "bytes": 855800,
+   "source": "models/Simple_Modern_Living_Room.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "room-office-modern",
+   "name": "Modern office set",
+   "category": "environment",
+   "scenes": [],
+   "file": "assets/props/room-office-modern.glb",
+   "anchor": "floor",
+   "size": [
+    5000,
+    2576.6,
+    3715.9
+   ],
+   "min": [
+    -2500,
+    0,
+    -1857.9
+   ],
+   "max": [
+    2500,
+    2576.6,
+    1858
+   ],
+   "tris": 80006,
+   "bytes": 1508200,
+   "sourceTris": 87278,
+   "source": "models/Modern_Office (2).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "room-office-minimal",
+   "name": "Minimal office set",
+   "category": "environment",
+   "scenes": [],
+   "file": "assets/props/room-office-minimal.glb",
+   "anchor": "floor",
+   "size": [
+    2631.4,
+    1628.2,
+    5000
+   ],
+   "min": [
+    -1315.7,
+    0,
+    -2500
+   ],
+   "max": [
+    1315.7,
+    1628.2,
+    2500
+   ],
+   "tris": 80191,
+   "bytes": 1371592,
+   "sourceTris": 133674,
+   "source": "models/Minimalistic_Modern_Office (2).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "room-office-small",
+   "name": "Small office set",
+   "category": "environment",
+   "scenes": [],
+   "file": "assets/props/room-office-small.glb",
+   "anchor": "floor",
+   "size": [
+    2016.5,
+    2014.6,
+    4000
+   ],
+   "min": [
+    -1008.3,
+    0,
+    -2000
+   ],
+   "max": [
+    1008.2,
+    2014.6,
+    2000
+   ],
+   "tris": 80140,
+   "bytes": 901908,
+   "sourceTris": 101488,
+   "source": "models/Small_Office (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "room-office-black",
+   "name": "Black office set",
+   "category": "environment",
+   "scenes": [],
+   "file": "assets/props/room-office-black.glb",
+   "anchor": "floor",
+   "size": [
+    5000,
+    1442.8,
+    5000
+   ],
+   "min": [
+    -2500,
+    0,
+    -2500
+   ],
+   "max": [
+    2500,
+    1442.8,
+    2500
+   ],
+   "tris": 83805,
+   "bytes": 1389440,
+   "sourceTris": 360599,
+   "source": "models/HOUSE_BLACK_-_OFFICE (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "room-gallery",
+   "name": "Showroom gallery",
+   "category": "environment",
+   "scenes": [
+    "gallery"
+   ],
+   "file": "assets/props/room-gallery.glb",
+   "anchor": "floor",
+   "size": [
+    8000,
+    414.9,
+    5854.5
+   ],
+   "min": [
+    -4000,
+    0,
+    -2927.3
+   ],
+   "max": [
+    4000,
+    414.9,
+    2927.3
+   ],
+   "tris": 99997,
+   "bytes": 1969124,
+   "sourceTris": 106783,
+   "source": "models/Metallic_Showroom_Gallery.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hangar",
+   "name": "Aircraft hangar",
+   "category": "environment",
+   "scenes": [],
+   "file": "assets/props/hangar.glb",
+   "anchor": "floor",
+   "size": [
+    10913.2,
+    3536.3,
+    20000
+   ],
+   "min": [
+    -5456.6,
+    0,
+    -10000
+   ],
+   "max": [
+    5456.6,
+    3536.3,
+    10000
+   ],
+   "tris": 80003,
+   "bytes": 3301724,
+   "sourceTris": 120556,
+   "source": "models/Aircraft_Hangar.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "house-modern",
+   "name": "Modern house",
+   "category": "environment",
+   "scenes": [],
+   "file": "assets/props/house-modern.glb",
+   "anchor": "floor",
+   "size": [
+    15000,
+    3170.2,
+    9564.5
+   ],
+   "min": [
+    -7500,
+    0,
+    -4782.3
+   ],
+   "max": [
+    7500,
+    3170.2,
+    4782.3
+   ],
+   "tris": 87182,
+   "bytes": 1027860,
+   "sourceTris": 235016,
+   "source": "models/A_modern_house_design.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "house-clay",
+   "name": "Clay concept house",
+   "category": "environment",
+   "scenes": [],
+   "file": "assets/props/house-clay.glb",
+   "anchor": "floor",
+   "size": [
+    9756,
+    2452.9,
+    15000
+   ],
+   "min": [
+    -4878,
+    0,
+    -7500
+   ],
+   "max": [
+    4878,
+    2452.9,
+    7500
+   ],
+   "tris": 32254,
+   "bytes": 582912,
+   "source": "models/Clay_Mansion_Concept_Home.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "school-damage",
+   "name": "Damaged school prop",
+   "category": "environment",
+   "scenes": [],
+   "file": "assets/props/school-damage.glb",
+   "anchor": "floor",
+   "size": [
+    785.4,
+    426.7,
+    3000
+   ],
+   "min": [
+    -392.7,
+    0,
+    -1500
+   ],
+   "max": [
+    392.7,
+    426.7,
+    1500
+   ],
+   "tris": 102054,
+   "bytes": 576808,
+   "sourceTris": 139002,
+   "source": "models/HW_XYZ_School_Damage.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "modern-mirror-2",
+   "name": "Modern mirror",
+   "category": "decor",
+   "scenes": [
+    "bedroom",
+    "home"
+   ],
+   "file": "assets/props/modern-mirror-2.glb",
+   "anchor": "wall-floor",
+   "size": [
+    196.7,
+    1500,
+    681.5
+   ],
+   "min": [
+    -98.3,
+    0,
+    0
+   ],
+   "max": [
+    98.3,
+    1500,
+    681.5
+   ],
+   "tris": 200,
+   "bytes": 7644,
+   "source": "models/Modern_mirror (1).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "table-mirror-2",
+   "name": "Table mirror",
+   "category": "decor",
+   "scenes": [
+    "bedroom"
+   ],
+   "file": "assets/props/table-mirror-2.glb",
+   "anchor": "floor",
+   "size": [
+    217.7,
+    300,
+    173.9
+   ],
+   "min": [
+    -108.9,
+    0,
+    -86.9
+   ],
+   "max": [
+    108.9,
+    300,
+    86.9
+   ],
+   "tris": 3024,
+   "bytes": 36088,
+   "source": "models/Table_Mirror (2).usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "iron-safe",
+   "name": "Antique iron safe",
+   "category": "furniture",
+   "scenes": [
+    "study",
+    "workshop"
+   ],
+   "file": "assets/props/iron-safe.glb",
+   "anchor": "floor",
+   "size": [
+    569,
+    900,
+    750.2
+   ],
+   "min": [
+    -284.5,
+    0,
+    -375.1
+   ],
+   "max": [
+    284.5,
+    900,
+    375.1
+   ],
+   "tris": 2490,
+   "bytes": 157064,
+   "source": "models/Antique_Iron_Safe.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  },
+  {
+   "id": "hifi-speakers",
+   "name": "Hi-fi speaker set",
+   "category": "music",
+   "scenes": [
+    "music",
+    "lounge"
+   ],
+   "file": "assets/props/hifi-speakers.glb",
+   "anchor": "floor",
+   "size": [
+    1114.9,
+    1100.8,
+    425.5
+   ],
+   "min": [
+    -557.5,
+    -0.8,
+    -212.8
+   ],
+   "max": [
+    557.4,
+    1100,
+    212.8
+   ],
+   "tris": 19990,
+   "bytes": 305864,
+   "sourceTris": 148602,
+   "source": "models/Beo_Lab_14_By_Bang_Olufsen.usdz",
+   "license": "unconfirmed",
+   "attribution": null
+  }
+ ],
+ "screens": [
+  {
+   "id": "ceo",
+   "file": "assets/props/screens/ceo.jpg",
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "architect",
+   "file": "assets/props/screens/architect.jpg",
+   "scenes": [
+    "office",
+    "creative"
+   ]
+  },
+  {
+   "id": "architect-portrait",
+   "file": "assets/props/screens/architect-portrait.jpg",
+   "scenes": [
+    "creative"
+   ]
+  },
+  {
+   "id": "marketing",
+   "file": "assets/props/screens/marketing.jpg",
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "designer-laptop",
+   "file": "assets/props/screens/designer-laptop.png",
+   "scenes": [
+    "creative",
+    "home"
+   ]
+  }
+ ],
+ "generated": "2026-09-11T04:26:20.096Z",
+ "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
+}

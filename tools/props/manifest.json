@@ -1,0 +1,5189 @@
+{
+ "_readme": "Source of truth for the prop library. `fit` is the real-world size in millimetres along one axis of the final Y-up model ('max' = longest side). `anchor` says where the origin sits: floor (base at y=0), ceiling (top at y=0), wall (back face at z=0, faces +z), wall-floor, or center. `scenes` lists room scenes that may use the prop; `category` groups the picker. Sizes marked in `sizeNote` are estimates, not manufacturer data. `exclude` lists object-name fragments deleted on import (ground discs, floor slabs). `material` overrides image-free materials: color [r,g,b] 0-1, roughness, metallic, alpha, emissive, emissiveStrength. `license` and `attribution` default to 'unconfirmed' / null and are copied into assets/props/index.json; fill them in per prop as terms are verified. `budget` caps a prop's triangle count: the converter simplifies anything above it, which matters because the photogrammetry sources run to hundreds of thousands of triangles each. `textureSize` overrides the library default per prop.",
+ "textureSize": 1024,
+ "props": [
+  {
+   "id": "apple",
+   "name": "Apple",
+   "source": "Apple.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 75
+   },
+   "scenes": [
+    "home",
+    "kitchen"
+   ]
+  },
+  {
+   "id": "orange",
+   "name": "Orange slice",
+   "source": "Orange.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 75
+   },
+   "scenes": [
+    "home",
+    "kitchen"
+   ]
+  },
+  {
+   "id": "airtag",
+   "name": "Apple AirTag",
+   "source": "Apple_AirTag.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 32
+   },
+   "scenes": [
+    "office",
+    "home"
+   ]
+  },
+  {
+   "id": "earbuds",
+   "name": "Apple Earbuds",
+   "source": "Apple_Earbuds.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 60
+   },
+   "scenes": [
+    "office",
+    "home",
+    "music"
+   ]
+  },
+  {
+   "id": "apple-keyboard",
+   "name": "Apple Magic Keyboard",
+   "source": "Apple_Keyboard.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 279
+   },
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ]
+  },
+  {
+   "id": "mac-studio",
+   "name": "Apple Mac Studio",
+   "source": "Apple_Mac_Studio.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 197
+   },
+   "scenes": [
+    "office",
+    "creative",
+    "music"
+   ]
+  },
+  {
+   "id": "apple-pencil",
+   "name": "Apple Pencil",
+   "source": "Apple_Pencil.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 166
+   },
+   "scenes": [
+    "creative"
+   ]
+  },
+  {
+   "id": "magic-mouse",
+   "name": "Apple Magic Mouse",
+   "source": "apple_magic_mouse.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 113
+   },
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ]
+  },
+  {
+   "id": "barber-scissors",
+   "name": "Barber scissors",
+   "source": "Barbers_scissors.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 165
+   },
+   "scenes": []
+  },
+  {
+   "id": "beer-can",
+   "name": "Beer can",
+   "source": "Beer_can.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 122
+   },
+   "scenes": [
+    "gaming",
+    "lounge"
+   ]
+  },
+  {
+   "id": "ottoman",
+   "name": "Black leather ottoman",
+   "source": "Black_Leather_Ottoman.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 430
+   },
+   "scenes": [
+    "home",
+    "lounge"
+   ]
+  },
+  {
+   "id": "office-keyboard",
+   "name": "Black office keyboard",
+   "source": "Black_Office_Keyboard.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 440
+   },
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "briefcase",
+   "name": "Briefcase",
+   "source": "Brief_Case.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 450
+   },
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "beef-protein",
+   "name": "Beef protein isolate",
+   "source": "Bulk_Supplements_Beef_Protein_Isolate.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "gym"
+   ]
+  },
+  {
+   "id": "cardboard-boxes",
+   "name": "Cardboard box set",
+   "source": "Cardboard_Box_Set-_Low_Poly.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 600
+   },
+   "scenes": [
+    "office",
+    "home"
+   ]
+  },
+  {
+   "id": "cat-sitting",
+   "name": "Cat, sitting",
+   "source": "Cat_Sitting.usdz",
+   "category": "pets",
+   "fit": {
+    "axis": "y",
+    "mm": 320
+   },
+   "scenes": [
+    "home"
+   ]
+  },
+  {
+   "id": "cat",
+   "name": "Cat",
+   "source": "cat.usdz",
+   "category": "pets",
+   "fit": {
+    "axis": "y",
+    "mm": 280
+   },
+   "scenes": [
+    "home"
+   ]
+  },
+  {
+   "id": "cat-walk",
+   "name": "Cat, walking",
+   "source": "cat_Walk.usdz",
+   "category": "pets",
+   "fit": {
+    "axis": "y",
+    "mm": 280
+   },
+   "scenes": [
+    "home"
+   ]
+  },
+  {
+   "id": "chandelier",
+   "name": "Ceiling chandelier",
+   "source": "Ceiling_chandelier.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "max",
+    "mm": 650
+   },
+   "anchor": "ceiling",
+   "scenes": [
+    "home",
+    "lounge"
+   ]
+  },
+  {
+   "id": "hand-fan",
+   "name": "Chinese hand fan",
+   "source": "Chinese_Hand_Fan.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 330
+   },
+   "scenes": [
+    "home"
+   ],
+   "anchor": "wall",
+   "rotateX": 90
+  },
+  {
+   "id": "takeout-boxes",
+   "name": "Chinese take-out boxes",
+   "source": "Chinese_take_Out_Boxes.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "gaming",
+    "kitchen"
+   ]
+  },
+  {
+   "id": "clipboard",
+   "name": "Clipboard",
+   "source": "Clipboard.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 330
+   },
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "wheelchair",
+   "name": "Combat wheelchair (iron and brass)",
+   "source": "Combat_Wheelchair_Base_Model_-_Iron_and_Brass.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 950
+   },
+   "scenes": []
+  },
+  {
+   "id": "cutting-board",
+   "name": "Cutting board with meat",
+   "source": "Cutting_board_with_raw_meat_HandPainted_FREE.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 400
+   },
+   "scenes": [
+    "kitchen"
+   ]
+  },
+  {
+   "id": "drawing-tablet",
+   "name": "Drawing tablet",
+   "source": "DP_2_HW_10_Drawing_tablet.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "creative"
+   ]
+  },
+  {
+   "id": "desk-lamp",
+   "name": "Desk lamp",
+   "source": "Desk_Lamp.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "y",
+    "mm": 450
+   },
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ],
+   "exclude": [
+    "Object_3"
+   ],
+   "sizeNote": "The source carries an 850 mm ground disc (mesh Object_3), removed here."
+  },
+  {
+   "id": "letter-tray",
+   "name": "Document letter tray",
+   "source": "Document_Letter_Tray__Documents_Organizer.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 350
+   },
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "full-length-mirror",
+   "name": "Full-length mirror",
+   "source": "Espejo_Cuerpo_Entero_-__Full_Length_Mirror.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 1600
+   },
+   "anchor": "wall-floor",
+   "scenes": [
+    "home",
+    "gym"
+   ]
+  },
+  {
+   "id": "exercise-equipment",
+   "name": "Exercise equipment",
+   "source": "Exercise_equipment.usdz",
+   "category": "fitness",
+   "fit": {
+    "axis": "max",
+    "mm": 1000
+   },
+   "scenes": [
+    "gym"
+   ]
+  },
+  {
+   "id": "tesla-tequila",
+   "name": "Tequila bottle on stand",
+   "source": "FREE_Tesla_Tequila.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "lounge"
+   ]
+  },
+  {
+   "id": "foosball",
+   "name": "Foosball table",
+   "source": "Foosball_table.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 1450
+   },
+   "scenes": [
+    "gaming",
+    "lounge"
+   ]
+  },
+  {
+   "id": "trash-can-futuristic",
+   "name": "Futuristic trash can",
+   "source": "Futuristic_Trash_Can.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 700
+   },
+   "scenes": [
+    "scifi",
+    "gaming"
+   ]
+  },
+  {
+   "id": "gaming-laptop",
+   "name": "Gaming laptop",
+   "source": "Gaming_Laptop.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 380
+   },
+   "scenes": [
+    "gaming"
+   ]
+  },
+  {
+   "id": "glasses",
+   "name": "Glasses",
+   "source": "Glasses (1).usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 145
+   },
+   "scenes": [
+    "office",
+    "home"
+   ]
+  },
+  {
+   "id": "heart-glasses",
+   "name": "Heart-shaped glasses",
+   "source": "Heart-shaped_glasses.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 145
+   },
+   "scenes": [
+    "home"
+   ]
+  },
+  {
+   "id": "binoculars",
+   "name": "Binoculars",
+   "source": "HW6.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 180
+   },
+   "scenes": [
+    "home",
+    "office"
+   ]
+  },
+  {
+   "id": "printer-3d",
+   "name": "Desktop 3D printer",
+   "source": "HW_XYZ_School_detailing_2.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "y",
+    "mm": 450
+   },
+   "scenes": [
+    "creative"
+   ]
+  },
+  {
+   "id": "hanging-led-lamp",
+   "name": "Hanging LED lamp",
+   "source": "Hanging_LED_Lamp.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "x",
+    "mm": 400
+   },
+   "anchor": "ceiling",
+   "scenes": [
+    "home",
+    "creative",
+    "lounge"
+   ]
+  },
+  {
+   "id": "hemp-protein",
+   "name": "Hemp protein",
+   "source": "Hemp_protein.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 250
+   },
+   "scenes": [
+    "gym"
+   ]
+  },
+  {
+   "id": "insulated-mug",
+   "name": "Insulated mug",
+   "source": "Insulated_Mug.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "y",
+    "mm": 150
+   },
+   "scenes": [
+    "office",
+    "home"
+   ]
+  },
+  {
+   "id": "tea-cup",
+   "name": "Japanese tea cup",
+   "source": "Japanese_Tea_Cup.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "y",
+    "mm": 70
+   },
+   "scenes": [
+    "home",
+    "creative"
+   ]
+  },
+  {
+   "id": "knife-set",
+   "name": "Kitchen knife set",
+   "source": "Kitchen_Knife_Set.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 350
+   },
+   "scenes": [
+    "kitchen"
+   ]
+  },
+  {
+   "id": "kitchen-scissors",
+   "name": "Kitchen scissors",
+   "source": "Kitchen_Scissors.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 220
+   },
+   "scenes": [
+    "kitchen"
+   ]
+  },
+  {
+   "id": "led-ceiling-light",
+   "name": "LED ceiling light",
+   "source": "LED_Ceiling_Light.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "max",
+    "mm": 600
+   },
+   "anchor": "ceiling",
+   "scenes": [
+    "office",
+    "gaming",
+    "scifi"
+   ]
+  },
+  {
+   "id": "lava-lamp",
+   "name": "Lava lamp",
+   "source": "Lava_Lamp.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "y",
+    "mm": 400
+   },
+   "scenes": [
+    "gaming",
+    "music",
+    "lounge"
+   ]
+  },
+  {
+   "id": "sofa",
+   "name": "Black leather sofa",
+   "source": "Leather_Black_Sofa.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 2600
+   },
+   "scenes": [
+    "home",
+    "lounge",
+    "gaming"
+   ],
+   "exclude": [
+    "floor"
+   ],
+   "sizeNote": "The source includes a square floor slab, removed here."
+  },
+  {
+   "id": "lego",
+   "name": "Lego",
+   "source": "Lego.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 100
+   },
+   "scenes": [
+    "gaming",
+    "home"
+   ],
+   "sizeNote": "Shown at 100 mm, larger than a real minifigure, so it reads at desk scale."
+  },
+  {
+   "id": "lego-bricks",
+   "name": "Lego bricks",
+   "source": "Lego_Bricks.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "max",
+    "mm": 400
+   },
+   "scenes": [
+    "gaming",
+    "home"
+   ]
+  },
+  {
+   "id": "recessed-light",
+   "name": "Recessed light",
+   "source": "Lighting_Fixture_-_3D_Recessed_Light.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "max",
+    "mm": 150
+   },
+   "anchor": "ceiling",
+   "scenes": [
+    "office",
+    "scifi"
+   ]
+  },
+  {
+   "id": "long-scissors",
+   "name": "Long scissors",
+   "source": "Long_Scissors.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 250
+   },
+   "scenes": [
+    "creative"
+   ]
+  },
+  {
+   "id": "pen",
+   "name": "Luxury pen",
+   "source": "Luxury_Pen.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 140
+   },
+   "scenes": [
+    "office",
+    "creative"
+   ]
+  },
+  {
+   "id": "marble-table-lamp",
+   "name": "Marble and metal table lamp",
+   "source": "Marble_And_Metal_Table_Lamp.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "y",
+    "mm": 550
+   },
+   "scenes": [
+    "home",
+    "lounge"
+   ]
+  },
+  {
+   "id": "metal-ruler",
+   "name": "Metal ruler",
+   "source": "Metal_Ruler.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "creative"
+   ]
+  },
+  {
+   "id": "mickey-ears",
+   "name": "Mouse-ear hat",
+   "source": "Mickey_Mouse_Ear_Hat.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "x",
+    "mm": 250
+   },
+   "scenes": [
+    "home"
+   ]
+  },
+  {
+   "id": "fridge",
+   "name": "Modern fridge",
+   "source": "Modern_Fridge.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 1800
+   },
+   "scenes": [
+    "kitchen"
+   ]
+  },
+  {
+   "id": "modern-lamp",
+   "name": "Modern lamp",
+   "source": "Modern_Lamp.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "y",
+    "mm": 500
+   },
+   "scenes": [
+    "home",
+    "office"
+   ]
+  },
+  {
+   "id": "table-lamps",
+   "name": "Modern table lamps",
+   "source": "Modern_Table_Lamps.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "y",
+    "mm": 550
+   },
+   "scenes": [
+    "home",
+    "lounge"
+   ]
+  },
+  {
+   "id": "villa",
+   "name": "Modern luxury villa",
+   "source": "Modern_luxury_villa_house_building_with_pool.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 20000
+   },
+   "scenes": []
+  },
+  {
+   "id": "modern-mirror",
+   "name": "Modern mirror",
+   "source": "Modern_mirror.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 1700
+   },
+   "anchor": "wall-floor",
+   "scenes": [
+    "home",
+    "gym"
+   ]
+  },
+  {
+   "id": "monitor",
+   "name": "Monitor",
+   "source": "Monitor.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 800
+   },
+   "scenes": [
+    "gaming",
+    "office"
+   ]
+  },
+  {
+   "id": "nasa-mug",
+   "name": "NASA mug",
+   "source": "NASA_Mug.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "y",
+    "mm": 90
+   },
+   "scenes": [
+    "office",
+    "home",
+    "creative",
+    "gaming"
+   ]
+  },
+  {
+   "id": "office-lamp",
+   "name": "Office lamp",
+   "source": "Office_Lamp.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "y",
+    "mm": 450
+   },
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "office-phone",
+   "name": "Office phone",
+   "source": "Office_Phone.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 220
+   },
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "oval-mirror",
+   "name": "Oval mirror",
+   "source": "Oval_mirror.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 900
+   },
+   "anchor": "wall",
+   "scenes": [
+    "home",
+    "lounge"
+   ]
+  },
+  {
+   "id": "painted-mug",
+   "name": "Painted mug",
+   "source": "Painted_Mug.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "y",
+    "mm": 90
+   },
+   "scenes": [
+    "home",
+    "creative"
+   ]
+  },
+  {
+   "id": "paper-bin",
+   "name": "Paper waste bin",
+   "source": "Paper_Waste_Bin.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ]
+  },
+  {
+   "id": "paper-drawer",
+   "name": "Paper drawer",
+   "source": "Paper_drawer.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 350
+   },
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "papers-envelopes",
+   "name": "Papers and envelopes",
+   "source": "Papers__Envelopes.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 450
+   },
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "papers",
+   "name": "Papers",
+   "source": "Papers_from_Poly_by_Google.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "office",
+    "creative"
+   ],
+   "rotateX": 90
+  },
+  {
+   "id": "gaming-pc",
+   "name": "Gaming PC",
+   "source": "Pc_Gamer.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "y",
+    "mm": 500
+   },
+   "scenes": [
+    "gaming"
+   ]
+  },
+  {
+   "id": "picture-frame",
+   "name": "Picture frame",
+   "source": "Picture_Frame_-_Cat.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 250
+   },
+   "scenes": [
+    "home",
+    "office"
+   ],
+   "anchor": "wall"
+  },
+  {
+   "id": "razer-keyboard",
+   "name": "Razer Huntsman keyboard",
+   "source": "RAZER_HUNTSMAN.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 445
+   },
+   "scenes": [
+    "gaming"
+   ]
+  },
+  {
+   "id": "hugo-mirror",
+   "name": "Round mirror",
+   "source": "RUSTA_Hugo_Mirror.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 800
+   },
+   "anchor": "wall",
+   "rotateY": 270,
+   "scenes": [
+    "home",
+    "lounge"
+   ]
+  },
+  {
+   "id": "sitting-person",
+   "name": "Seated figure",
+   "source": "Rpm2_sitting_erks.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1300
+   },
+   "scenes": []
+  },
+  {
+   "id": "ruler-set-square",
+   "name": "Ruler and set square",
+   "source": "Ruler_and_Set_Square.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "creative"
+   ]
+  },
+  {
+   "id": "samsung-oled-tv",
+   "name": "Samsung OLED 4K TV (65\")",
+   "source": "SAMSUNG_OLED_4K_Smart_TV_S90C.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "x",
+    "mm": 1444
+   },
+   "scenes": [
+    "lounge",
+    "gaming",
+    "home"
+   ]
+  },
+  {
+   "id": "sf-hallway",
+   "name": "Sci-fi hallway",
+   "source": "SF_Hallway.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "y",
+    "mm": 3000
+   },
+   "scenes": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "dog-snacks",
+   "name": "Dog snacks bag",
+   "source": "Sacred_Snacks_Dog_-_3D.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "home"
+   ]
+  },
+  {
+   "id": "samsung-neo-tv",
+   "name": "Samsung Neo QLED TV (50\")",
+   "source": "Samsung_NEO_QN50QN90CAF.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "x",
+    "mm": 1117
+   },
+   "scenes": [
+    "lounge",
+    "gaming",
+    "home"
+   ]
+  },
+  {
+   "id": "sci-fi-hangar",
+   "name": "Sci-fi hangar",
+   "source": "Sci-Fi_Hanger.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "y",
+    "mm": 8000
+   },
+   "scenes": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "tron-studio",
+   "name": "Tron studio (baked)",
+   "source": "Scifi_Tron_Studio__Baked.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "y",
+    "mm": 3000
+   },
+   "scenes": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "shelving",
+   "name": "Shelving",
+   "source": "Shelving_2.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 1800
+   },
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ]
+  },
+  {
+   "id": "sonic-statue",
+   "name": "Classic Sonic statue",
+   "source": "Sonic_Generations_-_Classic_Sonic_Statue.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 250
+   },
+   "scenes": [
+    "gaming"
+   ]
+  },
+  {
+   "id": "space-music",
+   "name": "Space music collage",
+   "source": "Space_Music.usdz",
+   "category": "unsorted",
+   "fit": {
+    "axis": "max",
+    "mm": 1000
+   },
+   "scenes": []
+  },
+  {
+   "id": "spiderman-lego",
+   "name": "Spider-Man LEGO model",
+   "source": "Spider-Man_Homecoming_LEGO_Model.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 150
+   },
+   "scenes": [
+    "gaming",
+    "home"
+   ]
+  },
+  {
+   "id": "survival-props",
+   "name": "Survival prop pack",
+   "source": "Survival_Game_PropAsset_Pack.usdz",
+   "category": "unsorted",
+   "fit": {
+    "axis": "max",
+    "mm": 1500
+   },
+   "scenes": []
+  },
+  {
+   "id": "coffee-table",
+   "name": "Table",
+   "source": "Table.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 1200
+   },
+   "scenes": [
+    "home",
+    "lounge"
+   ]
+  },
+  {
+   "id": "table-mirror",
+   "name": "Table mirror",
+   "source": "Table_Mirror.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "home"
+   ]
+  },
+  {
+   "id": "tablet-folder",
+   "name": "Tablet folder",
+   "source": "Tablet_folder.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 260
+   },
+   "scenes": [
+    "office",
+    "creative"
+   ]
+  },
+  {
+   "id": "trash-basket",
+   "name": "Trash basket",
+   "source": "Trash_basket.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "backpack",
+   "name": "Traveller's backpack",
+   "source": "Travelers_backpack_Dnd.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 500
+   },
+   "scenes": [
+    "home",
+    "gaming"
+   ]
+  },
+  {
+   "id": "sports-bottle",
+   "name": "Sports drink bottle",
+   "source": "Umph_Sports_Drink_Bottle.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 240
+   },
+   "scenes": [
+    "gym",
+    "gaming"
+   ]
+  },
+  {
+   "id": "water-bottle",
+   "name": "Water bottle",
+   "source": "WaterBottle001B.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 250
+   },
+   "scenes": [
+    "office",
+    "gym",
+    "home"
+   ]
+  },
+  {
+   "id": "coffee-cups",
+   "name": "Coffee cups",
+   "source": "coffee_cups_low_poly.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 100
+   },
+   "scenes": [
+    "kitchen",
+    "office"
+   ]
+  },
+  {
+   "id": "football",
+   "name": "World Cup football",
+   "source": "fifa_world_cup_ball.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 220
+   },
+   "scenes": [
+    "gaming",
+    "home",
+    "gym"
+   ]
+  },
+  {
+   "id": "curved-monitor",
+   "name": "Curved gaming monitor",
+   "source": "screen.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "x",
+    "mm": 900
+   },
+   "scenes": [
+    "gaming"
+   ]
+  },
+  {
+   "id": "skateboard",
+   "name": "Skateboard",
+   "source": "skateboard.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "max",
+    "mm": 810
+   },
+   "scenes": [
+    "gaming",
+    "home"
+   ]
+  },
+  {
+   "id": "wall-lamp",
+   "name": "Wall lamp",
+   "source": "wall_lamp.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "x",
+    "mm": 300
+   },
+   "anchor": "wall",
+   "scenes": [
+    "home",
+    "lounge",
+    "music"
+   ]
+  },
+  {
+   "id": "canvas",
+   "name": "Canvas (36 x 48 in)",
+   "source": "Canvas.3dm",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 1219
+   },
+   "scenes": [
+    "creative"
+   ],
+   "rotateX": 90,
+   "anchor": "wall",
+   "material": {
+    "color": [
+     0.93,
+     0.91,
+     0.86
+    ],
+    "roughness": 0.9
+   }
+  },
+  {
+   "id": "easel-bar",
+   "name": "Easel bar",
+   "source": "EaselBar.3dm",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 1530
+   },
+   "scenes": [
+    "creative"
+   ],
+   "material": {
+    "color": [
+     0.55,
+     0.38,
+     0.22
+    ],
+    "roughness": 0.7
+   }
+  },
+  {
+   "id": "glass-of-water",
+   "name": "Glass of water",
+   "source": "GlassOfWater.3dm",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 150
+   },
+   "scenes": [
+    "office",
+    "home",
+    "kitchen"
+   ],
+   "material": {
+    "color": [
+     0.85,
+     0.92,
+     0.97
+    ],
+    "roughness": 0.05,
+    "alpha": 0.35
+   }
+  },
+  {
+   "id": "led-wall",
+   "name": "LED backdrop wall (16:9)",
+   "source": "LEDBG.3dm",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 4877
+   },
+   "scenes": [
+    "music",
+    "scifi"
+   ],
+   "rotateY": 90,
+   "material": {
+    "color": [
+     0.06,
+     0.06,
+     0.07
+    ],
+    "roughness": 0.4,
+    "metallic": 0.2,
+    "emissive": [
+     0.02,
+     0.03,
+     0.06
+    ],
+    "emissiveStrength": 1.0
+   }
+  },
+  {
+   "id": "paper-holder",
+   "name": "Paper holder",
+   "source": "PaperHolder.3dm",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 244
+   },
+   "scenes": [
+    "office"
+   ],
+   "material": {
+    "color": [
+     0.75,
+     0.76,
+     0.78
+    ],
+    "roughness": 0.35,
+    "metallic": 0.8
+   }
+  },
+  {
+   "id": "triangle-table",
+   "name": "Triangle table",
+   "source": "TriangleTable.3dm",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 750
+   },
+   "scenes": [],
+   "material": {
+    "color": [
+     0.82,
+     0.8,
+     0.76
+    ],
+    "roughness": 0.5
+   }
+  },
+  {
+   "id": "soda-can",
+   "name": "Soda can",
+   "source": "pepsi.3dm",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 122
+   },
+   "scenes": [
+    "gaming",
+    "lounge",
+    "kitchen"
+   ],
+   "rotateX": 90,
+   "material": {
+    "color": [
+     0.82,
+     0.83,
+     0.86
+    ],
+    "roughness": 0.28,
+    "metallic": 0.75
+   }
+  },
+  {
+   "id": "luxury-chair",
+   "name": "Luxury chair",
+   "source": "A_Luxury_Chair.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 1050
+   },
+   "scenes": [
+    "lounge",
+    "gallery"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "armchair-leather",
+   "name": "Leather armchair",
+   "source": "Armchair_Leather_BOK.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 900
+   },
+   "scenes": [
+    "lounge",
+    "home",
+    "study"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "armchair-poppi",
+   "name": "Poppi armchair",
+   "source": "Armchair_Poppi.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 880
+   },
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "sofa-fabric",
+   "name": "Fabric sofa",
+   "source": "Beautiful_Sofa.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 2200
+   },
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "sofa-leather-couch",
+   "name": "Leather couch",
+   "source": "Leather_Sofacouch.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 2100
+   },
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "sofa-leather-wood",
+   "name": "Leather and wood sofa",
+   "source": "Leather_Wood_Sofa__Game_Ready__4K.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 2000
+   },
+   "scenes": [
+    "lounge",
+    "study"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "sofa-plain",
+   "name": "Sofa",
+   "source": "Sofa.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 2050
+   },
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "lounge-chair-metal",
+   "name": "Metal lounge chair",
+   "source": "Metal_Lounge_Chair.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 780
+   },
+   "scenes": [
+    "lounge",
+    "gallery"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "modern-chair",
+   "name": "Modern chair",
+   "source": "Modern_Chair.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 830
+   },
+   "scenes": [
+    "office",
+    "creative"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "round-chair",
+   "name": "Round chair",
+   "source": "Round_chair.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 800
+   },
+   "scenes": [
+    "lounge",
+    "bedroom"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "gaming-chair",
+   "name": "Gaming chair",
+   "source": "Red_Gaming_Chair_HighQuality.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 1280
+   },
+   "scenes": [
+    "gaming"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "bar-stool-leather",
+   "name": "Leather bar stool",
+   "source": "Leather_High_Bar_Stool.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 1050
+   },
+   "scenes": [
+    "lounge",
+    "kitchen"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "bar-stool-brass",
+   "name": "Brass bar stool",
+   "source": "Pub_Bar_Rose_Gold_Metal_Stool__Wood_Top.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 760
+   },
+   "scenes": [
+    "lounge",
+    "kitchen"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "leather-pouffe",
+   "name": "Leather pouffe",
+   "source": "Leather_Puff.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 420
+   },
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "hall-bench",
+   "name": "Hall bench",
+   "source": "Hall_bench.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 1200
+   },
+   "scenes": [
+    "home",
+    "bedroom"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "gold-cushion",
+   "name": "Gold cushion",
+   "source": "Golden_Pillow.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 450
+   },
+   "scenes": [
+    "lounge",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "electric-wheelchair",
+   "name": "Electric wheelchair",
+   "source": "Compact_electric_wheelchair__rigg_-_100_free.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "max",
+    "mm": 1100
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "antique-table",
+   "name": "Antique table",
+   "source": "Antique_Table.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 1400
+   },
+   "scenes": [
+    "study",
+    "gallery"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "coffee-table-2",
+   "name": "Coffee table",
+   "source": "Coffee_Table.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 1100
+   },
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "drafting-desk",
+   "name": "Art drafting desk",
+   "source": "Art_Drafting_Desk.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 1200
+   },
+   "scenes": [
+    "creative",
+    "study"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "drafting-table",
+   "name": "Drafting table",
+   "source": "Sophia_Drafting_Table_by_BigTurntables.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 1100
+   },
+   "scenes": [
+    "creative"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "study-desk",
+   "name": "Study desk",
+   "source": "Study_Desk.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 1300
+   },
+   "scenes": [
+    "study"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "garage-desk",
+   "name": "Garage workbench",
+   "source": "Garage_Desk.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 1600
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "cabinet",
+   "name": "Cabinet",
+   "source": "Cabinet.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 1900
+   },
+   "scenes": [
+    "home",
+    "study"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "books-cabinet",
+   "name": "Bookcase",
+   "source": "Books_Cabinet.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 2000
+   },
+   "scenes": [
+    "study",
+    "home"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "dresser",
+   "name": "Dresser",
+   "source": "Dresser.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 1100
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "paper-stand",
+   "name": "Paper stand",
+   "source": "Paper_Stand.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "office",
+    "study"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "filing-tray-wood",
+   "name": "Wooden filing tray",
+   "source": "Wooden_flat_filing_tray.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 340
+   },
+   "scenes": [
+    "office",
+    "study"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "case-boxes",
+   "name": "Storage cases",
+   "source": "Case_boxes.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 700
+   },
+   "scenes": [
+    "workshop",
+    "office"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "pallet",
+   "name": "Wooden pallet",
+   "source": "Wooden_palette_Game_ready.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 1200
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "wood-pillar",
+   "name": "Wooden pillar",
+   "source": "Wood_Pillar.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 2400
+   },
+   "scenes": [
+    "gallery",
+    "workshop"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "bed",
+   "name": "Double bed",
+   "source": "BED (1).usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "max",
+    "mm": 2050
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "bed-2",
+   "name": "Bed",
+   "source": "Bed (2).usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "max",
+    "mm": 2000
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "bunk-bed",
+   "name": "Bunk bed",
+   "source": "bunk_bed.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 1700
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "carpet-nain",
+   "name": "Persian Nain carpet",
+   "source": "Persian_Nain_Carpet.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 3000
+   },
+   "scenes": [
+    "lounge",
+    "study"
+   ],
+   "budget": 25000,
+   "textureSize": 512
+  },
+  {
+   "id": "carpet-runner",
+   "name": "Persian runner carpet",
+   "source": "Persian_Malayer_Runner_Carpet.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 2400
+   },
+   "scenes": [
+    "home",
+    "study"
+   ],
+   "budget": 25000,
+   "textureSize": 512
+  },
+  {
+   "id": "monstera",
+   "name": "Monstera in pot",
+   "source": "Monstera_Deliciosa_Potted_Mid-Century_plant.usdz",
+   "category": "plants",
+   "fit": {
+    "axis": "y",
+    "mm": 1250
+   },
+   "scenes": [
+    "home",
+    "creative",
+    "lounge",
+    "office"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "ficus",
+   "name": "Ficus",
+   "source": "ficus.usdz",
+   "category": "plants",
+   "fit": {
+    "axis": "y",
+    "mm": 1500
+   },
+   "scenes": [
+    "home",
+    "office",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "ivy",
+   "name": "Ivy",
+   "source": "Ivy_High_Poly.usdz",
+   "category": "plants",
+   "fit": {
+    "axis": "max",
+    "mm": 900
+   },
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "potted-tree",
+   "name": "Potted tree",
+   "source": "Potted_Tree.usdz",
+   "category": "plants",
+   "fit": {
+    "axis": "y",
+    "mm": 1900
+   },
+   "scenes": [
+    "office",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "fan-palm",
+   "name": "Fan palm",
+   "source": "FREE__Livistona_Chinensis_-_Fan_Palm.usdz",
+   "category": "plants",
+   "fit": {
+    "axis": "y",
+    "mm": 1500
+   },
+   "scenes": [
+    "home",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "rose",
+   "name": "Red rose",
+   "source": "Red_rose.usdz",
+   "category": "plants",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "home",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "strat-guitar",
+   "name": "Stratocaster guitar",
+   "source": "FENDER_Stratocaster__Guitar.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 984
+   },
+   "scenes": [
+    "music"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "les-paul-guitar",
+   "name": "Les Paul guitar",
+   "source": "Les_Paul_Tribute_To_one_of_The_Greats (2).usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 1000
+   },
+   "scenes": [
+    "music"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "rose-neck-guitar",
+   "name": "Engraved guitar",
+   "source": "Silver_Rose_Neck_Guitar.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 1000
+   },
+   "scenes": [
+    "music"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "upright-piano",
+   "name": "Upright piano, 1896",
+   "source": "Hallet_And_Davis_Piano_1896_3DST19.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "x",
+    "mm": 1520
+   },
+   "scenes": [
+    "music",
+    "study"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "chorus-pedal",
+   "name": "Chorus pedal",
+   "source": "BOSS_CH-1_Super_Chorus_.RAWscan.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 129
+   },
+   "scenes": [
+    "music"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "jukebox",
+   "name": "Jukebox",
+   "source": "Jukebox.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "y",
+    "mm": 1550
+   },
+   "scenes": [
+    "music",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "gramophone",
+   "name": "Gramophone",
+   "source": "Deutch_gramophone.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "y",
+    "mm": 700
+   },
+   "scenes": [
+    "music",
+    "study",
+    "gallery"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "sheet-music",
+   "name": "Sheet music",
+   "source": "Sheet_Music.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "music"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "headset-stand",
+   "name": "Headset stand",
+   "source": "Kashmir_headset_stand.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "y",
+    "mm": 280
+   },
+   "scenes": [
+    "music",
+    "gaming"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "boombox",
+   "name": "Boombox",
+   "source": "Sony_Boombox_Photoscan_MEDPOLY.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "x",
+    "mm": 600
+   },
+   "scenes": [
+    "music",
+    "lounge"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "walkman",
+   "name": "Walkman",
+   "source": "Sony_Walkman.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 115
+   },
+   "scenes": [
+    "music",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "party-speaker",
+   "name": "Party speaker",
+   "source": "JBL_Partybox_110.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "y",
+    "mm": 570
+   },
+   "scenes": [
+    "music",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "headphones",
+   "name": "Over-ear headphones",
+   "source": "JBL_Tour_One_M2.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 200
+   },
+   "scenes": [
+    "music",
+    "gaming",
+    "creative"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "earbuds-case",
+   "name": "Earbud case",
+   "source": "JBL_Tour_Pro_2.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 70
+   },
+   "scenes": [
+    "music",
+    "desk"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "space-age-radio",
+   "name": "Space-age radio",
+   "source": "Space_Age_Radio.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "lounge",
+    "scifi"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "wind-up-radio",
+   "name": "Wind-up radio",
+   "source": "Grundig_Radio_FR-250_Free_AM_FM_SW.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 200
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "site-radio",
+   "name": "Site radio",
+   "source": "Makita_Radio.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "walkie-talkie",
+   "name": "Walkie talkie",
+   "source": "Handheld_Portable_Radio__Walkie_Talkie.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 230
+   },
+   "scenes": [
+    "workshop",
+    "scifi"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "radio-gadget",
+   "name": "Radio gadget",
+   "source": "Gadget_-_Radio_-_Flashlight_-_Radar.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 250
+   },
+   "scenes": [
+    "workshop",
+    "scifi"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "ps5",
+   "name": "Games console",
+   "source": "Playstation_5.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "y",
+    "mm": 390
+   },
+   "scenes": [
+    "gaming"
+   ],
+   "budget": 30000,
+   "textureSize": 512
+  },
+  {
+   "id": "ps5-slim",
+   "name": "Games console, slim",
+   "source": "Free_3D_PS5_medpoly.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "y",
+    "mm": 358
+   },
+   "scenes": [
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "ps1",
+   "name": "Retro games console",
+   "source": "Playstation_1.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "x",
+    "mm": 260
+   },
+   "scenes": [
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "handheld-console",
+   "name": "Handheld console",
+   "source": "Nintendo_Game_Boy_Original_1989.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "y",
+    "mm": 148
+   },
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "graphics-card",
+   "name": "Graphics card",
+   "source": "Nvidia_Ge_Force_RTX_4090.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "max",
+    "mm": 336
+   },
+   "scenes": [
+    "gaming",
+    "workshop"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "gaming-desktop",
+   "name": "Gaming desktop",
+   "source": "Gaming_Desktop_PC.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "y",
+    "mm": 480
+   },
+   "scenes": [
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "gaming-case",
+   "name": "Gaming PC case",
+   "source": "Gaming_PC_Case.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "y",
+    "mm": 500
+   },
+   "scenes": [
+    "gaming"
+   ],
+   "budget": 30000,
+   "textureSize": 512
+  },
+  {
+   "id": "pc-setup",
+   "name": "Desktop PC setup",
+   "source": "PC_Setup_FInal.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "x",
+    "mm": 1400
+   },
+   "scenes": [
+    "gaming",
+    "office"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "rgb-keyboard",
+   "name": "Mechanical RGB keyboard",
+   "source": "Mechanical_RGB_Keyboard.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 440
+   },
+   "scenes": [
+    "gaming"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "gaming-mouse",
+   "name": "Gaming mouse",
+   "source": "Computer_mouse_A4Tech_bloody_V7.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 128
+   },
+   "scenes": [
+    "gaming"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "game-controller",
+   "name": "Game controller",
+   "source": "radio_controller.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 160
+   },
+   "scenes": [
+    "gaming",
+    "lounge"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "monitor-slim",
+   "name": "Slim monitor",
+   "source": "Monitor (3).usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "x",
+    "mm": 620
+   },
+   "scenes": [
+    "office",
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "tablet-pc",
+   "name": "Tablet PC",
+   "source": "Microsoft_Surface_Pro_3__Touch_Cover.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "x",
+    "mm": 292
+   },
+   "scenes": [
+    "office",
+    "creative"
+   ],
+   "budget": 30000,
+   "textureSize": 512
+  },
+  {
+   "id": "headset-xr",
+   "name": "Mixed-reality headset",
+   "source": "Apple_Vision_Pro.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "x",
+    "mm": 200
+   },
+   "scenes": [
+    "gaming",
+    "scifi",
+    "creative"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "smart-watch",
+   "name": "Smart watch",
+   "source": "Apple_Watch_Ultra_2.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "y",
+    "mm": 49
+   },
+   "scenes": [
+    "office",
+    "gym"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "wireless-charger",
+   "name": "Wireless charger",
+   "source": "Wireless_Charger_USB_QC.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 100
+   },
+   "scenes": [
+    "office",
+    "bedroom"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "calculator",
+   "name": "Calculator",
+   "source": "Calculator_02.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 160
+   },
+   "scenes": [
+    "office",
+    "study"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "retro-computer",
+   "name": "Retro home computer",
+   "source": "IBM_PCjr_4863_Computer-Freepoly.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "x",
+    "mm": 480
+   },
+   "scenes": [
+    "study",
+    "workshop"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "rotary-phone",
+   "name": "Rotary phone",
+   "source": "Old_Phone-Freepoly.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 230
+   },
+   "scenes": [
+    "study",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "oscilloscope",
+   "name": "Oscilloscope",
+   "source": "Oscilloscope_U1602B.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "x",
+    "mm": 300
+   },
+   "scenes": [
+    "workshop",
+    "scifi"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "voltage-regulator",
+   "name": "Voltage regulator",
+   "source": "Autotransformer_voltage_regulator.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "max",
+    "mm": 260
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "fpv-drone",
+   "name": "FPV drone",
+   "source": "DJI_FVP_-_SDC_PERFORMANCE_EDITION.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "max",
+    "mm": 280
+   },
+   "scenes": [
+    "workshop",
+    "gaming"
+   ],
+   "budget": 30000,
+   "textureSize": 512
+  },
+  {
+   "id": "robotic-arm",
+   "name": "Robotic arm",
+   "source": "Sci_Fi_Robotic_Arm.usdz",
+   "category": "electronics",
+   "fit": {
+    "axis": "y",
+    "mm": 900
+   },
+   "scenes": [
+    "scifi",
+    "workshop"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "mars-rover",
+   "name": "Mars rover model",
+   "source": "Mars_Curiosity_Rover.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 600
+   },
+   "scenes": [
+    "scifi",
+    "study"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "robot-dog",
+   "name": "Robot dog",
+   "source": "Robot_Dog__4KRiggedAsset.usdz",
+   "category": "pets",
+   "fit": {
+    "axis": "max",
+    "mm": 650
+   },
+   "scenes": [
+    "scifi",
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "chop-saw",
+   "name": "Chop saw",
+   "source": "Makita_Chop_Saw.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 600
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "impact-wrench",
+   "name": "Impact wrench",
+   "source": "Makita_DTW1002.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 250
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "hammer-drill",
+   "name": "Hammer drill",
+   "source": "Hammer_drill.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 330
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "hand-drill",
+   "name": "Hand drill",
+   "source": "Old_School_Drill.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "cutter-machine",
+   "name": "Cutting machine",
+   "source": "Cutter_Machine.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 900
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "toolbox-industrial",
+   "name": "Industrial toolbox",
+   "source": "Industrial_Toolbox.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "x",
+    "mm": 600
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "toolbox",
+   "name": "Toolbox",
+   "source": "Toolbox.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "x",
+    "mm": 450
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "tool-cart",
+   "name": "Tool cart",
+   "source": "Tool_Cart.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "y",
+    "mm": 950
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "multi-tool",
+   "name": "Multi-tool",
+   "source": "Leatherman_Signal_Tool.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 115
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "multi-tool-open",
+   "name": "Multi-tool, open",
+   "source": "Rigged_Multi_Tool_Animated.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 150
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "rubber-mallet",
+   "name": "Rubber mallet",
+   "source": "Rubber_Mallet_Photoscan.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 330
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "caliper",
+   "name": "Outside caliper",
+   "source": "outside_caliper.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 200
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "painters-tape",
+   "name": "Painter's tape",
+   "source": "Black_Painters_Tape.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 100
+   },
+   "scenes": [
+    "workshop",
+    "creative"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "polish-bottle",
+   "name": "Polish bottle",
+   "source": "3M_Finesse-It_Polish_-_Extra_Fine.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "y",
+    "mm": 250
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "gas-can",
+   "name": "Fuel can",
+   "source": "Plastic_Gas_Can_Scan_2_LOWPOLY.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "y",
+    "mm": 380
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "sewing-machine",
+   "name": "Sewing machine",
+   "source": "Sewing_Machine.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "x",
+    "mm": 420
+   },
+   "scenes": [
+    "creative",
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "shop-machine",
+   "name": "Shop machine",
+   "source": "machine.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "y",
+    "mm": 1400
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "laser-sight",
+   "name": "Laser sight module",
+   "source": "Steiner_Dbal.usdz",
+   "category": "tools",
+   "fit": {
+    "axis": "max",
+    "mm": 120
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "welder-figure",
+   "name": "Welder",
+   "source": "Human_welder.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1780
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "antique-book",
+   "name": "Antique book with quill",
+   "source": "Antique_Book_with_Quill_and_Key.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 320
+   },
+   "scenes": [
+    "study"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "ink-quill",
+   "name": "Ink bottle and quill",
+   "source": "Ink_Bottle_with_Quill.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "y",
+    "mm": 220
+   },
+   "scenes": [
+    "study"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "bookwheel",
+   "name": "Bookwheel",
+   "source": "The_Bookwheel.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 1900
+   },
+   "scenes": [
+    "study",
+    "gallery"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "journal",
+   "name": "Journal",
+   "source": "Journal_3.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 230
+   },
+   "scenes": [
+    "study",
+    "creative"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "sketchbook",
+   "name": "Sketchbook",
+   "source": "sketchbook.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "creative",
+    "study"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "comics",
+   "name": "Comics collection",
+   "source": "TEX_COMICS_COLLECTION (1).usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 280
+   },
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "magazines",
+   "name": "Magazines",
+   "source": "Harpers_Bazaar_Magazines.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "lounge",
+    "home"
+   ],
+   "budget": 25000,
+   "textureSize": 512
+  },
+  {
+   "id": "globe",
+   "name": "Antique globe",
+   "source": "Antique_Globe.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 600
+   },
+   "scenes": [
+    "study",
+    "gallery"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "heliograph",
+   "name": "Sunshine recorder",
+   "source": "Classic_heliograph__Sunshine_Recorder.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "study",
+    "gallery"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "pencil-case",
+   "name": "Leather pencil case",
+   "source": "Designer_Leather_Pencil_Case.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 210
+   },
+   "scenes": [
+    "creative",
+    "study"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "cork-board",
+   "name": "Cork board",
+   "source": "Cork_Board (2).usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 900
+   },
+   "scenes": [
+    "creative",
+    "office"
+   ],
+   "anchor": "wall",
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "photo-frame",
+   "name": "Photo frame",
+   "source": "Photo_Frame.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 250
+   },
+   "scenes": [
+    "home",
+    "study"
+   ],
+   "anchor": "wall",
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "photo-frame-dog",
+   "name": "Photo frame, dog",
+   "source": "Photo_Frame_of_Dog.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 220
+   },
+   "scenes": [
+    "home"
+   ],
+   "anchor": "wall",
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "photo-frames",
+   "name": "Framed photographs",
+   "source": "Frames_With_Photographs_2.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 600
+   },
+   "scenes": [
+    "home",
+    "study"
+   ],
+   "anchor": "wall",
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "gallery-poster",
+   "name": "Gallery poster",
+   "source": "RICHARD_AVEDON___The_Beatles.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 900
+   },
+   "scenes": [
+    "gallery",
+    "lounge"
+   ],
+   "anchor": "wall",
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "mosaic-art",
+   "name": "Mosaic artwork",
+   "source": "Mosaic_Art_for_Cities_Skylines.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 1200
+   },
+   "scenes": [
+    "gallery"
+   ],
+   "anchor": "wall",
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "carved-emblem",
+   "name": "Carved emblem",
+   "source": "Emblem_of_The_Golden_Head_pharmacy_in_Kraków.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 700
+   },
+   "scenes": [
+    "gallery"
+   ],
+   "anchor": "wall",
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "the-thinker",
+   "name": "The Thinker, cast",
+   "source": "The_Thinker_by_Auguste_Rodin (1).usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 700
+   },
+   "scenes": [
+    "gallery",
+    "study"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "aphrodite",
+   "name": "Aphrodite of Milos, cast",
+   "source": "Aphrodite_of_Milos_a_plaster_cast.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 2020
+   },
+   "scenes": [
+    "gallery"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "mercury-statue",
+   "name": "Mercury, cast",
+   "source": "Mercury_about_to_kill_Argos_by_B.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 1700
+   },
+   "scenes": [
+    "gallery"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "crown",
+   "name": "Crown, prop",
+   "source": "A_royal_crown__a_prop.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 250
+   },
+   "scenes": [
+    "gallery"
+   ],
+   "budget": 30000,
+   "textureSize": 512
+  },
+  {
+   "id": "gold-award",
+   "name": "Golden ball award",
+   "source": "Golden_Ball_Award.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 350
+   },
+   "scenes": [
+    "gallery",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "music-award",
+   "name": "Music award",
+   "source": "MTV_Award (1).usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 350
+   },
+   "scenes": [
+    "music",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "skull",
+   "name": "Human skull, cast",
+   "source": "Human_Skull_high_detailed.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 200
+   },
+   "scenes": [
+    "study",
+    "gallery"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "skeleton",
+   "name": "Skeleton, teaching model",
+   "source": "Human_Skeleton_high_detailed.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 1700
+   },
+   "scenes": [
+    "study"
+   ],
+   "budget": 60000,
+   "textureSize": 512
+  },
+  {
+   "id": "antique-vase",
+   "name": "Antique vase",
+   "source": "Antique_Vase.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 450
+   },
+   "scenes": [
+    "gallery",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "katana",
+   "name": "Katana",
+   "source": "Katana.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 1000
+   },
+   "scenes": [
+    "gallery",
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-sitting-1",
+   "name": "Seated figure",
+   "source": "Carla_-_Sitting_Idle.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1300
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-sitting-2",
+   "name": "Seated figure, reading",
+   "source": "Sitting_Girl.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1300
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-sitting-3",
+   "name": "Seated figure, man",
+   "source": "Man_Sitting.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1300
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-sitting-4",
+   "name": "Seated figure, casual",
+   "source": "Sit_pose.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1300
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-standing-1",
+   "name": "Standing figure, business",
+   "source": "Dennis_Posed_004_-_Male_Standing_Business_Model.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1800
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-standing-2",
+   "name": "Standing figure",
+   "source": "Female (1).usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1700
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-standing-3",
+   "name": "Standing figure, rigged",
+   "source": "Female_Standing_Character_-_human_riged_model (1).usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1700
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-standing-4",
+   "name": "Standing figure",
+   "source": "FREE_DOWNLOAD_Attractive_African_woman_236.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1700
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-standing-5",
+   "name": "Standing figure, suit",
+   "source": "Indian_Man_in_suit.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1780
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-standing-6",
+   "name": "Standing figure, casual",
+   "source": "Indian_Teen_In_Shorts_Female.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1650
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-standing-7",
+   "name": "Standing figure",
+   "source": "Person.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1750
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-standing-8",
+   "name": "Standing figure, rock",
+   "source": "Redhead_Rock_Girl.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1700
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-standing-9",
+   "name": "Standing figure, scanned",
+   "source": "Free_091_Aya_OBJ.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1650
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-tech",
+   "name": "Technician figure",
+   "source": "Army_Tech_Guy_Ready_for_Unreal_Engine.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1800
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-animated",
+   "name": "Animated figure",
+   "source": "Facial__Body_Animated_Party_M_0001_-_ActorCore.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1780
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "person-seated-desk",
+   "name": "Seated figure at a desk",
+   "source": "Mindhunter.usdz",
+   "category": "people",
+   "fit": {
+    "axis": "y",
+    "mm": 1300
+   },
+   "scenes": [],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "dog-labradoodle",
+   "name": "Labradoodle",
+   "source": "Riley_the_Labradoodle.usdz",
+   "category": "pets",
+   "fit": {
+    "axis": "max",
+    "mm": 700
+   },
+   "scenes": [
+    "home"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "dog-detailed",
+   "name": "Dog",
+   "source": "high_detailed_dog.usdz",
+   "category": "pets",
+   "fit": {
+    "axis": "max",
+    "mm": 650
+   },
+   "scenes": [
+    "home"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "dog-a",
+   "name": "Dog, sitting",
+   "source": "DOG_A_-_1of6_-_for_free__happy_new_year_2022.usdz",
+   "category": "pets",
+   "fit": {
+    "axis": "y",
+    "mm": 550
+   },
+   "scenes": [
+    "home"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "dog-b",
+   "name": "Dog, standing",
+   "source": "DOG_B_-_1of13_-_for_free.usdz",
+   "category": "pets",
+   "fit": {
+    "axis": "max",
+    "mm": 600
+   },
+   "scenes": [
+    "home"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "tin-cat",
+   "name": "Tin cat ornament",
+   "source": "Tin_Cat_photogrammetry.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 200
+   },
+   "scenes": [
+    "home",
+    "study"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "salmon",
+   "name": "Salmon",
+   "source": "salmon_Fish.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 600
+   },
+   "scenes": [
+    "kitchen"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "cabbage",
+   "name": "Cabbage",
+   "source": "Cabbage.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 180
+   },
+   "scenes": [
+    "kitchen"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "peach",
+   "name": "Peach",
+   "source": "Peach_-_PhotoCatch.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 75
+   },
+   "scenes": [
+    "kitchen",
+    "home"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "pear",
+   "name": "Pear",
+   "source": "Pear_-_Photoscan.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 95
+   },
+   "scenes": [
+    "kitchen",
+    "home"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "pomegranate",
+   "name": "Pomegranate",
+   "source": "PhotoCatch_Pomegranate.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 90
+   },
+   "scenes": [
+    "kitchen"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "cookie",
+   "name": "Chocolate chip cookie",
+   "source": "Chocolate_Chip_Cookie.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 70
+   },
+   "scenes": [
+    "kitchen",
+    "home"
+   ],
+   "budget": 15000,
+   "textureSize": 512
+  },
+  {
+   "id": "cookies",
+   "name": "Cookies",
+   "source": "Scanned_Low_Poly__Cookies.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 150
+   },
+   "scenes": [
+    "kitchen",
+    "home"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "fruitcake-tin",
+   "name": "Fruitcake tin",
+   "source": "Hawaiian_Fruitcake_Tin.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 180
+   },
+   "scenes": [
+    "kitchen"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "cereal-box",
+   "name": "Cereal box",
+   "source": "Miss_America_Corn_Flakes_Box.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "kitchen"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "soda-bottle",
+   "name": "Soda bottle",
+   "source": "Bundaberg_bottle.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 210
+   },
+   "scenes": [
+    "kitchen",
+    "lounge"
+   ],
+   "budget": 25000,
+   "textureSize": 512
+  },
+  {
+   "id": "bottle-set",
+   "name": "Bottle set",
+   "source": "Multiple_types_of_bottle_plastic_glass.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "kitchen"
+   ],
+   "budget": 30000,
+   "textureSize": 512
+  },
+  {
+   "id": "sports-bottle-2",
+   "name": "Sports bottle",
+   "source": "High-Poly_Yellow_Sports_Bottle.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 250
+   },
+   "scenes": [
+    "gym"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "percolator",
+   "name": "Tea percolator",
+   "source": "Tea-percolator.usdz",
+   "category": "food",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "kitchen"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "mug-set",
+   "name": "Mug set",
+   "source": "Coffee__Tea_Mugs_FREE (1).usdz",
+   "category": "food",
+   "fit": {
+    "axis": "max",
+    "mm": 250
+   },
+   "scenes": [
+    "kitchen",
+    "office"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "gas-stove",
+   "name": "Gas stove",
+   "source": "Old_Soviet_Gas_Stove.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 600
+   },
+   "scenes": [
+    "kitchen"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "electric-stove",
+   "name": "Electric stove",
+   "source": "Old_electric_stove.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "x",
+    "mm": 600
+   },
+   "scenes": [
+    "kitchen"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "kitchen-run",
+   "name": "Kitchen run",
+   "source": "Small_Modern_Kitchen.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "x",
+    "mm": 3000
+   },
+   "scenes": [
+    "kitchen"
+   ],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "dumbbell",
+   "name": "Dumbbell",
+   "source": "Dumbbell.usdz",
+   "category": "fitness",
+   "fit": {
+    "axis": "max",
+    "mm": 350
+   },
+   "scenes": [
+    "gym"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "dumbbell-weights",
+   "name": "Dumbbells and weights",
+   "source": "Dumbbell_and_Weights.usdz",
+   "category": "fitness",
+   "fit": {
+    "axis": "max",
+    "mm": 800
+   },
+   "scenes": [
+    "gym"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "gym-props",
+   "name": "Gym props",
+   "source": "Gym_Props.usdz",
+   "category": "fitness",
+   "fit": {
+    "axis": "max",
+    "mm": 900
+   },
+   "scenes": [
+    "gym"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "gym-props-2",
+   "name": "Gym props, set two",
+   "source": "Gym_Props (1).usdz",
+   "category": "fitness",
+   "fit": {
+    "axis": "max",
+    "mm": 900
+   },
+   "scenes": [
+    "gym"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "gym-props-3",
+   "name": "Gym props, set three",
+   "source": "Gym_Props (2).usdz",
+   "category": "fitness",
+   "fit": {
+    "axis": "max",
+    "mm": 900
+   },
+   "scenes": [
+    "gym"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "basketball",
+   "name": "Basketball",
+   "source": "BASKETBALL_AND1_XCELERATE.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 242
+   },
+   "scenes": [
+    "gym",
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "baseball",
+   "name": "Baseball",
+   "source": "Baseball_ball.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 74
+   },
+   "scenes": [
+    "gym",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "football-worn",
+   "name": "Worn football",
+   "source": "Dirty_Soccer_Ball.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 220
+   },
+   "scenes": [
+    "gym"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "football-match",
+   "name": "Match football",
+   "source": "Al_Rihla_-_FIFA_World_Cup_Qatar_2022.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 220
+   },
+   "scenes": [
+    "gym",
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "cap",
+   "name": "Sports cap",
+   "source": "Nike_Dri-FIT_Club.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 280
+   },
+   "scenes": [
+    "gym",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "ski-goggles",
+   "name": "Ski goggles",
+   "source": "Ski_Goggle.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 200
+   },
+   "scenes": [
+    "gym",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "skateboard-2",
+   "name": "Skateboard",
+   "source": "Low_Poly__Skateboard.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "max",
+    "mm": 800
+   },
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "scooter",
+   "name": "Scooter",
+   "source": "Cyberpunk_Scooter.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 1200
+   },
+   "scenes": [
+    "scifi",
+    "workshop"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "sports-car",
+   "name": "Sports car",
+   "source": "FREE_1975_Porsche_911_930_Turbo.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 4290
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "race-car-model",
+   "name": "Race car model",
+   "source": "RaceCar_RC-09_Re-imagined_model.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "max",
+    "mm": 400
+   },
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "biplane-model",
+   "name": "Biplane model",
+   "source": "Red_Baron.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "max",
+    "mm": 500
+   },
+   "scenes": [
+    "study",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "sneaker-1",
+   "name": "Sneaker",
+   "source": "Air_Jordan_1.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "bedroom",
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "running-shoe",
+   "name": "Running shoe",
+   "source": "Nike_Air_Zoom_Pegasus_36.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "gym",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "skate-shoes",
+   "name": "Skate shoes",
+   "source": "Shoes_Mockup_Asset_-_VANS_SKATE_OLD_SKOOL_SHOES.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 310
+   },
+   "scenes": [
+    "bedroom",
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "leather-shoes",
+   "name": "Leather shoes",
+   "source": "Leather_shoes.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "work-boot",
+   "name": "Work boot",
+   "source": "Caterpillar_Work_Boot.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 310
+   },
+   "scenes": [
+    "workshop"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "hiking-boot",
+   "name": "Hiking boot",
+   "source": "Old_Lowa_Gore-Tex_Boot_2021__FREE.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "workshop",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "riding-boot",
+   "name": "Riding boot",
+   "source": "Coraline_Riding_Boot.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 450
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "worn-shoe",
+   "name": "Worn shoe",
+   "source": "Zapatilla_vieja.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 290
+   },
+   "scenes": [],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "wallet",
+   "name": "Leather wallet",
+   "source": "Brown_Leather_Wallet.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 110
+   },
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "crossbody-bag",
+   "name": "Crossbody bag",
+   "source": "Crossbody_Bag_Final.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "home",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "backpack-large",
+   "name": "Large backpack",
+   "source": "Large_Backpack_-_White_Texture_Mockup.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 550
+   },
+   "scenes": [
+    "gym",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "backpack-leather",
+   "name": "Leather backpack",
+   "source": "Leather_backpack.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 450
+   },
+   "scenes": [
+    "office",
+    "study"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "backpack-daypack",
+   "name": "Daypack",
+   "source": "Backpack_-_July_Daybreak_-_Game_Ready.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 480
+   },
+   "scenes": [
+    "home",
+    "gym"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "duffel-bag",
+   "name": "Duffel bag",
+   "source": "Mountain_Track_Bag.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 600
+   },
+   "scenes": [
+    "gym"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "camera-bag",
+   "name": "Camera bag",
+   "source": "Old_Camera_Bag_.RAWscan.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 320
+   },
+   "scenes": [
+    "creative",
+    "study"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "cape-coat",
+   "name": "Cape coat",
+   "source": "Cape_coat.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 1200
+   },
+   "scenes": [
+    "bedroom",
+    "gallery"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "leather-cap",
+   "name": "Leather cap",
+   "source": "The_cap_is_leather.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 280
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "designer-bag",
+   "name": "Designer bag",
+   "source": "Gucci.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 320
+   },
+   "scenes": [
+    "bedroom",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "glasses-2",
+   "name": "Glasses",
+   "source": "Glasses.usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 145
+   },
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "glasses-3",
+   "name": "Reading glasses",
+   "source": "Glasses (2).usdz",
+   "category": "desk",
+   "fit": {
+    "axis": "max",
+    "mm": 145
+   },
+   "scenes": [
+    "study",
+    "home"
+   ],
+   "budget": 12000,
+   "textureSize": 512
+  },
+  {
+   "id": "retro-camera",
+   "name": "Retro camera",
+   "source": "Canon_AT-1_Retro_Camera.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 140
+   },
+   "scenes": [
+    "creative",
+    "study"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "rangefinder-camera",
+   "name": "Rangefinder camera",
+   "source": "Digital_Rangefinder_camera.usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "max",
+    "mm": 140
+   },
+   "scenes": [
+    "creative"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "droid-figure",
+   "name": "Droid figure",
+   "source": "R2-D2.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 1090
+   },
+   "scenes": [
+    "scifi",
+    "gaming"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "green-child-figure",
+   "name": "Small alien figure",
+   "source": "Mandalorian_-_Grogu__The_force.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 400
+   },
+   "scenes": [
+    "gaming"
+   ],
+   "budget": 30000,
+   "textureSize": 512
+  },
+  {
+   "id": "hero-figure",
+   "name": "Superhero figure",
+   "source": "Spiderman.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "turtle-figure",
+   "name": "Turtle figure",
+   "source": "Ninja_Turtles_Leonardo_Toy.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 280
+   },
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "virtual-pet",
+   "name": "Virtual pet toy",
+   "source": "Tamagotchi_Pet_Sailor_Moon.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "max",
+    "mm": 60
+   },
+   "scenes": [
+    "gaming",
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "toy-train",
+   "name": "Toy train",
+   "source": "Painted_Toy_Train_Model.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "max",
+    "mm": 300
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "figure-misc",
+   "name": "Collectible figure",
+   "source": "FF.usdz",
+   "category": "toys",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "gaming"
+   ],
+   "budget": 30000,
+   "textureSize": 512
+  },
+  {
+   "id": "table-lamp-plain",
+   "name": "Table lamp",
+   "source": "Lamp.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "y",
+    "mm": 450
+   },
+   "scenes": [
+    "home",
+    "bedroom"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "retro-light",
+   "name": "Retro light",
+   "source": "Retro_Light_-_oldclean_model.usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "y",
+    "mm": 400
+   },
+   "scenes": [
+    "study",
+    "lounge"
+   ],
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "chandelier-2",
+   "name": "Ceiling chandelier, small",
+   "source": "Ceiling_chandelier (1).usdz",
+   "category": "lighting",
+   "fit": {
+    "axis": "max",
+    "mm": 550
+   },
+   "scenes": [
+    "bedroom",
+    "lounge"
+   ],
+   "anchor": "ceiling",
+   "budget": 40000,
+   "textureSize": 512
+  },
+  {
+   "id": "room-bedroom-minimal",
+   "name": "Minimal bedroom set",
+   "source": "Minimalistic_Modern_Bedroom.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 4500
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "room-bedroom-modern",
+   "name": "Modern bedroom set",
+   "source": "Modern_Bedroom.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 4500
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "room-bedroom-modern-2",
+   "name": "Modern bedroom set, two",
+   "source": "Modern_Bedroom (1).usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 4500
+   },
+   "scenes": [],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "room-bedroom-scifi",
+   "name": "Sci-fi bedroom set",
+   "source": "Sci-Fi_Bedroom.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 4500
+   },
+   "scenes": [
+    "scifi"
+   ],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "room-living",
+   "name": "Living room set",
+   "source": "Simple_Modern_Living_Room.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 5000
+   },
+   "scenes": [
+    "lounge"
+   ],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "room-office-modern",
+   "name": "Modern office set",
+   "source": "Modern_Office (2).usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 5000
+   },
+   "scenes": [],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "room-office-minimal",
+   "name": "Minimal office set",
+   "source": "Minimalistic_Modern_Office (2).usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 5000
+   },
+   "scenes": [],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "room-office-small",
+   "name": "Small office set",
+   "source": "Small_Office (1).usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 4000
+   },
+   "scenes": [],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "room-office-black",
+   "name": "Black office set",
+   "source": "HOUSE_BLACK_-_OFFICE (1).usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 5000
+   },
+   "scenes": [],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "room-gallery",
+   "name": "Showroom gallery",
+   "source": "Metallic_Showroom_Gallery.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 8000
+   },
+   "scenes": [
+    "gallery"
+   ],
+   "budget": 100000,
+   "textureSize": 1024
+  },
+  {
+   "id": "hangar",
+   "name": "Aircraft hangar",
+   "source": "Aircraft_Hangar.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 20000
+   },
+   "scenes": [],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "house-modern",
+   "name": "Modern house",
+   "source": "A_modern_house_design.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 15000
+   },
+   "scenes": [],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "house-clay",
+   "name": "Clay concept house",
+   "source": "Clay_Mansion_Concept_Home.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 15000
+   },
+   "scenes": [],
+   "budget": 80000,
+   "textureSize": 1024
+  },
+  {
+   "id": "school-damage",
+   "name": "Damaged school prop",
+   "source": "HW_XYZ_School_Damage.usdz",
+   "category": "environment",
+   "fit": {
+    "axis": "max",
+    "mm": 3000
+   },
+   "scenes": [],
+   "budget": 100000,
+   "textureSize": 1024
+  },
+  {
+   "id": "modern-mirror-2",
+   "name": "Modern mirror",
+   "source": "Modern_mirror (1).usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 1500
+   },
+   "scenes": [
+    "bedroom",
+    "home"
+   ],
+   "anchor": "wall-floor",
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "table-mirror-2",
+   "name": "Table mirror",
+   "source": "Table_Mirror (2).usdz",
+   "category": "decor",
+   "fit": {
+    "axis": "y",
+    "mm": 300
+   },
+   "scenes": [
+    "bedroom"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  },
+  {
+   "id": "iron-safe",
+   "name": "Antique iron safe",
+   "source": "Antique_Iron_Safe.usdz",
+   "category": "furniture",
+   "fit": {
+    "axis": "y",
+    "mm": 900
+   },
+   "scenes": [
+    "study",
+    "workshop"
+   ],
+   "budget": 40000,
+   "textureSize": 1024
+  },
+  {
+   "id": "hifi-speakers",
+   "name": "Hi-fi speaker set",
+   "source": "Beo_Lab_14_By_Bang_Olufsen.usdz",
+   "category": "music",
+   "fit": {
+    "axis": "y",
+    "mm": 1100
+   },
+   "scenes": [
+    "music",
+    "lounge"
+   ],
+   "budget": 20000,
+   "textureSize": 512
+  }
+ ],
+ "screens": [
+  {
+   "id": "ceo",
+   "source": "CEoBG.jpg",
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "architect",
+   "source": "architectBG.jpg",
+   "scenes": [
+    "office",
+    "creative"
+   ]
+  },
+  {
+   "id": "architect-portrait",
+   "source": "ArchitectBgPortrait.jpg",
+   "scenes": [
+    "creative"
+   ]
+  },
+  {
+   "id": "marketing",
+   "source": "marketingBG.jpg",
+   "scenes": [
+    "office"
+   ]
+  },
+  {
+   "id": "designer-laptop",
+   "source": "designerlaptopBG.png",
+   "scenes": [
+    "creative",
+    "home"
+   ]
+  }
+ ]
+}
