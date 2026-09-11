@@ -619,18 +619,12 @@
 
                         <!-- 3D Transform Tools -->
                         <div class="flex gap-4 items-center bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm shadow-sm mt-4">
-                            <span class="font-medium text-blue-800">Transform Tool:</span>
+                            <span class="font-medium text-blue-800">Transform Gumball:</span>
                             <label class="flex items-center gap-1.5 cursor-pointer text-blue-900">
                                 <input type="radio" name="transform_mode" value="none" checked class="accent-blue-600"> Off
                             </label>
                             <label class="flex items-center gap-1.5 cursor-pointer text-blue-900">
-                                <input type="radio" name="transform_mode" value="translate" class="accent-blue-600"> Move
-                            </label>
-                            <label class="flex items-center gap-1.5 cursor-pointer text-blue-900">
-                                <input type="radio" name="transform_mode" value="rotate" class="accent-blue-600"> Rotate
-                            </label>
-                            <label class="flex items-center gap-1.5 cursor-pointer text-blue-900">
-                                <input type="radio" name="transform_mode" value="scale" class="accent-blue-600"> Scale
+                                <input type="radio" name="transform_mode" value="unified" class="accent-blue-600"> Move · Rotate · Scale
                             </label>
                             <button id="undo-btn" class="ml-auto bg-white border border-blue-300 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled title="Undo last edit (Ctrl+Z)">Undo</button>
                         </div>
@@ -660,7 +654,7 @@
                         </div>
 
                         <p class="text-xs text-gray-500 leading-relaxed bg-gray-100 p-3 rounded-lg mt-4">
-                            <strong>Pro Tip:</strong> Keep Transform Tool "Off" to quickly select multiple single parts without interference. When ready to move a part, select it, then activate "Move" or "Rotate". For dense hardware like magnets or screws, hold <kbd>Shift</kbd> (or <kbd>Alt</kbd>) and drag a box across them instead of clicking one at a time — <kbd>Esc</kbd> cancels a box mid-drag. Press <kbd>`</kbd> to enter/leave the full-screen setup workspace (add <code>?setup</code> to the URL to open it on load), and drag the divider to resize this panel.
+                            <strong>Pro Tip:</strong> Keep the gumball "Off" while building a multi-selection. Turn it on to move with the arrows, rotate with the rings, or scale with the square handles — all three stay available together. For dense hardware like magnets or screws, hold <kbd>Shift</kbd> (or <kbd>Alt</kbd>) and drag a box across them instead of clicking one at a time. Press <kbd>`</kbd> to enter/leave the full-screen setup workspace.
                         </p>
 
                         <div class="flex gap-3 mt-2">

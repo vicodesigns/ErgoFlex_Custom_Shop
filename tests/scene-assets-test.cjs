@@ -44,6 +44,9 @@ const server = http.createServer((req, res) => {
     assert.equal(original.list, original.count, 'every placed prop appears in the scene list');
 
     const edited = await page.evaluate(() => {
+      document.getElementById('clear-parts-btn').click();
+      document.getElementById('selection-mode-toggle').click();
+      document.querySelector('[name="transform_mode"][value="unified"]').click();
       document.querySelector('.scene-current-item').click();
       const obj = ErgoFlex.movingObjects.at(-1).obj;
       const id = obj.userData.editorId;
@@ -55,6 +58,15 @@ const server = http.createServer((req, res) => {
       document.getElementById('selected-part-rename-btn').click();
       return { id, x: ErgoFlex.canonicalTransform(obj).p.x, project: ErgoFlex.serializeProject() };
     });
+    const gumball = await page.evaluate(() => ({
+      modes: ErgoFlex.transformControl.controls.map(control => control.mode).sort(),
+      visible: ErgoFlex.transformControl.controls.filter(control => control.visible && control.enabled).length,
+      object: ErgoFlex.transformControl.object === ErgoFlex.transformProxy
+    }));
+    assert.deepEqual(gumball.modes, ['rotate', 'scale', 'translate']);
+    assert.equal(gumball.visible, 3, 'move, rotate and scale handles are visible together');
+    assert.equal(gumball.object, true, 'all handles share the selection proxy');
+    await page.screenshot({ path: '/tmp/ergoflex-unified-gumball.png' });
     assert.equal(edited.project.presentation.sceneAssetLabels.some(([id, label]) => id === edited.id && label === 'Reception shelf'), true);
     assert.equal(edited.project.parts.labels.some(([id]) => id === edited.id), false, 'scene labels stay out of desk-part validation');
 

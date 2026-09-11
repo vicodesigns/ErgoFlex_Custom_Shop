@@ -51,7 +51,27 @@ radius — wide enough to catch the visible capsules without swallowing the dish
 It is a **momentary jog, not a position dial**
 (`movement_and_rotation_joystick.dart:361-383, 588-598`): twist past 5° and the
 desk turns for as long as you hold it; release and it stops and the ring springs
-back to zero. Speed follows the Glide speed word, as on the phone.
+back to zero.
+
+The desk turns about **`Base_Panels_3`**, its wheel centre, not the model origin
+— rotating about the origin swings the whole desk around a point off in the
+assembly, so it orbits instead of turning on the spot. Position and yaw are
+therefore one transform: rotating about a pivot that is not the origin means the
+position has to absorb the difference.
+
+The **mecanum wheels roll while it turns**, each contact point travelling
+tangentially about that pivot, so the near and far sides run opposite ways. The
+existing spin model already projects a displacement onto the roller axis, so the
+turn only has to supply the rotational displacement rather than invent a second
+model.
+
+Turning and gliding move the wheels at **the same rate for the same speed word**.
+Gliding spins a wheel at `glideSpeed / radius` and turning at
+`projection * omega / radius`, so `omega = glideSpeed / projection` — where the
+projection is the mecanum term `ax + latSign * az`, not the wheel's distance from
+the pivot; those differ by a large factor. Both paths also clamp `dt` to 0.05 per
+frame: without that a long frame advances the turn by the whole gap and the desk
+jumps, and on a slow machine only one of the two is throttled.
 
 Nothing wrote the model's yaw before this, so the rotation itself is new, not
 just the control for it.

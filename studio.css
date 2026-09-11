@@ -231,7 +231,7 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .viewer-controls .studio-toolbar { position: static; gap: 5px; }
 .scene-switcher { display: flex; align-items: center; gap: 12px; margin-top: 12px; min-width: 0; }
 .scenes-label { font-size: 10px; font-weight: 650; letter-spacing: 1.1px; text-transform: uppercase; color: var(--ink); }
-.scene-options { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: thin; padding: 3px; }
+.scene-options { display: flex; flex-wrap: nowrap; gap: 5px; overflow-x: auto; scrollbar-width: thin; padding: 3px; scroll-snap-type: x proximity; }
 .scene-options button { display: inline-flex; align-items: center; flex-shrink: 0; gap: 6px; border: 1px solid #ffffff60; border-radius: 7px; background: #ffffffa8; padding: 7px 9px; color: #304a3d; font-size: 11px; transition: background .18s, border-color .18s; }
 .scene-options button:hover { background: #ffffffed; }
 .scene-options button[aria-pressed=true] { background: #233d34; color: #fff; border-color: #233d34; box-shadow: 0 2px 6px #1a302322; }
@@ -296,8 +296,24 @@ body:not(.setup-layout) .camera-shortcuts { display: none; }
     .camera-shortcuts { display: none; }
     .scene-switcher { gap: 7px; margin-top: 18px; align-items: flex-start; }
     .scenes-label { padding-top: 12px; }
-    .scene-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); flex: 1; gap: 4px; overflow: visible; }
-    .scene-options button { padding: 7px 5px; font-size: 10px; min-height: 34px; justify-content: center; }
+    /* One scrolling row, three at a time. As a wrapping grid this became five
+       rows of scenes above the desk - more chrome than product, and growing with
+       every scene added. */
+    .scene-options {
+        display: flex; flex: 1; gap: 4px;
+        overflow-x: auto; overflow-y: hidden;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 5px;
+        /* Clear the floating icon column on the right, so the last scene in the
+           row is never parked underneath it. */
+        padding-right: 52px;
+    }
+    .scene-options button {
+        flex: 0 0 calc((100% - 8px) / 3);
+        scroll-snap-align: start;
+        padding: 7px 5px; font-size: 10px; min-height: 34px; justify-content: center;
+    }
     #viewer-shell, body.setup-layout #viewer-shell { height: 760px !important; min-height: 760px !important; }
     .scene-dot { display: none; }
     #room-scene-caption { font-size: 9px; }

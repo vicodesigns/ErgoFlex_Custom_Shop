@@ -313,9 +313,15 @@
 .remote-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
 .remote-arc .arc-rim { fill: none; stroke: var(--fill); stroke-linecap: round; }
 .remote-arc .arc-face { fill: none; stroke: #fff; stroke-linecap: round; }
+/* Vertical, over the crescent. It was a horizontal strip pinned to the bottom of
+   the box, which was right while the track was a top arc: once the track became a
+   vertical crescent the only draggable area was a thin invisible bar under it, so
+   dragging the thumb along the arc - the obvious gesture - did nothing at all. */
 .remote-arc input[type=range] {
-    position: absolute; inset: auto 0 0; width: 100%;
-    margin: 0; appearance: none; background: none; height: 28px; cursor: ew-resize;
+    position: absolute; left: 50%; top: 50%;
+    width: 170px; height: 64px;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    margin: 0; appearance: none; background: none; cursor: ns-resize;
 }
 .remote-arc input::-webkit-slider-thumb { appearance: none; width: 26px; height: 26px; opacity: 0; }
 .remote-arc input::-moz-range-thumb { width: 26px; height: 26px; opacity: 0; border: 0; }
@@ -435,3 +441,15 @@ body:not(.setup-layout) .remote-body #tilt-sliders-overlay { display: none; }
 .remote-vslider, .remote-arc { height: 170px; margin: 6px auto 0; }
 .remote-arc svg { height: 100%; width: auto; display: block; margin: 0 auto; }
 .remote-vslider { width: 40px; }
+
+/* Claim the gesture. A drag on a slider is a drag on that slider, not a page
+   scroll - without this, moving Height or Tilt on a touch screen scrolls the
+   page out from under your finger. The compass already sets this; the two
+   tracks need it just as much, and more so because they are rotated, so the
+   browser's own axis heuristics read them the wrong way round. */
+.remote-vslider, .remote-vslider input[type=range],
+.remote-arc, .remote-arc input[type=range] { touch-action: none; }
+
+/* The chips and form cards are pressed and held, which a touch browser would
+   otherwise treat as the start of a scroll or a text selection. */
+.remote-chip, .remote-form { touch-action: manipulation; user-select: none; -webkit-user-select: none; }

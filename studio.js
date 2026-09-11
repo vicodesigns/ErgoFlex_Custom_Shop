@@ -5284,7 +5284,10 @@ function buildWheelRigs() {
             obj.updateMatrixWorld(true);
             wrapper.attach(obj);
         });
-        wheelRigs.push({ prefix: spec.prefix, latSign: spec.latSign, wrapper: wrapper, radius: radius, spin: 0 });
+        wheelRigs.push({ prefix: spec.prefix, latSign: spec.latSign, wrapper: wrapper, radius: radius, spin: 0, yawArm: null });
+        // Measured now rather than on the first turn: the speed of a turn is
+        // derived from these, and a half-populated set gives the wrong answer.
+        wheelYawArm(wheelRigs[wheelRigs.length - 1]);
     });
     if (wheelRigs.length > 0) {
         console.log('[ErgoFlex] Wheel rigs: ' + wheelRigs.map(r => r.prefix + ' (r=' + r.radius.toFixed(3) + ')').join(', '));
@@ -5428,15 +5431,114 @@ function tiltDegreesPerSecond() { return TILT_SPEEDS[tiltSpeed] ?? TILT_SPEEDS.a
 // hold it, release and it stops and the ring springs back to zero
 // (movement_and_rotation_joystick.dart:361-383, 588-598). Nothing wrote the
 // model's yaw before this, so the movement itself is new.
+// The desk turns about its wheel centre, which is the part named Base_Panels_3,
+// not about the model's own origin. Setting rotation.y alone swings the whole
+// desk around a point somewhere off in the assembly, so it orbits instead of
+// turning on the spot.
+const YAW_PIVOT_PART = 'Base_Panels_3';
+let yawPivotLocal = null;   // the pivot in the model's local frame, measured once
+function yawPivotOffset() {
+    if (yawPivotLocal) return yawPivotLocal;
+    if (!loadedModel) return null;
+    let found = null;
+    loadedModel.traverse(child => { if (!found && child.isMesh && child.name === YAW_PIVOT_PART) found = child; });
+    if (!found) {
+        reportSceneWarning('yaw-pivot',
+            `Rotation pivot part "${YAW_PIVOT_PART}" is not in this model, so the desk turns about the model origin instead of its wheel centre.`);
+        yawPivotLocal = new THREE.Vector3();
+        return yawPivotLocal;
+    }
+    const centre = new THREE.Box3().setFromObject(found).getCenter(new THREE.Vector3());
+    // Local to the model, so it survives the glide moving the model around.
+    yawPivotLocal = loadedModel.worldToLocal(centre);
+    yawPivotLocal.y = 0;    // turning is about the vertical axis through that point
+    return yawPivotLocal;
+}
+
+// Turning on the spot still rolls the wheels, and mecanum wheels roll
+// differently depending where they sit: each contact point travels tangentially
+// about the pivot, so the near and far sides run opposite ways. The existing
+// spin model already projects a displacement onto the roller axis
+// (spin -= (dx + latSign * dz) / radius), so this only has to supply the right
+// displacement - the rotational one - rather than invent a second model.
+//
+// The arm is measured in the desk's own frame, so it does not change as the desk
+// turns, and is worked out once per wheel.
+function wheelYawArm(rig) {
+    if (rig.yawArm) return rig.yawArm;
+    const pivot = yawPivotOffset();
+    if (!pivot || !rig.wrapper) return null;
+    const world = rig.wrapper.getWorldPosition(new THREE.Vector3());
+    const local = loadedModel.worldToLocal(world.clone());
+    const scale = loadedModel.scale.x;
+    const rx = (local.x - pivot.x) * scale, rz = (local.z - pivot.z) * scale;
+    // d/dtheta of rotating (rx, rz) about Y.
+    rig.yawArm = { ax: rz, az: -rx };
+    return rig.yawArm;
+}
+
+function spinWheelsForYaw(dTheta) {
+    if (!dTheta) return;
+    wheelRigs.forEach(rig => {
+        const arm = wheelYawArm(rig);
+        if (!arm || !rig.radius) return;
+        rig.spin -= (arm.ax + rig.latSign * arm.az) * dTheta / rig.radius;
+        rig.wrapper.rotation.z = rig.spin;
+    });
+}
+
+// Position and yaw are one transform: rotating about a pivot that is not the
+// origin means the position has to absorb the difference, or the pivot slides.
+function applyDeskTransform() {
+    if (!loadedModel) return;
+    const pivot = yawPivotOffset();
+    const scale = loadedModel.scale.x;
+    const rest = pivot ? pivot.clone().multiplyScalar(scale) : new THREE.Vector3();
+    const turned = rest.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), deskYaw);
+    loadedModel.rotation.y = deskYaw;
+    loadedModel.position.x = glideBase.x + glideOffset.x + rest.x - turned.x;
+    loadedModel.position.z = glideBase.z + glideOffset.z + rest.z - turned.z;
+}
+
 let deskYaw = 0;          // radians actually applied to the model
 let yawCommand = 0;       // -1 left, 0 stop, +1 right
 let ringAngle = 0;        // degrees the ring is twisted, for the visual only
-const YAW_SPEEDS = { crawl: 0.12, ninja: 0.24, slow: 0.38, medium: 0.6, fast: 0.95 };
+// Derived from the glide speed rather than tabled separately, so the wheels turn
+// at the same rate whichever way the desk is moving. glideSpeed is world units
+// per second of travel; a wheel sitting `arm` from the pivot covers arm * omega
+// per second while turning, so matching the two means omega = glideSpeed / arm.
+// A separate table of angular speeds could only coincide with that by accident.
+// What actually drives a wheel's spin is the mecanum projection
+// (dx + latSign * dz), not the wheel's distance from the pivot - the roller
+// angle means those differ by a large factor. Matching on distance left the
+// wheels turning about eight times faster than the same speed setting produces
+// while gliding.
+function meanYawProjection() {
+    let sum = 0, count = 0;
+    wheelRigs.forEach(rig => {
+        const arm = wheelYawArm(rig);
+        if (!arm) return;
+        const projection = Math.abs(arm.ax + rig.latSign * arm.az);
+        if (projection > 1e-6) { sum += projection; count++; }
+    });
+    return count ? sum / count : 0;
+}
+function meanWheelRadius() {
+    const radii = wheelRigs.map(rig => rig.radius).filter(r => r > 1e-6);
+    return radii.length ? radii.reduce((a, b) => a + b, 0) / radii.length : 0.074;
+}
+
+// Gliding spins a wheel at glideSpeed / radius. Turning spins it at
+// projection * omega / radius. Setting those equal gives omega = glideSpeed /
+// projection, so the same speed word means the same wheel speed either way.
+//
+// The projection has to be measured before it is used. Reading it lazily meant
+// the first frames fell back to a guess while the spin already used the real
+// arms, and the two disagreed by more than an order of magnitude.
 function yawRadiansPerSecond() {
-    // Shares the glide speed word, as it does on the phone.
-    const names = ['crawl', 'ninja', 'slow', 'medium', 'fast'];
-    const index = [0.17, 0.34, 0.51, 0.68, 0.85].findIndex(v => Math.abs(v - glideSpeed) < 0.01);
-    return YAW_SPEEDS[names[index < 0 ? 2 : index]];
+    const projection = meanYawProjection();
+    if (!projection) return glideSpeed / Math.max(0.02, meanWheelRadius() * 4);
+    return glideSpeed / projection;
 }
 function setYawCommand(direction) {
     yawCommand = direction;
@@ -5659,7 +5761,9 @@ function positionArcThumb() {
     if (!box || !slider || !thumb) return;
     const min = Number(slider.min), max = Number(slider.max);
     const t = max === min ? 0.5 : (Number(slider.value) - min) / (max - min);
-    const deg = ARC.from - (ARC.from - ARC.to) * t;
+    // t = 0 at the bottom of the crescent: the slider is rotated so up is its
+    // maximum, and the thumb has to travel the same way or the two disagree.
+    const deg = ARC.to + (ARC.from - ARC.to) * t;
     const [x, y] = arcPoint(deg);
     thumb.style.left = (x / ARC.vw * 100) + '%';
     thumb.style.top = (y / ARC.vh * 100) + '%';
@@ -6092,7 +6196,7 @@ function applyGlideOffset(next) {
         rig.wrapper.rotation.z = rig.spin;
     });
     glideOffset.copy(next);
-    loadedModel.position.x = glideBase.x + next.x; loadedModel.position.z = glideBase.z + next.z;
+    applyDeskTransform();
     loadedModel.updateMatrixWorld(true);
     if (isSelectionMode) boxHelpers.forEach(helper => helper.update());
 }
@@ -6593,8 +6697,16 @@ function animate() {
 
     // The desk turns for as long as the ring is held over.
     if (loadedModel && !motionPaused && yawCommand) {
-        deskYaw += yawCommand * yawRadiansPerSecond() * dt;
-        loadedModel.rotation.y = deskYaw;
+        // The same per-frame ceiling updateGlide applies. Without it a long frame
+        // advances the turn by that whole gap - the desk jumps, and on a slow
+        // machine turning outruns gliding at the same speed setting because only
+        // one of them is throttled.
+        const turnDt = Math.min(Math.max(dt, 0), 0.05);
+        const step = yawCommand * yawRadiansPerSecond() * turnDt;
+        deskYaw += step;
+        spinWheelsForYaw(step);
+        applyDeskTransform();
+        loadedModel.updateMatrixWorld(true);
     }
 
     // Tilt eases toward its target the same way. applyTiltConfig is immediate, so
@@ -6703,12 +6815,11 @@ function setRoomScene(id, persist = true) {
     if (persist) {
         try { localStorage.setItem('ergoflex.roomScene', choice.id); } catch {}
     }
-    requestAnimationFrame(() => {
-        syncViewerSize();
-        const view = document.getElementById('camera-view');
-        if (view && persist) view.value = choice.id === 'product' ? 'hero' : 'room';
-        if (view && (persist || view.value === 'room')) view.dispatchEvent(new Event('change'));
-    });
+    // The camera is deliberately left alone. Changing the room used to fire a
+    // change on #camera-view, which snapped to a preset - so every scene switch
+    // threw away wherever you had orbited to. Swapping the backdrop is not a
+    // reason to move the viewer.
+    requestAnimationFrame(syncViewerSize);
 }
 function notifyUser(message) {
     const toast = document.getElementById('studio-toast');
@@ -7209,7 +7320,7 @@ function initStudio() {
     window.addEventListener('resize', clampDockPosition);
     if (document.fonts?.ready) document.fonts.ready.then(clampDockPosition).catch(() => {});
     const editorTools = document.createElement('div'); editorTools.className = 'precision-tools';
-    editorTools.innerHTML = `<div class="eyebrow">PRECISION & VISIBILITY</div><div><button id="focus-selected">Focus selection <kbd>F</kbd></button><button id="isolate-parts" aria-pressed="false">Isolate</button><button id="show-all-parts">Show all</button></div><div><label>Coordinates <select id="transform-space"><option value="world">World</option><option value="local">Local</option></select></label><label class="check-label"><input type="checkbox" id="transform-snap"> Snap transforms</label></div><p class="studio-note">Q Select · W Move · E Rotate · R Scale · F Focus<br>Snap: 0.05 scene units / 15° / 10% scale</p>`;
+    editorTools.innerHTML = `<div class="eyebrow">PRECISION & VISIBILITY</div><div><button id="focus-selected">Focus selection <kbd>F</kbd></button><button id="isolate-parts" aria-pressed="false">Isolate</button><button id="show-all-parts">Show all</button></div><div><label>Coordinates <select id="transform-space"><option value="world">World</option><option value="local">Local</option></select></label><label class="check-label"><input type="checkbox" id="transform-snap"> Snap transforms</label></div><p class="studio-note">G Gumball · Q Hide · F Focus<br>Arrows move · rings rotate · squares scale<br>Snap: 0.05 scene units / 15° / 10% scale</p>`;
     document.getElementById('part-search-input').parentElement.after(editorTools);
     const liftTools = document.createElement('div'); liftTools.className = 'precision-tools';
     liftTools.innerHTML = `<div class="eyebrow">LIFT ASSEMBLY</div><div><button id="assign-lift">Assign selected</button><button id="unassign-lift">Remove selected</button></div><p class="studio-note">Selection is independent of animation. Assign unrigged parts here to make them follow the lift. Changes apply to this session.</p>`;
@@ -7273,7 +7384,7 @@ function initStudio() {
         }
         if (e.key === 'Escape') { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); }
         if (!setupLayoutOn || e.ctrlKey || e.metaKey || e.altKey || e.target.closest('input,select,textarea,[contenteditable],#glide-pad')) return;
-        const mode = { q: 'none', w: 'translate', e: 'rotate', r: 'scale' }[e.key.toLowerCase()];
+        const mode = { q: 'none', g: 'unified' }[e.key.toLowerCase()];
         if (mode) { e.preventDefault(); document.querySelector(`input[name="transform_mode"][value="${mode}"]`).click(); }
         if (e.key.toLowerCase() === 'f') { e.preventDefault(); document.getElementById('focus-selected').click(); }
         if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -7330,6 +7441,12 @@ window.ErgoFlex = {
     setMotionTab,
     haltAllMotion,
     get deskYaw() { return deskYaw; },
+    // Drives the ring's command directly: the gesture is a pointer path, and the
+    // behaviour worth asserting is what the command does to the desk.
+    jogYaw: setYawCommand,
+    get yawRate() { return yawRadiansPerSecond(); },
+    get yawProjection() { return meanYawProjection(); },
+    get glideSpeed() { return glideSpeed; },
     get yawCommand() { return yawCommand; },
     get heightInches() { return liftToHeight(currentLift); },
     placeDockFromStorage,
