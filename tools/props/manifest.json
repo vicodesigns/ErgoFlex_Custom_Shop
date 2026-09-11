@@ -1641,15 +1641,19 @@
    "source": "Metal_Lounge_Chair.usdz",
    "category": "furniture",
    "fit": {
-    "axis": "y",
-    "mm": 780
+    "axis": "max",
+    "mm": 900
    },
    "scenes": [
     "lounge",
     "gallery"
    ],
    "budget": 40000,
-   "textureSize": 1024
+   "textureSize": 1024,
+   "exclude": [
+    "Object_25"
+   ],
+   "sizeNote": "The source sits on a 5.4 m ground plane, removed here."
   },
   {
    "id": "modern-chair",
@@ -1809,12 +1813,12 @@
   },
   {
    "id": "coffee-table-2",
-   "name": "Coffee table",
+   "name": "Round side table",
    "source": "Coffee_Table.usdz",
    "category": "furniture",
    "fit": {
-    "axis": "x",
-    "mm": 1100
+    "axis": "y",
+    "mm": 700
    },
    "scenes": [
     "lounge",
@@ -2203,12 +2207,12 @@
   },
   {
    "id": "les-paul-guitar",
-   "name": "Les Paul guitar",
+   "name": "Guitar case",
    "source": "Les_Paul_Tribute_To_one_of_The_Greats (2).usdz",
    "category": "music",
    "fit": {
     "axis": "max",
-    "mm": 1000
+    "mm": 1050
    },
    "scenes": [
     "music"
@@ -2233,19 +2237,20 @@
   },
   {
    "id": "upright-piano",
-   "name": "Upright piano, 1896",
+   "name": "Piano frame",
    "source": "Hallet_And_Davis_Piano_1896_3DST19.usdz",
    "category": "music",
    "fit": {
-    "axis": "x",
-    "mm": 1520
+    "axis": "max",
+    "mm": 1600
    },
    "scenes": [
     "music",
     "study"
    ],
    "budget": 20000,
-   "textureSize": 512
+   "textureSize": 512,
+   "sizeNote": "The source is a piano frame and soundboard, not a cased instrument."
   },
   {
    "id": "chorus-pedal",
@@ -2660,8 +2665,8 @@
    "source": "Monitor (3).usdz",
    "category": "electronics",
    "fit": {
-    "axis": "x",
-    "mm": 620
+    "axis": "max",
+    "mm": 700
    },
    "scenes": [
     "office",
@@ -2844,7 +2849,11 @@
     "workshop"
    ],
    "budget": 40000,
-   "textureSize": 512
+   "textureSize": 512,
+   "exclude": [
+    "Object_93"
+   ],
+   "sizeNote": "The source includes a backdrop plane, removed here."
   },
   {
    "id": "mars-rover",
@@ -3209,7 +3218,11 @@
     "gallery"
    ],
    "budget": 40000,
-   "textureSize": 1024
+   "textureSize": 1024,
+   "exclude": [
+    "floor"
+   ],
+   "sizeNote": "The source sits on a 4 m floor plane, removed here."
   },
   {
    "id": "journal",
