@@ -46,6 +46,16 @@
 
 /* ── Panel shell ─────────────────────────────────────────────────────────── */
 
+/* Docked below the viewer on the storefront: in flow, full width, no overlay.
+   The header stays as the thing you click to drop it down. */
+#motion-dock.app-remote[data-mode="docked"] {
+    position: static;
+    width: 100%;
+    margin-top: 12px;
+    transform: none;
+}
+#motion-dock.app-remote[data-mode="docked"] .remote-header { cursor: pointer; }
+
 #motion-dock.app-remote {
     position: absolute;
     /* Parked bottom-centre until dragged. Setting className wholesale drops the
@@ -146,25 +156,46 @@
 
 #viewer-shell > .relative { container: viewer / inline-size; }
 
+/* Two halves, as the landscape app lays it out: Glide with its Ergo Forms on
+   the left, Height and Tilt side by side on the right. */
 .remote-grid {
     display: grid;
-    grid-template-columns: auto 1fr 1fr auto;
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 18px;
     align-items: start;
+}
+.remote-half-right { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+/* heading, compass, speed word - on one line, as the app has it. */
+.remote-glide-row { display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 12px; justify-content: start; }
+.remote-glide-row .remote-heading { margin: 0; align-self: start; }
+.remote-glide-row .remote-speed { margin: 0; }
+.remote-col { min-width: 0; text-align: center; }
+.remote-col .remote-heading { text-align: center; }
+
+/* The dashed info beacon beside each heading. */
+.remote-info {
+    display: inline-block; width: 13px; height: 13px; vertical-align: middle;
+    margin-left: 5px; border-radius: 50%;
+    border: 1.4px dashed color-mix(in srgb, var(--text-2) 60%, transparent);
+    position: relative;
+}
+.remote-info::after {
+    content: 'i'; position: absolute; inset: 0;
+    font-size: 8px; font-weight: 700; line-height: 13px; text-align: center;
+    color: var(--text-2); font-style: italic;
 }
 .remote-col { min-width: 0; }
 /* A column, not a row underneath: the panel floats over the desk, so height is
    the expensive dimension and width is the cheap one. */
-.remote-forms { margin-top: 0; min-width: 104px; }
-.remote-forms-row { flex-direction: column; }
+.remote-forms { margin-top: 10px; }
+.remote-forms-row { display: flex; gap: 8px; }
 
-@container viewer (max-width: 760px) {
-    .remote-grid { grid-template-columns: auto 1fr 1fr; }
-    .remote-forms { grid-column: 1 / -1; margin-top: 8px; }
-    .remote-forms-row { flex-direction: row; }
+@container viewer (max-width: 700px) {
+    .remote-grid { grid-template-columns: 1fr; gap: 14px; }
 }
 @container viewer (max-width: 560px) {
     .remote-grid { grid-template-columns: 1fr; gap: 12px; }
+    .remote-glide-row { grid-template-columns: 1fr; justify-items: center; }
     /* Bounded and scrollable: the panel must never grow taller than the
        viewer it floats inside. */
     .remote-body { max-height: min(60vh, 420px); overflow-y: auto; }
@@ -278,7 +309,7 @@
 /* ── Tilt slider: 120° arc ───────────────────────────────────────────────── */
 /* arc_control_slider.dart: start -pi/3, sweep 2pi/3, round caps, rim under white. */
 
-.remote-arc { position: relative; width: 100%; max-width: 150px; margin: 0 auto; }
+.remote-arc { position: relative; width: 100%; max-width: 96px; margin: 0 auto; }
 .remote-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
 .remote-arc .arc-rim { fill: none; stroke: var(--fill); stroke-linecap: round; }
 .remote-arc .arc-face { fill: none; stroke: #fff; stroke-linecap: round; }
@@ -363,3 +394,44 @@ body:not(.setup-layout) .remote-body #tilt-sliders-overlay { display: none; }
     border: 1px solid rgba(20,24,36,.14); background: #fff; color: var(--text); cursor: pointer;
 }
 .app-remote .glide-actions button:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
+
+/* ── Header chrome ───────────────────────────────────────────────────────── */
+
+/* The grab handle the app shows at the top of the sheet. */
+.remote-grip {
+    position: absolute; left: 50%; top: 4px; translate: -50% 0;
+    width: 34px; height: 4px; border-radius: 2px;
+    background: color-mix(in srgb, var(--text-2) 35%, transparent);
+}
+.remote-header { position: relative; padding-top: 11px; }
+
+.remote-chrome {
+    width: 26px; height: 26px; flex: none; padding: 0;
+    border: 0; background: none; display: grid; place-items: center;
+}
+.remote-chrome img { width: 22px; height: 22px; display: block; }
+/* Disabled on purpose: these belong to the physical desk. Dimmed rather than
+   hidden, so the bar reads as the app's without pretending to be connected. */
+.remote-chrome:disabled { opacity: .38; cursor: not-allowed; }
+.remote-menu {
+    width: 28px; height: 26px; border-radius: 7px;
+    background: color-mix(in srgb, var(--fill) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--fill) 22%, transparent);
+    gap: 3px; align-content: center; padding: 5px 6px;
+}
+.remote-menu span { display: block; height: 2px; border-radius: 1px; background: var(--fill); }
+.remote-menu span:nth-child(1) { width: 14px; }
+.remote-menu span:nth-child(2) { width: 10px; margin-left: 4px; }
+.remote-menu span:nth-child(3) { width: 14px; }
+
+/* The readout sizes to five characters so "28.21" and "-3.62" both fit without
+   the unit crowding the number. */
+.remote-readout { max-width: 168px; margin: 0 auto; justify-content: center; }
+.remote-readout input { width: 5.2ch; margin-right: 2px; }
+
+/* Height and Tilt are read side by side, so their rows have to line up. Giving
+   both tracks the same height is enough - subgrid collapsed the speed word and
+   the chips into one cell, which is worse than the misalignment it replaced. */
+.remote-vslider, .remote-arc { height: 170px; margin: 6px auto 0; }
+.remote-arc svg { height: 100%; width: auto; display: block; margin: 0 auto; }
+.remote-vslider { width: 40px; }

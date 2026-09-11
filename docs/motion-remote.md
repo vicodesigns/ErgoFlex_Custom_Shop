@@ -31,6 +31,31 @@ and the panel floats over it, so:
 The contract is now simply: **nothing the panel does may change the canvas.**
 Not switching sections, not collapsing, not dragging. That is asserted directly.
 
+## Where it lives
+
+**In the studio** it floats inside the viewer and can be dragged anywhere, which
+suits a tool: you want it over the model, and out of the way on demand.
+
+**On the storefront it drops down instead.** A panel sitting on top of the desk
+is just covering the product, so there it lives in normal flow *beneath* the
+viewer and takes no space at all until you open it — the page loads with it
+closed, and the header bar is what you press to drop it down. Dragging is
+disabled in that mode; there is nothing to drag out of the way.
+
+## Turning the desk in place
+
+The compass is two controls. The dish steers the glide; **the outer ring turns
+the desk in place**. The band is the app's own — `0.62` to `1.02` of the outer
+radius — wide enough to catch the visible capsules without swallowing the dish.
+
+It is a **momentary jog, not a position dial**
+(`movement_and_rotation_joystick.dart:361-383, 588-598`): twist past 5° and the
+desk turns for as long as you hold it; release and it stops and the ring springs
+back to zero. Speed follows the Glide speed word, as on the phone.
+
+Nothing wrote the model's yaw before this, so the rotation itself is new, not
+just the control for it.
+
 ## Moving it
 
 Drag the header. Only the bare strip starts a drag — a pointerdown on the stop
@@ -46,10 +71,10 @@ outer viewer, and re-clamped whenever that rectangle can change: the viewer's
 
 | Control | Behaviour |
 |---|---|
-| Glide compass | drag it, or focus it and hold an arrow key |
+| Glide compass | drag the dish, or focus it and hold an arrow key; twist the outer ring to turn in place |
 | Glide speed | Crawl / Ninja / Slow / Medium / Fast |
 | Height | editable readout, vertical slider, and a speed |
-| Tilt | editable readout, 120° arc slider, and a speed |
+| Tilt | editable readout, a 120° crescent track, and a speed |
 | Preset banks | **separate** for lift and tilt — tap recalls, press and hold saves |
 | Ergo Forms | a combined pose: height *and* tilt. Double-click to rename |
 | Stop | freezes everything exactly where it is |
@@ -101,7 +126,14 @@ breakpoint, because in setup mode the viewer is far narrower than the window.
 
 ## Scope
 
-This is the app's motion surface only. The phone also carries a menu, info
-beacons, a microphone, a shield, logout and a wellness bar; none of those mean
-anything against a 3D model, so none are drawn. The green dot is decorative — it
-does not reflect a connection to real hardware.
+This is the app's **motion** surface. The phone's other header controls — menu,
+info, microphone, collision shield, sign out — are **drawn but disabled**, with a
+tooltip saying they are hardware controls not connected in the preview. Drawing
+them keeps the bar recognisable as the app's; disabling them avoids the worse
+outcome, a control that looks live and silently does nothing.
+
+The green status dot is decorative for the same reason: it reports that this is a
+preview, not a connection to a desk.
+
+Not built: the wellness bar along the bottom of the phone (routine, timer, save,
+lamp). That is a routines feature rather than a desk control.

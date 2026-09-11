@@ -577,19 +577,20 @@ export const ROOM_SCENES = [
         { id: 'painters-tape', at: [-430, 0, 80] },
         { id: 'walkie-talkie', at: [300, 0, 120], turn: 40 }
       ],
-      shell: 'workshop', feature: 'plain', props: [
-        { id: 'garage-desk', at: [-1600, 0, 200], turn: 90 },
-        { id: 'tool-cart', at: [1700, 0, 700], turn: -60 },
-        { id: 'toolbox-industrial', at: [1650, 0, -700], turn: -30 },
+      shell: 'workshop', feature: 'plain', counter: true, props: [
+        { id: 'tool-cart', at: [1700, 0, 600], turn: -60 },
+        { id: 'toolbox-industrial', at: [1700, 0, 1450], turn: -35 },
+        { id: 'shop-machine', at: [1550, 0, -1050], turn: -20 },
+        { id: 'impact-wrench', at: [-1600, 900, 100], turn: -25 },
         { id: 'chop-saw', at: [-1550, 900, -600], turn: 75 },
         { id: 'hammer-drill', at: [-1520, 900, 400], turn: 20 },
         { id: 'rubber-mallet', at: [-1600, 900, 750], turn: -40 },
-        { id: 'gas-can', at: [1850, 0, 1500], turn: 15 },
-        { id: 'pallet', at: [-500, 0, 1900], turn: 8 },
+        { id: 'gas-can', at: [1150, 0, 1700], turn: 15 },
+        { id: 'pallet', at: [700, 0, 1950], turn: 8 },
         { id: 'work-boot', at: [1200, 0, 1700], turn: -25 },
         { id: 'cork-board', at: [2072, 1500, -400], turn: -90, on: 'wall' },
         { id: 'led-ceiling-light', at: [0, 2600, -150], on: 'ceiling' },
-        { id: 'oscilloscope', at: [1750, 900, -1400], turn: -20 },
+        { id: 'oscilloscope', at: [-1600, 900, -1250], turn: 65 },
         { id: 'toolbox', at: [1450, 0, 1550], turn: 35 }
       ] },
     { id: 'study', name: 'Study', caption: 'Quiet, and full of books.', tone: 'warm',
@@ -600,7 +601,10 @@ export const ROOM_SCENES = [
         { id: 'calculator', at: [300, 0, -230], turn: -30 },
         { id: 'glasses-3', at: [130, 0, -260], turn: 40 }
       ],
-      shelf: [ { id: 'globe', at: [-400, 0, 20], turn: 20 } ],
+      shelf: [
+        { id: 'globe', at: [-400, 0, 20], turn: 20 },
+        { id: 'skull', at: [420, 0, 20], turn: -25 }
+      ],
       shell: 'study', feature: 'window', props: [
         { id: 'books-cabinet', at: [1780, 0, -700], turn: -90 },
         { id: 'armchair-leather', at: [-1500, 0, 1200], turn: 65 },
@@ -610,7 +614,6 @@ export const ROOM_SCENES = [
         { id: 'the-thinker', at: [1450, 0, 600], turn: -25 },
         { id: 'photo-frames', at: [2072, 1550, 200], turn: -90, on: 'wall' },
         { id: 'retro-light', at: [-1700, 0, 500], turn: 15 },
-        { id: 'skull', at: [1780, 900, -1450], turn: 25 },
         { id: 'ficus', at: [-1800, 0, 1750], turn: 0 },
         { id: 'magazines', at: [-1250, 0, 1450], turn: -20 }
       ] },
@@ -618,7 +621,8 @@ export const ROOM_SCENES = [
       desk: [
         { id: 'journal', at: [400, 0, 20], turn: -10 },
         { id: 'pen', at: [300, 0, -150], turn: 30 },
-        { id: 'glasses-2', at: [-400, 0, -60], turn: -20 }
+        { id: 'glasses-2', at: [-400, 0, -60], turn: -20 },
+        { id: 'gold-award', at: [430, 0, -120], turn: -15 }
       ],
       shell: 'gallery', feature: 'plain', props: [
         { id: 'aphrodite', at: [-1600, 0, -500], turn: 20 },
@@ -632,7 +636,6 @@ export const ROOM_SCENES = [
         { id: 'recessed-light', at: [-900, 2600, -300], on: 'ceiling' },
         { id: 'recessed-light', at: [900, 2600, -300], on: 'ceiling' },
         { id: 'recessed-light', at: [0, 2600, 900], on: 'ceiling' },
-        { id: 'gold-award', at: [1750, 900, 200], turn: -15 }
       ] }
 ];
 

@@ -4,7 +4,7 @@
   "description": "ErgoFlex custom desk configurator and 3D design studio",
   "main": "index.js",
   "scripts": {
-    "dev": "live-server --port=3000 --no-browser",
+    "dev": "live-server --port=3000 --host=:: --no-browser --wait=500 --ignore=assets/props,models,scene-shots,node_modules,.git",
     "test": "node tests/catalog-test.cjs && node tests/project-io-test.cjs && node tests/validation-test.cjs && node tests/studio-smoke.cjs",
     "test:scene-assets": "node tests/scene-assets-test.cjs"
   },

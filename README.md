@@ -42,6 +42,8 @@ Open **http://localhost:3000** for the store preview or **http://localhost:3000/
 ## Movement and presentation
 
 - **The motion remote** is a replica of the ErgoFlex Desk app's motion surface — compass, Height and Tilt readouts and sliders, per-axis speeds, preset banks, Ergo Forms and a stop — floating over the viewer. See [docs/motion-remote.md](docs/motion-remote.md).
+- **The compass turns the desk as well as gliding it.** The dish steers; the outer ring is a momentary jog that rotates the desk in place while held and springs back on release. The desk's yaw had never been animated before.
+- **On the storefront the panel drops down below the viewer** rather than floating over the product, and starts closed, so the desk is unobstructed until you ask for the controls. The studio keeps the floating, draggable panel.
 - **It floats, and the canvas ignores it.** The panel used to be subtracted from the canvas height, costing the desk ~283px, and because its three tabs were different heights every tab had to reserve the tallest one — which is why the Lift tab showed dead space. The canvas is now sized from the viewer alone, so nothing the panel does can move the camera. Drag it by its header; the position is clamped to the canvas rectangle and persists.
 - **Lift:** editable height readout, vertical slider, Auto / Slow / Medium / Fast, and a bank of three presets. Movement is in units per second against real frame time, not a per-frame fraction that ran at different speeds on different displays.
 - **Tilt:** editable readout and a 120° arc slider, bound to the rig named `tilting` rather than to whichever rig happened to load first. Its own speed and preset bank.
@@ -61,10 +63,11 @@ Open **http://localhost:3000** for the store preview or **http://localhost:3000/
 
 ## Scene assets
 
-The rooms are furnished from a library of 105 converted props — furniture,
-lighting, desk clutter, plants, pets, food, toys and a few environments — built
-from the USDZ and Rhino files in `models/`. The whole library is 17 MB, the
-median prop 73 KB.
+The rooms are furnished from a library of 339 converted props in 15 categories —
+furniture, lighting, desk clutter, plants, pets, food, tools, instruments,
+figures and a few whole environments — built from the USDZ and Rhino files in
+`models/`. The library is 116 MB against 2.9 GB of sources, the median prop
+197 KB, and 6.9 million triangles decimated from 26.5 million.
 
 In the studio, **Scene assets → Prop library** lists every prop with a
 thumbnail, a search box and a category filter. Clicking one drops it into the

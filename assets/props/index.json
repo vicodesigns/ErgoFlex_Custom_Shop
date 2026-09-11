@@ -942,7 +942,7 @@
     538.3
    ],
    "tris": 73636,
-   "bytes": 381408,
+   "bytes": 440052,
    "source": "models/Foosball_table.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -995,15 +995,15 @@
    "min": [
     -190,
     0,
-    -156.3
+    -156.1
    ],
    "max": [
     190,
     271.1,
-    156
+    156.1
    ],
    "tris": 7332,
-   "bytes": 76652,
+   "bytes": 77612,
    "source": "models/Gaming_Laptop.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -1592,7 +1592,7 @@
     197.3
    ],
    "tris": 1830,
-   "bytes": 15688,
+   "bytes": 16072,
    "source": "models/Marble_And_Metal_Table_Lamp.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -1652,7 +1652,7 @@
     75.1
    ],
    "tris": 27040,
-   "bytes": 47928,
+   "bytes": 102524,
    "source": "models/Mickey_Mouse_Ear_Hat.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -1682,7 +1682,7 @@
     355.3
    ],
    "tris": 4614,
-   "bytes": 25652,
+   "bytes": 32940,
    "source": "models/Modern_Fridge.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -1803,7 +1803,7 @@
     772.3
    ],
    "tris": 200,
-   "bytes": 7200,
+   "bytes": 7652,
    "source": "models/Modern_mirror.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -1834,7 +1834,7 @@
     183
    ],
    "tris": 922,
-   "bytes": 92796,
+   "bytes": 93980,
    "source": "models/Monitor.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -2142,7 +2142,7 @@
     212
    ],
    "tris": 184,
-   "bytes": 38984,
+   "bytes": 38980,
    "source": "models/Pc_Gamer.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -2203,7 +2203,7 @@
     69.1
    ],
    "tris": 19287,
-   "bytes": 85864,
+   "bytes": 129584,
    "source": "models/RAZER_HUNTSMAN.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -2234,7 +2234,7 @@
     46
    ],
    "tris": 5760,
-   "bytes": 27448,
+   "bytes": 31936,
    "source": "models/RUSTA_Hugo_Mirror.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -3227,21 +3227,21 @@
    "anchor": "floor",
    "size": [
     850.3,
-    1049.9,
+    1050,
     776.7
    ],
    "min": [
-    -428.4,
-    0.1,
-    -384.7
+    -425.2,
+    0,
+    -388.4
    ],
    "max": [
-    421.9,
+    425.2,
     1050,
-    392
+    388.4
    ],
    "tris": 41930,
-   "bytes": 494188,
+   "bytes": 483428,
    "sourceTris": 132240,
    "source": "models/A_Luxury_Chair.usdz",
    "license": "unconfirmed",
@@ -3327,16 +3327,16 @@
    ],
    "min": [
     -1100,
-    -0.1,
+    0,
     -456.2
    ],
    "max": [
     1100,
-    765.5,
+    765.6,
     456.2
    ],
-   "tris": 39990,
-   "bytes": 772040,
+   "tris": 39991,
+   "bytes": 771884,
    "sourceTris": 199188,
    "source": "models/Beautiful_Sofa.usdz",
    "license": "unconfirmed",
@@ -3398,8 +3398,8 @@
     533.8,
     347.1
    ],
-   "tris": 40000,
-   "bytes": 388792,
+   "tris": 39999,
+   "bytes": 388604,
    "sourceTris": 47166,
    "source": "models/Leather_Wood_Sofa__Game_Ready__4K.usdz",
    "license": "unconfirmed",
@@ -3447,26 +3447,27 @@
    "file": "assets/props/lounge-chair-metal.glb",
    "anchor": "floor",
    "size": [
-    62390.6,
-    780,
-    62597.4
+    639,
+    250.8,
+    900
    ],
    "min": [
-    -31195.3,
+    -319.5,
     0,
-    -31298.7
+    -450
    ],
    "max": [
-    31195.3,
-    780,
-    31298.7
+    319.5,
+    250.8,
+    450
    ],
-   "tris": 39961,
-   "bytes": 373204,
-   "sourceTris": 218331,
+   "tris": 39963,
+   "bytes": 384332,
+   "sourceTris": 218104,
    "source": "models/Metal_Lounge_Chair.usdz",
    "license": "unconfirmed",
-   "attribution": null
+   "attribution": null,
+   "sizeNote": "The source sits on a 5.4 m ground plane, removed here."
   },
   {
    "id": "modern-chair",
@@ -3510,22 +3511,22 @@
    "file": "assets/props/round-chair.glb",
    "anchor": "floor",
    "size": [
-    706.9,
-    800.5,
-    706.1
+    705.5,
+    800,
+    706
    ],
    "min": [
-    -358.2,
-    -0.1,
-    -358.2
+    -352.7,
+    0,
+    -353
    ],
    "max": [
-    348.7,
-    800.4,
-    347.9
+    352.7,
+    800,
+    353
    ],
-   "tris": 39988,
-   "bytes": 183900,
+   "tris": 39992,
+   "bytes": 184028,
    "sourceTris": 680576,
    "source": "models/Round_chair.usdz",
    "license": "unconfirmed",
@@ -3547,16 +3548,16 @@
    ],
    "min": [
     -348.2,
-    0.1,
-    -380.4
+    0,
+    -380.3
    ],
    "max": [
     348.2,
-    1280.1,
-    380.2
+    1280,
+    380.3
    ],
    "tris": 39999,
-   "bytes": 411684,
+   "bytes": 411768,
    "sourceTris": 185494,
    "source": "models/Red_Gaming_Chair_HighQuality.usdz",
    "license": "unconfirmed",
@@ -3587,8 +3588,8 @@
     1050,
     245.5
    ],
-   "tris": 39999,
-   "bytes": 393656,
+   "tris": 40000,
+   "bytes": 394168,
    "sourceTris": 73216,
    "source": "models/Leather_High_Bar_Stool.usdz",
    "license": "unconfirmed",
@@ -3667,22 +3668,22 @@
    "file": "assets/props/hall-bench.glb",
    "anchor": "floor",
    "size": [
-    1200.4,
-    1521.5,
-    450.2
+    1200,
+    1521,
+    450.1
    ],
    "min": [
-    -600.4,
+    -600,
     0,
-    -224.9
+    -225
    ],
    "max": [
     600,
-    1521.5,
-    225.3
+    1521,
+    225
    ],
-   "tris": 40109,
-   "bytes": 802672,
+   "tris": 40108,
+   "bytes": 802848,
    "sourceTris": 135426,
    "source": "models/Hall_bench.usdz",
    "license": "unconfirmed",
@@ -3714,7 +3715,7 @@
     225
    ],
    "tris": 20000,
-   "bytes": 164772,
+   "bytes": 164968,
    "sourceTris": 27984,
    "source": "models/Golden_Pillow.usdz",
    "license": "unconfirmed",
@@ -3728,22 +3729,22 @@
    "file": "assets/props/electric-wheelchair.glb",
    "anchor": "floor",
    "size": [
-    1055.8,
-    1101.2,
-    622.5
+    1054.7,
+    1100,
+    621.9
    ],
    "min": [
-    -528.1,
-    -1,
-    -311.3
+    -527.3,
+    0,
+    -311
    ],
    "max": [
-    527.8,
-    1100.2,
-    311.3
+    527.3,
+    1100,
+    311
    ],
-   "tris": 40164,
-   "bytes": 1658812,
+   "tris": 40165,
+   "bytes": 1658716,
    "sourceTris": 146847,
    "source": "models/Compact_electric_wheelchair__rigg_-_100_free.usdz",
    "license": "unconfirmed",
@@ -3760,22 +3761,22 @@
    "file": "assets/props/antique-table.glb",
    "anchor": "floor",
    "size": [
-    1399.4,
-    1194.9,
-    1403.5
+    1400,
+    1195.4,
+    1404.1
    ],
    "min": [
-    -701.3,
+    -700,
     0,
-    -699.5
+    -702
    ],
    "max": [
-    698.1,
-    1194.9,
-    704.1
+    700,
+    1195.4,
+    702
    ],
-   "tris": 39998,
-   "bytes": 804524,
+   "tris": 39852,
+   "bytes": 804552,
    "sourceTris": 169744,
    "source": "models/Antique_Table.usdz",
    "license": "unconfirmed",
@@ -3783,7 +3784,7 @@
   },
   {
    "id": "coffee-table-2",
-   "name": "Coffee table",
+   "name": "Round side table",
    "category": "furniture",
    "scenes": [
     "lounge",
@@ -3792,22 +3793,22 @@
    "file": "assets/props/coffee-table-2.glb",
    "anchor": "floor",
    "size": [
-    1099.7,
-    1832.9,
-    1100
+    420,
+    700,
+    420.1
    ],
    "min": [
-    -549.8,
+    -210,
     0,
-    -550
+    -210
    ],
    "max": [
-    549.8,
-    1832.9,
-    550
+    210,
+    700,
+    210
    ],
-   "tris": 39998,
-   "bytes": 372300,
+   "tris": 39997,
+   "bytes": 372632,
    "sourceTris": 125296,
    "source": "models/Coffee_Table.usdz",
    "license": "unconfirmed",
@@ -3824,22 +3825,22 @@
    "file": "assets/props/drafting-desk.glb",
    "anchor": "floor",
    "size": [
-    1199.9,
-    817,
+    1200,
+    817.1,
     732.6
    ],
    "min": [
-    -599.9,
-    11.4,
-    -385.7
+    -600,
+    0,
+    -366.3
    ],
    "max": [
     600,
-    828.5,
-    346.9
+    817.1,
+    366.3
    ],
-   "tris": 40566,
-   "bytes": 1306180,
+   "tris": 40565,
+   "bytes": 1305688,
    "sourceTris": 52188,
    "source": "models/Art_Drafting_Desk.usdz",
    "license": "unconfirmed",
@@ -3855,22 +3856,22 @@
    "file": "assets/props/drafting-table.glb",
    "anchor": "floor",
    "size": [
-    1100.2,
-    765.8,
-    632.5
+    1100,
+    765.7,
+    632.4
    ],
    "min": [
-    -550.1,
-    -0.2,
-    -316.4
+    -550,
+    0,
+    -316.2
    ],
    "max": [
     550,
-    765.6,
-    316.1
+    765.7,
+    316.2
    ],
    "tris": 40000,
-   "bytes": 417460,
+   "bytes": 417456,
    "sourceTris": 81092,
    "source": "models/Sophia_Drafting_Table_by_BigTurntables.usdz",
    "license": "unconfirmed",
@@ -3901,7 +3902,7 @@
     295
    ],
    "tris": 39993,
-   "bytes": 946092,
+   "bytes": 946200,
    "sourceTris": 44023,
    "source": "models/Study_Desk.usdz",
    "license": "unconfirmed",
@@ -3917,22 +3918,22 @@
    "file": "assets/props/garage-desk.glb",
    "anchor": "floor",
    "size": [
-    1589.3,
-    1069.7,
-    1667.2
+    1600,
+    1076.9,
+    1678.5
    ],
    "min": [
-    -789.3,
-    11.1,
-    -841.3
+    -800,
+    0,
+    -839.2
    ],
    "max": [
     800,
-    1080.8,
-    825.9
+    1076.9,
+    839.2
    ],
    "tris": 41696,
-   "bytes": 1795184,
+   "bytes": 1794840,
    "sourceTris": 50649,
    "source": "models/Garage_Desk.usdz",
    "license": "unconfirmed",
@@ -4072,22 +4073,22 @@
    "file": "assets/props/filing-tray-wood.glb",
    "anchor": "floor",
    "size": [
-    346.9,
-    73.6,
-    242.3
+    340,
+    72.2,
+    237.4
    ],
    "min": [
-    -173,
-    -2.6,
-    -120.9
+    -170,
+    0,
+    -118.7
    ],
    "max": [
-    173.9,
-    71,
-    121.4
+    170,
+    72.2,
+    118.7
    ],
-   "tris": 12128,
-   "bytes": 202152,
+   "tris": 12129,
+   "bytes": 202300,
    "sourceTris": 164346,
    "source": "models/Wooden_flat_filing_tray.usdz",
    "license": "unconfirmed",
@@ -4195,22 +4196,22 @@
    "file": "assets/props/bed.glb",
    "anchor": "floor",
    "size": [
-    1978.7,
-    844.9,
-    2049.5
+    1979.2,
+    845.1,
+    2050
    ],
    "min": [
-    -988.3,
+    -989.6,
     0,
-    -1025.2
+    -1025
    ],
    "max": [
-    990.4,
-    844.9,
-    1024.4
+    989.6,
+    845.1,
+    1025
    ],
-   "tris": 40566,
-   "bytes": 622204,
+   "tris": 40565,
+   "bytes": 622528,
    "sourceTris": 126412,
    "source": "models/BED (1).usdz",
    "license": "unconfirmed",
@@ -4257,22 +4258,22 @@
    "file": "assets/props/bunk-bed.glb",
    "anchor": "floor",
    "size": [
-    2211.1,
-    1701,
-    2120.2
+    2209.8,
+    1700,
+    2119
    ],
    "min": [
-    -1105.4,
+    -1104.9,
     0,
-    -1060.1
+    -1059.5
    ],
    "max": [
-    1105.7,
-    1701,
-    1060.1
+    1104.9,
+    1700,
+    1059.5
    ],
    "tris": 41439,
-   "bytes": 904852,
+   "bytes": 904116,
    "sourceTris": 110385,
    "source": "models/bunk_bed.usdz",
    "license": "unconfirmed",
@@ -4289,22 +4290,22 @@
    "file": "assets/props/carpet-nain.glb",
    "anchor": "floor",
    "size": [
-    2999,
+    3000,
     28.8,
-    2234.2
+    2234.9
    ],
    "min": [
-    -1499.5,
-    -9,
-    -1119.7
+    -1500,
+    0,
+    -1117.5
    ],
    "max": [
-    1499.5,
-    19.8,
-    1114.5
+    1500,
+    28.8,
+    1117.5
    ],
-   "tris": 69749,
-   "bytes": 807748,
+   "tris": 65498,
+   "bytes": 624276,
    "sourceTris": 628216,
    "source": "models/Persian_Nain_Carpet.usdz",
    "license": "unconfirmed",
@@ -4321,22 +4322,22 @@
    "file": "assets/props/carpet-runner.glb",
    "anchor": "floor",
    "size": [
-    2399.3,
+    2400,
     11.6,
-    649.3
+    649.5
    ],
    "min": [
-    -1199.9,
-    -3.1,
-    -323.8
+    -1200,
+    0,
+    -324.7
    ],
    "max": [
-    1199.5,
-    8.6,
-    325.5
+    1200,
+    11.6,
+    324.7
    ],
-   "tris": 104231,
-   "bytes": 885428,
+   "tris": 101546,
+   "bytes": 885328,
    "sourceTris": 612684,
    "source": "models/Persian_Malayer_Runner_Carpet.usdz",
    "license": "unconfirmed",
@@ -4370,8 +4371,7 @@
     363.4
    ],
    "tris": 9310,
-   "sourceTris": 9310,
-   "bytes": 620624,
+   "bytes": 307040,
    "source": "models/Monstera_Deliciosa_Potted_Mid-Century_plant.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -4388,22 +4388,22 @@
    "file": "assets/props/ficus.glb",
    "anchor": "floor",
    "size": [
-    498.3,
-    1502.5,
-    542
+    497.5,
+    1500,
+    541.2
    ],
    "min": [
-    -249.6,
-    -2.6,
-    -271.3
+    -248.7,
+    0,
+    -270.6
    ],
    "max": [
     248.7,
-    1499.9,
-    270.7
+    1500,
+    270.6
    ],
-   "tris": 20000,
-   "bytes": 549688,
+   "tris": 20018,
+   "bytes": 547544,
    "sourceTris": 287416,
    "source": "models/ficus.usdz",
    "license": "unconfirmed",
@@ -4420,22 +4420,22 @@
    "file": "assets/props/ivy.glb",
    "anchor": "floor",
    "size": [
-    899.9,
+    900,
     320.8,
-    85.7
+    85.8
    ],
    "min": [
     -450,
-    2.4,
-    -45
+    0,
+    -42.9
    ],
    "max": [
-    449.9,
-    323.2,
-    40.7
+    450,
+    320.8,
+    42.9
    ],
-   "tris": 39997,
-   "bytes": 799124,
+   "tris": 39995,
+   "bytes": 799084,
    "sourceTris": 176048,
    "source": "models/Ivy_High_Poly.usdz",
    "license": "unconfirmed",
@@ -4452,22 +4452,22 @@
    "file": "assets/props/potted-tree.glb",
    "anchor": "floor",
    "size": [
-    955.9,
-    1899.4,
-    911.8
+    956.2,
+    1900,
+    912
    ],
    "min": [
-    -478,
+    -478.1,
     0,
-    -455.9
+    -456
    ],
    "max": [
-    477.9,
-    1899.4,
-    455.9
+    478.1,
+    1900,
+    456
    ],
    "tris": 20016,
-   "bytes": 844668,
+   "bytes": 834776,
    "sourceTris": 51328,
    "source": "models/Potted_Tree.usdz",
    "license": "unconfirmed",
@@ -4484,22 +4484,22 @@
    "file": "assets/props/fan-palm.glb",
    "anchor": "floor",
    "size": [
-    1570.7,
-    1500.2,
-    1427.9
+    1570.6,
+    1500,
+    1427.7
    ],
    "min": [
-    -785.4,
-    0.1,
-    -714.3
+    -785.3,
+    0,
+    -713.9
    ],
    "max": [
     785.3,
-    1500.3,
-    713.6
+    1500,
+    713.9
    ],
-   "tris": 19998,
-   "bytes": 410060,
+   "tris": 19999,
+   "bytes": 410076,
    "sourceTris": 61856,
    "source": "models/FREE__Livistona_Chinensis_-_Fan_Palm.usdz",
    "license": "unconfirmed",
@@ -4523,15 +4523,15 @@
    "min": [
     -90.9,
     0,
-    -92.5
+    -92.6
    ],
    "max": [
-    91,
+    90.9,
     300,
-    92.8
+    92.6
    ],
    "tris": 19998,
-   "bytes": 285196,
+   "bytes": 285220,
    "sourceTris": 214660,
    "source": "models/Red_rose.usdz",
    "license": "unconfirmed",
@@ -4547,30 +4547,30 @@
    "file": "assets/props/strat-guitar.glb",
    "anchor": "floor",
    "size": [
-    471.3,
-    980.6,
-    441.1
+    479.8,
+    984,
+    456.3
    ],
    "min": [
-    -235.3,
+    -239.9,
     0,
-    -220.5
+    -228.2
    ],
    "max": [
-    236,
-    980.6,
-    220.5
+    239.9,
+    984,
+    228.2
    ],
-   "tris": 20000,
+   "tris": 24732,
+   "bytes": 274384,
    "sourceTris": 206344,
-   "bytes": 407416,
    "source": "models/FENDER_Stratocaster__Guitar.usdz",
    "license": "unconfirmed",
    "attribution": null
   },
   {
    "id": "les-paul-guitar",
-   "name": "Les Paul guitar",
+   "name": "Guitar case",
    "category": "music",
    "scenes": [
     "music"
@@ -4578,22 +4578,22 @@
    "file": "assets/props/les-paul-guitar.glb",
    "anchor": "floor",
    "size": [
-    1000.8,
-    531.1,
-    590.9
+    1050,
+    557.2,
+    619.9
    ],
    "min": [
-    -500.4,
-    28.6,
-    -299.5
+    -525,
+    0,
+    -310
    ],
    "max": [
-    500.4,
-    559.7,
-    291.3
+    525,
+    557.2,
+    310
    ],
-   "tris": 19997,
-   "bytes": 325024,
+   "tris": 19998,
+   "bytes": 324768,
    "sourceTris": 35736,
    "source": "models/Les_Paul_Tribute_To_one_of_The_Greats (2).usdz",
    "license": "unconfirmed",
@@ -4609,22 +4609,22 @@
    "file": "assets/props/rose-neck-guitar.glb",
    "anchor": "floor",
    "size": [
-    1000.4,
-    310.9,
+    1000,
+    310.7,
     72
    ],
    "min": [
-    -500.2,
-    0.2,
+    -500,
+    0,
     -36
    ],
    "max": [
-    500.3,
-    311.1,
+    500,
+    310.7,
     36
    ],
-   "tris": 19995,
-   "bytes": 135468,
+   "tris": 19996,
+   "bytes": 135696,
    "sourceTris": 312799,
    "source": "models/Silver_Rose_Neck_Guitar.usdz",
    "license": "unconfirmed",
@@ -4632,7 +4632,7 @@
   },
   {
    "id": "upright-piano",
-   "name": "Upright piano, 1896",
+   "name": "Piano frame",
    "category": "music",
    "scenes": [
     "music",
@@ -4641,26 +4641,27 @@
    "file": "assets/props/upright-piano.glb",
    "anchor": "floor",
    "size": [
-    1520,
-    2351.3,
-    2595.6
+    937,
+    1449.4,
+    1600
    ],
    "min": [
-    -760,
+    -468.5,
     0,
-    -1297.8
+    -800
    ],
    "max": [
-    760,
-    2351.3,
-    1297.8
+    468.5,
+    1449.4,
+    800
    ],
    "tris": 20006,
-   "bytes": 310484,
+   "bytes": 310496,
    "sourceTris": 284900,
    "source": "models/Hallet_And_Davis_Piano_1896_3DST19.usdz",
    "license": "unconfirmed",
-   "attribution": null
+   "attribution": null,
+   "sizeNote": "The source is a piano frame and soundboard, not a cased instrument."
   },
   {
    "id": "chorus-pedal",
@@ -4672,22 +4673,22 @@
    "file": "assets/props/chorus-pedal.glb",
    "anchor": "floor",
    "size": [
-    129.7,
-    58,
-    71.7
+    129,
+    57.7,
+    71.4
    ],
    "min": [
-    -65.5,
-    -0.7,
-    -36
+    -64.5,
+    0,
+    -35.7
    ],
    "max": [
-    64.1,
-    57.3,
-    35.8
+    64.5,
+    57.7,
+    35.7
    ],
-   "tris": 19998,
-   "bytes": 256748,
+   "tris": 19999,
+   "bytes": 256540,
    "sourceTris": 200034,
    "source": "models/BOSS_CH-1_Super_Chorus_.RAWscan.usdz",
    "license": "unconfirmed",
@@ -4719,7 +4720,7 @@
     467.4
    ],
    "tris": 20003,
-   "bytes": 407104,
+   "bytes": 407148,
    "sourceTris": 26830,
    "source": "models/Jukebox.usdz",
    "license": "unconfirmed",
@@ -4813,7 +4814,7 @@
     86.4
    ],
    "tris": 11997,
-   "bytes": 309712,
+   "bytes": 309932,
    "sourceTris": 27910,
    "source": "models/Kashmir_headset_stand.usdz",
    "license": "unconfirmed",
@@ -4894,7 +4895,7 @@
    "size": [
     296,
     570,
-    340.6
+    340.7
    ],
    "min": [
     -148,
@@ -4906,8 +4907,8 @@
     570,
     170.3
    ],
-   "tris": 19991,
-   "bytes": 482440,
+   "tris": 19990,
+   "bytes": 482088,
    "sourceTris": 169886,
    "source": "models/JBL_Partybox_110.usdz",
    "license": "unconfirmed",
@@ -4927,20 +4928,20 @@
    "size": [
     180.6,
     200,
-    83.3
+    83.1
    ],
    "min": [
     -90.3,
     0,
-    -41.7
+    -41.6
    ],
    "max": [
     90.3,
     200,
     41.6
    ],
-   "tris": 20274,
-   "bytes": 472628,
+   "tris": 20277,
+   "bytes": 472440,
    "sourceTris": 132665,
    "source": "models/JBL_Tour_One_M2.usdz",
    "license": "unconfirmed",
@@ -4969,10 +4970,10 @@
    "max": [
     35,
     65.8,
-    30.2
+    30.1
    ],
-   "tris": 20295,
-   "bytes": 327280,
+   "tris": 20297,
+   "bytes": 326912,
    "sourceTris": 133589,
    "source": "models/JBL_Tour_Pro_2.usdz",
    "license": "unconfirmed",
@@ -5125,8 +5126,8 @@
     154.8,
     44.5
    ],
-   "tris": 20161,
-   "bytes": 274980,
+   "tris": 20160,
+   "bytes": 274624,
    "sourceTris": 23898,
    "source": "models/Gadget_-_Radio_-_Flashlight_-_Radar.usdz",
    "license": "unconfirmed",
@@ -5142,22 +5143,22 @@
    "file": "assets/props/ps5.glb",
    "anchor": "floor",
    "size": [
-    188.7,
-    344.5,
-    125.5
+    210.3,
+    390,
+    139.9
    ],
    "min": [
-    -88.8,
-    16.1,
-    -62.2
+    -105.2,
+    0,
+    -70
    ],
    "max": [
-    99.9,
-    360.6,
-    63.2
+    105.2,
+    390,
+    70
    ],
-   "tris": 30562,
-   "bytes": 429728,
+   "tris": 30563,
+   "bytes": 440828,
    "sourceTris": 179078,
    "source": "models/Playstation_5.usdz",
    "license": "unconfirmed",
@@ -5173,22 +5174,22 @@
    "file": "assets/props/ps5-slim.glb",
    "anchor": "floor",
    "size": [
-    288.7,
-    358.1,
-    193.3
+    288.6,
+    358,
+    193.2
    ],
    "min": [
-    -154.1,
-    -0.1,
-    -99.6
+    -144.3,
+    0,
+    -96.6
    ],
    "max": [
-    134.6,
+    144.3,
     358,
-    93.7
+    96.6
    ],
-   "tris": 33858,
-   "bytes": 294908,
+   "tris": 33860,
+   "bytes": 294440,
    "sourceTris": 206042,
    "source": "models/Free_3D_PS5_medpoly.usdz",
    "license": "unconfirmed",
@@ -5204,9 +5205,9 @@
    "file": "assets/props/ps1.glb",
    "anchor": "floor",
    "size": [
-    259.9,
-    57.2,
-    182.5
+    260,
+    57.1,
+    182.6
    ],
    "min": [
     -130,
@@ -5215,11 +5216,11 @@
    ],
    "max": [
     130,
-    57.2,
+    57.1,
     91.3
    ],
-   "tris": 19995,
-   "bytes": 157188,
+   "tris": 19992,
+   "bytes": 156980,
    "sourceTris": 283464,
    "source": "models/Playstation_1.usdz",
    "license": "unconfirmed",
@@ -5267,22 +5268,22 @@
    "file": "assets/props/graphics-card.glb",
    "anchor": "floor",
    "size": [
-    331.9,
-    52.9,
-    147.6
+    336,
+    53.6,
+    149.5
    ],
    "min": [
-    -163.9,
+    -168,
     0,
-    -67.9
+    -74.7
    ],
    "max": [
     168,
-    52.9,
-    79.7
+    53.6,
+    74.7
    ],
-   "tris": 19992,
-   "bytes": 186732,
+   "tris": 18414,
+   "bytes": 185704,
    "sourceTris": 77338,
    "source": "models/Nvidia_Ge_Force_RTX_4090.usdz",
    "license": "unconfirmed",
@@ -5298,22 +5299,22 @@
    "file": "assets/props/gaming-desktop.glb",
    "anchor": "floor",
    "size": [
-    461.5,
-    316.5,
-    915.1
+    699.8,
+    480,
+    1387.8
    ],
    "min": [
-    -230.7,
-    127,
-    -457.5
+    -349.9,
+    0,
+    -693.9
    ],
    "max": [
-    230.7,
-    443.5,
-    457.5
+    349.9,
+    480,
+    693.9
    ],
-   "tris": 42026,
-   "bytes": 866020,
+   "tris": 42021,
+   "bytes": 860936,
    "sourceTris": 86272,
    "source": "models/Gaming_Desktop_PC.usdz",
    "license": "unconfirmed",
@@ -5329,12 +5330,12 @@
    "file": "assets/props/gaming-case.glb",
    "anchor": "floor",
    "size": [
-    589.3,
+    589.4,
     500,
-    222.9
+    223
    ],
    "min": [
-    -294.6,
+    -294.7,
     0,
     -111.5
    ],
@@ -5343,8 +5344,8 @@
     500,
     111.5
    ],
-   "tris": 29997,
-   "bytes": 216648,
+   "tris": 29995,
+   "bytes": 216928,
    "sourceTris": 378700,
    "source": "models/Gaming_PC_Case.usdz",
    "license": "unconfirmed",
@@ -5361,22 +5362,22 @@
    "file": "assets/props/pc-setup.glb",
    "anchor": "floor",
    "size": [
-    1385,
-    2008.9,
-    1128.1
+    1400,
+    2030.4,
+    1140.5
    ],
    "min": [
-    -692.5,
-    1,
-    -563.6
+    -700,
+    0,
+    -570.2
    ],
    "max": [
-    692.5,
-    2009.9,
-    564.5
+    700,
+    2030.4,
+    570.2
    ],
-   "tris": 19985,
-   "bytes": 345968,
+   "tris": 19988,
+   "bytes": 343184,
    "sourceTris": 215192,
    "source": "models/PC_Setup_FInal.usdz",
    "license": "unconfirmed",
@@ -5393,12 +5394,12 @@
    "anchor": "floor",
    "size": [
     440,
-    38.2,
+    37.9,
     133.7
    ],
    "min": [
     -220,
-    -0.3,
+    0,
     -66.9
    ],
    "max": [
@@ -5406,8 +5407,8 @@
     37.9,
     66.9
    ],
-   "tris": 11999,
-   "bytes": 242848,
+   "tris": 12000,
+   "bytes": 242412,
    "sourceTris": 16120,
    "source": "models/Mechanical_RGB_Keyboard.usdz",
    "license": "unconfirmed",
@@ -5423,9 +5424,9 @@
    "file": "assets/props/gaming-mouse.glb",
    "anchor": "floor",
    "size": [
-    128.1,
-    57,
-    185.8
+    128,
+    56.9,
+    185.7
    ],
    "min": [
     -64,
@@ -5433,12 +5434,12 @@
     -92.8
    ],
    "max": [
-    64.1,
-    57,
-    92.9
+    64,
+    56.9,
+    92.8
    ],
-   "tris": 11996,
-   "bytes": 124064,
+   "tris": 11995,
+   "bytes": 124116,
    "sourceTris": 136520,
    "source": "models/Computer_mouse_A4Tech_bloody_V7.usdz",
    "license": "unconfirmed",
@@ -5455,22 +5456,22 @@
    "file": "assets/props/game-controller.glb",
    "anchor": "floor",
    "size": [
-    160.2,
-    81.3,
-    173.6
+    160,
+    81.4,
+    173.5
    ],
    "min": [
-    -80.1,
-    0.1,
-    -86.6
+    -80,
+    0,
+    -86.7
    ],
    "max": [
-    80.1,
+    80,
     81.4,
-    86.9
+    86.7
    ],
    "tris": 11998,
-   "bytes": 328368,
+   "bytes": 328480,
    "sourceTris": 95190,
    "source": "models/radio_controller.usdz",
    "license": "unconfirmed",
@@ -5487,22 +5488,22 @@
    "file": "assets/props/monitor-slim.glb",
    "anchor": "floor",
    "size": [
-    620,
-    1047.8,
-    1753.4
+    247.5,
+    418.3,
+    700
    ],
    "min": [
-    -310,
+    -123.8,
     0,
-    -876.7
+    -350
    ],
    "max": [
-    310,
-    1047.8,
-    876.7
+    123.8,
+    418.3,
+    350
    ],
    "tris": 20109,
-   "bytes": 247572,
+   "bytes": 247392,
    "sourceTris": 59367,
    "source": "models/Monitor (3).usdz",
    "license": "unconfirmed",
@@ -5525,16 +5526,16 @@
    ],
    "min": [
     -146,
-    20.6,
-    -107.3
+    0,
+    -136.9
    ],
    "max": [
     146,
-    205,
-    166.6
+    184.4,
+    136.9
    ],
-   "tris": 30158,
-   "bytes": 207200,
+   "tris": 30154,
+   "bytes": 213048,
    "sourceTris": 343660,
    "source": "models/Microsoft_Surface_Pro_3__Touch_Cover.usdz",
    "license": "unconfirmed",
@@ -5552,22 +5553,22 @@
    "file": "assets/props/headset-xr.glb",
    "anchor": "floor",
    "size": [
-    197.6,
-    68.8,
-    132.5
+    200,
+    69.6,
+    134
    ],
    "min": [
-    -99,
-    0.3,
-    -66.4
+    -100,
+    0,
+    -67
    ],
    "max": [
-    98.7,
-    69,
-    66
+    100,
+    69.6,
+    67
    ],
-   "tris": 23734,
-   "bytes": 1098500,
+   "tris": 23739,
+   "bytes": 1098208,
    "sourceTris": 151469,
    "source": "models/Apple_Vision_Pro.usdz",
    "license": "unconfirmed",
@@ -5589,17 +5590,17 @@
     49.5
    ],
    "min": [
-    -14.5,
+    -14.4,
     0,
     -24.7
    ],
    "max": [
-    14.3,
+    14.4,
     49,
     24.7
    ],
-   "tris": 12820,
-   "bytes": 1257496,
+   "tris": 12816,
+   "bytes": 1257084,
    "sourceTris": 140916,
    "source": "models/Apple_Watch_Ultra_2.usdz",
    "license": "unconfirmed",
@@ -5631,7 +5632,7 @@
     33.7
    ],
    "tris": 12023,
-   "bytes": 120324,
+   "bytes": 117100,
    "sourceTris": 184536,
    "source": "models/Wireless_Charger_USB_QC.usdz",
    "license": "unconfirmed",
@@ -5662,8 +5663,8 @@
     28.8,
     80
    ],
-   "tris": 11967,
-   "bytes": 135972,
+   "tris": 11975,
+   "bytes": 135760,
    "sourceTris": 122000,
    "source": "models/Calculator_02.usdz",
    "license": "unconfirmed",
@@ -5680,9 +5681,9 @@
    "file": "assets/props/retro-computer.glb",
    "anchor": "floor",
    "size": [
-    480.1,
-    302.4,
-    677.2
+    480,
+    302.3,
+    677.1
    ],
    "min": [
     -240,
@@ -5690,12 +5691,12 @@
     -338.6
    ],
    "max": [
-    240.1,
-    302.4,
+    240,
+    302.3,
     338.6
    ],
-   "tris": 39995,
-   "bytes": 596108,
+   "tris": 39991,
+   "bytes": 594892,
    "sourceTris": 307282,
    "source": "models/IBM_PCjr_4863_Computer-Freepoly.usdz",
    "license": "unconfirmed",
@@ -5712,7 +5713,7 @@
    "file": "assets/props/rotary-phone.glb",
    "anchor": "floor",
    "size": [
-    153.1,
+    153,
     230,
     81.3
    ],
@@ -5724,10 +5725,10 @@
    "max": [
     76.5,
     230,
-    40.7
+    40.6
    ],
    "tris": 19998,
-   "bytes": 253144,
+   "bytes": 253212,
    "sourceTris": 255758,
    "source": "models/Old_Phone-Freepoly.usdz",
    "license": "unconfirmed",
@@ -5805,22 +5806,22 @@
    "file": "assets/props/fpv-drone.glb",
    "anchor": "floor",
    "size": [
-    198.7,
-    204.2,
-    251.3
+    221.4,
+    227.5,
+    280
    ],
    "min": [
-    -102.9,
-    5.7,
-    -123.7
+    -110.7,
+    0,
+    -140
    ],
    "max": [
-    95.7,
-    209.9,
-    127.6
+    110.7,
+    227.5,
+    140
    ],
-   "tris": 33264,
-   "bytes": 466764,
+   "tris": 33270,
+   "bytes": 466172,
    "sourceTris": 325470,
    "source": "models/DJI_FVP_-_SDC_PERFORMANCE_EDITION.usdz",
    "license": "unconfirmed",
@@ -5837,26 +5838,27 @@
    "file": "assets/props/robotic-arm.glb",
    "anchor": "floor",
    "size": [
-    1710,
-    901.1,
-    2101
+    803.1,
+    900,
+    1644.5
    ],
    "min": [
-    -967.1,
-    -11.5,
-    -1056.4
+    -401.5,
+    0,
+    -822.2
    ],
    "max": [
-    742.9,
-    889.6,
-    1044.6
+    401.5,
+    900,
+    822.2
    ],
    "tris": 40646,
-   "bytes": 275028,
-   "sourceTris": 670224,
+   "bytes": 271000,
+   "sourceTris": 669904,
    "source": "models/Sci_Fi_Robotic_Arm.usdz",
    "license": "unconfirmed",
-   "attribution": null
+   "attribution": null,
+   "sizeNote": "The source includes a backdrop plane, removed here."
   },
   {
    "id": "mars-rover",
@@ -5869,22 +5871,22 @@
    "file": "assets/props/mars-rover.glb",
    "anchor": "floor",
    "size": [
-    416.6,
-    331.5,
-    600.1
+    416.5,
+    331.6,
+    600
    ],
    "min": [
-    -208.3,
-    0.5,
+    -208.2,
+    0,
     -300
    ],
    "max": [
-    208.3,
-    331.9,
-    300.1
+    208.2,
+    331.6,
+    300
    ],
-   "tris": 20090,
-   "bytes": 561552,
+   "tris": 20088,
+   "bytes": 561492,
    "sourceTris": 48383,
    "source": "models/Mars_Curiosity_Rover.usdz",
    "license": "unconfirmed",
@@ -5901,22 +5903,22 @@
    "file": "assets/props/robot-dog.glb",
    "anchor": "floor",
    "size": [
-    248.4,
-    287.8,
-    593.4
+    272.1,
+    315.3,
+    650
    ],
    "min": [
-    -120.7,
-    5.9,
-    -324.6
+    -136.1,
+    0,
+    -325
    ],
    "max": [
-    127.7,
-    293.7,
-    268.7
+    136.1,
+    315.3,
+    325
    ],
-   "tris": 19995,
-   "bytes": 273088,
+   "tris": 19994,
+   "bytes": 272868,
    "sourceTris": 46744,
    "source": "models/Robot_Dog__4KRiggedAsset.usdz",
    "license": "unconfirmed",
@@ -5932,22 +5934,22 @@
    "file": "assets/props/chop-saw.glb",
    "anchor": "floor",
    "size": [
-    437.3,
-    596.7,
-    297
+    439.8,
+    600,
+    298.7
    ],
    "min": [
-    -219.2,
-    3,
-    -148.5
+    -219.9,
+    0,
+    -149.3
    ],
    "max": [
-    218.1,
-    599.6,
-    148.5
+    219.9,
+    600,
+    149.3
    ],
    "tris": 11999,
-   "bytes": 168596,
+   "bytes": 168552,
    "sourceTris": 39817,
    "source": "models/Makita_Chop_Saw.usdz",
    "license": "unconfirmed",
@@ -5963,22 +5965,22 @@
    "file": "assets/props/impact-wrench.glb",
    "anchor": "floor",
    "size": [
-    78.6,
-    251,
-    225.8
+    78.3,
+    250,
+    224.9
    ],
    "min": [
-    -39.3,
-    -0.8,
-    -113
+    -39.2,
+    0,
+    -112.5
    ],
    "max": [
-    39.3,
-    250.2,
-    112.8
+    39.2,
+    250,
+    112.5
    ],
-   "tris": 11998,
-   "bytes": 175164,
+   "tris": 11997,
+   "bytes": 175208,
    "sourceTris": 295702,
    "source": "models/Makita_DTW1002.usdz",
    "license": "unconfirmed",
@@ -6009,7 +6011,7 @@
     31.9
    ],
    "tris": 11999,
-   "bytes": 161080,
+   "bytes": 161048,
    "sourceTris": 13200,
    "source": "models/Hammer_drill.usdz",
    "license": "unconfirmed",
@@ -6040,7 +6042,7 @@
     41.4
    ],
    "tris": 11999,
-   "bytes": 196104,
+   "bytes": 196060,
    "sourceTris": 31205,
    "source": "models/Old_School_Drill.usdz",
    "license": "unconfirmed",
@@ -6056,22 +6058,22 @@
    "file": "assets/props/cutter-machine.glb",
    "anchor": "floor",
    "size": [
-    899.8,
-    638.9,
-    818
+    900,
+    639,
+    818.1
    ],
    "min": [
-    -449.8,
-    -0.1,
-    -408.7
+    -450,
+    0,
+    -409.1
    ],
    "max": [
     450,
-    638.8,
-    409.3
+    639,
+    409.1
    ],
    "tris": 11996,
-   "bytes": 260456,
+   "bytes": 260644,
    "sourceTris": 128812,
    "source": "models/Cutter_Machine.usdz",
    "license": "unconfirmed",
@@ -6117,22 +6119,22 @@
    "file": "assets/props/toolbox.glb",
    "anchor": "floor",
    "size": [
-    450.7,
-    383.8,
-    248.4
+    450,
+    383.3,
+    248
    ],
    "min": [
-    -225.3,
-    -0.2,
-    -124.2
+    -225,
+    0,
+    -124
    ],
    "max": [
-    225.3,
-    383.6,
-    124.2
+    225,
+    383.3,
+    124
    ],
-   "tris": 11998,
-   "bytes": 195304,
+   "tris": 11999,
+   "bytes": 195176,
    "sourceTris": 76813,
    "source": "models/Toolbox.usdz",
    "license": "unconfirmed",
@@ -6148,22 +6150,22 @@
    "file": "assets/props/tool-cart.glb",
    "anchor": "floor",
    "size": [
-    1111.3,
-    950.3,
-    614.3
+    1108.6,
+    950,
+    612.6
    ],
    "min": [
-    -555.6,
-    -0.3,
-    -307.2
+    -554.3,
+    0,
+    -306.3
    ],
    "max": [
-    555.6,
+    554.3,
     950,
-    307.1
+    306.3
    ],
-   "tris": 20940,
-   "bytes": 193272,
+   "tris": 20928,
+   "bytes": 192264,
    "sourceTris": 80112,
    "source": "models/Tool_Cart.usdz",
    "license": "unconfirmed",
@@ -6179,22 +6181,22 @@
    "file": "assets/props/multi-tool.glb",
    "anchor": "floor",
    "size": [
-    92.2,
-    10,
-    113.2
+    93.7,
+    10.1,
+    115
    ],
    "min": [
-    -44.4,
+    -46.8,
     0,
-    -56.4
+    -57.5
    ],
    "max": [
-    47.8,
-    10,
-    56.8
+    46.8,
+    10.1,
+    57.5
    ],
-   "tris": 12136,
-   "bytes": 274828,
+   "tris": 12141,
+   "bytes": 275652,
    "sourceTris": 73284,
    "source": "models/Leatherman_Signal_Tool.usdz",
    "license": "unconfirmed",
@@ -6210,22 +6212,22 @@
    "file": "assets/props/multi-tool-open.glb",
    "anchor": "floor",
    "size": [
-    56.4,
+    68.2,
     150,
     10.3
    ],
    "min": [
-    -28.2,
+    -34.1,
     0,
     -5.1
    ],
    "max": [
-    28.3,
+    34.1,
     150,
     5.1
    ],
-   "tris": 13556,
-   "bytes": 124228,
+   "tris": 13550,
+   "bytes": 123016,
    "sourceTris": 178436,
    "source": "models/Rigged_Multi_Tool_Animated.usdz",
    "license": "unconfirmed",
@@ -6256,7 +6258,7 @@
     165
    ],
    "tris": 12000,
-   "bytes": 205924,
+   "bytes": 205908,
    "sourceTris": 15279,
    "source": "models/Rubber_Mallet_Photoscan.usdz",
    "license": "unconfirmed",
@@ -6272,22 +6274,22 @@
    "file": "assets/props/caliper.glb",
    "anchor": "floor",
    "size": [
-    107.1,
+    107.2,
     15.2,
-    199.9
+    200
    ],
    "min": [
     -53.6,
-    2.9,
+    0,
     -100
    ],
    "max": [
     53.6,
-    18.1,
-    99.9
+    15.2,
+    100
    ],
    "tris": 11994,
-   "bytes": 154700,
+   "bytes": 154672,
    "sourceTris": 102580,
    "source": "models/outside_caliper.usdz",
    "license": "unconfirmed",
@@ -6304,19 +6306,19 @@
    "file": "assets/props/painters-tape.glb",
    "anchor": "floor",
    "size": [
-    73.3,
-    73.7,
-    31.6
+    99.5,
+    100,
+    42.8
    ],
    "min": [
-    -36.7,
-    13.1,
-    -15.8
+    -49.7,
+    0,
+    -21.4
    ],
    "max": [
-    36.6,
-    86.8,
-    15.8
+    49.7,
+    100,
+    21.4
    ],
    "tris": 9996,
    "bytes": 102072,
@@ -6348,8 +6350,8 @@
     250,
     25.3
    ],
-   "tris": 11997,
-   "bytes": 112420,
+   "tris": 11998,
+   "bytes": 112200,
    "sourceTris": 29632,
    "source": "models/3M_Finesse-It_Polish_-_Extra_Fine.usdz",
    "license": "unconfirmed",
@@ -6462,16 +6464,16 @@
    ],
    "min": [
     -46.9,
-    -0.1,
+    0,
     -60
    ],
    "max": [
-    46.8,
+    46.9,
     50.8,
     60
    ],
-   "tris": 12138,
-   "bytes": 178412,
+   "tris": 12137,
+   "bytes": 178504,
    "sourceTris": 104584,
    "source": "models/Steiner_Dbal.usdz",
    "license": "unconfirmed",
@@ -6578,25 +6580,26 @@
    "file": "assets/props/bookwheel.glb",
    "anchor": "floor",
    "size": [
-    4506.1,
-    1871.7,
-    3644.8
+    1369.9,
+    1900,
+    1282.6
    ],
    "min": [
-    -2253.1,
+    -685,
     0,
-    -1822.4
+    -641.3
    ],
    "max": [
-    2253.1,
-    1871.7,
-    1822.4
+    685,
+    1900,
+    641.3
    ],
-   "tris": 29079,
-   "bytes": 1154916,
+   "tris": 28832,
+   "bytes": 837536,
    "source": "models/The_Bookwheel.usdz",
    "license": "unconfirmed",
-   "attribution": null
+   "attribution": null,
+   "sizeNote": "The source sits on a 4 m floor plane, removed here."
   },
   {
    "id": "journal",
@@ -6609,7 +6612,7 @@
    "file": "assets/props/journal.glb",
    "anchor": "floor",
    "size": [
-    141.5,
+    141.6,
     55.1,
     230
    ],
@@ -6624,7 +6627,7 @@
     115
    ],
    "tris": 11987,
-   "bytes": 148976,
+   "bytes": 148952,
    "sourceTris": 30120,
    "source": "models/Journal_3.usdz",
    "license": "unconfirmed",
@@ -6842,7 +6845,7 @@
     11.3
    ],
    "tris": 20000,
-   "bytes": 156520,
+   "bytes": 156484,
    "sourceTris": 41684,
    "source": "models/Cork_Board (2).usdz",
    "license": "unconfirmed",
@@ -7011,19 +7014,19 @@
    "file": "assets/props/carved-emblem.glb",
    "anchor": "wall",
    "size": [
-    283.3,
-    683.3,
-    391.6
+    290.2,
+    700,
+    401.1
    ],
    "min": [
-    -141.6,
-    -339,
-    11.9
+    -145.1,
+    -350,
+    0
    ],
    "max": [
-    141.6,
-    344.2,
-    403.5
+    145.1,
+    350,
+    401.1
    ],
    "tris": 39993,
    "bytes": 290260,
@@ -7105,22 +7108,22 @@
    "file": "assets/props/mercury-statue.glb",
    "anchor": "floor",
    "size": [
-    624.6,
-    1628.1,
-    756.7
+    652.2,
+    1700,
+    790.1
    ],
    "min": [
-    -337.3,
-    49.7,
-    -374.4
+    -326.1,
+    0,
+    -395.1
    ],
    "max": [
-    287.3,
-    1677.8,
-    382.3
+    326.1,
+    1700,
+    395.1
    ],
-   "tris": 39998,
-   "bytes": 453464,
+   "tris": 39997,
+   "bytes": 453468,
    "sourceTris": 292385,
    "source": "models/Mercury_about_to_kill_Argos_by_B.usdz",
    "license": "unconfirmed",
@@ -7183,7 +7186,7 @@
     128.7
    ],
    "tris": 19998,
-   "bytes": 245424,
+   "bytes": 245476,
    "sourceTris": 75634,
    "source": "models/Golden_Ball_Award.usdz",
    "license": "unconfirmed",
@@ -7200,22 +7203,22 @@
    "file": "assets/props/music-award.glb",
    "anchor": "floor",
    "size": [
-    191.7,
-    281,
-    136.4
+    238.9,
+    350,
+    170
    ],
    "min": [
-    -77.9,
-    35.2,
-    -73.6
+    -119.4,
+    0,
+    -85
    ],
    "max": [
-    113.8,
-    316.2,
-    62.9
+    119.4,
+    350,
+    85
    ],
-   "tris": 19997,
-   "bytes": 200040,
+   "tris": 19962,
+   "bytes": 200876,
    "sourceTris": 121932,
    "source": "models/MTV_Award (1).usdz",
    "license": "unconfirmed",
@@ -7269,15 +7272,15 @@
    "min": [
     -220,
     0,
-    -136.6
+    -136.7
    ],
    "max": [
     220,
     1700,
-    136.8
+    136.7
    ],
    "tris": 60000,
-   "bytes": 482112,
+   "bytes": 482192,
    "sourceTris": 99799,
    "source": "models/Human_Skeleton_high_detailed.usdz",
    "license": "unconfirmed",
@@ -7340,7 +7343,7 @@
     500
    ],
    "tris": 19997,
-   "bytes": 208276,
+   "bytes": 208296,
    "sourceTris": 66237,
    "source": "models/Katana.usdz",
    "license": "unconfirmed",
@@ -7405,7 +7408,7 @@
   },
   {
    "id": "person-sitting-3",
-   "name": "Seated figure, man",
+   "name": "Figure, arms out",
    "category": "people",
    "scenes": [],
    "file": "assets/props/person-sitting-3.glb",
@@ -7426,7 +7429,7 @@
     134
    ],
    "tris": 33920,
-   "bytes": 440908,
+   "bytes": 440912,
    "source": "models/Man_Sitting.usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -7439,26 +7442,27 @@
    "file": "assets/props/person-sitting-4.glb",
    "anchor": "floor",
    "size": [
-    2886.2,
+    379.4,
     1300,
-    3161.1
+    585.7
    ],
    "min": [
-    -1443.1,
+    -189.7,
     0,
-    -1580.5
+    -292.9
    ],
    "max": [
-    1443.1,
+    189.7,
     1300,
-    1580.5
+    292.9
    ],
-   "tris": 39983,
-   "bytes": 183256,
-   "sourceTris": 720624,
+   "tris": 39985,
+   "bytes": 183340,
+   "sourceTris": 455080,
    "source": "models/Sit_pose.usdz",
    "license": "unconfirmed",
-   "attribution": null
+   "attribution": null,
+   "sizeNote": "The source sits on a ground plane, removed here."
   },
   {
    "id": "person-standing-1",
@@ -7468,22 +7472,22 @@
    "file": "assets/props/person-standing-1.glb",
    "anchor": "floor",
    "size": [
-    617.4,
-    1799.9,
+    617.5,
+    1800,
     432.7
    ],
    "min": [
     -308.7,
     0,
-    -216.5
+    -216.3
    ],
    "max": [
     308.7,
     1800,
-    216.2
+    216.3
    ],
-   "tris": 40000,
-   "bytes": 268732,
+   "tris": 39999,
+   "bytes": 268688,
    "sourceTris": 99964,
    "source": "models/Dennis_Posed_004_-_Male_Standing_Business_Model.usdz",
    "license": "unconfirmed",
@@ -7498,21 +7502,21 @@
    "anchor": "floor",
    "size": [
     641,
-    1699.9,
-    1247.6
+    1700,
+    1247.7
    ],
    "min": [
-    -329.5,
+    -320.5,
     0,
-    -510.9
+    -623.8
    ],
    "max": [
-    311.5,
-    1699.9,
-    736.7
+    320.5,
+    1700,
+    623.8
    ],
-   "tris": 39997,
-   "bytes": 369216,
+   "tris": 39996,
+   "bytes": 369352,
    "sourceTris": 108134,
    "source": "models/Female (1).usdz",
    "license": "unconfirmed",
@@ -7555,21 +7559,21 @@
    "anchor": "floor",
    "size": [
     670.8,
-    1699.9,
+    1700,
     531.5
    ],
    "min": [
     -335.4,
     0,
-    -265.6
+    -265.8
    ],
    "max": [
     335.4,
     1700,
-    265.9
+    265.8
    ],
    "tris": 39999,
-   "bytes": 284040,
+   "bytes": 283996,
    "sourceTris": 100004,
    "source": "models/FREE_DOWNLOAD_Attractive_African_woman_236.usdz",
    "license": "unconfirmed",
@@ -7590,15 +7594,15 @@
    "min": [
     -864.9,
     0,
-    -159.1
+    -159
    ],
    "max": [
     864.9,
     1780,
-    158.9
+    159
    ],
-   "tris": 39990,
-   "bytes": 456908,
+   "tris": 39991,
+   "bytes": 456856,
    "sourceTris": 78492,
    "source": "models/Indian_Man_in_suit.usdz",
    "license": "unconfirmed",
@@ -7612,22 +7616,22 @@
    "file": "assets/props/person-standing-6.glb",
    "anchor": "floor",
    "size": [
-    1629.3,
-    1651.9,
-    360.3
+    1627.5,
+    1650,
+    359.9
    ],
    "min": [
-    -814.9,
-    -0.1,
-    -180.2
+    -813.7,
+    0,
+    -179.9
    ],
    "max": [
-    814.5,
-    1651.8,
-    180.1
+    813.7,
+    1650,
+    179.9
    ],
-   "tris": 39989,
-   "bytes": 917880,
+   "tris": 39987,
+   "bytes": 917848,
    "sourceTris": 119866,
    "source": "models/Indian_Teen_In_Shorts_Female.usdz",
    "license": "unconfirmed",
@@ -7641,53 +7645,24 @@
    "file": "assets/props/person-standing-7.glb",
    "anchor": "floor",
    "size": [
-    515.9,
-    1750.1,
-    658.9
+    515.8,
+    1750,
+    658.8
    ],
    "min": [
-    -258.1,
+    -257.9,
     0,
     -329.4
    ],
    "max": [
-    257.7,
-    1750.1,
+    257.9,
+    1750,
     329.4
    ],
-   "tris": 39998,
-   "bytes": 354596,
+   "tris": 39999,
+   "bytes": 354456,
    "sourceTris": 200546,
    "source": "models/Person.usdz",
-   "license": "unconfirmed",
-   "attribution": null
-  },
-  {
-   "id": "person-standing-8",
-   "name": "Standing figure, rock",
-   "category": "people",
-   "scenes": [],
-   "file": "assets/props/person-standing-8.glb",
-   "anchor": "floor",
-   "size": [
-    679.1,
-    1700,
-    21241.8
-   ],
-   "min": [
-    -339.5,
-    0,
-    -10620.9
-   ],
-   "max": [
-    339.5,
-    1700,
-    10620.9
-   ],
-   "tris": 40028,
-   "bytes": 515860,
-   "sourceTris": 42808,
-   "source": "models/Redhead_Rock_Girl.usdz",
    "license": "unconfirmed",
    "attribution": null
   },
@@ -7714,7 +7689,7 @@
     479.6
    ],
    "tris": 39998,
-   "bytes": 1171352,
+   "bytes": 1171432,
    "sourceTris": 103111,
    "source": "models/Free_091_Aya_OBJ.usdz",
    "license": "unconfirmed",
@@ -7749,61 +7724,36 @@
    "attribution": null
   },
   {
-   "id": "person-animated",
-   "name": "Animated figure",
-   "category": "people",
-   "scenes": [],
-   "file": "assets/props/person-animated.glb",
+   "id": "studio-recorder",
+   "name": "Studio recorder",
+   "category": "music",
+   "scenes": [
+    "music"
+   ],
+   "file": "assets/props/studio-recorder.glb",
    "anchor": "floor",
    "size": [
-    8609.9,
-    1780,
-    8714.9
+    587.3,
+    134.6,
+    600
    ],
    "min": [
-    -4305,
+    -293.7,
     0,
-    -4357.4
+    -300
    ],
    "max": [
-    4305,
-    1780,
-    4357.4
+    293.7,
+    134.6,
+    300
    ],
-   "tris": 14490,
-   "bytes": 166484,
-   "source": "models/Facial__Body_Animated_Party_M_0001_-_ActorCore.usdz",
-   "license": "unconfirmed",
-   "attribution": null
-  },
-  {
-   "id": "person-seated-desk",
-   "name": "Seated figure at a desk",
-   "category": "people",
-   "scenes": [],
-   "file": "assets/props/person-seated-desk.glb",
-   "anchor": "floor",
-   "size": [
-    5034.5,
-    1153.5,
-    5143.3
-   ],
-   "min": [
-    -2517.8,
-    0,
-    -2580.6
-   ],
-   "max": [
-    2516.8,
-    1153.5,
-    2562.6
-   ],
-   "tris": 53800,
-   "bytes": 790844,
+   "tris": 53809,
+   "bytes": 792912,
    "sourceTris": 184064,
    "source": "models/Mindhunter.usdz",
    "license": "unconfirmed",
-   "attribution": null
+   "attribution": null,
+   "sizeNote": "The source is a recording console, not the figure its filename suggests."
   },
   {
    "id": "dog-labradoodle",
@@ -7815,22 +7765,22 @@
    "file": "assets/props/dog-labradoodle.glb",
    "anchor": "floor",
    "size": [
-    183.5,
-    422.8,
-    707.6
+    181.5,
+    418.3,
+    700
    ],
    "min": [
-    -91.7,
+    -90.8,
     0,
     -350
    ],
    "max": [
-    91.7,
-    422.8,
-    357.6
+    90.8,
+    418.3,
+    350
    ],
-   "tris": 19998,
-   "bytes": 338128,
+   "tris": 19993,
+   "bytes": 338164,
    "sourceTris": 43718,
    "source": "models/Riley_the_Labradoodle.usdz",
    "license": "unconfirmed",
@@ -7861,7 +7811,7 @@
     325
    ],
    "tris": 39999,
-   "bytes": 322916,
+   "bytes": 322700,
    "sourceTris": 52847,
    "source": "models/high_detailed_dog.usdz",
    "license": "unconfirmed",
@@ -7877,22 +7827,22 @@
    "file": "assets/props/dog-a.glb",
    "anchor": "floor",
    "size": [
-    789.9,
-    550.8,
-    454.6
+    788.8,
+    550,
+    453.9
    ],
    "min": [
-    -394.9,
-    -0.8,
-    -227.3
+    -394.4,
+    0,
+    -227
    ],
    "max": [
-    395,
-    549.9,
-    227.2
+    394.4,
+    550,
+    227
    ],
    "tris": 20000,
-   "bytes": 198940,
+   "bytes": 198932,
    "sourceTris": 33766,
    "source": "models/DOG_A_-_1of6_-_for_free__happy_new_year_2022.usdz",
    "license": "unconfirmed",
@@ -7908,22 +7858,22 @@
    "file": "assets/props/dog-b.glb",
    "anchor": "floor",
    "size": [
-    597.9,
-    225.2,
-    434.2
+    600,
+    226,
+    435.7
    ],
    "min": [
-    -299.1,
-    3.7,
-    -217
+    -300,
+    0,
+    -217.9
    ],
    "max": [
-    298.8,
-    228.9,
-    217.2
+    300,
+    226,
+    217.9
    ],
-   "tris": 19999,
-   "bytes": 237796,
+   "tris": 20000,
+   "bytes": 237864,
    "sourceTris": 49851,
    "source": "models/DOG_B_-_1of13_-_for_free.usdz",
    "license": "unconfirmed",
@@ -7970,22 +7920,22 @@
    "file": "assets/props/salmon.glb",
    "anchor": "floor",
    "size": [
-    385.7,
-    352.4,
-    534.7
+    432.9,
+    395.5,
+    600
    ],
    "min": [
-    -183.1,
+    -216.4,
     0,
-    -256.3
+    -300
    ],
    "max": [
-    202.6,
-    352.4,
-    278.4
+    216.4,
+    395.5,
+    300
    ],
    "tris": 12000,
-   "bytes": 178484,
+   "bytes": 178504,
    "sourceTris": 12028,
    "source": "models/salmon_Fish.usdz",
    "license": "unconfirmed",
@@ -8001,22 +7951,22 @@
    "file": "assets/props/cabbage.glb",
    "anchor": "floor",
    "size": [
-    172.1,
-    130,
-    181
+    171.1,
+    129.3,
+    180
    ],
    "min": [
-    -86.3,
-    -0.7,
-    -90.6
+    -85.6,
+    0,
+    -90
    ],
    "max": [
-    85.8,
-    129.4,
-    90.4
+    85.6,
+    129.3,
+    90
    ],
    "tris": 12000,
-   "bytes": 299812,
+   "bytes": 299768,
    "sourceTris": 41474,
    "source": "models/Cabbage.usdz",
    "license": "unconfirmed",
@@ -8033,22 +7983,22 @@
    "file": "assets/props/peach.glb",
    "anchor": "floor",
    "size": [
-    62.3,
-    59.6,
-    63.8
+    73.2,
+    70.1,
+    75
    ],
    "min": [
-    -31.5,
+    -36.6,
     0,
-    -31.7
+    -37.5
    ],
    "max": [
-    30.8,
-    59.6,
-    32.1
+    36.6,
+    70.1,
+    37.5
    ],
-   "tris": 11999,
-   "bytes": 132340,
+   "tris": 12000,
+   "bytes": 132304,
    "sourceTris": 125726,
    "source": "models/Peach_-_PhotoCatch.usdz",
    "license": "unconfirmed",
@@ -8095,22 +8045,22 @@
    "file": "assets/props/pomegranate.glb",
    "anchor": "floor",
    "size": [
-    63.4,
-    70.1,
-    63.9
+    81.4,
+    90,
+    82
    ],
    "min": [
-    -31.6,
-    11.4,
-    -34
+    -40.7,
+    0,
+    -41
    ],
    "max": [
-    31.8,
-    81.4,
-    29.8
+    40.7,
+    90,
+    41
    ],
    "tris": 12000,
-   "bytes": 157016,
+   "bytes": 156976,
    "sourceTris": 100000,
    "source": "models/PhotoCatch_Pomegranate.usdz",
    "license": "unconfirmed",
@@ -8127,7 +8077,7 @@
    "file": "assets/props/cookie.glb",
    "anchor": "floor",
    "size": [
-    63.1,
+    63.2,
     18.5,
     70
    ],
@@ -8137,12 +8087,12 @@
     -35
    ],
    "max": [
-    31.5,
+    31.6,
     18.5,
     35
    ],
-   "tris": 14997,
-   "bytes": 180136,
+   "tris": 14999,
+   "bytes": 179920,
    "sourceTris": 413216,
    "source": "models/Chocolate_Chip_Cookie.usdz",
    "license": "unconfirmed",
@@ -8189,22 +8139,22 @@
    "file": "assets/props/fruitcake-tin.glb",
    "anchor": "floor",
    "size": [
-    180.2,
-    54.3,
-    180.1
+    180,
+    54.2,
+    179.8
    ],
    "min": [
     -90,
-    -0.2,
-    -90
+    0,
+    -89.9
    ],
    "max": [
-    90.2,
-    54.1,
-    90
+    90,
+    54.2,
+    89.9
    ],
    "tris": 11999,
-   "bytes": 139840,
+   "bytes": 139808,
    "sourceTris": 159995,
    "source": "models/Hawaiian_Fruitcake_Tin.usdz",
    "license": "unconfirmed",
@@ -8220,22 +8170,22 @@
    "file": "assets/props/cereal-box.glb",
    "anchor": "floor",
    "size": [
-    206.5,
-    299.8,
-    85.3
+    206.6,
+    300,
+    85.4
    ],
    "min": [
-    -103.5,
+    -103.3,
     0,
-    -42.8
+    -42.7
    ],
    "max": [
-    102.9,
-    299.8,
-    42.5
+    103.3,
+    300,
+    42.7
    ],
-   "tris": 11997,
-   "bytes": 270504,
+   "tris": 11996,
+   "bytes": 270472,
    "sourceTris": 222110,
    "source": "models/Miss_America_Corn_Flakes_Box.usdz",
    "license": "unconfirmed",
@@ -8253,21 +8203,21 @@
    "anchor": "floor",
    "size": [
     93.2,
-    210.3,
-    94.5
+    210,
+    94.3
    ],
    "min": [
     -46.6,
-    -0.2,
+    0,
     -47.2
    ],
    "max": [
-    46.7,
-    210.1,
-    47.3
+    46.6,
+    210,
+    47.2
    ],
    "tris": 24995,
-   "bytes": 544276,
+   "bytes": 544712,
    "sourceTris": 318730,
    "source": "models/Bundaberg_bottle.usdz",
    "license": "unconfirmed",
@@ -8283,22 +8233,22 @@
    "file": "assets/props/bottle-set.glb",
    "anchor": "floor",
    "size": [
-    300.1,
-    125.2,
+    300,
+    125.3,
     27.9
    ],
    "min": [
     -150,
     0,
-    -14
+    -13.9
    ],
    "max": [
-    150.1,
-    125.2,
+    150,
+    125.3,
     13.9
    ],
-   "tris": 29954,
-   "bytes": 156896,
+   "tris": 29948,
+   "bytes": 156780,
    "sourceTris": 687664,
    "source": "models/Multiple_types_of_bottle_plastic_glass.usdz",
    "license": "unconfirmed",
@@ -8319,17 +8269,17 @@
     356.7
    ],
    "min": [
-    -72.3,
+    -70.9,
     0,
-    -178.7
+    -178.3
    ],
    "max": [
-    69.6,
+    70.9,
     250,
-    178
+    178.3
    ],
-   "tris": 19997,
-   "bytes": 194096,
+   "tris": 19994,
+   "bytes": 194356,
    "sourceTris": 385588,
    "source": "models/High-Poly_Yellow_Sports_Bottle.usdz",
    "license": "unconfirmed",
@@ -8347,20 +8297,20 @@
    "size": [
     423.9,
     300,
-    311.7
+    311.5
    ],
    "min": [
     -211.9,
     0,
-    -155.7
+    -155.8
    ],
    "max": [
-    212,
+    211.9,
     300,
-    156
+    155.8
    ],
    "tris": 11990,
-   "bytes": 192788,
+   "bytes": 192804,
    "sourceTris": 179122,
    "source": "models/Tea-percolator.usdz",
    "license": "unconfirmed",
@@ -8391,8 +8341,8 @@
     118.6,
     125
    ],
-   "tris": 12016,
-   "bytes": 358544,
+   "tris": 12013,
+   "bytes": 358504,
    "sourceTris": 19316,
    "source": "models/Coffee__Tea_Mugs_FREE (1).usdz",
    "license": "unconfirmed",
@@ -8439,24 +8389,25 @@
    "anchor": "floor",
    "size": [
     600,
-    884.7,
-    969
+    1371.4,
+    633.6
    ],
    "min": [
     -300,
     0,
-    -484.5
+    -316.8
    ],
    "max": [
     300,
-    884.7,
-    484.5
+    1371.4,
+    316.8
    ],
-   "tris": 2996,
-   "bytes": 266024,
+   "tris": 2832,
+   "bytes": 181236,
    "source": "models/Old_electric_stove.usdz",
    "license": "unconfirmed",
-   "attribution": null
+   "attribution": null,
+   "sizeNote": "The source includes wall tiling and a brick column, removed here."
   },
   {
    "id": "kitchen-run",
@@ -8482,8 +8433,8 @@
     1882.4,
     2588
    ],
-   "tris": 80150,
-   "bytes": 1923984,
+   "tris": 80149,
+   "bytes": 1910596,
    "sourceTris": 129722,
    "source": "models/Small_Modern_Kitchen.usdz",
    "license": "unconfirmed",
@@ -8500,25 +8451,26 @@
    "anchor": "floor",
    "size": [
     350,
-    214.8,
-    350
+    172.4,
+    188.2
    ],
    "min": [
     -175,
     0,
-    -175
+    -94.1
    ],
    "max": [
     175,
-    214.8,
-    175
+    172.4,
+    94.1
    ],
-   "tris": 40000,
-   "bytes": 279972,
-   "sourceTris": 216050,
+   "tris": 39994,
+   "bytes": 278892,
+   "sourceTris": 216044,
    "source": "models/Dumbbell.usdz",
    "license": "unconfirmed",
-   "attribution": null
+   "attribution": null,
+   "sizeNote": "The source sits in a backdrop box, removed here."
   },
   {
    "id": "dumbbell-weights",
@@ -8530,22 +8482,22 @@
    "file": "assets/props/dumbbell-weights.glb",
    "anchor": "floor",
    "size": [
-    754.4,
-    65.7,
-    302.2
+    800,
+    69.7,
+    320.5
    ],
    "min": [
-    -385.3,
+    -400,
     0,
-    -166.6
+    -160.2
    ],
    "max": [
-    369,
-    65.7,
-    135.6
+    400,
+    69.7,
+    160.2
    ],
-   "tris": 39994,
-   "bytes": 595548,
+   "tris": 39995,
+   "bytes": 595744,
    "sourceTris": 207612,
    "source": "models/Dumbbell_and_Weights.usdz",
    "license": "unconfirmed",
@@ -8575,8 +8527,8 @@
     45.4,
     141.3
    ],
-   "tris": 39989,
-   "bytes": 658000,
+   "tris": 39988,
+   "bytes": 658728,
    "sourceTris": 95073,
    "source": "models/Gym_Props.usdz",
    "license": "unconfirmed",
@@ -8653,22 +8605,22 @@
    "file": "assets/props/basketball.glb",
    "anchor": "floor",
    "size": [
-    177.9,
-    177.9,
-    177.3
+    242,
+    242,
+    241.1
    ],
    "min": [
-    -89,
-    32,
-    -88.6
+    -121,
+    0,
+    -120.6
    ],
    "max": [
-    89,
-    210,
-    88.6
+    121,
+    242,
+    120.6
    ],
    "tris": 20000,
-   "bytes": 210744,
+   "bytes": 210916,
    "sourceTris": 20784,
    "source": "models/BASKETBALL_AND1_XCELERATE.usdz",
    "license": "unconfirmed",
@@ -8685,26 +8637,27 @@
    "file": "assets/props/baseball.glb",
    "anchor": "floor",
    "size": [
-    139.8,
-    52.7,
-    139.8
+    73.6,
+    74,
+    73.6
    ],
    "min": [
-    -69.9,
-    8.5,
-    -69.9
+    -36.8,
+    0,
+    -36.8
    ],
    "max": [
-    69.9,
-    61.2,
-    69.9
+    36.8,
+    74,
+    36.8
    ],
-   "tris": 20015,
-   "bytes": 267292,
-   "sourceTris": 52370,
+   "tris": 19995,
+   "bytes": 224668,
+   "sourceTris": 52338,
    "source": "models/Baseball_ball.usdz",
    "license": "unconfirmed",
-   "attribution": null
+   "attribution": null,
+   "sizeNote": "The source sits on a ground plane, removed here."
   },
   {
    "id": "football-worn",
@@ -8757,12 +8710,12 @@
     -109.5
    ],
    "max": [
-    110,
+    109.9,
     220,
     109.5
    ],
    "tris": 19999,
-   "bytes": 219376,
+   "bytes": 219388,
    "sourceTris": 73216,
    "source": "models/Al_Rihla_-_FIFA_World_Cup_Qatar_2022.usdz",
    "license": "unconfirmed",
@@ -8779,22 +8732,22 @@
    "file": "assets/props/cap.glb",
    "anchor": "floor",
    "size": [
-    176.2,
-    107.8,
-    255.7
+    192.9,
+    118,
+    280
    ],
    "min": [
-    -93.5,
+    -96.5,
     0,
-    -128.2
+    -140
    ],
    "max": [
-    82.7,
-    107.8,
-    127.5
+    96.5,
+    118,
+    140
    ],
-   "tris": 19995,
-   "bytes": 145068,
+   "tris": 19967,
+   "bytes": 144988,
    "sourceTris": 256992,
    "source": "models/Nike_Dri-FIT_Club.usdz",
    "license": "unconfirmed",
@@ -8873,22 +8826,22 @@
    "file": "assets/props/scooter.glb",
    "anchor": "floor",
    "size": [
-    535.1,
-    1103.2,
-    1200.3
+    535,
+    1103,
+    1200
    ],
    "min": [
-    -267.6,
-    -0.3,
-    -600.3
+    -267.5,
+    0,
+    -600
    ],
    "max": [
-    267.6,
-    1102.9,
+    267.5,
+    1103,
     600
    ],
-   "tris": 20000,
-   "bytes": 393384,
+   "tris": 19978,
+   "bytes": 393224,
    "sourceTris": 65414,
    "source": "models/Cyberpunk_Scooter.usdz",
    "license": "unconfirmed",
@@ -8905,21 +8858,21 @@
    "anchor": "floor",
    "size": [
     2145,
-    1287.4,
+    1287.1,
     4290
    ],
    "min": [
-    -1010.8,
-    87.9,
+    -1072.5,
+    0,
     -2145
    ],
    "max": [
-    1134.2,
-    1375.4,
+    1072.5,
+    1287.1,
     2145
    ],
-   "tris": 80978,
-   "bytes": 1731160,
+   "tris": 80979,
+   "bytes": 1731000,
    "sourceTris": 241260,
    "source": "models/FREE_1975_Porsche_911_930_Turbo.usdz",
    "license": "unconfirmed",
@@ -8936,22 +8889,22 @@
    "file": "assets/props/race-car-model.glb",
    "anchor": "floor",
    "size": [
-    159.1,
-    97,
-    400.6
+    158.8,
+    96.9,
+    400
    ],
    "min": [
-    -79.5,
-    -1.4,
-    -200.4
+    -79.4,
+    0,
+    -200
    ],
    "max": [
-    79.5,
-    95.6,
-    200.2
+    79.4,
+    96.9,
+    200
    ],
-   "tris": 21770,
-   "bytes": 403776,
+   "tris": 21755,
+   "bytes": 403184,
    "sourceTris": 114782,
    "source": "models/RaceCar_RC-09_Re-imagined_model.usdz",
    "license": "unconfirmed",
@@ -9005,13 +8958,13 @@
    ],
    "min": [
     -150,
-    -0.2,
+    0,
     -121.5
    ],
    "max": [
     150,
-    144.7,
-    121.4
+    144.9,
+    121.5
    ],
    "tris": 19999,
    "bytes": 389484,
@@ -9031,7 +8984,7 @@
    "file": "assets/props/running-shoe.glb",
    "anchor": "floor",
    "size": [
-    106.9,
+    106.8,
     135.1,
     300
    ],
@@ -9042,11 +8995,11 @@
    ],
    "max": [
     53.4,
-    135,
+    135.1,
     150
    ],
-   "tris": 19998,
-   "bytes": 226328,
+   "tris": 19999,
+   "bytes": 226268,
    "sourceTris": 71085,
    "source": "models/Nike_Air_Zoom_Pegasus_36.usdz",
    "license": "unconfirmed",
@@ -9065,20 +9018,20 @@
    "size": [
     254.9,
     111.4,
-    309.9
+    310
    ],
    "min": [
-    -127.4,
+    -127.5,
     0,
-    -155.2
+    -155
    ],
    "max": [
     127.5,
     111.4,
-    154.8
+    155
    ],
    "tris": 19999,
-   "bytes": 247832,
+   "bytes": 247636,
    "sourceTris": 168674,
    "source": "models/Shoes_Mockup_Asset_-_VANS_SKATE_OLD_SKOOL_SHOES.usdz",
    "license": "unconfirmed",
@@ -9095,7 +9048,7 @@
    "anchor": "floor",
    "size": [
     300,
-    106.4,
+    106.3,
     210.8
    ],
    "min": [
@@ -9105,11 +9058,11 @@
    ],
    "max": [
     150,
-    106.4,
+    106.3,
     105.4
    ],
    "tris": 20000,
-   "bytes": 264680,
+   "bytes": 264480,
    "sourceTris": 39364,
    "source": "models/Leather_shoes.usdz",
    "license": "unconfirmed",
@@ -9125,22 +9078,22 @@
    "file": "assets/props/work-boot.glb",
    "anchor": "floor",
    "size": [
-    258.4,
-    186.6,
-    193
+    310,
+    223.9,
+    231.6
    ],
    "min": [
-    -130.8,
+    -155,
     0,
-    -91.6
+    -115.8
    ],
    "max": [
-    127.5,
-    186.6,
-    101.5
+    155,
+    223.9,
+    115.8
    ],
    "tris": 19999,
-   "bytes": 207712,
+   "bytes": 207688,
    "sourceTris": 24896,
    "source": "models/Caterpillar_Work_Boot.usdz",
    "license": "unconfirmed",
@@ -9192,14 +9145,14 @@
     202.1
    ],
    "min": [
-    -124.1,
+    -119.2,
     0,
-    -96.3
+    -101.1
    ],
    "max": [
-    114.4,
+    119.2,
     450,
-    105.8
+    101.1
    ],
    "tris": 19999,
    "bytes": 168292,
@@ -9231,7 +9184,7 @@
     145
    ],
    "tris": 19999,
-   "bytes": 190164,
+   "bytes": 190024,
    "sourceTris": 46706,
    "source": "models/Zapatilla_vieja.usdz",
    "license": "unconfirmed",
@@ -9248,22 +9201,22 @@
    "file": "assets/props/wallet.glb",
    "anchor": "floor",
    "size": [
-    110.2,
-    31.2,
-    102.5
+    110,
+    31.1,
+    102.4
    ],
    "min": [
-    -55.1,
+    -55,
     0,
     -51.2
    ],
    "max": [
     55,
-    31.2,
-    51.3
+    31.1,
+    51.2
    ],
    "tris": 12000,
-   "bytes": 153888,
+   "bytes": 153848,
    "sourceTris": 53822,
    "source": "models/Brown_Leather_Wallet.usdz",
    "license": "unconfirmed",
@@ -9287,15 +9240,15 @@
    "min": [
     -92.8,
     0,
-    -82.5
+    -82.8
    ],
    "max": [
     92.8,
     300,
-    83
+    82.8
    ],
-   "tris": 20083,
-   "bytes": 270408,
+   "tris": 20080,
+   "bytes": 270392,
    "sourceTris": 31951,
    "source": "models/Crossbody_Bag_Final.usdz",
    "license": "unconfirmed",
@@ -9326,8 +9279,8 @@
     550,
     239.1
    ],
-   "tris": 20000,
-   "bytes": 194364,
+   "tris": 19999,
+   "bytes": 194360,
    "sourceTris": 81679,
    "source": "models/Large_Backpack_-_White_Texture_Mockup.usdz",
    "license": "unconfirmed",
@@ -9344,7 +9297,7 @@
    "file": "assets/props/backpack-leather.glb",
    "anchor": "floor",
    "size": [
-    466,
+    466.1,
     450,
     359.2
    ],
@@ -9358,8 +9311,8 @@
     450,
     179.6
    ],
-   "tris": 19995,
-   "bytes": 217592,
+   "tris": 19996,
+   "bytes": 217448,
    "sourceTris": 76740,
    "source": "models/Leather_backpack.usdz",
    "license": "unconfirmed",
@@ -9376,13 +9329,13 @@
    "file": "assets/props/backpack-daypack.glb",
    "anchor": "floor",
    "size": [
-    366.5,
-    480.1,
-    357
+    366.4,
+    480,
+    356.9
    ],
    "min": [
-    -183.3,
-    -0.1,
+    -183.2,
+    0,
     -178.5
    ],
    "max": [
@@ -9391,7 +9344,7 @@
     178.5
    ],
    "tris": 20000,
-   "bytes": 187468,
+   "bytes": 187420,
    "sourceTris": 104368,
    "source": "models/Backpack_-_July_Daybreak_-_Game_Ready.usdz",
    "license": "unconfirmed",
@@ -9438,22 +9391,22 @@
    "file": "assets/props/camera-bag.glb",
    "anchor": "floor",
    "size": [
-    314.7,
-    186.4,
-    199.1
+    320,
+    189.5,
+    202.4
    ],
    "min": [
-    -156.6,
-    6.5,
-    -99.5
+    -160,
+    0,
+    -101.2
    ],
    "max": [
-    158.1,
-    192.9,
-    99.6
+    160,
+    189.5,
+    101.2
    ],
    "tris": 19999,
-   "bytes": 275948,
+   "bytes": 275900,
    "sourceTris": 138038,
    "source": "models/Old_Camera_Bag_.RAWscan.usdz",
    "license": "unconfirmed",
@@ -9471,21 +9424,21 @@
    "anchor": "floor",
    "size": [
     413.9,
-    1200.1,
-    531.3
+    1200,
+    531.2
    ],
    "min": [
-    -206.8,
+    -206.9,
     0,
-    -265.8
+    -265.6
    ],
    "max": [
-    207.1,
-    1200.1,
-    265.5
+    206.9,
+    1200,
+    265.6
    ],
-   "tris": 20339,
-   "bytes": 689020,
+   "tris": 20340,
+   "bytes": 688988,
    "sourceTris": 145537,
    "source": "models/Cape_coat.usdz",
    "license": "unconfirmed",
@@ -9532,22 +9485,22 @@
    "file": "assets/props/designer-bag.glb",
    "anchor": "floor",
    "size": [
-    319.8,
-    264.1,
-    120.5
+    320,
+    264.3,
+    120.6
    ],
    "min": [
-    -159.9,
-    -0.1,
-    -60.2
+    -160,
+    0,
+    -60.3
    ],
    "max": [
-    159.9,
-    264.1,
+    160,
+    264.3,
     60.3
    ],
-   "tris": 19988,
-   "bytes": 324492,
+   "tris": 19989,
+   "bytes": 324616,
    "sourceTris": 156942,
    "source": "models/Gucci.usdz",
    "license": "unconfirmed",
@@ -9578,8 +9531,8 @@
     49.7,
     68.8
    ],
-   "tris": 11996,
-   "bytes": 146052,
+   "tris": 11997,
+   "bytes": 145992,
    "sourceTris": 120640,
    "source": "models/Glasses.usdz",
    "license": "unconfirmed",
@@ -9610,8 +9563,8 @@
     35.8,
     72.5
    ],
-   "tris": 11999,
-   "bytes": 177456,
+   "tris": 12000,
+   "bytes": 177464,
    "sourceTris": 32152,
    "source": "models/Glasses (2).usdz",
    "license": "unconfirmed",
@@ -9704,7 +9657,7 @@
     352.5
    ],
    "tris": 20063,
-   "bytes": 358716,
+   "bytes": 358800,
    "sourceTris": 30422,
    "source": "models/R2-D2.usdz",
    "license": "unconfirmed",
@@ -9720,22 +9673,22 @@
    "file": "assets/props/green-child-figure.glb",
    "anchor": "floor",
    "size": [
-    363.5,
-    399.7,
-    377.5
+    363.8,
+    400,
+    377.8
    ],
    "min": [
-    -181.8,
-    -0.4,
-    -189.1
+    -181.9,
+    0,
+    -188.9
    ],
    "max": [
-    181.7,
-    399.3,
-    188.5
+    181.9,
+    400,
+    188.9
    ],
-   "tris": 29987,
-   "bytes": 534140,
+   "tris": 29982,
+   "bytes": 534776,
    "sourceTris": 334399,
    "source": "models/Mandalorian_-_Grogu__The_force.usdz",
    "license": "unconfirmed",
@@ -9766,8 +9719,8 @@
     300,
     34.3
    ],
-   "tris": 19997,
-   "bytes": 632152,
+   "tris": 19996,
+   "bytes": 632108,
    "sourceTris": 37798,
    "source": "models/Spiderman.usdz",
    "license": "unconfirmed",
@@ -9784,22 +9737,22 @@
    "file": "assets/props/turtle-figure.glb",
    "anchor": "floor",
    "size": [
-    200.3,
+    200.2,
     280,
-    260.5
+    260.4
    ],
    "min": [
     -100.1,
     0,
-    -130.3
+    -130.2
    ],
    "max": [
-    100.2,
+    100.1,
     280,
     130.2
    ],
    "tris": 19998,
-   "bytes": 199820,
+   "bytes": 199936,
    "sourceTris": 289720,
    "source": "models/Ninja_Turtles_Leonardo_Toy.usdz",
    "license": "unconfirmed",
@@ -9846,22 +9799,22 @@
    "file": "assets/props/toy-train.glb",
    "anchor": "floor",
    "size": [
-    285.5,
-    248,
-    299.9
+    285.6,
+    248.1,
+    300
    ],
    "min": [
     -142.8,
     0,
-    -149.9
+    -150
    ],
    "max": [
-    142.7,
-    247.9,
-    149.9
+    142.8,
+    248.1,
+    150
    ],
    "tris": 19999,
-   "bytes": 218236,
+   "bytes": 218312,
    "sourceTris": 61906,
    "source": "models/Painted_Toy_Train_Model.usdz",
    "license": "unconfirmed",
@@ -9892,7 +9845,7 @@
     21.4
    ],
    "tris": 29995,
-   "bytes": 179924,
+   "bytes": 179488,
    "sourceTris": 318128,
    "source": "models/FF.usdz",
    "license": "unconfirmed",
@@ -9924,7 +9877,7 @@
     291.6
    ],
    "tris": 39996,
-   "bytes": 341932,
+   "bytes": 342140,
    "sourceTris": 117996,
    "source": "models/Lamp.usdz",
    "license": "unconfirmed",
@@ -9955,8 +9908,8 @@
     400,
     42.7
    ],
-   "tris": 39995,
-   "bytes": 433852,
+   "tris": 39996,
+   "bytes": 433288,
    "sourceTris": 130792,
    "source": "models/Retro_Light_-_oldclean_model.usdz",
    "license": "unconfirmed",
@@ -10017,8 +9970,8 @@
     2571.4,
     1634.4
    ],
-   "tris": 79997,
-   "bytes": 1101396,
+   "tris": 79983,
+   "bytes": 931088,
    "sourceTris": 83902,
    "source": "models/Minimalistic_Modern_Bedroom.usdz",
    "license": "unconfirmed",
@@ -10106,8 +10059,8 @@
     2935,
     2250
    ],
-   "tris": 80212,
-   "bytes": 946884,
+   "tris": 80209,
+   "bytes": 937396,
    "sourceTris": 430915,
    "source": "models/Sci-Fi_Bedroom.usdz",
    "license": "unconfirmed",
@@ -10163,10 +10116,10 @@
    "max": [
     2500,
     2576.6,
-    1858
+    1857.9
    ],
-   "tris": 80006,
-   "bytes": 1508200,
+   "tris": 80007,
+   "bytes": 1508612,
    "sourceTris": 87278,
    "source": "models/Modern_Office (2).usdz",
    "license": "unconfirmed",
@@ -10195,7 +10148,7 @@
     2500
    ],
    "tris": 80191,
-   "bytes": 1371592,
+   "bytes": 1532440,
    "sourceTris": 133674,
    "source": "models/Minimalistic_Modern_Office (2).usdz",
    "license": "unconfirmed",
@@ -10219,12 +10172,12 @@
     -2000
    ],
    "max": [
-    1008.2,
+    1008.3,
     2014.6,
     2000
    ],
-   "tris": 80140,
-   "bytes": 901908,
+   "tris": 80142,
+   "bytes": 899452,
    "sourceTris": 101488,
    "source": "models/Small_Office (1).usdz",
    "license": "unconfirmed",
@@ -10252,8 +10205,8 @@
     1442.8,
     2500
    ],
-   "tris": 83805,
-   "bytes": 1389440,
+   "tris": 83803,
+   "bytes": 1388924,
    "sourceTris": 360599,
    "source": "models/HOUSE_BLACK_-_OFFICE (1).usdz",
    "license": "unconfirmed",
@@ -10283,8 +10236,8 @@
     414.9,
     2927.3
    ],
-   "tris": 99997,
-   "bytes": 1969124,
+   "tris": 99998,
+   "bytes": 1966908,
    "sourceTris": 106783,
    "source": "models/Metallic_Showroom_Gallery.usdz",
    "license": "unconfirmed",
@@ -10312,8 +10265,8 @@
     3536.3,
     10000
    ],
-   "tris": 80003,
-   "bytes": 3301724,
+   "tris": 80002,
+   "bytes": 3297080,
    "sourceTris": 120556,
    "source": "models/Aircraft_Hangar.usdz",
    "license": "unconfirmed",
@@ -10341,8 +10294,8 @@
     3170.2,
     4782.3
    ],
-   "tris": 87182,
-   "bytes": 1027860,
+   "tris": 87144,
+   "bytes": 1027972,
    "sourceTris": 235016,
    "source": "models/A_modern_house_design.usdz",
    "license": "unconfirmed",
@@ -10398,8 +10351,8 @@
     426.7,
     1500
    ],
-   "tris": 102054,
-   "bytes": 576808,
+   "tris": 99158,
+   "bytes": 576980,
    "sourceTris": 139002,
    "source": "models/HW_XYZ_School_Damage.usdz",
    "license": "unconfirmed",
@@ -10431,7 +10384,7 @@
     681.5
    ],
    "tris": 200,
-   "bytes": 7644,
+   "bytes": 7592,
    "source": "models/Modern_mirror (1).usdz",
    "license": "unconfirmed",
    "attribution": null
@@ -10508,22 +10461,22 @@
    "file": "assets/props/hifi-speakers.glb",
    "anchor": "floor",
    "size": [
-    1114.9,
-    1100.8,
-    425.5
+    1114.1,
+    1100,
+    425.3
    ],
    "min": [
-    -557.5,
-    -0.8,
-    -212.8
+    -557,
+    0,
+    -212.6
    ],
    "max": [
-    557.4,
+    557,
     1100,
-    212.8
+    212.6
    ],
    "tris": 19990,
-   "bytes": 305864,
+   "bytes": 305728,
    "sourceTris": 148602,
    "source": "models/Beo_Lab_14_By_Bang_Olufsen.usdz",
    "license": "unconfirmed",
@@ -10569,6 +10522,6 @@
    ]
   }
  ],
- "generated": "2026-09-11T04:30:12.618Z",
+ "generated": "2026-09-11T04:43:07.310Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

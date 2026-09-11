@@ -128,6 +128,36 @@ def decimate(objs, budget):
         bpy.ops.object.modifier_apply(modifier=mod.name)
     return triangle_count(objs)
 
+DIFFUSE_HINTS = ('diffuse', 'basecolor', 'base_color', 'albedo', 'colour', 'color')
+
+def reconnect_diffuse():
+    # USD sources often ship a diffuse map the importer leaves unconnected: a
+    # specular/glossiness workflow Blender does not read, or a PBR material whose
+    # constant diffuseColor is black while the real colour sits in a texture.
+    # Either way the prop renders as a black silhouette. If Base Color has no
+    # link and the material owns an image that looks like a colour map, wire it.
+    for m in bpy.data.materials:
+        if not m.use_nodes: continue
+        bsdf = next((n for n in m.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
+        if not bsdf: continue
+        base = bsdf.inputs['Base Color']
+        black = max(base.default_value[:3]) <= 0.04
+        if not black: continue          # a real constant colour: leave it
+        if not base.is_linked:
+            images = [n for n in m.node_tree.nodes if n.type == 'TEX_IMAGE' and n.image]
+            pick = next((n for n in images
+                         if any(h in (n.image.name or '').lower() for h in DIFFUSE_HINTS)
+                         and not any(x in (n.image.name or '').lower()
+                                     for x in ('normal', 'rough', 'metal', 'spec', 'gloss', 'occlusion', 'height'))), None)
+            if not pick: continue
+            pick.image.colorspace_settings.name = 'sRGB'
+            m.node_tree.links.new(pick.outputs['Color'], base)
+        # glTF multiplies the base colour texture by the base colour factor, and
+        # Blender writes that factor from this socket's value even once a texture
+        # is linked. Left at the source's black, it multiplies the map away and
+        # the prop still exports as a silhouette.
+        base.default_value = (1.0, 1.0, 1.0, 1.0)
+
 def fix_materials():
     # Blender's USD importer leaves the Principled alpha at whatever the file said;
     # opaque surfaces with a stray alpha input still export as BLEND, which makes
@@ -190,6 +220,7 @@ def run(job):
     for o in roots: o.matrix_world = Matrix.Translation(shift) @ o.matrix_world
     bpy.context.view_layer.update()
     bake_transforms()
+    reconnect_diffuse()
     fix_materials()
     lo, hi = world_bounds(objs)
     lo, hi = Vector((lo.x, lo.z, -hi.y)), Vector((hi.x, hi.z, -lo.y))   # report in Y-up

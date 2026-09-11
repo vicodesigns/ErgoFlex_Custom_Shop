@@ -297,13 +297,14 @@ const server = http.createServer((req, res) => {
       const canvas = document.getElementById('model-canvas');
       const settle = () => new Promise(r => setTimeout(r, 450));
       const before = canvas.getBoundingClientRect().height;
+      const startedCollapsed = document.getElementById('motion-dock').classList.contains('collapsed');
       document.getElementById('motion-dock-toggle').click();
       await settle();
       const collapsed = canvas.getBoundingClientRect().height;
       const persisted = localStorage.getItem('ergoflex.motionDockCollapsed');
       document.getElementById('motion-dock-toggle').click();
       await settle();
-      return { before, collapsed, restored: canvas.getBoundingClientRect().height, persisted };
+      return { before, collapsed, restored: canvas.getBoundingClientRect().height, persisted, startedCollapsed };
     });
     // The panel floats over the canvas instead of displacing it, so collapsing it
     // must NOT resize anything. This is the inverse of what it used to assert: the
@@ -312,7 +313,10 @@ const server = http.createServer((req, res) => {
     assert.ok(Math.abs(dock.collapsed - dock.before) < 2,
       'collapsing the movement panel leaves the canvas alone, got ' + dock.before + ' -> ' + dock.collapsed);
     assert.ok(Math.abs(dock.restored - dock.before) < 2, 'and so does expanding it again');
-    assert.equal(dock.persisted, 'true', 'the collapse state is remembered');
+    // Asserted as a flip rather than a fixed value: the storefront now opens with
+    // the panel closed, so one click expands it rather than collapsing it.
+    assert.equal(dock.persisted, String(!dock.startedCollapsed),
+      'the collapse state is remembered');
 
     // Each camera shortcut must frame its own assembly, and close-ups need the
     // orbit floor lowered or minDistance 2 clamps them to a mid shot.
@@ -565,13 +569,20 @@ const server = http.createServer((req, res) => {
 
     // Drag by the header, and only from the bare strip - a pointerdown on the
     // stop button or the collapse toggle belongs to that control, not the drag.
-    const header = await page.$('.remote-header');
-    const hb = await header.boundingBox();
     const canvasBefore = await page.evaluate(() => document.querySelector('canvas').height);
-    await page.mouse.move(hb.x + 30, hb.y + hb.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(hb.x + 30 - 120, hb.y + hb.height / 2 - 90, { steps: 8 });
-    await page.mouse.up();
+    await page.evaluate(() => {
+      // Coordinates come from getBoundingClientRect, which is viewport-relative
+      // like the events themselves. Driving this through page.mouse meant mixing
+      // that with page-relative box coordinates, which only agree when nothing
+      // has scrolled.
+      const header = document.querySelector('.remote-header');
+      const box = header.getBoundingClientRect();
+      const at = (x, y) => ({ bubbles: true, button: 0, pointerId: 11, clientX: x, clientY: y });
+      const x = box.left + 30, y = box.top + box.height / 2;
+      header.dispatchEvent(new PointerEvent('pointerdown', at(x, y)));
+      header.dispatchEvent(new PointerEvent('pointermove', at(x - 120, y - 90)));
+      header.dispatchEvent(new PointerEvent('pointerup', at(x - 120, y - 90)));
+    });
     await new Promise(r => setTimeout(r, 200));
     const moved = await page.evaluate(() => ({
       left: document.getElementById('motion-dock').style.left,
@@ -672,6 +683,68 @@ const server = http.createServer((req, res) => {
     await page.evaluate(() => { ErgoFlex.setGlidePosition(0, 0); ErgoFlex.setHeight(28); ErgoFlex.setTilt('tilting', 0); });
     await page.waitForFunction(() => Math.abs(ErgoFlex.glidePosition.x) < 0.005 && Math.abs(ErgoFlex.glidePosition.z) < 0.005,
       { timeout: 30000 });
+    // The compass is two controls. The dish glides; the outer ring turns the desk
+    // in place, and it is a momentary jog rather than a position dial - hold to
+    // turn, release to stop and spring back (movement_and_rotation_joystick.dart:361).
+    const ring = await page.evaluate(async () => {
+      const pad = document.getElementById('glide-pad');
+      const box = pad.getBoundingClientRect();
+      const cx = box.left + box.width / 2, cy = box.top + box.height / 2, R = box.width / 2;
+      const at = (deg, frac) => ({ bubbles: true, button: 0, pointerId: 21,
+        clientX: cx + Math.cos(deg * Math.PI / 180) * R * frac,
+        clientY: cy + Math.sin(deg * Math.PI / 180) * R * frac });
+      const ev = (type, pt) => pad.dispatchEvent(new PointerEvent(type, pt));
+      const out = { start: ErgoFlex.deskYaw };
+      ev('pointerdown', at(0, 0.85));          // on the ring
+      ev('pointermove', at(40, 0.85));         // twisted past the threshold
+      out.command = ErgoFlex.yawCommand;
+      await new Promise(r => setTimeout(r, 600));
+      out.turned = ErgoFlex.deskYaw - out.start;
+      ev('pointerup', at(40, 0.85));
+      out.commandAfterRelease = ErgoFlex.yawCommand;
+      const held = ErgoFlex.deskYaw;
+      await new Promise(r => setTimeout(r, 400));
+      out.driftAfterRelease = ErgoFlex.deskYaw - held;
+      // under the threshold, and inside the dish, must both leave the yaw alone
+      const before = ErgoFlex.deskYaw;
+      ev('pointerdown', at(0, 0.85)); ev('pointermove', at(3, 0.85));
+      out.belowThreshold = ErgoFlex.yawCommand;
+      ev('pointerup', at(3, 0.85));
+      ev('pointerdown', at(0, 0.2));
+      out.insideDish = ErgoFlex.yawCommand;
+      ev('pointerup', at(0, 0.2));
+      await new Promise(r => setTimeout(r, 300));
+      out.unmoved = ErgoFlex.deskYaw - before;
+      ErgoFlex.haltAllMotion();
+      return out;
+    });
+    assert.equal(ring.command, 1, 'twisting the ring right commands a right turn');
+    assert.ok(ring.turned > 0.05, 'and the desk actually turns while held, got ' + ring.turned);
+    assert.equal(ring.commandAfterRelease, 0, 'releasing stops the turn');
+    assert.ok(Math.abs(ring.driftAfterRelease) < 0.01, 'and it does not coast, got ' + ring.driftAfterRelease);
+    assert.equal(ring.belowThreshold, 0, 'a twist under the threshold does nothing');
+    assert.equal(ring.insideDish, 0, 'and a press in the dish glides rather than turning');
+    assert.ok(Math.abs(ring.unmoved) < 0.01, 'neither moved the desk');
+
+    // On the storefront the panel must not sit on top of the product.
+    await page.click('#setup-exit-btn');
+    await new Promise(r => setTimeout(r, 500));
+    const docked = await page.evaluate(() => {
+      const dock = document.getElementById('motion-dock');
+      const viewer = document.getElementById('viewer-shell').getBoundingClientRect();
+      const rect = dock.getBoundingClientRect();
+      return { mode: dock.dataset.mode, below: rect.top >= viewer.bottom - 2 };
+    });
+    assert.equal(docked.mode, 'docked', 'the storefront docks the panel instead of floating it');
+    assert.ok(docked.below, 'below the viewer, so the desk is never covered');
+    // Back into the studio: every editor assertion below this needs that layout,
+    // and leaving the suite on the storefront would break all of them.
+    await page.click('#open-editor');
+    await page.waitForFunction(() => document.body.classList.contains('setup-layout'));
+    await new Promise(r => setTimeout(r, 400));
+    assert.equal(await page.evaluate(() => document.getElementById('motion-dock').dataset.mode), 'floating',
+      'and the studio floats it again');
+
     console.log('Motion remote: drag, clamping, corrupt storage, presets, forms and stop passed.');
 
 

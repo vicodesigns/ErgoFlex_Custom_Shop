@@ -13,8 +13,8 @@ somewhere, or the library becomes the only copy.
 
 ## Licensing is unconfirmed, and that matters before this ships
 
-**All 102 USDZ sources are Sketchfab exports**, confirmed by the
-`Sketchfab_model` prim every one of them carries. Sketchfab distributes models
+**Every USDZ source is a Sketchfab export**, confirmed by the `Sketchfab_model`
+prim each one carries. Sketchfab distributes models
 under per-model terms: CC-BY (attribution required), CC-BY-NC (no commercial
 use), and the paid Sketchfab Standard and Editorial licences. Those terms are
 not recorded in the files, so this repository cannot tell you which applies to
@@ -42,17 +42,20 @@ still does; it does not cover this library.
 
 | | |
 | --- | --- |
-| Props | 105 |
-| Sources | 102 USDZ, 7 Rhino `.3dm` |
-| Total size on disk | 17 MB, of which 2.3 MB is thumbnails |
-| Median prop | 73 KB |
-| Largest three | `lego-bricks` 449 KB, `foosball` 372 KB, `sf-hallway` 311 KB |
-| Triangles across the library | 1,243,716 |
+| Props | 339 in 15 categories |
+| Sources | 368 USDZ, 7 Rhino `.3dm`, totalling 2.9 GB |
+| Library on disk | 116 MB, of which 101 MB is models and 15 MB thumbnails |
+| Median prop | 197 KB |
+| Largest three | `hangar` 3.1 MB, `room-gallery` 1.9 MB, `kitchen-run` 1.8 MB |
+| Triangles | 6.9 million, decimated from 26.5 million |
 | Screen wallpapers | 5, copied through unconverted |
 
-Four source files are deliberately unused because they duplicate another entry
-byte for byte: `Ceiling_chandelier (1).usdz`, `Modern_mirror (1).usdz`,
-`Monitor (2).usdz` and `Table_Mirror (2).usdz`.
+Sixteen source files are unused. Fifteen duplicate another entry byte for byte,
+including three copies of one office set and two each of several rooms,
+guitars and figures. Two more were dropped as unusable and are listed under
+`_dropped` in the manifest with the reason: one is a skinned figure whose
+meshes collapse to nothing at rest, and one is a figure fused into an 8.6 m
+ground plane as a single mesh, so the plane cannot be removed.
 
 ## The conversion pipeline
 
@@ -152,9 +155,26 @@ never has to think in Blender's axes.
 build the studio uses and writes `assets/props/thumbs/<id>.png`. The studio's
 prop library grid uses these directly. `--sheet out.png` also writes a labelled
 contact sheet with each prop's measured size and triangle count, which is the
-fastest way to review scale and orientation across the whole library — it is
-how the ground discs, the black Rhino geometry and several wrong-by-10x sizes
-were caught.
+fastest way to review scale and orientation across the whole library.
+
+Reviewing the sheet is not optional, and it has earned its place. Two bugs in
+the pipeline itself only showed up there:
+
+- **Sizes landed short.** Blender's `object.bound_box` goes stale once a
+  modifier is applied and a view-layer update does not refresh it, so every
+  decimated prop was measured against its pre-decimation box. A statue asked for
+  2020 mm exported at 1683 mm, and floor anchors left those props hanging in the
+  air. The converter now measures bounds from vertex positions, which cannot go
+  stale, and decimates before it measures.
+- **Props rendered as black silhouettes.** Several sources ship a diffuse map
+  the USD importer leaves unconnected — a specular/glossiness workflow Blender
+  does not read, or a PBR material whose constant `diffuseColor` is black while
+  the real colour sits in a texture. The converter now wires a colour-looking
+  image into an unlinked, near-black Base Color.
+
+Ground discs and floor slabs that ship with a model, mislabelled files, and
+sizes wrong by a factor of ten all surface the same way. The contact sheet is
+the review step; treat a conversion as unfinished until you have looked at it.
 
 ## Reviewing rooms
 

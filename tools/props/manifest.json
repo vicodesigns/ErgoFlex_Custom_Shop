@@ -3636,7 +3636,7 @@
   },
   {
    "id": "person-sitting-3",
-   "name": "Seated figure, man",
+   "name": "Figure, arms out",
    "source": "Man_Sitting.usdz",
    "category": "people",
    "fit": {
@@ -3658,7 +3658,11 @@
    },
    "scenes": [],
    "budget": 40000,
-   "textureSize": 512
+   "textureSize": 512,
+   "exclude": [
+    "Object_1"
+   ],
+   "sizeNote": "The source sits on a ground plane, removed here."
   },
   {
    "id": "person-standing-1",
@@ -3752,19 +3756,6 @@
    "textureSize": 512
   },
   {
-   "id": "person-standing-8",
-   "name": "Standing figure, rock",
-   "source": "Redhead_Rock_Girl.usdz",
-   "category": "people",
-   "fit": {
-    "axis": "y",
-    "mm": 1700
-   },
-   "scenes": [],
-   "budget": 40000,
-   "textureSize": 512
-  },
-  {
    "id": "person-standing-9",
    "name": "Standing figure, scanned",
    "source": "Free_091_Aya_OBJ.usdz",
@@ -3791,30 +3782,20 @@
    "textureSize": 512
   },
   {
-   "id": "person-animated",
-   "name": "Animated figure",
-   "source": "Facial__Body_Animated_Party_M_0001_-_ActorCore.usdz",
-   "category": "people",
-   "fit": {
-    "axis": "y",
-    "mm": 1780
-   },
-   "scenes": [],
-   "budget": 40000,
-   "textureSize": 512
-  },
-  {
-   "id": "person-seated-desk",
-   "name": "Seated figure at a desk",
+   "id": "studio-recorder",
+   "name": "Studio recorder",
    "source": "Mindhunter.usdz",
-   "category": "people",
+   "category": "music",
    "fit": {
-    "axis": "y",
-    "mm": 1300
+    "axis": "max",
+    "mm": 600
    },
-   "scenes": [],
+   "scenes": [
+    "music"
+   ],
    "budget": 40000,
-   "textureSize": 512
+   "textureSize": 512,
+   "sizeNote": "The source is a recording console, not the figure its filename suggests."
   },
   {
    "id": "dog-labradoodle",
@@ -4136,7 +4117,12 @@
     "kitchen"
    ],
    "budget": 40000,
-   "textureSize": 1024
+   "textureSize": 1024,
+   "exclude": [
+    "Tile",
+    "Porebric"
+   ],
+   "sizeNote": "The source includes wall tiling and a brick column, removed here."
   },
   {
    "id": "kitchen-run",
@@ -4166,7 +4152,11 @@
     "gym"
    ],
    "budget": 40000,
-   "textureSize": 512
+   "textureSize": 512,
+   "exclude": [
+    "Object_8"
+   ],
+   "sizeNote": "The source sits in a backdrop box, removed here."
   },
   {
    "id": "dumbbell-weights",
@@ -4258,7 +4248,11 @@
     "bedroom"
    ],
    "budget": 20000,
-   "textureSize": 512
+   "textureSize": 512,
+   "exclude": [
+    "Plane_ground"
+   ],
+   "sizeNote": "The source sits on a ground plane, removed here."
   },
   {
    "id": "football-worn",
@@ -5198,5 +5192,9 @@
     "home"
    ]
   }
- ]
+ ],
+ "_dropped": {
+  "Redhead_Rock_Girl.usdz": "Skinned meshes collapse to zero at rest and one stray vertex put the bounds 21 m deep. Unusable without the armature this pipeline drops.",
+  "Facial__Body_Animated_Party_M_0001_-_ActorCore.usdz": "The figure and its 8.6 m ground plane are a single mesh, so the plane cannot be excluded."
+ }
 }

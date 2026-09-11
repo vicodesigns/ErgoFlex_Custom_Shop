@@ -1594,6 +1594,7 @@ function setSetupLayout(on) {
         });
         if (animDebugger) animDebugger.style.display = '';
         document.body.classList.add('setup-layout');
+        placeRemoteForMode();
         ['setup-backdrop', 'setup-sidebar', 'setup-resizer', 'setup-exit-btn'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = '';
@@ -1602,6 +1603,7 @@ function setSetupLayout(on) {
         [animDebugger, configColumn].forEach(node => { if (node) returnHome(node); });
         if (animDebugger) animDebugger.style.display = 'none';
         document.body.classList.remove('setup-layout');
+        placeRemoteForMode();
         ['setup-backdrop', 'setup-sidebar', 'setup-resizer', 'setup-exit-btn'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
@@ -5336,13 +5338,56 @@ function setupGlideControls() {
         if (glideInput.length() > 1) glideInput.normalize();
         document.getElementById('glide-knob').style.transform = `translate(calc(-50% + ${glideInput.x * 30}px), calc(-50% + ${glideInput.y * 30}px))`;
     };
+    // The compass is two controls in one. A press inside the dish steers the
+    // glide; a press on the outer ring turns the desk in place. The band is the
+    // app's: 0.62 to 1.02 of the outer radius, wide enough to catch the visible
+    // capsules without swallowing the dish (movement_and_rotation_joystick.dart:507-528).
+    let ringPointer = null, ringStartAngle = 0;
+    const padAngle = e => {
+        const box = pad.getBoundingClientRect();
+        return {
+            deg: Math.atan2(e.clientY - (box.top + box.height / 2),
+                            e.clientX - (box.left + box.width / 2)) * 180 / Math.PI,
+            radius: Math.hypot(e.clientX - (box.left + box.width / 2),
+                               e.clientY - (box.top + box.height / 2)) / (box.width / 2)
+        };
+    };
+    const endRing = () => {
+        if (ringPointer === null) return;
+        ringPointer = null;
+        setYawCommand(0);
+        applyRingAngle(0);   // springs back, as it does on the phone
+    };
+
     pad.onpointerdown = e => {
         if (e.button !== 0 || !manualGlideReady()) return;
-        e.preventDefault(); pad.focus(); glideTarget.copy(glideOffset); glidePointer = e.pointerId;
-        pad.setPointerCapture(e.pointerId); updatePointer(e);
+        e.preventDefault(); pad.focus();
+        const { deg, radius } = padAngle(e);
+        if (radius >= 0.62 && radius <= 1.02) {
+            ringPointer = e.pointerId;
+            ringStartAngle = deg;
+            try { pad.setPointerCapture(e.pointerId); } catch {}
+            return;
+        }
+        glideTarget.copy(glideOffset); glidePointer = e.pointerId;
+        try { pad.setPointerCapture(e.pointerId); } catch {}
+        updatePointer(e);
     };
-    pad.onpointermove = e => { if (glidePointer === e.pointerId) updatePointer(e); };
-    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => pad.addEventListener(type, releaseGlideInput));
+    pad.onpointermove = e => {
+        if (ringPointer === e.pointerId) {
+            // Relative to where the twist started, wrapped so crossing the
+            // -180/180 seam does not read as a full turn the other way.
+            let delta = padAngle(e).deg - ringStartAngle;
+            while (delta > 180) delta -= 360;
+            while (delta < -180) delta += 360;
+            applyRingAngle(delta);
+            setYawCommand(delta > 5 ? 1 : delta < -5 ? -1 : 0);
+            return;
+        }
+        if (glidePointer === e.pointerId) updatePointer(e);
+    };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type =>
+        pad.addEventListener(type, e => { endRing(); releaseGlideInput(e); }));
     pad.onkeydown = e => {
         if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
         e.preventDefault(); if (!manualGlideReady()) return;
@@ -5378,6 +5423,32 @@ function tiltDegreesPerSecond() { return TILT_SPEEDS[tiltSpeed] ?? TILT_SPEEDS.a
 // The desktop tilt, by name. Never tiltConfigs[0]: restoreTiltConfigs loads saved
 // rigs before the baked one, so index 0 is whatever happened to load first and
 // changes between sessions.
+// Rotating the desk in place. The app's outer ring is a momentary jog, not a
+// position dial: twist past a threshold and the desk turns for as long as you
+// hold it, release and it stops and the ring springs back to zero
+// (movement_and_rotation_joystick.dart:361-383, 588-598). Nothing wrote the
+// model's yaw before this, so the movement itself is new.
+let deskYaw = 0;          // radians actually applied to the model
+let yawCommand = 0;       // -1 left, 0 stop, +1 right
+let ringAngle = 0;        // degrees the ring is twisted, for the visual only
+const YAW_SPEEDS = { crawl: 0.12, ninja: 0.24, slow: 0.38, medium: 0.6, fast: 0.95 };
+function yawRadiansPerSecond() {
+    // Shares the glide speed word, as it does on the phone.
+    const names = ['crawl', 'ninja', 'slow', 'medium', 'fast'];
+    const index = [0.17, 0.34, 0.51, 0.68, 0.85].findIndex(v => Math.abs(v - glideSpeed) < 0.01);
+    return YAW_SPEEDS[names[index < 0 ? 2 : index]];
+}
+function setYawCommand(direction) {
+    yawCommand = direction;
+    const status = document.getElementById('glide-status');
+    if (status) status.textContent = direction ? (direction > 0 ? 'Turning right' : 'Turning left') : 'Ready to move';
+}
+function applyRingAngle(deg) {
+    ringAngle = deg;
+    const ring = document.querySelector('#glide-pad .compass-ring');
+    if (ring) ring.style.transform = `rotate(${deg}deg)`;
+}
+
 function primaryTiltConfig() {
     return tiltConfigs.find(c => c.name === 'tilting') || tiltConfigs[0] || null;
 }
@@ -5407,8 +5478,8 @@ function showHeight(inches) {
     if (deskHeightSlider) deskHeightSlider.value = inches;
     const readout = document.getElementById('desk-height-display');
     if (readout && document.activeElement !== readout) {
-        if ('value' in readout) readout.value = inches.toFixed(1);
-        else readout.innerText = inches.toFixed(1) + '"';
+        if ('value' in readout) readout.value = inches.toFixed(2);
+        else readout.innerText = inches.toFixed(2) + '"';
     }
 }
 
@@ -5417,7 +5488,7 @@ function syncTiltUI() {
     const readout = document.getElementById('tilt-value');
     const slider = document.getElementById('tilt-slider');
     if (!config) return;
-    if (readout && document.activeElement !== readout) readout.value = config.currentDeg.toFixed(1);
+    if (readout && document.activeElement !== readout) readout.value = config.currentDeg.toFixed(2);
     if (slider && document.activeElement !== slider) {
         slider.min = config.minDeg; slider.max = config.maxDeg; slider.value = config.currentDeg;
     }
@@ -5434,6 +5505,8 @@ function haltAllMotion() {
     targetLift = currentLift;
     manualLiftOverride = false;
     tiltTarget = null;
+    setYawCommand(0);
+    applyRingAngle(0);
     const status = document.getElementById('glide-status');
     if (status) status.textContent = 'Stopped';
 }
@@ -5546,24 +5619,36 @@ function compassSvg() {
       <circle cx="66" cy="66" r="64" fill="#fff"/>
       <circle cx="66" cy="66" r="${(R * 0.82).toFixed(1)}" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="${(R * 0.055).toFixed(1)}"/>
       <circle cx="66" cy="66" r="${(R * 0.745).toFixed(1)}" fill="none" stroke="#2F55D4" stroke-opacity=".16" stroke-width="${(R * 0.008).toFixed(2)}"/>
-      ${ticks}
+      <g class="compass-ring" style="transform-origin:66px 66px">${ticks}</g>
       <circle cx="66" cy="66" r="${Rin}" fill="url(#glide-dish)"/>
       <circle cx="66" cy="66" r="${Rin - 1}" fill="none" stroke="#2F55D4" stroke-opacity=".42" stroke-width="1.6"/>
       <g class="compass-star">${star}</g>
     </svg>`;
 }
 
-// A 120 degree arc, the app's start of -60 degrees and sweep of 120.
-const ARC = { cx: 95, cy: 95, r: 70, from: 150, to: 30 };
+// The tilt track is a crescent opening to the LEFT: 120 degrees centred on the
+// horizontal, so it bulges right the way it does on the phone. Drawing it as a
+// top arc was a misreading of the portrait screenshot.
+const ARC = { cx: 26, cy: 95, r: 68, from: 60, to: -60, vw: 120, vh: 190 };
+function arcPoint(deg) {
+    return [ARC.cx + ARC.r * Math.cos(deg * Math.PI / 180),
+            ARC.cy - ARC.r * Math.sin(deg * Math.PI / 180)];
+}
 function arcSvg() {
-    const pt = deg => [ARC.cx + ARC.r * Math.cos(deg * Math.PI / 180),
-                       ARC.cy - ARC.r * Math.sin(deg * Math.PI / 180)];
-    const [x1, y1] = pt(ARC.from), [x2, y2] = pt(ARC.to);
+    const [x1, y1] = arcPoint(ARC.from), [x2, y2] = arcPoint(ARC.to);
+    // sweep 1: from the upper end, round the right, down to the lower one.
     const d = `M${x1.toFixed(1)} ${y1.toFixed(1)} A${ARC.r} ${ARC.r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
-    return `<svg viewBox="0 30 190 90" aria-hidden="true" focusable="false">
-      <path class="arc-rim" d="${d}" stroke-width="33.2"/>
-      <path class="arc-face" d="${d}" stroke-width="30"/>
-      <circle cx="${ARC.cx}" cy="${(ARC.cy - ARC.r).toFixed(1)}" r="4" fill="#2F55D4" fill-opacity=".6"/>
+    const [mx, my] = arcPoint(0);
+    const arrow = (deg, flip) => {
+        const [x, y] = arcPoint(deg);
+        return `<polygon points="${x - 5},${y - flip * 3} ${x + 5},${y - flip * 3} ${x},${y + flip * 5}"
+                 fill="#2F55D4" fill-opacity=".75"/>`;
+    };
+    return `<svg viewBox="0 0 ${ARC.vw} ${ARC.vh}" aria-hidden="true" focusable="false">
+      <path class="arc-rim" d="${d}" stroke-width="35.2"/>
+      <path class="arc-face" d="${d}" stroke-width="32"/>
+      ${arrow(44, 1)}${arrow(24, 1)}${arrow(-24, -1)}${arrow(-44, -1)}
+      <circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="3.5" fill="#2F55D4" fill-opacity=".55"/>
     </svg>`;
 }
 
@@ -5575,11 +5660,9 @@ function positionArcThumb() {
     const min = Number(slider.min), max = Number(slider.max);
     const t = max === min ? 0.5 : (Number(slider.value) - min) / (max - min);
     const deg = ARC.from - (ARC.from - ARC.to) * t;
-    const x = ARC.cx + ARC.r * Math.cos(deg * Math.PI / 180);
-    const y = ARC.cy - ARC.r * Math.sin(deg * Math.PI / 180);
-    // The SVG viewBox is 190 wide and starts at y=30 with a height of 90.
-    thumb.style.left = (x / 190 * 100) + '%';
-    thumb.style.top = ((y - 30) / 90 * 100) + '%';
+    const [x, y] = arcPoint(deg);
+    thumb.style.left = (x / ARC.vw * 100) + '%';
+    thumb.style.top = (y / ARC.vh * 100) + '%';
 }
 
 function speedSelect(id, label, value) {
@@ -5590,7 +5673,7 @@ function speedSelect(id, label, value) {
 
 function chipRow(kind) {
     return `<div class="remote-chips" data-preset-bank="${kind}">` +
-        [1, 2, 3].map(n => `<button class="remote-chip" data-slot="${n - 1}" type="button">${n}<span class="caret">^</span></button>`).join('') +
+        [1, 2, 3].map(n => `<button class="remote-chip" data-slot="${n - 1}" type="button">${n}<span class="caret">&#94;</span></button>`).join('') +
         `</div>`;
 }
 
@@ -5607,10 +5690,26 @@ function buildMotionRemote() {
 
     const header = document.createElement('div');
     header.className = 'remote-header';
-    header.innerHTML = `<img class="remote-logo" src="./assets/app-icons/ergoflexwidelogonoslogan.svg" alt="ErgoFlex Desk">
-        <span class="remote-status" role="img" aria-label="Desk connected"></span>
+    // The app's bar, in its order. The icons that belong to the physical desk -
+    // microphone, collision shield, session logout - are drawn because they are
+    // part of this design, and disabled because there is no desk behind them
+    // here. A control that looks live and does nothing is worse than one that
+    // says it is unavailable.
+    const inert = (file, label) =>
+        `<button class="remote-chrome" type="button" disabled aria-label="${label}"
+                 title="${label} — hardware control, not connected in the preview"><img src="./assets/app-icons/${file}" alt=""></button>`;
+    header.innerHTML = `<span class="remote-grip" aria-hidden="true"></span>
+        <button class="remote-chrome remote-menu" type="button" disabled aria-label="Menu"
+                title="Menu — not part of the preview"><span></span><span></span><span></span></button>
+        <img class="remote-logo" src="./assets/app-icons/ergoflexwidelogonoslogan.svg" alt="ErgoFlex Desk">
+        <span class="remote-status" role="img" aria-label="Preview — not connected to a desk"
+              title="Preview only: this panel drives the 3D model, not a desk"></span>
         <span class="remote-spacer"></span>
+        ${inert('help.svg', 'Info')}
+        ${inert('MicOn.svg', 'Voice')}
+        ${inert('pre_collision_on.svg', 'Collision guard')}
         <button id="remote-stop" type="button" title="Stop all movement" aria-label="Stop all movement"><img src="./assets/app-icons/e-stop.svg" alt=""></button>
+        ${inert('quick_logout.svg', 'Sign out')}
         <button id="motion-dock-toggle" class="motion-dock-toggle" type="button" aria-controls="motion-dock-content" title="Collapse the movement panel">▼</button>`;
     dock.append(header);
 
@@ -5619,56 +5718,66 @@ function buildMotionRemote() {
     body.className = 'motion-dock-body';
     body.innerHTML = `<div class="remote-body">
       <div class="remote-grid">
-        <div class="remote-col" data-motion-panel="glide">
-          <h3 class="remote-heading">Glide</h3>
-          <div id="glide-pad" class="remote-compass" tabindex="0" role="group"
-               aria-label="Glide joystick. Drag in any direction or use arrow keys while focused."
-               aria-describedby="glide-help">${compassSvg()}<span id="glide-knob" class="remote-sphere"></span></div>
-          <div class="remote-speed"><select id="glide-speed" aria-label="Glide speed">
-            <option value="0.17">Crawl</option><option value="0.34">Ninja</option>
-            <option value="0.51" selected>Slow</option><option value="0.68">Medium</option>
-            <option value="0.85">Fast</option></select></div>
+
+        <div class="remote-half remote-half-left">
+          <div class="remote-glide-row" data-motion-panel="glide">
+            <h3 class="remote-heading">Glide</h3>
+            <div id="glide-pad" class="remote-compass" tabindex="0" role="group"
+                 aria-label="Glide joystick. Drag the dish to move, twist the outer ring to turn in place, or use arrow keys."
+                 aria-describedby="glide-help">${compassSvg()}<span id="glide-knob" class="remote-sphere"></span></div>
+            <div class="remote-speed">
+              <select id="glide-speed" aria-label="Glide speed">
+                <option value="0.17">Crawl</option><option value="0.34">Ninja</option>
+                <option value="0.51" selected>Slow</option><option value="0.68">Medium</option>
+                <option value="0.85">Fast</option>
+              </select>
+            </div>
+          </div>
+          <div class="remote-forms">
+            <h3 class="remote-heading">Ergo Forms <span class="remote-info" role="img" aria-label="About this control"></span></h3>
+            <div class="remote-forms-row"></div>
+          </div>
           <div class="glide-actions">
             <span id="glide-status">Ready to move</span>
             <button id="glide-demo" type="button" aria-pressed="false">Play demo</button>
             <button id="glide-home" type="button">Recenter</button>
           </div>
         </div>
-        <div class="remote-col" data-motion-panel="lift">
-          <h3 class="remote-heading">Height</h3>
-          <label class="remote-readout"><span class="sr-only">Desk height in inches</span>
-            <input id="desk-height-display" type="number" inputmode="decimal"
-                   min="${HEIGHT_MIN}" max="${HEIGHT_MAX}" step="0.1" value="${HEIGHT_MIN.toFixed(1)}">
-            <span class="unit">in</span>
-            <svg class="pencil" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
-          </label>
-          <div class="remote-vslider">
-            <div class="vs-arrows"><span class="up u1"></span><span class="up u2"></span><span class="down d1"></span><span class="down d2"></span></div>
-            <input type="range" id="desk-height-slider" min="${HEIGHT_MIN}" max="${HEIGHT_MAX}" step="0.1" value="${HEIGHT_MIN}" aria-label="Desk height">
+
+        <div class="remote-half remote-half-right">
+          <div class="remote-col" data-motion-panel="lift">
+            <h3 class="remote-heading">Height <span class="remote-info" role="img" aria-label="About this control"></span></h3>
+            <label class="remote-readout"><span class="sr-only">Desk height in inches</span>
+              <input id="desk-height-display" type="number" inputmode="decimal"
+                     min="${HEIGHT_MIN}" max="${HEIGHT_MAX}" step="0.01" value="${HEIGHT_MIN.toFixed(2)}">
+              <span class="unit">in</span>
+              <svg class="pencil" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
+            </label>
+            <div class="remote-vslider">
+              <div class="vs-arrows"><span class="up u1"></span><span class="up u2"></span><span class="down d1"></span><span class="down d2"></span></div>
+              <input type="range" id="desk-height-slider" min="${HEIGHT_MIN}" max="${HEIGHT_MAX}" step="0.1" value="${HEIGHT_MIN}" aria-label="Desk height">
+            </div>
+            ${speedSelect('lift-speed', 'Lift speed', 'medium')}
+            ${chipRow('lift')}
           </div>
-          ${speedSelect('lift-speed', 'Lift speed', 'auto')}
-          ${chipRow('lift')}
-        </div>
-        <div class="remote-col" data-motion-panel="tilt">
-          <h3 class="remote-heading">Tilt</h3>
-          <label class="remote-readout"><span class="sr-only">Desktop tilt in degrees</span>
-            <input id="tilt-value" type="number" inputmode="decimal" step="0.1" value="0.0">
-            <span class="unit">&deg;</span>
-            <svg class="pencil" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
-          </label>
-          <div class="remote-arc">${arcSvg()}
-            <input type="range" id="tilt-slider" min="-30" max="30" step="0.1" value="0" aria-label="Desktop tilt">
-            <span class="remote-sphere"></span>
+          <div class="remote-col" data-motion-panel="tilt">
+            <h3 class="remote-heading">Tilt <span class="remote-info" role="img" aria-label="About this control"></span></h3>
+            <label class="remote-readout"><span class="sr-only">Desktop tilt in degrees</span>
+              <input id="tilt-value" type="number" inputmode="decimal" step="0.01" value="0.00">
+              <span class="unit">&deg;</span>
+              <svg class="pencil" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
+            </label>
+            <div class="remote-arc">${arcSvg()}
+              <input type="range" id="tilt-slider" min="-30" max="30" step="0.1" value="0" aria-label="Desktop tilt">
+              <span class="remote-sphere"></span>
+            </div>
+            ${speedSelect('tilt-speed', 'Tilt speed', 'medium')}
+            ${chipRow('tilt')}
           </div>
-          ${speedSelect('tilt-speed', 'Tilt speed', 'auto')}
-          ${chipRow('tilt')}
         </div>
-        <div class="remote-col remote-forms">
-          <h3 class="remote-heading">Forms</h3>
-          <div class="remote-forms-row"></div>
-        </div>
+
       </div>
-      <p id="glide-help" class="remote-hint">Drag the compass or use arrow keys. Tap a preset to recall it, press and hold to save.</p>
+      <p id="glide-help" class="remote-hint">Drag the dish to glide, twist the outer ring to turn in place. Tap a preset to recall it, press and hold to save.</p>
     </div>`;
     dock.append(body);
     if (tiltOverlay) body.querySelector('.remote-body').append(tiltOverlay);
@@ -5749,6 +5858,33 @@ function clampDockPosition() {
     return { x, y };
 }
 
+// Where the panel lives depends on the mode.
+//
+// In the studio it floats inside the viewer and can be dragged anywhere, which
+// is right for a tool: the editor wants it over the model and out of the way on
+// demand. On the storefront a panel sitting on top of the desk is just covering
+// the product, so there it drops DOWN, in normal flow beneath the viewer, and
+// takes no space at all until you open it.
+function placeRemoteForMode() {
+    const dock = document.getElementById('motion-dock');
+    const viewer = document.getElementById('viewer-shell');
+    if (!dock || !viewer) return;
+    const studio = document.body.classList.contains('setup-layout');
+    dock.dataset.mode = studio ? 'floating' : 'docked';
+
+    if (studio) {
+        const stage = canvas?.parentElement;
+        if (stage && dock.parentElement !== stage) stage.append(dock);
+        placeDockFromStorage();
+        return;
+    }
+    // Storefront: a sibling after the viewer, in flow. Clear anything the drag
+    // left behind or it would still be positioned against the old parent.
+    if (dock.parentElement !== viewer.parentElement) viewer.after(dock);
+    dock.dataset.floating = '';
+    dock.style.left = dock.style.top = dock.style.bottom = dock.style.transform = '';
+}
+
 function placeDockFromStorage() {
     const dock = document.getElementById('motion-dock');
     const container = canvas?.parentElement;
@@ -5772,6 +5908,7 @@ function wireRemote(dock, header) {
         // Only the bare strip drags. A pointerdown on the stop button, the
         // collapse toggle, or anything else operable belongs to that control.
         if (e.button !== 0 || e.target.closest('button, a, input, select, [tabindex]')) return;
+        if (dock.dataset.mode !== 'floating') return;   // docked below the viewer: nothing to drag
         const rect = dock.getBoundingClientRect();
         const container = canvas.parentElement.getBoundingClientRect();
         dragging = { dx: e.clientX - rect.left, dy: e.clientY - rect.top };
@@ -5816,6 +5953,13 @@ function wireRemote(dock, header) {
         }
     });
     dockToggle.onclick = toggleDock;
+    // Docked below the viewer, the whole header is the affordance: the panel is
+    // closed until you ask for it, and the bar is what you press.
+    header.addEventListener('click', e => {
+        if (dock.dataset.mode === 'floating') return;
+        if (e.target.closest('button, a, input, select')) return;
+        toggleDock();
+    });
 
     // ---- stop ----
     document.getElementById('remote-stop').onclick = () => { haltAllMotion(); notifyUser('Movement stopped.'); };
@@ -5826,7 +5970,7 @@ function wireRemote(dock, header) {
         const value = Number(heightField.value);
         if (!isFinite(value)) { showHeight(liftToHeight(currentLift)); return; }
         const clamped = THREE.MathUtils.clamp(value, HEIGHT_MIN, HEIGHT_MAX);
-        heightField.value = clamped.toFixed(1);
+        heightField.value = clamped.toFixed(2);
         goToHeight(clamped);
     };
     heightField.addEventListener('change', commitHeight);
@@ -5842,7 +5986,7 @@ function wireRemote(dock, header) {
         const value = Number(tiltField.value);
         if (!isFinite(value)) { syncTiltUI(); return; }
         const clamped = THREE.MathUtils.clamp(value, config.minDeg, config.maxDeg);
-        tiltField.value = clamped.toFixed(1);
+        tiltField.value = clamped.toFixed(2);
         goToTilt(clamped);
     };
     tiltField.addEventListener('change', commitTilt);
@@ -5853,7 +5997,7 @@ function wireRemote(dock, header) {
         tiltTarget = null;                     // dragging is direct, not eased
         config.currentDeg = Number(tiltSlider.value);
         applyTiltConfig(config);
-        tiltField.value = config.currentDeg.toFixed(1);
+        tiltField.value = config.currentDeg.toFixed(2);
         positionArcThumb();
     });
     document.getElementById('tilt-speed').onchange = e => { tiltSpeed = e.target.value; };
@@ -6445,6 +6589,12 @@ function animate() {
                 _loggedMaxHeight = false; // reset when back near min
             }
         }
+    }
+
+    // The desk turns for as long as the ring is held over.
+    if (loadedModel && !motionPaused && yawCommand) {
+        deskYaw += yawCommand * yawRadiansPerSecond() * dt;
+        loadedModel.rotation.y = deskYaw;
     }
 
     // Tilt eases toward its target the same way. applyTiltConfig is immediate, so
@@ -7048,7 +7198,12 @@ function initStudio() {
     };
     document.querySelectorAll('#viewer-shell button[title]').forEach(b => b.setAttribute('aria-label', b.title));
     buildMotionRemote();
-    placeDockFromStorage();
+    placeRemoteForMode();
+    // The storefront opens with the panel closed, so the desk is unobstructed
+    // until the controls are actually asked for.
+    if (!document.body.classList.contains('setup-layout') && localStorage.getItem('ergoflex.motionDockCollapsed') === null) {
+        document.getElementById('motion-dock-toggle')?.click();
+    }
     // A saved position is only valid against the layout it was saved in, so
     // re-check it whenever the box it lives in could have changed shape.
     window.addEventListener('resize', clampDockPosition);
@@ -7174,11 +7329,13 @@ window.ErgoFlex = {
     setAutoRotate(v) { if (controls) controls.autoRotate = !!v; },
     setMotionTab,
     haltAllMotion,
+    get deskYaw() { return deskYaw; },
+    get yawCommand() { return yawCommand; },
     get heightInches() { return liftToHeight(currentLift); },
     placeDockFromStorage,
     // Rebuilding is how the panel is exercised against corrupt storage without
     // a full page reload.
-    rebuildMotionRemote() { buildMotionRemote(); placeDockFromStorage(); },
+    rebuildMotionRemote() { buildMotionRemote(); placeRemoteForMode(); },
     resetView() { const btn = document.getElementById('reset-view'); if (btn) btn.click(); },
     setPivotByName(name) {
         let done = false;
