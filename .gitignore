@@ -4,3 +4,9 @@ node_modules/
 # referenced by the app - kept out of history deliberately.
 models/
 scene-shots/
+
+# Conversion inputs for the prop library, not used at runtime. The converted
+# GLBs and their thumbnails ARE referenced (index.json -> workspace-3d.mjs, and
+# studio.js for the picker), so those stay tracked; these do not, and each
+# entry in index.json already records the source it came from.
+assets/props/raw/

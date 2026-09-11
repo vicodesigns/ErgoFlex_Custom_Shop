@@ -3447,22 +3447,22 @@
    "file": "assets/props/lounge-chair-metal.glb",
    "anchor": "floor",
    "size": [
-    65774.5,
-    1004,
-    66743.5
+    62390.6,
+    780,
+    62597.4
    ],
    "min": [
-    -32885.9,
-    -223.8,
-    -33627.2
+    -31195.3,
+    0,
+    -31298.7
    ],
    "max": [
-    32888.6,
-    780.2,
-    33116.3
+    31195.3,
+    780,
+    31298.7
    ],
    "tris": 39961,
-   "bytes": 373516,
+   "bytes": 373204,
    "sourceTris": 218331,
    "source": "models/Metal_Lounge_Chair.usdz",
    "license": "unconfirmed",
@@ -4226,22 +4226,22 @@
    "file": "assets/props/bed-2.glb",
    "anchor": "floor",
    "size": [
-    1285.5,
-    767.8,
-    1606.4
+    1600.5,
+    956,
+    2000
    ],
    "min": [
-    -642.6,
-    651.3,
-    -903.3
+    -800.3,
+    0,
+    -1000
    ],
    "max": [
-    642.9,
-    1419.1,
-    703.1
+    800.3,
+    956,
+    1000
    ],
    "tris": 39999,
-   "bytes": 274680,
+   "bytes": 274744,
    "sourceTris": 161010,
    "source": "models/Bed (2).usdz",
    "license": "unconfirmed",
@@ -4641,22 +4641,22 @@
    "file": "assets/props/upright-piano.glb",
    "anchor": "floor",
    "size": [
-    1520.6,
-    2352.2,
-    2596.6
+    1520,
+    2351.3,
+    2595.6
    ],
    "min": [
-    -759.7,
-    0.4,
-    -1296.9
+    -760,
+    0,
+    -1297.8
    ],
    "max": [
-    760.8,
-    2352.6,
-    1299.6
+    760,
+    2351.3,
+    1297.8
    ],
-   "tris": 20007,
-   "bytes": 310468,
+   "tris": 20006,
+   "bytes": 310484,
    "sourceTris": 284900,
    "source": "models/Hallet_And_Davis_Piano_1896_3DST19.usdz",
    "license": "unconfirmed",
@@ -7043,22 +7043,22 @@
    "file": "assets/props/the-thinker.glb",
    "anchor": "floor",
    "size": [
-    588.7,
-    693.4,
-    413.2
+    594.3,
+    700,
+    417.1
    ],
    "min": [
-    -292.8,
-    2.5,
-    -205.8
+    -297.1,
+    0,
+    -208.6
    ],
    "max": [
-    295.8,
-    695.8,
-    207.4
+    297.1,
+    700,
+    208.6
    ],
    "tris": 19999,
-   "bytes": 576364,
+   "bytes": 271368,
    "sourceTris": 50974,
    "source": "models/The_Thinker_by_Auguste_Rodin (1).usdz",
    "license": "unconfirmed",
@@ -7074,22 +7074,22 @@
    "file": "assets/props/aphrodite.glb",
    "anchor": "floor",
    "size": [
-    558.7,
-    1683.4,
-    513.2
+    670.5,
+    2020,
+    615.9
    ],
    "min": [
-    -272.5,
-    256.1,
-    -262.6
+    -335.2,
+    0,
+    -307.9
    ],
    "max": [
-    286.2,
-    1939.5,
-    250.6
+    335.2,
+    2020,
+    307.9
    ],
-   "tris": 19997,
-   "bytes": 268400,
+   "tris": 19996,
+   "bytes": 268384,
    "sourceTris": 238904,
    "source": "models/Aphrodite_of_Milos_a_plaster_cast.usdz",
    "license": "unconfirmed",
@@ -7136,22 +7136,22 @@
    "file": "assets/props/crown.glb",
    "anchor": "floor",
    "size": [
-    239,
-    184.8,
-    250.3
+    238.7,
+    184.6,
+    250
    ],
    "min": [
     -119.3,
     0,
-    -125.4
+    -125
    ],
    "max": [
-    119.7,
-    184.8,
-    124.9
+    119.3,
+    184.6,
+    125
    ],
-   "tris": 29996,
-   "bytes": 465600,
+   "tris": 29995,
+   "bytes": 465796,
    "sourceTris": 453775,
    "source": "models/A_royal_crown__a_prop.usdz",
    "license": "unconfirmed",
@@ -10569,6 +10569,6 @@
    ]
   }
  ],
- "generated": "2026-09-11T04:26:20.096Z",
+ "generated": "2026-09-11T04:30:12.618Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

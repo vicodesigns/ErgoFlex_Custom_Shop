@@ -88,9 +88,25 @@ Three stages, in order:
    `fit.mm` millimetres along `fit.axis`, rotated by `rotateY`/`rotateX`, then
    moved so its origin sits on its anchor. Transforms are baked and the result
    is exported as a Y-up GLB in metres.
-3. **Optimise.** `gltf-transform optimize` applies meshopt compression, resizes
-   textures to 1024 px and re-encodes them as WebP. The desk lamp went from
-   1.49 MB to 172 KB this way.
+3. **Decimate to budget.** Each prop carries a `budget` triangle count, and
+   anything above it goes through Blender's collapse decimator. This happens in
+   Blender rather than after export on purpose: glTF splits a vertex for every
+   unique normal and UV, so a post-export simplifier sees a photogrammetry mesh
+   as almost entirely unshared vertices and barely reduces it. One games console
+   went 179,078 → 164,425 triangles through `gltf-transform simplify` at any
+   error tolerance, and 179,078 → 30,562 through Blender, which took the file
+   from 1.9 MB to 420 KB. Blender keeps normals and UVs as loop data over shared
+   vertices, so it collapses the real topology.
+4. **Optimise.** `gltf-transform optimize` applies meshopt compression, resizes
+   textures and re-encodes them as WebP. The desk lamp went from 1.49 MB to
+   172 KB this way. Texture size is 1024 px by default, 512 for small props
+   where the difference never reaches the screen.
+
+Budgets default by category — 12,000 triangles for desk, food and tool props,
+20,000 for decor and electronics, 40,000 for furniture and figures, 100,000 for
+environments — and any prop can override it. Of 341 props, 159 needed
+decimating; the library holds 7.0 million triangles against 26.8 million in the
+sources.
 
 The studio loads these through `GLTFLoader` with `MeshoptDecoder` attached.
 Loaded models are cached and cloned, and the clones share geometry and

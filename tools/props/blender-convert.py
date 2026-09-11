@@ -39,11 +39,17 @@ def mesh_objects():
     return [o for o in bpy.context.scene.objects if o.type == 'MESH']
 
 def world_bounds(objs):
+    # Measured from vertices, not object.bound_box. bound_box goes stale after a
+    # modifier is applied, and a view-layer update does not refresh it: a
+    # decimated statue still reported its pre-decimation box, so it scaled to the
+    # wrong size and its floor anchor left it hanging in the air.
     lo = Vector((math.inf,) * 3); hi = Vector((-math.inf,) * 3)
     for o in objs:
-        for c in o.bound_box:
-            p = o.matrix_world @ Vector(c)
+        mw = o.matrix_world
+        for v in o.data.vertices:
+            p = mw @ v.co
             lo = Vector(map(min, lo, p)); hi = Vector(map(max, hi, p))
+    if lo.x == math.inf: raise ValueError('no vertices to measure')
     return lo, hi
 
 def triangle_count(objs):
@@ -51,6 +57,20 @@ def triangle_count(objs):
     for o in objs:
         for p in o.data.polygons: n += max(len(p.vertices) - 2, 0)
     return n
+
+def flatten_hierarchy():
+    # Every mesh becomes a root, keeping its world transform. Blender's
+    # transform_apply on a parent and its children in one call double-applies
+    # the parent's scale, which silently landed props short of the size the
+    # manifest asked for: a 2020 mm statue exported at 1683 mm.
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in bpy.context.scene.objects: o.select_set(True)
+    if bpy.context.scene.objects:
+        bpy.context.view_layer.objects.active = next(iter(bpy.context.scene.objects))
+        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+    for o in list(bpy.context.scene.objects):
+        if o.type != 'MESH': bpy.data.objects.remove(o, do_unlink=True)
+    bpy.context.view_layer.update()
 
 def clean_scene():
     # Drop anything that is not a mesh or the parent of one; empties without meshes below them add nothing.
@@ -135,8 +155,16 @@ def run(job):
     exclude_objects(job.get('exclude'))
     clean_scene()
     override_materials(job.get('material'))
+    # Decimate before measuring. Collapsing a mesh pulls in its extremities, so
+    # a prop scaled first and decimated after lands short of its target size --
+    # a statue asked for 2020 mm came out 1683.
     objs = mesh_objects()
     if not objs: raise ValueError('no mesh geometry after import')
+    flatten_hierarchy()
+    objs = mesh_objects()
+    source_tris = triangle_count(objs)
+    decimate(objs, job.get('budget'))
+    bpy.context.view_layer.update()
     # Blender is Z-up while the manifest (and the exported GLB) are Y-up:
     # manifest x -> Blender x, manifest y (up) -> Blender z, manifest z -> Blender -y.
     # Rotate about the origin first so the fit measures the final orientation.
@@ -163,9 +191,6 @@ def run(job):
     bpy.context.view_layer.update()
     bake_transforms()
     fix_materials()
-    before = triangle_count(objs)
-    reduced = decimate(objs, job.get('budget'))
-    job['sourceTris'] = before
     lo, hi = world_bounds(objs)
     lo, hi = Vector((lo.x, lo.z, -hi.y)), Vector((hi.x, hi.z, -lo.y))   # report in Y-up
     os.makedirs(os.path.dirname(job['out']), exist_ok=True)
@@ -174,7 +199,7 @@ def run(job):
                               export_lights=False, export_cameras=False, export_extras=False,
                               export_image_format='AUTO', export_materials='EXPORT', export_texcoords=True,
                               export_normals=True, export_tangents=False, use_selection=False)
-    return {'id': job['id'], 'ok': True, 'tris': reduced, 'sourceTris': job.get('sourceTris'), 'meshes': len(objs),
+    return {'id': job['id'], 'ok': True, 'tris': triangle_count(objs), 'sourceTris': source_tris, 'meshes': len(objs),
             'materials': len({m for o in objs for m in o.data.materials if m}),
             'min': [round(v * 1000, 1) for v in lo], 'max': [round(v * 1000, 1) for v in hi],
             'size': [round(v * 1000, 1) for v in (hi - lo)]}
