@@ -93,8 +93,8 @@ outer viewer, and re-clamped whenever that rectangle can change: the viewer's
 |---|---|
 | Glide compass | drag the dish, or focus it and hold an arrow key; twist the outer ring to turn in place |
 | Glide speed | Crawl / Ninja / Slow / Medium / Fast |
-| Height | editable readout, vertical slider, and a speed |
-| Tilt | editable readout, a 120° crescent track, and a speed |
+| Height | editable readout, a centred jog track, and a speed |
+| Tilt | editable readout, a 120° crescent jog track, and a speed |
 | Preset banks | **separate** for lift and tilt — tap recalls, press and hold saves |
 | Ergo Forms | a combined pose: height *and* tilt. Double-click to rename |
 | Stop | freezes everything exactly where it is |
@@ -104,11 +104,27 @@ position, which is the opposite of what a stop must do. `haltAllMotion()` holds
 glide at its current offset, sets the lift target to the current lift, and drops
 the tilt target.
 
-**Lift and tilt move in units per second**, integrated against real frame time.
-The lift previously eased by a fixed `* 0.08` per frame, so it genuinely moved at
-different speeds on different displays and stalled under load. `setHeight()`
-remains immediate — editing and tests depend on that — and the eased path is
-separate.
+**The Height and Tilt tracks are rate controls, not position sliders.** They rest
+at centre, drive the desk while held away from it, and spring back on release —
+the app's own behaviour (`centered_control_slider.dart`), with a dead zone around
+centre so a nudge does nothing. Because of that the slider no longer reports the
+height; the readout is the only thing that does.
+
+Every way of letting go is handled — `pointerup`, `pointercancel`,
+`lostpointercapture`, `mouseup`, `touchend`, `touchcancel`, `blur` and `keyup` —
+since a single missed path leaves the desk driving itself with nothing holding
+it. The test covers losing focus mid-hold specifically, because that is the one a
+pointer-only implementation would miss.
+
+**Movement is in units per second**, integrated against real frame time and
+clamped to 0.05 per frame like the glide. The lift previously eased by a fixed
+`* 0.08` per frame, so it genuinely moved at different speeds on different
+displays and stalled under load. `setHeight()` remains immediate — editing,
+presets and tests depend on that — and the driven path is separate.
+
+**Not yet calibrated against each other:** tilt travels considerably faster than
+lift for the same speed word. The wheel speeds were matched to the glide by
+derivation; these two have not been.
 
 **Tilt binds to the rig named `tilting`, never `tiltConfigs[0]`.** Saved rigs are
 restored before the baked one, so index 0 is whatever happened to load first and

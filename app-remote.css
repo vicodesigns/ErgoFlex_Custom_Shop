@@ -116,16 +116,16 @@
 #remote-stop img { width: 34px; height: 34px; display: block; }
 #remote-stop:active { transform: translateY(1px); }
 
-.remote-body { padding: 10px 12px 12px; }
+.remote-body { padding: 7px 12px 8px; }
 
 /* ── Section headings ────────────────────────────────────────────────────── */
 /* letter-spacing: 3px is the app's signature. shift_motion_panel.dart:991 */
 
 .remote-heading {
-    font-size: 15px; font-weight: 500; letter-spacing: 3px;
+    font-size: 14px; font-weight: 500; letter-spacing: 3px;
     line-height: 1.1; color: var(--text);
     text-shadow: 0 1px 2px rgba(0,0,0,.08);
-    margin: 0 0 6px;
+    margin: 0 0 3px;
 }
 
 /* ── The glossy sphere, shared by all three controls ─────────────────────── */
@@ -161,7 +161,7 @@
 .remote-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-    gap: 18px;
+    gap: 14px;
     align-items: start;
 }
 .remote-half-right { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -187,7 +187,7 @@
 .remote-col { min-width: 0; }
 /* A column, not a row underneath: the panel floats over the desk, so height is
    the expensive dimension and width is the cheap one. */
-.remote-forms { margin-top: 10px; }
+.remote-forms { margin-top: 6px; }
 .remote-forms-row { display: flex; gap: 8px; }
 
 @container viewer (max-width: 700px) {
@@ -204,7 +204,7 @@
 
 /* ── Glide compass ───────────────────────────────────────────────────────── */
 
-.remote-compass { position: relative; width: 108px; height: 108px; touch-action: none; cursor: grab; }
+.remote-compass { position: relative; width: 104px; height: 104px; touch-action: none; cursor: grab; }
 .remote-compass:active { cursor: grabbing; }
 .remote-compass svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .remote-compass .remote-sphere {
@@ -222,7 +222,7 @@
    tracking 5. Here the neighbours are dimmed rather than hidden, so the control
    still reads as a list you can move through. */
 
-.remote-speed { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.remote-speed { display: flex; align-items: center; gap: 8px; margin-top: 3px; justify-content: center; }
 .remote-speed select {
     font: inherit; font-size: 15px; font-weight: 700; letter-spacing: 5px;
     color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer;
@@ -242,7 +242,7 @@
         linear-gradient(rgba(255,255,255,.10) 0%, rgba(255,255,255,.05) 4%, rgba(255,255,255,.015) 100%),
         #FFFFFF;
     box-shadow: 0 3px 10px rgba(0,0,0,.10);
-    padding: 6px 26px 6px 10px;
+    padding: 4px 24px 4px 9px;
 }
 .remote-readout input {
     font: inherit; font-size: 19px; font-weight: 600; letter-spacing: 2px;
@@ -267,7 +267,7 @@
 
 .remote-vslider {
     position: relative;
-    width: 40px; height: 104px;
+    width: 38px; height: 96px;
     border-radius: 13px;
     border: 1.6px solid var(--fill);
     background: #fff;
@@ -276,7 +276,7 @@
 }
 .remote-vslider input[type=range] {
     position: absolute; left: 50%; top: 50%;
-    width: 104px; height: 40px;
+    width: 96px; height: 38px;
     transform: translate(-50%, -50%) rotate(-90deg);
     margin: 0; background: none; appearance: none; cursor: ns-resize;
 }
@@ -309,7 +309,7 @@
 /* ── Tilt slider: 120° arc ───────────────────────────────────────────────── */
 /* arc_control_slider.dart: start -pi/3, sweep 2pi/3, round caps, rim under white. */
 
-.remote-arc { position: relative; width: 100%; max-width: 96px; margin: 0 auto; }
+.remote-arc { position: relative; width: 61px; max-width: 61px; margin: 0 auto; }
 .remote-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
 .remote-arc .arc-rim { fill: none; stroke: var(--fill); stroke-linecap: round; }
 .remote-arc .arc-face { fill: none; stroke: #fff; stroke-linecap: round; }
@@ -319,7 +319,7 @@
    dragging the thumb along the arc - the obvious gesture - did nothing at all. */
 .remote-arc input[type=range] {
     position: absolute; left: 50%; top: 50%;
-    width: 170px; height: 64px;
+    width: 96px; height: 56px;
     transform: translate(-50%, -50%) rotate(-90deg);
     margin: 0; appearance: none; background: none; cursor: ns-resize;
 }
@@ -335,7 +335,7 @@
 .remote-form {
     flex: 1; min-width: 0;
     border-radius: 17px;
-    padding: 7px 5px;
+    padding: 6px 5px;
     font: inherit; font-size: 11px; font-weight: 700; letter-spacing: 2px;
     color: #1D1D1F;
     cursor: pointer;
@@ -354,9 +354,9 @@
 /* ── Preset chips ────────────────────────────────────────────────────────── */
 /* swipe_up_position_button.dart: radius 11, height 30, state in the rim. */
 
-.remote-chips { display: flex; gap: 6px; margin-top: 8px; justify-content: center; }
+.remote-chips { display: flex; gap: 5px; margin-top: 4px; justify-content: center; }
 .remote-chip {
-    height: 24px; min-width: 34px;
+    height: 22px; min-width: 32px;
     border-radius: 11px;
     border: 1.5px solid var(--rim-empty);
     background: rgba(255,255,255,.55);
@@ -372,7 +372,7 @@
 .remote-chip:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
 .remote-chip .caret { font-size: 9px; opacity: .65; }
 
-.remote-hint { font-size: 9px; color: var(--text-2); text-align: center; margin: 8px 0 0; }
+.remote-hint { font-size: 9px; color: var(--text-2); text-align: center; margin: 5px 0 0; }
 
 /* Motion is decoration here; the controls work identically without it. */
 @media (prefers-reduced-motion: reduce) {
@@ -393,8 +393,8 @@ body:not(.setup-layout) .remote-body #tilt-sliders-overlay { display: none; }
 .remote-body #tilt-sliders-overlay { margin-top: 10px; }
 
 /* Glide's status line and its two buttons, on one row. */
-.app-remote .glide-actions { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-.app-remote .glide-actions #glide-status { flex: 1 0 100%; font-size: 10px; color: var(--text-2); }
+.app-remote .glide-actions { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: nowrap; }
+.app-remote .glide-actions #glide-status { flex: 1; font-size: 9px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .app-remote .glide-actions button {
     font: inherit; font-size: 10px; padding: 4px 8px; border-radius: 8px;
     border: 1px solid rgba(20,24,36,.14); background: #fff; color: var(--text); cursor: pointer;
@@ -409,7 +409,7 @@ body:not(.setup-layout) .remote-body #tilt-sliders-overlay { display: none; }
     width: 34px; height: 4px; border-radius: 2px;
     background: color-mix(in srgb, var(--text-2) 35%, transparent);
 }
-.remote-header { position: relative; padding-top: 11px; }
+.remote-header { position: relative; padding: 9px 12px 6px; }
 
 .remote-chrome {
     width: 26px; height: 26px; flex: none; padding: 0;
@@ -438,8 +438,10 @@ body:not(.setup-layout) .remote-body #tilt-sliders-overlay { display: none; }
 /* Height and Tilt are read side by side, so their rows have to line up. Giving
    both tracks the same height is enough - subgrid collapsed the speed word and
    the chips into one cell, which is worse than the misalignment it replaced. */
-.remote-vslider, .remote-arc { height: 170px; margin: 6px auto 0; }
-.remote-arc svg { height: 100%; width: auto; display: block; margin: 0 auto; }
+.remote-vslider, .remote-arc { height: 96px; margin: 4px auto 0; }
+/* 120x190 viewBox at 96px tall is 60.6 wide. The thumb is placed as a
+   percentage of this box, so the box must match the drawing exactly. */
+.remote-arc svg { width: 100%; height: 100%; display: block; }
 .remote-vslider { width: 40px; }
 
 /* Claim the gesture. A drag on a slider is a drag on that slider, not a page
@@ -453,3 +455,15 @@ body:not(.setup-layout) .remote-body #tilt-sliders-overlay { display: none; }
 /* The chips and form cards are pressed and held, which a touch browser would
    otherwise treat as the start of a scroll or a text selection. */
 .remote-chip, .remote-form { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+
+/* Demo and Recenter sit in the header rather than costing the body a row of
+   their own - the reference spends that height on the controls. */
+.remote-header .glide-actions { display: flex; align-items: center; gap: 5px; margin: 0; }
+.remote-header .glide-actions #glide-status {
+    font-size: 9px; color: var(--text-2); max-width: 96px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.remote-header .glide-actions button {
+    font: inherit; font-size: 9px; padding: 3px 7px; border-radius: 7px;
+    border: 1px solid rgba(20,24,36,.14); background: #fff; color: var(--text); cursor: pointer;
+}

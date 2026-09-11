@@ -3,7 +3,7 @@
 `models/` holds the 3D files supplied for this project. `assets/props/` holds the
 web-ready conversions the studio actually loads. Nothing in `models/` is served
 to the browser — the sources are USDZ and Rhino files, which browsers cannot
-open, and they total 53 MB against 17 MB for the whole converted library.
+open, and they total 2.9 GB against 115 MB for the whole converted library.
 
 `models/` is in `.gitignore`, so the sources are local to the machine that has
 them and only the converted library is committed. A fresh clone can run the app
@@ -44,7 +44,7 @@ still does; it does not cover this library.
 | --- | --- |
 | Props | 339 in 15 categories |
 | Sources | 368 USDZ, 7 Rhino `.3dm`, totalling 2.9 GB |
-| Library on disk | 116 MB, of which 101 MB is models and 15 MB thumbnails |
+| Library on disk | 115 MB, of which 101 MB is models and 14 MB thumbnails |
 | Median prop | 197 KB |
 | Largest three | `hangar` 3.1 MB, `room-gallery` 1.9 MB, `kitchen-run` 1.8 MB |
 | Triangles | 6.9 million, decimated from 26.5 million |
@@ -107,8 +107,8 @@ Three stages, in order:
 
 Budgets default by category — 12,000 triangles for desk, food and tool props,
 20,000 for decor and electronics, 40,000 for furniture and figures, 100,000 for
-environments — and any prop can override it. Of 341 props, 159 needed
-decimating; the library holds 7.0 million triangles against 26.8 million in the
+environments — and any prop can override it. Of 339 props, 157 needed
+decimating; the library holds 6.9 million triangles against 26.5 million in the
 sources.
 
 The studio loads these through `GLTFLoader` with `MeshoptDecoder` attached.
@@ -140,10 +140,10 @@ position:
 
 | Anchor | Origin | Count |
 | --- | --- | --- |
-| `floor` | Base at y = 0, centred in x and z | 93 |
-| `ceiling` | Top at y = 0, so the prop hangs from the placement height | 4 |
-| `wall` | Back face at z = 0, facing +z, centred vertically | 6 |
-| `wall-floor` | Back face at z = 0 and base at y = 0 | 2 |
+| `floor` | Base at y = 0, centred in x and z | 318 |
+| `ceiling` | Top at y = 0, so the prop hangs from the placement height | 5 |
+| `wall` | Back face at z = 0, facing +z, centred vertically | 13 |
+| `wall-floor` | Back face at z = 0 and base at y = 0 | 3 |
 
 Blender works Z-up while glTF and the manifest are Y-up. The converter maps
 between them in one place and reports final bounds in Y-up, so the manifest

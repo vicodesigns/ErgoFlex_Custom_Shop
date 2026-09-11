@@ -745,6 +745,53 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.evaluate(() => document.getElementById('motion-dock').dataset.mode), 'floating',
       'and the studio floats it again');
 
+    // Height and Tilt are rate controls, not position sliders: they rest at
+    // centre, drive while held, and spring back on release. A missed release
+    // path would leave the desk driving itself with nothing holding it.
+    const jog = await page.evaluate(async () => {
+      const hold = async (sel, value, ms, releaseEvent) => {
+        const el = document.querySelector(sel);
+        el.value = String(value);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        await new Promise(r => setTimeout(r, ms));
+        el.dispatchEvent(new PointerEvent(releaseEvent, { bubbles: true }));
+        await new Promise(r => setTimeout(r, 250));
+        return el.value;
+      };
+      ErgoFlex.setHeight(34);
+      ErgoFlex.setTilt('tilting', -20);
+      await new Promise(r => setTimeout(r, 300));
+      const out = { startHeight: ErgoFlex.heightInches };
+      out.restsAtCentre = document.querySelector('#desk-height-slider').value;
+      out.sliderAfterRelease = await hold('#desk-height-slider', 80, 600, 'pointerup');
+      out.heightAtRelease = ErgoFlex.heightInches;
+      await new Promise(r => setTimeout(r, 400));
+      out.heightAfterRelease = ErgoFlex.heightInches;
+      // a release the pointer never delivers - focus lost mid-hold
+      const before = ErgoFlex.heightInches;
+      const el = document.querySelector('#desk-height-slider');
+      el.value = '80'; el.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise(r => setTimeout(r, 200));
+      el.dispatchEvent(new Event('blur', { bubbles: true }));
+      const atBlur = ErgoFlex.heightInches;
+      await new Promise(r => setTimeout(r, 400));
+      out.driftAfterBlur = ErgoFlex.heightInches - atBlur;
+      out.movedBeforeBlur = atBlur - before;
+      // inside the dead zone, nothing
+      const settled = ErgoFlex.heightInches;
+      await hold('#desk-height-slider', 4, 400, 'pointerup');
+      out.deadZoneMoved = ErgoFlex.heightInches - settled;
+      return out;
+    });
+    assert.equal(jog.restsAtCentre, '0', 'the height jog rests at centre');
+    assert.ok(jog.heightAtRelease > jog.startHeight, 'holding it off centre raises the desk');
+    assert.equal(jog.sliderAfterRelease, '0', 'and it springs back to centre on release');
+    assert.ok(Math.abs(jog.heightAfterRelease - jog.heightAtRelease) < 0.05,
+      'the desk stops where it was, rather than coasting');
+    assert.ok(jog.movedBeforeBlur > 0, 'losing focus mid-hold still counts as holding until it happens');
+    assert.ok(Math.abs(jog.driftAfterBlur) < 0.05, 'and releases cleanly, not leaving the desk driving itself');
+    assert.ok(Math.abs(jog.deadZoneMoved) < 0.01, 'a nudge inside the dead zone moves nothing');
+
     console.log('Motion remote: drag, clamping, corrupt storage, presets, forms and stop passed.');
 
 
@@ -820,7 +867,11 @@ const server = http.createServer((req, res) => {
     await page.click('#glide-demo');
     assert.equal(await page.evaluate(() => ErgoFlex.glideActive), false);
     await page.evaluate(() => { ErgoFlex.setHeight(48); ErgoFlex.setTilt(ErgoFlex.tiltConfigs[0].name, -10); });
-    assert.equal(await page.$eval('#desk-height-slider', el => el.value), '48');
+    // The slider is a rate control that rests at centre, as it is in the app, so
+    // it no longer reports the height - the readout does.
+    assert.equal(await page.$eval('#desk-height-display', el => el.value), '48.00');
+    assert.equal(await page.$eval('#desk-height-slider', el => el.value), '0',
+      'and the jog sits at centre when nothing is holding it');
     assert.equal(await page.evaluate(() => ErgoFlex.tiltConfigs[0].currentDeg), -10);
     await page.screenshot({ path: '/tmp/ergoflex-glide.png' });
     console.log('Movement tests passed.');

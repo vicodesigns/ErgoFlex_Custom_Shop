@@ -66,7 +66,7 @@ Open **http://localhost:3000** for the store preview or **http://localhost:3000/
 The rooms are furnished from a library of 339 converted props in 15 categories —
 furniture, lighting, desk clutter, plants, pets, food, tools, instruments,
 figures and a few whole environments — built from the USDZ and Rhino files in
-`models/`. The library is 116 MB against 2.9 GB of sources, the median prop
+`models/`. The library is 115 MB against 2.9 GB of sources, the median prop
 197 KB, and 6.9 million triangles decimated from 26.5 million.
 
 In the studio, **Scene assets → Prop library** lists every prop with a

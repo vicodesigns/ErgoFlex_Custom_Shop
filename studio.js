@@ -5418,6 +5418,13 @@ function setupGlideControls() {
 let liftSpeed = 'auto';
 let tiltSpeed = 'auto';
 let tiltTarget = null;
+// The app's Height and Tilt sliders are rate controls, not position sliders:
+// centred at zero, a dead zone around it, and they spring back the moment you
+// let go (centered_control_slider.dart). Holding the thumb off centre drives the
+// desk; releasing stops it where it is. -1..1, zero being centred.
+let liftJog = 0;
+let tiltJog = 0;
+const JOG_DEADZONE = 0.08;
 const LIFT_SPEEDS = { auto: 2.6, slow: 1.3, medium: 2.6, fast: 5.2 };
 const TILT_SPEEDS = { auto: 14, slow: 7, medium: 14, fast: 28 };
 function liftUnitsPerSecond() { return LIFT_SPEEDS[liftSpeed] ?? LIFT_SPEEDS.auto; }
@@ -5559,25 +5566,38 @@ function primaryTiltConfig() {
 // with the panel, so caching it once at startup left both this listener and
 // showHeight() writing to a detached input - the slider did nothing and the
 // readout silently stopped tracking.
+// Both tracks behave the same way, so the spring-back lives in one place.
+function wireJogSlider(slider, onJog) {
+    if (!slider) return;
+    const read = () => {
+        const raw = Number(slider.value) / Number(slider.max || 1);
+        onJog(Math.abs(raw) < JOG_DEADZONE ? 0 : raw);
+    };
+    const release = () => { slider.value = 0; onJog(0); };
+    slider.addEventListener('input', read);
+    // Every way of letting go: pointer, touch, keyboard, and losing focus while
+    // still held - any of which would otherwise leave the desk driving itself.
+    ['pointerup', 'pointercancel', 'lostpointercapture', 'mouseup', 'touchend', 'touchcancel', 'blur', 'keyup']
+        .forEach(type => slider.addEventListener(type, release));
+}
+
 function wireHeightSlider() {
     deskHeightSlider = document.getElementById('desk-height-slider');
-    if (!deskHeightSlider) return;
-    deskHeightSlider.addEventListener('input', (e) => {
-        manualLiftOverride = true;
-        isStanding = false;
-        if (toggleHeightBtn) {
-            toggleHeightBtn.style.color = '#374151';
-            toggleHeightBtn.style.borderColor = '#e5e7eb';
+    wireJogSlider(deskHeightSlider, value => {
+        if (value) {
+            manualLiftOverride = false;
+            isStanding = false;
+            if (toggleHeightBtn) {
+                toggleHeightBtn.style.color = '#374151';
+                toggleHeightBtn.style.borderColor = '#e5e7eb';
+            }
         }
-        const h = parseFloat(e.target.value);
-        showHeight(h);
-        currentLift = targetLift = heightToLift(h);
-        updateMovingObjectsPosition();
+        liftJog = value;
     });
 }
 
 function showHeight(inches) {
-    if (deskHeightSlider) deskHeightSlider.value = inches;
+    // The slider is a jog that rests at zero, so it does not track the height.
     const readout = document.getElementById('desk-height-display');
     if (readout && document.activeElement !== readout) {
         if ('value' in readout) readout.value = inches.toFixed(2);
@@ -5609,6 +5629,7 @@ function haltAllMotion() {
     tiltTarget = null;
     setYawCommand(0);
     applyRingAngle(0);
+    liftJog = tiltJog = 0;
     const status = document.getElementById('glide-status');
     if (status) status.textContent = 'Stopped';
 }
@@ -5809,6 +5830,11 @@ function buildMotionRemote() {
         <span class="remote-status" role="img" aria-label="Preview — not connected to a desk"
               title="Preview only: this panel drives the 3D model, not a desk"></span>
         <span class="remote-spacer"></span>
+        <span class="glide-actions">
+          <span id="glide-status">Ready to move</span>
+          <button id="glide-demo" type="button" aria-pressed="false">Play demo</button>
+          <button id="glide-home" type="button">Recenter</button>
+        </span>
         ${inert('help.svg', 'Info')}
         ${inert('MicOn.svg', 'Voice')}
         ${inert('pre_collision_on.svg', 'Collision guard')}
@@ -5841,11 +5867,6 @@ function buildMotionRemote() {
             <h3 class="remote-heading">Ergo Forms <span class="remote-info" role="img" aria-label="About this control"></span></h3>
             <div class="remote-forms-row"></div>
           </div>
-          <div class="glide-actions">
-            <span id="glide-status">Ready to move</span>
-            <button id="glide-demo" type="button" aria-pressed="false">Play demo</button>
-            <button id="glide-home" type="button">Recenter</button>
-          </div>
         </div>
 
         <div class="remote-half remote-half-right">
@@ -5859,7 +5880,7 @@ function buildMotionRemote() {
             </label>
             <div class="remote-vslider">
               <div class="vs-arrows"><span class="up u1"></span><span class="up u2"></span><span class="down d1"></span><span class="down d2"></span></div>
-              <input type="range" id="desk-height-slider" min="${HEIGHT_MIN}" max="${HEIGHT_MAX}" step="0.1" value="${HEIGHT_MIN}" aria-label="Desk height">
+              <input type="range" id="desk-height-slider" min="-100" max="100" step="1" value="0" aria-label="Raise or lower the desk. Hold away from centre to move; it returns to centre when released.">
             </div>
             ${speedSelect('lift-speed', 'Lift speed', 'medium')}
             ${chipRow('lift')}
@@ -5872,7 +5893,7 @@ function buildMotionRemote() {
               <svg class="pencil" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
             </label>
             <div class="remote-arc">${arcSvg()}
-              <input type="range" id="tilt-slider" min="-30" max="30" step="0.1" value="0" aria-label="Desktop tilt">
+              <input type="range" id="tilt-slider" min="-100" max="100" step="1" value="0" aria-label="Tilt the desktop. Hold away from centre to move; it returns to centre when released.">
               <span class="remote-sphere"></span>
             </div>
             ${speedSelect('tilt-speed', 'Tilt speed', 'medium')}
@@ -6095,15 +6116,7 @@ function wireRemote(dock, header) {
     };
     tiltField.addEventListener('change', commitTilt);
     tiltField.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commitTilt(); tiltField.blur(); } });
-    tiltSlider.addEventListener('input', () => {
-        const config = primaryTiltConfig();
-        if (!config) return;
-        tiltTarget = null;                     // dragging is direct, not eased
-        config.currentDeg = Number(tiltSlider.value);
-        applyTiltConfig(config);
-        tiltField.value = config.currentDeg.toFixed(2);
-        positionArcThumb();
-    });
+    wireJogSlider(tiltSlider, value => { tiltJog = value; });
     document.getElementById('tilt-speed').onchange = e => { tiltSpeed = e.target.value; };
 
     // ---- preset banks ----
@@ -6707,6 +6720,27 @@ function animate() {
         spinWheelsForYaw(step);
         applyDeskTransform();
         loadedModel.updateMatrixWorld(true);
+    }
+
+    // Held off centre: drive for as long as it is held.
+    if (loadedModel && !motionPaused && liftJog) {
+        const jogDt = Math.min(Math.max(dt, 0), 0.05);
+        currentLift = THREE.MathUtils.clamp(
+            currentLift + liftJog * liftUnitsPerSecond() * jogDt, LIFT_MIN, LIFT_MAX);
+        targetLift = currentLift;
+        updateMovingObjectsPosition();
+        showHeight(liftToHeight(currentLift));
+    }
+    if (loadedModel && !motionPaused && tiltJog) {
+        const config = primaryTiltConfig();
+        if (config) {
+            const jogDt = Math.min(Math.max(dt, 0), 0.05);
+            config.currentDeg = THREE.MathUtils.clamp(
+                config.currentDeg + tiltJog * tiltDegreesPerSecond() * jogDt, config.minDeg, config.maxDeg);
+            tiltTarget = null;
+            applyTiltConfig(config);
+            syncTiltUI();
+        }
     }
 
     // Tilt eases toward its target the same way. applyTiltConfig is immediate, so
