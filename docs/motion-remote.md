@@ -163,9 +163,20 @@ glossy sphere shared by all three knobs is
 
 Drag any corner and the panel resizes. It **snaps to real device screens** and a
 toast names the one it landed on: the Fold 5 cover screen and unfolded pane in
-both orientations, an iPhone, and the Apple foldable. The table is
-`REMOTE_DEVICES` in `studio.js` and it is the only place a device size is
-written. CSS pixels are the app's dp, so the figures transfer unchanged; the
+both orientations, the unfolded device in a split window, an iPhone, and the
+Apple foldable. The table is `REMOTE_DEVICES` in `studio.js` and it is the only
+place a device size is written.
+
+**It cannot be dragged into a shape no device has.** The minimum and maximum are
+the table's own extremes rather than numbers of their own — 344 to 890 on both
+axes as the table stands — so adding a device widens the range automatically.
+And a release always settles on the *nearest* device, however far off one the
+drag finished: magnetic snapping while dragging only catches a size you were
+already close to, whereas this is what makes every resting size a real screen.
+A size no screen has is one the app's layouts were never drawn for; they do not
+degrade into it, they distort. The clamp is inside `applyRemoteSize()` rather
+than only in the drag handler, so the test hook and the restore path cannot get
+round it either. CSS pixels are the app's dp, so the figures transfer unchanged; the
 Fold 5 numbers are quoted from the app's own
 `lib/utils/layout_breakpoints.dart`, which measured its portrait weights on the
 cover screen (344 × 882) and documents the unfolded device as 810 × 674.

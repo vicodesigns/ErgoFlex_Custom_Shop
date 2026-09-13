@@ -16,6 +16,13 @@ const server = http.createServer((req, res) => {
     res.end(data);
   });
 });
+// A settled size has to BE a device's size, not merely be labelled one.
+const DEVICE_SIZES = {};
+function ErgoFlexDeviceMatches(size, id) {
+  const device = DEVICE_SIZES[id];
+  return !!device && device.w === size.w && device.h === size.h;
+}
+
 (async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
@@ -993,6 +1000,53 @@ const server = http.createServer((req, res) => {
     assert.equal(resize.tabletDevice, 'fold5-open-l', 'and is named');
     assert.equal(resize.tabletColumns, 3, 'as the app\'s three-column landscape row');
     assert.ok(/Fold 5 unfolded/.test(resize.tabletToast), 'with its own toast');
+
+    // The panel is a replica of an app that runs on real screens, so a size no
+    // real screen has is one the layout was never drawn for: it distorts rather
+    // than degrades. Two things stop it - bounds taken from the device table
+    // itself, and a release that always settles on a device.
+    const bounded = await page.evaluate(async () => {
+      const out = { bounds: ErgoFlex.remoteSizeBounds };
+      ErgoFlex.setRemoteSize(40, 40);
+      await new Promise(r => setTimeout(r, 150));
+      out.tooSmall = ErgoFlex.remoteSize;
+      ErgoFlex.setRemoteSize(6000, 6000);
+      await new Promise(r => setTimeout(r, 150));
+      out.tooBig = ErgoFlex.remoteSize;
+      // A drag that finishes nowhere near a device still has to land on one.
+      const dock = document.getElementById('motion-dock');
+      ErgoFlex.setRemoteSize(420, 700);
+      await new Promise(r => setTimeout(r, 150));
+      const grip = dock.querySelector('[data-edge="se"]');
+      const rect = dock.getBoundingClientRect();
+      const k = ErgoFlex.remoteScale || 1;
+      const ev = (t, x, y) => grip.dispatchEvent(new PointerEvent(t, {
+        bubbles: true, pointerId: 7, button: 0, clientX: x, clientY: y
+      }));
+      ev('pointerdown', rect.right - 4, rect.bottom - 4);
+      ev('pointermove', rect.right - 4 + 190 * k, rect.bottom - 4 + 60 * k);
+      await new Promise(r => setTimeout(r, 120));
+      out.midDrag = ErgoFlex.remoteSize;
+      out.midDragDevice = ErgoFlex.remoteDevice;
+      ev('pointerup', rect.right - 4 + 190 * k, rect.bottom - 4 + 60 * k);
+      await new Promise(r => setTimeout(r, 250));
+      out.settled = ErgoFlex.remoteSize;
+      out.settledDevice = ErgoFlex.remoteDevice;
+      out.split = ErgoFlex.remoteDevices.find(d => d.id === 'fold5-split-p');
+      out.all = ErgoFlex.remoteDevices.map(d => [d.id, d.w, d.h]);
+      return out;
+    });
+    bounded.all.forEach(([id, w, h]) => { DEVICE_SIZES[id] = { w, h }; });
+    assert.deepEqual(bounded.bounds, { minW: 344, maxW: 890, minH: 344, maxH: 890 },
+      'the bounds are the device table\'s own extremes');
+    assert.deepEqual(bounded.tooSmall, { w: 344, h: 344 }, 'nothing can be squeezed below the smallest real screen');
+    assert.deepEqual(bounded.tooBig, { w: 890, h: 890 }, 'or stretched past the largest');
+    assert.equal(bounded.midDragDevice, null, 'mid-drag it may sit between devices');
+    assert.ok(bounded.settledDevice, 'but releasing always settles on one, got ' + JSON.stringify(bounded.settled));
+    assert.ok(ErgoFlexDeviceMatches(bounded.settled, bounded.settledDevice),
+      'at that device\'s exact size');
+    assert.deepEqual(bounded.split, { id: 'fold5-split-p', name: 'Fold 5 split view', w: 388, h: 810 },
+      'and the unfolded split window is one of them');
 
     console.log('Motion remote: drag, clamping, corrupt storage, presets, forms, tilt jog, arc, resize and stop passed.');
 

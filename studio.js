@@ -6188,11 +6188,22 @@ const REMOTE_DEVICES = [
     // @3x scale. The folded cover screen has not been confirmed; until it is,
     // the iPhone entry above is the closest honest stand-in for it.
     { id: 'apple-fold-p',  name: 'Apple foldable',             w: 626, h: 890 },
-    { id: 'apple-fold-l',  name: 'Apple foldable, landscape',  w: 890, h: 626 }
+    { id: 'apple-fold-l',  name: 'Apple foldable, landscape',  w: 890, h: 626 },
+    // The unfolded device running the app in a split window - 1043 x 2176
+    // hardware pixels at the inner screen's 2.6875. A real form factor the
+    // app is used in, and the narrowest tall one it has to hold.
+    { id: 'fold5-split-p', name: 'Fold 5 split view',          w: 388, h: 810 }
 ];
 const DEVICE_SNAP_PX = 24;          // how close a drag has to land, per axis
-const REMOTE_MIN_W = 300;
-const REMOTE_MIN_H = 220;
+
+// The bounds are the table's own extremes rather than numbers of their own.
+// The panel is a replica of an app that runs on real screens, so a size no
+// real screen has is a size the layout was never designed to hold - it does
+// not degrade, it distorts. Adding a device widens the range automatically.
+const REMOTE_MIN_W = Math.min(...REMOTE_DEVICES.map(d => d.w));
+const REMOTE_MAX_W = Math.max(...REMOTE_DEVICES.map(d => d.w));
+const REMOTE_MIN_H = Math.min(...REMOTE_DEVICES.map(d => d.h));
+const REMOTE_MAX_H = Math.max(...REMOTE_DEVICES.map(d => d.h));
 const DOCK_SIZE_KEY = 'ergoflex.dockSizeV1';
 const DOCK_PAD = 8;                 // the same inset clampDockPosition keeps
 
@@ -6206,6 +6217,19 @@ function snapRemoteSize(w, h) {
             return { w: device.w, h: device.h, device };
     }
     return { w, h, device: null };
+}
+
+// What the panel settles on when the finger lifts. Magnetic snapping while
+// dragging only catches a size you were already close to; this is what makes
+// every RESTING size a real screen, so the panel cannot be left at an aspect
+// no device has and no layout was drawn for.
+function nearestRemoteDevice(w, h) {
+    let best = REMOTE_DEVICES[0], bestDistance = Infinity;
+    for (const device of REMOTE_DEVICES) {
+        const distance = (w - device.w) ** 2 + (h - device.h) ** 2;
+        if (distance < bestDistance) { best = device; bestDistance = distance; }
+    }
+    return best;
 }
 
 // Which of the app's four layouts this size is. These are the predicates from
@@ -6240,7 +6264,11 @@ function remoteFitScale(w, h) {
 function applyRemoteSize(w, h, { announce = false } = {}) {
     const dock = document.getElementById('motion-dock');
     if (!dock) return;
-    const snapped = snapRemoteSize(Math.round(w), Math.round(h));
+    // Clamped here rather than only at the drag, so no caller - the test hook
+    // and the restore path included - can hand the layout a size it cannot hold.
+    const snapped = snapRemoteSize(
+        Math.round(THREE.MathUtils.clamp(w, REMOTE_MIN_W, REMOTE_MAX_W)),
+        Math.round(THREE.MathUtils.clamp(h, REMOTE_MIN_H, REMOTE_MAX_H)));
     const changed = snapped.device?.id !== remoteDevice?.id;
     remoteSize = { w: snapped.w, h: snapped.h };
     remoteDevice = snapped.device;
@@ -6274,8 +6302,8 @@ function persistRemoteSize() {
 
 function restoreDockSize() {
     const stored = readStore(DOCK_SIZE_KEY, 1, null);
-    const w = numberOrNull(stored?.w, REMOTE_MIN_W, 4000);
-    const h = numberOrNull(stored?.h, REMOTE_MIN_H, 4000);
+    const w = numberOrNull(stored?.w, REMOTE_MIN_W, REMOTE_MAX_W);
+    const h = numberOrNull(stored?.h, REMOTE_MIN_H, REMOTE_MAX_H);
     if (w === null || h === null) return;   // never resized, or unreadable: CSS sizes it
     applyRemoteSize(w, h);
 }
@@ -6451,8 +6479,8 @@ function wireRemote(dock, header) {
             if (edge.includes('w')) w = resizing.w0 - dx;
             if (edge.includes('s')) h = resizing.h0 + dy;
             if (edge.includes('n')) h = resizing.h0 - dy;
-            w = THREE.MathUtils.clamp(w, REMOTE_MIN_W, 4000);
-            h = THREE.MathUtils.clamp(h, REMOTE_MIN_H, 4000);
+                w = THREE.MathUtils.clamp(w, REMOTE_MIN_W, REMOTE_MAX_W);
+            h = THREE.MathUtils.clamp(h, REMOTE_MIN_H, REMOTE_MAX_H);
             applyRemoteSize(w, h, { announce: true });
             // A west or north grip moves the opposite corner as well as the size,
             // so the edge the user is NOT holding has to stay where it was.
@@ -6465,6 +6493,9 @@ function wireRemote(dock, header) {
             resizing = null;
             dock.querySelectorAll('.remote-resize.dragging').forEach(g => g.classList.remove('dragging'));
             try { e.target.releasePointerCapture?.(e.pointerId); } catch {}
+            // Land on a real screen, however far off one the drag finished.
+            const settle = nearestRemoteDevice(remoteSize.w, remoteSize.h);
+            applyRemoteSize(settle.w, settle.h, { announce: true });
             persistRemoteSize();
             const at = clampDockPosition();
             if (at) writeStore(DOCK_POS_KEY, { v: 1, x: at.x, y: at.y });
@@ -6662,10 +6693,23 @@ function updateGlide(dt) {
 let arBusy = false;
 let lastARBlobUrl = null;
 
-function isMobileARDevice() {
-    const ua = navigator.userAgent;
-    const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
-    return isIOS || /Android/i.test(ua);
+// Ask the browser what it can do rather than guessing from the user-agent.
+// Chrome defaults to desktop-site mode on large foldables (and on tablets),
+// which rewrites the UA to an "X11; Linux x86_64" desktop string — no Android
+// in it. A Fold with working ARCore and a live immersive-ar session therefore
+// used to fail a UA sniff and get told to open the page on a phone.
+async function isMobileARDevice() {
+    // Android and anything else with WebXR. Needs a secure context, so this
+    // is also what reports false on a plain-http dev URL.
+    if (navigator.xr) {
+        try {
+            if (await navigator.xr.isSessionSupported('immersive-ar')) return true;
+        } catch { /* isSessionSupported throws on some older builds */ }
+    }
+    // iOS has no navigator.xr; AR Quick Look is the path there, and the
+    // supported way to detect it is the <a rel="ar"> relationship.
+    const a = document.createElement('a');
+    return !!(a.relList && a.relList.supports && a.relList.supports('ar'));
 }
 
 async function prepareARModel() {
@@ -6717,7 +6761,7 @@ async function prepareARModel() {
 
 async function launchAR() {
     if (arBusy || !loadedModel) return;
-    if (!isMobileARDevice()) {
+    if (!await isMobileARDevice()) {
         showARHelpModal();
         return;
     }
@@ -7906,6 +7950,7 @@ window.ErgoFlex = {
     setShellMode,
     get shellMode() { return shellMode; },
     remoteDevices: REMOTE_DEVICES,
+    remoteSizeBounds: { minW: REMOTE_MIN_W, maxW: REMOTE_MAX_W, minH: REMOTE_MIN_H, maxH: REMOTE_MAX_H },
     setRemoteSize(w, h) { anchorDock(document.getElementById('motion-dock')); applyRemoteSize(w, h, { announce: true }); persistRemoteSize(); },
     get remoteSize() { return remoteSize ? { ...remoteSize } : null; },
     get remoteDevice() { return remoteDevice?.id || null; },
