@@ -201,10 +201,23 @@ container query because CSS cannot ask about `shortestSide`.
 | shape | predicate | layout |
 |---|---|---|
 | `narrow-portrait` | `w < 600` upright | the app's four-block column: Glide 34, Ergo Forms 13, Lift+Tilt 44, Hub 8 |
-| `wide-portrait` | `w >= 600` upright | the same blocks on the pre-rebalance weights |
+| `wide-portrait` | `w >= 600` upright | the same blocks on `kWidePortrait*` — 28 / 12 / 50 / 9 |
 | `narrow-landscape` | `h < 500` on its side | three columns, Glide over Ergo Forms 2:1 |
 | `landscape` | otherwise | three columns, 3:1 |
 | `tablet-landscape` | `shortestSide >= 600` | three columns, 59:41, and six Ergo Form slots as two rows of three |
+
+**`wide-portrait` is the shape the replica is tuned against**, measured off the
+device at 674 × 810 rather than eyeballed. Headings run along the top of their
+block, left, with the info beacon pushed to the far right. The dial sits on the
+Glide block's left half with the speed word beside it. Ergo Forms are three
+capsules across the full width, each with its chevron in the bottom right. And
+Height and Tilt use `base_panel.dart`'s **splitPortrait**: the track goes down
+the left of its column and the readout sits top-right with the speed word under
+it, which is why the readout has no full-width band of its own here. The track's
+inset from the panel edge is a margin on the track, not padding on the column —
+as padding it came out of the readout's half as well, and the tilt arc's box is
+three times the lift track's width, so the readout there was squeezed off the
+panel.
 
 The fixed-px internals are gone with it. The compass, the lift track and the
 tilt arc are derived from `--remote-unit`, the panel's own short side over 100,
@@ -223,10 +236,39 @@ outcome, a control that looks live and silently does nothing.
 The green status dot is decorative for the same reason: it reports that this is a
 preview, not a connection to a desk.
 
-The wellness blocks — the Mini Wellness strip, the start-routine buttons and the
-Wellness Hub bar along the bottom — are **drawn and disabled** on the same
-terms. They are routines rather than desk controls and there is nothing behind
-them here, but the app has them, and a replica that omits them is not a replica.
+The **Wellness Hub bar** along the bottom — the desk, the wellness score and its
+ring, the routine timer, save, and the lamp that is red while it is on — is
+drawn and disabled on the same terms. It is routines rather than desk movement
+and there is nothing behind it here, but the app has it and a replica that omits
+it is not a replica.
+
+The Mini Wellness strip and the start-routine buttons were drawn here for a
+while and have been removed. They are in the Dart — `responsive_main_screen.dart`
+and the landscape branch of `main_screen.dart` — but they are not on the device:
+none of the screenshots of the app running on the hardware has either one. **The
+hardware wins over the source.** The source says what the app can draw; the
+device says what it does.
+
+## Both themes
+
+The app ships a light theme and a dark one, so the panel carries both and the
+sun/moon in its header switches between them. The choice persists under
+`ergoflex.remoteThemeV1`. **Dark is the default**, because it is what the app is
+shown in and what every reference screenshot is.
+
+The dark ramp is sampled off the device rather than guessed — the Fold 5
+unfolded upright, 1812 × 2176 at 2.6875 — and every value in it is a colour
+actually on that screen: `#000000` page, `#050713` app bar, `#0A183F` hub bar,
+`#07080C` readout, `#4788FF` rims, `#8DA5ED` for the speed word, `#C10207` for
+the lamp. Surfaces are named (`--sunk`, `--chip`, `--bar`, `--pill-a`) so rules
+never have to know which theme they are in.
+
+Two things that are easy to get wrong here, both found by getting them wrong:
+the compass is themed entirely from CSS, because **`var()` is not valid in an
+SVG presentation attribute** — a `stop-color="var(--dial-b)"` silently paints
+nothing, and the dish stayed white on a black panel. And the app-icon SVGs are
+the app's own full-colour artwork drawn for its dark UI, so they are never
+tinted; inverting them for dark flattened every one into a grey disc.
 
 ## The tilt arc
 

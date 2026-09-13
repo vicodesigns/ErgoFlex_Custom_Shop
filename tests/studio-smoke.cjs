@@ -1048,6 +1048,40 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.deepEqual(bounded.split, { id: 'fold5-split-p', name: 'Fold 5 split view', w: 388, h: 810 },
       'and the unfolded split window is one of them');
 
+    // The app ships a light theme and a dark one, so the replica carries both.
+    const themed = await page.evaluate(async () => {
+      const dock = document.getElementById('motion-dock');
+      const ground = () => getComputedStyle(dock).getPropertyValue('--ground').trim();
+      const out = { initial: ErgoFlex.remoteTheme, darkGround: ground() };
+      dock.querySelector('.remote-theme').click();
+      await new Promise(r => setTimeout(r, 120));
+      out.afterClick = ErgoFlex.remoteTheme;
+      out.lightGround = ground();
+      try { out.stored = JSON.parse(localStorage.getItem('ergoflex.remoteThemeV1')); } catch {}
+      // The compass dish is a gradient whose stops are set from CSS; as an SVG
+      // attribute a var() reference silently paints nothing, so assert a stop
+      // actually resolves to a colour in both themes.
+      out.lightStop = getComputedStyle(dock.querySelector('.dish-mid')).stopColor;
+      dock.querySelector('.remote-theme').click();
+      await new Promise(r => setTimeout(r, 120));
+      out.backToDark = ErgoFlex.remoteTheme;
+      out.darkStop = getComputedStyle(dock.querySelector('.dish-mid')).stopColor;
+      // And the blocks that are in the Dart but not on the device stay gone.
+      out.strays = dock.querySelectorAll('.remote-wellness-start, .remote-mini-wellness').length;
+      out.hub = !!dock.querySelector('.remote-wellness-hub .hub-led');
+      return out;
+    });
+    assert.equal(themed.initial, 'dark', 'the panel opens in the theme the app is shown in');
+    assert.equal(themed.darkGround, '#000000', 'whose page is black');
+    assert.equal(themed.afterClick, 'light', 'the header switch flips it');
+    assert.notEqual(themed.lightGround, themed.darkGround, 'and the palette actually changes');
+    assert.equal(themed.stored?.theme, 'light', 'the choice is remembered under a versioned key');
+    assert.equal(themed.backToDark, 'dark', 'and it switches back');
+    assert.notEqual(themed.lightStop, themed.darkStop, 'the compass dish is themed, not painted once');
+    assert.ok(/^rgb/.test(themed.darkStop), 'and its gradient stop resolves to a colour, got ' + themed.darkStop);
+    assert.equal(themed.strays, 0, 'the blocks that are not on the device are not drawn');
+    assert.ok(themed.hub, 'but the wellness bar, which is, still is');
+
     console.log('Motion remote: drag, clamping, corrupt storage, presets, forms, tilt jog, arc, resize and stop passed.');
 
 

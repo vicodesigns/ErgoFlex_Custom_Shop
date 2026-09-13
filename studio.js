@@ -5801,7 +5801,7 @@ function compassSvg() {
     for (let i = 0; i < 8; i++) {
         const a = i * Math.PI / 4;
         const [x1, y1] = at(tickR, a - half), [x2, y2] = at(tickR, a + half);
-        ticks += `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${tickR.toFixed(2)} ${tickR.toFixed(2)} 0 0 0 ${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" stroke="#2F55D4" stroke-width="${(R * 0.115).toFixed(2)}" stroke-linecap="round"/>`;
+        ticks += `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${tickR.toFixed(2)} ${tickR.toFixed(2)} 0 0 0 ${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" class="dial-tick" stroke-width="${(R * 0.115).toFixed(2)}" stroke-linecap="round"/>`;
     }
     const Rin = 40, base = Rin * 0.40, len = Rin * 0.26, wide = Rin * 0.12;
     let star = '';
@@ -5811,18 +5811,18 @@ function compassSvg() {
         const tip = [C + dx * (base + len), C + dy * (base + len)];
         const p1 = [C + dx * base - dy * wide, C + dy * base + dx * wide];
         const p2 = [C + dx * base + dy * wide, C + dy * base - dx * wide];
-        star += `<polygon points="${tip[0].toFixed(1)},${tip[1].toFixed(1)} ${p1[0].toFixed(1)},${p1[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}" fill="#2F55D4" fill-opacity=".92"/>`;
+        star += `<polygon points="${tip[0].toFixed(1)},${tip[1].toFixed(1)} ${p1[0].toFixed(1)},${p1[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}" class="dial-star"/>`;
     }
     return `<svg viewBox="0 0 132 132" aria-hidden="true" focusable="false">
       <defs><radialGradient id="glide-dish" cx="50%" cy="50%" r="50%">
-        <stop offset="0" stop-color="#C8D2F1"/><stop offset=".55" stop-color="#FFFFFF"/><stop offset="1" stop-color="#D0D9F2"/>
+        <stop class="dish-edge" offset="0"/><stop class="dish-mid" offset=".55"/><stop class="dish-edge" offset="1"/>
       </radialGradient></defs>
-      <circle cx="66" cy="66" r="64" fill="#fff"/>
-      <circle cx="66" cy="66" r="${(R * 0.82).toFixed(1)}" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="${(R * 0.055).toFixed(1)}"/>
-      <circle cx="66" cy="66" r="${(R * 0.745).toFixed(1)}" fill="none" stroke="#2F55D4" stroke-opacity=".16" stroke-width="${(R * 0.008).toFixed(2)}"/>
+      <circle class="dial-plate" cx="66" cy="66" r="64"/>
+      <circle class="dial-groove" cx="66" cy="66" r="${(R * 0.82).toFixed(1)}" fill="none" stroke-width="${(R * 0.055).toFixed(1)}"/>
+      <circle class="dial-hair" cx="66" cy="66" r="${(R * 0.745).toFixed(1)}" fill="none" stroke-width="${(R * 0.008).toFixed(2)}"/>
       <g class="compass-ring" style="transform-origin:66px 66px">${ticks}</g>
       <circle cx="66" cy="66" r="${Rin}" fill="url(#glide-dish)"/>
-      <circle cx="66" cy="66" r="${Rin - 1}" fill="none" stroke="#2F55D4" stroke-opacity=".42" stroke-width="1.6"/>
+      <circle class="dial-rim" cx="66" cy="66" r="${Rin - 1}" fill="none" stroke-width="1.6"/>
       <g class="compass-star">${star}</g>
     </svg>`;
 }
@@ -5960,6 +5960,18 @@ function wireArcControl(box, slider) {
 // of the app. They are disabled because they are routines, not desk controls -
 // there is nothing behind them here, and a control that looks live and does
 // nothing is worse than one that says it is unavailable.
+// The hub's own glyphs, drawn rather than pulled from assets/app-icons: none of
+// those are these shapes, and the bar reads as the app's only if they are.
+const DESK_GLYPH = `<svg viewBox="0 0 32 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+  <path d="M3 9h26M5 13h22"/><path d="M8 4v5M24 4v5"/><path d="M7 13v7M25 13v7M3 20h26"/></g></svg>`;
+const SEAT_GLYPH = `<svg viewBox="0 0 24 24" class="hub-seat" aria-hidden="true"><g fill="currentColor">
+  <circle cx="12" cy="4" r="2"/><path d="M12 7c-1.2 0-2 .8-2 2v3l-4 2 .8 1.7L12 13l5.2 2.7.8-1.7-4-2V9c0-1.2-.8-2-2-2Z"/>
+  <path d="M6 19c2-1.4 4-2 6-2s4 .6 6 2l-.9 1.6C15.4 19.6 13.8 19 12 19s-3.4.6-5.1 1.6Z"/></g></svg>`;
+const SAVE_GLYPH = `<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.7">
+  <path d="M4 4h12l4 4v12H4z"/><path d="M8 4v5h7V4"/></g><path d="M10 13.5v5l4.5-2.5z" fill="currentColor"/></svg>`;
+const BULB_GLYPH = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor"
+  d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Zm-3 18h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"/></svg>`;
+
 function hubTile(file, label) {
     return `<button class="hub-tile" type="button" disabled aria-label="${label}"
              title="${label} — a routines feature, not connected in the preview"><img src="./assets/app-icons/${file}" alt=""></button>`;
@@ -6014,6 +6026,11 @@ function buildMotionRemote() {
         ${inert('pre_collision_on.svg', 'Collision guard')}
         <button id="remote-stop" type="button" title="Stop all movement" aria-label="Stop all movement"><img src="./assets/app-icons/e-stop.svg" alt=""></button>
         ${inert('quick_logout.svg', 'Sign out')}
+        <button class="remote-chrome remote-theme" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true">
+          <path class="moon" fill="currentColor" d="M20 14.2A8.2 8.2 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/>
+          <g class="sun" fill="currentColor"><circle cx="12" cy="12" r="4.2"/>
+            <path d="M11 2h2v3.2h-2zm0 16.8h2V22h-2zM2 11h3.2v2H2zm16.8 0H22v2h-3.2zM4.4 5.8 5.8 4.4 8 6.6 6.6 8zM16 17.4l1.4-1.4 2.2 2.2-1.4 1.4zM17.4 8 16 6.6l2.2-2.2 1.4 1.4zM6.6 16 8 17.4l-2.2 2.2-1.4-1.4z"/></g>
+        </svg></button>
         <button id="motion-dock-toggle" class="motion-dock-toggle" type="button" aria-controls="motion-dock-content" title="Collapse the movement panel">▼</button>`;
     dock.append(header);
 
@@ -6021,11 +6038,6 @@ function buildMotionRemote() {
     body.id = 'motion-dock-content';
     body.className = 'motion-dock-body';
     body.innerHTML = `<div class="remote-body">
-      <div class="remote-mini-wellness" role="status" aria-label="Movement status">
-        <img src="./assets/app-icons/lift_up.svg" alt="" aria-hidden="true">
-        <span class="mini-text">Seated · 0m since last move</span>
-        <span class="mini-state">Preview</span>
-      </div>
       <div class="remote-grid">
 
         <div class="remote-half remote-half-left">
@@ -6081,21 +6093,19 @@ function buildMotionRemote() {
         </div>
 
       </div>
-      <div class="remote-wellness-start" role="group" aria-label="Wellness routines">
-        <button type="button" class="remote-start sit" disabled
-                title="Start a sitting routine — a routines feature, not connected in the preview">
-          <span class="badge">PRESET</span>Start Sitting</button>
-        <button type="button" class="remote-start stand" disabled
-                title="Start a standing routine — a routines feature, not connected in the preview">
-          <span class="badge">DIRECT</span>Start Standing</button>
-      </div>
       <div class="remote-wellness-hub" role="group" aria-label="Wellness">
-        ${hubTile('lift_up.svg', 'Desk position')}
-        ${hubTile('tilt_up.svg', 'Movement')}
-        ${hubTile('help.svg', 'Wellness')}
-        <span class="hub-timer" role="timer" aria-label="Routine timer, not running">00m 00s</span>
-        ${hubTile('arrow_right.svg', 'Start or pause')}
-        ${hubTile('e-stop.svg', 'Stop routine')}
+        <span class="hub-desk" role="img" aria-label="Your desk">${DESK_GLYPH}</span>
+        <span class="hub-score">${SEAT_GLYPH}<span class="hub-score-text">Wellness Score</span>
+          <span class="hub-ring" role="img" aria-label="Wellness score, preview value"><i>75</i></span></span>
+        <span class="hub-rule" aria-hidden="true"></span>
+        <span class="hub-timer" role="timer" aria-label="Routine timer, not running">0m 00s</span>
+        <span class="hub-rule" aria-hidden="true"></span>
+        <button class="hub-tile" type="button" disabled aria-label="Save routine"
+                title="Save routine — a routines feature, not connected in the preview">${SAVE_GLYPH}</button>
+        <span class="hub-rule" aria-hidden="true"></span>
+        <button class="hub-led" type="button" disabled aria-label="Desk lamp"
+                title="Desk lamp — a hardware control, not connected in the preview">${BULB_GLYPH}</button>
+        <span class="remote-info" role="img" aria-label="About the wellness bar"></span>
       </div>
       <p id="glide-help" class="remote-hint">Drag the dish to glide, twist the outer ring to turn in place. Tap a preset to recall it, press and hold to save.</p>
     </div>`;
@@ -6109,6 +6119,7 @@ function buildMotionRemote() {
         dock.append(grip);
     }
 
+    applyRemoteTheme(loadRemoteTheme());
     renderErgoForms();
     renderPresetChips();
     wireRemote(dock, header);
@@ -6205,11 +6216,37 @@ const REMOTE_MAX_W = Math.max(...REMOTE_DEVICES.map(d => d.w));
 const REMOTE_MIN_H = Math.min(...REMOTE_DEVICES.map(d => d.h));
 const REMOTE_MAX_H = Math.max(...REMOTE_DEVICES.map(d => d.h));
 const DOCK_SIZE_KEY = 'ergoflex.dockSizeV1';
+const REMOTE_THEME_KEY = 'ergoflex.remoteThemeV1';
 const DOCK_PAD = 8;                 // the same inset clampDockPosition keeps
 
 let remoteSize = null;              // { w, h } in device px, or null for CSS sizing
 let remoteDevice = null;            // the matched REMOTE_DEVICES entry, or null
 let remoteScale = 1;                // shrink-to-fit when the device is taller than the viewer
+
+// The app ships a light theme and a dark one, so the replica carries both and
+// the header switches between them. Dark is the default because it is what the
+// app is shown in and what every reference screenshot is.
+function loadRemoteTheme() {
+    const stored = readStore(REMOTE_THEME_KEY, 1, null);
+    return stored?.theme === 'light' ? 'light' : 'dark';
+}
+
+function dockThemeName() {
+    return document.getElementById('motion-dock')?.dataset.theme || 'dark';
+}
+
+function applyRemoteTheme(theme) {
+    const dock = document.getElementById('motion-dock');
+    if (!dock) return;
+    dock.dataset.theme = theme === 'light' ? 'light' : 'dark';
+    const button = dock.querySelector('.remote-theme');
+    if (button) {
+        const dark = dock.dataset.theme === 'dark';
+        button.setAttribute('aria-pressed', String(dark));
+        button.title = dark ? 'Dark theme — switch to light' : 'Light theme — switch to dark';
+        button.setAttribute('aria-label', button.title);
+    }
+}
 
 function snapRemoteSize(w, h) {
     for (const device of REMOTE_DEVICES) {
@@ -6503,6 +6540,13 @@ function wireRemote(dock, header) {
         dock.addEventListener('pointerup', endResize);
         dock.addEventListener('pointercancel', endResize);
     }
+
+    // ---- theme ----
+    header.querySelector('.remote-theme')?.addEventListener('click', () => {
+        const next = dock.dataset.theme === 'dark' ? 'light' : 'dark';
+        applyRemoteTheme(next);
+        writeStore(REMOTE_THEME_KEY, { v: 1, theme: next });
+    });
 
     // ---- collapse ----
     const dockToggle = document.getElementById('motion-dock-toggle');
@@ -7956,6 +8000,8 @@ window.ErgoFlex = {
     get remoteDevice() { return remoteDevice?.id || null; },
     get remoteShape() { return document.getElementById('motion-dock')?.dataset.shape || null; },
     get remoteScale() { return remoteScale; },
+    get remoteTheme() { return document.getElementById('motion-dock')?.dataset.theme || null; },
+    setRemoteTheme(theme) { applyRemoteTheme(theme); writeStore(REMOTE_THEME_KEY, { v: 1, theme: dockThemeName() }); },
     resetView() { const btn = document.getElementById('reset-view'); if (btn) btn.click(); },
     setPivotByName(name) {
         let done = false;

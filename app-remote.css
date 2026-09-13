@@ -18,18 +18,38 @@
  */
 
 .app-remote {
-    /* The five-colour family ramp. Everything else is derived from these. */
+    /* The light family ramp, transcribed from the app's light theme. Surfaces
+       are named rather than literal so the dark theme below can restate them
+       without every rule having to know which theme it is in. */
     --fill:   #2F55D4;   /* filled marks, rims, thumbs */
     --ink:    #1E3FB0;   /* the accent used as text, so it clears 4.5:1 */
     --wash:   #E2E7F9;   /* the "set" surface: fill at 14% over white */
     --ground: #E7EAF2;   /* page paper */
-    --hub:    #F5F6FD;   /* raised bar */
+    --hub:    #F5F6FD;   /* the app bar band */
+    --bar:    #F5F6FD;   /* the wellness hub bar */
+    --sunk:   #FFFFFF;   /* a readout pill, a track, a chip */
+    --chip:   #FFFFFF;
+    --pill-a: #FFFFFF;   /* Ergo Form pill, unset */
+    --pill-b: #FFFFFF;
+    --pill-set-a: #F2F4FC;
+    --pill-set-b: #E2E7F9;
+    --dial-a: #E8ECFB;      /* compass dish, mid */
+    --dial-b: #FFFFFF;      /* compass dish, edge */
+    --dial-plate: #FFFFFF;  /* the face the capsules sit on */
+    --dial-groove: rgba(255,255,255,.55);
 
     --text:      #141824;
     --text-2:    #5B6273;
     --rim:       #0C82B6;   /* bespoke, deliberately off-ramp */
     --rim-empty: #696969;
     --status-ok: #007815;
+    --danger:    #C10207;
+    --cyan:      #0C82B6;
+    --amber:     #C07A12;
+
+    --hairline: rgba(20,24,36,.10);
+    --shell-rim: rgba(255,255,255,.65);
+    --sunk-shade: 0 3px 10px rgba(0,0,0,.10);
 
     /* deepen(fill) = mix(fill, black, 45%) - the sphere's dark pole. */
     --fill-deep: #15265F;
@@ -42,6 +62,50 @@
 
     font-family: Poppins, "Noto Sans JP", "Noto Sans KR", "Noto Sans SC", system-ui, sans-serif;
     color: var(--text);
+}
+
+/* The app's dark theme, sampled off the device rather than guessed - the Fold 5
+   unfolded upright, 1812 x 2176 at 2.6875. Every value here is a colour that is
+   actually on that screen. Both themes ship in the app, so both ship here; the
+   header's sun/moon switches between them and the choice is remembered. */
+.app-remote[data-theme="dark"] {
+    --fill:   #4788FF;   /* the track rim */
+    --ink:    #8DA5ED;   /* the accent as text: the speed word, "Ninja" */
+    --wash:   #273252;
+    --ground: #000000;
+    --hub:    #050713;   /* the app bar band */
+    --bar:    #0A183F;   /* the wellness hub bar */
+    --sunk:   #07080C;   /* a readout pill: darker than the page it sits on */
+    --chip:   #0B1320;
+    --pill-a: #273252;
+    --pill-b: #141B2E;
+    --pill-set-a: #2E3C63;
+    --pill-set-b: #172038;
+    --dial-a: #06123B;
+    --dial-b: #020629;
+    --dial-plate: #04091F;
+    --dial-groove: rgba(71,136,255,.10);
+
+    --text:      #FFFFFF;
+    --text-2:    #8DA5ED;
+    --rim:       #4788FF;
+    --rim-empty: #2D3A5E;
+    --status-ok: #22C55E;
+    --danger:    #C10207;
+    --cyan:      #38BDF8;
+    --amber:     #FFB64D;
+
+    --hairline: rgba(255,255,255,.14);
+    --shell-rim: rgba(71,136,255,.22);
+    --sunk-shade: inset 0 1px 6px rgba(0,0,0,.55);
+
+    --fill-deep: #0B1740;
+    --fill-lite: #DCE7FF;
+
+    /* On black, elevation is a rim and a glow, not a drop shadow. */
+    --lift1: 0 0 0 1px rgba(71,136,255,.16);
+    --lift2: 0 0 0 1px rgba(71,136,255,.20), 0 18px 50px -20px rgba(0,0,0,.9);
+    --pressed: inset 0 1px 6px rgba(0,0,0,.7);
 }
 
 /* ── Panel shell ─────────────────────────────────────────────────────────── */
@@ -74,10 +138,10 @@
     max-width: none;
     padding: 0;
     border-radius: 18px;
-    border: 1px solid rgba(255,255,255,.65);
+    border: 1px solid var(--shell-rim);
     /* Translucent: the panel floats over the desk rather than displacing it,
        so the desk has to remain readable underneath. */
-    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    background: color-mix(in srgb, var(--ground) 90%, transparent);
     backdrop-filter: blur(18px);
     box-shadow: var(--lift2);
     overflow: hidden;
@@ -98,7 +162,7 @@
     transform-origin: top left;
 }
 #motion-dock.app-remote[data-sized="true"] {
-    --compass: clamp(84px, calc(var(--remote-unit) * 30), 220px);
+    --compass: clamp(84px, calc(var(--remote-unit) * 25), 200px);
     --track-h: clamp(80px, calc(var(--remote-unit) * 28), 260px);
 }
 #motion-dock.app-remote[data-sized="true"] .motion-dock-body { flex: 1; min-height: 0; display: flex; }
@@ -133,7 +197,7 @@
     display: flex; align-items: center; gap: 10px;
     padding: 8px 12px;
     background: var(--hub);
-    border-bottom: 1px solid rgba(20,24,36,.06);
+    border-bottom: 1px solid var(--hairline);
     cursor: grab;
     touch-action: none;
     user-select: none;
@@ -141,11 +205,14 @@
 .remote-header.dragging { cursor: grabbing; }
 .remote-header :is(button, a, input, select) { cursor: default; }
 .remote-logo { height: 17px; width: auto; display: block; }
+/* The app-icon SVGs are the app's own full-colour artwork - cyan gradients on
+   navy, drawn for its dark UI - so they are never tinted. An earlier attempt to
+   invert them for the dark theme flattened every one into a grey disc. */
 .remote-status {
     width: 12px; height: 12px; border-radius: 50%;
     background: var(--status-ok);
-    border: 1px solid rgba(20,24,36,.7);
-    box-shadow: 0 0 4px rgba(0,120,21,.5);
+    border: 1px solid var(--hairline);
+    box-shadow: 0 0 5px color-mix(in srgb, var(--status-ok) 60%, transparent);
     flex: none;
 }
 .remote-spacer { flex: 1; }
@@ -340,6 +407,18 @@
 }
 .remote-compass:active { cursor: grabbing; }
 .remote-compass svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Every part of the dial is themed from CSS rather than baked into the SVG.
+   stop-color especially has to be set here: var() is not valid in an SVG
+   presentation attribute, so an attribute referencing it silently paints
+   nothing - which is how the dish stayed white on a black panel. */
+.remote-compass .dish-edge { stop-color: var(--dial-b); }
+.remote-compass .dish-mid  { stop-color: var(--dial-a); }
+.remote-compass .dial-plate  { fill: var(--dial-plate); }
+.remote-compass .dial-groove { stroke: var(--dial-groove); }
+.remote-compass .dial-hair   { stroke: var(--fill); stroke-opacity: .16; }
+.remote-compass .dial-rim    { stroke: var(--fill); stroke-opacity: .42; }
+.remote-compass .dial-tick   { stroke: var(--fill); }
+.remote-compass .dial-star   { fill: var(--fill); fill-opacity: .92; }
 .remote-compass .remote-sphere {
     --r: 12px;
     position: absolute; left: 50%; top: 50%;
@@ -370,16 +449,16 @@
     display: flex; align-items: baseline; gap: 4px;
     position: relative;
     border-radius: 14px;
-    border: 1px solid rgba(20,24,36,.10);
+    border: 1px solid var(--hairline);
     background:
         linear-gradient(rgba(255,255,255,.10) 0%, rgba(255,255,255,.05) 4%, rgba(255,255,255,.015) 100%),
-        #FFFFFF;
-    box-shadow: 0 3px 10px rgba(0,0,0,.10);
+        var(--sunk);
+    box-shadow: var(--sunk-shade);
     padding: 4px 24px 4px 9px;
 }
 .remote-readout input {
     font: inherit; font-size: 19px; font-weight: 600; letter-spacing: 2px;
-    color: var(--ink); background: none; border: 0; padding: 0;
+    color: var(--text); background: none; border: 0; padding: 0;
     /* Sized to its content rather than the flex line: at width:100% the number
        input's spinner buttons claimed the space and "28.0" rendered as "2". */
     width: 4.4ch; flex: 0 0 auto; min-width: 0;
@@ -403,7 +482,7 @@
     width: 38px; height: 96px;
     border-radius: 13px;
     border: 1.6px solid var(--fill);
-    background: #fff;
+    background: var(--sunk);
     box-shadow: var(--lift1);
     margin: 0 auto;
 }
@@ -445,7 +524,7 @@
 .remote-arc { position: relative; margin: 0 auto; }
 .remote-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
 .remote-arc .arc-rim { fill: none; stroke: var(--fill); stroke-linecap: round; }
-.remote-arc .arc-face { fill: none; stroke: #fff; stroke-linecap: round; }
+.remote-arc .arc-face { fill: none; stroke: var(--sunk); stroke-linecap: round; }
 /* The pointer gesture belongs to .remote-arc itself, which projects the finger
    onto the arc by angle the way the phone does. This input is no longer the hit
    area - it is the keyboard and assistive-technology surface, and the value
@@ -472,16 +551,16 @@
     border-radius: 17px;
     padding: 6px 5px;
     font: inherit; font-size: 11px; font-weight: 700; letter-spacing: 2px;
-    color: #1D1D1F;
+    color: var(--text);
     cursor: pointer;
     box-shadow: var(--lift1);
-    background: #fff;
+    background: linear-gradient(var(--pill-a), var(--pill-b));
     border: 1.5px solid var(--rim-empty);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .remote-form[data-set="true"] {
-    background: linear-gradient(#F2F4FC, var(--wash));
-    border-color: color-mix(in srgb, var(--rim) 90%, black);
+    background: linear-gradient(var(--pill-set-a), var(--pill-set-b));
+    border-color: var(--rim);
 }
 .remote-form:active { box-shadow: var(--pressed); transform: translateY(1px); }
 .remote-form:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
@@ -497,14 +576,14 @@
     min-width: clamp(32px, calc(var(--remote-unit, 1.4px) * 19), 68px);
     border-radius: 11px;
     border: 1.5px solid var(--rim-empty);
-    background: rgba(255,255,255,.55);
+    background: var(--chip);
     font: inherit; font-size: 12px; font-weight: 600; color: var(--text);
     cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center; gap: 2px;
 }
 .remote-chip[data-saved="true"] {
-    border-color: color-mix(in srgb, var(--rim) 90%, black);
-    box-shadow: 0 0 6px rgba(12,130,182,.30);
+    border-color: var(--rim);
+    box-shadow: 0 0 8px rgba(71,136,255,.35);
     background: linear-gradient(#F2F4FC, var(--wash));
 }
 .remote-chip:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
@@ -530,7 +609,7 @@
 .app-remote .glide-actions #glide-status { flex: 1; font-size: 9px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .app-remote .glide-actions button {
     font: inherit; font-size: 10px; padding: 4px 8px; border-radius: 8px;
-    border: 1px solid rgba(20,24,36,.14); background: #fff; color: var(--text); cursor: pointer;
+    border: 1px solid var(--hairline); background: var(--chip); color: var(--text); cursor: pointer;
 }
 .app-remote .glide-actions button:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
 
@@ -601,51 +680,370 @@
 }
 .remote-header .glide-actions button {
     font: inherit; font-size: 9px; padding: 3px 7px; border-radius: 7px;
-    border: 1px solid rgba(20,24,36,.14); background: #fff; color: var(--text); cursor: pointer;
+    border: 1px solid var(--hairline); background: var(--chip); color: var(--text); cursor: pointer;
 }
 
-/* ── Wellness blocks ─────────────────────────────────────────────────────── */
-/* mini_wellness_widget.dart, wellness_start_buttons.dart, wellness_hub_widget
-   .dart. Drawn to complete the replica; every control is disabled, because
-   these are routines rather than desk movement and nothing is behind them. */
+/* ── The wellness bar ────────────────────────────────────────────────────── */
+/* wellness_hub_widget.dart. Drawn to complete the replica; every control is
+   disabled, because these are routines rather than desk movement and there is
+   nothing behind them here.
 
-.remote-mini-wellness {
-    display: flex; align-items: center; gap: 8px;
-    min-height: 40px; padding: 0 10px; margin-bottom: 6px;
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--hub) 70%, transparent);
-    border: 1px solid rgba(20,24,36,.06);
-    font-size: 11px; color: var(--text-2);
+   The Mini Wellness strip and the start-routine buttons used to be drawn here
+   too - they are in the Dart, in responsive_main_screen.dart and the landscape
+   branch of main_screen.dart. They are not on the device: none of the four
+   screenshots of the app running on the hardware has either one. The hardware
+   wins over the source; the hub bar is the whole of this block. */
+
+.remote-wellness-hub { grid-row: 4; }
+
+/* PORTRAIT, wide: the unfolded device upright. Same four blocks, the weights
+   the layout was tuned on before the narrow rebalance, and a 3px gap. */
+#motion-dock[data-shape="wide-portrait"] .remote-body {
+    display: grid;
+    grid-template-rows: 28fr 12fr 50fr 9fr auto;
+    gap: 3px;
+    overflow: hidden;
 }
-.remote-mini-wellness img { width: 16px; height: 16px; opacity: .55; }
-.remote-mini-wellness .mini-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.remote-mini-wellness .mini-state {
-    font-size: 9px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
-    padding: 2px 6px; border-radius: 6px; background: rgba(47,85,212,.10); color: var(--fill);
+#motion-dock[data-shape="wide-portrait"] .remote-hint { grid-row: 5; }
+#motion-dock[data-shape="wide-portrait"] .remote-grid,
+#motion-dock[data-shape="wide-portrait"] .remote-half-left { display: contents; }
+#motion-dock[data-shape="wide-portrait"] .remote-half-right { grid-row: 3; grid-template-columns: 1fr 1fr; gap: 14px; min-height: 0; }
+#motion-dock[data-shape="wide-portrait"] .remote-glide-row { grid-row: 1; grid-template-columns: 1fr; justify-items: center; align-content: center; min-height: 0; }
+#motion-dock[data-shape="wide-portrait"] .remote-forms { grid-row: 2; margin: 0; min-height: 0; }
+#motion-dock[data-shape="wide-portrait"] .remote-wellness-hub { grid-row: 4; }
+
+/* LANDSCAPE: _buildLandscapeLayout - Glide+Forms 50, Lift 25, Tilt 25. */
+#motion-dock[data-shape="landscape"] .remote-grid,
+#motion-dock[data-shape="narrow-landscape"] .remote-grid,
+#motion-dock[data-shape="tablet-landscape"] .remote-grid {
+    grid-template-columns: 50fr 25fr 25fr;
+    align-items: stretch;
+    min-height: 0;
+}
+#motion-dock[data-shape="landscape"] .remote-half-right,
+#motion-dock[data-shape="narrow-landscape"] .remote-half-right,
+#motion-dock[data-shape="tablet-landscape"] .remote-half-right {
+    display: contents;
+}
+/* The left column splits Glide against Ergo Forms. Three ratios, because the
+   app branches three ways: 2:1 narrow, 3:1 ordinary, 59:41 on a tablet, where
+   the six Ergo Form slots become two rows of three instead of a carousel. */
+#motion-dock[data-shape="landscape"] .remote-half-left,
+#motion-dock[data-shape="narrow-landscape"] .remote-half-left,
+#motion-dock[data-shape="tablet-landscape"] .remote-half-left {
+    display: grid; gap: 8px; min-height: 0;
+}
+#motion-dock[data-shape="narrow-landscape"] .remote-half-left { grid-template-rows: 2fr 1fr; gap: 4px; }
+#motion-dock[data-shape="landscape"] .remote-half-left { grid-template-rows: 3fr 1fr; }
+#motion-dock[data-shape="tablet-landscape"] .remote-half-left { grid-template-rows: 59fr 41fr; gap: 4px; }
+#motion-dock[data-shape="tablet-landscape"] .remote-forms-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+#motion-dock[data-shape="narrow-landscape"] .remote-glide-row,
+#motion-dock[data-shape="landscape"] .remote-glide-row,
+#motion-dock[data-shape="tablet-landscape"] .remote-glide-row {
+    grid-template-columns: auto auto auto; align-content: center; min-height: 0;
 }
 
-.remote-wellness-start { display: flex; gap: 8px; margin-top: 8px; }
-.remote-start {
-    flex: 1; min-width: 0; height: 40px;
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    border: 0; border-radius: 12px;
-    font: inherit; font-size: 12px; font-weight: 600; color: #fff;
-    background: linear-gradient(135deg, var(--fill) 0%, var(--fill-deep) 100%);
+/* ── Glide compass ───────────────────────────────────────────────────────── */
+
+.remote-compass {
+    position: relative;
+    /* Derived from the panel's own short side once it is a device, so a bigger
+       screen gets a bigger dial rather than a wider margin around the same one.
+       Unsized, --remote-unit is undefined and the 104px fallback stands. */
+    width: var(--compass, 104px); height: var(--compass, 104px);
+    touch-action: none; cursor: grab;
+}
+.remote-compass:active { cursor: grabbing; }
+.remote-compass svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Every part of the dial is themed from CSS rather than baked into the SVG.
+   stop-color especially has to be set here: var() is not valid in an SVG
+   presentation attribute, so an attribute referencing it silently paints
+   nothing - which is how the dish stayed white on a black panel. */
+.remote-compass .dish-edge { stop-color: var(--dial-b); }
+.remote-compass .dish-mid  { stop-color: var(--dial-a); }
+.remote-compass .dial-plate  { fill: var(--dial-plate); }
+.remote-compass .dial-groove { stroke: var(--dial-groove); }
+.remote-compass .dial-hair   { stroke: var(--fill); stroke-opacity: .16; }
+.remote-compass .dial-rim    { stroke: var(--fill); stroke-opacity: .42; }
+.remote-compass .dial-tick   { stroke: var(--fill); }
+.remote-compass .dial-star   { fill: var(--fill); fill-opacity: .92; }
+.remote-compass .remote-sphere {
+    --r: 12px;
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+/* The star breathes 0.9 -> 1.1 over 1s in the app. */
+.compass-star { transform-origin: center; animation: compass-pulse 1s ease-in-out infinite alternate; }
+@keyframes compass-pulse { from { transform: scale(.9); } to { transform: scale(1.1); } }
+
+/* ── Speed words ─────────────────────────────────────────────────────────── */
+/* speed_dial.dart: only the selected word is visible (unselected opacity 0),
+   tracking 5. Here the neighbours are dimmed rather than hidden, so the control
+   still reads as a list you can move through. */
+
+.remote-speed { display: flex; align-items: center; gap: 8px; margin-top: 3px; justify-content: center; }
+.remote-speed select {
+    font: inherit; font-size: 15px; font-weight: 700; letter-spacing: 5px;
+    color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer;
+    appearance: none; text-align: center;
+}
+.remote-speed select:focus-visible { outline: 2px solid var(--fill); outline-offset: 3px; border-radius: 4px; }
+
+/* ── Height / Tilt readout ───────────────────────────────────────────────── */
+/* lift_tilt_readout_frame.dart - a direct port of the app's .field CSS. */
+
+.remote-readout {
+    display: flex; align-items: baseline; gap: 4px;
+    position: relative;
+    border-radius: 14px;
+    border: 1px solid var(--hairline);
+    background:
+        linear-gradient(rgba(255,255,255,.10) 0%, rgba(255,255,255,.05) 4%, rgba(255,255,255,.015) 100%),
+        var(--sunk);
+    box-shadow: var(--sunk-shade);
+    padding: 4px 24px 4px 9px;
+}
+.remote-readout input {
+    font: inherit; font-size: 19px; font-weight: 600; letter-spacing: 2px;
+    color: var(--text); background: none; border: 0; padding: 0;
+    /* Sized to its content rather than the flex line: at width:100% the number
+       input's spinner buttons claimed the space and "28.0" rendered as "2". */
+    width: 4.4ch; flex: 0 0 auto; min-width: 0;
+    appearance: textfield; -moz-appearance: textfield;
+}
+.remote-readout input::-webkit-outer-spin-button,
+.remote-readout input::-webkit-inner-spin-button { appearance: none; margin: 0; }
+.remote-readout input:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; border-radius: 4px; }
+.remote-readout input:invalid { color: #C90105; }
+.remote-readout .unit { font-size: 15px; font-weight: 400; letter-spacing: 3px; color: var(--ink); }
+.remote-readout .pencil {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 12px; height: 12px; opacity: .6; color: var(--fill); pointer-events: none;
+}
+
+/* ── Lift slider: vertical pill ──────────────────────────────────────────── */
+/* centered_control_slider.dart: width 48, radius 13, 1.6px border, white fill. */
+
+.remote-vslider {
+    position: relative;
+    width: 38px; height: 96px;
+    border-radius: 13px;
+    border: 1.6px solid var(--fill);
+    background: var(--sunk);
     box-shadow: var(--lift1);
-    opacity: .58; cursor: not-allowed;
+    margin: 0 auto;
 }
-.remote-start.stand { background: linear-gradient(135deg, #3f8f6b 0%, #2c6a4e 100%); }
-.remote-start .badge {
-    font-size: 8px; font-weight: 800; letter-spacing: .7px;
-    padding: 2px 5px; border-radius: 5px; background: rgba(255,255,255,.22);
+.remote-vslider input[type=range] {
+    position: absolute; left: 50%; top: 50%;
+    width: 96px; height: 38px;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    margin: 0; background: none; appearance: none; cursor: ns-resize;
 }
+.remote-vslider input::-webkit-slider-runnable-track { background: none; }
+.remote-vslider input::-moz-range-track { background: none; }
+.remote-vslider input::-webkit-slider-thumb {
+    appearance: none; width: 24px; height: 24px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, var(--fill-lite) 0%, var(--fill) 50%, var(--fill-deep) 100%);
+    border: 1.6px solid rgba(255,255,255,.30);
+    box-shadow: 0 0 0 4px rgba(47,85,212,.20), 0 0 0 9px rgba(47,85,212,.14);
+}
+.remote-vslider input::-moz-range-thumb {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, var(--fill-lite) 0%, var(--fill) 50%, var(--fill-deep) 100%);
+    border: 1.6px solid rgba(255,255,255,.30);
+}
+.remote-vslider input:focus-visible { outline: 2px solid var(--fill); outline-offset: 4px; border-radius: 13px; }
+/* The travelling arrow pairs, two per side. */
+.remote-vslider .vs-arrows { position: absolute; inset: 0; pointer-events: none; }
+.remote-vslider .vs-arrows span {
+    position: absolute; left: 50%; translate: -50% 0;
+    border-left: 7px solid transparent; border-right: 7px solid transparent;
+    opacity: .55;
+}
+.remote-vslider .vs-arrows .up { border-bottom: 8px solid var(--fill); }
+.remote-vslider .vs-arrows .down { border-top: 8px solid var(--fill); }
+.remote-vslider .vs-arrows .u1 { top: 12px; } .remote-vslider .vs-arrows .u2 { top: 26px; scale: .88; }
+.remote-vslider .vs-arrows .d1 { bottom: 12px; } .remote-vslider .vs-arrows .d2 { bottom: 26px; scale: .88; }
+
+/* ── Tilt slider: 120° arc ───────────────────────────────────────────────── */
+/* arc_control_slider.dart: start -pi/3, sweep 2pi/3, round caps, rim under white. */
+
+.remote-arc { position: relative; margin: 0 auto; }
+.remote-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
+.remote-arc .arc-rim { fill: none; stroke: var(--fill); stroke-linecap: round; }
+.remote-arc .arc-face { fill: none; stroke: var(--sunk); stroke-linecap: round; }
+/* The pointer gesture belongs to .remote-arc itself, which projects the finger
+   onto the arc by angle the way the phone does. This input is no longer the hit
+   area - it is the keyboard and assistive-technology surface, and the value
+   every path writes to - so it takes no pointer events. */
+.remote-arc { cursor: ns-resize; touch-action: none; }
+.remote-arc input[type=range] {
+    position: absolute; left: 50%; top: 50%;
+    width: 96px; height: 56px;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    margin: 0; appearance: none; background: none;
+    pointer-events: none;
+}
+.remote-arc input::-webkit-slider-thumb { appearance: none; width: 26px; height: 26px; opacity: 0; }
+.remote-arc input::-moz-range-thumb { width: 26px; height: 26px; opacity: 0; border: 0; }
+.remote-arc input:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; border-radius: 8px; }
+.remote-arc .remote-sphere { --r: 13px; position: absolute; pointer-events: none; translate: -50% -50%; }
+
+/* ── Ergo Form cards ─────────────────────────────────────────────────────── */
+/* ergo_form_card_surface.dart: radius 17; saved gradient; rim carries state. */
+
+.remote-forms-row { display: flex; gap: 8px; }
+.remote-form {
+    flex: 1; min-width: 0;
+    border-radius: 17px;
+    padding: 6px 5px;
+    font: inherit; font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: var(--lift1);
+    background: linear-gradient(var(--pill-a), var(--pill-b));
+    border: 1.5px solid var(--rim-empty);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.remote-form[data-set="true"] {
+    background: linear-gradient(var(--pill-set-a), var(--pill-set-b));
+    border-color: var(--rim);
+}
+.remote-form:active { box-shadow: var(--pressed); transform: translateY(1px); }
+.remote-form:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
+
+/* ── Preset chips ────────────────────────────────────────────────────────── */
+/* swipe_up_position_button.dart: radius 11, height 30, state in the rim. */
+
+.remote-chips { display: flex; gap: 5px; margin-top: 4px; justify-content: center; }
+.remote-chip {
+    /* kPresetChipRowHeight is a 48dp tap target drawing a 30dp chip; the ink is
+       what is sized here, the row's own padding supplies the rest. */
+    height: clamp(22px, calc(var(--remote-unit, 1.4px) * 13), 48px);
+    min-width: clamp(32px, calc(var(--remote-unit, 1.4px) * 19), 68px);
+    border-radius: 11px;
+    border: 1.5px solid var(--rim-empty);
+    background: var(--chip);
+    font: inherit; font-size: 12px; font-weight: 600; color: var(--text);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+}
+.remote-chip[data-saved="true"] {
+    border-color: var(--rim);
+    box-shadow: 0 0 8px rgba(71,136,255,.35);
+    background: linear-gradient(#F2F4FC, var(--wash));
+}
+.remote-chip:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
+.remote-chip .caret { font-size: 9px; opacity: .65; }
+
+.remote-hint { font-size: 9px; color: var(--text-2); text-align: center; margin: 5px 0 0; }
+
+/* Motion is decoration here; the controls work identically without it. */
+@media (prefers-reduced-motion: reduce) {
+    .compass-star { animation: none; transform: none; }
+    .app-remote * { transition: none !important; }
+}
+
+/* Labels that exist for screen readers only. The readouts are inputs, so they
+   need a real label even though the heading above them says what they are. */
+.app-remote .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Glide's status line and its two buttons, on one row. */
+.app-remote .glide-actions { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: nowrap; }
+.app-remote .glide-actions #glide-status { flex: 1; font-size: 9px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-remote .glide-actions button {
+    font: inherit; font-size: 10px; padding: 4px 8px; border-radius: 8px;
+    border: 1px solid var(--hairline); background: var(--chip); color: var(--text); cursor: pointer;
+}
+.app-remote .glide-actions button:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
+
+/* ── Header chrome ───────────────────────────────────────────────────────── */
+
+/* The grab handle the app shows at the top of the sheet. */
+.remote-grip {
+    position: absolute; left: 50%; top: 4px; translate: -50% 0;
+    width: 34px; height: 4px; border-radius: 2px;
+    background: color-mix(in srgb, var(--text-2) 35%, transparent);
+}
+.remote-header { position: relative; padding: 9px 12px 6px; }
+
+.remote-chrome {
+    width: 26px; height: 26px; flex: none; padding: 0;
+    border: 0; background: none; display: grid; place-items: center;
+}
+.remote-chrome img { width: 22px; height: 22px; display: block; }
+/* Disabled on purpose: these belong to the physical desk. Dimmed rather than
+   hidden, so the bar reads as the app's without pretending to be connected. */
+.remote-chrome:disabled { opacity: .38; cursor: not-allowed; }
+.remote-menu {
+    width: 28px; height: 26px; border-radius: 7px;
+    background: color-mix(in srgb, var(--fill) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--fill) 22%, transparent);
+    gap: 3px; align-content: center; padding: 5px 6px;
+}
+.remote-menu span { display: block; height: 2px; border-radius: 1px; background: var(--fill); }
+.remote-menu span:nth-child(1) { width: 14px; }
+.remote-menu span:nth-child(2) { width: 10px; margin-left: 4px; }
+.remote-menu span:nth-child(3) { width: 14px; }
+
+/* The readout sizes to five characters so "28.21" and "-3.62" both fit without
+   the unit crowding the number. */
+.remote-readout { max-width: min(168px, 92%); margin: 0 auto; justify-content: center; }
+.remote-readout input { width: 5.2ch; margin-right: 2px; }
+
+/* Height and Tilt are read side by side, so their rows have to line up. Giving
+   both tracks the same height is enough - subgrid collapsed the speed word and
+   the chips into one cell, which is worse than the misalignment it replaced. */
+.remote-vslider, .remote-arc { height: var(--track-h, 96px); margin: 4px auto 0; }
+/* 120x190 viewBox at 96px tall is 60.6 wide. The thumb is placed as a
+   percentage of this box, so the box must match the drawing exactly. */
+.remote-arc svg { width: 100%; height: 100%; display: block; }
+.remote-vslider { width: clamp(34px, calc(var(--track-h, 96px) * .40), 64px); }
+/* 120x190 viewBox: the thumb is placed as a percentage of this box, so the
+   box's ratio has to match the drawing exactly whatever the height becomes. */
+.remote-arc { width: calc(var(--track-h, 96px) * 120 / 190); max-width: none; }
+
+/* Claim the gesture. A drag on a slider is a drag on that slider, not a page
+   scroll - without this, moving Height or Tilt on a touch screen scrolls the
+   page out from under your finger. The compass already sets this; the two
+   tracks need it just as much, and more so because they are rotated, so the
+   browser's own axis heuristics read them the wrong way round. */
+.remote-vslider, .remote-vslider input[type=range],
+.remote-arc, .remote-arc input[type=range] { touch-action: none; }
+
+/* The chips and form cards are pressed and held, which a touch browser would
+   otherwise treat as the start of a scroll or a text selection. */
+.remote-chip, .remote-form { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+
+/* Demo and Recenter sit in the header rather than costing the body a row of
+   their own - the reference spends that height on the controls. */
+.remote-header .glide-actions { display: flex; align-items: center; gap: 5px; margin: 0; }
+.remote-header .glide-actions #glide-status {
+    font-size: 9px; color: var(--text-2); max-width: 96px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.remote-header .glide-actions button {
+    font: inherit; font-size: 9px; padding: 3px 7px; border-radius: 7px;
+    border: 1px solid var(--hairline); background: var(--chip); color: var(--text); cursor: pointer;
+}
+
+/* ── The wellness bar ────────────────────────────────────────────────────── */
+/* wellness_hub_widget.dart. Drawn to complete the replica; every control is
+   disabled, because these are routines rather than desk movement and there is
+   nothing behind them here. */
 
 .remote-wellness-hub {
     display: flex; align-items: center; justify-content: space-between; gap: 6px;
     min-height: 40px; max-height: 80px; margin-top: 8px; padding: 0 8px;
     border-radius: 12px;
-    background: color-mix(in srgb, var(--hub) 82%, transparent);
-    border: 1px solid rgba(20,24,36,.06);
+    background: var(--bar);
+    border: 1px solid var(--hairline);
 }
 .hub-tile {
     width: 26px; height: 26px; padding: 0; border: 0; background: none;
@@ -661,14 +1059,9 @@
 /* Where each block belongs, per shape. The narrow column is the app's own
    four-block portrait order, so the hub is the last row and the start buttons
    and the mini strip - which that layout does not carry - stand down. */
-#motion-dock[data-shape="narrow-portrait"] .remote-mini-wellness,
-#motion-dock[data-shape="narrow-landscape"] .remote-mini-wellness { display: none; }
-#motion-dock[data-shape="narrow-portrait"] .remote-wellness-start,
-#motion-dock[data-shape="wide-portrait"] .remote-wellness-start { display: none; }
 #motion-dock[data-shape="narrow-portrait"] .remote-wellness-hub,
 #motion-dock[data-shape="wide-portrait"] .remote-wellness-hub { margin-top: 0; min-height: 0; }
 #motion-dock[data-shape="narrow-landscape"] .remote-wellness-hub { min-height: 30px; max-height: 40px; }
-#motion-dock[data-shape="narrow-landscape"] .remote-start { height: 32px; }
 /* A tablet landscape has the room the phone does not, which is the whole
    reason that branch exists. */
 #motion-dock[data-shape="tablet-landscape"] .remote-wellness-hub { min-height: 48px; }
@@ -701,3 +1094,149 @@
 #motion-dock[data-sized="true"] .remote-glide-row { align-content: center; }
 /* The hint is one line of web affordance text; it must not take a share. */
 #motion-dock[data-sized="true"] .remote-hint { flex: none; margin-top: 6px; }
+
+/* ── Sun / moon ──────────────────────────────────────────────────────────── */
+.remote-theme { cursor: pointer; opacity: .8; }
+.remote-theme:hover { opacity: 1; }
+.remote-theme svg { width: 20px; height: 20px; color: var(--text-2); }
+.app-remote[data-theme="dark"] .remote-theme .sun,
+.app-remote:not([data-theme="dark"]) .remote-theme .moon { display: none; }
+
+/* ── The hub bar, as the device draws it ─────────────────────────────────── */
+/* wellness_hub_widget.dart: the desk, the score with its ring, the routine
+   timer, save, and the lamp - which is red while it is on. */
+.hub-desk { display: inline-flex; color: var(--text-2); flex: none; }
+.hub-desk svg { width: 30px; height: 22px; }
+.hub-score { display: inline-flex; align-items: center; gap: 6px; min-width: 0; color: var(--cyan); }
+.hub-score .hub-seat { width: 16px; height: 16px; flex: none; }
+.hub-score-text { font-size: 11px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hub-ring {
+    flex: none; width: 20px; height: 20px; border-radius: 50%;
+    display: inline-grid; place-items: center;
+    border: 2px solid var(--amber); border-bottom-color: transparent;
+    rotate: -45deg;
+}
+.hub-ring i { rotate: 45deg; font-style: normal; font-size: 8px; font-weight: 700; color: var(--amber); }
+.hub-rule { width: 1px; align-self: stretch; margin: 7px 0; background: var(--hairline); flex: none; }
+.remote-wellness-hub .hub-timer { flex: none; color: var(--text); font-size: 13px; font-weight: 600; }
+.remote-wellness-hub .hub-tile { width: 22px; height: 22px; color: var(--cyan); opacity: .85; }
+.remote-wellness-hub .hub-tile svg { width: 20px; height: 20px; }
+.hub-led {
+    flex: none; min-width: 54px; height: 24px; border: 0; border-radius: 12px;
+    background: var(--danger); color: #fff; cursor: not-allowed;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.hub-led svg { width: 16px; height: 16px; }
+.remote-wellness-hub .remote-info { margin-left: 2px; flex: none; }
+
+/* ── Fold 5 unfolded, upright ────────────────────────────────────────────── */
+/* The shape the replica is tuned against, measured off the device at 674 x 810.
+   Everything here is a proportion read from that screen, not a guess. */
+
+/* Headings run along the top of their block, left, with the info beacon pushed
+   to the far right - not centred over the control. */
+#motion-dock[data-shape="wide-portrait"] .remote-heading {
+    display: flex; align-items: center; justify-content: space-between;
+    text-align: left; width: 100%; margin: 0 0 2px;
+    font-size: calc(var(--remote-unit) * 4.6);
+    letter-spacing: 1px;
+}
+#motion-dock[data-shape="wide-portrait"] .remote-forms .remote-heading {
+    font-size: calc(var(--remote-unit) * 3);
+}
+
+/* Glide: the dial sits left of centre with the speed word beside it, and the
+   heading spans the block above both. */
+#motion-dock[data-shape="wide-portrait"] .remote-glide-row {
+    min-height: 0; overflow: hidden; align-content: center;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "head head" "dial speed";
+    justify-items: start; align-items: center;
+    column-gap: calc(var(--remote-unit) * 3);
+    padding: 0 calc(var(--remote-unit) * 2.6);
+}
+#motion-dock[data-shape="wide-portrait"] .remote-glide-row .remote-heading { grid-area: head; margin: 0; }
+/* Measured on the device: the dial's left edge sits at 161 of 674, not against
+   the margin - it is centred on the Glide block's own left half, with the speed
+   word taking the right. */
+#motion-dock[data-shape="wide-portrait"] .remote-compass {
+    grid-area: dial;
+    margin-left: calc(var(--remote-unit) * 21);
+    width: clamp(84px, calc(var(--remote-unit) * 24), 200px);
+    height: clamp(84px, calc(var(--remote-unit) * 24), 200px);
+}
+#motion-dock[data-shape="wide-portrait"] .remote-glide-row .remote-speed { grid-area: speed; }
+
+/* Ergo Forms: three pills across the full width, each a wide rounded capsule
+   with its chevron tucked into the bottom right. */
+#motion-dock[data-shape="wide-portrait"] .remote-forms { padding: 0 calc(var(--remote-unit) * 2.6); }
+#motion-dock[data-shape="wide-portrait"] .remote-forms-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: calc(var(--remote-unit) * 1.4);
+}
+#motion-dock[data-shape="wide-portrait"] .remote-form {
+    position: relative; height: calc(var(--remote-unit) * 5.5); border-radius: 999px;
+    font-size: calc(var(--remote-unit) * 2); letter-spacing: 1.4px;
+}
+#motion-dock[data-shape="wide-portrait"] .remote-form::after {
+    content: ''; position: absolute; right: 12%; bottom: 18%;
+    width: 7px; height: 7px; border-left: 1.6px solid var(--fill); border-top: 1.6px solid var(--fill);
+    rotate: 45deg;
+}
+
+/* Height and Tilt: the split layout. The track goes down the left of its
+   column and the readout sits top-right with the speed word under it - which
+   is base_panel.dart's splitPortrait, and the reason the readout has no
+   full-width band of its own here. */
+#motion-dock[data-shape="wide-portrait"] .remote-col {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "head head" "track readout" "track speed" "chips chips";
+    align-items: center; justify-items: center;
+    /* The track is inset from the panel edge - measured, it runs down x 72..112
+       of a 337-wide column - but the inset is a MARGIN on the track, not
+       padding on the column. As padding it came out of the readout's half too,
+       and the tilt arc's box is three times the lift track's width, so the
+       readout there was squeezed off the panel. */
+    column-gap: calc(var(--remote-unit) * 2);
+    padding: 0 calc(var(--remote-unit) * 2);
+}
+#motion-dock[data-shape="wide-portrait"] .remote-vslider { margin-left: calc(var(--remote-unit) * 8); }
+#motion-dock[data-shape="wide-portrait"] .remote-arc { margin-left: calc(var(--remote-unit) * 3); }
+#motion-dock[data-shape="wide-portrait"] .remote-col .remote-heading { grid-area: head; }
+#motion-dock[data-shape="wide-portrait"] .remote-vslider,
+#motion-dock[data-shape="wide-portrait"] .remote-arc { grid-area: track; margin-block: 0; }
+#motion-dock[data-shape="wide-portrait"] .remote-readout { grid-area: readout; align-self: start; margin: 0; }
+#motion-dock[data-shape="wide-portrait"] .remote-col .remote-speed { grid-area: speed; margin: 0; }
+/* The preset band is the one thing in the column that ignores that gutter and
+   spans the whole of it, as it does on the device. */
+#motion-dock[data-shape="wide-portrait"] .remote-chips {
+    grid-area: chips; width: 100%;
+    padding: 0 4%; gap: 9%;
+}
+/* Measured: a 40dp track against a 195dp one, so width follows the app's own
+   constant rather than a fraction of the height. */
+#motion-dock[data-shape="wide-portrait"] .remote-vslider {
+    width: clamp(30px, calc(var(--remote-unit) * 6), 52px);
+}
+#motion-dock[data-shape="wide-portrait"] .remote-chip {
+    height: calc(var(--remote-unit) * 3.9); border-radius: 11px;
+    font-size: calc(var(--remote-unit) * 2);
+}
+/* The unfolded device upright carries no status strip and no start buttons -
+   the hub bar is the whole of the wellness block on this screen. */
+#motion-dock[data-shape="wide-portrait"] .remote-wellness-hub {
+    min-height: calc(var(--remote-unit) * 9); padding: 0 calc(var(--remote-unit) * 1.6);
+    gap: calc(var(--remote-unit) * 1.2);
+}
+/* Demo and Recenter have no counterpart on the device, and neither has the
+   "Ready to move" line - the app bar there is hamburger, wordmark, dot, info,
+   mic, shield, stop, sign out and nothing else. The status line goes; the two
+   buttons stay, ghosted into the gap the wordmark leaves, because losing them
+   would cost the panel a control to gain a pixel. */
+#motion-dock[data-shape="wide-portrait"] .remote-header #glide-status { display: none; }
+#motion-dock[data-shape="wide-portrait"] .remote-header .glide-actions button {
+    background: none; border-color: transparent; color: var(--text-2);
+    font-size: 9px; padding: 3px 4px;
+}
