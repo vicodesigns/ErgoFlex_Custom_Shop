@@ -1489,37 +1489,103 @@ function applyMarqueeSelection(hits) {
     if (selectedPartsCount) selectedPartsCount.innerText = movingObjects.length;
 }
 
-// --- Setup workspace layout ---------------------------------------------------
-// Setup mode becomes a full-viewport split: builder + configurator in a scrollable
-// left sidebar, 3D viewer filling everything to the right of it. Only #anim-debugger
-// and #config-column are reparented; the viewer (and its WebGL canvas) is repositioned
-// with CSS alone so the GL context survives the switch.
+// --- Shared store/studio shell -----------------------------------------------
+// Both modes use one viewport shell. Only the editor/configurator nodes move;
+// #viewer-shell stays put so its WebGL context survives every mode switch.
 let setupLayoutOn = false;
-let setupChromeBuilt = false;
+let shellMode = null;
+let shellChromeBuilt = false;
+let shellWidths = null;
 const layoutSlots = new Map(); // node -> placeholder comment marking its home position
 
-const SIDEBAR_W_KEY = 'ergoflex.setupSidebarWidth';
+const LEGACY_SIDEBAR_W_KEY = 'ergoflex.setupSidebarWidth';
+const SHELL_W_KEY = 'ergoflex.shellWidthV1';
 const SIDEBAR_W_MIN = 300;
+const SHELL_MODES = Object.freeze({
+    studio: {
+        bodyClass: 'setup-layout',
+        defaultWidth: 420,
+        eyebrow: 'ERGOFLEX / DESIGN STUDIO',
+        title: 'Your workspace. Refined.',
+        exit: { label: 'Store preview ↗', to: 'store' },
+        tabs: [
+            { id: 'editor', label: 'Editor tools', nodeId: 'anim-debugger' },
+            { id: 'finishes', label: 'Product & finishes', nodeId: 'config-column' }
+        ]
+    },
+    store: {
+        bodyClass: 'store-layout',
+        defaultWidth: 360,
+        eyebrow: 'ERGOFLEX / CUSTOM SHOP',
+        title: 'Built around you.',
+        exit: null,
+        tabs: [{ id: 'build', label: 'Configure', nodeId: 'config-column' }]
+    }
+});
 
-function setSidebarWidth(px) {
+function loadShellWidths() {
+    const stored = readStore(SHELL_W_KEY, 1, null);
+    const widths = {
+        v: 1,
+        studio: numberOrNull(stored?.studio, SIDEBAR_W_MIN, 4000) ?? SHELL_MODES.studio.defaultWidth,
+        store: numberOrNull(stored?.store, SIDEBAR_W_MIN, 4000) ?? SHELL_MODES.store.defaultWidth
+    };
+    if (!stored) {
+        let legacy = null;
+        try { legacy = Number.parseInt(localStorage.getItem(LEGACY_SIDEBAR_W_KEY), 10); } catch {}
+        if (Number.isFinite(legacy) && legacy >= SIDEBAR_W_MIN && legacy <= 4000) {
+            widths.studio = legacy;
+            writeStore(SHELL_W_KEY, widths);
+        }
+    }
+    return widths;
+}
+
+function setSidebarWidth(px, mode = shellMode || 'studio') {
+    if (!SHELL_MODES[mode]) mode = 'studio';
     const max = Math.max(SIDEBAR_W_MIN, window.innerWidth - 420);
-    const w = Math.round(Math.max(SIDEBAR_W_MIN, Math.min(max, px)));
-    document.documentElement.style.setProperty('--setup-sidebar-w', w + 'px');
+    const raw = Number(px);
+    const w = raw === 0 ? 0 : Math.round(Math.max(SIDEBAR_W_MIN, Math.min(max, raw)));
+    document.documentElement.style.setProperty('--shell-sidebar-w', w + 'px');
+    if (shellWidths && w > 0) shellWidths[mode] = w;
     return w;
 }
 
-function buildSetupChrome() {
-    if (setupChromeBuilt) return;
-    setupChromeBuilt = true;
+function persistShellWidths() {
+    if (shellWidths) writeStore(SHELL_W_KEY, { v: 1, studio: shellWidths.studio, store: shellWidths.store });
+}
+
+function renderShellChrome(mode) {
+    const config = SHELL_MODES[mode];
+    const sidebar = document.getElementById('setup-sidebar');
+    const exitBtn = document.getElementById('setup-exit-btn');
+    if (!config || !sidebar || !exitBtn) return;
+    const chrome = sidebar.querySelector('.studio-sidebar-header');
+    chrome.innerHTML = `<div class="eyebrow">${config.eyebrow}</div><h2>${config.title}</h2><div class="studio-tabs">${config.tabs.map((tab, index) =>
+        `<button data-sidebar-tab="${tab.id}" aria-pressed="${index === 0}">${tab.label}</button>`).join('')}</div>`;
+    sidebar.dataset.tab = config.tabs[0].id;
+    sidebar.dataset.tabs = String(config.tabs.length);
+    exitBtn.textContent = config.exit?.label || '';
+}
+
+function buildShellChrome() {
+    if (shellChromeBuilt) return;
+    shellChromeBuilt = true;
+    shellWidths = loadShellWidths();
 
     const backdrop = document.createElement('div');
     backdrop.id = 'setup-backdrop';
 
     const sidebar = document.createElement('aside');
     sidebar.id = 'setup-sidebar';
-    sidebar.dataset.tab = 'editor';
-    sidebar.innerHTML = `<div class="studio-sidebar-header"><div class="eyebrow">ERGOFLEX / DESIGN STUDIO</div><h2>Your workspace. Refined.</h2><div class="studio-tabs"><button data-sidebar-tab="editor" aria-pressed="true">Editor tools</button><button data-sidebar-tab="finishes" aria-pressed="false">Product & finishes</button></div></div>`;
-    sidebar.querySelectorAll('[data-sidebar-tab]').forEach(button => button.addEventListener('click', () => { sidebar.dataset.tab = button.dataset.sidebarTab; sidebar.querySelectorAll('[data-sidebar-tab]').forEach(b => b.setAttribute('aria-pressed', String(b === button))); }));
+    sidebar.innerHTML = '<div class="studio-sidebar-header"></div>';
+    sidebar.addEventListener('click', event => {
+        const button = event.target.closest('[data-sidebar-tab]');
+        if (!button) return;
+        sidebar.dataset.tab = button.dataset.sidebarTab;
+        sidebar.querySelectorAll('[data-sidebar-tab]').forEach(item =>
+            item.setAttribute('aria-pressed', String(item === button)));
+    });
 
     const resizer = document.createElement('div');
     resizer.id = 'setup-resizer';
@@ -1528,43 +1594,41 @@ function buildSetupChrome() {
     const exitBtn = document.createElement('button');
     exitBtn.id = 'setup-exit-btn';
     exitBtn.className = 'bg-white/90 hover:bg-white border border-gray-200 shadow-sm text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg';
-    exitBtn.textContent = 'Store preview ↗';
     exitBtn.addEventListener('click', () => setSetupLayout(false));
 
     document.body.append(backdrop, sidebar, resizer, exitBtn);
 
-    let stored = null;
-    try { stored = parseInt(localStorage.getItem(SIDEBAR_W_KEY), 10); } catch (_) {}
-    setSidebarWidth(Number.isFinite(stored) ? stored : 420);
-
     let draggingSplitter = false;
-    resizer.addEventListener('pointerdown', (e) => {
+    resizer.addEventListener('pointerdown', event => {
+        if (!shellMode) return;
         draggingSplitter = true;
         resizer.classList.add('dragging');
-        try { resizer.setPointerCapture(e.pointerId); } catch (_) {}
-        e.preventDefault();
+        try { resizer.setPointerCapture(event.pointerId); } catch {}
+        event.preventDefault();
     });
-    resizer.addEventListener('pointermove', (e) => {
-        if (!draggingSplitter) return;
-        setSidebarWidth(e.clientX);
+    resizer.addEventListener('pointermove', event => {
+        if (!draggingSplitter || !shellMode) return;
+        setSidebarWidth(event.clientX, shellMode);
         syncViewerSize();
     });
-    const stopSplitter = (e) => {
+    const stopSplitter = event => {
         if (!draggingSplitter) return;
         draggingSplitter = false;
         resizer.classList.remove('dragging');
-        try { resizer.releasePointerCapture(e.pointerId); } catch (_) {}
-        const w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--setup-sidebar-w'), 10);
-        if (Number.isFinite(w)) { try { localStorage.setItem(SIDEBAR_W_KEY, String(w)); } catch (_) {} }
+        try { resizer.releasePointerCapture(event.pointerId); } catch {}
+        const w = Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue('--shell-sidebar-w'), 10);
+        if (Number.isFinite(w) && shellMode) shellWidths[shellMode] = w;
+        persistShellWidths();
         syncViewerSize();
     };
     resizer.addEventListener('pointerup', stopSplitter);
     resizer.addEventListener('pointercancel', stopSplitter);
 
     window.addEventListener('resize', () => {
-        if (!setupLayoutOn) return;
-        const w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--setup-sidebar-w'), 10);
-        if (Number.isFinite(w)) setSidebarWidth(w); // re-clamp against the new window width
+        if (!shellMode) return;
+        measureShellTop();
+        const w = Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue('--shell-sidebar-w'), 10);
+        if (Number.isFinite(w)) setSidebarWidth(w, shellMode);
     });
 }
 
@@ -1580,48 +1644,63 @@ function returnHome(node) {
     if (slot && slot.parentNode) slot.parentNode.insertBefore(node, slot);
 }
 
-function setSetupLayout(on) {
+function measureShellTop() {
+    const siteHeader = document.querySelector('body > header');
+    const breadcrumbBar = document.querySelector('.breadcrumb')?.parentElement;
+    const top = shellMode === 'studio'
+        ? 54
+        : (siteHeader?.offsetHeight || 0) + (breadcrumbBar?.offsetHeight || 0);
+    document.documentElement.style.setProperty('--shell-top', top + 'px');
+    return top;
+}
+
+function setShellMode(mode) {
+    const config = SHELL_MODES[mode];
+    if (!config) return false;
+    buildShellChrome();
+
+    const outgoing = SHELL_MODES[shellMode];
+    outgoing?.tabs.forEach(tab => returnHome(document.getElementById(tab.nodeId)));
+
+    shellMode = mode;
+    setupLayoutOn = mode === 'studio';
+    renderShellChrome(mode);
+    setSidebarWidth(shellWidths?.[mode] ?? config.defaultWidth, mode);
+
+    const sidebar = document.getElementById('setup-sidebar');
+    config.tabs.forEach(tab => {
+        const node = document.getElementById(tab.nodeId);
+        if (!node) return;
+        stashHome(node);
+        node.dataset.shellTab = tab.id;
+        sidebar.appendChild(node);
+    });
+
     const animDebugger = document.getElementById('anim-debugger');
-    const configColumn = document.getElementById('config-column');
+    if (animDebugger) animDebugger.style.display = setupLayoutOn ? '' : 'none';
+    document.body.classList.remove('setup-layout', 'store-layout');
+    document.body.classList.add('shell-layout', config.bodyClass);
+    const configCollapsed = collapsibles.get('config-column')?.collapsed === true;
+    document.body.classList.toggle('sidebar-collapsed', mode === 'store' && configCollapsed);
 
-    if (on) {
-        buildSetupChrome();
-        const sidebar = document.getElementById('setup-sidebar');
-        [animDebugger, configColumn].forEach(node => {
-            if (!node) return;
-            stashHome(node);
-            sidebar.appendChild(node);
-        });
-        if (animDebugger) animDebugger.style.display = '';
-        document.body.classList.add('setup-layout');
-        placeRemoteForMode();
-        ['setup-backdrop', 'setup-sidebar', 'setup-resizer', 'setup-exit-btn'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = '';
-        });
-    } else {
-        [animDebugger, configColumn].forEach(node => { if (node) returnHome(node); });
-        if (animDebugger) animDebugger.style.display = 'none';
-        document.body.classList.remove('setup-layout');
-        placeRemoteForMode();
-        ['setup-backdrop', 'setup-sidebar', 'setup-resizer', 'setup-exit-btn'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-    }
-
-    if (!on) {
+    if (!setupLayoutOn) {
         isSelectionMode = false;
         if (selectionModeToggle) selectionModeToggle.checked = false;
-        document.querySelector('input[name="transform_mode"][value="none"]').checked = true;
+        document.querySelector('input[name="transform_mode"][value="none"]')?.click();
         if (transformProxy) updateTransformProxy();
         boxHelpers.forEach(helper => helper.visible = false);
         showAllParts();
         updateBoxSelectHint();
     }
-    setupLayoutOn = on;
     controls && (controls.autoRotate = false);
+    measureShellTop();
+    placeRemoteForMode();
     requestAnimationFrame(syncViewerSize);
+    return true;
+}
+
+function setSetupLayout(on) {
+    return setShellMode(on ? 'studio' : 'store');
 }
 
 function updateBoxSelectHint() {
@@ -2413,10 +2492,12 @@ function initConfigColumnCollapse() {
             button.textContent = collapsed ? 'Show options' : 'Hide options';
             button.setAttribute('aria-expanded', String(!collapsed));
             document.getElementById('config-column')?.classList.toggle('collapsed', collapsed);
-            // Not a Tailwind class swap: the CDN JIT only generates classes it
-            // finds in the markup, and lg:col-span-4 appears nowhere, so adding
-            // it did nothing. Toggle a real rule in studio.css instead.
-            grid.classList.toggle('options-hidden', collapsed);
+            // The shared shell gives its whole sidebar track back to the viewer.
+            // The legacy grid path remains for the non-shell mobile fallback.
+            if (document.body.classList.contains('shell-layout'))
+                document.body.classList.toggle('sidebar-collapsed', collapsed);
+            else
+                grid.classList.toggle('options-hidden', collapsed);
             syncViewerSize();
             requestAnimationFrame(syncViewerSize);
             setTimeout(syncViewerSize, 60);
@@ -3313,7 +3394,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const animDebugger = document.getElementById('anim-debugger');
     const SETUP_MODE = new URLSearchParams(window.location.search).has('setup');
     if (animDebugger) animDebugger.style.display = 'none';
-    if (SETUP_MODE) setSetupLayout(true);
+    setShellMode(SETUP_MODE ? 'studio' : 'store');
 
     // Wire up Transform Tool Mode Switches
     document.querySelectorAll('input[name="transform_mode"]').forEach(radio => {
@@ -4845,14 +4926,13 @@ function saveTiltConfig() {
     rebuildTiltUI();
 }
 
+// One per-rig slider, in the editor panel. There used to be a second copy of
+// every one of these floating inside the motion remote, which is a replica of
+// the phone app - and the phone app has no per-rig sliders. The remote's arc is
+// the tilt control; these are an authoring tool and belong with the rig fields.
 function rebuildTiltUI() {
     const list = document.getElementById('tilt-configs-list');
-    const overlay = document.getElementById('tilt-sliders-overlay');
     if (list) list.innerHTML = '';
-    if (overlay) {
-        overlay.innerHTML = '';
-        overlay.classList.toggle('hidden', tiltConfigs.length === 0);
-    }
     tiltConfigs.forEach((config, idx) => {
         // Debug panel slider
         const div = document.createElement('div');
@@ -4862,6 +4942,7 @@ function rebuildTiltUI() {
             '<span class="font-medium text-orange-800">' + config.name + ' (' + config.axis.toUpperCase() + ', ' + config.wrapperGroup.children.length + ' parts)</span>' +
             '<div class="flex items-center gap-2">' +
             '<span class="text-xs text-orange-600" id="tilt-val-' + idx + '">' + config.currentDeg.toFixed(1) + ' deg</span>' +
+            '<button class="tilt-reset" data-reset-tilt="' + idx + '" title="Reset this rig to zero">↺</button>' +
             '<button class="text-red-400 hover:text-red-600 text-sm font-bold leading-none" data-remove-tilt="' + idx + '" title="Remove tilt config">✕</button>' +
             '</div></div>' +
             '<input type="range" min="' + config.minDeg + '" max="' + config.maxDeg + '" step="0.1" value="' + config.currentDeg + '" class="w-full" data-tilt-idx="' + idx + '">' +
@@ -4871,40 +4952,24 @@ function rebuildTiltUI() {
             '</div>';
         if (list) list.appendChild(div);
 
-        // Overlay slider below height slider
-        const overlayDiv = document.createElement('div');
-        overlayDiv.className = 'bg-white/80 backdrop-blur-xl px-6 py-3 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/50 flex items-center gap-5';
-        overlayDiv.innerHTML =
-            '<div class="flex flex-col items-center min-w-[50px]">' +
-            '<span class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-0.5">' + config.name + '</span>' +
-            '<span class="text-lg font-bold text-gray-900 heading-font" id="tilt-overlay-val-' + idx + '">' + config.currentDeg.toFixed(1) + '°</span>' +
-            '</div>' +
-            '<input type="range" min="' + config.minDeg + '" max="' + config.maxDeg + '" step="0.1" value="' + config.currentDeg + '" class="height-slider flex-1" data-tilt-idx="' + idx + '">' +
-            '<button class="tilt-reset" data-reset-tilt="' + idx + '" title="Reset tilt">↺</button>';
-        if (overlay) overlay.appendChild(overlayDiv);
-
-        // Sync both sliders
         const panelSlider = div.querySelector('input[type="range"]');
-        const overlaySlider = overlayDiv.querySelector('input[type="range"]');
 
         function onTiltInput(deg, source) {
             config.currentDeg = THREE.MathUtils.clamp(Number(deg) || 0, config.minDeg, config.maxDeg);
             const valSpan = document.getElementById('tilt-val-' + idx);
-            if (valSpan) valSpan.textContent = deg.toFixed(1) + ' deg';
-            const overlayVal = document.getElementById('tilt-overlay-val-' + idx);
-            if (overlayVal) overlayVal.textContent = deg.toFixed(1) + '°';
-            if (source !== panelSlider) panelSlider.value = deg;
-            if (source !== overlaySlider) overlaySlider.value = deg;
+            if (valSpan) valSpan.textContent = config.currentDeg.toFixed(1) + ' deg';
+            if (source !== panelSlider) panelSlider.value = config.currentDeg;
             applyTiltConfig(config);
+            // The remote's readout tracks the primary rig, so a rig edit here has
+            // to reach it - it is the same angle seen from the other panel.
+            syncTiltUI();
         }
 
         panelSlider.addEventListener('input', (e) => onTiltInput(parseFloat(e.target.value), panelSlider));
-        overlaySlider.addEventListener('input', (e) => onTiltInput(parseFloat(e.target.value), overlaySlider));
 
         // Delete buttons
         div.querySelector('[data-remove-tilt]')?.addEventListener('click', () => removeTiltConfig(idx));
-        overlayDiv.querySelector('[data-reset-tilt]')?.addEventListener('click', () => onTiltInput(THREE.MathUtils.clamp(0, config.minDeg, config.maxDeg), null));
-        overlaySlider.setAttribute('aria-label', config.name + ' angle in degrees');
+        div.querySelector('[data-reset-tilt]')?.addEventListener('click', () => onTiltInput(THREE.MathUtils.clamp(0, config.minDeg, config.maxDeg), null));
         panelSlider.setAttribute('aria-label', config.name + ' angle in degrees');
 
         // Add/remove selected parts on the existing rig
@@ -5567,13 +5632,19 @@ function primaryTiltConfig() {
 // showHeight() writing to a detached input - the slider did nothing and the
 // readout silently stopped tracking.
 // Both tracks behave the same way, so the spring-back lives in one place.
-function wireJogSlider(slider, onJog) {
+function wireJogSlider(slider, onJog, onSettle) {
     if (!slider) return;
     const read = () => {
-        const raw = Number(slider.value) / Number(slider.max || 1);
+        // Normalise against the track's own half-span, not against `max` alone.
+        // `max` alone was only ever right for a symmetric range, and read as a
+        // string it defeats a `|| 1` fallback: "0" is truthy, so a max of zero
+        // divided rather than fell back - NaN at rest, -Infinity on any pull.
+        const span = Math.max(Math.abs(Number(slider.max) || 0), Math.abs(Number(slider.min) || 0)) || 1;
+        const raw = THREE.MathUtils.clamp(Number(slider.value) / span, -1, 1);
         onJog(Math.abs(raw) < JOG_DEADZONE ? 0 : raw);
+        onSettle?.();
     };
-    const release = () => { slider.value = 0; onJog(0); };
+    const release = () => { slider.value = 0; onJog(0); onSettle?.(); };
     slider.addEventListener('input', read);
     // Every way of letting go: pointer, touch, keyboard, and losing focus while
     // still held - any of which would otherwise leave the desk driving itself.
@@ -5606,14 +5677,14 @@ function showHeight(inches) {
 }
 
 function syncTiltUI() {
+    // The arc is a jog that rests at zero, so it does not track the tilt - the
+    // same rule showHeight() follows. Re-authoring its range from the rig is
+    // what broke it: the only rig runs -70..0, so `max` became zero and the
+    // normaliser divided by it. Only the readout follows the angle.
     const config = primaryTiltConfig();
     const readout = document.getElementById('tilt-value');
-    const slider = document.getElementById('tilt-slider');
     if (!config) return;
     if (readout && document.activeElement !== readout) readout.value = config.currentDeg.toFixed(2);
-    if (slider && document.activeElement !== slider) {
-        slider.min = config.minDeg; slider.max = config.maxDeg; slider.value = config.currentDeg;
-    }
     positionArcThumb();
 }
 
@@ -5630,6 +5701,13 @@ function haltAllMotion() {
     setYawCommand(0);
     applyRingAngle(0);
     liftJog = tiltJog = 0;
+    // Zeroing the jogs is not enough: the tracks are what the eye reads, and a
+    // thumb left off centre says the desk is still being driven.
+    for (const id of ['desk-height-slider', 'tilt-slider']) {
+        const track = document.getElementById(id);
+        if (track) track.value = 0;
+    }
+    positionArcThumb();
     const status = document.getElementById('glide-status');
     if (status) status.textContent = 'Stopped';
 }
@@ -5780,14 +5858,111 @@ function positionArcThumb() {
     const slider = document.getElementById('tilt-slider');
     const thumb = box?.querySelector('.remote-sphere');
     if (!box || !slider || !thumb) return;
-    const min = Number(slider.min), max = Number(slider.max);
-    const t = max === min ? 0.5 : (Number(slider.value) - min) / (max - min);
-    // t = 0 at the bottom of the crescent: the slider is rotated so up is its
-    // maximum, and the thumb has to travel the same way or the two disagree.
+    // Centre-relative, against the track's own half-span - the same span the
+    // jog normaliser uses, so the sphere and the desk can never disagree. At
+    // rest the value is 0 and t is 0.5, which is the middle of the crescent.
+    const span = Math.max(Math.abs(Number(slider.max) || 0), Math.abs(Number(slider.min) || 0)) || 1;
+    const t = THREE.MathUtils.clamp(0.5 + (Number(slider.value) / span) / 2, 0, 1);
+    // t = 0 at the bottom of the crescent: positive is extend, which is up.
     const deg = ARC.to + (ARC.from - ARC.to) * t;
     const [x, y] = arcPoint(deg);
     thumb.style.left = (x / ARC.vw * 100) + '%';
     thumb.style.top = (y / ARC.vh * 100) + '%';
+}
+
+// The arc is a real angular control, not a rotated linear track.
+//
+// Ported from arc_control_slider.dart: the finger is projected onto the arc by
+// angle, the value runs +-155 with a +-10 dead zone, and letting go springs
+// back to centre over 150ms. Everything it produces is written to the hidden
+// range input and announced as an `input` event, so the dead zone, the jog
+// integration and the thumb all stay on the single wireJogSlider path - and
+// so keyboard, assistive technology and the tests keep working unchanged.
+const ARC_RANGE = 155;                       // _minValue / _maxValue
+const ARC_START = -Math.PI / 3;              // _startAngle, upper-right
+const ARC_SWEEP = (2 * Math.PI) / 3;         // _sweepAngle, 120 degrees CW
+const ARC_SPRING_MS = 150;                   // _springController
+
+// Wrap into [ref-PI, ref+PI) so atan2's discontinuity at +-PI can never fall
+// inside the arc's own range and jump the value as the finger crosses it.
+function normaliseArcAngle(angle, ref) {
+    let d = angle - ref;
+    while (d > Math.PI) d -= 2 * Math.PI;
+    while (d < -Math.PI) d += 2 * Math.PI;
+    return ref + d;
+}
+
+function wireArcControl(box, slider) {
+    if (!box || !slider) return;
+    const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+    let spring = null;
+
+    // The arc is drawn in viewBox units and laid out in CSS pixels, so the
+    // centre and radius have to come from the live box, not from ARC directly.
+    const project = event => {
+        const rect = box.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        const cx = rect.left + (ARC.cx / ARC.vw) * rect.width;
+        const cy = rect.top + (ARC.cy / ARC.vh) * rect.height;
+        const mid = ARC_START + ARC_SWEEP / 2;
+        const angle = normaliseArcAngle(Math.atan2(event.clientY - cy, event.clientX - cx), mid);
+        const t = THREE.MathUtils.clamp((angle - ARC_START) / ARC_SWEEP, 0, 1);
+        // t = 0 is the top of the sweep, which is extend, which is +155.
+        return ARC_RANGE - t * 2 * ARC_RANGE;
+    };
+
+    const emit = value => {
+        slider.value = String(Math.round(value));
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    const springBack = () => {
+        const from = Number(slider.value) || 0;
+        if (spring) cancelAnimationFrame(spring);
+        if (!from) { emit(0); return; }
+        const t0 = performance.now();
+        const step = now => {
+            const k = Math.min(1, (now - t0) / ARC_SPRING_MS);
+            emit(from * (1 - easeOutCubic(k)));
+            spring = k < 1 ? requestAnimationFrame(step) : null;
+        };
+        spring = requestAnimationFrame(step);
+    };
+
+    let holding = false;
+    box.addEventListener('pointerdown', event => {
+        if (event.button !== 0) return;
+        const value = project(event);
+        if (value === null) return;
+        if (spring) { cancelAnimationFrame(spring); spring = null; }
+        holding = true;
+        try { box.setPointerCapture(event.pointerId); } catch {}
+        event.preventDefault();
+        emit(value);
+    });
+    box.addEventListener('pointermove', event => {
+        if (!holding) return;
+        const value = project(event);
+        if (value !== null) emit(value);
+    });
+    const letGo = event => {
+        if (!holding) return;
+        holding = false;
+        try { box.releasePointerCapture(event.pointerId); } catch {}
+        springBack();
+    };
+    box.addEventListener('pointerup', letGo);
+    box.addEventListener('pointercancel', letGo);
+    box.addEventListener('lostpointercapture', letGo);
+}
+
+// The wellness blocks are drawn because the app has them and this is a replica
+// of the app. They are disabled because they are routines, not desk controls -
+// there is nothing behind them here, and a control that looks live and does
+// nothing is worse than one that says it is unavailable.
+function hubTile(file, label) {
+    return `<button class="hub-tile" type="button" disabled aria-label="${label}"
+             title="${label} — a routines feature, not connected in the preview"><img src="./assets/app-icons/${file}" alt=""></button>`;
 }
 
 function speedSelect(id, label, value) {
@@ -5809,7 +5984,6 @@ function buildMotionRemote() {
     tiltPresets = loadTiltPresets();
     ergoForms = loadErgoForms();
 
-    const tiltOverlay = document.getElementById('tilt-sliders-overlay');
     dock.className = 'app-remote';
     dock.innerHTML = '';
 
@@ -5847,6 +6021,11 @@ function buildMotionRemote() {
     body.id = 'motion-dock-content';
     body.className = 'motion-dock-body';
     body.innerHTML = `<div class="remote-body">
+      <div class="remote-mini-wellness" role="status" aria-label="Movement status">
+        <img src="./assets/app-icons/lift_up.svg" alt="" aria-hidden="true">
+        <span class="mini-text">Seated · 0m since last move</span>
+        <span class="mini-state">Preview</span>
+      </div>
       <div class="remote-grid">
 
         <div class="remote-half remote-half-left">
@@ -5893,7 +6072,7 @@ function buildMotionRemote() {
               <svg class="pencil" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
             </label>
             <div class="remote-arc">${arcSvg()}
-              <input type="range" id="tilt-slider" min="-100" max="100" step="1" value="0" aria-label="Tilt the desktop. Hold away from centre to move; it returns to centre when released.">
+              <input type="range" id="tilt-slider" min="-155" max="155" step="1" value="0" aria-label="Tilt the desktop. Hold away from centre to move; it returns to centre when released.">
               <span class="remote-sphere"></span>
             </div>
             ${speedSelect('tilt-speed', 'Tilt speed', 'medium')}
@@ -5902,10 +6081,33 @@ function buildMotionRemote() {
         </div>
 
       </div>
+      <div class="remote-wellness-start" role="group" aria-label="Wellness routines">
+        <button type="button" class="remote-start sit" disabled
+                title="Start a sitting routine — a routines feature, not connected in the preview">
+          <span class="badge">PRESET</span>Start Sitting</button>
+        <button type="button" class="remote-start stand" disabled
+                title="Start a standing routine — a routines feature, not connected in the preview">
+          <span class="badge">DIRECT</span>Start Standing</button>
+      </div>
+      <div class="remote-wellness-hub" role="group" aria-label="Wellness">
+        ${hubTile('lift_up.svg', 'Desk position')}
+        ${hubTile('tilt_up.svg', 'Movement')}
+        ${hubTile('help.svg', 'Wellness')}
+        <span class="hub-timer" role="timer" aria-label="Routine timer, not running">00m 00s</span>
+        ${hubTile('arrow_right.svg', 'Start or pause')}
+        ${hubTile('e-stop.svg', 'Stop routine')}
+      </div>
       <p id="glide-help" class="remote-hint">Drag the dish to glide, twist the outer ring to turn in place. Tap a preset to recall it, press and hold to save.</p>
     </div>`;
     dock.append(body);
-    if (tiltOverlay) body.querySelector('.remote-body').append(tiltOverlay);
+    // Eight grips, inside the border box: the shell clips its own overflow to
+    // keep the header's radius, so a handle hanging off the edge is invisible.
+    for (const edge of ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']) {
+        const grip = document.createElement('span');
+        grip.className = 'remote-resize';
+        grip.dataset.edge = edge;
+        dock.append(grip);
+    }
 
     renderErgoForms();
     renderPresetChips();
@@ -5966,16 +6168,151 @@ function goToTilt(deg) {
     tiltTarget = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg);
 }
 
+// ── The panel as a device mockup ─────────────────────────────────────────────
+//
+// The remote is a replica of the ErgoFlex Desk app, so the honest way to show
+// it at a given form factor is to give it that device's screen and let its own
+// layout answer. Drag any corner; it snaps to a real device and says which.
+//
+// CSS pixels are the app's dp, so the Flutter figures transfer unchanged. The
+// Fold 5 numbers are quoted from lib/utils/layout_breakpoints.dart, which
+// measured its portrait weights on the cover screen and documents both panes.
+const REMOTE_DEVICES = [
+    { id: 'fold5-cover-p', name: 'Fold 5 cover',               w: 344, h: 882 },
+    { id: 'fold5-cover-l', name: 'Fold 5 cover, landscape',    w: 882, h: 344 },
+    { id: 'fold5-open-p',  name: 'Fold 5 unfolded',            w: 674, h: 810 },
+    { id: 'fold5-open-l',  name: 'Fold 5 unfolded, landscape', w: 810, h: 674 },
+    { id: 'iphone-p',      name: 'iPhone',                     w: 393, h: 852 },
+    { id: 'iphone-l',      name: 'iPhone, landscape',          w: 852, h: 393 },
+    // 1878 x 2670 hardware pixels at 430 ppi - a 7.6in panel - taken at Apple's
+    // @3x scale. The folded cover screen has not been confirmed; until it is,
+    // the iPhone entry above is the closest honest stand-in for it.
+    { id: 'apple-fold-p',  name: 'Apple foldable',             w: 626, h: 890 },
+    { id: 'apple-fold-l',  name: 'Apple foldable, landscape',  w: 890, h: 626 }
+];
+const DEVICE_SNAP_PX = 24;          // how close a drag has to land, per axis
+const REMOTE_MIN_W = 300;
+const REMOTE_MIN_H = 220;
+const DOCK_SIZE_KEY = 'ergoflex.dockSizeV1';
+const DOCK_PAD = 8;                 // the same inset clampDockPosition keeps
+
+let remoteSize = null;              // { w, h } in device px, or null for CSS sizing
+let remoteDevice = null;            // the matched REMOTE_DEVICES entry, or null
+let remoteScale = 1;                // shrink-to-fit when the device is taller than the viewer
+
+function snapRemoteSize(w, h) {
+    for (const device of REMOTE_DEVICES) {
+        if (Math.abs(w - device.w) <= DEVICE_SNAP_PX && Math.abs(h - device.h) <= DEVICE_SNAP_PX)
+            return { w: device.w, h: device.h, device };
+    }
+    return { w, h, device: null };
+}
+
+// Which of the app's four layouts this size is. These are the predicates from
+// lib/utils/layout_breakpoints.dart, and they are in JS rather than in a
+// container query because CSS cannot ask about `shortestSide`.
+function remoteShapeFor(w, h) {
+    if (w > h) {
+        // Three landscape cases, because main_screen.dart branches three ways:
+        // isTabletLandscape (six Ergo Form slots), isNarrowLandscape (a phone
+        // on its side, which gets its own weights), and the ordinary one.
+        if (Math.min(w, h) >= 600) return 'tablet-landscape';
+        return h < 500 ? 'narrow-landscape' : 'landscape';
+    }
+    return w >= 600 ? 'wide-portrait' : 'narrow-portrait';
+}
+
+// A device bigger than the viewer is shown smaller, not made unreachable: a
+// Fold 5 cover screen is 882px tall and almost no laptop viewport has that
+// once the header and the toolbar are out. The panel keeps the device's
+// LAYOUT size - so its breakpoints still answer as that device - and is drawn
+// scaled. Every pointer delta is divided back out, so dragging still tracks.
+function remoteFitScale(w, h) {
+    const container = canvas?.parentElement;
+    if (!container) return 1;
+    const top = parseFloat(canvas.style.top) || 0;
+    const availableW = container.clientWidth - DOCK_PAD * 2;
+    const availableH = container.clientHeight - top - DOCK_PAD * 2;
+    if (availableW <= 0 || availableH <= 0) return 1;
+    return Math.min(1, availableW / w, availableH / h);
+}
+
+function applyRemoteSize(w, h, { announce = false } = {}) {
+    const dock = document.getElementById('motion-dock');
+    if (!dock) return;
+    const snapped = snapRemoteSize(Math.round(w), Math.round(h));
+    const changed = snapped.device?.id !== remoteDevice?.id;
+    remoteSize = { w: snapped.w, h: snapped.h };
+    remoteDevice = snapped.device;
+    remoteScale = remoteFitScale(snapped.w, snapped.h);
+
+    dock.style.setProperty('--dock-w', snapped.w + 'px');
+    dock.style.setProperty('--dock-h', snapped.h + 'px');
+    dock.style.setProperty('--remote-unit', (Math.min(snapped.w, snapped.h) / 100) + 'px');
+    dock.style.setProperty('--remote-scale', String(remoteScale));
+    dock.dataset.shape = remoteShapeFor(snapped.w, snapped.h);
+    dock.dataset.device = snapped.device?.id || '';
+    dock.dataset.sized = 'true';
+
+    if (announce && changed && snapped.device)
+        notifyUser(`${snapped.device.name} — ${snapped.device.w} × ${snapped.device.h}`);
+    clampDockPosition();
+}
+
+// Re-apply the current device at the current fit. Deliberately NOT a call to
+// syncViewerSize(): nothing the panel does may change the canvas, which is the
+// invariant the whole floating rebuild was for.
+function refitRemote() {
+    if (remoteSize) applyRemoteSize(remoteSize.w, remoteSize.h);
+    else clampDockPosition();
+}
+
+function persistRemoteSize() {
+    if (!remoteSize) return;
+    writeStore(DOCK_SIZE_KEY, { v: 1, w: remoteSize.w, h: remoteSize.h, device: remoteDevice?.id || null });
+}
+
+function restoreDockSize() {
+    const stored = readStore(DOCK_SIZE_KEY, 1, null);
+    const w = numberOrNull(stored?.w, REMOTE_MIN_W, 4000);
+    const h = numberOrNull(stored?.h, REMOTE_MIN_H, 4000);
+    if (w === null || h === null) return;   // never resized, or unreadable: CSS sizes it
+    applyRemoteSize(w, h);
+}
+
+// The panel positions itself absolutely the moment it is dragged OR resized.
+// Resizing from a never-dragged panel used to have nothing to work against:
+// the panel was still parked by `left: 50%` and a transform, so there were no
+// left/top numbers for a west or north edge to move.
+function anchorDock(dock) {
+    if (dock.dataset.floating === 'true') return;
+    const rect = dock.getBoundingClientRect();
+    const container = canvas.parentElement.getBoundingClientRect();
+    dock.dataset.floating = 'true';
+    dock.style.bottom = 'auto';
+    // The parked state is `left: 50%` plus a -50% translate. Left and top are
+    // absolute from here on, so that translate has to go or the panel sits
+    // half its own width to the left of where it is positioned.
+    dock.style.transform = 'none';
+    dock.style.left = (rect.left - container.left) + 'px';
+    dock.style.top = (rect.top - container.top) + 'px';
+}
+
 // Keep the panel inside the canvas's usable rectangle, not merely the viewer:
 // a position saved at one window size, in one layout, must not strand it.
 function clampDockPosition() {
     const dock = document.getElementById('motion-dock');
     const container = canvas?.parentElement;
     if (!dock || !container || dock.dataset.floating !== 'true') return;
-    const pad = 8;
+    const pad = DOCK_PAD;
     const top = parseFloat(canvas.style.top) || 0;
-    const maxX = Math.max(pad, container.clientWidth - dock.offsetWidth - pad);
-    const maxY = Math.max(top + pad, container.clientHeight - dock.offsetHeight - pad);
+    // offsetWidth/Height are the LAYOUT box; a scaled-to-fit device draws
+    // smaller than that, and clamping against the layout box would refuse
+    // positions that are plainly on screen.
+    const drawnW = dock.offsetWidth * remoteScale;
+    const drawnH = dock.offsetHeight * remoteScale;
+    const maxX = Math.max(pad, container.clientWidth - drawnW - pad);
+    const maxY = Math.max(top + pad, container.clientHeight - drawnH - pad);
     const x = THREE.MathUtils.clamp(parseFloat(dock.style.left) || 0, pad, maxX);
     const y = THREE.MathUtils.clamp(parseFloat(dock.style.top) || 0, top + pad, maxY);
     dock.style.left = x + 'px';
@@ -5983,23 +6320,28 @@ function clampDockPosition() {
     return { x, y };
 }
 
-// Where the panel lives depends on the mode.
+// Where the panel lives depends on the shell, not on the mode.
 //
-// In the studio it floats inside the viewer and can be dragged anywhere, which
-// is right for a tool: the editor wants it over the model and out of the way on
-// demand. On the storefront a panel sitting on top of the desk is just covering
-// the product, so there it drops DOWN, in normal flow beneath the viewer, and
-// takes no space at all until you open it.
+// Both shells now give the viewer the whole window, so there is no longer any
+// in-flow space below it to drop into: the panel floats inside the viewer and
+// can be dragged and resized in the store exactly as in the studio. What keeps
+// it off the product on the storefront is that it ARRIVES COLLAPSED - a bar,
+// not a slab - which is handled at startup rather than by docking it.
+//
+// The docked branch below is still reached: the <=760px stacked fallback drops
+// the shell entirely, and there the viewer is a normal block again.
 function placeRemoteForMode() {
     const dock = document.getElementById('motion-dock');
     const viewer = document.getElementById('viewer-shell');
     if (!dock || !viewer) return;
-    const studio = document.body.classList.contains('setup-layout');
-    dock.dataset.mode = studio ? 'floating' : 'docked';
+    const floating = document.body.classList.contains('shell-layout')
+        && window.matchMedia('(min-width: 761px)').matches;
+    dock.dataset.mode = floating ? 'floating' : 'docked';
 
-    if (studio) {
+    if (floating) {
         const stage = canvas?.parentElement;
         if (stage && dock.parentElement !== stage) stage.append(dock);
+        restoreDockSize();
         placeDockFromStorage();
         return;
     }
@@ -6008,6 +6350,14 @@ function placeRemoteForMode() {
     if (dock.parentElement !== viewer.parentElement) viewer.after(dock);
     dock.dataset.floating = '';
     dock.style.left = dock.style.top = dock.style.bottom = dock.style.transform = '';
+    // A size the user dragged out in the shell is a device mockup size, which
+    // means nothing to the stacked fallback's full-width bar.
+    dock.style.width = dock.style.height = '';
+    ['--dock-w', '--dock-h', '--remote-unit', '--remote-scale'].forEach(v => dock.style.removeProperty(v));
+    delete dock.dataset.sized;
+    delete dock.dataset.shape;
+    delete dock.dataset.device;
+    remoteScale = 1;
 }
 
 function placeDockFromStorage() {
@@ -6035,13 +6385,8 @@ function wireRemote(dock, header) {
         if (e.button !== 0 || e.target.closest('button, a, input, select, [tabindex]')) return;
         if (dock.dataset.mode !== 'floating') return;   // docked below the viewer: nothing to drag
         const rect = dock.getBoundingClientRect();
-        const container = canvas.parentElement.getBoundingClientRect();
         dragging = { dx: e.clientX - rect.left, dy: e.clientY - rect.top };
-        dock.dataset.floating = 'true';
-        dock.style.bottom = 'auto';
-        dock.style.transform = 'none';
-        dock.style.left = (rect.left - container.left) + 'px';
-        dock.style.top = (rect.top - container.top) + 'px';
+        anchorDock(dock);
         header.classList.add('dragging');
         try { header.setPointerCapture(e.pointerId); } catch {}
         e.preventDefault();
@@ -6063,6 +6408,70 @@ function wireRemote(dock, header) {
     };
     header.addEventListener('pointerup', endDrag);
     header.addEventListener('pointercancel', endDrag);
+
+    // ---- resize: the panel is a device, so its size is the point ----
+    // Same pointer-capture shape as the studio's sidebar splitter, which is
+    // the pattern that already works here.
+    //
+    // Bound once. The drag handlers above go on the header, which is rebuilt
+    // with the panel, so they are replaced each time; these go on #motion-dock
+    // itself, which is authored in the markup and survives `innerHTML = ''`.
+    // Re-binding them stacked a second copy on every rebuild, and two copies
+    // applied the same pointer delta twice against different scales.
+    let resizing = null;
+    if (dock.dataset.resizeWired !== 'true') {
+        dock.dataset.resizeWired = 'true';
+        dock.addEventListener('pointerdown', e => {
+            const grip = e.target.closest('.remote-resize');
+            if (!grip || e.button !== 0 || dock.dataset.mode !== 'floating') return;
+            anchorDock(dock);
+            const rect = dock.getBoundingClientRect();
+            const container = canvas.parentElement.getBoundingClientRect();
+            resizing = {
+                edge: grip.dataset.edge,
+                x0: e.clientX, y0: e.clientY,
+                w0: dock.offsetWidth, h0: dock.offsetHeight,
+                left0: rect.left - container.left,
+                top0: rect.top - container.top
+            };
+            grip.classList.add('dragging');
+            try { grip.setPointerCapture(e.pointerId); } catch {}
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        dock.addEventListener('pointermove', e => {
+            if (!resizing) return;
+            // Pointer deltas are in drawn pixels; the size is in device pixels.
+            const scale = remoteScale || 1;
+            const dx = (e.clientX - resizing.x0) / scale;
+            const dy = (e.clientY - resizing.y0) / scale;
+            const { edge } = resizing;
+            let w = resizing.w0, h = resizing.h0;
+            if (edge.includes('e')) w = resizing.w0 + dx;
+            if (edge.includes('w')) w = resizing.w0 - dx;
+            if (edge.includes('s')) h = resizing.h0 + dy;
+            if (edge.includes('n')) h = resizing.h0 - dy;
+            w = THREE.MathUtils.clamp(w, REMOTE_MIN_W, 4000);
+            h = THREE.MathUtils.clamp(h, REMOTE_MIN_H, 4000);
+            applyRemoteSize(w, h, { announce: true });
+            // A west or north grip moves the opposite corner as well as the size,
+            // so the edge the user is NOT holding has to stay where it was.
+            if (edge.includes('w')) dock.style.left = (resizing.left0 + (resizing.w0 - remoteSize.w) * scale) + 'px';
+            if (edge.includes('n')) dock.style.top = (resizing.top0 + (resizing.h0 - remoteSize.h) * scale) + 'px';
+            clampDockPosition();
+        });
+        const endResize = e => {
+            if (!resizing) return;
+            resizing = null;
+            dock.querySelectorAll('.remote-resize.dragging').forEach(g => g.classList.remove('dragging'));
+            try { e.target.releasePointerCapture?.(e.pointerId); } catch {}
+            persistRemoteSize();
+            const at = clampDockPosition();
+            if (at) writeStore(DOCK_POS_KEY, { v: 1, x: at.x, y: at.y });
+        };
+        dock.addEventListener('pointerup', endResize);
+        dock.addEventListener('pointercancel', endResize);
+    }
 
     // ---- collapse ----
     const dockToggle = document.getElementById('motion-dock-toggle');
@@ -6116,7 +6525,8 @@ function wireRemote(dock, header) {
     };
     tiltField.addEventListener('change', commitTilt);
     tiltField.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commitTilt(); tiltField.blur(); } });
-    wireJogSlider(tiltSlider, value => { tiltJog = value; });
+    wireJogSlider(tiltSlider, value => { tiltJog = value; }, positionArcThumb);
+    wireArcControl(dock.querySelector('.remote-arc'), tiltSlider);
     document.getElementById('tilt-speed').onchange = e => { tiltSpeed = e.target.value; };
 
     // ---- preset banks ----
@@ -7346,13 +7756,19 @@ function initStudio() {
     placeRemoteForMode();
     // The storefront opens with the panel closed, so the desk is unobstructed
     // until the controls are actually asked for.
-    if (!document.body.classList.contains('setup-layout') && localStorage.getItem('ergoflex.motionDockCollapsed') === null) {
+    let dockPreference = null;
+    try { dockPreference = localStorage.getItem('ergoflex.motionDockCollapsed'); } catch {}
+    if (!document.body.classList.contains('setup-layout') && dockPreference === null) {
         document.getElementById('motion-dock-toggle')?.click();
     }
     // A saved position is only valid against the layout it was saved in, so
     // re-check it whenever the box it lives in could have changed shape.
-    window.addEventListener('resize', clampDockPosition);
+    window.addEventListener('resize', refitRemote);
     if (document.fonts?.ready) document.fonts.ready.then(clampDockPosition).catch(() => {});
+    // A device scaled to fit has to be re-fitted when the box it fits into
+    // changes - a divider drag, a collapse, a window resize.
+    if (window.ResizeObserver && canvas?.parentElement)
+        new ResizeObserver(refitRemote).observe(canvas.parentElement);
     const editorTools = document.createElement('div'); editorTools.className = 'precision-tools';
     editorTools.innerHTML = `<div class="eyebrow">PRECISION & VISIBILITY</div><div><button id="focus-selected">Focus selection <kbd>F</kbd></button><button id="isolate-parts" aria-pressed="false">Isolate</button><button id="show-all-parts">Show all</button></div><div><label>Coordinates <select id="transform-space"><option value="world">World</option><option value="local">Local</option></select></label><label class="check-label"><input type="checkbox" id="transform-snap"> Snap transforms</label></div><p class="studio-note">G Gumball · Q Hide · F Focus<br>Arrows move · rings rotate · squares scale<br>Snap: 0.05 scene units / 15° / 10% scale</p>`;
     document.getElementById('part-search-input').parentElement.after(editorTools);
@@ -7487,6 +7903,14 @@ window.ErgoFlex = {
     // Rebuilding is how the panel is exercised against corrupt storage without
     // a full page reload.
     rebuildMotionRemote() { buildMotionRemote(); placeRemoteForMode(); },
+    setShellMode,
+    get shellMode() { return shellMode; },
+    remoteDevices: REMOTE_DEVICES,
+    setRemoteSize(w, h) { anchorDock(document.getElementById('motion-dock')); applyRemoteSize(w, h, { announce: true }); persistRemoteSize(); },
+    get remoteSize() { return remoteSize ? { ...remoteSize } : null; },
+    get remoteDevice() { return remoteDevice?.id || null; },
+    get remoteShape() { return document.getElementById('motion-dock')?.dataset.shape || null; },
+    get remoteScale() { return remoteScale; },
     resetView() { const btn = document.getElementById('reset-view'); if (btn) btn.click(); },
     setPivotByName(name) {
         let done = false;

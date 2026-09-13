@@ -19,71 +19,6 @@
             border: 1px solid #e5e5e7;
         }
 
-        /* --- Setup workspace: full-viewport split view (builder left, viewer right) ---
-           Everything here is pure CSS repositioning layered over the normal page.
-           #viewer-shell is never reparented in the DOM, so the WebGL canvas keeps
-           its context when entering/leaving setup mode. --- */
-        body.setup-layout { overflow: hidden; }
-
-        #setup-backdrop {
-            position: fixed;
-            inset: 0;
-            background: #ffffff;
-            z-index: 50;
-        }
-
-        #setup-sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: var(--setup-sidebar-w, 420px);
-            z-index: 52;
-            overflow-y: auto;
-            overflow-x: hidden;
-            background: #fafafa;
-            border-right: 1px solid #e5e5e7;
-            padding: 14px;
-        }
-
-        /* The builder sits flush at the top of the sidebar — no stray top margin */
-        #setup-sidebar > #anim-debugger { margin-top: 0; }
-        #setup-sidebar > #config-column { margin-top: 24px; }
-
-        #setup-resizer {
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: var(--setup-sidebar-w, 420px);
-            width: 6px;
-            z-index: 53;
-            cursor: col-resize;
-            background: #e5e5e7;
-            transition: background 0.15s ease;
-        }
-        #setup-resizer:hover, #setup-resizer.dragging { background: #0071e3; }
-
-        body.setup-layout #viewer-shell {
-            position: fixed;
-            left: calc(var(--setup-sidebar-w, 420px) + 6px);
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: auto;
-            height: auto !important;
-            min-height: 0 !important;
-            z-index: 51;
-            border-radius: 0 !important;
-            border: none;
-        }
-
-        #setup-exit-btn {
-            position: fixed;
-            top: 10px;
-            right: 12px;
-            z-index: 54;
-        }
-
         /* Marquee (box-select) rubber band drawn over the canvas */
         #marquee-box {
             position: absolute;
@@ -483,7 +418,6 @@
 
                         <!-- Desk Height + Tilt Controls -->
                         <div id="motion-dock" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 w-11/12 max-w-sm flex flex-col gap-2">
-                            <div id="tilt-sliders-overlay" class="flex flex-col gap-2 hidden"></div>
                             <div class="bg-white/80 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/50 flex items-center gap-5">
                                 <div class="flex flex-col items-center min-w-[50px]">
                                     <span class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-0.5">Height</span>

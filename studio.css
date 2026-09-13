@@ -72,14 +72,27 @@ header h1 { letter-spacing: -.7px; }
    flat green. */
 .height-slider::-webkit-slider-thumb { border-color: var(--accent); width: 20px; height: 20px; }
 .height-slider::-moz-range-thumb { border-color: var(--accent); width: 17px; height: 17px; background: white; border-radius: 50%; }
-#tilt-sliders-overlay { max-height: 210px; overflow: auto; }
-#tilt-sliders-overlay > div { background: none; box-shadow: none; border: 0; padding: 16px 10px; gap: 12px; }
-#tilt-sliders-overlay:empty::after { content: 'Create a tilt rig in the editor to preview its motion.'; font-size: 12px; padding: 20px; color: #758173; }
-#tilt-sliders-overlay .tilt-reset { color: #567662; padding: 7px; font-size: 19px; }
-body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-sidebar-w, 420px) + 4px); }
+body.shell-layout { overflow: hidden; }
+#setup-backdrop { position: fixed; inset: 0; background: #fff; z-index: 50; }
+#setup-sidebar { position: fixed; left: 0; top: var(--shell-top, 54px); bottom: 0; width: var(--shell-sidebar-w, 420px); z-index: 52; overflow-y: auto; overflow-x: hidden; background: #fafafa; border-right: 1px solid #e5e5e7; padding: 14px; }
+#setup-resizer { position: fixed; top: var(--shell-top, 54px); bottom: 0; left: var(--shell-sidebar-w, 420px); width: 4px; z-index: 53; cursor: col-resize; background: #e5e5e7; transition: background .15s ease; }
+body.shell-layout #viewer-shell { position: fixed; top: var(--shell-top, 54px); bottom: 0; left: calc(var(--shell-sidebar-w, 420px) + 4px); right: 0; width: auto; height: auto !important; min-height: 0 !important; z-index: 51; border-radius: 0 !important; border: none; }
+#setup-exit-btn { position: fixed; top: 10px; right: 12px; z-index: 54; }
+#setup-sidebar > #anim-debugger { margin-top: 0; }
+#setup-sidebar > #config-column { margin-top: 0; }
+body.store-layout #setup-backdrop { top: var(--shell-top); background: #fff; }
+body.store-layout #setup-backdrop::after { content: none; }
+body.store-layout #setup-sidebar, body.store-layout #setup-resizer { top: var(--shell-top); }
+body.store-layout #setup-exit-btn { display: none; }
+body.store-layout #store-grid { display: block; }
+body.store-layout #viewer-column { display: contents; }
+body.shell-layout.sidebar-collapsed { --shell-sidebar-w: 0px; }
+body.shell-layout.sidebar-collapsed #setup-resizer { display: none; }
+body.shell-layout.sidebar-collapsed #setup-sidebar { overflow: visible; border-right: 0; }
+body.shell-layout.sidebar-collapsed #config-collapse { position: fixed; top: calc(var(--shell-top) + 12px); left: 12px; z-index: 55; padding: 8px 10px; border-radius: 6px; background: #fff; box-shadow: 0 2px 12px #17271d24; white-space: nowrap; }
 #setup-backdrop { background: #f5f6f1; }
 #setup-exit-btn { top: 12px; right: 22px; background: var(--ink); border: none; color: white; border-radius: 6px; padding: 7px 15px; box-shadow: none; }
-#setup-backdrop::after { content: 'ERGOFLEX  /  CUSTOM SHOP                                    Live workspace'; position: absolute; left: calc(var(--setup-sidebar-w, 420px) + 28px); top: 20px; font-size: 10px; color: #687e6e; letter-spacing: 1.3px; white-space: pre; }
+#setup-backdrop::after { content: 'ERGOFLEX  /  CUSTOM SHOP                                    Live workspace'; position: absolute; left: calc(var(--shell-sidebar-w, 420px) + 28px); top: 20px; font-size: 10px; color: #687e6e; letter-spacing: 1.3px; white-space: pre; }
 #setup-sidebar { padding: 0 16px 24px; background: #fcfcf9; border-color: #e1e7dc; scrollbar-width: thin; scrollbar-color: #cbd6c8 transparent; }
 #setup-resizer { width: 4px; background: #e0e6dc; }
 #setup-resizer:hover, #setup-resizer.dragging { background: #759477; }
@@ -88,7 +101,9 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .studio-tabs { display: flex; gap: 4px; background: #edf1e9; padding: 4px; border-radius: 8px; }
 .studio-tabs button { flex: 1; padding: 9px 4px; font-size: 12px; color: #7d8b7a; border-radius: 5px; }
 .studio-tabs button[aria-pressed=true] { background: white; color: #314e3c; box-shadow: 0 1px 5px #1a321610; font-weight: 600; }
-#setup-sidebar[data-tab=editor] > #config-column, #setup-sidebar[data-tab=finishes] > #anim-debugger { display: none !important; }
+#setup-sidebar > [data-shell-tab] { display: none; }
+#setup-sidebar[data-tab="editor"] > [data-shell-tab="editor"], #setup-sidebar[data-tab="finishes"] > [data-shell-tab="finishes"], #setup-sidebar[data-tab="build"] > [data-shell-tab="build"] { display: block; }
+#setup-sidebar[data-tabs="1"] .studio-tabs { display: none; }
 #setup-sidebar > #config-column { margin-top: 0; padding: 4px; }
 #anim-debugger { padding: 0; background: transparent; border: none; gap: 12px; }
 #debug-panel-header { font-size: 12px; color: #516849; border: 0; padding: 2px 0 8px; }
@@ -138,12 +153,12 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
 .cart-row button { color: #946055; font-size: 11px; }
 .cart-total { text-align: right; color: var(--ink); font-weight: 600; margin-top: 20px; }
 #studio-toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); max-width: min(90vw, 520px); background: #233d34; color: #fff; padding: 13px 20px; border-radius: 10px; font-size: 12px; line-height: 1.5; box-shadow: 0 8px 28px #162a282b; z-index: 200; }
-@media (min-width: 1024px) { body:not(.setup-layout) #viewer-shell { position: sticky; top: 18px; } }
+@media (min-width: 1024px) { body:not(.shell-layout) #viewer-shell { position: sticky; top: 18px; } }
 @media (max-width: 1100px) { .studio-toolbar > label > span { display: none; } .studio-toolbar { gap: 4px; } }
 @media (max-width: 760px) {
-    body.setup-layout { overflow: auto; }
+    body.shell-layout { overflow: auto; }
     #setup-backdrop, #setup-resizer { display: none !important; }
-    body.setup-layout #viewer-shell { position: relative; top: auto; left: auto; width: 100%; height: 660px !important; margin-top: 36px; border-radius: 14px !important; z-index: 1; }
+    body.shell-layout #viewer-shell { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: 100%; height: 660px !important; margin-top: 36px; border-radius: 14px !important; z-index: 1; }
     #setup-sidebar { position: relative; width: 100%; overflow: visible; padding-top: 12px; border-top: 1px solid var(--line); }
     #setup-exit-btn { position: fixed; top: 10px; right: 12px; z-index: 60; }
     .studio-sidebar-header { position: relative; }
@@ -153,7 +168,7 @@ body.setup-layout #viewer-shell { top: 54px; bottom: 0; left: calc(var(--setup-s
     .studio-toolbar { top: 111px; left: 16px; right: 66px; gap: 5px; }
     .studio-toolbar > button, .studio-toolbar summary, .studio-toolbar > label { padding: 7px; font-size: 10px; }
     #viewer-shell .absolute.top-4.right-4 { right: 12px; top: 20px; }
-    #motion-dock { bottom: 18px; max-width: 360px; }
+    #motion-dock[data-mode="docked"] { bottom: 18px; max-width: 360px; }
     #viewer-shell .absolute.bottom-4.left-4 { display: none; }
     .render-settings > div { right: auto; left: 0; }
     body > .max-w-7xl { padding-left: 16px; padding-right: 16px; }
@@ -287,8 +302,8 @@ body:not(.setup-layout) .camera-shortcuts { display: none; }
 #add-to-cart { font-size: 14px; }
 .preset-card:hover, .preset-card:focus-visible { border-color: #75947e; background: #f5f8f1; }
 @media (min-width: 1024px) {
-    body:not(.setup-layout) #store-grid { grid-template-columns: minmax(290px, 330px) minmax(0, 1fr); gap: 28px; }
-    body:not(.setup-layout) #viewer-column { grid-column: 2; }
+    body:not(.shell-layout) #store-grid { grid-template-columns: minmax(290px, 330px) minmax(0, 1fr); gap: 28px; }
+    body:not(.shell-layout) #viewer-column { grid-column: 2; }
 }
 @media (max-width: 760px) {
     .viewer-controls { top: 110px; left: 16px; right: 16px; }
@@ -314,7 +329,7 @@ body:not(.setup-layout) .camera-shortcuts { display: none; }
         scroll-snap-align: start;
         padding: 7px 5px; font-size: 10px; min-height: 34px; justify-content: center;
     }
-    #viewer-shell, body.setup-layout #viewer-shell { height: 760px !important; min-height: 760px !important; }
+    #viewer-shell, body.shell-layout #viewer-shell { height: 760px !important; min-height: 760px !important; }
     .scene-dot { display: none; }
     #room-scene-caption { font-size: 9px; }
     #accessory-list { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
@@ -324,7 +339,7 @@ body:not(.setup-layout) .camera-shortcuts { display: none; }
    swap cannot do this: the CDN JIT only generates classes present in the
    markup, and lg:col-span-4 appears nowhere. */
 @media (min-width: 1024px) {
-  #store-grid.options-hidden { grid-template-columns: minmax(0, 1fr); }
-  #store-grid.options-hidden #viewer-column { grid-column: 1 / -1; }
-  #store-grid.options-hidden #config-column { grid-column: 1 / -1; }
+  body:not(.shell-layout) #store-grid.options-hidden { grid-template-columns: minmax(0, 1fr); }
+  body:not(.shell-layout) #store-grid.options-hidden #viewer-column { grid-column: 1 / -1; }
+  body:not(.shell-layout) #store-grid.options-hidden #config-column { grid-column: 1 / -1; }
 }

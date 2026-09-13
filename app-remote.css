@@ -67,7 +67,9 @@
     /* Above .viewer-controls (16), which otherwise paints its scene chips over
        the panel, and below the cart modal (100) and toasts (200). */
     z-index: 20;
-    /* Never wider than the viewer, and never edge-to-edge inside it. */
+    /* Never wider than the viewer, and never edge-to-edge inside it. This is
+       the unsized default; a panel that has been resized carries its device
+       size below instead. */
     width: min(600px, calc(100% - 24px));
     max-width: none;
     padding: 0;
@@ -80,6 +82,50 @@
     box-shadow: var(--lift2);
     overflow: hidden;
 }
+
+/* ── The panel as a device ───────────────────────────────────────────────── */
+/* Once resized it holds a real device's screen size, and its own layout is
+   decided by that size rather than by the viewer's. A device taller than the
+   viewer is DRAWN smaller but LAID OUT at full size, so its breakpoints still
+   answer as that device; the pointer maths divides the scale back out. */
+#motion-dock.app-remote[data-sized="true"] {
+    width: var(--dock-w);
+    height: var(--dock-h);
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    scale: var(--remote-scale, 1);
+    transform-origin: top left;
+}
+#motion-dock.app-remote[data-sized="true"] {
+    --compass: clamp(84px, calc(var(--remote-unit) * 30), 220px);
+    --track-h: clamp(80px, calc(var(--remote-unit) * 28), 260px);
+}
+#motion-dock.app-remote[data-sized="true"] .motion-dock-body { flex: 1; min-height: 0; display: flex; }
+#motion-dock.app-remote[data-sized="true"] .remote-body { flex: 1; min-height: 0; }
+
+/* Eight grips, inset so the shell's own overflow clip cannot eat them. */
+.remote-resize { position: absolute; z-index: 3; touch-action: none; }
+#motion-dock.app-remote[data-mode="docked"] .remote-resize { display: none; }
+.remote-resize[data-edge="n"] { top: 0; left: 14px; right: 14px; height: 6px; cursor: ns-resize; }
+.remote-resize[data-edge="s"] { bottom: 0; left: 14px; right: 14px; height: 6px; cursor: ns-resize; }
+.remote-resize[data-edge="e"] { right: 0; top: 14px; bottom: 14px; width: 6px; cursor: ew-resize; }
+.remote-resize[data-edge="w"] { left: 0; top: 14px; bottom: 14px; width: 6px; cursor: ew-resize; }
+.remote-resize[data-edge="ne"] { top: 0; right: 0; width: 14px; height: 14px; cursor: nesw-resize; }
+.remote-resize[data-edge="nw"] { top: 0; left: 0; width: 14px; height: 14px; cursor: nwse-resize; }
+.remote-resize[data-edge="se"] { bottom: 0; right: 0; width: 14px; height: 14px; cursor: nwse-resize; }
+.remote-resize[data-edge="sw"] { bottom: 0; left: 0; width: 14px; height: 14px; cursor: nesw-resize; }
+/* Only the corners show a mark, and only on approach. */
+.remote-resize[data-edge="se"]::after,
+.remote-resize[data-edge="sw"]::after,
+.remote-resize[data-edge="ne"]::after,
+.remote-resize[data-edge="nw"]::after {
+    content: ''; position: absolute; inset: 3px;
+    border-radius: 2px; background: var(--fill); opacity: 0;
+    transition: opacity .15s ease;
+}
+#motion-dock.app-remote:hover .remote-resize::after,
+.remote-resize.dragging::after { opacity: .34; }
 
 /* The drag handle. Only this strip initiates a move, and only where the
    pointer did not land on something interactive. */
@@ -132,7 +178,7 @@
 /* glide_core_thumb.dart: focal 38%/34%, stops .82 white / fill / deepen. */
 
 .remote-sphere {
-    --r: 14px;
+    --r: clamp(10px, calc(var(--remote-unit, 1.4px) * 4), 22px);
     width: calc(var(--r) * 2); height: calc(var(--r) * 2);
     border-radius: 50%;
     background: radial-gradient(circle at 38% 34%,
@@ -149,12 +195,12 @@
 }
 
 /* ── Layout ──────────────────────────────────────────────────────────────── */
-/* A container query on the viewer, not a window media query: in setup mode the
-   viewer is far narrower than the window, so a window-level breakpoint would
-   pick the wide layout for a narrow panel. This is the box the panel floats in
-   and is already the containing block for it. */
-
-#viewer-shell > .relative { container: viewer / inline-size; }
+/* The panel is a replica of the app, so it answers the question the app asks:
+   how big is MY screen. It used to ask about the viewer it floats in, which
+   was right while it was furniture and wrong now that it is a device - a
+   Fold 5 cover screen inside a wide viewer would have picked the wide layout.
+   [data-shape] is set in JS from main_screen.dart's own predicates, because a
+   container query cannot ask about `shortestSide`. */
 
 /* Two halves, as the landscape app lays it out: Glide with its Ergo Forms on
    the left, Height and Tilt side by side on the right. */
@@ -190,21 +236,108 @@
 .remote-forms { margin-top: 6px; }
 .remote-forms-row { display: flex; gap: 8px; }
 
-@container viewer (max-width: 700px) {
-    .remote-grid { grid-template-columns: 1fr; gap: 14px; }
+/* Unsized - the panel is still furniture, not yet a device. Keep the old
+   viewer-relative behaviour so nothing regresses before the first drag. */
+#motion-dock:not([data-sized="true"]) .remote-body { max-height: min(60vh, 420px); overflow-y: auto; }
+
+/* ── The four app layouts ────────────────────────────────────────────────── */
+/* Weights are main_screen.dart's, via layout_breakpoints.dart. They are shares
+   of a column or a row, not sizes, which is why they transfer to grid as-is. */
+
+/* PORTRAIT, narrow: a phone, or a foldable held shut. _buildPortraitLayout.
+   Glide 34 / Ergo Forms 13 / Lift+Tilt 44 / Wellness Hub 8, sum 99, with a
+   10px gap either side of the Ergo Forms block. */
+#motion-dock[data-shape="narrow-portrait"] .remote-body {
+    display: grid;
+    /* The four app blocks, then a track for the hint line, which is this
+       replica's own affordance text rather than anything the app carries. */
+    grid-template-rows: 34fr 13fr 44fr 8fr auto;
+    gap: var(--forms-gap, 10px);
+    overflow: hidden;
 }
-@container viewer (max-width: 560px) {
-    .remote-grid { grid-template-columns: 1fr; gap: 12px; }
-    .remote-glide-row { grid-template-columns: 1fr; justify-items: center; }
-    /* Bounded and scrollable: the panel must never grow taller than the
-       viewer it floats inside. */
-    .remote-body { max-height: min(60vh, 420px); overflow-y: auto; }
-    .remote-heading { font-size: 17px; letter-spacing: 2px; }
+#motion-dock[data-shape="narrow-portrait"] .remote-hint { grid-row: 5; }
+#motion-dock[data-shape="narrow-portrait"] .remote-grid {
+    display: contents;
+}
+#motion-dock[data-shape="narrow-portrait"] .remote-half-left {
+    display: contents;
+}
+/* The two panels share one row, half each, as the app's Row(50, 50) does. */
+#motion-dock[data-shape="narrow-portrait"] .remote-half-right {
+    grid-row: 3;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    min-height: 0;
+}
+#motion-dock[data-shape="narrow-portrait"] .remote-glide-row {
+    grid-row: 1;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    align-content: center;
+    min-height: 0;
+}
+#motion-dock[data-shape="narrow-portrait"] .remote-forms { grid-row: 2; margin: 0; min-height: 0; }
+#motion-dock[data-shape="narrow-portrait"] .remote-wellness-hub { grid-row: 4; }
+
+/* PORTRAIT, wide: the unfolded device upright. Same four blocks, the weights
+   the layout was tuned on before the narrow rebalance, and a 3px gap. */
+#motion-dock[data-shape="wide-portrait"] .remote-body {
+    display: grid;
+    grid-template-rows: 28fr 12fr 50fr 9fr auto;
+    gap: 3px;
+    overflow: hidden;
+}
+#motion-dock[data-shape="wide-portrait"] .remote-hint { grid-row: 5; }
+#motion-dock[data-shape="wide-portrait"] .remote-grid,
+#motion-dock[data-shape="wide-portrait"] .remote-half-left { display: contents; }
+#motion-dock[data-shape="wide-portrait"] .remote-half-right { grid-row: 3; grid-template-columns: 1fr 1fr; gap: 14px; min-height: 0; }
+#motion-dock[data-shape="wide-portrait"] .remote-glide-row { grid-row: 1; grid-template-columns: 1fr; justify-items: center; align-content: center; min-height: 0; }
+#motion-dock[data-shape="wide-portrait"] .remote-forms { grid-row: 2; margin: 0; min-height: 0; }
+#motion-dock[data-shape="wide-portrait"] .remote-wellness-hub { grid-row: 4; }
+
+/* LANDSCAPE: _buildLandscapeLayout - Glide+Forms 50, Lift 25, Tilt 25. */
+#motion-dock[data-shape="landscape"] .remote-grid,
+#motion-dock[data-shape="narrow-landscape"] .remote-grid,
+#motion-dock[data-shape="tablet-landscape"] .remote-grid {
+    grid-template-columns: 50fr 25fr 25fr;
+    align-items: stretch;
+    min-height: 0;
+}
+#motion-dock[data-shape="landscape"] .remote-half-right,
+#motion-dock[data-shape="narrow-landscape"] .remote-half-right,
+#motion-dock[data-shape="tablet-landscape"] .remote-half-right {
+    display: contents;
+}
+/* The left column splits Glide against Ergo Forms. Three ratios, because the
+   app branches three ways: 2:1 narrow, 3:1 ordinary, 59:41 on a tablet, where
+   the six Ergo Form slots become two rows of three instead of a carousel. */
+#motion-dock[data-shape="landscape"] .remote-half-left,
+#motion-dock[data-shape="narrow-landscape"] .remote-half-left,
+#motion-dock[data-shape="tablet-landscape"] .remote-half-left {
+    display: grid; gap: 8px; min-height: 0;
+}
+#motion-dock[data-shape="narrow-landscape"] .remote-half-left { grid-template-rows: 2fr 1fr; gap: 4px; }
+#motion-dock[data-shape="landscape"] .remote-half-left { grid-template-rows: 3fr 1fr; }
+#motion-dock[data-shape="tablet-landscape"] .remote-half-left { grid-template-rows: 59fr 41fr; gap: 4px; }
+#motion-dock[data-shape="tablet-landscape"] .remote-forms-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+#motion-dock[data-shape="narrow-landscape"] .remote-glide-row,
+#motion-dock[data-shape="landscape"] .remote-glide-row,
+#motion-dock[data-shape="tablet-landscape"] .remote-glide-row {
+    grid-template-columns: auto auto auto; align-content: center; min-height: 0;
 }
 
 /* ── Glide compass ───────────────────────────────────────────────────────── */
 
-.remote-compass { position: relative; width: 104px; height: 104px; touch-action: none; cursor: grab; }
+.remote-compass {
+    position: relative;
+    /* Derived from the panel's own short side once it is a device, so a bigger
+       screen gets a bigger dial rather than a wider margin around the same one.
+       Unsized, --remote-unit is undefined and the 104px fallback stands. */
+    width: var(--compass, 104px); height: var(--compass, 104px);
+    touch-action: none; cursor: grab;
+}
 .remote-compass:active { cursor: grabbing; }
 .remote-compass svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .remote-compass .remote-sphere {
@@ -309,19 +442,21 @@
 /* ── Tilt slider: 120° arc ───────────────────────────────────────────────── */
 /* arc_control_slider.dart: start -pi/3, sweep 2pi/3, round caps, rim under white. */
 
-.remote-arc { position: relative; width: 61px; max-width: 61px; margin: 0 auto; }
+.remote-arc { position: relative; margin: 0 auto; }
 .remote-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
 .remote-arc .arc-rim { fill: none; stroke: var(--fill); stroke-linecap: round; }
 .remote-arc .arc-face { fill: none; stroke: #fff; stroke-linecap: round; }
-/* Vertical, over the crescent. It was a horizontal strip pinned to the bottom of
-   the box, which was right while the track was a top arc: once the track became a
-   vertical crescent the only draggable area was a thin invisible bar under it, so
-   dragging the thumb along the arc - the obvious gesture - did nothing at all. */
+/* The pointer gesture belongs to .remote-arc itself, which projects the finger
+   onto the arc by angle the way the phone does. This input is no longer the hit
+   area - it is the keyboard and assistive-technology surface, and the value
+   every path writes to - so it takes no pointer events. */
+.remote-arc { cursor: ns-resize; touch-action: none; }
 .remote-arc input[type=range] {
     position: absolute; left: 50%; top: 50%;
     width: 96px; height: 56px;
     transform: translate(-50%, -50%) rotate(-90deg);
-    margin: 0; appearance: none; background: none; cursor: ns-resize;
+    margin: 0; appearance: none; background: none;
+    pointer-events: none;
 }
 .remote-arc input::-webkit-slider-thumb { appearance: none; width: 26px; height: 26px; opacity: 0; }
 .remote-arc input::-moz-range-thumb { width: 26px; height: 26px; opacity: 0; border: 0; }
@@ -356,7 +491,10 @@
 
 .remote-chips { display: flex; gap: 5px; margin-top: 4px; justify-content: center; }
 .remote-chip {
-    height: 22px; min-width: 32px;
+    /* kPresetChipRowHeight is a 48dp tap target drawing a 30dp chip; the ink is
+       what is sized here, the row's own padding supplies the rest. */
+    height: clamp(22px, calc(var(--remote-unit, 1.4px) * 13), 48px);
+    min-width: clamp(32px, calc(var(--remote-unit, 1.4px) * 19), 68px);
     border-radius: 11px;
     border: 1.5px solid var(--rim-empty);
     background: rgba(255,255,255,.55);
@@ -386,11 +524,6 @@
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
-
-/* The per-rig tilt sliders are an editor tool: with a single primary tilt in the
-   panel above, showing them on the storefront just duplicates that control. */
-body:not(.setup-layout) .remote-body #tilt-sliders-overlay { display: none; }
-.remote-body #tilt-sliders-overlay { margin-top: 10px; }
 
 /* Glide's status line and its two buttons, on one row. */
 .app-remote .glide-actions { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: nowrap; }
@@ -432,17 +565,20 @@ body:not(.setup-layout) .remote-body #tilt-sliders-overlay { display: none; }
 
 /* The readout sizes to five characters so "28.21" and "-3.62" both fit without
    the unit crowding the number. */
-.remote-readout { max-width: 168px; margin: 0 auto; justify-content: center; }
+.remote-readout { max-width: min(168px, 92%); margin: 0 auto; justify-content: center; }
 .remote-readout input { width: 5.2ch; margin-right: 2px; }
 
 /* Height and Tilt are read side by side, so their rows have to line up. Giving
    both tracks the same height is enough - subgrid collapsed the speed word and
    the chips into one cell, which is worse than the misalignment it replaced. */
-.remote-vslider, .remote-arc { height: 96px; margin: 4px auto 0; }
+.remote-vslider, .remote-arc { height: var(--track-h, 96px); margin: 4px auto 0; }
 /* 120x190 viewBox at 96px tall is 60.6 wide. The thumb is placed as a
    percentage of this box, so the box must match the drawing exactly. */
 .remote-arc svg { width: 100%; height: 100%; display: block; }
-.remote-vslider { width: 40px; }
+.remote-vslider { width: clamp(34px, calc(var(--track-h, 96px) * .40), 64px); }
+/* 120x190 viewBox: the thumb is placed as a percentage of this box, so the
+   box's ratio has to match the drawing exactly whatever the height becomes. */
+.remote-arc { width: calc(var(--track-h, 96px) * 120 / 190); max-width: none; }
 
 /* Claim the gesture. A drag on a slider is a drag on that slider, not a page
    scroll - without this, moving Height or Tilt on a touch screen scrolls the
@@ -467,3 +603,101 @@ body:not(.setup-layout) .remote-body #tilt-sliders-overlay { display: none; }
     font: inherit; font-size: 9px; padding: 3px 7px; border-radius: 7px;
     border: 1px solid rgba(20,24,36,.14); background: #fff; color: var(--text); cursor: pointer;
 }
+
+/* ── Wellness blocks ─────────────────────────────────────────────────────── */
+/* mini_wellness_widget.dart, wellness_start_buttons.dart, wellness_hub_widget
+   .dart. Drawn to complete the replica; every control is disabled, because
+   these are routines rather than desk movement and nothing is behind them. */
+
+.remote-mini-wellness {
+    display: flex; align-items: center; gap: 8px;
+    min-height: 40px; padding: 0 10px; margin-bottom: 6px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--hub) 70%, transparent);
+    border: 1px solid rgba(20,24,36,.06);
+    font-size: 11px; color: var(--text-2);
+}
+.remote-mini-wellness img { width: 16px; height: 16px; opacity: .55; }
+.remote-mini-wellness .mini-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.remote-mini-wellness .mini-state {
+    font-size: 9px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 6px; background: rgba(47,85,212,.10); color: var(--fill);
+}
+
+.remote-wellness-start { display: flex; gap: 8px; margin-top: 8px; }
+.remote-start {
+    flex: 1; min-width: 0; height: 40px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    border: 0; border-radius: 12px;
+    font: inherit; font-size: 12px; font-weight: 600; color: #fff;
+    background: linear-gradient(135deg, var(--fill) 0%, var(--fill-deep) 100%);
+    box-shadow: var(--lift1);
+    opacity: .58; cursor: not-allowed;
+}
+.remote-start.stand { background: linear-gradient(135deg, #3f8f6b 0%, #2c6a4e 100%); }
+.remote-start .badge {
+    font-size: 8px; font-weight: 800; letter-spacing: .7px;
+    padding: 2px 5px; border-radius: 5px; background: rgba(255,255,255,.22);
+}
+
+.remote-wellness-hub {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    min-height: 40px; max-height: 80px; margin-top: 8px; padding: 0 8px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--hub) 82%, transparent);
+    border: 1px solid rgba(20,24,36,.06);
+}
+.hub-tile {
+    width: 26px; height: 26px; padding: 0; border: 0; background: none;
+    opacity: .5; cursor: not-allowed;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.hub-tile img { width: 20px; height: 20px; }
+.remote-wellness-hub .hub-timer {
+    font-size: 11px; font-weight: 600; color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Where each block belongs, per shape. The narrow column is the app's own
+   four-block portrait order, so the hub is the last row and the start buttons
+   and the mini strip - which that layout does not carry - stand down. */
+#motion-dock[data-shape="narrow-portrait"] .remote-mini-wellness,
+#motion-dock[data-shape="narrow-landscape"] .remote-mini-wellness { display: none; }
+#motion-dock[data-shape="narrow-portrait"] .remote-wellness-start,
+#motion-dock[data-shape="wide-portrait"] .remote-wellness-start { display: none; }
+#motion-dock[data-shape="narrow-portrait"] .remote-wellness-hub,
+#motion-dock[data-shape="wide-portrait"] .remote-wellness-hub { margin-top: 0; min-height: 0; }
+#motion-dock[data-shape="narrow-landscape"] .remote-wellness-hub { min-height: 30px; max-height: 40px; }
+#motion-dock[data-shape="narrow-landscape"] .remote-start { height: 32px; }
+/* A tablet landscape has the room the phone does not, which is the whole
+   reason that branch exists. */
+#motion-dock[data-shape="tablet-landscape"] .remote-wellness-hub { min-height: 48px; }
+
+/* ── Filling the device ──────────────────────────────────────────────────── */
+/* A device screen is a fixed height, so the blocks have to divide it rather
+   than stack from the top and leave the bottom empty - which is exactly what
+   the app's Expanded weights do. */
+/* Landscape only. The portrait shapes above are already a grid whose rows ARE
+   the app's weights; turning them into a flex column here would silently
+   discard them - which is what a later rule of equal specificity does. */
+#motion-dock[data-sized="true"][data-shape$="landscape"] .remote-body {
+    display: flex; flex-direction: column;
+}
+#motion-dock[data-sized="true"][data-shape$="landscape"] .remote-grid { flex: 1; min-height: 0; }
+#motion-dock[data-sized="true"] .remote-body { padding-bottom: 8px; }
+/* The landscape shapes hand the row the height and let each column spread its
+   own controls, which is what stops the preset band floating mid-panel. */
+#motion-dock[data-sized="true"] .remote-col {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: space-evenly;
+    min-height: 0;
+}
+#motion-dock[data-sized="true"] .remote-col > * { flex: none; }
+/* The preset band belongs to its own panel's column. Sized from the device
+   alone, three chips at their ceiling are wider than a half-width phone
+   column, and the band ran across into its neighbour. */
+#motion-dock[data-sized="true"] .remote-chips { width: 100%; }
+#motion-dock[data-sized="true"] .remote-chip { flex: 1 1 0; min-width: 0; }
+#motion-dock[data-sized="true"] .remote-glide-row { align-content: center; }
+/* The hint is one line of web affordance text; it must not take a share. */
+#motion-dock[data-sized="true"] .remote-hint { flex: none; margin-top: 6px; }

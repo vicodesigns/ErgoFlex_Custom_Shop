@@ -36,11 +36,17 @@ Not switching sections, not collapsing, not dragging. That is asserted directly.
 **In the studio** it floats inside the viewer and can be dragged anywhere, which
 suits a tool: you want it over the model, and out of the way on demand.
 
-**On the storefront it drops down instead.** A panel sitting on top of the desk
-is just covering the product, so there it lives in normal flow *beneath* the
-viewer and takes no space at all until you open it — the page loads with it
-closed, and the header bar is what you press to drop it down. Dragging is
-disabled in that mode; there is nothing to drag out of the way.
+**On the storefront it floats too, and arrives closed.** It used to drop into
+normal flow beneath the viewer, which was the only way to keep it off the
+product while the store was a column grid. The store now uses the same
+full-viewport shell as the studio, so there is no in-flow space below the viewer
+to drop into — and what keeps the panel off the desk is that it *arrives
+collapsed*: a bar, not a slab. The header is what you press to open it. Dragging
+and resizing work there exactly as they do in the studio.
+
+The docked mode still exists and is still reached: below 760px the shell steps
+aside for the stacked mobile layout, and there the viewer is an ordinary block
+again with room beneath it.
 
 ## Turning the desk in place
 
@@ -153,12 +159,47 @@ glossy sphere shared by all three knobs is
 `radial-gradient(circle at 38% 34%, #E1E7F8, #2F55D4 50%, #15265F)` — where
 `#15265F` is `mix(#2F55D4, black, 45%)`, not a hand-picked colour.
 
-Layout is the one deliberate departure. The phone stacks Glide, Ergo Forms, then
-Height and Tilt vertically because it owns a whole screen; transcribing that here
-would make the panel taller, which is the opposite of the point. The same blocks
-run **wide** instead, and fall back to the phone's order only when the viewer is
-genuinely narrow — via a **container query on the viewer**, not a window
-breakpoint, because in setup mode the viewer is far narrower than the window.
+## The panel is a device
+
+Drag any corner and the panel resizes. It **snaps to real device screens** and a
+toast names the one it landed on: the Fold 5 cover screen and unfolded pane in
+both orientations, an iPhone, and the Apple foldable. The table is
+`REMOTE_DEVICES` in `studio.js` and it is the only place a device size is
+written. CSS pixels are the app's dp, so the figures transfer unchanged; the
+Fold 5 numbers are quoted from the app's own
+`lib/utils/layout_breakpoints.dart`, which measured its portrait weights on the
+cover screen (344 × 882) and documents the unfolded device as 810 × 674.
+
+**A device bigger than the viewer is drawn smaller, not made unreachable.** A
+cover screen is 882px tall and almost no laptop viewport has that once the
+header and the toolbar are out. The panel keeps the device's *layout* size — so
+its breakpoints still answer as that device — and is painted at a scale that
+fits. Every pointer delta is divided back out, so dragging still tracks the
+cursor. The Apple foldable's 626 × 890 is 1878 × 2670 hardware pixels at
+430 ppi taken at @3x; **its folded cover screen is unconfirmed**, and the iPhone
+entry stands in for it until it is.
+
+Layout used to be a deliberate departure — the blocks ran wide, and fell back to
+the phone's order via a container query on **the viewer**. That was right while
+the panel was furniture and is wrong now that it is a device: a cover screen
+inside a wide viewer would have picked the wide layout. The panel now answers
+the question the app asks — *how big is my screen* — through a `data-shape`
+attribute set from `main_screen.dart`'s own predicates. It is JS rather than a
+container query because CSS cannot ask about `shortestSide`.
+
+| shape | predicate | layout |
+|---|---|---|
+| `narrow-portrait` | `w < 600` upright | the app's four-block column: Glide 34, Ergo Forms 13, Lift+Tilt 44, Hub 8 |
+| `wide-portrait` | `w >= 600` upright | the same blocks on the pre-rebalance weights |
+| `narrow-landscape` | `h < 500` on its side | three columns, Glide over Ergo Forms 2:1 |
+| `landscape` | otherwise | three columns, 3:1 |
+| `tablet-landscape` | `shortestSide >= 600` | three columns, 59:41, and six Ergo Form slots as two rows of three |
+
+The fixed-px internals are gone with it. The compass, the lift track and the
+tilt arc are derived from `--remote-unit`, the panel's own short side over 100,
+so a bigger screen gets bigger controls rather than wider margins. The arc keeps
+its 120:190 viewBox ratio exactly, because the sphere is placed as a percentage
+of that box.
 
 ## Scope
 
@@ -171,5 +212,31 @@ outcome, a control that looks live and silently does nothing.
 The green status dot is decorative for the same reason: it reports that this is a
 preview, not a connection to a desk.
 
-Not built: the wellness bar along the bottom of the phone (routine, timer, save,
-lamp). That is a routines feature rather than a desk control.
+The wellness blocks — the Mini Wellness strip, the start-routine buttons and the
+Wellness Hub bar along the bottom — are **drawn and disabled** on the same
+terms. They are routines rather than desk controls and there is nothing behind
+them here, but the app has them, and a replica that omits them is not a replica.
+
+## The tilt arc
+
+The arc is an angular control, ported from `arc_control_slider.dart`: the finger
+is projected onto the crescent by angle (`atan2`, normalised so the ±π wrap
+never lands inside the sweep), the value runs ±155 with a ±10 dead zone, and
+letting go springs it back to centre over 150ms. The `<input type=range>` behind
+it takes no pointer events; it is the keyboard and assistive-technology surface,
+and the value every path writes to, so the dead zone, the jog integration and
+the sphere all stay on one code path.
+
+It was broken for a while, and the way it broke is worth keeping: `syncTiltUI()`
+kept re-authoring the track's `min`/`max` from the rig, as if it were still a
+position slider. The only rig runs `-70..0`, so `max` became the string `"0"` —
+truthy, so `Number(slider.max || 1)` never fell back — and the normaliser
+divided by zero. At rest that was `NaN` and nothing moved; pulled down it was
+`-Infinity` and the desk hit its limit inside one frame; and up was unreachable,
+because zero had become the maximum. The height track was fine only because
+`showHeight()` deliberately does not touch it. Both tracks now normalise against
+their own half-span, and `syncTiltUI()` writes the readout and nothing else.
+
+The per-rig tilt sliders that used to float inside the panel are gone from it.
+They are an authoring tool, the app has no such control, and the editor panel's
+`#tilt-configs-list` already carries one per rig.

@@ -726,17 +726,76 @@ const server = http.createServer((req, res) => {
     assert.equal(ring.insideDish, 0, 'and a press in the dish glides rather than turning');
     assert.ok(Math.abs(ring.unmoved) < 0.01, 'neither moved the desk');
 
-    // On the storefront the panel must not sit on top of the product.
+    // The storefront now uses the same full-viewport shell as the studio, so
+    // there is no in-flow space below the viewer to drop into. What keeps the
+    // panel off the product is that it arrives collapsed, and that it stays
+    // inside the viewer rectangle wherever it is dragged.
     await page.click('#setup-exit-btn');
+    await page.waitForFunction(() => document.body.classList.contains('store-layout'));
     await new Promise(r => setTimeout(r, 500));
     const docked = await page.evaluate(() => {
       const dock = document.getElementById('motion-dock');
-      const viewer = document.getElementById('viewer-shell').getBoundingClientRect();
+      const stage = document.getElementById('model-canvas').parentElement.getBoundingClientRect();
       const rect = dock.getBoundingClientRect();
-      return { mode: dock.dataset.mode, below: rect.top >= viewer.bottom - 2 };
+      return {
+        mode: dock.dataset.mode,
+        inside: rect.left >= stage.left - 2 && rect.right <= stage.right + 2 && rect.bottom <= stage.bottom + 2,
+        shell: document.body.classList.contains('shell-layout')
+      };
     });
-    assert.equal(docked.mode, 'docked', 'the storefront docks the panel instead of floating it');
-    assert.ok(docked.below, 'below the viewer, so the desk is never covered');
+    assert.ok(docked.shell, 'the storefront runs the shared shell');
+    assert.equal(docked.mode, 'floating', 'and floats the panel inside its full-bleed viewer');
+    assert.ok(docked.inside, 'clamped inside the viewer, so it can never drift onto the page');
+
+    // The store's configuration lives in the shell sidebar, and reparenting it
+    // must not have detached anything the renderers target by id.
+    const storeShell = await page.evaluate(() => {
+      const column = document.getElementById('config-column');
+      const sidebar = document.getElementById('setup-sidebar').getBoundingClientRect();
+      const viewer = document.getElementById('viewer-shell').getBoundingClientRect();
+      return {
+        parent: column?.parentElement?.id,
+        tab: column?.dataset.shellTab,
+        tabsHidden: getComputedStyle(document.querySelector('.studio-tabs')).display === 'none',
+        header: !!document.querySelector('body > header')?.offsetHeight,
+        cart: !!document.getElementById('cart-btn')?.offsetParent,
+        presets: !!document.getElementById('preset-list'),
+        price: !!document.getElementById('price-breakdown'),
+        accessories: !!document.getElementById('accessory-list'),
+        noOverlap: viewer.left >= sidebar.right - 1,
+        viewerTop: Math.round(viewer.top)
+      };
+    });
+    assert.equal(storeShell.parent, 'setup-sidebar', 'the store configuration moves into the shell sidebar');
+    assert.equal(storeShell.tab, 'build', 'tagged with the store shell tab');
+    assert.ok(storeShell.tabsHidden, 'and a single tab hides the tab strip rather than showing one button');
+    assert.ok(storeShell.header, 'the site header is still there');
+    assert.ok(storeShell.cart, 'and the build list is still reachable');
+    assert.ok(storeShell.presets && storeShell.price && storeShell.accessories,
+      'every injected block survived the reparent');
+    assert.ok(storeShell.noOverlap, 'the viewer starts where the sidebar ends');
+    assert.ok(storeShell.viewerTop > 0, 'and below the header rather than under it');
+
+    // Dragging the divider re-frames the desk and the width outlives a reload.
+    const split = await page.evaluate(async () => {
+      const resizer = document.getElementById('setup-resizer');
+      const before = document.getElementById('model-canvas').width;
+      const r = resizer.getBoundingClientRect();
+      const ev = (type, x) => resizer.dispatchEvent(new PointerEvent(type, {
+        bubbles: true, pointerId: 1, button: 0, clientX: x, clientY: r.top + 10
+      }));
+      ev('pointerdown', r.left + 2);
+      ev('pointermove', 520);
+      ev('pointerup', 520);
+      await new Promise(res => setTimeout(res, 300));
+      let stored = null;
+      try { stored = JSON.parse(localStorage.getItem('ergoflex.shellWidthV1')); } catch {}
+      return { before, after: document.getElementById('model-canvas').width, stored };
+    });
+    assert.ok(split.after < split.before, 'widening the sidebar narrows the canvas');
+    assert.equal(split.stored?.v, 1, 'and the width is persisted under a versioned key');
+    assert.ok(split.stored?.store >= 300, 'for the store shell specifically, got ' + split.stored?.store);
+    await page.evaluate(() => { ErgoFlex.setShellMode('store'); });
     // Back into the studio: every editor assertion below this needs that layout,
     // and leaving the suite on the storefront would break all of them.
     await page.click('#open-editor');
@@ -792,7 +851,150 @@ const server = http.createServer((req, res) => {
     assert.ok(Math.abs(jog.driftAfterBlur) < 0.05, 'and releases cleanly, not leaving the desk driving itself');
     assert.ok(Math.abs(jog.deadZoneMoved) < 0.01, 'a nudge inside the dead zone moves nothing');
 
-    console.log('Motion remote: drag, clamping, corrupt storage, presets, forms and stop passed.');
+    // Tilt is the same rate control, and for a long time it was the broken one:
+    // syncTiltUI re-authored the track's range from the rig, the rig runs -70..0,
+    // so `max` became zero and the normaliser divided by it. At rest that was
+    // NaN (nothing moved); pulled down it was -Infinity (the desk hit its limit
+    // in one frame); and up was unreachable, because zero was now the maximum.
+    const tiltJog = await page.evaluate(async () => {
+      const el = () => document.querySelector('#tilt-slider');
+      const deg = () => ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg;
+      const hold = async (value, ms, releaseEvent) => {
+        const slider = el();
+        slider.value = String(value);
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
+        await new Promise(r => setTimeout(r, ms));
+        slider.dispatchEvent(new PointerEvent(releaseEvent, { bubbles: true }));
+        await new Promise(r => setTimeout(r, 250));
+        return slider.value;
+      };
+      ErgoFlex.setTilt('tilting', -30);
+      await new Promise(r => setTimeout(r, 350));
+      const out = { range: [el().min, el().max], restsAtCentre: el().value, start: deg() };
+      // Down, from -30 toward -70. Gradual is the whole assertion: the old
+      // -Infinity jumped the full 40 degrees inside a single frame.
+      out.sliderAfterRelease = await hold(-80, 600, 'pointerup');
+      out.downTo = deg();
+      await new Promise(r => setTimeout(r, 400));
+      out.downDrift = deg() - out.downTo;
+      // Up, which the broken range could not reach at all.
+      const beforeUp = deg();
+      await hold(80, 600, 'pointerup');
+      out.upDelta = deg() - beforeUp;
+      // Dead zone, then stop.
+      const settled = deg();
+      await hold(4, 400, 'pointerup');
+      out.deadZoneMoved = deg() - settled;
+      el().value = '-80'; el().dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise(r => setTimeout(r, 150));
+      ErgoFlex.haltAllMotion();
+      await new Promise(r => setTimeout(r, 250));
+      out.afterStop = [document.querySelector('#desk-height-slider').value, el().value];
+      return out;
+    });
+    assert.deepEqual(tiltJog.range, ['-155', '155'],
+      'the tilt track keeps its authored range rather than being re-authored from the rig');
+    assert.equal(tiltJog.restsAtCentre, '0', 'the tilt jog rests at centre');
+    assert.ok(tiltJog.downTo < tiltJog.start, 'holding it down tilts the desk down');
+    assert.ok(tiltJog.start - tiltJog.downTo < 30,
+      'gradually, rather than snapping to the rig limit, got ' + (tiltJog.start - tiltJog.downTo));
+    assert.equal(tiltJog.sliderAfterRelease, '0', 'and it springs back to centre on release');
+    assert.ok(Math.abs(tiltJog.downDrift) < 0.05, 'the desk stops where it was rather than coasting');
+    assert.ok(tiltJog.upDelta > 0.5, 'and holding it up tilts the other way, got ' + tiltJog.upDelta);
+    assert.ok(Math.abs(tiltJog.deadZoneMoved) < 0.01, 'a nudge inside the dead zone moves nothing');
+    assert.deepEqual(tiltJog.afterStop, ['0', '0'], 'stop re-centres both tracks, not just the desk');
+
+    // The arc is an angular control: the finger is projected onto the crescent
+    // by angle, and letting go springs the sphere back to the middle.
+    const arc = await page.evaluate(async () => {
+      const box = document.querySelector('.remote-arc');
+      const thumb = box.querySelector('.remote-sphere');
+      const deg = () => ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg;
+      ErgoFlex.setTilt('tilting', -30);
+      await new Promise(r => setTimeout(r, 350));
+      const rect = box.getBoundingClientRect();
+      const at = (type, x, y) => box.dispatchEvent(new PointerEvent(type, {
+        bubbles: true, pointerId: 3, button: 0, clientX: x, clientY: y
+      }));
+      const rest = thumb.style.top;
+      const before = deg();
+      // The top of the crescent is extend. The arc centre is at 26/120 across
+      // and 95/190 down of the box, so this lands well above it.
+      at('pointerdown', rect.left + rect.width * 0.8, rect.top + rect.height * 0.15);
+      at('pointermove', rect.left + rect.width * 0.8, rect.top + rect.height * 0.15);
+      await new Promise(r => setTimeout(r, 400));
+      const out = { rest, held: thumb.style.top, value: Number(document.querySelector('#tilt-slider').value), moved: deg() - before };
+      at('pointerup', rect.left + rect.width * 0.8, rect.top + rect.height * 0.15);
+      await new Promise(r => setTimeout(r, 400));
+      out.settled = thumb.style.top;
+      out.settledValue = document.querySelector('#tilt-slider').value;
+      return out;
+    });
+    assert.ok(arc.value > 10, 'dragging the upper arc asks for extend, got ' + arc.value);
+    assert.ok(arc.moved > 0.5, 'and the desk actually tilts up, got ' + arc.moved);
+    assert.notEqual(arc.held, arc.rest, 'the sphere follows the finger along the arc');
+    assert.equal(arc.settledValue, '0', 'releasing springs the value back to centre');
+    assert.equal(arc.settled, arc.rest, 'and the sphere returns to the middle of the crescent');
+
+    // The panel is a device mockup: drag a corner, it snaps to a real device,
+    // says which, and re-lays itself out the way the app does at that size.
+    const resize = await page.evaluate(async () => {
+      const dock = document.getElementById('motion-dock');
+      if (dock.classList.contains('collapsed')) document.getElementById('motion-dock-toggle').click();
+      await new Promise(r => setTimeout(r, 200));
+      const canvasBefore = document.getElementById('model-canvas').height;
+      // Park it top-left so a tall device has somewhere to grow into.
+      ErgoFlex.setRemoteSize(420, 640);
+      await new Promise(r => setTimeout(r, 200));
+      const grip = dock.querySelector('[data-edge="se"]');
+      const rect = dock.getBoundingClientRect();
+      const ev = (type, x, y) => grip.dispatchEvent(new PointerEvent(type, {
+        bubbles: true, pointerId: 4, button: 0, clientX: x, clientY: y
+      }));
+      // Aim a little off 344 x 882 - inside the snap window, not on it.
+      const scale = ErgoFlex.remoteScale || 1;
+      const toX = rect.right - 4 + (344 - 420 + 9) * scale;
+      const toY = rect.bottom - 4 + (882 - 640 - 11) * scale;
+      ev('pointerdown', rect.right - 4, rect.bottom - 4);
+      ev('pointermove', toX, toY);
+      await new Promise(r => setTimeout(r, 120));
+      const toast = document.getElementById('studio-toast');
+      const out = {
+        canvasBefore,
+        size: ErgoFlex.remoteSize,
+        device: ErgoFlex.remoteDevice,
+        shape: ErgoFlex.remoteShape,
+        toast: toast.hidden ? '' : toast.textContent
+      };
+      ev('pointerup', toX, toY);
+      await new Promise(r => setTimeout(r, 250));
+      try { out.stored = JSON.parse(localStorage.getItem('ergoflex.dockSizeV1')); } catch { out.stored = null; }
+      out.canvasAfter = document.getElementById('model-canvas').height;
+      // And the layout answers as that device, not as the viewer it sits in.
+      out.portraitRows = getComputedStyle(dock.querySelector('.remote-body')).gridTemplateRows.split(' ').length;
+      ErgoFlex.setRemoteSize(810, 674);
+      await new Promise(r => setTimeout(r, 200));
+      out.tabletShape = ErgoFlex.remoteShape;
+      out.tabletDevice = ErgoFlex.remoteDevice;
+      out.tabletColumns = getComputedStyle(dock.querySelector('.remote-grid')).gridTemplateColumns.split(' ').length;
+      out.tabletToast = document.getElementById('studio-toast').textContent;
+      return out;
+    });
+    assert.deepEqual(resize.size, { w: 344, h: 882 }, 'a drag near a device size snaps onto it exactly');
+    assert.equal(resize.device, 'fold5-cover-p', 'and identifies the device');
+    assert.ok(/Fold 5 cover/.test(resize.toast), 'announcing it by name, got ' + JSON.stringify(resize.toast));
+    assert.equal(resize.shape, 'narrow-portrait', 'a cover screen lays out as narrow portrait');
+    assert.equal(resize.portraitRows, 5, 'which is the app\'s four-block column, plus a track for the hint line');
+    assert.equal(resize.stored?.v, 1, 'the size is persisted under a versioned key');
+    assert.deepEqual([resize.stored?.w, resize.stored?.h], [344, 882], 'with the snapped size');
+    assert.equal(resize.canvasAfter, resize.canvasBefore,
+      'and resizing the panel never re-sizes the canvas, which would move the camera');
+    assert.equal(resize.tabletShape, 'tablet-landscape', 'the unfolded device lays out as a tablet');
+    assert.equal(resize.tabletDevice, 'fold5-open-l', 'and is named');
+    assert.equal(resize.tabletColumns, 3, 'as the app\'s three-column landscape row');
+    assert.ok(/Fold 5 unfolded/.test(resize.tabletToast), 'with its own toast');
+
+    console.log('Motion remote: drag, clamping, corrupt storage, presets, forms, tilt jog, arc, resize and stop passed.');
 
 
     // The shaped side panels are Desktop_1/Desktop_2: 35x18in faces only 0.7in
