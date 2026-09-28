@@ -11,6 +11,7 @@ import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PRO
 import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
+const EVENT_DEMO = location.pathname.endsWith('/product-demo.html');
 
 const STARTING_POS = { x: 4.8, y: 3.4, z: 4.2 };
 const STARTING_TARGET = { x: -0.1, y: 0.9, z: 0.0 };
@@ -3216,7 +3217,7 @@ function buildPrecisionTools(anchorElement) {
         </div>
         <p class="studio-note">Values are in the part's own parent space, with animation removed. Rotation is in degrees. Typed edits, alignment, and gizmo drags share one undo history.</p>`;
     anchorElement.after(panel);
-    buildSceneAssetTools(panel);
+    if (!EVENT_DEMO) buildSceneAssetTools(panel);
 
     panel.querySelectorAll('input[data-axis]').forEach(input => {
         input.addEventListener('focus', () => { inspectorSuspended = true; });
@@ -4583,7 +4584,13 @@ const BAKED_TILT_CONFIGS = [
             "Desktop_1_4", "Desktop_2_5", "Desktop_3", "Desktop_3_6",
             "L_A_Hardware_Top_1_33", "L_A_Hardware_Top_3_35", "L_A_Hardware_Top_4_255",
             "L_A_Hardware_Top_6_257", "L_A_Hardware_Top_7_258", "mesh_692_692",
-            "Power_1_1", "Power_2_2", "Power_4_8", "Power_7_11"
+            "Power_1_1", "Power_2_2", "Power_4_8", "Power_7_11",
+            "L_A_Hardware_Top_32", "L_A_Hardware_Top_2_34", "L_A_Hardware_Top_5_256",
+            "Touch_Screen_1_583", "Touch_Screen_2_584", "Touch_Screen_3_585",
+            "mesh_624_624", "mesh_625_625", "mesh_626_626",
+            "Touch_Screen_4_683", "Touch_Screen_5_684", "Touch_Screen_6_685",
+            "Touch_Screen_7_686", "Power_3_7", "Power_5_9", "Touch_Screen_582",
+            "Power_0", "Power_6_10"
         ]
     }
 ];
@@ -6399,6 +6406,12 @@ function placeRemoteForMode() {
     const dock = document.getElementById('motion-dock');
     const viewer = document.getElementById('viewer-shell');
     if (!dock || !viewer) return;
+    if (EVENT_DEMO) {
+        const slot = document.getElementById('demo-remote');
+        if (slot && dock.parentElement !== slot) slot.append(dock);
+        dock.dataset.mode = 'docked';
+        return;
+    }
     const floating = document.body.classList.contains('shell-layout')
         && window.matchMedia('(min-width: 761px)').matches;
     dock.dataset.mode = floating ? 'floating' : 'docked';
@@ -7152,7 +7165,7 @@ function syncViewerSize() {
     const container = canvas.parentElement;
     const w = container.clientWidth;
     const viewerControls = container.querySelector('.viewer-controls');
-    const top = viewerControls ? viewerControls.offsetTop + viewerControls.offsetHeight + 12 : (w < 500 ? 188 : 168);
+    const top = EVENT_DEMO ? 0 : viewerControls ? viewerControls.offsetTop + viewerControls.offsetHeight + 12 : (w < 500 ? 188 : 168);
     // The movement panel floats over the canvas rather than displacing it, so its
     // size no longer reaches the camera at all. Coupling them is what made the
     // panel cost the desk ~283px of height, and what forced every tab to reserve
@@ -7694,13 +7707,14 @@ function initStudio() {
     // accessory list, so migration is a read of the old key when the new one is
     // absent — no separate conversion step, and V1 data is left untouched.
     const readStored = (v2Key, v1Key) => {
+        if (EVENT_DEMO) return null;
         try {
             const raw = localStorage.getItem(v2Key) ?? localStorage.getItem(v1Key);
             return raw ? JSON.parse(raw) : null;
         } catch { return null; }
     };
     try {
-        const shared = new URLSearchParams(location.search).get('build');
+        const shared = EVENT_DEMO ? null : new URLSearchParams(location.search).get('build');
         const stored = shared ? JSON.parse(shared) : readStored(SAVED_BUILD_KEY, 'ergoflexSavedBuildV1');
         if (validConfig(stored)) currentConfig = cleanConfig(stored);
         if (shared && !validConfig(stored)) notifyUser('This build link is invalid. Showing the default configuration.');
@@ -7772,7 +7786,7 @@ function initStudio() {
     viewerControls.append(scenes, roomCaption); viewer.append(viewerControls);
     scenes.querySelectorAll('button').forEach(button => button.onclick = () => setRoomScene(button.dataset.roomScene));
     new ResizeObserver(syncViewerSize).observe(viewerControls);
-    try { selectedRoomScene = localStorage.getItem('ergoflex.roomScene') || 'product'; } catch {}
+    try { selectedRoomScene = EVENT_DEMO ? 'product' : localStorage.getItem('ergoflex.roomScene') || 'product'; } catch {}
     setRoomScene(selectedRoomScene, false);
     const applyEnvironment = (value) => {
         document.getElementById('viewer-shell').dataset.environment = value;
@@ -7846,7 +7860,7 @@ function initStudio() {
     // until the controls are actually asked for.
     let dockPreference = null;
     try { dockPreference = localStorage.getItem('ergoflex.motionDockCollapsed'); } catch {}
-    if (!document.body.classList.contains('setup-layout') && dockPreference === null) {
+    if (!EVENT_DEMO && !document.body.classList.contains('setup-layout') && dockPreference === null) {
         document.getElementById('motion-dock-toggle')?.click();
     }
     // A saved position is only valid against the layout it was saved in, so

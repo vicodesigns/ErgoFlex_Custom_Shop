@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ErgoFlex Divi Page Editor</title>
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <header class="toolbar">
+    <div><strong>ErgoFlex page editor</strong><span>Edit the page, preview it, then paste the exported code into your Divi Code module.</span></div>
+    <div class="actions">
+      <button id="import-button" type="button">Open existing HTML</button>
+      <button id="copy-button" type="button">Copy Divi code</button>
+      <button id="download-button" type="button" class="primary">Download Divi code</button>
+      <input id="import-file" type="file" accept=".html,text/html" hidden>
+    </div>
+  </header>
+  <main class="layout">
+    <aside class="controls">
+      <p class="hint"><strong>Click anything in the preview to edit it.</strong> The matching field opens here. Use a WordPress Media Library URL for videos. Images can use a URL or a file from your computer.</p>
+      <div id="fields"></div>
+    </aside>
+    <section class="preview-area" aria-label="Page preview">
+      <div class="preview-toolbar"><strong>Click a section or item to edit it</strong><div><button id="desktop-button" class="selected" type="button">Desktop</button><button id="mobile-button" type="button">Phone</button></div></div>
+      <div id="preview-frame-wrap"><iframe id="preview" title="ErgoFlex page preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div>
+    </section>
+  </main>
+  <div id="status" role="status" aria-live="polite"></div>
+  <template id="original-source">
+<!-- MODULE_HERE -->
+  </template>
+  <script src="editor.js"></script>
+</body>
+</html>
