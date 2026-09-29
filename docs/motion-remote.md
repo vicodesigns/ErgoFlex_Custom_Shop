@@ -102,9 +102,9 @@ outer viewer, and re-clamped whenever that rectangle can change: the viewer's
 | Height | editable readout, a centred jog track, and a speed |
 | Tilt | editable readout, a 120° crescent jog track, and a speed |
 | Touchscreen | slides out, then rotates to face the user; tap again to stow |
-| LEDs | turns the desk, shelf, and base lights on or off |
+| LEDs | turns the desk, shelf, and base lights and their soft glow on or off |
 | Preset banks | **separate** for lift and tilt — tap recalls, press and hold saves |
-| Ergo Forms | a combined pose: height *and* tilt. Double-click to rename |
+| Ergo Forms | Sitting (28″, 0°), Standing (48″, 0°), and Easel (52″, 65°) combined poses. Double-click to rename |
 | Stop | freezes everything exactly where it is |
 
 **Stop is not `stopGlide()`.** That function returns the desk to its home
@@ -146,9 +146,9 @@ foreign-versioned data falls back to defaults rather than breaking the panel.
 | Key | Holds |
 |---|---|
 | `ergoflex.dockPosV1` | `{v, x, y}` — clamped to the usable rect on read |
-| `ergoflex.liftPresetsV1` | `{v, slots}` — three heights or nulls |
-| `ergoflex.tiltPresetsV1` | `{v, slots}` — three angles or nulls |
-| `ergoflex.ergoFormsV1` | `{v, forms}` — three `{name, lift, tilt}` |
+| `ergoflex.liftPresetsV1` | `{v, slots}` — defaults to 28″, 42.5″, and 52″; saved values take priority |
+| `ergoflex.tiltPresetsV1` | `{v, slots}` — defaults to −5°, 39°, and 65°; saved values take priority |
+| `ergoflex.ergoFormsV2` | `{v, forms}` — three `{name, lift, tilt}`; separate key gives existing visitors the new named forms |
 | `ergoflex.motionDockCollapsed` | unchanged |
 
 ## Design source

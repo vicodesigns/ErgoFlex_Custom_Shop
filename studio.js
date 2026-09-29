@@ -2154,10 +2154,11 @@ async function loadTouchscreenAssembly() {
 function setLedsEnabled(on) {
     ledsEnabled = !!on;
     document.body.dataset.ledsEnabled = String(ledsEnabled);
-    ledParts.forEach(({ material, color }) => {
+    ledParts.forEach(({ material, color, halos }) => {
         material.color.set(color).multiplyScalar(ledsEnabled ? 1 : 0.12);
         material.emissive.set(color);
         material.emissiveIntensity = ledsEnabled ? 2.2 : 0;
+        halos.forEach(halo => { halo.visible = ledsEnabled; });
     });
     document.querySelectorAll('[data-led-toggle],.hub-led').forEach(button =>
         button.setAttribute('aria-pressed', String(ledsEnabled)));
@@ -2173,6 +2174,7 @@ async function loadLedOverlay() {
         roots.lift.name = 'Shelf LEDs';
         roots.tilt.name = 'Desktop LEDs';
         ledParts = [];
+        const haloMaterials = new Map();
         gltf.scene.children.forEach((_, index) => {
             const color = index >= 3 && index <= 37 ? 0xff2828 : 0x40eaff;
             const material = new THREE.MeshStandardMaterial({ color, emissive: color,
@@ -2180,8 +2182,36 @@ async function loadLedOverlay() {
                 polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
             const role = index === 38 ? 'base' : index >= 39 ? 'lift' : 'tilt';
             const part = makeOverlayNode(gltf, index, -100, material, `${roots[role].name} ${index + 1}`);
+            if (!haloMaterials.has(color)) {
+                haloMaterials.set(color, [0.18, 0.05].map(opacity => new THREE.MeshBasicMaterial({
+                    color, transparent: true, opacity, blending: THREE.AdditiveBlending,
+                    depthWrite: false, side: THREE.DoubleSide, toneMapped: false,
+                    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
+                })));
+            }
+            const halos = [];
+            for (const mesh of [...part.children]) {
+                mesh.geometry.computeBoundingBox();
+                const box = mesh.geometry.boundingBox;
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                for (const [layer, spread] of [1, 3].entries()) {
+                    const geometry = mesh.geometry.clone();
+                    geometry.translate(-center.x, -center.y, -center.z);
+                    geometry.scale(...['x', 'y', 'z'].map(axis =>
+                        Math.min(4, 1 + spread / Math.max(size[axis], 0.2))));
+                    geometry.translate(center.x, center.y, center.z);
+                    const halo = new THREE.Mesh(geometry, haloMaterials.get(color)[layer]);
+                    halo.name = `LED glow ${index + 1} layer ${layer + 1}`;
+                    halo.visible = false;
+                    halo.renderOrder = 2 + layer;
+                    halo.frustumCulled = false;
+                    part.add(halo);
+                    halos.push(halo);
+                }
+            }
             roots[role].add(part);
-            ledParts.push({ material, color });
+            ledParts.push({ material, color, halos });
         });
         roots.lift.position.y = LIFT_MIN;
         roots.tilt.position.y = LIFT_MIN;
@@ -6203,7 +6233,7 @@ function writeStore(key, value) {
 
 const LIFT_PRESET_KEY = 'ergoflex.liftPresetsV1';
 const TILT_PRESET_KEY = 'ergoflex.tiltPresetsV1';
-const ERGO_FORMS_KEY  = 'ergoflex.ergoFormsV1';
+const ERGO_FORMS_KEY  = 'ergoflex.ergoFormsV2';
 const DOCK_POS_KEY    = 'ergoflex.dockPosV1';
 
 const numberOrNull = (value, lo, hi) =>
@@ -6212,25 +6242,27 @@ const numberOrNull = (value, lo, hi) =>
 function loadLiftPresets() {
     const stored = readStore(LIFT_PRESET_KEY, 1, null);
     const slots = Array.isArray(stored?.slots) ? stored.slots : [];
-    return [0, 1, 2].map(i => numberOrNull(slots[i], HEIGHT_MIN, HEIGHT_MAX));
+    const defaults = [28, 42.5, 52];
+    return defaults.map((value, i) => numberOrNull(slots[i], HEIGHT_MIN, HEIGHT_MAX) ?? value);
 }
 function loadTiltPresets() {
     const stored = readStore(TILT_PRESET_KEY, 1, null);
     const slots = Array.isArray(stored?.slots) ? stored.slots : [];
-    return [0, 1, 2].map(i => numberOrNull(slots[i], -90, 90));
+    const defaults = [-5, 39, 65];
+    return defaults.map((value, i) => numberOrNull(slots[i], TILT_MIN, TILT_MAX) ?? value);
 }
 function loadErgoForms() {
     const fallback = [
         { name: 'Sitting', lift: 28, tilt: 0 },
-        { name: 'Stool', lift: 40, tilt: -5 },
-        { name: 'Standing', lift: 48, tilt: 0 }
+        { name: 'Standing', lift: 48, tilt: 0 },
+        { name: 'Easel', lift: 52, tilt: 65 }
     ];
-    const stored = readStore(ERGO_FORMS_KEY, 1, null);
+    const stored = readStore(ERGO_FORMS_KEY, 2, null);
     if (!Array.isArray(stored?.forms) || stored.forms.length !== 3) return fallback;
     return stored.forms.map((form, i) => ({
         name: typeof form?.name === 'string' && form.name.trim() ? form.name.slice(0, 24) : fallback[i].name,
         lift: numberOrNull(form?.lift, HEIGHT_MIN, HEIGHT_MAX),
-        tilt: numberOrNull(form?.tilt, -90, 90)
+        tilt: numberOrNull(form?.tilt, TILT_MIN, TILT_MAX)
     }));
 }
 
@@ -6433,7 +6465,7 @@ function speedSelect(id, label, value) {
 
 function chipRow(kind) {
     return `<div class="remote-chips" data-preset-bank="${kind}">` +
-        [1, 2, 3].map(n => `<button class="remote-chip" data-slot="${n - 1}" type="button">${n}<span class="caret">&#94;</span></button>`).join('') +
+        [1, 2, 3].map(n => `<button class="remote-chip" data-slot="${n - 1}" type="button"><span class="preset-value">${n}</span><span class="caret">&#94;</span></button>`).join('') +
         `</div>`;
 }
 
@@ -6600,9 +6632,12 @@ function renderPresetChips() {
         document.querySelectorAll(`[data-preset-bank="${kind}"] .remote-chip`).forEach(chip => {
             const value = bank[Number(chip.dataset.slot)];
             chip.dataset.saved = String(value !== null);
+            chip.querySelector('.preset-value').textContent = value === null ? String(Number(chip.dataset.slot) + 1)
+                : String(Number(value.toFixed(1)));
             chip.title = value === null
                 ? 'Empty. Press and hold to save the current ' + (kind === 'lift' ? 'height' : 'tilt') + '.'
                 : (kind === 'lift' ? value.toFixed(1) + '"' : value.toFixed(1) + '°') + ' — tap to recall, hold to overwrite.';
+            chip.setAttribute('aria-label', `${kind === 'lift' ? 'Height' : 'Tilt'} preset ${Number(chip.dataset.slot) + 1}: ${value === null ? 'empty' : chip.title}`);
         });
     }
 }
@@ -7115,7 +7150,7 @@ function wireRemote(dock, header) {
         const name = prompt('Name this Ergo Form', form.name);
         if (name && name.trim()) {
             form.name = name.trim().slice(0, 24);
-            writeStore(ERGO_FORMS_KEY, { v: 1, forms: ergoForms });
+            writeStore(ERGO_FORMS_KEY, { v: 2, forms: ergoForms });
             renderErgoForms();
             wireErgoForms();
         }
@@ -7136,7 +7171,7 @@ function wireErgoForms() {
                 form.lift = Number(liftToHeight(currentLift).toFixed(1));
                 const config = primaryTiltConfig();
                 form.tilt = config ? Number(config.currentDeg.toFixed(1)) : 0;
-                writeStore(ERGO_FORMS_KEY, { v: 1, forms: ergoForms });
+                writeStore(ERGO_FORMS_KEY, { v: 2, forms: ergoForms });
                 renderErgoForms();
                 wireErgoForms();
                 notifyUser(form.name + ' saved: ' + form.lift.toFixed(1) + '" at ' + form.tilt.toFixed(1) + '°.');

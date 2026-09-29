@@ -63,8 +63,14 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.ok(await page.evaluate(() => ErgoFlex.ledsEnabled &&
       [...ErgoFlex.partRegistry.values()].filter(({ obj }) => /^Touch_Screen(?:_|$)/.test(obj.name)).every(({ obj }) => !obj.visible)),
     'LEDs light and the animated screen replaces its stowed base meshes');
+    assert.ok(await page.evaluate(() => {
+      const glow = ErgoFlex.loadedModel.getObjectByName('LED glow 1 layer 1');
+      return glow?.visible && glow.material.blending === 2;
+    }), 'turning on the LEDs shows additive glow around them');
     await page.evaluate(() => { ErgoFlex.setTouchscreenOpen(false); ErgoFlex.setLedsEnabled(false); });
     await page.waitForFunction(() => ErgoFlex.touchscreenProgress < 0.01, { timeout: 10000 });
+    assert.equal(await page.evaluate(() => ErgoFlex.loadedModel.getObjectByName('LED glow 1 layer 1')?.visible), false,
+      'turning off the LEDs hides their glow');
     const clearance = await page.evaluate(() => {
       ErgoFlex.setTilt('tilting', 0); ErgoFlex.setHeight(28); ErgoFlex.setTilt('tilting', 65);
       const low = ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg;
@@ -672,21 +678,25 @@ function ErgoFlexDeviceMatches(size, id) {
 
     // Corrupt or foreign data must not take the panel down with it.
     const survived = await page.evaluate(() => {
-      for (const key of ['ergoflex.dockPosV1', 'ergoflex.liftPresetsV1', 'ergoflex.tiltPresetsV1', 'ergoflex.ergoFormsV1']) {
+      for (const key of ['ergoflex.dockPosV1', 'ergoflex.liftPresetsV1', 'ergoflex.tiltPresetsV1', 'ergoflex.ergoFormsV2']) {
         localStorage.setItem(key, '{"v":99,"slots":"not-an-array"');   // truncated AND wrong version
       }
       ErgoFlex.rebuildMotionRemote();
       return {
-        forms: document.querySelectorAll('.remote-form').length,
-        empty: [...document.querySelectorAll('.remote-chip')].every(c => c.dataset.saved === 'false')
+        forms: [...document.querySelectorAll('.remote-form')].map(c => c.textContent),
+        presetTitles: [...document.querySelectorAll('.remote-chip')].map(c => c.title),
+        ready: [...document.querySelectorAll('.remote-chip')].every(c => c.dataset.saved === 'true')
       };
     });
-    assert.equal(survived.forms, 3, 'corrupt storage falls back to the default Ergo Forms');
-    assert.ok(survived.empty, 'and to empty preset banks');
+    assert.deepEqual(survived.forms, ['Sitting', 'Standing', 'Easel'],
+      'corrupt storage falls back to the three updated Ergo Forms');
+    assert.ok(survived.ready, 'and to ready-to-try preset banks');
+    assert.deepEqual(survived.presetTitles.map(t => t.split(' —')[0]),
+      ['28.0"', '42.5"', '52.0"', '-5.0°', '39.0°', '65.0°']);
     // Clear up after ourselves: the corrupt values would otherwise still be there
     // for the next assertion to read.
     await page.evaluate(() => {
-      for (const key of ['ergoflex.dockPosV1', 'ergoflex.liftPresetsV1', 'ergoflex.tiltPresetsV1', 'ergoflex.ergoFormsV1']) localStorage.removeItem(key);
+      for (const key of ['ergoflex.dockPosV1', 'ergoflex.liftPresetsV1', 'ergoflex.tiltPresetsV1', 'ergoflex.ergoFormsV2']) localStorage.removeItem(key);
       ErgoFlex.rebuildMotionRemote();
     });
 
@@ -716,7 +726,7 @@ function ErgoFlexDeviceMatches(size, id) {
     // An Ergo Form carries a pose: both height and tilt.
     await page.evaluate(() => { ErgoFlex.setHeight(33); ErgoFlex.setTilt('tilting', 12); });
     await press('.remote-form', 750);
-    const pose = await page.evaluate(() => JSON.parse(localStorage.getItem('ergoflex.ergoFormsV1')).forms[0]);
+    const pose = await page.evaluate(() => JSON.parse(localStorage.getItem('ergoflex.ergoFormsV2')).forms[0]);
     assert.equal(pose.lift, 33, 'an Ergo Form saves the height');
     assert.equal(pose.tilt, 12, 'and the tilt alongside it');
 
