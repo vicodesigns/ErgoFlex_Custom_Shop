@@ -20,11 +20,14 @@ const SMALL_TRIM_MODEL_URL = './assets/trim/shelveanddesktopTrim.glb';
 const LARGE_DESKTOP_MODEL_URL = './assets/trim/desktopLwTrim.glb';
 const TOUCHSCREEN_PULLED_URL = './assets/motion/touchscreenPulledOut.glb';
 const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb';
+const TOUCHSCREEN_WIDE_URL = './assets/motion/touchscreenExtendedForWideDesktop.glb';
+const TOUCHSCREEN_FACE_URL = './assets/motion/panel_mainscreen_20260929_104051.png';
 const LED_MODEL_URL = './assets/motion/LEDS.glb';
 const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb';
 const LED_COLOR_KEY = 'ergoflex.ledColorV1';
 const LED_GLOW_KEY = 'ergoflex.ledGlowV1';
 const SCREEN_PIVOT = new THREE.Vector3(-141.99034318, 49.56108308, 0);
+const WIDE_SCREEN_PIVOT = new THREE.Vector3(-139.79, 49.56108308, 0);
 const SCREEN_SLIDE = 4.7;
 const SCREEN_TURN = THREE.MathUtils.degToRad(146.457954);
 let screenAssembly = null;
@@ -35,6 +38,7 @@ let ledDesktopFit = null;
 let ledStandardStrips = null;
 let ledExtendedStrips = null;
 let ledAreaLights = [];
+let ledSpillMaterials = [];
 let ledsEnabled = false;
 const TRIM_COLOR_KEY = 'ergoflex.trimColorV1';
 // The Rhino export has ten unnamed nodes, each split into many mesh primitives.
@@ -652,6 +656,10 @@ function initThreeJS() {
     scene.background = null;
 
     camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 0.1, 2000);
+    // Shelf and desktop LEDs use separate light-receiver layers to stand in
+    // for occlusion, which RectAreaLight does not support.
+    camera.layers.enable(1);
+    camera.layers.enable(2);
     camera.position.set(STARTING_POS.x, STARTING_POS.y, STARTING_POS.z);
 
     // WebGL can be unavailable (GPU process crash, hardware acceleration off).
@@ -1946,6 +1954,7 @@ function setLedColor(value, persist = true) {
         entry.material.emissive.set(value);
     });
     ledAreaLights.forEach(light => light.color.set(value));
+    ledSpillMaterials.forEach(material => material.uniforms.ledColor.value.set(value));
     const picker = document.getElementById('led-color');
     if (picker && picker.value !== value) picker.value = value;
     const readout = document.getElementById('led-color-value');
@@ -1992,6 +2001,7 @@ function syncSizeGeometry() {
     setVisible(sizeVariantParts.largeTop, extended);
     setVisible(sizeVariantParts.largeTrim, extended);
     syncLedSizeGeometry();
+    setScreenProgress(screenProgress);
     buildSceneTree();
 }
 
@@ -2141,18 +2151,39 @@ function makeOverlayNode(gltf, index, xShift, material, name) {
     return group;
 }
 
+function makeTouchscreenFace(gltf, xShift, pivot, turn, material, name) {
+    const face = makeOverlayNode(gltf, 0, xShift, material, name);
+    face.children.forEach(mesh => {
+        // Rhino's U runs across the short side of this panel and V along its
+        // long side. The supplied 1024x600 image runs the other way.
+        const uv = mesh.geometry.getAttribute('uv');
+        if (!uv) throw new Error('Touchscreen display mesh has no UV coordinates.');
+        for (let i = 0; i < uv.count; i++) {
+            const u = uv.getX(i), v = uv.getY(i);
+            uv.setXY(i, v, u);
+        }
+        uv.needsUpdate = true;
+        mesh.geometry.translate(-pivot.x, -pivot.y, 0);
+        mesh.geometry.rotateZ(-turn);
+    });
+    return face;
+}
+
 function setScreenProgress(value) {
     screenProgress = THREE.MathUtils.clamp(value, 0, 1);
     if (!screenAssembly) return;
-    const { moving, staticParts, baseParts } = screenAssembly;
+    const { variants, baseParts } = screenAssembly;
     const opened = screenProgress > 0.001;
     baseParts.forEach(mesh => { mesh.visible = !opened; });
-    moving.visible = opened;
-    staticParts.visible = opened;
     const slide = Math.min(1, screenProgress * 2);
     const turn = Math.max(0, (screenProgress - 0.5) * 2);
-    moving.position.x = SCREEN_PIVOT.x - SCREEN_SLIDE * (1 - slide);
-    moving.rotation.z = SCREEN_TURN * turn;
+    for (const [size, { moving, staticParts, pivot }] of Object.entries(variants)) {
+        const visible = opened && (size === (currentConfig.size === '60x30' ? 'wide' : 'standard'));
+        moving.visible = visible;
+        staticParts.visible = visible;
+        moving.position.x = pivot.x - SCREEN_SLIDE * (1 - slide);
+        moving.rotation.z = SCREEN_TURN * turn;
+    }
 }
 
 function setTouchscreenOpen(open) {
@@ -2164,12 +2195,17 @@ function setTouchscreenOpen(open) {
 
 async function loadTouchscreenAssembly() {
     try {
-        const [pulled, extended] = await Promise.all([
+        const [pulled, extended, wide, faceTexture] = await Promise.all([
             gltfLoader.loadAsync(TOUCHSCREEN_PULLED_URL),
-            gltfLoader.loadAsync(TOUCHSCREEN_EXTENDED_URL)
+            gltfLoader.loadAsync(TOUCHSCREEN_EXTENDED_URL),
+            gltfLoader.loadAsync(TOUCHSCREEN_WIDE_URL),
+            textureLoader.loadAsync(TOUCHSCREEN_FACE_URL)
         ]);
-        if (pulled.scene.children.length !== 7 || extended.scene.children.length !== 12)
+        if (pulled.scene.children.length !== 7 || extended.scene.children.length !== 12 || wide.scene.children.length !== 12)
             throw new Error('Touchscreen exports have changed; recheck the motion mapping.');
+        faceTexture.colorSpace = THREE.SRGBColorSpace;
+        faceTexture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+        const faceMaterial = new THREE.MeshBasicMaterial({ map: faceTexture, side: THREE.DoubleSide, toneMapped: false });
         const dark = new THREE.MeshPhysicalMaterial({ color: 0x10141c, metalness: 0.4, roughness: 0.27, side: THREE.DoubleSide });
         const glass = new THREE.MeshPhysicalMaterial({ color: 0x111b29, metalness: 0.1, roughness: 0.16, side: THREE.DoubleSide });
         const metal = new THREE.MeshStandardMaterial({ color: 0x444a50, metalness: 0.75, roughness: 0.32, side: THREE.DoubleSide });
@@ -2186,21 +2222,39 @@ async function loadTouchscreenAssembly() {
             moving.add(part);
         }
         // Extended node 0 is a detail absent from the pulled-out export.
-        const detail = makeOverlayNode(extended, 0, -200, dark, 'Touchscreen face detail');
-        detail.children.forEach(mesh => {
-            mesh.geometry.translate(-SCREEN_PIVOT.x, -SCREEN_PIVOT.y, 0);
-            mesh.geometry.rotateZ(-SCREEN_TURN);
-        });
-        moving.add(detail);
+        moving.add(makeTouchscreenFace(extended, -200, SCREEN_PIVOT, SCREEN_TURN,
+            faceMaterial, 'Standard touchscreen display'));
         const staticParts = new THREE.Group();
         staticParts.name = 'Touchscreen slide rails';
         for (const i of [5, 6]) staticParts.add(makeOverlayNode(pulled, i, -200, metal, `Touchscreen rail ${i}`));
         for (const i of [6, 7, 8, 9]) staticParts.add(makeOverlayNode(extended, i, -200, metal, `Touchscreen extension ${i}`));
-        root.add(staticParts, moving);
+        // The wide export is the authored final pose. Reverse the turn around
+        // its pivot once, so the same slide-and-turn animation lands exactly
+        // on the supplied geometry at full extension.
+        const wideMoving = new THREE.Group();
+        wideMoving.position.copy(WIDE_SCREEN_PIVOT);
+        wideMoving.add(makeTouchscreenFace(wide, -100, WIDE_SCREEN_PIVOT, SCREEN_TURN,
+            faceMaterial, 'Extended touchscreen display'));
+        for (const i of [1, 8, 9, 10, 11]) {
+            const part = makeOverlayNode(wide, i, -100, dark, `Extended touchscreen moving ${i}`);
+            part.children.forEach(mesh => {
+                mesh.geometry.translate(-WIDE_SCREEN_PIVOT.x, -WIDE_SCREEN_PIVOT.y, 0);
+                mesh.geometry.rotateZ(-SCREEN_TURN);
+            });
+            wideMoving.add(part);
+        }
+        const wideStatic = new THREE.Group();
+        wideStatic.name = 'Extended touchscreen slide rails';
+        for (const i of [2, 3, 4, 5, 6, 7])
+            wideStatic.add(makeOverlayNode(wide, i, -100, metal, `Extended touchscreen rail ${i}`));
+        root.add(staticParts, moving, wideStatic, wideMoving);
         loadedModel.add(root);
         const baseParts = [...partRegistry.values()].map(entry => entry.obj)
             .filter(obj => /^Touch_Screen(?:_|$)/.test(obj.name));
-        screenAssembly = { root, moving, staticParts, baseParts };
+        screenAssembly = { root, baseParts, variants: {
+            standard: { moving, staticParts, pivot: SCREEN_PIVOT },
+            wide: { moving: wideMoving, staticParts: wideStatic, pivot: WIDE_SCREEN_PIVOT }
+        } };
         setScreenProgress(screenProgress);
         return root;
     } catch (error) {
@@ -2219,32 +2273,94 @@ function setLedsEnabled(on) {
     });
     ledAreaLights.forEach(light => {
         light.visible = ledsEnabled && ledGlow > 0;
-        light.intensity = 0.08 * ledGlow / 100;
+        light.intensity = 0.25 * (light.userData.gain ?? 1) * ledGlow / 100;
+    });
+    ledSpillMaterials.forEach(material => {
+        material.uniforms.strength.value = ledsEnabled ? ledGlow / 100 : 0;
     });
     document.querySelectorAll('[data-led-toggle],.hub-led').forEach(button =>
         button.setAttribute('aria-pressed', String(ledsEnabled)));
 }
 
-function addLedAreaLight(part, parent) {
+function addLedAreaLight(part, parent, receiverLayer = 0) {
     part.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(part);
     const size = box.getSize(new THREE.Vector3());
     const majorX = size.x > size.z;
     const length = Math.max(size.x, size.z);
     if (length < 5) return;
-    // A long area source gives a continuous wash and specular reflection, with
-    // no single bright point on the wings at the low sitting height.
+    // The physical strip faces down from the shelf/desktop underside. A long,
+    // soft area source spreads its color across the panel below without the
+    // circular hotspots produced by point lights.
     const light = new THREE.RectAreaLight(ledColor, 0, length * 0.9, 2.4);
     light.name = `${part.name} soft LED wash`;
     light.position.copy(box.getCenter(new THREE.Vector3()));
-    light.position.y = box.min.y - 0.6;
+    light.position.y = box.min.y - 0.15;
     const right = majorX ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1);
+    // RectAreaLight emits from its local -Z face, so +Z points up here.
     const up = majorX ? new THREE.Vector3(0, 0, -1) : new THREE.Vector3(1, 0, 0);
     light.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(
         right, up, new THREE.Vector3(0, 1, 0)));
     light.visible = false;
+    light.layers.set(receiverLayer);
     parent.add(light);
     ledAreaLights.push(light);
+}
+
+function enableLedReceiver(object, layer) {
+    object?.traverse(child => {
+        if (child.isMesh) child.layers.enable(layer);
+    });
+}
+
+function addDesktopLedSpill(desktop) {
+    // The real lower-shelf strip makes a red pool near the rear of the top,
+    // fading before the keyboard edge. Reuse the desktop's exact mesh so the
+    // wash respects the curved edge and cutouts, including the 60-inch top.
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            ledColor: { value: new THREE.Color(ledColor) },
+            strength: { value: 0 }
+        },
+        vertexShader: `
+            varying vec3 ledPosition;
+            varying vec3 ledNormal;
+            void main() {
+                ledPosition = position;
+                ledNormal = normal;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 ledColor;
+            uniform float strength;
+            varying vec3 ledPosition;
+            varying vec3 ledNormal;
+            void main() {
+                float top = smoothstep(0.55, 0.95, normalize(ledNormal).y);
+                float dx = (ledPosition.x + 171.0) / 10.0;
+                float dz = (ledPosition.z + 327.0) / 23.0;
+                float pool = exp(-0.5 * (dx * dx + dz * dz));
+                float alpha = min(0.9, 0.52 * strength * pool * top);
+                gl_FragColor = vec4(ledColor, alpha);
+                #include <tonemapping_fragment>
+                #include <colorspace_fragment>
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+        side: THREE.FrontSide
+    });
+    const spill = new THREE.Mesh(desktop.geometry, material);
+    spill.name = `${desktop.name} LED reflection`;
+    spill.renderOrder = 1;
+    spill.raycast = () => {};
+    desktop.add(spill);
+    ledSpillMaterials.push(material);
 }
 
 function revealCenterLed(part, desktopGeometry) {
@@ -2279,6 +2395,7 @@ async function loadLedOverlay() {
         roots.tilt.add(ledDesktopFit);
         ledParts = [];
         ledAreaLights = [];
+        ledSpillMaterials = [];
         RectAreaLightUniformsLib.init();
         gltf.scene.children.forEach((_, index) => {
             const color = index >= 3 && index <= 37 ? 0xff2828 : ledColor;
@@ -2313,7 +2430,19 @@ async function loadLedOverlay() {
         revealCenterLed(wideCenter, sizeVariantParts.largeTop.geometry);
         for (const part of ledStandardStrips.children.slice()) addLedAreaLight(part, ledStandardStrips);
         for (const part of ledExtendedStrips.children.slice()) addLedAreaLight(part, ledExtendedStrips);
-        for (const index of [39, 40, 41, 42]) addLedAreaLight(ledParts[index].part, roots.lift);
+        const lowerShelf = [...partRegistry.values()].find(({ obj }) => obj.name === 'Top_Shelf_3')?.obj;
+        if (!lowerShelf) throw new Error('Lower shelf LED receiver is missing.');
+        enableLedReceiver(lowerShelf, 1);
+        enableLedReceiver(sizeVariantParts.smallTop, 2);
+        enableLedReceiver(sizeVariantParts.largeTop, 2);
+        addDesktopLedSpill(sizeVariantParts.smallTop);
+        addDesktopLedSpill(sizeVariantParts.largeTop);
+        // The upper shelf lights wash the lower shelf. The lower shelf light
+        // washes the desktop. This prevents illumination through the panels.
+        for (const index of [39, 40, 41, 42]) {
+            addLedAreaLight(ledParts[index].part, roots.lift, index === 39 ? 2 : 1);
+            if (index === 39) ledAreaLights.at(-1).userData.gain = 0.12;
+        }
         roots.tilt.add(ledStandardStrips, ledExtendedStrips);
         roots.lift.position.y = LIFT_MIN;
         roots.tilt.position.y = LIFT_MIN;

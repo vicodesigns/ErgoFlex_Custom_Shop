@@ -63,6 +63,29 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.ok(await page.evaluate(() => ErgoFlex.ledsEnabled &&
       [...ErgoFlex.partRegistry.values()].filter(({ obj }) => /^Touch_Screen(?:_|$)/.test(obj.name)).every(({ obj }) => !obj.visible)),
     'LEDs light and the animated screen replaces its stowed base meshes');
+    const screenDisplay = async () => page.evaluate(() => {
+      const model = ErgoFlex.loadedModel;
+      const standard = model.getObjectByName('Standard touchscreen display');
+      const wide = model.getObjectByName('Extended touchscreen display');
+      const image = wide?.children[0]?.material?.map?.image;
+      return {
+        standard: standard?.parent?.visible, wide: wide?.parent?.visible,
+        imageWidth: image?.naturalWidth, imageHeight: image?.naturalHeight,
+        faceU: Math.round(wide?.children[0]?.geometry?.attributes?.uv?.getX(0) * 1000),
+        widePieces: wide?.parent?.children?.length,
+        rails: model.getObjectByName('Extended touchscreen slide rails')?.children?.length
+      };
+    });
+    assert.deepEqual(await screenDisplay(), {
+      standard: true, wide: false, imageWidth: 1024, imageHeight: 600, faceU: 1000,
+      widePieces: 6, rails: 6
+    }, 'the supplied controls are mapped to the standard screen and the wide export loads');
+    await page.select('#size-select', '60x30');
+    assert.deepEqual(await screenDisplay(), {
+      standard: false, wide: true, imageWidth: 1024, imageHeight: 600, faceU: 1000,
+      widePieces: 6, rails: 6
+    }, 'the 60-inch size switches to its authored touchscreen without resetting the animation');
+    await page.select('#size-select', '48x30');
     assert.ok(await page.evaluate(() => {
       const model = ErgoFlex.loadedModel;
       const standard = model.getObjectByName('Standard desktop underside LEDs');
@@ -76,8 +99,12 @@ function ErgoFlexDeviceMatches(size, id) {
         extended.children.some(child => child.name === 'Extended desktop center LED') &&
         ledPointLights === 0 && standard.children.some(child => child.isRectAreaLight) &&
         [...model.getObjectByName('Desktop LED size fit').children].every(child => !child.visible) &&
+        model.getObjectByName('Top_Shelf_3')?.layers.isEnabled(1) &&
+        model.getObjectByName('Standard desktop LED reflection')?.material?.uniforms?.strength?.value > 0 &&
+        model.getObjectByName('Shelf LEDs 40 soft LED wash')?.layers.isEnabled(2) &&
+        model.getObjectByName('Shelf LEDs 41 soft LED wash')?.layers.isEnabled(1) &&
         !model.getObjectByName('LED glow 1 layer 1');
-    }), 'three authored desktop LEDs load without spotlight hotspots or floating source details');
+    }), 'authored LEDs light their facing panels and make a soft desktop reflection');
     const ledColor = await page.evaluate(() => {
       ErgoFlex.setLedColor('#ff8800');
       let emissive;
@@ -112,6 +139,9 @@ function ErgoFlexDeviceMatches(size, id) {
       return intensity;
     }), 0,
       'turning off the LEDs disables emissive desktop strips');
+    assert.equal(await page.evaluate(() => ErgoFlex.loadedModel
+      .getObjectByName('Standard desktop LED reflection')?.material.uniforms.strength.value), 0,
+    'turning off the LEDs also removes their desktop reflection');
     const clearance = await page.evaluate(() => {
       ErgoFlex.setTilt('tilting', 0); ErgoFlex.setHeight(28); ErgoFlex.setTilt('tilting', 65);
       const low = ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg;

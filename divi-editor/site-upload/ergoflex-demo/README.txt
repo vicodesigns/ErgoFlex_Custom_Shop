@@ -8,7 +8,7 @@ for its Hosted 3D viewer URL.
 
 The base model is fetched from the existing public Store/model/full.glb URL.
 The trim and Extended desktop GLBs are included in assets/trim.
-The animated touchscreen and both desktop-size LED GLBs are included in assets/motion.
+Both animated touchscreen sizes, the touchscreen image, and both desktop-size LED GLBs are included in assets/motion.
 The player lets viewers switch between Standard 48-inch and Extended 60-inch
 desktops, with red trim and the updated birch finish.
 The LED toggle, color picker, and glow slider use emissive meshes with soft panel illumination.
