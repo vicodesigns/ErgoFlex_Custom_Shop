@@ -64,13 +64,19 @@ function ErgoFlexDeviceMatches(size, id) {
       [...ErgoFlex.partRegistry.values()].filter(({ obj }) => /^Touch_Screen(?:_|$)/.test(obj.name)).every(({ obj }) => !obj.visible)),
     'LEDs light and the animated screen replaces its stowed base meshes');
     assert.ok(await page.evaluate(() => {
-      const glow = ErgoFlex.loadedModel.getObjectByName('LED glow 1 layer 1');
-      return glow?.visible && glow.material.blending === 2;
-    }), 'turning on the LEDs shows additive glow around them');
+      const model = ErgoFlex.loadedModel;
+      const standard = model.getObjectByName('Standard desktop edge LEDs');
+      const extended = model.getObjectByName('Extended desktop edge LEDs');
+      const light = model.getObjectByName('Standard desktop min illumination');
+      return standard?.visible && !extended?.visible && light?.visible &&
+        standard.children.filter(child => child.isMesh).length === 2 &&
+        extended.children.filter(child => child.isMesh).length === 2 &&
+        !model.getObjectByName('LED glow 1 layer 1');
+    }), 'desktop LEDs follow the top contours and illuminate nearby surfaces without enlarged mesh patches');
     await page.evaluate(() => { ErgoFlex.setTouchscreenOpen(false); ErgoFlex.setLedsEnabled(false); });
     await page.waitForFunction(() => ErgoFlex.touchscreenProgress < 0.01, { timeout: 10000 });
-    assert.equal(await page.evaluate(() => ErgoFlex.loadedModel.getObjectByName('LED glow 1 layer 1')?.visible), false,
-      'turning off the LEDs hides their glow');
+    assert.equal(await page.evaluate(() => ErgoFlex.loadedModel.getObjectByName('Standard desktop min illumination')?.visible), false,
+      'turning off the LEDs disables surface illumination');
     const clearance = await page.evaluate(() => {
       ErgoFlex.setTilt('tilting', 0); ErgoFlex.setHeight(28); ErgoFlex.setTilt('tilting', 65);
       const low = ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg;
@@ -79,13 +85,20 @@ function ErgoFlexDeviceMatches(size, id) {
       const size = document.getElementById('size-select');
       size.value = '60x30'; size.dispatchEvent(new Event('change', { bubbles: true }));
       const extendedHeight = ErgoFlex.heightInches;
+      const extendedLedsVisible = ErgoFlex.loadedModel.getObjectByName('Extended desktop edge LEDs')?.visible;
       ErgoFlex.setTilt('tilting', 0); size.value = '48x30'; size.dispatchEvent(new Event('change', { bubbles: true }));
       ErgoFlex.setHeight(28);
-      return { low, standard, extendedHeight };
+      return { low, standard, extendedHeight,
+        extendedLedsVisible,
+        extendedLeds: ErgoFlex.loadedModel.getObjectByName('Extended desktop edge LEDs')?.visible,
+        standardLeds: ErgoFlex.loadedModel.getObjectByName('Standard desktop edge LEDs')?.visible };
     });
     assert.equal(clearance.low, 39, '28 inches limits the desktop to 39 degrees');
     assert.equal(clearance.standard, 65, 'Standard reaches 65 degrees at 40.5 inches');
     assert.equal(clearance.extendedHeight, 42.5, 'Extended rises to its 42.5-inch clearance');
+    assert.equal(clearance.extendedLedsVisible, true, 'Extended uses contour-fitted desktop LEDs');
+    assert.equal(clearance.extendedLeds, false, 'switching back to Standard hides the Extended edge strips');
+    assert.equal(clearance.standardLeds, true, 'switching back to Standard restores its matching edge strips');
     const lighting = await page.evaluate(async () => {
       const { ROOM_ATMOSPHERES } = await import('/workspace-3d.mjs');
       ErgoFlex.setRoomScene('music', false);

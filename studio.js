@@ -27,6 +27,10 @@ let screenAssembly = null;
 let screenProgress = 0;
 let screenTarget = 0;
 let ledParts = [];
+let ledDesktopFit = null;
+let ledStandardStrips = null;
+let ledExtendedStrips = null;
+let ledContourLights = [];
 let ledsEnabled = false;
 const TRIM_COLOR_KEY = 'ergoflex.trimColorV1';
 // The Rhino export has ten unnamed nodes, each split into many mesh primitives.
@@ -1945,7 +1949,99 @@ function syncSizeGeometry() {
     setVisible(sizeVariantParts.smallTrim, !extended);
     setVisible(sizeVariantParts.largeTop, extended);
     setVisible(sizeVariantParts.largeTrim, extended);
+    syncLedSizeGeometry();
     buildSceneTree();
+}
+
+function syncLedSizeGeometry() {
+    if (!ledDesktopFit || !sizeVariantParts) return;
+    ledDesktopFit.position.set(0, 0, 0);
+    ledDesktopFit.scale.set(1, 1, 1);
+    const extendedSize = currentConfig.size === '60x30';
+    // The exported cyan bars follow only the Standard top's straight layout.
+    // Both displayed sizes use contour-fitted strips below instead.
+    for (const index of [0, 1, 2]) if (ledParts[index]) ledParts[index].part.visible = false;
+    if (ledStandardStrips) ledStandardStrips.visible = !extendedSize;
+    if (ledExtendedStrips) ledExtendedStrips.visible = extendedSize;
+    if (!extendedSize) return;
+    const standard = sizeVariantParts.smallTrim.geometry;
+    const extended = sizeVariantParts.largeTrim.geometry;
+    standard.computeBoundingBox();
+    extended.computeBoundingBox();
+    const a = standard.boundingBox;
+    const b = extended.boundingBox;
+    const sx = (b.max.x - b.min.x) / (a.max.x - a.min.x);
+    const sy = (b.max.y - b.min.y) / (a.max.y - a.min.y);
+    const sz = (b.max.z - b.min.z) / (a.max.z - a.min.z);
+    const offset = new THREE.Vector3(
+        (b.min.x + b.max.x - sx * (a.min.x + a.max.x)) / 2,
+        (b.min.y + b.max.y - sy * (a.min.y + a.max.y)) / 2,
+        (b.min.z + b.max.z - sz * (a.min.z + a.max.z)) / 2
+    );
+    ledDesktopFit.scale.set(sx, sy, sz);
+    ledDesktopFit.position.copy(offset);
+}
+
+function makeContourLedStrips(desktop, material, label) {
+    const root = new THREE.Group();
+    root.name = `${label} desktop edge LEDs`;
+    const surface = new THREE.Mesh(desktop, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+    surface.updateMatrixWorld(true);
+    const ray = new THREE.Raycaster();
+    ray.ray.direction.set(0, -1, 0);
+    ray.far = 200;
+    desktop.computeBoundingBox();
+    const extent = desktop.boundingBox;
+    const start = extent.min.x + 1;
+    const end = extent.max.x - 1;
+    const positions = desktop.getAttribute('position');
+    const indices = desktop.index;
+    const count = indices ? indices.count : positions.count;
+    // Intersect each X station with the desktop triangles to find both side
+    // edges. This captures the Extended top's concave cutout without stretching
+    // a straight strip across open space.
+    const edgeStations = [];
+    for (let step = 0; step <= 30; step++) {
+        const x = start + (end - start) * step / 30;
+        let zMin = Infinity, zMax = -Infinity;
+        for (let i = 0; i < count; i += 3) {
+            const ids = [0, 1, 2].map(j => indices ? indices.getX(i + j) : i + j);
+            for (let j = 0; j < 3; j++) {
+                const a = ids[j], b = ids[(j + 1) % 3];
+                const ax = positions.getX(a), bx = positions.getX(b);
+                if ((x - ax) * (x - bx) > 0 || Math.abs(bx - ax) < 1e-6) continue;
+                const t = (x - ax) / (bx - ax);
+                const z = positions.getZ(a) + t * (positions.getZ(b) - positions.getZ(a));
+                zMin = Math.min(zMin, z);
+                zMax = Math.max(zMax, z);
+            }
+        }
+        if (isFinite(zMin) && zMax - zMin >= 3) edgeStations.push({ x, zMin, zMax });
+    }
+    for (const side of ['min', 'max']) {
+        const points = [];
+        for (const { x, zMin, zMax } of edgeStations) {
+            const z = side === 'min' ? zMin + 1.2 : zMax - 1.2;
+            ray.ray.origin.set(x, 100, z);
+            const hit = ray.intersectObject(surface, false)[0];
+            if (hit) points.push(new THREE.Vector3(x, hit.point.y + 0.18, z));
+        }
+        if (points.length < 3) continue;
+        const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal');
+        const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, points.length * 3, 0.16, 5, false), material);
+        mesh.name = `${label} desktop ${side} edge LED`;
+        mesh.castShadow = false;
+        root.add(mesh);
+        const light = new THREE.PointLight(0x40eaff, 1.2, 0.35, 2);
+        light.name = `${label} desktop ${side} illumination`;
+        light.position.copy(points[Math.floor(points.length / 2)]);
+        light.position.y += 10;
+        light.visible = false;
+        root.add(light);
+        ledContourLights.push(light);
+    }
+    surface.material.dispose();
+    return root;
 }
 
 async function loadTrimOverlay() {
@@ -2154,12 +2250,13 @@ async function loadTouchscreenAssembly() {
 function setLedsEnabled(on) {
     ledsEnabled = !!on;
     document.body.dataset.ledsEnabled = String(ledsEnabled);
-    ledParts.forEach(({ material, color, halos }) => {
+    ledParts.forEach(({ material, color, lights }) => {
         material.color.set(color).multiplyScalar(ledsEnabled ? 1 : 0.12);
         material.emissive.set(color);
         material.emissiveIntensity = ledsEnabled ? 2.2 : 0;
-        halos.forEach(halo => { halo.visible = ledsEnabled; });
+        lights.forEach(light => { light.visible = ledsEnabled; });
     });
+    ledContourLights.forEach(light => { light.visible = ledsEnabled; });
     document.querySelectorAll('[data-led-toggle],.hub-led').forEach(button =>
         button.setAttribute('aria-pressed', String(ledsEnabled)));
 }
@@ -2173,8 +2270,11 @@ async function loadLedOverlay() {
         roots.base.name = 'Base LEDs';
         roots.lift.name = 'Shelf LEDs';
         roots.tilt.name = 'Desktop LEDs';
+        ledDesktopFit = new THREE.Group();
+        ledDesktopFit.name = 'Desktop LED size fit';
+        roots.tilt.add(ledDesktopFit);
         ledParts = [];
-        const haloMaterials = new Map();
+        ledContourLights = [];
         gltf.scene.children.forEach((_, index) => {
             const color = index >= 3 && index <= 37 ? 0xff2828 : 0x40eaff;
             const material = new THREE.MeshStandardMaterial({ color, emissive: color,
@@ -2182,41 +2282,36 @@ async function loadLedOverlay() {
                 polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
             const role = index === 38 ? 'base' : index >= 39 ? 'lift' : 'tilt';
             const part = makeOverlayNode(gltf, index, -100, material, `${roots[role].name} ${index + 1}`);
-            if (!haloMaterials.has(color)) {
-                haloMaterials.set(color, [0.18, 0.05].map(opacity => new THREE.MeshBasicMaterial({
-                    color, transparent: true, opacity, blending: THREE.AdditiveBlending,
-                    depthWrite: false, side: THREE.DoubleSide, toneMapped: false,
-                    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
-                })));
+            const lights = [];
+            if (index >= 38) {
+                const center = new THREE.Box3().setFromObject(part).getCenter(new THREE.Vector3());
+                const light = new THREE.PointLight(color, 0.08, 0.35, 2);
+                light.name = `LED illumination ${index + 1}`;
+                light.position.copy(center);
+                light.position.y += 18;
+                light.visible = false;
+                light.castShadow = false;
+                part.add(light);
+                lights.push(light);
             }
-            const halos = [];
-            for (const mesh of [...part.children]) {
-                mesh.geometry.computeBoundingBox();
-                const box = mesh.geometry.boundingBox;
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                for (const [layer, spread] of [1, 3].entries()) {
-                    const geometry = mesh.geometry.clone();
-                    geometry.translate(-center.x, -center.y, -center.z);
-                    geometry.scale(...['x', 'y', 'z'].map(axis =>
-                        Math.min(4, 1 + spread / Math.max(size[axis], 0.2))));
-                    geometry.translate(center.x, center.y, center.z);
-                    const halo = new THREE.Mesh(geometry, haloMaterials.get(color)[layer]);
-                    halo.name = `LED glow ${index + 1} layer ${layer + 1}`;
-                    halo.visible = false;
-                    halo.renderOrder = 2 + layer;
-                    halo.frustumCulled = false;
-                    part.add(halo);
-                    halos.push(halo);
-                }
-            }
-            roots[role].add(part);
-            ledParts.push({ material, color, halos });
+            (role === 'tilt' ? ledDesktopFit : roots[role]).add(part);
+            ledParts.push({ part, material, color, lights });
         });
+        const standardTop = sizeVariantParts.smallTop;
+        standardTop.updateMatrixWorld(true);
+        loadedModel.updateMatrixWorld(true);
+        const standardGeometry = standardTop.geometry.clone();
+        standardGeometry.applyMatrix4(loadedModel.matrixWorld.clone().invert().multiply(standardTop.matrixWorld));
+        standardGeometry.translate(0, -LIFT_MIN, 0);
+        ledStandardStrips = makeContourLedStrips(standardGeometry, ledParts[0].material, 'Standard');
+        standardGeometry.dispose();
+        ledExtendedStrips = makeContourLedStrips(sizeVariantParts.largeTop.geometry, ledParts[0].material, 'Extended');
+        roots.tilt.add(ledStandardStrips, ledExtendedStrips);
         roots.lift.position.y = LIFT_MIN;
         roots.tilt.position.y = LIFT_MIN;
         for (const root of Object.values(roots)) loadedModel.add(root);
         liftObjects.set(roots.lift, { obj: roots.lift, baseY: roots.lift.position.y });
+        syncLedSizeGeometry();
         [...partRegistry.values()].forEach(({ obj }) => {
             if (/^Leds(?:_|$)/.test(obj.name)) obj.visible = false;
         });
@@ -2249,6 +2344,10 @@ function loadModel() {
         sizeVariantParts = null;
         screenAssembly = null;
         ledParts = [];
+        ledDesktopFit = null;
+        ledStandardStrips = null;
+        ledExtendedStrips = null;
+        ledContourLights = [];
         boxHelpers.forEach(h => scene.remove(h));
         boxHelpers.clear();
         editorIdCounter = 0;
