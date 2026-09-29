@@ -406,6 +406,7 @@
     touch-action: none; cursor: grab;
 }
 .remote-compass:active { cursor: grabbing; }
+.remote-compass[data-turning="true"] .dial-groove { stroke: var(--fill); stroke-opacity: .9; }
 .remote-compass svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 /* Every part of the dial is themed from CSS rather than baked into the SVG.
    stop-color especially has to be set here: var() is not valid in an SVG
@@ -1123,10 +1124,14 @@
 .remote-wellness-hub .hub-tile svg { width: 20px; height: 20px; }
 .hub-led {
     flex: none; min-width: 54px; height: 24px; border: 0; border-radius: 12px;
-    background: var(--danger); color: #fff; cursor: not-allowed;
+    background: var(--danger); color: #fff; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
 }
 .hub-led svg { width: 16px; height: 16px; }
+.hub-led[aria-pressed="true"] { background: #e60505; box-shadow: 0 0 10px #e60505; }
+.hub-screen { border: 1px solid var(--fill); border-radius: 12px; background: transparent;
+    color: var(--fill); font: inherit; font-size: 11px; padding: 3px 8px; cursor: pointer; }
+.hub-screen[aria-pressed="true"] { background: var(--fill); color: var(--dial-plate); }
 .remote-wellness-hub .remote-info { margin-left: 2px; flex: none; }
 
 /* ── Fold 5 unfolded, upright ────────────────────────────────────────────── */

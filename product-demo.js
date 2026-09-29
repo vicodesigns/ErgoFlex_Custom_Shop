@@ -4,6 +4,8 @@ const demo = document.createElement('section');
 demo.id = 'event-demo';
 demo.innerHTML = `<div class="demo-top"><strong>Explore ErgoFlex in 3D</strong><div class="demo-top-controls"><div class="demo-size" role="group" aria-label="Desktop size"><span>Desktop</span><button type="button" data-demo-size="48x30" aria-pressed="true" disabled>48″ Standard</button><button type="button" data-demo-size="60x30" aria-pressed="false" disabled>60″ Extended</button></div><label>Backdrop <select id="demo-backdrop"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label></div></div><div id="demo-stage"><div id="demo-viewer"></div><div class="demo-app-tools"><span class="demo-swipe-hint">The complete wide app layout.</span><button id="demo-control-size" type="button">View larger</button></div><div id="demo-remote" role="region" tabindex="0" aria-label="Interactive ErgoFlex app controls"></div></div><p class="demo-note" role="status">Loading the workstation…</p>`;
 document.body.append(demo);
+demo.querySelector('.demo-top-controls').insertAdjacentHTML('beforeend',
+  '<button class="demo-action" data-led-toggle type="button" aria-pressed="false" disabled>LEDs off</button><button class="demo-action" data-touchscreen-toggle type="button" aria-pressed="false" disabled>Extend screen</button>');
 document.querySelector('#demo-viewer').append(document.querySelector('#viewer-shell'));
 const start = Date.now();
 const ready = setInterval(() => {
@@ -65,6 +67,20 @@ const ready = setInterval(() => {
   }));
   sizeSelect.addEventListener('change', syncDemoSize);
   syncDemoSize();
+  const ledButton = demo.querySelector('[data-led-toggle]');
+  const screenButton = demo.querySelector('[data-touchscreen-toggle]');
+  ledButton.disabled = false;
+  screenButton.disabled = false;
+  const syncActions = () => {
+    ledButton.setAttribute('aria-pressed', String(api.ledsEnabled));
+    ledButton.textContent = api.ledsEnabled ? 'LEDs on' : 'LEDs off';
+    screenButton.setAttribute('aria-pressed', String(api.touchscreenOpen));
+    screenButton.textContent = api.touchscreenOpen ? 'Stow screen' : 'Extend screen';
+  };
+  ledButton.addEventListener('click', () => { api.setLedsEnabled(!api.ledsEnabled); syncActions(); });
+  screenButton.addEventListener('click', () => { api.setTouchscreenOpen(!api.touchscreenOpen); syncActions(); });
+  syncActions();
+  setInterval(syncActions, 250);
   demo.querySelector('.demo-note').textContent='Drag the desk to rotate · Scroll or pinch to zoom · Use the ErgoFlex app controls to move the 3D workstation.';
   const fitFrame = () => {
     try {

@@ -51,11 +51,11 @@ again with room beneath it.
 ## Turning the desk in place
 
 The compass is two controls. The dish steers the glide; **the outer ring turns
-the desk in place**. The band is the app's own — `0.62` to `1.02` of the outer
-radius — wide enough to catch the visible capsules without swallowing the dish.
+the desk in place**. The turning target starts halfway out from the center, so
+the visible ring is easy to grab. Hold the Left or Right button for a precise turn.
 
 It is a **momentary jog, not a position dial**
-(`movement_and_rotation_joystick.dart:361-383, 588-598`): twist past 5° and the
+(`movement_and_rotation_joystick.dart:361-383, 588-598`): twist past 3° and the
 desk turns for as long as you hold it; release and it stops and the ring springs
 back to zero.
 
@@ -97,10 +97,12 @@ outer viewer, and re-clamped whenever that rectangle can change: the viewer's
 
 | Control | Behaviour |
 |---|---|
-| Glide compass | drag the dish, or focus it and hold an arrow key; twist the outer ring to turn in place |
+| Glide compass | drag the inner half, or focus it and hold an arrow key; twist the outer half or hold Left/Right to turn in place |
 | Glide speed | Crawl / Ninja / Slow / Medium / Fast |
 | Height | editable readout, a centred jog track, and a speed |
 | Tilt | editable readout, a 120° crescent jog track, and a speed |
+| Touchscreen | slides out, then rotates to face the user; tap again to stow |
+| LEDs | turns the desk, shelf, and base lights on or off |
 | Preset banks | **separate** for lift and tilt — tap recalls, press and hold saves |
 | Ergo Forms | a combined pose: height *and* tilt. Double-click to rename |
 | Stop | freezes everything exactly where it is |
@@ -282,7 +284,7 @@ the sphere all stay on one code path.
 
 It was broken for a while, and the way it broke is worth keeping: `syncTiltUI()`
 kept re-authoring the track's `min`/`max` from the rig, as if it were still a
-position slider. The only rig runs `-70..0`, so `max` became the string `"0"` —
+position slider. The old rig ran `-70..0`, so `max` became the string `"0"` —
 truthy, so `Number(slider.max || 1)` never fell back — and the normaliser
 divided by zero. At rest that was `NaN` and nothing moved; pulled down it was
 `-Infinity` and the desk hit its limit inside one frame; and up was unreachable,

@@ -17,6 +17,10 @@ body> :not(#event-demo):not(script):not(style):not(link){display:none!important}
 .demo-size button[aria-pressed="true"]{border-color:#8e2c9d;background:#f6e8fa;color:#621c72;font-weight:700}
 .demo-size button:disabled{cursor:wait;opacity:.55}
 .demo-size button:focus-visible{outline:2px solid #8e2c9d;outline-offset:2px}
+.demo-action{border:1px solid #c9bdce;border-radius:8px;background:#fff;color:#251b2b;padding:7px 10px;font-size:13px;cursor:pointer}
+.demo-action[aria-pressed="true"]{border-color:#e60505;background:#fff0f0;color:#a60000;font-weight:700}
+.demo-action:disabled{opacity:.55;cursor:wait}
+.demo-action:focus-visible{outline:2px solid #8e2c9d;outline-offset:2px}
 #demo-backdrop{padding:8px;border:1px solid #d9cddd;border-radius:8px;background:white;color:#251b2b}
 #event-demo #viewer-shell{position:relative!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;height:100%!important;min-height:0!important;width:100%!important;max-width:none!important;margin:0!important;border-radius:16px;display:block!important;overflow:hidden}
 #event-demo #viewer-shell .viewer-heading,#event-demo #viewer-shell .viewer-controls,#event-demo #viewer-shell #room-scene-caption{display:none!important}

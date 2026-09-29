@@ -10,14 +10,14 @@ OUT = ROOT / 'divi-editor' / 'site-upload' / 'ergoflex-demo'
 FILES = (
     'product-demo.html', 'product-demo.css', 'product-demo.js',
     'studio.js', 'studio.css', 'app-remote.css',
-    'catalog.mjs', 'project-io.mjs', 'validation.mjs',
+    'catalog.mjs', 'project-io.mjs', 'validation.mjs', 'motion-limits.mjs',
     'workspace-3d.mjs', 'workspace-icons.mjs', 'bir.jpg',
 )
 
 OUT.mkdir(parents=True, exist_ok=True)
 for name in FILES:
     shutil.copy2(ROOT / name, OUT / name)
-for folder in ('assets/app-icons', 'assets/wood', 'assets/trim'):
+for folder in ('assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion'):
     shutil.copytree(ROOT / folder, OUT / folder, dirs_exist_ok=True)
 
 # The page's only scene is Product. Its 3D model is already hosted at the public
@@ -32,13 +32,14 @@ for folder in ('assets/app-icons', 'assets/wood', 'assets/trim'):
     'for its Hosted 3D viewer URL.\n\n'
     'The base model is fetched from the existing public Store/model/full.glb URL.\n'
     'The trim and Extended desktop GLBs are included in assets/trim.\n'
+    'The animated touchscreen and LED GLBs are included in assets/motion.\n'
     'The player lets viewers switch between Standard 48-inch and Extended 60-inch\n'
     'desktops, with red trim and the updated birch finish.\n'
     'The shared Studio code also includes live grain visibility and sheen controls.\n'
     'This bundle bakes the Studio tilt group with 32 moving parts.\n'
     'The app keeps its wide layout on mobile and fits the full panel to the screen.\n'
     'View larger opens full-size controls with horizontal scrolling.\n'
-    'Lift and tilt default to Fast.\n'
+    'Lift and tilt default to Fast. The clearance envelope limits tilt at low heights.\n'
     'If the Studio tilt rig changes again, rebuild this bundle and upload again.\n'
 )
 

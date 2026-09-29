@@ -7,6 +7,7 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
          ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=grain-controls-20260928';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
+import { TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs';
 import { accessoryIllustration } from './workspace-icons.mjs';
@@ -16,6 +17,17 @@ const EVENT_DEMO = location.pathname.endsWith('/product-demo.html');
 const TRIM_MODEL_URL = './assets/trim/fullTrim.glb';
 const SMALL_TRIM_MODEL_URL = './assets/trim/shelveanddesktopTrim.glb';
 const LARGE_DESKTOP_MODEL_URL = './assets/trim/desktopLwTrim.glb';
+const TOUCHSCREEN_PULLED_URL = './assets/motion/touchscreenPulledOut.glb';
+const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb';
+const LED_MODEL_URL = './assets/motion/LEDS.glb';
+const SCREEN_PIVOT = new THREE.Vector3(-141.99034318, 49.56108308, 0);
+const SCREEN_SLIDE = 4.7;
+const SCREEN_TURN = THREE.MathUtils.degToRad(146.457954);
+let screenAssembly = null;
+let screenProgress = 0;
+let screenTarget = 0;
+let ledParts = [];
+let ledsEnabled = false;
 const TRIM_COLOR_KEY = 'ergoflex.trimColorV1';
 // The Rhino export has ten unnamed nodes, each split into many mesh primitives.
 // These labels and rest-pose roles
@@ -990,7 +1002,15 @@ function withNeutralPose(fn) {
     try {
         if (glideOffset.lengthSq() > 0) applyGlideOffset(new THREE.Vector3(0, 0, 0));
         wheelRigs.forEach(rig => { rig.spin = 0; rig.wrapper.rotation.z = 0; });
-        tiltConfigs.forEach(config => { config.currentDeg = 0; applyTiltConfig(config); });
+        // Neutral here means the authored GLB transform, which is the physical
+        // -5-degree desk pose. Keep the editor's numeric neutral at zero while
+        // clearing the wrapper rotation directly for transform deltas.
+        tiltConfigs.forEach(config => {
+            config.currentDeg = 0;
+            config.wrapperGroup.rotation.set(0, 0, 0);
+            config.wrapperGroup.updateMatrixWorld(true);
+        });
+        updateActuatorRigs();
         manualLiftOverride = true;
         currentLift = LIFT_MIN;
         targetLift = LIFT_MIN;
@@ -1903,6 +1923,17 @@ function setTrimColor(value, persist = true) {
 
 function syncSizeGeometry() {
     if (!sizeVariantParts) return;
+    // Switching from Standard to Extended at a steep tilt needs two more inches
+    // of clearance. Raise first, then reveal the larger desktop mesh.
+    const tilt = primaryTiltConfig()?.currentDeg ?? 0;
+    const minimum = minimumHeightForTilt(tilt, currentConfig.size);
+    if (liftToHeight(currentLift) < minimum - 0.001) {
+        currentLift = heightToLift(minimum);
+        targetLift = Math.max(targetLift, currentLift);
+        updateMovingObjectsPosition();
+        showHeight(minimum);
+    }
+    targetLift = Math.max(targetLift, heightToLift(minimum));
     const extended = currentConfig.size === '60x30';
     const setVisible = (obj, visible) => {
         obj.visible = visible;
@@ -2030,6 +2061,143 @@ async function loadTrimOverlay() {
     }
 }
 
+// Rhino exports these overlays in the same rest pose as full.glb. Their X
+// positions are shifted for export, so bake that translation into each mesh.
+function makeOverlayNode(gltf, index, xShift, material, name) {
+    gltf.scene.updateMatrixWorld(true);
+    const sceneInverse = gltf.scene.matrixWorld.clone().invert();
+    const group = new THREE.Group();
+    group.name = name;
+    const node = gltf.scene.children[index];
+    if (!node) throw new Error(`Missing ${name} in GLB export.`);
+    node.traverse(child => {
+        if (!child.isMesh) return;
+        const geometry = child.geometry.clone();
+        geometry.applyMatrix4(sceneInverse.clone().multiply(child.matrixWorld));
+        geometry.translate(xShift, 0, 0);
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+        group.add(mesh);
+    });
+    return group;
+}
+
+function setScreenProgress(value) {
+    screenProgress = THREE.MathUtils.clamp(value, 0, 1);
+    if (!screenAssembly) return;
+    const { moving, staticParts, baseParts } = screenAssembly;
+    const opened = screenProgress > 0.001;
+    baseParts.forEach(mesh => { mesh.visible = !opened; });
+    moving.visible = opened;
+    staticParts.visible = opened;
+    const slide = Math.min(1, screenProgress * 2);
+    const turn = Math.max(0, (screenProgress - 0.5) * 2);
+    moving.position.x = SCREEN_PIVOT.x - SCREEN_SLIDE * (1 - slide);
+    moving.rotation.z = SCREEN_TURN * turn;
+}
+
+function setTouchscreenOpen(open) {
+    screenTarget = open ? 1 : 0;
+    document.body.dataset.touchscreenTarget = String(screenTarget);
+    document.querySelectorAll('[data-touchscreen-toggle]').forEach(button =>
+        button.setAttribute('aria-pressed', String(!!open)));
+}
+
+async function loadTouchscreenAssembly() {
+    try {
+        const [pulled, extended] = await Promise.all([
+            gltfLoader.loadAsync(TOUCHSCREEN_PULLED_URL),
+            gltfLoader.loadAsync(TOUCHSCREEN_EXTENDED_URL)
+        ]);
+        if (pulled.scene.children.length !== 7 || extended.scene.children.length !== 12)
+            throw new Error('Touchscreen exports have changed; recheck the motion mapping.');
+        const dark = new THREE.MeshPhysicalMaterial({ color: 0x10141c, metalness: 0.4, roughness: 0.27, side: THREE.DoubleSide });
+        const glass = new THREE.MeshPhysicalMaterial({ color: 0x111b29, metalness: 0.1, roughness: 0.16, side: THREE.DoubleSide });
+        const metal = new THREE.MeshStandardMaterial({ color: 0x444a50, metalness: 0.75, roughness: 0.32, side: THREE.DoubleSide });
+        const root = new THREE.Group();
+        root.name = 'Animated touchscreen';
+        root.position.y = LIFT_MIN;
+        const moving = new THREE.Group();
+        moving.position.copy(SCREEN_PIVOT);
+        // The first five pulled-out nodes and extended nodes 5..1 are the same
+        // rigid assembly. Their measured transform is a 146.46-degree turn.
+        for (let i = 0; i < 5; i++) {
+            const part = makeOverlayNode(pulled, i, -200, i === 0 ? glass : dark, `Touchscreen moving ${i + 1}`);
+            part.children.forEach(mesh => mesh.geometry.translate(-SCREEN_PIVOT.x, -SCREEN_PIVOT.y, 0));
+            moving.add(part);
+        }
+        // Extended node 0 is a detail absent from the pulled-out export.
+        const detail = makeOverlayNode(extended, 0, -200, dark, 'Touchscreen face detail');
+        detail.children.forEach(mesh => {
+            mesh.geometry.translate(-SCREEN_PIVOT.x, -SCREEN_PIVOT.y, 0);
+            mesh.geometry.rotateZ(-SCREEN_TURN);
+        });
+        moving.add(detail);
+        const staticParts = new THREE.Group();
+        staticParts.name = 'Touchscreen slide rails';
+        for (const i of [5, 6]) staticParts.add(makeOverlayNode(pulled, i, -200, metal, `Touchscreen rail ${i}`));
+        for (const i of [6, 7, 8, 9]) staticParts.add(makeOverlayNode(extended, i, -200, metal, `Touchscreen extension ${i}`));
+        root.add(staticParts, moving);
+        loadedModel.add(root);
+        const baseParts = [...partRegistry.values()].map(entry => entry.obj)
+            .filter(obj => /^Touch_Screen(?:_|$)/.test(obj.name));
+        screenAssembly = { root, moving, staticParts, baseParts };
+        setScreenProgress(screenProgress);
+        return root;
+    } catch (error) {
+        console.warn('[ErgoFlex] Touchscreen animation did not load:', error);
+        return null;
+    }
+}
+
+function setLedsEnabled(on) {
+    ledsEnabled = !!on;
+    document.body.dataset.ledsEnabled = String(ledsEnabled);
+    ledParts.forEach(({ material, color }) => {
+        material.color.set(color).multiplyScalar(ledsEnabled ? 1 : 0.12);
+        material.emissive.set(color);
+        material.emissiveIntensity = ledsEnabled ? 2.2 : 0;
+    });
+    document.querySelectorAll('[data-led-toggle],.hub-led').forEach(button =>
+        button.setAttribute('aria-pressed', String(ledsEnabled)));
+}
+
+async function loadLedOverlay() {
+    try {
+        const gltf = await gltfLoader.loadAsync(LED_MODEL_URL);
+        if (gltf.scene.children.length !== 43)
+            throw new Error('LED export has changed; recheck panel assignments.');
+        const roots = { base: new THREE.Group(), lift: new THREE.Group(), tilt: new THREE.Group() };
+        roots.base.name = 'Base LEDs';
+        roots.lift.name = 'Shelf LEDs';
+        roots.tilt.name = 'Desktop LEDs';
+        ledParts = [];
+        gltf.scene.children.forEach((_, index) => {
+            const color = index >= 3 && index <= 37 ? 0xff2828 : 0x40eaff;
+            const material = new THREE.MeshStandardMaterial({ color, emissive: color,
+                roughness: 0.4, metalness: 0.05, side: THREE.DoubleSide,
+                polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+            const role = index === 38 ? 'base' : index >= 39 ? 'lift' : 'tilt';
+            const part = makeOverlayNode(gltf, index, -100, material, `${roots[role].name} ${index + 1}`);
+            roots[role].add(part);
+            ledParts.push({ material, color });
+        });
+        roots.lift.position.y = LIFT_MIN;
+        roots.tilt.position.y = LIFT_MIN;
+        for (const root of Object.values(roots)) loadedModel.add(root);
+        liftObjects.set(roots.lift, { obj: roots.lift, baseY: roots.lift.position.y });
+        [...partRegistry.values()].forEach(({ obj }) => {
+            if (/^Leds(?:_|$)/.test(obj.name)) obj.visible = false;
+        });
+        setLedsEnabled(ledsEnabled);
+        return roots.tilt;
+    } catch (error) {
+        console.warn('[ErgoFlex] LED overlay did not load:', error);
+        return null;
+    }
+}
+
 function loadModel() {
     const onLoaded = async (gltf) => {
         workspaceAccessories?.dispose();
@@ -2049,6 +2217,8 @@ function loadModel() {
         telescopingObjects = [];
         interactableObjects = [];
         sizeVariantParts = null;
+        screenAssembly = null;
+        ledParts = [];
         boxHelpers.forEach(h => scene.remove(h));
         boxHelpers.clear();
         editorIdCounter = 0;
@@ -2168,6 +2338,8 @@ function loadModel() {
         // Keep the desk's existing editor IDs stable. The separate trim GLB
         // shares full.glb's coordinates and inherits its scale and glide.
         const trimTiltParts = await loadTrimOverlay();
+        const screenTiltPart = await loadTouchscreenAssembly();
+        const ledTiltPart = await loadLedOverlay();
 
         restorePartLabels();
 
@@ -2175,8 +2347,9 @@ function loadModel() {
         restoreTiltConfigs();
         const deskTilt = primaryTiltConfig();
         if (deskTilt) {
-            const unriggedTrim = trimTiltParts.filter(obj => !isInTiltWrapper(obj));
-            if (unriggedTrim.length) attachPartsToTilt(deskTilt, unriggedTrim);
+            const overlays = [...trimTiltParts, screenTiltPart, ledTiltPart]
+                .filter(obj => obj && !isInTiltWrapper(obj));
+            if (overlays.length) attachPartsToTilt(deskTilt, overlays);
         }
 
         // Actuator rigs restore AFTER tilts so rest state is captured correctly
@@ -2364,6 +2537,8 @@ function serializeProject() {
             presentation: {
                 surfaceFinish,
                 trimColor,
+                ledsEnabled,
+                touchscreenOpen: screenTarget > 0.5,
                 grainEnabled,
                 grainVisibility,
                 grainSheen,
@@ -2658,6 +2833,11 @@ function applyConfigToUI() {
 function applyProjectPresentation(project) {
     const presentation = project.presentation || {};
     if (presentation.trimColor) setTrimColor(presentation.trimColor);
+    if (typeof presentation.ledsEnabled === 'boolean') setLedsEnabled(presentation.ledsEnabled);
+    if (typeof presentation.touchscreenOpen === 'boolean') {
+        setTouchscreenOpen(presentation.touchscreenOpen);
+        setScreenProgress(screenTarget);
+    }
     if (validConfig(project.customerConfig)) {
         currentConfig = cleanConfig(project.customerConfig);
         applyConfigToUI();
@@ -2763,8 +2943,9 @@ function sampleSceneForValidation() {
     if (!loadedModel || !actuatorRigs.length) return { actuators: [], overlaps: [], warnings: sceneWarnings };
 
     const heights = [HEIGHT_MIN, (HEIGHT_MIN + HEIGHT_MAX) / 2, HEIGHT_MAX];
-    const tiltSteps = tiltConfigs.length
-        ? [tiltConfigs[0].minDeg, (tiltConfigs[0].minDeg + tiltConfigs[0].maxDeg) / 2, tiltConfigs[0].maxDeg]
+    const primary = primaryTiltConfig();
+    const tiltSteps = primary
+        ? [primary.minDeg, (primary.minDeg + primary.maxDeg) / 2, primary.maxDeg]
         : [0];
     const lengths = new Map(actuatorRigs.map(rig => [rig.name, []]));
 
@@ -2780,7 +2961,9 @@ function sampleSceneForValidation() {
             currentLift = targetLift = heightToLift(height);
             for (const deg of tiltSteps) {
                 tiltConfigs.forEach(config => {
-                    config.currentDeg = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg);
+                    const upper = config.name === 'tilting'
+                        ? maximumTiltForHeight(height, currentConfig.size) : config.maxDeg;
+                    config.currentDeg = THREE.MathUtils.clamp(deg, config.minDeg, Math.min(config.maxDeg, upper));
                 });
                 updateMovingObjectsPosition();
                 tiltConfigs.forEach(applyTiltConfig);
@@ -3743,7 +3926,8 @@ document.addEventListener('DOMContentLoaded', () => {
             manualLiftOverride = false;
             isStanding = !isStanding;
 
-            targetLift = isStanding ? LIFT_MAX : LIFT_MIN;
+            targetLift = isStanding ? LIFT_MAX
+                : heightToLift(minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size));
 
             toggleHeightBtn.style.color = isStanding ? '#007aff' : '#374151';
             toggleHeightBtn.style.borderColor = isStanding ? '#007aff' : '#e5e7eb';
@@ -4800,13 +4984,13 @@ function cloneSelectedParts() {
 //  pivotLocal is stored in model-local coordinates at the 28" reference height.
 const BAKED_TILT_CONFIGS = [
     // "tilting" — desktop tilt rig built in the editor (Jul 6, 2026).
-    // Rest pose is 0°, tilts to -70° around the Z axis, anchored at the picked
+    // Authored rest pose is physical -5°, tilts through +65° around the Z axis, anchored at the picked
     // pivot part. pivotLocal is model-local at the 28" reference height.
     {
         name: "tilting",
         axis: "z",
-        minDeg: -70,
-        maxDeg: 0,
+        minDeg: TILT_MIN,
+        maxDeg: TILT_MAX,
         pivotLocal: { x: -175.85000650000003, y: 24.739389450000004, z: -306.42251899999997 },
         groupEditorIds: [
             "Desktop_1_4", "Desktop_2_5", "Desktop_3", "Desktop_3_6",
@@ -4860,8 +5044,9 @@ function rejoinLift(obj) {
 // parts join or leave in the rest pose, then restore the current angle.
 function attachPartsToTilt(config, parts) {
     const savedDeg = config.currentDeg;
-    config.currentDeg = 0;
-    applyTiltConfig(config);
+    // Attach at the GLB's authored pose. The production rig's displayed 0°
+    // is physically level, but its authored rest pose is displayed as -5°.
+    config.wrapperGroup.rotation.set(0, 0, 0);
     config.wrapperGroup.updateMatrixWorld(true);
     parts.forEach(obj => {
         removeFromLift(obj);
@@ -4877,8 +5062,7 @@ function attachPartsToTilt(config, parts) {
 
 function detachPartsFromTilt(config, parts) {
     const savedDeg = config.currentDeg;
-    config.currentDeg = 0;
-    applyTiltConfig(config);
+    config.wrapperGroup.rotation.set(0, 0, 0);
     config.wrapperGroup.updateMatrixWorld(true);
     parts.forEach(obj => {
         if (obj.parent !== config.wrapperGroup) return;
@@ -4957,8 +5141,10 @@ function createTiltConfig({ name, axis, minDeg, maxDeg, parts, pivotLocal, group
     });
 
     const config = {
-        name, axis, minDeg, maxDeg,
-        currentDeg: 0,
+        name, axis,
+        minDeg: name === 'tilting' ? TILT_MIN : minDeg,
+        maxDeg: name === 'tilting' ? TILT_MAX : maxDeg,
+        currentDeg: name === 'tilting' ? TILT_MIN : 0,
         groupEditorIds,
         wrapperGroup: wrapper,
         wrapperBaseY: pivotLocal.y,
@@ -5190,10 +5376,12 @@ function rebuildTiltUI() {
         const panelSlider = div.querySelector('input[type="range"]');
 
         function onTiltInput(deg, source) {
-            config.currentDeg = THREE.MathUtils.clamp(Number(deg) || 0, config.minDeg, config.maxDeg);
+            const heightLimit = config.name === 'tilting'
+                ? maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size) : config.maxDeg;
+            config.currentDeg = THREE.MathUtils.clamp(Number(deg) || 0, config.minDeg, Math.min(config.maxDeg, heightLimit));
             const valSpan = document.getElementById('tilt-val-' + idx);
             if (valSpan) valSpan.textContent = config.currentDeg.toFixed(1) + ' deg';
-            if (source !== panelSlider) panelSlider.value = config.currentDeg;
+            panelSlider.value = config.currentDeg;
             applyTiltConfig(config);
             // The remote's readout tracks the primary rig, so a rig edit here has
             // to reach it - it is the same angle seen from the other panel.
@@ -5247,7 +5435,14 @@ function removeTiltConfig(idx, { recordUndo = true } = {}) {
 
 function applyTiltConfig(config) {
     if (!config.wrapperGroup) return;
-    const rad = THREE.MathUtils.degToRad(config.currentDeg);
+    if (config.name === 'tilting' && !motionPaused) {
+        config.currentDeg = THREE.MathUtils.clamp(config.currentDeg, TILT_MIN,
+            maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size));
+    }
+    // Rhino authored this desk at physical -5°. Its original Z rotation is
+    // zero there; level is -5° in rig space, and +65° is -70° in rig space.
+    const rigDeg = config.name === 'tilting' ? rigDegreesForTilt(config.currentDeg) : config.currentDeg;
+    const rad = THREE.MathUtils.degToRad(rigDeg);
     config.wrapperGroup.rotation.set(0, 0, 0);
     if (config.axis === 'x') config.wrapperGroup.rotation.x = rad;
     else if (config.axis === 'y') config.wrapperGroup.rotation.y = rad;
@@ -5643,8 +5838,8 @@ function setupGlideControls() {
     };
     // The compass is two controls in one. A press inside the dish steers the
     // glide; a press on the outer ring turns the desk in place. The band is the
-    // app's: 0.62 to 1.02 of the outer radius, wide enough to catch the visible
-    // capsules without swallowing the dish (movement_and_rotation_joystick.dart:507-528).
+    // Give the turn ring a generous hit area. The old 0.62 boundary put the
+    // inner half of its visible band into joystick mode.
     let ringPointer = null, ringStartAngle = 0;
     const padAngle = e => {
         const box = pad.getBoundingClientRect();
@@ -5652,7 +5847,7 @@ function setupGlideControls() {
             deg: Math.atan2(e.clientY - (box.top + box.height / 2),
                             e.clientX - (box.left + box.width / 2)) * 180 / Math.PI,
             radius: Math.hypot(e.clientX - (box.left + box.width / 2),
-                               e.clientY - (box.top + box.height / 2)) / (box.width / 2)
+                               e.clientY - (box.top + box.height / 2)) / (Math.min(box.width, box.height) / 2)
         };
     };
     const endRing = () => {
@@ -5660,15 +5855,17 @@ function setupGlideControls() {
         ringPointer = null;
         setYawCommand(0);
         applyRingAngle(0);   // springs back, as it does on the phone
+        delete pad.dataset.turning;
     };
 
     pad.onpointerdown = e => {
         if (e.button !== 0 || !manualGlideReady()) return;
         e.preventDefault(); pad.focus();
         const { deg, radius } = padAngle(e);
-        if (radius >= 0.62 && radius <= 1.02) {
+        if (radius >= 0.5) {
             ringPointer = e.pointerId;
             ringStartAngle = deg;
+            pad.dataset.turning = 'true';
             try { pad.setPointerCapture(e.pointerId); } catch {}
             return;
         }
@@ -5684,7 +5881,7 @@ function setupGlideControls() {
             while (delta > 180) delta -= 360;
             while (delta < -180) delta += 360;
             applyRingAngle(delta);
-            setYawCommand(delta > 5 ? 1 : delta < -5 ? -1 : 0);
+            setYawCommand(delta > 3 ? -1 : delta < -3 ? 1 : 0);
             return;
         }
         if (glidePointer === e.pointerId) updatePointer(e);
@@ -5708,6 +5905,21 @@ function setupGlideControls() {
     document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); } });
     document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.51;
     document.getElementById('glide-home').onclick = () => setGlidePosition(0, 0);
+    document.querySelectorAll('[data-turn-command]').forEach(button => {
+        const direction = Number(button.dataset.turnCommand);
+        const stop = () => setYawCommand(0);
+        button.onpointerdown = e => {
+            if (!manualGlideReady()) return;
+            e.preventDefault();
+            button.setPointerCapture(e.pointerId);
+            setYawCommand(direction);
+        };
+        button.onpointerup = stop;
+        button.onpointercancel = stop;
+        button.onlostpointercapture = stop;
+        button.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (manualGlideReady()) setYawCommand(direction); } };
+        button.onkeyup = stop;
+    });
     document.getElementById('glide-demo').onclick = () => {
         if (glideActive) { glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); }
         else startGlide();
@@ -5914,7 +6126,7 @@ function showHeight(inches) {
 function syncTiltUI() {
     // The arc is a jog that rests at zero, so it does not track the tilt - the
     // same rule showHeight() follows. Re-authoring its range from the rig is
-    // what broke it: the only rig runs -70..0, so `max` became zero and the
+    // what broke it: the old rig ran -70..0, so `max` became zero and the
     // normaliser divided by it. Only the readout follows the angle.
     const config = primaryTiltConfig();
     const readout = document.getElementById('tilt-value');
@@ -6253,6 +6465,8 @@ function buildMotionRemote() {
         <span class="remote-spacer"></span>
         <span class="glide-actions">
           <span id="glide-status">Ready to move</span>
+          <button type="button" data-turn-command="-1" aria-label="Hold to turn left">↶ Left</button>
+          <button type="button" data-turn-command="1" aria-label="Hold to turn right">Right ↷</button>
           <button id="glide-demo" type="button" aria-pressed="false">Play demo</button>
           <button id="glide-home" type="button">Recenter</button>
         </span>
@@ -6279,7 +6493,7 @@ function buildMotionRemote() {
           <div class="remote-glide-row" data-motion-panel="glide">
             <h3 class="remote-heading">Glide</h3>
             <div id="glide-pad" class="remote-compass" tabindex="0" role="group"
-                 aria-label="Glide joystick. Drag the dish to move, twist the outer ring to turn in place, or use arrow keys."
+                 aria-label="Glide joystick. Drag the inner half to move, twist the outer half to turn in place, or use arrow keys."
                  aria-describedby="glide-help">${compassSvg()}<span id="glide-knob" class="remote-sphere"></span></div>
             <div class="remote-speed">
               <select id="glide-speed" aria-label="Glide speed">
@@ -6338,11 +6552,13 @@ function buildMotionRemote() {
         <button class="hub-tile" type="button" disabled aria-label="Save routine"
                 title="Save routine — a routines feature, not connected in the preview">${SAVE_GLYPH}</button>
         <span class="hub-rule" aria-hidden="true"></span>
-        <button class="hub-led" type="button" disabled aria-label="Desk lamp"
-                title="Desk lamp — a hardware control, not connected in the preview">${BULB_GLYPH}</button>
+        <button class="hub-led" type="button" aria-label="Toggle desk LEDs" aria-pressed="false"
+                title="Toggle desk LEDs">${BULB_GLYPH}</button>
+        <button class="hub-screen" data-touchscreen-toggle type="button" aria-label="Extend touchscreen"
+                aria-pressed="false" title="Slide and turn touchscreen">Screen</button>
         <span class="remote-info" role="img" aria-label="About the wellness bar"></span>
       </div>
-      <p id="glide-help" class="remote-hint">Drag the dish to glide, twist the outer ring to turn in place. Tap a preset to recall it, press and hold to save.</p>
+      <p id="glide-help" class="remote-hint">Drag the inner half to glide; twist the outer half or hold Left/Right to turn. Tap a preset to recall it, press and hold to save.</p>
     </div>`;
     dock.append(body);
     // Eight grips, inside the border box: the shell clips its own overflow to
@@ -6362,6 +6578,10 @@ function buildMotionRemote() {
     // they are re-wired here. Wiring them once at startup left them pointing at
     // elements a rebuild had already replaced.
     setupGlideControls();
+    dock.querySelector('.hub-led').onclick = () => setLedsEnabled(!ledsEnabled);
+    dock.querySelector('.hub-screen').onclick = () => setTouchscreenOpen(screenTarget < 0.5);
+    setLedsEnabled(ledsEnabled);
+    setTouchscreenOpen(screenTarget > 0.5);
     wireHeightSlider();
     syncTiltUI();
 }
@@ -6406,12 +6626,23 @@ function bindHold(el, onTap, onHold) {
 function goToHeight(inches) {
     if (!loadedModel) return;
     manualLiftOverride = false;
-    targetLift = heightToLift(THREE.MathUtils.clamp(inches, HEIGHT_MIN, HEIGHT_MAX));
+    const minimum = minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size);
+    targetLift = heightToLift(THREE.MathUtils.clamp(inches, minimum, HEIGHT_MAX));
 }
 function goToTilt(deg) {
     const config = primaryTiltConfig();
     if (!config) return;
-    tiltTarget = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg);
+    tiltTarget = THREE.MathUtils.clamp(deg, config.minDeg,
+        Math.min(config.maxDeg, maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size)));
+}
+function goToPose(height, deg) {
+    const config = primaryTiltConfig();
+    if (!loadedModel || !config) return;
+    const tilt = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg);
+    const safeHeight = Math.max(height, minimumHeightForTilt(tilt, currentConfig.size));
+    manualLiftOverride = false;
+    targetLift = heightToLift(THREE.MathUtils.clamp(safeHeight, HEIGHT_MIN, HEIGHT_MAX));
+    tiltTarget = tilt;
 }
 
 // ── The panel as a device mockup ─────────────────────────────────────────────
@@ -6819,7 +7050,8 @@ function wireRemote(dock, header) {
     const commitHeight = () => {
         const value = Number(heightField.value);
         if (!isFinite(value)) { showHeight(liftToHeight(currentLift)); return; }
-        const clamped = THREE.MathUtils.clamp(value, HEIGHT_MIN, HEIGHT_MAX);
+        const minimum = minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size);
+        const clamped = THREE.MathUtils.clamp(value, minimum, HEIGHT_MAX);
         heightField.value = clamped.toFixed(2);
         goToHeight(clamped);
     };
@@ -6835,7 +7067,8 @@ function wireRemote(dock, header) {
         if (!config) return;
         const value = Number(tiltField.value);
         if (!isFinite(value)) { syncTiltUI(); return; }
-        const clamped = THREE.MathUtils.clamp(value, config.minDeg, config.maxDeg);
+        const clamped = THREE.MathUtils.clamp(value, config.minDeg,
+            Math.min(config.maxDeg, maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size)));
         tiltField.value = clamped.toFixed(2);
         goToTilt(clamped);
     };
@@ -6894,8 +7127,7 @@ function wireErgoForms() {
         bindHold(button,
             () => {
                 if (form.lift === null || form.tilt === null) { notifyUser('That form is empty. Press and hold to save the current pose.'); return; }
-                goToHeight(form.lift);
-                goToTilt(form.tilt);
+                goToPose(form.lift, form.tilt);
             },
             () => {
                 form.lift = Number(liftToHeight(currentLift).toFixed(1));
@@ -7418,16 +7650,24 @@ function animate() {
     // runs, so the viewer does not freeze.
     const dt = clock.getDelta();
     if (!motionPaused) updateGlide(dt);
+    if (!motionPaused && screenAssembly && Math.abs(screenProgress - screenTarget) > 0.0001) {
+        const step = Math.min(1, dt / 2.2);
+        setScreenProgress(Math.abs(screenTarget - screenProgress) <= step
+            ? screenTarget : screenProgress + Math.sign(screenTarget - screenProgress) * step);
+    }
 
     // Handle smooth animation if not manually scrubbing
     if (loadedModel && !manualLiftOverride && !motionPaused) {
-        if (Math.abs(targetLift - currentLift) > 0.001) {
+        const minLift = heightToLift(minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size));
+        const allowedTargetLift = Math.max(targetLift, minLift);
+        if (Math.abs(allowedTargetLift - currentLift) > 0.001) {
             // Units per second, integrated against the real frame time. The old
             // `* 0.08` was a per-frame fraction, so the desk genuinely moved at
             // different speeds on different displays and stalled under load.
             const step = liftUnitsPerSecond() * dt;
-            const remaining = targetLift - currentLift;
-            currentLift += Math.abs(remaining) <= step ? remaining : Math.sign(remaining) * step;
+            const remaining = allowedTargetLift - currentLift;
+            currentLift = Math.max(minLift,
+                currentLift + (Math.abs(remaining) <= step ? remaining : Math.sign(remaining) * step));
             updateMovingObjectsPosition();
             showHeight(liftToHeight(currentLift));
 
@@ -7464,8 +7704,9 @@ function animate() {
     // Held off centre: drive for as long as it is held.
     if (loadedModel && !motionPaused && liftJog) {
         const jogDt = Math.min(Math.max(dt, 0), 0.05);
+        const minLift = heightToLift(minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size));
         currentLift = THREE.MathUtils.clamp(
-            currentLift + liftJog * liftUnitsPerSecond() * jogDt, LIFT_MIN, LIFT_MAX);
+            currentLift + liftJog * liftUnitsPerSecond() * jogDt, minLift, LIFT_MAX);
         targetLift = currentLift;
         updateMovingObjectsPosition();
         showHeight(liftToHeight(currentLift));
@@ -7474,8 +7715,11 @@ function animate() {
         const config = primaryTiltConfig();
         if (config) {
             const jogDt = Math.min(Math.max(dt, 0), 0.05);
+            const heightLimit = config.name === 'tilting'
+                ? maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size) : config.maxDeg;
             config.currentDeg = THREE.MathUtils.clamp(
-                config.currentDeg + tiltJog * tiltDegreesPerSecond() * jogDt, config.minDeg, config.maxDeg);
+                config.currentDeg + tiltJog * tiltDegreesPerSecond() * jogDt,
+                config.minDeg, Math.min(config.maxDeg, heightLimit));
             tiltTarget = null;
             applyTiltConfig(config);
             syncTiltUI();
@@ -7490,8 +7734,10 @@ function animate() {
         else if (Math.abs(tiltTarget - config.currentDeg) <= 0.01) {
             config.currentDeg = tiltTarget; applyTiltConfig(config); tiltTarget = null; syncTiltUI();
         } else {
+            const allowedTilt = Math.min(tiltTarget,
+                maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size));
             const step = tiltDegreesPerSecond() * dt;
-            const remaining = tiltTarget - config.currentDeg;
+            const remaining = allowedTilt - config.currentDeg;
             config.currentDeg += Math.abs(remaining) <= step ? remaining : Math.sign(remaining) * step;
             applyTiltConfig(config); syncTiltUI();
         }
@@ -8240,6 +8486,13 @@ function initStudio() {
 
 // Small console API for setup & testing (open DevTools and type `ErgoFlex.`)
 window.ErgoFlex = {
+    setTouchscreenOpen,
+    get touchscreenOpen() { return screenTarget > 0.5; },
+    get touchscreenProgress() { return screenProgress; },
+    get touchscreenReady() { return !!screenAssembly; },
+    setLedsEnabled,
+    get ledsEnabled() { return ledsEnabled; },
+    get ledCount() { return ledParts.length; },
     get workspaceAccessories() { return workspaceAccessories; },
     get workspaceRoom() { return workspaceRoom; },
     get roomScene() { return selectedRoomScene; },
@@ -8268,7 +8521,8 @@ window.ErgoFlex = {
     },
     setHeight(h) {
         manualLiftOverride = true;
-        h = THREE.MathUtils.clamp(Number(h) || HEIGHT_MIN, HEIGHT_MIN, HEIGHT_MAX);
+        h = THREE.MathUtils.clamp(Number(h) || HEIGHT_MIN,
+            minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size), HEIGHT_MAX);
         currentLift = targetLift = heightToLift(h);
         updateMovingObjectsPosition();
         showHeight(h);
@@ -8276,7 +8530,9 @@ window.ErgoFlex = {
     setTilt(name, deg) {
         const config = tiltConfigs.find(c => c.name === name);
         if (!config) return false;
-        config.currentDeg = THREE.MathUtils.clamp(Number(deg) || 0, config.minDeg, config.maxDeg);
+        const heightLimit = config.name === 'tilting'
+            ? maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size) : config.maxDeg;
+        config.currentDeg = THREE.MathUtils.clamp(Number(deg) || 0, config.minDeg, Math.min(config.maxDeg, heightLimit));
         applyTiltConfig(config);
         rebuildTiltUI(); // keep sliders/labels in sync
         return true;

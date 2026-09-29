@@ -45,6 +45,41 @@ function ErgoFlexDeviceMatches(size, id) {
     await page.waitForFunction(() => getComputedStyle(document.querySelector('#loader')).display === 'none');
     assert.equal(await page.evaluate(() => ErgoFlex.actuatorRigs.length), 2);
     console.log('Loaded model and rigs.');
+    const tiltReference = await page.evaluate(() => {
+      const rig = ErgoFlex.tiltConfigs.find(c => c.name === 'tilting');
+      const authored = { display: rig.currentDeg, angle: rig.wrapperGroup.rotation.z };
+      ErgoFlex.setTilt('tilting', 0);
+      const level = rig.wrapperGroup.rotation.z * 180 / Math.PI;
+      ErgoFlex.setTilt('tilting', -5);
+      return { authored, level };
+    });
+    assert.equal(tiltReference.authored.display, -5, 'authored pose is labelled physical -5 degrees');
+    assert.ok(Math.abs(tiltReference.authored.angle) < 1e-8, 'authored pose has no rig rotation');
+    assert.ok(Math.abs(tiltReference.level + 5) < 1e-6, 'physical zero rotates the rig five degrees toward level');
+    assert.deepEqual(await page.evaluate(() => ({ screen: ErgoFlex.touchscreenReady, leds: ErgoFlex.ledCount })),
+      { screen: true, leds: 43 }, 'the supplied screen and LED exports load');
+    await page.evaluate(() => { ErgoFlex.setLedsEnabled(true); ErgoFlex.setTouchscreenOpen(true); });
+    await page.waitForFunction(() => ErgoFlex.touchscreenProgress > 0.99, { timeout: 10000 });
+    assert.ok(await page.evaluate(() => ErgoFlex.ledsEnabled &&
+      [...ErgoFlex.partRegistry.values()].filter(({ obj }) => /^Touch_Screen(?:_|$)/.test(obj.name)).every(({ obj }) => !obj.visible)),
+    'LEDs light and the animated screen replaces its stowed base meshes');
+    await page.evaluate(() => { ErgoFlex.setTouchscreenOpen(false); ErgoFlex.setLedsEnabled(false); });
+    await page.waitForFunction(() => ErgoFlex.touchscreenProgress < 0.01, { timeout: 10000 });
+    const clearance = await page.evaluate(() => {
+      ErgoFlex.setTilt('tilting', 0); ErgoFlex.setHeight(28); ErgoFlex.setTilt('tilting', 65);
+      const low = ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg;
+      ErgoFlex.setHeight(40.5); ErgoFlex.setTilt('tilting', 65);
+      const standard = ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg;
+      const size = document.getElementById('size-select');
+      size.value = '60x30'; size.dispatchEvent(new Event('change', { bubbles: true }));
+      const extendedHeight = ErgoFlex.heightInches;
+      ErgoFlex.setTilt('tilting', 0); size.value = '48x30'; size.dispatchEvent(new Event('change', { bubbles: true }));
+      ErgoFlex.setHeight(28);
+      return { low, standard, extendedHeight };
+    });
+    assert.equal(clearance.low, 43, '28 inches limits the desktop to 43 degrees');
+    assert.equal(clearance.standard, 65, 'Standard reaches 65 degrees at 40.5 inches');
+    assert.equal(clearance.extendedHeight, 42.5, 'Extended rises to its 42.5-inch clearance');
     const lighting = await page.evaluate(async () => {
       const { ROOM_ATMOSPHERES } = await import('/workspace-3d.mjs');
       ErgoFlex.setRoomScene('music', false);
@@ -150,7 +185,7 @@ function ErgoFlexDeviceMatches(size, id) {
     // withNeutralPose must put every motion source back, including on a throw.
     const neutral = await page.evaluate(() => {
       ErgoFlex.setHeight(44);
-      ErgoFlex.setTilt('tilting', -20);
+      ErgoFlex.setTilt('tilting', -4);
       ErgoFlex.setGlidePosition(0.3, -0.2);
       const before = { height: ErgoFlex.deskHeight, tilt: ErgoFlex.tiltConfigs[0].currentDeg, glide: ErgoFlex.glidePosition };
       let insideHeight = null, insideTilt = null;
@@ -193,7 +228,7 @@ function ErgoFlexDeviceMatches(size, id) {
 
       // Save at a deliberately non-neutral pose: raised, tilted, and glided.
       ErgoFlex.setHeight(45);
-      ErgoFlex.setTilt('tilting', -18);
+      ErgoFlex.setTilt('tilting', 18);
       ErgoFlex.setGlidePosition(0.2, 0.1);
       const project = ErgoFlex.serializeProject();
       return {
@@ -236,7 +271,7 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.equal(restored.cloneCount, 1, 'the clone came back');
     assert.equal(restored.liftCount, roundTrip.liftCount, 'lift membership came back');
     assert.ok(Math.abs(restored.height - 45) < 0.2, 'motion is applied after the neutral-pose scope, not swallowed by it');
-    assert.equal(restored.tilt, -18, 'tilt came back');
+    assert.equal(restored.tilt, 18, 'tilt came back');
     assert.ok(Math.abs(restored.glide.x - 0.2) < 1e-6, 'glide came back');
 
     // Importing the same project again must not collide with its own clones.
@@ -679,11 +714,11 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.ok(true, 'and tapping it recalls that height');
 
     // An Ergo Form carries a pose: both height and tilt.
-    await page.evaluate(() => { ErgoFlex.setHeight(33); ErgoFlex.setTilt('tilting', -12); });
+    await page.evaluate(() => { ErgoFlex.setHeight(33); ErgoFlex.setTilt('tilting', 12); });
     await press('.remote-form', 750);
     const pose = await page.evaluate(() => JSON.parse(localStorage.getItem('ergoflex.ergoFormsV1')).forms[0]);
     assert.equal(pose.lift, 33, 'an Ergo Form saves the height');
-    assert.equal(pose.tilt, -12, 'and the tilt alongside it');
+    assert.equal(pose.tilt, 12, 'and the tilt alongside it');
 
     // Stop must freeze in place. stopGlide() sends the desk home, which is the
     // opposite, so this is the one control that cannot reuse it.
@@ -694,7 +729,7 @@ function ErgoFlexDeviceMatches(size, id) {
       ErgoFlex.setGlidePosition(20, -20);           // a far target: glide is in motion
       document.getElementById('desk-height-display').value = '50';
       document.getElementById('desk-height-display').dispatchEvent(new Event('change'));
-      document.getElementById('tilt-value').value = '-40';
+      document.getElementById('tilt-value').value = '40';
       document.getElementById('tilt-value').dispatchEvent(new Event('change'));
       await new Promise(r => setTimeout(r, 400));   // let all three actually be moving
       document.getElementById('remote-stop').click();
@@ -850,7 +885,7 @@ function ErgoFlexDeviceMatches(size, id) {
         return el.value;
       };
       ErgoFlex.setHeight(34);
-      ErgoFlex.setTilt('tilting', -20);
+      ErgoFlex.setTilt('tilting', -4);
       await new Promise(r => setTimeout(r, 300));
       const out = { startHeight: ErgoFlex.heightInches };
       out.restsAtCentre = document.querySelector('#desk-height-slider').value;
@@ -884,7 +919,7 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.ok(Math.abs(jog.deadZoneMoved) < 0.01, 'a nudge inside the dead zone moves nothing');
 
     // Tilt is the same rate control, and for a long time it was the broken one:
-    // syncTiltUI re-authored the track's range from the rig, the rig runs -70..0,
+    // syncTiltUI used to re-author the track's range from the rig (-70..0),
     // so `max` became zero and the normaliser divided by it. At rest that was
     // NaN (nothing moved); pulled down it was -Infinity (the desk hit its limit
     // in one frame); and up was unreachable, because zero was now the maximum.
@@ -900,11 +935,11 @@ function ErgoFlexDeviceMatches(size, id) {
         await new Promise(r => setTimeout(r, 250));
         return slider.value;
       };
-      ErgoFlex.setTilt('tilting', -30);
+      ErgoFlex.setTilt('tilting', 0);
       await new Promise(r => setTimeout(r, 350));
       const out = { range: [el().min, el().max], restsAtCentre: el().value, start: deg() };
-      // Down, from -30 toward -70. Gradual is the whole assertion: the old
-      // -Infinity jumped the full 40 degrees inside a single frame.
+      // Down, toward the new -5-degree limit. The old -Infinity jumped to the
+      // limit in a single frame.
       out.sliderAfterRelease = await hold(-80, 600, 'pointerup');
       out.downTo = deg();
       await new Promise(r => setTimeout(r, 400));
@@ -942,7 +977,7 @@ function ErgoFlexDeviceMatches(size, id) {
       const box = document.querySelector('.remote-arc');
       const thumb = box.querySelector('.remote-sphere');
       const deg = () => ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg;
-      ErgoFlex.setTilt('tilting', -30);
+      ErgoFlex.setTilt('tilting', 0);
       await new Promise(r => setTimeout(r, 350));
       const rect = box.getBoundingClientRect();
       const at = (type, x, y) => box.dispatchEvent(new PointerEvent(type, {
@@ -1181,13 +1216,13 @@ function ErgoFlexDeviceMatches(size, id) {
     await page.waitForFunction(() => ErgoFlex.glideActive);
     await page.click('#glide-demo');
     assert.equal(await page.evaluate(() => ErgoFlex.glideActive), false);
-    await page.evaluate(() => { ErgoFlex.setHeight(48); ErgoFlex.setTilt(ErgoFlex.tiltConfigs[0].name, -10); });
+    await page.evaluate(() => { ErgoFlex.setHeight(48); ErgoFlex.setTilt(ErgoFlex.tiltConfigs[0].name, -4); });
     // The slider is a rate control that rests at centre, as it is in the app, so
     // it no longer reports the height - the readout does.
     assert.equal(await page.$eval('#desk-height-display', el => el.value), '48.00');
     assert.equal(await page.$eval('#desk-height-slider', el => el.value), '0',
       'and the jog sits at centre when nothing is holding it');
-    assert.equal(await page.evaluate(() => ErgoFlex.tiltConfigs[0].currentDeg), -10);
+    assert.equal(await page.evaluate(() => ErgoFlex.tiltConfigs[0].currentDeg), -4);
     await page.screenshot({ path: '/tmp/ergoflex-glide.png' });
     console.log('Movement tests passed.');
     await page.click('[data-sidebar-tab="finishes"]');
@@ -1344,7 +1379,7 @@ function ErgoFlexDeviceMatches(size, id) {
 
     // Sampling must leave the desk exactly where it was.
     const undisturbed = await page.evaluate(() => {
-      ErgoFlex.setHeight(41); ErgoFlex.setTilt('tilting', -12);
+      ErgoFlex.setHeight(41); ErgoFlex.setTilt('tilting', 12);
       const before = { h: ErgoFlex.deskHeight, t: ErgoFlex.tiltConfigs[0].currentDeg };
       ErgoFlex.runValidation();
       return { before, after: { h: ErgoFlex.deskHeight, t: ErgoFlex.tiltConfigs[0].currentDeg } };
