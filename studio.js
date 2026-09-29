@@ -7,7 +7,7 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
          ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=grain-controls-20260928';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
-import { TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs';
+import { TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=motion-v2-20260928';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs';
 import { accessoryIllustration } from './workspace-icons.mjs';
