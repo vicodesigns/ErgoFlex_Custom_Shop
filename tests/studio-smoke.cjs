@@ -77,7 +77,7 @@ function ErgoFlexDeviceMatches(size, id) {
       ErgoFlex.setHeight(28);
       return { low, standard, extendedHeight };
     });
-    assert.equal(clearance.low, 43, '28 inches limits the desktop to 43 degrees');
+    assert.equal(clearance.low, 39, '28 inches limits the desktop to 39 degrees');
     assert.equal(clearance.standard, 65, 'Standard reaches 65 degrees at 40.5 inches');
     assert.equal(clearance.extendedHeight, 42.5, 'Extended rises to its 42.5-inch clearance');
     const lighting = await page.evaluate(async () => {
@@ -938,13 +938,13 @@ function ErgoFlexDeviceMatches(size, id) {
       ErgoFlex.setTilt('tilting', 0);
       await new Promise(r => setTimeout(r, 350));
       const out = { range: [el().min, el().max], restsAtCentre: el().value, start: deg() };
-      // Down, toward the new -5-degree limit. The old -Infinity jumped to the
-      // limit in a single frame.
+      // Pulling the control down lowers the desktop's front edge, increasing
+      // the physical tilt value gradually.
       out.sliderAfterRelease = await hold(-80, 600, 'pointerup');
       out.downTo = deg();
       await new Promise(r => setTimeout(r, 400));
       out.downDrift = deg() - out.downTo;
-      // Up, which the broken range could not reach at all.
+      // Pulling up raises the front edge and decreases the physical angle.
       const beforeUp = deg();
       await hold(80, 600, 'pointerup');
       out.upDelta = deg() - beforeUp;
@@ -962,12 +962,12 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.deepEqual(tiltJog.range, ['-155', '155'],
       'the tilt track keeps its authored range rather than being re-authored from the rig');
     assert.equal(tiltJog.restsAtCentre, '0', 'the tilt jog rests at centre');
-    assert.ok(tiltJog.downTo < tiltJog.start, 'holding it down tilts the desk down');
-    assert.ok(tiltJog.start - tiltJog.downTo < 30,
-      'gradually, rather than snapping to the rig limit, got ' + (tiltJog.start - tiltJog.downTo));
+    assert.ok(tiltJog.downTo > tiltJog.start, 'holding it down lowers the front edge');
+    assert.ok(tiltJog.downTo - tiltJog.start < 30,
+      'gradually, rather than snapping to the rig limit, got ' + (tiltJog.downTo - tiltJog.start));
     assert.equal(tiltJog.sliderAfterRelease, '0', 'and it springs back to centre on release');
     assert.ok(Math.abs(tiltJog.downDrift) < 0.05, 'the desk stops where it was rather than coasting');
-    assert.ok(tiltJog.upDelta > 0.5, 'and holding it up tilts the other way, got ' + tiltJog.upDelta);
+    assert.ok(tiltJog.upDelta < -0.5, 'and holding it up raises the front edge, got ' + tiltJog.upDelta);
     assert.ok(Math.abs(tiltJog.deadZoneMoved) < 0.01, 'a nudge inside the dead zone moves nothing');
     assert.deepEqual(tiltJog.afterStop, ['0', '0'], 'stop re-centres both tracks, not just the desk');
 
@@ -998,7 +998,7 @@ function ErgoFlexDeviceMatches(size, id) {
       return out;
     });
     assert.ok(arc.value > 10, 'dragging the upper arc asks for extend, got ' + arc.value);
-    assert.ok(arc.moved > 0.5, 'and the desk actually tilts up, got ' + arc.moved);
+    assert.ok(arc.moved < -0.5, 'and the desktop front edge rises, got ' + arc.moved);
     assert.notEqual(arc.held, arc.rest, 'the sphere follows the finger along the arc');
     assert.equal(arc.settledValue, '0', 'releasing springs the value back to centre');
     assert.equal(arc.settled, arc.rest, 'and the sphere returns to the middle of the crescent');

@@ -7,7 +7,7 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
          ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=grain-controls-20260928';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
-import { TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=motion-v2-20260928';
+import { TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=motion-v3-20260928';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs';
 import { accessoryIllustration } from './workspace-icons.mjs';
@@ -6310,7 +6310,8 @@ function positionArcThumb() {
     // rest the value is 0 and t is 0.5, which is the middle of the crescent.
     const span = Math.max(Math.abs(Number(slider.max) || 0), Math.abs(Number(slider.min) || 0)) || 1;
     const t = THREE.MathUtils.clamp(0.5 + (Number(slider.value) / span) / 2, 0, 1);
-    // t = 0 at the bottom of the crescent: positive is extend, which is up.
+    // t = 0 at the bottom of the crescent. The top moves the desktop's
+    // user-facing edge upward; the motion rig uses the opposite angle sign.
     const deg = ARC.to + (ARC.from - ARC.to) * t;
     const [x, y] = arcPoint(deg);
     thumb.style.left = (x / ARC.vw * 100) + '%';
@@ -6354,7 +6355,7 @@ function wireArcControl(box, slider) {
         const mid = ARC_START + ARC_SWEEP / 2;
         const angle = normaliseArcAngle(Math.atan2(event.clientY - cy, event.clientX - cx), mid);
         const t = THREE.MathUtils.clamp((angle - ARC_START) / ARC_SWEEP, 0, 1);
-        // t = 0 is the top of the sweep, which is extend, which is +155.
+        // t = 0 is the top of the sweep and yields +155 on the control track.
         return ARC_RANGE - t * 2 * ARC_RANGE;
     };
 
@@ -7074,7 +7075,9 @@ function wireRemote(dock, header) {
     };
     tiltField.addEventListener('change', commitTilt);
     tiltField.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commitTilt(); tiltField.blur(); } });
-    wireJogSlider(tiltSlider, value => { tiltJog = value; }, positionArcThumb);
+    // This desk's front edge rises as the physical tilt value decreases.
+    // Keep the control gesture intuitive: drag upward to raise that edge.
+    wireJogSlider(tiltSlider, value => { tiltJog = -value; }, positionArcThumb);
     wireArcControl(dock.querySelector('.remote-arc'), tiltSlider);
     document.getElementById('tilt-speed').onchange = e => { tiltSpeed = e.target.value; };
 

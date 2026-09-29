@@ -3,7 +3,7 @@
 // controls meet at the same boundary from either direction.
 export const TILT_MIN = -5;
 export const TILT_MAX = 65;
-export const LOW_HEIGHT_MAX_TILT = 43;
+export const LOW_HEIGHT_MAX_TILT = 39;
 export const LOW_HEIGHT = 28;
 export const FULL_TILT_MIN_HEIGHT = Object.freeze({ '48x30': 40.5, '60x30': 42.5 });
 
