@@ -17,7 +17,7 @@ FILES = (
 OUT.mkdir(parents=True, exist_ok=True)
 for name in FILES:
     shutil.copy2(ROOT / name, OUT / name)
-for folder in ('assets/app-icons', 'assets/wood'):
+for folder in ('assets/app-icons', 'assets/wood', 'assets/trim'):
     shutil.copytree(ROOT / folder, OUT / folder, dirs_exist_ok=True)
 
 # The page's only scene is Product. Its 3D model is already hosted at the public
@@ -30,7 +30,11 @@ for folder in ('assets/app-icons', 'assets/wood'):
     'Then check https://ergoflexdesk.com/wp-content/uploads/2026/promo/ergoflex-demo/product-demo.html\n'
     'The LA Tech Week Divi button must use /wp-content/uploads/2026/promo/ergoflex-demo/product-demo.html\n'
     'for its Hosted 3D viewer URL.\n\n'
-    'The model is fetched from the existing public Store/model/full.glb URL.\n'
+    'The base model is fetched from the existing public Store/model/full.glb URL.\n'
+    'The trim and Extended desktop GLBs are included in assets/trim.\n'
+    'The player lets viewers switch between Standard 48-inch and Extended 60-inch\n'
+    'desktops, with red trim and the updated birch finish.\n'
+    'The shared Studio code also includes live grain visibility and sheen controls.\n'
     'This bundle bakes the Studio tilt group with 32 moving parts.\n'
     'The app keeps its wide layout on mobile and fits the full panel to the screen.\n'
     'View larger opens full-size controls with horizontal scrolling.\n'
@@ -46,9 +50,11 @@ with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as z:
 print(f'Built {archive} ({archive.stat().st_size:,} bytes)')
 
 # For an existing installation, extract this archive *inside* ergoflex-demo.
-# Its files have no enclosing folder, avoiding an accidental nested copy.
-layout_update = OUT.parent / 'ergoflex-demo-wide-app-fit-three-file-update.zip'
-with zipfile.ZipFile(layout_update, 'w', compression=zipfile.ZIP_DEFLATED) as z:
-    for name in ('product-demo.html', 'product-demo.css', 'product-demo.js'):
-        z.write(OUT / name, name)
-print(f'Built {layout_update} ({layout_update.stat().st_size:,} bytes)')
+# Include every changed runtime file and trim asset: a three-file layout-only
+# update would leave the size toggle without its matching geometry.
+flat_update = OUT.parent / 'ergoflex-demo-current-update.zip'
+with zipfile.ZipFile(flat_update, 'w', compression=zipfile.ZIP_DEFLATED) as z:
+    for path in OUT.rglob('*'):
+        if path.is_file():
+            z.write(path, path.relative_to(OUT))
+print(f'Built {flat_update} ({flat_update.stat().st_size:,} bytes)')

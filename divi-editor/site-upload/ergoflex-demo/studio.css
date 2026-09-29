@@ -36,6 +36,9 @@ header h1 { letter-spacing: -.7px; }
 .material-options { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 12px; font-size: 12px; }
 .material-options label, .precision-tools label { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .material-options select, .precision-tools select { border: 1px solid var(--line); border-radius: 5px; padding: 5px; background: white; }
+.grain-controls { display: grid; gap: 7px; }
+.grain-controls input[type=range] { width: 100%; margin: 0 0 6px; }
+.grain-controls output { color: var(--accent); font-variant-numeric: tabular-nums; }
 .check-label { justify-content: flex-start !important; }
 .look-presets { margin: -8px 0 24px; }
 .look-presets > div:last-child { display: flex; gap: 6px; flex-wrap: wrap; }

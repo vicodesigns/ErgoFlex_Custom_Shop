@@ -206,9 +206,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="studio.css">
+    <link rel="stylesheet" href="studio.css?v=grain-controls-20260928">
     <link rel="stylesheet" href="app-remote.css">
-<link rel="stylesheet" href="./product-demo.css?v=wide-app-fit-20260927"></head>
+<link rel="stylesheet" href="./product-demo.css?v=desktop-size-20260928"></head>
 <body class="bg-white">
     <!-- Header -->
     <header class="bg-white border-b border-gray-200">
@@ -284,11 +284,8 @@
                         </div>
                         <div class="config-content expanded" id="size-content">
                             <div class="px-6 pb-6">
-                                <select id="size-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
-                                    <option value="48x30" data-price="0">48" × 30" (Standard)</option>
-                                    <option value="60x30" data-price="200">60" × 30" (Large) +$200</option>
-                                    <option value="72x30" data-price="400">72" × 30" (Executive) +$400</option>
-                                </select>
+                                <div id="size-choice-toggle" class="grid grid-cols-2 gap-2" role="group" aria-label="Desk size"></div>
+                                <select id="size-select" class="sr-only" aria-label="Desk size selection"></select>
                             </div>
                         </div>
                     </div>
@@ -329,6 +326,24 @@
                                     <!-- Base finishes will be populated here -->
                                 </div>
                                 <div id="selected-base-name" class="text-sm text-gray-600">White</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trim Color -->
+                    <div class="config-section">
+                        <div class="config-header p-6" onclick="toggleSection('trim')">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-medium text-gray-900">Trim Color</h3>
+                                <svg class="w-5 h-5 text-gray-400 transform transition-transform" id="trim-arrow">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="config-content expanded" id="trim-content">
+                            <div class="px-6 pb-6 flex items-center gap-3">
+                                <input id="trim-color" type="color" value="#e60505" aria-label="Trim color" class="w-12 h-10 cursor-pointer">
+                                <span id="trim-color-value" class="text-sm text-gray-600">#E60505</span>
                             </div>
                         </div>
                     </div>
@@ -721,7 +736,7 @@
     }
     </script>
 
-    <script type="module" src="./studio.js?v=tilt-20260926"></script>
+    <script type="module" src="./studio.js?v=grain-controls-20260928"></script>
     <script>
         // Classic script: runs before the deferred module above. Browsers refuse to
         // load ES modules over file://, so studio.js never executes and the loader
@@ -738,5 +753,5 @@
             }
         }
     </script>
-<script src="./product-demo.js?v=wide-app-fit-20260927"></script></body>
+<script src="./product-demo.js?v=desktop-size-20260928"></script></body>
 </html>

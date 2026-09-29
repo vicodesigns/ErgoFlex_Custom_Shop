@@ -14,10 +14,10 @@ const assert = require('node:assert/strict');
   assert.equal(configurationPrice(defaultConfig), base,
     'default configuration costs the base price');
 
-  const walnutNavy = { size: '72x30', woodFinish: 'Walnut', baseFinish: 'Navy' };
+  const walnutNavy = { size: '60x30', woodFinish: 'Walnut', baseFinish: 'Navy' };
   assert.equal(
     configurationPrice(walnutNavy),
-    base + PRODUCT_CONFIG.sizes['72x30'].price
+    base + PRODUCT_CONFIG.sizes['60x30'].price
          + PRODUCT_CONFIG.woodFinishes.find(f => f.name === 'Walnut').price
          + PRODUCT_CONFIG.baseFinishes.find(f => f.name === 'Navy').price,
     'upgrades sum onto the base price');
@@ -108,7 +108,7 @@ const assert = require('node:assert/strict');
 
   // Compatibility is enforced, not advisory, at the validation boundary.
   assert.equal(accessoryFits('monitor-arm-2', '48x30'), false, 'the dual arm needs a wider top');
-  assert.equal(accessoryFits('monitor-arm-2', '72x30'), true);
+  assert.equal(accessoryFits('monitor-arm-2', '60x30'), true);
   assert.deepEqual(incompatibleAccessories({ size: '48x30', accessories: ['monitor-arm-2', 'cable-tray'] })
     .map(a => a.id), ['monitor-arm-2'], 'incompatible accessories are reported, not silently dropped');
 
@@ -117,7 +117,9 @@ const assert = require('node:assert/strict');
   assert.equal(validConfig({ ...defaultConfig, accessories: 'cable-tray' }), false, 'a string is not a list');
   assert.deepEqual(cleanConfig({ ...defaultConfig, accessories: ['cable-tray', 'cable-tray', 'nope'] }).accessories,
     ['cable-tray'], 'duplicates and unknowns are stripped');
-  assert.deepEqual(cleanConfig({ ...defaultConfig, size: '72x30', accessories: ['monitor-arm', 'logitech-lift', 'monitor-arm-2'] }).accessories,
+  const legacyWide = cleanConfig({ ...defaultConfig, size: '72x30', accessories: ['monitor-arm', 'logitech-lift', 'monitor-arm-2'] });
+  assert.equal(legacyWide.size, '60x30', 'old 72-inch saved builds migrate to Extended');
+  assert.deepEqual(legacyWide.accessories,
     ['logitech-lift', 'monitor-arm-2'], 'restored builds replace the old monitor mount while preserving other accessories');
 
   // Every accessory must price and fit at least one size.

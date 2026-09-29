@@ -2,7 +2,7 @@
 // Other controls stay in the DOM for the shared studio engine.
 const demo = document.createElement('section');
 demo.id = 'event-demo';
-demo.innerHTML = `<div class="demo-top"><strong>Explore ErgoFlex in 3D</strong><label>Backdrop <select id="demo-backdrop"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label></div><div id="demo-stage"><div id="demo-viewer"></div><div class="demo-app-tools"><span class="demo-swipe-hint">The complete wide app layout.</span><button id="demo-control-size" type="button">View larger</button></div><div id="demo-remote" role="region" tabindex="0" aria-label="Interactive ErgoFlex app controls"></div></div><p class="demo-note" role="status">Loading the workstation…</p>`;
+demo.innerHTML = `<div class="demo-top"><strong>Explore ErgoFlex in 3D</strong><div class="demo-top-controls"><div class="demo-size" role="group" aria-label="Desktop size"><span>Desktop</span><button type="button" data-demo-size="48x30" aria-pressed="true" disabled>48″ Standard</button><button type="button" data-demo-size="60x30" aria-pressed="false" disabled>60″ Extended</button></div><label>Backdrop <select id="demo-backdrop"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label></div></div><div id="demo-stage"><div id="demo-viewer"></div><div class="demo-app-tools"><span class="demo-swipe-hint">The complete wide app layout.</span><button id="demo-control-size" type="button">View larger</button></div><div id="demo-remote" role="region" tabindex="0" aria-label="Interactive ErgoFlex app controls"></div></div><p class="demo-note" role="status">Loading the workstation…</p>`;
 document.body.append(demo);
 document.querySelector('#demo-viewer').append(document.querySelector('#viewer-shell'));
 const start = Date.now();
@@ -52,6 +52,19 @@ const ready = setInterval(() => {
   const backdrop = document.querySelector('#demo-backdrop');
   backdrop.value=document.querySelector('#studio-environment').value;
   backdrop.onchange=()=>{const original=document.querySelector('#studio-environment');original.value=backdrop.value;original.dispatchEvent(new Event('change'));};
+  const sizeSelect = document.getElementById('size-select');
+  const sizeButtons = [...demo.querySelectorAll('[data-demo-size]')];
+  sizeButtons.forEach(button => { button.disabled = false; });
+  const syncDemoSize = () => sizeButtons.forEach(button =>
+    button.setAttribute('aria-pressed', String(button.dataset.demoSize === sizeSelect.value)));
+  sizeButtons.forEach(button => button.addEventListener('click', () => {
+    if (sizeSelect.value === button.dataset.demoSize) return;
+    sizeSelect.value = button.dataset.demoSize;
+    sizeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    document.getElementById('fit-view')?.click();
+  }));
+  sizeSelect.addEventListener('change', syncDemoSize);
+  syncDemoSize();
   demo.querySelector('.demo-note').textContent='Drag the desk to rotate · Scroll or pinch to zoom · Use the ErgoFlex app controls to move the 3D workstation.';
   const fitFrame = () => {
     try {

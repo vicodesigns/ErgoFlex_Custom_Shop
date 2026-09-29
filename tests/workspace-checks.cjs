@@ -44,7 +44,7 @@ module.exports = async function checkWorkspace(page, url) {
     const w = ErgoFlex.workspaceAccessories;
     ErgoFlex.toggleAccessory('monitor-arm');
     const mounted = !w.items.get('dell-u2724d').getObjectByName('monitor-stand').visible;
-    const size = document.getElementById('size-select'); size.value = '72x30'; size.dispatchEvent(new Event('change'));
+    const size = document.getElementById('size-select'); size.value = '60x30'; size.dispatchEvent(new Event('change'));
     ErgoFlex.toggleAccessory('monitor-arm-2');
     const replaced = !w.items.has('monitor-arm') && w.items.has('monitor-arm-2');
     size.value = '48x30'; size.dispatchEvent(new Event('change'));

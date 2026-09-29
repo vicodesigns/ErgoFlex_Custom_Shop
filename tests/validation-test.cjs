@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
   const { validateBuild, blockingFindings, validationCacheKey, LIMITS, INTENDED_CONTACT } =
     await import('../validation.mjs');
 
-  const config = { size: '72x30', woodFinish: 'Walnut', baseFinish: 'Navy', accessories: ['monitor-arm-2'] };
+  const config = { size: '60x30', woodFinish: 'Walnut', baseFinish: 'Navy', accessories: ['monitor-arm-2'] };
   const codes = f => f.map(x => x.code);
 
   // --- advisory by default -------------------------------------------------
@@ -62,7 +62,7 @@ const assert = require('node:assert/strict');
   // --- cache key -----------------------------------------------------------
   // The failure this guards against: moving a part changes the geometry the
   // rules run against while size, rigs and accessories all stay the same.
-  const base = { fingerprint: 'abc', size: '72x30', editRevision: 1, rigSignature: 'r1', accessories: ['cable-tray'] };
+  const base = { fingerprint: 'abc', size: '60x30', editRevision: 1, rigSignature: 'r1', accessories: ['cable-tray'] };
   assert.equal(validationCacheKey(base), validationCacheKey({ ...base }), 'the key is stable');
   assert.notEqual(validationCacheKey(base), validationCacheKey({ ...base, editRevision: 2 }),
     'an edit invalidates the cache');

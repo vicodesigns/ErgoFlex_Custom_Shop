@@ -388,6 +388,10 @@ function ErgoFlexDeviceMatches(size, id) {
     // texture object rather than birch's, or the processing did not happen.
     assert.notEqual(species.ash.mapId, species.birch.mapId,
       'Black Birch uses its own processed copy of the birch photograph');
+    assert.equal(species.birch.mapRotation, Math.PI / 2, 'Natural Birch face grain turns 90 degrees');
+    assert.equal(species.ash.mapRotation, Math.PI / 2, 'Black Birch face grain turns 90 degrees');
+    assert.equal(species.ash.roughnessRotation, Math.PI / 2, 'the sheen grain follows the face grain');
+    assert.equal(species.walnut.mapRotation, 0, 'other wood species retain their mapping');
     // Neutral, because any surviving warmth from the birch tone turns the black
     // brown - which is exactly what a plain dark tint on the original did.
     const [r, g, bl] = [1, 3, 5].map(i => parseInt(species.ash.color.slice(i, i + 2), 16));
@@ -399,6 +403,27 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.ok(species.ash.bumpScale > species.birch.bumpScale,
       'Black Birch carries more relief than the untinted birch');
     assert.equal(species.ash.roughnessMapped, true, 'and varies its gloss with the grain');
+
+    const grainControls = await page.evaluate(() => {
+      const visibility = document.getElementById('grain-visibility');
+      const sheen = document.getElementById('grain-sheen');
+      const startingRelief = ErgoFlex.woodMaterials.desktop.bumpScale;
+      visibility.value = '25'; visibility.dispatchEvent(new Event('input'));
+      const reducedRelief = ErgoFlex.woodMaterials.desktop.bumpScale;
+      sheen.value = '0'; sheen.dispatchEvent(new Event('input'));
+      const noGrainSheen = ErgoFlex.woodMaterials.desktop.roughnessMapped;
+      const saved = ErgoFlex.serializeProject().presentation;
+      visibility.value = '100'; visibility.dispatchEvent(new Event('input'));
+      sheen.value = '100'; sheen.dispatchEvent(new Event('input'));
+      return { startingRelief, reducedRelief, noGrainSheen, saved,
+        visibilityText: document.getElementById('grain-visibility-value').textContent };
+    });
+    assert.ok(grainControls.reducedRelief < grainControls.startingRelief,
+      'grain visibility reduces physical relief');
+    assert.equal(grainControls.noGrainSheen, false, 'zero grain sheen removes the roughness pattern');
+    assert.equal(grainControls.saved.grainVisibility, 25, 'grain visibility is saved with the project');
+    assert.equal(grainControls.saved.grainSheen, 0, 'grain sheen is saved with the project');
+    assert.equal(grainControls.visibilityText, '100%', 'the slider readout follows its value');
 
     // Each material role gets its own treatment; they used to share one pair.
     const treatments = await page.evaluate(() => {
@@ -1205,7 +1230,7 @@ function ErgoFlexDeviceMatches(size, id) {
         lines: ErgoFlex.priceLines
       };
     });
-    assert.equal(preset.size, '72x30', 'the preset set the size');
+    assert.equal(preset.size, '60x30', 'the preset set the size');
     assert.equal(preset.wood, 'Walnut', 'and the finish');
     assert.ok(preset.accessories.length >= 2, 'and the accessories');
     const sum = preset.lines.reduce((n, l) => n + l.price, 0);

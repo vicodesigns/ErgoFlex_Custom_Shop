@@ -6,7 +6,11 @@ Then check https://ergoflexdesk.com/wp-content/uploads/2026/promo/ergoflex-demo/
 The LA Tech Week Divi button must use /wp-content/uploads/2026/promo/ergoflex-demo/product-demo.html
 for its Hosted 3D viewer URL.
 
-The model is fetched from the existing public Store/model/full.glb URL.
+The base model is fetched from the existing public Store/model/full.glb URL.
+The trim and Extended desktop GLBs are included in assets/trim.
+The player lets viewers switch between Standard 48-inch and Extended 60-inch
+desktops, with red trim and the updated birch finish.
+The shared Studio code also includes live grain visibility and sheen controls.
 This bundle bakes the Studio tilt group with 32 moving parts.
 The app keeps its wide layout on mobile and fits the full panel to the screen.
 View larger opens full-size controls with horizontal scrolling.

@@ -7,9 +7,8 @@ export const PRODUCT_CONFIG = {
     basePrice: 4999,
     modelUrl: 'https://ergoflexdesk.com/Store/model/full.glb',
     sizes: {
-        '48x30': { price: 0, name: '48" × 30"' },
-        '60x30': { price: 200, name: '60" × 30"' },
-        '72x30': { price: 400, name: '72" × 30"' }
+        '48x30': { price: 0, name: '48" × 30"', label: 'Standard' },
+        '60x30': { price: 200, name: '60" × 30"', label: 'Extended' }
     },
     woodFinishes: [
         { name: "Natural Birch", color: "#e6c998", price: 0 },
@@ -109,32 +108,32 @@ export const ACCESSORIES = [
     { id: 'dell-u2724d', name: 'Dell UltraSharp 27', brand: 'DELL · U2724D', category: 'Desktop', visual: 'monitor',
       description: '27″ QHD display with a height-adjustable stand.', dimensionsMm: { width: 612.24, depth: 192.28, height: 450 },
       source: 'https://www.delltechnologies.com/asset/en-us/products/electronics-and-accessories/technical-support/dell-ultrasharp-27-monitor-u2724d-datasheet.pdf',
-      price: 399, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'] },
+      price: 399, provisional: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'logitech-lift', name: 'Logitech Lift', brand: 'LOGITECH · LIFT', category: 'Desktop', visual: 'mouse',
       description: 'A vertical grip for small to medium right hands.', dimensionsMm: { width: 70, depth: 108, height: 71 },
       source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/ergo-lift-b2b-data-sheet.pdf',
-      price: 79, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'] },
+      price: 79, provisional: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'logitech-k860', name: 'Logitech ERGO K860', brand: 'LOGITECH · ERGO', category: 'Desktop', visual: 'keyboard',
       description: 'Split keys, a curved profile and a cushioned palm rest.', dimensionsMm: { width: 456, depth: 233, height: 48 },
       source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/ergo-k860-for-business-data-sheet-w11.pdf',
-      price: 149, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'] },
+      price: 149, provisional: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'desk-mat', name: 'Wool felt desk mat', category: 'Desktop', visual: 'mat', description: 'A soft landing for your keyboard and mouse.',
-      price: 49, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'] },
+      price: 49, provisional: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'task-light', name: 'Adjustable task light', category: 'Desktop', visual: 'lamp', description: 'Articulating task lighting, within easy reach.',
-      price: 119, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'] },
+      price: 119, provisional: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'cable-tray', name: 'Under-desk cable tray', category: 'Support', visual: 'tray', description: 'Keep cables tucked beneath the work surface.',
-      price: 89, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
+      price: 89, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
     { id: 'monitor-arm', name: 'Single monitor arm', category: 'Support', visual: 'arm', exclusiveGroup: 'monitor-mount', description: 'Shelf-mounted arm. Display sold separately.',
-      price: 179, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
+      price: 179, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
     { id: 'monitor-arm-2', name: 'Dual monitor arm', category: 'Support', visual: 'dual-arm', exclusiveGroup: 'monitor-mount', description: 'Two mounting heads. Displays sold separately.',
-      price: 289, provisional: true, compatibleSizes: ['60x30', '72x30'], node: null,
+      price: 289, provisional: true, compatibleSizes: ['60x30'], node: null,
       note: 'Needs a 60in or wider top for the mounting spread.' },
     { id: 'cpu-holder', name: 'CPU holder', category: 'Support', visual: 'holder', description: 'An open cradle beneath the desk. Computer not included.',
-      price: 129, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null },
+      price: 129, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
     { id: 'led-strip', name: 'Under-surface LED strip', category: 'Support', description: 'Integrated accent lighting beneath the surface.',
-      price: 69, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: 'Leds' },
+      price: 69, provisional: true, compatibleSizes: ['48x30', '60x30'], node: 'Leds' },
     { id: 'foot-rest', name: 'Adjustable foot rest', category: 'Support', visual: 'footrest', description: 'A gently angled foot support in front of your desk.',
-      price: 99, provisional: true, compatibleSizes: ['48x30', '60x30', '72x30'], node: null }
+      price: 99, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null }
 ];
 
 export function accessory(id) { return ACCESSORIES.find(a => a.id === id) || null; }
@@ -153,7 +152,7 @@ export const PRESETS = [
       accessories: ['cable-tray'], cameraPreset: 'hero' },
     { id: 'creative', name: 'Creative studio',
       blurb: 'Walnut, a 27″ display, split keyboard and soft task lighting.',
-      size: '72x30', woodFinish: 'Walnut', baseFinish: 'Space Gray',
+      size: '60x30', woodFinish: 'Walnut', baseFinish: 'Space Gray',
       accessories: ['dell-u2724d', 'logitech-k860', 'logitech-lift', 'monitor-arm-2', 'task-light', 'led-strip', 'cable-tray'], cameraPreset: 'hero' },
     { id: 'standing', name: 'Standing workstation',
       blurb: 'Mid-width oak set up for a full day on your feet.',
@@ -212,7 +211,7 @@ export function priceBreakdown(config) {
 // The validation boundary for share links and restored local storage. Keep it
 // strict: it is the only thing standing between a URL and the rendered config.
 export function validConfig(value) {
-    if (!value || !Object.hasOwn(PRODUCT_CONFIG.sizes, value.size)) return false;
+    if (!value || (!Object.hasOwn(PRODUCT_CONFIG.sizes, value.size) && value.size !== '72x30')) return false;
     if (!PRODUCT_CONFIG.woodFinishes.some(f => f.name === migrateWoodFinish(value.woodFinish))) return false;
     if (!PRODUCT_CONFIG.baseFinishes.some(f => f.name === value.baseFinish)) return false;
     // Accessories are optional, but if present must be an array of known ids.
@@ -242,7 +241,8 @@ export function cleanConfig(value) {
         const group = accessory(id).exclusiveGroup;
         return !group || !accessories.slice(index + 1).some(other => accessory(other).exclusiveGroup === group);
     });
-    return { size: value.size, woodFinish: migrateWoodFinish(value.woodFinish), baseFinish: value.baseFinish, accessories: selected };
+    return { size: value.size === '72x30' ? '60x30' : value.size,
+        woodFinish: migrateWoodFinish(value.woodFinish), baseFinish: value.baseFinish, accessories: selected };
 }
 
 // Accessories that no longer fit the chosen size. Returned rather than silently

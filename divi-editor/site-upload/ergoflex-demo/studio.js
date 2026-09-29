@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=grain-controls-20260928';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs';
@@ -12,6 +13,25 @@ import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
 const EVENT_DEMO = location.pathname.endsWith('/product-demo.html');
+const TRIM_MODEL_URL = './assets/trim/fullTrim.glb';
+const SMALL_TRIM_MODEL_URL = './assets/trim/shelveanddesktopTrim.glb';
+const LARGE_DESKTOP_MODEL_URL = './assets/trim/desktopLwTrim.glb';
+const TRIM_COLOR_KEY = 'ergoflex.trimColorV1';
+// The Rhino export has ten unnamed nodes, each split into many mesh primitives.
+// These labels and rest-pose roles
+// follow their measured bounds against the matching full.glb desk model.
+const TRIM_PARTS = [
+    { name: 'Desktop trim', role: 'tilt' },
+    { name: 'Left leg profile trim', role: 'base' },
+    { name: 'Right leg profile trim', role: 'base' },
+    { name: 'Left wing trim', role: 'tilt' },
+    { name: 'Right wing trim', role: 'tilt' },
+    { name: 'Shelf back trim', role: 'lift' },
+    { name: 'Shelf left trim', role: 'lift' },
+    { name: 'Shelf right trim', role: 'lift' },
+    { name: 'Leg back connector trim', role: 'base' },
+    { name: 'Base panel trim', role: 'base' }
+];
 
 const STARTING_POS = { x: 4.8, y: 3.4, z: 4.2 };
 const STARTING_TARGET = { x: -0.1, y: 0.9, z: 0.0 };
@@ -66,6 +86,7 @@ let movingObjects = []; // Editor selection; independent of lift membership.
 const liftObjects = new Map();
 let telescopingObjects = [];
 let interactableObjects = [];
+let sizeVariantParts = null;
 let boxHelpers = new Map();
 let isSelectionMode = false;
 
@@ -344,6 +365,12 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 let scene, camera, renderer, controls, transformControl, transformProxy, loadedModel, floorMesh;
+let trimMaterial = null;
+let trimColor = '#e60505';
+try {
+    const stored = localStorage.getItem(TRIM_COLOR_KEY);
+    if (/^#[0-9a-f]{6}$/i.test(stored || '')) trimColor = stored;
+} catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
 let sceneLights = null;
 const roomLightSettings = {};
@@ -1861,8 +1888,150 @@ async function fetchModelWithFingerprint(url) {
     return { buffer, fingerprint };
 }
 
+function setTrimColor(value, persist = true) {
+    if (!/^#[0-9a-f]{6}$/i.test(value || '')) return;
+    trimColor = value;
+    if (trimMaterial) trimMaterial.color.set(value);
+    const picker = document.getElementById('trim-color');
+    if (picker && picker.value !== value) picker.value = value;
+    const readout = document.getElementById('trim-color-value');
+    if (readout) readout.textContent = value.toUpperCase();
+    if (persist) {
+        try { localStorage.setItem(TRIM_COLOR_KEY, value); } catch (_) {}
+    }
+}
+
+function syncSizeGeometry() {
+    if (!sizeVariantParts) return;
+    const extended = currentConfig.size === '60x30';
+    const setVisible = (obj, visible) => {
+        obj.visible = visible;
+        const index = interactableObjects.indexOf(obj);
+        if (visible && index === -1) interactableObjects.push(obj);
+        if (!visible && index !== -1) interactableObjects.splice(index, 1);
+    };
+    setVisible(sizeVariantParts.smallTop, !extended);
+    setVisible(sizeVariantParts.smallTrim, !extended);
+    setVisible(sizeVariantParts.largeTop, extended);
+    setVisible(sizeVariantParts.largeTrim, extended);
+    buildSceneTree();
+}
+
+async function loadTrimOverlay() {
+    try {
+        const gltf = await gltfLoader.loadAsync(TRIM_MODEL_URL);
+        const trimNodes = gltf.scene.children.filter(node => {
+            let hasMesh = false;
+            node.traverse(obj => { if (obj.isMesh) hasMesh = true; });
+            return hasMesh;
+        });
+        if (trimNodes.length !== TRIM_PARTS.length) {
+            throw new Error(`Expected ${TRIM_PARTS.length} trim parts; found ${trimNodes.length}. Check the Rhino export before assigning motion.`);
+        }
+
+        trimMaterial = new THREE.MeshPhysicalMaterial({
+            color: trimColor, metalness: 0.35, roughness: 0.45,
+            // The Rhino trim consists of open surfaces; either face can be
+            // visible as the desk tilts or the camera moves around it.
+            side: THREE.DoubleSide, polygonOffset: true,
+            polygonOffsetFactor: -1, polygonOffsetUnits: -1
+        });
+        const tiltParts = [];
+        const smallTop = [...partRegistry.values()].map(entry => entry.obj).find(obj => {
+            if (!obj.name.startsWith('Desktop') || !obj.geometry) return false;
+            obj.geometry.computeBoundingBox();
+            const size = obj.geometry.boundingBox.getSize(new THREE.Vector3());
+            return size.x > 30 && size.z > 40 && size.y < 5;
+        });
+        if (!smallTop) throw new Error('Could not identify the original desktop surface.');
+        gltf.scene.updateMatrixWorld(true);
+        const sceneInverse = gltf.scene.matrixWorld.clone().invert();
+        trimNodes.forEach((node, index) => {
+            if (index === 0) return; // Replaced by the corrected small desktop trim export.
+            // Rhino wrote each part as 16-197 separate primitives. Merge each
+            // node into one selectable mesh so Studio shows ten trim parts.
+            const geometries = [];
+            node.traverse(child => {
+                if (!child.isMesh) return;
+                const geometry = child.geometry.clone();
+                geometry.applyMatrix4(sceneInverse.clone().multiply(child.matrixWorld));
+                geometries.push(geometry);
+            });
+            const geometry = mergeGeometries(geometries, false);
+            geometries.forEach(part => part.dispose());
+            if (!geometry) throw new Error(`Could not combine trim part ${index + 1}.`);
+            const obj = new THREE.Mesh(geometry, trimMaterial);
+            const spec = TRIM_PARTS[index];
+            const editorId = `Trim_${String(index).padStart(2, '0')}`;
+            obj.name = spec.name;
+            obj.userData.editorId = editorId;
+            obj.userData.isTrim = true;
+            obj.castShadow = false;
+            obj.receiveShadow = false;
+            loadedModel.add(obj);
+            // full.glb is authored above the viewer's 28-inch starting pose.
+            // Shift only parts that ride the lift, matching the base loader.
+            if (spec.role !== 'base') obj.position.y += LIFT_MIN;
+            partRegistry.set(editorId, { obj, name: obj.name, editorId, isClone: false });
+            interactableObjects.push(obj);
+            captureAssetBaseline(obj);
+            if (spec.role === 'lift') liftObjects.set(obj, { obj, baseY: obj.position.y });
+            if (spec.role === 'tilt') tiltParts.push(obj);
+        });
+
+        const [smallGltf, largeGltf] = await Promise.all([
+            gltfLoader.loadAsync(SMALL_TRIM_MODEL_URL),
+            gltfLoader.loadAsync(LARGE_DESKTOP_MODEL_URL)
+        ]);
+        if (smallGltf.scene.children.length !== 3 || largeGltf.scene.children.length !== 2) {
+            throw new Error('The size variant exports no longer contain the expected parts.');
+        }
+        const addVariantNode = (source, index, name, editorId, role, material, isTrim) => {
+            source.scene.updateMatrixWorld(true);
+            const inverse = source.scene.matrixWorld.clone().invert();
+            const shift = new THREE.Matrix4().makeTranslation(-100, 0, 0);
+            const geometries = [];
+            source.scene.children[index].traverse(child => {
+                if (!child.isMesh) return;
+                const geometry = child.geometry.clone();
+                geometry.applyMatrix4(inverse.clone().multiply(child.matrixWorld).premultiply(shift));
+                geometries.push(geometry);
+            });
+            const geometry = mergeGeometries(geometries, false);
+            geometries.forEach(part => part.dispose());
+            if (!geometry) throw new Error(`Could not combine ${name}.`);
+            const obj = new THREE.Mesh(geometry, material);
+            obj.name = name;
+            obj.userData.editorId = editorId;
+            obj.userData.isTrim = isTrim;
+            obj.userData.isSizeVariant = true;
+            obj.castShadow = !isTrim;
+            obj.receiveShadow = !isTrim;
+            obj.position.y = LIFT_MIN;
+            loadedModel.add(obj);
+            partRegistry.set(editorId, { obj, name, editorId, isClone: false });
+            interactableObjects.push(obj);
+            captureAssetBaseline(obj);
+            if (role === 'lift') liftObjects.set(obj, { obj, baseY: obj.position.y });
+            if (role === 'tilt') tiltParts.push(obj);
+            return obj;
+        };
+        addVariantNode(smallGltf, 0, 'Lower shelf trim', 'Trim_Shelf_Lower', 'lift', trimMaterial, true);
+        addVariantNode(smallGltf, 1, 'Upper shelf trim', 'Trim_Shelf_Upper', 'lift', trimMaterial, true);
+        const smallTrim = addVariantNode(smallGltf, 2, 'Standard desktop trim', 'Trim_Desktop_Standard', 'tilt', trimMaterial, true);
+        const largeTop = addVariantNode(largeGltf, 0, 'Extended desktop', 'Variant_Desktop_Extended', 'tilt', smallTop.material, false);
+        const largeTrim = addVariantNode(largeGltf, 1, 'Extended desktop trim', 'Trim_Desktop_Extended', 'tilt', trimMaterial, true);
+        sizeVariantParts = { smallTop, smallTrim, largeTop, largeTrim };
+        syncSizeGeometry();
+        return tiltParts;
+    } catch (error) {
+        console.warn('[ErgoFlex] Trim overlay did not load:', error);
+        return [];
+    }
+}
+
 function loadModel() {
-    const onLoaded = (gltf) => {
+    const onLoaded = async (gltf) => {
         workspaceAccessories?.dispose();
         workspaceAccessories = null;
         if (loadedModel) scene.remove(loadedModel);
@@ -1879,6 +2048,7 @@ function loadModel() {
         liftObjects.clear();
         telescopingObjects = [];
         interactableObjects = [];
+        sizeVariantParts = null;
         boxHelpers.forEach(h => scene.remove(h));
         boxHelpers.clear();
         editorIdCounter = 0;
@@ -1995,10 +2165,19 @@ function loadModel() {
         editTransforms.clear();
         partRegistry.forEach(entry => captureAssetBaseline(entry.obj));
 
+        // Keep the desk's existing editor IDs stable. The separate trim GLB
+        // shares full.glb's coordinates and inherits its scale and glide.
+        const trimTiltParts = await loadTrimOverlay();
+
         restorePartLabels();
 
         // Rebuild tilt rigs: baked production configs + any saved this session
         restoreTiltConfigs();
+        const deskTilt = primaryTiltConfig();
+        if (deskTilt) {
+            const unriggedTrim = trimTiltParts.filter(obj => !isInTiltWrapper(obj));
+            if (unriggedTrim.length) attachPartsToTilt(deskTilt, unriggedTrim);
+        }
 
         // Actuator rigs restore AFTER tilts so rest state is captured correctly
         restoreActuatorRigs();
@@ -2184,7 +2363,10 @@ function serializeProject() {
             // a project shared between machines should not rearrange the editor.
             presentation: {
                 surfaceFinish,
+                trimColor,
                 grainEnabled,
+                grainVisibility,
+                grainSheen,
                 environment: document.getElementById('studio-environment')?.value || 'gallery',
                 roomScene: selectedRoomScene,
                 sceneAssets: serializeSceneAssetStates(),
@@ -2409,17 +2591,52 @@ function applyProjectMotion(motion) {
 function populateSizeOptions() {
     if (!sizeSelect) return;
     sizeSelect.replaceChildren();
+    const toggle = document.getElementById('size-choice-toggle');
+    toggle?.replaceChildren();
     for (const [key, size] of Object.entries(PRODUCT_CONFIG.sizes)) {
         const option = document.createElement('option');
         option.value = key;
         option.textContent = size.name + (size.price ? ` · +${money(size.price)}` : '');
         sizeSelect.append(option);
+        if (toggle) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.dataset.sizeChoice = key;
+            button.className = 'rounded-lg border px-3 py-3 text-left text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-700';
+            const label = document.createElement('strong');
+            label.className = 'block';
+            label.textContent = size.label;
+            const detail = document.createElement('span');
+            detail.className = 'block text-xs mt-1';
+            detail.textContent = size.name + (size.price ? ` · +${money(size.price)}` : ' · Included');
+            button.append(label, detail);
+            button.addEventListener('click', () => {
+                sizeSelect.value = key;
+                sizeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+            toggle.append(button);
+        }
     }
     sizeSelect.value = currentConfig.size;
+    syncSizeChoiceUI();
+}
+
+function syncSizeChoiceUI() {
+    document.querySelectorAll('[data-size-choice]').forEach(button => {
+        const selected = button.dataset.sizeChoice === currentConfig.size;
+        button.setAttribute('aria-pressed', String(selected));
+        button.classList.toggle('border-green-700', selected);
+        button.classList.toggle('bg-green-50', selected);
+        button.classList.toggle('text-green-900', selected);
+        button.classList.toggle('border-gray-300', !selected);
+        button.classList.toggle('bg-white', !selected);
+    });
 }
 
 function applyConfigToUI() {
     if (sizeSelect) sizeSelect.value = currentConfig.size;
+    syncSizeChoiceUI();
+    syncSizeGeometry();
     const woodName = document.getElementById('selected-wood-name');
     const baseName = document.getElementById('selected-base-name');
     if (woodName) woodName.textContent = currentConfig.woodFinish;
@@ -2440,6 +2657,7 @@ function applyConfigToUI() {
 
 function applyProjectPresentation(project) {
     const presentation = project.presentation || {};
+    if (presentation.trimColor) setTrimColor(presentation.trimColor);
     if (validConfig(project.customerConfig)) {
         currentConfig = cleanConfig(project.customerConfig);
         applyConfigToUI();
@@ -2456,6 +2674,14 @@ function applyProjectPresentation(project) {
         const el = document.getElementById('wood-grain');
         if (el) el.checked = grainEnabled;
     }
+    if (Number.isFinite(presentation.grainVisibility)) {
+        grainVisibility = Math.max(0, Math.min(100, presentation.grainVisibility));
+        clearPhotoGrainTextures();
+    }
+    if (Number.isFinite(presentation.grainSheen)) {
+        grainSheen = Math.max(0, Math.min(100, presentation.grainSheen));
+    }
+    syncGrainControls();
     applySurfaceFinish();
     clearSceneAssetRegistration();
     restoreSceneAssetStates(presentation.sceneAssets || {});
@@ -4189,6 +4415,8 @@ function showCartModal() {
 
 sizeSelect.addEventListener('change', (e) => {
     currentConfig.size = e.target.value;
+    syncSizeChoiceUI();
+    syncSizeGeometry();
     // Some accessories need a wider top. Drop the ones that no longer fit and
     // say which, rather than quietly charging for something that cannot ship.
     const dropped = incompatibleAccessories(currentConfig);
@@ -7287,8 +7515,54 @@ function animate() {
 
 // Studio presentation, customer configuration, and accessible controls.
 const speciesPhotos = new Map(); // image path -> THREE.Texture (undefined while loading)
-let surfaceFinish = 'satin';
+let surfaceFinish = 'gloss';
 let grainEnabled = true;
+let grainVisibility = 100;
+let grainSheen = 100;
+const grainRoughnessTextures = new Map();
+
+function syncGrainControls() {
+    for (const [id, value] of [['grain-visibility', grainVisibility], ['grain-sheen', grainSheen]]) {
+        const input = document.getElementById(id);
+        const output = document.getElementById(id + '-value');
+        if (input) input.value = value;
+        if (output) output.textContent = value + '%';
+    }
+}
+
+function clearPhotoGrainTextures() {
+    for (const [key, texture] of speciesTextures) {
+        if (!key.includes('|photo|')) continue;
+        texture.dispose();
+        speciesTextures.delete(key);
+    }
+}
+
+function grainRoughnessTexture(source, role) {
+    const previous = grainRoughnessTextures.get(role);
+    if (previous?.source === source && previous.strength === grainSheen) return previous.texture;
+    previous?.texture.dispose();
+    const image = source.image;
+    if (!image?.width) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    const data = pixels.data;
+    const strength = grainSheen / 100;
+    for (let i = 0; i < data.length; i += 4) {
+        const luma = (data[i] + data[i + 1] + data[i + 2]) / 3;
+        data[i] = data[i + 1] = data[i + 2] = 255 - (255 - luma) * strength;
+    }
+    context.putImageData(pixels, 0, 0);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.anisotropy = source.anisotropy;
+    grainRoughnessTextures.set(role, { source, strength: grainSheen, texture });
+    return texture;
+}
 let studioGrid = null;
 let isolatedVisibility = null;
 let dialogReturnFocus = null;
@@ -7380,7 +7654,7 @@ function syncBuildSummary() {
     const el = document.getElementById('build-summary');
     if (el) el.textContent = `${currentConfig.woodFinish} / ${currentConfig.baseFinish}`;
     const size = document.getElementById('size-preview-note');
-    if (size) size.textContent = `Selected: ${PRODUCT_CONFIG.sizes[currentConfig.size].name}. 3D shows the reference assembly; size options update your estimate.`;
+    if (size) size.textContent = `Selected: ${PRODUCT_CONFIG.sizes[currentConfig.size].name}. The 3D desktop and trim match this size.`;
 }
 // Applies the current sheen to every material role, and derives each wood
 // surface's texture repeat from its own size in inches so grain scale stays
@@ -7401,8 +7675,11 @@ function applySurfaceFinish() {
         // image. A near-black finish has its albedo variation scaled away with
         // everything else, so its grain has to be carried by shading and by
         // varying gloss - which is how black-stained timber reads in the first place.
-        material.bumpScale = role === 'edge' ? 0.0016 : (species.bumpScale || 0.0006);
-        material.roughnessMap = (species.grainSheen && role !== 'edge') ? texture : null;
+        material.bumpScale = (role === 'edge' ? 0.0016 : (species.bumpScale || 0.0006)) * grainVisibility / 100;
+        const roughnessTexture = texture && species.grainSheen && role !== 'edge' && grainSheen > 0
+            ? grainRoughnessTexture(texture, role) : null;
+        if (roughnessTexture) applyGrainScale(roughnessTexture, role, species);
+        material.roughnessMap = roughnessTexture;
         material.needsUpdate = true;
     });
 
@@ -7495,7 +7772,7 @@ function woodTextureFor(name, role) {
         // image or whichever role ran last would set the grain scale for all of
         // them and the physical scaling would silently not hold. Keyed by path,
         // so finishes sharing an image share these clones too.
-        const boost = spec.contrastBoost || 1;
+        const boost = (spec.contrastBoost || 1) * grainVisibility / 100;
         const grayscale = !!spec.grayscale;
         const key = spec.photo + '|photo|' + boost + (grayscale ? '|bw' : '') + '|' + role;
         if (!speciesTextures.has(key)) {
@@ -7511,12 +7788,16 @@ function woodTextureFor(name, role) {
     return generateGrainTexture(name, role);
 }
 
-// Grain scale is physical: a 72in top gets 1.5x the repeats of a 48in top, so
+// Grain scale is physical: a 60in top gets 1.25x the repeats of a 48in top, so
 // the grain stays the same size rather than stretching with the surface.
 function applyGrainScale(texture, role, species) {
     const size = surfaceInches(role);
     texture.repeat.set(Math.max(0.25, size.w * species.repeatsPerInch),
                        Math.max(0.25, size.d * species.repeatsPerInch));
+    // The two birch finishes share the same face photograph. Turn its grain
+    // across the UVs while leaving the generated plywood edge laminations alone.
+    texture.rotation = species.photo === './bir.jpg' && role !== 'edge' ? Math.PI / 2 : 0;
+    texture.center.set(0.5, 0.5);
     texture.needsUpdate = true;
 }
 
@@ -7760,10 +8041,21 @@ function initStudio() {
     };
     const sizeNote = document.createElement('p'); sizeNote.id = 'size-preview-note'; sizeNote.className = 'studio-note'; sizeSelect.after(sizeNote);
     const materialOptions = document.createElement('div'); materialOptions.className = 'material-options';
-    materialOptions.innerHTML = `<label>Surface sheen <select id="surface-finish"><option value="matte">Matte</option><option value="satin" selected>Satin</option><option value="gloss">Gloss</option></select></label><label class="check-label"><input id="wood-grain" type="checkbox" checked> Show wood grain</label><p class="studio-note">Wood tones preview stains on the reference birch surface. Sheen is a visualization setting.</p>`;
+    materialOptions.innerHTML = `<label>Surface sheen <select id="surface-finish"><option value="matte">Matte</option><option value="satin">Satin</option><option value="gloss" selected>Gloss</option></select></label><label class="check-label"><input id="wood-grain" type="checkbox" checked> Show wood grain</label><div class="grain-controls"><label for="grain-visibility">Grain visibility <output id="grain-visibility-value" for="grain-visibility">100%</output></label><input id="grain-visibility" type="range" min="0" max="100" value="100" aria-label="Grain visibility"><label for="grain-sheen">Grain sheen <output id="grain-sheen-value" for="grain-sheen">100%</output></label><input id="grain-sheen" type="range" min="0" max="100" value="100" aria-label="Grain sheen"></div><p class="studio-note">Grain visibility changes the wood pattern and relief. Grain sheen changes how strongly the pattern reflects light. The finish above sets the overall shine.</p>`;
     document.getElementById('selected-wood-name').after(materialOptions);
     document.getElementById('surface-finish').onchange = e => { surfaceFinish = e.target.value; applySurfaceFinish(); };
     document.getElementById('wood-grain').onchange = e => { grainEnabled = e.target.checked; applySurfaceFinish(); };
+    document.getElementById('grain-visibility').oninput = e => {
+        grainVisibility = Number(e.target.value);
+        document.getElementById('grain-visibility-value').textContent = grainVisibility + '%';
+        clearPhotoGrainTextures();
+        applySurfaceFinish();
+    };
+    document.getElementById('grain-sheen').oninput = e => {
+        grainSheen = Number(e.target.value);
+        document.getElementById('grain-sheen-value').textContent = grainSheen + '%';
+        applySurfaceFinish();
+    };
     const looks = document.createElement('div'); looks.className = 'look-presets';
     looks.innerHTML = `<div class="eyebrow">A LITTLE INSPIRATION</div><div><button data-look="Natural Birch|White">Light & natural</button><button data-look="Walnut|Forest">Warm & grounded</button><button data-look="Black Birch|Black">All in black</button></div>`;
     document.getElementById('config-column').children[0].after(looks);
@@ -8077,6 +8369,8 @@ window.ErgoFlex = {
         color: '#' + m.color.getHexString(),
         bumpScale: m.bumpScale, roughnessMapped: !!m.roughnessMap,
         mapId: m.map ? m.map.uuid : null,
+        mapRotation: m.map ? m.map.rotation : null,
+        roughnessRotation: m.roughnessMap ? m.roughnessMap.rotation : null,
         repeat: m.map ? [m.map.repeat.x, m.map.repeat.y] : null
     }])); },
     get frameMaterial() { return sharedBasePaintMaterial && { roughness: sharedBasePaintMaterial.roughness, clearcoat: sharedBasePaintMaterial.clearcoat, metalness: sharedBasePaintMaterial.metalness }; },
@@ -8133,5 +8427,7 @@ const ctx = {
 // Populate the configurator UI first so it works even if 3D init fails
 initStudio();
 populateFinishOptions();
+setTrimColor(trimColor, false);
+document.getElementById('trim-color')?.addEventListener('input', event => setTrimColor(event.target.value));
 updatePrice();
 initThreeJS();
