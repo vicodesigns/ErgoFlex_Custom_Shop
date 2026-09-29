@@ -65,18 +65,53 @@ function ErgoFlexDeviceMatches(size, id) {
     'LEDs light and the animated screen replaces its stowed base meshes');
     assert.ok(await page.evaluate(() => {
       const model = ErgoFlex.loadedModel;
-      const standard = model.getObjectByName('Standard desktop edge LEDs');
-      const extended = model.getObjectByName('Extended desktop edge LEDs');
-      const light = model.getObjectByName('Standard desktop min illumination');
-      return standard?.visible && !extended?.visible && light?.visible &&
-        standard.children.filter(child => child.isMesh).length === 2 &&
-        extended.children.filter(child => child.isMesh).length === 2 &&
+      const standard = model.getObjectByName('Standard desktop underside LEDs');
+      const extended = model.getObjectByName('Extended desktop underside LEDs');
+      let ledPointLights = 0;
+      for (const name of ['Desktop LEDs', 'Shelf LEDs', 'Base LEDs'])
+        model.getObjectByName(name)?.traverse(obj => { if (obj.isPointLight) ledPointLights++; });
+      return standard?.visible && !extended?.visible &&
+        standard.children.filter(child => child.isGroup).length === 3 &&
+        extended.children.filter(child => child.isGroup).length === 3 &&
+        extended.children.some(child => child.name === 'Extended desktop center LED') &&
+        ledPointLights === 0 && standard.children.some(child => child.isRectAreaLight) &&
+        [...model.getObjectByName('Desktop LED size fit').children].every(child => !child.visible) &&
         !model.getObjectByName('LED glow 1 layer 1');
-    }), 'desktop LEDs follow the top contours and illuminate nearby surfaces without enlarged mesh patches');
+    }), 'three authored desktop LEDs load without spotlight hotspots or floating source details');
+    const ledColor = await page.evaluate(() => {
+      ErgoFlex.setLedColor('#ff8800');
+      let emissive;
+      ErgoFlex.loadedModel.getObjectByName('Desktop LEDs 3')?.traverse(obj => {
+        if (obj.isMesh) emissive = `#${obj.material.emissive.getHexString()}`;
+      });
+      return { selected: ErgoFlex.ledColor, emissive,
+        saved: ErgoFlex.serializeProject().presentation.ledColor };
+    });
+    assert.deepEqual(ledColor, { selected: '#ff8800', emissive: '#ff8800', saved: '#ff8800' },
+      'LED color updates the authored mesh and saved project');
+    const ledGlow = await page.evaluate(() => {
+      ErgoFlex.setLedGlow(160);
+      const model = ErgoFlex.loadedModel;
+      return { selected: ErgoFlex.ledGlow, saved: ErgoFlex.serializeProject().presentation.ledGlow,
+        emissive: (() => { let value; model.getObjectByName('Desktop LEDs 3')?.traverse(obj => {
+          if (obj.isMesh) value = obj.material.emissiveIntensity;
+        }); return value; })(),
+        wash: model.getObjectByName('Desktop LEDs 3 soft LED wash')?.intensity };
+    });
+    assert.equal(ledGlow.selected, 160);
+    assert.equal(ledGlow.saved, 160);
+    assert.ok(ledGlow.emissive > 2.2 && ledGlow.wash > 0,
+      'glow control raises mesh emission and the soft panel wash');
     await page.evaluate(() => { ErgoFlex.setTouchscreenOpen(false); ErgoFlex.setLedsEnabled(false); });
     await page.waitForFunction(() => ErgoFlex.touchscreenProgress < 0.01, { timeout: 10000 });
-    assert.equal(await page.evaluate(() => ErgoFlex.loadedModel.getObjectByName('Standard desktop min illumination')?.visible), false,
-      'turning off the LEDs disables surface illumination');
+    assert.equal(await page.evaluate(() => {
+      let intensity;
+      ErgoFlex.loadedModel.getObjectByName('Desktop LEDs 3')?.traverse(obj => {
+        if (obj.isMesh) intensity = obj.material.emissiveIntensity;
+      });
+      return intensity;
+    }), 0,
+      'turning off the LEDs disables emissive desktop strips');
     const clearance = await page.evaluate(() => {
       ErgoFlex.setTilt('tilting', 0); ErgoFlex.setHeight(28); ErgoFlex.setTilt('tilting', 65);
       const low = ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg;
@@ -85,13 +120,13 @@ function ErgoFlexDeviceMatches(size, id) {
       const size = document.getElementById('size-select');
       size.value = '60x30'; size.dispatchEvent(new Event('change', { bubbles: true }));
       const extendedHeight = ErgoFlex.heightInches;
-      const extendedLedsVisible = ErgoFlex.loadedModel.getObjectByName('Extended desktop edge LEDs')?.visible;
+      const extendedLedsVisible = ErgoFlex.loadedModel.getObjectByName('Extended desktop underside LEDs')?.visible;
       ErgoFlex.setTilt('tilting', 0); size.value = '48x30'; size.dispatchEvent(new Event('change', { bubbles: true }));
       ErgoFlex.setHeight(28);
       return { low, standard, extendedHeight,
         extendedLedsVisible,
-        extendedLeds: ErgoFlex.loadedModel.getObjectByName('Extended desktop edge LEDs')?.visible,
-        standardLeds: ErgoFlex.loadedModel.getObjectByName('Standard desktop edge LEDs')?.visible };
+        extendedLeds: ErgoFlex.loadedModel.getObjectByName('Extended desktop underside LEDs')?.visible,
+        standardLeds: ErgoFlex.loadedModel.getObjectByName('Standard desktop underside LEDs')?.visible };
     });
     assert.equal(clearance.low, 39, '28 inches limits the desktop to 39 degrees');
     assert.equal(clearance.standard, 65, 'Standard reaches 65 degrees at 40.5 inches');

@@ -348,6 +348,28 @@
                         </div>
                     </div>
 
+                    <!-- LED Color -->
+                    <div class="config-section">
+                        <div class="config-header p-6" onclick="toggleSection('leds')">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-medium text-gray-900">LED Color</h3>
+                                <svg class="w-5 h-5 text-gray-400 transform transition-transform" id="leds-arrow">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="config-content expanded" id="leds-content">
+                            <div class="px-6 pb-6 space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <input id="led-color" type="color" value="#40eaff" aria-label="LED color" class="w-12 h-10 cursor-pointer">
+                                    <span id="led-color-value" class="text-sm text-gray-600">#40EAFF</span>
+                                </div>
+                                <label class="block text-sm text-gray-700" for="led-glow">Glow strength <span id="led-glow-value">140%</span></label>
+                                <input id="led-glow" type="range" min="0" max="200" value="140" aria-label="LED glow strength" class="w-full">
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Features -->
                     <div class="config-section">
                         <div class="config-header p-6" onclick="toggleSection('features')">
@@ -736,7 +758,7 @@
     }
     </script>
 
-    <script type="module" src="./studio.js?v=led-fit-20260929"></script>
+    <script type="module" src="./studio.js?v=led-glow-20260929"></script>
     <script>
         // Classic script: runs before the deferred module above. Browsers refuse to
         // load ES modules over file://, so studio.js never executes and the loader

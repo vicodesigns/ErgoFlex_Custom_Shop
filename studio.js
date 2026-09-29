@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
          ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=grain-controls-20260928';
@@ -20,6 +21,9 @@ const LARGE_DESKTOP_MODEL_URL = './assets/trim/desktopLwTrim.glb';
 const TOUCHSCREEN_PULLED_URL = './assets/motion/touchscreenPulledOut.glb';
 const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb';
 const LED_MODEL_URL = './assets/motion/LEDS.glb';
+const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb';
+const LED_COLOR_KEY = 'ergoflex.ledColorV1';
+const LED_GLOW_KEY = 'ergoflex.ledGlowV1';
 const SCREEN_PIVOT = new THREE.Vector3(-141.99034318, 49.56108308, 0);
 const SCREEN_SLIDE = 4.7;
 const SCREEN_TURN = THREE.MathUtils.degToRad(146.457954);
@@ -30,7 +34,7 @@ let ledParts = [];
 let ledDesktopFit = null;
 let ledStandardStrips = null;
 let ledExtendedStrips = null;
-let ledContourLights = [];
+let ledAreaLights = [];
 let ledsEnabled = false;
 const TRIM_COLOR_KEY = 'ergoflex.trimColorV1';
 // The Rhino export has ten unnamed nodes, each split into many mesh primitives.
@@ -383,9 +387,16 @@ const mouse = new THREE.Vector2();
 let scene, camera, renderer, controls, transformControl, transformProxy, loadedModel, floorMesh;
 let trimMaterial = null;
 let trimColor = '#e60505';
+let ledColor = '#40eaff';
+let ledGlow = 140;
 try {
     const stored = localStorage.getItem(TRIM_COLOR_KEY);
     if (/^#[0-9a-f]{6}$/i.test(stored || '')) trimColor = stored;
+    const storedLed = localStorage.getItem(LED_COLOR_KEY);
+    if (/^#[0-9a-f]{6}$/i.test(storedLed || '')) ledColor = storedLed;
+    const storedGlow = localStorage.getItem(LED_GLOW_KEY);
+    if (storedGlow !== null && Number(storedGlow) >= 0 && Number(storedGlow) <= 200)
+        ledGlow = Number(storedGlow);
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
 let sceneLights = null;
@@ -1925,6 +1936,37 @@ function setTrimColor(value, persist = true) {
     }
 }
 
+function setLedColor(value, persist = true) {
+    if (!/^#[0-9a-f]{6}$/i.test(value || '')) return;
+    ledColor = value;
+    ledParts.forEach((entry, index) => {
+        if (index >= 3 && index <= 37) return;
+        entry.color = value;
+        entry.material.color.set(value).multiplyScalar(ledsEnabled ? 1 : 0.12);
+        entry.material.emissive.set(value);
+    });
+    ledAreaLights.forEach(light => light.color.set(value));
+    const picker = document.getElementById('led-color');
+    if (picker && picker.value !== value) picker.value = value;
+    const readout = document.getElementById('led-color-value');
+    if (readout) readout.textContent = value.toUpperCase();
+    if (persist) {
+        try { localStorage.setItem(LED_COLOR_KEY, value); } catch (_) {}
+    }
+}
+
+function setLedGlow(value, persist = true) {
+    ledGlow = THREE.MathUtils.clamp(Number(value) || 0, 0, 200);
+    const picker = document.getElementById('led-glow');
+    if (picker && Number(picker.value) !== ledGlow) picker.value = String(ledGlow);
+    const readout = document.getElementById('led-glow-value');
+    if (readout) readout.textContent = `${Math.round(ledGlow)}%`;
+    setLedsEnabled(ledsEnabled);
+    if (persist) {
+        try { localStorage.setItem(LED_GLOW_KEY, String(ledGlow)); } catch (_) {}
+    }
+}
+
 function syncSizeGeometry() {
     if (!sizeVariantParts) return;
     // Switching from Standard to Extended at a steep tilt needs two more inches
@@ -1955,93 +1997,13 @@ function syncSizeGeometry() {
 
 function syncLedSizeGeometry() {
     if (!ledDesktopFit || !sizeVariantParts) return;
-    ledDesktopFit.position.set(0, 0, 0);
-    ledDesktopFit.scale.set(1, 1, 1);
     const extendedSize = currentConfig.size === '60x30';
-    // The exported cyan bars follow only the Standard top's straight layout.
-    // Both displayed sizes use contour-fitted strips below instead.
-    for (const index of [0, 1, 2]) if (ledParts[index]) ledParts[index].part.visible = false;
+    // Use the three authored Standard strips, and the two authored wide side
+    // strips with the same center strip for Extended. The tiny red desktop
+    // details in the original export are not in the panel pockets.
+    for (let index = 3; index < 38; index++) if (ledParts[index]) ledParts[index].part.visible = false;
     if (ledStandardStrips) ledStandardStrips.visible = !extendedSize;
     if (ledExtendedStrips) ledExtendedStrips.visible = extendedSize;
-    if (!extendedSize) return;
-    const standard = sizeVariantParts.smallTrim.geometry;
-    const extended = sizeVariantParts.largeTrim.geometry;
-    standard.computeBoundingBox();
-    extended.computeBoundingBox();
-    const a = standard.boundingBox;
-    const b = extended.boundingBox;
-    const sx = (b.max.x - b.min.x) / (a.max.x - a.min.x);
-    const sy = (b.max.y - b.min.y) / (a.max.y - a.min.y);
-    const sz = (b.max.z - b.min.z) / (a.max.z - a.min.z);
-    const offset = new THREE.Vector3(
-        (b.min.x + b.max.x - sx * (a.min.x + a.max.x)) / 2,
-        (b.min.y + b.max.y - sy * (a.min.y + a.max.y)) / 2,
-        (b.min.z + b.max.z - sz * (a.min.z + a.max.z)) / 2
-    );
-    ledDesktopFit.scale.set(sx, sy, sz);
-    ledDesktopFit.position.copy(offset);
-}
-
-function makeContourLedStrips(desktop, material, label) {
-    const root = new THREE.Group();
-    root.name = `${label} desktop edge LEDs`;
-    const surface = new THREE.Mesh(desktop, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
-    surface.updateMatrixWorld(true);
-    const ray = new THREE.Raycaster();
-    ray.ray.direction.set(0, -1, 0);
-    ray.far = 200;
-    desktop.computeBoundingBox();
-    const extent = desktop.boundingBox;
-    const start = extent.min.x + 1;
-    const end = extent.max.x - 1;
-    const positions = desktop.getAttribute('position');
-    const indices = desktop.index;
-    const count = indices ? indices.count : positions.count;
-    // Intersect each X station with the desktop triangles to find both side
-    // edges. This captures the Extended top's concave cutout without stretching
-    // a straight strip across open space.
-    const edgeStations = [];
-    for (let step = 0; step <= 30; step++) {
-        const x = start + (end - start) * step / 30;
-        let zMin = Infinity, zMax = -Infinity;
-        for (let i = 0; i < count; i += 3) {
-            const ids = [0, 1, 2].map(j => indices ? indices.getX(i + j) : i + j);
-            for (let j = 0; j < 3; j++) {
-                const a = ids[j], b = ids[(j + 1) % 3];
-                const ax = positions.getX(a), bx = positions.getX(b);
-                if ((x - ax) * (x - bx) > 0 || Math.abs(bx - ax) < 1e-6) continue;
-                const t = (x - ax) / (bx - ax);
-                const z = positions.getZ(a) + t * (positions.getZ(b) - positions.getZ(a));
-                zMin = Math.min(zMin, z);
-                zMax = Math.max(zMax, z);
-            }
-        }
-        if (isFinite(zMin) && zMax - zMin >= 3) edgeStations.push({ x, zMin, zMax });
-    }
-    for (const side of ['min', 'max']) {
-        const points = [];
-        for (const { x, zMin, zMax } of edgeStations) {
-            const z = side === 'min' ? zMin + 1.2 : zMax - 1.2;
-            ray.ray.origin.set(x, 100, z);
-            const hit = ray.intersectObject(surface, false)[0];
-            if (hit) points.push(new THREE.Vector3(x, hit.point.y + 0.18, z));
-        }
-        if (points.length < 3) continue;
-        const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal');
-        const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, points.length * 3, 0.16, 5, false), material);
-        mesh.name = `${label} desktop ${side} edge LED`;
-        mesh.castShadow = false;
-        root.add(mesh);
-        const light = new THREE.PointLight(0x40eaff, 1.2, 0.35, 2);
-        light.name = `${label} desktop ${side} illumination`;
-        light.position.copy(points[Math.floor(points.length / 2)]);
-        light.position.y += 10;
-        light.visible = false;
-        root.add(light);
-        ledContourLights.push(light);
-    }
-    surface.material.dispose();
-    return root;
 }
 
 async function loadTrimOverlay() {
@@ -2250,22 +2212,64 @@ async function loadTouchscreenAssembly() {
 function setLedsEnabled(on) {
     ledsEnabled = !!on;
     document.body.dataset.ledsEnabled = String(ledsEnabled);
-    ledParts.forEach(({ material, color, lights }) => {
+    ledParts.forEach(({ material, color }) => {
         material.color.set(color).multiplyScalar(ledsEnabled ? 1 : 0.12);
         material.emissive.set(color);
-        material.emissiveIntensity = ledsEnabled ? 2.2 : 0;
-        lights.forEach(light => { light.visible = ledsEnabled; });
+        material.emissiveIntensity = ledsEnabled ? 3.6 * ledGlow / 100 : 0;
     });
-    ledContourLights.forEach(light => { light.visible = ledsEnabled; });
+    ledAreaLights.forEach(light => {
+        light.visible = ledsEnabled && ledGlow > 0;
+        light.intensity = 0.08 * ledGlow / 100;
+    });
     document.querySelectorAll('[data-led-toggle],.hub-led').forEach(button =>
         button.setAttribute('aria-pressed', String(ledsEnabled)));
 }
 
+function addLedAreaLight(part, parent) {
+    part.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(part);
+    const size = box.getSize(new THREE.Vector3());
+    const majorX = size.x > size.z;
+    const length = Math.max(size.x, size.z);
+    if (length < 5) return;
+    // A long area source gives a continuous wash and specular reflection, with
+    // no single bright point on the wings at the low sitting height.
+    const light = new THREE.RectAreaLight(ledColor, 0, length * 0.9, 2.4);
+    light.name = `${part.name} soft LED wash`;
+    light.position.copy(box.getCenter(new THREE.Vector3()));
+    light.position.y = box.min.y - 0.6;
+    const right = majorX ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1);
+    const up = majorX ? new THREE.Vector3(0, 0, -1) : new THREE.Vector3(1, 0, 0);
+    light.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(
+        right, up, new THREE.Vector3(0, 1, 0)));
+    light.visible = false;
+    parent.add(light);
+    ledAreaLights.push(light);
+}
+
+function revealCenterLed(part, desktopGeometry) {
+    const underside = new THREE.Mesh(desktopGeometry,
+        new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+    const center = new THREE.Box3().setFromObject(part);
+    const ray = new THREE.Raycaster(
+        new THREE.Vector3((center.min.x + center.max.x) / 2, -100,
+            (center.min.z + center.max.z) / 2),
+        new THREE.Vector3(0, 1, 0), 0, 200);
+    const hit = ray.intersectObject(underside, false)[0];
+    if (hit) part.position.y += Math.min(0, hit.point.y - center.min.y - 0.06);
+    underside.material.dispose();
+}
+
 async function loadLedOverlay() {
     try {
-        const gltf = await gltfLoader.loadAsync(LED_MODEL_URL);
+        const [gltf, wideGltf] = await Promise.all([
+            gltfLoader.loadAsync(LED_MODEL_URL),
+            gltfLoader.loadAsync(WIDE_DESKTOP_LED_URL)
+        ]);
         if (gltf.scene.children.length !== 43)
             throw new Error('LED export has changed; recheck panel assignments.');
+        if (wideGltf.scene.children.length !== 2)
+            throw new Error('Wide desktop LED export must contain its two side strips.');
         const roots = { base: new THREE.Group(), lift: new THREE.Group(), tilt: new THREE.Group() };
         roots.base.name = 'Base LEDs';
         roots.lift.name = 'Shelf LEDs';
@@ -2274,38 +2278,42 @@ async function loadLedOverlay() {
         ledDesktopFit.name = 'Desktop LED size fit';
         roots.tilt.add(ledDesktopFit);
         ledParts = [];
-        ledContourLights = [];
+        ledAreaLights = [];
+        RectAreaLightUniformsLib.init();
         gltf.scene.children.forEach((_, index) => {
-            const color = index >= 3 && index <= 37 ? 0xff2828 : 0x40eaff;
+            const color = index >= 3 && index <= 37 ? 0xff2828 : ledColor;
             const material = new THREE.MeshStandardMaterial({ color, emissive: color,
                 roughness: 0.4, metalness: 0.05, side: THREE.DoubleSide,
                 polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
             const role = index === 38 ? 'base' : index >= 39 ? 'lift' : 'tilt';
             const part = makeOverlayNode(gltf, index, -100, material, `${roots[role].name} ${index + 1}`);
-            const lights = [];
-            if (index >= 38) {
-                const center = new THREE.Box3().setFromObject(part).getCenter(new THREE.Vector3());
-                const light = new THREE.PointLight(color, 0.08, 0.35, 2);
-                light.name = `LED illumination ${index + 1}`;
-                light.position.copy(center);
-                light.position.y += 18;
-                light.visible = false;
-                light.castShadow = false;
-                part.add(light);
-                lights.push(light);
-            }
             (role === 'tilt' ? ledDesktopFit : roots[role]).add(part);
-            ledParts.push({ part, material, color, lights });
+            ledParts.push({ part, material, color });
         });
+        ledStandardStrips = new THREE.Group();
+        ledStandardStrips.name = 'Standard desktop underside LEDs';
+        for (let index = 0; index < 3; index++) ledStandardStrips.add(ledParts[index].part);
+        ledExtendedStrips = new THREE.Group();
+        ledExtendedStrips.name = 'Extended desktop underside LEDs';
+        for (let index = 0; index < 2; index++) {
+            ledExtendedStrips.add(makeOverlayNode(wideGltf, index, -100,
+                ledParts[index].material, `Extended desktop side LED ${index + 1}`));
+        }
+        const wideCenter = ledParts[2].part.clone(true);
+        wideCenter.name = 'Extended desktop center LED';
+        ledExtendedStrips.add(wideCenter);
         const standardTop = sizeVariantParts.smallTop;
         standardTop.updateMatrixWorld(true);
         loadedModel.updateMatrixWorld(true);
         const standardGeometry = standardTop.geometry.clone();
         standardGeometry.applyMatrix4(loadedModel.matrixWorld.clone().invert().multiply(standardTop.matrixWorld));
         standardGeometry.translate(0, -LIFT_MIN, 0);
-        ledStandardStrips = makeContourLedStrips(standardGeometry, ledParts[0].material, 'Standard');
+        revealCenterLed(ledParts[2].part, standardGeometry);
         standardGeometry.dispose();
-        ledExtendedStrips = makeContourLedStrips(sizeVariantParts.largeTop.geometry, ledParts[0].material, 'Extended');
+        revealCenterLed(wideCenter, sizeVariantParts.largeTop.geometry);
+        for (const part of ledStandardStrips.children.slice()) addLedAreaLight(part, ledStandardStrips);
+        for (const part of ledExtendedStrips.children.slice()) addLedAreaLight(part, ledExtendedStrips);
+        for (const index of [39, 40, 41, 42]) addLedAreaLight(ledParts[index].part, roots.lift);
         roots.tilt.add(ledStandardStrips, ledExtendedStrips);
         roots.lift.position.y = LIFT_MIN;
         roots.tilt.position.y = LIFT_MIN;
@@ -2347,7 +2355,6 @@ function loadModel() {
         ledDesktopFit = null;
         ledStandardStrips = null;
         ledExtendedStrips = null;
-        ledContourLights = [];
         boxHelpers.forEach(h => scene.remove(h));
         boxHelpers.clear();
         editorIdCounter = 0;
@@ -2666,6 +2673,8 @@ function serializeProject() {
             presentation: {
                 surfaceFinish,
                 trimColor,
+                ledColor,
+                ledGlow,
                 ledsEnabled,
                 touchscreenOpen: screenTarget > 0.5,
                 grainEnabled,
@@ -2962,6 +2971,8 @@ function applyConfigToUI() {
 function applyProjectPresentation(project) {
     const presentation = project.presentation || {};
     if (presentation.trimColor) setTrimColor(presentation.trimColor);
+    if (presentation.ledColor) setLedColor(presentation.ledColor);
+    if (presentation.ledGlow !== undefined) setLedGlow(presentation.ledGlow);
     if (typeof presentation.ledsEnabled === 'boolean') setLedsEnabled(presentation.ledsEnabled);
     if (typeof presentation.touchscreenOpen === 'boolean') {
         setTouchscreenOpen(presentation.touchscreenOpen);
@@ -8628,6 +8639,10 @@ window.ErgoFlex = {
     get touchscreenProgress() { return screenProgress; },
     get touchscreenReady() { return !!screenAssembly; },
     setLedsEnabled,
+    setLedColor,
+    get ledColor() { return ledColor; },
+    setLedGlow,
+    get ledGlow() { return ledGlow; },
     get ledsEnabled() { return ledsEnabled; },
     get ledCount() { return ledParts.length; },
     get workspaceAccessories() { return workspaceAccessories; },
@@ -8822,5 +8837,9 @@ initStudio();
 populateFinishOptions();
 setTrimColor(trimColor, false);
 document.getElementById('trim-color')?.addEventListener('input', event => setTrimColor(event.target.value));
+setLedColor(ledColor, false);
+document.getElementById('led-color')?.addEventListener('input', event => setLedColor(event.target.value));
+setLedGlow(ledGlow, false);
+document.getElementById('led-glow')?.addEventListener('input', event => setLedGlow(event.target.value));
 updatePrice();
 initThreeJS();

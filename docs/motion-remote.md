@@ -102,7 +102,7 @@ outer viewer, and re-clamped whenever that rectangle can change: the viewer's
 | Height | editable readout, a centred jog track, and a speed |
 | Tilt | editable readout, a 120° crescent jog track, and a speed |
 | Touchscreen | slides out, then rotates to face the user; tap again to stow |
-| LEDs | turns the desk, shelf, and base lights and local surface illumination on or off |
+| LEDs | turns the emissive strips and soft panel illumination on or off; LED color and glow strength are adjustable in Studio and the LA Tech Week player |
 | Preset banks | **separate** for lift and tilt — tap recalls, press and hold saves |
 | Ergo Forms | Sitting (28″, 0°), Standing (48″, 0°), and Easel (52″, 65°) combined poses. Double-click to rename |
 | Stop | freezes everything exactly where it is |
