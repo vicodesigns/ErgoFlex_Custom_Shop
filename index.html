@@ -366,6 +366,20 @@
                                 </div>
                                 <label class="block text-sm text-gray-700" for="led-glow">Glow strength <span id="led-glow-value">140%</span></label>
                                 <input id="led-glow" type="range" min="0" max="200" value="140" aria-label="LED glow strength" class="w-full">
+                                <div class="pt-3 border-t border-gray-200 text-sm font-medium text-gray-800">Light on surfaces</div>
+                                <p class="text-xs text-gray-500">Adjust reflected light separately from LED brightness.</p>
+                                <label class="block text-sm text-gray-700" for="led-desktop-strength">Desktop reflection <span data-led-surface-value="desktopStrength">100%</span></label>
+                                <input id="led-desktop-strength" data-led-surface="desktopStrength" type="range" min="0" max="200" value="100" aria-label="Desktop LED reflection strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-desktop-reach">Desktop fade reach <span data-led-surface-value="desktopReach">50%</span></label>
+                                <input id="led-desktop-reach" data-led-surface="desktopReach" type="range" min="0" max="100" value="50" aria-label="How far the desktop LED reflection fades toward the front" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-shelf-strength">Lower shelf reflection <span data-led-surface-value="shelfStrength">100%</span></label>
+                                <input id="led-shelf-strength" data-led-surface="shelfStrength" type="range" min="0" max="200" value="100" aria-label="Lower shelf LED reflection strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-shelf-reach">Lower shelf fade reach <span data-led-surface-value="shelfReach">50%</span></label>
+                                <input id="led-shelf-reach" data-led-surface="shelfReach" type="range" min="0" max="100" value="50" aria-label="How far the lower shelf LED reflection fades" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-base-strength">Base shelf reflection <span data-led-surface-value="baseStrength">0%</span></label>
+                                <input id="led-base-strength" data-led-surface="baseStrength" type="range" min="0" max="200" value="0" aria-label="Base shelf LED reflection strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-base-reach">Base shelf fade reach <span data-led-surface-value="baseReach">50%</span></label>
+                                <input id="led-base-reach" data-led-surface="baseReach" type="range" min="0" max="100" value="50" aria-label="How far the base shelf LED reflection fades" class="w-full">
                             </div>
                         </div>
                     </div>
@@ -758,7 +772,7 @@
     }
     </script>
 
-    <script type="module" src="./studio.js?v=wide-touchscreen-20260929"></script>
+    <script type="module" src="./studio.js?v=surface-fade-20260929"></script>
     <script>
         // Classic script: runs before the deferred module above. Browsers refuse to
         // load ES modules over file://, so studio.js never executes and the loader

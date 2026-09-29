@@ -26,6 +26,7 @@ const LED_MODEL_URL = './assets/motion/LEDS.glb';
 const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb';
 const LED_COLOR_KEY = 'ergoflex.ledColorV1';
 const LED_GLOW_KEY = 'ergoflex.ledGlowV1';
+const LED_SURFACE_KEY = 'ergoflex.ledSurfacesV1';
 const SCREEN_PIVOT = new THREE.Vector3(-141.99034318, 49.56108308, 0);
 const WIDE_SCREEN_PIVOT = new THREE.Vector3(-139.79, 49.56108308, 0);
 const SCREEN_SLIDE = 4.7;
@@ -393,6 +394,12 @@ let trimMaterial = null;
 let trimColor = '#e60505';
 let ledColor = '#40eaff';
 let ledGlow = 140;
+const LED_SURFACE_DEFAULTS = Object.freeze({
+    desktopStrength: 100, desktopReach: 50,
+    shelfStrength: 100, shelfReach: 50,
+    baseStrength: 0, baseReach: 50
+});
+let ledSurfaces = { ...LED_SURFACE_DEFAULTS };
 try {
     const stored = localStorage.getItem(TRIM_COLOR_KEY);
     if (/^#[0-9a-f]{6}$/i.test(stored || '')) trimColor = stored;
@@ -401,6 +408,13 @@ try {
     const storedGlow = localStorage.getItem(LED_GLOW_KEY);
     if (storedGlow !== null && Number(storedGlow) >= 0 && Number(storedGlow) <= 200)
         ledGlow = Number(storedGlow);
+    const storedSurfaces = JSON.parse(localStorage.getItem(LED_SURFACE_KEY) || '{}');
+    for (const key of Object.keys(LED_SURFACE_DEFAULTS)) {
+        const value = storedSurfaces[key];
+        if (value !== undefined && Number.isFinite(Number(value)))
+            ledSurfaces[key] = THREE.MathUtils.clamp(Number(value), 0,
+                key.endsWith('Strength') ? 200 : 100);
+    }
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
 let sceneLights = null;
@@ -660,6 +674,7 @@ function initThreeJS() {
     // for occlusion, which RectAreaLight does not support.
     camera.layers.enable(1);
     camera.layers.enable(2);
+    camera.layers.enable(3);
     camera.position.set(STARTING_POS.x, STARTING_POS.y, STARTING_POS.z);
 
     // WebGL can be unavailable (GPU process crash, hardware acceleration off).
@@ -1954,7 +1969,7 @@ function setLedColor(value, persist = true) {
         entry.material.emissive.set(value);
     });
     ledAreaLights.forEach(light => light.color.set(value));
-    ledSpillMaterials.forEach(material => material.uniforms.ledColor.value.set(value));
+    ledSpillMaterials.forEach(({ material }) => material.uniforms.ledColor.value.set(value));
     const picker = document.getElementById('led-color');
     if (picker && picker.value !== value) picker.value = value;
     const readout = document.getElementById('led-color-value');
@@ -1973,6 +1988,21 @@ function setLedGlow(value, persist = true) {
     setLedsEnabled(ledsEnabled);
     if (persist) {
         try { localStorage.setItem(LED_GLOW_KEY, String(ledGlow)); } catch (_) {}
+    }
+}
+
+function setLedSurface(key, value, persist = true) {
+    if (!Object.hasOwn(LED_SURFACE_DEFAULTS, key)) return;
+    const number = Number(value);
+    if (!Number.isFinite(number)) return;
+    ledSurfaces[key] = THREE.MathUtils.clamp(number, 0, key.endsWith('Strength') ? 200 : 100);
+    const slider = document.querySelector(`[data-led-surface="${key}"]`);
+    if (slider) slider.value = String(ledSurfaces[key]);
+    const readout = document.querySelector(`[data-led-surface-value="${key}"]`);
+    if (readout) readout.textContent = `${Math.round(ledSurfaces[key])}%`;
+    setLedsEnabled(ledsEnabled);
+    if (persist) {
+        try { localStorage.setItem(LED_SURFACE_KEY, JSON.stringify(ledSurfaces)); } catch (_) {}
     }
 }
 
@@ -2272,17 +2302,22 @@ function setLedsEnabled(on) {
         material.emissiveIntensity = ledsEnabled ? 3.6 * ledGlow / 100 : 0;
     });
     ledAreaLights.forEach(light => {
-        light.visible = ledsEnabled && ledGlow > 0;
-        light.intensity = 0.25 * (light.userData.gain ?? 1) * ledGlow / 100;
+        const receiver = light.userData.receiver;
+        const strength = ledSurfaces[`${receiver}Strength`] / 100;
+        light.visible = ledsEnabled && ledGlow > 0 && strength > 0;
+        light.intensity = 0.25 * (light.userData.gain ?? 1) * strength * ledGlow / 100;
     });
-    ledSpillMaterials.forEach(material => {
-        material.uniforms.strength.value = ledsEnabled ? ledGlow / 100 : 0;
+    ledSpillMaterials.forEach(({ material, receiver, minReach, maxReach }) => {
+        material.uniforms.strength.value = ledsEnabled
+            ? ledGlow * ledSurfaces[`${receiver}Strength`] / 10000 : 0;
+        material.uniforms.fadeReach.value = minReach +
+            (maxReach - minReach) * ledSurfaces[`${receiver}Reach`] / 100;
     });
     document.querySelectorAll('[data-led-toggle],.hub-led').forEach(button =>
         button.setAttribute('aria-pressed', String(ledsEnabled)));
 }
 
-function addLedAreaLight(part, parent, receiverLayer = 0) {
+function addLedAreaLight(part, parent, receiverLayer = 0, receiver = 'base') {
     part.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(part);
     const size = box.getSize(new THREE.Vector3());
@@ -2303,6 +2338,7 @@ function addLedAreaLight(part, parent, receiverLayer = 0) {
         right, up, new THREE.Vector3(0, 1, 0)));
     light.visible = false;
     light.layers.set(receiverLayer);
+    light.userData.receiver = receiver;
     parent.add(light);
     ledAreaLights.push(light);
 }
@@ -2313,14 +2349,19 @@ function enableLedReceiver(object, layer) {
     });
 }
 
-function addDesktopLedSpill(desktop) {
-    // The real lower-shelf strip makes a red pool near the rear of the top,
-    // fading before the keyboard edge. Reuse the desktop's exact mesh so the
-    // wash respects the curved edge and cutouts, including the 60-inch top.
+function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
+    minReach, maxReach, peakAlpha) {
+    // Follow the actual panel mesh so the light fade respects its outline and
+    // cutouts as the lift, tilt, and desktop size change.
     const material = new THREE.ShaderMaterial({
         uniforms: {
             ledColor: { value: new THREE.Color(ledColor) },
-            strength: { value: 0 }
+            strength: { value: 0 },
+            fadeReach: { value: (minReach + maxReach) / 2 },
+            centerX: { value: centerX },
+            centerZ: { value: centerZ },
+            zRadius: { value: zRadius },
+            peakAlpha: { value: peakAlpha }
         },
         vertexShader: `
             varying vec3 ledPosition;
@@ -2334,14 +2375,19 @@ function addDesktopLedSpill(desktop) {
         fragmentShader: `
             uniform vec3 ledColor;
             uniform float strength;
+            uniform float fadeReach;
+            uniform float centerX;
+            uniform float centerZ;
+            uniform float zRadius;
+            uniform float peakAlpha;
             varying vec3 ledPosition;
             varying vec3 ledNormal;
             void main() {
                 float top = smoothstep(0.55, 0.95, normalize(ledNormal).y);
-                float dx = (ledPosition.x + 171.0) / 10.0;
-                float dz = (ledPosition.z + 327.0) / 23.0;
+                float dx = (ledPosition.x - centerX) / fadeReach;
+                float dz = (ledPosition.z - centerZ) / zRadius;
                 float pool = exp(-0.5 * (dx * dx + dz * dz));
-                float alpha = min(0.9, 0.52 * strength * pool * top);
+                float alpha = min(0.9, peakAlpha * strength * pool * top);
                 gl_FragColor = vec4(ledColor, alpha);
                 #include <tonemapping_fragment>
                 #include <colorspace_fragment>
@@ -2355,12 +2401,12 @@ function addDesktopLedSpill(desktop) {
         polygonOffsetUnits: -1,
         side: THREE.FrontSide
     });
-    const spill = new THREE.Mesh(desktop.geometry, material);
-    spill.name = `${desktop.name} LED reflection`;
+    const spill = new THREE.Mesh(surface.geometry, material);
+    spill.name = `${surface.name} LED reflection`;
     spill.renderOrder = 1;
     spill.raycast = () => {};
-    desktop.add(spill);
-    ledSpillMaterials.push(material);
+    surface.add(spill);
+    ledSpillMaterials.push({ material, receiver, minReach, maxReach });
 }
 
 function revealCenterLed(part, desktopGeometry) {
@@ -2428,20 +2474,29 @@ async function loadLedOverlay() {
         revealCenterLed(ledParts[2].part, standardGeometry);
         standardGeometry.dispose();
         revealCenterLed(wideCenter, sizeVariantParts.largeTop.geometry);
-        for (const part of ledStandardStrips.children.slice()) addLedAreaLight(part, ledStandardStrips);
-        for (const part of ledExtendedStrips.children.slice()) addLedAreaLight(part, ledExtendedStrips);
+        for (const part of ledStandardStrips.children.slice()) addLedAreaLight(part, ledStandardStrips, 3, 'base');
+        for (const part of ledExtendedStrips.children.slice()) addLedAreaLight(part, ledExtendedStrips, 3, 'base');
         const lowerShelf = [...partRegistry.values()].find(({ obj }) => obj.name === 'Top_Shelf_3')?.obj;
-        if (!lowerShelf) throw new Error('Lower shelf LED receiver is missing.');
+        const baseShelf = [...partRegistry.values()].find(({ obj }) => obj.name === 'Base_Panels_3')?.obj;
+        if (!lowerShelf || !baseShelf) throw new Error('Shelf LED receiver is missing.');
         enableLedReceiver(lowerShelf, 1);
+        enableLedReceiver(baseShelf, 3);
         enableLedReceiver(sizeVariantParts.smallTop, 2);
         enableLedReceiver(sizeVariantParts.largeTop, 2);
-        addDesktopLedSpill(sizeVariantParts.smallTop);
-        addDesktopLedSpill(sizeVariantParts.largeTop);
+        addLedSurfaceSpill(sizeVariantParts.smallTop, 'desktop', -171, -327,
+            23, 6, 14, 0.52);
+        addLedSurfaceSpill(sizeVariantParts.largeTop, 'desktop', -171, -327,
+            23, 6, 14, 0.52);
+        addLedSurfaceSpill(lowerShelf, 'shelf', -177, -327,
+            22, 3, 11, 0.42);
+        addLedSurfaceSpill(baseShelf, 'base', -166, -327,
+            21, 3, 11, 0.28);
         // The upper shelf lights wash the lower shelf. The lower shelf light
         // washes the desktop. This prevents illumination through the panels.
         for (const index of [39, 40, 41, 42]) {
-            addLedAreaLight(ledParts[index].part, roots.lift, index === 39 ? 2 : 1);
-            if (index === 39) ledAreaLights.at(-1).userData.gain = 0.12;
+            addLedAreaLight(ledParts[index].part, roots.lift,
+                index === 39 ? 2 : 1, index === 39 ? 'desktop' : 'shelf');
+            ledAreaLights.at(-1).userData.gain = 0.12;
         }
         roots.tilt.add(ledStandardStrips, ledExtendedStrips);
         roots.lift.position.y = LIFT_MIN;
@@ -2804,6 +2859,7 @@ function serializeProject() {
                 trimColor,
                 ledColor,
                 ledGlow,
+                ledSurfaces: { ...ledSurfaces },
                 ledsEnabled,
                 touchscreenOpen: screenTarget > 0.5,
                 grainEnabled,
@@ -3102,6 +3158,8 @@ function applyProjectPresentation(project) {
     if (presentation.trimColor) setTrimColor(presentation.trimColor);
     if (presentation.ledColor) setLedColor(presentation.ledColor);
     if (presentation.ledGlow !== undefined) setLedGlow(presentation.ledGlow);
+    for (const [key, value] of Object.entries(presentation.ledSurfaces || {}))
+        setLedSurface(key, value);
     if (typeof presentation.ledsEnabled === 'boolean') setLedsEnabled(presentation.ledsEnabled);
     if (typeof presentation.touchscreenOpen === 'boolean') {
         setTouchscreenOpen(presentation.touchscreenOpen);
@@ -8772,6 +8830,8 @@ window.ErgoFlex = {
     get ledColor() { return ledColor; },
     setLedGlow,
     get ledGlow() { return ledGlow; },
+    setLedSurface,
+    get ledSurfaces() { return { ...ledSurfaces }; },
     get ledsEnabled() { return ledsEnabled; },
     get ledCount() { return ledParts.length; },
     get workspaceAccessories() { return workspaceAccessories; },
@@ -8970,5 +9030,8 @@ setLedColor(ledColor, false);
 document.getElementById('led-color')?.addEventListener('input', event => setLedColor(event.target.value));
 setLedGlow(ledGlow, false);
 document.getElementById('led-glow')?.addEventListener('input', event => setLedGlow(event.target.value));
+for (const [key, value] of Object.entries(ledSurfaces)) setLedSurface(key, value, false);
+document.querySelectorAll('[data-led-surface]').forEach(slider =>
+    slider.addEventListener('input', event => setLedSurface(event.target.dataset.ledSurface, event.target.value)));
 updatePrice();
 initThreeJS();

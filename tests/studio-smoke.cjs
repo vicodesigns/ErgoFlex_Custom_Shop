@@ -123,12 +123,46 @@ function ErgoFlexDeviceMatches(size, id) {
         emissive: (() => { let value; model.getObjectByName('Desktop LEDs 3')?.traverse(obj => {
           if (obj.isMesh) value = obj.material.emissiveIntensity;
         }); return value; })(),
-        wash: model.getObjectByName('Desktop LEDs 3 soft LED wash')?.intensity };
+        wash: model.getObjectByName('Shelf LEDs 40 soft LED wash')?.intensity };
     });
     assert.equal(ledGlow.selected, 160);
     assert.equal(ledGlow.saved, 160);
     assert.ok(ledGlow.emissive > 2.2 && ledGlow.wash > 0,
       'glow control raises mesh emission and the soft panel wash');
+    const surfaceLight = await page.evaluate(() => {
+      ErgoFlex.setLedSurface('desktopStrength', 65);
+      ErgoFlex.setLedSurface('desktopReach', 80);
+      ErgoFlex.setLedSurface('shelfStrength', 25);
+      ErgoFlex.setLedSurface('shelfReach', 70);
+      ErgoFlex.setLedSurface('baseStrength', 35);
+      ErgoFlex.setLedSurface('baseReach', 20);
+      const model = ErgoFlex.loadedModel;
+      const uniforms = model.getObjectByName('Standard desktop LED reflection').material.uniforms;
+      const shelf = model.getObjectByName('Top_Shelf_3 LED reflection').material.uniforms;
+      const base = model.getObjectByName('Base_Panels_3 LED reflection').material.uniforms;
+      return {
+        saved: ErgoFlex.serializeProject().presentation.ledSurfaces,
+        desktopStrength: uniforms.strength.value,
+        desktopReach: uniforms.fadeReach.value,
+        shelfStrength: shelf.strength.value,
+        shelfReach: shelf.fadeReach.value,
+        baseStrength: base.strength.value,
+        baseReach: base.fadeReach.value
+      };
+    });
+    assert.equal(surfaceLight.saved.desktopStrength, 65);
+    assert.equal(surfaceLight.saved.desktopReach, 80);
+    assert.equal(surfaceLight.saved.shelfStrength, 25);
+    assert.equal(surfaceLight.saved.shelfReach, 70);
+    assert.equal(surfaceLight.saved.baseStrength, 35);
+    assert.equal(surfaceLight.saved.baseReach, 20);
+    assert.ok(Math.abs(surfaceLight.desktopStrength - 1.04) < 0.001);
+    assert.ok(Math.abs(surfaceLight.desktopReach - 12.4) < 0.001);
+    assert.ok(Math.abs(surfaceLight.shelfStrength - 0.4) < 0.001);
+    assert.ok(Math.abs(surfaceLight.shelfReach - 8.6) < 0.001);
+    assert.ok(Math.abs(surfaceLight.baseStrength - 0.56) < 0.001);
+    assert.ok(Math.abs(surfaceLight.baseReach - 4.6) < 0.001,
+      'surface controls independently set the strength and fade on each panel');
     await page.evaluate(() => { ErgoFlex.setTouchscreenOpen(false); ErgoFlex.setLedsEnabled(false); });
     await page.waitForFunction(() => ErgoFlex.touchscreenProgress < 0.01, { timeout: 10000 });
     assert.equal(await page.evaluate(() => {
