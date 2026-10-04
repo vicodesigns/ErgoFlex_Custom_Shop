@@ -20,18 +20,27 @@ const puppeteer = require('puppeteer');
     await page.waitForFunction(() => document.activeElement?.id === 'proof1Title');
     await frame.$eval('[data-ef-field="heroTitle"]',el => el.click());
     await page.waitForFunction(() => document.activeElement?.id === 'heroTitle');
-    assert.equal(await page.$eval('#heroTitle',el => el.value),'Meet ErgoFlex: The Workstation That Moves With You.');
+    assert.equal(await page.$eval('#heroTitle',el => el.value),'Meet ErgoFlex: The Smart Workstation That Moves With You.');
     assert.equal(await page.$eval('#proof1Title',el => el.value),'Two issued U.S. patents');
-    assert.equal(await page.$eval('#proof2Title',el => el.value),'Third application submitted');
-    assert.equal(await page.$eval('#platform1Title',el => el.value),'See an interaction become movement.');
-    assert.equal(await page.$eval('#format1Title',el => el.value),'AI & founder conversations');
+    assert.equal(await page.$eval('#proof2Title',el => el.value),'Third patent application pending');
+    assert.equal(await page.$eval('#platform1Title',el => el.value),'See a desk respond to its user.');
+    assert.equal(await page.$eval('#heroButton',el => el.value),'Plan an interactive demo');
+    assert.equal(await page.$eval('#format1Title',el => el.value),'Watch smart ergonomics in motion.');
+    assert.equal(await page.$eval('#format2Title',el => el.value),'Find a position that fits.');
+    assert.equal(await page.$eval('#format3Title',el => el.value),'Explore the thinking behind the desk.');
     await frame.$eval('#ef-tech-platform-title',el => el.click());
     await page.waitForFunction(() => document.activeElement?.id === 'platformTitle');
     await page.$eval('#platformTitle',el => {el.value='Your editable product story';el.dispatchEvent(new Event('input',{bubbles:true}));});
     assert.equal(await page.$eval('#clip0_title',el => el.value),'Vision control');
-    for (const [i,title] of ['Vision control','Light & sound response','Voice control & pre-collision sensing','Recorded routines & playback','Sound-reactive LED inlay'].entries()) {
+    for (const [i,title] of ['Vision control','Touchscreen control, light & sound feedback','Voice control & pre-collision sensing','Groove routines & playback','Sound-reactive LED inlay'].entries()) {
       assert.equal(await page.$eval(`#clip${i}_title`,el => el.value),title);
     }
+    assert.match(await page.$eval('#clip0_description',el => el.value),/hands-free way to interact/);
+    assert.match(await page.$eval('#clip1_description',el => el.value),/integrated touch display/);
+    assert.match(await page.$eval('#clip2_description',el => el.value),/proximity sensing/);
+    assert.match(await page.$eval('#clip3_description',el => el.value),/forward or in reverse/);
+    assert.match(await page.$eval('#clip4_description',el => el.value),/respond to sound/);
+    assert.equal(await page.$eval('#hostButtonUrl',el => el.value),'mailto:vico@ergoflexdesk.com?subject=Tech%20Week%20ErgoFlex%20demo');
     const expectedVisionPoster = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(__dirname,'assets/vision-control-04s.jpg')).toString('base64');
     assert.equal(await frame.$eval('#ef-tech-player',el => el.getAttribute('poster')),expectedVisionPoster);
     assert.equal(await frame.$eval('#ef-tech-player',el => el.muted),true);

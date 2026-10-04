@@ -21,7 +21,7 @@ const server = http.createServer((req, res) => {
 
 (async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
+  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--disable-dev-shm-usage'] });
   try {
     const page = await browser.newPage();
     const errors = [];
@@ -32,6 +32,55 @@ const server = http.createServer((req, res) => {
     // more props is a pipeline run and not also a test edit.
     const catalogSize = JSON.parse(fs.readFileSync(path.join(root, 'assets/props/index.json'), 'utf8')).props.length;
     await page.waitForFunction(count => document.querySelectorAll('.scene-library-card').length === count, { timeout: 90000 }, catalogSize);
+    await page.evaluate(() => ErgoFlex.renderer.setPixelRatio(1));
+    console.log('Studio and ' + catalogSize + ' picker entries loaded.');
+    const catalog = JSON.parse(fs.readFileSync(path.join(root, 'assets/props/index.json'), 'utf8')).props;
+    const collections = [...new Set(catalog.map(p => p.collection).filter(Boolean))];
+    for (const collection of collections) {
+      const expected = catalog.filter(p => p.collection === collection);
+      for (const prop of expected) {
+        assert.ok(fs.existsSync(path.join(root, prop.file)), `${prop.id} has a runtime model`);
+        assert.ok(fs.existsSync(path.join(root, 'assets/props/thumbs', prop.id + '.png')), `${prop.id} has a thumbnail`);
+      }
+      await page.select('#scene-library-collection', collection);
+      assert.equal(await page.$$eval('.scene-library-card', cards => cards.length), expected.length, collection + ' filters the picker');
+    }
+    await page.select('#scene-library-collection', 'Kenney Furniture');
+    await page.select('#scene-library-category', 'lighting');
+    await page.type('#scene-library-search', 'floor');
+    assert.equal(await page.$$eval('.scene-library-card', cards => cards.length), 2, 'Collection, category, and search combine');
+    await page.$eval('#scene-library-search', input => { input.value = ''; input.dispatchEvent(new Event('input')); });
+    await page.select('#scene-library-category', 'all');
+    await page.select('#scene-library-collection', 'all');
+    console.log('All six collection filters and combined search passed.');
+
+    // New decorations are physically sized, supported, and clear of walls in
+    // every layout, while the requested Steelcase chair remains in each scene.
+    await page.evaluate(async () => { ErgoFlex.setRoomScene('home', false); await ErgoFlex.workspaceRoom.ready; });
+    for (const id of ['apartment', 'house', 'spacious', 'premium', 'executive']) {
+      await page.evaluate(async layout => { ErgoFlex.setHomeLayout(layout); await ErgoFlex.workspaceRoom.ready; }, id);
+      const layout = await page.evaluate(async () => {
+        const THREE = await import('three'), room = ErgoFlex.workspaceRoom;
+        room.root.updateMatrixWorld(true);
+        const inverse = room.root.matrixWorld.clone().invert();
+        return { dimensions: room.root.userData.dimensionsMm, back: room.homeLayout.back, missing: room.missingProps, props: room.assets().map(obj => {
+          const bounds = new THREE.Box3();
+          obj.traverse(mesh => { if (mesh.isMesh) { mesh.geometry.computeBoundingBox(); bounds.union(mesh.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(mesh.matrixWorld))); } });
+          return { id: obj.userData.propId, min: bounds.min.toArray(), max: bounds.max.toArray(), y: obj.position.y };
+        }) };
+      });
+      assert.deepEqual(layout.missing, [], id + ' loads every prop');
+      assert.ok(layout.props.some(p => p.id === 'steelcase-leap-v2'));
+      for (const prop of layout.props) {
+        assert.ok(prop.min[0] >= -layout.dimensions.width/2-1 && prop.max[0] <= layout.dimensions.width/2+1, id + ': ' + prop.id + ' fits room width');
+        assert.ok(prop.min[2] >= layout.back-1 && prop.max[2] <= layout.back+layout.dimensions.depth+1, id + ': ' + prop.id + ' fits room depth');
+        if (prop.y === 0) assert.ok(Math.abs(prop.min[1]) < 1, prop.id + ' stands on the floor');
+      }
+      const newIds = layout.props.filter(p => /^(kenney-|quaternius-)/.test(p.id)).map(p => p.id);
+      assert.equal(newIds.length, id === 'apartment' ? 3 : 5);
+      console.log(id + ': all props loaded and fit room bounds.');
+    }
+    console.log('Imported model files, thumbnails, collection filters, and all five Home Office placements passed.');
 
     await page.evaluate(async () => { ErgoFlex.setRoomScene('office', false); await ErgoFlex.workspaceRoom.ready; });
     const original = await page.evaluate(() => ({
@@ -83,7 +132,7 @@ const server = http.createServer((req, res) => {
 
     const lifecycle = await page.evaluate(async () => {
       const before = ErgoFlex.sceneAssetRegistry.size;
-      await ErgoFlex.addSceneAsset('airtag');
+      await ErgoFlex.addSceneAsset('quaternius-guitar');
       const added = ErgoFlex.movingObjects.at(-1).obj.userData.editorId;
       const afterAdd = ErgoFlex.sceneAssetRegistry.size;
       ErgoFlex.deleteSelectedSceneAssets();

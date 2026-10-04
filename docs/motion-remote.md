@@ -88,6 +88,16 @@ Drag the header. Only the bare strip starts a drag — a pointerdown on the stop
 button, the collapse toggle, or any other interactive descendant belongs to that
 control.
 
+A resized panel retains its device width when collapsed, but its height shrinks
+to the header. Expanding restores the saved device height, including after reload.
+
+Glide travel in furnished scenes follows the selected room's physical floor,
+with the visible desk footprint and 25 mm clearance kept inside its walls.
+Rotation, posture, and desktop size update this clearance. Furniture does not
+block travel. Project files retain positions beyond the product preview's ±1
+range. Slow is 0.306 scene units/second (50% faster than the previous 0.204);
+Crawl, Ninja, Medium, and Fast retain their existing rates.
+
 The position is clamped to the **canvas's usable rectangle**, not merely the
 outer viewer, and re-clamped whenever that rectangle can change: the viewer's
 `ResizeObserver`, window resize, collapsing or expanding, and after
@@ -104,7 +114,7 @@ outer viewer, and re-clamped whenever that rectangle can change: the viewer's
 | Touchscreen | slides out, then rotates to face the user; tap again to stow |
 | LEDs | turns the emissive strips and soft panel illumination on or off; LED color and glow strength are adjustable in Studio and the LA Tech Week player |
 | Preset banks | **separate** for lift and tilt — tap recalls, press and hold saves |
-| Ergo Forms | Sitting (28″, 0°), Standing (48″, 0°), and Easel (52″, 65°) combined poses. Double-click to rename |
+| Ergo Forms | Sitting (28″, 0°), Standing (43.5″, −5°), and Easel (52″, 65°) combined poses. Double-click to rename |
 | Stop | freezes everything exactly where it is |
 
 **Stop is not `stopGlide()`.** That function returns the desk to its home
@@ -295,3 +305,12 @@ their own half-span, and `syncTiltUI()` writes the readout and nothing else.
 The per-rig tilt sliders that used to float inside the panel are gone from it.
 They are an authoring tool, the app has no such control, and the editor panel's
 `#tilt-configs-list` already carries one per rig.
+
+## Fixed Glide floor directions (October 3, 2026)
+
+The inner pad and arrow keys use the original room/AR placement frame: down is
+front (+X in scene coordinates), up is back, right is -Z and left is +Z. Camera
+orbit and desk yaw never remap these directions. Outer-ring/Left/Right turning,
+wheel spin, floor bounds and Recenter remain on the existing motion paths.
+Movement LED direction is derived from actual motion relative to the desk. The
+rotation comet trail alone is reversed following the user's visual correction.

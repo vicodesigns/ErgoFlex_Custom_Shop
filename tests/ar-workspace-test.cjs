@@ -1,0 +1,100 @@
+const assert=require('node:assert/strict');
+const puppeteer=require('puppeteer');
+const http=require('node:http');
+const fs=require('node:fs');
+const path=require('node:path');
+const server=http.createServer((req,res)=>{
+ if(req.url==='/'){res.setHeader('Content-Type','text/html');res.end('<meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=/studio.css><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js"}}</script>');return;}
+ fs.readFile(path.resolve(__dirname,req.url==='/studio.css'?'../studio.css':'../ar-workspace.mjs'),(e,b)=>{res.setHeader('Content-Type',req.url==='/studio.css'?'text/css':'text/javascript');res.end(b);});
+});
+(async()=>{
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ const browser=await puppeteer.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage();
+  await page.goto('http://127.0.0.1:'+server.address().port);
+  const result=await page.evaluate(async()=>{
+   const THREE=await import('three');const {ARWorkspace}=await import('/ar-workspace.mjs');
+   const grainCanvas=document.createElement('canvas');grainCanvas.width=grainCanvas.height=32;
+   const paint=grainCanvas.getContext('2d');paint.fillStyle='#ddd';paint.fillRect(0,0,32,32);paint.fillStyle='#888';for(let y=0;y<32;y+=4)paint.fillRect(0,y,32,1);
+   const grain=new THREE.CanvasTexture(grainCanvas);grain.repeat.set(1.8,.8);grain.rotation=Math.PI/2;
+   const wood=new THREE.MeshPhysicalMaterial({map:grain,bumpMap:grain,roughnessMap:grain,bumpScale:.06,clearcoat:.65});
+   const scene=new THREE.Scene(),model=new THREE.Mesh(new THREE.BoxGeometry(2,1,1),wood);
+   model.position.set(.3,.5,.2);scene.add(model);
+   const accessory=new THREE.Group();scene.add(accessory);
+   const originalOrder=scene.children.map(o=>o.uuid);
+   const camera=new THREE.PerspectiveCamera(35,1,.1,2000);camera.position.set(4,3,5);
+   const originalCamera=camera.toJSON();
+   const xr=new THREE.EventDispatcher();Object.assign(xr,{setReferenceSpaceType(){},setFramebufferScaleFactor(v){this.factor=v;},setSession:async()=>{},getReferenceSpace:()=>({})});
+   const renderer={xr,shadowMap:{enabled:true}},controls={enabled:true};
+   let state={height:48,tilt:0,glow:75,leds:false,color:'#f10404'},cancelled=0;
+   let rejectSession=false,referenceWidth=1/.0254;
+   Object.defineProperty(navigator,'xr',{value:{requestSession:async()=>{
+    if(rejectSession)throw new DOMException('Camera declined','NotAllowedError');
+    return {requestReferenceSpace:async()=>({}),requestHitTestSource:async()=>({cancel:()=>cancelled++}),end:async()=>xr.dispatchEvent({type:'sessionend'})};
+   }}});
+   const remote=document.createElement('div');remote.id='motion-dock';remote.className='app-remote';remote.innerHTML='<div class=remote-header></div><button id=original-app-button>Glide</button>';document.body.append(remote);
+   let appClicks=0;remote.querySelector('button').onclick=()=>appClicks++;
+   const workspace=new ARWorkspace({scene,model,camera,renderer,controls,lights:()=>[],accessories:()=>[accessory],metersPerUnit:()=>referenceWidth*.0254/2,sizeReference:()=>({widthUnits:2,widthInches:referenceWidth,nominalWidth:1/.0254}),setWidth:value=>{const n=Number(value);if(n<24||n>96||!Number.isFinite(n))return false;referenceWidth=n;return true;},
+    halt(){},resize(){},remote:()=>remote,ledControls:()=>[]});
+   window.testWorkspace=workspace;
+   await workspace.start();
+   const mapsRetained=wood.map===grain&&wood.bumpMap===grain&&wood.roughnessMap===grain;
+   const dimensions=new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3()).toArray();
+   const appMoved=remote.closest('#ef-ar-overlay')!==null;remote.querySelector('button').click();
+   const hiddenUntilPlaced=!workspace.root.visible;
+   workspace.update({getHitTestResults:()=>[{getPose:()=>({transform:{matrix:new THREE.Matrix4().makeTranslation(1,0,-2).elements}})}]},200);
+   workspace.place();
+   const placement={placed:workspace.placed,position:workspace.root.position.toArray(),visible:workspace.root.visible};
+   document.querySelector('[data-ar-width]').value=String(1.2/.0254);document.querySelector('[data-ar-size-apply]').click();
+   const calibrated={dimensions:new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3()).toArray(),position:workspace.root.position.toArray()};
+   document.querySelector('[data-ar-size-reset]').click();
+   const blocked=new THREE.Matrix4().makeRotationX(Math.PI/2);
+   workspace.update({getHitTestResults:()=>[{getPose:()=>({transform:{matrix:blocked.elements}})}]},400);
+   const wallRejected=!workspace.hitReady;
+   await workspace.session.end();
+   const restored={order:scene.children.map(o=>o.uuid),camera:JSON.stringify(camera.toJSON())===JSON.stringify(originalCamera),shadows:renderer.shadowMap.enabled,controls:controls.enabled,overlay:!!document.querySelector('#ef-ar-overlay')};
+   rejectSession=true;let rejected=false;
+   try{await workspace.start();}catch(e){rejected=e.name==='NotAllowedError';}
+   const failure={rejected,status:workspace.status,error:workspace.error,overlay:!!document.querySelector('#ef-ar-overlay'),parent:model.parent===scene};
+   rejectSession=false;await workspace.start();await workspace.session.end();
+   return {calibrated,mapsRetained,appMoved,appClicks,appRestored:remote.parentElement===document.body,dimensions,hiddenUntilPlaced,placement,wallRejected,restored,originalOrder,failure,cancelled,factor:xr.factor};
+  });
+  result.calibrated.dimensions.forEach((n,i)=>assert.ok(Math.abs(n-[1.2,.6,.6][i])<1e-6));assert.deepEqual(result.calibrated.position,[1,0,-2]);
+  assert.equal(result.mapsRetained,true);
+  assert.equal(result.appMoved,true);assert.equal(result.appClicks,1);assert.equal(result.appRestored,true);
+  assert.deepEqual(result.dimensions,[1,.5,.5]);
+  assert.equal(result.hiddenUntilPlaced,true);assert.deepEqual(result.placement,{placed:true,position:[1,0,-2],visible:true});assert.equal(result.wallRejected,true);
+  assert.deepEqual(result.restored,{order:result.originalOrder,camera:true,shadows:true,controls:true,overlay:false});
+  assert.equal(result.failure.rejected,true);assert.equal(result.failure.status,'failed');assert.match(result.failure.error,/Camera declined/);assert.equal(result.failure.overlay,false);assert.equal(result.failure.parent,true);
+  assert.equal(result.cancelled,2);assert.equal(result.factor,.75);
+  await page.setViewport({width:674,height:810});
+  await page.evaluate(()=>testWorkspace.start());
+  const rect=()=>page.$eval('.ef-ar-panel',el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};});
+  const initial=await rect();
+  assert.ok(initial.width<674*.8,'Large Fold starts with a smaller panel');
+  const drag=await page.$eval('[data-ar-drag]',el=>{const r=el.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};});
+  await page.mouse.move(drag.x,drag.y);await page.mouse.down();await page.mouse.move(drag.x-90,drag.y-180,{steps:8});await page.mouse.up();
+  const moved=await rect();assert.ok(moved.x<initial.x-70);assert.ok(moved.y<initial.y-150);
+  const grip=await page.$eval('[data-ar-resize]',el=>{const r=el.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};});
+  await page.mouse.move(grip.x,grip.y);await page.mouse.down();await page.mouse.move(grip.x-70,grip.y,{steps:8});await page.mouse.up();
+  const resized=await rect();assert.ok(resized.width<moved.width-60);
+  await page.evaluate(()=>testWorkspace.session.end());await page.evaluate(()=>testWorkspace.start());
+  const remembered=await rect();assert.ok(Math.abs(remembered.width-resized.width)<1);assert.ok(Math.abs(remembered.x-resized.x)<1);assert.ok(Math.abs(remembered.y-resized.y)<1);
+  await page.setViewport({width:390,height:800});
+  await page.waitForFunction(()=>document.querySelector('#ef-ar-overlay').dataset.floating==='false');
+  const cover=await rect();assert.ok(cover.width>370);assert.ok(cover.bottom<=800&&cover.bottom>780);
+  assert.equal(await page.$eval('.ef-ar-layout-tools',el=>getComputedStyle(el).display),'none');
+  await page.setViewport({width:810,height:674});
+  await page.waitForFunction(()=>document.querySelector('#ef-ar-overlay').dataset.floating==='true');
+  const landscape=await rect();assert.ok(landscape.width<500);assert.ok(landscape.x>=8&&landscape.right<=802&&landscape.bottom<=666);
+  await page.focus('[data-ar-drag]');await page.keyboard.press('ArrowUp');
+  assert.ok((await rect()).y<landscape.y);
+  await page.click('[data-ar-reset]');assert.ok((await rect()).width>resized.width);
+  await page.screenshot({path:'/tmp/ef-ar-floating-layout.png'});
+  await page.evaluate(()=>testWorkspace.session.end());
+  assert.equal(await page.$('#ef-ar-overlay'),null);
+  console.log('Fold panel drag, resize, keyboard movement, saved layout, cover-screen anchoring, landscape bounds and reset passed.');
+  console.log('AR measured-width calibration, stable placement, physical scale, floor placement, wall rejection, session restoration, camera denial and retry passed.');
+ }finally{await browser.close();server.close();}
+})().catch(e=>{console.error(e);server.close();process.exitCode=1;});

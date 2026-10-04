@@ -1,0 +1,21 @@
+const assert = require('node:assert/strict');
+(async () => {
+    const { planGroove, poseIsClear, segmentIsClear, angleDelta } = await import('../room-groove.mjs');
+    const bounds = {minX:-3500,maxX:3500,minZ:-2500,maxZ:2500};
+    const footprint = {halfWidth:650,halfDepth:380,margin:45};
+    const start = {x:-1800,z:0,yaw:0}, desired = {x:1800,z:0,yaw:0};
+    const obstacle = {minX:-400,maxX:400,minZ:-600,maxZ:600};
+    const data = {start,desired,bounds,footprint,obstacles:[obstacle]};
+    const detour = planGroove(data);
+    assert.ok(detour.ok && detour.route.length > 2, 'Detour around a blocked straight route');
+    assert.ok(detour.route.slice(1).every((p,i)=>segmentIsClear(detour.route[i],p,bounds,data.obstacles,footprint)), 'Every translation and turn clears the furniture');
+    const wall = {minX:-50,maxX:50,minZ:-2500,maxZ:2500};
+    const blocked = planGroove({...data,obstacles:[wall],maxNodes:8000});
+    assert.ok(!blocked.ok || blocked.destination.x < 0, 'Cannot cross an impassable wall to reach a goal');
+    assert.equal(planGroove({...data,start:{x:0,z:0,yaw:0}}).ok,false,'An overlapping start does not teleport out');
+    assert.equal(poseIsClear({x:0,z:2100,yaw:Math.PI/2},bounds,[],footprint),false,'Rotated full footprint stays inside walls');
+    const thin = {minX:-20,maxX:20,minZ:-200,maxZ:200};
+    assert.equal(segmentIsClear(start,desired,bounds,[thin],footprint),false,'Swept paths catch thin obstacles');
+    assert.ok(Math.abs(angleDelta(Math.PI-.02,-Math.PI+.02)-.04)<1e-9,'Turn takes the short path across ±pi');
+    console.log('Groove planner: detours, rotated clearance, narrow barriers, blocked starts and shortest turns passed');
+})().catch(e=>{console.error(e);process.exitCode=1;});

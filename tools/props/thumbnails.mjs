@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Render a thumbnail of every prop in assets/props/index.json with the same
 // Three.js build the studio uses, via Puppeteer.
-//   node tools/props/thumbnails.mjs [--only id,id] [--size 256] [--sheet out.png]
+//   node tools/props/thumbnails.mjs [--only id,id] [--collection name|new] [--size 256] [--sheet out.png]
 // Writes assets/props/thumbs/<id>.png. --sheet also writes a labelled contact
 // sheet, which is the quickest way to review scale and orientation decisions.
 import puppeteer from 'puppeteer';
@@ -14,10 +14,11 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const args = process.argv.slice(2);
 const opt = (name, def) => { const i = args.indexOf(name); return i > -1 ? args[i + 1] : def; };
 const only = opt('--only')?.split(',');
+const collection = opt('--collection');
 const size = Number(opt('--size', 256));
 const sheet = opt('--sheet');
 const index = JSON.parse(readFileSync(join(root, 'assets/props/index.json'), 'utf8'));
-const props = index.props.filter(p => !only || only.includes(p.id));
+const props = index.props.filter(p => (!only || only.includes(p.id)) && (!collection || (collection === 'new' ? !!p.collection : p.collection === collection)));
 mkdirSync(join(root, 'assets/props/thumbs'), { recursive: true });
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.glb': 'model/gltf-binary', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.webp': 'image/webp' };
@@ -39,7 +40,12 @@ const key = new THREE.DirectionalLight('#fff', 2.2); key.position.set(3, 6, 4); 
 const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
 let current = null;
 window.renderProp = (url) => new Promise((ok, fail) => loader.load(url, (g) => {
-    if (current) scene.remove(current);
+    if (current) {
+        scene.remove(current);
+        const geometries = new Set(), materials = new Set(), textures = new Set();
+        current.traverse(o => { if (o.isMesh) { geometries.add(o.geometry); for (const m of [].concat(o.material)) { materials.add(m); for (const v of Object.values(m)) if (v?.isTexture) textures.add(v); } } });
+        geometries.forEach(g=>g.dispose()); materials.forEach(m=>m.dispose()); textures.forEach(t=>t.dispose());
+    }
     current = g.scene; scene.add(current);
     const box = new THREE.Box3().setFromObject(current), c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
     const radius = Math.max(s.x, s.y, s.z) * .5 || 1;
@@ -89,3 +95,4 @@ if (sheet) {
     console.log(`contact sheet → ${sheet}`);
 }
 await browser.close(); server.close();
+if (rendered.length !== props.length) process.exitCode = 1;

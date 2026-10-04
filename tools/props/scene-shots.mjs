@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 // Screenshot every room scene in the studio, for reviewing prop placement.
 //   node tools/props/scene-shots.mjs [--out dir] [--only id,id] [--views hero,front,top]
+//   --gaming-layout house --gaming-mode evening --home-layout apartment
+//   --music-layout executive --music-mode party
+//   --artist-layout premium --artist-mode afternoon
+//   --office-layout spacious --office-mode afternoon
 // Starts its own static server and loads the real app, so it needs network
 // access for Three.js and the desk model, like the smoke test.
 import puppeteer from 'puppeteer';
@@ -46,6 +50,96 @@ for (const id of scenes) {
         await ErgoFlex.workspaceRoom.ready.catch(() => {});
         await new Promise(r => setTimeout(r, 400));
     }, id);
+    if (id === 'home' && opt('--home-layout')) {
+        await page.evaluate(async layout => {
+            ErgoFlex.setHomeLayout(layout);
+            await ErgoFlex.workspaceRoom.ready;
+        }, opt('--home-layout'));
+    }
+    if (id === 'gaming') {
+        if (opt('--gaming-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setGamingLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--gaming-layout'));
+        if (opt('--gaming-mode')) await page.evaluate(mode => ErgoFlex.setGamingMode(mode), opt('--gaming-mode'));
+    }
+    if (id === 'music') {
+        if (opt('--music-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setMusicLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--music-layout'));
+        if (opt('--music-mode')) await page.evaluate(mode => ErgoFlex.setMusicMode(mode), opt('--music-mode'));
+    }
+    if (id === 'creative') {
+        if (opt('--artist-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setArtistLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--artist-layout'));
+        if (opt('--artist-mode')) await page.evaluate(mode => ErgoFlex.setArtistMode(mode), opt('--artist-mode'));
+    }
+    if (id === 'study') {
+        if (opt('--study-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setStudyLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--study-layout'));
+        if (opt('--study-mode')) await page.evaluate(mode => ErgoFlex.setStudyMode(mode), opt('--study-mode'));
+    }
+    if (id === 'library') {
+        if (opt('--library-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setLibraryLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--library-layout'));
+        if (opt('--library-mode')) await page.evaluate(mode => ErgoFlex.setLibraryMode(mode), opt('--library-mode'));
+    }
+    if (id === 'coworking') {
+        if (opt('--coworking-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setCoworkingLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--coworking-layout'));
+        if (opt('--coworking-mode')) await page.evaluate(mode => ErgoFlex.setCoworkingMode(mode), opt('--coworking-mode'));
+    }
+    if (id === 'office') {
+        if (opt('--office-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setOfficeLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--office-layout'));
+        if (opt('--office-mode')) await page.evaluate(mode => ErgoFlex.setOfficeMode(mode), opt('--office-mode'));
+    }
+    if (id === 'gym') {
+        if (opt('--gym-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setGymLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--gym-layout'));
+        if (opt('--gym-mode')) await page.evaluate(mode => ErgoFlex.setGymMode(mode), opt('--gym-mode'));
+    }
+    if (id === 'kitchen') {
+        if (opt('--kitchen-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setKitchenLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--kitchen-layout'));
+        if (opt('--kitchen-mode')) await page.evaluate(mode => ErgoFlex.setKitchenMode(mode), opt('--kitchen-mode'));
+    }
+    if (id === 'scifi') {
+        if (opt('--scifi-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setScifiLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--scifi-layout'));
+        if (opt('--scifi-mode')) await page.evaluate(mode => ErgoFlex.setScifiMode(mode), opt('--scifi-mode'));
+    }
+    if (id === 'gallery') {
+        if (opt('--gallery-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setGalleryLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--gallery-layout'));
+        if (opt('--gallery-mode')) await page.evaluate(mode => ErgoFlex.setGalleryMode(mode), opt('--gallery-mode'));
+    }
+    if (id === 'bedroom') {
+        if (opt('--bedroom-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setBedroomLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--bedroom-layout'));
+        if (opt('--bedroom-mode')) await page.evaluate(mode => ErgoFlex.setBedroomMode(mode), opt('--bedroom-mode'));
+    }
+    if (id === 'workshop') {
+        if (opt('--workshop-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setWorkshopLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--workshop-layout'));
+        if (opt('--workshop-mode')) await page.evaluate(mode => ErgoFlex.setWorkshopMode(mode), opt('--workshop-mode'));
+    }
+    if (id === 'lounge') {
+        if (opt('--lounge-layout')) await page.evaluate(async layout => {
+            ErgoFlex.setLoungeLayout(layout); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--lounge-layout'));
+        if (opt('--lounge-mode')) await page.evaluate(mode => ErgoFlex.setLoungeMode(mode), opt('--lounge-mode'));
+    }
     for (const view of views) {
         await page.select('#camera-view', view);
         await new Promise(r => setTimeout(r, 900));

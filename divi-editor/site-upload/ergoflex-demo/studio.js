@@ -3,34 +3,51 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=grain-controls-20260928';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=public-plates-controls-20260930';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=motion-v3-20260928';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs';
+import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=home-rooms-20261001';
+import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=home-rooms-20261001';
+import { ARWorkspace } from './ar-workspace.mjs?v=public-plates-controls-20260930';
 import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
 const EVENT_DEMO = location.pathname.endsWith('/product-demo.html');
-const TRIM_MODEL_URL = './assets/trim/fullTrim.glb';
-const SMALL_TRIM_MODEL_URL = './assets/trim/shelveanddesktopTrim.glb';
-const LARGE_DESKTOP_MODEL_URL = './assets/trim/desktopLwTrim.glb';
-const TOUCHSCREEN_PULLED_URL = './assets/motion/touchscreenPulledOut.glb';
-const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb';
-const TOUCHSCREEN_WIDE_URL = './assets/motion/touchscreenExtendedForWideDesktop.glb';
-const TOUCHSCREEN_FACE_URL = './assets/motion/panel_mainscreen_20260929_104051.png';
-const LED_MODEL_URL = './assets/motion/LEDS.glb';
-const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb';
+const TRIM_MODEL_URL = './assets/trim/fullTrim.glb?v=public-plates-controls-20260930';
+const SMALL_TRIM_MODEL_URL = './assets/trim/shelveanddesktopTrim.glb?v=public-plates-controls-20260930';
+const LARGE_DESKTOP_MODEL_URL = './assets/trim/desktopLwTrim.glb?v=public-plates-controls-20260930';
+const LARGE_DESKTOP_TRIM_URL = './assets/trim/desktopLwTrimV2.glb?v=desktop-trim-v2-20261001';
+const TOUCHSCREEN_PULLED_URL = './assets/motion/touchscreenPulledOut.glb?v=public-plates-controls-20260930';
+const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb?v=public-plates-controls-20260930';
+const TOUCHSCREEN_WIDE_URL = './assets/motion/touchscreenExtendedForWideDesktop.glb?v=public-plates-controls-20260930';
+const TOUCHSCREEN_FACE_URL = './assets/motion/panel_mainscreen_20260929_104051.png?v=public-plates-controls-20260930';
+const LED_MODEL_URL = './assets/motion/LEDS.glb?v=public-plates-controls-20260930';
+const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb?v=public-plates-controls-20260930';
 const LED_COLOR_KEY = 'ergoflex.ledColorV1';
-const LED_GLOW_KEY = 'ergoflex.ledGlowV1';
+const LED_GLOW_KEY = 'ergoflex.ledGlowV4';
 const LED_SURFACE_KEY = 'ergoflex.ledSurfacesV1';
+// The former 85% output is the new ceiling shown to visitors as 100%.
+const LED_FULL_BRIGHTNESS = 123.25;
+const LED_COLOR_PRESETS = Object.freeze([
+    { name: 'Red', value: '#f10404' },
+    { name: 'Amber', value: '#ffb347' },
+    { name: 'Violet', value: '#a66bff' },
+    { name: 'Blue', value: '#497bff' },
+    { name: 'Cyan', value: '#40eaff' },
+    { name: 'Green', value: '#42d89c' },
+    { name: 'Day pure white', value: '#ffffff' },
+    { name: 'Evening white', value: '#fff1d6' }
+]);
 const SCREEN_PIVOT = new THREE.Vector3(-141.99034318, 49.56108308, 0);
 const WIDE_SCREEN_PIVOT = new THREE.Vector3(-139.79, 49.56108308, 0);
 const SCREEN_SLIDE = 4.7;
 const SCREEN_TURN = THREE.MathUtils.degToRad(146.457954);
+// The wide export's open screen face is 12° steeper than the Standard face.
+// Remove that authored difference before applying their shared slide and turn.
+const WIDE_SCREEN_REST_TURN = SCREEN_TURN + THREE.MathUtils.degToRad(12);
 let screenAssembly = null;
 let screenProgress = 0;
 let screenTarget = 0;
@@ -38,7 +55,6 @@ let ledParts = [];
 let ledDesktopFit = null;
 let ledStandardStrips = null;
 let ledExtendedStrips = null;
-let ledAreaLights = [];
 let ledSpillMaterials = [];
 let ledsEnabled = false;
 const TRIM_COLOR_KEY = 'ergoflex.trimColorV1';
@@ -84,7 +100,7 @@ const INITIAL_ANIMATED_PARTS = [
     "Power", "Power_1", "Power_2", "Desktop", "Desktop_1", "Desktop_2", "Desktop_3", "Power_3", "Power_4", "Power_5", "Power_6", "Power_7", "Lift_Column_Top", "Lift_Column_Top_1", "Lift_Column_Top_2", "Lift_Column_Top_3", "Lift_Column_Top_4", "Lift_Column_Top_5", "Lift_Column_Top_6", "Lift_Column_Top_7", "Lift_Column_Top_8", "Lift_Column_Top_9", "Lift_Column_Top_10", "Lift_Column_Top_11", "Lift_Column_Top_12", "Lift_Column_Top_13", "Lift_Column_Top_14", "Lift_Column_Top_15", "L_A_Hardware_Top", "L_A_Hardware_Top_1", "L_A_Hardware_Top_2", "L_A_Hardware_Top_3", "Linear_Actuators", "Linear_Actuators_1", "Linear_Actuators_2", "Linear_Actuators_3", "Linear_Actuators_4", "Linear_Actuators_5", "Linear_Actuators_6", "Linear_Actuators_7", "Linear_Actuators_8", "Linear_Actuators_9", "Lift_Column_Top_16", "Lift_Column_Top_17", "L_A_Hardware_Top_4", "L_A_Hardware_Top_5", "L_A_Hardware_Top_6", "L_A_Hardware_Top_7", "Leds", "Leds_1", "Leds_2", "Revolve2", "Plates_Hardware", "Plates_Hardware_1", "Plates_Hardware_2", "Plates_Hardware_3", "Plates_Hardware_4", "Plates_Hardware_5", "Plates_Hardware_6", "Plates_Hardware_7", "Plates_Hardware_8", "Plates_Hardware_9", "Plates_Hardware_10", "Plates_Hardware_11", "Plates_Hardware_12", "Plates_Hardware_13", "Plates_Hardware_14", "Plates_Hardware_15", "Plates_Hardware_16", "Plates_Hardware_17", "Plates_Hardware_18", "Plates_Hardware_19", "Plates_Hardware_20", "Plates_Hardware_21", "Plates_Hardware_22", "Plates_Hardware_23", "Plates_Hardware_24", "Plates_Hardware_25", "Plates_Hardware_26", "Plates_Hardware_27", "Plates_Hardware_28", "Plates_Hardware_29", "Plates_Hardware_30", "Plates_Hardware_31", "Plates_Hardware_32", "Plates_Hardware_33", "Plates_Hardware_34", "Plates_Hardware_35", "Plates_Hardware_36", "Plates_Hardware_37", "Plates_Hardware_38", "Plates_Hardware_39", "Plates_Hardware_40", "Plates_Hardware_41", "Plates_Hardware_42", "Plates_Hardware_43", "Plates_Hardware_44", "Plates_Hardware_45", "Plates_Hardware_46", "Plates_Hardware_47", "Plates_Hardware_48", "Plates_Hardware_49", "Plates_Hardware_50", "Plates_Hardware_51", "Plates_Hardware_52", "Plates_Hardware_53", "Plates_Hardware_54", "Plates_Hardware_55", "Plates_Hardware_56", "Plates_Hardware_57", "Plates_Hardware_58", "Plates_Hardware_59", "Plates_Hardware_60", "Plates_Hardware_61", "Plates_Hardware_62", "Plates_Hardware_63", "Plates_Hardware_64", "Plates_Hardware_65", "Plates_Hardware_66", "Plates_Hardware_67", "Plates_Hardware_68", "Plates_Hardware_69", "Plates_Hardware_70", "Plates_Hardware_71", "Plates_Hardware_72", "Plates_Hardware_73", "Plates_Hardware_74", "Plates_Hardware_75", "Plates_Hardware_76", "Plates_Hardware_77", "Plates_Hardware_78", "Plates_Hardware_79", "Plates_Hardware_80", "Plates_Hardware_81", "Plates_Hardware_82", "Plates_Hardware_83", "Plates_Hardware_84", "Plates_Hardware_85", "Plates_Hardware_86", "Plates_Hardware_87", "Plates_Hardware_88", "Plates_Hardware_89", "Plates_Hardware_90", "Plates_Hardware_91", "Plates_Hardware_92", "Plates_Hardware_93", "Plates_Hardware_94", "Plates_Hardware_95", "Plates_Hardware_96", "Plates_Hardware_97", "Plates_Hardware_98", "Plates_Hardware_99", "Plates_Hardware_100", "Plates_Hardware_101", "Plates_Hardware_102", "Plates_Hardware_103", "Plates_Hardware_104", "Plates_Hardware_105", "Plates_Hardware_106", "Plates_Hardware_107", "Plates_Hardware_108", "Plates_Hardware_109", "Plates_Hardware_110", "Plates_Hardware_111", "Plates_Hardware_112", "Plates_Hardware_113", "Plates_Hardware_114", "Plates_Hardware_115", "Plates_Hardware_116", "Plates_Hardware_117", "Plates_Hardware_118", "Plates_Hardware_119", "Plates_Hardware_120", "Plates_Hardware_121", "Plates_Hardware_122", "Plates_Hardware_123", "Plates_Hardware_124", "Plates_Hardware_125", "Plates_Hardware_126", "Plates_Hardware_127", "Plates_Hardware_128", "Plates_Hardware_129", "Plates_Hardware_130", "Plates_Hardware_131", "Plates_Hardware_132", "Plates_Hardware_133", "Plates_Hardware_134", "Plates_Hardware_135", "Plates_Hardware_136", "Plates_Hardware_137", "Plates_Hardware_138", "Plates_Hardware_139", "Plates_Hardware_140", "Plates_Hardware_141", "Plates_Hardware_142", "Plates_Hardware_143", "Plates_Hardware_144", "Plates_Hardware_145", "Plates_Hardware_146", "Plates_Hardware_147", "Plates_Hardware_148", "Plates_Hardware_149", "Plates_Hardware_150", "Plates_Hardware_151", "Plates_Hardware_152", "Plates_Hardware_153", "Plates_Hardware_154", "Plates_Hardware_155", "Plates_Hardware_156", "Plates_Hardware_157", "Plates_Hardware_158", "Plates_Hardware_159", "Plates_Hardware_160", "Plates_Hardware_161", "Plates_Hardware_162", "Plates_Hardware_163", "Plates_Hardware_164", "Plates_Hardware_165", "Plates_Hardware_166", "Plates_Hardware_167", "Plates_Hardware_168", "Plates_Hardware_169", "Plates_Hardware_170", "Plates_Hardware_171", "Plates_Hardware_172", "Plates_Hardware_173", "Plates_Hardware_174", "Plates_Hardware_175", "Plates_Hardware_176", "Plates_Hardware_177", "Plates_Hardware_178", "Plates_Hardware_179", "Plates_Hardware_180", "Plates_Hardware_181", "Plates_Hardware_182", "Plates_Hardware_183", "Plates_Hardware_184", "Plates_Hardware_185", "Plates_Hardware_186", "Plates_Hardware_187", "Plates_Hardware_188", "Plates_Hardware_189", "Plates_Hardware_190", "Plates_Hardware_191", "Plates_Hardware_192", "Plates_Hardware_193", "Plates_Hardware_194", "Plates_Hardware_195", "Plates_Hardware_196", "Plates_Hardware_197", "Plates_Hardware_198", "Plates_Hardware_199", "Plates_Hardware_200", "Combine1", "Revolve2_1", "Combine1_1", "mesh_471", "mesh_472", "mesh_473", "mesh_474", "mesh_475", "mesh_476", "mesh_477", "Leds_3", "Combine1_2", "Revolve2_2", "mesh_481", "mesh_482", "mesh_483", "mesh_484", "Combine1_3", "Revolve2_3", "mesh_487", "mesh_488", "mesh_489", "mesh_490", "Plates_Hardware_201", "Plates_Hardware_202", "Plates_Hardware_203", "Plates_Hardware_204", "Plates_Hardware_205", "Plates_Hardware_206", "Plates_Hardware_207", "Plates_Hardware_208", "Plates_Hardware_209", "Plates_Hardware_210", "Plates_Hardware_211", "Plates_Hardware_212", "Plates_Hardware_213", "Plates_Hardware_214", "Plates_Hardware_215", "Plates_Hardware_216", "Plates_Hardware_217", "Plates_Hardware_218", "Plates_Hardware_219", "Plates_Hardware_220", "Plates_Hardware_221", "Plates_Hardware_222", "Plates_Hardware_223", "Plates_Hardware_224", "Plates_Hardware_225", "Plates_Hardware_226", "Plates_Hardware_227", "Plates_Hardware_228", "Plates_Hardware_229", "Plates_Hardware_230", "Plates_Hardware_231", "Plates_Hardware_232", "Plates_Hardware_233", "Plates_Hardware_234", "Plates_Hardware_235", "Plates_Hardware_236", "Plates_Hardware_237", "Plates_Hardware_238", "Plates_Hardware_239", "Plates_Hardware_240", "Plates_Hardware_241", "Plates_Hardware_242", "Plates_Hardware_243", "Plates_Hardware_244", "Plates_Hardware_245", "Plates_Hardware_246", "Plates_Hardware_247", "Plates_Hardware_248", "Plates_Hardware_249", "Plates_Hardware_250", "Plates_Hardware_251", "Plates_Hardware_252", "Plates_Hardware_253", "Plates_Hardware_254", "Plates_Hardware_255", "Plates_Hardware_256", "Plates_Hardware_257", "Plates_Hardware_258", "Plates_Hardware_259", "Plates_Hardware_260", "Plates_Hardware_261", "Plates_Hardware_262", "Plates_Hardware_263", "Plates_Hardware_264", "Plates_Hardware_265", "Plates_Hardware_266", "Plates_Hardware_267", "Plates_Hardware_268", "Plates_Hardware_269", "Plates_Hardware_270", "Plates_Hardware_271", "Plates_Hardware_272", "Plates_Hardware_273", "Plates_Hardware_274", "Plates_Hardware_275", "Plates_Hardware_276", "Plates_Hardware_277", "Plates_Hardware_278", "Plates_Hardware_279", "Plates_Hardware_280", "Plates_Hardware_281", "Plates_Hardware_282", "Plates_Hardware_283", "Plates_Hardware_284", "Plates_Hardware_285", "Plates_Hardware_286", "Plates_Hardware_287", "Plates_Hardware_288", "Plates_Hardware_289", "Plates_Hardware_290", "Plates_Hardware_291", "Touch_Screen", "Touch_Screen_1", "Touch_Screen_2", "Touch_Screen_3", "mesh_624", "mesh_625", "mesh_626", "Leds_4", "Leds_5", "Leds_6", "Leds_7", "Leds_8", "Leds_9", "Leds_10", "Leds_11", "Leds_12", "Leds_13", "Leds_14", "Leds_15", "Leds_16", "Leds_17", "Leds_18", "Leds_19", "Leds_20", "Leds_21", "Leds_22", "Leds_23", "Leds_24", "Leds_25", "Leds_26", "Leds_27", "Leds_28", "Leds_29", "Leds_30", "Leds_31", "Leds_32", "Leds_33", "Leds_34", "Leds_35", "Leds_36", "Leds_37", "Leds_38", "Joinery_6", "Joinery_7", "Joinery_8", "Joinery_9", "Joinery_10", "Joinery_11", "Joinery_12", "Joinery_13", "Joinery_14", "Joinery_15", "Joinery_16", "Joinery_17", "Joinery_18", "Plates_Hardware_292", "Plates_Hardware_293", "Plates_Hardware_294", "Plates_Hardware_295", "mesh_679", "mesh_680", "mesh_681", "mesh_682", "Touch_Screen_4", "Touch_Screen_5", "Touch_Screen_6", "Touch_Screen_7", "Leds_40", "Leds_41", "Leds_42", "Leds_43", "mesh_692", "Screws_24", "Screws_25", "Screws_26", "Screws_27", "Screws_28", "Screws_29", "Screws_30", "Screws_31", "Screws_32", "Screws_33", "Screws_34", "Screws_35", "Screws_36", "Screws_37", "Screws_38", "Screws_39", "Screws_40", "Screws_41", "Screws_42", "Screws_43", "Screws_44", "Screws_45", "Screws_46", "Screws_47", "Screws_48", "Screws_49", "Screws_50", "Screws_51", "Screws_52", "Screws_53", "Screws_54", "Screws_55", "Screws_56", "Screws_57", "Screws_58", "Screws_59", "Screws_60", "Screws_61", "Screws_62", "Screws_63", "Screws_64", "Screws_65", "Screws_66", "Screws_67", "Screws_68", "Screws_69", "Screws_70", "Screws_71", "Screws_72", "Screws_73", "Screws_74", "Screws_75", "Screws_76", "Screws_77", "Screws_78", "Screws_79", "Screws_80", "Screws_81", "Screws_82", "Screws_83", "Screws_84", "Screws_85", "Screws_86", "Screws_87", "Screws_88", "Screws_89", "Screws_90", "Screws_91", "Screws_92", "Screws_93", "Screws_94", "Screws_95", "Screws_96", "Screws_97", "Screws_98", "Screws_99", "Screws_100", "Screws_101", "Screws_102", "Screws_103", "Screws_104", "Screws_105", "Screws_106", "Screws_107", "Screws_108", "Screws_109", "Screws_110", "Screws_111", "Screws_112", "Screws_113", "Screws_114", "Screws_115", "Screws_116", "Screws_117", "Screws_118", "Screws_119", "Screws_120", "Screws_121", "Screws_122", "Screws_123", "Screws_124", "Screws_125", "Screws_126", "Screws_127", "Top_Shelf", "Top_Shelf_1", "Top_Shelf_2", "Top_Shelf_3", "Top_Shelf_4"
 ];
 
-let currentConfig = defaultConfig();
+let currentConfig = { ...defaultConfig(), ...(EVENT_DEMO ? { size: '60x30' } : {}) };
 let cartItems = [];
 // V2 keys: the configuration gained an accessories list. V1 keys are still read
 // once, as a migration, and never written again.
@@ -129,6 +145,8 @@ function editorEntry(editorId) {
 }
 
 function sceneAssetState(sceneId = selectedRoomScene) {
+    // Apartment edits stay separate from the larger home office layout.
+    if (sceneId === 'home') sceneId = `home:${workspaceRoom?.homeLayout?.id || selectedHomeLayout().id}`;
     if (!sceneAssetStates.has(sceneId)) {
         sceneAssetStates.set(sceneId, { removed: new Set(), added: new Map(), transforms: new Map() });
     }
@@ -391,32 +409,44 @@ const mouse = new THREE.Vector2();
 
 let scene, camera, renderer, controls, transformControl, transformProxy, loadedModel, floorMesh;
 let trimMaterial = null;
-let trimColor = '#e60505';
-let ledColor = '#40eaff';
-let ledGlow = 140;
+let trimColor = '#dc0909';
+let ledColor = '#f10404';
+let ledGlow = LED_FULL_BRIGHTNESS * 0.75;
 const LED_SURFACE_DEFAULTS = Object.freeze({
-    desktopStrength: 100, desktopReach: 50,
-    shelfStrength: 100, shelfReach: 50,
-    baseStrength: 0, baseReach: 50
+    desktopStrength: 157, desktopReach: 100, desktopWidth: 5,
+    desktopCone: 100, desktopEdgeFade: 46, desktopSharpness: 62,
+    shelfStrength: 176, shelfReach: 98,
+    baseStrength: 54, baseReach: 20,
+    topStrength: 143, topReach: 77,
+    floorStrength: 156, floorReach: 4, floorWidth: 50, floorSharpness: 73,
+    leftWingStrength: 111, leftWingReach: 85,
+    rightWingStrength: 110, rightWingReach: 87
 });
 let ledSurfaces = { ...LED_SURFACE_DEFAULTS };
 try {
     const stored = localStorage.getItem(TRIM_COLOR_KEY);
     if (/^#[0-9a-f]{6}$/i.test(stored || '')) trimColor = stored;
-    const storedLed = localStorage.getItem(LED_COLOR_KEY);
-    if (/^#[0-9a-f]{6}$/i.test(storedLed || '')) ledColor = storedLed;
-    const storedGlow = localStorage.getItem(LED_GLOW_KEY);
-    if (storedGlow !== null && Number(storedGlow) >= 0 && Number(storedGlow) <= 200)
-        ledGlow = Number(storedGlow);
-    const storedSurfaces = JSON.parse(localStorage.getItem(LED_SURFACE_KEY) || '{}');
-    for (const key of Object.keys(LED_SURFACE_DEFAULTS)) {
-        const value = storedSurfaces[key];
-        if (value !== undefined && Number.isFinite(Number(value)))
-            ledSurfaces[key] = THREE.MathUtils.clamp(Number(value), 0,
-                key.endsWith('Strength') ? 200 : 100);
+    if (!EVENT_DEMO) {
+        const storedLed = localStorage.getItem(LED_COLOR_KEY);
+        if (/^#[0-9a-f]{6}$/i.test(storedLed || '')) ledColor = storedLed;
+        const storedGlow = localStorage.getItem(LED_GLOW_KEY);
+        if (storedGlow !== null && Number(storedGlow) >= 0)
+            ledGlow = THREE.MathUtils.clamp(Number(storedGlow), 0, LED_FULL_BRIGHTNESS);
+        const storedSurfaces = JSON.parse(localStorage.getItem(LED_SURFACE_KEY) || '{}');
+        for (const key of Object.keys(LED_SURFACE_DEFAULTS)) {
+            const value = storedSurfaces[key];
+            if (value !== undefined && Number.isFinite(Number(value)))
+                ledSurfaces[key] = THREE.MathUtils.clamp(Number(value), 0,
+                    key.endsWith('Strength') ? 200 : 100);
+        }
     }
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
+let homeMode = 'afternoon', homeDeskReturn = null;
+let homeLayoutId = 'apartment';
+try { const stored = localStorage.getItem('ergoflex.homeLayout'); if (HOME_LAYOUTS[stored]) homeLayoutId = stored; } catch {}
+function selectedHomeLayout() { return homeLayoutId ? homeLayoutById(homeLayoutId) : homeLayoutForSize(currentConfig.size); }
+try { const stored = localStorage.getItem('ergoflex.homeMode'); if (HOME_MODES[stored]) homeMode = stored; } catch {}
 let sceneLights = null;
 const roomLightSettings = {};
 let accessoryCategory = 'Desktop';
@@ -670,11 +700,6 @@ function initThreeJS() {
     scene.background = null;
 
     camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 0.1, 2000);
-    // Shelf and desktop LEDs use separate light-receiver layers to stand in
-    // for occlusion, which RectAreaLight does not support.
-    camera.layers.enable(1);
-    camera.layers.enable(2);
-    camera.layers.enable(3);
     camera.position.set(STARTING_POS.x, STARTING_POS.y, STARTING_POS.z);
 
     // WebGL can be unavailable (GPU process crash, hardware acceleration off).
@@ -692,7 +717,7 @@ function initThreeJS() {
         showContextLostOverlay();
     }, false);
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, EVENT_DEMO && matchMedia('(pointer: coarse)').matches ? 1.5 : 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.NeutralToneMapping;
     renderer.toneMappingExposure = 1.02;
@@ -766,7 +791,7 @@ function initThreeJS() {
     const keyLight = new THREE.DirectionalLight(0xfff9f0, 1.5);
     keyLight.position.set(4.5, 8, 5.5);
     keyLight.castShadow = true;
-    keyLight.shadow.mapSize.setScalar(2048);
+    keyLight.shadow.mapSize.setScalar(EVENT_DEMO && matchMedia('(pointer: coarse)').matches ? 1024 : 2048);
     keyLight.shadow.camera.near = 1;
     keyLight.shadow.camera.far = 25;
     keyLight.shadow.camera.left = -5;
@@ -856,7 +881,8 @@ function initThreeJS() {
         new ResizeObserver(() => { syncViewerSize(); clampDockPosition(); }).observe(canvas.parentElement);
     }
 
-    animate();
+    renderer.xr.enabled = true;
+    renderer.setAnimationLoop(animate);
 }
 
 // --- Undo system for setup edits ---
@@ -1968,10 +1994,14 @@ function setLedColor(value, persist = true) {
         entry.material.color.set(value).multiplyScalar(ledsEnabled ? 1 : 0.12);
         entry.material.emissive.set(value);
     });
-    ledAreaLights.forEach(light => light.color.set(value));
     ledSpillMaterials.forEach(({ material }) => material.uniforms.ledColor.value.set(value));
     const picker = document.getElementById('led-color');
     if (picker && picker.value !== value) picker.value = value;
+    document.querySelectorAll('[data-led-color]').forEach(input => {
+        if (input.value !== value) input.value = value;
+    });
+    document.querySelectorAll('.led-preset').forEach(button =>
+        button.setAttribute('aria-pressed', String(button.dataset.ledPreset === value.toLowerCase())));
     const readout = document.getElementById('led-color-value');
     if (readout) readout.textContent = value.toUpperCase();
     if (persist) {
@@ -1979,12 +2009,29 @@ function setLedColor(value, persist = true) {
     }
 }
 
+function mountLedPalette(container) {
+    if (!container || container.childElementCount) return;
+    LED_COLOR_PRESETS.forEach(({ name, value }) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'led-preset';
+        button.dataset.ledPreset = value;
+        button.style.backgroundColor = value;
+        button.setAttribute('aria-label', `${name} LED color`);
+        button.setAttribute('aria-pressed', String(ledColor.toLowerCase() === value));
+        button.title = name;
+        button.addEventListener('click', () => setLedColor(value, !EVENT_DEMO));
+        container.append(button);
+    });
+}
+
 function setLedGlow(value, persist = true) {
-    ledGlow = THREE.MathUtils.clamp(Number(value) || 0, 0, 200);
+    ledGlow = THREE.MathUtils.clamp(Number(value) || 0, 0, LED_FULL_BRIGHTNESS);
+    const brightness = Math.round(ledGlow / LED_FULL_BRIGHTNESS * 100);
     const picker = document.getElementById('led-glow');
-    if (picker && Number(picker.value) !== ledGlow) picker.value = String(ledGlow);
+    if (picker && Number(picker.value) !== brightness) picker.value = String(brightness);
     const readout = document.getElementById('led-glow-value');
-    if (readout) readout.textContent = `${Math.round(ledGlow)}%`;
+    if (readout) readout.textContent = `${brightness}%`;
     setLedsEnabled(ledsEnabled);
     if (persist) {
         try { localStorage.setItem(LED_GLOW_KEY, String(ledGlow)); } catch (_) {}
@@ -2033,6 +2080,7 @@ function syncSizeGeometry() {
     syncLedSizeGeometry();
     setScreenProgress(screenProgress);
     buildSceneTree();
+    if (selectedRoomScene === 'home' && workspaceRoom?.homeLayout) setRoomScene('home', false, { preserveDesk: true });
 }
 
 function syncLedSizeGeometry() {
@@ -2108,11 +2156,12 @@ async function loadTrimOverlay() {
             if (spec.role === 'tilt') tiltParts.push(obj);
         });
 
-        const [smallGltf, largeGltf] = await Promise.all([
+        const [smallGltf, largeGltf, largeTrimGltf] = await Promise.all([
             gltfLoader.loadAsync(SMALL_TRIM_MODEL_URL),
-            gltfLoader.loadAsync(LARGE_DESKTOP_MODEL_URL)
+            gltfLoader.loadAsync(LARGE_DESKTOP_MODEL_URL),
+            gltfLoader.loadAsync(LARGE_DESKTOP_TRIM_URL)
         ]);
-        if (smallGltf.scene.children.length !== 3 || largeGltf.scene.children.length !== 2) {
+        if (smallGltf.scene.children.length !== 3 || largeGltf.scene.children.length !== 2 || largeTrimGltf.scene.children.length !== 1) {
             throw new Error('The size variant exports no longer contain the expected parts.');
         }
         const addVariantNode = (source, index, name, editorId, role, material, isTrim) => {
@@ -2149,7 +2198,7 @@ async function loadTrimOverlay() {
         addVariantNode(smallGltf, 1, 'Upper shelf trim', 'Trim_Shelf_Upper', 'lift', trimMaterial, true);
         const smallTrim = addVariantNode(smallGltf, 2, 'Standard desktop trim', 'Trim_Desktop_Standard', 'tilt', trimMaterial, true);
         const largeTop = addVariantNode(largeGltf, 0, 'Extended desktop', 'Variant_Desktop_Extended', 'tilt', smallTop.material, false);
-        const largeTrim = addVariantNode(largeGltf, 1, 'Extended desktop trim', 'Trim_Desktop_Extended', 'tilt', trimMaterial, true);
+        const largeTrim = addVariantNode(largeTrimGltf, 0, 'Extended desktop trim', 'Trim_Desktop_Extended', 'tilt', trimMaterial, true);
         sizeVariantParts = { smallTop, smallTrim, largeTop, largeTrim };
         syncSizeGeometry();
         return tiltParts;
@@ -2258,18 +2307,17 @@ async function loadTouchscreenAssembly() {
         staticParts.name = 'Touchscreen slide rails';
         for (const i of [5, 6]) staticParts.add(makeOverlayNode(pulled, i, -200, metal, `Touchscreen rail ${i}`));
         for (const i of [6, 7, 8, 9]) staticParts.add(makeOverlayNode(extended, i, -200, metal, `Touchscreen extension ${i}`));
-        // The wide export is the authored final pose. Reverse the turn around
-        // its pivot once, so the same slide-and-turn animation lands exactly
-        // on the supplied geometry at full extension.
+        // Reverse the wide export around its pivot, correcting its 12° extra
+        // face tilt so both sizes share the same open angle and animation.
         const wideMoving = new THREE.Group();
         wideMoving.position.copy(WIDE_SCREEN_PIVOT);
-        wideMoving.add(makeTouchscreenFace(wide, -100, WIDE_SCREEN_PIVOT, SCREEN_TURN,
+        wideMoving.add(makeTouchscreenFace(wide, -100, WIDE_SCREEN_PIVOT, WIDE_SCREEN_REST_TURN,
             faceMaterial, 'Extended touchscreen display'));
         for (const i of [1, 8, 9, 10, 11]) {
             const part = makeOverlayNode(wide, i, -100, dark, `Extended touchscreen moving ${i}`);
             part.children.forEach(mesh => {
                 mesh.geometry.translate(-WIDE_SCREEN_PIVOT.x, -WIDE_SCREEN_PIVOT.y, 0);
-                mesh.geometry.rotateZ(-SCREEN_TURN);
+                mesh.geometry.rotateZ(-WIDE_SCREEN_REST_TURN);
             });
             wideMoving.add(part);
         }
@@ -2277,7 +2325,23 @@ async function loadTouchscreenAssembly() {
         wideStatic.name = 'Extended touchscreen slide rails';
         for (const i of [2, 3, 4, 5, 6, 7])
             wideStatic.add(makeOverlayNode(wide, i, -100, metal, `Extended touchscreen rail ${i}`));
-        root.add(staticParts, moving, wideStatic, wideMoving);
+        // Keep the wide screen the same distance from the front and right
+        // desktop edges as the Standard screen. The wide GLB changes its X
+        // anchor, but its Z position remains at the Standard desktop edge.
+        const standardTopBounds = sizeVariantParts.smallTop.geometry;
+        const wideTopBounds = sizeVariantParts.largeTop.geometry;
+        standardTopBounds.computeBoundingBox();
+        wideTopBounds.computeBoundingBox();
+        const wideMount = new THREE.Group();
+        wideMount.name = 'Extended touchscreen edge alignment';
+        wideMount.position.set(
+            wideTopBounds.boundingBox.max.x - standardTopBounds.boundingBox.max.x
+                - (WIDE_SCREEN_PIVOT.x - SCREEN_PIVOT.x),
+            0,
+            wideTopBounds.boundingBox.min.z - standardTopBounds.boundingBox.min.z
+        );
+        wideMount.add(wideStatic, wideMoving);
+        root.add(staticParts, moving, wideMount);
         loadedModel.add(root);
         const baseParts = [...partRegistry.values()].map(entry => entry.obj)
             .filter(obj => /^Touch_Screen(?:_|$)/.test(obj.name));
@@ -2301,74 +2365,62 @@ function setLedsEnabled(on) {
         material.emissive.set(color);
         material.emissiveIntensity = ledsEnabled ? 3.6 * ledGlow / 100 : 0;
     });
-    ledAreaLights.forEach(light => {
-        const receiver = light.userData.receiver;
-        const strength = ledSurfaces[`${receiver}Strength`] / 100;
-        light.visible = ledsEnabled && ledGlow > 0 && strength > 0;
-        light.intensity = 0.25 * (light.userData.gain ?? 1) * strength * ledGlow / 100;
-    });
     ledSpillMaterials.forEach(({ material, receiver, minReach, maxReach }) => {
         material.uniforms.strength.value = ledsEnabled
             ? ledGlow * ledSurfaces[`${receiver}Strength`] / 10000 : 0;
         material.uniforms.fadeReach.value = minReach +
             (maxReach - minReach) * ledSurfaces[`${receiver}Reach`] / 100;
+        if (material.uniforms.falloffPower) {
+            const sharpness = ledSurfaces[`${receiver}Sharpness`] ?? 0;
+            material.uniforms.falloffPower.value = 2 + 6 * sharpness / 100;
+        }
+        if (receiver === 'desktop' && material.uniforms.stripBaseSpread) {
+            const width = ledSurfaces.desktopWidth;
+            material.uniforms.stripBaseSpread.value = width <= 20
+                ? -3 + width / 5 : 1 + (width - 20) / 20;
+            material.uniforms.stripFanSlope.value = ledSurfaces.desktopCone / 400;
+            material.uniforms.stripFeather.value = 0.2 + ledSurfaces.desktopEdgeFade / 25;
+        }
+        if (receiver === 'floor' && material.uniforms.stripHalfSpan)
+            material.uniforms.stripHalfSpan.value = 0.08 + 0.003 * ledSurfaces.floorWidth;
     });
     document.querySelectorAll('[data-led-toggle],.hub-led').forEach(button =>
         button.setAttribute('aria-pressed', String(ledsEnabled)));
-}
-
-function addLedAreaLight(part, parent, receiverLayer = 0, receiver = 'base') {
-    part.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(part);
-    const size = box.getSize(new THREE.Vector3());
-    const majorX = size.x > size.z;
-    const length = Math.max(size.x, size.z);
-    if (length < 5) return;
-    // The physical strip faces down from the shelf/desktop underside. A long,
-    // soft area source spreads its color across the panel below without the
-    // circular hotspots produced by point lights.
-    const light = new THREE.RectAreaLight(ledColor, 0, length * 0.9, 2.4);
-    light.name = `${part.name} soft LED wash`;
-    light.position.copy(box.getCenter(new THREE.Vector3()));
-    light.position.y = box.min.y - 0.15;
-    const right = majorX ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1);
-    // RectAreaLight emits from its local -Z face, so +Z points up here.
-    const up = majorX ? new THREE.Vector3(0, 0, -1) : new THREE.Vector3(1, 0, 0);
-    light.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(
-        right, up, new THREE.Vector3(0, 1, 0)));
-    light.visible = false;
-    light.layers.set(receiverLayer);
-    light.userData.receiver = receiver;
-    parent.add(light);
-    ledAreaLights.push(light);
-}
-
-function enableLedReceiver(object, layer) {
-    object?.traverse(child => {
-        if (child.isMesh) child.layers.enable(layer);
-    });
+    document.dispatchEvent(new CustomEvent('ergoflex-led-state', {detail:{enabled:ledsEnabled}}));
 }
 
 function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
-    minReach, maxReach, peakAlpha) {
+    minReach, maxReach, peakAlpha, stripBounds = null, referenceSurface = null) {
     // Follow the actual panel mesh so the light fade respects its outline and
     // cutouts as the lift, tilt, and desktop size change.
     const material = new THREE.ShaderMaterial({
         uniforms: {
+            reflectionFrame: { value: new THREE.Matrix4() },
+            reflectionNormal: { value: new THREE.Matrix3() },
             ledColor: { value: new THREE.Color(ledColor) },
             strength: { value: 0 },
             fadeReach: { value: (minReach + maxReach) / 2 },
             centerX: { value: centerX },
             centerZ: { value: centerZ },
             zRadius: { value: zRadius },
-            peakAlpha: { value: peakAlpha }
+            peakAlpha: { value: peakAlpha },
+            stripMinZ: { value: stripBounds?.minZ ?? 0 },
+            stripMaxZ: { value: stripBounds?.maxZ ?? 0 },
+            stripFeather: { value: stripBounds?.feather ?? 1 },
+            stripSourceX: { value: stripBounds?.sourceX ?? 0 },
+            stripBaseSpread: { value: stripBounds?.baseSpread ?? 0 },
+            stripFanSlope: { value: stripBounds?.fanSlope ?? 0 },
+            stripFanLimit: { value: stripBounds?.fanLimit ?? 0 },
+            falloffPower: { value: 2 }
         },
         vertexShader: `
+            uniform mat4 reflectionFrame;
+            uniform mat3 reflectionNormal;
             varying vec3 ledPosition;
             varying vec3 ledNormal;
             void main() {
-                ledPosition = position;
-                ledNormal = normal;
+                ledPosition = (reflectionFrame * vec4(position, 1.0)).xyz;
+                ledNormal = reflectionNormal * normal;
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
         `,
@@ -2380,6 +2432,14 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
             uniform float centerZ;
             uniform float zRadius;
             uniform float peakAlpha;
+            uniform float stripMinZ;
+            uniform float stripMaxZ;
+            uniform float stripFeather;
+            uniform float stripSourceX;
+            uniform float stripBaseSpread;
+            uniform float stripFanSlope;
+            uniform float stripFanLimit;
+            uniform float falloffPower;
             varying vec3 ledPosition;
             varying vec3 ledNormal;
             void main() {
@@ -2387,6 +2447,21 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
                 float dx = (ledPosition.x - centerX) / fadeReach;
                 float dz = (ledPosition.z - centerZ) / zRadius;
                 float pool = exp(-0.5 * (dx * dx + dz * dz));
+                if (stripMaxZ > stripMinZ) {
+                    // The adjustable strip width and forward fan describe
+                    // light bouncing past the shelf side plates.
+                    float forward = max(0.0, ledPosition.x - stripSourceX);
+                    float fan = min(stripFanLimit, forward * stripFanSlope);
+                    float bandMin = stripMinZ - stripBaseSpread - fan;
+                    float bandMax = stripMaxZ + stripBaseSpread + fan;
+                    // Distance to a finite light strip gives its ends rounded
+                    // falloff, avoiding a flat rectangular edge at oblique views.
+                    float beyondEnd = max(max(bandMin - ledPosition.z,
+                        ledPosition.z - bandMax), 0.0);
+                    float across = exp(-0.5 * pow(abs(dx), falloffPower));
+                    float endFade = exp(-0.5 * pow(beyondEnd / stripFeather, 2.0));
+                    pool = across * endFade;
+                }
                 float alpha = min(0.9, peakAlpha * strength * pool * top);
                 gl_FragColor = vec4(ledColor, alpha);
                 #include <tonemapping_fragment>
@@ -2405,8 +2480,259 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
     spill.name = `${surface.name} LED reflection`;
     spill.renderOrder = 1;
     spill.raycast = () => {};
+    if (referenceSurface) {
+        // Power modules share the desktop's light field, but retain their own
+        // mesh and mounting transform as the desk lifts, tilts, or is edited.
+        spill.onBeforeRender = () => {
+            material.uniforms.reflectionFrame.value.copy(referenceSurface.matrixWorld)
+                .invert().multiply(surface.matrixWorld);
+            material.uniforms.reflectionNormal.value.getNormalMatrix(
+                material.uniforms.reflectionFrame.value);
+        };
+    }
     surface.add(spill);
     ledSpillMaterials.push({ material, receiver, minReach, maxReach });
+}
+
+function addLedWingSpill(surface, receiver) {
+    // The two side wings are nearly vertical. Their reflection needs an X/Y
+    // fade, unlike the horizontal desktop and shelves above.
+    const minReach = 5;
+    const maxReach = 18;
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            ledColor: { value: new THREE.Color(ledColor) },
+            strength: { value: 0 },
+            fadeReach: { value: (minReach + maxReach) / 2 }
+        },
+        vertexShader: `
+            varying vec3 ledPosition;
+            varying vec3 ledNormal;
+            void main() {
+                ledPosition = position;
+                ledNormal = normal;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 ledColor;
+            uniform float strength;
+            uniform float fadeReach;
+            varying vec3 ledPosition;
+            varying vec3 ledNormal;
+            void main() {
+                float face = smoothstep(0.7, 0.95, abs(normalize(ledNormal).z));
+                float dx = (ledPosition.x + 159.8) / fadeReach;
+                float dy = (ledPosition.y - 48.5) / 7.0;
+                float pool = exp(-0.5 * (dx * dx + dy * dy));
+                float alpha = min(0.75, 0.38 * strength * pool * face);
+                gl_FragColor = vec4(ledColor, alpha);
+                #include <tonemapping_fragment>
+                #include <colorspace_fragment>
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+        side: THREE.DoubleSide
+    });
+    const spill = new THREE.Mesh(surface.geometry, material);
+    spill.name = `${surface.name} LED wing reflection`;
+    spill.renderOrder = 1;
+    spill.raycast = () => {};
+    surface.add(spill);
+    ledSpillMaterials.push({ material, receiver, minReach, maxReach });
+}
+
+function addLedUprightSpill(surface, strip, receiver, direction, minY, maxY, options = {}) {
+    // Shade only the actual inward-facing board/column geometry. The nearest
+    // point on the LED segment produces soft bounce along the entire strip.
+    const minReach = options.minReach ?? 5;
+    const maxReach = options.maxReach ?? 12;
+    surface.geometry.computeBoundingBox();
+    const surfaceBox = surface.geometry.boundingBox;
+    const stripBox = new THREE.Box3().setFromObject(strip);
+    const stripCenter = stripBox.getCenter(new THREE.Vector3());
+    const stripSize = stripBox.getSize(new THREE.Vector3());
+    const alongX = stripSize.x > stripSize.z;
+    const halfLength = (alongX ? stripSize.x : stripSize.z) / 2;
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            ledColor: { value: new THREE.Color(ledColor) },
+            strength: { value: 0 },
+            fadeReach: { value: minReach },
+            reflectionFrame: { value: new THREE.Matrix4() },
+            reflectionNormal: { value: new THREE.Matrix3() },
+            stripCenter: { value: stripCenter },
+            halfLength: { value: halfLength },
+            stripAxis: { value: alongX ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1) },
+            sourceActive: { value: 1 },
+            gain: { value: options.gain ?? 1 },
+            uprightOnly: { value: options.uprightOnly === false ? 0 : 1 },
+            cage: { value: options.cage ? 1 : 0 },
+            surfaceMinY: { value: surfaceBox.min.y },
+            surfaceMaxY: { value: surfaceBox.max.y },
+            direction: { value: direction },
+            minY: { value: minY },
+            maxY: { value: maxY }
+        },
+        vertexShader: `
+            uniform mat4 reflectionFrame;
+            uniform mat3 reflectionNormal;
+            varying vec3 ledPosition;
+            varying vec3 ledNormal;
+            varying float surfaceY;
+            void main() {
+                surfaceY = position.y;
+                ledPosition = (reflectionFrame * vec4(position, 1.0)).xyz;
+                ledNormal = reflectionNormal * normal;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 ledColor;
+            uniform float strength;
+            uniform float fadeReach;
+            uniform vec3 stripCenter;
+            uniform float halfLength;
+            uniform vec3 stripAxis;
+            uniform float sourceActive;
+            uniform float gain;
+            uniform float uprightOnly;
+            uniform float cage;
+            uniform float surfaceMinY;
+            uniform float surfaceMaxY;
+            uniform float direction;
+            uniform float minY;
+            uniform float maxY;
+            varying vec3 ledPosition;
+            varying vec3 ledNormal;
+            varying float surfaceY;
+            void main() {
+                vec3 nearest = stripCenter;
+                nearest += stripAxis * clamp(dot(ledPosition - stripCenter, stripAxis), -halfLength, halfLength);
+                vec3 towardLight = nearest - ledPosition;
+                float distanceToStrip = length(towardLight);
+                vec3 normal = normalize(ledNormal);
+                float facing = max(dot(normal, towardLight / max(distanceToStrip, 0.001)), 0.0);
+                float upright = 1.0 - smoothstep(0.35, 0.7, abs(normal.y));
+                float emitted = smoothstep(-0.12, 0.12,
+                    direction * (ledPosition.y - stripCenter.y));
+                // Shelves block spill into the next compartment. Feather the
+                // boundary on the receiving geometry to keep it continuous.
+                float compartment = smoothstep(minY - 0.2, minY + 0.2, ledPosition.y)
+                    * (1.0 - smoothstep(maxY - 0.2, maxY + 0.2, ledPosition.y));
+                float pool = exp(-0.5 * pow(distanceToStrip / fadeReach, 2.0));
+                // Include light arriving from farther along the strip. A
+                // nearest-point-only field misses the inside column faces
+                // because their normals point along the strip itself.
+                float lineBounce = 0.0;
+                for (int sampleIndex = 0; sampleIndex < 5; sampleIndex++) {
+                    vec3 samplePoint = stripCenter;
+                    samplePoint += stripAxis * halfLength * (float(sampleIndex) * 0.5 - 1.0);
+                    vec3 ray = samplePoint - ledPosition;
+                    float rayLength = max(length(ray), 0.001);
+                    lineBounce += max(dot(normal, ray / rayLength), 0.0)
+                        * exp(-0.5 * pow(rayLength / fadeReach, 2.0)) / 5.0;
+                }
+                float reflected = 0.5 * (pool * facing + lineBounce);
+                float lowerEdge = 1.0 - smoothstep(surfaceMinY + 0.15,
+                    max(surfaceMinY + 0.3, surfaceMaxY + 0.1), surfaceY);
+                float occlusion = mix(1.0, lowerEdge, cage);
+                // The cage receives weak indirect bounce along its lower
+                // edge, including faces pointing away from the direct strip.
+                reflected += cage * 0.08 * pool;
+                float alpha = min(0.55, 0.28 * strength * gain * sourceActive * reflected
+                    * mix(1.0, upright, uprightOnly) * emitted * compartment * occlusion);
+                gl_FragColor = vec4(ledColor, alpha);
+                #include <tonemapping_fragment>
+                #include <colorspace_fragment>
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+        side: THREE.FrontSide
+    });
+    const spill = new THREE.Mesh(surface.geometry, material);
+    spill.name = `${surface.name} ${receiver}${options.underside ? ' LED underside reflection' : ' LED upright reflection'}`;
+    spill.renderOrder = 1;
+    spill.raycast = () => {};
+    // Strip geometry is baked in the shelf rig frame. Columns may move by a
+    // different amount during lift, so project them into that moving frame.
+    const frame = new THREE.Matrix4();
+    spill.onBeforeRender = () => {
+        let active = true;
+        for (let node = strip; node; node = node.parent) active &&= node.visible;
+        material.uniforms.sourceActive.value = active ? 1 : 0;
+        frame.copy(strip.parent.matrixWorld).invert().multiply(surface.matrixWorld);
+        material.uniforms.reflectionFrame.value.copy(frame);
+        material.uniforms.reflectionNormal.value.getNormalMatrix(frame);
+    };
+    surface.add(spill);
+    ledSpillMaterials.push({ material, receiver, minReach, maxReach });
+}
+
+function addFootLedFloorGlow(parent) {
+    // ShadowMaterial catches shadows but cannot display the LED color. Place a
+    // separate transparent pool just above the floor and parent it to the
+    // desk base so it follows glide and rotation without following lift.
+    const minReach = 0.06;
+    const maxReach = 0.35;
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            ledColor: { value: new THREE.Color(ledColor) },
+            strength: { value: 0 },
+            fadeReach: { value: (minReach + maxReach) / 2 },
+            stripHalfSpan: { value: 0.23 },
+            falloffPower: { value: 2 }
+        },
+        vertexShader: `
+            varying vec2 ledUv;
+            void main() {
+                ledUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 ledColor;
+            uniform float strength;
+            uniform float fadeReach;
+            uniform float stripHalfSpan;
+            uniform float falloffPower;
+            varying vec2 ledUv;
+            void main() {
+                // The foot LED is a long strip across the desk. Measure the
+                // falloff from that segment, including its softly rounded ends.
+                float across = abs(ledUv.x - 0.5) / fadeReach;
+                float pastEnd = max(abs(ledUv.y - 0.5) - stripHalfSpan, 0.0) / 0.08;
+                float pool = exp(-0.5 * pow(length(vec2(across, pastEnd)), falloffPower));
+                float edge = 1.0 - smoothstep(0.43, 0.5, abs(ledUv.x - 0.5));
+                float alpha = min(0.6, 0.34 * strength * pool * edge);
+                gl_FragColor = vec4(ledColor, alpha);
+                #include <tonemapping_fragment>
+                #include <colorspace_fragment>
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), material);
+    glow.name = 'Foot LED floor glow';
+    glow.rotation.x = -Math.PI / 2;
+    glow.position.set(-159.2, loadedModel.worldToLocal(new THREE.Vector3(0, 0.012, 0)).y, -327.1);
+    glow.renderOrder = 1;
+    glow.raycast = () => {};
+    parent.add(glow);
+    ledSpillMaterials.push({ material, receiver: 'floor', minReach, maxReach });
 }
 
 function revealCenterLed(part, desktopGeometry) {
@@ -2440,9 +2766,7 @@ async function loadLedOverlay() {
         ledDesktopFit.name = 'Desktop LED size fit';
         roots.tilt.add(ledDesktopFit);
         ledParts = [];
-        ledAreaLights = [];
         ledSpillMaterials = [];
-        RectAreaLightUniformsLib.init();
         gltf.scene.children.forEach((_, index) => {
             const color = index >= 3 && index <= 37 ? 0xff2828 : ledColor;
             const material = new THREE.MeshStandardMaterial({ color, emissive: color,
@@ -2474,30 +2798,81 @@ async function loadLedOverlay() {
         revealCenterLed(ledParts[2].part, standardGeometry);
         standardGeometry.dispose();
         revealCenterLed(wideCenter, sizeVariantParts.largeTop.geometry);
-        for (const part of ledStandardStrips.children.slice()) addLedAreaLight(part, ledStandardStrips, 3, 'base');
-        for (const part of ledExtendedStrips.children.slice()) addLedAreaLight(part, ledExtendedStrips, 3, 'base');
         const lowerShelf = [...partRegistry.values()].find(({ obj }) => obj.name === 'Top_Shelf_3')?.obj;
+        const topShelf = [...partRegistry.values()].find(({ obj }) => obj.name === 'Top_Shelf_4')?.obj;
         const baseShelf = [...partRegistry.values()].find(({ obj }) => obj.name === 'Base_Panels_3')?.obj;
-        if (!lowerShelf || !baseShelf) throw new Error('Shelf LED receiver is missing.');
-        enableLedReceiver(lowerShelf, 1);
-        enableLedReceiver(baseShelf, 3);
-        enableLedReceiver(sizeVariantParts.smallTop, 2);
-        enableLedReceiver(sizeVariantParts.largeTop, 2);
-        addLedSurfaceSpill(sizeVariantParts.smallTop, 'desktop', -171, -327,
-            23, 6, 14, 0.52);
-        addLedSurfaceSpill(sizeVariantParts.largeTop, 'desktop', -171, -327,
-            23, 6, 14, 0.52);
+        const leftWing = [...partRegistry.values()].find(({ obj }) => obj.name === 'Desktop_1')?.obj;
+        const rightWing = [...partRegistry.values()].find(({ obj }) => obj.name === 'Desktop_2')?.obj;
+        if (!lowerShelf || !topShelf || !baseShelf || !leftWing || !rightWing)
+            throw new Error('LED receiver is missing.');
+        // Shelf LED 40 faces the desktop. Its physical span is narrower than
+        // the desktop, especially the Extended version. The side plates limit
+        // the direct light here; the reflection spreads gently farther forward.
+        const desktopStripBox = new THREE.Box3().setFromObject(ledParts[39].part);
+        const desktopStripBounds = {
+            minZ: desktopStripBox.min.z,
+            maxZ: desktopStripBox.max.z,
+            sourceX: desktopStripBox.max.x,
+            baseSpread: 1,
+            fanSlope: 0.08,
+            fanLimit: 6,
+            feather: 1.4
+        };
+        const desktopStripCenterZ = (desktopStripBounds.minZ + desktopStripBounds.maxZ) / 2;
+        const desktopStripHalfWidth = (desktopStripBounds.maxZ - desktopStripBounds.minZ) / 2;
+        addLedSurfaceSpill(sizeVariantParts.smallTop, 'desktop', -171,
+            desktopStripCenterZ, desktopStripHalfWidth, 1, 14, 0.52, desktopStripBounds);
+        addLedSurfaceSpill(sizeVariantParts.largeTop, 'desktop', -171,
+            desktopStripCenterZ, desktopStripHalfWidth, 1, 14, 0.52, desktopStripBounds);
+        for (const { obj } of partRegistry.values()) {
+            if (!/^Power(?:_\d+)?$/.test(obj.name) || !obj.isMesh) continue;
+            addLedSurfaceSpill(obj, 'desktop', -171, desktopStripCenterZ,
+                desktopStripHalfWidth, 1, 14, 0.18, desktopStripBounds,
+                sizeVariantParts.smallTop);
+        }
         addLedSurfaceSpill(lowerShelf, 'shelf', -177, -327,
             22, 3, 11, 0.42);
         addLedSurfaceSpill(baseShelf, 'base', -166, -327,
             21, 3, 11, 0.28);
-        // The upper shelf lights wash the lower shelf. The lower shelf light
-        // washes the desktop. This prevents illumination through the panels.
-        for (const index of [39, 40, 41, 42]) {
-            addLedAreaLight(ledParts[index].part, roots.lift,
-                index === 39 ? 2 : 1, index === 39 ? 'desktop' : 'shelf');
-            ledAreaLights.at(-1).userData.gain = 0.12;
+        addLedSurfaceSpill(topShelf, 'top', -179, -327,
+            21, 2, 10, 0.38);
+        const uprightNames = new Set(['Top_Shelf', 'Top_Shelf_1', 'Top_Shelf_2',
+            'Lift_Column_Top_16', 'Lift_Column_Top_17']);
+        for (const { obj } of partRegistry.values()) {
+            if (!uprightNames.has(obj.name) || !obj.isMesh) continue;
+            addLedUprightSpill(obj, ledParts[39].part, 'desktop', -1, 47.6, 51.92);
+            addLedUprightSpill(obj, ledParts[41].part, 'shelf', -1, 52.69, 57.0);
+            addLedUprightSpill(obj, ledParts[40].part, 'top', 1, 57.78, 1000);
         }
+        const legNames = new Set(['Lift_Column_Top_16', 'Lift_Column_Top_17',
+            'Lift_Column_Center', 'Lift_Column_Center_1',
+            'Lift_Column_Bottom_2', 'Lift_Column_Bottom_3']);
+        for (const { obj } of partRegistry.values()) {
+            if (!obj.isMesh) continue;
+            const underDeskPart = obj.name === 'Desktop' || obj.name === 'mesh_692';
+            if (!underDeskPart && !legNames.has(obj.name)) continue;
+            const crossbar = obj.name === 'Desktop';
+            for (const group of [ledStandardStrips, ledExtendedStrips]) {
+                const centerStrip = group.children[2];
+                addLedUprightSpill(obj, centerStrip, 'base', -1, -1000, 49,
+                    { underside: true, uprightOnly: false, cage: underDeskPart && !crossbar,
+                      gain: crossbar ? 2 : underDeskPart ? 0.5 : 1, minReach: 12, maxReach: 28 });
+                if (legNames.has(obj.name)) {
+                    obj.geometry.computeBoundingBox();
+                    const left = obj.geometry.boundingBox.getCenter(new THREE.Vector3()).z < -327;
+                    addLedUprightSpill(obj, group.children[left ? 1 : 0],
+                        left ? 'leftWing' : 'rightWing', -1, -1000, 49,
+                        { underside: true, gain: 0.65, minReach: 8, maxReach: 18 });
+                }
+            }
+        }
+        addLedWingSpill(leftWing, 'leftWing');
+        addLedWingSpill(rightWing, 'rightWing');
+        addFootLedFloorGlow(roots.base);
+        // All LED receivers use the mesh-aligned light fields above. Three.js
+        // selects lights by the camera's layers, not each receiving mesh's
+        // layers. Extra area lights therefore leaked onto the desktop and
+        // produced a sharp, view-dependent diagonal across its top triangles.
         roots.tilt.add(ledStandardStrips, ledExtendedStrips);
         roots.lift.position.y = LIFT_MIN;
         roots.tilt.position.y = LIFT_MIN;
@@ -2683,11 +3058,29 @@ function loadModel() {
         applyAccessoryVisibility();
         if (!workspaceRoom) workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
         setRoomScene(selectedRoomScene, false);
+        if (selectedRoomScene === 'home') setHomeMode(homeMode);
         applySurfaceFinish();   // now that surfaceInches can measure the real model
         syncBuildSummary();
+        // Set the demo's first pose before revealing and fitting the model.
+        if (EVENT_DEMO) {
+            currentLift = targetLift = heightToLift(43.5);
+            manualLiftOverride = true;
+            updateMovingObjectsPosition();
+            const initialTilt = primaryTiltConfig();
+            if (initialTilt) {initialTilt.currentDeg = -5;applyTiltConfig(initialTilt);syncTiltUI();}
+            showHeight(43.5);
+        }
         document.getElementById('scene-status').textContent = 'LIVE 3D · READY';
         syncViewerSize();
         focusObjects([loadedModel]);
+
+        // A shared preview can request the architectural view explicitly.
+        if (!EVENT_DEMO && new URLSearchParams(location.search).get('view') === 'room') {
+            workspaceRoom?.ready.then(() => {
+                const select = document.getElementById('camera-view');
+                if (select) { select.value = 'room'; select.dispatchEvent(new Event('change')); }
+            });
+        }
 
         // Phase 1.4: Material smoke check
         if (!woodMaterials.size) {
@@ -2807,6 +3200,7 @@ function serializeProject() {
     const motion = {
         heightInches: liftToHeight(currentLift),
         tilt: Object.fromEntries(tiltConfigs.map(c => [c.name, c.currentDeg])),
+        yaw: deskYaw,
         // The target, not the current offset: glide eases toward its target over
         // several frames, so saving the offset would capture wherever the desk
         // happened to be mid-transit rather than the position that was asked for.
@@ -2867,6 +3261,8 @@ function serializeProject() {
                 grainSheen,
                 environment: document.getElementById('studio-environment')?.value || 'gallery',
                 roomScene: selectedRoomScene,
+                homeMode,
+                homeLayout: selectedHomeLayout().id,
                 sceneAssets: serializeSceneAssetStates(),
                 sceneAssetLabels: [...partLabels].filter(([editorId]) => editorId.startsWith('scene:')),
                 sceneAssetLocked: [...lockedParts].filter(editorId => editorId.startsWith('scene:')),
@@ -3065,6 +3461,7 @@ function clearProjectState() {
 
 function applyProjectMotion(motion) {
     if (!motion) return;
+    if (Number.isFinite(motion.yaw)) { deskYaw = motion.yaw % (Math.PI * 2); applyDeskTransform(); }
     if (Number.isFinite(motion.heightInches)) {
         manualLiftOverride = true;
         currentLift = targetLift = heightToLift(THREE.MathUtils.clamp(motion.heightInches, HEIGHT_MIN, HEIGHT_MAX));
@@ -3195,7 +3592,9 @@ function applyProjectPresentation(project) {
     for (const [editorId, label] of presentation.sceneAssetLabels || []) partLabels.set(editorId, label);
     for (const editorId of presentation.sceneAssetLocked || []) lockedParts.add(editorId);
     persistSceneAssetStates();
-    setRoomScene(presentation.roomScene || 'product', false);
+    if (HOME_MODES[presentation.homeMode]) homeMode = presentation.homeMode;
+    homeLayoutId = HOME_LAYOUTS[presentation.homeLayout] ? presentation.homeLayout : homeLayoutForSize(currentConfig.size).id;
+    setRoomScene(presentation.roomScene || 'product', false, { preserveDesk: true });
     const environment = document.getElementById('studio-environment');
     if (environment && presentation.environment) {
         environment.value = presentation.environment;
@@ -6136,7 +6535,7 @@ const glideInput = new THREE.Vector2();
 const glideDemoOrigin = new THREE.Vector3();
 const glideKeys = new Set();
 let glidePointer = null;
-let glideSpeed = 0.51;
+let glideSpeed = 0.204;
 let glideUIPrev = '';
 function releaseGlideInput() {
     glideKeys.clear(); glideInput.set(0, 0); glidePointer = null;
@@ -6230,7 +6629,7 @@ function setupGlideControls() {
     pad.onblur = releaseGlideInput;
     window.addEventListener('blur', () => { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); });
     document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); } });
-    document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.51;
+    document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.204;
     document.getElementById('glide-home').onclick = () => setGlidePosition(0, 0);
     document.querySelectorAll('[data-turn-command]').forEach(button => {
         const direction = Number(button.dataset.turnCommand);
@@ -6238,7 +6637,7 @@ function setupGlideControls() {
         button.onpointerdown = e => {
             if (!manualGlideReady()) return;
             e.preventDefault();
-            button.setPointerCapture(e.pointerId);
+            try { button.setPointerCapture(e.pointerId); } catch {}
             setYawCommand(direction);
         };
         button.onpointerup = stop;
@@ -6551,16 +6950,22 @@ function loadTiltPresets() {
 function loadErgoForms() {
     const fallback = [
         { name: 'Sitting', lift: 28, tilt: 0 },
-        { name: 'Standing', lift: 48, tilt: 0 },
+        { name: 'Standing', lift: 43.5, tilt: -5 },
         { name: 'Easel', lift: 52, tilt: 65 }
     ];
     const stored = readStore(ERGO_FORMS_KEY, 2, null);
     if (!Array.isArray(stored?.forms) || stored.forms.length !== 3) return fallback;
-    return stored.forms.map((form, i) => ({
-        name: typeof form?.name === 'string' && form.name.trim() ? form.name.slice(0, 24) : fallback[i].name,
-        lift: numberOrNull(form?.lift, HEIGHT_MIN, HEIGHT_MAX),
-        tilt: numberOrNull(form?.tilt, TILT_MIN, TILT_MAX)
-    }));
+    return stored.forms.map((form, i) => {
+        // Upgrade untouched defaults; retain users' renamed or custom poses.
+        const previousDefault = i === 0 && form?.name === 'Sitting' && form?.lift === 28 && [0, -4].includes(form?.tilt)
+            || i === 1 && form?.name === 'Standing' && form?.lift === 48 && form?.tilt === 0;
+        if (previousDefault) return { ...fallback[i] };
+        return {
+            name: typeof form?.name === 'string' && form.name.trim() ? form.name.slice(0, 24) : fallback[i].name,
+            lift: numberOrNull(form?.lift, HEIGHT_MIN, HEIGHT_MAX),
+            tilt: numberOrNull(form?.tilt, TILT_MIN, TILT_MAX)
+        };
+    });
 }
 
 let liftPresets = [null, null, null];
@@ -6762,7 +7167,7 @@ function speedSelect(id, label, value) {
 
 function chipRow(kind) {
     return `<div class="remote-chips" data-preset-bank="${kind}">` +
-        [1, 2, 3].map(n => `<button class="remote-chip" data-slot="${n - 1}" type="button"><span class="preset-value">${n}</span><span class="caret">&#94;</span></button>`).join('') +
+        [1, 2, 3].map(n => `<button class="remote-chip" data-slot="${n - 1}" type="button"><span class="preset-number">${n}</span><span class="preset-value" aria-hidden="true"></span><span class="caret" aria-hidden="true">&#94;</span></button>`).join('') +
         `</div>`;
 }
 
@@ -6827,8 +7232,8 @@ function buildMotionRemote() {
                  aria-describedby="glide-help">${compassSvg()}<span id="glide-knob" class="remote-sphere"></span></div>
             <div class="remote-speed">
               <select id="glide-speed" aria-label="Glide speed">
-                <option value="0.17">Crawl</option><option value="0.34">Ninja</option>
-                <option value="0.51" selected>Slow</option><option value="0.68">Medium</option>
+                <option value="0.034">Crawl</option><option value="0.136">Ninja</option>
+                <option value="0.204" selected>Slow</option><option value="0.68">Medium</option>
                 <option value="0.85">Fast</option>
               </select>
             </div>
@@ -6888,7 +7293,7 @@ function buildMotionRemote() {
                 aria-pressed="false" title="Slide and turn touchscreen">Screen</button>
         <span class="remote-info" role="img" aria-label="About the wellness bar"></span>
       </div>
-      <p id="glide-help" class="remote-hint">Drag the inner half to glide; twist the outer half or hold Left/Right to turn. Tap a preset to recall it, press and hold to save.</p>
+      <p id="glide-help" class="remote-hint">Drag the inner half to glide; twist the outer half or hold Left/Right to turn. Presets: tap to recall, hold to save, swipe up to see the value.</p>
     </div>`;
     dock.append(body);
     // Eight grips, inside the border box: the shell clips its own overflow to
@@ -6929,11 +7334,11 @@ function renderPresetChips() {
         document.querySelectorAll(`[data-preset-bank="${kind}"] .remote-chip`).forEach(chip => {
             const value = bank[Number(chip.dataset.slot)];
             chip.dataset.saved = String(value !== null);
-            chip.querySelector('.preset-value').textContent = value === null ? String(Number(chip.dataset.slot) + 1)
-                : String(Number(value.toFixed(1)));
+            chip.querySelector('.preset-value').textContent = value === null ? 'Empty'
+                : String(Number(value.toFixed(1))) + (kind === 'lift' ? '″' : '°');
             chip.title = value === null
                 ? 'Empty. Press and hold to save the current ' + (kind === 'lift' ? 'height' : 'tilt') + '.'
-                : (kind === 'lift' ? value.toFixed(1) + '"' : value.toFixed(1) + '°') + ' — tap to recall, hold to overwrite.';
+                : (kind === 'lift' ? value.toFixed(1) + '"' : value.toFixed(1) + '°') + ' — tap to recall, hold to overwrite, swipe up or press Arrow Up to reveal.';
             chip.setAttribute('aria-label', `${kind === 'lift' ? 'Height' : 'Tilt'} preset ${Number(chip.dataset.slot) + 1}: ${value === null ? 'empty' : chip.title}`);
         });
     }
@@ -6941,19 +7346,47 @@ function renderPresetChips() {
 
 // Tap recalls, press-and-hold saves - the app's gesture, and the reason the two
 // banks are separate: lift and tilt are stored independently there.
-function bindHold(el, onTap, onHold) {
-    let timer = null, held = false;
-    const start = () => { held = false; timer = setTimeout(() => { held = true; onHold(); }, 550); };
+function bindHold(el, onTap, onHold, onReveal = null) {
+    let timer = null, held = false, moved = false, revealed = false;
+    let pointer = null, startX = 0, startY = 0;
     const cancel = () => { clearTimeout(timer); timer = null; };
-    el.addEventListener('pointerdown', start);
-    el.addEventListener('pointerup', () => { cancel(); if (!held) onTap(); });
-    el.addEventListener('pointerleave', cancel);
-    el.addEventListener('pointercancel', cancel);
+    el.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || pointer !== null) return;
+        pointer = e.pointerId; startX = e.clientX; startY = e.clientY;
+        held = moved = revealed = false;
+        // Synthetic/accessibility pointer events may have no active capture.
+        try { el.setPointerCapture(e.pointerId); } catch {}
+        timer = setTimeout(() => { held = true; onHold(); }, 550);
+    });
+    el.addEventListener('pointermove', e => {
+        if (e.pointerId !== pointer) return;
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        if (Math.hypot(dx, dy) > 8) { moved = true; cancel(); }
+        if (onReveal && !held && !revealed && dy <= -12 && Math.abs(dy) > Math.abs(dx)) {
+            revealed = true; onReveal();
+        }
+    });
+    el.addEventListener('pointerup', e => {
+        if (e.pointerId !== pointer) return;
+        cancel(); pointer = null;
+        if (!held && !moved) onTap();
+    });
+    const abandon = () => { cancel(); pointer = null; };
+    el.addEventListener('pointercancel', abandon);
+    el.addEventListener('lostpointercapture', abandon);
     el.addEventListener('keydown', e => {
+        if (e.key === 'ArrowUp' && onReveal) { e.preventDefault(); onReveal(); return; }
         if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault();
-        if (e.shiftKey) onHold(); else onTap();   // Shift+Enter is the keyboard's "hold"
+        if (!e.repeat) { if (e.shiftKey) onHold(); else onTap(); }
     });
+}
+
+const presetRevealTimers = new WeakMap();
+function revealPresetChip(chip) {
+    clearTimeout(presetRevealTimers.get(chip));
+    chip.dataset.revealed = 'true';
+    presetRevealTimers.set(chip, setTimeout(() => { chip.dataset.revealed = 'false'; }, 2500));
 }
 
 function goToHeight(inches) {
@@ -7436,7 +7869,8 @@ function wireRemote(dock, header) {
                     notifyUser('Tilt ' + tiltPresets[slot].toFixed(1) + '° saved to preset ' + (slot + 1) + '.');
                 }
                 renderPresetChips();
-            });
+                revealPresetChip(chip);
+            }, () => revealPresetChip(chip));
     });
 
     // ---- ergo forms ----
@@ -7519,7 +7953,9 @@ function updateGlide(dt) {
     } else {
         if (glideInput.lengthSq() > 0) {
             // Camera-relative floor motion keeps the pad intuitive after orbiting.
-            const forward = camera.getWorldDirection(new THREE.Vector3()); forward.y = 0; forward.normalize();
+            const forward = camera.getWorldDirection(new THREE.Vector3());
+            if (liveAR?.active) forward.applyQuaternion(loadedModel.parent.getWorldQuaternion(new THREE.Quaternion()).invert());
+            forward.y = 0; forward.normalize();
             const right = new THREE.Vector3(-forward.z, 0, forward.x);
             glideTarget.copy(glideOffset).addScaledVector(right, glideInput.x * glideSpeed * dt).addScaledVector(forward, -glideInput.y * glideSpeed * dt);
             glideTarget.x = THREE.MathUtils.clamp(glideTarget.x, -1, 1); glideTarget.z = THREE.MathUtils.clamp(glideTarget.z, -1, 1);
@@ -7533,17 +7969,90 @@ function updateGlide(dt) {
     syncGlideUI();
 }
 
-// --- Phase 6: AR "See in your space" ---
-// Exports the CURRENT configured desk (finishes, height, tilt pose) to a GLB
-// at true physical scale and hands it to <model-viewer> for the AR handoff:
-//   iOS / iPadOS -> AR Quick Look (USDZ generated on the fly)
-//   Android      -> WebXR AR session in the browser
-// The meters-per-world-unit factor is derived from the lift math: the lift
-// travel spans exactly HEIGHT_MAX - HEIGHT_MIN real inches.
-// NOTE: WebXR needs a secure context (https), so Android AR requires the
-// production site — it won't trigger from a plain-http LAN dev URL.
+// --- AR "See in your space" ---
+// Android WebXR renders the live desk with DOM overlay controls; no GLB export
+// or second renderer is needed. iOS Quick Look offers an interactive USDZ test
+// asset and the configured GLB export as a static fallback.
+// Both paths use meters calibrated from the selected desktop's physical width.
+// WebXR requires HTTPS (or localhost) and iframe xr-spatial-tracking permission.
+let liveAR = null;
 let arBusy = false;
 let lastARBlobUrl = null;
+let lastAppleARBlobUrl = null;
+
+async function prepareAppleTapAsset() {
+    const { appleTapStates, exportAppleTapUSDZ } = await import('./apple-ar-interactions.mjs?v=apple-taps-handoff-fix-20260930');
+    if (workspaceAccessories?.items.size) {
+        throw new Error('Tap controls are not available with added desk accessories yet. Use the current-pose AR option.');
+    }
+    const height = liftToHeight(currentLift);
+    const tilt = primaryTiltConfig()?.currentDeg ?? 0;
+    const states = appleTapStates(height, tilt, currentConfig.size);
+    const sourceMeshes = [];
+    loadedModel.traverseVisible(object => {
+        if (object.isMesh && !object.material?.isShaderMaterial) sourceMeshes.push(object);
+    });
+    const root = new THREE.Group();
+    const samples = new Map();
+    const meters = new THREE.Matrix4().makeScale(...Array(3).fill(arSizeReference().metersPerUnit));
+    const materialCopies = new Map();
+    const exported = sourceMeshes.map(source => {
+        if (Array.isArray(source.material)) throw new Error('Apple tap export requires one material per desk surface.');
+        let material = materialCopies.get(source.material);
+        if (!material) {
+            material = source.material.isMeshStandardMaterial ? source.material.clone() : new THREE.MeshStandardMaterial({
+                color: source.material.color, map: source.material.map, roughness: .65,
+                transparent: source.material.transparent, opacity: source.material.opacity, side: source.material.side
+            });
+            // USDZExporter writes emissive color but not emissiveIntensity.
+            material.emissive.multiplyScalar(material.emissiveIntensity);
+            material.emissiveIntensity = 1;
+            materialCopies.set(source.material, material);
+        }
+        const mesh = new THREE.Mesh(source.geometry, material);
+        mesh.name = source.name;
+        mesh.matrixAutoUpdate = false;
+        root.add(mesh);
+        samples.set(mesh.id, []);
+        return mesh;
+    });
+    const savedLift = currentLift;
+    const savedDegrees = tiltConfigs.map(config => config.currentDeg);
+    const savedPaused = motionPaused;
+    try {
+        // Synchronous sampling: no frame, UI update, saved preset or localStorage
+        // write can see these temporary poses. Restore even if a rig throws.
+        motionPaused = true;
+        for (let i = 0; i < states.length; i++) {
+            currentLift = heightToLift(states[i].height);
+            if (primaryTiltConfig()) primaryTiltConfig().currentDeg = states[i].tilt;
+            updateMovingObjectsPosition();
+            tiltConfigs.forEach(applyTiltConfig);
+            loadedModel.updateWorldMatrix(true, true);
+            sourceMeshes.forEach((source, index) => {
+                const matrix = meters.clone().multiply(source.matrixWorld);
+                samples.get(exported[index].id).push(matrix);
+                if (i === 0) exported[index].matrix.copy(matrix);
+            });
+        }
+    } finally {
+        currentLift = savedLift;
+        tiltConfigs.forEach((config, i) => { config.currentDeg = savedDegrees[i]; });
+        updateMovingObjectsPosition();
+        tiltConfigs.forEach(applyTiltConfig);
+        loadedModel.updateWorldMatrix(true, true);
+        motionPaused = savedPaused;
+    }
+    root.updateMatrixWorld(true);
+    try {
+        const result = await exportAppleTapUSDZ(root, { states, samples });
+        if (lastAppleARBlobUrl) URL.revokeObjectURL(lastAppleARBlobUrl);
+        lastAppleARBlobUrl = URL.createObjectURL(new Blob([result.bytes], { type: 'model/vnd.usdz+zip' }));
+        return { url: lastAppleARBlobUrl, bytes: result.bytes.length, ...result.stats };
+    } finally {
+        materialCopies.forEach(material => material.dispose());
+    }
+}
 
 // Ask the browser what it can do rather than guessing from the user-agent.
 // Chrome defaults to desktop-site mode on large foldables (and on tablets),
@@ -7564,21 +8073,37 @@ async function isMobileARDevice() {
     return !!(a.relList && a.relList.supports && a.relList.supports('ar'));
 }
 
-async function prepareARModel() {
+async function prepareARModel({ appleTaps = true } = {}) {
     const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
     if (!customElements.get('model-viewer')) {
         await import('https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js');
     }
+    haltAllMotion();
     stopGlide(); // desk must be at its home position for a clean export
+
+    let appleAsset = null, appleError = null;
+    if (appleTaps) {
+        try { appleAsset = await prepareAppleTapAsset(); }
+        catch (error) {
+            console.warn('[ErgoFlex] Apple tap preview unavailable:', error);
+            appleError = error.message;
+        }
+    }
 
     // Clone shares geometries/materials — cheap even at 830 meshes
     const clone = loadedModel.clone(true);
+    // The browser's additive LED fields use custom shaders that GLB/Quick Look
+    // cannot represent. Export the actual textured surfaces and LED strips.
+    const browserLightFields = [];
+    clone.traverse(object => {
+        if (object.isMesh && object.material?.isShaderMaterial) browserLightFields.push(object);
+    });
+    browserLightFields.forEach(object => object.removeFromParent());
     clone.position.x = glideBase.x;
     clone.position.z = glideBase.z;
 
-    const inchesPerWorld = (HEIGHT_MAX - HEIGHT_MIN) / ((LIFT_MAX - LIFT_MIN) * loadedModel.scale.x);
     const exportRoot = new THREE.Group();
-    exportRoot.scale.setScalar(0.0254 * inchesPerWorld); // glTF units are meters
+    exportRoot.scale.setScalar(arSizeReference().metersPerUnit); // glTF units are meters
     exportRoot.add(clone);
     for (const group of workspaceAccessories?.exportGroups() || []) {
         group.matrix.elements[12] -= glideOffset.x;
@@ -7597,46 +8122,174 @@ async function prepareARModel() {
         mv = document.createElement('model-viewer');
         mv.id = 'ar-model-viewer';
         mv.setAttribute('ar', '');
+        // In the tall LA Tech Week iframe this hidden element sits below the
+        // phone's visible viewport. Default lazy loading never starts there.
+        mv.setAttribute('loading', 'eager');
         mv.setAttribute('ar-modes', 'webxr quick-look');
         mv.setAttribute('ar-scale', 'fixed'); // true size in the room
+        mv.addEventListener('ar-status', event => {
+            if (event.detail.status === 'failed') {
+                showARHelpModal('AR could not start. Try opening the viewer directly on a compatible phone or tablet over HTTPS.');
+            }
+        });
         mv.style.cssText = 'position:fixed;bottom:0;left:0;width:2px;height:2px;opacity:0.01;pointer-events:none;';
         document.body.appendChild(mv);
     }
-    mv.src = lastARBlobUrl;
     await new Promise((resolve, reject) => {
-        const to = setTimeout(() => reject(new Error('model-viewer load timeout')), 30000);
-        mv.addEventListener('load', () => { clearTimeout(to); resolve(); }, { once: true });
-        mv.addEventListener('error', () => { clearTimeout(to); reject(new Error('model-viewer failed to parse GLB')); }, { once: true });
+        const cleanup = () => {
+            clearTimeout(to);
+            mv.removeEventListener('load', onLoad);
+            mv.removeEventListener('error', onError);
+        };
+        const onLoad = () => { cleanup(); resolve(); };
+        const onError = event => { cleanup(); reject(new Error(`AR model loading failed (${event.detail?.type || 'unknown error'}).`)); };
+        const to = setTimeout(() => { cleanup(); reject(new Error('AR model loading timed out. Open the viewer directly and try again.')); }, 120000);
+        mv.addEventListener('load', onLoad);
+        mv.addEventListener('error', onError);
+        mv.src = lastARBlobUrl;
     });
-    return { modelViewer: mv, bytes: blob.size };
+    // Supplying ios-src prevents model-viewer from re-converting the interactive
+    // asset and dropping its tap behavior graph. Android never enters this path.
+    if (appleAsset) mv.setAttribute('ios-src', appleAsset.url);
+    else mv.removeAttribute('ios-src');
+    return { modelViewer: mv, bytes: blob.size, appleAsset, appleError };
+}
+
+const arWidthOverrides = new Map();
+function arSizeReference() {
+    const nominalWidth = Number(currentConfig.size.split('x')[0]);
+    let widthInches = arWidthOverrides.get(currentConfig.size) ?? nominalWidth;
+    try {
+        const stored = Number(localStorage.getItem('ergoflex.arWidthV1.'+currentConfig.size));
+        if (!arWidthOverrides.has(currentConfig.size) && stored >= 24 && stored <= 96) widthInches = stored;
+    } catch {}
+    let widthUnits;
+    if (sizeVariantParts) {
+        loadedModel.updateWorldMatrix(true,true);
+        const inverse = loadedModel.matrixWorld.clone().invert();
+        const parts = currentConfig.size === '60x30'
+            ? [sizeVariantParts.largeTop,sizeVariantParts.largeTrim]
+            : [sizeVariantParts.smallTop,sizeVariantParts.smallTrim];
+        const bounds = new THREE.Box3();
+        for (const part of parts) {
+            part.geometry.computeBoundingBox();
+            bounds.union(part.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(part.matrixWorld)));
+        }
+        // Authored width is Z. Cancel model yaw, AR placement and parent scale
+        // before measuring, so changing the pose cannot change its real size.
+        widthUnits = bounds.getSize(new THREE.Vector3()).z * Math.abs(loadedModel.scale.z);
+    }
+    const fallback = .0254 * (HEIGHT_MAX-HEIGHT_MIN)/((LIFT_MAX-LIFT_MIN)*loadedModel.scale.x);
+    return {key:currentConfig.size,nominalWidth,widthInches,widthUnits,
+        metersPerUnit:widthUnits>0 ? widthInches*.0254/widthUnits : fallback};
+}
+
+function setARWidth(inches) {
+    const width = Number(inches);
+    if (!Number.isFinite(width) || width<24 || width>96) return false;
+    arWidthOverrides.set(currentConfig.size,width);
+    try {localStorage.setItem('ergoflex.arWidthV1.'+currentConfig.size,String(width));} catch {}
+    return true;
+}
+
+function getLiveAR() {
+    if (!liveAR) liveAR = new ARWorkspace({
+        get renderer() { return renderer; }, get camera() { return camera; },
+        get controls() { return controls; }, get model() { return loadedModel; },
+        get scene() { return scene; }, lights:() => Object.values(sceneLights),
+        accessories:() => [...(workspaceAccessories?.mounts.values() || [])].map(mount => mount.group),
+        metersPerUnit:() => arSizeReference().metersPerUnit,
+        sizeReference:arSizeReference, setWidth:setARWidth,
+        remote:() => document.getElementById('motion-dock'),
+        ledControls:() => [document.querySelector('#event-demo .demo-led-glow'),document.querySelector('#event-demo .demo-led-color-stack')].filter(Boolean),
+        halt:haltAllMotion, resize:syncViewerSize
+    });
+    return liveAR;
 }
 
 async function launchAR() {
     if (arBusy || !loadedModel) return;
+    if (navigator.xr && await navigator.xr.isSessionSupported('immersive-ar').catch(() => false)) {
+        const modal = showARHelpModal('Place the current desk at full size, then use the ErgoFlex app to Glide, turn, adjust height and tilt, or switch LEDs inside AR.');
+        const place = document.createElement('button');
+        place.type = 'button'; place.id = 'ar-place-button'; place.textContent = 'Start AR';
+        place.addEventListener('click', () => {
+            place.disabled = true;
+            const starting = getLiveAR().start(); // requestSession runs during this tap
+            modal.remove();
+            starting.catch(error => showARHelpModal(`AR could not start: ${error.name}: ${error.message}. Try opening the viewer directly.`));
+        });
+        modal.querySelector('#ar-help-close').before(place);
+        place.focus();
+        return;
+    }
     if (!await isMobileARDevice()) {
         showARHelpModal();
         return;
     }
-    const btn = document.getElementById('ar-btn');
+    const buttons = [...document.querySelectorAll('#ar-btn, [data-ar-launch]')];
     arBusy = true;
-    if (btn) btn.classList.add('animate-pulse');
+    buttons.forEach(button => { button.disabled = true; button.setAttribute('aria-busy', 'true'); });
+    const modal = showARHelpModal('Preparing your current desk configuration…');
     try {
-        const { modelViewer } = await prepareARModel();
-        await modelViewer.activateAR();
+        const { modelViewer, appleAsset, appleError } = await prepareARModel();
+        if (!modal.isConnected) return;
+        modal.querySelector('#ar-help-message').textContent = appleAsset
+            ? 'iPhone tap-controls preview: tap a leg to switch Sitting/Standing, or a wing to cycle −5°, 39° and 65°. The desk raises if needed for tilt clearance. This preview needs an iPhone test. You can also open the current pose only.'
+            : 'Your desk is ready. Place it in your room at full size.' + (appleError ? ' Tap-controls preview unavailable: ' + appleError : '');
+        const place = document.createElement('button');
+        place.type = 'button';
+        place.id = 'ar-place-button';
+        place.className = 'btn-primary w-full py-3';
+        place.textContent = appleAsset ? 'Try iPhone tap controls' : 'Place in my space';
+        // A fresh tap after export preserves the user activation required by
+        // Quick Look and WebXR; exporting first can take several seconds.
+        place.addEventListener('click', () => {
+            if (!modelViewer.canActivateAR) {
+                showARHelpModal('This browser could not enable AR. Open the viewer directly on a compatible phone or tablet over HTTPS.');
+                return;
+            }
+            place.disabled = true;
+            modelViewer.activateAR().then(() => modal.remove()).catch(err => {
+                console.error('[ErgoFlex] AR launch failed:', err);
+                showARHelpModal('AR could not start. Open this viewer over HTTPS on a compatible phone or tablet and try again.');
+            });
+        });
+        modal.querySelector('#ar-help-close').before(place);
+        if (appleAsset) {
+            const staticPlace = document.createElement('button');
+            staticPlace.type = 'button'; staticPlace.id = 'ar-static-button';
+            staticPlace.className = 'btn-primary w-full py-3';
+            staticPlace.textContent = 'Open current pose only';
+            staticPlace.addEventListener('click', () => {
+                modelViewer.removeAttribute('ios-src');
+                staticPlace.disabled = true;
+                modelViewer.activateAR().then(() => modal.remove()).catch(error => {
+                    staticPlace.disabled = false;
+                    showARHelpModal(`AR could not start. ${error.message || 'Open the viewer directly and try again.'}`);
+                });
+            });
+            modal.querySelector('#ar-help-close').before(staticPlace);
+        }
+        place.focus();
     } catch (err) {
         console.error('[ErgoFlex] AR launch failed:', err);
-        showARHelpModal('AR could not start on this device. Make sure you are on a recent iPhone, iPad, or ARCore-capable Android phone, over https.');
+        showARHelpModal(`The AR model could not be prepared. ${err.message || 'Please try again.'}`);
     } finally {
         arBusy = false;
-        if (btn) btn.classList.remove('animate-pulse');
+        buttons.forEach(button => { button.disabled = false; button.removeAttribute('aria-busy'); });
     }
 }
 
 function showARHelpModal(message) {
+    const returnFocus = document.activeElement;
     let modal = document.getElementById('ar-help-modal');
     if (modal) modal.remove();
     modal = document.createElement('div');
     modal.id = 'ar-help-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'ar-help-title');
     modal.className = 'fixed inset-0 bg-black bg-opacity-25 z-50 flex items-center justify-center p-4';
     modal.innerHTML = `
         <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-xl text-center">
@@ -7645,17 +8298,31 @@ function showARHelpModal(message) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                 </svg>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">See it in your space</h3>
-            <p class="text-gray-600 text-sm leading-relaxed mb-4">${message ||
-                'Open this page on your <b>phone or tablet</b> and tap the cube button to place the ErgoFlex desk in your room — at true size, in your exact configuration.'}</p>
-            <p class="text-xs text-gray-400 break-all mb-6">${window.location.href}</p>
+            <h3 id="ar-help-title" class="text-xl font-semibold text-gray-900 mb-2">See it in your space</h3>
+            <p id="ar-help-message" class="text-gray-600 text-sm leading-relaxed mb-4"></p>
+            <a id="ar-help-url" class="text-xs text-gray-400 break-all mb-6" target="_blank" rel="noopener">Open the viewer directly</a>
             <button class="btn-primary w-full py-3" id="ar-help-close">Got it</button>
         </div>
     `;
+    modal.querySelector('#ar-help-message').textContent = message ||
+        'Open this viewer over HTTPS on a compatible phone or tablet, then tap AR/XR to place your configured ErgoFlex desk in your room at full size.';
+    modal.querySelector('#ar-help-url').href = window.location.href;
+    const close = () => { modal.remove(); if (returnFocus?.isConnected) returnFocus.focus(); };
     modal.addEventListener('click', (e) => {
-        if (e.target === modal || e.target.id === 'ar-help-close') modal.remove();
+        if (e.target === modal || e.target.id === 'ar-help-close') close();
     });
     document.body.appendChild(modal);
+    modal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') close();
+        if (event.key === 'Tab') {
+            const controls = [...modal.querySelectorAll('a, button:not(:disabled)')];
+            const first = controls[0], last = controls.at(-1);
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+    });
+    modal.querySelector('#ar-help-close').focus();
+    return modal;
 }
 
 // --- Rig setup UI (draft state + buttons) ---
@@ -7956,6 +8623,7 @@ function rebuildRigUI() {
 // Re-fits the renderer to whatever size the viewer container currently is.
 // Called on window resize, on ResizeObserver ticks, and after layout switches.
 function syncViewerSize() {
+    if (renderer?.xr.isPresenting) return;
     if (!renderer || !camera || !canvas.parentElement) return;
     const container = canvas.parentElement;
     const w = container.clientWidth;
@@ -7977,8 +8645,8 @@ function syncViewerSize() {
 // Temp instrumentation: track if we've logged max height
 let _loggedMaxHeight = false;
 
-function animate() {
-    requestAnimationFrame(animate);
+function animate(time, frame) {
+    liveAR?.update(frame, time);
 
     // withNeutralPose sets motionPaused while it captures or applies geometry, so
     // a frame cannot advance the lift or the glide mid-capture. Rendering still
@@ -8083,15 +8751,15 @@ function animate() {
         boxHelpers.forEach(helper => helper.update());
     }
 
-    if (controls) {
+    if (controls && !liveAR?.active) {
         updateCameraTween(dt);
         controls.update();
         const orbitButton = document.getElementById('rotate-scene');
         if (orbitButton && orbitButton.getAttribute('aria-pressed') !== String(controls.autoRotate)) orbitButton.setAttribute('aria-pressed', String(controls.autoRotate));
     }
     workspaceAccessories?.update();
-    if (camera) workspaceRoom?.update(camera);
-    if (renderer && scene && camera) renderer.render(scene, camera);
+    if (camera && !liveAR?.active) workspaceRoom?.update(camera);
+    if (renderer && scene && camera) renderer.render(liveAR?.active ? liveAR.scene : scene, camera);
 }
 
 // Studio presentation, customer configuration, and accessible controls.
@@ -8149,20 +8817,28 @@ let isolatedVisibility = null;
 let dialogReturnFocus = null;
 let toastTimer;
 function applyRoomLighting() {
-    const profile = ROOM_ATMOSPHERES[selectedRoomScene];
+    const profile = selectedRoomScene === 'home' ? HOME_MODES[homeMode] : ROOM_ATMOSPHERES[selectedRoomScene];
     const settings = roomLightSettings[selectedRoomScene] || {};
     const exposure = settings.exposure ?? profile.exposure;
     const daylight = settings.daylight ?? 1;
     const accent = settings.accent ?? 1;
+    const ledStudio = document.getElementById('studio-environment')?.value === 'led';
     if (renderer) renderer.toneMappingExposure = exposure;
-    if (scene) scene.environmentIntensity = profile.bounce;
+    if (scene) scene.environmentIntensity = profile.bounce * (ledStudio ? .35 : 1);
     if (sceneLights) {
-        sceneLights.key.color.set(profile.key); sceneLights.key.intensity = profile.power * daylight;
+        sceneLights.key.color.set(profile.key); sceneLights.key.intensity = profile.power * daylight * (ledStudio ? .55 : 1);
         sceneLights.key.position.set(selectedRoomScene === 'home' || selectedRoomScene === 'lounge' ? -5 : -3, 7, 5);
         if (selectedRoomScene === 'product') sceneLights.key.position.set(4.5, 8, 5.5);
-        sceneLights.fill.color.set(profile.fill); sceneLights.fill.intensity = .45 * daylight;
-        sceneLights.rim.color.set(profile.accent); sceneLights.rim.intensity = .8 * accent;
-        sceneLights.hemi.color.set(profile.fill); sceneLights.hemi.groundColor.set('#746b61'); sceneLights.hemi.intensity = profile.ambient;
+        sceneLights.fill.color.set(profile.fill); sceneLights.fill.intensity = .45 * daylight * (ledStudio ? .4 : 1);
+        sceneLights.rim.color.set(profile.accent); sceneLights.rim.intensity = .8 * accent * (ledStudio ? .7 : 1);
+        sceneLights.hemi.color.set(profile.fill); sceneLights.hemi.groundColor.set('#746b61'); sceneLights.hemi.intensity = profile.ambient * (ledStudio ? .45 : 1);
+        if (selectedRoomScene === 'home' && workspaceRoom?.root) {
+            const scale = workspaceRoom.root.scale.x, layout = workspaceRoom.homeLayout;
+            // Sunlight enters through the real window, toward the desk.
+            sceneLights.key.position.set((layout.back - 1100) * scale, 4000 * scale, 1600 * scale);
+            sceneLights.fill.intensity *= homeMode === 'night' || homeMode === 'party' ? .25 : 1;
+            workspaceRoom.homeAtmosphere?.(homeMode, accent);
+        }
     }
     for (const [id, value] of [['studio-exposure', exposure], ['studio-daylight', daylight], ['studio-accent', accent]]) {
         const input = document.getElementById(id); if (input) input.value = value;
@@ -8171,8 +8847,66 @@ function applyRoomLighting() {
     const label = document.getElementById('scene-light-name'); if (label) label.textContent = profile.label;
 }
 
-function setRoomScene(id, persist = true) {
+function positionHomeDesk() {
+    if (!loadedModel || !workspaceRoom?.homeLayout) return;
+    const layout = workspaceRoom.homeLayout, mode = HOME_MODES[homeMode], scale = workspaceRoom.root.scale.x;
+    haltAllMotion();
+    deskYaw = THREE.MathUtils.degToRad(mode.yaw);
+    const next = new THREE.Vector3((layout.desk[1] + mode.offset[1]) * scale, 0, -(layout.desk[0] + mode.offset[0]) * scale);
+    applyGlideOffset(next); glideTarget.copy(glideOffset);
+    loadedModel.updateMatrixWorld(true); workspaceAccessories?.update();
+}
+
+function syncHomeOfficeUI() {
+    const shell = document.getElementById('viewer-shell');
+    if (shell) { if (selectedRoomScene === 'home') shell.dataset.homeMode = homeMode; else delete shell.dataset.homeMode; }
+    const panel = document.getElementById('home-office-controls'); if (!panel) return;
+    panel.hidden = selectedRoomScene !== 'home';
+    const layout = selectedHomeLayout(), mode = HOME_MODES[homeMode];
+    panel.querySelector('[data-home-description]').textContent = mode.description;
+    panel.querySelector('#home-room-size').value = layout.id;
+    panel.querySelectorAll('[data-home-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.homeMode === homeMode)));
+    panel.querySelectorAll('[data-home-size]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.homeSize === currentConfig.size)));
+    const caption = document.getElementById('room-scene-caption');
+    const feet = mm => { const inches = Math.round(mm / 25.4); return `${Math.floor(inches / 12)}′${inches % 12}″`; };
+    if (selectedRoomScene === 'home' && caption) caption.textContent = `${layout.name} · ${feet(layout.width)} × ${feet(layout.depth)} (${layout.width / 1000} × ${layout.depth / 1000} m) · ${layout.height / 1000} m ceiling · ${mode.label}`;
+}
+
+function setHomeLayout(id) {
+    if (!HOME_LAYOUTS[id]) return;
+    homeLayoutId = id;
+    try { localStorage.setItem('ergoflex.homeLayout', id); } catch {}
+    setRoomScene('home', false);
+    workspaceRoom.ready.then(() => {
+        const view = document.getElementById('camera-view');
+        if (view?.value === 'room') view.dispatchEvent(new Event('change'));
+    });
+}
+
+function setHomeMode(id, moveDesk = true) {
+    if (!HOME_MODES[id]) return;
+    homeMode = id;
+    try { localStorage.setItem('ergoflex.homeMode', id); } catch {}
+    if (selectedRoomScene === 'home') {
+        delete roomLightSettings.home;
+        try { localStorage.setItem('ergoflex.sceneLights', JSON.stringify(roomLightSettings)); } catch {}
+        if (moveDesk && loadedModel) {
+            positionHomeDesk();
+            const mode = HOME_MODES[id]; goToPose(mode.height, mode.tilt);
+            if (mode.color) setLedColor(mode.color, false);
+            setLedsEnabled(mode.leds);
+        }
+        applyRoomLighting();
+    }
+    syncHomeOfficeUI();
+}
+
+function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
     const choice = ROOM_SCENES.find(s => s.id === id) || ROOM_SCENES[0];
+    if (loadedModel && choice.id === 'home' && !homeDeskReturn && !workspaceRoom?.homeLayout) homeDeskReturn = { offset: glideOffset.clone(), yaw: deskYaw };
+    if (loadedModel && selectedRoomScene === 'home' && choice.id !== 'home' && homeDeskReturn) {
+        haltAllMotion(); deskYaw = homeDeskReturn.yaw; applyGlideOffset(homeDeskReturn.offset); glideTarget.copy(glideOffset); homeDeskReturn = null;
+    }
     const hydrationToken = ++sceneAssetHydrationToken;
     if (choice.id !== selectedRoomScene || sceneAssetRegistry.size) {
         persistSceneAssetStates();
@@ -8180,7 +8914,18 @@ function setRoomScene(id, persist = true) {
         clearSceneAssetRegistration();
     }
     selectedRoomScene = choice.id;
-    workspaceRoom?.set(choice.id);
+    let homeScale;
+    if (choice.id === 'home' && loadedModel) {
+        const reference = arSizeReference();
+        // Nominal desktop inches establish the room's physical units. An AR
+        // calibration preference does not silently resize this architecture.
+        homeScale = reference.widthUnits > 0 ? reference.widthUnits / (reference.nominalWidth * 25.4) : 1 / (reference.metersPerUnit * 1000);
+    }
+    workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: selectedHomeLayout().id });
+    if (choice.id === 'home') {
+        if (!preserveDesk) positionHomeDesk();
+        if (!preserveDesk && persist && loadedModel) setHomeMode(homeMode);
+    }
     // Room props and desk dressing load over the network. A failure leaves the
     // procedural room standing and is reported in Build checks rather than
     // only in the console.
@@ -8211,6 +8956,7 @@ function setRoomScene(id, persist = true) {
     if (environment) environment.value = choice.tone;
     if (shell) shell.dataset.environment = choice.tone;
     applyRoomLighting();
+    syncHomeOfficeUI();
     updateSceneLibraryStatus();
     if (persist) {
         try { localStorage.setItem('ergoflex.roomScene', choice.id); } catch {}
@@ -8651,19 +9397,29 @@ function initStudio() {
     top.innerHTML = `<div class="eyebrow" id="scene-status">LOADING YOUR WORKSPACE</div><h2>Designed to move you.</h2><p id="build-summary"></p>`; viewer.append(top);
     const toolbar = document.createElement('div'); toolbar.className = 'studio-toolbar';
     toolbar.innerHTML = `<label><span>Backdrop</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="room">Whole room</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><p id="scene-light-name"></p><label>Exposure <output id="studio-exposure-value"></output><input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Main light <output id="studio-daylight-value"></output><input id="studio-daylight" type="range" min="0.2" max="2" step="0.05" value="1"></label><label>Accent light <output id="studio-accent-value"></output><input id="studio-accent" type="range" min="0" max="2" step="0.05" value="1"></label><button id="reset-scene-light" type="button">Reset scene lighting</button><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
+    toolbar.querySelector('#studio-environment').insertAdjacentHTML('beforeend', '<option value="led">LED studio</option>');
     const viewerControls = document.createElement('div'); viewerControls.className = 'viewer-controls';
     viewerControls.append(toolbar);
     const scenes = document.createElement('div'); scenes.className = 'scene-switcher';
     scenes.innerHTML = `<span class="scenes-label">Scenes</span><div class="scene-options" role="group" aria-label="Workspace scenes">${ROOM_SCENES.map(s => `<button type="button" data-room-scene="${s.id}" aria-pressed="${s.id === 'product'}"><span class="scene-dot scene-${s.id}" aria-hidden="true"></span>${s.name}</button>`).join('')}</div>`;
     const roomCaption = document.createElement('p'); roomCaption.id = 'room-scene-caption'; roomCaption.setAttribute('aria-live', 'polite');
-    viewerControls.append(scenes, roomCaption); viewer.append(viewerControls);
+    const homeControls = document.createElement('div'); homeControls.id = 'home-office-controls'; homeControls.hidden = true;
+    homeControls.innerHTML = `<div class="home-layout-choices" role="group" aria-label="Home office size"><label for="home-room-size">Room</label><select id="home-room-size">${Object.values(HOME_LAYOUTS).map(layout => `<option value="${layout.id}">${layout.name} · ${layout.width / 1000} × ${layout.depth / 1000} m</option>`).join('')}</select><button type="button" data-home-size="48x30">48″ desk</button><button type="button" data-home-size="60x30">60″ desk</button></div><div class="home-time-choices" role="group" aria-label="Time of day">${Object.entries(HOME_MODES).map(([id, mode]) => `<button type="button" data-home-mode="${id}" aria-pressed="false">${mode.label}</button>`).join('')}</div><p data-home-description></p>`;
+    homeControls.querySelector('#home-room-size').onchange = e => setHomeLayout(e.target.value);
+    homeControls.querySelectorAll('[data-home-size]').forEach(b => b.onclick = () => { sizeSelect.value = b.dataset.homeSize; sizeSelect.dispatchEvent(new Event('change', { bubbles: true })); });
+    homeControls.querySelectorAll('[data-home-mode]').forEach(b => b.onclick = () => setHomeMode(b.dataset.homeMode));
+    viewerControls.append(scenes, homeControls, roomCaption); viewer.append(viewerControls);
     scenes.querySelectorAll('button').forEach(button => button.onclick = () => setRoomScene(button.dataset.roomScene));
     new ResizeObserver(syncViewerSize).observe(viewerControls);
-    try { selectedRoomScene = EVENT_DEMO ? 'product' : localStorage.getItem('ergoflex.roomScene') || 'product'; } catch {}
+    try {
+        const requestedRoom = new URLSearchParams(location.search).get('room');
+        selectedRoomScene = EVENT_DEMO ? 'product' : ROOM_SCENES.some(s => s.id === requestedRoom) ? requestedRoom : localStorage.getItem('ergoflex.roomScene') || 'product';
+    } catch {}
     setRoomScene(selectedRoomScene, false);
     const applyEnvironment = (value) => {
         document.getElementById('viewer-shell').dataset.environment = value;
-        if (floorMesh) floorMesh.material.opacity = value === 'slate' ? .36 : .24;
+        if (floorMesh) floorMesh.material.opacity = value === 'led' ? .42 : value === 'slate' ? .36 : .24;
+        applyRoomLighting();
     };
     document.getElementById('studio-environment').onchange = e => applyEnvironment(e.target.value);
     document.getElementById('studio-environment').value = (ROOM_SCENES.find(s => s.id === selectedRoomScene) || ROOM_SCENES[0]).tone;
@@ -8827,9 +9583,11 @@ window.ErgoFlex = {
     get touchscreenReady() { return !!screenAssembly; },
     setLedsEnabled,
     setLedColor,
+    mountLedPalette,
     get ledColor() { return ledColor; },
     setLedGlow,
     get ledGlow() { return ledGlow; },
+    get ledFullBrightness() { return LED_FULL_BRIGHTNESS; },
     setLedSurface,
     get ledSurfaces() { return { ...ledSurfaces }; },
     get ledsEnabled() { return ledsEnabled; },
@@ -8839,6 +9597,10 @@ window.ErgoFlex = {
     get roomScene() { return selectedRoomScene; },
     roomScenes: ROOM_SCENES,
     setRoomScene,
+    setHomeMode,
+    get homeMode() { return homeMode; },
+    setHomeLayout,
+    get homeLayout() { return selectedHomeLayout().id; },
     addSceneAsset,
     deleteSelectedSceneAssets,
     get tiltConfigs() { return tiltConfigs; },
@@ -8981,6 +9743,8 @@ window.ErgoFlex = {
     readAutosaveRing,
     writeAutosave,
     prepareARModel,
+    get arSize() {return arSizeReference();},
+    get arState() { return {status:liveAR?.status || 'idle',active:!!liveAR?.active,error:liveAR?.error,tracking:!!liveAR?.hitReady,placed:!!liveAR?.placed,drawCalls:renderer?.info.render.calls}; },
     launchAR
 };
 
@@ -9026,10 +9790,12 @@ initStudio();
 populateFinishOptions();
 setTrimColor(trimColor, false);
 document.getElementById('trim-color')?.addEventListener('input', event => setTrimColor(event.target.value));
+mountLedPalette(document.getElementById('led-palette'));
 setLedColor(ledColor, false);
 document.getElementById('led-color')?.addEventListener('input', event => setLedColor(event.target.value));
 setLedGlow(ledGlow, false);
-document.getElementById('led-glow')?.addEventListener('input', event => setLedGlow(event.target.value));
+document.getElementById('led-glow')?.addEventListener('input', event =>
+    setLedGlow(Number(event.target.value) * LED_FULL_BRIGHTNESS / 100));
 for (const [key, value] of Object.entries(ledSurfaces)) setLedSurface(key, value, false);
 document.querySelectorAll('[data-led-surface]').forEach(slider =>
     slider.addEventListener('input', event => setLedSurface(event.target.dataset.ledSurface, event.target.value)));

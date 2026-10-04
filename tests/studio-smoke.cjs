@@ -58,6 +58,44 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.ok(Math.abs(tiltReference.level + 5) < 1e-6, 'physical zero rotates the rig five degrees toward level');
     assert.deepEqual(await page.evaluate(() => ({ screen: ErgoFlex.touchscreenReady, leds: ErgoFlex.ledCount })),
       { screen: true, leds: 43 }, 'the supplied screen and LED exports load');
+    assert.deepEqual(await page.evaluate(() => ({
+      color: ErgoFlex.ledColor, output: ErgoFlex.ledGlow, enabled: ErgoFlex.ledsEnabled,
+      brightness: document.querySelector('#led-glow').value,
+      surfaces: ErgoFlex.ledSurfaces
+    })), {
+      color: '#f10404', output: 92.4375, enabled: false, brightness: '75',
+      surfaces: {
+        desktopStrength: 143, desktopReach: 77, desktopWidth: 5,
+        desktopCone: 100, desktopEdgeFade: 46, desktopSharpness: 62,
+        shelfStrength: 176, shelfReach: 98,
+        baseStrength: 54, baseReach: 20,
+        topStrength: 143, topReach: 77,
+        floorStrength: 156, floorReach: 4, floorWidth: 50, floorSharpness: 73,
+        leftWingStrength: 111, leftWingReach: 85,
+        rightWingStrength: 110, rightWingReach: 87
+      }
+    }, 'a fresh Studio build keeps LEDs off with the preferred settings at 75% brightness');
+    assert.deepEqual(await page.evaluate(() => {
+      const palette = document.querySelector('#led-palette');
+      palette.querySelector('[data-led-preset="#fff1d6"]').click();
+      const selected = palette.querySelector('[aria-pressed="true"]');
+      const result = { count: palette.children.length, color: ErgoFlex.ledColor,
+        picker: document.querySelector('#led-color').value, selected: selected?.dataset.ledPreset,
+        dayWhite: !!palette.querySelector('[data-led-preset="#ffffff"]') };
+      ErgoFlex.setLedColor('#f10404', false);
+      return result;
+    }), { count: 8, color: '#fff1d6', picker: '#fff1d6', selected: '#fff1d6', dayWhite: true },
+    'a Studio palette swatch updates the actual LED color and custom picker');
+    assert.deepEqual(await page.evaluate(() => {
+      const slider = document.querySelector('#led-glow');
+      slider.value = '50';
+      slider.dispatchEvent(new Event('input', { bubbles: true }));
+      const dimmed = [ErgoFlex.ledGlow, document.querySelector('#led-glow-value').textContent];
+      slider.value = '100';
+      slider.dispatchEvent(new Event('input', { bubbles: true }));
+      return { dimmed, full: ErgoFlex.ledGlow };
+    }), { dimmed: [61.625, '50%'], full: 123.25 },
+    'Studio brightness dims from the preferred output without exceeding it');
     await page.evaluate(() => { ErgoFlex.setLedsEnabled(true); ErgoFlex.setTouchscreenOpen(true); });
     await page.waitForFunction(() => ErgoFlex.touchscreenProgress > 0.99, { timeout: 10000 });
     assert.ok(await page.evaluate(() => ErgoFlex.ledsEnabled &&
@@ -85,26 +123,66 @@ function ErgoFlexDeviceMatches(size, id) {
       standard: false, wide: true, imageWidth: 1024, imageHeight: 600, faceU: 1000,
       widePieces: 6, rails: 6
     }, 'the 60-inch size switches to its authored touchscreen without resetting the animation');
+    const screenMargins = await page.evaluate(() => {
+      const model = ErgoFlex.loadedModel;
+      model.updateMatrixWorld(true);
+      const Box3 = model.getObjectByName('Desktop_3').geometry.boundingBox.constructor;
+      const clearance = (screenName, desktopName) => {
+        const display = model.getObjectByName(screenName);
+        const screen = new Box3().setFromObject(display);
+        const desktop = new Box3().setFromObject(model.getObjectByName(desktopName));
+        const face = display.children[0], normal = face.geometry.attributes.normal, m = face.matrixWorld.elements;
+        const nx = normal.getX(0), ny = normal.getY(0), nz = normal.getZ(0);
+        const x = m[0] * nx + m[4] * ny + m[8] * nz;
+        const y = m[1] * nx + m[5] * ny + m[9] * nz;
+        return { front: screen.min.x - desktop.max.x, side: screen.min.z - desktop.min.z,
+          faceAngle: Math.atan2(y, x) * 180 / Math.PI };
+      };
+      return {
+        standard: clearance('Standard touchscreen display', 'Desktop_3'),
+        extended: clearance('Extended touchscreen display', 'Extended desktop')
+      };
+    });
+    assert.ok(screenMargins.standard.front > 0 &&
+      screenMargins.extended.front >= screenMargins.standard.front &&
+      Math.abs(screenMargins.standard.side - screenMargins.extended.side) < 0.01,
+    `both touchscreen mounts clear their desktop edges: ${JSON.stringify(screenMargins)}`);
+    assert.ok(Math.abs(screenMargins.standard.faceAngle - screenMargins.extended.faceAngle) < 0.2,
+      `both open touchscreen faces share the same tilt: ${JSON.stringify(screenMargins)}`);
     await page.select('#size-select', '48x30');
-    assert.ok(await page.evaluate(() => {
+    const ledMapping = await page.evaluate(() => {
       const model = ErgoFlex.loadedModel;
       const standard = model.getObjectByName('Standard desktop underside LEDs');
       const extended = model.getObjectByName('Extended desktop underside LEDs');
       let ledPointLights = 0;
       for (const name of ['Desktop LEDs', 'Shelf LEDs', 'Base LEDs'])
         model.getObjectByName(name)?.traverse(obj => { if (obj.isPointLight) ledPointLights++; });
-      return standard?.visible && !extended?.visible &&
-        standard.children.filter(child => child.isGroup).length === 3 &&
-        extended.children.filter(child => child.isGroup).length === 3 &&
-        extended.children.some(child => child.name === 'Extended desktop center LED') &&
-        ledPointLights === 0 && standard.children.some(child => child.isRectAreaLight) &&
-        [...model.getObjectByName('Desktop LED size fit').children].every(child => !child.visible) &&
-        model.getObjectByName('Top_Shelf_3')?.layers.isEnabled(1) &&
-        model.getObjectByName('Standard desktop LED reflection')?.material?.uniforms?.strength?.value > 0 &&
-        model.getObjectByName('Shelf LEDs 40 soft LED wash')?.layers.isEnabled(2) &&
-        model.getObjectByName('Shelf LEDs 41 soft LED wash')?.layers.isEnabled(1) &&
-        !model.getObjectByName('LED glow 1 layer 1');
-    }), 'authored LEDs light their facing panels and make a soft desktop reflection');
+      return {
+        standardVisible: standard?.visible, extendedVisible: extended?.visible,
+        standardGroups: standard?.children.filter(child => child.isGroup).length,
+        extendedGroups: extended?.children.filter(child => child.isGroup).length,
+        extendedCenter: extended?.children.some(child => child.name === 'Extended desktop center LED'),
+        ledPointLights, standardAreaLight: standard?.children.some(child => child.isRectAreaLight),
+        sizeFitHidden: [...(model.getObjectByName('Desktop LED size fit')?.children || [])].every(child => !child.visible),
+        shelfSpill: model.getObjectByName('Top_Shelf_3 LED reflection')?.material?.uniforms?.strength?.value,
+        desktopSpill: model.getObjectByName('Desktop_3 LED reflection')?.material?.uniforms?.strength?.value,
+        desktopAreaWash: !!model.getObjectByName('Shelf LEDs 40 soft LED wash'),
+        powerSpill: model.getObjectByName('Power LED reflection')?.material?.uniforms?.strength?.value,
+        shelfAreaWash: !!model.getObjectByName('Shelf LEDs 41 soft LED wash'),
+        uprightSpills: (() => { let count=0;model.traverse(obj=>{
+          if(obj.name.endsWith(' LED upright reflection') && obj.material.uniforms.strength.value>0)count++;
+        });return count; })(),
+        obsoleteGlow: !!model.getObjectByName('LED glow 1 layer 1')
+      };
+    });
+    assert.ok(ledMapping.standardVisible && !ledMapping.extendedVisible &&
+      ledMapping.standardGroups === 3 && ledMapping.extendedGroups === 3 &&
+      ledMapping.extendedCenter && ledMapping.ledPointLights === 0 &&
+      !ledMapping.standardAreaLight && ledMapping.sizeFitHidden && ledMapping.shelfSpill > 0 &&
+      ledMapping.desktopSpill > 0 && !ledMapping.desktopAreaWash &&
+      ledMapping.powerSpill === ledMapping.desktopSpill && !ledMapping.shelfAreaWash &&
+      ledMapping.uprightSpills === 15 && !ledMapping.obsoleteGlow,
+    `authored LEDs light their facing panels and make a soft desktop reflection: ${JSON.stringify(ledMapping)}`);
     const ledColor = await page.evaluate(() => {
       ErgoFlex.setLedColor('#ff8800');
       let emissive;
@@ -117,33 +195,43 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.deepEqual(ledColor, { selected: '#ff8800', emissive: '#ff8800', saved: '#ff8800' },
       'LED color updates the authored mesh and saved project');
     const ledGlow = await page.evaluate(() => {
-      ErgoFlex.setLedGlow(160);
+      ErgoFlex.setLedGlow(123.25);
       const model = ErgoFlex.loadedModel;
       return { selected: ErgoFlex.ledGlow, saved: ErgoFlex.serializeProject().presentation.ledGlow,
         emissive: (() => { let value; model.getObjectByName('Desktop LEDs 3')?.traverse(obj => {
           if (obj.isMesh) value = obj.material.emissiveIntensity;
         }); return value; })(),
-        wash: model.getObjectByName('Shelf LEDs 40 soft LED wash')?.intensity };
+        wash: model.getObjectByName('Top_Shelf_3 LED reflection')?.material?.uniforms?.strength?.value };
     });
-    assert.equal(ledGlow.selected, 160);
-    assert.equal(ledGlow.saved, 160);
+    assert.equal(ledGlow.selected, 123.25);
+    assert.equal(ledGlow.saved, 123.25);
     assert.ok(ledGlow.emissive > 2.2 && ledGlow.wash > 0,
       'glow control raises mesh emission and the soft panel wash');
     const surfaceLight = await page.evaluate(() => {
       ErgoFlex.setLedSurface('desktopStrength', 65);
       ErgoFlex.setLedSurface('desktopReach', 80);
+      ErgoFlex.setLedSurface('desktopWidth', 70);
+      ErgoFlex.setLedSurface('desktopCone', 80);
+      ErgoFlex.setLedSurface('desktopEdgeFade', 75);
+      ErgoFlex.setLedSurface('desktopSharpness', 100);
+      ErgoFlex.setLedSurface('floorSharpness', 100);
       ErgoFlex.setLedSurface('shelfStrength', 25);
       ErgoFlex.setLedSurface('shelfReach', 70);
       ErgoFlex.setLedSurface('baseStrength', 35);
       ErgoFlex.setLedSurface('baseReach', 20);
       const model = ErgoFlex.loadedModel;
-      const uniforms = model.getObjectByName('Standard desktop LED reflection').material.uniforms;
+      const uniforms = model.getObjectByName('Desktop_3 LED reflection').material.uniforms;
       const shelf = model.getObjectByName('Top_Shelf_3 LED reflection').material.uniforms;
       const base = model.getObjectByName('Base_Panels_3 LED reflection').material.uniforms;
       return {
         saved: ErgoFlex.serializeProject().presentation.ledSurfaces,
         desktopStrength: uniforms.strength.value,
         desktopReach: uniforms.fadeReach.value,
+        desktopWidth: uniforms.stripBaseSpread.value,
+        desktopCone: uniforms.stripFanSlope.value,
+        desktopEdgeFade: uniforms.stripFeather.value,
+        desktopSharpness: uniforms.falloffPower.value,
+        floorSharpness: model.getObjectByName('Foot LED floor glow').material.uniforms.falloffPower.value,
         shelfStrength: shelf.strength.value,
         shelfReach: shelf.fadeReach.value,
         baseStrength: base.strength.value,
@@ -152,17 +240,60 @@ function ErgoFlexDeviceMatches(size, id) {
     });
     assert.equal(surfaceLight.saved.desktopStrength, 65);
     assert.equal(surfaceLight.saved.desktopReach, 80);
+    assert.equal(surfaceLight.saved.desktopWidth, 70);
+    assert.equal(surfaceLight.saved.desktopCone, 80);
+    assert.equal(surfaceLight.saved.desktopEdgeFade, 75);
     assert.equal(surfaceLight.saved.shelfStrength, 25);
     assert.equal(surfaceLight.saved.shelfReach, 70);
     assert.equal(surfaceLight.saved.baseStrength, 35);
     assert.equal(surfaceLight.saved.baseReach, 20);
-    assert.ok(Math.abs(surfaceLight.desktopStrength - 1.04) < 0.001);
-    assert.ok(Math.abs(surfaceLight.desktopReach - 12.4) < 0.001);
-    assert.ok(Math.abs(surfaceLight.shelfStrength - 0.4) < 0.001);
+    assert.ok(Math.abs(surfaceLight.desktopStrength - 0.801125) < 0.001);
+    assert.ok(Math.abs(surfaceLight.desktopReach - 11.4) < 0.001);
+    assert.ok(Math.abs(surfaceLight.desktopWidth - 3.5) < 0.001);
+    assert.ok(Math.abs(surfaceLight.desktopCone - 0.2) < 0.001);
+    assert.ok(Math.abs(surfaceLight.desktopEdgeFade - 3.2) < 0.001);
+    assert.equal(surfaceLight.desktopSharpness, 8);
+    assert.equal(surfaceLight.floorSharpness, 8);
+    assert.ok(Math.abs(surfaceLight.shelfStrength - 0.308125) < 0.001);
     assert.ok(Math.abs(surfaceLight.shelfReach - 8.6) < 0.001);
-    assert.ok(Math.abs(surfaceLight.baseStrength - 0.56) < 0.001);
+    assert.ok(Math.abs(surfaceLight.baseStrength - 0.431375) < 0.001);
     assert.ok(Math.abs(surfaceLight.baseReach - 4.6) < 0.001,
       'surface controls independently set the strength and fade on each panel');
+    const addedLight = await page.evaluate(() => {
+      for (const [key, value] of Object.entries({
+        topStrength: 40, topReach: 40,
+        floorStrength: 30, floorReach: 80, floorWidth: 25,
+        leftWingStrength: 60, leftWingReach: 60,
+        rightWingStrength: 20, rightWingReach: 20
+      })) ErgoFlex.setLedSurface(key, value);
+      const model = ErgoFlex.loadedModel;
+      const read = name => {
+        const uniforms = model.getObjectByName(name)?.material?.uniforms;
+        return uniforms && [uniforms.strength.value, uniforms.fadeReach.value];
+      };
+      return {
+        top: read('Top_Shelf_4 LED reflection'),
+        floor: read('Foot LED floor glow'),
+        floorWidth: model.getObjectByName('Foot LED floor glow').material.uniforms.stripHalfSpan.value,
+        left: read('Desktop_1 LED wing reflection'),
+        right: read('Desktop_2 LED wing reflection'),
+        saved: ErgoFlex.serializeProject().presentation.ledSurfaces,
+        controlsFit: document.querySelector('#leds-content').scrollHeight <
+          parseFloat(getComputedStyle(document.querySelector('#leds-content')).maxHeight),
+        controlCount: document.querySelectorAll('#leds-content [data-led-surface]').length
+      };
+    });
+    assert.ok(addedLight.controlsFit && addedLight.controlCount === 20,
+      'all Studio lighting sliders fit inside the expanded section');
+    assert.deepEqual([addedLight.saved.topStrength, addedLight.saved.floorStrength,
+      addedLight.saved.leftWingStrength, addedLight.saved.rightWingStrength], [40, 30, 60, 20]);
+    assert.ok(Math.abs(addedLight.top[0] - 0.493) < 0.001);
+    assert.ok(Math.abs(addedLight.floor[0] - 0.36975) < 0.001);
+    assert.ok(Math.abs(addedLight.left[0] - 0.7395) < 0.001);
+    assert.ok(Math.abs(addedLight.right[0] - 0.2465) < 0.001);
+    assert.ok(Math.abs(addedLight.floor[1] - 0.292) < 0.001,
+      'the foot, top, and both wing reflections respond independently');
+    assert.ok(Math.abs(addedLight.floorWidth - 0.155) < 0.001);
     await page.evaluate(() => { ErgoFlex.setTouchscreenOpen(false); ErgoFlex.setLedsEnabled(false); });
     await page.waitForFunction(() => ErgoFlex.touchscreenProgress < 0.01, { timeout: 10000 });
     assert.equal(await page.evaluate(() => {
@@ -174,7 +305,7 @@ function ErgoFlexDeviceMatches(size, id) {
     }), 0,
       'turning off the LEDs disables emissive desktop strips');
     assert.equal(await page.evaluate(() => ErgoFlex.loadedModel
-      .getObjectByName('Standard desktop LED reflection')?.material.uniforms.strength.value), 0,
+      .getObjectByName('Desktop_3 LED reflection')?.material.uniforms.strength.value), 0,
     'turning off the LEDs also removes their desktop reflection');
     const clearance = await page.evaluate(() => {
       ErgoFlex.setTilt('tilting', 0); ErgoFlex.setHeight(28); ErgoFlex.setTilt('tilting', 65);

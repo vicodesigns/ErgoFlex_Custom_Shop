@@ -206,8 +206,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="studio.css?v=grain-controls-20260928">
-    <link rel="stylesheet" href="app-remote.css?v=motion-v2-20260928">
+    <link rel="stylesheet" href="studio.css?v=led-game-20261003">
+    <link rel="stylesheet" href="app-remote.css?v=room-glide-20261001">
 </head>
 <body class="bg-white">
     <!-- Header -->
@@ -342,8 +342,8 @@
                         </div>
                         <div class="config-content expanded" id="trim-content">
                             <div class="px-6 pb-6 flex items-center gap-3">
-                                <input id="trim-color" type="color" value="#e60505" aria-label="Trim color" class="w-12 h-10 cursor-pointer">
-                                <span id="trim-color-value" class="text-sm text-gray-600">#E60505</span>
+                                <input id="trim-color" type="color" value="#dc0909" aria-label="Trim color" class="w-12 h-10 cursor-pointer">
+                                <span id="trim-color-value" class="text-sm text-gray-600">#DC0909</span>
                             </div>
                         </div>
                     </div>
@@ -360,26 +360,58 @@
                         </div>
                         <div class="config-content expanded" id="leds-content">
                             <div class="px-6 pb-6 space-y-3">
+                                <div id="led-palette" class="led-palette" role="group" aria-label="Quick LED colors"></div>
                                 <div class="flex items-center gap-3">
-                                    <input id="led-color" type="color" value="#40eaff" aria-label="LED color" class="w-12 h-10 cursor-pointer">
-                                    <span id="led-color-value" class="text-sm text-gray-600">#40EAFF</span>
+                                    <input id="led-color" type="color" value="#f10404" aria-label="LED color" class="w-12 h-10 cursor-pointer">
+                                    <span id="led-color-value" class="text-sm text-gray-600">#F10404</span>
                                 </div>
-                                <label class="block text-sm text-gray-700" for="led-glow">Glow strength <span id="led-glow-value">140%</span></label>
-                                <input id="led-glow" type="range" min="0" max="200" value="140" aria-label="LED glow strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-glow">Brightness <span id="led-glow-value">75%</span></label>
+                                <input id="led-glow" type="range" min="0" max="100" value="75" aria-label="LED brightness" class="w-full">
+                                <div id="led-effects" class="led-effects-controls"></div>
+                                <div id="led-mapping"></div>
+                                <div id="led-playback"></div>
                                 <div class="pt-3 border-t border-gray-200 text-sm font-medium text-gray-800">Light on surfaces</div>
                                 <p class="text-xs text-gray-500">Adjust reflected light separately from LED brightness.</p>
-                                <label class="block text-sm text-gray-700" for="led-desktop-strength">Desktop reflection <span data-led-surface-value="desktopStrength">100%</span></label>
-                                <input id="led-desktop-strength" data-led-surface="desktopStrength" type="range" min="0" max="200" value="100" aria-label="Desktop LED reflection strength" class="w-full">
-                                <label class="block text-sm text-gray-700" for="led-desktop-reach">Desktop fade reach <span data-led-surface-value="desktopReach">50%</span></label>
-                                <input id="led-desktop-reach" data-led-surface="desktopReach" type="range" min="0" max="100" value="50" aria-label="How far the desktop LED reflection fades toward the front" class="w-full">
-                                <label class="block text-sm text-gray-700" for="led-shelf-strength">Lower shelf reflection <span data-led-surface-value="shelfStrength">100%</span></label>
-                                <input id="led-shelf-strength" data-led-surface="shelfStrength" type="range" min="0" max="200" value="100" aria-label="Lower shelf LED reflection strength" class="w-full">
-                                <label class="block text-sm text-gray-700" for="led-shelf-reach">Lower shelf fade reach <span data-led-surface-value="shelfReach">50%</span></label>
-                                <input id="led-shelf-reach" data-led-surface="shelfReach" type="range" min="0" max="100" value="50" aria-label="How far the lower shelf LED reflection fades" class="w-full">
-                                <label class="block text-sm text-gray-700" for="led-base-strength">Base shelf reflection <span data-led-surface-value="baseStrength">0%</span></label>
-                                <input id="led-base-strength" data-led-surface="baseStrength" type="range" min="0" max="200" value="0" aria-label="Base shelf LED reflection strength" class="w-full">
-                                <label class="block text-sm text-gray-700" for="led-base-reach">Base shelf fade reach <span data-led-surface-value="baseReach">50%</span></label>
-                                <input id="led-base-reach" data-led-surface="baseReach" type="range" min="0" max="100" value="50" aria-label="How far the base shelf LED reflection fades" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-desktop-strength">Desktop reflection <span data-led-surface-value="desktopStrength">157%</span></label>
+                                <input id="led-desktop-strength" data-led-surface="desktopStrength" type="range" min="0" max="200" value="157" aria-label="Desktop LED reflection strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-desktop-reach">Desktop fade reach <span data-led-surface-value="desktopReach">100%</span></label>
+                                <input id="led-desktop-reach" data-led-surface="desktopReach" type="range" min="0" max="100" value="100" aria-label="How far the desktop LED reflection fades toward the front" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-desktop-width">Desktop reflection width <span data-led-surface-value="desktopWidth">5%</span></label>
+                                <input id="led-desktop-width" data-led-surface="desktopWidth" type="range" min="0" max="100" value="5" aria-label="How far the desktop LED reflection spreads beyond each end of the light strip" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-desktop-cone">Desktop cone angle <span data-led-surface-value="desktopCone">100%</span></label>
+                                <input id="led-desktop-cone" data-led-surface="desktopCone" type="range" min="0" max="100" value="100" aria-label="How much the desktop reflection fans out toward the front" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-desktop-edge-fade">Desktop cone edge fade <span data-led-surface-value="desktopEdgeFade">46%</span></label>
+                                <input id="led-desktop-edge-fade" data-led-surface="desktopEdgeFade" type="range" min="0" max="100" value="46" aria-label="How softly the sides of the desktop light cone fade" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-desktop-sharpness">Desktop fade sharpness <span data-led-surface-value="desktopSharpness">62%</span></label>
+                                <input id="led-desktop-sharpness" data-led-surface="desktopSharpness" type="range" min="0" max="100" value="62" aria-label="How sharply the desktop LED reflection fades" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-shelf-strength">Lower shelf reflection <span data-led-surface-value="shelfStrength">176%</span></label>
+                                <input id="led-shelf-strength" data-led-surface="shelfStrength" type="range" min="0" max="200" value="176" aria-label="Lower shelf LED reflection strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-shelf-reach">Lower shelf fade reach <span data-led-surface-value="shelfReach">98%</span></label>
+                                <input id="led-shelf-reach" data-led-surface="shelfReach" type="range" min="0" max="100" value="98" aria-label="How far the lower shelf LED reflection fades" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-base-strength">Base shelf reflection <span data-led-surface-value="baseStrength">54%</span></label>
+                                <input id="led-base-strength" data-led-surface="baseStrength" type="range" min="0" max="200" value="54" aria-label="Base shelf LED reflection strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-base-reach">Base shelf fade reach <span data-led-surface-value="baseReach">20%</span></label>
+                                <input id="led-base-reach" data-led-surface="baseReach" type="range" min="0" max="100" value="20" aria-label="How far the base shelf LED reflection fades" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-top-strength">Top shelf reflection <span data-led-surface-value="topStrength">143%</span></label>
+                                <input id="led-top-strength" data-led-surface="topStrength" type="range" min="0" max="200" value="143" aria-label="Top shelf LED reflection strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-top-reach">Top shelf fade reach <span data-led-surface-value="topReach">77%</span></label>
+                                <input id="led-top-reach" data-led-surface="topReach" type="range" min="0" max="100" value="77" aria-label="How far the top shelf LED reflection fades" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-floor-strength">Foot LED floor glow <span data-led-surface-value="floorStrength">156%</span></label>
+                                <input id="led-floor-strength" data-led-surface="floorStrength" type="range" min="0" max="200" value="156" aria-label="Foot LED floor glow strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-floor-reach">Floor glow reach <span data-led-surface-value="floorReach">4%</span></label>
+                                <input id="led-floor-reach" data-led-surface="floorReach" type="range" min="0" max="100" value="4" aria-label="How far the foot LED glow spreads on the floor" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-floor-width">Foot light width <span data-led-surface-value="floorWidth">50%</span></label>
+                                <input id="led-floor-width" data-led-surface="floorWidth" type="range" min="0" max="100" value="50" aria-label="Length of the foot LED reflection across the floor" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-floor-sharpness">Floor glow sharpness <span data-led-surface-value="floorSharpness">73%</span></label>
+                                <input id="led-floor-sharpness" data-led-surface="floorSharpness" type="range" min="0" max="100" value="73" aria-label="How sharply the foot LED glow fades on the floor" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-left-wing-strength">Left desktop wing reflection <span data-led-surface-value="leftWingStrength">111%</span></label>
+                                <input id="led-left-wing-strength" data-led-surface="leftWingStrength" type="range" min="0" max="200" value="111" aria-label="Left desktop wing LED reflection strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-left-wing-reach">Left wing fade reach <span data-led-surface-value="leftWingReach">85%</span></label>
+                                <input id="led-left-wing-reach" data-led-surface="leftWingReach" type="range" min="0" max="100" value="85" aria-label="How far the left wing LED reflection fades" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-right-wing-strength">Right desktop wing reflection <span data-led-surface-value="rightWingStrength">110%</span></label>
+                                <input id="led-right-wing-strength" data-led-surface="rightWingStrength" type="range" min="0" max="200" value="110" aria-label="Right desktop wing LED reflection strength" class="w-full">
+                                <label class="block text-sm text-gray-700" for="led-right-wing-reach">Right wing fade reach <span data-led-surface-value="rightWingReach">87%</span></label>
+                                <input id="led-right-wing-reach" data-led-surface="rightWingReach" type="range" min="0" max="100" value="87" aria-label="How far the right wing LED reflection fades" class="w-full">
                             </div>
                         </div>
                     </div>
@@ -772,7 +804,7 @@
     }
     </script>
 
-    <script type="module" src="./studio.js?v=surface-fade-20260929"></script>
+    <script type="module" src="./studio.js?v=led-game-20261003"></script>
     <script>
         // Classic script: runs before the deferred module above. Browsers refuse to
         // load ES modules over file://, so studio.js never executes and the loader

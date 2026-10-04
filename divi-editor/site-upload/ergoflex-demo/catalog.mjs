@@ -5,7 +5,7 @@
 
 export const PRODUCT_CONFIG = {
     basePrice: 4999,
-    modelUrl: 'https://ergoflexdesk.com/Store/model/full.glb',
+    modelUrl: './assets/model/desk-public.glb?v=public-plates-controls-20260930',
     sizes: {
         '48x30': { price: 0, name: '48" × 30"', label: 'Standard' },
         '60x30': { price: 200, name: '60" × 30"', label: 'Extended' }

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "title": "Neon Flight",
+  "duration": 12,
+  "fps": 60,
+  "frames": 720,
+  "counts": [
+    14,
+    14,
+    15,
+    14,
+    14,
+    11,
+    11,
+    13
+  ],
+  "video": "neon-flight.mp4",
+  "banks": {
+    "calm:colours": "calm-colours.rgbw",
+    "calm:music": "calm-music.rgbw",
+    "normal:colours": "normal-colours.rgbw",
+    "normal:music": "normal-music.rgbw",
+    "intense:colours": "intense-colours.rgbw",
+    "intense:music": "intense-music.rgbw",
+    "full:colours": "full-colours.rgbw",
+    "full:music": "full-music.rgbw"
+  },
+  "stage": "compiled Ambient.hpp emit; brightness 255; configured 8000 mA ceiling; raw linear RGBW drive bytes",
+  "provenance": "Original synthetic video/audio; actual ambient.py host pipeline and compiled board Ambient.hpp; synthetic scheduled audio metrics; not ESP32 capture",
+  "sourceHashes": {
+    "ambient.py": "25b46bb6e70e45b8589d903dd4b1c1ab4b667f6129d33f3eafc379468af61a5b",
+    "Ambient.hpp": "8b1256e84e0276b0546c233f908006ff41e504a2eb2d622f230a7cb28d4b3193"
+  },
+  "stripMap": "desk02-config-2026-10-01-address-space-v1",
+  "endpointCalibration": "saved operator 2026-10-01T22:51:29; geometry and visibility need current hardware check"
+}

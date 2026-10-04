@@ -1092,6 +1092,13 @@
    column, and the band ran across into its neighbour. */
 #motion-dock[data-sized="true"] .remote-chips { width: 100%; }
 #motion-dock[data-sized="true"] .remote-chip { flex: 1 1 0; min-width: 0; }
+
+/* Slot numbers stay visible until the user swipes upward to inspect a value. */
+.remote-chip { touch-action: none; }
+.remote-chip .preset-value { display: none; }
+.remote-chip[data-revealed="true"] .preset-number { display: none; }
+.remote-chip[data-revealed="true"] .preset-value { display: inline; }
+.remote-chip[data-revealed="true"] .caret { display: none; }
 #motion-dock[data-sized="true"] .remote-glide-row { align-content: center; }
 /* The hint is one line of web affordance text; it must not take a share. */
 #motion-dock[data-sized="true"] .remote-hint { flex: none; margin-top: 6px; }

@@ -1,1 +1,9 @@
 AddType text/javascript .mjs
+<Files "product-demo.html">
+  <IfModule mod_expires.c>
+    ExpiresActive Off
+  </IfModule>
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, max-age=0, must-revalidate"
+  </IfModule>
+</Files>

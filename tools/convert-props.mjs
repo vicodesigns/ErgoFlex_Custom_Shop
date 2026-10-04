@@ -43,10 +43,24 @@ const selected = manifest.props.filter(p => !only || only.includes(p.id));
 if (only) for (const id of only) if (!ids.has(id)) throw new Error(`unknown prop id ${id}`);
 
 // 1. Rhino files -> OBJ.
-const jobs = [];
+const jobs = [], directConverted = new Set();
+const packProps = selected.filter(prop => prop.converter === 'gltf-pack');
+if (packProps.length) {
+    const res = run(process.execPath, [join(root, 'tools/props/import-packs.mjs'), '--only', packProps.map(prop => prop.id).join(',')], 'glTF packs');
+    if (res.status !== 0) throw new Error(`Pack conversion failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);
+    packProps.forEach(prop => directConverted.add(prop.id));
+}
 for (const prop of selected) {
+    if (directConverted.has(prop.id)) continue;
     let source = join(root, 'models', prop.source);
     if (!existsSync(source)) throw new Error(`${prop.id}: missing source ${prop.source}`);
+    if (extname(source).toLowerCase() === '.dwg') {
+        if (prop.id !== 'steelcase-leap-v2') throw new Error('No verified converter for this DWG.');
+        const res = run(process.execPath, [join(root, 'tools/props/dwg-chair.mjs'), ...(process.env.DWG_READER ? [process.env.DWG_READER] : [])], prop.id);
+        if (res.status !== 0) throw new Error(`${prop.id}: DWG export failed\n${res.stderr}`);
+        process.stdout.write(res.stdout); directConverted.add(prop.id); continue;
+    }
     if (extname(source).toLowerCase() === '.3dm') {
         const obj = join(work, `${prop.id}.obj`);
         const res = run(PYTHON, [join(root, 'tools/props/rhino-to-obj.py'), source, obj], prop.id);
@@ -63,7 +77,7 @@ for (const prop of selected) {
 const jobsFile = join(work, 'jobs.json');
 writeFileSync(jobsFile, JSON.stringify(jobs));
 console.log(`Converting ${jobs.length} props with ${BLENDER}…`);
-const blender = run(BLENDER, ['-b', '--python-exit-code', '1', '-P', join(root, 'tools/props/blender-convert.py'), '--', jobsFile], 'blender');
+const blender = jobs.length ? run(BLENDER, ['-b', '--python-exit-code', '1', '-P', join(root, 'tools/props/blender-convert.py'), '--', jobsFile], 'blender') : { stdout: '', stderr: '', status: 0 };
 const results = new Map();
 for (const line of blender.stdout.split('\n')) if (line.startsWith('RESULT ')) { const r = JSON.parse(line.slice(7)); results.set(r.id, r); }
 if (blender.status !== 0 && results.size === 0) throw new Error(`Blender failed:\n${blender.stderr}\n${blender.stdout.slice(-2000)}`);
@@ -75,6 +89,7 @@ const byId = new Map(index.props.map(p => [p.id, p]));
 const gltfTransform = join(root, 'node_modules/.bin/gltf-transform');
 let failures = 0;
 for (const prop of selected) {
+    if (directConverted.has(prop.id)) continue;
     const r = results.get(prop.id);
     if (!r?.ok) { failures++; console.error(`✗ ${prop.id}: ${r?.error || 'no result from Blender'}`); continue; }
     const raw = join(rawDir, `${prop.id}.glb`), out = join(outDir, `${prop.id}.glb`);

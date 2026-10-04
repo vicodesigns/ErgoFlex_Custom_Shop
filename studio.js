@@ -1,36 +1,79 @@
+import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=groove-routines-20261002';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=groove-routines-20261002';
+import { RoomGroove } from './room-groove-runtime.mjs?v=groove-routines-20261002';
+import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
+import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
+import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
+import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
+import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=groove-routines-20261002';
+import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
+import { LED_EFFECTS, normalizeLedEffect, sampleLedEffect } from './led-effects.mjs?v=led-effects-20261003';
+import { LED_STRIPS, LED_STRIP_MAP_VERSION, createLedFrame, sampleLedDiagnostic } from './led-strip-map.mjs?v=led-game-20261003';
+import { LedPixelRenderer } from './led-pixel-renderer.mjs?v=led-game-20261003';
+import { LedMotion } from './led-movement.mjs?v=led-game-20261003';
+import { LedSounds } from './led-sounds.mjs?v=led-game-20261003';
+import { LedGameMode } from './led-game-mode.mjs?v=led-game-20261003';
+import { LedMusicMode } from './led-music-mode.mjs?v=led-music-20261003';
+import { sampleDecorativeInto } from './led-showcase-effects.mjs?v=led-music-20261003';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=grain-controls-20260928';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=public-plates-controls-20260930';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=motion-v3-20260928';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs';
+import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=groove-routines-20261002';
+import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=groove-routines-20261002';
+import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=groove-routines-20261002';
+import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=groove-routines-20261002';
+import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=groove-routines-20261002';
+import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=groove-routines-20261002';
+import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=groove-routines-20261002';
+import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
+import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
+import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
+import { ARWorkspace } from './ar-workspace.mjs?v=public-plates-controls-20260930';
 import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
 const EVENT_DEMO = location.pathname.endsWith('/product-demo.html');
-const TRIM_MODEL_URL = './assets/trim/fullTrim.glb';
-const SMALL_TRIM_MODEL_URL = './assets/trim/shelveanddesktopTrim.glb';
-const LARGE_DESKTOP_MODEL_URL = './assets/trim/desktopLwTrim.glb';
-const TOUCHSCREEN_PULLED_URL = './assets/motion/touchscreenPulledOut.glb';
-const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb';
-const TOUCHSCREEN_WIDE_URL = './assets/motion/touchscreenExtendedForWideDesktop.glb';
-const TOUCHSCREEN_FACE_URL = './assets/motion/panel_mainscreen_20260929_104051.png';
-const LED_MODEL_URL = './assets/motion/LEDS.glb';
-const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb';
+const TRIM_MODEL_URL = './assets/trim/fullTrim.glb?v=public-plates-controls-20260930';
+const SMALL_TRIM_MODEL_URL = './assets/trim/shelveanddesktopTrim.glb?v=public-plates-controls-20260930';
+const LARGE_DESKTOP_MODEL_URL = './assets/trim/desktopLwTrim.glb?v=public-plates-controls-20260930';
+const LARGE_DESKTOP_TRIM_URL = './assets/trim/desktopLwTrimV2.glb?v=desktop-trim-v2-20261001';
+const TOUCHSCREEN_PULLED_URL = './assets/motion/touchscreenPulledOut.glb?v=public-plates-controls-20260930';
+const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb?v=public-plates-controls-20260930';
+const TOUCHSCREEN_WIDE_URL = './assets/motion/touchscreenExtendedForWideDesktop.glb?v=public-plates-controls-20260930';
+const TOUCHSCREEN_FACE_URL = './assets/motion/panel_mainscreen_20260929_104051.png?v=public-plates-controls-20260930';
+const LED_MODEL_URL = './assets/motion/LEDS.glb?v=public-plates-controls-20260930';
+const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb?v=public-plates-controls-20260930';
 const LED_COLOR_KEY = 'ergoflex.ledColorV1';
-const LED_GLOW_KEY = 'ergoflex.ledGlowV1';
+const LED_GLOW_KEY = 'ergoflex.ledGlowV4';
 const LED_SURFACE_KEY = 'ergoflex.ledSurfacesV1';
+const LED_EFFECT_KEY = 'ergoflex.ledEffectV1';
+// The former 85% output is the new ceiling shown to visitors as 100%.
+const LED_FULL_BRIGHTNESS = 123.25;
+const LED_COLOR_PRESETS = Object.freeze([
+    { name: 'Red', value: '#f10404' },
+    { name: 'Amber', value: '#ffb347' },
+    { name: 'Violet', value: '#a66bff' },
+    { name: 'Blue', value: '#497bff' },
+    { name: 'Cyan', value: '#40eaff' },
+    { name: 'Green', value: '#42d89c' },
+    { name: 'Day pure white', value: '#ffffff' },
+    { name: 'Evening white', value: '#fff1d6' }
+]);
 const SCREEN_PIVOT = new THREE.Vector3(-141.99034318, 49.56108308, 0);
 const WIDE_SCREEN_PIVOT = new THREE.Vector3(-139.79, 49.56108308, 0);
 const SCREEN_SLIDE = 4.7;
 const SCREEN_TURN = THREE.MathUtils.degToRad(146.457954);
+// The wide export's open screen face is 12° steeper than the Standard face.
+// Remove that authored difference before applying their shared slide and turn.
+const WIDE_SCREEN_REST_TURN = SCREEN_TURN + THREE.MathUtils.degToRad(12);
 let screenAssembly = null;
 let screenProgress = 0;
 let screenTarget = 0;
@@ -38,7 +81,6 @@ let ledParts = [];
 let ledDesktopFit = null;
 let ledStandardStrips = null;
 let ledExtendedStrips = null;
-let ledAreaLights = [];
 let ledSpillMaterials = [];
 let ledsEnabled = false;
 const TRIM_COLOR_KEY = 'ergoflex.trimColorV1';
@@ -84,7 +126,7 @@ const INITIAL_ANIMATED_PARTS = [
     "Power", "Power_1", "Power_2", "Desktop", "Desktop_1", "Desktop_2", "Desktop_3", "Power_3", "Power_4", "Power_5", "Power_6", "Power_7", "Lift_Column_Top", "Lift_Column_Top_1", "Lift_Column_Top_2", "Lift_Column_Top_3", "Lift_Column_Top_4", "Lift_Column_Top_5", "Lift_Column_Top_6", "Lift_Column_Top_7", "Lift_Column_Top_8", "Lift_Column_Top_9", "Lift_Column_Top_10", "Lift_Column_Top_11", "Lift_Column_Top_12", "Lift_Column_Top_13", "Lift_Column_Top_14", "Lift_Column_Top_15", "L_A_Hardware_Top", "L_A_Hardware_Top_1", "L_A_Hardware_Top_2", "L_A_Hardware_Top_3", "Linear_Actuators", "Linear_Actuators_1", "Linear_Actuators_2", "Linear_Actuators_3", "Linear_Actuators_4", "Linear_Actuators_5", "Linear_Actuators_6", "Linear_Actuators_7", "Linear_Actuators_8", "Linear_Actuators_9", "Lift_Column_Top_16", "Lift_Column_Top_17", "L_A_Hardware_Top_4", "L_A_Hardware_Top_5", "L_A_Hardware_Top_6", "L_A_Hardware_Top_7", "Leds", "Leds_1", "Leds_2", "Revolve2", "Plates_Hardware", "Plates_Hardware_1", "Plates_Hardware_2", "Plates_Hardware_3", "Plates_Hardware_4", "Plates_Hardware_5", "Plates_Hardware_6", "Plates_Hardware_7", "Plates_Hardware_8", "Plates_Hardware_9", "Plates_Hardware_10", "Plates_Hardware_11", "Plates_Hardware_12", "Plates_Hardware_13", "Plates_Hardware_14", "Plates_Hardware_15", "Plates_Hardware_16", "Plates_Hardware_17", "Plates_Hardware_18", "Plates_Hardware_19", "Plates_Hardware_20", "Plates_Hardware_21", "Plates_Hardware_22", "Plates_Hardware_23", "Plates_Hardware_24", "Plates_Hardware_25", "Plates_Hardware_26", "Plates_Hardware_27", "Plates_Hardware_28", "Plates_Hardware_29", "Plates_Hardware_30", "Plates_Hardware_31", "Plates_Hardware_32", "Plates_Hardware_33", "Plates_Hardware_34", "Plates_Hardware_35", "Plates_Hardware_36", "Plates_Hardware_37", "Plates_Hardware_38", "Plates_Hardware_39", "Plates_Hardware_40", "Plates_Hardware_41", "Plates_Hardware_42", "Plates_Hardware_43", "Plates_Hardware_44", "Plates_Hardware_45", "Plates_Hardware_46", "Plates_Hardware_47", "Plates_Hardware_48", "Plates_Hardware_49", "Plates_Hardware_50", "Plates_Hardware_51", "Plates_Hardware_52", "Plates_Hardware_53", "Plates_Hardware_54", "Plates_Hardware_55", "Plates_Hardware_56", "Plates_Hardware_57", "Plates_Hardware_58", "Plates_Hardware_59", "Plates_Hardware_60", "Plates_Hardware_61", "Plates_Hardware_62", "Plates_Hardware_63", "Plates_Hardware_64", "Plates_Hardware_65", "Plates_Hardware_66", "Plates_Hardware_67", "Plates_Hardware_68", "Plates_Hardware_69", "Plates_Hardware_70", "Plates_Hardware_71", "Plates_Hardware_72", "Plates_Hardware_73", "Plates_Hardware_74", "Plates_Hardware_75", "Plates_Hardware_76", "Plates_Hardware_77", "Plates_Hardware_78", "Plates_Hardware_79", "Plates_Hardware_80", "Plates_Hardware_81", "Plates_Hardware_82", "Plates_Hardware_83", "Plates_Hardware_84", "Plates_Hardware_85", "Plates_Hardware_86", "Plates_Hardware_87", "Plates_Hardware_88", "Plates_Hardware_89", "Plates_Hardware_90", "Plates_Hardware_91", "Plates_Hardware_92", "Plates_Hardware_93", "Plates_Hardware_94", "Plates_Hardware_95", "Plates_Hardware_96", "Plates_Hardware_97", "Plates_Hardware_98", "Plates_Hardware_99", "Plates_Hardware_100", "Plates_Hardware_101", "Plates_Hardware_102", "Plates_Hardware_103", "Plates_Hardware_104", "Plates_Hardware_105", "Plates_Hardware_106", "Plates_Hardware_107", "Plates_Hardware_108", "Plates_Hardware_109", "Plates_Hardware_110", "Plates_Hardware_111", "Plates_Hardware_112", "Plates_Hardware_113", "Plates_Hardware_114", "Plates_Hardware_115", "Plates_Hardware_116", "Plates_Hardware_117", "Plates_Hardware_118", "Plates_Hardware_119", "Plates_Hardware_120", "Plates_Hardware_121", "Plates_Hardware_122", "Plates_Hardware_123", "Plates_Hardware_124", "Plates_Hardware_125", "Plates_Hardware_126", "Plates_Hardware_127", "Plates_Hardware_128", "Plates_Hardware_129", "Plates_Hardware_130", "Plates_Hardware_131", "Plates_Hardware_132", "Plates_Hardware_133", "Plates_Hardware_134", "Plates_Hardware_135", "Plates_Hardware_136", "Plates_Hardware_137", "Plates_Hardware_138", "Plates_Hardware_139", "Plates_Hardware_140", "Plates_Hardware_141", "Plates_Hardware_142", "Plates_Hardware_143", "Plates_Hardware_144", "Plates_Hardware_145", "Plates_Hardware_146", "Plates_Hardware_147", "Plates_Hardware_148", "Plates_Hardware_149", "Plates_Hardware_150", "Plates_Hardware_151", "Plates_Hardware_152", "Plates_Hardware_153", "Plates_Hardware_154", "Plates_Hardware_155", "Plates_Hardware_156", "Plates_Hardware_157", "Plates_Hardware_158", "Plates_Hardware_159", "Plates_Hardware_160", "Plates_Hardware_161", "Plates_Hardware_162", "Plates_Hardware_163", "Plates_Hardware_164", "Plates_Hardware_165", "Plates_Hardware_166", "Plates_Hardware_167", "Plates_Hardware_168", "Plates_Hardware_169", "Plates_Hardware_170", "Plates_Hardware_171", "Plates_Hardware_172", "Plates_Hardware_173", "Plates_Hardware_174", "Plates_Hardware_175", "Plates_Hardware_176", "Plates_Hardware_177", "Plates_Hardware_178", "Plates_Hardware_179", "Plates_Hardware_180", "Plates_Hardware_181", "Plates_Hardware_182", "Plates_Hardware_183", "Plates_Hardware_184", "Plates_Hardware_185", "Plates_Hardware_186", "Plates_Hardware_187", "Plates_Hardware_188", "Plates_Hardware_189", "Plates_Hardware_190", "Plates_Hardware_191", "Plates_Hardware_192", "Plates_Hardware_193", "Plates_Hardware_194", "Plates_Hardware_195", "Plates_Hardware_196", "Plates_Hardware_197", "Plates_Hardware_198", "Plates_Hardware_199", "Plates_Hardware_200", "Combine1", "Revolve2_1", "Combine1_1", "mesh_471", "mesh_472", "mesh_473", "mesh_474", "mesh_475", "mesh_476", "mesh_477", "Leds_3", "Combine1_2", "Revolve2_2", "mesh_481", "mesh_482", "mesh_483", "mesh_484", "Combine1_3", "Revolve2_3", "mesh_487", "mesh_488", "mesh_489", "mesh_490", "Plates_Hardware_201", "Plates_Hardware_202", "Plates_Hardware_203", "Plates_Hardware_204", "Plates_Hardware_205", "Plates_Hardware_206", "Plates_Hardware_207", "Plates_Hardware_208", "Plates_Hardware_209", "Plates_Hardware_210", "Plates_Hardware_211", "Plates_Hardware_212", "Plates_Hardware_213", "Plates_Hardware_214", "Plates_Hardware_215", "Plates_Hardware_216", "Plates_Hardware_217", "Plates_Hardware_218", "Plates_Hardware_219", "Plates_Hardware_220", "Plates_Hardware_221", "Plates_Hardware_222", "Plates_Hardware_223", "Plates_Hardware_224", "Plates_Hardware_225", "Plates_Hardware_226", "Plates_Hardware_227", "Plates_Hardware_228", "Plates_Hardware_229", "Plates_Hardware_230", "Plates_Hardware_231", "Plates_Hardware_232", "Plates_Hardware_233", "Plates_Hardware_234", "Plates_Hardware_235", "Plates_Hardware_236", "Plates_Hardware_237", "Plates_Hardware_238", "Plates_Hardware_239", "Plates_Hardware_240", "Plates_Hardware_241", "Plates_Hardware_242", "Plates_Hardware_243", "Plates_Hardware_244", "Plates_Hardware_245", "Plates_Hardware_246", "Plates_Hardware_247", "Plates_Hardware_248", "Plates_Hardware_249", "Plates_Hardware_250", "Plates_Hardware_251", "Plates_Hardware_252", "Plates_Hardware_253", "Plates_Hardware_254", "Plates_Hardware_255", "Plates_Hardware_256", "Plates_Hardware_257", "Plates_Hardware_258", "Plates_Hardware_259", "Plates_Hardware_260", "Plates_Hardware_261", "Plates_Hardware_262", "Plates_Hardware_263", "Plates_Hardware_264", "Plates_Hardware_265", "Plates_Hardware_266", "Plates_Hardware_267", "Plates_Hardware_268", "Plates_Hardware_269", "Plates_Hardware_270", "Plates_Hardware_271", "Plates_Hardware_272", "Plates_Hardware_273", "Plates_Hardware_274", "Plates_Hardware_275", "Plates_Hardware_276", "Plates_Hardware_277", "Plates_Hardware_278", "Plates_Hardware_279", "Plates_Hardware_280", "Plates_Hardware_281", "Plates_Hardware_282", "Plates_Hardware_283", "Plates_Hardware_284", "Plates_Hardware_285", "Plates_Hardware_286", "Plates_Hardware_287", "Plates_Hardware_288", "Plates_Hardware_289", "Plates_Hardware_290", "Plates_Hardware_291", "Touch_Screen", "Touch_Screen_1", "Touch_Screen_2", "Touch_Screen_3", "mesh_624", "mesh_625", "mesh_626", "Leds_4", "Leds_5", "Leds_6", "Leds_7", "Leds_8", "Leds_9", "Leds_10", "Leds_11", "Leds_12", "Leds_13", "Leds_14", "Leds_15", "Leds_16", "Leds_17", "Leds_18", "Leds_19", "Leds_20", "Leds_21", "Leds_22", "Leds_23", "Leds_24", "Leds_25", "Leds_26", "Leds_27", "Leds_28", "Leds_29", "Leds_30", "Leds_31", "Leds_32", "Leds_33", "Leds_34", "Leds_35", "Leds_36", "Leds_37", "Leds_38", "Joinery_6", "Joinery_7", "Joinery_8", "Joinery_9", "Joinery_10", "Joinery_11", "Joinery_12", "Joinery_13", "Joinery_14", "Joinery_15", "Joinery_16", "Joinery_17", "Joinery_18", "Plates_Hardware_292", "Plates_Hardware_293", "Plates_Hardware_294", "Plates_Hardware_295", "mesh_679", "mesh_680", "mesh_681", "mesh_682", "Touch_Screen_4", "Touch_Screen_5", "Touch_Screen_6", "Touch_Screen_7", "Leds_40", "Leds_41", "Leds_42", "Leds_43", "mesh_692", "Screws_24", "Screws_25", "Screws_26", "Screws_27", "Screws_28", "Screws_29", "Screws_30", "Screws_31", "Screws_32", "Screws_33", "Screws_34", "Screws_35", "Screws_36", "Screws_37", "Screws_38", "Screws_39", "Screws_40", "Screws_41", "Screws_42", "Screws_43", "Screws_44", "Screws_45", "Screws_46", "Screws_47", "Screws_48", "Screws_49", "Screws_50", "Screws_51", "Screws_52", "Screws_53", "Screws_54", "Screws_55", "Screws_56", "Screws_57", "Screws_58", "Screws_59", "Screws_60", "Screws_61", "Screws_62", "Screws_63", "Screws_64", "Screws_65", "Screws_66", "Screws_67", "Screws_68", "Screws_69", "Screws_70", "Screws_71", "Screws_72", "Screws_73", "Screws_74", "Screws_75", "Screws_76", "Screws_77", "Screws_78", "Screws_79", "Screws_80", "Screws_81", "Screws_82", "Screws_83", "Screws_84", "Screws_85", "Screws_86", "Screws_87", "Screws_88", "Screws_89", "Screws_90", "Screws_91", "Screws_92", "Screws_93", "Screws_94", "Screws_95", "Screws_96", "Screws_97", "Screws_98", "Screws_99", "Screws_100", "Screws_101", "Screws_102", "Screws_103", "Screws_104", "Screws_105", "Screws_106", "Screws_107", "Screws_108", "Screws_109", "Screws_110", "Screws_111", "Screws_112", "Screws_113", "Screws_114", "Screws_115", "Screws_116", "Screws_117", "Screws_118", "Screws_119", "Screws_120", "Screws_121", "Screws_122", "Screws_123", "Screws_124", "Screws_125", "Screws_126", "Screws_127", "Top_Shelf", "Top_Shelf_1", "Top_Shelf_2", "Top_Shelf_3", "Top_Shelf_4"
 ];
 
-let currentConfig = defaultConfig();
+let currentConfig = { ...defaultConfig(), ...(EVENT_DEMO ? { size: '60x30' } : {}) };
 let cartItems = [];
 // V2 keys: the configuration gained an accessories list. V1 keys are still read
 // once, as a migration, and never written again.
@@ -129,6 +171,9 @@ function editorEntry(editorId) {
 }
 
 function sceneAssetState(sceneId = selectedRoomScene) {
+    // Apartment edits stay separate from the larger home office layout.
+    const profile = measuredRoomProfile(sceneId);
+    if (profile) sceneId = `${sceneId}:${(workspaceRoom?.id === sceneId ? workspaceRoom.roomLayout?.id : null) || profile.layout.id}`;
     if (!sceneAssetStates.has(sceneId)) {
         sceneAssetStates.set(sceneId, { removed: new Set(), added: new Map(), transforms: new Map() });
     }
@@ -145,6 +190,7 @@ function plainLocalTransform(obj) {
 
 function applyPlainLocalTransform(obj, transform) {
     if (!transform) return;
+    transform = roomLifeDisplayTransform(obj, transform);
     obj.position.set(transform.p.x, transform.p.y, transform.p.z);
     obj.quaternion.set(transform.q.x, transform.q.y, transform.q.z, transform.q.w);
     obj.scale.set(transform.s.x, transform.s.y, transform.s.z);
@@ -228,7 +274,7 @@ function sceneAssetEditorId(obj) {
 
 function sceneAssetName(obj) {
     const catalogName = PROP_LIBRARY.entry(obj?.userData?.propId)?.name;
-    return catalogName || obj?.userData?.propId || obj?.name || 'Scene asset';
+    return catalogName || obj?.userData?.sceneAssetName || obj?.userData?.propId || obj?.name || 'Scene asset';
 }
 
 function selectionTarget(obj) {
@@ -285,11 +331,11 @@ function discardSceneAssetUndoEntries() {
 
 function canonicalTransformPlain(obj) {
     const transform = canonicalTransform(obj);
-    return transform ? {
+    return roomLifeBaseTransform(obj, transform ? {
         p: { x: transform.p.x, y: transform.p.y, z: transform.p.z },
         q: { x: transform.q.x, y: transform.q.y, z: transform.q.z, w: transform.q.w },
         s: { x: transform.s.x, y: transform.s.y, z: transform.s.z }
-    } : plainLocalTransform(obj);
+    } : plainLocalTransform(obj));
 }
 
 function captureActiveSceneAssetTransforms() {
@@ -391,32 +437,198 @@ const mouse = new THREE.Vector2();
 
 let scene, camera, renderer, controls, transformControl, transformProxy, loadedModel, floorMesh;
 let trimMaterial = null;
-let trimColor = '#e60505';
-let ledColor = '#40eaff';
-let ledGlow = 140;
+let trimColor = '#dc0909';
+let ledColor = '#f10404';
+let ledGlow = LED_FULL_BRIGHTNESS * 0.75;
 const LED_SURFACE_DEFAULTS = Object.freeze({
-    desktopStrength: 100, desktopReach: 50,
-    shelfStrength: 100, shelfReach: 50,
-    baseStrength: 0, baseReach: 50
+    desktopStrength: 157, desktopReach: 100, desktopWidth: 5,
+    desktopCone: 100, desktopEdgeFade: 46, desktopSharpness: 62,
+    shelfStrength: 176, shelfReach: 98,
+    baseStrength: 54, baseReach: 20,
+    topStrength: 143, topReach: 77,
+    floorStrength: 156, floorReach: 4, floorWidth: 50, floorSharpness: 73,
+    leftWingStrength: 111, leftWingReach: 85,
+    rightWingStrength: 110, rightWingReach: 87
 });
 let ledSurfaces = { ...LED_SURFACE_DEFAULTS };
+let ledEffect = normalizeLedEffect();
+let ledEffectStart = performance.now() / 1000;
+const ledFrameColor = new THREE.Color();
+const ledReducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let ledPixels = null;
+const ledPixelFrame = createLedFrame();
+let ledDiagnostic = { strip: null, pixel: null };
+const ledMotion = new LedMotion();
+const ledSounds = new LedSounds();
+const ledGame = new LedGameMode(LED_STRIPS.map(s => s.count));
+const ledMusic = new LedMusicMode(LED_STRIPS.map(s => s.count));
+let ledMotionEnabled = true, ledAutoLift = false, ledAutoTilt = false, ledPlaybackUIAt = 0;
+let ledPixelSource = 'base';
+try {
+    if (!EVENT_DEMO) ledEffect = normalizeLedEffect(JSON.parse(localStorage.getItem(LED_EFFECT_KEY) || '{}'));
+} catch (_) {}
 try {
     const stored = localStorage.getItem(TRIM_COLOR_KEY);
     if (/^#[0-9a-f]{6}$/i.test(stored || '')) trimColor = stored;
-    const storedLed = localStorage.getItem(LED_COLOR_KEY);
-    if (/^#[0-9a-f]{6}$/i.test(storedLed || '')) ledColor = storedLed;
-    const storedGlow = localStorage.getItem(LED_GLOW_KEY);
-    if (storedGlow !== null && Number(storedGlow) >= 0 && Number(storedGlow) <= 200)
-        ledGlow = Number(storedGlow);
-    const storedSurfaces = JSON.parse(localStorage.getItem(LED_SURFACE_KEY) || '{}');
-    for (const key of Object.keys(LED_SURFACE_DEFAULTS)) {
-        const value = storedSurfaces[key];
-        if (value !== undefined && Number.isFinite(Number(value)))
-            ledSurfaces[key] = THREE.MathUtils.clamp(Number(value), 0,
-                key.endsWith('Strength') ? 200 : 100);
+    if (!EVENT_DEMO) {
+        const storedLed = localStorage.getItem(LED_COLOR_KEY);
+        if (/^#[0-9a-f]{6}$/i.test(storedLed || '')) ledColor = storedLed;
+        const storedGlow = localStorage.getItem(LED_GLOW_KEY);
+        if (storedGlow !== null && Number(storedGlow) >= 0)
+            ledGlow = THREE.MathUtils.clamp(Number(storedGlow), 0, LED_FULL_BRIGHTNESS);
+        const storedSurfaces = JSON.parse(localStorage.getItem(LED_SURFACE_KEY) || '{}');
+        for (const key of Object.keys(LED_SURFACE_DEFAULTS)) {
+            const value = storedSurfaces[key];
+            if (value !== undefined && Number.isFinite(Number(value)))
+                ledSurfaces[key] = THREE.MathUtils.clamp(Number(value), 0,
+                    key.endsWith('Strength') ? 200 : 100);
+        }
     }
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
+let roomGroove = null, grooveSettingPose = false;
+let homeMode = 'afternoon', homeDeskReturn = null;
+let homeLayoutId = 'apartment';
+try { const stored = localStorage.getItem('ergoflex.homeLayout'); if (HOME_LAYOUTS[stored]) homeLayoutId = stored; } catch {}
+function selectedHomeLayout() { return homeLayoutId ? homeLayoutById(homeLayoutId) : homeLayoutForSize(currentConfig.size); }
+try { const stored = localStorage.getItem('ergoflex.homeMode'); if (HOME_MODES[stored]) homeMode = stored; } catch {}
+let gamingMode = 'evening', gamingLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.gamingLayout'), mode = localStorage.getItem('ergoflex.gamingMode');
+    if (GAMING_LAYOUTS[layout]) gamingLayoutId = layout;
+    if (GAMING_MODES[mode]) gamingMode = mode;
+} catch {}
+function selectedGamingLayout() { return gamingLayoutId ? gamingLayoutById(gamingLayoutId) : gamingLayoutForSize(currentConfig.size); }
+let musicMode = 'afternoon', musicLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.musicLayout'), mode = localStorage.getItem('ergoflex.musicMode');
+    if (MUSIC_LAYOUTS[layout]) musicLayoutId = layout;
+    if (MUSIC_MODES[mode]) musicMode = mode;
+} catch {}
+function selectedMusicLayout() { return musicLayoutId ? musicLayoutById(musicLayoutId) : musicLayoutForSize(currentConfig.size); }
+let artistMode = 'afternoon', artistLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.creativeLayout'), mode = localStorage.getItem('ergoflex.creativeMode');
+    if (ARTIST_LAYOUTS[layout]) artistLayoutId = layout;
+    if (ARTIST_MODES[mode]) artistMode = mode;
+} catch {}
+function selectedArtistLayout() { return artistLayoutId ? artistLayoutById(artistLayoutId) : artistLayoutForSize(currentConfig.size); }
+let studyMode = 'afternoon', studyLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.studyLayout'), mode = localStorage.getItem('ergoflex.studyMode');
+    if (STUDY_LAYOUTS[layout]) studyLayoutId = layout;
+    if (STUDY_MODES[mode]) studyMode = mode;
+} catch {}
+function selectedStudyLayout() { return studyLayoutId ? studyLayoutById(studyLayoutId) : studyLayoutForSize(currentConfig.size); }
+let officeMode = 'afternoon', officeLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.officeLayout'), mode = localStorage.getItem('ergoflex.officeMode');
+    if (OFFICE_LAYOUTS[layout]) officeLayoutId = layout;
+    if (OFFICE_MODES[mode]) officeMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'office' && OFFICE_LAYOUTS[query.get('layout')]) officeLayoutId = query.get('layout');
+} catch {}
+function selectedOfficeLayout() { return officeLayoutId ? officeLayoutById(officeLayoutId) : officeLayoutForSize(currentConfig.size); }
+let gymMode = 'morning', gymLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.gymLayout'), mode = localStorage.getItem('ergoflex.gymMode');
+    if (GYM_LAYOUTS[layout]) gymLayoutId = layout;
+    if (GYM_MODES[mode]) gymMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'gym' && GYM_LAYOUTS[query.get('layout')]) gymLayoutId = query.get('layout');
+} catch {}
+function selectedGymLayout() { return gymLayoutId ? gymLayoutById(gymLayoutId) : gymLayoutForSize(currentConfig.size); }
+let kitchenMode = 'morning', kitchenLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.kitchenLayout'), mode = localStorage.getItem('ergoflex.kitchenMode');
+    if (KITCHEN_LAYOUTS[layout]) kitchenLayoutId = layout;
+    if (KITCHEN_MODES[mode]) kitchenMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'kitchen' && KITCHEN_LAYOUTS[query.get('layout')]) kitchenLayoutId = query.get('layout');
+} catch {}
+function selectedKitchenLayout() { return kitchenLayoutId ? kitchenLayoutById(kitchenLayoutId) : kitchenLayoutForSize(currentConfig.size); }
+let libraryMode = 'morning', libraryLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.libraryLayout'), mode = localStorage.getItem('ergoflex.libraryMode');
+    if (LIBRARY_LAYOUTS[layout]) libraryLayoutId = layout;
+    if (LIBRARY_MODES[mode]) libraryMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'library' && LIBRARY_LAYOUTS[query.get('layout')]) libraryLayoutId = query.get('layout');
+} catch {}
+function selectedLibraryLayout() { return libraryLayoutId ? libraryLayoutById(libraryLayoutId) : libraryLayoutForSize(currentConfig.size); }
+let coworkingMode = 'morning', coworkingLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.coworkingLayout'), mode = localStorage.getItem('ergoflex.coworkingMode');
+    if (COWORKING_LAYOUTS[layout]) coworkingLayoutId = layout;
+    if (COWORKING_MODES[mode]) coworkingMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'coworking' && COWORKING_LAYOUTS[query.get('layout')]) coworkingLayoutId = query.get('layout');
+} catch {}
+function selectedCoworkingLayout() { return coworkingLayoutId ? coworkingLayoutById(coworkingLayoutId) : coworkingLayoutForSize(currentConfig.size); }
+let scifiMode = 'morning', scifiLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.scifiLayout'), mode = localStorage.getItem('ergoflex.scifiMode');
+    if (SCIFI_LAYOUTS[layout]) scifiLayoutId = layout;
+    if (SCIFI_MODES[mode]) scifiMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'scifi' && SCIFI_LAYOUTS[query.get('layout')]) scifiLayoutId = query.get('layout');
+} catch {}
+function selectedScifiLayout() { return scifiLayoutId ? scifiLayoutById(scifiLayoutId) : scifiLayoutForSize(currentConfig.size); }
+let galleryMode = 'morning', galleryLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.galleryLayout'), mode = localStorage.getItem('ergoflex.galleryMode');
+    if (GALLERY_LAYOUTS[layout]) galleryLayoutId = layout;
+    if (GALLERY_MODES[mode]) galleryMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'gallery' && GALLERY_LAYOUTS[query.get('layout')]) galleryLayoutId = query.get('layout');
+} catch {}
+function selectedGalleryLayout() { return galleryLayoutId ? galleryLayoutById(galleryLayoutId) : galleryLayoutForSize(currentConfig.size); }
+let bedroomMode = 'morning', bedroomLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.bedroomLayout'), mode = localStorage.getItem('ergoflex.bedroomMode');
+    if (BEDROOM_LAYOUTS[layout]) bedroomLayoutId = layout;
+    if (BEDROOM_MODES[mode]) bedroomMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'bedroom' && BEDROOM_LAYOUTS[query.get('layout')]) bedroomLayoutId = query.get('layout');
+} catch {}
+function selectedBedroomLayout() { return bedroomLayoutId ? bedroomLayoutById(bedroomLayoutId) : bedroomLayoutForSize(currentConfig.size); }
+let workshopMode = 'morning', workshopLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.workshopLayout'), mode = localStorage.getItem('ergoflex.workshopMode');
+    if (WORKSHOP_LAYOUTS[layout]) workshopLayoutId = layout;
+    if (WORKSHOP_MODES[mode]) workshopMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'workshop' && WORKSHOP_LAYOUTS[query.get('layout')]) workshopLayoutId = query.get('layout');
+} catch {}
+function selectedWorkshopLayout() { return workshopLayoutId ? workshopLayoutById(workshopLayoutId) : workshopLayoutForSize(currentConfig.size); }
+let loungeMode = 'afternoon', loungeLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.loungeLayout'), mode = localStorage.getItem('ergoflex.loungeMode');
+    if (LOUNGE_LAYOUTS[layout]) loungeLayoutId = layout;
+    if (LOUNGE_MODES[mode]) loungeMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'lounge' && LOUNGE_LAYOUTS[query.get('layout')]) loungeLayoutId = query.get('layout');
+} catch {}
+function selectedLoungeLayout() { return loungeLayoutId ? loungeLayoutById(loungeLayoutId) : loungeLayoutForSize(currentConfig.size); }
+function measuredRoomPanelId(id) { return id === 'home' ? 'home-office-controls' : `${id}-room-controls`; }
+function measuredRoomProfile(id = selectedRoomScene) {
+    if (id === 'library') return { id, layouts: LIBRARY_LAYOUTS, modes: LIBRARY_MODES, layout: selectedLibraryLayout(), mode: libraryMode, prefix: 'library' };
+    if (id === 'coworking') return { id, layouts: COWORKING_LAYOUTS, modes: COWORKING_MODES, layout: selectedCoworkingLayout(), mode: coworkingMode, prefix: 'coworking' };
+    if (id === 'bedroom') return { id, layouts: BEDROOM_LAYOUTS, modes: BEDROOM_MODES, layout: selectedBedroomLayout(), mode: bedroomMode, prefix: 'bedroom' };
+    if (id === 'gallery') return { id, layouts: GALLERY_LAYOUTS, modes: GALLERY_MODES, layout: selectedGalleryLayout(), mode: galleryMode, prefix: 'gallery' };
+    if (id === 'scifi') return { id, layouts: SCIFI_LAYOUTS, modes: SCIFI_MODES, layout: selectedScifiLayout(), mode: scifiMode, prefix: 'scifi' };
+    if (id === 'workshop') return { id, layouts: WORKSHOP_LAYOUTS, modes: WORKSHOP_MODES, layout: selectedWorkshopLayout(), mode: workshopMode, prefix: 'workshop' };
+    if (id === 'home') return { id, layouts: HOME_LAYOUTS, modes: HOME_MODES, layout: selectedHomeLayout(), mode: homeMode, prefix: 'home' };
+    if (id === 'gaming') return { id, layouts: GAMING_LAYOUTS, modes: GAMING_MODES, layout: selectedGamingLayout(), mode: gamingMode, prefix: 'gaming' };
+    if (id === 'music') return { id, layouts: MUSIC_LAYOUTS, modes: MUSIC_MODES, layout: selectedMusicLayout(), mode: musicMode, prefix: 'music' };
+    if (id === 'creative') return { id, layouts: ARTIST_LAYOUTS, modes: ARTIST_MODES, layout: selectedArtistLayout(), mode: artistMode, prefix: 'artist' };
+    if (id === 'office') return { id, layouts: OFFICE_LAYOUTS, modes: OFFICE_MODES, layout: selectedOfficeLayout(), mode: officeMode, prefix: 'office' };
+    if (id === 'lounge') return { id, layouts: LOUNGE_LAYOUTS, modes: LOUNGE_MODES, layout: selectedLoungeLayout(), mode: loungeMode, prefix: 'lounge' };
+    if (id === 'kitchen') return { id, layouts: KITCHEN_LAYOUTS, modes: KITCHEN_MODES, layout: selectedKitchenLayout(), mode: kitchenMode, prefix: 'kitchen' };
+    if (id === 'gym') return { id, layouts: GYM_LAYOUTS, modes: GYM_MODES, layout: selectedGymLayout(), mode: gymMode, prefix: 'gym' };
+    if (id === 'study') return { id, layouts: STUDY_LAYOUTS, modes: STUDY_MODES, layout: selectedStudyLayout(), mode: studyMode, prefix: 'study' };
+    return null;
+}
 let sceneLights = null;
 const roomLightSettings = {};
 let accessoryCategory = 'Desktop';
@@ -670,11 +882,6 @@ function initThreeJS() {
     scene.background = null;
 
     camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 0.1, 2000);
-    // Shelf and desktop LEDs use separate light-receiver layers to stand in
-    // for occlusion, which RectAreaLight does not support.
-    camera.layers.enable(1);
-    camera.layers.enable(2);
-    camera.layers.enable(3);
     camera.position.set(STARTING_POS.x, STARTING_POS.y, STARTING_POS.z);
 
     // WebGL can be unavailable (GPU process crash, hardware acceleration off).
@@ -692,7 +899,7 @@ function initThreeJS() {
         showContextLostOverlay();
     }, false);
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, EVENT_DEMO && matchMedia('(pointer: coarse)').matches ? 1.5 : 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.NeutralToneMapping;
     renderer.toneMappingExposure = 1.02;
@@ -766,7 +973,7 @@ function initThreeJS() {
     const keyLight = new THREE.DirectionalLight(0xfff9f0, 1.5);
     keyLight.position.set(4.5, 8, 5.5);
     keyLight.castShadow = true;
-    keyLight.shadow.mapSize.setScalar(2048);
+    keyLight.shadow.mapSize.setScalar(EVENT_DEMO && matchMedia('(pointer: coarse)').matches ? 1024 : 2048);
     keyLight.shadow.camera.near = 1;
     keyLight.shadow.camera.far = 25;
     keyLight.shadow.camera.left = -5;
@@ -777,15 +984,15 @@ function initThreeJS() {
     keyLight.shadow.normalBias = 0.004;
     keyLight.shadow.radius = 8;
     keyLight.shadow.blurSamples = 16;
-    scene.add(keyLight);
+    scene.add(keyLight, keyLight.target);
 
     const fillLight = new THREE.DirectionalLight(0xe8f0ff, 0.35);
     fillLight.position.set(-6, 3.5, 3);
-    scene.add(fillLight);
+    scene.add(fillLight, fillLight.target);
 
     const rimLight = new THREE.DirectionalLight(0xffffff, 0.55);
     rimLight.position.set(-4, 5.5, -7.5);
-    scene.add(rimLight);
+    scene.add(rimLight, rimLight.target);
     sceneLights = { key: keyLight, fill: fillLight, rim: rimLight, hemi: hemiLight };
 
     // Pointer events for ultra-reliable click detection
@@ -856,7 +1063,8 @@ function initThreeJS() {
         new ResizeObserver(() => { syncViewerSize(); clampDockPosition(); }).observe(canvas.parentElement);
     }
 
-    animate();
+    renderer.xr.enabled = true;
+    renderer.setAnimationLoop(animate);
 }
 
 // --- Undo system for setup edits ---
@@ -1070,6 +1278,85 @@ function withNeutralPose(fn) {
         suppressTransactions = saved.suppressed;
         motionPaused = saved.paused;
     }
+}
+
+// Secondary Office desks are pose snapshots of the actual current desk model.
+// Capture synchronously under the existing motion guard, then restore the main
+// rig. Batch by material so a shared office does not multiply CAD draw calls.
+function captureOfficeStation(spec, millimetreScale) {
+    return withNeutralPose(() => {
+        currentLift = heightToLift(spec.height);
+        updateMovingObjectsPosition();
+        const tilt = primaryTiltConfig();
+        if (tilt) { tilt.currentDeg = spec.tilt; applyTiltConfig(tilt); }
+        loadedModel.updateWorldMatrix(true, true);
+        workspaceAccessories?.update();
+        const toRoom = new THREE.Matrix4().makeRotationY(-Math.PI / 2)
+            .multiply(new THREE.Matrix4().makeScale(...Array(3).fill(loadedModel.scale.x / millimetreScale)))
+            .multiply(loadedModel.matrixWorld.clone().invert());
+        const group = new THREE.Group(), batches = new Map();
+        let sourceMeshCount = 0;
+        const ledMeshes = new Set(ledParts.map(p => p.part));
+        loadedModel.traverseVisible(source => {
+            if (!source.isMesh || ledMeshes.has(source) || /^(Leds|LED)/i.test(source.name)) return;
+            sourceMeshCount++;
+            const sourceMaterials = Array.isArray(source.material) ? source.material : [source.material];
+            // Current public CAD surfaces have one material; preserve groups if
+            // an imported replacement carries multiple material assignments.
+            sourceMaterials.forEach((mat, index) => {
+                if (!mat || mat.isShaderMaterial) return;
+                const geometry = source.geometry.index ? source.geometry.toNonIndexed() : source.geometry.clone();
+                if (sourceMaterials.length > 1) {
+                    const ranges = source.geometry.groups.filter(g => g.materialIndex === index);
+                    if (!ranges.length) { geometry.dispose(); return; }
+                    const selected = new THREE.BufferGeometry();
+                    for (const name of ['position', 'normal', 'uv']) {
+                        const attr = geometry.getAttribute(name); if (!attr) continue;
+                        const values = [];
+                        for (const range of ranges) for (let i = range.start; i < range.start + range.count; i++)
+                            for (let k = 0; k < attr.itemSize; k++) values.push(attr.array[i * attr.itemSize + k]);
+                        selected.setAttribute(name, new THREE.Float32BufferAttribute(values, attr.itemSize));
+                    }
+                    geometry.dispose();
+                    append(selected, mat, source);
+                } else append(geometry, mat, source);
+            });
+        });
+        function append(geometry, mat, source) {
+            for (const name of Object.keys(geometry.attributes)) if (!['position', 'normal', 'uv'].includes(name)) geometry.deleteAttribute(name);
+            if (!geometry.attributes.normal) geometry.computeVertexNormals();
+            if (!geometry.attributes.uv) geometry.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(geometry.attributes.position.count * 2), 2));
+            geometry.clearGroups(); geometry.applyMatrix4(toRoom.clone().multiply(source.matrixWorld));
+            // Rhino exports many identical material objects. Compare appearance,
+            // retaining distinct texture maps and UVs, rather than object identity.
+            const key = JSON.stringify(['type', 'roughness', 'metalness', 'clearcoat', 'clearcoatRoughness', 'opacity', 'transparent', 'alphaTest', 'side', 'depthTest', 'depthWrite', 'vertexColors', 'bumpScale', 'envMapIntensity', 'polygonOffset', 'polygonOffsetFactor', 'polygonOffsetUnits']
+                .map(k => mat[k]).concat([mat.color?.getHex(), mat.normalScale?.toArray()],
+                    ['map', 'normalMap', 'bumpMap', 'roughnessMap', 'metalnessMap', 'alphaMap', 'aoMap'].map(k => mat[k]?.uuid)));
+            if (!batches.has(key)) batches.set(key, { sourceMaterial: mat, geometries: [] });
+            batches.get(key).geometries.push(geometry);
+        }
+        for (const { sourceMaterial, geometries } of batches.values()) {
+            const geometry = mergeGeometries(geometries, false);
+            geometries.forEach(g => g.dispose());
+            if (!geometry) throw new Error('Could not batch Office desk surfaces');
+            const material = sourceMaterial.clone();
+            // Grain maps belong to the live desk; disposal must leave them valid.
+            material.userData = { ...material.userData, sharedTextures: true };
+            if (material.emissive) material.emissive.setHex(0);
+            const mesh = new THREE.Mesh(geometry, material); mesh.castShadow = mesh.receiveShadow = true; group.add(mesh);
+        }
+        group.updateMatrixWorld(true);
+        const bounds = new THREE.Box3().setFromObject(group), center = bounds.getCenter(new THREE.Vector3());
+        const offset = new THREE.Vector3(-center.x, -bounds.min.y, -center.z);
+        group.children.forEach(mesh => mesh.position.add(offset));
+        const mounts = {};
+        for (const role of ['desktop', 'shelf']) {
+            const mount = workspaceAccessories?.mounts.get(role); if (!mount) continue;
+            mounts[role] = new THREE.Matrix4().makeTranslation(...offset.toArray()).multiply(toRoom.clone().multiply(mount.dress.matrixWorld));
+        }
+        group.userData.officeStation = { role: spec.id, height: spec.height, tilt: spec.tilt, widthMm: arSizeReference().nominalWidth * 25.4, sourceMeshCount, surfaceBatches: batches.size, main: false };
+        return { group, mounts };
+    });
 }
 
 // Undo and redo run the same code in opposite directions. Each entry knows how
@@ -1318,6 +1605,7 @@ function updateTransformProxy() {
 }
 
 function toggleMovingObject(obj, forceState = null, skipUpdate = false) {
+    if (roomGroove?.run && forceState !== false) haltAllMotion();
     const existingIndex = movingObjects.findIndex(item => item.obj === obj);
     const currentlySelected = existingIndex > -1;
     // A locked part can always be deselected, never selected.
@@ -1853,6 +2141,16 @@ function onCanvasClick(event) {
         return;
     }
 
+    if (!isSelectionMode && roomGroove?.prepared && !roomGroove.run) {
+        const rect = canvas.getBoundingClientRect();
+        mouse.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+        raycaster.setFromCamera(mouse, camera);
+        const visible = o => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
+        const hit = raycaster.intersectObject(loadedModel, true).find(h => visible(h.object));
+        const obstruction = raycaster.intersectObject(workspaceRoom.root, true).find(h => visible(h.object) && !h.object.parent?.userData.grooveMarker);
+        if (hit && (!obstruction || hit.distance < obstruction.distance)) grooveController().start();
+        return;
+    }
     if (!isSelectionMode) return;
     if (transformControl && transformControl.dragging) return;
 
@@ -1968,10 +2266,15 @@ function setLedColor(value, persist = true) {
         entry.material.color.set(value).multiplyScalar(ledsEnabled ? 1 : 0.12);
         entry.material.emissive.set(value);
     });
-    ledAreaLights.forEach(light => light.color.set(value));
     ledSpillMaterials.forEach(({ material }) => material.uniforms.ledColor.value.set(value));
+    updateLedEffectFrame();
     const picker = document.getElementById('led-color');
     if (picker && picker.value !== value) picker.value = value;
+    document.querySelectorAll('[data-led-color]').forEach(input => {
+        if (input.value !== value) input.value = value;
+    });
+    document.querySelectorAll('.led-preset').forEach(button =>
+        button.setAttribute('aria-pressed', String(button.dataset.ledPreset === value.toLowerCase())));
     const readout = document.getElementById('led-color-value');
     if (readout) readout.textContent = value.toUpperCase();
     if (persist) {
@@ -1979,12 +2282,174 @@ function setLedColor(value, persist = true) {
     }
 }
 
+function updateLedEffectFrame(seconds = performance.now() / 1000) {
+    const diagnostic = ledDiagnostic.strip !== null;
+    let pixels = false, linear = false;
+    if (diagnostic) {sampleLedDiagnostic(ledPixelFrame, LED_STRIPS, ledDiagnostic); pixels = true; ledPixelSource = 'diagnostic';}
+    else if (ledMotionEnabled && ledMotion.sample(ledPixelFrame, seconds * 1000, ledReducedMotion.matches)) {pixels = true;ledPixelSource = ledMotion.owner ? 'movement' : 'completion';}
+    else if (ledGame.sample(ledPixelFrame)) {pixels = true;linear = true;ledPixelSource = 'game';}
+    else if (ledMusic.sample(ledPixelFrame)) {pixels = true;ledPixelSource = 'music';}
+    else if (sampleDecorativeInto(ledPixelFrame, ledEffect, seconds - ledEffectStart, ledColor,
+        ledReducedMotion.matches, (liftToHeight(currentLift) - 28) / 24)) {pixels = true;ledPixelSource = 'effect';}
+    else ledPixelSource = 'base';
+    const frame = sampleLedEffect(ledEffect, seconds - ledEffectStart, ledsEnabled,
+        ledReducedMotion.matches || pixels);
+    if (pixels && ledsEnabled) ledPixels?.upload(ledPixelFrame, linear);
+    ledPixels?.setActive(pixels && ledsEnabled, 3.6 * ledGlow / 100);
+    if (frame.hue === null) ledFrameColor.set(ledColor);
+    else ledFrameColor.setHSL(frame.hue, 1, 0.5, THREE.SRGBColorSpace);
+    ledParts.forEach(({ material }, index) => {
+        // The fixed red IC details are not part of the decorative effect.
+        if (index >= 3 && index <= 37) return;
+        material.color.copy(ledFrameColor).multiplyScalar(ledsEnabled ? 1 : 0.12);
+        material.emissive.copy(ledFrameColor);
+        material.emissiveIntensity = 3.6 * ledGlow / 100 * frame.gain;
+    });
+    ledSpillMaterials.forEach(({ material, receiver }) => {
+        material.uniforms.ledColor.value.copy(ledFrameColor);
+        material.uniforms.strength.value = ledGlow * ledSurfaces[`${receiver}Strength`] / 10000 * frame.gain;
+    });
+}
+
+function ledPose() {return {lift:liftToHeight(currentLift),tilt:primaryTiltConfig()?.currentDeg || 0,x:glideOffset.x,z:glideOffset.z,yaw:deskYaw};}
+function setLedMotionEnabled(value) {
+    ledMotionEnabled = !!value; ledMotion.cancel(loadedModel ? ledPose() : null);
+    ledAutoLift = ledAutoTilt = false; ledSounds.stop(); updateLedEffectFrame();
+}
+function mountLedPlayback(container) {
+    ledGame.mountControls(container,{motionEnabled:()=>ledMotionEnabled,setMotionEnabled:setLedMotionEnabled,sounds:ledSounds,startLights:()=>{ledMusic.stop();setLedsEnabled(true);}});
+    ledMusic.mountControls(container,()=>{ledGame.stop();setLedsEnabled(true);});
+}
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {haltAllMotion();ledGame.video.pause();ledMusic.pause();ledSounds.stop();ledMotion.cancel();updateLedEffectFrame();ledGame.syncUI();}
+});
+window.addEventListener('pagehide', e => {if (!e.persisted) {ledSounds.dispose();ledGame.dispose();ledMusic.dispose();}else {ledSounds.stop();ledGame.video.pause();ledMusic.pause();}});
+
+function setLedDiagnostic(value = {}) {
+    const strip = value.strip === null || value.strip === undefined ? null : Number(value.strip);
+    const spec = LED_STRIPS.find(entry => entry.id === strip);
+    const pixel = value.pixel === null || value.pixel === undefined ? null : Number(value.pixel);
+    if (strip !== null && !spec) return false;
+    if (pixel !== null && (!spec || !Number.isInteger(pixel) || pixel < 0 || pixel >= spec.count)) return false;
+    ledDiagnostic = { strip, pixel };
+    sampleLedDiagnostic(ledPixelFrame, LED_STRIPS, ledDiagnostic);
+    ledPixels?.upload(ledPixelFrame);
+    updateLedEffectFrame();
+    document.querySelectorAll('[data-led-diagnostic-strip]').forEach(select => select.value = strip === null ? 'off' : String(strip));
+    document.querySelectorAll('[data-led-diagnostic-pixel]').forEach(input => {
+        input.disabled = !spec;
+        input.max = spec ? String(spec.count - 1) : '0';
+        input.value = pixel === null ? '' : String(pixel);
+    });
+    document.querySelectorAll('[data-led-diagnostic-label]').forEach(output => output.textContent = spec
+        ? `Strip ${strip}: ${spec.name} · ${pixel === null ? 'all addresses' : `address ${pixel}`} · saved endpoint; visibility unverified`
+        : 'Desk 02 saved endpoint calibration · confirm geometry, visible addresses and size-specific counts.');
+    return true;
+}
+
+function mountLedDiagnostic(container) {
+    if (!container || container.childElementCount) return;
+    // Engineer tooling stays out of the normal customer controls.
+    container.hidden = new URLSearchParams(location.search).get('ledDiagnostics') !== '1';
+    if (container.hidden) return;
+    const details = document.createElement('details');
+    details.className = 'led-map-diagnostic';
+    details.innerHTML = '<summary>LED strip mapping</summary><div class="led-effects-controls"><label>Strip <select data-led-diagnostic-strip aria-label="Diagnostic LED strip"><option value="off">Off</option></select></label><label>Address <input data-led-diagnostic-pixel type="number" min="0" step="1" placeholder="All" aria-label="Diagnostic LED address"></label><button type="button" data-led-diagnostic-next>Next address</button><button type="button" data-led-diagnostic-end>End test</button></div><p data-led-diagnostic-label role="status"></p>';
+    const select = details.querySelector('select'), pixel = details.querySelector('input');
+    LED_STRIPS.forEach(strip => select.add(new Option(`${strip.id} · ${strip.name}`, String(strip.id))));
+    const change = () => setLedDiagnostic({ strip: select.value === 'off' ? null : Number(select.value), pixel: pixel.value === '' ? null : Number(pixel.value) });
+    select.addEventListener('change', () => { pixel.value = ''; change(); });
+    pixel.addEventListener('change', () => { if (!change()) pixel.value = ledDiagnostic.pixel ?? ''; });
+    details.querySelector('[data-led-diagnostic-next]').addEventListener('click', () => {
+        const spec = LED_STRIPS.find(strip => strip.id === ledDiagnostic.strip);
+        if (spec) setLedDiagnostic({ strip: spec.id, pixel: ledDiagnostic.pixel === null ? 0 : (ledDiagnostic.pixel + 1) % spec.count });
+    });
+    details.querySelector('[data-led-diagnostic-end]').addEventListener('click', () => setLedDiagnostic());
+    details.addEventListener('toggle', () => { if (!details.open) setLedDiagnostic(); });
+    container.append(details);
+    setLedDiagnostic(ledDiagnostic);
+}
+
+function bindLedPixels() {
+    ledPixels?.dispose();
+    ledPixels = new LedPixelRenderer(LED_STRIPS);
+    LED_STRIPS.forEach(strip => ledPixels.bindStrip(ledParts[strip.mesh].part, strip.id));
+    ledPixels.bindStrip(ledExtendedStrips.children[0], 6);
+    ledPixels.bindStrip(ledExtendedStrips.children[1], 5);
+    ledPixels.bindStrip(ledExtendedStrips.children[2], 4);
+    const receiverIds = { desktop: [3], shelf: [1, 2], base: [7], top: [0], leftWing: [5], rightWing: [6], floor: [7] };
+    ledSpillMaterials.forEach(entry => {
+        const ids = entry.strip ? [entry.strip.userData.ledPhysicalId] : receiverIds[entry.receiver];
+        const source = ledPixels.bindings.find(binding => binding.stripId === ids[0] && binding.part === entry.strip)
+            || ledPixels.bindings.find(binding => binding.stripId === ids[0]);
+        if (entry.receiver === 'floor') {
+            // Floor UV.y runs opposite model-local Z; use the authored strip span.
+            ledPixels.bindSpill(entry, ids, [source.min, source.max], '-327.1 - (ledUv.y - 0.5) * 60.0');
+        } else ledPixels.bindSpill(entry, ids, [source.min, source.max], `ledPosition.${source.axis}`);
+    });
+    setLedDiagnostic(ledDiagnostic);
+}
+
+function setLedEffect(value, persist = true) {
+    ledEffect = normalizeLedEffect(value);
+    ledEffectStart = performance.now() / 1000;
+    updateLedEffectFrame();
+    document.querySelectorAll('[data-led-effect]').forEach(input => input.value = ledEffect.mode);
+    document.querySelectorAll('[data-led-period]').forEach(input => input.value = String(ledEffect.period));
+    document.querySelectorAll('[data-led-period-value]').forEach(output => output.textContent = `${ledEffect.period}s`);
+    if (persist) {
+        try { localStorage.setItem(LED_EFFECT_KEY, JSON.stringify(ledEffect)); } catch (_) {}
+    }
+}
+
+function mountLedEffects(container) {
+    if (!container || container.childElementCount) return;
+    const label = document.createElement('label');
+    label.textContent = 'LED effect ';
+    const select = document.createElement('select');
+    select.dataset.ledEffect = '';
+    select.setAttribute('aria-label', 'LED effect');
+    select.title = 'Decorative pixel previews; not byte-identical hardware output. Music effects are in Music Mode.';
+    LED_EFFECTS.forEach(effect => select.add(new Option(effect.label, effect.id)));
+    label.append(select);
+    const periodLabel = document.createElement('label');
+    periodLabel.textContent = 'Cycle ';
+    const period = document.createElement('input');
+    period.type = 'range'; period.min = '4'; period.max = '30'; period.step = '1';
+    period.dataset.ledPeriod = '';
+    period.setAttribute('aria-label', 'LED effect cycle seconds');
+    const output = document.createElement('output');
+    output.dataset.ledPeriodValue = '';
+    periodLabel.append(period, output);
+    container.append(label, periodLabel);
+    select.addEventListener('change', () => {ledGame.stop();ledMusic.stop();setLedEffect({ ...ledEffect, mode: select.value }, !EVENT_DEMO);});
+    period.addEventListener('input', () => setLedEffect({ ...ledEffect, period: Number(period.value) }, !EVENT_DEMO));
+    setLedEffect(ledEffect, false);
+}
+
+function mountLedPalette(container) {
+    if (!container || container.childElementCount) return;
+    LED_COLOR_PRESETS.forEach(({ name, value }) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'led-preset';
+        button.dataset.ledPreset = value;
+        button.style.backgroundColor = value;
+        button.setAttribute('aria-label', `${name} LED color`);
+        button.setAttribute('aria-pressed', String(ledColor.toLowerCase() === value));
+        button.title = name;
+        button.addEventListener('click', () => setLedColor(value, !EVENT_DEMO));
+        container.append(button);
+    });
+}
+
 function setLedGlow(value, persist = true) {
-    ledGlow = THREE.MathUtils.clamp(Number(value) || 0, 0, 200);
+    ledGlow = THREE.MathUtils.clamp(Number(value) || 0, 0, LED_FULL_BRIGHTNESS);
+    const brightness = Math.round(ledGlow / LED_FULL_BRIGHTNESS * 100);
     const picker = document.getElementById('led-glow');
-    if (picker && Number(picker.value) !== ledGlow) picker.value = String(ledGlow);
+    if (picker && Number(picker.value) !== brightness) picker.value = String(brightness);
     const readout = document.getElementById('led-glow-value');
-    if (readout) readout.textContent = `${Math.round(ledGlow)}%`;
+    if (readout) readout.textContent = `${brightness}%`;
     setLedsEnabled(ledsEnabled);
     if (persist) {
         try { localStorage.setItem(LED_GLOW_KEY, String(ledGlow)); } catch (_) {}
@@ -2033,6 +2498,7 @@ function syncSizeGeometry() {
     syncLedSizeGeometry();
     setScreenProgress(screenProgress);
     buildSceneTree();
+    if (measuredRoomProfile() && workspaceRoom?.roomLayout) setRoomScene(selectedRoomScene, false, { preserveDesk: true });
 }
 
 function syncLedSizeGeometry() {
@@ -2108,11 +2574,12 @@ async function loadTrimOverlay() {
             if (spec.role === 'tilt') tiltParts.push(obj);
         });
 
-        const [smallGltf, largeGltf] = await Promise.all([
+        const [smallGltf, largeGltf, largeTrimGltf] = await Promise.all([
             gltfLoader.loadAsync(SMALL_TRIM_MODEL_URL),
-            gltfLoader.loadAsync(LARGE_DESKTOP_MODEL_URL)
+            gltfLoader.loadAsync(LARGE_DESKTOP_MODEL_URL),
+            gltfLoader.loadAsync(LARGE_DESKTOP_TRIM_URL)
         ]);
-        if (smallGltf.scene.children.length !== 3 || largeGltf.scene.children.length !== 2) {
+        if (smallGltf.scene.children.length !== 3 || largeGltf.scene.children.length !== 2 || largeTrimGltf.scene.children.length !== 1) {
             throw new Error('The size variant exports no longer contain the expected parts.');
         }
         const addVariantNode = (source, index, name, editorId, role, material, isTrim) => {
@@ -2149,7 +2616,7 @@ async function loadTrimOverlay() {
         addVariantNode(smallGltf, 1, 'Upper shelf trim', 'Trim_Shelf_Upper', 'lift', trimMaterial, true);
         const smallTrim = addVariantNode(smallGltf, 2, 'Standard desktop trim', 'Trim_Desktop_Standard', 'tilt', trimMaterial, true);
         const largeTop = addVariantNode(largeGltf, 0, 'Extended desktop', 'Variant_Desktop_Extended', 'tilt', smallTop.material, false);
-        const largeTrim = addVariantNode(largeGltf, 1, 'Extended desktop trim', 'Trim_Desktop_Extended', 'tilt', trimMaterial, true);
+        const largeTrim = addVariantNode(largeTrimGltf, 0, 'Extended desktop trim', 'Trim_Desktop_Extended', 'tilt', trimMaterial, true);
         sizeVariantParts = { smallTop, smallTrim, largeTop, largeTrim };
         syncSizeGeometry();
         return tiltParts;
@@ -2258,18 +2725,17 @@ async function loadTouchscreenAssembly() {
         staticParts.name = 'Touchscreen slide rails';
         for (const i of [5, 6]) staticParts.add(makeOverlayNode(pulled, i, -200, metal, `Touchscreen rail ${i}`));
         for (const i of [6, 7, 8, 9]) staticParts.add(makeOverlayNode(extended, i, -200, metal, `Touchscreen extension ${i}`));
-        // The wide export is the authored final pose. Reverse the turn around
-        // its pivot once, so the same slide-and-turn animation lands exactly
-        // on the supplied geometry at full extension.
+        // Reverse the wide export around its pivot, correcting its 12° extra
+        // face tilt so both sizes share the same open angle and animation.
         const wideMoving = new THREE.Group();
         wideMoving.position.copy(WIDE_SCREEN_PIVOT);
-        wideMoving.add(makeTouchscreenFace(wide, -100, WIDE_SCREEN_PIVOT, SCREEN_TURN,
+        wideMoving.add(makeTouchscreenFace(wide, -100, WIDE_SCREEN_PIVOT, WIDE_SCREEN_REST_TURN,
             faceMaterial, 'Extended touchscreen display'));
         for (const i of [1, 8, 9, 10, 11]) {
             const part = makeOverlayNode(wide, i, -100, dark, `Extended touchscreen moving ${i}`);
             part.children.forEach(mesh => {
                 mesh.geometry.translate(-WIDE_SCREEN_PIVOT.x, -WIDE_SCREEN_PIVOT.y, 0);
-                mesh.geometry.rotateZ(-SCREEN_TURN);
+                mesh.geometry.rotateZ(-WIDE_SCREEN_REST_TURN);
             });
             wideMoving.add(part);
         }
@@ -2277,7 +2743,23 @@ async function loadTouchscreenAssembly() {
         wideStatic.name = 'Extended touchscreen slide rails';
         for (const i of [2, 3, 4, 5, 6, 7])
             wideStatic.add(makeOverlayNode(wide, i, -100, metal, `Extended touchscreen rail ${i}`));
-        root.add(staticParts, moving, wideStatic, wideMoving);
+        // Keep the wide screen the same distance from the front and right
+        // desktop edges as the Standard screen. The wide GLB changes its X
+        // anchor, but its Z position remains at the Standard desktop edge.
+        const standardTopBounds = sizeVariantParts.smallTop.geometry;
+        const wideTopBounds = sizeVariantParts.largeTop.geometry;
+        standardTopBounds.computeBoundingBox();
+        wideTopBounds.computeBoundingBox();
+        const wideMount = new THREE.Group();
+        wideMount.name = 'Extended touchscreen edge alignment';
+        wideMount.position.set(
+            wideTopBounds.boundingBox.max.x - standardTopBounds.boundingBox.max.x
+                - (WIDE_SCREEN_PIVOT.x - SCREEN_PIVOT.x),
+            0,
+            wideTopBounds.boundingBox.min.z - standardTopBounds.boundingBox.min.z
+        );
+        wideMount.add(wideStatic, wideMoving);
+        root.add(staticParts, moving, wideMount);
         loadedModel.add(root);
         const baseParts = [...partRegistry.values()].map(entry => entry.obj)
             .filter(obj => /^Touch_Screen(?:_|$)/.test(obj.name));
@@ -2301,74 +2783,63 @@ function setLedsEnabled(on) {
         material.emissive.set(color);
         material.emissiveIntensity = ledsEnabled ? 3.6 * ledGlow / 100 : 0;
     });
-    ledAreaLights.forEach(light => {
-        const receiver = light.userData.receiver;
-        const strength = ledSurfaces[`${receiver}Strength`] / 100;
-        light.visible = ledsEnabled && ledGlow > 0 && strength > 0;
-        light.intensity = 0.25 * (light.userData.gain ?? 1) * strength * ledGlow / 100;
-    });
     ledSpillMaterials.forEach(({ material, receiver, minReach, maxReach }) => {
         material.uniforms.strength.value = ledsEnabled
             ? ledGlow * ledSurfaces[`${receiver}Strength`] / 10000 : 0;
         material.uniforms.fadeReach.value = minReach +
             (maxReach - minReach) * ledSurfaces[`${receiver}Reach`] / 100;
+        if (material.uniforms.falloffPower) {
+            const sharpness = ledSurfaces[`${receiver}Sharpness`] ?? 0;
+            material.uniforms.falloffPower.value = 2 + 6 * sharpness / 100;
+        }
+        if (receiver === 'desktop' && material.uniforms.stripBaseSpread) {
+            const width = ledSurfaces.desktopWidth;
+            material.uniforms.stripBaseSpread.value = width <= 20
+                ? -3 + width / 5 : 1 + (width - 20) / 20;
+            material.uniforms.stripFanSlope.value = ledSurfaces.desktopCone / 400;
+            material.uniforms.stripFeather.value = 0.2 + ledSurfaces.desktopEdgeFade / 25;
+        }
+        if (receiver === 'floor' && material.uniforms.stripHalfSpan)
+            material.uniforms.stripHalfSpan.value = 0.08 + 0.003 * ledSurfaces.floorWidth;
     });
     document.querySelectorAll('[data-led-toggle],.hub-led').forEach(button =>
         button.setAttribute('aria-pressed', String(ledsEnabled)));
-}
-
-function addLedAreaLight(part, parent, receiverLayer = 0, receiver = 'base') {
-    part.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(part);
-    const size = box.getSize(new THREE.Vector3());
-    const majorX = size.x > size.z;
-    const length = Math.max(size.x, size.z);
-    if (length < 5) return;
-    // The physical strip faces down from the shelf/desktop underside. A long,
-    // soft area source spreads its color across the panel below without the
-    // circular hotspots produced by point lights.
-    const light = new THREE.RectAreaLight(ledColor, 0, length * 0.9, 2.4);
-    light.name = `${part.name} soft LED wash`;
-    light.position.copy(box.getCenter(new THREE.Vector3()));
-    light.position.y = box.min.y - 0.15;
-    const right = majorX ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1);
-    // RectAreaLight emits from its local -Z face, so +Z points up here.
-    const up = majorX ? new THREE.Vector3(0, 0, -1) : new THREE.Vector3(1, 0, 0);
-    light.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(
-        right, up, new THREE.Vector3(0, 1, 0)));
-    light.visible = false;
-    light.layers.set(receiverLayer);
-    light.userData.receiver = receiver;
-    parent.add(light);
-    ledAreaLights.push(light);
-}
-
-function enableLedReceiver(object, layer) {
-    object?.traverse(child => {
-        if (child.isMesh) child.layers.enable(layer);
-    });
+    document.dispatchEvent(new CustomEvent('ergoflex-led-state', {detail:{enabled:ledsEnabled}}));
+    updateLedEffectFrame();
 }
 
 function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
-    minReach, maxReach, peakAlpha) {
+    minReach, maxReach, peakAlpha, stripBounds = null, referenceSurface = null) {
     // Follow the actual panel mesh so the light fade respects its outline and
     // cutouts as the lift, tilt, and desktop size change.
     const material = new THREE.ShaderMaterial({
         uniforms: {
+            reflectionFrame: { value: new THREE.Matrix4() },
+            reflectionNormal: { value: new THREE.Matrix3() },
             ledColor: { value: new THREE.Color(ledColor) },
             strength: { value: 0 },
             fadeReach: { value: (minReach + maxReach) / 2 },
             centerX: { value: centerX },
             centerZ: { value: centerZ },
             zRadius: { value: zRadius },
-            peakAlpha: { value: peakAlpha }
+            peakAlpha: { value: peakAlpha },
+            stripMinZ: { value: stripBounds?.minZ ?? 0 },
+            stripMaxZ: { value: stripBounds?.maxZ ?? 0 },
+            stripFeather: { value: stripBounds?.feather ?? 1 },
+            stripSourceX: { value: stripBounds?.sourceX ?? 0 },
+            stripBaseSpread: { value: stripBounds?.baseSpread ?? 0 },
+            stripFanSlope: { value: stripBounds?.fanSlope ?? 0 },
+            stripFanLimit: { value: stripBounds?.fanLimit ?? 0 },
+            falloffPower: { value: 2 }
         },
         vertexShader: `
+            uniform mat4 reflectionFrame;
+            uniform mat3 reflectionNormal;
             varying vec3 ledPosition;
             varying vec3 ledNormal;
             void main() {
-                ledPosition = position;
-                ledNormal = normal;
+                ledPosition = (reflectionFrame * vec4(position, 1.0)).xyz;
+                ledNormal = reflectionNormal * normal;
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
         `,
@@ -2380,6 +2851,14 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
             uniform float centerZ;
             uniform float zRadius;
             uniform float peakAlpha;
+            uniform float stripMinZ;
+            uniform float stripMaxZ;
+            uniform float stripFeather;
+            uniform float stripSourceX;
+            uniform float stripBaseSpread;
+            uniform float stripFanSlope;
+            uniform float stripFanLimit;
+            uniform float falloffPower;
             varying vec3 ledPosition;
             varying vec3 ledNormal;
             void main() {
@@ -2387,6 +2866,21 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
                 float dx = (ledPosition.x - centerX) / fadeReach;
                 float dz = (ledPosition.z - centerZ) / zRadius;
                 float pool = exp(-0.5 * (dx * dx + dz * dz));
+                if (stripMaxZ > stripMinZ) {
+                    // The adjustable strip width and forward fan describe
+                    // light bouncing past the shelf side plates.
+                    float forward = max(0.0, ledPosition.x - stripSourceX);
+                    float fan = min(stripFanLimit, forward * stripFanSlope);
+                    float bandMin = stripMinZ - stripBaseSpread - fan;
+                    float bandMax = stripMaxZ + stripBaseSpread + fan;
+                    // Distance to a finite light strip gives its ends rounded
+                    // falloff, avoiding a flat rectangular edge at oblique views.
+                    float beyondEnd = max(max(bandMin - ledPosition.z,
+                        ledPosition.z - bandMax), 0.0);
+                    float across = exp(-0.5 * pow(abs(dx), falloffPower));
+                    float endFade = exp(-0.5 * pow(beyondEnd / stripFeather, 2.0));
+                    pool = across * endFade;
+                }
                 float alpha = min(0.9, peakAlpha * strength * pool * top);
                 gl_FragColor = vec4(ledColor, alpha);
                 #include <tonemapping_fragment>
@@ -2405,8 +2899,259 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
     spill.name = `${surface.name} LED reflection`;
     spill.renderOrder = 1;
     spill.raycast = () => {};
+    if (referenceSurface) {
+        // Power modules share the desktop's light field, but retain their own
+        // mesh and mounting transform as the desk lifts, tilts, or is edited.
+        spill.onBeforeRender = () => {
+            material.uniforms.reflectionFrame.value.copy(referenceSurface.matrixWorld)
+                .invert().multiply(surface.matrixWorld);
+            material.uniforms.reflectionNormal.value.getNormalMatrix(
+                material.uniforms.reflectionFrame.value);
+        };
+    }
     surface.add(spill);
     ledSpillMaterials.push({ material, receiver, minReach, maxReach });
+}
+
+function addLedWingSpill(surface, receiver) {
+    // The two side wings are nearly vertical. Their reflection needs an X/Y
+    // fade, unlike the horizontal desktop and shelves above.
+    const minReach = 5;
+    const maxReach = 18;
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            ledColor: { value: new THREE.Color(ledColor) },
+            strength: { value: 0 },
+            fadeReach: { value: (minReach + maxReach) / 2 }
+        },
+        vertexShader: `
+            varying vec3 ledPosition;
+            varying vec3 ledNormal;
+            void main() {
+                ledPosition = position;
+                ledNormal = normal;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 ledColor;
+            uniform float strength;
+            uniform float fadeReach;
+            varying vec3 ledPosition;
+            varying vec3 ledNormal;
+            void main() {
+                float face = smoothstep(0.7, 0.95, abs(normalize(ledNormal).z));
+                float dx = (ledPosition.x + 159.8) / fadeReach;
+                float dy = (ledPosition.y - 48.5) / 7.0;
+                float pool = exp(-0.5 * (dx * dx + dy * dy));
+                float alpha = min(0.75, 0.38 * strength * pool * face);
+                gl_FragColor = vec4(ledColor, alpha);
+                #include <tonemapping_fragment>
+                #include <colorspace_fragment>
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+        side: THREE.DoubleSide
+    });
+    const spill = new THREE.Mesh(surface.geometry, material);
+    spill.name = `${surface.name} LED wing reflection`;
+    spill.renderOrder = 1;
+    spill.raycast = () => {};
+    surface.add(spill);
+    ledSpillMaterials.push({ material, receiver, minReach, maxReach });
+}
+
+function addLedUprightSpill(surface, strip, receiver, direction, minY, maxY, options = {}) {
+    // Shade only the actual inward-facing board/column geometry. The nearest
+    // point on the LED segment produces soft bounce along the entire strip.
+    const minReach = options.minReach ?? 5;
+    const maxReach = options.maxReach ?? 12;
+    surface.geometry.computeBoundingBox();
+    const surfaceBox = surface.geometry.boundingBox;
+    const stripBox = new THREE.Box3().setFromObject(strip);
+    const stripCenter = stripBox.getCenter(new THREE.Vector3());
+    const stripSize = stripBox.getSize(new THREE.Vector3());
+    const alongX = stripSize.x > stripSize.z;
+    const halfLength = (alongX ? stripSize.x : stripSize.z) / 2;
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            ledColor: { value: new THREE.Color(ledColor) },
+            strength: { value: 0 },
+            fadeReach: { value: minReach },
+            reflectionFrame: { value: new THREE.Matrix4() },
+            reflectionNormal: { value: new THREE.Matrix3() },
+            stripCenter: { value: stripCenter },
+            halfLength: { value: halfLength },
+            stripAxis: { value: alongX ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1) },
+            sourceActive: { value: 1 },
+            gain: { value: options.gain ?? 1 },
+            uprightOnly: { value: options.uprightOnly === false ? 0 : 1 },
+            cage: { value: options.cage ? 1 : 0 },
+            surfaceMinY: { value: surfaceBox.min.y },
+            surfaceMaxY: { value: surfaceBox.max.y },
+            direction: { value: direction },
+            minY: { value: minY },
+            maxY: { value: maxY }
+        },
+        vertexShader: `
+            uniform mat4 reflectionFrame;
+            uniform mat3 reflectionNormal;
+            varying vec3 ledPosition;
+            varying vec3 ledNormal;
+            varying float surfaceY;
+            void main() {
+                surfaceY = position.y;
+                ledPosition = (reflectionFrame * vec4(position, 1.0)).xyz;
+                ledNormal = reflectionNormal * normal;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 ledColor;
+            uniform float strength;
+            uniform float fadeReach;
+            uniform vec3 stripCenter;
+            uniform float halfLength;
+            uniform vec3 stripAxis;
+            uniform float sourceActive;
+            uniform float gain;
+            uniform float uprightOnly;
+            uniform float cage;
+            uniform float surfaceMinY;
+            uniform float surfaceMaxY;
+            uniform float direction;
+            uniform float minY;
+            uniform float maxY;
+            varying vec3 ledPosition;
+            varying vec3 ledNormal;
+            varying float surfaceY;
+            void main() {
+                vec3 nearest = stripCenter;
+                nearest += stripAxis * clamp(dot(ledPosition - stripCenter, stripAxis), -halfLength, halfLength);
+                vec3 towardLight = nearest - ledPosition;
+                float distanceToStrip = length(towardLight);
+                vec3 normal = normalize(ledNormal);
+                float facing = max(dot(normal, towardLight / max(distanceToStrip, 0.001)), 0.0);
+                float upright = 1.0 - smoothstep(0.35, 0.7, abs(normal.y));
+                float emitted = smoothstep(-0.12, 0.12,
+                    direction * (ledPosition.y - stripCenter.y));
+                // Shelves block spill into the next compartment. Feather the
+                // boundary on the receiving geometry to keep it continuous.
+                float compartment = smoothstep(minY - 0.2, minY + 0.2, ledPosition.y)
+                    * (1.0 - smoothstep(maxY - 0.2, maxY + 0.2, ledPosition.y));
+                float pool = exp(-0.5 * pow(distanceToStrip / fadeReach, 2.0));
+                // Include light arriving from farther along the strip. A
+                // nearest-point-only field misses the inside column faces
+                // because their normals point along the strip itself.
+                float lineBounce = 0.0;
+                for (int sampleIndex = 0; sampleIndex < 5; sampleIndex++) {
+                    vec3 samplePoint = stripCenter;
+                    samplePoint += stripAxis * halfLength * (float(sampleIndex) * 0.5 - 1.0);
+                    vec3 ray = samplePoint - ledPosition;
+                    float rayLength = max(length(ray), 0.001);
+                    lineBounce += max(dot(normal, ray / rayLength), 0.0)
+                        * exp(-0.5 * pow(rayLength / fadeReach, 2.0)) / 5.0;
+                }
+                float reflected = 0.5 * (pool * facing + lineBounce);
+                float lowerEdge = 1.0 - smoothstep(surfaceMinY + 0.15,
+                    max(surfaceMinY + 0.3, surfaceMaxY + 0.1), surfaceY);
+                float occlusion = mix(1.0, lowerEdge, cage);
+                // The cage receives weak indirect bounce along its lower
+                // edge, including faces pointing away from the direct strip.
+                reflected += cage * 0.08 * pool;
+                float alpha = min(0.55, 0.28 * strength * gain * sourceActive * reflected
+                    * mix(1.0, upright, uprightOnly) * emitted * compartment * occlusion);
+                gl_FragColor = vec4(ledColor, alpha);
+                #include <tonemapping_fragment>
+                #include <colorspace_fragment>
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+        side: THREE.FrontSide
+    });
+    const spill = new THREE.Mesh(surface.geometry, material);
+    spill.name = `${surface.name} ${receiver}${options.underside ? ' LED underside reflection' : ' LED upright reflection'}`;
+    spill.renderOrder = 1;
+    spill.raycast = () => {};
+    // Strip geometry is baked in the shelf rig frame. Columns may move by a
+    // different amount during lift, so project them into that moving frame.
+    const frame = new THREE.Matrix4();
+    spill.onBeforeRender = () => {
+        let active = true;
+        for (let node = strip; node; node = node.parent) active &&= node.visible;
+        material.uniforms.sourceActive.value = active ? 1 : 0;
+        frame.copy(strip.parent.matrixWorld).invert().multiply(surface.matrixWorld);
+        material.uniforms.reflectionFrame.value.copy(frame);
+        material.uniforms.reflectionNormal.value.getNormalMatrix(frame);
+    };
+    surface.add(spill);
+    ledSpillMaterials.push({ material, receiver, minReach, maxReach, strip });
+}
+
+function addFootLedFloorGlow(parent) {
+    // ShadowMaterial catches shadows but cannot display the LED color. Place a
+    // separate transparent pool just above the floor and parent it to the
+    // desk base so it follows glide and rotation without following lift.
+    const minReach = 0.06;
+    const maxReach = 0.35;
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            ledColor: { value: new THREE.Color(ledColor) },
+            strength: { value: 0 },
+            fadeReach: { value: (minReach + maxReach) / 2 },
+            stripHalfSpan: { value: 0.23 },
+            falloffPower: { value: 2 }
+        },
+        vertexShader: `
+            varying vec2 ledUv;
+            void main() {
+                ledUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 ledColor;
+            uniform float strength;
+            uniform float fadeReach;
+            uniform float stripHalfSpan;
+            uniform float falloffPower;
+            varying vec2 ledUv;
+            void main() {
+                // The foot LED is a long strip across the desk. Measure the
+                // falloff from that segment, including its softly rounded ends.
+                float across = abs(ledUv.x - 0.5) / fadeReach;
+                float pastEnd = max(abs(ledUv.y - 0.5) - stripHalfSpan, 0.0) / 0.08;
+                float pool = exp(-0.5 * pow(length(vec2(across, pastEnd)), falloffPower));
+                float edge = 1.0 - smoothstep(0.43, 0.5, abs(ledUv.x - 0.5));
+                float alpha = min(0.6, 0.34 * strength * pool * edge);
+                gl_FragColor = vec4(ledColor, alpha);
+                #include <tonemapping_fragment>
+                #include <colorspace_fragment>
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), material);
+    glow.name = 'Foot LED floor glow';
+    glow.rotation.x = -Math.PI / 2;
+    glow.position.set(-159.2, loadedModel.worldToLocal(new THREE.Vector3(0, 0.012, 0)).y, -327.1);
+    glow.renderOrder = 1;
+    glow.raycast = () => {};
+    parent.add(glow);
+    ledSpillMaterials.push({ material, receiver: 'floor', minReach, maxReach });
 }
 
 function revealCenterLed(part, desktopGeometry) {
@@ -2440,9 +3185,7 @@ async function loadLedOverlay() {
         ledDesktopFit.name = 'Desktop LED size fit';
         roots.tilt.add(ledDesktopFit);
         ledParts = [];
-        ledAreaLights = [];
         ledSpillMaterials = [];
-        RectAreaLightUniformsLib.init();
         gltf.scene.children.forEach((_, index) => {
             const color = index >= 3 && index <= 37 ? 0xff2828 : ledColor;
             const material = new THREE.MeshStandardMaterial({ color, emissive: color,
@@ -2474,30 +3217,81 @@ async function loadLedOverlay() {
         revealCenterLed(ledParts[2].part, standardGeometry);
         standardGeometry.dispose();
         revealCenterLed(wideCenter, sizeVariantParts.largeTop.geometry);
-        for (const part of ledStandardStrips.children.slice()) addLedAreaLight(part, ledStandardStrips, 3, 'base');
-        for (const part of ledExtendedStrips.children.slice()) addLedAreaLight(part, ledExtendedStrips, 3, 'base');
         const lowerShelf = [...partRegistry.values()].find(({ obj }) => obj.name === 'Top_Shelf_3')?.obj;
+        const topShelf = [...partRegistry.values()].find(({ obj }) => obj.name === 'Top_Shelf_4')?.obj;
         const baseShelf = [...partRegistry.values()].find(({ obj }) => obj.name === 'Base_Panels_3')?.obj;
-        if (!lowerShelf || !baseShelf) throw new Error('Shelf LED receiver is missing.');
-        enableLedReceiver(lowerShelf, 1);
-        enableLedReceiver(baseShelf, 3);
-        enableLedReceiver(sizeVariantParts.smallTop, 2);
-        enableLedReceiver(sizeVariantParts.largeTop, 2);
-        addLedSurfaceSpill(sizeVariantParts.smallTop, 'desktop', -171, -327,
-            23, 6, 14, 0.52);
-        addLedSurfaceSpill(sizeVariantParts.largeTop, 'desktop', -171, -327,
-            23, 6, 14, 0.52);
+        const leftWing = [...partRegistry.values()].find(({ obj }) => obj.name === 'Desktop_1')?.obj;
+        const rightWing = [...partRegistry.values()].find(({ obj }) => obj.name === 'Desktop_2')?.obj;
+        if (!lowerShelf || !topShelf || !baseShelf || !leftWing || !rightWing)
+            throw new Error('LED receiver is missing.');
+        // Shelf LED 40 faces the desktop. Its physical span is narrower than
+        // the desktop, especially the Extended version. The side plates limit
+        // the direct light here; the reflection spreads gently farther forward.
+        const desktopStripBox = new THREE.Box3().setFromObject(ledParts[39].part);
+        const desktopStripBounds = {
+            minZ: desktopStripBox.min.z,
+            maxZ: desktopStripBox.max.z,
+            sourceX: desktopStripBox.max.x,
+            baseSpread: 1,
+            fanSlope: 0.08,
+            fanLimit: 6,
+            feather: 1.4
+        };
+        const desktopStripCenterZ = (desktopStripBounds.minZ + desktopStripBounds.maxZ) / 2;
+        const desktopStripHalfWidth = (desktopStripBounds.maxZ - desktopStripBounds.minZ) / 2;
+        addLedSurfaceSpill(sizeVariantParts.smallTop, 'desktop', -171,
+            desktopStripCenterZ, desktopStripHalfWidth, 1, 14, 0.52, desktopStripBounds);
+        addLedSurfaceSpill(sizeVariantParts.largeTop, 'desktop', -171,
+            desktopStripCenterZ, desktopStripHalfWidth, 1, 14, 0.52, desktopStripBounds);
+        for (const { obj } of partRegistry.values()) {
+            if (!/^Power(?:_\d+)?$/.test(obj.name) || !obj.isMesh) continue;
+            addLedSurfaceSpill(obj, 'desktop', -171, desktopStripCenterZ,
+                desktopStripHalfWidth, 1, 14, 0.18, desktopStripBounds,
+                sizeVariantParts.smallTop);
+        }
         addLedSurfaceSpill(lowerShelf, 'shelf', -177, -327,
             22, 3, 11, 0.42);
         addLedSurfaceSpill(baseShelf, 'base', -166, -327,
             21, 3, 11, 0.28);
-        // The upper shelf lights wash the lower shelf. The lower shelf light
-        // washes the desktop. This prevents illumination through the panels.
-        for (const index of [39, 40, 41, 42]) {
-            addLedAreaLight(ledParts[index].part, roots.lift,
-                index === 39 ? 2 : 1, index === 39 ? 'desktop' : 'shelf');
-            ledAreaLights.at(-1).userData.gain = 0.12;
+        addLedSurfaceSpill(topShelf, 'top', -179, -327,
+            21, 2, 10, 0.38);
+        const uprightNames = new Set(['Top_Shelf', 'Top_Shelf_1', 'Top_Shelf_2',
+            'Lift_Column_Top_16', 'Lift_Column_Top_17']);
+        for (const { obj } of partRegistry.values()) {
+            if (!uprightNames.has(obj.name) || !obj.isMesh) continue;
+            addLedUprightSpill(obj, ledParts[39].part, 'desktop', -1, 47.6, 51.92);
+            addLedUprightSpill(obj, ledParts[41].part, 'shelf', -1, 52.69, 57.0);
+            addLedUprightSpill(obj, ledParts[40].part, 'top', 1, 57.78, 1000);
         }
+        const legNames = new Set(['Lift_Column_Top_16', 'Lift_Column_Top_17',
+            'Lift_Column_Center', 'Lift_Column_Center_1',
+            'Lift_Column_Bottom_2', 'Lift_Column_Bottom_3']);
+        for (const { obj } of partRegistry.values()) {
+            if (!obj.isMesh) continue;
+            const underDeskPart = obj.name === 'Desktop' || obj.name === 'mesh_692';
+            if (!underDeskPart && !legNames.has(obj.name)) continue;
+            const crossbar = obj.name === 'Desktop';
+            for (const group of [ledStandardStrips, ledExtendedStrips]) {
+                const centerStrip = group.children[2];
+                addLedUprightSpill(obj, centerStrip, 'base', -1, -1000, 49,
+                    { underside: true, uprightOnly: false, cage: underDeskPart && !crossbar,
+                      gain: crossbar ? 2 : underDeskPart ? 0.5 : 1, minReach: 12, maxReach: 28 });
+                if (legNames.has(obj.name)) {
+                    obj.geometry.computeBoundingBox();
+                    const left = obj.geometry.boundingBox.getCenter(new THREE.Vector3()).z < -327;
+                    addLedUprightSpill(obj, group.children[left ? 1 : 0],
+                        left ? 'leftWing' : 'rightWing', -1, -1000, 49,
+                        { underside: true, gain: 0.65, minReach: 8, maxReach: 18 });
+                }
+            }
+        }
+        addLedWingSpill(leftWing, 'leftWing');
+        addLedWingSpill(rightWing, 'rightWing');
+        addFootLedFloorGlow(roots.base);
+        // All LED receivers use the mesh-aligned light fields above. Three.js
+        // selects lights by the camera's layers, not each receiving mesh's
+        // layers. Extra area lights therefore leaked onto the desktop and
+        // produced a sharp, view-dependent diagonal across its top triangles.
         roots.tilt.add(ledStandardStrips, ledExtendedStrips);
         roots.lift.position.y = LIFT_MIN;
         roots.tilt.position.y = LIFT_MIN;
@@ -2507,6 +3301,7 @@ async function loadLedOverlay() {
         [...partRegistry.values()].forEach(({ obj }) => {
             if (/^Leds(?:_|$)/.test(obj.name)) obj.visible = false;
         });
+        bindLedPixels();
         setLedsEnabled(ledsEnabled);
         return roots.tilt;
     } catch (error) {
@@ -2517,6 +3312,10 @@ async function loadLedOverlay() {
 
 function loadModel() {
     const onLoaded = async (gltf) => {
+        // The temporary video screen owns its GPU resources across model loads.
+        ledGame.restoreMonitor();
+        ledMotion.cancel();
+        ledSounds.stop();
         workspaceAccessories?.dispose();
         workspaceAccessories = null;
         if (loadedModel) scene.remove(loadedModel);
@@ -2535,6 +3334,7 @@ function loadModel() {
         interactableObjects = [];
         sizeVariantParts = null;
         screenAssembly = null;
+        ledPixels?.dispose(); ledPixels = null;
         ledParts = [];
         ledDesktopFit = null;
         ledStandardStrips = null;
@@ -2683,11 +3483,30 @@ function loadModel() {
         applyAccessoryVisibility();
         if (!workspaceRoom) workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
         setRoomScene(selectedRoomScene, false);
+        const roomProfile = measuredRoomProfile();
+        if (roomProfile) setMeasuredRoomMode(roomProfile.id, roomProfile.mode);
         applySurfaceFinish();   // now that surfaceInches can measure the real model
         syncBuildSummary();
+        // Set the demo's first pose before revealing and fitting the model.
+        if (EVENT_DEMO) {
+            currentLift = targetLift = heightToLift(43.5);
+            manualLiftOverride = true;
+            updateMovingObjectsPosition();
+            const initialTilt = primaryTiltConfig();
+            if (initialTilt) {initialTilt.currentDeg = -5;applyTiltConfig(initialTilt);syncTiltUI();}
+            showHeight(43.5);
+        }
         document.getElementById('scene-status').textContent = 'LIVE 3D · READY';
         syncViewerSize();
         focusObjects([loadedModel]);
+
+        // A shared preview can request the architectural view explicitly.
+        if (!EVENT_DEMO && new URLSearchParams(location.search).get('view') === 'room') {
+            workspaceRoom?.ready.then(() => {
+                const select = document.getElementById('camera-view');
+                if (select) { select.value = 'room'; select.dispatchEvent(new Event('change')); }
+            });
+        }
 
         // Phase 1.4: Material smoke check
         if (!woodMaterials.size) {
@@ -2807,6 +3626,7 @@ function serializeProject() {
     const motion = {
         heightInches: liftToHeight(currentLift),
         tilt: Object.fromEntries(tiltConfigs.map(c => [c.name, c.currentDeg])),
+        yaw: deskYaw,
         // The target, not the current offset: glide eases toward its target over
         // several frames, so saving the offset would capture wherever the desk
         // happened to be mid-transit rather than the position that was asked for.
@@ -2859,6 +3679,7 @@ function serializeProject() {
                 trimColor,
                 ledColor,
                 ledGlow,
+                ledEffect: { ...ledEffect },
                 ledSurfaces: { ...ledSurfaces },
                 ledsEnabled,
                 touchscreenOpen: screenTarget > 0.5,
@@ -2867,6 +3688,36 @@ function serializeProject() {
                 grainSheen,
                 environment: document.getElementById('studio-environment')?.value || 'gallery',
                 roomScene: selectedRoomScene,
+                homeMode,
+                homeLayout: selectedHomeLayout().id,
+                gamingMode,
+                gamingLayout: selectedGamingLayout().id,
+                musicMode,
+                musicLayout: selectedMusicLayout().id,
+                artistMode,
+                artistLayout: selectedArtistLayout().id,
+                bedroomMode,
+                bedroomLayout: selectedBedroomLayout().id,
+                galleryMode,
+                galleryLayout: selectedGalleryLayout().id,
+                libraryMode,
+                libraryLayout: selectedLibraryLayout().id,
+                coworkingMode,
+                coworkingLayout: selectedCoworkingLayout().id,
+                scifiMode,
+                scifiLayout: selectedScifiLayout().id,
+                workshopMode,
+                workshopLayout: selectedWorkshopLayout().id,
+                loungeMode,
+                loungeLayout: selectedLoungeLayout().id,
+                kitchenMode,
+                kitchenLayout: selectedKitchenLayout().id,
+                gymMode,
+                gymLayout: selectedGymLayout().id,
+                officeMode,
+                officeLayout: selectedOfficeLayout().id,
+                studyMode,
+                studyLayout: selectedStudyLayout().id,
                 sceneAssets: serializeSceneAssetStates(),
                 sceneAssetLabels: [...partLabels].filter(([editorId]) => editorId.startsWith('scene:')),
                 sceneAssetLocked: [...lockedParts].filter(editorId => editorId.startsWith('scene:')),
@@ -3003,7 +3854,10 @@ function applyProject(project, { confirmSoft = null, isRollback = false } = {}) 
             }
             for (const rig of rigs.actuator || []) buildActuatorRig(rig);
             buildWheelRigs();
-            if (loadedModel) glideBase.copy(loadedModel.position);
+            // Rebuilding rigs does not change the model's rest origin. Its
+            // current position also includes compensation for yaw about the
+            // wheel center; copying that into the base would accumulate drift
+            // each time a rotated project is restored.
 
             deletedBakedRigs.tilt = new Set(project.deletedBaked?.tilt || []);
             deletedBakedRigs.actuator = new Set(project.deletedBaked?.actuator || []);
@@ -3011,8 +3865,9 @@ function applyProject(project, { confirmSoft = null, isRollback = false } = {}) 
 
         // 7. motion, applied AFTER the neutral-pose scope — inside it, the restore
         //    in the finally block would immediately overwrite whatever we set.
-        applyProjectMotion(project.motion);
         applyProjectPresentation(project);
+        // Establish the selected floor before restoring its travel position.
+        applyProjectMotion(project.motion);
 
         rebuildTiltUI();
         rebuildRigUI();
@@ -3065,6 +3920,8 @@ function clearProjectState() {
 
 function applyProjectMotion(motion) {
     if (!motion) return;
+    glideFootprintCache = null;
+    if (Number.isFinite(motion.yaw)) { deskYaw = motion.yaw % (Math.PI * 2); applyDeskTransform(); }
     if (Number.isFinite(motion.heightInches)) {
         manualLiftOverride = true;
         currentLift = targetLift = heightToLift(THREE.MathUtils.clamp(motion.heightInches, HEIGHT_MIN, HEIGHT_MAX));
@@ -3076,7 +3933,7 @@ function applyProjectMotion(motion) {
         if (config) { config.currentDeg = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg); applyTiltConfig(config); }
     }
     if (motion.glide && Number.isFinite(motion.glide.x) && Number.isFinite(motion.glide.z)) {
-        glideTarget.set(THREE.MathUtils.clamp(motion.glide.x, -1, 1), 0, THREE.MathUtils.clamp(motion.glide.z, -1, 1));
+        clampGlidePosition(glideTarget.set(motion.glide.x, 0, motion.glide.z));
         applyGlideOffset(glideTarget);
     }
 }
@@ -3158,6 +4015,7 @@ function applyProjectPresentation(project) {
     if (presentation.trimColor) setTrimColor(presentation.trimColor);
     if (presentation.ledColor) setLedColor(presentation.ledColor);
     if (presentation.ledGlow !== undefined) setLedGlow(presentation.ledGlow);
+    setLedEffect(presentation.ledEffect || {}, false);
     for (const [key, value] of Object.entries(presentation.ledSurfaces || {}))
         setLedSurface(key, value);
     if (typeof presentation.ledsEnabled === 'boolean') setLedsEnabled(presentation.ledsEnabled);
@@ -3195,7 +4053,37 @@ function applyProjectPresentation(project) {
     for (const [editorId, label] of presentation.sceneAssetLabels || []) partLabels.set(editorId, label);
     for (const editorId of presentation.sceneAssetLocked || []) lockedParts.add(editorId);
     persistSceneAssetStates();
-    setRoomScene(presentation.roomScene || 'product', false);
+    if (HOME_MODES[presentation.homeMode]) homeMode = presentation.homeMode;
+    homeLayoutId = HOME_LAYOUTS[presentation.homeLayout] ? presentation.homeLayout : homeLayoutForSize(currentConfig.size).id;
+    if (GAMING_MODES[presentation.gamingMode]) gamingMode = presentation.gamingMode;
+    if (GAMING_LAYOUTS[presentation.gamingLayout]) gamingLayoutId = presentation.gamingLayout;
+    if (MUSIC_MODES[presentation.musicMode]) musicMode = presentation.musicMode;
+    if (MUSIC_LAYOUTS[presentation.musicLayout]) musicLayoutId = presentation.musicLayout;
+    if (ARTIST_MODES[presentation.artistMode]) artistMode = presentation.artistMode;
+    if (ARTIST_LAYOUTS[presentation.artistLayout]) artistLayoutId = presentation.artistLayout;
+    if (BEDROOM_MODES[presentation.bedroomMode]) bedroomMode = presentation.bedroomMode;
+    if (BEDROOM_LAYOUTS[presentation.bedroomLayout]) bedroomLayoutId = presentation.bedroomLayout;
+    if (GALLERY_MODES[presentation.galleryMode]) galleryMode = presentation.galleryMode;
+    if (GALLERY_LAYOUTS[presentation.galleryLayout]) galleryLayoutId = presentation.galleryLayout;
+    if (LIBRARY_MODES[presentation.libraryMode]) libraryMode = presentation.libraryMode;
+    if (LIBRARY_LAYOUTS[presentation.libraryLayout]) libraryLayoutId = presentation.libraryLayout;
+    if (COWORKING_MODES[presentation.coworkingMode]) coworkingMode = presentation.coworkingMode;
+    if (COWORKING_LAYOUTS[presentation.coworkingLayout]) coworkingLayoutId = presentation.coworkingLayout;
+    if (SCIFI_MODES[presentation.scifiMode]) scifiMode = presentation.scifiMode;
+    if (SCIFI_LAYOUTS[presentation.scifiLayout]) scifiLayoutId = presentation.scifiLayout;
+    if (WORKSHOP_MODES[presentation.workshopMode]) workshopMode = presentation.workshopMode;
+    if (WORKSHOP_LAYOUTS[presentation.workshopLayout]) workshopLayoutId = presentation.workshopLayout;
+    if (LOUNGE_MODES[presentation.loungeMode]) loungeMode = presentation.loungeMode;
+    if (LOUNGE_LAYOUTS[presentation.loungeLayout]) loungeLayoutId = presentation.loungeLayout;
+    if (KITCHEN_MODES[presentation.kitchenMode]) kitchenMode = presentation.kitchenMode;
+    if (KITCHEN_LAYOUTS[presentation.kitchenLayout]) kitchenLayoutId = presentation.kitchenLayout;
+    if (GYM_MODES[presentation.gymMode]) gymMode = presentation.gymMode;
+    if (GYM_LAYOUTS[presentation.gymLayout]) gymLayoutId = presentation.gymLayout;
+    if (OFFICE_MODES[presentation.officeMode]) officeMode = presentation.officeMode;
+    if (OFFICE_LAYOUTS[presentation.officeLayout]) officeLayoutId = presentation.officeLayout;
+    if (STUDY_MODES[presentation.studyMode]) studyMode = presentation.studyMode;
+    if (STUDY_LAYOUTS[presentation.studyLayout]) studyLayoutId = presentation.studyLayout;
+    setRoomScene(presentation.roomScene || 'product', false, { preserveDesk: true });
     const environment = document.getElementById('studio-environment');
     if (environment && presentation.environment) {
         environment.value = presentation.environment;
@@ -3864,14 +4752,19 @@ function renderSceneAssetLibrary() {
     if (!grid) return;
     const query = (document.getElementById('scene-library-search')?.value || '').trim().toLowerCase();
     const category = document.getElementById('scene-library-category')?.value || 'all';
+    const collection = document.getElementById('scene-library-collection')?.value || 'all';
     const entries = sceneAssetLibraryEntries.filter(entry =>
         (category === 'all' || entry.category === category) &&
-        (!query || entry.name.toLowerCase().includes(query) || entry.id.includes(query)));
+        (collection === 'all' || (entry.collection || 'Original library') === collection) &&
+        (!query || `${entry.name} ${entry.id} ${entry.collection || ''}`.toLowerCase().includes(query)));
+    const count = document.getElementById('scene-library-count');
+    if (count) count.textContent = `${entries.length} models`;
     grid.replaceChildren();
     entries.forEach(entry => {
         const card = document.createElement('button');
         card.className = 'scene-library-card';
         card.type = 'button';
+        card.title = `${entry.name} · ${entry.collection || 'Original library'}`;
         const image = document.createElement('img');
         image.src = `./assets/props/thumbs/${entry.id}.png`;
         image.alt = '';
@@ -3879,7 +4772,7 @@ function renderSceneAssetLibrary() {
         const name = document.createElement('span');
         name.textContent = entry.name;
         const meta = document.createElement('small');
-        meta.textContent = entry.category;
+        meta.textContent = `${entry.category} · ${entry.collection || 'Original library'}`;
         card.append(image, name, meta);
         card.onclick = () => addSceneAsset(entry.id);
         grid.append(card);
@@ -3898,7 +4791,8 @@ async function buildSceneAssetTools(anchorElement) {
     panel.id = 'scene-asset-tools';
     panel.className = 'precision-tools scene-asset-tools';
     panel.innerHTML = `<div class="scene-library-heading"><div><div class="eyebrow">SCENE ASSETS</div><strong>Prop library</strong></div><span id="scene-library-status">Loading library…</span></div>
-        <div class="scene-library-filters"><input id="scene-library-search" type="search" placeholder="Search 3D assets…" aria-label="Search scene assets"><select id="scene-library-category" aria-label="Scene asset category"><option value="all">All categories</option></select></div>
+        <div class="scene-library-filters"><input id="scene-library-search" type="search" placeholder="Search 3D assets…" aria-label="Search scene assets"><select id="scene-library-collection" aria-label="Model collection"><option value="all">All collections</option></select><select id="scene-library-category" aria-label="Scene asset category"><option value="all">All categories</option></select></div>
+        <small id="scene-library-count" aria-live="polite"></small>
         <div id="scene-library-grid" class="scene-library-grid" aria-label="Available scene assets"></div>
         <div class="scene-current-heading"><strong>In this scene</strong><button id="delete-scene-assets" type="button">Delete selected</button></div>
         <div id="scene-assets-current" class="scene-assets-current"></div>
@@ -3906,11 +4800,19 @@ async function buildSceneAssetTools(anchorElement) {
     anchorElement.after(panel);
     panel.querySelector('#scene-library-search').oninput = renderSceneAssetLibrary;
     panel.querySelector('#scene-library-category').onchange = renderSceneAssetLibrary;
+    panel.querySelector('#scene-library-collection').onchange = renderSceneAssetLibrary;
     panel.querySelector('#delete-scene-assets').onclick = deleteSelectedSceneAssets;
     try {
         const index = await PROP_LIBRARY.loadIndex();
         sceneAssetLibraryEntries = [...index.props].sort((a, b) => a.name.localeCompare(b.name));
         const categories = [...new Set(sceneAssetLibraryEntries.map(entry => entry.category))].sort();
+        const collectionSelect = panel.querySelector('#scene-library-collection');
+        [...new Set(sceneAssetLibraryEntries.map(entry => entry.collection || 'Original library'))].sort().forEach(collection => {
+            const option = document.createElement('option');
+            option.value = collection;
+            option.textContent = collection;
+            collectionSelect.append(option);
+        });
         const select = panel.querySelector('#scene-library-category');
         categories.forEach(category => {
             const option = document.createElement('option');
@@ -6136,8 +7038,44 @@ const glideInput = new THREE.Vector2();
 const glideDemoOrigin = new THREE.Vector3();
 const glideKeys = new Set();
 let glidePointer = null;
-let glideSpeed = 0.51;
+let glideSpeed = 0.306;
 let glideUIPrev = '';
+let glideFootprintCache = null;
+function glideBounds() {
+    const floor = liveAR?.active ? null : workspaceRoom?.floorBounds;
+    if (!floor || !loadedModel) return { minX: -1, maxX: 1, minZ: -1, maxZ: 1 };
+    // Translation cancels out of the footprint. Re-measure only when geometry
+    // or posture changes; do not walk every mesh on each driving frame.
+    const key = [loadedModel.uuid, editRevision, currentConfig.size, deskYaw, screenProgress, currentLift,
+        ...tiltConfigs.map(c => c.currentDeg)].join(':');
+    if (glideFootprintCache?.key !== key) {
+        loadedModel.updateMatrixWorld(true);
+        const box = new THREE.Box3();
+        loadedModel.traverseVisible(obj => {
+            if (!obj.isMesh || obj.material?.isShaderMaterial) return;
+            if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
+            box.union(obj.geometry.boundingBox.clone().applyMatrix4(obj.matrixWorld));
+        });
+        box.min.sub(glideOffset); box.max.sub(glideOffset);
+        glideFootprintCache = { key, box };
+    }
+    const box = glideFootprintCache.box;
+    const margin = workspaceRoom.root.scale.x * 25; // 25 mm clearance
+    const bounds = {
+        minX: floor.min.x + margin - box.min.x, maxX: floor.max.x - margin - box.max.x,
+        minZ: floor.min.z + margin - box.min.z, maxZ: floor.max.z - margin - box.max.z
+    };
+    // If an edited model is wider than a room, center it on that axis.
+    if (bounds.minX > bounds.maxX) bounds.minX = bounds.maxX = (bounds.minX + bounds.maxX) / 2;
+    if (bounds.minZ > bounds.maxZ) bounds.minZ = bounds.maxZ = (bounds.minZ + bounds.maxZ) / 2;
+    return bounds;
+}
+function clampGlidePosition(position) {
+    const b = glideBounds();
+    position.x = THREE.MathUtils.clamp(position.x, b.minX, b.maxX);
+    position.z = THREE.MathUtils.clamp(position.z, b.minZ, b.maxZ);
+    return position;
+}
 function releaseGlideInput() {
     glideKeys.clear(); glideInput.set(0, 0); glidePointer = null;
     const knob = document.getElementById('glide-knob'); if (knob) knob.style.transform = 'translate(-50%, -50%)';
@@ -6147,12 +7085,13 @@ function manualGlideReady() {
     if (transformControl?.object || isDraggingTransform) {
         notifyUser('Set Transform Tool to Off before moving the entire desk.'); return false;
     }
+    if (roomGroove?.run) haltAllMotion();
     glideActive = false; controls.autoRotate = false; return true;
 }
 function setGlidePosition(x, z) {
     if (!Number.isFinite(x) || !Number.isFinite(z) || !manualGlideReady()) return false;
     releaseGlideInput();
-    glideTarget.set(THREE.MathUtils.clamp(x, -1, 1), 0, THREE.MathUtils.clamp(z, -1, 1));
+    clampGlidePosition(glideTarget.set(x, 0, z));
     syncGlideUI(); return true;
 }
 function setupGlideControls() {
@@ -6230,7 +7169,7 @@ function setupGlideControls() {
     pad.onblur = releaseGlideInput;
     window.addEventListener('blur', () => { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); });
     document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); } });
-    document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.51;
+    document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.306;
     document.getElementById('glide-home').onclick = () => setGlidePosition(0, 0);
     document.querySelectorAll('[data-turn-command]').forEach(button => {
         const direction = Number(button.dataset.turnCommand);
@@ -6238,7 +7177,7 @@ function setupGlideControls() {
         button.onpointerdown = e => {
             if (!manualGlideReady()) return;
             e.preventDefault();
-            button.setPointerCapture(e.pointerId);
+            try { button.setPointerCapture(e.pointerId); } catch {}
             setYawCommand(direction);
         };
         button.onpointerup = stop;
@@ -6466,6 +7405,8 @@ function syncTiltUI() {
 // it sends the desk back to its home position, which is the opposite of what a
 // stop button must do.
 function haltAllMotion() {
+    ledMotion.cancel(loadedModel ? ledPose() : null);ledAutoLift = ledAutoTilt = false;ledSounds.stop();
+    roomGroove?.cancel();
     glideActive = false;
     releaseGlideInput();
     glideTarget.copy(glideOffset);
@@ -6484,6 +7425,7 @@ function haltAllMotion() {
     positionArcThumb();
     const status = document.getElementById('glide-status');
     if (status) status.textContent = 'Stopped';
+    updateLedEffectFrame();
 }
 
 // ── The motion remote ────────────────────────────────────────────────────────
@@ -6551,16 +7493,22 @@ function loadTiltPresets() {
 function loadErgoForms() {
     const fallback = [
         { name: 'Sitting', lift: 28, tilt: 0 },
-        { name: 'Standing', lift: 48, tilt: 0 },
+        { name: 'Standing', lift: 43.5, tilt: -5 },
         { name: 'Easel', lift: 52, tilt: 65 }
     ];
     const stored = readStore(ERGO_FORMS_KEY, 2, null);
     if (!Array.isArray(stored?.forms) || stored.forms.length !== 3) return fallback;
-    return stored.forms.map((form, i) => ({
-        name: typeof form?.name === 'string' && form.name.trim() ? form.name.slice(0, 24) : fallback[i].name,
-        lift: numberOrNull(form?.lift, HEIGHT_MIN, HEIGHT_MAX),
-        tilt: numberOrNull(form?.tilt, TILT_MIN, TILT_MAX)
-    }));
+    return stored.forms.map((form, i) => {
+        // Upgrade untouched defaults; retain users' renamed or custom poses.
+        const previousDefault = i === 0 && form?.name === 'Sitting' && form?.lift === 28 && [0, -4].includes(form?.tilt)
+            || i === 1 && form?.name === 'Standing' && form?.lift === 48 && form?.tilt === 0;
+        if (previousDefault) return { ...fallback[i] };
+        return {
+            name: typeof form?.name === 'string' && form.name.trim() ? form.name.slice(0, 24) : fallback[i].name,
+            lift: numberOrNull(form?.lift, HEIGHT_MIN, HEIGHT_MAX),
+            tilt: numberOrNull(form?.tilt, TILT_MIN, TILT_MAX)
+        };
+    });
 }
 
 let liftPresets = [null, null, null];
@@ -6762,7 +7710,7 @@ function speedSelect(id, label, value) {
 
 function chipRow(kind) {
     return `<div class="remote-chips" data-preset-bank="${kind}">` +
-        [1, 2, 3].map(n => `<button class="remote-chip" data-slot="${n - 1}" type="button"><span class="preset-value">${n}</span><span class="caret">&#94;</span></button>`).join('') +
+        [1, 2, 3].map(n => `<button class="remote-chip" data-slot="${n - 1}" type="button"><span class="preset-number">${n}</span><span class="preset-value" aria-hidden="true"></span><span class="caret" aria-hidden="true">&#94;</span></button>`).join('') +
         `</div>`;
 }
 
@@ -6827,8 +7775,8 @@ function buildMotionRemote() {
                  aria-describedby="glide-help">${compassSvg()}<span id="glide-knob" class="remote-sphere"></span></div>
             <div class="remote-speed">
               <select id="glide-speed" aria-label="Glide speed">
-                <option value="0.17">Crawl</option><option value="0.34">Ninja</option>
-                <option value="0.51" selected>Slow</option><option value="0.68">Medium</option>
+                <option value="0.034">Crawl</option><option value="0.136">Ninja</option>
+                <option value="0.306" selected>Slow</option><option value="0.68">Medium</option>
                 <option value="0.85">Fast</option>
               </select>
             </div>
@@ -6888,7 +7836,7 @@ function buildMotionRemote() {
                 aria-pressed="false" title="Slide and turn touchscreen">Screen</button>
         <span class="remote-info" role="img" aria-label="About the wellness bar"></span>
       </div>
-      <p id="glide-help" class="remote-hint">Drag the inner half to glide; twist the outer half or hold Left/Right to turn. Tap a preset to recall it, press and hold to save.</p>
+      <p id="glide-help" class="remote-hint">Glide: down = front, up = back, left/right stay fixed. Twist the outer half or hold Left/Right to turn. Presets: tap to recall, hold to save, swipe up to see the value.</p>
     </div>`;
     dock.append(body);
     // Eight grips, inside the border box: the shell clips its own overflow to
@@ -6929,11 +7877,11 @@ function renderPresetChips() {
         document.querySelectorAll(`[data-preset-bank="${kind}"] .remote-chip`).forEach(chip => {
             const value = bank[Number(chip.dataset.slot)];
             chip.dataset.saved = String(value !== null);
-            chip.querySelector('.preset-value').textContent = value === null ? String(Number(chip.dataset.slot) + 1)
-                : String(Number(value.toFixed(1)));
+            chip.querySelector('.preset-value').textContent = value === null ? 'Empty'
+                : String(Number(value.toFixed(1))) + (kind === 'lift' ? '″' : '°');
             chip.title = value === null
                 ? 'Empty. Press and hold to save the current ' + (kind === 'lift' ? 'height' : 'tilt') + '.'
-                : (kind === 'lift' ? value.toFixed(1) + '"' : value.toFixed(1) + '°') + ' — tap to recall, hold to overwrite.';
+                : (kind === 'lift' ? value.toFixed(1) + '"' : value.toFixed(1) + '°') + ' — tap to recall, hold to overwrite, swipe up or press Arrow Up to reveal.';
             chip.setAttribute('aria-label', `${kind === 'lift' ? 'Height' : 'Tilt'} preset ${Number(chip.dataset.slot) + 1}: ${value === null ? 'empty' : chip.title}`);
         });
     }
@@ -6941,34 +7889,65 @@ function renderPresetChips() {
 
 // Tap recalls, press-and-hold saves - the app's gesture, and the reason the two
 // banks are separate: lift and tilt are stored independently there.
-function bindHold(el, onTap, onHold) {
-    let timer = null, held = false;
-    const start = () => { held = false; timer = setTimeout(() => { held = true; onHold(); }, 550); };
+function bindHold(el, onTap, onHold, onReveal = null) {
+    let timer = null, held = false, moved = false, revealed = false;
+    let pointer = null, startX = 0, startY = 0;
     const cancel = () => { clearTimeout(timer); timer = null; };
-    el.addEventListener('pointerdown', start);
-    el.addEventListener('pointerup', () => { cancel(); if (!held) onTap(); });
-    el.addEventListener('pointerleave', cancel);
-    el.addEventListener('pointercancel', cancel);
+    el.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || pointer !== null) return;
+        pointer = e.pointerId; startX = e.clientX; startY = e.clientY;
+        held = moved = revealed = false;
+        // Synthetic/accessibility pointer events may have no active capture.
+        try { el.setPointerCapture(e.pointerId); } catch {}
+        timer = setTimeout(() => { held = true; onHold(); }, 550);
+    });
+    el.addEventListener('pointermove', e => {
+        if (e.pointerId !== pointer) return;
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        if (Math.hypot(dx, dy) > 8) { moved = true; cancel(); }
+        if (onReveal && !held && !revealed && dy <= -12 && Math.abs(dy) > Math.abs(dx)) {
+            revealed = true; onReveal();
+        }
+    });
+    el.addEventListener('pointerup', e => {
+        if (e.pointerId !== pointer) return;
+        cancel(); pointer = null;
+        if (!held && !moved) onTap();
+    });
+    const abandon = () => { cancel(); pointer = null; };
+    el.addEventListener('pointercancel', abandon);
+    el.addEventListener('lostpointercapture', abandon);
     el.addEventListener('keydown', e => {
+        if (e.key === 'ArrowUp' && onReveal) { e.preventDefault(); onReveal(); return; }
         if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault();
-        if (e.shiftKey) onHold(); else onTap();   // Shift+Enter is the keyboard's "hold"
+        if (!e.repeat) { if (e.shiftKey) onHold(); else onTap(); }
     });
 }
 
+const presetRevealTimers = new WeakMap();
+function revealPresetChip(chip) {
+    clearTimeout(presetRevealTimers.get(chip));
+    chip.dataset.revealed = 'true';
+    presetRevealTimers.set(chip, setTimeout(() => { chip.dataset.revealed = 'false'; }, 2500));
+}
+
 function goToHeight(inches) {
+    if (roomGroove?.run && !grooveSettingPose) haltAllMotion();
     if (!loadedModel) return;
     manualLiftOverride = false;
     const minimum = minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size);
     targetLift = heightToLift(THREE.MathUtils.clamp(inches, minimum, HEIGHT_MAX));
 }
 function goToTilt(deg) {
+    if (roomGroove?.run && !grooveSettingPose) haltAllMotion();
     const config = primaryTiltConfig();
     if (!config) return;
     tiltTarget = THREE.MathUtils.clamp(deg, config.minDeg,
         Math.min(config.maxDeg, maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size)));
 }
 function goToPose(height, deg) {
+    if (roomGroove?.run && !grooveSettingPose) haltAllMotion();
     const config = primaryTiltConfig();
     if (!loadedModel || !config) return;
     const tilt = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg);
@@ -7436,7 +8415,8 @@ function wireRemote(dock, header) {
                     notifyUser('Tilt ' + tiltPresets[slot].toFixed(1) + '° saved to preset ' + (slot + 1) + '.');
                 }
                 renderPresetChips();
-            });
+                revealPresetChip(chip);
+            }, () => revealPresetChip(chip));
     });
 
     // ---- ergo forms ----
@@ -7510,19 +8490,27 @@ function updateGlide(dt) {
     if (!loadedModel) return;
     dt = Math.min(Math.max(dt, 0), 0.05);
     if (transformControl?.object || isDraggingTransform) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); return; }
+    // Rotation, tilt, desktop size, and room changes can alter the clearance.
+    if (!liveAR?.active && workspaceRoom?.root) {
+        clampGlidePosition(glideTarget);
+        _glidePos.copy(glideOffset); clampGlidePosition(_glidePos);
+        if (_glidePos.distanceToSquared(glideOffset) > 1e-12) applyGlideOffset(_glidePos);
+    }
     if (glideActive) {
         glideT = Math.min(1, glideT + dt / GLIDE_DURATION);
         glidePath(glideT, _glidePos).add(glideDemoOrigin);
-        _glidePos.x = THREE.MathUtils.clamp(_glidePos.x, -1, 1); _glidePos.z = THREE.MathUtils.clamp(_glidePos.z, -1, 1);
+        clampGlidePosition(_glidePos);
         applyGlideOffset(_glidePos); glideTarget.copy(glideOffset);
         if (glideT >= 1) glideActive = false;
     } else {
         if (glideInput.lengthSq() > 0) {
-            // Camera-relative floor motion keeps the pad intuitive after orbiting.
-            const forward = camera.getWorldDirection(new THREE.Vector3()); forward.y = 0; forward.normalize();
-            const right = new THREE.Vector3(-forward.z, 0, forward.x);
-            glideTarget.copy(glideOffset).addScaledVector(right, glideInput.x * glideSpeed * dt).addScaledVector(forward, -glideInput.y * glideSpeed * dt);
-            glideTarget.x = THREE.MathUtils.clamp(glideTarget.x, -1, 1); glideTarget.z = THREE.MathUtils.clamp(glideTarget.z, -1, 1);
+            // Fixed floor directions in the original placement frame: +X is
+            // front, -Z is right. Orbiting or turning the desk never remaps them.
+            // In AR the placement parent carries this frame into the real room.
+            glideTarget.copy(glideOffset);
+            glideTarget.x += glideInput.y * glideSpeed * dt;
+            glideTarget.z -= glideInput.x * glideSpeed * dt;
+            clampGlidePosition(glideTarget);
             applyGlideOffset(glideTarget);
         } else if (glideOffset.distanceToSquared(glideTarget) > 0.000001) {
             _glidePos.copy(glideTarget).sub(glideOffset);
@@ -7533,17 +8521,90 @@ function updateGlide(dt) {
     syncGlideUI();
 }
 
-// --- Phase 6: AR "See in your space" ---
-// Exports the CURRENT configured desk (finishes, height, tilt pose) to a GLB
-// at true physical scale and hands it to <model-viewer> for the AR handoff:
-//   iOS / iPadOS -> AR Quick Look (USDZ generated on the fly)
-//   Android      -> WebXR AR session in the browser
-// The meters-per-world-unit factor is derived from the lift math: the lift
-// travel spans exactly HEIGHT_MAX - HEIGHT_MIN real inches.
-// NOTE: WebXR needs a secure context (https), so Android AR requires the
-// production site — it won't trigger from a plain-http LAN dev URL.
+// --- AR "See in your space" ---
+// Android WebXR renders the live desk with DOM overlay controls; no GLB export
+// or second renderer is needed. iOS Quick Look offers an interactive USDZ test
+// asset and the configured GLB export as a static fallback.
+// Both paths use meters calibrated from the selected desktop's physical width.
+// WebXR requires HTTPS (or localhost) and iframe xr-spatial-tracking permission.
+let liveAR = null;
 let arBusy = false;
 let lastARBlobUrl = null;
+let lastAppleARBlobUrl = null;
+
+async function prepareAppleTapAsset() {
+    const { appleTapStates, exportAppleTapUSDZ } = await import('./apple-ar-interactions.mjs?v=apple-taps-handoff-fix-20260930');
+    if (workspaceAccessories?.items.size) {
+        throw new Error('Tap controls are not available with added desk accessories yet. Use the current-pose AR option.');
+    }
+    const height = liftToHeight(currentLift);
+    const tilt = primaryTiltConfig()?.currentDeg ?? 0;
+    const states = appleTapStates(height, tilt, currentConfig.size);
+    const sourceMeshes = [];
+    loadedModel.traverseVisible(object => {
+        if (object.isMesh && !object.material?.isShaderMaterial) sourceMeshes.push(object);
+    });
+    const root = new THREE.Group();
+    const samples = new Map();
+    const meters = new THREE.Matrix4().makeScale(...Array(3).fill(arSizeReference().metersPerUnit));
+    const materialCopies = new Map();
+    const exported = sourceMeshes.map(source => {
+        if (Array.isArray(source.material)) throw new Error('Apple tap export requires one material per desk surface.');
+        let material = materialCopies.get(source.material);
+        if (!material) {
+            material = source.material.isMeshStandardMaterial ? source.material.clone() : new THREE.MeshStandardMaterial({
+                color: source.material.color, map: source.material.map, roughness: .65,
+                transparent: source.material.transparent, opacity: source.material.opacity, side: source.material.side
+            });
+            // USDZExporter writes emissive color but not emissiveIntensity.
+            material.emissive.multiplyScalar(material.emissiveIntensity);
+            material.emissiveIntensity = 1;
+            materialCopies.set(source.material, material);
+        }
+        const mesh = new THREE.Mesh(source.geometry, material);
+        mesh.name = source.name;
+        mesh.matrixAutoUpdate = false;
+        root.add(mesh);
+        samples.set(mesh.id, []);
+        return mesh;
+    });
+    const savedLift = currentLift;
+    const savedDegrees = tiltConfigs.map(config => config.currentDeg);
+    const savedPaused = motionPaused;
+    try {
+        // Synchronous sampling: no frame, UI update, saved preset or localStorage
+        // write can see these temporary poses. Restore even if a rig throws.
+        motionPaused = true;
+        for (let i = 0; i < states.length; i++) {
+            currentLift = heightToLift(states[i].height);
+            if (primaryTiltConfig()) primaryTiltConfig().currentDeg = states[i].tilt;
+            updateMovingObjectsPosition();
+            tiltConfigs.forEach(applyTiltConfig);
+            loadedModel.updateWorldMatrix(true, true);
+            sourceMeshes.forEach((source, index) => {
+                const matrix = meters.clone().multiply(source.matrixWorld);
+                samples.get(exported[index].id).push(matrix);
+                if (i === 0) exported[index].matrix.copy(matrix);
+            });
+        }
+    } finally {
+        currentLift = savedLift;
+        tiltConfigs.forEach((config, i) => { config.currentDeg = savedDegrees[i]; });
+        updateMovingObjectsPosition();
+        tiltConfigs.forEach(applyTiltConfig);
+        loadedModel.updateWorldMatrix(true, true);
+        motionPaused = savedPaused;
+    }
+    root.updateMatrixWorld(true);
+    try {
+        const result = await exportAppleTapUSDZ(root, { states, samples });
+        if (lastAppleARBlobUrl) URL.revokeObjectURL(lastAppleARBlobUrl);
+        lastAppleARBlobUrl = URL.createObjectURL(new Blob([result.bytes], { type: 'model/vnd.usdz+zip' }));
+        return { url: lastAppleARBlobUrl, bytes: result.bytes.length, ...result.stats };
+    } finally {
+        materialCopies.forEach(material => material.dispose());
+    }
+}
 
 // Ask the browser what it can do rather than guessing from the user-agent.
 // Chrome defaults to desktop-site mode on large foldables (and on tablets),
@@ -7564,21 +8625,37 @@ async function isMobileARDevice() {
     return !!(a.relList && a.relList.supports && a.relList.supports('ar'));
 }
 
-async function prepareARModel() {
+async function prepareARModel({ appleTaps = true } = {}) {
     const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
     if (!customElements.get('model-viewer')) {
         await import('https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js');
     }
+    haltAllMotion();
     stopGlide(); // desk must be at its home position for a clean export
+
+    let appleAsset = null, appleError = null;
+    if (appleTaps) {
+        try { appleAsset = await prepareAppleTapAsset(); }
+        catch (error) {
+            console.warn('[ErgoFlex] Apple tap preview unavailable:', error);
+            appleError = error.message;
+        }
+    }
 
     // Clone shares geometries/materials — cheap even at 830 meshes
     const clone = loadedModel.clone(true);
+    // The browser's additive LED fields use custom shaders that GLB/Quick Look
+    // cannot represent. Export the actual textured surfaces and LED strips.
+    const browserLightFields = [];
+    clone.traverse(object => {
+        if (object.isMesh && object.material?.isShaderMaterial) browserLightFields.push(object);
+    });
+    browserLightFields.forEach(object => object.removeFromParent());
     clone.position.x = glideBase.x;
     clone.position.z = glideBase.z;
 
-    const inchesPerWorld = (HEIGHT_MAX - HEIGHT_MIN) / ((LIFT_MAX - LIFT_MIN) * loadedModel.scale.x);
     const exportRoot = new THREE.Group();
-    exportRoot.scale.setScalar(0.0254 * inchesPerWorld); // glTF units are meters
+    exportRoot.scale.setScalar(arSizeReference().metersPerUnit); // glTF units are meters
     exportRoot.add(clone);
     for (const group of workspaceAccessories?.exportGroups() || []) {
         group.matrix.elements[12] -= glideOffset.x;
@@ -7597,46 +8674,175 @@ async function prepareARModel() {
         mv = document.createElement('model-viewer');
         mv.id = 'ar-model-viewer';
         mv.setAttribute('ar', '');
+        // In the tall LA Tech Week iframe this hidden element sits below the
+        // phone's visible viewport. Default lazy loading never starts there.
+        mv.setAttribute('loading', 'eager');
         mv.setAttribute('ar-modes', 'webxr quick-look');
         mv.setAttribute('ar-scale', 'fixed'); // true size in the room
+        mv.addEventListener('ar-status', event => {
+            if (event.detail.status === 'failed') {
+                showARHelpModal('AR could not start. Try opening the viewer directly on a compatible phone or tablet over HTTPS.');
+            }
+        });
         mv.style.cssText = 'position:fixed;bottom:0;left:0;width:2px;height:2px;opacity:0.01;pointer-events:none;';
         document.body.appendChild(mv);
     }
-    mv.src = lastARBlobUrl;
     await new Promise((resolve, reject) => {
-        const to = setTimeout(() => reject(new Error('model-viewer load timeout')), 30000);
-        mv.addEventListener('load', () => { clearTimeout(to); resolve(); }, { once: true });
-        mv.addEventListener('error', () => { clearTimeout(to); reject(new Error('model-viewer failed to parse GLB')); }, { once: true });
+        const cleanup = () => {
+            clearTimeout(to);
+            mv.removeEventListener('load', onLoad);
+            mv.removeEventListener('error', onError);
+        };
+        const onLoad = () => { cleanup(); resolve(); };
+        const onError = event => { cleanup(); reject(new Error(`AR model loading failed (${event.detail?.type || 'unknown error'}).`)); };
+        const to = setTimeout(() => { cleanup(); reject(new Error('AR model loading timed out. Open the viewer directly and try again.')); }, 120000);
+        mv.addEventListener('load', onLoad);
+        mv.addEventListener('error', onError);
+        mv.src = lastARBlobUrl;
     });
-    return { modelViewer: mv, bytes: blob.size };
+    // Supplying ios-src prevents model-viewer from re-converting the interactive
+    // asset and dropping its tap behavior graph. Android never enters this path.
+    if (appleAsset) mv.setAttribute('ios-src', appleAsset.url);
+    else mv.removeAttribute('ios-src');
+    return { modelViewer: mv, bytes: blob.size, appleAsset, appleError };
+}
+
+const arWidthOverrides = new Map();
+function arSizeReference() {
+    const nominalWidth = Number(currentConfig.size.split('x')[0]);
+    let widthInches = arWidthOverrides.get(currentConfig.size) ?? nominalWidth;
+    try {
+        const stored = Number(localStorage.getItem('ergoflex.arWidthV1.'+currentConfig.size));
+        if (!arWidthOverrides.has(currentConfig.size) && stored >= 24 && stored <= 96) widthInches = stored;
+    } catch {}
+    let widthUnits;
+    if (sizeVariantParts) {
+        loadedModel.updateWorldMatrix(true,true);
+        const inverse = loadedModel.matrixWorld.clone().invert();
+        const parts = currentConfig.size === '60x30'
+            ? [sizeVariantParts.largeTop,sizeVariantParts.largeTrim]
+            : [sizeVariantParts.smallTop,sizeVariantParts.smallTrim];
+        const bounds = new THREE.Box3();
+        for (const part of parts) {
+            part.geometry.computeBoundingBox();
+            bounds.union(part.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(part.matrixWorld)));
+        }
+        // Authored width is Z. Cancel model yaw, AR placement and parent scale
+        // before measuring, so changing the pose cannot change its real size.
+        widthUnits = bounds.getSize(new THREE.Vector3()).z * Math.abs(loadedModel.scale.z);
+    }
+    const fallback = .0254 * (HEIGHT_MAX-HEIGHT_MIN)/((LIFT_MAX-LIFT_MIN)*loadedModel.scale.x);
+    return {key:currentConfig.size,nominalWidth,widthInches,widthUnits,
+        metersPerUnit:widthUnits>0 ? widthInches*.0254/widthUnits : fallback};
+}
+
+function setARWidth(inches) {
+    const width = Number(inches);
+    if (!Number.isFinite(width) || width<24 || width>96) return false;
+    arWidthOverrides.set(currentConfig.size,width);
+    try {localStorage.setItem('ergoflex.arWidthV1.'+currentConfig.size,String(width));} catch {}
+    return true;
+}
+
+function getLiveAR() {
+    if (!liveAR) liveAR = new ARWorkspace({
+        get renderer() { return renderer; }, get camera() { return camera; },
+        get controls() { return controls; }, get model() { return loadedModel; },
+        get scene() { return scene; }, lights:() => Object.values(sceneLights),
+        accessories:() => [...(workspaceAccessories?.mounts.values() || [])].map(mount => mount.group),
+        metersPerUnit:() => arSizeReference().metersPerUnit,
+        sizeReference:arSizeReference, setWidth:setARWidth,
+        remote:() => document.getElementById('motion-dock'),
+        ledControls:() => [document.querySelector('#event-demo .demo-led-glow'),document.querySelector('#event-demo .demo-led-color-stack'),document.querySelector('#event-demo .demo-led-effects'),document.querySelector('#event-demo .demo-led-mapping'),document.querySelector('#event-demo .demo-led-playback')].filter(Boolean),
+        halt:haltAllMotion, resize:syncViewerSize
+    });
+    return liveAR;
 }
 
 async function launchAR() {
     if (arBusy || !loadedModel) return;
+    if (roomGroove?.prepared) { haltAllMotion(); roomGroove.reset(); }
+    if (navigator.xr && await navigator.xr.isSessionSupported('immersive-ar').catch(() => false)) {
+        const modal = showARHelpModal('Place the current desk at full size, then use the ErgoFlex app to Glide, turn, adjust height and tilt, or switch LEDs inside AR.');
+        const place = document.createElement('button');
+        place.type = 'button'; place.id = 'ar-place-button'; place.textContent = 'Start AR';
+        place.addEventListener('click', () => {
+            place.disabled = true;
+            const starting = getLiveAR().start(); // requestSession runs during this tap
+            modal.remove();
+            starting.catch(error => showARHelpModal(`AR could not start: ${error.name}: ${error.message}. Try opening the viewer directly.`));
+        });
+        modal.querySelector('#ar-help-close').before(place);
+        place.focus();
+        return;
+    }
     if (!await isMobileARDevice()) {
         showARHelpModal();
         return;
     }
-    const btn = document.getElementById('ar-btn');
+    const buttons = [...document.querySelectorAll('#ar-btn, [data-ar-launch]')];
     arBusy = true;
-    if (btn) btn.classList.add('animate-pulse');
+    buttons.forEach(button => { button.disabled = true; button.setAttribute('aria-busy', 'true'); });
+    const modal = showARHelpModal('Preparing your current desk configuration…');
     try {
-        const { modelViewer } = await prepareARModel();
-        await modelViewer.activateAR();
+        const { modelViewer, appleAsset, appleError } = await prepareARModel();
+        if (!modal.isConnected) return;
+        modal.querySelector('#ar-help-message').textContent = appleAsset
+            ? 'iPhone tap-controls preview: tap a leg to switch Sitting/Standing, or a wing to cycle −5°, 39° and 65°. The desk raises if needed for tilt clearance. This preview needs an iPhone test. You can also open the current pose only.'
+            : 'Your desk is ready. Place it in your room at full size.' + (appleError ? ' Tap-controls preview unavailable: ' + appleError : '');
+        const place = document.createElement('button');
+        place.type = 'button';
+        place.id = 'ar-place-button';
+        place.className = 'btn-primary w-full py-3';
+        place.textContent = appleAsset ? 'Try iPhone tap controls' : 'Place in my space';
+        // A fresh tap after export preserves the user activation required by
+        // Quick Look and WebXR; exporting first can take several seconds.
+        place.addEventListener('click', () => {
+            if (!modelViewer.canActivateAR) {
+                showARHelpModal('This browser could not enable AR. Open the viewer directly on a compatible phone or tablet over HTTPS.');
+                return;
+            }
+            place.disabled = true;
+            modelViewer.activateAR().then(() => modal.remove()).catch(err => {
+                console.error('[ErgoFlex] AR launch failed:', err);
+                showARHelpModal('AR could not start. Open this viewer over HTTPS on a compatible phone or tablet and try again.');
+            });
+        });
+        modal.querySelector('#ar-help-close').before(place);
+        if (appleAsset) {
+            const staticPlace = document.createElement('button');
+            staticPlace.type = 'button'; staticPlace.id = 'ar-static-button';
+            staticPlace.className = 'btn-primary w-full py-3';
+            staticPlace.textContent = 'Open current pose only';
+            staticPlace.addEventListener('click', () => {
+                modelViewer.removeAttribute('ios-src');
+                staticPlace.disabled = true;
+                modelViewer.activateAR().then(() => modal.remove()).catch(error => {
+                    staticPlace.disabled = false;
+                    showARHelpModal(`AR could not start. ${error.message || 'Open the viewer directly and try again.'}`);
+                });
+            });
+            modal.querySelector('#ar-help-close').before(staticPlace);
+        }
+        place.focus();
     } catch (err) {
         console.error('[ErgoFlex] AR launch failed:', err);
-        showARHelpModal('AR could not start on this device. Make sure you are on a recent iPhone, iPad, or ARCore-capable Android phone, over https.');
+        showARHelpModal(`The AR model could not be prepared. ${err.message || 'Please try again.'}`);
     } finally {
         arBusy = false;
-        if (btn) btn.classList.remove('animate-pulse');
+        buttons.forEach(button => { button.disabled = false; button.removeAttribute('aria-busy'); });
     }
 }
 
 function showARHelpModal(message) {
+    const returnFocus = document.activeElement;
     let modal = document.getElementById('ar-help-modal');
     if (modal) modal.remove();
     modal = document.createElement('div');
     modal.id = 'ar-help-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'ar-help-title');
     modal.className = 'fixed inset-0 bg-black bg-opacity-25 z-50 flex items-center justify-center p-4';
     modal.innerHTML = `
         <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-xl text-center">
@@ -7645,17 +8851,31 @@ function showARHelpModal(message) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                 </svg>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">See it in your space</h3>
-            <p class="text-gray-600 text-sm leading-relaxed mb-4">${message ||
-                'Open this page on your <b>phone or tablet</b> and tap the cube button to place the ErgoFlex desk in your room — at true size, in your exact configuration.'}</p>
-            <p class="text-xs text-gray-400 break-all mb-6">${window.location.href}</p>
+            <h3 id="ar-help-title" class="text-xl font-semibold text-gray-900 mb-2">See it in your space</h3>
+            <p id="ar-help-message" class="text-gray-600 text-sm leading-relaxed mb-4"></p>
+            <a id="ar-help-url" class="text-xs text-gray-400 break-all mb-6" target="_blank" rel="noopener">Open the viewer directly</a>
             <button class="btn-primary w-full py-3" id="ar-help-close">Got it</button>
         </div>
     `;
+    modal.querySelector('#ar-help-message').textContent = message ||
+        'Open this viewer over HTTPS on a compatible phone or tablet, then tap AR/XR to place your configured ErgoFlex desk in your room at full size.';
+    modal.querySelector('#ar-help-url').href = window.location.href;
+    const close = () => { modal.remove(); if (returnFocus?.isConnected) returnFocus.focus(); };
     modal.addEventListener('click', (e) => {
-        if (e.target === modal || e.target.id === 'ar-help-close') modal.remove();
+        if (e.target === modal || e.target.id === 'ar-help-close') close();
     });
     document.body.appendChild(modal);
+    modal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') close();
+        if (event.key === 'Tab') {
+            const controls = [...modal.querySelectorAll('a, button:not(:disabled)')];
+            const first = controls[0], last = controls.at(-1);
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+    });
+    modal.querySelector('#ar-help-close').focus();
+    return modal;
 }
 
 // --- Rig setup UI (draft state + buttons) ---
@@ -7956,6 +9176,7 @@ function rebuildRigUI() {
 // Re-fits the renderer to whatever size the viewer container currently is.
 // Called on window resize, on ResizeObserver ticks, and after layout switches.
 function syncViewerSize() {
+    if (renderer?.xr.isPresenting) return;
     if (!renderer || !camera || !canvas.parentElement) return;
     const container = canvas.parentElement;
     const w = container.clientWidth;
@@ -7977,14 +9198,23 @@ function syncViewerSize() {
 // Temp instrumentation: track if we've logged max height
 let _loggedMaxHeight = false;
 
-function animate() {
-    requestAnimationFrame(animate);
+function animate(time, frame) {
+    liveAR?.update(frame, time);
 
     // withNeutralPose sets motionPaused while it captures or applies geometry, so
     // a frame cannot advance the lift or the glide mid-capture. Rendering still
     // runs, so the viewer does not freeze.
     const dt = clock.getDelta();
-    if (!motionPaused) updateGlide(dt);
+    if (loadedModel && !motionPaused) {
+        if (liftJog) ledAutoLift = false;
+        else if (Math.abs(targetLift-currentLift) > .001) ledAutoLift = true;
+        if (tiltJog) ledAutoTilt = false;
+        else if (tiltTarget !== null) ledAutoTilt = true;
+    }
+    if (!motionPaused) {
+        if (roomGroove?.run) roomGroove.update(dt);
+        else updateGlide(dt);
+    }
     if (!motionPaused && screenAssembly && Math.abs(screenProgress - screenTarget) > 0.0001) {
         const step = Math.min(1, dt / 2.2);
         setScreenProgress(Math.abs(screenTarget - screenProgress) <= step
@@ -8083,15 +9313,32 @@ function animate() {
         boxHelpers.forEach(helper => helper.update());
     }
 
-    if (controls) {
+    if (controls && !liveAR?.active) {
         updateCameraTween(dt);
         controls.update();
         const orbitButton = document.getElementById('rotate-scene');
         if (orbitButton && orbitButton.getAttribute('aria-pressed') !== String(controls.autoRotate)) orbitButton.setAttribute('aria-pressed', String(controls.autoRotate));
     }
     workspaceAccessories?.update();
-    if (camera) workspaceRoom?.update(camera);
-    if (renderer && scene && camera) renderer.render(scene, camera);
+    if (loadedModel && !motionPaused) {
+        const completed = ledMotion.completionUntil;
+        ledMotion.observe(ledPose(), time, {enabled:ledMotionEnabled && ledDiagnostic.strip === null && !document.hidden,
+            liftReached:ledAutoLift && Math.abs(targetLift-currentLift)<=.001,
+            tiltReached:ledAutoTilt && tiltTarget === null});
+        if (!ledMotion.axes.lift) ledAutoLift = false;
+        if (!ledMotion.axes.tilt) ledAutoTilt = false;
+        ledSounds.update(ledMotion.owner?.sound || null, ledMotion.completionUntil > completed);
+    }
+    if (ledEffect.mode !== 'solid' || ledDiagnostic.strip !== null || ledPixels?.active || ledMotion.owner || ledMotion.completionUntil || ledGame.active || ledMusic.active)
+        updateLedEffectFrame(time / 1000);
+    if (time-ledPlaybackUIAt > 150) {
+        ledPlaybackUIAt = time;
+        if (ledGame.active) ledGame.syncMonitor(workspaceAccessories);
+        ledGame.syncUI(ledSounds.error || (ledMotion.owner ? `${ledMotion.owner.name} · movement cue` : ''));
+        ledMusic.syncUI();
+    }
+    if (camera && !liveAR?.active) workspaceRoom?.update(camera);
+    if (renderer && scene && camera) renderer.render(liveAR?.active ? liveAR.scene : scene, camera);
 }
 
 // Studio presentation, customer configuration, and accessible controls.
@@ -8149,20 +9396,30 @@ let isolatedVisibility = null;
 let dialogReturnFocus = null;
 let toastTimer;
 function applyRoomLighting() {
-    const profile = ROOM_ATMOSPHERES[selectedRoomScene];
+    const measured = measuredRoomProfile();
+    const profile = measured ? measured.modes[measured.mode] : ROOM_ATMOSPHERES[selectedRoomScene];
     const settings = roomLightSettings[selectedRoomScene] || {};
     const exposure = settings.exposure ?? profile.exposure;
     const daylight = settings.daylight ?? 1;
     const accent = settings.accent ?? 1;
+    const ledStudio = document.getElementById('studio-environment')?.value === 'led';
     if (renderer) renderer.toneMappingExposure = exposure;
-    if (scene) scene.environmentIntensity = profile.bounce;
+    if (scene) scene.environmentIntensity = profile.bounce * (ledStudio ? .35 : 1);
     if (sceneLights) {
-        sceneLights.key.color.set(profile.key); sceneLights.key.intensity = profile.power * daylight;
+        if (!measured) resetRoomLightRig(sceneLights);
+        sceneLights.key.color.set(profile.key); sceneLights.key.intensity = profile.power * daylight * (ledStudio ? .55 : 1);
         sceneLights.key.position.set(selectedRoomScene === 'home' || selectedRoomScene === 'lounge' ? -5 : -3, 7, 5);
         if (selectedRoomScene === 'product') sceneLights.key.position.set(4.5, 8, 5.5);
-        sceneLights.fill.color.set(profile.fill); sceneLights.fill.intensity = .45 * daylight;
-        sceneLights.rim.color.set(profile.accent); sceneLights.rim.intensity = .8 * accent;
-        sceneLights.hemi.color.set(profile.fill); sceneLights.hemi.groundColor.set('#746b61'); sceneLights.hemi.intensity = profile.ambient;
+        sceneLights.fill.color.set(profile.fill); sceneLights.fill.intensity = .45 * daylight * (ledStudio ? .4 : 1);
+        sceneLights.rim.color.set(profile.accent); sceneLights.rim.intensity = .8 * accent * (ledStudio ? .7 : 1);
+        sceneLights.hemi.color.set(profile.fill); sceneLights.hemi.groundColor.set('#746b61'); sceneLights.hemi.intensity = profile.ambient * (ledStudio ? .45 : 1);
+        if (measured && workspaceRoom?.root) {
+            configureRoomLightRig(workspaceRoom, sceneLights, measured.mode);
+            sceneLights.fill.intensity *= measured.mode === 'night' || measured.mode === 'party' ? (measured.id === 'home' ? .25 : .35) : 1;
+            workspaceRoom.roomAtmosphere?.(measured.mode, accent);
+            workspaceRoom.life?.apply(measured.mode);
+            workspaceRoom.life?.lightActivity();
+        }
     }
     for (const [id, value] of [['studio-exposure', exposure], ['studio-daylight', daylight], ['studio-accent', accent]]) {
         const input = document.getElementById(id); if (input) input.value = value;
@@ -8171,8 +9428,216 @@ function applyRoomLighting() {
     const label = document.getElementById('scene-light-name'); if (label) label.textContent = profile.label;
 }
 
-function setRoomScene(id, persist = true) {
+function syncGrooveUI(state) {
+    for (const panel of document.querySelectorAll('.groove-controls')) {
+        const start = panel.querySelector('[data-groove-start]');
+        start.disabled = !roomGroove?.prepared?.plan || !!roomGroove?.run;
+        start.textContent = roomGroove?.prepared?.plan?.ok === false ? 'Check route' : 'Start Groove';
+        panel.querySelector('[data-groove-stop]').disabled = !roomGroove?.run;
+        panel.querySelector('[data-groove-status]').textContent = state.message;
+    }
+}
+function grooveFootprint() {
+    if (!loadedModel || !workspaceRoom?.roomLayout) return null;
+    return withNeutralPose(() => {
+        const savedYaw = deskYaw;
+        deskYaw = 0; applyDeskTransform();
+        try {
+            loadedModel.updateWorldMatrix(true, true); workspaceRoom.root.updateWorldMatrix(true, false);
+            const inverse = workspaceRoom.root.matrixWorld.clone().invert(), box = new THREE.Box3();
+            loadedModel.traverseVisible(o => {
+                if (!o.isMesh || !o.geometry || o.material?.isShaderMaterial) return;
+                if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+                box.union(o.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(o.matrixWorld)));
+            });
+            const size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+            return { halfWidth: size.x / 2, halfDepth: size.z / 2, offsetX: center.x, offsetZ: center.z, margin: 45 };
+        } finally { deskYaw = savedYaw; applyDeskTransform(); }
+    });
+}
+function grooveController() {
+    if (roomGroove) return roomGroove;
+    roomGroove = new RoomGroove({
+        get room() { return workspaceRoom; }, get sceneId() { return selectedRoomScene; },
+        mode: phase => measuredRoomProfile().modes[phase],
+        pose: () => ({ x: -glideOffset.z / workspaceRoom.root.scale.x, z: glideOffset.x / workspaceRoom.root.scale.x, yaw: deskYaw }),
+        footprint: grooveFootprint, height: () => liftToHeight(currentLift), tilt: () => primaryTiltConfig()?.currentDeg || 0,
+        safeHeight: (h,t) => Math.max(h, minimumHeightForTilt(t, currentConfig.size)),
+        sync: syncGrooveUI, halt: haltAllMotion,
+        stopPose: () => { glideTarget.copy(glideOffset); targetLift = currentLift; tiltTarget = null; manualLiftOverride = false; },
+        canMove: () => {
+            if (!loadedModel || liveAR?.active || transformControl?.object || isSelectionMode) { notifyUser('Turn off the editing tools before starting Groove.'); return false; }
+            controls.autoRotate = false; return true;
+        },
+        manual: () => !!(glideInput.lengthSq() || yawCommand || liftJog || tiltJog || glideActive || transformControl?.object),
+        goPose: (h,t) => { grooveSettingPose = true; try { goToPose(h,t); } finally { grooveSettingPose = false; } },
+        move: p => {
+            const turn = p.yaw - deskYaw; deskYaw = p.yaw; spinWheelsForYaw(turn);
+            applyGlideOffset(new THREE.Vector3(p.z * workspaceRoom.root.scale.x, 0, -p.x * workspaceRoom.root.scale.x));
+            glideTarget.copy(glideOffset); loadedModel.updateMatrixWorld(true); workspaceAccessories?.update();
+        },
+        dress: (phase, mode) => { workspaceAccessories?.setDayDress(phase); if (mode.color) setLedColor(mode.color, false); setLedsEnabled(mode.leds); }
+    });
+    return roomGroove;
+}
+async function prepareGrooveMode(sceneId, phase) {
+    if (selectedRoomScene !== sceneId || !measuredRoomProfile(sceneId)?.modes[phase]) return;
+    haltAllMotion(); setMeasuredRoomMode(sceneId, phase, false);
+    await grooveController().prepare(sceneId, phase);
+}
+function positionHomeDesk(useModePose = false) {
+    const profile = measuredRoomProfile();
+    if (!loadedModel || !workspaceRoom?.roomLayout || !profile) return;
+    const layout = workspaceRoom.roomLayout, mode = profile.modes[profile.mode], scale = workspaceRoom.root.scale.x;
+    haltAllMotion();
+    // A room/desktop-size change starts in its authored desk bay. Time-button
+    // destinations belong to Groove; an old saved social phase must not spawn
+    // a wider, rotated desk inside the bed or a neighbouring workstation.
+    deskYaw = useModePose ? THREE.MathUtils.degToRad(mode.yaw) : 0;
+    const f = grooveFootprint(), c = Math.cos(deskYaw), s = Math.sin(deskYaw);
+    const ex = Math.abs(c) * f.halfWidth + Math.abs(s) * f.halfDepth + 70;
+    const ez = Math.abs(s) * f.halfWidth + Math.abs(c) * f.halfDepth + 70;
+    const ox = c * f.offsetX + s * f.offsetZ, oz = -s * f.offsetX + c * f.offsetZ;
+    const fit = (value, min, max) => min > max ? (min + max) / 2 : THREE.MathUtils.clamp(value, min, max);
+    const x = fit(layout.desk[0] + (useModePose ? mode.offset[0] : 0), -layout.width / 2 + ex - ox, layout.width / 2 - ex - ox);
+    const z = fit(layout.desk[1] + (useModePose ? mode.offset[1] : 0), layout.back + ez - oz, layout.back + layout.depth - ez - oz);
+    const next = new THREE.Vector3(z * scale, 0, -x * scale);
+    applyGlideOffset(next); glideTarget.copy(glideOffset);
+    loadedModel.updateMatrixWorld(true); workspaceAccessories?.update();
+}
+
+function syncHomeOfficeUI() {
+    const shell = document.getElementById('viewer-shell');
+    if (shell) { if (selectedRoomScene === 'home') shell.dataset.homeMode = homeMode; else delete shell.dataset.homeMode; }
+    const active = measuredRoomProfile();
+    if (shell) { if (active) shell.dataset.roomMode = active.mode; else delete shell.dataset.roomMode; }
+    for (const id of ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'gallery', 'scifi', 'coworking', 'library']) {
+        const profile = measuredRoomProfile(id), prefix = profile.prefix;
+        const panel = document.getElementById(measuredRoomPanelId(id));
+        if (!panel) continue;
+        panel.hidden = selectedRoomScene !== id;
+        panel.querySelector(`[data-${prefix}-description]`).textContent = profile.modes[profile.mode].description + ' · ' + ROOM_STORIES[id][DAY_PHASES.indexOf(profile.mode)] + (['office', 'coworking'].includes(id) ? ` · ${profile.layout.stations.length + 1} ErgoFlex desks · App controls the Main desk` : '');
+        panel.querySelector(`#${prefix}-room-size`).value = profile.layout.id;
+        panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-mode`) === profile.mode)));
+        panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-size`) === currentConfig.size)));
+    }
+    const caption = document.getElementById('room-scene-caption');
+    const feet = mm => { const inches = Math.round(mm / 25.4); return `${Math.floor(inches / 12)}′${inches % 12}″`; };
+    if (active && caption) {
+        const { layout } = active, mode = active.modes[active.mode];
+        caption.textContent = `${layout.name} · ${feet(layout.width)} × ${feet(layout.depth)} (${layout.width / 1000} × ${layout.depth / 1000} m) · ${layout.height / 1000} m ceiling · ${mode.label}`;
+    }
+}
+
+function setHomeLayout(id) {
+    setMeasuredRoomLayout('home', id);
+}
+function setGamingLayout(id) { setMeasuredRoomLayout('gaming', id); }
+function setMusicLayout(id) { setMeasuredRoomLayout('music', id); }
+function setArtistLayout(id) { setMeasuredRoomLayout('creative', id); }
+function setOfficeLayout(id) { setMeasuredRoomLayout('office', id); }
+function setBedroomLayout(id) { setMeasuredRoomLayout('bedroom', id); }
+function setGalleryLayout(id) { setMeasuredRoomLayout('gallery', id); }
+function setLibraryLayout(id) { setMeasuredRoomLayout('library', id); }
+function setCoworkingLayout(id) { setMeasuredRoomLayout('coworking', id); }
+function setScifiLayout(id) { setMeasuredRoomLayout('scifi', id); }
+function setWorkshopLayout(id) { setMeasuredRoomLayout('workshop', id); }
+function setLoungeLayout(id) { setMeasuredRoomLayout('lounge', id); }
+function setKitchenLayout(id) { setMeasuredRoomLayout('kitchen', id); }
+function setGymLayout(id) { setMeasuredRoomLayout('gym', id); }
+function setStudyLayout(id) { setMeasuredRoomLayout('study', id); }
+function setMeasuredRoomLayout(sceneId, id) {
+    if (!measuredRoomProfile(sceneId)?.layouts[id]) return;
+    if (sceneId === 'home') homeLayoutId = id;
+    else if (sceneId === 'gaming') gamingLayoutId = id;
+    else if (sceneId === 'music') musicLayoutId = id;
+    else if (sceneId === 'creative') artistLayoutId = id;
+    else if (sceneId === 'study') studyLayoutId = id;
+    else if (sceneId === 'office') officeLayoutId = id;
+    else if (sceneId === 'gym') gymLayoutId = id;
+    else if (sceneId === 'kitchen') kitchenLayoutId = id;
+    else if (sceneId === 'workshop') workshopLayoutId = id;
+    else if (sceneId === 'bedroom') bedroomLayoutId = id;
+    else if (sceneId === 'gallery') galleryLayoutId = id;
+    else if (sceneId === 'scifi') scifiLayoutId = id;
+    else if (sceneId === 'coworking') coworkingLayoutId = id;
+    else if (sceneId === 'library') libraryLayoutId = id;
+    else loungeLayoutId = id;
+    try { localStorage.setItem(`ergoflex.${sceneId}Layout`, id); } catch {}
+    setRoomScene(sceneId, false);
+    workspaceRoom.ready.then(() => {
+        if (selectedRoomScene !== sceneId) return;
+        const view = document.getElementById('camera-view');
+        if (view?.value === 'room') view.dispatchEvent(new Event('change'));
+    });
+}
+
+function setHomeMode(id, moveDesk = true) {
+    setMeasuredRoomMode('home', id, moveDesk);
+}
+function setGamingMode(id, moveDesk = true) { setMeasuredRoomMode('gaming', id, moveDesk); }
+function setMusicMode(id, moveDesk = true) { setMeasuredRoomMode('music', id, moveDesk); }
+function setArtistMode(id, moveDesk = true) { setMeasuredRoomMode('creative', id, moveDesk); }
+function setOfficeMode(id, moveDesk = true) { setMeasuredRoomMode('office', id, moveDesk); }
+function setBedroomMode(id, moveDesk = true) { setMeasuredRoomMode('bedroom', id, moveDesk); }
+function setGalleryMode(id, moveDesk = true) { setMeasuredRoomMode('gallery', id, moveDesk); }
+function setLibraryMode(id, moveDesk = true) { setMeasuredRoomMode('library', id, moveDesk); }
+function setCoworkingMode(id, moveDesk = true) { setMeasuredRoomMode('coworking', id, moveDesk); }
+function setScifiMode(id, moveDesk = true) { setMeasuredRoomMode('scifi', id, moveDesk); }
+function setWorkshopMode(id, moveDesk = true) { setMeasuredRoomMode('workshop', id, moveDesk); }
+function setLoungeMode(id, moveDesk = true) { setMeasuredRoomMode('lounge', id, moveDesk); }
+function setKitchenMode(id, moveDesk = true) { setMeasuredRoomMode('kitchen', id, moveDesk); }
+function setGymMode(id, moveDesk = true) { setMeasuredRoomMode('gym', id, moveDesk); }
+function setStudyMode(id, moveDesk = true) { setMeasuredRoomMode('study', id, moveDesk); }
+function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
+    if (roomGroove?.prepared) { haltAllMotion(); roomGroove.reset(); }
+    const profile = measuredRoomProfile(sceneId);
+    if (!profile?.modes[id]) return;
+    if (sceneId === 'home') homeMode = id;
+    else if (sceneId === 'gaming') gamingMode = id;
+    else if (sceneId === 'music') musicMode = id;
+    else if (sceneId === 'creative') artistMode = id;
+    else if (sceneId === 'study') studyMode = id;
+    else if (sceneId === 'office') officeMode = id;
+    else if (sceneId === 'gym') gymMode = id;
+    else if (sceneId === 'kitchen') kitchenMode = id;
+    else if (sceneId === 'workshop') workshopMode = id;
+    else if (sceneId === 'bedroom') bedroomMode = id;
+    else if (sceneId === 'gallery') galleryMode = id;
+    else if (sceneId === 'scifi') scifiMode = id;
+    else if (sceneId === 'coworking') coworkingMode = id;
+    else if (sceneId === 'library') libraryMode = id;
+    else loungeMode = id;
+    try { localStorage.setItem(`ergoflex.${sceneId}Mode`, id); } catch {}
+    if (selectedRoomScene === sceneId) {
+        if (workspaceRoom?.life?.mode !== id) {
+            // Return selected room props from the gizmo proxy before staging.
+            for (const { obj } of [...movingObjects]) if (obj.userData?.sceneAsset) toggleMovingObject(obj, false, true);
+            updateTransformProxy();
+            discardSceneAssetUndoEntries();
+        }
+        delete roomLightSettings[sceneId];
+        try { localStorage.setItem('ergoflex.sceneLights', JSON.stringify(roomLightSettings)); } catch {}
+        if (moveDesk && loadedModel) {
+            positionHomeDesk(true);
+            const mode = profile.modes[id]; goToPose(mode.height, mode.tilt);
+            if (mode.color) setLedColor(mode.color, false);
+            setLedsEnabled(mode.leds);
+            workspaceAccessories?.setDayDress(id);
+        }
+        applyRoomLighting();
+    }
+    syncHomeOfficeUI();
+}
+
+function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
+    if (roomGroove) { haltAllMotion(); roomGroove.reset(); }
     const choice = ROOM_SCENES.find(s => s.id === id) || ROOM_SCENES[0];
+    const measured = measuredRoomProfile(choice.id);
+    if (loadedModel && measured && !homeDeskReturn && !workspaceRoom?.roomLayout) homeDeskReturn = { offset: glideOffset.clone(), yaw: deskYaw };
+    if (loadedModel && measuredRoomProfile() && !measured && homeDeskReturn) {
+        haltAllMotion(); deskYaw = homeDeskReturn.yaw; applyGlideOffset(homeDeskReturn.offset); glideTarget.copy(glideOffset); homeDeskReturn = null;
+    }
     const hydrationToken = ++sceneAssetHydrationToken;
     if (choice.id !== selectedRoomScene || sceneAssetRegistry.size) {
         persistSceneAssetStates();
@@ -8180,7 +9645,37 @@ function setRoomScene(id, persist = true) {
         clearSceneAssetRegistration();
     }
     selectedRoomScene = choice.id;
-    workspaceRoom?.set(choice.id);
+    let homeScale;
+    if (measured && loadedModel) {
+        const reference = arSizeReference();
+        // Nominal desktop inches establish the room's physical units. An AR
+        // calibration preference does not silently resize this architecture.
+        homeScale = reference.widthUnits > 0 ? reference.widthUnits / (reference.nominalWidth * 25.4) : 1 / (reference.metersPerUnit * 1000);
+    }
+    if (choice.id === 'gaming' && !gamingLayoutId) gamingLayoutId = measured.layout.id;
+    if (choice.id === 'music' && !musicLayoutId) musicLayoutId = measured.layout.id;
+    if (choice.id === 'creative' && !artistLayoutId) artistLayoutId = measured.layout.id;
+    if (choice.id === 'study' && !studyLayoutId) studyLayoutId = measured.layout.id;
+    if (choice.id === 'bedroom' && !bedroomLayoutId) bedroomLayoutId = measured.layout.id;
+    if (choice.id === 'gallery' && !galleryLayoutId) galleryLayoutId = measured.layout.id;
+    if (choice.id === 'library' && !libraryLayoutId) libraryLayoutId = measured.layout.id;
+    if (choice.id === 'coworking' && !coworkingLayoutId) coworkingLayoutId = measured.layout.id;
+    if (choice.id === 'scifi' && !scifiLayoutId) scifiLayoutId = measured.layout.id;
+    if (choice.id === 'workshop' && !workshopLayoutId) workshopLayoutId = measured.layout.id;
+    if (choice.id === 'lounge' && !loungeLayoutId) loungeLayoutId = measured.layout.id;
+    if (choice.id === 'kitchen' && !kitchenLayoutId) kitchenLayoutId = measured.layout.id;
+    if (choice.id === 'gym' && !gymLayoutId) gymLayoutId = measured.layout.id;
+    if (choice.id === 'office' && !officeLayoutId) officeLayoutId = measured.layout.id;
+    workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
+        createStation: ['office', 'coworking'].includes(choice.id) && loadedModel ? spec => captureOfficeStation(spec, homeScale) : null });
+    if (measured) {
+        if (!preserveDesk) positionHomeDesk();
+        if (!preserveDesk && persist && loadedModel) {
+            const mode = measured.modes[measured.mode]; goToPose(mode.height, mode.tilt);
+            if (mode.color) setLedColor(mode.color, false);
+            setLedsEnabled(mode.leds);
+        }
+    }
     // Room props and desk dressing load over the network. A failure leaves the
     // procedural room standing and is reported in Build checks rather than
     // only in the console.
@@ -8193,7 +9688,9 @@ function setRoomScene(id, persist = true) {
         if (results[1].status === 'rejected') {
             reportSceneWarning('desk-dressing', `Desk dressing for ${choice.name} could not be loaded (${results[1].reason.message}).`);
         }
-        return hydrateSceneAssets(choice.id, hydrationToken);
+        const hydrated = hydrateSceneAssets(choice.id, hydrationToken);
+        if (hydrationToken === sceneAssetHydrationToken) workspaceAccessories?.setDayDress(measuredRoomProfile()?.mode || 'morning');
+        return hydrated;
     });
     if (workspaceRoom) workspaceRoom.ready = assetsReady;
     if (floorMesh) floorMesh.visible = choice.id === 'product';
@@ -8211,6 +9708,7 @@ function setRoomScene(id, persist = true) {
     if (environment) environment.value = choice.tone;
     if (shell) shell.dataset.environment = choice.tone;
     applyRoomLighting();
+    syncHomeOfficeUI();
     updateSceneLibraryStatus();
     if (persist) {
         try { localStorage.setItem('ergoflex.roomScene', choice.id); } catch {}
@@ -8540,6 +10038,9 @@ function focusObjects(objects, { animate = false } = {}) {
         const depth = point.dot(direction);
         distance = Math.max(distance, depth + Math.abs(point.dot(up)) / tanV, depth + Math.abs(point.dot(right)) / tanH);
     }
+    // Measured halls can exceed the product viewer's original zoom limit.
+    // Allow the distance required to frame the complete room at this aspect.
+    if (workspaceRoom?.root && objects.includes(workspaceRoom.root)) controls.maxDistance = Math.max(30, distance * 1.12);
     distance = Math.min(controls.maxDistance, distance * 1.12);
     const position = center.clone().addScaledVector(direction, distance);
     controls.autoRotate = false;
@@ -8651,19 +10152,37 @@ function initStudio() {
     top.innerHTML = `<div class="eyebrow" id="scene-status">LOADING YOUR WORKSPACE</div><h2>Designed to move you.</h2><p id="build-summary"></p>`; viewer.append(top);
     const toolbar = document.createElement('div'); toolbar.className = 'studio-toolbar';
     toolbar.innerHTML = `<label><span>Backdrop</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="room">Whole room</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><p id="scene-light-name"></p><label>Exposure <output id="studio-exposure-value"></output><input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Main light <output id="studio-daylight-value"></output><input id="studio-daylight" type="range" min="0.2" max="2" step="0.05" value="1"></label><label>Accent light <output id="studio-accent-value"></output><input id="studio-accent" type="range" min="0" max="2" step="0.05" value="1"></label><button id="reset-scene-light" type="button">Reset scene lighting</button><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
+    toolbar.querySelector('#studio-environment').insertAdjacentHTML('beforeend', '<option value="led">LED studio</option>');
     const viewerControls = document.createElement('div'); viewerControls.className = 'viewer-controls';
     viewerControls.append(toolbar);
     const scenes = document.createElement('div'); scenes.className = 'scene-switcher';
     scenes.innerHTML = `<span class="scenes-label">Scenes</span><div class="scene-options" role="group" aria-label="Workspace scenes">${ROOM_SCENES.map(s => `<button type="button" data-room-scene="${s.id}" aria-pressed="${s.id === 'product'}"><span class="scene-dot scene-${s.id}" aria-hidden="true"></span>${s.name}</button>`).join('')}</div>`;
     const roomCaption = document.createElement('p'); roomCaption.id = 'room-scene-caption'; roomCaption.setAttribute('aria-live', 'polite');
-    viewerControls.append(scenes, roomCaption); viewer.append(viewerControls);
+    const roomControls = ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'gallery', 'scifi', 'coworking', 'library'].map(id => {
+        const profile = measuredRoomProfile(id), prefix = profile.prefix;
+        const panel = document.createElement('div'); panel.id = measuredRoomPanelId(id);
+        panel.className = 'measured-room-controls'; panel.hidden = true;
+        panel.innerHTML = `<div class="home-layout-choices" role="group" aria-label="${ROOM_SCENES.find(s => s.id === id).name} size"><label for="${prefix}-room-size">Room</label><select id="${prefix}-room-size">${Object.values(profile.layouts).map(layout => `<option value="${layout.id}">${layout.name} · ${layout.width / 1000} × ${layout.depth / 1000} m</option>`).join('')}</select><button type="button" data-${prefix}-size="48x30">48″ desk</button><button type="button" data-${prefix}-size="60x30">60″ desk</button></div><div class="home-time-choices" role="group" aria-label="Time of day">${Object.entries(profile.modes).map(([modeId, mode]) => `<button type="button" data-${prefix}-mode="${modeId}" aria-pressed="false">${mode.label}</button>`).join('')}</div><p data-${prefix}-description></p>`;
+        panel.querySelector(`#${prefix}-room-size`).onchange = e => setMeasuredRoomLayout(id, e.target.value);
+        panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.onclick = () => { sizeSelect.value = b.getAttribute(`data-${prefix}-size`); sizeSelect.dispatchEvent(new Event('change', { bubbles: true })); });
+        panel.insertAdjacentHTML('beforeend', '<div class="groove-controls"><button type="button" data-groove-start disabled>Start Groove</button><button type="button" data-groove-stop disabled>Stop</button><span data-groove-status role="status">Choose a time, then tap the desk to start its Groove.</span></div>');
+        panel.querySelector('[data-groove-start]').onclick = () => grooveController().start();
+        panel.querySelector('[data-groove-stop]').onclick = haltAllMotion;
+        panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.onclick = () => prepareGrooveMode(id, b.getAttribute(`data-${prefix}-mode`)));
+        return panel;
+    });
+    viewerControls.append(scenes, ...roomControls, roomCaption); viewer.append(viewerControls);
     scenes.querySelectorAll('button').forEach(button => button.onclick = () => setRoomScene(button.dataset.roomScene));
     new ResizeObserver(syncViewerSize).observe(viewerControls);
-    try { selectedRoomScene = EVENT_DEMO ? 'product' : localStorage.getItem('ergoflex.roomScene') || 'product'; } catch {}
+    try {
+        const requestedRoom = new URLSearchParams(location.search).get('room');
+        selectedRoomScene = EVENT_DEMO ? 'product' : ROOM_SCENES.some(s => s.id === requestedRoom) ? requestedRoom : localStorage.getItem('ergoflex.roomScene') || 'product';
+    } catch {}
     setRoomScene(selectedRoomScene, false);
     const applyEnvironment = (value) => {
         document.getElementById('viewer-shell').dataset.environment = value;
-        if (floorMesh) floorMesh.material.opacity = value === 'slate' ? .36 : .24;
+        if (floorMesh) floorMesh.material.opacity = value === 'led' ? .42 : value === 'slate' ? .36 : .24;
+        applyRoomLighting();
     };
     document.getElementById('studio-environment').onchange = e => applyEnvironment(e.target.value);
     document.getElementById('studio-environment').value = (ROOM_SCENES.find(s => s.id === selectedRoomScene) || ROOM_SCENES[0]).tone;
@@ -8807,7 +10326,7 @@ function initStudio() {
             }
             return;
         }
-        if (e.key === 'Escape') { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); }
+        if (e.key === 'Escape') { haltAllMotion(); syncGlideUI(); }
         if (!setupLayoutOn || e.ctrlKey || e.metaKey || e.altKey || e.target.closest('input,select,textarea,[contenteditable],#glide-pad')) return;
         const mode = { q: 'none', g: 'unified' }[e.key.toLowerCase()];
         if (mode) { e.preventDefault(); document.querySelector(`input[name="transform_mode"][value="${mode}"]`).click(); }
@@ -8827,9 +10346,25 @@ window.ErgoFlex = {
     get touchscreenReady() { return !!screenAssembly; },
     setLedsEnabled,
     setLedColor,
+    mountLedPalette,
+    mountLedEffects,
+    mountLedPlayback,
+    setLedMotionEnabled,
+    get ledMotionState() {return {enabled:ledMotionEnabled,owner:ledMotion.owner ? {...ledMotion.owner} : null,completionUntil:ledMotion.completionUntil,source:ledPixelSource};},
+    get ledGameMode() {return ledGame;},
+    get ledMusicMode() {return ledMusic;},
+    get ledSoundState() {return {enabled:ledSounds.enabled,owner:ledSounds.owner,error:ledSounds.error};},
+    mountLedDiagnostic,
+    setLedDiagnostic,
+    get ledDiagnostic() { return { ...ledDiagnostic }; },
+    get ledStripMap() { return { version: LED_STRIP_MAP_VERSION, status: 'provisional', strips: LED_STRIPS.map(strip => ({ ...strip })) }; },
+    get ledPixelRenderer() { return ledPixels; },
+    setLedEffect,
+    get ledEffect() { return { ...ledEffect }; },
     get ledColor() { return ledColor; },
     setLedGlow,
     get ledGlow() { return ledGlow; },
+    get ledFullBrightness() { return LED_FULL_BRIGHTNESS; },
     setLedSurface,
     get ledSurfaces() { return { ...ledSurfaces }; },
     get ledsEnabled() { return ledsEnabled; },
@@ -8839,6 +10374,66 @@ window.ErgoFlex = {
     get roomScene() { return selectedRoomScene; },
     roomScenes: ROOM_SCENES,
     setRoomScene,
+    setHomeMode,
+    get homeMode() { return homeMode; },
+    setHomeLayout,
+    get homeLayout() { return selectedHomeLayout().id; },
+    setGamingMode,
+    get gamingMode() { return gamingMode; },
+    setGamingLayout,
+    get gamingLayout() { return selectedGamingLayout().id; },
+    setMusicMode,
+    get musicMode() { return musicMode; },
+    setMusicLayout,
+    get musicLayout() { return selectedMusicLayout().id; },
+    setArtistMode,
+    get artistMode() { return artistMode; },
+    setArtistLayout,
+    get artistLayout() { return selectedArtistLayout().id; },
+    setBedroomMode,
+    get bedroomMode() { return bedroomMode; },
+    setBedroomLayout,
+    get bedroomLayout() { return selectedBedroomLayout().id; },
+    setGalleryMode,
+    get galleryMode() { return galleryMode; },
+    setGalleryLayout,
+    get galleryLayout() { return selectedGalleryLayout().id; },
+    setLibraryMode,
+    get libraryMode() { return libraryMode; },
+    setLibraryLayout,
+    get libraryLayout() { return selectedLibraryLayout().id; },
+    setCoworkingMode,
+    get coworkingMode() { return coworkingMode; },
+    setCoworkingLayout,
+    get coworkingLayout() { return selectedCoworkingLayout().id; },
+    setScifiMode,
+    get scifiMode() { return scifiMode; },
+    setScifiLayout,
+    get scifiLayout() { return selectedScifiLayout().id; },
+    setWorkshopMode,
+    get workshopMode() { return workshopMode; },
+    setWorkshopLayout,
+    get workshopLayout() { return selectedWorkshopLayout().id; },
+    setLoungeMode,
+    get loungeMode() { return loungeMode; },
+    setLoungeLayout,
+    get loungeLayout() { return selectedLoungeLayout().id; },
+    setKitchenMode,
+    get kitchenMode() { return kitchenMode; },
+    setKitchenLayout,
+    get kitchenLayout() { return selectedKitchenLayout().id; },
+    setGymMode,
+    get gymMode() { return gymMode; },
+    setGymLayout,
+    get gymLayout() { return selectedGymLayout().id; },
+    setOfficeMode,
+    get officeMode() { return officeMode; },
+    setOfficeLayout,
+    get officeLayout() { return selectedOfficeLayout().id; },
+    setStudyMode,
+    get studyMode() { return studyMode; },
+    setStudyLayout,
+    get studyLayout() { return selectedStudyLayout().id; },
     addSceneAsset,
     deleteSelectedSceneAssets,
     get tiltConfigs() { return tiltConfigs; },
@@ -8861,6 +10456,7 @@ window.ErgoFlex = {
         return count;
     },
     setHeight(h) {
+        if (roomGroove?.run) haltAllMotion();
         manualLiftOverride = true;
         h = THREE.MathUtils.clamp(Number(h) || HEIGHT_MIN,
             minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size), HEIGHT_MAX);
@@ -8869,6 +10465,7 @@ window.ErgoFlex = {
         showHeight(h);
     },
     setTilt(name, deg) {
+        if (roomGroove?.run) haltAllMotion();
         const config = tiltConfigs.find(c => c.name === name);
         if (!config) return false;
         const heightLimit = config.name === 'tilting'
@@ -8881,6 +10478,10 @@ window.ErgoFlex = {
     setAutoRotate(v) { if (controls) controls.autoRotate = !!v; },
     setMotionTab,
     haltAllMotion,
+    prepareGrooveMode,
+    startGroove() { return grooveController().start(); },
+    get grooveState() { return roomGroove?.state || { status: 'idle' }; },
+    get grooveRouting() { return roomGroove?.prepared ? roomGroove.snapshot() : null; },
     get deskYaw() { return deskYaw; },
     // Drives the ring's command directly: the gesture is a pointer path, and the
     // behaviour worth asserting is what the command does to the desk.
@@ -8888,6 +10489,9 @@ window.ErgoFlex = {
     get yawRate() { return yawRadiansPerSecond(); },
     get yawProjection() { return meanYawProjection(); },
     get glideSpeed() { return glideSpeed; },
+    get glideBounds() { return glideBounds(); },
+    get glideTarget() { return { x: glideTarget.x, z: glideTarget.z }; },
+    get glideInput() { return { x: glideInput.x, y: glideInput.y }; },
     get yawCommand() { return yawCommand; },
     get heightInches() { return liftToHeight(currentLift); },
     placeDockFromStorage,
@@ -8975,12 +10579,21 @@ window.ErgoFlex = {
     get plasticMaterial() { return sharedBlackPlasticMaterial && { roughness: sharedBlackPlasticMaterial.roughness, clearcoat: sharedBlackPlasticMaterial.clearcoat }; },
     setSurfaceFinish(value) { surfaceFinish = value; applySurfaceFinish(); },
     focusCameraShortcutTargets: cameraShortcutTargets,
+    get roomLightingState() {
+        const c = sceneLights?.key.shadow.camera;
+        return c && { mode: workspaceRoom?.root?.userData.lighting?.mode || 'product',
+            key: sceneLights.key.position.toArray(), target: sceneLights.key.target.position.toArray(),
+            shadow: { left: c.left, right: c.right, top: c.top, bottom: c.bottom, near: c.near, far: c.far },
+            viewMatrix: c.matrixWorldInverse.toArray(), shadowLights: scene.children.filter(o => o.isLight && o.castShadow).length };
+    },
     get cameraState() { return { position: camera.position.toArray(), target: controls.target.toArray(), minDistance: controls.minDistance }; },
     serializeProject,
     applyProject,
     readAutosaveRing,
     writeAutosave,
     prepareARModel,
+    get arSize() {return arSizeReference();},
+    get arState() { return {status:liveAR?.status || 'idle',active:!!liveAR?.active,error:liveAR?.error,tracking:!!liveAR?.hitReady,placed:!!liveAR?.placed,drawCalls:renderer?.info.render.calls}; },
     launchAR
 };
 
@@ -9026,10 +10639,15 @@ initStudio();
 populateFinishOptions();
 setTrimColor(trimColor, false);
 document.getElementById('trim-color')?.addEventListener('input', event => setTrimColor(event.target.value));
+mountLedPalette(document.getElementById('led-palette'));
+mountLedEffects(document.getElementById('led-effects'));
+mountLedPlayback(document.getElementById('led-playback'));
+mountLedDiagnostic(document.getElementById('led-mapping'));
 setLedColor(ledColor, false);
 document.getElementById('led-color')?.addEventListener('input', event => setLedColor(event.target.value));
 setLedGlow(ledGlow, false);
-document.getElementById('led-glow')?.addEventListener('input', event => setLedGlow(event.target.value));
+document.getElementById('led-glow')?.addEventListener('input', event =>
+    setLedGlow(Number(event.target.value) * LED_FULL_BRIGHTNESS / 100));
 for (const [key, value] of Object.entries(ledSurfaces)) setLedSurface(key, value, false);
 document.querySelectorAll('[data-led-surface]').forEach(slider =>
     slider.addEventListener('input', event => setLedSurface(event.target.dataset.ledSurface, event.target.value)));

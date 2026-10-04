@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ACCESSORIES } from './catalog.mjs';
+import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=home-rooms-20261001';
 
 // Original geometry in millimetres: X is user-right, Z is toward the user.
 // The CAD desk uses X for depth and Z for width. Only the mounting layer maps
@@ -386,27 +387,13 @@ export const ROOM_SCENES = [
       ] },
     { id: 'home', name: 'Home office', caption: 'Make yourself at work.', tone: 'warm',
       desk: [
-        { id: 'painted-mug', at: [420, 0, 60] },
-        { id: 'apple', at: [330, 0, -80] },
-        { id: 'table-mirror', at: [-430, 0, 60], turn: -15 },
-        { id: 'modern-lamp', at: [480, 0, -250] },
-        { id: 'papers', at: [-300, 0, -250], turn: 6 }
+        { id: 'office-keyboard', at: [-70, 0, 80] },
+        { id: 'magic-mouse', at: [270, 0, 80], turn: 90 },
+        { id: 'painted-mug', at: [440, 0, -30] },
+        { id: 'journal', at: [-420, 0, -80], turn: -8 }
       ],
-      shelf: [ { id: 'picture-frame', at: [-400, 0, 0], turn: 15 } ],
-      shell: 'warm', feature: 'window', slats: true, props: [
-        { id: 'sofa', at: [-1560, 0, 1180], turn: 90 },
-        { id: 'coffee-table', at: [-560, 0, 1400], turn: 90 },
-        { id: 'cat', at: [-540, 391, 1400], turn: 150 },
-        { id: 'takeout-boxes', at: [-620, 391, 1250], turn: -20 },
-        { id: 'marble-table-lamp', at: [1720, 0, 620], turn: -30 },
-        { id: 'backpack', at: [1500, 0, 1350], turn: 35 },
-        { id: 'football', at: [-1750, 0, -320] },
-        { id: 'picture-frame', at: [2072, 1450, 260], turn: -90, on: 'wall' },
-        { id: 'hugo-mirror', at: [2072, 1500, -900], turn: -90, on: 'wall' },
-        { id: 'chandelier', at: [-900, 2600, 900], on: 'ceiling' },
-        { id: 'cat-sitting', at: [1180, 0, 1600], turn: -140 },
-        { id: 'paper-bin', at: [-1250, 0, 260] }
-      ] },
+      shelf: [ { id: 'curved-monitor', at: [0, 0, 0] } ],
+      shell: 'warm', feature: 'window', props: homeLayoutForSize('48x30').props },
     { id: 'music', name: 'Music studio', caption: 'Find your creative frequency.', tone: 'slate',
       desk: [
         { id: 'insulated-mug', at: [430, 0, 40] },
@@ -642,7 +629,7 @@ export const ROOM_SCENES = [
 export const ROOM_ATMOSPHERES = {
     product: { label: 'Softbox studio', space: [0, 0, 0], key: '#fff9f0', fill: '#e8f0ff', accent: '#ffffff', power: 1.5, ambient: .35, exposure: .95, bounce: 1.3 },
     office: { label: 'Fresh morning', space: [700, 650, 650], key: '#fff5df', fill: '#dceeff', accent: '#d3f1df', power: 1.8, ambient: .48, exposure: 1.02, bounce: .85 },
-    home: { label: 'Late afternoon', space: [1000, 750, 1100], key: '#ffd4a0', fill: '#e4e9ff', accent: '#ffb96f', power: 1.5, ambient: .4, exposure: 1.05, bounce: .7 },
+    home: { ...HOME_MODES.afternoon, space: [-700, -600, -200] }, // compact default; WorkspaceRoom supplies both measured layouts
     music: { label: 'Amber sessions', space: [950, 800, 1000], key: '#ffce9c', fill: '#b3bdff', accent: '#ff9454', power: 1.5, ambient: .38, exposure: 1.1, bounce: .75 },
     gaming: { label: 'Violet after hours', space: [1100, 850, 1200], key: '#becaff', fill: '#cb92ff', accent: '#54dfff', power: 1.65, ambient: .36, exposure: 1.1, bounce: .75 },
     creative: { label: 'North light atelier', space: [1050, 900, 1100], key: '#eff6ff', fill: '#ffe0bd', accent: '#f6c99a', power: 1.7, ambient: .55, exposure: 1.08, bounce: .9 },
@@ -697,17 +684,26 @@ export class WorkspaceRoom {
         this.root = null; this.walls = []; this.token = 0; this.ready = Promise.resolve();
         this.missingProps = [];
     }
-    set(id) {
+    set(id, options = {}) {
         if (!ROOM_SCENES.some(s => s.id === id)) id = 'product';
         // Any prop load still in flight belongs to the room being replaced.
         this.token++;
         if (this.root) disposeTree(this.root);
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
+        this.homeAtmosphere = null; this.homeLayout = null; this.ceilingFixture = null;
         if (id === 'product') { this.ready = Promise.resolve(); return; }
-        const scene = ROOM_SCENES.find(s => s.id === id);
+        let scene = ROOM_SCENES.find(s => s.id === id);
+        if (id === 'home') {
+            this.homeLayout = options.layout ? homeLayoutById(options.layout) : homeLayoutForSize(options.size);
+            scene = { ...scene, props: this.homeLayout.props, physical: true };
+        }
         const root = this.root = new THREE.Group(); root.name = `Room:${id}`;
-        root.rotation.y = Math.PI / 2; root.scale.setScalar(this.scale); this.scene.add(root);
-        this.buildShell(root, scene);
+        root.rotation.y = Math.PI / 2;
+        // Use the measured nominal desktop width for the Home Office's metre
+        // conversion. Other scenes retain their existing authored scale.
+        root.scale.setScalar(id === 'home' ? options.scale || this.scale : this.scale); this.scene.add(root);
+        if (id === 'home') buildHomeOffice(this, root, this.homeLayout, { material, mesh, box, rod, sphere });
+        else this.buildShell(root, scene);
         this.ready = this.addProps(root, scene, this.token);
     }
     ensureAssetRoot() {
@@ -829,13 +825,13 @@ export class WorkspaceRoom {
         for (let index = 0; index < placements.length; index++) {
             const { placement, object } = placements[index];
             if (!object) { this.missingProps.push(placement.id); continue; }
-            const position = roomPosition(scene, placement);
+            const position = scene.physical ? [...placement.at] : roomPosition(scene, placement);
             // Countertop objects travel with the complete counter, not the lounge zone.
             if (scene.counter && placement.at[1] >= 900 && placement.on !== 'ceiling') position[2] = placement.at[2];
             object.position.set(...position);
             object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
             if (placement.scale) object.scale.multiplyScalar(placement.scale);
-            markSceneAsset(object, { key: `${scene.id}:room:${index}:${placement.id}` });
+            markSceneAsset(object, { key: `${scene.id}:${scene.physical ? this.homeLayout.id + ':' : ''}room:${index}:${placement.id}` });
             root.add(object);
         }
         if (this.missingProps.length) console.warn(`Room ${scene.id}: props unavailable: ${this.missingProps.join(', ')}`);
@@ -853,5 +849,8 @@ export class WorkspaceRoom {
         this.ensureAssetRoot().add(object);
         return object;
     }
-    update(camera) { for (const wall of this.walls) wall.obj.visible = camera.position[wall.axis] > wall.limit + .05; }
+    update(camera) {
+        for (const wall of this.walls) wall.obj.visible = (wall.sign || 1) * (camera.position[wall.axis] - wall.limit) > .05;
+        if (this.ceilingFixture) this.ceilingFixture.visible = camera.position.y < (this.homeLayout.height + 200) * this.root.scale.x;
+    }
 }

@@ -1,9 +1,9 @@
 # Scene assets: the prop library
 
-`models/` holds the 3D files supplied for this project. `assets/props/` holds the
-web-ready conversions the studio actually loads. Nothing in `models/` is served
-to the browser — the sources are USDZ and Rhino files, which browsers cannot
-open, and they total 2.9 GB against 115 MB for the whole converted library.
+`models/` holds the 3D files supplied for this project, including USDZ, Rhino,
+DWG, and the extracted glTF packs. `assets/props/` holds the web-ready
+conversions the studio loads. Runtime model requests use `assets/props/`;
+exclude the original `models/` directory when deploying the public viewer.
 
 `models/` is in `.gitignore`, so the sources are local to the machine that has
 them and only the converted library is committed. A fresh clone can run the app
@@ -26,7 +26,7 @@ Spider-Man figure, a Sonic statue, mouse-ear hat, NASA mug, a Pepsi can and a
 Tesla-branded bottle. Depicting those in a commercial storefront is a
 trademark question independent of the model licence.
 
-Every entry in `assets/props/index.json` therefore carries
+The original USDZ entries in `assets/props/index.json` carry
 `"license": "unconfirmed"` and `"attribution": null`. Fill those in per prop in
 `tools/props/manifest.json` as terms are verified, and re-run the converter.
 Until then, treat this library as an internal design tool. Shipping it publicly
@@ -38,7 +38,7 @@ This also contradicts the older claim in
 are redistributed. That claim held for the procedural accessory geometry and
 still does; it does not cover this library.
 
-## What the library contains
+## Original library baseline
 
 | | |
 | --- | --- |
@@ -58,6 +58,47 @@ meshes collapse to nothing at rest, and one is a figure fused into an 8.6 m
 ground plane as a single mesh, so the plane cannot be removed.
 
 ## The conversion pipeline
+
+### October 2026 packs
+
+The complete library now has **687 models**: 339 original props, the Steelcase
+chair, and 347 additional models. Studio's collection selector, category
+selector, and search can be combined. Every new model has a rendered thumbnail.
+
+| Collection | Models | Source directory |
+| --- | ---: | --- |
+| Kenney Furniture | 140 | `models/packs/kenney-furniture/` |
+| Kenney Factory | 143 | `models/packs/kenney-factory/` |
+| Kenney Space | 40 | `models/packs/kenney-space/` |
+| Decorations | 15 | `models/packs/decorations/` |
+| Pickups & Objects | 8 | `models/packs/pickups-and-objects/` |
+| Quaternius Guitar | 1 | `models/packs/quaternius/` |
+
+Original archive directory structures, alternate formats, textures, previews,
+and included license files are preserved. Alternate exports of the same pickup
+are kept as sources but appear once in the picker. The three Kenney licenses
+included in the packs are CC0; the other supplied files contain no license
+document, so their entries remain `unconfirmed`.
+
+`tools/props/import-packs.mjs` uses the installed glTF Transform library to
+write self-contained GLBs, preserve materials/textures and animation tracks,
+normalize axes and anchors, and update the manifest and index. The new runtime
+models total 17 MB and 183,188 triangles. They were already low polygon meshes,
+so no Blender conversion or decimation is required. Pack modules keep a shared
+scale; small props have explicit size estimates, documented in `sizeNote`.
+
+```sh
+node tools/props/import-packs.mjs
+node tools/props/thumbnails.mjs --collection new --sheet /tmp/new-packs.png
+# Rebuild one model through the standard pipeline:
+node tools/convert-props.mjs --only quaternius-guitar
+```
+
+The Home Office uses the new books, shelf plant, and reading lamp in all five
+layouts. Larger rooms also use a coffee maker and an upright wall-mounted guitar.
+Factory, space, and gaming props are available for hand placement in Studio.
+
+### Original USDZ and Rhino pipeline
 
 `node tools/convert-props.mjs` reads `tools/props/manifest.json` and writes
 `assets/props/*.glb` plus `assets/props/index.json`. Flags: `--only id,id`
