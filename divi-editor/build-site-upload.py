@@ -11,7 +11,7 @@ FILES = (
     'product-demo.html', 'product-demo.css', 'product-demo.js',
     'studio.js', 'studio.css', 'app-remote.css', 'ar-workspace.mjs', 'apple-ar-interactions.mjs', 'led-effects.mjs', 'led-strip-map.mjs', 'led-pixel-renderer.mjs',
     'led-movement.mjs', 'led-sounds.mjs', 'led-game-mode.mjs', 'led-game-frames.mjs',
-    'led-music-mode.mjs', 'led-showcase-effects.mjs',
+    'led-music-mode.mjs', 'led-showcase-effects.mjs', 'led-auto-dj.mjs', 'led-command-center.mjs',
     'catalog.mjs', 'project-io.mjs', 'validation.mjs', 'motion-limits.mjs',
     'workspace-3d.mjs', 'room-refinement.mjs', 'room-life.mjs', 'room-groove.mjs', 'room-groove-runtime.mjs', 'home-office.mjs', 'gaming-room.mjs', 'music-room.mjs', 'artist-room.mjs', 'study-room.mjs', 'office-room.mjs', 'gym-room.mjs', 'kitchen-room.mjs', 'lounge-room.mjs', 'workshop-room.mjs', 'bedroom-room.mjs', 'gallery-room.mjs', 'scifi-room.mjs', 'coworking-room.mjs', 'library-room.mjs', 'workspace-icons.mjs', 'bir.jpg',
 )
@@ -61,7 +61,7 @@ for folder in ('assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion'
     'Desktop power-module faces receive the same LED color and dimming as the desktop reflection.\n'
     'LEDs load off. Switching them on starts at 75% of the new maximum.\n'
     'The displayed 100% brightness is 85% of the former maximum light output.\n'
-    'Use product-demo.html?v=large-desktop-trim-fix-20261001 as the Divi Hosted 3D viewer URL to bypass older browser copies.\n'
+    'Use product-demo.html?v=app-dj-20261004 as the Divi Hosted 3D viewer URL to bypass older browser copies.\n'
     'The viewer HTML revalidates on future visits; versioned runtime assets may stay cached.\n'
     'The hidden AR viewer loads eagerly even outside the mobile iframe viewport.\n'
     'AR preparation errors show the actual loading failure, rather than a device warning.\n'
@@ -92,6 +92,12 @@ for folder in ('assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion'
     'The extended touchscreen follows the 60-inch desktop front and side edges.\n'
     'Its open angle matches the Standard touchscreen.\n'
     'The app controls meet the viewer directly, without the former wide-layout toolbar.\n'
+    'The app now uses Height / Glide / Tilt cards and ivory controls.\n'
+    'Tap the bulb to switch LED power; hold to open the LED Command Center: Light, Music, Auto DJ, Game Mode and movement cues.\n'
+    'The wide Command Center covers the app controller without dimming or blocking the desk viewer.\n'
+    'Auto DJ offers Chill, Party, Rave and a weighted custom rotation with Standard / Reduced / Minimal flash comfort.\n'
+    'DJ settings save on the device; music starts only on a user tap and is muted until Hear music is enabled.\n'
+    'LED animations and Auto DJ are browser previews, not byte-identical firmware output or physical desk control.\n'
     'Lift and tilt default to Fast. The clearance envelope limits tilt at low heights.\n'
     'If the Studio tilt rig changes again, rebuild this bundle and upload again.\n'
 )

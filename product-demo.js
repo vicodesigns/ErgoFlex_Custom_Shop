@@ -48,7 +48,8 @@ const ready = setInterval(() => {
     slot.scrollLeft = 0;
   };
   fitRemote();
-  window.addEventListener('resize', fitRemote);
+  window.addEventListener('resize', () => requestAnimationFrame(fitRemote));
+  if(window.ResizeObserver){let fittedWidth=slot.clientWidth;new ResizeObserver(()=>{if(slot.clientWidth!==fittedWidth){fittedWidth=slot.clientWidth;fitRemote();}}).observe(slot);}
   if (dock.classList.contains('collapsed')) document.querySelector('#motion-dock-toggle')?.click();
   for (const id of ['lift-speed', 'tilt-speed']) {
     const speed = document.getElementById(id);
@@ -120,6 +121,7 @@ const ready = setInterval(() => {
     brightnessValue.value = `${glowSlider.value}%`;
   });
   screenButton.addEventListener('click', () => { api.setTouchscreenOpen(!api.touchscreenOpen); syncActions(); });
+  api.prepareLedCommandCenter({power:ledButton,glow:demo.querySelector('.demo-led-glow'),colors:demo.querySelector('.demo-led-color-stack'),effects:effectControls,playback:playbackControls,mapping:mappingControls});
   syncActions();
   setInterval(syncActions, 250);
   demo.querySelector('.demo-note').textContent='Drag the desk to rotate · Scroll or pinch to zoom · Use the ErgoFlex app controls to move the 3D workstation.';

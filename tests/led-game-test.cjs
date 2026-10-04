@@ -32,18 +32,23 @@ const server=http.createServer((req,res)=>{
         await page.goto(`http://127.0.0.1:${server.address().port}/product-demo.html`);
         await page.waitForFunction(()=>window.ErgoFlex?.loadedModel&&document.querySelector('.demo-led-playback summary'),{timeout:120000});
         await page.evaluate(()=>{ErgoFlex.renderer.setPixelRatio(.45);ErgoFlex.renderer.shadowMap.enabled=false;ErgoFlex.setLedColor('#40eaff',false);ErgoFlex.setLedEffect({mode:'breathe',period:8},false);});
-        await page.click('.demo-led-playback summary');
+        await page.focus('.hub-led');await page.keyboard.down('Shift');await page.keyboard.press('Enter');await page.keyboard.up('Shift');await page.click('[data-ledcc-tab="game"]');
         const control=s=>'.demo-led-playback '+s;
         await page.click(control('[data-game-play]'));
         await page.waitForFunction(()=>ErgoFlex.ledGameMode.bank&&!ErgoFlex.ledGameMode.video.paused&&ErgoFlex.ledGameMode.video.currentTime>.25,{timeout:30000}).catch(async e=>{console.log('Start diagnostic',await page.evaluate(()=>({active:ErgoFlex.ledGameMode.active,error:ErgoFlex.ledGameMode.error,time:ErgoFlex.ledGameMode.video.currentTime,paused:ErgoFlex.ledGameMode.video.paused,ready:ErgoFlex.ledGameMode.video.readyState})));throw e;});
         assert.equal(await page.evaluate(()=>ErgoFlex.ledsEnabled),true);
         assert.equal(await page.evaluate(()=>ErgoFlex.ledGameMode.video.muted),true,'No autoplay sound');
         await page.waitForFunction(()=>ErgoFlex.ledGameMode.monitor?.parent&&ErgoFlex.ledMotionState.source==='game');
+        await page.$eval('[data-game-cap]',el=>{el.value='25';el.dispatchEvent(new Event('input'));});
+        assert.equal(await page.evaluate(()=>ErgoFlex.ledGameMode.maxBrightness),.25);
+        await page.$eval('[data-game-cap]',el=>{el.value='100';el.dispatchEvent(new Event('input'));});
         const allocations=await page.evaluate(()=>({texture:ErgoFlex.ledPixelRenderer.texture.uuid,monitor:ErgoFlex.ledGameMode.monitor.uuid,
             exportHasGame:ErgoFlex.workspaceAccessories.exportGroups().some(g=>{let found=false;g.traverse(o=>{if(o.userData.transientGameScreen)found=true;});return found;})}));
         assert.equal(allocations.exportHasGame,false,'Native export keeps the static desk fallback');
         await page.click(control('[data-game-play]')); // pause
         assert.equal(await page.evaluate(()=>ErgoFlex.ledGameMode.video.paused),true);
+        const capped=await page.evaluate(()=>{const game=ErgoFlex.ledGameMode,full=game.counts.map(n=>new Uint8Array(n*4)),dim=game.counts.map(n=>new Uint8Array(n*4));game.maxBrightness=1;game.sample(full);game.maxBrightness=.25;game.sample(dim);game.maxBrightness=1;return full.every((row,j)=>row.every((value,i)=>dim[j][i]===Math.round(value*.25)));});
+        assert.ok(capped,'Game brightness cap scales the rendered RGBW pixels');
         await page.$eval(control('[data-game-seek]'),el=>{el.value='3';el.dispatchEvent(new Event('input'));});
         await page.waitForFunction(()=>Math.abs(ErgoFlex.ledGameMode.video.currentTime-3)<.05&&ErgoFlex.ledGameMode.video.readyState>=2).catch(async e=>{
             console.log('Seek diagnostic',await page.evaluate(()=>{const g=ErgoFlex.ledGameMode,v=g.video;return {time:v.currentTime,paused:v.paused,ready:v.readyState,seeking:v.seeking,duration:v.duration,error:g.error};}));throw e;

@@ -35,6 +35,7 @@ const server = http.createServer((req, res) => {
         await page.goto(`http://127.0.0.1:${server.address().port}/product-demo.html?ledDiagnostics=1`);
         await page.waitForFunction(()=>ErgoFlex?.ledPixelRenderer && document.querySelector('.demo-led-mapping select'),{timeout:120000});
         await page.evaluate(()=>{ErgoFlex.renderer.setPixelRatio(.6);ErgoFlex.renderer.shadowMap.enabled=false;ErgoFlex.setLedsEnabled(true);});
+        await page.focus('.hub-led');await page.keyboard.down('Shift');await page.keyboard.press('Enter');await page.keyboard.up('Shift');
         await page.click('.demo-led-mapping summary');
         const result=await page.evaluate(()=>{
             const renderer=ErgoFlex.ledPixelRenderer;

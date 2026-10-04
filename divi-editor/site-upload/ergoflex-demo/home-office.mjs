@@ -54,6 +54,26 @@ Object.assign(HOME_LAYOUTS, {
             { id: 'modern-lamp', at: [2650, 741, -2000] }
         ] }
 });
+// New library accents keep their physical dimensions in every room. Append
+// defaults so existing scene-asset keys and saved edits keep their identities.
+for (const layout of Object.values(HOME_LAYOUTS)) {
+    const apartment = layout.id === 'apartment';
+    const cx = apartment ? 995 : layout.width / 2 - 570;
+    const chair = layout.props.find(p => p.id === 'armchair-poppi');
+    layout.readingLight = apartment ? [-430, 1870] : [-layout.width / 2 + 220, chair.at[2] + 680];
+    layout.props.push(
+        { id: 'kenney-furniture-books', at: [cx - 80, 1384, layout.back + 110] },
+        { id: 'kenney-furniture-plant-small1', at: [cx + 40, 1784, layout.back + 110] },
+        { id: 'kenney-furniture-lamp-round-floor', at: [layout.readingLight[0], 0, layout.readingLight[1]] }
+    );
+    if (!apartment) {
+        layout.props.find(p => p.id === 'modern-lamp').at[0] = cx + 200;
+        layout.props.push(
+            { id: 'kenney-furniture-kitchen-coffee-machine', at: [cx - 220, 741, layout.back + 190] },
+            { id: 'quaternius-guitar', at: [-layout.width / 2 + 85, 650, 150], turn: 90 }
+        );
+    }
+}
 export const homeLayoutForSize = size => HOME_LAYOUTS[size === '60x30' ? 'house' : 'apartment'];
 export const homeLayoutById = id => HOME_LAYOUTS[id] || HOME_LAYOUTS.apartment;
 
@@ -174,8 +194,15 @@ export function buildHomeOffice(room, root, layout, helpers) {
     // Compact display shelves above storage, clear of the lifting desk.
     for (const y of [1370, 1770]) {
         box(back, [cw + 35, 28, 210], [cx, y, bz + 110], joinery, 2);
-        for (let i = 0; i < 5; i++) box(back, [25 + i % 2 * 8, 155 + i % 3 * 20, 100], [cx - cw / 2 + 60 + i * 36, y + 95, bz + 100], material(['#d7c8a8', '#7c8972', '#aa735c'][i % 3]), 1);
+        if (y === 1770) for (let i = 0; i < 5; i++) box(back, [25 + i % 2 * 8, 155 + i % 3 * 20, 100], [cx - cw / 2 + 60 + i * 36, y + 95, bz + 100], material(['#d7c8a8', '#7c8972', '#aa735c'][i % 3]), 1);
         sphere(back, [45, 65, 45], [cx + cw / 2 - 70, y + 78, bz + 100], material('#c4b5a2'));
+    }
+    if (house) {
+        // A small wall hanger supports the guitar without filling floor space.
+        const hanger = new THREE.Group(); hanger.name = 'Guitar wall hanger'; entry.add(hanger);
+        const black = material('#282b2c', { metalness: .35, roughness: .65 });
+        box(hanger, [15, 120, 70], [-w / 2 + 12, 1550, 150], black, 3);
+        for (const z of [125, 175]) rod(hanger, [-w / 2 + 20, 1515, z], [-w / 2 + 100, 1515, z], 7, black);
     }
     const frame = new THREE.Group(); frame.position.set(w / 2 - 36, 1610, house ? 550 : 610); frame.rotation.y = -Math.PI / 2; side.add(frame);
     box(frame, [660, 810, 28], [0, 0, 0], joinery, 3);
@@ -223,7 +250,8 @@ export function buildHomeOffice(room, root, layout, helpers) {
     const lights = [
         makeLight([cx, 1080, bz + 450], '#ffcd8f', 3.5, 3500),
         makeLight([0, h - 340, 370], '#ffdfb0', 5, 4200),
-        makeLight([w / 2 - 500, 150, front - 600], '#b18bdf', 1.5, 2300)
+        makeLight([w / 2 - 500, 150, front - 600], '#b18bdf', 1.5, 2300),
+        makeLight([layout.readingLight[0], 1520, layout.readingLight[1]], '#ffdcaa', 2.5, 2600)
     ];
     // Light sources are owned by this room and disappear on scene replacement.
     room.homeAtmosphere = (modeId, accent = 1) => {
@@ -237,5 +265,7 @@ export function buildHomeOffice(room, root, layout, helpers) {
         lights[2].light.color.set(modeId === 'party' ? '#b880ff' : '#ffcf99'); glow.emissiveIntensity = .3 + mode.practical;
     };
     room.homeAtmosphere('afternoon');
+    // Explicit surface roles keep detail off artwork and imported models.
+    for (const [mat, surface] of [[wallMat, 'plaster'], [oak, 'wood'], [joinery, 'wood'], [sage, 'powder'], [brass, 'metal'], [linen, 'fabric'], [shade, 'fabric']]) mat.userData.roomSurface = surface;
     root.userData.dimensionsMm = { width: w, depth: d, height: h };
 }

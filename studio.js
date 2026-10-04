@@ -1,3 +1,4 @@
+import { LedCommandCenter } from './led-command-center.mjs?v=app-dj-20261004';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=groove-routines-20261002';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=groove-routines-20261002';
 import { RoomGroove } from './room-groove-runtime.mjs?v=groove-routines-20261002';
@@ -13,8 +14,8 @@ import { LED_STRIPS, LED_STRIP_MAP_VERSION, createLedFrame, sampleLedDiagnostic 
 import { LedPixelRenderer } from './led-pixel-renderer.mjs?v=led-game-20261003';
 import { LedMotion } from './led-movement.mjs?v=led-game-20261003';
 import { LedSounds } from './led-sounds.mjs?v=led-game-20261003';
-import { LedGameMode } from './led-game-mode.mjs?v=led-game-20261003';
-import { LedMusicMode } from './led-music-mode.mjs?v=led-music-20261003';
+import { LedGameMode } from './led-game-mode.mjs?v=app-dj-20261004';
+import { LedMusicMode } from './led-music-mode.mjs?v=app-dj-20261004';
 import { sampleDecorativeInto } from './led-showcase-effects.mjs?v=led-music-20261003';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -36,7 +37,7 @@ import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } f
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
-import { ARWorkspace } from './ar-workspace.mjs?v=public-plates-controls-20260930';
+import { ARWorkspace } from './ar-workspace.mjs?v=app-dj-20261004';
 import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
@@ -7522,10 +7523,10 @@ function compassSvg() {
     const at = (r, a) => [C + r * Math.cos(a), C - r * Math.sin(a)];
     const tickR = R * 0.915, half = 9.5 * Math.PI / 180;
     let ticks = '';
-    for (let i = 0; i < 8; i++) {
-        const a = i * Math.PI / 4;
-        const [x1, y1] = at(tickR, a - half), [x2, y2] = at(tickR, a + half);
-        ticks += `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${tickR.toFixed(2)} ${tickR.toFixed(2)} 0 0 0 ${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" class="dial-tick" stroke-width="${(R * 0.115).toFixed(2)}" stroke-linecap="round"/>`;
+    for (let i = 0; i < 12; i++) {
+        const a = i * Math.PI / 6;
+        const [x1, y1] = at(tickR*.89, a), [x2, y2] = at(tickR*.99, a);
+        ticks += `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} L${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" class="dial-tick" stroke-width="2.5" stroke-linecap="round"/>`;
     }
     const Rin = 40, base = Rin * 0.40, len = Rin * 0.26, wide = Rin * 0.12;
     let star = '';
@@ -7547,7 +7548,7 @@ function compassSvg() {
       <g class="compass-ring" style="transform-origin:66px 66px">${ticks}</g>
       <circle cx="66" cy="66" r="${Rin}" fill="url(#glide-dish)"/>
       <circle class="dial-rim" cx="66" cy="66" r="${Rin - 1}" fill="none" stroke-width="1.6"/>
-      <g class="compass-star">${star}</g>
+      <g class="compass-arrows" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M59 38l7-7 7 7M59 94l7 7 7-7M38 59l-7 7 7 7M94 59l7 7-7 7"/></g>
     </svg>`;
 }
 
@@ -7714,6 +7715,11 @@ function chipRow(kind) {
         `</div>`;
 }
 
+let ledCommandCenter=null;
+function prepareLedCommandCenter(controls){
+    if(!ledCommandCenter)ledCommandCenter=new LedCommandCenter(window.ErgoFlex,controls);
+    return ledCommandCenter;
+}
 function buildMotionRemote() {
     const dock = document.getElementById('motion-dock');
     if (!dock) return;
@@ -7721,7 +7727,7 @@ function buildMotionRemote() {
     tiltPresets = loadTiltPresets();
     ergoForms = loadErgoForms();
 
-    dock.className = 'app-remote';
+    dock.className = 'app-remote remote-v2';
     dock.innerHTML = '';
 
     const header = document.createElement('div');
@@ -7737,7 +7743,7 @@ function buildMotionRemote() {
     header.innerHTML = `<span class="remote-grip" aria-hidden="true"></span>
         <button class="remote-chrome remote-menu" type="button" disabled aria-label="Menu"
                 title="Menu — not part of the preview"><span></span><span></span><span></span></button>
-        <img class="remote-logo" src="./assets/app-icons/ergoflexwidelogonoslogan.svg" alt="ErgoFlex Desk">
+        <img class="remote-logo" src="./assets/app-icons/ergoflex-app-logo.svg" alt="ErgoFlex Desk">
         <span class="remote-status" role="img" aria-label="Preview — not connected to a desk"
               title="Preview only: this panel drives the 3D model, not a desk"></span>
         <span class="remote-spacer"></span>
@@ -7830,14 +7836,28 @@ function buildMotionRemote() {
         <button class="hub-tile" type="button" disabled aria-label="Save routine"
                 title="Save routine — a routines feature, not connected in the preview">${SAVE_GLYPH}</button>
         <span class="hub-rule" aria-hidden="true"></span>
-        <button class="hub-led" type="button" aria-label="Toggle desk LEDs" aria-pressed="false"
-                title="Toggle desk LEDs">${BULB_GLYPH}</button>
+        <button class="hub-led" type="button" aria-label="Desk LEDs. Tap to switch power; hold to open LED Command Center." aria-pressed="false" aria-expanded="false" aria-controls="led-command-center"
+                title="Tap: LEDs on/off · Hold: LED Command Center">${BULB_GLYPH}</button>
         <button class="hub-screen" data-touchscreen-toggle type="button" aria-label="Extend touchscreen"
                 aria-pressed="false" title="Slide and turn touchscreen">Screen</button>
         <span class="remote-info" role="img" aria-label="About the wellness bar"></span>
       </div>
       <p id="glide-help" class="remote-hint">Glide: down = front, up = back, left/right stay fixed. Twist the outer half or hold Left/Right to turn. Presets: tap to recall, hold to save, swipe up to see the value.</p>
     </div>`;
+    // Keep the proven controls and their IDs, rearranged to the updated app.
+    const grid=body.querySelector('.remote-grid');
+    const lift=body.querySelector('[data-motion-panel="lift"]'),glide=body.querySelector('[data-motion-panel="glide"]'),tilt=body.querySelector('[data-motion-panel="tilt"]');
+    const forms=body.querySelector('.remote-forms'),hub=body.querySelector('.remote-wellness-hub');
+    grid.replaceChildren(lift,glide,tilt);
+    for(const card of [lift,glide,tilt]){
+        card.classList.add('remote-card');
+        const heading=document.createElement('div');heading.className='remote-card-heading';
+        heading.append(card.querySelector('.remote-heading'),card.querySelector('.remote-speed'));card.prepend(heading);
+        if(card!==glide){const adjust=document.createElement('div');adjust.className='remote-adjust';
+            adjust.append(card.querySelector('.remote-readout'),card.querySelector('.remote-vslider,.remote-arc'));heading.after(adjust);
+        }
+    }
+    const footer=document.createElement('div');footer.className='remote-footer';footer.append(forms,hub);grid.after(footer);
     dock.append(body);
     // Eight grips, inside the border box: the shell clips its own overflow to
     // keep the header's radius, so a handle hanging off the edge is invisible.
@@ -7856,7 +7876,11 @@ function buildMotionRemote() {
     // they are re-wired here. Wiring them once at startup left them pointing at
     // elements a rebuild had already replaced.
     setupGlideControls();
-    dock.querySelector('.hub-led').onclick = () => setLedsEnabled(!ledsEnabled);
+    const bulb=dock.querySelector('.hub-led');
+    bindHold(bulb,()=>setLedsEnabled(!ledsEnabled),()=>prepareLedCommandCenter().open());
+    // Assistive technology can activate a button without pointer events.
+    bulb.addEventListener('click',event=>{if(event.detail===0)setLedsEnabled(!ledsEnabled);});
+    bulb.addEventListener('contextmenu',event=>event.preventDefault());
     dock.querySelector('.hub-screen').onclick = () => setTouchscreenOpen(screenTarget < 0.5);
     setLedsEnabled(ledsEnabled);
     setTouchscreenOpen(screenTarget > 0.5);
@@ -8753,7 +8777,7 @@ function getLiveAR() {
         metersPerUnit:() => arSizeReference().metersPerUnit,
         sizeReference:arSizeReference, setWidth:setARWidth,
         remote:() => document.getElementById('motion-dock'),
-        ledControls:() => [document.querySelector('#event-demo .demo-led-glow'),document.querySelector('#event-demo .demo-led-color-stack'),document.querySelector('#event-demo .demo-led-effects'),document.querySelector('#event-demo .demo-led-mapping'),document.querySelector('#event-demo .demo-led-playback')].filter(Boolean),
+        ledControls:() => [], // Lighting opens from the app inside the WebXR overlay.
         halt:haltAllMotion, resize:syncViewerSize
     });
     return liveAR;
@@ -9335,7 +9359,7 @@ function animate(time, frame) {
         ledPlaybackUIAt = time;
         if (ledGame.active) ledGame.syncMonitor(workspaceAccessories);
         ledGame.syncUI(ledSounds.error || (ledMotion.owner ? `${ledMotion.owner.name} · movement cue` : ''));
-        ledMusic.syncUI();
+        ledMusic.syncUI(true);
     }
     if (camera && !liveAR?.active) workspaceRoom?.update(camera);
     if (renderer && scene && camera) renderer.render(liveAR?.active ? liveAR.scene : scene, camera);
@@ -10346,6 +10370,8 @@ window.ErgoFlex = {
     get touchscreenReady() { return !!screenAssembly; },
     setLedsEnabled,
     setLedColor,
+    prepareLedCommandCenter,
+    get ledPreviewFrame() {return ledPixelFrame;},
     mountLedPalette,
     mountLedEffects,
     mountLedPlayback,

@@ -1,9 +1,26 @@
+import { refineRoomSurfaces } from './room-refinement.mjs?v=groove-routines-20261002';
+import { RoomLife } from './room-life.mjs?v=groove-routines-20261002';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
+import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
+import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
+import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
+import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=groove-routines-20261002';
+import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ACCESSORIES } from './catalog.mjs';
-import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=home-rooms-20261001';
+import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=groove-routines-20261002';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=groove-routines-20261002';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=groove-routines-20261002';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=groove-routines-20261002';
+import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=groove-routines-20261002';
+
+import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=groove-routines-20261002';
+import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
+import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
+import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
 
 // Original geometry in millimetres: X is user-right, Z is toward the user.
 // The CAD desk uses X for depth and Z for width. Only the mounting layer maps
@@ -33,11 +50,14 @@ function disposeTree(root) {
         // Library props are clones that share geometry and materials with the
         // cache in PROP_LIBRARY; only the procedural room geometry is owned here.
         if (obj.userData.sharedProp) return;
+        if (obj.isInstancedMesh) obj.dispose();
         if (obj.geometry) geometries.add(obj.geometry);
         for (const m of (Array.isArray(obj.material) ? obj.material : [obj.material])) {
             if (!m) continue;
             materials.add(m);
-            if (m.map) textures.add(m.map);
+            if (!m.userData.sharedTextures) for (const value of Object.values(m)) {
+                if (value?.isTexture) textures.add(value);
+            }
         }
     });
     geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose());
@@ -54,7 +74,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=arcades-20261002').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -286,6 +306,13 @@ export class WorkspaceAccessories {
         }
         this.update();
     }
+    setDayDress(mode) {
+        const phase = ['morning', 'afternoon', 'evening', 'night', 'party'].indexOf(mode);
+        for (const mount of this.mounts.values()) for (const child of mount.dress?.children || []) {
+            if (child.userData.dayKit) child.children.forEach((variant, i) => variant.visible = i === phase);
+            else if (child.userData.dailyInput) child.visible = phase !== 2 && phase !== 4;
+        }
+    }
     update() {
         for (const { anchor, group, dress, relative } of this.mounts.values()) {
             anchor.updateWorldMatrix(true, false);
@@ -313,7 +340,7 @@ export class WorkspaceAccessories {
             .map((placement, index) => ({ ...placement, sceneAssetKey: `${scene.id}:${placement.role}:${index}:${placement.id}` }));
         await PROP_LIBRARY.loadIndex();
         const loaded = await Promise.all(wanted.map(async placement => {
-            try { return { placement, object: await PROP_LIBRARY.instance(placement.id) }; }
+            try { return { placement, object: placement.procedural === 'midi' ? createMusicKeyboard() : await PROP_LIBRARY.instance(placement.id) }; }
             catch { return { placement, object: null }; }
         }));
         if (token !== this.dressToken) return;
@@ -323,7 +350,30 @@ export class WorkspaceAccessories {
             object.position.set(...placement.at);
             object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
             markSceneAsset(object, { key: placement.sceneAssetKey, role: placement.role });
+            object.userData.dailyInput = placement.role === 'desktop' && /keyboard|mouse|laptop|tablet/.test(placement.id) && sceneId !== 'music';
             mount.dress.add(object);
+        }
+        const desktop = this.mounts.get('desktop');
+        if (desktop && sceneId !== 'product') {
+            const kit = new THREE.Group(); kit.name = 'Groove tabletop · daily materials'; kit.userData.dayKit = true;
+            kit.position.set(-440, 1, 150); markSceneAsset(kit, { key: `${sceneId}:desktop:daily-kit`, role: 'desktop' });
+            const paper = material('#e9dfc8'), cover = material(sceneId === 'creative' ? '#b9765d' : '#52746c'), ceramic = material('#e6d6b8'), ink = material('#354b50');
+            for (let phase = 0; phase < 5; phase++) {
+                const group = new THREE.Group(); group.name = ['Morning coffee', 'Working notes', 'Evening reading', 'Quiet focus', 'Shared setup'][phase]; kit.add(group);
+                if (phase === 0 || phase === 4) {
+                    for (const x of phase === 4 ? [-45, 45] : [0]) {
+                        mesh(group, new THREE.CylinderGeometry(27, 24, 54, 16), ceramic, [x, 27, 0]);
+                        mesh(group, new THREE.CylinderGeometry(23, 23, 2, 16), ink, [x, 55, 0]);
+                    }
+                } else {
+                    box(group, [phase === 2 ? 155 : 100, 5, 125], [0, 2.5, 0], cover, 2);
+                    box(group, [phase === 2 ? 150 : 95, 10, 118], [0, 10, 0], paper, 1);
+                    if (phase === 3) box(group, [100, 4, 125], [0, 17, 0], cover, 2);
+                    else { for (let n = 0; n < 5; n++) box(group, [65, .5, 1], [0, 15.3, -35 + n * 14], ink); rod(group, [-50, 4, 78], [50, 4, 78], 3, cover); }
+                }
+                group.visible = phase === 0;
+            }
+            desktop.dress.add(kit);
         }
         this.update();
     }
@@ -332,7 +382,13 @@ export class WorkspaceAccessories {
             mount.dress ? mount.dress.children.filter(child => child.userData.sceneAsset) : []);
     }
     objects() { return [...this.items.values()]; }
-    exportGroups() { this.update(); return [...this.mounts.values()].map(m => m.group.clone(true)); }
+    exportGroups() {
+        this.update(); return [...this.mounts.values()].map(m => {
+            const clone=m.group.clone(true), transient=[];
+            clone.traverse(obj=>{if(obj.userData.transientGameScreen)transient.push(obj);});
+            transient.forEach(obj=>obj.removeFromParent());return clone;
+        });
+    }
     dispose() {
         this.dressToken++;
         this.mounts.forEach(m => { disposeTree(m.group); if (m.dress) disposeTree(m.dress); });
@@ -364,27 +420,23 @@ const SHELLS = {
 // Wall props hang on a wall face; ceiling props hang from y = 2600.
 export const ROOM_SCENES = [
     { id: 'product', name: 'Product', caption: 'A clear view of every detail.', tone: 'slate' },
-    { id: 'office', name: 'Office', caption: 'Space for your next big idea.', tone: 'gallery',
+    { id: 'office', name: 'Office', caption: 'Different talents. One shared workspace.', tone: 'gallery',
       desk: [
-        { id: 'nasa-mug', at: [430, 0, 60] },
-        { id: 'pen', at: [355, 0, -110], turn: 25 },
-        { id: 'clipboard', at: [-430, 0, -120], turn: -14 },
-        { id: 'glasses', at: [250, 0, -235], turn: 35 },
-        { id: 'papers', at: [-300, 0, -255], turn: -8 },
-        { id: 'paper-holder', at: [-480, 0, 120], turn: 8 }
+        { id: 'office-keyboard', at: [-60, 0, 90] },
+        { id: 'magic-mouse', at: [285, 0, 90], turn: 90 },
+        { id: 'journal', at: [-420, 0, -140], turn: -10 },
+        { id: 'painted-mug', at: [435, 0, -155] }
       ],
-      shell: 'daylight', feature: 'window', props: [
-        { id: 'shelving', at: [1830, 0, -950], turn: -90 },
-        { id: 'letter-tray', at: [480, 610, -1390] },
-        { id: 'papers-envelopes', at: [1320, 612, -1330], turn: 12 },
-        { id: 'office-phone', at: [1560, 610, -1400], turn: -24 },
-        { id: 'paper-bin', at: [-1330, 0, 330] },
-        { id: 'cardboard-boxes', at: [1560, 0, 1450], turn: -18 },
-        { id: 'briefcase', at: [820, 0, 1320], turn: 28 },
-        { id: 'water-bottle', at: [700, 610, -1420] },
-        { id: 'led-ceiling-light', at: [0, 2600, -250], on: 'ceiling' },
-        { id: 'picture-frame', at: [2072, 1500, -700], turn: -90, on: 'wall' }
-      ] },
+      shelf: [{ id: 'curved-monitor', at: [0, 0, 0] }],
+      shell: 'daylight', feature: 'window', props: officeLayoutForSize('48x30').props },
+    { id: 'library', name: 'Library', caption: 'Make room for discovery.', tone: 'warm',
+      desk: [{ id: 'kenney-furniture-laptop', at: [-180, 0, 20] }, { id: 'journal', at: [320, 0, 80], turn: -8 }, { id: 'apple-pencil', at: [440, 0, 100], turn: 80 }],
+      shelf: [{ id: 'kenney-furniture-books', at: [-310, 0, 0] }, { id: 'paper-holder', at: [300, 0, 0] }],
+      shell: 'daylight', feature: 'window', props: libraryLayoutForSize('48x30').props },
+    { id: 'coworking', name: 'Co-working', caption: 'Find your people. Make room for your ideas.', tone: 'warm',
+      desk: [{ id: 'office-keyboard', at: [-80, 0, 90] }, { id: 'magic-mouse', at: [295, 0, 80], turn: 90 }, { id: 'journal', at: [-420, 0, -130], turn: -8 }],
+      shelf: [{ id: 'curved-monitor', at: [0, 0, 0] }],
+      shell: 'daylight', feature: 'window', props: coworkingLayoutForSize('48x30').props },
     { id: 'home', name: 'Home office', caption: 'Make yourself at work.', tone: 'warm',
       desk: [
         { id: 'office-keyboard', at: [-70, 0, 80] },
@@ -396,126 +448,56 @@ export const ROOM_SCENES = [
       shell: 'warm', feature: 'window', props: homeLayoutForSize('48x30').props },
     { id: 'music', name: 'Music studio', caption: 'Find your creative frequency.', tone: 'slate',
       desk: [
-        { id: 'insulated-mug', at: [430, 0, 40] },
-        { id: 'earbuds', at: [330, 0, -70], turn: 20 },
-        { id: 'tablet-folder', at: [-420, 0, -60], turn: -10 },
-        { id: 'pen', at: [-300, 0, -215], turn: 40 }
+        { id: 'music-midi-keyboard', procedural: 'midi', at: [-70, 0, 105] },
+        { id: 'magic-mouse', at: [465, 0, 85], turn: 90 },
+        { id: 'mac-studio', at: [-455, 0, -250] },
+        { id: 'headphones', at: [410, 0, -240], turn: 18 }
       ],
-      shell: 'studio', feature: 'panels', piano: true, glow: 'warm', props: [
-        { id: 'lava-lamp', at: [-1700, 0, 780] },
-        { id: 'wall-lamp', at: [2072, 1650, 500], turn: -90, on: 'wall' },
-        { id: 'ottoman', at: [-1400, 0, 1500], turn: 20 },
-        { id: 'insulated-mug', at: [-1400, 430, 1500] },
-        { id: 'earbuds', at: [-1310, 430, 1580] },
-        { id: 'led-wall', at: [-1980, 0, -800], turn: 90 },
-        { id: 'skateboard', at: [1870, 0, 1500], turn: -75 }
-      ] },
+      shelf: [ { id: 'curved-monitor', at: [0, 0, 0] } ],
+      shell: 'studio', feature: 'panels', props: musicLayoutForSize('48x30').props },
     { id: 'gaming', name: 'Gaming', caption: 'Settle into your next world.', tone: 'slate',
       desk: [
-        { id: 'gaming-laptop', at: [-380, 0, 60], turn: 12 },
-        { id: 'soda-can', at: [430, 0, 20] },
-        { id: 'lego', at: [-300, 0, -250], turn: 25 },
-        { id: 'mickey-ears', at: [-470, 0, -230], turn: -20 }
+        { id: 'rgb-keyboard', at: [-100, 0, 30] },
+        { id: 'gaming-mouse', at: [300, 0, 30] },
+        { id: 'game-controller', at: [-420, 0, -240], turn: 15 },
+        { id: 'headphones', at: [435, 0, -230], turn: -20 }
       ],
-      shelf: [
-        { id: 'sonic-statue', at: [-420, 0, 0], turn: 25 },
-        { id: 'spiderman-lego', at: [420, 0, 0], turn: -20 }
-      ],
-      shell: 'studio', feature: 'panels', bars: true, glow: 'cool', props: [
-        { id: 'gaming-pc', at: [1500, 0, -260], turn: -22 },
-        { id: 'razer-keyboard', at: [-520, 391, 1420], turn: 90 },
-        { id: 'sofa', at: [-1500, 0, 1250], turn: 90 },
-        { id: 'coffee-table', at: [-520, 0, 1420], turn: 90 },
-        { id: 'soda-can', at: [-470, 391, 1330], turn: 15 },
-        { id: 'takeout-boxes', at: [-600, 391, 1480], turn: -35 },
-        { id: 'sports-bottle', at: [-420, 391, 1520] },
-        { id: 'lava-lamp', at: [1780, 0, 900] },
-        { id: 'lego-bricks', at: [1720, 0, 260], turn: -60 },
-        { id: 'football', at: [-1800, 0, -200] },
-        { id: 'skateboard', at: [-1900, 0, 400], turn: 70 },
-        { id: 'led-ceiling-light', at: [0, 2600, -200], on: 'ceiling' },
-        { id: 'samsung-neo-tv', at: [-1560, 0, -420], turn: 90 }
-      ] },
-    { id: 'creative', name: 'Creative studio', caption: 'Room to make a mess of things.', tone: 'gallery',
+      shelf: [ { id: 'curved-monitor', at: [0, 0, 0] } ],
+      shell: 'studio', feature: 'panels', props: gamingLayoutForSize('48x30').props },
+    { id: 'creative', name: 'Artist studio', caption: 'A space for your next creation.', tone: 'gallery',
       desk: [
-        { id: 'drawing-tablet', at: [-360, 0, 40], turn: 8 },
-        { id: 'apple-pencil', at: [-195, 0, -60], turn: 60 },
-        { id: 'metal-ruler', at: [-430, 0, -240], turn: -6 },
-        { id: 'painted-mug', at: [430, 0, 40] },
-        { id: 'heart-glasses', at: [300, 0, -220], turn: 40 }
+        { id: 'drawing-tablet', at: [-285, 0, 40], turn: 8 },
+        { id: 'apple-pencil', at: [-115, 0, 50], turn: 65 },
+        { id: 'sketchbook', at: [110, 0, -105], turn: -8 },
+        { id: 'metal-ruler', at: [-425, 0, -195], turn: 90 },
+        { id: 'painted-mug', at: [410, 0, -180] }
       ],
-      shell: 'loft', feature: 'window', props: [
-        { id: 'easel-bar', at: [-1700, 0, 900], turn: 18 },
-        { id: 'canvas', at: [2072, 1350, 900], turn: -90, on: 'wall' },
-        { id: 'canvas', at: [-1450, 0, 640], turn: 100 },
-        { id: 'shelving', at: [1830, 0, -960], turn: -90 },
-        { id: 'printer-3d', at: [1500, 0, 1350], turn: -25 },
-        { id: 'ruler-set-square', at: [640, 612, -1400], turn: -15 },
-        { id: 'long-scissors', at: [900, 612, -1330], turn: 40 },
-        { id: 'paper-bin', at: [-1300, 0, 300] },
-        { id: 'tea-cup', at: [400, 610, -1350] },
-        { id: 'hanging-led-lamp', at: [-800, 2600, 700], on: 'ceiling' },
-        { id: 'papers', at: [1000, 612, -1440], turn: -8 }
-      ] },
-    { id: 'lounge', name: 'Lounge', caption: 'Clock off without going far.', tone: 'warm',
+      shell: 'loft', feature: 'window', props: artistLayoutForSize('48x30').props },
+    { id: 'lounge', name: 'Lounge', caption: 'Good company. A little play. Your kind of evening.', tone: 'warm',
       desk: [
-        { id: 'beer-can', at: [430, 0, 40] },
-        { id: 'glasses', at: [300, 0, -180], turn: 30 },
-        { id: 'papers', at: [-330, 0, -230], turn: -12 }
+        { id: 'tablet-pc', at: [-210, 0, 20] },
+        { id: 'game-controller', at: [210, 0, 90], turn: -15 },
+        { id: 'tea-cup', at: [430, 0, -140] }
       ],
-      shell: 'lounge', feature: 'window', props: [
-        { id: 'sofa', at: [-1500, 0, 1200], turn: 90 },
-        { id: 'coffee-table', at: [-500, 0, 1400], turn: 90 },
-        { id: 'glass-of-water', at: [-430, 391, 1320] },
-        { id: 'tesla-tequila', at: [-560, 391, 1460], turn: -25 },
-        { id: 'ottoman', at: [-1300, 0, -180], turn: 15 },
-        { id: 'samsung-oled-tv', at: [1750, 0, 640], turn: -90 },
-        { id: 'foosball', at: [1400, 0, 1550], turn: -12 },
-        { id: 'table-lamps', at: [-1900, 0, 380], turn: 25 },
-        { id: 'oval-mirror', at: [2072, 1400, -560], turn: -90, on: 'wall' },
-        { id: 'chandelier', at: [-700, 2600, 950], on: 'ceiling' },
-        { id: 'hand-fan', at: [2072, 1700, -1100], turn: -90, on: 'wall' },
-        { id: 'coffee-cups', at: [-620, 391, 1240], turn: 40 }
-      ] },
-    { id: 'kitchen', name: 'Kitchen', caption: 'Work where the coffee lives.', tone: 'gallery',
+      shelf: [{ id: 'kenney-furniture-plant-small2', at: [350, 0, 60] }],
+      shell: 'lounge', feature: 'window', props: loungeLayoutForSize('48x30').props },
+    { id: 'kitchen', name: 'Kitchen', caption: 'Gather here. Make something good.', tone: 'warm',
       desk: [
-        { id: 'coffee-cups', at: [400, 0, 40], turn: -20 },
-        { id: 'apple', at: [300, 0, -90] },
-        { id: 'glass-of-water', at: [-420, 0, 40] }
+        { id: 'cutting-board', at: [-90, 0, 100] },
+        { id: 'apple', at: [290, 0, 60] },
+        { id: 'orange', at: [380, 0, -70] },
+        { id: 'tablet-pc', at: [-380, 0, -90] }
       ],
-      shell: 'kitchen', feature: 'plain', props: [
-        { id: 'fridge', at: [1600, 0, -1150], turn: -90 },
-        { id: 'cutting-board', at: [-1600, 900, 500], turn: 20 },
-        { id: 'knife-set', at: [-1750, 900, 120], turn: 35 },
-        { id: 'kitchen-scissors', at: [-1520, 902, 260], turn: -50 },
-        { id: 'coffee-cups', at: [-1600, 900, 860], turn: -15 },
-        { id: 'takeout-boxes', at: [-1350, 900, 1150], turn: 25 },
-        { id: 'apple', at: [-1780, 900, 760] },
-        { id: 'orange', at: [-1690, 900, 980], turn: 40 },
-        { id: 'soda-can', at: [-1450, 900, 640] },
-        { id: 'glass-of-water', at: [-1450, 900, 380] },
-        { id: 'led-ceiling-light', at: [-900, 2600, 500], on: 'ceiling' },
-        { id: 'trash-basket', at: [1750, 0, 1450], turn: 20 },
-        { id: 'water-bottle', at: [1700, 0, -150] }
-      ], counter: true },
-    { id: 'gym', name: 'Home gym', caption: 'Stand up. Then keep going.', tone: 'gallery',
+      shelf: [{ id: 'kenney-furniture-plant-small1', at: [350, 0, 70] }],
+      shell: 'kitchen', feature: 'window', props: kitchenLayoutForSize('48x30').props },
+    { id: 'gym', name: 'Home gym', caption: 'Your daily momentum. Built here.', tone: 'slate',
       desk: [
         { id: 'sports-bottle', at: [430, 0, 40] },
-        { id: 'water-bottle', at: [330, 0, -90] },
-        { id: 'airtag', at: [-400, 0, -210] }
+        { id: 'tablet-pc', at: [-170, 0, 40] },
+        { id: 'journal', at: [190, 0, -90] }
       ],
-      shell: 'gym', feature: 'plain', props: [
-        { id: 'full-length-mirror', at: [2072, 0, 400], turn: -90, on: 'wall' },
-        { id: 'exercise-equipment', at: [-1500, 0, 1250], turn: 30 },
-        { id: 'sports-bottle', at: [-1150, 0, 620] },
-        { id: 'water-bottle', at: [-980, 0, 700] },
-        { id: 'hemp-protein', at: [1700, 0, -1350] },
-        { id: 'beef-protein', at: [1450, 0, -1380], turn: -20 },
-        { id: 'football', at: [-1800, 0, -400] },
-        { id: 'shelving', at: [1830, 0, -960], turn: -90 },
-        { id: 'led-ceiling-light', at: [0, 2600, -200], on: 'ceiling' },
-        { id: 'paper-bin', at: [-1250, 0, 200] }
-      ] },
+      shelf: [{ id: 'curved-monitor', at: [0, 0, 90] }],
+      shell: 'gym', feature: 'window', props: gymLayoutForSize('48x30').props },
     { id: 'scifi', name: 'Sci-fi bay', caption: 'A desk at the edge of known space.', tone: 'slate',
       desk: [
         { id: 'mac-studio', at: [-400, 0, -120], turn: 15 },
@@ -523,18 +505,9 @@ export const ROOM_SCENES = [
         { id: 'airtag', at: [-250, 0, -255] }
       ],
       shelf: [ { id: 'curved-monitor', at: [0, 0, 120], turn: 0 } ],
-      shell: 'hangar', feature: 'panels', bars: true, glow: 'cool', props: [
-        { id: 'led-wall', at: [-1980, 0, -700], turn: 90 },
-        { id: 'trash-can-futuristic', at: [1700, 0, 1350], turn: -25 },
-        { id: 'recessed-light', at: [-700, 2600, 200], on: 'ceiling' },
-        { id: 'recessed-light', at: [700, 2600, 200], on: 'ceiling' },
-        { id: 'recessed-light', at: [0, 2600, 1000], on: 'ceiling' },
-        { id: 'binoculars', at: [1620, 0, 480], turn: 35 },
-        { id: 'lava-lamp', at: [1780, 0, 820] },
-        { id: 'led-ceiling-light', at: [700, 2600, 1100], on: 'ceiling' }
-      ] }
+      shell: 'hangar', feature: 'panels', props: scifiLayoutForSize('48x30').props }
 ,
-    { id: 'bedroom', name: 'Bedroom', caption: 'Work, then stop working.', tone: 'warm',
+    { id: 'bedroom', name: 'Bedroom', caption: 'Room to begin. Room to unwind.', tone: 'warm',
       desk: [
         { id: 'table-lamp-plain', at: [-450, 0, -230] },
         { id: 'journal', at: [400, 0, 40], turn: -18 },
@@ -543,92 +516,40 @@ export const ROOM_SCENES = [
         { id: 'glasses-3', at: [-180, 0, -250], turn: -25 }
       ],
       shelf: [ { id: 'photo-frame', at: [-380, 0, 0], turn: 18 } ],
-      shell: 'bedroom', feature: 'window', slats: true, props: [
-        { id: 'bed', at: [-1450, 0, 900], turn: 90 },
-        { id: 'dresser', at: [1700, 0, -900], turn: -90 },
-        { id: 'table-mirror-2', at: [1700, 780, -900], turn: -90 },
-        { id: 'hall-bench', at: [-400, 0, 1750], turn: 0 },
-        { id: 'sneaker-1', at: [1500, 0, 1450], turn: 25 },
-        { id: 'skate-shoes', at: [1180, 0, 1620], turn: -30 },
-        { id: 'backpack-daypack', at: [1750, 0, 900], turn: 40 },
-        { id: 'toy-train', at: [-1750, 0, -250], turn: 20 },
-        { id: 'comics', at: [-1500, 0, 1750], turn: -15 },
-        { id: 'modern-mirror-2', at: [2072, 0, 300], turn: -90, on: 'wall' },
-        { id: 'chandelier-2', at: [-600, 2600, 700], on: 'ceiling' },
-        { id: 'monstera', at: [1550, 0, 1750], turn: 15 }
-      ] },
-    { id: 'workshop', name: 'Workshop', caption: 'Somewhere to make the thing.', tone: 'gallery',
+      shell: 'bedroom', feature: 'window', props: bedroomLayoutForSize('48x30').props },
+    { id: 'workshop', name: 'Workshop', caption: 'Make it. Mend it. Make it yours.', tone: 'warm',
       desk: [
         { id: 'multi-tool', at: [400, 0, -60], turn: 20 },
         { id: 'caliper', at: [-380, 0, -180], turn: -35 },
         { id: 'painters-tape', at: [-430, 0, 80] },
         { id: 'walkie-talkie', at: [300, 0, 120], turn: 40 }
       ],
-      shell: 'workshop', feature: 'plain', counter: true, props: [
-        { id: 'tool-cart', at: [1700, 0, 600], turn: -60 },
-        { id: 'toolbox-industrial', at: [1700, 0, 1450], turn: -35 },
-        { id: 'shop-machine', at: [1550, 0, -1050], turn: -20 },
-        { id: 'impact-wrench', at: [-1600, 900, 100], turn: -25 },
-        { id: 'chop-saw', at: [-1550, 900, -600], turn: 75 },
-        { id: 'hammer-drill', at: [-1520, 900, 400], turn: 20 },
-        { id: 'rubber-mallet', at: [-1600, 900, 750], turn: -40 },
-        { id: 'gas-can', at: [1150, 0, 1700], turn: 15 },
-        { id: 'pallet', at: [700, 0, 1950], turn: 8 },
-        { id: 'work-boot', at: [1200, 0, 1700], turn: -25 },
-        { id: 'cork-board', at: [2072, 1500, -400], turn: -90, on: 'wall' },
-        { id: 'led-ceiling-light', at: [0, 2600, -150], on: 'ceiling' },
-        { id: 'oscilloscope', at: [-1600, 900, -1250], turn: 65 },
-        { id: 'toolbox', at: [1450, 0, 1550], turn: 35 }
-      ] },
-    { id: 'study', name: 'Study', caption: 'Quiet, and full of books.', tone: 'warm',
+      shell: 'workshop', feature: 'window', props: workshopLayoutForSize('48x30').props },
+    { id: 'study', name: 'Study', caption: 'Make time for a quieter kind of work.', tone: 'warm',
       desk: [
-        { id: 'ink-quill', at: [430, 0, -40] },
-        { id: 'antique-book', at: [-400, 0, 20], turn: -12 },
-        { id: 'journal', at: [-280, 0, -220], turn: 24 },
-        { id: 'calculator', at: [300, 0, -230], turn: -30 },
-        { id: 'glasses-3', at: [130, 0, -260], turn: 40 }
+        { id: 'kenney-furniture-laptop', at: [-220, 0, 10] },
+        { id: 'journal', at: [170, 0, 70], turn: -8 },
+        { id: 'pen', at: [355, 0, 160], turn: -12 },
+        { id: 'glasses-3', at: [180, 0, -225], turn: 15 },
+        { id: 'modern-lamp', at: [425, 0, -190] }
       ],
-      shelf: [
-        { id: 'globe', at: [-400, 0, 20], turn: 20 },
-        { id: 'skull', at: [420, 0, 20], turn: -25 }
-      ],
-      shell: 'study', feature: 'window', props: [
-        { id: 'books-cabinet', at: [1780, 0, -700], turn: -90 },
-        { id: 'armchair-leather', at: [-1500, 0, 1200], turn: 65 },
-        { id: 'bookwheel', at: [-1650, 0, -450], turn: 40 },
-        { id: 'iron-safe', at: [1700, 0, 1500], turn: -35 },
-        { id: 'carpet-runner', at: [0, 0, 1500], turn: 0 },
-        { id: 'the-thinker', at: [1450, 0, 600], turn: -25 },
-        { id: 'photo-frames', at: [2072, 1550, 200], turn: -90, on: 'wall' },
-        { id: 'retro-light', at: [-1700, 0, 500], turn: 15 },
-        { id: 'ficus', at: [-1800, 0, 1750], turn: 0 },
-        { id: 'magazines', at: [-1250, 0, 1450], turn: -20 }
-      ] },
-    { id: 'gallery', name: 'Gallery', caption: 'Put the work on a wall.', tone: 'gallery',
+      shelf: [{ id: 'kenney-furniture-books', at: [-240, 0, 0] }, { id: 'tin-cat', at: [320, 0, 0] }],
+      shell: 'study', feature: 'window', props: studyLayoutForSize('48x30').props },
+    { id: 'gallery', name: 'Gallery', caption: 'A collection with room to inspire.', tone: 'gallery',
       desk: [
-        { id: 'journal', at: [400, 0, 20], turn: -10 },
+        { id: 'journal', at: [120, 0, 80], turn: -10 },
         { id: 'pen', at: [300, 0, -150], turn: 30 },
         { id: 'glasses-2', at: [-400, 0, -60], turn: -20 },
         { id: 'gold-award', at: [430, 0, -120], turn: -15 }
       ],
-      shell: 'gallery', feature: 'plain', props: [
-        { id: 'aphrodite', at: [-1600, 0, -500], turn: 20 },
-        { id: 'mercury-statue', at: [1650, 0, -600], turn: -30 },
-        { id: 'the-thinker', at: [-1500, 0, 1400], turn: 45 },
-        { id: 'antique-vase', at: [1700, 0, 1200], turn: 0 },
-        { id: 'gallery-poster', at: [2072, 1500, -200], turn: -90, on: 'wall' },
-        { id: 'mosaic-art', at: [2072, 1500, 1100], turn: -90, on: 'wall' },
-        { id: 'carved-emblem', at: [2072, 1700, -1300], turn: -90, on: 'wall' },
-        { id: 'lounge-chair-metal', at: [-300, 0, 1900], turn: 180 },
-        { id: 'recessed-light', at: [-900, 2600, -300], on: 'ceiling' },
-        { id: 'recessed-light', at: [900, 2600, -300], on: 'ceiling' },
-        { id: 'recessed-light', at: [0, 2600, 900], on: 'ceiling' },
-      ] }
+      shell: 'gallery', feature: 'window', props: galleryLayoutForSize('48x30').props }
 ];
 
 export const ROOM_ATMOSPHERES = {
     product: { label: 'Softbox studio', space: [0, 0, 0], key: '#fff9f0', fill: '#e8f0ff', accent: '#ffffff', power: 1.5, ambient: .35, exposure: .95, bounce: 1.3 },
     office: { label: 'Fresh morning', space: [700, 650, 650], key: '#fff5df', fill: '#dceeff', accent: '#d3f1df', power: 1.8, ambient: .48, exposure: 1.02, bounce: .85 },
+    library: { label: 'Campus daylight', space: [1000, 1000, 1400], key: '#fff0d7', fill: '#dcecf0', accent: '#c0d7be', power: 1.45, ambient: .46, exposure: 1.07, bounce: .65 },
+    coworking: { label: 'Shared daylight', space: [1100, 950, 1300], key: '#fff0d8', fill: '#d8e9ee', accent: '#c0d6c5', power: 1.5, ambient: .46, exposure: 1.08, bounce: .66 },
     home: { ...HOME_MODES.afternoon, space: [-700, -600, -200] }, // compact default; WorkspaceRoom supplies both measured layouts
     music: { label: 'Amber sessions', space: [950, 800, 1000], key: '#ffce9c', fill: '#b3bdff', accent: '#ff9454', power: 1.5, ambient: .38, exposure: 1.1, bounce: .75 },
     gaming: { label: 'Violet after hours', space: [1100, 850, 1200], key: '#becaff', fill: '#cb92ff', accent: '#54dfff', power: 1.65, ambient: .36, exposure: 1.1, bounce: .75 },
@@ -690,21 +611,120 @@ export class WorkspaceRoom {
         this.token++;
         if (this.root) disposeTree(this.root);
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
-        this.homeAtmosphere = null; this.homeLayout = null; this.ceilingFixture = null;
+        this.decorateStation = null;
+        this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null;
+        this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.life = null;
         if (id === 'product') { this.ready = Promise.resolve(); return; }
         let scene = ROOM_SCENES.find(s => s.id === id);
         if (id === 'home') {
             this.homeLayout = options.layout ? homeLayoutById(options.layout) : homeLayoutForSize(options.size);
+            this.roomLayout = this.homeLayout;
             scene = { ...scene, props: this.homeLayout.props, physical: true };
+        } else if (id === 'gaming') {
+            this.roomLayout = options.layout ? gamingLayoutById(options.layout) : gamingLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'music') {
+            this.roomLayout = options.layout ? musicLayoutById(options.layout) : musicLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'creative') {
+            this.roomLayout = options.layout ? artistLayoutById(options.layout) : artistLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'library') {
+            this.roomLayout = options.layout ? libraryLayoutById(options.layout) : libraryLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'coworking') {
+            this.roomLayout = options.layout ? coworkingLayoutById(options.layout) : coworkingLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'office') {
+            this.roomLayout = options.layout ? officeLayoutById(options.layout) : officeLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'bedroom') {
+            this.roomLayout = options.layout ? bedroomLayoutById(options.layout) : bedroomLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'gallery') {
+            this.roomLayout = options.layout ? galleryLayoutById(options.layout) : galleryLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'scifi') {
+            this.roomLayout = options.layout ? scifiLayoutById(options.layout) : scifiLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'workshop') {
+            this.roomLayout = options.layout ? workshopLayoutById(options.layout) : workshopLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'lounge') {
+            this.roomLayout = options.layout ? loungeLayoutById(options.layout) : loungeLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'kitchen') {
+            this.roomLayout = options.layout ? kitchenLayoutById(options.layout) : kitchenLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'gym') {
+            this.roomLayout = options.layout ? gymLayoutById(options.layout) : gymLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'study') {
+            this.roomLayout = options.layout ? studyLayoutById(options.layout) : studyLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
         }
         const root = this.root = new THREE.Group(); root.name = `Room:${id}`;
         root.rotation.y = Math.PI / 2;
-        // Use the measured nominal desktop width for the Home Office's metre
+        // Use the measured nominal desktop width for measured rooms' metre
         // conversion. Other scenes retain their existing authored scale.
-        root.scale.setScalar(id === 'home' ? options.scale || this.scale : this.scale); this.scene.add(root);
-        if (id === 'home') buildHomeOffice(this, root, this.homeLayout, { material, mesh, box, rod, sphere });
+        root.scale.setScalar(this.roomLayout ? options.scale || this.scale : this.scale); this.scene.add(root);
+        if (id === 'home') {
+            buildHomeOffice(this, root, this.homeLayout, { material, mesh, box, rod, sphere });
+            this.roomAtmosphere = this.homeAtmosphere;
+        }
+        else if (id === 'gaming') buildGamingRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere });
+        else if (id === 'music') buildMusicRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'creative') buildArtistRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'study') buildStudyRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'bedroom') buildBedroomRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'gallery') buildGalleryRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'scifi') buildScifiRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'workshop') buildWorkshopRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'lounge') buildLoungeRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'kitchen') buildKitchenRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'gym') buildGymRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'library') buildLibraryRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'coworking') buildCoworkingRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'office') buildOfficeRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else this.buildShell(root, scene);
-        this.ready = this.addProps(root, scene, this.token);
+        if (this.roomLayout) {
+            this.life = new RoomLife(this, { material, mesh, box, rod, sphere, markSceneAsset });
+            refineRoomSurfaces(this);
+        }
+        const token = this.token;
+        this.ready = Promise.all([this.addProps(root, scene, this.token),
+            ['office', 'coworking'].includes(id) ? this.addOfficeStations(root, options.createStation, this.token) : Promise.resolve()]).then(() => {
+            if (token === this.token) this.life?.bind();
+        });
+    }
+    async addOfficeStations(root, createStation, token) {
+        if (!createStation) return;
+        await PROP_LIBRARY.loadIndex();
+        if (token !== this.token) return;
+        const snapshots = this.roomLayout.stations.map(spec => ({ spec, ...createStation(spec) }));
+        for (const { spec, group } of snapshots) {
+            group.name = `ErgoFlex ${this.id}: ${spec.name}`;
+            group.userData.propId = `${this.id}-station-${spec.id}`;
+            group.userData.sceneAssetName = spec.name + ' · ErgoFlex desk';
+            markSceneAsset(group, { key: `${this.id}:${this.roomLayout.id}:station:${spec.id}` });
+            group.position.set(spec.at[0], 0, spec.at[1]); root.add(group);
+        }
+        for (const { spec, group, mounts } of snapshots) {
+            for (const role of ['desktop', 'shelf']) {
+                const mount = new THREE.Group(); mount.name = spec.name + ':' + role;
+                if (!mounts[role]) continue;
+                mount.matrixAutoUpdate = false; mount.matrix.copy(mounts[role]); group.add(mount);
+                for (const placement of spec[role] || []) {
+                    try {
+                        const object = await PROP_LIBRARY.instance(placement.id);
+                        if (token !== this.token) { disposeTree(group); return; }
+                        object.position.set(...placement.at); object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
+                        mount.add(object);
+                    } catch { if (token === this.token) this.missingProps.push(placement.id); }
+                }
+                if (role === 'desktop' && spec.plan) this.decorateStation?.(mount, spec);
+            }
+        }
     }
     ensureAssetRoot() {
         if (this.root) return this.root;
@@ -714,6 +734,24 @@ export class WorkspaceRoom {
         root.scale.setScalar(this.scale);
         this.scene.add(root);
         return root;
+    }
+    // Usable floor rectangle in scene coordinates, inside the physical walls.
+    get floorBounds() {
+        if (!this.root || this.id === 'product') return null;
+        let left, right, back, front;
+        if (this.roomLayout) {
+            left = -this.roomLayout.width / 2; right = -left;
+            back = this.roomLayout.back; front = back + this.roomLayout.depth;
+        } else {
+            const [wide, rear, ahead] = ROOM_ATMOSPHERES[this.id].space;
+            left = -2100 - wide; right = 2075 + wide;
+            back = -1625 - rear; front = 2200 + ahead;
+        }
+        this.root.updateWorldMatrix(true, false);
+        const bounds = new THREE.Box3();
+        for (const x of [left, right]) for (const z of [back, front])
+            bounds.expandByPoint(new THREE.Vector3(x, 0, z).applyMatrix4(this.root.matrixWorld));
+        return bounds;
     }
     buildShell(root, scene) {
         const palette = SHELLS[scene.shell] || SHELLS.daylight;
@@ -825,19 +863,24 @@ export class WorkspaceRoom {
         for (let index = 0; index < placements.length; index++) {
             const { placement, object } = placements[index];
             if (!object) { this.missingProps.push(placement.id); continue; }
+            this.decorateProp?.(object, placement);
             const position = scene.physical ? [...placement.at] : roomPosition(scene, placement);
             // Countertop objects travel with the complete counter, not the lounge zone.
             if (scene.counter && placement.at[1] >= 900 && placement.on !== 'ceiling') position[2] = placement.at[2];
             object.position.set(...position);
             object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
             if (placement.scale) object.scale.multiplyScalar(placement.scale);
-            markSceneAsset(object, { key: `${scene.id}:${scene.physical ? this.homeLayout.id + ':' : ''}room:${index}:${placement.id}` });
+            markSceneAsset(object, { key: `${scene.id}:${scene.physical ? this.roomLayout.id + ':' : ''}room:${index}:${placement.id}` });
             root.add(object);
         }
         if (this.missingProps.length) console.warn(`Room ${scene.id}: props unavailable: ${this.missingProps.join(', ')}`);
     }
     assets() {
-        return this.root ? this.root.children.filter(child => child.userData.sceneAsset) : [];
+        const assets = [];
+        // Framed art may belong to a cutaway wall group. Include explicitly
+        // registered descendants so wall attachment keeps its editor identity.
+        this.root?.traverse(child => { if (child.userData.sceneAsset) assets.push(child); });
+        return assets;
     }
     async addAsset(propId, key, position = [0, 0, 800]) {
         const token = this.token;
@@ -851,6 +894,6 @@ export class WorkspaceRoom {
     }
     update(camera) {
         for (const wall of this.walls) wall.obj.visible = (wall.sign || 1) * (camera.position[wall.axis] - wall.limit) > .05;
-        if (this.ceilingFixture) this.ceilingFixture.visible = camera.position.y < (this.homeLayout.height + 200) * this.root.scale.x;
+        if (this.ceilingFixture) this.ceilingFixture.visible = camera.position.y < (this.roomLayout.height + 200) * this.root.scale.x;
     }
 }

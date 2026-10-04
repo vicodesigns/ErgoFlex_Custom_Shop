@@ -1,5 +1,5 @@
 body{margin:0!important;background:#f5f1f7!important;font-family:system-ui,sans-serif}
-body> :not(#event-demo):not(#ar-help-modal):not(#ar-model-viewer):not(#ef-ar-overlay):not(script):not(style):not(link){display:none!important}
+body> :not(#event-demo):not(#ar-help-modal):not(#ar-model-viewer):not(#ef-ar-overlay):not(#led-command-center):not(script):not(style):not(link){display:none!important}
 #ar-help-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.45)}
 #ar-help-modal>div{max-width:440px;width:100%;padding:28px;border-radius:16px;background:#fff;color:#251b2b;text-align:center;box-shadow:0 12px 48px #0004}
 #ar-help-modal button{border:1px solid #c9bdce;border-radius:8px;padding:10px 16px;background:#fff;color:#251b2b;cursor:pointer;margin:6px}

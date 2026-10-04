@@ -33,6 +33,7 @@ const server = http.createServer((req, res) => {
         await page.goto(`http://127.0.0.1:${server.address().port}/product-demo.html`);
         await page.waitForFunction(()=>window.ErgoFlex?.ledCount===43 && document.querySelector('.demo-led-effects select'),{timeout:120000});
         await page.evaluate(()=>{ErgoFlex.renderer.setPixelRatio(.5);ErgoFlex.renderer.shadowMap.enabled=false;ErgoFlex.setLedsEnabled(true);});
+        await page.focus('.hub-led');await page.keyboard.down('Shift');await page.keyboard.press('Enter');await page.keyboard.up('Shift');await page.click('[data-ledcc-light="effects"]');
         await page.select('.demo-led-effects select','breathe');
         const snap=()=>page.evaluate(()=>{
             const materials=new Map();

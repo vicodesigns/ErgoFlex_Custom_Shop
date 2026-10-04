@@ -26,7 +26,7 @@ Mesh-aligned panel reflections avoid the angle-dependent area-light seam.
 Desktop power-module faces receive the same LED color and dimming as the desktop reflection.
 LEDs load off. Switching them on starts at 75% of the new maximum.
 The displayed 100% brightness is 85% of the former maximum light output.
-Use product-demo.html?v=large-desktop-trim-fix-20261001 as the Divi Hosted 3D viewer URL to bypass older browser copies.
+Use product-demo.html?v=app-dj-20261004 as the Divi Hosted 3D viewer URL to bypass older browser copies.
 The viewer HTML revalidates on future visits; versioned runtime assets may stay cached.
 The hidden AR viewer loads eagerly even outside the mobile iframe viewport.
 AR preparation errors show the actual loading failure, rather than a device warning.
@@ -57,5 +57,11 @@ The app keeps its wide layout on mobile and fits the full panel to the screen.
 The extended touchscreen follows the 60-inch desktop front and side edges.
 Its open angle matches the Standard touchscreen.
 The app controls meet the viewer directly, without the former wide-layout toolbar.
+The app now uses Height / Glide / Tilt cards and ivory controls.
+Tap the bulb to switch LED power; hold to open the LED Command Center: Light, Music, Auto DJ, Game Mode and movement cues.
+The wide Command Center covers the app controller without dimming or blocking the desk viewer.
+Auto DJ offers Chill, Party, Rave and a weighted custom rotation with Standard / Reduced / Minimal flash comfort.
+DJ settings save on the device; music starts only on a user tap and is muted until Hear music is enabled.
+LED animations and Auto DJ are browser previews, not byte-identical firmware output or physical desk control.
 Lift and tilt default to Fast. The clearance envelope limits tilt at low heights.
 If the Studio tilt rig changes again, rebuild this bundle and upload again.

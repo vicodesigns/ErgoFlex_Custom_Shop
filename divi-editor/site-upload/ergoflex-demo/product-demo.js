@@ -8,6 +8,15 @@ demo.querySelector('#demo-backdrop').insertAdjacentHTML('beforeend', '<option va
 demo.querySelector('.demo-top-controls').insertAdjacentHTML('beforeend',
   '<button class="demo-action" data-led-toggle type="button" aria-pressed="false" disabled>LEDs off</button><label class="demo-led-glow">Brightness <input type="range" data-led-glow aria-label="LED brightness" min="0" max="100" value="75" disabled><output data-led-brightness-value>75%</output></label><div class="demo-led-color-stack"><div class="led-palette" role="group" aria-label="Quick LED colors"></div><label class="demo-led-color">LED color <input type="color" data-led-color aria-label="LED color" value="#f10404" disabled></label></div><button class="demo-action" data-touchscreen-toggle type="button" aria-pressed="false" disabled>Extend screen</button><button class="demo-action" data-ar-launch type="button" title="Place the current desk in your room at full size" disabled>AR/XR · See in your space</button>');
 document.querySelector('#demo-viewer').append(document.querySelector('#viewer-shell'));
+const effectControls = document.createElement('div');
+effectControls.className = 'demo-led-effects led-effects-controls';
+demo.querySelector('.demo-top-controls').append(effectControls);
+const mappingControls = document.createElement('div');
+mappingControls.className = 'demo-led-mapping';
+demo.querySelector('.demo-top-controls').append(mappingControls);
+const playbackControls = document.createElement('div');
+playbackControls.className = 'demo-led-playback';
+demo.querySelector('.demo-top-controls').append(playbackControls);
 const start = Date.now();
 const ready = setInterval(() => {
   const api = window.ErgoFlex;
@@ -39,7 +48,8 @@ const ready = setInterval(() => {
     slot.scrollLeft = 0;
   };
   fitRemote();
-  window.addEventListener('resize', fitRemote);
+  window.addEventListener('resize', () => requestAnimationFrame(fitRemote));
+  if(window.ResizeObserver){let fittedWidth=slot.clientWidth;new ResizeObserver(()=>{if(slot.clientWidth!==fittedWidth){fittedWidth=slot.clientWidth;fitRemote();}}).observe(slot);}
   if (dock.classList.contains('collapsed')) document.querySelector('#motion-dock-toggle')?.click();
   for (const id of ['lift-speed', 'tilt-speed']) {
     const speed = document.getElementById(id);
@@ -85,6 +95,9 @@ const ready = setInterval(() => {
   const screenButton = demo.querySelector('[data-touchscreen-toggle]');
   ledButton.disabled = false;
   api.mountLedPalette(demo.querySelector('.led-palette'));
+  api.mountLedEffects(effectControls);
+  api.mountLedPlayback(playbackControls);
+  api.mountLedDiagnostic(mappingControls);
   ledPicker.disabled = false;
   ledPicker.value = api.ledColor;
   glowSlider.disabled = false;
@@ -108,6 +121,7 @@ const ready = setInterval(() => {
     brightnessValue.value = `${glowSlider.value}%`;
   });
   screenButton.addEventListener('click', () => { api.setTouchscreenOpen(!api.touchscreenOpen); syncActions(); });
+  api.prepareLedCommandCenter({power:ledButton,glow:demo.querySelector('.demo-led-glow'),colors:demo.querySelector('.demo-led-color-stack'),effects:effectControls,playback:playbackControls,mapping:mappingControls});
   syncActions();
   setInterval(syncActions, 250);
   demo.querySelector('.demo-note').textContent='Drag the desk to rotate · Scroll or pinch to zoom · Use the ErgoFlex app controls to move the 3D workstation.';

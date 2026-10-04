@@ -14,7 +14,7 @@ const server=http.createServer((request,response)=>{
 });
 (async()=>{
     await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-    const browser=await puppeteer.launch({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader','--disable-dev-shm-usage']});
+    const browser=await puppeteer.launch({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader','--disable-dev-shm-usage','--disable-accelerated-video-decode']});
     try{
         const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
         await page.setViewport({width:1366,height:1100});
@@ -25,6 +25,17 @@ const server=http.createServer((request,response)=>{
             const panel=document.querySelector('.demo-led-playback .led-music-playback');
             panel.id='music-test';panel.open=true;
         });
+        const powerBefore=await page.evaluate(()=>ErgoFlex.ledsEnabled);
+        await page.click('.hub-led');
+        assert.equal(await page.evaluate(()=>ErgoFlex.ledsEnabled),!powerBefore,'Tap toggles LED power');
+        assert.equal(await page.$eval('#led-command-center',el=>el.hidden),true,'Tap leaves Command Center closed');
+        const bulbBox=await (await page.$('.hub-led')).boundingBox();
+        await page.mouse.move(bulbBox.x+bulbBox.width/2,bulbBox.y+bulbBox.height/2);await page.mouse.down();
+        await page.waitForFunction(()=>!document.querySelector('#led-command-center').hidden,{timeout:3000});await page.mouse.up();
+        assert.equal(await page.evaluate(()=>ErgoFlex.ledsEnabled),!powerBefore,'Hold opens settings without toggling power');
+        assert.ok(await page.evaluate(()=>{const canvas=document.querySelector('#model-canvas').getBoundingClientRect();return document.elementFromPoint(canvas.x+canvas.width/2,canvas.y+canvas.height/2).id==='model-canvas';}),'Desk remains interactive while settings are open');
+        await page.click('[data-ledcc-tab="music"]');
+        assert.equal(await page.$eval('#led-command-center',el=>el.hidden),false);
         const control=selector=>'#music-test '+selector;
         assert.equal(await page.$$eval(control('[data-music-effect] option'),options=>options.length),10);
         assert.equal(await page.evaluate(()=>ErgoFlex.ledMusicMode.soundOn),false);
@@ -44,6 +55,8 @@ const server=http.createServer((request,response)=>{
             assert.equal(await page.evaluate(()=>ErgoFlex.ledMusicMode.fx),fx);
         }
         await page.click(control('[data-music-sound]'));
+        assert.equal(await page.evaluate(()=>ErgoFlex.ledMusicMode.soundOn),true,'Sound toggle enables audible music');
+        await page.waitForFunction(()=>Math.abs(ErgoFlex.ledMusicMode.gain.gain.value-.5)<.001,{timeout:3000});
         assert.equal(await page.evaluate(()=>ErgoFlex.ledMusicMode.gain.gain.value),.5);
         await page.$eval(control('[data-music-volume]'),element=>{element.value='1';element.dispatchEvent(new Event('input',{bubbles:true}));});
         await page.waitForFunction(()=>ErgoFlex.ledMusicMode.gain.gain.value===1);
@@ -100,6 +113,37 @@ const server=http.createServer((request,response)=>{
         await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'no-preference'}]);
         await page.click(control('[data-music-play]'));
         await page.waitForFunction(()=>!ErgoFlex.ledMusicMode.audio.paused);
+        await page.click('[data-ledcc-music="dj"]');
+        await page.select('[data-dj-program]','custom');
+        for(const fx of [28,29,30,31,32,33,37,38,39,40])await page.select(`[data-dj-weight="${fx}"]`,fx===33?'4':'0');
+        await page.click('button[data-dj-comfort="minimal"]');
+        await page.click('[data-dj-save]');
+        assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('ergoflex.browserAutoDJ.v1')).weights[33]),4);
+        await page.click('[data-dj-start]');
+        await page.waitForFunction(()=>ErgoFlex.ledMusicMode.dj.enabled&&!ErgoFlex.ledMusicMode.audio.paused);
+        assert.equal(await page.evaluate(()=>ErgoFlex.ledMusicMode.fx),33);
+        await page.evaluate(()=>ErgoFlex.ledMusicMode.pause());
+        const djTime=await page.evaluate(()=>ErgoFlex.ledMusicMode.dj.time);
+        await new Promise(resolve=>setTimeout(resolve,250));
+        assert.equal(await page.evaluate(()=>ErgoFlex.ledMusicMode.dj.time),djTime,'Paused Auto DJ holds its conductor');
+        await page.click('[data-dj-stop]');assert.equal(await page.evaluate(()=>ErgoFlex.ledMusicMode.dj.enabled),false);
+        // One UI on both screen sizes; every dial stays inside its card.
+        await page.click('[data-ledcc-close]');
+        assert.equal(await page.$('.demo-top [data-led-toggle]'),null,'Lighting is integrated into the app');
+        for(const width of [390,674,1366]){
+            await page.setViewport({width,height:1100});
+            await page.waitForFunction(()=>{const slot=document.querySelector('#demo-remote'),dock=document.querySelector('#motion-dock');const scale=slot.clientWidth<760?slot.clientWidth/760:1;return Math.abs(Number(dock.style.getPropertyValue('--demo-app-scale'))-scale)<.001&&document.querySelector('#glide-pad').getBoundingClientRect().right<=innerWidth;});
+            await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+            const inside=await page.evaluate(()=>[...document.querySelectorAll('.remote-grid>[data-motion-panel]')].every(card=>{
+                const a=card.getBoundingClientRect(),b=card.querySelector('.remote-compass,.remote-vslider,.remote-arc').getBoundingClientRect();return b.left>=a.left-1&&b.right<=a.right+1&&b.top>=a.top-1&&b.bottom<=a.bottom+1;
+            }));assert.ok(inside,`Controls stay inside cards at ${width}px`);
+            await page.focus('.hub-led');await page.keyboard.down('Shift');await page.keyboard.press('Enter');await page.keyboard.up('Shift');
+            assert.ok(await page.$eval('.ledcc-sheet',el=>{const box=el.getBoundingClientRect(),app=document.querySelector('#demo-remote').getBoundingClientRect();return box.right<=innerWidth+.5&&box.top>=app.top-.5&&box.bottom<=app.bottom+.5;}),'Command Center stays over app, clear of desk');
+            await page.screenshot({path:`/tmp/ef-command-center-${width}.png`});
+            await page.click('[data-ledcc-close]');
+        }
+        await page.focus('.hub-led');await page.keyboard.down('Shift');await page.keyboard.press('Enter');await page.keyboard.up('Shift');await page.click('[data-ledcc-tab="music"]');
+        await page.click('[data-music-play]');
         await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});
         assert.equal(await page.evaluate(()=>ErgoFlex.ledMusicMode.audio.paused),true);
         assert.deepEqual(errors,[]);

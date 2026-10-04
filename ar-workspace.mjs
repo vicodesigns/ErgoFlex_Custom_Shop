@@ -303,6 +303,7 @@ export class ARWorkspace {
         this.ui.place.textContent = 'Move desk here';
     }
     restore() {
+        document.dispatchEvent(new Event('ergoflex-ar-ended'));
         try {this.hitSource?.cancel();} catch {}
         this.hitSource = null;
         const {renderer,camera,controls} = this.ctx;

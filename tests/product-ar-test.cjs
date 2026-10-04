@@ -80,6 +80,7 @@ const server = http.createServer((req,res) => {
     assert.equal(size.nominalWidth,60);assert.equal(size.widthInches,60);
     assert.ok(Math.abs(size.widthUnits*size.metersPerUnit/.0254-60)<1e-6,'Physical desktop width matches the selected size');
     console.log('Checking first LED backdrop cycle');
+    await page.focus('.hub-led');await page.keyboard.down('Shift');await page.keyboard.press('Enter');await page.keyboard.up('Shift');
     await page.click('[data-led-toggle]');
     assert.equal(await page.$eval('#demo-backdrop',el=>el.value),'led');
     await page.click('[data-led-toggle]');
@@ -89,6 +90,7 @@ const server = http.createServer((req,res) => {
     await page.click('[data-led-toggle]');
     assert.equal(await page.$eval('#demo-backdrop',el=>el.value),'warm');
     assert.equal(await page.evaluate(()=>localStorage.getItem('ergoflex.demoFirstLedBackdropV1')),'done');
+    await page.click('[data-ledcc-close]');
     console.log('Checking Sitting preset');
     await page.click('[data-form="0"]');
     await page.waitForFunction(() => Math.abs(ErgoFlex.tiltConfigs[0].currentDeg)<.01 && Math.abs(ErgoFlex.heightInches-28)<.01,{timeout:30000});
@@ -176,7 +178,9 @@ const server = http.createServer((req,res) => {
       assert.equal(native.shadow,false);
       assert.notEqual(await page.$eval('#ef-ar-overlay',el=>getComputedStyle(el).display),'none');
       assert.equal(await page.evaluate(()=>document.querySelector('#ef-ar-overlay #motion-dock')===arOriginalApp),true,'Move the real app rather than duplicating it');
-      assert.ok(await page.$('#ef-ar-overlay .demo-led-playback [data-game-play]'),'Game Mode and movement controls travel with the reused AR panel');
+      await page.$eval('#ef-ar-overlay .hub-led',button=>button.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',shiftKey:true,bubbles:true})));
+      assert.ok(await page.$('#ef-ar-overlay #led-command-center [data-game-play]'),'Command Center opens inside the WebXR DOM overlay');
+      await page.$eval('[data-ledcc-close]',button=>button.click());
       await page.$eval('[data-ar-width]',el=>{el.value='62';});
       await page.$eval('[data-ar-size-apply]',el=>el.click());
       assert.equal(await page.evaluate(()=>ErgoFlex.arSize.widthInches),62);
@@ -189,10 +193,12 @@ const server = http.createServer((req,res) => {
       await page.waitForFunction(()=>Math.abs(ErgoFlex.tiltConfigs[0].currentDeg-10)<.01,{timeout:25000});
       await page.$eval('#ef-ar-overlay #desk-height-display',el=>{el.value='48';el.dispatchEvent(new Event('change'));});
       await page.waitForFunction(()=>Math.abs(ErgoFlex.heightInches-48)<.01,{timeout:25000});
-      await page.$eval('#ef-ar-overlay .hub-led',el=>el.click());
+      await page.$eval('#ef-ar-overlay .hub-led',button=>button.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',shiftKey:true,bubbles:true})));
+      await page.$eval('#ef-ar-overlay [data-led-toggle]',el=>el.click());
       assert.equal(await page.evaluate(()=>ErgoFlex.ledsEnabled),false);
       await page.$eval('#ef-ar-overlay [data-led-color]',el=>{el.value='#22ccff';el.dispatchEvent(new Event('input'));});
       assert.equal(await page.evaluate(()=>ErgoFlex.ledColor),'#22ccff');
+      await page.$eval('[data-ledcc-close]',button=>button.click());
       // The original compass keyboard gesture must move the AR desk and spin wheels.
       const beforeGlide=await page.evaluate(()=>({position:ErgoFlex.glidePosition,spins:ErgoFlex.wheelRigs.map(r=>r.spin)}));
       await page.focus('#ef-ar-overlay #glide-pad');
@@ -220,13 +226,15 @@ const server = http.createServer((req,res) => {
         await browserPage.screenshot({path:'/tmp/ef-ar-app-reused-mobile.png'});
         await browserPage.setViewport({width:1366,height:1050});
       }
+      if(launch===1)await page.$eval('#ef-ar-overlay .hub-led',button=>button.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',shiftKey:true,bubbles:true})));
       await page.$eval('[data-ar-exit]',el=>el.click());
       await page.waitForFunction(()=>!ErgoFlex.arState.active);
       assert.equal(await page.evaluate(()=>ErgoFlex.loadedModel.parent===arOriginalParent),true);
       assert.equal(await page.evaluate(()=>ErgoFlex.renderer.shadowMap.enabled===arOriginalShadows),true,'AR restores the prior shadow setting');
       assert.equal(await page.$('#ef-ar-overlay'),null);
       assert.equal(await page.evaluate(()=>document.getElementById('motion-dock')===arOriginalApp && arOriginalApp.parentElement===arOriginalAppParent),true);
-      assert.ok(await page.$('#event-demo [data-led-color]'),'LED controls return to the normal viewer');
+      assert.ok(await page.$('body>#led-command-center [data-led-color]'),'Command Center returns to the normal viewer');
+      assert.equal(await page.$eval('#led-command-center',el=>el.hidden),true);
     }
     await page.evaluate(()=>{
       ErgoFlex.renderer.xr.setSession=arOriginalSetSession;

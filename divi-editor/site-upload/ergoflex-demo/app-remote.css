@@ -168,6 +168,12 @@
 #motion-dock.app-remote[data-sized="true"] .motion-dock-body { flex: 1; min-height: 0; display: flex; }
 #motion-dock.app-remote[data-sized="true"] .remote-body { flex: 1; min-height: 0; }
 
+/* A saved device size belongs to the expanded controls. A collapsed remote
+   keeps its width, but occupies only its header instead of an empty slab. */
+#motion-dock.app-remote[data-sized="true"].collapsed { height: auto; }
+#motion-dock.app-remote.collapsed .motion-dock-body { display: none; }
+#motion-dock.app-remote.collapsed .remote-resize { display: none; }
+
 /* Eight grips, inset so the shell's own overflow clip cannot eat them. */
 .remote-resize { position: absolute; z-index: 3; touch-action: none; }
 #motion-dock.app-remote[data-mode="docked"] .remote-resize { display: none; }
@@ -1252,3 +1258,223 @@
     background: none; border-color: transparent; color: var(--text-2);
     font-size: 9px; padding: 3px 4px;
 }
+
+/* October app surface: Height / Glide / Tilt, charcoal cards and ivory knobs.
+   The existing inputs, gesture maths and preset storage stay authoritative. */
+#motion-dock.remote-v2[data-theme="dark"] {
+    --ground:#171e24;--hub:#1c2838;--bar:#08153a;--text:#f0f0ef;--text-2:#a2aab2;
+    --sunk:#121820;--chip:#202930;--pill-a:#263038;--pill-b:#1b2229;
+    --pill-set-a:#263038;--pill-set-b:#1b2229;--rim:#46515f;--rim-empty:#3c4751;
+    --dial-a:#1c232b;--dial-b:#111820;--dial-plate:#182029;--dial-groove:#303c48;
+    --fill:#929aa6;--fill-lite:#fffdf2;--fill-deep:#969489;--ink:#b9c9ef;
+    --shell-rim:#38434f;--lift1:inset 1px 1px 2px #ffffff0b,5px 6px 15px #0003;
+}
+#motion-dock.app-remote.remote-v2 {--compass:clamp(90px,calc(var(--remote-unit,1.6px) * 48),255px);--track-h:clamp(76px,calc(var(--remote-unit,1.6px) * 40),190px)}
+#motion-dock.app-remote.remote-v2 {background:var(--ground)}
+#motion-dock.remote-v2 .remote-header {padding:12px 16px;gap:12px;background:var(--hub);min-height:46px}
+#motion-dock.remote-v2 .remote-logo {width:clamp(105px,calc(var(--remote-unit,1.6px) * 56),230px);height:auto}
+#motion-dock.remote-v2 .remote-status {width:12px;height:12px;margin-left:auto;box-shadow:0 0 8px #4cbf69}
+#motion-dock.remote-v2 .remote-menu {border-radius:50%;width:36px;height:36px;box-shadow:var(--lift1);border-color:var(--rim);color:#5096dd}
+#motion-dock.remote-v2 .remote-menu span {background:#5096dd}
+#motion-dock.remote-v2 .remote-chrome {width:30px;height:30px}
+#motion-dock.remote-v2 .remote-chrome img {width:26px;height:26px}
+#motion-dock.remote-v2 .remote-body {display:flex;flex-direction:column;gap:10px;padding:12px 16px 8px;overflow:visible;max-height:none}
+#motion-dock.remote-v2 .remote-grid {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.65fr) minmax(0,1fr);gap:14px;align-items:stretch;min-height:0;flex:1}
+#motion-dock.remote-v2 .remote-card {display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;background:linear-gradient(145deg,var(--pill-a),var(--pill-b));border:1px solid var(--rim-empty);border-radius:24px;padding:12px;min-width:0;box-shadow:var(--lift1);text-align:left;gap:6px}
+#motion-dock.remote-v2 .remote-card-heading {display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+#motion-dock.remote-v2 .remote-heading {font-size:12px;text-transform:uppercase;font-weight:400;letter-spacing:2px;color:var(--text-2);margin:0;text-align:left}
+#motion-dock.remote-v2 .remote-info {width:12px;height:12px;margin-left:3px}
+#motion-dock.remote-v2 .remote-speed {margin:0}
+#motion-dock.remote-v2 .remote-speed select {font-size:13px;letter-spacing:1px;font-weight:600;border:1px solid var(--rim-empty);border-radius:18px;padding:7px 10px;background:var(--chip);box-shadow:var(--lift1)}
+#motion-dock.remote-v2 .remote-adjust {display:flex;align-items:center;justify-content:space-between;gap:6px;flex:1;min-height:0}
+#motion-dock.remote-v2 .remote-readout {background:none;border:0;box-shadow:none;padding:0 0 18px;margin:0;max-width:none;display:flex;align-items:baseline;gap:0;min-width:0}
+#motion-dock.remote-v2 .remote-readout input {font-size:clamp(23px,calc(var(--remote-unit,1.6px) * 8.5),52px);letter-spacing:-1px;font-weight:300;width:5.1ch;flex:0 1 auto;min-width:0}
+#motion-dock.remote-v2 .remote-readout .unit {letter-spacing:0;font-size:13px;color:var(--text-2)}
+#motion-dock.remote-v2 .remote-readout::after {position:absolute;bottom:0;left:2px;content:'INCHES';letter-spacing:1px;font-size:10px;color:var(--text-2)}
+#motion-dock.remote-v2 [data-motion-panel="tilt"] .remote-readout::after {content:'ANGLE'}
+#motion-dock.remote-v2 .remote-readout .pencil {display:none}
+#motion-dock.remote-v2 .remote-vslider,#motion-dock.remote-v2 .remote-arc {grid-area:auto;margin:2px 0;height:var(--track-h);flex:none}
+#motion-dock.remote-v2 .remote-vslider {border:5px solid var(--rim);border-radius:36px;width:clamp(35px,calc(var(--track-h) * .32),60px);background:#111821;box-shadow:inset 3px 3px 8px #0007}
+#motion-dock.remote-v2 .remote-vslider input {width:calc(var(--track-h) - 10px);height:40px}
+#motion-dock.remote-v2 .remote-vslider input::-webkit-slider-thumb {background:radial-gradient(circle at 35% 30%,#fffef8,#dad7cc 55%,#97958a);border:1px solid #efeee7;box-shadow:2px 3px 5px #0008;width:30px;height:30px}
+#motion-dock.remote-v2 .remote-vslider input::-moz-range-thumb {background:radial-gradient(circle at 35% 30%,#fffef8,#dad7cc 55%,#97958a);border:1px solid #efeee7;box-shadow:2px 3px 5px #0008;width:30px;height:30px}
+#motion-dock.remote-v2 .vs-arrows .u2,#motion-dock.remote-v2 .vs-arrows .d2 {display:none}
+#motion-dock.remote-v2 .remote-arc .arc-rim {stroke:var(--rim)}
+#motion-dock.remote-v2 .remote-arc svg polygon {fill:var(--fill)}
+#motion-dock.remote-v2 .remote-sphere {background:radial-gradient(circle at 35% 30%,#fffef8,#dad7cc 55%,#97958a);box-shadow:2px 3px 6px #0008;border:1px solid #efeee7}
+#motion-dock.remote-v2 .remote-compass {width:var(--compass);height:var(--compass);margin:auto;flex:none;color:#8e98a5}
+#motion-dock.remote-v2 .remote-compass .remote-sphere {--r:clamp(12px,calc(var(--compass) * .08),21px)}
+#motion-dock.remote-v2 .dial-tick {stroke:#848d99}
+#motion-dock.remote-v2 .dial-hair {stroke:#7b8797;stroke-opacity:.15}
+#motion-dock.remote-v2 .dial-rim {stroke:#02060c;stroke-width:3;stroke-opacity:.7}
+#motion-dock.remote-v2 .remote-chips {grid-area:auto;width:100%;margin:0;gap:5px}
+#motion-dock.remote-v2 .remote-chip {flex:1;min-width:0;height:32px;border-radius:12px;font-size:13px;background:var(--chip);border-color:var(--rim-empty);box-shadow:var(--lift1)}
+#motion-dock.remote-v2 .remote-chip[data-saved="true"] {background:var(--chip);box-shadow:var(--lift1);border-color:var(--rim)}
+#motion-dock.remote-v2 .remote-footer {display:grid;grid-template-columns:1.35fr 1fr;gap:16px;align-items:stretch}
+#motion-dock.remote-v2 .remote-forms {margin:0;padding:0}
+#motion-dock.remote-v2 .remote-forms .remote-heading {display:none}
+#motion-dock.remote-v2 .remote-forms-row {display:flex;height:100%;gap:12px}
+#motion-dock.remote-v2 .remote-form {font-size:13px;letter-spacing:1px;padding:12px;border-radius:20px;border-color:var(--rim-empty);background:linear-gradient(145deg,var(--pill-a),var(--pill-b));box-shadow:var(--lift1)}
+#motion-dock.remote-v2 .remote-form::after {display:none}
+#motion-dock.remote-v2 .remote-wellness-hub {margin:0;min-height:44px;border-radius:20px;background:var(--bar);border-color:#1c294e;padding:5px 10px;gap:6px}
+#motion-dock.remote-v2 .hub-led {width:34px;height:34px;border-radius:50%;background:#c8c9cf;color:#fff;border:2px solid #5a6070;box-shadow:none}
+#motion-dock.remote-v2 .hub-led[aria-pressed="true"] {background:#3366da;color:white;box-shadow:0 0 8px #3265dd5c}
+#motion-dock.remote-v2 .hub-score {display:none}
+#motion-dock.remote-v2 .remote-hint {font-size:8px;margin:0;color:var(--text-2);line-height:1.2}
+/* Tall resized remotes retain the same cards in a compact portrait arrangement. */
+#motion-dock.remote-v2[data-shape$="portrait"] .remote-grid {grid-template-columns:1fr 1fr;grid-template-rows:1fr 1.1fr;gap:10px}
+#motion-dock.remote-v2[data-shape$="portrait"] [data-motion-panel="glide"] {grid-column:1 / -1;grid-row:1}
+#motion-dock.remote-v2[data-shape$="portrait"] .remote-glide-row {display:flex;grid-template-areas:none}
+#motion-dock.remote-v2[data-shape$="portrait"] .remote-footer {display:flex;flex-direction:column;gap:10px}
+#motion-dock.remote-v2[data-shape$="portrait"] .remote-adjust {flex-direction:column}
+#motion-dock.remote-v2[data-shape$="portrait"] .remote-vslider,#motion-dock.remote-v2[data-shape$="portrait"] .remote-arc {height:clamp(76px,calc(var(--remote-unit,1.6px) * 28),160px);margin:auto}
+#motion-dock.remote-v2[data-shape$="portrait"] .remote-arc {width:calc(clamp(76px,calc(var(--remote-unit,1.6px) * 28),160px) * 120 / 190)}
+#motion-dock.remote-v2[data-shape$="portrait"] .remote-header .glide-actions {display:none}
+#motion-dock.remote-v2[data-shape$="portrait"] .remote-readout {align-self:auto;grid-area:auto}
+#motion-dock.remote-v2:not([data-sized="true"]) {--compass:120px;--track-h:90px}
+#motion-dock.remote-v2:not([data-sized="true"]) .remote-card {padding:8px;border-radius:18px}
+#motion-dock.remote-v2:not([data-sized="true"]) .remote-card-heading {flex-wrap:wrap}
+#motion-dock.remote-v2:not([data-sized="true"]) .remote-readout input {font-size:22px}
+
+/* Command Center sheet. It is reparented into the WebXR DOM overlay on open. */
+#led-command-center {position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;padding:18px;background:#03070d8f;box-sizing:border-box;font-family:system-ui,sans-serif;color:#eee;touch-action:auto}
+#led-command-center[hidden],#led-command-center [hidden] {display:none!important}
+#led-command-center * {box-sizing:border-box}
+#led-command-center .sr-only {position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+#led-command-center .ledcc-sheet {position:relative;width:min(850px,100%);max-height:90dvh;display:flex;flex-direction:column;border:1px solid #3d5185;border-radius:28px;background:#1c1e24;box-shadow:0 25px 70px #0008;padding:16px 18px 20px;outline:none}
+#led-command-center .ledcc-grip {width:48px;height:4px;background:#5c5f67;border-radius:6px;margin:0 auto 12px}
+#led-command-center .ledcc-header {display:flex;align-items:center;gap:12px;margin-bottom:16px;flex:none}
+#led-command-center .ledcc-header nav {flex:1}
+#led-command-center button,#led-command-center select {font:inherit;color:#eaeaf0;border:1px solid #3b414b;background:#222730;border-radius:12px;padding:10px 14px;cursor:pointer}
+#led-command-center button:focus-visible,#led-command-center input:focus-visible,#led-command-center select:focus-visible {outline:2px solid #7597ff;outline-offset:3px}
+#led-command-center button[aria-pressed="true"] {background:#3c424d;border-color:#526bbc;box-shadow:inset 0 1px 3px #fff2}
+#led-command-center .ledcc-header>button {background:none;border:0;font-size:25px;padding:4px 8px}
+#led-command-center .ledcc-segments {display:flex;gap:5px;border-radius:16px;background:#2b2d33;padding:4px}
+#led-command-center .ledcc-segments button {flex:1;background:none;border:0;font-weight:650;color:#aaaeb6}
+#led-command-center .ledcc-segments button[aria-pressed="true"] {background:#46484e;color:#fff}
+#led-command-center .ledcc-scroll {overflow:auto;min-height:0;padding:0 3px;overscroll-behavior:contain}
+#led-command-center .ledcc-card {background:#202124;border:1px solid #3b3d40;border-radius:18px;margin:0 0 16px;padding:18px}
+#led-command-center h3 {margin:0 0 10px;font-size:19px;font-weight:500;color:#eee}
+#led-command-center p {color:#a3a5ad;font-size:13px;line-height:1.5;margin:8px 0}
+#led-command-center .ledcc-desk {padding:0;overflow:hidden}
+#led-command-center .ledcc-desk-heading {display:flex;align-items:center;gap:14px;padding:18px}
+#led-command-center .ledcc-desk-heading h3 {margin:0}
+#led-command-center .ledcc-desk-heading p {margin:5px 0 0}
+#led-command-center .ledcc-bulb {display:grid;place-items:center;border-radius:13px;background:#4168dc;width:42px;height:42px;font-size:28px;color:white}
+#led-command-center .ledcc-badge {margin-left:auto;font-size:12px;color:#94d6ac;white-space:nowrap;border:1px solid #507e60;border-radius:18px;padding:6px 10px}
+#led-command-center .ledcc-master {display:flex;align-items:center;gap:18px;border-block:1px solid #35373c;padding:15px 18px}
+#led-command-center .ledcc-master>[data-led-toggle] {font-size:13px;min-width:84px}
+#led-command-center .demo-led-glow {display:flex;gap:12px;align-items:center;flex:1;font-size:13px}
+#led-command-center .demo-led-glow input {width:auto;flex:1;min-width:45px;accent-color:#466bea}
+#led-command-center .demo-led-glow output {min-width:3.5ch}
+#led-command-center .ledcc-now {padding:15px 18px;font-size:13px;color:#aeb4c2}
+#led-command-center .ledcc-strips {display:flex;gap:6px;margin-top:10px}
+#led-command-center .ledcc-strips i {flex:1;height:14px;border:1px solid #646976;border-radius:4px;box-shadow:0 0 4px #ffffff28}
+#led-command-center .ledcc-subnav {display:flex;justify-content:center;gap:8px;margin:4px 0 18px}
+#led-command-center .ledcc-subnav button {background:none;border:0;border-radius:0;color:#a3a6ae;font-size:15px}
+#led-command-center .ledcc-subnav button[aria-pressed="true"] {border-bottom:2px solid #4c71ee;box-shadow:none;color:#fff}
+#led-command-center .ledcc-moods {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#led-command-center .ledcc-mood {display:flex;flex-direction:column;align-items:stretch;gap:16px;text-align:left;min-height:82px;background:#2a2b31}
+#led-command-center .ledcc-mood i {height:9px;border-radius:4px;box-shadow:0 0 10px #ffffff15}
+#led-command-center .led-palette {display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 18px}
+#led-command-center .led-preset {width:35px;height:35px;min-width:35px;padding:0;border:2px solid #abb3c3;border-radius:50%}
+#led-command-center .led-preset[aria-pressed="true"] {outline:2px solid #5e85f8;outline-offset:3px;background:var(--unused)}
+#led-command-center label {display:flex;align-items:center;justify-content:space-between;gap:14px;color:#e0e1e7;font-size:14px;min-width:0}
+#led-command-center input[type="color"] {width:56px;height:40px;border:1px solid #626a78;background:#262932;border-radius:10px;padding:4px;cursor:pointer}
+#led-command-center input[type="range"] {accent-color:#466bea;min-width:40px;flex:1}
+#led-command-center input[type="checkbox"] {accent-color:#466bea;width:18px;height:18px}
+#led-command-center input[type="file"] {max-width:60%;font-size:12px}
+#led-command-center .led-playback {display:block;max-width:none;background:#202124;border:1px solid #3b3d40;padding:18px;border-radius:18px;margin:0 0 16px}
+#led-command-center .led-playback>summary {display:none}
+#led-command-center .led-playback-controls {display:flex;flex-direction:column;gap:14px}
+#led-command-center .led-effects-controls {display:flex;flex-direction:column;align-items:stretch;gap:14px;min-width:0}
+#led-command-center .led-playback-controls>div:not([data-game-screen]) {display:flex;gap:10px;flex-wrap:wrap}
+#led-command-center .led-playback-controls .led-effects-controls {display:flex;flex-direction:column;align-items:stretch}
+#led-command-center [data-game-screen] video {max-width:100%;width:100%;max-height:190px;border-radius:14px}
+#led-command-center .ledcc-dj-grid {display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
+#led-command-center .ledcc-dj-card {flex-direction:column;align-items:stretch;background:#222b43;border:1px solid #405aab;padding:15px;border-radius:16px;font-size:17px}
+#led-command-center .ledcc-dj-card select {font-size:13px;background:#1b2340}
+#led-command-center fieldset {border:1px solid #383c46;border-radius:16px;margin:18px 0;padding:14px}
+#led-command-center legend {font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#c5cad6;padding:0 6px}
+#led-command-center .ledcc-actions {display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+#led-command-center [data-dj-start],#led-command-center [data-music-play],#led-command-center [data-game-play] {background:#315acf;border-color:#577ee9;color:#fff}
+#led-command-center .ledcc-page-title {padding:6px 0}
+#led-command-center .ledcc-automate label {margin:20px 0}
+#led-command-center .ledcc-diagnostics {font-size:12px}
+@media(max-width:600px){
+    #led-command-center {padding:8px;align-items:flex-end}
+    #led-command-center .ledcc-sheet {border-radius:24px 24px 10px 10px;padding:12px 10px;max-height:94dvh}
+    #led-command-center .ledcc-header {gap:4px}
+    #led-command-center .ledcc-header .ledcc-segments button {padding:10px 6px;font-size:13px}
+    #led-command-center .ledcc-moods {grid-template-columns:repeat(2,minmax(0,1fr))}
+    #led-command-center .ledcc-master {gap:10px;padding:12px}
+    #led-command-center .demo-led-glow {flex-wrap:wrap;gap:8px}
+    #led-command-center .ledcc-badge {font-size:10px;padding:4px 7px}
+    #led-command-center .ledcc-desk-heading {gap:8px;padding:12px}
+    #led-command-center .ledcc-dj-grid {grid-template-columns:1fr 1fr}
+    #led-command-center label {font-size:13px}
+}
+/* Reset the old portrait row assignment inside the new shared footer. */
+#motion-dock.remote-v2 .remote-footer>.remote-wellness-hub {grid-row:auto;grid-column:auto}
+#motion-dock.app-remote.remote-v2 {--compass:clamp(90px,calc(var(--remote-unit,1.6px) * 40),230px);--track-h:clamp(76px,calc(var(--remote-unit,1.6px) * 30),170px)}
+#motion-dock.remote-v2 .hub-led {min-width:34px}
+#led-command-center .ledcc-header {background:transparent!important}
+#led-command-center .led-playback-controls {align-items:stretch;max-width:none;flex-wrap:nowrap}
+#led-command-center .led-playback-controls label {display:flex;justify-content:space-between;align-items:center}
+#led-command-center .led-playback-controls input[type="range"] {width:auto;max-width:70%}
+#event-demo #motion-dock.remote-v2 {background:var(--ground)!important}
+#led-command-center select {min-width:86px;flex:none}
+#led-command-center .ledcc-dj-card {display:flex;flex-direction:column;gap:15px}
+#led-command-center .ledcc-rating {display:flex;border:1px solid #4d6cd0;border-radius:14px;overflow:hidden}
+#led-command-center .ledcc-rating button {flex:1;padding:8px 3px;font-size:10px;border:0;border-right:1px solid #4d6cd0;border-radius:0;background:none}
+#led-command-center .ledcc-rating button:last-child {border:0}
+#led-command-center .ledcc-rating button[aria-pressed="true"] {background:#426ae0;color:#fff;box-shadow:none}
+@media(max-width:600px){#led-command-center .ledcc-dj-grid {grid-template-columns:1fr}#led-command-center .ledcc-rating button {font-size:12px}}
+/* The Command Center replaces the controller footprint, leaving the model clear. */
+#led-command-center {inset:auto;padding:0;background:transparent;align-items:stretch;pointer-events:none}
+#led-command-center .ledcc-sheet {width:100%;height:100%;max-height:none;border-radius:22px;padding:10px 14px;pointer-events:auto;box-shadow:0 8px 22px #0003}
+#led-command-center .ledcc-grip {margin-bottom:6px;height:3px}
+#led-command-center .ledcc-header {margin-bottom:10px;gap:8px}
+#led-command-center .ledcc-header .ledcc-segments {max-width:600px;margin:auto}
+#led-command-center .ledcc-scroll {display:grid;grid-template-columns:minmax(210px,.65fr) minmax(0,2fr);gap:14px;flex:1;overflow:hidden;align-items:stretch}
+#led-command-center .ledcc-desk {grid-column:1;grid-row:1 / 3;margin:0;align-self:start}
+#led-command-center [data-ledcc-page] {grid-column:2;grid-row:1;overflow:auto;min-height:0;overscroll-behavior:contain;padding-right:4px}
+#led-command-center .ledcc-diagnostics {grid-column:2;grid-row:2;max-height:42px;overflow:auto}
+#led-command-center .ledcc-desk-heading {padding:12px;gap:10px;flex-wrap:wrap}
+#led-command-center .ledcc-desk-heading p {display:none}
+#led-command-center .ledcc-desk-heading h3 {font-size:16px}
+#led-command-center .ledcc-badge {font-size:10px;padding:4px 7px}
+#led-command-center .ledcc-master {flex-wrap:wrap;gap:10px;padding:12px}
+#led-command-center .demo-led-glow {flex-basis:100%;gap:8px}
+#led-command-center .ledcc-now {padding:12px;font-size:12px}
+#led-command-center .ledcc-card {padding:12px;margin-bottom:10px}
+#led-command-center .ledcc-desk {padding:0}
+#led-command-center .ledcc-subnav {margin:0 0 8px;gap:6px}
+#led-command-center .ledcc-subnav button {font-size:13px;padding:6px 10px}
+#led-command-center .led-playback {padding:12px;margin-bottom:10px}
+#led-command-center .led-playback-controls {display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#led-command-center .led-playback-controls label {flex-wrap:wrap;gap:8px}
+#led-command-center .led-playback-controls input[type="range"] {max-width:none;min-width:60px;flex:1}
+#led-command-center .led-playback-controls>div.led-effects-controls {grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#led-command-center [data-music-status],#led-command-center [data-game-status] {grid-column:1 / -1}
+#led-command-center .led-playback-controls [data-game-screen] {grid-column:1 / -1}
+#led-command-center .ledcc-dj-grid {margin:12px 0;gap:10px}
+#led-command-center .ledcc-mood {min-height:60px;gap:8px}
+#led-command-center[data-compact="true"] .ledcc-sheet {padding:6px 8px;border-radius:16px}
+#led-command-center[data-compact="true"] .ledcc-grip {display:none}
+#led-command-center[data-compact="true"] .ledcc-header {margin-bottom:6px}
+#led-command-center[data-compact="true"] .ledcc-header button {padding:6px;font-size:12px}
+#led-command-center[data-compact="true"] .ledcc-header>button {font-size:20px}
+#led-command-center[data-compact="true"] .ledcc-scroll {display:block;overflow:auto;padding:0}
+#led-command-center[data-compact="true"] .ledcc-desk {margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr}
+#led-command-center[data-compact="true"] .ledcc-desk-heading {display:none}
+#led-command-center[data-compact="true"] .ledcc-master {border:0;padding:8px;gap:5px;flex-wrap:nowrap}
+#led-command-center[data-compact="true"] .ledcc-master>[data-led-toggle] {min-width:65px;padding:5px;font-size:11px}
+#led-command-center[data-compact="true"] .demo-led-glow {font-size:10px;gap:4px;flex-wrap:wrap}
+#led-command-center[data-compact="true"] .demo-led-glow input {min-width:45px;width:45px}
+#led-command-center[data-compact="true"] .ledcc-now {padding:8px;font-size:9px;align-self:center}
+#led-command-center[data-compact="true"] .ledcc-strips {gap:3px;margin-top:5px}
+#led-command-center[data-compact="true"] .ledcc-strips i {height:8px}
+#led-command-center[data-compact="true"] .led-playback-controls {grid-template-columns:1fr}
+#led-command-center[data-compact="true"] .ledcc-header nav {margin:0;max-width:none}
+#motion-dock.remote-v2 .hub-led {touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}

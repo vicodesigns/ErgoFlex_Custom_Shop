@@ -1,4 +1,22 @@
+import { LedCommandCenter } from './led-command-center.mjs?v=app-dj-20261004';
+import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=groove-routines-20261002';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=groove-routines-20261002';
+import { RoomGroove } from './room-groove-runtime.mjs?v=groove-routines-20261002';
+import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
+import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
+import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
+import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
+import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=groove-routines-20261002';
+import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
+import { LED_EFFECTS, normalizeLedEffect, sampleLedEffect } from './led-effects.mjs?v=led-effects-20261003';
+import { LED_STRIPS, LED_STRIP_MAP_VERSION, createLedFrame, sampleLedDiagnostic } from './led-strip-map.mjs?v=led-game-20261003';
+import { LedPixelRenderer } from './led-pixel-renderer.mjs?v=led-game-20261003';
+import { LedMotion } from './led-movement.mjs?v=led-game-20261003';
+import { LedSounds } from './led-sounds.mjs?v=led-game-20261003';
+import { LedGameMode } from './led-game-mode.mjs?v=app-dj-20261004';
+import { LedMusicMode } from './led-music-mode.mjs?v=app-dj-20261004';
+import { sampleDecorativeInto } from './led-showcase-effects.mjs?v=led-music-20261003';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
@@ -9,9 +27,17 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=motion-v3-20260928';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=home-rooms-20261001';
-import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=home-rooms-20261001';
-import { ARWorkspace } from './ar-workspace.mjs?v=public-plates-controls-20260930';
+import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=groove-routines-20261002';
+import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=groove-routines-20261002';
+import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=groove-routines-20261002';
+import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=groove-routines-20261002';
+import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=groove-routines-20261002';
+import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=groove-routines-20261002';
+import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=groove-routines-20261002';
+import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
+import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
+import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
+import { ARWorkspace } from './ar-workspace.mjs?v=app-dj-20261004';
 import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
@@ -29,6 +55,7 @@ const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb?v=public-pl
 const LED_COLOR_KEY = 'ergoflex.ledColorV1';
 const LED_GLOW_KEY = 'ergoflex.ledGlowV4';
 const LED_SURFACE_KEY = 'ergoflex.ledSurfacesV1';
+const LED_EFFECT_KEY = 'ergoflex.ledEffectV1';
 // The former 85% output is the new ceiling shown to visitors as 100%.
 const LED_FULL_BRIGHTNESS = 123.25;
 const LED_COLOR_PRESETS = Object.freeze([
@@ -146,7 +173,8 @@ function editorEntry(editorId) {
 
 function sceneAssetState(sceneId = selectedRoomScene) {
     // Apartment edits stay separate from the larger home office layout.
-    if (sceneId === 'home') sceneId = `home:${workspaceRoom?.homeLayout?.id || selectedHomeLayout().id}`;
+    const profile = measuredRoomProfile(sceneId);
+    if (profile) sceneId = `${sceneId}:${(workspaceRoom?.id === sceneId ? workspaceRoom.roomLayout?.id : null) || profile.layout.id}`;
     if (!sceneAssetStates.has(sceneId)) {
         sceneAssetStates.set(sceneId, { removed: new Set(), added: new Map(), transforms: new Map() });
     }
@@ -163,6 +191,7 @@ function plainLocalTransform(obj) {
 
 function applyPlainLocalTransform(obj, transform) {
     if (!transform) return;
+    transform = roomLifeDisplayTransform(obj, transform);
     obj.position.set(transform.p.x, transform.p.y, transform.p.z);
     obj.quaternion.set(transform.q.x, transform.q.y, transform.q.z, transform.q.w);
     obj.scale.set(transform.s.x, transform.s.y, transform.s.z);
@@ -246,7 +275,7 @@ function sceneAssetEditorId(obj) {
 
 function sceneAssetName(obj) {
     const catalogName = PROP_LIBRARY.entry(obj?.userData?.propId)?.name;
-    return catalogName || obj?.userData?.propId || obj?.name || 'Scene asset';
+    return catalogName || obj?.userData?.sceneAssetName || obj?.userData?.propId || obj?.name || 'Scene asset';
 }
 
 function selectionTarget(obj) {
@@ -303,11 +332,11 @@ function discardSceneAssetUndoEntries() {
 
 function canonicalTransformPlain(obj) {
     const transform = canonicalTransform(obj);
-    return transform ? {
+    return roomLifeBaseTransform(obj, transform ? {
         p: { x: transform.p.x, y: transform.p.y, z: transform.p.z },
         q: { x: transform.q.x, y: transform.q.y, z: transform.q.z, w: transform.q.w },
         s: { x: transform.s.x, y: transform.s.y, z: transform.s.z }
-    } : plainLocalTransform(obj);
+    } : plainLocalTransform(obj));
 }
 
 function captureActiveSceneAssetTransforms() {
@@ -423,6 +452,22 @@ const LED_SURFACE_DEFAULTS = Object.freeze({
     rightWingStrength: 110, rightWingReach: 87
 });
 let ledSurfaces = { ...LED_SURFACE_DEFAULTS };
+let ledEffect = normalizeLedEffect();
+let ledEffectStart = performance.now() / 1000;
+const ledFrameColor = new THREE.Color();
+const ledReducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let ledPixels = null;
+const ledPixelFrame = createLedFrame();
+let ledDiagnostic = { strip: null, pixel: null };
+const ledMotion = new LedMotion();
+const ledSounds = new LedSounds();
+const ledGame = new LedGameMode(LED_STRIPS.map(s => s.count));
+const ledMusic = new LedMusicMode(LED_STRIPS.map(s => s.count));
+let ledMotionEnabled = true, ledAutoLift = false, ledAutoTilt = false, ledPlaybackUIAt = 0;
+let ledPixelSource = 'base';
+try {
+    if (!EVENT_DEMO) ledEffect = normalizeLedEffect(JSON.parse(localStorage.getItem(LED_EFFECT_KEY) || '{}'));
+} catch (_) {}
 try {
     const stored = localStorage.getItem(TRIM_COLOR_KEY);
     if (/^#[0-9a-f]{6}$/i.test(stored || '')) trimColor = stored;
@@ -442,11 +487,149 @@ try {
     }
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
+let roomGroove = null, grooveSettingPose = false;
 let homeMode = 'afternoon', homeDeskReturn = null;
 let homeLayoutId = 'apartment';
 try { const stored = localStorage.getItem('ergoflex.homeLayout'); if (HOME_LAYOUTS[stored]) homeLayoutId = stored; } catch {}
 function selectedHomeLayout() { return homeLayoutId ? homeLayoutById(homeLayoutId) : homeLayoutForSize(currentConfig.size); }
 try { const stored = localStorage.getItem('ergoflex.homeMode'); if (HOME_MODES[stored]) homeMode = stored; } catch {}
+let gamingMode = 'evening', gamingLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.gamingLayout'), mode = localStorage.getItem('ergoflex.gamingMode');
+    if (GAMING_LAYOUTS[layout]) gamingLayoutId = layout;
+    if (GAMING_MODES[mode]) gamingMode = mode;
+} catch {}
+function selectedGamingLayout() { return gamingLayoutId ? gamingLayoutById(gamingLayoutId) : gamingLayoutForSize(currentConfig.size); }
+let musicMode = 'afternoon', musicLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.musicLayout'), mode = localStorage.getItem('ergoflex.musicMode');
+    if (MUSIC_LAYOUTS[layout]) musicLayoutId = layout;
+    if (MUSIC_MODES[mode]) musicMode = mode;
+} catch {}
+function selectedMusicLayout() { return musicLayoutId ? musicLayoutById(musicLayoutId) : musicLayoutForSize(currentConfig.size); }
+let artistMode = 'afternoon', artistLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.creativeLayout'), mode = localStorage.getItem('ergoflex.creativeMode');
+    if (ARTIST_LAYOUTS[layout]) artistLayoutId = layout;
+    if (ARTIST_MODES[mode]) artistMode = mode;
+} catch {}
+function selectedArtistLayout() { return artistLayoutId ? artistLayoutById(artistLayoutId) : artistLayoutForSize(currentConfig.size); }
+let studyMode = 'afternoon', studyLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.studyLayout'), mode = localStorage.getItem('ergoflex.studyMode');
+    if (STUDY_LAYOUTS[layout]) studyLayoutId = layout;
+    if (STUDY_MODES[mode]) studyMode = mode;
+} catch {}
+function selectedStudyLayout() { return studyLayoutId ? studyLayoutById(studyLayoutId) : studyLayoutForSize(currentConfig.size); }
+let officeMode = 'afternoon', officeLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.officeLayout'), mode = localStorage.getItem('ergoflex.officeMode');
+    if (OFFICE_LAYOUTS[layout]) officeLayoutId = layout;
+    if (OFFICE_MODES[mode]) officeMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'office' && OFFICE_LAYOUTS[query.get('layout')]) officeLayoutId = query.get('layout');
+} catch {}
+function selectedOfficeLayout() { return officeLayoutId ? officeLayoutById(officeLayoutId) : officeLayoutForSize(currentConfig.size); }
+let gymMode = 'morning', gymLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.gymLayout'), mode = localStorage.getItem('ergoflex.gymMode');
+    if (GYM_LAYOUTS[layout]) gymLayoutId = layout;
+    if (GYM_MODES[mode]) gymMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'gym' && GYM_LAYOUTS[query.get('layout')]) gymLayoutId = query.get('layout');
+} catch {}
+function selectedGymLayout() { return gymLayoutId ? gymLayoutById(gymLayoutId) : gymLayoutForSize(currentConfig.size); }
+let kitchenMode = 'morning', kitchenLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.kitchenLayout'), mode = localStorage.getItem('ergoflex.kitchenMode');
+    if (KITCHEN_LAYOUTS[layout]) kitchenLayoutId = layout;
+    if (KITCHEN_MODES[mode]) kitchenMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'kitchen' && KITCHEN_LAYOUTS[query.get('layout')]) kitchenLayoutId = query.get('layout');
+} catch {}
+function selectedKitchenLayout() { return kitchenLayoutId ? kitchenLayoutById(kitchenLayoutId) : kitchenLayoutForSize(currentConfig.size); }
+let libraryMode = 'morning', libraryLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.libraryLayout'), mode = localStorage.getItem('ergoflex.libraryMode');
+    if (LIBRARY_LAYOUTS[layout]) libraryLayoutId = layout;
+    if (LIBRARY_MODES[mode]) libraryMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'library' && LIBRARY_LAYOUTS[query.get('layout')]) libraryLayoutId = query.get('layout');
+} catch {}
+function selectedLibraryLayout() { return libraryLayoutId ? libraryLayoutById(libraryLayoutId) : libraryLayoutForSize(currentConfig.size); }
+let coworkingMode = 'morning', coworkingLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.coworkingLayout'), mode = localStorage.getItem('ergoflex.coworkingMode');
+    if (COWORKING_LAYOUTS[layout]) coworkingLayoutId = layout;
+    if (COWORKING_MODES[mode]) coworkingMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'coworking' && COWORKING_LAYOUTS[query.get('layout')]) coworkingLayoutId = query.get('layout');
+} catch {}
+function selectedCoworkingLayout() { return coworkingLayoutId ? coworkingLayoutById(coworkingLayoutId) : coworkingLayoutForSize(currentConfig.size); }
+let scifiMode = 'morning', scifiLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.scifiLayout'), mode = localStorage.getItem('ergoflex.scifiMode');
+    if (SCIFI_LAYOUTS[layout]) scifiLayoutId = layout;
+    if (SCIFI_MODES[mode]) scifiMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'scifi' && SCIFI_LAYOUTS[query.get('layout')]) scifiLayoutId = query.get('layout');
+} catch {}
+function selectedScifiLayout() { return scifiLayoutId ? scifiLayoutById(scifiLayoutId) : scifiLayoutForSize(currentConfig.size); }
+let galleryMode = 'morning', galleryLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.galleryLayout'), mode = localStorage.getItem('ergoflex.galleryMode');
+    if (GALLERY_LAYOUTS[layout]) galleryLayoutId = layout;
+    if (GALLERY_MODES[mode]) galleryMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'gallery' && GALLERY_LAYOUTS[query.get('layout')]) galleryLayoutId = query.get('layout');
+} catch {}
+function selectedGalleryLayout() { return galleryLayoutId ? galleryLayoutById(galleryLayoutId) : galleryLayoutForSize(currentConfig.size); }
+let bedroomMode = 'morning', bedroomLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.bedroomLayout'), mode = localStorage.getItem('ergoflex.bedroomMode');
+    if (BEDROOM_LAYOUTS[layout]) bedroomLayoutId = layout;
+    if (BEDROOM_MODES[mode]) bedroomMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'bedroom' && BEDROOM_LAYOUTS[query.get('layout')]) bedroomLayoutId = query.get('layout');
+} catch {}
+function selectedBedroomLayout() { return bedroomLayoutId ? bedroomLayoutById(bedroomLayoutId) : bedroomLayoutForSize(currentConfig.size); }
+let workshopMode = 'morning', workshopLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.workshopLayout'), mode = localStorage.getItem('ergoflex.workshopMode');
+    if (WORKSHOP_LAYOUTS[layout]) workshopLayoutId = layout;
+    if (WORKSHOP_MODES[mode]) workshopMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'workshop' && WORKSHOP_LAYOUTS[query.get('layout')]) workshopLayoutId = query.get('layout');
+} catch {}
+function selectedWorkshopLayout() { return workshopLayoutId ? workshopLayoutById(workshopLayoutId) : workshopLayoutForSize(currentConfig.size); }
+let loungeMode = 'afternoon', loungeLayoutId = null;
+try {
+    const layout = localStorage.getItem('ergoflex.loungeLayout'), mode = localStorage.getItem('ergoflex.loungeMode');
+    if (LOUNGE_LAYOUTS[layout]) loungeLayoutId = layout;
+    if (LOUNGE_MODES[mode]) loungeMode = mode;
+    const query = new URLSearchParams(location.search);
+    if (query.get('room') === 'lounge' && LOUNGE_LAYOUTS[query.get('layout')]) loungeLayoutId = query.get('layout');
+} catch {}
+function selectedLoungeLayout() { return loungeLayoutId ? loungeLayoutById(loungeLayoutId) : loungeLayoutForSize(currentConfig.size); }
+function measuredRoomPanelId(id) { return id === 'home' ? 'home-office-controls' : `${id}-room-controls`; }
+function measuredRoomProfile(id = selectedRoomScene) {
+    if (id === 'library') return { id, layouts: LIBRARY_LAYOUTS, modes: LIBRARY_MODES, layout: selectedLibraryLayout(), mode: libraryMode, prefix: 'library' };
+    if (id === 'coworking') return { id, layouts: COWORKING_LAYOUTS, modes: COWORKING_MODES, layout: selectedCoworkingLayout(), mode: coworkingMode, prefix: 'coworking' };
+    if (id === 'bedroom') return { id, layouts: BEDROOM_LAYOUTS, modes: BEDROOM_MODES, layout: selectedBedroomLayout(), mode: bedroomMode, prefix: 'bedroom' };
+    if (id === 'gallery') return { id, layouts: GALLERY_LAYOUTS, modes: GALLERY_MODES, layout: selectedGalleryLayout(), mode: galleryMode, prefix: 'gallery' };
+    if (id === 'scifi') return { id, layouts: SCIFI_LAYOUTS, modes: SCIFI_MODES, layout: selectedScifiLayout(), mode: scifiMode, prefix: 'scifi' };
+    if (id === 'workshop') return { id, layouts: WORKSHOP_LAYOUTS, modes: WORKSHOP_MODES, layout: selectedWorkshopLayout(), mode: workshopMode, prefix: 'workshop' };
+    if (id === 'home') return { id, layouts: HOME_LAYOUTS, modes: HOME_MODES, layout: selectedHomeLayout(), mode: homeMode, prefix: 'home' };
+    if (id === 'gaming') return { id, layouts: GAMING_LAYOUTS, modes: GAMING_MODES, layout: selectedGamingLayout(), mode: gamingMode, prefix: 'gaming' };
+    if (id === 'music') return { id, layouts: MUSIC_LAYOUTS, modes: MUSIC_MODES, layout: selectedMusicLayout(), mode: musicMode, prefix: 'music' };
+    if (id === 'creative') return { id, layouts: ARTIST_LAYOUTS, modes: ARTIST_MODES, layout: selectedArtistLayout(), mode: artistMode, prefix: 'artist' };
+    if (id === 'office') return { id, layouts: OFFICE_LAYOUTS, modes: OFFICE_MODES, layout: selectedOfficeLayout(), mode: officeMode, prefix: 'office' };
+    if (id === 'lounge') return { id, layouts: LOUNGE_LAYOUTS, modes: LOUNGE_MODES, layout: selectedLoungeLayout(), mode: loungeMode, prefix: 'lounge' };
+    if (id === 'kitchen') return { id, layouts: KITCHEN_LAYOUTS, modes: KITCHEN_MODES, layout: selectedKitchenLayout(), mode: kitchenMode, prefix: 'kitchen' };
+    if (id === 'gym') return { id, layouts: GYM_LAYOUTS, modes: GYM_MODES, layout: selectedGymLayout(), mode: gymMode, prefix: 'gym' };
+    if (id === 'study') return { id, layouts: STUDY_LAYOUTS, modes: STUDY_MODES, layout: selectedStudyLayout(), mode: studyMode, prefix: 'study' };
+    return null;
+}
 let sceneLights = null;
 const roomLightSettings = {};
 let accessoryCategory = 'Desktop';
@@ -802,15 +985,15 @@ function initThreeJS() {
     keyLight.shadow.normalBias = 0.004;
     keyLight.shadow.radius = 8;
     keyLight.shadow.blurSamples = 16;
-    scene.add(keyLight);
+    scene.add(keyLight, keyLight.target);
 
     const fillLight = new THREE.DirectionalLight(0xe8f0ff, 0.35);
     fillLight.position.set(-6, 3.5, 3);
-    scene.add(fillLight);
+    scene.add(fillLight, fillLight.target);
 
     const rimLight = new THREE.DirectionalLight(0xffffff, 0.55);
     rimLight.position.set(-4, 5.5, -7.5);
-    scene.add(rimLight);
+    scene.add(rimLight, rimLight.target);
     sceneLights = { key: keyLight, fill: fillLight, rim: rimLight, hemi: hemiLight };
 
     // Pointer events for ultra-reliable click detection
@@ -1098,6 +1281,85 @@ function withNeutralPose(fn) {
     }
 }
 
+// Secondary Office desks are pose snapshots of the actual current desk model.
+// Capture synchronously under the existing motion guard, then restore the main
+// rig. Batch by material so a shared office does not multiply CAD draw calls.
+function captureOfficeStation(spec, millimetreScale) {
+    return withNeutralPose(() => {
+        currentLift = heightToLift(spec.height);
+        updateMovingObjectsPosition();
+        const tilt = primaryTiltConfig();
+        if (tilt) { tilt.currentDeg = spec.tilt; applyTiltConfig(tilt); }
+        loadedModel.updateWorldMatrix(true, true);
+        workspaceAccessories?.update();
+        const toRoom = new THREE.Matrix4().makeRotationY(-Math.PI / 2)
+            .multiply(new THREE.Matrix4().makeScale(...Array(3).fill(loadedModel.scale.x / millimetreScale)))
+            .multiply(loadedModel.matrixWorld.clone().invert());
+        const group = new THREE.Group(), batches = new Map();
+        let sourceMeshCount = 0;
+        const ledMeshes = new Set(ledParts.map(p => p.part));
+        loadedModel.traverseVisible(source => {
+            if (!source.isMesh || ledMeshes.has(source) || /^(Leds|LED)/i.test(source.name)) return;
+            sourceMeshCount++;
+            const sourceMaterials = Array.isArray(source.material) ? source.material : [source.material];
+            // Current public CAD surfaces have one material; preserve groups if
+            // an imported replacement carries multiple material assignments.
+            sourceMaterials.forEach((mat, index) => {
+                if (!mat || mat.isShaderMaterial) return;
+                const geometry = source.geometry.index ? source.geometry.toNonIndexed() : source.geometry.clone();
+                if (sourceMaterials.length > 1) {
+                    const ranges = source.geometry.groups.filter(g => g.materialIndex === index);
+                    if (!ranges.length) { geometry.dispose(); return; }
+                    const selected = new THREE.BufferGeometry();
+                    for (const name of ['position', 'normal', 'uv']) {
+                        const attr = geometry.getAttribute(name); if (!attr) continue;
+                        const values = [];
+                        for (const range of ranges) for (let i = range.start; i < range.start + range.count; i++)
+                            for (let k = 0; k < attr.itemSize; k++) values.push(attr.array[i * attr.itemSize + k]);
+                        selected.setAttribute(name, new THREE.Float32BufferAttribute(values, attr.itemSize));
+                    }
+                    geometry.dispose();
+                    append(selected, mat, source);
+                } else append(geometry, mat, source);
+            });
+        });
+        function append(geometry, mat, source) {
+            for (const name of Object.keys(geometry.attributes)) if (!['position', 'normal', 'uv'].includes(name)) geometry.deleteAttribute(name);
+            if (!geometry.attributes.normal) geometry.computeVertexNormals();
+            if (!geometry.attributes.uv) geometry.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(geometry.attributes.position.count * 2), 2));
+            geometry.clearGroups(); geometry.applyMatrix4(toRoom.clone().multiply(source.matrixWorld));
+            // Rhino exports many identical material objects. Compare appearance,
+            // retaining distinct texture maps and UVs, rather than object identity.
+            const key = JSON.stringify(['type', 'roughness', 'metalness', 'clearcoat', 'clearcoatRoughness', 'opacity', 'transparent', 'alphaTest', 'side', 'depthTest', 'depthWrite', 'vertexColors', 'bumpScale', 'envMapIntensity', 'polygonOffset', 'polygonOffsetFactor', 'polygonOffsetUnits']
+                .map(k => mat[k]).concat([mat.color?.getHex(), mat.normalScale?.toArray()],
+                    ['map', 'normalMap', 'bumpMap', 'roughnessMap', 'metalnessMap', 'alphaMap', 'aoMap'].map(k => mat[k]?.uuid)));
+            if (!batches.has(key)) batches.set(key, { sourceMaterial: mat, geometries: [] });
+            batches.get(key).geometries.push(geometry);
+        }
+        for (const { sourceMaterial, geometries } of batches.values()) {
+            const geometry = mergeGeometries(geometries, false);
+            geometries.forEach(g => g.dispose());
+            if (!geometry) throw new Error('Could not batch Office desk surfaces');
+            const material = sourceMaterial.clone();
+            // Grain maps belong to the live desk; disposal must leave them valid.
+            material.userData = { ...material.userData, sharedTextures: true };
+            if (material.emissive) material.emissive.setHex(0);
+            const mesh = new THREE.Mesh(geometry, material); mesh.castShadow = mesh.receiveShadow = true; group.add(mesh);
+        }
+        group.updateMatrixWorld(true);
+        const bounds = new THREE.Box3().setFromObject(group), center = bounds.getCenter(new THREE.Vector3());
+        const offset = new THREE.Vector3(-center.x, -bounds.min.y, -center.z);
+        group.children.forEach(mesh => mesh.position.add(offset));
+        const mounts = {};
+        for (const role of ['desktop', 'shelf']) {
+            const mount = workspaceAccessories?.mounts.get(role); if (!mount) continue;
+            mounts[role] = new THREE.Matrix4().makeTranslation(...offset.toArray()).multiply(toRoom.clone().multiply(mount.dress.matrixWorld));
+        }
+        group.userData.officeStation = { role: spec.id, height: spec.height, tilt: spec.tilt, widthMm: arSizeReference().nominalWidth * 25.4, sourceMeshCount, surfaceBatches: batches.size, main: false };
+        return { group, mounts };
+    });
+}
+
 // Undo and redo run the same code in opposite directions. Each entry knows how
 // to reverse itself and returns the entry that would reverse THAT, which is
 // pushed onto the other stack — so a redo is just an undo of an undo.
@@ -1344,6 +1606,7 @@ function updateTransformProxy() {
 }
 
 function toggleMovingObject(obj, forceState = null, skipUpdate = false) {
+    if (roomGroove?.run && forceState !== false) haltAllMotion();
     const existingIndex = movingObjects.findIndex(item => item.obj === obj);
     const currentlySelected = existingIndex > -1;
     // A locked part can always be deselected, never selected.
@@ -1879,6 +2142,16 @@ function onCanvasClick(event) {
         return;
     }
 
+    if (!isSelectionMode && roomGroove?.prepared && !roomGroove.run) {
+        const rect = canvas.getBoundingClientRect();
+        mouse.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+        raycaster.setFromCamera(mouse, camera);
+        const visible = o => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
+        const hit = raycaster.intersectObject(loadedModel, true).find(h => visible(h.object));
+        const obstruction = raycaster.intersectObject(workspaceRoom.root, true).find(h => visible(h.object) && !h.object.parent?.userData.grooveMarker);
+        if (hit && (!obstruction || hit.distance < obstruction.distance)) grooveController().start();
+        return;
+    }
     if (!isSelectionMode) return;
     if (transformControl && transformControl.dragging) return;
 
@@ -1995,6 +2268,7 @@ function setLedColor(value, persist = true) {
         entry.material.emissive.set(value);
     });
     ledSpillMaterials.forEach(({ material }) => material.uniforms.ledColor.value.set(value));
+    updateLedEffectFrame();
     const picker = document.getElementById('led-color');
     if (picker && picker.value !== value) picker.value = value;
     document.querySelectorAll('[data-led-color]').forEach(input => {
@@ -2007,6 +2281,151 @@ function setLedColor(value, persist = true) {
     if (persist) {
         try { localStorage.setItem(LED_COLOR_KEY, value); } catch (_) {}
     }
+}
+
+function updateLedEffectFrame(seconds = performance.now() / 1000) {
+    const diagnostic = ledDiagnostic.strip !== null;
+    let pixels = false, linear = false;
+    if (diagnostic) {sampleLedDiagnostic(ledPixelFrame, LED_STRIPS, ledDiagnostic); pixels = true; ledPixelSource = 'diagnostic';}
+    else if (ledMotionEnabled && ledMotion.sample(ledPixelFrame, seconds * 1000, ledReducedMotion.matches)) {pixels = true;ledPixelSource = ledMotion.owner ? 'movement' : 'completion';}
+    else if (ledGame.sample(ledPixelFrame)) {pixels = true;linear = true;ledPixelSource = 'game';}
+    else if (ledMusic.sample(ledPixelFrame)) {pixels = true;ledPixelSource = 'music';}
+    else if (sampleDecorativeInto(ledPixelFrame, ledEffect, seconds - ledEffectStart, ledColor,
+        ledReducedMotion.matches, (liftToHeight(currentLift) - 28) / 24)) {pixels = true;ledPixelSource = 'effect';}
+    else ledPixelSource = 'base';
+    const frame = sampleLedEffect(ledEffect, seconds - ledEffectStart, ledsEnabled,
+        ledReducedMotion.matches || pixels);
+    if (pixels && ledsEnabled) ledPixels?.upload(ledPixelFrame, linear);
+    ledPixels?.setActive(pixels && ledsEnabled, 3.6 * ledGlow / 100);
+    if (frame.hue === null) ledFrameColor.set(ledColor);
+    else ledFrameColor.setHSL(frame.hue, 1, 0.5, THREE.SRGBColorSpace);
+    ledParts.forEach(({ material }, index) => {
+        // The fixed red IC details are not part of the decorative effect.
+        if (index >= 3 && index <= 37) return;
+        material.color.copy(ledFrameColor).multiplyScalar(ledsEnabled ? 1 : 0.12);
+        material.emissive.copy(ledFrameColor);
+        material.emissiveIntensity = 3.6 * ledGlow / 100 * frame.gain;
+    });
+    ledSpillMaterials.forEach(({ material, receiver }) => {
+        material.uniforms.ledColor.value.copy(ledFrameColor);
+        material.uniforms.strength.value = ledGlow * ledSurfaces[`${receiver}Strength`] / 10000 * frame.gain;
+    });
+}
+
+function ledPose() {return {lift:liftToHeight(currentLift),tilt:primaryTiltConfig()?.currentDeg || 0,x:glideOffset.x,z:glideOffset.z,yaw:deskYaw};}
+function setLedMotionEnabled(value) {
+    ledMotionEnabled = !!value; ledMotion.cancel(loadedModel ? ledPose() : null);
+    ledAutoLift = ledAutoTilt = false; ledSounds.stop(); updateLedEffectFrame();
+}
+function mountLedPlayback(container) {
+    ledGame.mountControls(container,{motionEnabled:()=>ledMotionEnabled,setMotionEnabled:setLedMotionEnabled,sounds:ledSounds,startLights:()=>{ledMusic.stop();setLedsEnabled(true);}});
+    ledMusic.mountControls(container,()=>{ledGame.stop();setLedsEnabled(true);});
+}
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {haltAllMotion();ledGame.video.pause();ledMusic.pause();ledSounds.stop();ledMotion.cancel();updateLedEffectFrame();ledGame.syncUI();}
+});
+window.addEventListener('pagehide', e => {if (!e.persisted) {ledSounds.dispose();ledGame.dispose();ledMusic.dispose();}else {ledSounds.stop();ledGame.video.pause();ledMusic.pause();}});
+
+function setLedDiagnostic(value = {}) {
+    const strip = value.strip === null || value.strip === undefined ? null : Number(value.strip);
+    const spec = LED_STRIPS.find(entry => entry.id === strip);
+    const pixel = value.pixel === null || value.pixel === undefined ? null : Number(value.pixel);
+    if (strip !== null && !spec) return false;
+    if (pixel !== null && (!spec || !Number.isInteger(pixel) || pixel < 0 || pixel >= spec.count)) return false;
+    ledDiagnostic = { strip, pixel };
+    sampleLedDiagnostic(ledPixelFrame, LED_STRIPS, ledDiagnostic);
+    ledPixels?.upload(ledPixelFrame);
+    updateLedEffectFrame();
+    document.querySelectorAll('[data-led-diagnostic-strip]').forEach(select => select.value = strip === null ? 'off' : String(strip));
+    document.querySelectorAll('[data-led-diagnostic-pixel]').forEach(input => {
+        input.disabled = !spec;
+        input.max = spec ? String(spec.count - 1) : '0';
+        input.value = pixel === null ? '' : String(pixel);
+    });
+    document.querySelectorAll('[data-led-diagnostic-label]').forEach(output => output.textContent = spec
+        ? `Strip ${strip}: ${spec.name} · ${pixel === null ? 'all addresses' : `address ${pixel}`} · saved endpoint; visibility unverified`
+        : 'Desk 02 saved endpoint calibration · confirm geometry, visible addresses and size-specific counts.');
+    return true;
+}
+
+function mountLedDiagnostic(container) {
+    if (!container || container.childElementCount) return;
+    // Engineer tooling stays out of the normal customer controls.
+    container.hidden = new URLSearchParams(location.search).get('ledDiagnostics') !== '1';
+    if (container.hidden) return;
+    const details = document.createElement('details');
+    details.className = 'led-map-diagnostic';
+    details.innerHTML = '<summary>LED strip mapping</summary><div class="led-effects-controls"><label>Strip <select data-led-diagnostic-strip aria-label="Diagnostic LED strip"><option value="off">Off</option></select></label><label>Address <input data-led-diagnostic-pixel type="number" min="0" step="1" placeholder="All" aria-label="Diagnostic LED address"></label><button type="button" data-led-diagnostic-next>Next address</button><button type="button" data-led-diagnostic-end>End test</button></div><p data-led-diagnostic-label role="status"></p>';
+    const select = details.querySelector('select'), pixel = details.querySelector('input');
+    LED_STRIPS.forEach(strip => select.add(new Option(`${strip.id} · ${strip.name}`, String(strip.id))));
+    const change = () => setLedDiagnostic({ strip: select.value === 'off' ? null : Number(select.value), pixel: pixel.value === '' ? null : Number(pixel.value) });
+    select.addEventListener('change', () => { pixel.value = ''; change(); });
+    pixel.addEventListener('change', () => { if (!change()) pixel.value = ledDiagnostic.pixel ?? ''; });
+    details.querySelector('[data-led-diagnostic-next]').addEventListener('click', () => {
+        const spec = LED_STRIPS.find(strip => strip.id === ledDiagnostic.strip);
+        if (spec) setLedDiagnostic({ strip: spec.id, pixel: ledDiagnostic.pixel === null ? 0 : (ledDiagnostic.pixel + 1) % spec.count });
+    });
+    details.querySelector('[data-led-diagnostic-end]').addEventListener('click', () => setLedDiagnostic());
+    details.addEventListener('toggle', () => { if (!details.open) setLedDiagnostic(); });
+    container.append(details);
+    setLedDiagnostic(ledDiagnostic);
+}
+
+function bindLedPixels() {
+    ledPixels?.dispose();
+    ledPixels = new LedPixelRenderer(LED_STRIPS);
+    LED_STRIPS.forEach(strip => ledPixels.bindStrip(ledParts[strip.mesh].part, strip.id));
+    ledPixels.bindStrip(ledExtendedStrips.children[0], 6);
+    ledPixels.bindStrip(ledExtendedStrips.children[1], 5);
+    ledPixels.bindStrip(ledExtendedStrips.children[2], 4);
+    const receiverIds = { desktop: [3], shelf: [1, 2], base: [7], top: [0], leftWing: [5], rightWing: [6], floor: [7] };
+    ledSpillMaterials.forEach(entry => {
+        const ids = entry.strip ? [entry.strip.userData.ledPhysicalId] : receiverIds[entry.receiver];
+        const source = ledPixels.bindings.find(binding => binding.stripId === ids[0] && binding.part === entry.strip)
+            || ledPixels.bindings.find(binding => binding.stripId === ids[0]);
+        if (entry.receiver === 'floor') {
+            // Floor UV.y runs opposite model-local Z; use the authored strip span.
+            ledPixels.bindSpill(entry, ids, [source.min, source.max], '-327.1 - (ledUv.y - 0.5) * 60.0');
+        } else ledPixels.bindSpill(entry, ids, [source.min, source.max], `ledPosition.${source.axis}`);
+    });
+    setLedDiagnostic(ledDiagnostic);
+}
+
+function setLedEffect(value, persist = true) {
+    ledEffect = normalizeLedEffect(value);
+    ledEffectStart = performance.now() / 1000;
+    updateLedEffectFrame();
+    document.querySelectorAll('[data-led-effect]').forEach(input => input.value = ledEffect.mode);
+    document.querySelectorAll('[data-led-period]').forEach(input => input.value = String(ledEffect.period));
+    document.querySelectorAll('[data-led-period-value]').forEach(output => output.textContent = `${ledEffect.period}s`);
+    if (persist) {
+        try { localStorage.setItem(LED_EFFECT_KEY, JSON.stringify(ledEffect)); } catch (_) {}
+    }
+}
+
+function mountLedEffects(container) {
+    if (!container || container.childElementCount) return;
+    const label = document.createElement('label');
+    label.textContent = 'LED effect ';
+    const select = document.createElement('select');
+    select.dataset.ledEffect = '';
+    select.setAttribute('aria-label', 'LED effect');
+    select.title = 'Decorative pixel previews; not byte-identical hardware output. Music effects are in Music Mode.';
+    LED_EFFECTS.forEach(effect => select.add(new Option(effect.label, effect.id)));
+    label.append(select);
+    const periodLabel = document.createElement('label');
+    periodLabel.textContent = 'Cycle ';
+    const period = document.createElement('input');
+    period.type = 'range'; period.min = '4'; period.max = '30'; period.step = '1';
+    period.dataset.ledPeriod = '';
+    period.setAttribute('aria-label', 'LED effect cycle seconds');
+    const output = document.createElement('output');
+    output.dataset.ledPeriodValue = '';
+    periodLabel.append(period, output);
+    container.append(label, periodLabel);
+    select.addEventListener('change', () => {ledGame.stop();ledMusic.stop();setLedEffect({ ...ledEffect, mode: select.value }, !EVENT_DEMO);});
+    period.addEventListener('input', () => setLedEffect({ ...ledEffect, period: Number(period.value) }, !EVENT_DEMO));
+    setLedEffect(ledEffect, false);
 }
 
 function mountLedPalette(container) {
@@ -2080,7 +2499,7 @@ function syncSizeGeometry() {
     syncLedSizeGeometry();
     setScreenProgress(screenProgress);
     buildSceneTree();
-    if (selectedRoomScene === 'home' && workspaceRoom?.homeLayout) setRoomScene('home', false, { preserveDesk: true });
+    if (measuredRoomProfile() && workspaceRoom?.roomLayout) setRoomScene(selectedRoomScene, false, { preserveDesk: true });
 }
 
 function syncLedSizeGeometry() {
@@ -2387,6 +2806,7 @@ function setLedsEnabled(on) {
     document.querySelectorAll('[data-led-toggle],.hub-led').forEach(button =>
         button.setAttribute('aria-pressed', String(ledsEnabled)));
     document.dispatchEvent(new CustomEvent('ergoflex-led-state', {detail:{enabled:ledsEnabled}}));
+    updateLedEffectFrame();
 }
 
 function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
@@ -2676,7 +3096,7 @@ function addLedUprightSpill(surface, strip, receiver, direction, minY, maxY, opt
         material.uniforms.reflectionNormal.value.getNormalMatrix(frame);
     };
     surface.add(spill);
-    ledSpillMaterials.push({ material, receiver, minReach, maxReach });
+    ledSpillMaterials.push({ material, receiver, minReach, maxReach, strip });
 }
 
 function addFootLedFloorGlow(parent) {
@@ -2882,6 +3302,7 @@ async function loadLedOverlay() {
         [...partRegistry.values()].forEach(({ obj }) => {
             if (/^Leds(?:_|$)/.test(obj.name)) obj.visible = false;
         });
+        bindLedPixels();
         setLedsEnabled(ledsEnabled);
         return roots.tilt;
     } catch (error) {
@@ -2892,6 +3313,10 @@ async function loadLedOverlay() {
 
 function loadModel() {
     const onLoaded = async (gltf) => {
+        // The temporary video screen owns its GPU resources across model loads.
+        ledGame.restoreMonitor();
+        ledMotion.cancel();
+        ledSounds.stop();
         workspaceAccessories?.dispose();
         workspaceAccessories = null;
         if (loadedModel) scene.remove(loadedModel);
@@ -2910,6 +3335,7 @@ function loadModel() {
         interactableObjects = [];
         sizeVariantParts = null;
         screenAssembly = null;
+        ledPixels?.dispose(); ledPixels = null;
         ledParts = [];
         ledDesktopFit = null;
         ledStandardStrips = null;
@@ -3058,7 +3484,8 @@ function loadModel() {
         applyAccessoryVisibility();
         if (!workspaceRoom) workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
         setRoomScene(selectedRoomScene, false);
-        if (selectedRoomScene === 'home') setHomeMode(homeMode);
+        const roomProfile = measuredRoomProfile();
+        if (roomProfile) setMeasuredRoomMode(roomProfile.id, roomProfile.mode);
         applySurfaceFinish();   // now that surfaceInches can measure the real model
         syncBuildSummary();
         // Set the demo's first pose before revealing and fitting the model.
@@ -3253,6 +3680,7 @@ function serializeProject() {
                 trimColor,
                 ledColor,
                 ledGlow,
+                ledEffect: { ...ledEffect },
                 ledSurfaces: { ...ledSurfaces },
                 ledsEnabled,
                 touchscreenOpen: screenTarget > 0.5,
@@ -3263,6 +3691,34 @@ function serializeProject() {
                 roomScene: selectedRoomScene,
                 homeMode,
                 homeLayout: selectedHomeLayout().id,
+                gamingMode,
+                gamingLayout: selectedGamingLayout().id,
+                musicMode,
+                musicLayout: selectedMusicLayout().id,
+                artistMode,
+                artistLayout: selectedArtistLayout().id,
+                bedroomMode,
+                bedroomLayout: selectedBedroomLayout().id,
+                galleryMode,
+                galleryLayout: selectedGalleryLayout().id,
+                libraryMode,
+                libraryLayout: selectedLibraryLayout().id,
+                coworkingMode,
+                coworkingLayout: selectedCoworkingLayout().id,
+                scifiMode,
+                scifiLayout: selectedScifiLayout().id,
+                workshopMode,
+                workshopLayout: selectedWorkshopLayout().id,
+                loungeMode,
+                loungeLayout: selectedLoungeLayout().id,
+                kitchenMode,
+                kitchenLayout: selectedKitchenLayout().id,
+                gymMode,
+                gymLayout: selectedGymLayout().id,
+                officeMode,
+                officeLayout: selectedOfficeLayout().id,
+                studyMode,
+                studyLayout: selectedStudyLayout().id,
                 sceneAssets: serializeSceneAssetStates(),
                 sceneAssetLabels: [...partLabels].filter(([editorId]) => editorId.startsWith('scene:')),
                 sceneAssetLocked: [...lockedParts].filter(editorId => editorId.startsWith('scene:')),
@@ -3399,7 +3855,10 @@ function applyProject(project, { confirmSoft = null, isRollback = false } = {}) 
             }
             for (const rig of rigs.actuator || []) buildActuatorRig(rig);
             buildWheelRigs();
-            if (loadedModel) glideBase.copy(loadedModel.position);
+            // Rebuilding rigs does not change the model's rest origin. Its
+            // current position also includes compensation for yaw about the
+            // wheel center; copying that into the base would accumulate drift
+            // each time a rotated project is restored.
 
             deletedBakedRigs.tilt = new Set(project.deletedBaked?.tilt || []);
             deletedBakedRigs.actuator = new Set(project.deletedBaked?.actuator || []);
@@ -3407,8 +3866,9 @@ function applyProject(project, { confirmSoft = null, isRollback = false } = {}) 
 
         // 7. motion, applied AFTER the neutral-pose scope — inside it, the restore
         //    in the finally block would immediately overwrite whatever we set.
-        applyProjectMotion(project.motion);
         applyProjectPresentation(project);
+        // Establish the selected floor before restoring its travel position.
+        applyProjectMotion(project.motion);
 
         rebuildTiltUI();
         rebuildRigUI();
@@ -3461,6 +3921,7 @@ function clearProjectState() {
 
 function applyProjectMotion(motion) {
     if (!motion) return;
+    glideFootprintCache = null;
     if (Number.isFinite(motion.yaw)) { deskYaw = motion.yaw % (Math.PI * 2); applyDeskTransform(); }
     if (Number.isFinite(motion.heightInches)) {
         manualLiftOverride = true;
@@ -3473,7 +3934,7 @@ function applyProjectMotion(motion) {
         if (config) { config.currentDeg = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg); applyTiltConfig(config); }
     }
     if (motion.glide && Number.isFinite(motion.glide.x) && Number.isFinite(motion.glide.z)) {
-        glideTarget.set(THREE.MathUtils.clamp(motion.glide.x, -1, 1), 0, THREE.MathUtils.clamp(motion.glide.z, -1, 1));
+        clampGlidePosition(glideTarget.set(motion.glide.x, 0, motion.glide.z));
         applyGlideOffset(glideTarget);
     }
 }
@@ -3555,6 +4016,7 @@ function applyProjectPresentation(project) {
     if (presentation.trimColor) setTrimColor(presentation.trimColor);
     if (presentation.ledColor) setLedColor(presentation.ledColor);
     if (presentation.ledGlow !== undefined) setLedGlow(presentation.ledGlow);
+    setLedEffect(presentation.ledEffect || {}, false);
     for (const [key, value] of Object.entries(presentation.ledSurfaces || {}))
         setLedSurface(key, value);
     if (typeof presentation.ledsEnabled === 'boolean') setLedsEnabled(presentation.ledsEnabled);
@@ -3594,6 +4056,34 @@ function applyProjectPresentation(project) {
     persistSceneAssetStates();
     if (HOME_MODES[presentation.homeMode]) homeMode = presentation.homeMode;
     homeLayoutId = HOME_LAYOUTS[presentation.homeLayout] ? presentation.homeLayout : homeLayoutForSize(currentConfig.size).id;
+    if (GAMING_MODES[presentation.gamingMode]) gamingMode = presentation.gamingMode;
+    if (GAMING_LAYOUTS[presentation.gamingLayout]) gamingLayoutId = presentation.gamingLayout;
+    if (MUSIC_MODES[presentation.musicMode]) musicMode = presentation.musicMode;
+    if (MUSIC_LAYOUTS[presentation.musicLayout]) musicLayoutId = presentation.musicLayout;
+    if (ARTIST_MODES[presentation.artistMode]) artistMode = presentation.artistMode;
+    if (ARTIST_LAYOUTS[presentation.artistLayout]) artistLayoutId = presentation.artistLayout;
+    if (BEDROOM_MODES[presentation.bedroomMode]) bedroomMode = presentation.bedroomMode;
+    if (BEDROOM_LAYOUTS[presentation.bedroomLayout]) bedroomLayoutId = presentation.bedroomLayout;
+    if (GALLERY_MODES[presentation.galleryMode]) galleryMode = presentation.galleryMode;
+    if (GALLERY_LAYOUTS[presentation.galleryLayout]) galleryLayoutId = presentation.galleryLayout;
+    if (LIBRARY_MODES[presentation.libraryMode]) libraryMode = presentation.libraryMode;
+    if (LIBRARY_LAYOUTS[presentation.libraryLayout]) libraryLayoutId = presentation.libraryLayout;
+    if (COWORKING_MODES[presentation.coworkingMode]) coworkingMode = presentation.coworkingMode;
+    if (COWORKING_LAYOUTS[presentation.coworkingLayout]) coworkingLayoutId = presentation.coworkingLayout;
+    if (SCIFI_MODES[presentation.scifiMode]) scifiMode = presentation.scifiMode;
+    if (SCIFI_LAYOUTS[presentation.scifiLayout]) scifiLayoutId = presentation.scifiLayout;
+    if (WORKSHOP_MODES[presentation.workshopMode]) workshopMode = presentation.workshopMode;
+    if (WORKSHOP_LAYOUTS[presentation.workshopLayout]) workshopLayoutId = presentation.workshopLayout;
+    if (LOUNGE_MODES[presentation.loungeMode]) loungeMode = presentation.loungeMode;
+    if (LOUNGE_LAYOUTS[presentation.loungeLayout]) loungeLayoutId = presentation.loungeLayout;
+    if (KITCHEN_MODES[presentation.kitchenMode]) kitchenMode = presentation.kitchenMode;
+    if (KITCHEN_LAYOUTS[presentation.kitchenLayout]) kitchenLayoutId = presentation.kitchenLayout;
+    if (GYM_MODES[presentation.gymMode]) gymMode = presentation.gymMode;
+    if (GYM_LAYOUTS[presentation.gymLayout]) gymLayoutId = presentation.gymLayout;
+    if (OFFICE_MODES[presentation.officeMode]) officeMode = presentation.officeMode;
+    if (OFFICE_LAYOUTS[presentation.officeLayout]) officeLayoutId = presentation.officeLayout;
+    if (STUDY_MODES[presentation.studyMode]) studyMode = presentation.studyMode;
+    if (STUDY_LAYOUTS[presentation.studyLayout]) studyLayoutId = presentation.studyLayout;
     setRoomScene(presentation.roomScene || 'product', false, { preserveDesk: true });
     const environment = document.getElementById('studio-environment');
     if (environment && presentation.environment) {
@@ -4263,14 +4753,19 @@ function renderSceneAssetLibrary() {
     if (!grid) return;
     const query = (document.getElementById('scene-library-search')?.value || '').trim().toLowerCase();
     const category = document.getElementById('scene-library-category')?.value || 'all';
+    const collection = document.getElementById('scene-library-collection')?.value || 'all';
     const entries = sceneAssetLibraryEntries.filter(entry =>
         (category === 'all' || entry.category === category) &&
-        (!query || entry.name.toLowerCase().includes(query) || entry.id.includes(query)));
+        (collection === 'all' || (entry.collection || 'Original library') === collection) &&
+        (!query || `${entry.name} ${entry.id} ${entry.collection || ''}`.toLowerCase().includes(query)));
+    const count = document.getElementById('scene-library-count');
+    if (count) count.textContent = `${entries.length} models`;
     grid.replaceChildren();
     entries.forEach(entry => {
         const card = document.createElement('button');
         card.className = 'scene-library-card';
         card.type = 'button';
+        card.title = `${entry.name} · ${entry.collection || 'Original library'}`;
         const image = document.createElement('img');
         image.src = `./assets/props/thumbs/${entry.id}.png`;
         image.alt = '';
@@ -4278,7 +4773,7 @@ function renderSceneAssetLibrary() {
         const name = document.createElement('span');
         name.textContent = entry.name;
         const meta = document.createElement('small');
-        meta.textContent = entry.category;
+        meta.textContent = `${entry.category} · ${entry.collection || 'Original library'}`;
         card.append(image, name, meta);
         card.onclick = () => addSceneAsset(entry.id);
         grid.append(card);
@@ -4297,7 +4792,8 @@ async function buildSceneAssetTools(anchorElement) {
     panel.id = 'scene-asset-tools';
     panel.className = 'precision-tools scene-asset-tools';
     panel.innerHTML = `<div class="scene-library-heading"><div><div class="eyebrow">SCENE ASSETS</div><strong>Prop library</strong></div><span id="scene-library-status">Loading library…</span></div>
-        <div class="scene-library-filters"><input id="scene-library-search" type="search" placeholder="Search 3D assets…" aria-label="Search scene assets"><select id="scene-library-category" aria-label="Scene asset category"><option value="all">All categories</option></select></div>
+        <div class="scene-library-filters"><input id="scene-library-search" type="search" placeholder="Search 3D assets…" aria-label="Search scene assets"><select id="scene-library-collection" aria-label="Model collection"><option value="all">All collections</option></select><select id="scene-library-category" aria-label="Scene asset category"><option value="all">All categories</option></select></div>
+        <small id="scene-library-count" aria-live="polite"></small>
         <div id="scene-library-grid" class="scene-library-grid" aria-label="Available scene assets"></div>
         <div class="scene-current-heading"><strong>In this scene</strong><button id="delete-scene-assets" type="button">Delete selected</button></div>
         <div id="scene-assets-current" class="scene-assets-current"></div>
@@ -4305,11 +4801,19 @@ async function buildSceneAssetTools(anchorElement) {
     anchorElement.after(panel);
     panel.querySelector('#scene-library-search').oninput = renderSceneAssetLibrary;
     panel.querySelector('#scene-library-category').onchange = renderSceneAssetLibrary;
+    panel.querySelector('#scene-library-collection').onchange = renderSceneAssetLibrary;
     panel.querySelector('#delete-scene-assets').onclick = deleteSelectedSceneAssets;
     try {
         const index = await PROP_LIBRARY.loadIndex();
         sceneAssetLibraryEntries = [...index.props].sort((a, b) => a.name.localeCompare(b.name));
         const categories = [...new Set(sceneAssetLibraryEntries.map(entry => entry.category))].sort();
+        const collectionSelect = panel.querySelector('#scene-library-collection');
+        [...new Set(sceneAssetLibraryEntries.map(entry => entry.collection || 'Original library'))].sort().forEach(collection => {
+            const option = document.createElement('option');
+            option.value = collection;
+            option.textContent = collection;
+            collectionSelect.append(option);
+        });
         const select = panel.querySelector('#scene-library-category');
         categories.forEach(category => {
             const option = document.createElement('option');
@@ -6535,8 +7039,44 @@ const glideInput = new THREE.Vector2();
 const glideDemoOrigin = new THREE.Vector3();
 const glideKeys = new Set();
 let glidePointer = null;
-let glideSpeed = 0.204;
+let glideSpeed = 0.306;
 let glideUIPrev = '';
+let glideFootprintCache = null;
+function glideBounds() {
+    const floor = liveAR?.active ? null : workspaceRoom?.floorBounds;
+    if (!floor || !loadedModel) return { minX: -1, maxX: 1, minZ: -1, maxZ: 1 };
+    // Translation cancels out of the footprint. Re-measure only when geometry
+    // or posture changes; do not walk every mesh on each driving frame.
+    const key = [loadedModel.uuid, editRevision, currentConfig.size, deskYaw, screenProgress, currentLift,
+        ...tiltConfigs.map(c => c.currentDeg)].join(':');
+    if (glideFootprintCache?.key !== key) {
+        loadedModel.updateMatrixWorld(true);
+        const box = new THREE.Box3();
+        loadedModel.traverseVisible(obj => {
+            if (!obj.isMesh || obj.material?.isShaderMaterial) return;
+            if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
+            box.union(obj.geometry.boundingBox.clone().applyMatrix4(obj.matrixWorld));
+        });
+        box.min.sub(glideOffset); box.max.sub(glideOffset);
+        glideFootprintCache = { key, box };
+    }
+    const box = glideFootprintCache.box;
+    const margin = workspaceRoom.root.scale.x * 25; // 25 mm clearance
+    const bounds = {
+        minX: floor.min.x + margin - box.min.x, maxX: floor.max.x - margin - box.max.x,
+        minZ: floor.min.z + margin - box.min.z, maxZ: floor.max.z - margin - box.max.z
+    };
+    // If an edited model is wider than a room, center it on that axis.
+    if (bounds.minX > bounds.maxX) bounds.minX = bounds.maxX = (bounds.minX + bounds.maxX) / 2;
+    if (bounds.minZ > bounds.maxZ) bounds.minZ = bounds.maxZ = (bounds.minZ + bounds.maxZ) / 2;
+    return bounds;
+}
+function clampGlidePosition(position) {
+    const b = glideBounds();
+    position.x = THREE.MathUtils.clamp(position.x, b.minX, b.maxX);
+    position.z = THREE.MathUtils.clamp(position.z, b.minZ, b.maxZ);
+    return position;
+}
 function releaseGlideInput() {
     glideKeys.clear(); glideInput.set(0, 0); glidePointer = null;
     const knob = document.getElementById('glide-knob'); if (knob) knob.style.transform = 'translate(-50%, -50%)';
@@ -6546,12 +7086,13 @@ function manualGlideReady() {
     if (transformControl?.object || isDraggingTransform) {
         notifyUser('Set Transform Tool to Off before moving the entire desk.'); return false;
     }
+    if (roomGroove?.run) haltAllMotion();
     glideActive = false; controls.autoRotate = false; return true;
 }
 function setGlidePosition(x, z) {
     if (!Number.isFinite(x) || !Number.isFinite(z) || !manualGlideReady()) return false;
     releaseGlideInput();
-    glideTarget.set(THREE.MathUtils.clamp(x, -1, 1), 0, THREE.MathUtils.clamp(z, -1, 1));
+    clampGlidePosition(glideTarget.set(x, 0, z));
     syncGlideUI(); return true;
 }
 function setupGlideControls() {
@@ -6629,7 +7170,7 @@ function setupGlideControls() {
     pad.onblur = releaseGlideInput;
     window.addEventListener('blur', () => { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); });
     document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); } });
-    document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.204;
+    document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.306;
     document.getElementById('glide-home').onclick = () => setGlidePosition(0, 0);
     document.querySelectorAll('[data-turn-command]').forEach(button => {
         const direction = Number(button.dataset.turnCommand);
@@ -6865,6 +7406,8 @@ function syncTiltUI() {
 // it sends the desk back to its home position, which is the opposite of what a
 // stop button must do.
 function haltAllMotion() {
+    ledMotion.cancel(loadedModel ? ledPose() : null);ledAutoLift = ledAutoTilt = false;ledSounds.stop();
+    roomGroove?.cancel();
     glideActive = false;
     releaseGlideInput();
     glideTarget.copy(glideOffset);
@@ -6883,6 +7426,7 @@ function haltAllMotion() {
     positionArcThumb();
     const status = document.getElementById('glide-status');
     if (status) status.textContent = 'Stopped';
+    updateLedEffectFrame();
 }
 
 // ── The motion remote ────────────────────────────────────────────────────────
@@ -6979,10 +7523,10 @@ function compassSvg() {
     const at = (r, a) => [C + r * Math.cos(a), C - r * Math.sin(a)];
     const tickR = R * 0.915, half = 9.5 * Math.PI / 180;
     let ticks = '';
-    for (let i = 0; i < 8; i++) {
-        const a = i * Math.PI / 4;
-        const [x1, y1] = at(tickR, a - half), [x2, y2] = at(tickR, a + half);
-        ticks += `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${tickR.toFixed(2)} ${tickR.toFixed(2)} 0 0 0 ${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" class="dial-tick" stroke-width="${(R * 0.115).toFixed(2)}" stroke-linecap="round"/>`;
+    for (let i = 0; i < 12; i++) {
+        const a = i * Math.PI / 6;
+        const [x1, y1] = at(tickR*.89, a), [x2, y2] = at(tickR*.99, a);
+        ticks += `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} L${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" class="dial-tick" stroke-width="2.5" stroke-linecap="round"/>`;
     }
     const Rin = 40, base = Rin * 0.40, len = Rin * 0.26, wide = Rin * 0.12;
     let star = '';
@@ -7004,7 +7548,7 @@ function compassSvg() {
       <g class="compass-ring" style="transform-origin:66px 66px">${ticks}</g>
       <circle cx="66" cy="66" r="${Rin}" fill="url(#glide-dish)"/>
       <circle class="dial-rim" cx="66" cy="66" r="${Rin - 1}" fill="none" stroke-width="1.6"/>
-      <g class="compass-star">${star}</g>
+      <g class="compass-arrows" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M59 38l7-7 7 7M59 94l7 7 7-7M38 59l-7 7 7 7M94 59l7 7-7 7"/></g>
     </svg>`;
 }
 
@@ -7171,6 +7715,11 @@ function chipRow(kind) {
         `</div>`;
 }
 
+let ledCommandCenter=null;
+function prepareLedCommandCenter(controls){
+    if(!ledCommandCenter)ledCommandCenter=new LedCommandCenter(window.ErgoFlex,controls);
+    return ledCommandCenter;
+}
 function buildMotionRemote() {
     const dock = document.getElementById('motion-dock');
     if (!dock) return;
@@ -7178,7 +7727,7 @@ function buildMotionRemote() {
     tiltPresets = loadTiltPresets();
     ergoForms = loadErgoForms();
 
-    dock.className = 'app-remote';
+    dock.className = 'app-remote remote-v2';
     dock.innerHTML = '';
 
     const header = document.createElement('div');
@@ -7194,7 +7743,7 @@ function buildMotionRemote() {
     header.innerHTML = `<span class="remote-grip" aria-hidden="true"></span>
         <button class="remote-chrome remote-menu" type="button" disabled aria-label="Menu"
                 title="Menu — not part of the preview"><span></span><span></span><span></span></button>
-        <img class="remote-logo" src="./assets/app-icons/ergoflexwidelogonoslogan.svg" alt="ErgoFlex Desk">
+        <img class="remote-logo" src="./assets/app-icons/ergoflex-app-logo.svg" alt="ErgoFlex Desk">
         <span class="remote-status" role="img" aria-label="Preview — not connected to a desk"
               title="Preview only: this panel drives the 3D model, not a desk"></span>
         <span class="remote-spacer"></span>
@@ -7233,7 +7782,7 @@ function buildMotionRemote() {
             <div class="remote-speed">
               <select id="glide-speed" aria-label="Glide speed">
                 <option value="0.034">Crawl</option><option value="0.136">Ninja</option>
-                <option value="0.204" selected>Slow</option><option value="0.68">Medium</option>
+                <option value="0.306" selected>Slow</option><option value="0.68">Medium</option>
                 <option value="0.85">Fast</option>
               </select>
             </div>
@@ -7287,14 +7836,28 @@ function buildMotionRemote() {
         <button class="hub-tile" type="button" disabled aria-label="Save routine"
                 title="Save routine — a routines feature, not connected in the preview">${SAVE_GLYPH}</button>
         <span class="hub-rule" aria-hidden="true"></span>
-        <button class="hub-led" type="button" aria-label="Toggle desk LEDs" aria-pressed="false"
-                title="Toggle desk LEDs">${BULB_GLYPH}</button>
+        <button class="hub-led" type="button" aria-label="Desk LEDs. Tap to switch power; hold to open LED Command Center." aria-pressed="false" aria-expanded="false" aria-controls="led-command-center"
+                title="Tap: LEDs on/off · Hold: LED Command Center">${BULB_GLYPH}</button>
         <button class="hub-screen" data-touchscreen-toggle type="button" aria-label="Extend touchscreen"
                 aria-pressed="false" title="Slide and turn touchscreen">Screen</button>
         <span class="remote-info" role="img" aria-label="About the wellness bar"></span>
       </div>
-      <p id="glide-help" class="remote-hint">Drag the inner half to glide; twist the outer half or hold Left/Right to turn. Presets: tap to recall, hold to save, swipe up to see the value.</p>
+      <p id="glide-help" class="remote-hint">Glide: down = front, up = back, left/right stay fixed. Twist the outer half or hold Left/Right to turn. Presets: tap to recall, hold to save, swipe up to see the value.</p>
     </div>`;
+    // Keep the proven controls and their IDs, rearranged to the updated app.
+    const grid=body.querySelector('.remote-grid');
+    const lift=body.querySelector('[data-motion-panel="lift"]'),glide=body.querySelector('[data-motion-panel="glide"]'),tilt=body.querySelector('[data-motion-panel="tilt"]');
+    const forms=body.querySelector('.remote-forms'),hub=body.querySelector('.remote-wellness-hub');
+    grid.replaceChildren(lift,glide,tilt);
+    for(const card of [lift,glide,tilt]){
+        card.classList.add('remote-card');
+        const heading=document.createElement('div');heading.className='remote-card-heading';
+        heading.append(card.querySelector('.remote-heading'),card.querySelector('.remote-speed'));card.prepend(heading);
+        if(card!==glide){const adjust=document.createElement('div');adjust.className='remote-adjust';
+            adjust.append(card.querySelector('.remote-readout'),card.querySelector('.remote-vslider,.remote-arc'));heading.after(adjust);
+        }
+    }
+    const footer=document.createElement('div');footer.className='remote-footer';footer.append(forms,hub);grid.after(footer);
     dock.append(body);
     // Eight grips, inside the border box: the shell clips its own overflow to
     // keep the header's radius, so a handle hanging off the edge is invisible.
@@ -7313,7 +7876,11 @@ function buildMotionRemote() {
     // they are re-wired here. Wiring them once at startup left them pointing at
     // elements a rebuild had already replaced.
     setupGlideControls();
-    dock.querySelector('.hub-led').onclick = () => setLedsEnabled(!ledsEnabled);
+    const bulb=dock.querySelector('.hub-led');
+    bindHold(bulb,()=>setLedsEnabled(!ledsEnabled),()=>prepareLedCommandCenter().open());
+    // Assistive technology can activate a button without pointer events.
+    bulb.addEventListener('click',event=>{if(event.detail===0)setLedsEnabled(!ledsEnabled);});
+    bulb.addEventListener('contextmenu',event=>event.preventDefault());
     dock.querySelector('.hub-screen').onclick = () => setTouchscreenOpen(screenTarget < 0.5);
     setLedsEnabled(ledsEnabled);
     setTouchscreenOpen(screenTarget > 0.5);
@@ -7390,18 +7957,21 @@ function revealPresetChip(chip) {
 }
 
 function goToHeight(inches) {
+    if (roomGroove?.run && !grooveSettingPose) haltAllMotion();
     if (!loadedModel) return;
     manualLiftOverride = false;
     const minimum = minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size);
     targetLift = heightToLift(THREE.MathUtils.clamp(inches, minimum, HEIGHT_MAX));
 }
 function goToTilt(deg) {
+    if (roomGroove?.run && !grooveSettingPose) haltAllMotion();
     const config = primaryTiltConfig();
     if (!config) return;
     tiltTarget = THREE.MathUtils.clamp(deg, config.minDeg,
         Math.min(config.maxDeg, maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size)));
 }
 function goToPose(height, deg) {
+    if (roomGroove?.run && !grooveSettingPose) haltAllMotion();
     const config = primaryTiltConfig();
     if (!loadedModel || !config) return;
     const tilt = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg);
@@ -7944,21 +8514,27 @@ function updateGlide(dt) {
     if (!loadedModel) return;
     dt = Math.min(Math.max(dt, 0), 0.05);
     if (transformControl?.object || isDraggingTransform) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); return; }
+    // Rotation, tilt, desktop size, and room changes can alter the clearance.
+    if (!liveAR?.active && workspaceRoom?.root) {
+        clampGlidePosition(glideTarget);
+        _glidePos.copy(glideOffset); clampGlidePosition(_glidePos);
+        if (_glidePos.distanceToSquared(glideOffset) > 1e-12) applyGlideOffset(_glidePos);
+    }
     if (glideActive) {
         glideT = Math.min(1, glideT + dt / GLIDE_DURATION);
         glidePath(glideT, _glidePos).add(glideDemoOrigin);
-        _glidePos.x = THREE.MathUtils.clamp(_glidePos.x, -1, 1); _glidePos.z = THREE.MathUtils.clamp(_glidePos.z, -1, 1);
+        clampGlidePosition(_glidePos);
         applyGlideOffset(_glidePos); glideTarget.copy(glideOffset);
         if (glideT >= 1) glideActive = false;
     } else {
         if (glideInput.lengthSq() > 0) {
-            // Camera-relative floor motion keeps the pad intuitive after orbiting.
-            const forward = camera.getWorldDirection(new THREE.Vector3());
-            if (liveAR?.active) forward.applyQuaternion(loadedModel.parent.getWorldQuaternion(new THREE.Quaternion()).invert());
-            forward.y = 0; forward.normalize();
-            const right = new THREE.Vector3(-forward.z, 0, forward.x);
-            glideTarget.copy(glideOffset).addScaledVector(right, glideInput.x * glideSpeed * dt).addScaledVector(forward, -glideInput.y * glideSpeed * dt);
-            glideTarget.x = THREE.MathUtils.clamp(glideTarget.x, -1, 1); glideTarget.z = THREE.MathUtils.clamp(glideTarget.z, -1, 1);
+            // Fixed floor directions in the original placement frame: +X is
+            // front, -Z is right. Orbiting or turning the desk never remaps them.
+            // In AR the placement parent carries this frame into the real room.
+            glideTarget.copy(glideOffset);
+            glideTarget.x += glideInput.y * glideSpeed * dt;
+            glideTarget.z -= glideInput.x * glideSpeed * dt;
+            clampGlidePosition(glideTarget);
             applyGlideOffset(glideTarget);
         } else if (glideOffset.distanceToSquared(glideTarget) > 0.000001) {
             _glidePos.copy(glideTarget).sub(glideOffset);
@@ -8201,7 +8777,7 @@ function getLiveAR() {
         metersPerUnit:() => arSizeReference().metersPerUnit,
         sizeReference:arSizeReference, setWidth:setARWidth,
         remote:() => document.getElementById('motion-dock'),
-        ledControls:() => [document.querySelector('#event-demo .demo-led-glow'),document.querySelector('#event-demo .demo-led-color-stack')].filter(Boolean),
+        ledControls:() => [], // Lighting opens from the app inside the WebXR overlay.
         halt:haltAllMotion, resize:syncViewerSize
     });
     return liveAR;
@@ -8209,6 +8785,7 @@ function getLiveAR() {
 
 async function launchAR() {
     if (arBusy || !loadedModel) return;
+    if (roomGroove?.prepared) { haltAllMotion(); roomGroove.reset(); }
     if (navigator.xr && await navigator.xr.isSessionSupported('immersive-ar').catch(() => false)) {
         const modal = showARHelpModal('Place the current desk at full size, then use the ErgoFlex app to Glide, turn, adjust height and tilt, or switch LEDs inside AR.');
         const place = document.createElement('button');
@@ -8652,7 +9229,16 @@ function animate(time, frame) {
     // a frame cannot advance the lift or the glide mid-capture. Rendering still
     // runs, so the viewer does not freeze.
     const dt = clock.getDelta();
-    if (!motionPaused) updateGlide(dt);
+    if (loadedModel && !motionPaused) {
+        if (liftJog) ledAutoLift = false;
+        else if (Math.abs(targetLift-currentLift) > .001) ledAutoLift = true;
+        if (tiltJog) ledAutoTilt = false;
+        else if (tiltTarget !== null) ledAutoTilt = true;
+    }
+    if (!motionPaused) {
+        if (roomGroove?.run) roomGroove.update(dt);
+        else updateGlide(dt);
+    }
     if (!motionPaused && screenAssembly && Math.abs(screenProgress - screenTarget) > 0.0001) {
         const step = Math.min(1, dt / 2.2);
         setScreenProgress(Math.abs(screenTarget - screenProgress) <= step
@@ -8758,6 +9344,23 @@ function animate(time, frame) {
         if (orbitButton && orbitButton.getAttribute('aria-pressed') !== String(controls.autoRotate)) orbitButton.setAttribute('aria-pressed', String(controls.autoRotate));
     }
     workspaceAccessories?.update();
+    if (loadedModel && !motionPaused) {
+        const completed = ledMotion.completionUntil;
+        ledMotion.observe(ledPose(), time, {enabled:ledMotionEnabled && ledDiagnostic.strip === null && !document.hidden,
+            liftReached:ledAutoLift && Math.abs(targetLift-currentLift)<=.001,
+            tiltReached:ledAutoTilt && tiltTarget === null});
+        if (!ledMotion.axes.lift) ledAutoLift = false;
+        if (!ledMotion.axes.tilt) ledAutoTilt = false;
+        ledSounds.update(ledMotion.owner?.sound || null, ledMotion.completionUntil > completed);
+    }
+    if (ledEffect.mode !== 'solid' || ledDiagnostic.strip !== null || ledPixels?.active || ledMotion.owner || ledMotion.completionUntil || ledGame.active || ledMusic.active)
+        updateLedEffectFrame(time / 1000);
+    if (time-ledPlaybackUIAt > 150) {
+        ledPlaybackUIAt = time;
+        if (ledGame.active) ledGame.syncMonitor(workspaceAccessories);
+        ledGame.syncUI(ledSounds.error || (ledMotion.owner ? `${ledMotion.owner.name} · movement cue` : ''));
+        ledMusic.syncUI(true);
+    }
     if (camera && !liveAR?.active) workspaceRoom?.update(camera);
     if (renderer && scene && camera) renderer.render(liveAR?.active ? liveAR.scene : scene, camera);
 }
@@ -8817,7 +9420,8 @@ let isolatedVisibility = null;
 let dialogReturnFocus = null;
 let toastTimer;
 function applyRoomLighting() {
-    const profile = selectedRoomScene === 'home' ? HOME_MODES[homeMode] : ROOM_ATMOSPHERES[selectedRoomScene];
+    const measured = measuredRoomProfile();
+    const profile = measured ? measured.modes[measured.mode] : ROOM_ATMOSPHERES[selectedRoomScene];
     const settings = roomLightSettings[selectedRoomScene] || {};
     const exposure = settings.exposure ?? profile.exposure;
     const daylight = settings.daylight ?? 1;
@@ -8826,18 +9430,19 @@ function applyRoomLighting() {
     if (renderer) renderer.toneMappingExposure = exposure;
     if (scene) scene.environmentIntensity = profile.bounce * (ledStudio ? .35 : 1);
     if (sceneLights) {
+        if (!measured) resetRoomLightRig(sceneLights);
         sceneLights.key.color.set(profile.key); sceneLights.key.intensity = profile.power * daylight * (ledStudio ? .55 : 1);
         sceneLights.key.position.set(selectedRoomScene === 'home' || selectedRoomScene === 'lounge' ? -5 : -3, 7, 5);
         if (selectedRoomScene === 'product') sceneLights.key.position.set(4.5, 8, 5.5);
         sceneLights.fill.color.set(profile.fill); sceneLights.fill.intensity = .45 * daylight * (ledStudio ? .4 : 1);
         sceneLights.rim.color.set(profile.accent); sceneLights.rim.intensity = .8 * accent * (ledStudio ? .7 : 1);
         sceneLights.hemi.color.set(profile.fill); sceneLights.hemi.groundColor.set('#746b61'); sceneLights.hemi.intensity = profile.ambient * (ledStudio ? .45 : 1);
-        if (selectedRoomScene === 'home' && workspaceRoom?.root) {
-            const scale = workspaceRoom.root.scale.x, layout = workspaceRoom.homeLayout;
-            // Sunlight enters through the real window, toward the desk.
-            sceneLights.key.position.set((layout.back - 1100) * scale, 4000 * scale, 1600 * scale);
-            sceneLights.fill.intensity *= homeMode === 'night' || homeMode === 'party' ? .25 : 1;
-            workspaceRoom.homeAtmosphere?.(homeMode, accent);
+        if (measured && workspaceRoom?.root) {
+            configureRoomLightRig(workspaceRoom, sceneLights, measured.mode);
+            sceneLights.fill.intensity *= measured.mode === 'night' || measured.mode === 'party' ? (measured.id === 'home' ? .25 : .35) : 1;
+            workspaceRoom.roomAtmosphere?.(measured.mode, accent);
+            workspaceRoom.life?.apply(measured.mode);
+            workspaceRoom.life?.lightActivity();
         }
     }
     for (const [id, value] of [['studio-exposure', exposure], ['studio-daylight', daylight], ['studio-accent', accent]]) {
@@ -8847,12 +9452,80 @@ function applyRoomLighting() {
     const label = document.getElementById('scene-light-name'); if (label) label.textContent = profile.label;
 }
 
-function positionHomeDesk() {
-    if (!loadedModel || !workspaceRoom?.homeLayout) return;
-    const layout = workspaceRoom.homeLayout, mode = HOME_MODES[homeMode], scale = workspaceRoom.root.scale.x;
+function syncGrooveUI(state) {
+    for (const panel of document.querySelectorAll('.groove-controls')) {
+        const start = panel.querySelector('[data-groove-start]');
+        start.disabled = !roomGroove?.prepared?.plan || !!roomGroove?.run;
+        start.textContent = roomGroove?.prepared?.plan?.ok === false ? 'Check route' : 'Start Groove';
+        panel.querySelector('[data-groove-stop]').disabled = !roomGroove?.run;
+        panel.querySelector('[data-groove-status]').textContent = state.message;
+    }
+}
+function grooveFootprint() {
+    if (!loadedModel || !workspaceRoom?.roomLayout) return null;
+    return withNeutralPose(() => {
+        const savedYaw = deskYaw;
+        deskYaw = 0; applyDeskTransform();
+        try {
+            loadedModel.updateWorldMatrix(true, true); workspaceRoom.root.updateWorldMatrix(true, false);
+            const inverse = workspaceRoom.root.matrixWorld.clone().invert(), box = new THREE.Box3();
+            loadedModel.traverseVisible(o => {
+                if (!o.isMesh || !o.geometry || o.material?.isShaderMaterial) return;
+                if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+                box.union(o.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(o.matrixWorld)));
+            });
+            const size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+            return { halfWidth: size.x / 2, halfDepth: size.z / 2, offsetX: center.x, offsetZ: center.z, margin: 45 };
+        } finally { deskYaw = savedYaw; applyDeskTransform(); }
+    });
+}
+function grooveController() {
+    if (roomGroove) return roomGroove;
+    roomGroove = new RoomGroove({
+        get room() { return workspaceRoom; }, get sceneId() { return selectedRoomScene; },
+        mode: phase => measuredRoomProfile().modes[phase],
+        pose: () => ({ x: -glideOffset.z / workspaceRoom.root.scale.x, z: glideOffset.x / workspaceRoom.root.scale.x, yaw: deskYaw }),
+        footprint: grooveFootprint, height: () => liftToHeight(currentLift), tilt: () => primaryTiltConfig()?.currentDeg || 0,
+        safeHeight: (h,t) => Math.max(h, minimumHeightForTilt(t, currentConfig.size)),
+        sync: syncGrooveUI, halt: haltAllMotion,
+        stopPose: () => { glideTarget.copy(glideOffset); targetLift = currentLift; tiltTarget = null; manualLiftOverride = false; },
+        canMove: () => {
+            if (!loadedModel || liveAR?.active || transformControl?.object || isSelectionMode) { notifyUser('Turn off the editing tools before starting Groove.'); return false; }
+            controls.autoRotate = false; return true;
+        },
+        manual: () => !!(glideInput.lengthSq() || yawCommand || liftJog || tiltJog || glideActive || transformControl?.object),
+        goPose: (h,t) => { grooveSettingPose = true; try { goToPose(h,t); } finally { grooveSettingPose = false; } },
+        move: p => {
+            const turn = p.yaw - deskYaw; deskYaw = p.yaw; spinWheelsForYaw(turn);
+            applyGlideOffset(new THREE.Vector3(p.z * workspaceRoom.root.scale.x, 0, -p.x * workspaceRoom.root.scale.x));
+            glideTarget.copy(glideOffset); loadedModel.updateMatrixWorld(true); workspaceAccessories?.update();
+        },
+        dress: (phase, mode) => { workspaceAccessories?.setDayDress(phase); if (mode.color) setLedColor(mode.color, false); setLedsEnabled(mode.leds); }
+    });
+    return roomGroove;
+}
+async function prepareGrooveMode(sceneId, phase) {
+    if (selectedRoomScene !== sceneId || !measuredRoomProfile(sceneId)?.modes[phase]) return;
+    haltAllMotion(); setMeasuredRoomMode(sceneId, phase, false);
+    await grooveController().prepare(sceneId, phase);
+}
+function positionHomeDesk(useModePose = false) {
+    const profile = measuredRoomProfile();
+    if (!loadedModel || !workspaceRoom?.roomLayout || !profile) return;
+    const layout = workspaceRoom.roomLayout, mode = profile.modes[profile.mode], scale = workspaceRoom.root.scale.x;
     haltAllMotion();
-    deskYaw = THREE.MathUtils.degToRad(mode.yaw);
-    const next = new THREE.Vector3((layout.desk[1] + mode.offset[1]) * scale, 0, -(layout.desk[0] + mode.offset[0]) * scale);
+    // A room/desktop-size change starts in its authored desk bay. Time-button
+    // destinations belong to Groove; an old saved social phase must not spawn
+    // a wider, rotated desk inside the bed or a neighbouring workstation.
+    deskYaw = useModePose ? THREE.MathUtils.degToRad(mode.yaw) : 0;
+    const f = grooveFootprint(), c = Math.cos(deskYaw), s = Math.sin(deskYaw);
+    const ex = Math.abs(c) * f.halfWidth + Math.abs(s) * f.halfDepth + 70;
+    const ez = Math.abs(s) * f.halfWidth + Math.abs(c) * f.halfDepth + 70;
+    const ox = c * f.offsetX + s * f.offsetZ, oz = -s * f.offsetX + c * f.offsetZ;
+    const fit = (value, min, max) => min > max ? (min + max) / 2 : THREE.MathUtils.clamp(value, min, max);
+    const x = fit(layout.desk[0] + (useModePose ? mode.offset[0] : 0), -layout.width / 2 + ex - ox, layout.width / 2 - ex - ox);
+    const z = fit(layout.desk[1] + (useModePose ? mode.offset[1] : 0), layout.back + ez - oz, layout.back + layout.depth - ez - oz);
+    const next = new THREE.Vector3(z * scale, 0, -x * scale);
     applyGlideOffset(next); glideTarget.copy(glideOffset);
     loadedModel.updateMatrixWorld(true); workspaceAccessories?.update();
 }
@@ -8860,41 +9533,121 @@ function positionHomeDesk() {
 function syncHomeOfficeUI() {
     const shell = document.getElementById('viewer-shell');
     if (shell) { if (selectedRoomScene === 'home') shell.dataset.homeMode = homeMode; else delete shell.dataset.homeMode; }
-    const panel = document.getElementById('home-office-controls'); if (!panel) return;
-    panel.hidden = selectedRoomScene !== 'home';
-    const layout = selectedHomeLayout(), mode = HOME_MODES[homeMode];
-    panel.querySelector('[data-home-description]').textContent = mode.description;
-    panel.querySelector('#home-room-size').value = layout.id;
-    panel.querySelectorAll('[data-home-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.homeMode === homeMode)));
-    panel.querySelectorAll('[data-home-size]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.homeSize === currentConfig.size)));
+    const active = measuredRoomProfile();
+    if (shell) { if (active) shell.dataset.roomMode = active.mode; else delete shell.dataset.roomMode; }
+    for (const id of ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'gallery', 'scifi', 'coworking', 'library']) {
+        const profile = measuredRoomProfile(id), prefix = profile.prefix;
+        const panel = document.getElementById(measuredRoomPanelId(id));
+        if (!panel) continue;
+        panel.hidden = selectedRoomScene !== id;
+        panel.querySelector(`[data-${prefix}-description]`).textContent = profile.modes[profile.mode].description + ' · ' + ROOM_STORIES[id][DAY_PHASES.indexOf(profile.mode)] + (['office', 'coworking'].includes(id) ? ` · ${profile.layout.stations.length + 1} ErgoFlex desks · App controls the Main desk` : '');
+        panel.querySelector(`#${prefix}-room-size`).value = profile.layout.id;
+        panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-mode`) === profile.mode)));
+        panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-size`) === currentConfig.size)));
+    }
     const caption = document.getElementById('room-scene-caption');
     const feet = mm => { const inches = Math.round(mm / 25.4); return `${Math.floor(inches / 12)}′${inches % 12}″`; };
-    if (selectedRoomScene === 'home' && caption) caption.textContent = `${layout.name} · ${feet(layout.width)} × ${feet(layout.depth)} (${layout.width / 1000} × ${layout.depth / 1000} m) · ${layout.height / 1000} m ceiling · ${mode.label}`;
+    if (active && caption) {
+        const { layout } = active, mode = active.modes[active.mode];
+        caption.textContent = `${layout.name} · ${feet(layout.width)} × ${feet(layout.depth)} (${layout.width / 1000} × ${layout.depth / 1000} m) · ${layout.height / 1000} m ceiling · ${mode.label}`;
+    }
 }
 
 function setHomeLayout(id) {
-    if (!HOME_LAYOUTS[id]) return;
-    homeLayoutId = id;
-    try { localStorage.setItem('ergoflex.homeLayout', id); } catch {}
-    setRoomScene('home', false);
+    setMeasuredRoomLayout('home', id);
+}
+function setGamingLayout(id) { setMeasuredRoomLayout('gaming', id); }
+function setMusicLayout(id) { setMeasuredRoomLayout('music', id); }
+function setArtistLayout(id) { setMeasuredRoomLayout('creative', id); }
+function setOfficeLayout(id) { setMeasuredRoomLayout('office', id); }
+function setBedroomLayout(id) { setMeasuredRoomLayout('bedroom', id); }
+function setGalleryLayout(id) { setMeasuredRoomLayout('gallery', id); }
+function setLibraryLayout(id) { setMeasuredRoomLayout('library', id); }
+function setCoworkingLayout(id) { setMeasuredRoomLayout('coworking', id); }
+function setScifiLayout(id) { setMeasuredRoomLayout('scifi', id); }
+function setWorkshopLayout(id) { setMeasuredRoomLayout('workshop', id); }
+function setLoungeLayout(id) { setMeasuredRoomLayout('lounge', id); }
+function setKitchenLayout(id) { setMeasuredRoomLayout('kitchen', id); }
+function setGymLayout(id) { setMeasuredRoomLayout('gym', id); }
+function setStudyLayout(id) { setMeasuredRoomLayout('study', id); }
+function setMeasuredRoomLayout(sceneId, id) {
+    if (!measuredRoomProfile(sceneId)?.layouts[id]) return;
+    if (sceneId === 'home') homeLayoutId = id;
+    else if (sceneId === 'gaming') gamingLayoutId = id;
+    else if (sceneId === 'music') musicLayoutId = id;
+    else if (sceneId === 'creative') artistLayoutId = id;
+    else if (sceneId === 'study') studyLayoutId = id;
+    else if (sceneId === 'office') officeLayoutId = id;
+    else if (sceneId === 'gym') gymLayoutId = id;
+    else if (sceneId === 'kitchen') kitchenLayoutId = id;
+    else if (sceneId === 'workshop') workshopLayoutId = id;
+    else if (sceneId === 'bedroom') bedroomLayoutId = id;
+    else if (sceneId === 'gallery') galleryLayoutId = id;
+    else if (sceneId === 'scifi') scifiLayoutId = id;
+    else if (sceneId === 'coworking') coworkingLayoutId = id;
+    else if (sceneId === 'library') libraryLayoutId = id;
+    else loungeLayoutId = id;
+    try { localStorage.setItem(`ergoflex.${sceneId}Layout`, id); } catch {}
+    setRoomScene(sceneId, false);
     workspaceRoom.ready.then(() => {
+        if (selectedRoomScene !== sceneId) return;
         const view = document.getElementById('camera-view');
         if (view?.value === 'room') view.dispatchEvent(new Event('change'));
     });
 }
 
 function setHomeMode(id, moveDesk = true) {
-    if (!HOME_MODES[id]) return;
-    homeMode = id;
-    try { localStorage.setItem('ergoflex.homeMode', id); } catch {}
-    if (selectedRoomScene === 'home') {
-        delete roomLightSettings.home;
+    setMeasuredRoomMode('home', id, moveDesk);
+}
+function setGamingMode(id, moveDesk = true) { setMeasuredRoomMode('gaming', id, moveDesk); }
+function setMusicMode(id, moveDesk = true) { setMeasuredRoomMode('music', id, moveDesk); }
+function setArtistMode(id, moveDesk = true) { setMeasuredRoomMode('creative', id, moveDesk); }
+function setOfficeMode(id, moveDesk = true) { setMeasuredRoomMode('office', id, moveDesk); }
+function setBedroomMode(id, moveDesk = true) { setMeasuredRoomMode('bedroom', id, moveDesk); }
+function setGalleryMode(id, moveDesk = true) { setMeasuredRoomMode('gallery', id, moveDesk); }
+function setLibraryMode(id, moveDesk = true) { setMeasuredRoomMode('library', id, moveDesk); }
+function setCoworkingMode(id, moveDesk = true) { setMeasuredRoomMode('coworking', id, moveDesk); }
+function setScifiMode(id, moveDesk = true) { setMeasuredRoomMode('scifi', id, moveDesk); }
+function setWorkshopMode(id, moveDesk = true) { setMeasuredRoomMode('workshop', id, moveDesk); }
+function setLoungeMode(id, moveDesk = true) { setMeasuredRoomMode('lounge', id, moveDesk); }
+function setKitchenMode(id, moveDesk = true) { setMeasuredRoomMode('kitchen', id, moveDesk); }
+function setGymMode(id, moveDesk = true) { setMeasuredRoomMode('gym', id, moveDesk); }
+function setStudyMode(id, moveDesk = true) { setMeasuredRoomMode('study', id, moveDesk); }
+function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
+    if (roomGroove?.prepared) { haltAllMotion(); roomGroove.reset(); }
+    const profile = measuredRoomProfile(sceneId);
+    if (!profile?.modes[id]) return;
+    if (sceneId === 'home') homeMode = id;
+    else if (sceneId === 'gaming') gamingMode = id;
+    else if (sceneId === 'music') musicMode = id;
+    else if (sceneId === 'creative') artistMode = id;
+    else if (sceneId === 'study') studyMode = id;
+    else if (sceneId === 'office') officeMode = id;
+    else if (sceneId === 'gym') gymMode = id;
+    else if (sceneId === 'kitchen') kitchenMode = id;
+    else if (sceneId === 'workshop') workshopMode = id;
+    else if (sceneId === 'bedroom') bedroomMode = id;
+    else if (sceneId === 'gallery') galleryMode = id;
+    else if (sceneId === 'scifi') scifiMode = id;
+    else if (sceneId === 'coworking') coworkingMode = id;
+    else if (sceneId === 'library') libraryMode = id;
+    else loungeMode = id;
+    try { localStorage.setItem(`ergoflex.${sceneId}Mode`, id); } catch {}
+    if (selectedRoomScene === sceneId) {
+        if (workspaceRoom?.life?.mode !== id) {
+            // Return selected room props from the gizmo proxy before staging.
+            for (const { obj } of [...movingObjects]) if (obj.userData?.sceneAsset) toggleMovingObject(obj, false, true);
+            updateTransformProxy();
+            discardSceneAssetUndoEntries();
+        }
+        delete roomLightSettings[sceneId];
         try { localStorage.setItem('ergoflex.sceneLights', JSON.stringify(roomLightSettings)); } catch {}
         if (moveDesk && loadedModel) {
-            positionHomeDesk();
-            const mode = HOME_MODES[id]; goToPose(mode.height, mode.tilt);
+            positionHomeDesk(true);
+            const mode = profile.modes[id]; goToPose(mode.height, mode.tilt);
             if (mode.color) setLedColor(mode.color, false);
             setLedsEnabled(mode.leds);
+            workspaceAccessories?.setDayDress(id);
         }
         applyRoomLighting();
     }
@@ -8902,9 +9655,11 @@ function setHomeMode(id, moveDesk = true) {
 }
 
 function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
+    if (roomGroove) { haltAllMotion(); roomGroove.reset(); }
     const choice = ROOM_SCENES.find(s => s.id === id) || ROOM_SCENES[0];
-    if (loadedModel && choice.id === 'home' && !homeDeskReturn && !workspaceRoom?.homeLayout) homeDeskReturn = { offset: glideOffset.clone(), yaw: deskYaw };
-    if (loadedModel && selectedRoomScene === 'home' && choice.id !== 'home' && homeDeskReturn) {
+    const measured = measuredRoomProfile(choice.id);
+    if (loadedModel && measured && !homeDeskReturn && !workspaceRoom?.roomLayout) homeDeskReturn = { offset: glideOffset.clone(), yaw: deskYaw };
+    if (loadedModel && measuredRoomProfile() && !measured && homeDeskReturn) {
         haltAllMotion(); deskYaw = homeDeskReturn.yaw; applyGlideOffset(homeDeskReturn.offset); glideTarget.copy(glideOffset); homeDeskReturn = null;
     }
     const hydrationToken = ++sceneAssetHydrationToken;
@@ -8915,16 +9670,35 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
     }
     selectedRoomScene = choice.id;
     let homeScale;
-    if (choice.id === 'home' && loadedModel) {
+    if (measured && loadedModel) {
         const reference = arSizeReference();
         // Nominal desktop inches establish the room's physical units. An AR
         // calibration preference does not silently resize this architecture.
         homeScale = reference.widthUnits > 0 ? reference.widthUnits / (reference.nominalWidth * 25.4) : 1 / (reference.metersPerUnit * 1000);
     }
-    workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: selectedHomeLayout().id });
-    if (choice.id === 'home') {
+    if (choice.id === 'gaming' && !gamingLayoutId) gamingLayoutId = measured.layout.id;
+    if (choice.id === 'music' && !musicLayoutId) musicLayoutId = measured.layout.id;
+    if (choice.id === 'creative' && !artistLayoutId) artistLayoutId = measured.layout.id;
+    if (choice.id === 'study' && !studyLayoutId) studyLayoutId = measured.layout.id;
+    if (choice.id === 'bedroom' && !bedroomLayoutId) bedroomLayoutId = measured.layout.id;
+    if (choice.id === 'gallery' && !galleryLayoutId) galleryLayoutId = measured.layout.id;
+    if (choice.id === 'library' && !libraryLayoutId) libraryLayoutId = measured.layout.id;
+    if (choice.id === 'coworking' && !coworkingLayoutId) coworkingLayoutId = measured.layout.id;
+    if (choice.id === 'scifi' && !scifiLayoutId) scifiLayoutId = measured.layout.id;
+    if (choice.id === 'workshop' && !workshopLayoutId) workshopLayoutId = measured.layout.id;
+    if (choice.id === 'lounge' && !loungeLayoutId) loungeLayoutId = measured.layout.id;
+    if (choice.id === 'kitchen' && !kitchenLayoutId) kitchenLayoutId = measured.layout.id;
+    if (choice.id === 'gym' && !gymLayoutId) gymLayoutId = measured.layout.id;
+    if (choice.id === 'office' && !officeLayoutId) officeLayoutId = measured.layout.id;
+    workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
+        createStation: ['office', 'coworking'].includes(choice.id) && loadedModel ? spec => captureOfficeStation(spec, homeScale) : null });
+    if (measured) {
         if (!preserveDesk) positionHomeDesk();
-        if (!preserveDesk && persist && loadedModel) setHomeMode(homeMode);
+        if (!preserveDesk && persist && loadedModel) {
+            const mode = measured.modes[measured.mode]; goToPose(mode.height, mode.tilt);
+            if (mode.color) setLedColor(mode.color, false);
+            setLedsEnabled(mode.leds);
+        }
     }
     // Room props and desk dressing load over the network. A failure leaves the
     // procedural room standing and is reported in Build checks rather than
@@ -8938,7 +9712,9 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
         if (results[1].status === 'rejected') {
             reportSceneWarning('desk-dressing', `Desk dressing for ${choice.name} could not be loaded (${results[1].reason.message}).`);
         }
-        return hydrateSceneAssets(choice.id, hydrationToken);
+        const hydrated = hydrateSceneAssets(choice.id, hydrationToken);
+        if (hydrationToken === sceneAssetHydrationToken) workspaceAccessories?.setDayDress(measuredRoomProfile()?.mode || 'morning');
+        return hydrated;
     });
     if (workspaceRoom) workspaceRoom.ready = assetsReady;
     if (floorMesh) floorMesh.visible = choice.id === 'product';
@@ -9286,6 +10062,9 @@ function focusObjects(objects, { animate = false } = {}) {
         const depth = point.dot(direction);
         distance = Math.max(distance, depth + Math.abs(point.dot(up)) / tanV, depth + Math.abs(point.dot(right)) / tanH);
     }
+    // Measured halls can exceed the product viewer's original zoom limit.
+    // Allow the distance required to frame the complete room at this aspect.
+    if (workspaceRoom?.root && objects.includes(workspaceRoom.root)) controls.maxDistance = Math.max(30, distance * 1.12);
     distance = Math.min(controls.maxDistance, distance * 1.12);
     const position = center.clone().addScaledVector(direction, distance);
     controls.autoRotate = false;
@@ -9403,12 +10182,20 @@ function initStudio() {
     const scenes = document.createElement('div'); scenes.className = 'scene-switcher';
     scenes.innerHTML = `<span class="scenes-label">Scenes</span><div class="scene-options" role="group" aria-label="Workspace scenes">${ROOM_SCENES.map(s => `<button type="button" data-room-scene="${s.id}" aria-pressed="${s.id === 'product'}"><span class="scene-dot scene-${s.id}" aria-hidden="true"></span>${s.name}</button>`).join('')}</div>`;
     const roomCaption = document.createElement('p'); roomCaption.id = 'room-scene-caption'; roomCaption.setAttribute('aria-live', 'polite');
-    const homeControls = document.createElement('div'); homeControls.id = 'home-office-controls'; homeControls.hidden = true;
-    homeControls.innerHTML = `<div class="home-layout-choices" role="group" aria-label="Home office size"><label for="home-room-size">Room</label><select id="home-room-size">${Object.values(HOME_LAYOUTS).map(layout => `<option value="${layout.id}">${layout.name} · ${layout.width / 1000} × ${layout.depth / 1000} m</option>`).join('')}</select><button type="button" data-home-size="48x30">48″ desk</button><button type="button" data-home-size="60x30">60″ desk</button></div><div class="home-time-choices" role="group" aria-label="Time of day">${Object.entries(HOME_MODES).map(([id, mode]) => `<button type="button" data-home-mode="${id}" aria-pressed="false">${mode.label}</button>`).join('')}</div><p data-home-description></p>`;
-    homeControls.querySelector('#home-room-size').onchange = e => setHomeLayout(e.target.value);
-    homeControls.querySelectorAll('[data-home-size]').forEach(b => b.onclick = () => { sizeSelect.value = b.dataset.homeSize; sizeSelect.dispatchEvent(new Event('change', { bubbles: true })); });
-    homeControls.querySelectorAll('[data-home-mode]').forEach(b => b.onclick = () => setHomeMode(b.dataset.homeMode));
-    viewerControls.append(scenes, homeControls, roomCaption); viewer.append(viewerControls);
+    const roomControls = ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'gallery', 'scifi', 'coworking', 'library'].map(id => {
+        const profile = measuredRoomProfile(id), prefix = profile.prefix;
+        const panel = document.createElement('div'); panel.id = measuredRoomPanelId(id);
+        panel.className = 'measured-room-controls'; panel.hidden = true;
+        panel.innerHTML = `<div class="home-layout-choices" role="group" aria-label="${ROOM_SCENES.find(s => s.id === id).name} size"><label for="${prefix}-room-size">Room</label><select id="${prefix}-room-size">${Object.values(profile.layouts).map(layout => `<option value="${layout.id}">${layout.name} · ${layout.width / 1000} × ${layout.depth / 1000} m</option>`).join('')}</select><button type="button" data-${prefix}-size="48x30">48″ desk</button><button type="button" data-${prefix}-size="60x30">60″ desk</button></div><div class="home-time-choices" role="group" aria-label="Time of day">${Object.entries(profile.modes).map(([modeId, mode]) => `<button type="button" data-${prefix}-mode="${modeId}" aria-pressed="false">${mode.label}</button>`).join('')}</div><p data-${prefix}-description></p>`;
+        panel.querySelector(`#${prefix}-room-size`).onchange = e => setMeasuredRoomLayout(id, e.target.value);
+        panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.onclick = () => { sizeSelect.value = b.getAttribute(`data-${prefix}-size`); sizeSelect.dispatchEvent(new Event('change', { bubbles: true })); });
+        panel.insertAdjacentHTML('beforeend', '<div class="groove-controls"><button type="button" data-groove-start disabled>Start Groove</button><button type="button" data-groove-stop disabled>Stop</button><span data-groove-status role="status">Choose a time, then tap the desk to start its Groove.</span></div>');
+        panel.querySelector('[data-groove-start]').onclick = () => grooveController().start();
+        panel.querySelector('[data-groove-stop]').onclick = haltAllMotion;
+        panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.onclick = () => prepareGrooveMode(id, b.getAttribute(`data-${prefix}-mode`)));
+        return panel;
+    });
+    viewerControls.append(scenes, ...roomControls, roomCaption); viewer.append(viewerControls);
     scenes.querySelectorAll('button').forEach(button => button.onclick = () => setRoomScene(button.dataset.roomScene));
     new ResizeObserver(syncViewerSize).observe(viewerControls);
     try {
@@ -9563,7 +10350,7 @@ function initStudio() {
             }
             return;
         }
-        if (e.key === 'Escape') { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); }
+        if (e.key === 'Escape') { haltAllMotion(); syncGlideUI(); }
         if (!setupLayoutOn || e.ctrlKey || e.metaKey || e.altKey || e.target.closest('input,select,textarea,[contenteditable],#glide-pad')) return;
         const mode = { q: 'none', g: 'unified' }[e.key.toLowerCase()];
         if (mode) { e.preventDefault(); document.querySelector(`input[name="transform_mode"][value="${mode}"]`).click(); }
@@ -9583,7 +10370,23 @@ window.ErgoFlex = {
     get touchscreenReady() { return !!screenAssembly; },
     setLedsEnabled,
     setLedColor,
+    prepareLedCommandCenter,
+    get ledPreviewFrame() {return ledPixelFrame;},
     mountLedPalette,
+    mountLedEffects,
+    mountLedPlayback,
+    setLedMotionEnabled,
+    get ledMotionState() {return {enabled:ledMotionEnabled,owner:ledMotion.owner ? {...ledMotion.owner} : null,completionUntil:ledMotion.completionUntil,source:ledPixelSource};},
+    get ledGameMode() {return ledGame;},
+    get ledMusicMode() {return ledMusic;},
+    get ledSoundState() {return {enabled:ledSounds.enabled,owner:ledSounds.owner,error:ledSounds.error};},
+    mountLedDiagnostic,
+    setLedDiagnostic,
+    get ledDiagnostic() { return { ...ledDiagnostic }; },
+    get ledStripMap() { return { version: LED_STRIP_MAP_VERSION, status: 'provisional', strips: LED_STRIPS.map(strip => ({ ...strip })) }; },
+    get ledPixelRenderer() { return ledPixels; },
+    setLedEffect,
+    get ledEffect() { return { ...ledEffect }; },
     get ledColor() { return ledColor; },
     setLedGlow,
     get ledGlow() { return ledGlow; },
@@ -9601,6 +10404,62 @@ window.ErgoFlex = {
     get homeMode() { return homeMode; },
     setHomeLayout,
     get homeLayout() { return selectedHomeLayout().id; },
+    setGamingMode,
+    get gamingMode() { return gamingMode; },
+    setGamingLayout,
+    get gamingLayout() { return selectedGamingLayout().id; },
+    setMusicMode,
+    get musicMode() { return musicMode; },
+    setMusicLayout,
+    get musicLayout() { return selectedMusicLayout().id; },
+    setArtistMode,
+    get artistMode() { return artistMode; },
+    setArtistLayout,
+    get artistLayout() { return selectedArtistLayout().id; },
+    setBedroomMode,
+    get bedroomMode() { return bedroomMode; },
+    setBedroomLayout,
+    get bedroomLayout() { return selectedBedroomLayout().id; },
+    setGalleryMode,
+    get galleryMode() { return galleryMode; },
+    setGalleryLayout,
+    get galleryLayout() { return selectedGalleryLayout().id; },
+    setLibraryMode,
+    get libraryMode() { return libraryMode; },
+    setLibraryLayout,
+    get libraryLayout() { return selectedLibraryLayout().id; },
+    setCoworkingMode,
+    get coworkingMode() { return coworkingMode; },
+    setCoworkingLayout,
+    get coworkingLayout() { return selectedCoworkingLayout().id; },
+    setScifiMode,
+    get scifiMode() { return scifiMode; },
+    setScifiLayout,
+    get scifiLayout() { return selectedScifiLayout().id; },
+    setWorkshopMode,
+    get workshopMode() { return workshopMode; },
+    setWorkshopLayout,
+    get workshopLayout() { return selectedWorkshopLayout().id; },
+    setLoungeMode,
+    get loungeMode() { return loungeMode; },
+    setLoungeLayout,
+    get loungeLayout() { return selectedLoungeLayout().id; },
+    setKitchenMode,
+    get kitchenMode() { return kitchenMode; },
+    setKitchenLayout,
+    get kitchenLayout() { return selectedKitchenLayout().id; },
+    setGymMode,
+    get gymMode() { return gymMode; },
+    setGymLayout,
+    get gymLayout() { return selectedGymLayout().id; },
+    setOfficeMode,
+    get officeMode() { return officeMode; },
+    setOfficeLayout,
+    get officeLayout() { return selectedOfficeLayout().id; },
+    setStudyMode,
+    get studyMode() { return studyMode; },
+    setStudyLayout,
+    get studyLayout() { return selectedStudyLayout().id; },
     addSceneAsset,
     deleteSelectedSceneAssets,
     get tiltConfigs() { return tiltConfigs; },
@@ -9623,6 +10482,7 @@ window.ErgoFlex = {
         return count;
     },
     setHeight(h) {
+        if (roomGroove?.run) haltAllMotion();
         manualLiftOverride = true;
         h = THREE.MathUtils.clamp(Number(h) || HEIGHT_MIN,
             minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size), HEIGHT_MAX);
@@ -9631,6 +10491,7 @@ window.ErgoFlex = {
         showHeight(h);
     },
     setTilt(name, deg) {
+        if (roomGroove?.run) haltAllMotion();
         const config = tiltConfigs.find(c => c.name === name);
         if (!config) return false;
         const heightLimit = config.name === 'tilting'
@@ -9643,6 +10504,10 @@ window.ErgoFlex = {
     setAutoRotate(v) { if (controls) controls.autoRotate = !!v; },
     setMotionTab,
     haltAllMotion,
+    prepareGrooveMode,
+    startGroove() { return grooveController().start(); },
+    get grooveState() { return roomGroove?.state || { status: 'idle' }; },
+    get grooveRouting() { return roomGroove?.prepared ? roomGroove.snapshot() : null; },
     get deskYaw() { return deskYaw; },
     // Drives the ring's command directly: the gesture is a pointer path, and the
     // behaviour worth asserting is what the command does to the desk.
@@ -9650,6 +10515,9 @@ window.ErgoFlex = {
     get yawRate() { return yawRadiansPerSecond(); },
     get yawProjection() { return meanYawProjection(); },
     get glideSpeed() { return glideSpeed; },
+    get glideBounds() { return glideBounds(); },
+    get glideTarget() { return { x: glideTarget.x, z: glideTarget.z }; },
+    get glideInput() { return { x: glideInput.x, y: glideInput.y }; },
     get yawCommand() { return yawCommand; },
     get heightInches() { return liftToHeight(currentLift); },
     placeDockFromStorage,
@@ -9737,6 +10605,13 @@ window.ErgoFlex = {
     get plasticMaterial() { return sharedBlackPlasticMaterial && { roughness: sharedBlackPlasticMaterial.roughness, clearcoat: sharedBlackPlasticMaterial.clearcoat }; },
     setSurfaceFinish(value) { surfaceFinish = value; applySurfaceFinish(); },
     focusCameraShortcutTargets: cameraShortcutTargets,
+    get roomLightingState() {
+        const c = sceneLights?.key.shadow.camera;
+        return c && { mode: workspaceRoom?.root?.userData.lighting?.mode || 'product',
+            key: sceneLights.key.position.toArray(), target: sceneLights.key.target.position.toArray(),
+            shadow: { left: c.left, right: c.right, top: c.top, bottom: c.bottom, near: c.near, far: c.far },
+            viewMatrix: c.matrixWorldInverse.toArray(), shadowLights: scene.children.filter(o => o.isLight && o.castShadow).length };
+    },
     get cameraState() { return { position: camera.position.toArray(), target: controls.target.toArray(), minDistance: controls.minDistance }; },
     serializeProject,
     applyProject,
@@ -9791,6 +10666,9 @@ populateFinishOptions();
 setTrimColor(trimColor, false);
 document.getElementById('trim-color')?.addEventListener('input', event => setTrimColor(event.target.value));
 mountLedPalette(document.getElementById('led-palette'));
+mountLedEffects(document.getElementById('led-effects'));
+mountLedPlayback(document.getElementById('led-playback'));
+mountLedDiagnostic(document.getElementById('led-mapping'));
 setLedColor(ledColor, false);
 document.getElementById('led-color')?.addEventListener('input', event => setLedColor(event.target.value));
 setLedGlow(ledGlow, false);
