@@ -1,4 +1,5 @@
-import { AutoDJ, DJ_SETTINGS_KEY, normalizeDJSettings } from './led-auto-dj.mjs?v=app-dj-20261004';
+import { AutoDJ, DJ_SETTINGS_KEY, normalizeDJSettings } from './led-auto-dj.mjs?v=app-dj-20261005';
+import { BurstOverlay, BuildDropDetector, BURST_RECIPES, BURST_DEFAULTS, normalizeBurst } from './led-music-bursts.mjs';
 import { MUSIC_EFFECTS, MusicSampler, analyseMusic } from './led-showcase-effects.mjs';
 
 export class LedMusicMode{
@@ -8,7 +9,7 @@ export class LedMusicMode{
         this.audio.src='./assets/led/music/neon-flight-demo.mp3';this.audio.volume=1;
         this.fx=28;this.active=false;this.soundOn=false;this.volume=.5;this.sensitivity=1;this.error='';this.ui=[];this.sourceName='Original demo soundtrack';this.token=0;
         let saved;try{saved=JSON.parse(localStorage.getItem(DJ_SETTINGS_KEY)||'null');}catch{}
-        this.dj=new AutoDJ(saved||{});this.djUI=[];
+        this.dj=new AutoDJ(saved||{});this.djUI=[];this.burst=new BurstOverlay();this.burstManual={...BURST_DEFAULTS};this.burstFlags=new BuildDropDetector();
         this.metrics={bands:new Float32Array(8),raw:new Float32Array(8),volume:0,energy:0,bassAverage:0,lastBeat:-1000,beat:false,bassBeat:false};
         this.reduced=matchMedia('(prefers-reduced-motion: reduce)');
         this.onReduced=()=>{if(this.reduced.matches)this.pause();};this.reduced.addEventListener('change',this.onReduced);
@@ -37,7 +38,7 @@ export class LedMusicMode{
         }catch(error){if(token===this.token){this.error=error.message||'Tap Play to start audio.';this.active=false;this.audio.pause();this.syncUI();}return false;}
     }
     pause(){this.audio.pause();this.syncUI();}
-    stop(){this.stopDJ();this.token++;this.active=false;this.audio.pause();this.audio.currentTime=0;this.frame.forEach(row=>row.fill(0));this.sampler.reset();this.syncUI();}
+    stop(){this.stopDJ();this.token++;this.active=false;this.audio.pause();this.audio.currentTime=0;this.frame.forEach(row=>row.fill(0));this.sampler.reset();this.burst.reset();this.burstFlags.reset();this.syncUI();}
     useFile(file){
         if(!file||file.size>100*1024*1024||!file.type.startsWith('audio/')){this.error='Choose an audio file smaller than 100 MB.';this.syncUI();return false;}
         this.stop();if(this.objectUrl)URL.revokeObjectURL(this.objectUrl);this.objectUrl=URL.createObjectURL(file);
@@ -57,9 +58,23 @@ export class LedMusicMode{
             if(next!==null&&next!==this.fx){this.fx=next;this.sampler.reset();this.syncUI();}
             this.sampler.sample(this.frame,this.fx,this.metrics,this.audio.currentTime,dt,this.reduced.matches);
             if(this.dj.enabled&&this.dj.settings.comfort==='reduced'&&(this.fx===31||this.fx===40)){for(const row of this.frame)for(let i=0;i<row.length;i++)row[i]=Math.round(row[i]*.65);}
+            this.applyBursts(now,dt);
         }
         frame.forEach((row,index)=>row.set(this.frame[index]));return true;
     }
+    // Color Bursts overlay (desk EffectEngine mirror). Manual tunables, or the Auto DJ's per-phrase recipe.
+    burstConfig(){
+        if(this.dj.enabled&&this.dj.settings.bursts)return {...BURST_RECIPES[this.dj.burstRecipe],enable:true};
+        return this.burstManual;
+    }
+    applyBursts(now,dt){
+        const config=normalizeBurst(this.burstConfig()),comfort=this.dj.enabled&&this.dj.settings.comfort!=='standard';
+        if(this.dj.enabled&&this.dj.settings.comfort==='minimal')config.depth=Math.min(config.depth,128);
+        this.burst.configure(config);
+        const t=now*1000,flags={...this.burstFlags.update(t,dt,this.metrics),comfort};
+        this.burst.update(t,dt,this.metrics,flags);this.burst.apply(this.frame);
+    }
+    setBurst(patch){this.burstManual=normalizeBurst({...this.burstManual,...patch});this.burst.configure(this.burstManual);this.syncUI();}
     stopDJ(){if(!this.dj.enabled)return;this.dj.stop();if(this.manualFx!==undefined)this.fx=this.manualFx;this.manualFx=undefined;this.syncDJUI();}
     async startDJ(settings=this.dj.settings){
         if(!this.dj.configure(settings)){this.stopDJ();this.error='Choose at least one effect allowed by your flash comfort setting.';this.syncUI();return false;}
@@ -73,7 +88,7 @@ export class LedMusicMode{
     }}
     mountDJControls(container){
         if(!container||container.childElementCount)return;
-        container.innerHTML='<p class="ledcc-intro">You are the DJ. Choose a program or rate your own effect rotation.</p><label>DJ program <select data-dj-program><option value="chill">Chill</option><option value="party">Party</option><option value="rave">Rave</option><option value="custom">My rotation</option></select></label><fieldset><legend>Flash comfort</legend><div class="ledcc-segments" data-dj-comfort></div><p>Reduced plays flash-heavy effects less often. Minimal leaves them out.</p></fieldset><label data-dj-custom>Change after <select data-dj-bars><option value="4">4 bars</option><option value="8">8 bars</option><option value="16">16 bars</option></select> · falls back to 30 seconds without a beat</label><div class="ledcc-dj-grid" data-dj-weights></div><div class="ledcc-actions"><button type="button" data-dj-save>Save DJ settings</button><button type="button" data-dj-start>Start Auto DJ</button><button type="button" data-dj-stop>Stop Auto DJ</button></div><p data-dj-status role="status"></p>';
+        container.innerHTML='<p class="ledcc-intro">You are the DJ. Choose a program or rate your own effect rotation.</p><label class="ledcc-burst-toggle"><input type="checkbox" data-dj-bursts> Color Bursts (rotates burst recipes each phrase)</label><label>DJ program <select data-dj-program><option value="chill">Chill</option><option value="party">Party</option><option value="rave">Rave</option><option value="custom">My rotation</option></select></label><fieldset><legend>Flash comfort</legend><div class="ledcc-segments" data-dj-comfort></div><p>Reduced plays flash-heavy effects less often. Minimal leaves them out.</p></fieldset><label data-dj-custom>Change after <select data-dj-bars><option value="4">4 bars</option><option value="8">8 bars</option><option value="16">16 bars</option></select> · falls back to 30 seconds without a beat</label><div class="ledcc-dj-grid" data-dj-weights></div><div class="ledcc-actions"><button type="button" data-dj-save>Save DJ settings</button><button type="button" data-dj-start>Start Auto DJ</button><button type="button" data-dj-stop>Stop Auto DJ</button></div><p data-dj-status role="status"></p>';
         const config=normalizeDJSettings(this.dj.settings);let comfort=config.comfort;
         const program=container.querySelector('[data-dj-program]'),bars=container.querySelector('[data-dj-bars]');program.value=config.program;bars.value=config.bars;
         const weights={...config.weights};
@@ -88,7 +103,8 @@ export class LedMusicMode{
             ['Off','Rare','Sometimes','Often','Favorite'].forEach((label,index)=>{const button=document.createElement('button');button.type='button';button.textContent=label;button.setAttribute('aria-pressed',String(index===Number(select.value)));button.onclick=()=>{select.value=index;select.dispatchEvent(new Event('change',{bubbles:true}));};ratings.append(button);});
             select.onchange=()=>{ratings.querySelectorAll('button').forEach((button,index)=>button.setAttribute('aria-pressed',String(index===Number(select.value))));weights[effect.fx]=Number(select.value);program.value='custom';apply();};card.append(select,ratings);container.querySelector('[data-dj-weights]').append(card);
         }
-        const settings=()=>({program:program.value,comfort,bars:Number(bars.value),weights});
+        const burstsBox=container.querySelector('[data-dj-bursts]');burstsBox.checked=config.bursts;burstsBox.onchange=()=>apply();
+        const settings=()=>({program:program.value,comfort,bars:Number(bars.value),weights,bursts:burstsBox.checked});
         const apply=()=>{const custom=program.value==='custom';container.querySelector('[data-dj-custom]').hidden=!custom;container.querySelector('[data-dj-weights]').hidden=!custom;
             if(this.dj.enabled){this.dj.configure(settings());if(!this.dj.pool.length){this.stopDJ();this.error='Choose at least one effect allowed by your flash comfort setting.';}else this.fx=this.dj.fx;}this.syncUI();};
         program.onchange=apply;bars.onchange=apply;
@@ -111,6 +127,12 @@ export class LedMusicMode{
         const details=document.createElement('details');details.className='led-playback led-music-playback';
         details.innerHTML='<summary>Music Mode · all music effects</summary><div class="led-playback-controls"><label>Music effect <select data-music-effect></select></label><label>Your song <input data-music-file type="file" accept="audio/*"></label><button type="button" data-music-demo>Use demo soundtrack</button><div><button type="button" data-music-play>Start Music Mode</button><button type="button" data-music-stop>Stop</button></div><label><input type="checkbox" data-music-sound> Hear music</label><label>Music volume <input data-music-volume type="range" min="0" max="1" step="0.05" value="0.5"></label><label>Sensitivity <input data-music-sensitivity type="range" min="0.5" max="3" step="0.1" value="1"></label><label>Song position <input data-music-seek type="range" min="0" max="12" step="0.05" value="0" disabled></label><label><input data-music-repeat type="checkbox" checked> Repeat</label><p data-music-status role="status"></p><p>Your song stays on this device.</p></div>';
         const select=details.querySelector('[data-music-effect]');MUSIC_EFFECTS.forEach(effect=>select.add(new Option(effect.label,String(effect.fx))));
+        const bursts=document.createElement('div');bursts.className='led-burst-controls';
+        bursts.innerHTML='<label><input type="checkbox" data-burst="enable"> Color Bursts</label>'+[['rate','Rate (0 = beats only)'],['spectrum','Color spread'],['zone','Zone (bottom / top)'],['depth','Depth (subtle / full wash)'],['tail','Tail (snappy / glow)'],['section','Calm sections (0 = off)']].map(([key,label])=>`<label>${label} <input type="range" min="0" max="255" step="1" data-burst="${key}"></label>`).join('')+'<label><input type="checkbox" data-burst="dropAware"> Drop-aware (hold back in builds, full hit on drops)</label>';
+        details.querySelector('.led-playback-controls').append(bursts);
+        bursts.querySelectorAll('[data-burst]').forEach(input=>{const key=input.dataset.burst,check=input.type==='checkbox';
+            check?input.checked=!!this.burstManual[key]:input.value=String(this.burstManual[key]);
+            input.addEventListener('input',()=>this.setBurst({[key]:check?input.checked:Number(input.value)}));});
         container.append(details);this.ui.push(details);
         const on=(selector,event,callback)=>details.querySelector(selector).addEventListener(event,callback);
         on('[data-music-effect]','change',event=>this.setEffect(event.target.value));

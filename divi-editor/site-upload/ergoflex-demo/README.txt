@@ -26,7 +26,7 @@ Mesh-aligned panel reflections avoid the angle-dependent area-light seam.
 Desktop power-module faces receive the same LED color and dimming as the desktop reflection.
 LEDs load off. Switching them on starts at 75% of the new maximum.
 The displayed 100% brightness is 85% of the former maximum light output.
-Use product-demo.html?v=app-dj-20261004 as the Divi Hosted 3D viewer URL to bypass older browser copies.
+Use product-demo.html?v=app-dj-20261005 as the Divi Hosted 3D viewer URL to bypass older browser copies.
 The viewer HTML revalidates on future visits; versioned runtime assets may stay cached.
 The hidden AR viewer loads eagerly even outside the mobile iframe viewport.
 AR preparation errors show the actual loading failure, rather than a device warning.

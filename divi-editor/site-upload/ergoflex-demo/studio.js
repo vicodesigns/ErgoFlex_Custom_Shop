@@ -1,4 +1,4 @@
-import { LedCommandCenter } from './led-command-center.mjs?v=app-dj-20261004';
+import { LedCommandCenter } from './led-command-center.mjs?v=app-dj-20261005';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=groove-routines-20261002';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=groove-routines-20261002';
 import { RoomGroove } from './room-groove-runtime.mjs?v=groove-routines-20261002';
@@ -14,8 +14,8 @@ import { LED_STRIPS, LED_STRIP_MAP_VERSION, createLedFrame, sampleLedDiagnostic 
 import { LedPixelRenderer } from './led-pixel-renderer.mjs?v=led-game-20261003';
 import { LedMotion } from './led-movement.mjs?v=led-game-20261003';
 import { LedSounds } from './led-sounds.mjs?v=led-game-20261003';
-import { LedGameMode } from './led-game-mode.mjs?v=app-dj-20261004';
-import { LedMusicMode } from './led-music-mode.mjs?v=app-dj-20261004';
+import { LedGameMode } from './led-game-mode.mjs?v=app-dj-20261005';
+import { LedMusicMode } from './led-music-mode.mjs?v=app-dj-20261005';
 import { sampleDecorativeInto } from './led-showcase-effects.mjs?v=led-music-20261003';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -37,7 +37,7 @@ import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } f
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
-import { ARWorkspace } from './ar-workspace.mjs?v=app-dj-20261004';
+import { ARWorkspace } from './ar-workspace.mjs?v=app-dj-20261005';
 import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
