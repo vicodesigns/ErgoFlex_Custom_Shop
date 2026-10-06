@@ -70,7 +70,7 @@ for (const layout of Object.values(HOME_LAYOUTS)) {
         layout.props.find(p => p.id === 'modern-lamp').at[0] = cx + 200;
         layout.props.push(
             { id: 'kenney-furniture-kitchen-coffee-machine', at: [cx - 220, 741, layout.back + 190] },
-            { id: 'quaternius-guitar', at: [-layout.width / 2 + 85, 650, 150], turn: 90 }
+            { id: 'quaternius-guitar', at: [-layout.width / 2 + 85, 650, 150], turn: 90, on: 'wall' }
         );
     }
 }
@@ -200,19 +200,22 @@ export function buildHomeOffice(room, root, layout, helpers) {
     if (house) {
         // A small wall hanger supports the guitar without filling floor space.
         const hanger = new THREE.Group(); hanger.name = 'Guitar wall hanger'; entry.add(hanger);
+        room.propSupports.push({obj:hanger,id:'quaternius-guitar',at:[-w/2+85,650,150]});
         const black = material('#282b2c', { metalness: .35, roughness: .65 });
         box(hanger, [15, 120, 70], [-w / 2 + 12, 1550, 150], black, 3);
         for (const z of [125, 175]) rod(hanger, [-w / 2 + 20, 1515, z], [-w / 2 + 100, 1515, z], 7, black);
     }
-    const frame = new THREE.Group(); frame.position.set(w / 2 - 36, 1610, house ? 550 : 610); frame.rotation.y = -Math.PI / 2; side.add(frame);
+    const frame = new THREE.Group();frame.name='Framed abstract artwork'; frame.position.set(w / 2 - 36, 1610, house ? 550 : 610); frame.rotation.y = -Math.PI / 2; side.add(frame);
     box(frame, [660, 810, 28], [0, 0, 0], joinery, 3);
     box(frame, [615, 765, 5], [0, 0, 17], trim);
     box(frame, [560, 700, 3], [0, 0, 21], material('#ffffff', { map: artTexture(), roughness: .9 }));
     if (house) {
         // Low storage along the side leaves a full route from entry to desk.
-        box(side, [310, 650, premium ? 900 : 1300], [w / 2 - 165, 340, premium ? 450 : 750], sage, 6);
-        box(side, [335, 25, premium ? 930 : 1330], [w / 2 - 166, 678, premium ? 450 : 750], joinery, 3);
-        for (const z of (premium ? [160, 450, 740] : [310, 750, 1190])) box(side, [12, 590, premium ? 275 : 410], [w / 2 - 327, 350, z], sage, 2);
+        const storage=new THREE.Group();storage.name='Low sideboard';root.add(storage);
+        box(storage,[260,15,premium?850:1250],[w/2-165,7.5,premium?450:750],sage,3);
+        box(storage, [310, 650, premium ? 900 : 1300], [w / 2 - 165, 340, premium ? 450 : 750], sage, 6);
+        box(storage, [335, 25, premium ? 930 : 1330], [w / 2 - 166, 678, premium ? 450 : 750], joinery, 3);
+        for (const z of (premium ? [160, 450, 740] : [310, 750, 1190])) box(storage, [12, 590, premium ? 275 : 410], [w / 2 - 327, 350, z], sage, 2);
     }
     if (premium) {
         // Extra floor area becomes a lounge and a library, not scaled furniture.

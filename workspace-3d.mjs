@@ -11,9 +11,9 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ACCESSORIES } from './catalog.mjs';
-import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=groove-routines-20261002';
+import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=room-furnishings-20261006';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=groove-routines-20261002';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=groove-routines-20261002';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=room-furnishings-20261006';
 import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=groove-routines-20261002';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=groove-routines-20261002';
 
@@ -604,15 +604,18 @@ export class WorkspaceRoom {
         this.scene = scene; this.scale = millimetreScale; this.id = 'product';
         this.root = null; this.walls = []; this.token = 0; this.ready = Promise.resolve();
         this.missingProps = [];
+        this.ownedMaterials = new Set();
     }
     set(id, options = {}) {
         if (!ROOM_SCENES.some(s => s.id === id)) id = 'product';
         // Any prop load still in flight belongs to the room being replaced.
         this.token++;
+        this.ownedMaterials.forEach(mat => mat.dispose()); this.ownedMaterials.clear();
         if (this.root) disposeTree(this.root);
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
         this.decorateStation = null;
         this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null;
+        this.propSupports = [];
         this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.life = null;
         if (id === 'product') { this.ready = Promise.resolve(); return; }
         let scene = ROOM_SCENES.find(s => s.id === id);
@@ -868,10 +871,13 @@ export class WorkspaceRoom {
             // Countertop objects travel with the complete counter, not the lounge zone.
             if (scene.counter && placement.at[1] >= 900 && placement.on !== 'ceiling') position[2] = placement.at[2];
             object.position.set(...position);
+            object.userData.propAnchor = placement.on || PROP_LIBRARY.entry(placement.id)?.anchor;
             object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
             if (placement.scale) object.scale.multiplyScalar(placement.scale);
             markSceneAsset(object, { key: `${scene.id}:${scene.physical ? this.roomLayout.id + ':' : ''}room:${index}:${placement.id}` });
             root.add(object);
+            const support=this.propSupports.find(s=>s.id===placement.id&&s.at.every((v,i)=>Math.abs(v-position[i])<1));
+            if(support){root.updateMatrixWorld(true);support.obj.attach(object);}
         }
         if (this.missingProps.length) console.warn(`Room ${scene.id}: props unavailable: ${this.missingProps.join(', ')}`);
     }
@@ -882,12 +888,16 @@ export class WorkspaceRoom {
         this.root?.traverse(child => { if (child.userData.sceneAsset) assets.push(child); });
         return assets;
     }
+    registerInteractionAsset(object, key) {
+        if(!object.userData.sceneAsset)markSceneAsset(object,{key});
+    }
     async addAsset(propId, key, position = [0, 0, 800]) {
         const token = this.token;
         await PROP_LIBRARY.loadIndex();
         const object = await PROP_LIBRARY.instance(propId);
         if (token !== this.token) return null;
         object.position.set(...position);
+        object.userData.propAnchor = PROP_LIBRARY.entry(propId)?.anchor;
         markSceneAsset(object, { key, custom: true });
         this.ensureAssetRoot().add(object);
         return object;

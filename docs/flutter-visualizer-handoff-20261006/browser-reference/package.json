@@ -1,0 +1,52 @@
+{
+  "name": "ergoflex_custom_shop",
+  "version": "1.0.0",
+  "description": "ErgoFlex custom desk configurator and 3D design studio",
+  "main": "index.js",
+  "scripts": {
+    "dev": "live-server --port=3000 --host=:: --no-browser --wait=500 --ignore=assets/props,models,scene-shots,node_modules,.git",
+    "test": "node tests/catalog-test.cjs && node tests/project-io-test.cjs && node tests/validation-test.cjs && node tests/studio-smoke.cjs",
+    "test:scene-assets": "node tests/scene-assets-test.cjs",
+    "test:gaming": "node tests/gaming-room-test.cjs",
+    "test:music": "node tests/music-room-test.cjs",
+    "test:artist": "node tests/artist-room-test.cjs",
+    "test:study": "node tests/study-room-test.cjs",
+    "test:office": "node tests/office-room-test.cjs",
+    "test:gym": "node tests/gym-room-test.cjs",
+    "test:kitchen": "node tests/kitchen-room-test.cjs",
+    "test:lounge": "node tests/lounge-room-test.cjs",
+    "test:workshop": "node tests/workshop-room-test.cjs",
+    "test:bedroom": "node tests/bedroom-room-test.cjs",
+    "test:gallery": "node tests/gallery-room-test.cjs",
+    "test:scifi": "node tests/scifi-room-test.cjs",
+    "test:coworking": "node tests/coworking-room-test.cjs",
+    "test:library": "node tests/library-room-test.cjs",
+    "test:room-lighting": "node tests/room-lighting-test.cjs",
+    "test:room-life": "node tests/room-life-test.cjs",
+    "test:room-groove": "node tests/room-groove-planner-test.cjs && node tests/room-groove-test.cjs",
+    "test:led-effects": "node tests/led-effects-test.cjs",
+    "test:led-pixels": "node tests/led-pixels-test.cjs",
+    "test:led-playback": "node tests/led-movement-test.cjs && node tests/led-game-test.cjs",
+    "test:led-music": "node tests/led-auto-dj-test.mjs && node tests/led-dj-overlay-test.mjs && node tests/led-music-effects-test.mjs && node tests/led-music-test.cjs && node tests/led-computer-audio-test.cjs && node tests/led-mobile-audio-test.cjs",
+    "test:led-scroll": "node tests/led-command-scroll-test.cjs",
+    "test:led-tilt": "node tests/led-tilt-reflection-test.cjs",
+    "test:led-presets-dj": "node tests/led-custom-presets-test.mjs && node tests/led-auto-dj-test.mjs && node tests/led-dj-overlay-test.mjs && node tests/led-music-effects-test.mjs && node tests/led-presets-dj-test.cjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vicodesigns/ErgoFlex_Custom_Shop.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/vicodesigns/ErgoFlex_Custom_Shop/issues"
+  },
+  "homepage": "https://github.com/vicodesigns/ErgoFlex_Custom_Shop#readme",
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.5.0",
+    "live-server": "^1.2.2",
+    "puppeteer": "^24.38.0"
+  }
+}

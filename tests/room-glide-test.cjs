@@ -32,7 +32,7 @@ const server = http.createServer((req, res) => {
             });
         };
         await ready();
-        assert.equal(await page.evaluate(() => ErgoFlex.glideSpeed), .306);
+        assert.equal(await page.evaluate(() => ErgoFlex.glideSpeed), .0765);
         assert.equal(await page.$eval('#glide-speed', s => s.selectedOptions[0].textContent), 'Slow');
 
         // Reproduce a saved device size and a collapsed body on initial load.
@@ -108,7 +108,7 @@ const server = http.createServer((req, res) => {
         const moving = await page.evaluate(() => {
             const p = ErgoFlex.serializeProject(); p.motion.yaw = 0; p.motion.glide = { x: 1.05, z: 0 };
             ErgoFlex.applyProject(p);
-            const speed = document.querySelector('#glide-speed'); speed.value = '0.85'; speed.dispatchEvent(new Event('change'));
+            const speed = document.querySelector('#glide-speed'); speed.value = '0.306'; speed.dispatchEvent(new Event('change'));
             if (document.querySelector('#motion-dock').classList.contains('collapsed')) document.querySelector('#motion-dock-toggle').click();
             return ErgoFlex.glidePosition;
         });

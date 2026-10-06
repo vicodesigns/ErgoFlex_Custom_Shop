@@ -126,6 +126,7 @@ export class RoomGroove {
             const turn = angleDelta(a.yaw, b.yaw), duration = Math.max(.25, Math.hypot(b.x - a.x, b.z - a.z) / 420, Math.abs(turn) / .4);
             run.elapsed += dt; const t = Math.min(1, run.elapsed / duration), s = t * t * (3 - 2 * t);
             this.ctx.move({ x: a.x + (b.x - a.x) * s, z: a.z + (b.z - a.z) * s, yaw: a.yaw + turn * s });
+            if(this.run!==run)return; // Contact can latch a stop while the step is applied.
             if (t === 1) {
                 run.segment++; run.elapsed = 0;
                 if (run.segment === run.route.length) {

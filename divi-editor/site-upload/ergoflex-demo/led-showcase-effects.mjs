@@ -70,33 +70,37 @@ export function sampleDecorativeInto(frame,effect,elapsed,color='#f10404',reduce
     return true;
 }
 
+// Head travel is about one fifth of the previous preview rate.
+export const COMET_TRAVEL_RATE = 6;
 export class MusicSampler{
     constructor(){this.pulse=new Float32Array(8);this.positions=new Float32Array(8);this.forward=false;this.drop=0;}
     reset(){this.pulse.fill(0);this.positions.fill(0);this.forward=false;this.drop=0;}
-    sample(frame,fx,metrics,seconds,delta=.016,reducedMotion=false){
-        if(!MUSIC_EFFECTS.some(entry=>entry.fx===fx))throw new RangeError('Unknown music effect');
+    sample(frame,fx,metrics,seconds,delta=.016,reducedMotion=false,configs=null){
+        const effects=Array.isArray(fx)?fx:Array(frame.length).fill(fx);
+        if(effects.length!==frame.length||effects.some(value=>!MUSIC_EFFECTS.some(entry=>entry.fx===value)))throw new RangeError('Unknown music effect');
         const dt=Math.min(.05,Math.max(0,delta)), volume=clamp(metrics.volume), energy=clamp(metrics.energy);
         if(metrics.bassBeat)this.forward=!this.forward;
         this.drop=Math.max(metrics.bassBeat?1:0,this.drop-dt*1.8);
         for(let strip=0;strip<frame.length;strip++){
+            const fx=effects[strip],config=configs?.[strip],speed=config?(0.25+config.sx/128*.75):1,intensity=(config?.ix??127.5)/255,clock=seconds*speed;
             const row=frame[strip],count=row.length/4,band=clamp(metrics.bands[7-strip]||0);
-            this.pulse[strip]=Math.max(metrics.beat?1:0,this.pulse[strip]-dt*(2+strip*.1));
-            this.positions[strip]=modulo(this.positions[strip]+(this.forward?1:-1)*(.02+energy*.15)*dt*30);
+            this.pulse[strip]=Math.max(metrics.beat?1:0,this.pulse[strip]-dt*(.5+3*intensity+strip*.1));
+            this.positions[strip]=modulo(this.positions[strip]+(this.forward?1:-1)*(.02+energy*.15)*dt*COMET_TRAVEL_RATE*speed);
             for(let pixel=0;pixel<count;pixel++){
-                const position=pixel/Math.max(1,count-1), layer=layers[strip]/4;
+                const rawPosition=config?.rev?1-pixel/Math.max(1,count-1):pixel/Math.max(1,count-1),position=config?.mi?Math.abs(rawPosition*2-1):rawPosition, layer=layers[strip]/4;
                 let gain=0,hue=position*.8+strip/12+seconds*.04;
                 if(reducedMotion){gain=volume;hue=position*.6+strip/12;}
                 else switch(fx){
-                    case 28: gain=band>.03 && pixel<Math.max(1,Math.floor(band**.8*count))?1:0;break;
-                    case 29: gain=Math.max(volume*.25,this.pulse[strip]*Math.max(0,1-strip*.04));hue=strip/8+seconds*.05;break;
-                    case 30:{const distance=modulo((position-this.positions[strip])*(this.forward?1:-1));gain=volume*Math.max(.08,1-distance*4);break;}
-                    case 31: gain=volume*(.15+.85*Math.max(0,Math.sin(seconds*Math.PI*4))**4);break;
-                    case 32: hue=.02+noise(strip*19+pixel+Math.floor(seconds*12))*.1;gain=volume*(.2+.8*noise(pixel+strip*23+Math.floor(seconds*12)));break;
-                    case 33: gain=volume*(.15+.85*(.5+.5*Math.sin(position*6+seconds*4+strip*.4)));break;
-                    case 37: gain=volume*(layer<=energy?1:.08);hue=layer*.6;break;
-                    case 38: gain=volume*Math.max(.05,1-Math.abs(modulo(seconds*.6)-layer)*3);break;
-                    case 39: hue=.55+layer*.22;gain=volume*(.2+.8*(metrics.bands[0]||0)*(1-layer));break;
-                    case 40: gain=volume*Math.max(.04,this.drop*(.5+.5*Math.cos(position*6-layer*4)));hue=.05+this.drop*.6;break;
+                    case 28: gain=band>.03 && position*count<Math.max(1,Math.floor(band**(1.3-intensity)*count))?1:0;break;
+                    case 29: gain=Math.max(volume*.25,this.pulse[strip]*Math.max(0,1-strip*.04));hue=strip/8+clock*.05;break;
+                    case 30:{const distance=modulo((position-this.positions[strip])*(this.forward?1:-1));gain=volume*Math.max(.08,1-distance*(7-6*intensity));break;}
+                    case 31: gain=volume*(.15+.85*Math.max(0,Math.sin(clock*Math.PI*4))**(7-6*intensity));break;
+                    case 32: hue=.02+noise(strip*19+pixel+Math.floor(clock*12))*.1;gain=volume*(.1+(.4+intensity)*noise(pixel+strip*23+Math.floor(clock*12)));break;
+                    case 33: gain=volume*(.15+.85*(.5+.5*Math.sin(position*(3+6*intensity)+clock*4+strip*.4)));break;
+                    case 37: gain=volume*(layer<=Math.min(1,energy*(.5+intensity))?1:.08);hue=layer*.6;break;
+                    case 38: gain=volume*Math.max(.05,1-Math.abs(modulo(clock*.6)-layer)*(5-4*intensity));break;
+                    case 39: hue=.55+layer*.22;gain=volume*(.2+.8*(metrics.bands[0]||0)*(1-layer)*(.5+intensity));break;
+                    case 40: gain=volume*Math.max(.04,this.drop*(.5+.5*Math.cos(position*(3+6*intensity)-layer*4)));hue=.05+this.drop*.6;break;
                 }
                 writeColor(row,pixel,hue,gain);
             }

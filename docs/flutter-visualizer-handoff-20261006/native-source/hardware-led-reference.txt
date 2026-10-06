@@ -1,0 +1,13 @@
+Selected LED identity and addressing excerpts from reviewed local config.h
+Source SHA-256: 8285117a80da3d4bac8ac3ef20999b405f1ca9e10cd142ec953efc6368a1c588
+12: // BTF-LIGHTING FCOB WS2814 (24V) Hardware Specifications
+13: // Each 71.42mm (2.81") = 1 addressable pixel containing 56 physical LEDs
+15: #define NUM_SEGMENTS 8            // 8 GPIO outputs
+17: #define LEDS_PER_PIXEL 56         // Physical LEDs per addressable cluster
+25: const uint8_t STRIP_PINS[NUM_SEGMENTS] = {27, 2, 33, 12, 5, 25, 4, 15};  // Desk 02 2026-10-01: Desktop Left moved off GPIO 26 (weakened by a short) to 25
+35: const uint16_t STRIP_LENGTHS[NUM_SEGMENTS] = {14, 14, 15, 14, 14, 11, 11, 13};  // Desk 02 2026-10-01: Desktop Left 10 -> 11 (+1 sacrificial pixel, like Desktop Right)
+153: // WS2814 BTF-LIGHTING verified wire order: W-R-G-B
+157: #define RGBW_ARG_INDEX_R 0  // RgbwColor arg index for Red
+158: #define RGBW_ARG_INDEX_G 2  // RgbwColor arg index for Green
+159: #define RGBW_ARG_INDEX_B 3  // RgbwColor arg index for Blue
+160: #define RGBW_ARG_INDEX_W 1  // RgbwColor arg index for White

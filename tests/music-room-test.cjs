@@ -39,7 +39,7 @@ const server = http.createServer((req, res) => {
                     mesh.geometry.computeBoundingBox();
                     b.union(mesh.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(mesh.matrixWorld)));
                 } });
-                return { id: obj.userData.propId, key: obj.userData.sceneAssetKey, at: obj.position.toArray(), min: b.min.toArray(), max: b.max.toArray(), scale: obj.scale.x };
+                return { id: obj.userData.propId || obj.name, anchor: obj.userData.propAnchor, key: obj.userData.sceneAssetKey, at: obj.position.toArray(), min: b.min.toArray(), max: b.max.toArray(), scale: obj.scale.x };
             });
             const instruments = ['Keyboard composing area', 'Vocal recording microphone', 'Acoustic drum kit'].map(name => {
                 const obj = room.root.getObjectByName(name); if (!obj) return null;
@@ -57,7 +57,7 @@ const server = http.createServer((req, res) => {
                 assert.ok(p.min[0] >= -w / 2 - 1 && p.max[0] <= w / 2 + 1, `${data.id}: ${p.id} within side walls: ${p.min[0]}..${p.max[0]}`);
                 assert.ok(p.min[2] >= data.back - 1 && p.max[2] <= end + 1, `${data.id}: ${p.id} within floor depth: ${p.min[2]}..${p.max[2]}`);
                 assert.ok(p.min[1] >= -1 && p.max[1] <= data.dimensions.height + 1, `${p.id} between floor and ceiling`);
-                if (p.at[1] === 0) assert.ok(Math.abs(p.min[1]) < 1, `${p.id} rests on the floor`);
+                if (p.at[1] === 0 && p.anchor !== 'wall') assert.ok(Math.abs(p.min[1]) < 1, `${p.id} rests on the floor`);
                 assert.ok(p.key.startsWith(`music:${data.id}:`), 'Room assets have independent layout identities');
             }
             for (const i of data.instruments) {

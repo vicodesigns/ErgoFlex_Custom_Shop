@@ -1,6 +1,10 @@
 // Preview clearance envelope supplied for the Standard and Extended desktops.
 // Between the measured endpoints, use linear interpolation so lift and tilt
 // controls meet at the same boundary from either direction.
+// Preview rates retuned from the owner's real-desk comparison (not measured calibration).
+// Tilt is degrees/second; glide is metres/second, with rotation derived from wheel geometry.
+export const TILT_SPEEDS = Object.freeze({ auto: 3.5, slow: 1.75, medium: 3.5, fast: 7 });
+export const GLIDE_SPEEDS = Object.freeze({ crawl: .0085, ninja: .034, slow: .0765, medium: .153, fast: .306 });
 export const TILT_MIN = -5;
 export const TILT_MAX = 65;
 export const LOW_HEIGHT_MAX_TILT = 39;

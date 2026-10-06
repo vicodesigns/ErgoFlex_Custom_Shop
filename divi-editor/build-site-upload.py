@@ -1,48 +1,67 @@
 """Build the small static 3D viewer bundle for the live LA Tech Week page."""
 
 from pathlib import Path
+import hashlib
+import json
+import re
 import shutil
 import zipfile
 
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'divi-editor' / 'site-upload' / 'ergoflex-demo'
+RELEASE = 'desktop-tilt-reach-20261006'
+WEBSITE_ZIP = 'ergoflex-explore-3d-tilt-lighting-20261006.zip'
 FILES = (
     'product-demo.html', 'product-demo.css', 'product-demo.js',
     'studio.js', 'studio.css', 'app-remote.css', 'ar-workspace.mjs', 'apple-ar-interactions.mjs', 'led-effects.mjs', 'led-strip-map.mjs', 'led-pixel-renderer.mjs',
     'led-movement.mjs', 'led-sounds.mjs', 'led-game-mode.mjs', 'led-game-frames.mjs',
-    'led-music-mode.mjs', 'led-showcase-effects.mjs', 'led-auto-dj.mjs', 'led-command-center.mjs',
+    'led-music-mode.mjs', 'led-showcase-effects.mjs', 'led-auto-dj.mjs', 'led-dj-overlay.mjs', 'led-command-center.mjs', 'led-custom-presets.mjs', 'led-saved-library.mjs',
     'catalog.mjs', 'project-io.mjs', 'validation.mjs', 'motion-limits.mjs',
-    'workspace-3d.mjs', 'room-refinement.mjs', 'room-life.mjs', 'room-groove.mjs', 'room-groove-runtime.mjs', 'home-office.mjs', 'gaming-room.mjs', 'music-room.mjs', 'artist-room.mjs', 'study-room.mjs', 'office-room.mjs', 'gym-room.mjs', 'kitchen-room.mjs', 'lounge-room.mjs', 'workshop-room.mjs', 'bedroom-room.mjs', 'gallery-room.mjs', 'scifi-room.mjs', 'coworking-room.mjs', 'library-room.mjs', 'workspace-icons.mjs', 'bir.jpg',
+    'workspace-3d.mjs', 'room-refinement.mjs', 'room-life.mjs', 'room-groove.mjs', 'room-groove-runtime.mjs', 'room-collision.mjs', 'room-safety.mjs', 'touchscreen-display.mjs', 'room-interactions.mjs', 'room-led-spill.mjs', 'home-office.mjs', 'gaming-room.mjs', 'music-room.mjs', 'artist-room.mjs', 'study-room.mjs', 'office-room.mjs', 'gym-room.mjs', 'kitchen-room.mjs', 'lounge-room.mjs', 'workshop-room.mjs', 'bedroom-room.mjs', 'gallery-room.mjs', 'scifi-room.mjs', 'coworking-room.mjs', 'library-room.mjs', 'workspace-icons.mjs', 'bir.jpg',
 )
 
 OUT.mkdir(parents=True, exist_ok=True)
 for name in FILES:
     shutil.copy2(ROOT / name, OUT / name)
+    if Path(name).suffix in ('.html', '.js', '.mjs', '.css'):
+        text = (OUT / name).read_text()
+        # The uploaded release gets one cache key throughout the module graph,
+        # including dependencies whose older URL had no version query at all.
+        text = re.sub(r'\?v=[A-Za-z0-9_-]+', '?v=' + RELEASE, text)
+        text = re.sub(
+            r"((?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s*)['\"])(\./[^'\"]+\.m?js)(?:\?v=[^'\"]+)?(['\"])",
+            lambda match: match[1] + match[2] + '?v=' + RELEASE + match[3],
+            text,
+        )
+        (OUT / name).write_text(text)
 for folder in ('assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion', 'assets/model', 'assets/led'):
     shutil.copytree(ROOT / folder, OUT / folder, dirs_exist_ok=True)
 
 # Ship the edited public model with the viewer; room props are not bundled.
 (OUT / '.htaccess').write_text(
     'AddType text/javascript .mjs\n'
-    '<Files "product-demo.html">\n'
+    '<FilesMatch "\\.(html|js|mjs|css|json)$">\n'
     '  <IfModule mod_expires.c>\n'
     '    ExpiresActive Off\n'
     '  </IfModule>\n'
     '  <IfModule mod_headers.c>\n'
     '    Header set Cache-Control "no-cache, max-age=0, must-revalidate"\n'
     '  </IfModule>\n'
-    '</Files>\n'
+    '</FilesMatch>\n'
 )
 (OUT / 'README.txt').write_text(
-    'ErgoFlex LA Tech Week 3D viewer\n\n'
-    'For the large-desktop-trim-fix ZIP: extract directly inside the existing\n'
-    'wp-content/uploads/2026/promo/ergoflex-demo folder and overwrite files.\n'
+    'Explore ErgoFlex in 3D — release ' + RELEASE + '\n\n'
+    'UPLOAD THIS WEBSITE PACKAGE: ' + WEBSITE_ZIP + '\n'
+    'Upload and extract directly inside the existing\n'
+    'wp-content/uploads/2026/promo/ergoflex-demo folder. Allow overwriting files\n'
+    'when uploading/extracting. Uploading the ZIP without extracting does not update the website.\n'
     'product-demo.html must be directly in that folder, not in another nested ergoflex-demo.\n'
-    'For the tuned-leds-upload ZIP: extract inside promo; it creates ergoflex-demo.\n'
-    'Then check https://ergoflexdesk.com/wp-content/uploads/2026/promo/ergoflex-demo/product-demo.html\n'
-    'The LA Tech Week Divi button must use /wp-content/uploads/2026/promo/ergoflex-demo/product-demo.html\n'
-    'for its Hosted 3D viewer URL.\n\n'
+    'Set the Divi Hosted 3D viewer URL (Explore ErgoFlex in 3D button) to:\n'
+    '/wp-content/uploads/2026/promo/ergoflex-demo/product-demo.html?v=' + RELEASE + '\n'
+    'Test the direct URL with the new version query, then test the Divi button.\n'
+    'BUILD.json should show release ' + RELEASE + '. It also contains file hashes.\n'
+    'physical-auto-dj-engineer-handoff.zip is documentation/reference material, not this website.\n\n'
     'The base model is assets/model/desk-public.glb, with edited shelf plates replacing the original geometry.\n'
     'The trim and Extended desktop GLBs are included in assets/trim.\n'
     'The Extended desktop uses desktopLwTrimV2.glb in place of the old trim mesh.\n'
@@ -52,7 +71,11 @@ for folder in ('assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion'
     'desktops; it opens with the Extended 60-inch size, red trim, and updated birch finish.\n'
     'The LED toggle, quick color swatches, and custom picker control the panel illumination.\n'
     'The LED studio backdrop dims ambient lighting to show the LEDs.\n'
-    'The desktop reflection follows the shelf LED strip and fans out softly toward the front.\n'
+    'The desktop reflection has three blended depth bands driven independently by the lower shelf and upper underside front/back strips.\n'
+    'All three desktop reflection bands are shifted approximately five inches toward the rear edge, including the power-module reflections.\n'
+    'Desktop light reach follows physical tilt: the existing -5-degree look is preserved, level extends its depth by 25%, and positive tilt fills the front more.\n'
+    'The smooth extension settles at +15 degrees; both desktop sizes and power modules share the same rear-anchored field.\n'
+    'This curve is tuned from the owner\'s visual comparison, not a measured photometric simulation. Manual surface controls remain available.\n'
     'Studio includes tuned desktop width, cone angle, edge fade, reach and sharpness, plus foot width and fade controls.\n'
     'The preferred September 29 tuning is the shared default for the viewer and Studio.\n'
     'The desktop crossbar and legs catch LED light; the cage receives weaker lower-edge bounce.\n'
@@ -61,8 +84,20 @@ for folder in ('assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion'
     'Desktop power-module faces receive the same LED color and dimming as the desktop reflection.\n'
     'LEDs load off. Switching them on starts at 75% of the new maximum.\n'
     'The displayed 100% brightness is 85% of the former maximum light output.\n'
-    'Use product-demo.html?v=app-dj-20261004 as the Divi Hosted 3D viewer URL to bypass older browser copies.\n'
-    'The viewer HTML revalidates on future visits; versioned runtime assets may stay cached.\n'
+    'Runtime scripts, module imports, styles and previously versioned assets use the new release cache key.\n'
+    'Full screen shows only the live desk and app controls, preserving music capture and the LED Command Center.\n'
+    'Auto DJ: Mix Across Shelves toggles strip mixing; DJ extras default enabled with Wide Color Dynamics and 100% sensitivity.\n'
+    'Light / Moods / My looks imports supported saved LED JSON presets on the visitor device.\n'
+    'Auto DJ has separate look and palette frequency ratings; palette colours preserve hard edges.\n'
+    'DJ uses only 24 music-capable looks; Daytime and other static looks stay in Light / Moods.\n'
+    'Switch on the beat replaces the bar selector; remix, dynamics and opt-in localized burst controls are included.\n'
+    'Music Comet travels five times slower. Motion rates follow owner feedback, not measured hardware calibration.\n'
+    'Music looks are marked with a music note. Preset changes keep active music/sharing and pause position.\n'
+    'Wing outer faces retain full reflection; inner faces receive weak centre-desktop-strip bounce.\n'
+    'Silver tilt actuators reflect the centre desktop underside strip through lift, tilt and both desktop sizes.\n'
+    'Includes 31 saved desk looks and 9 palettes, including Rojo, Master REGGAE and Mexican Power.\n'
+    'Exit full screen returns to the page; embeds that deny native fullscreen fill the preview instead.\n'
+    'The supplied Apache .htaccess revalidates HTML, scripts, styles and JSON on future visits.\n'
     'The hidden AR viewer loads eagerly even outside the mobile iframe viewport.\n'
     'AR preparation errors show the actual loading failure, rather than a device warning.\n'
     'Android WebXR uses the live desk and the original ErgoFlex app panel, including Glide, turning, height, tilt and LEDs inside AR.\n'
@@ -84,7 +119,7 @@ for folder in ('assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion'
     'The initial demo posture is Standing: 43.5 inches at -5 degrees.\n'
     'AR requires a compatible device; WebXR requires HTTPS and iframe xr-spatial-tracking permission.\n'
     'The Sitting preset now uses 28 inches at 0 degrees.\n'
-    'Glide Slow is 20% faster than the previous Slow; Crawl and Ninja are unchanged.\n'
+    'Tilt Slow/Medium/Fast: 1.75/3.5/7 deg/s. Glide Slow/Medium/Fast: .0765/.153/.306 m/s.\n'
     'Height and tilt preset buttons show 1, 2, 3; swipe up to reveal their saved values.\n'
     'The shared Studio code also includes live grain visibility and sheen controls.\n'
     'This bundle includes the current Studio tilt group.\n'
@@ -96,11 +131,40 @@ for folder in ('assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion'
     'Tap the bulb to switch LED power; hold to open the LED Command Center: Light, Music, Auto DJ, Game Mode and movement cues.\n'
     'The wide Command Center covers the app controller without dimming or blocking the desk viewer.\n'
     'Auto DJ offers Chill, Party, Rave and a weighted custom rotation with Standard / Reduced / Minimal flash comfort.\n'
+    'Use computer audio prompts for tab or system audio sharing; system-wide support depends on browser and OS.\n'
+    'Android Chrome, including Galaxy Fold, cannot share audio from another app. Unsupported sharing controls are hidden.\n'
+    'Music / Live / Use microphone listens to music playing nearby after the visitor allows microphone access.\n'
+    'Your song and Use demo soundtrack remain available; tap Start Music Mode after choosing either.\n'
+    'Microphone analysis stays on the device, without recording, upload or speaker replay. Stop releases the microphone.\n'
+    'Microphone access requires HTTPS (or localhost); if an embed blocks permission, open the viewer in its own tab.\n'
+    'For cross-origin embeds, delegate microphone access with allow="microphone; fullscreen; xr-spatial-tracking".\n'
+    'Compact LED Command Center pages share one touch scroller so every setting remains reachable on phones.\n'
+    'Captured audio feeds the LED analyser locally, without replay, recording or upload; Stop sharing releases every track.\n'
     'DJ settings save on the device; music starts only on a user tap and is muted until Hear music is enabled.\n'
     'LED animations and Auto DJ are browser previews, not byte-identical firmware output or physical desk control.\n'
     'Lift and tilt default to Fast. The clearance envelope limits tilt at low heights.\n'
     'If the Studio tilt rig changes again, rebuild this bundle and upload again.\n'
 )
+
+# Give the installed website an independently readable release identity.
+manifest = {
+    'release': RELEASE,
+    'entrypoint': 'product-demo.html?v=' + RELEASE,
+    'files': {
+        str(path.relative_to(OUT)): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(OUT.rglob('*'))
+        if path.is_file() and path.name != 'BUILD.json'
+    },
+}
+(OUT / 'BUILD.json').write_text(json.dumps(manifest, indent=2) + '\n')
+
+# The canonical update is flat: the owner is already in ergoflex-demo in cPanel.
+website_update = OUT.parent / WEBSITE_ZIP
+with zipfile.ZipFile(website_update, 'w', compression=zipfile.ZIP_DEFLATED) as z:
+    for path in sorted(OUT.rglob('*')):
+        if path.is_file():
+            z.write(path, path.relative_to(OUT))
+print(f'Built {website_update} ({website_update.stat().st_size:,} bytes)')
 
 archive = OUT.parent / 'ergoflex-demo-tuned-leds-upload.zip'
 with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as z:

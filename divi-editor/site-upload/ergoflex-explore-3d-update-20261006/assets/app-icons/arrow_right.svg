@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 121.13 121.13">
+  <defs>
+    <filter id="drop-shadow-1" filterUnits="userSpaceOnUse">
+      <feOffset dx="4.28" dy="4.28"/>
+      <feGaussianBlur result="blur" stdDeviation="3.06"/>
+      <feFlood flood-color="#000" flood-opacity=".75"/>
+      <feComposite in2="blur" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="ShiftMotion">
+    <g style="filter: url(#drop-shadow-1);">
+      <circle cx="60.56" cy="60.56" r="60.56" style="fill: #2e2c74; stroke-width: 0px;"/>
+      <polygon points="86.68 60.56 86.68 100.67 51.95 80.62 17.22 60.56 51.95 40.51 86.68 20.46 86.68 60.56" style="fill: #fff; stroke-width: 0px;"/>
+    </g>
+  </g>
+</svg>

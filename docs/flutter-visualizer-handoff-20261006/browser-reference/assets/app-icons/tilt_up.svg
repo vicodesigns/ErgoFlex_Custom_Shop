@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2"
+  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420">
+  <g id="TiltAngle">
+    <g>
+      <circle style="fill: #2e2c74;" cx="210" cy="210" r="210"/>
+      <g>
+        <path style="fill: none;
+        stroke: #fff;
+        stroke-miterlimit: 10; stroke-width: 10.2px;" d="M125.3,314.2c170.6,8.6,179.7-48.8,170.9-173.2"/>
+        <polygon style="fill: #fff;" points="347.7 152 290.6 68.3 246.6 159.6 347.7 152"/>
+      </g>
+      <path style="fill: none;
+      stroke: #fff;
+      stroke-miterlimit: 10; stroke-width: 25.7px;" d="M118.7,313.1c136.6,29.5,221.2-31.2,175.3-179.9"/>
+    </g>
+  </g>
+</svg>

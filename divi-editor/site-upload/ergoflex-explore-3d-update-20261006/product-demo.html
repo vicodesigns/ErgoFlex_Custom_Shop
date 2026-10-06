@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ErgoFlex Standing Desk Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .heading-font {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .product-viewer {
+            background: radial-gradient(115% 85% at 50% 28%, #ffffff 0%, #f5f5f7 40%, #e8e9ec 75%, #dcdde1 100%);
+            border: 1px solid #e5e5e7;
+        }
+
+        /* Marquee (box-select) rubber band drawn over the canvas */
+        #marquee-box {
+            position: absolute;
+            border: 1.5px dashed #30d158;
+            background: rgba(48, 209, 88, 0.14);
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 20;
+        }
+        #marquee-count {
+            position: absolute;
+            transform: translate(0, -120%);
+            background: #30d158;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 999px;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        #loader {
+            transition: opacity 0.4s ease;
+        }
+
+        .config-section {
+            border-bottom: 1px solid #d2d2d7;
+            transition: all 0.3s ease;
+        }
+
+        .config-section:last-child {
+            border-bottom: none;
+        }
+
+        .config-header {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .config-header:hover {
+            background-color: #f5f5f7;
+        }
+
+        .finish-swatch {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            border: 2px solid #d2d2d7;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .finish-swatch:hover {
+            border-color: #007aff;
+            transform: scale(1.05);
+        }
+
+        .finish-swatch.selected {
+            border-color: #007aff;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+        }
+
+        .finish-swatch.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .price-display {
+            color: #1d1d1f;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: #0056cc;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #007aff;
+            border: 1px solid #007aff;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #007aff;
+            color: white;
+        }
+
+        .loader {
+            border: 3px solid #e5e5e7;
+            border-top: 3px solid #007aff;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .rating-stars {
+            color: #ff9500;
+        }
+
+        .feature-check {
+            color: #30d158;
+        }
+
+        .config-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .config-content.expanded {
+            max-height: 500px;
+        }
+
+        .breadcrumb {
+            color: #86868b;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            text-decoration: none;
+            color: #86868b;
+            transition: color 0.2s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: #007aff;
+        }
+
+        /* Custom Premium Height Slider Styles */
+        .height-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .height-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #007aff;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: transform 0.1s;
+        }
+
+        .height-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="studio.css?v=explore-3d-20261006">
+    <link rel="stylesheet" href="app-remote.css?v=explore-3d-20261006">
+<link rel="stylesheet" href="./product-demo.css?v=explore-3d-20261006"></head>
+<body class="bg-white">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-8">
+                    <h1 class="text-xl font-semibold text-gray-900">ErgoFlex<span class="brand-dot">®</span></h1>
+                    <nav class="hidden md:flex space-x-6">
+                        <a href="#config-column" class="text-gray-600 hover:text-gray-900 text-sm">Configure your desk</a>
+                        <button id="open-editor" class="text-gray-600 hover:text-gray-900 text-sm">Open studio ↗</button>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="share-build" title="Copy a link to this configuration" aria-label="Share configuration" class="text-gray-600 hover:text-gray-900">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16V3m-4 4 4-4 4 4M5 12v8a1 1 0 001 1h12a1 1 0 001-1v-8"></path>
+                        </svg>
+                    </button>
+                    <button id="cart-btn" aria-label="Open your build list" class="relative text-gray-600 hover:text-gray-900">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="breadcrumb">
+            CUSTOM SHOP <span aria-hidden="true"> / </span> <span class="text-gray-900">Your workspace, your way</span>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 pb-12">
+        <div id="store-grid" class="grid grid-cols-1 lg:grid-cols-4 gap-10">
+            <!-- Configuration Panel -->
+            <div id="config-column" class="lg:col-span-1 order-2 lg:order-1">
+                <button id="config-collapse" class="config-collapse" aria-expanded="true" aria-controls="config-column-content" title="Collapse the options panel to give the desk more room">Hide options</button>
+                <div id="config-column-content">
+                <!-- Product Header -->
+                <div class="mb-8">
+                    <div class="eyebrow">BUILT AROUND YOU</div>
+                    <h1 class="heading-font text-3xl font-semibold text-gray-900 mb-2">Make room<br>for your best work.</h1>
+                    <p class="text-gray-600 mb-4">Meet your ErgoFlex. A workspace that lifts, tilts, and moves with you.</p>
+
+                    <!-- Rating -->
+                    <div class="flex items-center mb-4">
+                        <span class="collection-badge">ErgoFlex / Custom Series</span>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="mb-6">
+                        <div class="text-sm text-gray-600 mb-1">As configured:</div>
+                        <div class="price-display text-3xl heading-font" id="total-price">$1,299</div>
+                        <div class="text-sm text-gray-500">Estimated configuration price</div>
+                    </div>
+                </div>
+
+                <!-- Configuration Options -->
+                <div class="space-y-0 border border-gray-200 rounded-xl overflow-hidden">
+                    <!-- Size Configuration -->
+                    <div class="config-section">
+                        <div class="config-header p-6" onclick="toggleSection('size')">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-medium text-gray-900">Desk Size</h3>
+                                <svg class="w-5 h-5 text-gray-400 transform transition-transform" id="size-arrow">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="config-content expanded" id="size-content">
+                            <div class="px-6 pb-6">
+                                <div id="size-choice-toggle" class="grid grid-cols-2 gap-2" role="group" aria-label="Desk size"></div>
+                                <select id="size-select" class="sr-only" aria-label="Desk size selection"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Finish -->
+                    <div class="config-section">
+                        <div class="config-header p-6" onclick="toggleSection('desktop')">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-medium text-gray-900">Desktop Finish</h3>
+                                <svg class="w-5 h-5 text-gray-400 transform transition-transform" id="desktop-arrow">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="config-content expanded" id="desktop-content">
+                            <div class="px-6 pb-6">
+                                <div id="wood-finishes" class="grid grid-cols-4 gap-3 mb-4">
+                                    <!-- Wood finishes will be populated here -->
+                                </div>
+                                <div id="selected-wood-name" class="text-sm text-gray-600">Natural Birch</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Base Finish -->
+                    <div class="config-section">
+                        <div class="config-header p-6" onclick="toggleSection('base')">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-medium text-gray-900">Frame Finish</h3>
+                                <svg class="w-5 h-5 text-gray-400 transform transition-transform" id="base-arrow">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="config-content expanded" id="base-content">
+                            <div class="px-6 pb-6">
+                                <div id="base-finishes" class="grid grid-cols-4 gap-3 mb-4">
+                                    <!-- Base finishes will be populated here -->
+                                </div>
+                                <div id="selected-base-name" class="text-sm text-gray-600">White</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trim Color -->
+                    <div class="config-section">
+                        <div class="config-header p-6" onclick="toggleSection('trim')">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-medium text-gray-900">Trim Color</h3>
+                                <svg class="w-5 h-5 text-gray-400 transform transition-transform" id="trim-arrow">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="config-content expanded" id="trim-content">
+                            <div class="px-6 pb-6 flex items-center gap-3">
+                                <input id="trim-color" type="color" value="#dc0909" aria-label="Trim color" class="w-12 h-10 cursor-pointer">
+                                <span id="trim-color-value" class="text-sm text-gray-600">#DC0909</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="config-section">
+                        <div class="config-header p-6" onclick="toggleSection('features')">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-medium text-gray-900">Included Features</h3>
+                                <svg class="w-5 h-5 text-gray-400 transform transition-transform" id="features-arrow">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="config-content" id="features-content">
+                            <div class="px-6 pb-6">
+                                <ul class="space-y-3 text-sm">
+                                    <li class="flex items-center">
+                                        <span class="feature-check mr-3">✓</span>
+                                        <span>Explore 28" – 52.5" height adjustment</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="feature-check mr-3">✓</span>
+                                        <span>Independent desktop tilt</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="feature-check mr-3">✓</span>
+                                        <span>Omnidirectional wheel movement</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="feature-check mr-3">✓</span>
+                                        <span>Custom wood tones and frame finishes</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="feature-check mr-3">✓</span>
+                                        <span>Save and compare your configurations</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div id="build-actions" class="mt-8 space-y-4">
+                    <button id="add-to-cart" class="btn-primary w-full py-4 text-lg font-medium">
+                        Add to build list — <span id="cart-price">$1,299</span>
+                    </button>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="reset-build" class="btn-secondary py-3 text-sm">
+                            Start Over
+                        </button>
+                        <button id="save-build" class="btn-secondary py-3 text-sm">
+                            Save for Later
+                        </button>
+                        <button id="download-quote" class="btn-secondary py-3 text-sm">
+                            Download estimate
+                        </button>
+                    </div>
+
+                    <div class="text-center text-sm text-gray-500 mt-4">
+                        Design preview · Final specifications, availability, and delivery confirmed before ordering.
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- 3D Viewer -->
+            <div id="viewer-column" class="lg:col-span-3 order-1 lg:order-2">
+                <div id="viewer-shell" class="product-viewer rounded-xl overflow-hidden" style="height: min(1040px, calc(100vh - 140px)); min-height: 520px;">
+                    <div class="relative w-full h-full">
+                        <div id="loader" class="absolute inset-0 flex items-center justify-center z-10" style="background: radial-gradient(115% 85% at 50% 28%, #ffffff 0%, #f5f5f7 40%, #e8e9ec 75%, #dcdde1 100%);">
+                            <div class="flex flex-col items-center">
+                                <div class="loader mb-4"></div>
+                                <p class="text-sm text-gray-700" id="loader-status">Loading 3D workspace...</p>
+                            </div>
+                        </div>
+
+                        <canvas id="model-canvas" role="img" aria-label="Interactive ErgoFlex desk. Drag to rotate; scroll or pinch to zoom." class="w-full h-full"></canvas>
+
+                        <!-- Box-select rubber band (Shift/Alt + drag) -->
+                        <div id="marquee-box" class="hidden"><div id="marquee-count">0</div></div>
+
+                        <!-- Part name under the cursor while a pick mode is armed -->
+                        <div id="pick-hover-label" class="hidden absolute z-20 pointer-events-none bg-gray-900/85 text-white text-[11px] font-medium px-2 py-1 rounded shadow-lg whitespace-nowrap"></div>
+
+                        <!-- Desk Height + Tilt Controls -->
+                        <div id="motion-dock" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 w-11/12 max-w-sm flex flex-col gap-2">
+                            <div class="bg-white/80 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/50 flex items-center gap-5">
+                                <div class="flex flex-col items-center min-w-[50px]">
+                                    <span class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-0.5">Height</span>
+                                    <span class="text-lg font-bold text-gray-900 heading-font" id="desk-height-display">28.0"</span>
+                                </div>
+                                <input type="range" id="desk-height-slider" aria-label="Desk height in inches" min="28" max="52.5" step="0.1" value="28" class="height-slider flex-1">
+                            </div>
+                        </div>
+
+                        <!-- Viewer Controls -->
+                        <div class="absolute top-4 right-4 flex flex-col space-y-2 z-10">
+                            <button id="toggle-height-btn" class="bg-white bg-opacity-90 hover:bg-opacity-100 p-3 rounded-lg shadow-sm border border-gray-200 transition-all text-gray-700" title="Toggle Sit / Stand Height">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14"></path>
+                                </svg>
+                            </button>
+                            <button id="ar-btn" class="bg-white bg-opacity-90 hover:bg-opacity-100 p-3 rounded-lg shadow-sm border border-gray-200 transition-all text-gray-700" title="See it in your space (AR)">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l7 4v10l-7 4-7-4V7l7-4z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11l7-4M12 11L5 7m7 4v10"></path>
+                                </svg>
+                            </button>
+                            <button id="glide-btn" class="bg-white bg-opacity-90 hover:bg-opacity-100 p-3 rounded-lg shadow-sm border border-gray-200 transition-all text-gray-700" title="Play glide demo — omni wheels roll in all directions">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18M3 12h18"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"></path>
+                                </svg>
+                            </button>
+                            <button id="reset-view" class="bg-white bg-opacity-90 hover:bg-opacity-100 p-3 rounded-lg shadow-sm border border-gray-200 transition-all" title="Reset View">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- View Instructions -->
+                        <div class="absolute bottom-4 left-4 bg-white bg-opacity-90 rounded-lg px-4 py-2 text-sm text-gray-600 shadow-sm border border-gray-100 z-10 hidden md:block">
+                            Drag to rotate • Scroll to zoom<span id="boxselect-hint" class="hidden"> • Shift-drag to box-select</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Animation Tuner (Moved Below Viewer) -->
+                <div class="mt-6 bg-gray-50 border border-gray-200 p-5 rounded-xl flex flex-col gap-4" id="anim-debugger">
+                    <div class="font-semibold text-gray-800 border-b border-gray-200 pb-2 flex justify-between items-center cursor-pointer" id="debug-panel-header">
+                        Part Group & Transform Builder
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-normal text-gray-500 bg-gray-200 px-2 py-1 rounded-full">Setup Mode</span>
+                            <span id="debug-collapse-icon" class="text-gray-400 text-sm font-mono select-none">&#9660;</span>
+                        </div>
+                    </div>
+
+                    <div id="debug-panel-content">
+                        <!-- Part Search/Filter -->
+                        <div class="mb-4">
+                            <input type="text" id="part-search-input" placeholder="Search desk parts and scene assets..." class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <div id="part-search-results" class="mt-1 max-h-[200px] overflow-y-auto bg-white border border-gray-200 rounded-lg text-sm hidden"></div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition -ml-2">
+                                <input type="checkbox" id="selection-mode-toggle" class="w-4 h-4 cursor-pointer accent-blue-500">
+                                <span class="font-medium text-sm text-gray-700">Enable Click Selection</span>
+                            </label>
+                            <div class="flex items-center gap-2 bg-white border border-gray-200 px-3 py-2 rounded-lg text-sm shadow-sm">
+                                <span class="text-gray-500">Selected Objects:</span>
+                                <span id="selected-parts-count" class="font-bold text-green-600">0</span>
+                            </div>
+                        </div>
+
+                        <!-- Which part did I just click, and what do I want to call it? -->
+                        <div class="bg-white border border-gray-200 p-3 rounded-lg text-sm shadow-sm mt-4">
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="font-medium text-gray-700">Selected Object</span>
+                                <span id="selected-part-id" class="text-[11px] font-mono text-gray-400">—</span>
+                            </div>
+                            <div id="selected-part-empty" class="text-xs text-gray-400">Click a desk part or scene asset to inspect and rename it.</div>
+                            <div id="selected-part-body" class="hidden flex-col gap-2">
+                                <div class="text-xs text-gray-500">Model name: <span id="selected-part-modelname" class="font-mono text-gray-700"></span></div>
+                                <div class="flex gap-2">
+                                    <input type="text" id="selected-part-label" class="flex-1 p-2 border border-gray-300 rounded-lg text-sm" placeholder="Your name for this part...">
+                                    <button id="selected-part-rename-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">Rename</button>
+                                    <button id="selected-part-reset-btn" class="border border-gray-300 text-gray-600 hover:bg-gray-50 px-3 py-2 rounded-lg text-xs font-medium transition-colors" title="Drop the custom name and go back to the model name">Reset</button>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button id="selected-part-copy-btn" class="text-[11px] text-blue-600 hover:underline">Copy editor ID</button>
+                                    <button id="selected-part-copy-named-btn" class="text-[11px] text-blue-600 hover:underline">Copy all renamed parts</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                            <div class="flex flex-col gap-2 bg-white border border-gray-200 p-3 rounded-lg text-sm shadow-sm">
+                                <span class="font-medium text-gray-700 border-b border-gray-100 pb-1">Click Mode:</span>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="radio" name="select_mode" value="single" checked class="accent-blue-500"> Single Mesh
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="radio" name="select_mode" value="parent" class="accent-blue-500"> Parent Assembly
+                                </label>
+
+                                <span class="font-medium text-gray-700 border-b border-gray-100 pb-1 pt-2">Box Select:</span>
+                                <p class="text-xs text-gray-500 -mt-1">Hold <kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px]">Shift</kbd> or <kbd class="px-1 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px]">Alt</kbd> and drag across the model.</p>
+                                <div class="flex gap-4">
+                                    <label class="flex items-center gap-1.5 cursor-pointer" title="Only parts fully inside the box">
+                                        <input type="radio" name="box_mode" value="enclose" checked class="accent-blue-500"> Enclose
+                                    </label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer" title="Any part the box touches">
+                                        <input type="radio" name="box_mode" value="touch" class="accent-blue-500"> Touch
+                                    </label>
+                                </div>
+                                <label class="flex items-center gap-1.5 cursor-pointer text-xs text-gray-600" title="Inverts it: plain drag box-selects, Shift/Alt + drag orbits the camera">
+                                    <input type="checkbox" id="box-select-sticky" class="w-3.5 h-3.5 accent-blue-500"> Drag without modifier (Shift/Alt orbits)
+                                </label>
+                            </div>
+
+                            <div class="flex flex-col gap-2 bg-white border border-gray-200 p-3 rounded-lg text-sm shadow-sm">
+                                <span class="font-medium text-gray-700 border-b border-gray-100 pb-1">Action:</span>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="radio" name="click_action" value="toggle" checked class="accent-blue-500"> Toggle
+                                </label>
+                                <div class="flex gap-4">
+                                    <label class="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="click_action" value="select" class="accent-blue-500"> Select
+                                    </label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="click_action" value="deselect" class="accent-blue-500"> Deselect
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3D Transform Tools -->
+                        <div class="flex gap-4 items-center bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm shadow-sm mt-4">
+                            <span class="font-medium text-blue-800">Transform Gumball:</span>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-blue-900">
+                                <input type="radio" name="transform_mode" value="none" checked class="accent-blue-600"> Off
+                            </label>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-blue-900">
+                                <input type="radio" name="transform_mode" value="unified" class="accent-blue-600"> Move · Rotate · Scale
+                            </label>
+                            <button id="undo-btn" class="ml-auto bg-white border border-blue-300 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled title="Undo last edit (Ctrl+Z)">Undo</button>
+                        </div>
+
+                        <!-- Named Groups -->
+                        <div class="bg-white border border-gray-200 p-3 rounded-lg text-sm shadow-sm mt-4">
+                            <span class="font-medium text-gray-700 border-b border-gray-100 pb-1 block mb-2">Named Groups</span>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="group-name-input" placeholder="Group name..." class="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <button id="save-group-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">Save Group</button>
+                            </div>
+                            <div class="flex gap-2 items-center">
+                                <select id="group-select" class="flex-1 p-2 border border-gray-300 rounded-lg text-sm">
+                                    <option value="">-- Select Group --</option>
+                                </select>
+                                <button id="load-group-btn" class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">Load</button>
+                                <button id="export-group-btn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors" title="Export group as JSON">Export</button>
+                                <button id="delete-group-btn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">Del</button>
+                            </div>
+                        </div>
+
+                        <!-- Clone Button -->
+                        <div class="mt-4">
+                            <button id="clone-parts-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg transition-colors font-medium text-sm shadow-sm">
+                                Clone Selected Desk Parts
+                            </button>
+                        </div>
+
+                        <p class="text-xs text-gray-500 leading-relaxed bg-gray-100 p-3 rounded-lg mt-4">
+                            <strong>Pro Tip:</strong> Keep the gumball "Off" while building a multi-selection. Turn it on to move with the arrows, rotate with the rings, or scale with the square handles — all three stay available together. For dense hardware like magnets or screws, hold <kbd>Shift</kbd> (or <kbd>Alt</kbd>) and drag a box across them instead of clicking one at a time. Press <kbd>`</kbd> to enter/leave the full-screen setup workspace.
+                        </p>
+
+                        <div class="flex gap-3 mt-2">
+                            <button id="clear-parts-btn" class="w-1/3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 rounded-lg transition-colors font-medium text-sm shadow-sm">
+                                Clear All
+                            </button>
+                            <button id="copy-parts-btn" class="w-2/3 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-lg transition-colors font-medium text-sm shadow-sm">
+                                Copy Transform Payload
+                            </button>
+                        </div>
+
+                        <!-- Scene Hierarchy Tree -->
+                        <div class="mt-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="font-medium text-gray-700 p-3 border-b border-gray-100 flex justify-between items-center cursor-pointer" id="scene-tree-header">
+                                <span>Scene Hierarchy</span>
+                                <span id="scene-tree-collapse-icon" class="text-gray-400 text-sm font-mono select-none">&#9660;</span>
+                            </div>
+                            <div id="scene-tree-container" class="max-h-[400px] overflow-y-auto p-2 text-xs" style="display:none;">
+                                <div id="scene-tree-content"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tilt Animation System -->
+                        <div class="bg-white border border-gray-200 p-3 rounded-lg text-sm shadow-sm mt-4">
+                            <span class="font-medium text-gray-700 border-b border-gray-100 pb-1 block mb-2">Tilt Animation Configs</span>
+                            <div id="tilt-configs-list" class="flex flex-col gap-2 mb-2"></div>
+                            <div class="flex flex-col gap-2">
+                                <input type="text" id="tilt-name-input" placeholder="Tilt config name..." class="p-2 border border-gray-300 rounded-lg text-sm">
+                                <div class="flex gap-2 items-center">
+                                    <span class="text-gray-600">Axis:</span>
+                                    <label class="flex items-center gap-1"><input type="radio" name="tilt_axis" value="x" class="accent-blue-500"> X</label>
+                                    <label class="flex items-center gap-1"><input type="radio" name="tilt_axis" value="y" class="accent-blue-500"> Y</label>
+                                    <label class="flex items-center gap-1"><input type="radio" name="tilt_axis" value="z" checked class="accent-blue-500"> Z</label>
+                                </div>
+                                <div class="flex gap-2 items-center">
+                                    <label class="text-gray-600">Min:</label>
+                                    <input type="number" id="tilt-min-deg" value="-5" class="w-16 p-1 border border-gray-300 rounded text-sm">
+                                    <label class="text-gray-600">Max:</label>
+                                    <input type="number" id="tilt-max-deg" value="65" class="w-16 p-1 border border-gray-300 rounded text-sm">
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button id="pick-pivot-btn" class="border border-orange-400 text-orange-600 hover:bg-orange-50 px-2 py-1 rounded text-xs font-medium transition-colors">Pick Pivot</button>
+                                    <span id="pivot-status" class="text-xs text-gray-500">Pivot: None (center)</span>
+                                    <button id="clear-pivot-btn" class="text-xs text-red-400 hover:text-red-600 hidden">✕</button>
+                                </div>
+                                <button id="save-tilt-btn" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">Save Tilt Config</button>
+                                <button id="export-tilt-btn" class="bg-white border border-orange-300 text-orange-600 hover:bg-orange-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors">Export Animations (JSON)</button>
+                            </div>
+                        </div>
+
+                        <!-- Actuator Rigs: linked follow-animations (aim at target + telescope) -->
+                        <div class="bg-white border border-gray-200 p-3 rounded-lg text-sm shadow-sm mt-4">
+                            <span class="font-medium text-gray-700 border-b border-gray-100 pb-1 block mb-2">Actuator Rigs <span class="text-xs font-normal text-gray-400">(auto-follow a tilt: aim at target, rod slides in/out)</span></span>
+                            <div id="rig-list" class="flex flex-col gap-2 mb-2"></div>
+                            <div class="flex flex-col gap-2">
+                                <input type="text" id="rig-name-input" placeholder="Rig name (e.g. left_actuator)..." class="p-2 border border-gray-300 rounded-lg text-sm">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button id="rig-pick-base-btn" class="border border-purple-400 text-purple-600 hover:bg-purple-50 px-2 py-1.5 rounded text-xs font-medium transition-colors" title="Click a part at the actuator's frame mount — the fixed hinge">1. Pick Base Part</button>
+                                    <button id="rig-pick-target-btn" class="border border-purple-400 text-purple-600 hover:bg-purple-50 px-2 py-1.5 rounded text-xs font-medium transition-colors" title="Click the part the rod attaches to on the tilting assembly">2. Pick Target Part</button>
+                                    <button id="rig-capture-cyl-btn" class="border border-purple-400 text-purple-600 hover:bg-purple-50 px-2 py-1.5 rounded text-xs font-medium transition-colors" title="Stores the currently selected parts as the cylinder (rotates at the base)">3. Capture Cylinder = Selection</button>
+                                    <button id="rig-capture-rod-btn" class="border border-purple-400 text-purple-600 hover:bg-purple-50 px-2 py-1.5 rounded text-xs font-medium transition-colors" title="Stores the currently selected parts as the rod (rotates AND slides)">4. Capture Rod = Selection</button>
+                                </div>
+                                <div id="rig-status" class="text-xs text-gray-500 leading-relaxed bg-gray-50 p-2 rounded">Base: — &nbsp;·&nbsp; Target: — &nbsp;·&nbsp; Cylinder: 0 parts &nbsp;·&nbsp; Rod: 0 parts</div>
+
+                                <!-- Base pivot editor: the hinge the actuator swings around.
+                                     Picking a base part seeds this with that part's centre; these
+                                     controls move it to the real hinge. -->
+                                <div id="rig-pivot-editor" class="hidden bg-purple-50 border border-purple-200 rounded-lg p-2 flex flex-col gap-2">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-semibold text-purple-800" id="rig-pivot-title">Base pivot</span>
+                                        <div class="flex gap-1">
+                                            <button id="rig-pivot-gizmo-btn" class="border border-purple-400 text-purple-700 hover:bg-purple-100 px-2 py-1 rounded text-[11px] font-medium transition-colors" title="Attach the 3D move gizmo to the pivot marker">Drag in 3D</button>
+                                            <button id="rig-pivot-selection-btn" class="border border-purple-400 text-purple-700 hover:bg-purple-100 px-2 py-1 rounded text-[11px] font-medium transition-colors" title="Snap the pivot to the centre of the current part selection">Selection centre</button>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-1 text-[11px] text-purple-700">
+                                        <label class="flex items-center gap-1">X<input type="number" step="0.05" id="rig-pivot-x" class="w-full p-1 border border-purple-300 rounded"></label>
+                                        <label class="flex items-center gap-1">Y<input type="number" step="0.05" id="rig-pivot-y" class="w-full p-1 border border-purple-300 rounded"></label>
+                                        <label class="flex items-center gap-1">Z<input type="number" step="0.05" id="rig-pivot-z" class="w-full p-1 border border-purple-300 rounded"></label>
+                                    </div>
+                                    <div class="flex gap-1">
+                                        <button id="rig-pivot-apply-btn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded text-[11px] font-medium transition-colors">Apply</button>
+                                        <button id="rig-pivot-close-btn" class="border border-purple-300 text-purple-600 hover:bg-purple-100 px-2 py-1 rounded text-[11px] font-medium transition-colors">Done</button>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <button id="save-rig-btn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">Save Actuator Rig</button>
+                                    <button id="reset-anim-btn" class="border border-red-300 text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg text-xs font-medium transition-colors" title="Delete rigs and tilt configs saved in this browser and reload using only the baked definitions">Reset saved animation data</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Success Modal -->
+    <div id="cart-modal" role="dialog" aria-modal="true" aria-labelledby="cart-title" tabindex="-1" class="fixed inset-0 bg-black bg-opacity-25 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-xl">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h3 id="cart-title" class="text-xl font-semibold text-gray-900 mb-2">Your build list</h3>
+                <div id="cart-content" class="text-gray-600 mb-6"></div>
+                <div class="flex space-x-3">
+                    <button id="continue-shopping" class="flex-1 btn-secondary py-3">
+                        Continue Building
+                    </button>
+                    <button id="export-cart" class="flex-1 btn-primary py-3">
+                        Export estimate
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js Scripts -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.8.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module" src="./studio.js?v=explore-3d-20261006"></script>
+    <script>
+        // Classic script: runs before the deferred module above. Browsers refuse to
+        // load ES modules over file://, so studio.js never executes and the loader
+        // would otherwise spin forever with no explanation. Say what is wrong instead.
+        if (location.protocol === 'file:') {
+            var el = document.getElementById('loader');
+            if (el) {
+                el.innerHTML = '<div style="max-width:34rem;padding:1.5rem;text-align:center;font:14px/1.5 system-ui,sans-serif;color:#1f2937">'
+                    + '<p style="font-weight:600;margin:0 0 .5rem">This page needs to be served over HTTP.</p>'
+                    + '<p style="margin:0 0 .75rem">The app loads as an ES module, which browsers block on <code>file://</code>, so the 3D workspace cannot start.</p>'
+                    + '<p style="margin:0">Run <code style="background:#e8e9ec;padding:.1rem .35rem;border-radius:.2rem">npm run dev</code> and open '
+                    + '<a href="http://localhost:3000/" style="color:#1d4ed8;text-decoration:underline">http://localhost:3000/</a> '
+                    + '(add <code>?setup</code> for the studio).</p></div>';
+            }
+        }
+    </script>
+<script src="./product-demo.js?v=explore-3d-20261006"></script></body>
+</html>

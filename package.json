@@ -27,7 +27,12 @@
     "test:led-effects": "node tests/led-effects-test.cjs",
     "test:led-pixels": "node tests/led-pixels-test.cjs",
     "test:led-playback": "node tests/led-movement-test.cjs && node tests/led-game-test.cjs",
-    "test:led-music": "node tests/led-auto-dj-test.mjs && node tests/led-music-effects-test.mjs && node tests/led-music-test.cjs"
+    "test:led-music": "node tests/led-auto-dj-test.mjs && node tests/led-dj-overlay-test.mjs && node tests/led-music-effects-test.mjs && node tests/led-music-test.cjs && node tests/led-computer-audio-test.cjs && node tests/led-mobile-audio-test.cjs",
+    "test:led-scroll": "node tests/led-command-scroll-test.cjs",
+    "test:led-tilt": "node tests/led-tilt-reflection-test.cjs",
+    "test:led-presets-dj": "node tests/led-custom-presets-test.mjs && node tests/led-auto-dj-test.mjs && node tests/led-dj-overlay-test.mjs && node tests/led-music-effects-test.mjs && node tests/led-presets-dj-test.cjs",
+    "test:room-safety": "node tests/room-safety-test.mjs && node tests/room-interactions-test.cjs --safety",
+    "test:room-interactions": "node tests/room-collision-test.mjs && node tests/room-safety-test.mjs && node tests/room-interactions-test.cjs"
   },
   "repository": {
     "type": "git",

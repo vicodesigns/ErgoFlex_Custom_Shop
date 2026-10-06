@@ -1465,7 +1465,11 @@
 #led-command-center[data-compact="true"] .ledcc-header {margin-bottom:6px}
 #led-command-center[data-compact="true"] .ledcc-header button {padding:6px;font-size:12px}
 #led-command-center[data-compact="true"] .ledcc-header>button {font-size:20px}
-#led-command-center[data-compact="true"] .ledcc-scroll {display:block;overflow:auto;padding:0}
+#led-command-center[data-compact="true"] .ledcc-scroll {display:block;overflow-x:hidden;overflow-y:auto;padding:0;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+/* Compact pages share the sheet's scroller. A nested overflow:auto page with
+   overscroll containment swallows phone swipes even when it cannot scroll. */
+#led-command-center[data-compact="true"] [data-ledcc-page] {overflow:visible;overscroll-behavior:auto;padding-right:0}
+#led-command-center[data-compact="true"] .ledcc-diagnostics {max-height:none;overflow:visible}
 #led-command-center[data-compact="true"] .ledcc-desk {margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr}
 #led-command-center[data-compact="true"] .ledcc-desk-heading {display:none}
 #led-command-center[data-compact="true"] .ledcc-master {border:0;padding:8px;gap:5px;flex-wrap:nowrap}
@@ -1478,3 +1482,20 @@
 #led-command-center[data-compact="true"] .led-playback-controls {grid-template-columns:1fr}
 #led-command-center[data-compact="true"] .ledcc-header nav {margin:0;max-width:none}
 #motion-dock.remote-v2 .hub-led {touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#led-command-center .led-music-share-help {grid-column:1 / -1;margin:0;font-size:12px;line-height:1.4}
+#led-command-center .led-playback-controls>div.led-music-share-help {display:block!important}
+#led-command-center .led-music-share-help ol {padding-left:20px;margin:6px 0}
+#led-command-center .led-music-share-help p {margin:6px 0 0}
+#led-command-center .led-music-share-help a {color:#94b7ff;text-decoration:underline}
+#led-command-center .ledcc-custom-looks {margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #3b3d40}
+#led-command-center .ledcc-import {margin-top:12px;flex-wrap:wrap}
+#led-command-center .ledcc-import input {max-width:100%}
+#led-command-center .ledcc-strip-mix {font-size:11px;line-height:1.6}
+#led-command-center [data-ledcc-look] .ledcc-strips {margin:0;gap:3px}
+
+/* Auto DJ extras stay within the dock's scrollable controls. */
+.ledcc-dj-extra { display:flex; align-items:center; gap:18px; padding:14px 0; border-bottom:1px solid #ffffff16; }
+.ledcc-dj-extra span { flex:1; }
+.ledcc-dj-extra strong,.ledcc-dj-extra small { display:block; }
+.ledcc-dj-extra small { margin-top:6px; color:#a8adb5; font-size:12px; line-height:1.45; }
+.ledcc-dj-extra input { flex:0 0 auto; width:22px; height:22px; accent-color:#4a6dea; }

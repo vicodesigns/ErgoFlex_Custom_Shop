@@ -1,0 +1,277 @@
+[
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "LED_SURFACE_DEFAULTS",
+    "line": 445
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "updateLedEffectFrame",
+    "line": 481
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "bindLedPixels",
+    "line": 2409
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "setLedsEnabled",
+    "line": 489
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "updateDesktopReflectionTilt",
+    "line": 2843
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "addLedSurfaceSpill",
+    "line": 2863
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "addLedWingSpill",
+    "line": 3004
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "addLedUprightSpill",
+    "line": 3064
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "addFootLedFloorGlow",
+    "line": 3196
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "loadLedOverlay",
+    "line": 3265
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "syncLedSizeGeometry",
+    "line": 2536
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "applyTiltConfig",
+    "line": 6404
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "createStudioEnvironment",
+    "line": 753
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "applyRoomLighting",
+    "line": 4209
+  },
+  {
+    "file": "browser-reference/studio.js",
+    "symbol": "applySurfaceFinish",
+    "line": 3603
+  },
+  {
+    "file": "browser-reference/led-pixel-renderer.mjs",
+    "symbol": "LedPixelRenderer",
+    "line": 25
+  },
+  {
+    "file": "browser-reference/led-pixel-renderer.mjs",
+    "symbol": "upload",
+    "line": 48
+  },
+  {
+    "file": "browser-reference/led-pixel-renderer.mjs",
+    "symbol": "bindStrip",
+    "line": 71
+  },
+  {
+    "file": "browser-reference/led-pixel-renderer.mjs",
+    "symbol": "bindSpill",
+    "line": 108
+  },
+  {
+    "file": "browser-reference/led-pixel-renderer.mjs",
+    "symbol": "bindReflectionBands",
+    "line": 129
+  },
+  {
+    "file": "browser-reference/led-showcase-effects.mjs",
+    "symbol": "DECORATIVE_EFFECTS",
+    "line": 1
+  },
+  {
+    "file": "browser-reference/led-showcase-effects.mjs",
+    "symbol": "MUSIC_EFFECTS",
+    "line": 9
+  },
+  {
+    "file": "browser-reference/led-showcase-effects.mjs",
+    "symbol": "MusicSampler",
+    "line": 75
+  },
+  {
+    "file": "browser-reference/led-showcase-effects.mjs",
+    "symbol": "analyseMusic",
+    "line": 112
+  },
+  {
+    "file": "browser-reference/led-music-mode.mjs",
+    "symbol": "LedMusicMode",
+    "line": 7
+  },
+  {
+    "file": "browser-reference/led-music-mode.mjs",
+    "symbol": "useLiveAudio",
+    "line": 71
+  },
+  {
+    "file": "browser-reference/led-music-mode.mjs",
+    "symbol": "renderRecipe",
+    "line": 106
+  },
+  {
+    "file": "browser-reference/led-music-mode.mjs",
+    "symbol": "sample",
+    "line": 112
+  },
+  {
+    "file": "browser-reference/led-music-mode.mjs",
+    "symbol": "startDJ",
+    "line": 135
+  },
+  {
+    "file": "browser-reference/led-auto-dj.mjs",
+    "symbol": "DJ_PROGRAMS",
+    "line": 4
+  },
+  {
+    "file": "browser-reference/led-auto-dj.mjs",
+    "symbol": "normalizeDJSettings",
+    "line": 14
+  },
+  {
+    "file": "browser-reference/led-auto-dj.mjs",
+    "symbol": "AutoDJ",
+    "line": 38
+  },
+  {
+    "file": "browser-reference/led-auto-dj.mjs",
+    "symbol": "stripEffects",
+    "line": 63
+  },
+  {
+    "file": "browser-reference/led-auto-dj.mjs",
+    "symbol": "tick",
+    "line": 83
+  },
+  {
+    "file": "browser-reference/led-dj-overlay.mjs",
+    "symbol": "DJOverlay",
+    "line": 14
+  },
+  {
+    "file": "browser-reference/led-dj-overlay.mjs",
+    "symbol": "prepare",
+    "line": 17
+  },
+  {
+    "file": "browser-reference/led-dj-overlay.mjs",
+    "symbol": "paint",
+    "line": 62
+  },
+  {
+    "file": "browser-reference/led-custom-presets.mjs",
+    "symbol": "normalizeCustomLook",
+    "line": 23
+  },
+  {
+    "file": "browser-reference/led-custom-presets.mjs",
+    "symbol": "normalizeCustomPalette",
+    "line": 8
+  },
+  {
+    "file": "browser-reference/led-custom-presets.mjs",
+    "symbol": "sampleCustomPalette",
+    "line": 14
+  },
+  {
+    "file": "browser-reference/led-custom-presets.mjs",
+    "symbol": "CustomLookSampler",
+    "line": 63
+  },
+  {
+    "file": "browser-reference/led-game-frames.mjs",
+    "symbol": "validateGameManifest",
+    "line": 1
+  },
+  {
+    "file": "browser-reference/led-game-frames.mjs",
+    "symbol": "sampleGameBank",
+    "line": 10
+  },
+  {
+    "file": "browser-reference/led-game-mode.mjs",
+    "symbol": "LedGameMode",
+    "line": 5
+  },
+  {
+    "file": "browser-reference/led-game-mode.mjs",
+    "symbol": "selectVariant",
+    "line": 25
+  },
+  {
+    "file": "browser-reference/led-game-mode.mjs",
+    "symbol": "sample",
+    "line": 51
+  },
+  {
+    "file": "browser-reference/led-game-mode.mjs",
+    "symbol": "syncMonitor",
+    "line": 53
+  },
+  {
+    "file": "native-source/desk_viewer/desk-viewer.js",
+    "symbol": "applyPose",
+    "line": 112
+  },
+  {
+    "file": "native-source/desk_viewer/desk-viewer.js",
+    "symbol": "setupGlow",
+    "line": 363
+  },
+  {
+    "file": "native-source/desk_viewer/desk-viewer.js",
+    "symbol": "patchSurfaceForGlow",
+    "line": 411
+  },
+  {
+    "file": "native-source/desk_viewer/desk-viewer.js",
+    "symbol": "updateGlowUniforms",
+    "line": 474
+  },
+  {
+    "file": "native-source/desk_viewer/desk-viewer.js",
+    "symbol": "updateLeds",
+    "line": 492
+  },
+  {
+    "file": "native-source/desk_viewer/desk-viewer.js",
+    "symbol": "setLedLook",
+    "line": 541
+  },
+  {
+    "file": "native-source/desk_viewer/desk-viewer.js",
+    "symbol": "tick",
+    "line": 767
+  },
+  {
+    "file": "native-source/desk_viewer/desk-viewer.js",
+    "symbol": "receive",
+    "line": 813
+  }
+]

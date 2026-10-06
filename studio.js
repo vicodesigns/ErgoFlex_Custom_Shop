@@ -1,7 +1,12 @@
-import { LedCommandCenter } from './led-command-center.mjs?v=app-dj-20261004';
+import { LedCommandCenter } from './led-command-center.mjs?v=desktop-bands-back-20261005';
+import { normalizeCustomLook, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=groove-routines-20261002';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=groove-routines-20261002';
-import { RoomGroove } from './room-groove-runtime.mjs?v=groove-routines-20261002';
+import { RoomGroove } from './room-groove-runtime.mjs?v=room-safety-20261006';
+import { RoomInteractions } from './room-interactions.mjs?v=room-safety-20261006';
+import { RoomSafety } from './room-safety.mjs?v=room-safety-20261006';
+import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
+import { RoomLedSpill } from './room-led-spill.mjs?v=room-furnishings-20261006';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
@@ -11,12 +16,12 @@ import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayout
 import * as THREE from 'three';
 import { LED_EFFECTS, normalizeLedEffect, sampleLedEffect } from './led-effects.mjs?v=led-effects-20261003';
 import { LED_STRIPS, LED_STRIP_MAP_VERSION, createLedFrame, sampleLedDiagnostic } from './led-strip-map.mjs?v=led-game-20261003';
-import { LedPixelRenderer } from './led-pixel-renderer.mjs?v=led-game-20261003';
+import { LedPixelRenderer } from './led-pixel-renderer.mjs?v=desktop-bands-back-20261005';
 import { LedMotion } from './led-movement.mjs?v=led-game-20261003';
-import { LedSounds } from './led-sounds.mjs?v=led-game-20261003';
-import { LedGameMode } from './led-game-mode.mjs?v=app-dj-20261004';
-import { LedMusicMode } from './led-music-mode.mjs?v=app-dj-20261004';
-import { sampleDecorativeInto } from './led-showcase-effects.mjs?v=led-music-20261003';
+import { LedSounds } from './led-sounds.mjs?v=room-safety-20261006';
+import { LedGameMode } from './led-game-mode.mjs?v=desktop-bands-back-20261005';
+import { LedMusicMode } from './led-music-mode.mjs?v=room-furnishings-20261006';
+import { sampleDecorativeInto } from './led-showcase-effects.mjs?v=desktop-bands-back-20261005';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
@@ -25,19 +30,19 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
          ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=public-plates-controls-20260930';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
-import { TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=motion-v3-20260928';
+import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=groove-routines-20261002';
+import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=room-furnishings-20261006';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=groove-routines-20261002';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=groove-routines-20261002';
-import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=groove-routines-20261002';
+import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=room-furnishings-20261006';
 import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=groove-routines-20261002';
 import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=groove-routines-20261002';
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=groove-routines-20261002';
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
-import { ARWorkspace } from './ar-workspace.mjs?v=app-dj-20261004';
+import { ARWorkspace } from './ar-workspace.mjs?v=desktop-bands-back-20261005';
 import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
@@ -49,7 +54,9 @@ const LARGE_DESKTOP_TRIM_URL = './assets/trim/desktopLwTrimV2.glb?v=desktop-trim
 const TOUCHSCREEN_PULLED_URL = './assets/motion/touchscreenPulledOut.glb?v=public-plates-controls-20260930';
 const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb?v=public-plates-controls-20260930';
 const TOUCHSCREEN_WIDE_URL = './assets/motion/touchscreenExtendedForWideDesktop.glb?v=public-plates-controls-20260930';
-const TOUCHSCREEN_FACE_URL = './assets/motion/panel_mainscreen_20260929_104051.png?v=public-plates-controls-20260930';
+const touchscreenDisplay = new TouchscreenDisplay();
+let touchscreenTexture = null, touchscreenDrawAt = 0;
+const roomSafety = new RoomSafety();
 const LED_MODEL_URL = './assets/motion/LEDS.glb?v=public-plates-controls-20260930';
 const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb?v=public-plates-controls-20260930';
 const LED_COLOR_KEY = 'ergoflex.ledColorV1';
@@ -463,6 +470,30 @@ const ledMotion = new LedMotion();
 const ledSounds = new LedSounds();
 const ledGame = new LedGameMode(LED_STRIPS.map(s => s.count));
 const ledMusic = new LedMusicMode(LED_STRIPS.map(s => s.count));
+let customLedLook = null;
+const customLookSampler = new CustomLookSampler(LED_STRIPS.map(s => s.count));
+function applyCustomLedLook(value) {
+    const look = normalizeCustomLook(value);
+    ledGame.stop();ledMusic.stopDJ();setLedEffect({mode:'solid'}, false);
+    const primary=look.strips[0].col[0];
+    setLedColor('#'+primary.slice(0,3).map(channel=>Math.min(255,channel+primary[3]).toString(16).padStart(2,'0')).join(''), false);
+    setLedGlow(look.bri / 255 * LED_FULL_BRIGHTNESS, false);
+    customLookSampler.music.reset();customLookSampler.decorativeFrames.clear();
+    customLedLook=look;setLedsEnabled(look.on);
+    // Preset changes do not revoke a shared source, rewind a song or undo Pause.
+    // A saved music recipe starts Music Mode only when it isn't already active.
+    if(customLookUsesMusic(look)&&!ledMusic.active)ledMusic.start();
+    ledMusic.syncUI();
+    updateLedEffectFrame();
+}
+document.addEventListener('ergoflex-music-effect-selected',()=>{customLedLook=null;});
+function applyCustomLedPalette(palette) {
+    ledMusic.applyPalette(palette);
+    const definition=ledMusic.paletteOverride;
+    if(customLedLook)customLedLook={...customLedLook,strips:customLedLook.strips.map(strip=>({...strip,pal:0,palette:definition}))};
+    else if(!ledMusic.active)customLedLook=normalizeCustomLook({name:definition.name,bri:255,on:true,strips:LED_STRIPS.map(({id})=>({id,fx:Number(ledEffect.mode.replace('fx-',''))||0,pal:0,col:[[255,255,255,0]],palette:definition,sx:128,ix:128}))});
+    setLedsEnabled(true);updateLedEffectFrame();
+}
 let ledMotionEnabled = true, ledAutoLift = false, ledAutoTilt = false, ledPlaybackUIAt = 0;
 let ledPixelSource = 'base';
 try {
@@ -487,6 +518,9 @@ try {
     }
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
+let roomInteractions = null, roomFurnitureSaveTimer = null, roomCollisionBlocked = false;
+const roomLedSpill = new RoomLedSpill();
+let roomLedGain = 0;
 let roomGroove = null, grooveSettingPose = false;
 let homeMode = 'afternoon', homeDeskReturn = null;
 let homeLayoutId = 'apartment';
@@ -1052,6 +1086,20 @@ function initThreeJS() {
         if (marquee.active) cancelMarquee();
     });
 
+    roomInteractions = new RoomInteractions({canvas:renderer.domElement,camera,controls,scene,
+        room:()=>workspaceRoom,deskBox:deskCollisionBox,deskObject:()=>loadedModel,safety:roomSafety,
+        enabled:()=>!!workspaceRoom?.root&&!liveAR?.active&&!isSelectionMode&&!isDraggingTransform&&!roomGroove?.run,
+        onSelection:entry=>{
+            const toolbar=document.getElementById('room-object-controls');if(!toolbar)return;
+            toolbar.hidden=!entry;
+            toolbar.querySelector('[data-room-object-name]').textContent=entry?.name||'';
+            toolbar.querySelectorAll('[data-room-object-turn]').forEach(button=>button.hidden=entry?.surface!=='floor');
+        },
+        onStatus:notifyUser,onChange:()=>{
+            if(roomGroove?.prepared)roomGroove.reset();
+            clearTimeout(roomFurnitureSaveTimer);
+            roomFurnitureSaveTimer=setTimeout(persistSceneAssetStates,350);
+        }});
     loadModel();
 
     window.addEventListener('resize', syncViewerSize);
@@ -2260,6 +2308,8 @@ function setTrimColor(value, persist = true) {
 
 function setLedColor(value, persist = true) {
     if (!/^#[0-9a-f]{6}$/i.test(value || '')) return;
+    customLedLook = null;
+    ledMusic.paletteOverride = null;
     ledColor = value;
     ledParts.forEach((entry, index) => {
         if (index >= 3 && index <= 37) return;
@@ -2286,18 +2336,34 @@ function setLedColor(value, persist = true) {
 function updateLedEffectFrame(seconds = performance.now() / 1000) {
     const diagnostic = ledDiagnostic.strip !== null;
     let pixels = false, linear = false;
-    if (diagnostic) {sampleLedDiagnostic(ledPixelFrame, LED_STRIPS, ledDiagnostic); pixels = true; ledPixelSource = 'diagnostic';}
+    if (roomSafety.alert) {
+        const amber=roomSafety.alert.kind==='ahead',gain=ledReducedMotion.matches?1:.72+.28*Math.sin(seconds*3)**2;
+        for(const row of ledPixelFrame)for(let p=0;p<row.length;p+=4)row.set([Math.round(255*gain),Math.round((amber?145:16)*gain),Math.round((amber?8:12)*gain),0],p);
+        pixels=true;ledPixelSource=amber?'obstacle-ahead':'collision';
+    }
+    else if (diagnostic) {sampleLedDiagnostic(ledPixelFrame, LED_STRIPS, ledDiagnostic); pixels = true; ledPixelSource = 'diagnostic';}
     else if (ledMotionEnabled && ledMotion.sample(ledPixelFrame, seconds * 1000, ledReducedMotion.matches)) {pixels = true;ledPixelSource = ledMotion.owner ? 'movement' : 'completion';}
     else if (ledGame.sample(ledPixelFrame)) {pixels = true;linear = true;ledPixelSource = 'game';}
-    else if (ledMusic.sample(ledPixelFrame)) {pixels = true;ledPixelSource = 'music';}
+    else if (ledMusic.sample(ledPixelFrame)) {
+        if(customLedLook){
+            if(ledMusic.dj.enabled){if(!ledMusic.dj.currentLook&&!ledMusic.dj.currentPalette)tintCustomMusic(ledPixelFrame,customLedLook);}
+            else if(customLookUsesMusic(customLedLook))customLookSampler.sample(ledPixelFrame,customLedLook,ledMusic.playbackTime,{...ledMusic.metrics,beat:!ledMusic.paused&&ledMusic.metrics.beat,bassBeat:!ledMusic.paused&&ledMusic.metrics.bassBeat},ledReducedMotion.matches,ledMusic.paused?0:.016);
+            else tintCustomMusic(ledPixelFrame,customLedLook);
+        }
+        pixels = true;ledPixelSource = 'music';
+    }
+    else if (customLookSampler.sample(ledPixelFrame,customLedLook,seconds-ledEffectStart,{bands:[],volume:0,energy:0,beat:false,bassBeat:false},ledReducedMotion.matches,.016,(liftToHeight(currentLift)-28)/24)) {pixels=true;ledPixelSource='preset';}
     else if (sampleDecorativeInto(ledPixelFrame, ledEffect, seconds - ledEffectStart, ledColor,
         ledReducedMotion.matches, (liftToHeight(currentLift) - 28) / 24)) {pixels = true;ledPixelSource = 'effect';}
     else ledPixelSource = 'base';
     const frame = sampleLedEffect(ledEffect, seconds - ledEffectStart, ledsEnabled,
         ledReducedMotion.matches || pixels);
+    if(roomSafety.alert)frame.gain=ledsEnabled?1:0;
+    roomLedGain = 1.8 * ledGlow / 100 * frame.gain;
     if (pixels && ledsEnabled) ledPixels?.upload(ledPixelFrame, linear);
     ledPixels?.setActive(pixels && ledsEnabled, 3.6 * ledGlow / 100);
-    if (frame.hue === null) ledFrameColor.set(ledColor);
+    if (roomSafety.alert) ledFrameColor.set(roomSafety.alert.kind==='ahead'?'#ff9108':'#ff100c');
+    else if (frame.hue === null) ledFrameColor.set(ledColor);
     else ledFrameColor.setHSL(frame.hue, 1, 0.5, THREE.SRGBColorSpace);
     ledParts.forEach(({ material }, index) => {
         // The fixed red IC details are not part of the decorative effect.
@@ -2324,7 +2390,7 @@ function mountLedPlayback(container) {
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {haltAllMotion();ledGame.video.pause();ledMusic.pause();ledSounds.stop();ledMotion.cancel();updateLedEffectFrame();ledGame.syncUI();}
 });
-window.addEventListener('pagehide', e => {if (!e.persisted) {ledSounds.dispose();ledGame.dispose();ledMusic.dispose();}else {ledSounds.stop();ledGame.video.pause();ledMusic.pause();}});
+window.addEventListener('pagehide', e => {if (!e.persisted) {ledSounds.dispose();ledGame.dispose();ledMusic.dispose();}else {ledSounds.stop();ledGame.video.pause();if(ledMusic.liveAudio||ledMusic.capturePending)ledMusic.stop();else ledMusic.pause();}});
 
 function setLedDiagnostic(value = {}) {
     const strip = value.strip === null || value.strip === undefined ? null : Number(value.strip);
@@ -2380,7 +2446,8 @@ function bindLedPixels() {
     ledPixels.bindStrip(ledExtendedStrips.children[2], 4);
     const receiverIds = { desktop: [3], shelf: [1, 2], base: [7], top: [0], leftWing: [5], rightWing: [6], floor: [7] };
     ledSpillMaterials.forEach(entry => {
-        const ids = entry.strip ? [entry.strip.userData.ledPhysicalId] : receiverIds[entry.receiver];
+        const ids = entry.sourceIds || (entry.strip ? [entry.strip.userData.ledPhysicalId] : receiverIds[entry.receiver]);
+        entry.material.userData.ledSpillSources = [...ids];
         const source = ledPixels.bindings.find(binding => binding.stripId === ids[0] && binding.part === entry.strip)
             || ledPixels.bindings.find(binding => binding.stripId === ids[0]);
         if (entry.receiver === 'floor') {
@@ -2392,6 +2459,7 @@ function bindLedPixels() {
 }
 
 function setLedEffect(value, persist = true) {
+    customLedLook = null;
     ledEffect = normalizeLedEffect(value);
     ledEffectStart = performance.now() / 1000;
     updateLedEffectFrame();
@@ -2649,6 +2717,47 @@ function makeOverlayNode(gltf, index, xShift, material, name) {
     return group;
 }
 
+function updateTouchscreenDisplay() {
+    const mode=measuredRoomProfile()?.mode;
+    const theme=document.getElementById('studio-environment')?.value==='led'||['evening','night','party'].includes(mode)?'dark':'light';
+    const changed=touchscreenDisplay.update({theme,height:Math.round(liftToHeight(currentLift)*10)/10,tilt:Math.round(primaryTiltConfig()?.currentDeg||0),
+        guard:roomSafety.guard,sound:ledSounds.enabled,leds:ledsEnabled,alert:roomSafety.alert,
+        heightSpeed:document.querySelector('#lift-speed option:checked')?.textContent?.trim()||'Medium',
+        glideSpeed:document.querySelector('#glide-speed option:checked')?.textContent?.trim()||'Medium',
+        tiltSpeed:document.querySelector('#tilt-speed option:checked')?.textContent?.trim()||'Fast',
+        heightJog:Math.round(liftJog*10)/10,phase:mode||'Workspace',moving:!!(glideInput.lengthSq()||yawCommand||liftJog||tiltJog||glideActive||Math.abs(targetLift-currentLift)>.001)});
+    if(changed&&touchscreenTexture)touchscreenTexture.needsUpdate=true;
+}
+
+function mountSafetyAlert() {
+    if(document.getElementById('room-safety-alert'))return;
+    const card=document.createElement('section');card.id='room-safety-alert';card.hidden=true;card.setAttribute('role','alert');
+    card.innerHTML='<header><strong data-safety-title></strong><span>Desk stopped · movement held</span></header><div class="safety-content"><p data-safety-message></p><p class="safety-source" data-safety-source></p><p>Check the area around the desk, then press CLEAR before resuming.</p><button type="button" data-safety-clear>✓ CLEAR</button><small>3D preview · room geometry</small></div>';
+    card.querySelector('[data-safety-clear]').onclick=clearCollisionAlert;document.body.append(card);
+}
+let safetyUIPrev='';
+function syncSafetyUI() {
+    const state=JSON.stringify([roomSafety.guard,roomSafety.alert,ledSounds.enabled,dockThemeName()]);if(state===safetyUIPrev)return;safetyUIPrev=state;
+    const shield=document.getElementById('remote-shield');if(shield){shield.setAttribute('aria-pressed',String(roomSafety.guard));shield.title=roomSafety.guard?'Shield ON · stop 15 cm before contact':'Shield OFF · contact alerts active';}
+    const sound=document.getElementById('remote-alert-sound');if(sound)sound.setAttribute('aria-pressed',String(ledSounds.enabled));
+    document.querySelectorAll('[data-led-sounds]').forEach(input=>input.checked=ledSounds.enabled);
+    const card=document.getElementById('room-safety-alert');if(!card)return;
+    const alert=roomSafety.alert;card.hidden=!alert;card.dataset.theme=dockThemeName();
+    if(alert){
+        const ahead=alert.kind==='ahead';card.dataset.kind=alert.kind;
+        card.querySelector('[data-safety-title]').textContent=ahead?'⚠ OBSTACLE AHEAD':alert.pushable?'✖ COLLISION':'✖ HEAVY COLLISION';
+        card.querySelector('[data-safety-message]').textContent=ahead?'Shield stopped the desk before contact with '+alert.name+'.':'Desk stopped after detecting resistance from '+alert.name+'.';
+        card.querySelector('[data-safety-source]').textContent='Source: Wheels'+(ahead?' · Preview clearance 15 cm (6 in)':'');
+    }
+}
+function setCollisionGuard(on){roomSafety.guard=!!on;syncSafetyUI();updateTouchscreenDisplay();}
+function announceRoomSafety(event){
+    haltAllMotion();roomCollisionBlocked=true;glideUIPrev='';syncGlideUI();syncSafetyUI();updateTouchscreenDisplay();ledSounds.alert(event.kind);
+}
+function clearCollisionAlert(){
+    haltAllMotion();roomSafety.clear();roomCollisionBlocked=false;glideUIPrev='';syncGlideUI();syncSafetyUI();updateTouchscreenDisplay();updateLedEffectFrame();
+}
+
 function makeTouchscreenFace(gltf, xShift, pivot, turn, material, name) {
     const face = makeOverlayNode(gltf, 0, xShift, material, name);
     face.children.forEach(mesh => {
@@ -2693,14 +2802,15 @@ function setTouchscreenOpen(open) {
 
 async function loadTouchscreenAssembly() {
     try {
-        const [pulled, extended, wide, faceTexture] = await Promise.all([
+        const [pulled, extended, wide] = await Promise.all([
             gltfLoader.loadAsync(TOUCHSCREEN_PULLED_URL),
             gltfLoader.loadAsync(TOUCHSCREEN_EXTENDED_URL),
-            gltfLoader.loadAsync(TOUCHSCREEN_WIDE_URL),
-            textureLoader.loadAsync(TOUCHSCREEN_FACE_URL)
+            gltfLoader.loadAsync(TOUCHSCREEN_WIDE_URL)
         ]);
         if (pulled.scene.children.length !== 7 || extended.scene.children.length !== 12 || wide.scene.children.length !== 12)
             throw new Error('Touchscreen exports have changed; recheck the motion mapping.');
+        updateTouchscreenDisplay();
+        const faceTexture = touchscreenTexture = new THREE.CanvasTexture(touchscreenDisplay.canvas);
         faceTexture.colorSpace = THREE.SRGBColorSpace;
         faceTexture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
         const faceMaterial = new THREE.MeshBasicMaterial({ map: faceTexture, side: THREE.DoubleSide, toneMapped: false });
@@ -2803,14 +2913,29 @@ function setLedsEnabled(on) {
         if (receiver === 'floor' && material.uniforms.stripHalfSpan)
             material.uniforms.stripHalfSpan.value = 0.08 + 0.003 * ledSurfaces.floorWidth;
     });
+    updateDesktopReflectionTilt();
     document.querySelectorAll('[data-led-toggle],.hub-led').forEach(button =>
         button.setAttribute('aria-pressed', String(ledsEnabled)));
     document.dispatchEvent(new CustomEvent('ergoflex-led-state', {detail:{enabled:ledsEnabled}}));
     updateLedEffectFrame();
 }
 
+function updateDesktopReflectionTilt() {
+    // Owner-observed footprint: the authored -5° look covers roughly 80% of
+    // the depth; level reaches the front. Positive tilt fills the front more.
+    // Keep the rear edge anchored and saturate gently once the desk is raised.
+    const tilt = primaryTiltConfig()?.currentDeg ?? -5;
+    const depthScale = 1 + 0.25 * THREE.MathUtils.smoothstep(tilt, -5, 0)
+        + 0.6 * THREE.MathUtils.smoothstep(tilt, 0, 15);
+    for (const { material } of ledSpillMaterials) {
+        if (material.uniforms.desktopDepthScale)
+            material.uniforms.desktopDepthScale.value = depthScale;
+    }
+}
+
 function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
-    minReach, maxReach, peakAlpha, stripBounds = null, referenceSurface = null) {
+    minReach, maxReach, peakAlpha, stripBounds = null, referenceSurface = null,
+    reflectionBands = null) {
     // Follow the actual panel mesh so the light fade respects its outline and
     // cutouts as the lift, tilt, and desktop size change.
     const material = new THREE.ShaderMaterial({
@@ -2831,7 +2956,11 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
             stripBaseSpread: { value: stripBounds?.baseSpread ?? 0 },
             stripFanSlope: { value: stripBounds?.fanSlope ?? 0 },
             stripFanLimit: { value: stripBounds?.fanLimit ?? 0 },
-            falloffPower: { value: 2 }
+            falloffPower: { value: 2 },
+            reflectionBandActive: { value: reflectionBands ? 1 : 0 },
+            reflectionBandCenters: { value: new THREE.Vector3(...(reflectionBands?.map(b => b.centerX) ?? [0, 0, 0])) },
+            reflectionBandGains: { value: new THREE.Vector3(...(reflectionBands?.map(b => b.gain) ?? [1, 1, 1])) },
+            reflectionBandWidths: { value: new THREE.Vector3(...(reflectionBands?.map(b => b.width) ?? [1, 1, 1])) }
         },
         vertexShader: `
             uniform mat4 reflectionFrame;
@@ -2860,6 +2989,12 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
             uniform float stripFanSlope;
             uniform float stripFanLimit;
             uniform float falloffPower;
+            uniform float reflectionBandActive;
+            uniform vec3 reflectionBandCenters;
+            uniform vec3 reflectionBandGains;
+            uniform vec3 reflectionBandWidths;
+            uniform float desktopDepthScale;
+            uniform float desktopRearX;
             varying vec3 ledPosition;
             varying vec3 ledNormal;
             void main() {
@@ -2867,6 +3002,7 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
                 float dx = (ledPosition.x - centerX) / fadeReach;
                 float dz = (ledPosition.z - centerZ) / zRadius;
                 float pool = exp(-0.5 * (dx * dx + dz * dz));
+                float endFade = exp(-0.5 * dz * dz);
                 if (stripMaxZ > stripMinZ) {
                     // The adjustable strip width and forward fan describe
                     // light bouncing past the shelf side plates.
@@ -2879,8 +3015,25 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
                     float beyondEnd = max(max(bandMin - ledPosition.z,
                         ledPosition.z - bandMax), 0.0);
                     float across = exp(-0.5 * pow(abs(dx), falloffPower));
-                    float endFade = exp(-0.5 * pow(beyondEnd / stripFeather, 2.0));
+                    endFade = exp(-0.5 * pow(beyondEnd / stripFeather, 2.0));
                     pool = across * endFade;
+                }
+                vec3 reflectionWeights = vec3(pool, 0.0, 0.0);
+                if (reflectionBandActive > 0.5) {
+                    // Three overlapping depth pools: lower shelf nearest the
+                    // back, upper front underneath in the middle, upper back
+                    // underneath farther forward. Keep the photos' soft edges
+                    // even at high sharpness, and share the existing width fan.
+                    // Stretch the depth field forward from the rear edge as
+                    // tilt increases. At -5° this is the original light field.
+                    float reflectedX = desktopRearX + (ledPosition.x - desktopRearX)
+                        / max(1.0, desktopDepthScale);
+                    vec3 distance = abs(vec3(reflectedX) - reflectionBandCenters)
+                        / (max(0.8, fadeReach * 0.24) * reflectionBandWidths);
+                    float softness = mix(1.6, 2.4, clamp((falloffPower - 2.0) / 6.0, 0.0, 1.0));
+                    reflectionWeights = exp(-0.5 * pow(distance, vec3(softness)))
+                        * reflectionBandGains * endFade;
+                    pool = min(1.25, dot(reflectionWeights, vec3(1.0)));
                 }
                 float alpha = min(0.9, peakAlpha * strength * pool * top);
                 gl_FragColor = vec4(ledColor, alpha);
@@ -2896,6 +3049,12 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
         polygonOffsetUnits: -1,
         side: THREE.FrontSide
     });
+    if (reflectionBands) {
+        // Both desktop sizes and their power modules use the same authored
+        // rear anchor, so the colour bands stay aligned through every pose.
+        material.uniforms.desktopDepthScale = { value: 1 };
+        material.uniforms.desktopRearX = { value: -177.3 };
+    }
     const spill = new THREE.Mesh(surface.geometry, material);
     spill.name = `${surface.name} LED reflection`;
     spill.renderOrder = 1;
@@ -2911,18 +3070,23 @@ function addLedSurfaceSpill(surface, receiver, centerX, centerZ, zRadius,
         };
     }
     surface.add(spill);
-    ledSpillMaterials.push({ material, receiver, minReach, maxReach });
+    ledSpillMaterials.push({ material, receiver, minReach, maxReach, reflectionBands,
+        ...(reflectionBands ? { sourceIds: reflectionBands.map(b => b.sourceId) } : {}) });
 }
 
-function addLedWingSpill(surface, receiver) {
+function addLedWingSpill(surface, receiver, inside = false) {
     // The two side wings are nearly vertical. Their reflection needs an X/Y
     // fade, unlike the horizontal desktop and shelves above.
     const minReach = 5;
     const maxReach = 18;
+    surface.geometry.computeBoundingBox();
+    const outward = Math.sign(surface.geometry.boundingBox.getCenter(new THREE.Vector3()).z + 327.1) || 1;
     const material = new THREE.ShaderMaterial({
         uniforms: {
             ledColor: { value: new THREE.Color(ledColor) },
             strength: { value: 0 },
+            faceSign: { value: inside ? -outward : outward },
+            bounceGain: { value: inside ? 0.18 : 1 },
             fadeReach: { value: (minReach + maxReach) / 2 }
         },
         vertexShader: `
@@ -2938,14 +3102,16 @@ function addLedWingSpill(surface, receiver) {
             uniform vec3 ledColor;
             uniform float strength;
             uniform float fadeReach;
+            uniform float faceSign;
+            uniform float bounceGain;
             varying vec3 ledPosition;
             varying vec3 ledNormal;
             void main() {
-                float face = smoothstep(0.7, 0.95, abs(normalize(ledNormal).z));
+                float face = smoothstep(0.7, 0.95, normalize(ledNormal).z * faceSign);
                 float dx = (ledPosition.x + 159.8) / fadeReach;
                 float dy = (ledPosition.y - 48.5) / 7.0;
                 float pool = exp(-0.5 * (dx * dx + dy * dy));
-                float alpha = min(0.75, 0.38 * strength * pool * face);
+                float alpha = min(0.75, 0.38 * strength * pool * face * bounceGain);
                 gl_FragColor = vec4(ledColor, alpha);
                 #include <tonemapping_fragment>
                 #include <colorspace_fragment>
@@ -2960,11 +3126,12 @@ function addLedWingSpill(surface, receiver) {
         side: THREE.DoubleSide
     });
     const spill = new THREE.Mesh(surface.geometry, material);
-    spill.name = `${surface.name} LED wing reflection`;
+    spill.name = `${surface.name} LED wing ${inside ? 'inner bounce' : 'outer reflection'}`;
     spill.renderOrder = 1;
     spill.raycast = () => {};
     surface.add(spill);
-    ledSpillMaterials.push({ material, receiver, minReach, maxReach });
+    ledSpillMaterials.push({ material, receiver, minReach, maxReach, sourceIds: inside ? [4] : receiver === 'leftWing' ? [5] : [6] });
+    if (!inside) addLedWingSpill(surface, receiver, true);
 }
 
 function addLedUprightSpill(surface, strip, receiver, direction, minY, maxY, options = {}) {
@@ -3081,7 +3248,7 @@ function addLedUprightSpill(surface, strip, receiver, direction, minY, maxY, opt
         side: THREE.FrontSide
     });
     const spill = new THREE.Mesh(surface.geometry, material);
-    spill.name = `${surface.name} ${receiver}${options.underside ? ' LED underside reflection' : ' LED upright reflection'}`;
+    spill.name = `${surface.name} ${receiver}${options.actuator ? ' LED actuator reflection' : options.underside ? ' LED underside reflection' : ' LED upright reflection'}`;
     spill.renderOrder = 1;
     spill.raycast = () => {};
     // Strip geometry is baked in the shelf rig frame. Columns may move by a
@@ -3225,9 +3392,9 @@ async function loadLedOverlay() {
         const rightWing = [...partRegistry.values()].find(({ obj }) => obj.name === 'Desktop_2')?.obj;
         if (!lowerShelf || !topShelf || !baseShelf || !leftWing || !rightWing)
             throw new Error('LED receiver is missing.');
-        // Shelf LED 40 faces the desktop. Its physical span is narrower than
-        // the desktop, especially the Extended version. The side plates limit
-        // the direct light here; the reflection spreads gently farther forward.
+        // The three underside shelf strips cast separate, softly overlapping
+        // bands across the desktop. Their physical span stays narrower than
+        // either desktop; the side plates limit the pool before its forward fan.
         const desktopStripBox = new THREE.Box3().setFromObject(ledParts[39].part);
         const desktopStripBounds = {
             minZ: desktopStripBox.min.z,
@@ -3240,15 +3407,25 @@ async function loadLedOverlay() {
         };
         const desktopStripCenterZ = (desktopStripBounds.minZ + desktopStripBounds.maxZ) / 2;
         const desktopStripHalfWidth = (desktopStripBounds.maxZ - desktopStripBounds.minZ) / 2;
+        // Move the complete reflection field five authored inches toward the
+        // rear (-X), so the nearest band's soft edge reaches the desktop back.
+        const desktopReflectionRearShift = 5;
+        const desktopReflectionBands = [
+            { sourceId: 3, centerX: -166 - desktopReflectionRearShift, width: 0.85, gain: 1.0 },
+            { sourceId: 2, centerX: -159 - desktopReflectionRearShift, width: 1.0, gain: 0.8 },
+            { sourceId: 1, centerX: -152 - desktopReflectionRearShift, width: 1.15, gain: 0.65 }
+        ];
         addLedSurfaceSpill(sizeVariantParts.smallTop, 'desktop', -171,
-            desktopStripCenterZ, desktopStripHalfWidth, 1, 14, 0.52, desktopStripBounds);
+            desktopStripCenterZ, desktopStripHalfWidth, 1, 14, 0.52, desktopStripBounds,
+            null, desktopReflectionBands);
         addLedSurfaceSpill(sizeVariantParts.largeTop, 'desktop', -171,
-            desktopStripCenterZ, desktopStripHalfWidth, 1, 14, 0.52, desktopStripBounds);
+            desktopStripCenterZ, desktopStripHalfWidth, 1, 14, 0.52, desktopStripBounds,
+            null, desktopReflectionBands);
         for (const { obj } of partRegistry.values()) {
             if (!/^Power(?:_\d+)?$/.test(obj.name) || !obj.isMesh) continue;
             addLedSurfaceSpill(obj, 'desktop', -171, desktopStripCenterZ,
                 desktopStripHalfWidth, 1, 14, 0.18, desktopStripBounds,
-                sizeVariantParts.smallTop);
+                sizeVariantParts.smallTop, desktopReflectionBands);
         }
         addLedSurfaceSpill(lowerShelf, 'shelf', -177, -327,
             22, 3, 11, 0.42);
@@ -3288,6 +3465,16 @@ async function loadLedOverlay() {
         }
         addLedWingSpill(leftWing, 'leftWing');
         addLedWingSpill(rightWing, 'rightWing');
+        // Silver tilt cylinders and telescoping rods receive the centre
+        // desktop underside strip. Each mesh carries its own receiver through
+        // the actuator solver; the light frame follows the tilting desktop.
+        for (const { obj } of partRegistry.values()) {
+            if (!obj.isMesh || !/^Linear_Actuators(?:_\d+)?$/.test(obj.name)) continue;
+            for (const group of [ledStandardStrips, ledExtendedStrips]) {
+                addLedUprightSpill(obj, group.children[2], 'base', -1, -1000, 1000,
+                    { actuator: true, uprightOnly: false, gain: 1.5, minReach: 12, maxReach: 28 });
+            }
+        }
         addFootLedFloorGlow(roots.base);
         // All LED receivers use the mesh-aligned light fields above. Three.js
         // selects lights by the camera's layers, not each receiving mesh's
@@ -4703,6 +4890,7 @@ async function addSceneAsset(propId) {
         if (!obj || !state.added.has(editorId)) return;
         registerSceneAsset(obj);
         state.transforms.set(editorId, plainLocalTransform(obj));
+        roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
         const record = sceneAssetRecord(sceneAssetRegistry.get(editorId));
         transaction({ type: 'scene-assets', records: [record], present: false });
         persistSceneAssetStates();
@@ -6679,6 +6867,7 @@ function applyTiltConfig(config) {
     else config.wrapperGroup.rotation.z = rad;
     config.wrapperGroup.updateMatrixWorld(true);
     updateActuatorRigs();
+    if (config === primaryTiltConfig()) updateDesktopReflectionTilt();
 }
 
 // --- Phase 4: Actuator Rigs ---
@@ -7039,7 +7228,7 @@ const glideInput = new THREE.Vector2();
 const glideDemoOrigin = new THREE.Vector3();
 const glideKeys = new Set();
 let glidePointer = null;
-let glideSpeed = 0.306;
+let glideSpeed = GLIDE_SPEEDS.slow;
 let glideUIPrev = '';
 let glideFootprintCache = null;
 function glideBounds() {
@@ -7077,11 +7266,17 @@ function clampGlidePosition(position) {
     position.z = THREE.MathUtils.clamp(position.z, b.minZ, b.maxZ);
     return position;
 }
+function deskCollisionBox() {
+    if(!loadedModel||!workspaceRoom?.root)return null;
+    glideBounds();
+    return glideFootprintCache?.box.clone().translate(glideOffset) || new THREE.Box3().setFromObject(loadedModel);
+}
 function releaseGlideInput() {
     glideKeys.clear(); glideInput.set(0, 0); glidePointer = null;
     const knob = document.getElementById('glide-knob'); if (knob) knob.style.transform = 'translate(-50%, -50%)';
 }
 function manualGlideReady() {
+    if (roomSafety.alert) { syncSafetyUI(); return false; }
     if (!loadedModel) { notifyUser('Wait for the desk to finish loading.'); return false; }
     if (transformControl?.object || isDraggingTransform) {
         notifyUser('Set Transform Tool to Off before moving the entire desk.'); return false;
@@ -7170,7 +7365,7 @@ function setupGlideControls() {
     pad.onblur = releaseGlideInput;
     window.addEventListener('blur', () => { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); syncGlideUI(); });
     document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); } });
-    document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || 0.306;
+    document.getElementById('glide-speed').onchange = e => glideSpeed = Number(e.target.value) || GLIDE_SPEEDS.slow;
     document.getElementById('glide-home').onclick = () => setGlidePosition(0, 0);
     document.querySelectorAll('[data-turn-command]').forEach(button => {
         const direction = Number(button.dataset.turnCommand);
@@ -7205,7 +7400,6 @@ let liftJog = 0;
 let tiltJog = 0;
 const JOG_DEADZONE = 0.08;
 const LIFT_SPEEDS = { auto: 2.6, slow: 1.3, medium: 2.6, fast: 5.2 };
-const TILT_SPEEDS = { auto: 14, slow: 7, medium: 14, fast: 28 };
 function liftUnitsPerSecond() { return LIFT_SPEEDS[liftSpeed] ?? LIFT_SPEEDS.auto; }
 function tiltDegreesPerSecond() { return TILT_SPEEDS[tiltSpeed] ?? TILT_SPEEDS.auto; }
 
@@ -7327,7 +7521,7 @@ function yawRadiansPerSecond() {
     return glideSpeed / projection;
 }
 function setYawCommand(direction) {
-    yawCommand = direction;
+    yawCommand = roomSafety.alert ? 0 : direction;
     const status = document.getElementById('glide-status');
     if (status) status.textContent = direction ? (direction > 0 ? 'Turning right' : 'Turning left') : 'Ready to move';
 }
@@ -7732,11 +7926,7 @@ function buildMotionRemote() {
 
     const header = document.createElement('div');
     header.className = 'remote-header';
-    // The app's bar, in its order. The icons that belong to the physical desk -
-    // microphone, collision shield, session logout - are drawn because they are
-    // part of this design, and disabled because there is no desk behind them
-    // here. A control that looks live and does nothing is worse than one that
-    // says it is unavailable.
+    // Preview controls operate the scene. Voice and account actions remain hardware-only.
     const inert = (file, label) =>
         `<button class="remote-chrome" type="button" disabled aria-label="${label}"
                  title="${label} — hardware control, not connected in the preview"><img src="./assets/app-icons/${file}" alt=""></button>`;
@@ -7756,7 +7946,8 @@ function buildMotionRemote() {
         </span>
         ${inert('help.svg', 'Info')}
         ${inert('MicOn.svg', 'Voice')}
-        ${inert('pre_collision_on.svg', 'Collision guard')}
+        <button id="remote-shield" class="remote-chrome" type="button" aria-label="Collision shield" aria-pressed="false" title="Shield: stop before contact"><img src="./assets/app-icons/pre_collision_on.svg" alt=""></button>
+        <button id="remote-alert-sound" class="remote-safety-sound" type="button" aria-pressed="false" title="Enable movement sounds and collision alerts">♪ Sound alerts</button>
         <button id="remote-stop" type="button" title="Stop all movement" aria-label="Stop all movement"><img src="./assets/app-icons/e-stop.svg" alt=""></button>
         ${inert('quick_logout.svg', 'Sign out')}
         <button class="remote-chrome remote-theme" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true">
@@ -7781,9 +7972,7 @@ function buildMotionRemote() {
                  aria-describedby="glide-help">${compassSvg()}<span id="glide-knob" class="remote-sphere"></span></div>
             <div class="remote-speed">
               <select id="glide-speed" aria-label="Glide speed">
-                <option value="0.034">Crawl</option><option value="0.136">Ninja</option>
-                <option value="0.306" selected>Slow</option><option value="0.68">Medium</option>
-                <option value="0.85">Fast</option>
+                ${Object.entries(GLIDE_SPEEDS).map(([name,speed])=>`<option value="${speed}"${name==='slow'?' selected':''}>${name[0].toUpperCase()+name.slice(1)}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -7876,6 +8065,9 @@ function buildMotionRemote() {
     // they are re-wired here. Wiring them once at startup left them pointing at
     // elements a rebuild had already replaced.
     setupGlideControls();
+    dock.querySelector('#remote-shield').onclick=()=>setCollisionGuard(!roomSafety.guard);
+    dock.querySelector('#remote-alert-sound').onclick=()=>{ledSounds.setEnabled(!ledSounds.enabled);syncSafetyUI();};
+    mountSafetyAlert();syncSafetyUI();
     const bulb=dock.querySelector('.hub-led');
     bindHold(bulb,()=>setLedsEnabled(!ledsEnabled),()=>prepareLedCommandCenter().open());
     // Assistive technology can activate a button without pointer events.
@@ -8481,12 +8673,12 @@ function wireErgoForms() {
 }
 
 function syncGlideUI() {
-    const state = `${glideOffset.x.toFixed(2)},${glideOffset.z.toFixed(2)},${glideActive},${glideInput.lengthSq() > 0}`;
+    const state = `${glideOffset.x.toFixed(2)},${glideOffset.z.toFixed(2)},${glideActive},${glideInput.lengthSq() > 0},${roomCollisionBlocked}`;
     if (state === glideUIPrev) return; glideUIPrev = state;
     const demo = document.getElementById('glide-demo');
     if (demo) { demo.textContent = glideActive ? 'Pause demo' : 'Play demo'; demo.setAttribute('aria-pressed', String(glideActive)); }
     const status = document.getElementById('glide-status');
-    if (status) status.textContent = glideActive ? 'Demo playing' : glideInput.lengthSq() > 0 ? 'Gliding' : glideOffset.distanceTo(glideTarget) > 0.005 ? 'Moving to position' : 'Ready to move';
+    if (status) status.textContent = roomCollisionBlocked ? 'Stopped · furniture ahead' : glideActive ? 'Demo playing' : glideInput.lengthSq() > 0 ? 'Gliding' : glideOffset.distanceTo(glideTarget) > 0.005 ? 'Moving to position' : 'Ready to move';
 }
 function startGlide() {
     if (!manualGlideReady()) return false;
@@ -8498,8 +8690,17 @@ function stopGlide() {
     glideActive = false; releaseGlideInput(); glideTarget.set(0, 0, 0);
     applyGlideOffset(glideTarget); syncGlideUI();
 }
-function applyGlideOffset(next) {
+function applyGlideOffset(next, { collide = false } = {}) {
     if (!loadedModel) return;
+    let safetyEvent=null;
+    if(collide&&!liveAR?.active&&workspaceRoom?.root){
+        const result=roomInteractions?.moveDesk(deskCollisionBox(),{x:next.x-glideOffset.x,z:next.z-glideOffset.z});
+        if(result){
+            next=new THREE.Vector3(glideOffset.x+result.x,0,glideOffset.z+result.z);
+            roomCollisionBlocked=result.blocked;safetyEvent=result.event;
+            if(result.blocked)glideTarget.copy(next);
+        }
+    }
     const dx = next.x - glideOffset.x, dz = next.z - glideOffset.z;
     wheelRigs.forEach(rig => {
         rig.spin -= (dx + rig.latSign * dz) / rig.radius;
@@ -8509,9 +8710,10 @@ function applyGlideOffset(next) {
     applyDeskTransform();
     loadedModel.updateMatrixWorld(true);
     if (isSelectionMode) boxHelpers.forEach(helper => helper.update());
+    if(safetyEvent)announceRoomSafety(safetyEvent);
 }
 function updateGlide(dt) {
-    if (!loadedModel) return;
+    if (!loadedModel || roomSafety.alert) return;
     dt = Math.min(Math.max(dt, 0), 0.05);
     if (transformControl?.object || isDraggingTransform) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); return; }
     // Rotation, tilt, desktop size, and room changes can alter the clearance.
@@ -8524,7 +8726,7 @@ function updateGlide(dt) {
         glideT = Math.min(1, glideT + dt / GLIDE_DURATION);
         glidePath(glideT, _glidePos).add(glideDemoOrigin);
         clampGlidePosition(_glidePos);
-        applyGlideOffset(_glidePos); glideTarget.copy(glideOffset);
+        applyGlideOffset(_glidePos, { collide:true }); glideTarget.copy(glideOffset);
         if (glideT >= 1) glideActive = false;
     } else {
         if (glideInput.lengthSq() > 0) {
@@ -8535,11 +8737,11 @@ function updateGlide(dt) {
             glideTarget.x += glideInput.y * glideSpeed * dt;
             glideTarget.z -= glideInput.x * glideSpeed * dt;
             clampGlidePosition(glideTarget);
-            applyGlideOffset(glideTarget);
+            applyGlideOffset(glideTarget, { collide:true });
         } else if (glideOffset.distanceToSquared(glideTarget) > 0.000001) {
             _glidePos.copy(glideTarget).sub(glideOffset);
             const step = Math.min(_glidePos.length(), glideSpeed * dt);
-            _glidePos.setLength(step).add(glideOffset); applyGlideOffset(_glidePos);
+            _glidePos.setLength(step).add(glideOffset); applyGlideOffset(_glidePos, { collide:true });
         }
     }
     syncGlideUI();
@@ -9229,13 +9431,13 @@ function animate(time, frame) {
     // a frame cannot advance the lift or the glide mid-capture. Rendering still
     // runs, so the viewer does not freeze.
     const dt = clock.getDelta();
-    if (loadedModel && !motionPaused) {
+    if (loadedModel && !motionPaused && !roomSafety.alert) {
         if (liftJog) ledAutoLift = false;
         else if (Math.abs(targetLift-currentLift) > .001) ledAutoLift = true;
         if (tiltJog) ledAutoTilt = false;
         else if (tiltTarget !== null) ledAutoTilt = true;
     }
-    if (!motionPaused) {
+    if (!motionPaused && !roomSafety.alert) {
         if (roomGroove?.run) roomGroove.update(dt);
         else updateGlide(dt);
     }
@@ -9246,7 +9448,7 @@ function animate(time, frame) {
     }
 
     // Handle smooth animation if not manually scrubbing
-    if (loadedModel && !manualLiftOverride && !motionPaused) {
+    if (loadedModel && !manualLiftOverride && !motionPaused && !roomSafety.alert) {
         const minLift = heightToLift(minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size));
         const allowedTargetLift = Math.max(targetLift, minLift);
         if (Math.abs(allowedTargetLift - currentLift) > 0.001) {
@@ -9277,21 +9479,26 @@ function animate(time, frame) {
     }
 
     // The desk turns for as long as the ring is held over.
-    if (loadedModel && !motionPaused && yawCommand) {
+    if (loadedModel && !motionPaused && !roomSafety.alert && yawCommand) {
         // The same per-frame ceiling updateGlide applies. Without it a long frame
         // advances the turn by that whole gap - the desk jumps, and on a slow
         // machine turning outruns gliding at the same speed setting because only
         // one of them is throttled.
         const turnDt = Math.min(Math.max(dt, 0), 0.05);
         const step = yawCommand * yawRadiansPerSecond() * turnDt;
+        const before=!liveAR?.active?deskCollisionBox():null;
         deskYaw += step;
-        spinWheelsForYaw(step);
         applyDeskTransform();
         loadedModel.updateMatrixWorld(true);
+        const safetyStop=before&&roomInteractions?.turnSafety(before,deskCollisionBox());
+        if(safetyStop?.blocked || (before&&!roomInteractions?.canTurn(before,deskCollisionBox()))){
+            deskYaw-=step;applyDeskTransform();loadedModel.updateMatrixWorld(true);roomCollisionBlocked=true;
+            if(safetyStop?.event)announceRoomSafety(safetyStop.event);
+        }else{spinWheelsForYaw(step);roomCollisionBlocked=false;}
     }
 
     // Held off centre: drive for as long as it is held.
-    if (loadedModel && !motionPaused && liftJog) {
+    if (loadedModel && !motionPaused && !roomSafety.alert && liftJog) {
         const jogDt = Math.min(Math.max(dt, 0), 0.05);
         const minLift = heightToLift(minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size));
         currentLift = THREE.MathUtils.clamp(
@@ -9300,7 +9507,7 @@ function animate(time, frame) {
         updateMovingObjectsPosition();
         showHeight(liftToHeight(currentLift));
     }
-    if (loadedModel && !motionPaused && tiltJog) {
+    if (loadedModel && !motionPaused && !roomSafety.alert && tiltJog) {
         const config = primaryTiltConfig();
         if (config) {
             const jogDt = Math.min(Math.max(dt, 0), 0.05);
@@ -9317,7 +9524,7 @@ function animate(time, frame) {
 
     // Tilt eases toward its target the same way. applyTiltConfig is immediate, so
     // without this a speed control would have nothing to act on.
-    if (loadedModel && !motionPaused && tiltTarget !== null) {
+    if (loadedModel && !motionPaused && !roomSafety.alert && tiltTarget !== null) {
         const config = primaryTiltConfig();
         if (!config) tiltTarget = null;
         else if (Math.abs(tiltTarget - config.currentDeg) <= 0.01) {
@@ -9344,7 +9551,7 @@ function animate(time, frame) {
         if (orbitButton && orbitButton.getAttribute('aria-pressed') !== String(controls.autoRotate)) orbitButton.setAttribute('aria-pressed', String(controls.autoRotate));
     }
     workspaceAccessories?.update();
-    if (loadedModel && !motionPaused) {
+    if (loadedModel && !motionPaused && !roomSafety.alert) {
         const completed = ledMotion.completionUntil;
         ledMotion.observe(ledPose(), time, {enabled:ledMotionEnabled && ledDiagnostic.strip === null && !document.hidden,
             liftReached:ledAutoLift && Math.abs(targetLift-currentLift)<=.001,
@@ -9353,7 +9560,7 @@ function animate(time, frame) {
         if (!ledMotion.axes.tilt) ledAutoTilt = false;
         ledSounds.update(ledMotion.owner?.sound || null, ledMotion.completionUntil > completed);
     }
-    if (ledEffect.mode !== 'solid' || ledDiagnostic.strip !== null || ledPixels?.active || ledMotion.owner || ledMotion.completionUntil || ledGame.active || ledMusic.active)
+    if (roomSafety.alert || ledEffect.mode !== 'solid' || ledDiagnostic.strip !== null || ledPixels?.active || ledMotion.owner || ledMotion.completionUntil || ledGame.active || ledMusic.active)
         updateLedEffectFrame(time / 1000);
     if (time-ledPlaybackUIAt > 150) {
         ledPlaybackUIAt = time;
@@ -9362,6 +9569,9 @@ function animate(time, frame) {
         ledMusic.syncUI(true);
     }
     if (camera && !liveAR?.active) workspaceRoom?.update(camera);
+    syncSafetyUI();
+    if(time-touchscreenDrawAt>100){touchscreenDrawAt=time;updateTouchscreenDisplay();}
+    roomLedSpill.update(workspaceRoom,ledPixels,{enabled:ledsEnabled&&!liveAR?.active,colour:ledFrameColor,gain:roomLedGain});
     if (renderer && scene && camera) renderer.render(liveAR?.active ? liveAR.scene : scene, camera);
 }
 
@@ -9450,6 +9660,7 @@ function applyRoomLighting() {
         const output = document.getElementById(`${id}-value`); if (output) output.textContent = `${Number(value).toFixed(2)}×`;
     }
     const label = document.getElementById('scene-light-name'); if (label) label.textContent = profile.label;
+    updateTouchscreenDisplay();
 }
 
 function syncGrooveUI(state) {
@@ -9490,14 +9701,19 @@ function grooveController() {
         sync: syncGrooveUI, halt: haltAllMotion,
         stopPose: () => { glideTarget.copy(glideOffset); targetLift = currentLift; tiltTarget = null; manualLiftOverride = false; },
         canMove: () => {
+            if(roomSafety.alert){syncSafetyUI();return false;}
             if (!loadedModel || liveAR?.active || transformControl?.object || isSelectionMode) { notifyUser('Turn off the editing tools before starting Groove.'); return false; }
             controls.autoRotate = false; return true;
         },
         manual: () => !!(glideInput.lengthSq() || yawCommand || liftJog || tiltJog || glideActive || transformControl?.object),
         goPose: (h,t) => { grooveSettingPose = true; try { goToPose(h,t); } finally { grooveSettingPose = false; } },
         move: p => {
-            const turn = p.yaw - deskYaw; deskYaw = p.yaw; spinWheelsForYaw(turn);
-            applyGlideOffset(new THREE.Vector3(p.z * workspaceRoom.root.scale.x, 0, -p.x * workspaceRoom.root.scale.x));
+            const before=deskCollisionBox(),oldYaw=deskYaw,turn = p.yaw - deskYaw;
+            deskYaw = p.yaw;applyDeskTransform();loadedModel.updateMatrixWorld(true);
+            const stop=before&&roomInteractions?.turnSafety(before,deskCollisionBox());
+            if(stop?.blocked){deskYaw=oldYaw;applyDeskTransform();loadedModel.updateMatrixWorld(true);if(stop.event)announceRoomSafety(stop.event);return;}
+            spinWheelsForYaw(turn);
+            applyGlideOffset(new THREE.Vector3(p.z * workspaceRoom.root.scale.x, 0, -p.x * workspaceRoom.root.scale.x),{collide:true});
             glideTarget.copy(glideOffset); loadedModel.updateMatrixWorld(true); workspaceAccessories?.update();
         },
         dress: (phase, mode) => { workspaceAccessories?.setDayDress(phase); if (mode.color) setLedColor(mode.color, false); setLedsEnabled(mode.leds); }
@@ -9690,6 +9906,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
     if (choice.id === 'kitchen' && !kitchenLayoutId) kitchenLayoutId = measured.layout.id;
     if (choice.id === 'gym' && !gymLayoutId) gymLayoutId = measured.layout.id;
     if (choice.id === 'office' && !officeLayoutId) officeLayoutId = measured.layout.id;
+    roomInteractions?.end();roomInteractions?.select(null);roomLedSpill.dispose();roomCollisionBlocked=false;roomSafety.reset();syncSafetyUI();
     workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
         createStation: ['office', 'coworking'].includes(choice.id) && loadedModel ? spec => captureOfficeStation(spec, homeScale) : null });
     if (measured) {
@@ -9705,16 +9922,21 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
     // only in the console.
     const roomReady = workspaceRoom?.ready || Promise.resolve();
     const dressReady = workspaceAccessories?.dress(choice.id) || Promise.resolve();
-    const assetsReady = Promise.allSettled([roomReady, dressReady]).then(results => {
+    const assetsReady = Promise.allSettled([roomReady, dressReady]).then(async results => {
         if (results[0].status === 'rejected') {
             reportSceneWarning('room-props', `Scene props for ${choice.name} could not be loaded (${results[0].reason.message}). The room is shown without them.`);
         }
         if (results[1].status === 'rejected') {
             reportSceneWarning('desk-dressing', `Desk dressing for ${choice.name} could not be loaded (${results[1].reason.message}).`);
         }
-        const hydrated = hydrateSceneAssets(choice.id, hydrationToken);
-        if (hydrationToken === sceneAssetHydrationToken) workspaceAccessories?.setDayDress(measuredRoomProfile()?.mode || 'morning');
-        return hydrated;
+        if(hydrationToken!==sceneAssetHydrationToken)return;
+        // Give procedural furnishings stable editor IDs before restoring placements.
+        roomInteractions?.bind(workspaceRoom);
+        await hydrateSceneAssets(choice.id, hydrationToken);
+        if (hydrationToken === sceneAssetHydrationToken) {
+            workspaceAccessories?.setDayDress(measuredRoomProfile()?.mode || 'morning');
+            roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
+        }
     });
     if (workspaceRoom) workspaceRoom.ready = assetsReady;
     if (floorMesh) floorMesh.visible = choice.id === 'product';
@@ -9727,6 +9949,8 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
         caption.textContent = choice.id === 'product' ? 'Explore your desk from every angle.' : `${((4200 + wide * 2) / 1000).toFixed(1)} × ${((4000 + rear + front) / 1000).toFixed(1)} m · ${ROOM_ATMOSPHERES[choice.id].label} · Furnishings for inspiration`;
     }
     const heading = document.querySelector('.viewer-heading h2');
+    const interactionHint=document.getElementById('room-interaction-hint');
+    if(interactionHint)interactionHint.hidden=choice.id==='product';
     if (heading) heading.textContent = choice.id === 'product' ? 'Designed to move you.' : choice.caption;
     const environment = document.getElementById('studio-environment');
     if (environment) environment.value = choice.tone;
@@ -10182,6 +10406,12 @@ function initStudio() {
     const scenes = document.createElement('div'); scenes.className = 'scene-switcher';
     scenes.innerHTML = `<span class="scenes-label">Scenes</span><div class="scene-options" role="group" aria-label="Workspace scenes">${ROOM_SCENES.map(s => `<button type="button" data-room-scene="${s.id}" aria-pressed="${s.id === 'product'}"><span class="scene-dot scene-${s.id}" aria-hidden="true"></span>${s.name}</button>`).join('')}</div>`;
     const roomCaption = document.createElement('p'); roomCaption.id = 'room-scene-caption'; roomCaption.setAttribute('aria-live', 'polite');
+    const interactionHint=document.createElement('p');interactionHint.id='room-interaction-hint';interactionHint.className='studio-note';interactionHint.hidden=true;
+    interactionHint.textContent='Drag floor furnishings to move them; select one to rotate it. Drag wall decorations along their wall. Contact stops the desk until CLEAR. After clearing, small objects can be pushed. Turn on the shield to stop before contact.';
+    const objectControls=document.createElement('div');objectControls.id='room-object-controls';objectControls.className='room-object-controls';objectControls.hidden=true;
+    objectControls.innerHTML='<span data-room-object-name role="status"></span><button type="button" data-room-object-turn="-15" aria-label="Rotate selected furnishing left 15 degrees">↶ Rotate left</button><button type="button" data-room-object-turn="15" aria-label="Rotate selected furnishing right 15 degrees">Rotate right ↷</button><button type="button" data-room-object-done>Done</button>';
+    objectControls.querySelectorAll('[data-room-object-turn]').forEach(button=>button.onclick=()=>roomInteractions?.rotateSelected(Number(button.dataset.roomObjectTurn)));
+    objectControls.querySelector('[data-room-object-done]').onclick=()=>roomInteractions?.select(null);
     const roomControls = ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'gallery', 'scifi', 'coworking', 'library'].map(id => {
         const profile = measuredRoomProfile(id), prefix = profile.prefix;
         const panel = document.createElement('div'); panel.id = measuredRoomPanelId(id);
@@ -10195,7 +10425,7 @@ function initStudio() {
         panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.onclick = () => prepareGrooveMode(id, b.getAttribute(`data-${prefix}-mode`)));
         return panel;
     });
-    viewerControls.append(scenes, ...roomControls, roomCaption); viewer.append(viewerControls);
+    viewerControls.append(scenes, ...roomControls, roomCaption, interactionHint, objectControls); viewer.append(viewerControls);
     scenes.querySelectorAll('button').forEach(button => button.onclick = () => setRoomScene(button.dataset.roomScene));
     new ResizeObserver(syncViewerSize).observe(viewerControls);
     try {
@@ -10368,9 +10598,16 @@ window.ErgoFlex = {
     get touchscreenOpen() { return screenTarget > 0.5; },
     get touchscreenProgress() { return screenProgress; },
     get touchscreenReady() { return !!screenAssembly; },
+    get touchscreenDisplay() {return touchscreenDisplay;},
+    get touchscreenTexture() {return touchscreenTexture;},
+    get collisionState() {return {guard:roomSafety.guard,alert:roomSafety.alert?{...roomSafety.alert}:null};},
+    setCollisionGuard,clearCollisionAlert,
     setLedsEnabled,
     setLedColor,
     prepareLedCommandCenter,
+    applyCustomLedLook,
+    get customLedLook() {return customLedLook;},
+    applyCustomLedPalette,
     get ledPreviewFrame() {return ledPixelFrame;},
     mountLedPalette,
     mountLedEffects,
@@ -10379,7 +10616,7 @@ window.ErgoFlex = {
     get ledMotionState() {return {enabled:ledMotionEnabled,owner:ledMotion.owner ? {...ledMotion.owner} : null,completionUntil:ledMotion.completionUntil,source:ledPixelSource};},
     get ledGameMode() {return ledGame;},
     get ledMusicMode() {return ledMusic;},
-    get ledSoundState() {return {enabled:ledSounds.enabled,owner:ledSounds.owner,error:ledSounds.error};},
+    get ledSoundState() {return {enabled:ledSounds.enabled,owner:ledSounds.owner,error:ledSounds.error,alertCount:ledSounds.alertCount,audioState:ledSounds.alertContext?.state};},
     mountLedDiagnostic,
     setLedDiagnostic,
     get ledDiagnostic() { return { ...ledDiagnostic }; },
@@ -10397,6 +10634,9 @@ window.ErgoFlex = {
     get ledCount() { return ledParts.length; },
     get workspaceAccessories() { return workspaceAccessories; },
     get workspaceRoom() { return workspaceRoom; },
+    get roomInteractions() { return roomInteractions; },
+    get roomLedSpill() { return roomLedSpill; },
+    get roomCollisionBlocked() { return roomCollisionBlocked; },
     get roomScene() { return selectedRoomScene; },
     roomScenes: ROOM_SCENES,
     setRoomScene,

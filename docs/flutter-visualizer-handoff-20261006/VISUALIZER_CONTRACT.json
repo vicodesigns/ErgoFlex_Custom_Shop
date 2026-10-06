@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 1,
+  "referenceRelease": "desktop-tilt-reach-20261006",
+  "purpose": "Rendering parity contract; no hardware command API",
+  "hardwareReference": {
+    "profile": "Desk 02",
+    "stripType": "BTF-LIGHTING FCOB WS2814",
+    "voltage": 24,
+    "channels": [
+      "r",
+      "g",
+      "b",
+      "w"
+    ],
+    "physicalLedsPerCluster": 56,
+    "clusterPitchMm": 71.42,
+    "freshHardwareVerification": false,
+    "sizeSpecificCountsVerified": false
+  },
+  "strips": [
+    {
+      "id": 0,
+      "name": "Top Shelf Top",
+      "count": 14,
+      "gpio": 27,
+      "mesh": 40,
+      "axis": "z",
+      "rig": "lift",
+      "reverse": true,
+      "visibleAddresses": null,
+      "verified": false
+    },
+    {
+      "id": 1,
+      "name": "Top Shelf Bottom Back",
+      "count": 14,
+      "gpio": 2,
+      "mesh": 41,
+      "axis": "z",
+      "rig": "lift",
+      "reverse": true,
+      "visibleAddresses": null,
+      "verified": false
+    },
+    {
+      "id": 2,
+      "name": "Top Shelf Bottom Front",
+      "count": 15,
+      "gpio": 33,
+      "mesh": 42,
+      "axis": "z",
+      "rig": "lift",
+      "reverse": true,
+      "visibleAddresses": null,
+      "verified": false
+    },
+    {
+      "id": 3,
+      "name": "Second Shelf",
+      "count": 14,
+      "gpio": 12,
+      "mesh": 39,
+      "axis": "z",
+      "rig": "lift",
+      "reverse": true,
+      "visibleAddresses": null,
+      "verified": false
+    },
+    {
+      "id": 4,
+      "name": "Desk Top Center",
+      "count": 14,
+      "gpio": 5,
+      "mesh": 2,
+      "axis": "z",
+      "rig": "tilt",
+      "reverse": false,
+      "visibleAddresses": null,
+      "verified": false
+    },
+    {
+      "id": 5,
+      "name": "Desktop Left",
+      "count": 11,
+      "gpio": 25,
+      "mesh": 1,
+      "axis": "x",
+      "rig": "tilt",
+      "reverse": false,
+      "visibleAddresses": null,
+      "verified": false
+    },
+    {
+      "id": 6,
+      "name": "Desktop Right",
+      "count": 11,
+      "gpio": 4,
+      "mesh": 0,
+      "axis": "x",
+      "rig": "tilt",
+      "reverse": false,
+      "visibleAddresses": null,
+      "verified": false
+    },
+    {
+      "id": 7,
+      "name": "Foot Rest",
+      "count": 13,
+      "gpio": 15,
+      "mesh": 38,
+      "axis": "z",
+      "rig": "base",
+      "reverse": true,
+      "visibleAddresses": null,
+      "verified": false
+    }
+  ],
+  "defaults": {
+    "desktopStrength": 157,
+    "desktopReach": 100,
+    "desktopWidth": 5,
+    "desktopCone": 100,
+    "desktopEdgeFade": 46,
+    "desktopSharpness": 62,
+    "shelfStrength": 176,
+    "shelfReach": 98,
+    "baseStrength": 54,
+    "baseReach": 20,
+    "topStrength": 143,
+    "topReach": 77,
+    "floorStrength": 156,
+    "floorReach": 4,
+    "floorWidth": 50,
+    "floorSharpness": 73,
+    "leftWingStrength": 111,
+    "leftWingReach": 85,
+    "rightWingStrength": 110,
+    "rightWingReach": 87
+  },
+  "brightness": {
+    "uiFullGlow": 123.25,
+    "demoInitialFraction": 0.75,
+    "stripPowerFactor": 3.6,
+    "receiverStrengthDivisor": 10000,
+    "units": "appearance gain, not hardware power"
+  },
+  "desktopBands": [
+    {
+      "sourceId": 3,
+      "centerX": -171,
+      "width": 0.85,
+      "gain": 1
+    },
+    {
+      "sourceId": 2,
+      "centerX": -164,
+      "width": 1,
+      "gain": 0.8
+    },
+    {
+      "sourceId": 1,
+      "centerX": -157,
+      "width": 1.15,
+      "gain": 0.65
+    }
+  ],
+  "desktopTilt": {
+    "input": "physical degrees",
+    "rearAnchorX": -177.3,
+    "segments": [
+      {
+        "minDeg": -5,
+        "maxDeg": 0,
+        "scaleIncrement": 0.25
+      },
+      {
+        "minDeg": 0,
+        "maxDeg": 15,
+        "scaleIncrement": 0.6
+      }
+    ],
+    "baseScale": 1,
+    "maximumScale": 1.85,
+    "curve": "smoothstep",
+    "photometricCalibration": false
+  },
+  "receivers": {
+    "desktop": [
+      3,
+      2,
+      1
+    ],
+    "powerModules": [
+      3,
+      2,
+      1
+    ],
+    "lowerShelf": [
+      1,
+      2
+    ],
+    "topShelf": [
+      0
+    ],
+    "baseShelf": [
+      7
+    ],
+    "floor": [
+      7
+    ],
+    "leftWingOuter": [
+      5
+    ],
+    "rightWingOuter": [
+      6
+    ],
+    "wingInner": [
+      4
+    ],
+    "crossbar": [
+      4
+    ],
+    "cage": [
+      4
+    ],
+    "actuators": [
+      4
+    ],
+    "legs": [
+      4,
+      5,
+      6
+    ],
+    "uprightCompartments": [
+      3,
+      1,
+      0
+    ]
+  },
+  "encoding": {
+    "logicalOrder": [
+      "r",
+      "g",
+      "b",
+      "w"
+    ],
+    "displayWhiteMix": "min(255, RGB+W)",
+    "normalInput": "srgb-display-byte-approximation",
+    "gameInput": "raw-linear-rgbw-drive",
+    "gameUploadLinear": true,
+    "atlasFilter": "nearest",
+    "localNeighborhoodSamples": 3
+  },
+  "priority": [
+    "diagnostic",
+    "movement/completion",
+    "game",
+    "music/autoDJ",
+    "saved-look",
+    "decorative",
+    "base"
+  ],
+  "musicEffects": [
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    37,
+    38,
+    39,
+    40
+  ],
+  "musicBandEdgesHz": [
+    20,
+    60,
+    150,
+    400,
+    1000,
+    2500,
+    5000,
+    10000,
+    20000
+  ],
+  "game": {
+    "version": 1,
+    "title": "Neon Flight",
+    "duration": 12,
+    "fps": 60,
+    "frames": 720,
+    "counts": [
+      14,
+      14,
+      15,
+      14,
+      14,
+      11,
+      11,
+      13
+    ],
+    "video": "neon-flight.mp4",
+    "banks": {
+      "calm:colours": "calm-colours.rgbw",
+      "calm:music": "calm-music.rgbw",
+      "normal:colours": "normal-colours.rgbw",
+      "normal:music": "normal-music.rgbw",
+      "intense:colours": "intense-colours.rgbw",
+      "intense:music": "intense-music.rgbw",
+      "full:colours": "full-colours.rgbw",
+      "full:music": "full-music.rgbw"
+    },
+    "stage": "compiled Ambient.hpp emit; brightness 255; configured 8000 mA ceiling; raw linear RGBW drive bytes",
+    "provenance": "Original synthetic video/audio; actual ambient.py host pipeline and compiled board Ambient.hpp; synthetic scheduled audio metrics; not ESP32 capture",
+    "sourceHashes": {
+      "ambient.py": "25b46bb6e70e45b8589d903dd4b1c1ab4b667f6129d33f3eafc379468af61a5b",
+      "Ambient.hpp": "8b1256e84e0276b0546c233f908006ff41e504a2eb2d622f230a7cb28d4b3193"
+    },
+    "stripMap": "desk02-config-2026-10-01-address-space-v1",
+    "endpointCalibration": "saved operator 2026-10-01T22:51:29; geometry and visibility need current hardware check"
+  },
+  "integrationStatus": "proposed Flutter port; app unchanged"
+}

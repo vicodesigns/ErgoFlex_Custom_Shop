@@ -1,0 +1,568 @@
+{
+  "review_date_local": "2026-10-05",
+  "scope": "Read-only source/image comparison; no live hardware verification or native implementation.",
+  "repositories": [
+    {
+      "root": "/home/ergo/ErgoFlex_Custom_Shop",
+      "head": "865277cb127883386316e985e9271ccccedd59e4",
+      "status": [
+        " M app-remote.css",
+        " M divi-editor/build-site-upload.py",
+        " M divi-editor/site-upload/ergoflex-demo-large-desktop-trim-fix.zip",
+        " M divi-editor/site-upload/ergoflex-demo-tuned-leds-upload.zip",
+        " M divi-editor/site-upload/ergoflex-demo/README.txt",
+        " M divi-editor/site-upload/ergoflex-demo/app-remote.css",
+        " M divi-editor/site-upload/ergoflex-demo/led-auto-dj.mjs",
+        " M divi-editor/site-upload/ergoflex-demo/led-command-center.mjs",
+        " M divi-editor/site-upload/ergoflex-demo/led-music-mode.mjs",
+        " M divi-editor/site-upload/ergoflex-demo/led-pixel-renderer.mjs",
+        " M divi-editor/site-upload/ergoflex-demo/led-showcase-effects.mjs",
+        " M divi-editor/site-upload/ergoflex-demo/motion-limits.mjs",
+        " M divi-editor/site-upload/ergoflex-demo/product-demo.css",
+        " M divi-editor/site-upload/ergoflex-demo/product-demo.html",
+        " M divi-editor/site-upload/ergoflex-demo/product-demo.js",
+        " M divi-editor/site-upload/ergoflex-demo/studio.js",
+        " M docs/led-app-auto-dj-status.md",
+        " M index.html",
+        " M led-auto-dj.mjs",
+        " M led-command-center.mjs",
+        " M led-music-mode.mjs",
+        " M led-pixel-renderer.mjs",
+        " M led-showcase-effects.mjs",
+        " M motion-limits.mjs",
+        " M package.json",
+        " M product-demo.css",
+        " M product-demo.html",
+        " M product-demo.js",
+        " M studio.js",
+        " M tests/led-auto-dj-test.mjs",
+        " M tests/led-music-effects-test.mjs",
+        " M tests/motion-limits-test.mjs",
+        " M tests/room-glide-test.cjs",
+        "?? divi-editor/site-upload/ergoflex-demo/led-custom-presets.mjs",
+        "?? divi-editor/site-upload/ergoflex-demo/led-dj-overlay.mjs",
+        "?? divi-editor/site-upload/ergoflex-demo/led-saved-library.mjs",
+        "?? docs/physical-auto-dj-improvement-handoff.md",
+        "?? led-custom-presets.mjs",
+        "?? led-dj-overlay.mjs",
+        "?? led-saved-library.mjs",
+        "?? tests/led-computer-audio-test.cjs",
+        "?? tests/led-custom-presets-test.mjs",
+        "?? tests/led-dj-overlay-test.mjs",
+        "?? tests/led-presets-dj-test.cjs",
+        "?? tests/product-fullscreen-test.cjs"
+      ]
+    },
+    {
+      "root": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features",
+      "head": "2514ab69702d591eaf225d5b210357d17a5bd927",
+      "status": [
+        " M Firmware/ergoled_firmware/src/config.h",
+        " M ergoflex_api/misrecognitions.json",
+        "?? DESK02_LOCAL_DIFFS.md",
+        "?? Firmware/ergoled_firmware/src/config.h.orig",
+        "?? ergoflex_api/ergoflex_api.rollback-2276774b",
+        "?? ergoflex_api/ergoflex_api.rollback-ad257a16",
+        "?? ergoflex_api/ergoflex_api.rollback-prechat",
+        "?? ergoflex_api/ergoflex_api.rollback-pregemini",
+        "?? ergoflex_api/ergoflex_api.rollback-preled",
+        "?? ergoflex_api/ergoflex_api.rollback-preota1",
+        "?? ergoflex_api/ergoflex_api.rollback-prerestore",
+        "?? ergoflex_api/ergoflex_api.rollback-pretimeout",
+        "?? ergoflex_app/android/wear/build/",
+        "?? song-capture.wav"
+      ]
+    }
+  ],
+  "reviewed_files": [
+    {
+      "source": "/home/ergo/ErgoFlex_Custom_Shop/led-auto-dj.mjs",
+      "snapshot": "browser-source/led-auto-dj.mjs",
+      "sha256": "89b7b806ae517bfc80e27a3a5c3009552bcd212bd07adb8d6ba32aaf228bb01d",
+      "bytes": 9080
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Custom_Shop/led-dj-overlay.mjs",
+      "snapshot": "browser-source/led-dj-overlay.mjs",
+      "sha256": "6868f1f4ad16cd6255566dade03c03e5441800869e445949e191e167cef0dd1d",
+      "bytes": 6080
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Custom_Shop/led-custom-presets.mjs",
+      "snapshot": "browser-source/led-custom-presets.mjs",
+      "sha256": "2926c8cae4e3fcf073085e266604e38560a6ec569ce252fdd783e5f08ba65add",
+      "bytes": 9060
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Custom_Shop/led-showcase-effects.mjs",
+      "snapshot": "browser-source/led-showcase-effects.mjs",
+      "sha256": "2423660bf171a8691257dd1b70847f2b608ffc6bbfbeefe1c2c13992ffd32ca4",
+      "bytes": 9350
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Custom_Shop/led-strip-map.mjs",
+      "snapshot": "browser-source/led-strip-map.mjs",
+      "sha256": "69b9c1fbab494effeb41faddb0a9acba5e7091efcf6453a3eb52f9562191b90f",
+      "bytes": 3198
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Custom_Shop/led-saved-library.mjs",
+      "snapshot": "browser-source/led-saved-library.mjs",
+      "sha256": "3d24a8ecf2141e74c228237154b07ebfe482df61b634b2bc65169c0868aa1d2c",
+      "bytes": 178370
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Custom_Shop/led-pixel-renderer.mjs",
+      "snapshot": "browser-source/led-pixel-renderer.mjs",
+      "sha256": "2cd6e8a532e49cff425efa2a36d881d2cff91a77395ee16b22aeedbafa3ea727",
+      "bytes": 9731
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Custom_Shop/led-music-mode.mjs",
+      "snapshot": "browser-source/led-music-mode.mjs",
+      "sha256": "b9cbbcac11bd78c1a7b21e11eb12ddb809bbaf98a9bca06aecb7e8113c924485",
+      "bytes": 28292
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Custom_Shop/studio.js",
+      "snapshot": "browser-source/studio.js",
+      "sha256": "66c5b5f1a21c8479cf77855c38194508e6489ab554d7e48aa2e94d22061e5538",
+      "bytes": 547855
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/services/music_auto_dj_runtime.go",
+      "snapshot": "native-source/ergoflex_api/services/music_auto_dj_runtime.go",
+      "sha256": "3ccbf18db4b0f18b367135cc51242201886ecffb91bbed4a5199293e85565cd0",
+      "bytes": 57607
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/services/music_auto_dj_deck.go",
+      "snapshot": "native-source/ergoflex_api/services/music_auto_dj_deck.go",
+      "sha256": "0c7383e61a82b4cb3c022be59008d74e63098de54f585d40bf82477d8ae96b39",
+      "bytes": 17625
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/services/music_auto_dj_compose.go",
+      "snapshot": "native-source/ergoflex_api/services/music_auto_dj_compose.go",
+      "sha256": "e9820292eff3566082e152c27222f0bfc142cb17fec4daf0e71c7837471af8cf",
+      "bytes": 20727
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/services/music_auto_dj_tiers.go",
+      "snapshot": "native-source/ergoflex_api/services/music_auto_dj_tiers.go",
+      "sha256": "00d77965679bf2b9ee2974a6cda67ad68bd9204f820bb975cb54948538df114b",
+      "bytes": 2091
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/services/music_auto_dj.go",
+      "snapshot": "native-source/ergoflex_api/services/music_auto_dj.go",
+      "sha256": "608af45348eaced8b48dbfff7e6fb4916e1cbf33c604dd6491b3c70229159f1e",
+      "bytes": 56988
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/services/music_auto_dj_overlay.go",
+      "snapshot": "native-source/ergoflex_api/services/music_auto_dj_overlay.go",
+      "sha256": "97df71396915a2351ca61caa46216cee7a5d87942f1e18f251e30eeab8d199dd",
+      "bytes": 31986
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/services/music_auto_dj_beat_align.go",
+      "snapshot": "native-source/ergoflex_api/services/music_auto_dj_beat_align.go",
+      "sha256": "75feab7c57161ba179d215bb85d8c91c0cd646a969ec354f4dd0a3b98f1894cc",
+      "bytes": 8269
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/services/music_mode_service.go",
+      "snapshot": "native-source/ergoflex_api/services/music_mode_service.go",
+      "sha256": "6108f232fc174045dbedfeff2b9d9c994fa0465207ec47a617d077fd8f423ca3",
+      "bytes": 148695
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/services/music_auto_dj_seg_sanitize_test.go",
+      "snapshot": "native-source/ergoflex_api/services/music_auto_dj_seg_sanitize_test.go",
+      "sha256": "8a5296a29c67e519f7d93bb157e89724e8ed56c796c24e8dcbad63b3fe448a70",
+      "bytes": 8457
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/services/music_auto_dj_compose_test.go",
+      "snapshot": "native-source/ergoflex_api/services/music_auto_dj_compose_test.go",
+      "sha256": "5ed88e8836e86493744a2cf2f5551c971e2e0821a35c7a440b7c0bd65a12f880",
+      "bytes": 26969
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/py_scripts/music_analyzer.py",
+      "snapshot": "native-source/ergoflex_api/py_scripts/music_analyzer.py",
+      "sha256": "2da229a01d7cc620fcda7692934ea70d3d16300cff1f689c491cce0ddbe9ee50",
+      "bytes": 60251
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_api/scripts/dj_feature_audit.py",
+      "snapshot": "native-source/ergoflex_api/scripts/dj_feature_audit.py",
+      "sha256": "dc531b12b0680dab26099b0100ddfae6344468e57eee5e73a0a37ab8dadce616",
+      "bytes": 35512
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_app/lib/models/dj_settings.dart",
+      "snapshot": "native-source/ergoflex_app/lib/models/dj_settings.dart",
+      "sha256": "2a47da81eb1d5c16795329333c0a09fad5103f3d426847218be9d744905f1767",
+      "bytes": 20114
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/ergoflex_app/lib/widgets/led/dj_now_strips_sheet.dart",
+      "snapshot": "native-source/ergoflex_app/lib/widgets/led/dj_now_strips_sheet.dart",
+      "sha256": "80f61b0d03214a35d15ceff2d5188072e571f34be865b8540fe0d71fdd85ad3d",
+      "bytes": 4389
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/Firmware/ergoled_firmware/src/EffectEngine.h",
+      "snapshot": "native-source/Firmware/ergoled_firmware/src/EffectEngine.h",
+      "sha256": "5319af50cd063ad53113ee30abdd799d83573c89bdb96f13077324955e89f3f2",
+      "bytes": 185760
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/Firmware/ergoled_firmware/src/PaletteEngine.h",
+      "snapshot": "native-source/Firmware/ergoled_firmware/src/PaletteEngine.h",
+      "sha256": "f50188dd7a55dade76026e21fd541c87a99157580f9be6951ff96ec1ee09024e",
+      "bytes": 25921
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/Firmware/ergoled_firmware/src/PowerLimiter.h",
+      "snapshot": "native-source/Firmware/ergoled_firmware/src/PowerLimiter.h",
+      "sha256": "17cb2d5d0213a553869d294244414401fa250c93e7e2e5b9ef15625c6acb9e65",
+      "bytes": 7557
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/Firmware/ergoled_firmware/test/native_music_render/test_music_spread.cpp",
+      "snapshot": "native-source/Firmware/ergoled_firmware/test/native_music_render/test_music_spread.cpp",
+      "sha256": "82e76b87ef9b2915ece83bae67608844b12bfc5c23613cb368a60f1f6c1deee5",
+      "bytes": 6121
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/Firmware/ergoled_firmware/src/config.h",
+      "snapshot": null,
+      "sha256": "8285117a80da3d4bac8ac3ef20999b405f1ca9e10cd142ec953efc6368a1c588",
+      "bytes": 15599
+    },
+    {
+      "source": "/home/ergo/ErgoFlex_Desk_Stack/Polish-Features/Firmware/ergoled_firmware/src/main.cpp",
+      "snapshot": null,
+      "sha256": "350ea9021417de8644eb5cb4358087a744ce5281a8a6ec6e5a23eb9f9c312940",
+      "bytes": 133759
+    }
+  ],
+  "screenshots": [
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 16-59-37.png",
+      "sha256": "5080dd3f9bc599b196b4c7e6e844913688e5ee95f8705c0855cc49c2eb5c05f1",
+      "bytes": 703719
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 16-59-41.png",
+      "sha256": "4e0fdfa64edc9890d7f8ce0f0fe6d9d7e5de6a442b5f1f9c109ec48c460f2d96",
+      "bytes": 678506
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 16-59-42.png",
+      "sha256": "1c3a10c4403334ac16f16f44b5616dcf92236e0c2a84a66e6e8119b9ac7a6260",
+      "bytes": 689447
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 16-59-45.png",
+      "sha256": "3067c02e5b99d61bbd29d73df597bd22027afac37d82a0cd2ba991236416deb2",
+      "bytes": 718099
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 16-59-46.png",
+      "sha256": "8fe4cf0bf07436a3147cb4e9e7f5f85e3810c3dc9ccb6d4063aaa40467371182",
+      "bytes": 724366
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 16-59-48.png",
+      "sha256": "9ac8b88b0f3110da12088c4da1c5b9bd105322b3fce0c0f967ab4c8548fdd34f",
+      "bytes": 755775
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 16-59-49.png",
+      "sha256": "712306a4769e2193c568ef9bfaf4d333575866f7ec05f91fff95a0ea8b06b605",
+      "bytes": 754802
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-08.png",
+      "sha256": "ca3ec10530a5c758f7358bccfc8e0c526179f525b4ba2e4f79af96bca5d2d36a",
+      "bytes": 737704
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-14.png",
+      "sha256": "1aa9f9400eabc2a753d33965a1be38fe658a19b5464355eaf67fedc47af74927",
+      "bytes": 699523
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-18.png",
+      "sha256": "f378d7b72e7f1dfcfa5f1e060923e4142e951b277fdd9f5a2d105a57686dc030",
+      "bytes": 705601
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-20.png",
+      "sha256": "2c0dcc565160a04e3e251d8da52018864d8b238a02978b3f97f299a2644ece0f",
+      "bytes": 710817
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-23.png",
+      "sha256": "0202f866151f0351c25449dcee0194f70f5c5cc08d31ea329f05de77eea6e1f5",
+      "bytes": 716182
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-25.png",
+      "sha256": "ed17910b47983b55f392e62f1ec9f9a3c9f7459594c7bf79a2a2dc88e9d8b4ba",
+      "bytes": 715624
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-28.png",
+      "sha256": "c09c19a9caae14e997ea1150cd70455a6be9d401bbb154a5442f572776745697",
+      "bytes": 704574
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-38.png",
+      "sha256": "6d84f514235ceb09050cb32ed820065b8d82957c0d0aed5365cc43d5313de6c0",
+      "bytes": 699896
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-40.png",
+      "sha256": "10dd81d96cb30010e00fde72133e6fe4b486643997835cccaddd4ccb25b2c415",
+      "bytes": 706122
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-42.png",
+      "sha256": "bfce9fbfcf49426ed28cc0fd93128a74533f57ebf10449d843053de303119e47",
+      "bytes": 701611
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-44.png",
+      "sha256": "06ef426da84eaf0a1a452f55ac0a321a8ffdac01c524efdda04e41ed51012ccd",
+      "bytes": 731933
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-45.png",
+      "sha256": "ab544e36b08608723db0b7cdc01fdda021eabb87d9f18da8950694ca781641a7",
+      "bytes": 720549
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-47.png",
+      "sha256": "f3729e1aad3d70259dc62919bcb66013e15d9e3dcdab72fa57e13f8f98851276",
+      "bytes": 732795
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-48.png",
+      "sha256": "a4c28c8721a9238f89727df36a2941b29ba69d6f5af1a56de440551eca09fb77",
+      "bytes": 721834
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-49.png",
+      "sha256": "7bd0ffbc2960f5ec0bfa5b592bf7701493e667e853148dd978ede0380d9e0745",
+      "bytes": 700302
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-51.png",
+      "sha256": "db4a92a422c0fd8ee23d87e4d5810edac137f19c39fc1545acd17161715f2e2a",
+      "bytes": 712631
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-55.png",
+      "sha256": "2485e3f21eb24083ee0370f5261feac2867bbd2f25c476cd741cedaf17454441",
+      "bytes": 702451
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-56.png",
+      "sha256": "8d8dcce977e9deaa055008335234edad705b7fe45aeefa5f2337b950d163313b",
+      "bytes": 692722
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-58.png",
+      "sha256": "5dd824d59ad11f22cfa1ce160e0d56e239b7ab43272768d9aa67ae531c227915",
+      "bytes": 710732
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-59.png",
+      "sha256": "64bc828d397c07fff00c57a57ca2ef6f25254299a6617accf5d41a4bf04dbeb9",
+      "bytes": 709136
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-00.png",
+      "sha256": "d0bc8156efb0d56fb04970ee4fe049304fbe74c715efe401c0f43109793a69f1",
+      "bytes": 700160
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-02.png",
+      "sha256": "65f55e21fc4be999eae9ab387d50c85ca9ba816b016feb5bdce3d5fb107de11e",
+      "bytes": 712522
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-07.png",
+      "sha256": "b43e28113c482236338fd411085a4f1e58b82282124bc7f267bdf75fa871e68f",
+      "bytes": 689281
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-14.png",
+      "sha256": "1b7faef0fdbb605b0072d17a7dfb02c32a19d9ab6fbab43bf30d69ff757473b2",
+      "bytes": 702988
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-32.png",
+      "sha256": "885fe0659fbf732d54ae7df7ea573135f23358fa38855e6559e223827c1aa753",
+      "bytes": 716509
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-34.png",
+      "sha256": "24adb2400520375fccedd7c92b22ff05fe8529bb80a73a73fc8652c6954e7dd4",
+      "bytes": 738698
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-35.png",
+      "sha256": "4b5f16b7ccdcb30c4803293db97f403e944c492cc6d2350942c043e7de5eaf11",
+      "bytes": 731607
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-37.png",
+      "sha256": "7324851cf9778b98f4dcbcc8e8ce3261648351652448297a3ffd5a76367038df",
+      "bytes": 721506
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-39.png",
+      "sha256": "ec4f84bb75024f23fc529c3a1dbb6a9354885b188c6cfe862ed282ff2d120e68",
+      "bytes": 724297
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-41.png",
+      "sha256": "cdc27c2570b8de4ca906ad2b96a4d9d33c9d1b007a21eebf4b6f66274f7e2987",
+      "bytes": 741957
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-36.png",
+      "sha256": "962ebf06c93ed4af09b136a198c50d6c10658f32aeab0d64e2ebfa0ac0227f7b",
+      "bytes": 718595
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-37.png",
+      "sha256": "593e9bfbfb490af1a389879cdf6e320ef62aa9b55335c2dcaf42c6d88f30e2e0",
+      "bytes": 724486
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-39.png",
+      "sha256": "64abfe6111ab696949ffddb2186ef20265a1219cb3e4e32eef04bb4a5c223963",
+      "bytes": 717344
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-40.png",
+      "sha256": "5fc71223d69caa5c49bfac28d5f2de7ea4b32cdc3840a5b58b80cfd0d0f906c8",
+      "bytes": 738045
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-42.png",
+      "sha256": "8514cc5ba21a18e0b2ccf136ac5732f7dbc513ae84f30448c691d8a4e87a272e",
+      "bytes": 725052
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-43.png",
+      "sha256": "0cfe3562cb06ad05faf76ea5433c90758c8dce4477d43b6e753552a09c11d917",
+      "bytes": 730694
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-45.png",
+      "sha256": "e4c7c7172ceb6738eeba0589586e84d0c823cb2521a6602b1e1a6cfbc7717d5a",
+      "bytes": 735019
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-47.png",
+      "sha256": "175a03544104132221fc493528c81b79685600f8697d05ba8a571b435e15aac7",
+      "bytes": 711136
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-49.png",
+      "sha256": "340495679adb6d8ad0124c8c58df92ef864d1bab3f94a1bfea27f50f3553bf22",
+      "bytes": 668294
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-50.png",
+      "sha256": "f5e70dc03be167724bed4251983341891c775f8560ea7c498e60e1f37c9c150a",
+      "bytes": 697209
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-52.png",
+      "sha256": "6f713e16bba6dadb809c0d598ebeaf5f831528f6595840f2e0b6085ddb77add6",
+      "bytes": 731206
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-53.png",
+      "sha256": "eb058384d515bd1bc0a4f60efaee6ffff78b5c9e1264320617e0d7473d06d2ee",
+      "bytes": 726663
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-55.png",
+      "sha256": "b7777c77d4fb598e4cd3045b1171b05145236bf6ebf31c8ff083b3f011fcdab6",
+      "bytes": 736599
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-03-02.png",
+      "sha256": "e5a455abd86b6e9b8d2b3d4f3239ef8dc44dcc577d3ec29afe6db844210d3e15",
+      "bytes": 717180
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-03-33.png",
+      "sha256": "e46e532347674125bed3b32164c17b2d6ade3eae1b490fced443a18f064557f9",
+      "bytes": 686618
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-03-35.png",
+      "sha256": "61863792038fbcebb56a59dc1be115562fa4b3ec681d4be45c6a847eb8c8e6a8",
+      "bytes": 705472
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-03-36.png",
+      "sha256": "e93c972f6210bdd125c10d2ea869a0c6e31866e5c593ee2369de55b99358a195",
+      "bytes": 709521
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-03-37.png",
+      "sha256": "47c9ea887bdb3c612c82e1cbcb5ff402454e3bedbd9a53186b43a86e9490ba87",
+      "bytes": 694486
+    }
+  ],
+  "included_evidence": [
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-34.png",
+      "copy": "evidence/dynamic-170134.png",
+      "sha256": "24adb2400520375fccedd7c92b22ff05fe8529bb80a73a73fc8652c6954e7dd4"
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-39.png",
+      "copy": "evidence/mexican-power-170239.png",
+      "sha256": "64abfe6111ab696949ffddb2186ef20265a1219cb3e4e32eef04bb4a5c223963"
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-02-42.png",
+      "copy": "evidence/g-copy-170242.png",
+      "sha256": "8514cc5ba21a18e0b2ccf136ac5732f7dbc513ae84f30448c691d8a4e87a272e"
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-00-47.png",
+      "copy": "evidence/ripple-170047.png",
+      "sha256": "f3729e1aad3d70259dc62919bcb66013e15d9e3dcdab72fa57e13f8f98851276"
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-01-00.png",
+      "copy": "evidence/reggae-170100.png",
+      "sha256": "d0bc8156efb0d56fb04970ee4fe049304fbe74c715efe401c0f43109793a69f1"
+    },
+    {
+      "source": "/home/ergo/Pictures/Screenshots/Screenshot from 2026-10-05 17-03-35.png",
+      "copy": "evidence/blue-red-170335.png",
+      "sha256": "61863792038fbcebb56a59dc1be115562fa4b3ec681d4be45c6a847eb8c8e6a8"
+    },
+    {
+      "source": "/home/ergo/Downloads/20261005_153416.jpg",
+      "copy": "evidence/physical-desk-153416.jpg",
+      "sha256": "2263423ebd2c4680de1d69330a1853789e29110b255f4708fa4c39e67df70264"
+    }
+  ],
+  "document_sha256": "7d87a0d1498eba4693734d04867f1a27c4c8ed09c5407f0eb6e489f8fca7df2c"
+}

@@ -1,4 +1,6 @@
 // One app sheet, reused in the normal viewer and WebXR DOM overlay.
+import { CUSTOM_LOOKS_KEY, importCustomLooks, sampleCustomPalette, customLookUsesMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
+import { SAVED_LED_LOOKS, SAVED_LED_PALETTES } from './led-saved-library.mjs?v=desktop-bands-back-20261005';
 export class LedCommandCenter {
     constructor(api, controls) {
         this.api=api;this.returnFocus=null;
@@ -6,7 +8,7 @@ export class LedCommandCenter {
         root.innerHTML=`<section class="ledcc-sheet" role="region" aria-labelledby="ledcc-title" tabindex="-1">
             <div class="ledcc-grip" aria-hidden="true"></div><header class="ledcc-header"><button type="button" data-ledcc-close aria-label="Close LED Command Center">×</button><h2 id="ledcc-title" class="sr-only">LED Command Center</h2><nav class="ledcc-segments" aria-label="LED Command Center"><button type="button" data-ledcc-tab="light" aria-pressed="true">Light</button><button type="button" data-ledcc-tab="music" aria-pressed="false">Music</button><button type="button" data-ledcc-tab="automate" aria-pressed="false">Automate</button></nav><button type="button" data-ledcc-tab="game" aria-pressed="false" aria-label="Game Mode" title="Game Mode"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M7 6h10c2 0 3 2 4 6l1 5c.4 2-2 3-3 1l-2-3H7l-2 3c-1 2-3.4 1-3-1l1-5c1-4 2-6 4-6zm-1 3v2H4v2h2v2h2v-2h2v-2H8V9H6zm10 2a1 1 0 100 2 1 1 0 000-2zm3 2a1 1 0 100 2 1 1 0 000-2z"/></svg></button></header>
             <div class="ledcc-scroll"><section class="ledcc-card ledcc-desk"><div class="ledcc-desk-heading"><span class="ledcc-bulb">☼</span><div><h3>Desk lights</h3><p>Explore your desk’s lighting</p></div><span class="ledcc-badge">3D preview</span></div><div class="ledcc-master"></div><div class="ledcc-now"><span data-ledcc-now>On the desk now: Solid</span><div class="ledcc-strips" role="img" aria-label="Eight desk LED strips">${Array.from({length:8},()=>'<i></i>').join('')}</div></div></section>
-            <section data-ledcc-page="light"><nav class="ledcc-subnav" aria-label="Light controls"><button type="button" data-ledcc-light="moods" aria-pressed="true">☼ Moods</button><button type="button" data-ledcc-light="paint" aria-pressed="false">✎ Paint</button><button type="button" data-ledcc-light="effects" aria-pressed="false">✧ Effects</button></nav><section class="ledcc-card" data-ledcc-light-page="moods"><h3>Choose a mood</h3><div class="ledcc-moods"></div></section><section class="ledcc-card" data-ledcc-light-page="paint" hidden><h3>Your colour</h3><div class="ledcc-paint"></div></section><section class="ledcc-card" data-ledcc-light-page="effects" hidden><h3>Animated effects</h3><div class="ledcc-effects"></div></section></section>
+            <section data-ledcc-page="light"><nav class="ledcc-subnav" aria-label="Light controls"><button type="button" data-ledcc-light="moods" aria-pressed="true">☼ Moods</button><button type="button" data-ledcc-light="palettes" aria-pressed="false">▤ Palettes</button><button type="button" data-ledcc-light="paint" aria-pressed="false">✎ Paint</button><button type="button" data-ledcc-light="effects" aria-pressed="false">✧ Effects</button></nav><section class="ledcc-card" data-ledcc-light-page="moods"><h3>Choose a mood</h3><div class="ledcc-moods"></div></section><section class="ledcc-card" data-ledcc-light-page="palettes" hidden><h3>Your palettes</h3><p>Change colour sections while keeping strip effects and timing.</p><div class="ledcc-moods" data-ledcc-palettes></div></section><section class="ledcc-card" data-ledcc-light-page="paint" hidden><h3>Your colour</h3><div class="ledcc-paint"></div></section><section class="ledcc-card" data-ledcc-light-page="effects" hidden><h3>Animated effects</h3><div class="ledcc-effects"></div></section></section>
             <section data-ledcc-page="music" hidden><nav class="ledcc-subnav" aria-label="Music controls"><button type="button" data-ledcc-music="live" aria-pressed="true">♫ Live</button><button type="button" data-ledcc-music="dj" aria-pressed="false">◎ Auto DJ</button></nav><div class="ledcc-music demo-led-playback"></div><section class="ledcc-card" data-ledcc-music-page="dj" hidden><div class="ledcc-dj"></div></section></section>
             <section data-ledcc-page="game" hidden><h3 class="ledcc-page-title">Game Mode</h3><div class="ledcc-game demo-led-playback"></div></section>
             <section data-ledcc-page="automate" hidden><h3 class="ledcc-page-title">Movement & sound</h3><section class="ledcc-card ledcc-automate"><p>Movement cues take priority, then your lighting resumes.</p></section></section>
@@ -21,6 +23,7 @@ export class LedCommandCenter {
             if(event.key==='Escape'){event.stopPropagation();this.close();}
         });
         document.addEventListener('ergoflex-ar-ended',()=>this.close());
+        document.addEventListener('ergoflex-demo-fullscreen',()=>{if(!root.hidden){this.attach();this.fitToApp();}});
         this.fit=()=>this.fitToApp();
         window.addEventListener('resize',this.fit);window.addEventListener('scroll',this.fit,true);
         this.mount(controls);this.select('tab','light');this.select('music','live');
@@ -62,8 +65,43 @@ export class LedCommandCenter {
         controls.playback.remove();
         api.ledMusicMode.mountDJControls(root.querySelector('.ledcc-dj'));
         const moods=[['Daytime','#ffffff'],['Warm evening','#fff1d6'],['Amber glow','#ffb347'],['Ocean','#40eaff'],['Forest','#42d89c'],['Violet','#a66bff'],['Blue hour','#497bff'],['Red room','#f10404']];
-        for(const [name,color] of moods){const button=document.createElement('button');button.type='button';button.className='ledcc-mood';button.innerHTML=`<span>${name}</span><i style="background:${color}"></i>`;button.onclick=()=>{api.ledGameMode.stop();api.ledMusicMode.stop();api.setLedEffect({mode:'solid',period:8});api.setLedColor(color);api.setLedsEnabled(true);this.sync();};root.querySelector('.ledcc-moods').append(button);}
+        for(const [name,color] of moods){const button=document.createElement('button');button.type='button';button.className='ledcc-mood';button.dataset.ledccMood=name;button.innerHTML=`<span>${name}</span><i style="background:${color}"></i>`;button.onclick=()=>{const col=[1,3,5].map(index=>parseInt(color.slice(index,index+2),16));api.applyCustomLedLook({name,on:true,bri:Math.round(api.ledGlow/api.ledFullBrightness*255),strips:Array.from({length:8},(_,id)=>({id,fx:0,pal:0,col:[col]}))});this.sync();};root.querySelector('.ledcc-moods').append(button);}
+        this.mountCustomLooks();
         this.sync();
+    }
+    mountCustomLooks(){
+        const host=this.root.querySelector('[data-ledcc-light-page="moods"]');
+        const section=document.createElement('section');section.className='ledcc-custom-looks';
+        section.innerHTML='<h3>My looks</h3><div class="ledcc-moods" data-ledcc-looks></div><label class="ledcc-import">Import saved LED presets <input type="file" accept=".json,application/json" data-ledcc-import></label><p data-ledcc-import-status role="status">31 saved desk looks and 9 palettes included. Import more looks from your app.</p>';
+        host.prepend(section);this.looks=importCustomLooks(SAVED_LED_LOOKS);this.palettes=SAVED_LED_PALETTES;
+        const palettes=this.root.querySelector('[data-ledcc-palettes]');for(const palette of this.palettes){const button=document.createElement('button');button.type='button';button.className='ledcc-mood';button.dataset.ledccPalette=palette.name;const name=document.createElement('span');name.textContent=palette.name;const swatches=document.createElement('div');swatches.className='ledcc-strips';for(let i=0;i<18;i++){const col=sampleCustomPalette(palette,Math.floor((256*i+128)/18)),swatch=document.createElement('i');swatch.style.background=`rgb(${col.slice(0,3).map(c=>Math.min(255,c+col[3])).join(' ')})`;swatches.append(swatch);}button.append(name,swatches);button.onclick=()=>{this.api.applyCustomLedPalette(palette);this.sync();};palettes.append(button);}
+        try{const saved=JSON.parse(localStorage.getItem(CUSTOM_LOOKS_KEY)||'null');if(saved){const merged=new Map(this.looks.map(look=>[look.name,look]));importCustomLooks(saved).forEach(look=>merged.set(look.name,look));this.looks=[...merged.values()];}}catch{}
+        this.renderCustomLooks();
+        section.querySelector('input').onchange=async event=>{
+            const file=event.target.files[0],status=section.querySelector('[data-ledcc-import-status]');if(!file)return;
+            try{
+                if(file.size>1024*1024)throw new Error('Choose a preset JSON file smaller than 1 MB.');
+                const imported=importCustomLooks(JSON.parse(await file.text()));
+                const merged=new Map(this.looks.map(look=>[look.name,look]));imported.forEach(look=>merged.set(look.name,look));
+                if(merged.size>100)throw new Error('This device can save up to 100 looks.');
+                this.looks=[...merged.values()];this.renderCustomLooks();
+                let saved=true;try{localStorage.setItem(CUSTOM_LOOKS_KEY,JSON.stringify(this.looks));}catch{saved=false;}
+                status.textContent=`Imported ${imported.length} look${imported.length===1?'':'s'}. `+(saved?'Saved on this device.':'Available for this session; storage is unavailable.');
+            }catch(error){status.textContent=error.message||'This preset file could not be imported.';}
+            finally{event.target.value='';}
+        };
+    }
+    renderCustomLooks(){
+        this.api.ledMusicMode.setLibrary(this.looks,this.palettes);
+        const list=this.root.querySelector('[data-ledcc-looks]');list.replaceChildren();
+        for(const look of this.looks){
+            const button=document.createElement('button');button.type='button';button.className='ledcc-mood';button.dataset.ledccLook=look.name;
+            const music=customLookUsesMusic(look);button.dataset.ledccMusic=String(music);button.title=music?'Includes Music Mode':'Keeps Music Mode active if it is already on';
+            const name=document.createElement('span');name.textContent=(music?'♫ ':'')+look.name;button.append(name);
+            const swatches=document.createElement('div');swatches.className='ledcc-strips';swatches.setAttribute('aria-hidden','true');
+            look.strips.forEach(strip=>{const swatch=document.createElement('i'),col=strip.col[0];swatch.style.background=`rgb(${col.slice(0,3).map(channel=>Math.min(255,channel+col[3])).join(' ')})`;swatches.append(swatch);});button.append(swatches);
+            button.onclick=()=>{this.api.applyCustomLedLook(look);this.sync();};list.append(button);
+        }
     }
     select(kind,value){
         const root=this.root;
@@ -71,8 +109,13 @@ export class LedCommandCenter {
         else {root.dataset[kind]=value;if(kind==='music'){const dj=root.querySelector('[data-ledcc-music-page="dj"]');root.querySelector('.ledcc-music').before(dj);}
             root.querySelectorAll(`[data-ledcc-${kind}-page]`).forEach(page=>page.hidden=page.getAttribute(`data-ledcc-${kind}-page`)!==value);root.querySelectorAll(`[data-ledcc-${kind}]`).forEach(button=>button.setAttribute('aria-pressed',String(button.getAttribute(`data-ledcc-${kind}`)===value)));}
     }
+    attach(){
+        const dock=document.getElementById('motion-dock');
+        const parent=dock?.closest('#ef-ar-overlay')||dock?.closest('.demo-fullscreen')||document.body;
+        if(this.root.parentElement!==parent)parent.append(this.root);
+    }
     open(){
-        const overlay=document.getElementById('ef-ar-overlay');(overlay||document.body).append(this.root);
+        this.attach();
         this.returnFocus=document.activeElement;this.root.hidden=false;this.fitToApp();this.root.querySelector('.ledcc-sheet').focus({preventScroll:true});
         document.querySelector('.hub-led')?.setAttribute('aria-expanded','true');this.sync();
         clearInterval(this.timer);this.timer=setInterval(()=>this.sync(),150);
@@ -98,8 +141,9 @@ export class LedCommandCenter {
         api.ledMusicMode.syncDJUI();api.ledGameMode.syncUI();
         const seek=root.querySelector('[data-music-seek]');if(document.activeElement!==seek)seek.value=api.ledMusicMode.audio.currentTime||0;
         const source=api.ledMotionState.source;
-        root.querySelector('[data-ledcc-now]').textContent='On the desk now: '+(!api.ledsEnabled?'Off':source==='music'?(api.ledMusicMode.dj.enabled?'Auto DJ · ':'Music · ')+root.querySelector('[data-music-effect] option:checked').textContent:source==='game'?'Game Mode':source==='movement'?'Movement cue':source==='completion'?'Movement complete':api.ledEffect.mode.replaceAll('-',' '));
-        root.querySelectorAll('.ledcc-strips i').forEach((swatch,index)=>{const row=api.ledPreviewFrame?.[index];let r=0,g=0,b=0;if(row&&['game','music','movement','completion','diagnostic','effect'].includes(source)){for(let i=0;i<row.length;i+=4){r+=row[i]+row[i+3];g+=row[i+1]+row[i+3];b+=row[i+2]+row[i+3];}const count=row.length/4;r/=count;g/=count;b/=count;swatch.style.background=`rgb(${r} ${g} ${b})`;}else swatch.style.background=api.ledColor;swatch.style.opacity=api.ledsEnabled?'1':'.15';});
+        root.querySelector('[data-ledcc-now]').textContent='On the desk now: '+(!api.ledsEnabled?'Off':source==='music'?(api.ledMusicMode.dj.enabled?'Auto DJ · ':'Music · ')+(api.ledMusicMode.dj.currentLook?.name||api.customLedLook?.name||root.querySelector('[data-music-effect] option:checked').textContent)+(api.ledMusicMode.dj.currentPalette?' · '+api.ledMusicMode.dj.currentPalette.name:api.ledMusicMode.paletteOverride?' · '+api.ledMusicMode.paletteOverride.name:''):source==='game'?'Game Mode':source==='movement'?'Movement cue':source==='completion'?'Movement complete':api.customLedLook?.name||api.ledEffect.mode.replaceAll('-',' '));
+        root.querySelectorAll('.ledcc-now .ledcc-strips i').forEach((swatch,index)=>{const row=api.ledPreviewFrame?.[index];let r=0,g=0,b=0;if(row&&['game','music','movement','completion','diagnostic','effect','preset'].includes(source)){for(let i=0;i<row.length;i+=4){r+=row[i]+row[i+3];g+=row[i+1]+row[i+3];b+=row[i+2]+row[i+3];}const count=row.length/4;r/=count;g/=count;b/=count;swatch.style.background=`rgb(${r} ${g} ${b})`;}else swatch.style.background=api.ledColor;swatch.style.opacity=api.ledsEnabled?'1':'.15';});
+        root.querySelectorAll('[data-ledcc-look]').forEach(button=>button.setAttribute('aria-pressed',String(api.customLedLook?.name===button.dataset.ledccLook)));
         root.querySelectorAll('[data-ledcc-choice]').forEach(button=>button.setAttribute('aria-pressed',String(root.querySelector(`[${button.dataset.ledccChoice}]`).value===button.dataset.value)));
         root.querySelectorAll('[data-ledcc-mirror]').forEach(input=>{const source=root.querySelector(`[${input.dataset.ledccMirror}]`);input.checked=source.checked;input.value=source.value;});
     }

@@ -4,6 +4,54 @@ const demo = document.createElement('section');
 demo.id = 'event-demo';
 demo.innerHTML = `<div class="demo-top"><strong>Explore ErgoFlex in 3D</strong><div class="demo-top-controls"><div class="demo-size" role="group" aria-label="Desktop size"><span>Desktop</span><button type="button" data-demo-size="48x30" aria-pressed="false" disabled>48″ Standard</button><button type="button" data-demo-size="60x30" aria-pressed="true" disabled>60″ Extended</button></div><label>Backdrop <select id="demo-backdrop"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label></div></div><div id="demo-stage"><div id="demo-viewer"></div><div id="demo-remote" role="region" tabindex="0" aria-label="Interactive ErgoFlex app controls"></div></div><p class="demo-note" role="status">Loading the workstation…</p>`;
 document.body.append(demo);
+const stage = demo.querySelector('#demo-stage');
+const fullscreenButton = document.createElement('button');
+fullscreenButton.className = 'demo-action';
+fullscreenButton.type = 'button';
+fullscreenButton.textContent = 'Full screen';
+fullscreenButton.setAttribute('aria-controls', 'demo-stage');
+fullscreenButton.setAttribute('aria-pressed', 'false');
+demo.querySelector('.demo-top-controls').append(fullscreenButton);
+const exitFullscreenButton = document.createElement('button');
+exitFullscreenButton.className = 'demo-fullscreen-exit';
+exitFullscreenButton.type = 'button';
+exitFullscreenButton.textContent = 'Exit full screen';
+stage.append(exitFullscreenButton);
+let fullscreenScroll = 0;
+const syncFullscreen = active => {
+  stage.classList.toggle('demo-fullscreen', active);
+  document.body.classList.toggle('demo-fullscreen-active', active);
+  fullscreenButton.setAttribute('aria-pressed', String(active));
+  document.dispatchEvent(new Event('ergoflex-demo-fullscreen'));
+  window.dispatchEvent(new Event('resize'));
+  if (!active) {
+    window.scrollTo(0, fullscreenScroll);
+    fullscreenButton.focus({preventScroll:true});
+  }
+};
+fullscreenButton.addEventListener('click', async () => {
+  fullscreenScroll = window.scrollY;
+  // Request native fullscreen during the click. Embedded browsers can fall back
+  // to filling their preview without rebuilding the viewer or interrupting audio.
+  try {
+    if (!stage.requestFullscreen) throw new Error('Fullscreen unavailable');
+    await stage.requestFullscreen();
+  } catch {
+    syncFullscreen(true);
+  }
+});
+const exitFullscreen = async () => {
+  if (document.fullscreenElement === stage) await document.exitFullscreen();
+  else syncFullscreen(false);
+};
+exitFullscreenButton.addEventListener('click', exitFullscreen);
+document.addEventListener('fullscreenchange', () => syncFullscreen(document.fullscreenElement === stage));
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && stage.classList.contains('demo-fullscreen') && !document.fullscreenElement) {
+    event.preventDefault();
+    syncFullscreen(false);
+  }
+});
 demo.querySelector('#demo-backdrop').insertAdjacentHTML('beforeend', '<option value="led">LED studio</option>');
 demo.querySelector('.demo-top-controls').insertAdjacentHTML('beforeend',
   '<button class="demo-action" data-led-toggle type="button" aria-pressed="false" disabled>LEDs off</button><label class="demo-led-glow">Brightness <input type="range" data-led-glow aria-label="LED brightness" min="0" max="100" value="75" disabled><output data-led-brightness-value>75%</output></label><div class="demo-led-color-stack"><div class="led-palette" role="group" aria-label="Quick LED colors"></div><label class="demo-led-color">LED color <input type="color" data-led-color aria-label="LED color" value="#f10404" disabled></label></div><button class="demo-action" data-touchscreen-toggle type="button" aria-pressed="false" disabled>Extend screen</button><button class="demo-action" data-ar-launch type="button" title="Place the current desk in your room at full size" disabled>AR/XR · See in your space</button>');
@@ -38,11 +86,12 @@ const ready = setInterval(() => {
   const slot = document.querySelector('#demo-remote');
   const fitRemote = () => {
     if (dock.closest('#ef-ar-overlay')) return;
-    const narrow = slot.clientWidth < 760;
-    const scale = narrow ? slot.clientWidth / 760 : 1;
+    const fullscreen = stage.classList.contains('demo-fullscreen');
+    const scale = Math.min(1, slot.clientWidth / 760, fullscreen ? stage.clientHeight * .4 / 390 : 1);
     dock.dataset.shape = 'landscape';
     dock.style.setProperty('--remote-unit', '3.9px');
     dock.style.setProperty('--demo-app-scale', String(scale));
+    dock.style.setProperty('--demo-app-width', `${slot.clientWidth / scale}px`);
     slot.style.height = `${390 * scale}px`;
     slot.style.overflowX = 'hidden';
     slot.scrollLeft = 0;
@@ -126,6 +175,7 @@ const ready = setInterval(() => {
   setInterval(syncActions, 250);
   demo.querySelector('.demo-note').textContent='Drag the desk to rotate · Scroll or pinch to zoom · Use the ErgoFlex app controls to move the 3D workstation.';
   const fitFrame = () => {
+    if (stage.classList.contains('demo-fullscreen')) return;
     try {
       if (window.frameElement) window.frameElement.style.setProperty('height', `${Math.ceil(demo.getBoundingClientRect().height) + 12}px`, 'important');
     } catch {}

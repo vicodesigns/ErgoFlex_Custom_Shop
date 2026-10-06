@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-06",
+  "testedRelease": "desktop-tilt-reach-20261006",
+  "completed": [
+    {
+      "test": "led-tilt-reflection-test.cjs",
+      "scope": "Source and unpacked canonical website ZIP",
+      "result": "passed"
+    },
+    {
+      "test": "led-pixels-test.cjs",
+      "scope": "Custom Shop source viewer",
+      "result": "passed"
+    },
+    {
+      "test": "led-game-horizontal-test.mjs",
+      "scope": "Delivered browser-reference directory",
+      "result": "passed"
+    },
+    {
+      "test": "led-auto-dj-test.mjs",
+      "scope": "Delivered browser-reference directory",
+      "result": "passed"
+    },
+    {
+      "test": "led-music-effects-test.mjs",
+      "scope": "Delivered browser-reference directory",
+      "result": "passed"
+    },
+    {
+      "test": "led-custom-presets-test.mjs",
+      "scope": "Delivered browser-reference directory",
+      "result": "passed"
+    }
+  ],
+  "isolatedGpuFrontRedSamples": {
+    "48x30": {
+      "-5": 1,
+      "0": 43,
+      "5": 101,
+      "15": 167,
+      "65": 167
+    },
+    "60x30": {
+      "-5": 0,
+      "0": 8,
+      "5": 44,
+      "15": 147,
+      "65": 147
+    }
+  },
+  "sampleUnits": "framebuffer byte values, not physical light percentages or lux",
+  "flutterPortTested": false,
+  "freshPhysicalMappingTested": false,
+  "foldMicrophone": "owner confirmed lights respond during previous Fold 5 test"
+}

@@ -48,3 +48,13 @@ body> :not(#event-demo):not(#ar-help-modal):not(#ar-model-viewer):not(#ef-ar-ove
 .demo-note{font-size:12px;color:#63566b;margin:12px 0 0}
 @media(max-width:760px){#demo-viewer{height:420px}#demo-remote{overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-color:#6955b2 #e6e0eb;scrollbar-width:thin}#event-demo #motion-dock.app-remote{width:760px!important;min-width:760px!important;max-width:none!important;height:390px!important}}
 @media(max-width:550px){#event-demo{padding:10px}#demo-viewer{height:380px}.demo-top{align-items:start}.demo-top label{display:grid;gap:3px}}
+.demo-fullscreen-exit{display:none;position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:10001;border:1px solid #637185;border-radius:9px;background:#202936e6;color:#fff;padding:9px 12px;font:13px system-ui;cursor:pointer}
+.demo-fullscreen-exit:focus-visible{outline:2px solid #91b8ff;outline-offset:3px}
+body.demo-fullscreen-active{overflow:hidden!important}
+.demo-fullscreen-active .demo-top,.demo-fullscreen-active .demo-note{display:none}
+#demo-stage.demo-fullscreen{position:fixed;inset:0;z-index:9000;width:100%;height:100dvh;max-height:100%;background:#111822;overflow:hidden}
+#demo-stage.demo-fullscreen #demo-viewer{flex:1 1 0;height:auto}
+#demo-stage.demo-fullscreen #demo-remote{flex:0 0 auto}
+#demo-stage.demo-fullscreen .demo-fullscreen-exit{display:block}
+#event-demo #demo-stage.demo-fullscreen #viewer-shell{border-radius:0}
+#event-demo #demo-stage.demo-fullscreen #motion-dock.app-remote{width:var(--demo-app-width)!important;min-width:0!important;max-width:none!important;height:390px!important;border-radius:0}

@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import { AutoDJ,DJ_EFFECT_IDS } from '../led-auto-dj.mjs';
+import { DJOverlay } from '../led-dj-overlay.mjs';
+import { SAVED_LED_LOOKS,SAVED_LED_PALETTES } from '../led-saved-library.mjs';
+const baseline=JSON.stringify(SAVED_LED_LOOKS),palettes=JSON.stringify(SAVED_LED_PALETTES);
+const metrics={bands:Array(8).fill(.6),volume:.4,energy:.5,bassBeat:false,beat:false};
+const copy=JSON.stringify(metrics),zeros=Object.fromEntries(DJ_EFFECT_IDS.map(fx=>[fx,0]));
+const dj=new AutoDJ({program:'custom',weights:{...zeros,33:4},lookWeights:Object.fromEntries(SAVED_LED_LOOKS.map(look=>[look.name,look.name==='Master REGGAE'?4:0])),remixPresets:true,remixSliders:true,remixPhysics:true,randomizeOn:true,burstsOn:true,remixBursts:true,dynamicsMode:'wide'},()=>.7);
+dj.setLibrary(SAVED_LED_LOOKS,SAVED_LED_PALETTES);dj.start();dj.currentLook=SAVED_LED_LOOKS.find(look=>look.name==='Master REGGAE');
+const overlay=new DJOverlay(),render=overlay.prepare(dj,metrics,1,.016);
+assert.ok(render.look.strips.every(strip=>strip.fx===33),'Preset remix selects only permitted effects');
+assert.ok(render.configs.some(strip=>strip.sx!==128),'Slider remix changes effective tuning');
+assert.ok(render.look.strips.every((strip,id)=>strip.col===dj.currentLook.strips[id].col&&strip.palette===dj.currentLook.strips[id].palette),'Remix preserves authored colours');
+assert.equal(JSON.stringify(metrics),copy,'Physics leaves analyser metrics intact');
+const create=()=>Array.from({length:8},()=>new Uint8Array(128*4));
+const colours=create();colours.forEach(row=>{for(let p=0;p<128;p++)row[p*4]=128;});
+const before=colours.map(row=>row.slice());overlay.paint(colours,dj,metrics,1);assert.notDeepEqual(colours,before,'Wide dynamics changes rendered colours');
+for(const row of colours)for(let p=0;p<128;p++)assert.equal(Math.max(...row.slice(p*4,p*4+3)),128,'Dynamics preserves local peak intensity');
+dj.configure({...dj.settings,dynamicsMode:'off',burstsOn:false,remixBursts:true});overlay.prepare(dj,{...metrics,bassBeat:true,beat:true},2,.016);
+const noBurst=create();overlay.paint(noBurst,dj,metrics,2);assert.ok(noBurst.every(row=>row.every(value=>value===0)),'Remix Bursts never enables bursts');
+dj.configure({...dj.settings,burstsOn:true});overlay.prepare(dj,{...metrics,bassBeat:true},3,.016);overlay.prepare(dj,{...metrics,bassBeat:true},3.5,.016);
+const bursts=create();overlay.paint(bursts,dj,metrics,3.5);assert.ok(bursts.some(row=>row.some(value=>value>0)),'Enabled bursts render local colour');
+assert.ok(bursts.every(row=>Array.from({length:128},(_,p)=>Math.max(...row.slice(p*4,p*4+3))).filter(v=>v>0).length<64),'Bursts stay localized');
+for(const comfort of ['reduced','minimal']){dj.configure({...dj.settings,comfort});overlay.prepare(dj,{...metrics,bassBeat:true},5,.016);const frame=create();overlay.paint(frame,dj,metrics,5);assert.ok(frame.every(row=>row.every(v=>v===0)),'Comfort suppresses bursts');}
+const reduced=create();overlay.paint(reduced,dj,metrics,6,true);assert.ok(reduced.every(row=>row.every(v=>v===0)));
+dj.stop();assert.deepEqual(overlay.prepare(dj,metrics,7,.016),{metrics,look:null,configs:null});assert.equal(overlay.effects,null);
+assert.equal(JSON.stringify(SAVED_LED_LOOKS),baseline);assert.equal(JSON.stringify(SAVED_LED_PALETTES),palettes);
+console.log('DJ overlays: permitted remix, slider tuning, immutable saved colours/metrics, dynamics, localized opt-in bursts, comfort and stop restoration pass.');
