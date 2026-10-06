@@ -92,7 +92,32 @@ function calmMs(s){return 2000+s*160;}
 // Auto DJ burst recipes.
 assert.equal(normalizeDJSettings({}).bursts,false);assert.equal(normalizeDJSettings({bursts:true}).bursts,true);
 for(const program of Object.keys(DJ_BURST_POOLS))for(const name of DJ_BURST_POOLS[program])assert.ok(BURST_RECIPES[name],name);
-{const dj=new AutoDJ({program:'party',bursts:true},()=>.3);dj.start(0);assert.equal(dj.burstRecipe,'burst_base');
- const seen=new Set([dj.burstRecipe]);for(let t=.25;t<200;t+=.25){dj.tick(t,{volume:.3,energy:.3});seen.add(dj.burstRecipe);}
- assert.ok(['burst_base','burst_sparse','burst_dense','burst_focused'].every(n=>seen.has(n)),'party rotates all four');}
+// The desk API: only custom + Remix Bursts rotates recipes; every other program runs the user's own tunables.
+for(const program of ['chill','party','rave']){assert.deepEqual(DJ_BURST_POOLS[program],[],program);
+ const dj=new AutoDJ({program,bursts:true,remixBursts:true},()=>.3);dj.start(0);assert.equal(dj.burstRecipe,null,program+' has no recipe');}
+{const off=new AutoDJ({program:'custom',bursts:true,remixBursts:false},()=>.3);off.start(0);assert.equal(off.burstRecipe,null,'remix off -> no recipe');
+ const offBursts=new AutoDJ({program:'custom',bursts:false,remixBursts:true},()=>.3);offBursts.start(0);assert.equal(offBursts.burstRecipe,null,'bursts off -> remix never switches them on');
+ const dj=new AutoDJ({program:'custom',bursts:true,remixBursts:true},()=>.3);dj.start(0);assert.equal(dj.burstRecipe,'burst_base');
+ const seen=[dj.burstRecipe];for(let t=.25;t<400;t+=.25){dj.tick(t,{volume:.3,energy:.3});if(seen[seen.length-1]!==dj.burstRecipe)seen.push(dj.burstRecipe);}
+ assert.deepEqual(seen.slice(0,5),['burst_base','burst_sparse','burst_dense','burst_focused','burst_base'],'custom cycles the four in order');}
+// Drift guard: the numbers above are a hand-port of the desk. When the desk source is on this
+// machine, compare the recipes (API) and the firmware constants; skip loudly when it is not.
+import { existsSync, readFileSync } from 'node:fs';
+const stack=process.env.DESK_STACK||'/home/ergo/ErgoFlex_Desk_Stack/Polish-Features';
+const apiFile=stack+'/ergoflex_api/services/music_auto_dj_variation.go',fwFile=stack+'/Firmware/ergoled_firmware/src/EffectEngine.h';
+if(existsSync(apiFile)&&existsSync(fwFile)){
+ const go=readFileSync(apiFile,'utf8'),fw=readFileSync(fwFile,'utf8');
+ const keyMap={burstRate:'rate',burstSpectrum:'spectrum',burstZone:'zone',burstDepth:'depth',burstTail:'tail',burstSection:'section',burstDropAware:'dropAware'};
+ for(const [id,recipe] of Object.entries(BURST_RECIPES)){
+  const m=go.match(new RegExp('id: "'+id+'", values: map\\[string\\]djOverlayValue\\{([^}]*)\\}'));assert.ok(m,'API recipe '+id+' not found');
+  const got={};for(const [,k,v] of m[1].matchAll(/"(\w+)": djU8\((\d+)\)/g))got[keyMap[k]]=Number(v);
+  for(const [k,v] of Object.entries(got))assert.equal(recipe[k],k==='dropAware'?v===1:v,id+'.'+k+' differs from the API');
+  assert.equal(Object.keys(got).length,7,id+' API recipe key count');}
+ const num=(re,label)=>{const m=fw.match(re);assert.ok(m,label+' not found in firmware');return Number(m[1]);};
+ assert.equal(num(/kHypeMs = (\d+)UL/,'hype ms'),30000);assert.equal(num(/calmMs = (\d+)UL/,'calm base'),2000);
+ assert.equal(num(/burstSection \* (\d+)UL/,'calm per step'),160);assert.equal(num(/kBurstSilenceFloor = (\d+)/,'silence floor'),6);
+ assert.equal(num(/minWeight = (\d+)/,'zone floor'),48);assert.equal(num(/int16_t df = (\d+) \+/,'tail base'),245);
+ assert.equal(num(/minP = comfort \? (\d+) :/,'comfort floor'),350);assert.equal(num(/dropHit\) \{ _burstHype = true; _burstSectMs = now - \(kHypeMs - (\d+)UL\)/,'drop hold'),12000);
+ console.log('drift guard: recipes and firmware constants match the desk source');
+}else console.log('drift guard SKIPPED: desk source not found at '+stack+' (set DESK_STACK)');
 console.log('Color Bursts: defaults, rate, depth, tail, zone, hue continuity, sections, drop-aware and DJ recipes pass.');

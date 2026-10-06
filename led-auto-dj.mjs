@@ -6,19 +6,16 @@ export const DJ_PROGRAMS = Object.freeze({
     rave: {pool:[37,38,28,31,32,29,37],bars:4,seconds:20,drop:40,hold:8,quiet:39},
     custom: {bars:8,seconds:30,drop:40,hold:6,quiet:33}
 });
-// Burst recipes the desk's DJ rotates per phrase (values live in led-music-bursts.mjs BURST_RECIPES).
-// Which recipes each program rotates is a browser choice: the desk API owns the real schedule.
-export const DJ_BURST_POOLS = Object.freeze({
-    chill:['burst_base','burst_sparse'],
-    party:['burst_base','burst_sparse','burst_dense','burst_focused'],
-    rave:['burst_dense','burst_dense','burst_focused','burst_base'],
-    custom:['burst_base','burst_sparse','burst_dense','burst_focused']
-});
+// Mirrors the desk API: ONLY the custom program with Remix Bursts rotates burst recipes (all four,
+// in order, one per phrase). Chill/Party/Rave turn bursts on but shape nothing, so they run the
+// user's own burst tunables (music-mode panel) - there is no recipe for them.
+export const DJ_BURST_POOLS = Object.freeze({chill:[],party:[],rave:[],custom:['burst_base','burst_sparse','burst_dense','burst_focused']});
+
 export const DJ_EFFECT_IDS = [28,29,30,31,32,33,37,38,39,40];
 export const DJ_SETTINGS_KEY = 'ergoflex.browserAutoDJ.v1';
 const flashy = fx => fx === 31 || fx === 40;
 export function normalizeDJSettings(input = {}) {
-    return {version:1,bursts:input.bursts===true,program:Object.hasOwn(DJ_PROGRAMS,input.program)?input.program:'party',
+    return {version:1,bursts:input.bursts===true,remixBursts:input.remixBursts===true,program:Object.hasOwn(DJ_PROGRAMS,input.program)?input.program:'party',
         comfort:['standard','reduced','minimal'].includes(input.comfort)?input.comfort:'standard',
         bars:[4,8,16].includes(Number(input.bars))?Number(input.bars):8,
         weights:Object.fromEntries(DJ_EFFECT_IDS.map(fx=>[fx,Number.isInteger(input.weights?.[fx])?Math.max(0,Math.min(4,input.weights[fx])):2]))};
@@ -43,7 +40,7 @@ export class AutoDJ {
         return this.pool.length>0;
     }
     reset(time=0){this.time=time;this.switchedAt=time;this.beats=0;this.energyAverage=.1;this.quietAt=null;this.dropUntil=0;this.dropAt=time;this.drops=0;this.reason='phrase';this.deck=[];this.burstRecipe='burst_base';this.burstIndex=0;}
-    nextBurst(){const pool=DJ_BURST_POOLS[this.settings.program];this.burstRecipe=pool[this.burstIndex++%pool.length];return this.burstRecipe;}
+    nextBurst(){const pool=this.settings.bursts&&this.settings.remixBursts?DJ_BURST_POOLS[this.settings.program]:[];this.burstRecipe=pool.length?pool[this.burstIndex++%pool.length]:null;return this.burstRecipe;}
     draw(){
         if(!this.pool.length)return null;
         if(!this.deck.length){this.deck=[...this.pool];for(let i=this.deck.length-1;i>0;i--){const j=Math.floor(this.random()*(i+1));[this.deck[i],this.deck[j]]=[this.deck[j],this.deck[i]];}}
