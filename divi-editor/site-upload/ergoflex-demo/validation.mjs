@@ -9,7 +9,7 @@
 // Pure: it takes a description of the scene, not the scene itself, so it is
 // tested directly in Node.
 
-import { ACCESSORIES, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=desktop-tilt-reach-20261006';
+import { ACCESSORIES, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=remote-header-wrap-20261006';
 
 // Limits that would gate an order. NONE of these are confirmed product
 // specifications, so every rule that uses them ships advisory. Fill them in

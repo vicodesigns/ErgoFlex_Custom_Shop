@@ -5,7 +5,7 @@
 import { Matrix4 } from 'three';
 import { USDZExporter } from 'three/addons/exporters/USDZExporter.js';
 import { unzipSync, zipSync, strToU8, strFromU8 } from 'three/addons/libs/fflate.module.js';
-import { minimumHeightForTilt } from './motion-limits.mjs?v=desktop-tilt-reach-20261006';
+import { minimumHeightForTilt } from './motion-limits.mjs?v=remote-header-wrap-20261006';
 
 const SCENE = '/Root/Scenes/Scene';
 const IDENTITY = new Matrix4();

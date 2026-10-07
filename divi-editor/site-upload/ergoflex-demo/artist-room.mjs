@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { HOME_LAYOUTS } from './home-office.mjs?v=desktop-tilt-reach-20261006';
+import { HOME_LAYOUTS } from './home-office.mjs?v=remote-header-wrap-20261006';
 
 // Interior dimensions in millimetres. Room choice and desk size are independent.
 const names = ['Apartment art nook', 'Home artist studio', 'Drawing & painting studio', 'Artist atelier & lounge', 'Fine art & making suite'];

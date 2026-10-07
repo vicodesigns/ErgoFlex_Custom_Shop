@@ -1,26 +1,26 @@
-import { refineRoomSurfaces } from './room-refinement.mjs?v=desktop-tilt-reach-20261006';
-import { RoomLife } from './room-life.mjs?v=desktop-tilt-reach-20261006';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=desktop-tilt-reach-20261006';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=remote-header-wrap-20261006';
+import { RoomLife } from './room-life.mjs?v=remote-header-wrap-20261006';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=remote-header-wrap-20261006';
+import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=remote-header-wrap-20261006';
+import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=remote-header-wrap-20261006';
+import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=remote-header-wrap-20261006';
+import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=remote-header-wrap-20261006';
+import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=remote-header-wrap-20261006';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES } from './catalog.mjs?v=desktop-tilt-reach-20261006';
-import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=desktop-tilt-reach-20261006';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=desktop-tilt-reach-20261006';
+import { ACCESSORIES } from './catalog.mjs?v=remote-header-wrap-20261006';
+import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=remote-header-wrap-20261006';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=remote-header-wrap-20261006';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=remote-header-wrap-20261006';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=remote-header-wrap-20261006';
+import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=remote-header-wrap-20261006';
 
-import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=desktop-tilt-reach-20261006';
-import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=desktop-tilt-reach-20261006';
+import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=remote-header-wrap-20261006';
+import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=remote-header-wrap-20261006';
+import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=remote-header-wrap-20261006';
+import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=remote-header-wrap-20261006';
 
 // Original geometry in millimetres: X is user-right, Z is toward the user.
 // The CAD desk uses X for depth and Z for width. Only the mounting layer maps
@@ -74,7 +74,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=desktop-tilt-reach-20261006').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=remote-header-wrap-20261006').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -604,15 +604,18 @@ export class WorkspaceRoom {
         this.scene = scene; this.scale = millimetreScale; this.id = 'product';
         this.root = null; this.walls = []; this.token = 0; this.ready = Promise.resolve();
         this.missingProps = [];
+        this.ownedMaterials = new Set();
     }
     set(id, options = {}) {
         if (!ROOM_SCENES.some(s => s.id === id)) id = 'product';
         // Any prop load still in flight belongs to the room being replaced.
         this.token++;
+        this.ownedMaterials.forEach(mat => mat.dispose()); this.ownedMaterials.clear();
         if (this.root) disposeTree(this.root);
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
         this.decorateStation = null;
         this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null;
+        this.propSupports = [];
         this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.life = null;
         if (id === 'product') { this.ready = Promise.resolve(); return; }
         let scene = ROOM_SCENES.find(s => s.id === id);
@@ -868,10 +871,13 @@ export class WorkspaceRoom {
             // Countertop objects travel with the complete counter, not the lounge zone.
             if (scene.counter && placement.at[1] >= 900 && placement.on !== 'ceiling') position[2] = placement.at[2];
             object.position.set(...position);
+            object.userData.propAnchor = placement.on || PROP_LIBRARY.entry(placement.id)?.anchor;
             object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
             if (placement.scale) object.scale.multiplyScalar(placement.scale);
             markSceneAsset(object, { key: `${scene.id}:${scene.physical ? this.roomLayout.id + ':' : ''}room:${index}:${placement.id}` });
             root.add(object);
+            const support=this.propSupports.find(s=>s.id===placement.id&&s.at.every((v,i)=>Math.abs(v-position[i])<1));
+            if(support){root.updateMatrixWorld(true);support.obj.attach(object);}
         }
         if (this.missingProps.length) console.warn(`Room ${scene.id}: props unavailable: ${this.missingProps.join(', ')}`);
     }
@@ -882,12 +888,16 @@ export class WorkspaceRoom {
         this.root?.traverse(child => { if (child.userData.sceneAsset) assets.push(child); });
         return assets;
     }
+    registerInteractionAsset(object, key) {
+        if(!object.userData.sceneAsset)markSceneAsset(object,{key});
+    }
     async addAsset(propId, key, position = [0, 0, 800]) {
         const token = this.token;
         await PROP_LIBRARY.loadIndex();
         const object = await PROP_LIBRARY.instance(propId);
         if (token !== this.token) return null;
         object.position.set(...position);
+        object.userData.propAnchor = PROP_LIBRARY.entry(propId)?.anchor;
         markSceneAsset(object, { key, custom: true });
         this.ensureAssetRoot().add(object);
         return object;

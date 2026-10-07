@@ -1,14 +1,14 @@
-Explore ErgoFlex in 3D — release desktop-tilt-reach-20261006
+Explore ErgoFlex in 3D — release remote-header-wrap-20261006
 
-UPLOAD THIS WEBSITE PACKAGE: ergoflex-explore-3d-tilt-lighting-20261006.zip
+UPLOAD THIS WEBSITE PACKAGE: ergoflex-explore-3d-remote-header-20261006.zip
 Upload and extract directly inside the existing
 wp-content/uploads/2026/promo/ergoflex-demo folder. Allow overwriting files
 when uploading/extracting. Uploading the ZIP without extracting does not update the website.
 product-demo.html must be directly in that folder, not in another nested ergoflex-demo.
 Set the Divi Hosted 3D viewer URL (Explore ErgoFlex in 3D button) to:
-/wp-content/uploads/2026/promo/ergoflex-demo/product-demo.html?v=desktop-tilt-reach-20261006
+/wp-content/uploads/2026/promo/ergoflex-demo/product-demo.html?v=remote-header-wrap-20261006
 Test the direct URL with the new version query, then test the Divi button.
-BUILD.json should show release desktop-tilt-reach-20261006. It also contains file hashes.
+BUILD.json should show release remote-header-wrap-20261006. It also contains file hashes.
 physical-auto-dj-engineer-handoff.zip is documentation/reference material, not this website.
 
 The base model is assets/model/desk-public.glb, with edited shelf plates replacing the original geometry.
@@ -35,7 +35,7 @@ LEDs load off. Switching them on starts at 75% of the new maximum.
 The displayed 100% brightness is 85% of the former maximum light output.
 Runtime scripts, module imports, styles and previously versioned assets use the new release cache key.
 Full screen shows only the live desk and app controls, preserving music capture and the LED Command Center.
-Auto DJ: Mix Across Shelves toggles strip mixing; opt-in remix extras leave saved looks intact.
+Auto DJ: Mix Across Shelves toggles strip mixing; DJ extras default enabled with Wide Color Dynamics and 100% sensitivity.
 Light / Moods / My looks imports supported saved LED JSON presets on the visitor device.
 Auto DJ has separate look and palette frequency ratings; palette colours preserve hard edges.
 DJ uses only 24 music-capable looks; Daytime and other static looks stay in Light / Moods.
@@ -77,6 +77,9 @@ The extended touchscreen follows the 60-inch desktop front and side edges.
 Its open angle matches the Standard touchscreen.
 The app controls meet the viewer directly, without the former wide-layout toolbar.
 The app now uses Height / Glide / Tilt cards and ivory controls.
+The app header wraps instead of clipping; STOP and the collapse toggle stay visible at every size.
+Reaching an Ergo Form or saved lift/tilt preset no longer turns every LED green for 5 seconds; the chosen look stays.
+Loading a saved project keeps the shelf LEDs moving with the lift.
 Tap the bulb to switch LED power; hold to open the LED Command Center: Light, Music, Auto DJ, Game Mode and movement cues.
 The wide Command Center covers the app controller without dimming or blocking the desk viewer.
 Auto DJ offers Chill, Party, Rave and a weighted custom rotation with Standard / Reduced / Minimal flash comfort.

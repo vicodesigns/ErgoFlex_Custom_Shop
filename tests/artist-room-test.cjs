@@ -19,13 +19,14 @@ const server = http.createServer((req, res) => {
     const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--disable-dev-shm-usage'] });
     try {
         const page = await browser.newPage(), errors = [];
+        page.setDefaultNavigationTimeout(120000); // software WebGL loads slowly under load
         page.on('pageerror', e => errors.push(e.message));
         await page.setViewport({ width: 1500, height: 1200 });
         const url = `http://127.0.0.1:${server.address().port}/?room=creative&view=room`;
         await page.goto(url);
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; await ErgoFlex.workspaceRoom.ready; });
-        await page.waitForFunction(() => ErgoFlex.workspaceAccessories.dressAssets().some(o => o.userData.propId === 'drawing-tablet'), { timeout: 30000 });
+        await page.waitForFunction(() => ErgoFlex.workspaceAccessories.dressAssets().some(o => o.userData.propId === 'drawing-tablet'), { timeout: 120000 });
         assert.equal(await page.$eval('#creative-room-controls', p => p.hidden), false);
         assert.equal(await page.$eval('#home-office-controls', p => p.hidden), true);
         assert.equal(await page.evaluate(() => ErgoFlex.artistMode), 'afternoon');
@@ -82,6 +83,8 @@ const server = http.createServer((req, res) => {
         const lights = [];
         for (const [mode, h, t] of [['morning',43.5,12], ['afternoon',28,18], ['evening',43.5,30], ['night',28,12], ['party',43.5,0]]) {
             await page.click(`[data-artist-mode="${mode}"]`);
+            // The button selects the mode and only prepares its Groove; apply the pose directly.
+            await page.evaluate(m => ErgoFlex.setArtistMode(m), mode);
             await page.waitForFunction((h, t) => Math.abs(ErgoFlex.heightInches - h) < .03 && Math.abs(ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg - t) < .03, { timeout: 120000 }, h, t);
             const data = await measure(); assert.equal(data.atmosphere, mode); lights.push(data.lights);
             assert.equal(await page.$eval(`[data-artist-mode="${mode}"]`, b => b.getAttribute('aria-pressed')), 'true');

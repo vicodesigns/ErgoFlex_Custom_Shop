@@ -87,6 +87,7 @@ let screenProgress = 0;
 let screenTarget = 0;
 let ledParts = [];
 let ledDesktopFit = null;
+let ledShelfRoot = null; // the shelf LED group rides the lift without an editorId
 let ledStandardStrips = null;
 let ledExtendedStrips = null;
 let ledSpillMaterials = [];
@@ -2342,7 +2343,7 @@ function updateLedEffectFrame(seconds = performance.now() / 1000) {
         pixels=true;ledPixelSource=amber?'obstacle-ahead':'collision';
     }
     else if (diagnostic) {sampleLedDiagnostic(ledPixelFrame, LED_STRIPS, ledDiagnostic); pixels = true; ledPixelSource = 'diagnostic';}
-    else if (ledMotionEnabled && ledMotion.sample(ledPixelFrame, seconds * 1000, ledReducedMotion.matches)) {pixels = true;ledPixelSource = ledMotion.owner ? 'movement' : 'completion';}
+    else if (ledMotionEnabled && ledMotion.sample(ledPixelFrame, seconds * 1000, ledReducedMotion.matches)) {pixels = true;ledPixelSource = 'movement';}
     else if (ledGame.sample(ledPixelFrame)) {pixels = true;linear = true;ledPixelSource = 'game';}
     else if (ledMusic.sample(ledPixelFrame)) {
         if(customLedLook){
@@ -3484,6 +3485,7 @@ async function loadLedOverlay() {
         roots.lift.position.y = LIFT_MIN;
         roots.tilt.position.y = LIFT_MIN;
         for (const root of Object.values(roots)) loadedModel.add(root);
+        ledShelfRoot = roots.lift;
         liftObjects.set(roots.lift, { obj: roots.lift, baseY: roots.lift.position.y });
         syncLedSizeGeometry();
         [...partRegistry.values()].forEach(({ obj }) => {
@@ -3525,6 +3527,7 @@ function loadModel() {
         ledPixels?.dispose(); ledPixels = null;
         ledParts = [];
         ledDesktopFit = null;
+        ledShelfRoot = null;
         ledStandardStrips = null;
         ledExtendedStrips = null;
         boxHelpers.forEach(h => scene.remove(h));
@@ -4024,7 +4027,10 @@ function applyProject(project, { confirmSoft = null, isRollback = false } = {}) 
             savedGroups = Object.assign({}, parts.groups || {});
             for (const editorId of parts.locked || []) lockedParts.add(editorId);
 
-            // 5. lift membership, after edits so baseY derives from the edited pose
+            // 5. lift membership, after edits so baseY derives from the edited pose.
+            //    The shelf LED group has no editorId and is never serialized, so
+            //    it keeps its membership rather than being dropped from the lift.
+            const shelfLeds = ledShelfRoot && liftObjects.get(ledShelfRoot);
             liftObjects.clear();
             for (const editorId of parts.liftMembers || []) {
                 const entry = partRegistry.get(editorId);
@@ -4032,6 +4038,8 @@ function applyProject(project, { confirmSoft = null, isRollback = false } = {}) 
                 const canon = canonicalTransform(entry.obj);
                 liftObjects.set(entry.obj, { obj: entry.obj, baseY: canon ? canon.p.y : entry.obj.position.y });
             }
+            // After the parts, as on a fresh load, so liftObjects[0] stays a part.
+            if (shelfLeds) liftObjects.set(ledShelfRoot, shelfLeds);
 
             // 6. rigs. Wrappers use attach(), which preserves world transform, so
             //    they pick up the edited positions applied in step 3.

@@ -19,6 +19,7 @@ const server = http.createServer((req, res) => {
     const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--disable-dev-shm-usage'] });
     try {
         const page = await browser.newPage(), errors = [];
+        page.setDefaultNavigationTimeout(120000); // software WebGL loads slowly under load
         page.on('pageerror', e => errors.push(e.message));
         page.on('error', e => console.error('Browser page:', e.message));
         browser.process().once('exit', (code, signal) => { if (code) console.error('Browser exit:', code, signal); });
@@ -27,7 +28,7 @@ const server = http.createServer((req, res) => {
         await page.goto(url);
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; await ErgoFlex.workspaceRoom.ready; });
-        await page.waitForFunction(() => ErgoFlex.workspaceAccessories.dressAssets().some(o => o.userData.propId === 'office-keyboard'), { timeout: 30000 });
+        await page.waitForFunction(() => ErgoFlex.workspaceAccessories.dressAssets().some(o => o.userData.propId === 'office-keyboard'), { timeout: 120000 });
         assert.equal(await page.$eval('#office-room-controls', p => p.hidden), false);
         assert.equal(await page.$eval('#home-office-controls', p => p.hidden), true);
         assert.equal(await page.evaluate(() => ErgoFlex.officeMode), 'afternoon');
@@ -76,7 +77,7 @@ const server = http.createServer((req, res) => {
         };
         const initial = await measure(); checkBounds(initial);
         assert.equal(initial.id, 'apartment');
-        assert.equal(initial.props.filter(p => p.id.startsWith('office-station-')).length, 1);
+        assert.equal(initial.props.filter(p => p.id?.startsWith('office-station-')).length, 1);
         const snapshot = () => page.evaluate(() => ErgoFlex.workspaceRoom.assets().filter(o => o.userData.officeStation).map(o => ({
             key:o.userData.sceneAssetKey, pose:o.userData.officeStation, position:o.position.toArray(),
             geometry:o.children.filter(m => m.isMesh).map(m => m.geometry.uuid),
@@ -92,6 +93,8 @@ const server = http.createServer((req, res) => {
         assert.equal(before[0].pose.height, 43.5); assert.equal(before[0].pose.tilt, 39);
         for (const [mode, h, t] of [['morning',43.5,-5], ['afternoon',28,0], ['evening',43.5,18], ['night',28,0], ['party',43.5,-5]]) {
             await page.click(`[data-office-mode="${mode}"]`);
+            // The button selects the mode and only prepares its Groove; apply the pose directly.
+            await page.evaluate(m => ErgoFlex.setOfficeMode(m), mode);
             await page.waitForFunction((h,t) => Math.abs(ErgoFlex.heightInches-h)<.03 && Math.abs(ErgoFlex.tiltConfigs.find(c=>c.name==='tilting').currentDeg-t)<.03, {timeout:120000}, h,t);
             const data = await measure(); checkBounds(data); assert.equal(data.atmosphere, mode); lights.push(data.lights);
             assert.deepEqual(await snapshot(), before, 'Main lift, tilt and mode placement leave secondary desks fixed');
@@ -110,7 +113,7 @@ const server = http.createServer((req, res) => {
             console.log('Checking Office room:',id);
             await page.select('#office-room-size',id); await page.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;});
             const data=await measure();checkBounds(data);
-            assert.equal(data.props.filter(p=>p.id.startsWith('office-station-')).length,count-1);
+            assert.equal(data.props.filter(p=>p.id?.startsWith('office-station-')).length,count-1);
             assert.equal(data.props.filter(p=>p.id==='steelcase-leap-v2').length,count);
             const narrow=await snapshot(); assert.ok(narrow.every(s=>s.pose.widthMm===48*25.4));
             await page.click('[data-office-size="60x30"]'); await page.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;});

@@ -10,8 +10,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'divi-editor' / 'site-upload' / 'ergoflex-demo'
-RELEASE = 'desktop-tilt-reach-20261006'
-WEBSITE_ZIP = 'ergoflex-explore-3d-tilt-lighting-20261006.zip'
+RELEASE = 'remote-header-wrap-20261006'
+WEBSITE_ZIP = 'ergoflex-explore-3d-remote-header-20261006.zip'
 FILES = (
     'product-demo.html', 'product-demo.css', 'product-demo.js',
     'studio.js', 'studio.css', 'app-remote.css', 'ar-workspace.mjs', 'apple-ar-interactions.mjs', 'led-effects.mjs', 'led-strip-map.mjs', 'led-pixel-renderer.mjs',
@@ -128,6 +128,9 @@ for folder in ('assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion'
     'Its open angle matches the Standard touchscreen.\n'
     'The app controls meet the viewer directly, without the former wide-layout toolbar.\n'
     'The app now uses Height / Glide / Tilt cards and ivory controls.\n'
+    'The app header wraps instead of clipping; STOP and the collapse toggle stay visible at every size.\n'
+    'Reaching an Ergo Form or saved lift/tilt preset no longer turns every LED green for 5 seconds; the chosen look stays.\n'
+    'Loading a saved project keeps the shelf LEDs moving with the lift.\n'
     'Tap the bulb to switch LED power; hold to open the LED Command Center: Light, Music, Auto DJ, Game Mode and movement cues.\n'
     'The wide Command Center covers the app controller without dimming or blocking the desk viewer.\n'
     'Auto DJ offers Chill, Party, Rave and a weighted custom rotation with Standard / Reduced / Minimal flash comfort.\n'

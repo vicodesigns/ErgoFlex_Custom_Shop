@@ -24,7 +24,7 @@ const fs=require('node:fs');
     motion.observe({...start,lift:44.3,tilt:-3,x:.02},80);assert.equal(motion.owner.fx,36);assert.equal(motion.owner.ix,3);
     motion.observe({...start,lift:44.3,tilt:-3,x:.02},100);assert.equal(motion.owner,null,'Release restores ambient/base immediately');
     motion.reset(start);motion.observe({...start,lift:44},100);motion.observe({...start,lift:44},120,{liftReached:true});
-    assert.equal(motion.completionUntil,5120);assert.equal(motion.sample(frame,200),true);assert.equal(frame[0][1],254);
+    assert.equal(motion.completionUntil,5120);assert.equal(motion.status,'Target reached');assert.equal(motion.sample(frame,200),false,'Arrival does not override the chosen look');
     motion.observe({...start,lift:44,x:.01},300);assert.equal(motion.completionUntil,0,'New owner cancels completion without stale timers');
     motion.observe({...start,lift:44,x:.02},5200);assert.equal(motion.owner.fx,36,'Old completion expiry cannot clear wheels');
     motion.cancel(start);motion.observe(start,6000);assert.equal(motion.owner,null,'Held limit/stationary desk has no cue');

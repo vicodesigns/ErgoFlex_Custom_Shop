@@ -103,7 +103,8 @@ export class LedMotion {
             sampleMovementInto(frame,{...this.owner,elapsedMs:reduced ? 1000 : Math.max(0,now-this.owner.started)});
             return true;
         }
-        if (now < this.completionUntil) {for (const row of frame) for (let p=0;p<row.length;p+=4) row.set([0,254,0,0],p); return true;}
+        // Arrival keeps its chime and status, but the strips return to the
+        // chosen look at once: a 5 s solid green override read as a fault.
         return false;
     }
     get status() {return this.owner?.name || (this.completionUntil ? 'Target reached' : 'Base effect');}

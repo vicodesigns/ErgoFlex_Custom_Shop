@@ -1271,7 +1271,14 @@
 }
 #motion-dock.app-remote.remote-v2 {--compass:clamp(90px,calc(var(--remote-unit,1.6px) * 48),255px);--track-h:clamp(76px,calc(var(--remote-unit,1.6px) * 40),190px)}
 #motion-dock.app-remote.remote-v2 {background:var(--ground)}
-#motion-dock.remote-v2 .remote-header {padding:12px 16px;gap:12px;background:var(--hub);min-height:46px}
+#motion-dock.remote-v2 .remote-header {padding:12px 16px;gap:8px 10px;background:var(--hub);min-height:46px;flex-wrap:wrap;container-type:inline-size}
+/* The full bar needs ~820-940px (the logo grows with the remote); the default
+   remote is 600. The shell clips, so a bar that cannot wrap loses its trailing
+   controls - STOP and the collapse toggle among them. Narrower remotes move the glide actions to a row of their
+   own and keep the icons, STOP and toggle together on the first. */
+@container (max-width: 940px) {
+    #motion-dock.remote-v2 .remote-header .glide-actions {order:1;flex:1 0 100%}
+}
 #motion-dock.remote-v2 .remote-logo {width:clamp(105px,calc(var(--remote-unit,1.6px) * 56),230px);height:auto}
 #motion-dock.remote-v2 .remote-status {width:12px;height:12px;margin-left:auto;box-shadow:0 0 8px #4cbf69}
 #motion-dock.remote-v2 .remote-menu {border-radius:50%;width:36px;height:36px;box-shadow:var(--lift1);border-color:var(--rim);color:#5096dd}

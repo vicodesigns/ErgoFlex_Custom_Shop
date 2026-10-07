@@ -1,5 +1,5 @@
 // Saved desk recipes for the browser preview. No hardware commands or account data.
-import { DECORATIVE_EFFECTS, MUSIC_EFFECTS, MusicSampler, sampleDecorativeInto } from './led-showcase-effects.mjs?v=desktop-tilt-reach-20261006';
+import { DECORATIVE_EFFECTS, MUSIC_EFFECTS, MusicSampler, sampleDecorativeInto } from './led-showcase-effects.mjs?v=remote-header-wrap-20261006';
 export const CUSTOM_LOOKS_KEY='ergoflex.browserLedLooks.v1';
 export function customLookUsesMusic(look){return !!look?.music||look?.strips?.some(strip=>MUSIC_EFFECTS.some(effect=>effect.fx===strip.fx))===true;}
 const supported=new Set([0,2,...DECORATIVE_EFFECTS.map(e=>e.fx),...MUSIC_EFFECTS.map(e=>e.fx)]);

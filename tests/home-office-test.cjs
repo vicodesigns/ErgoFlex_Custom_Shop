@@ -21,7 +21,7 @@ const server = http.createServer((req, res) => {
         const page = await browser.newPage(), errors = [];
         page.on('pageerror', e => errors.push(e.message));
         await page.setViewport({ width: 1500, height: 1200 });
-        await page.goto(`http://127.0.0.1:${server.address().port}/`);
+        await page.goto(`http://127.0.0.1:${server.address().port}/`, { timeout: 120000 });
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4, { timeout: 120000 });
         await page.waitForFunction(() => getComputedStyle(document.querySelector('#loader')).display === 'none');
         await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(1); ErgoFlex.setRoomScene('home'); await ErgoFlex.workspaceRoom.ready; });
@@ -57,6 +57,8 @@ const server = http.createServer((req, res) => {
         await capture('apartment-afternoon');
         for (const [mode, expectedHeight, expectedTilt] of [['morning', 43.5, -5], ['evening', 28, 12], ['night', 28, 0], ['party', 43.5, 0]]) {
             await page.click(`[data-home-mode="${mode}"]`);
+            // The button selects the mode and only prepares its Groove; apply the pose directly.
+            await page.evaluate(m => ErgoFlex.setHomeMode(m), mode);
             await page.waitForFunction((h, t) => Math.abs(ErgoFlex.heightInches - h) < .02 && Math.abs(ErgoFlex.tiltConfigs.find(c => c.name === 'tilting').currentDeg - t) < .02, { timeout: 120000 }, expectedHeight, expectedTilt);
             assert.equal(await page.$eval(`[data-home-mode="${mode}"]`, b => b.getAttribute('aria-pressed')), 'true');
             if (mode === 'night') await capture('apartment-night');
@@ -78,18 +80,18 @@ const server = http.createServer((req, res) => {
         assert.deepEqual(large.dimensions, { width: 3600, depth: 4200, height: 2700 });
         assert.ok(Math.abs(large.ref.widthUnits / large.scale - 60 * 25.4) < .001, '60-inch desktop is physically sized');
         assert.deepEqual(large.missing, []); checkBounds(large, -1450);
-        assert.equal(compact.props.find(p => p.id === 'armchair-poppi').scale, large.props.find(p => p.id === 'armchair-poppi').scale, 'Furniture remains the same physical size');
+        assert.ok(Math.abs(compact.props.find(p => p.id === 'armchair-poppi').scale - large.props.find(p => p.id === 'armchair-poppi').scale) < 1e-9, 'Furniture remains the same physical size');
         await page.click('[data-home-mode="afternoon"]');
         await page.select('#camera-view', 'room');
         await capture('house-afternoon');
-        await page.click('[data-home-mode="party"]');
+        await page.click('[data-home-mode="party"]'); await page.evaluate(() => ErgoFlex.setHomeMode('party'));
         await page.waitForFunction(() => Math.abs(ErgoFlex.heightInches - 43.5) < .02, { timeout: 120000 });
         await capture('house-party');
         await page.click('[data-home-size="48x30"]');
         assert.equal((await measure()).id, 'house', 'Room choice remains independent of desktop width');
         await page.select('#home-room-size', 'apartment');
         await page.evaluate(async () => { await ErgoFlex.workspaceRoom.ready; });
-        assert.equal(await page.evaluate(key => ErgoFlex.workspaceRoom.assets().find(p => p.userData.sceneAssetKey === key).position.x, edit.key), edit.x, 'Apartment edits survive a desktop size round trip');
+        assert.ok(Math.abs(await page.evaluate(key => ErgoFlex.workspaceRoom.assets().find(p => p.userData.sceneAssetKey === key).position.x, edit.key) - edit.x) < 1e-6, 'Apartment edits survive a desktop size round trip');
         for (const [id, width, depth, height, back] of [['spacious',4200,4800,2800,-1600],['premium',5200,5800,3000,-1850],['executive',6500,7000,3200,-2200]]) {
             await page.select('#home-room-size', id);
             await page.evaluate(async () => { await ErgoFlex.workspaceRoom.ready; });

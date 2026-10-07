@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { HOME_LAYOUTS } from './home-office.mjs?v=desktop-tilt-reach-20261006';
+import { HOME_LAYOUTS } from './home-office.mjs?v=remote-header-wrap-20261006';
 
 const names = ['Apartment recording nook', 'Home production studio', 'Writing & recording room', 'Producer studio & lounge', 'Production & performance suite'];
 export const MUSIC_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map((home, index) => {
@@ -16,7 +16,7 @@ export const MUSIC_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map(
         { id: 'studio-recorder', at: [rack[0], 800, rack[1]], turn: 0 },
         { id: 'kenney-furniture-books', at: [width / 2 - 160, 1504, rack[1] - 120], turn: -90 },
         { id: 'kenney-furniture-plant-small2', at: [width / 2 - 165, 1874, rack[1] + 60] },
-        { id: 'quaternius-guitar', at: [width / 2 - 100, 1120, back + 500], turn: -90 },
+        { id: 'quaternius-guitar', at: [width / 2 - 100, 1120, back + 500], turn: -90, on: 'wall' },
         { id: 'kenney-furniture-potted-plant', at: [-width / 2 + 260, 0, back + 1500] },
         { id: 'kenney-furniture-lamp-round-floor', at: [-width / 2 + 175, 0, front - 270] }
     ];
@@ -86,7 +86,24 @@ export function createMusicKeyboard(wide = false) {
 export function buildMusicRoom(room, root, layout, helpers) {
     const { material, mesh, box, rod, sphere, markSceneAsset } = helpers;
     const { width: w, depth: d, height: h, back: bz, rack: [rx, rz] } = layout, front = bz + d;
-    const cream = material('#cbc8b9', { roughness: .96 }), wood = material('#80634e', { roughness: .75 });
+    const cream = material('#252b32', { roughness: .88 }), wood = material('#80634e', { roughness: .75 });
+    // Each speaker instance owns these copies; the prop library stays reusable.
+    room.decorateProp = (object, placement) => {
+        if (!/speaker/.test(placement.id)) return;
+        const copies = new Map();
+        object.traverse(mesh => {
+            if (!mesh.isMesh) return;
+            const darken = source => {
+                if (copies.has(source)) return copies.get(source);
+                const mat = source.clone(), silver = /metal/i.test(source.name);
+                mat.color.set(silver ? '#c4cbd2' : '#14191f');
+                mat.metalness = silver ? .8 : .12; mat.roughness = silver ? .27 : .62;
+                mat.userData.sharedTextures = true;
+                copies.set(source, mat); room.ownedMaterials.add(mat); return mat;
+            };
+            mesh.material = Array.isArray(mesh.material) ? mesh.material.map(darken) : darken(mesh.material);
+        });
+    };
     const instrument = (group, id, name) => {
         group.userData.propId = id; group.userData.sceneAssetName = name;
         markSceneAsset(group, { key: `music:${layout.id}:instrument:${id}` });
@@ -122,8 +139,9 @@ export function buildMusicRoom(room, root, layout, helpers) {
     const count = layout.compact ? 3 : 5, panelW = layout.compact ? 490 : 425;
     for (let i = 0; i < count; i++) {
         const x = layout.desk[0] + (i - (count - 1) / 2) * (panelW + 35);
-        box(back, [panelW, 1260, 65], [x, 1790, bz + 40], wood, 12);
-        box(back, [panelW - 25, 1235, 30], [x, 1790, bz + 87], i % 2 ? clay : moss, 12);
+        const panel=new THREE.Group();panel.name=`Acoustic wall panel ${i+1}`;back.add(panel);
+        box(panel, [panelW, 1260, 65], [x, 1790, bz + 40], wood, 12);
+        box(panel, [panelW - 25, 1235, 30], [x, 1790, bz + 87], i % 2 ? clay : moss, 12);
     }
     // Walnut diffuser blocks add depth above the control desk.
     for (let i = 0; i < (layout.compact ? 22 : 30); i++) {
@@ -135,9 +153,12 @@ export function buildMusicRoom(room, root, layout, helpers) {
     const side = new THREE.Group(); side.name = 'Music instrument and rack wall'; root.add(side);
     box(side, [80, h, d], [w / 2 + 40, h / 2, bz + d / 2], cream);
     box(side, [24, 85, d], [w / 2 - 12, 42.5, bz + d / 2], wood);
+    room.propSupports=[];
     for (const z of [bz + 500]) {
-        box(side, [55, 1280, 510], [w / 2 - 30, 1640, z], moss, 10);
-        rod(side, [w / 2 - 120, 2110, z - 45], [w / 2 - 120, 2110, z + 45], 9, metal);
+        const hanger=new THREE.Group();hanger.name='Guitar and wall hanger';side.add(hanger);
+        box(hanger, [55, 1280, 510], [w / 2 - 30, 1640, z], moss, 10);
+        rod(hanger, [w / 2 - 120, 2110, z - 45], [w / 2 - 120, 2110, z + 45], 9, metal);
+        room.propSupports.push({obj:hanger,id:'quaternius-guitar',at:[w/2-100,1120,z]});
     }
     room.walls.push({ obj: side, axis: 'z', limit: -w / 2 * root.scale.x });
 
@@ -169,6 +190,7 @@ export function buildMusicRoom(room, root, layout, helpers) {
 
     // Real support heights match the recorder, monitor speakers, and shelves.
     const rack = new THREE.Group(); rack.name = 'Recording equipment cabinet'; root.add(rack);
+    instrument(rack, 'music-equipment-cabinet', 'Recording equipment cabinet');
     box(rack, [690, 745, 680], [rx, 407.5, rz], trim, 8);
     box(rack, [710, 20, 700], [rx, 790, rz], wood, 4);
     for (const x of [rx - 260, rx + 260]) for (const z of [rz - 250, rz + 250]) rod(rack, [x, 0, z], [x, 35, z], 14, metal);
@@ -176,18 +198,25 @@ export function buildMusicRoom(room, root, layout, helpers) {
         box(rack, [644, 156, 12], [rx, y, rz + 346], metal, 4);
         for (let i = 0; i < 7; i++) rod(rack, [rx - 250 + i * 70, y - 18, rz + 353], [rx - 250 + i * 70, y + 18, rz + 353], 3, trim);
     }
-    for (const y of [1490, 1860]) box(side, [300, 28, 570], [w / 2 - 160, y, rz], wood, 3);
+    for (const y of [1490, 1860]) {
+        const shelf=new THREE.Group();shelf.name=y===1490?'Wall shelf and books':'Wall shelf and plant';side.add(shelf);
+        box(shelf, [300, 28, 570], [w / 2 - 160, y, rz], wood, 3);
+        room.propSupports.push(y===1490?{obj:shelf,id:'kenney-furniture-books',at:[w/2-160,1504,rz-120]}:{obj:shelf,id:'kenney-furniture-plant-small2',at:[w/2-165,1874,rz+60]});
+    }
     for (const sign of [-1, 1]) {
         const x = layout.desk[0] + sign * layout.speakers, z = layout.desk[1] - 260;
-        box(root, [360, 22, 330], [x, 11, z], metal, 8);
-        rod(root, [x, 22, z], [x, 734, z], 28, metal);
-        box(root, [326, 16, 295], [x, 742, z], wood, 4);
+        const stand = new THREE.Group(); stand.name = sign < 0 ? 'Left monitor speaker and stand' : 'Right monitor speaker and stand';stand.position.set(x,0,z);root.add(stand);
+        instrument(stand, `music-speaker-stand-${sign}`, stand.name);
+        box(stand, [360,22,330], [0,11,0], metal,8);
+        rod(stand, [0,22,0], [0,734,0],28,metal);
+        box(stand,[326,16,295],[0,742,0],wood,4);
+        room.propSupports.push({obj:stand,at:[x,750,z],id:'kenney-furniture-speaker-small'});
     }
 
     if (!layout.compact) {
         const [x, z] = layout.piano;
         const piano = new THREE.Group(); piano.name = 'Keyboard composing area'; piano.position.set(x, 0, z); piano.rotation.y = Math.PI / 2; root.add(piano);
-        instrument(piano, 'music-stage-piano', 'Stage piano and bench');
+        instrument(piano, 'music-stage-piano', 'Stage piano');
         const keys = createMusicKeyboard(true); keys.position.y = 740; piano.add(keys);
         box(piano, [420, 6, 200], [0, 840, -65], metal, 3);
         for (const sx of [-150, 150]) rod(piano, [sx, 800, -90], [sx, 837, -65], 5, metal);
@@ -196,6 +225,7 @@ export function buildMusicRoom(room, root, layout, helpers) {
         const bench = new THREE.Group(); bench.name = 'Piano bench'; bench.position.set(0, 0, 630); piano.add(bench);
         box(bench, [650, 90, 370], [0, 475, 0], moss, 12);
         for (const sx of [-240, 240]) for (const sz of [-120, 120]) rod(bench, [sx, 0, sz], [sx, 430, sz], 18, wood);
+        root.updateMatrixWorld(true);root.attach(bench);instrument(bench, 'music-piano-bench', 'Piano bench');
     }
     // Small spaces use one vocal stand; larger studios get a defined live area.
     const [mx, mz] = layout.performance;
@@ -215,8 +245,10 @@ export function buildMusicRoom(room, root, layout, helpers) {
 
     if (layout.large) {
         box(root, [2500, 5, 2200], [-400, 2.5, front - 1280], material('#cbc1ab', { map: rugMap, roughness: 1 }), 8);
-        box(root, [650, 735, 600], [-w / 2 + 370, 392.5, bz + 360], trim, 8);
-        box(root, [680, 30, 630], [-w / 2 + 370, 775, bz + 360], wood, 4);
+        const coffeeCabinet=new THREE.Group();coffeeCabinet.name='Studio coffee cabinet';root.add(coffeeCabinet);
+        box(coffeeCabinet,[560,25,510],[-w/2+370,12.5,bz+360],metal,3);
+        box(coffeeCabinet, [650, 735, 600], [-w / 2 + 370, 392.5, bz + 360], trim, 8);
+        box(coffeeCabinet, [680, 30, 630], [-w / 2 + 370, 775, bz + 360], wood, 4);
         box(back, [670, 28, 270], [-w / 2 + 370, 1540, bz + 150], wood, 3);
     }
     if (layout.drums) {
@@ -246,6 +278,7 @@ export function buildMusicRoom(room, root, layout, helpers) {
         c.fillStyle = '#344b43'; c.font = '22px sans-serif'; c.fillText('CREATE · LISTEN · REPEAT', 36, 455);
     });
     const art = new THREE.Group(); art.name = 'Original waveform artwork'; art.position.set(w / 2 - 25, 1760, layout.compact ? front - 440 : front - 1050); art.rotation.y = -Math.PI / 2; side.add(art);
+    instrument(art, 'music-waveform-art', 'Framed waveform artwork');
     box(art, [layout.compact ? 540 : 820, 640, 28], [0, 0, 0], wood, 3);
     box(art, [layout.compact ? 510 : 790, 610, 4], [0, 0, 17], material('#ffffff', { map: artwork, roughness: .9 }));
 

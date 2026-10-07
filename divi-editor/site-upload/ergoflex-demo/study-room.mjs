@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { HOME_LAYOUTS } from './home-office.mjs?v=desktop-tilt-reach-20261006';
+import { HOME_LAYOUTS } from './home-office.mjs?v=remote-header-wrap-20261006';
 
 const names = ['Apartment writing nook', 'Home study & reading room', 'Writer’s study & library', 'Private library & lounge', 'Library & conversation suite'];
 export const STUDY_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map((home, index) => {

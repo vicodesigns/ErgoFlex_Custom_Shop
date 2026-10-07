@@ -19,8 +19,12 @@ export function grooveObstacles(room) {
         const box = new THREE.Box3();
         obj.traverse(o => {
             if (!o.isMesh || !o.geometry) return;
-            if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-            box.union(o.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(o.matrixWorld)));
+            // An InstancedMesh's geometry box is one instance at its own origin;
+            // the instances' extent is the mesh's own boundingBox.
+            let local;
+            if (o.isInstancedMesh) { o.computeBoundingBox(); local = o.boundingBox; }
+            else { if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); local = o.geometry.boundingBox; }
+            box.union(local.clone().applyMatrix4(inverse.clone().multiply(o.matrixWorld)));
         });
         const size = box.getSize(new THREE.Vector3());
         if (box.isEmpty() || box.min.y > 240 || size.y < 80 || size.x < 100 || size.z < 100) continue;

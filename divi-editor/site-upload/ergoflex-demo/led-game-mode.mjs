@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { validateGameManifest, sampleGameBank } from './led-game-frames.mjs?v=desktop-tilt-reach-20261006';
+import { validateGameManifest, sampleGameBank } from './led-game-frames.mjs?v=remote-header-wrap-20261006';
 
 export class LedGameMode {
     constructor(counts) {

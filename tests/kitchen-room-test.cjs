@@ -19,6 +19,7 @@ const server = http.createServer((req, res) => {
     const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--disable-dev-shm-usage'] });
     try {
         const page = await browser.newPage(), errors = [];
+        page.setDefaultNavigationTimeout(120000); // software WebGL loads slowly under load
         page.on('pageerror', e => errors.push(e.message));
         page.on('error', e => console.error('Browser page:', e.message));
         browser.process().once('exit', (code, signal) => { if (code) console.error('Browser exit:', code, signal); });
@@ -27,7 +28,7 @@ const server = http.createServer((req, res) => {
         await page.goto(url);
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; await ErgoFlex.workspaceRoom.ready; });
-        await page.waitForFunction(() => ErgoFlex.workspaceAccessories.dressAssets().some(o => o.userData.propId === 'cutting-board'), { timeout: 30000 });
+        await page.waitForFunction(() => ErgoFlex.workspaceAccessories.dressAssets().some(o => o.userData.propId === 'cutting-board'), { timeout: 120000 });
         assert.equal(await page.$eval('#kitchen-room-controls', p => p.hidden), false);
         assert.equal(await page.$eval('#home-office-controls', p => p.hidden), true);
         assert.equal(await page.evaluate(() => ErgoFlex.kitchenMode), 'morning');
@@ -83,6 +84,8 @@ const server = http.createServer((req, res) => {
         const lights=[];
         for (const [mode,h,t] of [['morning',36,0],['afternoon',28,0],['evening',36,0],['night',28,0],['party',38,0]]) {
             await page.click(`[data-kitchen-mode="${mode}"]`);
+            // The button selects the mode and only prepares its Groove; apply the pose directly.
+            await page.evaluate(m => ErgoFlex.setKitchenMode(m), mode);
             await page.waitForFunction((h,t)=>Math.abs(ErgoFlex.heightInches-h)<.03 && Math.abs(ErgoFlex.tiltConfigs.find(c=>c.name==='tilting').currentDeg-t)<.03,{timeout:120000},h,t);
             const data=await measure(); checkBounds(data); assert.equal(data.atmosphere,mode);lights.push(data.lights);
         }

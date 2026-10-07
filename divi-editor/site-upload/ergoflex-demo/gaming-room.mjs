@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { HOME_LAYOUTS } from './home-office.mjs?v=desktop-tilt-reach-20261006';
+import { HOME_LAYOUTS } from './home-office.mjs?v=remote-header-wrap-20261006';
 
 // The same measured room tiers as Home Office, with independent furnishings
 // and saved edits. All dimensions are millimetres; props retain their size.

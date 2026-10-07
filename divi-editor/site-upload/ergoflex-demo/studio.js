@@ -1,58 +1,64 @@
-import { LedCommandCenter } from './led-command-center.mjs?v=desktop-tilt-reach-20261006';
-import { normalizeCustomLook, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-tilt-reach-20261006';
-import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=desktop-tilt-reach-20261006';
-import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=desktop-tilt-reach-20261006';
-import { RoomGroove } from './room-groove-runtime.mjs?v=desktop-tilt-reach-20261006';
-import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=desktop-tilt-reach-20261006';
-import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=desktop-tilt-reach-20261006';
-import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=desktop-tilt-reach-20261006';
-import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=desktop-tilt-reach-20261006';
-import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=desktop-tilt-reach-20261006';
-import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=desktop-tilt-reach-20261006';
+import { LedCommandCenter } from './led-command-center.mjs?v=remote-header-wrap-20261006';
+import { normalizeCustomLook, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=remote-header-wrap-20261006';
+import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=remote-header-wrap-20261006';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=remote-header-wrap-20261006';
+import { RoomGroove } from './room-groove-runtime.mjs?v=remote-header-wrap-20261006';
+import { RoomInteractions } from './room-interactions.mjs?v=remote-header-wrap-20261006';
+import { RoomSafety } from './room-safety.mjs?v=remote-header-wrap-20261006';
+import { TouchscreenDisplay } from './touchscreen-display.mjs?v=remote-header-wrap-20261006';
+import { RoomLedSpill } from './room-led-spill.mjs?v=remote-header-wrap-20261006';
+import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=remote-header-wrap-20261006';
+import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=remote-header-wrap-20261006';
+import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=remote-header-wrap-20261006';
+import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=remote-header-wrap-20261006';
+import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=remote-header-wrap-20261006';
+import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=remote-header-wrap-20261006';
 import * as THREE from 'three';
-import { LED_EFFECTS, normalizeLedEffect, sampleLedEffect } from './led-effects.mjs?v=desktop-tilt-reach-20261006';
-import { LED_STRIPS, LED_STRIP_MAP_VERSION, createLedFrame, sampleLedDiagnostic } from './led-strip-map.mjs?v=desktop-tilt-reach-20261006';
-import { LedPixelRenderer } from './led-pixel-renderer.mjs?v=desktop-tilt-reach-20261006';
-import { LedMotion } from './led-movement.mjs?v=desktop-tilt-reach-20261006';
-import { LedSounds } from './led-sounds.mjs?v=desktop-tilt-reach-20261006';
-import { LedGameMode } from './led-game-mode.mjs?v=desktop-tilt-reach-20261006';
-import { LedMusicMode } from './led-music-mode.mjs?v=desktop-tilt-reach-20261006';
-import { sampleDecorativeInto } from './led-showcase-effects.mjs?v=desktop-tilt-reach-20261006';
+import { LED_EFFECTS, normalizeLedEffect, sampleLedEffect } from './led-effects.mjs?v=remote-header-wrap-20261006';
+import { LED_STRIPS, LED_STRIP_MAP_VERSION, createLedFrame, sampleLedDiagnostic } from './led-strip-map.mjs?v=remote-header-wrap-20261006';
+import { LedPixelRenderer } from './led-pixel-renderer.mjs?v=remote-header-wrap-20261006';
+import { LedMotion } from './led-movement.mjs?v=remote-header-wrap-20261006';
+import { LedSounds } from './led-sounds.mjs?v=remote-header-wrap-20261006';
+import { LedGameMode } from './led-game-mode.mjs?v=remote-header-wrap-20261006';
+import { LedMusicMode } from './led-music-mode.mjs?v=remote-header-wrap-20261006';
+import { sampleDecorativeInto } from './led-showcase-effects.mjs?v=remote-header-wrap-20261006';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=desktop-tilt-reach-20261006';
-import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs?v=desktop-tilt-reach-20261006';
-import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-tilt-reach-20261006';
-import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs?v=desktop-tilt-reach-20261006';
-import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=desktop-tilt-reach-20261006';
-import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=desktop-tilt-reach-20261006';
-import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=desktop-tilt-reach-20261006';
-import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=desktop-tilt-reach-20261006';
-import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=desktop-tilt-reach-20261006';
-import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=desktop-tilt-reach-20261006';
-import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=desktop-tilt-reach-20261006';
-import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=desktop-tilt-reach-20261006';
-import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=desktop-tilt-reach-20261006';
-import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=desktop-tilt-reach-20261006';
-import { ARWorkspace } from './ar-workspace.mjs?v=desktop-tilt-reach-20261006';
-import { accessoryIllustration } from './workspace-icons.mjs?v=desktop-tilt-reach-20261006';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=remote-header-wrap-20261006';
+import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs?v=remote-header-wrap-20261006';
+import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=remote-header-wrap-20261006';
+import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs?v=remote-header-wrap-20261006';
+import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=remote-header-wrap-20261006';
+import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=remote-header-wrap-20261006';
+import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=remote-header-wrap-20261006';
+import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=remote-header-wrap-20261006';
+import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=remote-header-wrap-20261006';
+import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=remote-header-wrap-20261006';
+import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=remote-header-wrap-20261006';
+import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=remote-header-wrap-20261006';
+import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=remote-header-wrap-20261006';
+import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=remote-header-wrap-20261006';
+import { ARWorkspace } from './ar-workspace.mjs?v=remote-header-wrap-20261006';
+import { accessoryIllustration } from './workspace-icons.mjs?v=remote-header-wrap-20261006';
 
 // Configuration
 const EVENT_DEMO = location.pathname.endsWith('/product-demo.html');
-const TRIM_MODEL_URL = './assets/trim/fullTrim.glb?v=desktop-tilt-reach-20261006';
-const SMALL_TRIM_MODEL_URL = './assets/trim/shelveanddesktopTrim.glb?v=desktop-tilt-reach-20261006';
-const LARGE_DESKTOP_MODEL_URL = './assets/trim/desktopLwTrim.glb?v=desktop-tilt-reach-20261006';
-const LARGE_DESKTOP_TRIM_URL = './assets/trim/desktopLwTrimV2.glb?v=desktop-tilt-reach-20261006';
-const TOUCHSCREEN_PULLED_URL = './assets/motion/touchscreenPulledOut.glb?v=desktop-tilt-reach-20261006';
-const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb?v=desktop-tilt-reach-20261006';
-const TOUCHSCREEN_WIDE_URL = './assets/motion/touchscreenExtendedForWideDesktop.glb?v=desktop-tilt-reach-20261006';
-const TOUCHSCREEN_FACE_URL = './assets/motion/panel_mainscreen_20260929_104051.png?v=desktop-tilt-reach-20261006';
-const LED_MODEL_URL = './assets/motion/LEDS.glb?v=desktop-tilt-reach-20261006';
-const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb?v=desktop-tilt-reach-20261006';
+const TRIM_MODEL_URL = './assets/trim/fullTrim.glb?v=remote-header-wrap-20261006';
+const SMALL_TRIM_MODEL_URL = './assets/trim/shelveanddesktopTrim.glb?v=remote-header-wrap-20261006';
+const LARGE_DESKTOP_MODEL_URL = './assets/trim/desktopLwTrim.glb?v=remote-header-wrap-20261006';
+const LARGE_DESKTOP_TRIM_URL = './assets/trim/desktopLwTrimV2.glb?v=remote-header-wrap-20261006';
+const TOUCHSCREEN_PULLED_URL = './assets/motion/touchscreenPulledOut.glb?v=remote-header-wrap-20261006';
+const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb?v=remote-header-wrap-20261006';
+const TOUCHSCREEN_WIDE_URL = './assets/motion/touchscreenExtendedForWideDesktop.glb?v=remote-header-wrap-20261006';
+const touchscreenDisplay = new TouchscreenDisplay();
+let touchscreenTexture = null, touchscreenDrawAt = 0;
+const roomSafety = new RoomSafety();
+const LED_MODEL_URL = './assets/motion/LEDS.glb?v=remote-header-wrap-20261006';
+const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb?v=remote-header-wrap-20261006';
 const LED_COLOR_KEY = 'ergoflex.ledColorV1';
 const LED_GLOW_KEY = 'ergoflex.ledGlowV4';
 const LED_SURFACE_KEY = 'ergoflex.ledSurfacesV1';
@@ -81,6 +87,7 @@ let screenProgress = 0;
 let screenTarget = 0;
 let ledParts = [];
 let ledDesktopFit = null;
+let ledShelfRoot = null; // the shelf LED group rides the lift without an editorId
 let ledStandardStrips = null;
 let ledExtendedStrips = null;
 let ledSpillMaterials = [];
@@ -512,6 +519,9 @@ try {
     }
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
+let roomInteractions = null, roomFurnitureSaveTimer = null, roomCollisionBlocked = false;
+const roomLedSpill = new RoomLedSpill();
+let roomLedGain = 0;
 let roomGroove = null, grooveSettingPose = false;
 let homeMode = 'afternoon', homeDeskReturn = null;
 let homeLayoutId = 'apartment';
@@ -1077,6 +1087,20 @@ function initThreeJS() {
         if (marquee.active) cancelMarquee();
     });
 
+    roomInteractions = new RoomInteractions({canvas:renderer.domElement,camera,controls,scene,
+        room:()=>workspaceRoom,deskBox:deskCollisionBox,deskObject:()=>loadedModel,safety:roomSafety,
+        enabled:()=>!!workspaceRoom?.root&&!liveAR?.active&&!isSelectionMode&&!isDraggingTransform&&!roomGroove?.run,
+        onSelection:entry=>{
+            const toolbar=document.getElementById('room-object-controls');if(!toolbar)return;
+            toolbar.hidden=!entry;
+            toolbar.querySelector('[data-room-object-name]').textContent=entry?.name||'';
+            toolbar.querySelectorAll('[data-room-object-turn]').forEach(button=>button.hidden=entry?.surface!=='floor');
+        },
+        onStatus:notifyUser,onChange:()=>{
+            if(roomGroove?.prepared)roomGroove.reset();
+            clearTimeout(roomFurnitureSaveTimer);
+            roomFurnitureSaveTimer=setTimeout(persistSceneAssetStates,350);
+        }});
     loadModel();
 
     window.addEventListener('resize', syncViewerSize);
@@ -2313,8 +2337,13 @@ function setLedColor(value, persist = true) {
 function updateLedEffectFrame(seconds = performance.now() / 1000) {
     const diagnostic = ledDiagnostic.strip !== null;
     let pixels = false, linear = false;
-    if (diagnostic) {sampleLedDiagnostic(ledPixelFrame, LED_STRIPS, ledDiagnostic); pixels = true; ledPixelSource = 'diagnostic';}
-    else if (ledMotionEnabled && ledMotion.sample(ledPixelFrame, seconds * 1000, ledReducedMotion.matches)) {pixels = true;ledPixelSource = ledMotion.owner ? 'movement' : 'completion';}
+    if (roomSafety.alert) {
+        const amber=roomSafety.alert.kind==='ahead',gain=ledReducedMotion.matches?1:.72+.28*Math.sin(seconds*3)**2;
+        for(const row of ledPixelFrame)for(let p=0;p<row.length;p+=4)row.set([Math.round(255*gain),Math.round((amber?145:16)*gain),Math.round((amber?8:12)*gain),0],p);
+        pixels=true;ledPixelSource=amber?'obstacle-ahead':'collision';
+    }
+    else if (diagnostic) {sampleLedDiagnostic(ledPixelFrame, LED_STRIPS, ledDiagnostic); pixels = true; ledPixelSource = 'diagnostic';}
+    else if (ledMotionEnabled && ledMotion.sample(ledPixelFrame, seconds * 1000, ledReducedMotion.matches)) {pixels = true;ledPixelSource = 'movement';}
     else if (ledGame.sample(ledPixelFrame)) {pixels = true;linear = true;ledPixelSource = 'game';}
     else if (ledMusic.sample(ledPixelFrame)) {
         if(customLedLook){
@@ -2330,9 +2359,12 @@ function updateLedEffectFrame(seconds = performance.now() / 1000) {
     else ledPixelSource = 'base';
     const frame = sampleLedEffect(ledEffect, seconds - ledEffectStart, ledsEnabled,
         ledReducedMotion.matches || pixels);
+    if(roomSafety.alert)frame.gain=ledsEnabled?1:0;
+    roomLedGain = 1.8 * ledGlow / 100 * frame.gain;
     if (pixels && ledsEnabled) ledPixels?.upload(ledPixelFrame, linear);
     ledPixels?.setActive(pixels && ledsEnabled, 3.6 * ledGlow / 100);
-    if (frame.hue === null) ledFrameColor.set(ledColor);
+    if (roomSafety.alert) ledFrameColor.set(roomSafety.alert.kind==='ahead'?'#ff9108':'#ff100c');
+    else if (frame.hue === null) ledFrameColor.set(ledColor);
     else ledFrameColor.setHSL(frame.hue, 1, 0.5, THREE.SRGBColorSpace);
     ledParts.forEach(({ material }, index) => {
         // The fixed red IC details are not part of the decorative effect.
@@ -2686,6 +2718,47 @@ function makeOverlayNode(gltf, index, xShift, material, name) {
     return group;
 }
 
+function updateTouchscreenDisplay() {
+    const mode=measuredRoomProfile()?.mode;
+    const theme=document.getElementById('studio-environment')?.value==='led'||['evening','night','party'].includes(mode)?'dark':'light';
+    const changed=touchscreenDisplay.update({theme,height:Math.round(liftToHeight(currentLift)*10)/10,tilt:Math.round(primaryTiltConfig()?.currentDeg||0),
+        guard:roomSafety.guard,sound:ledSounds.enabled,leds:ledsEnabled,alert:roomSafety.alert,
+        heightSpeed:document.querySelector('#lift-speed option:checked')?.textContent?.trim()||'Medium',
+        glideSpeed:document.querySelector('#glide-speed option:checked')?.textContent?.trim()||'Medium',
+        tiltSpeed:document.querySelector('#tilt-speed option:checked')?.textContent?.trim()||'Fast',
+        heightJog:Math.round(liftJog*10)/10,phase:mode||'Workspace',moving:!!(glideInput.lengthSq()||yawCommand||liftJog||tiltJog||glideActive||Math.abs(targetLift-currentLift)>.001)});
+    if(changed&&touchscreenTexture)touchscreenTexture.needsUpdate=true;
+}
+
+function mountSafetyAlert() {
+    if(document.getElementById('room-safety-alert'))return;
+    const card=document.createElement('section');card.id='room-safety-alert';card.hidden=true;card.setAttribute('role','alert');
+    card.innerHTML='<header><strong data-safety-title></strong><span>Desk stopped · movement held</span></header><div class="safety-content"><p data-safety-message></p><p class="safety-source" data-safety-source></p><p>Check the area around the desk, then press CLEAR before resuming.</p><button type="button" data-safety-clear>✓ CLEAR</button><small>3D preview · room geometry</small></div>';
+    card.querySelector('[data-safety-clear]').onclick=clearCollisionAlert;document.body.append(card);
+}
+let safetyUIPrev='';
+function syncSafetyUI() {
+    const state=JSON.stringify([roomSafety.guard,roomSafety.alert,ledSounds.enabled,dockThemeName()]);if(state===safetyUIPrev)return;safetyUIPrev=state;
+    const shield=document.getElementById('remote-shield');if(shield){shield.setAttribute('aria-pressed',String(roomSafety.guard));shield.title=roomSafety.guard?'Shield ON · stop 15 cm before contact':'Shield OFF · contact alerts active';}
+    const sound=document.getElementById('remote-alert-sound');if(sound)sound.setAttribute('aria-pressed',String(ledSounds.enabled));
+    document.querySelectorAll('[data-led-sounds]').forEach(input=>input.checked=ledSounds.enabled);
+    const card=document.getElementById('room-safety-alert');if(!card)return;
+    const alert=roomSafety.alert;card.hidden=!alert;card.dataset.theme=dockThemeName();
+    if(alert){
+        const ahead=alert.kind==='ahead';card.dataset.kind=alert.kind;
+        card.querySelector('[data-safety-title]').textContent=ahead?'⚠ OBSTACLE AHEAD':alert.pushable?'✖ COLLISION':'✖ HEAVY COLLISION';
+        card.querySelector('[data-safety-message]').textContent=ahead?'Shield stopped the desk before contact with '+alert.name+'.':'Desk stopped after detecting resistance from '+alert.name+'.';
+        card.querySelector('[data-safety-source]').textContent='Source: Wheels'+(ahead?' · Preview clearance 15 cm (6 in)':'');
+    }
+}
+function setCollisionGuard(on){roomSafety.guard=!!on;syncSafetyUI();updateTouchscreenDisplay();}
+function announceRoomSafety(event){
+    haltAllMotion();roomCollisionBlocked=true;glideUIPrev='';syncGlideUI();syncSafetyUI();updateTouchscreenDisplay();ledSounds.alert(event.kind);
+}
+function clearCollisionAlert(){
+    haltAllMotion();roomSafety.clear();roomCollisionBlocked=false;glideUIPrev='';syncGlideUI();syncSafetyUI();updateTouchscreenDisplay();updateLedEffectFrame();
+}
+
 function makeTouchscreenFace(gltf, xShift, pivot, turn, material, name) {
     const face = makeOverlayNode(gltf, 0, xShift, material, name);
     face.children.forEach(mesh => {
@@ -2730,14 +2803,15 @@ function setTouchscreenOpen(open) {
 
 async function loadTouchscreenAssembly() {
     try {
-        const [pulled, extended, wide, faceTexture] = await Promise.all([
+        const [pulled, extended, wide] = await Promise.all([
             gltfLoader.loadAsync(TOUCHSCREEN_PULLED_URL),
             gltfLoader.loadAsync(TOUCHSCREEN_EXTENDED_URL),
-            gltfLoader.loadAsync(TOUCHSCREEN_WIDE_URL),
-            textureLoader.loadAsync(TOUCHSCREEN_FACE_URL)
+            gltfLoader.loadAsync(TOUCHSCREEN_WIDE_URL)
         ]);
         if (pulled.scene.children.length !== 7 || extended.scene.children.length !== 12 || wide.scene.children.length !== 12)
             throw new Error('Touchscreen exports have changed; recheck the motion mapping.');
+        updateTouchscreenDisplay();
+        const faceTexture = touchscreenTexture = new THREE.CanvasTexture(touchscreenDisplay.canvas);
         faceTexture.colorSpace = THREE.SRGBColorSpace;
         faceTexture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
         const faceMaterial = new THREE.MeshBasicMaterial({ map: faceTexture, side: THREE.DoubleSide, toneMapped: false });
@@ -3411,6 +3485,7 @@ async function loadLedOverlay() {
         roots.lift.position.y = LIFT_MIN;
         roots.tilt.position.y = LIFT_MIN;
         for (const root of Object.values(roots)) loadedModel.add(root);
+        ledShelfRoot = roots.lift;
         liftObjects.set(roots.lift, { obj: roots.lift, baseY: roots.lift.position.y });
         syncLedSizeGeometry();
         [...partRegistry.values()].forEach(({ obj }) => {
@@ -3452,6 +3527,7 @@ function loadModel() {
         ledPixels?.dispose(); ledPixels = null;
         ledParts = [];
         ledDesktopFit = null;
+        ledShelfRoot = null;
         ledStandardStrips = null;
         ledExtendedStrips = null;
         boxHelpers.forEach(h => scene.remove(h));
@@ -3951,7 +4027,10 @@ function applyProject(project, { confirmSoft = null, isRollback = false } = {}) 
             savedGroups = Object.assign({}, parts.groups || {});
             for (const editorId of parts.locked || []) lockedParts.add(editorId);
 
-            // 5. lift membership, after edits so baseY derives from the edited pose
+            // 5. lift membership, after edits so baseY derives from the edited pose.
+            //    The shelf LED group has no editorId and is never serialized, so
+            //    it keeps its membership rather than being dropped from the lift.
+            const shelfLeds = ledShelfRoot && liftObjects.get(ledShelfRoot);
             liftObjects.clear();
             for (const editorId of parts.liftMembers || []) {
                 const entry = partRegistry.get(editorId);
@@ -3959,6 +4038,8 @@ function applyProject(project, { confirmSoft = null, isRollback = false } = {}) 
                 const canon = canonicalTransform(entry.obj);
                 liftObjects.set(entry.obj, { obj: entry.obj, baseY: canon ? canon.p.y : entry.obj.position.y });
             }
+            // After the parts, as on a fresh load, so liftObjects[0] stays a part.
+            if (shelfLeds) liftObjects.set(ledShelfRoot, shelfLeds);
 
             // 6. rigs. Wrappers use attach(), which preserves world transform, so
             //    they pick up the edited positions applied in step 3.
@@ -4817,6 +4898,7 @@ async function addSceneAsset(propId) {
         if (!obj || !state.added.has(editorId)) return;
         registerSceneAsset(obj);
         state.transforms.set(editorId, plainLocalTransform(obj));
+        roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
         const record = sceneAssetRecord(sceneAssetRegistry.get(editorId));
         transaction({ type: 'scene-assets', records: [record], present: false });
         persistSceneAssetStates();
@@ -7192,11 +7274,17 @@ function clampGlidePosition(position) {
     position.z = THREE.MathUtils.clamp(position.z, b.minZ, b.maxZ);
     return position;
 }
+function deskCollisionBox() {
+    if(!loadedModel||!workspaceRoom?.root)return null;
+    glideBounds();
+    return glideFootprintCache?.box.clone().translate(glideOffset) || new THREE.Box3().setFromObject(loadedModel);
+}
 function releaseGlideInput() {
     glideKeys.clear(); glideInput.set(0, 0); glidePointer = null;
     const knob = document.getElementById('glide-knob'); if (knob) knob.style.transform = 'translate(-50%, -50%)';
 }
 function manualGlideReady() {
+    if (roomSafety.alert) { syncSafetyUI(); return false; }
     if (!loadedModel) { notifyUser('Wait for the desk to finish loading.'); return false; }
     if (transformControl?.object || isDraggingTransform) {
         notifyUser('Set Transform Tool to Off before moving the entire desk.'); return false;
@@ -7441,7 +7529,7 @@ function yawRadiansPerSecond() {
     return glideSpeed / projection;
 }
 function setYawCommand(direction) {
-    yawCommand = direction;
+    yawCommand = roomSafety.alert ? 0 : direction;
     const status = document.getElementById('glide-status');
     if (status) status.textContent = direction ? (direction > 0 ? 'Turning right' : 'Turning left') : 'Ready to move';
 }
@@ -7846,11 +7934,7 @@ function buildMotionRemote() {
 
     const header = document.createElement('div');
     header.className = 'remote-header';
-    // The app's bar, in its order. The icons that belong to the physical desk -
-    // microphone, collision shield, session logout - are drawn because they are
-    // part of this design, and disabled because there is no desk behind them
-    // here. A control that looks live and does nothing is worse than one that
-    // says it is unavailable.
+    // Preview controls operate the scene. Voice and account actions remain hardware-only.
     const inert = (file, label) =>
         `<button class="remote-chrome" type="button" disabled aria-label="${label}"
                  title="${label} — hardware control, not connected in the preview"><img src="./assets/app-icons/${file}" alt=""></button>`;
@@ -7870,7 +7954,8 @@ function buildMotionRemote() {
         </span>
         ${inert('help.svg', 'Info')}
         ${inert('MicOn.svg', 'Voice')}
-        ${inert('pre_collision_on.svg', 'Collision guard')}
+        <button id="remote-shield" class="remote-chrome" type="button" aria-label="Collision shield" aria-pressed="false" title="Shield: stop before contact"><img src="./assets/app-icons/pre_collision_on.svg" alt=""></button>
+        <button id="remote-alert-sound" class="remote-safety-sound" type="button" aria-pressed="false" title="Enable movement sounds and collision alerts">♪ Sound alerts</button>
         <button id="remote-stop" type="button" title="Stop all movement" aria-label="Stop all movement"><img src="./assets/app-icons/e-stop.svg" alt=""></button>
         ${inert('quick_logout.svg', 'Sign out')}
         <button class="remote-chrome remote-theme" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true">
@@ -7988,6 +8073,9 @@ function buildMotionRemote() {
     // they are re-wired here. Wiring them once at startup left them pointing at
     // elements a rebuild had already replaced.
     setupGlideControls();
+    dock.querySelector('#remote-shield').onclick=()=>setCollisionGuard(!roomSafety.guard);
+    dock.querySelector('#remote-alert-sound').onclick=()=>{ledSounds.setEnabled(!ledSounds.enabled);syncSafetyUI();};
+    mountSafetyAlert();syncSafetyUI();
     const bulb=dock.querySelector('.hub-led');
     bindHold(bulb,()=>setLedsEnabled(!ledsEnabled),()=>prepareLedCommandCenter().open());
     // Assistive technology can activate a button without pointer events.
@@ -8593,12 +8681,12 @@ function wireErgoForms() {
 }
 
 function syncGlideUI() {
-    const state = `${glideOffset.x.toFixed(2)},${glideOffset.z.toFixed(2)},${glideActive},${glideInput.lengthSq() > 0}`;
+    const state = `${glideOffset.x.toFixed(2)},${glideOffset.z.toFixed(2)},${glideActive},${glideInput.lengthSq() > 0},${roomCollisionBlocked}`;
     if (state === glideUIPrev) return; glideUIPrev = state;
     const demo = document.getElementById('glide-demo');
     if (demo) { demo.textContent = glideActive ? 'Pause demo' : 'Play demo'; demo.setAttribute('aria-pressed', String(glideActive)); }
     const status = document.getElementById('glide-status');
-    if (status) status.textContent = glideActive ? 'Demo playing' : glideInput.lengthSq() > 0 ? 'Gliding' : glideOffset.distanceTo(glideTarget) > 0.005 ? 'Moving to position' : 'Ready to move';
+    if (status) status.textContent = roomCollisionBlocked ? 'Stopped · furniture ahead' : glideActive ? 'Demo playing' : glideInput.lengthSq() > 0 ? 'Gliding' : glideOffset.distanceTo(glideTarget) > 0.005 ? 'Moving to position' : 'Ready to move';
 }
 function startGlide() {
     if (!manualGlideReady()) return false;
@@ -8610,8 +8698,17 @@ function stopGlide() {
     glideActive = false; releaseGlideInput(); glideTarget.set(0, 0, 0);
     applyGlideOffset(glideTarget); syncGlideUI();
 }
-function applyGlideOffset(next) {
+function applyGlideOffset(next, { collide = false } = {}) {
     if (!loadedModel) return;
+    let safetyEvent=null;
+    if(collide&&!liveAR?.active&&workspaceRoom?.root){
+        const result=roomInteractions?.moveDesk(deskCollisionBox(),{x:next.x-glideOffset.x,z:next.z-glideOffset.z});
+        if(result){
+            next=new THREE.Vector3(glideOffset.x+result.x,0,glideOffset.z+result.z);
+            roomCollisionBlocked=result.blocked;safetyEvent=result.event;
+            if(result.blocked)glideTarget.copy(next);
+        }
+    }
     const dx = next.x - glideOffset.x, dz = next.z - glideOffset.z;
     wheelRigs.forEach(rig => {
         rig.spin -= (dx + rig.latSign * dz) / rig.radius;
@@ -8621,9 +8718,10 @@ function applyGlideOffset(next) {
     applyDeskTransform();
     loadedModel.updateMatrixWorld(true);
     if (isSelectionMode) boxHelpers.forEach(helper => helper.update());
+    if(safetyEvent)announceRoomSafety(safetyEvent);
 }
 function updateGlide(dt) {
-    if (!loadedModel) return;
+    if (!loadedModel || roomSafety.alert) return;
     dt = Math.min(Math.max(dt, 0), 0.05);
     if (transformControl?.object || isDraggingTransform) { releaseGlideInput(); glideActive = false; glideTarget.copy(glideOffset); return; }
     // Rotation, tilt, desktop size, and room changes can alter the clearance.
@@ -8636,7 +8734,7 @@ function updateGlide(dt) {
         glideT = Math.min(1, glideT + dt / GLIDE_DURATION);
         glidePath(glideT, _glidePos).add(glideDemoOrigin);
         clampGlidePosition(_glidePos);
-        applyGlideOffset(_glidePos); glideTarget.copy(glideOffset);
+        applyGlideOffset(_glidePos, { collide:true }); glideTarget.copy(glideOffset);
         if (glideT >= 1) glideActive = false;
     } else {
         if (glideInput.lengthSq() > 0) {
@@ -8647,11 +8745,11 @@ function updateGlide(dt) {
             glideTarget.x += glideInput.y * glideSpeed * dt;
             glideTarget.z -= glideInput.x * glideSpeed * dt;
             clampGlidePosition(glideTarget);
-            applyGlideOffset(glideTarget);
+            applyGlideOffset(glideTarget, { collide:true });
         } else if (glideOffset.distanceToSquared(glideTarget) > 0.000001) {
             _glidePos.copy(glideTarget).sub(glideOffset);
             const step = Math.min(_glidePos.length(), glideSpeed * dt);
-            _glidePos.setLength(step).add(glideOffset); applyGlideOffset(_glidePos);
+            _glidePos.setLength(step).add(glideOffset); applyGlideOffset(_glidePos, { collide:true });
         }
     }
     syncGlideUI();
@@ -8669,7 +8767,7 @@ let lastARBlobUrl = null;
 let lastAppleARBlobUrl = null;
 
 async function prepareAppleTapAsset() {
-    const { appleTapStates, exportAppleTapUSDZ } = await import('./apple-ar-interactions.mjs?v=desktop-tilt-reach-20261006');
+    const { appleTapStates, exportAppleTapUSDZ } = await import('./apple-ar-interactions.mjs?v=remote-header-wrap-20261006');
     if (workspaceAccessories?.items.size) {
         throw new Error('Tap controls are not available with added desk accessories yet. Use the current-pose AR option.');
     }
@@ -9341,13 +9439,13 @@ function animate(time, frame) {
     // a frame cannot advance the lift or the glide mid-capture. Rendering still
     // runs, so the viewer does not freeze.
     const dt = clock.getDelta();
-    if (loadedModel && !motionPaused) {
+    if (loadedModel && !motionPaused && !roomSafety.alert) {
         if (liftJog) ledAutoLift = false;
         else if (Math.abs(targetLift-currentLift) > .001) ledAutoLift = true;
         if (tiltJog) ledAutoTilt = false;
         else if (tiltTarget !== null) ledAutoTilt = true;
     }
-    if (!motionPaused) {
+    if (!motionPaused && !roomSafety.alert) {
         if (roomGroove?.run) roomGroove.update(dt);
         else updateGlide(dt);
     }
@@ -9358,7 +9456,7 @@ function animate(time, frame) {
     }
 
     // Handle smooth animation if not manually scrubbing
-    if (loadedModel && !manualLiftOverride && !motionPaused) {
+    if (loadedModel && !manualLiftOverride && !motionPaused && !roomSafety.alert) {
         const minLift = heightToLift(minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size));
         const allowedTargetLift = Math.max(targetLift, minLift);
         if (Math.abs(allowedTargetLift - currentLift) > 0.001) {
@@ -9389,21 +9487,26 @@ function animate(time, frame) {
     }
 
     // The desk turns for as long as the ring is held over.
-    if (loadedModel && !motionPaused && yawCommand) {
+    if (loadedModel && !motionPaused && !roomSafety.alert && yawCommand) {
         // The same per-frame ceiling updateGlide applies. Without it a long frame
         // advances the turn by that whole gap - the desk jumps, and on a slow
         // machine turning outruns gliding at the same speed setting because only
         // one of them is throttled.
         const turnDt = Math.min(Math.max(dt, 0), 0.05);
         const step = yawCommand * yawRadiansPerSecond() * turnDt;
+        const before=!liveAR?.active?deskCollisionBox():null;
         deskYaw += step;
-        spinWheelsForYaw(step);
         applyDeskTransform();
         loadedModel.updateMatrixWorld(true);
+        const safetyStop=before&&roomInteractions?.turnSafety(before,deskCollisionBox());
+        if(safetyStop?.blocked || (before&&!roomInteractions?.canTurn(before,deskCollisionBox()))){
+            deskYaw-=step;applyDeskTransform();loadedModel.updateMatrixWorld(true);roomCollisionBlocked=true;
+            if(safetyStop?.event)announceRoomSafety(safetyStop.event);
+        }else{spinWheelsForYaw(step);roomCollisionBlocked=false;}
     }
 
     // Held off centre: drive for as long as it is held.
-    if (loadedModel && !motionPaused && liftJog) {
+    if (loadedModel && !motionPaused && !roomSafety.alert && liftJog) {
         const jogDt = Math.min(Math.max(dt, 0), 0.05);
         const minLift = heightToLift(minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size));
         currentLift = THREE.MathUtils.clamp(
@@ -9412,7 +9515,7 @@ function animate(time, frame) {
         updateMovingObjectsPosition();
         showHeight(liftToHeight(currentLift));
     }
-    if (loadedModel && !motionPaused && tiltJog) {
+    if (loadedModel && !motionPaused && !roomSafety.alert && tiltJog) {
         const config = primaryTiltConfig();
         if (config) {
             const jogDt = Math.min(Math.max(dt, 0), 0.05);
@@ -9429,7 +9532,7 @@ function animate(time, frame) {
 
     // Tilt eases toward its target the same way. applyTiltConfig is immediate, so
     // without this a speed control would have nothing to act on.
-    if (loadedModel && !motionPaused && tiltTarget !== null) {
+    if (loadedModel && !motionPaused && !roomSafety.alert && tiltTarget !== null) {
         const config = primaryTiltConfig();
         if (!config) tiltTarget = null;
         else if (Math.abs(tiltTarget - config.currentDeg) <= 0.01) {
@@ -9456,7 +9559,7 @@ function animate(time, frame) {
         if (orbitButton && orbitButton.getAttribute('aria-pressed') !== String(controls.autoRotate)) orbitButton.setAttribute('aria-pressed', String(controls.autoRotate));
     }
     workspaceAccessories?.update();
-    if (loadedModel && !motionPaused) {
+    if (loadedModel && !motionPaused && !roomSafety.alert) {
         const completed = ledMotion.completionUntil;
         ledMotion.observe(ledPose(), time, {enabled:ledMotionEnabled && ledDiagnostic.strip === null && !document.hidden,
             liftReached:ledAutoLift && Math.abs(targetLift-currentLift)<=.001,
@@ -9465,7 +9568,7 @@ function animate(time, frame) {
         if (!ledMotion.axes.tilt) ledAutoTilt = false;
         ledSounds.update(ledMotion.owner?.sound || null, ledMotion.completionUntil > completed);
     }
-    if (ledEffect.mode !== 'solid' || ledDiagnostic.strip !== null || ledPixels?.active || ledMotion.owner || ledMotion.completionUntil || ledGame.active || ledMusic.active)
+    if (roomSafety.alert || ledEffect.mode !== 'solid' || ledDiagnostic.strip !== null || ledPixels?.active || ledMotion.owner || ledMotion.completionUntil || ledGame.active || ledMusic.active)
         updateLedEffectFrame(time / 1000);
     if (time-ledPlaybackUIAt > 150) {
         ledPlaybackUIAt = time;
@@ -9474,6 +9577,9 @@ function animate(time, frame) {
         ledMusic.syncUI(true);
     }
     if (camera && !liveAR?.active) workspaceRoom?.update(camera);
+    syncSafetyUI();
+    if(time-touchscreenDrawAt>100){touchscreenDrawAt=time;updateTouchscreenDisplay();}
+    roomLedSpill.update(workspaceRoom,ledPixels,{enabled:ledsEnabled&&!liveAR?.active,colour:ledFrameColor,gain:roomLedGain});
     if (renderer && scene && camera) renderer.render(liveAR?.active ? liveAR.scene : scene, camera);
 }
 
@@ -9562,6 +9668,7 @@ function applyRoomLighting() {
         const output = document.getElementById(`${id}-value`); if (output) output.textContent = `${Number(value).toFixed(2)}×`;
     }
     const label = document.getElementById('scene-light-name'); if (label) label.textContent = profile.label;
+    updateTouchscreenDisplay();
 }
 
 function syncGrooveUI(state) {
@@ -9602,14 +9709,19 @@ function grooveController() {
         sync: syncGrooveUI, halt: haltAllMotion,
         stopPose: () => { glideTarget.copy(glideOffset); targetLift = currentLift; tiltTarget = null; manualLiftOverride = false; },
         canMove: () => {
+            if(roomSafety.alert){syncSafetyUI();return false;}
             if (!loadedModel || liveAR?.active || transformControl?.object || isSelectionMode) { notifyUser('Turn off the editing tools before starting Groove.'); return false; }
             controls.autoRotate = false; return true;
         },
         manual: () => !!(glideInput.lengthSq() || yawCommand || liftJog || tiltJog || glideActive || transformControl?.object),
         goPose: (h,t) => { grooveSettingPose = true; try { goToPose(h,t); } finally { grooveSettingPose = false; } },
         move: p => {
-            const turn = p.yaw - deskYaw; deskYaw = p.yaw; spinWheelsForYaw(turn);
-            applyGlideOffset(new THREE.Vector3(p.z * workspaceRoom.root.scale.x, 0, -p.x * workspaceRoom.root.scale.x));
+            const before=deskCollisionBox(),oldYaw=deskYaw,turn = p.yaw - deskYaw;
+            deskYaw = p.yaw;applyDeskTransform();loadedModel.updateMatrixWorld(true);
+            const stop=before&&roomInteractions?.turnSafety(before,deskCollisionBox());
+            if(stop?.blocked){deskYaw=oldYaw;applyDeskTransform();loadedModel.updateMatrixWorld(true);if(stop.event)announceRoomSafety(stop.event);return;}
+            spinWheelsForYaw(turn);
+            applyGlideOffset(new THREE.Vector3(p.z * workspaceRoom.root.scale.x, 0, -p.x * workspaceRoom.root.scale.x),{collide:true});
             glideTarget.copy(glideOffset); loadedModel.updateMatrixWorld(true); workspaceAccessories?.update();
         },
         dress: (phase, mode) => { workspaceAccessories?.setDayDress(phase); if (mode.color) setLedColor(mode.color, false); setLedsEnabled(mode.leds); }
@@ -9802,6 +9914,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
     if (choice.id === 'kitchen' && !kitchenLayoutId) kitchenLayoutId = measured.layout.id;
     if (choice.id === 'gym' && !gymLayoutId) gymLayoutId = measured.layout.id;
     if (choice.id === 'office' && !officeLayoutId) officeLayoutId = measured.layout.id;
+    roomInteractions?.end();roomInteractions?.select(null);roomLedSpill.dispose();roomCollisionBlocked=false;roomSafety.reset();syncSafetyUI();
     workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
         createStation: ['office', 'coworking'].includes(choice.id) && loadedModel ? spec => captureOfficeStation(spec, homeScale) : null });
     if (measured) {
@@ -9817,16 +9930,21 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
     // only in the console.
     const roomReady = workspaceRoom?.ready || Promise.resolve();
     const dressReady = workspaceAccessories?.dress(choice.id) || Promise.resolve();
-    const assetsReady = Promise.allSettled([roomReady, dressReady]).then(results => {
+    const assetsReady = Promise.allSettled([roomReady, dressReady]).then(async results => {
         if (results[0].status === 'rejected') {
             reportSceneWarning('room-props', `Scene props for ${choice.name} could not be loaded (${results[0].reason.message}). The room is shown without them.`);
         }
         if (results[1].status === 'rejected') {
             reportSceneWarning('desk-dressing', `Desk dressing for ${choice.name} could not be loaded (${results[1].reason.message}).`);
         }
-        const hydrated = hydrateSceneAssets(choice.id, hydrationToken);
-        if (hydrationToken === sceneAssetHydrationToken) workspaceAccessories?.setDayDress(measuredRoomProfile()?.mode || 'morning');
-        return hydrated;
+        if(hydrationToken!==sceneAssetHydrationToken)return;
+        // Give procedural furnishings stable editor IDs before restoring placements.
+        roomInteractions?.bind(workspaceRoom);
+        await hydrateSceneAssets(choice.id, hydrationToken);
+        if (hydrationToken === sceneAssetHydrationToken) {
+            workspaceAccessories?.setDayDress(measuredRoomProfile()?.mode || 'morning');
+            roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
+        }
     });
     if (workspaceRoom) workspaceRoom.ready = assetsReady;
     if (floorMesh) floorMesh.visible = choice.id === 'product';
@@ -9839,6 +9957,8 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
         caption.textContent = choice.id === 'product' ? 'Explore your desk from every angle.' : `${((4200 + wide * 2) / 1000).toFixed(1)} × ${((4000 + rear + front) / 1000).toFixed(1)} m · ${ROOM_ATMOSPHERES[choice.id].label} · Furnishings for inspiration`;
     }
     const heading = document.querySelector('.viewer-heading h2');
+    const interactionHint=document.getElementById('room-interaction-hint');
+    if(interactionHint)interactionHint.hidden=choice.id==='product';
     if (heading) heading.textContent = choice.id === 'product' ? 'Designed to move you.' : choice.caption;
     const environment = document.getElementById('studio-environment');
     if (environment) environment.value = choice.tone;
@@ -10294,6 +10414,12 @@ function initStudio() {
     const scenes = document.createElement('div'); scenes.className = 'scene-switcher';
     scenes.innerHTML = `<span class="scenes-label">Scenes</span><div class="scene-options" role="group" aria-label="Workspace scenes">${ROOM_SCENES.map(s => `<button type="button" data-room-scene="${s.id}" aria-pressed="${s.id === 'product'}"><span class="scene-dot scene-${s.id}" aria-hidden="true"></span>${s.name}</button>`).join('')}</div>`;
     const roomCaption = document.createElement('p'); roomCaption.id = 'room-scene-caption'; roomCaption.setAttribute('aria-live', 'polite');
+    const interactionHint=document.createElement('p');interactionHint.id='room-interaction-hint';interactionHint.className='studio-note';interactionHint.hidden=true;
+    interactionHint.textContent='Drag floor furnishings to move them; select one to rotate it. Drag wall decorations along their wall. Contact stops the desk until CLEAR. After clearing, small objects can be pushed. Turn on the shield to stop before contact.';
+    const objectControls=document.createElement('div');objectControls.id='room-object-controls';objectControls.className='room-object-controls';objectControls.hidden=true;
+    objectControls.innerHTML='<span data-room-object-name role="status"></span><button type="button" data-room-object-turn="-15" aria-label="Rotate selected furnishing left 15 degrees">↶ Rotate left</button><button type="button" data-room-object-turn="15" aria-label="Rotate selected furnishing right 15 degrees">Rotate right ↷</button><button type="button" data-room-object-done>Done</button>';
+    objectControls.querySelectorAll('[data-room-object-turn]').forEach(button=>button.onclick=()=>roomInteractions?.rotateSelected(Number(button.dataset.roomObjectTurn)));
+    objectControls.querySelector('[data-room-object-done]').onclick=()=>roomInteractions?.select(null);
     const roomControls = ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'gallery', 'scifi', 'coworking', 'library'].map(id => {
         const profile = measuredRoomProfile(id), prefix = profile.prefix;
         const panel = document.createElement('div'); panel.id = measuredRoomPanelId(id);
@@ -10307,7 +10433,7 @@ function initStudio() {
         panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.onclick = () => prepareGrooveMode(id, b.getAttribute(`data-${prefix}-mode`)));
         return panel;
     });
-    viewerControls.append(scenes, ...roomControls, roomCaption); viewer.append(viewerControls);
+    viewerControls.append(scenes, ...roomControls, roomCaption, interactionHint, objectControls); viewer.append(viewerControls);
     scenes.querySelectorAll('button').forEach(button => button.onclick = () => setRoomScene(button.dataset.roomScene));
     new ResizeObserver(syncViewerSize).observe(viewerControls);
     try {
@@ -10480,6 +10606,10 @@ window.ErgoFlex = {
     get touchscreenOpen() { return screenTarget > 0.5; },
     get touchscreenProgress() { return screenProgress; },
     get touchscreenReady() { return !!screenAssembly; },
+    get touchscreenDisplay() {return touchscreenDisplay;},
+    get touchscreenTexture() {return touchscreenTexture;},
+    get collisionState() {return {guard:roomSafety.guard,alert:roomSafety.alert?{...roomSafety.alert}:null};},
+    setCollisionGuard,clearCollisionAlert,
     setLedsEnabled,
     setLedColor,
     prepareLedCommandCenter,
@@ -10494,7 +10624,7 @@ window.ErgoFlex = {
     get ledMotionState() {return {enabled:ledMotionEnabled,owner:ledMotion.owner ? {...ledMotion.owner} : null,completionUntil:ledMotion.completionUntil,source:ledPixelSource};},
     get ledGameMode() {return ledGame;},
     get ledMusicMode() {return ledMusic;},
-    get ledSoundState() {return {enabled:ledSounds.enabled,owner:ledSounds.owner,error:ledSounds.error};},
+    get ledSoundState() {return {enabled:ledSounds.enabled,owner:ledSounds.owner,error:ledSounds.error,alertCount:ledSounds.alertCount,audioState:ledSounds.alertContext?.state};},
     mountLedDiagnostic,
     setLedDiagnostic,
     get ledDiagnostic() { return { ...ledDiagnostic }; },
@@ -10512,6 +10642,9 @@ window.ErgoFlex = {
     get ledCount() { return ledParts.length; },
     get workspaceAccessories() { return workspaceAccessories; },
     get workspaceRoom() { return workspaceRoom; },
+    get roomInteractions() { return roomInteractions; },
+    get roomLedSpill() { return roomLedSpill; },
+    get roomCollisionBlocked() { return roomCollisionBlocked; },
     get roomScene() { return selectedRoomScene; },
     roomScenes: ROOM_SCENES,
     setRoomScene,

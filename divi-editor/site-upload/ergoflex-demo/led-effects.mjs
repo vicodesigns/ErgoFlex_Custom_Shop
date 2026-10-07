@@ -1,5 +1,5 @@
 // Software preview parameters, independent of any physical LED protocol.
-import { DECORATIVE_EFFECTS } from './led-showcase-effects.mjs?v=desktop-tilt-reach-20261006';
+import { DECORATIVE_EFFECTS } from './led-showcase-effects.mjs?v=remote-header-wrap-20261006';
 export const LED_EFFECTS = Object.freeze([
     { id: 'solid', label: 'Solid' },
     { id: 'breathe', label: 'Breathe' },

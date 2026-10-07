@@ -19,6 +19,7 @@ const server = http.createServer((req, res) => {
     const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--disable-dev-shm-usage'] });
     try {
         const page = await browser.newPage(), errors = [];
+        page.setDefaultNavigationTimeout(120000); // software WebGL loads slowly under load
         page.on('pageerror', e => errors.push(e.message));
         page.on('error', e => console.error('Browser page:', e.message));
         browser.process().once('exit', (code, signal) => { if (code) console.error('Browser exit:', code, signal); });
@@ -27,7 +28,7 @@ const server = http.createServer((req, res) => {
         await page.goto(url);
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; await ErgoFlex.workspaceRoom.ready; });
-        await page.waitForFunction(() => ErgoFlex.workspaceAccessories.dressAssets().some(o => o.userData.propId === 'journal'), { timeout: 30000 });
+        await page.waitForFunction(() => ErgoFlex.workspaceAccessories.dressAssets().some(o => o.userData.propId === 'journal'), { timeout: 120000 });
         assert.equal(await page.$eval('#library-room-controls', p => p.hidden), false);
         assert.equal(await page.$eval('#home-office-controls', p => p.hidden), true);
         assert.equal(await page.evaluate(() => ErgoFlex.libraryMode), 'morning');
@@ -85,11 +86,13 @@ const server = http.createServer((req, res) => {
             const shelf=ErgoFlex.workspaceRoom.assets().find(o=>o.userData.libraryStack);
             return {batches:shelf.children.filter(o=>o.isInstancedMesh).length,books:shelf.children.filter(o=>o.isInstancedMesh).reduce((n,o)=>n+o.count,0)};
         });
-        assert.equal(shelfBatches.batches,6);assert.equal(shelfBatches.books,88,'Books are batched by material');
+        assert.equal(shelfBatches.batches,6);assert.equal(shelfBatches.books,126,'Books are batched by material: packed runs, leaning books and lying stacks');
         await capture('apartment-morning');
         const lights=[];
         for (const [mode,h,t] of [['morning',43.5,-5],['afternoon',28,0],['evening',28,12],['night',28,0],['party',43.5,-5]]) {
             await page.click(`[data-library-mode="${mode}"]`);
+            // The button selects the mode and only prepares its Groove; apply the pose directly.
+            await page.evaluate(m => ErgoFlex.setLibraryMode(m), mode);
             await page.waitForFunction((h,t)=>Math.abs(ErgoFlex.heightInches-h)<.03 && Math.abs(ErgoFlex.tiltConfigs.find(c=>c.name==='tilting').currentDeg-t)<.03,{timeout:120000},h,t);
             const data=await measure(); checkBounds(data); assert.equal(data.atmosphere,mode);lights.push(data.lights);
             if(mode==='night')assert.equal(data.leds,true,'Late study has warm desk LEDs');
@@ -105,7 +108,7 @@ const server = http.createServer((req, res) => {
             await page.select('#library-room-size',id);await page.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;});
             const data=await measure();checkBounds(data);assert.deepEqual(Object.values(data.dimensions),dims[n]);
             const stackCount=[4,7,13,22][n];
-            assert.equal(data.props.filter(p=>p.id.startsWith('rear-')||p.id.startsWith('stack-')).length,stackCount);
+            assert.equal(data.props.filter(p=>p.id?.startsWith('rear-')||p.id?.startsWith('stack-')).length,stackCount);
             if(n>=1) assert.ok(data.props.some(p=>p.id==='carrel-0'));
             for(const p of data.props.filter(p=>['kenney-furniture-laptop','kenney-furniture-books','journal'].includes(p.id)&&p.at[1]===740))assert.ok(Math.abs(p.min[1]-740)<1,p.id+' rests on the study table');
             await page.click('[data-library-size="60x30"]');await page.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;});

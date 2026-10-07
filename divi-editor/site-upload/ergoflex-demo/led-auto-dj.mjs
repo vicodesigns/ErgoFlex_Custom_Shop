@@ -1,4 +1,4 @@
-import { customLookUsesMusic } from './led-custom-presets.mjs?v=desktop-tilt-reach-20261006';
+import { customLookUsesMusic } from './led-custom-presets.mjs?v=remote-header-wrap-20261006';
 // Browser conductor using the desk API's program pools, cadence and comfort policy.
 // Music renderers remain browser adaptations; this does not send desk commands.
 export const DJ_PROGRAMS = Object.freeze({
@@ -15,10 +15,10 @@ export function normalizeDJSettings(input = {}) {
     return {version:1,program:Object.hasOwn(DJ_PROGRAMS,input.program)?input.program:'party',
         comfort:['standard','reduced','minimal'].includes(input.comfort)?input.comfort:'standard',
         beatAlign:input.beatAlign!==false,
-        remixPresets:input.remixPresets===true,remixSliders:input.remixSliders===true,
-        remixPhysics:input.remixPhysics===true,burstsOn:input.burstsOn===true,
-        randomizeOn:input.randomizeOn===true,remixBursts:input.remixBursts===true,
-        dynamicsMode:['off','story','wide'].includes(input.dynamicsMode)?input.dynamicsMode:'off',
+        remixPresets:input.remixPresets!==false,remixSliders:input.remixSliders!==false,
+        remixPhysics:input.remixPhysics!==false,burstsOn:input.burstsOn!==false,
+        randomizeOn:input.randomizeOn!==false,remixBursts:input.remixBursts!==false,
+        dynamicsMode:['off','story','wide'].includes(input.dynamicsMode)?input.dynamicsMode:'wide',
         mixStrips:input.mixStrips!==false,
         lookWeights:ratings(input.lookWeights),paletteWeights:ratings(input.paletteWeights),
         weights:Object.fromEntries(DJ_EFFECT_IDS.map(fx=>[fx,Number.isInteger(input.weights?.[fx])?Math.max(0,Math.min(4,input.weights[fx])):2]))};

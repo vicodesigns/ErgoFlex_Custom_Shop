@@ -1,6 +1,6 @@
 // One app sheet, reused in the normal viewer and WebXR DOM overlay.
-import { CUSTOM_LOOKS_KEY, importCustomLooks, sampleCustomPalette, customLookUsesMusic } from './led-custom-presets.mjs?v=desktop-tilt-reach-20261006';
-import { SAVED_LED_LOOKS, SAVED_LED_PALETTES } from './led-saved-library.mjs?v=desktop-tilt-reach-20261006';
+import { CUSTOM_LOOKS_KEY, importCustomLooks, sampleCustomPalette, customLookUsesMusic } from './led-custom-presets.mjs?v=remote-header-wrap-20261006';
+import { SAVED_LED_LOOKS, SAVED_LED_PALETTES } from './led-saved-library.mjs?v=remote-header-wrap-20261006';
 export class LedCommandCenter {
     constructor(api, controls) {
         this.api=api;this.returnFocus=null;

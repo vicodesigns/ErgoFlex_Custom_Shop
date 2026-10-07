@@ -5,7 +5,7 @@
 
 export const PRODUCT_CONFIG = {
     basePrice: 4999,
-    modelUrl: './assets/model/desk-public.glb?v=desktop-tilt-reach-20261006',
+    modelUrl: './assets/model/desk-public.glb?v=remote-header-wrap-20261006',
     sizes: {
         '48x30': { price: 0, name: '48" × 30"', label: 'Standard' },
         '60x30': { price: 200, name: '60" × 30"', label: 'Extended' }

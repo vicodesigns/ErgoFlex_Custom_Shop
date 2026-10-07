@@ -15,12 +15,12 @@ const server = http.createServer((req, res) => {
 });
 (async () => {
     await new Promise(r => server.listen(0, '127.0.0.1', r));
-    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--disable-dev-shm-usage'] });
+    const browser = await puppeteer.launch({ headless: true, protocolTimeout: 600000, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--disable-dev-shm-usage'] });
     try {
         const page = await browser.newPage(), errors = [];
         page.on('pageerror', e => errors.push(e.message));
         await page.setViewport({ width: 1500, height: 1200 });
-        await page.goto(`http://127.0.0.1:${server.address().port}/?room=home&view=room`);
+        await page.goto(`http://127.0.0.1:${server.address().port}/?room=home&view=room`, { timeout: 120000 });
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; });
         for (const id of ['home','gaming','music','creative','study','office','gym','kitchen','lounge','workshop','bedroom','gallery','scifi','coworking','library']) {

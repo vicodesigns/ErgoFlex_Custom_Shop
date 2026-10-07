@@ -80,7 +80,8 @@ const server=http.createServer((req,res)=>{
         assert.equal(await page.evaluate(()=>ErgoFlex.ledMotionState.completionUntil),0,'Jog release does not fake target completion');
         const target=await page.evaluate(()=>ErgoFlex.heightInches+.5);
         await page.$eval('#desk-height-display',(el,target)=>{el.value=String(target);el.dispatchEvent(new Event('change'));},target);
-        await page.waitForFunction(()=>ErgoFlex.ledMotionState.source==='completion',{timeout:15000});
+        await page.waitForFunction(()=>ErgoFlex.ledMotionState.completionUntil>0,{timeout:15000});
+        assert.equal(await page.evaluate(()=>ErgoFlex.ledMotionState.source),'game','Arrival returns straight to the active look, without a green cue');
         assert.ok(await page.evaluate(target=>Math.abs(ErgoFlex.heightInches-target)<.01,target),'Target cue follows actual preset arrival');
         await page.waitForFunction(()=>ErgoFlex.ledMotionState.source==='game',{timeout:10000});
         await page.$eval('#tilt-slider',el=>{el.value=-Number(el.max)*.7;el.dispatchEvent(new Event('input'));});

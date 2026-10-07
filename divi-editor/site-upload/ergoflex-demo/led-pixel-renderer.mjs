@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { validateStripMap, visibleAddresses } from './led-strip-map.mjs?v=desktop-tilt-reach-20261006';
+import { validateStripMap, visibleAddresses } from './led-strip-map.mjs?v=remote-header-wrap-20261006';
 
 // RGBW wire values remain in the input frame. Display mixing is an approximation:
 // add white to RGB and clamp, then convert sRGB to the renderer's linear space.
