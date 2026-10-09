@@ -1271,6 +1271,9 @@
 }
 #motion-dock.app-remote.remote-v2 {--compass:clamp(90px,calc(var(--remote-unit,1.6px) * 48),255px);--track-h:clamp(76px,calc(var(--remote-unit,1.6px) * 40),190px)}
 #motion-dock.app-remote.remote-v2 {background:var(--ground)}
+#motion-dock.remote-v2[data-mode="floating"] {display:flex;flex-direction:column;max-height:var(--dock-available-h,100dvh)}
+#motion-dock.remote-v2[data-mode="floating"] .remote-header {flex:none}
+#motion-dock.remote-v2[data-mode="floating"] .motion-dock-body {min-height:0;overflow:auto;overscroll-behavior:contain}
 #motion-dock.remote-v2 .remote-header {padding:12px 16px;gap:8px 10px;background:var(--hub);min-height:46px;flex-wrap:wrap;container-type:inline-size}
 /* The full bar needs ~820-940px (the logo grows with the remote); the default
    remote is 600. The shell clips, so a bar that cannot wrap loses its trailing
@@ -1506,3 +1509,174 @@
 .ledcc-dj-extra strong,.ledcc-dj-extra small { display:block; }
 .ledcc-dj-extra small { margin-top:6px; color:#a8adb5; font-size:12px; line-height:1.45; }
 .ledcc-dj-extra input { flex:0 0 auto; width:22px; height:22px; accent-color:#4a6dea; }
+
+/* Fixed wide controller: 720 × 298, plus the Extras tab above it. */
+#motion-dock.app-remote.remote-compact {
+    width:720px;height:auto;max-height:none;--compass:166px;--track-h:116px;
+    border-radius:14px;overflow:hidden;box-sizing:border-box;
+}
+#motion-dock.remote-compact[data-theme="dark"] {--hub:#1b2229;--bar:#1b2229;--ground:#1b2229}
+#motion-dock.remote-compact[data-mode="docked"] {scale:1;zoom:var(--remote-scale,1);margin:12px auto 0}
+#motion-dock.remote-compact .remote-extras {flex:none;background:var(--hub);border-bottom:1px solid var(--hairline)}
+#motion-dock.remote-compact .remote-extras summary {height:20px;box-sizing:border-box;padding:2px 12px;text-align:center;font-size:10px;cursor:pointer;color:var(--text-2)}
+#motion-dock.remote-compact .remote-extra-tools {display:flex;align-items:center;justify-content:center;gap:10px;padding:5px 12px}
+#motion-dock.remote-compact .remote-extra-tools .glide-actions {flex:1;margin:0;min-width:0}
+#motion-dock.remote-compact .remote-extra-tools button {font-size:10px;white-space:nowrap}
+#motion-dock.remote-compact .remote-header {height:42px;min-height:0;box-sizing:border-box;flex-wrap:nowrap;padding:7px 14px;gap:18px}
+#motion-dock.remote-compact .remote-logo {width:158px;margin-right:auto}
+#motion-dock.remote-compact .remote-status {width:10px;height:10px;margin:0 20px 0 0}
+#motion-dock.remote-compact .remote-spacer {display:none}
+#motion-dock.remote-compact .remote-chrome {width:23px;height:23px}
+#motion-dock.remote-compact .remote-chrome img {width:23px;height:23px}
+#motion-dock.remote-compact .remote-menu {border:0;box-shadow:none;background:none;border-radius:0;margin-right:80px;opacity:.8}
+#motion-dock.remote-compact .remote-menu span {background:var(--text-2)}
+#motion-dock.remote-compact #remote-stop {width:58px;height:30px;margin:0 0 0 16px;border:1px solid #a54e49;border-radius:20px;background:linear-gradient(#eb5249,#b41d17);box-shadow:inset 0 2px 3px #ffffff40;color:#fff;font-size:11px;font-weight:700;letter-spacing:2px;flex:none}
+#motion-dock.remote-compact #motion-dock-toggle {width:18px;padding:0;font-size:10px;flex:none}
+#motion-dock.remote-compact .motion-dock-body {height:254px;flex:none;display:flex;overflow:visible}
+#motion-dock.remote-compact.collapsed .motion-dock-body {display:none}
+#motion-dock.remote-compact .remote-body {height:254px;box-sizing:border-box;display:flex;flex-direction:column;padding:8px 14px;gap:10px;overflow:visible}
+#motion-dock.remote-compact .remote-grid {display:grid;grid-template-columns:1fr 1.72fr 1fr;gap:12px;flex:1;min-height:0;grid-template-rows:1fr}
+#motion-dock.remote-compact .remote-card {padding:8px;border-radius:18px;gap:4px;align-items:stretch;justify-content:space-between}
+#motion-dock.remote-compact .remote-card-heading {gap:3px;flex-wrap:nowrap}
+#motion-dock.remote-compact .remote-heading {font-size:9px;letter-spacing:1.2px}
+#motion-dock.remote-compact .remote-info {width:10px;height:10px}
+#motion-dock.remote-compact .remote-speed select {font-size:10px;letter-spacing:.3px;padding:5px 7px;border-radius:16px;width:auto}
+#motion-dock.remote-compact .remote-adjust {flex:1!important;min-height:0;gap:2px}
+#motion-dock.remote-compact .remote-readout {padding-bottom:17px;flex:1;align-self:center}
+#motion-dock.remote-compact .remote-readout input {font-size:31px;letter-spacing:-1px;width:4.7ch}
+#motion-dock.remote-compact .remote-readout .unit {display:none}
+#motion-dock.remote-compact [data-motion-panel="tilt"] .remote-readout .unit {display:inline;font-size:28px;color:var(--text)}
+#motion-dock.remote-compact .remote-readout::after {font-size:9px;letter-spacing:1px}
+#motion-dock.remote-compact .remote-vslider {width:33px;height:116px;border-width:3px;margin:0;background:var(--sunk)}
+#motion-dock.remote-compact .remote-vslider input {width:110px;height:30px}
+#motion-dock.remote-compact .remote-vslider input::-webkit-slider-thumb {width:24px;height:24px}
+#motion-dock.remote-compact .remote-vslider input::-moz-range-thumb {width:24px;height:24px}
+#motion-dock.remote-compact .vs-arrows {position:absolute;inset:0;pointer-events:none}
+#motion-dock.remote-compact .vs-arrows svg {width:100%;height:100%;fill:none;stroke:var(--text-2);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+#motion-dock.remote-compact .remote-arc {height:116px;width:73.26px;margin:0 -7px 0 -5px}
+#motion-dock.remote-compact .arc-chevron {fill:none;stroke:var(--text-2);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+#motion-dock.remote-compact .remote-compass {width:166px;height:166px;align-self:center;margin:-14px auto 0}
+#motion-dock.remote-compact .remote-compass .remote-sphere {--r:14px}
+#motion-dock.remote-compact .remote-chip {height:25px;font-size:10px;border-radius:10px}
+#motion-dock.remote-compact .remote-chip .preset-number,#motion-dock.remote-compact .remote-chip .caret {display:none}
+#motion-dock.remote-compact .remote-chip .preset-value {display:inline}
+#motion-dock.remote-compact .remote-footer {display:grid;grid-template-columns:1.6fr 1fr;gap:12px;flex:none;height:38px}
+#motion-dock.remote-compact .remote-forms-row {gap:10px}
+#motion-dock.remote-compact .remote-form {font-size:11px;padding:4px;border-radius:15px;letter-spacing:.5px}
+#motion-dock.remote-compact .remote-wellness-hub {height:38px;min-height:0;padding:0;border:0;background:none;border-radius:0;gap:7px;max-height:none}
+#motion-dock.remote-compact .hub-rule,#motion-dock.remote-compact .remote-wellness-hub>.remote-info {display:none}
+#motion-dock.remote-compact .hub-desk {width:29px;flex:none}
+#motion-dock.remote-compact .hub-timer {height:38px;flex:1;display:grid;place-items:center;border:1px solid var(--rim-empty);border-radius:11px;background:var(--chip);font-size:10px;box-shadow:var(--lift1)}
+#motion-dock.remote-compact .hub-groove,#motion-dock.remote-compact .hub-led {height:38px;width:44px;min-width:0;border:1px solid var(--rim-empty);border-radius:11px;background:var(--chip);color:var(--text);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0;box-shadow:var(--lift1);cursor:pointer;font:inherit;font-size:8px;flex:none;padding:3px}
+#motion-dock.remote-compact .hub-groove>span:first-child {font-size:17px;width:100%;line-height:17px}
+#motion-dock.remote-compact .hub-groove:disabled {opacity:.4;cursor:default}
+#motion-dock.remote-compact .hub-led svg {width:16px;height:20px}
+#motion-dock.remote-compact .hub-led-bars {font-size:17px;letter-spacing:-3px;line-height:20px}
+#motion-dock.remote-compact .hub-led-label {display:block;width:100%;line-height:9px}
+#motion-dock.remote-compact .hub-led[aria-pressed="true"] {color:#f5eccc;background:var(--chip);box-shadow:var(--lift1)}
+#motion-dock.remote-compact #glide-help {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0)}
+#motion-dock.app-remote.remote-compact[data-mode="floating"] .motion-dock-body {flex:none;overflow:visible}
+#motion-dock.app-remote.remote-compact .remote-card,#motion-dock.app-remote.remote-compact .remote-wellness-hub,#motion-dock.app-remote.remote-compact .hub-led {box-sizing:border-box}
+#motion-dock.app-remote.remote-compact .remote-compass {width:156px;height:156px}
+#motion-dock.app-remote.remote-compact .hub-led {width:54px;display:grid;grid-template-columns:16px 22px;grid-template-rows:20px 9px;gap:0;padding:3px 6px}
+#motion-dock.app-remote.remote-compact .hub-led-bars {font-size:15px;letter-spacing:-3px;line-height:20px}
+#motion-dock.app-remote.remote-compact .hub-led-label {grid-column:1 / -1}
+#motion-dock.app-remote.remote-compact .hub-led svg.hub-led-bars {width:22px;height:20px}
+#motion-dock.app-remote.remote-compact.collapsed {padding-bottom:0}
+#motion-dock.app-remote.remote-compact[data-mode="docked"][data-sized="true"] {scale:1;zoom:var(--remote-scale,1)}
+
+/* October 7 reference, measured at the fixed 720 × 298 controller size. */
+#motion-dock.app-remote.remote-compact {--compass:174px;--track-h:102px;backdrop-filter:none}
+#motion-dock.remote-compact[data-theme="dark"] {
+    --ground:#1b2229;--hub:#1b2229;--bar:#1b2229;
+    --pill-a:#252f37;--pill-b:#1b2229;--text:#e7e9eb;--text-2:#929da7;
+    --rim-empty:#37434d;--rim:#4d5865;--dial-a:#1c232c;--dial-b:#11171f;
+    --dial-groove:#070d15;--lift1:inset 1px 1px 1px #c9d7e711,3px 5px 8px #0004;
+}
+#motion-dock.app-remote.remote-compact .remote-header {position:relative;padding:0;border-bottom:0;background:linear-gradient(110deg,var(--hub),var(--ground))}
+#motion-dock.app-remote.remote-compact .remote-header>.remote-grip {display:none}
+#motion-dock.app-remote.remote-compact .remote-header>.remote-logo {position:absolute;left:146px;top:10px;width:112px;margin:0;filter:brightness(1.18)}
+#motion-dock.app-remote.remote-compact .remote-header>.remote-status {position:absolute;left:355px;top:17px;margin:0;width:10px;height:10px;border:1px solid #b8e8c0;background:#46bc67;box-shadow:0 0 5px #6bd68377}
+#motion-dock.app-remote.remote-compact .remote-header>.remote-chrome {position:absolute;margin:0;padding:0;width:23px;height:26px;top:9px;box-shadow:none;border:0;background:none}
+#motion-dock.app-remote.remote-compact .remote-header>.remote-menu {left:13px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;opacity:1}
+#motion-dock.app-remote.remote-compact .remote-menu span {height:2.5px;margin:0;background:linear-gradient(90deg,#d9e2e9,#6c7984);border-radius:3px}
+#motion-dock.app-remote.remote-compact .remote-menu span:nth-child(1) {width:19px}
+#motion-dock.app-remote.remote-compact .remote-menu span:nth-child(2) {width:14px}
+#motion-dock.app-remote.remote-compact .remote-menu span:nth-child(3) {width:9px}
+#motion-dock.app-remote.remote-compact .remote-header>[aria-label="Info"] {left:413px;opacity:.65}
+#motion-dock.app-remote.remote-compact .remote-header>[aria-label="Voice"] {left:476px;opacity:.5;filter:grayscale(1)}
+#motion-dock.app-remote.remote-compact #remote-shield {left:541px;filter:grayscale(1);opacity:.6}
+#motion-dock.app-remote.remote-compact #remote-shield[aria-pressed="true"] {filter:none;opacity:1}
+#motion-dock.app-remote.remote-compact #remote-stop {position:absolute;right:20px;top:6px;margin:0;width:54px;height:29px;font-size:11px;border:1px solid #923e39;background:linear-gradient(170deg,#f66b61 0%,#d8342b 40%,#b21b15 100%);box-shadow:inset 0 2px 1px #ffb3a86b,0 1px 2px #0005}
+/* The reference's handle is also the existing minimize / expand control. */
+#motion-dock.app-remote.remote-compact #motion-dock-toggle {position:absolute;left:340px;top:0;width:40px;height:13px;margin:0;border:0;background:none;color:transparent;font-size:0}
+#motion-dock.app-remote.remote-compact #motion-dock-toggle::after {content:'';position:absolute;width:38px;height:4px;left:1px;top:8px;border-radius:3px;background:#818589}
+#motion-dock.app-remote.remote-compact #motion-dock-toggle:focus-visible {outline:2px solid #789ced;outline-offset:0}
+#motion-dock.app-remote.remote-compact .remote-card {position:relative;padding:8px 9px;border-radius:18px}
+#motion-dock.app-remote.remote-compact .remote-card-heading {height:29px;flex:none;align-items:center}
+#motion-dock.app-remote.remote-compact .remote-heading {font-size:9px;letter-spacing:1.35px}
+#motion-dock.app-remote.remote-compact .remote-card>.remote-info {position:absolute;top:15px;right:9px;width:13px;height:13px;margin:0;opacity:.8}
+#motion-dock.app-remote.remote-compact [data-motion-panel="glide"]>.remote-info {top:auto;bottom:11px;right:16px}
+#motion-dock.app-remote.remote-compact .remote-card-heading>.remote-speed {position:absolute;left:75px;top:9px}
+#motion-dock.app-remote.remote-compact [data-motion-panel="glide"] .remote-speed {left:auto;right:10px;top:12px}
+#motion-dock.app-remote.remote-compact .remote-speed select {font-size:11px;letter-spacing:.5px;padding:7px 8px;line-height:1;border-radius:17px}
+#motion-dock.app-remote.remote-compact .remote-adjust {gap:0;align-items:center}
+#motion-dock.app-remote.remote-compact .remote-readout {position:relative;justify-content:flex-start;padding:0 0 24px;align-self:center;flex:1;min-width:0;margin:0}
+#motion-dock.app-remote.remote-compact .remote-readout input {font-size:36px;line-height:1.2;width:100%;font-weight:300;letter-spacing:-1.4px;flex:0 1 auto;margin:0}
+#motion-dock.app-remote.remote-compact .remote-readout::before {content:'';position:absolute;bottom:19px;left:3px;width:29px;height:1.5px;border-radius:2px;background:var(--rim-empty)}
+#motion-dock.app-remote.remote-compact .remote-readout::after {font-size:11px;letter-spacing:.8px;bottom:0;left:3px}
+#motion-dock.app-remote.remote-compact [data-motion-panel="tilt"] .remote-readout input {width:3ch;max-width:76px;flex:0 1 auto}
+#motion-dock.app-remote.remote-compact [data-motion-panel="tilt"] .remote-readout .unit {font-size:29px}
+#motion-dock.app-remote.remote-compact .remote-vslider {width:37px;height:102px;border-width:4px;margin:0 10px 0 0;border-color:var(--rim);box-shadow:inset 2px 2px 4px #0009,2px 3px 5px #0004}
+#motion-dock.app-remote.remote-compact .remote-vslider input {width:94px;height:29px}
+#motion-dock.app-remote.remote-compact .remote-vslider input::-webkit-slider-thumb {width:25px;height:25px}
+#motion-dock.app-remote.remote-compact .remote-vslider input::-moz-range-thumb {width:25px;height:25px}
+#motion-dock.app-remote.remote-compact .remote-arc {height:102px;width:55.83px;margin:0 -3px 0 0;filter:drop-shadow(2px 3px 3px #0005)}
+#motion-dock.app-remote.remote-compact .arc-rim {stroke:url(#tilt-rim)}
+#motion-dock.app-remote.remote-compact .arc-rim-light {stop-color:var(--text-2)}
+#motion-dock.app-remote.remote-compact .arc-rim-dark {stop-color:var(--rim)}
+#motion-dock.app-remote.remote-compact .arc-chevron {stroke-width:4;stroke:var(--text-2)}
+#motion-dock.app-remote.remote-compact .remote-arc .remote-sphere {--r:12px}
+#motion-dock.app-remote.remote-compact .remote-compass {position:absolute;width:174px;height:174px;left:50%;top:7px;transform:translateX(-50%);margin:0;color:var(--text-2);filter:drop-shadow(2px 3px 3px #0004)}
+#motion-dock.app-remote.remote-compact .remote-compass .remote-sphere {--r:13px}
+#motion-dock.app-remote.remote-compact .ring-light {stop-color:var(--pill-a)}
+#motion-dock.app-remote.remote-compact .ring-dark {stop-color:var(--dial-b)}
+#motion-dock.app-remote.remote-compact .dial-outer {stroke:var(--rim)}
+#motion-dock.app-remote.remote-compact .dial-hair {stroke:var(--text-2);stroke-opacity:.16}
+#motion-dock.app-remote.remote-compact .dial-rim {stroke:#060b12;stroke-opacity:1;stroke-width:2.2px}
+#motion-dock.app-remote.remote-compact .dial-tick {stroke:var(--text-2)}
+#motion-dock.app-remote.remote-compact .remote-chips {padding:0 14px 0 7px;gap:5px;box-sizing:border-box;position:relative}
+#motion-dock.app-remote.remote-compact .remote-chips::after {content:'••';position:absolute;right:0;top:4px;writing-mode:vertical-rl;letter-spacing:1px;font-size:13px;color:var(--text-2);opacity:.7;pointer-events:none}
+#motion-dock.app-remote.remote-compact .remote-chip {height:26px;font-size:10px;border-radius:10px;color:var(--ink)}
+#motion-dock.app-remote.remote-compact .remote-footer {grid-template-columns:1.57fr 1fr;gap:12px;padding:0 7px}
+#motion-dock.app-remote.remote-compact .remote-forms-row {gap:10px}
+#motion-dock.app-remote.remote-compact .remote-form {border-radius:16px;font-size:12px;font-weight:600;position:relative}
+#motion-dock.app-remote.remote-compact .remote-form::after {display:block;content:'⌃';position:absolute;right:5px;bottom:0;color:#5493d0;font-size:10px}
+#motion-dock.app-remote.remote-compact .remote-wellness-hub {gap:7px;position:relative;padding-right:17px}
+#motion-dock.app-remote.remote-compact .remote-wellness-hub>.remote-info {display:block;position:absolute;right:0;top:4px;width:13px;height:13px}
+#motion-dock.app-remote.remote-compact .hub-desk {width:27px}
+#motion-dock.app-remote.remote-compact .hub-timer {display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;position:relative;font-weight:400;padding:4px 8px 7px;border-radius:12px;box-sizing:border-box}
+#motion-dock.app-remote.remote-compact .hub-phase {width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:10px;letter-spacing:.5px;line-height:12px}
+#motion-dock.app-remote.remote-compact .hub-time {font-size:5px;letter-spacing:1px;line-height:7px}
+#motion-dock.app-remote.remote-compact .hub-progress {position:absolute;bottom:4px;left:10px;right:10px;height:2px;background:var(--sunk);border-radius:2px;overflow:hidden}
+#motion-dock.app-remote.remote-compact .hub-progress i {display:block;width:0;height:100%;background:#426ee7}
+#motion-dock.app-remote.remote-compact .hub-groove {width:37px;font-size:9px;border-radius:11px;color:#d9d4c4;font-weight:400}
+#motion-dock.app-remote.remote-compact .hub-led {width:54px;color:#d9d4c4;font-size:9px;font-weight:400}
+#motion-dock.app-remote.remote-compact .hub-groove:disabled {opacity:.65}
+
+#motion-dock.app-remote.remote-compact .remote-arc {width:64.42px}
+#motion-dock.app-remote.remote-compact .remote-header>[aria-label="Info"] .remote-info {width:13px;height:13px;opacity:1;margin:0}
+#motion-dock.app-remote.remote-compact .remote-mic-icon {width:19px;height:26px;color:var(--text-2)}
+#motion-dock.app-remote.remote-compact .remote-shield-icon {width:22px;height:28px;stroke:var(--text-2);stroke-width:1.2;fill:none;stroke-linejoin:round}
+#motion-dock.app-remote.remote-compact #remote-shield[aria-pressed="true"] .remote-shield-icon {stroke:#8cb5ed;fill:#2c599a44}
+
+#motion-dock.app-remote.remote-compact .hub-desk {height:38px;align-items:center;justify-content:center}
+#motion-dock.app-remote.remote-compact .hub-desk img {width:31px;height:38px;object-fit:contain;filter:drop-shadow(1px 2px 2px #0007)}
+
+#motion-dock.app-remote.remote-compact[data-theme="dark"] .remote-logo {content:url('./assets/app-icons/controller-logo-dark.svg')}
+/* Give the minimized handle a readable action without changing the open layout. */
+#motion-dock.app-remote.remote-compact.collapsed #motion-dock-toggle {left:310px;width:100px;height:16px;color:var(--text-2);font-size:8px;line-height:14px;letter-spacing:.3px}
+#motion-dock.app-remote.remote-compact.collapsed #motion-dock-toggle::after {content:'Expand controls ⌃';top:0;left:0;width:100%;height:auto;background:none}
+
+#motion-dock.app-remote.remote-compact.collapsed #motion-dock-toggle {color:transparent}
+#motion-dock.app-remote.remote-compact.collapsed #motion-dock-toggle::after {color:var(--text-2)}

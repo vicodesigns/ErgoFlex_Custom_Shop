@@ -26,6 +26,21 @@ const server = http.createServer((req, res) => {
         await page.goto(url);
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; await ErgoFlex.workspaceRoom.ready; });
+        if(process.argv.includes('--restore')){
+            const result=await page.evaluate(async()=>{
+                const ef=ErgoFlex;
+                ef.setMusicLayout('apartment');await ef.workspaceRoom.ready;
+                ef.setMusicMode('party',false);
+                const read=()=>({mic:ef.workspaceRoom.assets().find(o=>o.userData.propId==='music-vocal-mic').position.z,midi:ef.workspaceAccessories.dressAssets().find(o=>o.userData.propId==='music-midi-keyboard').position.x});
+                ef.workspaceRoom.assets().find(o=>o.userData.propId==='music-vocal-mic').position.z-=50;
+                ef.workspaceAccessories.dressAssets().find(o=>o.userData.propId==='music-midi-keyboard').position.x+=20;
+                const original=read();ef.setMusicLayout('house');await ef.workspaceRoom.ready;ef.setMusicMode('night',false);
+                const project=ef.serializeProject();ef.setRoomScene('product',false);const applied=ef.applyProject(project);await ef.workspaceRoom.ready;
+                ef.setMusicLayout('apartment');await ef.workspaceRoom.ready;ef.setMusicMode('party',false);
+                return {original,restored:read(),applied};
+            });
+            console.log(JSON.stringify(result));for(const key of ['mic','midi'])assert.ok(Math.abs(result.restored[key]-result.original[key])<1e-6);assert.equal(result.applied.ok,true);return;
+        }
         await page.waitForFunction(() => ErgoFlex.workspaceAccessories.dressAssets().some(o => o.userData.propId === 'curved-monitor'), { timeout: 120000 });
         assert.equal(await page.$eval('#music-room-controls', p => p.hidden), false);
         assert.equal(await page.$eval('#home-office-controls', p => p.hidden), true);
@@ -98,11 +113,13 @@ const server = http.createServer((req, res) => {
             const chair = ErgoFlex.workspaceRoom.assets().find(o => o.userData.propId === 'steelcase-leap-v2');
             chair.position.x += 60; return { key: chair.userData.sceneAssetKey, x: chair.position.x };
         });
-        const originalEdits = await page.evaluate(() => {
+        const originalEdits = await page.evaluate(async () => {
+            const {roomLifeBaseTransform}=await import('./room-life.mjs');
             const mic = ErgoFlex.workspaceRoom.assets().find(o => o.userData.propId === 'music-vocal-mic');
             const midi = ErgoFlex.workspaceAccessories.dressAssets().find(o => o.userData.propId === 'music-midi-keyboard');
             mic.position.z -= 50; midi.position.x += 20;
-            return { mic: mic.position.z, midi: midi.position.x };
+            const base=o=>roomLifeBaseTransform(o,{p:{...o.position},q:{x:o.quaternion.x,y:o.quaternion.y,z:o.quaternion.z,w:o.quaternion.w},s:{...o.scale}});
+            return { mic: base(mic).p.z, midi: base(midi).p.x };
         });
         for (const id of ['house', 'spacious', 'premium', 'executive']) {
             await page.select('#music-room-size', id);
@@ -120,10 +137,12 @@ const server = http.createServer((req, res) => {
         }
         await page.select('#music-room-size', 'apartment'); await page.evaluate(async () => { await ErgoFlex.workspaceRoom.ready; });
         assert.equal(await page.evaluate(key => ErgoFlex.workspaceRoom.assets().find(o => o.userData.sceneAssetKey === key).position.x, chairEdit.key), chairEdit.x, 'Music edits survive layout and desktop switches');
-        const readOriginalEdits = () => page.evaluate(() => ({
-            mic: ErgoFlex.workspaceRoom.assets().find(o => o.userData.propId === 'music-vocal-mic').position.z,
-            midi: ErgoFlex.workspaceAccessories.dressAssets().find(o => o.userData.propId === 'music-midi-keyboard').position.x
-        }));
+        const readOriginalEdits = () => page.evaluate(async () => {
+            const {roomLifeBaseTransform}=await import('./room-life.mjs');
+            const base=o=>roomLifeBaseTransform(o,{p:{...o.position},q:{x:o.quaternion.x,y:o.quaternion.y,z:o.quaternion.z,w:o.quaternion.w},s:{...o.scale}});
+            return {mic:base(ErgoFlex.workspaceRoom.assets().find(o => o.userData.propId === 'music-vocal-mic')).p.z,
+                midi:base(ErgoFlex.workspaceAccessories.dressAssets().find(o => o.userData.propId === 'music-midi-keyboard')).p.x};
+        });
         for (const [key, value] of Object.entries(await readOriginalEdits())) assert.ok(Math.abs(value - originalEdits[key]) < 1e-6, 'Original instrument and MIDI edits survive room changes');
         await page.evaluate(async () => { ErgoFlex.setGamingLayout('house'); await ErgoFlex.workspaceRoom.ready; ErgoFlex.setGamingMode('night'); });
         assert.equal(await page.evaluate(() => ErgoFlex.musicMode), 'party');

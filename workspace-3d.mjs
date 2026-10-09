@@ -1,5 +1,7 @@
-import { refineRoomSurfaces } from './room-refinement.mjs?v=groove-routines-20261002';
-import { RoomLife } from './room-life.mjs?v=groove-routines-20261002';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout } from './institutional-scenes.mjs?v=institutional-atmosphere-20261008';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=institutional-atmosphere-20261008';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=institutional-atmosphere-20261008';
+import { RoomLife } from './room-life.mjs?v=institutional-atmosphere-20261008';
 import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
@@ -52,7 +54,7 @@ function disposeTree(root) {
         if (obj.userData.sharedProp) return;
         if (obj.isInstancedMesh) obj.dispose();
         if (obj.geometry) geometries.add(obj.geometry);
-        for (const m of (Array.isArray(obj.material) ? obj.material : [obj.material])) {
+        for (const m of [...(Array.isArray(obj.material) ? obj.material : [obj.material]), ...(obj.replacedMaterials || [])]) {
             if (!m) continue;
             materials.add(m);
             if (!m.userData.sharedTextures) for (const value of Object.values(m)) {
@@ -542,10 +544,12 @@ export const ROOM_SCENES = [
         { id: 'glasses-2', at: [-400, 0, -60], turn: -20 },
         { id: 'gold-award', at: [430, 0, -120], turn: -15 }
       ],
-      shell: 'gallery', feature: 'window', props: galleryLayoutForSize('48x30').props }
+      shell: 'gallery', feature: 'window', props: galleryLayoutForSize('48x30').props },
+    ...INSTITUTIONAL_IDS.map(id => { const p = INSTITUTIONAL_ROOMS[id]; return { id, name: p.name, caption: p.caption, category: p.category, tone: 'gallery', desk: [{ id: 'journal', at: [160, 0, 70] }, { id: 'kenney-furniture-laptop', at: [-230, 0, 10] }], shelf: [{ id: 'paper-holder', at: [300, 0, 0] }], props: [] }; })
 ];
 
 export const ROOM_ATMOSPHERES = {
+    ...Object.fromEntries(INSTITUTIONAL_IDS.map(id => [id, { ...INSTITUTIONAL_ROOMS[id].modes.morning, space: [1000, 1000, 1400] }])),
     product: { label: 'Softbox studio', space: [0, 0, 0], key: '#fff9f0', fill: '#e8f0ff', accent: '#ffffff', power: 1.5, ambient: .35, exposure: .95, bounce: 1.3 },
     office: { label: 'Fresh morning', space: [700, 650, 650], key: '#fff5df', fill: '#dceeff', accent: '#d3f1df', power: 1.8, ambient: .48, exposure: 1.02, bounce: .85 },
     library: { label: 'Campus daylight', space: [1000, 1000, 1400], key: '#fff0d7', fill: '#dcecf0', accent: '#c0d7be', power: 1.45, ambient: .46, exposure: 1.07, bounce: .65 },
@@ -610,6 +614,7 @@ export class WorkspaceRoom {
         if (!ROOM_SCENES.some(s => s.id === id)) id = 'product';
         // Any prop load still in flight belongs to the room being replaced.
         this.token++;
+        this.grounding?.dispose(); this.grounding = null;
         this.ownedMaterials.forEach(mat => mat.dispose()); this.ownedMaterials.clear();
         if (this.root) disposeTree(this.root);
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
@@ -619,7 +624,10 @@ export class WorkspaceRoom {
         this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.life = null;
         if (id === 'product') { this.ready = Promise.resolve(); return; }
         let scene = ROOM_SCENES.find(s => s.id === id);
-        if (id === 'home') {
+        if (INSTITUTIONAL_ROOMS[id]) {
+            this.roomLayout = institutionalLayout(id, options.layout, options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'home') {
             this.homeLayout = options.layout ? homeLayoutById(options.layout) : homeLayoutForSize(options.size);
             this.roomLayout = this.homeLayout;
             scene = { ...scene, props: this.homeLayout.props, physical: true };
@@ -689,6 +697,7 @@ export class WorkspaceRoom {
         else if (id === 'library') buildLibraryRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'coworking') buildCoworkingRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'office') buildOfficeRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (INSTITUTIONAL_ROOMS[id]) buildInstitutionalRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else this.buildShell(root, scene);
         if (this.roomLayout) {
             this.life = new RoomLife(this, { material, mesh, box, rod, sphere, markSceneAsset });
@@ -876,6 +885,16 @@ export class WorkspaceRoom {
             if (placement.scale) object.scale.multiplyScalar(placement.scale);
             markSceneAsset(object, { key: `${scene.id}:${scene.physical ? this.roomLayout.id + ':' : ''}room:${index}:${placement.id}` });
             root.add(object);
+            // Upgrade a procedural fixture without changing its saved editor key.
+            // Shared GLB resources stay owned by PROP_LIBRARY, as for other props.
+            const fixture = placement.replaceFixture && this.assets().find(o => o.userData.propId === placement.replaceFixture);
+            if (fixture) {
+                const retired = new Set();
+                fixture.traverse(o => { if (o.isMesh && !o.userData.sharedProp) { o.geometry.dispose(); for (const m of (Array.isArray(o.material) ? o.material : [o.material])) retired.add(m); } });
+                fixture.replacedMaterials = [...retired];
+                fixture.clear(); root.updateMatrixWorld(true); fixture.attach(object);
+                object.userData.sceneAsset = false; fixture.userData.propId = placement.id;
+            }
             const support=this.propSupports.find(s=>s.id===placement.id&&s.at.every((v,i)=>Math.abs(v-position[i])<1));
             if(support){root.updateMatrixWorld(true);support.obj.attach(object);}
         }
@@ -903,6 +922,7 @@ export class WorkspaceRoom {
         return object;
     }
     update(camera) {
+        this.grounding?.update();
         for (const wall of this.walls) wall.obj.visible = (wall.sign || 1) * (camera.position[wall.axis] - wall.limit) > .05;
         if (this.ceilingFixture) this.ceilingFixture.visible = camera.position.y < (this.roomLayout.height + 200) * this.root.scale.x;
     }

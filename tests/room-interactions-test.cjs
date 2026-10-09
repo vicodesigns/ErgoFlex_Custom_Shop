@@ -27,6 +27,119 @@ const server = http.createServer((req, res) => {
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length===4&&getComputedStyle(document.querySelector('#loader')).display==='none',{timeout:120000});
         await page.evaluate(async()=>{ErgoFlex.renderer.setPixelRatio(.6);ErgoFlex.renderer.shadowMap.enabled=false;await ErgoFlex.workspaceRoom.ready;ErgoFlex.setMusicLayout('house');await ErgoFlex.workspaceRoom.ready;});
 
+        const aimAt = id => page.evaluate(async id=>{
+            const THREE=await import('three'),r=ErgoFlex.roomInteractions,e=r.entries.find(e=>e.id===id),b=new THREE.Box3().setFromObject(e.obj),center=b.getCenter(new THREE.Vector3());
+            const offset=e.surface==='wall'?new THREE.Vector3(e.wall.axis==='x'?(e.wall.sign||1)*2:.4,.3,e.wall.axis==='z'?(e.wall.sign||1)*2:.4):new THREE.Vector3(1.8,1.7,2.2);
+            r.camera.position.copy(center).add(offset);r.controls.target.copy(center);r.controls.update();r.camera.updateMatrixWorld(true);ErgoFlex.workspaceRoom.update(r.camera);
+            const rect=r.canvas.getBoundingClientRect(),meshes=[];e.obj.traverse(o=>{if(o.isMesh)meshes.push(o);});
+            const belongs=obj=>{for(let p=obj;p;p=p.parent)if(p===e.obj)return true;return false;};
+            for(const mesh of meshes){
+                const p=new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3()),v=p.clone().project(r.camera),x=rect.left+(v.x+1)*rect.width/2,y=rect.top+(1-v.y)*rect.height/2;
+                if(document.elementFromPoint(x,y)!==r.canvas)continue;r.point({clientX:x,clientY:y});
+                const hit=r.ray.intersectObject(r.root,true).find(h=>{for(let o=h.object;o;o=o.parent)if(!o.visible)return false;return true;});
+                const desk=r.ray.intersectObject(ErgoFlex.loadedModel,true).find(h=>{if(h.object.material?.isShaderMaterial)return false;for(let o=h.object;o;o=o.parent)if(!o.visible)return false;return true;});
+                if(hit&&desk&&desk.distance<hit.distance-.01)continue;
+                if(hit&&belongs(hit.object))return {x,y,world:hit.point.toArray()};
+            }
+            throw new Error('No visible mesh surface for '+e.name);
+        },id);
+
+        if(process.argv.includes('--undo')){
+            await page.$eval('#motion-dock',e=>e.style.visibility='hidden');
+            await new Promise(r=>setTimeout(r,1000));
+            const close=(a,b,label)=>assert.ok(a.every((v,i)=>Math.abs(v-b[i])<1e-6),label);
+            const state=id=>page.evaluate(id=>{const e=ErgoFlex.roomInteractions.entries.find(e=>e.id===id);return {p:e.obj.position.toArray(),q:e.obj.quaternion.toArray(),undo:ErgoFlex.undoCount,redo:ErgoFlex.redoCount};},id);
+            const shortcut=async(key,shift=false)=>{
+                await page.keyboard.down('Control');if(shift)await page.keyboard.down('Shift');
+                await page.keyboard.press(key);if(shift)await page.keyboard.up('Shift');await page.keyboard.up('Control');
+            };
+            const dragObject=async(id,delta)=>{
+                const hit=await aimAt(id);
+                const end=await page.evaluate(async({hit,delta})=>{
+                    const THREE=await import('three'),r=ErgoFlex.roomInteractions,rect=r.canvas.getBoundingClientRect(),p=new THREE.Vector3(...hit.world).add(new THREE.Vector3(...delta)).project(r.camera);
+                    return {x:rect.left+(p.x+1)*rect.width/2,y:rect.top+(1-p.y)*rect.height/2};
+                },{hit,delta});
+                await page.mouse.move(hit.x,hit.y);await page.mouse.down();
+                await page.waitForFunction(()=>!!ErgoFlex.roomInteractions.drag);
+                await page.mouse.move(end.x,end.y,{steps:8});await page.mouse.up();
+                await page.waitForFunction(()=>!ErgoFlex.roomInteractions.drag);
+            };
+            const chair=await page.evaluate(async()=>{
+                const THREE=await import('three'),r=ErgoFlex.roomInteractions,e=r.entries.find(e=>/steelcase/.test(e.name)),b=new THREE.Box3().setFromObject(e.obj),f=ErgoFlex.workspaceRoom.floorBounds;
+                r.entries.forEach(other=>other.obj.visible=other===e);r.moveObject(e.obj,f.max.x-1.1-b.max.x,f.max.z-.8-b.max.z);
+                return e.id;
+            });
+            const before=await state(chair);
+            await dragObject(chair,[-.22,0,-.18]);const moved=await state(chair);
+            assert.equal(moved.undo,before.undo+1,'An entire drag is one history entry');assert.ok(Math.abs(moved.p[0]-before.p[0])>50);
+            await page.click('[data-room-object-turn="15"]');const rotated=await state(chair);
+            assert.equal(rotated.undo,moved.undo+1,'Rotation creates an entry');assert.notDeepEqual(rotated.q,moved.q);
+            await page.waitForFunction(()=>document.getElementById('room-save-status').textContent==='Saved in this browser');
+            await shortcut('z');close((await state(chair)).q,moved.q,'Ctrl+Z undoes rotation');
+            await shortcut('z');close((await state(chair)).p,before.p,'Ctrl+Z undoes floor drag');
+            await shortcut('y');close((await state(chair)).p,moved.p,'Ctrl+Y redoes floor drag');
+            await shortcut('z');await shortcut('z',true);close((await state(chair)).p,moved.p,'Ctrl+Shift+Z redoes');
+            await page.click('#room-redo-btn');close((await state(chair)).q,rotated.q,'Visible Redo button works');
+            await page.focus('#room-rearrange-toggle');await shortcut('z');close((await state(chair)).q,moved.q,'Checkbox focus does not swallow undo');
+            await page.$eval('#motion-dock',e=>e.style.visibility='');
+            if(await page.$eval('#motion-dock-content',e=>getComputedStyle(e).display==='none'))await page.click('#motion-dock-toggle');
+            await page.focus('#desk-height-display');assert.equal(await page.evaluate(()=>document.activeElement.id),'desk-height-display');
+            const guarded=await state(chair);await shortcut('z');assert.equal((await state(chair)).undo,guarded.undo,'Numeric input retains its own shortcuts');
+            await page.$eval('#motion-dock',e=>e.style.visibility='hidden');
+            await page.click('#room-undo-btn');close((await state(chair)).p,before.p,'Visible Undo button works');
+            await dragObject(chair,[-.15,0,-.1]);assert.equal((await state(chair)).redo,0,'New gesture clears redo');
+            const clickBefore=await state(chair),hit=await aimAt(chair);await page.mouse.click(hit.x,hit.y);assert.equal((await state(chair)).undo,clickBefore.undo,'A selection click creates no edit');
+            // Wall decorations use the same history and preserve their mounting plane.
+            const wall=await page.evaluate(()=>{const r=ErgoFlex.roomInteractions,e=r.entries.find(e=>e.surface==='wall');r.entries.forEach(other=>other.obj.visible=other===e);e.wall.obj.visible=true;return {id:e.id,axis:e.wall.axis};});
+            const wallBefore=await state(wall.id);await dragObject(wall.id,wall.axis==='x'?[0,.08,.08]:[.08,.08,0]);const wallAfter=await state(wall.id);
+            assert.equal(wallAfter.undo,wallBefore.undo+1);assert.notDeepEqual(wallAfter.p,wallBefore.p);
+            await shortcut('z');close((await state(wall.id)).p,wallBefore.p,'Wall drag undoes');
+            await shortcut('y');close((await state(wall.id)).p,wallAfter.p,'Wall drag redoes');
+            await page.waitForFunction(()=>document.getElementById('room-save-status').textContent==='Saved in this browser');
+            const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('ergoflex.sceneAssets.v1')));
+            await page.reload();await page.waitForFunction(()=>window.ErgoFlex?.wheelRigs.length===4&&getComputedStyle(document.querySelector('#loader')).display==='none',{timeout:120000});
+            await page.evaluate(()=>ErgoFlex.workspaceRoom.ready);
+            const restored=await page.evaluate(()=>Object.fromEntries([...ErgoFlex.sceneAssetStates].map(([key,value])=>[key,Object.fromEntries(value.transforms)])));
+            for(const [key,value] of Object.entries(saved))assert.deepEqual(restored[key],value.transforms,'Undo/redo arrangement restores after reload');
+            assert.equal(await page.evaluate(()=>ErgoFlex.undoCount),0,'History is session-only');
+            assert.deepEqual(errors,[]);console.log('Furniture undo/redo: floor drag, rotation, wall drag, keyboard and buttons, focus guard, autosave and reload pass.');return;
+        }
+
+        if(process.argv.includes('--rearrange')){
+            assert.equal(await page.$eval('#room-rearrange-toggle',e=>e.checked),true,'Rearranging starts on');
+            await page.evaluate(()=>{const r=ErgoFlex.roomInteractions;r.select(r.entries.find(e=>e.surface==='floor'));});
+            assert.equal(await page.$eval('#room-object-controls',e=>e.hidden),false);
+            await page.click('#room-rearrange-toggle');
+            assert.deepEqual(await page.evaluate(()=>({enabled:ErgoFlex.roomInteractions.enabled(),selected:ErgoFlex.roomInteractions.selected,drag:ErgoFlex.roomInteractions.drag})),{enabled:false,selected:null,drag:null});
+            assert.equal(await page.$eval('#room-object-controls',e=>e.hidden),true);
+            const locked=await page.evaluate(()=>{
+                const r=ErgoFlex.roomInteractions,e=r.entries.find(e=>e.surface==='floor'),before=e.obj.quaternion.toArray();
+                r.down({target:r.canvas,button:0,pointerId:1,clientX:100,clientY:100});
+                const pointerIgnored=!r.drag&&!r.selected;
+                r.select(e);const rotated=r.rotateSelected(15),after=e.obj.quaternion.toArray();r.select(null);
+                return {pointerIgnored,rotated,before,after};
+            });
+            assert.equal(locked.pointerIgnored,true);assert.equal(locked.rotated,false);assert.deepEqual(locked.after,locked.before);
+            const contact=await page.evaluate(async()=>{
+                const THREE=await import('three'),r=ErgoFlex.roomInteractions,d=r.deskBox(),e=r.entries.find(e=>e.collider&&!e.pushable);
+                r.entries.forEach(other=>other.obj.visible=other===e);
+                const b=new THREE.Box3().setFromObject(e.obj);
+                r.moveObject(e.obj,d.max.x+.02-b.min.x,(d.min.z+d.max.z-b.min.z-b.max.z)/2);
+                return r.moveDesk(d,{x:.1,z:0}).blocked;
+            });
+            assert.equal(contact,true,'Desk collision remains enabled while rearranging is off');
+            await page.evaluate(()=>{ErgoFlex.setRoomScene('library',false);});
+            assert.equal(await page.$eval('#room-rearrange-toggle',e=>e.checked),false,'Scene change keeps choice');
+            await page.reload();
+            await page.waitForFunction(()=>window.ErgoFlex?.wheelRigs.length===4&&getComputedStyle(document.querySelector('#loader')).display==='none',{timeout:120000});
+            assert.equal(await page.$eval('#room-rearrange-toggle',e=>e.checked),false,'Reload keeps choice');
+            await page.click('#room-rearrange-toggle');
+            assert.equal(await page.evaluate(()=>ErgoFlex.roomInteractions.enabled()),true,'Toggle restores editing');
+            await page.evaluate(()=>ErgoFlex.setRoomScene('product',false));
+            assert.equal(await page.$eval('#room-rearrange-control',e=>getComputedStyle(e).display),'none');
+            assert.deepEqual(errors,[]);console.log('Rearrange toggle: defaults, selection clearing, pointer/rotation lock, collision, scene changes and reload persistence pass.');return;
+        }
+
         if(process.argv.includes('--safety')){
             await page.evaluate(()=>{ErgoFlex.renderer.setPixelRatio(.3);ErgoFlex.setLedEffect({mode:'solid'});ErgoFlex.setLedColor('#0345ff');ErgoFlex.setLedsEnabled(true);ErgoFlex.setTouchscreenOpen(true);});
             await page.$eval('#glide-speed',e=>{e.value=[...e.options].at(-1).value;e.dispatchEvent(new Event('change'));});
@@ -134,22 +247,10 @@ const server = http.createServer((req, res) => {
         await page.waitForFunction(()=>ErgoFlex.roomCollisionBlocked,{timeout:60000});
         const stopped=await page.evaluate(async id=>{const THREE=await import('three'),r=ErgoFlex.roomInteractions,e=r.entries.find(e=>e.id===id);return {position:ErgoFlex.glidePosition,furniture:e.obj.getWorldPosition(new THREE.Vector3()).toArray()};},fixed.id);
         assert.deepEqual(stopped.furniture,fixed.before);assert.ok(stopped.position.x<fixed.start.x+.3,'Cabinet stops desk');
+        assert.equal(await page.evaluate(()=>ErgoFlex.collisionState.alert?.kind),'contact','A blocked push into a low cabinet also latches CLEAR');
         await page.click('[data-safety-clear]');
         // Pick an actual visible mesh surface, rather than the empty centre of a chair.
-        const aimAt = id => page.evaluate(async id=>{
-            const THREE=await import('three'),r=ErgoFlex.roomInteractions,e=r.entries.find(e=>e.id===id),b=new THREE.Box3().setFromObject(e.obj),center=b.getCenter(new THREE.Vector3());
-            const offset=e.surface==='wall'?new THREE.Vector3(e.wall.axis==='x'?(e.wall.sign||1)*2:.4,.3,e.wall.axis==='z'?(e.wall.sign||1)*2:.4):new THREE.Vector3(1.8,1.7,2.2);
-            r.camera.position.copy(center).add(offset);r.controls.target.copy(center);r.controls.update();r.camera.updateMatrixWorld(true);ErgoFlex.workspaceRoom.update(r.camera);
-            const rect=r.canvas.getBoundingClientRect(),meshes=[];e.obj.traverse(o=>{if(o.isMesh)meshes.push(o);});
-            const belongs=obj=>{for(let p=obj;p;p=p.parent)if(p===e.obj)return true;return false;};
-            for(const mesh of meshes){
-                const p=new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3()),v=p.clone().project(r.camera),x=rect.left+(v.x+1)*rect.width/2,y=rect.top+(1-v.y)*rect.height/2;
-                if(document.elementFromPoint(x,y)!==r.canvas)continue;r.point({clientX:x,clientY:y});
-                const hit=r.ray.intersectObject(r.root,true).find(h=>{for(let o=h.object;o;o=o.parent)if(!o.visible)return false;return true;});
-                if(hit&&belongs(hit.object))return {x,y,world:hit.point.toArray()};
-            }
-            throw new Error('No visible mesh surface for '+e.name);
-        },id);
+
         const projectShift = (hit,delta) => page.evaluate(async ({hit,delta})=>{
             const THREE=await import('three'),r=ErgoFlex.roomInteractions,rect=r.canvas.getBoundingClientRect(),p=new THREE.Vector3(...hit.world).add(new THREE.Vector3(...delta)).project(r.camera);
             return {x:rect.left+(p.x+1)*rect.width/2,y:rect.top+(1-p.y)*rect.height/2};
@@ -204,15 +305,24 @@ const server = http.createServer((req, res) => {
         for(let i=0;i<4;i++)assert.ok(Math.abs(restored.q[i]-cabinetSaved.q[i])<1e-6,'Saved furniture rotation restores');
         // Touch uses the same floor plane and exposes the same rotation controls.
         await page.setViewport({width:480,height:900});
+        // Isolate furniture input from the floating controller overlay, as in
+        // the CAD tap test, and let the responsive camera projection settle.
+        await page.evaluate(()=>{document.querySelector('#motion-dock').style.visibility='hidden';});
+        await page.waitForFunction(()=>{const r=ErgoFlex.roomInteractions,c=r.canvas.getBoundingClientRect();return c.left>=0&&c.right<=innerWidth+1&&Math.abs(r.camera.aspect-c.width/c.height)<.001;});
+        // The mobile store stacks the viewer below its configuration column.
+        await page.$eval('#model-canvas',canvas=>canvas.scrollIntoView({block:'center'}));
+        await new Promise(resolve=>setTimeout(resolve,900)); // finish the scene camera tween before aiming
         await page.evaluate(()=>{const r=ErgoFlex.roomInteractions,e=r.entries.find(e=>/cabinet/i.test(e.name));r.entries.forEach(other=>other.obj.visible=other===e);});
         const touchId=await page.evaluate(()=>ErgoFlex.roomInteractions.entries.find(e=>/cabinet/i.test(e.name)).id),touchHit=await aimAt(touchId),touchEnd=await projectShift(touchHit,[-.1,0,0]);
         const touchBefore=await page.evaluate(id=>ErgoFlex.roomInteractions.entries.find(e=>e.id===id).obj.position.toArray(),touchId),cdp=await page.createCDPSession();
         await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:touchHit.x,y:touchHit.y}]});
-        assert.ok(await page.evaluate(()=>ErgoFlex.roomInteractions.drag),'Touch selects furniture');
+        await page.waitForFunction(()=>ErgoFlex.roomInteractions.drag,{timeout:5000});
         for(let i=1;i<=6;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:touchHit.x+(touchEnd.x-touchHit.x)*i/6,y:touchHit.y+(touchEnd.y-touchHit.y)*i/6}]});
         await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+        await page.waitForFunction(()=>!ErgoFlex.roomInteractions.drag,{timeout:5000});
         assert.ok(await page.evaluate(({id,before})=>{const e=ErgoFlex.roomInteractions.entries.find(e=>e.id===id);return Math.hypot(e.obj.position.x-before[0],e.obj.position.z-before[2])>30;},{id:touchId,before:touchBefore}),'Touch drag moves cabinet');
         await page.setViewport({width:1500,height:1200});
+        await page.evaluate(()=>{document.querySelector('#motion-dock').style.visibility='';});
         await page.evaluate(async()=>{ErgoFlex.setRoomScene('library',false);await ErgoFlex.workspaceRoom.ready;});
         const support=await page.evaluate(async()=>{
             const THREE=await import('three'),r=ErgoFlex.roomInteractions,e=r.entries.find(e=>/study table/i.test(e.name));

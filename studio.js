@@ -1,12 +1,17 @@
 import { LedCommandCenter } from './led-command-center.mjs?v=desktop-bands-back-20261005';
-import { normalizeCustomLook, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
-import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=groove-routines-20261002';
-import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=groove-routines-20261002';
-import { RoomGroove } from './room-groove-runtime.mjs?v=room-safety-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=room-safety-20261006';
-import { RoomSafety } from './room-safety.mjs?v=room-safety-20261006';
+import { normalizeCustomLook, normalizeCustomPalette, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
+import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=institutional-atmosphere-20261008';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=institutional-atmosphere-20261008';
+import { RoomGroove } from './room-groove-runtime.mjs?v=groove-save-20261007';
+import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
+import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
+import { RoomInteractions } from './room-interactions.mjs?v=institutional-atmosphere-20261008';
+import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
+import { roomPolishLighting } from './room-polish.mjs?v=institutional-atmosphere-20261008';
 import { RoomLedSpill } from './room-led-spill.mjs?v=room-furnishings-20261006';
+import { SurfaceArtwork } from './surface-artwork.mjs?v=institutional-atmosphere-20261008';
+import { artworkSummary } from './artwork-config.mjs?v=institutional-atmosphere-20261008';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
@@ -27,12 +32,13 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
-         WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=public-plates-controls-20260930';
+         WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=institutional-atmosphere-20261008';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=room-furnishings-20261006';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=institutional-atmosphere-20261008';
+import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=institutional-atmosphere-20261008';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=groove-routines-20261002';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=groove-routines-20261002';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=room-furnishings-20261006';
@@ -42,7 +48,7 @@ import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } f
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
-import { ARWorkspace } from './ar-workspace.mjs?v=desktop-bands-back-20261005';
+import { ARWorkspace } from './ar-workspace.mjs?v=compact-controller-20261007';
 import { accessoryIllustration } from './workspace-icons.mjs';
 
 // Configuration
@@ -136,6 +142,8 @@ const INITIAL_ANIMATED_PARTS = [
 ];
 
 let currentConfig = { ...defaultConfig(), ...(EVENT_DEMO ? { size: '60x30' } : {}) };
+let restoredBuildSize = false;
+let surfaceArtwork = null;
 let cartItems = [];
 // V2 keys: the configuration gained an accessories list. V1 keys are still read
 // once, as a migration, and never written again.
@@ -229,7 +237,15 @@ function restoreSceneAssetStates(value) {
 }
 
 function persistSceneAssetStates() {
-    try { localStorage.setItem(SCENE_ASSET_STATE_KEY, JSON.stringify(serializeSceneAssetStates())); } catch (_) {}
+    try {
+        localStorage.setItem(SCENE_ASSET_STATE_KEY, JSON.stringify(serializeSceneAssetStates()));
+        setRoomSaveStatus('Saved in this browser');
+    } catch (_) { setRoomSaveStatus('Save failed — browser storage is unavailable'); }
+}
+
+function setRoomSaveStatus(message) {
+    const status=document.getElementById('room-save-status');
+    if(status)status.textContent=message;
 }
 
 try { restoreSceneAssetStates(JSON.parse(localStorage.getItem(SCENE_ASSET_STATE_KEY) || '{}')); } catch (_) {}
@@ -328,7 +344,7 @@ function clearSceneAssetRegistration() {
 
 function discardSceneAssetUndoEntries() {
     const clean = stack => stack.flatMap(entry => {
-        if (entry.type === 'scene-assets') return [];
+        if (entry.type === 'scene-assets' || entry.type === 'room-transform') return [];
         if (entry.type !== 'transform') return [entry];
         const items = entry.items.filter(item => !item.obj.userData?.sceneAsset);
         return items.length ? [{ ...entry, items }] : [];
@@ -520,9 +536,28 @@ try {
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
 let roomInteractions = null, roomFurnitureSaveTimer = null, roomCollisionBlocked = false;
+let roomRearrangeEnabled = readStore('ergoflex.roomRearrange', 1, null)?.enabled !== false;
+
+function syncRoomRearrangeUI() {
+    const toggle=document.getElementById('room-rearrange-toggle');
+    if(toggle)toggle.checked=roomRearrangeEnabled;
+    const hint=document.getElementById('room-interaction-hint');
+    if(hint)hint.textContent=(roomRearrangeEnabled
+        ? 'Drag floor furnishings to move them; select one to rotate it. Drag wall decorations along their wall. '
+        : 'Rearranging is off. Drag to orbit the room. ')
+        +'Contact stops the desk until CLEAR. After clearing, small objects can be pushed. Turn on the shield to stop before contact.';
+}
+
+function setRoomRearrangeEnabled(enabled) {
+    roomRearrangeEnabled=!!enabled;
+    if(!roomRearrangeEnabled){roomInteractions?.end();roomInteractions?.select(null);}
+    writeStore('ergoflex.roomRearrange',{v:1,enabled:roomRearrangeEnabled});
+    syncRoomRearrangeUI();
+}
 const roomLedSpill = new RoomLedSpill();
 let roomLedGain = 0;
 let roomGroove = null, grooveSettingPose = false;
+let groovePresets = normalizeGroovePresets(readStore(GROOVE_PRESETS_KEY, 1, null)?.presets);
 let homeMode = 'afternoon', homeDeskReturn = null;
 let homeLayoutId = 'apartment';
 try { const stored = localStorage.getItem('ergoflex.homeLayout'); if (HOME_LAYOUTS[stored]) homeLayoutId = stored; } catch {}
@@ -646,8 +681,22 @@ try {
     if (query.get('room') === 'lounge' && LOUNGE_LAYOUTS[query.get('layout')]) loungeLayoutId = query.get('layout');
 } catch {}
 function selectedLoungeLayout() { return loungeLayoutId ? loungeLayoutById(loungeLayoutId) : loungeLayoutForSize(currentConfig.size); }
+const institutionalState = Object.fromEntries(INSTITUTIONAL_IDS.map(id => {
+    const p = INSTITUTIONAL_ROOMS[id]; let layout = null, mode = 'morning';
+    try {
+        const saved = localStorage.getItem(`ergoflex.${id}Layout`), phase = localStorage.getItem(`ergoflex.${id}Mode`);
+        if (p.layouts[saved]) layout = saved; if (p.modes[phase]) mode = phase;
+        const q = new URLSearchParams(location.search); if (q.get('room') === id && p.layouts[q.get('layout')]) layout = q.get('layout');
+    } catch {}
+    return [id, { layout, mode }];
+}));
+const MEASURED_ROOM_IDS = ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'gallery', 'scifi', 'coworking', 'library', ...INSTITUTIONAL_IDS];
 function measuredRoomPanelId(id) { return id === 'home' ? 'home-office-controls' : `${id}-room-controls`; }
 function measuredRoomProfile(id = selectedRoomScene) {
+    if (INSTITUTIONAL_ROOMS[id]) {
+        const p = INSTITUTIONAL_ROOMS[id], state = institutionalState[id];
+        return { id, layouts: p.layouts, modes: p.modes, layout: institutionalLayout(id, state.layout, currentConfig.size), mode: state.mode, prefix: id };
+    }
     if (id === 'library') return { id, layouts: LIBRARY_LAYOUTS, modes: LIBRARY_MODES, layout: selectedLibraryLayout(), mode: libraryMode, prefix: 'library' };
     if (id === 'coworking') return { id, layouts: COWORKING_LAYOUTS, modes: COWORKING_MODES, layout: selectedCoworkingLayout(), mode: coworkingMode, prefix: 'coworking' };
     if (id === 'bedroom') return { id, layouts: BEDROOM_LAYOUTS, modes: BEDROOM_MODES, layout: selectedBedroomLayout(), mode: bedroomMode, prefix: 'bedroom' };
@@ -1089,7 +1138,7 @@ function initThreeJS() {
 
     roomInteractions = new RoomInteractions({canvas:renderer.domElement,camera,controls,scene,
         room:()=>workspaceRoom,deskBox:deskCollisionBox,deskObject:()=>loadedModel,safety:roomSafety,
-        enabled:()=>!!workspaceRoom?.root&&!liveAR?.active&&!isSelectionMode&&!isDraggingTransform&&!roomGroove?.run,
+        enabled:()=>roomRearrangeEnabled&&!!workspaceRoom?.root&&!liveAR?.active&&!isSelectionMode&&!isDraggingTransform&&!roomGroove?.run,
         onSelection:entry=>{
             const toolbar=document.getElementById('room-object-controls');if(!toolbar)return;
             toolbar.hidden=!entry;
@@ -1099,8 +1148,19 @@ function initThreeJS() {
         onStatus:notifyUser,onChange:()=>{
             if(roomGroove?.prepared)roomGroove.reset();
             clearTimeout(roomFurnitureSaveTimer);
+            setRoomSaveStatus('Saving…');
             roomFurnitureSaveTimer=setTimeout(persistSceneAssetStates,350);
+        },
+        onEditStart:()=>[...new Set(roomInteractions.entries.flatMap(entry=>entry.objects))]
+            .filter(obj=>obj.parent).map(obj=>({obj,before:canonicalTransformPlain(obj)})),
+        onEditEnd:snapshot=>{
+            const items=(snapshot||[]).map(item=>({...item,after:canonicalTransformPlain(item.obj)}))
+                .filter(item=>['p','q','s'].some(key=>Object.keys(item.before[key]).some(axis=>Math.abs(item.before[key][axis]-item.after[key][axis])>1e-8)));
+            if(items.length)transaction({type:'room-transform',items});
         }});
+    window.addEventListener('pagehide',()=>{
+        roomInteractions?.end();clearTimeout(roomFurnitureSaveTimer);persistSceneAssetStates();
+    });
     loadModel();
 
     window.addEventListener('resize', syncViewerSize);
@@ -1143,6 +1203,9 @@ function updateUndoBtn() {
         redoBtn.disabled = redoStack.length === 0;
         redoBtn.textContent = redoStack.length ? 'Redo (' + redoStack.length + ')' : 'Redo';
     }
+    const roomUndo=document.getElementById('room-undo-btn'),roomRedo=document.getElementById('room-redo-btn');
+    if(roomUndo)roomUndo.disabled=!undoStack.length;
+    if(roomRedo)roomRedo.disabled=!redoStack.length;
     refreshTransformInspector();
 }
 
@@ -1415,6 +1478,7 @@ function captureOfficeStation(spec, millimetreScale) {
 function invertEntry(entry) {
     switch (entry.type) {
         case 'transform':
+        case 'room-transform':
             return { ...entry, items: entry.items.map(i => ({ obj: i.obj, before: i.after, after: i.before })) };
         case 'clone':
             return { ...entry, type: 'clone-restore' };
@@ -1439,7 +1503,12 @@ function invertEntry(entry) {
 }
 
 function applyEntry(entry) {
-    if (entry.type === 'transform') {
+    if (entry.type === 'room-transform') {
+        haltAllMotion();roomGroove?.reset();
+        entry.items.forEach(item=>applyPlainLocalTransform(item.obj,item.before));
+        if(roomInteractions?.selected)roomInteractions.select(roomInteractions.selected);
+        clearTimeout(roomFurnitureSaveTimer);persistSceneAssetStates();
+    } else if (entry.type === 'transform') {
         // Restoring the world matrix alone would leave baseY holding the value
         // derived from the undone edit, reintroducing the same overwrite one step
         // into the past. Re-record the canonical state exactly as a fresh commit does.
@@ -1533,6 +1602,7 @@ function applyEntry(entry) {
 }
 
 function performUndo() {
+    roomInteractions?.end();
     const entry = undoStack.pop();
     if (!entry) return;
     const wasSuppressed = suppressTransactions;
@@ -1546,6 +1616,7 @@ function performUndo() {
 }
 
 function performRedo() {
+    roomInteractions?.end();
     const entry = redoStack.pop();
     if (!entry) return;
     const wasSuppressed = suppressTransactions;
@@ -2133,6 +2204,7 @@ function updateBoxSelectHint() {
 }
 
 function onCanvasClick(event) {
+    if (surfaceArtwork?.handlePick(event, camera, canvas, interactableObjects)) return;
     if (rigPickMode) {
         const rect = canvas.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -2296,14 +2368,32 @@ async function fetchModelWithFingerprint(url) {
 
 function setTrimColor(value, persist = true) {
     if (!/^#[0-9a-f]{6}$/i.test(value || '')) return;
-    trimColor = value;
+    trimColor = value.toLowerCase();
+    currentConfig.trimColor = trimColor;
     if (trimMaterial) trimMaterial.color.set(value);
     const picker = document.getElementById('trim-color');
     if (picker && picker.value !== value) picker.value = value;
     const readout = document.getElementById('trim-color-value');
-    if (readout) readout.textContent = value.toUpperCase();
+    const preset = TRIM_COLORS.find(c => c.value === trimColor);
+    if (readout) readout.textContent = preset ? preset.name : `Saved custom trim · ${value.toUpperCase()}`;
+    document.querySelectorAll('[data-trim-color]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.trimColor === trimColor)));
     if (persist) {
         try { localStorage.setItem(TRIM_COLOR_KEY, value); } catch (_) {}
+    }
+}
+
+function mountTrimPalette() {
+    const palette = document.getElementById('trim-palette');
+    if (!palette) return;
+    palette.replaceChildren();
+    for (const color of TRIM_COLORS) {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'trim-choice';
+        button.dataset.trimColor = color.value; button.setAttribute('aria-label', `${color.name} trim`);
+        const chip = document.createElement('span'); chip.style.backgroundColor = color.value; chip.setAttribute('aria-hidden', 'true');
+        const label = document.createElement('span'); label.textContent = color.name;
+        button.append(chip, label); button.onclick = () => { setTrimColor(color.value); syncBuildSummary(); };
+        palette.append(button);
     }
 }
 
@@ -2541,7 +2631,7 @@ function setLedSurface(key, value, persist = true) {
     }
 }
 
-function syncSizeGeometry() {
+function syncSizeGeometry({ rebuildRoom = true } = {}) {
     if (!sizeVariantParts) return;
     // Switching from Standard to Extended at a steep tilt needs two more inches
     // of clearance. Raise first, then reveal the larger desktop mesh.
@@ -2566,9 +2656,10 @@ function syncSizeGeometry() {
     setVisible(sizeVariantParts.largeTop, extended);
     setVisible(sizeVariantParts.largeTrim, extended);
     syncLedSizeGeometry();
+    if (surfaceArtwork?.bound) bindSurfaceArtwork();
     setScreenProgress(screenProgress);
     buildSceneTree();
-    if (measuredRoomProfile() && workspaceRoom?.roomLayout) setRoomScene(selectedRoomScene, false, { preserveDesk: true });
+    if (rebuildRoom && measuredRoomProfile() && workspaceRoom?.roomLayout) setRoomScene(selectedRoomScene, false, { preserveDesk: true });
 }
 
 function syncLedSizeGeometry() {
@@ -3508,6 +3599,7 @@ function loadModel() {
         ledSounds.stop();
         workspaceAccessories?.dispose();
         workspaceAccessories = null;
+        surfaceArtwork?.unbind();
         if (loadedModel) scene.remove(loadedModel);
 
         sharedBirchMaterial = null;
@@ -3673,10 +3765,13 @@ function loadModel() {
         withNeutralPose(() => { workspaceAccessories = new WorkspaceAccessories(scene, partRegistry, millimetreScale, loadedModel); });
         applyAccessoryVisibility();
         if (!workspaceRoom) workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
-        setRoomScene(selectedRoomScene, false);
+        // Startup already chose the room's desktop. Rebuilding the model must
+        // retain any explicit size selected since then.
+        setRoomScene(selectedRoomScene, false, { defaultDesktop: false });
         const roomProfile = measuredRoomProfile();
         if (roomProfile) setMeasuredRoomMode(roomProfile.id, roomProfile.mode);
         applySurfaceFinish();   // now that surfaceInches can measure the real model
+        bindSurfaceArtwork();
         syncBuildSummary();
         // Set the demo's first pose before revealing and fitting the model.
         if (EVENT_DEMO) {
@@ -3879,6 +3974,7 @@ function serializeProject() {
                 grainSheen,
                 environment: document.getElementById('studio-environment')?.value || 'gallery',
                 roomScene: selectedRoomScene,
+                institutionalRooms: JSON.parse(JSON.stringify(institutionalState)),
                 homeMode,
                 homeLayout: selectedHomeLayout().id,
                 gamingMode,
@@ -3910,6 +4006,7 @@ function serializeProject() {
                 studyMode,
                 studyLayout: selectedStudyLayout().id,
                 sceneAssets: serializeSceneAssetStates(),
+                groovePositions: normalizeGroovePresets(groovePresets),
                 sceneAssetLabels: [...partLabels].filter(([editorId]) => editorId.startsWith('scene:')),
                 sceneAssetLocked: [...lockedParts].filter(editorId => editorId.startsWith('scene:')),
                 exposure: renderer ? renderer.toneMappingExposure : 1.02,
@@ -4188,6 +4285,7 @@ function applyConfigToUI() {
     if (sizeSelect) sizeSelect.value = currentConfig.size;
     syncSizeChoiceUI();
     syncSizeGeometry();
+    surfaceArtwork?.setState(currentConfig.artwork);
     const woodName = document.getElementById('selected-wood-name');
     const baseName = document.getElementById('selected-base-name');
     if (woodName) woodName.textContent = currentConfig.woodFinish;
@@ -4195,19 +4293,26 @@ function applyConfigToUI() {
     const wood = PRODUCT_CONFIG.woodFinishes.find(f => f.name === currentConfig.woodFinish);
     const base = PRODUCT_CONFIG.baseFinishes.find(f => f.name === currentConfig.baseFinish);
     if (wood) applyWoodSpecies(wood);
+    setTrimColor(currentConfig.trimColor || trimColor, false);
     if (base && sharedBasePaintMaterial) {
         sharedBasePaintMaterial.color.set(base.color);
         sharedBasePaintMaterial.metalness = frameMetalness(base);
     }
-    document.querySelectorAll('#wood-finishes [data-finish], #base-finishes [data-material]').forEach(el => {
-        const selected = el.dataset.finish === currentConfig.woodFinish || el.dataset.material === currentConfig.baseFinish;
+    document.querySelectorAll('#wood-finishes [data-finish], #base-finishes [data-finish]').forEach(el => {
+        const selected = el.dataset.finish === currentConfig[el.dataset.material === 'wood' ? 'woodFinish' : 'baseFinish'];
         el.classList.toggle('selected', selected);
+        el.setAttribute('aria-pressed', String(selected));
     });
     updatePrice();
 }
 
 function applyProjectPresentation(project) {
     const presentation = project.presentation || {};
+    if (presentation.groovePositions !== undefined) {
+        groovePresets = normalizeGroovePresets(presentation.groovePositions);
+        writeStore(GROOVE_PRESETS_KEY, { v: 1, presets: groovePresets });
+        roomGroove?.reset();
+    }
     if (presentation.trimColor) setTrimColor(presentation.trimColor);
     if (presentation.ledColor) setLedColor(presentation.ledColor);
     if (presentation.ledGlow !== undefined) setLedGlow(presentation.ledGlow);
@@ -4249,6 +4354,11 @@ function applyProjectPresentation(project) {
     for (const [editorId, label] of presentation.sceneAssetLabels || []) partLabels.set(editorId, label);
     for (const editorId of presentation.sceneAssetLocked || []) lockedParts.add(editorId);
     persistSceneAssetStates();
+    for (const id of INSTITUTIONAL_IDS) {
+        const saved = presentation.institutionalRooms?.[id], p = INSTITUTIONAL_ROOMS[id];
+        institutionalState[id] = { layout: p.layouts[saved?.layout] ? saved.layout : null, mode: p.modes[saved?.mode] ? saved.mode : 'morning' };
+        try { localStorage.setItem(`ergoflex.${id}Layout`, institutionalState[id].layout || ''); localStorage.setItem(`ergoflex.${id}Mode`, institutionalState[id].mode); } catch {}
+    }
     if (HOME_MODES[presentation.homeMode]) homeMode = presentation.homeMode;
     homeLayoutId = HOME_LAYOUTS[presentation.homeLayout] ? presentation.homeLayout : homeLayoutForSize(currentConfig.size).id;
     if (GAMING_MODES[presentation.gamingMode]) gamingMode = presentation.gamingMode;
@@ -4610,14 +4720,14 @@ function renderPriceBreakdown() {
         label.textContent = line.label + (line.provisional ? '*' : '');
         if (line.provisional) provisional = true;
         const value = document.createElement('span');
-        value.textContent = money(line.price);
+        value.textContent = line.quoted ? 'On request' : money(line.price);
         row.append(label, value);
         container.append(row);
     }
     const total = document.createElement('div');
     total.className = 'breakdown-row breakdown-total';
     const label = document.createElement('span');
-    label.textContent = 'Estimate';
+    label.textContent = lines.some(line => line.quoted) ? 'Estimate before finish quote' : 'Estimate';
     const value = document.createElement('span');
     value.textContent = money(lines.reduce((n, l) => n + l.price, 0));
     total.append(label, value);
@@ -5442,7 +5552,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape' && marquee.active) { e.preventDefault(); cancelMarquee(); return; }
         const tag = document.activeElement?.tagName?.toLowerCase();
         const isEditable = document.activeElement?.isContentEditable;
-        if (tag === 'input' || tag === 'textarea' || tag === 'select' || isEditable) return;
+        const textInput=tag==='input'&&!['checkbox','radio','button','submit','reset'].includes(document.activeElement.type);
+        if (textInput || tag === 'textarea' || tag === 'select' || isEditable) return;
         if (!document.getElementById('cart-modal').classList.contains('hidden')) return;
         if (e.key === '`') {
             e.preventDefault();
@@ -5762,6 +5873,32 @@ function generateGrainTexture(name, role) {
     return texture;
 }
 
+// Small, seamless material samples for the two wrap previews. Unlike a wood
+// stain, these cover the plywood edge too. No network image dependency.
+function wrapTextureFor(spec, role) {
+    const key = spec.surface + '|' + role;
+    if (speciesTextures.has(key)) return speciesTextures.get(key);
+    const sample = document.createElement('canvas'); sample.width = sample.height = 256;
+    const context = sample.getContext('2d'), image = context.createImageData(256, 256);
+    for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) {
+        let shade;
+        if (spec.surface === 'carbon-wrap') {
+            const across = (Math.floor(x / 8) + Math.floor(y / 8)) % 2 === 0;
+            const strand = (across ? y : x) % 8;
+            shade = 132 + 66 * Math.sin(Math.PI * strand / 8) + 12 * Math.cos((across ? x : y) * Math.PI);
+        } else {
+            shade = 216 + 15 * Math.sin(y * Math.PI / 2) + 8 * Math.cos(y * Math.PI / 8) + 3 * Math.sin(x * Math.PI / 32);
+        }
+        const i = (y * 256 + x) * 4;
+        image.data[i] = image.data[i + 1] = image.data[i + 2] = shade; image.data[i + 3] = 255;
+    }
+    context.putImageData(image, 0, 0);
+    const texture = new THREE.CanvasTexture(sample); texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.anisotropy = renderer ? renderer.capabilities.getMaxAnisotropy() : 4;
+    speciesTextures.set(key, texture); return texture;
+}
+
 function hexToRgb(hex) {
     const n = parseInt(hex.replace('#', ''), 16);
     return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
@@ -5906,9 +6043,21 @@ function getOrCreateBlackMetalMaterial() {
 
 function populateFinishOptions() {
     woodFinishesGrid.innerHTML = '';
-    PRODUCT_CONFIG.woodFinishes.forEach(finish => {
-        woodFinishesGrid.appendChild(createFinishSwatch(finish, 'wood'));
-    });
+    for (const collection of FINISH_COLLECTIONS) {
+        const section = document.createElement('section'); section.className = 'finish-collection'; section.dataset.collection = collection.id;
+        const heading = document.createElement('h4'); heading.id = `finish-collection-${collection.id}`; heading.textContent = collection.name;
+        const description = document.createElement('p'); description.textContent = collection.description;
+        const options = document.createElement('div'); options.className = 'finish-options';
+        options.setAttribute('role', 'group'); options.setAttribute('aria-labelledby', heading.id);
+        for (const finish of PRODUCT_CONFIG.woodFinishes.filter(f => (f.collection || 'natural') === collection.id)) {
+            const item = document.createElement('div'); item.className = 'finish-option';
+            const label = document.createElement('span'); label.className = 'finish-label'; label.textContent = finish.name;
+            const detail = document.createElement('span'); detail.className = 'finish-detail';
+            detail.textContent = finish.quoted ? 'On request' : finish.price ? `+${money(finish.price)}` : 'Included';
+            item.append(createFinishSwatch(finish, 'wood'), label, detail); options.append(item);
+        }
+        section.append(heading, description, options); woodFinishesGrid.append(section);
+    }
     baseFinishesGrid.innerHTML = '';
     PRODUCT_CONFIG.baseFinishes.forEach(finish => {
         baseFinishesGrid.appendChild(createFinishSwatch(finish, 'base'));
@@ -5921,7 +6070,8 @@ function createFinishSwatch(finish, type) {
     swatch.className = 'finish-swatch';
     swatch.dataset.finish = finish.name;
     swatch.dataset.material = type;
-    swatch.setAttribute('aria-label', `${finish.name}, ${finish.price ? '+$' + finish.price : 'included'}`);
+    if (finish.surface) swatch.dataset.surface = finish.surface;
+    swatch.setAttribute('aria-label', `${finish.name}, ${finish.quoted ? 'finish pricing on request' : finish.price ? '+$' + finish.price : 'included'}`);
     swatch.setAttribute('aria-pressed', String(finish.name === currentConfig[type === 'wood' ? 'woodFinish' : 'baseFinish']));
     swatch.style.backgroundColor = finish.color;
     swatch.title = `${finish.name}${finish.price > 0 ? ` (+${finish.price})` : ''}`;
@@ -5937,7 +6087,7 @@ function selectFinish(finish, type, element) {
     element.classList.add('selected');
     if (type === 'wood') {
         currentConfig.woodFinish = finish.name;
-        document.getElementById('selected-wood-name').textContent = finish.name + (finish.price ? ' · +$' + finish.price : ' · Included');
+        document.getElementById('selected-wood-name').textContent = finish.name + (finish.quoted ? ' · Finish pricing on request' : finish.price ? ' · +$' + finish.price : ' · Included');
         applyWoodSpecies(finish);
     } else {
         currentConfig.baseFinish = finish.name;
@@ -5951,7 +6101,7 @@ function updatePrice() {
     // One price formula for the whole app: configurationPrice in catalog.mjs.
     // This used to re-implement the sum with different guards and a different
     // locale, so the headline price could disagree with the cart rows.
-    const total = money(configurationPrice(currentConfig));
+    const total = money(configurationPrice(currentConfig)) + (priceBreakdown(currentConfig).some(line => line.quoted) ? ' + finish quote' : '');
     totalPrice.textContent = total;
     cartPrice.textContent = total;
     renderPriceBreakdown();
@@ -5980,7 +6130,7 @@ function showCartModal() {
         const row = document.createElement('div');
         row.className = 'cart-row';
         const description = document.createElement('div');
-        description.textContent = `${PRODUCT_CONFIG.sizes[item.size].name} · ${item.woodFinish} · ${item.baseFinish}`;
+        description.textContent = `${PRODUCT_CONFIG.sizes[item.size].name} · ${item.woodFinish} · ${item.baseFinish}${item.trimColor ? ' · ' + (TRIM_COLORS.find(c=>c.value===item.trimColor)?.name || item.trimColor) + ' trim' : ''}`;
         const additions = document.createElement('ul'); additions.className = 'cart-accessories';
         for (const id of item.accessories || []) {
             const product = accessory(id);
@@ -5989,6 +6139,9 @@ function showCartModal() {
             const name = document.createElement('span'); name.textContent = product.name;
             const amount = document.createElement('span'); amount.textContent = money(product.price) + '*';
             line.append(name, amount); additions.append(line);
+        }
+        for (const summary of artworkSummary(item.artwork)) {
+            const line = document.createElement('li'); line.textContent = summary + ' · quote on request'; additions.append(line);
         }
         description.append(additions);
         const preview = document.createElement('button'); preview.className = 'cart-preview'; preview.textContent = 'View this build in 3D ↗';
@@ -6001,7 +6154,7 @@ function showCartModal() {
         };
         description.append(preview);
         const price = document.createElement('strong');
-        price.textContent = money(item.price * item.quantity);
+        price.textContent = money(item.price * item.quantity) + (priceBreakdown(item).some(line=>line.quoted) ? ' + finish quote' : '');
         const quantity = document.createElement('input');
         quantity.type = 'number'; quantity.min = '1'; quantity.max = '20'; quantity.value = item.quantity;
         quantity.setAttribute('aria-label', 'Quantity for ' + description.textContent);
@@ -6016,6 +6169,7 @@ function showCartModal() {
     });
     const total = document.createElement('p'); total.className = 'cart-total';
     total.textContent = 'Estimated total ' + money(cartItems.reduce((n, i) => n + i.price * i.quantity, 0));
+    if (cartItems.some(item=>priceBreakdown(item).some(line=>line.quoted))) total.textContent += ' + finish quotes';
     content.append(total);
     if (cartItems.some(item => item.accessories?.length)) {
         const note = document.createElement('p'); note.className = 'studio-note'; note.textContent = '* Accessory estimates shown per desk. Final pricing and availability need confirmation.'; content.append(note);
@@ -6023,10 +6177,11 @@ function showCartModal() {
     openDialog(document.getElementById('cart-modal'));
 }
 
-sizeSelect.addEventListener('change', (e) => {
-    currentConfig.size = e.target.value;
+function changeDesktopSize(size, { rebuildRoom = true } = {}) {
+    currentConfig.size = size;
+    sizeSelect.value = size;
     syncSizeChoiceUI();
-    syncSizeGeometry();
+    syncSizeGeometry({ rebuildRoom });
     // Some accessories need a wider top. Drop the ones that no longer fit and
     // say which, rather than quietly charging for something that cannot ship.
     const dropped = incompatibleAccessories(currentConfig);
@@ -6038,7 +6193,8 @@ sizeSelect.addEventListener('change', (e) => {
     applyAccessoryVisibility();
     updatePrice();
     scheduleValidation();
-});
+}
+sizeSelect.addEventListener('change', e => changeDesktopSize(e.target.value));
 
 addToCartBtn.addEventListener('click', addToCart);
 
@@ -7236,7 +7392,7 @@ const glideInput = new THREE.Vector2();
 const glideDemoOrigin = new THREE.Vector3();
 const glideKeys = new Set();
 let glidePointer = null;
-let glideSpeed = GLIDE_SPEEDS.slow;
+let glideSpeed = GLIDE_SPEEDS.medium;
 let glideUIPrev = '';
 let glideFootprintCache = null;
 function glideBounds() {
@@ -7308,8 +7464,7 @@ function setupGlideControls() {
     };
     // The compass is two controls in one. A press inside the dish steers the
     // glide; a press on the outer ring turns the desk in place. The band is the
-    // Give the turn ring a generous hit area. The old 0.62 boundary put the
-    // inner half of its visible band into joystick mode.
+    // Match the inset dish boundary: the arrow tips steer; the grooved ring turns.
     let ringPointer = null, ringStartAngle = 0;
     const padAngle = e => {
         const box = pad.getBoundingClientRect();
@@ -7332,7 +7487,7 @@ function setupGlideControls() {
         if (e.button !== 0 || !manualGlideReady()) return;
         e.preventDefault(); pad.focus();
         const { deg, radius } = padAngle(e);
-        if (radius >= 0.5) {
+        if (radius >= 0.67) {
             ringPointer = e.pointerId;
             ringStartAngle = deg;
             pad.dataset.turning = 'true';
@@ -7397,8 +7552,8 @@ function setupGlideControls() {
 }
 // Lift and tilt speeds, in real units per second rather than per-frame
 // fractions. 'auto' is the app's default: the speed the desk picks for itself.
-let liftSpeed = 'auto';
-let tiltSpeed = 'auto';
+let liftSpeed = 'medium';
+let tiltSpeed = 'fast';
 let tiltTarget = null;
 // The app's Height and Tilt sliders are rate controls, not position sliders:
 // centred at zero, a dead zone around it, and they spring back the moment you
@@ -7587,7 +7742,7 @@ function showHeight(inches) {
     // The slider is a jog that rests at zero, so it does not track the height.
     const readout = document.getElementById('desk-height-display');
     if (readout && document.activeElement !== readout) {
-        if ('value' in readout) readout.value = inches.toFixed(2);
+        if ('value' in readout) readout.value = inches.toFixed(1);
         else readout.innerText = inches.toFixed(2) + '"';
     }
 }
@@ -7600,7 +7755,7 @@ function syncTiltUI() {
     const config = primaryTiltConfig();
     const readout = document.getElementById('tilt-value');
     if (!config) return;
-    if (readout && document.activeElement !== readout) readout.value = config.currentDeg.toFixed(2);
+    if (readout && document.activeElement !== readout) readout.value = String(Number(config.currentDeg.toFixed(1)));
     positionArcThumb();
 }
 
@@ -7633,14 +7788,9 @@ function haltAllMotion() {
 
 // ── The motion remote ────────────────────────────────────────────────────────
 //
-// A port of the ErgoFlex Desk app's motion surface: Glide, Height, Tilt, their
-// speeds and preset banks, Ergo Forms, and a stop. Geometry and colour come from
-// the Flutter source rather than from a screenshot - see app-remote.css.
-//
-// The phone stacks these vertically because it is a phone. Transcribing that
-// here would make the panel taller, which is the opposite of what it is for, so
-// the same blocks are laid out wide and fall back to the phone's order only when
-// the viewer is genuinely narrow.
+// The October 7 app surface, kept at 720 × 298 logical pixels. It scales to
+// fit narrow viewers while retaining the same Height / Glide / Tilt layout.
+// Native inputs, preset storage and motion integration remain authoritative.
 
 const SPEED_WORDS = [['auto', 'Auto'], ['slow', 'Slow'], ['medium', 'Medium'], ['fast', 'Fast']];
 
@@ -7696,15 +7846,16 @@ function loadTiltPresets() {
 function loadErgoForms() {
     const fallback = [
         { name: 'Sitting', lift: 28, tilt: 0 },
-        { name: 'Standing', lift: 43.5, tilt: -5 },
-        { name: 'Easel', lift: 52, tilt: 65 }
+        { name: 'Stool', lift: 35, tilt: 0 },
+        { name: 'Standing', lift: 43.5, tilt: -5 }
     ];
     const stored = readStore(ERGO_FORMS_KEY, 2, null);
     if (!Array.isArray(stored?.forms) || stored.forms.length !== 3) return fallback;
+    const oldBank=[{name:'Sitting',lift:28,tilt:0},{name:'Standing',lift:43.5,tilt:-5},{name:'Easel',lift:52,tilt:65}];
+    if(stored.forms.every((f,i)=>f?.name===oldBank[i].name&&f?.lift===oldBank[i].lift&&f?.tilt===oldBank[i].tilt))return fallback;
     return stored.forms.map((form, i) => {
         // Upgrade untouched defaults; retain users' renamed or custom poses.
-        const previousDefault = i === 0 && form?.name === 'Sitting' && form?.lift === 28 && [0, -4].includes(form?.tilt)
-            || i === 1 && form?.name === 'Standing' && form?.lift === 48 && form?.tilt === 0;
+        const previousDefault = i === 0 && form?.name === 'Sitting' && form?.lift === 28 && [0, -4].includes(form?.tilt);
         if (previousDefault) return { ...fallback[i] };
         return {
             name: typeof form?.name === 'string' && form.name.trim() ? form.name.slice(0, 24) : fallback[i].name,
@@ -7718,65 +7869,53 @@ let liftPresets = [null, null, null];
 let tiltPresets = [null, null, null];
 let ergoForms = [];
 
-// The compass, drawn to the app's numbers: 8 capsule ticks at R*0.915 spanning
-// 19 degrees with round caps, an inner dish, and an eight-point star.
+// October 7 controller: a broad grooved turn ring and an inset steering dish.
 function compassSvg() {
-    const R = 66, C = 66;
-    const at = (r, a) => [C + r * Math.cos(a), C - r * Math.sin(a)];
-    const tickR = R * 0.915, half = 9.5 * Math.PI / 180;
-    let ticks = '';
+    const C = 66;
+    let ticks = '', grooves = '';
     for (let i = 0; i < 12; i++) {
-        const a = i * Math.PI / 6;
-        const [x1, y1] = at(tickR*.89, a), [x2, y2] = at(tickR*.99, a);
-        ticks += `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} L${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" class="dial-tick" stroke-width="2.5" stroke-linecap="round"/>`;
+        const a = (i * 30 + 15) * Math.PI / 180;
+        const at = r => `${(C + r * Math.cos(a)).toFixed(2)} ${(C + r * Math.sin(a)).toFixed(2)}`;
+        ticks += `<path d="M${at(54.8)} L${at(60.5)}" class="dial-tick" fill="none" stroke-width="1.9" stroke-linecap="round"/>`;
     }
-    const Rin = 40, base = Rin * 0.40, len = Rin * 0.26, wide = Rin * 0.12;
-    let star = '';
-    for (let i = 0; i < 8; i++) {
-        const a = i * Math.PI / 4;
-        const dx = Math.cos(a), dy = -Math.sin(a);
-        const tip = [C + dx * (base + len), C + dy * (base + len)];
-        const p1 = [C + dx * base - dy * wide, C + dy * base + dx * wide];
-        const p2 = [C + dx * base + dy * wide, C + dy * base - dx * wide];
-        star += `<polygon points="${tip[0].toFixed(1)},${tip[1].toFixed(1)} ${p1[0].toFixed(1)},${p1[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}" class="dial-star"/>`;
-    }
+    for (const r of [48.5, 50.2, 51.9, 53.6, 55.3, 57, 58.7])
+        grooves += `<circle class="dial-hair" cx="66" cy="66" r="${r}" fill="none" stroke-width=".35"/>`;
     return `<svg viewBox="0 0 132 132" aria-hidden="true" focusable="false">
-      <defs><radialGradient id="glide-dish" cx="50%" cy="50%" r="50%">
-        <stop class="dish-edge" offset="0"/><stop class="dish-mid" offset=".55"/><stop class="dish-edge" offset="1"/>
-      </radialGradient></defs>
-      <circle class="dial-plate" cx="66" cy="66" r="64"/>
-      <circle class="dial-groove" cx="66" cy="66" r="${(R * 0.82).toFixed(1)}" fill="none" stroke-width="${(R * 0.055).toFixed(1)}"/>
-      <circle class="dial-hair" cx="66" cy="66" r="${(R * 0.745).toFixed(1)}" fill="none" stroke-width="${(R * 0.008).toFixed(2)}"/>
+      <defs>
+        <linearGradient id="glide-ring" x2="1" y2="1"><stop class="ring-light"/><stop class="ring-dark" offset="1"/></linearGradient>
+        <linearGradient id="glide-dish" x2=".8" y2="1"><stop class="dish-edge"/><stop class="dish-mid" offset="1"/></linearGradient>
+      </defs>
+      <circle class="dial-outer" cx="66" cy="66" r="64" fill="url(#glide-ring)" stroke-width="1.9"/>
+      ${grooves}
       <g class="compass-ring" style="transform-origin:66px 66px">${ticks}</g>
-      <circle cx="66" cy="66" r="${Rin}" fill="url(#glide-dish)"/>
-      <circle class="dial-rim" cx="66" cy="66" r="${Rin - 1}" fill="none" stroke-width="1.6"/>
-      <g class="compass-arrows" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M59 38l7-7 7 7M59 94l7 7 7-7M38 59l-7 7 7 7M94 59l7 7-7 7"/></g>
+      <circle class="dial-groove" cx="66" cy="66" r="45.5" fill="none" stroke-width="1.6"/>
+      <circle class="dial-rim" cx="66" cy="66" r="42.7" fill="url(#glide-dish)" stroke-width="2.2"/>
+      <g class="compass-arrows" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M61.5 42.5l4.5-4.5 4.5 4.5M61.5 89.5l4.5 4.5 4.5-4.5M42.5 61.5L38 66l4.5 4.5M89.5 61.5L94 66l-4.5 4.5"/></g>
     </svg>`;
 }
 
-// The tilt track is a crescent opening to the LEFT: 120 degrees centred on the
-// horizontal, so it bulges right the way it does on the phone. Drawing it as a
-// top arc was a misreading of the portrait screenshot.
-const ARC = { cx: 26, cy: 95, r: 68, from: 60, to: -60, vw: 120, vh: 190 };
+// The compact app uses a short sculpted track, with a slight waist at rest.
+// Drawing, thumb placement and pointer projection share this same curve.
+const ARC = { from: 60, to: -60, vw: 120, vh: 190 };
 function arcPoint(deg) {
-    return [ARC.cx + ARC.r * Math.cos(deg * Math.PI / 180),
-            ARC.cy - ARC.r * Math.sin(deg * Math.PI / 180)];
+    const t = THREE.MathUtils.clamp((ARC.from - deg) / (ARC.from - ARC.to), 0, 1);
+    const wave = Math.sin(Math.PI * t);
+    return [44 + 48 * wave - 18 * Math.pow(wave, 12), 32 + 126 * t];
 }
 function arcSvg() {
-    const [x1, y1] = arcPoint(ARC.from), [x2, y2] = arcPoint(ARC.to);
-    // sweep 1: from the upper end, round the right, down to the lower one.
-    const d = `M${x1.toFixed(1)} ${y1.toFixed(1)} A${ARC.r} ${ARC.r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
-    const [mx, my] = arcPoint(0);
+    const d = Array.from({length:65}, (_, i) => {
+        const [x,y] = arcPoint(ARC.from + (ARC.to - ARC.from) * i / 64);
+        return `${i ? 'L' : 'M'}${x.toFixed(2)} ${y.toFixed(2)}`;
+    }).join(' ');
     const arrow = (deg, flip) => {
-        const [x, y] = arcPoint(deg);
-        return `<polygon points="${x - 5},${y - flip * 3} ${x + 5},${y - flip * 3} ${x},${y + flip * 5}"
-                 fill="#2F55D4" fill-opacity=".75"/>`;
+        const [x,y] = arcPoint(deg);
+        return `<path class="arc-chevron" d="M${x-5} ${y+flip*3}l0 ${-flip*9} 9 0"/>`;
     };
     return `<svg viewBox="0 0 ${ARC.vw} ${ARC.vh}" aria-hidden="true" focusable="false">
-      <path class="arc-rim" d="${d}" stroke-width="35.2"/>
-      <path class="arc-face" d="${d}" stroke-width="32"/>
-      ${arrow(44, 1)}${arrow(24, 1)}${arrow(-24, -1)}${arrow(-44, -1)}
-      <circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="3.5" fill="#2F55D4" fill-opacity=".55"/>
+      <defs><linearGradient id="tilt-rim" x2="1" y2=".7"><stop class="arc-rim-light"/><stop class="arc-rim-dark" offset=".5"/><stop class="arc-rim-light" offset="1"/></linearGradient></defs>
+      <path class="arc-rim" d="${d}" stroke-width="60"/>
+      <path class="arc-face" d="${d}" stroke-width="46"/>
+      ${arrow(38, 1)}${arrow(-38, -1)}
     </svg>`;
 }
 
@@ -7798,45 +7937,29 @@ function positionArcThumb() {
     thumb.style.top = (y / ARC.vh * 100) + '%';
 }
 
-// The arc is a real angular control, not a rotated linear track.
-//
-// Ported from arc_control_slider.dart: the finger is projected onto the arc by
-// angle, the value runs +-155 with a +-10 dead zone, and letting go springs
-// back to centre over 150ms. Everything it produces is written to the hidden
-// range input and announced as an `input` event, so the dead zone, the jog
-// integration and the thumb all stay on the single wireJogSlider path - and
-// so keyboard, assistive technology and the tests keep working unchanged.
-const ARC_RANGE = 155;                       // _minValue / _maxValue
-const ARC_START = -Math.PI / 3;              // _startAngle, upper-right
-const ARC_SWEEP = (2 * Math.PI) / 3;         // _sweepAngle, 120 degrees CW
-const ARC_SPRING_MS = 150;                   // _springController
-
-// Wrap into [ref-PI, ref+PI) so atan2's discontinuity at +-PI can never fall
-// inside the arc's own range and jump the value as the finger crosses it.
-function normaliseArcAngle(angle, ref) {
-    let d = angle - ref;
-    while (d > Math.PI) d -= 2 * Math.PI;
-    while (d < -Math.PI) d += 2 * Math.PI;
-    return ref + d;
-}
+// The sculpted tilt track uses the same spring-return jog input as Height.
+// Keep keyboard and assistive input on the native range control.
+const ARC_RANGE = 155;
+const ARC_SPRING_MS = 150;
 
 function wireArcControl(box, slider) {
     if (!box || !slider) return;
     const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
     let spring = null;
 
-    // The arc is drawn in viewBox units and laid out in CSS pixels, so the
-    // centre and radius have to come from the live box, not from ARC directly.
+    // Project onto the visible track so the waist and end caps stay usable.
     const project = event => {
         const rect = box.getBoundingClientRect();
         if (!rect.width || !rect.height) return null;
-        const cx = rect.left + (ARC.cx / ARC.vw) * rect.width;
-        const cy = rect.top + (ARC.cy / ARC.vh) * rect.height;
-        const mid = ARC_START + ARC_SWEEP / 2;
-        const angle = normaliseArcAngle(Math.atan2(event.clientY - cy, event.clientX - cx), mid);
-        const t = THREE.MathUtils.clamp((angle - ARC_START) / ARC_SWEEP, 0, 1);
-        // t = 0 is the top of the sweep and yields +155 on the control track.
-        return ARC_RANGE - t * 2 * ARC_RANGE;
+        const px = (event.clientX - rect.left) / rect.width * ARC.vw;
+        const py = (event.clientY - rect.top) / rect.height * ARC.vh;
+        let best = Infinity, nearest = .5;
+        for (let i = 0; i <= 200; i++) {
+            const t = i / 200, [x,y] = arcPoint(ARC.from + (ARC.to - ARC.from) * t);
+            const distance = (x-px)**2 + (y-py)**2;
+            if (distance < best) { best = distance; nearest = t; }
+        }
+        return ARC_RANGE - nearest * 2 * ARC_RANGE;
     };
 
     const emit = value => {
@@ -7890,8 +8013,6 @@ function wireArcControl(box, slider) {
 // nothing is worse than one that says it is unavailable.
 // The hub's own glyphs, drawn rather than pulled from assets/app-icons: none of
 // those are these shapes, and the bar reads as the app's only if they are.
-const DESK_GLYPH = `<svg viewBox="0 0 32 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-  <path d="M3 9h26M5 13h22"/><path d="M8 4v5M24 4v5"/><path d="M7 13v7M25 13v7M3 20h26"/></g></svg>`;
 const SEAT_GLYPH = `<svg viewBox="0 0 24 24" class="hub-seat" aria-hidden="true"><g fill="currentColor">
   <circle cx="12" cy="4" r="2"/><path d="M12 7c-1.2 0-2 .8-2 2v3l-4 2 .8 1.7L12 13l5.2 2.7.8-1.7-4-2V9c0-1.2-.8-2-2-2Z"/>
   <path d="M6 19c2-1.4 4-2 6-2s4 .6 6 2l-.9 1.6C15.4 19.6 13.8 19 12 19s-3.4.6-5.1 1.6Z"/></g></svg>`;
@@ -7929,7 +8050,7 @@ function buildMotionRemote() {
     tiltPresets = loadTiltPresets();
     ergoForms = loadErgoForms();
 
-    dock.className = 'app-remote remote-v2';
+    dock.className = 'app-remote remote-v2 remote-compact';
     dock.innerHTML = '';
 
     const header = document.createElement('div');
@@ -7952,11 +8073,11 @@ function buildMotionRemote() {
           <button id="glide-demo" type="button" aria-pressed="false">Play demo</button>
           <button id="glide-home" type="button">Recenter</button>
         </span>
-        ${inert('help.svg', 'Info')}
-        ${inert('MicOn.svg', 'Voice')}
-        <button id="remote-shield" class="remote-chrome" type="button" aria-label="Collision shield" aria-pressed="false" title="Shield: stop before contact"><img src="./assets/app-icons/pre_collision_on.svg" alt=""></button>
+        <button class="remote-chrome" type="button" disabled aria-label="Info" title="Controller information"><span class="remote-info" aria-hidden="true"></span></button>
+        <button class="remote-chrome" type="button" disabled aria-label="Voice" title="Voice — hardware control, not connected in the preview"><svg class="remote-mic-icon" viewBox="0 0 24 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><rect x="8" y="2" width="8" height="19" rx="4"/><rect x="10" y="4" width="4" height="14" rx="2"/><path d="M4 13v5a8 8 0 0 0 16 0v-5M12 26v4M7 30h10"/></g></svg></button>
+        <button id="remote-shield" class="remote-chrome" type="button" aria-label="Collision shield" aria-pressed="false" title="Shield: stop before contact"><svg class="remote-shield-icon" viewBox="0 0 24 32" aria-hidden="true"><path d="M12 2L3 6v10c0 7 4 11 9 14 5-3 9-7 9-14V6Z"/><path d="M12 5L6 8v8c0 5 2 8 6 11 4-3 6-6 6-11V8Z"/><path d="M12 5v22"/></svg></button>
         <button id="remote-alert-sound" class="remote-safety-sound" type="button" aria-pressed="false" title="Enable movement sounds and collision alerts">♪ Sound alerts</button>
-        <button id="remote-stop" type="button" title="Stop all movement" aria-label="Stop all movement"><img src="./assets/app-icons/e-stop.svg" alt=""></button>
+        <button id="remote-stop" type="button" title="Stop all movement" aria-label="Stop all movement">STOP</button>
         ${inert('quick_logout.svg', 'Sign out')}
         <button class="remote-chrome remote-theme" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true">
           <path class="moon" fill="currentColor" d="M20 14.2A8.2 8.2 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/>
@@ -7964,7 +8085,14 @@ function buildMotionRemote() {
             <path d="M11 2h2v3.2h-2zm0 16.8h2V22h-2zM2 11h3.2v2H2zm16.8 0H22v2h-3.2zM4.4 5.8 5.8 4.4 8 6.6 6.6 8zM16 17.4l1.4-1.4 2.2 2.2-1.4 1.4zM17.4 8 16 6.6l2.2-2.2 1.4 1.4zM6.6 16 8 17.4l-2.2 2.2-1.4-1.4z"/></g>
         </svg></button>
         <button id="motion-dock-toggle" class="motion-dock-toggle" type="button" aria-controls="motion-dock-content" title="Collapse the movement panel">▼</button>`;
-    dock.append(header);
+    const extras = document.createElement('details');
+    extras.className = 'remote-extras';
+    extras.innerHTML = '<summary>Extras</summary><div class="remote-extra-tools" role="group" aria-label="Preview tools"></div>';
+    const tools = extras.querySelector('.remote-extra-tools');
+    tools.append(header.querySelector('.glide-actions'),header.querySelector('#remote-alert-sound'),header.querySelector('.remote-theme'));
+    header.querySelector('[aria-label="Sign out"]')?.remove();
+    dock.append(extras,header);
+    extras.addEventListener('toggle',()=>refitRemote());
 
     const body = document.createElement('div');
     body.id = 'motion-dock-content';
@@ -7980,7 +8108,7 @@ function buildMotionRemote() {
                  aria-describedby="glide-help">${compassSvg()}<span id="glide-knob" class="remote-sphere"></span></div>
             <div class="remote-speed">
               <select id="glide-speed" aria-label="Glide speed">
-                ${Object.entries(GLIDE_SPEEDS).map(([name,speed])=>`<option value="${speed}"${name==='slow'?' selected':''}>${name[0].toUpperCase()+name.slice(1)}</option>`).join('')}
+                ${Object.entries(GLIDE_SPEEDS).map(([name,speed])=>`<option value="${speed}"${speed===glideSpeed?' selected':''}>${name[0].toUpperCase()+name.slice(1)}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -7995,15 +8123,15 @@ function buildMotionRemote() {
             <h3 class="remote-heading">Height <span class="remote-info" role="img" aria-label="About this control"></span></h3>
             <label class="remote-readout"><span class="sr-only">Desk height in inches</span>
               <input id="desk-height-display" type="number" inputmode="decimal"
-                     min="${HEIGHT_MIN}" max="${HEIGHT_MAX}" step="0.01" value="${HEIGHT_MIN.toFixed(2)}">
+                     min="${HEIGHT_MIN}" max="${HEIGHT_MAX}" step="0.01" value="${HEIGHT_MIN.toFixed(1)}">
               <span class="unit">in</span>
               <svg class="pencil" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
             </label>
             <div class="remote-vslider">
-              <div class="vs-arrows"><span class="up u1"></span><span class="up u2"></span><span class="down d1"></span><span class="down d2"></span></div>
+              <div class="vs-arrows"><svg viewBox="0 0 36 120" aria-hidden="true"><path d="M11 21l7-7 7 7M11 99l7 7 7-7"/></svg></div>
               <input type="range" id="desk-height-slider" min="-100" max="100" step="1" value="0" aria-label="Raise or lower the desk. Hold away from centre to move; it returns to centre when released.">
             </div>
-            ${speedSelect('lift-speed', 'Lift speed', 'medium')}
+            ${speedSelect('lift-speed', 'Lift speed', liftSpeed)}
             ${chipRow('lift')}
           </div>
           <div class="remote-col" data-motion-panel="tilt">
@@ -8017,18 +8145,18 @@ function buildMotionRemote() {
               <input type="range" id="tilt-slider" min="-155" max="155" step="1" value="0" aria-label="Tilt the desktop. Hold away from centre to move; it returns to centre when released.">
               <span class="remote-sphere"></span>
             </div>
-            ${speedSelect('tilt-speed', 'Tilt speed', 'medium')}
+            ${speedSelect('tilt-speed', 'Tilt speed', tiltSpeed)}
             ${chipRow('tilt')}
           </div>
         </div>
 
       </div>
       <div class="remote-wellness-hub" role="group" aria-label="Wellness">
-        <span class="hub-desk" role="img" aria-label="Your desk">${DESK_GLYPH}</span>
+        <span class="hub-desk"><img src="./assets/app-icons/controller-desk.png" alt="Your ErgoFlex desk"></span>
         <span class="hub-score">${SEAT_GLYPH}<span class="hub-score-text">Wellness Score</span>
           <span class="hub-ring" role="img" aria-label="Wellness score, preview value"><i>75</i></span></span>
         <span class="hub-rule" aria-hidden="true"></span>
-        <span class="hub-timer" role="timer" aria-label="Routine timer, not running">0m 00s</span>
+        <span class="hub-timer" role="status"><span class="hub-phase">Ready to Groove</span><span class="hub-time">0m 00s</span><span class="hub-progress" aria-hidden="true"><i></i></span></span>
         <span class="hub-rule" aria-hidden="true"></span>
         <button class="hub-tile" type="button" disabled aria-label="Save routine"
                 title="Save routine — a routines feature, not connected in the preview">${SAVE_GLYPH}</button>
@@ -8050,21 +8178,21 @@ function buildMotionRemote() {
         card.classList.add('remote-card');
         const heading=document.createElement('div');heading.className='remote-card-heading';
         heading.append(card.querySelector('.remote-heading'),card.querySelector('.remote-speed'));card.prepend(heading);
+        const info=card.querySelector('.remote-info')||document.createElement('span');
+        info.className='remote-info';info.setAttribute('role','img');info.setAttribute('aria-label','About this control');card.append(info);
         if(card!==glide){const adjust=document.createElement('div');adjust.className='remote-adjust';
             adjust.append(card.querySelector('.remote-readout'),card.querySelector('.remote-vslider,.remote-arc'));heading.after(adjust);
         }
     }
     const footer=document.createElement('div');footer.className='remote-footer';footer.append(forms,hub);grid.after(footer);
     dock.append(body);
-    // Eight grips, inside the border box: the shell clips its own overflow to
-    // keep the header's radius, so a handle hanging off the edge is invisible.
-    for (const edge of ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']) {
-        const grip = document.createElement('span');
-        grip.className = 'remote-resize';
-        grip.dataset.edge = edge;
-        dock.append(grip);
-    }
-
+    tools.append(body.querySelector('.hub-screen'));
+    const hubTile=body.querySelector('.hub-tile');
+    hubTile.disabled=false;hubTile.className='hub-groove';hubTile.innerHTML='<span aria-hidden="true">▶</span><span>Groove</span>';
+    hubTile.setAttribute('aria-label','Start current room Groove');hubTile.title='Start or stop the current room Groove';
+    hubTile.onclick=()=>roomGroove?.run?haltAllMotion():startCurrentGroove();
+    const bulbControl=body.querySelector('.hub-led');
+    bulbControl.insertAdjacentHTML('beforeend','<svg class="hub-led-bars" viewBox="0 0 22 20" aria-hidden="true"><path d="M2 18v-4M8 18v-8M14 18V6M20 18V2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span class="hub-led-label">LED</span>');
     applyRemoteTheme(loadRemoteTheme());
     renderErgoForms();
     renderPresetChips();
@@ -8181,42 +8309,11 @@ function goToPose(height, deg) {
     tiltTarget = tilt;
 }
 
-// ── The panel as a device mockup ─────────────────────────────────────────────
-//
-// The remote is a replica of the ErgoFlex Desk app, so the honest way to show
-// it at a given form factor is to give it that device's screen and let its own
-// layout answer. Drag any corner; it snaps to a real device and says which.
-//
-// CSS pixels are the app's dp, so the Flutter figures transfer unchanged. The
-// Fold 5 numbers are quoted from lib/utils/layout_breakpoints.dart, which
-// measured its portrait weights on the cover screen and documents both panes.
-const REMOTE_DEVICES = [
-    { id: 'fold5-cover-p', name: 'Fold 5 cover',               w: 344, h: 882 },
-    { id: 'fold5-cover-l', name: 'Fold 5 cover, landscape',    w: 882, h: 344 },
-    { id: 'fold5-open-p',  name: 'Fold 5 unfolded',            w: 674, h: 810 },
-    { id: 'fold5-open-l',  name: 'Fold 5 unfolded, landscape', w: 810, h: 674 },
-    { id: 'iphone-p',      name: 'iPhone',                     w: 393, h: 852 },
-    { id: 'iphone-l',      name: 'iPhone, landscape',          w: 852, h: 393 },
-    // 1878 x 2670 hardware pixels at 430 ppi - a 7.6in panel - taken at Apple's
-    // @3x scale. The folded cover screen has not been confirmed; until it is,
-    // the iPhone entry above is the closest honest stand-in for it.
-    { id: 'apple-fold-p',  name: 'Apple foldable',             w: 626, h: 890 },
-    { id: 'apple-fold-l',  name: 'Apple foldable, landscape',  w: 890, h: 626 },
-    // The unfolded device running the app in a split window - 1043 x 2176
-    // hardware pixels at the inner screen's 2.6875. A real form factor the
-    // app is used in, and the narrowest tall one it has to hold.
-    { id: 'fold5-split-p', name: 'Fold 5 split view',          w: 388, h: 810 }
-];
-const DEVICE_SNAP_PX = 24;          // how close a drag has to land, per axis
-
-// The bounds are the table's own extremes rather than numbers of their own.
-// The panel is a replica of an app that runs on real screens, so a size no
-// real screen has is a size the layout was never designed to hold - it does
-// not degrade, it distorts. Adding a device widens the range automatically.
-const REMOTE_MIN_W = Math.min(...REMOTE_DEVICES.map(d => d.w));
-const REMOTE_MAX_W = Math.max(...REMOTE_DEVICES.map(d => d.w));
-const REMOTE_MIN_H = Math.min(...REMOTE_DEVICES.map(d => d.h));
-const REMOTE_MAX_H = Math.max(...REMOTE_DEVICES.map(d => d.h));
+// One compact landscape controller, matching the October 7 app reference.
+// Old stored device dimensions are deliberately ignored.
+const REMOTE_DEVICES = [{ id:'compact',name:'Compact controller',w:720,h:298 }];
+const REMOTE_MIN_W = 720, REMOTE_MAX_W = 720;
+const REMOTE_MIN_H = 298, REMOTE_MAX_H = 298;
 const DOCK_SIZE_KEY = 'ergoflex.dockSizeV1';
 const REMOTE_THEME_KEY = 'ergoflex.remoteThemeV1';
 const DOCK_PAD = 8;                 // the same inset clampDockPosition keeps
@@ -8250,79 +8347,32 @@ function applyRemoteTheme(theme) {
     }
 }
 
-function snapRemoteSize(w, h) {
-    for (const device of REMOTE_DEVICES) {
-        if (Math.abs(w - device.w) <= DEVICE_SNAP_PX && Math.abs(h - device.h) <= DEVICE_SNAP_PX)
-            return { w: device.w, h: device.h, device };
-    }
-    return { w, h, device: null };
-}
-
-// What the panel settles on when the finger lifts. Magnetic snapping while
-// dragging only catches a size you were already close to; this is what makes
-// every RESTING size a real screen, so the panel cannot be left at an aspect
-// no device has and no layout was drawn for.
-function nearestRemoteDevice(w, h) {
-    let best = REMOTE_DEVICES[0], bestDistance = Infinity;
-    for (const device of REMOTE_DEVICES) {
-        const distance = (w - device.w) ** 2 + (h - device.h) ** 2;
-        if (distance < bestDistance) { best = device; bestDistance = distance; }
-    }
-    return best;
-}
-
-// Which of the app's four layouts this size is. These are the predicates from
-// lib/utils/layout_breakpoints.dart, and they are in JS rather than in a
-// container query because CSS cannot ask about `shortestSide`.
-function remoteShapeFor(w, h) {
-    if (w > h) {
-        // Three landscape cases, because main_screen.dart branches three ways:
-        // isTabletLandscape (six Ergo Form slots), isNarrowLandscape (a phone
-        // on its side, which gets its own weights), and the ordinary one.
-        if (Math.min(w, h) >= 600) return 'tablet-landscape';
-        return h < 500 ? 'narrow-landscape' : 'landscape';
-    }
-    return w >= 600 ? 'wide-portrait' : 'narrow-portrait';
-}
-
-// A device bigger than the viewer is shown smaller, not made unreachable: a
-// Fold 5 cover screen is 882px tall and almost no laptop viewport has that
-// once the header and the toolbar are out. The panel keeps the device's
-// LAYOUT size - so its breakpoints still answer as that device - and is drawn
-// scaled. Every pointer delta is divided back out, so dragging still tracks.
 function remoteFitScale(w, h) {
-    const container = canvas?.parentElement;
-    if (!container) return 1;
-    const top = parseFloat(canvas.style.top) || 0;
-    const availableW = container.clientWidth - DOCK_PAD * 2;
-    const availableH = container.clientHeight - top - DOCK_PAD * 2;
-    if (availableW <= 0 || availableH <= 0) return 1;
-    return Math.min(1, availableW / w, availableH / h);
+    const dock=document.getElementById('motion-dock'),container=canvas?.parentElement;
+    if(!dock||!container)return 1;
+    if(dock.dataset.mode==='docked'){
+        // The stacked shell uses display:contents, which has no clientWidth.
+        let parent=dock.parentElement;
+        while(parent&&!parent.clientWidth)parent=parent.parentElement;
+        return Math.max(.1,Math.min(1,(Math.min(innerWidth,parent?.clientWidth||innerWidth)-32)/w));
+    }
+    const top=parseFloat(canvas.style.top)||0;
+    return Math.max(.1,Math.min(1,(container.clientWidth-DOCK_PAD*2)/w,(container.clientHeight-top-DOCK_PAD*2)/h));
 }
 
-function applyRemoteSize(w, h, { announce = false } = {}) {
-    const dock = document.getElementById('motion-dock');
-    if (!dock) return;
-    // Clamped here rather than only at the drag, so no caller - the test hook
-    // and the restore path included - can hand the layout a size it cannot hold.
-    const snapped = snapRemoteSize(
-        Math.round(THREE.MathUtils.clamp(w, REMOTE_MIN_W, REMOTE_MAX_W)),
-        Math.round(THREE.MathUtils.clamp(h, REMOTE_MIN_H, REMOTE_MAX_H)));
-    const changed = snapped.device?.id !== remoteDevice?.id;
-    remoteSize = { w: snapped.w, h: snapped.h };
-    remoteDevice = snapped.device;
-    remoteScale = remoteFitScale(snapped.w, snapped.h);
-
-    dock.style.setProperty('--dock-w', snapped.w + 'px');
-    dock.style.setProperty('--dock-h', snapped.h + 'px');
-    dock.style.setProperty('--remote-unit', (Math.min(snapped.w, snapped.h) / 100) + 'px');
-    dock.style.setProperty('--remote-scale', String(remoteScale));
-    dock.dataset.shape = remoteShapeFor(snapped.w, snapped.h);
-    dock.dataset.device = snapped.device?.id || '';
-    dock.dataset.sized = 'true';
-
-    if (announce && changed && snapped.device)
-        notifyUser(`${snapped.device.name} — ${snapped.device.w} × ${snapped.device.h}`);
+function applyRemoteSize(w, h) {
+    const dock=document.getElementById('motion-dock');
+    if(!dock)return;
+    remoteDevice=REMOTE_DEVICES[0];remoteSize={w:remoteDevice.w,h:remoteDevice.h};
+    const extras=dock.querySelector('.remote-extras');
+    const expanded=!dock.classList.contains('collapsed');
+    const height=(expanded?remoteSize.h:42)+(extras?.offsetHeight||22)+2;
+    remoteScale=remoteFitScale(remoteSize.w,height);
+    dock.style.setProperty('--dock-w',remoteSize.w+'px');
+    dock.style.setProperty('--dock-h',remoteSize.h+'px');
+    dock.style.setProperty('--remote-unit','2.98px');
+    dock.style.setProperty('--remote-scale',String(remoteScale));
+    dock.dataset.shape='compact';dock.dataset.device='compact';dock.dataset.sized='true';
     clampDockPosition();
 }
 
@@ -8340,11 +8390,7 @@ function persistRemoteSize() {
 }
 
 function restoreDockSize() {
-    const stored = readStore(DOCK_SIZE_KEY, 1, null);
-    const w = numberOrNull(stored?.w, REMOTE_MIN_W, REMOTE_MAX_W);
-    const h = numberOrNull(stored?.h, REMOTE_MIN_H, REMOTE_MAX_H);
-    if (w === null || h === null) return;   // never resized, or unreadable: CSS sizes it
-    applyRemoteSize(w, h);
+    applyRemoteSize(720,298);
 }
 
 // The panel positions itself absolutely the moment it is dragged OR resized.
@@ -8370,9 +8416,11 @@ function anchorDock(dock) {
 function clampDockPosition() {
     const dock = document.getElementById('motion-dock');
     const container = canvas?.parentElement;
-    if (!dock || !container || dock.dataset.floating !== 'true') return;
+    if (!dock || !container) return;
     const pad = DOCK_PAD;
     const top = parseFloat(canvas.style.top) || 0;
+    dock.style.setProperty('--dock-available-h', Math.max(100,(container.clientHeight-top-pad*2)/(remoteScale||1))+'px');
+    if (dock.dataset.floating !== 'true') return;
     // offsetWidth/Height are the LAYOUT box; a scaled-to-fit device draws
     // smaller than that, and clamping against the layout box would refuse
     // positions that are plainly on screen.
@@ -8405,6 +8453,7 @@ function placeRemoteForMode() {
         const slot = document.getElementById('demo-remote');
         if (slot && dock.parentElement !== slot) slot.append(dock);
         dock.dataset.mode = 'docked';
+        restoreDockSize();
         return;
     }
     const floating = document.body.classList.contains('shell-layout')
@@ -8423,14 +8472,7 @@ function placeRemoteForMode() {
     if (dock.parentElement !== viewer.parentElement) viewer.after(dock);
     dock.dataset.floating = '';
     dock.style.left = dock.style.top = dock.style.bottom = dock.style.transform = '';
-    // A size the user dragged out in the shell is a device mockup size, which
-    // means nothing to the stacked fallback's full-width bar.
-    dock.style.width = dock.style.height = '';
-    ['--dock-w', '--dock-h', '--remote-unit', '--remote-scale'].forEach(v => dock.style.removeProperty(v));
-    delete dock.dataset.sized;
-    delete dock.dataset.shape;
-    delete dock.dataset.device;
-    remoteScale = 1;
+    restoreDockSize();
 }
 
 function placeDockFromStorage() {
@@ -8451,14 +8493,15 @@ function placeDockFromStorage() {
 
 function wireRemote(dock, header) {
     // ---- drag ----
-    let dragging = null;
+    let dragging = null, headerMoved = false;
     header.addEventListener('pointerdown', e => {
         // Only the bare strip drags. A pointerdown on the stop button, the
         // collapse toggle, or anything else operable belongs to that control.
         if (e.button !== 0 || e.target.closest('button, a, input, select, [tabindex]')) return;
         if (dock.dataset.mode !== 'floating') return;   // docked below the viewer: nothing to drag
         const rect = dock.getBoundingClientRect();
-        dragging = { dx: e.clientX - rect.left, dy: e.clientY - rect.top };
+        headerMoved = false;
+        dragging = { dx: e.clientX - rect.left, dy: e.clientY - rect.top, x:e.clientX, y:e.clientY };
         anchorDock(dock);
         header.classList.add('dragging');
         try { header.setPointerCapture(e.pointerId); } catch {}
@@ -8466,6 +8509,7 @@ function wireRemote(dock, header) {
     });
     header.addEventListener('pointermove', e => {
         if (!dragging) return;
+        if(Math.hypot(e.clientX-dragging.x,e.clientY-dragging.y)>3)headerMoved=true;
         const container = canvas.parentElement.getBoundingClientRect();
         dock.style.left = (e.clientX - container.left - dragging.dx) + 'px';
         dock.style.top = (e.clientY - container.top - dragging.dy) + 'px';
@@ -8482,75 +8526,8 @@ function wireRemote(dock, header) {
     header.addEventListener('pointerup', endDrag);
     header.addEventListener('pointercancel', endDrag);
 
-    // ---- resize: the panel is a device, so its size is the point ----
-    // Same pointer-capture shape as the studio's sidebar splitter, which is
-    // the pattern that already works here.
-    //
-    // Bound once. The drag handlers above go on the header, which is rebuilt
-    // with the panel, so they are replaced each time; these go on #motion-dock
-    // itself, which is authored in the markup and survives `innerHTML = ''`.
-    // Re-binding them stacked a second copy on every rebuild, and two copies
-    // applied the same pointer delta twice against different scales.
-    let resizing = null;
-    if (dock.dataset.resizeWired !== 'true') {
-        dock.dataset.resizeWired = 'true';
-        dock.addEventListener('pointerdown', e => {
-            const grip = e.target.closest('.remote-resize');
-            if (!grip || e.button !== 0 || dock.dataset.mode !== 'floating') return;
-            anchorDock(dock);
-            const rect = dock.getBoundingClientRect();
-            const container = canvas.parentElement.getBoundingClientRect();
-            resizing = {
-                edge: grip.dataset.edge,
-                x0: e.clientX, y0: e.clientY,
-                w0: dock.offsetWidth, h0: dock.offsetHeight,
-                left0: rect.left - container.left,
-                top0: rect.top - container.top
-            };
-            grip.classList.add('dragging');
-            try { grip.setPointerCapture(e.pointerId); } catch {}
-            e.preventDefault();
-            e.stopPropagation();
-        });
-        dock.addEventListener('pointermove', e => {
-            if (!resizing) return;
-            // Pointer deltas are in drawn pixels; the size is in device pixels.
-            const scale = remoteScale || 1;
-            const dx = (e.clientX - resizing.x0) / scale;
-            const dy = (e.clientY - resizing.y0) / scale;
-            const { edge } = resizing;
-            let w = resizing.w0, h = resizing.h0;
-            if (edge.includes('e')) w = resizing.w0 + dx;
-            if (edge.includes('w')) w = resizing.w0 - dx;
-            if (edge.includes('s')) h = resizing.h0 + dy;
-            if (edge.includes('n')) h = resizing.h0 - dy;
-                w = THREE.MathUtils.clamp(w, REMOTE_MIN_W, REMOTE_MAX_W);
-            h = THREE.MathUtils.clamp(h, REMOTE_MIN_H, REMOTE_MAX_H);
-            applyRemoteSize(w, h, { announce: true });
-            // A west or north grip moves the opposite corner as well as the size,
-            // so the edge the user is NOT holding has to stay where it was.
-            if (edge.includes('w')) dock.style.left = (resizing.left0 + (resizing.w0 - remoteSize.w) * scale) + 'px';
-            if (edge.includes('n')) dock.style.top = (resizing.top0 + (resizing.h0 - remoteSize.h) * scale) + 'px';
-            clampDockPosition();
-        });
-        const endResize = e => {
-            if (!resizing) return;
-            resizing = null;
-            dock.querySelectorAll('.remote-resize.dragging').forEach(g => g.classList.remove('dragging'));
-            try { e.target.releasePointerCapture?.(e.pointerId); } catch {}
-            // Land on a real screen, however far off one the drag finished.
-            const settle = nearestRemoteDevice(remoteSize.w, remoteSize.h);
-            applyRemoteSize(settle.w, settle.h, { announce: true });
-            persistRemoteSize();
-            const at = clampDockPosition();
-            if (at) writeStore(DOCK_POS_KEY, { v: 1, x: at.x, y: at.y });
-        };
-        dock.addEventListener('pointerup', endResize);
-        dock.addEventListener('pointercancel', endResize);
-    }
-
     // ---- theme ----
-    header.querySelector('.remote-theme')?.addEventListener('click', () => {
+    dock.querySelector('.remote-theme')?.addEventListener('click', () => {
         const next = dock.dataset.theme === 'dark' ? 'light' : 'dark';
         applyRemoteTheme(next);
         writeStore(REMOTE_THEME_KEY, { v: 1, theme: next });
@@ -8565,15 +8542,17 @@ function wireRemote(dock, header) {
             dock.classList.toggle('collapsed', collapsed);
             dockToggle.textContent = collapsed ? '▲' : '▼';
             dockToggle.setAttribute('aria-label', collapsed ? 'Expand movement panel' : 'Collapse movement panel');
-            // The canvas is not involved; only the panel's own footprint changed.
-            clampDockPosition();
+            dockToggle.title = collapsed ? 'Expand controls' : 'Minimize controls';
+            // Fit the expanded panel before clamping its position.
+            refitRemote();
         }
     });
     dockToggle.onclick = toggleDock;
     // Docked below the viewer, the whole header is the affordance: the panel is
     // closed until you ask for it, and the bar is what you press.
     header.addEventListener('click', e => {
-        if (dock.dataset.mode === 'floating') return;
+        if(headerMoved){headerMoved=false;return;}
+        if (dock.dataset.mode === 'floating' && !dock.classList.contains('collapsed')) return;
         if (e.target.closest('button, a, input, select')) return;
         toggleDock();
     });
@@ -8588,7 +8567,7 @@ function wireRemote(dock, header) {
         if (!isFinite(value)) { showHeight(liftToHeight(currentLift)); return; }
         const minimum = minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size);
         const clamped = THREE.MathUtils.clamp(value, minimum, HEIGHT_MAX);
-        heightField.value = clamped.toFixed(2);
+        heightField.value = clamped.toFixed(1);
         goToHeight(clamped);
     };
     heightField.addEventListener('change', commitHeight);
@@ -8605,7 +8584,7 @@ function wireRemote(dock, header) {
         if (!isFinite(value)) { syncTiltUI(); return; }
         const clamped = THREE.MathUtils.clamp(value, config.minDeg,
             Math.min(config.maxDeg, maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size)));
-        tiltField.value = clamped.toFixed(2);
+        tiltField.value = String(Number(clamped.toFixed(1)));
         goToTilt(clamped);
     };
     tiltField.addEventListener('change', commitTilt);
@@ -9648,7 +9627,7 @@ function applyRoomLighting() {
     if (renderer) renderer.toneMappingExposure = exposure;
     if (scene) scene.environmentIntensity = profile.bounce * (ledStudio ? .35 : 1);
     if (sceneLights) {
-        if (!measured) resetRoomLightRig(sceneLights);
+        if (!measured) { resetRoomLightRig(sceneLights); delete document.getElementById('viewer-shell').dataset.roomDark; }
         sceneLights.key.color.set(profile.key); sceneLights.key.intensity = profile.power * daylight * (ledStudio ? .55 : 1);
         sceneLights.key.position.set(selectedRoomScene === 'home' || selectedRoomScene === 'lounge' ? -5 : -3, 7, 5);
         if (selectedRoomScene === 'product') sceneLights.key.position.set(4.5, 8, 5.5);
@@ -9658,6 +9637,13 @@ function applyRoomLighting() {
         if (measured && workspaceRoom?.root) {
             configureRoomLightRig(workspaceRoom, sceneLights, measured.mode);
             sceneLights.fill.intensity *= measured.mode === 'night' || measured.mode === 'party' ? (measured.id === 'home' ? .25 : .35) : 1;
+            const backdrop = roomPolishLighting(workspaceRoom, sceneLights, measured.mode);
+            const shell = document.getElementById('viewer-shell');
+            if (backdrop && shell) {
+                shell.style.setProperty('--room-halo', backdrop.halo);
+                shell.style.setProperty('--room-edge', backdrop.edge);
+                shell.dataset.roomDark = String(backdrop.dark);
+            }
             workspaceRoom.roomAtmosphere?.(measured.mode, accent);
             workspaceRoom.life?.apply(measured.mode);
             workspaceRoom.life?.lightActivity();
@@ -9671,14 +9657,100 @@ function applyRoomLighting() {
     updateTouchscreenDisplay();
 }
 
-function syncGrooveUI(state) {
+function currentGrooveKey(sceneId = selectedRoomScene, phase = measuredRoomProfile(sceneId)?.mode) {
+    const profile = measuredRoomProfile(sceneId);
+    return profile ? groovePresetKey(sceneId, profile.layout.id, currentConfig.size, phase) : null;
+}
+function savedGroovePosition(sceneId, phase) { return groovePresets[currentGrooveKey(sceneId, phase)] || null; }
+function captureGrooveLights() {
+    return JSON.parse(JSON.stringify({
+        color: ledColor, glow: ledGlow, enabled: ledsEnabled, effect: ledEffect, surfaces: ledSurfaces,
+        look: customLedLook, motion: ledMotionEnabled,
+        music: { active: ledMusic.active, fx: ledMusic.manualFx ?? ledMusic.fx, sensitivity: ledMusic.sensitivity,
+            palette: ledMusic.paletteOverride, dj: ledMusic.dj.enabled, settings: ledMusic.dj.settings,
+            source: ledMusic.captureKind || (ledMusic.objectUrl ? 'file' : 'demo'), sourceName: ledMusic.sourceName },
+        game: { active: ledGame.active, mode: ledGame.mode, content: ledGame.content, maxBrightness: ledGame.maxBrightness }
+    }));
+}
+function applyGrooveLights(lights) {
+    const music = lights.music || {}, game = lights.game || {};
+    // Saving a recipe never stores a microphone permission or an audio file.
+    const sourceAvailable = music.source === 'demo' ||
+        (music.source === 'file' ? !!ledMusic.objectUrl && ledMusic.sourceName === music.sourceName : ledMusic.captureKind === music.source);
+    ledGame.stop();
+    if (!music.active || !sourceAvailable) ledMusic.stop(); else ledMusic.stopDJ();
+    setLedColor(lights.color, false); setLedEffect(lights.effect || {}, false);
+    if (Number.isFinite(lights.glow)) setLedGlow(lights.glow, false);
+    for (const [key, value] of Object.entries(lights.surfaces || {})) setLedSurface(key, value, false);
+    setLedMotionEnabled(lights.motion !== false);
+    customLookSampler.music.reset(); customLookSampler.decorativeFrames.clear();
+    if (Number.isInteger(music.fx)) ledMusic.setEffect(music.fx);
+    // setEffect clears a custom look through the existing selection event.
+    try { customLedLook = lights.look ? normalizeCustomLook(lights.look) : null; } catch { customLedLook = null; }
+    ledMusic.sensitivity = THREE.MathUtils.clamp(Number(music.sensitivity) || 1, .5, 3);
+    try { ledMusic.paletteOverride = music.palette ? normalizeCustomPalette(music.palette) : null; } catch { ledMusic.paletteOverride = null; }
+    ledMusic.dj.configure(normalizeDJSettings(music.settings || {}));
+    // Rebuild the DJ controls too: their handlers retain the displayed weights.
+    const roots = [...ledMusic.djUI]; ledMusic.djUI.length = 0;
+    for (const root of roots) { root.replaceChildren(); ledMusic.mountDJControls(root); }
+    setLedsEnabled(lights.enabled !== false);
+    if (music.active && sourceAvailable && lights.enabled !== false) {
+        if (music.source === 'demo' && (ledMusic.liveAudio || ledMusic.objectUrl)) ledMusic.useDemo();
+        if (music.dj) void ledMusic.startDJ(); else void ledMusic.start();
+    } else if (music.active && !sourceAvailable) notifyUser('Groove lights restored. Open Music to reconnect the saved audio source.');
+    if (['calm','normal','intense','full'].includes(game.mode)) ledGame.mode = game.mode;
+    if (['colours','music'].includes(game.content)) ledGame.content = game.content;
+    if (Number.isFinite(game.maxBrightness)) ledGame.maxBrightness = THREE.MathUtils.clamp(game.maxBrightness, 0, 1);
+    if (game.active && lights.enabled !== false) void ledGame.start();
+    ledMusic.syncUI(); ledGame.syncUI(); updateLedEffectFrame();
+}
+function saveCurrentGroovePosition() {
+    const profile = measuredRoomProfile();
+    if (!profile || !loadedModel || roomGroove?.run || roomSafety.alert || liveAR?.active) return false;
+    haltAllMotion();
+    const preset = { pose: grooveController().ctx.pose(), height: liftToHeight(currentLift),
+        tilt: primaryTiltConfig()?.currentDeg || 0, lights: captureGrooveLights() };
+    const key = currentGrooveKey(), next = normalizeGroovePresets({ ...groovePresets, [key]: preset });
+    if (!next[key]) { notifyUser('This desk pose could not be saved.'); return false; }
+    groovePresets = next;
+    const persisted = writeStore(GROOVE_PRESETS_KEY, { v: 1, presets: groovePresets });
+    roomGroove.reset();
+    const message = `${profile.modes[profile.mode].label} Groove position and lights saved${persisted ? ' in this browser.' : ' for this session only.'}`;
+    roomGroove.announce(message); notifyUser(message); markEdited();
+    return true;
+}
+function resetCurrentGroovePosition() {
+    const key = currentGrooveKey(); if (!groovePresets[key] || roomGroove?.run) return false;
+    delete groovePresets[key];
+    const persisted = writeStore(GROOVE_PRESETS_KEY, { v: 1, presets: groovePresets });
+    haltAllMotion(); roomGroove?.reset();
+    const message = 'Original Groove position restored' + (persisted ? '.' : ' for this session only.');
+    roomGroove?.announce(message); notifyUser(message); markEdited(); return true;
+}
+function syncGrooveUI(state = {}) {
+    const phase=document.querySelector('.hub-phase');
+    if(phase)phase.textContent=roomGroove?.run?'Moving to position':measuredRoomProfile()?'Ready to Groove':'Desk preview';
+    const button=document.querySelector('.hub-groove');
+    if(button){button.disabled=!measuredRoomProfile()||!loadedModel;button.setAttribute('aria-pressed',String(!!roomGroove?.run));button.setAttribute('aria-label',roomGroove?.run?'Stop room Groove':'Start current room Groove');}
+
     for (const panel of document.querySelectorAll('.groove-controls')) {
         const start = panel.querySelector('[data-groove-start]');
-        start.disabled = !roomGroove?.prepared?.plan || !!roomGroove?.run;
+        start.disabled = !!roomGroove?.run || !!(roomGroove?.prepared&&!roomGroove.prepared.plan) || panel.dataset.scene !== selectedRoomScene || !loadedModel;
         start.textContent = roomGroove?.prepared?.plan?.ok === false ? 'Check route' : 'Start Groove';
         panel.querySelector('[data-groove-stop]').disabled = !roomGroove?.run;
-        panel.querySelector('[data-groove-status]').textContent = state.message;
+        const active = panel.dataset.scene === selectedRoomScene, saved = savedGroovePosition(panel.dataset.scene);
+        panel.querySelector('[data-groove-save]').disabled = !active || !loadedModel || !!roomGroove?.run || !!roomSafety.alert || !!liveAR?.active;
+        panel.querySelector('[data-groove-reset]').disabled = !active || !saved || !!roomGroove?.run;
+        panel.querySelector('[data-groove-saved]').textContent = saved ? 'Saved position & lights · this room and desk size' : 'Original position';
+        panel.querySelector('[data-groove-status]').textContent = active && state.message && state.status === 'idle' ? state.message : roomGroove?.prepared ? state.message : `${measuredRoomProfile(panel.dataset.scene)?.modes[measuredRoomProfile(panel.dataset.scene)?.mode]?.label || 'Current setting'} Groove · Start to plan a clear route and move the desk.`;
     }
+}
+async function startCurrentGroove() {
+    const profile=measuredRoomProfile();
+    if(!profile||roomGroove?.run||roomSafety.alert)return false;
+    if(!roomGroove?.prepared || roomGroove.prepared.scene!==selectedRoomScene || roomGroove.prepared.phase!==profile.mode)
+        await prepareGrooveMode(selectedRoomScene,profile.mode);
+    return grooveController().start();
 }
 function grooveFootprint() {
     if (!loadedModel || !workspaceRoom?.roomLayout) return null;
@@ -9703,6 +9775,7 @@ function grooveController() {
     roomGroove = new RoomGroove({
         get room() { return workspaceRoom; }, get sceneId() { return selectedRoomScene; },
         mode: phase => measuredRoomProfile().modes[phase],
+        saved: savedGroovePosition,
         pose: () => ({ x: -glideOffset.z / workspaceRoom.root.scale.x, z: glideOffset.x / workspaceRoom.root.scale.x, yaw: deskYaw }),
         footprint: grooveFootprint, height: () => liftToHeight(currentLift), tilt: () => primaryTiltConfig()?.currentDeg || 0,
         safeHeight: (h,t) => Math.max(h, minimumHeightForTilt(t, currentConfig.size)),
@@ -9724,7 +9797,11 @@ function grooveController() {
             applyGlideOffset(new THREE.Vector3(p.z * workspaceRoom.root.scale.x, 0, -p.x * workspaceRoom.root.scale.x),{collide:true});
             glideTarget.copy(glideOffset); loadedModel.updateMatrixWorld(true); workspaceAccessories?.update();
         },
-        dress: (phase, mode) => { workspaceAccessories?.setDayDress(phase); if (mode.color) setLedColor(mode.color, false); setLedsEnabled(mode.leds); }
+        dress: (phase, mode) => {
+            workspaceAccessories?.setDayDress(phase);
+            if (mode.saved) { void applyGrooveLights(mode.saved.lights); return; }
+            if (mode.color) setLedColor(mode.color, false); setLedsEnabled(mode.leds);
+        }
     });
     return roomGroove;
 }
@@ -9755,11 +9832,12 @@ function positionHomeDesk(useModePose = false) {
 }
 
 function syncHomeOfficeUI() {
+    const grooveButton=document.querySelector('.hub-groove');if(grooveButton)grooveButton.disabled=selectedRoomScene==='product';
     const shell = document.getElementById('viewer-shell');
     if (shell) { if (selectedRoomScene === 'home') shell.dataset.homeMode = homeMode; else delete shell.dataset.homeMode; }
     const active = measuredRoomProfile();
     if (shell) { if (active) shell.dataset.roomMode = active.mode; else delete shell.dataset.roomMode; }
-    for (const id of ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'gallery', 'scifi', 'coworking', 'library']) {
+    for (const id of MEASURED_ROOM_IDS) {
         const profile = measuredRoomProfile(id), prefix = profile.prefix;
         const panel = document.getElementById(measuredRoomPanelId(id));
         if (!panel) continue;
@@ -9775,6 +9853,7 @@ function syncHomeOfficeUI() {
         const { layout } = active, mode = active.modes[active.mode];
         caption.textContent = `${layout.name} · ${feet(layout.width)} × ${feet(layout.depth)} (${layout.width / 1000} × ${layout.depth / 1000} m) · ${layout.height / 1000} m ceiling · ${mode.label}`;
     }
+    syncGrooveUI();
 }
 
 function setHomeLayout(id) {
@@ -9796,7 +9875,8 @@ function setGymLayout(id) { setMeasuredRoomLayout('gym', id); }
 function setStudyLayout(id) { setMeasuredRoomLayout('study', id); }
 function setMeasuredRoomLayout(sceneId, id) {
     if (!measuredRoomProfile(sceneId)?.layouts[id]) return;
-    if (sceneId === 'home') homeLayoutId = id;
+    if (INSTITUTIONAL_ROOMS[sceneId]) institutionalState[sceneId].layout = id;
+    else if (sceneId === 'home') homeLayoutId = id;
     else if (sceneId === 'gaming') gamingLayoutId = id;
     else if (sceneId === 'music') musicLayoutId = id;
     else if (sceneId === 'creative') artistLayoutId = id;
@@ -9841,7 +9921,8 @@ function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
     if (roomGroove?.prepared) { haltAllMotion(); roomGroove.reset(); }
     const profile = measuredRoomProfile(sceneId);
     if (!profile?.modes[id]) return;
-    if (sceneId === 'home') homeMode = id;
+    if (INSTITUTIONAL_ROOMS[sceneId]) institutionalState[sceneId].mode = id;
+    else if (sceneId === 'home') homeMode = id;
     else if (sceneId === 'gaming') gamingMode = id;
     else if (sceneId === 'music') musicMode = id;
     else if (sceneId === 'creative') artistMode = id;
@@ -9878,7 +9959,14 @@ function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
     syncHomeOfficeUI();
 }
 
-function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
+function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop = !preserveDesk } = {}) {
+    if (Object.hasOwn(INSTITUTIONAL_GROUPS, id)) {
+        const group = INSTITUTIONAL_GROUPS[id];
+        let setting = group.settings.includes(selectedRoomScene) ? selectedRoomScene : group.initial;
+        try { const saved = localStorage.getItem(`ergoflex.${group.storage}`); if (group.settings.includes(saved)) setting = saved; } catch {}
+        id = setting;
+    }
+    roomInteractions?.end();
     if (roomGroove) { haltAllMotion(); roomGroove.reset(); }
     const choice = ROOM_SCENES.find(s => s.id === id) || ROOM_SCENES[0];
     const measured = measuredRoomProfile(choice.id);
@@ -9893,13 +9981,13 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
         clearSceneAssetRegistration();
     }
     selectedRoomScene = choice.id;
-    let homeScale;
-    if (measured && loadedModel) {
-        const reference = arSizeReference();
-        // Nominal desktop inches establish the room's physical units. An AR
-        // calibration preference does not silently resize this architecture.
-        homeScale = reference.widthUnits > 0 ? reference.widthUnits / (reference.nominalWidth * 25.4) : 1 / (reference.metersPerUnit * 1000);
+    const groupId = institutionalGroup(choice.id), pickerId = groupId || choice.id;
+    const sceneSelect = document.getElementById('room-scene-select'); if (sceneSelect) sceneSelect.value = pickerId;
+    if (groupId) {
+        try { localStorage.setItem(`ergoflex.${INSTITUTIONAL_GROUPS[groupId].storage}`, choice.id); } catch {}
+        document.querySelectorAll(`[data-institutional-setting="${groupId}"]`).forEach(select => { select.value = choice.id; });
     }
+    if (INSTITUTIONAL_ROOMS[choice.id] && !institutionalState[choice.id].layout) institutionalState[choice.id].layout = measured.layout.id;
     if (choice.id === 'gaming' && !gamingLayoutId) gamingLayoutId = measured.layout.id;
     if (choice.id === 'music' && !musicLayoutId) musicLayoutId = measured.layout.id;
     if (choice.id === 'creative' && !artistLayoutId) artistLayoutId = measured.layout.id;
@@ -9914,6 +10002,21 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
     if (choice.id === 'kitchen' && !kitchenLayoutId) kitchenLayoutId = measured.layout.id;
     if (choice.id === 'gym' && !gymLayoutId) gymLayoutId = measured.layout.id;
     if (choice.id === 'office' && !officeLayoutId) officeLayoutId = measured.layout.id;
+    if (measured && defaultDesktop) {
+        // Compare within this environment: a compact library is still much
+        // larger than a home office, but uses its smaller desk arrangement.
+        const compact = Object.values(measured.layouts).reduce((a, b) =>
+            a.width * a.depth <= b.width * b.depth ? a : b);
+        const size = measured.layout.desktopSize || (measured.layout.id === compact.id ? '48x30' : '60x30');
+        if (currentConfig.size !== size) changeDesktopSize(size, { rebuildRoom: false });
+    }
+    let homeScale;
+    if (measured && loadedModel) {
+        const reference = arSizeReference();
+        // Nominal desktop inches establish the room's physical units. An AR
+        // calibration preference does not silently resize this architecture.
+        homeScale = reference.widthUnits > 0 ? reference.widthUnits / (reference.nominalWidth * 25.4) : 1 / (reference.metersPerUnit * 1000);
+    }
     roomInteractions?.end();roomInteractions?.select(null);roomLedSpill.dispose();roomCollisionBlocked=false;roomSafety.reset();syncSafetyUI();
     workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
         createStation: ['office', 'coworking'].includes(choice.id) && loadedModel ? spec => captureOfficeStation(spec, homeScale) : null });
@@ -9944,13 +10047,14 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
         if (hydrationToken === sceneAssetHydrationToken) {
             workspaceAccessories?.setDayDress(measuredRoomProfile()?.mode || 'morning');
             roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
+            syncGrooveUI(roomGroove?.state || {});
         }
     });
     if (workspaceRoom) workspaceRoom.ready = assetsReady;
     if (floorMesh) floorMesh.visible = choice.id === 'product';
     const shell = document.getElementById('viewer-shell');
     if (shell) shell.dataset.roomScene = choice.id;
-    document.querySelectorAll('[data-room-scene]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.roomScene === choice.id)));
+    document.querySelectorAll('[data-room-scene]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.roomScene === pickerId)));
     const caption = document.getElementById('room-scene-caption');
     if (caption) {
         const [wide, rear, front] = ROOM_ATMOSPHERES[choice.id].space;
@@ -9959,6 +10063,11 @@ function setRoomScene(id, persist = true, { preserveDesk = false } = {}) {
     const heading = document.querySelector('.viewer-heading h2');
     const interactionHint=document.getElementById('room-interaction-hint');
     if(interactionHint)interactionHint.hidden=choice.id==='product';
+    const rearrangeControl=document.getElementById('room-rearrange-control');
+    if(rearrangeControl)rearrangeControl.hidden=choice.id==='product';
+    for(const controlId of ['room-undo-btn','room-redo-btn','room-save-status']){
+        const control=document.getElementById(controlId);if(control)control.hidden=choice.id==='product';
+    }
     if (heading) heading.textContent = choice.id === 'product' ? 'Designed to move you.' : choice.caption;
     const environment = document.getElementById('studio-environment');
     if (environment) environment.value = choice.tone;
@@ -9987,7 +10096,7 @@ function persistCart() {
 }
 function syncBuildSummary() {
     const el = document.getElementById('build-summary');
-    if (el) el.textContent = `${currentConfig.woodFinish} / ${currentConfig.baseFinish}`;
+    if (el) el.textContent = `${currentConfig.woodFinish} / ${currentConfig.baseFinish} · ${TRIM_COLORS.find(c => c.value === trimColor)?.name || 'Custom'} trim`;
     const size = document.getElementById('size-preview-note');
     if (size) size.textContent = `Selected: ${PRODUCT_CONFIG.sizes[currentConfig.size].name}. The 3D desktop and trim match this size.`;
 }
@@ -9999,10 +10108,12 @@ function applySurfaceFinish() {
     const species = woodSpecies(currentConfig.woodFinish);
 
     woodMaterials.forEach((material, role) => {
-        const { roughness, clearcoat } = treatment('wood');
+        const { roughness, clearcoat } = treatment(species.treatment || 'wood');
         material.roughness = roughness;
         material.clearcoat = clearcoat;
-        const texture = grainEnabled ? woodTextureFor(currentConfig.woodFinish, role) : null;
+        material.metalness = species.metalness || 0;
+        const texture = species.surface === 'opaque' ? null : species.surface ? wrapTextureFor(species, role)
+            : grainEnabled ? woodTextureFor(currentConfig.woodFinish, role) : null;
         if (texture) applyGrainScale(texture, role, species);
         material.map = texture;
         material.bumpMap = texture;
@@ -10010,13 +10121,21 @@ function applySurfaceFinish() {
         // image. A near-black finish has its albedo variation scaled away with
         // everything else, so its grain has to be carried by shading and by
         // varying gloss - which is how black-stained timber reads in the first place.
-        material.bumpScale = (role === 'edge' ? 0.0016 : (species.bumpScale || 0.0006)) * grainVisibility / 100;
+        material.bumpScale = species.surface ? (species.surface === 'opaque' ? 0 : .0003)
+            : (role === 'edge' ? 0.0016 : (species.bumpScale || 0.0006)) * grainVisibility / 100;
         const roughnessTexture = texture && species.grainSheen && role !== 'edge' && grainSheen > 0
             ? grainRoughnessTexture(texture, role) : null;
         if (roughnessTexture) applyGrainScale(roughnessTexture, role, species);
         material.roughnessMap = roughnessTexture;
         material.needsUpdate = true;
     });
+    const woodControls = document.querySelector('.material-options');
+    if (woodControls) {
+        const wood = !species.surface;
+        woodControls.querySelector('.check-label').hidden = !wood;
+        woodControls.querySelector('.grain-controls').hidden = !wood;
+        woodControls.querySelector('.studio-note').hidden = !wood;
+    }
 
     if (sharedBasePaintMaterial) {
         const { roughness, clearcoat } = treatment('powder');
@@ -10036,6 +10155,43 @@ function applySurfaceFinish() {
         sharedBlackPlasticMaterial.clearcoat = clearcoat;
         sharedBlackPlasticMaterial.needsUpdate = true;
     }
+    surfaceArtwork?.refresh();
+}
+
+function bindSurfaceArtwork() {
+    if (!surfaceArtwork || !loadedModel || !sizeVariantParts) return;
+    withNeutralPose(() => {
+        loadedModel.updateMatrixWorld(true);
+        const inverse = loadedModel.matrixWorld.clone().invert();
+        const byName = name => [...partRegistry.values()].find(entry => entry.name === name)?.obj;
+        const candidates = [
+            ['desktop', currentConfig.size === '60x30' ? sizeVariantParts.largeTop : sizeVariantParts.smallTop],
+            ['left-panel', byName('Desktop_1'), true, 1],
+            ['right-panel', byName('Desktop_2'), true, -1],
+            ['upper-shelf', byName('Top_Shelf_4')],
+            ['lower-shelf', byName('Top_Shelf_3')],
+            ['base-shelf', byName('Base_Panels_3')],
+            ['desktop-crossbar', byName('Desktop'), false, 1, 'front'],
+            ['footrest-panel', byName('Base_Panels_2'), false, 1, 'front'],
+            ['shelf-back', byName('Top_Shelf'), false, 1, 'back'],
+            ['shelf-left-panel', byName('Top_Shelf_1'), true, 1],
+            ['shelf-right-panel', byName('Top_Shelf_2'), true, -1],
+            ['left-leg-panel', byName('Base_Panels_1'), true, 1],
+            ['right-leg-panel', byName('Base_Panels'), true, -1],
+            ['left-foot', byName('Lift_Column_Bottom_1')],
+            ['right-foot', byName('Lift_Column_Bottom')],
+            ['left-column-upper', byName('Lift_Column_Top_16'), true, 1],
+            ['right-column-upper', byName('Lift_Column_Top_17'), true, -1],
+            ['left-column-center', byName('Lift_Column_Center'), true, 1],
+            ['right-column-center', byName('Lift_Column_Center_1'), true, -1],
+            ['left-column-lower', byName('Lift_Column_Bottom_2'), true, 1],
+            ['right-column-lower', byName('Lift_Column_Bottom_3'), true, -1]
+        ];
+        surfaceArtwork.bind(candidates.filter(([, obj]) => obj?.geometry).map(([id, obj, panel = false, outerSign = 1, facing]) => {
+            obj.updateWorldMatrix(true, false);
+            return { id, obj, panel, outerSign, facing, frame: inverse.clone().multiply(obj.matrixWorld) };
+        }));
+    });
 }
 
 // A species change swaps the map on every wood role and retints. Natural Birch
@@ -10178,11 +10334,14 @@ function downloadEstimate(items) {
     const lines = ['ERGOFLEX — CUSTOM SHOP', 'Configuration estimate · ' + new Date().toLocaleDateString(), ''];
     items.forEach((item, i) => {
         lines.push(`${i + 1}. ErgoFlex · ${PRODUCT_CONFIG.sizes[item.size].name}`, `   ${item.woodFinish} desktop / ${item.baseFinish} frame`);
-        for (const line of priceBreakdown(item)) lines.push(`   ${line.label}${line.provisional ? '*' : ''}: ${money(line.price)}`);
+        if (item.trimColor) lines.push(`   ${TRIM_COLORS.find(c=>c.value===item.trimColor)?.name || item.trimColor} trim`);
+        for (const summary of artworkSummary(item.artwork)) lines.push('   ' + summary);
+        for (const line of priceBreakdown(item)) lines.push(`   ${line.label}${line.provisional ? '*' : ''}: ${line.quoted ? 'On request (not included in estimate)' : money(line.price)}`);
         lines.push(`   Quantity ${item.quantity} × ${money(item.price)} = ${money(item.quantity * item.price)}`, '');
     });
     if (items.some(item => item.accessories?.length)) lines.push('* Accessory prices are provisional estimates per desk; availability and mounting fit need confirmation.', '');
-    lines.push('Estimated total: ' + money(items.reduce((sum, i) => sum + i.price * i.quantity, 0)), '', 'Design preview only. Taxes, delivery, availability, and final specifications require confirmation.');
+    lines.push('Estimated total: ' + money(items.reduce((sum, i) => sum + i.price * i.quantity, 0))
+        + (items.some(item=>priceBreakdown(item).some(line=>line.quoted)) ? ' + finish quotes' : ''), '', 'Design preview only. Taxes, delivery, availability, and final specifications require confirmation.');
     downloadFile('ErgoFlex-estimate.txt', lines.join('\n'));
     notifyUser('Your configuration estimate has been downloaded.');
 }
@@ -10222,6 +10381,9 @@ function startCameraTween(toPos, toTarget) {
         camera.position.copy(cameraTween.toPos);
         controls.target.copy(cameraTween.toTarget);
         controls.update();
+        // The fallback can finish between render frames. Keep cutaway walls
+        // consistent with that camera before the next canvas pick.
+        workspaceRoom?.update(camera);
     }, cameraTween.duration * 1000 + 250);
 }
 
@@ -10335,7 +10497,7 @@ function initStudio() {
     try {
         const shared = EVENT_DEMO ? null : new URLSearchParams(location.search).get('build');
         const stored = shared ? JSON.parse(shared) : readStored(SAVED_BUILD_KEY, 'ergoflexSavedBuildV1');
-        if (validConfig(stored)) currentConfig = cleanConfig(stored);
+        if (validConfig(stored)) { currentConfig = cleanConfig(stored); restoredBuildSize = true; }
         if (shared && !validConfig(stored)) notifyUser('This build link is invalid. Showing the default configuration.');
     } catch { notifyUser('Saved configuration could not be read. Showing the default build.'); }
     try {
@@ -10373,6 +10535,17 @@ function initStudio() {
         notifyUser('Back to the standard build: ' + currentConfig.woodFinish + ' on ' + currentConfig.baseFinish + '.');
     };
     document.getElementById('share-build').onclick = async () => {
+        if (currentConfig.artwork && Object.keys(currentConfig.artwork.surfaces).length) {
+            if (loadedModel) {
+                downloadFile('ErgoFlex-artwork-project.json', JSON.stringify(serializeProject(), null, 2), 'application/json');
+                notifyUser('Project downloaded with your build, artwork and placements. Restore it with Open project.');
+            } else {
+                surfaceArtwork.root.open = true;
+                surfaceArtwork.root.querySelector('[data-art-export]').click();
+                notifyUser('Artwork downloaded with its placements. Import artwork restores it on another device.');
+            }
+            return;
+        }
         const url = new URL(location.href); url.search = ''; url.searchParams.set('build', JSON.stringify(currentConfig));
         try { await navigator.clipboard.writeText(url.href); notifyUser('Configuration link copied.'); }
         catch { downloadFile('ErgoFlex-build-link.txt', url.href); notifyUser('Configuration link downloaded.'); }
@@ -10381,6 +10554,27 @@ function initStudio() {
     const materialOptions = document.createElement('div'); materialOptions.className = 'material-options';
     materialOptions.innerHTML = `<label>Surface sheen <select id="surface-finish"><option value="matte">Matte</option><option value="satin">Satin</option><option value="gloss" selected>Gloss</option></select></label><label class="check-label"><input id="wood-grain" type="checkbox" checked> Show wood grain</label><div class="grain-controls"><label for="grain-visibility">Grain visibility <output id="grain-visibility-value" for="grain-visibility">100%</output></label><input id="grain-visibility" type="range" min="0" max="100" value="100" aria-label="Grain visibility"><label for="grain-sheen">Grain sheen <output id="grain-sheen-value" for="grain-sheen">100%</output></label><input id="grain-sheen" type="range" min="0" max="100" value="100" aria-label="Grain sheen"></div><p class="studio-note">Grain visibility changes the wood pattern and relief. Grain sheen changes how strongly the pattern reflects light. The finish above sets the overall shine.</p>`;
     document.getElementById('selected-wood-name').after(materialOptions);
+    surfaceArtwork = new SurfaceArtwork({
+        host: materialOptions.parentElement,
+        getConfig: () => currentConfig,
+        onChange: artwork => {
+            if (Object.keys(artwork.surfaces).length) currentConfig.artwork = artwork;
+            else delete currentConfig.artwork;
+            updatePrice();
+        },
+        notify: notifyUser,
+        focus: obj => { if (controls) controls.minDistance = CLOSEUP_MIN_DISTANCE; focusObjects([obj], { animate: true }); },
+        onSampleLook: () => document.querySelector('[data-look-trim="#f19c00"]')?.click(),
+        getFinishColor: id => {
+            const material = surfaceArtwork?.bindings.get(id)?.obj.material;
+            const color = (Array.isArray(material) ? material[0] : material)?.color;
+            return color ? '#' + color.getHexString() : PRODUCT_CONFIG.woodFinishes.find(f => f.name === currentConfig.woodFinish)?.color || '#1a1a1a';
+        }
+    });
+    materialOptions.after(surfaceArtwork.root);
+    // The latest artwork draft can be newer than the last explicit Save build.
+    // A shared build link is explicit and retains its own artwork instead.
+    if (!EVENT_DEMO && !new URLSearchParams(location.search).has('build')) surfaceArtwork.restoreDraft();
     document.getElementById('surface-finish').onchange = e => { surfaceFinish = e.target.value; applySurfaceFinish(); };
     document.getElementById('wood-grain').onchange = e => { grainEnabled = e.target.checked; applySurfaceFinish(); };
     document.getElementById('grain-visibility').oninput = e => {
@@ -10395,52 +10589,98 @@ function initStudio() {
         applySurfaceFinish();
     };
     const looks = document.createElement('div'); looks.className = 'look-presets';
-    looks.innerHTML = `<div class="eyebrow">A LITTLE INSPIRATION</div><div><button data-look="Natural Birch|White">Light & natural</button><button data-look="Walnut|Forest">Warm & grounded</button><button data-look="Black Birch|Black">All in black</button></div>`;
+    looks.innerHTML = `<div class="eyebrow">A LITTLE INSPIRATION</div><div><button data-look="Natural Birch|White">Light & natural</button><button data-look="Walnut|Forest">Warm & grounded</button><button data-look="Black Birch|Black">All in black</button><button data-look="Forest Green|Black" data-look-trim="#f19c00">Humboldt · forest & gold</button></div>`;
     document.getElementById('config-column').children[0].after(looks);
-    looks.querySelectorAll('[data-look]').forEach(b => b.onclick = () => b.dataset.look.split('|').forEach((name, i) => {
+    looks.querySelectorAll('[data-look]').forEach(b => b.onclick = () => {
+        b.dataset.look.split('|').forEach((name, i) => {
         const type = i ? 'base' : 'wood';
         const finish = PRODUCT_CONFIG[i ? 'baseFinishes' : 'woodFinishes'].find(f => f.name === name);
         const swatch = [...document.querySelectorAll(`[data-material="${type}"]`)].find(el => el.dataset.finish === name);
         selectFinish(finish, type, swatch);
-    }));
+        });
+        if (b.dataset.lookTrim) { setTrimColor(b.dataset.lookTrim); syncBuildSummary(); }
+    });
     const viewer = canvas.parentElement;
     const top = document.createElement('div'); top.className = 'viewer-heading';
     top.innerHTML = `<div class="eyebrow" id="scene-status">LOADING YOUR WORKSPACE</div><h2>Designed to move you.</h2><p id="build-summary"></p>`; viewer.append(top);
     const toolbar = document.createElement('div'); toolbar.className = 'studio-toolbar';
     toolbar.innerHTML = `<label><span>Backdrop</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="room">Whole room</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><p id="scene-light-name"></p><label>Exposure <output id="studio-exposure-value"></output><input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Main light <output id="studio-daylight-value"></output><input id="studio-daylight" type="range" min="0.2" max="2" step="0.05" value="1"></label><label>Accent light <output id="studio-accent-value"></output><input id="studio-accent" type="range" min="0" max="2" step="0.05" value="1"></label><button id="reset-scene-light" type="button">Reset scene lighting</button><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
     toolbar.querySelector('#studio-environment').insertAdjacentHTML('beforeend', '<option value="led">LED studio</option>');
+    const rearrangeControl=document.createElement('label');rearrangeControl.id='room-rearrange-control';rearrangeControl.hidden=true;
+    rearrangeControl.innerHTML='<input type="checkbox" id="room-rearrange-toggle" aria-describedby="room-interaction-hint"><span>Rearrange items</span>';
+    rearrangeControl.querySelector('input').onchange=e=>setRoomRearrangeEnabled(e.target.checked);
+    toolbar.append(rearrangeControl);
+    for(const [id,label,shortcut,action] of [
+        ['room-undo-btn','Undo','Ctrl+Z / Cmd+Z',performUndo],
+        ['room-redo-btn','Redo','Ctrl+Y / Ctrl+Shift+Z / Cmd+Shift+Z',performRedo]]){
+        const button=document.createElement('button');button.id=id;button.type='button';button.textContent=label;
+        button.title=shortcut;button.hidden=true;button.disabled=true;button.onclick=action;toolbar.append(button);
+    }
+    const saveStatus=document.createElement('span');saveStatus.id='room-save-status';saveStatus.setAttribute('role','status');
+    saveStatus.textContent='Auto-saves in this browser';saveStatus.hidden=true;toolbar.append(saveStatus);
     const viewerControls = document.createElement('div'); viewerControls.className = 'viewer-controls';
     viewerControls.append(toolbar);
     const scenes = document.createElement('div'); scenes.className = 'scene-switcher';
-    scenes.innerHTML = `<span class="scenes-label">Scenes</span><div class="scene-options" role="group" aria-label="Workspace scenes">${ROOM_SCENES.map(s => `<button type="button" data-room-scene="${s.id}" aria-pressed="${s.id === 'product'}"><span class="scene-dot scene-${s.id}" aria-hidden="true"></span>${s.name}</button>`).join('')}</div>`;
+    const addedGroups = new Set();
+    const pickerScenes = ROOM_SCENES.flatMap(s => {
+        const groupId = institutionalGroup(s.id);
+        if (!groupId) return [s];
+        if (addedGroups.has(groupId)) return [];
+        addedGroups.add(groupId);
+        const group = INSTITUTIONAL_GROUPS[groupId];
+        return [{ id: groupId, name: group.name, category: group.category }];
+    });
+    const sceneGroups = ['Product & lifestyle', 'Public service', 'Educational', 'Clinical & technical'];
+    scenes.innerHTML = `<label class="scenes-label" for="room-scene-select">Scenes</label><select id="room-scene-select" aria-label="Choose environment">${sceneGroups.map(group => `<optgroup label="${group}">${pickerScenes.filter(s => (s.category || 'Product & lifestyle') === group).map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</optgroup>`).join('')}</select><div class="scene-options" role="group" aria-label="Workspace scenes">${pickerScenes.map(s => `<button type="button" data-room-scene="${s.id}" aria-pressed="${s.id === 'product'}"><span class="scene-dot scene-${s.id}" aria-hidden="true"></span>${s.name}</button>`).join('')}</div>`;
     const roomCaption = document.createElement('p'); roomCaption.id = 'room-scene-caption'; roomCaption.setAttribute('aria-live', 'polite');
     const interactionHint=document.createElement('p');interactionHint.id='room-interaction-hint';interactionHint.className='studio-note';interactionHint.hidden=true;
-    interactionHint.textContent='Drag floor furnishings to move them; select one to rotate it. Drag wall decorations along their wall. Contact stops the desk until CLEAR. After clearing, small objects can be pushed. Turn on the shield to stop before contact.';
     const objectControls=document.createElement('div');objectControls.id='room-object-controls';objectControls.className='room-object-controls';objectControls.hidden=true;
     objectControls.innerHTML='<span data-room-object-name role="status"></span><button type="button" data-room-object-turn="-15" aria-label="Rotate selected furnishing left 15 degrees">↶ Rotate left</button><button type="button" data-room-object-turn="15" aria-label="Rotate selected furnishing right 15 degrees">Rotate right ↷</button><button type="button" data-room-object-done>Done</button>';
     objectControls.querySelectorAll('[data-room-object-turn]').forEach(button=>button.onclick=()=>roomInteractions?.rotateSelected(Number(button.dataset.roomObjectTurn)));
     objectControls.querySelector('[data-room-object-done]').onclick=()=>roomInteractions?.select(null);
-    const roomControls = ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'gallery', 'scifi', 'coworking', 'library'].map(id => {
+    const roomControls = MEASURED_ROOM_IDS.map(id => {
         const profile = measuredRoomProfile(id), prefix = profile.prefix;
         const panel = document.createElement('div'); panel.id = measuredRoomPanelId(id);
         panel.className = 'measured-room-controls'; panel.hidden = true;
         panel.innerHTML = `<div class="home-layout-choices" role="group" aria-label="${ROOM_SCENES.find(s => s.id === id).name} size"><label for="${prefix}-room-size">Room</label><select id="${prefix}-room-size">${Object.values(profile.layouts).map(layout => `<option value="${layout.id}">${layout.name} · ${layout.width / 1000} × ${layout.depth / 1000} m</option>`).join('')}</select><button type="button" data-${prefix}-size="48x30">48″ desk</button><button type="button" data-${prefix}-size="60x30">60″ desk</button></div><div class="home-time-choices" role="group" aria-label="Time of day">${Object.entries(profile.modes).map(([modeId, mode]) => `<button type="button" data-${prefix}-mode="${modeId}" aria-pressed="false">${mode.label}</button>`).join('')}</div><p data-${prefix}-description></p>`;
+        const groupId = institutionalGroup(id);
+        if (groupId) {
+            const group = INSTITUTIONAL_GROUPS[groupId];
+            const level = document.createElement('label');
+            level.className = 'institutional-setting-label';
+            level.innerHTML = `${group.label} <select data-institutional-setting="${groupId}" ${groupId === 'educational' ? 'data-educational-level' : ''}>${group.settings.map(settingId => `<option value="${settingId}">${INSTITUTIONAL_ROOMS[settingId].name}</option>`).join('')}</select>`;
+            level.querySelector('select').value = id;
+            level.querySelector('select').onchange = e => setRoomScene(e.target.value);
+            panel.querySelector('.home-layout-choices').prepend(level);
+            if (groupId === 'educational') {
+                panel.querySelector(`label[for="${prefix}-room-size"]`).hidden = true;
+                panel.querySelector(`#${prefix}-room-size`).hidden = true;
+            } else panel.querySelector(`label[for="${prefix}-room-size"]`).textContent = 'Room size';
+        }
         panel.querySelector(`#${prefix}-room-size`).onchange = e => setMeasuredRoomLayout(id, e.target.value);
         panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.onclick = () => { sizeSelect.value = b.getAttribute(`data-${prefix}-size`); sizeSelect.dispatchEvent(new Event('change', { bubbles: true })); });
-        panel.insertAdjacentHTML('beforeend', '<div class="groove-controls"><button type="button" data-groove-start disabled>Start Groove</button><button type="button" data-groove-stop disabled>Stop</button><span data-groove-status role="status">Choose a time, then tap the desk to start its Groove.</span></div>');
-        panel.querySelector('[data-groove-start]').onclick = () => grooveController().start();
+        panel.insertAdjacentHTML('beforeend', '<div class="groove-controls"><button type="button" data-groove-start disabled>Start Groove</button><button type="button" data-groove-stop disabled>Stop</button><button type="button" data-groove-save disabled title="Save the current location, rotation, height, tilt and LED settings for this time of day">Save Groove position</button><button type="button" data-groove-reset disabled title="Restore the original position and lighting preset for this time of day">Reset Groove position</button><span data-groove-saved></span><span data-groove-status role="status">Choose a time, then tap the desk to start its Groove.</span></div>');
+        panel.querySelector('.groove-controls').dataset.scene=id;
+        panel.querySelector('[data-groove-start]').onclick = startCurrentGroove;
         panel.querySelector('[data-groove-stop]').onclick = haltAllMotion;
-        panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.onclick = () => prepareGrooveMode(id, b.getAttribute(`data-${prefix}-mode`)));
+        panel.querySelector('[data-groove-save]').onclick = saveCurrentGroovePosition;
+        panel.querySelector('[data-groove-reset]').onclick = resetCurrentGroovePosition;
+        panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => {
+            b.title=`Prepare ${profile.modes[b.getAttribute(`data-${prefix}-mode`)].label} Groove`;
+            b.onclick = () => prepareGrooveMode(id, b.getAttribute(`data-${prefix}-mode`));
+        });
         return panel;
     });
     viewerControls.append(scenes, ...roomControls, roomCaption, interactionHint, objectControls); viewer.append(viewerControls);
+    syncRoomRearrangeUI();
+    scenes.querySelector('#room-scene-select').onchange = e => setRoomScene(e.target.value);
     scenes.querySelectorAll('button').forEach(button => button.onclick = () => setRoomScene(button.dataset.roomScene));
     new ResizeObserver(syncViewerSize).observe(viewerControls);
     try {
         const requestedRoom = new URLSearchParams(location.search).get('room');
-        selectedRoomScene = EVENT_DEMO ? 'product' : ROOM_SCENES.some(s => s.id === requestedRoom) ? requestedRoom : localStorage.getItem('ergoflex.roomScene') || 'product';
+        selectedRoomScene = EVENT_DEMO ? 'product' : (Object.hasOwn(INSTITUTIONAL_GROUPS, requestedRoom) || ROOM_SCENES.some(s => s.id === requestedRoom)) ? requestedRoom : localStorage.getItem('ergoflex.roomScene') || 'product';
     } catch {}
-    setRoomScene(selectedRoomScene, false);
+    setRoomScene(selectedRoomScene, false, { defaultDesktop: !restoredBuildSize });
     const applyEnvironment = (value) => {
         document.getElementById('viewer-shell').dataset.environment = value;
         if (floorMesh) floorMesh.material.opacity = value === 'led' ? .42 : value === 'slate' ? .36 : .24;
@@ -10519,7 +10759,7 @@ function initStudio() {
     }
     // A saved position is only valid against the layout it was saved in, so
     // re-check it whenever the box it lives in could have changed shape.
-    window.addEventListener('resize', refitRemote);
+    window.addEventListener('resize',()=>{placeRemoteForMode();refitRemote();});
     if (document.fonts?.ready) document.fonts.ready.then(clampDockPosition).catch(() => {});
     // A device scaled to fit has to be re-fitted when the box it fits into
     // changes - a divider drag, a collapse, a window resize.
@@ -10647,6 +10887,9 @@ window.ErgoFlex = {
     get roomCollisionBlocked() { return roomCollisionBlocked; },
     get roomScene() { return selectedRoomScene; },
     roomScenes: ROOM_SCENES,
+    setMeasuredRoomLayout,
+    setMeasuredRoomMode,
+    get measuredRoom() { return measuredRoomProfile(); },
     setRoomScene,
     setHomeMode,
     get homeMode() { return homeMode; },
@@ -10754,6 +10997,9 @@ window.ErgoFlex = {
     haltAllMotion,
     prepareGrooveMode,
     startGroove() { return grooveController().start(); },
+    startCurrentGroove,
+    saveCurrentGroovePosition, resetCurrentGroovePosition,
+    get savedGroovePositions() { return normalizeGroovePresets(groovePresets); },
     get grooveState() { return roomGroove?.state || { status: 'idle' }; },
     get grooveRouting() { return roomGroove?.prepared ? roomGroove.snapshot() : null; },
     get deskYaw() { return deskYaw; },
@@ -10862,6 +11108,7 @@ window.ErgoFlex = {
     },
     get cameraState() { return { position: camera.position.toArray(), target: controls.target.toArray(), minDistance: controls.minDistance }; },
     serializeProject,
+    get surfaceArtwork() { return surfaceArtwork; },
     applyProject,
     readAutosaveRing,
     writeAutosave,
@@ -10911,8 +11158,8 @@ const ctx = {
 // Populate the configurator UI first so it works even if 3D init fails
 initStudio();
 populateFinishOptions();
+mountTrimPalette();
 setTrimColor(trimColor, false);
-document.getElementById('trim-color')?.addEventListener('input', event => setTrimColor(event.target.value));
 mountLedPalette(document.getElementById('led-palette'));
 mountLedEffects(document.getElementById('led-effects'));
 mountLedPlayback(document.getElementById('led-playback'));

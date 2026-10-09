@@ -1,4 +1,4 @@
-import { overlapArea } from './room-collision.mjs';
+import { overlapArea } from './room-collision.mjs?v=room-regressions-20261007';
 
 export const expandFloorBox = (b, margin) => ({...b,minX:b.minX-margin,maxX:b.maxX+margin,minZ:b.minZ-margin,maxZ:b.maxZ+margin});
 export const floorGap = (a,b) => Math.hypot(Math.max(0,b.minX-a.maxX,a.minX-b.maxX),Math.max(0,b.minZ-a.maxZ,a.minZ-b.maxZ));
@@ -33,6 +33,10 @@ export class RoomSafety {
     constructor(){this.guard=false;this.alert=null;this.acknowledged=new Set();}
     reset(){this.alert=null;this.acknowledged.clear();}
     clear(){if(this.alert?.kind==='contact'&&this.alert.pushable)this.acknowledged.add(this.alert.id);this.alert=null;}
+    contact(hit,body,scale){
+        this.alert={id:hit.id,name:hit.name||'Room furnishing',pushable:!!hit.pushable,kind:this.guard?'ahead':'contact',distanceMm:floorGap(body,hit.box)/scale,at:performance.now()};
+        return this.alert;
+    }
     check(body,delta,obstacles,scale){
         if(this.alert)return {x:0,z:0,blocked:true};
         for(const id of this.acknowledged){const o=obstacles.find(o=>o.id===id);if(!o||floorGap(body,o.box)>scale*60)this.acknowledged.delete(id);}

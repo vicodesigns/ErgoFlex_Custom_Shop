@@ -54,8 +54,9 @@ class Heap {
     pop() { const v = this.values, first = v[0], last = v.pop(); if (v.length) { let n = 0; while (2 * n + 1 < v.length) { let child = 2 * n + 1; if (child + 1 < v.length && v[child + 1].f < v[child].f) child++; if (v[child].f >= last.f) break; v[n] = v[child]; n = child; } v[n] = last; } return first; }
 }
 
-export function planGroove({ start, desired, bounds, obstacles, footprint, maxNodes = 18000 }) {
+export function planGroove({ start, desired, bounds, obstacles, footprint, exact = false, maxNodes = 18000 }) {
     if (!poseIsClear(start, bounds, obstacles, footprint)) return { ok: false, reason: 'The desk needs more clearance from nearby furniture before this routine can start.' };
+    if (exact && !poseIsClear(desired, bounds, obstacles, footprint)) return { ok: false, reason: 'The saved Groove position is blocked. Move nearby furniture or save a new position.' };
     if (segmentIsClear(start, desired, bounds, obstacles, footprint)) return { ok: true, route: [start, desired], destination: desired, adjusted: false, visited: 0 };
     const step = Math.max(bounds.maxX - bounds.minX, bounds.maxZ - bounds.minZ) > 10000 ? 160 : 120, heads = 16, turn = TAU / heads;
     const pose = n => ({ x: start.x + n.x * step, z: start.z + n.z * step, yaw: start.yaw + n.h * turn });
@@ -70,14 +71,14 @@ export function planGroove({ start, desired, bounds, obstacles, footprint, maxNo
             const goal = { x: Math.round((desired.x + radius * Math.cos(angle) - start.x) / step), z: Math.round((desired.z + radius * Math.sin(angle) - start.z) / step), h };
             const p = pose(goal), distance = Math.hypot(p.x - desired.x, p.z - desired.z);
             // Avoid presenting the current position as a new daily destination.
-            if (Math.hypot(p.x - start.x, p.z - start.z) < 75 || !poseIsClear(p, bounds, obstacles, footprint)) continue;
+            if (Math.hypot(p.x - start.x, p.z - start.z) < 75 || !poseIsClear(p, bounds, obstacles, footprint) || (exact && !segmentIsClear(p, desired, bounds, obstacles, footprint))) continue;
             goals.set(key(goal), { ...goal, penalty: distance * 2.5 + Math.abs(angleDelta(p.yaw, desired.yaw)) * 180 });
         }
     }
     // A compact room may not permit crossing to its social zone. Include
     // reachable adjustments near the current desk, with a higher cost so a
     // useful destination nearer the intended activity wins when available.
-    for (const radius of [120, 240, 360, 600]) for (let n = 0; n < 12; n++) {
+    for (const radius of exact ? [] : [120, 240, 360, 600]) for (let n = 0; n < 12; n++) {
         for (const h of [...new Set([0, heading])]) {
             const a = n * TAU / 12, g = { x: Math.round(radius * Math.cos(a) / step), z: Math.round(radius * Math.sin(a) / step), h };
             const p = pose(g), k = key(g);
@@ -112,6 +113,7 @@ export function planGroove({ start, desired, bounds, obstacles, footprint, maxNo
     }
     if (!winner) return { ok: false, reason: 'There is no clear route through the current furniture arrangement. Try another setup or move a nearby item.' };
     const raw = []; for (let n = winner; n; n = n.parent) raw.unshift(pose(n));
+    if (exact) raw.push(desired);
     const route = [raw[0]];
     // Smooth away unnecessary grid stops, but validate the complete swept
     // footprint of every shortcut, including rotation and diagonal motion.

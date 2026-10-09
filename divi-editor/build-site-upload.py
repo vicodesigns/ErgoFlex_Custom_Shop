@@ -17,8 +17,8 @@ FILES = (
     'studio.js', 'studio.css', 'app-remote.css', 'ar-workspace.mjs', 'apple-ar-interactions.mjs', 'led-effects.mjs', 'led-strip-map.mjs', 'led-pixel-renderer.mjs',
     'led-movement.mjs', 'led-sounds.mjs', 'led-game-mode.mjs', 'led-game-frames.mjs',
     'led-music-mode.mjs', 'led-showcase-effects.mjs', 'led-auto-dj.mjs', 'led-dj-overlay.mjs', 'led-command-center.mjs', 'led-custom-presets.mjs', 'led-saved-library.mjs',
-    'catalog.mjs', 'project-io.mjs', 'validation.mjs', 'motion-limits.mjs',
-    'workspace-3d.mjs', 'room-refinement.mjs', 'room-life.mjs', 'room-groove.mjs', 'room-groove-runtime.mjs', 'room-collision.mjs', 'room-safety.mjs', 'touchscreen-display.mjs', 'room-interactions.mjs', 'room-led-spill.mjs', 'home-office.mjs', 'gaming-room.mjs', 'music-room.mjs', 'artist-room.mjs', 'study-room.mjs', 'office-room.mjs', 'gym-room.mjs', 'kitchen-room.mjs', 'lounge-room.mjs', 'workshop-room.mjs', 'bedroom-room.mjs', 'gallery-room.mjs', 'scifi-room.mjs', 'coworking-room.mjs', 'library-room.mjs', 'workspace-icons.mjs', 'bir.jpg',
+    'catalog.mjs', 'artwork-config.mjs', 'surface-artwork.mjs', 'project-io.mjs', 'validation.mjs', 'motion-limits.mjs',
+    'workspace-3d.mjs', 'institutional-scenes.mjs', 'institutional-room.mjs', 'institutional-detail.mjs', 'room-refinement.mjs', 'room-polish.mjs', 'room-life.mjs', 'room-groove.mjs', 'room-groove-runtime.mjs', 'room-groove-presets.mjs', 'room-collision.mjs', 'room-safety.mjs', 'touchscreen-display.mjs', 'room-interactions.mjs', 'room-led-spill.mjs', 'home-office.mjs', 'gaming-room.mjs', 'music-room.mjs', 'artist-room.mjs', 'study-room.mjs', 'office-room.mjs', 'gym-room.mjs', 'kitchen-room.mjs', 'lounge-room.mjs', 'workshop-room.mjs', 'bedroom-room.mjs', 'gallery-room.mjs', 'scifi-room.mjs', 'coworking-room.mjs', 'library-room.mjs', 'workspace-icons.mjs', 'bir.jpg',
 )
 
 OUT.mkdir(parents=True, exist_ok=True)
@@ -35,7 +35,7 @@ for name in FILES:
             text,
         )
         (OUT / name).write_text(text)
-for folder in ('assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion', 'assets/model', 'assets/led'):
+for folder in ('assets/artwork', 'assets/app-icons', 'assets/wood', 'assets/trim', 'assets/motion', 'assets/model', 'assets/led'):
     shutil.copytree(ROOT / folder, OUT / folder, dirs_exist_ok=True)
 
 # Ship the edited public model with the viewer; room props are not bundled.

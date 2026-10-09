@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { solveFloorMove, overlapArea } from './room-collision.mjs';
+import { RoomGrounding } from './room-polish.mjs?v=institutional-atmosphere-20261008';
+import { solveFloorMove, overlapArea } from './room-collision.mjs?v=room-regressions-20261007';
 
 const visible = obj => { for(let p=obj;p;p=p.parent)if(!p.visible)return false;return true; };
 export const floorBox = box => ({minX:box.min.x,maxX:box.max.x,minZ:box.min.z,maxZ:box.max.z,minY:box.min.y,maxY:box.max.y});
@@ -8,8 +9,8 @@ const architecture = /ceiling|window|curtain|door|daylight|lighting.track|suspen
 const descendant = (obj,parent) => { for(let p=obj;p;p=p.parent)if(p===parent)return true;return false; };
 
 export class RoomInteractions {
-    constructor({canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,safety}) {
-        Object.assign(this,{canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,safety});
+    constructor({canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,onEditStart,onEditEnd,safety}) {
+        Object.assign(this,{canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,onEditStart,onEditEnd,safety});
         this.entries=[];this.root=null;this.drag=null;this.selected=null;this.ray=new THREE.Raycaster();this.pointer=new THREE.Vector2();
         this.highlight=new THREE.Box3Helper(new THREE.Box3(),0x41d4b0);this.highlight.visible=false;scene.add(this.highlight);
         window.addEventListener('pointerdown',e=>this.down(e),true);
@@ -22,13 +23,14 @@ export class RoomInteractions {
     bind(room=this.room()) {
         this.end();this.select(null);this.root=room?.root;this.entries=[];
         if(!this.root)return;
+        room.grounding?.dispose(); room.grounding = null;
         this.root.updateWorldMatrix(true,true);
         const scale=this.root.scale.x,floor=room.floorBounds,wallRoots=new Set(room.walls.map(w=>w.obj));
         const candidates=new Set([...this.root.children,...room.assets()]);
         // Procedural decorations keep their entire frame/board as one object.
         for(const wall of room.walls)for(const obj of wall.obj.children)if(obj.isGroup)candidates.add(obj);
         for(const obj of candidates){
-            if(wallRoots.has(obj)||obj===room.ceilingFixture||obj.isLight||obj.userData.grooveMarker||architecture.test(obj.name))continue;
+            if(obj.userData.presentationOnly||wallRoots.has(obj)||obj===room.ceilingFixture||obj.isLight||obj.userData.grooveMarker||architecture.test(obj.name))continue;
             if([...candidates].some(parent=>parent!==obj&&!wallRoots.has(parent)&&descendant(obj,parent)))continue;
             const b=new THREE.Box3().setFromObject(obj),size=b.getSize(new THREE.Vector3());
             if(b.isEmpty()||Math.max(size.x,size.z)<scale*50)continue;
@@ -65,6 +67,7 @@ export class RoomInteractions {
             entry.objects=[...new Set(entry.objects)].filter(obj=>!entry.objects.some(parent=>parent!==obj&&descendant(obj,parent)));
         }
         this.entries.forEach((entry,i)=>entry.objects.forEach((obj,j)=>room.registerInteractionAsset(obj,`${room.id}:${room.roomLayout?.id||'shell'}:placement:${i}:${j}:${obj.name}`)));
+        room.grounding = room.roomLayout ? new RoomGrounding(room, this.entries) : null;
     }
     select(entry) {
         this.selected=entry;this.highlight.visible=!!entry;
@@ -93,6 +96,9 @@ export class RoomInteractions {
         const obstacles=this.obstacles(),stop=this.safety?.check(floorBox(box),delta,obstacles,room.root.scale.x);
         if(stop)return stop;
         const result=solveFloorMove(floorBox(box),delta,obstacles,floorBox(room.floorBounds),{step:room.root.scale.x*25,gap:room.root.scale.x*3});
+        // A cleared portable object can transmit contact to another furnishing
+        // below the desktop. Report the actual blocker from the push chain.
+        if(result.blocked&&result.contact&&this.safety)result.event=this.safety.contact(result.contact,floorBox(box),room.root.scale.x);
         this.commitPushes(result);return result;
     }
     turnSafety(before,after) {
@@ -105,6 +111,7 @@ export class RoomInteractions {
     }
     rotateSelected(degrees) {
         const entry=this.selected,room=this.room();if(!entry||entry.surface!=='floor'||this.drag||!this.enabled())return false;
+        const edit=this.onEditStart?.();
         const before=new THREE.Box3().setFromObject(entry.obj),pivot=before.getCenter(new THREE.Vector3());pivot.y=0;
         const matrix=new THREE.Matrix4().makeTranslation(pivot.x,0,pivot.z).multiply(new THREE.Matrix4().makeRotationY(THREE.MathUtils.degToRad(degrees))).multiply(new THREE.Matrix4().makeTranslation(-pivot.x,0,-pivot.z));
         // Use actual rotated geometry bounds; rotating the old AABB overestimates round chairs.
@@ -117,7 +124,7 @@ export class RoomInteractions {
         const obstacles=entry.collider?this.obstacles(entry.obj):[],desk=this.deskBox();if(entry.collider&&desk)obstacles.push({box:floorBox(desk)});
         const blocked=!fits||obstacles.some(o=>overlapArea(floorBox(after),o.box)>Math.max(1e-10,overlapArea(floorBox(before),o.box)+1e-10));
         if(blocked){saved.forEach(({obj,p,q,s})=>{obj.position.copy(p);obj.quaternion.copy(q);obj.scale.copy(s);obj.updateMatrixWorld(true);});this.onStatus?.('Move this furnishing into a clear space before rotating it.');}
-        else this.onChange?.();
+        else {this.onEditEnd?.(edit);this.onChange?.();}
         this.highlight.box.setFromObject(entry.obj);return !blocked;
     }
     point(event) {
@@ -137,7 +144,7 @@ export class RoomInteractions {
         const normal=entry.surface==='wall'?new THREE.Vector3(entry.wall.axis==='x'?1:0,0,entry.wall.axis==='z'?1:0):new THREE.Vector3(0,1,0);
         const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,hit.point),anchor=new THREE.Vector3();
         if(!this.ray.ray.intersectPlane(plane,anchor))return;
-        this.drag={entry,pointer:e.pointerId,plane,last:anchor.clone(),controlsEnabled:this.controls.enabled,changed:false};
+        this.drag={entry,pointer:e.pointerId,plane,last:anchor.clone(),controlsEnabled:this.controls.enabled,changed:false,edit:this.onEditStart?.()};
         this.controls.enabled=false;this.controls.autoRotate=false;this.canvas.setPointerCapture(e.pointerId);this.canvas.style.cursor='grabbing';this.select(entry);
         this.onStatus?.(`Drag ${entry.name} along the ${entry.surface}. ${entry.surface==='floor'?'Use the rotation buttons to turn it.':'Release to place it.'}`);
         e.preventDefault();e.stopImmediatePropagation();
@@ -166,7 +173,7 @@ export class RoomInteractions {
         const d=this.drag;if(!d||(e&&e.pointerId!==d.pointer))return;
         if(this.canvas.hasPointerCapture(d.pointer))this.canvas.releasePointerCapture(d.pointer);
         this.controls.enabled=d.controlsEnabled;this.canvas.style.cursor='';this.drag=null;
-        if(d.changed)this.onChange?.();
+        if(d.changed){this.onEditEnd?.(d.edit);this.onChange?.();}
         if(e){e.preventDefault();e.stopImmediatePropagation();}
     }
 }

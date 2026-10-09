@@ -85,6 +85,13 @@ const assert = require('node:assert/strict');
   const { ACCESSORIES, PRESETS, priceBreakdown, accessoryFits, incompatibleAccessories } =
     await import('../catalog.mjs');
 
+  const humboldt = { ...defaultConfig, woodFinish: 'Forest Green', trimColor: '#F19C00' };
+  assert.equal(validConfig(humboldt), true, 'new finish and trim survive the share-link boundary');
+  assert.equal(cleanConfig(humboldt).trimColor, '#f19c00', 'trim survives build normalization');
+  assert.equal(validConfig({ ...humboldt, trimColor: 'invalid' }), false, 'malformed trim colors are rejected');
+  assert.ok(priceBreakdown(humboldt).some(line => line.quoted && line.price === 0),
+    'unpriced finishes remain explicit quote items, not included upgrades');
+
   // The breakdown must always sum to the price. That is the whole contract.
   for (const preset of PRESETS) {
     const config = cleanConfig(preset);

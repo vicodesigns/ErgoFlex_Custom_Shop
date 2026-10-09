@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { angleDelta, grooveDestination, planGroove, segmentIsClear, poseIsClear } from './room-groove.mjs?v=groove-routines-20261002';
+import { angleDelta, grooveDestination, planGroove, segmentIsClear, poseIsClear } from './room-groove.mjs?v=groove-save-20261007';
 
 // Cutaway visibility is a camera choice. Hidden walls and furnishings still
 // occupy physical space; architecture is handled by the room bounds.
@@ -46,7 +46,8 @@ export class RoomGroove {
     }
     snapshot() {
         const room = this.ctx.room, l = room.roomLayout;
-        return { start: this.ctx.pose(), desired: grooveDestination(this.prepared.scene, l, this.prepared.phase),
+        const saved = this.ctx.saved?.(this.prepared.scene, this.prepared.phase);
+        return { start: this.ctx.pose(), desired: saved?.pose || grooveDestination(this.prepared.scene, l, this.prepared.phase), exact: !!saved,
             bounds: { minX: -l.width / 2 + 20, maxX: l.width / 2 - 20, minZ: l.back + 20, maxZ: l.back + l.depth - 20 },
             obstacles: grooveObstacles(room), footprint: this.ctx.footprint() };
     }
@@ -103,7 +104,8 @@ export class RoomGroove {
         if (!this.prepared || this.run || !this.ctx.canMove()) return false;
         const plan = this.replan(); if (!plan.ok) return false;
         this.ctx.halt();
-        const mode = this.ctx.mode(this.prepared.phase);
+        const saved = this.ctx.saved?.(this.prepared.scene, this.prepared.phase);
+        const mode = { ...this.ctx.mode(this.prepared.phase), ...(saved ? { height: saved.height, tilt: saved.tilt, saved } : {}) };
         this.run = { stage: 'clearance', segment: 1, elapsed: 0, route: plan.route, mode };
         this.ctx.goPose(Math.max(36, mode.height), 0);
         this.announce(`${mode.label} Groove · leveling the desktop before driving`);

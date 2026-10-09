@@ -122,9 +122,8 @@ export class ARWorkspace {
             }
             const slot = find('.ef-ar-app');
             const width = slot.clientWidth;
-            const collapsed = this.remote.classList.contains('collapsed');
-            const height = collapsed ? this.remote.querySelector('.remote-header').offsetHeight : 390;
-            const scale = !wide && this.expanded ? 1 : Math.min(1,width/760,this.overlay.clientHeight*.48/height);
+            const height = this.remote.offsetHeight;
+            const scale = !wide && this.expanded ? 1 : Math.min(1,width/720,this.overlay.clientHeight*.48/height);
             this.remote.style.setProperty('--ar-app-scale',String(scale));
             slot.style.height = `${Math.min(height*scale,this.overlay.clientHeight*.5)}px`;
             slot.style.overflow = !wide && this.expanded ? 'auto' : 'hidden';

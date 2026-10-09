@@ -2,6 +2,7 @@
 // state — so the same source is imported by studio.js in the browser and by the
 // test suite in Node. Anything that touches the scene or the page belongs in
 // studio.js instead.
+import { validArtwork, cleanArtwork, artworkSummary } from './artwork-config.mjs?v=all-panels-artwork-20261008';
 
 export const PRODUCT_CONFIG = {
     basePrice: 4999,
@@ -14,11 +15,20 @@ export const PRODUCT_CONFIG = {
         { name: "Natural Birch", color: "#e6c998", price: 0 },
         { name: "White Oak", color: "#e0d6c8", price: 50 },
         { name: "Walnut", color: "#5c4033", price: 100 },
-        { name: "Black Birch", color: "#1a1a1a", price: 75, isDefault: true },
+        { name: "Black Birch", color: "#1a1a1a", price: 75, collection: 'signature', isDefault: true },
+        { name: "Modern Grey", color: "#929496", price: 0, collection: 'signature', quoted: true },
+        { name: "White Birch", color: "#f1f0e9", price: 0, collection: 'signature', quoted: true },
         { name: "Cherry", color: "#a45a31", price: 125 },
         { name: "Maple", color: "#e8cda1", price: 75 },
         { name: "Mahogany", color: "#8b3a20", price: 150 },
-        { name: "Bamboo", color: "#d2b875", price: 100 }
+        { name: "Bamboo", color: "#d2b875", price: 100 },
+        { name: "Deep Navy", color: "#223751", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
+        { name: "Forest Green", color: "#004c46", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
+        { name: "Earthy Forest Green", color: "#203b2b", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
+        { name: "Bordeaux", color: "#693b48", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
+        { name: "Warm Ivory", color: "#e8dfcd", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
+        { name: "Carbon Weave Wrap", color: "#343b43", price: 0, collection: 'bespoke', quoted: true, surface: 'carbon-wrap' },
+        { name: "Brushed Silver Wrap", color: "#b9bdc3", price: 0, collection: 'bespoke', quoted: true, surface: 'metal-wrap' }
     ],
     baseFinishes: [
         { name: "White", color: "#f8f8f8", price: 0 },
@@ -31,6 +41,19 @@ export const PRODUCT_CONFIG = {
         { name: "Terracotta", color: "#a45c47", price: 50 }
     ]
 };
+
+export const FINISH_COLLECTIONS = [
+    { id: 'signature', name: 'Signature Stains & Finishes', description: 'Black, modern grey and white. Birch grain with a refined stained finish.' },
+    { id: 'bespoke', name: 'Bespoke Collection', description: 'Premium opaque colors and textured wraps. Finish pricing on request.' },
+    { id: 'natural', name: 'Natural Woods', description: 'Distinctive wood tones and natural grain.' }
+];
+export const TRIM_COLORS = [
+    { name: 'Black', value: '#1c1c1e' }, { name: 'White', value: '#f5f5f2' },
+    { name: 'Grey', value: '#85888c' }, { name: 'Red', value: '#dc0909' },
+    { name: 'Green', value: '#286344' }, { name: 'Yellow', value: '#f0c52e' },
+    // Match the Humboldt logo reference supplied October 8, including its warmer gold.
+    { name: 'Forest Green', value: '#004c46' }, { name: 'Gold', value: '#f19c00' }
+];
 
 // Per-species grain description. Real tileable photography is the right answer
 // and is still a content dependency; until it exists these drive a procedural
@@ -69,6 +92,8 @@ export const WOOD_SPECIES = {
     'White Oak':     { photo: './assets/wood/white-oak.jpg', tint: '#e9d9b8', repeatsPerInch: 1 / 28, ringsPerTile: 40, figureWaves: 3, contrast: 0.20, warm: '#d8c49c', dark: '#a98f63', figure: 0.85 },
     'Walnut':        { photo: './assets/wood/walnut.jpg',    tint: '#c9a882', repeatsPerInch: 1 / 28, ringsPerTile: 32, figureWaves: 2, contrast: 0.26, warm: '#7a5334', dark: '#4a3220', figure: 0.55 },
     'Black Birch':   { photo: './bir.jpg',                  tint: '#1b1b1b', bumpScale: 0.06, grainSheen: true, grayscale: true, contrastBoost: 3.2, repeatsPerInch: 1 / 32, ringsPerTile: 44, figureWaves: 2, contrast: 0.26, warm: '#4a4441', dark: '#241f1d', figure: 0.75 },
+    'Modern Grey':   { photo: './bir.jpg', tint: '#a0a3a6', bumpScale: .012, grainSheen: true, grayscale: true, contrastBoost: 1.7, repeatsPerInch: 1 / 32, ringsPerTile: 44, figureWaves: 2, contrast: .12, warm: '#bababa', dark: '#949494', figure: .75 },
+    'White Birch':   { photo: './bir.jpg', tint: '#ffffff', bumpScale: .006, grainSheen: true, grayscale: true, contrastBoost: .55, repeatsPerInch: 1 / 32, ringsPerTile: 44, figureWaves: 2, contrast: .05, warm: '#f4f3ef', dark: '#dededb', figure: .75 },
     'Cherry':        { photo: './assets/wood/cherry.jpg',    tint: '#d98c62', repeatsPerInch: 1 / 30, ringsPerTile: 30, figureWaves: 2, contrast: 0.14, warm: '#b16a45', dark: '#8a4c2e', figure: 0.30 },
     'Maple':         { photo: './assets/wood/maple.jpg',     tint: '#f0dcb8', repeatsPerInch: 1 / 26, ringsPerTile: 26, figureWaves: 1, contrast: 0.08, warm: '#e6d3ae', dark: '#cdb68d', figure: 0.20 },
     'Mahogany':      { photo: './assets/wood/mahogany.jpg',  tint: '#c98c6a', repeatsPerInch: 1 / 28, ringsPerTile: 32, figureWaves: 2, contrast: 0.18, warm: '#7d3f2c', dark: '#57271a', figure: 0.45 },
@@ -76,6 +101,11 @@ export const WOOD_SPECIES = {
 };
 
 export function woodSpecies(name) {
+    const finish = PRODUCT_CONFIG.woodFinishes.find(f => f.name === name);
+    if (finish?.surface) return { surface: finish.surface, tint: finish.color,
+        treatment: finish.surface === 'metal-wrap' ? 'metalWrap' : 'opaque',
+        metalness: finish.surface === 'metal-wrap' ? .65 : 0,
+        repeatsPerInch: finish.surface === 'carbon-wrap' ? 1 / 4 : 1 / 12 };
     return WOOD_SPECIES[name] || WOOD_SPECIES['Natural Birch'];
 }
 
@@ -85,6 +115,8 @@ export function woodSpecies(name) {
 // per role, so the constructor and the runtime cannot drift apart.
 export const SURFACE_TREATMENTS = {
     wood:      { matte: { roughness: 0.68, clearcoat: 0.08 }, satin: { roughness: 0.40, clearcoat: 0.25 }, gloss: { roughness: 0.20, clearcoat: 0.65 } },
+    opaque:    { matte: { roughness: .62, clearcoat: .05 }, satin: { roughness: .34, clearcoat: .28 }, gloss: { roughness: .18, clearcoat: .65 } },
+    metalWrap: { matte: { roughness: .50, clearcoat: 0 }, satin: { roughness: .36, clearcoat: .05 }, gloss: { roughness: .25, clearcoat: .15 } },
     // Powder coat is a baked polymer: no clearcoat, and it stays fairly matte
     // even in the "gloss" option.
     powder:    { matte: { roughness: 0.72, clearcoat: 0.0 },  satin: { roughness: 0.55, clearcoat: 0.05 }, gloss: { roughness: 0.38, clearcoat: 0.15 } },
@@ -196,10 +228,13 @@ export function priceBreakdown(config) {
     if (size && size.price) lines.push({ label: size.name, price: size.price });
 
     const wood = PRODUCT_CONFIG.woodFinishes.find(f => f.name === config.woodFinish);
-    if (wood && wood.price) lines.push({ label: wood.name + ' desktop', price: wood.price });
+    if (wood && (wood.price || wood.quoted)) lines.push({ label: wood.name + ' desktop', price: wood.price, ...(wood.quoted ? { quoted: true } : {}) });
 
     const base = PRODUCT_CONFIG.baseFinishes.find(f => f.name === config.baseFinish);
     if (base && base.price) lines.push({ label: base.name + ' frame', price: base.price });
+
+    for (const summary of artworkSummary(config.artwork))
+        lines.push({ label: 'Premium artwork · ' + summary, price: 0, quoted: true });
 
     for (const id of config.accessories || []) {
         const item = accessory(id);
@@ -214,6 +249,8 @@ export function validConfig(value) {
     if (!value || (!Object.hasOwn(PRODUCT_CONFIG.sizes, value.size) && value.size !== '72x30')) return false;
     if (!PRODUCT_CONFIG.woodFinishes.some(f => f.name === migrateWoodFinish(value.woodFinish))) return false;
     if (!PRODUCT_CONFIG.baseFinishes.some(f => f.name === value.baseFinish)) return false;
+    if (value.trimColor !== undefined && !/^#[0-9a-f]{6}$/i.test(value.trimColor)) return false;
+    if (value.artwork !== undefined && !validArtwork(value.artwork)) return false;
     // Accessories are optional, but if present must be an array of known ids.
     // A V1 payload has no accessories key at all and is still valid.
     if (value.accessories !== undefined) {
@@ -242,7 +279,9 @@ export function cleanConfig(value) {
         return !group || !accessories.slice(index + 1).some(other => accessory(other).exclusiveGroup === group);
     });
     return { size: value.size === '72x30' ? '60x30' : value.size,
-        woodFinish: migrateWoodFinish(value.woodFinish), baseFinish: value.baseFinish, accessories: selected };
+        woodFinish: migrateWoodFinish(value.woodFinish), baseFinish: value.baseFinish, accessories: selected,
+        ...(typeof value.trimColor === 'string' && /^#[0-9a-f]{6}$/i.test(value.trimColor) ? { trimColor: value.trimColor.toLowerCase() } : {}),
+        ...(validArtwork(value.artwork) && Object.keys(value.artwork.surfaces).length ? { artwork: cleanArtwork(value.artwork) } : {}) };
 }
 
 // Accessories that no longer fit the chosen size. Returned rather than silently

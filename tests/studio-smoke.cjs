@@ -931,7 +931,7 @@ function ErgoFlexDeviceMatches(size, id) {
         ready: [...document.querySelectorAll('.remote-chip')].every(c => c.dataset.saved === 'true')
       };
     });
-    assert.deepEqual(survived.forms, ['Sitting', 'Standing', 'Easel'],
+    assert.deepEqual(survived.forms, ['Sitting', 'Stool', 'Standing'],
       'corrupt storage falls back to the three updated Ergo Forms');
     assert.ok(survived.ready, 'and to ready-to-try preset banks');
     assert.deepEqual(survived.presetTitles.map(t => t.split(' —')[0]),
@@ -1261,110 +1261,21 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.equal(arc.settledValue, '0', 'releasing springs the value back to centre');
     assert.equal(arc.settled, arc.rest, 'and the sphere returns to the middle of the crescent');
 
-    // The panel is a device mockup: drag a corner, it snaps to a real device,
-    // says which, and re-lays itself out the way the app does at that size.
-    const resize = await page.evaluate(async () => {
-      const dock = document.getElementById('motion-dock');
-      if (dock.classList.contains('collapsed')) document.getElementById('motion-dock-toggle').click();
-      await new Promise(r => setTimeout(r, 200));
-      const canvasBefore = document.getElementById('model-canvas').height;
-      // Park it top-left so a tall device has somewhere to grow into.
-      ErgoFlex.setRemoteSize(420, 640);
-      await new Promise(r => setTimeout(r, 200));
-      const grip = dock.querySelector('[data-edge="se"]');
-      const rect = dock.getBoundingClientRect();
-      const ev = (type, x, y) => grip.dispatchEvent(new PointerEvent(type, {
-        bubbles: true, pointerId: 4, button: 0, clientX: x, clientY: y
-      }));
-      // Aim a little off 344 x 882 - inside the snap window, not on it.
-      const scale = ErgoFlex.remoteScale || 1;
-      const toX = rect.right - 4 + (344 - 420 + 9) * scale;
-      const toY = rect.bottom - 4 + (882 - 640 - 11) * scale;
-      ev('pointerdown', rect.right - 4, rect.bottom - 4);
-      ev('pointermove', toX, toY);
-      await new Promise(r => setTimeout(r, 120));
-      const toast = document.getElementById('studio-toast');
-      const out = {
-        canvasBefore,
-        size: ErgoFlex.remoteSize,
-        device: ErgoFlex.remoteDevice,
-        shape: ErgoFlex.remoteShape,
-        toast: toast.hidden ? '' : toast.textContent
-      };
-      ev('pointerup', toX, toY);
-      await new Promise(r => setTimeout(r, 250));
-      try { out.stored = JSON.parse(localStorage.getItem('ergoflex.dockSizeV1')); } catch { out.stored = null; }
-      out.canvasAfter = document.getElementById('model-canvas').height;
-      // And the layout answers as that device, not as the viewer it sits in.
-      out.portraitRows = getComputedStyle(dock.querySelector('.remote-body')).gridTemplateRows.split(' ').length;
-      ErgoFlex.setRemoteSize(810, 674);
-      await new Promise(r => setTimeout(r, 200));
-      out.tabletShape = ErgoFlex.remoteShape;
-      out.tabletDevice = ErgoFlex.remoteDevice;
-      out.tabletColumns = getComputedStyle(dock.querySelector('.remote-grid')).gridTemplateColumns.split(' ').length;
-      out.tabletToast = document.getElementById('studio-toast').textContent;
-      return out;
+    // The controller now has one fixed landscape size. Legacy device sizes
+    // cannot restore the tall layouts or change the canvas.
+    const fixed = await page.evaluate(() => {
+      const dock=document.getElementById('motion-dock'),before=document.getElementById('model-canvas').height;
+      ErgoFlex.setRemoteSize(344,882);const small=ErgoFlex.remoteSize;
+      ErgoFlex.setRemoteSize(6000,6000);
+      return {small,size:ErgoFlex.remoteSize,device:ErgoFlex.remoteDevice,shape:ErgoFlex.remoteShape,
+        grips:dock.querySelectorAll('.remote-resize').length,bounds:ErgoFlex.remoteSizeBounds,
+        columns:getComputedStyle(dock.querySelector('.remote-grid')).gridTemplateColumns.split(' ').length,
+        canvasBefore:before,canvasAfter:document.getElementById('model-canvas').height};
     });
-    assert.deepEqual(resize.size, { w: 344, h: 882 }, 'a drag near a device size snaps onto it exactly');
-    assert.equal(resize.device, 'fold5-cover-p', 'and identifies the device');
-    assert.ok(/Fold 5 cover/.test(resize.toast), 'announcing it by name, got ' + JSON.stringify(resize.toast));
-    assert.equal(resize.shape, 'narrow-portrait', 'a cover screen lays out as narrow portrait');
-    assert.equal(resize.portraitRows, 5, 'which is the app\'s four-block column, plus a track for the hint line');
-    assert.equal(resize.stored?.v, 1, 'the size is persisted under a versioned key');
-    assert.deepEqual([resize.stored?.w, resize.stored?.h], [344, 882], 'with the snapped size');
-    assert.equal(resize.canvasAfter, resize.canvasBefore,
-      'and resizing the panel never re-sizes the canvas, which would move the camera');
-    assert.equal(resize.tabletShape, 'tablet-landscape', 'the unfolded device lays out as a tablet');
-    assert.equal(resize.tabletDevice, 'fold5-open-l', 'and is named');
-    assert.equal(resize.tabletColumns, 3, 'as the app\'s three-column landscape row');
-    assert.ok(/Fold 5 unfolded/.test(resize.tabletToast), 'with its own toast');
-
-    // The panel is a replica of an app that runs on real screens, so a size no
-    // real screen has is one the layout was never drawn for: it distorts rather
-    // than degrades. Two things stop it - bounds taken from the device table
-    // itself, and a release that always settles on a device.
-    const bounded = await page.evaluate(async () => {
-      const out = { bounds: ErgoFlex.remoteSizeBounds };
-      ErgoFlex.setRemoteSize(40, 40);
-      await new Promise(r => setTimeout(r, 150));
-      out.tooSmall = ErgoFlex.remoteSize;
-      ErgoFlex.setRemoteSize(6000, 6000);
-      await new Promise(r => setTimeout(r, 150));
-      out.tooBig = ErgoFlex.remoteSize;
-      // A drag that finishes nowhere near a device still has to land on one.
-      const dock = document.getElementById('motion-dock');
-      ErgoFlex.setRemoteSize(420, 700);
-      await new Promise(r => setTimeout(r, 150));
-      const grip = dock.querySelector('[data-edge="se"]');
-      const rect = dock.getBoundingClientRect();
-      const k = ErgoFlex.remoteScale || 1;
-      const ev = (t, x, y) => grip.dispatchEvent(new PointerEvent(t, {
-        bubbles: true, pointerId: 7, button: 0, clientX: x, clientY: y
-      }));
-      ev('pointerdown', rect.right - 4, rect.bottom - 4);
-      ev('pointermove', rect.right - 4 + 190 * k, rect.bottom - 4 + 60 * k);
-      await new Promise(r => setTimeout(r, 120));
-      out.midDrag = ErgoFlex.remoteSize;
-      out.midDragDevice = ErgoFlex.remoteDevice;
-      ev('pointerup', rect.right - 4 + 190 * k, rect.bottom - 4 + 60 * k);
-      await new Promise(r => setTimeout(r, 250));
-      out.settled = ErgoFlex.remoteSize;
-      out.settledDevice = ErgoFlex.remoteDevice;
-      out.split = ErgoFlex.remoteDevices.find(d => d.id === 'fold5-split-p');
-      out.all = ErgoFlex.remoteDevices.map(d => [d.id, d.w, d.h]);
-      return out;
-    });
-    bounded.all.forEach(([id, w, h]) => { DEVICE_SIZES[id] = { w, h }; });
-    assert.deepEqual(bounded.bounds, { minW: 344, maxW: 890, minH: 344, maxH: 890 },
-      'the bounds are the device table\'s own extremes');
-    assert.deepEqual(bounded.tooSmall, { w: 344, h: 344 }, 'nothing can be squeezed below the smallest real screen');
-    assert.deepEqual(bounded.tooBig, { w: 890, h: 890 }, 'or stretched past the largest');
-    assert.equal(bounded.midDragDevice, null, 'mid-drag it may sit between devices');
-    assert.ok(bounded.settledDevice, 'but releasing always settles on one, got ' + JSON.stringify(bounded.settled));
-    assert.ok(ErgoFlexDeviceMatches(bounded.settled, bounded.settledDevice),
-      'at that device\'s exact size');
-    assert.deepEqual(bounded.split, { id: 'fold5-split-p', name: 'Fold 5 split view', w: 388, h: 810 },
-      'and the unfolded split window is one of them');
+    assert.deepEqual(fixed.small,{w:720,h:298});assert.deepEqual(fixed.size,fixed.small);
+    assert.equal(fixed.device,'compact');assert.equal(fixed.shape,'compact');assert.equal(fixed.grips,0);
+    assert.equal(fixed.columns,3);assert.equal(fixed.canvasBefore,fixed.canvasAfter);
+    assert.deepEqual(fixed.bounds,{minW:720,maxW:720,minH:298,maxH:298});
 
     // The app ships a light theme and a dark one, so the replica carries both.
     const themed = await page.evaluate(async () => {
@@ -1390,7 +1301,7 @@ function ErgoFlexDeviceMatches(size, id) {
       return out;
     });
     assert.equal(themed.initial, 'dark', 'the panel opens in the theme the app is shown in');
-    assert.equal(themed.darkGround, '#171e24', 'whose page is the October charcoal');
+    assert.equal(themed.darkGround, '#1b2229', 'whose page is the October charcoal');
     assert.equal(themed.afterClick, 'light', 'the header switch flips it');
     assert.notEqual(themed.lightGround, themed.darkGround, 'and the palette actually changes');
     assert.equal(themed.stored?.theme, 'light', 'the choice is remembered under a versioned key');
@@ -1400,7 +1311,7 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.equal(themed.strays, 0, 'the blocks that are not on the device are not drawn');
     assert.ok(themed.hub, 'but the wellness bar, which is, still is');
 
-    console.log('Motion remote: drag, clamping, corrupt storage, presets, forms, tilt jog, arc, resize and stop passed.');
+    console.log('Motion remote: drag, clamping, corrupt storage, presets, forms, tilt jog, arc, fixed size and stop passed.');
 
 
     // The shaped side panels are Desktop_1/Desktop_2: 35x18in faces only 0.7in

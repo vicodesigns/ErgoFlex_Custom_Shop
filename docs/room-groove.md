@@ -12,6 +12,26 @@ replan from that position. Manual input, an editing tool, changing scene/room
 size/desktop size, or launching AR cancels playback. Editing and AR keep their
 existing controls; Groove is a Studio room feature.
 
+## Save your own setup
+
+Select the scene and time of day first. Drive and turn the desk, adjust its
+height and tilt, and choose your LED settings. Press **Save Groove position**.
+Saving stops any manual motion and records the actual current pose, not an
+unfinished movement target. The next **Start Groove** travels to that saved
+position and applies its posture and lights on arrival. **Reset Groove
+position** restores the original preset for that selected setting.
+
+Saves are separate for each scene, room size, desk size and time of day. They
+persist in this browser and are included in project exports/autosave snapshots.
+LED recipes include power, brightness, colour/effect, custom looks/palettes,
+surface reflections, movement lighting and Music/Auto DJ/Game options. Audio
+files and live microphone/tab-sharing permissions are not stored; reconnect
+those sources in Music after reopening. Saves never request microphone access.
+
+Saved destinations must be clear. Routing can detour but does not replace a
+blocked saved destination with a nearby spot. Move the obstruction or save a
+new position. Original presets retain their nearby-clear-spot fallback.
+
 ## Physical routing
 
 `room-groove.mjs` plans in room-local millimetres. It uses an oriented rectangle

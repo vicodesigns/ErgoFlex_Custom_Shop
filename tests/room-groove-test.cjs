@@ -23,6 +23,12 @@ const server = http.createServer((req, res) => {
         await page.goto(`http://127.0.0.1:${server.address().port}/?room=home&view=room`);
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; });
+        await page.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;});
+        assert.equal(await page.$eval('#home-office-controls [data-groove-start]',e=>e.disabled),false,'Current setting can start without a second time selection');
+        await page.click('#home-office-controls [data-groove-start]');
+        await page.waitForFunction(()=>['clearance','driving','posture'].includes(ErgoFlex.grooveState.status),{timeout:30000});
+        await page.evaluate(()=>ErgoFlex.haltAllMotion());
+        assert.equal(await page.$$eval('.measured-room-controls [title^="Prepare "]',buttons=>buttons.length),75,'Every room daily setting advertises its Groove');
 
         for (const id of ((process.argv.includes('--wide') || process.argv.includes('--tap')) ? [] : ['home','gaming','music','creative','study','office','gym','kitchen','lounge','workshop','bedroom','gallery','scifi','coworking','library'])) {
             const result = await page.evaluate(async id => {
@@ -129,10 +135,11 @@ const server = http.createServer((req, res) => {
                 const px=r.left+(x+1)*r.width/2,py=r.top+(1-y)*r.height/2;
                 if(hit&&(!other||hit.distance<other.distance)&&document.elementFromPoint(px,py)===canvas)return {x:px,y:py};
             }
-            return null;
+            return {failed:true,cs,rect:{x:r.x,y:r.y,w:r.width,h:r.height},sample:[-.4,0,.4].map(y=>{ray.setFromCamera(new THREE.Vector2(0,y),camera);return {y,desk:ray.intersectObject(ErgoFlex.loadedModel,true).filter(h=>visible(h.object)).slice(0,2).map(h=>({name:h.object.name,d:h.distance})),room:ray.intersectObject(ErgoFlex.workspaceRoom.root,true).filter(h=>visible(h.object)).slice(0,3).map(h=>({name:h.object.name,parent:h.object.parent?.name,d:h.distance}))};})};
         });
         await page.screenshot({path:'/tmp/ef-groove-preview.png'});
-        assert.ok(tap,'An unobscured CAD point is visible and clickable');
+        if(tap?.failed)console.log('Tap diagnostics',JSON.stringify(tap));
+        assert.ok(tap&&!tap.failed,'An unobscured CAD point is visible and clickable');
         await page.mouse.click(tap.x,tap.y);
         await page.waitForFunction(()=>['clearance','driving','posture'].includes(ErgoFlex.grooveState.status),{timeout:5000});
         await page.evaluate(()=>ErgoFlex.haltAllMotion());

@@ -206,8 +206,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="studio.css?v=room-safety-20261006">
-    <link rel="stylesheet" href="app-remote.css?v=desktop-bands-back-20261005">
+    <link rel="stylesheet" href="studio.css?v=institutional-atmosphere-20261008">
+    <link rel="stylesheet" href="app-remote.css?v=humboldt-artwork-20261008">
 <link rel="stylesheet" href="./product-demo.css?v=desktop-bands-back-20261005"></head>
 <body class="bg-white">
     <!-- Header -->
@@ -302,8 +302,8 @@
                         </div>
                         <div class="config-content expanded" id="desktop-content">
                             <div class="px-6 pb-6">
-                                <div id="wood-finishes" class="grid grid-cols-4 gap-3 mb-4">
-                                    <!-- Wood finishes will be populated here -->
+                                <div id="wood-finishes" class="finish-collections">
+                                    <!-- Finish collections will be populated here -->
                                 </div>
                                 <div id="selected-wood-name" class="text-sm text-gray-600">Natural Birch</div>
                             </div>
@@ -341,9 +341,9 @@
                             </div>
                         </div>
                         <div class="config-content expanded" id="trim-content">
-                            <div class="px-6 pb-6 flex items-center gap-3">
-                                <input id="trim-color" type="color" value="#dc0909" aria-label="Trim color" class="w-12 h-10 cursor-pointer">
-                                <span id="trim-color-value" class="text-sm text-gray-600">#DC0909</span>
+                            <div class="px-6 pb-6">
+                                <div id="trim-palette" class="trim-palette" role="group" aria-label="Trim color"></div>
+                                <p id="trim-color-value" class="selected-trim-name" aria-live="polite">Red</p>
                             </div>
                         </div>
                     </div>
@@ -470,7 +470,7 @@
                         </div>
 
                         <!-- View Instructions -->
-                        <div class="absolute bottom-4 left-4 bg-white bg-opacity-90 rounded-lg px-4 py-2 text-sm text-gray-600 shadow-sm border border-gray-100 z-10 hidden md:block">
+                        <div id="viewer-interaction-hint" class="absolute bottom-4 left-4 bg-white bg-opacity-90 rounded-lg px-4 py-2 text-sm text-gray-600 shadow-sm border border-gray-100 z-10 hidden md:block">
                             Drag to rotate • Scroll to zoom<span id="boxselect-hint" class="hidden"> • Shift-drag to box-select</span>
                         </div>
                     </div>
@@ -736,7 +736,7 @@
     }
     </script>
 
-    <script type="module" src="./studio.js?v=room-safety-20261006"></script>
+    <script type="module" src="./studio.js?v=institutional-atmosphere-20261008"></script>
     <script>
         // Classic script: runs before the deferred module above. Browsers refuse to
         // load ES modules over file://, so studio.js never executes and the loader

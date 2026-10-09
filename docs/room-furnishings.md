@@ -2,6 +2,8 @@
 
 ## Controls
 
+Each environment starts with a 48″ desktop in its most compact room layout and a 60″ desktop in its larger layouts. Choosing a different room or layout applies that starting size. The desktop buttons still allow either size; changing time of day keeps that choice. Saved builds, shared builds and restored projects retain their explicit desktop size.
+
 In a room scene, drag a floor furnishing with a mouse or one finger. Its floor height stays unchanged. Click/tap a furnishing and use **Rotate left** or **Rotate right** to turn it 15 degrees around its footprint. **Done**, Escape, or clicking empty room space clears the selection. Empty space still supports normal camera orbit controls.
 
 Wall artwork, acoustic panels and grouped shelves drag horizontally and vertically within their wall plane. They remain attached to the same wall and clamp at its edges and ceiling. Floor furnishings clamp to the usable room rectangle. Rotation rejects new furniture/desk overlaps; move the furnishing into clear space to turn it.
@@ -14,7 +16,27 @@ Contact temporarily overrides LED pixels with a slow red pulse; pre-collision us
 
 The 3D touchscreen uses live canvas artwork inspired by the supplied October 6 app screenshots. It displays current height, tilt, speed settings, shield, sound, LED power and the alert. Both desktop sizes share the texture. Morning/afternoon use light artwork; evening/night/party and LED studio use dark. Changing the floating movement panel theme remains independent of the physical screen's scene theme.
 
-## Implementation
+## Compact movement controller
+
+The October 7 controller uses one 720 × 298 landscape layout, with an **Extras** tab above it for turning, demo, recenter, sound, theme and touchscreen tools. It scales to fit narrow screens, keeps minimizing and dragging, and ignores previous device-size preferences. Preset values stay visible. Tap LED to switch power; hold it to open the LED Command Center. The Groove button starts/stops the room’s current setting. Saved poses and custom form names remain intact.
+
+## Groove routines
+
+**Rearrange items** in the room toolbar enables or disables direct furniture dragging and rotation. It starts on and remembers the browser's choice across scenes and reloads. Turning it off ends any active drag, clears selection and restores camera navigation. Desk contact, shield protection and acknowledged portable-object pushing remain active.
+
+Direct drags and rotations share the editor's undo history. **Ctrl/Cmd+Z** undoes one completed gesture; **Ctrl+Y** or **Ctrl/Cmd+Shift+Z** redoes it. Room toolbar buttons offer the same actions. A drag includes supported props and any furniture it pushes. Blocked rotations and clicks without a move create no history entry. History lasts for the session and room edits are cleared when changing scene or room size; saved placements remain. Text fields keep their normal editing shortcuts. Desk driving is not recorded as a decoration edit.
+
+Placements auto-save locally after a short debounce (350 ms). The room toolbar reports **Saving…**, **Saved in this browser**, or a storage failure. Undo/redo saves the restored arrangement too. This storage belongs to the current browser and site, so a different device or browser does not inherit it.
+
+Use **Save Groove position** beside Start Groove to record the current location, rotation, height, tilt and LED recipe for the selected daily setting. Saves are separate for each scene, room size and desktop size. **Reset Groove position** restores that setting’s original preset. Timing remains authored.
+
+All 15 furnished scenes expose a Groove for each of their five daily settings, in every room size and with either desktop. **Start Groove** plans and starts the current setting directly; selecting another daily setting prepares that routine without moving the desk. The desk levels and raises for travel, follows a checked route, then adopts the setting's height, tilt, LEDs and tabletop kit. Stop, manual controls, furniture edits and scene changes cancel travel. Collision alerts also hold Groove until CLEAR.
+
+Camera cutaway visibility is refreshed when a camera tween finishes between render frames, so an invisible wall cannot intercept a desk tap. A blocked push chain reports its final blocker to the safety card, even when that object is lower than the desk body.
+
+Project placement checks compare the saved base arrangement independently of daily staging. Restoring a night project keeps the night setup while preserving the original microphone and MIDI edits.
+
+## Implementation details
 
 - `room-interactions.mjs`: pointer capture, floor/wall ray planes, object selection, parent-aware world transforms, floor rotation, support grouping, persistent object registration and Glide contact adapter.
 - `room-collision.mjs`: swept axis-aligned bounding-box contacts, height filtering, push chains, fixed obstacles and room boundaries. It is a conservative contact preview, not a rigid-body physics engine.
@@ -31,3 +53,5 @@ Saved positions and orientations are scoped to the scene and room size using the
 `npm run test:room-interactions` covers swept contacts, push chains, walls, height separation, actual Glide chair pushing/cabinet blocking, mouse dragging, rotation, wall attachment, scene switches, persistence, touch dragging, grouped table dressing and rendered LED floor response.
 
 `npm run test:room-safety` covers contact latch/CLEAR, optional audio, LED priority/restoration, guard clearance, mobile CLEAR access, acknowledged chair pushing and both touchscreen theme/material bindings.
+
+`node tests/compact-remote-test.cjs` checks fixed sizing, legacy size migration, Extras, collapse, theme, keyboard/STOP and narrow Fold layouts.

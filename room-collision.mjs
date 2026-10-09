@@ -11,10 +11,10 @@ const entering = (before, after, other) => overlapArea(after,other)>Math.max(1e-
 export function solveFloorMove(body, delta, obstacles, floor, { step=.025, gap=.001 }={}) {
     const count=Math.max(1,Math.ceil(Math.hypot(delta.x,delta.z)/step));
     const dx=delta.x/count,dz=delta.z/count,length=Math.hypot(dx,dz),ux=length?dx/length:0,uz=length?dz/length:0;
-    let current={...body}, state=obstacles.map(o=>({...o,box:{...o.box},dx:0,dz:0})), blocked=false;
+    let current={...body}, state=obstacles.map(o=>({...o,box:{...o.box},dx:0,dz:0})), blocked=false, contact=null;
     const push=(index, obstacleState, from, to, chain=new Set())=>{
         const o=obstacleState[index];
-        if(!o.movable || chain.has(index) || !length)return false;
+        if(!o.movable || chain.has(index) || !length){contact=o;return false;}
         chain=new Set(chain);chain.add(index);
         const exits=[];
         if(ux>0)exits.push((to.maxX+gap-o.box.minX)/ux);
@@ -24,7 +24,7 @@ export function solveFloorMove(body, delta, obstacles, floor, { step=.025, gap=.
         const amount=Math.min(...exits.filter(t=>t>=0)),mx=ux*amount,mz=uz*amount;
         if(!Number.isFinite(amount))return false;
         const before=o.box,next=translateBox(before,mx,mz);
-        if(!inside(next,floor))return false;
+        if(!inside(next,floor)){contact=o;return false;}
         for(let j=0;j<obstacleState.length;j++){
             if(j===index||!entering(before,next,obstacleState[j].box))continue;
             if(!push(j,obstacleState,before,next,chain))return false;
@@ -42,6 +42,6 @@ export function solveFloorMove(body, delta, obstacles, floor, { step=.025, gap=.
         if(!accepted){blocked=true;break;}
         current=next;state=trial;
     }
-    return {x:current.minX-body.minX,z:current.minZ-body.minZ,blocked,
+    return {x:current.minX-body.minX,z:current.minZ-body.minZ,blocked,contact,
         pushes:state.filter(o=>Math.abs(o.dx)+Math.abs(o.dz)>1e-10).map(o=>({id:o.id,x:o.dx,z:o.dz}))};
 }

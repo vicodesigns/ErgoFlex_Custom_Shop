@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "live-server --port=3000 --host=:: --no-browser --wait=500 --ignore=assets/props,models,scene-shots,node_modules,.git",
     "test": "node tests/catalog-test.cjs && node tests/project-io-test.cjs && node tests/validation-test.cjs && node tests/studio-smoke.cjs",
+    "test:institutions": "node tests/institutional-room-test.cjs",
     "test:scene-assets": "node tests/scene-assets-test.cjs",
     "test:gaming": "node tests/gaming-room-test.cjs",
     "test:music": "node tests/music-room-test.cjs",
@@ -32,7 +33,9 @@
     "test:led-tilt": "node tests/led-tilt-reflection-test.cjs",
     "test:led-presets-dj": "node tests/led-custom-presets-test.mjs && node tests/led-auto-dj-test.mjs && node tests/led-dj-overlay-test.mjs && node tests/led-music-effects-test.mjs && node tests/led-presets-dj-test.cjs",
     "test:room-safety": "node tests/room-safety-test.mjs && node tests/room-interactions-test.cjs --safety",
-    "test:room-interactions": "node tests/room-collision-test.mjs && node tests/room-safety-test.mjs && node tests/room-interactions-test.cjs"
+    "test:room-interactions": "node tests/room-collision-test.mjs && node tests/room-safety-test.mjs && node tests/room-interactions-test.cjs",
+    "test:groove-save": "node tests/room-groove-planner-test.cjs && node tests/room-groove-save-test.cjs",
+    "test:artwork": "node tests/artwork-config-test.mjs && node tests/surface-artwork-test.cjs"
   },
   "repository": {
     "type": "git",

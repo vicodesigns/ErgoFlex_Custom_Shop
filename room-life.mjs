@@ -1,9 +1,11 @@
 import * as THREE from 'three';
+import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=institutional-atmosphere-20261008';
 
 export const DAY_PHASES = ['morning', 'afternoon', 'evening', 'night', 'party'];
 const TIERS = ['apartment', 'house', 'spacious', 'premium', 'executive'];
 // Authored activities, rather than the same dinner party in every environment.
 export const ROOM_STORIES = {
+    ...Object.fromEntries(Object.entries(INSTITUTIONAL_ROOMS).map(([id, p]) => [id, p.stories])),
     home: ['Coffee & daily planning', 'Notes open, chair at the desk', 'Reading nook & tea', 'Quiet work, lounge put away', 'Drinks & conversation'],
     gaming: ['Coffee & a fresh start', 'Practice session & strategy notes', 'Console night with friends', 'Solo play, controller charging', 'Tournament & shared snacks'],
     music: ['Lyrics & vocal warm-up', 'Recording session & score study', 'Listening lounge & tea', 'Headphone mixing, stage cleared', 'Live set & guest seating'],
@@ -38,6 +40,7 @@ export function roomLifeDisplayTransform(obj, transform) {
 }
 
 function activityAnchor(id, l) {
+    if (INSTITUTIONAL_ROOMS[id]) return { at: l.activity, y: 740, offset: [0, 0], support: 'activity-table', small: true };
     const front = l.back + l.depth, tier = TIERS.indexOf(l.id), w = l.width;
     // A named real support and its contact height, in millimetres. The small
     // offset leaves room for the existing books, cups, vases and equipment.
@@ -115,7 +118,23 @@ export class RoomLife {
         const tray = !['creative', 'workshop', 'library', 'coworking', 'scifi'].includes(id);
         if (tray) h.box(g, [small ? 110 : 290, 4, small ? 105 : 195], [0, 2, 0], m.wood, 7);
         const y = tray ? 4 : 0;
-        if (id === 'gym') {
+        if (INSTITUTIONAL_ROOMS[id]) {
+            const spec = INSTITUTIONAL_ROOMS[id];
+            this.book(g, [0, y, 0], spec.accent, active || social);
+            if (spec.kind === 'it') {
+                h.box(g, [115, 10, 90], [160, y + 5, 0], m.ink, 4);
+                for (let n = 0; n < 4; n++) h.box(g, [15, 4, 18], [125 + n * 22, y + 12, 0], m.brass, 1);
+                const cable = h.mesh(g, new THREE.TorusGeometry(36, 3, 6, 20), m.ink, [160, y + 3, 100]); cable.rotation.x = Math.PI / 2;
+            } else if (spec.kind === 'lab') {
+                h.box(g, [130, 8, 70], [160, y + 4, 0], m.linen, 4);
+                for (let n = 0; n < (active || social ? 4 : 2); n++) { h.mesh(g, new THREE.CylinderGeometry(8, 8, 45, 10), m.linen, [115 + n * 28, y + 30, 0]); h.mesh(g, new THREE.CylinderGeometry(9, 9, 6, 10), m.clay, [115 + n * 28, y + 56, 0]); }
+            } else if (spec.kind === 'early' || spec.kind === 'primary') {
+                for (let n = 0; n < (quiet ? 2 : 4); n++) h.box(g, [36, 25 + n * 8, 36], [110 + n % 2 * 55, y + 13 + n * 4, -45 + Math.floor(n / 2) * 65], n % 2 ? m.clay : m.brass, 4);
+            } else if (spec.kind === 'hospital') {
+                h.box(g, [105, 6, 140], [170, y + 3, 0], m.ink, 5); h.box(g, [92, 2, 120], [170, y + 7, 0], m.paper, 3);
+                h.box(g, [40, 4, 9], [170, y + 10, -60], m.brass, 2);
+            } else if (!quiet) for (let n = 0; n < (social ? 4 : 2); n++) h.box(g, [45, 2, 60], [105 + n % 2 * 55, y + 1, -50 + Math.floor(n / 2) * 70], n % 2 ? m.clay : m.paper, 2);
+        } else if (id === 'gym') {
             for (let i = 0; i < (quiet ? 3 : 1); i++) h.box(g, [140, 22, 100], [0, y + 11 + i * 23, 0], m.linen, 5);
             if (!quiet) this.book(g, [0, y + 22, 0], '#61796c');
         } else if (id === 'creative') {
