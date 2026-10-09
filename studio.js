@@ -1,17 +1,17 @@
 import { LedCommandCenter } from './led-command-center.mjs?v=desktop-bands-back-20261005';
 import { normalizeCustomLook, normalizeCustomPalette, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
-import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=institutional-atmosphere-20261008';
-import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=institutional-atmosphere-20261008';
+import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=institutional-sweep-20261009';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=institutional-sweep-20261009';
 import { RoomGroove } from './room-groove-runtime.mjs?v=groove-save-20261007';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=institutional-atmosphere-20261008';
+import { RoomInteractions } from './room-interactions.mjs?v=institutional-sweep-20261009';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
-import { roomPolishLighting } from './room-polish.mjs?v=institutional-atmosphere-20261008';
+import { roomPolishLighting } from './room-polish.mjs?v=institutional-sweep-20261009';
 import { RoomLedSpill } from './room-led-spill.mjs?v=room-furnishings-20261006';
-import { SurfaceArtwork } from './surface-artwork.mjs?v=institutional-atmosphere-20261008';
-import { artworkSummary } from './artwork-config.mjs?v=institutional-atmosphere-20261008';
+import { SurfaceArtwork } from './surface-artwork.mjs?v=institutional-sweep-20261009';
+import { artworkSummary } from './artwork-config.mjs?v=institutional-sweep-20261009';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
@@ -33,12 +33,12 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=institutional-atmosphere-20261008';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=institutional-sweep-20261009';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=institutional-atmosphere-20261008';
-import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=institutional-atmosphere-20261008';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=institutional-sweep-20261009';
+import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=institutional-sweep-20261009';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=groove-routines-20261002';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=groove-routines-20261002';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=room-furnishings-20261006';
@@ -1393,11 +1393,34 @@ function withNeutralPose(fn) {
     }
 }
 
+// Temporarily show the requested desktop size (48x30 / 60x30) on the live
+// model for a synchronous snapshot, then restore it. No frame renders in
+// between, and interactable/LED/accessory state is untouched, so the user's
+// own desk is never visibly affected.
+function withDeskSize(size, fn) {
+    if (!sizeVariantParts || !['48x30', '60x30'].includes(size) || size === currentConfig.size) return fn();
+    const parts = ['smallTop', 'smallTrim', 'largeTop', 'largeTrim'].map(key => sizeVariantParts[key]).filter(Boolean);
+    const saved = { size: currentConfig.size, visible: parts.map(obj => obj.visible) };
+    const extended = size === '60x30';
+    try {
+        currentConfig.size = size;
+        sizeVariantParts.smallTop.visible = sizeVariantParts.smallTrim.visible = !extended;
+        sizeVariantParts.largeTop.visible = sizeVariantParts.largeTrim.visible = extended;
+        setScreenProgress(screenProgress);
+        return fn();
+    } finally {
+        currentConfig.size = saved.size;
+        parts.forEach((obj, i) => { obj.visible = saved.visible[i]; });
+        setScreenProgress(screenProgress);
+    }
+}
+
 // Secondary Office desks are pose snapshots of the actual current desk model.
 // Capture synchronously under the existing motion guard, then restore the main
 // rig. Batch by material so a shared office does not multiply CAD draw calls.
+// spec.size ('48x30' | '60x30') renders that desktop size for this station only.
 function captureOfficeStation(spec, millimetreScale) {
-    return withNeutralPose(() => {
+    return withDeskSize(spec.size, () => withNeutralPose(() => {
         currentLift = heightToLift(spec.height);
         updateMovingObjectsPosition();
         const tilt = primaryTiltConfig();
@@ -1467,9 +1490,9 @@ function captureOfficeStation(spec, millimetreScale) {
             const mount = workspaceAccessories?.mounts.get(role); if (!mount) continue;
             mounts[role] = new THREE.Matrix4().makeTranslation(...offset.toArray()).multiply(toRoom.clone().multiply(mount.dress.matrixWorld));
         }
-        group.userData.officeStation = { role: spec.id, height: spec.height, tilt: spec.tilt, widthMm: arSizeReference().nominalWidth * 25.4, sourceMeshCount, surfaceBatches: batches.size, main: false };
+        group.userData.officeStation = { role: spec.id, height: spec.height, tilt: spec.tilt, size: currentConfig.size, turn: spec.turn || 0, widthMm: arSizeReference().nominalWidth * 25.4, sourceMeshCount, surfaceBatches: batches.size, main: false };
         return { group, mounts };
-    });
+    }));
 }
 
 // Undo and redo run the same code in opposite directions. Each entry knows how
@@ -2779,6 +2802,9 @@ async function loadTrimOverlay() {
         const largeTop = addVariantNode(largeGltf, 0, 'Extended desktop', 'Variant_Desktop_Extended', 'tilt', smallTop.material, false);
         const largeTrim = addVariantNode(largeTrimGltf, 0, 'Extended desktop trim', 'Trim_Desktop_Extended', 'tilt', trimMaterial, true);
         sizeVariantParts = { smallTop, smallTrim, largeTop, largeTrim };
+        // Accessories mount on the Standard top; hiding it for Extended must
+        // not hide the dressing riding on the desk.
+        for (const part of Object.values(sizeVariantParts)) part.userData.sizeVariant = true;
         syncSizeGeometry();
         return tiltParts;
     } catch (error) {
@@ -9952,8 +9978,9 @@ function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
             const mode = profile.modes[id]; goToPose(mode.height, mode.tilt);
             if (mode.color) setLedColor(mode.color, false);
             setLedsEnabled(mode.leds);
-            workspaceAccessories?.setDayDress(id);
         }
+        // Desk dressing follows the selected activity even when the desk stays put.
+        workspaceAccessories?.setDayDress(id);
         applyRoomLighting();
     }
     syncHomeOfficeUI();
@@ -10019,7 +10046,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     }
     roomInteractions?.end();roomInteractions?.select(null);roomLedSpill.dispose();roomCollisionBlocked=false;roomSafety.reset();syncSafetyUI();
     workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
-        createStation: ['office', 'coworking'].includes(choice.id) && loadedModel ? spec => captureOfficeStation(spec, homeScale) : null });
+        createStation: (['office', 'coworking'].includes(choice.id) || INSTITUTIONAL_ROOMS[choice.id]) && loadedModel ? spec => captureOfficeStation(spec, homeScale) : null });
     if (measured) {
         if (!preserveDesk) positionHomeDesk();
         if (!preserveDesk && persist && loadedModel) {

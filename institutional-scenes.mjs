@@ -1,5 +1,17 @@
+import * as government from './institutional-government.mjs?v=institutional-sweep-20261009';
+import * as education from './institutional-education.mjs?v=institutional-sweep-20261009';
+import * as healthcare from './institutional-healthcare.mjs?v=institutional-sweep-20261009';
+import * as it from './institutional-it.mjs?v=institutional-sweep-20261009';
+
 // Measured public service, education and mobile work settings. Units are mm.
 // Scene IDs intentionally contain only letters, matching saved Groove keys.
+// Each group module owns its scenes' overrides (lighting, modes, finish,
+// stations, layout tweaks) and builder hooks; this file only merges them.
+// Columns: id, name, category, caption, kind, wall, accent, [width, depth] of
+// the smallest layout, five activity labels.
+export const INSTITUTIONAL_MODULES = { government, education, healthcare, it };
+const moduleByScene = Object.fromEntries(Object.values(INSTITUTIONAL_MODULES).flatMap(m => m.SCENES.map(id => [id, m])));
+export function institutionalModule(id) { return moduleByScene[id]; }
 const definitions = [
     ['security', 'Security operations', 'Public service', 'A mobile command position with a clear view.', 'operations', '#273c4b', '#48aeb0', [5800, 6800], ['Shift briefing', 'Active watch', 'Evening watch', 'Night watch', 'Team handover']],
     ['police', 'Police / PD', 'Public service', 'Brief, review and respond from one workspace.', 'police', '#e0e5e9', '#234e72', [6200, 7200], ['Morning briefing', 'Case review', 'Evening shift', 'Night shift', 'Team briefing']],
@@ -33,23 +45,13 @@ export const INSTITUTIONAL_GROUPS = {
 export function institutionalGroup(id) {
     return Object.keys(INSTITUTIONAL_GROUPS).find(key => INSTITUTIONAL_GROUPS[key].settings.includes(id));
 }
+// Per-kind practical/wash balance and task/bounce colours, owned by the group modules.
+const LIGHTING = Object.assign({}, ...Object.values(INSTITUTIONAL_MODULES).map(m => m.lighting || {}));
 function makeModes(labels, accent, kind) {
     const clinical = ['lab', 'hospital'].includes(kind), operational = ['operations', 'it', 'police'].includes(kind);
     // Separate general room light from local work light. Hospital observation
     // and operations watch keep dim surroundings without dimming the task pool.
-    const lighting = {
-        early: { practical: [.24,.3,.7,.35,.65], wash: [.2,.18,.35,.16,.4], task: '#ffe6bf', bounce: '#c6d4bb' },
-        primary: { practical: [.28,.32,.74,.4,.7], wash: [.2,.18,.36,.18,.4], task: '#ffe9ca', bounce: '#c2d8cb' },
-        secondary: { practical: [.3,.38,.8,.45,.76], wash: [.18,.18,.36,.18,.4], task: '#f5ebd8', bounce: '#bdced5' },
-        college: { practical: [.28,.34,.8,.46,.78], wash: [.2,.18,.4,.2,.42], task: '#ffe8c9', bounce: '#cfbdab' },
-        university: { practical: [.3,.36,.82,.48,.8], wash: [.2,.18,.38,.2,.4], task: '#f4ead3', bounce: '#b6ccbf' },
-        government: { practical: [.28,.35,.78,.4,.76], wash: [.22,.2,.4,.18,.4], task: '#ffe9cf', bounce: '#c7d2bc' },
-        police: { practical: [.32,.4,.74,.55,.78], wash: [.18,.2,.3,.16,.36], task: '#e7edf0', bounce: '#9db5c2' },
-        operations: { practical: [.28,.34,.58,.45,.64], wash: [.14,.14,.22,.1,.28], task: '#d9e8ed', bounce: '#7eabae' },
-        lab: { practical: [.42,.5,.88,.62,.84], wash: [.2,.2,.35,.2,.38], task: '#eaf3ed', bounce: '#b7d1cc' },
-        hospital: { practical: [.3,.38,.66,.3,.64], wash: [.22,.2,.3,.12,.3], task: '#ffecd5', bounce: '#bfd6d0' },
-        it: { practical: [.34,.42,.76,.5,.74], wash: [.16,.18,.28,.14,.32], task: '#deedf0', bounce: '#9bbbc8' }
-    }[kind];
+    const lighting = LIGHTING[kind];
     // Daylight still leads by day; night keeps local work surfaces legible.
     const practicalColor = clinical ? '#e4f2ed' : operational ? '#c4e2ed' : '#ffe1b6';
     const ledColors = clinical ? ['#bee8dd', '#d9eee4'] : operational ? ['#66c2d1', '#93d8cf'] : ['#ffe0ae', '#cce4bd'];
@@ -65,15 +67,31 @@ function makeModes(labels, accent, kind) {
         offset: [0, 0], yaw: 0, leds: i > 1, color: ledColors[i === 4 ? 1 : 0]
     }]));
 }
-export const INSTITUTIONAL_ROOMS = Object.fromEntries(definitions.map(([id, name, category, caption, kind, wall, accent, dimensions, labels]) => {
+// Station chairs: a Steelcase prop 1050 mm in front of the desk, turned with it.
+function stationChair(s) {
+    const a = (s.turn || 0) * Math.PI / 180, distance = s.chairDistance ?? 1050;
+    return { id: 'steelcase-leap-v2', at: [s.at[0] + Math.sin(a) * distance, 0, s.at[1] + Math.cos(a) * distance], turn: 180 + (s.turn || 0) };
+}
+const mergeModes = (modes, extra = {}) => { for (const [phase, values] of Object.entries(extra)) modes[phase] = { ...modes[phase], ...values }; return modes; };
+export const INSTITUTIONAL_ROOMS = Object.fromEntries(definitions.map(row => {
+    const group = moduleByScene[row[0]], override = group?.sceneOverrides?.[row[0]] || {};
+    const [id, name, category, caption, kind, wall, accent, dimensions, labels] = row.map((value, i) => override[['id', 'name', 'category', 'caption', 'kind', 'wall', 'accent', 'dimensions', 'labels'][i]] ?? value);
     const layouts = Object.fromEntries(['apartment', 'house', 'spacious'].filter(tier => !EDUCATIONAL_LEVELS[id] || EDUCATIONAL_LEVELS[id].includes(tier)).map(tier => {
         const index = ['apartment', 'house', 'spacious'].indexOf(tier);
         const width = dimensions[0] + index * 1800, depth = dimensions[1] + index * 2200, back = -depth / 3, desk = [-width / 2 + 1250, back + 1900];
-        return [tier, { id: tier, index, schoolRows: ({kindergarten:2,elementary:3,middleschool:4,highschool:4,college:5,university:5})[id], desktopSize: index === 0 ? '48x30' : '60x30', name: EDUCATIONAL_LEVELS[id] ? name : ['Small', 'Medium', 'Large'][index] + ' ' + name.toLowerCase(), width, depth,
+        const layout = { id: tier, index, schoolRows: ({kindergarten:2,elementary:3,middleschool:4,highschool:4,college:5,university:5})[id], desktopSize: index === 0 ? '48x30' : '60x30', name: EDUCATIONAL_LEVELS[id] ? name : ['Small', 'Medium', 'Large'][index] + ' ' + name.toLowerCase(), width, depth,
             height: 3100 + index * 150, back, desk,
-            daylight: [-width / 2 + 100, back + depth * .54], activity: [width / 2 - 1000, back + depth - 700], props: [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1050], turn: 180, replaceFixture: 'mobile-desk-chair' }] }];
+            daylight: [-width / 2 + 100, back + depth * .54], activity: [width / 2 - 1000, back + depth - 700], props: [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1050], turn: 180, replaceFixture: 'mobile-desk-chair' }] };
+        // Extra ErgoFlex desks: rendered by WorkspaceRoom.addOfficeStations
+        // from a snapshot of the live desk at each station's size and pose.
+        layout.stations = (group?.stations?.(id, layout) || []).map(s => ({ size: '60x30', turn: 0, height: 28, tilt: 0, ...s }));
+        for (const s of layout.stations) if (s.chair !== false) layout.props.push(stationChair(s));
+        override.layout?.(tier, layout);
+        return [tier, layout];
     }));
-    return [id, { id, name, category: EDUCATIONAL_LEVELS[id] ? 'Educational' : category, caption, kind, wall, accent, layouts, modes: makeModes(labels, accent, kind),
+    return [id, { id, name, category: EDUCATIONAL_LEVELS[id] ? 'Educational' : category, caption, kind, wall, accent, layouts, modes: mergeModes(makeModes(labels, accent, kind), override.modes),
+        desk: override.desk, shelf: override.shelf,
+        boardTitle: override.boardTitle || name.toUpperCase(), finish: group?.finish?.({ id, name, kind, accent }),
         stories: labels.map((label, i) => `${label} · ${['Prepare the mobile desk', 'Flexible work and shared materials', 'Focused task lighting', 'Quiet workspace', 'A clear route for the mobile desk'][i]}`) }];
 }));
 export const INSTITUTIONAL_IDS = Object.keys(INSTITUTIONAL_ROOMS);

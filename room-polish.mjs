@@ -1,10 +1,11 @@
 import * as THREE from 'three';
-import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=institutional-atmosphere-20261008';
+import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=institutional-sweep-20261009';
 
 // Authored art, imported GLBs and user transforms are left in their own systems.
 // These finishes apply only to the builders' explicitly tagged room materials.
 export const ROOM_FINISHES = {
-    ...Object.fromEntries(Object.entries(INSTITUTIONAL_ROOMS).map(([id, p]) => [id, { name: p.name + (['lab','hospital'].includes(p.kind) ? ' · terrazzo & satin enamel' : ['operations','police','government','it'].includes(p.kind) ? ' · woven carpet & acoustic felt' : ' · natural oak & learning textiles'), ground: ['lab','hospital'].includes(p.kind) ? '#809c95' : ['operations','police','government','it'].includes(p.kind) ? '#626f76' : '#9b8768', wood: .53, metal: .31, stone: ['lab','hospital'].includes(p.kind) ? .43 : .6, night: .92, partyDay: true }])),
+    // Institutional finishes are owned by each group module (`finish` export).
+    ...Object.fromEntries(Object.entries(INSTITUTIONAL_ROOMS).map(([id, p]) => [id, p.finish])),
     home:      { name: 'Warm oak & linen',       ground: '#85745e', wood: .52, metal: .32, stone: .65, night: .95 },
     gaming:    { backdrops: { morning: ['#dfe6f0','#a7b8cf'], afternoon: ['#cfdeed','#91a6bf'], evening: ['#9cacc9','#4e6081'] }, name: 'Graphite & violet',      ground: '#41445a', wood: .49, metal: .30, stone: .61, night: .80 },
     music:     { backdrops: { morning: ['#e9dfd1','#b5b4b0'], afternoon: ['#d2d9df','#8e9da9'], evening: ['#c4aa9c','#6e7787'] }, name: 'Walnut & acoustic felt', ground: '#635042', wood: .48, metal: .29, stone: .64, night: .82 },

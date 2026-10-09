@@ -1,7 +1,7 @@
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout } from './institutional-scenes.mjs?v=institutional-atmosphere-20261008';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=institutional-atmosphere-20261008';
-import { refineRoomSurfaces } from './room-refinement.mjs?v=institutional-atmosphere-20261008';
-import { RoomLife } from './room-life.mjs?v=institutional-atmosphere-20261008';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=institutional-sweep-20261009';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=institutional-sweep-20261009';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=institutional-sweep-20261009';
+import { RoomLife } from './room-life.mjs?v=institutional-sweep-20261009';
 import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
@@ -312,6 +312,7 @@ export class WorkspaceAccessories {
         const phase = ['morning', 'afternoon', 'evening', 'night', 'party'].indexOf(mode);
         for (const mount of this.mounts.values()) for (const child of mount.dress?.children || []) {
             if (child.userData.dayKit) child.children.forEach((variant, i) => variant.visible = i === phase);
+            else if (child.userData.dressPhases) child.visible = child.userData.dressPhases.includes(mode);
             else if (child.userData.dailyInput) child.visible = phase !== 2 && phase !== 4;
         }
     }
@@ -319,7 +320,7 @@ export class WorkspaceAccessories {
         for (const { anchor, group, dress, relative } of this.mounts.values()) {
             anchor.updateWorldMatrix(true, false);
             let visible = true;
-            for (let p = anchor; p; p = p.parent) if (!p.visible) visible = false;
+            for (let p = anchor; p; p = p.parent) if (!p.visible && !p.userData.sizeVariant) visible = false;
             for (const target of [group, dress]) {
                 if (!target) continue;
                 target.matrix.multiplyMatrices(anchor.matrixWorld, relative);
@@ -353,7 +354,16 @@ export class WorkspaceAccessories {
             object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
             markSceneAsset(object, { key: placement.sceneAssetKey, role: placement.role });
             object.userData.dailyInput = placement.role === 'desktop' && /keyboard|mouse|laptop|tablet/.test(placement.id) && sceneId !== 'music';
+            // Optional daypart filter, e.g. phases: ['evening', 'night'].
+            if (placement.phases) object.userData.dressPhases = placement.phases;
             mount.dress.add(object);
+        }
+        // Institutional groups may add procedural main-desk detail:
+        // mainDeskDetail({ sceneId, role, THREE, add(object, phases?) }).
+        const detailHook = INSTITUTIONAL_ROOMS[sceneId] && institutionalModule(sceneId)?.mainDeskDetail;
+        if (detailHook) for (const [role, mount] of this.mounts) {
+            if (!mount.dress || role === 'floor') continue;
+            detailHook({ sceneId, role, THREE, add: (object, phases) => { if (phases) object.userData.dressPhases = phases; mount.dress.add(object); return object; } });
         }
         const desktop = this.mounts.get('desktop');
         if (desktop && sceneId !== 'product') {
@@ -545,7 +555,9 @@ export const ROOM_SCENES = [
         { id: 'gold-award', at: [430, 0, -120], turn: -15 }
       ],
       shell: 'gallery', feature: 'window', props: galleryLayoutForSize('48x30').props },
-    ...INSTITUTIONAL_IDS.map(id => { const p = INSTITUTIONAL_ROOMS[id]; return { id, name: p.name, caption: p.caption, category: p.category, tone: 'gallery', desk: [{ id: 'journal', at: [160, 0, 70] }, { id: 'kenney-furniture-laptop', at: [-230, 0, 10] }], shelf: [{ id: 'paper-holder', at: [300, 0, 0] }], props: [] }; })
+    // Main-desk dressing: per-scene `desk`/`shelf` from the group module's
+    // sceneOverrides (placements may list `phases`), else this generic set.
+    ...INSTITUTIONAL_IDS.map(id => { const p = INSTITUTIONAL_ROOMS[id]; return { id, name: p.name, caption: p.caption, category: p.category, tone: 'gallery', desk: p.desk || [{ id: 'journal', at: [160, 0, 70] }, { id: 'kenney-furniture-laptop', at: [-230, 0, 10] }], shelf: p.shelf || [{ id: 'paper-holder', at: [300, 0, 0] }], props: [] }; })
 ];
 
 export const ROOM_ATMOSPHERES = {
@@ -705,10 +717,16 @@ export class WorkspaceRoom {
         }
         const token = this.token;
         this.ready = Promise.all([this.addProps(root, scene, this.token),
-            ['office', 'coworking'].includes(id) ? this.addOfficeStations(root, options.createStation, this.token) : Promise.resolve()]).then(() => {
+            this.roomLayout?.stations?.length ? this.addOfficeStations(root, options.createStation, this.token) : Promise.resolve()]).then(() => {
             if (token === this.token) this.life?.bind();
         });
     }
+    // Extra ErgoFlex desks (office, coworking and institutional layouts).
+    // Station spec: { id, name, at: [x, z], size?: '48x30'|'60x30', turn?: degrees,
+    // height, tilt, desktop?, shelf?, plan? }. createStation (studio.js) returns
+    // a batched snapshot of the live desk at that size and pose. Keys are
+    // `${scene}:${layout}:station:${id}`; RoomInteractions.bind registers the
+    // groups as floor colliders like any other root-level furnishing.
     async addOfficeStations(root, createStation, token) {
         if (!createStation) return;
         await PROP_LIBRARY.loadIndex();
@@ -719,7 +737,7 @@ export class WorkspaceRoom {
             group.userData.propId = `${this.id}-station-${spec.id}`;
             group.userData.sceneAssetName = spec.name + ' · ErgoFlex desk';
             markSceneAsset(group, { key: `${this.id}:${this.roomLayout.id}:station:${spec.id}` });
-            group.position.set(spec.at[0], 0, spec.at[1]); root.add(group);
+            group.position.set(spec.at[0], 0, spec.at[1]); group.rotation.y = THREE.MathUtils.degToRad(spec.turn || 0); root.add(group);
         }
         for (const { spec, group, mounts } of snapshots) {
             for (const role of ['desktop', 'shelf']) {
@@ -735,6 +753,9 @@ export class WorkspaceRoom {
                     } catch { if (token === this.token) this.missingProps.push(placement.id); }
                 }
                 if (role === 'desktop' && spec.plan) this.decorateStation?.(mount, spec);
+                // Institutional groups attach procedural role detail (scanners,
+                // lightboxes, pools...) here; it moves and is disposed with the station.
+                if (INSTITUTIONAL_ROOMS[this.id]) institutionalModule(this.id)?.stationDetail?.(spec, mount, THREE, { role, layout: this.roomLayout, sceneId: this.id });
             }
         }
     }

@@ -1,23 +1,48 @@
 import * as THREE from 'three';
-import { institutionalFloor, institutionalOak, drawInstitutionalBoard, drawInstitutionalScreen, drawInstitutionalCampus, enrichInstitutionalRoom } from './institutional-detail.mjs?v=institutional-atmosphere-20261008';
-import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=institutional-atmosphere-20261008';
+import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom } from './institutional-detail.mjs?v=institutional-sweep-20261009';
+import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=institutional-sweep-20261009';
 
-// A common architectural kit, with purpose-built furniture for each setting.
-// Floor furnishings are separate stable assets so rearranging and collision
-// detection use the same objects that the visitor sees.
+// Shared architectural kit. The shell (floor, walls, daylight window, door,
+// sign, planning board, ceiling lights) and the common furniture helpers live
+// here; every setting's own furnishings, displays and decor are built by its
+// group module (institutional-government/-education/-healthcare/-it.mjs)
+// through the `kit` object passed to the hooks below. Floor furnishings are
+// separate stable assets so rearranging and collision detection use the same
+// objects that the visitor sees.
+//
+// Group module hooks, in call order (all optional except furnish):
+//   options(spec)            shell knobs (see defaultOptions)
+//   floor(spec, w, d)        -> { map, roughness, surface }
+//   drawBoard(c, W, H, spec, variant) / drawScreen(c, W, H, spec, variant, phase)
+//   furnish(kit)             main furnishings
+//   dressProp(id, k, g, kit) batched detail per furnishing (institutional-detail.mjs)
+//   decorate(kit)            perimeter features
+//   finishDecor(kit), activityMaterials(k, phase, y, kit), extraLamps(kit)
+//   atmosphere(phase, gain, kit)  per-phase updates
+const defaultOptions = spec => ({
+    trimColor: '#c4c2b6', acousticName: 'Wall acoustic panels', signLabel: 'CONNECTED WORKSPACE', rugColor: '#889b85', planter: true,
+    boardOnSideWall: false, boardName: 'Wall teaching and planning board', boardFooter: '#f1f0e7',
+    storage: { height: 1200, open: false }, chairDetailHeight: 480, nightBackground: .55,
+    lampSupport: null
+});
 export function buildInstitutionalRoom(room, root, layout, h) {
-    const spec = INSTITUTIONAL_ROOMS[room.id], { box, mesh, rod, sphere, material, markSceneAsset } = h;
+    const spec = INSTITUTIONAL_ROOMS[room.id], group = institutionalModule(room.id), { box, mesh, rod, sphere, material, markSceneAsset } = h;
+    const options = { ...defaultOptions(spec), ...group.options?.(spec) };
     const { width: w, depth: d, height: ceiling, back: bz, index } = layout, front = bz + d;
     const mat = (color, surface, extra = {}) => { const m = material(color, extra); if (surface) m.userData.roomSurface = surface; return m; };
     const wall = mat(spec.wall, 'plaster'), trim = mat('#f3f1e9', 'powder'), accent = mat(spec.accent, 'powder');
     const metal = mat('#74808a', 'metal', { metalness: .65, roughness: .32 }), ink = mat('#25333d', 'powder');
     const oak = mat('#ffffff', 'wood', { map: institutionalOak(), roughness: .55 }), paper = mat('#eeeadc', 'plaster'), seat = mat(spec.accent, 'fabric');
-    const floorFinish = institutionalFloor(spec, w, d);
+    const floorFinish = group.floor(spec, w, d);
     const floor = mat('#ffffff', floorFinish.surface, { map: floorFinish.map, roughness: floorFinish.roughness });
     const glow = material('#ecf6ff', { emissive: '#d9efff', emissiveIntensity: .6, roughness: .5 });
     const taskSeat = mat('#384c57', 'fabric');
     const screenMats = [];
     let screenPhase;
+    const drawScreen = (c, W, H, variant = 0, phase = 'morning') => group.drawScreen(c, W, H, spec, variant, phase);
+    const drawBoard = (c, W, H, variant = 0) => group.drawBoard(c, W, H, spec, variant);
+    // Every furnishing that should be saved/rearranged is created with asset():
+    // its key is `${scene}:${layout}:fixture:${id}` and must stay stable.
     const asset = (id, name, at = [0, 0, 0], parent = root) => {
         const g = new THREE.Group(); g.name = name; g.position.set(...at); parent.add(g);
         g.userData.propId = id; g.userData.sceneAssetName = name;
@@ -56,7 +81,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
         return g;
     };
     const monitor = (parent, at, width = 540, variant = 0, mounted = false) => {
-        const m = canvasMat((c, W, H) => drawInstitutionalScreen(c, W, H, spec, variant));
+        const m = canvasMat((c, W, H) => drawScreen(c, W, H, variant));
         m.emissive.set('#b2d9df'); m.emissiveMap = m.map; m.emissiveIntensity = .18; m.userData.screenVariant = variant; screenMats.push(m);
         const g = new THREE.Group(); g.position.set(...at); parent.add(g);
         box(g, [width, width * .6, 28], [0, 200, 0], ink, 8);
@@ -99,6 +124,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
         }
         return g;
     };
+    const byId = id => { let found; root.traverse(g => { if (g.userData.propId === id) found = g; }); return found; };
 
     box(root, [w, 30, d], [0, -15, bz + d / 2], floor);
     const back = new THREE.Group(); back.name = `${spec.name} back wall`; root.add(back);
@@ -130,126 +156,24 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     rod(door, [310, 1040, 55], [310, 1190, 55], 12, metal);
     const sign = asset('room-sign', 'Wall room identity', [0, 2520, bz + 50], back);
     label(sign, spec.name.toUpperCase(), [Math.min(w - 500, 2700), 340], [0, 0, 0]);
-    const board = asset('planning-board', spec.kind === 'operations' ? 'Wall operations overview' : 'Wall teaching and planning board', [w * .17, 1640, bz + 65], back);
+    const board = asset('planning-board', options.boardName, [w * .17, 1640, bz + 65], back);
     box(board, [2200, 1000, 40], [0, 0, 0], metal, 8);
-    const boardMap = canvasMat((c, W, H) => drawInstitutionalBoard(c, W, H, spec));
+    const boardMap = canvasMat((c, W, H) => drawBoard(c, W, H));
     mesh(board, new THREE.PlaneGeometry(2140, 940), boardMap, [0, 0, 22]);
     // A real low support anchors all five daily activity kits.
     table('activity-table', 'Daily planning table', [layout.activity[0], 0, layout.activity[1]], 1300, 650, 740);
-    cabinet('storage', [w / 2 - 760, 0, bz + 430], 1250, spec.kind === 'early' ? 940 : 1200, ['early', 'primary'].includes(spec.kind));
+    cabinet('storage', [w / 2 - 760, 0, bz + 430], 1250, options.storage.height, options.storage.open);
     chair('mobile-desk-chair', [layout.desk[0], 0, layout.desk[1] + 1050], 450, Math.PI / 5);
 
-    if (spec.category === 'Educational') {
-        const young = spec.kind === 'early' || spec.kind === 'primary';
-        const topHeight = spec.kind === 'early' ? 520 : spec.kind === 'primary' ? 620 : 740;
-        const rows = layout.schoolRows || 2 + index, columns = index > 0 ? 2 : 1;
-        for (let row = 0; row < rows; row++) for (let col = 0; col < columns; col++) {
-            const x = columns === 1 ? w * .2 : -150 + col * 1850, z = bz + 2300 + row * 1450;
-            const g = table(`student-table-${row}-${col}`, young ? 'Shared learning table' : spec.kind === 'university' ? 'Seminar table' : 'Student work table', [x, 0, z], 1250, 620, topHeight, young ? paper : oak);
-            for (const dx of [-340, 340]) chair(`student-chair-${row}-${col}-${dx}`, [x + dx, 0, z + 570], topHeight - 260, 0);
-            if (young) for (let n = 0; n < 3; n++) box(g, [70, 65 + n * 12, 70], [-240 + n * 160, topHeight + 34 + n * 6, 0], mat(['#ce805c', '#70a696', '#d4b864'][n], 'powder'), 7);
-            else if (spec.kind === 'college' || spec.kind === 'university') {
-                box(g, [300, 12, 210], [0, topHeight + 6, 0], ink, 5);
-                box(g, [280, 170, 12], [0, topHeight + 92, -80], accent, 4);
-            } else box(g, [220, 20, 170], [0, topHeight + 10, 0], accent, 3);
-        }
-        if (young) {
-            const rug = asset('circle-rug', 'Learning circle floor rug', [-w / 2 + 1400, 0, front - 1500]);
-            mesh(rug, new THREE.CylinderGeometry(950, 950, 5, 48), mat('#a9c5bc', 'fabric'), [0, 2.5, 0]);
-            for (let n = 0; n < 7; n++) { const a = n / 7 * Math.PI * 2; mesh(rug, new THREE.CylinderGeometry(145, 145, 6, 20), mat(['#dcaa73', '#6f9fb1', '#b48d99'][n % 3], 'fabric'), [Math.cos(a) * 680, 7, Math.sin(a) * 680]); }
-            const art = asset('student-art', 'Wall student artwork', [w / 2 - 45, 1900, bz + d * .52], right); art.rotation.y = -Math.PI / 2;
-            label(art, 'OUR IDEAS GROW HERE', [1900, 360], [0, 0, 0], '#7c9b7e');
-        } else {
-            const display = asset('presentation-display', 'Wall presentation display', [w / 2 - 30, 1350, bz + d * .57], right); display.rotation.y = -Math.PI / 2;
-            monitor(display, [0, 0, 0], 1500, 1, true);
-        }
-    } else if (spec.kind === 'operations' || spec.kind === 'police' || spec.kind === 'government') {
-        const operations = spec.kind === 'operations';
-        const rows = 2 + index;
-        for (let n = 0; n < rows; n++) {
-            const z = bz + 2200 + n * 1450, x = w * .22;
-            const g = table(`workstation-${n}`, operations ? 'Security console table' : spec.kind === 'police' ? 'Case review workstation' : 'Public service workstation', [x, 0, z], 1500, 750);
-            monitor(g, [operations ? -350 : 0, 740, -190], 560, n);
-            if (operations) monitor(g, [350, 740, -190], 560, n + 1);
-            box(g, [420, 18, 145], [0, 752, 160], ink, 5);
-            chair(`operator-chair-${n}`, [x, 0, z + 680]);
-        }
-        if (operations) {
-            // A six-screen overview is recognisable without using real footage.
-            board.visible = false;
-            const overview = asset('overview', 'Wall security display array', [0, 1520, bz + 70], back);
-            for (let row = 0; row < 2; row++) for (let col = 0; col < 3; col++) monitor(overview, [-850 + col * 850, row * 500 - 350, 0], 800, row * 3 + col, true);
-        }
-        if (spec.kind === 'police') {
-            const lockers = cabinet('equipment-lockers', [w / 2 - 450, 0, bz + d * .72], 1600, 1900); lockers.rotation.y = -Math.PI / 2;
-            label(lockers, 'EQUIPMENT', [1250, 180], [0, 1680, 235]);
-        }
-        if (spec.kind === 'government') {
-            const counter = table('service-counter', 'Public reception counter', [w / 2 - 1050, 0, front - 2000], 1700, 700, 1000, paper);
-            label(counter, 'WELCOME', [900, 160], [0, 810, 365]);
-        }
-    } else if (spec.kind === 'lab') {
-        for (let n = 0; n < 2 + index; n++) {
-            const x = w * .2, z = bz + 2300 + n * 1500;
-            const g = table(`lab-bench-${n}`, 'Laboratory bench', [x, 0, z], 1800, 850, 900, ink);
-            for (const dx of [-500, 500]) {
-                box(g, [180, 32, 230], [dx, 916, 0], trim, 7);
-                rod(g, [dx, 930, -50], [dx + 50, 1110, -40], 23, metal);
-                rod(g, [dx + 50, 1110, -40], [dx, 1200, -20], 24, ink);
-                box(g, [120, 14, 100], [dx, 1000, 15], metal, 2);
-                mesh(g, new THREE.CylinderGeometry(25, 32, 85, 16), mat('#80b1b0', 'powder'), [dx + 220, 944, 80]);
-            }
-            chair(`lab-stool-${n}`, [x, 0, z + 680], 610);
-        }
-        cart('sample-cart', [w / 2 - 700, 0, front - 2300], 'hospital');
-        const hood = asset('fume-hood', 'Laboratory extraction hood', [0, 0, bz + 450]);
-        box(hood, [1700, 850, 650], [0, 425, 0], trim, 12);
-        for(const x of [-420,420]) { box(hood,[810,740,25],[x,450,340],accent,6);box(hood,[140,16,30],[x,720,360],metal,4); }
-        box(hood,[1670,60,690],[0,910,0],ink,6);
-        box(hood,[1550,1000,35],[0,1450,-300],ink,4);
-        for(const x of [-800,800]) box(hood,[100,1050,650],[x,1475,0],trim,6);
-        box(hood,[1700,200,650],[0,2000,0],trim,10);
-        box(hood,[700,80,500],[0,2140,-50],metal,6);
-        box(hood,[1460,650,14],[0,1580,335],mat('#94c1c9','powder',{transparent:true,opacity:.22,depthWrite:false}),4);
-        rod(hood,[-730,1250,350],[730,1250,350],14,metal);
-        label(hood,'EXTRACTION / ANALYSIS',[1150,95],[0,2000,332]);
-    } else if (spec.kind === 'hospital') {
-        const beds = 1 + index;
-        for (let n = 0; n < beds; n++) {
-            const x = w * .22, z = bz + 2600 + n * 2500;
-            const bed = asset(`care-bed-${n}`, 'Hospital care bed', [x, 0, z]);
-            for (const dx of [-420, 420]) for (const dz of [-850, 850]) {
-                const wheel = mesh(bed, new THREE.CylinderGeometry(55, 55, 34, 14), ink, [dx, 55, dz]); wheel.rotation.z = Math.PI / 2;
-                box(bed, [40, 430, 40], [dx, 290, dz], metal, 7);
-            }
-            box(bed, [1000, 80, 2100], [0, 500, 0], trim, 25);
-            box(bed, [940, 130, 1950], [0, 605, 0], mat('#b5cdd0', 'fabric'), 35);
-            box(bed, [700, 95, 370], [0, 715, -680], paper, 40);
-            for (const dz of [-1060, 1060]) box(bed, [1030, 460, 65], [0, 700, dz], accent, 24);
-            for (const dx of [-510, 510]) rod(bed, [dx, 790, -650], [dx, 790, 650], 20, metal);
-            const obs = asset(`patient-monitor-${n}`, 'Observation monitor stand', [x + 950, 0, z - 600]);
-            box(obs, [450, 30, 450], [0, 15, 0], metal, 15); rod(obs, [0, 20, 0], [0, 1150, 0], 25, metal); monitor(obs, [0, 1150, 0], 480, n);
-            // Curtain stays attached to its floor stand, and moves as one item.
-            const curtain = asset(`privacy-screen-${n}`, 'Mobile privacy screen', [x + 1450, 0, z + 180]);
-            for (const dz of [-750, 750]) { box(curtain, [420, 35, 80], [0, 17.5, dz], metal, 7); rod(curtain, [0, 35, dz], [0, 1950, dz], 15, metal); }
-            box(curtain, [22, 1500, 1450], [0, 1170, 0], mat('#adc7c2', 'fabric'), 8);
-        }
-        cart('clinical-cart', [w / 2 - 650, 0, front - 1850], 'hospital');
-    } else if (spec.kind === 'it') {
-        for (let n = 0; n < 2 + index; n++) {
-            const rack = asset(`server-rack-${n}`, 'IT equipment rack', [-50 + n * 1050, 0, bz + 650]);
-            box(rack, [800, 2000, 900], [0, 1000, 0], ink, 12);
-            for (let unit = 0; unit < 10; unit++) {
-                box(rack, [730, 125, 25], [0, 220 + unit * 170, 465], metal, 5);
-                for (let lamp = 0; lamp < 3; lamp++) sphere(rack, [7, 7, 4], [240 + lamp * 28, 220 + unit * 170, 480], glow);
-                for (let slot = 0; slot < 4; slot++) box(rack, [300, 4, 3], [-130, 195 + unit * 170 + slot * 14, 481], ink);
-            }
-        }
-        for (let n = 0; n < 2 + index; n++) cart(`diagnostic-cart-${n}`, [w * .2, 0, bz + 2700 + n * 1450]);
-        const bench = table('service-bench', 'IT service workbench', [w / 2 - 650, 0, front - 2400], 1400, 700, 900); bench.rotation.y = -Math.PI / 2;
-        monitor(bench, [0, 900, -130], 600, 2);
-    }
-    const dressAtmosphere = enrichInstitutionalRoom(room, root, layout, spec, h, { asset, wall: back, right, left, window, cabinet, label, board, table, chair, oak });
+    const kit = {
+        THREE, room, root, layout, spec, h, group, options, box, mesh, rod, sphere, material, mat,
+        w, d, ceiling, bz, front, index,
+        wall, trim, accent, metal, ink, oak, paper, seat, glow, taskSeat, floor,
+        asset, canvasMat, label, chair, table, monitor, cabinet, cart, byId, drawBoard, drawScreen,
+        back, right, left, window, door, board, sky, screenMats
+    };
+    group.furnish(kit);
+    const dressAtmosphere = enrichInstitutionalRoom(kit);
     // Slim linear ceiling fixtures disappear with the camera cutaway.
     const ceilingGroup = new THREE.Group(); ceilingGroup.name = 'Ceiling lighting'; root.add(ceilingGroup); room.ceilingFixture = ceilingGroup;
     for (let n = 0; n < 3; n++) {
@@ -257,7 +181,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
         box(ceilingGroup, [w * .68, 50, 150], [0, ceiling - 100, z], metal, 10);
         box(ceilingGroup, [w * .66, 8, 115], [0, ceiling - 129, z], glow, 6);
     }
-    const lights = [[layout.desk[0], 2100, layout.desk[1]], [w * .2, 2200, bz + d * .46], [0, 2300, front - 1300]].map(at => {
+    const lights = kit.lights = [[layout.desk[0], 2100, layout.desk[1]], [w * .2, 2200, bz + d * .46], [0, 2300, front - 1300]].map(at => {
         const light = new THREE.PointLight('#e7f3ff', 0, 5500 * root.scale.x, 2); light.position.set(...at); root.add(light); return light;
     });
     room.roomAtmosphere = (phase, gain = 1) => {
@@ -268,7 +192,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
             // Screens stay readable without lighting the whole watch room.
             m.emissiveIntensity = phase === 'night' ? .19 : .14;
             if (screenPhase !== phase) {
-                drawInstitutionalScreen(m.map.image.getContext('2d'), m.map.image.width, m.map.image.height, spec, m.userData.screenVariant, phase);
+                drawScreen(m.map.image.getContext('2d'), m.map.image.width, m.map.image.height, m.userData.screenVariant, phase);
                 m.map.needsUpdate = true;
             }
         });
@@ -276,7 +200,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
         lights.forEach((l, n) => {
             l.color.set(n === 2 ? mode.colors[1] : mode.colors[0]);
             const night = phase === 'night';
-            const background = night ? (spec.kind === 'hospital' ? .28 : spec.kind === 'operations' ? .35 : .55) : 1;
+            const background = night ? options.nightBackground : 1;
             const power = n === 0 ? 4 * mode.practical : (n === 1 ? 5 * mode.practical : 2 * mode.practical + 2 * mode.wash) * background;
             l.intensity = (root.scale.x * 1000) ** 2 * power * gain;
         });
