@@ -1,0 +1,134 @@
+{
+  "errors": [],
+  "review": [
+    {
+      "mode": "store",
+      "theme": "light",
+      "header": {
+        "x": 0,
+        "y": 0,
+        "w": 1440,
+        "h": 56.5,
+        "right": 1440,
+        "bottom": 56.5
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 57,
+        "w": 360,
+        "h": 943,
+        "right": 360,
+        "bottom": 1000
+      },
+      "viewer": {
+        "x": 364,
+        "y": 57,
+        "w": 1076,
+        "h": 943,
+        "right": 1440,
+        "bottom": 1000
+      },
+      "overflow": 0,
+      "panelBg": "rgb(251, 252, 252)"
+    },
+    {
+      "mode": "store",
+      "theme": "dark",
+      "header": {
+        "x": 0,
+        "y": 0,
+        "w": 1440,
+        "h": 56.5,
+        "right": 1440,
+        "bottom": 56.5
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 57,
+        "w": 360,
+        "h": 943,
+        "right": 360,
+        "bottom": 1000
+      },
+      "viewer": {
+        "x": 364,
+        "y": 57,
+        "w": 1076,
+        "h": 943,
+        "right": 1440,
+        "bottom": 1000
+      },
+      "overflow": 0,
+      "panelBg": "rgb(23, 36, 43)"
+    },
+    {
+      "mode": "studio",
+      "theme": "light",
+      "header": {
+        "x": 0,
+        "y": 0,
+        "w": 1440,
+        "h": 56.5,
+        "right": 1440,
+        "bottom": 56.5
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 57,
+        "w": 420,
+        "h": 943,
+        "right": 420,
+        "bottom": 1000
+      },
+      "viewer": {
+        "x": 424,
+        "y": 57,
+        "w": 1016,
+        "h": 943,
+        "right": 1440,
+        "bottom": 1000
+      },
+      "overflow": 0,
+      "panelBg": "rgb(251, 252, 252)"
+    },
+    {
+      "mode": "studio",
+      "theme": "dark",
+      "header": {
+        "x": 0,
+        "y": 0,
+        "w": 1440,
+        "h": 56.5,
+        "right": 1440,
+        "bottom": 56.5
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 57,
+        "w": 420,
+        "h": 943,
+        "right": 420,
+        "bottom": 1000
+      },
+      "viewer": {
+        "x": 424,
+        "y": 57,
+        "w": 1016,
+        "h": 943,
+        "right": 1440,
+        "bottom": 1000
+      },
+      "overflow": 0,
+      "panelBg": "rgb(23, 36, 43)"
+    }
+  ],
+  "checks": [
+    "2 portals × 2 themes",
+    "344/412/700px phones",
+    "keyboard accordions and tabs",
+    "appearance persistence/system updates",
+    "mode-switch configuration retention",
+    "dialog focus",
+    "LED settings unclipped"
+  ]
+}

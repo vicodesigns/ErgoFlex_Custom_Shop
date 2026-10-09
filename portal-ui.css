@@ -1,0 +1,218 @@
+/* Store + Studio interface tokens. Scene lighting and controller geometry own
+   their appearance independently; these rules style only interface surfaces. */
+:root {
+    --portal-header-height: 56px;
+    --ui-page: #f2f5f4; --ui-panel: #fbfcfc; --ui-card: #fff; --ui-soft: #edf2f0;
+    --ui-text: #20332e; --ui-muted: #576d64; --ui-border: #d4dfda;
+    --ui-accent: #235b46; --ui-on-accent: #fff; --ui-selected: #e3f0e9; --ui-focus: #177952;
+    --ui-shadow: 0 8px 28px #152d2112; --ui-glass: #fbfcfcf5;
+    --ink: var(--ui-text); --muted: var(--ui-muted); --accent: var(--ui-accent); --line: var(--ui-border);
+}
+:root[data-portal-theme=dark] {
+    --ui-page: #101a20; --ui-panel: #17242b; --ui-card: #1e2e36; --ui-soft: #243740;
+    --ui-text: #ecf4f1; --ui-muted: #afc4bc; --ui-border: #3b515a;
+    --ui-accent: #93debb; --ui-on-accent: #122c22; --ui-selected: #2c4c40; --ui-focus: #a1e8c6;
+    --ui-shadow: 0 8px 28px #0003; --ui-glass: #17242bf5;
+}
+html[data-portal-theme] body { background: var(--ui-page); color: var(--ui-text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+html[data-portal-page=shop] .portal-header {
+    position: fixed; inset: 0 0 auto; z-index: 80; display: flex !important; align-items: center;
+    gap: 26px; min-height: 56px; padding: 8px 22px; background: var(--ui-panel) !important;
+    color: var(--ui-text); border-bottom: 1px solid var(--ui-border); box-shadow: 0 1px 8px #00000008;
+}
+.portal-brand { display: flex; align-items: baseline; gap: 13px; white-space: nowrap; }
+.portal-brand strong { font-size: 21px; letter-spacing: -.8px; }
+.portal-brand strong > span { font-size: 10px; vertical-align: super; color: var(--ui-muted); }
+.portal-brand small { font-size: 12px; color: var(--ui-muted); border-left: 1px solid var(--ui-border); padding-left: 13px; }
+.portal-modes { display: flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--ui-soft); }
+.portal-modes button { border: 0; padding: 7px 18px; font-size: 13px; font-weight: 600; border-radius: 7px; color: var(--ui-muted); }
+.portal-modes button[aria-pressed=true] { color: var(--ui-text); background: var(--ui-card); box-shadow: 0 1px 4px #0002; }
+.portal-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.portal-appearance { display: flex; align-items: center; gap: 7px; color: var(--ui-muted); border: 1px solid var(--ui-border); border-radius: 9px; padding: 0 10px; min-height: 36px; background: var(--ui-card); }
+.portal-appearance > span { font-size: 18px; }
+.portal-appearance select { cursor: pointer; background: transparent; color: var(--ui-text); border: 0; font: inherit; font-size: 12px; font-weight: 500; min-height: 34px; max-width: 86px; }
+.portal-action { display: flex; gap: 7px; align-items: center; position: relative; font-size: 12px; font-weight: 600; min-height: 36px; border: 1px solid var(--ui-border); border-radius: 9px; padding: 7px 11px; background: var(--ui-card); color: var(--ui-text); }
+.portal-action svg { width: 17px; height: 17px; }
+#cart-count { background: var(--ui-accent); color: var(--ui-on-accent); }
+.portal-mobile-nav { display: none; }
+.portal-skip { position: absolute; transform: translateY(-200%); padding: 10px 14px; background: var(--ui-accent); color: var(--ui-on-accent); border-radius: 8px; }
+.portal-skip:focus { transform: none; z-index: 2; }
+html[data-portal-page=shop] .portal-breadcrumb, html[data-portal-page=shop] #setup-exit-btn { display: none !important; }
+html[data-portal-page=shop] #setup-backdrop { background: var(--ui-page); }
+html[data-portal-page=shop] #setup-backdrop::after { content: none; }
+html[data-portal-page=shop] body.shell-layout :is(#setup-sidebar, #setup-resizer, #viewer-shell) { top: var(--portal-header-height) !important; }
+html[data-portal-page=shop] #setup-sidebar { background: var(--ui-panel); color: var(--ui-text); border-color: var(--ui-border); padding: 0 18px 36px; scrollbar-color: var(--ui-border) transparent; scroll-padding-top: 180px; }
+html[data-portal-page=shop] #setup-resizer { background: var(--ui-border); }
+html[data-portal-page=shop] #setup-resizer:is(:hover, :focus-visible, .dragging) { background: var(--ui-accent); }
+html[data-portal-page=shop] .studio-sidebar-header { margin: 0 -18px 20px; padding: 22px 22px 16px; background: var(--ui-glass); border-color: var(--ui-border); }
+.studio-sidebar-header .eyebrow { font-size: 10px; color: var(--ui-muted); letter-spacing: 1.4px; }
+.studio-sidebar-header h2 { color: var(--ui-text); font-size: 23px; line-height: 1.25; font-weight: 550; margin-bottom: 16px; }
+html[data-portal-theme] .studio-tabs { background: var(--ui-soft); border: 1px solid var(--ui-border); border-radius: 10px; }
+html[data-portal-theme] .studio-tabs button { font-size: 12px; min-height: 36px; color: var(--ui-muted); }
+html[data-portal-theme] .studio-tabs button[aria-pressed=true] { background: var(--ui-card); color: var(--ui-text); border-radius: 7px; }
+#portal-project-actions { display: flex; gap: 8px; margin-top: 12px; }
+#portal-project-actions button { border: 1px solid var(--ui-border); border-radius: 8px; font-size: 12px; padding: 8px 12px; min-height: 36px; background: var(--ui-card); color: var(--ui-text); }
+#portal-project-actions button:first-child { flex: 1; background: var(--ui-accent); border-color: var(--ui-accent); color: var(--ui-on-accent); font-weight: 600; display: flex; justify-content: space-between; }
+/* Consistent readable controls, including the dynamically generated editor. */
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) { color: var(--ui-text); font-size: 13px; line-height: 1.55; }
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) :is([class*=text-gray], [class*=text-green], [class*=text-purple], [class*=text-blue], .eyebrow, .studio-note, .finish-label, .finish-detail, .selected-trim-name, .finish-collection > p, .artwork-body p) { color: var(--ui-muted); }
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) :is(h1,h2,h3,h4,strong, .price-display, .finish-label, .accessory-name, .scene-asset-name) { color: var(--ui-text); }
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) :is([class*=bg-white], [class*=bg-gray], [class*=bg-green-50], [class*=bg-purple-50], [class*=bg-blue-50], .precision-tools, .scene-asset-tools, .scene-asset-card, .artwork-samples, .artwork-sample, .artwork-upload, .artwork-import, .collection-badge) { background-color: var(--ui-card); border-color: var(--ui-border); }
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) [class*=border-] { border-color: var(--ui-border); }
+html[data-portal-theme] #config-column h1 { font-size: 30px; letter-spacing: -1px; font-weight: 500; }
+html[data-portal-theme] #config-column p { line-height: 1.6; }
+html[data-portal-theme] .collection-badge { display: inline-block; border-radius: 6px; color: var(--ui-muted); }
+html[data-portal-theme] #config-column-content > .mb-8 { padding: 0 4px; }
+html[data-portal-theme] .config-header { padding: 18px; background: var(--ui-card); color: var(--ui-text); }
+html[data-portal-theme] .config-header h3 { font-size: 14px; }
+html[data-portal-theme] .config-header:hover { background: var(--ui-soft); }
+html[data-portal-theme] .config-content { background: var(--ui-card); }
+html[data-portal-theme] .config-content.expanded { max-height: none !important; overflow: visible; }
+html[data-portal-theme] .config-content > div { padding: 0 18px 22px; }
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) :is(input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]), select, textarea) { background: var(--ui-card); color: var(--ui-text); border: 1px solid var(--ui-border); border-radius: 8px; min-height: 36px; padding: 7px 9px; font-size: 12px; }
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) input::placeholder { color: var(--ui-muted); opacity: .8; }
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) button:not(.finish-swatch):not(.led-preset):not(.trim-choice) { min-height: 34px; border-radius: 8px; }
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) :is(.btn-secondary, .look-presets button, .precision-tools button, .project-tools button, .artwork-actions button, .artwork-samples button, .artwork-tabs button) { background: var(--ui-card); border-color: var(--ui-border); color: var(--ui-text); }
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) .btn-primary { background: var(--ui-accent); color: var(--ui-on-accent); }
+html[data-portal-theme] :is(#setup-sidebar, #cart-modal) :is(button[aria-pressed=true]:not(.led-preset):not(.finish-swatch), .size-choice.selected) { background: var(--ui-selected); border-color: var(--ui-accent); color: var(--ui-text); }
+html[data-portal-theme] .finish-detail { font-size: 11px; }
+html[data-portal-theme] .finish-label { font-size: 12px; }
+html[data-portal-theme] .trim-choice { color: var(--ui-text); background: var(--ui-card); border-color: var(--ui-border); padding: 10px 4px; font-size: 12px; }
+html[data-portal-theme] .finish-swatch.selected { border-color: var(--ui-accent); outline-color: var(--ui-accent); }
+html[data-portal-theme] :is(.premium-artwork, .artwork-samples, .artwork-body fieldset) { border-color: var(--ui-border); color: var(--ui-text); }
+html[data-portal-theme] .premium-artwork { background: var(--ui-card); border-radius: 12px; }
+html[data-portal-theme] .premium-artwork summary { font-size: 14px; min-height: 44px; }
+html[data-portal-theme] #setup-sidebar :is(.studio-note, .precision-hint, .scene-library-status, .scene-asset-note) { font-size: 12px; color: var(--ui-muted); }
+html[data-portal-theme] #setup-sidebar :is(.precision-tools, .scene-asset-tools) { padding: 15px; border: 1px solid var(--ui-border); border-radius: 12px; box-shadow: 0 1px 3px #00000005; }
+html[data-portal-theme] #setup-sidebar :is(#transform-inspector, #scene-asset-tools) { color: var(--ui-text); background: var(--ui-card); border-color: var(--ui-border); border-radius: 12px; }
+html[data-portal-theme] #setup-sidebar #transform-inspector :is(input,select) { padding: 4px; min-height: 30px; }
+html[data-portal-theme] #setup-sidebar #scene-library-grid { scrollbar-color: var(--ui-border) transparent; }
+html[data-portal-theme] #setup-sidebar .scene-asset-card { border-color: var(--ui-border); }
+html[data-portal-theme] #setup-sidebar .scene-asset-card:hover { border-color: var(--ui-accent); background: var(--ui-soft); }
+html[data-portal-theme] #setup-sidebar .scene-asset-card img { border-radius: 7px; }
+html[data-portal-theme] #setup-sidebar #debug-panel-header { font-size: 13px; color: var(--ui-text); }
+html[data-portal-theme] :is(button,a,input,select,summary,[tabindex]):focus-visible { outline: 3px solid var(--ui-focus); outline-offset: 3px; }
+html[data-portal-theme] input[type=range] { accent-color: var(--ui-accent); min-height: 20px; }
+html[data-portal-theme] :is(button,input,select):disabled { opacity: .5; }
+/* Viewer interface islands remain legible over every environment and daypart. */
+html[data-portal-page=shop] #viewer-shell .viewer-heading { top: 20px; left: 24px; right: 74px; }
+html[data-portal-page=shop] #viewer-shell .viewer-heading h2 { font-size: clamp(19px, 1.7vw, 26px); line-height: 1.2; font-weight: 500; text-shadow: 0 1px 8px #ffffff55; }
+html[data-portal-page=shop] #viewer-shell .viewer-heading p { font-size: 12px; }
+html[data-portal-theme] #viewer-shell .studio-toolbar { gap: 6px; }
+html[data-portal-theme] #viewer-shell :is(.studio-toolbar > label, .studio-toolbar > button, .render-settings summary, .room-scene-picker, .scene-options button, .room-object-controls button, .measured-room-controls button, .measured-room-controls select) {
+    background: var(--ui-card); color: var(--ui-text); border: 1px solid var(--ui-border); border-radius: 8px; font-size: 12px; min-height: 36px; padding: 7px 10px;
+}
+html[data-portal-theme] #viewer-shell .studio-toolbar > label > span { color: var(--ui-muted); font-size: 11px; }
+html[data-portal-theme] #viewer-shell :is(.measured-room-controls, .room-object-controls, .render-settings > div) { color: var(--ui-text); background: var(--ui-glass); border: 1px solid var(--ui-border); border-radius: 12px; box-shadow: var(--ui-shadow); padding: 12px; }
+html[data-portal-theme] #viewer-shell :is(.measured-room-controls p, .measured-room-controls label, .render-settings output, .render-settings #scene-light-name, .room-object-controls span) { color: var(--ui-muted); font-size: 12px; }
+html[data-portal-theme] #viewer-shell :is(.measured-room-controls button, .scene-options button, .studio-toolbar button)[aria-pressed=true] { color: var(--ui-on-accent); background: var(--ui-accent); border-color: var(--ui-accent); font-weight: 600; }
+html[data-portal-theme] #viewer-shell .render-settings select { background: var(--ui-card); color: var(--ui-text); }
+html[data-portal-theme] #viewer-shell #room-interaction-hint { background: var(--ui-glass); color: var(--ui-muted); border: 1px solid var(--ui-border); font-size: 12px; }
+html[data-portal-theme] #viewer-shell .absolute.top-4.right-4 button { background: var(--ui-card); color: var(--ui-text); border-color: var(--ui-border); }
+html[data-portal-theme] #cart-modal { background: #06120dcc; backdrop-filter: blur(8px); }
+html[data-portal-theme] #cart-modal > div { border: 1px solid var(--ui-border); background: var(--ui-card); color: var(--ui-text); border-radius: 20px; }
+html[data-portal-theme] .studio-toast { background: var(--ui-text); color: var(--ui-page); box-shadow: var(--ui-shadow); border-radius: 12px; font-size: 13px; }
+/* LED panels use the same palette, without altering the reference remote. */
+html[data-portal-theme] #led-command-center { color: var(--ui-text); }
+html[data-portal-theme] #led-command-center :is(.ledcc-sheet, .ledcc-card) { background: var(--ui-panel); color: var(--ui-text); border-color: var(--ui-border); }
+html[data-portal-theme] #led-command-center :is(.ledcc-segments, fieldset, details, .ledcc-mood, input:not([type=range]), select) { background: var(--ui-card); color: var(--ui-text); border-color: var(--ui-border); }
+html[data-portal-theme] #led-command-center :is(button, label, h3) { color: var(--ui-text); }
+html[data-portal-theme] #led-command-center :is(p, small, legend, .ledcc-subnav button, .ledcc-now) { color: var(--ui-muted); }
+html[data-portal-theme] #led-command-center :is(.ledcc-segments button, .ledcc-subnav button)[aria-pressed=true] { color: var(--ui-on-accent); background: var(--ui-accent); }
+html[data-portal-theme] #led-command-center :is(select,input) { color-scheme: inherit; }
+html[data-portal-theme] #led-command-center .ledcc-mood:hover { background: var(--ui-soft); border-color: var(--ui-accent); }
+html[data-portal-theme] #led-command-center button:focus-visible { outline-color: var(--ui-focus); }
+html[data-portal-page=demo] #event-demo :is(.demo-top, .demo-note) { color: var(--ui-text); }
+html[data-portal-page=demo] #event-demo :is(.demo-action, .demo-size button, #demo-backdrop) { background: var(--ui-card); color: var(--ui-text); border-color: var(--ui-border); }
+@media (max-width: 1050px) {
+    .portal-brand small { display: none; }
+    .portal-header { gap: 16px; }
+    .portal-action-label { display: none; }
+}
+@media (max-width: 760px) {
+    html[data-portal-page=shop] .portal-header { flex-wrap: wrap; gap: 7px 10px; padding: 8px 12px; }
+    .portal-brand strong { font-size: 20px; }
+    .portal-modes button { padding: 7px 12px; min-height: 34px; }
+    .portal-actions { gap: 6px; }
+    .portal-action { padding: 7px; min-width: 34px; }
+    .portal-appearance { padding: 0 6px; gap: 4px; }
+    .portal-appearance > span { display: none; }
+    .portal-appearance select { font-size: 12px; max-width: 66px; }
+    .portal-mobile-nav { display: flex; flex: 1 0 100%; gap: 8px; border-top: 1px solid var(--ui-border); padding-top: 7px; }
+    .portal-mobile-nav button { flex: 1; border-radius: 7px; background: var(--ui-soft); color: var(--ui-text); padding: 7px; font-size: 12px; min-height: 34px; }
+    html[data-portal-page=shop] body.shell-layout { overflow-y: auto; overflow-x: hidden; padding-top: var(--portal-header-height); }
+    html[data-portal-page=shop] body.shell-layout #viewer-shell { top: auto !important; margin-top: 12px !important; height: 780px !important; min-height: 780px !important; }
+    html[data-portal-page=shop] body.shell-layout #setup-sidebar { top: auto !important; padding: 18px 16px 36px; border-top: 1px solid var(--ui-border); }
+    html[data-portal-page=shop] :is(#viewer-shell, #setup-sidebar) { scroll-margin-top: calc(var(--portal-header-height) + 12px); }
+    html[data-portal-page=shop] .studio-sidebar-header { position: static; margin: -18px -16px 20px; padding: 22px 20px; }
+    html[data-portal-page=shop] #viewer-shell .viewer-heading { top: 18px; left: 16px; right: 58px; }
+    html[data-portal-page=shop] #viewer-shell .viewer-heading h2 { font-size: 21px; }
+    html[data-portal-page=shop] #viewer-shell .viewer-heading p { font-size: 11px; }
+    html[data-portal-theme] #viewer-shell .viewer-controls { left: 12px; right: 12px; top: 116px; }
+    html[data-portal-theme] #viewer-shell .studio-toolbar { padding-right: 42px; }
+    html[data-portal-theme] #viewer-shell :is(.studio-toolbar > button, .studio-toolbar > label, .render-settings summary) { font-size: 11px; padding: 7px; min-height: 36px; }
+    html[data-portal-theme] #viewer-shell .measured-room-controls { gap: 10px; padding: 10px; }
+    html[data-portal-theme] #viewer-shell .measured-room-controls button { min-height: 40px; }
+    html[data-portal-theme] #setup-sidebar :is(select, input:not([type=range]):not([type=checkbox]):not([type=radio]), button:not(.finish-swatch):not(.led-preset)) { min-height: 40px; }
+    html[data-portal-theme] #setup-sidebar :is(input[type=text], input[type=search], input[type=number], select) { font-size: 16px; }
+    html[data-portal-theme] #setup-sidebar #transform-inspector input { min-height: 32px; font-size: 13px; }
+    html[data-portal-theme] #cart-modal > div { padding: 24px; }
+}
+@media (max-width: 380px) {
+    .portal-brand strong { font-size: 17px; }
+    .portal-header .portal-modes button { padding: 7px 9px; }
+    .portal-actions { gap: 4px; }
+    .portal-appearance select { max-width: 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    html[data-portal-theme] :is(.config-content, .finish-swatch, .scene-options button) { transition: none; }
+}
+html[data-portal-theme] #setup-sidebar .scene-library-card { background: var(--ui-card) !important; border-color: var(--ui-border) !important; padding: 7px !important; border-radius: 9px; }
+html[data-portal-theme] #setup-sidebar .scene-library-card:hover { background: var(--ui-soft) !important; border-color: var(--ui-accent) !important; }
+html[data-portal-theme] #setup-sidebar .scene-library-card span { color: var(--ui-text); font-size: 11px; }
+html[data-portal-theme] #setup-sidebar .scene-library-card small { color: var(--ui-muted); font-size: 9px; }
+html[data-portal-theme] #setup-sidebar .scene-library-card img { background: var(--ui-soft); }
+html[data-portal-theme] #setup-sidebar :is(.artwork-sample span, .artwork-sample small, .premium-artwork summary, .artwork-body legend) { color: var(--ui-text); }
+html[data-portal-theme] #led-command-center :is(.ledcc-dj-card, .led-playback) { background: var(--ui-card); color: var(--ui-text); border-color: var(--ui-border); }
+html[data-portal-theme] #led-command-center button:not(.led-preset):not([aria-pressed=true]) { background-color: var(--ui-card); border-color: var(--ui-border); }
+html[data-portal-page=shop] #viewer-shell .viewer-heading { width: fit-content; max-width: calc(100% - 100px); padding: 10px 14px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-glass); box-shadow: var(--ui-shadow); }
+html[data-portal-page=shop] #viewer-shell .viewer-heading :is(h2,p,.eyebrow) { color: var(--ui-text) !important; text-shadow: none; }
+html[data-portal-page=shop] #viewer-shell .viewer-heading .eyebrow { margin-bottom: 5px; color: var(--ui-muted) !important; }
+html[data-portal-theme] #viewer-shell :is(#room-scene-select, .camera-shortcuts button) { background: var(--ui-card); color: var(--ui-text); border: 1px solid var(--ui-border); border-radius: 8px; font-size: 12px; min-height: 36px; padding: 7px 10px; }
+html[data-portal-theme] #viewer-shell :is(#room-save-status, .scenes-label, #room-scene-caption) { color: var(--ui-text); background: var(--ui-glass); border-radius: 6px; padding: 5px 7px; font-size: 11px; width: fit-content; }
+html[data-portal-theme] #viewer-shell .measured-room-controls :is(span,output) { color: var(--ui-muted); }
+html[data-portal-theme] #setup-sidebar .scene-library-card { height: auto !important; min-height: 106px !important; }
+html[data-portal-page=shop] #portal-build-summary { position: sticky; bottom: -36px; z-index: 6; margin: 20px -18px -36px; display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: var(--ui-glass); backdrop-filter: blur(12px); border-top: 1px solid var(--ui-border); box-shadow: 0 -5px 18px #00000008; }
+#portal-build-summary > div { display: grid; gap: 1px; flex: 1; min-width: 0; }
+#portal-build-summary small { font-size: 10px; color: var(--ui-muted); }
+#portal-build-summary strong { color: var(--ui-text); font-size: 20px; font-weight: 600; letter-spacing: -.5px; }
+html[data-portal-theme] #setup-sidebar #portal-build-summary button { min-height: 40px; background: var(--ui-accent); color: var(--ui-on-accent); padding: 10px 12px; border-radius: 9px; font-size: 12px; font-weight: 650; display: flex; gap: 8px; align-items: center; }
+html[data-portal-theme] #led-command-center button[aria-pressed=true]:not(.led-preset) { background: var(--ui-accent); color: var(--ui-on-accent); border-color: var(--ui-accent); }
+@media (max-width:760px) { html[data-portal-page=shop] #portal-build-summary { margin-inline: -16px; bottom: 0; } }
+html[data-portal-theme] #setup-sidebar :is(.preset-card, .accessory-row, .accessory-empty, .build-summary) { color: var(--ui-text); background: var(--ui-card); border-color: var(--ui-border); }
+html[data-portal-theme] #setup-sidebar .preset-card:hover { background: var(--ui-soft); border-color: var(--ui-accent); }
+html[data-portal-theme] #setup-sidebar :is(.preset-card p, .accessory-intro, .accessory-description, .accessory-brand, .accessory-source, .validation-block summary, .cart-accessories) { color: var(--ui-muted); }
+html[data-portal-theme] #setup-sidebar :is(.preset-card strong, .preset-card span, .accessory-price) { color: var(--ui-text); }
+html[data-portal-theme] #setup-sidebar :is(.accessory-art, .accessory-filters) { background: var(--ui-soft); }
+html[data-portal-theme] #setup-sidebar .accessory-row.is-selected { background: var(--ui-selected); border-color: var(--ui-accent); }
+html[data-portal-theme] #setup-sidebar .scene-current-item { background: var(--ui-card); color: var(--ui-text); border-color: var(--ui-border); font-size: 11px !important; }
+html[data-portal-theme] #setup-sidebar .scene-current-item[aria-pressed=true] { background: var(--ui-selected) !important; color: var(--ui-text); border-color: var(--ui-accent) !important; }
+html[data-portal-theme] #setup-sidebar .preset-card small { color: var(--ui-muted); }
+html[data-portal-theme] #setup-sidebar :is(.led-map-diagnostic button, .led-playback-controls button) { background: var(--ui-card); color: var(--ui-text); border-color: var(--ui-border); }
+html[data-portal-theme] #setup-sidebar .artwork-upload input::file-selector-button { background: var(--ui-accent); color: var(--ui-on-accent); }
+html[data-portal-theme] #setup-sidebar :is(.artwork-badge, .accessory-add, .price-breakdown) { border-color: var(--ui-border); }
+html[data-portal-theme] #cart-modal :is(.cart-row, .price-breakdown) { border-color: var(--ui-border); }
+html[data-portal-theme] #cart-modal :is(.cart-accessories, .cart-preview, .cart-row small) { color: var(--ui-muted); }
+@media (max-width:760px) {
+    html[data-portal-page=shop] .portal-header { display: grid !important; grid-template-columns: auto minmax(0,1fr); gap: 7px 10px; }
+    .portal-header .portal-brand { grid-row: 1; grid-column: 1; }
+    .portal-header .portal-actions { grid-row: 1; grid-column: 2; margin: 0; justify-self: end; }
+    .portal-header .portal-modes { grid-row: 2; grid-column: 1; justify-self: start; }
+    .portal-header .portal-mobile-nav { grid-row: 2; grid-column: 2; min-width: 0; border: 0; padding: 0; gap: 6px; }
+    .portal-header .portal-mobile-nav button { padding: 7px 5px; font-size: 11px; }
+}
+html[data-portal-page=demo] body { background: var(--ui-page) !important; }
+html[data-portal-theme] #ar-help-modal { background: #06100e99; backdrop-filter: blur(8px); }
+html[data-portal-theme] #ar-help-modal > div { background: var(--ui-card); color: var(--ui-text); border: 1px solid var(--ui-border); border-radius: 18px; }
+html[data-portal-theme] #ar-help-modal :is(h3,p,a) { color: var(--ui-text); }
+html[data-portal-theme] #ar-help-modal .btn-primary { background: var(--ui-accent); color: var(--ui-on-accent); }

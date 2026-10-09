@@ -14,7 +14,7 @@ RELEASE = 'remote-header-wrap-20261006'
 WEBSITE_ZIP = 'ergoflex-explore-3d-remote-header-20261006.zip'
 FILES = (
     'product-demo.html', 'product-demo.css', 'product-demo.js',
-    'studio.js', 'studio.css', 'app-remote.css', 'ar-workspace.mjs', 'apple-ar-interactions.mjs', 'led-effects.mjs', 'led-strip-map.mjs', 'led-pixel-renderer.mjs',
+    'studio.js', 'studio.css', 'portal-ui.mjs', 'portal-ui.css', 'app-remote.css', 'ar-workspace.mjs', 'apple-ar-interactions.mjs', 'led-effects.mjs', 'led-strip-map.mjs', 'led-pixel-renderer.mjs',
     'led-movement.mjs', 'led-sounds.mjs', 'led-game-mode.mjs', 'led-game-frames.mjs',
     'led-music-mode.mjs', 'led-showcase-effects.mjs', 'led-auto-dj.mjs', 'led-dj-overlay.mjs', 'led-command-center.mjs', 'led-custom-presets.mjs', 'led-saved-library.mjs',
     'catalog.mjs', 'artwork-config.mjs', 'surface-artwork.mjs', 'project-io.mjs', 'validation.mjs', 'motion-limits.mjs',

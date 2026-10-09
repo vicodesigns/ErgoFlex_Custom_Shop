@@ -1,4 +1,4 @@
-import { LedCommandCenter } from './led-command-center.mjs?v=desktop-bands-back-20261005';
+import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261008';
 import { normalizeCustomLook, normalizeCustomPalette, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=institutional-sweep-20261009';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=institutional-sweep-20261009';
@@ -802,7 +802,7 @@ function makeCollapsible(sectionId, { storageKey = null, defaultCollapsed = fals
 window.toggleSection = function(sectionId) {
     const entry = collapsibles.get(sectionId);
     const content = document.getElementById(`${sectionId}-content`);
-    const collapsed = entry ? entry.collapsed : content?.classList.contains('expanded');
+    const collapsed = entry ? entry.collapsed : !content?.classList.contains('expanded');
     setCollapsed(sectionId, !collapsed);
 }
 

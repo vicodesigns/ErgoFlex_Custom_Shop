@@ -206,9 +206,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+    <script>
+        try {
+            const choice = localStorage.getItem('ergoflex.portal.theme.v1') || 'system';
+            document.documentElement.dataset.portalTheme = choice === 'dark' || (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            document.documentElement.style.colorScheme = document.documentElement.dataset.portalTheme;
+        } catch {}
+    </script>
     <link rel="stylesheet" href="studio.css?v=institutional-sweep-20261009">
     <link rel="stylesheet" href="app-remote.css?v=humboldt-artwork-20261008">
-<link rel="stylesheet" href="./product-demo.css?v=desktop-bands-back-20261005"></head>
+    <link rel="stylesheet" href="./product-demo.css?v=desktop-bands-back-20261005">
+    <link rel="stylesheet" href="portal-ui.css?v=portal-polish-20261008">
+</head>
 <body class="bg-white">
     <!-- Header -->
     <header class="bg-white border-b border-gray-200">
@@ -736,6 +745,7 @@
     }
     </script>
 
+    <script type="module" src="./portal-ui.mjs?v=portal-polish-20261008"></script>
     <script type="module" src="./studio.js?v=institutional-sweep-20261009"></script>
     <script>
         // Classic script: runs before the deferred module above. Browsers refuse to

@@ -123,11 +123,16 @@ export class LedCommandCenter {
     fitToApp(){
         if(this.root.hidden)return;
         const dock=document.getElementById('motion-dock'),box=dock?.getBoundingClientRect();if(!box)return;
-        // Cover the controller footprint, keeping the model and camera view clear.
+        // Keep the controller's horizontal placement, with room to browse settings
+        // even when the remote is minimized. Anchor the sheet inside the viewport.
         const slot=dock.closest('#demo-remote'),area=slot?.getBoundingClientRect()||box;
-        const width=Math.min(area.width,innerWidth),height=Math.max(120,area.height);
-        this.root.style.left=Math.max(0,Math.min(area.left,innerWidth-width))+'px';
-        this.root.style.top=area.top+'px';this.root.style.width=width+'px';this.root.style.height=height+'px';
+        const header=document.querySelector('.portal-header'),headerBox=header?.getBoundingClientRect();
+        const safeTop=headerBox&&getComputedStyle(header).display!=='none'?Math.max(12,headerBox.bottom+12):12;
+        const width=Math.min(area.width,innerWidth-24);
+        const height=Math.min(Math.max(area.height,Math.min(440,innerHeight*.58)),Math.max(80,innerHeight-safeTop-12));
+        const bottom=Math.min(innerHeight-12,Math.max(safeTop+height,area.bottom));
+        this.root.style.left=Math.max(12,Math.min(area.left,innerWidth-width-12))+'px';
+        this.root.style.top=(bottom-height)+'px';this.root.style.width=width+'px';this.root.style.height=height+'px';
         this.root.dataset.compact=String(width<700||height<260);
     }
     close(){this.root.hidden=true;clearInterval(this.timer);document.body.append(this.root);document.querySelector('.hub-led')?.setAttribute('aria-expanded','false');this.returnFocus?.isConnected&&this.returnFocus.focus({preventScroll:true});}
