@@ -22,6 +22,8 @@ const server = http.createServer((req, res) => {
         page.on('console', m => { if(m.type() === 'error' && /Shader Error|VALIDATE_STATUS|WebGLProgram/.test(m.text())) errors.push(m.text()); });
         await page.setViewport({ width: 1500, height: 1200 });
         await page.goto(`http://127.0.0.1:${server.address().port}/?room=home&view=room`, { timeout: 120000 });
+        await page.waitForFunction(() => window.ErgoFlex?.renderer, { timeout: 120000 });
+        await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(.4); ErgoFlex.renderer.setAnimationLoop(null); });
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; });
         const names = { home: 'Home', gaming: 'Gaming', music: 'Music', creative: 'Artist', study: 'Study', office: 'Office', gym: 'Gym', kitchen: 'Kitchen', lounge: 'Lounge', workshop: 'Workshop', bedroom: 'Bedroom', gallery: 'Gallery', scifi: 'Scifi', coworking: 'Coworking', library: 'Library' };

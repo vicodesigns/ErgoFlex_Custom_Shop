@@ -1612,6 +1612,8 @@
 #motion-dock.app-remote.remote-compact #motion-dock-toggle {position:absolute;left:340px;top:0;width:40px;height:13px;margin:0;border:0;background:none;color:transparent;font-size:0}
 #motion-dock.app-remote.remote-compact #motion-dock-toggle::after {content:'';position:absolute;width:38px;height:4px;left:1px;top:8px;border-radius:3px;background:#818589}
 #motion-dock.app-remote.remote-compact #motion-dock-toggle:focus-visible {outline:2px solid #789ced;outline-offset:0}
+#motion-dock.app-remote.remote-compact[data-mode="floating"] #motion-dock-toggle {cursor:grab;touch-action:none}
+#motion-dock.app-remote.remote-compact .remote-header.dragging #motion-dock-toggle {cursor:grabbing}
 #motion-dock.app-remote.remote-compact .remote-card {position:relative;padding:8px 9px;border-radius:18px}
 #motion-dock.app-remote.remote-compact .remote-card-heading {height:29px;flex:none;align-items:center}
 #motion-dock.app-remote.remote-compact .remote-heading {font-size:9px;letter-spacing:1.35px}

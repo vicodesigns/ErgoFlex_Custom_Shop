@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { HOME_LAYOUTS } from './home-office.mjs?v=asset-packs-20261001';
+import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
 
 // The same measured room tiers as Home Office, with independent furnishings
 // and saved edits. All dimensions are millimetres; props retain their size.

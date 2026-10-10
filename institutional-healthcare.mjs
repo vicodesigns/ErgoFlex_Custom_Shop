@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { institutionalMap, rnd, boardFrame, detailKit, notebook, plant } from './institutional-detail.mjs?v=institutional-finish-20261009';
+import { institutionalMap, rnd, boardFrame, detailKit, notebook, plant } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
 
 // Healthcare group: `hospital` Hospital workspace and `laboratory` Science
 // laboratory (kinds hospital / lab). This module owns the group's registry

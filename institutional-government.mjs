@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { institutionalMap, rnd, boardFrame, boardColumns, screenHeader, screenFooter, detailKit, notebook, plant, workstationDetail } from './institutional-detail.mjs?v=institutional-finish-20261009';
+import { institutionalMap, rnd, boardFrame, boardColumns, screenHeader, screenFooter, detailKit, notebook, plant, workstationDetail } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
 
 // Government group: `government` Government office, `police` Police / PD,
 // `security` Security operations (kinds government / police / operations).
@@ -59,11 +59,11 @@ const LIGHT = {
         modes: [lmode('#f6efe2', '#d6e6ee', ['#a9cfe3', '#f0e4cc'], 1.2, .38, 1.08, .35, .3, .62, ['#f6ecdc', '#a9c6c8']),
             lmode('#f3f6fb', '#dde9f0', ['#8fc0dc', '#e2eef1'], 1.25, .4, 1.06, .3, .22, .66, ['#eef2f2', '#a3c4c8']),
             lmode('#ffcf9e', '#c9d3e8', ['#6f7fa7', '#f0b285'], .55, .26, 1.12, .55, .25, .46, ['#ffe3c0', '#8fb3b6'], '#1a4f57'),
-            lmode('#9fb6d6', '#8aa4c2', ['#0e1d30', '#28405a'], .14, .15, 1.22, .55, .09, .28, ['#ffe2bf', '#5f8f98'], '#1d5961'),
+            lmode('#9fb6d6', '#8aa4c2', ['#0e1d30', '#28405a'], .14, .15, 1.22, .55, .09, .28, ['#ffe2bf', '#5f8f98'], '#184047'),
             // Team handover 16:00: warm late sun under raised blinds, briefing bench lit.
             lmode('#ffe1c0', '#d3dfe6', ['#9fc0d3', '#f2d6b2'], 1.05, .36, 1.08, .72, .4, .6, ['#f8e6cc', '#a6cacb'], '#3c6763')],
         view: [.8, .85, .72, 1, .9], sun: [.14, .09, .08, 0, .2], ceiling: ['#e9f3f4', [[.4, .35, .3, .02, .6]]], desk: [.8, .8, .75, .62, .85],
-        lamps: [[.38, .14, .3, .08, .62], [.1, .08, .38, .42, .24]], glow: [.75, .7, .55, .95, .9], screens: [.2, .2, .2, .22, .21], station: [.34, .34, .32, .28, .34]
+        lamps: [[.38, .14, .3, .08, .62], [.1, .08, .38, .42, .24]], glow: [.75, .7, .55, .95, .9], screens: [.2, .2, .18, .16, .21], station: [.34, .34, .32, .28, .34]
     },
     police: {
         // Squad room: 4000K suspended linears, desk task pools, a picture-light
@@ -71,23 +71,23 @@ const LIGHT = {
         modes: [lmode('#fff0dc', '#dceaf0', ['#bad8e5', '#f5e6ca'], 1.45, .42, 1.06, .35, .22, .7, ['#f1eee6', '#a9bdc8']),
             lmode('#f0f7ff', '#e1edf2', ['#94c5de', '#e4eff1'], 1.5, .45, 1.04, .4, .2, .76, ['#eef2f2', '#a3b9c4']),
             lmode('#ffd2a6', '#cdd6ea', ['#ba96a4', '#f0c89e'], .62, .27, 1.1, .74, .3, .5, ['#ffe6c8', '#a7b4c2'], '#2a4c53'),
-            lmode('#b8cde8', '#a2bcd6', ['#132842', '#36506a'], .22, .2, 1.24, .7, .14, .3, ['#fbe2c2', '#7f97ab'], '#27474e'),
+            lmode('#b8cde8', '#a2bcd6', ['#132842', '#36506a'], .22, .2, 1.24, .7, .14, .3, ['#fbe2c2', '#7f97ab'], '#253238'),
             // Team briefing 16:00: warm late-afternoon light, every practical on.
             lmode('#ffe3c6', '#d5e1ea', ['#a6c4d6', '#f0d6b4'], 1.2, .4, 1.07, .84, .4, .62, ['#fbe8d0', '#aac3c9'])],
         view: [.85, .9, .75, .7, .9], sun: [.1, .07, .11, 0, .15], ceiling: ['#f4f6f2', [[.55, .5, .72, .5, .85], [.55, .5, .72, .08, .85], [.55, .5, .72, .08, .85]]], desk: [1, 1, .65, .8, .9],
-        lamps: [[.3, .2, .55, .1, .62], [.14, .16, .55, .58, .4]], glow: [1, 1, 1, 1, 1], screens: [.18, .18, .19, .2, .2], station: [.32, .32, .3, .3, .32]
+        lamps: [[.3, .2, .55, .1, .62], [.14, .16, .55, .58, .4]], glow: [1, 1, 1, 1, 1], screens: [.18, .18, .18, .16, .2], station: [.32, .32, .3, .3, .32]
     },
     government: {
         // Service centre: oak-trimmed suspended linears, opal globes over the
         // counters, a wall-washer on the service board, a gallery picture light.
         modes: [lmode('#ffeed8', '#dceaf0', ['#bad8e5', '#f5e6ca'], 1.5, .42, 1.06, .28, .22, .7, ['#fff0dc', '#c9d3c0']),
             lmode('#f2f6fb', '#e1edf2', ['#94c5de', '#e4eff1'], 1.55, .46, 1.04, .35, .2, .76, ['#fbf4e8', '#c3d0c2']),
-            lmode('#ffd6ac', '#d7deee', ['#ba96a4', '#f0c89e'], .7, .28, 1.1, .78, .4, .5, ['#ffe2bd', '#d6c6ad'], '#5a4630'),
+            lmode('#ffd6ac', '#d7deee', ['#ba96a4', '#f0c89e'], .7, .28, 1.1, .78, .4, .5, ['#ffe2bd', '#d6c6ad'], '#3d352c'),
             lmode('#c3d7ee', '#a9c8e1', ['#172c47', '#3c5265'], .22, .19, 1.24, .58, .2, .3, ['#ffdcb0', '#8ea3b4']),
             // Team workshop 16:00: warm late sun through half-drawn sheers, globes and pendants on.
             lmode('#ffe4c6', '#d9e0ea', ['#a7c4d8', '#f2d6b4'], 1.2, .4, 1.07, .86, .45, .62, ['#ffe6c4', '#d6ccb4'])],
         view: [.85, .9, .78, .72, .9], sun: [.11, .08, .12, 0, .16], ceiling: ['#fff1dc', [[.42, .36, .62, .22, .72], [.42, .36, .62, .03, .72], [.42, .36, .62, .03, .72]]], desk: [1, 1, .58, .9, .9],
-        lamps: [[.26, .16, .52, .05, .66], [.14, .14, .55, .58, .4]], glow: [1, 1, 1, 1, 1], screens: [.18, .18, .19, .2, .2], station: [.3, .3, .3, .26, .3]
+        lamps: [[.26, .16, .52, .05, .66], [.14, .14, .55, .58, .4]], glow: [1, 1, 1, 1, 1], screens: [.18, .18, .18, .16, .2], station: [.3, .3, .3, .26, .3]
     }
 };
 // Main desk pose per daypart [height in, tilt deg, yaw deg, offset [x, z] mm],
@@ -1356,7 +1356,8 @@ function sunPatch(kit) {
         for (let i = 0; i < pos.count; i++) {
             // uv.y = 1 at the window head (2600), 0 at the sill (800).
             const y = 800 + uv.getY(i) * 1800, z = z0 - half + uv.getX(i) * half * 2, t = y / elevation, x = -w / 2 + 25 + t, zz = z + sweep * t;
-            const inside = x < w / 2 - 40 && zz > bz + 30 && zz < front - 30 ? 1 - .25 * uv.getY(i) : 0, through = y > bottom + 40 ? pass : y > bottom - 40 ? pass + (1 - pass) * (bottom + 40 - y) / 80 : 1;
+            const edge = Math.min(w / 2 - 40 - x, zz - bz - 30, front - 30 - zz);
+            const inside = THREE.MathUtils.smoothstep(edge, 0, 420) * (1 - .25 * uv.getY(i)) / (1 + t / 7000), through = y > bottom + 40 ? pass : y > bottom - 40 ? pass + (1 - pass) * (bottom + 40 - y) / 80 : 1;
             pos.setXYZ(i, Math.min(x, w / 2 - 40), 10, THREE.MathUtils.clamp(zz, bz + 30, front - 30)); col.setXYZ(i, inside * through, inside * through, inside * through);
         }
         pos.needsUpdate = col.needsUpdate = true; geo.computeBoundingSphere();

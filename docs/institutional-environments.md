@@ -907,3 +907,49 @@ Evidence: `/tmp/ef-environment-finish-20261009/`; full test log:
 `institutional-finish-20261009`. The agreed materials/lighting handoff is
 complete. The original Office/Library LED tint, shared evening sun bands and
 Studio viewport panel remain separate decisions in the handoff document.
+
+### Government group · follow-up lighting review · 9 October 2026
+
+Security operations, Police and Government retain their completed layouts,
+station roles and material detail. This follow-up softens each projected sun
+patch over its final 420 mm at cutaway edges and attenuates distant window
+light. Overnight desk colors and screen emission are more restrained; the
+Government evening desk cue is also darker. Existing real lights, blinds,
+furniture bounds and stable object keys are retained.
+
+Principal review covered all **45 wide views**: three environments × three
+sizes × five dayparts. Daytime work surfaces remain readable, while night
+views separate local task lighting from subdued displays and cool ambient
+fill. The full institutional suite passed its 12 scenes, 24 layouts and 120
+lighting/Groove settings, including project restoration and mobile layout.
+
+Review evidence: `/tmp/ef-remaining-environments-20261009/after/`; test log:
+`/tmp/ef-remaining-environments-20261009/institutional-test.log`. Current cache
+revision: `environment-polish-20261009`.
+
+### Educational group · follow-up lighting review · 9 October 2026
+
+All six school stages retain their completed furnishings, teaching materials,
+window views and desk roles. Their afternoon/window pools have smoother edge
+fades and distance attenuation; the low sunset pool is less intense, and the
+night window wash is reduced. Neutral, low-value warm desk LED defaults keep
+the Black Birch finish readable in after-hours modes. The five existing real
+point lights and all furniture bounds remain unchanged.
+
+Principal review covered **30 wide views**: Kindergarten through University
+× five dayparts at each stage's authored size. Early stages retain the warmer
+activity areas, while older stages retain their teaching/workstation character.
+Night views preserve local work light without the stronger colored desktop
+wash. The full institutional suite passed its lighting/Groove, bounds,
+interaction registration, project restoration and mobile-layout checks.
+
+Review evidence: `/tmp/ef-remaining-environments-20261009/after/`; test log:
+`/tmp/ef-remaining-environments-20261009/institutional-test.log`. Current cache
+revision: `environment-polish-20261009`.
+# October 10 desk styling verification
+
+Current scene palettes and daily desk materials are described in
+`scene-desk-styling-20261010.md`. All 12 institutional environments, 24 layouts
+and 120 daypart settings passed the institutional regression. All 120 wide
+views and final afternoon/night desktop close-ups for the 12 environments
+were inspected. Stable prop keys, roles and layout dimensions are retained.

@@ -24,6 +24,7 @@
     "test:library": "node tests/library-room-test.cjs",
     "test:room-lighting": "node tests/room-lighting-test.cjs",
     "test:room-life": "node tests/room-life-test.cjs",
+    "test:scene-desk-styles": "node tests/room-desk-styles-test.cjs",
     "test:room-groove": "node tests/room-groove-planner-test.cjs && node tests/room-groove-test.cjs",
     "test:led-effects": "node tests/led-effects-test.cjs",
     "test:led-pixels": "node tests/led-pixels-test.cjs",

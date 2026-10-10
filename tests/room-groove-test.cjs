@@ -20,7 +20,9 @@ const server = http.createServer((req, res) => {
         const page = await browser.newPage(), errors = [];
         page.on('pageerror', e => errors.push(e.message));
         await page.setViewport({ width: 1500, height: 1200 });
-        await page.goto(`http://127.0.0.1:${server.address().port}/?room=home&view=room`);
+        await page.goto(`http://127.0.0.1:${server.address().port}/?room=home&view=room`, { waitUntil: 'domcontentloaded' });
+        await page.waitForFunction(() => window.ErgoFlex?.renderer, { timeout: 120000 });
+        await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(.4); });
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; });
         await page.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;});
@@ -28,7 +30,11 @@ const server = http.createServer((req, res) => {
         await page.click('#home-office-controls [data-groove-start]');
         await page.waitForFunction(()=>['clearance','driving','posture'].includes(ErgoFlex.grooveState.status),{timeout:30000});
         await page.evaluate(()=>ErgoFlex.haltAllMotion());
-        assert.equal(await page.$$eval('.measured-room-controls [title^="Prepare "]',buttons=>buttons.length),75,'Every room daily setting advertises its Groove');
+        const sceneIds = await page.evaluate(async () => (await import('./workspace-3d.mjs?v=scene-desk-styling-20261010')).ROOM_SCENES.filter(s => s.id !== 'product').map(s => s.id));
+        for (const id of sceneIds) {
+            const panel = id === 'home' ? 'home-office-controls' : `${id}-room-controls`;
+            assert.equal(await page.$$eval(`#${panel} [title^="Prepare "]`, buttons => buttons.length), 5, `${id}: every daily setting advertises its Groove`);
+        }
 
         for (const id of ((process.argv.includes('--wide') || process.argv.includes('--tap')) ? [] : ['home','gaming','music','creative','study','office','gym','kitchen','lounge','workshop','bedroom','gallery','scifi','coworking','library'])) {
             const result = await page.evaluate(async id => {
@@ -87,17 +93,20 @@ const server = http.createServer((req, res) => {
             const {segmentIsClear,poseIsClear}=await import('./room-groove.mjs');
             const {roomLifeBaseTransform}=await import('./room-life.mjs');
             const baseOf=o=>roomLifeBaseTransform(o,{p:{...o.position},q:{x:o.quaternion.x,y:o.quaternion.y,z:o.quaternion.z,w:o.quaternion.w},s:{...o.scale}}).p;
-            const size=document.getElementById('size-select'); size.value='60x30';size.dispatchEvent(new Event('change',{bubbles:true}));
-            await ErgoFlex.workspaceRoom.ready;
+            const size=document.getElementById('size-select');
             const results=[];
             for(const [id,method] of [['bedroom','setBedroomLayout'],['office','setOfficeLayout'],['library','setLibraryLayout']]) {
                 for(const layout of ['apartment','house','spacious','premium','executive']) {
                     ErgoFlex[method](layout); await ErgoFlex.workspaceRoom.ready;
+                    // Room changes choose their authored 48/60-inch default.
+                    // Exercise a visitor's explicit 60-inch override in every size.
+                    size.value='60x30';size.dispatchEvent(new Event('change',{bubbles:true}));
+                    await ErgoFlex.workspaceRoom.ready;
                     const objects=ErgoFlex.workspaceRoom.life.entries.flatMap(e=>e.objects).filter(o=>o.parent),before=objects.map(baseOf);
                     await ErgoFlex.prepareGrooveMode(id,'morning');
                     const baseDrift=Math.max(0,...objects.flatMap((o,i)=>Object.keys(before[i]).map(k=>Math.abs(baseOf(o)[k]-before[i][k]))));
                     const s=ErgoFlex.grooveState,d=ErgoFlex.grooveRouting;
-                    results.push({id,layout,baseDrift,ok:s.plan.ok,safe:s.plan.ok&&s.plan.route.slice(1).every((p,i)=>segmentIsClear(s.plan.route[i],p,d.bounds,d.obstacles,d.footprint)),message:s.message,width:d.footprint.halfWidth*2,colliders:d.obstacles.filter(o=>!poseIsClear(d.start,{minX:-1e8,maxX:1e8,minZ:-1e8,maxZ:1e8},[o],d.footprint)).map(o=>o.name)});
+                    results.push({id,layout,baseDrift,ok:s.plan.ok,safe:s.plan.ok&&s.plan.route.slice(1).every((p,i)=>segmentIsClear(s.plan.route[i],p,d.bounds,d.obstacles,d.footprint)),message:s.message,width:d.footprint.halfWidth*2,start:d.start,bounds:d.bounds,footprint:d.footprint,colliders:d.obstacles.filter(o=>!poseIsClear(d.start,{minX:-1e8,maxX:1e8,minZ:-1e8,maxZ:1e8},[o],d.footprint)).map(o=>o.name)});
                 }
             }
             return results;

@@ -1,18 +1,19 @@
 import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261008';
 import { normalizeCustomLook, normalizeCustomPalette, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
-import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=institutional-finish-20261009';
-import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=institutional-finish-20261009';
+import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { RoomGroove } from './room-groove-runtime.mjs?v=groove-save-20261007';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=institutional-finish-20261009';
+import { RoomInteractions } from './room-interactions.mjs?v=scene-desk-styling-20261010';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
-import { roomPolishLighting } from './room-polish.mjs?v=institutional-finish-20261009';
+import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261010';
+import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-desk-styling-20261010';
 import { RoomLedSpill } from './room-led-spill.mjs?v=room-furnishings-20261006';
-import { SurfaceArtwork } from './surface-artwork.mjs?v=institutional-finish-20261009';
-import { artworkSummary } from './artwork-config.mjs?v=institutional-finish-20261009';
-import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
+import { SurfaceArtwork } from './surface-artwork.mjs?v=scene-desk-styling-20261010';
+import { artworkSummary } from './artwork-config.mjs?v=scene-desk-styling-20261010';
+import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=scene-desk-styling-20261010';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
 import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
@@ -33,18 +34,18 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=institutional-finish-20261009';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=scene-desk-styling-20261010';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=institutional-finish-20261009';
-import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=institutional-finish-20261009';
-import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=groove-routines-20261002';
-import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=groove-routines-20261002';
-import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=room-furnishings-20261006';
-import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=groove-routines-20261002';
-import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=groove-routines-20261002';
-import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=groove-routines-20261002';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
+import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=scene-desk-styling-20261010';
+import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
+import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=scene-desk-styling-20261010';
+import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=scene-desk-styling-20261010';
+import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=scene-desk-styling-20261010';
+import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
+import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=scene-desk-styling-20261010';
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
@@ -143,6 +144,11 @@ const INITIAL_ANIMATED_PARTS = [
 
 let currentConfig = { ...defaultConfig(), ...(EVENT_DEMO ? { size: '60x30' } : {}) };
 let restoredBuildSize = false;
+let restoredSharedBuild = false;
+const SCENE_DESK_STYLES_KEY = 'ergoflex.sceneDeskStylesV1';
+let sceneDeskStyles = {};
+try { sceneDeskStyles = cleanRoomDeskStyles(JSON.parse(localStorage.getItem(SCENE_DESK_STYLES_KEY) || '{}')); } catch {}
+let sceneDeskLocation = null;
 let surfaceArtwork = null;
 let cartItems = [];
 // V2 keys: the configuration gained an accessories list. V1 keys are still read
@@ -1419,7 +1425,7 @@ function withDeskSize(size, fn) {
 // Capture synchronously under the existing motion guard, then restore the main
 // rig. Batch by material so a shared office does not multiply CAD draw calls.
 // spec.size ('48x30' | '60x30') renders that desktop size for this station only.
-function captureOfficeStation(spec, millimetreScale) {
+function captureOfficeStation(spec, millimetreScale, stationIndex = 0) {
     return withDeskSize(spec.size, () => withNeutralPose(() => {
         currentLift = heightToLift(spec.height);
         updateMovingObjectsPosition();
@@ -1471,11 +1477,17 @@ function captureOfficeStation(spec, millimetreScale) {
             if (!batches.has(key)) batches.set(key, { sourceMaterial: mat, geometries: [] });
             batches.get(key).geometries.push(geometry);
         }
+        const stationStyle = stationDeskStyle(selectedRoomScene, spec, stationIndex);
         for (const { sourceMaterial, geometries } of batches.values()) {
             const geometry = mergeGeometries(geometries, false);
             geometries.forEach(g => g.dispose());
             if (!geometry) throw new Error('Could not batch Office desk surfaces');
             const material = sourceMaterial.clone();
+            if (stationStyle && sourceMaterial === sharedBasePaintMaterial) {
+                const finish = PRODUCT_CONFIG.baseFinishes.find(f => f.name === stationStyle.baseFinish);
+                material.color.set(finish.color); material.metalness = frameMetalness(finish);
+            }
+            if (stationStyle && sourceMaterial === trimMaterial) material.color.set(stationStyle.trimColor);
             // Grain maps belong to the live desk; disposal must leave them valid.
             material.userData = { ...material.userData, sharedTextures: true };
             if (material.emissive) material.emissive.setHex(0);
@@ -1491,6 +1503,8 @@ function captureOfficeStation(spec, millimetreScale) {
             mounts[role] = new THREE.Matrix4().makeTranslation(...offset.toArray()).multiply(toRoom.clone().multiply(mount.dress.matrixWorld));
         }
         group.userData.officeStation = { role: spec.id, height: spec.height, tilt: spec.tilt, size: currentConfig.size, turn: spec.turn || 0, widthMm: arSizeReference().nominalWidth * 25.4, sourceMeshCount, surfaceBatches: batches.size, main: false };
+        group.userData.deskStyle = { woodFinish: currentConfig.woodFinish, baseFinish: stationStyle?.baseFinish || currentConfig.baseFinish,
+            trimColor: stationStyle?.trimColor || trimColor, sheen: surfaceFinish };
         return { group, mounts };
     }));
 }
@@ -2402,7 +2416,57 @@ function setTrimColor(value, persist = true) {
     document.querySelectorAll('[data-trim-color]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.trimColor === trimColor)));
     if (persist) {
         try { localStorage.setItem(TRIM_COLOR_KEY, value); } catch (_) {}
+        rememberSceneDeskStyle();
     }
+}
+
+function currentDeskStyle() {
+    return cleanDeskStyle({ ...currentConfig, trimColor, sheen: surfaceFinish });
+}
+function rememberSceneDeskStyle() {
+    if (!sceneDeskLocation) return;
+    sceneDeskStyles[sceneDeskLocation] = currentDeskStyle();
+    try { localStorage.setItem(SCENE_DESK_STYLES_KEY, JSON.stringify(sceneDeskStyles)); } catch {}
+    syncSceneDeskStyleUI();
+}
+function applyDeskStyle(style) {
+    const value = cleanDeskStyle(style); if (!value) return;
+    currentConfig.woodFinish = value.woodFinish; currentConfig.baseFinish = value.baseFinish;
+    surfaceFinish = value.sheen;
+    const sheen = document.getElementById('surface-finish'); if (sheen) sheen.value = surfaceFinish;
+    applyWoodSpecies(PRODUCT_CONFIG.woodFinishes.find(f => f.name === value.woodFinish));
+    const base = PRODUCT_CONFIG.baseFinishes.find(f => f.name === value.baseFinish);
+    if (sharedBasePaintMaterial) { sharedBasePaintMaterial.color.set(base.color); sharedBasePaintMaterial.metalness = frameMetalness(base); }
+    setTrimColor(value.trimColor, false);
+    for (const [id, text] of [['selected-wood-name', value.woodFinish], ['selected-base-name', value.baseFinish]]) {
+        const label = document.getElementById(id); if (label) label.textContent = text;
+    }
+    document.querySelectorAll('#wood-finishes [data-finish], #base-finishes [data-finish]').forEach(el => {
+        const chosen = el.dataset.finish === currentConfig[el.dataset.material === 'wood' ? 'woodFinish' : 'baseFinish'];
+        el.classList.toggle('selected', chosen); el.setAttribute('aria-pressed', String(chosen));
+    });
+    updatePrice(); syncBuildSummary();
+}
+function styleDeskForRoom(id, preserve = false) {
+    const initial = sceneDeskLocation === null;
+    if (initial && (restoredSharedBuild || !sceneDeskStyles.product)) sceneDeskStyles.product = currentDeskStyle();
+    if (initial && restoredBuildSize && id !== 'product' && (restoredSharedBuild || !sceneDeskStyles[id])) sceneDeskStyles[id] = currentDeskStyle();
+    if (!(preserve && sceneDeskLocation === id)) applyDeskStyle(sceneDeskStyles[id] || ROOM_DESK_STYLES[id]);
+    sceneDeskLocation = id;
+    syncSceneDeskStyleUI();
+}
+function syncSceneDeskStyleUI() {
+    const button = document.getElementById('room-desk-palette'); if (!button) return;
+    const theme = ROOM_DESK_STYLES[selectedRoomScene]; button.hidden = !theme;
+    button.textContent = sceneDeskStyles[selectedRoomScene] ? 'Use scene palette' : 'Scene palette';
+    button.title = theme ? `${theme.name} · ${theme.woodFinish} / ${theme.baseFinish} · restore this room’s suggested desk finishes` : '';
+}
+function resetSceneDeskStyle() {
+    const theme = ROOM_DESK_STYLES[selectedRoomScene]; if (!theme) return;
+    delete sceneDeskStyles[selectedRoomScene];
+    try { localStorage.setItem(SCENE_DESK_STYLES_KEY, JSON.stringify(sceneDeskStyles)); } catch {}
+    applyDeskStyle(theme); syncSceneDeskStyleUI();
+    setRoomScene(selectedRoomScene, false, { preserveDesk: true });
 }
 
 function mountTrimPalette() {
@@ -2668,6 +2732,7 @@ function syncSizeGeometry({ rebuildRoom = true } = {}) {
     }
     targetLift = Math.max(targetLift, heightToLift(minimum));
     const extended = currentConfig.size === '60x30';
+    const sizeChanged = sizeVariantParts.largeTop.visible !== extended;
     const setVisible = (obj, visible) => {
         obj.visible = visible;
         const index = interactableObjects.indexOf(obj);
@@ -2682,7 +2747,12 @@ function syncSizeGeometry({ rebuildRoom = true } = {}) {
     if (surfaceArtwork?.bound) bindSurfaceArtwork();
     setScreenProgress(screenProgress);
     buildSceneTree();
-    if (rebuildRoom && measuredRoomProfile() && workspaceRoom?.roomLayout) setRoomScene(selectedRoomScene, false, { preserveDesk: true });
+    if (rebuildRoom && measuredRoomProfile() && workspaceRoom?.roomLayout) {
+        setRoomScene(selectedRoomScene, false, { preserveDesk: true });
+        // Resizing keeps the current pose, nudging only a wall-bound edge far
+        // enough inside the room for the same clearance used by Groove.
+        if (sizeChanged) positionHomeDesk(false, { preservePosition: true });
+    }
 }
 
 function syncLedSizeGeometry() {
@@ -3988,6 +4058,7 @@ function serializeProject() {
             // a project shared between machines should not rearrange the editor.
             presentation: {
                 surfaceFinish,
+                sceneDeskStyles: JSON.parse(JSON.stringify(sceneDeskStyles)),
                 trimColor,
                 ledColor,
                 ledGlow,
@@ -4334,6 +4405,9 @@ function applyConfigToUI() {
 
 function applyProjectPresentation(project) {
     const presentation = project.presentation || {};
+    // Importing finishes must not register a manual edit in the outgoing room.
+    sceneDeskLocation = null;
+    if (presentation.sceneDeskStyles !== undefined) sceneDeskStyles = cleanRoomDeskStyles(presentation.sceneDeskStyles);
     if (presentation.groovePositions !== undefined) {
         groovePresets = normalizeGroovePresets(presentation.groovePositions);
         writeStore(GROOVE_PRESETS_KEY, { v: 1, presets: groovePresets });
@@ -4352,6 +4426,11 @@ function applyProjectPresentation(project) {
     }
     if (validConfig(project.customerConfig)) {
         currentConfig = cleanConfig(project.customerConfig);
+        // Size synchronisation can rebuild the room. Seed its imported palette
+        // first so a rebuild cannot replace an older project's customer finish.
+        sceneDeskStyles[presentation.roomScene || 'product'] = cleanDeskStyle({
+            ...currentConfig, sheen: presentation.surfaceFinish || surfaceFinish
+        });
         applyConfigToUI();
         applyAccessoryVisibility();
         renderAccessories();
@@ -4415,6 +4494,11 @@ function applyProjectPresentation(project) {
     if (OFFICE_LAYOUTS[presentation.officeLayout]) officeLayoutId = presentation.officeLayout;
     if (STUDY_MODES[presentation.studyMode]) studyMode = presentation.studyMode;
     if (STUDY_LAYOUTS[presentation.studyLayout]) studyLayoutId = presentation.studyLayout;
+    // A project's actual customer finish is authoritative, including older
+    // files authored before scene palettes existed.
+    sceneDeskStyles[presentation.roomScene || 'product'] = currentDeskStyle();
+    try { localStorage.setItem(SCENE_DESK_STYLES_KEY, JSON.stringify(sceneDeskStyles)); } catch {}
+    sceneDeskLocation = null;
     setRoomScene(presentation.roomScene || 'product', false, { preserveDesk: true });
     const environment = document.getElementById('studio-environment');
     if (environment && presentation.environment) {
@@ -4769,6 +4853,7 @@ function renderPriceBreakdown() {
 function applyPreset(preset) {
     currentConfig = cleanConfig(preset);
     applyConfigToUI();
+    rememberSceneDeskStyle();
     applyAccessoryVisibility();
     renderAccessories();
     if (preset.cameraPreset) {
@@ -6121,6 +6206,7 @@ function selectFinish(finish, type, element) {
         if (sharedBasePaintMaterial) { sharedBasePaintMaterial.color.set(finish.color); sharedBasePaintMaterial.metalness = frameMetalness(finish); }
     }
     updatePrice();
+    rememberSceneDeskStyle();
 }
 
 function updatePrice() {
@@ -6172,7 +6258,7 @@ function showCartModal() {
         description.append(additions);
         const preview = document.createElement('button'); preview.className = 'cart-preview'; preview.textContent = 'View this build in 3D ↗';
         preview.onclick = () => {
-            currentConfig = cleanConfig(item); applyConfigToUI(); applyAccessoryVisibility(); renderAccessories();
+            currentConfig = cleanConfig(item); applyConfigToUI(); rememberSceneDeskStyle(); applyAccessoryVisibility(); renderAccessories();
             closeDialog(document.getElementById('cart-modal'));
             if (loadedModel) focusObjects([loadedModel], { animate: true });
             canvas.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -8521,9 +8607,11 @@ function wireRemote(dock, header) {
     // ---- drag ----
     let dragging = null, headerMoved = false;
     header.addEventListener('pointerdown', e => {
-        // Only the bare strip drags. A pointerdown on the stop button, the
-        // collapse toggle, or anything else operable belongs to that control.
-        if (e.button !== 0 || e.target.closest('button, a, input, select, [tabindex]')) return;
+        // The center handle supports drag and tap-to-minimize/expand. Other
+        // controls retain their actions. Ignore focusable ancestors outside
+        // this header (the viewer itself has tabindex=-1).
+        const control = e.target.closest('button, a, input, select, [tabindex]');
+        if (e.button !== 0 || (control && header.contains(control) && control.id !== 'motion-dock-toggle')) return;
         if (dock.dataset.mode !== 'floating') return;   // docked below the viewer: nothing to drag
         const rect = dock.getBoundingClientRect();
         headerMoved = false;
@@ -8551,6 +8639,7 @@ function wireRemote(dock, header) {
     };
     header.addEventListener('pointerup', endDrag);
     header.addEventListener('pointercancel', endDrag);
+    header.addEventListener('lostpointercapture', endDrag);
 
     // ---- theme ----
     dock.querySelector('.remote-theme')?.addEventListener('click', () => {
@@ -8573,7 +8662,10 @@ function wireRemote(dock, header) {
             refitRemote();
         }
     });
-    dockToggle.onclick = toggleDock;
+    dockToggle.onclick = () => {
+        if (headerMoved) { headerMoved = false; return; }
+        toggleDock();
+    };
     // Docked below the viewer, the whole header is the affordance: the panel is
     // closed until you ask for it, and the bar is what you press.
     header.addEventListener('click', e => {
@@ -9836,7 +9928,7 @@ async function prepareGrooveMode(sceneId, phase) {
     haltAllMotion(); setMeasuredRoomMode(sceneId, phase, false);
     await grooveController().prepare(sceneId, phase);
 }
-function positionHomeDesk(useModePose = false) {
+function positionHomeDesk(useModePose = false, { preservePosition = false } = {}) {
     const profile = measuredRoomProfile();
     if (!loadedModel || !workspaceRoom?.roomLayout || !profile) return;
     const layout = workspaceRoom.roomLayout, mode = profile.modes[profile.mode], scale = workspaceRoom.root.scale.x;
@@ -9844,14 +9936,17 @@ function positionHomeDesk(useModePose = false) {
     // A room/desktop-size change starts in its authored desk bay. Time-button
     // destinations belong to Groove; an old saved social phase must not spawn
     // a wider, rotated desk inside the bed or a neighbouring workstation.
-    deskYaw = useModePose ? THREE.MathUtils.degToRad(mode.yaw) : 0;
+    if (!preservePosition) deskYaw = useModePose ? THREE.MathUtils.degToRad(mode.yaw) : 0;
     const f = grooveFootprint(), c = Math.cos(deskYaw), s = Math.sin(deskYaw);
-    const ex = Math.abs(c) * f.halfWidth + Math.abs(s) * f.halfDepth + 70;
-    const ez = Math.abs(s) * f.halfWidth + Math.abs(c) * f.halfDepth + 70;
+    const margin = f.margin ?? 45;
+    const ex = Math.abs(c) * (f.halfWidth + margin) + Math.abs(s) * (f.halfDepth + margin) + 25;
+    const ez = Math.abs(s) * (f.halfWidth + margin) + Math.abs(c) * (f.halfDepth + margin) + 25;
     const ox = c * f.offsetX + s * f.offsetZ, oz = -s * f.offsetX + c * f.offsetZ;
     const fit = (value, min, max) => min > max ? (min + max) / 2 : THREE.MathUtils.clamp(value, min, max);
-    const x = fit(layout.desk[0] + (useModePose ? mode.offset[0] : 0), -layout.width / 2 + ex - ox, layout.width / 2 - ex - ox);
-    const z = fit(layout.desk[1] + (useModePose ? mode.offset[1] : 0), layout.back + ez - oz, layout.back + layout.depth - ez - oz);
+    const wantedX = preservePosition ? -glideOffset.z / scale : layout.desk[0] + (useModePose ? mode.offset[0] : 0);
+    const wantedZ = preservePosition ? glideOffset.x / scale : layout.desk[1] + (useModePose ? mode.offset[1] : 0);
+    const x = fit(wantedX, -layout.width / 2 + ex - ox, layout.width / 2 - ex - ox);
+    const z = fit(wantedZ, layout.back + ez - oz, layout.back + layout.depth - ez - oz);
     const next = new THREE.Vector3(z * scale, 0, -x * scale);
     applyGlideOffset(next); glideTarget.copy(glideOffset);
     loadedModel.updateMatrixWorld(true); workspaceAccessories?.update();
@@ -10008,6 +10103,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
         clearSceneAssetRegistration();
     }
     selectedRoomScene = choice.id;
+    styleDeskForRoom(choice.id, preserveDesk);
     const groupId = institutionalGroup(choice.id), pickerId = groupId || choice.id;
     const sceneSelect = document.getElementById('room-scene-select'); if (sceneSelect) sceneSelect.value = pickerId;
     if (groupId) {
@@ -10046,7 +10142,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     }
     roomInteractions?.end();roomInteractions?.select(null);roomLedSpill.dispose();roomCollisionBlocked=false;roomSafety.reset();syncSafetyUI();
     workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
-        createStation: (['office', 'coworking'].includes(choice.id) || INSTITUTIONAL_ROOMS[choice.id]) && loadedModel ? spec => captureOfficeStation(spec, homeScale) : null });
+        createStation: (['office', 'coworking'].includes(choice.id) || INSTITUTIONAL_ROOMS[choice.id]) && loadedModel ? spec => captureOfficeStation(spec, homeScale, measured.layout.stations.indexOf(spec)) : null });
     if (measured) {
         if (!preserveDesk) positionHomeDesk();
         if (!preserveDesk && persist && loadedModel) {
@@ -10524,7 +10620,7 @@ function initStudio() {
     try {
         const shared = EVENT_DEMO ? null : new URLSearchParams(location.search).get('build');
         const stored = shared ? JSON.parse(shared) : readStored(SAVED_BUILD_KEY, 'ergoflexSavedBuildV1');
-        if (validConfig(stored)) { currentConfig = cleanConfig(stored); restoredBuildSize = true; }
+        if (validConfig(stored)) { currentConfig = cleanConfig(stored); restoredBuildSize = true; restoredSharedBuild = Boolean(shared); }
         if (shared && !validConfig(stored)) notifyUser('This build link is invalid. Showing the default configuration.');
     } catch { notifyUser('Saved configuration could not be read. Showing the default build.'); }
     try {
@@ -10556,6 +10652,7 @@ function initStudio() {
         try { localStorage.removeItem(SAVED_BUILD_KEY); localStorage.removeItem('ergoflexSavedBuildV1'); } catch {}
         currentConfig = defaultConfig();
         applyConfigToUI();
+        rememberSceneDeskStyle();
         applyAccessoryVisibility();
         renderAccessories();
         updatePrice();
@@ -10602,7 +10699,7 @@ function initStudio() {
     // The latest artwork draft can be newer than the last explicit Save build.
     // A shared build link is explicit and retains its own artwork instead.
     if (!EVENT_DEMO && !new URLSearchParams(location.search).has('build')) surfaceArtwork.restoreDraft();
-    document.getElementById('surface-finish').onchange = e => { surfaceFinish = e.target.value; applySurfaceFinish(); };
+    document.getElementById('surface-finish').onchange = e => { surfaceFinish = e.target.value; applySurfaceFinish(); rememberSceneDeskStyle(); };
     document.getElementById('wood-grain').onchange = e => { grainEnabled = e.target.checked; applySurfaceFinish(); };
     document.getElementById('grain-visibility').oninput = e => {
         grainVisibility = Number(e.target.value);
@@ -10633,6 +10730,9 @@ function initStudio() {
     const toolbar = document.createElement('div'); toolbar.className = 'studio-toolbar';
     toolbar.innerHTML = `<label><span>Backdrop</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="room">Whole room</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><p id="scene-light-name"></p><label>Exposure <output id="studio-exposure-value"></output><input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Main light <output id="studio-daylight-value"></output><input id="studio-daylight" type="range" min="0.2" max="2" step="0.05" value="1"></label><label>Accent light <output id="studio-accent-value"></output><input id="studio-accent" type="range" min="0" max="2" step="0.05" value="1"></label><button id="reset-scene-light" type="button">Reset scene lighting</button><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
     toolbar.querySelector('#studio-environment').insertAdjacentHTML('beforeend', '<option value="led">LED studio</option>');
+    const paletteButton = document.createElement('button'); paletteButton.id = 'room-desk-palette'; paletteButton.type = 'button';
+    paletteButton.textContent = 'Scene palette'; paletteButton.hidden = true; paletteButton.onclick = resetSceneDeskStyle;
+    toolbar.append(paletteButton);
     const rearrangeControl=document.createElement('label');rearrangeControl.id='room-rearrange-control';rearrangeControl.hidden=true;
     rearrangeControl.innerHTML='<input type="checkbox" id="room-rearrange-toggle" aria-describedby="room-interaction-hint"><span>Rearrange items</span>';
     rearrangeControl.querySelector('input').onchange=e=>setRoomRearrangeEnabled(e.target.checked);
@@ -10916,6 +11016,8 @@ window.ErgoFlex = {
     roomScenes: ROOM_SCENES,
     setMeasuredRoomLayout,
     setMeasuredRoomMode,
+    resetSceneDeskStyle,
+    get sceneDeskStyles() { return JSON.parse(JSON.stringify(sceneDeskStyles)); },
     get measuredRoom() { return measuredRoomProfile(); },
     setRoomScene,
     setHomeMode,

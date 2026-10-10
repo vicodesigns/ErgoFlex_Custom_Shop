@@ -33,7 +33,7 @@ const server = http.createServer((req, res) => {
     }
     try {
         let page = await freshPage();
-        const registry = await page.evaluate(async () => { const m = await import('./institutional-scenes.mjs?v=institutional-finish-20261009'); return { ids: m.INSTITUTIONAL_IDS, education: Object.keys(m.EDUCATIONAL_LEVELS), groups: m.INSTITUTIONAL_GROUPS, tiers: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)])),
+        const registry = await page.evaluate(async () => { const m = await import('./institutional-scenes.mjs?v=scene-desk-styling-20261010'); return { ids: m.INSTITUTIONAL_IDS, education: Object.keys(m.EDUCATIONAL_LEVELS), groups: m.INSTITUTIONAL_GROUPS, tiers: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)])),
             stations: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.fromEntries(Object.entries(m.INSTITUTIONAL_ROOMS[id].layouts).map(([tier, l]) => [tier, l.stations]))])),
             modules: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_MODULES).find(g => m.INSTITUTIONAL_MODULES[g] === m.institutionalModule(id))])) }; });
         const ids = registry.ids;

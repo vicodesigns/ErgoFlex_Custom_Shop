@@ -1,7 +1,7 @@
-import * as government from './institutional-government.mjs?v=institutional-finish-20261009';
-import * as education from './institutional-education.mjs?v=institutional-finish-20261009';
-import * as healthcare from './institutional-healthcare.mjs?v=institutional-finish-20261009';
-import * as it from './institutional-it.mjs?v=institutional-finish-20261009';
+import * as government from './institutional-government.mjs?v=scene-desk-styling-20261010';
+import * as education from './institutional-education.mjs?v=scene-desk-styling-20261010';
+import * as healthcare from './institutional-healthcare.mjs?v=scene-desk-styling-20261010';
+import * as it from './institutional-it.mjs?v=scene-desk-styling-20261010';
 
 // Measured public service, education and mobile work settings. Units are mm.
 // Scene IDs intentionally contain only letters, matching saved Groove keys.

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { institutionalMap, screenHeader, screenFooter, detailKit, plant, rnd } from './institutional-detail.mjs?v=institutional-finish-20261009';
+import { institutionalMap, screenHeader, screenFooter, detailKit, plant, rnd } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
 
 // Mobile IT group: `mobileit` (kind it). A field-service depot and tech bar.
 // Devices flow intake (tech bar / asset intake) → repair (ESD bench) →

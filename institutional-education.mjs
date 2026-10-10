@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { institutionalMap, boardFrame, boardGrid, boardCurve, screenHeader, screenFooter, detailKit, books, notebook, plant, storageBooks, storageTray, activityNotebook, identityGallery, rnd } from './institutional-detail.mjs?v=institutional-finish-20261009';
+import { institutionalMap, boardFrame, boardGrid, boardCurve, screenHeader, screenFooter, detailKit, books, notebook, plant, storageBooks, storageTray, activityNotebook, identityGallery, rnd } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
 
 // Educational group: `kindergarten`, `elementary`, `middleschool`,
 // `highschool`, `college`, `university` (kinds early / primary / secondary /
@@ -173,7 +173,7 @@ const STAGES = {
 // Desk LEDs: the shelf strips wash the desktop in their own colour, so in
 // daylight any bright warm colour turns the black ErgoFlex desktop tan. Desk
 // LEDs stay off by day (golden-hour evening included); at night they glow a
-// low-value warm white, and for the shared event a deep ErgoFlex red (deep
+// low-value neutral warm white, and for the shared event a deep ErgoFlex red (deep
 // teal in the middle-school STEM studio): black desktop with a coloured sheen.
 const mode =(key, fill, sky, power, ambient, exposure, practical, wash, bounce, colors, leds = false, color) => ({ key, fill, sky, power, ambient, exposure, practical, wash, bounce, colors, leds, ...(color ? { color } : {}) });
 const SKY = { morning: ['#a9cfe4', '#f7e6c8'], afternoon: ['#8fc2df', '#e2eef2'], evening: ['#8f86a8', '#f3bf8f'], night: ['#0f2038', '#2f4660'], party: ['#a3c0d6', '#f4d4ac'] };
@@ -183,54 +183,54 @@ const LIGHT = {
         modes: [mode('#fff0dc', '#e3edf0', SKY.morning, 1.55, .44, 1.06, .24, .2, .7, ['#ffe6bf', '#d6dcc6']),
             mode('#fff6ea', '#e1edf2', SKY.afternoon, 1.6, .46, 1.04, .3, .18, .76, ['#ffeccc', '#cfdcd2']),
             mode('#ffcf9e', '#d9d6e6', ['#b48fa2', '#f6c58e'], .52, .3, 1.1, .74, .4, .5, ['#ffd49e', '#e7c7aa']),
-            mode('#b4c8e2', '#9fb8d4', SKY.night, .1, .11, 1.21, .44, .14, .24, ['#ffcf98', '#8ea4be'], true, '#5a3e2a'),
+            mode('#b4c8e2', '#9fb8d4', SKY.night, .1, .11, 1.21, .44, .14, .24, ['#ffcf98', '#8ea4be'], true, '#292724'),
             mode('#ffe6c4', '#dfe4e4', SKY.party, .9, .38, 1.09, .58, .4, .6, ['#ffe4c0', '#e3dccb'], true, '#4a1a14')],
-        sun: [.08, .06, .2, .05, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .62, .9], ceiling: ['#fff1dc', [.35, .3, .45, .04, .5]], lamps: [[.14, .16, .78, .3, .55]]
+        sun: [.08, .06, .14, .018, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .62, .9], ceiling: ['#fff1dc', [.35, .3, .45, .04, .5]], lamps: [[.14, .16, .78, .3, .55]]
     },
     elementary: {
         // 3500K linear pendants, reading floor lamp, grow strip, word-wall picture light.
         modes: [mode('#fff0dc', '#dceaf0', SKY.morning, 1.5, .42, 1.06, .28, .2, .7, ['#ffe9ca', '#d0dccf']),
             mode('#f4f8ff', '#e1edf2', SKY.afternoon, 1.55, .46, 1.04, .32, .18, .76, ['#fff0d8', '#c8dacd']),
             mode('#ffd2a6', '#d7dbec', ['#a98ea6', '#f2c398'], .52, .29, 1.1, .72, .36, .5, ['#ffd8a6', '#dfc9b2']),
-            mode('#b6cae4', '#a0bad6', SKY.night, .1, .11, 1.21, .46, .14, .24, ['#ffd09c', '#8fa7c0'], true, '#5a3e2a'),
+            mode('#b6cae4', '#a0bad6', SKY.night, .1, .11, 1.21, .46, .14, .24, ['#ffd09c', '#8fa7c0'], true, '#292724'),
             mode('#ffe6c4', '#d8e2e0', SKY.party, .9, .36, 1.09, .6, .42, .6, ['#ffe6c4', '#d4e2d8'], true, '#4a1813')],
-        sun: [.08, .06, .2, .05, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .6, .9], ceiling: ['#fff3e2', [.35, .3, .55, .05, .55]], lamps: [[.14, .16, .7, .28, .5], [0, 0, .62, .66, .3]]
+        sun: [.08, .06, .14, .018, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .6, .9], ceiling: ['#fff3e2', [.35, .3, .55, .05, .55]], lamps: [[.14, .16, .7, .28, .5], [0, 0, .62, .66, .3]]
     },
     middleschool: {
         // 4000K suspended linears under the baffles, maker task strip, screen glow, printer ring.
         modes: [mode('#fff0dc', '#dceaf0', SKY.morning, 1.5, .42, 1.06, .3, .18, .7, ['#f5ebd8', '#c9d6da']),
             mode('#f2f7ff', '#e1edf2', SKY.afternoon, 1.55, .46, 1.04, .36, .18, .76, ['#f4f2ea', '#c4d4d8']),
             mode('#ffd3a8', '#d6dcee', ['#9d8ea8', '#efc39a'], .52, .29, 1.1, .74, .34, .5, ['#ffdcae', '#c7c9d2']),
-            mode('#b4c8e4', '#9fb9d6', SKY.night, .1, .11, 1.21, .46, .14, .24, ['#ffd8a6', '#8aa4c0'], true, '#5a3e2a'),
+            mode('#b4c8e4', '#9fb9d6', SKY.night, .1, .11, 1.21, .46, .14, .24, ['#ffd8a6', '#8aa4c0'], true, '#292724'),
             mode('#ffe4c0', '#d6dfe6', SKY.party, .82, .34, 1.1, .66, .44, .56, ['#f8ecd8', '#c8dee0'], true, '#0e3036')],
-        sun: [.08, .06, .2, .05, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .58, .9], ceiling: ['#f6f8f8', [.4, .35, .6, .05, .6]], lamps: [[.12, .16, .7, .32, .5]]
+        sun: [.08, .06, .14, .018, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .58, .9], ceiling: ['#f6f8f8', [.4, .35, .6, .05, .6]], lamps: [[.12, .16, .7, .32, .5]]
     },
     highschool: {
         // 4000K linears, demonstration spot on the slate inlay, gallery rail light, oscilloscope trace.
         modes: [mode('#fff0dc', '#dceaf0', SKY.morning, 1.5, .42, 1.06, .3, .18, .7, ['#f5ebd8', '#c4d0d6']),
             mode('#f0f7ff', '#e1edf2', SKY.afternoon, 1.55, .46, 1.04, .36, .18, .76, ['#f4efe4', '#c0ccd2']),
             mode('#ffcfa2', '#d5daec', ['#9a8aa6', '#efbf94'], .52, .28, 1.1, .76, .34, .5, ['#ffd8a8', '#c4c6d0']),
-            mode('#b4c8e4', '#9fb9d6', SKY.night, .1, .11, 1.21, .46, .14, .24, ['#ffd4a0', '#88a2be'], true, '#5a3e2a'),
+            mode('#b4c8e4', '#9fb9d6', SKY.night, .1, .11, 1.21, .46, .14, .24, ['#ffd4a0', '#88a2be'], true, '#292724'),
             mode('#ffe4c0', '#d6dfe6', SKY.party, .82, .34, 1.1, .66, .44, .56, ['#f8e8d0', '#c6d6dc'], true, '#4a1813')],
-        sun: [.08, .06, .2, .05, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .58, .9], ceiling: ['#f6f8f8', [.4, .35, .6, .05, .6]], lamps: [[.12, .16, .7, .3, .5]]
+        sun: [.08, .06, .14, .018, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .58, .9], ceiling: ['#f6f8f8', [.4, .35, .6, .05, .6]], lamps: [[.12, .16, .7, .3, .5]]
     },
     college: {
         // 3500K pendant clusters over the team tables, track spots on the teaching wall, lounge floor lamp.
         modes: [mode('#fff0dc', '#dceaf0', SKY.morning, 1.5, .42, 1.06, .28, .2, .7, ['#ffe8c9', '#d6c8b8']),
             mode('#f0f7ff', '#e1edf2', SKY.afternoon, 1.55, .46, 1.04, .34, .18, .76, ['#fff0dc', '#d2c6b8']),
             mode('#ffc994', '#d2d6ea', ['#8f80a4', '#f0b98a'], .52, .27, 1.11, .76, .4, .48, ['#ffd09a', '#dcbca2']),
-            mode('#b4c6e2', '#9fb8d4', SKY.night, .1, .11, 1.21, .48, .16, .23, ['#ffcf98', '#8ca1ba'], true, '#5a3e2a'),
+            mode('#b4c6e2', '#9fb8d4', SKY.night, .1, .11, 1.21, .48, .16, .23, ['#ffcf98', '#8ca1ba'], true, '#292724'),
             mode('#ffe2bc', '#dcdfe2', SKY.party, .82, .33, 1.1, .68, .46, .54, ['#ffe2bc', '#e2d4c2'], true, '#4a1813')],
-        sun: [.08, .06, .2, .05, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .6, .9], ceiling: ['#fff3e2', [.35, .3, .5, .04, .55]], lamps: [[.12, .16, .62, .26, .45], [.0, .0, .7, .62, .45]]
+        sun: [.08, .06, .14, .018, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .6, .9], ceiling: ['#fff3e2', [.35, .3, .5, .04, .55]], lamps: [[.12, .16, .62, .26, .45], [.0, .0, .7, .62, .45]]
     },
     university: {
         // 3000K long seminar pendant, brass picture lights, banker's lamps, lounge reading lamp.
         modes: [mode('#fff0dc', '#dceaf0', SKY.morning, 1.5, .42, 1.06, .3, .2, .7, ['#f6ead2', '#c8d4c8']),
             mode('#f2f6fb', '#e1edf2', SKY.afternoon, 1.5, .44, 1.04, .36, .2, .74, ['#f8eedc', '#c4d2c6']),
             mode('#ffc890', '#cfd4e8', ['#857ca2', '#ecb487'], .52, .26, 1.12, .78, .42, .46, ['#ffcc94', '#d8b896']),
-            mode('#b2c5e0', '#9cb6d2', ['#0d1d33', '#2b415a'], .11, .14, 1.22, .5, .16, .22, ['#ffcc94', '#889eb8'], true, '#5a3e2a'),
+            mode('#b2c5e0', '#9cb6d2', ['#0d1d33', '#2b415a'], .11, .14, 1.22, .5, .16, .22, ['#ffcc94', '#889eb8'], true, '#292724'),
             mode('#ffe2bc', '#dce0e0', SKY.party, .82, .33, 1.1, .7, .46, .54, ['#ffe0b8', '#d8d4be'], true, '#4a1813')],
-        sun: [.08, .06, .2, .05, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .6, .9], ceiling: ['#fff1dc', [.35, .3, .4, .03, .5]], lamps: [[.12, .16, .6, .24, .45], [.0, .0, .72, .66, .45]]
+        sun: [.08, .06, .14, .018, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .6, .9], ceiling: ['#fff1dc', [.35, .3, .4, .03, .5]], lamps: [[.12, .16, .6, .24, .45], [.0, .0, .72, .66, .45]]
     }
 };
 const modesFor = id => Object.fromEntries(STAGES[id].pose.map(([height, tilt, yaw = 0], i) => [PHASES[i], { ...LIGHT[id].modes[i], height, tilt, yaw }]));
@@ -2136,7 +2136,7 @@ function hangingPlanter(kit, E, [x, y, z]) {
 //
 // Sun patch: the glazing's silhouette projected on the floor along the same
 // sun direction as the shared shadow rig (room-refinement DAY_ANGLES).
-const SUN_ANGLE = { morning: [.62, -.36], afternoon: [1.45, .12], evening: [.32, .48], night: [1.2, -.18], party: [1.0, .3] }; // night: lamp-post / moon glow
+const SUN_ANGLE = { morning: [.62, -.36], afternoon: [1.45, .12], evening: [.32, .48], night: [1.8, -.1], party: [1.35, .25] }; // night: lamp-post / moon glow
 function sunPatch(kit, E) {
     const { w, d, bz, front } = kit, z0 = bz + d * .54, half = d * .24;
     const map = canvasTexture((c, W, H) => {
@@ -2158,7 +2158,10 @@ function sunPatch(kit, E) {
         for (let i = 0; i < pos.count; i++) {
             // uv.y = 1 at the window head (2600), 0 at the sill (800).
             const y = 800 + uv.getY(i) * 1800, z = z0 - half + uv.getX(i) * half * 2, t = y / elevation, x = -w / 2 + 25 + t, zz = z + sweep * t;
-            const inside = x < w / 2 - 40 && zz > bz + 30 && zz < front - 30 ? 1 - .3 * uv.getY(i) : 0;
+            // Fade the low sun before the cutaway edge instead of drawing a bright
+            // stripe right up to a wall. The moon wash uses the shadow rig's direction.
+            const edge = Math.min(w / 2 - 40 - x, zz - bz - 30, front - 30 - zz);
+            const inside = THREE.MathUtils.smoothstep(edge, 0, 420) * (1 - .3 * uv.getY(i)) / (1 + t / 7000);
             pos.setXYZ(i, Math.min(x, w / 2 - 40), 11, THREE.MathUtils.clamp(zz, bz + 30, front - 30)); col.setXYZ(i, inside, inside, inside);
         }
         pos.needsUpdate = col.needsUpdate = true; geo.computeBoundingSphere();

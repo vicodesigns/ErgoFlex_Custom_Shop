@@ -101,7 +101,9 @@ Use Healthcare setting for Hospital/Laboratory, or Scenes for Mobile IT.
   completed pass uses neutral dim cues (`#141618` Mobile IT overnight,
   `#101112` laboratory instrument watch), with LEDs off in daylight/review
   and hospital night observation. Inspect close-ups when tuning this; the
-  default product must retain its black surface and red trim in every daypart.
+  selected physical finish must remain readable in every daypart. The 10 October
+  scene-styling pass gives furnished rooms their own catalog palettes; Product
+  retains its separately remembered finish. See `scene-desk-styling-20261010.md`.
 - **Light budget.** 5 real lights per room: 3 room PointLights plus at most 2
   local lamps (the test requires 1–2). Everything else is emissive or an
   additive pool.

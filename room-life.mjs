@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=institutional-finish-20261009';
+import { activityPageMaterial } from './room-activity-print.mjs?v=scene-desk-styling-20261010';
+import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
 
 export const DAY_PHASES = ['morning', 'afternoon', 'evening', 'night', 'party'];
 const TIERS = ['apartment', 'house', 'spacious', 'premium', 'executive'];
@@ -69,7 +70,7 @@ export class RoomLife {
         this.room = room; this.h = helpers; this.entries = []; this.mode = null; this.bound = false;
         this.tier = TIERS.indexOf(room.roomLayout.id); this.factor = [.6, .8, 1, 1.2, 1.4][this.tier];
         this.anchor = activityAnchor(room.id, room.roomLayout);
-        this.kits = []; this.buildActivities();
+        this.kits = []; this.printedPages = new Map(); this.buildActivities();
     }
     buildActivities() {
         const { room, anchor: a, h } = this, l = room.roomLayout;
@@ -82,7 +83,7 @@ export class RoomLife {
         this.mats = { paper: mat('#e9dfc6'), ink: mat('#344c50'), clay: mat('#b98062'), linen: mat('#c8b694', 'fabric'), wood: mat('#997653', 'wood'), cream: mat('#e9dcc8'), brass: mat('#ac9270', 'metal', { metalness: .55 }), green: mat('#61796c') };
         for (let phase = 0; phase < DAY_PHASES.length; phase++) {
             const variant = new THREE.Group(); variant.name = ROOM_STORIES[room.id][phase]; group.add(variant); this.kits.push(variant);
-            this.makeKit(variant, phase, a.small);
+            this.kitPhase = phase; this.makeKit(variant, phase, a.small);
         }
         // Larger settings gain a second lived-in spot, not oversized decor.
         if (this.tier >= 2 && ['library', 'coworking', 'office', 'kitchen'].includes(room.id)) {
@@ -99,9 +100,27 @@ export class RoomLife {
         h.box(g, [open ? 202 : 94, 12, 134], [0, 11, 0], m.paper, 1);
         if (open) {
             h.box(g, [3, 14, 132], [0, 12, 0], cover, 1);
-            for (const x of [-50, 50]) for (let n = 0; n < 5; n++) h.box(g, [65, .5, 1.5], [x, 17.3, -35 + n * 13], m.ink);
-            h.box(g, [22, .6, 24], [50, 17.5, 42], m.clay);
-        } else h.box(g, [100, 4, 142], [0, 19, 0], cover, 2);
+            if (INSTITUTIONAL_ROOMS[this.room.id]) {
+                for (const x of [-50, 50]) for (let n = 0; n < 5; n++) h.box(g, [65, .5, 1.5], [x, 17.3, -35 + n * 13], m.ink);
+                h.box(g, [22, .6, 24], [50, 17.5, 42], m.clay);
+            } else {
+                const phase = this.kitPhase ?? 0;
+                if (!this.printedPages.has(phase)) this.printedPages.set(phase, activityPageMaterial(this.room.id, phase));
+                const page = h.mesh(g, new THREE.PlaneGeometry(198, 130), this.printedPages.get(phase), [0, 17.35, 0]);
+                page.rotation.x = -Math.PI / 2; page.castShadow = false;
+                page.userData.presentationOnly = true;
+                // A bookmark adds depth while remaining inside the book footprint.
+                h.box(g, [5, .8, 58], [24, 17.8, 36], m.clay);
+            }
+        } else {
+            h.box(g, [100, 4, 142], [0, 19, 0], cover, 2);
+            if (!INSTITUTIONAL_ROOMS[this.room.id]) {
+                const phase = this.kitPhase ?? 0, key = `${phase}:${color}`;
+                if (!this.printedPages.has(key)) this.printedPages.set(key, activityPageMaterial(this.room.id, phase, color));
+                const label = h.mesh(g, new THREE.PlaneGeometry(94, 136), this.printedPages.get(key), [0, 21.05, 0]);
+                label.rotation.x = -Math.PI / 2; label.castShadow = false; label.userData.presentationOnly = true;
+            }
+        }
         return g;
     }
     cup(parent, at, tea = true) {
@@ -124,9 +143,23 @@ export class RoomLife {
             this.book(g, [0, y, 0], spec.accent, active || social);
             // Each institutional group stages its own materials (stageKit in its module).
             institutionalModule(id)?.stageKit?.({ life: this, h, m, g, y, phase, active, social, quiet, small, spec, THREE });
+        } else if (id === 'music') {
+            this.book(g, [small ? 0 : -55, y, 0], '#715746', !quiet && !small);
+            if (!small && !quiet) {
+                // Pencil and a stopped metronome; no implied live audio source.
+                h.rod(g, [90, y + 4, 60], [182, y + 4, 73], 2, m.ink);
+                h.box(g, [45, 65, 35], [115, y + 32.5, -55], m.wood, 3);
+                h.rod(g, [115, y + 15, -36], [126, y + 57, -36], 1.8, m.brass);
+            }
+        } else if (id === 'office') {
+            this.book(g, [small ? 0 : -50, y, 0], '#3d6864', !quiet && !small);
+            if (!small && !quiet) {
+                for (let n = 0; n < (social ? 4 : 2); n++) h.box(g, [44, 1, 38], [85 + n % 2 * 52, y + 1, -50 + Math.floor(n / 2) * 48], n % 2 ? m.linen : m.green, 1);
+                h.rod(g, [65, y + 4, 72], [155, y + 4, 72], 2, m.ink);
+            }
         } else if (id === 'gym') {
             for (let i = 0; i < (quiet ? 3 : 1); i++) h.box(g, [140, 22, 100], [0, y + 11 + i * 23, 0], m.linen, 5);
-            if (!quiet) this.book(g, [0, y + 22, 0], '#61796c');
+            if (!quiet) this.book(g, [0, y + 22, 0], '#61796c', active || social);
         } else if (id === 'creative') {
             if (quiet || social) this.book(g, [0, 0, 0], '#89705c', social);
             else {

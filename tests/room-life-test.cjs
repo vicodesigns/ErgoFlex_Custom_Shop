@@ -21,12 +21,14 @@ const server = http.createServer((req, res) => {
         page.on('pageerror', e => errors.push(e.message));
         await page.setViewport({ width: 1500, height: 1200 });
         await page.goto(`http://127.0.0.1:${server.address().port}/?room=home&view=room`, { timeout: 120000 });
+        await page.waitForFunction(() => window.ErgoFlex?.renderer, { timeout: 120000 });
+        await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(.4); ErgoFlex.renderer.setAnimationLoop(null); });
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; });
         for (const id of ['home','gaming','music','creative','study','office','gym','kitchen','lounge','workshop','bedroom','gallery','scifi','coworking','library']) {
             const result = await page.evaluate(async id => {
                 const THREE = await import('three');
-                const { WorkspaceRoom } = await import('./workspace-3d.mjs?v=room-life-20261002');
+                const { WorkspaceRoom } = await import('./workspace-3d.mjs?v=scene-desk-styling-20261010');
                 const room = new WorkspaceRoom(new THREE.Scene(), .001), results = [];
                 for (const layout of ['apartment','house','spacious','premium','executive']) {
                     room.set(id, { layout, scale: .001 });
@@ -69,7 +71,7 @@ const server = http.createServer((req, res) => {
         }
         const editing = await page.evaluate(async () => {
             const THREE = await import('three');
-            const { roomLifeBaseTransform } = await import('./room-life.mjs?v=room-life-20261002');
+            const { roomLifeBaseTransform } = await import('./room-life.mjs?v=scene-desk-styling-20261010');
             ErgoFlex.setRoomScene('home', false); ErgoFlex.setHomeLayout('house'); await ErgoFlex.workspaceRoom.ready; ErgoFlex.setHomeMode('afternoon', false);
             const entry = [...ErgoFlex.sceneAssetRegistry.values()].find(e => e.obj.userData.propId === 'steelcase-leap-v2'), obj = entry.obj;
             const before = obj.position.x; obj.position.x += 75; obj.updateMatrixWorld(true);

@@ -883,29 +883,28 @@ function ErgoFlexDeviceMatches(size, id) {
 
     // --- the remote: dragging, presets, forms, and stop -------------------------
 
-    // Drag by the header, and only from the bare strip - a pointerdown on the
-    // stop button or the collapse toggle belongs to that control, not the drag.
+    // Drag by the center handle. A tap toggles it; a drag must not toggle it.
     const canvasBefore = await page.evaluate(() => document.querySelector('canvas').height);
-    await page.evaluate(() => {
-      // Coordinates come from getBoundingClientRect, which is viewport-relative
-      // like the events themselves. Driving this through page.mouse meant mixing
-      // that with page-relative box coordinates, which only agree when nothing
-      // has scrolled.
-      const header = document.querySelector('.remote-header');
-      const box = header.getBoundingClientRect();
-      const at = (x, y) => ({ bubbles: true, button: 0, pointerId: 11, clientX: x, clientY: y });
-      const x = box.left + 30, y = box.top + box.height / 2;
-      header.dispatchEvent(new PointerEvent('pointerdown', at(x, y)));
-      header.dispatchEvent(new PointerEvent('pointermove', at(x - 120, y - 90)));
-      header.dispatchEvent(new PointerEvent('pointerup', at(x - 120, y - 90)));
+    const dragStart = await page.evaluate(() => {
+      const dock = document.querySelector('#motion-dock'), box = dock.querySelector('#motion-dock-toggle').getBoundingClientRect();
+      return { x: box.left + box.width / 2, y: box.top + box.height / 2,
+        left: dock.getBoundingClientRect().left, collapsed: dock.classList.contains('collapsed') };
     });
+    await page.mouse.move(dragStart.x, dragStart.y);
+    await page.mouse.down();
+    await page.mouse.move(dragStart.x - 120, dragStart.y - 90, { steps: 8 });
+    await page.mouse.up();
     await new Promise(r => setTimeout(r, 200));
     const moved = await page.evaluate(() => ({
       left: document.getElementById('motion-dock').style.left,
       stored: localStorage.getItem('ergoflex.dockPosV1'),
-      canvas: document.querySelector('canvas').height
+      canvas: document.querySelector('canvas').height,
+      drawnLeft: document.getElementById('motion-dock').getBoundingClientRect().left,
+      collapsed: document.getElementById('motion-dock').classList.contains('collapsed')
     }));
     assert.ok(moved.left && parseFloat(moved.left) >= 0, 'dragging moves the panel');
+    assert.ok(Math.abs(moved.drawnLeft - dragStart.left) > 10, 'the actual handle moves the panel');
+    assert.equal(moved.collapsed, dragStart.collapsed, 'dragging does not expand or minimize');
     assert.ok(moved.stored && JSON.parse(moved.stored).v === 1, 'and the position is persisted with a schema version');
     assert.equal(moved.canvas, canvasBefore, 'and dragging never resizes the canvas');
 

@@ -19,13 +19,15 @@
 //
 // Images are 1280x800 CSS px at --ratio (0.75 -> 960x600 PNG).
 // Options:
-//   --only a,b         institutional scene IDs (required; `all` = every one)
+//   --only a,b         room IDs (`all` = institutions; `remaining` = this polish pass)
 //   --out DIR          output directory (default /tmp/ef-institutional-shots)
 //   --tiers t1,t2      restrict tiers (default: every tier of each scene)
 //   --phases p1,p2     restrict dayparts (default: all five)
-//   --angles a1,a2     restrict cameras (default: wide,hero,reverse)
+//   --angles a1,a2     cameras: wide,hero,reverse,activity (default: wide,hero,reverse)
 //   --reference r1,r2  reference rooms (default office,coworking,library; `none` skips)
 //   --ratio 0.75       renderer pixel ratio (viewport is 1280x800)
+//   --activity-details also capture house activity close-ups at afternoon/night
+//   --resume           keep completed layout captures in the same output folder
 //
 // Memory: exactly one Chromium process exists at a time. It is relaunched per
 // scene (software WebGL leaks between large rooms) and always closed on exit,
@@ -47,6 +49,7 @@ const ANGLES = list('--angles', ['wide', 'hero', 'reverse']);
 const tierFilter = list('--tiers', null);
 const refs = (opt('--reference') === 'none') ? [] : list('--reference', ['office', 'coworking', 'library']);
 const ratio = Number(opt('--ratio', '0.75'));
+const activityDetails = args.includes('--activity-details');
 let only = list('--only', null);
 if (!only) { console.error('Usage: node tools/props/institutional-review.mjs --only security,police [--out DIR] (see header)'); process.exit(2); }
 mkdirSync(outDir, { recursive: true });
@@ -64,7 +67,16 @@ await new Promise(r => server.listen(0, '127.0.0.1', r));
 const url = `http://127.0.0.1:${server.address().port}/`;
 
 let browser = null;
-const errors = [], report = [];
+const previous = args.includes('--resume') && existsSync(join(outDir, 'report.json'))
+    ? JSON.parse(readFileSync(join(outDir, 'report.json'), 'utf8')) : null;
+const errors = previous?.errors || [], report = previous?.report || [];
+function completed(id, tier) {
+    if (!previous) return false;
+    return PHASES.every(phase => report.some(r => r.id === id && r.tier === tier && r.phase === phase) &&
+        ANGLES.every(angle => existsSync(join(outDir, `${id}-${tier}-${phase}-${angle}.png`))) &&
+        (!activityDetails || tier !== 'house' || !['afternoon', 'night'].includes(phase) ||
+            ['activity','desktop'].every(angle => existsSync(join(outDir, `${id}-${tier}-${phase}-${angle}.png`)))));
+}
 const launchOptions = { headless: true, protocolTimeout: 600000, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--disable-dev-shm-usage'] };
 async function registryOnly() {
     // Registry discovery needs modules, not a fully furnished Security room.
@@ -80,8 +92,16 @@ async function registryOnly() {
     });
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     return page.evaluate(async () => {
-        const m = await import('./institutional-scenes.mjs?v=institutional-finish-20261009');
-        return Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)]));
+        const m = await import('./institutional-scenes.mjs?v=scene-desk-styling-20261010');
+        const registry = Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)]));
+        for (const id of ['home','office','library','coworking','music','gaming','creative','study','lounge','kitchen','gym','scifi','bedroom','workshop','gallery']) {
+            const file = id === 'home' ? 'home-office' : id === 'creative' ? 'artist-room' : id + '-room';
+            const mod = await import('./' + file + '.mjs');
+            const layouts = Object.entries(mod).find(([key]) => /^[A-Z]+_LAYOUTS$/.test(key))?.[1];
+            if (!layouts) throw new Error('Missing layout registry for ' + id);
+            registry[id] = Object.keys(layouts);
+        }
+        return registry;
     });
 }
 async function openRoom(id, tier) {
@@ -127,7 +147,10 @@ async function shoot(page, id, tier, phase, angle, file) {
         // them before fitting a camera, so their uninitialised millimetre
         // geometry cannot make the first overview shrink to a tiny room.
         ef.workspaceRoom.root.updateWorldMatrix(true, true);
-        ef.renderer.render(ef.roomInteractions.scene, ef.roomInteractions.camera);
+        if (window.__reviewOverlayRoot !== ef.workspaceRoom.root) {
+            ef.renderer.render(ef.roomInteractions.scene, ef.roomInteractions.camera);
+            window.__reviewOverlayRoot = ef.workspaceRoom.root;
+        }
     }, { id, phase });
     await page.evaluate(angle => {
         const THREE = window.__three, ef = ErgoFlex, room = ef.workspaceRoom, { camera, controls } = ef.roomInteractions, l = room.roomLayout;
@@ -150,6 +173,15 @@ async function shoot(page, id, tier, phase, angle, file) {
             target = center; eye = center.clone().addScaledVector(direction, distance * 1.05);
         } else if (angle === 'hero') {
             eye = world(dx + 2500, 1900, dz + 2300); target = world(dx, 800, dz - 300);
+        } else if (angle === 'activity') {
+            const kit = room.life.activity;
+            const box = new THREE.Box3().setFromObject(kit), center = box.getCenter(new THREE.Vector3());
+            target = center; eye = center.clone().add(new THREE.Vector3(.3, .5, .42));
+        } else if (angle === 'desktop') {
+            const mount = ef.workspaceAccessories.mounts.get('desktop');
+            const kit = mount.dress.children.find(o => o.userData.dayKit);
+            const box = new THREE.Box3().setFromObject(kit), center = box.getCenter(new THREE.Vector3());
+            target = center; eye = center.clone().add(new THREE.Vector3(.32, .42, .35));
         } else {
             // reverse: outside the back-right corner (both walls cut away).
             eye = world(w / 2 + 900, Math.min(ceiling + 600, 3900), bz - 900); target = world(-w * .15, 900, bz + d * .6);
@@ -170,24 +202,34 @@ async function stats(page, id, tier, phase) {
     return page.evaluate(({ id, tier, phase }) => {
         const r = ErgoFlex.workspaceRoom;
         return { id, tier, phase, missing: r.missingProps, stations: r.assets().filter(o => o.userData.officeStation).map(o => ({ key: o.userData.sceneAssetKey, size: o.userData.officeStation.size, turn: o.userData.officeStation.turn })),
-            atmosphere: r.root.userData.institutionalAtmosphere, drawCalls: ErgoFlex.renderer.info.render.calls, triangles: ErgoFlex.renderer.info.render.triangles };
+            atmosphere: r.root.userData.institutionalAtmosphere, polish: r.root.userData.polish, story: r.root.userData.dailyStory, surfaceDetail: r.root.userData.surfaceDetail, pointLights: r.root.children.filter(o => o.isPointLight).length, drawCalls: ErgoFlex.renderer.info.render.calls, triangles: ErgoFlex.renderer.info.render.triangles };
     }, { id, tier, phase });
 }
 
 try {
     const registry = await registryOnly();
     let page;
-    if (only.includes('all')) only = Object.keys(registry);
-    const unknown = only.filter(id => !registry[id]); if (unknown.length) throw new Error('Unknown institutional scene(s): ' + unknown.join(', ') + '. Known: ' + Object.keys(registry).join(', '));
+    if (only.includes('all')) only = Object.keys(registry).filter(id => !['home','office','library','coworking','music','gaming','creative','study','lounge','kitchen','gym','scifi','bedroom','workshop','gallery'].includes(id));
+    if (only.includes('remaining')) only = Object.keys(registry).filter(id => !['hospital','laboratory','mobileit'].includes(id));
+    if (only.includes('catalog')) only = Object.keys(registry);
+    const unknown = only.filter(id => !registry[id]); if (unknown.length) throw new Error('Unknown room(s): ' + unknown.join(', ') + '. Known: ' + Object.keys(registry).join(', '));
     for (const id of only) {
-        const tiers = registry[id].filter(t => !tierFilter || tierFilter.includes(t));
+        const tiers = registry[id].filter(t => (!tierFilter || tierFilter.includes(t)) && !completed(id, t));
+        if (!tiers.length) continue;
+        page = await openRoom(id, tiers[0]);
         for (const tier of tiers) {
-            page = await openRoom(id, tier);
+            // An interrupted layout is recaptured as a unit, without duplicate stats.
+            for (let i = report.length - 1; i >= 0; i--) if (report[i].id === id && report[i].tier === tier) report.splice(i, 1);
             await selectLayout(page, id, tier);
             for (const phase of PHASES) {
                 for (const angle of ANGLES) await shoot(page, id, tier, phase, angle, `${id}-${tier}-${phase}-${angle}.png`);
+                if (activityDetails && tier === 'house' && ['afternoon', 'night'].includes(phase) && !ANGLES.includes('activity')) {
+                    await shoot(page, id, tier, phase, 'activity', `${id}-${tier}-${phase}-activity.png`);
+                    await shoot(page, id, tier, phase, 'desktop', `${id}-${tier}-${phase}-desktop.png`);
+                }
                 report.push(await stats(page, id, tier, phase));
             }
+            writeFileSync(join(outDir, 'report.json'), JSON.stringify({ errors, report }, null, 2));
             console.log(`Reviewed ${id}/${tier}: ${PHASES.length} phases × ${ANGLES.length} angles`);
         }
     }

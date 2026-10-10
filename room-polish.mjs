@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=institutional-finish-20261009';
+import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
 
 // Authored art, imported GLBs and user transforms are left in their own systems.
 // These finishes apply only to the builders' explicitly tagged room materials.
@@ -22,6 +22,44 @@ export const ROOM_FINISHES = {
     coworking: { name: 'Clay & natural oak',     ground: '#8b7c69', wood: .55, metal: .34, stone: .61, night: .96 },
     library:   { partyDay: true, name: 'Forest green & brass',   ground: '#7d765d', wood: .51, metal: .30, stone: .67, night: .96 }
 };
+// Per-room finish and indirect-light balance. Multipliers are applied after
+// the authored mode and the visitor's lighting sliders, never accumulated.
+// Finished clinical/IT scenes retain their own group-specific calibration.
+const ROOM_BALANCE = {
+    home:      { plaster: .91, fabric: .96, powder: .62, dayFill: .94, eveningFill: .94, nightFill: .96, rim: .88, neutral: .12 },
+    office:    { plaster: .90, fabric: .94, powder: .57, dayFill: .92, eveningFill: .9,  nightFill: .9,  rim: .78, neutral: .20 },
+    coworking: { plaster: .92, fabric: .95, powder: .60, dayFill: .94, eveningFill: .9,  nightFill: .94, rim: .85, neutral: .17 },
+    library:   { plaster: .92, fabric: .96, powder: .60, dayFill: .94, eveningFill: .92, nightFill: .94, rim: .78, neutral: .18 },
+    study:     { plaster: .93, fabric: .96, powder: .60, dayFill: .95, eveningFill: .9,  nightFill: .94, rim: .82, neutral: .12 },
+    creative:  { plaster: .94, fabric: .96, powder: .64, dayFill: .98, eveningFill: .94, nightFill: .98, rim: .90, neutral: .28 },
+    music:     { plaster: .94, fabric: .98, powder: .58, dayFill: .90, eveningFill: .86, nightFill: .92, rim: .86, neutral: .18 },
+    gaming:    { plaster: .91, fabric: .95, powder: .56, dayFill: .90, eveningFill: .90, nightFill: .94, rim: .90, neutral: .18 },
+    lounge:    { plaster: .93, fabric: .97, powder: .61, dayFill: .94, eveningFill: .88, nightFill: .92, rim: .82, neutral: .12 },
+    kitchen:   { plaster: .91, fabric: .94, powder: .54, dayFill: .98, eveningFill: .94, nightFill: .96, rim: .87, neutral: .22 },
+    gym:       { plaster: .92, fabric: .96, powder: .63, dayFill: .97, eveningFill: .93, nightFill: .96, rim: .84, neutral: .26 },
+    bedroom:   { plaster: .94, fabric: .98, powder: .64, dayFill: .95, eveningFill: .88, nightFill: .90, rim: .78, neutral: .12 },
+    workshop:  { plaster: .94, fabric: .96, powder: .65, dayFill: .98, eveningFill: .97, nightFill: .98, rim: .86, neutral: .26 },
+    gallery:   { plaster: .93, fabric: .95, powder: .59, dayFill: .98, eveningFill: .94, nightFill: .98, rim: .86, neutral: .30 },
+    scifi:     { plaster: .86, fabric: .95, powder: .51, dayFill: .92, eveningFill: .92, nightFill: .96, rim: .92, neutral: .06 }
+};
+// Instance-owned material copies: muted upholstery and natural foliage on
+// the small untextured library props. Cached GLBs and mapped fabric stay intact.
+export function polishRoomProp(room, object, placement) {
+    if (!ROOM_BALANCE[room.id]) return;
+    const plant = /^kenney-furniture-(plant-small|potted-plant)/.test(placement.id);
+    const seating = /^kenney-furniture-(lounge-sofa|chair-cushion|chair-modern-cushion)$/.test(placement.id);
+    if (!plant && !seating) return;
+    const upholstery = { office: '#73877b', coworking: '#ae927c', library: '#7b8d7a', music: '#675c66', gaming: '#5a6073', creative: '#b4a489', study: '#78836b', lounge: '#74836e', kitchen: '#90a18c', gym: '#657771', bedroom: '#b19e91', gallery: '#a89e8c', workshop: '#788381', home: '#aca38d', scifi: '#53677a' }[room.id];
+    const copies = new Map();
+    const finish = source => {
+        if (!source?.isMeshStandardMaterial || source.map || !(plant && source.name === 'plant' || seating && source.name === 'carpet')) return source;
+        if (copies.has(source)) return copies.get(source);
+        const mat = source.clone(); mat.color.set(plant ? '#4e7254' : upholstery);
+        mat.roughness = plant ? .88 : .96; mat.metalness = 0;
+        mat.userData.sharedTextures = true; copies.set(source, mat); room.ownedMaterials.add(mat); return mat;
+    };
+    object.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(finish) : finish(o.material); });
+}
 const PHASE_LIGHT = {
     morning:   { fill: .90, rim: .62, ambient: 1.00, bounce: 1.00, contact: .22 },
     afternoon: { fill: .94, rim: .72, ambient: .98, bounce: 1.00, contact: .20 },
@@ -32,8 +70,16 @@ const PHASE_LIGHT = {
 export function roomPolishLighting(room, lights, mode) {
     const finish = ROOM_FINISHES[room.id], phase = PHASE_LIGHT[mode] || PHASE_LIGHT.afternoon;
     if (!finish) return;
-    lights.fill.intensity *= phase.fill;
-    lights.rim.intensity *= phase.rim * (mode === 'night' ? finish.night : 1);
+    const balance = ROOM_BALANCE[room.id];
+    lights.fill.intensity *= phase.fill * (balance ? mode === 'night' ? balance.nightFill : mode === 'evening' || mode === 'party' ? balance.eveningFill : balance.dayFill : 1);
+    if (balance) {
+        // Daylight colour rendering stays neutral; night retains the authored
+        // warm practical / cool ambient separation and RGB studio character.
+        const neutral = balance.neutral * (mode === 'morning' || mode === 'afternoon' ? 1 : .25);
+        lights.fill.color.lerp(new THREE.Color('#ffffff'), neutral);
+        lights.hemi.color.lerp(new THREE.Color('#ffffff'), neutral);
+    }
+    lights.rim.intensity *= phase.rim * (balance?.rim || 1) * (mode === 'night' ? finish.night : 1);
     lights.hemi.intensity *= phase.ambient;
     lights.hemi.groundColor.set(finish.ground);
     room.scene.environmentIntensity *= phase.bounce;
@@ -53,7 +99,8 @@ export function roomPolishLighting(room, lights, mode) {
 export function roomSurfaceFinish(room, mat, kind) {
     const finish = ROOM_FINISHES[room.id]; if (!finish) return;
     // Preserve lower authored roughness on polished stone and existing metalness.
-    const roughness = { plaster: .88, fabric: .93, rubber: .91, powder: .59, wood: finish.wood, metal: finish.metal, stone: finish.stone }[kind];
+    const balance = ROOM_BALANCE[room.id] || {};
+    const roughness = { plaster: balance.plaster ?? .88, fabric: balance.fabric ?? .93, rubber: .91, powder: balance.powder ?? .59, wood: finish.wood, metal: finish.metal, stone: finish.stone }[kind];
     if (roughness !== undefined) mat.roughness = kind === 'stone' || kind === 'metal' ? Math.min(mat.roughness, roughness) : roughness;
 }
 const visible = obj => { for (let p = obj; p; p = p.parent) if (!p.visible) return false; return true; };

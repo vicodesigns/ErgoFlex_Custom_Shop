@@ -13,6 +13,8 @@ const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(n); return i > -1 ? args[i + 1] : d; };
 const outDir = resolve(opt('--out', join(root, 'scene-shots')));
 const only = opt('--only')?.split(',');
+const ratio = Number(opt('--ratio', '.65'));
+const layout = opt('--layout', 'house');
 mkdirSync(outDir, { recursive: true });
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
@@ -39,15 +41,14 @@ const newPage = async () => {
 };
 let page = await newPage();
 await page.setViewport({ width: 1500, height: 1100 });
-await page.goto(url + '?room=product&view=product',{waitUntil:'domcontentloaded'});
-await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4, { timeout: 120000 });
-await page.waitForFunction(() => getComputedStyle(document.querySelector('#loader')).display === 'none');
-await page.evaluate(() => { ErgoFlex.setShellMode('studio'); ErgoFlex.renderer.setPixelRatio(1); });
-await page.addStyleTag({content:'#motion-dock{visibility:hidden!important}'});
-await page.evaluate(() => ErgoFlex.renderer.setAnimationLoop(null));
-await new Promise(resolve=>setTimeout(resolve,150));
-
-const names = await page.evaluate(() => Object.fromEntries(ErgoFlex.roomScenes.filter(s => s.id !== 'product').map(s => [s.id, s.name])));
+const imports = readFileSync(join(root, 'index.html'), 'utf8').match(/<script type="importmap">[\s\S]*?<\/script>/)?.[0];
+await page.setRequestInterception(true);
+page.on('request', request => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) request.respond({status:200,contentType:'text/html',body:`<!doctype html>${imports}`});
+    else request.continue();
+});
+await page.goto(url,{waitUntil:'domcontentloaded'});
+const names = await page.evaluate(async () => Object.fromEntries((await import('./workspace-3d.mjs')).ROOM_SCENES.filter(s => s.id !== 'product').map(s => [s.id, s.name])));
 const reportFile=join(outDir,'report.json');
 const report=only&&existsSync(reportFile)?JSON.parse(readFileSync(reportFile,'utf8')).filter(r=>!only.includes(r.id)):[];
 for(const [id,name] of (only ? only.map(id=>[id,names[id]]).filter(([,name])=>name) : Object.entries(names))) {
@@ -57,15 +58,19 @@ for(const [id,name] of (only ? only.map(id=>[id,names[id]]).filter(([,name])=>na
     await browser.close(); browser = await launch(); page = await newPage();
     await page.setViewport({width:1500,height:1100});
     console.log('Rendering',id);
-    await page.goto(url+'?room='+id+'&view=room&layout=house',{waitUntil:'domcontentloaded'});
+    await page.goto(url+'?room='+id+'&layout='+layout,{waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>window.ErgoFlex?.renderer,{timeout:120000});
+    await page.evaluate(r=>{ErgoFlex.renderer.setPixelRatio(r);ErgoFlex.renderer.setAnimationLoop(null);},ratio);
     await page.waitForFunction(()=>window.ErgoFlex?.wheelRigs.length===4 && getComputedStyle(document.querySelector('#loader')).display==='none',{timeout:120000});
     await page.evaluate(()=>{window.__reviewReady=false;window.__reviewPromise=ErgoFlex.workspaceRoom.ready.then(()=>import('three')).then(THREE=>{window.__reviewThree=THREE;window.__reviewReady=true;});});
     await page.waitForFunction(()=>window.__reviewReady,{timeout:120000});
-    await page.evaluate(()=>{ErgoFlex.setShellMode('studio');ErgoFlex.renderer.setPixelRatio(1);ErgoFlex.renderer.setAnimationLoop(null);});
+    await page.evaluate(r=>{ErgoFlex.setShellMode('studio');ErgoFlex.renderer.setPixelRatio(r);ErgoFlex.renderer.setAnimationLoop(null);},ratio);
     await page.addStyleTag({content:'#motion-dock{visibility:hidden!important}'});
     await new Promise(resolve=>setTimeout(resolve,150));
     await page.evaluate(()=>{
         const THREE=window.__reviewThree,ef=ErgoFlex,room=ef.workspaceRoom,{camera,controls}=ef.roomInteractions;
+        ef.renderer.setSize(1500,1100,false);camera.aspect=1500/1100;camera.updateProjectionMatrix();
+        ef.renderer.render(ef.roomInteractions.scene,camera);
         room.root.updateWorldMatrix(true,true);const box=new THREE.Box3().setFromObject(room.root).expandByObject(ef.loadedModel),center=box.getCenter(new THREE.Vector3());
         const direction=new THREE.Vector3(5,4,5).normalize(),right=new THREE.Vector3().crossVectors(camera.up,direction).normalize(),up=new THREE.Vector3().crossVectors(direction,right).normalize();
         const tanV=Math.tan(camera.fov*Math.PI/360),tanH=tanV*camera.aspect;let distance=controls.minDistance;
@@ -80,6 +85,7 @@ for(const [id,name] of (only ? only.map(id=>[id,names[id]]).filter(([,name])=>na
             const THREE=window.__reviewThree,ef=ErgoFlex;
             ef.setMeasuredRoomMode(id,mode,false);const look=ef.measuredRoom.modes[mode];ef.setLedsEnabled(look.leds);if(look.color)ef.setLedColor(look.color,false);
             ef.setHeight(look.height);ef.setTilt('tilting',look.tilt);
+            ef.setLedMotionEnabled?.(false);if(look.color)ef.setLedColor(look.color,false);
             ef.workspaceRoom.update(ef.roomInteractions.camera);ef.workspaceAccessories.update();
             ef.roomLedSpill.update(ef.workspaceRoom,ef.ledPixelRenderer,{enabled:look.leds,colour:new THREE.Color(look.color||ef.ledColor),gain:1.8});
             ef.renderer.render(ef.roomInteractions.scene,ef.roomInteractions.camera);
@@ -96,7 +102,7 @@ for(const [id,name] of (only ? only.map(id=>[id,names[id]]).filter(([,name])=>na
             return canvas.toDataURL('image/png').split(',')[1];
         });
         writeFileSync(join(outDir,`${id}-${mode}.png`),Buffer.from(png,'base64'));
-        report.push(await page.evaluate((id,mode)=>({id,mode,missing:ErgoFlex.workspaceRoom.missingProps,lighting:ErgoFlex.roomLightingState,polish:ErgoFlex.workspaceRoom.root.userData.polish,details:ErgoFlex.workspaceRoom.root.userData.detailLevel,atmosphere:ErgoFlex.workspaceRoom.root.userData.institutionalAtmosphere,drawCalls:ErgoFlex.renderer.info.render.calls,triangles:ErgoFlex.renderer.info.render.triangles}),id,mode));
+        report.push(await page.evaluate((id,mode)=>({id,mode,layout:ErgoFlex.workspaceRoom.roomLayout.id,missing:ErgoFlex.workspaceRoom.missingProps,lighting:ErgoFlex.roomLightingState,polish:ErgoFlex.workspaceRoom.root.userData.polish,details:ErgoFlex.workspaceRoom.root.userData.detailLevel,atmosphere:ErgoFlex.workspaceRoom.root.userData.institutionalAtmosphere,drawCalls:ErgoFlex.renderer.info.render.calls,triangles:ErgoFlex.renderer.info.render.triangles}),id,mode));
     }
     (await import('node:fs')).writeFileSync(reportFile,JSON.stringify(report,null,2));
     console.log('Reviewed',id);

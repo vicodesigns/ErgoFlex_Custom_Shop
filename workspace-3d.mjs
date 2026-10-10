@@ -1,8 +1,10 @@
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=institutional-finish-20261009';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=institutional-finish-20261009';
-import { refineRoomSurfaces } from './room-refinement.mjs?v=institutional-finish-20261009';
-import { RoomLife } from './room-life.mjs?v=institutional-finish-20261009';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=scene-desk-styling-20261010';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=scene-desk-styling-20261010';
+import { polishRoomProp } from './room-polish.mjs?v=scene-desk-styling-20261010';
+import { RoomLife } from './room-life.mjs?v=scene-desk-styling-20261010';
+import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=scene-desk-styling-20261010';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=scene-desk-styling-20261010';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
@@ -13,13 +15,13 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ACCESSORIES } from './catalog.mjs';
-import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=room-furnishings-20261006';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=groove-routines-20261002';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=room-furnishings-20261006';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=groove-routines-20261002';
-import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=groove-routines-20261002';
+import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=scene-desk-styling-20261010';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=scene-desk-styling-20261010';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=scene-desk-styling-20261010';
+import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 
-import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=groove-routines-20261002';
+import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=scene-desk-styling-20261010';
 import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
@@ -343,7 +345,8 @@ export class WorkspaceAccessories {
             .map((placement, index) => ({ ...placement, sceneAssetKey: `${scene.id}:${placement.role}:${index}:${placement.id}` }));
         await PROP_LIBRARY.loadIndex();
         const loaded = await Promise.all(wanted.map(async placement => {
-            try { return { placement, object: placement.procedural === 'midi' ? createMusicKeyboard() : await PROP_LIBRARY.instance(placement.id) }; }
+            try { return { placement, object: placement.procedural === 'midi' ? createMusicKeyboard()
+                : placement.id === 'journal' ? createDeskNotebook(sceneId, { box, mesh, material }) : await PROP_LIBRARY.instance(placement.id) }; }
             catch { return { placement, object: null }; }
         }));
         if (token !== this.dressToken) return;
@@ -367,26 +370,9 @@ export class WorkspaceAccessories {
         }
         const desktop = this.mounts.get('desktop');
         if (desktop && sceneId !== 'product') {
-            // Clinical/lab benches and field diagnostic desks use work notes, not drinks.
-            const workOnly = ['hospital', 'laboratory', 'mobileit'].includes(sceneId);
-            const kit = new THREE.Group(); kit.name = 'Groove tabletop · daily materials'; kit.userData.dayKit = true;
-            kit.position.set(-440, 1, 150); markSceneAsset(kit, { key: `${sceneId}:desktop:daily-kit`, role: 'desktop' });
-            const paper = material('#e9dfc8'), cover = material(sceneId === 'creative' ? '#b9765d' : '#52746c'), ceramic = material('#e6d6b8'), ink = material('#354b50');
-            for (let phase = 0; phase < 5; phase++) {
-                const group = new THREE.Group(); group.name = [workOnly ? 'Morning checklist' : 'Morning coffee', 'Working notes', 'Evening reading', 'Quiet focus', 'Shared setup'][phase]; kit.add(group);
-                if (!workOnly && (phase === 0 || phase === 4)) {
-                    for (const x of phase === 4 ? [-45, 45] : [0]) {
-                        mesh(group, new THREE.CylinderGeometry(27, 24, 54, 16), ceramic, [x, 27, 0]);
-                        mesh(group, new THREE.CylinderGeometry(23, 23, 2, 16), ink, [x, 55, 0]);
-                    }
-                } else {
-                    box(group, [phase === 2 ? 155 : 100, 5, 125], [0, 2.5, 0], cover, 2);
-                    box(group, [phase === 2 ? 150 : 95, 10, 118], [0, 10, 0], paper, 1);
-                    if (phase === 3) box(group, [100, 4, 125], [0, 17, 0], cover, 2);
-                    else { for (let n = 0; n < 5; n++) box(group, [65, .5, 1], [0, 15.3, -35 + n * 14], ink); rod(group, [-50, 4, 78], [50, 4, 78], 3, cover); }
-                }
-                group.visible = phase === 0;
-            }
+            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material });
+            placeDailyDeskKit(kit, desktop.dress.children);
+            markSceneAsset(kit, { key: `${sceneId}:desktop:daily-kit`, role: 'desktop' });
             desktop.dress.add(kit);
         }
         this.update();
@@ -748,7 +734,7 @@ export class WorkspaceRoom {
                 mount.matrixAutoUpdate = false; mount.matrix.copy(mounts[role]); group.add(mount);
                 for (const placement of spec[role] || []) {
                     try {
-                        const object = await PROP_LIBRARY.instance(placement.id);
+                        const object = placement.id === 'journal' ? createDeskNotebook(this.id, { box, mesh, material }) : await PROP_LIBRARY.instance(placement.id);
                         if (token !== this.token) { disposeTree(group); return; }
                         object.position.set(...placement.at); object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
                         mount.add(object);
@@ -899,6 +885,7 @@ export class WorkspaceRoom {
             const { placement, object } = placements[index];
             if (!object) { this.missingProps.push(placement.id); continue; }
             this.decorateProp?.(object, placement);
+            polishRoomProp(this, object, placement);
             const position = scene.physical ? [...placement.at] : roomPosition(scene, placement);
             // Countertop objects travel with the complete counter, not the lounge zone.
             if (scene.counter && placement.at[1] >= 900 && placement.on !== 'ceiling') position[2] = placement.at[2];
