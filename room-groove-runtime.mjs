@@ -14,7 +14,7 @@ export function grooveObstacles(room) {
         } else candidates.push(child);
     }
     for (const obj of candidates) {
-        if (obj.userData.grooveMarker || obj.isLight) continue;
+        if (obj.userData.grooveMarker || obj.userData.sceneDeskActive || obj.isLight) continue;
         // Compute in room coordinates, without first rotating a world AABB.
         const box = new THREE.Box3();
         obj.traverse(o => {

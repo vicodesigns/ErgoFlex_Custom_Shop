@@ -2,10 +2,16 @@ import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261
 import { normalizeCustomLook, normalizeCustomPalette, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
-import { RoomGroove } from './room-groove-runtime.mjs?v=groove-save-20261007';
+import { poseIsClear } from './room-groove.mjs';
+import { SceneDesks } from './scene-desks.mjs?v=scene-desk-editor-20261010';
+import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
+import { buildSceneDeskRig } from './scene-desk-rig.mjs';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs';
+import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
+import { RoomGroove } from './room-groove-runtime.mjs?v=scene-desk-editor-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=scene-desk-styling-20261010';
+import { RoomInteractions } from './room-interactions.mjs?v=scene-desk-editor-20261010';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261010';
@@ -39,7 +45,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=scene-desk-styling-20261010';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=scene-desk-editor-20261010';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=scene-desk-styling-20261010';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=scene-desk-styling-20261010';
@@ -541,22 +547,118 @@ try {
     }
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
+let sceneDesks=null,sceneDeskUI=null,sceneDeskInternal=false;
 let roomInteractions = null, roomFurnitureSaveTimer = null, roomCollisionBlocked = false;
 let roomRearrangeEnabled = readStore('ergoflex.roomRearrange', 1, null)?.enabled !== false;
+
+function initSceneDeskEditing() {
+    if(sceneDesks)return;
+    let groundingSignature='';
+    const liveAnchor=r=>{
+        loadedModel.updateWorldMatrix(true,true);workspaceRoom.root.updateWorldMatrix(true,false);
+        if(r?.rig?.anchorModel)return workspaceRoom.root.worldToLocal(loadedModel.localToWorld(r.rig.anchorModel.clone()));
+        const center=deskCollisionBox()?.getCenter(new THREE.Vector3())||new THREE.Box3().setFromObject(loadedModel).getCenter(new THREE.Vector3());
+        return workspaceRoom.root.worldToLocal(center);
+    };
+    const refresh=()=>{
+        if(!sceneDeskUI){const hint=document.getElementById('room-interaction-hint');if(hint?.parentElement){sceneDeskUI=mountSceneDeskUI(hint.parentElement,sceneDesks);hint.before(sceneDeskUI.panel);}}
+        sceneDeskUI?.sync();if(workspaceRoom)workspaceRoom.sceneDeskRecords=sceneDesks.records;
+        for(const r of sceneDesks.records.values())if(r.group){r.group.userData.sceneDeskActive=r.id===sceneDesks.selected;if(r.primary)for(const m of Object.values(r.rig?.mounts||{}))m.visible=r.id!==sceneDesks.selected;}
+        const signature=sceneDesks.key+':'+sceneDesks.selected+':'+[...sceneDesks.records.values()].map(r=>r.group?.uuid).join(',');
+        if(signature!==groundingSignature&&sceneDesks.key&&!sceneDesks.drag){groundingSignature=signature;roomInteractions?.bind(workspaceRoom);}
+        const dock=document.getElementById('motion-dock');if(dock)dock.setAttribute('aria-label','Movement controls · '+(sceneDesks.active?.state.name||'ErgoFlex desk'));
+        let label=document.getElementById('controlled-scene-desk');
+        if(!label&&dock){label=document.createElement('span');label.id='controlled-scene-desk';label.className='controlled-scene-desk';dock.prepend(label);}
+        if(label){label.hidden=!sceneDesks.key;label.textContent=sceneDesks.active?.state.name||'No desk selected';}
+        syncGrooveUI(roomGroove?.state||{});
+    };
+    sceneDesks=new SceneDesks({scene,canvas:renderer.domElement,camera,controls,
+        readStore:()=>readStore(SCENE_DESKS_KEY,1,null),writeStore:(k,v)=>writeStore(k,{...v,v:1}),changed:()=>{markEdited();setRoomSaveStatus('Saved in this browser');},
+        room:()=>workspaceRoom,sceneId:()=>selectedRoomScene,phase:()=>measuredRoomProfile()?.mode||'morning',phaseLabel:()=>measuredRoomProfile()?.modes[measuredRoomProfile()?.mode]?.label,
+        status:notifyUser,rearrange:()=>roomRearrangeEnabled&&!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active&&!sceneDesks?.playing&&!sceneDesks?.recording,
+        readLive:r=>{const p=workspaceRoom?.root?liveAnchor(r):new THREE.Vector3();return{size:currentConfig.size,style:currentDeskStyle(),pose:{x:p.x,z:p.z,yaw:deskYaw},height:liftToHeight(currentLift),tilt:primaryTiltConfig()?.currentDeg||0,lights:captureGrooveLights()};},
+        writeLive:r=>{
+            sceneDeskInternal=true;
+            try {
+                if(currentConfig.size!==r.state.size)changeDesktopSize(r.state.size,{rebuildRoom:false});
+                if(r.state.style&&JSON.stringify(currentDeskStyle())!==JSON.stringify(r.state.style))applyDeskStyle(r.state.style);
+                currentLift=targetLift=heightToLift(Math.max(r.state.height,minimumHeightForTilt(r.state.tilt,r.state.size)));
+                manualLiftOverride=true;tiltTarget=null;updateMovingObjectsPosition();
+                const tilt=primaryTiltConfig();if(tilt){tilt.currentDeg=r.state.tilt;applyTiltConfig(tilt);}
+                deskYaw=r.state.pose.yaw;applyDeskTransform();
+                const anchor=workspaceRoom.root.localToWorld(liveAnchor(r));
+                const desired=workspaceRoom.root.localToWorld(new THREE.Vector3(r.state.pose.x,0,r.state.pose.z));
+                glideOffset.x+=desired.x-anchor.x;glideOffset.z+=desired.z-anchor.z;glideTarget.copy(glideOffset);glideFootprintCache=null;
+                applyDeskTransform();loadedModel.updateMatrixWorld(true);workspaceAccessories?.update();showHeight(liftToHeight(currentLift));
+                positionArcThumb();syncGlideUI();
+            } finally {sceneDeskInternal=false;}
+        },
+        activate:r=>{roomGroove?.reset();roomSafety.reset();syncSafetyUI();if(Object.keys(r.state.lights||{}).length)applyGrooveLights(r.state.lights);},
+        makeRig:(state)=>{
+            const style=currentDeskStyle(),shown=loadedModel.visible;
+            sceneDeskInternal=true;
+            try {
+                loadedModel.visible=true;if(state.style)applyDeskStyle(state.style);
+                sharedBasePaintMaterial.userData.sceneDeskMaterial='base';trimMaterial.userData.sceneDeskMaterial='trim';
+                for(const [role,mat] of woodMaterials)mat.userData.sceneDeskMaterial='wood:'+role;
+                for(const [i,p] of ledParts.entries())if(i<3||i>37)p.material.userData.sceneDeskMaterial='led';
+                const rig=buildSceneDeskRig({sample:(h,t,visit)=>withDeskSize(state.size,()=>withNeutralPose(()=>{
+                    currentLift=heightToLift(Math.max(h,minimumHeightForTilt(t,state.size)));updateMovingObjectsPosition();
+                    const tilt=primaryTiltConfig();if(tilt){tilt.currentDeg=t;applyTiltConfig(tilt);}
+                    loadedModel.updateWorldMatrix(true,true);workspaceAccessories?.update();
+                    const toRoom=new THREE.Matrix4().makeRotationY(-Math.PI/2)
+                        .multiply(new THREE.Matrix4().makeScale(...Array(3).fill(loadedModel.scale.x/workspaceRoom.root.scale.x)))
+                        .multiply(loadedModel.matrixWorld.clone().invert());
+                    return visit({model:loadedModel,toRoom,accessoryMounts:workspaceAccessories.mounts});
+                }))});
+                // Every rebuild uses the same reference anchor, independent
+                // of the saved posture, so importing cannot recenter a desk.
+                rig.updatePose(state.height,state.tilt);return rig;
+            } finally {applyDeskStyle(style);loadedModel.visible=shown;sceneDeskInternal=false;}
+        },
+        restyle:r=>{if(r.rig&&r.renderedStyle!==JSON.stringify(r.state.style)){const style=currentDeskStyle();sceneDeskInternal=true;try{applyDeskStyle(r.state.style);r.rig.restyle();r.renderedStyle=JSON.stringify(r.state.style);}finally{applyDeskStyle(style);sceneDeskInternal=false;}}},
+        liveObject:()=>loadedModel,liveBox:()=>deskCollisionBox()||new THREE.Box3(),
+        showLive:(enabled,main)=>{if(loadedModel)loadedModel.visible=enabled;if(workspaceAccessories){workspaceAccessories.activeDeskDress=main;workspaceAccessories.update();}const body=document.querySelector('#motion-dock .app-body');if(body)body.inert=!enabled;refresh();},
+        retireBody:obj=>{unregisterSceneAsset(obj);disposeWorkspaceObject(obj);},registerBody:registerSceneAsset,unregisterBody:unregisterSceneAsset,
+        copyMainDress:mounts=>{for(const [role,m] of workspaceAccessories.mounts)if(m.dress&&mounts[role])for(const obj of m.dress.children){const copy=obj.clone(true);copy.traverse(o=>{o.userData={...o.userData,sharedProp:true,sceneAsset:false};delete o.userData.editorId;});mounts[role].add(copy);}},
+        disposeDress:r=>{for(const m of Object.values(r.rig?.mounts||{}))for(const child of [...m.children]){unregisterSceneAsset(child);disposeWorkspaceObject(child);}},
+        halt:()=>haltAllMotion(),dragLive:(x,z)=>{if(roomSafety.alert)return;applyGlideOffset(glideOffset.clone().add(new THREE.Vector3(x,0,z)),{collide:true});glideTarget.copy(glideOffset);workspaceAccessories.update();},
+        freePosition:size=>freeDeskPosition(workspaceRoom,sceneDesks.records,size),
+        planPath:(r,setting)=>planDeskPath(workspaceRoom,r,setting),samplePath:sampleDeskPath,
+        canPlace:(r,desired)=>{
+            if(roomSafety.alert)return false;
+            const clear=deskPoseClear(workspaceRoom,r,desired.pose);
+            if(!clear){
+                const bounds=deskRoomBounds(workspaceRoom),f=deskFootprint(r),hit=deskObstacles(workspaceRoom,r).find(o=>!poseIsClear(desired.pose,bounds,[o],f));
+                const world=hit?new THREE.Box3(new THREE.Vector3(hit.minX,0,hit.minZ),new THREE.Vector3(hit.maxX,1000,hit.maxZ)).applyMatrix4(workspaceRoom.root.matrixWorld):workspaceRoom.floorBounds;
+                const body=new THREE.Box3().setFromObject(r.group),box={minX:world.min.x,maxX:world.max.x,minY:world.min.y,maxY:world.max.y,minZ:world.min.z,maxZ:world.max.z};
+                announceRoomSafety(roomSafety.contact({id:hit?.id||'room-boundary',name:hit?.name||'Room boundary',box}, {minX:body.min.x,maxX:body.max.x,minY:body.min.y,maxY:body.max.y,minZ:body.min.z,maxZ:body.max.z},workspaceRoom.root.scale.x));
+            }
+            return clear;
+        },
+        lightDesk:r=>{if(r.id===sceneDesks.selected)applyGrooveLights(r.state.lights);},
+        updateLights:()=>{const seconds=performance.now()/1000;for(const r of sceneDesks.records.values()){if(r.id===sceneDesks.selected||!r.rig)continue;const l=r.state.lights||{},frame=sampleLedEffect(normalizeLedEffect(l.effect),seconds,l.enabled!==false,ledReducedMotion.matches);const color=new THREE.Color(l.color||ledColor);if(frame.hue!==null)color.setHSL(frame.hue,1,.5,THREE.SRGBColorSpace);r.group.traverse(o=>{if(o.material?.userData.sceneDeskMaterial==='led'){o.material.color.copy(color).multiplyScalar(l.enabled===false?.12:1);o.material.emissive.copy(color);o.material.emissiveIntensity=3.6*(l.glow??ledGlow)/100*frame.gain;}});}},
+        edit:(before,after)=>{if(JSON.stringify(before)!==JSON.stringify(after))transaction({type:'scene-desks',before,after});},
+        sync:refresh
+    });
+}
+function sceneDeskObstacleEntries(){
+    return [...(sceneDesks?.records.values()||[])].filter(r=>r.id!==sceneDesks.selected&&r.group?.parent).map(r=>({id:r.group.uuid,obj:r.group,objects:[r.group],name:r.state.name,collider:true,pushable:false,movable:false,surface:'floor'}));
+}
 
 function syncRoomRearrangeUI() {
     const toggle=document.getElementById('room-rearrange-toggle');
     if(toggle)toggle.checked=roomRearrangeEnabled;
     const hint=document.getElementById('room-interaction-hint');
     if(hint)hint.textContent=(roomRearrangeEnabled
-        ? 'Drag floor furnishings to move them; select one to rotate it. Drag wall decorations along their wall. '
-        : 'Rearranging is off. Drag to orbit the room. ')
+        ? 'Click a desk to control it; drag desks or floor furnishings to move them. Use Desks to rotate a desk. Drag wall decorations along their wall. '
+        : 'Rearranging is off. Drag to orbit the room; click a desk to control it. ')
         +'Contact stops the desk until CLEAR. After clearing, small objects can be pushed. Turn on the shield to stop before contact.';
 }
 
 function setRoomRearrangeEnabled(enabled) {
     roomRearrangeEnabled=!!enabled;
-    if(!roomRearrangeEnabled){roomInteractions?.end();roomInteractions?.select(null);}
+    if(!roomRearrangeEnabled){sceneDesks?.endDrag();roomInteractions?.end();roomInteractions?.select(null);}
     writeStore('ergoflex.roomRearrange',{v:1,enabled:roomRearrangeEnabled});
     syncRoomRearrangeUI();
 }
@@ -1143,6 +1245,7 @@ function initThreeJS() {
     });
 
     roomInteractions = new RoomInteractions({canvas:renderer.domElement,camera,controls,scene,
+        deskPointer:e=>sceneDesks?.down(e),deskMove:e=>sceneDesks?.moveDrag(e),deskEnd:e=>sceneDesks?.endDrag(e),deskEntries:sceneDeskObstacleEntries,
         room:()=>workspaceRoom,deskBox:deskCollisionBox,deskObject:()=>loadedModel,safety:roomSafety,
         enabled:()=>roomRearrangeEnabled&&!!workspaceRoom?.root&&!liveAR?.active&&!isSelectionMode&&!isDraggingTransform&&!roomGroove?.run,
         onSelection:entry=>{
@@ -1164,8 +1267,9 @@ function initThreeJS() {
                 .filter(item=>['p','q','s'].some(key=>Object.keys(item.before[key]).some(axis=>Math.abs(item.before[key][axis]-item.after[key][axis])>1e-8)));
             if(items.length)transaction({type:'room-transform',items});
         }});
+    initSceneDeskEditing();
     window.addEventListener('pagehide',()=>{
-        roomInteractions?.end();clearTimeout(roomFurnitureSaveTimer);persistSceneAssetStates();
+        sceneDesks?.persist();roomInteractions?.end();clearTimeout(roomFurnitureSaveTimer);persistSceneAssetStates();
     });
     loadModel();
 
@@ -1389,7 +1493,7 @@ function withNeutralPose(fn) {
         tiltConfigs.forEach((config, i) => {
             if (saved.tilt[i] !== undefined) { config.currentDeg = saved.tilt[i]; applyTiltConfig(config); }
         });
-        applyGlideOffset(saved.glide);
+        glideOffset.copy(saved.glide); applyDeskTransform();
         glideTarget.copy(saved.glideTarget);
         wheelRigs.forEach((rig, i) => {
             if (saved.spins[i] !== undefined) { rig.spin = saved.spins[i]; rig.wrapper.rotation.z = rig.spin; }
@@ -1514,6 +1618,7 @@ function captureOfficeStation(spec, millimetreScale, stationIndex = 0) {
 // pushed onto the other stack — so a redo is just an undo of an undo.
 function invertEntry(entry) {
     switch (entry.type) {
+        case 'scene-desks':return {...entry,before:entry.after,after:entry.before};
         case 'transform':
         case 'room-transform':
             return { ...entry, items: entry.items.map(i => ({ obj: i.obj, before: i.after, after: i.before })) };
@@ -1540,6 +1645,7 @@ function invertEntry(entry) {
 }
 
 function applyEntry(entry) {
+    if(entry.type==='scene-desks'){haltAllMotion();sceneDesks.restore(entry.before);setRoomScene(selectedRoomScene,false,{preserveDesk:true,defaultDesktop:false});return;}
     if (entry.type === 'room-transform') {
         haltAllMotion();roomGroove?.reset();
         entry.items.forEach(item=>applyPlainLocalTransform(item.obj,item.before));
@@ -2241,6 +2347,7 @@ function updateBoxSelectHint() {
 }
 
 function onCanvasClick(event) {
+    if(!isSelectionMode&&!rigPickMode&&!isPickingPivot&&!surfaceArtwork?.picking){const picked=sceneDesks?.pick(event);if(picked?.id&&picked.id!==sceneDesks.selected){sceneDesks.select(picked.id);return;}}
     if (surfaceArtwork?.handlePick(event, camera, canvas, interactableObjects)) return;
     if (rigPickMode) {
         const rect = canvas.getBoundingClientRect();
@@ -2424,6 +2531,8 @@ function currentDeskStyle() {
     return cleanDeskStyle({ ...currentConfig, trimColor, sheen: surfaceFinish });
 }
 function rememberSceneDeskStyle() {
+    if(sceneDeskInternal)return;
+    if(sceneDesks?.active&&sceneDesks.selected!=='main'){sceneDesks.active.state.style=currentDeskStyle();sceneDesks.persist();return;}
     if (!sceneDeskLocation) return;
     sceneDeskStyles[sceneDeskLocation] = currentDeskStyle();
     try { localStorage.setItem(SCENE_DESK_STYLES_KEY, JSON.stringify(sceneDeskStyles)); } catch {}
@@ -4003,6 +4112,7 @@ function applyTransformDelta(obj, base, delta) {
 }
 
 function serializeProject() {
+    const sceneDeskState=sceneDesks?.serialize();
     // Motion is read BEFORE neutralising, or it would record the rest pose the
     // capture itself just imposed rather than the pose the desk is actually in.
     const motion = {
@@ -4059,6 +4169,7 @@ function serializeProject() {
             presentation: {
                 surfaceFinish,
                 sceneDeskStyles: JSON.parse(JSON.stringify(sceneDeskStyles)),
+                sceneDesks: sceneDeskState,
                 trimColor,
                 ledColor,
                 ledGlow,
@@ -4405,6 +4516,7 @@ function applyConfigToUI() {
 
 function applyProjectPresentation(project) {
     const presentation = project.presentation || {};
+    if(presentation.sceneDesks!==undefined)sceneDesks?.restore(presentation.sceneDesks);
     // Importing finishes must not register a manual edit in the outgoing room.
     sceneDeskLocation = null;
     if (presentation.sceneDeskStyles !== undefined) sceneDeskStyles = cleanRoomDeskStyles(presentation.sceneDeskStyles);
@@ -6290,6 +6402,7 @@ function showCartModal() {
 }
 
 function changeDesktopSize(size, { rebuildRoom = true } = {}) {
+    if(rebuildRoom&&!sceneDeskInternal&&sceneDesks?.active)return sceneDesks.setSize(size);
     currentConfig.size = size;
     sizeSelect.value = size;
     syncSizeChoiceUI();
@@ -7552,6 +7665,7 @@ function releaseGlideInput() {
     const knob = document.getElementById('glide-knob'); if (knob) knob.style.transform = 'translate(-50%, -50%)';
 }
 function manualGlideReady() {
+    if(sceneDesks?.playing)haltAllMotion();
     if (roomSafety.alert) { syncSafetyUI(); return false; }
     if (!loadedModel) { notifyUser('Wait for the desk to finish loading.'); return false; }
     if (transformControl?.object || isDraggingTransform) {
@@ -7875,6 +7989,7 @@ function syncTiltUI() {
 // it sends the desk back to its home position, which is the opposite of what a
 // stop button must do.
 function haltAllMotion() {
+    if(sceneDesks?.playing)sceneDesks.stop();
     ledMotion.cancel(loadedModel ? ledPose() : null);ledAutoLift = ledAutoTilt = false;ledSounds.stop();
     roomGroove?.cancel();
     glideActive = false;
@@ -9656,6 +9771,7 @@ function animate(time, frame) {
         if (orbitButton && orbitButton.getAttribute('aria-pressed') !== String(controls.autoRotate)) orbitButton.setAttribute('aria-pressed', String(controls.autoRotate));
     }
     workspaceAccessories?.update();
+    if(sceneDesks?.key&&!motionPaused)sceneDesks.update(dt);
     if (loadedModel && !motionPaused && !roomSafety.alert) {
         const completed = ledMotion.completionUntil;
         ledMotion.observe(ledPose(), time, {enabled:ledMotionEnabled && ledDiagnostic.strip === null && !document.hidden,
@@ -9779,7 +9895,10 @@ function currentGrooveKey(sceneId = selectedRoomScene, phase = measuredRoomProfi
     const profile = measuredRoomProfile(sceneId);
     return profile ? groovePresetKey(sceneId, profile.layout.id, currentConfig.size, phase) : null;
 }
-function savedGroovePosition(sceneId, phase) { return groovePresets[currentGrooveKey(sceneId, phase)] || null; }
+function savedGroovePosition(sceneId, phase=measuredRoomProfile(sceneId)?.mode) {
+    const setting=sceneId===selectedRoomScene&&sceneDesks?.active?.state.phases[phase];
+    if(setting){const yaw=deskYaw;deskYaw=setting.pose.yaw;applyDeskTransform();const p=sceneDesks.ctx.readLive(sceneDesks.active).pose;const origin={x:-glideOffset.z/workspaceRoom.root.scale.x,z:glideOffset.x/workspaceRoom.root.scale.x};deskYaw=yaw;applyDeskTransform();return {...setting,pose:{x:setting.pose.x-(p.x-origin.x),z:setting.pose.z-(p.z-origin.z),yaw:setting.pose.yaw}};}
+    return groovePresets[currentGrooveKey(sceneId, phase)] || null; }
 function captureGrooveLights() {
     return JSON.parse(JSON.stringify({
         color: ledColor, glow: ledGlow, enabled: ledsEnabled, effect: ledEffect, surfaces: ledSurfaces,
@@ -9823,6 +9942,7 @@ function applyGrooveLights(lights) {
     ledMusic.syncUI(); ledGame.syncUI(); updateLedEffectFrame();
 }
 function saveCurrentGroovePosition() {
+    if(sceneDesks?.active&&!sceneDesks.saveSetting())return false;
     const profile = measuredRoomProfile();
     if (!profile || !loadedModel || roomGroove?.run || roomSafety.alert || liveAR?.active) return false;
     haltAllMotion();
@@ -9838,7 +9958,11 @@ function saveCurrentGroovePosition() {
     return true;
 }
 function resetCurrentGroovePosition() {
-    const key = currentGrooveKey(); if (!groovePresets[key] || roomGroove?.run) return false;
+    if(roomGroove?.run||sceneDesks?.playing||sceneDesks?.recording)return false;
+    const key=currentGrooveKey(),phase=measuredRoomProfile()?.mode;
+    const savedDesk=sceneDesks?.active?.state.phases[phase];
+    if(!savedDesk&&!groovePresets[key])return false;
+    if(savedDesk){const before=sceneDesks.serialize();delete sceneDesks.active.state.phases[phase];sceneDesks.persist();sceneDesks.ctx.edit(before,sceneDesks.serialize());sceneDesks.sync();}
     delete groovePresets[key];
     const persisted = writeStore(GROOVE_PRESETS_KEY, { v: 1, presets: groovePresets });
     haltAllMotion(); roomGroove?.reset();
@@ -10076,6 +10200,7 @@ function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
         }
         // Desk dressing follows the selected activity even when the desk stays put.
         workspaceAccessories?.setDayDress(id);
+        sceneDesks?.stop();sceneDesks?.sync();
         applyRoomLighting();
     }
     syncHomeOfficeUI();
@@ -10088,6 +10213,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
         try { const saved = localStorage.getItem(`ergoflex.${group.storage}`); if (group.settings.includes(saved)) setting = saved; } catch {}
         id = setting;
     }
+    sceneDesks?.dispose();
     roomInteractions?.end();
     if (roomGroove) { haltAllMotion(); roomGroove.reset(); }
     const choice = ROOM_SCENES.find(s => s.id === id) || ROOM_SCENES[0];
@@ -10169,6 +10295,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
         await hydrateSceneAssets(choice.id, hydrationToken);
         if (hydrationToken === sceneAssetHydrationToken) {
             workspaceAccessories?.setDayDress(measuredRoomProfile()?.mode || 'morning');
+            sceneDesks?.bind(workspaceRoom);
             roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
             syncGrooveUI(roomGroove?.state || {});
         }
@@ -11128,6 +11255,7 @@ window.ErgoFlex = {
     startGroove() { return grooveController().start(); },
     startCurrentGroove,
     saveCurrentGroovePosition, resetCurrentGroovePosition,
+    get sceneDesks(){return sceneDesks;},
     get savedGroovePositions() { return normalizeGroovePresets(groovePresets); },
     get grooveState() { return roomGroove?.state || { status: 'idle' }; },
     get grooveRouting() { return roomGroove?.prepared ? roomGroove.snapshot() : null; },

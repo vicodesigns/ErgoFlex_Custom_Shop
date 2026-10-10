@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {cleanSceneDeskData,cleanDeskRecording,sampleDeskRecording} from '../scene-desk-data.mjs';
+const setting={pose:{x:400,z:1200,yaw:.3},height:40,tilt:0,lights:{color:'#286344',enabled:true}};
+const frames=[{t:0,x:0,z:0,yaw:0,height:36,tilt:0},{t:2,x:400,z:800,yaw:Math.PI*2,height:44,tilt:20}];
+const source={version:1,rooms:{'hospital/house':{selected:'station-review',deleted:['main'],desks:{'station-review':{...setting,name:'Review desk',size:'48x30',phases:{night:{...setting,recording:frames}}}}}}};
+const clean=cleanSceneDeskData(source);assert.equal(clean.rooms['hospital/house'].selected,'station-review');
+assert.deepEqual(clean.rooms['hospital/house'].desks['station-review'].phases.night.recording,frames);
+source.rooms['hospital/house'].desks['station-review'].lights.color='#ffffff';assert.equal(clean.rooms['hospital/house'].desks['station-review'].lights.color,'#286344');
+assert.deepEqual(sampleDeskRecording(frames,1),{pose:{x:200,z:400,yaw:Math.PI},height:40,tilt:10});
+assert.equal(sampleDeskRecording(frames,9).pose.yaw,Math.PI*2);
+assert.deepEqual(cleanDeskRecording([{...frames[0],t:1},frames[1]]),[]);
+assert.deepEqual(cleanDeskRecording([frames[0],{...frames[1],height:Infinity}]),[]);
+assert.deepEqual(cleanDeskRecording([frames[0],{...frames[1],t:0}]),[]);
+const broken=structuredClone(clean);broken.rooms['hospital/house'].desks['station-review'].pose.x=NaN;
+assert.deepEqual(cleanSceneDeskData(broken).rooms['hospital/house'].desks,{});
+assert.deepEqual(cleanSceneDeskData({rooms:{'hospital/house':null}}).rooms['hospital/house'],{desks:{},deleted:[],selected:null});
+console.log('Desk identities, per-setting poses, independent light settings, recording interpolation, full turns and invalid-file bounds passed.');

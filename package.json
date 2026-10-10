@@ -37,7 +37,9 @@
     "test:room-interactions": "node tests/room-collision-test.mjs && node tests/room-safety-test.mjs && node tests/room-interactions-test.cjs",
     "test:groove-save": "node tests/room-groove-planner-test.cjs && node tests/room-groove-save-test.cjs",
     "test:artwork": "node tests/artwork-config-test.mjs && node tests/surface-artwork-test.cjs",
-    "test:portal-ui": "node tests/portal-ui-test.cjs"
+    "test:portal-ui": "node tests/portal-ui-test.cjs",
+    "test:scene-desks": "node tests/scene-desk-data-test.mjs && node tests/scene-desks-test.cjs",
+    "test:room-ceilings": "node tests/room-ceilings-test.cjs"
   },
   "repository": {
     "type": "git",

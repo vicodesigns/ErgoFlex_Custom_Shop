@@ -9,8 +9,8 @@ const architecture = /ceiling|window|curtain|door|daylight|lighting.track|suspen
 const descendant = (obj,parent) => { for(let p=obj;p;p=p.parent)if(p===parent)return true;return false; };
 
 export class RoomInteractions {
-    constructor({canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,onEditStart,onEditEnd,safety}) {
-        Object.assign(this,{canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,onEditStart,onEditEnd,safety});
+    constructor({canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,onEditStart,onEditEnd,safety,deskPointer,deskMove,deskEnd,deskEntries}) {
+        Object.assign(this,{canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,onEditStart,onEditEnd,safety,deskPointer,deskMove,deskEnd,deskEntries});
         this.entries=[];this.root=null;this.drag=null;this.selected=null;this.ray=new THREE.Raycaster();this.pointer=new THREE.Vector2();
         this.highlight=new THREE.Box3Helper(new THREE.Box3(),0x41d4b0);this.highlight.visible=false;scene.add(this.highlight);
         window.addEventListener('pointerdown',e=>this.down(e),true);
@@ -30,7 +30,7 @@ export class RoomInteractions {
         // Procedural decorations keep their entire frame/board as one object.
         for(const wall of room.walls)for(const obj of wall.obj.children)if(obj.isGroup)candidates.add(obj);
         for(const obj of candidates){
-            if(obj.userData.presentationOnly||wallRoots.has(obj)||obj===room.ceilingFixture||obj.isLight||obj.userData.grooveMarker||architecture.test(obj.name))continue;
+            if(obj.userData.sceneDeskId||obj.userData.presentationOnly||wallRoots.has(obj)||obj===room.ceilingFixture||obj.isLight||obj.userData.grooveMarker||architecture.test(obj.name))continue;
             if([...candidates].some(parent=>parent!==obj&&!wallRoots.has(parent)&&descendant(obj,parent)))continue;
             const b=new THREE.Box3().setFromObject(obj),size=b.getSize(new THREE.Vector3());
             if(b.isEmpty()||Math.max(size.x,size.z)<scale*50)continue;
@@ -67,7 +67,7 @@ export class RoomInteractions {
             entry.objects=[...new Set(entry.objects)].filter(obj=>!entry.objects.some(parent=>parent!==obj&&descendant(obj,parent)));
         }
         this.entries.forEach((entry,i)=>entry.objects.forEach((obj,j)=>room.registerInteractionAsset(obj,`${room.id}:${room.roomLayout?.id||'shell'}:placement:${i}:${j}:${obj.name}`)));
-        room.grounding = room.roomLayout ? new RoomGrounding(room, this.entries) : null;
+        room.grounding = room.roomLayout ? new RoomGrounding(room, [...this.entries,...(this.deskEntries?.()||[])]) : null;
     }
     select(entry) {
         this.selected=entry;this.highlight.visible=!!entry;
@@ -75,7 +75,7 @@ export class RoomInteractions {
         this.onSelection?.(entry);
     }
     obstacles(except=null) {
-        return this.entries.filter(e=>e.collider&&e.obj!==except&&e.obj.parent&&visible(e.obj)).map(e=>({...e,movable:e.pushable,box:floorBox(new THREE.Box3().setFromObject(e.obj))}));
+        return [...this.entries,...(this.deskEntries?.()||[])].filter(e=>e.collider&&e.obj!==except&&e.obj.parent&&visible(e.obj)).map(e=>({...e,movable:e.pushable,box:floorBox(new THREE.Box3().setFromObject(e.obj))}));
     }
     applyTransform(objects,matrix) {
         for(const obj of objects){
@@ -132,6 +132,7 @@ export class RoomInteractions {
         this.ray.setFromCamera(this.pointer,this.camera);
     }
     down(e) {
+        if(this.deskPointer?.(e))return;
         if(e.target!==this.canvas||e.button!==0||!this.enabled()||e.shiftKey||e.altKey||e.ctrlKey||e.metaKey)return;
         if(this.drag){this.end();return;}
         this.point(e);
@@ -150,6 +151,7 @@ export class RoomInteractions {
         e.preventDefault();e.stopImmediatePropagation();
     }
     move(e) {
+        if(this.deskMove?.(e))return;
         const d=this.drag;if(!d||d.pointer!==e.pointerId)return;
         this.point(e);const point=new THREE.Vector3();
         if(this.ray.ray.intersectPlane(d.plane,point)){
@@ -170,6 +172,7 @@ export class RoomInteractions {
         e.preventDefault();e.stopImmediatePropagation();
     }
     end(e) {
+        if(this.deskEnd?.(e))return;
         const d=this.drag;if(!d||(e&&e.pointerId!==d.pointer))return;
         if(this.canvas.hasPointerCapture(d.pointer))this.canvas.releasePointerCapture(d.pointer);
         this.controls.enabled=d.controlsEnabled;this.canvas.style.cursor='';this.drag=null;

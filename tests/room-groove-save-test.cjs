@@ -65,7 +65,7 @@ const server = http.createServer((req, res) => {
             motion:ErgoFlex.ledMotionState.enabled,fx:ErgoFlex.ledMusicMode.fx,sensitivity:ErgoFlex.ledMusicMode.sensitivity,
             position:ErgoFlex.glidePosition,yaw:ErgoFlex.deskYaw,scale:ErgoFlex.workspaceRoom.root.scale.x}));
         assert.ok(Math.abs(final.height-saved.height)<.05);assert.ok(Math.abs(final.tilt-saved.tilt)<.1);
-        assert.ok(Math.abs(-final.position.z/final.scale-saved.pose.x)<1e-5);
+        assert.ok(Math.abs(-final.position.z/final.scale-saved.pose.x)<1e-5,JSON.stringify({saved:saved.pose,final:final.position,scale:final.scale}));
         assert.ok(Math.abs(final.position.x/final.scale-saved.pose.z)<1e-5);
         assert.ok(Math.abs(final.yaw-saved.pose.yaw)<1e-5);
         assert.equal(final.color,saved.lights.color);assert.equal(final.glow,saved.lights.glow);

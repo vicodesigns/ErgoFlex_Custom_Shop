@@ -67,6 +67,7 @@ function disposeTree(root) {
     geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose());
     root.removeFromParent();
 }
+export const disposeWorkspaceObject = disposeTree;
 
 // Converted props from assets/props (see tools/convert-props.mjs). Each GLB is
 // Y-up, in metres, with its origin on the anchor named in the index: floor
@@ -326,7 +327,7 @@ export class WorkspaceAccessories {
             for (const target of [group, dress]) {
                 if (!target) continue;
                 target.matrix.multiplyMatrices(anchor.matrixWorld, relative);
-                target.visible = visible; target.updateMatrixWorld(true);
+                target.visible = visible && (target !== dress || this.activeDeskDress !== false); target.updateMatrixWorld(true);
             }
         }
     }
@@ -934,6 +935,13 @@ export class WorkspaceRoom {
     update(camera) {
         this.grounding?.update();
         for (const wall of this.walls) wall.obj.visible = (wall.sign || 1) * (camera.position[wall.axis] - wall.limit) > .05;
-        if (this.ceilingFixture) this.ceilingFixture.visible = camera.position.y < (this.roomLayout.height + 200) * this.root.scale.x;
+        if (this.root && this.roomLayout) {
+            // Both lighting and suspended decoration use the same room-local
+            // ceiling plane, including translated/scaled room roots.
+            const eye = this.root.worldToLocal(camera.getWorldPosition(new THREE.Vector3()));
+            const below = eye.y < this.roomLayout.height;
+            for (const group of this.root.children)
+                if (group === this.ceilingFixture || /^Ceiling /i.test(group.name)) group.visible = below;
+        }
     }
 }

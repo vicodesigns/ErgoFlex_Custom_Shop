@@ -1682,3 +1682,16 @@
 
 #motion-dock.app-remote.remote-compact.collapsed #motion-dock-toggle {color:transparent}
 #motion-dock.app-remote.remote-compact.collapsed #motion-dock-toggle::after {color:var(--text-2)}
+
+/* Scene desk tools share the portal palette and remain compact above the view. */
+.scene-desk-panel {color:var(--ui-text,#e5edf3);background:var(--ui-glass,#202c33);border:1px solid var(--ui-border,#42515a);border-radius:12px;padding:9px 12px;max-width:100%;margin:8px 0;font-size:12px;}
+.scene-desk-panel summary {cursor:pointer;font-weight:650;}
+.scene-desk-panel summary span {font-weight:400;color:var(--ui-muted,#adbec9);}
+.scene-desk-row {display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:9px;}
+.scene-desk-row label {display:flex;align-items:center;gap:6px;}
+.scene-desk-row select,.scene-desk-row button {font:inherit;min-height:34px;padding:6px 9px;border:1px solid var(--ui-border,#42515a);border-radius:7px;color:inherit;background:var(--ui-glass,#26363e);}
+.scene-desk-row button:disabled {opacity:.45;cursor:default;}
+.scene-desk-row button:focus-visible,.scene-desk-row select:focus-visible {outline:2px solid #75d7b4;outline-offset:2px;}
+.scene-desk-routines {margin-top:10px;}
+.scene-desk-row [role=status] {color:var(--ui-muted,#adbec9);}
+.controlled-scene-desk {position:absolute;bottom:100%;left:12px;padding:3px 8px;border-radius:6px 6px 0 0;background:var(--chip,#202c33);color:var(--text,#e5edf3);font:11px system-ui;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;}
