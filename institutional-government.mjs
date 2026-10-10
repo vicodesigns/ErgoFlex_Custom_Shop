@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { institutionalMap, rnd, boardFrame, boardColumns, screenHeader, screenFooter, detailKit, notebook, plant, workstationDetail } from './institutional-detail.mjs?v=institutional-sweep-20261009';
+import { institutionalMap, rnd, boardFrame, boardColumns, screenHeader, screenFooter, detailKit, notebook, plant, workstationDetail } from './institutional-detail.mjs?v=institutional-finish-20261009';
 
 // Government group: `government` Government office, `police` Police / PD,
 // `security` Security operations (kinds government / police / operations).

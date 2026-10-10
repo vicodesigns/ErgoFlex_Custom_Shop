@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=institutional-sweep-20261009';
+import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=institutional-finish-20261009';
 
 export const DAY_PHASES = ['morning', 'afternoon', 'evening', 'night', 'party'];
 const TIERS = ['apartment', 'house', 'spacious', 'premium', 'executive'];

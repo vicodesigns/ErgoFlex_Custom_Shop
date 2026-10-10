@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom } from './institutional-detail.mjs?v=institutional-sweep-20261009';
-import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=institutional-sweep-20261009';
+import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom } from './institutional-detail.mjs?v=institutional-finish-20261009';
+import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=institutional-finish-20261009';
 
 // Shared architectural kit. The shell (floor, walls, daylight window, door,
 // sign, planning board, ceiling lights) and the common furniture helpers live

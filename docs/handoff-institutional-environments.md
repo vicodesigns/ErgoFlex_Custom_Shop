@@ -1,7 +1,7 @@
 # Handoff: finish the Mobile IT and Healthcare environments
 
-Status: in progress · Written 9 October 2026 · Repo: `ErgoFlex_Custom_Shop`
-Last related commit: `9f502a3` · Cache version: `institutional-sweep-20261009`
+Status: completed and verified · Updated 9 October 2026 · Repo: `ErgoFlex_Custom_Shop`
+Handoff baseline: `6c00192` · Cache version: `institutional-finish-20261009`
 
 ## Goal
 
@@ -19,12 +19,21 @@ mixing 48x30 and 60x30. Both groups already do this; keep it so.
 
 | Group | Done | Remaining |
 | --- | --- | --- |
-| Mobile IT, `institutional-it.mjs` (S/M/L) | Layout, desk roles, storytelling. Materials are mostly done; that pass stopped early when the session wrapped up. | Finish materials, lighting, principal sign-off |
-| Healthcare, `institutional-healthcare.mjs` (Hospital and Lab, S/M/L) | Layout, desk roles, storytelling | Materials, lighting, principal sign-off |
+| Mobile IT, `institutional-it.mjs` (S/M/L) | Layout, desk roles, materials, lighting, principal review and regression tests | None in this handoff's scope |
+| Healthcare, `institutional-healthcare.mjs` (Hospital and Lab, S/M/L) | Layout, desk roles, materials, lighting, principal review and regression tests | None in this handoff's scope |
 
-The remaining work is listed at the end of each group's sections in
-`docs/institutional-environments.md` ("Healthcare group …" and "Mobile IT
-group …"). In summary:
+The original checklist below has been implemented. The dated materials,
+lighting and principal reviews are in `docs/institutional-environments.md`.
+Both targeted suites and the full integration suite passed: **12 scenes,
+24 layouts, 120 lighting/Groove settings**, project restoration and mobile fit.
+The principal review covered **135 views** plus close-ups and reference rooms.
+Evidence and test logs are in `/tmp/ef-environment-finish-20261009/`.
+
+Open the completed collection at
+`http://localhost:3000/?room=hospital&view=room&v=institutional-finish-20261009`.
+Use Healthcare setting for Hospital/Laboratory, or Scenes for Mobile IT.
+
+## Original checklist (implemented)
 
 **Mobile IT**
 - **Materials (finish):**
@@ -88,9 +97,11 @@ group …"). In summary:
 ## Pitfalls that cost time before
 
 - **LED wash on the desk.** Desk LEDs tint the black ErgoFlex desktop through
-  `room-led-spill`. Keep LEDs off by day and use low values at night/party,
-  e.g. `#5a3e2a` warm night, `#4a1813` deep red event. The product must read as
-  black/red in every daypart.
+  `room-led-spill`, even when a saturated colour has a low byte value. The
+  completed pass uses neutral dim cues (`#141618` Mobile IT overnight,
+  `#101112` laboratory instrument watch), with LEDs off in daylight/review
+  and hospital night observation. Inspect close-ups when tuning this; the
+  default product must retain its black surface and red trim in every daypart.
 - **Light budget.** 5 real lights per room: 3 room PointLights plus at most 2
   local lamps (the test requires 1–2). Everything else is emissive or an
   additive pool.
@@ -148,10 +159,9 @@ sign-off.
 
 ## When done
 
-- Bump `institutional-sweep-20261009` to a new value in every importer (`grep`
-  for it: the institutional modules, `room-*.mjs`, `workspace-3d.mjs`,
-  `studio.js`, `index.html`, `product-demo.html`, the test, the review tool and
-  the doc).
+- Cache revision bumped from `institutional-sweep-20261009` to
+  `institutional-finish-20261009` consistently in the importers, entry pages,
+  test and review renderer. For future changes, bump the version again.
 - Commit only environment files. Check `git status`: other sessions may be
   working in this checkout.
 - Push once the user agrees.

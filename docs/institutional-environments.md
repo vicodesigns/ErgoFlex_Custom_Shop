@@ -178,7 +178,7 @@ or an assertion of clinical, educational or public-service compliance.
 `root.userData.institutionalAtmosphere` exposes the selected phase, clock hour,
 local-light count and activity variants for inspection. Small furnishings remain
 batched, and existing scene IDs and saved furnishing keys are retained. The
-module cache revision was `institutional-atmosphere-20261008` (now `institutional-sweep-20261009`, see Team structure).
+module cache revision was `institutional-atmosphere-20261008` (now `institutional-finish-20261009`, see Team structure).
 
 Verification of this pass: all 12 settings passed the quick integration matrix
 (12 layouts × 3 activities = 36 lighting/Groove combinations), furnishing bounds,
@@ -259,7 +259,7 @@ dayparts. Current placements are placeholders: every layout has a seated
   `activity-table`, and stable `asset()` ids; asset keys are saved in projects.
 - Group modules are imported by `institutional-scenes.mjs`; never import the
   registry or `institutional-room.mjs` from a group module (cycle).
-- Cache revision `institutional-sweep-20261009` is shared by all
+- Cache revision `institutional-finish-20261009` is shared by all
   institutional modules and their importers (`institutional-scenes/room`,
   group modules, `room-life`, `room-polish`, `room-refinement`,
   `room-interactions`, `workspace-3d`, `studio.js`, `index.html`,
@@ -651,7 +651,7 @@ shared by `stations`, the builder hooks and `sceneOverrides[id].layout`.
   tracks, floor zones and the pool layer are `presentationOnly` groups.
 - The test checks one bed and one headwall (hospital) or one island bench
   (lab) per size step, the lab safety set, and a clear door path.
-- Left for the materials pass: oak-look HPL texture on headwalls and bay
+- At the end of the layout pass (superseded by the materials/lighting note below): oak-look HPL texture on headwalls and bay
   inlays, bed-guard rail / coved skirting, tile splashback, epoxy fleck, lab
   floor re-tone, curtain and blind fabrics, healing-garden / research-park
   window views (the shared campus view still shows). Left for the lighting
@@ -659,6 +659,54 @@ shared by `stations`, the builder hooks and `sceneOverrides[id].layout`.
   desk LEDs tint the black desktop in evening / night / party (lab party
   `#4a1813` reads red, hospital teal); night-light, headwall wash, bench
   strip, hood and grow-light levels; ceiling fixtures are still the shell's.
+
+### Healthcare group · materials and lighting · 9 October 2026
+
+Implementation in `institutional-healthcare.mjs`; layouts, furniture keys and
+station roles retained in every tier.
+
+- Hospital: oak-look HPL headwalls with physical grain scale and 3 mm reveals,
+  wood-look bay floor inlays, cleanable bed-guard panels and brushed crash
+  rails, radiused 100 mm coved skirting, fine-fleck sheet vinyl, powder-coated
+  bed frames, brushed rails and woven linen. Leaf-print cubicle fabric now
+  has a breathable mesh top; blind weave follows roller drop.
+- Laboratory: 300 × 150 mm glazed splashback tiles, black epoxy worktops with
+  a subtle fleck, warm dry-zone vinyl and seamless clinical floor fleck,
+  cleanable laminate and powder finishes, radiused skirting.
+- Window outlooks now repaint a healing garden courtyard (paths, raised
+  planting, benches, warm bollards and a distant clinic wing) or a research
+  park (glass lab block, solar panels, greenhouse and planted swales).
+- The per-kind `LIGHT` table controls all five modes, room-light powers,
+  local lamps, ceiling lenses, blind drops, window emission, screens and
+  clipped daylight patches. Hospital night uses amber bedside/bed-foot pools
+  and dim monitors; lab instrument watch uses neutral bench/hood tasks,
+  instrument glows and the soft magenta sill experiment. Three room lights
+  plus one/two local lights stay within the five-light budget.
+- Ward LEDs are off for sleeping patients; evening LEDs are neutral and dim,
+  lab instrument-watch LEDs lower still. Daytime review modes keep LEDs off
+  to preserve the product's black surface and red trim under room spill.
+- New wall finishes are `presentationOnly` children of cutaway walls; new
+  furnishing pools copy the owner's transform into a detached overlay so
+  furniture bounds, collision and Groove routes are preserved.
+
+### Healthcare group · principal review · 9 October 2026
+
+Reviewed all 90 views: Hospital and Laboratory × Small/Medium/Large × five
+dayparts × wide/hero/reverse. Compared with Office, Co-working and Library;
+also inspected bed/headwall, bench/hood and window close-ups by day and night.
+The clinical finishes have consistent physical scale. The ward's night look
+uses amber floor lights, dim monitors, closed curtains and blackout blinds;
+the laboratory keeps quieter neutral task light. Black desktops and red trim
+remain legible without the former teal/red spill. Clinical main desks use
+work notes instead of inherited coffee cups. Layouts and station roles retained.
+
+`node tests/institutional-room-test.cjs --only=hospital,laboratory` passed:
+2 scenes, 6 layouts, 30 lighting/Groove settings, bounds, mixed desk sizes,
+interaction registration, door clearances, project restoration and mobile fit.
+Full-suite integration sign-off is recorded below.
+
+Review evidence: `/tmp/ef-environment-finish-20261009/healthcare/`;
+targeted test log: `/tmp/ef-environment-finish-20261009/test-hospital-laboratory.log`.
 
 ## Mobile IT group · layout, desk roles and storytelling · 9 October 2026
 
@@ -785,8 +833,77 @@ Specialist 2 pass, all in `institutional-it.mjs` (no shared files touched).
   snap and label, anodised laptops with printed asset tags, the repair laptop
   shown open (battery, board, fan, heat pipe, RAM, SSD, cover and screws),
   powder-coated switch / KVM / imaging tower with vents, carton and tote labels.
-- **Left for the next pass.** Rack fronts read dark through the door mesh in
+- **At the end of this earlier materials pass** (superseded below). Rack fronts read dark through the door mesh in
   daylight: give them a lit cold aisle or a soft fill. Window `VIEW_LEVEL` and
   blind drop per daypart are untuned. The sill laptop sorter is still simple.
   The intake `tablet-pc` library prop shows a tiled start screen. The shared
   cache revision has not been bumped.
+
+
+### Mobile IT group · finish materials and lighting · 9 October 2026
+
+Implementation in `institutional-it.mjs`; Small/Medium/Large layouts, desk
+roles, cold aisle and door clearances retained.
+
+- The sill sorter has rubber-lined aluminium trays, dividers, closed laptops,
+  seams and asset labels. Intake now uses a procedural tablet with the scan
+  workflow, replacing the consumer tiled-screen library prop. Packing-bench
+  HPL speckle was inspected in daylight and at night.
+- One existing room light now lights the rack cold aisle. Rack equipment,
+  patch leads and status indicators remain visible through the perforated
+  doors. Suspended neutral-white ceiling linears, local work lamps, screens,
+  status LEDs and the service-yard view have authored five-daypart levels.
+- The blind follows each mode, with a softened, clipped window light patch
+  in the independent presentation layer. No extra real lights were added.
+- Overnight lighting is cool and quiet, with a neutral desk cue. Deployment
+  lighting keeps desk LEDs off. The desk reads black/red in both modes; the
+  door uses neutral powder coat instead of the oak material that went red-brown.
+- Principal detail corrections removed drinks from the field diagnostic desk
+  and briefing table; the NOC station retains its insulated mug. A scoped
+  shared desktop-dressing rule replaces inherited coffee cups with work notes
+  in Mobile IT, Hospital and Laboratory only.
+- The review tool pauses animation before prop loading, reads the registry
+  without loading an extra room, and renders following overlays before camera
+  fitting. This fixes the misleading first large-room overview and reduces
+  software-renderer load; production rendering is unchanged.
+
+### Mobile IT group · principal review · 9 October 2026
+
+Reviewed all 45 views: Small/Medium/Large × five dayparts × wide/hero/reverse,
+plus rack fronts, packing HPL, intake scanner and service-yard/sorter close-ups
+by day and night. Compared with Office, Co-working and Library. Ports and patch
+leads remain visible through the rack mesh; the night look is subdued, with
+readable status indicators. The door stays neutral, and the desktop retains
+its black/red finish in overnight and deployment modes. The intake tablet is
+generic; diagnostic surfaces are drink-free, with the insulated mug confined
+to the NOC desk. Cold aisle, station footprints and door paths retained.
+
+`node tests/institutional-room-test.cjs --only=mobileit` passed:
+1 scene, 3 layouts, 15 lighting/Groove settings, bounds, mixed desk sizes,
+interaction registration, cold-aisle/door clearances, project restoration and
+mobile fit. Full-suite integration sign-off is recorded below.
+
+Review evidence: `/tmp/ef-environment-finish-20261009/mobileit/`;
+targeted test log: `/tmp/ef-environment-finish-20261009/test-mobileit.log`.
+
+### Integration sign-off · 9 October 2026
+
+The required full `node tests/institutional-room-test.cjs` passed: **12 scenes,
+24 layouts, 120 lighting/Groove settings**, project restoration and mobile
+layout. Both targeted suites also passed. No assertions were relaxed; the
+test/review browsers pause continuous rendering earlier during asset loading
+to reduce software-renderer load. The review renderer also avoids loading a
+room just to discover the registry and avoids the startup camera tween when
+capturing its custom angles.
+
+Visual review covered 135 views across the nine completed Mobile IT/Hospital/
+Laboratory layouts, plus day/night detail views and the Office, Co-working and
+Library references. All 18 completed render reports have no missing props,
+page errors or shader errors. Syntax checks for the edited implementations and
+review/test tools passed; `git diff --check` was clean.
+
+Evidence: `/tmp/ef-environment-finish-20261009/`; full test log:
+`/tmp/ef-environment-finish-20261009/test-all.log`. Cache revision:
+`institutional-finish-20261009`. The agreed materials/lighting handoff is
+complete. The original Office/Library LED tint, shared evening sun bands and
+Studio viewport panel remain separate decisions in the handoff document.

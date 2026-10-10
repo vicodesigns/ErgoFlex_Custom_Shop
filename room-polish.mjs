@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=institutional-sweep-20261009';
+import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=institutional-finish-20261009';
 
 // Authored art, imported GLBs and user transforms are left in their own systems.
 // These finishes apply only to the builders' explicitly tagged room materials.

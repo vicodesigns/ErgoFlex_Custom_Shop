@@ -25,13 +25,15 @@ const server = http.createServer((req, res) => {
         page.setDefaultTimeout(120000); page.setDefaultNavigationTimeout(120000);
         await page.setViewport({ width: 1500, height: 1100 });
         await page.goto(`http://127.0.0.1:${server.address().port}/?room=security&view=room`);
+        await page.waitForFunction(() => window.ErgoFlex?.renderer);
+        await page.evaluate(() => { ErgoFlex.renderer.setAnimationLoop(null); ErgoFlex.renderer.setPixelRatio(.4); ErgoFlex.renderer.shadowMap.enabled = false; });
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none');
         await page.evaluate(async () => { ErgoFlex.renderer.setAnimationLoop(null); ErgoFlex.renderer.setPixelRatio(.4); ErgoFlex.renderer.shadowMap.enabled = false; await ErgoFlex.workspaceRoom.ready; });
         return page;
     }
     try {
         let page = await freshPage();
-        const registry = await page.evaluate(async () => { const m = await import('./institutional-scenes.mjs?v=institutional-sweep-20261009'); return { ids: m.INSTITUTIONAL_IDS, education: Object.keys(m.EDUCATIONAL_LEVELS), groups: m.INSTITUTIONAL_GROUPS, tiers: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)])),
+        const registry = await page.evaluate(async () => { const m = await import('./institutional-scenes.mjs?v=institutional-finish-20261009'); return { ids: m.INSTITUTIONAL_IDS, education: Object.keys(m.EDUCATIONAL_LEVELS), groups: m.INSTITUTIONAL_GROUPS, tiers: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)])),
             stations: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.fromEntries(Object.entries(m.INSTITUTIONAL_ROOMS[id].layouts).map(([tier, l]) => [tier, l.stations]))])),
             modules: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_MODULES).find(g => m.INSTITUTIONAL_MODULES[g] === m.institutionalModule(id))])) }; });
         const ids = registry.ids;
@@ -207,6 +209,8 @@ const server = http.createServer((req, res) => {
         assert.equal(await page.evaluate(()=>ErgoFlex.measuredRoom.layout.id),'house','Project restores selected room size');
         assert.equal(await page.evaluate(()=>ErgoFlex.measuredRoom.mode),'afternoon','Project restores selected activity');
         await page.reload();
+        await page.waitForFunction(() => window.ErgoFlex?.renderer);
+        await page.evaluate(() => { ErgoFlex.renderer.setAnimationLoop(null); ErgoFlex.renderer.setPixelRatio(.4); ErgoFlex.renderer.shadowMap.enabled = false; });
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length===4 && getComputedStyle(document.querySelector('#loader')).display==='none');
         await page.evaluate(async()=>{ErgoFlex.renderer.setAnimationLoop(null);ErgoFlex.renderer.setPixelRatio(.4);ErgoFlex.renderer.shadowMap.enabled=false;await ErgoFlex.workspaceRoom.ready;});
         // Explicit room query initially selects security; each environment's settings survive a reload.

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { institutionalMap, screenHeader, screenFooter, detailKit, plant, rnd } from './institutional-detail.mjs?v=institutional-sweep-20261009';
+import { institutionalMap, screenHeader, screenFooter, detailKit, plant, rnd } from './institutional-detail.mjs?v=institutional-finish-20261009';
 
 // Mobile IT group: `mobileit` (kind it). A field-service depot and tech bar.
 // Devices flow intake (tech bar / asset intake) → repair (ESD bench) →
@@ -24,21 +24,22 @@ const BLUE = '#467eaa', YELLOW = '#f2c230', RACK = '#1d252b', GREEN_LED = '#58d6
 
 // ---- Registry data (merged by institutional-scenes.mjs) -----------------
 export const lighting = {
-    it: { practical: [.34, .42, .76, .5, .74], wash: [.18, .18, .28, .12, .36], task: '#deedf0', bounce: '#9bbbc8' }
+    it: { practical: [.34, .42, .76, .34, .64], wash: [.18, .18, .28, .09, .30], task: '#deedf0', bounce: '#9bbbc8' }
 };
 // Desktop placements: [x, y, z] in the desktop / shelf frame (+z toward the user).
 const P = (id, x, z, turn = 0, y = 0, extra = {}) => ({ id, at: [x, y, z], ...(turn ? { turn } : {}), ...extra });
 
 // Per daypart: registry light mode (from the brief, for the lighting pass to
 // tune) and the main desk pose [height in, tilt deg, yaw deg]. Desk LEDs stay
-// off by day (their spill washes the black desktop); low-value teal at night.
+// off during staffed service and deployment; a dim neutral cue overnight keeps
+// the black/red product materials readable without a teal desktop wash.
 const lmode = (key, fill, sky, power, ambient, exposure, practical, wash, color) => ({ key, fill, sky, power, ambient, exposure, practical, wash, leds: !!color, ...(color ? { color } : {}) });
 const MODES = [
     lmode('#f5f2ea', '#dce8ef', ['#bad8e5', '#f5e6ca'], 1.45, .42, 1.06, .34, .18),
     lmode('#f0f7ff', '#e1edf2', ['#94c5de', '#e4eff1'], 1.5, .45, 1.04, .42, .18),
     lmode('#ffd6ac', '#d0d9ea', ['#ba96a4', '#f0c89e'], .65, .26, 1.09, .76, .28),
-    lmode('#a9c0dd', '#93aec9', ['#0f2034', '#2f4864'], .18, .12, 1.15, .5, .12, '#163f46'),
-    lmode('#e2ebf2', '#d5e8e7', ['#a9cdd7', '#ede3cd'], 1.1, .38, 1.07, .74, .36, '#1d3d3a')
+    lmode('#bfcbd8', '#a5b5c3', ['#0f2034', '#2f4864'], .16, .17, 1.18, .34, .09, '#141618'),
+    lmode('#e2ebf2', '#d5e8e7', ['#a9cdd7', '#ede3cd'], 1.1, .38, 1.07, .64, .30)
 ];
 // System checks standing; service session seated; maintenance mid; overnight
 // seated, slight back tilt; team deployment standing, turned toward the carts.
@@ -73,7 +74,7 @@ const STATION = {
     noc: (at) => ({ id: 'noc-monitoring', name: 'Network monitoring', size: '60x30', at, turn: 0, height: 28, tilt: 0, role: 'noc',
         desktop: [P('office-keyboard', -80, 120), P('kenney-furniture-computer-mouse', 330, 110), P('headphones', -580, -90, 20), P('insulated-mug', 620, 60)], shelf: [] }),
     intake: (at) => ({ id: 'asset-intake', name: 'Asset intake and returns', size: '48x30', at, turn: 0, height: 28, tilt: 0, role: 'intake',
-        desktop: [P('tablet-pc', -250, 60), P('papers-envelopes', 250, 120)], shelf: [] })
+        desktop: [P('papers-envelopes', 250, 120)], shelf: [] })
 };
 const STATIONS = [
     [STATION.imaging([1600, 1000]), STATION.techbar([1000, 3800])],
@@ -711,7 +712,7 @@ function wallFinishes(kit, I) {
 // and a roll cage, bollards and lamp posts. The roller blind covers the top
 // half, so the yard sits low in the frame. Unlit (black base, emissive map),
 // redrawn per daypart; the level per daypart is VIEW_LEVEL (lighting pass).
-const VIEW_LEVEL = [.9, .96, .78, .62, .88];
+const VIEW_LEVEL = [.72, .82, .58, .32, .76];
 function installView(kit, I) {
     const pane = kit.window.children.find(o => o.isMesh && o.material === kit.sky); if (!pane) return;
     const aspect = kit.d * .48 / 1750, H = 512, W = Math.min(2048, Math.round(H * aspect / 16) * 16);
@@ -990,7 +991,7 @@ function buildRack(kit, I, n, x) {
     for (const s of [-1, 1]) { K.brushed.box([20, 290, 20], [s * 200, 2135, -150], '#8d979c'); K.brushed.box([600, 50, 8], [0, 2300, -150 + s * 150], '#a3acb0'); }
     for (let r = 0; r < 4; r++) K.brushed.box([24, 12, 300], [-225 + r * 150, 2282, -150], '#a3acb0');
     K.build(rack, I.C);
-    const ledMesh = leds.build(rack, I.rackLeds ||= I.ledMat([.95, .95, 1.1, 1.6, 1.05])); if (ledMesh) { ledMesh.castShadow = false; ledMesh.name = 'Rack status LEDs'; }
+    const ledMesh = leds.build(rack, I.rackLeds ||= I.ledMat([.58, .58, .82, 1.12, .65])); if (ledMesh) { ledMesh.castShadow = false; ledMesh.name = 'Rack status LEDs'; }
     cords.build(rack, I.C.cable);
     return { rack, door };
 }
@@ -1330,7 +1331,7 @@ function floorStory(kit, I) {
     const aisle = [(t.rackX0 + t.rackX1) / 2, t.rackFront + 625], aisleSize = [t.rackX1 - t.rackX0 + 100, 1200];
     I.flat('cold-aisle', 'Cold aisle floor marking', aisle, aisleSize, coldAisleDraw(kit, aisle, aisleSize), { res: 1536, height: 3, surface: 'stone', roughness: .55 });
     // Rack LED field: a faint cool pool on the cold-aisle floor (after hours).
-    I.pool(I.poolLayer, [(t.rackX0 + t.rackX1) / 2, 6, t.rackFront + 450], [t.rackX1 - t.rackX0 + 500, 1300], '#7fb6ff', [0, 0, .04, .12, .03]);
+    I.pool(I.poolLayer, [(t.rackX0 + t.rackX1) / 2, 6, t.rackFront + 450], [t.rackX1 - t.rackX0 + 500, 1300], '#7fb6ff', [0, 0, .035, .085, .02]);
     // Deployment bay under the staging carts.
     const xs = t.carts.map(c => c[0]), zs = t.carts.map(c => c[1]);
     const bx0 = Math.min(...xs) - 450, bx1 = Math.max(...xs) + 450, bz0 = Math.min(...zs) - 380, bz1 = Math.max(...zs) + 480;
@@ -1376,23 +1377,41 @@ function floorStory(kit, I) {
 }
 function windowStory(kit, I) {
     const { d } = kit, span = d * .48;
-    // Low-glare roller blinds, half drawn (the lighting pass may vary the drop per daypart).
+    // Low-glare roller blinds; LIGHT sets their drop for each daypart.
     const k = detailKit();
     k.box([span + 40, 110, 110], [0, 830, 70], '#c9cfd3');
     const weave = I.tex((c, W, H) => { c.fillStyle = '#e4e6e1'; c.fillRect(0, 0, W, H); for (let n = 0; n < W; n += 4) { c.fillStyle = 'rgba(160,166,162,.35)'; c.fillRect(n, 0, 1.5, H); c.fillRect(0, n, W, 1.5); } }, 64, 64, { surface: null, roughness: .95, transparent: true, repeat: [(span - 30) / 24, 860 / 24] });
     weave.opacity = .84; weave.side = THREE.DoubleSide; weave.color.set('#dfe1dc');
     const blind = kit.mesh(kit.window, new THREE.PlaneGeometry(span - 30, 860), weave, [0, 400, 95]);
-    blind.castShadow = false; blind.name = 'Roller blind';
-    k.box([span - 30, 26, 22], [0, -40, 95], '#aab3b8');
+    blind.castShadow = false; blind.name = 'Roller blind'; I.blind = blind;
+    I.blindRod = kit.box(kit.window, [span - 30, 26, 22], [0, -40, 95], I.M('#aab3b8', 'metal'));
+    I.blindRod.castShadow = false;
     I.build(k, kit.window);
     // Returned laptops in a sorter on the sill, tagged for intake.
     const s = ck();
-    for (let n = 0; n < 3; n++) { const z = -span * .3 + n * span * .22; s.powder.box([300, 16, 140], [z, -858, 80], '#7d888e'); for (let l = 0; l < 3; l++) { s.alu.box([300, 220, 20], [z, -740, 40 + l * 34], l % 2 ? '#9aa3a8' : '#5b656c'); s.box([290, 2, 21], [z, -631, 40 + l * 34], '#2b3338'); s.box([70, 26, 2], [z - 90, -660, 51 + l * 34], '#f2c230'); } tag(s, ASSET_TAGS[n], [80, 40], [z + 70, -700, 112]); }
+    for (let n = 0; n < 3; n++) {
+        const x = -span * .3 + n * span * .22;
+        s.powder.box([330, 16, 160], [x, -858, 80], '#65727b');
+        s.rubber.box([310, 4, 142], [x, -848, 80], '#253238');
+        for (let l = 0; l < 4; l++) s.powder.box([310, 38, 4], [x, -829, 24 + l * 36], '#8f9aa1');
+        for (let l = 0; l < 3; l++) {
+            const z = 42 + l * 36;
+            s.alu.box([300, 220, 18], [x, -740, z], l % 2 ? '#9aa3a8' : '#5b656c');
+            s.rubber.box([290, 2, 19], [x, -631, z], '#263138');
+            s.box([280, 1.5, 2], [x, -642, z + 9.7], '#b8c2c7');
+            s.powder.box([56, 9, 2], [x + 82, -791, z + 9.8], '#38444b');
+            tag(s, ASSET_TAGS[(n + l) % ASSET_TAGS.length], [66, 30], [x - 82, -661, z + 10]);
+        }
+        tag(s, 'RETURNS', [100, 32], [x, -850, 161]);
+    }
     s.build(kit.window, I.C);
 }
 export function decorate(kit) {
     const I = itKit(kit);
-    wallStory(kit, I); wallFinishes(kit, I); floorStory(kit, I); windowStory(kit, I); finishFloor(kit); installView(kit, I);
+    wallStory(kit, I); wallFinishes(kit, I); floorStory(kit, I); windowStory(kit, I); finishFloor(kit); installView(kit, I); daylightPatch(kit, I);
+    // Powder-coated service door: cool neutral paint, separate from the oak
+    // furniture material that otherwise turns red-brown under evening light.
+    kit.door?.traverse(o => { if (o.isMesh && o.material === kit.oak) o.material = I.M('#71828c', 'powder', { roughness: .67 }); });
     // Party: two field backpacks by the door, ready to go out with the carts.
     const t = kit.itTier, bags = kit.asset('deployment-bags', 'Deployment kit bags', t.i ? [t.w / 2 - 650, 0, t.door - 1250] : [t.w / 2 - 600, 0, t.front - 350]);
     const b = ck();
@@ -1403,14 +1422,14 @@ export function decorate(kit) {
 export function finishDecor() {}
 
 // Briefing table, per daypart: rack checklist and site list; tickets; spares
-// and a cable tester; a closed laptop and a mug; site map, device checklist
+// and a cable tester; a closed laptop; site map, device checklist
 // and boxed laptops for the team deployment.
 export function activityMaterials(k, phase, y) {
     const sheet = (x, z, w, d, r = 0, c = '#f2f2ec') => k.box([w, 2, d], [x, y + 1, z], c, [0, r, 0]);
     if (phase === 0) { k.box([230, 12, 330], [260, y + 6, 40], '#7d5f3f'); sheet(260, 50, 210, 290, 0); for (let n = 0; n < 8; n++) k.box([150, 2, 4], [270, y + 13, -60 + n * 30], '#7d888e'); sheet(-80, 80, 210, 290, .1, '#e8eef2'); }
     if (phase === 1) for (let n = 0; n < 5; n++) sheet(-120 + n * 110, 60 + (n % 2) * 50, 100, 140, (rnd(n) - .5) * .4, ['#f6d76b', '#f4b6a0', '#bfe0f2', '#c7e6c4', '#f6d76b'][n]);
     if (phase === 2) { k.box([90, 160, 40], [250, y + 20, 60], YELLOW, [Math.PI / 2, 0, .3]); for (let n = 0; n < 3; n++) k.box([180, 30, 120], [-60 + n * 40, y + 15 + n * 30, -40], ['#c9cfd3', '#b99067', '#2b3338'][n]); k.add(new THREE.TorusGeometry(80, 6, 6, 20), [80, y + 6, 160], '#3c7fc4', [1, 1, 1], [Math.PI / 2, 0, 0]); }
-    if (phase === 3) { k.box([330, 18, 230], [200, y + 9, 40], '#2c3439'); k.cyl(42, 38, 110, [-120, y + 55, 120], '#e8ebe8'); }
+    if (phase === 3) k.box([330, 18, 230], [200, y + 9, 40], '#2c3439');
     if (phase === 4) {
         k.box([640, 2, 420], [60, y + 1, 30], '#e3ebe4'); for (let n = 0; n < 6; n++) k.cyl(18, 18, 4, [-160 + n * 80, y + 3, -40 + (n % 3) * 70], ['#c23a2e', BLUE, '#4f9a6a'][n % 3]);
         sheet(-420, 120, 210, 290, -.1); for (let n = 0; n < 3; n++) k.box([340, 60, 250], [-420, y + 30 + n * 60, -140], ['#c49d74', '#b99067', '#c49d74'][n]);
@@ -1424,10 +1443,72 @@ export function extraLamps(kit) {
     const light = new THREE.PointLight('#eef6ff', 0, 2200 * kit.root.scale.x, 2); light.position.set(0, 1560, 260); shelf.add(light);
     kit.lamps.push({ light, luminous: lens, color: '#eef6ff' });
 }
+// Five real lights: retain the shell's three lights and the two task lamps.
+// Place one shell light over the cold aisle rather than adding a sixth light.
+const LIGHT = {
+    ceiling: [[.26, .32, .52, .16, .42], [.23, .30, .50, .035, .4], [.23, .30, .45, .025, .4]],
+    desk: [.82, .82, .76, .56, .82],
+    aisle: [1.45, 1.6, 1.55, .58, 1.4],
+    front: [.82, .82, .78, .36, .86],
+    lamps: [[.16, .18, .58, .09, .65], [.16, .16, .52, .28, .5]],
+    blind: [.48, .56, .38, .7, .5],
+    sun: [.11, .08, .13, 0, .07]
+};
+function ensureCeiling(kit, I) {
+    const ceil = kit.room?.ceilingFixture; if (!ceil || I.strips) return;
+    const kids = ceil.children.filter(o => o.isMesh).slice(0, 6);
+    I.strips = [];
+    const wires = new THREE.Group(); wires.name = 'Linear light suspension';
+    for (let n = 0; n < 3; n++) {
+        const housing = kids[n * 2], lens = kids[n * 2 + 1]; if (!housing || !lens) continue;
+        lens.material = lens.material.clone(); I.strips.push(lens.material);
+        housing.castShadow = lens.castShadow = false;
+        // Suspended 4000 K linears, with a visible dark housing and slim cables.
+        const y = Math.min(kit.ceiling - 190, 2780), z = housing.position.z;
+        housing.position.y = y + 29; lens.position.y = y;
+        for (const x of [-kit.w * .272, kit.w * .272]) kit.rod(wires, [x, y + 54, z], [x, kit.ceiling - 4, z], 3, kit.metal).castShadow = false;
+    }
+    ceil.add(wires);
+}
+// Project the window opening onto the floor. Independent presentation layer:
+// no furnishing footprint, pick target or collision changes.
+const SUN_ANGLE = { morning: [.62, -.36], afternoon: [1.45, .12], evening: [.32, .48], night: null, party: [1.35, .25] };
+function daylightPatch(kit, I) {
+    const { w, d, bz, front } = kit, z0 = bz + d * .54, half = d * .24;
+    const map = institutionalMap((c, W, H) => {
+        c.fillStyle = '#000000'; c.fillRect(0, 0, W, H); c.filter = 'blur(14px)'; c.fillStyle = '#ffffff';
+        for (const [a, b] of [[.05, .48], [.52, .95]]) c.fillRect(a * W, H * .06, (b - a) * W, H * .88);
+    }, 512, 256);
+    const geo = new THREE.PlaneGeometry(1, 1, 8, 36); geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
+    const mat = new THREE.MeshBasicMaterial({ map, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const sun = new THREE.Mesh(geo, mat); sun.name = 'Window daylight patch'; sun.renderOrder = 2; sun.castShadow = sun.receiveShadow = false; sun.frustumCulled = false; sun.raycast = noRay; I.poolLayer.add(sun);
+    I.sun = (phase, strength, drop) => {
+        const angle = SUN_ANGLE[phase]; sun.visible = !!angle && strength > .01; if (!sun.visible) return;
+        const [elevation, sweep] = angle, bottom = 2560 - 1750 * drop, pos = geo.attributes.position, uv = geo.attributes.uv, col = geo.attributes.color;
+        for (let n = 0; n < pos.count; n++) {
+            const y = 800 + uv.getY(n) * 1800, z = z0 - half + uv.getX(n) * half * 2, t = y / elevation, x = -w / 2 + 25 + t, zz = z + sweep * t;
+            const inside = x < w / 2 - 40 && zz > bz + 30 && zz < front - 30 ? 1 - .25 * uv.getY(n) : 0;
+            const through = y > bottom + 40 ? .28 : y > bottom - 40 ? .28 + .72 * (bottom + 40 - y) / 80 : 1;
+            pos.setXYZ(n, Math.min(x, w / 2 - 40), 10, THREE.MathUtils.clamp(zz, bz + 30, front - 30)); col.setXYZ(n, inside * through, inside * through, inside * through);
+        }
+        pos.needsUpdate = col.needsUpdate = true; geo.computeBoundingSphere(); mat.color.set(kit.spec.modes[phase]?.key || '#fff4e0').multiplyScalar(strength);
+    };
+}
 // Per-daypart changes: glows, LED fields, pools, phase-only objects, signs, stations.
 export function atmosphere(phase, gain, kit) {
     const I = kit.it; if (!I) return;
     const i = phaseIndex(phase);
+    ensureCeiling(kit, I);
+    (I.strips || []).forEach((m, n) => { m.color.set('#edf2f3'); m.emissive.set('#edf2f3'); m.emissiveIntensity = LIGHT.ceiling[n][i] * gain; });
+    const t = kit.itTier;
+    if (kit.lights?.[0]) kit.lights[0].intensity *= LIGHT.desk[i];
+    if (kit.lights?.[1]) { kit.lights[1].position.set((t.rackX0 + t.rackX1) / 2, 1750, t.rackFront + 900); kit.lights[1].color.set('#e0edf3'); kit.lights[1].intensity *= LIGHT.aisle[i]; }
+    if (kit.lights?.[2]) kit.lights[2].intensity *= LIGHT.front[i];
+    (kit.lamps || []).forEach(({ light, luminous }, n) => { const v = LIGHT.lamps[n]?.[i]; if (v === undefined) return; light.intensity = (kit.root.scale.x * 1000) ** 2 * v * gain; luminous.emissiveIntensity = .06 + v * gain * 1.2; });
+    const drop = LIGHT.blind[i], height = 1750 * drop;
+    if (I.blind) { I.blind.scale.y = height / 860; I.blind.position.y = 830 - height / 2; I.blind.material.map.repeat.y = height / 24; }
+    if (I.blindRod) I.blindRod.position.y = 830 - height;
+    I.sun?.(phase, LIGHT.sun[i] * Math.min(gain, 1.4), drop);
     drawView(kit, I, phase, gain);
     if (I.ceilingItems && kit.room?.ceilingFixture) { for (const g of I.ceilingItems) kit.room.ceilingFixture.add(g); I.ceilingItems = null; }
     for (const { m, levels } of I.glows) m.emissiveIntensity = levels[i] * gain;
@@ -1452,7 +1533,7 @@ function applyStationPhase(root, i, gain = 1) {
 
 // ---- Station role detail (moves and is disposed with the station) --------
 // Screen levels per daypart (emissive); LED fields (unlit, brightness).
-const SCREEN = [.32, .3, .36, .42, .34], LEDS = [.8, .8, .9, 1.2, .9];
+const SCREEN = [.26, .24, .32, .37, .28], LEDS = [.62, .62, .8, 1, .7];
 export function stationDetail(spec, mount, T, { role: mountRole }) {
     const k = ck(), led = detailKit(), cable = k.cable, extras = [];
     const role = spec.role, desk = mountRole === 'desktop', shelf = mountRole === 'shelf', half = spec.size === '48x30' ? 610 : 762;
@@ -1578,6 +1659,13 @@ export function stationDetail(spec, mount, T, { role: mountRole }) {
     }
     if (role === 'intake') {
         if (desk) {
+            // Generic asset-intake tablet: the same scan screen as the tech bar,
+            // with an anodised chassis and low stand; no tiled consumer UI.
+            k.powder.box([140, 10, 120], [-250, 5, 70], '#29343b');
+            k.alu.box([34, 70, 24], [-250, 40, 62], '#7f8d95');
+            k.alu.add(new T.BoxGeometry(264, 194, 12), [-250, 110, 100], '#29343b', [1, 1, 1], [-.6, 0, 0]);
+            screen('intake', 240, 170, [-250, 113.7, 105.4], [-.6, 0, 0], 384);
+            led.ball(2, [-250, 194, 47], '#73868f');
             // Label printer with a label coming out; barcode scanner in its cradle; a returns tote.
             k.poly.box([160, 120, 200], [-480, 60, -90], '#e8ebe8'); k.box([110, 4, 40], [-480, 90, 15], '#f7f7f2'); led.box([8, 8, 2], [-430, 100, 11], GREEN_LED);
             k.box([90, 40, 70], [450, 20, -130], '#2b3338'); k.add(new T.BoxGeometry(60, 160, 50), [450, 110, -130], '#2b3338', [1, 1, 1], [.4, 0, 0]); led.box([40, 6, 3], [450, 175, -100], '#e05a4a');
@@ -1613,7 +1701,7 @@ export function mainDeskDetail({ role, THREE: T, add }) {
     if (role === 'shelf') {
         const k = detailKit(), width = 560, h = width * .58, cy = 150 + h / 2;
         k.box([width + 24, h + 24, 24], [-60, cy, 0], '#1a2227'); k.box([34, 160, 26], [-60, 80, -40], '#3b464d'); k.box([220, 12, 160], [-60, 6, -40], '#3b464d');
-        plant(k, 520, 0, 0, .3); k.cyl(40, 36, 100, [330, 50, 30], '#e8ebe8'); k.cyl(36, 36, 3, [330, 100, 30], '#3b2a20');
+        plant(k, 520, 0, 0, .3); // Drinks belong at the NOC station, not the field diagnostic desk.
         const g = new T.Group(); g.name = 'Field tech monitor'; k.build(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: .5 }));
         const map = institutionalMap(() => {}, 512, 297);
         const screen = new T.Mesh(new T.PlaneGeometry(width, h), new T.MeshStandardMaterial({ map, color: '#ffffff', emissive: '#ffffff', emissiveMap: map, emissiveIntensity: SCREEN[MAIN_PHASE], roughness: .35 }));

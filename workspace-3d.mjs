@@ -1,7 +1,7 @@
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=institutional-sweep-20261009';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=institutional-sweep-20261009';
-import { refineRoomSurfaces } from './room-refinement.mjs?v=institutional-sweep-20261009';
-import { RoomLife } from './room-life.mjs?v=institutional-sweep-20261009';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=institutional-finish-20261009';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=institutional-finish-20261009';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=institutional-finish-20261009';
+import { RoomLife } from './room-life.mjs?v=institutional-finish-20261009';
 import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=groove-routines-20261002';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
@@ -367,12 +367,14 @@ export class WorkspaceAccessories {
         }
         const desktop = this.mounts.get('desktop');
         if (desktop && sceneId !== 'product') {
+            // Clinical/lab benches and field diagnostic desks use work notes, not drinks.
+            const workOnly = ['hospital', 'laboratory', 'mobileit'].includes(sceneId);
             const kit = new THREE.Group(); kit.name = 'Groove tabletop · daily materials'; kit.userData.dayKit = true;
             kit.position.set(-440, 1, 150); markSceneAsset(kit, { key: `${sceneId}:desktop:daily-kit`, role: 'desktop' });
             const paper = material('#e9dfc8'), cover = material(sceneId === 'creative' ? '#b9765d' : '#52746c'), ceramic = material('#e6d6b8'), ink = material('#354b50');
             for (let phase = 0; phase < 5; phase++) {
-                const group = new THREE.Group(); group.name = ['Morning coffee', 'Working notes', 'Evening reading', 'Quiet focus', 'Shared setup'][phase]; kit.add(group);
-                if (phase === 0 || phase === 4) {
+                const group = new THREE.Group(); group.name = [workOnly ? 'Morning checklist' : 'Morning coffee', 'Working notes', 'Evening reading', 'Quiet focus', 'Shared setup'][phase]; kit.add(group);
+                if (!workOnly && (phase === 0 || phase === 4)) {
                     for (const x of phase === 4 ? [-45, 45] : [0]) {
                         mesh(group, new THREE.CylinderGeometry(27, 24, 54, 16), ceramic, [x, 27, 0]);
                         mesh(group, new THREE.CylinderGeometry(23, 23, 2, 16), ink, [x, 55, 0]);

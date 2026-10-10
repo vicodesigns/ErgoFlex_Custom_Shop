@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { institutionalMap, boardFrame, boardGrid, boardCurve, screenHeader, screenFooter, detailKit, books, notebook, plant, storageBooks, storageTray, activityNotebook, identityGallery, rnd } from './institutional-detail.mjs?v=institutional-sweep-20261009';
+import { institutionalMap, boardFrame, boardGrid, boardCurve, screenHeader, screenFooter, detailKit, books, notebook, plant, storageBooks, storageTray, activityNotebook, identityGallery, rnd } from './institutional-detail.mjs?v=institutional-finish-20261009';
 
 // Educational group: `kindergarten`, `elementary`, `middleschool`,
 // `highschool`, `college`, `university` (kinds early / primary / secondary /

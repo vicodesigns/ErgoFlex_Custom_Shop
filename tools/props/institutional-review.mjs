@@ -29,7 +29,7 @@
 //
 // Memory: exactly one Chromium process exists at a time. It is relaunched per
 // scene (software WebGL leaks between large rooms) and always closed on exit,
-// so two reviewers can run concurrently. Browser storage is isolated; user
+// so review jobs should run sequentially. Browser storage is isolated; user
 // projects are not modified.
 import puppeteer from 'puppeteer';
 import { createServer } from 'node:http';
@@ -65,17 +65,44 @@ const url = `http://127.0.0.1:${server.address().port}/`;
 
 let browser = null;
 const errors = [], report = [];
+const launchOptions = { headless: true, protocolTimeout: 600000, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--disable-dev-shm-usage'] };
+async function registryOnly() {
+    // Registry discovery needs modules, not a fully furnished Security room.
+    // Keep the same origin/import map while avoiding an extra model load.
+    browser = await puppeteer.launch(launchOptions);
+    const page = await browser.newPage();
+    const imports = readFileSync(join(root, 'index.html'), 'utf8').match(/<script type="importmap">[\s\S]*?<\/script>/)?.[0];
+    if (!imports) throw new Error('Review renderer needs the application import map');
+    await page.setRequestInterception(true);
+    page.on('request', request => {
+        if (request.isNavigationRequest() && request.frame() === page.mainFrame()) request.respond({ status: 200, contentType: 'text/html', body: `<!doctype html>${imports}` });
+        else request.continue();
+    });
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    return page.evaluate(async () => {
+        const m = await import('./institutional-scenes.mjs?v=institutional-finish-20261009');
+        return Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)]));
+    });
+}
 async function openRoom(id, tier) {
     // Never more than one browser: close the previous one first.
     if (browser) { await browser.close(); browser = null; }
-    browser = await puppeteer.launch({ headless: true, protocolTimeout: 600000, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--disable-dev-shm-usage'] });
+    browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage(); page.setDefaultTimeout(180000); page.setDefaultNavigationTimeout(180000);
     page.on('pageerror', e => { errors.push(`${id}: ${e.message}`); console.error('page error:', e.message); });
     page.on('console', m => { if (m.type() === 'error' && /Shader Error|VALIDATE_STATUS|WebGLProgram/.test(m.text())) { errors.push(`${id}: ${m.text()}`); console.error(m.text()); } });
     await page.setViewport({ width: 1280, height: 800 });
-    await page.goto(`${url}?room=${id}&view=room${tier ? '&layout=' + tier : ''}`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${url}?room=${id}${tier ? '&layout=' + tier : ''}`, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => window.ErgoFlex?.renderer);
+    await page.evaluate(r => { ErgoFlex.renderer.setPixelRatio(r); ErgoFlex.renderer.setAnimationLoop(null); }, ratio);
     await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none');
-    await page.evaluate(async () => { window.__three = await import('three'); await ErgoFlex.workspaceRoom.ready; });
+    // Stop continuous full-resolution software rendering before station GLBs
+    // finish loading. Capture only the requested frames; this also avoids
+    // exhausting Chromium while reviewing the larger institutional layouts.
+    await page.evaluate(async r => {
+        ErgoFlex.renderer.setPixelRatio(r); ErgoFlex.renderer.setAnimationLoop(null);
+        window.__three = await import('three'); await ErgoFlex.workspaceRoom.ready;
+    }, ratio);
     await page.addStyleTag({ content: '#motion-dock{visibility:hidden!important}' });
     await page.evaluate(r => { ErgoFlex.setShellMode('studio'); ErgoFlex.renderer.setPixelRatio(r); ErgoFlex.renderer.setAnimationLoop(null); }, ratio);
     return page;
@@ -96,6 +123,11 @@ async function shoot(page, id, tier, phase, angle, file) {
         // The paused render loop would freeze the blue 'Lift up' motion pixels; show the authored colour.
         ef.setLedMotionEnabled?.(false); if (look.color) ef.setLedColor(look.color, false);
         ef.roomLedSpill.update(ef.workspaceRoom, ef.ledPixelRenderer, { enabled: look.leds, colour: new THREE.Color(look.color || ef.ledColor), gain: 1.8 });
+        // Transform-following overlays update in onBeforeRender. Initialise
+        // them before fitting a camera, so their uninitialised millimetre
+        // geometry cannot make the first overview shrink to a tiny room.
+        ef.workspaceRoom.root.updateWorldMatrix(true, true);
+        ef.renderer.render(ef.roomInteractions.scene, ef.roomInteractions.camera);
     }, { id, phase });
     await page.evaluate(angle => {
         const THREE = window.__three, ef = ErgoFlex, room = ef.workspaceRoom, { camera, controls } = ef.roomInteractions, l = room.roomLayout;
@@ -143,8 +175,8 @@ async function stats(page, id, tier, phase) {
 }
 
 try {
-    let page = await openRoom('security', null);
-    const registry = await page.evaluate(async () => { const m = await import('./institutional-scenes.mjs?v=institutional-sweep-20261009'); return Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)])); });
+    const registry = await registryOnly();
+    let page;
     if (only.includes('all')) only = Object.keys(registry);
     const unknown = only.filter(id => !registry[id]); if (unknown.length) throw new Error('Unknown institutional scene(s): ' + unknown.join(', ') + '. Known: ' + Object.keys(registry).join(', '));
     for (const id of only) {

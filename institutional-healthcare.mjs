@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { institutionalMap, institutionalFloor, rnd, boardFrame, detailKit, notebook, plant } from './institutional-detail.mjs?v=institutional-sweep-20261009';
+import { institutionalMap, rnd, boardFrame, detailKit, notebook, plant } from './institutional-detail.mjs?v=institutional-finish-20261009';
 
 // Healthcare group: `hospital` Hospital workspace and `laboratory` Science
 // laboratory (kinds hospital / lab). This module owns the group's registry
@@ -46,20 +46,38 @@ const MODES = {
     hospital: [
         lmode('#fff3e2', '#e2eef0', ['#bad8e5', '#f5e6ca'], 1.55, .45, 1.05, .3, .22, .7),
         lmode('#f2f7fb', '#e1edf2', ['#94c5de', '#e4eff1'], 1.55, .46, 1.04, .38, .2, .76),
-        lmode('#ffd9b0', '#d6e0ec', ['#ba96a4', '#f0c89e'], .75, .3, 1.08, .66, .3, .5, '#34544c'),
-        // Night observation: ward dark, local practicals only, very low LEDs.
-        lmode('#9fb4cf', '#8ea6c0', ['#0f2238', '#2c4560'], .14, .15, 1.18, .3, .08, .26, '#1c2d29'),
-        lmode('#e8eef2', '#d5e8e7', ['#a9cdd7', '#ede3cd'], 1.1, .38, 1.07, .64, .3, .57, '#2c4d55')],
+        lmode('#ffd9b0', '#d6e0ec', ['#ba96a4', '#f0c89e'], .75, .3, 1.08, .66, .3, .5, '#171819'),
+        // Night observation: ward dark, local practicals only, desk LEDs off.
+        lmode('#9fb4cf', '#8ea6c0', ['#0f2238', '#2c4560'], .14, .15, 1.18, .3, .08, .26),
+        lmode('#e8eef2', '#d5e8e7', ['#a9cdd7', '#ede3cd'], 1.1, .38, 1.07, .64, .3, .57)],
     lab: [
         lmode('#f3f6f8', '#dce9ee', ['#bad8e5', '#f5e6ca'], 1.5, .44, 1.05, .42, .2, .7),
         lmode('#f0f7ff', '#e1edf2', ['#94c5de', '#e4eff1'], 1.55, .46, 1.04, .5, .2, .76),
-        lmode('#ffe2c2', '#d7deee', ['#ba96a4', '#f0c89e'], .8, .3, 1.08, .88, .35, .5, '#334d55'),
-        lmode('#b9cde4', '#a4bed6', ['#172c47', '#3c5265'], .22, .18, 1.13, .62, .18, .28, '#173a40'),
-        lmode('#e8eef2', '#d5e8e7', ['#a9cdd7', '#ede3cd'], 1.1, .38, 1.07, .84, .38, .57, '#4a1813')]
+        lmode('#ffe2c2', '#d7deee', ['#ba96a4', '#f0c89e'], .8, .3, 1.08, .88, .35, .5, '#171819'),
+        lmode('#b9cde4', '#a4bed6', ['#172c47', '#3c5265'], .22, .18, 1.13, .62, .18, .28, '#101112'),
+        lmode('#e8eef2', '#d5e8e7', ['#a9cdd7', '#ede3cd'], 1.1, .38, 1.07, .84, .38, .57)]
 };
+// A single authored table owns the five looks and local lighting. Room-light
+// powers are scaled square metres (same units as the shell), never accumulated
+// from a previous look. Three room lights plus one/two real local lamps.
+const LIGHT = {
+    hospital: { modes: MODES.hospital, task: '#fff1df', bounce: '#bdcdd1',
+        room: [[1.05,1.2,1.2,.20,1.8], [1.3,1.5,1.1,.08,1.65], [.85,.9,.7,.04,1.2]],
+        ceiling: [[.32,.36,.55,.012,.6], [.28,.32,.5,.008,.55], [.28,.32,.5,.008,.55]],
+        lamps: [[.22,.14,.48,.016,.5], [.1,.06,.3,.018,.2]],
+        view: [.88,.92,.72,.55,.88], sun: [.028,.025,.035,0,.04],
+        screens: [.18,.18,.17,.13,.18], sheer: [.15,.4,.9,1,.3], blackout: [0,0,0,.96,0] },
+    lab: { modes: MODES.lab, task: '#eef4fb', bounce: '#bfd1cc',
+        room: [[1.45,1.65,1.5,.38,1.8], [1.75,1.95,1.9,.23,2.0], [1.0,1.15,.8,.075,1.35]],
+        ceiling: [[.48,.65,.8,.09,.85], [.48,.65,.8,.035,.85], [.48,.65,.8,.015,.85]],
+        lamps: [[.25,.2,.45,.06,.52], [.16,.2,.38,.14,.4]],
+        view: [.88,.94,.75,.72,.9], sun: [.035,.03,.04,0,.04],
+        screens: [.18,.19,.19,.17,.19], sheer: [.25,.45,.2,.65,.3], blackout: null }
+};
+for (const [kind, L] of Object.entries(LIGHT)) for (const mode of L.modes) mode.colors = [L.task, L.bounce];
 // Main desk pose per daypart [height in, tilt deg, yaw deg, offset [x, z] mm].
 // Positive yaw turns the user toward the door wall (+x): the beds and benches.
-const pose = (kind, list) => Object.fromEntries(PHASES.map((p, i) => [p, { ...MODES[kind][i], height: list[i][0], tilt: list[i][1], yaw: list[i][2] || 0, offset: list[i][3] || [0, 0] }]));
+const pose = (kind, list) => Object.fromEntries(PHASES.map((p, i) => [p, { ...LIGHT[kind].modes[i], height: list[i][0], tilt: list[i][1], yaw: list[i][2] || 0, offset: list[i][3] || [0, 0] }]));
 export const sceneOverrides = {
     hospital: {
         boardTitle: 'UNIT HUDDLE · SAFE CARE TODAY',
@@ -468,7 +486,7 @@ const props = {
 function stationKit() { return { k: detailKit(), mat: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .6 }) }; }
 // Station desktop pools by role [m, a, e, n, p]: the medication station has
 // its own 4000K task light (drugs are read under neutral light).
-const STATION_POOL = { medication: [.05, .05, .12, .14, .08], physician: [.03, .03, .1, .04, .06], charge: [.03, .03, .1, .08, .07], telehealth: [.03, .03, .08, .02, .06], pharmacist: [.03, .03, .1, .03, .07], discharge: [.03, .03, .1, .02, .06],
+const STATION_POOL = { medication: [.05, .05, .12, .07, .08], physician: [.03, .03, .1, .04, .06], charge: [.03, .03, .1, .08, .07], telehealth: [.03, .03, .08, .02, .06], pharmacist: [.03, .03, .1, .03, .07], discharge: [.03, .03, .1, .02, .06],
     instrument: [.03, .04, .1, .1, .06], microscopy: [.03, .04, .1, .06, .06], prep: [.04, .05, .1, .03, .06], demo: [.03, .03, .08, .02, .08], review: [.03, .03, .1, .04, .07], pi: [.03, .03, .1, .04, .07] };
 export function stationDetail(spec, mount, T, ctx) {
     const role = spec.role, half = spec.size === '60x30' ? 762 : 610, { k, mat } = stationKit();
@@ -487,7 +505,7 @@ export function stationDetail(spec, mount, T, ctx) {
         if (role === 'medication') {
             // 4000K task light under the shelf, read by the desktop pool.
             k.box([half * 2 - 260, 24, 50], [0, -30, 60], '#d9dfe0');
-            glow.push([new THREE.BoxGeometry(half * 2 - 280, 4, 34), '#f1f3ee', [.6, .6, 1.2, 1.4, .9], [0, -44, 60]]);
+            glow.push([new THREE.BoxGeometry(half * 2 - 280, 4, 34), '#f1f3ee', [.6, .6, 1.2, .7, .9], [0, -44, 60]]);
         }
     } else {
         if (role === 'medication') { props.drawers(k, 250, 0, -60); props.medCups(k, 470, 0, 160); props.scanner(k, -520, 0, -90); k.box([160, 2, 110], [-80, 1, 170], '#f4f2ea'); }
@@ -541,7 +559,12 @@ export function options(spec) {
         lampSupport: lab ? { id: 'lab-bench-0', height: 900, clinical: true, color: '#eaf3ed' } : null
     };
 }
-export const floor = (spec, w, d) => institutionalFloor('clinical', w, d);
+export function floor(spec, w, d) {
+    const base = spec.kind === 'lab' ? '#c4d3ce' : '#cdd9d3';
+    const map = surfaceMap((c, W, H) => fineFleck(c, W, H, base, ['#8faaa133', '#ffffff85', '#c2bda243'], 2900, 1.4), 512, 512);
+    map.repeat.set(w / 1000, d / 1000);
+    return { map, roughness: spec.kind === 'lab' ? .4 : .43, surface: 'stone' };
+}
 export function drawBoard(c, W, H, spec, variant = 0) {
     boardFrame(c, W, H, spec);
     if (spec.kind === 'lab') {
@@ -597,17 +620,185 @@ const signText = (text, bg, fg, font = '600 54px sans-serif', sub) => (c, W, H) 
 };
 // Bed-local (x, z) to room (x, z) for a bed at [bx, bz, rot].
 const bedXZ = ([bx, bzz, rot], x, z) => { const a = rad(rot), c = Math.cos(a), s = Math.sin(a); return [bx + x * c + z * s, bzz - x * s + z * c]; };
+// ---- Clinical finishes at real-world scale -------------------------------
+// Maps carry millimetre periods, following the signed-off Educational and
+// Government builders. Wall finishes stay on the cutaway walls and are never
+// registered as furnishings. Plain shell boxes use non-vertex-colour materials.
+function surfaceMap(draw, width = 512, height = width, linear = false) {
+    const m = institutionalMap(draw, width, height);
+    m.wrapS = m.wrapT = THREE.RepeatWrapping; m.anisotropy = 8;
+    if (linear) m.colorSpace = THREE.NoColorSpace;
+    return m;
+}
+function physicalUV(geometry, [pu, pv]) {
+    const p = geometry.attributes.position, n = geometry.attributes.normal;
+    if (!p || !n || geometry.userData.hcUV) return;
+    const uv = new Float32Array(p.count * 2);
+    for (let i = 0; i < p.count; i++) {
+        const x = p.getX(i), y = p.getY(i), z = p.getZ(i), ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+        const [u, v] = ay >= ax && ay >= az ? [x, -z] : ax >= az ? [z, y] : [x, y];
+        uv[i * 2] = u / pu; uv[i * 2 + 1] = v / pv;
+    }
+    geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); geometry.userData.hcUV = true;
+}
+function drawOakHPL(c, W, H, vertical = false, planks = false) {
+    if (vertical) { c.save(); c.translate(W, 0); c.rotate(Math.PI / 2); [W, H] = [H, W]; }
+    c.fillStyle = '#ede2cf'; c.fillRect(0, 0, W, H);
+    const bands = planks ? 5 : 4;
+    for (let b = 0; b < bands; b++) { c.fillStyle = ['#c8ab8617', '#ffffff12', '#ad885514', '#ffffff06'][b % 4]; c.fillRect(0, b * H / bands, W, H / bands); }
+    for (let i = 0; i < H * 1.2; i++) {
+        const y = rnd(i * 1.17 + 4) * H, a = 2 + rnd(i * 4) * 5, ph = rnd(i * 3) * TAU;
+        c.strokeStyle = i % 3 ? '#8f704325' : '#ffffff38'; c.lineWidth = .5 + rnd(i * 5) * 1.2;
+        for (const dy of [-H, 0, H]) { c.beginPath(); for (let x = 0; x <= W; x += W / 32) c.lineTo(x, y + dy + Math.sin(x / W * TAU * 2 + ph) * a); c.stroke(); }
+    }
+    for (let i = 0; i < 4; i++) for (let r = 0; r < 6; r++) {
+        const cx = W * (.2 + rnd(i * 7) * .6), cy = (i + .55) * H / 4;
+        c.strokeStyle = '#8f704318'; c.lineWidth = .8; c.beginPath(); c.ellipse(cx, cy, 48 + r * 19, 5 + r * 3.5, 0, Math.PI * 1.04, TAU * .98); c.stroke();
+    }
+    for (let i = 0; i < W * H / 70; i++) { c.fillStyle = '#82643d19'; c.fillRect(rnd(i * 1.7) * W, rnd(i * 2.3) * H, 2 + rnd(i) * 3, .6); }
+    if (planks) { c.fillStyle = '#82643d45'; for (let b = 1; b < bands; b++) c.fillRect(0, b * H / bands, W, 1); for (let b = 0; b < bands; b++) c.fillRect((b % 3) * W / 3, b * H / bands, 1, H / bands); }
+    if (vertical) c.restore();
+}
+function fineFleck(c, W, H, base, colors, count = 1200, spread = 1.8) {
+    c.fillStyle = base; c.fillRect(0, 0, W, H);
+    for (let i = 0; i < count; i++) { c.fillStyle = colors[i % colors.length]; const r = .35 + rnd(i * 4.3) * spread; c.beginPath(); c.ellipse(rnd(i * 1.7) * W, rnd(i * 2.9) * H, r, r * (.4 + rnd(i)), rnd(i * 5) * 3, 0, TAU); c.fill(); }
+}
+function drawFabric(c, W, H) {
+    c.fillStyle = '#f0f0ed'; c.fillRect(0, 0, W, H);
+    for (let y = 0; y < H; y += 4) for (let x = 0; x < W; x += 4) { c.fillStyle = (x + y) % 8 ? '#ffffff32' : '#838e8a22'; c.fillRect(x, y, 3, 2); }
+    for (let i = 0; i < W * H / 10; i++) { c.fillStyle = i % 2 ? '#ffffff20' : '#52625b12'; c.fillRect(rnd(i * 1.3) * W, rnd(i * 2.7) * H, .8, 2); }
+}
 function hcMaterials(kit) {
     if (kit.hcM) return kit.hcM;
     const { mat, material } = kit;
-    return kit.hcM = {
-        frame: mat('#d9dfe0', 'powder'), dark: mat('#3a4247', 'powder'), rail: mat('#9aa7ad', 'metal', { metalness: .55, roughness: .35 }),
-        mattress: mat('#b9cfd3', 'fabric'), linen: mat('#f4f6f2', 'fabric'), blanket: mat('#a9c5d0', 'fabric'), pillow: mat('#ffffff', 'fabric'),
-        recliner: mat('#4f7d8a', 'fabric'), wood: mat('#c9a77c', 'wood'), hpl: mat('#eef1ee', 'powder'), epoxy: mat('#22282b', 'stone', { roughness: .3 }),
-        teal: mat('#608e9d', 'powder'), yellow: mat('#e1b12c', 'powder'), white: mat('#f2f4f1', 'powder'), steel: mat('#c9d0d3', 'metal', { metalness: .6, roughness: .3 }),
+    const mapped = (color, draw, [W, H], [pu, pv], extra = {}) => {
+        const m = material(color, { map: surfaceMap(draw, W, H), ...extra }); m.userData.hcUV = [pu, pv]; return m;
+    };
+    const powder = (color, roughness = .4) => mapped(color, (c, W, H) => fineFleck(c, W, H, '#f4f4f4', ['#ffffff50', '#b9c0c02a'], W * H / 8, .65), [128, 128], [180, 180], { roughness, metalness: .12 });
+    const fabric = (color) => mapped(color, drawFabric, [128, 128], [70, 70], { roughness: .95 });
+    const epoxy = mapped('#22282b', (c, W, H) => fineFleck(c, W, H, '#f3f3f3', ['#ffffff50', '#a3aaac65', '#5c656433'], W * H / 190, 1), [512, 512], [500, 500], { roughness: .3 });
+    const M = kit.hcM = {
+        frame: powder('#d9dfe0'), dark: powder('#3a4247', .5), rail: mapped('#a8b4b8', (c, W, H) => { c.fillStyle = '#e6e6e6'; c.fillRect(0, 0, W, H); for (let i = 0; i < 1000; i++) { c.fillStyle = i % 2 ? '#ffffff50' : '#bcbcbc30'; c.fillRect(rnd(i * 2.3) * W, rnd(i * 3.1) * H, 20 + rnd(i) * 80, .6); } }, [256, 64], [220, 70], { metalness: .65, roughness: .3 }),
+        mattress: fabric('#b9cfd3'), linen: fabric('#f4f6f2'), blanket: fabric('#a9c5d0'), pillow: fabric('#ffffff'),
+        recliner: mapped('#4f7d8a', (c, W, H) => fineFleck(c, W, H, '#eeeeee', ['#ffffff45', '#909b9d30'], W * H / 12, .8), [256, 256], [200, 200], { roughness: .5 }),
+        wood: mapped('#c9a77c', drawOakHPL, [1024, 512], [1400, 700], { roughness: .55 }),
+        woodV: mapped('#c9a77c', (c, W, H) => drawOakHPL(c, W, H, true), [512, 1024], [600, 1400], { roughness: .55 }),
+        bayFloor: mapped('#b89a74', (c, W, H) => drawOakHPL(c, W, H, false, true), [1024, 1024], [1800, 1800], { roughness: .5 }),
+        hpl: powder('#eef1ee', .5), epoxy, teal: powder('#608e9d'), yellow: powder('#e1b12c', .45), white: powder('#f2f4f1'), steel: mat('#c9d0d3', 'metal', { metalness: .6, roughness: .3 }),
+        tile: mapped('#ffffff', (c, W, H) => { c.fillStyle = '#c9d3cf'; c.fillRect(0, 0, W, H); for (let row = 0; row < 4; row++) for (let col = -1; col < 3; col++) { const x = col * W / 2 + (row % 2) * W / 4, y = row * H / 4; c.fillStyle = '#f2f4f1'; c.fillRect(x + 1.5, y + 1.5, W / 2 - 3, H / 4 - 3); c.fillStyle = '#ffffff60'; c.fillRect(x + 3, y + 3, W / 2 - 6, 1); } }, [512, 512], [600, 600], { roughness: .3 }),
+        dryFloor: mapped('#ffffff', (c, W, H) => fineFleck(c, W, H, '#d6d2c4', ['#8f988923', '#ffffff65', '#aaad9950'], 2100, 1.1), [512, 512], [800, 800], { roughness: .4 }),
+        cove: powder(kit.spec.kind === 'lab' ? '#7c9a97' : '#97aca8', .48), guard: powder('#9fbdc4', .45),
         glass: material('#cfe6ea', { transparent: true, opacity: .26, roughness: .08, metalness: .1, depthWrite: false }),
         liquid: material('#ffffff', { vertexColors: true, transparent: true, opacity: .62, roughness: .15 })
     };
+    // Shell oak is used by the planning table, door and picture frames. Keep
+    // physical grain scale on it rather than stretching one image per box.
+    kit.oak.map = M.wood.map; kit.oak.color.set('#c9a77c'); kit.oak.userData.hcUV = [1400, 700]; kit.oak.needsUpdate = true;
+    const paint = surfaceMap((c, W, H) => fineFleck(c, W, H, '#fafafa', ['#ffffff20', '#8c9d9110'], 4000, .9), 256, 256);
+    kit.wall.map = paint; kit.wall.roughness = .9; kit.wall.userData.hcUV = [1200, 1200]; kit.wall.needsUpdate = true;
+    return M;
+}
+function clinicalWallFinishes(kit) {
+    const { w, d, bz, front } = kit, M = hcMaterials(kit), W = w / 2, door = front - 1600;
+    // Existing generic accent band is replaced by cleanable clinical finishes.
+    for (const o of kit.back.children) if (o.isMesh && o.material === kit.accent) o.visible = false;
+    for (const o of kit.right.children) if (o.isMesh && o.material === kit.metal && o.geometry.parameters?.height === 110) o.visible = false;
+    const runs = { back: [[-W, W]], right: [[bz, door - 560], [door + 560, front]], left: [[bz, front]] };
+    const walls = { back: kit.back, right: kit.right, left: kit.left };
+    for (const side of ['back', 'right', 'left']) {
+        const g = new THREE.Group(); g.name = 'Clinical coved skirting and wall protection'; g.userData.presentationOnly = true; walls[side].add(g);
+        const at = (mid, y, off) => side === 'back' ? [mid, y, bz + off] : [side === 'left' ? -W + off : W - off, y, mid];
+        const size = (len, h, dep) => side === 'back' ? [len, h, dep] : [dep, h, len];
+        for (const [a, b] of runs[side]) {
+            const len = b - a, mid = (a + b) / 2;
+            // Extruded, radiused floor-to-wall cove: 100 high, 35 into room.
+            const shape = new THREE.Shape(); shape.moveTo(0, 0); shape.lineTo(35, 0); shape.lineTo(35, 3); shape.quadraticCurveTo(5, 3, 5, 35); shape.lineTo(5, 100); shape.lineTo(0, 100); shape.closePath();
+            const geo = new THREE.ExtrudeGeometry(shape, { depth: len, bevelEnabled: false, curveSegments: 8 });
+            const o = kit.mesh(g, geo, M.cove, side === 'back' ? [b, 0, bz + 2] : side === 'right' ? [W - 2, 0, b] : [-W + 2, 0, a]);
+            o.rotation.y = side === 'back' ? -Math.PI / 2 : side === 'right' ? Math.PI : 0; o.castShadow = false;
+            // Guard panels end below the daylight sill on the window wall.
+            if (kit.spec.kind !== 'lab') {
+                const guardRuns = side !== 'left' ? [[a, b, 800]] : [[bz, bz + d * .3, 800], [bz + d * .3, bz + d * .78, 675], [bz + d * .78, front, 800]];
+                for (const [ga, gb, y] of guardRuns) {
+                    kit.box(g, size(gb - ga, 200, 14), at((ga + gb) / 2, y, 16), M.guard, 4).castShadow = false;
+                    kit.box(g, size(gb - ga, 40, 28), at((ga + gb) / 2, y - 50, 32), M.rail, 8).castShadow = false;
+                }
+            }
+        }
+    }
+    if (kit.spec.kind === 'lab') {
+        const plan = labPlan(kit.layout), g = new THREE.Group(); g.name = 'Glazed laboratory splashback'; g.userData.presentationOnly = true; kit.right.add(g);
+        // Tile behind the wash station, above the epoxy surface and below signs.
+        kit.box(g, [8, 720, 1540], [W - 8, 1250, plan.wash], M.tile).castShadow = false;
+        const back = new THREE.Group(); back.name = 'Glazed hood splashback'; back.userData.presentationOnly = true; kit.back.add(back);
+        kit.box(back, [1920, 760, 8], [plan.hood, 1260, bz + 6], M.tile).castShadow = false;
+    }
+}
+
+// ---- Per-setting outlooks: a healing garden and a research park ------------
+// Emissive pane replaces only the shared outlook, with no new lights or assets.
+function installClinicalView(kit) {
+    const pane = kit.window.children.find(o => o.isMesh && o.material === kit.sky); if (!pane) return;
+    const H = 640, W = Math.min(2048, Math.round(H * kit.d * .48 / 1750 / 16) * 16);
+    const map = institutionalMap(() => {}, W, H); map.wrapS = map.wrapT = THREE.ClampToEdgeWrapping; map.anisotropy = 8;
+    const m = kit.material('#000000', { emissive: '#ffffff', emissiveMap: map, emissiveIntensity: LIGHT[kit.spec.kind].view[0], roughness: .9 });
+    pane.material = m; kit.hcView = { m, map, W, H, phase: null };
+}
+function drawClinicalView(kit, phase) {
+    const v = kit.hcView; if (!v) return; v.m.emissiveIntensity = LIGHT[kit.spec.kind].view[phaseIndex(phase)];
+    if (v.phase === phase) return; v.phase = phase;
+    const { W, H } = v, c = v.map.image.getContext('2d'), night = phase === 'night', dusk = phase === 'evening', lab = kit.spec.kind === 'lab';
+    const tone = (a, b, d) => night ? d : dusk ? b : a;
+    const sky = kit.spec.modes[phase]?.sky || ['#bad8e5', '#f5e6ca'], grad = c.createLinearGradient(0, 0, 0, H * .6);
+    grad.addColorStop(0, sky[0]); grad.addColorStop(1, sky[1]); c.fillStyle = grad; c.fillRect(0, 0, W, H);
+    c.fillStyle = night ? '#e9eee3' : '#fff5db'; c.beginPath(); c.arc(W * (phase === 'afternoon' ? .8 : .18), H * (dusk ? .42 : .16), night ? 11 : 18, 0, TAU); c.fill();
+    if (night) for (let i = 0; i < 50; i++) { c.fillStyle = '#c9d9e480'; c.fillRect(rnd(i * 2.3) * W, rnd(i * 3.7) * H * .35, 1.5, 1.5); }
+    const glow = (x, y, r, col, alpha = '80') => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col + alpha); g.addColorStop(1, col + '00'); c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); };
+    const tree = (x, y, r, seed = 0) => {
+        c.fillStyle = tone('#76614a', '#624d3e', '#282f2c'); c.fillRect(x - r * .06, y - r * .4, r * .12, r * .65);
+        for (let i = 0; i < 7; i++) { c.fillStyle = tone(i % 2 ? '#668451' : '#78965e', '#5b7252', i % 2 ? '#223b33' : '#2a4438'); c.beginPath(); c.ellipse(x + Math.sin(i * 2.4 + seed) * r * .4, y - r + Math.cos(i * 2.4) * r * .25, r * .6, r * .8, 0, 0, TAU); c.fill(); }
+    };
+    // Low distant clinic wing / glazed research block, with restrained night windows.
+    const bx = W * (lab ? .08 : .54), by = H * (lab ? .27 : .4), bw = W * (lab ? .47 : .43), bh = H * (lab ? .32 : .2);
+    c.fillStyle = tone(lab ? '#a3bbc2' : '#d2cec0', '#b6a895', '#2e404a'); c.fillRect(bx, by, bw, bh);
+    c.fillStyle = tone('#718289', '#747571', '#202e36'); c.fillRect(bx - 4, by - 8, bw + 8, 8);
+    const rows = lab ? 4 : 2, cols = lab ? 13 : 10;
+    for (let r = 0; r < rows; r++) for (let n = 0; n < cols; n++) {
+        const x = bx + n * bw / cols + 3, y = by + r * bh / rows + 6, on = (night || dusk) && rnd(n * 2.7 + r * 13) < (lab ? .55 : .32);
+        c.fillStyle = on ? (lab ? '#d8e3f0' : '#f3d8a8') : tone('#8caab7', '#7a8d95', '#152c38'); c.fillRect(x, y, bw / cols - 6, bh / rows - 10);
+        if (lab) { c.fillStyle = tone('#c3cccb', '#abaeaa', '#41515a'); c.fillRect(x + bw / cols * .4, y, 2, bh / rows - 10); }
+    }
+    c.fillStyle = tone('#879e72', '#708464', '#23382e'); c.fillRect(0, H * .6, W, H * .4);
+    for (let i = 0; i < 6; i++) tree(W * (.04 + i * .18), H * .63, H * (.065 + rnd(i) * .045), i);
+    if (lab) {
+        // Roof-mounted photovoltaic panels, greenhouse and landscaped swales.
+        for (let i = 0; i < 9; i++) { const x = bx + bw * (.05 + i * .1), y = by - H * .035; c.fillStyle = tone('#284d69', '#314657', '#172836'); c.beginPath(); c.moveTo(x, y); c.lineTo(x + bw * .075, y); c.lineTo(x + bw * .085, y + H * .025); c.lineTo(x - bw * .01, y + H * .025); c.closePath(); c.fill(); c.strokeStyle = '#8da3b250'; c.lineWidth = .7; c.stroke(); }
+        const gx = W * .63, gy = H * .6, gw = W * .3, gh = H * .2;
+        c.fillStyle = tone('#a9c9bc', '#a8b1a4', '#9e8ba9'); c.beginPath(); c.moveTo(gx, gy); c.lineTo(gx, gy - gh * .64); c.lineTo(gx + gw * .5, gy - gh); c.lineTo(gx + gw, gy - gh * .64); c.lineTo(gx + gw, gy); c.closePath(); c.fill();
+        c.strokeStyle = tone('#e1e8df', '#d7dacf', '#cdbcd6'); c.lineWidth = 3; c.stroke();
+        for (let i = 0; i <= 7; i++) { const x = gx + i * gw / 7; c.beginPath(); c.moveTo(x, gy); c.lineTo(x, gy - gh * .64 - (1 - Math.abs(i / 7 - .5) * 2) * gh * .36); c.stroke(); }
+        if (night || dusk) glow(gx + gw / 2, gy - gh / 2, gw * .65, '#f2d9ff', '2c');
+        c.fillStyle = tone('#709a78', '#5b7b62', '#1b362e'); c.beginPath(); c.moveTo(0, H * .74); c.bezierCurveTo(W * .3, H * .55, W * .4, H * .92, W, H * .68); c.lineTo(W, H * .82); c.bezierCurveTo(W * .45, H, W * .35, H * .68, 0, H * .86); c.closePath(); c.fill();
+        c.strokeStyle = tone('#bac8b19a', '#a4ac9490', '#59716980'); c.lineWidth = 2; for (let i = 0; i < 130; i++) { const x = rnd(i * 1.7) * W, y = H * (.75 + rnd(i * 2.9) * .12); c.beginPath(); c.moveTo(x, y); c.lineTo(x + rnd(i) * 5, y - 10 - rnd(i * 3) * 10); c.stroke(); }
+        c.fillStyle = tone('#ccc8b7', '#b5ae99', '#3f5149'); c.beginPath(); c.moveTo(W * .48, H); c.lineTo(W * .57, H * .61); c.lineTo(W * .61, H * .61); c.lineTo(W * .6, H); c.fill();
+    } else {
+        // Accessible loop path, rounded raised beds, benches and flowering shrubs.
+        c.strokeStyle = tone('#d8d3bd', '#b9ac92', '#48554a'); c.lineWidth = H * .105; c.beginPath(); c.moveTo(W * .2, H); c.bezierCurveTo(W * .6, H * .78, W * .82, H * .55, W * .36, H * .69); c.bezierCurveTo(W * .05, H * .76, W * .03, H * .81, 0, H * .91); c.stroke();
+        for (const [px, py, sx, sy] of [[.22, .77, .14, .055], [.7, .79, .16, .065], [.46, .92, .19, .07]]) {
+            c.fillStyle = tone('#a9a28b', '#93856e', '#3f4539'); c.beginPath(); c.ellipse(W * px, H * py, W * sx, H * sy, 0, 0, TAU); c.fill();
+            c.fillStyle = tone('#4e7153', '#4f654b', '#1a332b'); c.beginPath(); c.ellipse(W * px, H * (py - .018), W * sx * .96, H * sy * .8, 0, 0, TAU); c.fill();
+            for (let i = 0; i < 75; i++) { c.fillStyle = tone(i % 3 ? '#c99ab5' : '#e8c46e', i % 3 ? '#b4889f' : '#c4a465', i % 3 ? '#4a3b4a' : '#5d5341'); c.beginPath(); c.arc(W * (px + (rnd(i * 2.3 + px) - .5) * sx * 1.7), H * (py - .02 + (rnd(i * 3.7) - .5) * sy), 2 + rnd(i) * 3, 0, TAU); c.fill(); }
+        }
+        for (const [px, py] of [[.44, .72], [.78, .88]]) {
+            const x = W * px, y = H * py, sw = H * .2; c.fillStyle = tone('#9e805b', '#84684c', '#403e33'); c.fillRect(x, y - 28, sw, 15); c.fillRect(x, y - 5, sw, 12);
+            c.fillStyle = tone('#657070', '#555f5c', '#263832'); for (const dx of [8, sw - 12]) c.fillRect(x + dx, y + 5, 4, 22);
+        }
+        // Three warm bollards illuminate only the garden path at night.
+        for (const [px, py] of [[.12, .85], [.53, .72], [.83, .85]]) { const x = W * px, y = H * py; c.fillStyle = tone('#6d7973', '#5b665c', '#36433b'); c.fillRect(x - 4, y - 34, 8, 34); c.fillStyle = night || dusk ? '#f4d7a1' : '#d9decb'; c.fillRect(x - 5, y - 28, 10, 6); if (night || dusk) { glow(x, y - 25, 24, '#f4d7a1'); glow(x, y, 45, '#f4d7a1', '35'); } }
+        tree(W * .04, H * .9, H * .2, 8); tree(W * .94, H * .8, H * .16, 9);
+        c.fillStyle = tone('#b7ad98', '#9f917c', '#3b493e'); c.fillRect(0, H * .97, W, H * .03);
+    }
+    v.map.needsUpdate = true;
 }
 // ---- Hospital furnishing --------------------------------------------------
 function buildBed(kit, n, at) {
@@ -633,6 +824,10 @@ function buildBed(kit, n, at) {
     // Split side rails (down on the nurse's working side by day).
     for (const s of [-1, 1]) for (const [z0, len] of [[-640, 620], [260, 820]]) {
         box(bed, [30, 300, len], [s * 500, 790, z0], M.rail, 10); box(bed, [36, 210, len - 70], [s * 500, 790, z0], M.frame, 8);
+    }
+    for (const side of [-1,1]) {
+        lens(bed, new THREE.BoxGeometry(120, 30, 4), '#ffb86b', [0,0,.08,.75,.04], [side*400,170,960]);
+        addPool(kit, bed, [side*410, 5, 1150], [700,1050], '#ffb06a', [0,0,.012,.105,.008]);
     }
     return bed;
 }
@@ -662,7 +857,9 @@ function buildHeadwall(kit, n, bedAt, wallSide) {
     const g = wallSide === 'right' ? wallAsset(kit, 'right', n ? `care-services-${n}` : 'care-services', 'Wall bed headwall services', z, 0, 0)
         : wallAsset(kit, 'back', n ? `care-services-${n}` : 'care-services', 'Wall bed headwall services', x, 0, 0);
     anchorWall(g);
-    kit.box(g, [1600, 1500, 18], [0, 950, 9], M.wood, 4);
+    kit.box(g, [1600, 1500, 18], [0, 950, 9], M.woodV, 4);
+    // Narrow HPL panel joints and edge strips, not a flat tan slab.
+    for (const x of [-800, -400, 400, 800]) kit.box(g, [3, 1490, 2], [x, 950, 19], M.dark).castShadow = false;
     kit.box(g, [1500, 220, 70], [0, 1500, 54], M.hpl, 12); kit.box(g, [1520, 24, 80], [0, 1622, 58], M.frame, 4);
     // Patient care board above (generic headings and blank lines, no patient data).
     kit.box(g, [940, 640, 24], [0, 2050, 12], M.frame, 6);
@@ -690,16 +887,16 @@ function buildHeadwall(kit, n, bedAt, wallSide) {
     // Vitals monitor arm on the working side.
     k.box([90, 120, 40], [-680, 1660, 30], '#9aa7ad'); k.box([40, 40, 220], [-680, 1660, 150], '#9aa7ad'); k.box([40, 40, 160], [-660, 1660, 300], '#9aa7ad', [0, .6, 0]);
     // Night-lights: two recessed amber rectangles low on the wall.
-    for (const s of [-1, 1]) k.box([200, 90, 10], [s * 640, 330, 5], '#b9c2c6');
+    for (const s of [-1, 1]) k.box([200, 90, 10], [s * 640, 140, 5], '#b9c2c6');
     k.build(g, kit.dress);
     kit.monitor(g, [-640, 1470, 400], 440, n, true);
     lens(g, new THREE.BoxGeometry(250, 6, 46), '#fff1db', [.05, .05, .5, .1, .3], [380, 1915, 125], [0, 0, -.12]);
-    for (const s of [-1, 1]) lens(g, new THREE.BoxGeometry(170, 60, 4), '#ffb86b', [0, 0, .25, 1.4, .15], [s * 640, 330, 12]);
+    for (const s of [-1, 1]) lens(g, new THREE.BoxGeometry(170, 60, 4), '#ffb86b', [0, 0, .25, 1.4, .15], [s * 640, 140, 12]);
     // Indirect wall-wash strip above the care board.
-    kit.box(g, [1600, 40, 90], [0, 2440, 45], M.frame, 6); lens(g, new THREE.BoxGeometry(1560, 4, 60), '#fff4e6', [.2, .2, .6, .1, .5], [0, 2462, 45]);
+    kit.box(g, [1600, 40, 90], [0, 2440, 45], M.frame, 6); lens(g, new THREE.BoxGeometry(1560, 4, 60), '#fff4e6', [.2, .2, .6, .045, .5], [0, 2462, 45]);
     panel(kit, g, signText(`BED ${n + 1}`, '#608e9d', '#ffffff', '600 64px sans-serif'), [280, 90], [-720, 2050, 14], { cw: 256, ch: 82 });
-    addPool(kit, g, [0, 2300, 30], [2200, 900], '#fff1dc', [.02, .02, .08, .015, .07], 'back');
-    for (const s of [-1, 1]) addPool(kit, g, [s * 640, 6, 360], [900, 700], '#ffb06a', [0, 0, .02, .11, .01], 'floor');
+    addPool(kit, g, [0, 2300, 30], [2200, 900], '#fff1dc', [.02, .02, .08, .008, .07], 'back');
+    for (const s of [-1, 1]) addPool(kit, g, [s * 640, 6, 360], [900, 700], '#ffb06a', [0, 0, .025, .16, .01], 'floor');
     return g;
 }
 // Ceiling-track cubicle curtains: U-track round each bay at h-100 (open:
@@ -707,14 +904,23 @@ function buildHeadwall(kit, n, bedAt, wallSide) {
 // foot at night). Architecture, not furniture: the name keeps them out of
 // RoomInteractions and the Groove planner.
 function curtainMaterial(kit, kind) {
-    const map = institutionalMap((c, W, H) => {
+    const map = surfaceMap((c, W, H) => {
         c.fillStyle = '#cfe1db'; c.fillRect(0, 0, W, H);
-        for (let n = 0; n < 60; n++) { const x = rnd(n) * W, y = H * .16 + rnd(n + 60) * H * .84; c.fillStyle = ['#a8c8bc', '#b9d4c9', '#9cbcb4'][n % 3]; c.beginPath(); c.ellipse(x, y, 10, 26, rnd(n + 9) * 3, 0, TAU); c.fill(); }
-        c.fillStyle = '#f4f7f5'; c.fillRect(0, 0, W, H * .12); c.strokeStyle = '#c9d6d2'; for (let x = 0; x < W; x += 6) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H * .12); c.stroke(); }
-        for (let x = 0; x < W; x += 32) { c.fillStyle = '#00000014'; c.fillRect(x, H * .12, 14, H); }
-    }, 256, 512);
-    map.wrapS = THREE.RepeatWrapping; void kind;
-    return kit.material('#ffffff', { map, roughness: .9, side: THREE.DoubleSide });
+        for (let n = 0; n < 50; n++) {
+            const x = rnd(n * 1.7) * W, y = H * .125 + rnd(n * 2.9) * H * .875;
+            c.strokeStyle = '#8daf9f70'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(x, y + 18); c.quadraticCurveTo(x - 9, y, x + 5, y - 17); c.stroke();
+            for (const [dx, dy, r] of [[-4, -8, -.5], [4, 4, .8]]) { c.fillStyle = ['#a8c8bc70', '#b9d4c980', '#9cbcb450'][n % 3]; c.beginPath(); c.ellipse(x + dx, y + dy, 4, 10, r, 0, TAU); c.fill(); }
+        }
+        for (let y = H * .125; y < H; y += 3) { c.fillStyle = '#ffffff14'; c.fillRect(0, y, W, .6); }
+        for (let x = 0; x < W; x += 3) { c.fillStyle = '#68857614'; c.fillRect(x, H * .125, .6, H); }
+        // 300mm breathable mesh on an approximately 2400mm curtain drop.
+        c.clearRect(0, 0, W, H * .125); c.fillStyle = '#e7eee7';
+        for (let y = 0; y < H * .125; y += 6) c.fillRect(0, y, W, 2);
+        for (let x = 0; x < W; x += 6) c.fillRect(x, 0, 2, H * .125);
+        c.fillStyle = '#a4beb5'; c.fillRect(0, H * .125 - 2, W, 4); c.fillRect(0, H - 6, W, 4);
+    }, 384, 1024);
+    void kind;
+    return kit.material('#ffffff', { map, alphaTest: .25, roughness: .95, side: THREE.DoubleSide });
 }
 function curtainPiece(length, height, amp, period, mat) {
     const seg = Math.max(8, Math.round(length / (period / 4))), geo = new THREE.PlaneGeometry(length, height, seg, 1), p = geo.attributes.position;
@@ -833,7 +1039,7 @@ function hospitalDecorate(kit) {
     windowBlinds(kit, 'hospital');
     // Floor: oak-look sheet vinyl inlay under each bay (zone, not furniture).
     const zones = floorZones(kit);
-    plan.beds.forEach(at => { const [cx, cz] = bedXZ(at, 150, 150); const o = kit.box(zones, [at[2] ? 2600 : 2400, 3, at[2] ? 2400 : 2600], [cx, 1.5, cz], M.wood); o.receiveShadow = true; o.castShadow = false; });
+    plan.beds.forEach(at => { const [cx, cz] = bedXZ(at, 150, 150); const o = kit.box(zones, [at[2] ? 2600 : 2400, 3, at[2] ? 2400 : 2600], [cx, 1.5, cz], M.bayFloor); o.receiveShadow = true; o.castShadow = false; });
     void ceiling;
 }
 function floorZones(kit) {
@@ -845,14 +1051,15 @@ function windowBlinds(kit, kind) {
     // wall, y about the opening centre, +z into the room). Drops per daypart.
     const { window: win, d } = kit, span = d * .48, count = 3, bw = span / count - 30, M = hcMaterials(kit);
     const k = detailKit(); k.box([span + 60, 90, 130], [0, 905, 80], '#e3e7e4'); k.build(win, kit.dress);
-    const sheer = kit.material('#f3f1ea', { transparent: true, opacity: kind === 'lab' ? .9 : .55, roughness: .9, side: THREE.DoubleSide });
-    const blackout = kit.material(kind === 'lab' ? '#cdd6d4' : '#5f7f86', { roughness: .9, side: THREE.DoubleSide });
-    const drops = kind === 'lab' ? { sheer: [.25, .45, .2, .7, .3] } : { sheer: [.15, .4, .9, 1, .3], blackout: [0, 0, 0, .96, 0] };
+    const sheer = kit.material('#f3f1ea', { map: surfaceMap(drawFabric, 128, 128), transparent: true, opacity: kind === 'lab' ? .9 : .55, roughness: .9, side: THREE.DoubleSide });
+    const blackout = kit.material(kind === 'lab' ? '#cdd6d4' : '#5f7f86', { map: surfaceMap(drawFabric, 128, 128), roughness: .95, side: THREE.DoubleSide });
+    const L = LIGHT[kind], drops = { sheer: L.sheer, ...(L.blackout ? { blackout: L.blackout } : {}) };
     for (let n = 0; n < count; n++) {
         const x = -span / 2 + (n + .5) * span / count;
         for (const [name, m, z] of [['sheer', sheer, 100], ['blackout', blackout, 122]]) {
             if (!drops[name]) continue;
-            const p = kit.mesh(win, new THREE.PlaneGeometry(bw, 1), m, [x, 860, z]); p.castShadow = false; p.name = 'Window blind';
+            const cm = m.clone(); cm.map = m.map.clone(); cm.map.repeat.set(bw / 120, 1); cm.map.needsUpdate = true;
+            const p = kit.mesh(win, new THREE.PlaneGeometry(bw, 1), cm, [x, 860, z]); p.castShadow = false; p.name = 'Window blind';
             const rail = kit.mesh(win, new THREE.BoxGeometry(bw, 24, 16), M.frame, [x, 860, z + 4]); rail.castShadow = false;
             p.userData.hcBlind = { levels: drops[name], rail };
         }
@@ -860,7 +1067,7 @@ function windowBlinds(kit, kind) {
 }
 const setBlinds = (root, i) => root.traverse(o => {
     const b = o.userData.hcBlind; if (!b) return; const h = Math.max(1, Math.min(1690, 1750 * b.levels[i]));
-    o.scale.y = h; o.position.y = 860 - h / 2; b.rail.position.y = 860 - h; o.visible = b.levels[i] > .01;
+    o.scale.y = h; if (o.material.map) o.material.map.repeat.y = h / 120; o.position.y = 860 - h / 2; b.rail.position.y = 860 - h; o.visible = b.levels[i] > .01;
 });
 
 // ---- Laboratory furnishing ------------------------------------------------
@@ -885,6 +1092,7 @@ function chairStool(kit, id, [x, z]) {
     kit.mesh(g, new THREE.CylinderGeometry(190, 180, 70, 24), kit.mat('#3f5f66', 'fabric'), [0, 640, 0]);
     kit.rod(g, [0, 80, 0], [0, 610, 0], 24, M.rail); kit.mesh(g, new THREE.TorusGeometry(190, 10, 8, 28), M.rail, [0, 330, 0]).rotation.x = Math.PI / 2;
     for (let i = 0; i < 5; i++) { const a = i * TAU / 5 + .3; kit.rod(g, [0, 90, 0], [Math.cos(a) * 260, 30, Math.sin(a) * 260], 15, M.dark); kit.mesh(g, new THREE.SphereGeometry(22, 10, 8), M.dark, [Math.cos(a) * 260, 22, Math.sin(a) * 260]); }
+    addPool(kit, g, [0, 895, 0], [1800, 850], '#eef4fb', [.035,.05,.085,.035,.065]);
     return g;
 }
 function buildHood(kit, x) {
@@ -910,6 +1118,7 @@ function buildHood(kit, x) {
     lens(hood, new THREE.BoxGeometry(20, 20, 6), '#4fd07f', [1.2, 1.2, 1.2, 1.4, 1.2], [690, 2440, 358]);
     panel(kit, hood, signText('SASH ≤ 500 mm', '#f2c230', '#1d2427', '600 40px sans-serif'), [160, 40], [-500, 2490, 336], { cw: 256, ch: 64 });
     panel(kit, hood, (c, W, H) => { c.fillStyle = '#0f2a1f'; c.fillRect(0, 0, W, H); c.fillStyle = '#5fe08a'; mono(c, 30, 600); c.fillText('0.5 m/s', 12, 38); }, [150, 50], [610, 2490, 361], { cw: 192, ch: 64, glow: .9 });
+    addPool(kit, hood, [0,888,0], [1400,600], '#eef4fb', [.012,.09,.015,.045,.045]);
     return hood;
 }
 function reagentCabinet(kit, storage) {
@@ -1029,11 +1238,12 @@ function labDecorate(kit) {
     k.build(win, kit.dress);
     lens(win, new THREE.BoxGeometry(880, 4, 40), '#e6b8ff', [.3, .3, .8, 1.2, .5], [x0 + 375, -397, 70]);
     panel(kit, win, (c, W2, H) => { c.fillStyle = '#ffffff'; c.fillRect(0, 0, W2, H); c.fillStyle = '#2d4b48'; sans(c, 24, 700); 'ABCDEF'.split('').forEach((t, n) => c.fillText(t, 10 + n * (W2 / 6), 30)); }, [900, 30], [x0 + 375, -840, 128], { cw: 384, ch: 40 });
+    addPool(kit, win, [x0 + 375,-782,70], [980,170], '#e6b8ff', [.008,.008,.025,.065,.012]);
     windowBlinds(kit, 'lab');
     // Floor: warmer dry zone along the window, hazard tape round the hood,
     // a green safety square under the shower (zones, not furniture).
     const zones = floorZones(kit), tape = kit.material('#e8c22e', { roughness: .6 });
-    kit.box(zones, [plan.dryEdge + W, 3, d], [(-W + plan.dryEdge) / 2, 1.5, bz + d / 2], kit.mat('#d6d2c4', 'stone', { roughness: .45 })).castShadow = false;
+    kit.box(zones, [plan.dryEdge + W, 3, d], [(-W + plan.dryEdge) / 2, 1.5, bz + d / 2], M.dryFloor).castShadow = false;
     kit.box(zones, [50, 4, d], [plan.dryEdge, 2, bz + d / 2], tape).castShadow = false;
     const hx = plan.hood; for (const [sx, sz, x, z] of [[2100, 50, hx, bz + 1100], [50, 1100, hx - 1050, bz + 550], [50, 1100, hx + 1050, bz + 550]]) kit.box(zones, [sx, 4, sz], [x, 2, z], tape).castShadow = false;
     kit.box(zones, [1000, 4, 1000], [W - 900, 2, plan.wash], kit.material('#2e8b57', { roughness: .6, transparent: true, opacity: .55 })).castShadow = false;
@@ -1134,10 +1344,13 @@ function stageGroups(kit) {
 export function decorate(kit) {
     if (kit.spec.kind === 'lab') labDecorate(kit); else hospitalDecorate(kit);
     stageGroups(kit);
+    clinicalWallFinishes(kit);
+    installClinicalView(kit);
+    clinicalSunPatch(kit);
 }
 export function finishDecor(kit) {
     // Every room surface dithered (lamp falloff on large plain walls).
-    kit.root.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) if (m) m.dithering = true; });
+    kit.root.traverse(o => { if (o.isMesh) { const p = o.material?.userData?.hcUV; if (p) physicalUV(o.geometry, p); for (const m of [].concat(o.material)) if (m) m.dithering = true; } });
 }
 export function activityMaterials(k, phase, y, kit) {
     if (kit?.spec.kind === 'lab') {
@@ -1169,10 +1382,56 @@ export function extraLamps(kit) {
         const light = new THREE.PointLight('#ffe4bf', 0, 1700 * root.scale.x, 2); light.position.set(-300, 1300, -860); bed.add(light); lamps.push({ light, luminous: m, clinicalLamp: true, color: '#ffe4bd' });
     }
 }
+function ensureClinicalCeiling(kit) {
+    const ceil = kit.room?.ceilingFixture; if (!ceil || kit.hcStrips) return;
+    const L = LIGHT[kit.spec.kind], lab = kit.spec.kind === 'lab', kids = ceil.children.filter(o => o.isMesh).slice(0,6);
+    kit.hcStrips = [];
+    for (let n=0;n<3;n++) {
+        const housing=kids[n*2], pane=kids[n*2+1]; if (!housing || !pane) continue;
+        const m=pane.material.clone(); pane.material=m; kit.hcStrips.push({m,levels:L.ceiling[n]});
+        m.color.set(lab ? '#eef4fb' : '#fff4e6'); m.emissive.copy(m.color);
+        housing.castShadow=pane.castShadow=false;
+        if (lab) {
+            // Suspended 5000K lines parallel to wet-lab islands.
+            const len=kit.w*.58, y=kit.ceiling-350, z=housing.position.z;
+            housing.scale.x=pane.scale.x=.85; housing.position.y=y+29; pane.position.y=y;
+            for (const x of [-len*.4,len*.4]) kit.rod(ceil,[x,y+58,z],[x,kit.ceiling-4,z],3,kit.metal).castShadow=false;
+        } else {
+            // Flush ward luminaires, tucked near the headwall / circulation line.
+            housing.scale.x=pane.scale.x=.65;
+        }
+    }
+}
+const SUN_ANGLE = {morning:[.62,-.36],afternoon:[1.45,.12],evening:[.32,.48],night:null,party:[1.35,.25]};
+function clinicalSunPatch(kit) {
+    const {w,d,bz,front}=kit, z0=bz+d*.54, half=d*.24;
+    const map=surfaceMap((c,W,H)=>{c.fillStyle='#000000';c.fillRect(0,0,W,H);c.filter='blur(30px)';c.fillStyle='#ffffff';for(const [a,b] of [[.04,.31],[.35,.65],[.69,.96]])c.fillRect(a*W,H*.04,(b-a)*W,H*.92);c.filter='none';},512,256);
+    map.wrapS=map.wrapT=THREE.ClampToEdgeWrapping;
+    const geo=new THREE.PlaneGeometry(1,1,8,36);geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count*3),3));
+    const m=new THREE.MeshBasicMaterial({map,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
+    const sun=new THREE.Mesh(geo,m);sun.name='Window daylight patch';sun.renderOrder=2;sun.castShadow=sun.receiveShadow=false;sun.frustumCulled=false;sun.raycast=noRay;poolLayer(kit).add(sun);
+    kit.hcSun=(phase,strength)=>{
+        const angle=SUN_ANGLE[phase];sun.visible=!!angle&&strength>.003;if(!sun.visible)return;
+        const i=phaseIndex(phase),L=LIGHT[kit.spec.kind],bottom=2560-Math.min(1690,1750*L.sheer[i]), pos=geo.attributes.position,uv=geo.attributes.uv,col=geo.attributes.color;
+        for(let n=0;n<pos.count;n++){
+            const y=800+uv.getY(n)*1800,t=y/angle[0],x=-w/2+25+t,z=z0-half+uv.getX(n)*half*2+angle[1]*t;
+            const inside=x<w/2-40&&z>bz+30&&z<front-30?1-.25*uv.getY(n):0,pass=y>bottom?.45:1;
+            pos.setXYZ(n,Math.min(x,w/2-40),10,THREE.MathUtils.clamp(z,bz+30,front-30));col.setXYZ(n,inside*pass,inside*pass,inside*pass);
+        }
+        pos.needsUpdate=col.needsUpdate=true;geo.computeBoundingSphere();m.color.set(kit.spec.modes[phase].key).multiplyScalar(strength);
+    };
+}
 export function atmosphere(phase, gain, kit) {
     const i = phaseIndex(phase), now = CURRENT[kit.spec.id] = kit.root.userData.hcPhase = { phase, gain };
     setBlinds(kit.root, i);
-    if (kit.spec.kind === 'hospital' && kit.lights?.[0]) kit.lights[0].intensity *= [1, 1, .8, .5, 1][i];
+    drawClinicalView(kit, phase);
+    const L=LIGHT[kit.spec.kind], unit=(kit.root.scale.x*1000)**2;
+    ensureClinicalCeiling(kit);
+    for (const {m,levels} of kit.hcStrips || []) m.emissiveIntensity=levels[i]*gain;
+    (kit.lights || []).forEach((light,n)=>{light.color.set(n===2?L.bounce:L.task);light.intensity=unit*L.room[n][i]*gain;});
+    (kit.lamps || []).forEach(({light,luminous},n)=>{const level=L.lamps[n]?.[i]||0;light.intensity=unit*level*gain;luminous.emissiveIntensity=.08+level*gain*1.3;});
+    for(const m of kit.screenMats || []) m.emissiveIntensity=L.screens[i]*Math.min(gain,1.3);
+    kit.hcSun?.(phase,L.sun[i]*Math.min(gain,1.4));
     applyPhase(kit.root, now);
     for (let n = MAIN_DETAIL.length - 1; n >= 0; n--) {
         const e = MAIN_DETAIL[n], on = attached(e.g);
