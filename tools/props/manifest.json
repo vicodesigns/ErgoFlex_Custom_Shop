@@ -12401,6 +12401,290 @@
     "mm": 1885
    },
    "textureSize": 1024
+  },
+  {
+   "id": "ergoflex-art-easel",
+   "name": "Artist easel & artwork",
+   "source": "ergoflex-supplied/EassleAccessoryAndArt.glb",
+   "category": "desk",
+   "scenes": [
+    "creative"
+   ],
+   "fit": {
+    "axis": "x",
+    "mm": 1485
+   },
+   "budget": 12000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications."
+  },
+  {
+   "id": "ergoflex-small-bookshelf",
+   "name": "Compact bookshelf",
+   "source": "ergoflex-supplied/bookshelsfsmaller.glb",
+   "category": "furniture",
+   "scenes": [
+    "library",
+    "home"
+   ],
+   "rotateY": -90,
+   "fit": {
+    "axis": "y",
+    "mm": 1200
+   },
+   "budget": 8000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "repair": "ergoflex-collection"
+  },
+  {
+   "id": "ergoflex-artist-stool",
+   "name": "Artist stool with palette",
+   "source": "ergoflex-supplied/artistsStoolwithPalete.glb",
+   "category": "furniture",
+   "scenes": [
+    "creative"
+   ],
+   "fit": {
+    "axis": "y",
+    "mm": 489
+   },
+   "budget": 30000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "rotateX": 90,
+   "repair": "ergoflex-collection"
+  },
+  {
+   "id": "ergoflex-tall-bookshelf",
+   "name": "Tall bookshelf",
+   "source": "ergoflex-supplied/TallBookShelf.glb",
+   "category": "furniture",
+   "scenes": [
+    "library",
+    "office"
+   ],
+   "rotateY": -90,
+   "fit": {
+    "axis": "y",
+    "mm": 1800
+   },
+   "budget": 10000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "repair": "ergoflex-collection"
+  },
+  {
+   "id": "ergoflex-painter-shelf",
+   "name": "Painter accessory shelf",
+   "source": "ergoflex-supplied/PAinterAccesoryShelf.glb",
+   "category": "desk",
+   "scenes": [
+    "creative"
+   ],
+   "fit": {
+    "axis": "x",
+    "mm": 574
+   },
+   "budget": 30000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications."
+  },
+  {
+   "id": "ergoflex-office-chair",
+   "name": "Office task chair",
+   "source": "ergoflex-supplied/officeChair3.glb",
+   "category": "furniture",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "rotateX": 90,
+   "fit": {
+    "axis": "y",
+    "mm": 1156
+   },
+   "budget": 22000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "rotateY": 0
+  },
+  {
+   "id": "ergoflex-keyboard-tray",
+   "name": "Keyboard tray",
+   "source": "ergoflex-supplied/KeyboardTray.glb",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "gaming"
+   ],
+   "rotateY": 90,
+   "anchor": "ceiling",
+   "fit": {
+    "axis": "x",
+    "mm": 679
+   },
+   "budget": 15000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications."
+  },
+  {
+   "id": "ergoflex-guitar-amp",
+   "name": "Guitar & amplifier",
+   "source": "ergoflex-supplied/GuitarAndAmp.glb",
+   "category": "music",
+   "scenes": [
+    "music"
+   ],
+   "fit": {
+    "axis": "y",
+    "mm": 989
+   },
+   "budget": 60000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "rotateY": -90
+  },
+  {
+   "id": "ergoflex-ergo-keyboard",
+   "name": "Ergonomic keyboard",
+   "source": "ergoflex-supplied/ErgoKeyboard.glb",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "gaming"
+   ],
+   "fit": {
+    "axis": "x",
+    "mm": 460
+   },
+   "budget": 25000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications."
+  },
+  {
+   "id": "ergoflex-gamer-chair",
+   "name": "Gaming chair",
+   "source": "ergoflex-supplied/GamerChair.glb",
+   "category": "furniture",
+   "scenes": [
+    "gaming"
+   ],
+   "fit": {
+    "axis": "y",
+    "mm": 1500
+   },
+   "budget": 35000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "rotateX": 180,
+   "rotateY": 180
+  },
+  {
+   "id": "ergoflex-tall-office-chair",
+   "name": "Tall office chair",
+   "source": "ergoflex-supplied/TallChairOffice.glb",
+   "category": "furniture",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "fit": {
+    "axis": "y",
+    "mm": 1295
+   },
+   "budget": 30000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "rotateX": 180,
+   "rotateY": 180
+  },
+  {
+   "id": "ergoflex-wide-monitor",
+   "name": "Wide landscape monitor",
+   "source": "ergoflex-supplied/WideMonitor.glb",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "gaming"
+   ],
+   "rotateY": 90,
+   "fit": {
+    "axis": "x",
+    "mm": 727
+   },
+   "budget": 1000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications."
+  },
+  {
+   "id": "ergoflex-portrait-monitor",
+   "name": "Portrait monitor",
+   "source": "ergoflex-supplied/PortraitMonitor.glb",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "rotateY": 90,
+   "fit": {
+    "axis": "x",
+    "mm": 385
+   },
+   "budget": 1000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications."
+  },
+  {
+   "id": "ergoflex-dual-monitor-arm",
+   "name": "Dual monitor arm",
+   "source": "ergoflex-supplied/DoubleMonitorArm.glb",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "gaming"
+   ],
+   "rotateY": 90,
+   "fit": {
+    "axis": "x",
+    "mm": 736
+   },
+   "budget": 30000,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "rotateX": 180,
+   "repair": "ergoflex-collection"
   }
  ],
  "screens": [

@@ -7,7 +7,7 @@ import { SceneDesks } from './scene-desks.mjs?v=notebook-scale-20261011';
 import { notebookTransform } from './notebook-transform.mjs';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=ergoflex-collection-20261011';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
@@ -41,12 +41,12 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=scene-desk-styling-20261010';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=ergoflex-collection-20261011';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=library-window-20261011';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=ergoflex-collection-20261011';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=scene-desk-styling-20261010';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=scene-desk-styling-20261010';
@@ -4904,7 +4904,10 @@ function renderAccessories() {
         row.hidden = accessoryCategory === 'Selected' ? !on : item.category !== accessoryCategory;
         row.dataset.accessory = item.id;
         const illustration = document.createElement('div'); illustration.className = 'accessory-art';
-        illustration.innerHTML = accessoryIllustration(item.visual || (item.id === 'led-strip' ? 'led' : 'foot'));
+        if (item.propId) {
+            const image = document.createElement('img'); image.src = `./assets/props/thumbs/${item.propId}.png`; image.alt = ''; image.loading = 'lazy';
+            illustration.append(image);
+        } else illustration.innerHTML = accessoryIllustration(item.visual || (item.id === 'led-strip' ? 'led' : 'foot'));
         const info = document.createElement('div'); info.className = 'accessory-info';
         const brand = document.createElement('span'); brand.className = 'accessory-brand'; brand.textContent = item.brand || 'ERGOFLEX · ACCESSORIES';
         const name = document.createElement('label'); name.className = 'accessory-name'; name.htmlFor = `accessory-${item.id}`; name.textContent = item.name;
@@ -4913,10 +4916,10 @@ function renderAccessories() {
         const action = document.createElement('label'); action.className = 'accessory-add';
         const box = document.createElement('input'); box.type = 'checkbox'; box.id = name.htmlFor;
         box.checked = on && fits; box.disabled = !fits;
-        box.setAttribute('aria-label', `${item.name}, ${money(item.price)} estimated`);
+        box.setAttribute('aria-label', `${item.name}, ${item.quoted ? 'price on request' : money(item.price) + ' estimated'}`);
         box.onchange = () => toggleAccessory(item.id);
         const label = document.createElement('span'); label.textContent = on ? 'Added' : 'Add to build';
-        const price = document.createElement('span'); price.className = 'accessory-price'; price.textContent = money(item.price) + '*';
+        const price = document.createElement('span'); price.className = 'accessory-price'; price.textContent = item.quoted ? 'On request' : money(item.price) + '*';
         action.append(box, label, price);
         row.append(illustration, info, action);
         if (item.source) {
@@ -4956,7 +4959,7 @@ function renderPriceBreakdown() {
     const total = document.createElement('div');
     total.className = 'breakdown-row breakdown-total';
     const label = document.createElement('span');
-    label.textContent = lines.some(line => line.quoted) ? 'Estimate before finish quote' : 'Estimate';
+    label.textContent = lines.some(line => line.quoted) ? 'Estimate before quoted options' : 'Estimate';
     const value = document.createElement('span');
     value.textContent = money(lines.reduce((n, l) => n + l.price, 0));
     total.append(label, value);
@@ -4997,7 +5000,8 @@ function buildGuidedConfiguration() {
         const card = document.createElement('button');
         card.className = 'preset-card';
         card.dataset.preset = preset.id;
-        card.innerHTML = `<strong>${preset.name}</strong><small>${preset.blurb}</small><em>${money(configurationPrice(cleanConfig(preset)))}</em>`;
+        const config = cleanConfig(preset), quote = priceBreakdown(config).some(line => line.quoted);
+        card.innerHTML = `<strong>${preset.name}</strong><small>${preset.blurb}</small><em>${money(configurationPrice(config))}${quote ? ' + quote' : ''}</em>`;
         card.onclick = () => applyPreset(preset);
         presets.append(card);
     }
@@ -5007,7 +5011,7 @@ function buildGuidedConfiguration() {
 
     const accessories = document.createElement('div');
     accessories.className = 'accessory-block';
-    accessories.innerHTML = `<div class="eyebrow">MAKE IT YOURS</div><h2>Complete your workspace.</h2><p class="accessory-intro">Add a little comfort. See it on your desk.</p><div class="accessory-filters" role="group" aria-label="Accessory categories"><button data-accessory-category="Desktop" aria-pressed="true">Desktop</button><button data-accessory-category="Support" aria-pressed="false">Support</button><button data-accessory-category="Selected" aria-pressed="false">Selected (0)</button></div><div id="accessory-list"></div><p class="studio-note">Original 3D approximations; branded products use manufacturer dimensions. Mounting fit needs confirmation. * Estimated accessory prices; availability unconfirmed.</p>`;
+    accessories.innerHTML = `<div class="eyebrow">MAKE IT YOURS</div><h2>Complete your workspace.</h2><p class="accessory-intro">Add a little comfort. See it on your desk.</p><div class="accessory-filters" role="group" aria-label="Accessory categories"><button data-accessory-category="Desktop" aria-pressed="true">Desktop</button><button data-accessory-category="Support" aria-pressed="false">Support</button><button data-accessory-category="Selected" aria-pressed="false">Selected (0)</button></div><div id="accessory-list"></div><p class="studio-note">Supplied ErgoFlex models and reference accessories. Mounting fit needs confirmation. Items marked On request are quoted separately; * prices are indicative.</p>`;
     (document.getElementById('build-actions') || anchorEl.lastElementChild).before(accessories);
     accessories.querySelectorAll('[data-accessory-category]').forEach(button => button.onclick = () => { accessoryCategory = button.dataset.accessoryCategory; renderAccessories(); });
 
@@ -6332,7 +6336,7 @@ function updatePrice() {
     // One price formula for the whole app: configurationPrice in catalog.mjs.
     // This used to re-implement the sum with different guards and a different
     // locale, so the headline price could disagree with the cart rows.
-    const total = money(configurationPrice(currentConfig)) + (priceBreakdown(currentConfig).some(line => line.quoted) ? ' + finish quote' : '');
+    const total = money(configurationPrice(currentConfig)) + (priceBreakdown(currentConfig).some(line => line.quoted) ? ' + quote' : '');
     totalPrice.textContent = total;
     cartPrice.textContent = total;
     renderPriceBreakdown();
@@ -6385,7 +6389,7 @@ function showCartModal() {
         };
         description.append(preview);
         const price = document.createElement('strong');
-        price.textContent = money(item.price * item.quantity) + (priceBreakdown(item).some(line=>line.quoted) ? ' + finish quote' : '');
+        price.textContent = money(item.price * item.quantity) + (priceBreakdown(item).some(line=>line.quoted) ? ' + quote' : '');
         const quantity = document.createElement('input');
         quantity.type = 'number'; quantity.min = '1'; quantity.max = '20'; quantity.value = item.quantity;
         quantity.setAttribute('aria-label', 'Quantity for ' + description.textContent);
@@ -6400,7 +6404,7 @@ function showCartModal() {
     });
     const total = document.createElement('p'); total.className = 'cart-total';
     total.textContent = 'Estimated total ' + money(cartItems.reduce((n, i) => n + i.price * i.quantity, 0));
-    if (cartItems.some(item=>priceBreakdown(item).some(line=>line.quoted))) total.textContent += ' + finish quotes';
+    if (cartItems.some(item=>priceBreakdown(item).some(line=>line.quoted))) total.textContent += ' + quotes';
     content.append(total);
     if (cartItems.some(item => item.accessories?.length)) {
         const note = document.createElement('p'); note.className = 'studio-note'; note.textContent = '* Accessory estimates shown per desk. Final pricing and availability need confirmation.'; content.append(note);
@@ -9079,6 +9083,7 @@ async function isMobileARDevice() {
 }
 
 async function prepareARModel({ appleTaps = true } = {}) {
+    await workspaceAccessories?.ready;
     const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
     if (!customElements.get('model-viewer')) {
         await import('https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js');
@@ -10617,7 +10622,7 @@ function downloadEstimate(items) {
     });
     if (items.some(item => item.accessories?.length)) lines.push('* Accessory prices are provisional estimates per desk; availability and mounting fit need confirmation.', '');
     lines.push('Estimated total: ' + money(items.reduce((sum, i) => sum + i.price * i.quantity, 0))
-        + (items.some(item=>priceBreakdown(item).some(line=>line.quoted)) ? ' + finish quotes' : ''), '', 'Design preview only. Taxes, delivery, availability, and final specifications require confirmation.');
+        + (items.some(item=>priceBreakdown(item).some(line=>line.quoted)) ? ' + quotes' : ''), '', 'Design preview only. Taxes, delivery, availability, and final specifications require confirmation.');
     downloadFile('ErgoFlex-estimate.txt', lines.join('\n'));
     notifyUser('Your configuration estimate has been downloaded.');
 }

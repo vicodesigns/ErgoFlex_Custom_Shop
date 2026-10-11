@@ -1,4 +1,4 @@
-import { mountDeskObjectUI } from './scene-desk-object-ui.mjs';
+import { mountDeskObjectUI } from './scene-desk-object-ui.mjs?v=ergoflex-collection-20261011';
 export function mountSceneDeskUI(parent,manager){
     const panel=document.createElement('details');panel.className='scene-desk-panel';panel.open=false;
     panel.innerHTML=`<summary>Desks <span data-desk-summary></span></summary>

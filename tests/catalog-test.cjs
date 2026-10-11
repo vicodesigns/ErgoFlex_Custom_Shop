@@ -131,11 +131,17 @@ const assert = require('node:assert/strict');
 
   // Every accessory must price and fit at least one size.
   for (const item of ACCESSORIES) {
-    assert.ok(Number.isFinite(item.price) && item.price > 0, `${item.id} has a price`);
+    assert.ok(Number.isFinite(item.price) && (item.price > 0 || (item.quoted && item.price === 0)), `${item.id} has a price or requires a quote`);
     assert.ok(item.compatibleSizes.length > 0, `${item.id} fits at least one size`);
     assert.ok(item.compatibleSizes.every(size => Object.hasOwn(PRODUCT_CONFIG.sizes, size)),
       `${item.id} only lists real sizes`);
   }
+
+  const quotedBuild = { ...defaultConfig, accessories: ['ergo-keyboard', 'magic-mouse'] };
+  assert.equal(configurationPrice(quotedBuild), base, 'quoted accessories do not invent prices');
+  assert.equal(priceBreakdown(quotedBuild).filter(line => line.quoted).length, 2, 'quoted accessories remain explicit in the breakdown');
+  assert.deepEqual(cleanConfig({ ...defaultConfig, accessories: ['ergo-keyboard', 'apple-keyboard'] }).accessories,
+    ['apple-keyboard'], 'selecting a second keyboard replaces the first');
 
   console.log('Catalog pricing, accessories, presets, validation, and formatting passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

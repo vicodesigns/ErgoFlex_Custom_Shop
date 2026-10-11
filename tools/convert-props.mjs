@@ -70,7 +70,7 @@ for (const prop of selected) {
     }
     jobs.push({ id: prop.id, source, fit: prop.fit, anchor: prop.anchor || 'floor', rotateY: prop.rotateY || 0,
                 rotateX: prop.rotateX || 0, exclude: prop.exclude || [], material: prop.material || null,
-                budget: prop.budget || 0, out: join(rawDir, `${prop.id}.glb`) });
+                budget: prop.budget || 0, repair: prop.repair || null, out: join(rawDir, `${prop.id}.glb`) });
 }
 
 // 2. Blender: import, scale to real-world size, anchor, export raw GLB.
@@ -108,7 +108,8 @@ for (const prop of selected) {
                     anchor: prop.anchor || 'floor', size: r.size, min: r.min, max: r.max, tris: r.tris, bytes: statSync(out).size,
                     ...(prop.budget && r.sourceTris && r.sourceTris > r.tris ? { sourceTris: r.sourceTris } : {}),
                     source: `models/${prop.source}`, license: prop.license || 'unconfirmed', attribution: prop.attribution || null,
-                    ...(prop.sizeNote ? { sizeNote: prop.sizeNote } : {}) };
+                    ...(prop.sizeNote ? { sizeNote: prop.sizeNote } : {}),
+                    ...(prop.collection ? { collection: prop.collection } : {}) };
     byId.set(prop.id, entry);
     const reduced = entry.sourceTris ? ` (from ${entry.sourceTris})` : '';
     console.log(`✓ ${prop.id.padEnd(24)} ${String(r.tris).padStart(7)} tris${reduced.padEnd(12)} ${(entry.bytes / 1024).toFixed(0).padStart(5)} KB  ${r.size.map(v => Math.round(v)).join(' × ')} mm`);

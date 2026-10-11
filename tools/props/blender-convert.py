@@ -46,7 +46,11 @@ def world_bounds(objs):
     lo = Vector((math.inf,) * 3); hi = Vector((-math.inf,) * 3)
     for o in objs:
         mw = o.matrix_world
-        for v in o.data.vertices:
+        # Decimation and some Draco exports leave unused vertices behind.
+        # glTF discards them, so they must not enlarge the fitted/exported size.
+        used = {index for polygon in o.data.polygons for index in polygon.vertices}
+        for index in used:
+            v = o.data.vertices[index]
             p = mw @ v.co
             lo = Vector(map(min, lo, p)); hi = Vector(map(max, hi, p))
     if lo.x == math.inf: raise ValueError('no vertices to measure')
@@ -220,6 +224,11 @@ def run(job):
     for o in roots: o.matrix_world = Matrix.Translation(shift) @ o.matrix_world
     bpy.context.view_layer.update()
     bake_transforms()
+    if job.get('repair') == 'ergoflex-collection':
+        sys.path.insert(0, os.path.dirname(__file__))
+        from supplied_model_repairs import improve
+        improve(job['id'])
+        objs = mesh_objects()
     reconnect_diffuse()
     fix_materials()
     lo, hi = world_bounds(objs)

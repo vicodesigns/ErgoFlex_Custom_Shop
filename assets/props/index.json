@@ -22807,6 +22807,473 @@
    "license": "Original workspace asset",
    "attribution": "Original geometry and game artwork authored for ErgoFlex",
    "sizeNote": "Illustrative full-size cabinet; dimensions authored in metres, not a manufacturer specification."
+  },
+  {
+   "id": "ergoflex-art-easel",
+   "name": "Artist easel & artwork",
+   "category": "desk",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/ergoflex-art-easel.glb",
+   "anchor": "floor",
+   "size": [
+    1485,
+    105.8,
+    602.4
+   ],
+   "min": [
+    -742.5,
+    0,
+    -301.2
+   ],
+   "max": [
+    742.5,
+    105.8,
+    301.2
+   ],
+   "tris": 8682,
+   "bytes": 44872,
+   "source": "models/ergoflex-supplied/EassleAccessoryAndArt.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-small-bookshelf",
+   "name": "Compact bookshelf",
+   "category": "furniture",
+   "scenes": [
+    "library",
+    "home"
+   ],
+   "file": "assets/props/ergoflex-small-bookshelf.glb",
+   "anchor": "floor",
+   "size": [
+    1014.2,
+    1200,
+    596.2
+   ],
+   "min": [
+    -507.1,
+    0,
+    -298.1
+   ],
+   "max": [
+    507.1,
+    1200,
+    298.1
+   ],
+   "tris": 2512,
+   "bytes": 30472,
+   "source": "models/ergoflex-supplied/bookshelsfsmaller.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-artist-stool",
+   "name": "Artist stool with palette",
+   "category": "furniture",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/ergoflex-artist-stool.glb",
+   "anchor": "floor",
+   "size": [
+    496.3,
+    489,
+    496.3
+   ],
+   "min": [
+    -248.1,
+    0,
+    -248.1
+   ],
+   "max": [
+    248.1,
+    489,
+    248.1
+   ],
+   "tris": 30231,
+   "bytes": 497688,
+   "sourceTris": 141560,
+   "source": "models/ergoflex-supplied/artistsStoolwithPalete.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-tall-bookshelf",
+   "name": "Tall bookshelf",
+   "category": "furniture",
+   "scenes": [
+    "library",
+    "office"
+   ],
+   "file": "assets/props/ergoflex-tall-bookshelf.glb",
+   "anchor": "floor",
+   "size": [
+    1016.5,
+    1800,
+    718.4
+   ],
+   "min": [
+    -508.3,
+    0,
+    -359.2
+   ],
+   "max": [
+    508.3,
+    1800,
+    359.2
+   ],
+   "tris": 4564,
+   "bytes": 51196,
+   "source": "models/ergoflex-supplied/TallBookShelf.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-painter-shelf",
+   "name": "Painter accessory shelf",
+   "category": "desk",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/ergoflex-painter-shelf.glb",
+   "anchor": "floor",
+   "size": [
+    574,
+    282.9,
+    279.9
+   ],
+   "min": [
+    -287,
+    0,
+    -140
+   ],
+   "max": [
+    287,
+    282.9,
+    140
+   ],
+   "tris": 30018,
+   "bytes": 263612,
+   "sourceTris": 68947,
+   "source": "models/ergoflex-supplied/PAinterAccesoryShelf.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-office-chair",
+   "name": "Office task chair",
+   "category": "furniture",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/ergoflex-office-chair.glb",
+   "anchor": "floor",
+   "size": [
+    699.1,
+    1156,
+    693.4
+   ],
+   "min": [
+    -349.5,
+    0,
+    -346.7
+   ],
+   "max": [
+    349.5,
+    1156,
+    346.7
+   ],
+   "tris": 18193,
+   "bytes": 285216,
+   "source": "models/ergoflex-supplied/officeChair3.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-keyboard-tray",
+   "name": "Keyboard tray",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "gaming"
+   ],
+   "file": "assets/props/ergoflex-keyboard-tray.glb",
+   "anchor": "ceiling",
+   "size": [
+    679,
+    96.7,
+    479.1
+   ],
+   "min": [
+    -339.5,
+    -96.7,
+    -239.5
+   ],
+   "max": [
+    339.5,
+    0,
+    239.5
+   ],
+   "tris": 11121,
+   "bytes": 91096,
+   "source": "models/ergoflex-supplied/KeyboardTray.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-guitar-amp",
+   "name": "Guitar & amplifier",
+   "category": "music",
+   "scenes": [
+    "music"
+   ],
+   "file": "assets/props/ergoflex-guitar-amp.glb",
+   "anchor": "floor",
+   "size": [
+    848,
+    989,
+    976.2
+   ],
+   "min": [
+    -424,
+    0,
+    -488.1
+   ],
+   "max": [
+    424,
+    989,
+    488.1
+   ],
+   "tris": 139868,
+   "bytes": 702080,
+   "sourceTris": 423623,
+   "source": "models/ergoflex-supplied/GuitarAndAmp.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-ergo-keyboard",
+   "name": "Ergonomic keyboard",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "gaming"
+   ],
+   "file": "assets/props/ergoflex-ergo-keyboard.glb",
+   "anchor": "floor",
+   "size": [
+    460,
+    45,
+    246.7
+   ],
+   "min": [
+    -230,
+    0,
+    -123.4
+   ],
+   "max": [
+    230,
+    45,
+    123.4
+   ],
+   "tris": 25000,
+   "bytes": 169244,
+   "sourceTris": 53222,
+   "source": "models/ergoflex-supplied/ErgoKeyboard.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-gamer-chair",
+   "name": "Gaming chair",
+   "category": "furniture",
+   "scenes": [
+    "gaming"
+   ],
+   "file": "assets/props/ergoflex-gamer-chair.glb",
+   "anchor": "floor",
+   "size": [
+    823.7,
+    1500,
+    860.6
+   ],
+   "min": [
+    -411.9,
+    0,
+    -430.3
+   ],
+   "max": [
+    411.9,
+    1500,
+    430.3
+   ],
+   "tris": 35220,
+   "bytes": 263736,
+   "sourceTris": 38704,
+   "source": "models/ergoflex-supplied/GamerChair.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-tall-office-chair",
+   "name": "Tall office chair",
+   "category": "furniture",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/ergoflex-tall-office-chair.glb",
+   "anchor": "floor",
+   "size": [
+    719.4,
+    1295,
+    710.5
+   ],
+   "min": [
+    -359.7,
+    0,
+    -355.2
+   ],
+   "max": [
+    359.7,
+    1295,
+    355.2
+   ],
+   "tris": 29038,
+   "bytes": 541920,
+   "source": "models/ergoflex-supplied/TallChairOffice.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-wide-monitor",
+   "name": "Wide landscape monitor",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "gaming"
+   ],
+   "file": "assets/props/ergoflex-wide-monitor.glb",
+   "anchor": "floor",
+   "size": [
+    727,
+    445.7,
+    148.8
+   ],
+   "min": [
+    -363.5,
+    0,
+    -74.4
+   ],
+   "max": [
+    363.5,
+    445.7,
+    74.4
+   ],
+   "tris": 228,
+   "bytes": 6368,
+   "source": "models/ergoflex-supplied/WideMonitor.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-portrait-monitor",
+   "name": "Portrait monitor",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/ergoflex-portrait-monitor.glb",
+   "anchor": "floor",
+   "size": [
+    385,
+    658.2,
+    139.4
+   ],
+   "min": [
+    -192.5,
+    0,
+    -69.7
+   ],
+   "max": [
+    192.5,
+    658.2,
+    69.7
+   ],
+   "tris": 228,
+   "bytes": 5088,
+   "source": "models/ergoflex-supplied/PortraitMonitor.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-dual-monitor-arm",
+   "name": "Dual monitor arm",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "gaming"
+   ],
+   "file": "assets/props/ergoflex-dual-monitor-arm.glb",
+   "anchor": "floor",
+   "size": [
+    736,
+    373.7,
+    385.4
+   ],
+   "min": [
+    -368,
+    0,
+    -192.7
+   ],
+   "max": [
+    368,
+    373.7,
+    192.7
+   ],
+   "tris": 30000,
+   "bytes": 177972,
+   "sourceTris": 117322,
+   "source": "models/ergoflex-supplied/DoubleMonitorArm.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "collection": "ErgoFlex Collection"
   }
  ],
  "screens": [
@@ -22848,6 +23315,6 @@
    ]
   }
  ],
- "generated": "2026-10-01T19:25:29.050Z",
+ "generated": "2026-10-11T22:45:43.384Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

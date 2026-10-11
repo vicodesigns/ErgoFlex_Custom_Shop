@@ -137,15 +137,15 @@ export const SURFACE_TREATMENTS = {
 // Branded dimensions come from the linked manufacturer specification. These
 // are reference models, not manufacturer CAD or an assertion of stock/partnership.
 export const ACCESSORIES = [
-    { id: 'dell-u2724d', name: 'Dell UltraSharp 27', brand: 'DELL · U2724D', category: 'Desktop', visual: 'monitor',
+    { id: 'dell-u2724d', name: 'Dell UltraSharp 27', brand: 'DELL · U2724D', category: 'Desktop', visual: 'monitor', exclusiveGroup: 'main-display',
       description: '27″ QHD display with a height-adjustable stand.', dimensionsMm: { width: 612.24, depth: 192.28, height: 450 },
       source: 'https://www.delltechnologies.com/asset/en-us/products/electronics-and-accessories/technical-support/dell-ultrasharp-27-monitor-u2724d-datasheet.pdf',
       price: 399, provisional: true, compatibleSizes: ['48x30', '60x30'] },
-    { id: 'logitech-lift', name: 'Logitech Lift', brand: 'LOGITECH · LIFT', category: 'Desktop', visual: 'mouse',
+    { id: 'logitech-lift', name: 'Logitech Lift', brand: 'LOGITECH · LIFT', category: 'Desktop', visual: 'mouse', exclusiveGroup: 'mouse',
       description: 'A vertical grip for small to medium right hands.', dimensionsMm: { width: 70, depth: 108, height: 71 },
       source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/ergo-lift-b2b-data-sheet.pdf',
       price: 79, provisional: true, compatibleSizes: ['48x30', '60x30'] },
-    { id: 'logitech-k860', name: 'Logitech ERGO K860', brand: 'LOGITECH · ERGO', category: 'Desktop', visual: 'keyboard',
+    { id: 'logitech-k860', name: 'Logitech ERGO K860', brand: 'LOGITECH · ERGO', category: 'Desktop', visual: 'keyboard', exclusiveGroup: 'keyboard',
       description: 'Split keys, a curved profile and a cushioned palm rest.', dimensionsMm: { width: 456, depth: 233, height: 48 },
       source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/ergo-k860-for-business-data-sheet-w11.pdf',
       price: 149, provisional: true, compatibleSizes: ['48x30', '60x30'] },
@@ -157,7 +157,7 @@ export const ACCESSORIES = [
       price: 89, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
     { id: 'monitor-arm', name: 'Single monitor arm', category: 'Support', visual: 'arm', exclusiveGroup: 'monitor-mount', description: 'Shelf-mounted arm. Display sold separately.',
       price: 179, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
-    { id: 'monitor-arm-2', name: 'Dual monitor arm', category: 'Support', visual: 'dual-arm', exclusiveGroup: 'monitor-mount', description: 'Two mounting heads. Displays sold separately.',
+    { id: 'monitor-arm-2', name: 'Dual monitor arm', category: 'Support', visual: 'dual-arm', propId: 'ergoflex-dual-monitor-arm', exclusiveGroup: 'monitor-mount', description: 'Two mounting heads, shown with the supplied ErgoFlex model. Displays sold separately.',
       price: 289, provisional: true, compatibleSizes: ['60x30'], node: null,
       note: 'Needs a 60in or wider top for the mounting spread.' },
     { id: 'cpu-holder', name: 'CPU holder', category: 'Support', visual: 'holder', description: 'An open cradle beneath the desk. Computer not included.',
@@ -165,7 +165,23 @@ export const ACCESSORIES = [
     { id: 'led-strip', name: 'Under-surface LED strip', category: 'Support', description: 'Integrated accent lighting beneath the surface.',
       price: 69, provisional: true, compatibleSizes: ['48x30', '60x30'], node: 'Leds' },
     { id: 'foot-rest', name: 'Adjustable foot rest', category: 'Support', visual: 'footrest', description: 'A gently angled foot support in front of your desk.',
-      price: 99, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null }
+      price: 99, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
+    { id: 'wide-monitor', name: 'Wide landscape monitor', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-wide-monitor', exclusiveGroup: 'main-display',
+      description: 'Landscape display. Pair with the portrait display and dual arm for a two-screen workspace.', price: 0, quoted: true, compatibleSizes: ['60x30'] },
+    { id: 'portrait-monitor', name: 'Portrait monitor', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-portrait-monitor',
+      description: 'Upright display for documents, code and reference material.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
+    { id: 'keyboard-tray', name: 'Keyboard tray', category: 'Support', visual: 'tray', propId: 'ergoflex-keyboard-tray',
+      description: 'Under-desktop tray for keyboard and mouse. Follows the desktop as it lifts and tilts.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
+    { id: 'ergo-keyboard', name: 'Ergonomic keyboard', category: 'Desktop', visual: 'keyboard', propId: 'ergoflex-ergo-keyboard', exclusiveGroup: 'keyboard',
+      description: 'The supplied ergonomic keyboard model, on the desktop or keyboard tray.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
+    { id: 'apple-keyboard', name: 'Apple Magic Keyboard', category: 'Desktop', visual: 'keyboard', propId: 'apple-keyboard', exclusiveGroup: 'keyboard',
+      description: 'Compact keyboard, shown using the existing library model.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
+    { id: 'magic-mouse', name: 'Apple Magic Mouse', category: 'Desktop', visual: 'mouse', propId: 'magic-mouse', exclusiveGroup: 'mouse',
+      description: 'Low-profile mouse, on the desktop or keyboard tray.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
+    { id: 'artist-easel', name: 'Artist easel & artwork', category: 'Desktop', visual: 'mat', propId: 'ergoflex-art-easel',
+      description: 'Full-width art surface and easel accessories for the Extended desktop.', price: 0, quoted: true, compatibleSizes: ['60x30'] },
+    { id: 'painter-shelf', name: 'Painter accessory shelf', category: 'Support', visual: 'tray', propId: 'ergoflex-painter-shelf', mount: 'shelf',
+      description: 'A shelf of painting tools and supplies, carried by the upper shelf.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] }
 ];
 
 export function accessory(id) { return ACCESSORIES.find(a => a.id === id) || null; }
@@ -178,6 +194,21 @@ export function accessoryFits(id, size) {
 // Curated starting points. Each is a complete configuration, so applying one
 // leaves nothing half-set.
 export const PRESETS = [
+    { id: 'office', name: 'Office', blurb: 'Modern grey, black trim, two displays, a dual arm and ergonomic inputs on a keyboard tray.',
+      size: '60x30', woodFinish: 'Modern Grey', baseFinish: 'Black', trimColor: '#1c1c1e',
+      accessories: ['monitor-arm-2', 'wide-monitor', 'portrait-monitor', 'keyboard-tray', 'ergo-keyboard', 'logitech-lift', 'cable-tray'], cameraPreset: 'hero' },
+    { id: 'artist', name: 'Artist', blurb: 'Natural birch, a light frame, warm trim and an art surface with a painter’s accessory shelf.',
+      size: '60x30', woodFinish: 'Natural Birch', baseFinish: 'White', trimColor: '#f19c00',
+      accessories: ['artist-easel', 'painter-shelf', 'task-light'], cameraPreset: 'hero' },
+    { id: 'gaming', name: 'Gaming', blurb: 'Black birch with red trim, a wide display, ergonomic keyboard and accent LEDs.',
+      size: '60x30', woodFinish: 'Black Birch', baseFinish: 'Black', trimColor: '#dc0909',
+      accessories: ['wide-monitor', 'ergo-keyboard', 'logitech-lift', 'led-strip', 'cable-tray'], cameraPreset: 'hero' },
+    { id: 'music', name: 'Music studio', blurb: 'Walnut and charcoal, a wide display, compact keyboard, mouse and accent lighting.',
+      size: '60x30', woodFinish: 'Walnut', baseFinish: 'Space Gray', trimColor: '#1c1c1e',
+      accessories: ['wide-monitor', 'apple-keyboard', 'magic-mouse', 'led-strip', 'cable-tray'], cameraPreset: 'hero' },
+    { id: 'library', name: 'Library & study', blurb: 'Earthy forest green, gold trim and a portrait display with compact inputs for reading and research.',
+      size: '48x30', woodFinish: 'Earthy Forest Green', baseFinish: 'Black', trimColor: '#f19c00',
+      accessories: ['portrait-monitor', 'apple-keyboard', 'magic-mouse', 'task-light'], cameraPreset: 'hero' },
     { id: 'compact', name: 'Compact workspace',
       blurb: 'The smallest top, a light frame, and just the cable management.',
       size: '48x30', woodFinish: 'Maple', baseFinish: 'White',
@@ -238,7 +269,7 @@ export function priceBreakdown(config) {
 
     for (const id of config.accessories || []) {
         const item = accessory(id);
-        if (item) lines.push({ label: item.name, price: item.price, provisional: item.provisional });
+        if (item) lines.push({ label: item.name, price: item.price, provisional: item.provisional, ...(item.quoted ? { quoted: true } : {}) });
     }
     return lines;
 }

@@ -16,7 +16,7 @@ export function mountDeskObjectUI(parent,manager){
         <details class="desk-object-library"><summary>Add from the object library</summary>
         <div class="scene-desk-row"><label>Place on <select data-object-target>${surfaces}</select></label>
         <label>Find an object <input type="search" data-object-search placeholder="Laptop, book, plant…"></label>
-        <label>Category <select data-object-category><option value="recommended">Desk sized objects</option><option value="all">All categories</option></select></label></div>
+        <label>Category <select data-object-category><option value="recommended">Desk sized objects</option><option value="ergoflex">ErgoFlex Collection</option><option value="all">All categories</option></select></label></div>
         <span data-object-library-status role="status" aria-live="polite">Loading object library…</span>
         <div class="desk-object-library-grid" data-object-library></div></details>`;
     parent.append(panel);const q=s=>panel.querySelector(s),select=q('[data-object-select]');
@@ -29,7 +29,7 @@ export function mountDeskObjectUI(parent,manager){
     let entries=[],renderSignature='';
     const library=()=>{
         const query=q('[data-object-search]').value.trim().toLowerCase(),category=q('[data-object-category]').value;
-        const filtered=entries.filter(e=>(category==='all'||category==='recommended'&&Math.max(...e.size)<750||e.category===category)&&(!query||`${e.name} ${e.id} ${e.category}`.toLowerCase().includes(query)));
+        const filtered=entries.filter(e=>(category==='all'||category==='ergoflex'&&e.collection==='ErgoFlex Collection'||category==='recommended'&&(e.category==='desk'||Math.max(...e.size)<750)||e.category===category)&&(!query||`${e.name} ${e.id} ${e.category}`.toLowerCase().includes(query)));
         const signature=filtered.map(e=>e.id).join('|');if(signature===renderSignature)return;renderSignature=signature;
         const grid=q('[data-object-library]');grid.replaceChildren();
         for(const entry of filtered){const b=document.createElement('button');b.type='button';b.className='desk-object-card';b.title='Add '+entry.name+' to the selected desk part';

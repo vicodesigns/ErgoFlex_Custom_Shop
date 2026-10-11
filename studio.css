@@ -443,6 +443,7 @@ body:not(.setup-layout) .camera-shortcuts { display: none; }
 .accessory-row.is-selected { border-color: #6d957e; background: #f6f9f3; }
 .accessory-art { display: flex; align-items: center; align-self: stretch; border-radius: 7px; background: #eff2eb; min-height: 74px; }
 .accessory-art svg { width: 100%; }
+.accessory-art img { width: 100%; height: 92px; object-fit: contain; border-radius: inherit; }
 .accessory-info { min-width: 0; align-self: center; }
 .accessory-brand { display: block; font-size: 8px; letter-spacing: .7px; color: #697f71; margin-bottom: 4px; }
 .accessory-name { display: block; font-size: 13px; font-weight: 600; line-height: 1.35; color: var(--ink); cursor: pointer; }
