@@ -40,7 +40,8 @@
     "test:portal-ui": "node tests/portal-ui-test.cjs",
     "test:scene-desks": "node tests/scene-desk-data-test.mjs && node tests/scene-desks-test.cjs",
     "test:room-ceilings": "node tests/room-ceilings-test.cjs",
-    "test:desk-objects": "node tests/scene-desk-data-test.mjs && node tests/scene-desk-objects-test.cjs"
+    "test:desk-objects": "node tests/scene-desk-data-test.mjs && node tests/scene-desk-objects-test.cjs",
+    "test:led-screen": "node tests/led-screen-sampler-test.mjs && node tests/led-screen-capture-test.cjs"
   },
   "repository": {
     "type": "git",

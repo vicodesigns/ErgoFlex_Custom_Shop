@@ -1710,3 +1710,9 @@
 .scene-desk-object-panel .desk-object-card:disabled { opacity: .45; cursor: default; }
 .desk-object-card img { width: 64px; height: 64px; object-fit: contain; border-radius: 6px; }
 @media(max-width:600px) { .desk-object-fields label { flex:1 1 120px; } .desk-object-fields input { width: 100%; box-sizing: border-box; } }
+
+/* Keep live-media help and preview across both Command Center columns. */
+#led-command-center :is([data-game-screen], [data-game-help], [data-game-status]) {grid-column:1 / -1}
+#led-command-center [data-game-help] {font-size:12px;line-height:1.5;color:inherit}
+#led-command-center [data-game-help] summary {cursor:pointer;font-weight:600}
+#led-command-center [data-game-help] p {margin:8px 0}

@@ -31,7 +31,7 @@ import { LED_STRIPS, LED_STRIP_MAP_VERSION, createLedFrame, sampleLedDiagnostic 
 import { LedPixelRenderer } from './led-pixel-renderer.mjs?v=desktop-bands-back-20261005';
 import { LedMotion } from './led-movement.mjs?v=led-game-20261003';
 import { LedSounds } from './led-sounds.mjs?v=room-safety-20261006';
-import { LedGameMode } from './led-game-mode.mjs?v=desktop-bands-back-20261005';
+import { LedGameMode } from './led-game-mode.mjs?v=screen-share-20261010';
 import { LedMusicMode } from './led-music-mode.mjs?v=room-furnishings-20261006';
 import { sampleDecorativeInto } from './led-showcase-effects.mjs?v=desktop-bands-back-20261005';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -2680,7 +2680,7 @@ function mountLedPlayback(container) {
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {haltAllMotion();ledGame.video.pause();ledMusic.pause();ledSounds.stop();ledMotion.cancel();updateLedEffectFrame();ledGame.syncUI();}
 });
-window.addEventListener('pagehide', e => {if (!e.persisted) {ledSounds.dispose();ledGame.dispose();ledMusic.dispose();}else {ledSounds.stop();ledGame.video.pause();if(ledMusic.liveAudio||ledMusic.capturePending)ledMusic.stop();else ledMusic.pause();}});
+window.addEventListener('pagehide', e => {if (!e.persisted) {ledSounds.dispose();ledGame.dispose();ledMusic.dispose();}else {ledSounds.stop();if(ledGame.captureStream||ledGame.capturePending)ledGame.stop();else ledGame.video.pause();if(ledMusic.liveAudio||ledMusic.capturePending)ledMusic.stop();else ledMusic.pause();}});
 
 function setLedDiagnostic(value = {}) {
     const strip = value.strip === null || value.strip === undefined ? null : Number(value.strip);
@@ -9788,7 +9788,7 @@ function animate(time, frame) {
         updateLedEffectFrame(time / 1000);
     if (time-ledPlaybackUIAt > 150) {
         ledPlaybackUIAt = time;
-        if (ledGame.active) ledGame.syncMonitor(workspaceAccessories);
+        if (ledGame.active) ledGame.syncMonitor(workspaceAccessories,[...(sceneDesks?.active?.objects?.values()||[])].filter(item=>!item.saved.removed));
         ledGame.syncUI(ledSounds.error || (ledMotion.owner ? `${ledMotion.owner.name} · movement cue` : ''));
         ledMusic.syncUI(true);
     }
@@ -9909,7 +9909,7 @@ function captureGrooveLights() {
         music: { active: ledMusic.active, fx: ledMusic.manualFx ?? ledMusic.fx, sensitivity: ledMusic.sensitivity,
             palette: ledMusic.paletteOverride, dj: ledMusic.dj.enabled, settings: ledMusic.dj.settings,
             source: ledMusic.captureKind || (ledMusic.objectUrl ? 'file' : 'demo'), sourceName: ledMusic.sourceName },
-        game: { active: ledGame.active, mode: ledGame.mode, content: ledGame.content, maxBrightness: ledGame.maxBrightness }
+        game: { active: ledGame.active, source: ledGame.source, mode: ledGame.mode, content: ledGame.content, maxBrightness: ledGame.maxBrightness }
     }));
 }
 function applyGrooveLights(lights) {
@@ -9941,7 +9941,10 @@ function applyGrooveLights(lights) {
     if (['calm','normal','intense','full'].includes(game.mode)) ledGame.mode = game.mode;
     if (['colours','music'].includes(game.content)) ledGame.content = game.content;
     if (Number.isFinite(game.maxBrightness)) ledGame.maxBrightness = THREE.MathUtils.clamp(game.maxBrightness, 0, 1);
-    if (game.active && lights.enabled !== false) void ledGame.start();
+    if (game.active && lights.enabled !== false) {
+        if(game.source==='screen'){ledGame.source='screen';notifyUser('Groove lights restored. Open Game Mode and share a tab or screen to reconnect.');}
+        else void ledGame.start();
+    }
     ledMusic.syncUI(); ledGame.syncUI(); updateLedEffectFrame();
 }
 function saveCurrentGroovePosition() {
