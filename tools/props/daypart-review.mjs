@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Render every environment at each authored time, plus a JSON lighting report.
 // node tools/props/daypart-review.mjs --out scene-shots/review [--only home,music]
+// --layouts apartment,house,spacious,premium,executive renders a layout matrix.
+// --focus research-help-counter frames a named furnishing for detail review.
 // Uses an isolated local server and browser; no user project data is changed.
 import puppeteer from 'puppeteer';
 import { createServer } from 'node:http';
@@ -15,6 +17,8 @@ const outDir = resolve(opt('--out', join(root, 'scene-shots')));
 const only = opt('--only')?.split(',');
 const ratio = Number(opt('--ratio', '.65'));
 const layout = opt('--layout', 'house');
+const layouts = opt('--layouts', layout).split(',');
+const focus = opt('--focus');
 mkdirSync(outDir, { recursive: true });
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
@@ -53,12 +57,13 @@ const reportFile=join(outDir,'report.json');
 const report=only&&existsSync(reportFile)?JSON.parse(readFileSync(reportFile,'utf8')).filter(r=>!only.includes(r.id)):[];
 for(const [id,name] of (only ? only.map(id=>[id,names[id]]).filter(([,name])=>name) : Object.entries(names))) {
     if(only&&!only.includes(id))continue;
+    for (const currentLayout of layouts) {
     // A fresh process releases software-renderer memory between large scenes.
     // The query selects the layout without cancelling an initial prop load.
     await browser.close(); browser = await launch(); page = await newPage();
     await page.setViewport({width:1500,height:1100});
-    console.log('Rendering',id);
-    await page.goto(url+'?room='+id+'&layout='+layout,{waitUntil:'domcontentloaded'});
+    console.log('Rendering',id,currentLayout);
+    await page.goto(url+'?room='+id+'&layout='+currentLayout,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>window.ErgoFlex?.renderer,{timeout:120000});
     await page.evaluate(r=>{ErgoFlex.renderer.setPixelRatio(r);ErgoFlex.renderer.setAnimationLoop(null);},ratio);
     await page.waitForFunction(()=>window.ErgoFlex?.wheelRigs.length===4 && getComputedStyle(document.querySelector('#loader')).display==='none',{timeout:120000});
@@ -67,11 +72,14 @@ for(const [id,name] of (only ? only.map(id=>[id,names[id]]).filter(([,name])=>na
     await page.evaluate(r=>{ErgoFlex.setShellMode('studio');ErgoFlex.renderer.setPixelRatio(r);ErgoFlex.renderer.setAnimationLoop(null);},ratio);
     await page.addStyleTag({content:'#motion-dock{visibility:hidden!important}'});
     await new Promise(resolve=>setTimeout(resolve,150));
-    await page.evaluate(()=>{
+    await page.evaluate((focus)=>{
         const THREE=window.__reviewThree,ef=ErgoFlex,room=ef.workspaceRoom,{camera,controls}=ef.roomInteractions;
         ef.renderer.setSize(1500,1100,false);camera.aspect=1500/1100;camera.updateProjectionMatrix();
         ef.renderer.render(ef.roomInteractions.scene,camera);
-        room.root.updateWorldMatrix(true,true);const box=new THREE.Box3().setFromObject(room.root).expandByObject(ef.loadedModel),center=box.getCenter(new THREE.Vector3());
+        room.root.updateWorldMatrix(true,true);
+        const subject=focus ? room.assets().find(o=>o.userData.propId===focus) : room.root;
+        if(!subject)throw new Error('Review subject unavailable: '+focus);
+        const box=new THREE.Box3().setFromObject(subject);if(!focus)box.expandByObject(ef.loadedModel);const center=box.getCenter(new THREE.Vector3());
         const direction=new THREE.Vector3(5,4,5).normalize(),right=new THREE.Vector3().crossVectors(camera.up,direction).normalize(),up=new THREE.Vector3().crossVectors(direction,right).normalize();
         const tanV=Math.tan(camera.fov*Math.PI/360),tanH=tanV*camera.aspect;let distance=controls.minDistance;
         for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){
@@ -79,7 +87,7 @@ for(const [id,name] of (only ? only.map(id=>[id,names[id]]).filter(([,name])=>na
             distance=Math.max(distance,depth+Math.abs(point.dot(up))/tanV,depth+Math.abs(point.dot(right))/tanH);
         }
         controls.maxDistance=Math.max(30,distance*1.12);controls.enableDamping=false;controls.target.copy(center);camera.position.copy(center).addScaledVector(direction,distance*1.12);controls.update();room.update(camera);
-    });
+    },focus);
     for(const mode of ['morning','afternoon','evening','night','party']) {
         await page.evaluate((id,name,mode)=>{
             const THREE=window.__reviewThree,ef=ErgoFlex;
@@ -95,19 +103,35 @@ for(const [id,name] of (only ? only.map(id=>[id,names[id]]).filter(([,name])=>na
         // avoids compositor screenshot stalls in software-rendered CI browsers.
         await new Promise(resolve=>setTimeout(resolve,150));
         const png=await page.evaluate(()=>{
-            ErgoFlex.renderer.render(ErgoFlex.roomInteractions.scene,ErgoFlex.roomInteractions.camera);
+            const camera=ErgoFlex.roomInteractions.camera;ErgoFlex.renderer.setSize(1500,1100,false);camera.aspect=1500/1100;camera.updateProjectionMatrix();
+            ErgoFlex.renderer.render(ErgoFlex.roomInteractions.scene,camera);
             const source=ErgoFlex.renderer.domElement,canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;
             const c=canvas.getContext('2d'),look=ErgoFlex.workspaceRoom.root.userData.polish,W=canvas.width,H=canvas.height;
             c.save();c.translate(W*.48,H*.32);c.scale(W,H);const gradient=c.createRadialGradient(0,0,0,0,0,.7);gradient.addColorStop(0,look.halo);gradient.addColorStop(.9,look.edge);gradient.addColorStop(1,look.edge);c.fillStyle=gradient;c.fillRect(-1,-1,2,2);c.restore();c.drawImage(source,0,0);
             return canvas.toDataURL('image/png').split(',')[1];
         });
-        writeFileSync(join(outDir,`${id}-${mode}.png`),Buffer.from(png,'base64'));
-        report.push(await page.evaluate((id,mode)=>({id,mode,layout:ErgoFlex.workspaceRoom.roomLayout.id,missing:ErgoFlex.workspaceRoom.missingProps,lighting:ErgoFlex.roomLightingState,polish:ErgoFlex.workspaceRoom.root.userData.polish,details:ErgoFlex.workspaceRoom.root.userData.detailLevel,atmosphere:ErgoFlex.workspaceRoom.root.userData.institutionalAtmosphere,drawCalls:ErgoFlex.renderer.info.render.calls,triangles:ErgoFlex.renderer.info.render.triangles}),id,mode));
+        writeFileSync(join(outDir,`${id}${layouts.length > 1 ? '-' + currentLayout : ''}-${mode}.png`),Buffer.from(png,'base64'));
+        report.push(await page.evaluate((id,mode)=>{
+            const room=ErgoFlex.workspaceRoom,THREE=window.__reviewThree,conflicts=[];
+            if(id==='library'){
+                const added=new Set(['research-help-counter','digital-research-table','current-periodicals','print-scan-cabinet','collaboration-whiteboard']);
+                const inverse=room.root.matrixWorld.clone().invert();
+                const furnishings=ErgoFlex.roomInteractions.entries.filter(e=>e.collider&&e.surface==='floor').map(e=>({id:e.obj.userData.propId,name:e.name,box:new THREE.Box3().setFromObject(e.obj).applyMatrix4(inverse)}));
+                for(let i=0;i<furnishings.length;i++)for(let j=i+1;j<furnishings.length;j++){
+                    const a=furnishings[i],b=furnishings[j];if(!added.has(a.id)&&!added.has(b.id))continue;
+                    const x=Math.min(a.box.max.x,b.box.max.x)-Math.max(a.box.min.x,b.box.min.x),z=Math.min(a.box.max.z,b.box.max.z)-Math.max(a.box.min.z,b.box.min.z);
+                    if(x>5&&z>5)conflicts.push({a:a.id,b:b.id,overlapMm:[x,z]});
+                }
+            }
+            return {id,mode,layout:room.roomLayout.id,missing:room.missingProps,lighting:ErgoFlex.roomLightingState,polish:room.root.userData.polish,details:room.root.userData.detailLevel,libraryOperations:room.root.userData.libraryOperations,furnishingConflicts:conflicts,atmosphere:room.root.userData.institutionalAtmosphere,drawCalls:ErgoFlex.renderer.info.render.calls,triangles:ErgoFlex.renderer.info.render.triangles};
+        },id,mode));
     }
     (await import('node:fs')).writeFileSync(reportFile,JSON.stringify(report,null,2));
-    console.log('Reviewed',id);
+    console.log('Reviewed',id,currentLayout);
+    }
 }
 (await import('node:fs')).writeFileSync(join(outDir,'report.json'),JSON.stringify(report,null,2));
 if(errors.length)throw new Error(errors.join('\n'));
+const conflicts=report.filter(r=>(!only||only.includes(r.id))&&r.furnishingConflicts?.length);if(conflicts.length)throw new Error('Added furniture overlaps: '+JSON.stringify(conflicts.map(r=>({layout:r.layout,mode:r.mode,conflicts:r.furnishingConflicts}))));
 console.log(`screenshots → ${outDir}`);
 } finally {await browser.close();server.close();}

@@ -49,6 +49,8 @@ const server = http.createServer((req, res) => {
             return { instruments, id: room.roomLayout.id, dimensions: room.root.userData.dimensionsMm, back: room.roomLayout.back, props,
                 missing: room.missingProps, scale: room.root.scale.x, ref: ErgoFlex.arSize, glide: ErgoFlex.glideBounds,
                 lights: room.root.children.filter(o => o.isPointLight).map(l => l.intensity),
+                operations: room.root.userData.libraryOperations, clock: room.assets().find(o => o.userData.propId === 'reading-room-clock').userData.libraryTime,
+                interaction: ErgoFlex.roomInteractions.entries.map(e => ({ id: e.obj.userData.propId, collider: e.collider, surface: e.surface })),
                 atmosphere: room.root.userData.atmosphere, leds: ErgoFlex.ledsEnabled, caption: document.querySelector('#room-scene-caption').textContent };
         });
         const checkBounds = data => {
@@ -66,7 +68,12 @@ const server = http.createServer((req, res) => {
                 assert.ok(i.min[1] >= -1 && i.max[1] <= data.dimensions.height, i.name + ' fits vertically');
             }
             assert.deepEqual(data.missing, []);
-            assert.equal(data.lights.length, 4, 'Library uses four practical lights without adding shadow maps');
+            assert.equal(data.operations.catalog, true); assert.equal(data.operations.periodicals, true);
+            for (const id of ['current-periodicals', ...(['spacious','premium','executive'].includes(data.id) ? ['research-help-counter','digital-research-table','print-scan-cabinet'] : [])]) {
+                assert.ok(data.interaction.some(e => e.id === id && e.collider && e.surface === 'floor'), id + ' is editable and participates in collision');
+            }
+            assert.ok(data.interaction.every(e => !e.id?.startsWith('acoustic-')), 'Acoustic wall treatment remains architecture');
+            assert.equal(data.lights.length, ['spacious','premium','executive'].includes(data.id) ? 5 : 4, 'Reading tables have practical lights within the five-light room budget');
             assert.ok(data.glide.maxX - data.glide.minX > 1 && data.glide.maxZ > data.glide.minZ, 'Full-room Glide uses physical boundaries');
             assert.ok(Math.abs(data.ref.widthUnits / data.scale - data.ref.nominalWidth * 25.4) < .01, 'Desk and room use the same physical units');
         };
@@ -95,6 +102,7 @@ const server = http.createServer((req, res) => {
             await page.evaluate(m => ErgoFlex.setLibraryMode(m), mode);
             await page.waitForFunction((h,t)=>Math.abs(ErgoFlex.heightInches-h)<.03 && Math.abs(ErgoFlex.tiltConfigs.find(c=>c.name==='tilting').currentDeg-t)<.03,{timeout:120000},h,t);
             const data=await measure(); checkBounds(data); assert.equal(data.atmosphere,mode);lights.push(data.lights);
+            assert.equal(data.operations.mode,mode); assert.equal(data.operations.service,mode==='night'?'self-service':'research-help');
             if(mode==='night')assert.equal(data.leds,true,'Late study has warm desk LEDs');
         }
         assert.equal(new Set(lights.map(l=>JSON.stringify(l))).size,5);
@@ -110,6 +118,15 @@ const server = http.createServer((req, res) => {
             const stackCount=[4,7,13,22][n];
             assert.equal(data.props.filter(p=>p.id?.startsWith('rear-')||p.id?.startsWith('stack-')).length,stackCount);
             if(n>=1) assert.ok(data.props.some(p=>p.id==='carrel-0'));
+            if(n>=1) assert.equal(data.operations.quietCarrels,[2,4,6][n-1]);
+            const clockTimes = new Set();
+            for (const mode of ['morning','afternoon','evening','night','party']) {
+                await page.evaluate(m => ErgoFlex.setLibraryMode(m,false),mode);
+                const timed = await measure(); checkBounds(timed); assert.equal(timed.operations.mode,mode);
+                assert.equal(timed.operations.service,mode==='night'?'self-service':'research-help'); clockTimes.add(JSON.stringify(timed.clock));
+                if(n>=1) assert.equal(await page.evaluate(()=>{const counter=ErgoFlex.workspaceRoom.assets().find(o=>o.userData.propId==='research-help-counter');return counter.children.filter(o=>o.name.startsWith('Library service activity')&&o.visible).length;}),1,'One service activity is visible per daypart');
+            }
+            assert.equal(clockTimes.size,5,'The wall clock follows the selected time rather than a frozen pose');
             for(const p of data.props.filter(p=>['kenney-furniture-laptop','kenney-furniture-books','journal'].includes(p.id)&&p.at[1]===740))assert.ok(Math.abs(p.min[1]-740)<1,p.id+' rests on the study table');
             await page.click('[data-library-size="60x30"]');await page.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;});
             const wide=await measure();checkBounds(wide);assert.deepEqual(wide.dimensions,data.dimensions);assert.equal(wide.id,id);
@@ -133,7 +150,7 @@ const server = http.createServer((req, res) => {
         await page.evaluate(async()=>{ErgoFlex.setLibraryLayout('spacious');await ErgoFlex.workspaceRoom.ready;ErgoFlex.setLibraryMode('afternoon',false);});await capture('spacious-afternoon');
         await page.setViewport({width:390,height:844});assert.equal(await page.$eval('#library-room-controls',p=>p.hidden),false);
         assert.ok(await page.$eval('#library-room-size',el=>el.getBoundingClientRect().width>0));assert.deepEqual(errors,[]);
-        console.log('Library: five physical room sizes, both desk widths, five lighting and posture modes, book stack batching, study surface contacts and furniture bounds, editing and project restore passed.');
+        console.log('Library: five physical room sizes, both desk widths, all 25 atmosphere combinations, five posture modes, book stack batching, study surface contacts and furniture bounds, editing and project restore passed.');
         console.log('Screenshots: '+out);
     } finally {await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});

@@ -12,17 +12,23 @@ const sizes = [
 export const LIBRARY_LAYOUTS = Object.fromEntries(sizes.map(([id, name, width, depth, height], index) => {
     const back = -depth / 3, front = back + depth, desk = [-width / 2 + 1100, back + 1600];
     const reading = index === 0 ? [[width / 2 - 1300, front - 2200]] : index < 3 ? [[width / 2 - 1600, front - 2300]] : [[0, front - 2400], [width / 2 - 1800, front - 2400]];
+    // Keep existing tables first so saved fixtures retain their identities.
+    if (index === 2) reading.push([0, front - 2300]);
+    if (index === 3) reading.push([width / 2 - 1800, front - 5500]);
+    if (index === 4) reading.push([0, front - 5600], [width / 2 - 1800, front - 5600]);
     const stacks = [];
     // Rear stacks and freestanding double-sided shelves with clear aisles.
     const rearCount = index === 0 ? 1 : index === 1 ? 2 : index === 2 ? 3 : index === 3 ? 4 : 6;
     for (let i = 0; i < rearCount; i++) stacks.push({ id: `rear-${i}`, at: [(i - (rearCount - 1) / 2) * 2000, back + 330], double: false });
-    const columns = index === 1 ? [width / 2 - 1600] : index === 2 ? [0, 2600] : index === 3 ? [-1000, 2000, 5000] : [-2000, 1100, 4200, 7300];
-    const rows = index === 1 ? [3000, 5000] : index === 2 ? [3000, 5400] : index === 3 ? [3000, 5400, 7800] : [3200, 5600, 8000, 10400];
+    const columns = index === 1 ? [width / 2 - 2000] : index === 2 ? [0, 3000] : index === 3 ? [-1000, 2000, 5000] : [-2000, 1100, 4200, 7300];
+    const rows = index === 1 ? [2800, 4500] : index === 2 ? [3000, 5400] : index === 3 ? [3000, 5400, 7800] : [3200, 5600, 8000, 10400];
     if (index) for (const [ci, x] of columns.entries()) for (const [ri, z] of rows.entries()) stacks.push({ id: `stack-${ci}-${ri}`, at: [x, back + z], double: true });
     const lounge = [-width / 2 + (index ? 1450 : 700), front - (index ? 650 : 900)];
-    const carrels = index >= 2 ? [front - 4000, front - 5800].map((z, i) => ({ id: `carrel-${i}`, at: [-width / 2 + 420, z] })) : [];
+    const carrels = index >= 2 ? Array.from({ length: [0, 0, 2, 4, 6][index] }, (_, i) => front - 4000 - i * 1800).map((z, i) => ({ id: `carrel-${i}`, at: [-width / 2 + 420, z] })) : [];
+    const research = index >= 2 ? [-width / 2 + 2600, front - 4600] : null;
+    const service = index >= 2 ? [-width / 2 + 2600, back + 4400] : null;
     const props = [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1050], turn: 180 }, { id: 'monstera', at: [-width / 2 + 450, 0, back + 430] }];
-    for (const [i, at] of reading.entries()) {
+    for (const [i, at] of reading.slice(0, index >= 3 ? 2 : 1).entries()) {
         const seats = index === 0 ? [-500, 500] : [-650, 650];
         for (const x of seats) for (const z of [-850, 850]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [at[0] + x, 0, at[1] + z], turn: z > 0 ? 180 : 0 });
         props.push({ id: 'kenney-furniture-laptop', at: [at[0] - 430, 740, at[1] - 260] }, { id: 'journal', at: [at[0] + 480, 740, at[1] + 260], turn: 12 },
@@ -32,22 +38,30 @@ export const LIBRARY_LAYOUTS = Object.fromEntries(sizes.map(([id, name, width, d
     if (index === 0) props.push({ id: 'armchair-leather', at: [lounge[0], 0, lounge[1]] });
     else props.push({ id: 'sofa-leather-couch', at: [lounge[0], 0, lounge[1]] }, { id: 'coffee-table', at: [lounge[0], 0, lounge[1] - 980] },
         { id: 'journal', at: [lounge[0] - 180, 391.2, lounge[1] - 980] });
-    for (const carrel of carrels) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: 90 },
+    for (const carrel of carrels.slice(0, 2)) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: 90 },
         { id: 'journal', at: [carrel.at[0] + 60, 740, carrel.at[1]], turn: 90 });
     props.push({ id: 'monstera', at: [width / 2 - 480, 0, front - 550] });
     // A globe on the lounge side table; the table carries it when moved.
     const sideTable = [lounge[0] + (index ? 1460 : 880), lounge[1] + (index ? -120 : 60)];
     props.push({ id: 'globe', at: [sideTable[0], 560, sideTable[1]], turn: 25 });
-    return [id, { id, name, width, depth, height, back, index, desk, reading, stacks, lounge, carrels, props, sideTable, daylight: [-width / 2 + 100, back + depth * .4] }];
+    // Append new native props after the original list. The loader keys include
+    // the placement index, so inserting them earlier would lose saved edits.
+    for (const at of reading.slice(index >= 3 ? 2 : 1)) {
+        for (const x of [-650, 650]) for (const z of [-850, 850]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [at[0] + x, 0, at[1] + z], turn: z > 0 ? 180 : 0 });
+        props.push({ id: 'kenney-furniture-laptop', at: [at[0] - 430, 740, at[1] - 260] }, { id: 'journal', at: [at[0] + 480, 740, at[1] + 260], turn: 12 }, { id: 'kenney-furniture-books', at: [at[0] + 30, 740, at[1] + 250] });
+    }
+    if (research) for (const dx of [-450, 450]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [research[0] + dx, 0, research[1] + 850], turn: 180 });
+    for (const carrel of carrels.slice(2)) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: 90 }, { id: 'journal', at: [carrel.at[0] + 60, 740, carrel.at[1]], turn: 90 });
+    return [id, { id, name, width, depth, height, back, index, desk, reading, stacks, lounge, carrels, research, service, props, sideTable, daylight: [-width / 2 + 100, back + depth * .4] }];
 }));
 export const libraryLayoutById = id => LIBRARY_LAYOUTS[id] || LIBRARY_LAYOUTS.apartment;
 export const libraryLayoutForSize = size => LIBRARY_LAYOUTS[size === '60x30' ? 'house' : 'apartment'];
 export const LIBRARY_MODES = {
-    morning: { label: 'Morning', description: 'Fresh daylight · standing study', key: '#ffe8c6', fill: '#d6e8f0', accent: '#c4dcc6', power: 1.55, ambient: .42, bounce: .6, exposure: 1.06, sky: ['#7fb3d1', '#f4e6c8'], practical: .2, wash: .16, colors: ['#f8dfb6', '#afd0ba'], height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
-    afternoon: { label: 'Afternoon', description: 'Read & research · seated focus', key: '#fff5e6', fill: '#dbe9ee', accent: '#b9d1c4', power: 1.3, ambient: .46, bounce: .66, exposure: 1.06, sky: ['#9cc6dc', '#eef0e4'], practical: .3, wash: .28, colors: ['#f3deb7', '#c0cebe'], height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
-    evening: { label: 'Evening', description: 'Warm reading lights · angled notes and sketches', key: '#ffb877', fill: '#b9c6dc', accent: '#e0b07c', power: .78, ambient: .27, bounce: .36, exposure: 1.12, sky: ['#5d76a0', '#f2a565'], practical: .95, wash: .55, colors: ['#ffcf94', '#c9b9a0'], height: 28, tilt: 12, offset: [0, 80], yaw: 0, leds: true, color: '#4a3f30' },
-    night: { label: 'Late study', description: 'Quiet late study · low ambient and task lights', key: '#9db4d8', fill: '#93a8c8', accent: '#e8b77e', power: .16, ambient: .15, bounce: .2, exposure: 1.14, sky: ['#0f1f35', '#34506a'], practical: 1.2, wash: .28, colors: ['#ffc98a', '#a9b9c4'], height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: true, color: '#2f2c26' },
-    party: { label: 'Study group', description: 'Share ideas · turn toward collaborative study', key: '#f2dcc0', fill: '#c8dae2', accent: '#b8d4ae', power: .9, ambient: .4, bounce: .52, exposure: 1.1, sky: ['#93a9c8', '#f3cfa6'], practical: .75, wash: .85, colors: ['#eed3ad', '#a4c9b2'], height: 43.5, tilt: -5, offset: [120, 250], yaw: -12, leds: true, color: '#375642' }
+    morning: { label: 'Morning', description: 'Opening the reading room · daylight and book returns', key: '#ffe8c6', fill: '#d6e8f0', accent: '#c4dcc6', power: 1.55, ambient: .42, bounce: .6, exposure: 1.06, sky: ['#7fb3d1', '#f4e6c8'], practical: .2, wash: .16, colors: ['#f2e6d2', '#c5d3c7'], height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
+    afternoon: { label: 'Afternoon', description: 'Reference research · catalog search and individual study', key: '#fff5e6', fill: '#dbe9ee', accent: '#b9d1c4', power: 1.3, ambient: .46, bounce: .66, exposure: 1.06, sky: ['#9cc6dc', '#eef0e4'], practical: .3, wash: .28, colors: ['#f5ebdb', '#cad7cd'], height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
+    evening: { label: 'Evening', description: 'Evening reading · warm task lights and research notes', key: '#efc7a0', fill: '#b9c6dc', accent: '#e0b07c', power: .78, ambient: .27, bounce: .36, exposure: 1.12, sky: ['#5d76a0', '#f2a565'], practical: .95, wash: .55, colors: ['#f4d8b1', '#ccc5b6'], height: 28, tilt: 12, offset: [0, 80], yaw: 0, leds: true, color: '#4a3f30' },
+    night: { label: 'Late study', description: 'Quiet late study · self service and focused task lighting', key: '#9db4d8', fill: '#93a8c8', accent: '#e8b77e', power: .18, ambient: .18, bounce: .2, exposure: 1.14, sky: ['#0f1f35', '#34506a'], practical: 1.2, wash: .28, colors: ['#f5ddbb', '#c0ccd3'], height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: true, color: '#2f2c26' },
+    party: { label: 'Study group', description: 'Collaborative study · shared sources and discussion notes', key: '#f2dcc0', fill: '#c8dae2', accent: '#b8d4ae', power: .9, ambient: .4, bounce: .52, exposure: 1.1, sky: ['#93a9c8', '#f3cfa6'], practical: .75, wash: .85, colors: ['#f1e2ca', '#c5d3c7'], height: 43.5, tilt: -5, offset: [120, 250], yaw: -12, leds: true, color: '#375642' }
 };
 function canvasMap(draw, w = 512, h = 512) {
     const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
@@ -121,6 +135,24 @@ function plasterUrn(k, [x, y, z]) {
 export function buildLibraryRoom(room, root, layout, helpers) {
     const { material, mesh, box, rod, markSceneAsset } = helpers;
     const { width: w, depth: d, height: h, back: bz, index } = layout, front = bz + d;
+    const carpeted = index === 2 || index === 4;
+    room.decorateProp = (object, placement) => {
+        if (placement.id !== 'kenney-furniture-chair-modern-cushion') return;
+        const copies = new Map();
+        object.traverse(o => {
+            if (!o.isMesh) return;
+            const finish = source => {
+                if (!source?.isMeshStandardMaterial || source.map) return source;
+                if (!copies.has(source)) {
+                    const mat = source.clone(), fabric = /carpet/i.test(source.name);
+                    mat.color.set(fabric ? '#718575' : '#46564e'); mat.roughness = fabric ? .98 : .56; mat.metalness = fabric ? 0 : .3;
+                    room.ownedMaterials.add(mat); copies.set(source, mat);
+                }
+                return copies.get(source);
+            };
+            o.material = Array.isArray(o.material) ? o.material.map(finish) : finish(o.material);
+        });
+    };
     const chalk = material('#e8e2d2', { roughness: .94 }), green = material('#436c58', { roughness: .86 }), dark = material('#344941'), brass = material('#b5a06b', { metalness: .55, roughness: .4 });
     const trim = material('#f1ecdf', { roughness: .8 }), dress = material('#ffffff', { vertexColors: true, roughness: .78 });
     const oakMap = canvasMap(c => { c.fillStyle = '#ac8960'; c.fillRect(0, 0, 512, 512); for (let x = 0; x < 512; x += 5) { c.strokeStyle = x % 3 ? '#684a2b25' : '#e2c48b35'; c.lineWidth = .8; c.beginPath(); c.moveTo(x, 0); c.bezierCurveTo(x + 8, 150, x - 12, 350, x + 2, 512); c.stroke(); } });
@@ -131,6 +163,17 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     // Honey-oak herringbone. Plank colour follows the pattern's lattice, so
     // the 1024 px tile repeats seamlessly every 680 mm.
     const floorMap = canvasMap((c, S) => {
+        if (carpeted) {
+            for (let col = 0; col < 2; col++) for (let row = 0; row < 2; row++) {
+                const x = col * S / 2, y = row * S / 2;
+                c.fillStyle = ['#9ea596', '#9ba293', '#a0a798', '#9ea596'][col + row * 2]; c.fillRect(x, y, S / 2, S / 2);
+                c.strokeStyle = '#40504412'; c.lineWidth = 1;
+                for (let n = 0; n < S / 2; n += 4) { c.beginPath(); c.moveTo(x + (row ? n : 0), y + (row ? 0 : n)); c.lineTo(x + (row ? n : S / 2), y + (row ? S / 2 : n)); c.stroke(); }
+                c.strokeStyle = '#45534616'; c.lineWidth = 3; c.strokeRect(x, y, S / 2, S / 2);
+            }
+            for (let n = 0; n < 18000; n++) { c.fillStyle = n % 2 ? '#ffffff15' : '#34483c12'; c.fillRect(rnd(n) * S, rnd(n + 13) * S, 1.5, 3); }
+            return;
+        }
         const W = S / 8, L = W * 4, tones = ['#b58c60', '#a87f55', '#bd966a', '#a07a51', '#b88f63', '#ad865b', '#c39c6e', '#a57d54'];
         c.fillStyle = '#7d5f40'; c.fillRect(0, 0, S, S);
         for (let k = -10; k <= 18; k++) for (let n = -3; n <= 3; n++) for (const tall of [0, 1]) {
@@ -150,8 +193,8 @@ export function buildLibraryRoom(room, root, layout, helpers) {
             c.restore();
         }
     }, 1024, 1024);
-    floorMap.wrapS = floorMap.wrapT = THREE.RepeatWrapping; floorMap.repeat.set(w / 680, d / 680); floorMap.anisotropy = 8;
-    const floor = material('#ffffff', { map: floorMap, roughness: .62 });
+    floorMap.wrapS = floorMap.wrapT = THREE.RepeatWrapping; floorMap.repeat.set(w / (carpeted ? 1200 : 680), d / (carpeted ? 1200 : 680)); floorMap.anisotropy = 8;
+    const floor = material('#ffffff', { map: floorMap, roughness: carpeted ? .98 : .62 });
     box(root, [w, 30, d], [0, -15, bz + d / 2], floor);
     // Wool rugs: woven border bands and a quiet field pattern.
     const rug = (field, band, line, motif) => material('#ffffff', { roughness: 1, map: canvasMap((c, S) => {
@@ -413,8 +456,10 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     const face = mesh(clock, new THREE.CircleGeometry(200, 40), material('#ffffff', { map: clockMap, roughness: .5 }), [0, 0, 36]); face.castShadow = false;
     const clockKit = kit(); clockKit.add(new THREE.TorusGeometry(212, 22, 10, 40), [0, 0, 30]).cyl(214, 214, 30, [0, 0, 15], { rot: [Math.PI / 2, 0, 0], seg: 40 });
     baked(clock, clockKit, brass, false);
-    const hands = kit(); hands.box([12, 130, 4], [26, 52, 40], { rot: [0, 0, -.45] }).box([8, 175, 4], [-58, -55, 42], { rot: [0, 0, -2.3] }).cyl(12, 12, 10, [0, 0, 44], { rot: [Math.PI / 2, 0, 0] });
-    baked(clock, hands, dark, false);
+    const hourHand = new THREE.Group(), minuteHand = new THREE.Group(); clock.add(hourHand, minuteHand);
+    box(hourHand, [12, 120, 4], [0, 50, 40], dark).castShadow = false;
+    box(minuteHand, [8, 175, 4], [0, 76, 42], dark).castShadow = false;
+    const hub = kit(); hub.cyl(12, 12, 10, [0, 0, 44], { rot: [Math.PI / 2, 0, 0] }); baked(clock, hub, brass, false);
     // Study wall: prints and sconces continue the line of the notice board.
     for (const [n, slot] of [2, 1, 3].entries()) {
         const z = bz + 2350 + n * 1000;
@@ -470,23 +515,218 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     const pleats = canvasMap((c, W, H) => { c.fillStyle = '#e4d3aa'; c.fillRect(0, 0, W, H); for (let x = 0; x < W; x += 8) { c.fillStyle = (x / 8) % 2 ? '#cdb98c' : '#f0e2c0'; c.fillRect(x, 0, 4, H); } c.fillStyle = '#9a7f52'; c.fillRect(0, 0, W, 6); c.fillRect(0, H - 6, W, 6); }, 256, 64);
     const lampShade = material('#ffffff', { map: pleats, side: THREE.DoubleSide, emissive: '#7a5a2c', emissiveMap: pleats }); mesh(lamp, new THREE.CylinderGeometry(170, 230, 330, 28, 1, true), lampShade, [0, 1580, 0]);
     mesh(lamp, new THREE.CylinderGeometry(222, 222, 8, 28), glowMat(), [0, 1420, 0]).castShadow = false;
+    const operations = buildLibraryOperations(room, layout, { material, mesh, box, group, baked, kit, canvasMap, oak, green, dark, brass, dress, back, right, catalog, cart, ceiling, glowMat });
     const lights = [
         { at: [layout.desk[0], 2100, layout.desk[1]], task: true, power: 4, range: 4300 },
         { at: [layout.reading[0][0], 2200, layout.reading[0][1]], task: true, power: 5, range: 5000 },
-        { at: [0, 2450, bz + d * .43], task: false, power: 6, range: d * .8 },
-        { at: [-w / 2 + 550, 1600, front - 1850], task: false, power: 3, range: 3700 }
+        { at: [index >= 2 ? layout.service[0] / 2 : 0, Math.min(2800, h - 350), bz + d * .43], task: false, power: 6 + index * 1.2, range: d * .8 },
+        { at: layout.research ? [layout.research[0], 1950, layout.research[1] + 350] : [-w / 2 + 550, 1600, front - 1850], task: !!layout.research, power: layout.research ? 5 : 3, range: layout.research ? 6200 : 3700 },
+        ...(layout.reading.length > 1 ? [{ at: [layout.reading[1][0], 2200, layout.reading[1][1]], task: true, power: 5, range: 5000 }] : [])
     ].map(spec => { const light = new THREE.PointLight('#efd8b5', 0, spec.range * root.scale.x, 2); light.position.set(...spec.at); root.add(light); return { ...spec, light, power: spec.power * (root.scale.x * 1000) ** 2 }; });
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = LIBRARY_MODES[modeId] || LIBRARY_MODES.morning, c = sky.getContext('2d');
         drawCampus(c, modeId, mode); skyMap.needsUpdate = true;
+        const time = { morning: [9, 15], afternoon: [14, 20], evening: [18, 30], night: [22, 10], party: [16, 0] }[modeId] || [9, 15];
+        hourHand.rotation.z = -(time[0] % 12 + time[1] / 60) / 12 * Math.PI * 2; minuteHand.rotation.z = -time[1] / 60 * Math.PI * 2;
+        clock.userData.libraryTime = time; operations.setMode(modeId);
         glow.forEach(mat => { mat.color.set(mode.colors[0]); mat.emissive.set(mode.colors[0]); mat.emissiveIntensity = .12 + mode.practical * accent; });
         shades.forEach(mat => { mat.emissiveIntensity = .04 + mode.practical ** 2 * .7 * accent; }); lampShade.emissiveIntensity = .1 + mode.practical * .9 * accent;
         lights.forEach(spec => { spec.light.color.set(spec.task ? mode.colors[0] : mode.colors[1]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent; }); root.userData.atmosphere = modeId;
     };
     // Explicit surface roles keep detail off artwork and imported models.
-    for (const [mat, surface] of [[chalk, 'plaster'], [trim, 'plaster'], [green, 'powder'], [dark, 'powder'], [brass, 'metal'], [oak, 'wood'], [floor, 'wood']]) mat.userData.roomSurface = surface;
+    for (const [mat, surface] of [[chalk, 'plaster'], [trim, 'plaster'], [green, 'powder'], [dark, 'powder'], [brass, 'metal'], [oak, 'wood'], [floor, carpeted ? 'fabric' : 'wood']]) mat.userData.roomSurface = surface;
     room.roomAtmosphere('morning'); root.userData.dimensionsMm = { width: w, depth: d, height: h };
 }
+// Library operations share the room's millimetre coordinates and stable asset
+// identities. Small fittings are baked; screens redraw only when the daypart
+// changes. Equipment stays with its real supporting cabinet/table when edited.
+function buildLibraryOperations(room, layout, h) {
+    const { material, mesh, box, group, baked, kit, canvasMap, oak, green, dark, brass, dress, back, right, catalog, cart, ceiling, glowMat } = h;
+    const { width: w, depth: d, height: height, back: bz, index } = layout, front = bz + d;
+    const modes = ['morning', 'afternoon', 'evening', 'night', 'party'], screens = [], variants = [];
+    const paper = material('#eee9da', { roughness: .94 }), steel = material('#47524f', { metalness: .45, roughness: .42 });
+    paper.userData.roomSurface = 'paper'; steel.userData.roomSurface = 'metal';
+    const notice = (parent, text, detail, at, size = [620, 220], rotation = 0) => {
+        const map = canvasMap((c, W, H) => {
+            c.fillStyle = '#26463e'; c.fillRect(0, 0, W, H); c.fillStyle = '#c4ab76'; c.fillRect(0, 0, 12, H);
+            c.fillStyle = '#f5f0e3'; c.font = 'bold 38px sans-serif'; c.fillText(text, 32, 70);
+            c.fillStyle = '#d6dbce'; c.font = '24px sans-serif'; c.fillText(detail, 32, 118);
+        }, 768, 160);
+        const p = mesh(parent, new THREE.PlaneGeometry(...size), material('#ffffff', { map, roughness: .85 }), at);
+        p.rotation.y = rotation; p.castShadow = false; return p;
+    };
+    const screen = (parent, at, kind, width = 400) => {
+        const screenHeight = width * .625, k = kit(), [x, y, z] = at;
+        k.box([width * .55, 9, 140], [x, y + 4.5, z + 5]).box([32, 115, 30], [x, y + 64, z]);
+        k.box([width + 24, screenHeight + 24, 22], [x, y + 120 + screenHeight / 2, z]); baked(parent, k, steel);
+        const map = canvasMap(() => {}, 768, 480), mat = material('#ffffff', { map, emissive: '#ffffff', emissiveMap: map, emissiveIntensity: .18, roughness: .65 });
+        const p = mesh(parent, new THREE.PlaneGeometry(width, screenHeight), mat, [x, y + 120 + screenHeight / 2, z + 12]); p.castShadow = false;
+        screens.push({ map, mat, kind }); return p;
+    };
+    const printedPage = (parent, at, title, open = false) => {
+        const k = kit(), [x, y, z] = at;
+        k.box([open ? 320 : 180, 8, 230], [x, y + 4, z], { color: '#456554' });
+        k.box([open ? 310 : 168, 20, 222], [x, y + 18, z], { color: '#e6dfcb' }); baked(parent, k, dress);
+        const map = canvasMap((c, W, H) => {
+            c.fillStyle = '#eee8d8'; c.fillRect(0, 0, W, H); c.fillStyle = '#33473e'; c.font = 'bold 22px serif'; c.fillText(title, 22, 42);
+            for (let col = 0; col < (open ? 2 : 1); col++) {
+                c.fillStyle = '#818678'; for (let n = 0; n < 11; n++) c.fillRect(22 + col * W / 2, 67 + n * 15, (open ? W / 2 : W) - 52 - (n % 4) * 8, 2);
+            }
+            if (open) { c.fillStyle = '#d3cab8'; c.fillRect(W / 2 - 2, 0, 4, H); }
+        }, 512, 256);
+        const page = mesh(parent, new THREE.PlaneGeometry(open ? 306 : 164, 218), material('#ffffff', { map, roughness: 1 }), [x, y + 28.2, z]); page.rotation.x = -Math.PI / 2; page.castShadow = false;
+    };
+    // A compact catalog terminal belongs in every size, even the pilot nook.
+    // Preserve the archival drawer cabinet and its previously saved identity.
+    screen(catalog, [-80, 1016, -20], 'catalog', 360);
+    notice(catalog, 'CATALOG', 'Find a book · Ask for help', [-80, 1110, 180], [350, 72]);
+    notice(cart, 'RETURNS', 'For staff to reshelve', [0, 475, 211], [650, 130]);
+    const rackZ = index >= 2 ? bz + d * .26 : bz + d * .5;
+    const periodicals = group('current-periodicals', 'Current journals and periodicals rack', [w / 2 - 170, 0, rackZ]); periodicals.rotation.y = -Math.PI / 2;
+    const rack = kit(); rack.box([1040, 1240, 28], [0, 650, -100]).box([1100, 70, 300], [0, 35, 0]);
+    for (const y of [370, 820]) rack.box([1030, 22, 240], [0, y, 0]).box([1030, 90, 18], [0, y + 35, 116]); baked(periodicals, rack, oak);
+    const coverMap = canvasMap((c, W, H) => {
+        const titles = [['FIELD', 'NOTES', 'ECOLOGY'], ['DESIGN', 'REVIEW', 'MATERIALS'], ['PUBLIC', 'HISTORY', 'ARCHIVES']];
+        for (let i = 0; i < 3; i++) {
+            const x = i * W / 3, cw = W / 3; c.fillStyle = ['#43685d', '#9a6955', '#52697a'][i]; c.fillRect(x, 0, cw, H);
+            c.fillStyle = '#eae3ce'; c.font = 'bold 37px serif'; c.fillText(titles[i][0], x + 24, 70); c.fillText(titles[i][1], x + 24, 112);
+            c.strokeStyle = '#d7c392'; c.lineWidth = 2; for (let n = 0; n < 9; n++) { c.beginPath(); c.ellipse(x + cw / 2, H * .52, 35 + n * 7, 64 + n * 6, n * .22, 0, Math.PI * 2); c.stroke(); }
+            c.font = '18px sans-serif'; c.fillText(titles[i][2], x + 24, H - 55); c.fillText('CURRENT ISSUE', x + 24, H - 28);
+        }
+    }, 768, 512);
+    for (let i = 0; i < 3; i++) {
+        const map = coverMap.clone(); map.repeat.x = 1 / 3; map.offset.x = i / 3;
+        const covers = kit(); for (const y of [530, 980]) covers.box([235, 310, 16], [(i - 1) * 315, y, -25], { rot: [-.13, 0, 0] });
+        baked(periodicals, covers, material('#ffffff', { map, roughness: .87 }));
+    }
+    notice(periodicals, 'CURRENT JOURNALS', 'Read here · Leave for reshelving', [0, 1190, 20], [940, 155]);
+    // Physical end labels let patrons find a subject from either aisle. Broad
+    // LC class letters are illustrative, not records of a real collection.
+    for (const [i, spec] of layout.stacks.entries()) {
+        const shelf = room.assets().find(o => o.userData.propId === spec.id);
+        const classification = ['N · ART', 'Q · SCIENCE', 'P · LITERATURE', 'D · HISTORY', 'T · TECHNOLOGY', 'A · REFERENCE'][i % 6];
+        const map = canvasMap((c, W, H) => {
+            c.fillStyle = '#ede8da'; c.fillRect(0, 0, W, H); c.fillStyle = '#315047'; c.fillRect(0, 0, W, 78);
+            c.fillStyle = '#f3eddc'; c.font = 'bold 28px sans-serif'; c.textAlign = 'center'; c.fillText('COLLECTIONS', W / 2, 48);
+            c.fillStyle = '#315047'; c.font = 'bold 26px sans-serif'; c.fillText(classification, W / 2, 137);
+            c.font = '20px sans-serif'; c.fillText('Browse both sides', W / 2, 193); c.fillText('Ask us for help', W / 2, 226);
+            c.strokeStyle = '#bcaa7b'; c.lineWidth = 3; c.strokeRect(12, 12, W - 24, H - 24);
+        }, 320, 280);
+        for (const side of [-1, 1]) {
+            const p = mesh(shelf, new THREE.PlaneGeometry(310, 270), material('#ffffff', { map, roughness: .88 }), [side * 931, 1390, 0]); p.rotation.y = side * Math.PI / 2; p.castShadow = false;
+        }
+    }
+    const services = [];
+    if (layout.service) {
+        const service = group('research-help-counter', 'Research help and self checkout counter', [layout.service[0], 0, layout.service[1]]); services.push(service);
+        const body = kit(); body.box([1550, 680, 560], [0, 370, -40]).box([1600, 60, 600], [0, 30, -40]); baked(service, body, green);
+        const top = kit(); top.box([1800, 40, 760], [0, 720, 0]); baked(service, top, oak);
+        const lip = kit(); lip.box([1650, 4, 18], [0, 742, 345]); baked(service, lip, brass, false);
+        // Low counter, open knees at the side, a visible book-reading pad and
+        // receipt outlet distinguish circulation from a private office desk.
+        box(service, [250, 14, 300], [540, 747, 140], dark, 8);
+        box(service, [110, 44, 110], [540, 762, -100], steel, 4);
+        box(service, [82, 2, 10], [540, 785, -76], dark);
+        screen(service, [-460, 740, -120], 'help', 380);
+        notice(service, 'RESEARCH HELP', 'Ask · Borrow · Return', [0, 545, 247], [1250, 240]);
+        for (const [phase, mode] of modes.entries()) {
+            const v = new THREE.Group(); v.name = 'Library service activity · ' + mode; service.add(v); variants.push({ obj: v, mode });
+            if (phase === 0) {
+                const books = kit(); for (let n = 0; n < 3; n++) books.box([230, 28, 170], [70, 754 + n * 28, 120], { color: ['#86624d', '#496756', '#c6ad76'][n], rot: [0, .06 * n, 0] }); baked(v, books, dress);
+            } else printedPage(v, [65, 740, 100], phase === 4 ? 'Shared sources' : phase === 3 ? 'Reserved reading' : 'Research notes', phase !== 3);
+            const slip = kit(); slip.box([95, 1, 145], [340, 741, 180], { color: '#eee8d8', rot: [0, .16, 0] }); baked(v, slip, dress, false);
+        }
+    }
+    if (layout.research) {
+        const table = group('digital-research-table', 'Digital research and accessible technology table', [layout.research[0], 0, layout.research[1]]); services.push(table);
+        box(table, [1800, 40, 750], [0, 720, 0], oak, 8);
+        const legs = kit(); for (const x of [-770, 770]) { legs.box([60, 700, 600], [x, 350, 0]); legs.box([440, 28, 680], [x, 14, 0]); } baked(table, legs, steel);
+        const cable = kit(); cable.box([1580, 80, 85], [0, 615, -240]).box([1600, 50, 55], [0, 765, -330]); baked(table, cable, green);
+        for (const x of [-450, 450]) {
+            screen(table, [x, 740, -235], 'research', 440);
+            const keyboard = kit(); keyboard.box([345, 12, 105], [x, 746, 65], { color: '#394841' }).box([48, 22, 76], [x + 227, 751, 65], { color: '#394841' });
+            for (let row = 0; row < 4; row++) for (let n = 0; n < 13; n++) keyboard.box([19, 2, 16], [x - 145 + n * 24, 753, 30 + row * 23], { color: '#bdc4bd' });
+            baked(table, keyboard, dress);
+        }
+        notice(table, 'DIGITAL RESEARCH', 'Databases · Citation tools · Assistive technology', [0, 622, 301], [1500, 155]);
+        const light = kit(); light.box([1700, 7, 50], [0, 1710, -285]); baked(table, light, glowMat(), false);
+        const supports = kit(); for (const x of [-850, 850]) supports.box([22, 970, 22], [x, 1225, -290]); baked(table, supports, steel);
+        const print = group('print-scan-cabinet', 'Print and scan equipment cabinet', [w / 2 - 350, 0, front - 4100]); print.rotation.y = -Math.PI / 2;
+        const cabinet = kit(); cabinet.box([1000, 760, 580], [0, 410, 0]).box([1050, 60, 600], [0, 30, 0]).box([1040, 35, 610], [0, 807.5, 0]); baked(print, cabinet, oak);
+        const machine = kit(); machine.box([660, 270, 470], [0, 960, 0], { color: '#d1d5cf' }).box([630, 28, 450], [0, 1109, -10], { color: '#414e49' });
+        machine.box([510, 24, 100], [0, 1140, -145], { color: '#47524f' }).box([380, 55, 90], [0, 846, 252], { color: '#3c4844' });
+        machine.box([330, 10, 230], [0, 882, 197], { color: '#eee9da' }); baked(print, machine, dress);
+        notice(print, 'PRINT / SCAN', 'Collect pages · Recycle drafts', [0, 510, 292], [780, 170]);
+        const display = screen(print, [390, 825, 160], 'print', 135); display.userData.presentationOnly = true;
+    }
+    // Fabric acoustic panels belong to the architecture. Posters and notice
+    // boards are still editable along the wall, but absorbers cannot turn into
+    // floor obstacles or be mistaken for furniture by the interaction binder.
+    const fabricMap = canvasMap((c, W, H) => {
+        c.fillStyle = '#b3b4a1'; c.fillRect(0, 0, W, H);
+        for (let n = 0; n < 2800; n++) { c.fillStyle = n % 2 ? '#ffffff18' : '#00000012'; c.fillRect(rnd(n) * W, rnd(n + 9) * H, 2, 5); }
+    }, 256, 256);
+    const acousticMat = material('#ffffff', { map: fabricMap, roughness: 1 }); acousticMat.userData.roomSurface = 'fabric';
+    for (let z = bz + 6100; z < front - 1250; z += 2200) {
+        const panel = group('acoustic-' + Math.round(z - bz), 'Library wall acoustic treatment', [w / 2 - 35, 1960, z], right); panel.rotation.y = -Math.PI / 2; panel.userData.presentationOnly = true;
+        box(panel, [1320, 800, 40], [0, 0, 0], acousticMat, 10);
+        for (const x of [-440, 0, 440]) box(panel, [8, 730, 6], [x, 0, 23], oak);
+    }
+    const guide = group('library-wayfinding', 'Library services and quiet study guide', [w / 2 - 32, 2350, bz + (index ? 4600 : 3000)], right); guide.rotation.y = -Math.PI / 2;
+    notice(guide, 'QUIET STUDY', index >= 2 ? '← Window carrels    Research help →' : 'Reading seats    Catalog →', [0, 0, 0], [1400, 290]);
+    // The discussion board is kept in the shared zone; it is not a loud display
+    // over the quiet carrels. Its frame follows the existing floor editing API.
+    let discussionMap = null;
+    if (index >= 3) {
+        const board = group('collaboration-whiteboard', 'Shared research discussion whiteboard', [-w / 2 + 3450, 0, front - 2450]); board.rotation.y = -.14;
+        const frame = kit(); for (const x of [-660, 660]) {
+            frame.box([28, 1760, 28], [x, 920, 0]).box([130, 28, 650], [x, 32, 0]);
+            for (const z of [-270, 270]) frame.cyl(24, 24, 28, [x, 24, z], { rot: [0, 0, Math.PI / 2] });
+        } frame.box([1390, 48, 40], [0, 1822, 0]).box([1390, 30, 70], [0, 922, 25]); baked(board, frame, steel);
+        box(board, [1310, 870, 24], [0, 1370, 0], paper, 6);
+        discussionMap = canvasMap(() => {}, 1024, 640);
+        mesh(board, new THREE.PlaneGeometry(1285, 845), material('#ffffff', { map: discussionMap, roughness: .9 }), [0, 1370, 13]).castShadow = false;
+    }
+    // Supplemental fixtures are attached to the existing ceiling cutaway root,
+    // never floating mid-room or obscuring a bird's-eye view.
+    for (const at of [layout.service, layout.research].filter(Boolean)) {
+        const k = kit(); k.box([1600, 45, 90], [at[0], height - 250, at[1]]);
+        for (const x of [-650, 650]) k.cyl(2, 2, 227.5, [at[0] + x, height - 113.75, at[1]]); baked(ceiling, k, steel, false);
+        box(ceiling, [1530, 5, 70], [at[0], height - 275, at[1]], glowMat(), 2).castShadow = false;
+    }
+    let previous = null;
+    return { setMode(mode) {
+        if (mode === previous) return; previous = mode;
+        variants.forEach(v => { v.obj.visible = v.mode === mode; });
+        const quiet = mode === 'night', groupStudy = mode === 'party';
+        for (const entry of screens) {
+            const c = entry.map.image.getContext('2d'), W = entry.map.image.width, H = entry.map.image.height;
+            c.fillStyle = quiet ? '#182d29' : '#edece1'; c.fillRect(0, 0, W, H);
+            c.fillStyle = '#285247'; c.fillRect(0, 0, W, 74); c.fillStyle = '#f4f0df'; c.font = 'bold 28px sans-serif';
+            c.fillText(entry.kind === 'print' ? 'READY TO SCAN' : entry.kind === 'help' ? quiet ? 'SELF SERVICE' : 'RESEARCH HELP' : 'LIBRARY SEARCH', 28, 48);
+            c.fillStyle = quiet ? '#dce3d4' : '#36574b'; c.font = '23px sans-serif';
+            c.fillText(entry.kind === 'help' ? quiet ? 'Staff desk closed · Quiet study' : 'Ask us about books and research' : groupStudy ? 'Shared sources for your project' : 'Search books, articles and databases', 28, 122);
+            c.fillStyle = quiet ? '#30473c' : '#ffffff'; c.fillRect(28, 153, W - 56, 55);
+            c.fillStyle = quiet ? '#c4d4bf' : '#73857a'; c.font = '22px sans-serif'; c.fillText(entry.kind === 'print' ? 'Place original on glass' : 'Title, author or subject…', 46, 189);
+            const rows = entry.kind === 'help' ? ['Borrow / renew', 'Course reserves', 'Research appointment'] : entry.kind === 'print' ? ['Scan to your device', 'Collect your print job', 'Recycle extra pages'] : ['Forest ecology · Books', 'Methods of research · Articles', 'Design and society · Databases'];
+            for (const [i, title] of rows.entries()) {
+                c.fillStyle = quiet ? '#3c594b' : '#cddace'; c.fillRect(28, 233 + i * 65, 34, 44); c.fillStyle = quiet ? '#dee7d9' : '#35544b'; c.fillText(title, 83, 259 + i * 65);
+            }
+            c.font = '18px sans-serif'; c.fillStyle = quiet ? '#aabcb1' : '#728678'; c.fillText('Campus library · Preview display', 28, H - 22);
+            entry.map.needsUpdate = true; entry.mat.emissiveIntensity = quiet ? .11 : .22;
+        }
+        if (discussionMap) {
+            const c = discussionMap.image.getContext('2d'); c.fillStyle = '#edece3'; c.fillRect(0, 0, 1024, 640); c.fillStyle = '#31544b'; c.font = 'bold 48px sans-serif';
+            c.fillText(groupStudy ? 'RESEARCH TOGETHER' : quiet ? 'NEXT STUDY SESSION' : 'RESEARCH WORKSHOP', 65, 95);
+            c.font = '28px sans-serif'; ['Question → Find sources', 'Compare evidence → Share ideas', 'Cite sources → Review together'].forEach((line, i) => c.fillText(line, 70, 195 + i * 110));
+            c.strokeStyle = '#8a9a81'; c.lineWidth = 3; c.strokeRect(45, 135, 930, 390); c.fillStyle = '#c8a269';
+            for (let i = 0; i < (groupStudy ? 5 : 2); i++) { c.fillRect(710 + i % 2 * 112, 200 + Math.floor(i / 2) * 100, 85, 68); }
+            discussionMap.needsUpdate = true;
+        }
+        room.root.userData.libraryOperations = { mode, service: quiet ? 'self-service' : 'research-help', catalog: true, periodicals: true, researchSeats: layout.research ? 2 : 0, quietCarrels: layout.carrels.length, collaborationBoard: index >= 3 };
+    } };
+}
+
 // The window view: a campus quad with a brick hall, clock tower, oaks and
 // redwoods. Sun, cloud and lit windows follow the time of day.
 function drawCampus(c, modeId, mode) {
@@ -510,6 +750,15 @@ function drawCampus(c, modeId, mode) {
     const brick = night ? '#3b2a2a' : dusk ? '#8a5a48' : '#a8705a', roof = night ? '#1f2629' : '#4f5a5e', lit = night || dusk;
     c.fillStyle = brick; c.fillRect(430, 250, 520, 160); c.fillRect(640, 130, 90, 130);
     c.fillStyle = roof; c.beginPath(); c.moveTo(420, 252); c.lineTo(690, 205); c.lineTo(960, 252); c.fill(); c.beginPath(); c.moveTo(630, 132); c.lineTo(685, 60); c.lineTo(740, 132); c.fill();
+    // Fine masonry, recessed openings and a shaded entrance give the campus
+    // view depth without loading photographs or adding exterior scene lights.
+    c.save(); c.beginPath(); c.rect(430, 255, 520, 151); c.clip();
+    const facade = c.createLinearGradient(430, 255, 950, 406); facade.addColorStop(0, '#fff0cf14'); facade.addColorStop(1, '#171e2935'); c.fillStyle = facade; c.fillRect(430, 255, 520, 151);
+    c.strokeStyle = night ? '#93806512' : '#dbb18f45'; c.lineWidth = .65;
+    for (let y = 257; y < 408; y += 9) { c.beginPath(); c.moveTo(430, y); c.lineTo(950, y); c.stroke(); for (let x = 430 + ((y - 257) / 9 % 2) * 14; x < 950; x += 28) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 9); c.stroke(); } }
+    c.restore();
+    c.fillStyle = night ? '#212829' : '#765c4c'; c.fillRect(430, 401, 520, 9);
+    c.fillStyle = night ? '#d6b278' : '#626b62'; c.fillRect(662, 369, 46, 40); c.fillStyle = roof; c.fillRect(654, 359, 63, 7);
     c.fillStyle = night ? '#e9d79c' : '#efe6cf'; c.beginPath(); c.arc(685, 172, 22, 0, Math.PI * 2); c.fill();
     for (let i = 0; i < 12; i++) for (let j = 0; j < 3; j++) {
         const on = lit && rnd(i * 3 + j) > (night ? .35 : .55);
@@ -522,6 +771,18 @@ function drawCampus(c, modeId, mode) {
         c.fillStyle = night ? '#2a2420' : '#5a4632'; c.fillRect(x - 6, 340, 12, 80);
         c.fillStyle = night ? '#18302a' : dusk ? '#3e5a40' : '#55804c';
         for (let j = 0; j < 7; j++) { c.beginPath(); c.arc(x + Math.cos(j * 1.3) * 34 * s, 320 + Math.sin(j * 1.9) * 22 * s - 20, 34 * s, 0, Math.PI * 2); c.fill(); }
+    }
+    // Outdoor seats, bicycle hoops and small pedestrian silhouettes make a
+    // functioning campus quad; the late-study window remains still and quiet.
+    for (const x of [485, 880]) {
+        c.fillStyle = night ? '#30322d' : '#967e59'; c.fillRect(x, 430, 52, 6); c.fillRect(x + 3, 416, 46, 8);
+        c.fillStyle = '#35443b'; c.fillRect(x + 7, 436, 3, 14); c.fillRect(x + 43, 436, 3, 14);
+    }
+    c.strokeStyle = night ? '#526260' : '#6e8178'; c.lineWidth = 2;
+    for (let x = 770; x < 824; x += 14) { c.beginPath(); c.moveTo(x, 430); c.lineTo(x, 414); c.quadraticCurveTo(x + 6, 405, x + 12, 414); c.lineTo(x + 12, 430); c.stroke(); }
+    if (!night) for (const [x, y, color] of [[652, 434, '#5a6f78'], [687, 453, '#9a7256']]) {
+        c.fillStyle = '#816959'; c.beginPath(); c.arc(x, y - 26, 3, 0, Math.PI * 2); c.fill();
+        c.fillStyle = color; c.fillRect(x - 3, y - 22, 6, 13); c.strokeStyle = '#374b44'; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y - 10); c.lineTo(x - 3, y); c.moveTo(x, y - 10); c.lineTo(x + 4, y - 1); c.stroke();
     }
     if (lit) for (const x of [600, 820]) {
         c.fillStyle = '#2a2a2a'; c.fillRect(x - 2, 360, 4, 60);
