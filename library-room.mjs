@@ -232,16 +232,30 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     const sign = group('commons-sign', 'Library commons identity', [0, 2560 + (h - 3000) * .5, bz + 35], back);
     const signMap = canvasMap(c => { c.fillStyle = '#436c58'; c.fillRect(0, 0, 1024, 256); c.strokeStyle = '#c9b27a'; c.lineWidth = 6; c.strokeRect(14, 14, 996, 228); c.fillStyle = '#efe8d2'; c.font = 'bold 73px serif'; c.fillText('LIBRARY / COMMONS', 48, 120); c.font = '23px sans-serif'; c.fillText('READ   •   DISCOVER   •   STUDY   •   SHARE', 56, 192); }, 1024, 256);
     box(sign, [index ? 3100 : 2600, 500, 30], [0, 0, 0], material('#ffffff', { map: signMap }), 7);
-    const window = new THREE.Group(); window.name = 'Library daylight and redwood view'; root.add(window);
+    const window = new THREE.Group(); window.name = 'Library daylight and campus view'; root.add(window);
     const ww = Math.min(6500, d * .6), wz = bz + d * .4, wh = Math.min(2400, h - 1100), a = wz - ww / 2, b = wz + ww / 2;
     for (const [length, z] of [[a - bz, (a + bz) / 2], [front - b, (front + b) / 2]]) box(window, [80, h, length], [-w / 2 - 40, h / 2, z], chalk);
     box(window, [80, low, ww], [-w / 2 - 40, low / 2, wz], chalk); box(window, [80, h - low - wh, ww], [-w / 2 - 40, (h + low + wh) / 2, wz], chalk);
-    const skyMap = canvasMap(() => {}, 1024, 512), sky = skyMap.image;
+    const skyMap = canvasMap(() => {}, 2048, Math.round(2048 * wh / ww)), sky = skyMap.image;
+    const campusImage = new Image(); let windowMode = 'morning';
+    const drawWindow = modeId => {
+        const c = sky.getContext('2d'), mode = LIBRARY_MODES[modeId] || LIBRARY_MODES.morning;
+        if (campusImage.naturalWidth) drawCampusImage(c, campusImage, modeId);
+        else { c.save(); c.scale(sky.width / 1024, sky.height / 512); drawCampus(c, modeId, mode); c.restore(); }
+        skyMap.needsUpdate = true;
+        root.userData.libraryWindow = { source: campusImage.naturalWidth ? 'assets/rooms/library/campus-window.png' : 'procedural-fallback', mode: modeId, croppedCurtains: true };
+    };
+    room.windowViewReady = new Promise(resolve => {
+        campusImage.onload = () => { if (room.root === root) drawWindow(windowMode); resolve(); };
+        campusImage.onerror = () => resolve(); // Keep the existing campus fallback if the asset is unavailable.
+        campusImage.src = new URL('./assets/rooms/library/campus-window.png', import.meta.url).href;
+    });
     const pane = mesh(window, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]); pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     const frame = kit();
-    for (let z = a; z <= b + 1; z += ww / 4) frame.box([60, wh + 35, 32], [-w / 2 + 16, low + wh / 2, z]);
-    for (const y of [low, low + wh, low + wh * .74]) frame.box([60, y === low || y === low + wh ? 35 : 24, ww + 40], [-w / 2 + 16, y, wz]);
-    for (let z = a + ww / 8; z < b; z += ww / 4) frame.box([30, 14, ww / 4], [-w / 2 + 16, low + wh * .87, z]).box([30, wh * .26, 14], [-w / 2 + 16, low + wh * .87, z]);
+    // The supplied picture includes its glazing bars. Keep only the physical
+    // perimeter so a second, differently spaced grid does not cross the view.
+    for (const z of [a, b]) frame.box([60, wh + 35, 32], [-w / 2 + 16, low + wh / 2, z]);
+    for (const y of [low, low + wh]) frame.box([60, 35, ww + 40], [-w / 2 + 16, y, wz]);
     baked(window, frame, dark);
     const sill = kit(); sill.box([160, 30, ww + 70], [-w / 2 + 40, low - 15, wz]).box([25, 100, d], [-w / 2 + 12.5, 50, bz + d / 2]).box([34, 40, a - bz], [-w / 2 + 17, low, (a + bz) / 2]).box([34, 40, front - b], [-w / 2 + 17, low, (front + b) / 2]);
     baked(window, sill, oak);
@@ -524,8 +538,8 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         ...(layout.reading.length > 1 ? [{ at: [layout.reading[1][0], 2200, layout.reading[1][1]], task: true, power: 5, range: 5000 }] : [])
     ].map(spec => { const light = new THREE.PointLight('#efd8b5', 0, spec.range * root.scale.x, 2); light.position.set(...spec.at); root.add(light); return { ...spec, light, power: spec.power * (root.scale.x * 1000) ** 2 }; });
     room.roomAtmosphere = (modeId, accent = 1) => {
-        const mode = LIBRARY_MODES[modeId] || LIBRARY_MODES.morning, c = sky.getContext('2d');
-        drawCampus(c, modeId, mode); skyMap.needsUpdate = true;
+        const mode = LIBRARY_MODES[modeId] || LIBRARY_MODES.morning;
+        windowMode = modeId; drawWindow(modeId);
         const time = { morning: [9, 15], afternoon: [14, 20], evening: [18, 30], night: [22, 10], party: [16, 0] }[modeId] || [9, 15];
         hourHand.rotation.z = -(time[0] % 12 + time[1] / 60) / 12 * Math.PI * 2; minuteHand.rotation.z = -time[1] / 60 * Math.PI * 2;
         clock.userData.libraryTime = time; operations.setMode(modeId);
@@ -727,7 +741,26 @@ function buildLibraryOperations(room, layout, h) {
     } };
 }
 
-// The window view: a campus quad with a brick hall, clock tower, oaks and
+// Crop the photographed curtains in the canvas, keeping the source file intact.
+// The room already has pleated linen drapes. Fit without stretching the campus
+// and keep the building centred across the five differently sized openings.
+function drawCampusImage(c, image, modeId) {
+    const W = c.canvas.width, H = c.canvas.height;
+    let x = image.naturalWidth * .058, y = 0;
+    let width = image.naturalWidth * .864, height = image.naturalHeight;
+    const aspect = W / H;
+    if (width / height > aspect) { const crop = height * aspect; x += (width - crop) / 2; width = crop; }
+    else { const crop = width / aspect; y = (height - crop) / 2; height = crop; }
+    const filters = { morning: 'brightness(0.96) saturate(0.94)', afternoon: 'none', evening: 'brightness(0.58) saturate(0.82)', night: 'brightness(0.16) saturate(0.60)', party: 'brightness(0.88) saturate(0.90)' };
+    c.save(); c.filter = filters[modeId] || filters.morning;
+    c.drawImage(image, x, y, width, height, 0, 0, W, H); c.filter = 'none';
+    if (modeId === 'evening' || modeId === 'night') {
+        c.fillStyle = modeId === 'night' ? '#17305266' : '#bd63252b'; c.fillRect(0, 0, W, H);
+    }
+    c.restore();
+}
+
+// Fallback window view: a campus quad with a brick hall, clock tower, oaks and
 // redwoods. Sun, cloud and lit windows follow the time of day.
 function drawCampus(c, modeId, mode) {
     const W = 1024, H = 512, night = modeId === 'night', dusk = modeId === 'evening', group = modeId === 'party';

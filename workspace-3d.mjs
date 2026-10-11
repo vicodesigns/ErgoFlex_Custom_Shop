@@ -4,7 +4,7 @@ import { refineRoomSurfaces } from './room-refinement.mjs?v=scene-desk-styling-2
 import { polishRoomProp } from './room-polish.mjs?v=scene-desk-styling-20261010';
 import { RoomLife } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=scene-desk-styling-20261010';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-realism-20261011';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-window-20261011';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
@@ -625,7 +625,7 @@ export class WorkspaceRoom {
         this.decorateStation = null;
         this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null;
         this.propSupports = [];
-        this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.ceilingSurface = null; this.bounce = null; this.life = null;
+        this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.ceilingSurface = null; this.bounce = null; this.life = null; this.windowViewReady = Promise.resolve();
         if (id === 'product') { this.ready = Promise.resolve(); return; }
         let scene = ROOM_SCENES.find(s => s.id === id);
         if (INSTITUTIONAL_ROOMS[id]) {
@@ -709,7 +709,7 @@ export class WorkspaceRoom {
             refineRoomSurfaces(this);
         }
         const token = this.token;
-        this.ready = Promise.all([this.addProps(root, scene, this.token),
+        this.ready = Promise.all([this.windowViewReady, this.addProps(root, scene, this.token),
             this.roomLayout?.stations?.length ? this.addOfficeStations(root, options.createStation, this.token) : Promise.resolve()]).then(() => {
             if (token === this.token) this.life?.bind();
         });
