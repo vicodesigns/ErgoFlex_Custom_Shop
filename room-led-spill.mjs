@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ROOM_BOUNCE_FRAGMENT } from './room-bounce-light.mjs?v=ceiling-bounce-20261011';
 
 const fragment = `
 uniform vec3 efRoomStart[8];
@@ -50,7 +51,7 @@ export class RoomLedSpill {
             efRoomTexture:{value:null},efRoomWidth:{value:15},efRoomCounts:{value:Array(8).fill(14)}};
     }
     bind(room) {
-        this.dispose();this.root=room?.root;if(!this.root)return;
+        this.dispose();this.root=room?.root;this.bounce=room?.bounce;if(!this.root)return;
         this.root.traverse(obj=>{
             if(!obj.isMesh)return;
             const patch=source=>{
@@ -58,7 +59,7 @@ export class RoomLedSpill {
                 if(this.materials.has(source))return this.materials.get(source);
                 const mat=source.clone(),priorCompile=source.onBeforeCompile,priorKey=source.customProgramCacheKey();
                 mat.onBeforeCompile=(shader,renderer)=>{
-                    priorCompile.call(mat,shader,renderer);Object.assign(shader.uniforms,this.uniforms);
+                    priorCompile.call(mat,shader,renderer);Object.assign(shader.uniforms,this.uniforms,this.bounce?.uniforms);
                     shader.vertexShader='varying vec3 efRoomPosition; varying vec3 efRoomNormal;\n'+shader.vertexShader;
                     shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>
                         vec4 efRoomVertex=vec4(transformed,1.0);
@@ -66,11 +67,11 @@ export class RoomLedSpill {
                             efRoomVertex=instanceMatrix*efRoomVertex;
                         #endif
                         efRoomPosition=(modelMatrix*efRoomVertex).xyz;
-                        efRoomNormal=normalize(mat3(modelMatrix)*objectNormal);`);
-                    shader.fragmentShader=fragment+shader.fragmentShader;
-                    shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`outgoingLight+=efRoomLight(diffuseColor.rgb);\n#include <opaque_fragment>`);
+                        efRoomNormal=inverseTransformDirection(transformedNormal,viewMatrix);`);
+                    shader.fragmentShader=fragment+(this.bounce?ROOM_BOUNCE_FRAGMENT:'')+shader.fragmentShader;
+                    shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`outgoingLight+=efRoomLight(diffuseColor.rgb);\n${this.bounce?'outgoingLight+=efRoomBounce(diffuseColor.rgb)*(1.0-metalnessFactor);':''}\n#include <opaque_fragment>`);
                 };
-                mat.customProgramCacheKey=()=>priorKey+'|room-led-spill-v1';mat.needsUpdate=true;
+                mat.customProgramCacheKey=()=>priorKey+'|room-led-spill-v2'+(this.bounce?'|architectural-bounce-v1':'');mat.needsUpdate=true;
                 this.materials.set(source,mat);return mat;
             };
             const original=obj.material;obj.material=Array.isArray(original)?original.map(patch):patch(original);
@@ -96,10 +97,11 @@ export class RoomLedSpill {
             u.efRoomRange.value[row]=scale*(row===7?1700:2100);
         }
         this.root.userData.ledSpill={receivers:this.bindings.length,active:enabled,gain:u.efRoomGain.value,sources:8};
+        this.bounce?.updateLeds(pixels,u);
     }
     dispose() {
         for(const {obj,original} of this.bindings)obj.material=original;
         for(const mat of this.materials.values())mat.dispose();
-        this.bindings=[];this.materials.clear();this.root=null;
+        this.bindings=[];this.materials.clear();this.root=null;this.bounce=null;
     }
 }

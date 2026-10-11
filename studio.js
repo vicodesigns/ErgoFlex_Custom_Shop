@@ -3,7 +3,8 @@ import { normalizeCustomLook, normalizeCustomPalette, customLookUsesMusic, Custo
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=desk-objects-20261010';
+import { SceneDesks } from './scene-desks.mjs?v=notebook-scale-20261011';
+import { notebookTransform } from './notebook-transform.mjs';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
 import { mountSceneDeskUI } from './scene-desk-ui.mjs';
@@ -16,7 +17,7 @@ import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261010';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-desk-styling-20261010';
-import { RoomLedSpill } from './room-led-spill.mjs?v=room-furnishings-20261006';
+import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
 import { SurfaceArtwork } from './surface-artwork.mjs?v=scene-desk-styling-20261010';
 import { artworkSummary } from './artwork-config.mjs?v=scene-desk-styling-20261010';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-realism-20261011';
@@ -45,7 +46,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=library-realism-20261011';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=ceiling-bounce-20261011';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=scene-desk-styling-20261010';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=scene-desk-styling-20261010';
@@ -219,6 +220,7 @@ function plainLocalTransform(obj) {
 
 function applyPlainLocalTransform(obj, transform) {
     if (!transform) return;
+    transform = notebookTransform(obj, transform);
     transform = roomLifeDisplayTransform(obj, transform);
     obj.position.set(transform.p.x, transform.p.y, transform.p.z);
     obj.quaternion.set(transform.q.x, transform.q.y, transform.q.z, transform.q.w);
@@ -547,6 +549,8 @@ try {
     }
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
+let ceilingPreviewEnabled = new URLSearchParams(location.search).get('ceiling') === 'on' || readStore('ergoflex.ceilingPreview', 1, null)?.enabled === true;
+let roomBounceEnabled = readStore('ergoflex.roomBounce', 1, null)?.enabled !== false;
 let sceneDesks=null,sceneDeskUI=null,sceneDeskInternal=false;
 let roomInteractions = null, roomFurnitureSaveTimer = null, roomCollisionBlocked = false;
 let roomRearrangeEnabled = readStore('ergoflex.roomRearrange', 1, null)?.enabled !== false;
@@ -9884,6 +9888,15 @@ function applyRoomLighting() {
             workspaceRoom.roomAtmosphere?.(measured.mode, accent);
             workspaceRoom.life?.apply(measured.mode);
             workspaceRoom.life?.lightActivity();
+            const bounced = ceilingPreviewEnabled && roomBounceEnabled;
+            // Replace a little flat ambient fill with directional surface
+            // bounce. Starting from the authored profile avoids accumulation.
+            if (bounced) {
+                sceneLights.hemi.intensity *= .88;
+                sceneLights.fill.intensity *= .85;
+                scene.environmentIntensity *= .9;
+            }
+            workspaceRoom.bounce?.configure(sceneLights, { enabled: bounced, mode: measured.mode, ledStudio });
         }
     }
     for (const [id, value] of [['studio-exposure', exposure], ['studio-daylight', daylight], ['studio-accent', accent]]) {
@@ -10275,6 +10288,11 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     roomInteractions?.end();roomInteractions?.select(null);roomLedSpill.dispose();roomCollisionBlocked=false;roomSafety.reset();syncSafetyUI();
     workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
         createStation: (['office', 'coworking'].includes(choice.id) || INSTITUTIONAL_ROOMS[choice.id]) && loadedModel ? spec => captureOfficeStation(spec, homeScale, measured.layout.stations.indexOf(spec)) : null });
+    workspaceRoom?.setCeilingEnabled(ceilingPreviewEnabled);
+    const ceilingControl = document.getElementById('room-ceiling-control');
+    if (ceilingControl) { ceilingControl.hidden = !workspaceRoom?.roomLayout; ceilingControl.querySelector('input').checked = ceilingPreviewEnabled; }
+    const bounceControl = document.getElementById('room-bounce-control');
+    if (bounceControl) { bounceControl.hidden = !workspaceRoom?.roomLayout; const input=bounceControl.querySelector('input'); input.checked=roomBounceEnabled; input.disabled=!ceilingPreviewEnabled; }
     if (measured) {
         if (!preserveDesk) positionHomeDesk();
         if (!preserveDesk && persist && loadedModel) {
@@ -10700,6 +10718,7 @@ function focusCameraShortcut(key) {
 
 function focusObjects(objects, { animate = false } = {}) {
     if (!camera || !controls || !objects.length) return;
+    camera.fov = 35; camera.updateProjectionMatrix();
     if (loadedModel && objects.includes(loadedModel)) objects = [...objects, ...(workspaceAccessories?.objects() || [])];
     const box = new THREE.Box3(); objects.forEach(obj => box.expandByObject(obj));
     if (box.isEmpty()) return;
@@ -10863,11 +10882,32 @@ function initStudio() {
     const top = document.createElement('div'); top.className = 'viewer-heading';
     top.innerHTML = `<div class="eyebrow" id="scene-status">LOADING YOUR WORKSPACE</div><h2>Designed to move you.</h2><p id="build-summary"></p>`; viewer.append(top);
     const toolbar = document.createElement('div'); toolbar.className = 'studio-toolbar';
-    toolbar.innerHTML = `<label><span>Backdrop</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="room">Whole room</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><p id="scene-light-name"></p><label>Exposure <output id="studio-exposure-value"></output><input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Main light <output id="studio-daylight-value"></output><input id="studio-daylight" type="range" min="0.2" max="2" step="0.05" value="1"></label><label>Accent light <output id="studio-accent-value"></output><input id="studio-accent" type="range" min="0" max="2" step="0.05" value="1"></label><button id="reset-scene-light" type="button">Reset scene lighting</button><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
+    toolbar.innerHTML = `<label><span>Backdrop</span><select id="studio-environment"><option value="gallery">Gallery</option><option value="warm">Warm studio</option><option value="slate" selected>Slate studio</option></select></label><label><span>Camera</span><select id="camera-view"><option value="hero">Perspective</option><option value="room">Whole room</option><option value="inside">Inside room</option><option value="front">Front</option><option value="side">Side</option><option value="top">Top</option></select></label><button id="fit-view" title="Fit the whole desk in view">Fit</button><span class="camera-shortcuts" role="group" aria-label="Camera shortcuts"><button data-camera-focus="desktop" title="Frame the desktop and shelf">Desktop</button><button data-camera-focus="wheels" title="Frame the omni wheels">Wheels</button><button data-camera-focus="actuators" title="Frame the linear actuators">Actuators</button><button data-camera-focus="columns" title="Frame the lift columns">Columns</button></span><button id="rotate-scene" aria-pressed="false">Orbit</button><button id="grid-toggle" aria-pressed="false">Grid</button><button id="capture-view">Capture ↗</button><details class="render-settings"><summary>Light & quality</summary><div><p id="scene-light-name"></p><label>Exposure <output id="studio-exposure-value"></output><input id="studio-exposure" type="range" min="0.6" max="1.6" step="0.05" value="1.02"></label><label>Main light <output id="studio-daylight-value"></output><input id="studio-daylight" type="range" min="0.2" max="2" step="0.05" value="1"></label><label>Accent light <output id="studio-accent-value"></output><input id="studio-accent" type="range" min="0" max="2" step="0.05" value="1"></label><button id="reset-scene-light" type="button">Reset scene lighting</button><label>Quality<select id="render-quality"><option value="1">Balanced</option><option value="2" selected>High</option></select></label></div></details>`;
     toolbar.querySelector('#studio-environment').insertAdjacentHTML('beforeend', '<option value="led">LED studio</option>');
     const paletteButton = document.createElement('button'); paletteButton.id = 'room-desk-palette'; paletteButton.type = 'button';
     paletteButton.textContent = 'Scene palette'; paletteButton.hidden = true; paletteButton.onclick = resetSceneDeskStyle;
     toolbar.append(paletteButton);
+    const ceilingControl = document.createElement('label'); ceilingControl.id = 'room-ceiling-control'; ceilingControl.hidden = true;
+    ceilingControl.className = 'check-label';
+    ceilingControl.title = 'Ceiling is visible inside the room and cuts away when viewed from above.';
+    ceilingControl.innerHTML = '<input type="checkbox" id="room-ceiling-toggle"><span>Ceiling preview</span>';
+    ceilingControl.querySelector('input').onchange = e => {
+        ceilingPreviewEnabled = e.target.checked;
+        writeStore('ergoflex.ceilingPreview', { v: 1, enabled: ceilingPreviewEnabled });
+        workspaceRoom?.setCeilingEnabled(ceilingPreviewEnabled);
+        const bounceInput = document.getElementById('room-bounce-toggle');
+        if (bounceInput) bounceInput.disabled = !ceilingPreviewEnabled;
+        applyRoomLighting();
+        if (camera) workspaceRoom?.update(camera);
+    };
+    toolbar.append(ceilingControl);
+    const bounceControl = document.createElement('label'); bounceControl.id = 'room-bounce-control'; bounceControl.hidden = true;
+    bounceControl.className = 'check-label'; bounceControl.title = 'Approximate light reflected once by the ceiling, walls and floor, including desk LED colours. Enable Ceiling preview to compare.';
+    bounceControl.innerHTML = '<input type="checkbox" id="room-bounce-toggle"><span>Bounced lighting</span>';
+    bounceControl.querySelector('input').onchange = e => {
+        roomBounceEnabled = e.target.checked; writeStore('ergoflex.roomBounce', { v: 1, enabled: roomBounceEnabled }); applyRoomLighting();
+    };
+    toolbar.append(bounceControl);
     const rearrangeControl=document.createElement('label');rearrangeControl.id='room-rearrange-control';rearrangeControl.hidden=true;
     rearrangeControl.innerHTML='<input type="checkbox" id="room-rearrange-toggle" aria-describedby="room-interaction-hint"><span>Rearrange items</span>';
     rearrangeControl.querySelector('input').onchange=e=>setRoomRearrangeEnabled(e.target.checked);
@@ -10978,6 +11018,18 @@ function initStudio() {
     });
     document.getElementById('camera-view').onchange = e => {
         if (!camera || !loadedModel) return;
+        if (e.target.value === 'inside') {
+            if (!workspaceRoom?.roomLayout) { e.target.value = 'hero'; e.target.dispatchEvent(new Event('change')); return; }
+            const { width, depth, height, back } = workspaceRoom.roomLayout;
+            workspaceRoom.root.updateWorldMatrix(true, false);
+            const eye = workspaceRoom.root.localToWorld(new THREE.Vector3(width * .23, Math.min(1600, height - 600), back + depth - 900));
+            const target = workspaceRoom.root.localToWorld(new THREE.Vector3(-width * .17, Math.min(1500, height - 700), back + depth * .25));
+            // A wide interior lens includes the ceiling and work surfaces in
+            // compact rooms. Product and whole-room framing restore 35°.
+            camera.fov = 65; camera.updateProjectionMatrix();
+            controls.minDistance = CLOSEUP_MIN_DISTANCE;
+            startCameraTween(eye, target); return;
+        }
         if (e.target.value === 'room') {
             const dock = document.getElementById('motion-dock');
             if (dock && !dock.classList.contains('collapsed')) document.getElementById('motion-dock-toggle')?.click();

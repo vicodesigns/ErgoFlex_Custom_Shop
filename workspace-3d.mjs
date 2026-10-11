@@ -11,6 +11,7 @@ import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gal
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=groove-routines-20261002';
 import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
+import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-20261011';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -610,6 +611,7 @@ export class WorkspaceRoom {
         this.scene = scene; this.scale = millimetreScale; this.id = 'product';
         this.root = null; this.walls = []; this.token = 0; this.ready = Promise.resolve();
         this.missingProps = [];
+        this.ceilingEnabled = false; this.ceilingSurface = null;
         this.ownedMaterials = new Set();
     }
     set(id, options = {}) {
@@ -623,7 +625,7 @@ export class WorkspaceRoom {
         this.decorateStation = null;
         this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null;
         this.propSupports = [];
-        this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.life = null;
+        this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.ceilingSurface = null; this.bounce = null; this.life = null;
         if (id === 'product') { this.ready = Promise.resolve(); return; }
         let scene = ROOM_SCENES.find(s => s.id === id);
         if (INSTITUTIONAL_ROOMS[id]) {
@@ -702,6 +704,7 @@ export class WorkspaceRoom {
         else if (INSTITUTIONAL_ROOMS[id]) buildInstitutionalRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else this.buildShell(root, scene);
         if (this.roomLayout) {
+            this.buildCeiling();
             this.life = new RoomLife(this, { material, mesh, box, rod, sphere, markSceneAsset });
             refineRoomSurfaces(this);
         }
@@ -933,6 +936,22 @@ export class WorkspaceRoom {
         this.ensureAssetRoot().add(object);
         return object;
     }
+    buildCeiling() {
+        const { width, depth, height, back } = this.roomLayout;
+        const group = this.ceilingSurface = new THREE.Group();
+        group.name = 'Ceiling surface · cutaway preview';
+        group.userData.presentationOnly = true;
+        const dark = ['music', 'gaming', 'scifi'].includes(this.id);
+        const plaster = material(dark ? '#343a40' : '#e8e5dd', { roughness: .94, metalness: 0 });
+        plaster.userData.roomSurface = 'plaster';
+        const plane = mesh(group, new THREE.PlaneGeometry(width, depth), plaster, [0, height, back + depth / 2]);
+        plane.rotation.x = Math.PI / 2; // The finished face points into the room.
+        plane.castShadow = false; plane.receiveShadow = true;
+        plane.userData.presentationOnly = true;
+        group.visible = false; this.root.add(group);
+        this.bounce = new RoomBounceLight(this);
+    }
+    setCeilingEnabled(enabled) { this.ceilingEnabled = !!enabled; }
     update(camera) {
         this.grounding?.update();
         for (const wall of this.walls) wall.obj.visible = (wall.sign || 1) * (camera.position[wall.axis] - wall.limit) > .05;
@@ -942,7 +961,8 @@ export class WorkspaceRoom {
             const eye = this.root.worldToLocal(camera.getWorldPosition(new THREE.Vector3()));
             const below = eye.y < this.roomLayout.height;
             for (const group of this.root.children)
-                if (group === this.ceilingFixture || /^Ceiling /i.test(group.name)) group.visible = below;
+                if (group === this.ceilingSurface) group.visible = this.ceilingEnabled && below;
+                else if (group === this.ceilingFixture || /^Ceiling /i.test(group.name)) group.visible = below;
         }
     }
 }

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { notebookTransform } from './notebook-transform.mjs';
 
 export const DESK_SURFACES={desktop:'Desktop',shelf:'Top shelf','lower-shelf':'Lower shelf','base-shelf':'Base shelf'};
 const phases=['morning','afternoon','evening','night','party'];
@@ -32,6 +33,7 @@ export class SceneDeskObjects {
         const mount=r.rig.mounts[saved.role];if(!mount)return;
         // Keep the original object hidden when removed, so defaults never return
         // after switching desks or changing the active daypart.
+        saved.transform=notebookTransform(obj,saved.transform);
         mount.add(obj);apply(obj,saved.transform);
         this.manager.ctx.unregisterProp?.(obj);
         obj.userData.deskObject={desk:r.id,id};obj.userData.sceneAsset=false;delete obj.userData.editorId;
