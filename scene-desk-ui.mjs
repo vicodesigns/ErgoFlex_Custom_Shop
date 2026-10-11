@@ -1,3 +1,4 @@
+import { mountDeskObjectUI } from './scene-desk-object-ui.mjs';
 export function mountSceneDeskUI(parent,manager){
     const panel=document.createElement('details');panel.className='scene-desk-panel';panel.open=false;
     panel.innerHTML=`<summary>Desks <span data-desk-summary></span></summary>
@@ -10,6 +11,7 @@ export function mountSceneDeskUI(parent,manager){
         <button type="button" data-desks-play>Play group Grooves</button><button type="button" data-desks-stop>Stop</button>
         <span role="status" aria-live="polite" data-desk-status>Move the selected desk with the controls, then save or record.</span></div></details>`;
     parent.append(panel);
+    const objects=mountDeskObjectUI(panel,manager);
     const q=s=>panel.querySelector(s);
     q('[data-desk-select]').onchange=e=>manager.select(e.target.value);
     q('[data-desk-size]').onchange=e=>manager.setSize(e.target.value);
@@ -21,7 +23,7 @@ export function mountSceneDeskUI(parent,manager){
     q('[data-desk-play]').onclick=()=>manager.play();q('[data-desks-play]').onclick=()=>manager.play(true);
     q('[data-desks-stop]').onclick=()=>{manager.stop();manager.ctx.halt();};
     return {panel,sync(){
-        panel.hidden=!manager.key;
+        panel.hidden=!manager.key;objects.sync();
         const select=q('[data-desk-select]'),ids=[...manager.records.keys()];
         const signature=ids.map(id=>id+':'+manager.records.get(id).state.name).join('|');
         if(select.dataset.signature!==signature){select.replaceChildren();for(const id of ids){const option=document.createElement('option');option.value=id;option.textContent=manager.records.get(id).state.name;select.add(option);}select.dataset.signature=signature;}

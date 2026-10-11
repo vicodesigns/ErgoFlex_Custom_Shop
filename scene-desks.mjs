@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { cleanSceneDeskData, cleanDeskRecording, sampleDeskRecording, SCENE_DESKS_KEY } from './scene-desk-data.mjs';
+import { SceneDeskObjects } from './scene-desk-objects.mjs';
 
 const descendant=(o,parent)=>{for(let p=o;p;p=p.parent)if(p===parent)return true;return false;};
 const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
@@ -13,6 +14,7 @@ export class SceneDesks {
         this.selected=null;this.key=null;this.recording=null;this.playing=null;this.drag=null;this.saveElapsed=0;
         this.ray=new THREE.Raycaster();this.pointer=new THREE.Vector2();
         this.highlight=new THREE.Box3Helper(new THREE.Box3(),0x45cfac);this.highlight.visible=false;ctx.scene.add(this.highlight);
+        this.objects=new SceneDeskObjects(this);
     }
     get roomData(){return this.data.rooms[this.key];}
     get active(){return this.records.get(this.selected);}
@@ -22,6 +24,7 @@ export class SceneDesks {
     capture(){
         if(!this.key||!this.roomData)return;
         for(const [id,r] of this.records){
+            this.objects.capture(r);
             if(id===this.selected)Object.assign(r.state,this.ctx.readLive(r));
             else if(r.group?.parent){r.state.pose={x:r.group.position.x,z:r.group.position.z,yaw:r.group.rotation.y};}
             this.roomData.desks[id]=clone(r.state);
@@ -29,7 +32,7 @@ export class SceneDesks {
         this.roomData.selected=this.selected;
     }
     dispose(){
-        this.stop();this.endDrag();this.capture();
+        this.stop();this.objects.endDrag();this.objects.selected=null;this.endDrag();this.capture();
         for(const r of this.records.values()){if(r.rig){this.ctx.unregisterBody?.(r.group);this.ctx.disposeDress?.(r);}r.rig?.dispose();}
         this.records.clear();this.selected=null;this.key=null;this.highlight.visible=false;
     }
@@ -82,7 +85,7 @@ export class SceneDesks {
         }else if(r.primary){
             this.ctx.copyMainDress?.(rig.mounts);
         }
-        r.rig=rig;r.renderedStyle=JSON.stringify(r.state.style);r.group=group;this.ctx.room().root.add(group);this.ctx.registerBody?.(group);this.place(r);return rig;
+        r.rig=rig;r.renderedStyle=JSON.stringify(r.state.style);r.group=group;this.ctx.room().root.add(group);this.ctx.registerBody?.(group);this.place(r);this.objects.bind(r);return rig;
     }
     place(r){
         if(!r.group)return;
@@ -91,7 +94,7 @@ export class SceneDesks {
     }
     select(id){
         const next=this.records.get(id);if(!next||id===this.selected)return !!next;
-        this.stop();this.ctx.halt();this.capture();
+        this.objects.endDrag();this.objects.selected=null;this.stop();this.ctx.halt();this.capture();
         const old=this.active;
         if(old){this.ensureRig(old);this.ctx.restyle?.(old);old.rig.updatePose(old.state.height,old.state.tilt);this.place(old);old.rig.setBodyVisible(true);}
         this.selected=id;this.ensureRig(next);this.ctx.restyle?.(next);this.ctx.activate?.(next);this.ctx.writeLive(next);next.rig.setBodyVisible(false);
@@ -109,6 +112,8 @@ export class SceneDesks {
         return null;
     }
     down(e){
+        if(this.objects.down(e))return true;
+        if(this.objects.editing)return false;
         if(e.target!==this.ctx.canvas||e.button!==0||!this.ctx.rearrange()||e.shiftKey||e.altKey||e.ctrlKey||e.metaKey)return false;
         const picked=this.pick(e);if(!picked)return false;
         this.select(picked.id);this.ctx.halt();
@@ -119,6 +124,7 @@ export class SceneDesks {
         e.preventDefault();e.stopImmediatePropagation();return true;
     }
     moveDrag(e){
+        if(this.objects.moveDrag(e))return true;
         const d=this.drag;if(!d||e.pointerId!==d.pointer)return false;
         const rect=this.ctx.canvas.getBoundingClientRect();this.pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);this.ray.setFromCamera(this.pointer,this.ctx.camera);
         const point=new THREE.Vector3();
@@ -128,6 +134,7 @@ export class SceneDesks {
         e.preventDefault();e.stopImmediatePropagation();return true;
     }
     endDrag(e){
+        if(e&&this.objects.endDrag(e))return true;
         const d=this.drag;if(!d||(e&&e.pointerId!==d.pointer))return false;
         this.drag=null;if(this.ctx.canvas.hasPointerCapture(d.pointer))this.ctx.canvas.releasePointerCapture(d.pointer);
         this.ctx.controls.enabled=d.controls;this.ctx.canvas.style.cursor='';this.persist();if(d.changed)this.ctx.edit?.(d.before,this.serialize());
@@ -149,7 +156,7 @@ export class SceneDesks {
         if(!this.roomData||this.records.size>=24)return false;
         this.stop();this.capture();const before=this.serialize(),state=clone(this.active?.state||this.ctx.readLive());
         const pose=this.ctx.freePosition(size);if(!pose){this.ctx.status('There is no clear space for another desk. Rearrange items first.');return false;}
-        const id='added-'+crypto.randomUUID();Object.assign(state,{name:'Desk '+(this.records.size+1),size,pose,added:true,phases:{}});
+        const id='added-'+crypto.randomUUID();Object.assign(state,{name:'Desk '+(this.records.size+1),size,pose,added:true,phases:{},objects:{}});
         const r={id,state};this.records.set(id,r);this.ensureRig(r);this.place(r);this.select(id);this.ctx.edit?.(before,this.serialize());return id;
     }
     remove(){
@@ -238,6 +245,7 @@ export class SceneDesks {
             if(!playing&&this.active.poseAt!==poseAt){this.active.rig?.updatePose(this.active.state.height,this.active.state.tilt);this.active.poseAt=poseAt;}
             this.highlight.box.copy(this.ctx.liveBox());this.highlight.visible=this.ctx.rearrange();
         }
+        for(const r of this.records.values())this.objects.phase(r);
         this.ctx.updateLights?.(dt);this.saveElapsed+=dt;if(this.saveElapsed>=1&&!playing){this.saveElapsed=0;this.capture();this.ctx.writeStore?.(SCENE_DESKS_KEY,cleanSceneDeskData(this.data));this.sync();}
     }
     sync(){this.ctx.sync?.(this);}

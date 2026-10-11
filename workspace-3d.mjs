@@ -255,7 +255,7 @@ function workingSurface(obj) {
 export class WorkspaceAccessories {
     constructor(scene, registry, millimetreScale, model) {
         this.scene = scene; this.items = new Map(); this.mounts = new Map(); this.scale = millimetreScale; this.dressToken = 0;
-        for (const [role, name] of [['desktop', 'Desktop_3'], ['shelf', 'Top_Shelf_4']]) {
+        for (const [role, name] of [['desktop', 'Desktop_3'], ['shelf', 'Top_Shelf_4'], ['lower-shelf', 'Top_Shelf_3'], ['base-shelf', 'Base_Panels_3']]) {
             const anchor = [...registry.values()].find(e => e.name === name && !e.isClone)?.obj;
             if (!anchor) continue;
             const surface = workingSurface(anchor);
@@ -267,7 +267,8 @@ export class WorkspaceAccessories {
             // and out of the AR export, so it gets its own group.
             const dress = new THREE.Group(); dress.name = `Scene dressing:${role}`; dress.matrixAutoUpdate = false; scene.add(dress);
             this.mounts.set(role, { anchor, group, dress, relative: anchor.matrixWorld.clone().invert().multiply(world),
-                depth: (surface.bounds.max.x - surface.bounds.min.x) / millimetreScale });
+                depth: (surface.bounds.max.x - surface.bounds.min.x) / millimetreScale,
+                width: (surface.bounds.max.z - surface.bounds.min.z) / millimetreScale });
         }
         if (model) {
             model.updateWorldMatrix(true, false);

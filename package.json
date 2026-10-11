@@ -39,7 +39,8 @@
     "test:artwork": "node tests/artwork-config-test.mjs && node tests/surface-artwork-test.cjs",
     "test:portal-ui": "node tests/portal-ui-test.cjs",
     "test:scene-desks": "node tests/scene-desk-data-test.mjs && node tests/scene-desks-test.cjs",
-    "test:room-ceilings": "node tests/room-ceilings-test.cjs"
+    "test:room-ceilings": "node tests/room-ceilings-test.cjs",
+    "test:desk-objects": "node tests/scene-desk-data-test.mjs && node tests/scene-desk-objects-test.cjs"
   },
   "repository": {
     "type": "git",

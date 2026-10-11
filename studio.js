@@ -3,15 +3,15 @@ import { normalizeCustomLook, normalizeCustomPalette, customLookUsesMusic, Custo
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=scene-desk-editor-20261010';
+import { SceneDesks } from './scene-desks.mjs?v=desk-objects-20261010';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
 import { mountSceneDeskUI } from './scene-desk-ui.mjs';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
-import { RoomGroove } from './room-groove-runtime.mjs?v=scene-desk-editor-20261010';
+import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=scene-desk-editor-20261010';
+import { RoomInteractions } from './room-interactions.mjs?v=desk-objects-20261010';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261010';
@@ -45,7 +45,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=scene-desk-editor-20261010';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=desk-objects-20261010';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=scene-desk-styling-20261010';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=scene-desk-styling-20261010';
@@ -563,7 +563,7 @@ function initSceneDeskEditing() {
     const refresh=()=>{
         if(!sceneDeskUI){const hint=document.getElementById('room-interaction-hint');if(hint?.parentElement){sceneDeskUI=mountSceneDeskUI(hint.parentElement,sceneDesks);hint.before(sceneDeskUI.panel);}}
         sceneDeskUI?.sync();if(workspaceRoom)workspaceRoom.sceneDeskRecords=sceneDesks.records;
-        for(const r of sceneDesks.records.values())if(r.group){r.group.userData.sceneDeskActive=r.id===sceneDesks.selected;if(r.primary)for(const m of Object.values(r.rig?.mounts||{}))m.visible=r.id!==sceneDesks.selected;}
+        for(const r of sceneDesks.records.values())if(r.group){r.group.userData.sceneDeskActive=r.id===sceneDesks.selected;}
         const signature=sceneDesks.key+':'+sceneDesks.selected+':'+[...sceneDesks.records.values()].map(r=>r.group?.uuid).join(',');
         if(signature!==groundingSignature&&sceneDesks.key&&!sceneDesks.drag){groundingSignature=signature;roomInteractions?.bind(workspaceRoom);}
         const dock=document.getElementById('motion-dock');if(dock)dock.setAttribute('aria-label','Movement controls · '+(sceneDesks.active?.state.name||'ErgoFlex desk'));
@@ -618,10 +618,12 @@ function initSceneDeskEditing() {
         },
         restyle:r=>{if(r.rig&&r.renderedStyle!==JSON.stringify(r.state.style)){const style=currentDeskStyle();sceneDeskInternal=true;try{applyDeskStyle(r.state.style);r.rig.restyle();r.renderedStyle=JSON.stringify(r.state.style);}finally{applyDeskStyle(style);sceneDeskInternal=false;}}},
         liveObject:()=>loadedModel,liveBox:()=>deskCollisionBox()||new THREE.Box3(),
-        showLive:(enabled,main)=>{if(loadedModel)loadedModel.visible=enabled;if(workspaceAccessories){workspaceAccessories.activeDeskDress=main;workspaceAccessories.update();}const body=document.querySelector('#motion-dock .app-body');if(body)body.inert=!enabled;refresh();},
+        showLive:(enabled,main)=>{if(loadedModel)loadedModel.visible=enabled;if(workspaceAccessories){workspaceAccessories.activeDeskDress=sceneDesks.key?false:main;workspaceAccessories.update();}const body=document.querySelector('#motion-dock .app-body');if(body)body.inert=!enabled;refresh();},
         retireBody:obj=>{unregisterSceneAsset(obj);disposeWorkspaceObject(obj);},registerBody:registerSceneAsset,unregisterBody:unregisterSceneAsset,
-        copyMainDress:mounts=>{for(const [role,m] of workspaceAccessories.mounts)if(m.dress&&mounts[role])for(const obj of m.dress.children){const copy=obj.clone(true);copy.traverse(o=>{o.userData={...o.userData,sharedProp:true,sceneAsset:false};delete o.userData.editorId;});mounts[role].add(copy);}},
+        copyMainDress:mounts=>{for(const [role,m] of workspaceAccessories.mounts)if(m.dress&&mounts[role])for(const obj of m.dress.children){unregisterSceneAsset(obj);const copy=obj.clone(true);copy.traverse(o=>{o.userData={...o.userData,sharedProp:true,sceneAsset:false};delete o.userData.editorId;});mounts[role].add(copy);}},
         disposeDress:r=>{for(const m of Object.values(r.rig?.mounts||{}))for(const child of [...m.children]){unregisterSceneAsset(child);disposeWorkspaceObject(child);}},
+        loadProp:async id=>{await PROP_LIBRARY.loadIndex();return PROP_LIBRARY.instance(id);},propEntry:id=>PROP_LIBRARY.entry(id),
+        objectName:obj=>PROP_LIBRARY.entry(obj.userData.propId)?.name||obj.name||sceneAssetName(obj),disposeObject:disposeWorkspaceObject,unregisterProp:unregisterSceneAsset,loadPropIndex:()=>PROP_LIBRARY.loadIndex(),
         halt:()=>haltAllMotion(),dragLive:(x,z)=>{if(roomSafety.alert)return;applyGlideOffset(glideOffset.clone().add(new THREE.Vector3(x,0,z)),{collide:true});glideTarget.copy(glideOffset);workspaceAccessories.update();},
         freePosition:size=>freeDeskPosition(workspaceRoom,sceneDesks.records,size),
         planPath:(r,setting)=>planDeskPath(workspaceRoom,r,setting),samplePath:sampleDeskPath,
@@ -2347,6 +2349,7 @@ function updateBoxSelectHint() {
 }
 
 function onCanvasClick(event) {
+    if(sceneDesks?.objects.click(event))return;
     if(!isSelectionMode&&!rigPickMode&&!isPickingPivot&&!surfaceArtwork?.picking){const picked=sceneDesks?.pick(event);if(picked?.id&&picked.id!==sceneDesks.selected){sceneDesks.select(picked.id);return;}}
     if (surfaceArtwork?.handlePick(event, camera, canvas, interactableObjects)) return;
     if (rigPickMode) {
@@ -10296,6 +10299,8 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
         if (hydrationToken === sceneAssetHydrationToken) {
             workspaceAccessories?.setDayDress(measuredRoomProfile()?.mode || 'morning');
             sceneDesks?.bind(workspaceRoom);
+            await sceneDesks?.objects.ready;
+            if(hydrationToken!==sceneAssetHydrationToken)return;
             roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
             syncGrooveUI(roomGroove?.state || {});
         }

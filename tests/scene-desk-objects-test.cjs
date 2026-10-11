@@ -1,0 +1,62 @@
+const assert=require('node:assert/strict'),p=require('puppeteer'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const root=path.resolve(__dirname,'..');
+const server=http.createServer((req,res)=>{const file=path.join(root,decodeURIComponent(new URL(req.url,'http://x').pathname).replace(/^\/$/,'/index.html'));if(!file.startsWith(root+path.sep))return res.writeHead(403).end();fs.readFile(file,(error,data)=>{if(error)return res.writeHead(404).end();res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.glb':'model/gltf-binary','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp'})[path.extname(file)]||'application/octet-stream');res.end(data);});});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await p.launch({headless:true,protocolTimeout:600000,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader','--disable-dev-shm-usage']});try{
+const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.stack));await page.setViewport({width:1440,height:1000});
+await page.goto(`http://127.0.0.1:${server.address().port}/?room=hospital&view=room`,{waitUntil:'domcontentloaded'});
+await page.waitForFunction(()=>window.ErgoFlex?.sceneDesks?.active&&getComputedStyle(document.querySelector('#loader')).display==='none',{timeout:240000});
+await page.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;ErgoFlex.renderer.setAnimationLoop(null);ErgoFlex.renderer.setPixelRatio(.5);});
+const result=await page.evaluate(async()=>{
+ const ef=ErgoFlex,m=ef.sceneDesks,editor=m.objects,T=await import('three'),fail=[],check=(v,msg)=>{if(!v)fail.push(msg);};
+ const main=m.active,initial=m.serialize();check(main.objects.size>0,'Missing authored main objects');
+ check(Object.keys(main.rig.mounts).length===4,'Missing desk surface mounts');
+ const original=[...main.objects.values()].find(i=>i.obj.visible),originalId=original.id;
+ editor.select(originalId);editor.change({x:123,z:80,rotation:45,scale:75});
+ check(Math.abs(original.obj.position.x-123)<.01,'Position edit ignored');check(Math.abs(original.obj.rotation.y-Math.PI/4)<.01,'Rotation edit ignored');
+ const secondary=[...m.records.values()].find(r=>!r.primary);m.select(secondary.id);
+ const added=await editor.add('apple','lower-shelf');check(!!added,'Library addition failed');
+ check(m.active.objects.get(added).obj.parent===m.active.rig.mounts['lower-shelf'],'Object attached to wrong surface');
+ editor.change({x:70,z:-30,rotation:30,scale:90});const saved=structuredClone(m.active.state.objects[added]);
+ const pose=structuredClone(m.active.state);pose.height=42;pose.tilt=15;pose.pose.x+=40;m.ctx.writeLive({...m.active,state:pose});m.update(.05);
+ check(JSON.stringify(m.active.state.objects[added])===JSON.stringify(saved),'Moving desk changed object local transform');
+ m.setSize('60x30');check(m.active.objects.get(added).obj.parent===m.active.rig.mounts['lower-shelf'],'Resize detached object');
+ editor.change({role:'base-shelf'});check(m.active.objects.get(added).obj.parent===m.active.rig.mounts['base-shelf'],'Surface transfer ignored');
+ m.select('main');check(Math.abs(main.objects.get(originalId).obj.position.x-123)<.01,'Switching desks lost edited object');
+ editor.select(originalId);editor.remove();check(!original.obj.visible,'Authored object removal failed');
+ const proj=ef.serializeProject();check(proj.presentation.sceneDesks.rooms[m.key].desks.main.objects[originalId].removed,'Project lost authored removal');
+ const imported=ef.applyProject(proj,{confirmSoft:()=>true});check(imported.ok,'Import rejected');await ef.workspaceRoom.ready;
+ check(!m.records.get('main').objects.get(originalId).obj.visible,'Import restored removed default');
+ m.select(secondary.id);const restored=m.active.objects.get(added);check(!!restored,'Import lost library object');check(restored.saved.role==='base-shelf','Import lost attachment');
+ check(Math.abs(restored.obj.position.x-70)<.01,'Import lost position');editor.select(added);editor.remove();check(!restored.obj.visible,'Library removal ignored');
+ ef.undo();await ef.workspaceRoom.ready;check(m.active.objects.get(added).obj.visible,'Undo did not restore removed library object');
+ ef.redo();await ef.workspaceRoom.ready;check(!m.active.objects.has(added),'Redo restored removed library object');
+ ef.undo();await ef.workspaceRoom.ready;editor.select(added);editor.change({role:'desktop',x:40,z:100,scale:100});m.persist();
+ ef.setMeasuredRoomMode('hospital','night',false);m.update(.05);check(m.active.objects.get(added).obj.visible,'User object disappeared at night');
+ check(!m.records.get('main').objects.get(originalId).obj.visible,'Daypart resurrected deleted object');
+ return{fail,key:m.key,desk:secondary.id,object:added};
+});console.log(JSON.stringify(result,null,2));assert.deepEqual(result.fail,[]);
+// Exercise the public UI and actual pointer path; direct API calls alone do
+// not catch the window capture handler or an overlay blocking the canvas.
+await page.setViewport({width:1600,height:1400});
+await page.click('.scene-desk-panel > summary');await page.click('.scene-desk-object-panel > summary');
+await page.select('[data-object-select]',result.object);
+assert.equal(await page.$eval('[data-object-edit]',e=>e.checked),true);
+await page.$eval('[data-object-x]',e=>{e.value='90';e.dispatchEvent(new Event('change',{bubbles:true}));});
+assert.equal(await page.evaluate(()=>ErgoFlex.sceneDesks.objects.current.obj.position.x),90,'UI input did not edit object');
+await page.$eval('.scene-desk-panel',e=>e.open=false);await new Promise(r=>setTimeout(r,600));
+const point=await page.evaluate(async()=>{
+ const m=ErgoFlex.sceneDesks,T=await import('three'),obj=m.objects.current.obj;
+ const center=new T.Box3().setFromObject(obj).getCenter(new T.Vector3());m.ctx.controls.target.copy(center);m.ctx.camera.position.copy(center).add(new T.Vector3(.5,1,1));m.ctx.controls.update();ErgoFlex.workspaceRoom.update(m.ctx.camera);ErgoFlex.renderer.render(m.ctx.scene,m.ctx.camera);
+ const rect=m.ctx.canvas.getBoundingClientRect(),p=center.project(m.ctx.camera),x=rect.left+(p.x+1)*rect.width/2,y=rect.top+(1-p.y)*rect.height/2;
+ for(let dy=-30;dy<=30;dy+=5)for(let dx=-30;dx<=30;dx+=5){const clientX=x+dx,clientY=y+dy;if(document.elementFromPoint(clientX,clientY)===m.ctx.canvas&&m.objects.pick({clientX,clientY})?.id===m.objects.selected)return{x:clientX,y:clientY};}return null;
+});assert.ok(point,'No clickable library object point');
+const dragBefore=await page.evaluate(()=>({id:ErgoFlex.sceneDesks.objects.selected,pose:structuredClone(ErgoFlex.sceneDesks.active.state.pose),x:ErgoFlex.sceneDesks.objects.current.obj.position.x,z:ErgoFlex.sceneDesks.objects.current.obj.position.z}));
+await page.mouse.move(point.x,point.y);await page.mouse.down();await page.mouse.move(point.x+25,point.y+5,{steps:5});await page.mouse.up();
+const dragAfter=await page.evaluate(()=>({id:ErgoFlex.sceneDesks.objects.selected,pose:ErgoFlex.sceneDesks.active.state.pose,x:ErgoFlex.sceneDesks.objects.current.obj.position.x,z:ErgoFlex.sceneDesks.objects.current.obj.position.z}));
+assert.equal(dragAfter.id,dragBefore.id,'Dragging selected a different prop');assert.deepEqual(dragAfter.pose,dragBefore.pose,'Prop drag moved whole desk');assert.ok(Math.hypot(dragAfter.x-dragBefore.x,dragAfter.z-dragBefore.z)>1,'Pointer drag failed');
+await page.$eval('.scene-desk-panel',e=>e.open=true);await page.$eval('.desk-object-library',e=>e.open=true);await page.type('[data-object-search]','apple');
+await page.evaluate(async()=>{const m=ErgoFlex.sceneDesks,T=await import('three'),c=new T.Box3().setFromObject(m.active.group).getCenter(new T.Vector3());m.ctx.controls.target.copy(c);m.ctx.camera.position.copy(c).add(new T.Vector3(1.8,1.6,2.5));m.ctx.controls.update();ErgoFlex.workspaceRoom.update(m.ctx.camera);ErgoFlex.renderer.render(m.ctx.scene,m.ctx.camera);});await page.screenshot({path:'/tmp/ef-desk-object-editor.png'});
+const beforeReload=await page.evaluate(()=>ErgoFlex.sceneDesks.serialize());await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.ErgoFlex?.sceneDesks?.active&&getComputedStyle(document.querySelector('#loader')).display==='none',{timeout:240000});await page.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;ErgoFlex.renderer.setAnimationLoop(null);});
+const afterReload=await page.evaluate(()=>ErgoFlex.sceneDesks.serialize());const rounded=v=>JSON.parse(JSON.stringify(v,(_k,x)=>typeof x==='number'?Math.round(x*1e6)/1e6:x));assert.deepEqual(rounded(afterReload.rooms[result.key].desks),rounded(beforeReload.rooms[result.key].desks),'Reload lost desk objects');assert.deepEqual(errors,[]);
+console.log('PASS authored and library props, four mounts, transforms, resize, desk movement, project import, removals, undo/redo, dayparts, real pointer dragging, UI and reload.');
+}finally{await browser.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

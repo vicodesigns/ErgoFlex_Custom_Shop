@@ -1695,3 +1695,18 @@
 .scene-desk-routines {margin-top:10px;}
 .scene-desk-row [role=status] {color:var(--ui-muted,#adbec9);}
 .controlled-scene-desk {position:absolute;bottom:100%;left:12px;padding:3px 8px;border-radius:6px 6px 0 0;background:var(--chip,#202c33);color:var(--text,#e5edf3);font:11px system-ui;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;}
+
+/* Desk props use the portal theme and keep the library inside a scroll area. */
+.scene-desk-object-panel { margin-top: 10px; border-top: 1px solid var(--ui-border); padding-top: 8px; }
+.scene-desk-object-panel summary { cursor: pointer; font-weight: 600; }
+.desk-object-note { font-size: 12px; max-width: 720px; color: var(--ui-muted); margin: 8px 0; }
+.desk-object-fields { display: flex; flex-wrap: wrap; gap: 10px; border: 1px solid var(--ui-border); border-radius: 10px; margin: 10px 0; padding: 10px; }
+.desk-object-fields label { display: grid; gap: 4px; font-size: 12px; }
+.desk-object-fields input { width: 125px; }
+.scene-desk-object-panel input, .scene-desk-object-panel select { color: var(--ui-text); background: var(--ui-glass); border: 1px solid var(--ui-border); border-radius: 7px; padding: 7px; }
+.scene-desk-object-panel select[data-object-select] { max-width: min(480px,75vw); }
+.desk-object-library-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(105px,1fr)); gap: 8px; max-height: 260px; overflow: auto; margin: 8px 0; max-width: 800px; }
+.scene-desk-object-panel .desk-object-card { display: grid; place-items: center; gap: 5px; padding: 8px; min-width: 0; font-size: 11px; text-align: center; color: var(--ui-text); background: var(--ui-glass); border: 1px solid var(--ui-border); border-radius: 8px; cursor: pointer; }
+.scene-desk-object-panel .desk-object-card:disabled { opacity: .45; cursor: default; }
+.desk-object-card img { width: 64px; height: 64px; object-fit: contain; border-radius: 6px; }
+@media(max-width:600px) { .desk-object-fields label { flex:1 1 120px; } .desk-object-fields input { width: 100%; box-sizing: border-box; } }

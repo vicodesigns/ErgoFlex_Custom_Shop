@@ -3,6 +3,19 @@ import { cleanDeskStyle } from './room-desk-styles.mjs';
 export const SCENE_DESKS_KEY = 'ergoflex.sceneDesksV1';
 const finite = (n,min,max) => Number.isFinite(n) && n>=min && n<=max;
 const deskId = id => typeof id==='string' && /^[a-z][a-z0-9-]{0,79}$/.test(id);
+export function cleanDeskObjects(value) {
+    const objects={};
+    for(const [id,v] of Object.entries(value||{})){
+        if(!deskId(id)||Object.keys(objects).length>=200||!['desktop','shelf','lower-shelf','base-shelf'].includes(v?.role))continue;
+        const t=v.transform;
+        if(!t||!['p','s'].every(k=>['x','y','z'].every(a=>finite(t[k]?.[a],k==='s'?0.00001:-100000,100000)))||!['x','y','z','w'].every(a=>finite(t.q?.[a],-1,1)))continue;
+        if(['x','y','z','w'].reduce((sum,a)=>sum+t.q[a]**2,0)<0.000001)continue;
+        if(v.added&&(!deskId(v.propId)))continue;
+        objects[id]={role:v.role,added:v.added===true,removed:v.removed===true,label:String(v.label||'Desk object').slice(0,100),
+            ...(v.added?{propId:v.propId}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
+    }
+    return objects;
+}
 export function cleanDeskPose(v) {
     if(!v || !finite(v.x,-100000,100000) || !finite(v.z,-100000,100000) || !finite(v.yaw,-10000,10000))return null;
     return {x:v.x,z:v.z,yaw:v.yaw};
@@ -48,7 +61,7 @@ export function cleanSceneDeskData(input) {
                 if(s)phases[phase]={...s,recording:cleanDeskRecording(v.phases[phase].recording)};
             }
             desks[id]={...setting,name:String(v.name||'ErgoFlex desk').slice(0,80),size:v.size,
-                added:v.added===true,phases,...(cleanDeskStyle(v.style)?{style:cleanDeskStyle(v.style)}:{})};
+                added:v.added===true,phases,objects:cleanDeskObjects(v.objects),...(cleanDeskStyle(v.style)?{style:cleanDeskStyle(v.style)}:{})};
         }
         const deleted=[...new Set((Array.isArray(room?.deleted)?room?.deleted:[]).filter(deskId))].slice(0,24);
         rooms[key]={desks,deleted,selected:desks[room?.selected]?room?.selected:Object.keys(desks)[0]||null};

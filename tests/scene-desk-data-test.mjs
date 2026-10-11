@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {cleanSceneDeskData,cleanDeskRecording,sampleDeskRecording} from '../scene-desk-data.mjs';
+import {cleanSceneDeskData,cleanDeskRecording,sampleDeskRecording,cleanDeskObjects} from '../scene-desk-data.mjs';
 const setting={pose:{x:400,z:1200,yaw:.3},height:40,tilt:0,lights:{color:'#286344',enabled:true}};
 const frames=[{t:0,x:0,z:0,yaw:0,height:36,tilt:0},{t:2,x:400,z:800,yaw:Math.PI*2,height:44,tilt:20}];
 const source={version:1,rooms:{'hospital/house':{selected:'station-review',deleted:['main'],desks:{'station-review':{...setting,name:'Review desk',size:'48x30',phases:{night:{...setting,recording:frames}}}}}}};
@@ -15,3 +15,11 @@ const broken=structuredClone(clean);broken.rooms['hospital/house'].desks['statio
 assert.deepEqual(cleanSceneDeskData(broken).rooms['hospital/house'].desks,{});
 assert.deepEqual(cleanSceneDeskData({rooms:{'hospital/house':null}}).rooms['hospital/house'],{desks:{},deleted:[],selected:null});
 console.log('Desk identities, per-setting poses, independent light settings, recording interpolation, full turns and invalid-file bounds passed.');
+
+const transform={p:{x:15,y:0,z:30},q:{x:0,y:0,z:0,w:1},s:{x:1000,y:1000,z:1000}};
+const objects=cleanDeskObjects({'object-apple':{role:'lower-shelf',added:true,propId:'apple',label:'Apple',transform},'default-desktop-0':{role:'desktop',removed:true,transform},'bad':{role:'wall',transform}});
+assert.equal(objects['object-apple'].propId,'apple');assert.equal(objects['default-desktop-0'].removed,true);assert.equal(objects.bad,undefined);
+transform.p.x=999;assert.equal(objects['object-apple'].transform.p.x,15);
+assert.deepEqual(cleanDeskObjects({bad:{role:'desktop',transform:{...transform,s:{x:0,y:1,z:1}}}}),{});
+assert.deepEqual(cleanDeskObjects({bad:{role:'desktop',transform:{...transform,q:{x:0,y:0,z:0,w:0}}}}),{});
+console.log('Desk prop attachments, additions, removed defaults, independent transforms and invalid inputs passed.');
