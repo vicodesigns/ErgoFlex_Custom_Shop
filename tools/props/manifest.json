@@ -12538,6 +12538,8 @@
     "mm": 679
    },
    "budget": 15000,
+   "material": { "color": [0.028, 0.034, 0.041], "metallic": 0.85, "roughness": 0.32 },
+   "repair": "ergoflex-collection",
    "collection": "ErgoFlex Collection",
    "license": "user-provided",
    "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications."

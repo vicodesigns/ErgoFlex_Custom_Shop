@@ -1,7 +1,7 @@
-import { mountDeskObjectUI } from './scene-desk-object-ui.mjs?v=ergoflex-collection-20261011';
+import { mountDeskObjectUI } from './scene-desk-object-ui.mjs?v=product-desk-objects-20261011';
 export function mountSceneDeskUI(parent,manager){
     const panel=document.createElement('details');panel.className='scene-desk-panel';panel.open=false;
-    panel.innerHTML=`<summary>Desks <span data-desk-summary></span></summary>
+    panel.innerHTML=`<summary><span data-desk-title>Desks</span> <span data-desk-summary></span></summary>
         <div class="scene-desk-row"><label>Control desk <select data-desk-select aria-label="Desk controlled by movement panel"></select></label>
         <label>Desktop <select data-desk-size><option value="48x30">48″ Standard</option><option value="60x30">60″ Extended</option></select></label>
         <button type="button" data-desk-add>Add desk</button><button type="button" data-desk-delete>Delete desk</button>
@@ -24,6 +24,11 @@ export function mountSceneDeskUI(parent,manager){
     q('[data-desks-stop]').onclick=()=>{manager.stop();manager.ctx.halt();};
     return {panel,sync(){
         panel.hidden=!manager.key;objects.sync();
+        const product=!!manager.active?.product;
+        q('[data-desk-title]').textContent=product?'Desk objects':'Desks';
+        panel.querySelector('.scene-desk-row').hidden=product;
+        panel.querySelector('.scene-desk-routines').hidden=product;
+        if(product)objects.panel.open=true;
         const select=q('[data-desk-select]'),ids=[...manager.records.keys()];
         const signature=ids.map(id=>id+':'+manager.records.get(id).state.name).join('|');
         if(select.dataset.signature!==signature){select.replaceChildren();for(const id of ids){const option=document.createElement('option');option.value=id;option.textContent=manager.records.get(id).state.name;select.add(option);}select.dataset.signature=signature;}
@@ -38,7 +43,7 @@ export function mountSceneDeskUI(parent,manager){
         q('[data-desk-play]').disabled=busy||!setting;
         q('[data-desks-play]').disabled=busy||![...manager.records.values()].some(r=>r.state.phases[phase]);
         q('[data-desks-stop]').disabled=!busy;
-        q('[data-desk-summary]').textContent=manager.active?'· '+manager.active.state.name+' · '+ids.length+' desks':'· Add a desk to this room';
+        q('[data-desk-summary]').textContent=manager.active?(product?'· Move, rotate, add or remove':'· '+manager.active.state.name+' · '+ids.length+' desks'):'· Add a desk to this room';
         q('[data-desk-setting]').textContent='· '+(manager.ctx.phaseLabel?.()||phase||'Current setting');
         q('[data-desk-status]').textContent=manager.recording?'Recording movement · up to 3 minutes':manager.playing?'Group Groove playing':setting?.recording.length?setting.recording.at(-1).t.toFixed(1)+' s recording saved for this setting':setting?'Position and lights saved for this setting':'Move the selected desk with the controls, then save or record.';
     }};

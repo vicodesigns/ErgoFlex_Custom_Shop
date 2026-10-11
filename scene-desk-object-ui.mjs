@@ -1,4 +1,4 @@
-import { DESK_SURFACES } from './scene-desk-objects.mjs';
+import { DESK_SURFACES } from './scene-desk-objects.mjs?v=product-desk-objects-20261011';
 
 export function mountDeskObjectUI(parent,manager){
     const editor=manager.objects,panel=document.createElement('details');panel.className='scene-desk-object-panel';
@@ -49,7 +49,7 @@ export function mountDeskObjectUI(parent,manager){
         q('fieldset').disabled=busy||!editor.current;
         for(const s of ['[data-object-target]','[data-object-search]','[data-object-category]'])q(s).disabled=busy||!r;
         for(const b of panel.querySelectorAll('.desk-object-card'))b.disabled=busy||!r;
-        const item=editor.current;if(item){const o=item.obj,values={role:item.saved.role,x:o.position.x,y:o.position.y,z:o.position.z,rotation:o.rotation.y*180/Math.PI,scale:o.scale.x/item.baseScale.x*100};for(const [field,v] of Object.entries(values)){const input=q(`[data-object-${field}]`);if(document.activeElement!==input)input.value=typeof v==='number'?Math.round(v*100)/100:v;}}
+        const item=editor.current;q('[data-object-y]').min=item?.obj.userData.accessoryId?-5000:0;q('[data-object-remove]').textContent=item?.obj.userData.accessoryId?'Remove accessory':'Remove object';if(item){const o=item.obj,values={role:item.saved.role,x:o.position.x,y:o.position.y,z:o.position.z,rotation:o.rotation.y*180/Math.PI,scale:o.scale.x/item.baseScale.x*100};for(const [field,v] of Object.entries(values)){const input=q(`[data-object-${field}]`);if(document.activeElement!==input)input.value=typeof v==='number'?Math.round(v*100)/100:v;}}
         q('[data-object-target]').value=editor.role;if(editor.loading)q('[data-object-library-status]').textContent='Adding object…';else if(entries.length)q('[data-object-library-status]').textContent=q('[data-object-library]').children.length+' objects · click one to add';
     }};
 }

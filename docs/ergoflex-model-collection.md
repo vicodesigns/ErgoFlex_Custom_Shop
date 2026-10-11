@@ -5,6 +5,7 @@
 - **Store → Start from:** Office, Artist, Gaming, Music studio, Library & study. Each applies the desk size, wood, base, trim and accessory selection together. Existing presets remain available.
 - **Store → Accessories:** landscape/portrait displays, dual monitor arm, keyboard tray, ergonomic/Apple keyboards, Logitech/Apple mice and artist accessories. Displays are purchased separately from arms.
 - **Studio → Object library → Collection → ErgoFlex Collection:** all 14 supplied models, including chairs, bookshelves, artist stool and guitar/amplifier.
+- **Product → Desk objects:** edit mounted purchase accessories or add library decoration to any of the four desk surfaces. Position, rotate, resize, drag and remove; changes save in this browser and travel with project files. Removing a purchased accessory also removes it from the purchase selection; Undo restores both the item and its placement.
 - **Room → Desks → Objects on this desk → Add from the object library:** choose ErgoFlex Collection, a desk part, then an object. These are decoration placements, separate from purchased accessories. Scale, position, rotate and remove using the existing editor.
 - **Save build** preserves the purchase configuration; project/room saves preserve decoration placements using the existing save system.
 
@@ -35,7 +36,7 @@ Sources are the user's GLBs in `/home/ergo/Manifest-Share/ErgoFlex/`, copied loc
 
 The fit dimensions are visualization estimates inferred from the CAD extents, mostly inch-based. They are not verified manufacturer mounting dimensions. Index bounds measure referenced vertices only, avoiding unused Draco/decimation vertices that disappear during GLB export.
 
-`tools/props/supplied_model_repairs.py` applies walnut cabinetry and cloth book colors to bookshelf islands, reinforces the artist stool's gas lift and gives the dual arm a graphite metal finish. Original source files stay untouched. Draco input becomes Meshopt output compatible with the existing loader. The guitar/amplifier remains relatively heavy (~140,000 triangles) to preserve its detail.
+`tools/props/supplied_model_repairs.py` applies walnut cabinetry and cloth book colors to bookshelf islands, reinforces the artist stool's gas lift and gives the dual arm a graphite metal finish. The keyboard tray uses charcoal metal (metallic 0.85, roughness 0.32), turned 80° to the right after fitting so its physical dimensions stay unchanged; input devices rest at the measured plate elevation when the tray is selected. Original source files stay untouched. Draco input becomes Meshopt output compatible with the existing loader. The guitar/amplifier remains relatively heavy (~140,000 triangles) to preserve its detail.
 
 Purchase models load asynchronously through PROP_LIBRARY, with guards against stale preset/selection loads. `workspaceAccessories.ready` is awaited by AR preparation. Mounted purchases follow the existing desk/shelf attachment matrices during height, tilt and glide. Two supplied display panels receive locally owned UV geometry, screen materials and optional stands; shared cache models are never modified. Screen preview shaders are not baked into the input files.
 
@@ -47,6 +48,7 @@ Floor decoration is not billed as a purchase accessory. Furniture models are ava
 
 ## Verification
 
+- `node tests/product-desk-objects-test.cjs`: Product editor and pointer dragging, purchase transforms, removal and Undo, surface transfers, resize, project import, reload and room switching.
 - `node tests/catalog-test.cjs`: presets, compatibility, exclusive choices and quoted pricing.
 - `node tests/ergoflex-collection-test.cjs`: all 14 models load at indexed bounds, five real UI presets, no stale duplicate models, tray follows lift/tilt, exported groups contain meshes, saved purchase build restores, room and desk object additions.
 - `node tools/props/thumbnails.mjs --collection 'ErgoFlex Collection'`: regenerate collection thumbnails.

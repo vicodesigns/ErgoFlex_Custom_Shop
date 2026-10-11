@@ -228,6 +228,9 @@ def run(job):
         sys.path.insert(0, os.path.dirname(__file__))
         from supplied_model_repairs import improve
         improve(job['id'])
+        # Repairs may rotate fitted geometry. Bake again so exported AABBs
+        # describe vertices, rather than rotated corners of the old bounds.
+        bake_transforms()
         objs = mesh_objects()
     reconnect_diffuse()
     fix_materials()

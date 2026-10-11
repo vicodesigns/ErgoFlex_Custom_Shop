@@ -29,12 +29,31 @@ export class SceneDeskObjects {
         this.ready=Promise.all([this.ready,...pending]);
         this.phase(r);
     }
+    // Purchased accessories retain their cart/export mounts. Only edited
+    // transforms override the catalog layout, so normal sizing still adapts.
+    syncAccessories(){
+        const r=this.manager.active;if(!r?.product)return;
+        const objects=this.manager.ctx.productAccessories(),live=new Set(objects);
+        for(const [id,item] of r.objects)if(item.obj.userData.accessoryId&&!live.has(item.obj)){
+            r.objects.delete(id);delete r.state.objects[id];if(this.selected===id)this.selected=null;
+        }
+        for(const obj of objects){
+            const id='accessory-'+obj.userData.accessoryId;
+            const item=r.objects.get(id);
+            if(item){if(item.saved.custom){this.purchaseMount(item.saved.role)?.add(obj);apply(obj,item.saved.transform);}continue;}
+            const role=this.manager.ctx.accessoryRole(obj),saved=r.state.objects[id]||{role,added:false,removed:false,label:this.manager.ctx.objectName(obj),transform:plain(obj)};
+            if(!saved.custom)saved.transform=plain(obj);
+            this.register(r,id,obj,saved,new THREE.Vector3(1,1,1));
+        }
+        this.manager.sync();
+    }
+    purchaseMount(role){return this.manager.ctx.purchaseMount?.(role);}
     register(r,id,obj,saved,baseScale){
         const mount=r.rig.mounts[saved.role];if(!mount)return;
         // Keep the original object hidden when removed, so defaults never return
         // after switching desks or changing the active daypart.
         saved.transform=notebookTransform(obj,saved.transform);
-        mount.add(obj);apply(obj,saved.transform);
+        (r.product&&obj.userData.accessoryId?this.purchaseMount(saved.role):mount)?.add(obj);apply(obj,saved.transform);
         this.manager.ctx.unregisterProp?.(obj);
         obj.userData.deskObject={desk:r.id,id};obj.userData.sceneAsset=false;delete obj.userData.editorId;
         r.state.objects[id]=saved;r.objects.set(id,{id,obj,saved,baseScale});
@@ -69,21 +88,26 @@ export class SceneDeskObjects {
     change(values){
         const m=this.manager,item=this.current,r=m.active;if(!item||m.playing||m.recording)return false;
         const before=m.serialize(),o=item.obj;
-        if(values.role&&r.rig.mounts[values.role]){r.rig.mounts[values.role].add(o);item.saved.role=values.role;this.role=values.role;o.position.y=0;}
-        for(const [field,axis] of [['x','x'],['y','y'],['z','z']])if(Number.isFinite(values[field]))o.position[axis]=Math.max(axis==='y'?0:-5000,Math.min(5000,values[field]));
+        if(r.product&&o.userData.accessoryId)item.saved.custom=true;
+        if(values.role&&r.rig.mounts[values.role]){(r.product&&o.userData.accessoryId?this.purchaseMount(values.role):r.rig.mounts[values.role]).add(o);item.saved.role=values.role;this.role=values.role;o.position.y=0;}
+        for(const [field,axis] of [['x','x'],['y','y'],['z','z']])if(Number.isFinite(values[field]))o.position[axis]=Math.max(axis==='y'&&!o.userData.accessoryId?0:-5000,Math.min(5000,values[field]));
         if(Number.isFinite(values.rotation))o.rotation.y=THREE.MathUtils.degToRad(values.rotation);
         if(Number.isFinite(values.scale))o.scale.copy(item.baseScale).multiplyScalar(Math.max(1,Math.min(500,values.scale))/100);
         o.updateMatrixWorld(true);m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
     }
     remove(){
         const m=this.manager,r=m.active,item=this.current;if(!item||m.playing||m.recording)return false;
-        const before=m.serialize();item.saved.removed=true;item.obj.visible=false;this.selected=null;
+        const before=m.serialize();
+        if(r.product&&item.obj.userData.accessoryId){
+            m.ctx.removeAccessory(item.obj.userData.accessoryId);this.selected=null;m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
+        }
+        item.saved.removed=true;item.obj.visible=false;this.selected=null;
         if(item.saved.added){r.objects.delete(item.id);delete r.state.objects[item.id];m.ctx.disposeObject?.(item.obj);}
         m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
     }
     pick(e){
         const m=this.manager,rect=m.ctx.canvas.getBoundingClientRect();m.pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);m.ray.setFromCamera(m.pointer,m.ctx.camera);
-        const hit=m.ray.intersectObjects([m.ctx.room()?.root,m.ctx.liveObject()].filter(Boolean),true).find(h=>shown(h.object)&&!h.object.material?.isShaderMaterial);
+        const hit=m.ray.intersectObjects([m.ctx.room()?.root,m.ctx.liveObject(),...(m.active?.product?Object.values(m.active.rig.mounts):[]),...(m.active?.product?m.ctx.productAccessories():[])].filter(Boolean),true).find(h=>shown(h.object)&&!h.object.material?.isShaderMaterial);
         for(let o=hit?.object;o;o=o.parent)if(o.userData.deskObject)return{...o.userData.deskObject,hit};
         return null;
     }
@@ -101,7 +125,7 @@ export class SceneDeskObjects {
     moveDrag(e){
         const d=this.drag,m=this.manager;if(!d||d.pointer!==e.pointerId)return false;
         const rect=m.ctx.canvas.getBoundingClientRect();m.pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);m.ray.setFromCamera(m.pointer,m.ctx.camera);const point=new THREE.Vector3();
-        if(m.ray.ray.intersectPlane(d.plane,point)){d.parent.worldToLocal(point);const delta=point.clone().sub(d.last),o=this.current?.obj;if(o){o.position.x+=delta.x;o.position.z+=delta.z;o.updateMatrixWorld(true);d.changed||=delta.length()>.001;}d.last.copy(point);}
+        if(m.ray.ray.intersectPlane(d.plane,point)){d.parent.worldToLocal(point);const delta=point.clone().sub(d.last),o=this.current?.obj;if(o){if(m.active.product&&o.userData.accessoryId)this.current.saved.custom=true;o.position.x+=delta.x;o.position.z+=delta.z;o.updateMatrixWorld(true);d.changed||=delta.length()>.001;}d.last.copy(point);}
         e.preventDefault();e.stopImmediatePropagation();return true;
     }
     endDrag(e){const d=this.drag,m=this.manager;if(!d||(e&&d.pointer!==e.pointerId))return false;this.drag=null;this.suppressClick=d.changed;if(m.ctx.canvas.hasPointerCapture(d.pointer))m.ctx.canvas.releasePointerCapture(d.pointer);m.ctx.controls.enabled=d.controls;m.ctx.canvas.style.cursor='';m.persist();if(d.changed)m.ctx.edit?.(d.before,m.serialize());m.sync();if(e){e.preventDefault();e.stopImmediatePropagation();}return true;}

@@ -23017,22 +23017,22 @@
    "file": "assets/props/ergoflex-keyboard-tray.glb",
    "anchor": "ceiling",
    "size": [
-    679,
+    494,
     96.7,
-    479.1
+    698
    ],
    "min": [
-    -339.5,
+    -284.3,
     -96.7,
-    -239.5
+    -343.2
    ],
    "max": [
-    339.5,
+    209.6,
     0,
-    239.5
+    354.8
    ],
    "tris": 11121,
-   "bytes": 91096,
+   "bytes": 90684,
    "source": "models/ergoflex-supplied/KeyboardTray.glb",
    "license": "user-provided",
    "attribution": null,
@@ -23315,6 +23315,6 @@
    ]
   }
  ],
- "generated": "2026-10-11T22:45:43.384Z",
+ "generated": "2026-10-11T23:48:00.598Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

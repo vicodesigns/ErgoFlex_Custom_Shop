@@ -2,6 +2,8 @@
 Runs after Y-up orientation, fitting and transform baking (Blender Z is up).
 """
 import bpy
+import math
+from mathutils import Matrix
 
 def mat(name, color, roughness=.5, metallic=0):
     m=bpy.data.materials.new(name);m.use_nodes=True
@@ -31,6 +33,13 @@ def improve(id):
         # Reinforce the existing central support without changing seat height.
         bpy.ops.mesh.primitive_cylinder_add(vertices=24,radius=.019,depth=.285,location=(0,0,.23))
         o=bpy.context.object;o.name='Reinforced stool gas lift';o.data.materials.append(mat('Gas lift graphite',(.025,.03,.032),.35,.55))
+    elif id=='ergoflex-keyboard-tray':
+        # Turn right after fitting, preserving the CAD dimensions and
+        # the ceiling anchor. Blender Z becomes glTF Y on export.
+        turn=Matrix.Rotation(math.radians(80),4,'Z')
+        for o in bpy.context.scene.objects:
+            if o.parent is None:o.matrix_world=turn @ o.matrix_world
+        bpy.context.view_layer.update()
     elif id=='ergoflex-dual-monitor-arm':
         for m in bpy.data.materials:
             if not m.use_nodes:continue

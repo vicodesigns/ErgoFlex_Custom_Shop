@@ -15,7 +15,7 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES } from './catalog.mjs';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=ergoflex-collection-20261011';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=scene-desk-styling-20261010';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=scene-desk-styling-20261010';
@@ -80,7 +80,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=arcades-20261002').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=product-desk-objects-20261011').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -123,7 +123,7 @@ function markSceneAsset(object, { key, role = 'room', custom = false }) {
     return object;
 }
 
-function screenTexture() {
+function screenTexture({ border = false } = {}) {
     const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 576;
     const c = canvas.getContext('2d');
     const gradient = c.createLinearGradient(0, 0, 1024, 576);
@@ -135,12 +135,14 @@ function screenTexture() {
     }
     c.fillStyle = '#f5f7ef'; c.font = '26px sans-serif'; c.fillText('A little space to think.', 64, 94);
     c.fillStyle = '#ffffff38'; c.fillRect(375, 535, 274, 22);
+    if (border) { c.strokeStyle = '#10171c'; c.lineWidth = 28; c.strokeRect(0, 0, 1024, 576); }
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; return texture;
 }
 
 export function createAccessory(item) {
     const root = new THREE.Group(); root.name = `Accessory:${item.id}`;
     root.userData.accessoryId = item.id;
+    if (item.propId) return root; // The supplied GLB is populated asynchronously.
     const dark = material('#262e33'), soft = material('#555b5d'), silver = material('#bbc1c1', { metalness: .7, roughness: .32 });
     const type = item.visual;
     if (type === 'monitor') {
@@ -233,6 +235,29 @@ export function createAccessory(item) {
     return root;
 }
 
+function prepareSuppliedDisplay(root, id) {
+    const panel = root.getObjectByName(`Prop:${id}`);
+    if (!panel) return;
+    const texture = screenTexture({ border: true });
+    panel.traverse(object => {
+        if (!object.isMesh || ![].concat(object.material).some(m => m.name === 'Material_003_#1')) return;
+        const geometry = object.geometry.clone(); geometry.computeBoundingBox();
+        const bounds = geometry.boundingBox, position = geometry.attributes.position;
+        const uv = new Float32Array(position.count * 2);
+        for (let i = 0; i < position.count; i++) {
+            uv[i * 2] = (position.getX(i) - bounds.min.x) / (bounds.max.x - bounds.min.x);
+            uv[i * 2 + 1] = (position.getY(i) - bounds.min.y) / (bounds.max.y - bounds.min.y);
+        }
+        geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+        object.geometry = geometry; object.material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false });
+        object.userData.sharedProp = false;
+    });
+    const stand = new THREE.Group(); stand.name = 'monitor-stand'; root.add(stand);
+    const silver = material('#535d65', { metalness: .65, roughness: .35 });
+    box(stand, [220, 8, 170], [0, 4, -12], silver, 4);
+    box(stand, [38, 135, 30], [0, 71, -48], silver, 3);
+}
+
 // Locate the largest upward-facing triangle. Its plane is the working face,
 // whereas the bounding-box maximum can be a lip several inches above it.
 function workingSurface(obj) {
@@ -253,9 +278,25 @@ function workingSurface(obj) {
     return { center, normal, bounds };
 }
 
+// Find the thin keyboard plate in mount-local millimetres. The rails and
+// the plate have different elevations; total model height is not a rest point.
+function prepareSuppliedTray(root) {
+    root.updateWorldMatrix(true, true);
+    const inverse = root.matrixWorld.clone().invert(); let plate = null, area = 0;
+    root.traverse(obj => {
+        if (!obj.isMesh) return;
+        obj.geometry.computeBoundingBox();
+        const bounds = obj.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(obj.matrixWorld));
+        const size = bounds.getSize(new THREE.Vector3());
+        if (size.y < 15 && size.x * size.z > area) { plate = bounds; area = size.x * size.z; }
+    });
+    if (plate) root.userData.traySurface = { center: plate.getCenter(new THREE.Vector3()), top: plate.max.y, width: plate.max.x - plate.min.x };
+}
+
 export class WorkspaceAccessories {
     constructor(scene, registry, millimetreScale, model) {
         this.scene = scene; this.items = new Map(); this.mounts = new Map(); this.scale = millimetreScale; this.dressToken = 0;
+        this.pending = new Map(); this.ready = Promise.resolve(); this.config = { accessories: [] };
         for (const [role, name] of [['desktop', 'Desktop_3'], ['shelf', 'Top_Shelf_4'], ['lower-shelf', 'Top_Shelf_3'], ['base-shelf', 'Base_Panels_3']]) {
             const anchor = [...registry.values()].find(e => e.name === name && !e.isClone)?.obj;
             if (!anchor) continue;
@@ -281,15 +322,35 @@ export class WorkspaceAccessories {
         }
     }
     sync(config) {
+        this.config = { ...config, accessories: [...config.accessories] };
         const selected = new Set(config.accessories);
         for (const [id, obj] of this.items) if (!selected.has(id)) { disposeTree(obj); this.items.delete(id); }
         for (const item of ACCESSORIES) {
             if (!selected.has(item.id) || !item.visual || this.items.has(item.id)) continue;
-            const role = item.visual === 'footrest' ? 'floor' : ['monitor', 'arm', 'dual-arm'].includes(item.visual) ? 'shelf' : 'desktop';
+            const role = item.mount || (item.visual === 'footrest' ? 'floor' : ['monitor', 'arm', 'dual-arm'].includes(item.visual) ? 'shelf' : 'desktop');
             const mount = this.mounts.get(role);
             if (!mount) continue;
             const obj = createAccessory(item); mount.group.add(obj); this.items.set(item.id, obj);
+            if (item.propId) {
+                const pending = PROP_LIBRARY.loadIndex().then(() => PROP_LIBRARY.instance(item.propId)).then(model => {
+                    // Removal, size changes and rapid preset switches must not
+                    // let a late loader attach to a disposed accessory mount.
+                    if (this.items.get(item.id) !== obj) return;
+                    obj.add(model); obj.userData.loaded = true;
+                    if (item.id === 'keyboard-tray') prepareSuppliedTray(obj);
+                    if (item.id === 'wide-monitor' || item.id === 'portrait-monitor') prepareSuppliedDisplay(obj, item.propId);
+                    this.layout();
+                }).catch(error => { obj.userData.loadError = true; console.error('[ErgoFlex] Accessory model failed:', item.id, error); })
+                  .finally(() => { if (this.pending.get(item.id) === pending) this.pending.delete(item.id); });
+                this.pending.set(item.id, pending);
+            }
         }
+        this.layout();
+        this.ready = Promise.all([...this.pending.values()]);
+    }
+    layout() {
+        const selected = new Set(this.config.accessories);
+        for (const obj of this.items.values()) { obj.rotation.set(0, 0, 0); obj.scale.setScalar(1); }
         const front = (this.mounts.get('desktop')?.depth || 800) / 2;
         const mat = selected.has('desk-mat') ? 3 : 0;
         const place = (id, x, y, z) => this.items.get(id)?.position.set(x, y, z);
@@ -300,9 +361,29 @@ export class WorkspaceAccessories {
         place('cable-tray', 0, -22, -80);
         place('cpu-holder', 370, -24, 40);
         place('foot-rest', 0, 0, 680);
+        const tray = selected.has('keyboard-tray');
+        place('keyboard-tray', 0, -28, front - 100);
+        const surface = this.items.get('keyboard-tray')?.userData.traySurface;
+        const inputY = tray ? -28 + (surface?.top ?? -20) : mat;
+        const inputZ = tray ? front - 100 + (surface?.center.z ?? 210) : front - 215;
+        const inputX = tray ? (surface?.center.x ?? -37) : 0;
+        for (const id of ['logitech-k860', 'ergo-keyboard', 'apple-keyboard']) place(id, inputX - (tray ? 30 : 64), inputY, inputZ);
+        for (const id of ['logitech-lift', 'magic-mouse']) place(id, tray ? inputX + (surface?.width ?? 506) / 2 - 42 : 240, inputY, inputZ + (tray ? 95 : 25));
+        place('artist-easel', 0, 0, 0);
+        place('painter-shelf', 0, -80, 0);
         const back = -(this.mounts.get('shelf')?.depth || 480) / 2;
         place('monitor-arm', 0, 0, back + 28);
         place('monitor-arm-2', 0, 0, back + 28);
+        const pair = selected.has('portrait-monitor') && (selected.has('wide-monitor') || selected.has('dell-u2724d'));
+        const mounted = selected.has('monitor-arm-2') || selected.has('monitor-arm');
+        place('wide-monitor', pair ? -300 : 0, mounted ? 70 : 0, mounted ? back + 320 : 0);
+        place('portrait-monitor', pair ? 340 : 0, mounted ? -30 : 0, mounted ? back + 320 : 0);
+        for (const id of ['wide-monitor', 'portrait-monitor']) {
+            const display = this.items.get(id);
+            if (!display?.userData.loaded) continue;
+            display.getObjectByName('monitor-stand').visible = !mounted;
+            display.getObjectByName(`Prop:${accessory(id).propId}`).position.y = mounted ? 0 : 125;
+        }
         const monitor = this.items.get('dell-u2724d');
         if (monitor) {
             const dual = selected.has('monitor-arm-2'), mounted = dual || selected.has('monitor-arm');
@@ -311,6 +392,7 @@ export class WorkspaceAccessories {
             monitor.position.set(dual ? -270 : 0, mounted ? 6.255 : 0, mounted ? back + 467 : 0);
             monitor.getObjectByName('monitor-stand').visible = !mounted;
         }
+        this.onLayout?.();
         this.update();
     }
     setDayDress(mode) {

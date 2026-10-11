@@ -12,7 +12,7 @@ export function cleanDeskObjects(value) {
         if(['x','y','z','w'].reduce((sum,a)=>sum+t.q[a]**2,0)<0.000001)continue;
         if(v.added&&(!deskId(v.propId)))continue;
         objects[id]={role:v.role,added:v.added===true,removed:v.removed===true,label:String(v.label||'Desk object').slice(0,100),
-            ...(v.added?{propId:v.propId}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
+            ...(v.added?{propId:v.propId}:{}),...(v.custom?{custom:true}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
     }
     return objects;
 }
@@ -66,5 +66,5 @@ export function cleanSceneDeskData(input) {
         const deleted=[...new Set((Array.isArray(room?.deleted)?room?.deleted:[]).filter(deskId))].slice(0,24);
         rooms[key]={desks,deleted,selected:desks[room?.selected]?room?.selected:Object.keys(desks)[0]||null};
     }
-    return {version:1,rooms};
+    return {version:1,rooms,...(Array.isArray(input?.productAccessories)?{productAccessories:[...new Set(input.productAccessories.filter(deskId))].slice(0,100)}:{})};
 }

@@ -3,11 +3,11 @@ import { normalizeCustomLook, normalizeCustomPalette, customLookUsesMusic, Custo
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=notebook-scale-20261011';
+import { SceneDesks } from './scene-desks.mjs?v=product-desk-objects-20261011';
 import { notebookTransform } from './notebook-transform.mjs';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=ergoflex-collection-20261011';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=product-desk-objects-20261011';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
@@ -41,12 +41,12 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=ergoflex-collection-20261011';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=product-desk-objects-20261011';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=ergoflex-collection-20261011';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=product-desk-objects-20261011';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=scene-desk-styling-20261010';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=scene-desk-styling-20261010';
@@ -621,13 +621,22 @@ function initSceneDeskEditing() {
             } finally {applyDeskStyle(style);loadedModel.visible=shown;sceneDeskInternal=false;}
         },
         restyle:r=>{if(r.rig&&r.renderedStyle!==JSON.stringify(r.state.style)){const style=currentDeskStyle();sceneDeskInternal=true;try{applyDeskStyle(r.state.style);r.rig.restyle();r.renderedStyle=JSON.stringify(r.state.style);}finally{applyDeskStyle(style);sceneDeskInternal=false;}}},
+        productReady:()=>!!workspaceAccessories&&!!loadedModel,
+        productRig:()=>({mounts:Object.fromEntries([...workspaceAccessories.mounts].filter(([role])=>role!=='floor').map(([role,m])=>[role,m.dress])),setBodyVisible(){},updatePose(){},dispose(){}}),
+        resizeProduct:size=>changeDesktopSize(size,{rebuildRoom:false}),
+        selectedAccessories:()=>[...currentConfig.accessories],
+        productAccessories:()=>workspaceAccessories.objects().filter(o=>accessory(o.userData.accessoryId)?.mount!=='floor'&&o.userData.accessoryId!=='foot-rest'),
+        purchaseMount:role=>workspaceAccessories.mounts.get(role)?.group,
+        accessoryRole:obj=>accessory(obj.userData.accessoryId)?.mount||([...workspaceAccessories.mounts].find(([,m])=>m.group===obj.parent)?.[0]||'desktop'),
+        removeAccessory:toggleAccessory,
+        restoreProductAccessories:ids=>{currentConfig=cleanConfig({...currentConfig,accessories:ids});applyAccessoryVisibility();renderAccessories();updatePrice();},
         liveObject:()=>loadedModel,liveBox:()=>deskCollisionBox()||new THREE.Box3(),
-        showLive:(enabled,main)=>{if(loadedModel)loadedModel.visible=enabled;if(workspaceAccessories){workspaceAccessories.activeDeskDress=sceneDesks.key?false:main;workspaceAccessories.update();}const body=document.querySelector('#motion-dock .app-body');if(body)body.inert=!enabled;refresh();},
+        showLive:(enabled,main)=>{if(loadedModel)loadedModel.visible=enabled;if(workspaceAccessories){workspaceAccessories.activeDeskDress=sceneDesks.key&&!sceneDesks.active?.product?false:main;workspaceAccessories.update();}const body=document.querySelector('#motion-dock .app-body');if(body)body.inert=!enabled;refresh();},
         retireBody:obj=>{unregisterSceneAsset(obj);disposeWorkspaceObject(obj);},registerBody:registerSceneAsset,unregisterBody:unregisterSceneAsset,
         copyMainDress:mounts=>{for(const [role,m] of workspaceAccessories.mounts)if(m.dress&&mounts[role])for(const obj of m.dress.children){unregisterSceneAsset(obj);const copy=obj.clone(true);copy.traverse(o=>{o.userData={...o.userData,sharedProp:true,sceneAsset:false};delete o.userData.editorId;});mounts[role].add(copy);}},
         disposeDress:r=>{for(const m of Object.values(r.rig?.mounts||{}))for(const child of [...m.children]){unregisterSceneAsset(child);disposeWorkspaceObject(child);}},
         loadProp:async id=>{await PROP_LIBRARY.loadIndex();return PROP_LIBRARY.instance(id);},propEntry:id=>PROP_LIBRARY.entry(id),
-        objectName:obj=>PROP_LIBRARY.entry(obj.userData.propId)?.name||obj.name||sceneAssetName(obj),disposeObject:disposeWorkspaceObject,unregisterProp:unregisterSceneAsset,loadPropIndex:()=>PROP_LIBRARY.loadIndex(),
+        objectName:obj=>accessory(obj.userData.accessoryId)?.name||PROP_LIBRARY.entry(obj.userData.propId)?.name||obj.name||sceneAssetName(obj),disposeObject:disposeWorkspaceObject,unregisterProp:unregisterSceneAsset,loadPropIndex:()=>PROP_LIBRARY.loadIndex(),
         halt:()=>haltAllMotion(),dragLive:(x,z)=>{if(roomSafety.alert)return;applyGlideOffset(glideOffset.clone().add(new THREE.Vector3(x,0,z)),{collide:true});glideTarget.copy(glideOffset);workspaceAccessories.update();},
         freePosition:size=>freeDeskPosition(workspaceRoom,sceneDesks.records,size),
         planPath:(r,setting)=>planDeskPath(workspaceRoom,r,setting),samplePath:sampleDeskPath,
@@ -647,6 +656,7 @@ function initSceneDeskEditing() {
         edit:(before,after)=>{if(JSON.stringify(before)!==JSON.stringify(after))transaction({type:'scene-desks',before,after});},
         sync:refresh
     });
+    if(workspaceAccessories)workspaceAccessories.onLayout=()=>sceneDesks.objects.syncAccessories();
 }
 function sceneDeskObstacleEntries(){
     return [...(sceneDesks?.records.values()||[])].filter(r=>r.id!==sceneDesks.selected&&r.group?.parent).map(r=>({id:r.group.uuid,obj:r.group,objects:[r.group],name:r.state.name,collider:true,pushable:false,movable:false,surface:'floor'}));
@@ -3975,6 +3985,7 @@ function loadModel() {
         glideBase.copy(loadedModel.position);
         const millimetreScale = loadedModel.scale.x * (LIFT_MAX - LIFT_MIN) / (HEIGHT_MAX - HEIGHT_MIN) / 25.4;
         withNeutralPose(() => { workspaceAccessories = new WorkspaceAccessories(scene, partRegistry, millimetreScale, loadedModel); });
+        workspaceAccessories.onLayout=()=>sceneDesks?.objects.syncAccessories();
         applyAccessoryVisibility();
         if (!workspaceRoom) workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
         // Startup already chose the room's desktop. Rebuilding the model must
@@ -10347,7 +10358,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     const rearrangeControl=document.getElementById('room-rearrange-control');
     if(rearrangeControl)rearrangeControl.hidden=choice.id==='product';
     for(const controlId of ['room-undo-btn','room-redo-btn','room-save-status']){
-        const control=document.getElementById(controlId);if(control)control.hidden=choice.id==='product';
+        const control=document.getElementById(controlId);if(control)control.hidden=false;
     }
     if (heading) heading.textContent = choice.id === 'product' ? 'Designed to move you.' : choice.caption;
     const environment = document.getElementById('studio-environment');
