@@ -15,7 +15,7 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=ergoflex-collection-20261011';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=mx-master-20261011';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=scene-desk-styling-20261010';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=scene-desk-styling-20261010';
@@ -172,6 +172,32 @@ export function createAccessory(item) {
         }
         for (let row = 0; row < 5; row++) for (let col = 0; col < 3; col++)
             box(root, [18, 5, 18], [164 + col * 21, 23, -90 + row * 24], dark, 1.5);
+    } else if (type === 'mx-master') {
+        // Original reference geometry, based on Logitech's 84.3 × 124.9 × 51 mm
+        // envelope. X is user-right; the buttons and USB port face negative Z.
+        const rubber = material('#343638', { roughness: .88 });
+        const shell = material('#414345', { roughness: .54 });
+        const seam = material('#191b1c');
+        sphere(root, [42.15, 3, 62.45], [0, 3, 0], seam);
+        sphere(root, [19, 5, 39], [-23, 7, 13], rubber);
+        const hump = mesh(root, new THREE.SphereGeometry(1, 32, 20, 0, Math.PI * 2, 0, Math.PI / 2), rubber, [7, 6, 0]);
+        hump.scale.set(35, 45, 62.45);
+        for (const [x, y] of [[-7, 41], [20, 38]]) {
+            const button = box(root, [25, 5, 43], [x, y, -32], shell, 2);
+            button.rotation.x = .27;
+        }
+        const wheel = mesh(root, new THREE.CylinderGeometry(8, 8, 9, 32), silver, [6, 43, -32]);
+        wheel.rotation.z = Math.PI / 2;
+        for (let i = 0; i < 16; i++) {
+            const a = i * Math.PI / 8;
+            const ridge = box(root, [9.5, .7, .7], [6, 43 + Math.cos(a) * 8, -32 + Math.sin(a) * 8], soft, .2);
+            ridge.rotation.x = -a;
+        }
+        box(root, [8, 2, 10], [6, 49, -11], shell, 2);
+        const thumbWheel = mesh(root, new THREE.CylinderGeometry(5, 5, 17, 24), silver, [-27, 27, -19]);
+        thumbWheel.rotation.x = Math.PI / 2;
+        for (const z of [2, 18]) box(root, [3, 4, 12], [-30, 18, z], shell, 1);
+        box(root, [7, 3, 1], [6, 8, -62], seam, 1);
     } else if (type === 'mouse') {
         sphere(root, [35, 8, 54], [0, 8, 0], soft);
         const body = sphere(root, [25, 34, 46], [7, 37, -2], dark); body.rotation.z = -.24;
@@ -368,7 +394,7 @@ export class WorkspaceAccessories {
         const inputZ = tray ? front - 100 + (surface?.center.z ?? 210) : front - 215;
         const inputX = tray ? (surface?.center.x ?? -37) : 0;
         for (const id of ['logitech-k860', 'ergo-keyboard', 'apple-keyboard']) place(id, inputX - (tray ? 30 : 64), inputY, inputZ);
-        for (const id of ['logitech-lift', 'magic-mouse']) place(id, tray ? inputX + (surface?.width ?? 506) / 2 - 42 : 240, inputY, inputZ + (tray ? 95 : 25));
+        for (const id of ['logitech-lift', 'logitech-mx-master', 'magic-mouse']) place(id, tray ? inputX + (surface?.width ?? 506) / 2 - 42 : 240, inputY, inputZ + (tray ? 95 : 25));
         place('artist-easel', 0, 0, 0);
         place('painter-shelf', 0, -80, 0);
         const back = -(this.mounts.get('shelf')?.depth || 480) / 2;

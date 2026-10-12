@@ -145,6 +145,10 @@ export const ACCESSORIES = [
       description: 'A vertical grip for small to medium right hands.', dimensionsMm: { width: 70, depth: 108, height: 71 },
       source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/ergo-lift-b2b-data-sheet.pdf',
       price: 79, provisional: true, compatibleSizes: ['48x30', '60x30'] },
+    { id: 'logitech-mx-master', name: 'Logitech MX Master 3S', brand: 'LOGITECH · MX MASTER', category: 'Desktop', visual: 'mx-master', exclusiveGroup: 'mouse',
+      description: 'Graphite ergonomic mouse with a thumb rest and two scroll wheels. Reference visualization.', dimensionsMm: { width: 84.3, depth: 124.9, height: 51 },
+      source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/mx-master-3s-business-wireless-mouse.pdf',
+      price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'logitech-k860', name: 'Logitech ERGO K860', brand: 'LOGITECH · ERGO', category: 'Desktop', visual: 'keyboard', exclusiveGroup: 'keyboard',
       description: 'Split keys, a curved profile and a cushioned palm rest.', dimensionsMm: { width: 456, depth: 233, height: 48 },
       source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/ergo-k860-for-business-data-sheet-w11.pdf',
@@ -194,9 +198,9 @@ export function accessoryFits(id, size) {
 // Curated starting points. Each is a complete configuration, so applying one
 // leaves nothing half-set.
 export const PRESETS = [
-    { id: 'office', name: 'Office', blurb: 'Modern grey, black trim, two displays, a dual arm and ergonomic inputs on a keyboard tray.',
+    { id: 'office', name: 'Office', blurb: 'Modern grey, black trim, two displays, a dual arm, ergonomic keyboard and MX Master mouse on a keyboard tray.',
       size: '60x30', woodFinish: 'Modern Grey', baseFinish: 'Black', trimColor: '#1c1c1e',
-      accessories: ['monitor-arm-2', 'wide-monitor', 'portrait-monitor', 'keyboard-tray', 'ergo-keyboard', 'logitech-lift', 'cable-tray'], cameraPreset: 'hero' },
+      accessories: ['monitor-arm-2', 'wide-monitor', 'portrait-monitor', 'keyboard-tray', 'ergo-keyboard', 'logitech-mx-master', 'cable-tray'], cameraPreset: 'hero' },
     { id: 'artist', name: 'Artist', blurb: 'Natural birch, a light frame, warm trim and an art surface with a painter’s accessory shelf.',
       size: '60x30', woodFinish: 'Natural Birch', baseFinish: 'White', trimColor: '#f19c00',
       accessories: ['artist-easel', 'painter-shelf', 'task-light'], cameraPreset: 'hero' },
