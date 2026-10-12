@@ -8760,10 +8760,13 @@ function wireRemote(dock, header) {
         if (dock.dataset.mode !== 'floating') return;   // docked below the viewer: nothing to drag
         const rect = dock.getBoundingClientRect();
         headerMoved = false;
-        dragging = { dx: e.clientX - rect.left, dy: e.clientY - rect.top, x:e.clientX, y:e.clientY };
+        // Keep a handle tap targeted at its button. Capturing on the header
+        // retargets the subsequent click and skips the button's collapse action.
+        const captureTarget = control?.id === 'motion-dock-toggle' ? control : header;
+        dragging = { dx: e.clientX - rect.left, dy: e.clientY - rect.top, x:e.clientX, y:e.clientY, captureTarget };
         anchorDock(dock);
         header.classList.add('dragging');
-        try { header.setPointerCapture(e.pointerId); } catch {}
+        try { captureTarget.setPointerCapture(e.pointerId); } catch {}
         e.preventDefault();
     });
     header.addEventListener('pointermove', e => {
@@ -8776,9 +8779,10 @@ function wireRemote(dock, header) {
     });
     const endDrag = e => {
         if (!dragging) return;
+        const { captureTarget } = dragging;
         dragging = null;
         header.classList.remove('dragging');
-        try { header.releasePointerCapture(e.pointerId); } catch {}
+        try { captureTarget.releasePointerCapture(e.pointerId); } catch {}
         const at = clampDockPosition();
         if (at) writeStore(DOCK_POS_KEY, { v: 1, x: at.x, y: at.y });
     };
