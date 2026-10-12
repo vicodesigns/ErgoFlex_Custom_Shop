@@ -5,6 +5,7 @@ import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHAS
 import { poseIsClear } from './room-groove.mjs';
 import { SceneDesks } from './scene-desks.mjs?v=product-desk-objects-20261011';
 import { notebookTransform } from './notebook-transform.mjs';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=editable-presets-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
 import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=product-desk-objects-20261011';
@@ -41,18 +42,18 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=supplied-accessories-20261012';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=editable-presets-20261012';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=supplied-accessories-20261012';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=editable-presets-20261012';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
-import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=supplied-accessories-20261012';
-import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=supplied-accessories-20261012';
-import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=supplied-accessories-20261012';
+import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=editable-presets-20261012';
+import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=editable-presets-20261012';
+import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=editable-presets-20261012';
 import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
-import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=supplied-accessories-20261012';
+import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=editable-presets-20261012';
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
@@ -161,6 +162,8 @@ let cartItems = [];
 // V2 keys: the configuration gained an accessories list. V1 keys are still read
 // once, as a migration, and never written again.
 const SAVED_BUILD_KEY = 'ergoflexSavedBuildV2';
+let buildPresets = cleanBuildPresets(EVENT_DEMO ? null : readStore(BUILD_PRESETS_KEY, 1, null));
+let activeBuildPreset = null, applyingBuildPreset = false, buildPresetTimer = null, buildPresetRun = 0, pendingBuildPresetRestore = null;
 const CART_KEY = 'ergoflexCartV2';
 let cartIdCounter = 0;
 const nextCartId = () => `item-${Date.now()}-${cartIdCounter++}`;
@@ -577,7 +580,10 @@ function initSceneDeskEditing() {
         syncGrooveUI(roomGroove?.state||{});
     };
     sceneDesks=new SceneDesks({scene,canvas:renderer.domElement,camera,controls,
-        readStore:()=>readStore(SCENE_DESKS_KEY,1,null),writeStore:(k,v)=>writeStore(k,{...v,v:1}),changed:()=>{markEdited();setRoomSaveStatus('Saved in this browser');},
+        readStore:()=>{
+            const data=readStore(SCENE_DESKS_KEY,1,null),draft=buildPresets.entries[activeBuildPreset];
+            return draft?.room&&selectedRoomScene==='product'?{...data,rooms:{...data?.rooms,'product/default':draft.room},productAccessories:draft.config.accessories}:data;
+        },writeStore:(k,v)=>writeStore(k,{...v,v:1}),changed:()=>{markEdited();setRoomSaveStatus('Saved in this browser');scheduleBuildPresetSave();},
         room:()=>workspaceRoom,sceneId:()=>selectedRoomScene,phase:()=>measuredRoomProfile()?.mode||'morning',phaseLabel:()=>measuredRoomProfile()?.modes[measuredRoomProfile()?.mode]?.label,
         status:notifyUser,rearrange:()=>roomRearrangeEnabled&&!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active&&!sceneDesks?.playing&&!sceneDesks?.recording,
         readLive:r=>{const p=workspaceRoom?.root?liveAnchor(r):new THREE.Vector3();return{size:currentConfig.size,style:currentDeskStyle(),pose:{x:p.x,z:p.z,yaw:deskYaw},height:liftToHeight(currentLift),tilt:primaryTiltConfig()?.currentDeg||0,lights:captureGrooveLights()};},
@@ -1457,6 +1463,7 @@ function transaction(entry) {
 function markEdited() {
     if (suppressTransactions) return;
     editRevision++;
+    scheduleBuildPresetSave();
 }
 
 // --- Neutral pose ----------------------------------------------------------
@@ -4132,6 +4139,7 @@ function applyTransformDelta(obj, base, delta) {
 }
 
 function serializeProject() {
+    saveBuildPreset();
     const sceneDeskState=sceneDesks?.serialize();
     // Motion is read BEFORE neutralising, or it would record the rest pose the
     // capture itself just imposed rather than the pose the desk is actually in.
@@ -4190,6 +4198,7 @@ function serializeProject() {
                 surfaceFinish,
                 sceneDeskStyles: JSON.parse(JSON.stringify(sceneDeskStyles)),
                 sceneDesks: sceneDeskState,
+                buildPresets: cleanBuildPresets(buildPresets),
                 trimColor,
                 ledColor,
                 ledGlow,
@@ -4536,6 +4545,17 @@ function applyConfigToUI() {
 
 function applyProjectPresentation(project) {
     const presentation = project.presentation || {};
+    // Importing a project must not overwrite the previously selected recipe.
+    activeBuildPreset = null;
+    if (presentation.buildPresets) {
+        buildPresets = cleanBuildPresets(presentation.buildPresets);
+        writeStore(BUILD_PRESETS_KEY, buildPresets);
+        activeBuildPreset = buildPresets.active;
+    } else {
+        buildPresets.active = null;
+        writeStore(BUILD_PRESETS_KEY, buildPresets);
+    }
+    syncBuildPresetUI();
     if(presentation.sceneDesks!==undefined)sceneDesks?.restore(presentation.sceneDesks);
     // Importing finishes must not register a manual edit in the outgoing room.
     sceneDeskLocation = null;
@@ -4991,17 +5011,103 @@ function renderPriceBreakdown() {
     }
 }
 
-function applyPreset(preset) {
-    currentConfig = cleanConfig(preset);
-    applyConfigToUI();
-    rememberSceneDeskStyle();
-    applyAccessoryVisibility();
-    renderAccessories();
-    if (preset.cameraPreset) {
-        const select = document.getElementById('camera-view');
-        if (select) { select.value = preset.cameraPreset; select.dispatchEvent(new Event('change')); }
+function syncBuildPresetUI(message) {
+    const preset = PRESETS.find(p => p.id === activeBuildPreset);
+    document.querySelectorAll('[data-preset]').forEach(card => {
+        card.setAttribute('aria-pressed', String(card.dataset.preset === activeBuildPreset));
+        const draft = buildPresets.entries[card.dataset.preset];
+        const label = card.querySelector('[data-preset-version]');
+        if (label) label.textContent = draft ? 'Your saved version' : 'Original setup';
+        const price = card.querySelector('em');
+        if (price && draft) price.textContent = money(configurationPrice(draft.config)) + (priceBreakdown(draft.config).some(l => l.quoted) ? ' + quote' : '');
+    });
+    const save = document.getElementById('save-preset');
+    if (save) { save.hidden = !preset; save.disabled = applyingBuildPreset || selectedRoomScene !== 'product'; save.textContent = `Save ${preset?.name || 'preset'} now`; }
+    const status = document.getElementById('preset-save-status');
+    if (status) status.textContent = message || (preset ? `${preset.name} · edits auto-save in this browser.` : 'Choose a setup. Your edits will auto-save as its own version.');
+}
+
+function saveBuildPreset() {
+    clearTimeout(buildPresetTimer);
+    if (EVENT_DEMO || applyingBuildPreset || !activeBuildPreset || selectedRoomScene !== 'product' || !sceneDesks?.active?.product || workspaceAccessories.pending.size || sceneDesks.objects.loading || sceneDesks.objects.drag) return false;
+    const room = sceneDesks.serialize().rooms['product/default'];
+    // Product view uses the CAD motion coordinates rather than room millimetres.
+    if (room?.desks.main) room.desks.main.pose = { x: glideTarget.x, z: glideTarget.z, yaw: deskYaw };
+    const next = cleanBuildPresets({ ...buildPresets, active: activeBuildPreset, entries: { ...buildPresets.entries, [activeBuildPreset]: {
+        config: cleanConfig(currentConfig), room,
+        surface: { finish: surfaceFinish, grain: grainEnabled, visibility: grainVisibility, sheen: grainSheen }
+    } } });
+    if (!writeStore(BUILD_PRESETS_KEY, next)) { syncBuildPresetUI('Could not save in this browser. Use Save project to keep your edits.'); return false; }
+    buildPresets = next;
+    syncBuildPresetUI(`${PRESETS.find(p => p.id === activeBuildPreset).name} · saved in this browser.`);
+    return true;
+}
+
+function scheduleBuildPresetSave() {
+    if (!activeBuildPreset || applyingBuildPreset || selectedRoomScene !== 'product') return;
+    clearTimeout(buildPresetTimer);
+    buildPresetTimer = setTimeout(saveBuildPreset, 500);
+}
+
+async function applyPreset(preset) {
+    preset = PRESETS.find(p => p.id === preset?.id);
+    if (!preset) return false;
+    saveBuildPreset();
+    const run = ++buildPresetRun;
+    applyingBuildPreset = true;
+    pendingBuildPresetRestore = null;
+    activeBuildPreset = preset.id;
+    const draft = buildPresets.entries[preset.id];
+    let applied = false;
+    try {
+        // Tear down the outgoing surface objects before binding this recipe's own
+        // objects. Other room layouts and desk routines remain in the same data.
+        sceneDesks?.dispose();
+        if (sceneDesks) {
+            const data = sceneDesks.serialize();
+            if (draft?.room) data.rooms['product/default'] = draft.room;
+            else delete data.rooms['product/default'];
+            delete data.productAccessories;
+            sceneDesks.restore(data);
+        }
+        currentConfig = cleanConfig(draft?.config || preset);
+        if (draft) {
+            surfaceFinish = draft.surface.finish; grainEnabled = draft.surface.grain;
+            grainVisibility = draft.surface.visibility; grainSheen = draft.surface.sheen;
+            clearPhotoGrainTextures(); syncGrainControls();
+            const sheen = document.getElementById('surface-finish'); if (sheen) sheen.value = surfaceFinish;
+            const grain = document.getElementById('wood-grain'); if (grain) grain.checked = grainEnabled;
+        }
+        sceneDeskLocation = 'product';
+        applyConfigToUI(); rememberSceneDeskStyle(); applyAccessoryVisibility(); renderAccessories();
+        sceneDeskStyles.product = currentDeskStyle();
+        setRoomScene('product', true, { preserveDesk: true });
+        syncBuildPresetUI(`Loading ${preset.name}…`);
+        await Promise.all([workspaceRoom?.ready, workspaceAccessories?.ready]);
+        await sceneDesks?.objects.ready;
+        if (run !== buildPresetRun) return false;
+        workspaceAccessories?.layout();
+        const state = draft?.room?.desks.main;
+        if (state) { applyProjectMotion({ heightInches: state.height, tilt: { [primaryTiltConfig()?.name]: state.tilt }, yaw: state.pose.yaw, glide: { x: state.pose.x, z: state.pose.z } }); applyGrooveLights(state.lights); }
+        if (preset.cameraPreset) {
+            const select = document.getElementById('camera-view');
+            if (select) { select.value = preset.cameraPreset; select.dispatchEvent(new Event('change')); }
+        }
+        notifyUser(`${preset.name}${draft ? ' saved version' : ''} applied.`);
+        applied = true;
+        return true;
+    } finally {
+        if (run === buildPresetRun) {
+            applyingBuildPreset = false;
+            if (!applied) {
+                activeBuildPreset = null;
+                buildPresets.active = null;
+                writeStore(BUILD_PRESETS_KEY, buildPresets);
+            }
+            syncBuildPresetUI();
+            if (applied) saveBuildPreset();
+        }
     }
-    notifyUser(`${preset.name} applied.`);
 }
 
 function buildGuidedConfiguration() {
@@ -5020,13 +5126,16 @@ function buildGuidedConfiguration() {
         card.className = 'preset-card';
         card.dataset.preset = preset.id;
         const config = cleanConfig(preset), quote = priceBreakdown(config).some(line => line.quoted);
-        card.innerHTML = `<strong>${preset.name}</strong><small>${preset.blurb}</small><em>${money(configurationPrice(config))}${quote ? ' + quote' : ''}</em>`;
-        card.onclick = () => applyPreset(preset);
+        card.innerHTML = `<strong>${preset.name}</strong><small>${preset.blurb}</small><span data-preset-version>Original setup</span><em>${money(configurationPrice(config))}${quote ? ' + quote' : ''}</em>`;
+        card.onclick = () => { applyPreset(preset).catch(error => { console.error('[Presets]', error); notifyUser('That setup could not be restored. Your saved version is kept.'); }); };
         presets.append(card);
     }
     // Above the accordions, below the product header.
     const header = column.querySelector('.mb-8');
     if (header) header.after(presets); else column.prepend(presets);
+    const save = document.createElement('button'); save.id = 'save-preset'; save.type = 'button'; save.className = 'btn-secondary'; save.onclick = () => { if (saveBuildPreset()) notifyUser('Your preset edits are saved.'); };
+    const status = document.createElement('p'); status.id = 'preset-save-status'; status.className = 'studio-note'; status.role = 'status';
+    presets.querySelector('.eyebrow').after(save, status); syncBuildPresetUI();
 
     const accessories = document.createElement('div');
     accessories.className = 'accessory-block';
@@ -6361,6 +6470,7 @@ function updatePrice() {
     renderPriceBreakdown();
     scheduleValidation();
     syncBuildSummary();
+    scheduleBuildPresetSave();
 }
 
 function addToCart() {
@@ -10254,6 +10364,7 @@ function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
 }
 
 function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop = !preserveDesk } = {}) {
+    saveBuildPreset();
     if (Object.hasOwn(INSTITUTIONAL_GROUPS, id)) {
         const group = INSTITUTIONAL_GROUPS[id];
         let setting = group.settings.includes(selectedRoomScene) ? selectedRoomScene : group.initial;
@@ -10350,8 +10461,14 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
             sceneDesks?.bind(workspaceRoom);
             await sceneDesks?.objects.ready;
             if(hydrationToken!==sceneAssetHydrationToken)return;
+            if (choice.id === 'product' && pendingBuildPresetRestore) {
+                const state = pendingBuildPresetRestore.room?.desks.main;
+                pendingBuildPresetRestore = null;
+                if (state) { applyProjectMotion({ heightInches: state.height, tilt: { [primaryTiltConfig()?.name]: state.tilt }, yaw: state.pose.yaw, glide: { x: state.pose.x, z: state.pose.z } }); applyGrooveLights(state.lights); }
+            }
             roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
             syncGrooveUI(roomGroove?.state || {});
+            scheduleBuildPresetSave();
         }
     });
     if (workspaceRoom) workspaceRoom.ready = assetsReady;
@@ -10379,6 +10496,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     applyRoomLighting();
     syncHomeOfficeUI();
     updateSceneLibraryStatus();
+    syncBuildPresetUI();
     if (persist) {
         try { localStorage.setItem('ergoflex.roomScene', choice.id); } catch {}
     }
@@ -10805,6 +10923,23 @@ function initStudio() {
         if (validConfig(stored)) { currentConfig = cleanConfig(stored); restoredBuildSize = true; restoredSharedBuild = Boolean(shared); }
         if (shared && !validConfig(stored)) notifyUser('This build link is invalid. Showing the default configuration.');
     } catch { notifyUser('Saved configuration could not be read. Showing the default build.'); }
+    if (!EVENT_DEMO && !restoredSharedBuild) {
+        const draft = buildPresets.entries[buildPresets.active];
+        const view = new URLSearchParams(location.search).get('view');
+        if (draft && view !== 'room') {
+            activeBuildPreset = buildPresets.active; currentConfig = cleanConfig(draft.config); restoredBuildSize = true;
+            surfaceFinish = draft.surface.finish; grainEnabled = draft.surface.grain;
+            grainVisibility = draft.surface.visibility; grainSheen = draft.surface.sheen;
+            pendingBuildPresetRestore = draft;
+        } else if (view !== 'room') {
+            // Adopt an existing Office build without reapplying its layout.
+            const office = currentConfig.size === '60x30' && ['monitor-arm-2','keyboard-tray','ergo-keyboard'].every(id => currentConfig.accessories.includes(id));
+            activeBuildPreset = office ? 'office' : PRESETS.find(p => JSON.stringify(cleanConfig(p)) === JSON.stringify(currentConfig))?.id || null;
+            if (office && !currentConfig.accessories.includes('logitech-mx-master')) {
+                currentConfig = cleanConfig({ ...currentConfig, accessories: [...currentConfig.accessories.filter(id => accessory(id)?.exclusiveGroup !== 'mouse'), 'logitech-mx-master'] });
+            }
+        }
+    }
     try {
         const saved = readStored(CART_KEY, 'ergoflexCartV1') || [];
         if (Array.isArray(saved)) cartItems = saved.filter(validConfig).slice(0, 100).map((item, index) => ({ ...cleanConfig(item), id: `restored-${index}`, quantity: Math.max(1, Math.min(20, Math.round(Number(item.quantity) || 1))), price: configurationPrice(cleanConfig(item)) }));
@@ -10831,6 +10966,7 @@ function initStudio() {
     // was no way to take that back from the page - clearing it meant editing
     // localStorage by hand.
     document.getElementById('reset-build').onclick = () => {
+        saveBuildPreset(); activeBuildPreset = null; buildPresets.active = null; writeStore(BUILD_PRESETS_KEY, buildPresets); syncBuildPresetUI();
         try { localStorage.removeItem(SAVED_BUILD_KEY); localStorage.removeItem('ergoflexSavedBuildV1'); } catch {}
         currentConfig = defaultConfig();
         applyConfigToUI();
@@ -11419,6 +11555,8 @@ window.ErgoFlex = {
     get deletedBakedRigs() { return { tilt: [...deletedBakedRigs.tilt], actuator: [...deletedBakedRigs.actuator] }; },
     focusCameraShortcut,
     applyPreset,
+    saveBuildPreset,
+    get activeBuildPreset() { return activeBuildPreset; },
     toggleAccessory,
     get priceLines() { return priceBreakdown(currentConfig); },
     runValidation,
@@ -11501,6 +11639,9 @@ const ctx = {
 };
 
 // Populate the configurator UI first so it works even if 3D init fails
+for (const event of ['input', 'change', 'click', 'pointerup']) document.addEventListener(event, scheduleBuildPresetSave);
+window.addEventListener('pagehide', saveBuildPreset);
+window.addEventListener('beforeunload', saveBuildPreset);
 initStudio();
 populateFinishOptions();
 mountTrimPalette();

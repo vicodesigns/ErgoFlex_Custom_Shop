@@ -12810,7 +12810,17 @@
    "budget": 26000,
    "collection": "ErgoFlex Collection",
    "license": "user-provided",
-   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified."
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "material": {
+    "color": [
+     0.007843137718737125,
+     0.007843137718737125,
+     0.007843137718737125
+    ],
+    "roughness": 1,
+    "metallic": 0
+   },
+   "revision": "keyboard-graphite-20261012"
   },
   {
    "id": "ergoflex-mouse-2",

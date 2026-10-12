@@ -16,7 +16,7 @@ const result=await page.evaluate(async()=>{
  let materials=[];w.items.get('keyboard-tray').traverse(o=>{if(o.isMesh)materials.push(...(Array.isArray(o.material)?o.material:[o.material]));});
  check(materials.every(mat=>mat.metalness>.8&&Math.max(mat.color.r,mat.color.g,mat.color.b)<.1),'Tray is not dark metal');
  const sizes=new T.Box3().setFromObject(w.items.get('keyboard-tray').children[0]).getSize(new T.Vector3());
- const entry=(await import('/workspace-3d.mjs?v=supplied-accessories-20261012')).PROP_LIBRARY.entry('ergoflex-keyboard-tray');
+ const entry=(await import('/workspace-3d.mjs?v=editable-presets-20261012')).PROP_LIBRARY.entry('ergoflex-keyboard-tray');
  check(entry.size[0]<550&&entry.size[2]>690,'Tray has not rotated from its original 679 mm wide orientation');check(w.items.get('keyboard-tray').userData.traySurface.center.z>0,'Tray plate points away from the front');check(Math.abs(w.items.get('ergo-keyboard').position.y-(-28+w.items.get('keyboard-tray').userData.traySurface.top))<.01,'Keyboard floats below the plate');
  editor.change({y:-40,z:300,rotation:15,scale:90});w.layout();check(editor.current.obj.position.x===155&&editor.current.obj.position.y===-40,'Catalog layout overwrote edited tray');
  m.setSize('48x30');check(m.active.product&&w.items.get('keyboard-tray').position.x===155&&ef.currentConfig.size==='48x30','Resize lost live product attachment');ef.undo();await ef.workspaceRoom.ready;await w.ready;check(ef.currentConfig.size==='60x30'&&ef.currentConfig.accessories.includes('wide-monitor'),'Resize undo lost size or compatible accessories');

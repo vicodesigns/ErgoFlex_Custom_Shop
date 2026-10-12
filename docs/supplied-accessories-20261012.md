@@ -43,3 +43,13 @@ The supplied monitor primitives combined display and enclosure faces. The screen
 ## Verification
 
 `node tests/ergoflex-collection-test.cjs` checks all 29 supplied collection assets, presets, real MX Master loading, mounting endpoints before/after screen edits, single/dual arm behavior, GLB export, rapid selection changes, motion and saved builds. `node tests/product-desk-objects-test.cjs` checks edited placements, undo, library additions, reload and room/product switching.
+
+## Editable Start From setups and rendering correction
+
+Each Start From setup now keeps a separate edited version in `ergoflex.buildPresetsV1`: configuration, accessory and added-object placement, desk posture, LED settings and surface finish controls. Changes auto-save locally; **Save [setup] now** flushes immediately. **Save project** includes these versions for backup or transfer. Existing Office builds are adopted without resetting their edited object placements; the previous Lift mouse is replaced by the supplied MX Master.
+
+Modern Grey uses a darker `#72777c` tint. The MX Master asset and conversion manifest now use the Ergo keyboard's graphite base color, roughness and metalness; its revision query prevents the prior light material from remaining cached.
+
+The supplied monitor arm fitting path preserves each mesh's scalar or array material form. Previously it converted scalar materials to arrays on CAD geometry with no material groups, so Three.js skipped rendering the actual arms while still showing the VESA adapters. The shared single/dual arm preparation now renders the CAD assembly correctly.
+
+`node tests/editable-build-presets-test.cjs` verifies independent setup versions, switch/reload persistence, existing Office migration, project export, exact keyboard/mouse material matching and draw calls for the actual dual-arm assembly.

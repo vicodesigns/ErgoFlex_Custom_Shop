@@ -15,14 +15,14 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=supplied-accessories-20261012';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=editable-presets-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=supplied-accessories-20261012';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=supplied-accessories-20261012';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=supplied-accessories-20261012';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=editable-presets-20261012';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=editable-presets-20261012';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=editable-presets-20261012';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 
-import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=supplied-accessories-20261012';
+import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=editable-presets-20261012';
 import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
@@ -80,7 +80,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=supplied-accessories-20261012').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=editable-presets-20261012').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -92,7 +92,7 @@ export const PROP_LIBRARY = {
         if (!this.cache.has(id)) {
             if (!this.loader) { this.loader = new GLTFLoader(); this.loader.setMeshoptDecoder(MeshoptDecoder); }
             const entry = this.entry(id);
-            const url = entry ? './' + entry.file : `${PROP_BASE}${id}.glb`;
+            const url = entry ? './' + entry.file + (entry.revision ? '?v=' + encodeURIComponent(entry.revision) : '') : `${PROP_BASE}${id}.glb`;
             this.cache.set(id, new Promise((resolve, reject) => this.loader.load(url, gltf => {
                 gltf.scene.traverse(obj => {
                     if (!obj.isMesh) return;
@@ -337,7 +337,7 @@ function prepareSuppliedArm(root, id) {
         object.userData.sharedProp = false;
         // Own the geometry and materials so disposing this fitted accessory
         // cannot invalidate the shared library cache.
-        object.material = [].concat(object.material).map(m => m.clone());
+        object.material = Array.isArray(object.material) ? object.material.map(m => m.clone()) : object.material.clone();
         root.armGeometry.push({ object, values, transform, inverse: transform.clone().invert() });
     });
     const bridges = new THREE.Group(); bridges.name = 'Display mounting adapters'; root.add(bridges);

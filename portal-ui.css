@@ -203,6 +203,10 @@ html[data-portal-theme] #setup-sidebar .accessory-row.is-selected { background: 
 html[data-portal-theme] #setup-sidebar .scene-current-item { background: var(--ui-card); color: var(--ui-text); border-color: var(--ui-border); font-size: 11px !important; }
 html[data-portal-theme] #setup-sidebar .scene-current-item[aria-pressed=true] { background: var(--ui-selected) !important; color: var(--ui-text); border-color: var(--ui-accent) !important; }
 html[data-portal-theme] #setup-sidebar .preset-card small { color: var(--ui-muted); }
+html[data-portal-theme] #setup-sidebar .preset-card [data-preset-version] { color: var(--ui-muted); font-size: 10px; }
+html[data-portal-theme] #setup-sidebar .preset-card[aria-pressed=true] { background: var(--ui-selected); border-color: var(--ui-accent); }
+#preset-save-status { margin: 8px 0 0; }
+#save-preset { width: 100%; }
 html[data-portal-theme] #setup-sidebar :is(.led-map-diagnostic button, .led-playback-controls button) { background: var(--ui-card); color: var(--ui-text); border-color: var(--ui-border); }
 html[data-portal-theme] #setup-sidebar .artwork-upload input::file-selector-button { background: var(--ui-accent); color: var(--ui-on-accent); }
 html[data-portal-theme] #setup-sidebar :is(.artwork-badge, .accessory-add, .price-breakdown) { border-color: var(--ui-border); }
