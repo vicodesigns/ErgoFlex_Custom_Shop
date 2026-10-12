@@ -2237,6 +2237,7 @@ function buildShellChrome() {
         const button = event.target.closest('[data-sidebar-tab]');
         if (!button) return;
         sidebar.dataset.tab = button.dataset.sidebarTab;
+        if (button.dataset.sidebarTab === 'finishes') setCollapsed('config-column', false);
         sidebar.querySelectorAll('[data-sidebar-tab]').forEach(item =>
             item.setAttribute('aria-pressed', String(item === button)));
     });
@@ -2334,6 +2335,7 @@ function setShellMode(mode) {
     if (animDebugger) animDebugger.style.display = setupLayoutOn ? '' : 'none';
     document.body.classList.remove('setup-layout', 'store-layout');
     document.body.classList.add('shell-layout', config.bodyClass);
+    if (mode === 'store' && collapsibles.has('config-column')) setCollapsed('config-column', false);
     const configCollapsed = collapsibles.get('config-column')?.collapsed === true;
     document.body.classList.toggle('sidebar-collapsed', mode === 'store' && configCollapsed);
 
@@ -4657,13 +4659,16 @@ function initConfigColumnCollapse() {
         storageKey: 'ergoflex.configColumnCollapsed',
         mode: 'display',
         onToggle: collapsed => {
-            button.textContent = collapsed ? 'Show options' : 'Hide options';
+            button.textContent = collapsed ? 'Show all product options' : 'Hide product options';
+            button.title = collapsed
+                ? 'Show desk size, finishes, trim, artwork, accessories and LED settings'
+                : 'Hide product options to give the viewer more room';
             button.setAttribute('aria-expanded', String(!collapsed));
             document.getElementById('config-column')?.classList.toggle('collapsed', collapsed);
             // The shared shell gives its whole sidebar track back to the viewer.
             // The legacy grid path remains for the non-shell mobile fallback.
             if (document.body.classList.contains('shell-layout'))
-                document.body.classList.toggle('sidebar-collapsed', collapsed);
+                document.body.classList.toggle('sidebar-collapsed', shellMode === 'store' && collapsed);
             else
                 grid.classList.toggle('options-hidden', collapsed);
             syncViewerSize();
@@ -4672,6 +4677,9 @@ function initConfigColumnCollapse() {
         }
     });
     button.onclick = toggle;
+    // A saved collapsed state must not hide the options when opening their portal/tab.
+    if (shellMode === 'store' || document.getElementById('setup-sidebar')?.dataset.tab === 'finishes')
+        setCollapsed('config-column', false);
 }
 
 // --- Build validation -------------------------------------------------------

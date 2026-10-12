@@ -213,7 +213,7 @@
             document.documentElement.style.colorScheme = document.documentElement.dataset.portalTheme;
         } catch {}
     </script>
-    <link rel="stylesheet" href="studio.css?v=product-desk-objects-20261011">
+    <link rel="stylesheet" href="studio.css?v=product-options-20261011">
     <link rel="stylesheet" href="app-remote.css?v=screen-share-20261010">
     <link rel="stylesheet" href="./product-demo.css?v=desktop-bands-back-20261005">
     <link rel="stylesheet" href="portal-ui.css?v=portal-polish-20261008">
@@ -258,7 +258,7 @@
         <div id="store-grid" class="grid grid-cols-1 lg:grid-cols-4 gap-10">
             <!-- Configuration Panel -->
             <div id="config-column" class="lg:col-span-1 order-2 lg:order-1">
-                <button id="config-collapse" class="config-collapse" aria-expanded="true" aria-controls="config-column-content" title="Collapse the options panel to give the desk more room">Hide options</button>
+                <button id="config-collapse" class="config-collapse" aria-expanded="true" aria-controls="config-column-content" title="Hide product options to give the viewer more room">Hide product options</button>
                 <div id="config-column-content">
                 <!-- Product Header -->
                 <div class="mb-8">
@@ -746,7 +746,7 @@
     </script>
 
     <script type="module" src="./portal-ui.mjs?v=portal-polish-20261008"></script>
-    <script type="module" src="./studio.js?v=product-desk-objects-20261011"></script>
+    <script type="module" src="./studio.js?v=product-options-20261011"></script>
     <script>
         // Classic script: runs before the deferred module above. Browsers refuse to
         // load ES modules over file://, so studio.js never executes and the loader

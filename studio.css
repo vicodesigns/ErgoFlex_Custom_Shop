@@ -148,7 +148,7 @@ body.store-layout #viewer-column { display: contents; }
 body.shell-layout.sidebar-collapsed { --shell-sidebar-w: 0px; }
 body.shell-layout.sidebar-collapsed #setup-resizer { display: none; }
 body.shell-layout.sidebar-collapsed #setup-sidebar { overflow: visible; border-right: 0; }
-body.shell-layout.sidebar-collapsed #config-collapse { position: fixed; top: calc(var(--shell-top) + 12px); left: 12px; z-index: 55; padding: 8px 10px; border-radius: 6px; background: #fff; box-shadow: 0 2px 12px #17271d24; white-space: nowrap; }
+body.shell-layout.sidebar-collapsed #config-collapse { position: fixed; top: calc(var(--shell-top) + 12px); left: 12px; z-index: 55; padding: 8px 10px; border-radius: 8px; background: var(--ui-soft, #edf2f0); box-shadow: 0 2px 12px #17271d24; white-space: nowrap; }
 #setup-backdrop { background: #f5f6f1; }
 #setup-exit-btn { top: 12px; right: 22px; background: var(--ink); border: none; color: white; border-radius: 6px; padding: 7px 15px; box-shadow: none; }
 #setup-backdrop::after { content: 'ERGOFLEX  /  CUSTOM SHOP                                    Live workspace'; position: absolute; left: calc(var(--shell-sidebar-w, 420px) + 28px); top: 20px; font-size: 10px; color: #687e6e; letter-spacing: 1.3px; white-space: pre; }
@@ -259,8 +259,8 @@ body.shell-layout.sidebar-collapsed #config-collapse { position: fixed; top: cal
    panel, no reserve to keep the tabs equal, and nothing for the canvas to wait on. */
 
 /* Options panel collapse. The viewer column takes the freed grid track. */
-.config-collapse { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: #666; background: none; border: 0; padding: 2px 0 10px; cursor: pointer; }
-.config-collapse:hover { color: #111; }
+.config-collapse { font-size: 12px; font-weight: 600; color: var(--ui-text, #20332e); background: var(--ui-soft, #edf2f0); border: 1px solid var(--ui-border, #d4dfda); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; cursor: pointer; }
+.config-collapse:hover { background: var(--ui-selected, #e3f0e9); }
 #config-column.collapsed { align-self: start; }
 
 /* Numeric transform inspector, alignment tools, and the lock toggle. */
