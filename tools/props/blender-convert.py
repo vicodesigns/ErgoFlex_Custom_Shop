@@ -98,6 +98,13 @@ def exclude_objects(patterns):
         while p: names.append(p.name); p = p.parent
         if any(pat in n for pat in patterns for n in names): bpy.data.objects.remove(o, do_unlink=True)
 
+def include_objects(patterns):
+    if not patterns: return
+    for o in list(mesh_objects()):
+        names=[];p=o
+        while p: names.append(p.name);p=p.parent
+        if not any(pat in n for pat in patterns for n in names): bpy.data.objects.remove(o, do_unlink=True)
+
 def override_materials(spec):
     # Untextured sources (Rhino files with no materials) come through black;
     # give every image-free material the manifest's colour and finish.
@@ -186,6 +193,7 @@ def bake_transforms():
 def run(job):
     reset()
     import_source(job['source'])
+    include_objects(job.get('include'))
     exclude_objects(job.get('exclude'))
     clean_scene()
     override_materials(job.get('material'))

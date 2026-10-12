@@ -25,7 +25,7 @@ export const ARTIST_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
     );
     if (large) props.push(
         { id: 'kenney-furniture-lounge-sofa', at: [650, 0, front - 490] },
-        { id: 'coffee-table', at: [650, 0, front - 1490] },
+        { id: 'ergoflex-coffee-table', at: [650, 0, front - 1490] },
         { id: 'sketchbook', at: [470, 391.2, front - 1510], turn: -8 },
         { id: 'antique-vase', at: [970, 391.2, front - 1480] },
         { id: 'papers', at: [table[0], 910, table[1] - 330], turn: 90 },

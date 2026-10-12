@@ -23274,6 +23274,515 @@
    "attribution": null,
    "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
    "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-triangle-table",
+   "name": "Triangular meeting table",
+   "category": "furniture",
+   "scenes": [
+    "office",
+    "coworking",
+    "educational"
+   ],
+   "file": "assets/props/ergoflex-triangle-table.glb",
+   "anchor": "floor",
+   "size": [
+    588.5,
+    740,
+    679.6
+   ],
+   "min": [
+    -294.3,
+    0,
+    -339.8
+   ],
+   "max": [
+    294.3,
+    740,
+    339.8
+   ],
+   "tris": 5754,
+   "bytes": 46952,
+   "source": "models/ergoflex-supplied/Triangle_Table.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-slim-speaker",
+   "name": "Slim studio speaker",
+   "category": "music",
+   "scenes": [
+    "music",
+    "gaming"
+   ],
+   "file": "assets/props/ergoflex-slim-speaker.glb",
+   "anchor": "floor",
+   "size": [
+    120.2,
+    420,
+    138.1
+   ],
+   "min": [
+    -60.1,
+    0,
+    -69
+   ],
+   "max": [
+    60.1,
+    420,
+    69
+   ],
+   "tris": 1080,
+   "bytes": 9228,
+   "source": "models/ergoflex-supplied/skeaker.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-single-monitor-arm",
+   "name": "Single monitor arm",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/ergoflex-single-monitor-arm.glb",
+   "anchor": "floor",
+   "size": [
+    416,
+    380,
+    385.1
+   ],
+   "min": [
+    -208,
+    0,
+    -192.5
+   ],
+   "max": [
+    208,
+    380,
+    192.5
+   ],
+   "tris": 10866,
+   "bytes": 114848,
+   "source": "models/ergoflex-supplied/singleMonitorArm.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-shelf-organizer",
+   "name": "Shelf organizer",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "creative"
+   ],
+   "file": "assets/props/ergoflex-shelf-organizer.glb",
+   "anchor": "floor",
+   "size": [
+    340,
+    125.3,
+    277.3
+   ],
+   "min": [
+    -170,
+    0,
+    -138.7
+   ],
+   "max": [
+    170,
+    125.3,
+    138.7
+   ],
+   "tris": 1512,
+   "bytes": 13292,
+   "source": "models/ergoflex-supplied/ShelvingOrganizing.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-mx-master-mouse",
+   "name": "MX Master mouse",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/ergoflex-mx-master-mouse.glb",
+   "anchor": "floor",
+   "size": [
+    82.1,
+    47.2,
+    124.9
+   ],
+   "min": [
+    -41,
+    0,
+    -62.5
+   ],
+   "max": [
+    41,
+    47.2,
+    62.5
+   ],
+   "tris": 26079,
+   "bytes": 180132,
+   "sourceTris": 168962,
+   "source": "models/ergoflex-supplied/MxMasterMouse.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-mouse-2",
+   "name": "Mouse · alternate style",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "gaming",
+    "home"
+   ],
+   "file": "assets/props/ergoflex-mouse-2.glb",
+   "anchor": "floor",
+   "size": [
+    96.7,
+    49.3,
+    115
+   ],
+   "min": [
+    -48.4,
+    0,
+    -57.5
+   ],
+   "max": [
+    48.4,
+    49.3,
+    57.5
+   ],
+   "tris": 12112,
+   "bytes": 150880,
+   "sourceTris": 43480,
+   "source": "models/ergoflex-supplied/Mouse2.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-mechanical-keyboard",
+   "name": "Mechanical keyboard",
+   "category": "desk",
+   "scenes": [
+    "gaming",
+    "office",
+    "home"
+   ],
+   "file": "assets/props/ergoflex-mechanical-keyboard.glb",
+   "anchor": "floor",
+   "size": [
+    440,
+    41.7,
+    137.1
+   ],
+   "min": [
+    -220,
+    0,
+    -68.6
+   ],
+   "max": [
+    220,
+    41.7,
+    68.6
+   ],
+   "tris": 16006,
+   "bytes": 102740,
+   "sourceTris": 19287,
+   "source": "models/ergoflex-supplied/MechanicalKeyboard.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-headphones-2",
+   "name": "Over-ear headphones",
+   "category": "desk",
+   "scenes": [
+    "music",
+    "gaming"
+   ],
+   "file": "assets/props/ergoflex-headphones-2.glb",
+   "anchor": "floor",
+   "size": [
+    173.3,
+    230,
+    128.3
+   ],
+   "min": [
+    -86.7,
+    0,
+    -64.1
+   ],
+   "max": [
+    86.7,
+    230,
+    64.1
+   ],
+   "tris": 41416,
+   "bytes": 198828,
+   "sourceTris": 208698,
+   "source": "models/ergoflex-supplied/Headphone2.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-game-table",
+   "name": "Gaming table",
+   "category": "furniture",
+   "scenes": [
+    "gaming",
+    "lounge"
+   ],
+   "file": "assets/props/ergoflex-game-table.glb",
+   "anchor": "floor",
+   "size": [
+    800.2,
+    740,
+    925.9
+   ],
+   "min": [
+    -400.1,
+    0,
+    -463
+   ],
+   "max": [
+    400.1,
+    740,
+    463
+   ],
+   "tris": 3430,
+   "bytes": 25740,
+   "source": "models/ergoflex-supplied/GameTable.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-easel-accessory",
+   "name": "Easel accessory rail",
+   "category": "desk",
+   "scenes": [
+    "creative"
+   ],
+   "file": "assets/props/ergoflex-easel-accessory.glb",
+   "anchor": "floor",
+   "size": [
+    1485,
+    105.8,
+    76.2
+   ],
+   "min": [
+    -742.6,
+    0,
+    -38.1
+   ],
+   "max": [
+    742.5,
+    105.8,
+    38.1
+   ],
+   "tris": 8642,
+   "bytes": 45624,
+   "source": "models/ergoflex-supplied/EaselAccesssory.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-drawing-tablet",
+   "name": "Drawing tablet",
+   "category": "desk",
+   "scenes": [
+    "creative",
+    "office"
+   ],
+   "file": "assets/props/ergoflex-drawing-tablet.glb",
+   "anchor": "floor",
+   "size": [
+    300,
+    17.4,
+    240.3
+   ],
+   "min": [
+    -150,
+    0,
+    -120.1
+   ],
+   "max": [
+    150,
+    17.4,
+    120.1
+   ],
+   "tris": 22027,
+   "bytes": 238428,
+   "sourceTris": 30686,
+   "source": "models/ergoflex-supplied/DrawingTablet.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-dual-monitor-arm-compact",
+   "name": "Dual monitor arms · compact",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "gaming"
+   ],
+   "file": "assets/props/ergoflex-dual-monitor-arm-compact.glb",
+   "anchor": "floor",
+   "size": [
+    736,
+    373.7,
+    382.7
+   ],
+   "min": [
+    -368,
+    0,
+    -191.3
+   ],
+   "max": [
+    368,
+    373.7,
+    191.3
+   ],
+   "tris": 32784,
+   "bytes": 277552,
+   "sourceTris": 144843,
+   "source": "models/ergoflex-supplied/DoubleMonitorArmsSM.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-desktop-pc",
+   "name": "Desktop PC",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home",
+    "gaming"
+   ],
+   "file": "assets/props/ergoflex-desktop-pc.glb",
+   "anchor": "floor",
+   "size": [
+    397.1,
+    450,
+    189.3
+   ],
+   "min": [
+    -198.6,
+    0,
+    -94.7
+   ],
+   "max": [
+    198.6,
+    450,
+    94.7
+   ],
+   "tris": 25026,
+   "bytes": 182232,
+   "source": "models/ergoflex-supplied/DesktopPc.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-coffee-table",
+   "name": "Coffee table · dark wood",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "music",
+    "lounge"
+   ],
+   "file": "assets/props/ergoflex-coffee-table.glb",
+   "anchor": "floor",
+   "size": [
+    1281.7,
+    390,
+    1352.4
+   ],
+   "min": [
+    -640.8,
+    0,
+    -676.2
+   ],
+   "max": [
+    640.8,
+    390,
+    676.2
+   ],
+   "tris": 1143,
+   "bytes": 19304,
+   "source": "models/ergoflex-supplied/coffeetable.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-vision-pro",
+   "name": "Apple Vision Pro headset",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "gaming",
+    "home"
+   ],
+   "file": "assets/props/ergoflex-vision-pro.glb",
+   "anchor": "floor",
+   "size": [
+    200,
+    76.7,
+    228.9
+   ],
+   "min": [
+    -100,
+    0,
+    -114.5
+   ],
+   "max": [
+    100,
+    76.7,
+    114.5
+   ],
+   "tris": 21802,
+   "bytes": 164312,
+   "sourceTris": 151469,
+   "source": "models/ergoflex-supplied/AppleVisionPro.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection"
   }
  ],
  "screens": [
@@ -23315,6 +23824,6 @@
    ]
   }
  ],
- "generated": "2026-10-11T23:48:00.598Z",
+ "generated": "2026-10-12T16:00:33.964Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

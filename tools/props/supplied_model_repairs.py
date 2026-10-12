@@ -12,7 +12,37 @@ def mat(name, color, roughness=.5, metallic=0):
     return m
 
 def improve(id):
-    if id in ('ergoflex-small-bookshelf','ergoflex-tall-bookshelf'):
+    if id in ('ergoflex-mechanical-keyboard','ergoflex-desktop-pc','ergoflex-mouse-2'):
+        # CAD's pure-black factors erase the form under any room lighting.
+        # Preserve each material assignment and expose the original detail.
+        for m in bpy.data.materials:
+            if not m.use_nodes:continue
+            p=m.node_tree.nodes.get('Principled BSDF')
+            if p and max(p.inputs['Base Color'].default_value[:3])<.005:
+                p.inputs['Base Color'].default_value=(.032,.04,.048,1)
+                p.inputs['Roughness'].default_value=.48
+    elif id=='ergoflex-game-table':
+        # The CAD shell has an open upper rim. Close that rim with a fitted
+        # working top, retaining the original cabinet and its footprint.
+        vertices=[o.matrix_world @ v.co for o in bpy.context.scene.objects if o.type=='MESH' for v in o.data.vertices]
+        height=max(v.z for v in vertices)
+        points=sorted(set((round(v.x,5),round(v.y,5)) for v in vertices if v.z>height-.005))
+        def cross(a,b,c):return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
+        lower=[];upper=[]
+        for v in points:
+            while len(lower)>1 and cross(lower[-2],lower[-1],v)<=0:lower.pop()
+            lower.append(v)
+        for v in reversed(points):
+            while len(upper)>1 and cross(upper[-2],upper[-1],v)<=0:upper.pop()
+            upper.append(v)
+        hull=lower[:-1]+upper[:-1];n=len(hull)
+        if n>=3:
+            data=bpy.data.meshes.new('Fitted gaming table top')
+            data.from_pydata([(x,y,z) for z in [height-.03,height] for x,y in hull],[],
+                [tuple(reversed(range(n))),tuple(range(n,n*2))]+[(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)])
+            data.update();o=bpy.data.objects.new('Fitted gaming table top',data);bpy.context.collection.objects.link(o)
+            o.data.materials.append(mat('Gaming table warm graphite top',(.09,.07,.045),.55,.05))
+    elif id in ('ergoflex-small-bookshelf','ergoflex-tall-bookshelf'):
         wood=mat('Warm walnut cabinet',(.24,.115,.05),.5)
         colors=[(.06,.15,.12),(.13,.19,.24),(.32,.10,.08),(.49,.33,.14),(.32,.29,.24)]
         books=[mat('Book cloth '+str(i),c,.82) for i,c in enumerate(colors)]

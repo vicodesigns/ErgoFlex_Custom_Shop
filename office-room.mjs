@@ -14,11 +14,11 @@ const roles = {
         desktop: [{ id: 'metal-ruler', at: [-390, 1, 80], turn: 90 }, { id: 'ruler-set-square', at: [285, 1, 55] }, { id: 'apple-pencil', at: [100, 1, 240], turn: 80 }],
         shelf: [{ id: 'sketchbook', at: [-320, 0, 0] }, { id: 'paper-stand', at: [300, 0, 0] }] },
     designer: { id: 'designer', name: 'Digital design', height: 28, tilt: 0,
-        desktop: [{ id: 'drawing-tablet', at: [-260, 0, 90] }, { id: 'apple-pencil', at: [-75, 0, 90], turn: 15 }, { id: 'office-keyboard', at: [190, 0, -170] }, { id: 'painted-mug', at: [440, 0, 160] }],
+        desktop: [{ id: 'ergoflex-drawing-tablet', at: [-260, 0, 90] }, { id: 'apple-pencil', at: [-75, 0, 90], turn: 15 }, { id: 'office-keyboard', at: [190, 0, -170] }, { id: 'painted-mug', at: [440, 0, 160] }],
         shelf: [{ id: 'curved-monitor', at: [0, 0, 0] }] },
     prototype: { id: 'prototype', name: 'Prototyping', height: 43.5, tilt: -5,
         desktop: [{ id: 'printer-3d', at: [-190, 0, -30] }, { id: 'sketchbook', at: [265, 0, 100], turn: -12 }],
-        shelf: [{ id: 'kenney-furniture-books', at: [-290, 0, 0] }, { id: 'paper-holder', at: [260, 0, 0] }] },
+        shelf: [{ id: 'kenney-furniture-books', at: [-290, 0, 0] }, { id: 'ergoflex-shelf-organizer', at: [260, 0, 0] }] },
     architect: { id: 'architect', name: 'Architecture', height: 43.5, tilt: 25, plan: true,
         desktop: [{ id: 'clipboard', at: [-330, 1, 65], turn: 12 }, { id: 'metal-ruler', at: [370, 1, -50], turn: 5 }],
         shelf: [{ id: 'paper-stand', at: [-300, 0, 0] }, { id: 'kenney-furniture-books', at: [280, 0, 0] }] },
@@ -39,7 +39,7 @@ export const OFFICE_LAYOUTS = Object.fromEntries(sizes.map(([id, name, width, de
     props.push({ id: 'monstera', at: [width / 2 - 510, 0, front - 550] });
     const lounge = index > 0 ? [-width / 2 + 1650, front - 550] : [0, front - 500];
     if (index === 0) {
-        props.push({ id: 'armchair-leather', at: [-700, 0, front - 650], turn: 15 }, { id: 'coffee-table-2', at: [0, 0, front - 420] }, { id: 'journal', at: [-45, 700, front - 420] });
+        props.push({ id: 'armchair-leather', at: [-700, 0, front - 650], turn: 15 }, { id: 'ergoflex-triangle-table', at: [0, 0, front - 420] }, { id: 'journal', at: [-45, 740, front - 420] });
     } else {
         props.push({ id: 'kenney-furniture-lounge-sofa', at: [lounge[0], 0, lounge[1]] },
             { id: 'coffee-table', at: [lounge[0], 0, lounge[1] - 950] }, { id: 'journal', at: [lounge[0] - 270, 391.2, lounge[1] - 980] },

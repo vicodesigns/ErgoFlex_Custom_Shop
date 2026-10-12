@@ -69,7 +69,7 @@ for (const prop of selected) {
         source = obj;
     }
     jobs.push({ id: prop.id, source, fit: prop.fit, anchor: prop.anchor || 'floor', rotateY: prop.rotateY || 0,
-                rotateX: prop.rotateX || 0, exclude: prop.exclude || [], material: prop.material || null,
+                rotateX: prop.rotateX || 0, exclude: prop.exclude || [], include: prop.include || [], material: prop.material || null,
                 budget: prop.budget || 0, repair: prop.repair || null, out: join(rawDir, `${prop.id}.glb`) });
 }
 

@@ -15,14 +15,14 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=mx-master-20261011';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=supplied-accessories-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=scene-desk-styling-20261010';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=scene-desk-styling-20261010';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=scene-desk-styling-20261010';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=supplied-accessories-20261012';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=supplied-accessories-20261012';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=supplied-accessories-20261012';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 
-import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=scene-desk-styling-20261010';
+import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=supplied-accessories-20261012';
 import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
@@ -80,7 +80,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=product-desk-objects-20261011').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=supplied-accessories-20261012').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -275,13 +275,73 @@ function prepareSuppliedDisplay(root, id) {
             uv[i * 2 + 1] = (position.getY(i) - bounds.min.y) / (bounds.max.y - bounds.min.y);
         }
         geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-        object.geometry = geometry; object.material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false });
+        // Some CAD primitives combine the screen and its back into one
+        // material. Texture the user-facing triangles only, not the enclosure.
+        geometry.clearGroups();
+        const index = geometry.index, a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), normal = new THREE.Vector3();
+        const count = index ? index.count : position.count;
+        const frontFaces = [], backFaces = [];
+        for (let i = 0; i < count; i += 3) {
+            a.fromBufferAttribute(position, index ? index.getX(i) : i);
+            b.fromBufferAttribute(position, index ? index.getX(i + 1) : i + 1);
+            c.fromBufferAttribute(position, index ? index.getX(i + 2) : i + 2);
+            normal.crossVectors(b.sub(a), c.sub(a)).normalize();
+            const faces = normal.z > .5 ? frontFaces : backFaces;
+            faces.push(index ? index.getX(i) : i, index ? index.getX(i + 1) : i + 1, index ? index.getX(i + 2) : i + 2);
+        }
+        geometry.setIndex(frontFaces.concat(backFaces));
+        if (frontFaces.length) geometry.addGroup(0, frontFaces.length, 0);
+        if (backFaces.length) geometry.addGroup(frontFaces.length, backFaces.length, 1);
+        object.geometry = geometry; object.material = [new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }), material('#222b33', { roughness: .5 })];
         object.userData.sharedProp = false;
     });
+    root.updateWorldMatrix(true, true);
+    const inverse = root.matrixWorld.clone().invert(), bounds = new THREE.Box3();
+    panel.traverse(object => {
+        if (!object.isMesh) return;
+        object.geometry.computeBoundingBox();
+        bounds.union(object.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(object.matrixWorld)));
+    });
+    root.userData.displayMount = bounds.getCenter(new THREE.Vector3());
+    root.userData.displayMount.z = bounds.min.z;
     const stand = new THREE.Group(); stand.name = 'monitor-stand'; root.add(stand);
     const silver = material('#535d65', { metalness: .65, roughness: .35 });
     box(stand, [220, 8, 170], [0, 4, -12], silver, 4);
     box(stand, [38, 135, 30], [0, 71, -48], silver, 3);
+}
+
+function prepareSuppliedArm(root, id) {
+    const model = root.getObjectByName(`Prop:${id}`);
+    if (!model) return;
+    // Measured on the normalized CAD exports. The clamp, rather than the
+    // overall bounds center, belongs on the shelf's rear edge. Both exports
+    // originally face away from the user or sideways.
+    const dual = id === 'ergoflex-dual-monitor-arm-compact';
+    const base = new THREE.Vector3(...(dual ? [-9.2, 0, 145.6] : [-149, 0, -24.5]));
+    const ends = dual ? [[333, 253.3, -125.4], [-333, 267.8, -92.9]] : [[173, 266.1, 119.9]];
+    model.rotation.y = dual ? Math.PI : -Math.atan2(322, 144.4);
+    const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), model.rotation.y);
+    model.position.copy(base.clone().applyQuaternion(rotation).negate());
+    root.userData.armHeads = ends.map(p => new THREE.Vector3(...p).sub(base).applyQuaternion(rotation));
+    root.updateWorldMatrix(true, true);
+    const inverse = root.matrixWorld.clone().invert();
+    root.armGeometry = [];
+    model.traverse(object => {
+        if (!object.isMesh) return;
+        object.geometry = object.geometry.clone();
+        const source = object.geometry.attributes.position;
+        const values = new Float32Array(source.count * 3);
+        for (let i = 0; i < source.count; i++) { values[i * 3] = source.getX(i); values[i * 3 + 1] = source.getY(i); values[i * 3 + 2] = source.getZ(i); }
+        object.geometry.setAttribute('position', new THREE.BufferAttribute(values.slice(), 3));
+        const transform = inverse.clone().multiply(object.matrixWorld);
+        object.userData.sharedProp = false;
+        // Own the geometry and materials so disposing this fitted accessory
+        // cannot invalidate the shared library cache.
+        object.material = [].concat(object.material).map(m => m.clone());
+        root.armGeometry.push({ object, values, transform, inverse: transform.clone().invert() });
+    });
+    const bridges = new THREE.Group(); bridges.name = 'Display mounting adapters'; root.add(bridges);
+    root.armAdapterGroup = bridges;
 }
 
 // Locate the largest upward-facing triangle. Its plane is the working face,
@@ -365,6 +425,7 @@ export class WorkspaceAccessories {
                     obj.add(model); obj.userData.loaded = true;
                     if (item.id === 'keyboard-tray') prepareSuppliedTray(obj);
                     if (item.id === 'wide-monitor' || item.id === 'portrait-monitor') prepareSuppliedDisplay(obj, item.propId);
+                    if (item.id === 'monitor-arm' || item.id === 'monitor-arm-2') prepareSuppliedArm(obj, item.propId);
                     this.layout();
                 }).catch(error => { obj.userData.loadError = true; console.error('[ErgoFlex] Accessory model failed:', item.id, error); })
                   .finally(() => { if (this.pending.get(item.id) === pending) this.pending.delete(item.id); });
@@ -393,22 +454,27 @@ export class WorkspaceAccessories {
         const inputY = tray ? -28 + (surface?.top ?? -20) : mat;
         const inputZ = tray ? front - 100 + (surface?.center.z ?? 210) : front - 215;
         const inputX = tray ? (surface?.center.x ?? -37) : 0;
-        for (const id of ['logitech-k860', 'ergo-keyboard', 'apple-keyboard']) place(id, inputX - (tray ? 30 : 64), inputY, inputZ);
+        for (const id of ['logitech-k860', 'ergo-keyboard', 'apple-keyboard', 'mechanical-keyboard']) place(id, inputX - (tray ? 30 : 64), inputY, inputZ);
         for (const id of ['logitech-lift', 'logitech-mx-master', 'magic-mouse']) place(id, tray ? inputX + (surface?.width ?? 506) / 2 - 42 : 240, inputY, inputZ + (tray ? 95 : 25));
         place('artist-easel', 0, 0, 0);
         place('painter-shelf', 0, -80, 0);
+        place('easel-rail', 0, 0, -190);
+        place('drawing-tablet', -210, 0, 35);
+        place('shelf-organizer', 0, 0, 0);
         const back = -(this.mounts.get('shelf')?.depth || 480) / 2;
         place('monitor-arm', 0, 0, back + 28);
         place('monitor-arm-2', 0, 0, back + 28);
         const pair = selected.has('portrait-monitor') && (selected.has('wide-monitor') || selected.has('dell-u2724d'));
         const mounted = selected.has('monitor-arm-2') || selected.has('monitor-arm');
+        const portraitMounted = selected.has('monitor-arm-2') || (selected.has('monitor-arm') && !selected.has('wide-monitor') && !selected.has('dell-u2724d'));
         place('wide-monitor', pair ? -300 : 0, mounted ? 70 : 0, mounted ? back + 320 : 0);
-        place('portrait-monitor', pair ? 340 : 0, mounted ? -30 : 0, mounted ? back + 320 : 0);
+        place('portrait-monitor', pair ? 340 : 0, portraitMounted ? -30 : 0, portraitMounted ? back + 320 : 0);
         for (const id of ['wide-monitor', 'portrait-monitor']) {
             const display = this.items.get(id);
             if (!display?.userData.loaded) continue;
-            display.getObjectByName('monitor-stand').visible = !mounted;
-            display.getObjectByName(`Prop:${accessory(id).propId}`).position.y = mounted ? 0 : 125;
+            const onArm = id === 'portrait-monitor' ? portraitMounted : mounted;
+            display.getObjectByName('monitor-stand').visible = !onArm;
+            display.getObjectByName(`Prop:${accessory(id).propId}`).position.y = onArm ? 0 : 125;
         }
         const monitor = this.items.get('dell-u2724d');
         if (monitor) {
@@ -420,6 +486,68 @@ export class WorkspaceAccessories {
         }
         this.onLayout?.();
         this.update();
+    }
+    fitMonitorArms() {
+        for (const id of ['monitor-arm', 'monitor-arm-2']) {
+            const arm = this.items.get(id), adapters = arm?.armAdapterGroup;
+            if (!adapters) continue;
+            arm.updateWorldMatrix(true, true);
+            const displays = [this.items.get('wide-monitor') || this.items.get('dell-u2724d'), this.items.get('portrait-monitor')].filter(Boolean);
+            const matches = displays.slice(0, arm.userData.armHeads.length).map((display, i) => {
+                display.updateWorldMatrix(true, true);
+                const point = (display.userData.displayMount || new THREE.Vector3(0, 273.745, -50.12)).clone();
+                // Stand-free panels start on the root floor. Their height offset
+                // must be included when a display returns to its own stand.
+                const panel = display.getObjectByName(`Prop:${accessory(display.userData.accessoryId)?.propId}`);
+                if (panel) point.add(panel.position);
+                const end = arm.worldToLocal(display.localToWorld(point));
+                const relative = arm.matrixWorld.clone().invert().multiply(display.matrixWorld);
+                const position = new THREE.Vector3(), rotation = new THREE.Quaternion(), scale = new THREE.Vector3();
+                relative.decompose(position, rotation, scale);
+                return { display, start: arm.userData.armHeads[i], end, rotation };
+            });
+            const signature = JSON.stringify(matches.map(m => [m.display.uuid, m.display.visible, ...m.end.toArray().map(v => Math.round(v * 100) / 100), ...m.rotation.toArray().map(v => Math.round(v * 1e6) / 1e6)]));
+            if (signature === arm.userData.armFitSignature) continue;
+            arm.userData.armFitSignature = signature;
+            for (const child of [...adapters.children]) disposeTree(child);
+            arm.userData.armConnections = [];
+            const metal = material('#4d565e', { metalness: .7, roughness: .3 });
+            const graphite = material('#222b33', { metalness: .45, roughness: .4 });
+            const fittings = matches.map(m => ({ ...m, head: m.end.clone().add(new THREE.Vector3(0, 0, -24).applyQuaternion(m.rotation)) }));
+            for (const fitting of fittings) fitting.delta = fitting.head.clone().sub(fitting.start);
+            // Keep the clamp and shared mast fixed, while the outer arm runs
+            // adapt to the screen positions. Work on owned vertex copies only;
+            // the library's source geometry and saved object poses stay intact.
+            const point = new THREE.Vector3();
+            for (const { object, values, transform, inverse } of arm.armGeometry) {
+                const positions = object.geometry.attributes.position;
+                for (let i = 0; i < positions.count; i++) {
+                    point.fromArray(values, i * 3).applyMatrix4(transform);
+                    const fitting = fittings.find(m => arm.userData.armHeads.length === 1 || Math.sign(m.start.x) === Math.sign(point.x));
+                    if (fitting && point.y > 90) {
+                        const reach = arm.userData.armHeads.length === 1 ? point.z : Math.abs(point.x);
+                        const terminal = arm.userData.armHeads.length === 1 ? fitting.start.z : Math.abs(fitting.start.x);
+                        const weight = THREE.MathUtils.clamp((reach - 70) / Math.max(1, terminal - 120), 0, 1);
+                        point.addScaledVector(fitting.delta, weight);
+                    }
+                    point.applyMatrix4(inverse); positions.setXYZ(i, point.x, point.y, point.z);
+                }
+                positions.needsUpdate = true; object.geometry.computeVertexNormals(); object.geometry.computeBoundingBox(); object.geometry.computeBoundingSphere();
+            }
+            for (const { display, head: start, end, rotation } of fittings) {
+                if (!display.visible) continue;
+                const joint = start.clone().lerp(end, .5);
+                // Short articulated adapters close the CAD head-to-enclosure
+                // gap without scaling the supplied arm or moving saved screens.
+                rod(adapters, start.toArray(), joint.toArray(), 10, graphite);
+                rod(adapters, joint.toArray(), end.toArray(), 8, metal);
+                sphere(adapters, [13, 13, 13], joint.toArray(), metal);
+                const plate = box(adapters, [90, 90, 6], end.toArray(), graphite, 2);
+                plate.quaternion.copy(rotation);
+                arm.userData.armConnections.push({ displayId: display.userData.accessoryId, start: start.clone(), end: end.clone() });
+            }
+            adapters.updateMatrixWorld(true);
+        }
     }
     setDayDress(mode) {
         const phase = ['morning', 'afternoon', 'evening', 'night', 'party'].indexOf(mode);
@@ -440,6 +568,7 @@ export class WorkspaceAccessories {
                 target.visible = visible && (target !== dress || this.activeDeskDress !== false); target.updateMatrixWorld(true);
             }
         }
+        this.fitMonitorArms();
     }
     // Scene dressing on the desk itself: mugs, papers and the like, which
     // follow the desktop as it lifts and tilts. Never priced, never exported
@@ -534,7 +663,7 @@ export const ROOM_SCENES = [
     { id: 'office', name: 'Office', caption: 'Different talents. One shared workspace.', tone: 'gallery',
       desk: [
         { id: 'office-keyboard', at: [-60, 0, 90] },
-        { id: 'magic-mouse', at: [285, 0, 90], turn: 90 },
+        { id: 'ergoflex-mx-master-mouse', at: [285, 0, 90] },
         { id: 'journal', at: [-420, 0, -140], turn: -10 },
         { id: 'painted-mug', at: [435, 0, -155] }
       ],
@@ -551,7 +680,7 @@ export const ROOM_SCENES = [
     { id: 'home', name: 'Home office', caption: 'Make yourself at work.', tone: 'warm',
       desk: [
         { id: 'office-keyboard', at: [-70, 0, 80] },
-        { id: 'magic-mouse', at: [270, 0, 80], turn: 90 },
+        { id: 'ergoflex-mx-master-mouse', at: [270, 0, 80] },
         { id: 'painted-mug', at: [440, 0, -30] },
         { id: 'journal', at: [-420, 0, -80], turn: -8 }
       ],
@@ -562,22 +691,22 @@ export const ROOM_SCENES = [
         { id: 'music-midi-keyboard', procedural: 'midi', at: [-70, 0, 105] },
         { id: 'magic-mouse', at: [465, 0, 85], turn: 90 },
         { id: 'mac-studio', at: [-455, 0, -250] },
-        { id: 'headphones', at: [410, 0, -240], turn: 18 }
+        { id: 'ergoflex-headphones-2', at: [410, 0, -240], turn: 18 }
       ],
       shelf: [ { id: 'curved-monitor', at: [0, 0, 0] } ],
       shell: 'studio', feature: 'panels', props: musicLayoutForSize('48x30').props },
     { id: 'gaming', name: 'Gaming', caption: 'Settle into your next world.', tone: 'slate',
       desk: [
-        { id: 'rgb-keyboard', at: [-100, 0, 30] },
-        { id: 'gaming-mouse', at: [300, 0, 30] },
+        { id: 'ergoflex-mechanical-keyboard', at: [-100, 0, 30] },
+        { id: 'ergoflex-mouse-2', at: [300, 0, 30] },
         { id: 'game-controller', at: [-420, 0, -240], turn: 15 },
-        { id: 'headphones', at: [435, 0, -230], turn: -20 }
+        { id: 'ergoflex-headphones-2', at: [435, 0, -230], turn: -20 }
       ],
       shelf: [ { id: 'curved-monitor', at: [0, 0, 0] } ],
       shell: 'studio', feature: 'panels', props: gamingLayoutForSize('48x30').props },
     { id: 'creative', name: 'Artist studio', caption: 'A space for your next creation.', tone: 'gallery',
       desk: [
-        { id: 'drawing-tablet', at: [-285, 0, 40], turn: 8 },
+        { id: 'ergoflex-drawing-tablet', at: [-285, 0, 40], turn: 8 },
         { id: 'apple-pencil', at: [-115, 0, 50], turn: 65 },
         { id: 'sketchbook', at: [110, 0, -105], turn: -8 },
         { id: 'metal-ruler', at: [-425, 0, -195], turn: 90 },

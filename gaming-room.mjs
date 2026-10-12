@@ -12,7 +12,7 @@ export const GAMING_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
     const loungeZ = back + depth - (large ? 1500 : 1150);
     const props = [
         { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180 },
-        { id: 'gaming-pc', at: [cabinetX, 610, cabinetZ], turn: 0 },
+        { id: 'ergoflex-desktop-pc', at: [cabinetX, 610, cabinetZ], turn: 0 },
         { id: 'kenney-furniture-books', at: [cabinetX - 95, 1604, back + 145] },
         { id: 'kenney-furniture-plant-small2', at: [cabinetX + 120, 1934, back + 140] },
         { id: 'kenney-furniture-potted-plant', at: [-width / 2 + 270, 0, large ? back + 1500 : back + 320] },
@@ -31,6 +31,9 @@ export const GAMING_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
         { id: 'headphones', at: [cabinetX - 190, 610, cabinetZ + 60], turn: -20 }
     );
     if (large) props.push(
+        { id: 'ergoflex-game-table', at: [400, 0, back + depth - 950] },
+        { id: 'game-controller', at: [400, 740, back + depth - 950], turn: -15 },
+        { id: 'ergoflex-vision-pro', at: [cabinetX + 140, 610, cabinetZ - 140], turn: -15 },
         { id: 'kenney-furniture-kitchen-coffee-machine', at: [-width / 2 + 370, 790, back + 360], turn: 90 },
         { id: 'monstera', at: [width / 2 - 500, 0, loungeZ - 1050] },
         { id: 'kenney-furniture-lounge-chair', at: [width / 2 - 720, 0, loungeZ + 820], turn: -110 }

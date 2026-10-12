@@ -12,7 +12,7 @@ export const MUSIC_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map(
     const performance = [width / 2 - 720, front - (compact ? 440 : 1050)];
     const props = [
         { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180 },
-        ...[-1, 1].map(sign => ({ id: 'kenney-furniture-speaker-small', at: [desk[0] + sign * speakers, 750, desk[1] - 260], turn: -sign * 10 })),
+        ...[-1, 1].map(sign => ({ id: 'ergoflex-slim-speaker', at: [desk[0] + sign * speakers, 750, desk[1] - 260], turn: -sign * 10 })),
         { id: 'studio-recorder', at: [rack[0], 800, rack[1]], turn: 0 },
         { id: 'kenney-furniture-books', at: [width / 2 - 160, 1504, rack[1] - 120], turn: -90 },
         { id: 'kenney-furniture-plant-small2', at: [width / 2 - 165, 1874, rack[1] + 60] },
@@ -26,7 +26,7 @@ export const MUSIC_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map(
     if (index === 2) props.push({ id: 'armchair-poppi', at: [150, 0, front - 500] });
     if (large) props.push(
         { id: 'kenney-furniture-lounge-sofa', at: [-400, 0, front - 650] },
-        { id: 'coffee-table', at: [-400, 0, front - 1600] },
+        { id: 'ergoflex-coffee-table', at: [-400, 0, front - 1600] },
         { id: 'journal', at: [-590, 391.2, front - 1650], turn: -12 },
         { id: 'strat-guitar', at: [width / 2 - 540, 0, front - 1800], turn: -35 },
         { id: 'kenney-furniture-kitchen-coffee-machine', at: [-width / 2 + 370, 790, back + 360], turn: 0 },
