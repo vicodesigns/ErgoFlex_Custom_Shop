@@ -1,17 +1,19 @@
-import { DESK_SURFACES } from './scene-desk-objects.mjs?v=product-desk-objects-20261011';
+import { DESK_SURFACES } from './scene-desk-objects.mjs?v=curved-pair-20261012';
 
 export function mountDeskObjectUI(parent,manager){
     const editor=manager.objects,panel=document.createElement('details');panel.className='scene-desk-object-panel';
     const surfaces=Object.entries(DESK_SURFACES).map(([id,label])=>`<option value="${id}">${label}</option>`).join('');
     panel.innerHTML=`<summary>Objects on this desk</summary>
         <div class="scene-desk-row"><label><input type="checkbox" data-object-edit> Edit desk objects</label><span data-object-count></span><button type="button" data-object-hide>Hide tools to see the desk</button></div>
-        <p class="desk-object-note">Turn on editing to click an object and drag it along its desk surface. Changes save in this browser; use Undo or Redo to reverse them.</p>
+        <p class="desk-object-note">Turn on editing to click and drag an object. For monitor alignment, use 0.5 mm position steps and 0.1° turn, tilt and roll. Changes save in this browser; use Undo or Redo to reverse them.</p>
         <div class="scene-desk-row"><label>Object <select data-object-select aria-label="Selected desk object"></select></label><button type="button" data-object-remove>Remove object</button></div>
         <fieldset class="desk-object-fields"><legend>Edit selected object</legend><label>Desk part <select data-object-role>${surfaces}</select></label>
-        <label>Left / right (mm)<input type="number" step="10" min="-5000" max="5000" data-object-x></label>
-        <label>Back / front (mm)<input type="number" step="10" min="-5000" max="5000" data-object-z></label>
-        <label>Height above part (mm)<input type="number" step="5" min="0" max="5000" data-object-y></label>
-        <label>Rotation (°)<input type="number" step="15" data-object-rotation></label>
+        <label>Left / right (mm)<input type="number" step="0.5" min="-5000" max="5000" data-object-x></label>
+        <label>Back / front (mm)<input type="number" step="0.5" min="-5000" max="5000" data-object-z></label>
+        <label>Height above part (mm)<input type="number" step="0.5" min="0" max="5000" data-object-y></label>
+        <label>Turn (°)<input type="number" step="0.1" data-object-rotation></label>
+        <label>Tilt (°)<input type="number" step="0.1" data-object-tilt></label>
+        <label>Roll (°)<input type="number" step="0.1" data-object-roll></label>
         <label>Size (%)<input type="number" step="5" min="1" max="500" data-object-scale></label></fieldset>
         <details class="desk-object-library"><summary>Add from the object library</summary>
         <div class="scene-desk-row"><label>Place on <select data-object-target>${surfaces}</select></label>
@@ -24,7 +26,7 @@ export function mountDeskObjectUI(parent,manager){
     q('[data-object-hide]').onclick=()=>{parent.open=false;};
     select.onchange=e=>{editor.select(e.target.value);editor.setEditing(true);};
     q('[data-object-remove]').onclick=()=>editor.remove();
-    for(const field of ['role','x','y','z','rotation','scale'])q(`[data-object-${field}]`).onchange=e=>editor.change({[field]:field==='role'?e.target.value:Number(e.target.value)});
+    for(const field of ['role','x','y','z','rotation','tilt','roll','scale'])q(`[data-object-${field}]`).onchange=e=>editor.change({[field]:field==='role'?e.target.value:Number(e.target.value)});
     q('[data-object-target]').onchange=e=>editor.role=e.target.value;
     let entries=[],renderSignature='';
     const library=()=>{
@@ -49,7 +51,7 @@ export function mountDeskObjectUI(parent,manager){
         q('fieldset').disabled=busy||!editor.current;
         for(const s of ['[data-object-target]','[data-object-search]','[data-object-category]'])q(s).disabled=busy||!r;
         for(const b of panel.querySelectorAll('.desk-object-card'))b.disabled=busy||!r;
-        const item=editor.current;q('[data-object-y]').min=item?.obj.userData.accessoryId?-5000:0;q('[data-object-remove]').textContent=item?.obj.userData.accessoryId?'Remove accessory':'Remove object';if(item){const o=item.obj,values={role:item.saved.role,x:o.position.x,y:o.position.y,z:o.position.z,rotation:o.rotation.y*180/Math.PI,scale:o.scale.x/item.baseScale.x*100};for(const [field,v] of Object.entries(values)){const input=q(`[data-object-${field}]`);if(document.activeElement!==input)input.value=typeof v==='number'?Math.round(v*100)/100:v;}}
+        const item=editor.current;q('[data-object-y]').min=item?.obj.userData.accessoryId?-5000:0;q('[data-object-remove]').textContent=item?.obj.userData.accessoryId?'Remove accessory':'Remove object';if(item){const o=item.obj,values={role:item.saved.role,x:o.position.x,y:o.position.y,z:o.position.z,rotation:o.rotation.y*180/Math.PI,tilt:o.rotation.x*180/Math.PI,roll:o.rotation.z*180/Math.PI,scale:o.scale.x/item.baseScale.x*100};for(const [field,v] of Object.entries(values)){const input=q(`[data-object-${field}]`);if(document.activeElement!==input)input.value=typeof v==='number'?Math.round(v*100)/100:v;}}
         q('[data-object-target]').value=editor.role;if(editor.loading)q('[data-object-library-status]').textContent='Adding object…';else if(entries.length)q('[data-object-library-status]').textContent=q('[data-object-library]').children.length+' objects · click one to add';
     }};
 }

@@ -1,7 +1,7 @@
 // Geometry and screen artwork adapted from the user's supplied ProVision panel HTML.
 // The source proportions are retained; diagonal is scaled to an illustrative 32 inches.
 import * as THREE from 'three';
-export function createProVisionMonitor() {
+export function createProVisionMonitor({portrait=false}={}) {
   // Materials
   const bodyMat = new THREE.MeshStandardMaterial({
     color: 0x181a1f, roughness: 0.35, metalness: 0.8
@@ -86,11 +86,12 @@ export function createProVisionMonitor() {
     }
   }
   drawScreen(0);
+  ctx.fillStyle = "#060709"; ctx.fillRect(0, 0, sCanvas.width, sCanvas.height);
 
   const screenTex = new THREE.CanvasTexture(sCanvas);
   screenTex.colorSpace = THREE.SRGBColorSpace;
   const screenOnMat = new THREE.MeshBasicMaterial({ map: screenTex });
-  const screenOffMat = new THREE.MeshStandardMaterial({ color: 0x060709, roughness: 0.2, metalness: 0.1 });
+  const screenOffMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: screenTex, roughness: 0.2, metalness: 0.1 });
 
   // Monitor Display Assembly (Origin at Center)
   const monitorHead = new THREE.Group();
@@ -103,7 +104,7 @@ export function createProVisionMonitor() {
   monitorHead.add(chassis);
 
   // Active Screen Surface
-  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(4.32, 2.52), screenOnMat);
+  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(4.32, 2.52), screenOffMat);
   screenMesh.position.z = 0.062;
   screenMesh.name = "monitor-screen";
   monitorHead.add(screenMesh);
@@ -158,5 +159,14 @@ export function createProVisionMonitor() {
   const scale = .8128 / Math.hypot(4.4, 2.6);
   monitorHead.scale.setScalar(scale);
   monitorHead.position.y = 1.32 * scale;
+  vesa.name = 'display-vesa-mount';
+  if (portrait) {
+    // Keep the flat panel, mounting hardware and bezels; turn the assembly
+    // upright and keep the desktop artwork oriented toward the viewer.
+    monitorHead.rotation.z = Math.PI/2;
+    const uv=screenMesh.geometry.attributes.uv;
+    for(let i=0;i<uv.count;i++){const u=uv.getX(i),v=uv.getY(i);uv.setXY(i,v,1-u);}
+    uv.needsUpdate=true;
+  }
   return monitorHead;
 }

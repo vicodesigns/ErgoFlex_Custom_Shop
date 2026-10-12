@@ -23,3 +23,14 @@ transform.p.x=999;assert.equal(objects['object-apple'].transform.p.x,15);
 assert.deepEqual(cleanDeskObjects({bad:{role:'desktop',transform:{...transform,s:{x:0,y:1,z:1}}}}),{});
 assert.deepEqual(cleanDeskObjects({bad:{role:'desktop',transform:{...transform,q:{x:0,y:0,z:0,w:0}}}}),{});
 console.log('Desk prop attachments, additions, removed defaults, independent transforms and invalid inputs passed.');
+
+const pair = cleanDeskObjects({
+ 'accessory-wide-monitor':{role:'shelf',transform:{p:{x:-300,y:210,z:80},q:{x:0,y:0,z:0,w:1},s:{x:1000,y:1000,z:1000}}},
+ 'accessory-portrait-monitor':{role:'shelf',transform:{p:{x:400,y:160,z:90},q:{x:0,y:0,z:0,w:1},s:{x:1000,y:1000,z:1000}}}
+});
+assert.equal(pair['accessory-wide-monitor'].transform.p.x,400);
+assert.equal(pair['accessory-portrait-monitor'].transform.p.x,-300);
+assert.equal(pair['accessory-wide-monitor'].transform.p.y,210);
+pair['accessory-wide-monitor'].transform.p.x=-350.5;
+assert.equal(cleanDeskObjects(pair)['accessory-wide-monitor'].transform.p.x,-350.5,'later manual edits are not swapped again');
+console.log('Old monitor pairs move curved right and portrait left once, retaining all other edits.');

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { cleanSceneDeskData, cleanDeskRecording, sampleDeskRecording, SCENE_DESKS_KEY } from './scene-desk-data.mjs';
-import { SceneDeskObjects } from './scene-desk-objects.mjs?v=product-desk-objects-20261011';
+import { SceneDeskObjects } from './scene-desk-objects.mjs?v=curved-pair-20261012';
 
 const descendant=(o,parent)=>{for(let p=o;p;p=p.parent)if(p===parent)return true;return false;};
 const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};

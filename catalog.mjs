@@ -170,10 +170,10 @@ export const ACCESSORIES = [
       price: 69, provisional: true, compatibleSizes: ['48x30', '60x30'], node: 'Leds' },
     { id: 'foot-rest', name: 'Adjustable foot rest', category: 'Support', visual: 'footrest', description: 'A gently angled foot support in front of your desk.',
       price: 99, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
-    { id: 'wide-monitor', name: 'ProVision Ultra 32″', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-wide-monitor', exclusiveGroup: 'main-display',
-      description: 'Slim landscape panel with a dark chassis, rear VESA mounting plate and ambient accents. Pair with the portrait display and extended dual arm.', price: 0, quoted: true, compatibleSizes: ['60x30'] },
-    { id: 'portrait-monitor', name: 'Portrait monitor', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-portrait-monitor',
-      description: 'Upright display for documents, code and reference material.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
+    { id: 'wide-monitor', name: 'AETHER 34UW curved ultrawide', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-wide-monitor', exclusiveGroup: 'main-display',
+      description: 'Curved ultrawide panel with dark screen glass, a dark chassis and rear RGB halo. On the right in the Office pair.', price: 0, quoted: true, compatibleSizes: ['60x30'] },
+    { id: 'portrait-monitor', name: 'ProVision Ultra 32″ portrait', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-portrait-monitor',
+      description: 'The supplied flat ProVision panel in portrait orientation, on the left in the Office pair.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'keyboard-tray', name: 'Keyboard tray', category: 'Support', visual: 'tray', propId: 'ergoflex-keyboard-tray',
       description: 'Under-desktop tray for keyboard and mouse. Follows the desktop as it lifts and tilts.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'ergo-keyboard', name: 'Ergonomic keyboard', category: 'Desktop', visual: 'keyboard', propId: 'ergoflex-ergo-keyboard', exclusiveGroup: 'keyboard',
@@ -206,7 +206,7 @@ export function accessoryFits(id, size) {
 // Curated starting points. Each is a complete configuration, so applying one
 // leaves nothing half-set.
 export const PRESETS = [
-    { id: 'office', name: 'Office', blurb: 'Modern grey, black trim, two displays, a dual arm, ergonomic keyboard and MX Master mouse on a keyboard tray.',
+    { id: 'office', name: 'Office', blurb: 'Modern grey, black trim, flat portrait on the left, curved ultrawide on the right, extended dual arm and ergonomic inputs on a keyboard tray.',
       size: '60x30', woodFinish: 'Modern Grey', baseFinish: 'Black', trimColor: '#1c1c1e',
       accessories: ['monitor-arm-2', 'wide-monitor', 'portrait-monitor', 'keyboard-tray', 'ergo-keyboard', 'logitech-mx-master', 'cable-tray'], cameraPreset: 'hero' },
     { id: 'artist', name: 'Artist', blurb: 'Natural birch, a light frame, warm trim and an art surface with an easel rail and painter’s accessory shelf.',

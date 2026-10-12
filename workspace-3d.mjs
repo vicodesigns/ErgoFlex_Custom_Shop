@@ -15,14 +15,14 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=extended-arms-20261012';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=curved-pair-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=extended-arms-20261012';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=extended-arms-20261012';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=extended-arms-20261012';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=curved-pair-20261012';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 
-import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=extended-arms-20261012';
+import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
 import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
@@ -80,7 +80,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=extended-arms-20261012').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=curved-pair-20261012').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -264,6 +264,12 @@ export function createAccessory(item) {
 function prepareSuppliedDisplay(root, id) {
     const panel = root.getObjectByName(`Prop:${id}`);
     if (!panel) return;
+    // Displays start with dark glass; shared media temporarily overlays them.
+    const screen = panel.getObjectByName('monitor-screen');
+    if (screen) {
+        screen.material = new THREE.MeshStandardMaterial({ color: 0x060709, roughness: .2, metalness: .1 });
+        screen.userData.sharedProp = false;
+    }
     const texture = screenTexture({ border: true });
     panel.traverse(object => {
         if (!object.isMesh || ![].concat(object.material).some(m => m.name === 'Material_003_#1')) return;
@@ -302,8 +308,11 @@ function prepareSuppliedDisplay(root, id) {
         object.geometry.computeBoundingBox();
         bounds.union(object.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(object.matrixWorld)));
     });
-    root.userData.displayMount = bounds.getCenter(new THREE.Vector3());
-    root.userData.displayMount.z = bounds.min.z;
+    // Conversion bakes and joins mesh transforms, so a named VESA mesh's
+    // node origin is not its mounting point. Use its authored normalized point.
+    const authoredMount=PROP_LIBRARY.entry(id)?.displayMountMm;
+    root.userData.displayMount=authoredMount?new THREE.Vector3(...authoredMount):bounds.getCenter(new THREE.Vector3());
+    if(!authoredMount)root.userData.displayMount.z=bounds.min.z;
     const stand = new THREE.Group(); stand.name = 'monitor-stand'; root.add(stand);
     const silver = material('#535d65', { metalness: .65, roughness: .35 });
     box(stand, [220, 8, 170], [0, 4, -12], silver, 4);
@@ -467,8 +476,8 @@ export class WorkspaceAccessories {
         const pair = selected.has('portrait-monitor') && (selected.has('wide-monitor') || selected.has('dell-u2724d'));
         const mounted = selected.has('monitor-arm-2') || selected.has('monitor-arm');
         const portraitMounted = selected.has('monitor-arm-2') || (selected.has('monitor-arm') && !selected.has('wide-monitor') && !selected.has('dell-u2724d'));
-        place('wide-monitor', pair ? -300 : 0, mounted ? 70 : 0, mounted ? back + 320 : 0);
-        place('portrait-monitor', pair ? 340 : 0, portraitMounted ? -30 : 0, portraitMounted ? back + 320 : 0);
+        place('wide-monitor', pair ? 280 : 0, mounted ? 70 : 0, mounted ? back + 320 : 0);
+        place('portrait-monitor', pair ? -360 : 0, portraitMounted ? -30 : 0, portraitMounted ? back + 320 : 0);
         for (const id of ['wide-monitor', 'portrait-monitor']) {
             const display = this.items.get(id);
             if (!display?.userData.loaded) continue;
@@ -493,7 +502,8 @@ export class WorkspaceAccessories {
             if (!adapters) continue;
             arm.updateWorldMatrix(true, true);
             const displays = [this.items.get('wide-monitor') || this.items.get('dell-u2724d'), this.items.get('portrait-monitor')].filter(Boolean);
-            const matches = displays.slice(0, arm.userData.armHeads.length).map((display, i) => {
+            const availableHeads = [...arm.userData.armHeads];
+            const matches = displays.slice(0, arm.userData.armHeads.length).map(display => {
                 display.updateWorldMatrix(true, true);
                 const point = (display.userData.displayMount || new THREE.Vector3(0, 273.745, -50.12)).clone();
                 // Stand-free panels start on the root floor. Their height offset
@@ -504,16 +514,18 @@ export class WorkspaceAccessories {
                 const relative = arm.matrixWorld.clone().invert().multiply(display.matrixWorld);
                 const position = new THREE.Vector3(), rotation = new THREE.Quaternion(), scale = new THREE.Vector3();
                 relative.decompose(position, rotation, scale);
-                return { display, start: arm.userData.armHeads[i], end, rotation };
+                // Assign left/right heads to the display on that side. A new
+                // pair arrangement must not make the supplied arms cross over.
+                const index=availableHeads.reduce((best,head,i)=>Math.abs(head.x-end.x)<Math.abs(availableHeads[best].x-end.x)?i:best,0);
+                const [start]=availableHeads.splice(index,1);
+                return { display, start, end, rotation };
             });
             const signature = JSON.stringify(matches.map(m => [m.display.uuid, m.display.visible, ...m.end.toArray().map(v => Math.round(v * 100) / 100), ...m.rotation.toArray().map(v => Math.round(v * 1e6) / 1e6)]));
             if (signature === arm.userData.armFitSignature) continue;
             arm.userData.armFitSignature = signature;
             for (const child of [...adapters.children]) disposeTree(child);
             arm.userData.armConnections = [];
-            const metal = material('#4d565e', { metalness: .7, roughness: .3 });
-            const graphite = material('#222b33', { metalness: .45, roughness: .4 });
-            const fittings = matches.map(m => ({ ...m, head: m.end.clone().add(new THREE.Vector3(0, 0, -24).applyQuaternion(m.rotation)) }));
+            const fittings = matches.map(m => ({ ...m, head: m.end.clone() }));
             for (const fitting of fittings) fitting.delta = fitting.head.clone().sub(fitting.start);
             // Keep the clamp and shared mast fixed, while the outer arm runs
             // adapt to the screen positions. Work on owned vertex copies only;
@@ -536,14 +548,8 @@ export class WorkspaceAccessories {
             }
             for (const { display, head: start, end, rotation } of fittings) {
                 if (!display.visible) continue;
-                const joint = start.clone().lerp(end, .5);
-                // Short articulated adapters close the CAD head-to-enclosure
-                // gap without scaling the supplied arm or moving saved screens.
-                rod(adapters, start.toArray(), joint.toArray(), 10, graphite);
-                rod(adapters, joint.toArray(), end.toArray(), 8, metal);
-                sphere(adapters, [13, 13, 13], joint.toArray(), metal);
-                const plate = box(adapters, [90, 90, 6], end.toArray(), graphite, 2);
-                plate.quaternion.copy(rotation);
+                // Use the supplied CAD head itself; do not stack a second
+                // bracket or adapter plate between it and the display.
                 arm.userData.armConnections.push({ displayId: display.userData.accessoryId, start: start.clone(), end: end.clone() });
             }
             adapters.updateMatrixWorld(true);

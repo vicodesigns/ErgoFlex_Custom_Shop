@@ -23175,7 +23175,7 @@
   },
   {
    "id": "ergoflex-wide-monitor",
-   "name": "ProVision Ultra 32″ · landscape panel",
+   "name": "AETHER 34UW · curved ultrawide",
    "category": "desk",
    "scenes": [
     "office",
@@ -23185,32 +23185,37 @@
    "file": "assets/props/ergoflex-wide-monitor.glb",
    "anchor": "floor",
    "size": [
-    700,
-    416.5,
-    29.1
+    815.4,
+    365.4,
+    86.7
    ],
    "min": [
-    -350,
+    -407.7,
     0,
-    -14.5
+    -43.4
    ],
    "max": [
-    350,
-    416.5,
-    14.5
+    407.7,
+    365.4,
+    43.4
    ],
-   "tris": 4298,
-   "bytes": 36648,
-   "source": "models/ergoflex-supplied/ProVisionUltra32.glb",
+   "tris": 7010,
+   "bytes": 81784,
+   "source": "models/ergoflex-supplied/Aether34UW.glb",
    "license": "user-provided",
    "attribution": null,
-   "sizeNote": "Illustrative 32-inch panel adapted from user-supplied HTML geometry; not a verified manufacturer specification.",
+   "sizeNote": "Curved panel geometry adapted from user-supplied AETHER HTML; visualization dimensions, not a verified manufacturer specification.",
    "collection": "ErgoFlex Collection",
-   "revision": "provision-32-20261012"
+   "revision": "curved-pair-20261012",
+   "displayMountMm": [
+    0,
+    194.69999220525636,
+    -36.35096509196597
+   ]
   },
   {
    "id": "ergoflex-portrait-monitor",
-   "name": "Portrait monitor",
+   "name": "ProVision Ultra 32″ · portrait panel",
    "category": "desk",
    "scenes": [
     "office",
@@ -23219,27 +23224,33 @@
    "file": "assets/props/ergoflex-portrait-monitor.glb",
    "anchor": "floor",
    "size": [
-    385,
-    658.2,
-    139.4
+    416.5,
+    700,
+    29.1
    ],
    "min": [
-    -192.5,
+    -208.3,
     0,
-    -69.7
+    -14.5
    ],
    "max": [
-    192.5,
-    658.2,
-    69.7
+    208.3,
+    700,
+    14.5
    ],
-   "tris": 228,
-   "bytes": 5088,
-   "source": "models/ergoflex-supplied/PortraitMonitor.glb",
+   "tris": 4298,
+   "bytes": 26780,
+   "source": "models/ergoflex-supplied/ProVisionUltra32Portrait.glb",
    "license": "user-provided",
    "attribution": null,
-   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
-   "collection": "ErgoFlex Collection"
+   "sizeNote": "The supplied flat ProVision panel turned to portrait; illustrative 32-inch proportions.",
+   "collection": "ErgoFlex Collection",
+   "revision": "curved-pair-20261012",
+   "displayMountMm": [
+    -0.7918551860807338,
+    350.00000000000006,
+    -11.600678702929443
+   ]
   },
   {
    "id": "ergoflex-dual-monitor-arm",
@@ -23827,6 +23838,6 @@
    ]
   }
  ],
- "generated": "2026-10-12T17:54:23.737Z",
+ "generated": "2026-10-12T18:18:09.048Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

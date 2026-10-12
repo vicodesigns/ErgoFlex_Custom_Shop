@@ -92,6 +92,8 @@ export class SceneDeskObjects {
         if(values.role&&r.rig.mounts[values.role]){(r.product&&o.userData.accessoryId?this.purchaseMount(values.role):r.rig.mounts[values.role]).add(o);item.saved.role=values.role;this.role=values.role;o.position.y=0;}
         for(const [field,axis] of [['x','x'],['y','y'],['z','z']])if(Number.isFinite(values[field]))o.position[axis]=Math.max(axis==='y'&&!o.userData.accessoryId?0:-5000,Math.min(5000,values[field]));
         if(Number.isFinite(values.rotation))o.rotation.y=THREE.MathUtils.degToRad(values.rotation);
+        if(Number.isFinite(values.tilt))o.rotation.x=THREE.MathUtils.degToRad(values.tilt);
+        if(Number.isFinite(values.roll))o.rotation.z=THREE.MathUtils.degToRad(values.roll);
         if(Number.isFinite(values.scale))o.scale.copy(item.baseScale).multiplyScalar(Math.max(1,Math.min(500,values.scale))/100);
         o.updateMatrixWorld(true);m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
     }

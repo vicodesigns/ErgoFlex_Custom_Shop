@@ -36,7 +36,7 @@ Product options now use the real MX Master, single arm and dual arm models. The 
 
 CAD world offsets are removed; all props use a floor origin and export in metres. The library instances them in millimetres. Physical dimensions are visualization estimates and are recorded in the manifest/index, not verified manufacturer mounting specifications. The gaming table’s open CAD rim is closed with a fitted working top, retaining the shell and footprint. Pure-black materials on the mouse, keyboard and PC were lifted to a dark graphite so their original geometry remains legible. The dual-arm source includes a much larger scene; only its `MonitorArms` assembly is retained.
 
-`WorkspaceAccessories` locates the CAD clamp and arm heads in mount coordinates. Owned geometry copies adapt the outer arm runs to the selected display backs while retaining the clamp/mast and saved screen poses. Short VESA adapters bridge the final gap. This is a visual fitting approximation, not a joint-limit or load-bearing simulation. Library geometry remains unchanged. The fit is recomputed when relative accessory poses change, and rides the shelf during desk movement. A second display retains its stand when only one arm head is purchased.
+`WorkspaceAccessories` locates the CAD clamp and arm heads in mount coordinates. Owned geometry copies adapt the outer arm runs to the selected display backs while retaining the clamp/mast and saved screen poses. The native CAD VESA heads meet the authored panel mount points; no extra adapter plates are added. This is a visual fitting approximation, not a joint-limit or load-bearing simulation. Library geometry remains unchanged. The fit is recomputed when relative accessory poses change, and rides the shelf during desk movement. A second display retains its stand when only one arm head is purchased.
 
 The supplied monitor primitives combined display and enclosure faces. The screen texture is now limited to front-facing triangles; backs use graphite. Runtime fitting references stay outside glTF `userData`, preventing oversized export extras.
 
@@ -58,4 +58,23 @@ The supplied monitor arm fitting path preserves each mesh's scalar or array mate
 
 The dual-arm accessory now uses `DoubleMonitorArmsExtended.glb`. Its anonymous CAD faces are joined before Blender conversion, then normalized and compressed. Clamp and VESA reference points in `prepareSuppliedArm` were remeasured for the extended geometry. The internal prop ID remains `ergoflex-dual-monitor-arm-compact` for saved-object compatibility; the public label is Extended.
 
-The landscape panel is now **ProVision Ultra 32″**, adapted from the user-supplied HTML model, including chassis, front screen artwork, bezels, rear VESA disk, I/O bay, indicator and rear ambient dots. `node tools/props/build-provision-monitor.mjs` regenerates its source GLB from the portable geometry module, then `tools/convert-props.mjs --only ergoflex-wide-monitor` normalizes and compresses it. Store and Office retain `wide-monitor` / `ergoflex-wide-monitor`, so edited placements survive. Both assets have revision queries to refresh cached models. The attached design is an illustrative panel; specification text in its artwork is part of that supplied design.
+The landscape panel is now **ProVision Ultra 32″**, adapted from the user-supplied HTML model, including chassis, front screen artwork, bezels, rear VESA disk, I/O bay, indicator and rear ambient dots. `node tools/props/build-provision-monitor.mjs` regenerates its source GLB from the portable geometry module, then `tools/convert-props.mjs --only ergoflex-wide-monitor` normalizes and compresses it. Store and Office retain `wide-monitor` / `ergoflex-wide-monitor`, so edited placements survive. The assets have revision queries to refresh cached models. The attached design is an illustrative panel; specification text in its artwork is part of that supplied design.
+
+
+## Curved right / portrait left and fine alignment
+
+The Office pair now uses the supplied **AETHER 34UW curved panel on the right** and **ProVision Ultra 32″ flat panel in portrait on the left**. Store IDs stay `wide-monitor` and `portrait-monitor`. Both screen faces start as dark glass. Shared media still uses the existing temporary preview screen.
+
+`tools/props/aether-monitor-model.mjs` extracts the AETHER panel geometry from the supplied HTML; the source's stand, page, environment and lights are excluded. `tools/props/provision-monitor-model.mjs` produces the flat portrait variant. Rebuild with:
+
+```sh
+node tools/props/build-provision-monitor.mjs
+BLENDER=/path/to/blender node tools/convert-props.mjs --only ergoflex-wide-monitor,ergoflex-portrait-monitor
+node tools/props/thumbnails.mjs --only ergoflex-wide-monitor,ergoflex-portrait-monitor
+```
+
+The builder records `displayMountMm` from each authored VESA centre, using the same floor origin, bounding-box centring and scale as prop conversion. The converter forwards it to the library index. A converted mesh origin is not a mounting centre because conversion bakes and merges geometry. Arm fitting chooses the nearest available left/right head and moves that native head to the mount; the extra procedural rods and plates were removed. This remains a visualization approximation.
+
+**Desk objects → Objects on this desk** offers 0.5 mm position steps and 0.1° Turn, Tilt and Roll adjustments. Full transforms persist in edited Start From setups and project files. Existing saved pairs receive a one-time left/right upgrade, retaining other transforms; subsequent edits are preserved.
+
+Model loading now pauses motion and constructs the CAD, overlays and saved tilt rigs at the same reference height before restoring the live height. Previously loading at a saved raised height could attach overlay meshes below the wings and separate desktop and wing trims. The regression checks both desktop sizes' trim transforms before and after export/reload, fine adjustment persistence, dark screens and the absence of extra adapters.

@@ -12634,8 +12634,8 @@
   },
   {
    "id": "ergoflex-wide-monitor",
-   "name": "ProVision Ultra 32″ · landscape panel",
-   "source": "ergoflex-supplied/ProVisionUltra32.glb",
+   "name": "AETHER 34UW · curved ultrawide",
+   "source": "ergoflex-supplied/Aether34UW.glb",
    "category": "desk",
    "scenes": [
     "office",
@@ -12645,34 +12645,45 @@
    "rotateY": 0,
    "fit": {
     "axis": "x",
+    "mm": 815.4
+   },
+   "budget": 0,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "Curved panel geometry adapted from user-supplied AETHER HTML; visualization dimensions, not a verified manufacturer specification.",
+   "revision": "curved-pair-20261012",
+   "displayMountMm": [
+    0,
+    194.69999220525636,
+    -36.35096509196597
+   ]
+  },
+  {
+   "id": "ergoflex-portrait-monitor",
+   "name": "ProVision Ultra 32″ · portrait panel",
+   "source": "ergoflex-supplied/ProVisionUltra32Portrait.glb",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "rotateY": 0,
+   "fit": {
+    "axis": "y",
     "mm": 700
    },
    "budget": 0,
    "collection": "ErgoFlex Collection",
    "license": "user-provided",
    "anchor": "floor",
-   "sizeNote": "Illustrative 32-inch panel adapted from user-supplied HTML geometry; not a verified manufacturer specification.",
-   "revision": "provision-32-20261012"
-  },
-  {
-   "id": "ergoflex-portrait-monitor",
-   "name": "Portrait monitor",
-   "source": "ergoflex-supplied/PortraitMonitor.glb",
-   "category": "desk",
-   "scenes": [
-    "office",
-    "home"
-   ],
-   "rotateY": 90,
-   "fit": {
-    "axis": "x",
-    "mm": 385
-   },
-   "budget": 1000,
-   "collection": "ErgoFlex Collection",
-   "license": "user-provided",
-   "anchor": "floor",
-   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications."
+   "sizeNote": "The supplied flat ProVision panel turned to portrait; illustrative 32-inch proportions.",
+   "revision": "curved-pair-20261012",
+   "displayMountMm": [
+    -0.7918551860807338,
+    350.00000000000006,
+    -11.600678702929443
+   ]
   },
   {
    "id": "ergoflex-dual-monitor-arm",

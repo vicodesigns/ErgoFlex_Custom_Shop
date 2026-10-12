@@ -118,7 +118,8 @@ for (const prop of selected) {
                     source: `models/${prop.source}`, license: prop.license || 'unconfirmed', attribution: prop.attribution || null,
                     ...(prop.sizeNote ? { sizeNote: prop.sizeNote } : {}),
                     ...(prop.collection ? { collection: prop.collection } : {}),
-                    ...(prop.revision ? { revision: prop.revision } : {}) };
+                    ...(prop.revision ? { revision: prop.revision } : {}),
+                    ...(prop.displayMountMm ? { displayMountMm: prop.displayMountMm } : {}) };
     byId.set(prop.id, entry);
     const reduced = entry.sourceTris ? ` (from ${entry.sourceTris})` : '';
     console.log(`✓ ${prop.id.padEnd(24)} ${String(r.tris).padStart(7)} tris${reduced.padEnd(12)} ${(entry.bytes / 1024).toFixed(0).padStart(5)} KB  ${r.size.map(v => Math.round(v)).join(' × ')} mm`);

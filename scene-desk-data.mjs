@@ -12,7 +12,16 @@ export function cleanDeskObjects(value) {
         if(['x','y','z','w'].reduce((sum,a)=>sum+t.q[a]**2,0)<0.000001)continue;
         if(v.added&&(!deskId(v.propId)))continue;
         objects[id]={role:v.role,added:v.added===true,removed:v.removed===true,label:String(v.label||'Desk object').slice(0,100),
-            ...(v.added?{propId:v.propId}:{}),...(v.custom?{custom:true}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
+            ...(v.added?{propId:v.propId}:{}),...(v.custom?{custom:true}:{}),...(v.monitorLayout==='curved-right-v1'?{monitorLayout:v.monitorLayout}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
+    }
+    const wide=objects['accessory-wide-monitor'],portrait=objects['accessory-portrait-monitor'];
+    if(wide&&portrait){
+        // One-time upgrade of saved Office pairs to the requested arrangement.
+        // Later custom adjustments retain the marker and are left as edited.
+        if(!wide.monitorLayout&&!portrait.monitorLayout&&wide.transform.p.x<portrait.transform.p.x){
+            [wide.transform.p.x,portrait.transform.p.x]=[portrait.transform.p.x,wide.transform.p.x];
+        }
+        wide.monitorLayout=portrait.monitorLayout='curved-right-v1';
     }
     return objects;
 }
