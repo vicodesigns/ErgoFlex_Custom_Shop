@@ -68,6 +68,14 @@ for (const prop of selected) {
         process.stdout.write(res.stdout);
         source = obj;
     }
+    // Some CAD exports contain one anonymous mesh per face. Join those faces
+    // before Blender import so normalization and fitting use one arm assembly.
+    if (prop.mergeMeshes) {
+        const merged = join(work, `${prop.id}-merged.glb`);
+        const res = run(join(root, 'node_modules/.bin/gltf-transform'), ['optimize', source, merged, '--compress', 'false', '--simplify', 'false', '--instance', 'false'], prop.id);
+        if (res.status !== 0) throw new Error(`${prop.id}: CAD merge failed\n${res.stderr}`);
+        source = merged;
+    }
     jobs.push({ id: prop.id, source, fit: prop.fit, anchor: prop.anchor || 'floor', rotateY: prop.rotateY || 0,
                 rotateX: prop.rotateX || 0, exclude: prop.exclude || [], include: prop.include || [], material: prop.material || null,
                 budget: prop.budget || 0, repair: prop.repair || null, out: join(rawDir, `${prop.id}.glb`) });

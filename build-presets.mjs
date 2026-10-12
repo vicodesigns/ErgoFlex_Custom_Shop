@@ -1,4 +1,4 @@
-import { PRESETS, cleanConfig, validConfig } from './catalog.mjs?v=editable-presets-20261012';
+import { PRESETS, cleanConfig, validConfig } from './catalog.mjs?v=extended-arms-20261012';
 import { cleanSceneDeskData } from './scene-desk-data.mjs';
 
 export const BUILD_PRESETS_KEY = 'ergoflex.buildPresetsV1';

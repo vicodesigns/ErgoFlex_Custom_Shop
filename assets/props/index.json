@@ -23175,7 +23175,7 @@
   },
   {
    "id": "ergoflex-wide-monitor",
-   "name": "Wide landscape monitor",
+   "name": "ProVision Ultra 32″ · landscape panel",
    "category": "desk",
    "scenes": [
     "office",
@@ -23185,27 +23185,28 @@
    "file": "assets/props/ergoflex-wide-monitor.glb",
    "anchor": "floor",
    "size": [
-    727,
-    445.7,
-    148.8
+    700,
+    416.5,
+    29.1
    ],
    "min": [
-    -363.5,
+    -350,
     0,
-    -74.4
+    -14.5
    ],
    "max": [
-    363.5,
-    445.7,
-    74.4
+    350,
+    416.5,
+    14.5
    ],
-   "tris": 228,
-   "bytes": 6368,
-   "source": "models/ergoflex-supplied/WideMonitor.glb",
+   "tris": 4298,
+   "bytes": 36648,
+   "source": "models/ergoflex-supplied/ProVisionUltra32.glb",
    "license": "user-provided",
    "attribution": null,
-   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
-   "collection": "ErgoFlex Collection"
+   "sizeNote": "Illustrative 32-inch panel adapted from user-supplied HTML geometry; not a verified manufacturer specification.",
+   "collection": "ErgoFlex Collection",
+   "revision": "provision-32-20261012"
   },
   {
    "id": "ergoflex-portrait-monitor",
@@ -23649,7 +23650,7 @@
   },
   {
    "id": "ergoflex-dual-monitor-arm-compact",
-   "name": "Dual monitor arms · compact",
+   "name": "Dual monitor arms · extended",
    "category": "desk",
    "scenes": [
     "office",
@@ -23660,27 +23661,28 @@
    "anchor": "floor",
    "size": [
     736,
-    373.7,
-    382.7
+    389.7,
+    464.5
    ],
    "min": [
     -368,
     0,
-    -191.3
+    -232.2
    ],
    "max": [
     368,
-    373.7,
-    191.3
+    389.7,
+    232.2
    ],
-   "tris": 32784,
-   "bytes": 277552,
-   "sourceTris": 144843,
-   "source": "models/ergoflex-supplied/DoubleMonitorArmsSM.glb",
+   "tris": 30000,
+   "bytes": 233580,
+   "sourceTris": 144761,
+   "source": "models/ergoflex-supplied/DoubleMonitorArmsExtended.glb",
    "license": "user-provided",
    "attribution": null,
    "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
-   "collection": "ErgoFlex Collection"
+   "collection": "ErgoFlex Collection",
+   "revision": "extended-arms-20261012"
   },
   {
    "id": "ergoflex-desktop-pc",
@@ -23825,6 +23827,6 @@
    ]
   }
  ],
- "generated": "2026-10-12T16:00:33.964Z",
+ "generated": "2026-10-12T17:54:23.737Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

@@ -38,6 +38,13 @@ const server = http.createServer((req, res) => {
    document.querySelector('[data-trim-color="#dc0909"]').click();ef.setLedColor('#33aa66');ef.setLedGlow(80);ef.setHeight(40);ef.setTilt('tilting',7);
    return id;
   });
+  const fitted=await page.evaluate(()=>{
+   const w=ErgoFlex.workspaceAccessories;w.update();const arm=w.items.get('monitor-arm-2');
+   return {screen:!!w.items.get('wide-monitor').getObjectByName('monitor-screen')?.material.map,
+    gaps:arm.userData.armConnections.map(c=>{const display=w.items.get(c.displayId),p=display.userData.displayMount.clone();p.add(display.getObjectByName('Prop:'+(c.displayId==='wide-monitor'?'ergoflex-wide-monitor':'ergoflex-portrait-monitor')).position);return arm.localToWorld(c.end.clone()).distanceTo(display.localToWorld(p));})};
+  });
+  assert.equal(fitted.screen,true,'supplied ProVision screen artwork is displayed');
+  assert.equal(fitted.gaps.length,2);assert.ok(fitted.gaps.every(v=>v<1e-6),'extended arms stay attached after editing screen position and rotation');
   await page.waitForFunction(id=>{const saved=JSON.parse(localStorage.getItem('ergoflex.buildPresetsV1')||'{}');return saved.entries?.office?.room?.desks.main.objects[id]?.transform.p.x===170;},{timeout:10000},apple);
   const office=await page.evaluate(()=>JSON.parse(localStorage.getItem('ergoflex.buildPresetsV1')).entries.office);
   assert.equal(office.config.trimColor,'#dc0909');assert.equal(office.room.desks.main.objects['accessory-wide-monitor'].transform.p.x,-355);assert.equal(office.room.desks.main.lights.color,'#33aa66');

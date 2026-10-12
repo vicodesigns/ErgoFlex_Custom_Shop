@@ -17,7 +17,7 @@
 | GameTable.glb | Gaming table |
 | EaselAccesssory.glb | Easel accessory rail |
 | DrawingTablet.glb | Drawing tablet |
-| DoubleMonitorArmsSM.glb | Dual monitor arms · compact |
+| DoubleMonitorArmsExtended.glb | Dual monitor arms · extended |
 | DesktopPc.glb | Desktop PC |
 | coffeetable.glb | Coffee table · dark wood |
 | AppleVisionPro.glb | Apple Vision Pro headset |
@@ -53,3 +53,9 @@ Modern Grey uses a darker `#72777c` tint. The MX Master asset and conversion man
 The supplied monitor arm fitting path preserves each mesh's scalar or array material form. Previously it converted scalar materials to arrays on CAD geometry with no material groups, so Three.js skipped rendering the actual arms while still showing the VESA adapters. The shared single/dual arm preparation now renders the CAD assembly correctly.
 
 `node tests/editable-build-presets-test.cjs` verifies independent setup versions, switch/reload persistence, existing Office migration, project export, exact keyboard/mouse material matching and draw calls for the actual dual-arm assembly.
+
+## Extended arms and supplied ProVision display
+
+The dual-arm accessory now uses `DoubleMonitorArmsExtended.glb`. Its anonymous CAD faces are joined before Blender conversion, then normalized and compressed. Clamp and VESA reference points in `prepareSuppliedArm` were remeasured for the extended geometry. The internal prop ID remains `ergoflex-dual-monitor-arm-compact` for saved-object compatibility; the public label is Extended.
+
+The landscape panel is now **ProVision Ultra 32″**, adapted from the user-supplied HTML model, including chassis, front screen artwork, bezels, rear VESA disk, I/O bay, indicator and rear ambient dots. `node tools/props/build-provision-monitor.mjs` regenerates its source GLB from the portable geometry module, then `tools/convert-props.mjs --only ergoflex-wide-monitor` normalizes and compresses it. Store and Office retain `wide-monitor` / `ergoflex-wide-monitor`, so edited placements survive. Both assets have revision queries to refresh cached models. The attached design is an illustrative panel; specification text in its artwork is part of that supplied design.

@@ -15,14 +15,14 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=editable-presets-20261012';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=extended-arms-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=editable-presets-20261012';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=editable-presets-20261012';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=editable-presets-20261012';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=extended-arms-20261012';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=extended-arms-20261012';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=extended-arms-20261012';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 
-import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=editable-presets-20261012';
+import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=extended-arms-20261012';
 import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
@@ -80,7 +80,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=editable-presets-20261012').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=extended-arms-20261012').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -317,8 +317,8 @@ function prepareSuppliedArm(root, id) {
     // overall bounds center, belongs on the shelf's rear edge. Both exports
     // originally face away from the user or sideways.
     const dual = id === 'ergoflex-dual-monitor-arm-compact';
-    const base = new THREE.Vector3(...(dual ? [-9.2, 0, 145.6] : [-149, 0, -24.5]));
-    const ends = dual ? [[333, 253.3, -125.4], [-333, 267.8, -92.9]] : [[173, 266.1, 119.9]];
+    const base = new THREE.Vector3(...(dual ? [-.9, 0, 188] : [-149, 0, -24.5]));
+    const ends = dual ? [[315, 270, -211], [-315, 270, -211]] : [[173, 266.1, 119.9]];
     model.rotation.y = dual ? Math.PI : -Math.atan2(322, 144.4);
     const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), model.rotation.y);
     model.position.copy(base.clone().applyQuaternion(rotation).negate());
