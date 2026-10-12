@@ -55,7 +55,7 @@ export class SceneDeskObjects {
             if(!saved.custom)saved.transform=plain(obj);
             this.register(r,id,obj,saved,new THREE.Vector3(1,1,1));
         }
-        this.manager.sync();
+        this.phase(r);this.manager.sync();
     }
     purchaseMount(role){return this.manager.ctx.purchaseMount?.(role);}
     register(r,id,obj,saved,baseScale){
@@ -74,7 +74,18 @@ export class SceneDeskObjects {
         for(const item of r.objects?.values()||[]){const o=item.obj;
             o.visible=!item.saved.removed&&(!o.userData.dressPhases||o.userData.dressPhases.includes(mode))&&(!o.userData.dailyInput||![2,4].includes(index));
             if(o.userData.dayKit)o.children.forEach((c,i)=>c.visible=i===index);
+            const canvas=o.getObjectByName('Artist painting');
+            if(canvas?.paintingTexture){
+                const map=item.saved.artworkVisible===false?null:canvas.paintingTexture;
+                if(canvas.material.map!==map){canvas.material.map=map;canvas.material.color.set(map?'#ffffff':'#a4a7a8');canvas.material.needsUpdate=true;}
+            }
         }
+    }
+    setArtwork(id,visible){
+        const m=this.manager,r=m.active,item=r?.objects?.get(id);
+        if(!item?.obj.getObjectByName('Artist painting')||m.playing||m.recording)return false;
+        const before=m.serialize();item.saved.artworkVisible=visible===true;
+        this.phase(r);m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
     }
     select(id){this.selected=this.manager.active?.objects?.has(id)?id:null;this.manager.sync();}
     setEditing(on){this.editing=!!on;if(!on)this.endDrag();this.manager.sync();}

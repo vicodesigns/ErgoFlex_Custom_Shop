@@ -637,3 +637,7 @@ body:not(.setup-layout) .camera-shortcuts { display: none; }
 #room-scene-select { flex: 0 1 215px; min-width: 140px; max-width: 38%; padding: 8px; border: 1px solid #ffffff80; border-radius: 7px; background: #fffffff0; color: #304a3d; font-family: inherit; font-size: 11px; font-weight: 500; }
 .scene-switcher .scene-options { flex: 1; min-width: 0; }
 @media (max-width: 600px) { .scene-switcher { flex-wrap: wrap; gap: 6px; } #room-scene-select { max-width: none; flex: 1; } .scene-switcher .scene-options { display: none; } }
+.artist-canvas-toggle:not([hidden]) { display: grid; gap: 6px; padding: 12px; margin-bottom: 14px; border: 1px solid var(--studio-border, #45616b); border-radius: 10px; }
+.artist-canvas-toggle label { display: flex; align-items: center; gap: 9px; font-weight: 600; cursor: pointer; }
+.artist-canvas-toggle input { width: 17px; height: 17px; accent-color: #91d9bd; }
+.artist-canvas-toggle small { font-size: 12px; opacity: .78; }

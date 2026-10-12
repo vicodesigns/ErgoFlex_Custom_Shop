@@ -12,7 +12,7 @@ export function cleanDeskObjects(value) {
         if(['x','y','z','w'].reduce((sum,a)=>sum+t.q[a]**2,0)<0.000001)continue;
         if(v.added&&(!deskId(v.propId)))continue;
         objects[id]={role:v.role,added:v.added===true,removed:v.removed===true,label:String(v.label||'Desk object').slice(0,100),
-            ...(v.added?{propId:v.propId}:{}),...(v.custom?{custom:true}:{}),...(v.clampMount==='rear-edge-v1'?{clampMount:v.clampMount}:{}),...(v.monitorLayout==='curved-right-v1'?{monitorLayout:v.monitorLayout}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
+            ...(v.added?{propId:v.propId}:{}),...(v.custom?{custom:true}:{}),...(typeof v.artworkVisible==='boolean'?{artworkVisible:v.artworkVisible}:{}),...(v.clampMount==='rear-edge-v1'?{clampMount:v.clampMount}:{}),...(v.monitorLayout==='curved-right-v1'?{monitorLayout:v.monitorLayout}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
     }
     const wide=objects['accessory-wide-monitor'],portrait=objects['accessory-portrait-monitor'];
     if(wide&&portrait){

@@ -23382,12 +23382,13 @@
     192.5
    ],
    "tris": 10866,
-   "bytes": 114848,
+   "bytes": 628200,
    "source": "models/ergoflex-supplied/singleMonitorArm.glb",
    "license": "user-provided",
    "attribution": null,
    "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
-   "collection": "ErgoFlex Collection"
+   "collection": "ErgoFlex Collection",
+   "revision": "rigid-joints-20261012"
   },
   {
    "id": "ergoflex-shelf-organizer",

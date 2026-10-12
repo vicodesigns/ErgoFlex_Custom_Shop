@@ -118,3 +118,15 @@ node tests/validation-test.cjs
 ```
 
 Visual review captures: `scene-shots/preset-review/{artist,architect,gaming,compact,office}.png` (ignored local artifacts).
+
+## Single arm reset and Artist finish follow-up
+
+The single arm now retains the supplied clamp, lower link, upper link and VESA head as separate rigid parts. Two joint rotations fit the links to the display position; screen roll rotates the head alone. Link geometry is never stretched or rewritten. The dual arm retains its existing fitting. Rebuild the segmented single-arm asset with `node tools/props/build-single-monitor-arm.mjs` after a generic prop conversion.
+
+Artist uses the actual flat landscape ProVision panel. Existing saved Artist drafts receive a one-time `singleArm: rigid-landscape-v1` migration: replace the rolled portrait panel while retaining its visible centre, reset the single clamp pose, and preserve all other objects, finishes, posture and lighting. Later object adjustments remain saved.
+
+The painting uses centred cover sizing to fill the whole canvas, cropping excess height. The shelf organizer's outer box, floors and mounting hooks copy the current desktop material. Both long and short internal dividers use clear acrylic, separated from the joined CAD mesh without changing the organizer placement.
+
+The Start From browser test checks rigid arm geometry under a 90° screen roll, head contact, one-time saved-preset migration, matching organizer material and acrylic divider assignments.
+
+Artist's **Show painting** checkbox sits beneath the preset save status. Off displays a grey primed canvas; on restores the same full-canvas image. `artworkVisible` is stored on the easel object and survives preset switching, page reloads and project serialization. The object edit participates in the existing undo history.

@@ -15,7 +15,7 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-mounts-20261012';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=artist-canvas-controls-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
@@ -52,6 +52,7 @@ function rod(parent, from, to, radius, mat) {
 function disposeTree(root) {
     const geometries = new Set(), materials = new Set(), textures = new Set();
     root.traverse(obj => {
+        obj.ownedTextures?.forEach(t=>textures.add(t));
         // Library props are clones that share geometry and materials with the
         // cache in PROP_LIBRARY; only the procedural room geometry is owned here.
         if (obj.userData.sharedProp) { obj.ownedMaterials?.forEach(m => materials.add(m)); return; }
@@ -80,7 +81,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=preset-mounts-20261012').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=artist-canvas-controls-20261012').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -348,10 +349,48 @@ function prepareArtistPainting(root) {
     const ctx=sheet.getContext('2d');ctx.fillStyle='#f6f3eb';ctx.fillRect(0,0,sheet.width,sheet.height);
     const texture=new THREE.CanvasTexture(sheet);texture.colorSpace=THREE.SRGBColorSpace;
     new THREE.TextureLoader().load('assets/artwork/artist-painting.jpg',source=>{
-        const image=source.image,scale=Math.min(sheet.width/image.width,sheet.height/image.height);
+        const image=source.image,scale=Math.max(sheet.width/image.width,sheet.height/image.height);
         ctx.drawImage(image,(sheet.width-image.width*scale)/2,(sheet.height-image.height*scale)/2,image.width*scale,image.height*scale);texture.needsUpdate=true;source.dispose();
     });
     canvas.material=material('#ffffff',{map:texture,roughness:.88}); canvas.name='Artist painting';
+    canvas.paintingTexture=texture;canvas.ownedTextures=[texture];
+}
+
+function prepareShelfOrganizer(root) {
+    root.updateWorldMatrix(true,true);
+    const inverse=root.matrixWorld.clone().invert(), bounds=new THREE.Box3();
+    const meshes=[];
+    root.traverse(obj=>{if(obj.isMesh){meshes.push(obj);obj.geometry.computeBoundingBox();bounds.union(obj.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(obj.matrixWorld)));}});
+    for(const obj of meshes){
+        const geometry=obj.geometry,positions=geometry.attributes.position,index=geometry.index;
+        const transform=inverse.clone().multiply(obj.matrixWorld),shell=[],dividers=[];
+        const black=[].concat(obj.material).every(m=>Math.max(m.color.r,m.color.g,m.color.b)<.01);
+        const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();
+        const count=index?index.count:positions.count;
+        for(let i=0;i<count;i+=3){
+            const ids=[0,1,2].map(k=>index?index.getX(i+k):i+k);
+            a.fromBufferAttribute(positions,ids[0]).applyMatrix4(transform);b.fromBufferAttribute(positions,ids[1]).applyMatrix4(transform);c.fromBufferAttribute(positions,ids[2]).applyMatrix4(transform);
+            const zs=[a.z,b.z,c.z],ys=[a.y,b.y,c.y];
+            // The three long dividers share the box material in the joined
+            // CAD export. Separate their thin interior plates, retaining the
+            // outer walls, compartment floors and mounting hooks as wood.
+            const internal=Math.max(...zs)-Math.min(...zs)<10 && Math.min(...zs)>bounds.min.z+85 && Math.max(...zs)<bounds.max.z-30 && Math.min(...ys)>bounds.min.y+10;
+            (black||internal?dividers:shell).push(...ids);
+        }
+        const make=(indices,acrylic)=>{
+            if(!indices.length)return;
+            const mesh=obj.clone(false);mesh.geometry=geometry.clone();mesh.geometry.setIndex(indices);mesh.userData={sharedProp:false};
+            if(acrylic){mesh.name='Organizer clear acrylic dividers';mesh.material=new THREE.MeshPhysicalMaterial({color:'#f0f8ff',roughness:.08,transmission:.94,thickness:.005,ior:1.49,depthWrite:false,side:THREE.DoubleSide});mesh.castShadow=false;}
+            else{
+                mesh.name='Organizer desk finish';mesh.material=new THREE.MeshPhysicalMaterial({color:'#f4ead8',roughness:.5});mesh.userData.artistShelfWood=true;
+                const uv=new Float32Array(positions.count*2);
+                for(let i=0;i<positions.count;i++){a.fromBufferAttribute(positions,i).applyMatrix4(transform);uv[i*2]=a.x/500;uv[i*2+1]=a.z/500;}
+                mesh.geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+            }
+            obj.parent.add(mesh);
+        };
+        make(shell,false);make(dividers,true);obj.removeFromParent();
+    }
 }
 
 function prepareSuppliedDisplay(root, id) {
@@ -463,8 +502,62 @@ function prepareSuppliedArm(root, id) {
         for(const {values,transform} of root.armGeometry)for(let i=0;i<values.length;i+=3){a.fromArray(values,i).applyMatrix4(transform);if(a.distanceTo(head)<110)extent=Math.max(extent,a.sub(head).dot(normal));}
         return {normal,extent};
     });
+    if (!dual) {
+        // Each supplied CAD part remains rigid. Only the two link pivots and
+        // the VESA head rotate; a display's roll must never twist the links.
+        const groups = Object.fromEntries(['clamp', 'lower', 'upper', 'head'].map(part => {
+            const group = new THREE.Group(); group.name = `Single arm ${part}`; root.add(group); return [part, group];
+        }));
+        for (const g of root.armGeometry) {
+            const part = g.object.name.match(/^single-arm-(clamp|lower|upper|head)-/)?.[1] || 'clamp';
+            g.object.geometry.applyMatrix4(g.transform);
+            g.values = g.object.geometry.attributes.position.array.slice();
+            groups[part].add(g.object); g.object.position.set(0,0,0); g.object.quaternion.identity(); g.object.scale.setScalar(1);
+            g.transform.identity(); g.inverse.identity(); g.part = part;
+        }
+        root.singleArmRig = {
+            groups, base: new THREE.Vector3(2.469258,8.835796,6.621386),
+            elbow: new THREE.Vector3(185.569247,278.204815,102.961439), tip: root.userData.armHeads[0].clone()
+        };
+    }
     const bridges = new THREE.Group(); bridges.name = 'Display mounting adapters'; root.add(bridges);
     root.armAdapterGroup = bridges;
+}
+
+function fitRigidSingleArm(arm, fitting) {
+    const rig = arm.singleArmRig;
+    const identity = new THREE.Quaternion();
+    const pose = (part, pivot, at, rotation) => {
+        const group = rig.groups[part];
+        group.quaternion.copy(rotation);
+        group.position.copy(at).sub(pivot.clone().applyQuaternion(rotation));
+        group.updateMatrix();
+        for (const g of arm.armGeometry) if (g.part === part) g.transform.copy(group.matrix);
+    };
+    if (!fitting) {
+        for (const part of Object.keys(rig.groups)) pose(part, rig.base, rig.base, identity);
+        return;
+    }
+    const lower = rig.elbow.clone().sub(rig.base), upper = rig.tip.clone().sub(rig.elbow);
+    const l1 = lower.length(), l2 = upper.length();
+    const direction = fitting.head.clone().sub(rig.base), requested = direction.length();
+    direction.normalize();
+    // A rigid arm has finite reach. Leave the clamp and CAD lengths intact.
+    const distance = THREE.MathUtils.clamp(requested, Math.abs(l1-l2)+.001, l1+l2-.001);
+    const tip = rig.base.clone().addScaledVector(direction, distance);
+    const along = (l1*l1-l2*l2+distance*distance)/(2*distance);
+    const sideways = lower.clone().addScaledVector(direction, -lower.dot(direction));
+    if (sideways.lengthSq() < 1e-8) sideways.set(1,0,0).addScaledVector(direction,-direction.x);
+    sideways.normalize();
+    const elbow = rig.base.clone().addScaledVector(direction,along).addScaledVector(sideways,Math.sqrt(Math.max(0,l1*l1-along*along)));
+    pose('clamp',rig.base,rig.base,identity);
+    pose('lower',rig.base,rig.base,new THREE.Quaternion().setFromUnitVectors(lower.normalize(),elbow.clone().sub(rig.base).normalize()));
+    pose('upper',rig.elbow,elbow,new THREE.Quaternion().setFromUnitVectors(upper.normalize(),tip.clone().sub(elbow).normalize()));
+    pose('head',rig.tip,tip,fitting.headRotation);
+    const face = arm.userData.armHeadFaces[0];
+    const contact = tip.clone().addScaledVector(fitting.normal,face.extent);
+    arm.userData.armConnections.push({displayId:fitting.display.userData.accessoryId,start:contact,end:fitting.end.clone(),headCenter:tip,normal:fitting.normal.clone()});
+    arm.updateWorldMatrix(true,true);
 }
 
 // Locate the largest upward-facing triangle. Its plane is the working face,
@@ -549,6 +642,7 @@ export class WorkspaceAccessories {
                     if (item.exclusiveGroup === 'mouse') addMousePad(obj);
                     if (item.id === 'keyboard-tray') prepareSuppliedTray(obj);
                     if (item.id === 'artist-easel') prepareArtistPainting(obj);
+                    if (item.id === 'shelf-organizer') prepareShelfOrganizer(obj);
                     if (['wide-monitor', 'portrait-monitor', 'flat-monitor'].includes(item.id)) prepareSuppliedDisplay(obj, item.propId);
                     if (item.id === 'monitor-arm' || item.id === 'monitor-arm-2') prepareSuppliedArm(obj, item.propId);
                     this.layout();
@@ -650,6 +744,10 @@ export class WorkspaceAccessories {
             for (const child of [...adapters.children]) disposeTree(child);
             arm.userData.armConnections = [];
             const fittings = matches;
+            if (arm.singleArmRig) {
+                fitRigidSingleArm(arm, matches.find(m => m.display.visible));
+                continue;
+            }
             for (const fitting of fittings) fitting.delta = fitting.head.clone().sub(fitting.start);
             // Keep the clamp and shared mast fixed, while the outer arm runs
             // adapt to the screen positions. Work on owned vertex copies only;
