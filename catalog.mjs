@@ -1,4 +1,4 @@
-import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs';
+import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=preset-camera-metal-20261012';
 // Pure catalog and pricing data. No DOM, no Three.js, no module-level mutable
 // state — so the same source is imported by studio.js in the browser and by the
 // test suite in Node. Anything that touches the scene or the page belongs in
@@ -183,7 +183,7 @@ export const ACCESSORIES = [
     { id: 'portrait-monitor', name: 'ProVision Ultra 32″ portrait', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-portrait-monitor',
       description: 'The supplied flat ProVision panel in portrait orientation, on the left in the Office pair.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'keyboard-tray', name: 'Keyboard tray', category: 'Support', visual: 'tray', propId: 'ergoflex-keyboard-tray',
-      finishes: ['black', 'white'],
+      finishes: ['black', 'white', 'steel'],
       description: 'Under-desktop tray for keyboard and mouse. Follows the desktop as it lifts and tilts.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'ergo-keyboard', name: 'Ergonomic keyboard', category: 'Desktop', visual: 'keyboard', propId: 'ergoflex-ergo-keyboard', exclusiveGroup: 'keyboard',
       finishes: ['black', 'white'],
@@ -219,7 +219,7 @@ export const PRESETS = [
     { id: 'occ', name: 'Orange Coast College', blurb: 'Coast navy, orange trim, a white frame and white ergonomic accessories. Editable official OCC logos on the desktop and side panels.',
       size: '60x30', woodFinish: 'Coast Navy', baseFinish: 'White', trimColor: '#f99239',
       accessories: ['monitor-arm', 'keyboard-tray', 'ergo-keyboard', 'wide-monitor', 'logitech-mx-master'],
-      accessoryFinishes: {'keyboard-tray':'white','ergo-keyboard':'white','logitech-mx-master':'white'}, cameraPreset: 'hero' },
+      accessoryFinishes: {'keyboard-tray':'steel','ergo-keyboard':'white','logitech-mx-master':'white'}, cameraPreset: 'hero' },
     { id: 'office', name: 'Office', blurb: 'Modern grey, grey trim, flat portrait on the left, curved ultrawide on the right, extended dual arm and ergonomic inputs on a keyboard tray.',
       size: '60x30', woodFinish: 'Modern Grey', baseFinish: 'Black', trimColor: '#1c1c1e',
       accessories: ['monitor-arm-2', 'wide-monitor', 'portrait-monitor', 'keyboard-tray', 'ergo-keyboard', 'logitech-mx-master', 'cable-tray'], cameraPreset: 'hero' },
@@ -295,7 +295,7 @@ export function priceBreakdown(config) {
 
     for (const id of config.accessories || []) {
         const item = accessory(id);
-        if (item) lines.push({ label: item.name + (config.accessoryFinishes?.[id] === 'white' ? ' · White' : ''), price: item.price, provisional: item.provisional, ...(item.quoted ? { quoted: true } : {}) });
+        if (item) lines.push({ label: item.name + ({white:' · White',steel:' · Brushed steel'}[config.accessoryFinishes?.[id]] || ''), price: item.price, provisional: item.provisional, ...(item.quoted ? { quoted: true } : {}) });
     }
     return lines;
 }

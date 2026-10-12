@@ -23450,14 +23450,14 @@
     62.5
    ],
    "tris": 26079,
-   "bytes": 180168,
+   "bytes": 616484,
    "sourceTris": 168962,
    "source": "models/ergoflex-supplied/MxMasterMouse.glb",
    "license": "user-provided",
    "attribution": null,
    "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
    "collection": "ErgoFlex Collection",
-   "revision": "keyboard-graphite-20261012"
+   "revision": "mx-material-roles-20261012"
   },
   {
    "id": "ergoflex-mouse-2",

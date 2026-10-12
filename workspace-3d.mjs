@@ -15,7 +15,7 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=college-accessories-led-20261012';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-camera-metal-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
@@ -81,7 +81,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=college-accessories-led-20261012').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=preset-camera-metal-20261012').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -667,14 +667,23 @@ export class WorkspaceAccessories {
                     const mats=[].concat(obj.material).map(source=>{
                         const mat=source.clone();mat.userData.sharedTextures=true;
                         obj.ownedMaterials||=[];obj.ownedMaterials.push(mat);
-                        root.finishMaterials.push({mat,color:source.color.clone(),metalness:source.metalness,roughness:source.roughness});return mat;
+                        root.finishMaterials.push({mat,color:source.color.clone(),metalness:source.metalness,roughness:source.roughness,roughnessMap:source.roughnessMap,role:source.name});return mat;
                     });obj.material=Array.isArray(obj.material)?mats:mats[0];
                 });
             }
-            for(const {mat,color,metalness,roughness} of root.finishMaterials){
-                mat.color.copy(finish==='white'?new THREE.Color('#ebede9'):color);
-                mat.metalness=finish==='white'&&id==='keyboard-tray' ? .15 : metalness;
-                mat.roughness=finish==='white'&&id==='keyboard-tray' ? .42 : roughness;
+            if(finish==='steel'&&id==='keyboard-tray'&&!root.brushedSteelMap){
+                const data=new Uint8Array(256*64*4);
+                for(let y=0;y<64;y++)for(let x=0;x<256;x++){const i=(y*256+x)*4,value=160+Math.round(55*((y*37%64)/63))+Math.round(8*Math.sin(x*.15+y));data[i]=data[i+1]=data[i+2]=value;data[i+3]=255;}
+                const map=new THREE.DataTexture(data,256,64);map.wrapS=map.wrapT=THREE.RepeatWrapping;map.repeat.set(5,3);map.needsUpdate=true;root.brushedSteelMap=map;root.ownedTextures||=[];root.ownedTextures.push(map);
+            }
+            for(const {mat,color,metalness,roughness,roughnessMap,role} of root.finishMaterials){
+                const mouse=id==='logitech-mx-master',steel=finish==='steel'&&id==='keyboard-tray';
+                const tint=finish==='white'?(mouse&&role==='MX roller steel'?color:mouse&&role==='MX graphite trim'?new THREE.Color('#727b82'):mouse&&role==='MX rubber grip'?new THREE.Color('#c6c8c4'):new THREE.Color('#ebede9')):steel?new THREE.Color('#9ca5ae'):color;
+                mat.color.copy(tint);
+                mat.metalness=steel ? .9 : finish==='white'&&id==='keyboard-tray' ? .15 : metalness;
+                mat.roughness=steel ? .5 : finish==='white'&&id==='keyboard-tray' ? .42 : roughness;
+                const nextMap=steel?root.brushedSteelMap:roughnessMap;
+                if(mat.roughnessMap!==nextMap){mat.roughnessMap=nextMap;mat.needsUpdate=true;}
             }
             root.userData.accessoryFinish=finish;
         }

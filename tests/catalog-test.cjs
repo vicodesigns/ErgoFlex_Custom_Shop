@@ -122,6 +122,15 @@ const assert = require('node:assert/strict');
   // Unknown accessory ids must not survive a share link.
   const white={...defaultConfig,accessoryFinishes:{'ergo-keyboard':'white','logitech-mx-master':'white','keyboard-tray':'white'}};
   assert.equal(validConfig(white),true,'all three white accessory finishes are valid');
+  assert.equal(validConfig({...white,accessoryFinishes:{'keyboard-tray':'steel'}}),true,'tray supports brushed steel');
+  const {cleanBuildPresets,cleanStartingView}=await import('../build-presets.mjs');
+  const {SHARED_BUILD_PRESETS}=await import('../preset-defaults.mjs');
+  const oldOCC=structuredClone(SHARED_BUILD_PRESETS.occ);oldOCC.config.accessoryFinishes['keyboard-tray']='white';oldOCC.room.desks.main.objects['accessory-keyboard-tray'].transform.p.x=77;
+  const steelOCC=cleanBuildPresets({entries:{occ:oldOCC}}).entries.occ;
+  assert.equal(steelOCC.config.accessoryFinishes['keyboard-tray'],'steel');assert.equal(steelOCC.room.desks.main.objects['accessory-keyboard-tray'].transform.p.x,77,'steel upgrade preserves tray placement');
+  steelOCC.config.accessoryFinishes['keyboard-tray']='white';assert.equal(cleanBuildPresets({entries:{occ:steelOCC}}).entries.occ.config.accessoryFinishes['keyboard-tray'],'white','later finish choice is kept');
+  assert.equal(cleanStartingView({position:{x:NaN,y:0,z:0},target:{x:0,y:0,z:0}}),null,'invalid view rejected');
+  assert.equal(cleanStartingView({position:{x:0,y:0,z:0},target:{x:0,y:0,z:0}}),null,'zero camera distance rejected');
   assert.deepEqual(cleanConfig(white).accessoryFinishes,white.accessoryFinishes,'white options survive saved and shared builds');
   assert.equal(validConfig({...white,accessoryFinishes:{'wide-monitor':'white'}}),false,'unsupported finish targets are rejected');
   assert.equal(validConfig({...white,accessoryFinishes:{'ergo-keyboard':'pink'}}),false,'unsupported finish colors are rejected');

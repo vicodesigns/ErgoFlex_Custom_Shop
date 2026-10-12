@@ -4,12 +4,12 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=college-accessories-led-20261012';
+import { SceneDesks } from './scene-desks.mjs?v=preset-camera-metal-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
-import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=college-accessories-led-20261012';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=preset-camera-metal-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=college-accessories-led-20261012';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=preset-camera-metal-20261012';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
@@ -20,7 +20,7 @@ import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-2026
 import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261010';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-desk-styling-20261010';
 import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
-import { SurfaceArtwork } from './surface-artwork.mjs?v=college-accessories-led-20261012';
+import { SurfaceArtwork } from './surface-artwork.mjs?v=preset-camera-metal-20261012';
 import { artworkSummary } from './artwork-config.mjs?v=scene-desk-styling-20261010';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-window-20261011';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
@@ -43,12 +43,12 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=college-accessories-led-20261012';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=preset-camera-metal-20261012';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=college-accessories-led-20261012';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=preset-camera-metal-20261012';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -4972,7 +4972,7 @@ function renderAccessories() {
         if(item.finishes){
             const finishes=document.createElement('label');finishes.className='accessory-finish';finishes.textContent='Color';
             const select=document.createElement('select');select.id=`accessory-finish-${item.id}`;select.setAttribute('aria-label',`${item.name} color`);select.disabled=!fits;
-            for(const finish of item.finishes){const option=document.createElement('option');option.value=finish;option.textContent=finish==='white'?'White':'Black';select.append(option);}
+            for(const finish of item.finishes){const option=document.createElement('option');option.value=finish;option.textContent={white:'White',black:'Black',steel:'Brushed steel / silver'}[finish];select.append(option);}
             select.value=currentConfig.accessoryFinishes?.[item.id]||'black';
             select.onchange=()=>{
                 currentConfig=cleanConfig({...currentConfig,accessoryFinishes:{...currentConfig.accessoryFinishes,[item.id]:select.value}});
@@ -5051,6 +5051,10 @@ function syncBuildPresetUI(message) {
     });
     const save = document.getElementById('save-preset');
     if (save) { save.hidden = !preset; save.disabled = applyingBuildPreset || selectedRoomScene !== 'product'; save.textContent = `Save ${preset?.name || 'preset'} now`; }
+    const viewSave = document.getElementById('save-preset-view');
+    if (viewSave) { viewSave.hidden = !preset; viewSave.disabled = applyingBuildPreset || pendingBuildPresetRestore || selectedRoomScene !== 'product' || !loadedModel; }
+    const viewStatus = document.getElementById('preset-view-status');
+    if (viewStatus) { viewStatus.hidden = !preset; viewStatus.textContent = buildPresets.entries[activeBuildPreset]?.initialView ? 'Starting view saved. Returns when selected or reloaded.' : 'Frame the desk, then save its starting view.'; }
     const status = document.getElementById('preset-save-status');
     if (status) status.textContent = message || (preset ? `${preset.name} · edits auto-save in this browser.` : 'Choose a setup. Your edits will auto-save as its own version.');
     syncArtistCanvasUI();
@@ -5074,13 +5078,41 @@ function saveBuildPreset() {
     if (room?.desks.main) room.desks.main.pose = { x: glideTarget.x, z: glideTarget.z, yaw: deskYaw };
     const next = cleanBuildPresets({ ...buildPresets, active: activeBuildPreset, entries: { ...buildPresets.entries, [activeBuildPreset]: {
         config: cleanConfig(currentConfig), room, ...(activeBuildPreset === 'artist' ? { startPose: 'artist-65-v1', startLighting: 'artist-daytime-40-v1', singleArm: 'rigid-landscape-v1' } : {}),
-        ...(activeBuildPreset === 'occ' ? { collegeArtwork: 'occ-v1' } : {}),
+        ...(activeBuildPreset === 'occ' ? { collegeArtwork: 'occ-v1', trayFinish:'occ-steel-v1' } : {}),
+        ...(buildPresets.entries[activeBuildPreset]?.initialView ? {initialView:buildPresets.entries[activeBuildPreset].initialView} : {}),
         surface: { finish: surfaceFinish, grain: grainEnabled, visibility: grainVisibility, sheen: grainSheen }
     } } });
     if (!writeStore(BUILD_PRESETS_KEY, next)) { syncBuildPresetUI('Could not save in this browser. Use Save project to keep your edits.'); return false; }
     buildPresets = next;
     syncBuildPresetUI(`${PRESETS.find(p => p.id === activeBuildPreset).name} · saved in this browser.`);
     return true;
+}
+
+function savePresetStartingView() {
+    if (!saveBuildPreset() || !camera || !controls) return false;
+    const vector = v => ({x:v.x,y:v.y,z:v.z});
+    const draft = buildPresets.entries[activeBuildPreset];
+    draft.initialView = {position:vector(cameraTween.active ? cameraTween.toPos : camera.position),target:vector(cameraTween.active ? cameraTween.toTarget : controls.target),fov:camera.fov};
+    if (!saveBuildPreset()) return false;
+    notifyUser(`Starting view saved for ${PRESETS.find(p=>p.id===activeBuildPreset).name}.`);
+    return true;
+}
+
+function restorePresetStartingView(view) {
+    if (!view || !camera || !controls) return;
+    cameraTween.active = false; clearTimeout(cameraTween.fallback);
+    controls.autoRotate = false;
+    document.getElementById('rotate-scene')?.setAttribute('aria-pressed','false');
+    // Clear residual orbit damping before restoring the exact framing.
+    const damping = controls.enableDamping; controls.enableDamping = false; controls.update();
+    camera.fov = view.fov; camera.updateProjectionMatrix();
+    camera.position.set(view.position.x,view.position.y,view.position.z);
+    controls.target.set(view.target.x,view.target.y,view.target.z);
+    const distance = camera.position.distanceTo(controls.target);
+    controls.minDistance = Math.min(CLOSEUP_MIN_DISTANCE,distance);
+    controls.maxDistance = Math.max(30,distance);
+    controls.update(); controls.enableDamping = damping;
+    workspaceRoom?.update(camera);
 }
 
 function scheduleBuildPresetSave() {
@@ -5142,7 +5174,8 @@ async function applyPreset(preset) {
         else if (Number.isFinite(preset.startTilt)) applyProjectMotion({ heightInches: Math.max(liftToHeight(currentLift), minimumHeightForTilt(preset.startTilt, currentConfig.size)), tilt: { [primaryTiltConfig()?.name]: preset.startTilt } });
         if (preset.id === 'artist') applyArtistStartingLights(draft);
         if (preset.id === 'occ' && draft?.collegeArtwork !== 'occ-v1' && !draft?.config.artwork && !await surfaceArtwork.applyOrangeCoastSamples()) throw new Error('OCC artwork could not be loaded.');
-        if (preset.cameraPreset) {
+        if (draft?.initialView) restorePresetStartingView(draft.initialView);
+        else if (preset.cameraPreset) {
             const select = document.getElementById('camera-view');
             if (select) { select.value = preset.cameraPreset; select.dispatchEvent(new Event('change')); }
         }
@@ -5188,10 +5221,12 @@ function buildGuidedConfiguration() {
     if (header) header.after(presets); else column.prepend(presets);
     const save = document.createElement('button'); save.id = 'save-preset'; save.type = 'button'; save.className = 'btn-secondary'; save.onclick = () => { if (saveBuildPreset()) notifyUser('Your preset edits are saved.'); };
     const status = document.createElement('p'); status.id = 'preset-save-status'; status.className = 'studio-note'; status.role = 'status';
+    const viewSave=document.createElement('button');viewSave.id='save-preset-view';viewSave.type='button';viewSave.className='btn-secondary';viewSave.textContent='Save starting view';viewSave.onclick=savePresetStartingView;
+    const viewStatus=document.createElement('p');viewStatus.id='preset-view-status';viewStatus.className='studio-note';viewStatus.role='status';
     const canvasToggle=document.createElement('div');canvasToggle.id='artist-canvas-toggle';canvasToggle.className='artist-canvas-toggle';canvasToggle.hidden=true;
     canvasToggle.innerHTML='<label><input id="artist-show-painting" type="checkbox" checked> Show painting</label><small>Painting fills the canvas.</small>';
     canvasToggle.querySelector('input').onchange=e=>sceneDesks?.objects.setArtwork('accessory-artist-easel',e.target.checked);
-    presets.querySelector('.eyebrow').after(save, status,canvasToggle); syncBuildPresetUI();
+    presets.querySelector('.eyebrow').after(save, status,viewSave,viewStatus,canvasToggle); syncBuildPresetUI();
 
     const accessories = document.createElement('div');
     accessories.className = 'accessory-block';
@@ -10527,6 +10562,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
                 pendingBuildPresetRestore = null;
                 if (state) { applyProjectMotion({ heightInches: state.height, tilt: { [primaryTiltConfig()?.name]: state.tilt }, yaw: state.pose.yaw, glide: { x: state.pose.x, z: state.pose.z } }); applyGrooveLights(state.lights); }
                 if (activeBuildPreset === 'artist') applyArtistStartingLights(draft);
+                if (draft.initialView) restorePresetStartingView(draft.initialView);
             }
             roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
             syncGrooveUI(roomGroove?.state || {});
@@ -11621,6 +11657,7 @@ window.ErgoFlex = {
     focusCameraShortcut,
     applyPreset,
     saveBuildPreset,
+    savePresetStartingView,
     get activeBuildPreset() { return activeBuildPreset; },
     toggleAccessory,
     get priceLines() { return priceBreakdown(currentConfig); },

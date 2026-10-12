@@ -140,3 +140,13 @@ The Ergo keyboard, MX Master and keyboard tray each have an independent Black/Wh
 Project restoration previously rebuilt the primary tilt rig from registered part IDs and left the generated Desktop LEDs and touchscreen behind. Those overlay groups have no editor IDs. The primary rig now reclaims both groups whenever it is created, including project import and undo/redo rig restoration.
 
 Verification: `node tests/accessory-college-options-test.cjs` and `node tests/desktop-led-attachment-test.cjs`. The latter checks fixed strip-to-desktop transforms through imports, saved-rig reloads, six preset changes, both desk sizes and −5° to 65° tilt.
+
+## Per-preset starting camera and refined accessory finishes
+
+**Save starting view** records the current camera position, orbit target and lens for the selected Start From preset. The saved view is restored on selection and initial page load; accessory edits and autosaves preserve it without replacing it with the current inspection angle. Each preset stores its own `initialView`, which also travels in the project’s preset collection. Camera restores stop active camera tweens and automatic orbit.
+
+Keyboard tray has a third **Brushed steel / silver** option. OCC upgrades its original white tray once (`trayFinish: occ-steel-v1`) while preserving the owner’s placement, artwork and other edits. Later finish choices remain saved. Its silver material uses metallic reflectance and a subtle directional roughness texture.
+
+The supplied MX Master geometry now has separate shell, rubber grip, trim and roller material roles. White finish keeps metallic main and thumb rollers, graphite trim and a softer grey grip. Black restores graphite shell and grip while retaining metal rollers. `node tools/props/refine-mx-master.mjs` separates these existing connected pieces without changing vertices, dimensions or placements; rerun it after a generic conversion of the mouse.
+
+Verification: `tests/accessory-college-options-test.cjs` checks two independent starting views, exact selection/reload restores, preservation during ordinary edits, tray material, contrasting mouse roles and existing artwork persistence. Catalog tests check OCC’s one-time finish migration and reject invalid camera data.

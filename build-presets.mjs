@@ -1,9 +1,16 @@
-import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=college-accessories-led-20261012';
+import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=preset-camera-metal-20261012';
 import { cleanSceneDeskData } from './scene-desk-data.mjs';
-import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs';
+import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=preset-camera-metal-20261012';
 import { minimumHeightForTilt } from './motion-limits.mjs';
 
 export const BUILD_PRESETS_KEY = 'ergoflex.buildPresetsV1';
+export function cleanStartingView(value) {
+    const vector = v => v && ['x','y','z'].every(k => Number.isFinite(v[k]) && Math.abs(v[k]) < 10000);
+    if (!vector(value?.position) || !vector(value?.target)) return null;
+    if (Math.hypot(...['x','y','z'].map(k => value.position[k] - value.target[k])) < .01) return null;
+    const xyz = v => ({x:v.x,y:v.y,z:v.z});
+    return { position: xyz(value.position), target: xyz(value.target), fov: Number.isFinite(value.fov) ? Math.max(10, Math.min(100, value.fov)) : 35 };
+}
 // Rotate a mount-local point without importing the renderer into preset storage.
 function rotatedPoint(p, q) {
     const t = {x:2*(q.y*p.z-q.z*p.y),y:2*(q.z*p.x-q.x*p.z),z:2*(q.x*p.y-q.y*p.x)};
@@ -24,6 +31,8 @@ export function cleanBuildPresets(value) {
             room.desks.main.height = Math.max(room.desks.main.height, minimumHeightForTilt(preset.startTilt, room.desks.main.size));
         }
         const config = cleanConfig(draft.config);
+        // Update OCC's original white tray once, retaining all owner placements.
+        if (preset.id === 'occ' && draft.trayFinish !== 'occ-steel-v1') config.accessoryFinishes = {...config.accessoryFinishes, 'keyboard-tray':'steel'};
         if (preset.id === 'artist' && room?.desks.main && draft.singleArm !== 'rigid-landscape-v1') {
             const main = room.desks.main, objects = main.objects;
             const portrait = objects['accessory-portrait-monitor'];
@@ -46,6 +55,8 @@ export function cleanBuildPresets(value) {
         entries[preset.id] = {
             ...(!value?.entries?.[preset.id] || draft.origin === 'shared' ? { origin: 'shared' } : {}),
             config, ...(room ? { room } : {}),
+            ...(cleanStartingView(draft.initialView) ? {initialView: cleanStartingView(draft.initialView)} : {}),
+            ...(preset.id === 'occ' ? {trayFinish:'occ-steel-v1'} : {}),
             ...(preset.id === 'artist' ? { startPose: 'artist-65-v1' } : {}),
             ...(preset.id === 'artist' ? { singleArm: 'rigid-landscape-v1' } : {}),
             ...(preset.id === 'occ' && draft.collegeArtwork === 'occ-v1' ? { collegeArtwork: 'occ-v1' } : {}),
