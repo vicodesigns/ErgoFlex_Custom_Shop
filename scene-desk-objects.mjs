@@ -40,8 +40,18 @@ export class SceneDeskObjects {
         for(const obj of objects){
             const id='accessory-'+obj.userData.accessoryId;
             const item=r.objects.get(id);
+            const previous=item?.saved||r.state.objects[id];
+            if(obj.userData.accessoryId==='task-light'&&previous&&previous.clampMount!=='rear-edge-v1'){
+                // Upgrade a saved freestanding lamp onto the rear edge once.
+                // Keep its chosen side; subsequent clamp edits stay untouched.
+                previous.transform.p.x=Math.max(-(r.state.size==='60x30'?762:610)+35,Math.min((r.state.size==='60x30'?762:610)-35,previous.transform.p.x));
+                previous.transform.p.y=0;previous.transform.p.z=obj.position.z;
+                previous.transform.q={x:0,y:0,z:0,w:1};
+                previous.clampMount='rear-edge-v1';
+            }
             if(item){if(item.saved.custom){this.purchaseMount(item.saved.role)?.add(obj);apply(obj,item.saved.transform);}continue;}
             const role=this.manager.ctx.accessoryRole(obj),saved=r.state.objects[id]||{role,added:false,removed:false,label:this.manager.ctx.objectName(obj),transform:plain(obj)};
+            if(obj.userData.accessoryId==='task-light')saved.clampMount='rear-edge-v1';
             if(!saved.custom)saved.transform=plain(obj);
             this.register(r,id,obj,saved,new THREE.Vector3(1,1,1));
         }

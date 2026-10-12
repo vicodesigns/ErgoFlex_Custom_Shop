@@ -78,3 +78,18 @@ The builder records `displayMountMm` from each authored VESA centre, using the s
 **Desk objects → Objects on this desk** offers 0.5 mm position steps and 0.1° Turn, Tilt and Roll adjustments. Full transforms persist in edited Start From setups and project files. Existing saved pairs receive a one-time left/right upgrade, retaining other transforms; subsequent edits are preserved.
 
 Model loading now pauses motion and constructs the CAD, overlays and saved tilt rigs at the same reference height before restoring the live height. Previously loading at a saved raised height could attach overlay meshes below the wings and separate desktop and wing trims. The regression checks both desktop sizes' trim transforms before and after export/reload, fine adjustment persistence, dark screens and the absence of extra adapters.
+
+## Artist materials, clamp light and starting posture
+
+The Artist easel rails use brushed aluminum and a beige plastic retaining lip. The painter shelf has a planar wood UV map and its purchased instance follows the desktop material, including stain, grain and surface finish. Its cup holders use transmissive clear acrylic (IOR 1.49). Three replacement brushes have colored wooden handles, nickel ferrules and individual bristle strands. Named material roles survive compression with palette merging disabled for these three assets; owned runtime material copies keep cached library assets unchanged.
+
+The task light now uses a padded C-clamp on the rear desktop edge. Both clamp and articulated lamp remain in the desktop mount coordinates, following height and tilt. Existing saved freestanding lamps are snapped to the rear edge once, keeping their left/right position; the `clampMount` marker preserves later adjustments.
+
+Artist starts at **65°**, raising the 60″ desktop to at least **42.5″** for the existing clearance envelope. LEDs start enabled at **40%** with **My looks → Daytime**, using an imported Daytime override when present. Existing Artist drafts receive these defaults once, retaining accessory transforms. Further saved posture and lighting edits are preserved by the `startPose` / `startLighting` markers. Project exports include these markers.
+
+Rebuild the Artist assets with:
+
+```sh
+BLENDER=/path/to/blender node tools/convert-props.mjs --only ergoflex-art-easel,ergoflex-easel-accessory,ergoflex-painter-shelf
+node tools/props/thumbnails.mjs --only ergoflex-art-easel,ergoflex-easel-accessory,ergoflex-painter-shelf
+```

@@ -1,14 +1,15 @@
 import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261008';
-import { normalizeCustomLook, normalizeCustomPalette, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
+import { normalizeCustomLook, normalizeCustomPalette, importCustomLooks, CUSTOM_LOOKS_KEY, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
+import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=curved-pair-20261012';
+import { SceneDesks } from './scene-desks.mjs?v=artist-finishes-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
-import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=curved-pair-20261012';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artist-finishes-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=curved-pair-20261012';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=artist-finishes-20261012';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
@@ -42,12 +43,12 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=curved-pair-20261012';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=artist-finishes-20261012';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=mouse-pad-20261012';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-finishes-20261012';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -5043,7 +5044,7 @@ function saveBuildPreset() {
     // Product view uses the CAD motion coordinates rather than room millimetres.
     if (room?.desks.main) room.desks.main.pose = { x: glideTarget.x, z: glideTarget.z, yaw: deskYaw };
     const next = cleanBuildPresets({ ...buildPresets, active: activeBuildPreset, entries: { ...buildPresets.entries, [activeBuildPreset]: {
-        config: cleanConfig(currentConfig), room,
+        config: cleanConfig(currentConfig), room, ...(activeBuildPreset === 'artist' ? { startPose: 'artist-65-v1', startLighting: 'artist-daytime-40-v1' } : {}),
         surface: { finish: surfaceFinish, grain: grainEnabled, visibility: grainVisibility, sheen: grainSheen }
     } } });
     if (!writeStore(BUILD_PRESETS_KEY, next)) { syncBuildPresetUI('Could not save in this browser. Use Save project to keep your edits.'); return false; }
@@ -5056,6 +5057,16 @@ function scheduleBuildPresetSave() {
     if (!activeBuildPreset || applyingBuildPreset || selectedRoomScene !== 'product') return;
     clearTimeout(buildPresetTimer);
     buildPresetTimer = setTimeout(saveBuildPreset, 500);
+}
+
+function applyArtistStartingLights(draft) {
+    if (draft?.startLighting === 'artist-daytime-40-v1') return;
+    let look = ledCommandCenter?.looks?.find(l => l.name === 'Daytime');
+    if (!look) try { look = importCustomLooks(JSON.parse(localStorage.getItem(CUSTOM_LOOKS_KEY) || '[]')).find(l => l.name === 'Daytime'); } catch {}
+    look ||= SAVED_LED_LOOKS.find(l => l.name === 'Daytime');
+    ledMusic.stop();
+    applyCustomLedLook({ ...look, on: true, bri: 102 });
+    setLedGlow(LED_FULL_BRIGHTNESS * .4, false);
 }
 
 async function applyPreset(preset) {
@@ -5098,6 +5109,8 @@ async function applyPreset(preset) {
         workspaceAccessories?.layout();
         const state = draft?.room?.desks.main;
         if (state) { applyProjectMotion({ heightInches: state.height, tilt: { [primaryTiltConfig()?.name]: state.tilt }, yaw: state.pose.yaw, glide: { x: state.pose.x, z: state.pose.z } }); applyGrooveLights(state.lights); }
+        else if (Number.isFinite(preset.startTilt)) applyProjectMotion({ heightInches: Math.max(liftToHeight(currentLift), minimumHeightForTilt(preset.startTilt, currentConfig.size)), tilt: { [primaryTiltConfig()?.name]: preset.startTilt } });
+        if (preset.id === 'artist') applyArtistStartingLights(draft);
         if (preset.cameraPreset) {
             const select = document.getElementById('camera-view');
             if (select) { select.value = preset.cameraPreset; select.dispatchEvent(new Event('change')); }
@@ -10470,10 +10483,13 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
             sceneDesks?.bind(workspaceRoom);
             await sceneDesks?.objects.ready;
             if(hydrationToken!==sceneAssetHydrationToken)return;
-            if (choice.id === 'product' && pendingBuildPresetRestore) {
-                const state = pendingBuildPresetRestore.room?.desks.main;
+            // The initial room shell may finish before CAD and its tilt rig.
+            // Leave restoration pending until the product desk can receive it.
+            if (choice.id === 'product' && pendingBuildPresetRestore && primaryTiltConfig() && sceneDesks?.active?.product) {
+                const draft = pendingBuildPresetRestore, state = draft.room?.desks.main;
                 pendingBuildPresetRestore = null;
                 if (state) { applyProjectMotion({ heightInches: state.height, tilt: { [primaryTiltConfig()?.name]: state.tilt }, yaw: state.pose.yaw, glide: { x: state.pose.x, z: state.pose.z } }); applyGrooveLights(state.lights); }
+                if (activeBuildPreset === 'artist') applyArtistStartingLights(draft);
             }
             roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
             syncGrooveUI(roomGroove?.state || {});

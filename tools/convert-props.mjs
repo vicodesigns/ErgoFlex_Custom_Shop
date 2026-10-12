@@ -105,7 +105,7 @@ for (const prop of selected) {
     else {
         const size = String(prop.textureSize || manifest.textureSize || 1024);
         const res = run(gltfTransform, ['optimize', raw, out, '--compress', 'meshopt', '--texture-compress', 'webp',
-                                        '--texture-size', size, '--simplify', 'false'], prop.id);
+                                        '--texture-size', size, '--simplify', 'false', ...(prop.preserveMaterials ? ['--palette', 'false'] : [])], prop.id);
         if (res.status !== 0) { failures++; console.error(`✗ ${prop.id}: optimize failed\n${res.stderr}`); continue; }
     }
     if (!flag('--keep-raw')) rmSync(raw);

@@ -12,7 +12,9 @@ def mat(name, color, roughness=.5, metallic=0):
     return m
 
 def improve(id):
-    if id in ('ergoflex-mechanical-keyboard','ergoflex-desktop-pc','ergoflex-mouse-2'):
+    if id in ('ergoflex-art-easel','ergoflex-easel-accessory','ergoflex-painter-shelf'):
+        improve_artist(id)
+    elif id in ('ergoflex-mechanical-keyboard','ergoflex-desktop-pc','ergoflex-mouse-2'):
         # CAD's pure-black factors erase the form under any room lighting.
         # Preserve each material assignment and expose the original detail.
         for m in bpy.data.materials:
@@ -77,3 +79,58 @@ def improve(id):
             if p:
                 p.inputs['Base Color'].default_value=(.16,.18,.20,1)
                 p.inputs['Roughness'].default_value=.32;p.inputs['Metallic'].default_value=.65
+
+# Artist accessory material roles survive conversion for finish matching.
+def improve_artist(id):
+    from mathutils import Vector
+    aluminium=mat('Artist brushed aluminium',(.58,.62,.66),.34,.92)
+    beige=mat('Artist beige plastic lip',(.69,.59,.43),.58)
+    if id=='ergoflex-art-easel':
+        for o in mesh_objects_artist():
+            if o.name in ('Mesh_0','Mesh_5'):continue # backing and art remain intact
+            o.data.materials.clear();o.data.materials.append(beige if o.name=='Mesh_1' else aluminium)
+    elif id=='ergoflex-easel-accessory':
+        for o in mesh_objects_artist():
+            o.data.materials.clear();o.data.materials.append(beige if o.name=='Mesh_7' else aluminium)
+    elif id=='ergoflex-painter-shelf':
+        acrylic=mat('Artist clear acrylic',(.94,.97,1),.09)
+        p=acrylic.node_tree.nodes.get('Principled BSDF');p.inputs['Transmission Weight'].default_value=.94;p.inputs['IOR'].default_value=1.49
+        wood=mat('Artist shelf wood',(.52,.34,.16),.53)
+        for o in list(mesh_objects_artist()):
+            if o.name=='Mesh_0':
+                o.name='Artist clear acrylic holders';o.data.materials.clear();o.data.materials.append(acrylic)
+            elif o.name=='Mesh_11':
+                o.name='Artist shelf surface';o.data.materials.clear();o.data.materials.append(wood)
+                uv=o.data.uv_layers.new(name='Shelf grain')
+                for face in o.data.polygons:
+                    # Horizontal grain projection, with real metre-based repeats.
+                    for loop in face.loop_indices:
+                        v=o.data.vertices[o.data.loops[loop].vertex_index].co
+                        uv.data[loop].uv=(v.x/.5,-v.y/.5)
+            else:bpy.data.objects.remove(o,do_unlink=True)
+        handles=[mat('Brush walnut handle',(.17,.065,.024),.32),mat('Brush ochre handle',(.43,.23,.07),.38),mat('Brush sage handle',(.11,.23,.19),.4)]
+        ferrule=mat('Brush nickel ferrule',(.61,.66,.69),.22,.95)
+        bristle=mat('Brush natural bristles',(.25,.13,.055),.82)
+        dark=mat('Brush dark bristles',(.055,.035,.023),.9)
+        def point(v):return Vector((v[0]/1000,-v[2]/1000,v[1]/1000))
+        def taper(name,a,b,r1,r2,m,vertices=16):
+            a,b=point(a),point(b);d=b-a
+            bpy.ops.mesh.primitive_cone_add(vertices=vertices,radius1=r1/1000,radius2=r2/1000,depth=d.length,location=(a+b)/2)
+            o=bpy.context.object;o.name=name;o.rotation_mode='QUATERNION';o.rotation_quaternion=d.to_track_quat('Z','Y');o.data.materials.append(m)
+            for f in o.data.polygons:f.use_smooth=True
+        brushes=[([78,80,0],[78,210,34],[78,232,40],[78,280,52],5.2,handles[0],dark),
+                 ([94,70,75],[94,185,121],[94,198,127],[94,220,136],2.8,handles[1],bristle),
+                 ([75,115,-85],[68,230,0],[67,245,11],[65,273,30],3.8,handles[2],bristle)]
+        for i,(base,neck,head,tip,r,hairHandle,hair) in enumerate(brushes):
+            taper('Brush %d lacquered handle'%i,base,neck,r*.55,r,hairHandle)
+            taper('Brush %d ferrule'%i,neck,head,r*1.12,r*1.08,ferrule)
+            taper('Brush %d bristle body'%i,head,tip,r*1.05,.3,hair,24)
+            # Fine strands extend the silhouette and catch light independently.
+            for j in range(14):
+                a=2*math.pi*j/14;dx=math.cos(a)*r*.82;dz=math.sin(a)*r*.82
+                start=[head[0]+dx,head[1],head[2]+dz]
+                end=[tip[0]+dx*.12,tip[1]-(j%4)*.7,tip[2]+dz*.12]
+                taper('Brush %d strand %d'%(i,j),start,end,.24,.055,hair,5)
+
+def mesh_objects_artist():
+    return [o for o in bpy.context.scene.objects if o.type=='MESH']

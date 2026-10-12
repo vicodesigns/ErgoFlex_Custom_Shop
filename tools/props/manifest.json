@@ -12418,7 +12418,10 @@
    "collection": "ErgoFlex Collection",
    "license": "user-provided",
    "anchor": "floor",
-   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications."
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "repair": "ergoflex-collection",
+   "revision": "artist-finishes-20261012",
+   "preserveMaterials": true
   },
   {
    "id": "ergoflex-small-bookshelf",
@@ -12498,7 +12501,10 @@
    "collection": "ErgoFlex Collection",
    "license": "user-provided",
    "anchor": "floor",
-   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications."
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "repair": "ergoflex-collection",
+   "revision": "artist-finishes-20261012",
+   "preserveMaterials": true
   },
   {
    "id": "ergoflex-office-chair",
@@ -12950,7 +12956,10 @@
    "budget": 18000,
    "collection": "ErgoFlex Collection",
    "license": "user-provided",
-   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified."
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "repair": "ergoflex-collection",
+   "revision": "artist-finishes-20261012",
+   "preserveMaterials": true
   },
   {
    "id": "ergoflex-drawing-tablet",

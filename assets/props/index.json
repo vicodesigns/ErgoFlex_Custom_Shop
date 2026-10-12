@@ -22833,12 +22833,13 @@
     301.2
    ],
    "tris": 8682,
-   "bytes": 44872,
+   "bytes": 46228,
    "source": "models/ergoflex-supplied/EassleAccessoryAndArt.glb",
    "license": "user-provided",
    "attribution": null,
    "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
-   "collection": "ErgoFlex Collection"
+   "collection": "ErgoFlex Collection",
+   "revision": "artist-finishes-20261012"
   },
   {
    "id": "ergoflex-small-bookshelf",
@@ -22950,7 +22951,7 @@
    "anchor": "floor",
    "size": [
     574,
-    282.9,
+    280.1,
     279.9
    ],
    "min": [
@@ -22960,17 +22961,18 @@
    ],
    "max": [
     287,
-    282.9,
+    280.1,
     140
    ],
-   "tris": 30018,
-   "bytes": 263612,
+   "tris": 6672,
+   "bytes": 65976,
    "sourceTris": 68947,
    "source": "models/ergoflex-supplied/PAinterAccesoryShelf.glb",
    "license": "user-provided",
    "attribution": null,
    "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
-   "collection": "ErgoFlex Collection"
+   "collection": "ErgoFlex Collection",
+   "revision": "artist-finishes-20261012"
   },
   {
    "id": "ergoflex-office-chair",
@@ -23618,12 +23620,13 @@
     38.1
    ],
    "tris": 8642,
-   "bytes": 45624,
+   "bytes": 44316,
    "source": "models/ergoflex-supplied/EaselAccesssory.glb",
    "license": "user-provided",
    "attribution": null,
    "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
-   "collection": "ErgoFlex Collection"
+   "collection": "ErgoFlex Collection",
+   "revision": "artist-finishes-20261012"
   },
   {
    "id": "ergoflex-drawing-tablet",
@@ -23838,6 +23841,6 @@
    ]
   }
  ],
- "generated": "2026-10-12T18:18:09.048Z",
+ "generated": "2026-10-12T18:59:08.315Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

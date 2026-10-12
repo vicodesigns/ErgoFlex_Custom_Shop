@@ -15,7 +15,7 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=curved-pair-20261012';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=artist-finishes-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
@@ -54,7 +54,7 @@ function disposeTree(root) {
     root.traverse(obj => {
         // Library props are clones that share geometry and materials with the
         // cache in PROP_LIBRARY; only the procedural room geometry is owned here.
-        if (obj.userData.sharedProp) return;
+        if (obj.userData.sharedProp) { obj.ownedMaterials?.forEach(m => materials.add(m)); return; }
         if (obj.isInstancedMesh) obj.dispose();
         if (obj.geometry) geometries.add(obj.geometry);
         for (const m of [...(Array.isArray(obj.material) ? obj.material : [obj.material]), ...(obj.replacedMaterials || [])]) {
@@ -80,7 +80,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=curved-pair-20261012').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=artist-finishes-20261012').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -111,6 +111,18 @@ export const PROP_LIBRARY = {
         clone.name = `Prop:${id}`; clone.userData.sharedProp = true; clone.userData.propId = id;
         clone.traverse(obj => { obj.userData.sharedProp = true; });
         clone.scale.setScalar(1000);
+        if (id === 'ergoflex-painter-shelf') clone.traverse(obj => {
+            if (!obj.isMesh) return;
+            const materials = [].concat(obj.material).map(m => {
+                if (m.name !== 'Artist shelf wood' && m.name !== 'Artist clear acrylic') return m;
+                const owned = m.name === 'Artist shelf wood' ? new THREE.MeshPhysicalMaterial({ color: m.color, roughness: m.roughness }) : m.clone(); owned.userData.sharedTextures = true;
+                obj.ownedMaterials ||= []; obj.ownedMaterials.push(owned);
+                if (m.name === 'Artist shelf wood') obj.userData.artistShelfWood = true;
+                else { owned.thickness = .0025; owned.ior = 1.49; owned.depthWrite = false; owned.side = THREE.DoubleSide; }
+                return owned;
+            });
+            obj.material = Array.isArray(obj.material) ? materials : materials[0];
+        });
         return clone;
     }
 };
@@ -233,8 +245,19 @@ export function createAccessory(item) {
     } else if (type === 'mat') {
         box(root, [720, 3, 330], [0, 1.5, 0], material('#717e75'), 1.4);
     } else if (type === 'lamp') {
-        mesh(root, new THREE.CylinderGeometry(63, 70, 10, 32), dark, [0, 5, 0]);
-        rod(root, [0, 10, 0], [0, 240, -45], 9, dark);
+        // Padded C-clamp grips the rear edge instead of a loose weighted base.
+        const clamp = new THREE.Group(); clamp.name = 'Padded desktop edge clamp'; root.add(clamp);
+        const steel = material('#454b51', { metalness: .8, roughness: .36 });
+        const rubber = material('#1c2023', { roughness: .98 });
+        box(clamp, [62, 4, 48], [0, 3, 19], steel, 1.8);
+        box(clamp, [62, 2, 40], [0, 0, 21], rubber, .9);
+        box(clamp, [62, 44, 10], [0, -17, -9], steel, 3);
+        box(clamp, [62, 5, 48], [0, -39, 10], steel, 2);
+        rod(clamp, [0, -46, 23], [0, -21, 23], 4, silver);
+        mesh(clamp, new THREE.CylinderGeometry(17, 17, 3, 24), rubber, [0, -20, 23]);
+        box(clamp, [36, 8, 14], [0, -47, 23], dark, 3);
+        mesh(clamp, new THREE.CylinderGeometry(16, 19, 12, 24), steel, [0, 11, 14]);
+        rod(root, [0, 15, 14], [0, 240, -45], 9, dark);
         rod(root, [0, 240, -45], [0, 395, 100], 8, dark);
         sphere(root, [15, 15, 15], [0, 240, -45], silver);
         box(root, [170, 13, 48], [0, 391, 100], dark, 6);
@@ -476,7 +499,7 @@ export class WorkspaceAccessories {
         place('desk-mat', 0, 0, front - 220);
         place('logitech-k860', -64, mat, front - 215);
         place('logitech-lift', 240, mat, front - 190);
-        place('task-light', -435, 0, front - 350);
+        place('task-light', -435, 0, -(this.mounts.get('desktop')?.depth || 800) / 2);
         place('cable-tray', 0, -22, -80);
         place('cpu-holder', 370, -24, 40);
         place('foot-rest', 0, 0, 680);
@@ -587,6 +610,15 @@ export class WorkspaceAccessories {
         }
     }
     update() {
+        // Use the actual desktop material, including stain, wraps and finish.
+        const desktop = this.mounts.get('desktop')?.anchor;
+        const finish = desktop && [].concat(desktop.material).find(m => m?.isMeshPhysicalMaterial);
+        if (finish) for (const root of this.items.values()) root.traverse(obj => {
+            if (!obj.userData.artistShelfWood || obj.artistFinishVersion === finish.version) return;
+            const m = obj.material;
+            m.copy(finish); m.name = 'Artist shelf wood'; m.userData.sharedTextures = true;
+            m.needsUpdate = true; obj.artistFinishVersion = finish.version;
+        });
         for (const { anchor, group, dress, relative } of this.mounts.values()) {
             anchor.updateWorldMatrix(true, false);
             let visible = true;
