@@ -93,3 +93,28 @@ Rebuild the Artist assets with:
 BLENDER=/path/to/blender node tools/convert-props.mjs --only ergoflex-art-easel,ergoflex-easel-accessory,ergoflex-painter-shelf
 node tools/props/thumbnails.mjs --only ergoflex-art-easel,ergoflex-easel-accessory,ergoflex-painter-shelf
 ```
+
+## Owner-edited Start From defaults and mounting pass
+
+The October 12 owner edits were exported through the live app's Save project control and promoted to `preset-defaults.mjs`. Office, Artist, Gaming, Music, Library, Compact and Creative now retain the supplied finishes, surface sheen/grain, posture, LED look/brightness and mount-local accessory transforms on a fresh browser. Local edits continue to take priority. Named Daytime and Night City strip settings were checked against `led-saved-library.mjs` before reusing those definitions. Transforms were rounded to six decimal places and quaternions normalized.
+
+Standing workstation is replaced by Architect drafting table: a 35° drawing surface, an architectural plan, parallel ruler, set square, drawing pencils, clamp light and shelf organizer. The drawing kit is separately selectable in the store. The Artist canvas now uses the owner-supplied `PAinting_small.jpg`, stored as `assets/artwork/artist-painting.jpg`, with its aspect ratio retained.
+
+The flat ProVision display also has a separate landscape accessory/library model (`flat-monitor` / `ergoflex-flat-monitor`). It uses the original flat panel geometry rather than the curved AETHER model. Compact's procedural 27-inch display has a 16 mm enclosure and a shallow rear electronics housing.
+
+Native monitor heads now use a measured front-face orientation and extent. Their housings rotate to follow a screen's yaw, pitch and roll, meet its rear mounting point, and stay behind the rear mounting plane. The clamp remains fixed and the outer arm geometry adapts without changing any saved monitor or arm root transforms. This remains a visualization fit, not a mechanical reach certification.
+
+Artist's saved 65° posture was already present; restoration now refreshes the controller readout and prevents an initial neutral pose from overwriting a pending restore. Legacy Office builds retain their own object edits rather than inheriting the new shared placement.
+
+Verification:
+
+```sh
+node tests/start-from-defaults-test.cjs
+node tests/editable-build-presets-test.cjs
+node tests/catalog-test.cjs
+node tests/scene-desk-data-test.mjs
+node tests/project-io-test.cjs
+node tests/validation-test.cjs
+```
+
+Visual review captures: `scene-shots/preset-review/{artist,architect,gaming,compact,office}.png` (ignored local artifacts).

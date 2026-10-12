@@ -49,7 +49,7 @@ const server = http.createServer((req, res) => {
   const fitted=await page.evaluate(()=>{
    const w=ErgoFlex.workspaceAccessories;w.update();const arm=w.items.get('monitor-arm-2');
    return {dark:['wide-monitor','portrait-monitor'].every(id=>{const m=w.items.get(id).getObjectByName('monitor-screen').material;return !m.map&&!m.emissiveMap&&m.emissiveIntensity<=1&&m.emissive.getHex()===0}),adapters:arm.armAdapterGroup.children.length,
-    gaps:arm.userData.armConnections.map(c=>{const display=w.items.get(c.displayId),p=display.userData.displayMount.clone();p.add(display.getObjectByName('Prop:'+(c.displayId==='wide-monitor'?'ergoflex-wide-monitor':'ergoflex-portrait-monitor')).position);return arm.localToWorld(c.end.clone()).distanceTo(display.localToWorld(p));})};
+    gaps:arm.userData.armConnections.map(c=>{const display=w.items.get(c.displayId),p=display.userData.displayMount.clone();p.z-=4;p.add(display.getObjectByName('Prop:'+(c.displayId==='wide-monitor'?'ergoflex-wide-monitor':'ergoflex-portrait-monitor')).position);return arm.localToWorld(c.end.clone()).distanceTo(display.localToWorld(p));})};
   });
   assert.equal(fitted.dark,true,'both screens start dark');assert.equal(fitted.adapters,0,'only supplied CAD brackets remain');
   assert.equal(fitted.gaps.length,2);assert.ok(fitted.gaps.every(v=>v<1e-6),'extended arms stay attached after editing screen position and rotation');

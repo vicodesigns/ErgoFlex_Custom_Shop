@@ -1,3 +1,4 @@
+import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs';
 // Pure catalog and pricing data. No DOM, no Three.js, no module-level mutable
 // state — so the same source is imported by studio.js in the browser and by the
 // test suite in Node. Anything that touches the scene or the page belongs in
@@ -172,6 +173,10 @@ export const ACCESSORIES = [
       price: 99, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
     { id: 'wide-monitor', name: 'AETHER 34UW curved ultrawide', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-wide-monitor', exclusiveGroup: 'main-display',
       description: 'Curved ultrawide panel with dark screen glass, a dark chassis and rear RGB halo. On the right in the Office pair.', price: 0, quoted: true, compatibleSizes: ['60x30'] },
+    { id: 'flat-monitor', name: 'ProVision Ultra 32″ landscape', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-flat-monitor', exclusiveGroup: 'main-display',
+      description: 'The flat ProVision display in landscape orientation. Available separately from the portrait panel.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
+    { id: 'drafting-kit', name: 'Architect drafting board & tools', category: 'Desktop', visual: 'drafting-kit',
+      description: 'Architectural drawing board with a plan, parallel ruler, set square and drawing tools.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'portrait-monitor', name: 'ProVision Ultra 32″ portrait', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-portrait-monitor',
       description: 'The supplied flat ProVision panel in portrait orientation, on the left in the Office pair.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'keyboard-tray', name: 'Keyboard tray', category: 'Support', visual: 'tray', propId: 'ergoflex-keyboard-tray',
@@ -206,34 +211,34 @@ export function accessoryFits(id, size) {
 // Curated starting points. Each is a complete configuration, so applying one
 // leaves nothing half-set.
 export const PRESETS = [
-    { id: 'office', name: 'Office', blurb: 'Modern grey, black trim, flat portrait on the left, curved ultrawide on the right, extended dual arm and ergonomic inputs on a keyboard tray.',
+    { id: 'office', name: 'Office', blurb: 'Modern grey, grey trim, flat portrait on the left, curved ultrawide on the right, extended dual arm and ergonomic inputs on a keyboard tray.',
       size: '60x30', woodFinish: 'Modern Grey', baseFinish: 'Black', trimColor: '#1c1c1e',
       accessories: ['monitor-arm-2', 'wide-monitor', 'portrait-monitor', 'keyboard-tray', 'ergo-keyboard', 'logitech-mx-master', 'cable-tray'], cameraPreset: 'hero' },
-    { id: 'artist', name: 'Artist', blurb: 'Natural birch, a light frame, warm trim and an art surface with an easel rail and painter’s accessory shelf.',
+    { id: 'artist', name: 'Artist', blurb: 'Warm ivory, a sand frame, white trim, an art surface and a painter’s accessory shelf.',
       size: '60x30', woodFinish: 'Natural Birch', baseFinish: 'White', trimColor: '#f19c00',
       accessories: ['artist-easel', 'easel-rail', 'painter-shelf', 'task-light'], startTilt: 65, cameraPreset: 'hero' },
     { id: 'gaming', name: 'Gaming', blurb: 'Black birch with red trim, a wide display, mechanical keyboard, MX Master mouse and accent LEDs.',
       size: '60x30', woodFinish: 'Black Birch', baseFinish: 'Black', trimColor: '#dc0909',
       accessories: ['wide-monitor', 'mechanical-keyboard', 'logitech-mx-master', 'led-strip', 'cable-tray'], cameraPreset: 'hero' },
-    { id: 'music', name: 'Music studio', blurb: 'Walnut and charcoal, a wide display, compact keyboard, mouse and accent lighting.',
+    { id: 'music', name: 'Music studio', blurb: 'Carbon weave and black trim, a display pair, compact inputs and Night City lighting.',
       size: '60x30', woodFinish: 'Walnut', baseFinish: 'Space Gray', trimColor: '#1c1c1e',
       accessories: ['wide-monitor', 'apple-keyboard', 'magic-mouse', 'led-strip', 'cable-tray'], cameraPreset: 'hero' },
-    { id: 'library', name: 'Library & study', blurb: 'Earthy forest green, gold trim and a portrait display with compact inputs for reading and research.',
+    { id: 'library', name: 'Library & study', blurb: 'Forest green and gold trim, an ultrawide display and ergonomic inputs on a keyboard tray.',
       size: '48x30', woodFinish: 'Earthy Forest Green', baseFinish: 'Black', trimColor: '#f19c00',
       accessories: ['portrait-monitor', 'apple-keyboard', 'magic-mouse', 'task-light'], cameraPreset: 'hero' },
     { id: 'compact', name: 'Compact workspace',
-      blurb: 'The smallest top, a light frame, and just the cable management.',
+      blurb: 'White birch and a white frame with a slim display, single arm and compact inputs.',
       size: '48x30', woodFinish: 'Maple', baseFinish: 'White',
       accessories: ['cable-tray'], cameraPreset: 'hero' },
     { id: 'creative', name: 'Creative studio',
-      blurb: 'Walnut, a 27″ display, split keyboard and soft task lighting.',
+      blurb: 'White birch and a black frame with a 27″ display, split keyboard and soft task lighting.',
       size: '60x30', woodFinish: 'Walnut', baseFinish: 'Space Gray',
       accessories: ['dell-u2724d', 'logitech-k860', 'logitech-lift', 'monitor-arm-2', 'task-light', 'led-strip', 'cable-tray'], cameraPreset: 'hero' },
-    { id: 'standing', name: 'Standing workstation',
-      blurb: 'Mid-width oak set up for a full day on your feet.',
-      size: '60x30', woodFinish: 'White Oak', baseFinish: 'Navy',
-      accessories: ['dell-u2724d', 'logitech-lift', 'monitor-arm', 'foot-rest', 'cable-tray'], cameraPreset: 'front' }
-];
+    { id: 'architect', name: 'Architect drafting table',
+      blurb: 'Warm ivory with a graphite frame, a tilted drawing board, architectural plans and precision drafting tools.',
+      size: '60x30', woodFinish: 'Warm Ivory', baseFinish: 'Space Gray', trimColor: '#85888c',
+      accessories: ['drafting-kit', 'task-light', 'shelf-organizer'], startTilt: 35, cameraPreset: 'hero' }
+].map(preset => ({ ...preset, ...(SHARED_BUILD_PRESETS[preset.id]?.config || {}) }));
 
 // The starting configuration, derived from the catalog itself. The finishes
 // already carried isDefault, but nothing read it - the real default was a second

@@ -13081,6 +13081,32 @@
    "collection": "ErgoFlex Collection",
    "license": "user-provided",
    "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified."
+  },
+  {
+   "id": "ergoflex-flat-monitor",
+   "name": "ProVision Ultra 32″ · landscape panel",
+   "source": "ergoflex-supplied/ProVisionUltra32.glb",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "rotateY": 0,
+   "fit": {
+    "axis": "x",
+    "mm": 700
+   },
+   "budget": 0,
+   "collection": "ErgoFlex Collection",
+   "license": "user-provided",
+   "anchor": "floor",
+   "sizeNote": "User-supplied flat ProVision design in landscape orientation.",
+   "revision": "preset-mounts-20261012",
+   "displayMountMm": [
+    0,
+    209.04977369174628,
+    -11.600678702929443
+   ]
   }
  ],
  "screens": [

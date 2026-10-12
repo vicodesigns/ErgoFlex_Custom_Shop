@@ -23800,6 +23800,45 @@
    "attribution": null,
    "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
    "collection": "ErgoFlex Collection"
+  },
+  {
+   "id": "ergoflex-flat-monitor",
+   "name": "ProVision Ultra 32″ · landscape panel",
+   "category": "desk",
+   "scenes": [
+    "office",
+    "home"
+   ],
+   "file": "assets/props/ergoflex-flat-monitor.glb",
+   "anchor": "floor",
+   "size": [
+    700,
+    416.5,
+    29.1
+   ],
+   "min": [
+    -350,
+    0,
+    -14.5
+   ],
+   "max": [
+    350,
+    416.5,
+    14.5
+   ],
+   "tris": 4298,
+   "bytes": 26680,
+   "source": "models/ergoflex-supplied/ProVisionUltra32.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "User-supplied flat ProVision design in landscape orientation.",
+   "collection": "ErgoFlex Collection",
+   "revision": "preset-mounts-20261012",
+   "displayMountMm": [
+    0,
+    209.04977369174628,
+    -11.600678702929443
+   ]
   }
  ],
  "screens": [
@@ -23841,6 +23880,6 @@
    ]
   }
  ],
- "generated": "2026-10-12T18:59:08.315Z",
+ "generated": "2026-10-12T20:39:35.030Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

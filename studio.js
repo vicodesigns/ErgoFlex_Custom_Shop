@@ -4,12 +4,12 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=artist-finishes-20261012';
+import { SceneDesks } from './scene-desks.mjs?v=preset-mounts-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
-import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artist-finishes-20261012';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=preset-mounts-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=artist-finishes-20261012';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=preset-mounts-20261012';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
@@ -43,12 +43,12 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=artist-finishes-20261012';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=preset-mounts-20261012';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-finishes-20261012';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=preset-mounts-20261012';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -582,7 +582,9 @@ function initSceneDeskEditing() {
     };
     sceneDesks=new SceneDesks({scene,canvas:renderer.domElement,camera,controls,
         readStore:()=>{
-            const data=readStore(SCENE_DESKS_KEY,1,null),draft=buildPresets.entries[activeBuildPreset];
+            // A legacy build has its own object edits. Shared defaults only
+            // replace that room when a preset was explicitly restored.
+            const data=readStore(SCENE_DESKS_KEY,1,null),draft=pendingBuildPresetRestore;
             return draft?.room&&selectedRoomScene==='product'?{...data,rooms:{...data?.rooms,'product/default':draft.room},productAccessories:draft.config.accessories}:data;
         },writeStore:(k,v)=>writeStore(k,{...v,v:1}),changed:()=>{markEdited();setRoomSaveStatus('Saved in this browser');scheduleBuildPresetSave();},
         room:()=>workspaceRoom,sceneId:()=>selectedRoomScene,phase:()=>measuredRoomProfile()?.mode||'morning',phaseLabel:()=>measuredRoomProfile()?.modes[measuredRoomProfile()?.mode]?.label,
@@ -4472,6 +4474,7 @@ function applyProjectMotion(motion) {
         const config = tiltConfigs.find(c => c.name === name);
         if (config) { config.currentDeg = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg); applyTiltConfig(config); }
     }
+    syncTiltUI();
     if (motion.glide && Number.isFinite(motion.glide.x) && Number.isFinite(motion.glide.z)) {
         clampGlidePosition(glideTarget.set(motion.glide.x, 0, motion.glide.z));
         applyGlideOffset(glideTarget);
@@ -5027,7 +5030,7 @@ function syncBuildPresetUI(message) {
         card.setAttribute('aria-pressed', String(card.dataset.preset === activeBuildPreset));
         const draft = buildPresets.entries[card.dataset.preset];
         const label = card.querySelector('[data-preset-version]');
-        if (label) label.textContent = draft ? 'Your saved version' : 'Original setup';
+        if (label) label.textContent = draft?.origin === 'shared' ? 'Shared default' : draft ? 'Your saved version' : 'Original setup';
         const price = card.querySelector('em');
         if (price && draft) price.textContent = money(configurationPrice(draft.config)) + (priceBreakdown(draft.config).some(l => l.quoted) ? ' + quote' : '');
     });
@@ -5039,7 +5042,7 @@ function syncBuildPresetUI(message) {
 
 function saveBuildPreset() {
     clearTimeout(buildPresetTimer);
-    if (EVENT_DEMO || applyingBuildPreset || !activeBuildPreset || selectedRoomScene !== 'product' || !sceneDesks?.active?.product || workspaceAccessories.pending.size || sceneDesks.objects.loading || sceneDesks.objects.drag) return false;
+    if (EVENT_DEMO || pendingBuildPresetRestore || applyingBuildPreset || !activeBuildPreset || selectedRoomScene !== 'product' || !sceneDesks?.active?.product || workspaceAccessories.pending.size || sceneDesks.objects.loading || sceneDesks.objects.drag) return false;
     const room = sceneDesks.serialize().rooms['product/default'];
     // Product view uses the CAD motion coordinates rather than room millimetres.
     if (room?.desks.main) room.desks.main.pose = { x: glideTarget.x, z: glideTarget.z, yaw: deskYaw };
