@@ -139,6 +139,27 @@ function screenTexture({ border = false } = {}) {
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; return texture;
 }
 
+// Compact cloth pad rides with its mouse, including saved tray placements.
+function addMousePad(root) {
+    if (root.getObjectByName('Mouse pad')) return;
+    for (const child of root.children) child.position.y += 3;
+    const pad = new THREE.Group(); pad.name = 'Mouse pad';
+    root.add(pad);
+    box(pad, [140, .6, 180], [0, .3, 0], material('#171a1d', { roughness: .95 }), .28);
+    box(pad, [138, 2.4, 178], [0, 1.8, 0], material('#3b4147', { roughness: 1 }), 1.15);
+    // A fine stitched edge keeps the pad legible against the graphite tray.
+    const edge = new THREE.Shape();
+    edge.moveTo(-60, -82); edge.lineTo(60, -82);
+    edge.quadraticCurveTo(66, -82, 66, -76); edge.lineTo(66, 76);
+    edge.quadraticCurveTo(66, 82, 60, 82); edge.lineTo(-60, 82);
+    edge.quadraticCurveTo(-66, 82, -66, 76); edge.lineTo(-66, -76);
+    edge.quadraticCurveTo(-66, -82, -60, -82);
+    const points = edge.getPoints(64).map(p => new THREE.Vector3(p.x, 3.02, p.y));
+    const stitches = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),
+        new THREE.LineDashedMaterial({ color: '#747c84', dashSize: 2, gapSize: 2, transparent: true, opacity: .6 }));
+    stitches.computeLineDistances(); pad.add(stitches);
+}
+
 export function createAccessory(item) {
     const root = new THREE.Group(); root.name = `Accessory:${item.id}`;
     root.userData.accessoryId = item.id;
@@ -256,6 +277,7 @@ export function createAccessory(item) {
         form.position.set(-(bounds.min.x + bounds.max.x) / 2 * form.scale.x, -bounds.min.y * form.scale.y, -(bounds.min.z + bounds.max.z) / 2 * form.scale.z);
         root.add(form);
     }
+    if (item.exclusiveGroup === 'mouse') addMousePad(root);
     // Unused palette materials have no GPU allocation; everything actually
     // assigned to a mesh is disposed with its owning product.
     return root;
@@ -432,6 +454,7 @@ export class WorkspaceAccessories {
                     // let a late loader attach to a disposed accessory mount.
                     if (this.items.get(item.id) !== obj) return;
                     obj.add(model); obj.userData.loaded = true;
+                    if (item.exclusiveGroup === 'mouse') addMousePad(obj);
                     if (item.id === 'keyboard-tray') prepareSuppliedTray(obj);
                     if (item.id === 'wide-monitor' || item.id === 'portrait-monitor') prepareSuppliedDisplay(obj, item.propId);
                     if (item.id === 'monitor-arm' || item.id === 'monitor-arm-2') prepareSuppliedArm(obj, item.propId);
