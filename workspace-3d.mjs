@@ -15,7 +15,7 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=artist-canvas-controls-20261012';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=college-accessories-led-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
@@ -81,7 +81,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=artist-canvas-controls-20261012').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=college-accessories-led-20261012').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -157,9 +157,10 @@ function addMousePad(root) {
     if (root.getObjectByName('Mouse pad')) return;
     for (const child of root.children) child.position.y += 3;
     const pad = new THREE.Group(); pad.name = 'Mouse pad';
+    pad.rotation.y = Math.PI / 2;
     root.add(pad);
     box(pad, [140, .6, 180], [0, .3, 0], material('#171a1d', { roughness: .95 }), .28);
-    box(pad, [138, 2.4, 178], [0, 1.8, 0], material('#3b4147', { roughness: 1 }), 1.15);
+    box(pad, [138, 2.4, 178], [0, 1.8, 0], material('#20252a', { roughness: 1 }), 1.15);
     // A fine stitched edge keeps the pad legible against the graphite tray.
     const edge = new THREE.Shape();
     edge.moveTo(-60, -82); edge.lineTo(60, -82);
@@ -169,7 +170,7 @@ function addMousePad(root) {
     edge.quadraticCurveTo(-66, -82, -60, -82);
     const points = edge.getPoints(64).map(p => new THREE.Vector3(p.x, 3.02, p.y));
     const stitches = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),
-        new THREE.LineDashedMaterial({ color: '#747c84', dashSize: 2, gapSize: 2, transparent: true, opacity: .6 }));
+        new THREE.LineDashedMaterial({ color: '#454c53', dashSize: 2, gapSize: 2, transparent: true, opacity: .6 }));
     stitches.computeLineDistances(); pad.add(stitches);
 }
 
@@ -654,7 +655,32 @@ export class WorkspaceAccessories {
         this.layout();
         this.ready = Promise.all([...this.pending.values()]);
     }
+    applyAccessoryFinishes() {
+        for (const [id,root] of this.items) {
+            const item=accessory(id);if(!item.finishes||!root.userData.loaded)continue;
+            const finish=this.config.accessoryFinishes?.[id]||'black';
+            if(root.userData.accessoryFinish===finish)continue;
+            if(!root.finishMaterials){
+                root.finishMaterials=[];
+                root.getObjectByName(`Prop:${item.propId}`)?.traverse(obj=>{
+                    if(!obj.isMesh)return;
+                    const mats=[].concat(obj.material).map(source=>{
+                        const mat=source.clone();mat.userData.sharedTextures=true;
+                        obj.ownedMaterials||=[];obj.ownedMaterials.push(mat);
+                        root.finishMaterials.push({mat,color:source.color.clone(),metalness:source.metalness,roughness:source.roughness});return mat;
+                    });obj.material=Array.isArray(obj.material)?mats:mats[0];
+                });
+            }
+            for(const {mat,color,metalness,roughness} of root.finishMaterials){
+                mat.color.copy(finish==='white'?new THREE.Color('#ebede9'):color);
+                mat.metalness=finish==='white'&&id==='keyboard-tray' ? .15 : metalness;
+                mat.roughness=finish==='white'&&id==='keyboard-tray' ? .42 : roughness;
+            }
+            root.userData.accessoryFinish=finish;
+        }
+    }
     layout() {
+        this.applyAccessoryFinishes();
         const selected = new Set(this.config.accessories);
         for (const obj of this.items.values()) { obj.rotation.set(0, 0, 0); obj.scale.setScalar(1); }
         const front = (this.mounts.get('desktop')?.depth || 800) / 2;

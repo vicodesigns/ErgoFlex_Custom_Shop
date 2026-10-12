@@ -7,7 +7,9 @@ const imageCache = new Map();
 const SAMPLE_ARTWORK = [
     { id:'humboldt-wordmark', name:'Cal Poly Humboldt wordmark', label:'Wordmark · white lettering', url:'./assets/artwork/cal-poly-humboldt-wordmark.png?v=transparent-white-20261008', type:'image/png', scale:65 },
     { id:'humboldt-wordmark-green', name:'Cal Poly Humboldt wordmark · green', label:'Wordmark · green lettering', url:'./assets/artwork/cal-poly-humboldt-wordmark-green.png', type:'image/png', scale:65 },
-    { id:'humboldt-seal', name:'Cal Poly Humboldt seal', label:'University seal', url:'./assets/artwork/cal-poly-humboldt-seal.webp', type:'image/webp', scale:40 }
+    { id:'humboldt-seal', name:'Cal Poly Humboldt seal', label:'University seal', url:'./assets/artwork/cal-poly-humboldt-seal.webp', type:'image/webp', scale:40 },
+    { id:'occ-wordmark', name:'Orange Coast College blue wordmark', label:'Blue wordmark', url:'./assets/artwork/orange-coast-college-wordmark.png', type:'image/png', scale:70 },
+    { id:'occ-white-lockup', name:'Orange Coast College white logo', label:'White college logo', url:'./assets/artwork/orange-coast-college-white-lockup.png', type:'image/png', scale:65 }
 ];
 const sampleCache = new Map();
 async function sampleImage(sample) {
@@ -136,8 +138,9 @@ export function paintArtworkLayer(context, image, layer, width, height) {
 }
 
 export class SurfaceArtwork {
-    constructor({ host, getConfig, onChange, notify, focus, getFinishColor, onSampleLook }) {
+    constructor({ host, getConfig, onChange, notify, focus, getFinishColor, onSampleLook, onCollegePreset }) {
         this.getConfig = getConfig; this.onChange = onChange; this.notify = notify; this.focus = focus; this.getFinishColor = getFinishColor; this.onSampleLook = onSampleLook;
+        this.onCollegePreset=onCollegePreset;
         this.state = cleanArtwork(getConfig().artwork); this.surface = 'desktop'; this.kind = 'logo'; this.bindings = new Map(); this.revision = 0;
         this.uploadTokens = new Map(); this.uploadGeneration = 0; this.selectedLayer = 'logo'; this.picking = false; this.bound = false;
         this.editRevision = 0;
@@ -146,9 +149,13 @@ export class SurfaceArtwork {
             <div class="artwork-body"><p class="studio-note">Make it yours with a graphic, a texture, or both. Premium customization is priced on request.</p>
             <section class="artwork-samples" aria-label="Sample artwork"><h4>Cal Poly Humboldt samples</h4>
             <p class="studio-note">Click a sample to add another image to your selected surface. Combine the seal and wordmark, or start with the complete forest & gold desk.</p>
-            <div class="artwork-sample-grid">${SAMPLE_ARTWORK.map(sample=>`<button type="button" data-art-sample="${sample.id}"><img src="${sample.url}" alt=""><span>${sample.label}</span></button>`).join('')}</div>
+            <div class="artwork-sample-grid">${SAMPLE_ARTWORK.filter(s=>s.id.startsWith('humboldt')).map(sample=>`<button type="button" data-art-sample="${sample.id}"><img src="${sample.url}" alt=""><span>${sample.label}</span></button>`).join('')}</div>
             <button type="button" data-art-sample-look>Apply Humboldt desk</button>
             <p class="studio-note">Transparent desktop wordmark + seals on both side panels. Each stays editable.</p></section>
+            <section class="artwork-samples" aria-label="Orange Coast College samples"><h4>Orange Coast College samples</h4>
+            <p class="studio-note">Official college logos, with navy and orange finishes. Each image can be moved, scaled or removed.</p>
+            <div class="artwork-sample-grid">${SAMPLE_ARTWORK.filter(s=>s.id.startsWith('occ-')).map(sample=>`<button type="button" data-art-sample="${sample.id}"><img src="${sample.url}" alt=""><span>${sample.label}</span></button>`).join('')}</div>
+            <button type="button" data-art-occ-look>Apply Orange Coast College desk</button></section>
             <label>Desk surface<select data-art-surface>${[...new Set(ARTWORK_SURFACES.map(s => s.group || 'Desktop & shelves'))].map(group => `<optgroup label="${group}">${ARTWORK_SURFACES.filter(s => (s.group || 'Desktop & shelves') === group).map(s => `<option value="${s.id}">${s.label}</option>`).join('')}</optgroup>`).join('')}</select></label>
             <div class="artwork-actions"><button type="button" data-art-pick aria-pressed="false">Pick in 3D</button><button type="button" data-art-focus>View surface</button></div>
             <div class="artwork-tabs" role="group" aria-label="Artwork layer"><button type="button" data-art-layer="logo" aria-pressed="true">Graphic / logo</button><button type="button" data-art-layer="texture" aria-pressed="false">Texture</button></div>
@@ -191,6 +198,7 @@ export class SurfaceArtwork {
         const q = s => this.root.querySelector(s);
         this.root.querySelectorAll('[data-art-sample]').forEach(button=>button.onclick=()=>this.applySample(button.dataset.artSample));
         q('[data-art-sample-look]').onclick=()=>this.applyHumboldtSamples();
+        q('[data-art-occ-look]').onclick=()=>this.onCollegePreset?.('occ');
         q('[data-art-surface]').onchange = e => { this.surface = e.target.value; this.syncUI(); this.refresh(); };
         q('[data-art-image]').onchange = e => { this.selectedLayer = e.target.value; this.syncUI(); this.refresh(); };
         this.root.querySelectorAll('[data-art-layer]').forEach(button => button.onclick = () => { this.kind = button.dataset.artLayer; this.syncUI(); this.refresh(); });
@@ -294,6 +302,19 @@ export class SurfaceArtwork {
             if(!validArtwork(candidate))throw new Error('Artwork storage is full. Remove an unused layer before adding the sample desk.');
             this.uploadGeneration++;this.uploadTokens.clear();this.onSampleLook?.();this.state=candidate;this.surface='desktop';this.kind='logo';this.selectedLayer='logo';this.root.open=true;this.commit();
             this.notify('Humboldt desk applied: forest green, gold trim, desktop wordmark and seals on both side panels.');return true;
+        }catch(error){this.status(error.message);this.notify(error.message);return false;}
+    }
+    async applyOrangeCoastSamples() {
+        const revision=this.editRevision;
+        try {
+            const sample=SAMPLE_ARTWORK.find(s=>s.id==='occ-white-lockup'),image=await sampleImage(sample);
+            if(revision!==this.editRevision)return false;
+            const candidate=cleanArtwork(this.state),layer=(scale,y=50)=>({...defaultArtworkLayer('logo'),image,name:sample.name,scale,x:50,y});
+            (candidate.surfaces.desktop||={}).logo=layer(70,62);
+            for(const id of ['left-panel','right-panel'])(candidate.surfaces[id]||={}).logo=layer(58);
+            if(!validArtwork(candidate))throw new Error('Could not prepare the college artwork.');
+            this.uploadGeneration++;this.uploadTokens.clear();this.state=candidate;this.surface='desktop';this.kind='logo';this.selectedLayer='logo';this.commit();
+            return true;
         }catch(error){this.status(error.message);this.notify(error.message);return false;}
     }
     setState(value) {

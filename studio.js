@@ -4,12 +4,12 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=artist-canvas-controls-20261012';
+import { SceneDesks } from './scene-desks.mjs?v=college-accessories-led-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
-import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artist-canvas-controls-20261012';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=college-accessories-led-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=artist-canvas-controls-20261012';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=college-accessories-led-20261012';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
@@ -20,7 +20,7 @@ import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-2026
 import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261010';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-desk-styling-20261010';
 import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
-import { SurfaceArtwork } from './surface-artwork.mjs?v=scene-desk-styling-20261010';
+import { SurfaceArtwork } from './surface-artwork.mjs?v=college-accessories-led-20261012';
 import { artworkSummary } from './artwork-config.mjs?v=scene-desk-styling-20261010';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-window-20261011';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
@@ -43,12 +43,12 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=artist-canvas-controls-20261012';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=college-accessories-led-20261012';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-canvas-controls-20261012';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=college-accessories-led-20261012';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -103,6 +103,7 @@ let screenProgress = 0;
 let screenTarget = 0;
 let ledParts = [];
 let ledDesktopFit = null;
+let ledDesktopRoot = null;
 let ledShelfRoot = null; // the shelf LED group rides the lift without an editorId
 let ledStandardStrips = null;
 let ledExtendedStrips = null;
@@ -3812,6 +3813,7 @@ async function loadLedOverlay() {
         roots.tilt.position.y = LIFT_MIN;
         for (const root of Object.values(roots)) loadedModel.add(root);
         ledShelfRoot = roots.lift;
+        ledDesktopRoot = roots.tilt;
         liftObjects.set(roots.lift, { obj: roots.lift, baseY: roots.lift.position.y });
         syncLedSizeGeometry();
         [...partRegistry.values()].forEach(({ obj }) => {
@@ -3860,6 +3862,7 @@ function loadModel() {
         ledPixels?.dispose(); ledPixels = null;
         ledParts = [];
         ledDesktopFit = null;
+        ledDesktopRoot = null;
         ledShelfRoot = null;
         ledStandardStrips = null;
         ledExtendedStrips = null;
@@ -4966,6 +4969,17 @@ function renderAccessories() {
         const name = document.createElement('label'); name.className = 'accessory-name'; name.htmlFor = `accessory-${item.id}`; name.textContent = item.name;
         const detail = document.createElement('p'); detail.className = 'accessory-description'; detail.textContent = !fits ? item.note : item.description;
         info.append(brand, name, detail);
+        if(item.finishes){
+            const finishes=document.createElement('label');finishes.className='accessory-finish';finishes.textContent='Color';
+            const select=document.createElement('select');select.id=`accessory-finish-${item.id}`;select.setAttribute('aria-label',`${item.name} color`);select.disabled=!fits;
+            for(const finish of item.finishes){const option=document.createElement('option');option.value=finish;option.textContent=finish==='white'?'White':'Black';select.append(option);}
+            select.value=currentConfig.accessoryFinishes?.[item.id]||'black';
+            select.onchange=()=>{
+                currentConfig=cleanConfig({...currentConfig,accessoryFinishes:{...currentConfig.accessoryFinishes,[item.id]:select.value}});
+                rememberSceneDeskStyle();applyAccessoryVisibility();updatePrice();scheduleBuildPresetSave();
+            };
+            finishes.append(select);info.append(finishes);
+        }
         const action = document.createElement('label'); action.className = 'accessory-add';
         const box = document.createElement('input'); box.type = 'checkbox'; box.id = name.htmlFor;
         box.checked = on && fits; box.disabled = !fits;
@@ -5060,6 +5074,7 @@ function saveBuildPreset() {
     if (room?.desks.main) room.desks.main.pose = { x: glideTarget.x, z: glideTarget.z, yaw: deskYaw };
     const next = cleanBuildPresets({ ...buildPresets, active: activeBuildPreset, entries: { ...buildPresets.entries, [activeBuildPreset]: {
         config: cleanConfig(currentConfig), room, ...(activeBuildPreset === 'artist' ? { startPose: 'artist-65-v1', startLighting: 'artist-daytime-40-v1', singleArm: 'rigid-landscape-v1' } : {}),
+        ...(activeBuildPreset === 'occ' ? { collegeArtwork: 'occ-v1' } : {}),
         surface: { finish: surfaceFinish, grain: grainEnabled, visibility: grainVisibility, sheen: grainSheen }
     } } });
     if (!writeStore(BUILD_PRESETS_KEY, next)) { syncBuildPresetUI('Could not save in this browser. Use Save project to keep your edits.'); return false; }
@@ -5126,6 +5141,7 @@ async function applyPreset(preset) {
         if (state) { applyProjectMotion({ heightInches: state.height, tilt: { [primaryTiltConfig()?.name]: state.tilt }, yaw: state.pose.yaw, glide: { x: state.pose.x, z: state.pose.z } }); applyGrooveLights(state.lights); }
         else if (Number.isFinite(preset.startTilt)) applyProjectMotion({ heightInches: Math.max(liftToHeight(currentLift), minimumHeightForTilt(preset.startTilt, currentConfig.size)), tilt: { [primaryTiltConfig()?.name]: preset.startTilt } });
         if (preset.id === 'artist') applyArtistStartingLights(draft);
+        if (preset.id === 'occ' && draft?.collegeArtwork !== 'occ-v1' && !draft?.config.artwork && !await surfaceArtwork.applyOrangeCoastSamples()) throw new Error('OCC artwork could not be loaded.');
         if (preset.cameraPreset) {
             const select = document.getElementById('camera-view');
             if (select) { select.value = preset.cameraPreset; select.dispatchEvent(new Event('change')); }
@@ -7112,6 +7128,9 @@ function removeSelectedFromTiltConfig(idx) {
 // model's units/scale), positioned at the pivot, with the parts attached to it.
 function createTiltConfig({ name, axis, minDeg, maxDeg, parts, pivotLocal, groupEditorIds }) {
     const liftOffset = currentLift - LIFT_MIN;
+    // Generated desktop overlays have no editor IDs, so a project file cannot
+    // list them as rig members. Every rebuilt primary rig must reclaim them.
+    if (name === 'tilting') parts = [...parts, ...[ledDesktopRoot, screenAssembly?.root].filter(obj => obj && !parts.includes(obj) && !isInTiltWrapper(obj))];
 
     const wrapper = new THREE.Group();
     wrapper.name = 'tiltWrapper_' + name;
@@ -11046,10 +11065,12 @@ function initStudio() {
             if (Object.keys(artwork.surfaces).length) currentConfig.artwork = artwork;
             else delete currentConfig.artwork;
             updatePrice();
+            scheduleBuildPresetSave();
         },
         notify: notifyUser,
         focus: obj => { if (controls) controls.minDistance = CLOSEUP_MIN_DISTANCE; focusObjects([obj], { animate: true }); },
         onSampleLook: () => document.querySelector('[data-look-trim="#f19c00"]')?.click(),
+        onCollegePreset: id => applyPreset({id}).catch(error=>{console.error('[College preset]',error);notifyUser('The college setup could not be loaded. Your saved version is kept.');}),
         getFinishColor: id => {
             const material = surfaceArtwork?.bindings.get(id)?.obj.material;
             const color = (Array.isArray(material) ? material[0] : material)?.color;
@@ -11057,9 +11078,9 @@ function initStudio() {
         }
     });
     materialOptions.after(surfaceArtwork.root);
-    // The latest artwork draft can be newer than the last explicit Save build.
-    // A shared build link is explicit and retains its own artwork instead.
-    if (!EVENT_DEMO && !new URLSearchParams(location.search).has('build')) surfaceArtwork.restoreDraft();
+    // Named presets auto-save their own artwork. The global free-build draft
+    // must not replace a restored preset or an explicit shared build.
+    if (!EVENT_DEMO && !activeBuildPreset && !new URLSearchParams(location.search).has('build')) surfaceArtwork.restoreDraft();
     document.getElementById('surface-finish').onchange = e => { surfaceFinish = e.target.value; applySurfaceFinish(); rememberSceneDeskStyle(); };
     document.getElementById('wood-grain').onchange = e => { grainEnabled = e.target.checked; applySurfaceFinish(); };
     document.getElementById('grain-visibility').oninput = e => {
@@ -11074,7 +11095,8 @@ function initStudio() {
         applySurfaceFinish();
     };
     const looks = document.createElement('div'); looks.className = 'look-presets';
-    looks.innerHTML = `<div class="eyebrow">A LITTLE INSPIRATION</div><div><button data-look="Natural Birch|White">Light & natural</button><button data-look="Walnut|Forest">Warm & grounded</button><button data-look="Black Birch|Black">All in black</button><button data-look="Forest Green|Black" data-look-trim="#f19c00">Humboldt · forest & gold</button></div>`;
+    looks.innerHTML = `<div class="eyebrow">A LITTLE INSPIRATION</div><div><button data-look="Natural Birch|White">Light & natural</button><button data-look="Walnut|Forest">Warm & grounded</button><button data-look="Black Birch|Black">All in black</button><button data-look="Forest Green|Black" data-look-trim="#f19c00">Humboldt · forest & gold</button><button data-college-preset="occ">Orange Coast · navy & orange</button></div>`;
+    looks.querySelector('[data-college-preset]').onclick=()=>applyPreset({id:'occ'}).catch(error=>{console.error('[College preset]',error);notifyUser('The college setup could not be loaded. Your saved version is kept.');});
     document.getElementById('config-column').children[0].after(looks);
     looks.querySelectorAll('[data-look]').forEach(b => b.onclick = () => {
         b.dataset.look.split('|').forEach((name, i) => {

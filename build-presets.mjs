@@ -1,4 +1,4 @@
-import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=artist-canvas-controls-20261012';
+import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=college-accessories-led-20261012';
 import { cleanSceneDeskData } from './scene-desk-data.mjs';
 import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs';
 import { minimumHeightForTilt } from './motion-limits.mjs';
@@ -48,6 +48,7 @@ export function cleanBuildPresets(value) {
             config, ...(room ? { room } : {}),
             ...(preset.id === 'artist' ? { startPose: 'artist-65-v1' } : {}),
             ...(preset.id === 'artist' ? { singleArm: 'rigid-landscape-v1' } : {}),
+            ...(preset.id === 'occ' && draft.collegeArtwork === 'occ-v1' ? { collegeArtwork: 'occ-v1' } : {}),
             ...(draft.startLighting === 'artist-daytime-40-v1' ? { startLighting: draft.startLighting } : {}),
             surface: {
                 finish: ['matte', 'satin', 'gloss'].includes(surface.finish) ? surface.finish : 'gloss',

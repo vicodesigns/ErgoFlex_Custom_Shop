@@ -130,3 +130,13 @@ The painting uses centred cover sizing to fill the whole canvas, cropping excess
 The Start From browser test checks rigid arm geometry under a 90° screen roll, head contact, one-time saved-preset migration, matching organizer material and acrylic divider assignments.
 
 Artist's **Show painting** checkbox sits beneath the preset save status. Off displays a grey primed canvas; on restores the same full-canvas image. `artworkVisible` is stored on the easel object and survives preset switching, page reloads and project serialization. The object edit participates in the existing undo history.
+
+## Accessory colors, Orange Coast College and restored LEDs
+
+The Ergo keyboard, MX Master and keyboard tray each have an independent Black/White selector on their accessory card. `accessoryFinishes` is validated and saved with the build and named preset. Render instances own their color materials, preserving the shared source model and accessory transforms. White tray parts use a powder-coat appearance; switching back restores the original dark metal. Mouse pads rotate 90° around their own centre and use darker charcoal cloth and stitching.
+
+**Orange Coast College** is available under Start From, the inspiration buttons, and Premium artwork & wraps. It uses the Library desktop layout with Coast Navy, Coast Orange trim, a white frame and white inputs/tray. Official transparent college artwork is embedded as editable decals. Source URLs and official digital color references are recorded in `assets/artwork/orange-coast-college-sources.md`. Subsequent changes save as the user's own OCC version. Restoring a named preset skips the global free-build artwork draft, which could otherwise replace its saved logos.
+
+Project restoration previously rebuilt the primary tilt rig from registered part IDs and left the generated Desktop LEDs and touchscreen behind. Those overlay groups have no editor IDs. The primary rig now reclaims both groups whenever it is created, including project import and undo/redo rig restoration.
+
+Verification: `node tests/accessory-college-options-test.cjs` and `node tests/desktop-led-attachment-test.cjs`. The latter checks fixed strip-to-desktop transforms through imports, saved-rig reloads, six preset changes, both desk sizes and −5° to 65° tilt.

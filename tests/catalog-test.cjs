@@ -120,6 +120,12 @@ const assert = require('node:assert/strict');
     .map(a => a.id), ['monitor-arm-2'], 'incompatible accessories are reported, not silently dropped');
 
   // Unknown accessory ids must not survive a share link.
+  const white={...defaultConfig,accessoryFinishes:{'ergo-keyboard':'white','logitech-mx-master':'white','keyboard-tray':'white'}};
+  assert.equal(validConfig(white),true,'all three white accessory finishes are valid');
+  assert.deepEqual(cleanConfig(white).accessoryFinishes,white.accessoryFinishes,'white options survive saved and shared builds');
+  assert.equal(validConfig({...white,accessoryFinishes:{'wide-monitor':'white'}}),false,'unsupported finish targets are rejected');
+  assert.equal(validConfig({...white,accessoryFinishes:{'ergo-keyboard':'pink'}}),false,'unsupported finish colors are rejected');
+  assert.equal(cleanConfig({...white,accessoryFinishes:{'ergo-keyboard':'black'}}).accessoryFinishes,undefined,'black restores the original finish');
   assert.equal(validConfig({ ...defaultConfig, accessories: ['not-a-thing'] }), false);
   assert.equal(validConfig({ ...defaultConfig, accessories: 'cable-tray' }), false, 'a string is not a list');
   assert.deepEqual(cleanConfig({ ...defaultConfig, accessories: ['cable-tray', 'cable-tray', 'nope'] }).accessories,

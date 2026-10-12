@@ -24,6 +24,7 @@ export const PRODUCT_CONFIG = {
         { name: "Mahogany", color: "#8b3a20", price: 150 },
         { name: "Bamboo", color: "#d2b875", price: 100 },
         { name: "Deep Navy", color: "#223751", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
+        { name: "Coast Navy", color: "#002d6a", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
         { name: "Forest Green", color: "#004c46", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
         { name: "Earthy Forest Green", color: "#203b2b", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
         { name: "Bordeaux", color: "#693b48", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
@@ -53,7 +54,8 @@ export const TRIM_COLORS = [
     { name: 'Grey', value: '#85888c' }, { name: 'Red', value: '#dc0909' },
     { name: 'Green', value: '#286344' }, { name: 'Yellow', value: '#f0c52e' },
     // Match the Humboldt logo reference supplied October 8, including its warmer gold.
-    { name: 'Forest Green', value: '#004c46' }, { name: 'Gold', value: '#f19c00' }
+    { name: 'Forest Green', value: '#004c46' }, { name: 'Gold', value: '#f19c00' },
+    { name: 'Coast Orange', value: '#f99239' }
 ];
 
 // Per-species grain description. Real tileable photography is the right answer
@@ -147,6 +149,7 @@ export const ACCESSORIES = [
       source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/ergo-lift-b2b-data-sheet.pdf',
       price: 79, provisional: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'logitech-mx-master', name: 'Logitech MX Master 3S', brand: 'LOGITECH · MX MASTER', category: 'Desktop', visual: 'mx-master', propId: 'ergoflex-mx-master-mouse', exclusiveGroup: 'mouse',
+      finishes: ['black', 'white'],
       description: 'Ergonomic mouse with a thumb rest and two scroll wheels, shown using the supplied MX Master model.', dimensionsMm: { width: 84.3, depth: 124.9, height: 51 },
       source: 'https://www.logitech.com/content/dam/logitech/en/business/pdf/mx-master-3s-business-wireless-mouse.pdf',
       price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
@@ -180,8 +183,10 @@ export const ACCESSORIES = [
     { id: 'portrait-monitor', name: 'ProVision Ultra 32″ portrait', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-portrait-monitor',
       description: 'The supplied flat ProVision panel in portrait orientation, on the left in the Office pair.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'keyboard-tray', name: 'Keyboard tray', category: 'Support', visual: 'tray', propId: 'ergoflex-keyboard-tray',
+      finishes: ['black', 'white'],
       description: 'Under-desktop tray for keyboard and mouse. Follows the desktop as it lifts and tilts.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'ergo-keyboard', name: 'Ergonomic keyboard', category: 'Desktop', visual: 'keyboard', propId: 'ergoflex-ergo-keyboard', exclusiveGroup: 'keyboard',
+      finishes: ['black', 'white'],
       description: 'The supplied ergonomic keyboard model, on the desktop or keyboard tray.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'apple-keyboard', name: 'Apple Magic Keyboard', category: 'Desktop', visual: 'keyboard', propId: 'apple-keyboard', exclusiveGroup: 'keyboard',
       description: 'Compact keyboard, shown using the existing library model.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
@@ -211,6 +216,10 @@ export function accessoryFits(id, size) {
 // Curated starting points. Each is a complete configuration, so applying one
 // leaves nothing half-set.
 export const PRESETS = [
+    { id: 'occ', name: 'Orange Coast College', blurb: 'Coast navy, orange trim, a white frame and white ergonomic accessories. Editable official OCC logos on the desktop and side panels.',
+      size: '60x30', woodFinish: 'Coast Navy', baseFinish: 'White', trimColor: '#f99239',
+      accessories: ['monitor-arm', 'keyboard-tray', 'ergo-keyboard', 'wide-monitor', 'logitech-mx-master'],
+      accessoryFinishes: {'keyboard-tray':'white','ergo-keyboard':'white','logitech-mx-master':'white'}, cameraPreset: 'hero' },
     { id: 'office', name: 'Office', blurb: 'Modern grey, grey trim, flat portrait on the left, curved ultrawide on the right, extended dual arm and ergonomic inputs on a keyboard tray.',
       size: '60x30', woodFinish: 'Modern Grey', baseFinish: 'Black', trimColor: '#1c1c1e',
       accessories: ['monitor-arm-2', 'wide-monitor', 'portrait-monitor', 'keyboard-tray', 'ergo-keyboard', 'logitech-mx-master', 'cable-tray'], cameraPreset: 'hero' },
@@ -286,7 +295,7 @@ export function priceBreakdown(config) {
 
     for (const id of config.accessories || []) {
         const item = accessory(id);
-        if (item) lines.push({ label: item.name, price: item.price, provisional: item.provisional, ...(item.quoted ? { quoted: true } : {}) });
+        if (item) lines.push({ label: item.name + (config.accessoryFinishes?.[id] === 'white' ? ' · White' : ''), price: item.price, provisional: item.provisional, ...(item.quoted ? { quoted: true } : {}) });
     }
     return lines;
 }
@@ -299,6 +308,7 @@ export function validConfig(value) {
     if (!PRODUCT_CONFIG.baseFinishes.some(f => f.name === value.baseFinish)) return false;
     if (value.trimColor !== undefined && !/^#[0-9a-f]{6}$/i.test(value.trimColor)) return false;
     if (value.artwork !== undefined && !validArtwork(value.artwork)) return false;
+    if (value.accessoryFinishes !== undefined && (!value.accessoryFinishes || typeof value.accessoryFinishes !== 'object' || Array.isArray(value.accessoryFinishes) || !Object.entries(value.accessoryFinishes).every(([id,finish])=>accessory(id)?.finishes?.includes(finish)))) return false;
     // Accessories are optional, but if present must be an array of known ids.
     // A V1 payload has no accessories key at all and is still valid.
     if (value.accessories !== undefined) {
@@ -317,6 +327,7 @@ const RENAMED_WOOD = { 'Black Ash': 'Black Birch' };
 export function migrateWoodFinish(name) { return RENAMED_WOOD[name] || name; }
 
 export function cleanConfig(value) {
+    const accessoryFinishes=Object.fromEntries(Object.entries(value.accessoryFinishes||{}).filter(([id,finish])=>accessory(id)?.finishes?.includes(finish)&&finish!=='black'));
     const accessories = Array.isArray(value.accessories)
         ? [...new Set(value.accessories.filter(id => accessory(id)))]
         : [];
@@ -328,6 +339,7 @@ export function cleanConfig(value) {
     });
     return { size: value.size === '72x30' ? '60x30' : value.size,
         woodFinish: migrateWoodFinish(value.woodFinish), baseFinish: value.baseFinish, accessories: selected,
+        ...(Object.keys(accessoryFinishes).length ? { accessoryFinishes } : {}),
         ...(typeof value.trimColor === 'string' && /^#[0-9a-f]{6}$/i.test(value.trimColor) ? { trimColor: value.trimColor.toLowerCase() } : {}),
         ...(validArtwork(value.artwork) && Object.keys(value.artwork.surfaces).length ? { artwork: cleanArtwork(value.artwork) } : {}) };
 }

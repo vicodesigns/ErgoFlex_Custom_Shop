@@ -21,8 +21,10 @@ const rows = {
  creative: {size:'60x30',wood:'White Birch',base:'Black',trim:'#85888c',height:38.282975,tilt:-5,glow:43.1375,look:'Daytime',accessories:['dell-u2724d','logitech-k860','logitech-lift','monitor-arm-2','task-light','led-strip','cable-tray'],objects:{
  'cable-tray':['desktop',[0,-22,-80]],'dell-u2724d':['shelf',[-270,6.255,225.410214]],'logitech-lift':['desktop',[240,0,216.814649]],'logitech-k860':['desktop',[-64,0,191.814649]],'task-light':['desktop',[-435,0,-406.814649]],'monitor-arm-2':['shelf',[0,0,-213.589786]]}}
 };
+rows.occ = {...rows.library,wood:'Coast Navy',base:'White',trim:'#f99239',finish:'satin',grain:0,
+ accessoryFinishes:{'ergo-keyboard':'white','logitech-mx-master':'white','keyboard-tray':'white'},objects:structuredClone(rows.library.objects)};
 export const SHARED_BUILD_PRESETS = Object.fromEntries(Object.entries(rows).map(([id,r])=>{
- const config={size:r.size,woodFinish:r.wood,baseFinish:r.base,trimColor:r.trim,accessories:r.accessories};
+ const config={size:r.size,woodFinish:r.wood,baseFinish:r.base,trimColor:r.trim,accessories:r.accessories,...(r.accessoryFinishes?{accessoryFinishes:r.accessoryFinishes}:{})};
  const objects=Object.fromEntries(Object.entries(r.objects).map(([name,[role,p,q,scale=1]])=>{
   q||=[0,0,0,1];const length=Math.hypot(...q);q=q.map(v=>v/length);
   return ['accessory-'+name,{role,custom:true,...(name==='task-light'?{clampMount:'rear-edge-v1'}:{}),...(['wide-monitor','portrait-monitor'].includes(name)?{monitorLayout:'curved-right-v1'}:{}),transform:{p:Object.fromEntries(['x','y','z'].map((a,i)=>[a,p[i]])),q:Object.fromEntries(['x','y','z','w'].map((a,i)=>[a,q[i]])),s:{x:scale,y:scale,z:scale}}}];
