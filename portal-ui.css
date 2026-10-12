@@ -1,6 +1,7 @@
 /* Store + Studio interface tokens. Scene lighting and controller geometry own
    their appearance independently; these rules style only interface surfaces. */
 :root {
+    color-scheme: light;
     --portal-header-height: 56px;
     --ui-page: #f2f5f4; --ui-panel: #fbfcfc; --ui-card: #fff; --ui-soft: #edf2f0;
     --ui-text: #20332e; --ui-muted: #576d64; --ui-border: #d4dfda;
@@ -9,12 +10,16 @@
     --ink: var(--ui-text); --muted: var(--ui-muted); --accent: var(--ui-accent); --line: var(--ui-border);
 }
 :root[data-portal-theme=dark] {
+    color-scheme: dark;
     --ui-page: #101a20; --ui-panel: #17242b; --ui-card: #1e2e36; --ui-soft: #243740;
     --ui-text: #ecf4f1; --ui-muted: #afc4bc; --ui-border: #3b515a;
     --ui-accent: #93debb; --ui-on-accent: #122c22; --ui-selected: #2c4c40; --ui-focus: #a1e8c6;
     --ui-shadow: 0 8px 28px #0003; --ui-glass: #17242bf5;
 }
 html[data-portal-theme] body { background: var(--ui-page); color: var(--ui-text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+/* Native popup menus need opaque themed colors; transparent select backgrounds
+   otherwise leave pale inherited text on the browser's white option list. */
+html[data-portal-theme] :is(option, optgroup) { background-color: var(--ui-card); color: var(--ui-text); }
 html[data-portal-page=shop] .portal-header {
     position: fixed; inset: 0 0 auto; z-index: 80; display: flex !important; align-items: center;
     gap: 26px; min-height: 56px; padding: 8px 22px; background: var(--ui-panel) !important;
