@@ -6,7 +6,7 @@ import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHAS
 import { poseIsClear } from './room-groove.mjs';
 import { SceneDesks } from './scene-desks.mjs?v=preset-size-setups-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
-import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=preset-size-setups-20261012';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artwork-size-isolation-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
 import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=obsbot-tiny-2-20261012';
@@ -21,7 +21,7 @@ import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-desk-styling-20261010';
 import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
 import { SurfaceArtwork } from './surface-artwork.mjs?v=obsbot-tiny-2-20261012';
-import { artworkSummary } from './artwork-config.mjs?v=scene-desk-styling-20261010';
+import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-window-20261011';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
@@ -167,6 +167,7 @@ const SAVED_BUILD_KEY = 'ergoflexSavedBuildV2';
 let buildPresets = cleanBuildPresets(EVENT_DEMO ? null : readStore(BUILD_PRESETS_KEY, 1, null));
 let activeBuildPreset = null, applyingBuildPreset = false, buildPresetTimer = null, buildPresetRun = 0, pendingBuildPresetRestore = null;
 let buildPresetReady = Promise.resolve();
+let pendingPresetArtwork = null;
 const CART_KEY = 'ergoflexCartV2';
 let cartIdCounter = 0;
 const nextCartId = () => `item-${Date.now()}-${cartIdCounter++}`;
@@ -4567,6 +4568,7 @@ function applyConfigToUI() {
 function applyProjectPresentation(project) {
     const presentation = project.presentation || {};
     // Importing a project must not overwrite the previously selected recipe.
+    pendingPresetArtwork = null;
     activeBuildPreset = null;
     if (presentation.buildPresets) {
         buildPresets = cleanBuildPresets(presentation.buildPresets);
@@ -5081,8 +5083,41 @@ function presetSizeDraft(id = activeBuildPreset, size = currentConfig.size) {
     return entry?.config.size === size ? entry : entry?.sizeSetups?.[size];
 }
 
+// Artwork edits have their own owner. Flush them even when a model load or
+// object drag temporarily prevents saving the full live desk snapshot.
+function flushPresetArtwork() {
+    const pending = pendingPresetArtwork;
+    if (!pending) return true;
+    const latest = cleanBuildPresets(readStore(BUILD_PRESETS_KEY, 1, null));
+    const entry = latest.entries[pending.id], local = buildPresets.entries[pending.id];
+    if (!entry || !local || entry.revision !== local.revision) {
+        syncBuildPresetUI('A newer version is saved in another tab. Save project to keep this tab’s artwork edits.');
+        return false;
+    }
+    const variant = entry.config.size === pending.size ? entry : entry.sizeSetups[pending.size];
+    const ownVariant = local.config.size === pending.size ? local : local.sizeSetups[pending.size];
+    if (!variant || !ownVariant) return false;
+    const artwork = Object.keys(pending.artwork.surfaces).length ? pending.artwork : undefined;
+    if (JSON.stringify(variant.config.artwork) !== JSON.stringify(artwork)) {
+        if (artwork) variant.config.artwork = cleanArtwork(artwork);
+        else delete variant.config.artwork;
+        entry.revision++;
+        if (!writeStore(BUILD_PRESETS_KEY, latest)) {
+            syncBuildPresetUI('Could not save artwork in this browser. Use Save project to keep your edits.');
+            return false;
+        }
+        // Keep live metadata such as an in-progress starting-view change.
+        local.revision = entry.revision;
+        if (artwork) ownVariant.config.artwork = cleanArtwork(artwork);
+        else delete ownVariant.config.artwork;
+    }
+    pendingPresetArtwork = null;
+    return true;
+}
+
 function saveBuildPreset() {
     clearTimeout(buildPresetTimer);
+    if (!EVENT_DEMO && !flushPresetArtwork()) return false;
     if (EVENT_DEMO || pendingBuildPresetRestore || applyingBuildPreset || !activeBuildPreset || selectedRoomScene !== 'product' || !sceneDesks?.active?.product || workspaceAccessories.pending.size || sceneDesks.objects.loading || sceneDesks.objects.drag) return false;
     const room = sceneDesks.serialize().rooms['product/default'];
     // Product view uses the CAD motion coordinates rather than room millimetres.
@@ -5184,6 +5219,7 @@ function applyPreset(preset, options = {}) {
 async function applyPresetNow(preset, {size} = {}) {
     preset = PRESETS.find(p => p.id === preset?.id);
     if (!preset) return false;
+    if (!flushPresetArtwork()) return false;
     saveBuildPreset();
     buildPresets = cleanBuildPresets(readStore(BUILD_PRESETS_KEY, 1, null));
     const run = ++buildPresetRun;
@@ -11119,7 +11155,7 @@ function initStudio() {
     // was no way to take that back from the page - clearing it meant editing
     // localStorage by hand.
     document.getElementById('reset-build').onclick = () => {
-        saveBuildPreset(); activeBuildPreset = null; buildPresets.active = null; writeStore(BUILD_PRESETS_KEY, buildPresets); syncBuildPresetUI();
+        saveBuildPreset(); pendingPresetArtwork = null; activeBuildPreset = null; buildPresets.active = null; writeStore(BUILD_PRESETS_KEY, buildPresets); syncBuildPresetUI();
         try { localStorage.removeItem(SAVED_BUILD_KEY); localStorage.removeItem('ergoflexSavedBuildV1'); } catch {}
         currentConfig = defaultConfig();
         applyConfigToUI();
@@ -11153,6 +11189,7 @@ function initStudio() {
         host: materialOptions.parentElement,
         getConfig: () => currentConfig,
         onChange: artwork => {
+            if (!EVENT_DEMO && activeBuildPreset && selectedRoomScene === 'product') pendingPresetArtwork = {id:activeBuildPreset,size:currentConfig.size,artwork:cleanArtwork(artwork)};
             if (Object.keys(artwork.surfaces).length) currentConfig.artwork = artwork;
             else delete currentConfig.artwork;
             updatePrice();

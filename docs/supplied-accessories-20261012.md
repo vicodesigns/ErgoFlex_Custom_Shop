@@ -177,3 +177,9 @@ The old size change and startup filters no longer delete accessories. Narrow dua
 Verification: build-preset-sizes-test checks migration, no mutation of owner data, one-time placement adaptation, physical scale, independent camera data and OCC recovery. preset-size-switch-test covers all nine presets, different positions/colors/lighting per width, OCC artwork edits and size-specific object removal/addition, reload, and distinct per-size starting views. Editable preset/project export regression also passes.
 
 The Architect recipe also restores its brushed aluminum easel support rail with the beige retaining lip in both saved widths. The rail sits at the drafting board’s lower edge, follows the tilting desktop and adapts to the smaller width. The one-time `architectRail` marker keeps future manual removals from being undone. Seeded 48-inch and 60-inch Architect previews were rendered and reviewed.
+
+## Artwork edits during size switches
+
+Artwork changes are staged with the preset ID and the current width, then flushed to that variant before switching presets or sizes. This save can run while an accessory is still loading, independently of the full live-desk save gate. A stale tab cannot replace a newer artwork revision. Project imports and Start Over clear pending ownership so outgoing artwork cannot enter another design.
+
+The artwork isolation regression uses the actual placement inputs and size buttons, without an explicit Save action. It checks position, scale, rotation, opacity, rendered layer signatures, size-specific layer removal, immediate switching while the OBSBOT accessory loads, and reload. The reported live tab was also confirmed to be running the earlier model-only Save controls; the updated entry point is `?view=product&v=artwork-size-isolation-20261012`.
