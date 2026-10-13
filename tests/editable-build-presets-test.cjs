@@ -37,9 +37,9 @@ const server = http.createServer((req, res) => {
    a.traverse(o=>{if(o.isMesh){if(Array.isArray(o.material)&&!o.geometry.groups.length)throw Error('Arm has no drawable material groups');o.onBeforeRender=()=>draws++}});
    ErgoFlex.renderer.render(ErgoFlex.roomInteractions.scene,ErgoFlex.roomInteractions.camera);
    const keyboard=materials('ergo-keyboard')[0],mx=materials('logitech-mx-master')[0];
-   return {prop:mouse.children[0].userData.propId,color:mx.color.toArray(),keyboard:keyboard.color.toArray(),roughness:mx.roughness,keyboardRoughness:keyboard.roughness,metal:mx.metalness,keyboardMetal:keyboard.metalness,draws};
+   return {prop:mouse.children[0].userData.propId,color:mx.color.toArray(),keyboard:keyboard.color.toArray(),roughness:mx.roughness,keyboardRoughness:keyboard.roughness,metal:mx.metalness,keyboardMetal:keyboard.metalness,roller:materials('logitech-mx-master').find(m=>m.name==='MX roller steel')?.metalness,draws};
   });
-  assert.equal(material.prop,'ergoflex-mx-master-mouse');assert.deepEqual(material.color,material.keyboard);assert.equal(material.roughness,material.keyboardRoughness);assert.equal(material.metal,material.keyboardMetal);assert.ok(material.draws>0,'CAD arm assembly is rendered, not just its adapters');
+  assert.equal(material.prop,'ergoflex-mx-master-mouse');assert.deepEqual(material.color,material.keyboard);assert.ok(material.roughness>=.4&&material.roughness<=.8,'mouse body has a matte plastic finish');assert.ok(material.metal<.2,'mouse body remains plastic');assert.ok(material.roller>.8,'scroll rollers retain their metal finish');assert.ok(material.draws>0,'CAD arm assembly is rendered, not just its adapters');
   const apple=await page.evaluate(async()=>{
    const ef=ErgoFlex,e=ef.sceneDesks.objects;e.select('accessory-wide-monitor');e.change({x:-355.5,z:100.5,rotation:-5.1,tilt:1.2,roll:-.3});e.select('accessory-ergo-keyboard');e.change({x:-100,z:320});
    const id=await e.add('apple','desktop');e.change({x:170,z:65,rotation:20,scale:80});

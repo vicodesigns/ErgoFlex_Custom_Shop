@@ -10,15 +10,17 @@ const server=http.createServer((req,res)=>{const file=path.join(root,new URL(req
   const check=async label=>{
    const state=await page.evaluate(async()=>{
     const T=await import('three'),a=ErgoFlex,desktop=a.partRegistry.get('Desktop_3_6').obj,led=a.loadedModel.getObjectByName('Desktop LEDs'),screen=a.loadedModel.getObjectByName('Animated touchscreen');
+    const native=[...a.partRegistry.values()].filter(e=>/^Leds(?:_|$)/.test(e.obj.name)&&e.obj.visible).map(e=>e.obj.name);
     const results=[];
     for(const tilt of [-5,0,25,65]){
      a.setHeight(52.5);a.setTilt('tilting',tilt);a.loadedModel.updateMatrixWorld(true);
      const relative=desktop.matrixWorld.clone().invert().multiply(led.matrixWorld);
      results.push({tilt,parent:led.parent.name,relative:relative.toArray(),screen:screen.parent.name,groups:led.children.filter(o=>/desktop underside LEDs/.test(o.name)).map(g=>({name:g.name,parent:g.parent.name,strips:g.children.length}))});
     }
-    return results;
+    return {results,native};
    });
-   for(const s of state){assert.equal(s.parent,'tiltWrapper_tilting',label+' desktop LEDs belong to the tilt rig');assert.equal(s.screen,'tiltWrapper_tilting',label+' touchscreen also stays attached');for(let i=0;i<16;i++)assert.ok(Math.abs(s.relative[i]-state[0].relative[i])<1e-8,label+' strip-to-desktop transform stays fixed at '+s.tilt);assert.ok(s.groups.every(g=>g.parent==='Desktop LEDs'&&g.strips===3),label+' both strip sets remain complete');}
+   assert.deepEqual(state.native,[],label+' original CAD LED strips stay hidden when replaced by the overlay');
+   for(const s of state.results){assert.equal(s.parent,'tiltWrapper_tilting',label+' desktop LEDs belong to the tilt rig');assert.equal(s.screen,'tiltWrapper_tilting',label+' touchscreen also stays attached');for(let i=0;i<16;i++)assert.ok(Math.abs(s.relative[i]-state.results[0].relative[i])<1e-8,label+' strip-to-desktop transform stays fixed at '+s.tilt);assert.ok(s.groups.every(g=>g.parent==='Desktop LEDs'&&g.strips===3),label+' both strip sets remain complete');}
   };
   await check('fresh load');
   const restored=await page.evaluate(()=>{const a=ErgoFlex,project=a.serializeProject();return a.applyProject(project)});assert.equal(restored.ok,true,'project round trip succeeds');await ready();await check('project restored');

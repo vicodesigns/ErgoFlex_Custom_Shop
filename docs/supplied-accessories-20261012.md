@@ -158,3 +158,10 @@ Added the local `/home/ergo/Downloads/obsbot-refined.html` reference as `obsbot-
 The envelope is calibrated to 47 × 44 × 62.02 mm from [OBSBOT's Tiny 2 specifications](https://www.obsbot.com/obsbot-tiny-2-4k-webcam/specs), which also confirm built-in dual microphones. Price is **On request**. The accessory starts on the front-left of the upper shelf; **Desk objects** can change its surface, position, rotation and scale. It uses the existing per-preset placement persistence.
 
 `tests/obsbot-webcam-test.cjs` checks selection, loading, size, no added lights, placement edits, reload persistence, object library addition and removal from the build.
+
+## Saved preset reload and desktop LEDs
+
+- Named Start From recipes seed the Product palette on load and keep the cached main-desk style consistent with their saved configuration. A stale generic Product style can no longer replace OCC’s navy finish. Object transforms, artwork placements and starting views retain their saved values.
+- Each recipe carries a save revision. Saving merges other recipes from the latest browser store; an older tab refuses to overwrite a newer copy of its active recipe. Selecting the recipe again loads the latest version. Switching an unchanged recipe still remembers the active selection.
+- The generated desktop LED overlay replaces the original CAD Leds meshes. Accessory selection keeps those old meshes hidden instead of exposing a floating second set.
+- Verified with accessory-college-options-test (including stale Product palette and older-tab writes), editable-build-presets-test (edited objects, positions, isolation, reload and export), and desktop-led-attachment-test (preset switches, project restore, both sizes and -5 to 65 degree tilt).

@@ -1,6 +1,7 @@
 import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=obsbot-tiny-2-20261012';
 import { cleanSceneDeskData } from './scene-desk-data.mjs';
 import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=obsbot-tiny-2-20261012';
+import { cleanDeskStyle } from './room-desk-styles.mjs';
 import { minimumHeightForTilt } from './motion-limits.mjs';
 
 export const BUILD_PRESETS_KEY = 'ergoflex.buildPresetsV1';
@@ -52,8 +53,12 @@ export function cleanBuildPresets(value) {
             if (arm) arm.transform = {p:{x:0,y:0,z:-213.589786},q:{x:0,y:0,z:0,w:1},s:{x:1,y:1,z:1}};
         }
         const surface = draft.surface || {};
+        // A named recipe owns its palette. Its cached live desk style must not
+        // revive the previous Product scene's finishes when binding the room.
+        if (room?.desks.main) room.desks.main.style = cleanDeskStyle({...config, sheen:surface.finish || 'gloss'});
         entries[preset.id] = {
             ...(!value?.entries?.[preset.id] || draft.origin === 'shared' ? { origin: 'shared' } : {}),
+            revision: Number.isSafeInteger(draft.revision) && draft.revision >= 0 ? draft.revision : 0,
             config, ...(room ? { room } : {}),
             ...(cleanStartingView(draft.initialView) ? {initialView: cleanStartingView(draft.initialView)} : {}),
             ...(preset.id === 'occ' ? {trayFinish:'occ-steel-v1'} : {}),

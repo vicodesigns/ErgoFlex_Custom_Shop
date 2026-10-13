@@ -6,7 +6,7 @@ import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHAS
 import { poseIsClear } from './room-groove.mjs';
 import { SceneDesks } from './scene-desks.mjs?v=obsbot-tiny-2-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
-import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=obsbot-tiny-2-20261012';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=preset-restore-led-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
 import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=obsbot-tiny-2-20261012';
@@ -4935,7 +4935,9 @@ function toggleAccessory(id) {
 function applyAccessoryVisibility() {
     for (const item of ACCESSORIES) {
         if (!item.node) continue;
-        const on = currentConfig.accessories.includes(item.id);
+        // The generated overlay replaces the original CAD LED geometry.
+        // Re-enabling those old meshes exposes a second, unrigged strip set.
+        const on = currentConfig.accessories.includes(item.id) && !(item.node === 'Leds' && ledDesktopRoot);
         partRegistry.forEach(entry => {
             if (entry.name === item.node || entry.name.startsWith(item.node + '_')) entry.obj.visible = on;
         });
@@ -5076,12 +5078,31 @@ function saveBuildPreset() {
     const room = sceneDesks.serialize().rooms['product/default'];
     // Product view uses the CAD motion coordinates rather than room millimetres.
     if (room?.desks.main) room.desks.main.pose = { x: glideTarget.x, z: glideTarget.z, yaw: deskYaw };
-    const next = cleanBuildPresets({ ...buildPresets, active: activeBuildPreset, entries: { ...buildPresets.entries, [activeBuildPreset]: {
+    // Other tabs may have saved a newer recipe since this page loaded. Merge
+    // their other presets and refuse to replace a newer copy of this one.
+    const latest = cleanBuildPresets(readStore(BUILD_PRESETS_KEY, 1, null));
+    const revision = buildPresets.entries[activeBuildPreset]?.revision || 0;
+    if ((latest.entries[activeBuildPreset]?.revision || 0) !== revision) {
+        syncBuildPresetUI('A newer version is saved in another tab. Select this preset again to load it, or Save project to keep this tab’s edits.');
+        return false;
+    }
+    const next = cleanBuildPresets({ ...latest, active: activeBuildPreset, entries: { ...latest.entries, [activeBuildPreset]: {
+        revision,
         config: cleanConfig(currentConfig), room, ...(activeBuildPreset === 'artist' ? { startPose: 'artist-65-v1', startLighting: 'artist-daytime-40-v1', singleArm: 'rigid-landscape-v1' } : {}),
         ...(activeBuildPreset === 'occ' ? { collegeArtwork: buildPresets.entries.occ?.collegeArtwork || 'occ-v2', trayFinish:'occ-steel-v1' } : {}),
         ...(buildPresets.entries[activeBuildPreset]?.initialView ? {initialView:buildPresets.entries[activeBuildPreset].initialView} : {}),
         surface: { finish: surfaceFinish, grain: grainEnabled, visibility: grainVisibility, sheen: grainSheen }
     } } });
+    const content = entry => {const {revision, origin, ...data} = entry; return JSON.stringify(data);};
+    if (content(next.entries[activeBuildPreset]) === content(latest.entries[activeBuildPreset])) {
+        // Switching an unchanged recipe still needs to remember which one is active.
+        if (latest.active !== activeBuildPreset && !writeStore(BUILD_PRESETS_KEY, next)) return false;
+        next.entries[activeBuildPreset] = latest.entries[activeBuildPreset];
+        buildPresets = next;
+        syncBuildPresetUI(`${PRESETS.find(p => p.id === activeBuildPreset).name} · saved in this browser.`);
+        return true;
+    }
+    next.entries[activeBuildPreset].revision = revision + 1;
     if (!writeStore(BUILD_PRESETS_KEY, next)) { syncBuildPresetUI('Could not save in this browser. Use Save project to keep your edits.'); return false; }
     buildPresets = next;
     syncBuildPresetUI(`${PRESETS.find(p => p.id === activeBuildPreset).name} · saved in this browser.`);
@@ -5144,6 +5165,7 @@ async function applyPreset(preset) {
     preset = PRESETS.find(p => p.id === preset?.id);
     if (!preset) return false;
     saveBuildPreset();
+    buildPresets = cleanBuildPresets(readStore(BUILD_PRESETS_KEY, 1, null));
     const run = ++buildPresetRun;
     applyingBuildPreset = true;
     pendingBuildPresetRestore = null;
@@ -11039,6 +11061,9 @@ function initStudio() {
             surfaceFinish = draft.surface.finish; grainEnabled = draft.surface.grain;
             grainVisibility = draft.surface.visibility; grainSheen = draft.surface.sheen;
             pendingBuildPresetRestore = draft;
+            // Seed Product from this named recipe before the room applies its
+            // generic palette. That cache may belong to a different preset.
+            sceneDeskStyles.product = cleanDeskStyle({...currentConfig, sheen:surfaceFinish});
         } else if (view !== 'room') {
             // Adopt an existing Office build without reapplying its layout.
             const office = currentConfig.size === '60x30' && ['monitor-arm-2','keyboard-tray','ergo-keyboard'].every(id => currentConfig.accessories.includes(id));
