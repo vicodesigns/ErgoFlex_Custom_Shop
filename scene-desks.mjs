@@ -159,6 +159,7 @@ export class SceneDesks {
     }
     setSize(size){
         if(!this.active||!['48x30','60x30'].includes(size))return false;
+        if(this.active.product && this.ctx.resizeProductPreset?.(size))return true;
         this.stop();this.ctx.halt();this.capture();
         const before=this.serialize(),r=this.active;r.state.size=size;
         if(r.product){this.ctx.resizeProduct(size);this.persist();this.ctx.edit?.(before,this.serialize());this.sync();return true;}

@@ -165,3 +165,15 @@ The envelope is calibrated to 47 × 44 × 62.02 mm from [OBSBOT's Tiny 2 specifi
 - Each recipe carries a save revision. Saving merges other recipes from the latest browser store; an older tab refuses to overwrite a newer copy of its active recipe. Selecting the recipe again loads the latest version. Switching an unchanged recipe still remembers the active selection.
 - The generated desktop LED overlay replaces the original CAD Leds meshes. Accessory selection keeps those old meshes hidden instead of exposing a floating second set.
 - Verified with accessory-college-options-test (including stale Product palette and older-tab writes), editable-build-presets-test (edited objects, positions, isolation, reload and export), and desktop-led-attachment-test (preset switches, project restore, both sizes and -5 to 65 degree tilt).
+
+## Independent Standard and Extended setups
+
+Each Start From preset now owns a 48-inch and a 60-inch recipe. Existing owner-authored data remains the source; the second width is seeded once with the same accessories, artwork, lighting and view. Lateral object positions follow the width ratio, while monitor and input device dimensions remain physical. Paired displays retain a gap, and full-width Artist inserts adapt inside their editable root. Later edits, additions, removals, finishes and saved starting views belong to the chosen size.
+
+The last selected size stays in the existing top-level preset fields for project compatibility. `sizeSetups` stores the other size without duplicating the active recipe. Both are included in Save project. Recipe revision protection still prevents stale tabs from replacing newer owner edits. Both the Product size selector and the desk editor use the same size-setup restore path.
+
+The old size change and startup filters no longer delete accessories. Narrow dual-monitor clearance is an advisory Build check. A one-time OCC recovery restores a legacy setup's missing display when it still has a monitor mount, before seeding the two widths; subsequent authored removals carry a migration marker.
+
+Verification: build-preset-sizes-test checks migration, no mutation of owner data, one-time placement adaptation, physical scale, independent camera data and OCC recovery. preset-size-switch-test covers all nine presets, different positions/colors/lighting per width, OCC artwork edits and size-specific object removal/addition, reload, and distinct per-size starting views. Editable preset/project export regression also passes.
+
+The Architect recipe also restores its brushed aluminum easel support rail with the beige retaining lip in both saved widths. The rail sits at the drafting board’s lower edge, follows the tilting desktop and adapts to the smaller width. The one-time `architectRail` marker keeps future manual removals from being undone. Seeded 48-inch and 60-inch Architect previews were rendered and reviewed.

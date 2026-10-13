@@ -170,8 +170,8 @@ export const ACCESSORIES = [
     { id: 'monitor-arm', name: 'Single monitor arm', category: 'Support', visual: 'arm', propId: 'ergoflex-single-monitor-arm', exclusiveGroup: 'monitor-mount', description: 'Shelf-mounted arm. Display sold separately.',
       price: 179, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
     { id: 'monitor-arm-2', name: 'Dual monitor arm · extended', category: 'Support', visual: 'dual-arm', propId: 'ergoflex-dual-monitor-arm-compact', exclusiveGroup: 'monitor-mount', description: 'Extended twin arms, shown with the supplied ErgoFlex model. Displays sold separately.',
-      price: 289, provisional: true, compatibleSizes: ['60x30'], node: null,
-      note: 'Needs a 60in or wider top for the mounting spread.' },
+      price: 289, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null,
+      note: 'Confirm screen and arm clearance for the selected layout.' },
     { id: 'cpu-holder', name: 'CPU holder', category: 'Support', visual: 'holder', description: 'An open cradle beneath the desk. Computer not included.',
       price: 129, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
     { id: 'led-strip', name: 'Under-surface LED strip', category: 'Support', description: 'Integrated accent lighting beneath the surface.',
@@ -179,7 +179,7 @@ export const ACCESSORIES = [
     { id: 'foot-rest', name: 'Adjustable foot rest', category: 'Support', visual: 'footrest', description: 'A gently angled foot support in front of your desk.',
       price: 99, provisional: true, compatibleSizes: ['48x30', '60x30'], node: null },
     { id: 'wide-monitor', name: 'AETHER 34UW curved ultrawide', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-wide-monitor', exclusiveGroup: 'main-display',
-      description: 'Curved ultrawide panel with dark screen glass, a dark chassis and rear RGB halo. On the right in the Office pair.', price: 0, quoted: true, compatibleSizes: ['60x30'] },
+      description: 'Curved ultrawide panel with dark screen glass, a dark chassis and rear RGB halo. On the right in the Office pair.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'flat-monitor', name: 'ProVision Ultra 32″ landscape', category: 'Desktop', visual: 'monitor', propId: 'ergoflex-flat-monitor', exclusiveGroup: 'main-display',
       description: 'The flat ProVision display in landscape orientation. Available separately from the portrait panel.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'drafting-kit', name: 'Architect drafting board & tools', category: 'Desktop', visual: 'drafting-kit',
@@ -203,9 +203,9 @@ export const ACCESSORIES = [
     { id: 'shelf-organizer', name: 'Shelf organizer', category: 'Desktop', visual: 'mat', propId: 'ergoflex-shelf-organizer', mount: 'lower-shelf',
       description: 'Compartment storage for tools and small supplies.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'easel-rail', name: 'Easel accessory rail', category: 'Support', visual: 'tray', propId: 'ergoflex-easel-accessory',
-      description: 'Full-width art accessory rail for the Extended desktop.', price: 0, quoted: true, compatibleSizes: ['60x30'] },
+      description: 'Size-matched art accessory rail for Standard and Extended desktops.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'artist-easel', name: 'Artist easel & artwork', category: 'Desktop', visual: 'mat', propId: 'ergoflex-art-easel',
-      description: 'Full-width art surface and easel accessories for the Extended desktop.', price: 0, quoted: true, compatibleSizes: ['60x30'] },
+      description: 'Size-matched art surface and easel accessories for Standard and Extended desktops.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'painter-shelf', name: 'Painter accessory shelf', category: 'Support', visual: 'tray', propId: 'ergoflex-painter-shelf', mount: 'shelf',
       description: 'A shelf of painting tools and supplies, carried by the upper shelf.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] }
 ];
@@ -250,7 +250,7 @@ export const PRESETS = [
     { id: 'architect', name: 'Architect drafting table',
       blurb: 'Warm ivory with a graphite frame, a tilted drawing board, architectural plans and precision drafting tools.',
       size: '60x30', woodFinish: 'Warm Ivory', baseFinish: 'Space Gray', trimColor: '#85888c',
-      accessories: ['drafting-kit', 'task-light', 'shelf-organizer'], startTilt: 35, cameraPreset: 'hero' }
+      accessories: ['drafting-kit', 'easel-rail', 'task-light', 'shelf-organizer'], startTilt: 35, cameraPreset: 'hero' }
 ].map(preset => ({ ...preset, ...(SHARED_BUILD_PRESETS[preset.id]?.config || {}) }));
 
 // The starting configuration, derived from the catalog itself. The finishes
@@ -348,8 +348,8 @@ export function cleanConfig(value) {
         ...(validArtwork(value.artwork) && Object.keys(value.artwork.surfaces).length ? { artwork: cleanArtwork(value.artwork) } : {}) };
 }
 
-// Accessories that no longer fit the chosen size. Returned rather than silently
-// dropped, so the UI can say what it removed and why.
+// Compatibility findings are advisory. Resizing must preserve the owner’s
+// selected accessories and edited placements.
 export function incompatibleAccessories(config) {
     return (config.accessories || [])
         .filter(id => !accessoryFits(id, config.size))

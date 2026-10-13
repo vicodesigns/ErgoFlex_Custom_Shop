@@ -54,10 +54,10 @@ const assert = require('node:assert/strict');
 
   // --- declarative incompatibilities ---------------------------------------
   const narrow = validateBuild({ size: '48x30', woodFinish: 'Walnut', baseFinish: 'Navy', accessories: ['monitor-arm-2'] });
-  assert.ok(codes(narrow).includes('incompatible'), 'a known-bad combination is caught');
-  assert.equal(narrow[0].severity, 'error', 'and sorts first');
+  assert.ok(codes(narrow).includes('mount-clearance'), 'a narrow dual-display layout requests a clearance review');
+  assert.equal(narrow.find(f=>f.code==='mount-clearance').severity, 'warning', 'fit review remains advisory');
   const wide = validateBuild(config);
-  assert.ok(!codes(wide).includes('incompatible'), 'the same accessory on a wider top is fine');
+  assert.ok(!codes(wide).includes('mount-clearance'), 'the wider top does not need this narrow-layout review');
 
   // --- cache key -----------------------------------------------------------
   // The failure this guards against: moving a part changes the geometry the

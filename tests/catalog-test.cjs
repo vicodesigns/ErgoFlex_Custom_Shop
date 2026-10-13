@@ -114,10 +114,10 @@ const assert = require('node:assert/strict');
     'provisional pricing is flagged all the way to the breakdown');
 
   // Compatibility is enforced, not advisory, at the validation boundary.
-  assert.equal(accessoryFits('monitor-arm-2', '48x30'), false, 'the dual arm needs a wider top');
+  assert.equal(accessoryFits('monitor-arm-2', '48x30'), true, 'the dual arm can be previewed on both desk sizes');
   assert.equal(accessoryFits('monitor-arm-2', '60x30'), true);
   assert.deepEqual(incompatibleAccessories({ size: '48x30', accessories: ['monitor-arm-2', 'cable-tray'] })
-    .map(a => a.id), ['monitor-arm-2'], 'incompatible accessories are reported, not silently dropped');
+    .map(a => a.id), [], 'resizing supports the same selected accessories');
 
   // Unknown accessory ids must not survive a share link.
   const white={...defaultConfig,accessoryFinishes:{'ergo-keyboard':'white','logitech-mx-master':'white','keyboard-tray':'white'}};

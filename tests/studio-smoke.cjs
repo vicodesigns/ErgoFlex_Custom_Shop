@@ -1448,7 +1448,7 @@ function ErgoFlexDeviceMatches(size, id) {
     assert.ok(rows.length === preset.lines.length + 1, 'every line is rendered, plus a total');
     assert.ok(rows[rows.length - 1].includes('Estimate'), 'the last row is the estimate');
 
-    // Narrowing the desk must remove an accessory that no longer fits, and say so.
+    // Resizing retains selected accessories instead of deleting the saved setup.
     const shrunk = await page.evaluate(async () => {
       const select = document.getElementById('size-select');
       select.value = '48x30';
@@ -1457,10 +1457,9 @@ function ErgoFlexDeviceMatches(size, id) {
                toast: document.getElementById('studio-toast').textContent,
                disabled: [...document.querySelectorAll('#accessory-list input')].filter(i => i.disabled).length };
     });
-    assert.ok(!shrunk.accessories.includes('monitor-arm-2'),
-      'the dual monitor arm is dropped when the top is too narrow');
-    assert.ok(/removed/i.test(shrunk.toast), 'and the removal is reported rather than silent');
-    assert.ok(shrunk.disabled > 0, 'incompatible accessories are disabled in the list');
+    assert.ok(shrunk.accessories.includes('monitor-arm-2'),
+      'the dual monitor arm stays selected on the 48 inch preview');
+    assert.equal(shrunk.disabled,0,'preview accessories remain available at both sizes');
 
     // Cart ids must be unique even for items added in the same millisecond;
     // Date.now() collided, and remove() filters by id, so one removal deleted two.

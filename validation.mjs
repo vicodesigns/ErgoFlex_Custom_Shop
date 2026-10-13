@@ -51,10 +51,11 @@ export const INTENDED_CONTACT = [
 const contactAllowed = (a, b) =>
     INTENDED_CONTACT.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
 
-// Combinations known not to work, independent of geometry.
+// Layouts that need a clearance review, independent of geometry.
 export const INCOMPATIBLE = [
     { when: { accessory: 'monitor-arm-2', size: '48x30' },
-      reason: 'The dual monitor arm needs a 60in or wider top for its mounting spread.' }
+      severity: 'warning', code: 'mount-clearance',
+      reason: 'Check the two screens and arm travel for clearance on the 48in desk.' }
 ];
 
 const finding = (severity, code, message, extra = {}) =>
@@ -107,7 +108,7 @@ export function validateBuild(config, scene = {}) {
         const wantsAccessory = !rule.when.accessory || (config.accessories || []).includes(rule.when.accessory);
         const matchesSize = !rule.when.size || config.size === rule.when.size;
         if (wantsAccessory && matchesSize) {
-            findings.push(finding('error', 'incompatible', rule.reason,
+            findings.push(finding(rule.severity || 'error', rule.code || 'incompatible', rule.reason,
                 { parts: [rule.when.accessory].filter(Boolean) }));
         }
     }

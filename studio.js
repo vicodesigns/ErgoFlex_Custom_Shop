@@ -4,9 +4,9 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=obsbot-tiny-2-20261012';
+import { SceneDesks } from './scene-desks.mjs?v=preset-size-setups-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
-import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=preset-restore-led-20261012';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=preset-size-setups-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
 import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=obsbot-tiny-2-20261012';
@@ -43,12 +43,12 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=obsbot-tiny-2-20261012';
+         ACCESSORIES, PRESETS, accessory, accessoryFits } from './catalog.mjs?v=preset-size-setups-20261012';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=obsbot-tiny-2-20261012';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=preset-size-setups-20261012';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -166,6 +166,7 @@ let cartItems = [];
 const SAVED_BUILD_KEY = 'ergoflexSavedBuildV2';
 let buildPresets = cleanBuildPresets(EVENT_DEMO ? null : readStore(BUILD_PRESETS_KEY, 1, null));
 let activeBuildPreset = null, applyingBuildPreset = false, buildPresetTimer = null, buildPresetRun = 0, pendingBuildPresetRestore = null;
+let buildPresetReady = Promise.resolve();
 const CART_KEY = 'ergoflexCartV2';
 let cartIdCounter = 0;
 const nextCartId = () => `item-${Date.now()}-${cartIdCounter++}`;
@@ -635,6 +636,7 @@ function initSceneDeskEditing() {
         productReady:()=>!!workspaceAccessories&&!!loadedModel,
         productRig:()=>({mounts:Object.fromEntries([...workspaceAccessories.mounts].filter(([role])=>role!=='floor').map(([role,m])=>[role,m.dress])),setBodyVisible(){},updatePose(){},dispose(){}}),
         resizeProduct:size=>changeDesktopSize(size,{rebuildRoom:false}),
+        resizeProductPreset:size=>{if(!activeBuildPreset||selectedRoomScene!=='product'||sceneDeskInternal)return false;changeDesktopSize(size);return true;},
         selectedAccessories:()=>[...currentConfig.accessories],
         productAccessories:()=>workspaceAccessories.objects().filter(o=>accessory(o.userData.accessoryId)?.mount!=='floor'&&o.userData.accessoryId!=='foot-rest'),
         purchaseMount:role=>workspaceAccessories.mounts.get(role)?.group,
@@ -4524,7 +4526,9 @@ function populateSizeOptions() {
 }
 
 function syncSizeChoiceUI() {
+    if (sizeSelect) sizeSelect.disabled = applyingBuildPreset;
     document.querySelectorAll('[data-size-choice]').forEach(button => {
+        button.disabled = applyingBuildPreset;
         const selected = button.dataset.sizeChoice === currentConfig.size;
         button.setAttribute('aria-pressed', String(selected));
         button.classList.toggle('border-green-700', selected);
@@ -5052,13 +5056,13 @@ function syncBuildPresetUI(message) {
         if (price && draft) price.textContent = money(configurationPrice(draft.config)) + (priceBreakdown(draft.config).some(l => l.quoted) ? ' + quote' : '');
     });
     const save = document.getElementById('save-preset');
-    if (save) { save.hidden = !preset; save.disabled = applyingBuildPreset || selectedRoomScene !== 'product'; save.textContent = `Save ${preset?.name || 'preset'} now`; }
+    if (save) { save.hidden = !preset; save.disabled = applyingBuildPreset || selectedRoomScene !== 'product'; save.textContent = `Save ${preset?.name || 'preset'} · ${currentConfig.size === '48x30' ? '48' : '60'}″ now`; }
     const viewSave = document.getElementById('save-preset-view');
     if (viewSave) { viewSave.hidden = !preset; viewSave.disabled = applyingBuildPreset || pendingBuildPresetRestore || selectedRoomScene !== 'product' || !loadedModel; }
     const viewStatus = document.getElementById('preset-view-status');
     if (viewStatus) { viewStatus.hidden = !preset; viewStatus.textContent = buildPresets.entries[activeBuildPreset]?.initialView ? 'Starting view saved. Returns when selected or reloaded.' : 'Frame the desk, then save its starting view.'; }
     const status = document.getElementById('preset-save-status');
-    if (status) status.textContent = message || (preset ? `${preset.name} · edits auto-save in this browser.` : 'Choose a setup. Your edits will auto-save as its own version.');
+    if (status) status.textContent = message || (preset ? `${preset.name} · ${currentConfig.size === '48x30' ? '48' : '60'}″ setup · edits auto-save separately for each size.` : 'Choose a setup. Your edits will auto-save as its own version.');
     syncArtistCanvasUI();
 }
 
@@ -5070,6 +5074,11 @@ function syncArtistCanvasUI() {
     toggle.disabled=!item||applyingBuildPreset||sceneDesks?.playing||sceneDesks?.recording;
     toggle.checked=item?.saved.artworkVisible!==false;
     row.querySelector('small').textContent=toggle.checked?'Painting fills the canvas.':'Grey primed canvas.';
+}
+
+function presetSizeDraft(id = activeBuildPreset, size = currentConfig.size) {
+    const entry = buildPresets.entries[id];
+    return entry?.config.size === size ? entry : entry?.sizeSetups?.[size];
 }
 
 function saveBuildPreset() {
@@ -5086,11 +5095,16 @@ function saveBuildPreset() {
         syncBuildPresetUI('A newer version is saved in another tab. Select this preset again to load it, or Save project to keep this tab’s edits.');
         return false;
     }
+    const oldEntry = latest.entries[activeBuildPreset];
+    const {sizeSetups, ...oldSize} = oldEntry;
+    const keptSizes = {...sizeSetups, [oldEntry.config.size]:oldSize};
+    delete keptSizes[currentConfig.size];
+    const draft = presetSizeDraft();
     const next = cleanBuildPresets({ ...latest, active: activeBuildPreset, entries: { ...latest.entries, [activeBuildPreset]: {
-        revision,
-        config: cleanConfig(currentConfig), room, ...(activeBuildPreset === 'artist' ? { startPose: 'artist-65-v1', startLighting: 'artist-daytime-40-v1', singleArm: 'rigid-landscape-v1' } : {}),
-        ...(activeBuildPreset === 'occ' ? { collegeArtwork: buildPresets.entries.occ?.collegeArtwork || 'occ-v2', trayFinish:'occ-steel-v1' } : {}),
-        ...(buildPresets.entries[activeBuildPreset]?.initialView ? {initialView:buildPresets.entries[activeBuildPreset].initialView} : {}),
+        revision, sizeSetups:keptSizes,
+        config: cleanConfig(currentConfig), room, ...(activeBuildPreset === 'architect' ? {architectRail:'support-rail-v1'} : {}), ...(activeBuildPreset === 'artist' ? { startPose: 'artist-65-v1', startLighting: 'artist-daytime-40-v1', singleArm: 'rigid-landscape-v1' } : {}),
+        ...(activeBuildPreset === 'occ' ? { collegeArtwork: draft?.collegeArtwork || 'occ-v2', trayFinish:'occ-steel-v1',occResizeRecovery:'size-setups-v1' } : {}),
+        ...(draft?.initialView ? {initialView:draft.initialView} : {}),
         surface: { finish: surfaceFinish, grain: grainEnabled, visibility: grainVisibility, sheen: grainSheen }
     } } });
     const content = entry => {const {revision, origin, ...data} = entry; return JSON.stringify(data);};
@@ -5099,20 +5113,20 @@ function saveBuildPreset() {
         if (latest.active !== activeBuildPreset && !writeStore(BUILD_PRESETS_KEY, next)) return false;
         next.entries[activeBuildPreset] = latest.entries[activeBuildPreset];
         buildPresets = next;
-        syncBuildPresetUI(`${PRESETS.find(p => p.id === activeBuildPreset).name} · saved in this browser.`);
+        syncBuildPresetUI(`${PRESETS.find(p => p.id === activeBuildPreset).name} · ${currentConfig.size === '48x30' ? '48' : '60'}″ setup saved.`);
         return true;
     }
     next.entries[activeBuildPreset].revision = revision + 1;
     if (!writeStore(BUILD_PRESETS_KEY, next)) { syncBuildPresetUI('Could not save in this browser. Use Save project to keep your edits.'); return false; }
     buildPresets = next;
-    syncBuildPresetUI(`${PRESETS.find(p => p.id === activeBuildPreset).name} · saved in this browser.`);
+    syncBuildPresetUI(`${PRESETS.find(p => p.id === activeBuildPreset).name} · ${currentConfig.size === '48x30' ? '48' : '60'}″ setup saved.`);
     return true;
 }
 
 function savePresetStartingView() {
     if (!saveBuildPreset() || !camera || !controls) return false;
     const vector = v => ({x:v.x,y:v.y,z:v.z});
-    const draft = buildPresets.entries[activeBuildPreset];
+    const draft = presetSizeDraft();
     draft.initialView = {position:vector(cameraTween.active ? cameraTween.toPos : camera.position),target:vector(cameraTween.active ? cameraTween.toTarget : controls.target),fov:camera.fov};
     if (!saveBuildPreset()) return false;
     notifyUser(`Starting view saved for ${PRESETS.find(p=>p.id===activeBuildPreset).name}.`);
@@ -5158,10 +5172,16 @@ async function upgradeOrangeCoastArtwork(draft) {
     const fresh = !draft?.collegeArtwork && !draft?.config.artwork;
     if ((legacy || fresh) && !await surfaceArtwork.applyOrangeCoastSamples({replaceLegacy:legacy})) throw new Error('OCC artwork could not be loaded.');
     // Removed stock artwork remains removed. Custom uploads and placements stay.
-    if (buildPresets.entries.occ) buildPresets.entries.occ.collegeArtwork = 'occ-v2';
+    const current = presetSizeDraft('occ');
+    if (current) current.collegeArtwork = 'occ-v2';
 }
 
-async function applyPreset(preset) {
+function applyPreset(preset, options = {}) {
+    buildPresetReady = applyPresetNow(preset, options);
+    return buildPresetReady;
+}
+
+async function applyPresetNow(preset, {size} = {}) {
     preset = PRESETS.find(p => p.id === preset?.id);
     if (!preset) return false;
     saveBuildPreset();
@@ -5170,7 +5190,10 @@ async function applyPreset(preset) {
     applyingBuildPreset = true;
     pendingBuildPresetRestore = null;
     activeBuildPreset = preset.id;
-    const draft = buildPresets.entries[preset.id];
+    const entry = buildPresets.entries[preset.id];
+    const draft = ['48x30','60x30'].includes(size) && entry?.config.size !== size ? entry?.sizeSetups?.[size] : entry;
+    const objectSelection = size ? sceneDesks?.objects.selected : null;
+    const objectEditing = size ? sceneDesks?.objects.editing : false;
     let applied = false;
     try {
         // Tear down the outgoing surface objects before binding this recipe's own
@@ -5210,12 +5233,15 @@ async function applyPreset(preset) {
             const select = document.getElementById('camera-view');
             if (select) { select.value = preset.cameraPreset; select.dispatchEvent(new Event('change')); }
         }
-        notifyUser(`${preset.name}${draft ? ' saved version' : ''} applied.`);
+        if (objectSelection) sceneDesks?.objects.select(objectSelection);
+        if (size && sceneDesks) sceneDesks.objects.setEditing(objectEditing);
+        notifyUser(`${preset.name} · ${currentConfig.size === '48x30' ? '48' : '60'}″ setup applied.`);
         applied = true;
         return true;
     } finally {
         if (run === buildPresetRun) {
             applyingBuildPreset = false;
+            syncSizeChoiceUI();
             if (!applied) {
                 activeBuildPreset = null;
                 buildPresets.active = null;
@@ -5251,13 +5277,14 @@ function buildGuidedConfiguration() {
     const header = column.querySelector('.mb-8');
     if (header) header.after(presets); else column.prepend(presets);
     const save = document.createElement('button'); save.id = 'save-preset'; save.type = 'button'; save.className = 'btn-secondary'; save.onclick = () => { if (saveBuildPreset()) notifyUser('Your preset edits are saved.'); };
+    const sizeNote = document.createElement('p'); sizeNote.className = 'studio-note'; sizeNote.textContent = '48″ and 60″ have separate saved setups. Switch sizes to edit each version’s finishes, objects, artwork and starting view.';
     const status = document.createElement('p'); status.id = 'preset-save-status'; status.className = 'studio-note'; status.role = 'status';
     const viewSave=document.createElement('button');viewSave.id='save-preset-view';viewSave.type='button';viewSave.className='btn-secondary';viewSave.textContent='Save starting view';viewSave.onclick=savePresetStartingView;
     const viewStatus=document.createElement('p');viewStatus.id='preset-view-status';viewStatus.className='studio-note';viewStatus.role='status';
     const canvasToggle=document.createElement('div');canvasToggle.id='artist-canvas-toggle';canvasToggle.className='artist-canvas-toggle';canvasToggle.hidden=true;
     canvasToggle.innerHTML='<label><input id="artist-show-painting" type="checkbox" checked> Show painting</label><small>Painting fills the canvas.</small>';
     canvasToggle.querySelector('input').onchange=e=>sceneDesks?.objects.setArtwork('accessory-artist-easel',e.target.checked);
-    presets.querySelector('.eyebrow').after(save, status,viewSave,viewStatus,canvasToggle); syncBuildPresetUI();
+    presets.querySelector('.eyebrow').after(sizeNote,save, status,viewSave,viewStatus,canvasToggle); syncBuildPresetUI();
 
     const accessories = document.createElement('div');
     accessories.className = 'accessory-block';
@@ -6664,18 +6691,17 @@ function showCartModal() {
 }
 
 function changeDesktopSize(size, { rebuildRoom = true } = {}) {
+    if (rebuildRoom && !sceneDeskInternal && activeBuildPreset && selectedRoomScene === 'product') {
+        if (currentConfig.size === size || applyingBuildPreset) return buildPresetReady;
+        return applyPreset({id:activeBuildPreset},{size}).catch(error=>{console.error('[Preset size]',error);notifyUser('That size setup could not be loaded. Your saved versions are kept.');});
+    }
     if(rebuildRoom&&!sceneDeskInternal&&sceneDesks?.active)return sceneDesks.setSize(size);
     currentConfig.size = size;
     sizeSelect.value = size;
     syncSizeChoiceUI();
     syncSizeGeometry({ rebuildRoom });
-    // Some accessories need a wider top. Drop the ones that no longer fit and
-    // say which, rather than quietly charging for something that cannot ship.
-    const dropped = incompatibleAccessories(currentConfig);
-    if (dropped.length) {
-        currentConfig.accessories = currentConfig.accessories.filter(id => accessoryFits(id, currentConfig.size));
-        notifyUser(`${dropped.map(a => a.name).join(', ')} removed: not available at this size.`);
-    }
+    // Size switches keep the entire recipe, including user-edited accessory
+    // transforms. Build checks report fit concerns without deleting selections.
     renderAccessories();
     applyAccessoryVisibility();
     updatePrice();
@@ -11077,12 +11103,6 @@ function initStudio() {
         const saved = readStored(CART_KEY, 'ergoflexCartV1') || [];
         if (Array.isArray(saved)) cartItems = saved.filter(validConfig).slice(0, 100).map((item, index) => ({ ...cleanConfig(item), id: `restored-${index}`, quantity: Math.max(1, Math.min(20, Math.round(Number(item.quantity) || 1))), price: configurationPrice(cleanConfig(item)) }));
     } catch {}
-    // An accessory can become incompatible if the stored size no longer suits it.
-    const dropped = incompatibleAccessories(currentConfig);
-    if (dropped.length) {
-        currentConfig.accessories = currentConfig.accessories.filter(id => accessoryFits(id, currentConfig.size));
-        notifyUser(`${dropped.map(a => a.name).join(', ')} removed: not available for this size.`);
-    }
     populateSizeOptions();
     applyConfigToUI();
     buildGuidedConfiguration();
@@ -11694,6 +11714,7 @@ window.ErgoFlex = {
     saveBuildPreset,
     savePresetStartingView,
     get activeBuildPreset() { return activeBuildPreset; },
+    get presetReady() { return buildPresetReady; },
     toggleAccessory,
     get priceLines() { return priceBreakdown(currentConfig); },
     runValidation,

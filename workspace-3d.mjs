@@ -15,7 +15,7 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=obsbot-tiny-2-20261012';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-size-setups-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
@@ -713,7 +713,7 @@ export class WorkspaceAccessories {
         place('artist-easel', 0, 0, 0);
         place('drafting-kit', 0, 0, 0);
         place('painter-shelf', 0, -80, 0);
-        place('easel-rail', 0, 0, -190);
+        place('easel-rail', 0, 0, selected.has('drafting-kit') ? 300 : -190);
         place('drawing-tablet', -210, 0, 35);
         place('shelf-organizer', 0, 0, 0);
         const back = -(this.mounts.get('shelf')?.depth || 480) / 2;
@@ -740,6 +740,17 @@ export class WorkspaceAccessories {
             // VESA head empty instead of inventing a second billed product.
             monitor.position.set(dual ? -270 : 0, mounted ? 6.255 : 0, mounted ? back + 467 : 0);
             monitor.getObjectByName('monitor-stand').visible = !mounted;
+        }
+        // Size the full-width Artist inserts inside their editable root. The
+        // owner's position, rotation and scale stay independent of desktop size.
+        const ratio = this.config.size === '48x30' ? .8 : 1;
+        for (const id of ['artist-easel', 'easel-rail']) {
+            const prop = this.items.get(id)?.getObjectByName(`Prop:${accessory(id).propId}`);
+            if (!prop) continue;
+            prop.sizeReferenceScale ||= prop.scale.clone();
+            prop.scale.copy(prop.sizeReferenceScale);
+            if (id === 'artist-easel') prop.scale.multiplyScalar(ratio);
+            else prop.scale.x *= ratio;
         }
         this.onLayout?.();
         this.update();
