@@ -643,6 +643,6 @@ body:not(.setup-layout) .camera-shortcuts { display: none; }
 .artist-canvas-toggle small { font-size: 12px; opacity: .78; }
 .accessory-finish { display: flex; align-items: center; gap: 8px; margin-top: 9px; font-size: 11px; }
 .accessory-finish select { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: inherit; color: inherit; }
-.artwork-sample-grid [data-art-sample="occ-white-lockup"] img { background: #002d6a; }
+.artwork-sample-grid [data-art-sample="occ-title"] img { background: #002d6a; }
 .artwork-samples > [data-art-occ-look] { width: 100%; background: #002d6a; color: #fff; border-color: #f99239; }
-.artwork-samples[aria-label="Orange Coast College samples"] .artwork-sample-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.artwork-samples[aria-label="Orange Coast College samples"] .artwork-sample-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

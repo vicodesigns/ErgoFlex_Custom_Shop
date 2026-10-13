@@ -1,6 +1,6 @@
-import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=preset-camera-metal-20261012';
+import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=occ-supplied-artwork-20261012';
 import { cleanSceneDeskData } from './scene-desk-data.mjs';
-import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=preset-camera-metal-20261012';
+import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=occ-supplied-artwork-20261012';
 import { minimumHeightForTilt } from './motion-limits.mjs';
 
 export const BUILD_PRESETS_KEY = 'ergoflex.buildPresetsV1';
@@ -59,7 +59,7 @@ export function cleanBuildPresets(value) {
             ...(preset.id === 'occ' ? {trayFinish:'occ-steel-v1'} : {}),
             ...(preset.id === 'artist' ? { startPose: 'artist-65-v1' } : {}),
             ...(preset.id === 'artist' ? { singleArm: 'rigid-landscape-v1' } : {}),
-            ...(preset.id === 'occ' && draft.collegeArtwork === 'occ-v1' ? { collegeArtwork: 'occ-v1' } : {}),
+            ...(preset.id === 'occ' && ['occ-v1','occ-v2'].includes(draft.collegeArtwork) ? { collegeArtwork: draft.collegeArtwork } : {}),
             ...(draft.startLighting === 'artist-daytime-40-v1' ? { startLighting: draft.startLighting } : {}),
             surface: {
                 finish: ['matte', 'satin', 'gloss'].includes(surface.finish) ? surface.finish : 'gloss',

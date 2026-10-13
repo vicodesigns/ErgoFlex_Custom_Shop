@@ -4,12 +4,12 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=preset-camera-metal-20261012';
+import { SceneDesks } from './scene-desks.mjs?v=occ-supplied-artwork-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
-import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=preset-camera-metal-20261012';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=occ-supplied-artwork-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=preset-camera-metal-20261012';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=occ-supplied-artwork-20261012';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
@@ -20,7 +20,7 @@ import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-2026
 import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261010';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-desk-styling-20261010';
 import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
-import { SurfaceArtwork } from './surface-artwork.mjs?v=preset-camera-metal-20261012';
+import { SurfaceArtwork } from './surface-artwork.mjs?v=occ-supplied-artwork-20261012';
 import { artworkSummary } from './artwork-config.mjs?v=scene-desk-styling-20261010';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-window-20261011';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
@@ -43,12 +43,12 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=preset-camera-metal-20261012';
+         ACCESSORIES, PRESETS, accessory, accessoryFits, incompatibleAccessories } from './catalog.mjs?v=occ-supplied-artwork-20261012';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=preset-camera-metal-20261012';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=occ-supplied-artwork-20261012';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -5078,7 +5078,7 @@ function saveBuildPreset() {
     if (room?.desks.main) room.desks.main.pose = { x: glideTarget.x, z: glideTarget.z, yaw: deskYaw };
     const next = cleanBuildPresets({ ...buildPresets, active: activeBuildPreset, entries: { ...buildPresets.entries, [activeBuildPreset]: {
         config: cleanConfig(currentConfig), room, ...(activeBuildPreset === 'artist' ? { startPose: 'artist-65-v1', startLighting: 'artist-daytime-40-v1', singleArm: 'rigid-landscape-v1' } : {}),
-        ...(activeBuildPreset === 'occ' ? { collegeArtwork: 'occ-v1', trayFinish:'occ-steel-v1' } : {}),
+        ...(activeBuildPreset === 'occ' ? { collegeArtwork: buildPresets.entries.occ?.collegeArtwork || 'occ-v2', trayFinish:'occ-steel-v1' } : {}),
         ...(buildPresets.entries[activeBuildPreset]?.initialView ? {initialView:buildPresets.entries[activeBuildPreset].initialView} : {}),
         surface: { finish: surfaceFinish, grain: grainEnabled, visibility: grainVisibility, sheen: grainSheen }
     } } });
@@ -5131,6 +5131,15 @@ function applyArtistStartingLights(draft) {
     setLedGlow(LED_FULL_BRIGHTNESS * .4, false);
 }
 
+async function upgradeOrangeCoastArtwork(draft) {
+    if (draft?.collegeArtwork === 'occ-v2') return;
+    const legacy = Object.values(draft?.config.artwork?.surfaces || {}).some(surface => Object.values(surface).some(layer => ['Orange Coast College white logo','Orange Coast College blue wordmark'].includes(layer.name)));
+    const fresh = !draft?.collegeArtwork && !draft?.config.artwork;
+    if ((legacy || fresh) && !await surfaceArtwork.applyOrangeCoastSamples({replaceLegacy:legacy})) throw new Error('OCC artwork could not be loaded.');
+    // Removed stock artwork remains removed. Custom uploads and placements stay.
+    if (buildPresets.entries.occ) buildPresets.entries.occ.collegeArtwork = 'occ-v2';
+}
+
 async function applyPreset(preset) {
     preset = PRESETS.find(p => p.id === preset?.id);
     if (!preset) return false;
@@ -5173,7 +5182,7 @@ async function applyPreset(preset) {
         if (state) { applyProjectMotion({ heightInches: state.height, tilt: { [primaryTiltConfig()?.name]: state.tilt }, yaw: state.pose.yaw, glide: { x: state.pose.x, z: state.pose.z } }); applyGrooveLights(state.lights); }
         else if (Number.isFinite(preset.startTilt)) applyProjectMotion({ heightInches: Math.max(liftToHeight(currentLift), minimumHeightForTilt(preset.startTilt, currentConfig.size)), tilt: { [primaryTiltConfig()?.name]: preset.startTilt } });
         if (preset.id === 'artist') applyArtistStartingLights(draft);
-        if (preset.id === 'occ' && draft?.collegeArtwork !== 'occ-v1' && !draft?.config.artwork && !await surfaceArtwork.applyOrangeCoastSamples()) throw new Error('OCC artwork could not be loaded.');
+        if (preset.id === 'occ') await upgradeOrangeCoastArtwork(draft);
         if (draft?.initialView) restorePresetStartingView(draft.initialView);
         else if (preset.cameraPreset) {
             const select = document.getElementById('camera-view');
@@ -10562,6 +10571,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
                 pendingBuildPresetRestore = null;
                 if (state) { applyProjectMotion({ heightInches: state.height, tilt: { [primaryTiltConfig()?.name]: state.tilt }, yaw: state.pose.yaw, glide: { x: state.pose.x, z: state.pose.z } }); applyGrooveLights(state.lights); }
                 if (activeBuildPreset === 'artist') applyArtistStartingLights(draft);
+                if (activeBuildPreset === 'occ') await upgradeOrangeCoastArtwork(draft);
                 if (draft.initialView) restorePresetStartingView(draft.initialView);
             }
             roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
