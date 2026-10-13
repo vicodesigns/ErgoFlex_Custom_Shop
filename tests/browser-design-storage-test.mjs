@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {encodeStoredJSON,decodeStoredJSON,compactStoredDesigns} from '../browser-design-storage.mjs';
+
+const image='data:image/png;base64,'+'abc123'.repeat(20000);
+const original={v:1,active:'occ',entries:{occ:{revision:42,config:{artwork:{image,x:11}},sizeSetups:{'48x30':{config:{artwork:{image,x:23}}}}}}};
+const before=JSON.stringify(original),packed=encodeStoredJSON(original);
+assert.ok(packed.length<before.length*.55,'image data is pooled across desk sizes');
+assert.deepEqual(decodeStoredJSON(packed),original);
+assert.equal(JSON.stringify(original),before,'encoding does not mutate live designs');
+assert.deepEqual(decodeStoredJSON(before),original,'legacy JSON remains readable');
+const restored=decodeStoredJSON(packed);restored.entries.occ.config.artwork.x=90;
+assert.equal(restored.entries.occ.sizeSetups['48x30'].config.artwork.x,23,'mutable layout data stays independent');
+const ring=[1,2,3,4,5].map(i=>({label:'recovery '+i,project:original}));
+assert.deepEqual(decodeStoredJSON(encodeStoredJSON(ring)),ring,'all five recovery states round trip');
+assert.ok(encodeStoredJSON(ring).length<JSON.stringify(ring).length*.15);
+const map=new Map([['ergoflex.buildPresetsV1',before],['ergoflexProjectAutosaveV1',JSON.stringify(ring)],['other','keep']]);
+const storage={getItem:key=>map.get(key),setItem:(key,value)=>map.set(key,value)};
+const result=compactStoredDesigns(storage);
+assert.equal(result.records,2);assert.equal(result.errors,0);assert.ok(result.freed>image.length*8);
+assert.deepEqual(decodeStoredJSON(map.get('ergoflexProjectAutosaveV1')),ring);assert.equal(map.get('other'),'keep');
+assert.equal(compactStoredDesigns(storage).records,0,'migration is idempotent');
+const denied={getItem:()=>before,setItem:()=>{throw new DOMException('denied','SecurityError')}};
+assert.equal(compactStoredDesigns(denied).records,0,'failed migrations preserve the previous record');
+assert.equal(encodeStoredJSON({v:1,p:4}),JSON.stringify({v:1,p:4}),'small settings stay ordinary JSON');
+assert.throws(()=>decodeStoredJSON(JSON.stringify({format:'ergoflex-image-pool-v1',data:{},images:[image],references:[[['missing']]]})),/location/);
+console.log('Lossless artwork pooling preserves size layouts, revisions and all recovery states.');

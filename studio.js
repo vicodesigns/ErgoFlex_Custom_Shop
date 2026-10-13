@@ -7,6 +7,7 @@ import { poseIsClear } from './room-groove.mjs';
 import { SceneDesks } from './scene-desks.mjs?v=preset-size-setups-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
 import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artwork-size-isolation-20261012';
+import { encodeStoredJSON, decodeStoredJSON, compactStoredDesigns } from './browser-design-storage.mjs?v=storage-artwork-pool-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
 import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=obsbot-tiny-2-20261012';
@@ -164,6 +165,9 @@ let cartItems = [];
 // V2 keys: the configuration gained an accessories list. V1 keys are still read
 // once, as a migration, and never written again.
 const SAVED_BUILD_KEY = 'ergoflexSavedBuildV2';
+// Repack legacy records before loading presets. No layouts or recovery states
+// are removed, and a denied write leaves each previous record intact.
+try { if (!EVENT_DEMO) compactStoredDesigns(localStorage); } catch {}
 let buildPresets = cleanBuildPresets(EVENT_DEMO ? null : readStore(BUILD_PRESETS_KEY, 1, null));
 let activeBuildPreset = null, applyingBuildPreset = false, buildPresetTimer = null, buildPresetRun = 0, pendingBuildPresetRestore = null;
 let buildPresetReady = Promise.resolve();
@@ -5840,7 +5844,7 @@ let autosaveTimer = null;
 function readAutosaveRing() {
     try {
         const raw = localStorage.getItem(PROJECT_AUTOSAVE_KEY);
-        const ring = raw ? JSON.parse(raw) : [];
+        const ring = raw ? decodeStoredJSON(raw) : [];
         return Array.isArray(ring) ? ring : [];
     } catch { return []; }
 }
@@ -5856,7 +5860,7 @@ function writeAutosave(label) {
         .slice(0, PROJECT_AUTOSAVE_SLOTS);
     while (ring.length) {
         try {
-            const payload = JSON.stringify(ring);
+            const payload = encodeStoredJSON(ring);
             if (payload.length > PROJECT_AUTOSAVE_BUDGET) { ring.pop(); continue; }
             localStorage.setItem(PROJECT_AUTOSAVE_KEY, payload);
             return true;
@@ -8354,24 +8358,33 @@ function readStore(key, version, fallback) {
     try {
         const raw = localStorage.getItem(key);
         if (!raw) return fallback;
-        const parsed = JSON.parse(raw);
+        const parsed = decodeStoredJSON(raw);
         if (!parsed || typeof parsed !== 'object' || parsed.v !== version) return fallback;
         return parsed;
     } catch { return fallback; }
 }
 // Reported, not swallowed. A quota or private-mode failure here means a preset
 // the user thought they saved is gone on reload, and the existing save paths in
-// this app already say so rather than claiming a save that did not happen. Once
-// per session, because a full quota fails on every write.
+// this app already say so rather than claiming a save that did not happen.
+// Suppress repeated warnings until a write succeeds again.
 let storageWarned = false;
 function writeStore(key, value) {
     try {
-        localStorage.setItem(key, JSON.stringify(value));
+        const payload = encodeStoredJSON(value);
+        try { localStorage.setItem(key, payload); }
+        catch (error) {
+            if (error?.name !== 'QuotaExceededError') throw error;
+            compactStoredDesigns(localStorage);
+            localStorage.setItem(key, payload);
+        }
+        storageWarned = false;
         return true;
-    } catch {
+    } catch (error) {
         if (!storageWarned) {
             storageWarned = true;
-            notifyUser('Browser storage is unavailable, so presets will not survive a reload.');
+            notifyUser(error?.name === 'QuotaExceededError'
+                ? 'Browser storage is full. Your latest edits have not been saved. Use Save project to keep them.'
+                : 'Browser storage could not be written. Use Save project to keep your latest edits.');
         }
         return false;
     }
@@ -10704,7 +10717,7 @@ function notifyUser(message) {
     clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.hidden = true, 4500);
 }
 function persistCart() {
-    try { localStorage.setItem(CART_KEY, JSON.stringify(cartItems)); }
+    try { localStorage.setItem(CART_KEY, encodeStoredJSON(cartItems)); }
     catch { notifyUser('Build list is available for this visit. Browser storage is unavailable.'); }
     updateCartUI();
 }
@@ -11106,7 +11119,7 @@ function initStudio() {
         if (EVENT_DEMO) return null;
         try {
             const raw = localStorage.getItem(v2Key) ?? localStorage.getItem(v1Key);
-            return raw ? JSON.parse(raw) : null;
+            return raw ? decodeStoredJSON(raw) : null;
         } catch { return null; }
     };
     try {
@@ -11148,7 +11161,7 @@ function initStudio() {
     document.getElementById('export-cart').onclick = () => cartItems.length ? downloadEstimate(cartItems) : notifyUser('Add a configuration first.');
     document.getElementById('download-quote').onclick = () => downloadEstimate([{ ...currentConfig, price: configurationPrice(currentConfig), quantity: 1 }]);
     document.getElementById('save-build').onclick = () => {
-        try { localStorage.setItem(SAVED_BUILD_KEY, JSON.stringify(currentConfig)); notifyUser('Build saved with your finishes, size and accessories.'); }
+        try { localStorage.setItem(SAVED_BUILD_KEY, encodeStoredJSON(currentConfig)); notifyUser('Build saved with your finishes, size and accessories.'); }
         catch { notifyUser('Browser storage is unavailable. Download an estimate to keep your build.'); }
     };
     // A saved build outranks the catalog default on every later visit, and there

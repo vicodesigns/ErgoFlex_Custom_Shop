@@ -53,8 +53,8 @@ const server = http.createServer((req, res) => {
   });
   assert.equal(fitted.dark,true,'both screens start dark');assert.equal(fitted.adapters,0,'only supplied CAD brackets remain');
   assert.equal(fitted.gaps.length,2);assert.ok(fitted.gaps.every(v=>v<1e-6),'extended arms stay attached after editing screen position and rotation');
-  await page.waitForFunction(id=>{const saved=JSON.parse(localStorage.getItem('ergoflex.buildPresetsV1')||'{}');return saved.entries?.office?.room?.desks.main.objects[id]?.transform.p.x===170;},{timeout:10000},apple);
-  const office=await page.evaluate(()=>JSON.parse(localStorage.getItem('ergoflex.buildPresetsV1')).entries.office);
+  await page.waitForFunction(async id=>{const {decodeStoredJSON}=await import('/browser-design-storage.mjs');const saved=decodeStoredJSON(localStorage.getItem('ergoflex.buildPresetsV1')||'{}');return saved.entries?.office?.room?.desks.main.objects[id]?.transform.p.x===170;},{timeout:10000},apple);
+  const office=await page.evaluate(async()=>{const {decodeStoredJSON}=await import('/browser-design-storage.mjs');return decodeStoredJSON(localStorage.getItem('ergoflex.buildPresetsV1')).entries.office});
   assert.equal(office.config.trimColor,'#dc0909');assert.equal(office.room.desks.main.objects['accessory-wide-monitor'].transform.p.x,-355.5);assert.equal(office.room.desks.main.lights.color,'#33aa66');
   await page.evaluate(()=>ErgoFlex.applyPreset({id:'artist'}));
   assert.equal(await page.evaluate(id=>ErgoFlex.sceneDesks.active.objects.has(id),apple),false,'Office decorations cannot leak into Artist');
