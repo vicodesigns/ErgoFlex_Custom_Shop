@@ -31,7 +31,8 @@ export const ROOM_DESK_STYLES = {
     university: style('Forest & gold seminar', 'Earthy Forest Green', 'Black', '#f19c00', 'Forest'),
     hospital: style('Clinical white & teal', 'White Birch', 'White', '#004c46', 'Silver'),
     laboratory: style('Neutral research bench', 'Modern Grey', 'White', '#1c1c1e', 'Silver'),
-    mobileit: style('Carbon field workstation', 'Carbon Weave Wrap', 'Space Gray', '#85888c', 'Black')
+    mobileit: style('Carbon field workstation', 'Carbon Weave Wrap', 'Space Gray', '#85888c', 'Black'),
+    occmedialab: style('OCC Coast navy & orange', 'Coast Navy', 'White', '#f99239', 'Silver')
 };
 export function cleanDeskStyle(value) {
     if (!value || !PRODUCT_CONFIG.woodFinishes.some(f => f.name === value.woodFinish) ||

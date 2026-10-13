@@ -2,6 +2,7 @@ import * as government from './institutional-government.mjs?v=scene-desk-styling
 import * as education from './institutional-education.mjs?v=scene-desk-styling-20261010';
 import * as healthcare from './institutional-healthcare.mjs?v=scene-desk-styling-20261010';
 import * as it from './institutional-it.mjs?v=scene-desk-styling-20261010';
+import * as media from './institutional-media.mjs?v=occ-media-lab-20261013';
 
 // Measured public service, education and mobile work settings. Units are mm.
 // Scene IDs intentionally contain only letters, matching saved Groove keys.
@@ -9,7 +10,7 @@ import * as it from './institutional-it.mjs?v=scene-desk-styling-20261010';
 // stations, layout tweaks) and builder hooks; this file only merges them.
 // Columns: id, name, category, caption, kind, wall, accent, [width, depth] of
 // the smallest layout, five activity labels.
-export const INSTITUTIONAL_MODULES = { government, education, healthcare, it };
+export const INSTITUTIONAL_MODULES = { government, education, healthcare, it, media };
 const moduleByScene = Object.fromEntries(Object.values(INSTITUTIONAL_MODULES).flatMap(m => m.SCENES.map(id => [id, m])));
 export function institutionalModule(id) { return moduleByScene[id]; }
 const definitions = [
@@ -24,7 +25,8 @@ const definitions = [
     ['university', 'University classroom', 'Education', 'A mobile teaching station for shared discovery.', 'university', '#e6e7dd', '#285c4b', [10200, 11800], ['Morning lecture', 'Research seminar', 'Evening lecture', 'Graduate study', 'Symposium']],
     ['laboratory', 'Science laboratory', 'Clinical & technical', 'Move between analysis, teaching and experiments.', 'lab', '#dde8e4', '#408d89', [6600, 8000], ['Lab preparation', 'Practical session', 'Analysis', 'Instrument watch', 'Research review']],
     ['hospital', 'Hospital workspace', 'Clinical & technical', 'A mobile documentation station beside the care space.', 'hospital', '#e8efeb', '#608e9d', [6200, 7600], ['Morning rounds', 'Care coordination', 'Evening handover', 'Night observation', 'Team review']],
-    ['mobileit', 'Mobile IT', 'Clinical & technical', 'Bring diagnostics and support to the equipment.', 'it', '#dce3e8', '#467eaa', [5800, 7200], ['System checks', 'Service session', 'Maintenance', 'Overnight monitoring', 'Team deployment']]
+    ['mobileit', 'Mobile IT', 'Clinical & technical', 'Bring diagnostics and support to the equipment.', 'it', '#dce3e8', '#467eaa', [5800, 7200], ['System checks', 'Service session', 'Maintenance', 'Overnight monitoring', 'Team deployment']],
+    ['occmedialab', 'OCC Multimedia Art Lab', 'Educational', 'Make films, mix sound and share your next idea.', 'media', '#e4e7e8', '#ec8b23', [8400, 10800], ['Pre-production', 'Edit & create', 'Sound & colour', 'Screening', 'Portfolio critique']]
 ];
 const phases = ['morning', 'afternoon', 'evening', 'night', 'party'];
 export const EDUCATIONAL_LEVELS = {
@@ -76,8 +78,9 @@ const mergeModes = (modes, extra = {}) => { for (const [phase, values] of Object
 export const INSTITUTIONAL_ROOMS = Object.fromEntries(definitions.map(row => {
     const group = moduleByScene[row[0]], override = group?.sceneOverrides?.[row[0]] || {};
     const [id, name, category, caption, kind, wall, accent, dimensions, labels] = row.map((value, i) => override[['id', 'name', 'category', 'caption', 'kind', 'wall', 'accent', 'dimensions', 'labels'][i]] ?? value);
-    const layouts = Object.fromEntries(['apartment', 'house', 'spacious'].filter(tier => !EDUCATIONAL_LEVELS[id] || EDUCATIONAL_LEVELS[id].includes(tier)).map(tier => {
-        const index = ['apartment', 'house', 'spacious'].indexOf(tier);
+    const tiers = override.tiers || ['apartment', 'house', 'spacious'];
+    const layouts = Object.fromEntries(tiers.filter(tier => !EDUCATIONAL_LEVELS[id] || EDUCATIONAL_LEVELS[id].includes(tier)).map(tier => {
+        const index = tiers.indexOf(tier);
         const width = dimensions[0] + index * 1800, depth = dimensions[1] + index * 2200, back = -depth / 3, desk = [-width / 2 + 1250, back + 1900];
         const layout = { id: tier, index, schoolRows: ({kindergarten:2,elementary:3,middleschool:4,highschool:4,college:5,university:5})[id], desktopSize: index === 0 ? '48x30' : '60x30', name: EDUCATIONAL_LEVELS[id] ? name : ['Small', 'Medium', 'Large'][index] + ' ' + name.toLowerCase(), width, depth,
             height: 3100 + index * 150, back, desk,

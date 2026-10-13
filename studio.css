@@ -313,6 +313,8 @@ body.shell-layout.sidebar-collapsed #config-collapse { position: fixed; top: cal
 .scene-options button[aria-pressed=true] { background: #233d34; color: #fff; border-color: #233d34; box-shadow: 0 2px 6px #1a302322; }
 .scene-dot { width: 13px; height: 13px; border-radius: 3px; border: 1px solid #ffffff80; background: linear-gradient(145deg, #aab7b5 50%, #687d75 50%); }
 .scene-office { background: linear-gradient(135deg, #e3eee6 45%, #8ca799 46%); }
+.scene-occmedialab { background: linear-gradient(135deg, #07326b 60%, #f18a27 61%); }
+.lab-preview-toggle { position:absolute;right:22px;bottom:104px;z-index:25;padding:8px 12px;border:1px solid var(--ui-border,#435966);border-radius:8px;background:var(--ui-soft,#20333c);color:var(--ui-text,#edf4f1);font-size:12px;cursor:pointer; }
 .scene-coworking { background: linear-gradient(135deg, #e8d8bd 45%, #b87962 46%, #6d8781); }
 .scene-library { background: linear-gradient(135deg, #d1c29e 45%, #436c58 46%); }
 .scene-home { background: linear-gradient(135deg, #e9dbc5 45%, #a99c72 46%); }

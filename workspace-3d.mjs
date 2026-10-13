@@ -1,4 +1,4 @@
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=occ-media-lab-20261013';
 import { buildInstitutionalRoom } from './institutional-room.mjs?v=scene-desk-styling-20261010';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { polishRoomProp } from './room-polish.mjs?v=scene-desk-styling-20261010';

@@ -19,7 +19,7 @@ import { RoomInteractions } from './room-interactions.mjs?v=desk-objects-2026101
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261010';
-import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-desk-styling-20261010';
+import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=occ-media-lab-20261013';
 import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
 import { SurfaceArtwork } from './surface-artwork.mjs?v=obsbot-tiny-2-20261012';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
@@ -48,8 +48,8 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=scene-sized-setups-20261012';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=occ-media-lab-20261013';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=occ-media-lab-20261013';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
@@ -710,6 +710,8 @@ function initRoomDeskPeripherals(r) {
     }
     const config=cleanConfig({...currentConfig,size:r.state.size,accessories:r.state.accessories,accessoryFinishes:r.state.accessoryFinishes||{}});
     const set=createSceneAccessorySet(r.rig.mounts,config,()=>r.group.children.find(obj=>obj.isMesh&&String(obj.material?.userData.sceneDeskMaterial).startsWith('wood:'))?.material);
+    const module=institutionalModule(selectedRoomScene),update=set.update;
+    if(module?.peripheralScreens)set.update=()=>{update();module.peripheralScreens(set,r,sceneDesks.ctx.phase());};
     r.peripherals=set;
     set.onLayout=()=>{
         if(sceneDesks.records.get(r.id)!==r||r.peripherals!==set)return;
@@ -10761,6 +10763,8 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     if (floorMesh) floorMesh.visible = choice.id === 'product';
     const shell = document.getElementById('viewer-shell');
     if (shell) shell.dataset.roomScene = choice.id;
+    const labPreview=document.getElementById('lab-preview-toggle'),sceneControls=document.getElementById('scene-controls');
+    if(labPreview){labPreview.hidden=choice.id!=='occmedialab';if(choice.id!=='occmedialab'){sceneControls.hidden=false;labPreview.textContent='Hide lab controls';labPreview.setAttribute('aria-expanded','true');}}
     document.querySelectorAll('[data-room-scene]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.roomScene === pickerId)));
     const caption = document.getElementById('room-scene-caption');
     if (caption) {
@@ -11429,7 +11433,11 @@ function initStudio() {
         });
         return panel;
     });
+    viewerControls.id='scene-controls';
     viewerControls.append(scenes, ...roomControls, roomCaption, interactionHint, objectControls); viewer.append(viewerControls);
+    const labPreview=document.createElement('button');labPreview.type='button';labPreview.id='lab-preview-toggle';labPreview.className='lab-preview-toggle';labPreview.hidden=true;
+    labPreview.textContent='Hide lab controls';labPreview.setAttribute('aria-controls','scene-controls');labPreview.setAttribute('aria-expanded','true');
+    labPreview.onclick=()=>{viewerControls.hidden=!viewerControls.hidden;labPreview.textContent=viewerControls.hidden?'Show lab controls':'Hide lab controls';labPreview.setAttribute('aria-expanded',String(!viewerControls.hidden));if(document.getElementById('camera-view').value==='room'&&workspaceRoom?.root)focusObjects([loadedModel,workspaceRoom.root],{animate:true});};viewer.append(labPreview);
     syncRoomRearrangeUI();
     scenes.querySelector('#room-scene-select').onchange = e => setRoomScene(e.target.value);
     scenes.querySelectorAll('button').forEach(button => button.onclick = () => setRoomScene(button.dataset.roomScene));

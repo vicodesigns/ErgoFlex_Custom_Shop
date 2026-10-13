@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
+import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=occ-media-lab-20261013';
 
 // Authored art, imported GLBs and user transforms are left in their own systems.
 // These finishes apply only to the builders' explicitly tagged room materials.

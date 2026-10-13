@@ -58,7 +58,7 @@ const server = http.createServer((req, res) => {
             assert.equal(await page.$$eval(`button[data-room-scene=${groupId}]`, es => es.length), 1);
             for (const setting of group.settings) assert.equal(await page.$$eval(`button[data-room-scene=${setting}]`, es => es.length), 0);
         }
-        assert.equal(ids.length, 12);
+        assert.equal(ids.length, 13);
         assert.equal(await page.$$eval('#room-scene-select optgroup', es => es.length), 4);
         const review = [], quick = process.argv.includes('--quick');
         for (const id of ids.filter(id => !process.argv.find(a=>a.startsWith('--only=')) || process.argv.find(a=>a.startsWith('--only=')).slice(7).split(',').includes(id))) {
@@ -94,7 +94,7 @@ const server = http.createServer((req, res) => {
                     assert.equal(await page.$eval(`#${id}-room-size`, e => e.hidden), true);
                     assert.equal(await page.$eval(`#${id}-room-controls [data-educational-level]`, e => e.value), id);
                 }
-                assert.ok(data.assets.some(a=>a.name==='Daily planning table'));
+                assert.ok(data.assets.some(a=>a.name===(id==='occmedialab'?'Storyboard & critique table':'Daily planning table')));
                 // Extra ErgoFlex desks: rendered at their own size, registered
                 // as floor colliders and clear of other floor furniture.
                 const specs = registry.stations[id][tier];

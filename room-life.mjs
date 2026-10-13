@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { activityPageMaterial } from './room-activity-print.mjs?v=scene-desk-styling-20261010';
-import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
+import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=occ-media-lab-20261013';
 
 export const DAY_PHASES = ['morning', 'afternoon', 'evening', 'night', 'party'];
 const TIERS = ['apartment', 'house', 'spacious', 'premium', 'executive'];
@@ -254,6 +254,7 @@ export class RoomLife {
     }
     pose(entry, phase) {
         const f = this.factor, scene = this.room.id, p = entry.pivot;
+        if(institutionalModule(scene)?.stableWorkstations&&['main-chair','work-chair'].includes(entry.role))return new THREE.Matrix4();
         const side = p.x > 0 ? -1 : 1;
         // Each role has a use: pulled-out work seat, a turned reading seat,
         // tucked meeting seats, or portable equipment brought into activity.

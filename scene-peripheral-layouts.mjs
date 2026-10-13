@@ -7,9 +7,15 @@ const profiles={
     music:'music',gaming:'gaming',creative:'creative',gallery:'artist',workshop:'architect',
     lounge:'compact',bedroom:'compact',kitchen:'compact',gym:'compact',scifi:'creative',
     security:'office',police:'office',government:'office',hospital:'occ',laboratory:'office',mobileit:'office',
-    kindergarten:'compact',elementary:'compact',middleschool:'compact',highschool:'office',college:'occ',university:'library'
+    kindergarten:'compact',elementary:'compact',middleschool:'compact',highschool:'office',college:'occ',university:'library',occmedialab:'occ'
 };
 export function scenePeripheralRecipe(sceneId,station='main') {
+    if(sceneId==='occmedialab'){
+        if(/sound|audio/.test(station))return 'music';
+        if(/animation|digital-art/.test(station))return 'creative';
+        if(/film-edit|colour/.test(station))return 'office';
+        return 'occ';
+    }
     if(/paint|easel/.test(station))return 'artist';
     if(/draft|architect|drawing/.test(station))return 'architect';
     if(/illustrat|design|diagnostic|analysis/.test(station))return 'creative';
