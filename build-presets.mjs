@@ -1,6 +1,6 @@
-import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=occ-supplied-artwork-20261012';
+import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=obsbot-tiny-2-20261012';
 import { cleanSceneDeskData } from './scene-desk-data.mjs';
-import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=occ-supplied-artwork-20261012';
+import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=obsbot-tiny-2-20261012';
 import { minimumHeightForTilt } from './motion-limits.mjs';
 
 export const BUILD_PRESETS_KEY = 'ergoflex.buildPresetsV1';

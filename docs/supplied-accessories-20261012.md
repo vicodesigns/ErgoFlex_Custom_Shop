@@ -150,3 +150,11 @@ Keyboard tray has a third **Brushed steel / silver** option. OCC upgrades its or
 The supplied MX Master geometry now has separate shell, rubber grip, trim and roller material roles. White finish keeps metallic main and thumb rollers, graphite trim and a softer grey grip. Black restores graphite shell and grip while retaining metal rollers. `node tools/props/refine-mx-master.mjs` separates these existing connected pieces without changing vertices, dimensions or placements; rerun it after a generic conversion of the mouse.
 
 Verification: `tests/accessory-college-options-test.cjs` checks two independent starting views, exact selection/reload restores, preservation during ordinary edits, tray material, contrasting mouse roles and existing artwork persistence. Catalog tests check OCC’s one-time finish migration and reject invalid camera data.
+
+## OBSBOT Tiny 2 webcam / mic
+
+Added the local `/home/ergo/Downloads/obsbot-refined.html` reference as `obsbot-tiny-2` in **Make it yours → Desktop** and the desk/scene object library's **ErgoFlex Collection**. Its geometry and canvas textures are adapted in `tools/props/obsbot-tiny-2-model.mjs`; `tools/props/build-obsbot-tiny-2.mjs` exports and compresses the GLB. The generated reference retains its gimbal, detailed lens, red trim, dual mic openings, rear connector and emissive green status strip. The status strip adds no light to the scene's light budget. This is a decorative model; it does not open a physical camera or microphone.
+
+The envelope is calibrated to 47 × 44 × 62.02 mm from [OBSBOT's Tiny 2 specifications](https://www.obsbot.com/obsbot-tiny-2-4k-webcam/specs), which also confirm built-in dual microphones. Price is **On request**. The accessory starts on the front-left of the upper shelf; **Desk objects** can change its surface, position, rotation and scale. It uses the existing per-preset placement persistence.
+
+`tests/obsbot-webcam-test.cjs` checks selection, loading, size, no added lights, placement edits, reload persistence, object library addition and removal from the build.

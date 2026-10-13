@@ -1,4 +1,4 @@
-import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=preset-camera-metal-20261012';
+import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=obsbot-tiny-2-20261012';
 // Pure catalog and pricing data. No DOM, no Three.js, no module-level mutable
 // state — so the same source is imported by studio.js in the browser and by the
 // test suite in Node. Anything that touches the scene or the page belongs in
@@ -140,6 +140,10 @@ export const SURFACE_TREATMENTS = {
 // Branded dimensions come from the linked manufacturer specification. These
 // are reference models, not manufacturer CAD or an assertion of stock/partnership.
 export const ACCESSORIES = [
+    { id: 'obsbot-tiny-2', name: 'OBSBOT Tiny 2 webcam / mic', brand: 'OBSBOT · TINY 2', category: 'Desktop', visual: 'webcam', propId: 'obsbot-tiny-2', mount: 'shelf',
+      description: 'Compact 4K PTZ webcam with built-in dual microphones. Starts on the upper shelf; move and rotate it in Desk objects.', dimensionsMm: { width: 47, depth: 44, height: 62.02 },
+      source: 'https://www.obsbot.com/obsbot-tiny-2-4k-webcam/specs',
+      price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'dell-u2724d', name: 'Dell UltraSharp 27', brand: 'DELL · U2724D', category: 'Desktop', visual: 'monitor', exclusiveGroup: 'main-display',
       description: '27″ QHD display with a height-adjustable stand.', dimensionsMm: { width: 612.24, depth: 192.28, height: 450 },
       source: 'https://www.delltechnologies.com/asset/en-us/products/electronics-and-accessories/technical-support/dell-ultrasharp-27-monitor-u2724d-datasheet.pdf',

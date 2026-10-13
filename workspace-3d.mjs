@@ -15,7 +15,7 @@ import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-202610
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-camera-metal-20261012';
+import { ACCESSORIES, accessory } from './catalog.mjs?v=obsbot-tiny-2-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
@@ -81,7 +81,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=preset-camera-metal-20261012').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=obsbot-tiny-2-20261012').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -717,6 +717,7 @@ export class WorkspaceAccessories {
         place('drawing-tablet', -210, 0, 35);
         place('shelf-organizer', 0, 0, 0);
         const back = -(this.mounts.get('shelf')?.depth || 480) / 2;
+        place('obsbot-tiny-2', -(this.mounts.get('shelf')?.width || 1100) / 2 + 75, 0, -back - 40);
         place('monitor-arm', 0, 0, back + 28);
         place('monitor-arm-2', 0, 0, back + 28);
         const pair = selected.has('portrait-monitor') && (selected.has('wide-monitor') || selected.has('flat-monitor') || selected.has('dell-u2724d'));

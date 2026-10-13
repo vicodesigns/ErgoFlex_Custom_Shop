@@ -23840,6 +23840,43 @@
     209.04977369174628,
     -11.600678702929443
    ]
+  },
+  {
+   "id": "obsbot-tiny-2",
+   "name": "OBSBOT Tiny 2 webcam / mic",
+   "category": "electronics",
+   "scenes": [
+    "office",
+    "home",
+    "gaming",
+    "music",
+    "coworking",
+    "educational"
+   ],
+   "file": "assets/props/obsbot-tiny-2.glb",
+   "anchor": "floor",
+   "size": [
+    47,
+    62.02,
+    43.999999999999986
+   ],
+   "min": [
+    -23.5,
+    0,
+    -21.999999999999993
+   ],
+   "max": [
+    23.5,
+    62.02,
+    21.999999999999996
+   ],
+   "tris": 21694,
+   "bytes": 232652,
+   "source": "models/ergoflex-supplied/ObsbotTiny2.glb",
+   "license": "unconfirmed",
+   "attribution": "Adapted from local obsbot-refined.html supplied reference",
+   "collection": "ErgoFlex Collection",
+   "revision": "obsbot-tiny-2-20261012"
   }
  ],
  "screens": [
