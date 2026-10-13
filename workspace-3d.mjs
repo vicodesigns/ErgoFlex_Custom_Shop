@@ -1,4 +1,4 @@
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=occ-media-lab-20261013';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=scene-screen-themes-20261013-final';
 import { buildInstitutionalRoom } from './institutional-room.mjs?v=scene-desk-styling-20261010';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { polishRoomProp } from './room-polish.mjs?v=scene-desk-styling-20261010';
@@ -6,7 +6,7 @@ import { RoomLife } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=scene-desk-styling-20261010';
 import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-window-20261011';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
-import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
+import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=groove-routines-20261002';
 import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
@@ -62,7 +62,7 @@ function disposeTree(root) {
             if (!m) continue;
             materials.add(m);
             if (!m.userData.sharedTextures) for (const value of Object.values(m)) {
-                if (value?.isTexture) textures.add(value);
+                if (value?.isTexture && !value.userData.sceneScreenContent) textures.add(value);
             }
         }
     });
@@ -214,7 +214,7 @@ export function createAccessory(item) {
         root.userData.displayMount = new THREE.Vector3(0, 273.745, -24);
         box(panel, [608, 349, 5], [0, 273.745, 2], dark, 2);
         const display = material('#060709', { roughness: .2 });
-        mesh(panel, new THREE.PlaneGeometry(596.74, 335.66), display, [0, 276, 4.6]);
+        mesh(panel, new THREE.PlaneGeometry(596.74, 335.66), display, [0, 276, 4.6]).name='monitor-screen';
         box(panel, [15, 2, 1], [0, 103, 5], silver);
         sphere(panel, [1.5, 1.5, 1], [291, 103, 5], material('#d5efdf', { emissive: '#bce2d2', emissiveIntensity: .5 }));
     } else if (type === 'keyboard') {
@@ -440,8 +440,15 @@ function prepareSuppliedDisplay(root, id) {
     // Displays start with dark glass; shared media temporarily overlays them.
     const screen = panel.getObjectByName('monitor-screen');
     if (screen) {
-        screen.material = new THREE.MeshStandardMaterial({ color: 0x060709, roughness: .2, metalness: .1 });
+        screen.material = new THREE.MeshStandardMaterial({ color: 0x060709, roughness: .2, metalness: .1, side: THREE.DoubleSide });
         screen.userData.sharedProp = false;
+        // The supplied curved export has inward normals despite a two-sided
+        // face. Keep its glass visible and use the actual user-facing side.
+        screen.userData.screenFront = 1;
+        // The chassis bevel projects 0.8 mm beyond the supplied wide glass.
+        // Move only the display face forward, leaving the mount and owner’s
+        // monitor placement untouched.
+        if(id==='ergoflex-wide-monitor')screen.position.z+=.002;
     }
     const texture = screenTexture({ border: true });
     panel.traverse(object => {

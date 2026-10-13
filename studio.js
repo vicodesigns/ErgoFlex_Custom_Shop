@@ -1,3 +1,4 @@
+import { SceneScreens, SCENE_SCREENS_KEY } from './scene-screens.mjs?v=scene-screen-themes-20261013-final2';
 import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261008';
 import { normalizeCustomLook, normalizeCustomPalette, importCustomLooks, CUSTOM_LOOKS_KEY, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
@@ -19,7 +20,7 @@ import { RoomInteractions } from './room-interactions.mjs?v=desk-objects-2026101
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261010';
-import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=occ-media-lab-20261013';
+import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-screen-themes-20261013-final';
 import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
 import { SurfaceArtwork } from './surface-artwork.mjs?v=obsbot-tiny-2-20261012';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
@@ -48,8 +49,8 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=occ-media-lab-20261013';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=occ-media-lab-20261013';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=scene-screen-themes-20261013-final';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=scene-screen-themes-20261013-final5';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
@@ -74,6 +75,7 @@ const TOUCHSCREEN_EXTENDED_URL = './assets/motion/touchscreenExtended.glb?v=publ
 const TOUCHSCREEN_WIDE_URL = './assets/motion/touchscreenExtendedForWideDesktop.glb?v=public-plates-controls-20260930';
 const touchscreenDisplay = new TouchscreenDisplay();
 let touchscreenTexture = null, touchscreenDrawAt = 0;
+let sceneScreens = null;
 const roomSafety = new RoomSafety();
 const LED_MODEL_URL = './assets/motion/LEDS.glb?v=public-plates-controls-20260930';
 const WIDE_DESKTOP_LED_URL = './assets/motion/LEDSforWideDesktop.glb?v=public-plates-controls-20260930';
@@ -700,8 +702,51 @@ function initSceneDeskEditing() {
         sync:refresh
     });
     sceneDesks.objects.editing=roomRearrangeMode==='items';
-    if(workspaceAccessories)workspaceAccessories.onLayout=()=>sceneDesks.objects.syncAccessories();
+    if(workspaceAccessories)workspaceAccessories.onLayout=()=>{sceneDesks.objects.syncAccessories();sceneScreens?.update(true);};
 }
+function initSceneScreenControls(toolbar) {
+    const panel=document.createElement('details');panel.className='render-settings scene-screen-controls';panel.id='scene-screen-controls';
+    panel.innerHTML='<summary>Screens</summary><div><label class="check-label"><input id="scene-screens-enabled" type="checkbox"><span>Scene screens on</span></label><p>Content follows the environment and time setting. Click a screen to switch it on or off when Rearrange is off.</p><label>Display<select id="scene-screen-select" aria-label="Choose screen"></select></label><label class="check-label"><input id="scene-screen-enabled" type="checkbox"><span>Selected screen on</span></label><button type="button" id="scene-screen-focus">View selected screen</button><button type="button" id="scene-screen-click-mode" title="Turns off desk and item rearranging">Enable screen clicks</button><button type="button" id="scene-screens-all-on">All screens on</button><button type="button" id="scene-screens-all-off">All screens off</button><p id="scene-screens-status" role="status"></p></div>';
+    toolbar.append(panel);
+    const select=panel.querySelector('#scene-screen-select'),enabled=panel.querySelector('#scene-screens-enabled'),single=panel.querySelector('#scene-screen-enabled');let revision=-1;
+    sceneScreens=new SceneScreens({
+        context:()=>{const p=measuredRoomProfile();return {scene:selectedRoomScene,layout:p?.layout.id||'product',phase:p?.mode||'morning',label:p?.modes[p.mode]?.label,preset:activeBuildPreset};},
+        room:()=>workspaceRoom,
+        sources:()=>{
+            const records=[...sceneDesks?.records.values()||[]],sources=[];
+            for(const r of records){const set=r.product?workspaceAccessories:r.peripherals;for(const [id,root] of set?.items||[])sources.push({root,id,key:`${r.id}:${r.state.size}`,label:r.state.name||'Desk',role:r.spec?.role||''});for(const [id,item] of r.objects||[])if(!item.saved.removed)sources.push({root:item.obj,id,key:`${r.id}:${r.state.size}`,label:r.state.name||'Desk',role:r.spec?.role||''});}
+            if(!records.length)for(const [id,root] of workspaceAccessories?.items||[])sources.push({root,id,key:`main:${currentConfig.size}`,label:'Main desk',role:''});
+            return sources;
+        },
+        save:value=>writeStore(SCENE_SCREENS_KEY,value),notify:notifyUser,
+        sync:manager=>{
+            enabled.checked=manager.enabled();
+            panel.querySelector('#scene-screen-focus').disabled=!manager.entries.length;
+            const clickMode=panel.querySelector('#scene-screen-click-mode');clickMode.disabled=roomRearrangeMode==='off'&&!isSelectionMode&&!rigPickMode&&!isPickingPivot&&!surfaceArtwork?.picking;clickMode.textContent=clickMode.disabled?'Screen clicks enabled':'Enable screen clicks';
+            if(revision!==manager.revision){revision=manager.revision;select.replaceChildren(...manager.entries.map(e=>{const option=document.createElement('option');option.value=e.key;option.textContent=e.label;return option;}));}
+            select.value=manager.selected;select.disabled=!manager.entries.length;
+            single.checked=manager.enabled()&&!manager.settings.off[manager.selected];single.disabled=!manager.enabled()||!manager.entries.length;
+            const shown=manager.entries.filter(e=>manager.enabled()&&!manager.settings.off[e.key]).length;
+            panel.querySelector('#scene-screens-status').textContent=manager.entries.length?`${shown} of ${manager.entries.length} screens on · saves with your project`:'No displays in this setup. Add a monitor from Desk objects or Accessories.';
+        }
+    },readStore(SCENE_SCREENS_KEY,1,{v:1}));
+    panel.querySelector('#scene-screen-focus').onclick=()=>{
+        const e=sceneScreens.entries.find(e=>e.key===sceneScreens.selected);if(!e)return;panel.open=false;
+        const viewer=document.getElementById('scene-controls'),toggle=document.getElementById('lab-preview-toggle');viewer.hidden=true;toggle.hidden=false;toggle.textContent=selectedRoomScene==='occmedialab'?'Show lab controls':'Show scene controls';toggle.setAttribute('aria-expanded','false');
+        requestAnimationFrame(()=>{syncViewerSize();e.obj.updateWorldMatrix(true,true);const center=new THREE.Box3().setFromObject(e.obj).getCenter(new THREE.Vector3()),normal=new THREE.Vector3(),normals=e.obj.geometry.attributes.normal;
+            if(e.obj.name==='monitor-screen'&&normals)for(let i=0;i<normals.count;i++)normal.add(new THREE.Vector3().fromBufferAttribute(normals,i));
+            if(e.obj.userData.screenFront)normal.set(0,0,e.obj.userData.screenFront);else if(normal.lengthSq()<.001)normal.set(0,0,1);normal.normalize().transformDirection(e.obj.matrixWorld);
+            controls.minDistance=.01;camera.position.copy(center).addScaledVector(normal,1);controls.target.copy(center);focusObjects([e.obj],{animate:true});
+        });
+    };
+    panel.querySelector('#scene-screen-click-mode').onclick=()=>{isSelectionMode=false;if(selectionModeToggle)selectionModeToggle.checked=false;rigPickMode=null;isPickingPivot=false;if(surfaceArtwork){surfaceArtwork.picking=false;surfaceArtwork.syncUI();}document.querySelector('input[name=transform_mode][value=none]')?.click();setRoomRearrangeMode('off');sceneScreens.update(true);notifyUser('Screen clicks enabled. Click the glass to switch a display on or off.');};
+    enabled.onchange=()=>sceneScreens.setEnabled(enabled.checked);
+    select.onchange=()=>{sceneScreens.selected=select.value;sceneScreens.update(true);};
+    single.onchange=()=>sceneScreens.setScreen(select.value,single.checked);
+    panel.querySelector('#scene-screens-all-on').onclick=()=>sceneScreens.allOn();
+    panel.querySelector('#scene-screens-all-off').onclick=()=>sceneScreens.setEnabled(false);
+}
+
 function initRoomDeskPeripherals(r) {
     if(r.product||!r.rig)return;
     seedScenePeripherals(r.state,selectedRoomScene,r.spec?.id||'main');
@@ -725,7 +770,7 @@ function initRoomDeskPeripherals(r) {
                 transform:{p:{x:obj.position.x,y:obj.position.y,z:obj.position.z},q:{x:obj.quaternion.x,y:obj.quaternion.y,z:obj.quaternion.z,w:obj.quaternion.w},s:{x:1,y:1,z:1}}};
             sceneDesks.objects.register(r,key,obj,saved,new THREE.Vector3(1,1,1));
         }
-        set.update();sceneDesks.sync();
+        set.update();sceneDesks.sync();sceneScreens?.update(true);
     };
     set.sync(config);
     sceneDesks.objects.ready=Promise.all([sceneDesks.objects.ready,set.ready]).then(()=>{if(r.peripherals===set)set.onLayout();});
@@ -2447,6 +2492,7 @@ function updateBoxSelectHint() {
 }
 
 function onCanvasClick(event) {
+    if(roomRearrangeMode==='off'&&!isSelectionMode&&!rigPickMode&&!isPickingPivot&&!surfaceArtwork?.picking&&!isDraggingTransform&&sceneScreens?.click(event,camera,canvas,[workspaceRoom?.root,loadedModel,...workspaceAccessories?.objects()||[]]))return;
     if(sceneDesks?.objects.click(event))return;
     if(roomRearrangeMode!=='items'&&!isSelectionMode&&!rigPickMode&&!isPickingPivot&&!surfaceArtwork?.picking){const picked=sceneDesks?.pick(event);if(picked?.id&&picked.id!==sceneDesks.selected){sceneDesks.select(picked.id);return;}}
     if (surfaceArtwork?.handlePick(event, camera, canvas, interactableObjects)) return;
@@ -4282,6 +4328,7 @@ function serializeProject() {
             // a project shared between machines should not rearrange the editor.
             presentation: {
                 surfaceFinish,
+                sceneScreens: sceneScreens?.export(),
                 sceneDeskStyles: JSON.parse(JSON.stringify(sceneDeskStyles)),
                 sceneDesks: sceneDeskState,
                 buildPresets: cleanBuildPresets(buildPresets),
@@ -4634,6 +4681,7 @@ function applyConfigToUI() {
 
 function applyProjectPresentation(project) {
     const presentation = project.presentation || {};
+    if(presentation.sceneScreens!==undefined)sceneScreens?.restore(presentation.sceneScreens);
     // Importing a project must not overwrite the previously selected recipe.
     pendingPresetArtwork = null;
     activeBuildPreset = null;
@@ -10218,6 +10266,7 @@ function animate(time, frame) {
         ledMusic.syncUI(true);
     }
     if (camera && !liveAR?.active) workspaceRoom?.update(camera);
+    sceneScreens?.update();
     syncSafetyUI();
     if(time-touchscreenDrawAt>100){touchscreenDrawAt=time;updateTouchscreenDisplay();}
     roomLedSpill.update(workspaceRoom,ledPixels,{enabled:ledsEnabled&&!liveAR?.active,colour:ledFrameColor,gain:roomLedGain});
@@ -10764,7 +10813,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     const shell = document.getElementById('viewer-shell');
     if (shell) shell.dataset.roomScene = choice.id;
     const labPreview=document.getElementById('lab-preview-toggle'),sceneControls=document.getElementById('scene-controls');
-    if(labPreview){labPreview.hidden=choice.id!=='occmedialab';if(choice.id!=='occmedialab'){sceneControls.hidden=false;labPreview.textContent='Hide lab controls';labPreview.setAttribute('aria-expanded','true');}}
+    if(labPreview){labPreview.hidden=choice.id==='product';if(choice.id!=='occmedialab'){sceneControls.hidden=false;labPreview.textContent='Hide scene controls';labPreview.setAttribute('aria-expanded','true');}}
     document.querySelectorAll('[data-room-scene]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.roomScene === pickerId)));
     const caption = document.getElementById('room-scene-caption');
     if (caption) {
@@ -11343,6 +11392,7 @@ function initStudio() {
     const paletteButton = document.createElement('button'); paletteButton.id = 'room-desk-palette'; paletteButton.type = 'button';
     paletteButton.textContent = 'Scene palette'; paletteButton.hidden = true; paletteButton.onclick = resetSceneDeskStyle;
     toolbar.append(paletteButton);
+    initSceneScreenControls(toolbar);
     const ceilingControl = document.createElement('label'); ceilingControl.id = 'room-ceiling-control'; ceilingControl.hidden = true;
     ceilingControl.className = 'check-label';
     ceilingControl.title = 'Ceiling is visible inside the room and cuts away when viewed from above.';
@@ -11437,7 +11487,7 @@ function initStudio() {
     viewerControls.append(scenes, ...roomControls, roomCaption, interactionHint, objectControls); viewer.append(viewerControls);
     const labPreview=document.createElement('button');labPreview.type='button';labPreview.id='lab-preview-toggle';labPreview.className='lab-preview-toggle';labPreview.hidden=true;
     labPreview.textContent='Hide lab controls';labPreview.setAttribute('aria-controls','scene-controls');labPreview.setAttribute('aria-expanded','true');
-    labPreview.onclick=()=>{viewerControls.hidden=!viewerControls.hidden;labPreview.textContent=viewerControls.hidden?'Show lab controls':'Hide lab controls';labPreview.setAttribute('aria-expanded',String(!viewerControls.hidden));if(document.getElementById('camera-view').value==='room'&&workspaceRoom?.root)focusObjects([loadedModel,workspaceRoom.root],{animate:true});};viewer.append(labPreview);
+    labPreview.onclick=()=>{viewerControls.hidden=!viewerControls.hidden;labPreview.textContent=viewerControls.hidden?(selectedRoomScene==='occmedialab'?'Show lab controls':'Show scene controls'):(selectedRoomScene==='occmedialab'?'Hide lab controls':'Hide scene controls');labPreview.setAttribute('aria-expanded',String(!viewerControls.hidden));if(document.getElementById('camera-view').value==='room'&&workspaceRoom?.root)focusObjects([loadedModel,workspaceRoom.root],{animate:true});};viewer.append(labPreview);
     syncRoomRearrangeUI();
     scenes.querySelector('#room-scene-select').onchange = e => setRoomScene(e.target.value);
     scenes.querySelectorAll('button').forEach(button => button.onclick = () => setRoomScene(button.dataset.roomScene));
@@ -11620,6 +11670,7 @@ function initStudio() {
 
 // Small console API for setup & testing (open DevTools and type `ErgoFlex.`)
 window.ErgoFlex = {
+    get sceneScreens(){return sceneScreens;},
     setTouchscreenOpen,
     get touchscreenOpen() { return screenTarget > 0.5; },
     get touchscreenProgress() { return screenProgress; },

@@ -257,24 +257,7 @@ export function peripheralScreens(set,record,phase){
         if(obj.userData.mediaSpeakerPair)for(const child of obj.children)child.position.x=child.userData.mediaSpeakerSide*(record.state.size==='60x30'?660:470);
         if(obj.userData.mediaDeskBadge)obj.children[0].position.x=(record.state.size==='60x30'?762:610)-105;
     });
-    const audio=/sound/.test(record.spec?.role||''),art=/art|animation|colour/.test(record.spec?.role||'');
-    for(const [id,root] of set.items){
-        const screen=root.getObjectByName('monitor-screen');if(!screen?.isMesh)continue;
-        let own=screen.userData.mediaLabScreen;
-        if(!own){
-            const variant=audio?2:art||id==='portrait-monitor'?1:0;
-            const map=institutionalMap((c,W,H)=>drawScreen(c,W,H,null,variant,phase),768,432);
-            if(id==='portrait-monitor'){map.center.set(.5,.5);map.rotation=-Math.PI/2;}
-            own=screen.userData.mediaLabScreen={map,phase,variant};
-        }
-        // Captured tab/screen video takes priority over this simulated project.
-        if(screen.material.map&&screen.material.map!==own.map)continue;
-        if(own.phase!==phase){drawScreen(own.map.image.getContext('2d'),768,432,null,own.variant,phase);own.map.needsUpdate=true;own.phase=phase;}
-        if(screen.material.map!==own.map){
-            screen.material.map=own.map;screen.material.color.set('#ffffff');screen.material.emissiveMap=own.map;screen.material.emissive.set('#d2e5ff');screen.material.needsUpdate=true;
-        }
-        screen.material.emissiveIntensity=phase==='night'?.24:.1;
-    }
+
 }
 export const stageAnchor = l => ({at:l.activity,y:740,offset:[90,-80],support:'activity-table',small:true});
 export function stageKit({h,m,g,y}){h.box(g,[80,18,55],[150,y+9,50],m.ink,5);for(let n=0;n<3;n++)h.box(g,[13,2,26],[126+n*23,y+20,50],m.brass,1);}

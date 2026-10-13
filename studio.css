@@ -648,3 +648,11 @@ body:not(.setup-layout) .camera-shortcuts { display: none; }
 .artwork-sample-grid [data-art-sample="occ-title"] img { background: #002d6a; }
 .artwork-samples > [data-art-occ-look] { width: 100%; background: #002d6a; color: #fff; border-color: #f99239; }
 .artwork-samples[aria-label="Orange Coast College samples"] .artwork-sample-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Screen content and power controls stay readable beside the room tools. */
+.scene-screen-controls > div { width: 310px; max-width: calc(100vw - 48px); left: 0; right: auto; max-height: min(520px, 45vh); }
+.scene-screen-controls p { margin: 0; font-size: 13px; line-height: 1.5; }
+.scene-screen-controls label.check-label { display: flex; align-items: center; gap: 8px; }
+.scene-screen-controls select { width: 100%; min-width: 0; max-width: none; }
+.scene-screen-controls input[type=checkbox] { accent-color: #91daba; }
+.scene-screen-controls button { min-height: 34px; }

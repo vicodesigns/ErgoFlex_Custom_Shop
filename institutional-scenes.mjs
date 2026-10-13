@@ -2,7 +2,7 @@ import * as government from './institutional-government.mjs?v=scene-desk-styling
 import * as education from './institutional-education.mjs?v=scene-desk-styling-20261010';
 import * as healthcare from './institutional-healthcare.mjs?v=scene-desk-styling-20261010';
 import * as it from './institutional-it.mjs?v=scene-desk-styling-20261010';
-import * as media from './institutional-media.mjs?v=occ-media-lab-20261013';
+import * as media from './institutional-media.mjs?v=scene-screen-themes-20261013-final';
 
 // Measured public service, education and mobile work settings. Units are mm.
 // Scene IDs intentionally contain only letters, matching saved Groove keys.

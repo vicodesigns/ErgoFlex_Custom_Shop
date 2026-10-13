@@ -201,7 +201,7 @@ export function buildScifiRoom(room, root, layout, helpers) {
     const consoleX=tier>=3?-w/2+4800:tier?-w/2+1050:lockerAt[0]+450+40+cw/2;
     const console=group('mission-console','Mission navigation display',[consoleX,1900,bz+90],0,back);
     const screenCanvas=document.createElement('canvas');screenCanvas.width=1024;screenCanvas.height=640;const screenMap=new THREE.CanvasTexture(screenCanvas);screenMap.colorSpace=THREE.SRGBColorSpace;
-    box(console,[cw,ch,85],[0,0,0],dark,12);box(console,[cw-110,ch-130,6],[0,0,47],new THREE.MeshBasicMaterial({map:screenMap}));strip(console,[cw-160,10,10],[0,-ch/2+45,53]);
+    box(console,[cw,ch,85],[0,0,0],dark,12);box(console,[cw-110,ch-130,6],[0,0,47],new THREE.MeshBasicMaterial({map:screenMap})).material.userData.sceneDisplay='native';strip(console,[cw-160,10,10],[0,-ch/2+45,53]);
     for(const sx of [-1,1]){strip(console,[10,ch-260,10],[sx*(cw/2+16),0,20],1);for(const sy of [-1,1]){const g=box(console,[90,90,95],[sx*(cw/2-12),sy*(ch/2-12),0],pale,4);g.rotation.z=Math.PI/4;}}
     box(console,[cw*.55,36,70],[0,-ch/2-14,10],pale,6);for(let i=0;i<4;i++)box(console,[12,12,6],[-cw*.25+i*28,-ch/2-14,47],leds[i%2?1:0]);
     const service=group('service-counter','Equipment console and storage',[layout.service[0],0,layout.service[1]],Math.PI/2);
@@ -211,7 +211,7 @@ export function buildScifiRoom(room, root, layout, helpers) {
     strip(service,[1690,8,12],[0,810,379]);
     // Telemetry riser, slanted control deck and a holo projector on the counter.
     const teleCanvas=document.createElement('canvas');teleCanvas.width=1024;teleCanvas.height=256;const teleMap=new THREE.CanvasTexture(teleCanvas);teleMap.colorSpace=THREE.SRGBColorSpace;
-    box(service,[1780,340,90],[0,1070,-340],dark,6);mesh(service,new THREE.PlaneGeometry(1200,300),new THREE.MeshBasicMaterial({map:teleMap}),[-180,1072,-294]).castShadow=false;
+    box(service,[1780,340,90],[0,1070,-340],dark,6);const telemetry=mesh(service,new THREE.PlaneGeometry(1200,300),new THREE.MeshBasicMaterial({map:teleMap}),[-180,1072,-294]);telemetry.castShadow=false;telemetry.material.userData.sceneDisplay='native';
     box(service,[1800,30,130],[0,1255,-330],pale,6);strip(service,[1650,8,10],[0,1238,-280],1);
     for(const x of [-855,855])box(service,[40,320,40],[x,1070,-290],pale,4);
     // The cutaway exposes the service side: access hatches, vents and wall feeds.
