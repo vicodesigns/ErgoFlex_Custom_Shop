@@ -24,3 +24,14 @@ assert.equal(compactStoredDesigns(denied).records,0,'failed migrations preserve 
 assert.equal(encodeStoredJSON({v:1,p:4}),JSON.stringify({v:1,p:4}),'small settings stay ordinary JSON');
 assert.throws(()=>decodeStoredJSON(JSON.stringify({format:'ergoflex-image-pool-v1',data:{},images:[image],references:[[['missing']]]})),/location/);
 console.log('Lossless artwork pooling preserves size layouts, revisions and all recovery states.');
+
+const scene = {objects:Object.fromEntries(Array.from({length:12},(_,i)=>['accessory-'+i,{role:'desktop',label:'Object '+i,transform:{p:{x:i*30,y:0,z:90},q:{x:0,y:0,z:0,w:1},s:{x:1,y:1,z:1}}}]))};
+const manyScenes={rooms:Object.fromEntries(Array.from({length:100},(_,i)=>['room-'+i,{desks:{main:structuredClone(scene),secondary:structuredClone(scene)}}]))};
+const scenePacked=encodeStoredJSON(manyScenes);
+assert.ok(scenePacked.length<JSON.stringify(manyScenes).length*.2,'repeated scene setups fit in browser storage');
+const decodedScenes=decodeStoredJSON(scenePacked);assert.deepEqual(decodedScenes,manyScenes);
+decodedScenes.rooms['room-0'].desks.main.objects['accessory-0'].transform.p.x=999;
+assert.equal(decodedScenes.rooms['room-0'].desks.secondary.objects['accessory-0'].transform.p.x,0);
+assert.equal(decodedScenes.rooms['room-1'].desks.main.objects['accessory-0'].transform.p.x,0);
+assert.equal(JSON.stringify(manyScenes.rooms['room-0'].desks.main),JSON.stringify(scene));
+console.log('Repeated scene setups pool losslessly without sharing mutable object transforms.');

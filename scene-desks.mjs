@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { cleanSceneDeskData, cleanDeskRecording, sampleDeskRecording, SCENE_DESKS_KEY } from './scene-desk-data.mjs';
+import { cleanSceneDeskData, cleanDeskRecording, sampleDeskRecording, seedSceneDeskSize, SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { SceneDeskObjects } from './scene-desk-objects.mjs?v=rearrange-targets-20261012';
 
 const descendant=(o,parent)=>{for(let p=o;p;p=p.parent)if(p===parent)return true;return false;};
@@ -27,7 +27,7 @@ export class SceneDesks {
             this.ctx.restoreProductAccessories?.(this.data.productAccessories);
         }
     }
-    persist(){this.capture();this.ctx.writeStore?.(SCENE_DESKS_KEY,cleanSceneDeskData(this.data));this.ctx.changed?.();}
+    persist(){this.capture();const saved=this.ctx.writeStore?.(SCENE_DESKS_KEY,cleanSceneDeskData(this.data))!==false;this.ctx.changed?.(saved);return saved;}
     capture(){
         if(!this.key||!this.roomData)return;
         if(this.active?.product)this.data.productAccessories=this.ctx.selectedAccessories();
@@ -41,7 +41,7 @@ export class SceneDesks {
     }
     dispose(){
         this.stop();this.objects.endDrag();this.objects.selected=null;this.endDrag();this.capture();
-        for(const r of this.records.values()){if(r.rig){if(r.group)this.ctx.unregisterBody?.(r.group);this.ctx.disposeDress?.(r);}r.rig?.dispose();}
+        for(const r of this.records.values()){r.peripherals?.dispose();if(r.rig){if(r.group)this.ctx.unregisterBody?.(r.group);this.ctx.disposeDress?.(r);}r.rig?.dispose();}
         this.records.clear();this.selected=null;this.key=null;this.highlight.visible=false;
     }
     bind(room){
@@ -59,6 +59,7 @@ export class SceneDesks {
         this.data.rooms[this.key]||={desks:{},deleted:[],selected:'main'};
         const saved=this.roomData;
         const mainSeed=this.ctx.readLive();
+        if(this.ctx.defaultLights)mainSeed.lights=this.ctx.defaultLights(mainSeed.lights);
         const mainState=saved.desks.main||{...mainSeed,name:'Main desk',added:false,phases:{}};
         if(!saved.deleted.includes('main'))this.records.set('main',{id:'main',state:mainState,primary:true});
         for(const group of room.assets().filter(o=>o.userData.officeStation)){
@@ -70,7 +71,7 @@ export class SceneDesks {
             const state=saved.desks[id]||{name:spec.name,size:spec.size||'48x30',pose:{x:group.position.x,z:group.position.z,yaw:group.rotation.y},
                 height:spec.height,tilt:spec.tilt,lights:clone(mainSeed.lights),style:group.userData.deskStyle,added:false,phases:{}};
             this.records.set(id,{id,state,group,spec});
-            if(saved.desks[id])this.ensureRig(this.records.get(id));
+            this.ensureRig(this.records.get(id));
             this.place(this.records.get(id));
         }
         for(const [id,state] of Object.entries(saved.desks)){
@@ -79,7 +80,7 @@ export class SceneDesks {
             }
         }
         // Seed the main anchor with the current model before applying a stored pose.
-        if(this.records.has('main')){const r=this.records.get('main');this.ensureRig(r);if(!saved.desks.main)Object.assign(r.state,this.ctx.readLive(r));}
+        if(this.records.has('main')){const r=this.records.get('main');this.ensureRig(r);if(!saved.desks.main){const {pose,height,tilt}=this.ctx.readLive(r);Object.assign(r.state,{pose,height,tilt});}}
         this.selected=this.records.has(saved.selected)?saved.selected:this.records.keys().next().value||null;
         if(this.active){this.ensureRig(this.active);this.ctx.activate?.(this.active);this.ctx.writeLive(this.active);this.active.rig.setBodyVisible(false);}
         for(const r of this.records.values())if(r.rig)r.rig.setBodyVisible(r.id!==this.selected);
@@ -92,7 +93,10 @@ export class SceneDesks {
         const group=rig.group;group.name=r.state.name+' · ErgoFlex desk';
         r.metadata||=old?.userData||{};
         group.userData={...r.metadata,sceneDeskId:r.id,sceneDeskManaged:true};
-        if(old){
+        if(r.resizeDress){
+            for(const [role,children] of Object.entries(r.resizeDress))if(rig.mounts[role])for(const child of children)rig.mounts[role].add(child);
+            delete r.resizeDress;
+        }else if(old){
             // Transfer the existing role dressing, with its editor IDs and props.
             for(const role of ['desktop','shelf']){
                 const m=old.children.find(o=>o.isGroup&&o.name.endsWith(':'+role));
@@ -102,7 +106,7 @@ export class SceneDesks {
         }else if(r.primary){
             this.ctx.copyMainDress?.(rig.mounts);
         }
-        r.rig=rig;r.renderedStyle=JSON.stringify(r.state.style);r.group=group;this.ctx.room().root.add(group);this.ctx.registerBody?.(group);this.place(r);this.objects.bind(r);return rig;
+        r.rig=rig;r.renderedStyle=JSON.stringify(r.state.style);r.group=group;this.ctx.room().root.add(group);this.ctx.registerBody?.(group);this.place(r);this.objects.bind(r);this.ctx.decorateDesk?.(r);return rig;
     }
     place(r){
         if(!r.group)return;
@@ -160,27 +164,40 @@ export class SceneDesks {
     setSize(size){
         if(!this.active||!['48x30','60x30'].includes(size))return false;
         if(this.active.product && this.ctx.resizeProductPreset?.(size))return true;
+        if(this.active.state.size===size)return true;
         this.stop();this.ctx.halt();this.capture();
-        const before=this.serialize(),r=this.active;r.state.size=size;
+        const before=this.serialize(),r=this.active;
         if(r.product){this.ctx.resizeProduct(size);this.persist();this.ctx.edit?.(before,this.serialize());this.sync();return true;}
-        const dressing={};for(const [role,mount] of Object.entries(r.rig?.mounts||{}))dressing[role]=[...mount.children];
+        const {name,added,sizeSetups={},...outgoing}=r.state;
+        const kept={...sizeSetups,[outgoing.size]:clone(outgoing)};
+        const next=kept[size]||this.ctx.seedDeskSize?.(r,outgoing,size)||seedSceneDeskSize(outgoing,size);
+        if(!next)return false;
+        delete kept[size];
+        r.peripherals?.dispose();r.peripherals=null;r.peripheralConfig=null;
+        r.resizeDress={};
+        for(const [role,mount] of Object.entries(r.rig?.mounts||{}))r.resizeDress[role]=[...mount.children].filter(child=>{
+            const item=r.objects?.get(child.userData.deskObject?.id);
+            if(item?.saved.added&&(!next.objects[item.id]?.added||next.objects[item.id]?.removed)){
+                this.ctx.disposeObject?.(child);return false;
+            }
+            return true;
+        });
+        r.state={...clone(next),name,added,sizeSetups:kept};r.objects=null;r.poseAt=null;
         this.ctx.unregisterBody?.(r.group);r.rig?.dispose();r.rig=null;r.group=null;
         this.ensureRig(r);
-        for(const [role,children] of Object.entries(dressing))if(r.rig.mounts[role]){
-            r.rig.mounts[role].clear();for(const child of children)r.rig.mounts[role].add(child);
-        }
-        this.ctx.writeLive(r);r.rig.setBodyVisible(false);this.persist();this.ctx.edit?.(before,this.serialize());this.sync();return true;
+        this.ctx.activate?.(r);this.ctx.writeLive(r);r.rig.setBodyVisible(false);this.persist();this.ctx.edit?.(before,this.serialize());this.sync();return true;
     }
     add(size='48x30'){
         if(!this.roomData||this.records.size>=24)return false;
         this.stop();this.capture();const before=this.serialize(),state=clone(this.active?.state||this.ctx.readLive());
         const pose=this.ctx.freePosition(size);if(!pose){this.ctx.status('There is no clear space for another desk. Rearrange items first.');return false;}
         const id='added-'+crypto.randomUUID();Object.assign(state,{name:'Desk '+(this.records.size+1),size,pose,added:true,phases:{},objects:{}});
+        delete state.sizeSetups;delete state.peripheralSetup;
         const r={id,state};this.records.set(id,r);this.ensureRig(r);this.place(r);this.select(id);this.ctx.edit?.(before,this.serialize());return id;
     }
     remove(){
         const r=this.active;if(!r)return false;
-        this.stop();this.ctx.halt();this.capture();const before=this.serialize();if(r.group)this.ctx.unregisterBody?.(r.group);this.ctx.disposeDress?.(r);r.rig?.dispose();r.group?.removeFromParent();
+        this.stop();this.ctx.halt();this.capture();const before=this.serialize();r.peripherals?.dispose();if(r.group)this.ctx.unregisterBody?.(r.group);this.ctx.disposeDress?.(r);r.rig?.dispose();r.group?.removeFromParent();
         delete this.roomData.desks[r.id];if(!r.state.added)this.roomData.deleted.push(r.id);
         this.records.delete(r.id);this.selected=null;
         const id=this.records.keys().next().value;
@@ -200,7 +217,7 @@ export class SceneDesks {
             const recording=r.state.phases[phase]?.recording||[];
             r.state.phases[phase]={pose:clone(r.state.pose),height:r.state.height,tilt:r.state.tilt,lights:clone(r.state.lights),recording};
         }
-        this.persist();this.ctx.edit?.(before,this.serialize());this.sync();this.ctx.status(all?'All desk positions and lights saved for this setting.':'Selected desk position and lights saved for this setting.');return true;
+        const saved=this.persist();this.ctx.edit?.(before,this.serialize());this.sync();this.ctx.status(saved?(all?'All desk positions and lights saved for this setting.':'Selected desk position and lights saved for this setting.'):'Could not save this setting. Use Save project to keep your edits.');return saved;
     }
     record(){
         if(!this.active||this.recording)return false;
@@ -264,7 +281,7 @@ export class SceneDesks {
             if(!playing&&this.active.poseAt!==poseAt){this.active.rig?.updatePose(this.active.state.height,this.active.state.tilt);this.active.poseAt=poseAt;}
             this.highlight.box.copy(this.ctx.liveBox());this.highlight.visible=!this.active.product&&this.ctx.rearrange();
         }
-        for(const r of this.records.values())this.objects.phase(r);
+        for(const r of this.records.values()){this.objects.phase(r);r.peripherals?.update();}
         this.ctx.updateLights?.(dt);this.saveElapsed+=dt;if(this.saveElapsed>=1&&!playing){this.saveElapsed=0;this.capture();this.ctx.writeStore?.(SCENE_DESKS_KEY,cleanSceneDeskData(this.data));this.sync();}
     }
     sync(){this.ctx.sync?.(this);}

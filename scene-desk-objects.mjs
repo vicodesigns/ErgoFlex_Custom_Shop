@@ -17,11 +17,13 @@ export class SceneDeskObjects {
         if(r.objects)return;
         r.objects=new Map();r.state.objects||={};
         for(const [role,mount] of Object.entries(r.rig.mounts))for(const [i,obj] of [...mount.children].entries()){
-            const id='default-'+role+'-'+i;
+            if(obj.userData.transientGameScreen)continue;
+            const identity=obj.userData.deskObject;
+            const id=identity?.desk===r.id?identity.id:'default-'+role+'-'+i;
             const saved=r.state.objects[id]||{role,added:false,removed:false,label:this.manager.ctx.objectName?.(obj)||obj.name||'Desk object',transform:plain(obj)};
             this.register(r,id,obj,saved,obj.scale.clone());
         }
-        const pending=Object.entries(r.state.objects).filter(([,s])=>s.added&&!s.removed).map(async([id,saved])=>{
+        const pending=Object.entries(r.state.objects).filter(([id,s])=>s.added&&!s.removed&&!r.objects.has(id)).map(async([id,saved])=>{
             try{const obj=await this.manager.ctx.loadProp(saved.propId);if(this.manager.records.get(r.id)!==r||!r.rig){this.manager.ctx.disposeObject?.(obj);return;}
                 this.register(r,id,obj,saved,new THREE.Vector3(1000,1000,1000));this.manager.sync();
             }catch(error){this.manager.ctx.status('Could not restore '+saved.label+'.');console.error('[Desk objects]',error);}
@@ -66,6 +68,9 @@ export class SceneDeskObjects {
         (r.product&&obj.userData.accessoryId?this.purchaseMount(saved.role):mount)?.add(obj);apply(obj,saved.transform);
         this.manager.ctx.unregisterProp?.(obj);
         obj.userData.deskObject={desk:r.id,id};obj.userData.sceneAsset=false;delete obj.userData.editorId;
+        const reference=obj.userData.deskObjectBaseScale;
+        if(Array.isArray(reference)&&reference.length===3&&reference.every(v=>Number.isFinite(v)&&v>0))baseScale=new THREE.Vector3(...reference);
+        else obj.userData.deskObjectBaseScale=baseScale.toArray();
         r.state.objects[id]=saved;r.objects.set(id,{id,obj,saved,baseScale});
         this.phase(r);
     }
@@ -121,7 +126,7 @@ export class SceneDeskObjects {
     remove(){
         const m=this.manager,r=m.active,item=this.current;if(!item||m.playing||m.recording)return false;
         const before=m.serialize();
-        if(r.product&&item.obj.userData.accessoryId){
+        if(item.obj.userData.accessoryId&&(r.product||r.peripherals)){
             m.ctx.removeAccessory(item.obj.userData.accessoryId);this.selected=null;m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
         }
         item.saved.removed=true;item.obj.visible=false;this.selected=null;

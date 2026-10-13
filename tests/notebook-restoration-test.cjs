@@ -46,10 +46,10 @@ const server = http.createServer((req, res) => {
                 const stored=p.sceneDesks.rooms[ef.sceneDesks.key].desks[desk.id].objects[item.id];
                 stored.transform.p.x+=35;stored.transform.s={x:1250,y:1250,z:1250};
                 localStorage.setItem('ergoflex.sceneAssets.v1',JSON.stringify(p.sceneAssets));
-                localStorage.setItem('ergoflex.sceneDesksV1',JSON.stringify({...p.sceneDesks,v:1}));
+                localStorage.removeItem('ergoflex.sceneDesksBySizeV2');localStorage.setItem('ergoflex.sceneDesksV1',JSON.stringify({...p.sceneDesks,v:1}));
                 return {key,roomX:state.transforms[key].p.x,deskId:item.id,deskX:stored.transform.p.x,assets:p.sceneAssets,desks:p.sceneDesks};
             });
-            const seed=await page.evaluateOnNewDocument(saved=>{localStorage.setItem('ergoflex.sceneAssets.v1',JSON.stringify(saved.assets));localStorage.setItem('ergoflex.sceneDesksV1',JSON.stringify({...saved.desks,v:1}));},saved);
+            const seed=await page.evaluateOnNewDocument(saved=>{localStorage.setItem('ergoflex.sceneAssets.v1',JSON.stringify(saved.assets));localStorage.removeItem('ergoflex.sceneDesksBySizeV2');localStorage.setItem('ergoflex.sceneDesksV1',JSON.stringify({...saved.desks,v:1}));},saved);
             await page.reload();await ready();await page.removeScriptToEvaluateOnNewDocument(seed.identifier);
             const measure=()=>page.evaluate(async(saved)=>{
                 const THREE=await import('three'),ef=ErgoFlex;
@@ -74,7 +74,7 @@ const server = http.createServer((req, res) => {
             await page.evaluate(()=>{
                 const p=ErgoFlex.serializeProject().presentation;
                 localStorage.setItem('ergoflex.sceneAssets.v1',JSON.stringify(p.sceneAssets));
-                localStorage.setItem('ergoflex.sceneDesksV1',JSON.stringify({...p.sceneDesks,v:1}));
+                localStorage.removeItem('ergoflex.sceneDesksBySizeV2');localStorage.setItem('ergoflex.sceneDesksV1',JSON.stringify({...p.sceneDesks,v:1}));
             });
             await page.reload();await ready();
             const again=await measure();assert.deepEqual(again.a.s,actual.a.s);assert.deepEqual(again.b.s,actual.b.s);

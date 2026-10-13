@@ -19,7 +19,7 @@ const result=await page.evaluate(async()=>{
  editor.change({x:70,z:-30,rotation:30,scale:90});const saved=structuredClone(m.active.state.objects[added]);
  const pose=structuredClone(m.active.state);pose.height=42;pose.tilt=15;pose.pose.x+=40;m.ctx.writeLive({...m.active,state:pose});m.update(.05);
  check(JSON.stringify(m.active.state.objects[added])===JSON.stringify(saved),'Moving desk changed object local transform');
- m.setSize('60x30');check(m.active.objects.get(added).obj.parent===m.active.rig.mounts['lower-shelf'],'Resize detached object');
+ m.setSize('60x30');const resizedX=m.active.objects.get(added).obj.position.x;check(m.active.objects.get(added).obj.parent===m.active.rig.mounts['lower-shelf'],'Resize detached object');
  editor.change({role:'base-shelf'});check(m.active.objects.get(added).obj.parent===m.active.rig.mounts['base-shelf'],'Surface transfer ignored');
  m.select('main');check(Math.abs(main.objects.get(originalId).obj.position.x-123)<.01,'Switching desks lost edited object');
  editor.select(originalId);editor.remove();check(!original.obj.visible,'Authored object removal failed');
@@ -27,7 +27,7 @@ const result=await page.evaluate(async()=>{
  const imported=ef.applyProject(proj,{confirmSoft:()=>true});check(imported.ok,'Import rejected');await ef.workspaceRoom.ready;
  check(!m.records.get('main').objects.get(originalId).obj.visible,'Import restored removed default');
  m.select(secondary.id);const restored=m.active.objects.get(added);check(!!restored,'Import lost library object');check(restored.saved.role==='base-shelf','Import lost attachment');
- check(Math.abs(restored.obj.position.x-70)<.01,'Import lost position');editor.select(added);editor.remove();check(!restored.obj.visible,'Library removal ignored');
+ check(Math.abs(restored.obj.position.x-resizedX)<.01,'Import lost position');editor.select(added);editor.remove();check(!restored.obj.visible,'Library removal ignored');
  ef.undo();await ef.workspaceRoom.ready;check(m.active.objects.get(added).obj.visible,'Undo did not restore removed library object');
  ef.redo();await ef.workspaceRoom.ready;check(!m.active.objects.has(added),'Redo restored removed library object');
  ef.undo();await ef.workspaceRoom.ready;editor.select(added);editor.change({role:'desktop',x:40,z:100,scale:100});m.persist();

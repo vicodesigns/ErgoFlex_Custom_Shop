@@ -1,6 +1,9 @@
 // Scene desk positions are in room-local millimetres; yaw is in radians.
 import { cleanDeskStyle } from './room-desk-styles.mjs';
-export const SCENE_DESKS_KEY = 'ergoflex.sceneDesksV1';
+import { ACCESSORIES } from './catalog.mjs';
+import { minimumHeightForTilt } from './motion-limits.mjs';
+import { cleanArtwork } from './artwork-config.mjs';
+export const SCENE_DESKS_KEY = 'ergoflex.sceneDesksBySizeV2';
 const finite = (n,min,max) => Number.isFinite(n) && n>=min && n<=max;
 const deskId = id => typeof id==='string' && /^[a-z][a-z0-9-]{0,79}$/.test(id);
 export function cleanDeskObjects(value) {
@@ -56,21 +59,50 @@ export function sampleDeskRecording(frames,time) {
     // Follow the recorded turn direction, including turns beyond 180 degrees.
     return {pose:{x:mix('x'),z:mix('z'),yaw:mix('yaw')},height:mix('height'),tilt:mix('tilt')};
 }
+export function cleanSceneDeskVariant(v) {
+    const setting=cleanDeskSetting(v);
+    if(!setting||!['48x30','60x30'].includes(v?.size))return null;
+    const phases={};
+    for(const phase of ['morning','afternoon','evening','night','party']){
+        const s=cleanDeskSetting(v.phases?.[phase]);
+        if(s)phases[phase]={...s,recording:cleanDeskRecording(v.phases[phase].recording)};
+    }
+    const valid=new Set(ACCESSORIES.map(a=>a.id)),accessories=Array.isArray(v.accessories)?[...new Set(v.accessories.filter(id=>valid.has(id)))]:null;
+    const finishes=Object.fromEntries(Object.entries(v.accessoryFinishes||{}).filter(([id,finish])=>ACCESSORIES.find(a=>a.id===id)?.finishes?.includes(finish)));
+    return {...setting,size:v.size,phases,objects:cleanDeskObjects(v.objects),
+        artwork:cleanArtwork(v.artwork||{v:1,surfaces:{}}),
+        ...(cleanDeskStyle(v.style)?{style:cleanDeskStyle(v.style)}:{}),
+        ...(accessories?{accessories,accessoryFinishes:finishes}:{}),
+        ...(deskId(v.peripheralRecipe)?{peripheralRecipe:v.peripheralRecipe}:{}),
+        ...(v.peripheralSetup==='product-reference-v1'?{peripheralSetup:v.peripheralSetup}:{})};
+}
+export function seedSceneDeskSize(source,size) {
+    const draft=cleanSceneDeskVariant({...source,size});
+    if(!draft)return null;
+    const ratio=size===source.size?1:size==='48x30'?.8:1.25;
+    for(const object of Object.values(draft.objects))object.transform.p.x*=ratio;
+    draft.height=Math.max(draft.height,minimumHeightForTilt(draft.tilt,size));
+    for(const phase of Object.values(draft.phases)){
+        phase.height=Math.max(phase.height,minimumHeightForTilt(phase.tilt,size));
+        for(const frame of phase.recording)frame.height=Math.max(frame.height,minimumHeightForTilt(frame.tilt,size));
+    }
+    return draft;
+}
 export function cleanSceneDeskData(input) {
     const rooms={};
     for(const [key,room] of Object.entries(input?.rooms||{})){
         if(!/^[a-z]+\/[a-z]+$/.test(key)||Object.keys(rooms).length>=150)continue;
         const desks={};
         for(const [id,v] of Object.entries(room?.desks||{})){
-            const setting=cleanDeskSetting(v);
-            if(!deskId(id)||!setting||!['48x30','60x30'].includes(v.size)||Object.keys(desks).length>=24)continue;
-            const phases={};
-            for(const phase of ['morning','afternoon','evening','night','party']){
-                const s=cleanDeskSetting(v.phases?.[phase]);
-                if(s)phases[phase]={...s,recording:cleanDeskRecording(v.phases[phase].recording)};
+            const variant=cleanSceneDeskVariant(v);
+            if(!deskId(id)||!variant||Object.keys(desks).length>=24)continue;
+            const sizeSetups={};
+            for(const size of ['48x30','60x30'])if(size!==v.size){
+                const saved=cleanSceneDeskVariant({...v.sizeSetups?.[size],size});
+                if(saved)sizeSetups[size]=saved;
             }
-            desks[id]={...setting,name:String(v.name||'ErgoFlex desk').slice(0,80),size:v.size,
-                added:v.added===true,phases,objects:cleanDeskObjects(v.objects),...(cleanDeskStyle(v.style)?{style:cleanDeskStyle(v.style)}:{})};
+            desks[id]={...variant,name:String(v.name||'ErgoFlex desk').slice(0,80),
+                added:v.added===true,...(Object.keys(sizeSetups).length?{sizeSetups}:{})};
         }
         const deleted=[...new Set((Array.isArray(room?.deleted)?room?.deleted:[]).filter(deskId))].slice(0,24);
         rooms[key]={desks,deleted,selected:desks[room?.selected]?room?.selected:Object.keys(desks)[0]||null};

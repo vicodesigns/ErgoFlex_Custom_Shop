@@ -4,13 +4,13 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=rearrange-targets-20261012';
+import { SceneDesks } from './scene-desks.mjs?v=scene-sized-setups-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
 import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artwork-size-isolation-20261012';
-import { encodeStoredJSON, decodeStoredJSON, compactStoredDesigns } from './browser-design-storage.mjs?v=storage-artwork-pool-20261012';
+import { encodeStoredJSON, decodeStoredJSON, compactStoredDesigns } from './browser-design-storage.mjs?v=scene-sized-setups-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=obsbot-tiny-2-20261012';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=scene-sized-setups-20261012';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
@@ -49,7 +49,8 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-canvas-light-20261012';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=scene-sized-setups-20261012';
+import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -580,6 +581,8 @@ function initSceneDeskEditing() {
     const refresh=()=>{
         if(!sceneDeskUI){const hint=document.getElementById('room-interaction-hint');if(hint?.parentElement){sceneDeskUI=mountSceneDeskUI(hint.parentElement,sceneDesks);hint.before(sceneDeskUI.panel);}}
         sceneDeskUI?.sync();if(workspaceRoom)workspaceRoom.sceneDeskRecords=sceneDesks.records;
+        const roomProfile=measuredRoomProfile();
+        if(roomProfile&&sceneDesks.active&&!sceneDesks.active.product)document.querySelectorAll(`[data-${roomProfile.prefix}-size]`).forEach(button=>button.setAttribute('aria-pressed',String(button.getAttribute(`data-${roomProfile.prefix}-size`)===sceneDesks.active.state.size)));
         for(const r of sceneDesks.records.values())if(r.group){r.group.userData.sceneDeskActive=r.id===sceneDesks.selected;}
         const signature=sceneDesks.key+':'+sceneDesks.selected+':'+[...sceneDesks.records.values()].map(r=>r.group?.uuid).join(',');
         if(signature!==groundingSignature&&sceneDesks.key&&!sceneDesks.drag){groundingSignature=signature;roomInteractions?.bind(workspaceRoom);}
@@ -594,17 +597,35 @@ function initSceneDeskEditing() {
         readStore:()=>{
             // A legacy build has its own object edits. Shared defaults only
             // replace that room when a preset was explicitly restored.
-            const data=readStore(SCENE_DESKS_KEY,1,null),draft=pendingBuildPresetRestore;
+            const data=readStore(SCENE_DESKS_KEY,1,null)||readStore('ergoflex.sceneDesksV1',1,null),draft=pendingBuildPresetRestore;
             return draft?.room&&selectedRoomScene==='product'?{...data,rooms:{...data?.rooms,'product/default':draft.room},productAccessories:draft.config.accessories}:data;
-        },writeStore:(k,v)=>writeStore(k,{...v,v:1}),changed:()=>{markEdited();setRoomSaveStatus('Saved in this browser');scheduleBuildPresetSave();},
+        },writeStore:(k,v)=>writeStore(k,{...v,v:1}),changed:(saved=true)=>{markEdited();setRoomSaveStatus(saved?'Saved in this browser':'Could not save. Use Save project to keep your edits.');scheduleBuildPresetSave();},
         room:()=>workspaceRoom,sceneId:()=>selectedRoomScene,phase:()=>measuredRoomProfile()?.mode||'morning',phaseLabel:()=>measuredRoomProfile()?.modes[measuredRoomProfile()?.mode]?.label,
         status:notifyUser,rearrange:()=>roomRearrangeMode==='desks'&&!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active&&!sceneDesks?.playing&&!sceneDesks?.recording,
         objectEditing:on=>setRoomRearrangeMode(on?'items':'off'),
         objectsEditable:()=>!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active,
-        readLive:r=>{const p=workspaceRoom?.root?liveAnchor(r):new THREE.Vector3();return{size:currentConfig.size,style:currentDeskStyle(),pose:{x:p.x,z:p.z,yaw:deskYaw},height:liftToHeight(currentLift),tilt:primaryTiltConfig()?.currentDeg||0,lights:captureGrooveLights()};},
+        seedDeskSize:(_r,source,size)=>seedSceneSizeWithPeripherals(source,size),
+        decorateDesk:initRoomDeskPeripherals,
+        defaultLights:base=>{
+            if(base.game?.active||base.music?.active)return base;
+            const profile=measuredRoomProfile(),mode=profile?.modes[profile.mode];
+            if(!mode)return base;
+            return {...base,enabled:mode.leds===true,color:mode.color||'#f4e8d4',
+                glow:profile.mode==='night'?12:profile.mode==='party'?28:24,
+                effect:{mode:'solid',cycleSeconds:8},look:null};
+        },
+        readLive:r=>{const p=workspaceRoom?.root?liveAnchor(r):new THREE.Vector3();return{size:currentConfig.size,style:currentDeskStyle(),...(r?{artwork:currentConfig.artwork||{v:1,surfaces:{}}}:{}),pose:{x:p.x,z:p.z,yaw:deskYaw},height:liftToHeight(currentLift),tilt:primaryTiltConfig()?.currentDeg||0,lights:captureGrooveLights()};},
         writeLive:r=>{
             sceneDeskInternal=true;
             try {
+                const artwork=r.state.artwork||{v:1,surfaces:{}};
+                if(r.appliedArtwork!==artwork&&JSON.stringify(currentConfig.artwork||{v:1,surfaces:{}})!==JSON.stringify(artwork)){
+                    currentConfig=cleanConfig({...currentConfig,artwork});
+                    if(!Object.keys(artwork.surfaces).length)delete currentConfig.artwork;
+                    surfaceArtwork?.setState(artwork);updatePrice();
+                }
+                r.appliedArtwork=artwork;
+                if(r.state.accessories&&JSON.stringify([currentConfig.accessories,currentConfig.accessoryFinishes||{}])!==JSON.stringify([r.state.accessories,r.state.accessoryFinishes||{}])){currentConfig=cleanConfig({...currentConfig,accessories:r.state.accessories,accessoryFinishes:r.state.accessoryFinishes||{}});renderAccessories();updatePrice();}
                 if(currentConfig.size!==r.state.size)changeDesktopSize(r.state.size,{rebuildRoom:false});
                 if(r.state.style&&JSON.stringify(currentDeskStyle())!==JSON.stringify(r.state.style))applyDeskStyle(r.state.style);
                 currentLift=targetLift=heightToLift(Math.max(r.state.height,minimumHeightForTilt(r.state.tilt,r.state.size)));
@@ -653,7 +674,7 @@ function initSceneDeskEditing() {
         removeAccessory:toggleAccessory,
         restoreProductAccessories:ids=>{currentConfig=cleanConfig({...currentConfig,accessories:ids});applyAccessoryVisibility();renderAccessories();updatePrice();},
         liveObject:()=>loadedModel,liveBox:()=>deskCollisionBox()||new THREE.Box3(),
-        showLive:(enabled,main)=>{if(loadedModel)loadedModel.visible=enabled;if(workspaceAccessories){workspaceAccessories.activeDeskDress=sceneDesks.key&&!sceneDesks.active?.product?false:main;workspaceAccessories.update();}const body=document.querySelector('#motion-dock .app-body');if(body)body.inert=!enabled;refresh();},
+        showLive:(enabled,main)=>{if(loadedModel)loadedModel.visible=enabled;if(workspaceAccessories){workspaceAccessories.activeDeskDress=sceneDesks.key&&!sceneDesks.active?.product?false:main;workspaceAccessories.sceneAccessoryOverride=!!sceneDesks.key&&!sceneDesks.active?.product;workspaceAccessories.update();}const body=document.querySelector('#motion-dock .app-body');if(body)body.inert=!enabled;refresh();},
         retireBody:obj=>{unregisterSceneAsset(obj);disposeWorkspaceObject(obj);},registerBody:registerSceneAsset,unregisterBody:unregisterSceneAsset,
         copyMainDress:mounts=>{for(const [role,m] of workspaceAccessories.mounts)if(m.dress&&mounts[role])for(const obj of m.dress.children){unregisterSceneAsset(obj);const copy=obj.clone(true);copy.traverse(o=>{o.userData={...o.userData,sharedProp:true,sceneAsset:false};delete o.userData.editorId;});mounts[role].add(copy);}},
         disposeDress:r=>{for(const m of Object.values(r.rig?.mounts||{}))for(const child of [...m.children]){unregisterSceneAsset(child);disposeWorkspaceObject(child);}},
@@ -674,12 +695,38 @@ function initSceneDeskEditing() {
             return clear;
         },
         lightDesk:r=>{if(r.id===sceneDesks.selected)applyGrooveLights(r.state.lights);},
-        updateLights:()=>{const seconds=performance.now()/1000;for(const r of sceneDesks.records.values()){if(r.id===sceneDesks.selected||!r.rig)continue;const l=r.state.lights||{},frame=sampleLedEffect(normalizeLedEffect(l.effect),seconds,l.enabled!==false,ledReducedMotion.matches);const color=new THREE.Color(l.color||ledColor);if(frame.hue!==null)color.setHSL(frame.hue,1,.5,THREE.SRGBColorSpace);r.group.traverse(o=>{if(o.material?.userData.sceneDeskMaterial==='led'){o.material.color.copy(color).multiplyScalar(l.enabled===false?.12:1);o.material.emissive.copy(color);o.material.emissiveIntensity=3.6*(l.glow??ledGlow)/100*frame.gain;}});}},
+        updateLights:()=>{const seconds=performance.now()/1000;for(const r of sceneDesks.records.values()){if(r.id===sceneDesks.selected||!r.rig)continue;const l=r.state.lights||{},frame=sampleLedEffect(normalizeLedEffect(l.effect),seconds,l.enabled!==false,ledReducedMotion.matches);const color=new THREE.Color(l.color||ledColor);if(frame.hue!==null)color.setHSL(frame.hue,1,.5,THREE.SRGBColorSpace);r.group.traverse(o=>{if(o.material?.userData.sceneDeskMaterial==='led'){if(l.enabled===false)o.material.color.set('#20292b');else o.material.color.copy(color);o.material.emissive.copy(color);o.material.emissiveIntensity=3.6*(l.glow??ledGlow)/100*frame.gain;}});}},
         edit:(before,after)=>{if(JSON.stringify(before)!==JSON.stringify(after))transaction({type:'scene-desks',before,after});},
         sync:refresh
     });
     sceneDesks.objects.editing=roomRearrangeMode==='items';
     if(workspaceAccessories)workspaceAccessories.onLayout=()=>sceneDesks.objects.syncAccessories();
+}
+function initRoomDeskPeripherals(r) {
+    if(r.product||!r.rig)return;
+    seedScenePeripherals(r.state,selectedRoomScene,r.spec?.id||'main');
+    for(const item of r.objects.values())if(item.id.startsWith('default-')&&isLegacyScenePeripheral(item.obj)){
+        item.saved.removed=true;item.obj.visible=false;
+    }
+    const config=cleanConfig({...currentConfig,size:r.state.size,accessories:r.state.accessories,accessoryFinishes:r.state.accessoryFinishes||{}});
+    const set=createSceneAccessorySet(r.rig.mounts,config,()=>r.group.children.find(obj=>obj.isMesh&&String(obj.material?.userData.sceneDeskMaterial).startsWith('wood:'))?.material);
+    r.peripherals=set;
+    set.onLayout=()=>{
+        if(sceneDesks.records.get(r.id)!==r||r.peripherals!==set)return;
+        for(const [key,item] of r.objects)if(item.obj.userData.accessoryId&&!set.items.has(item.obj.userData.accessoryId)){
+            r.objects.delete(key);delete r.state.objects[key];
+        }
+        const reference=peripheralReference(r.state.peripheralRecipe,r.state.size);
+        for(const [id,obj] of set.items){
+            const key='accessory-'+id,role=accessory(id)?.mount||'desktop';
+            const saved=r.state.objects[key]||reference.objects[key]||{role,added:false,removed:false,label:accessory(id).name,
+                transform:{p:{x:obj.position.x,y:obj.position.y,z:obj.position.z},q:{x:obj.quaternion.x,y:obj.quaternion.y,z:obj.quaternion.z,w:obj.quaternion.w},s:{x:1,y:1,z:1}}};
+            sceneDesks.objects.register(r,key,obj,saved,new THREE.Vector3(1,1,1));
+        }
+        set.update();sceneDesks.sync();
+    };
+    set.sync(config);
+    sceneDesks.objects.ready=Promise.all([sceneDesks.objects.ready,set.ready]).then(()=>{if(r.peripherals===set)set.onLayout();});
 }
 function sceneDeskObstacleEntries(){
     return [...(sceneDesks?.records.values()||[])].filter(r=>r.id!==sceneDesks.selected&&r.group?.parent).map(r=>({id:r.group.uuid,obj:r.group,objects:[r.group],name:r.state.name,collider:true,pushable:false,movable:false,surface:'floor'}));
@@ -4966,7 +5013,13 @@ function applyAccessoryVisibility() {
             if (entry.name === item.node || entry.name.startsWith(item.node + '_')) entry.obj.visible = on;
         });
     }
-    workspaceAccessories?.sync(currentConfig);
+    const r=sceneDesks?.active;
+    if(r&&!r.product&&r.peripherals){
+        if(!sceneDeskInternal){r.state.accessories=[...currentConfig.accessories];r.state.accessoryFinishes={...currentConfig.accessoryFinishes};}
+        const signature=JSON.stringify([currentConfig.size,currentConfig.accessories,currentConfig.accessoryFinishes]);
+        if(r.peripheralConfig!==signature){r.peripheralConfig=signature;r.peripherals.sync(currentConfig);}
+        if(!sceneDeskInternal)sceneDesks.persist();
+    }else workspaceAccessories?.sync(currentConfig);
 }
 
 function renderAccessories() {
@@ -5771,6 +5824,7 @@ function buildProjectTools(anchorButton) {
     panel.innerHTML = `<div class="eyebrow">PROJECT</div>
         <div>
             <button id="project-save">Save project</button>
+            <button id="project-copy">Copy project JSON</button>
             <button id="project-load">Load project…</button>
             <button id="project-recover">Recover…</button>
         </div>
@@ -5789,6 +5843,18 @@ function buildProjectTools(anchorButton) {
             console.error('[ErgoFlex] Save failed:', error);
             notifyUser('Project could not be saved. See the console for details.');
         }
+    };
+    document.getElementById('project-copy').onclick = async () => {
+        try {
+            const json=JSON.stringify(serializeProject(),null,2);
+            let field=document.getElementById('project-json-copy');
+            if(!field){field=document.createElement('textarea');field.id='project-json-copy';field.readOnly=true;field.setAttribute('aria-label','Project JSON');field.rows=8;document.getElementById('project-copy').after(field);}
+            field.value=json;
+            try {await navigator.clipboard.writeText(json);notifyUser('Project JSON copied.');}
+            catch {
+                field.focus();field.select();notifyUser('Select and copy the project JSON below.');
+            }
+        } catch {notifyUser('Project could not be copied.');}
     };
 
     const fileInput = document.getElementById('project-file');
@@ -6760,6 +6826,7 @@ function changeDesktopSize(size, { rebuildRoom = true } = {}) {
     applyAccessoryVisibility();
     updatePrice();
     scheduleValidation();
+    if(workspaceRoom)syncHomeOfficeUI();
 }
 sizeSelect.addEventListener('change', e => changeDesktopSize(e.target.value));
 
@@ -10144,7 +10211,7 @@ function animate(time, frame) {
         updateLedEffectFrame(time / 1000);
     if (time-ledPlaybackUIAt > 150) {
         ledPlaybackUIAt = time;
-        if (ledGame.active) ledGame.syncMonitor(workspaceAccessories,[...(sceneDesks?.active?.objects?.values()||[])].filter(item=>!item.saved.removed));
+        if (ledGame.active) ledGame.syncMonitor(sceneDesks?.active?.peripherals||workspaceAccessories,[...(sceneDesks?.active?.objects?.values()||[])].filter(item=>!item.saved.removed));
         ledGame.syncUI(ledSounds.error || (ledMotion.owner ? `${ledMotion.owner.name} · movement cue` : ''));
         ledMusic.syncUI(true);
     }

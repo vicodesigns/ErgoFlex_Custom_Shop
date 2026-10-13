@@ -896,10 +896,11 @@ export class WorkspaceAccessories {
             for (const target of [group, dress]) {
                 if (!target) continue;
                 target.matrix.multiplyMatrices(anchor.matrixWorld, relative);
-                target.visible = visible && (target !== dress || this.activeDeskDress !== false); target.updateMatrixWorld(true);
+                target.visible = visible && (target !== dress || this.activeDeskDress !== false)
+                    && (target !== group || !this.sceneAccessoryOverride); target.updateMatrixWorld(true);
             }
         }
-        this.fitMonitorArms();
+        if(!this.sceneAccessoryOverride)this.fitMonitorArms();
     }
     // Scene dressing on the desk itself: mugs, papers and the like, which
     // follow the desktop as it lifts and tilts. Never priced, never exported
@@ -965,6 +966,31 @@ export class WorkspaceAccessories {
         this.mounts.forEach(m => { disposeTree(m.group); if (m.dress) disposeTree(m.dress); });
         this.mounts.clear(); this.items.clear();
     }
+}
+
+// A room desk uses the same accessory geometry, finishing and arm fitting as
+// Product view, attached to its own animated surface mounts in millimetres.
+export function createSceneAccessorySet(mounts,config,finishMaterial) {
+    const set=new WorkspaceAccessories(null,new Map(),1,null);
+    set.mounts=new Map(Object.entries(mounts).map(([role,group])=>[role,{
+        group,depth:group.userData.surfaceSize?.depth||800,width:group.userData.surfaceSize?.width||1100
+    }]));
+    set.update=()=>{
+        const finish=finishMaterial?.();
+        if(finish)for(const root of set.items.values())root.traverse(obj=>{
+            if(!obj.userData.artistShelfWood)return;
+            const signature=finish.uuid+':'+finish.version+':'+finish.color.getHex()+':'+finish.map?.uuid;
+            if(obj.sceneFinishSignature===signature)return;
+            obj.material.copy(finish);obj.material.name='Artist shelf wood';obj.material.userData.sharedTextures=true;
+            obj.material.needsUpdate=true;obj.sceneFinishSignature=signature;
+        });
+        set.fitMonitorArms();
+    };
+    set.dispose=()=>{for(const obj of set.items.values())disposeTree(obj);set.items.clear();set.mounts.clear();};
+    // Caller installs its placement callback before loading, because every
+    // completed model reapplies the width-specific default layout.
+    set.initialConfig=config;
+    return set;
 }
 
 // Room shells. Each scene picks a palette and one wall treatment; the props

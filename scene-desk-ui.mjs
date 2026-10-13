@@ -6,6 +6,7 @@ export function mountSceneDeskUI(parent,manager){
         <label>Desktop <select data-desk-size><option value="48x30">48″ Standard</option><option value="60x30">60″ Extended</option></select></label>
         <button type="button" data-desk-add>Add desk</button><button type="button" data-desk-delete>Delete desk</button>
         <button type="button" data-desk-left aria-label="Rotate selected desk left">↶ 15°</button><button type="button" data-desk-right aria-label="Rotate selected desk right">↷ 15°</button><button type="button" data-desk-save>Save desk setting</button><button type="button" data-desks-save>Save all desks</button></div>
+        <p class="desk-object-note">Each desk keeps separate 48″ and 60″ setups, including finishes, accessories, objects and saved Grooves.</p>
         <details class="scene-desk-routines"><summary>Desk Grooves <span data-desk-setting></span></summary>
         <div class="scene-desk-row"><button type="button" data-desk-record>Record Groove</button><button type="button" data-desk-play>Play desk Groove</button>
         <button type="button" data-desks-play>Play group Grooves</button><button type="button" data-desks-stop>Stop</button>

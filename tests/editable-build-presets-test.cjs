@@ -73,7 +73,7 @@ const server = http.createServer((req, res) => {
   await page.evaluateOnNewDocument(draft=>{
    localStorage.removeItem('ergoflex.buildPresetsV1');
    localStorage.setItem('ergoflexSavedBuildV2',JSON.stringify({...draft.config,accessories:draft.config.accessories.map(id=>id==='logitech-mx-master'?'logitech-lift':id)}));
-   localStorage.setItem('ergoflex.sceneDesksV1',JSON.stringify({v:1,rooms:{'product/default':draft.room},productAccessories:draft.config.accessories}));
+   localStorage.removeItem('ergoflex.sceneDesksBySizeV2');localStorage.setItem('ergoflex.sceneDesksV1',JSON.stringify({v:1,rooms:{'product/default':draft.room},productAccessories:draft.config.accessories}));
   },office);
   await page.reload();await ready();
   assert.equal(await page.evaluate(()=>ErgoFlex.activeBuildPreset),'office');

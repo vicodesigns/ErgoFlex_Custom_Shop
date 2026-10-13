@@ -34,3 +34,15 @@ assert.equal(pair['accessory-wide-monitor'].transform.p.y,210);
 pair['accessory-wide-monitor'].transform.p.x=-350.5;
 assert.equal(cleanDeskObjects(pair)['accessory-wide-monitor'].transform.p.x,-350.5,'later manual edits are not swapped again');
 console.log('Old monitor pairs move curved right and portrait left once, retaining all other edits.');
+
+const {seedScenePeripherals,seedSceneSizeWithPeripherals,peripheralReference}=await import('../scene-peripheral-layouts.mjs');
+const sceneSeed=seedScenePeripherals({...setting,size:'60x30',phases:{},objects:{}},'office');
+sceneSeed.accessories=sceneSeed.accessories.filter(id=>id!=='logitech-mx-master');sceneSeed.accessories.push('task-light');sceneSeed.accessoryFinishes['ergo-keyboard']='white';
+const narrowSeed=seedSceneSizeWithPeripherals(sceneSeed,'48x30');
+assert.equal(narrowSeed.accessories.includes('logitech-mx-master'),false,'removed inputs do not return when seeding another width');
+assert.equal(narrowSeed.accessories.includes('task-light'),true,'extra purchased accessories seed across widths');
+assert.equal(narrowSeed.accessoryFinishes['ergo-keyboard'],'white','custom peripheral finish seeds across widths');
+assert.deepEqual(narrowSeed.objects['accessory-wide-monitor'].transform,peripheralReference('office','48x30').objects['accessory-wide-monitor'].transform,'new width uses its measured Product placement');
+assert.equal(sceneSeed.size,'60x30');narrowSeed.objects['accessory-wide-monitor'].transform.p.x=999;
+assert.notEqual(sceneSeed.objects['accessory-wide-monitor'].transform.p.x,999,'new scene variants own their transforms');
+console.log('New widths inherit purchased additions, removals and finish edits while using fitted Product reference positions.');
