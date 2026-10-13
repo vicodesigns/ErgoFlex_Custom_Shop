@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { activityPageMaterial } from './room-activity-print.mjs?v=scene-desk-styling-20261010';
+import { activityPageMaterial } from './room-activity-print.mjs?v=environment-detail-scale-20261013';
+import { ROOM_DETAIL_PALETTES } from './room-finish-palettes.mjs?v=environment-detail-scale-20261013';
 import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=occ-media-lab-20261013';
 
 export const DAY_PHASES = ['morning', 'afternoon', 'evening', 'night', 'party'];
@@ -80,7 +81,9 @@ export class RoomLife {
         group.userData.propId = `${room.id}-daily-activity`; group.userData.sceneAssetName = 'Daily activity · ' + l.name;
         h.markSceneAsset(group, { key: `${room.id}:${l.id}:life:activity` }); this.activity = group;
         const mat = (c, kind, extra = {}) => { const m = h.material(c, extra); if (kind) m.userData.roomSurface = kind; return m; };
-        this.mats = { paper: mat('#e9dfc6'), ink: mat('#344c50'), clay: mat('#b98062'), linen: mat('#c8b694', 'fabric'), wood: mat('#997653', 'wood'), cream: mat('#e9dcc8'), brass: mat('#ac9270', 'metal', { metalness: .55 }), green: mat('#61796c') };
+        const [textile, accent, paper, ceramic] = ROOM_DETAIL_PALETTES[room.id];
+        this.mats = { paper: mat(paper, null, { roughness: .96 }), ink: mat('#34434a'), clay: mat(accent), linen: mat(textile, 'fabric'), wood: mat('#997653', 'wood'), cream: mat(ceramic, null, { roughness: .28 }), brass: mat('#ac9270', 'metal', { metalness: .8 }), green: mat(textile), liquid: mat('#442d1d', null, { roughness: .18 }), ferrule: mat('#b4bcc0', 'metal', { metalness: .9, roughness: .26 }) };
+        room.root.userData.decorationFinish = { palette: [...ROOM_DETAIL_PALETTES[room.id]], phases: 5, version: 1 };
         for (let phase = 0; phase < DAY_PHASES.length; phase++) {
             const variant = new THREE.Group(); variant.name = ROOM_STORIES[room.id][phase]; group.add(variant); this.kits.push(variant);
             this.kitPhase = phase; this.makeKit(variant, phase, a.small);
@@ -95,40 +98,107 @@ export class RoomLife {
     }
     book(parent, at, color = '#61796c', open = false) {
         const { h, mats: m } = this, g = new THREE.Group(); g.position.set(...at); parent.add(g);
+        g.userData.activityBook = { open, width: open ? 210 : 100, depth: 142, color };
         const cover = h.material(color, { roughness: .88 });
         h.box(g, [open ? 210 : 100, 5, 142], [0, 2.5, 0], cover, 2);
         h.box(g, [open ? 202 : 94, 12, 134], [0, 11, 0], m.paper, 1);
+        // Fine page edges and a cloth spine sit inside the original book bounds.
+        for (const height of [7, 10, 13, 16]) h.box(g, [open ? 200 : 92, .35, .5], [0, height, 67.15], m.linen);
         if (open) {
             h.box(g, [3, 14, 132], [0, 12, 0], cover, 1);
-            if (INSTITUTIONAL_ROOMS[this.room.id]) {
-                for (const x of [-50, 50]) for (let n = 0; n < 5; n++) h.box(g, [65, .5, 1.5], [x, 17.3, -35 + n * 13], m.ink);
-                h.box(g, [22, .6, 24], [50, 17.5, 42], m.clay);
-            } else {
-                const phase = this.kitPhase ?? 0;
-                if (!this.printedPages.has(phase)) this.printedPages.set(phase, activityPageMaterial(this.room.id, phase));
-                const page = h.mesh(g, new THREE.PlaneGeometry(198, 130), this.printedPages.get(phase), [0, 17.35, 0]);
-                page.rotation.x = -Math.PI / 2; page.castShadow = false;
-                page.userData.presentationOnly = true;
-                // A bookmark adds depth while remaining inside the book footprint.
-                h.box(g, [5, .8, 58], [24, 17.8, 36], m.clay);
-            }
+            const phase = this.kitPhase ?? 0;
+            if (!this.printedPages.has(phase)) this.printedPages.set(phase, activityPageMaterial(this.room.id, phase));
+            const page = h.mesh(g, new THREE.PlaneGeometry(198, 130), this.printedPages.get(phase), [0, 17.35, 0]);
+            page.rotation.x = -Math.PI / 2; page.castShadow = false;
+            page.userData.presentationOnly = true;
+            // A bookmark adds depth while remaining inside the book footprint.
+            h.box(g, [5, .8, 58], [24, 17.8, 36], m.clay);
         } else {
             h.box(g, [100, 4, 142], [0, 19, 0], cover, 2);
-            if (!INSTITUTIONAL_ROOMS[this.room.id]) {
-                const phase = this.kitPhase ?? 0, key = `${phase}:${color}`;
-                if (!this.printedPages.has(key)) this.printedPages.set(key, activityPageMaterial(this.room.id, phase, color));
-                const label = h.mesh(g, new THREE.PlaneGeometry(94, 136), this.printedPages.get(key), [0, 21.05, 0]);
-                label.rotation.x = -Math.PI / 2; label.castShadow = false; label.userData.presentationOnly = true;
-            }
+            const phase = this.kitPhase ?? 0, key = `${phase}:${color}`;
+            if (!this.printedPages.has(key)) this.printedPages.set(key, activityPageMaterial(this.room.id, phase, color));
+            const label = h.mesh(g, new THREE.PlaneGeometry(94, 136), this.printedPages.get(key), [0, 21.05, 0]);
+            label.rotation.x = -Math.PI / 2; label.castShadow = false; label.userData.presentationOnly = true;
         }
         return g;
     }
     cup(parent, at, tea = true) {
         const { h, mats: m } = this, g = new THREE.Group(); g.position.set(...at); parent.add(g);
-        h.mesh(g, new THREE.CylinderGeometry(33, 28, 58, 16), m.cream, [0, 30, 0]);
-        h.mesh(g, new THREE.CylinderGeometry(29, 29, 2, 16), tea ? m.wood : m.ink, [0, 59, 0]);
+        g.userData.activityCup = true;
+        h.mesh(g, new THREE.LatheGeometry([[0,2],[26,2],[28,5],[33,56],[32,59],[29,59],[27,8],[0,8]].map(([x,y])=>new THREE.Vector2(x,y)), 32), m.cream);
+        h.mesh(g, new THREE.CylinderGeometry(28.3, 28.3, 1, 32), m.liquid, [0, 52, 0]);
+        h.mesh(g, new THREE.CylinderGeometry(39, 39, 2, 32), m.wood, [0, 1, 0]);
+        if (tea) {
+            h.rod(g, [12, 53, 0], [33, 55, 8], .35, m.paper);
+            h.rod(g, [33, 55, 8], [35, 38, 10], .35, m.paper);
+            h.box(g, [8, 11, 1], [35, 33, 10], m.clay, 1);
+        }
         const handle = h.mesh(g, new THREE.TorusGeometry(16, 4, 6, 12), m.cream, [36, 32, 0]); handle.rotation.y = Math.PI / 2;
         return g;
+    }
+    async decorate(library, current = () => true) {
+        // New models are children of the existing activity assets. Their owner,
+        // saved transforms, supports and per-time visibility stay the same.
+        const ids = ['ergoflex-notebook'];
+        const personal = ['home','office','coworking','library','study','bedroom','creative','music','gaming','lounge','occmedialab'].includes(this.room.id);
+        if (personal) ids.push('ergoflex-glasses','ergoflex-thermal-cup');
+        const pencilCup=!this.anchor.small && ['office','coworking','library','creative','workshop'].includes(this.room.id);
+        if (pencilCup) ids.push('ergoflex-pencil-cup');
+        const feature={occmedialab:'ergoflex-camera',scifi:'ergoflex-camera',gaming:'ergoflex-handheld-game',music:'ergoflex-earbuds',gym:'ergoflex-watch',office:'ergoflex-phone'}[this.room.id];
+        if (feature) ids.push(feature);
+        const loaded = new Map(await Promise.all(ids.map(async id => [id, await library.load(id).catch(()=>null)])));
+        if (!current()) return;
+        let count = 0;
+        const model = (id, parent, at, width, depth) => {
+            const source = loaded.get(id), entry = library.entry(id), g = source.clone(true);
+            const fit = Math.min(1, width / entry.size[0], depth / entry.size[2]);
+            g.name = entry.name + ' · daily detail'; g.userData.sharedProp = true;
+            g.scale.setScalar(1000 * fit); g.position.copy(at); parent.add(g);
+            g.traverse(o => {
+                o.userData.sharedProp = true;
+                if (!o.isMesh) return;
+                if (id === 'ergoflex-notebook') {
+                    o.material = [].concat(o.material).map(m => {
+                        if (!/cover/i.test(m.name)) return m;
+                        const own=m.clone(); own.color.set(ROOM_DETAIL_PALETTES[this.room.id][1]); own.userData.sharedTextures=true;
+                        o.ownedMaterials ||= []; o.ownedMaterials.push(own); return own;
+                    });
+                    if (o.material.length===1) o.material=o.material[0];
+                }
+            });
+            count++; return g;
+        };
+        for (const [phase, kit] of this.kits.entries()) {
+            const books=[], cups=[];
+            kit.traverse(o=>{ if(o.userData.activityBook)books.push(o); if(o.userData.activityCup)cups.push(o); });
+            if (phase===3) for (const book of books) {
+                if (!loaded.get('ergoflex-notebook')) continue;
+                const b=book.userData.activityBook;
+                model('ergoflex-notebook',book.parent,book.position,b.width,b.depth).rotation.copy(book.rotation);
+                book.visible=false;
+            }
+            if (personal && phase===2 && books[0] && loaded.get('ergoflex-glasses')) {
+                const book=books[0]; model('ergoflex-glasses',book,new THREE.Vector3(0,23,0),90,120).rotation.y=.24;
+            }
+            if (personal && phase===0 && cups[0] && loaded.get('ergoflex-thermal-cup')) {
+                const cup=cups[0]; model('ergoflex-thermal-cup',cup.parent,cup.position,78,78); cup.visible=false;
+            }
+            if (pencilCup && phase===1 && loaded.get('ergoflex-pencil-cup')) model('ergoflex-pencil-cup',kit,new THREE.Vector3(175,0,108),93,123);
+            if (feature && loaded.get(feature)) {
+                if (this.room.id==='occmedialab' && phase===0 && books[0]) {
+                    const book=books[0];model(feature,book.parent,book.position,100,142);book.visible=false;
+                } else if (this.room.id==='scifi' && phase===1) {
+                    model(feature,kit,new THREE.Vector3(),130,150);
+                    kit.children.filter(o=>o.userData.activityTablet).forEach(o=>o.visible=false);
+                } else if (this.room.id==='gaming' && phase===2) {
+                    const remote=kit.children.find(o=>o.userData.activityRemote);
+                    if(remote){model(feature,remote.parent,new THREE.Vector3(remote.position.x,4,remote.position.z),174,120);remote.visible=false;kit.children.filter(o=>o.userData.activityRemoteControl).forEach(o=>o.visible=false);}
+                } else if (this.room.id==='music' && phase===3) model(feature,kit,new THREE.Vector3(0,23,0),60,60);
+                else if(this.room.id==='gym' && phase===3) model(feature,kit,new THREE.Vector3(0,73,0),90,90);
+                else if(this.room.id==='office' && phase===4 && books[0]) model(feature,books[0],new THREE.Vector3(0,23,0),78,140);
+            }
+        }
+        this.room.root.userData.decorationFinish.suppliedActivityModels=count;
     }
     makeKit(g, phase, small) {
         const { h, mats: m, room } = this, id = room.id;
@@ -148,8 +218,10 @@ export class RoomLife {
             if (!small && !quiet) {
                 // Pencil and a stopped metronome; no implied live audio source.
                 h.rod(g, [90, y + 4, 60], [182, y + 4, 73], 2, m.ink);
+                h.rod(g, [176, y + 4, 72], [185, y + 4, 73], 2.2, m.brass);
                 h.box(g, [45, 65, 35], [115, y + 32.5, -55], m.wood, 3);
                 h.rod(g, [115, y + 15, -36], [126, y + 57, -36], 1.8, m.brass);
+                for (let n = 0; n < 4; n++) h.box(g, [5, .6, 1], [104, y + 14 + n * 12, -36], m.paper);
             }
         } else if (id === 'office') {
             this.book(g, [small ? 0 : -50, y, 0], '#3d6864', !quiet && !small);
@@ -159,6 +231,7 @@ export class RoomLife {
             }
         } else if (id === 'gym') {
             for (let i = 0; i < (quiet ? 3 : 1); i++) h.box(g, [140, 22, 100], [0, y + 11 + i * 23, 0], m.linen, 5);
+            for (const x of [-57, 57]) h.box(g, [2, .6, 86], [x, y + (quiet ? 68 : 22.3), 0], m.paper);
             if (!quiet) this.book(g, [0, y + 22, 0], '#61796c', active || social);
         } else if (id === 'creative') {
             if (quiet || social) this.book(g, [0, 0, 0], '#89705c', social);
@@ -166,6 +239,9 @@ export class RoomLife {
                 const palette = h.mesh(g, new THREE.CylinderGeometry(73, 73, 7, 24), m.wood, [0, 3.5, 0]); palette.scale.z = .72;
                 for (let i = 0; i < 5; i++) h.sphere(g, [9, 2, 9], [-45 + i * 22, 8, -22 + i % 2 * 12], h.material(['#b45b48', '#d2b662', '#638786', '#566986', '#e7dcc3'][i]));
                 h.rod(g, [-60, 12, 35], [60, 12, 35], 3, m.ink);
+                h.rod(g, [35, 12, 35], [49, 12, 35], 3.6, m.ferrule);
+                h.rod(g, [49, 12, 35], [65, 12, 35], 3, m.wood);
+                for (let n = 0; n < 4; n++) h.rod(g, [51, 12, 33 + n], [65, 12, 33 + n], .3, m.ink);
             }
             if (phase === 2) this.cup(g, [0, 0, 80]);
         } else if (id === 'workshop') {
@@ -178,8 +254,8 @@ export class RoomLife {
             } else if (phase === 2) this.cup(g, [85, 0, 0]);
         } else if (id === 'scifi') {
             const screen = h.material('#72ccd5', { emissive: '#63c4d0', emissiveIntensity: quiet ? .15 : .45 });
-            h.box(g, [130, 12, 150], [0, 6, 0], m.ink, 8);
-            h.box(g, [110, 2, 125], [0, 13, 0], screen, 3);
+            h.box(g, [130, 12, 150], [0, 6, 0], m.ink, 8).userData.activityTablet=true;
+            h.box(g, [110, 2, 125], [0, 13, 0], screen, 3).userData.activityTablet=true;
             for (let n = 0; n < (active ? 3 : 1); n++) h.mesh(g, new THREE.CylinderGeometry(14, 14, 60, 12), m.brass, [n * 38 - 38, 30, 100]);
         } else if (['library', 'coworking'].includes(id)) {
             this.book(g, [-25, 0, 0], '#536f65', !quiet);
@@ -188,8 +264,8 @@ export class RoomLife {
                 h.rod(g, [95, 3, 75], [195, 3, 75], 3, m.ink);
             } else if (quiet) this.book(g, [90, 0, 15], '#a78367');
         } else if (['gaming', 'lounge'].includes(id) && (active || social || phase === 2)) {
-            const remote = h.box(g, [86, 17, 55], [-65, y + 8.5, 0], m.ink, 7); remote.rotation.y = -.2;
-            for (const x of [-87, -48]) h.sphere(g, [6, 4, 6], [x, y + 19, 0], m.brass);
+            const remote = h.box(g, [86, 17, 55], [-65, y + 8.5, 0], m.ink, 7); remote.rotation.y = -.2; remote.userData.activityRemote=true;
+            for (const x of [-87, -48]) h.sphere(g, [6, 4, 6], [x, y + 19, 0], m.brass).userData.activityRemoteControl=true;
             this.snacks(g, [70, y, 0], social ? 7 : 4);
         } else if (id === 'kitchen' && !quiet) {
             this.snacks(g, [0, y, 0], social ? 7 : 3, phase === 0);
@@ -209,7 +285,7 @@ export class RoomLife {
     }
     snacks(parent, at, count, fruit = false) {
         const { h, mats: m } = this, g = new THREE.Group(); g.position.set(...at); parent.add(g);
-        h.mesh(g, new THREE.CylinderGeometry(48, 34, 20, 16), m.cream, [0, 10, 0]);
+        h.mesh(g, new THREE.LatheGeometry([[0,0],[31,0],[34,3],[48,19],[47,22],[44,22],[32,6],[0,6]].map(([x,y])=>new THREE.Vector2(x,y)), 32), m.cream);
         for (let i = 0; i < count; i++) { const angle = i * 2.4; h.sphere(g, fruit ? [15, 15, 15] : [10, 6, 10], [Math.cos(angle) * (i % 2 ? 24 : 10), 23 + i % 3 * 8, Math.sin(angle) * 22], fruit ? (i % 2 ? m.clay : m.green) : m.paper); }
     }
     bind() {
@@ -317,7 +393,7 @@ export class RoomLife {
         for (const lamp of lamps) {
             const task = Math.hypot(lamp.position.x - l.desk[0], lamp.position.z - l.desk[1]) < 1400;
             const social = this.mode === 'party';
-            const factor = this.mode === 'night' ? (task ? 1.15 : .58) : social ? (task ? .8 : communal ? 1.2 : 1.08) : this.mode === 'evening' ? (task ? .85 : 1.08) : 1;
+            const factor = this.mode === 'night' ? (task ? 1.18 : .72) : social ? (task ? .88 : communal ? 1.16 : 1.06) : this.mode === 'evening' ? (task ? .98 : 1.06) : 1;
             lamp.intensity *= factor;
         }
     }

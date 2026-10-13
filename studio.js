@@ -2,8 +2,8 @@ import { SceneScreens, SCENE_SCREENS_KEY } from './scene-screens.mjs?v=scene-scr
 import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261008';
 import { normalizeCustomLook, normalizeCustomPalette, importCustomLooks, CUSTOM_LOOKS_KEY, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
-import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
-import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
+import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=environment-detail-scale-20261013';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=environment-detail-scale-20261013';
 import { poseIsClear } from './room-groove.mjs';
 import { SceneDesks } from './scene-desks.mjs?v=scene-sized-setups-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
@@ -16,10 +16,10 @@ import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacle
 import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=desk-objects-20261010';
+import { RoomInteractions } from './room-interactions.mjs?v=environment-detail-scale-20261013';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
-import { roomPolishLighting } from './room-polish.mjs?v=scene-desk-styling-20261010';
+import { roomPolishLighting } from './room-polish.mjs?v=environment-detail-scale-20261013';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-screen-themes-20261013-final';
 import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
 import { SurfaceArtwork } from './surface-artwork.mjs?v=obsbot-tiny-2-20261012';
@@ -50,7 +50,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=scene-screen-themes-20261013-final';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=scene-screen-themes-20261013-final5';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=environment-detail-scale-20261013';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';

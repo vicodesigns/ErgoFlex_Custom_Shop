@@ -29,7 +29,8 @@ const THEMES = {
     university: ['RESEARCH NOTES', 'QUESTION / EVIDENCE / INSIGHT', '#4b715d'],
     hospital: ['WORKSPACE CHECKLIST', 'PREPARE / CHECK / HAND OVER', '#598b85'],
     laboratory: ['LAB NOTEBOOK', 'OBSERVE / RECORD / REVIEW', '#64808c'],
-    mobileit: ['SERVICE CHECKLIST', 'IDENTIFY / TEST / DEPLOY', '#617b86']
+    mobileit: ['SERVICE CHECKLIST', 'IDENTIFY / TEST / DEPLOY', '#617b86'],
+    occmedialab: ['PRODUCTION NOTES', 'STORY / IMAGE / SOUND', '#d77b23']
 };
 function printMaterial(canvas) {
     const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4;
@@ -78,7 +79,7 @@ export function activityPageMaterial(id, phase = 0, coverColor = null) {
             for (let line = 0; line < 5; line++) { const y = 150 + row * 94 + line * 9; c.beginPath(); c.moveTo(44, y); c.lineTo(339, y); c.stroke(); }
             for (let n = 0; n < 8; n++) { const x = 65 + n * 36, y = 160 + row * 94 + ((n * 3 + phase) % 5) * 5; c.beginPath(); c.ellipse(x, y, 5, 3.5, -.3, 0, Math.PI * 2); c.fill(); c.fillRect(x + 4, y - 24, 1.5, 24); }
         }
-    } else if (['workshop', 'scifi', 'gaming', 'mobileit', 'laboratory', 'middleschool'].includes(id)) {
+    } else if (['workshop', 'scifi', 'gaming', 'mobileit', 'laboratory', 'middleschool', 'occmedialab'].includes(id)) {
         c.fillStyle = '#e0e8e4'; c.fillRect(42, 134, 300, 196);
         c.strokeStyle = '#afc2bc';
         for (let x = 42; x <= 342; x += 20) { c.beginPath(); c.moveTo(x, 134); c.lineTo(x, 330); c.stroke(); }

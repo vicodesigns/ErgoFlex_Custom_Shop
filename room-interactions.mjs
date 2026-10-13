@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { RoomGrounding } from './room-polish.mjs?v=scene-desk-styling-20261010';
+import { RoomGrounding } from './room-polish.mjs?v=environment-detail-scale-20261013';
 import { solveFloorMove, overlapArea } from './room-collision.mjs?v=room-regressions-20261007';
 
 const visible = obj => { for(let p=obj;p;p=p.parent)if(!p.visible)return false;return true; };

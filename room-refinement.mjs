@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { roomSurfaceFinish } from './room-polish.mjs?v=scene-desk-styling-20261010';
+import { roomSurfaceFinish } from './room-polish.mjs?v=environment-detail-scale-20261013';
 
 // A single sun shadow map serves each measured room. Architectural coordinates
 // are millimetres; targets, shadow bounds and relief are converted through the
@@ -87,20 +87,24 @@ const SURFACES = {
 };
 
 function surfaceMaps(kind) {
-    const size = 128, height = new Uint8Array(size * size * 4), sheen = new Uint8Array(size * size * 4), color = new Uint8Array(size * size * 4);
+    const size = 256, height = new Uint8Array(size * size * 4), sheen = new Uint8Array(size * size * 4), color = new Uint8Array(size * size * 4);
     // Integer noise is stable across rebuilds. Sine waves tile at the edges.
     const noise = (x, y) => { let n = Math.imul(x + 13, 374761393) ^ Math.imul(y + 37, 668265263); n = Math.imul(n ^ n >>> 13, 1274126177); return (n >>> 0) / 4294967295; };
     for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
         const a = x / size * Math.PI * 2, b = y / size * Math.PI * 2, n = noise(x, y);
         let value;
-        if (kind === 'wood') value = .5 + .19 * Math.sin(a * 13 + .8 * Math.sin(b * 2)) + .07 * Math.sin(a * 29 + Math.sin(b)) + (n - .5) * .08;
-        else if (kind === 'fabric') value = .5 + .16 * Math.cos(a * 16) + .16 * Math.cos(b * 16) + .08 * Math.sin((a + b) * 8);
-        else if (kind === 'metal') value = .5 + .13 * Math.sin(a * 29) + (n - .5) * .06;
-        else value = .5 + (n - .5) * .48 + .07 * Math.sin(a * 3) * Math.cos(b * 4);
+        if (kind === 'wood') value = .5 + .15 * Math.sin(a * 13 + .7 * Math.sin(b * 2)) + .09 * Math.sin(a * 43 + 1.2 * Math.sin(b)) + .035 * Math.cos(a * 79) + (n - .5) * .07;
+        else if (kind === 'fabric') value = .5 + .14 * Math.cos(a * 16) + .14 * Math.cos(b * 16) + .07 * Math.sin((a + b) * 8) + (n - .5) * .1;
+        else if (kind === 'metal') value = .5 + .11 * Math.sin(a * 61) + .045 * Math.sin(a * 97) + (n - .5) * .04;
+        else if (kind === 'stone') value = .52 + .1 * Math.sin(a * 2 + 1.5 * Math.sin(b * 3)) + .035 * Math.sin(a * 11 + Math.sin(b * 2)) + (n - .5) * .09;
+        else if (kind === 'rubber') value = .5 + (n - .5) * .55 + .06 * Math.cos(a * 24) * Math.cos(b * 24);
+        else if (kind === 'powder') value = .5 + (n - .5) * .2;
+        else value = .5 + (n - .5) * .32 + .035 * Math.sin(a * 3) * Math.cos(b * 4);
         const i = (y * size + x) * 4;
         height[i] = height[i + 1] = height[i + 2] = Math.round(value * 255); height[i + 3] = 255;
-        sheen[i] = sheen[i + 1] = sheen[i + 2] = Math.round(225 + value * 30); sheen[i + 3] = 255;
-        color[i] = color[i + 1] = color[i + 2] = Math.round(232 + value * 23); color[i + 3] = 255;
+        const range = kind === 'stone' ? 38 : kind === 'metal' ? 30 : kind === 'wood' ? 26 : 14;
+        sheen[i] = sheen[i + 1] = sheen[i + 2] = Math.round(255 - range + value * range); sheen[i + 3] = 255;
+        color[i] = color[i + 1] = color[i + 2] = Math.round(240 + value * 15); color[i + 3] = 255;
     }
     const texture = (data, srgb = false) => {
         const map = new THREE.DataTexture(data, size, size); map.wrapS = map.wrapT = THREE.RepeatWrapping;
@@ -108,7 +112,7 @@ function surfaceMaps(kind) {
         map.channel = 1; if (srgb) map.colorSpace = THREE.SRGBColorSpace;
         map.needsUpdate = true; return map;
     };
-    return { bump: texture(height), roughness: texture(sheen), color: kind === 'wood' ? texture(color, true) : null };
+    return { bump: texture(height), roughness: texture(sheen), color: ['wood', 'stone', 'fabric', 'rubber'].includes(kind) ? texture(color, true) : null };
 }
 
 // A second UV set gives surface relief a physical repeat distance. Authored
@@ -143,12 +147,17 @@ export function refineRoomSurfaces(room) {
         if (materials.has(mat)) return;
         materials.add(mat);
         roomSurfaceFinish(room, mat, kind);
-        if (!maps.has(kind)) maps.set(kind, surfaceMaps(kind));
+        if (!maps.has(kind)) {
+            const generated = surfaceMaps(kind); maps.set(kind, generated);
+            // A mapped surface may not use the neutral colour detail. Own even
+            // those unused maps so a scene switch releases every allocation.
+            root.ownedTextures ||= []; root.ownedTextures.push(...Object.values(generated).filter(Boolean));
+        }
         const detail = maps.get(kind);
         mat.bumpMap = detail.bump; mat.bumpScale = spec.relief * root.scale.x;
         if (!mat.roughnessMap) mat.roughnessMap = detail.roughness;
         if (!mat.map && detail.color) mat.map = detail.color;
         mat.needsUpdate = true;
     });
-    root.userData.surfaceDetail = { meshes, materials: materials.size, types: [...maps.keys()], textureSize: 128 };
+    root.userData.surfaceDetail = { meshes, materials: materials.size, types: [...maps.keys()], textureSize: 256 };
 }

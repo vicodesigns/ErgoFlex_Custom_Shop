@@ -179,8 +179,11 @@ def fix_materials():
         bsdf = next((n for n in m.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
         if not bsdf: continue
         a = bsdf.inputs['Alpha']
-        if not a.is_linked and a.default_value >= 0.999: m.blend_method = 'OPAQUE'
-        elif not a.is_linked and a.default_value < 0.999: m.blend_method = 'BLEND'
+        if hasattr(m, 'blend_method'):
+            if not a.is_linked and a.default_value >= 0.999: m.blend_method = 'OPAQUE'
+            elif not a.is_linked and a.default_value < 0.999: m.blend_method = 'BLEND'
+        elif hasattr(m, 'surface_render_method'):
+            m.surface_render_method = 'DITHERED'
         m.use_backface_culling = False
 
 def bake_transforms():
@@ -232,9 +235,12 @@ def run(job):
     for o in roots: o.matrix_world = Matrix.Translation(shift) @ o.matrix_world
     bpy.context.view_layer.update()
     bake_transforms()
-    if job.get('repair') == 'ergoflex-collection':
+    if job.get('repair') in ('ergoflex-collection', 'environment-decor'):
         sys.path.insert(0, os.path.dirname(__file__))
-        from supplied_model_repairs import improve
+        if job['repair'] == 'environment-decor':
+            from environment_model_repairs import improve
+        else:
+            from supplied_model_repairs import improve
         improve(job['id'])
         # Repairs may rotate fitted geometry. Bake again so exported AABBs
         # describe vertices, rather than rotated corners of the old bounds.

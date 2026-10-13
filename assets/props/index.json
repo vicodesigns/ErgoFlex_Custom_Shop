@@ -23877,6 +23877,1172 @@
    "attribution": "Adapted from local obsbot-refined.html supplied reference",
    "collection": "ErgoFlex Collection",
    "revision": "obsbot-tiny-2-20261012"
+  },
+  {
+   "id": "ergoflex-notebook",
+   "name": "Bound notebook",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-notebook.glb",
+   "anchor": "floor",
+   "size": [
+    210,
+    20.2,
+    138.8
+   ],
+   "min": [
+    -105,
+    0,
+    -69.4
+   ],
+   "max": [
+    105,
+    20.2,
+    69.4
+   ],
+   "tris": 1262,
+   "bytes": 15232,
+   "source": "models/ergoflex-supplied/notebook.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-calendar",
+   "name": "Desktop calendar",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-calendar.glb",
+   "anchor": "floor",
+   "size": [
+    97.3,
+    144.9,
+    180
+   ],
+   "min": [
+    -48.6,
+    0,
+    -90
+   ],
+   "max": [
+    48.6,
+    144.9,
+    90
+   ],
+   "tris": 13683,
+   "bytes": 74064,
+   "source": "models/ergoflex-supplied/Calendar.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-pencil-cup",
+   "name": "Pencil cup",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-pencil-cup.glb",
+   "anchor": "floor",
+   "size": [
+    92.8,
+    165,
+    122.8
+   ],
+   "min": [
+    -46.4,
+    0,
+    -61.4
+   ],
+   "max": [
+    46.4,
+    165,
+    61.4
+   ],
+   "tris": 1264,
+   "bytes": 15908,
+   "source": "models/ergoflex-supplied/CupPencils.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-paper-tray",
+   "name": "Stacking paper tray",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-paper-tray.glb",
+   "anchor": "floor",
+   "size": [
+    340,
+    280.5,
+    297.6
+   ],
+   "min": [
+    -170,
+    0,
+    -148.8
+   ],
+   "max": [
+    170,
+    280.5,
+    148.8
+   ],
+   "tris": 1752,
+   "bytes": 16524,
+   "source": "models/ergoflex-supplied/paper tray.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-printer",
+   "name": "Desktop printer",
+   "category": "electronics",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-printer.glb",
+   "anchor": "floor",
+   "size": [
+    450,
+    188.5,
+    563.4
+   ],
+   "min": [
+    -225,
+    0,
+    -281.7
+   ],
+   "max": [
+    225,
+    188.5,
+    281.7
+   ],
+   "tris": 738,
+   "bytes": 6884,
+   "source": "models/ergoflex-supplied/printer.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-large-shelf",
+   "name": "Large accessory shelf",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-large-shelf.glb",
+   "anchor": "floor",
+   "size": [
+    800,
+    44.9,
+    537.8
+   ],
+   "min": [
+    -400,
+    0,
+    -268.9
+   ],
+   "max": [
+    400,
+    44.9,
+    268.9
+   ],
+   "tris": 4934,
+   "bytes": 29128,
+   "source": "models/ergoflex-supplied/largeShelf.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-glasses",
+   "name": "Reading glasses",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-glasses.glb",
+   "anchor": "floor",
+   "size": [
+    145,
+    39,
+    146.7
+   ],
+   "min": [
+    -72.5,
+    0,
+    -73.3
+   ],
+   "max": [
+    72.5,
+    39,
+    73.3
+   ],
+   "tris": 15998,
+   "bytes": 98776,
+   "sourceTris": 120640,
+   "source": "models/ergoflex-supplied/Glasses.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-laptop",
+   "name": "Laptop computer",
+   "category": "electronics",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-laptop.glb",
+   "anchor": "floor",
+   "size": [
+    323.4,
+    208.9,
+    344.1
+   ],
+   "min": [
+    -158.4,
+    0,
+    -169.2
+   ],
+   "max": [
+    165,
+    208.9,
+    174.9
+   ],
+   "tris": 1628,
+   "bytes": 17920,
+   "source": "models/ergoflex-supplied/Laptop1.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-thermal-cup",
+   "name": "Insulated coffee cup",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-thermal-cup.glb",
+   "anchor": "floor",
+   "size": [
+    90,
+    122.2,
+    89.8
+   ],
+   "min": [
+    -45,
+    0,
+    -44.9
+   ],
+   "max": [
+    45,
+    122.2,
+    44.9
+   ],
+   "tris": 13588,
+   "bytes": 79136,
+   "source": "models/ergoflex-supplied/thermoCup.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-picture-frame-2",
+   "name": "Picture frame · wide",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-picture-frame-2.glb",
+   "anchor": "floor",
+   "size": [
+    270,
+    269.7,
+    10.8
+   ],
+   "min": [
+    -135,
+    0,
+    -5.4
+   ],
+   "max": [
+    135,
+    269.7,
+    5.4
+   ],
+   "tris": 904,
+   "bytes": 12856,
+   "source": "models/ergoflex-supplied/PictureFrame2.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-picture-frame-1",
+   "name": "Picture frame · stand",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-picture-frame-1.glb",
+   "anchor": "floor",
+   "size": [
+    255,
+    320,
+    13.9
+   ],
+   "min": [
+    -127.5,
+    0,
+    -7
+   ],
+   "max": [
+    127.5,
+    320,
+    7
+   ],
+   "tris": 3048,
+   "bytes": 32656,
+   "source": "models/ergoflex-supplied/Picture Frame1.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-couch",
+   "name": "Upholstered sofa",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-couch.glb",
+   "anchor": "floor",
+   "size": [
+    2100,
+    707.5,
+    1860.8
+   ],
+   "min": [
+    -1050,
+    0,
+    -930.4
+   ],
+   "max": [
+    1050,
+    707.5,
+    930.4
+   ],
+   "tris": 36483,
+   "bytes": 159724,
+   "sourceTris": 199188,
+   "source": "models/ergoflex-supplied/Couch.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-furnishing-console",
+   "name": "Storage console",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-furnishing-console.glb",
+   "anchor": "floor",
+   "size": [
+    635.2,
+    900,
+    920.2
+   ],
+   "min": [
+    -317.6,
+    0,
+    -460.1
+   ],
+   "max": [
+    317.6,
+    900,
+    460.1
+   ],
+   "tris": 640,
+   "bytes": 7468,
+   "source": "models/ergoflex-supplied/Furnishingn1.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-plant-3",
+   "name": "Tabletop leafy planter",
+   "category": "plants",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-plant-3.glb",
+   "anchor": "floor",
+   "size": [
+    334.1,
+    260.2,
+    350
+   ],
+   "min": [
+    -167.1,
+    0,
+    -175
+   ],
+   "max": [
+    167.1,
+    260.2,
+    175
+   ],
+   "tris": 23996,
+   "bytes": 287012,
+   "sourceTris": 392484,
+   "source": "models/ergoflex-supplied/plant3.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-small-shelf",
+   "name": "Small accessory shelf",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-small-shelf.glb",
+   "anchor": "floor",
+   "size": [
+    450,
+    34.1,
+    450.4
+   ],
+   "min": [
+    -225,
+    0,
+    -225.2
+   ],
+   "max": [
+    225,
+    34.1,
+    225.2
+   ],
+   "tris": 5758,
+   "bytes": 34672,
+   "source": "models/ergoflex-supplied/SmallShelve.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-cup-holder",
+   "name": "Clamp cup holder",
+   "category": "desk",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-cup-holder.glb",
+   "anchor": "floor",
+   "size": [
+    140,
+    26.5,
+    137.8
+   ],
+   "min": [
+    -70,
+    0,
+    -68.9
+   ],
+   "max": [
+    70,
+    26.5,
+    68.9
+   ],
+   "tris": 9834,
+   "bytes": 54260,
+   "source": "models/ergoflex-supplied/CupHolder.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-imac-mini",
+   "name": "Mini desktop computer",
+   "category": "electronics",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-imac-mini.glb",
+   "anchor": "floor",
+   "size": [
+    196.9,
+    79.3,
+    197
+   ],
+   "min": [
+    -98.5,
+    0,
+    -98.5
+   ],
+   "max": [
+    98.5,
+    79.3,
+    98.5
+   ],
+   "tris": 14430,
+   "bytes": 100532,
+   "source": "models/ergoflex-supplied/imacMini.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-office-chair-2",
+   "name": "Office chair · upholstered",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-office-chair-2.glb",
+   "anchor": "floor",
+   "size": [
+    920.8,
+    1150,
+    892.5
+   ],
+   "min": [
+    -460.4,
+    0,
+    -446.2
+   ],
+   "max": [
+    460.4,
+    1150,
+    446.2
+   ],
+   "tris": 24889,
+   "bytes": 174160,
+   "sourceTris": 181494,
+   "source": "models/ergoflex-supplied/ChairOffice2.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-standing-mirror",
+   "name": "Standing mirror",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-standing-mirror.glb",
+   "anchor": "floor",
+   "size": [
+    765.8,
+    1700,
+    449.4
+   ],
+   "min": [
+    -382.9,
+    0,
+    -224.7
+   ],
+   "max": [
+    382.9,
+    1700,
+    224.7
+   ],
+   "tris": 200,
+   "bytes": 3704,
+   "source": "models/ergoflex-supplied/StandingMirror.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-designer-chair",
+   "name": "Designer chair",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-designer-chair.glb",
+   "anchor": "floor",
+   "size": [
+    687.1,
+    820,
+    699.8
+   ],
+   "min": [
+    -343.5,
+    0,
+    -349.9
+   ],
+   "max": [
+    343.5,
+    820,
+    349.9
+   ],
+   "tris": 16508,
+   "bytes": 77440,
+   "source": "models/ergoflex-supplied/ChairDesigner.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-plant-2",
+   "name": "Broad leaf planter",
+   "category": "plants",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-plant-2.glb",
+   "anchor": "floor",
+   "size": [
+    365.1,
+    1100,
+    398
+   ],
+   "min": [
+    -182.6,
+    0,
+    -199
+   ],
+   "max": [
+    182.6,
+    1100,
+    199
+   ],
+   "tris": 67263,
+   "bytes": 342000,
+   "sourceTris": 287186,
+   "source": "models/ergoflex-supplied/plant2.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-plant-1",
+   "name": "Tall indoor planter",
+   "category": "plants",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-plant-1.glb",
+   "anchor": "floor",
+   "size": [
+    512.4,
+    1450,
+    494.3
+   ],
+   "min": [
+    -256.2,
+    0,
+    -247.1
+   ],
+   "max": [
+    256.2,
+    1450,
+    247.1
+   ],
+   "tris": 115332,
+   "bytes": 1010276,
+   "sourceTris": 3398860,
+   "source": "models/ergoflex-supplied/plant1.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-cat",
+   "name": "Cat figurine",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-cat.glb",
+   "anchor": "floor",
+   "size": [
+    692.4,
+    300,
+    261.1
+   ],
+   "min": [
+    -346.2,
+    0,
+    -130.5
+   ],
+   "max": [
+    346.2,
+    300,
+    130.5
+   ],
+   "tris": 16000,
+   "bytes": 74776,
+   "sourceTris": 30798,
+   "source": "models/ergoflex-supplied/Cat.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-trash-can",
+   "name": "Waste bin",
+   "category": "furniture",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-trash-can.glb",
+   "anchor": "floor",
+   "size": [
+    411,
+    420,
+    411
+   ],
+   "min": [
+    -205.5,
+    0,
+    -205.5
+   ],
+   "max": [
+    205.5,
+    420,
+    205.5
+   ],
+   "tris": 9796,
+   "bytes": 91088,
+   "source": "models/ergoflex-supplied/tradhcan.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-violin",
+   "name": "Violin",
+   "category": "music",
+   "scenes": [
+    "music"
+   ],
+   "file": "assets/props/ergoflex-violin.glb",
+   "anchor": "floor",
+   "size": [
+    590,
+    89.7,
+    536
+   ],
+   "min": [
+    -295,
+    0,
+    -268
+   ],
+   "max": [
+    295,
+    89.7,
+    268
+   ],
+   "tris": 24796,
+   "bytes": 165780,
+   "sourceTris": 459874,
+   "source": "models/ergoflex-supplied/violin.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-purse",
+   "name": "Leather handbag",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-purse.glb",
+   "anchor": "floor",
+   "size": [
+    266.7,
+    289.1,
+    300
+   ],
+   "min": [
+    -133.4,
+    0,
+    -150
+   ],
+   "max": [
+    133.4,
+    289.1,
+    150
+   ],
+   "tris": 15993,
+   "bytes": 106364,
+   "sourceTris": 156942,
+   "source": "models/ergoflex-supplied/Purse.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-picture-frame",
+   "name": "Small picture frame",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-picture-frame.glb",
+   "anchor": "floor",
+   "size": [
+    157.3,
+    200,
+    127.8
+   ],
+   "min": [
+    -78.7,
+    0,
+    -63.9
+   ],
+   "max": [
+    78.7,
+    200,
+    63.9
+   ],
+   "tris": 222,
+   "bytes": 4236,
+   "source": "models/ergoflex-supplied/pictureframe.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-handheld-game",
+   "name": "Handheld game console",
+   "category": "electronics",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-handheld-game.glb",
+   "anchor": "floor",
+   "size": [
+    280,
+    42.1,
+    262.7
+   ],
+   "min": [
+    -140,
+    0,
+    -131.3
+   ],
+   "max": [
+    140,
+    42.1,
+    131.3
+   ],
+   "tris": 19917,
+   "bytes": 119412,
+   "sourceTris": 77830,
+   "source": "models/ergoflex-supplied/gamhandheld.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-balloon-dog",
+   "name": "Metallic balloon dog sculpture",
+   "category": "decor",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-balloon-dog.glb",
+   "anchor": "floor",
+   "size": [
+    433.6,
+    300,
+    424.7
+   ],
+   "min": [
+    -216.8,
+    0,
+    -212.4
+   ],
+   "max": [
+    216.8,
+    300,
+    212.4
+   ],
+   "tris": 15996,
+   "bytes": 71456,
+   "sourceTris": 265064,
+   "source": "models/ergoflex-supplied/dogballonSculpture.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-watch",
+   "name": "Smart watch",
+   "category": "electronics",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-watch.glb",
+   "anchor": "floor",
+   "size": [
+    89.1,
+    51.6,
+    90
+   ],
+   "min": [
+    -44.5,
+    0,
+    -45
+   ],
+   "max": [
+    44.5,
+    51.6,
+    45
+   ],
+   "tris": 16794,
+   "bytes": 183428,
+   "sourceTris": 140915,
+   "source": "models/ergoflex-supplied/iwatch.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-earbuds",
+   "name": "Wireless earbuds",
+   "category": "electronics",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-earbuds.glb",
+   "anchor": "floor",
+   "size": [
+    60,
+    24.2,
+    56.2
+   ],
+   "min": [
+    -30,
+    0,
+    -28.1
+   ],
+   "max": [
+    30,
+    24.2,
+    28.1
+   ],
+   "tris": 14276,
+   "bytes": 70760,
+   "source": "models/ergoflex-supplied/earbuds.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-camera",
+   "name": "Digital camera",
+   "category": "electronics",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-camera.glb",
+   "anchor": "floor",
+   "size": [
+    140,
+    87.3,
+    115
+   ],
+   "min": [
+    -70,
+    0,
+    -57.5
+   ],
+   "max": [
+    70,
+    87.3,
+    57.5
+   ],
+   "tris": 15916,
+   "bytes": 98976,
+   "source": "models/ergoflex-supplied/camera.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
+  },
+  {
+   "id": "ergoflex-phone",
+   "name": "Smartphone",
+   "category": "electronics",
+   "scenes": [
+    "home",
+    "office",
+    "occmedialab"
+   ],
+   "file": "assets/props/ergoflex-phone.glb",
+   "anchor": "floor",
+   "size": [
+    78.3,
+    12,
+    147
+   ],
+   "min": [
+    -39.1,
+    0,
+    -73.5
+   ],
+   "max": [
+    39.1,
+    12,
+    73.5
+   ],
+   "tris": 19246,
+   "bytes": 147184,
+   "sourceTris": 65121,
+   "source": "models/ergoflex-supplied/iphone.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Estimated real-world dimensions for scene decoration.",
+   "collection": "ErgoFlex Collection",
+   "revision": "environment-detail-scale-20261013"
   }
  ],
  "screens": [
@@ -23918,6 +25084,6 @@
    ]
   }
  ],
- "generated": "2026-10-12T20:39:35.030Z",
+ "generated": "2026-10-13T23:29:08.946Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

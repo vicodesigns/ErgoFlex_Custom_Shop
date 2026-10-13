@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=occ-media-lab-20261013';
+import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=scene-screen-themes-20261013-final';
+import { ROOM_DETAIL_PALETTES } from './room-finish-palettes.mjs?v=environment-detail-scale-20261013';
 
 // Authored art, imported GLBs and user transforms are left in their own systems.
 // These finishes apply only to the builders' explicitly tagged room materials.
@@ -26,6 +27,11 @@ export const ROOM_FINISHES = {
 // the authored mode and the visitor's lighting sliders, never accumulated.
 // Finished clinical/IT scenes retain their own group-specific calibration.
 const ROOM_BALANCE = {
+    ...Object.fromEntries(Object.keys(INSTITUTIONAL_ROOMS).map(id => [id, {
+        plaster: .93, fabric: .96, powder: ['hospital', 'laboratory'].includes(id) ? .48 : .61,
+        dayFill: .97, eveningFill: .98, nightFill: 1.06, rim: .86,
+        neutral: ['hospital', 'laboratory', 'mobileit', 'occmedialab'].includes(id) ? .22 : .12
+    }])),
     home:      { plaster: .91, fabric: .96, powder: .62, dayFill: .94, eveningFill: .94, nightFill: .96, rim: .88, neutral: .12 },
     office:    { plaster: .90, fabric: .94, powder: .57, dayFill: .92, eveningFill: .9,  nightFill: .9,  rim: .78, neutral: .20 },
     coworking: { plaster: .92, fabric: .95, powder: .60, dayFill: .94, eveningFill: .9,  nightFill: .94, rim: .85, neutral: .17 },
@@ -45,27 +51,32 @@ const ROOM_BALANCE = {
 // Instance-owned material copies: muted upholstery and natural foliage on
 // the small untextured library props. Cached GLBs and mapped fabric stay intact.
 export function polishRoomProp(room, object, placement) {
-    if (!ROOM_BALANCE[room.id]) return;
+    const palette = ROOM_DETAIL_PALETTES[room.id];
+    if (!palette) return;
     const plant = /^kenney-furniture-(plant-small|potted-plant)/.test(placement.id);
     const seating = /^kenney-furniture-(lounge-sofa|chair-cushion|chair-modern-cushion)$/.test(placement.id);
     if (!plant && !seating) return;
-    const upholstery = { office: '#73877b', coworking: '#ae927c', library: '#7b8d7a', music: '#675c66', gaming: '#5a6073', creative: '#b4a489', study: '#78836b', lounge: '#74836e', kitchen: '#90a18c', gym: '#657771', bedroom: '#b19e91', gallery: '#a89e8c', workshop: '#788381', home: '#aca38d', scifi: '#53677a' }[room.id];
+    const upholstery = palette[0];
     const copies = new Map();
     const finish = source => {
-        if (!source?.isMeshStandardMaterial || source.map || !(plant && source.name === 'plant' || seating && source.name === 'carpet')) return source;
+        if (!source?.isMeshStandardMaterial || source.map || !['plant', 'carpet', 'wood', 'metal', 'plastic'].includes(source.name)) return source;
         if (copies.has(source)) return copies.get(source);
-        const mat = source.clone(); mat.color.set(plant ? '#4e7254' : upholstery);
-        mat.roughness = plant ? .88 : .96; mat.metalness = 0;
+        const mat = source.clone();
+        if (source.name === 'plant') { mat.color.set('#4f7857'); mat.roughness = .86; mat.metalness = 0; }
+        else if (source.name === 'carpet') { mat.color.set(upholstery); mat.roughness = .96; mat.metalness = 0; }
+        else if (source.name === 'metal') { mat.roughness = .34; mat.metalness = .75; }
+        else if (source.name === 'wood') { mat.roughness = .56; mat.metalness = 0; }
+        else { mat.roughness = .58; mat.metalness = 0; }
         mat.userData.sharedTextures = true; copies.set(source, mat); room.ownedMaterials.add(mat); return mat;
     };
     object.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(finish) : finish(o.material); });
 }
 const PHASE_LIGHT = {
     morning:   { fill: .90, rim: .62, ambient: 1.00, bounce: 1.00, contact: .22 },
-    afternoon: { fill: .94, rim: .72, ambient: .98, bounce: 1.00, contact: .20 },
-    evening:   { fill: .78, rim: .47, ambient: .94, bounce: .94, contact: .25 },
-    night:     { fill: .68, rim: .22, ambient: .90, bounce: .86, contact: .29 },
-    party:     { fill: .75, rim: .38, ambient: .94, bounce: .92, contact: .25 }
+    afternoon: { fill: .90, rim: .65, ambient: .96, bounce: 1.00, contact: .22 },
+    evening:   { fill: .86, rim: .43, ambient: .94, bounce: .98, contact: .26 },
+    night:     { fill: .83, rim: .22, ambient: .92, bounce: .92, contact: .29 },
+    party:     { fill: .82, rim: .36, ambient: .94, bounce: .96, contact: .26 }
 };
 export function roomPolishLighting(room, lights, mode) {
     const finish = ROOM_FINISHES[room.id], phase = PHASE_LIGHT[mode] || PHASE_LIGHT.afternoon;

@@ -1,8 +1,9 @@
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=scene-screen-themes-20261013-final';
 import { buildInstitutionalRoom } from './institutional-room.mjs?v=scene-desk-styling-20261010';
-import { refineRoomSurfaces } from './room-refinement.mjs?v=scene-desk-styling-20261010';
-import { polishRoomProp } from './room-polish.mjs?v=scene-desk-styling-20261010';
-import { RoomLife } from './room-life.mjs?v=scene-desk-styling-20261010';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=environment-detail-scale-20261013';
+import { polishRoomProp } from './room-polish.mjs?v=environment-detail-scale-20261013';
+import { RoomLife } from './room-life.mjs?v=environment-detail-scale-20261013';
+import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=scene-desk-styling-20261010';
 import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-window-20261011';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
@@ -11,7 +12,7 @@ import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gal
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=groove-routines-20261002';
 import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
-import { RoomBounceLight } from './room-bounce-light.mjs?v=ceiling-bounce-20261011';
+import { RoomBounceLight } from './room-bounce-light.mjs?v=environment-detail-scale-20261013';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -81,7 +82,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=obsbot-tiny-2-20261012').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=environment-detail-scale-20261013').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -93,14 +94,24 @@ export const PROP_LIBRARY = {
         if (!this.cache.has(id)) {
             if (!this.loader) { this.loader = new GLTFLoader(); this.loader.setMeshoptDecoder(MeshoptDecoder); }
             const entry = this.entry(id);
-            const url = entry ? './' + entry.file + (entry.revision ? '?v=' + encodeURIComponent(entry.revision) : '') : `${PROP_BASE}${id}.glb`;
+            const url = entry ? './' + entry.file + '?v=' + encodeURIComponent(entry.revision || 'prop-unit-scale-20261013') : `${PROP_BASE}${id}.glb?v=prop-unit-scale-20261013`;
             this.cache.set(id, new Promise((resolve, reject) => this.loader.load(url, gltf => {
                 gltf.scene.traverse(obj => {
                     if (!obj.isMesh) return;
                     obj.castShadow = true; obj.receiveShadow = true;
                     obj.userData.sharedProp = true;
                 });
-                resolve(gltf.scene);
+                const size = new THREE.Box3().setFromObject(gltf.scene).getSize(new THREE.Vector3()).toArray();
+                const factor = propUnitCorrection(size, entry?.size);
+                if (factor === 1) resolve(gltf.scene);
+                else {
+                    // Keep this conversion below the editable instance root.
+                    // Restoring its saved scale cannot undo the unit repair.
+                    const normalized = new THREE.Group();
+                    gltf.scene.scale.multiplyScalar(factor); normalized.add(gltf.scene);
+                    normalized.userData.propUnitCorrection = factor;
+                    resolve(normalized);
+                }
             }, undefined, err => { this.cache.delete(id); this.failures.set(id, err); reject(err); })));
         }
         return this.cache.get(id);
@@ -112,6 +123,11 @@ export const PROP_LIBRARY = {
         clone.name = `Prop:${id}`; clone.userData.sharedProp = true; clone.userData.propId = id;
         clone.traverse(obj => { obj.userData.sharedProp = true; });
         clone.scale.setScalar(1000);
+        if (id === 'ergoflex-laptop') clone.traverse(obj => {
+            if (!obj.isMesh || obj.material?.name !== 'Decor screen glass') return;
+            obj.material=obj.material.clone(); obj.material.userData.sharedTextures=true;
+            obj.ownedMaterials=[obj.material]; obj.name='monitor-screen'; obj.userData.sceneDisplay='theme'; obj.userData.screenFront=1;
+        });
         if (id === 'ergoflex-painter-shelf') clone.traverse(obj => {
             if (!obj.isMesh) return;
             const materials = [].concat(obj.material).map(m => {
@@ -1311,8 +1327,12 @@ export class WorkspaceRoom {
         }
         const token = this.token;
         this.ready = Promise.all([this.windowViewReady, this.addProps(root, scene, this.token),
-            this.roomLayout?.stations?.length ? this.addOfficeStations(root, options.createStation, this.token) : Promise.resolve()]).then(() => {
-            if (token === this.token) this.life?.bind();
+            this.roomLayout?.stations?.length ? this.addOfficeStations(root, options.createStation, this.token) : Promise.resolve()]).then(async () => {
+            if (token === this.token) {
+                this.life?.bind();
+                const life=this.life;
+                if (life) { await PROP_LIBRARY.loadIndex(); if(token===this.token) await life.decorate(PROP_LIBRARY,()=>token===this.token); }
+            }
         });
     }
     // Extra ErgoFlex desks (office, coworking and institutional layouts).
@@ -1483,7 +1503,26 @@ export class WorkspaceRoom {
         try { await PROP_LIBRARY.loadIndex(); }
         catch (error) { this.missingProps = scene.props.map(p => p.id); throw new Error(`prop index unavailable: ${error.message}`); }
         const placements = await Promise.all(scene.props.map(async (placement, index) => {
-            try { return { placement, object: await PROP_LIBRARY.instance(placement.id) }; }
+            // Upgrade the room's background dressing, keeping each original
+            // placement/editor key. The user's desk builds use their own models.
+            const replacements = {
+                'kenney-furniture-potted-plant': 'ergoflex-plant-2',
+                'monstera': 'ergoflex-plant-2', 'potted-tree': 'ergoflex-plant-1',
+                'kenney-furniture-laptop': 'ergoflex-laptop', 'glasses': 'ergoflex-glasses'
+            };
+            const supplied = replacements[placement.id];
+            try {
+                const object = await PROP_LIBRARY.instance(supplied || placement.id);
+                if (supplied) {
+                    const old = PROP_LIBRARY.entry(placement.id), next = PROP_LIBRARY.entry(supplied);
+                    // Never enlarge the footprint into an existing aisle or
+                    // neighbouring tabletop object. Height remains proportional.
+                    const fit=Math.min(1,old.size[0]/next.size[0],old.size[2]/next.size[2]);
+                    object.scale.multiplyScalar(fit); object.userData.decorUpgrade=supplied;
+                    object.userData.propId=placement.id;
+                }
+                return { placement, object };
+            }
             catch { return { placement, object: null }; }
         }));
         if (token !== this.token) return;

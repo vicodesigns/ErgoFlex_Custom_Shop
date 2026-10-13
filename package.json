@@ -44,7 +44,9 @@
     "test:desk-objects": "node tests/scene-desk-data-test.mjs && node tests/scene-desk-objects-test.cjs",
     "test:led-screen": "node tests/led-screen-sampler-test.mjs && node tests/led-screen-capture-test.cjs",
     "test:media-lab": "node tests/occ-media-lab-test.cjs && node tests/scene-size-layouts-test.cjs --scenes=occmedialab",
-    "test:scene-screens": "node tests/scene-screens-test.cjs"
+    "test:scene-screens": "node tests/scene-screens-test.cjs",
+    "test:environment-detail": "node tests/environment-detail-test.cjs",
+    "test:prop-scale": "node tests/prop-scale-test.mjs"
   },
   "repository": {
     "type": "git",
