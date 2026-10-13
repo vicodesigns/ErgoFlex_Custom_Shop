@@ -4,7 +4,7 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=scene-desk-styling-20261010';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=scene-desk-styling-20261010';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=preset-size-setups-20261012';
+import { SceneDesks } from './scene-desks.mjs?v=rearrange-targets-20261012';
 import { notebookTransform } from './notebook-transform.mjs';
 import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artwork-size-isolation-20261012';
 import { encodeStoredJSON, decodeStoredJSON, compactStoredDesigns } from './browser-design-storage.mjs?v=storage-artwork-pool-20261012';
@@ -49,7 +49,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout } from './institutional-scenes.mjs?v=scene-desk-styling-20261010';
-import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=preset-size-setups-20261012';
+import { WorkspaceAccessories, WorkspaceRoom, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-canvas-light-20261012';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -564,7 +564,9 @@ let ceilingPreviewEnabled = new URLSearchParams(location.search).get('ceiling') 
 let roomBounceEnabled = readStore('ergoflex.roomBounce', 1, null)?.enabled !== false;
 let sceneDesks=null,sceneDeskUI=null,sceneDeskInternal=false;
 let roomInteractions = null, roomFurnitureSaveTimer = null, roomCollisionBlocked = false;
-let roomRearrangeEnabled = readStore('ergoflex.roomRearrange', 1, null)?.enabled !== false;
+const storedRearrange = readStore('ergoflex.roomRearrange', 1, null);
+let roomRearrangeMode = ['off','desks','items'].includes(storedRearrange?.mode)
+    ? storedRearrange.mode : storedRearrange?.enabled === false ? 'off' : 'items';
 
 function initSceneDeskEditing() {
     if(sceneDesks)return;
@@ -596,7 +598,9 @@ function initSceneDeskEditing() {
             return draft?.room&&selectedRoomScene==='product'?{...data,rooms:{...data?.rooms,'product/default':draft.room},productAccessories:draft.config.accessories}:data;
         },writeStore:(k,v)=>writeStore(k,{...v,v:1}),changed:()=>{markEdited();setRoomSaveStatus('Saved in this browser');scheduleBuildPresetSave();},
         room:()=>workspaceRoom,sceneId:()=>selectedRoomScene,phase:()=>measuredRoomProfile()?.mode||'morning',phaseLabel:()=>measuredRoomProfile()?.modes[measuredRoomProfile()?.mode]?.label,
-        status:notifyUser,rearrange:()=>roomRearrangeEnabled&&!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active&&!sceneDesks?.playing&&!sceneDesks?.recording,
+        status:notifyUser,rearrange:()=>roomRearrangeMode==='desks'&&!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active&&!sceneDesks?.playing&&!sceneDesks?.recording,
+        objectEditing:on=>setRoomRearrangeMode(on?'items':'off'),
+        objectsEditable:()=>!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active,
         readLive:r=>{const p=workspaceRoom?.root?liveAnchor(r):new THREE.Vector3();return{size:currentConfig.size,style:currentDeskStyle(),pose:{x:p.x,z:p.z,yaw:deskYaw},height:liftToHeight(currentLift),tilt:primaryTiltConfig()?.currentDeg||0,lights:captureGrooveLights()};},
         writeLive:r=>{
             sceneDeskInternal=true;
@@ -674,6 +678,7 @@ function initSceneDeskEditing() {
         edit:(before,after)=>{if(JSON.stringify(before)!==JSON.stringify(after))transaction({type:'scene-desks',before,after});},
         sync:refresh
     });
+    sceneDesks.objects.editing=roomRearrangeMode==='items';
     if(workspaceAccessories)workspaceAccessories.onLayout=()=>sceneDesks.objects.syncAccessories();
 }
 function sceneDeskObstacleEntries(){
@@ -682,18 +687,27 @@ function sceneDeskObstacleEntries(){
 
 function syncRoomRearrangeUI() {
     const toggle=document.getElementById('room-rearrange-toggle');
-    if(toggle)toggle.checked=roomRearrangeEnabled;
+    if(toggle)toggle.checked=roomRearrangeMode==='items';
+    const desks=document.getElementById('room-rearrange-desks-toggle');
+    if(desks)desks.checked=roomRearrangeMode==='desks';
+    const deskControl=document.getElementById('room-rearrange-desks-control');
+    if(deskControl)deskControl.hidden=selectedRoomScene==='product';
     const hint=document.getElementById('room-interaction-hint');
-    if(hint)hint.textContent=(roomRearrangeEnabled
-        ? 'Click a desk to control it; drag desks or floor furnishings to move them. Use Desks to rotate a desk. Drag wall decorations along their wall. '
-        : 'Rearranging is off. Drag to orbit the room; click a desk to control it. ')
-        +'Contact stops the desk until CLEAR. After clearing, small objects can be pushed. Turn on the shield to stop before contact.';
+    if(hint){
+        hint.hidden=selectedRoomScene==='product'&&roomRearrangeMode!=='items';
+        hint.textContent=roomRearrangeMode==='desks'
+            ? 'Drag a desk to move it. Items stay attached to their desk. Use Desks to select or rotate a desk.'
+            : roomRearrangeMode==='items'
+                ? 'Drag desk objects, room furnishings or wall decorations to rearrange them. Desks stay fixed. Use Desk objects for precise placement and rotation.'
+                : 'Rearranging is off. Drag to orbit the view; click a desk to control it.';
+    }
 }
 
-function setRoomRearrangeEnabled(enabled) {
-    roomRearrangeEnabled=!!enabled;
-    if(!roomRearrangeEnabled){sceneDesks?.endDrag();roomInteractions?.end();roomInteractions?.select(null);}
-    writeStore('ergoflex.roomRearrange',{v:1,enabled:roomRearrangeEnabled});
+function setRoomRearrangeMode(mode) {
+    sceneDesks?.endDrag();roomInteractions?.end();roomInteractions?.select(null);
+    roomRearrangeMode=['desks','items'].includes(mode)?mode:'off';
+    if(sceneDesks){sceneDesks.objects.editing=roomRearrangeMode==='items';sceneDesks.sync();}
+    writeStore('ergoflex.roomRearrange',{v:1,enabled:roomRearrangeMode!=='off',mode:roomRearrangeMode});
     syncRoomRearrangeUI();
 }
 const roomLedSpill = new RoomLedSpill();
@@ -1281,7 +1295,7 @@ function initThreeJS() {
     roomInteractions = new RoomInteractions({canvas:renderer.domElement,camera,controls,scene,
         deskPointer:e=>sceneDesks?.down(e),deskMove:e=>sceneDesks?.moveDrag(e),deskEnd:e=>sceneDesks?.endDrag(e),deskEntries:sceneDeskObstacleEntries,
         room:()=>workspaceRoom,deskBox:deskCollisionBox,deskObject:()=>loadedModel,safety:roomSafety,
-        enabled:()=>roomRearrangeEnabled&&!!workspaceRoom?.root&&!liveAR?.active&&!isSelectionMode&&!isDraggingTransform&&!roomGroove?.run,
+        enabled:()=>roomRearrangeMode==='items'&&!!workspaceRoom?.root&&!liveAR?.active&&!isSelectionMode&&!isDraggingTransform&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!roomGroove?.run,
         onSelection:entry=>{
             const toolbar=document.getElementById('room-object-controls');if(!toolbar)return;
             toolbar.hidden=!entry;
@@ -2385,7 +2399,7 @@ function updateBoxSelectHint() {
 
 function onCanvasClick(event) {
     if(sceneDesks?.objects.click(event))return;
-    if(!isSelectionMode&&!rigPickMode&&!isPickingPivot&&!surfaceArtwork?.picking){const picked=sceneDesks?.pick(event);if(picked?.id&&picked.id!==sceneDesks.selected){sceneDesks.select(picked.id);return;}}
+    if(roomRearrangeMode!=='items'&&!isSelectionMode&&!rigPickMode&&!isPickingPivot&&!surfaceArtwork?.picking){const picked=sceneDesks?.pick(event);if(picked?.id&&picked.id!==sceneDesks.selected){sceneDesks.select(picked.id);return;}}
     if (surfaceArtwork?.handlePick(event, camera, canvas, interactableObjects)) return;
     if (rigPickMode) {
         const rect = canvas.getBoundingClientRect();
@@ -10690,7 +10704,8 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     const interactionHint=document.getElementById('room-interaction-hint');
     if(interactionHint)interactionHint.hidden=choice.id==='product';
     const rearrangeControl=document.getElementById('room-rearrange-control');
-    if(rearrangeControl)rearrangeControl.hidden=choice.id==='product';
+    if(rearrangeControl)rearrangeControl.hidden=false;
+    syncRoomRearrangeUI();
     for(const controlId of ['room-undo-btn','room-redo-btn','room-save-status']){
         const control=document.getElementById(controlId);if(control)control.hidden=false;
     }
@@ -11278,9 +11293,13 @@ function initStudio() {
         roomBounceEnabled = e.target.checked; writeStore('ergoflex.roomBounce', { v: 1, enabled: roomBounceEnabled }); applyRoomLighting();
     };
     toolbar.append(bounceControl);
-    const rearrangeControl=document.createElement('label');rearrangeControl.id='room-rearrange-control';rearrangeControl.hidden=true;
+    const deskRearrangeControl=document.createElement('label');deskRearrangeControl.id='room-rearrange-desks-control';deskRearrangeControl.hidden=true;
+    deskRearrangeControl.innerHTML='<input type="checkbox" id="room-rearrange-desks-toggle" aria-describedby="room-interaction-hint"><span>Rearrange desks</span>';
+    deskRearrangeControl.querySelector('input').onchange=e=>setRoomRearrangeMode(e.target.checked?'desks':'off');
+    toolbar.append(deskRearrangeControl);
+    const rearrangeControl=document.createElement('label');rearrangeControl.id='room-rearrange-control';
     rearrangeControl.innerHTML='<input type="checkbox" id="room-rearrange-toggle" aria-describedby="room-interaction-hint"><span>Rearrange items</span>';
-    rearrangeControl.querySelector('input').onchange=e=>setRoomRearrangeEnabled(e.target.checked);
+    rearrangeControl.querySelector('input').onchange=e=>setRoomRearrangeMode(e.target.checked?'items':'off');
     toolbar.append(rearrangeControl);
     for(const [id,label,shortcut,action] of [
         ['room-undo-btn','Undo','Ctrl+Z / Cmd+Z',performUndo],

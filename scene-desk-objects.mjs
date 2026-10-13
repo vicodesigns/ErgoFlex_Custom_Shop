@@ -88,7 +88,7 @@ export class SceneDeskObjects {
         this.phase(r);m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
     }
     select(id){this.selected=this.manager.active?.objects?.has(id)?id:null;this.manager.sync();}
-    setEditing(on){this.editing=!!on;if(!on)this.endDrag();this.manager.sync();}
+    setEditing(on){this.editing=!!on;if(!on)this.endDrag();this.manager.ctx.objectEditing?.(this.editing);this.manager.sync();}
     async add(propId,role=this.role){
         const m=this.manager,r=m.active;if(!r||!r.rig.mounts[role]||this.loading||m.playing||m.recording)return false;
         if(Object.keys(r.state.objects||{}).length>=200){m.ctx.status('This desk has reached its 200 object limit.');return false;}
@@ -102,7 +102,7 @@ export class SceneDeskObjects {
             const scale=Math.min(1,400/max);obj.scale.multiplyScalar(scale);obj.position.set(0,-(entry?.min?.[1]||0)*scale,0);
             const saved={role,added:true,removed:false,propId,label:entry?.name||propId,transform:plain(obj)};
             this.register(r,id,obj,saved,new THREE.Vector3(1000,1000,1000));
-            this.selected=id;this.role=role;this.editing=true;m.persist();m.ctx.edit?.(before,m.serialize());m.ctx.status(saved.label+' added to '+r.state.name+' · '+DESK_SURFACES[role]+'.');return id;
+            this.selected=id;this.role=role;this.setEditing(true);m.persist();m.ctx.edit?.(before,m.serialize());m.ctx.status(saved.label+' added to '+r.state.name+' · '+DESK_SURFACES[role]+'.');return id;
         }catch(error){m.ctx.status('Could not load this library object.');console.error('[Desk objects]',error);return false;}
         finally{this.loading=false;m.sync();}
     }
@@ -134,9 +134,9 @@ export class SceneDeskObjects {
         for(let o=hit?.object;o;o=o.parent)if(o.userData.deskObject)return{...o.userData.deskObject,hit};
         return null;
     }
-    click(e){if(!this.editing)return false;if(this.suppressClick){this.suppressClick=false;return true;}const picked=this.pick(e);if(!picked)return false;this.manager.select(picked.desk);this.select(picked.id);return true;}
+    click(e){if(!this.editing||this.manager.ctx.objectsEditable?.()===false)return false;if(this.suppressClick){this.suppressClick=false;return true;}const picked=this.pick(e);if(!picked)return false;this.manager.select(picked.desk);this.select(picked.id);return true;}
     down(e){
-        const m=this.manager;if(!this.editing||e.target!==m.ctx.canvas||e.button!==0||m.playing||m.recording)return false;
+        const m=this.manager;if(!this.editing||m.ctx.objectsEditable?.()===false||e.target!==m.ctx.canvas||e.button!==0||m.playing||m.recording)return false;
         this.suppressClick=false;
         const picked=this.pick(e);if(!picked)return false;m.select(picked.desk);this.select(picked.id);m.ctx.halt();
         const item=this.current,parent=item.obj.parent;parent.updateWorldMatrix(true,false);

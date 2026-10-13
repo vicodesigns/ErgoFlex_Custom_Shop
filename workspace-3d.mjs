@@ -287,7 +287,24 @@ export function createAccessory(item) {
         rod(root, [0, 240, -45], [0, 395, 100], 8, dark);
         sphere(root, [15, 15, 15], [0, 240, -45], silver);
         box(root, [170, 13, 48], [0, 391, 100], dark, 6);
-        box(root, [153, 2, 32], [0, 383, 100], material('#fff5cf', { emissive: '#ffdb94', emissiveIntensity: 1 }));
+        const diffuser = box(root, [153, 2, 32], [0, 383, 100],
+            material('#fff5df', { emissive: '#fff0ce', emissiveIntensity: 3, toneMapped: false }));
+        diffuser.name = 'Clamp light luminous diffuser';
+        // A local halo follows the lamp through tilt and object edits. It adds
+        // no scene lights, keeping multi-desk rooms within the lighting budget.
+        const haloSheet = document.createElement('canvas'); haloSheet.width = haloSheet.height = 128;
+        const c = haloSheet.getContext('2d'), gradient = c.createRadialGradient(64,64,8,64,64,64);
+        gradient.addColorStop(0,'rgba(255,245,218,.65)');
+        gradient.addColorStop(.45,'rgba(255,237,194,.25)');
+        gradient.addColorStop(1,'rgba(255,237,194,0)');
+        c.fillStyle=gradient;c.fillRect(0,0,128,128);
+        const haloMap=new THREE.CanvasTexture(haloSheet);haloMap.colorSpace=THREE.SRGBColorSpace;
+        const halo=mesh(root,new THREE.PlaneGeometry(235,86),new THREE.MeshBasicMaterial({
+            map:haloMap,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,
+            depthWrite:false,toneMapped:false,side:THREE.DoubleSide
+        }),[0,381.8,100]);
+        halo.name='Clamp light soft glow';halo.rotation.x=-Math.PI/2;
+        halo.castShadow=false;halo.receiveShadow=false;halo.ownedTextures=[haloMap];
     } else if (type === 'arm' || type === 'dual-arm') {
         box(root, [80, 8, 60], [0, 4, 0], dark, 3);
         box(root, [68, 45, 8], [0, -16, -26], dark, 2);
@@ -336,6 +353,29 @@ function prepareArtistPainting(root) {
     const canvas = root.getObjectByName('Mesh_5');
     if (!canvas?.isMesh) return;
     root.updateWorldMatrix(true, true);
+    const backing=root.getObjectByName('Mesh_0'), lip=root.getObjectByName('Mesh_1'), rail=root.getObjectByName('Mesh_2');
+    if (backing?.isMesh && lip?.isMesh && rail?.isMesh) {
+        const inverse=root.matrixWorld.clone().invert();
+        const boundsInRoot=obj=>{
+            obj.geometry.computeBoundingBox();
+            return obj.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(obj.matrixWorld));
+        };
+        const board=boundsInRoot(backing), ledge=boundsInRoot(lip), bar=boundsInRoot(rail);
+        // The supplied board height already fits beneath the retaining flange,
+        // but its lower edge was too far forward. Tuck that edge against the
+        // bar face, behind the beige lip. Only internal parts move; saved
+        // accessory poses and scales stay valid.
+        const delta=new THREE.Vector3(
+            (ledge.min.x+ledge.max.x-board.min.x-board.max.x)/2,
+            0,
+            bar.max.z-board.min.z
+        );
+        for (const part of [backing,canvas]) {
+            const toParent=part.parent.matrixWorld.clone().invert().multiply(root.matrixWorld);
+            part.position.add(delta.clone().applyMatrix3(new THREE.Matrix3().setFromMatrix4(toParent)));
+        }
+        root.updateWorldMatrix(true,true);
+    }
     const toRoot = root.matrixWorld.clone().invert().multiply(canvas.matrixWorld);
     const geometry = canvas.geometry.clone(), position = geometry.attributes.position;
     geometry.computeBoundingBox(); const bounds = geometry.boundingBox.clone().applyMatrix4(toRoot);

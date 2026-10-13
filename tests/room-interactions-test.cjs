@@ -136,7 +136,7 @@ const server = http.createServer((req, res) => {
             await page.click('#room-rearrange-toggle');
             assert.equal(await page.evaluate(()=>ErgoFlex.roomInteractions.enabled()),true,'Toggle restores editing');
             await page.evaluate(()=>ErgoFlex.setRoomScene('product',false));
-            assert.equal(await page.$eval('#room-rearrange-control',e=>getComputedStyle(e).display),'none');
+            assert.notEqual(await page.$eval('#room-rearrange-control',e=>getComputedStyle(e).display),'none','Desk item rearranging remains available in product view');assert.equal(await page.$eval('#room-rearrange-desks-control',e=>getComputedStyle(e).display),'none');
             assert.deepEqual(errors,[]);console.log('Rearrange toggle: defaults, selection clearing, pointer/rotation lock, collision, scene changes and reload persistence pass.');return;
         }
 

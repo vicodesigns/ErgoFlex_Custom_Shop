@@ -64,7 +64,7 @@ const pointForDesk=async()=>page.evaluate(async()=>{
 });
 let point=await pointForDesk();assert.ok(point,'No unobscured supporting desk point');await page.mouse.click(point.x,point.y);
 assert.equal(await page.evaluate(()=>ErgoFlex.sceneDesks.selected),point.id,'Canvas click did not select desk');
-await page.click('#room-rearrange-toggle');point=await pointForDesk();assert.ok(point);
+await page.click('#room-rearrange-desks-toggle');point=await pointForDesk();assert.ok(point);
 const dragBefore=await page.evaluate(()=>({active:structuredClone(ErgoFlex.sceneDesks.active.state.pose),main:structuredClone(ErgoFlex.sceneDesks.records.get('main').state.pose)}));
 await page.mouse.move(point.x,point.y);await page.mouse.down();await page.mouse.move(point.x+14,point.y+4,{steps:4});await page.mouse.up();
 const dragAfter=await page.evaluate(()=>({active:ErgoFlex.sceneDesks.active.state.pose,main:ErgoFlex.sceneDesks.records.get('main').state.pose,alert:ErgoFlex.collisionState.alert}));
