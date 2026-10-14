@@ -8,7 +8,7 @@ hours at the university.
 
 ## Layouts and materials
 
-- Pilot nook: warm oak, forest green, brass, an upholstered window perch,
+- Pilot nook: warm oak, forest green, brass,
   one shared reading table and the owner's Library Product desk.
 - Campus reading room: two window carrels, a movable discussion board,
   warm reading lamps, a lounge and shelving with separate catalog/returns.

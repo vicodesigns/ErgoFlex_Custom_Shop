@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=library-humboldt-20261013';
+import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=library-clear-desk-20261013';
 
 // Campus-library concepts, not a survey of the Humboldt pilot site.
 // Architecture and furniture coordinates are millimetres.

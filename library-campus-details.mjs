@@ -11,27 +11,11 @@ export const LIBRARY_ROUTINES = {
 };
 
 export function buildLibraryCampusDetails(room, layout, h) {
-    const { material, mesh, box, group, baked, kit, canvasMap, oak, dark, brass, dress, catalog, infoMap } = h;
+    const { material, mesh, box, group, baked, kit, canvasMap, dark, dress, catalog, infoMap } = h;
     const { width: w, depth: d, back, index } = layout, front = back + d;
     const variants = [], publications = [];
     infoMap.name = 'Library daily routine notice';
-    const fabricMap = canvasMap((c, W, H) => {
-        c.fillStyle = '#728c83'; c.fillRect(0, 0, W, H);
-        for (let i = 0; i < W; i += 3) { c.fillStyle = i % 2 ? '#ffffff18' : '#00000018'; c.fillRect(i, 0, 1, H); c.fillRect(0, i, W, 1); }
-    }, 128, 128);
-    const fabric = material('#ffffff', { map: fabricMap, roughness: 1 }); fabric.userData.roomSurface = 'fabric';
-    const paper = material('#f2ede0', { roughness: .96 });
     const aluminium = material('#aeb8b6', { metalness: .82, roughness: .38 }); aluminium.userData.roomSurface = 'metal';
-    // A human-sized upholstered window perch fits the pilot nook without
-    // blocking the desk chair, the lamp or the shared table.
-    if (!index) {
-        const perch = group('window-reading-perch', 'Upholstered window reading perch', [-w / 2 + 320, 0, back + d * .55]); perch.rotation.y = Math.PI / 2;
-        const frame = kit(); frame.box([1300, 70, 430], [0, 390, 0]);
-        for (const x of [-535, 535]) for (const z of [-140, 140]) frame.box([38, 355, 38], [x, 177.5, z]); baked(perch, frame, oak);
-        box(perch, [1280, 60, 420], [0, 455, 0], fabric, 20);
-        const cushion = box(perch, [340, 80, 320], [-410, 525, -20], fabric, 20); cushion.rotation.y = .13;
-        perch.userData.libraryZone = 'quiet';
-    }
     // Loan materials are kept on the catalog cabinet, so edits move the
     // whole service together. Open shelves remain for actual books.
     const caddy = kit(); caddy.box([200, 10, 125], [350, 1021, 10], { color: '#48675c' });
