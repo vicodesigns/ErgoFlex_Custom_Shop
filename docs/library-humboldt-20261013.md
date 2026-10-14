@@ -10,7 +10,7 @@ hours at the university.
 
 - Pilot nook: warm oak, forest green, brass,
   one shared reading table and the owner's Library Product desk.
-- Campus reading room: two window carrels, a movable discussion board,
+- Campus reading room: one window carrel, a wall mounted discussion board,
   warm reading lamps, a lounge and shelving with separate catalog/returns.
 - Learning commons: lighter oak, acoustic carpet, mineral/sage seating,
   linear task lamps, digital research and a powered collaborative zone.
@@ -20,9 +20,22 @@ hours at the university.
   aisles, a research station and a discussion board.
 
 Circulation counters move to the catalog/returns side of the larger layouts.
-Only an untouched old default counter pose is migrated; custom user positions
-remain saved. The rolling stack ladder is now a separately editable fixture,
+Untouched saved furniture defaults migrate to the revised floorplans; custom
+positions, rotations and scale edits remain saved. The rolling stack ladder is now a separately editable fixture,
 so its projecting feet do not block the whole bookcase in the route planner.
+
+## Floorplan correction
+
+- The campus reading room has one quiet carrel and one freestanding stack;
+  the extra pair crowded the desk chair and table approach.
+- Larger rooms put digital research in a rear service bay and separate the
+  quiet window seats, collection aisles, lounge and shared reading tables.
+- Shared seating zones leave at least 900 mm between neighboring groups,
+  including chair pull-back space. Stacks retain separate browsing aisles.
+- Smaller rugs stay within their zones, with no rug intersections.
+- Discussion whiteboards are mounted on the right wall. Recycling is grouped
+  against the right entrance wall instead of blocking the study-table approach.
+- Desk builds, decals and peripheral adjustments are unchanged.
 
 ## Daily use and lighting
 
@@ -59,7 +72,8 @@ lights remain within the five-light room budget and add no shadow maps.
 - `npm run test:library-product-build`: Product graphics and placements,
   additional desks, tilt, size isolation and reload.
 - `npm run test:library-humboldt`: 50 layout/width/daypart combinations with
-  swept routine clearances, daily materials/notice boards, charger contact,
+  rug/furnishing overlap checks, shared seating aisle widths, swept routine
+  clearances, daily materials/notice boards, charger contact,
   independent phone edits, persistent removal and custom counter preservation.
 - Groove planner unit checks and visual review of room/desk day and night views.
 - `npm run test:item-shortcuts`: Delete, Ctrl+Z and redo for linked room

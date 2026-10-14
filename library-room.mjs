@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=library-clear-desk-20261013';
+import { roomLifeBaseTransform } from './room-life.mjs?v=library-floorplan-20261013';
+import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=library-floorplan-20261013';
 
 // Campus-library concepts, not a survey of the Humboldt pilot site.
 // Architecture and furniture coordinates are millimetres.
@@ -10,30 +11,45 @@ const sizes = [
     ['premium', 'University study hall', 13000, 16000, 3800],
     ['executive', 'Flagship library commons', 18000, 20000, 4400]
 ];
-export const LIBRARY_LAYOUTS = Object.fromEntries(sizes.map(([id, name, width, depth, height], index) => {
+function makeLibraryLayout([id, name, width, depth, height], index, legacy = false) {
     const back = -depth / 3, front = back + depth, desk = [-width / 2 + 1100, back + 1600];
-    const reading = index === 0 ? [[width / 2 - 1300, front - 2200]] : index < 3 ? [[width / 2 - 1600, front - 2300]] : [[0, front - 2400], [width / 2 - 1800, front - 2400]];
+    let reading = index === 0 ? [[width / 2 - 1300, front - 2200]] : index < 3 ? [[width / 2 - 1600, front - 2300]] : [[0, front - 2400], [width / 2 - 1800, front - 2400]];
     // Keep existing tables first so saved fixtures retain their identities.
     if (index === 2) reading.push([0, front - 2300]);
     if (index === 3) reading.push([width / 2 - 1800, front - 5500]);
     if (index === 4) reading.push([0, front - 5600], [width / 2 - 1800, front - 5600]);
+    if (!legacy) {
+        // Reserve a chair pull-back zone around each table, then an open aisle.
+        // Rugs are smaller than the occupied seating zone and never share edges.
+        if (index === 0) reading.splice(0, reading.length, [width / 2 - 1300, front - 2400]);
+        if (index === 1) reading.splice(0, reading.length, [width / 2 - 1700, front - 3100]);
+        if (index === 2) reading.splice(0, reading.length, [width / 2 - 1600, front - 2200], [-300, front - 2200]);
+        if (index === 3) reading.splice(0, reading.length, [0, front - 2000], [width / 2 - 1800, front - 2000], [width / 2 - 1800, front - 5500]);
+        if (index === 4) reading.splice(0, reading.length, [0, front - 2000], [width / 2 - 1800, front - 2000], [0, front - 5500], [width / 2 - 1800, front - 5500]);
+    }
     const stacks = [];
     // Rear stacks and freestanding double-sided shelves with clear aisles.
     const rearCount = index === 0 ? 1 : index === 1 ? 2 : index === 2 ? 3 : index === 3 ? 4 : 6;
     for (let i = 0; i < rearCount; i++) stacks.push({ id: `rear-${i}`, at: [(i - (rearCount - 1) / 2) * 2000, back + 330], double: false });
     const columns = index === 1 ? [width / 2 - 2000] : index === 2 ? [0, 3000] : index === 3 ? [-1000, 2000, 5000] : [-2000, 1100, 4200, 7300];
-    const rows = index === 1 ? [2800, 4500] : index === 2 ? [3000, 5400] : index === 3 ? [3000, 5400, 7800] : [3200, 5600, 8000, 10400];
+    let rows = index === 1 ? [2800, 4500] : index === 2 ? [3000, 5400] : index === 3 ? [3000, 5400, 7800] : [3200, 5600, 8000, 10400];
+    if (!legacy) rows = index === 1 ? [3000] : index === 2 ? [4800, 7000] : index === 3 ? [4800, 6350, 7900] : [4800, 7000, 9200, 11400];
     if (index) for (const [ci, x] of columns.entries()) for (const [ri, z] of rows.entries()) stacks.push({ id: `stack-${ci}-${ri}`, at: [x, back + z], double: true });
     const lounge = [-width / 2 + (index ? 1450 : 700), front - (index ? 650 : 900)];
-    const carrels = index >= 1 ? Array.from({ length: [0, 2, 2, 4, 6][index] }, (_, i) => front - 4000 - i * 1800).map((z, i) => ({ id: `carrel-${i}`, at: [-width / 2 + 420, z] })) : [];
-    const research = index >= 2 ? [-width / 2 + 2600, front - 4600] : null;
+    let carrels = index >= 1 ? Array.from({ length: [0, 2, 2, 4, 6][index] }, (_, i) => front - 4000 - i * 1800).map((z, i) => ({ id: `carrel-${i}`, at: [-width / 2 + 420, z] })) : [];
+    let research = index >= 2 ? [-width / 2 + 2600, front - 4600] : null;
+    if (!legacy) {
+        carrels = index ? Array.from({ length: [0, 1, 2, 4, 6][index] }, (_, i) => ({ id: `carrel-${i}`, at: [-width / 2 + 420, back + (index === 1 ? 5000 : 4800 + i * 1800)] })) : [];
+        // Research terminals occupy the rear service bay, not the reading aisle.
+        research = index >= 2 ? [index === 2 ? -1100 : -width / 2 + 4000, back + 2300] : null;
+    }
     // Put circulation beside the catalog/returns zone, leaving the window
     // study edge and the route out of the pilot desk bay unobstructed.
     const service = index >= 2 ? [width / 2 - 1700, back + 1700] : null;
     const props = [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1050], turn: 180 }, { id: 'monstera', at: [-width / 2 + 450, 0, back + 430] }];
     for (const [i, at] of reading.slice(0, index >= 3 ? 2 : 1).entries()) {
         const seats = index === 0 ? [-500, 500] : [-650, 650];
-        for (const x of seats) for (const z of [-850, 850]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [at[0] + x, 0, at[1] + z], turn: z > 0 ? 180 : 0 });
+        for (const x of seats) for (const z of [legacy ? -850 : -1000, legacy ? 850 : 1000]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [at[0] + x, 0, at[1] + z], turn: z > 0 ? 180 : 0 });
         props.push({ id: 'kenney-furniture-laptop', at: [at[0] - 430, 740, at[1] - 260] }, { id: 'journal', at: [at[0] + 480, 740, at[1] + 260], turn: 12 },
             { id: 'kenney-furniture-books', at: [at[0] + 30, 740, at[1] + 250] });
     }
@@ -43,21 +59,23 @@ export const LIBRARY_LAYOUTS = Object.fromEntries(sizes.map(([id, name, width, d
         { id: 'journal', at: [lounge[0] - 180, 391.2, lounge[1] - 980] });
     for (const carrel of (index >= 2 ? carrels.slice(0, 2) : [])) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: 90 },
         { id: 'journal', at: [carrel.at[0] + 60, 740, carrel.at[1]], turn: 90 });
-    props.push({ id: 'monstera', at: [width / 2 - 480, 0, front - 550] });
+    props.push({ id: 'monstera', at: [width / 2 - (!legacy && index >= 2 ? 230 : 480), 0, legacy ? front - 550 : index >= 2 ? front - 1100 : back + 2300] });
     // A globe on the lounge side table; the table carries it when moved.
-    const sideTable = [lounge[0] + (index ? 1460 : 880), lounge[1] + (index ? -120 : 60)];
+    const sideTable = [lounge[0] + (index ? 1460 : legacy ? 880 : 1050), lounge[1] + (index ? -120 : 60)];
     props.push({ id: 'globe', at: [sideTable[0], 560, sideTable[1]], turn: 25 });
     // Append new native props after the original list. The loader keys include
     // the placement index, so inserting them earlier would lose saved edits.
     for (const at of reading.slice(index >= 3 ? 2 : 1)) {
-        for (const x of [-650, 650]) for (const z of [-850, 850]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [at[0] + x, 0, at[1] + z], turn: z > 0 ? 180 : 0 });
+        for (const x of [-650, 650]) for (const z of [legacy ? -850 : -1000, legacy ? 850 : 1000]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [at[0] + x, 0, at[1] + z], turn: z > 0 ? 180 : 0 });
         props.push({ id: 'kenney-furniture-laptop', at: [at[0] - 430, 740, at[1] - 260] }, { id: 'journal', at: [at[0] + 480, 740, at[1] + 260], turn: 12 }, { id: 'kenney-furniture-books', at: [at[0] + 30, 740, at[1] + 250] });
     }
-    if (research) for (const dx of [-450, 450]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [research[0] + dx, 0, research[1] + 850], turn: 180 });
+    if (research) for (const dx of [-450, 450]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [research[0] + dx, 0, research[1] + (legacy ? 850 : 1000)], turn: 180 });
     for (const carrel of carrels.slice(2)) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: 90 }, { id: 'journal', at: [carrel.at[0] + 60, 740, carrel.at[1]], turn: 90 });
     if (index === 1) for (const carrel of carrels) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: 90 }, { id: 'journal', at: [carrel.at[0] + 60, 740, carrel.at[1]], turn: 90 });
     return [id, { id, name, width, depth, height, back, index, desk, reading, stacks, lounge, carrels, research, service, props, sideTable, daylight: [-width / 2 + 100, back + depth * .4] }];
-}));
+}
+export const LIBRARY_LAYOUTS = Object.fromEntries(sizes.map((s, i) => makeLibraryLayout(s, i)));
+const previousLayouts = Object.fromEntries(sizes.map((s, i) => makeLibraryLayout(s, i, true)));
 export const libraryLayoutById = id => LIBRARY_LAYOUTS[id] || LIBRARY_LAYOUTS.apartment;
 export const libraryLayoutForSize = size => LIBRARY_LAYOUTS[size === '60x30' ? 'house' : 'apartment'];
 export const LIBRARY_MODES = {
@@ -140,14 +158,34 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     const { material, mesh, box, rod, markSceneAsset } = helpers;
     const { width: w, depth: d, height: h, back: bz, index } = layout, front = bz + d;
     const modern = index >= 2, carpeted = modern;
+    const previous = previousLayouts[layout.id];
     room.migrateSavedTransform = (obj, saved) => {
-        if (!saved || obj.userData.propId !== 'research-help-counter' || index < 2) return saved;
-        const old = [-w / 2 + 2600, 0, bz + 4400];
-        // Old autosaves also captured untouched defaults. Upgrade only that
-        // exact authored pose; a moved, scaled or rotated counter stays edited.
-        if (!old.every((n, i) => Math.abs(saved.p[['x','y','z'][i]] - n) < .01)
-            || ['x','y','z'].some(a => Math.abs(saved.q[a]) > .00001 || Math.abs(saved.s[a] - 1) > .00001)) return saved;
-        return { ...saved, p: { x: layout.service[0], y: 0, z: layout.service[1] } };
+        if (!saved) return saved;
+        const id = obj.userData.propId, old = previous;
+        let at, turn = 0;
+        if (id?.startsWith('reading-table-')) at = old.reading[Number(id.split('-').at(-1))];
+        else if (id?.startsWith('carrel-')) { at = old.carrels.find(c => c.id === id)?.at; turn = Math.PI / 2; }
+        else if (id?.startsWith('stack-')) at = old.stacks.find(c => c.id === id)?.at;
+        else if (id === 'lounge-side-table') at = old.sideTable;
+        else if (id === 'digital-research-table') at = old.research;
+        else if (id === 'research-help-counter') at = old.service;
+        else if (id === 'collaboration-whiteboard') { at = [index === 1 ? -200 : -w / 2 + (index === 2 ? 2800 : 3450), front - (index === 1 ? 2600 : 2450)]; turn = -.14; }
+        else if (id === 'reading-room-recycling') at = [-w / 2 + (index >= 2 ? 4300 : 3100), front - 330];
+        else {
+            const match = obj.userData.sceneAssetKey?.match(/:room:(\d+):/);
+            const placement = match && old.props[Number(match[1])];
+            if (placement && placement.id === id) { at = placement.at; turn = THREE.MathUtils.degToRad(placement.turn || 0); }
+        }
+        if (!at) return saved;
+        let position = at.length === 2 ? [at[0], 0, at[1]] : at;
+        if (id === 'research-help-counter' && Math.abs(saved.p.x - (-w / 2 + 2600)) < .01 && Math.abs(saved.p.z - (bz + 4400)) < .01) position = [-w / 2 + 2600, 0, bz + 4400];
+        const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), turn);
+        // Autosave captured untouched authored poses too. Upgrade those only;
+        // any translated, rotated or scaled furnishing keeps the owner's edit.
+        if (!position.every((n, i) => Math.abs(saved.p[['x','y','z'][i]] - n) < .01)
+            || ['x','y','z','w'].some(a => Math.abs(saved.q[a] - q[a]) > .00001)
+            || ['x','y','z'].some(a => Math.abs(saved.s[a] - obj.scale[a]) > .00001)) return saved;
+        return { ...saved, ...roomLifeBaseTransform(obj, { p: { x: obj.position.x, y: obj.position.y, z: obj.position.z }, q: { x: obj.quaternion.x, y: obj.quaternion.y, z: obj.quaternion.z, w: obj.quaternion.w }, s: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z } }) };
     };
     room.decorateProp = (object, placement) => {
         if (placement.id !== 'kenney-furniture-chair-modern-cushion') return;
@@ -220,7 +258,8 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         c.strokeStyle = band; c.lineWidth = 34; c.strokeRect(17, 17, S - 34, S - 34);
         c.strokeStyle = line; c.lineWidth = 5; c.strokeRect(44, 44, S - 88, S - 88); c.lineWidth = 3; c.strokeRect(9, 9, S - 18, S - 18);
     }) });
-    box(root, [1900, 4, 2400], [layout.desk[0], 2, layout.desk[1] + 500], rug('#c7cbb5', '#6f8a74', '#efe8d2', '#b4bba2'), 8);
+    const floorRug = (id, size, at, mat, radius) => { const o = box(root, size, at, mat, radius); o.userData.libraryRug = id; return o; };
+    floorRug('desk', [1900, 4, 2300], [layout.desk[0], 2, layout.desk[1] + 450], rug('#c7cbb5', '#6f8a74', '#efe8d2', '#b4bba2'), 8);
     const back = new THREE.Group(); back.name = 'Library commons wall'; root.add(back);
     box(back, [w, h, 80], [0, h / 2, bz - 40], chalk); box(back, [w, 100, 25], [0, 50, bz + 12.5], oak);
     room.walls.push({ obj: back, axis: 'x', limit: bz * root.scale.x });
@@ -456,11 +495,11 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         for (const dx of [-24, 24]) for (const dz of [-7, 7]) power.box([4, 9, 2], [430 + dx + dz / 3, 802, -299], { color: '#d2d6ce' });
         power.box([18, 6, 2], [430, 818, -299], { color: '#d2d6ce' }); baked(g, power, dress, false);
     }
-    if (index) box(root, [2850, 4, 2200], [layout.lounge[0], 2, layout.lounge[1] - 650], rug('#8c4d3e', '#e3d6b4', '#2f4a40', '#a8604d'), 12);
+    if (index) floorRug('lounge', [2700, 4, 1900], [layout.lounge[0], 2, layout.lounge[1] - 400], rug('#8c4d3e', '#e3d6b4', '#2f4a40', '#a8604d'), 12);
     // A deep-green reading rug grounds the study tables.
-    for (const at of layout.reading) {
-        const rw = (index ? 2400 : 1800) + 1300, rd = 3000, x0 = Math.max(-w / 2 + 120, at[0] - rw / 2), x1 = Math.min(w / 2 - 120, at[0] + rw / 2);
-        box(root, [x1 - x0, 5, rd], [(x0 + x1) / 2, 2.5, at[1]], rug('#3f5e4e', '#d8c9a0', '#9a6a45', '#4c6c5b'), 12);
+    for (const [i, at] of layout.reading.entries()) {
+        const rw = index ? 3200 : 2700, rd = index ? 2700 : 2500, x0 = Math.max(-w / 2 + 120, at[0] - rw / 2), x1 = Math.min(w / 2 - 120, at[0] + rw / 2);
+        floorRug('reading-' + i, [x1 - x0, 5, rd], [(x0 + x1) / 2, 2.5, at[1]], rug('#3f5e4e', '#d8c9a0', '#9a6a45', '#4c6c5b'), 12);
     }
     const pilot = group('pilot-information', 'ErgoFlex student pilot information', [layout.desk[0], 6, layout.desk[1] + 1800]);
     const pilotMap = canvasMap(c => { c.fillStyle = '#304f45'; c.fillRect(0, 0, 1024, 256); c.strokeStyle = '#c9b27a'; c.lineWidth = 6; c.strokeRect(12, 12, 1000, 232); c.fillStyle = '#eee7d0'; c.font = 'bold 48px sans-serif'; c.textAlign = 'center'; c.fillText('ERGOFLEX / STUDENT PILOT', 512, 100); c.font = '28px sans-serif'; c.fillText('Choose your height • Find your angle • Make yourself at work', 512, 170); }, 1024, 256);
@@ -702,7 +741,7 @@ function buildLibraryOperations(room, layout, h) {
         }
         notice(table, 'DIGITAL RESEARCH', 'Databases · Citation tools · Assistive technology', [0, 622, 301], [1500, 155]);
         const light = kit(); light.box([1700, 7, 50], [0, 1710, -285]); baked(table, light, glowMat(), false);
-        const supports = kit(); for (const x of [-850, 850]) supports.box([22, 970, 22], [x, 1225, -290]); baked(table, supports, steel);
+        const supports = kit(); for (const x of [-1000, 1000]) supports.box([22, 970, 22], [x, 1225, -290]); baked(table, supports, steel);
         const print = group('print-scan-cabinet', 'Print and scan equipment cabinet', [w / 2 - 350, 0, front - 4100]); print.rotation.y = -Math.PI / 2;
         const cabinet = kit(); cabinet.box([1000, 760, 580], [0, 410, 0]).box([1050, 60, 600], [0, 30, 0]).box([1040, 35, 610], [0, 807.5, 0]); baked(print, cabinet, oak);
         const machine = kit(); machine.box([660, 270, 470], [0, 960, 0], { color: '#d1d5cf' }).box([630, 28, 450], [0, 1109, -10], { color: '#414e49' });
@@ -719,7 +758,7 @@ function buildLibraryOperations(room, layout, h) {
         for (let n = 0; n < 2800; n++) { c.fillStyle = n % 2 ? '#ffffff18' : '#00000012'; c.fillRect(rnd(n) * W, rnd(n + 9) * H, 2, 5); }
     }, 256, 256);
     const acousticMat = material('#ffffff', { map: fabricMap, roughness: 1 }); acousticMat.userData.roomSurface = 'fabric';
-    for (let z = bz + 6100; z < front - 1250; z += 2200) {
+    for (let z = bz + 6100; z < front - 3000; z += 2200) {
         const panel = group('acoustic-' + Math.round(z - bz), 'Library wall acoustic treatment', [w / 2 - 35, 1960, z], right); panel.rotation.y = -Math.PI / 2; panel.userData.presentationOnly = true;
         box(panel, [1320, 800, 40], [0, 0, 0], acousticMat, 10);
         for (const x of [-440, 0, 440]) box(panel, [8, 730, 6], [x, 0, 23], oak);
@@ -730,15 +769,15 @@ function buildLibraryOperations(room, layout, h) {
     // over the quiet carrels. Its frame follows the existing floor editing API.
     let discussionMap = null;
     if (index >= 1) {
-        const board = group('collaboration-whiteboard', 'Shared research discussion whiteboard', [index === 1 ? -200 : -w / 2 + (index === 2 ? 2800 : 3450), 0, front - (index === 1 ? 2600 : 2450)]); board.rotation.y = -.14;
-        board.userData.libraryZone = 'collaborative';
-        const frame = kit(); for (const x of [-660, 660]) {
-            frame.box([28, 1760, 28], [x, 920, 0]).box([130, 28, 650], [x, 32, 0]);
-            for (const z of [-270, 270]) frame.cyl(24, 24, 28, [x, 24, z], { rot: [0, 0, Math.PI / 2] });
-        } frame.box([1390, 48, 40], [0, 1822, 0]).box([1390, 30, 70], [0, 922, 25]); baked(board, frame, steel);
-        box(board, [1310, 870, 24], [0, 1370, 0], paper, 6);
+        const board = group('collaboration-whiteboard', 'Wall mounted shared research whiteboard', [w / 2 - 32, 900, front - 800], right); board.rotation.y = -Math.PI / 2;
+        board.userData.libraryZone = 'collaborative'; board.userData.propAnchor = 'wall';
+        const frame = kit();
+        for (const x of [-670, 670]) frame.box([28, 900, 32], [x, 470, 0]);
+        for (const y of [20, 920]) frame.box([1390, 28, 32], [0, y, 0]);
+        frame.box([1260, 25, 65], [0, 8, 25]); baked(board, frame, steel);
+        box(board, [1310, 870, 24], [0, 470, 0], paper, 6);
         discussionMap = canvasMap(() => {}, 1024, 640);
-        mesh(board, new THREE.PlaneGeometry(1285, 845), material('#ffffff', { map: discussionMap, roughness: .9 }), [0, 1370, 13]).castShadow = false;
+        mesh(board, new THREE.PlaneGeometry(1285, 845), material('#ffffff', { map: discussionMap, roughness: .9 }), [0, 470, 13]).castShadow = false;
     }
     // Supplemental fixtures are attached to the existing ceiling cutaway root,
     // never floating mid-room or obscuring a bird's-eye view.

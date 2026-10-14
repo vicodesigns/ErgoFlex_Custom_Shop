@@ -345,6 +345,21 @@ export class RoomLife {
             portable: [[side * 70, -90, .08 * side], [side * 130, 40, -.1 * side], [side * 50, 150, .14 * side], [0, 80, 0], [side * 220, -200, -.2 * side]]
         };
         let [x, z, angle] = poses[entry.role][phase];
+        if (scene === 'library') {
+            // Fixed library tables stay in their floorplan zones. Seat motions
+            // are measured from each seat's own table or window carrel, and
+            // don't grow with room size or shove rear seats into the tabletop.
+            if (entry.role === 'table') return new THREE.Matrix4();
+            if (entry.role === 'meeting-chair') {
+                const l = this.room.roomLayout;
+                const supports = [...l.reading, ...l.carrels.map(c => c.at), ...(l.research ? [l.research] : [])];
+                const nearest = supports.reduce((a, b) => Math.hypot(p.x-b[0], p.z-b[1]) < Math.hypot(p.x-a[0], p.z-a[1]) ? b : a);
+                const ox = p.x - nearest[0], oz = p.z - nearest[1], pull = [20, 0, 35, -50, 65][phase];
+                x = Math.abs(ox) > Math.abs(oz) ? Math.sign(ox) * pull / f : 0;
+                z = Math.abs(oz) >= Math.abs(ox) ? Math.sign(oz) * pull / f : 0;
+                angle = [0, .015, .025, 0, .04][phase] * side / f;
+            }
+        }
         // Scene-specific circulation: a microphone comes forward for a live
         // set, an easel turns for visitors, and the robot patrols the bay.
         if (entry.role === 'portable' && phase === 4) {

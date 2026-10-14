@@ -115,7 +115,7 @@ const server = http.createServer((req, res) => {
             console.log('Checking library:',id);
             await page.select('#library-room-size',id);await page.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;});
             const data=await measure();checkBounds(data);assert.deepEqual(Object.values(data.dimensions),dims[n]);
-            const stackCount=[4,7,13,22][n];
+            const stackCount=[3,7,13,22][n];
             assert.equal(data.props.filter(p=>p.id?.startsWith('rear-')||p.id?.startsWith('stack-')).length,stackCount);
             if(n>=1) assert.ok(data.props.some(p=>p.id==='carrel-0'));
             if(n>=1) assert.equal(data.operations.quietCarrels,[2,4,6][n-1]);

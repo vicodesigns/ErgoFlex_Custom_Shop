@@ -33,11 +33,41 @@ const server = http.createServer((req, res) => {
                         const b=charger.geometry.boundingBox.clone().applyMatrix4(mount.matrixWorld.clone().invert().multiply(charger.matrixWorld)),c=b.getCenter(new T.Vector3()); c.y=b.max.y+.5; return c;
                     });
                     if(actual.distanceTo(expected)>.01) throw Error(size+' phone not contacting the charging insert: '+actual.toArray()+' vs '+expected.toArray());
+                    const checkFloorplan = () => {
+                    room.root.updateMatrixWorld(true);
+                    const inverse = room.root.matrixWorld.clone().invert();
+                    const bounds = obj => {
+                        const b = new T.Box3();
+                        obj.traverse(m => { if (m.isMesh) { m.geometry.computeBoundingBox(); if(m.isInstancedMesh)m.computeBoundingBox(); b.union((m.isInstancedMesh ? m.boundingBox : m.geometry.boundingBox).clone().applyMatrix4(inverse.clone().multiply(m.matrixWorld))); } });
+                        return b;
+                    };
+                    const rugs = room.root.children.filter(o => o.userData.libraryRug).map(o => ({id:o.userData.libraryRug,b:bounds(o)}));
+                    const overlap = (a,b) => Math.min(a.max.x,b.max.x)-Math.max(a.min.x,b.min.x)>1 && Math.min(a.max.z,b.max.z)-Math.max(a.min.z,b.min.z)>1;
+                    for(let i=0;i<rugs.length;i++)for(let j=i+1;j<rugs.length;j++)if(overlap(rugs[i].b,rugs[j].b))throw Error(room.roomLayout.id+' rugs overlap: '+rugs[i].id+'/'+rugs[j].id);
+                    const floorItems=room.assets().filter(o=>o.parent&&o.visible&&!o.userData.presentationOnly).map(o=>({id:o.userData.propId,b:bounds(o)})).filter(o=>o.b.min.y<1&&o.b.max.y>50);
+                    const clashes=[];
+                    for(let i=0;i<floorItems.length;i++)for(let j=i+1;j<floorItems.length;j++){
+                        const a=floorItems[i],b=floorItems[j];
+                        if(!overlap(a.b,b.b)||[a.id,b.id].includes('rolling-stack-ladder'))continue;
+                        clashes.push(a.id+'/'+b.id+' '+JSON.stringify({a:[a.b.min.toArray(),a.b.max.toArray()],b:[b.b.min.toArray(),b.b.max.toArray()]}));
+                    }
+                    if(clashes.length)throw Error(room.roomLayout.id+' furnishings overlap: '+clashes.join(', '));
+                    const discussion=room.assets().find(o=>o.userData.propId==='collaboration-whiteboard');
+                    if(discussion && room.assets().some(o=>o===discussion&&bounds(o).min.y<850))throw Error('Whiteboard obstructs the floor');
+                    // Occupied table zones include the chairs and room to pull them back.
+                    const tableZones=room.roomLayout.reading.map(at=>({min:{x:at[0]-(room.roomLayout.index?1200:900),z:at[1]-1300},max:{x:at[0]+(room.roomLayout.index?1200:900),z:at[1]+1300}}));
+                    for(let i=0;i<tableZones.length;i++)for(let j=i+1;j<tableZones.length;j++){
+                        const a=tableZones[i],b=tableZones[j],dx=Math.max(a.min.x-b.max.x,b.min.x-a.max.x),dz=Math.max(a.min.z-b.max.z,b.min.z-a.max.z);
+                        if(Math.max(dx,dz)<900)throw Error(room.roomLayout.id+' shared seating aisle under 900mm');
+                    }
+                    };
+                    checkFloorplan();
                     const phases=[], maps=[], routes=[];
                     const board=room.assets().find(o=>o.userData.propId==='student-board');
                     const map=board.children.find(o=>o.material?.map?.name==='Library daily routine notice').material.map;
                     for(const mode of ['morning','afternoon','evening','night','party']) {
                         await e.prepareGrooveMode('library',mode);
+                        checkFloorplan();
                         const campus=room.root.userData.libraryCampus;
                         if(campus.routine!==mode) throw Error('Daily routine did not update');
                         for(const table of room.assets().filter(o=>o.userData.propId?.startsWith('reading-table-'))) {
@@ -52,6 +82,16 @@ const server = http.createServer((req, res) => {
                     if(new Set(maps).size!==5) throw Error('Daily notice board did not change');
                     const lamps=room.root.children.filter(o=>o.isPointLight);if(lamps.length>5||lamps.some(o=>!Number.isFinite(o.intensity)))throw Error('Practical light budget exceeded');
                     if(!room.root.userData.libraryOperations.collaborationBoard&&room.roomLayout.index>0)throw Error('Movable whiteboard missing');
+                    const l=room.roomLayout, front=l.back+l.depth;
+                    const table=room.assets().find(o=>o.userData.propId==='reading-table-0');
+                    const oldAt=[l.index>=3?0:l.width/2-(l.index?1600:1300),front-(l.index>=3?2400:l.index?2300:2200)];
+                    const oldTable={p:{x:oldAt[0],y:0,z:oldAt[1]},q:{x:0,y:0,z:0,w:1},s:{x:1,y:1,z:1}};
+                    const migrated=room.migrateSavedTransform(table,oldTable), moved=structuredClone(oldTable);moved.p.x+=111;
+                    if(Math.abs(migrated.p.x-l.reading[0][0])>.01||Math.abs(migrated.p.z-l.reading[0][1])>.01||room.migrateSavedTransform(table,moved)!==moved)throw Error('Table default/custom migration incorrect');
+                    const chair=room.assets().find(o=>o.userData.sceneAssetKey===`library:${l.id}:room:2:kenney-furniture-chair-modern-cushion`);
+                    const oldChair=structuredClone(oldTable);oldChair.p.x-=l.index?650:500;oldChair.p.z-=850;oldChair.s={x:chair.scale.x,y:chair.scale.y,z:chair.scale.z};
+                    const migratedChair=room.migrateSavedTransform(chair,oldChair);
+                    if(Math.abs(migratedChair.p.x-(l.reading[0][0]-(l.index?650:500)))>.01||Math.abs(migratedChair.p.z-(l.reading[0][1]-1000))>.01)throw Error('Chair migration saved a daily displacement twice');
                     const service=room.assets().find(o=>o.userData.propId==='research-help-counter');
                     if(service) {
                         const l=room.roomLayout,old={p:{x:-l.width/2+2600,y:0,z:l.back+4400},q:{x:0,y:0,z:0,w:1},s:{x:1,y:1,z:1}},custom=structuredClone(old);custom.p.x+=125;
@@ -72,6 +112,6 @@ const server = http.createServer((req, res) => {
         await p.evaluate(async()=>{await ErgoFlex.workspaceRoom.ready;await ErgoFlex.sceneDesks.objects.ready;});
         assert.equal(await p.evaluate(()=>ErgoFlex.sceneDesks.active.state.objects['default-library-iphone'].removed),true,'Removed default phone stays removed after reload');
         assert.deepEqual(errors,[]);
-        console.log('PASS Humboldt Library: 50 layout/width/daypart routines with swept clearance, five daily notice boards and material kits, iPhone charger contact, independent edits, removal/reload, and custom furniture preservation.');
+        console.log('PASS Humboldt Library: five floorplans, no rug/furnishing overlaps, 900mm shared seating aisles and 50 layout/width/daypart routines with swept clearance, five daily notice boards and material kits, iPhone charger contact, independent edits, removal/reload, and custom furniture preservation.');
     } finally { await browser.close(); server.close(); }
 })().catch(error=>{console.error(error);server.close();process.exitCode=1;});

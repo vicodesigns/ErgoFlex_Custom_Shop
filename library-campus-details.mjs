@@ -27,7 +27,8 @@ export function buildLibraryCampusDetails(room, layout, h) {
     mesh(catalog, new THREE.PlaneGeometry(270, 58), material('#ffffff', { map: caddyMap, roughness: .9 }), [350, 1114, 12]).castShadow = false;
     // Visible disposal openings, liner rims and separate labels make the
     // bins read as equipment rather than featureless cubes.
-    const station = group('reading-room-recycling', 'Paper recycling and waste station', [-w / 2 + (index >= 2 ? 4300 : 3100), 0, front - 330]);
+    const station = group('reading-room-recycling', 'Paper recycling and waste station', [w / 2 - 400, 0, front - 500]);
+    station.rotation.y = -Math.PI / 2;
     for (const [i, name] of ['PAPER', 'RECYCLING', 'WASTE'].entries()) {
         const bin = kit(), x = (i - 1) * 225;
         bin.box([204, 600, 260], [x, 300, 0]).box([214, 40, 270], [x, 620, 0]); baked(station, bin, dark);
@@ -85,8 +86,8 @@ export function buildLibraryCampusDetails(room, layout, h) {
     // identity while leaving quiet window glass and aisle space clear.
     const board = room.assets().find(o => o.userData.propId === 'collaboration-whiteboard');
     if (board) {
-        const marker = kit(); for (const [i, color] of ['#365248', '#587c90', '#9d5b49'].entries()) marker.cyl(5, 5, 120, [-480 + i * 44, 946, 46], { rot: [0, 0, Math.PI / 2], color });
-        marker.box([105, 25, 44], [-260, 951, 45], { color: '#54665d' }); baked(board, marker, dress, false);
+        const marker = kit(); for (const [i, color] of ['#365248', '#587c90', '#9d5b49'].entries()) marker.cyl(5, 5, 120, [-480 + i * 44, 46, 46], { rot: [0, 0, Math.PI / 2], color });
+        marker.box([105, 25, 44], [-260, 51, 45], { color: '#54665d' }); baked(board, marker, dress, false);
     }
     let last = null;
     return { setMode(mode) {
