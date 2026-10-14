@@ -74,7 +74,9 @@ export function cleanSceneDeskVariant(v) {
         ...(cleanDeskStyle(v.style)?{style:cleanDeskStyle(v.style)}:{}),
         ...(accessories?{accessories,accessoryFinishes:finishes}:{}),
         ...(deskId(v.peripheralRecipe)?{peripheralRecipe:v.peripheralRecipe}:{}),
-        ...(v.peripheralSetup==='product-reference-v1'?{peripheralSetup:v.peripheralSetup}:{})};
+        ...(v.peripheralSetup==='product-reference-v1'?{peripheralSetup:v.peripheralSetup}:{}),
+        ...(v.productBuild?.id==='library' && ['48x30','60x30'].includes(v.productBuild.size) && Number.isSafeInteger(v.productBuild.revision) && v.productBuild.revision>=0
+            ? {productBuild:{id:'library',size:v.productBuild.size,revision:v.productBuild.revision}} : {})};
 }
 export function seedSceneDeskSize(source,size) {
     const draft=cleanSceneDeskVariant({...source,size});

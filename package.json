@@ -46,7 +46,9 @@
     "test:media-lab": "node tests/occ-media-lab-test.cjs && node tests/scene-size-layouts-test.cjs --scenes=occmedialab",
     "test:scene-screens": "node tests/scene-screens-test.cjs",
     "test:environment-detail": "node tests/environment-detail-test.cjs",
-    "test:prop-scale": "node tests/prop-scale-test.mjs"
+    "test:prop-scale": "node tests/prop-scale-test.mjs",
+    "test:library-product-build": "node tests/library-product-build-test.mjs && node tests/library-product-artwork-test.cjs",
+    "test:free-items": "node tests/rearrange-free-items-test.cjs"
   },
   "repository": {
     "type": "git",

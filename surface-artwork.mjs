@@ -138,6 +138,34 @@ export function paintArtworkLayer(context, image, layer, width, height) {
     context.restore();
 }
 
+// Render the same clipped graphics on inactive room desks, without sharing the
+// editable Product overlay or attaching room graphics to the live CAD model.
+export async function createSceneDeskArtwork(state, targets) {
+    state=cleanArtwork(state);
+    const sources=new Set(Object.values(state.surfaces).flatMap(s=>Object.values(s).filter(l=>l.enabled).map(l=>l.image)));
+    const images=new Map(await Promise.all([...sources].map(async src=>[src,await decodedImage(src)])));
+    const result=[];
+    for(const {id,obj,frame,panel,outerSign,facing} of targets){
+        const layers=artworkLayers(state.surfaces[id]).filter(([,layer])=>layer.enabled);
+        if(!layers.length)continue;
+        const mapped=mappedGeometry(obj,frame,panel,outerSign,facing);
+        const w=Math.max(128,Math.round(1024*Math.min(1,mapped.width/mapped.height)));
+        const h=Math.max(128,Math.round(1024*Math.min(1,mapped.height/mapped.width)));
+        for(const [rank,[key,layer]] of layers.entries()){
+            const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+            paintArtworkLayer(canvas.getContext('2d'),images.get(layer.image),layer,w,h);
+            const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;map.anisotropy=4;
+            const material=new THREE.MeshPhysicalMaterial({map,color:0xffffff,roughness:.44,metalness:0,clearcoat:.18,transparent:true,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2-rank,polygonOffsetUnits:-2});
+            const mesh=new THREE.Mesh((layer.coverage==='wrap'?mapped.full:mapped.face).clone(),material);
+            mesh.name=`Artwork ${id} ${key}`;mesh.receiveShadow=true;mesh.renderOrder=.1+rank*.01;
+            mesh.userData.surfaceArtwork=true;mesh.raycast=()=>{};
+            result.push({source:obj,mesh});
+        }
+        mapped.full.dispose();mapped.face.dispose();
+    }
+    return result;
+}
+
 export class SurfaceArtwork {
     constructor({ host, getConfig, onChange, notify, focus, getFinishColor, onSampleLook, onCollegePreset }) {
         this.getConfig = getConfig; this.onChange = onChange; this.notify = notify; this.focus = focus; this.getFinishColor = getFinishColor; this.onSampleLook = onSampleLook;

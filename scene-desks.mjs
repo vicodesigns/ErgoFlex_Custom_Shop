@@ -89,6 +89,7 @@ export class SceneDesks {
     }
     ensureRig(r){
         if(r.rig)return r.rig;
+        this.ctx.prepareDesk?.(r);
         const old=r.group,rig=this.ctx.makeRig(r.state,r.spec);
         const group=rig.group;group.name=r.state.name+' · ErgoFlex desk';
         r.metadata||=old?.userData||{};

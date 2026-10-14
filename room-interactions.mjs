@@ -121,9 +121,10 @@ export class RoomInteractions {
         const dx=THREE.MathUtils.clamp(0,f.min.x-after.min.x,f.max.x-after.max.x),dz=THREE.MathUtils.clamp(0,f.min.z-after.min.z,f.max.z-after.max.z);
         const fits=after.max.x-after.min.x<=f.max.x-f.min.x&&after.max.z-after.min.z<=f.max.z-f.min.z;
         this.moveObject(entry.obj,dx,dz);after.translate(new THREE.Vector3(dx,0,dz));
-        const obstacles=entry.collider?this.obstacles(entry.obj):[],desk=this.deskBox();if(entry.collider&&desk)obstacles.push({box:floorBox(desk)});
-        const blocked=!fits||obstacles.some(o=>overlapArea(floorBox(after),o.box)>Math.max(1e-10,overlapArea(floorBox(before),o.box)+1e-10));
-        if(blocked){saved.forEach(({obj,p,q,s})=>{obj.position.copy(p);obj.quaternion.copy(q);obj.scale.copy(s);obj.updateMatrixWorld(true);});this.onStatus?.('Move this furnishing into a clear space before rotating it.');}
+        // Item editing is free placement: overlap with furniture or desks is
+        // intentional while arranging. Keep the room boundary as the limit.
+        const blocked=!fits;
+        if(blocked){saved.forEach(({obj,p,q,s})=>{obj.position.copy(p);obj.quaternion.copy(q);obj.scale.copy(s);obj.updateMatrixWorld(true);});this.onStatus?.('This furnishing is too large to rotate within the room.');}
         else {this.onEditEnd?.(edit);this.onChange?.();}
         this.highlight.box.setFromObject(entry.obj);return !blocked;
     }
@@ -136,12 +137,10 @@ export class RoomInteractions {
         if(e.target!==this.canvas||e.button!==0||!this.enabled()||e.shiftKey||e.altKey||e.ctrlKey||e.metaKey)return;
         if(this.drag){this.end();return;}
         this.point(e);
-        const hit=this.ray.intersectObject(this.root||new THREE.Group(),true).find(h=>visible(h.object));
+        const hit=this.ray.intersectObject(this.root||new THREE.Group(),true).find(h=>visible(h.object)&&this.entries.some(row=>row.objects.some(obj=>descendant(h.object,obj))));
         if(!hit){this.select(null);return;}
         const entry=this.entries.find(row=>row.objects.some(obj=>descendant(hit.object,obj)));
         if(!entry){this.select(null);return;}
-        const desk=this.deskObject?.(),deskHit=desk&&this.ray.intersectObject(desk,true).find(h=>visible(h.object)&&!h.object.material?.isShaderMaterial);
-        if(deskHit&&deskHit.distance<hit.distance-.01)return;
         const normal=entry.surface==='wall'?new THREE.Vector3(entry.wall.axis==='x'?1:0,0,entry.wall.axis==='z'?1:0):new THREE.Vector3(0,1,0);
         const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,hit.point),anchor=new THREE.Vector3();
         if(!this.ray.ray.intersectPlane(plane,anchor))return;
@@ -162,10 +161,8 @@ export class RoomInteractions {
                 delta.y=THREE.MathUtils.clamp(delta.y,room.root.scale.x*120-box.min.y,height-box.max.y);
                 this.moveObject(d.entry.obj,delta.x,delta.z,delta.y);d.changed||=delta.length()>1e-8;
             }else{
-                const obstacles=d.entry.collider?this.obstacles(d.entry.obj):[],desk=this.deskBox();
-                if(d.entry.collider&&desk)obstacles.push({id:'desk',box:floorBox(desk),movable:false});
-                const result=solveFloorMove(floorBox(box),{x:delta.x,z:delta.z},obstacles,floorBox(room.floorBounds),{step:room.root.scale.x*25,gap:room.root.scale.x*3});
-                this.moveObject(d.entry.obj,result.x,result.z);this.commitPushes(result);d.changed||=Math.hypot(result.x,result.z)>1e-8;
+                const result=solveFloorMove(floorBox(box),{x:delta.x,z:delta.z},[],floorBox(room.floorBounds),{step:room.root.scale.x*25,gap:0});
+                this.moveObject(d.entry.obj,result.x,result.z);d.changed||=Math.hypot(result.x,result.z)>1e-8;
             }
             d.last.copy(point);this.highlight.box.setFromObject(d.entry.obj);
         }

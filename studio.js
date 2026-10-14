@@ -5,24 +5,25 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=environment-detail-scale-20261013';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=environment-detail-scale-20261013';
 import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=scene-sized-setups-20261012';
+import { SceneDesks } from './scene-desks.mjs?v=library-build-free-items-20261013';
+import { applyLibraryProductBuild } from './library-product-build.mjs?v=library-build-free-items-20261013';
 import { notebookTransform } from './notebook-transform.mjs';
 import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artwork-size-isolation-20261012';
 import { encodeStoredJSON, decodeStoredJSON, compactStoredDesigns } from './browser-design-storage.mjs?v=scene-sized-setups-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
-import { buildSceneDeskRig } from './scene-desk-rig.mjs';
+import { buildSceneDeskRig } from './scene-desk-rig.mjs?v=library-build-free-items-20261013';
 import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=scene-sized-setups-20261012';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=environment-detail-scale-20261013';
+import { RoomInteractions } from './room-interactions.mjs?v=library-build-free-items-20261013';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=environment-detail-scale-20261013';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-screen-themes-20261013-final';
 import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
-import { SurfaceArtwork } from './surface-artwork.mjs?v=obsbot-tiny-2-20261012';
+import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=library-build-free-items-20261013';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-window-20261011';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
@@ -607,6 +608,11 @@ function initSceneDeskEditing() {
         objectEditing:on=>setRoomRearrangeMode(on?'items':'off'),
         objectsEditable:()=>!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active,
         seedDeskSize:(_r,source,size)=>seedSceneSizeWithPeripherals(source,size),
+        prepareDesk:r=>{
+            if(selectedRoomScene!=='library')return;
+            const saved=cleanBuildPresets(readStore(BUILD_PRESETS_KEY,1,null)||buildPresets);
+            applyLibraryProductBuild(r.state,saved.entries.library);
+        },
         decorateDesk:initRoomDeskPeripherals,
         defaultLights:base=>{
             if(base.game?.active||base.music?.active)return base;
@@ -661,10 +667,24 @@ function initSceneDeskEditing() {
                 }))});
                 // Every rebuild uses the same reference anchor, independent
                 // of the saved posture, so importing cannot recenter a desk.
-                rig.updatePose(state.height,state.tilt);return rig;
+                rig.updatePose(state.height,state.tilt);
+                const targets=withDeskSize(state.size,()=>surfaceArtworkTargets());
+                let artworkSignature=null,artworkRequest=0;
+                rig.syncArtwork=value=>{
+                    const signature=JSON.stringify(value||{v:1,surfaces:{}});
+                    if(signature===artworkSignature)return rig.artworkReady;
+                    artworkSignature=signature;const request=++artworkRequest;
+                    rig.artworkReady=createSceneDeskArtwork(value,targets).then(layers=>{
+                        if(request===artworkRequest)rig.addArtwork(layers);
+                        else for(const {mesh} of layers){mesh.geometry.dispose();mesh.material.map.dispose();mesh.material.dispose();}
+                    }).catch(error=>reportSceneWarning('desk-artwork','Desk artwork could not be loaded: '+error.message));
+                    return rig.artworkReady;
+                };
+                rig.syncArtwork(state.artwork);
+                return rig;
             } finally {applyDeskStyle(style);loadedModel.visible=shown;sceneDeskInternal=false;}
         },
-        restyle:r=>{if(r.rig&&r.renderedStyle!==JSON.stringify(r.state.style)){const style=currentDeskStyle();sceneDeskInternal=true;try{applyDeskStyle(r.state.style);r.rig.restyle();r.renderedStyle=JSON.stringify(r.state.style);}finally{applyDeskStyle(style);sceneDeskInternal=false;}}},
+        restyle:r=>{r.rig?.syncArtwork?.(r.state.artwork);if(r.rig&&r.renderedStyle!==JSON.stringify(r.state.style)){const style=currentDeskStyle();sceneDeskInternal=true;try{applyDeskStyle(r.state.style);r.rig.restyle();r.renderedStyle=JSON.stringify(r.state.style);}finally{applyDeskStyle(style);sceneDeskInternal=false;}}},
         productReady:()=>!!workspaceAccessories&&!!loadedModel,
         productRig:()=>({mounts:Object.fromEntries([...workspaceAccessories.mounts].filter(([role])=>role!=='floor').map(([role,m])=>[role,m.dress])),setBodyVisible(){},updatePose(){},dispose(){}}),
         resizeProduct:size=>changeDesktopSize(size,{rebuildRoom:false}),
@@ -773,7 +793,7 @@ function initRoomDeskPeripherals(r) {
         set.update();sceneDesks.sync();sceneScreens?.update(true);
     };
     set.sync(config);
-    sceneDesks.objects.ready=Promise.all([sceneDesks.objects.ready,set.ready]).then(()=>{if(r.peripherals===set)set.onLayout();});
+    sceneDesks.objects.ready=Promise.all([sceneDesks.objects.ready,set.ready,r.rig.artworkReady]).then(()=>{if(r.peripherals===set)set.onLayout();});
 }
 function sceneDeskObstacleEntries(){
     return [...(sceneDesks?.records.values()||[])].filter(r=>r.id!==sceneDesks.selected&&r.group?.parent).map(r=>({id:r.group.uuid,obj:r.group,objects:[r.group],name:r.state.name,collider:true,pushable:false,movable:false,surface:'floor'}));
@@ -792,7 +812,7 @@ function syncRoomRearrangeUI() {
         hint.textContent=roomRearrangeMode==='desks'
             ? 'Drag a desk to move it. Items stay attached to their desk. Use Desks to select or rotate a desk.'
             : roomRearrangeMode==='items'
-                ? 'Drag desk objects, room furnishings or wall decorations to rearrange them. Desks stay fixed. Use Desk objects for precise placement and rotation.'
+                ? 'Drag items through other items and desks to place them freely. Use Desk objects for precise placement and rotation.'
                 : 'Rearranging is off. Drag to orbit the view; click a desk to control it.';
     }
 }
@@ -10920,9 +10940,9 @@ function applySurfaceFinish() {
     surfaceArtwork?.refresh();
 }
 
-function bindSurfaceArtwork() {
-    if (!surfaceArtwork || !loadedModel || !sizeVariantParts) return;
-    withNeutralPose(() => {
+function surfaceArtworkTargets() {
+    if (!loadedModel || !sizeVariantParts) return [];
+    return withNeutralPose(() => {
         loadedModel.updateMatrixWorld(true);
         const inverse = loadedModel.matrixWorld.clone().invert();
         const byName = name => [...partRegistry.values()].find(entry => entry.name === name)?.obj;
@@ -10949,11 +10969,14 @@ function bindSurfaceArtwork() {
             ['left-column-lower', byName('Lift_Column_Bottom_2'), true, 1],
             ['right-column-lower', byName('Lift_Column_Bottom_3'), true, -1]
         ];
-        surfaceArtwork.bind(candidates.filter(([, obj]) => obj?.geometry).map(([id, obj, panel = false, outerSign = 1, facing]) => {
+        return candidates.filter(([, obj]) => obj?.geometry).map(([id, obj, panel = false, outerSign = 1, facing]) => {
             obj.updateWorldMatrix(true, false);
             return { id, obj, panel, outerSign, facing, frame: inverse.clone().multiply(obj.matrixWorld) };
-        }));
+        });
     });
+}
+function bindSurfaceArtwork() {
+    if(surfaceArtwork)surfaceArtwork.bind(surfaceArtworkTargets());
 }
 
 // A species change swaps the map on every wood role and retints. Natural Birch
@@ -11340,6 +11363,10 @@ function initStudio() {
             if (!EVENT_DEMO && activeBuildPreset && selectedRoomScene === 'product') pendingPresetArtwork = {id:activeBuildPreset,size:currentConfig.size,artwork:cleanArtwork(artwork)};
             if (Object.keys(artwork.surfaces).length) currentConfig.artwork = artwork;
             else delete currentConfig.artwork;
+            if(sceneDesks?.active&&!sceneDesks.active.product){
+                sceneDesks.active.state.artwork=cleanArtwork(artwork);
+                sceneDesks.active.rig?.syncArtwork?.(artwork);sceneDesks.persist();
+            }
             updatePrice();
             scheduleBuildPresetSave();
         },

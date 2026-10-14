@@ -5,10 +5,11 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // relative transforms at two probe poses, rather than guessed mesh names.
 // Sampling is synchronous and restores the live rig before the next render.
 export function buildSceneDeskRig({sample,height=28,tilt=0}) {
-    const group=new THREE.Group(), bodies=[], mounts={}, sources=[], initial=new Map();
+    const group=new THREE.Group(), bodies=[], artworkBodies=[], mounts={}, sources=[], initial=new Map();
+    let disposed=false,bodyVisible=true;
     sample(height,tilt,({model,toRoom})=>{
         model.traverseVisible(source=>{
-            if(!source.isMesh||!source.geometry)return;
+            if(!source.isMesh||!source.geometry||source.userData.surfaceArtwork)return;
             const mats=Array.isArray(source.material)?source.material:[source.material];
             if(mats.every(m=>!m||m.isShaderMaterial))return;
             sources.push(source);initial.set(source,toRoom.clone().multiply(source.matrixWorld));
@@ -77,14 +78,25 @@ export function buildSceneDeskRig({sample,height=28,tilt=0}) {
         }
     });
     const updatePose=(h,t)=>sample(h,t,({toRoom,accessoryMounts})=>{
-        for(const b of bodies){b.mesh.matrix.copy(offset).multiply(toRoom).multiply(b.source.matrixWorld).multiply(b.inverse);b.mesh.matrixWorldNeedsUpdate=true;}
+        height=h;tilt=t;
+        for(const b of [...bodies,...artworkBodies]){b.mesh.matrix.copy(offset).multiply(toRoom).multiply(b.source.matrixWorld).multiply(b.inverse);b.mesh.matrixWorldNeedsUpdate=true;}
         for(const [role,mount] of Object.entries(mounts)){
             const m=accessoryMounts.get(role);if(m?.dress){mount.matrix.copy(offset).multiply(toRoom).multiply(m.dress.matrixWorld);mount.matrixWorldNeedsUpdate=true;}
         }
         group.updateMatrixWorld(true);
     });
     updatePose(height,tilt);
+    const disposeArtwork=mesh=>{mesh.removeFromParent();mesh.geometry.dispose();mesh.material.map?.dispose();mesh.material.dispose();};
     return {group,mounts,anchorModel,updatePose,restyle:()=>{for(const b of bodies){b.mesh.material.copy(b.sourceMaterial);b.mesh.material.userData={...b.sourceMaterial.userData,sharedTextures:true};}},
-        setBodyVisible:visible=>bodies.forEach(b=>b.mesh.visible=visible),
-        dispose:()=>{group.removeFromParent();for(const b of bodies){b.mesh.geometry.dispose();b.mesh.material.dispose();}group.clear();}};
+        addArtwork:layers=>{
+            artworkBodies.splice(0).forEach(b=>disposeArtwork(b.mesh));
+            for(const {source,mesh} of layers){
+                if(disposed||!initial.has(source)){disposeArtwork(mesh);continue;}
+                mesh.geometry.applyMatrix4(initial.get(source));mesh.matrixAutoUpdate=false;mesh.visible=bodyVisible;
+                artworkBodies.push({source,mesh,inverse:initial.get(source).clone().invert()});group.add(mesh);
+            }
+            if(!disposed)updatePose(height,tilt);
+        },
+        setBodyVisible:visible=>{bodyVisible=visible;[...bodies,...artworkBodies].forEach(b=>b.mesh.visible=visible);},
+        dispose:()=>{disposed=true;group.removeFromParent();for(const b of bodies){b.mesh.geometry.dispose();b.mesh.material.dispose();}artworkBodies.forEach(b=>disposeArtwork(b.mesh));group.clear();}};
 }

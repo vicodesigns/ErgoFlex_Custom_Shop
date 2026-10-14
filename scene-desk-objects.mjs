@@ -135,7 +135,11 @@ export class SceneDeskObjects {
     }
     pick(e){
         const m=this.manager,rect=m.ctx.canvas.getBoundingClientRect();m.pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);m.ray.setFromCamera(m.pointer,m.ctx.camera);
-        const hit=m.ray.intersectObjects([m.ctx.room()?.root,m.ctx.liveObject(),...(m.active?.product?Object.values(m.active.rig.mounts):[]),...(m.active?.product?m.ctx.productAccessories():[])].filter(Boolean),true).find(h=>shown(h.object)&&!h.object.material?.isShaderMaterial);
+        const hit=m.ray.intersectObjects([m.ctx.room()?.root,m.ctx.liveObject(),...(m.active?.product?Object.values(m.active.rig.mounts):[]),...(m.active?.product?m.ctx.productAccessories():[])].filter(Boolean),true).find(h=>{
+            if(!shown(h.object)||h.object.material?.isShaderMaterial)return false;
+            for(let o=h.object;o;o=o.parent)if(o.userData.deskObject)return true;
+            return false;
+        });
         for(let o=hit?.object;o;o=o.parent)if(o.userData.deskObject)return{...o.userData.deskObject,hit};
         return null;
     }
