@@ -32,7 +32,7 @@ const server = http.createServer((req, res) => {
         await page.evaluate(()=>{ErgoFlex.renderer.setAnimationLoop(null);ErgoFlex.renderer.setPixelRatio(.35);});
         await page.waitForFunction(()=>ErgoFlex.wheelRigs.length===4 && getComputedStyle(document.querySelector('#loader')).display==='none',{timeout:120000});
         const result = await page.evaluate(async only => {
-            const {ROOM_DESK_STYLES,cleanDeskStyle} = await import('./room-desk-styles.mjs?v=scene-desk-styling-20261010');
+            const {ROOM_DESK_STYLES,cleanDeskStyle} = await import('./room-desk-styles.mjs?v=hbhs-classroom-20261013');
             const THREE=await import('three');
             const ef=ErgoFlex, failures=[], phases=['morning','afternoon','evening','night','party'];
             const canvas=document.createElement('canvas');canvas.width=canvas.height=8;

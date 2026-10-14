@@ -33,7 +33,7 @@ const server = http.createServer((req, res) => {
     }
     try {
         let page = await freshPage();
-        const registry = await page.evaluate(async () => { const m = await import('./institutional-scenes.mjs?v=scene-desk-styling-20261010'); return { ids: m.INSTITUTIONAL_IDS, education: Object.keys(m.EDUCATIONAL_LEVELS), groups: m.INSTITUTIONAL_GROUPS, tiers: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)])),
+        const registry = await page.evaluate(async () => { const m = await import('./institutional-scenes.mjs?v=hbhs-classroom-20261013'); return { ids: m.INSTITUTIONAL_IDS, education: Object.keys(m.EDUCATIONAL_LEVELS), groups: m.INSTITUTIONAL_GROUPS, tiers: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)])),
             stations: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.fromEntries(Object.entries(m.INSTITUTIONAL_ROOMS[id].layouts).map(([tier, l]) => [tier, l.stations]))])),
             modules: Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_MODULES).find(g => m.INSTITUTIONAL_MODULES[g] === m.institutionalModule(id))])) }; });
         const ids = registry.ids;
@@ -98,7 +98,8 @@ const server = http.createServer((req, res) => {
                 // Extra ErgoFlex desks: rendered at their own size, registered
                 // as floor colliders and clear of other floor furniture.
                 const specs = registry.stations[id][tier];
-                await page.waitForFunction(n => ErgoFlex.roomInteractions.entries.filter(e => e.obj.userData.officeStation).length === n, {}, specs.length);
+                // Stations are adopted as editable scene desks (sceneDeskId) and leave roomInteractions.entries.
+                await page.waitForFunction(n => ErgoFlex.workspaceRoom.assets().filter(o => o.userData.officeStation).length === n, {}, specs.length);
                 const st = await page.evaluate(async () => {
                     const THREE = await import('three'), r = ErgoFlex.workspaceRoom;
                     r.root.updateMatrixWorld(true); const inv = r.root.matrixWorld.clone().invert();
@@ -107,7 +108,7 @@ const server = http.createServer((req, res) => {
                     const own = o => { const b = new THREE.Box3(), gi = o.matrixWorld.clone().invert(); o.children.filter(c => c.isMesh).forEach(m => { m.geometry.computeBoundingBox(); b.union(m.geometry.boundingBox.clone().applyMatrix4(gi.clone().multiply(m.matrixWorld))); }); return b.max.x - b.min.x; };
                     const stations = r.assets().filter(o => o.userData.officeStation);
                     return { main: { size: ErgoFlex.currentConfig.size, plan: plan(ErgoFlex.loadedModel) },
-                        stations: stations.map(o => ({ key: o.userData.sceneAssetKey, size: o.userData.officeStation.size, width: own(o), plan: plan(o), collider: ErgoFlex.roomInteractions.entries.some(e => e.obj === o && e.collider && e.surface === 'floor') })),
+                        stations: stations.map(o => ({ key: o.userData.sceneAssetKey, size: o.userData.officeStation.size, width: own(o), plan: plan(o), collider: ErgoFlex.roomInteractions.entries.some(e => e.obj === o && e.collider && e.surface === 'floor') || !!o.userData.sceneDeskId })),
                         floor: ErgoFlex.roomInteractions.entries.filter(e => e.surface === 'floor' && e.collider && !e.obj.userData.officeStation).map(e => ({ name: e.name, plan: plan(e.obj) })) };
                 });
                 assert.equal(1 + st.stations.length, 1 + specs.length); assert.ok(1 + st.stations.length >= 3, `${id}/${tier}: >= 3 ErgoFlex desks rendered`);
@@ -143,7 +144,7 @@ const server = http.createServer((req, res) => {
                     const door = [L.width / 2 - 1100, L.back + L.depth - 2200, L.width / 2, L.back + L.depth - 1000];
                     for (const o of [...st.stations, ...st.floor]) assert.ok(!overlap(o.plan, door), `${id}/${tier}: ${o.key || o.name} blocks the door path ${o.plan.map(Math.round)}`);
                 }
-                const purpose={security:'Security console table',police:'Case review workstation',government:'Public service workstation',kindergarten:'Shared learning table',elementary:'Shared learning table',middleschool:'Student work table',highschool:'Student work table',college:'Student work table',university:'Seminar table',laboratory:'Laboratory bench',hospital:'Hospital care bed',mobileit:'IT equipment rack'};
+                const purpose={security:'Security console table',police:'Case review workstation',government:'Public service workstation',kindergarten:'Shared learning table',elementary:'Shared learning table',middleschool:'Student work table',highschool:'Student work table',college:'Student work table',university:'Seminar table',laboratory:'Laboratory bench',hospital:'Hospital care bed',mobileit:'IT equipment rack',occmedialab:'Storyboard & critique table'};
                 assert.ok(data.assets.some(a=>a.name===purpose[id]),`${id}: characteristic furnishings`); assert.ok(data.interactions.some(e=>e.surface==='wall'));
                 assert.ok(data.interactions.some(e=>e.pushable));
                 for(const a of data.assets) {
@@ -197,7 +198,7 @@ const server = http.createServer((req, res) => {
         page = await freshPage();
         await page.evaluate(async()=>{if(ErgoFlex.workspaceRoom.id!=='mobileit'){ErgoFlex.setMeasuredRoomLayout('mobileit','house');await ErgoFlex.workspaceRoom.ready;ErgoFlex.setMeasuredRoomMode('mobileit','afternoon',false);}});
         const project=await page.evaluate(()=>ErgoFlex.serializeProject());
-        assert.equal(Object.keys(project.presentation.institutionalRooms).length,12);
+        assert.equal(Object.keys(project.presentation.institutionalRooms).length,13);
         assert.equal(project.presentation.institutionalRooms.mobileit.layout,'house');
         assert.equal(project.presentation.institutionalRooms.mobileit.mode,'afternoon');
         await page.evaluate(async project => {

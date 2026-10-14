@@ -98,6 +98,46 @@ Verification: `npm run test:item-surface-drop` covers real geometry, carrel/book
 selection, linked and independent deletion, drop/undo, Product props and reload.
 `npm run test:free-items` verifies free dragging and normal desk collision behavior.
 
+## Expert lighting, materials and furnishing pass
+
+An expert review (lighting, interiors/materials, academic library planning)
+rendered all 5 layouts × 5 dayparts and close-ups; this pass acts on it.
+
+- **Evening and Late study** now read as warm task light in a dimmer room:
+  lower general light and bounce, stronger practical (lamp) levels. The
+  evening window is graded with canvas blend modes (multiply/soft-light), so
+  dusk also appears where `ctx.filter` is unsupported (older iOS Safari).
+- **Visible light pools** (`room-light-pools.mjs`): additive pools under
+  banker's lamps, carrel strips, the floor lamp (floor and wall scallop),
+  sconce scallops and every stack aisle. They follow their furnishing, take
+  no ray hits, add no collider and use no real lights or shadow maps.
+- **Stacks**: linear fixtures over each double-sided stack, finished oak
+  range-end panels with brass-framed signs, books instead of ornaments in
+  working stacks, and 1090 mm aisles in the University study hall.
+- **Seating**: the supplied designer chair replaces the low-poly reading chair
+  (scale .82; green leather on bronze in traditional rooms, woven fabric per
+  table in modern rooms). Carrel chairs now face their carrels.
+  `room.propReplacements` keeps saved placement keys; untouched saved poses
+  and scales migrate, edited ones are kept.
+- **Materials**: oak table legs with brass caps and a dark lamp rail, oak and
+  brass carrel sides, deeper commons carpet, subtle plaster on the long walls,
+  a painted frieze and picture rail in the tall rooms, fabric acoustic panels,
+  spine-coloured book blocks and an oak lounge table.
+- **Objects**: a new-books browsing island in the Flagship commons (supplied
+  low bookcases, chairs, plant), a bin beside the research table and a
+  desk calendar on the help counter.
+
+## Second expert review and polish
+
+A second, independent panel signed the Library off with polish; this pass
+applies it: seamless softer plaster, one carpet tone per tier, late-study task
+lights lowered and tightened with less wash, stack sections joined into
+continuous ranges in the two largest rooms (end panels only at open ends;
+untouched saved stacks migrate), a canopy light on each stack instead of
+ceiling rods, a lit discussion board for Study group, a lighter lounge table
+and plain shelf-top plants. Study-hall stack rows sit at 4600/6250/7900 mm,
+keeping 1090 mm aisles and more than 1 m to the reading tables.
+
 ## Research
 
 - [Study Spaces](https://www.humboldt.edu/library/services/use-your-library/study-spaces)

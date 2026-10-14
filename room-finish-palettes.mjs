@@ -23,7 +23,7 @@ export const ROOM_DETAIL_PALETTES = {
     kindergarten: ['#92b4a5', '#d39b49', '#f4ead4', '#d9e6ce'],
     elementary: ['#789b80', '#5d8b78', '#f0ead8', '#d9e5ce'],
     middleschool: ['#71909d', '#498698', '#e7eee9', '#cedfe0'],
-    highschool: ['#7c8e9c', '#567081', '#ece9dd', '#d5dde0'],
+    highschool: ['#8a8580', '#e8702a', '#ece4d3', '#d8d2c6'],
     college: ['#9c8b78', '#866653', '#eee7d8', '#ded3c3'],
     university: ['#718779', '#285c4b', '#eae7d7', '#cbd8c9'],
     hospital: ['#7caaa4', '#528c88', '#eff0e8', '#d7e6e3'],

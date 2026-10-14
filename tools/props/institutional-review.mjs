@@ -92,7 +92,7 @@ async function registryOnly() {
     });
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     return page.evaluate(async () => {
-        const m = await import('./institutional-scenes.mjs?v=scene-desk-styling-20261010');
+        const m = await import('./institutional-scenes.mjs?v=hbhs-classroom-20261013');
         const registry = Object.fromEntries(m.INSTITUTIONAL_IDS.map(id => [id, Object.keys(m.INSTITUTIONAL_ROOMS[id].layouts)]));
         for (const id of ['home','office','library','coworking','music','gaming','creative','study','lounge','kitchen','gym','scifi','bedroom','workshop','gallery']) {
             const file = id === 'home' ? 'home-office' : id === 'creative' ? 'artist-room' : id + '-room';

@@ -26,7 +26,7 @@ export const ROOM_DESK_STYLES = {
     kindergarten: style('Birch & sunshine', 'Natural Birch', 'White', '#f0c52e', 'Sand'),
     elementary: style('Maple & learning green', 'Maple', 'White', '#286344', 'Sand'),
     middleschool: style('Modern grey maker space', 'Modern Grey', 'White', '#286344', 'Space Gray'),
-    highschool: style('White & graphite classroom', 'White Birch', 'Space Gray', '#85888c', 'White'),
+    highschool: style('Oiler black & orange', 'Black Birch', 'White', '#e8702a', 'Black'),
     college: style('Oak & academic navy', 'White Oak', 'Navy', '#1c1c1e', 'Space Gray'),
     university: style('Forest & gold seminar', 'Earthy Forest Green', 'Black', '#f19c00', 'Forest'),
     hospital: style('Clinical white & teal', 'White Birch', 'White', '#004c46', 'Silver'),

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_BOUNCE_FRAGMENT } from './room-bounce-light.mjs?v=ceiling-bounce-20261011';
+import { ROOM_BOUNCE_FRAGMENT } from './room-bounce-light.mjs?v=environment-expert-20261014';
 
 const fragment = `
 uniform vec3 efRoomStart[8];

@@ -1,18 +1,18 @@
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=scene-screen-themes-20261013-final';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=scene-desk-styling-20261010';
-import { refineRoomSurfaces } from './room-refinement.mjs?v=environment-detail-scale-20261013';
-import { polishRoomProp } from './room-polish.mjs?v=library-humboldt-20261013';
-import { RoomLife } from './room-life.mjs?v=library-floorplan-20261013';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=environment-expert-20261014';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=environment-expert-20261014';
+import { polishRoomProp } from './room-polish.mjs?v=environment-expert-20261014';
+import { RoomLife } from './room-life.mjs?v=environment-expert-20261014';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
-import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=scene-desk-styling-20261010';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=item-surface-drop-20261013';
+import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=environment-expert-20261014';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=environment-expert-20261014';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=groove-routines-20261002';
 import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
-import { RoomBounceLight } from './room-bounce-light.mjs?v=environment-detail-scale-20261013';
+import { RoomBounceLight } from './room-bounce-light.mjs?v=environment-expert-20261014';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -1240,7 +1240,7 @@ export class WorkspaceRoom {
         if (this.root) disposeTree(this.root);
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
         this.decorateStation = null;
-        this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null; this.migrateSavedTransform = null;
+        this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null; this.migrateSavedTransform = null; this.propReplacements = null;
         this.propSupports = [];
         this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.ceilingSurface = null; this.bounce = null; this.life = null; this.windowViewReady = Promise.resolve();
         if (id === 'product') { this.ready = Promise.resolve(); return; }
@@ -1510,14 +1510,16 @@ export class WorkspaceRoom {
                 'monstera': 'ergoflex-plant-2', 'potted-tree': 'ergoflex-plant-1',
                 'kenney-furniture-laptop': 'ergoflex-laptop', 'glasses': 'ergoflex-glasses'
             };
-            const supplied = replacements[placement.id];
+            // A room may choose its own supplied model and an explicit scale.
+            const scoped = this.propReplacements?.[placement.id];
+            const supplied = scoped?.id || replacements[placement.id];
             try {
                 const object = await PROP_LIBRARY.instance(supplied || placement.id);
                 if (supplied) {
                     const old = PROP_LIBRARY.entry(placement.id), next = PROP_LIBRARY.entry(supplied);
                     // Never enlarge the footprint into an existing aisle or
                     // neighbouring tabletop object. Height remains proportional.
-                    const fit=Math.min(1,old.size[0]/next.size[0],old.size[2]/next.size[2]);
+                    const fit=scoped?.scale??Math.min(1,old.size[0]/next.size[0],old.size[2]/next.size[2]);
                     object.scale.multiplyScalar(fit); object.userData.decorUpgrade=supplied;
                     object.userData.propId=placement.id;
                 }

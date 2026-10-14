@@ -946,6 +946,32 @@ interaction registration, project restoration and mobile-layout checks.
 Review evidence: `/tmp/ef-remaining-environments-20261009/after/`; test log:
 `/tmp/ef-remaining-environments-20261009/institutional-test.log`. Current cache
 revision: `environment-polish-20261009`.
+
+### Educational group · High school as an HBHS-inspired classroom · 13 October 2026
+
+The `highschool` stage is now a "Surf City" science and media room inspired by
+Huntington Beach High School: Oiler black and orange, a coastal energy story
+("from derricks to waves"), an APA/MMET media desk and a window view of a
+stylised 1926 bell tower. It is an inspired-by concept with generic content
+and no official marks; see `hbhs-classroom.md` for the concept, sources and
+verification.
+
+- Station ids, the `Student work table` purpose, the 28 in accessible desk and
+  all earlier asset keys are unchanged. New room props are appended to
+  `STAGES.highschool.props` (room prop keys are index-based); new wall assets
+  are `bell-tower-print`, `teacher-pennants`, `oiler-pride-wall` and
+  `room-number-plaque`. `identity-gallery` is no longer built for this stage.
+- `stationChair()` in `institutional-scenes.mjs` accepts an optional
+  `chairId` (default Steelcase); the coastal nook and MMET desk use
+  `ergoflex-office-chair`.
+- `E.chairUp` (shared by kindergarten, middle and high school) now builds an
+  inverted chair: seat face down on the table, legs up, backrest over the
+  edge. Re-checked in kindergarten and middle-school renders.
+- Lighting stays at 4 real lights (3 room lights + the planning-table lamp);
+  new trophy-shelf LED, bell-tower print light, bell-schedule light and
+  showcase pennant strings are emissive or additive only.
+- Cache revision for the changed modules and their direct importers:
+  `hbhs-classroom-20261013`.
 # October 10 desk styling verification
 
 Current scene palettes and daily desk materials are described in

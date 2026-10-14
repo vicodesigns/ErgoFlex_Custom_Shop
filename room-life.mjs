@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { activityPageMaterial } from './room-activity-print.mjs?v=environment-detail-scale-20261013';
-import { ROOM_DETAIL_PALETTES } from './room-finish-palettes.mjs?v=environment-detail-scale-20261013';
-import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=occ-media-lab-20261013';
+import { activityPageMaterial } from './room-activity-print.mjs?v=environment-expert-20261014';
+import { ROOM_DETAIL_PALETTES } from './room-finish-palettes.mjs?v=environment-expert-20261014';
+import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
 
 export const DAY_PHASES = ['morning', 'afternoon', 'evening', 'night', 'party'];
 const TIERS = ['apartment', 'house', 'spacious', 'premium', 'executive'];

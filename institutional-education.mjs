@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { institutionalMap, boardFrame, boardGrid, boardCurve, screenHeader, screenFooter, detailKit, books, notebook, plant, storageBooks, storageTray, activityNotebook, identityGallery, rnd } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
+import { institutionalMap, boardFrame, screenHeader, screenFooter, detailKit, books, notebook, plant, storageBooks, storageTray, activityNotebook, identityGallery, rnd } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
 
 // Educational group: `kindergarten`, `elementary`, `middleschool`,
 // `highschool`, `college`, `university` (kinds early / primary / secondary /
@@ -95,25 +95,38 @@ const STAGES = {
         ]
     },
     highschool: {
-        desk: [p('kenney-furniture-laptop', -200, -20), p('calculator', 300, 140), p('papers', 470, 40, -8), p('insulated-mug', -600, 150)],
-        shelf: [p('curved-monitor', 0, 0)],
+        // Inspired by Huntington Beach High School ("Surf City physics": a science
+        // and media room; see docs/hbhs-classroom.md). MAIN: the science and media teacher's desk.
+        desk: [p('ergoflex-laptop', -200, -20), p('calculator', 300, 140), p('papers', 470, 40, -8), p('insulated-mug', -600, 150), p('ergoflex-picture-frame', 520, -200, -20)],
+        shelf: [p('curved-monitor', 0, 0), p('ergoflex-calendar', -600, 0, 10), p('ergoflex-pencil-cup', 600, 0)],
         pose: [[43.5, 0], [28, 0], [35, 10], [28, 0], [43.5, 0, 25]],
-        activity: [-3800, 7300],
+        activity: [-3400, 7400],
+        // Room props are keyed by index (`room:${index}`): new ones are appended after the originals.
         props: [p('backpack-daypack', -1830, 650, 20), p('backpack', 320, 2650, -30), p('backpack-daypack', 2470, 4650, 160), p('backpack', -1830, 4650, 10),
-            p('water-bottle', -2520, 360, 0, 740), p('water-bottle', 520, 2360, 0, 740), p('water-bottle', 1780, 360, 0, 740), p('water-bottle', -380, 4360, 0, 740)],
+            p('water-bottle', -2520, 360, 0, 740), p('water-bottle', 520, 2360, 0, 740), p('water-bottle', 1780, 360, 0, 740), p('water-bottle', -380, 4360, 0, 740),
+            // Teacher corner: tall plant, waste bin and a conference chair at the desk end.
+            p('ergoflex-plant-2', -3350, -3700), p('ergoflex-trash-can', -2580, -2700), p('ergoflex-designer-chair', -2420, -1550, -90),
+            // Lab bench: castored stools, handout tray, plant at the bench end; classroom printer on the resource shelf.
+            p('ergoflex-artist-stool', 4060, -2000), p('ergoflex-artist-stool', 4060, -1300), p('ergoflex-paper-tray', 4700, -2500, -90, 900), p('ergoflex-plant-2', 4700, -330),
+            p('ergoflex-printer', -1800, -3640, 0, 1050),
+            // Front: drafting chair at the design review desk, the media desk's production PC, trash and recycling by the lockers.
+            p('ergoflex-tall-office-chair', -1000, 7560, 180), p('ergoflex-desktop-pc', 2480, 6620, -90), p('ergoflex-trash-can', 3400, 7760), p('ergoflex-trash-can', 3850, 7760),
+            // An orchestra student's violin on a table (APA), and the APA script and score library under the spirit wall.
+            p('ergoflex-violin', 2420, 4520, 20, 740), p('ergoflex-small-bookshelf', -4700, 6350, 90)],
         stations: [
-            { id: 'demonstration-desk', name: 'Physics demonstration desk', size: '60x30', at: [0, -2600], turn: 180, height: 43.5, tilt: 0, chair: false,
-                desktop: [p('oscilloscope', -450, -90), p('voltage-regulator', 40, -110), p('kenney-furniture-laptop', 470, 30), p('multi-tool', -120, 160)] },
-            { id: 'student-standing', name: 'Student standing desk', size: '48x30', at: [4380, 1000], turn: 0, height: 41, tilt: 0, chair: false,
-                desktop: [p('kenney-furniture-laptop', -60, 0), p('calculator', 420, 120), p('journal', -460, 130)] },
-            { id: 'window-research', name: 'Research nook desk', size: '48x30', at: [-4300, 1000], turn: 0, height: 28, tilt: 0,
-                desktop: [p('kenney-furniture-laptop', -120, 0), p('kenney-furniture-books', 400, -100), p('glasses', 380, 150)], shelf: [p('paper-holder', 0, 0)] },
+            { id: 'demonstration-desk', name: 'Wave and energy demonstration desk', size: '60x30', at: [0, -2600], turn: 180, height: 43.5, tilt: 0, chair: false,
+                desktop: [p('oscilloscope', -480, 170), p('voltage-regulator', 40, -110), p('ergoflex-laptop', 470, 30), p('multi-tool', -120, 160)] },
+            { id: 'student-standing', name: 'Surf forecast standing desk', size: '48x30', at: [4380, 1000], turn: 0, height: 41, tilt: 0, chair: false,
+                desktop: [p('ergoflex-laptop', -60, 0), p('calculator', 420, 120), p('journal', -460, 130)] },
+            { id: 'window-research', name: 'Coastal research nook', size: '48x30', at: [-4300, 1000], turn: 0, height: 28, tilt: 0, chairId: 'ergoflex-office-chair',
+                desktop: [p('ergoflex-laptop', -120, 0), p('kenney-furniture-books', 400, -100), p('glasses', 380, 150)], shelf: [p('ergoflex-shelf-organizer', -300, 0), p('ergoflex-plant-3', 330, 0)] },
             { id: 'accessible-student', name: 'Accessible student desk', size: '48x30', at: [-4300, 3800], turn: 0, height: 28, tilt: 0, chair: false,
                 desktop: [p('tablet-pc', -150, -80), p('office-keyboard', -50, 160), p('headphones', 470, -90)] },
-            { id: 'project-review', name: 'Poster and project review desk', size: '60x30', at: [-1000, 6700], turn: 0, height: 43.5, tilt: 25, chair: false, plan: true,
-                desktop: [p('metal-ruler', 560, 0, 90, 1), p('sketchbook', -580, 160, 0, 1)], shelf: [p('kenney-furniture-books', -300, 0), p('paper-stand', 300, 0)] },
-            { id: 'research-desk', name: 'Research and data desk', size: '60x30', at: [1500, 6600], turn: 0, height: 28, tilt: 0,
-                desktop: [p('office-keyboard', -80, 120), p('magic-mouse', 330, 110, 90), p('journal', -560, 60), p('kenney-furniture-plant-small1', 610, -150)], shelf: [p('kenney-furniture-computer-screen', 0, 0)] }
+            { id: 'project-review', name: 'APA set and costume design review desk', size: '60x30', at: [-1000, 6700], turn: 0, height: 43.5, tilt: 25, chair: false, plan: true,
+                desktop: [p('ergoflex-art-easel', 0, -150, 0, 1), p('metal-ruler', 560, 0, 90, 1), p('sketchbook', -580, 160, 0, 1)], shelf: [p('ergoflex-shelf-organizer', -300, 0), p('ergoflex-pencil-cup', 300, 0)] },
+            { id: 'research-desk', name: 'MMET media desk', size: '60x30', at: [1500, 6600], turn: 0, height: 28, tilt: 0, chairId: 'ergoflex-office-chair',
+                desktop: [p('ergoflex-mechanical-keyboard', -80, 140), p('ergoflex-mx-master-mouse', 330, 130), p('ergoflex-drawing-tablet', -520, 150), p('ergoflex-camera', 560, -200, 20)],
+                shelf: [p('ergoflex-wide-monitor', 0, 0), p('ergoflex-slim-speaker', -650, 0), p('ergoflex-slim-speaker', 650, 0)] }
         ]
     },
     college: {
@@ -206,13 +219,15 @@ const LIGHT = {
         sun: [.08, .06, .14, .018, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .58, .9], ceiling: ['#f6f8f8', [.4, .35, .6, .05, .6]], lamps: [[.12, .16, .7, .32, .5]]
     },
     highschool: {
-        // 4000K linears, demonstration spot on the slate inlay, gallery rail light, oscilloscope trace.
-        modes: [mode('#fff0dc', '#dceaf0', SKY.morning, 1.5, .42, 1.06, .3, .18, .7, ['#f5ebd8', '#c4d0d6']),
-            mode('#f0f7ff', '#e1edf2', SKY.afternoon, 1.55, .46, 1.04, .36, .18, .76, ['#f4efe4', '#c0ccd2']),
-            mode('#ffcfa2', '#d5daec', ['#9a8aa6', '#efbf94'], .52, .28, 1.1, .76, .34, .5, ['#ffd8a8', '#c4c6d0']),
-            mode('#b4c8e4', '#9fb9d6', SKY.night, .1, .11, 1.21, .46, .14, .24, ['#ffd4a0', '#88a2be'], true, '#292724'),
-            mode('#ffe4c0', '#d6dfe6', SKY.party, .82, .34, 1.1, .66, .44, .56, ['#f8e8d0', '#c6d6dc'], true, '#4a1813')],
-        sun: [.08, .06, .14, .018, .12], desk: [1, 1, .55, .7, .6], view: [.9, .95, .82, .58, .9], ceiling: ['#f6f8f8', [.4, .35, .6, .05, .6]], lamps: [[.12, .16, .7, .3, .5]]
+        // Coastal Orange County light: marine-layer morning under 4000K troffers,
+        // crisp clear afternoon, Pacific sunset, field lights and the floodlit tower at night.
+        modes: [mode('#eef1f2', '#dde6ea', ['#c4ccd2', '#ebe6dc'], 1.05, .46, 1.02, .42, .2, .78, ['#f4efe6', '#c9d2d6']),
+            mode('#fff5e6', '#e2eef3', ['#7fb6da', '#e4eff2'], 1.6, .45, 1.03, .3, .16, .8, ['#f6f0e4', '#c3d0d6']),
+            mode('#ffbe84', '#d6d2e6', ['#6f78a6', '#f5a463'], .62, .27, 1.1, .76, .36, .5, ['#ffd3a0', '#c9c3cf']),
+            mode('#b0c4e0', '#9cb6d4', ['#0d1a2e', '#26364b'], .1, .07, 1.1, .32, .1, .2, ['#ffd4a0', '#88a2be'], true, '#292724'),
+            mode('#ffe0b6', '#dfe0e2', ['#93c0dc', '#f4d3a6'], .86, .36, 1.09, .7, .46, .56, ['#ffe6c6', '#d8d2c8'], true, '#4a200e')],
+        // Overcast morning: almost no patch; a long orange patch at sunset.
+        sun: [.03, .42, .17, .02, .13], desk: [1, 1, .55, .3, .6], view: [.74, .97, .9, .72, .92], ceiling: ['#f4f6f6', [.62, .3, .6, .05, .62]], lamps: [[.12, .16, .7, .34, .5]]
     },
     college: {
         // 3500K pendant clusters over the team tables, track spots on the teaching wall, lounge floor lamp.
@@ -244,11 +259,19 @@ export const sceneOverrides = {
     kindergarten: override('kindergarten', 'LITTLE DISCOVERIES'),
     elementary: override('elementary', 'READ / EXPLORE / CREATE'),
     middleschool: override('middleschool', 'DESIGN A BETTER CITY'),
-    highschool: override('highschool', 'ENERGY / SYSTEMS / CHANGE'),
+    // Inspired-by concept (Huntington Beach High School); generic content, no official marks.
+    highschool: (() => {
+        const o = override('highschool', 'ENERGY · WAVES · CHANGE');
+        const stories = ['First bell under the marine layer · today\'s plan and a warm-up question', 'Wave lab in crisp afternoon sun · swell data and the wave tank',
+            'After-school study at a Pacific sunset · APA rehearsal cues', 'Lesson planning · field lights and the floodlit bell tower outside', 'Oiler showcase · student science and APA media projects'];
+        PHASES.forEach((phase, i) => { o.modes[phase].description = stories[i]; });
+        return { ...o, caption: 'Surf City science and media classroom · inspired by Huntington Beach High School.', wall: '#ece5d6', accent: '#e8702a',
+            labels: ['First bell', 'Wave lab', 'After-school study', 'Lesson planning', 'Oiler showcase'] };
+    })(),
     college: override('college', 'IDEAS INTO PRACTICE'),
     university: override('university', 'RESEARCH / SHARED DISCOVERY')
 };
-export const finish = spec => ({ name: spec.name + ' · natural oak & learning textiles', ground: '#9b8768', wood: .53, metal: .31, stone: .6, night: .92, partyDay: true });
+export const finish = spec => ({ name: spec.id === 'highschool' ? 'High school · driftwood oak & Oiler orange' : spec.name + ' · natural oak & learning textiles', ground: '#9b8768', wood: .53, metal: .31, stone: .6, night: .92, partyDay: true });
 
 // Extra ErgoFlex desks per stage (fields: see docs "Extra ErgoFlex desks").
 export function stations(sceneId) {
@@ -388,15 +411,6 @@ function drawBoardMiddle(c, W, H, spec, v) {
     c.fillStyle = '#b8d38f'; c.fillRect(600, 92, 50, 50); c.fillStyle = '#c4d1d6'; c.fillRect(660, 92, 70, 30); c.fillRect(660, 130, 30, 106); c.fillStyle = '#7fb6d6'; c.fillRect(700, 130, 30, 106);
     c.fillStyle = '#e0b45e'; c.fillRect(600, 152, 50, 84);
 }
-function drawBoardHigh(c, W, H, spec, v) {
-    boardFrame(c, W, H, spec); reset(c);
-    boardGrid(c, W, H, spec); boardCurve(c, W, H, spec, v, 'E = P × t'); reset(c);
-    // A small circuit sketch in the corner.
-    c.strokeStyle = '#d9a441'; c.lineWidth = 3; c.strokeRect(560, 92, 160, 110);
-    c.beginPath(); for (let k = 0; k < 7; k++) c.lineTo(600 + k * 12, 92 + (k % 2 ? -10 : 10)); c.stroke();
-    dot(c, 720, 147, 12, '#567081'); write(c, 'V', 720, 147, 12, '#ffffff'); c.fillStyle = '#567081'; c.fillRect(556, 130, 8, 34);
-    write(c, 'R = V / I', 640, 228, 16, '#567081');
-}
 function drawBoardCollege(c, W, H, spec, v) {
     boardFrame(c, W, H, spec); reset(c);
     const steps = ['FRAME', 'RESEARCH', 'BUILD', 'TEST', 'SHARE'];
@@ -455,13 +469,13 @@ function slideChart(c, W, H, n, accent) {
 export function drawScreen(c, W, H, spec, variant = 0, phase = 'morning') {
     reset(c);
     const i = Math.max(0, PHASES.indexOf(phase));
-    const titles = { kindergarten: 'OUR DAY', elementary: 'CLASS SHOWCASE', middleschool: 'DESIGN A BETTER CITY', highschool: 'ENERGY SYSTEMS', college: 'TEAM PROJECTS', university: 'SYMPOSIUM' };
+    const titles = { kindergarten: 'OUR DAY', elementary: 'CLASS SHOWCASE', middleschool: 'DESIGN A BETTER CITY', highschool: ['TODAY · SCIENCE 214', 'WAVE LAB', 'TIDE CURVE', 'LESSON PLAN', 'OILER SHOWCASE'][i], college: 'TEAM PROJECTS', university: 'SYMPOSIUM' };
     screenHeader(c, W, H, (titles[spec.id] || 'LEARNING') + (variant ? `  ·  ${variant + 1}` : ''));
     reset(c);
     if (spec.id === 'middleschool') {
         if (i === 4) { c.fillStyle = '#e07a3f'; c.fillRect(30, 58, W - 60, H - 110); write(c, 'SHOWCASE', W / 2, H / 2 - 20, 56, '#fff6ec'); write(c, 'student city prototypes', W / 2, H / 2 + 34, 20, '#fff6ec', 'center', '400'); }
         else slideCity(c, W, H, (i + variant) % 4);
-    } else if (spec.id === 'highschool') slideChart(c, W, H, i + variant, '#d9a441');
+    } else if (spec.id === 'highschool') slideHigh(c, W, H, i);
     else if (spec.id === 'college') {
         slideChart(c, W, H, i + variant, '#a5624a');
         c.fillStyle = '#f2e6d8'; c.fillRect(W - 220, 80, 160, 90); write(c, 'TEAM ' + (variant + 1), W - 140, 108, 20, '#866653'); textLines(c, W - 205, 132, 130, 3, 11, '#a5624a', 3);
@@ -576,10 +590,11 @@ function cityPoster(c, x, y, w, h, n) {
     c.restore();
 }
 function sankey(c, W, H, spec) {
-    c.fillStyle = '#fbfaf6'; c.fillRect(0, 0, W, H); write(c, 'ENERGY FLOW', 24, 30, 22, spec.accent, 'left');
+    const hs = spec.id === 'highschool';
+    c.fillStyle = '#fbfaf6'; c.fillRect(0, 0, W, H); if (hs) varsity(c, 'FROM DERRICKS TO WAVES', 24, 32, 26, HB.deep, { align: 'left', track: .03, max: W - 48 }); else write(c, 'ENERGY FLOW', 24, 30, 22, spec.accent, 'left');
     const x0 = 40, x1 = W - 60, top = 70, total = H - 130;
-    c.fillStyle = '#d9a441'; c.fillRect(x0, top, 26, total);
-    const parts = [[.45, '#567081', 'useful'], [.3, '#d9a441', 'heat'], [.15, '#c97c5d', 'sound'], [.1, '#9aa8b0', 'light']];
+    c.fillStyle = hs ? HB.black : '#d9a441'; c.fillRect(x0, top, 26, total);
+    const parts = hs ? [[.38, HB.orange, 'oil'], [.24, HB.glass, 'wind'], [.22, HB.pacific, 'waves · hydro'], [.16, HB.sand, 'solar']] : [[.45, '#567081', 'useful'], [.3, '#d9a441', 'heat'], [.15, '#c97c5d', 'sound'], [.1, '#9aa8b0', 'light']];
     let y = top, outY = top;
     for (const [f, col, label] of parts) {
         const h = total * f, oy = outY; c.fillStyle = col + 'cc'; c.beginPath(); c.moveTo(x0 + 26, y); c.bezierCurveTo(W * .5, y, W * .5, oy, x1, oy); c.lineTo(x1, oy + h); c.bezierCurveTo(W * .5, oy + h, W * .5, y + h, x0 + 26, y + h); c.fill();
@@ -595,19 +610,6 @@ function periodic(c, W, H, spec) {
         c.fillStyle = cols[cat]; c.fillRect(20 + g * cw + 1, 44 + r * ch + 1, cw - 2, ch - 2); c.fillStyle = '#ffffff99'; c.fillRect(20 + g * cw + 4, 44 + r * ch + ch * .45, cw - 8, 2);
     }
     for (let r = 0; r < 2; r++) for (let g = 0; g < 15; g++) { c.fillStyle = cols[7 - r]; c.fillRect(20 + (g + 2.5) * cw + 1, 44 + (7.4 + r) * ch + 1, cw - 2, ch - 2); }
-}
-function sciencePoster(c, x, y, w, h, n, accent) {
-    c.save(); c.translate(x, y); c.fillStyle = '#fbfaf6'; c.fillRect(0, 0, w, h);
-    c.fillStyle = accent; c.fillRect(0, 0, w, h * .1); write(c, ['WIND', 'SOLAR', 'HYDRO', 'CIRCUITS', 'MOTION', 'WAVES'][n], w / 2, h * .05, w * .1, '#ffffff');
-    const cx = w / 2, cy = h * .4, s = w * .3; c.strokeStyle = '#3f4b52'; c.lineWidth = Math.max(2, w * .012); c.lineCap = 'round';
-    if (n === 0) { c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx, cy + s * 1.3); c.stroke(); for (let k = 0; k < 3; k++) { const a = k * TAU / 3 - .4; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a) * s, cy + Math.sin(a) * s); c.stroke(); } }
-    if (n === 1) { dot(c, cx + s * .6, cy - s * .6, s * .3, '#d9a441'); c.fillStyle = '#2f4f6a'; c.save(); c.translate(cx - s * .2, cy + s * .3); c.rotate(-.35); c.fillRect(-s * .6, -s * .3, s * 1.2, s * .6); c.restore(); }
-    if (n === 2) { c.fillStyle = '#9aa8b0'; c.fillRect(cx - s * .1, cy - s * .7, s * .3, s * 1.5); c.fillStyle = '#7fb6d6'; c.fillRect(cx - s, cy - s * .3, s * .9, s * 1.1); c.fillRect(cx + s * .2, cy + s * .5, s * .8, s * .3); }
-    if (n === 3) { c.strokeRect(cx - s, cy - s * .6, s * 2, s * 1.2); c.beginPath(); for (let k = 0; k < 7; k++) c.lineTo(cx - s * .4 + k * s * .13, cy - s * .6 + (k % 2 ? -10 : 10)); c.stroke(); dot(c, cx + s, cy, s * .15, accent); }
-    if (n === 4) { c.beginPath(); c.moveTo(cx - s, cy + s); c.lineTo(cx + s, cy + s); c.moveTo(cx - s, cy + s); c.lineTo(cx - s, cy - s); c.stroke(); c.strokeStyle = '#d9a441'; c.beginPath(); for (let k = 0; k <= 20; k++) c.lineTo(cx - s + k * s / 10, cy + s - (k / 20) ** 2 * s * 1.8); c.stroke(); }
-    if (n === 5) { c.strokeStyle = '#4f8fc0'; for (let q = 0; q < 2; q++) { c.beginPath(); for (let k = 0; k <= 40; k++) c.lineTo(cx - s + k * s / 20, cy + Math.sin(k * (.5 + q * .3)) * s * (.4 - q * .15) + q * s * .6); c.stroke(); } }
-    textLines(c, w * .08, h * .75, w * .84, 4, h * .04, '#8a9597', Math.max(2, h * .008));
-    c.restore();
 }
 function projectPhoto(c, x, y, w, h, n) {
     c.save(); c.translate(x, y); const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, ['#cfd8dc', '#e2d4c4', '#d4dccd', '#d8d1df'][n]); g.addColorStop(1, ['#9aa8ad', '#b99f88', '#99a98f', '#a69bb3'][n]); c.fillStyle = g; c.fillRect(0, 0, w, h);
@@ -731,8 +733,221 @@ function carpetInlay(color, sx, sz) {
     };
 }
 function drawPainting(c, W, H) { childPainting(c, 0, 0, W, H, 0); c.fillStyle = '#f0c24b88'; c.beginPath(); c.ellipse(W * .2, H * .8, W * .1, H * .06, 0, 0, TAU); c.fill(); }
-function drawPosterSheet(spec) { return (c, W, H) => spec.id === 'university' ? researchPoster(c, W, H, 2) : sankey(c, W, H, spec); }
+function drawPosterSheet(spec) { return (c, W, H) => spec.id === 'university' ? researchPoster(c, W, H, 2) : spec.id === 'highschool' ? drawSetDesign(c, W, H) : sankey(c, W, H, spec); }
+// APA set-design elevation on the review desk: proscenium, flats, a pier set piece.
+function drawSetDesign(c, W, H) {
+    c.fillStyle = '#f7f4ec'; c.fillRect(0, 0, W, H); c.strokeStyle = '#c9d4d8'; c.lineWidth = 1; for (let x = 0; x < W; x += 24) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); } for (let y = 0; y < H; y += 24) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+    write(c, 'APA · SET DESIGN · ACT 1', 24, 26, 20, HB.deep, 'left', '800');
+    const x0 = W * .1, x1 = W * .9, y0 = H * .18, y1 = H * .84; c.strokeStyle = HB.black; c.lineWidth = 4; c.beginPath(); c.moveTo(x0, y1); c.lineTo(x0, y0 + 60); c.arc((x0 + x1) / 2, y0 + 60, (x1 - x0) / 2, Math.PI, TAU); c.lineTo(x1, y1); c.stroke();
+    c.fillStyle = HB.orange + '55'; c.fillRect(x0 + 20, y1 - 120, (x1 - x0) * .3, 120); c.fillStyle = HB.pacific + '55'; c.fillRect(x1 - 20 - (x1 - x0) * .3, y1 - 150, (x1 - x0) * .3, 150);
+    c.strokeStyle = HB.charcoal; c.lineWidth = 3; c.fillStyle = HB.charcoal; c.fillRect(W * .38, y1 - 70, W * .24, 8); for (let k = 0; k < 4; k++) c.fillRect(W * (.39 + k * .07), y1 - 62, 5, 62);
+    c.strokeStyle = HB.pacific; c.beginPath(); for (let k = 0; k <= 40; k++) c.lineTo(x0 + 10 + k * (x1 - x0 - 20) / 40, y1 - 20 + Math.sin(k * .7) * 8); c.stroke();
+    c.strokeStyle = HB.black; c.lineWidth = 2; c.beginPath(); c.moveTo(x0, y1 + 14); c.lineTo(x1, y1 + 14); c.stroke(); write(c, 'scale 1:25', x1, y1 + 30, 14, HB.charcoal, 'right', '600');
+}
 function drawLectureNotes(c, W, H) { c.fillStyle = '#fbfaf3'; c.fillRect(0, 0, W, H); write(c, 'Lecture 7 · Notes', 20, 26, 22, '#285c4b', 'left'); textLines(c, 20, 56, W - 40, 12, 18, '#7d8784', 3); }
+
+// ---- High school: Huntington Beach High School (inspired-by concept) -----
+// "Surf City physics: from derricks to waves." Generic text only (OILERS,
+// HBHS, SURF CITY, EST. 1906); no school marks. The derrick appears only small,
+// inside information graphics; waves and the pier are the dominant motifs.
+// Colours approximate the school's black and orange (no official values).
+const HB = { orange: '#e8702a', deep: '#d45f1e', black: '#1d1d1f', charcoal: '#35383b', plaster: '#ece4d3', tile: '#b4583a', pacific: '#2e6f8e', glass: '#9cc3b6', sand: '#d9c7a0', cream: '#f2ece0', felt: '#46494d' };
+// Heavy varsity lettering, wide tracking, optional outline; squeezed to `max`.
+function varsity(c, s, x, y, size, fill, { outline = null, line = 4, align = 'center', track = .08, max = Infinity } = {}) {
+    c.save(); c.font = `900 ${Math.round(size)}px "Arial Black", Impact, sans-serif`; c.textBaseline = 'middle'; c.textAlign = 'left'; c.lineJoin = 'round';
+    const chars = [...s], widths = chars.map(ch => c.measureText(ch).width), gap = size * track, total = widths.reduce((a, b) => a + b, 0) + gap * (chars.length - 1), k = Math.min(1, max / total);
+    c.translate(x, y); c.scale(k, 1); let cx = align === 'center' ? -total / 2 : align === 'right' ? -total : 0;
+    chars.forEach((ch, i) => { if (outline) { c.strokeStyle = outline; c.lineWidth = line; c.strokeText(ch, cx, 0); } c.fillStyle = fill; c.fillText(ch, cx, 0); cx += widths[i] + gap; });
+    c.restore();
+}
+// Line icons for information graphics (stroke colour `col`, size ~ s).
+function iconDerrick(c, x, y, s, col, lw = 2) { // generic lattice derrick: triangle, 3 braces (small only)
+    c.save(); c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); c.moveTo(x - s * .32, y); c.lineTo(x, y - s); c.lineTo(x + s * .32, y);
+    for (let k = 1; k <= 3; k++) { const t = k / 4, h = y - s * t, half = s * .32 * (1 - t); c.moveTo(x - half, h); c.lineTo(x + half, h); }
+    c.moveTo(x - s * .24, y - s * .25); c.lineTo(x + s * .16, y - s * .5); c.stroke(); c.restore();
+}
+function iconTurbine(c, x, y, s, col, lw = 2) {
+    c.save(); c.strokeStyle = col; c.lineWidth = lw; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y); c.lineTo(x, y - s * .62);
+    for (let k = 0; k < 3; k++) { const a = -Math.PI / 2 + k * TAU / 3 + .3; c.moveTo(x, y - s * .62); c.lineTo(x + Math.cos(a) * s * .42, y - s * .62 + Math.sin(a) * s * .42); } c.stroke(); c.restore();
+}
+function iconPanel(c, x, y, s, col, lw = 2) {
+    c.save(); c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); c.moveTo(x - s * .45, y - s * .2); c.lineTo(x + s * .3, y - s * .2); c.lineTo(x + s * .45, y - s * .55); c.lineTo(x - s * .3, y - s * .55); c.closePath();
+    c.moveTo(x - s * .07, y - s * .2); c.lineTo(x + s * .08, y - s * .55); c.moveTo(x - s * .37, y - s * .37); c.lineTo(x + s * .37, y - s * .37); c.moveTo(x, y - s * .2); c.lineTo(x, y); c.stroke();
+    c.beginPath(); c.arc(x + s * .3, y - s * .85, s * .12, 0, TAU); c.stroke(); c.restore();
+}
+function iconWave(c, x, y, s, col, lw = 2) { // breaking-wave curl
+    c.save(); c.strokeStyle = col; c.lineWidth = lw; c.lineCap = 'round'; c.beginPath();
+    c.moveTo(x - s * .55, y); c.bezierCurveTo(x - s * .2, y, x - s * .1, y - s * .8, x + s * .25, y - s * .75); c.bezierCurveTo(x + s * .5, y - s * .7, x + s * .5, y - s * .4, x + s * .3, y - s * .38);
+    c.bezierCurveTo(x + s * .15, y - s * .37, x + s * .12, y - s * .5, x + s * .22, y - s * .52); c.moveTo(x - s * .55, y); c.lineTo(x + s * .55, y); c.stroke(); c.restore();
+}
+// Planning board: ENERGY · WAVES · CHANGE. Sine wave (λ, A, v = f·λ), shoaling
+// against pier pilings, and a 1920 → today energy timeline; per-phase strip.
+function drawBoardHigh(c, W, H, spec, v) {
+    c.fillStyle = '#f6f6f2'; c.fillRect(0, 0, W, H);
+    for (let i = 0; i < 18; i++) { c.strokeStyle = '#9aa8ad10'; c.lineWidth = 12 + rnd(i) * 20; c.beginPath(); c.ellipse(rnd(i * 3.3) * W, rnd(i * 5.9) * H, 60 + rnd(i) * 90, 18, rnd(i * 7), 0, TAU * .7); c.stroke(); } // ghosted erasing
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    write(c, 'ENERGY · WAVES · CHANGE', 26, 34, 26, HB.deep, 'left', '700');
+    c.fillStyle = HB.black; c.fillRect(26, 52, 330, 3);
+    // Left: a sine wave with wavelength and amplitude arrows.
+    const x0 = 30, y0 = 130, len = 230, amp = 34;
+    c.strokeStyle = HB.pacific; c.lineWidth = 4; c.beginPath(); for (let k = 0; k <= 60; k++) c.lineTo(x0 + k * len / 60, y0 - Math.sin(k / 60 * TAU * 1.5) * amp); c.stroke();
+    c.strokeStyle = HB.black; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x0 + len, y0); c.stroke();
+    const arrow = (ax, ay, bx, by) => { c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); const a = Math.atan2(by - ay, bx - ax); for (const [px, py, d] of [[ax, ay, 1], [bx, by, -1]]) { c.moveTo(px, py); c.lineTo(px + d * Math.cos(a - .5) * 8, py + d * Math.sin(a - .5) * 8); c.moveTo(px, py); c.lineTo(px + d * Math.cos(a + .5) * 8, py + d * Math.sin(a + .5) * 8); } c.stroke(); };
+    c.strokeStyle = HB.deep; c.lineWidth = 2.5; arrow(x0 + len / 6, y0 - amp - 12, x0 + len / 6 + len / 1.5, y0 - amp - 12); arrow(x0 + len * .5 + 10, y0, x0 + len * .5 + 10, y0 + amp);
+    write(c, 'λ', x0 + len * .5, y0 - amp - 26, 20, HB.deep, 'center', '700'); write(c, 'A', x0 + len * .5 + 24, y0 + amp * .55, 18, HB.deep, 'left', '700');
+    write(c, 'v = f · λ', x0 + 10, y0 + 66, 26, HB.black, 'left', '700');
+    // Middle: a wave shoaling toward the beach between pier pilings.
+    const mx = 300, my = 168; c.strokeStyle = HB.black; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(mx, my + 52); c.lineTo(mx + 210, my + 8); c.stroke(); // sloping sea bed
+    c.strokeStyle = HB.pacific; c.lineWidth = 3; c.beginPath(); for (let k = 0; k <= 80; k++) { const t = k / 80, a = 6 + t * t * 34; c.lineTo(mx + t * 210, my - 30 - Math.sin(t * TAU * 3.2) * a); } c.stroke();
+    c.fillStyle = HB.charcoal; c.fillRect(mx - 4, my - 92, 216, 7); for (let n = 0; n < 3; n++) c.fillRect(mx + 20 + n * 72, my - 85, 6, 130 - n * 18); // pier deck and pilings
+    write(c, 'H grows as depth falls', mx + 4, my + 74, 15, HB.black, 'left', '600');
+    // Right: energy timeline, 1920 first well → today sun · wind · waves.
+    const tx = 548, ty = 128; c.strokeStyle = HB.black; c.lineWidth = 2.5; c.beginPath(); c.moveTo(tx, ty); c.lineTo(tx + 186, ty); c.lineTo(tx + 176, ty - 6); c.moveTo(tx + 186, ty); c.lineTo(tx + 176, ty + 6); c.stroke();
+    iconDerrick(c, tx + 12, ty - 8, 46, HB.charcoal, 2); iconPanel(c, tx + 112, ty - 6, 40, HB.deep, 2); iconTurbine(c, tx + 142, ty - 6, 50, HB.pacific, 2); iconWave(c, tx + 172, ty - 6, 36, HB.pacific, 2.5);
+    write(c, '1920', tx, ty + 18, 15, HB.black, 'left', '700'); write(c, 'first well', tx, ty + 36, 13, HB.charcoal, 'left', '600');
+    write(c, 'today', tx + 186, ty + 18, 15, HB.black, 'right', '700'); write(c, 'sun · wind · waves', tx + 186, ty + 36, 13, HB.pacific, 'right', '600');
+    // Daypart strip.
+    const sy = 262; c.strokeStyle = '#c4ccd0'; c.lineWidth = 1; c.beginPath(); c.moveTo(26, sy - 18); c.lineTo(W - 26, sy - 18); c.stroke();
+    if (v === 0) { write(c, 'WARM-UP:', 28, sy + 6, 18, HB.deep, 'left', '800'); write(c, 'Why do waves get taller near the pier?', 128, sy + 6, 19, HB.black, 'left', '600'); textLines(c, 128, sy + 30, 360, 2, 14, '#9aa3a6', 3); }
+    else if (v === 1) { write(c, 'WAVE LAB · data', 28, sy, 17, HB.deep, 'left', '800'); c.strokeStyle = HB.black; c.lineWidth = 1.5; for (let r = 0; r < 4; r++) for (let k = 0; k < 5; k++) c.strokeRect(190 + k * 80, sy - 12 + r * 16, 80, 16); ['depth', 'H', 'T', 'λ', 'v'].forEach((s, k) => write(c, s, 230 + k * 80, sy - 4, 12, HB.pacific, 'center', '700')); }
+    else if (v === 2) { write(c, 'Homework: p. 214', 28, sy + 6, 22, HB.black, 'left', '700'); write(c, 'Q 1–6 · show units', 260, sy + 8, 17, HB.pacific, 'left', '600'); }
+    else if (v === 3) { ['Hook', 'Model', 'Lab', 'Check'].forEach((s, k) => { c.strokeStyle = HB.charcoal; c.lineWidth = 2; c.strokeRect(28 + k * 150, sy - 14, 132, 44); write(c, s, 40 + k * 150, sy - 2, 14, HB.charcoal, 'left', '700'); textLines(c, 40 + k * 150, sy + 14, 100, 1, 10, '#9aa3a6', 3); }); }
+    else { write(c, "SHOWCASE: judges' rubric", 28, sy, 18, HB.deep, 'left', '800'); ['Question', 'Evidence', 'Design', 'Story'].forEach((s, k) => { write(c, s, 300 + k * 108, sy, 13, HB.black, 'left', '700'); for (let q = 0; q < 4; q++) dot(c, 304 + k * 108 + q * 16, sy + 22, 5, q <= k % 3 + 1 ? HB.orange : '#c4ccd0'); }); }
+}
+// Presentation display slides (generic sample data, labelled as such).
+function slideHigh(c, W, H, i) {
+    const x0 = 30, y0 = 54, w = W - 60, h = H - 104, sample = () => write(c, 'sample data', x0 + w - 6, y0 + h - 10, 12, '#9fb3bb', 'right', '400');
+    if (i === 0) { // TODAY: agenda and a marine-layer icon
+        c.fillStyle = '#f4f1ea'; c.fillRect(x0, y0, w, h); write(c, 'TODAY', x0 + 24, y0 + 34, 30, HB.black, 'left', '900');
+        ['Warm-up · pier waves', 'Wave lab · tank + data', 'Exit ticket'].forEach((s, k) => { dot(c, x0 + 36, y0 + 88 + k * 52, 9, [HB.orange, HB.pacific, HB.black][k]); write(c, s, x0 + 58, y0 + 88 + k * 52, 22, HB.charcoal, 'left', '600'); });
+        const cx = x0 + w * .78, cy = y0 + h * .42; c.fillStyle = '#c4ccd2'; for (let k = 0; k < 4; k++) { c.beginPath(); c.ellipse(cx - 60 + k * 40, cy - (k % 2) * 12, 52, 26, 0, 0, TAU); c.fill(); } c.fillRect(cx - 110, cy, 220, 24);
+        c.strokeStyle = HB.pacific; c.lineWidth = 3; for (let k = 0; k < 3; k++) { c.beginPath(); for (let q = 0; q <= 24; q++) c.lineTo(cx - 110 + q * 9.2, cy + 52 + k * 16 + Math.sin(q * .9 + k) * 4); c.stroke(); }
+        write(c, 'marine layer · clears by noon', cx, cy + 112, 14, '#6d7a80', 'center', '600');
+    } else if (i === 1) { // SWELL FORECAST LAB: 7 wave-height bars, period line
+        c.fillStyle = '#10232d'; c.fillRect(x0, y0, w, h); write(c, 'SWELL FORECAST LAB', x0 + 20, y0 + 26, 20, '#f4efe2', 'left', '800');
+        const gx = x0 + 54, gy = y0 + h - 40, gw = w - 110, gh = h - 90; c.strokeStyle = '#3d5a64'; c.lineWidth = 1; for (let k = 0; k <= 4; k++) { c.beginPath(); c.moveTo(gx, gy - k * gh / 4); c.lineTo(gx + gw, gy - k * gh / 4); c.stroke(); }
+        const ft = [2.5, 3, 4.5, 5, 3.5, 3, 2], sec = [9, 11, 14, 15, 12, 10, 9];
+        ft.forEach((f, k) => { c.fillStyle = HB.pacific; c.fillRect(gx + 14 + k * gw / 7, gy - f / 6 * gh, gw / 7 - 28, f / 6 * gh); write(c, ['M', 'T', 'W', 'T', 'F', 'S', 'S'][k], gx + k * gw / 7 + gw / 14, gy + 14, 13, '#9fb3bb'); });
+        c.strokeStyle = HB.orange; c.lineWidth = 4; c.beginPath(); sec.forEach((s, k) => c.lineTo(gx + k * gw / 7 + gw / 14, gy - (s - 6) / 12 * gh)); c.stroke(); sec.forEach((s, k) => dot(c, gx + k * gw / 7 + gw / 14, gy - (s - 6) / 12 * gh, 5, HB.orange));
+        write(c, 'ft', gx - 10, gy - gh - 4, 13, '#7fb6da', 'right', '700'); write(c, 's', gx + gw + 10, gy - gh - 4, 13, HB.orange, 'left', '700'); sample();
+    } else if (i === 2) { // TIDE CURVE
+        c.fillStyle = '#f4f1ea'; c.fillRect(x0, y0, w, h); write(c, 'TIDE CURVE', x0 + 20, y0 + 28, 22, HB.black, 'left', '900');
+        const gx = x0 + 30, gy = y0 + h * .58, gw = w - 60, amp = h * .26, f = t => gy - Math.sin(t * TAU * 1.9 + .6) * amp * (.8 + .2 * Math.cos(t * 5));
+        c.fillStyle = HB.glass + 'aa'; c.beginPath(); c.moveTo(gx, y0 + h - 16); for (let k = 0; k <= 80; k++) c.lineTo(gx + k * gw / 80, f(k / 80)); c.lineTo(gx + gw, y0 + h - 16); c.fill();
+        c.strokeStyle = HB.pacific; c.lineWidth = 4; c.beginPath(); for (let k = 0; k <= 80; k++) c.lineTo(gx + k * gw / 80, f(k / 80)); c.stroke();
+        for (const t of [.077, .34, .6, .866]) { const y = f(t), hi = y < gy; dot(c, gx + t * gw, y, 7, hi ? HB.orange : HB.black); write(c, hi ? 'HIGH' : 'LOW', gx + t * gw, y + (hi ? -18 : 18), 12, hi ? HB.deep : HB.black, 'center', '800'); }
+        sample();
+    } else if (i === 3) { // LESSON PLAN · UNIT 4 ENERGY (dim)
+        c.fillStyle = '#0e1a20'; c.fillRect(x0, y0, w, h); write(c, 'LESSON PLAN · UNIT 4 ENERGY', x0 + 20, y0 + 28, 18, '#8fa4ab', 'left', '700');
+        for (let k = 0; k < 6; k++) { const bx = x0 + 20 + k % 3 * (w - 40) / 3, by = y0 + 56 + Math.floor(k / 3) * (h - 70) / 2; c.strokeStyle = '#3d5560'; c.lineWidth = 2; c.strokeRect(bx, by, (w - 40) / 3 - 14, (h - 70) / 2 - 14); textLines(c, bx + 12, by + 18, (w - 40) / 3 - 50, 3, 14, '#3d5560', 3); }
+    } else { // OILER SHOWCASE
+        c.fillStyle = HB.black; c.fillRect(x0, y0, w, h); c.fillStyle = HB.orange; c.fillRect(x0, y0 + 8, w, 4); c.fillRect(x0, y0 + h - 12, w, 4);
+        varsity(c, 'OILER SHOWCASE', W / 2, y0 + 72, 50, HB.orange, { track: .06, max: w - 60 });
+        const icons = [iconDerrick, iconTurbine, iconPanel, iconWave]; icons.forEach((f, k) => { const ix = x0 + w * (.2 + k * .2), iy = y0 + h * .78; f(c, ix, iy, 62, k ? '#f4efe2' : '#9aa3a6', 3); if (k < 3) { c.strokeStyle = HB.orange; c.lineWidth = 3; c.beginPath(); c.moveTo(ix + 34, iy - 26); c.lineTo(ix + w * .2 - 40, iy - 26); c.stroke(); } });
+        write(c, 'Science + APA media', W / 2, y0 + 128, 20, '#f4efe2', 'center', '600');
+    }
+}
+// Teacher corner: OILER BELL SCHEDULE (no times; blocks only, "sample").
+function drawBellSchedule(c, W, H) {
+    c.fillStyle = '#fbfaf5'; c.fillRect(0, 0, W, H); c.fillStyle = HB.black; c.fillRect(0, 0, W, H * .15);
+    varsity(c, 'OILER BELL SCHEDULE', W / 2, H * .078, H * .07, HB.orange, { track: .05, max: W * .9 });
+    const rows = ['0', '1', '2', '3', 'LUNCH', '4', '5', '6'], rh = H * .76 / rows.length, tones = [HB.pacific, HB.orange, HB.charcoal, HB.glass, HB.tile, HB.orange, HB.pacific, HB.charcoal];
+    rows.forEach((s, r) => {
+        const y = H * .18 + r * rh, lunch = s === 'LUNCH'; c.fillStyle = r % 2 ? '#f1eee6' : '#fbfaf5'; c.fillRect(W * .04, y, W * .92, rh - 4);
+        write(c, lunch ? 'LUNCH' : 'PERIOD ' + s, W * .07, y + rh / 2, rh * .34, HB.black, 'left', '800');
+        if (r === 0) write(c, 'zero period · surf', W * .3, y + rh / 2, rh * .3, HB.pacific, 'left', '700');
+        else { c.fillStyle = lunch ? '#d9d4c8' : tones[r]; rrect(c, W * .3, y + rh * .18, W * (lunch ? .3 : .38 + rnd(r) * .22), rh * .6, 6); c.fill(); if (!lunch) textLines(c, W * .32, y + rh * .4, W * .2, 1, 10, '#ffffffcc', 4); }
+    });
+    write(c, 'sample', W * .95, H * .965, H * .026, '#8a9597', 'right', '600');
+}
+// Framed line drawing: the 1926 bell tower and auditorium (stylised, generic).
+function drawTowerPrint(c, W, H) {
+    c.fillStyle = '#f3eddc'; c.fillRect(0, 0, W, H); paperNoise(c, W, H, 1500, '#7a6a5012');
+    const ink = '#3b3430', s = W / 512; c.strokeStyle = ink; c.lineWidth = 2.2 * s; c.lineJoin = 'round';
+    const base = H * .7, tx = W * .66, tw = W * .16, top = H * .1;
+    // Auditorium block with a tiled roof and three tall round-arched windows.
+    c.strokeRect(W * .08, base - H * .2, W * .52, H * .2); c.beginPath(); c.moveTo(W * .06, base - H * .2); c.lineTo(W * .12, base - H * .25); c.lineTo(W * .56, base - H * .25); c.lineTo(W * .62, base - H * .2); c.stroke();
+    for (let k = 0; k < 14; k++) { c.beginPath(); c.moveTo(W * (.13 + k * .031), base - H * .248); c.lineTo(W * (.12 + k * .031), base - H * .203); c.stroke(); }
+    for (let k = 0; k < 3; k++) { const ax = W * (.18 + k * .14), aw = W * .07; c.beginPath(); c.moveTo(ax, base - H * .02); c.lineTo(ax, base - H * .13); c.arc(ax + aw / 2, base - H * .13, aw / 2, Math.PI, TAU); c.lineTo(ax + aw, base - H * .02); c.stroke(); }
+    // Bell tower: shaft with quoins, round-arched corbel band, belfry with two arches, hipped tile cap.
+    c.strokeRect(tx, top + H * .15, tw, base - top - H * .15);
+    for (let y = top + H * .17; y < base; y += H * .028) { c.beginPath(); c.moveTo(tx, y); c.lineTo(tx + tw * .12, y); c.moveTo(tx + tw, y); c.lineTo(tx + tw * .88, y); c.stroke(); }
+    for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(tx + tw * (k + .5) / 6, top + H * .155, tw / 12, 0, Math.PI); c.stroke(); }
+    for (let k = 0; k < 2; k++) { const ax = tx + tw * (.16 + k * .4), aw = tw * .28; c.beginPath(); c.moveTo(ax, top + H * .135); c.lineTo(ax, top + H * .06); c.arc(ax + aw / 2, top + H * .06, aw / 2, Math.PI, TAU); c.lineTo(ax + aw, top + H * .135); c.stroke(); }
+    c.strokeRect(tx - tw * .06, top + H * .005, tw * 1.12, H * .14); c.beginPath(); c.moveTo(tx - tw * .12, top); c.lineTo(tx + tw / 2, top - H * .06); c.lineTo(tx + tw * 1.12, top); c.closePath(); c.stroke();
+    c.beginPath(); c.moveTo(tx + tw * .35, base - H * .02); c.lineTo(tx + tw * .35, base - H * .1); c.arc(tx + tw / 2, base - H * .1, tw * .15, Math.PI, TAU); c.lineTo(tx + tw * .65, base - H * .02); c.stroke();
+    // Ground line, two palms and hatching.
+    c.beginPath(); c.moveTo(W * .04, base); c.lineTo(W * .96, base); c.stroke();
+    for (const px of [W * .89, W * .04 + 6]) { c.beginPath(); c.moveTo(px, base); c.quadraticCurveTo(px + 6 * s, base - H * .18, px + 2 * s, base - H * .3); c.stroke(); for (let k = 0; k < 7; k++) { const a = -Math.PI + k * Math.PI / 6; c.beginPath(); c.moveTo(px + 2 * s, base - H * .3); c.quadraticCurveTo(px + 2 * s + Math.cos(a) * 22 * s, base - H * .3 + Math.sin(a) * 14 * s - 6 * s, px + 2 * s + Math.cos(a) * 34 * s, base - H * .3 + Math.sin(a) * 18 * s + 10 * s); c.stroke(); } }
+    c.lineWidth = 1 * s; for (let k = 0; k < 26; k++) { c.beginPath(); c.moveTo(tx + tw, top + H * .2 + k * H * .017); c.lineTo(tx + tw * .9, top + H * .21 + k * H * .017); c.stroke(); }
+    c.fillStyle = ink; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = `italic small-caps 600 ${Math.round(24 * s)}px serif`; c.fillText('Huntington Beach High School', W / 2, H * .82, W * .9);
+    c.font = `italic ${Math.round(21 * s)}px serif`; c.fillText('Est. 1906 · Tower 1926', W / 2, H * .885, W * .9);
+}
+// Felt banner: HOME OF THE OILERS (black field, orange letters, cream pinstripes).
+function drawOilerBanner(c, W, H) {
+    c.fillStyle = HB.black; c.fillRect(0, 0, W, H); for (let i = 0; i < W * H / 12; i++) { c.fillStyle = i % 2 ? '#ffffff0a' : '#0000001a'; c.fillRect(rnd(i) * W, rnd(i + 51) * H, 1, 2); }
+    c.fillStyle = '#ece4d3'; c.fillRect(0, H * .1, W, H * .025); c.fillRect(0, H * .875, W, H * .025);
+    varsity(c, 'HOME OF THE OILERS', W / 2, H * .52, H * .5, HB.orange, { outline: '#ece4d3', line: 3, track: .07, max: W * .86 });
+    for (const x of [W * .025, W * .975]) dot(c, x, H * .3, H * .055, '#c9c4b6');
+}
+// Pennant atlas, 2 × 3 cells: [text, field, ink, hoist] (generic text only).
+const PENNANTS = [['OILERS', HB.black, HB.orange, HB.orange], ['SURF CITY', HB.orange, HB.black, HB.black], ['HBHS', HB.black, HB.orange, '#ece4d3'],
+    ['CLASS OF 2027', '#ece4d3', HB.black, HB.orange], ['GO OILERS', HB.orange, HB.black, HB.black], ['EST. 1906', HB.black, '#ece4d3', HB.orange]];
+function drawPennants(c, W, H) {
+    const cw = W / 2, ch = H / 3;
+    PENNANTS.forEach(([text, field, ink, hoist], n) => {
+        const x = (n % 2) * cw, y = Math.floor(n / 2) * ch; c.fillStyle = field; c.fillRect(x, y, cw, ch);
+        for (let i = 0; i < 900; i++) { c.fillStyle = i % 2 ? '#ffffff0c' : '#00000012'; c.fillRect(x + rnd(i + n * 900) * cw, y + rnd(i + 77 + n) * ch, 1, 2); }
+        c.fillStyle = hoist; c.fillRect(x, y, cw * .085, ch);
+        varsity(c, text, x + cw * .38, y + ch / 2, ch * .3, ink, { outline: field === HB.orange ? null : null, track: .05, max: cw * .52 });
+        if (n === 1) iconWave(c, x + cw * .74, y + ch * .6, ch * .22, ink, 3);
+    });
+}
+// Lombard-band arcade frieze: small round arches in plaster tone, 240 mm pitch.
+function drawArcadeFrieze(c, W, H, pitchPx) {
+    c.fillStyle = '#e6dcc6'; c.fillRect(0, 0, W, H); c.fillStyle = '#d4c6aa'; c.fillRect(0, H * .82, W, H * .18); c.fillStyle = HB.tile + '66'; c.fillRect(0, H * .84, W, 2);
+    for (let x = 0; x < W + pitchPx; x += pitchPx) {
+        c.strokeStyle = '#b9a989'; c.lineWidth = 3; c.beginPath(); c.arc(x + pitchPx / 2, H * .56, pitchPx * .36, Math.PI, TAU); c.stroke();
+        c.strokeStyle = '#ffffff70'; c.lineWidth = 1.5; c.beginPath(); c.arc(x + pitchPx / 2, H * .56 - 2, pitchPx * .36, Math.PI, TAU); c.stroke();
+        c.fillStyle = '#b9a989'; c.fillRect(x + pitchPx / 2 - pitchPx * .36 - 2, H * .56, 4, H * .26); c.fillRect(x + pitchPx / 2 + pitchPx * .36 - 2, H * .56, 4, H * .26);
+    }
+    c.fillStyle = '#c7b796'; c.fillRect(0, 0, W, H * .1);
+}
+// Locker end panel: vertical OILERS stencil in orange on black.
+function drawLockerStencil(c, W, H) {
+    c.fillStyle = '#202124'; c.fillRect(0, 0, W, H); for (let i = 0; i < 800; i++) { c.fillStyle = i % 2 ? '#ffffff08' : '#00000014'; c.fillRect(rnd(i) * W, rnd(i + 9) * H, 1, 2); }
+    [...'OILERS'].forEach((ch, n) => varsity(c, ch, W / 2, H * (.12 + n * .152), W * .62, HB.orange, { track: 0 }));
+}
+// Desk and wall graphics.
+function drawTideCard(c, W, H) {
+    c.fillStyle = '#f6f8f6'; c.fillRect(0, 0, W, H); c.fillStyle = HB.pacific; c.fillRect(0, 0, W, H * .14); write(c, 'TIDES', W / 2, H * .075, H * .08, '#ffffff', 'center', '800');
+    for (let r = 0; r < 7; r++) { c.fillStyle = r % 2 ? '#e4edf0' : '#f6f8f6'; c.fillRect(W * .06, H * (.18 + r * .1), W * .88, H * .1); write(c, ['M', 'T', 'W', 'T', 'F', 'S', 'S'][r], W * .12, H * (.23 + r * .1), H * .05, HB.black, 'center', '700'); for (let k = 0; k < 3; k++) { c.fillStyle = k === 1 ? HB.orange : '#7d8a8c'; c.fillRect(W * (.25 + k * .23), H * (.22 + r * .1), W * .15, 3); } }
+    write(c, 'sample', W * .92, H * .95, H * .04, '#8a9597', 'right', '600');
+}
+function drawSciencePosterHigh(c, x, y, w, h, n) {
+    c.save(); c.translate(x, y); c.fillStyle = '#fbfaf6'; c.fillRect(0, 0, w, h);
+    c.fillStyle = n % 2 ? HB.black : HB.orange; c.fillRect(0, 0, w, h * .12); varsity(c, ['WAVES', 'TIDES', 'SWELL', 'WIND', 'SOLAR', 'OIL TO ENERGY'][n], w / 2, h * .062, h * .062, n % 2 ? HB.orange : '#ffffff', { max: w * .9 });
+    const cx = w / 2, cy = h * .42, s = w * .3; c.lineCap = 'round'; c.lineWidth = Math.max(3, w * .014);
+    if (n === 0) { c.strokeStyle = HB.pacific; for (let q = 0; q < 3; q++) { c.beginPath(); for (let k = 0; k <= 40; k++) c.lineTo(cx - s + k * s / 20, cy - s * .4 + q * s * .4 + Math.sin(k * .5 + q) * s * (.18 - q * .04)); c.stroke(); } }
+    if (n === 1) { c.strokeStyle = HB.pacific; c.beginPath(); for (let k = 0; k <= 40; k++) c.lineTo(cx - s + k * s / 20, cy + Math.sin(k / 40 * TAU * 1.5) * s * .5); c.stroke(); dot(c, cx + s * .8, cy - s * .7, s * .16, '#d8dfe4'); dot(c, cx + s * .86, cy - s * .74, s * .14, '#fbfaf6'); }
+    if (n === 2) { for (let k = 0; k < 5; k++) { c.fillStyle = k === 3 ? HB.orange : HB.pacific; const bh = s * (.4 + rnd(k + 3) * 1.1); c.fillRect(cx - s + k * s * .42, cy + s * .7 - bh, s * .3, bh); } }
+    if (n === 3) iconTurbine(c, cx, cy + s * .8, s * 1.8, HB.charcoal, Math.max(3, w * .016));
+    if (n === 4) iconPanel(c, cx, cy + s * .7, s * 1.6, HB.deep, Math.max(3, w * .014));
+    if (n === 5) { iconDerrick(c, cx - s * .55, cy + s * .6, s * .9, HB.charcoal, Math.max(2, w * .01)); c.strokeStyle = HB.orange; c.beginPath(); c.moveTo(cx - s * .15, cy + s * .2); c.lineTo(cx + s * .2, cy + s * .2); c.stroke(); iconWave(c, cx + s * .65, cy + s * .6, s * .8, HB.pacific, Math.max(3, w * .014)); }
+    textLines(c, w * .08, h * .75, w * .84, 4, h * .04, '#8a9597', Math.max(2, h * .008));
+    c.restore();
+}
+// APA / MMET performance posters pinned on the felt panels (no real titles, people or dates).
+function drawApaPoster(c, W, H, n) {
+    const [field, ink, top, sub] = [[HB.black, HB.orange, 'APA', 'SPRING MUSICAL · AUDITIONS'], [HB.pacific, '#f4efe2', 'MMET', 'SOUND & SCREEN NIGHT'], ['#ece4d3', HB.black, 'ORCHESTRA', 'WINTER CONCERT']][n];
+    c.fillStyle = field; c.fillRect(0, 0, W, H);
+    if (n === 0) { c.fillStyle = HB.orange + '40'; c.beginPath(); c.moveTo(W * .5, H * .2); c.lineTo(W * .1, H * .78); c.lineTo(W * .9, H * .78); c.fill(); dot(c, W * .5, H * .45, W * .16, HB.orange); }
+    if (n === 1) { c.strokeStyle = '#f4efe2'; c.lineWidth = W * .02; for (let k = 0; k < 9; k++) { const bh = H * (.08 + rnd(k + 4) * .26); c.beginPath(); c.moveTo(W * (.14 + k * .09), H * .52 - bh); c.lineTo(W * (.14 + k * .09), H * .52 + bh); c.stroke(); } }
+    if (n === 2) { c.strokeStyle = HB.black; c.lineWidth = W * .014; for (let k = 0; k < 5; k++) { c.beginPath(); c.moveTo(W * .1, H * (.32 + k * .05)); c.lineTo(W * .9, H * (.32 + k * .05)); c.stroke(); } for (let k = 0; k < 6; k++) dot(c, W * (.18 + k * .13), H * (.34 + rnd(k) * .2), W * .03, HB.orange); }
+    varsity(c, top, W / 2, H * .12, W * .16, ink, { max: W * .86 }); write(c, sub, W / 2, H * .86, W * .055, ink, 'center', '800', W * .9);
+}
 
 // ---- Surfaces: procedural colour / roughness maps per stage --------------
 // Every large surface carries a canvas map at a physical scale. `uvBox`
@@ -740,7 +955,7 @@ function drawLectureNotes(c, W, H) { c.fillStyle = '#fbfaf3'; c.fillRect(0, 0, W
 // table and a 0.4 m stool without stretching. Roughness maps are linear.
 // Stage palettes follow the brief (education.md §x.4): pale ash and birch
 // (kindergarten) → oak, tack-board and lino (elementary) → HPL, write-on wall
-// and studded rubber (middle) → slate, cork and painted dado (high) → carpet
+// and studded rubber (middle) → slate, charcoal felt and painted dado (high) → carpet
 // tile, oak slats and terracotta (college) → carpet, walnut, panelled green
 // and brass (university).
 const shade = (hex, l = 0, s = 0) => '#' + new THREE.Color(hex).offsetHSL(0, s, l).getHexString();
@@ -996,8 +1211,9 @@ const PALETTE = {
         trim: '#b48f62', top: { base: '#e3d2ae', dark: '#a8875a', light: '#fff2d6', seed: 6 }, shell: 'plastic' },
     middleschool: { floor: { kind: 'planks', tones: ['#c9ad85', '#c2a57c', '#ceb28b', '#bea079', '#c7aa82'], grain: ['#694d31', '#f6dfbb'], gap: '#7d6346', knots: .15, seed: 11 },
         trim: '#3e5f6a', top: { hpl: '#f1efe8', seed: 8 }, shell: 'plastic' },
-    highschool: { floor: { kind: 'planks', tones: ['#bfa47c', '#b89c74', '#c4a982', '#b39670', '#bca079'], grain: ['#5f452b', '#f2d9b2'], gap: '#735a3e', knots: .2, seed: 13 },
-        trim: '#2f3b44', top: { hpl: '#ece8df', seed: 9 }, shell: 'plastic' },
+    // Driftwood oak LVT planks; Oiler black trim (HBHS-inspired, see docs/hbhs-classroom.md).
+    highschool: { floor: { kind: 'planks', tones: ['#c2b294', '#b9a98b', '#c8b89b', '#b2a184', '#bead90'], grain: ['#5f4c36', '#efe0c4'], gap: '#776650', knots: .1, seed: 13 },
+        trim: '#1d1d1f', top: { hpl: '#ece8df', seed: 9 }, shell: 'plastic' },
     college: { floor: { kind: 'carpet', tones: ['#756f68', '#76706a', '#746e67', '#77716a'], fleck: ['#8e877c66', '#5c574f66', '#a5643f22', '#9b938866'], seam: '#5a554f' },
         stage: { tones: ['#b8915f', '#b08a5a', '#bf9867', '#ad8656'], grain: ['#5e4329', '#f3d8ae'], gap: '#6e5438', knots: .1, seed: 17 },
         trim: '#5b4636', top: { base: '#b08d63', dark: '#6b4b2c', light: '#e8c99a', figure: true, seed: 12 }, shell: 'fabric' },
@@ -1006,7 +1222,7 @@ const PALETTE = {
         trim: '#e4dfcf', top: { base: '#6b4a33', dark: '#3b2516', light: '#a07650', figure: true, streak: true, seed: 15 }, shell: 'leather' }
 };
 const SPINES = {
-    highschool: ['#567081', '#d9a441', '#c97c5d', '#3f4b52', '#6f8796', '#2f5f9e', '#9aa8b0', '#7a8f5a'],
+    highschool: ['#1d1d1f', '#e8702a', '#2e6f8e', '#ece4d3', '#9cc3b6', '#b4583a', '#35383b', '#d45f1e'],
     university: ['#285c4b', '#7a2f2f', '#2f3f5c', '#b39b6a', '#3d2f26', '#5e6b4a', '#8a6a3a', '#20302a', '#6b4a33']
 };
 // Room floor (shell hook): a seamless 1.6 m plank tile or 2 m carpet tile.
@@ -1021,11 +1237,18 @@ export function floor(spec, w, d) {
 // ---- Window views: one distinct, generic outlook per stage --------------
 // Drawn into the stage's own window texture (aspect matches the opening) and
 // redrawn per daypart: playground (KG), school garden (elementary), sports
-// field and bus loop (middle), car park, gym and floodlit field (high), quad
+// field and bus loop (middle), bell tower, palms and field lights (high), quad
 // (college), research campus with lab and clock tower (university).
-function viewSky(c, W, H, phase, sky) {
+function viewSky(c, W, H, phase, sky, overcast = false) {
     const night = phase === 'night', dusk = phase === 'evening';
     const g = c.createLinearGradient(0, 0, 0, H * .62); g.addColorStop(0, sky[0]); g.addColorStop(1, sky[1]); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    if (overcast) {
+        // Coastal marine layer: a flat, low stratus deck, no sun disc, no puffy clouds.
+        for (let i = 0; i < 9; i++) { c.fillStyle = i % 2 ? '#b9c1c7' : '#c9cfd2'; c.globalAlpha = .55; c.fillRect(0, H * (.02 + i * .045), W, H * .05); }
+        for (let i = 0; i < W / 6; i++) { c.fillStyle = i % 2 ? '#ffffff22' : '#8a949a22'; c.fillRect(rnd(i * 1.9) * W, rnd(i * 3.1) * H * .42, 30 + rnd(i) * 140, 2); }
+        c.globalAlpha = 1; const lo = c.createLinearGradient(0, H * .36, 0, H * .52); lo.addColorStop(0, '#c4ccd200'); lo.addColorStop(1, '#e6e2d8aa'); c.fillStyle = lo; c.fillRect(0, H * .36, W, H * .2);
+        return;
+    }
     const sun = { morning: [.16, .3, '#fff4d8'], afternoon: [.78, .12, '#fffdf0'], evening: [.3, .5, '#ffc27a'], night: [.82, .14, '#eef0e4'], party: [.86, .32, '#fff2dc'] }[phase] || [.5, .2, '#fff'];
     const sx = W * sun[0], sy = H * sun[1], halo = c.createRadialGradient(sx, sy, 3, sx, sy, night ? H * .14 : H * .45);
     halo.addColorStop(0, sun[2] + (night ? '80' : 'd0')); halo.addColorStop(1, sun[2] + '00'); c.fillStyle = halo; c.fillRect(0, 0, W, H);
@@ -1059,6 +1282,43 @@ function viewBuilding(c, x, y, w, h, { wall, roof = null, rows = 2, cols = 6, ph
     }
 }
 function viewGround(c, W, H, y, phase, color = '#7fa35e') { const { night, dusk } = viewTone(phase); c.fillStyle = night ? '#1f3a2c' : dusk ? shade(color, -.12) : color; c.fillRect(0, y, W, H - y); }
+// Mexican fan palm: a thin, slightly curved trunk and a small star-shaped crown at `top`.
+function viewPalm(c, x, baseY, top, phase) {
+    const { night, dusk } = viewTone(phase), lean = (rnd(x) - .5) * (baseY - top) * .08;
+    c.strokeStyle = night ? '#24221f' : dusk ? '#6e5d4e' : '#8a7a64'; c.lineWidth = 3.5; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(x, baseY); c.quadraticCurveTo(x + lean * .2, (baseY + top) / 2, x + lean, top); c.stroke();
+    const cx = x + lean, r = (baseY - top) * .1, frond = night ? '#18241f' : dusk ? '#4f5a3c' : '#4f7a45';
+    c.strokeStyle = frond; c.lineWidth = 2.5;
+    for (let k = 0; k < 11; k++) { const a = -Math.PI + k * Math.PI / 10 + (rnd(k + x) - .5) * .2, droop = Math.abs(Math.cos(a)) * r * .5; c.beginPath(); c.moveTo(cx, top); c.quadraticCurveTo(cx + Math.cos(a) * r * .7, top + Math.sin(a) * r * .7 - r * .2, cx + Math.cos(a) * r, top + Math.sin(a) * r * .55 + droop); c.stroke(); }
+    c.fillStyle = frond; c.beginPath(); c.ellipse(cx, top, r * .3, r * .22, 0, 0, TAU); c.fill();
+    if (!night) { c.fillStyle = '#7a6a52'; c.fillRect(cx - 2.5, top + r * .15, 5, r * .5); } // dead-frond skirt
+}
+// The 1926 campanile (stylised): plaster shaft with quoins, corbel band,
+// two round-arched belfry openings per face and a low hipped tile cap.
+function viewTower(c, x, baseY, w, h, phase) {
+    const { night, dusk } = viewTone(phase), x0 = x - w / 2;
+    // At night the shaft is floodlit (warm plaster against the blue-black sky).
+    const lit = night ? '#c9b490' : dusk ? '#f3b07c' : '#e9dfcb', side = night ? '#8f7c64' : dusk ? '#c9937a' : '#d4c8b0', quoin = night ? '#b39e7c' : dusk ? '#dba088' : '#d9ccb2';
+    const shaftTop = baseY - h * .78, belfry = baseY - h * .93;
+    if (night) { const g = c.createRadialGradient(x, baseY - h * .45, 4, x, baseY - h * .45, h * .55); g.addColorStop(0, '#ffe2b066'); g.addColorStop(1, '#ffe2b000'); c.fillStyle = g; c.fillRect(x - h * .6, baseY - h, h * 1.2, h); }
+    c.fillStyle = lit; c.fillRect(x0, shaftTop, w * .62, baseY - shaftTop); c.fillStyle = side; c.fillRect(x0 + w * .62, shaftTop, w * .38, baseY - shaftTop);
+    c.fillStyle = quoin; for (let y = shaftTop + 6, n = 0; y < baseY; y += h * .035, n++) { c.fillRect(x0, y, w * (n % 2 ? .08 : .13), h * .028); c.fillRect(x0 + w * (n % 2 ? .92 : .87), y, w * (n % 2 ? .08 : .13), h * .028); }
+    // Small arched window slits on the shaft.
+    c.fillStyle = night ? '#2a2420' : '#8a7f70'; for (const y of [.35, .58]) { c.fillRect(x - w * .06, baseY - h * y, w * .12, h * .06); c.beginPath(); c.arc(x, baseY - h * y, w * .06, Math.PI, TAU); c.fill(); }
+    // Corbel band of small round arches under the belfry.
+    c.fillStyle = side; c.fillRect(x0 - w * .04, shaftTop - h * .015, w * 1.08, h * .02); c.strokeStyle = night ? '#2c2622' : '#a89a80'; c.lineWidth = 1.5;
+    for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(x0 + w * (k + .5) / 6, shaftTop + h * .012, w / 14, 0, Math.PI); c.stroke(); }
+    // Belfry stage with two tall round-arched openings (warm at night).
+    c.fillStyle = lit; c.fillRect(x0 - w * .04, belfry, w * 1.08 * .62, shaftTop - belfry); c.fillStyle = side; c.fillRect(x0 - w * .04 + w * 1.08 * .62, belfry, w * 1.08 * .38, shaftTop - belfry);
+    for (let k = 0; k < 2; k++) {
+        const ow = w * .22, ox = x - w * .3 + k * w * .38, oy = belfry + h * .035, oh = shaftTop - oy - h * .02;
+        c.fillStyle = night ? '#ffd88a' : '#3a3430'; c.fillRect(ox, oy + ow / 2, ow, oh - ow / 2); c.beginPath(); c.arc(ox + ow / 2, oy + ow / 2, ow / 2, Math.PI, TAU); c.fill();
+        if (night) { const g = c.createRadialGradient(ox + ow / 2, oy + oh / 2, 1, ox + ow / 2, oy + oh / 2, w * .5); g.addColorStop(0, '#ffd88a90'); g.addColorStop(1, '#ffd88a00'); c.fillStyle = g; c.fillRect(ox - w * .4, oy - w * .3, ow + w * .8, oh + w * .6); }
+    }
+    // Low hipped terracotta cap with a small finial.
+    c.fillStyle = night ? '#2c2220' : dusk ? '#a04a30' : '#b4583a'; c.beginPath(); c.moveTo(x0 - w * .12, belfry); c.lineTo(x - w * .18, baseY - h); c.lineTo(x + w * .18, baseY - h); c.lineTo(x0 + w * 1.12, belfry); c.fill();
+    c.fillStyle = night ? '#3a302a' : '#8a3f2a'; c.fillRect(x0 - w * .12, belfry - 2, w * 1.24, 4); c.fillRect(x - 1.5, baseY - h - h * .04, 3, h * .04);
+}
 const VIEWS = {
     kindergarten(c, W, H, phase) {
         const { night, dusk } = viewTone(phase), y0 = H * .6;
@@ -1118,24 +1378,44 @@ const VIEWS = {
         viewTrees(c, W, H, H * .86, 2, phase, 15, 1.8);
     },
     highschool(c, W, H, phase) {
-        const { night, lit } = viewTone(phase);
-        viewTrees(c, W, H, H * .52, Math.round(W / 60), phase, 11, .7);
-        viewGround(c, W, H, H * .55, phase, '#79a65a');
-        // Gymnasium block with high clerestory windows (lit in the evening).
-        const gx = W * .55, gy = H * .32, gw = W * .4, gh = H * .28;
-        c.fillStyle = night ? '#3a3533' : '#b9a38c'; c.fillRect(gx, gy, gw, gh); c.fillStyle = night ? '#1f2629' : '#5f6b70'; c.beginPath(); c.moveTo(gx - 6, gy); c.quadraticCurveTo(gx + gw / 2, gy - gh * .3, gx + gw + 6, gy); c.fill();
-        for (let k = 0; k < 10; k++) { c.fillStyle = lit ? '#ffe2a0' : '#9fb7c2'; c.fillRect(gx + gw * (.04 + k * .096), gy + gh * .12, gw * .07, gh * .18); }
-        c.fillStyle = night ? '#2a2420' : '#8c7a66'; c.fillRect(gx + gw * .44, gy + gh * .55, gw * .12, gh * .45);
-        // Floodlit sports field beyond the car park.
-        c.fillStyle = night ? '#24402c' : '#6faa4e'; c.fillRect(0, H * .58, W * .52, H * .1);
-        for (const mx of [W * .04, W * .24, W * .46]) {
-            c.fillStyle = '#5c6670'; c.fillRect(mx, H * .2, 4, H * .4); c.fillStyle = night ? '#fff6d8' : '#c8cfd2'; c.fillRect(mx - H * .03, H * .19, H * .065, H * .03);
-            if (night || phase === 'evening') { const g = c.createRadialGradient(mx, H * .21, 2, mx, H * .21, H * .22); g.addColorStop(0, '#fff2c8d0'); g.addColorStop(1, '#fff2c800'); c.fillStyle = g; c.fillRect(mx - H * .22, 0, H * .44, H * .44); }
+        // HBHS-inspired outlook (artistic, no ocean: the campus is ~2 km inland).
+        // 1926 bell tower and auditorium (focal point), a 1970s classroom wing with
+        // orange doors, Mexican fan palms, a sun-bleached quad and field lights.
+        const { night, dusk } = viewTone(phase), party = phase === 'party', gy = H * .8;
+        const tone = (day, eve, nite) => night ? nite : dusk ? eve : day;
+        // Distant tree line and a tiny pumpjack silhouette at the horizon (an artistic nod).
+        viewTrees(c, W, H, H * .63, Math.round(W / 70), phase, 11, .5);
+        c.fillStyle = tone('#a9b2ae', '#8a7f86', '#1d2a33'); c.fillRect(0, H * .615, W, H * .04);
+        { const px = W * .6, py = H * .63, s = H * .05; c.strokeStyle = tone('#6d7472', '#5e5660', '#202a30'); c.lineWidth = 2; c.beginPath(); c.moveTo(px - s, py); c.lineTo(px - s * .2, py - s * .7); c.lineTo(px + s * .3, py); c.moveTo(px - s * 1.3, py - s * .55); c.lineTo(px + s * .9, py - s * .85); c.stroke(); }
+        // Stadium light standards on the far left (lit at night and for the showcase).
+        for (const mx of [W * .035, W * .12, W * .205]) {
+            c.fillStyle = tone('#6b7276', '#5d5a62', '#3a4248'); c.fillRect(mx - 2, H * .16, 4, H * .48);
+            c.fillStyle = night || party ? '#f6f1dc' : tone('#c8cfd2', '#b9b4b8', '#f6f1dc'); c.fillRect(mx - H * .035, H * .13, H * .07, H * .035);
+            if (night || party || dusk) { const g = c.createRadialGradient(mx, H * .15, 2, mx, H * .15, H * (night ? .26 : .16)); g.addColorStop(0, night ? '#fff4d8e0' : '#fff4d880'); g.addColorStop(1, '#fff4d800'); c.fillStyle = g; c.fillRect(mx - H * .3, 0, H * .6, H * .45); }
         }
-        // Staff car park with bays and parked cars.
-        c.fillStyle = night ? '#2a2e31' : '#8a8f93'; c.fillRect(0, H * .7, W, H * .3);
-        c.fillStyle = night ? '#5a5a50' : '#f2f2ec'; for (let x = 0; x < W; x += H * .16) c.fillRect(x, H * .76, 3, H * .14);
-        for (let k = 0; k < Math.floor(W / (H * .16)); k++) if (rnd(k * 3.3) > .35) { const x = k * H * .16 + H * .02, col = ['#c94a3c', '#3c5a7a', '#d9d9d2', '#2f3b44', '#7f8a8f'][k % 5]; c.fillStyle = night ? shade(col, -.3) : col; c.fillRect(x, H * .79, H * .12, H * .07); c.fillStyle = night ? '#1c2228' : '#9fbccb'; c.fillRect(x + H * .02, H * .775, H * .08, H * .03); }
+        // Auditorium block (cream plaster, tiled roof, three tall round-arched windows) and the bell tower at its end.
+        const ax = W * .705, aw = W * .27, ah = H * .24;
+        c.fillStyle = tone('#e6dbc5', '#d9b79e', '#3e3833'); c.fillRect(ax, gy - ah, aw, ah);
+        c.fillStyle = tone('#b4583a', '#9c4a34', '#2c2220'); c.beginPath(); c.moveTo(ax - 6, gy - ah); c.lineTo(ax + aw * .04, gy - ah - H * .045); c.lineTo(ax + aw * .96, gy - ah - H * .045); c.lineTo(ax + aw + 6, gy - ah); c.fill();
+        for (let k = 0; k < 3; k++) { const wx = ax + aw * (.28 + k * .22), ww = aw * .07; c.fillStyle = night ? (k === 1 ? '#ffd88a' : '#5a4a38') : tone('#7d8c92', '#8a7a78', '#2a2c30'); c.fillRect(wx, gy - ah * .82, ww, ah * .7); c.beginPath(); c.arc(wx + ww / 2, gy - ah * .82, ww / 2, Math.PI, TAU); c.fill(); }
+        viewTower(c, W * .7, gy, W * .07, H * .72, phase);
+        // 1970s classroom wing: flat roof, black fascia, ribbon windows, orange doors under a covered walkway.
+        const wx0 = 0, ww = W * .55, wh = H * .2;
+        c.fillStyle = tone('#e2d8c4', '#cdb39f', '#34302c'); c.fillRect(wx0, gy - wh, ww, wh);
+        c.fillStyle = tone('#1d1d1f', '#1d1d1f', '#121214'); c.fillRect(wx0, gy - wh - H * .03, ww + 6, H * .035);
+        for (let k = 0; k < 14; k++) { const on = night && rnd(k * 3.7) < .35; c.fillStyle = on ? '#ffd88a' : tone('#8fa7b2', '#9a8a86', '#232b31'); c.fillRect(wx0 + W * .012 + k * ww / 14, gy - wh * .78, ww / 14 - W * .008, wh * .32); }
+        c.fillStyle = tone('#c9bfac', '#b39d8c', '#2a2724'); c.fillRect(wx0, gy - wh * .36, ww, H * .018); // walkway canopy
+        for (let k = 0; k < 9; k++) { c.fillStyle = '#1d1d1f'; c.fillRect(wx0 + W * .02 + k * ww / 8.6, gy - wh * .34, 3, wh * .34); }
+        for (const dx of [.18, .62]) { c.fillStyle = night ? '#6a3a20' : tone('#e8702a', '#d0662c', '#6a3a20'); c.fillRect(wx0 + ww * dx, gy - wh * .32, W * .02, wh * .32); }
+        // Mid-ground canopies and Mexican fan palms spread across the view.
+        viewTrees(c, W, H, gy + H * .02, 2, phase, 41, 1.7);
+        [[.08, .5], [.3, .44], [.47, .38], [.59, .47], [.88, .4], [.97, .52]].forEach(([fx, top], n) => viewPalm(c, W * fx, gy + H * (.02 + (n % 2) * .03), gy - H * top, phase));
+        // Sun-bleached lawn and a pale concrete path.
+        c.fillStyle = tone('#9db57a', '#8a9466', '#1f3326'); c.fillRect(0, gy, W, H - gy);
+        for (let i = 0; i < W / 3; i++) { c.fillStyle = i % 2 ? '#ffffff12' : '#0000000e'; c.fillRect(rnd(i * 1.3) * W, gy + rnd(i * 2.7) * (H - gy), 3, 1); }
+        c.fillStyle = tone('#d9d2c2', '#c4b3a0', '#3a3a36'); c.beginPath(); c.moveTo(W * .3, H); c.lineTo(W * .52, gy + 2); c.lineTo(W * .57, gy + 2); c.lineTo(W * .46, H); c.fill(); c.fillRect(0, H * .9, W, H * .03);
+        // Marine-layer haze softens the first-bell outlook.
+        if (phase === 'morning') { c.fillStyle = '#d8dcdd38'; c.fillRect(0, 0, W, H); }
     },
     college(c, W, H, phase) {
         const { night, dusk, lit } = viewTone(phase);
@@ -1282,9 +1562,14 @@ const WALLS = {
         k.build(g, E.dress);
     },
     highschool(kit, E, S) {
-        const dado = S.mapped('dado', (c, W, H) => drawPaint(c, W, H, '#567081'), [256, 256], [800, 900], { roughness: .62 });
-        const cork = S.mapped('cork', drawCork, [512, 256], [600, 200], { roughness: .9 });
-        wainscot(kit, dado, 900, { cap: '#c8cfd2', capH: 10, capD: 14 }); wainscot(kit, cork, 200, { lift: 900, cap: '#c8cfd2', capH: 14, capD: 16, depth: 10 });
+        // Charcoal eggshell dado, a 10 mm Oiler-orange cap rail, a 300 mm charcoal
+        // felt tack strip (910–1210) and Tower Plaster above (homage to the 1926 plaster).
+        const dado = S.mapped('dado', (c, W, H) => drawPaint(c, W, H, '#35383b'), [256, 256], [800, 900], { roughness: .55 });
+        const felt = S.mapped('tack-felt', (c, W, H) => drawFelt(c, W, H, '#46494d', '#5a5d61', '#36383b'), [512, 256], [600, 300], { roughness: .95, surface: 'fabric' });
+        wainscot(kit, dado, 900, { cap: HB.orange, capH: 10, capD: 14 }); wainscot(kit, felt, 300, { lift: 910, cap: HB.black, capH: 12, capD: 16, depth: 10 });
+        // Limewash clouds on the shell's plaster (the registry wall colour tints them).
+        const wash = (c, W, H) => { const base = '#f6f2ea'; c.fillStyle = base; c.fillRect(0, 0, W, H); for (let i = 0; i < 60; i++) { const x = rnd(i * 2.3) * W, y = rnd(i * 4.7) * H, r = W * (.05 + rnd(i * 6.1) * .14); wrapped(W, H, (dx, dy) => { const g = c.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, r); g.addColorStop(0, (i % 2 ? shade(base, .03) : shade(base, -.035)) + '66'); g.addColorStop(1, base + '00'); c.fillStyle = g; c.fillRect(x + dx - r, y + dy - r, r * 2, r * 2); }); } };
+        const wall = kit.wall; if (wall?.isMaterial && !wall.map) { wall.map = canvasTexture(wash, 512, 512); wall.roughness = .9; wall.userData.eduUV = [2400, 2400]; wall.needsUpdate = true; }
         pinnedSheets(kit, E, 'highschool');
     },
     college(kit, E, S) {
@@ -1325,7 +1610,7 @@ function slatWall(kit, E, S, x0, x1, height, parent = kit.back, z = kit.bz + 18)
 // each with a coloured push pin; generic content.
 function pinnedSheets(kit, E, stage) {
     const { w, bz, front } = kit, young = stage === 'elementary';
-    const yMid = young ? 560 : 1000, list = [];
+    const yMid = young ? 560 : 1060, list = [];
     // [wall, along, y, w, h, rot]
     if (young) { for (let n = 0; n < 7; n++) list.push(['right', -900 + n * 500, yMid + (n % 2) * 70, 210, 297, (rnd(n) - .5) * .12]); for (let n = 0; n < 6; n++) list.push(['back', -3600 + n * 330, yMid + (n % 3) * 40, 210, 297, (rnd(n + 9) - .5) * .12]); }
     else { for (let n = 0; n < 9; n++) list.push(['back', -1250 + n * 310, yMid, 210, 150, (rnd(n) - .5) * .08]); for (let n = 0; n < 8; n++) list.push(['right', -1100 + n * 420, yMid, 150, 180, (rnd(n + 4) - .5) * .1]); }
@@ -1334,8 +1619,8 @@ function pinnedSheets(kit, E, stage) {
         for (let n = 0; n < 8; n++) {
             const x = (n % 4) * W / 4, y = Math.floor(n / 4) * H / 2, cw = W / 4, ch = H / 2; c.fillStyle = ['#fffdf6', '#fdf7e4', '#f4f8fb', '#fff8f0'][n % 4]; c.fillRect(x, y, cw, ch);
             if (n % 3 === 0) { childPainting(c, x + 14, y + 14, cw - 28, ch * .5, n + (young ? 0 : 4)); textLines(c, x + 18, y + ch * .66, cw - 36, 4, 14, '#7d8a8c', 3); }
-            else if (n % 3 === 1) { write(c, young ? ['My story', 'Maths', 'Spelling', 'Plants'][n % 4] : ['LAB 4', 'DATA', 'NOTICE', 'CLUB'][n % 4], x + cw / 2, y + 26, 20, young ? '#5d8b78' : '#567081'); textLines(c, x + 16, y + 52, cw - 32, 9, 16, '#8a9597', 3); }
-            else { c.strokeStyle = '#c9d4d8'; for (let k = 0; k < 8; k++) { c.beginPath(); c.moveTo(x + 10, y + 30 + k * 26); c.lineTo(x + cw - 10, y + 30 + k * 26); c.stroke(); } c.strokeStyle = young ? '#e07a3f' : '#d9a441'; c.lineWidth = 3; c.beginPath(); for (let k = 0; k < 10; k++) c.lineTo(x + 20 + k * (cw - 40) / 9, y + ch * .75 - rnd(n * 10 + k) * ch * .5); c.stroke(); c.lineWidth = 1; }
+            else if (n % 3 === 1) { write(c, young ? ['My story', 'Maths', 'Spelling', 'Plants'][n % 4] : ['SURF CLUB', 'APA AUDITIONS', 'LAB 4', 'GO OILERS'][n % 4], x + cw / 2, y + 26, 20, young ? '#5d8b78' : n % 2 ? HB.deep : HB.black, 'center', '800', cw - 16); textLines(c, x + 16, y + 52, cw - 32, 9, 16, '#8a9597', 3); }
+            else { c.strokeStyle = '#c9d4d8'; for (let k = 0; k < 8; k++) { c.beginPath(); c.moveTo(x + 10, y + 30 + k * 26); c.lineTo(x + cw - 10, y + 30 + k * 26); c.stroke(); } c.strokeStyle = young ? '#e07a3f' : HB.pacific; c.lineWidth = 3; c.beginPath(); for (let k = 0; k < 10; k++) c.lineTo(x + 20 + k * (cw - 40) / 9, y + ch * .75 - rnd(n * 10 + k) * ch * .5); c.stroke(); c.lineWidth = 1; }
         }
     }, 1024, 512), roughness: .9, side: THREE.DoubleSide });
     const pins = { back: detailKit(), right: detailKit() }, parts = [];
@@ -1343,7 +1628,7 @@ function pinnedSheets(kit, E, stage) {
         const cell = n % 8, g = new THREE.PlaneGeometry(sw, sh), uv = g.attributes.uv;
         for (let i = 0; i < uv.count; i++) uv.setXY(i, ((cell % 4) + .02 + uv.getX(i) * .96) / 4, (cell < 4 ? .5 : 0) + (.02 + uv.getY(i) * .96) / 2);
         g.rotateZ(rot);
-        const pinCol = PASTEL[n % 6];
+        const pinCol = young ? PASTEL[n % 6] : [HB.orange, HB.orange, '#ece4d3', HB.pacific][n % 4];
         if (wall === 'back') { g.translate(along, y, bz + (young ? 30 : 30)); pins.back.ball(7, [along + Math.sin(-rot) * sh * .42, y + sh * .42, bz + 34], pinCol, [1, 1, .6]); }
         else { g.rotateY(-Math.PI / 2); g.translate(w / 2 - 16, y, along); pins.right.ball(7, [w / 2 - 20, y + sh * .42, along], pinCol, [.6, 1, 1]); }
         parts.push(g);
@@ -1367,7 +1652,7 @@ function installView(kit, E) {
 function drawView(kit, E, phase) {
     const v = E.view; if (!v || v.phase === phase) return; v.phase = phase;
     const c = v.map.image.getContext('2d'), sky = kit.spec.modes[phase]?.sky || ['#bad8e5', '#f5e6ca'];
-    c.save(); viewSky(c, v.W, v.H, phase, sky); VIEWS[kit.spec.id](c, v.W, v.H, phase); c.restore(); reset(c);
+    c.save(); viewSky(c, v.W, v.H, phase, sky, kit.spec.id === 'highschool' && phase === 'morning'); VIEWS[kit.spec.id](c, v.W, v.H, phase); c.restore(); reset(c);
     v.map.needsUpdate = true;
     // The outlook reads as daylight beyond the glass; at night only lit windows and lamps carry.
     v.m.emissiveIntensity = LIGHT[kit.spec.id]?.view[Math.max(0, PHASES.indexOf(phase))] ?? .9;
@@ -1378,7 +1663,7 @@ function glazeCabinet(kit, E, cab, contents) {
     if (!cab) return;
     const width = 1250, depth = 420, height = kit.options.storage.height;
     for (const o of [...cab.children]) if (o.isMesh && (o.material === kit.trim || o.material === kit.metal) && o.position.z > depth / 2 - 30) { cab.remove(o); o.geometry.dispose(); }
-    const k = detailKit(), frame = '#2f3b44', iw = width - 60;
+    const k = detailKit(), frame = kit.spec.id === 'highschool' ? HB.black : '#2f3b44', iw = width - 60;
     for (let s = 1; s <= 3; s++) k.box([iw, 18, depth - 40], [0, 45 + s * (height - 90) / 4, -5], '#b99a72');
     for (const side of [-1, 1]) {
         const cx = side * width / 4, dw = width / 2 - 30, dh = height - 90, z = depth / 2 + 8;
@@ -1399,9 +1684,9 @@ const CABINET = {
             const y = s ? 45 + s * gap + 9 : 45;
             for (let n = 0; n < 5; n++) {
                 const x = -iw / 2 + 80 + n * (iw - 160) / 4, kind = (s * 5 + n) % 5;
-                if (kind === 0) { k.box([180, 120, 240], [x, y + 60, -20], ['#d9a441', '#567081', '#c97c5d'][s % 3]); k.box([110, 40, 3], [x, y + 80, 101], '#f4f1e8'); }
+                if (kind === 0) { k.box([180, 120, 240], [x, y + 60, -20], [HB.orange, HB.black, HB.glass][s % 3]); k.box([110, 40, 3], [x, y + 80, 101], '#f4f1e8'); }
                 if (kind === 1) for (let q = 0; q < 3; q++) { k.cyl(28, 32, 110 - q * 15, [x - 50 + q * 50, y + 55, 0], '#d7eaef'); k.cyl(30, 30, 6, [x - 50 + q * 50, y + 10 + q * 3, 0], '#9fd3c7'); }
-                if (kind === 2) { k.box([150, 110, 90], [x, y + 55, 0], '#f0c24b'); k.box([100, 50, 4], [x, y + 75, 46], '#1f2f2a'); for (let q = 0; q < 2; q++) k.cyl(8, 8, 60, [x - 40 + q * 80, y + 140, 40], q ? '#d9534f' : '#2f3b44'); }
+                if (kind === 2) { k.box([150, 110, 90], [x, y + 55, 0], HB.orange); k.box([100, 50, 4], [x, y + 75, 46], '#1f2f2a'); for (let q = 0; q < 2; q++) k.cyl(8, 8, 60, [x - 40 + q * 80, y + 140, 40], q ? '#d9534f' : '#2f3b44'); }
                 if (kind === 3) { k.box([80, 20, 140], [x, y + 10, 0], '#3f4b52'); k.cyl(12, 12, 180, [x, y + 110, -30], '#4b5a63'); k.box([40, 60, 40], [x, y + 200, 0], '#3f4b52'); k.cyl(20, 14, 70, [x, y + 140, 30], '#2f3b44'); }
                 if (kind === 4) { k.add(new THREE.TorusGeometry(45, 9, 6, 18, Math.PI), [x, y + 55, 0], '#d9534f', [1, 1, 1], [0, 0, Math.PI]); k.cyl(36, 36, 50, [x + 80, y + 25, 0], '#b06a36'); }
             }
@@ -1415,6 +1700,18 @@ const CABINET = {
 // Child stools and the TA stool: re-tint the GLB's coral 'carpet' seat (shared
 // library materials are cloned and owned by the room).
 function tintProps(kit) {
+    if (kit.spec.id === 'highschool') {
+        // Charcoal waste bins, with one Pacific-blue recycling bin by the lockers.
+        kit.room.decorateProp = (object, placement) => {
+            const col = placement.id === 'ergoflex-trash-can' ? (placement.at[0] === 3850 ? HB.pacific : '#3d3f42') : null;
+            object.traverse(o => {
+                if (!o.isMesh) return; const mats = Array.isArray(o.material) ? o.material : [o.material];
+                const next = mats.map(m => { if (!col) return m; const c = m.clone(); c.color.set(col); kit.room.ownedMaterials?.add(c); return c; });
+                o.material = Array.isArray(o.material) ? next : next[0];
+            });
+        };
+        return;
+    }
     const tints = { elementary: { 'kenney-furniture-stool-bar-square': ['#5d8b78', '#e0b45e', '#88a9bf', '#7fb3a5'] }, college: { 'kenney-furniture-stool-bar': ['#866653'] } }[kit.spec.id];
     if (!tints) return;
     let n = 0;
@@ -1524,11 +1821,18 @@ function eduKit(kit) {
     E.edge = (g, [sx, sz], color, width = 30, height = 7) => { const k = detailKit(); for (const s of [-1, 1]) { k.box([sx + width, height, width], [0, height / 2, s * sz / 2], color); k.box([width, height, sz], [s * sx / 2, height / 2, 0], color); } k.build(g, dress); };
     // Book spine atlas material (cached per room).
     E.spines = () => E.spineMat || (E.spineMat = kit.material('#ffffff', { map: canvasTexture((c, W, H) => drawSpines(c, W, H, SPINES[kit.spec.id] || SPINES.university), 1024, 256), roughness: .78 }));
-    // At night (or another phase) the chair is shown upturned on its table.
+    // At night (or another phase) the chair is shown upturned on its table, the
+    // way it is stacked for cleaning: seat face down on the top, legs pointing up,
+    // and the backrest hanging below the table edge on the chair's own side.
     E.chairUp = (chair, table, [x, z], phases, seat = 450, color = '#7c8a8f') => {
-        const k = detailKit(), top = (table.children[0]?.position.y ?? 722.5) + 17.5, wide = seat < 400 ? 310 : 420;
-        k.box([wide, 40, wide * .9], [x, top + seat - 20 + 40, z], color); k.box([wide, seat * .55, 30], [x, top + seat - seat * .55 / 2 + 20, z + wide * .42], color);
-        for (const dx of [-1, 1]) for (const dz of [-1, 1]) k.box([16, seat - 20, 16], [x + dx * wide * .39, top + (seat - 20) / 2 + 20, z + dz * wide * .33], '#74808a');
+        const k = detailKit(), slab = table.children[0], top = (slab?.position.y ?? 722.5) + 17.5, wide = seat < 400 ? 310 : 420, deep = wide * .9;
+        let half = 310; if (slab?.geometry) { slab.geometry.computeBoundingBox(); const b = slab.geometry.boundingBox; half = (b.max.z - b.min.z) / 2; }
+        const s = z < 0 ? -1 : 1, cz = s * (half - deep / 2 + 8), back = seat * .72, leg = seat - 20;
+        k.box([wide, 40, deep], [x, top + 20, cz], color); // seat, face down on the table
+        k.box([wide, back, 30], [x, top + 30 - back / 2, s * (half + 26)], color, [s * .1, 0, 0]); // backrest over the edge
+        for (const dx of [-1, 1]) k.box([16, 46, 22], [x + dx * wide * .36, top + 28, s * (half + 6)], '#74808a'); // back posts round the edge
+        for (const dx of [-1, 1]) for (const dz of [-1, 1]) { k.box([16, leg, 16], [x + dx * wide * .39, top + 40 + leg / 2, cz + dz * deep * .37], '#74808a'); k.box([20, 8, 20], [x + dx * wide * .39, top + 40 + leg + 4, cz + dz * deep * .37], '#2f3438'); }
+        for (const dx of [-1, 1]) k.box([12, 12, deep * .74], [x + dx * wide * .39, top + 40 + leg * .45, cz], '#74808a'); // side stretchers
         const g = new THREE.Group(); g.name = 'Chairs up for cleaning'; table.add(g); k.build(g, dress); g.visible = false;
         E.chairsUp.push({ chair, up: g, phases });
     };
@@ -1540,8 +1844,8 @@ function eduKit(kit) {
 export function options(spec) {
     const young = isYoung(spec), id = spec.id;
     return {
-        trimColor: PALETTE[id]?.trim || '#c4c2b6', acousticName: young ? 'Wall discovery gallery' : 'Wall acoustic panels', signLabel: young ? 'A PLACE TO GROW' : 'CONNECTED WORKSPACE',
-        rugColor: { kindergarten: '#c9b48d', elementary: '#8fae98', middleschool: '#7f9aa1', highschool: '#8b97a0', college: '#8a7466', university: '#4d6a5d' }[id] || '#889b85',
+        trimColor: PALETTE[id]?.trim || '#c4c2b6', acousticName: young ? 'Wall discovery gallery' : 'Wall acoustic panels', signLabel: young ? 'A PLACE TO GROW' : id === 'highschool' ? 'SCIENCE 214 · SURF CITY' : 'CONNECTED WORKSPACE',
+        rugColor: { kindergarten: '#c9b48d', elementary: '#8fae98', middleschool: '#7f9aa1', highschool: '#8a8580', college: '#8a7466', university: '#4d6a5d' }[id] || '#889b85',
         planter: ['elementary', 'college', 'university'].includes(id), boardName: 'Wall teaching and planning board', boardFooter: id === 'kindergarten' ? '#efe2c6' : young ? '#eadfc8' : '#f1f0e7',
         storage: { height: id === 'kindergarten' ? 940 : ['highschool', 'university'].includes(id) ? 1900 : 1200, open: young || id === 'middleschool' },
         chairDetailHeight: spec.kind === 'early' ? 260 : spec.kind === 'primary' ? 360 : 480, nightBackground: .55,
@@ -1652,25 +1956,32 @@ const BUILD = {
         E.build(lk, lockers);
     },
     highschool(kit, E) {
-        const { asset } = kit, top = E.S.top, shells = ['#567081', '#6f8796'];
+        const { asset } = kit, top = E.S.top, shells = ['#2a2b2e', '#2a2b2e', '#e2692a']; // one chair in three in Oiler orange
         const cols = [-2075, 75, 2225], rows = [500, 2500, 4500];
         rows.forEach((z, r) => cols.forEach((x, c) => {
             const t = kit.table(`student-table-${r}-${c}`, 'Student work table', [x, 0, z], 1250, 620, 740, top);
-            [-310, 310].forEach((dx, n) => { const ch = E.recolor(kit.chair(`student-chair-${r}-${c}-${n}`, [x + dx, 0, z + 570], 480, 0), shells[n]); if ((r + c) % 2) E.chairUp(ch, t, [dx, 60], [2, 3], 480, shells[n]); });
+            [-310, 310].forEach((dx, n) => { const col = shells[(r * 6 + c * 2 + n) % 3], ch = E.recolor(kit.chair(`student-chair-${r}-${c}-${n}`, [x + dx, 0, z + 570], 480, 0), col); if ((r + c) % 2) E.chairUp(ch, t, [dx, 60], [2, 3], 480, col); });
         }));
-        E.edge(E.flat('demo-floor-inlay', 'Demonstration zone slate inlay', [0, -2600], [2400, 1600], E.S.slate(), { height: 4 }), [2400, 1600], '#9aa8b0', 26, 6);
-        // Lab wall bench with a sink along the door wall (back third).
+        E.edge(E.flat('demo-floor-inlay', 'Demonstration zone slate inlay', [0, -2600], [2400, 1600], E.S.slate(), { height: 4 }), [2400, 1600], HB.orange, 26, 6);
+        // Lab wall bench with a sink along the door wall (back third): charcoal HPL doors, black epoxy top, stainless sink.
         const bench = asset('wall-bench', 'Lab wall bench with sink', [kit.w / 2 - 300, 0, -1650]);
-        const bk = detailKit(); bk.box([600, 860, 2100], [0, 430, 0], '#567081'); bk.box([640, 40, 2140], [0, 880, 0], '#2f3b44');
-        bk.box([420, 20, 520], [0, 892, -400], '#9fb0b8'); bk.box([30, 300, 30], [200, 1050, -400], '#c8cfd2'); bk.box([30, 30, 200], [200, 1190, -330], '#c8cfd2');
-        for (let n = 0; n < 4; n++) { bk.box([8, 700, 470], [-304, 430, -790 + n * 520], '#4b6372'); bk.box([10, 20, 120], [-308, 760, -790 + n * 520], '#c8cfd2'); }
-        for (let n = 0; n < 5; n++) bk.cyl(40, 40, 120 + n * 20, [-120 + n % 2 * 120, 960 + n * 10, 300 + n * 110], ['#c8dfe6', '#e0b45e', '#9fd3c7'][n % 3]);
+        const bk = detailKit(); bk.box([600, 860, 2100], [0, 430, 0], '#2e3236'); bk.box([640, 40, 2140], [0, 880, 0], '#1b1c1e'); bk.box([590, 90, 2090], [10, 45, 0], '#1d1d1f');
+        bk.box([420, 20, 520], [0, 892, -400], '#b9c0c4'); bk.box([380, 6, 480], [0, 903, -400], '#9aa3a8'); bk.box([30, 300, 30], [200, 1050, -400], '#c8cfd2'); bk.box([30, 30, 200], [200, 1190, -330], '#c8cfd2');
+        for (let n = 0; n < 4; n++) { bk.box([8, 700, 470], [-304, 470, -790 + n * 520], '#34393e'); bk.box([10, 18, 140], [-310, 780, -790 + n * 520], '#c8cfd2'); }
+        for (let n = 0; n < 5; n++) bk.cyl(40, 40, 120 + n * 20, [-120 + n % 2 * 120, 960 + n * 10, 300 + n * 110], ['#c8dfe6', HB.orange, HB.glass][n % 3]);
         E.build(bk, bench);
-        // Lockers by the front corner.
+        // Lockers by the front corner: black body, alternating orange and black doors,
+        // brass number plates and a vertical OILERS stencil on both end panels.
         const lockers = asset('lockers', 'Student lockers', [kit.w / 2 - 170, 0, 7500]); lockers.rotation.y = -Math.PI / 2;
-        const lk = detailKit(); lk.box([820, 1850, 300], [0, 925, 0], '#2f3b44');
-        for (let n = 0; n < 8; n++) { const x = -300 + (n % 4) * 200, y = n < 4 ? 1380 : 470; lk.box([186, 880, 8], [x, y, 152], n % 2 ? '#567081' : '#62808f'); for (let v = 0; v < 4; v++) lk.box([120, 6, 4], [x, y + 330 - v * 16, 157], '#26323a'); lk.box([14, 60, 8], [x + 70, y, 158], '#d9a441'); }
+        const lk = detailKit(); lk.box([820, 1850, 300], [0, 925, 0], '#202124'); lk.box([830, 90, 310], [0, 45, 0], '#151617'); lk.box([830, 20, 312], [0, 1860, 0], '#151617');
+        for (let n = 0; n < 8; n++) {
+            const x = -300 + (n % 4) * 200, y = n < 4 ? 1380 : 520, door = (n + (n < 4 ? 0 : 1)) % 2 ? '#2a2b2e' : '#e2692a';
+            lk.box([186, n < 4 ? 900 : 820, 8], [x, y, 152], door); for (let v = 0; v < 5; v++) lk.box([120, 7, 4], [x, y + 360 - v * 18, 157], '#151617');
+            lk.box([16, 70, 10], [x + 70, y - 40, 159], '#c8cfd2'); lk.box([44, 26, 3], [x - 40, y + 240, 157], '#c9b37a');
+        }
         E.build(lk, lockers);
+        const stencil = E.tex(drawLockerStencil, 192, 1024, 'powder', .5);
+        for (const s of [-1, 1]) { const pl = kit.mesh(lockers, new THREE.PlaneGeometry(260, 1500), stencil, [s * 412, 960, 0]); pl.rotation.y = s * Math.PI / 2; pl.castShadow = false; }
     },
     college(kit, E) {
         const { asset } = kit, top = E.S.top, shells = ['#866653', '#c9b08f'];
@@ -1804,6 +2115,16 @@ export function furnish(kit) {
     }
 }
 
+// Pumpjack model (~220 mm at s = 1) in black and orange: skid, A-frame, walking
+// beam, horse head, crank with counterweights. Batched into the caller's kit.
+function pumpjack(k, x, y, z, s = 1) {
+    const b = HB.black, o = HB.orange, P = (dx, dy, dz) => [x + dx * s, y + dy * s, z + dz * s];
+    k.box([280 * s, 14 * s, 80 * s], P(0, 7, 0), b); k.box([70 * s, 40 * s, 60 * s], P(-95, 34, 0), '#35383b');
+    for (const dz of [-24, 24]) { k.box([12 * s, 160 * s, 12 * s], P(10, 92, dz), b, [dz > 0 ? -.16 : .16, 0, 0]); k.box([10 * s, 120 * s, 10 * s], P(40, 72, dz * .8), b, [dz > 0 ? -.12 : .12, 0, .45]); }
+    k.box([250 * s, 14 * s, 16 * s], P(15, 172, 0), o, [0, 0, .07]); k.box([22 * s, 80 * s, 20 * s], P(140, 150, 0), o, [0, 0, -.12]); k.box([30 * s, 20 * s, 20 * s], P(128, 188, 0), o);
+    k.box([4 * s, 130 * s, 4 * s], P(146, 82, 0), '#c8cfd2'); k.cyl(10 * s, 12 * s, 26 * s, P(146, 20, 0), '#35383b');
+    for (const dz of [-34, 34]) { k.add(new THREE.CylinderGeometry(34 * s, 34 * s, 10 * s, 16), P(-95, 70, dz), o, [1, 1, 1], [Math.PI / 2, 0, 0]); k.box([8 * s, 104 * s, 8 * s], P(-92, 118, dz * .7), b, [0, 0, .1]); }
+}
 // Batched detail per furnishing (runs for every asset, including the shell's).
 export function dressProp(id, k, g, kit) {
     const { spec } = kit, young = isYoung(spec);
@@ -1825,8 +2146,8 @@ export function dressProp(id, k, g, kit) {
             for (let n = 0; n < 4; n++) k.cyl(50, 50, 40, [380 + (n % 2) * 110, top + 20 + Math.floor(n / 2) * 40, -120], ['#e07a3f', '#498698', '#f0c24b', '#6aa56a'][n]);
             for (let row = 0; row < 3; row++) for (let col = 0; col < 3; col++) if (col < 2 || row < 2) { const x = -417 + col * 417, y = 178 + row * 275; k.box([150, 50, 3], [x, y + 30, 142], '#f4f6f2'); }
         } else if (spec.id === 'highschool') {
-            // Equipment cabinet (glazed in decorate): boxed sets on top.
-            for (let n = 0; n < 3; n++) k.box([300, 120, 260], [-380 + n * 330, top + 60 + (n % 2) * 4, 0], ['#d9a441', '#567081', '#6f8796'][n]);
+            // Equipment cabinet (glazed in decorate): boxed sets on top in orange, black and sea glass.
+            for (let n = 0; n < 3; n++) { k.box([300, 120, 260], [-380 + n * 330, top + 60 + (n % 2) * 4, 0], [HB.orange, HB.black, HB.glass][n]); k.box([180, 40, 3], [-380 + n * 330, top + 70, 131], '#f4f1e8'); }
             k.cyl(60, 60, 260, [480, top + 130, 0], '#9fb0b8');
         } else if (spec.id === 'university') {
             for (let n = 0; n < 4; n++) k.box([260, 300, 380], [-440 + n * 280, top + 150, 0], n % 2 ? '#c9b48f' : '#b3a07c');
@@ -1844,11 +2165,11 @@ export function dressProp(id, k, g, kit) {
             for (let n = 0; n < 6; n++) { k.cyl(6, 6, 50, [-260 + n * 150, y + 35, 220], '#7b5a3a'); k.ball(34, [-260 + n * 150, y + 80, 220], '#5e9a5a'); }
         }
         if (spec.id === 'highschool') {
-            // Wind turbine model, solar panel and a circuit board.
+            // From derricks to waves: a pumpjack model beside a wind turbine and a solar panel.
             k.cyl(60, 70, 30, [380, y + 15, -120], '#9fb0b8'); k.cyl(12, 16, 520, [380, y + 290, -120], '#e8ecee'); k.box([60, 50, 80], [380, y + 560, -100], '#e8ecee');
             for (let n = 0; n < 3; n++) k.box([16, 260, 30], [380 + Math.sin(n * TAU / 3) * 130, y + 560 + Math.cos(n * TAU / 3) * 130, -60], '#f4f6f6', [0, 0, -n * TAU / 3]);
             k.box([380, 14, 260], [-40, y + 90, 120], '#2f4f6a', [-.5, 0, 0]); k.box([20, 90, 20], [-40, y + 45, 60], '#9fb0b8');
-            k.box([240, 10, 160], [100, y + 5, -170], '#3f7a53'); for (let n = 0; n < 6; n++) k.box([30, 16, 20], [20 + n % 3 * 60, y + 16, -200 + Math.floor(n / 3) * 60], n % 2 ? '#2f3b44' : '#d9a441');
+            pumpjack(k, 90, y, -170, 1.1);
         }
         if (spec.id === 'college') { k.box([500, 300, 300], [250, y + 150, -60], '#e8e4db'); k.box([340, 160, 200], [250, y + 380, -60], '#a5624a'); k.box([300, 6, 200], [-20, y + 3, 150], '#f2ead8'); }
         if (spec.id === 'university') {
@@ -1897,8 +2218,9 @@ export function dressProp(id, k, g, kit) {
             notebook(k, -330, top, /-a$/.test(id) ? -140 : 140, '#e0b45e'); k.box([210, 3, 290], [330, top + 2, /-a$/.test(id) ? -120 : 120], '#f4f4ee');
             if (/student-table-0-b/.test(id)) { k.box([360, 180, 260], [200, top + 90, -40], '#c9a97a'); k.box([140, 120, 120], [80, top + 240, -60], '#d9bb8c'); for (let n = 0; n < 3; n++) k.box([60, 60, 3], [140 + n * 80, top + 120, 92], '#7fb6d6'); }
         } else if (spec.id === 'highschool') {
-            for (const x of [-310, 310]) { k.box([210, 2, 290], [x, top + 1, 110], '#f4f4ee'); for (let n = 0; n < 6; n++) k.box([190, 1, 1.5], [x, top + 3, -15 + n * 45], '#a8c3d6'); k.box([75, 14, 150], [x + 170, top + 7, 100], '#2f3b44'); k.box([60, 2, 40], [x + 170, top + 15, 60], '#9fc4a0'); }
-            k.box([1120, 45, 22], [0, top - 80, -240], '#2f3b44');
+            // Worksheets and calculators at each place (the violin takes the right-hand place on table 2-2).
+            for (const x of [-310, 310]) { if (id === 'student-table-2-2' && x > 0) continue; k.box([210, 2, 290], [x, top + 1, 110], '#f4f4ee'); for (let n = 0; n < 6; n++) k.box([190, 1, 1.5], [x, top + 3, -15 + n * 45], '#a8c3d6'); k.box([75, 14, 150], [x + 170, top + 7, 100], '#2f3b44'); k.box([60, 2, 40], [x + 170, top + 15, 60], HB.orange); }
+            k.box([1120, 45, 22], [0, top - 80, -240], HB.black);
         } else if (spec.id === 'college') {
             k.cyl(70, 70, 24, [0, top + 12, 0], '#2f2f2f'); k.cyl(40, 40, 4, [0, top + 25, 0], '#7ec4ba');
             // Team flag at the table end (team colour, white roundel).
@@ -1925,7 +2247,7 @@ export function dressProp(id, k, g, kit) {
         }
         if (/student-table/.test(id) && ['middleschool', 'highschool'].includes(spec.id)) {
             // HPL tops get a coloured (middle) or graphite (high) ABS edge band.
-            const geo = g.children[0].geometry; geo.computeBoundingBox(); const b = geo.boundingBox, tw = b.max.x - b.min.x, td = b.max.z - b.min.z, edge = spec.id === 'middleschool' ? '#498698' : '#2f3b44';
+            const geo = g.children[0].geometry; geo.computeBoundingBox(); const b = geo.boundingBox, tw = b.max.x - b.min.x, td = b.max.z - b.min.z, edge = spec.id === 'middleschool' ? '#498698' : HB.black;
             for (const s of [-1, 1]) { k.box([tw + 4, 24, 4], [0, top - 17.5, s * (td / 2 + 1)], edge); k.box([4, 24, td + 4], [s * (tw / 2 + 1), top - 17.5, 0], edge); }
         }
         if (!young && spec.id !== 'highschool' && spec.id !== 'university') { const geo = g.children[0].geometry; geo.computeBoundingBox(); const b = geo.boundingBox, tw = b.max.x - b.min.x, td = b.max.z - b.min.z; k.box([tw - 130, 45, 22], [0, top - 80, -td / 2 + 70], '#72818a'); }
@@ -1933,7 +2255,8 @@ export function dressProp(id, k, g, kit) {
     if (/student-chair/.test(id) && ['middleschool', 'highschool', 'college'].includes(spec.id)) {
         // Some satchels and backpacks hang on chair backs.
         const n = [...id].reduce((a, ch) => a + ch.charCodeAt(0), 0);
-        if (n % 3 === 0) { k.box([220, 260, 100], [0, 380, 210], ['#8d9c90', '#a5624a', '#4f6f86', '#c9b08f'][n % 4]); k.box([150, 90, 12], [0, 290, 262], '#b8b39b'); }
+        if (n % 3 === 0 && spec.id === 'highschool') { const c = ['#35383b', '#e8702a', '#2e6f8e', '#9cc3b6'][n % 4]; k.ball(130, [0, 390, 205], c, [.85, 1, .4]); k.ball(70, [0, 300, 250], c, [.9, .6, .3]); k.box([16, 200, 6], [-60, 470, 160], '#2a2b2e'); k.box([16, 200, 6], [60, 470, 160], '#2a2b2e'); }
+        else if (n % 3 === 0) { k.box([220, 260, 100], [0, 380, 210], ['#8d9c90', '#a5624a', '#4f6f86', '#c9b08f'][n % 4]); k.box([150, 90, 12], [0, 290, 262], '#b8b39b'); }
     }
 }
 
@@ -2016,27 +2339,59 @@ const DECOR = {
     highschool(kit, E) {
         const { w, bz, d, byId } = kit;
         byId('room-sign')?.position.set(0, 2880, bz + 50);
+        // Resource shelf: books between black bookends (the classroom printer stands on top: a room prop);
+        // its fabric bins in black, orange and Pacific blue.
         const shelf = kit.cabinet('resource-shelf', [-2200, 0, bz + 340], 1550, 1050, true); const sk = detailKit();
-        for (const x of [-660, 120]) { sk.box([12, 160, 140], [x, 1050 + 80, 60], '#2f3b44'); sk.box([120, 8, 140], [x + 60 * (x < 0 ? 1 : -1), 1054, 60], '#2f3b44'); }
-        sk.box([220, 70, 300], [400, 1050 + 35, 20], '#d9a441'); sk.box([200, 60, 280], [410, 1050 + 100, 20], '#567081'); E.build(sk, shelf);
+        { const bins = { b68c66: HB.black, '6e9c96': HB.pacific, cebb74: HB.orange }; shelf.traverse(o => { const hex = o.isMesh && o.material?.color?.getHexString(); if (bins[hex]) o.material = E.M(bins[hex], 'fabric', { roughness: .92 }); }); }
+        for (const x of [-660, 120]) { sk.box([12, 160, 140], [x, 1050 + 80, 60], HB.black); sk.box([120, 8, 140], [x + 60 * (x < 0 ? 1 : -1), 1054, 60], HB.black); }
+        E.build(sk, shelf);
         const hsBooks = bookRuns([{ x0: -650, x1: 110, y: 1050, front: 130, depth: 190, hMin: 190, hMax: 260, seed: 77 }], E.spines()); if (hsBooks) shelf.add(hsBooks);
-        const table = E.wall('back', 'research-gallery', 'Wall periodic table poster', -2200, 1900, 18); E.panel(table, 1800, 840, (c, W, H) => periodic(c, W, H, kit.spec), { frame: '#2f3b44', border: 18, res: 1024 });
-        const flow = E.wall('back', 'sankey-poster', 'Wall energy flow poster', -500, 1750, 14); E.panel(flow, 1000, 760, (c, W, H) => sankey(c, W, H, kit.spec), { frame: '#2f3b44', border: 14, res: 768 });
+        const table = E.wall('back', 'research-gallery', 'Wall periodic table poster', -2200, 1900, 18); E.panel(table, 1800, 840, (c, W, H) => periodic(c, W, H, kit.spec), { frame: HB.black, border: 18, res: 1024 });
+        const flow = E.wall('back', 'sankey-poster', 'Wall energy flow poster', -500, 1750, 14); E.panel(flow, 1000, 760, (c, W, H) => sankey(c, W, H, kit.spec), { frame: HB.black, border: 14, res: 768 });
+        // Bell-tower print (teacher corner of the teaching wall), lit by a picture light (FIXTURES).
+        const print = E.wall('back', 'bell-tower-print', 'Wall bell tower print', -4100, 1650, 24); E.panel(print, 650, 900, drawTowerPrint, { frame: HB.black, border: 34, depth: 24, res: 768 });
         // Projector screen roll-down box above the board.
-        const box = E.wall('back', 'projector-screen-box', 'Projector screen box', kit.w * .17, 2560, 120); const pk = detailKit(); pk.box([2500, 110, 120], [0, 0, 0], '#e8ecee'); pk.box([2400, 10, 6], [0, -58, 40], '#2f3b44'); E.build(pk, box);
-        const acoustic = byId('acoustic-panels'); if (acoustic) acoustic.position.set(w / 2 - 45, 1900, 1000);
-        // Door wall: goggles rack and eyewash sign over the bench, poster gallery, lockers.
+        const box = E.wall('back', 'projector-screen-box', 'Projector screen box', kit.w * .17, 2560, 120); const pk = detailKit(); pk.box([2500, 110, 120], [0, 0, 0], '#e8ecee'); pk.box([2400, 10, 6], [0, -58, 40], HB.black); E.build(pk, box);
+        // Lombard-band arcade frieze along the top of the teaching wall (one plane, one draw call).
+        { const fw = w - 120, fh = 140, m = E.tex((c, W, H) => drawArcadeFrieze(c, W, H, W / (fw / 240)), 4096, 64, 'plaster', .9); const f = kit.mesh(kit.back, new THREE.PlaneGeometry(fw, fh), m, [0, 2950, bz + 21]); f.castShadow = false; f.name = 'Lombard band frieze'; }
+        // Charcoal felt acoustic panels on the door wall, with APA / MMET posters pinned on them.
+        const acoustic = byId('acoustic-panels');
+        if (acoustic) {
+            acoustic.position.set(w / 2 - 45, 1900, 1000);
+            for (const o of [...acoustic.children]) if (o.isMesh) { acoustic.remove(o); o.geometry.dispose(); }
+            const felt = E.M('#3a3d41', 'fabric', { roughness: .95 }), seam = detailKit();
+            for (let n = 0; n < 5; n++) { kit.box(acoustic, [262, 1050, 40], [-560 + n * 280, 0, 0], felt, 4); seam.box([4, 1050, 4], [-560 + n * 280 + 133, 0, 18], '#2a2c2f'); }
+            E.build(seam, acoustic);
+            [-420, 0, 420].forEach((x, n) => { const p = E.panel(acoustic, 360, 510, (c, W, H) => drawApaPoster(c, W, H, n), { res: 512, at: [x, (n - 1) * 30 + 40, 22] }); p.rotation.z = (rnd(n + 11) - .5) * .05; });
+            const pins = detailKit(); [-420, 0, 420].forEach((x, n) => pins.ball(9, [x, (n - 1) * 30 + 40 + 235, 26], HB.orange, [1, 1, .6])); E.build(pins, acoustic);
+        }
+        // Door wall: goggles rack and eyewash sign over the bench, poster gallery, room-number plaque, lockers.
         const goggles = E.wall('right', 'goggles-rack', 'Wall safety goggles rack', -2000, 1500, 60); const gk = detailKit(); gk.box([800, 40, 50], [0, 0, 0], '#9fb0b8');
-        for (let n = 0; n < 8; n++) { gk.box([80, 40, 30], [-350 + n * 100, -50, 40], '#2f3b44'); gk.box([70, 45, 20], [-350 + n * 100, -90, 50], '#c9e4ec'); } E.build(gk, goggles);
+        for (let n = 0; n < 8; n++) { gk.box([80, 40, 30], [-350 + n * 100, -50, 40], HB.black); gk.box([70, 45, 20], [-350 + n * 100, -90, 50], '#c9e4ec'); } E.build(gk, goggles);
         const eye = E.wall('right', 'eyewash-sign', 'Wall eyewash and goggles signs', -1000, 1750, 8); E.panel(eye, 420, 300, (c, W, H) => { c.fillStyle = '#2f8a57'; c.fillRect(0, 0, W / 2 - 4, H); c.fillStyle = '#2a6aa8'; c.fillRect(W / 2 + 4, 0, W / 2 - 4, H); dot(c, W * .25, H * .45, H * .18, '#ffffff'); dot(c, W * .25, H * .45, H * .07, '#2f8a57'); for (let n = 0; n < 3; n++) dot(c, W * (.15 + n * .1), H * .78, 6, '#ffffff'); c.strokeStyle = '#ffffff'; c.lineWidth = 8; c.beginPath(); c.arc(W * .66, H * .45, H * .12, 0, TAU); c.arc(W * .86, H * .45, H * .12, 0, TAU); c.stroke(); write(c, 'EYE WASH', W * .25, H * .12, 16, '#ffffff'); write(c, 'GOGGLES', W * .76, H * .12, 16, '#ffffff'); }, { res: 512 });
-        const gallery = E.wall('right', 'poster-gallery', 'Wall student poster gallery', 4800, 1700, 10);
-        E.panel(gallery, 2000, 1750, (c, W, H) => { c.fillStyle = '#e7e4de'; c.fillRect(0, 0, W, H); for (let n = 0; n < 6; n++) { const x = n % 3 * W / 3, y = Math.floor(n / 3) * H / 2; c.fillStyle = '#2f3b44'; c.fillRect(x + 10, y + 10, W / 3 - 20, H / 2 - 20); sciencePoster(c, x + 22, y + 22, W / 3 - 44, H / 2 - 44, n, '#567081'); } }, { res: 1024 });
-        identityGallery(kit, { right: false, z: (6700 - bz) / d, name: 'Wall community and project gallery', landscape: false });
-        // Teacher corner (window wall, back bay): lab safety poster and the department timetable.
-        const safe = E.wall('left', 'safety-poster', 'Wall lab safety poster', kit.layout.desk[1] - 1350, 1800, 14); E.panel(safe, 760, 1000, safetyPoster, { frame: '#2f3b44', border: 16, res: 768 });
-        const tt = E.wall('left', 'teacher-timetable', 'Wall department timetable', kit.layout.desk[1] + 50, 1900, 16); E.panel(tt, 1300, 900, (c, W, H) => timetable(c, W, H, 'PHYSICS · TERM 2', '#567081', ['#567081', '#d9a441', '#6f8796', '#9aa8b0']), { frame: '#2f3b44', border: 18, res: 1024 });
+        const gallery = E.wall('right', 'poster-gallery', 'Wall student poster gallery', 4700, 1700, 10);
+        E.panel(gallery, 2000, 1750, (c, W, H) => { c.fillStyle = '#e7e2d6'; c.fillRect(0, 0, W, H); for (let n = 0; n < 6; n++) { const x = n % 3 * W / 3, y = Math.floor(n / 3) * H / 2; c.fillStyle = HB.black; c.fillRect(x + 10, y + 10, W / 3 - 20, H / 2 - 20); drawSciencePosterHigh(c, x + 22, y + 22, W / 3 - 44, H / 2 - 44, n); } }, { res: 1024 });
+        const plaque = E.wall('right', 'room-number-plaque', 'Wall room number plaque', 5795, 1500, 10);
+        E.panel(plaque, 120, 120, (c, W, H) => { c.fillStyle = HB.orange; c.fillRect(0, 0, W, H); varsity(c, '214', W / 2, H * .42, H * .36, HB.black, { track: .02 }); write(c, 'SCIENCE', W / 2, H * .78, H * .13, HB.black, 'center', '800'); }, { frame: HB.black, border: 6, depth: 10, res: 256 });
+        // Teacher corner (window wall, back bay): lab safety poster, OILER BELL SCHEDULE and two pennants above.
+        const safe = E.wall('left', 'safety-poster', 'Wall lab safety poster', kit.layout.desk[1] - 1350, 1800, 14); E.panel(safe, 760, 1000, safetyPoster, { frame: HB.black, border: 16, res: 768 });
+        const tt = E.wall('left', 'teacher-timetable', 'Wall Oiler bell schedule', kit.layout.desk[1] + 50, 1560, 16); E.panel(tt, 1300, 800, drawBellSchedule, { frame: HB.black, border: 18, res: 1024 });
+        const pen = E.wall('left', 'teacher-pennants', 'Wall teacher corner pennants', kit.layout.desk[1] - 650, 2650, 0);
+        pennants(kit, pen, [[0, -700, 0, 600, 220, -.05], [1, 700, 0, 600, 220, .04]]);
+        // Window wall front bay: the Oiler spirit wall (banner, surf-team longboard, trophy shelf).
+        spiritWall(kit, E);
+        // Showcase only: pennant strings at wall level (the ceiling decor is outside the review cameras).
+        E.show(wallBunting(kit, E, kit.left, [-w / 2 + 40, 2930, 5480], [-w / 2 + 40, 2930, 7950], 14, 110), [4]);
+        E.show(wallBunting(kit, E, kit.back, [-w / 2 + 300, 2720, bz + 175], [w / 2 - 300, 2720, bz + 175], 26, 70), [4]);
+        E.show(wallBunting(kit, E, kit.right, [w / 2 - 40, 3000, 1700], [w / 2 - 40, 3000, 5650], 18, 60), [4]);
+        // Shell trims in school colours: dark bronze 1970s window frames, black door frame, orange clock bezel.
+        const bronze = E.M('#3b3632', 'metal', { metalness: .4, roughness: .45 });
+        for (const o of kit.window.children) if (o.isMesh && o.material === kit.trim) o.material = bronze;
+        const doorFrame = kit.door.children.find(o => o.isMesh && o.material === kit.metal); if (doorFrame) doorFrame.material = E.M(HB.black, 'powder', { roughness: .5 });
+        const clock = byId('wall-clock')?.children.find(o => o.isMesh && o.material === kit.oak); if (clock) clock.material = E.M(HB.orange, 'powder', { roughness: .45 });
+        const cab = byId('storage'); if (cab) for (const o of cab.children) if (o.isMesh && o.material === kit.accent) o.material = E.M('#2e3236', 'powder', { roughness: .6 });
         // A pendulum model hanging from the ceiling near the window.
-        const px = -w / 2 + 1500, pz = 2500; kit.rod(E.ceiling, [px, kit.ceiling - 10, pz], [px + 120, 1850, pz], 2, kit.ink); kit.mesh(E.ceiling, new THREE.SphereGeometry(70, 18, 12), E.M('#d9a441', 'metal', { metalness: .6, roughness: .3 }), [px + 125, 1780, pz]);
+        const px = -w / 2 + 1500, pz = 2500; kit.rod(E.ceiling, [px, kit.ceiling - 10, pz], [px + 120, 1850, pz], 2, kit.ink); kit.mesh(E.ceiling, new THREE.SphereGeometry(70, 18, 12), E.M(HB.orange, 'metal', { metalness: .5, roughness: .35 }), [px + 125, 1780, pz]);
         kit.box(E.ceiling, [300, 20, 60], [px, kit.ceiling - 10, pz], kit.metal, 3);
     },
     college(kit, E) {
@@ -2129,6 +2484,86 @@ function hangingPlanter(kit, E, [x, y, z]) {
     for (let n = 0; n < 14; n++) { const a = n * 2.4, r = 90 + n % 3 * 30; k.ball(50, [x + Math.cos(a) * r, y + 20 - n * 26, z + Math.sin(a) * r], n % 2 ? '#4f7f52' : '#6b9a5e', [.6, 1.6, .5], [0, a, .4]); }
     E.build(k, E.ceiling);
 }
+// ---- High school: pennants, spirit wall and showcase strings ------------
+const indexed = g => { if (!g.index) g.setIndex([...Array(g.attributes.position.count).keys()]); return g; };
+// Felt pennants from the PENNANTS atlas: [cell, x, y, w, h, rot] in the parent's frame (hoist at −x).
+function pennants(kit, parent, list) {
+    const E = kit.edu, mat = E.pennantMat ||= kit.material('#ffffff', { map: canvasTexture(drawPennants, 1024, 576), roughness: .92, side: THREE.DoubleSide });
+    mat.userData.roomSurface = 'fabric'; const parts = [], k = detailKit();
+    for (const [cell, x, y, w, h, rot] of list) {
+        const u0 = (cell % 2) / 2, row = Math.floor(cell / 2), vt = 1 - row / 3, vb = 1 - (row + 1) / 3, g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute([-w / 2, h / 2, 0, -w / 2, -h / 2, 0, w / 2, 0, 0], 3));
+        g.setAttribute('uv', new THREE.Float32BufferAttribute([u0 + .002, vt - .004, u0 + .002, vb + .004, u0 + .5, (vt + vb) / 2], 2)); g.computeVertexNormals();
+        g.rotateZ(rot); g.translate(x, y, 8); parts.push(g);
+        k.add(new THREE.CylinderGeometry(7, 7, h + 50, 8), [x - w / 2 * Math.cos(rot) - 4, y - w / 2 * Math.sin(rot), 10], HB.black, [1, 1, 1], [0, 0, rot]);
+    }
+    const m = new THREE.Mesh(mergeGeometries(parts, false), mat); parts.forEach(p => p.dispose()); m.name = 'Felt pennants'; m.castShadow = false; m.receiveShadow = true; parent.add(m);
+    E.build(k, parent);
+}
+// HOME OF THE OILERS banner, a surf-team longboard on brackets and a lit glass
+// trophy shelf: one wall asset (above 900, so no floor footprint). Its name must
+// not start with Window / Door / Ceiling (RoomInteractions would skip it).
+function spiritWall(kit, E) {
+    const g = E.wall('left', 'oiler-pride-wall', 'Wall Oiler pride display', 6700, 1800, 0), Y = y => y - 1800;
+    E.panel(g, 2200, 300, drawOilerBanner, { res: 1536, at: [0, Y(2450), 12] });
+    const k = detailKit();
+    k.box([2330, 18, 18], [0, Y(2612), 20], HB.black); for (const x of [-1175, 1175]) k.ball(16, [x, Y(2612), 20], HB.black);
+    for (const x of [-1060, 1060]) k.box([4, 14, 4], [x, Y(2604), 14], '#c9c4b6');
+    // Longboard brackets (arms with a lip) under the board's lower rail.
+    const yb = 1950 - 280; for (const x of [-560, 560]) { k.box([40, 26, 130], [x, Y(yb - 13), 65], HB.black); k.box([40, 70, 16], [x, Y(yb + 6), 122], HB.black); k.box([60, 90, 10], [x, Y(yb - 30), 5], HB.black); }
+    // Trophy shelf brackets; trophy bases, volleyball stand, fin trophy, plaque body.
+    const ys = 1350; for (const x of [-780, 0, 780]) { k.box([18, 120, 14], [x, Y(ys - 66), 8], HB.black); k.box([18, 18, 230], [x, Y(ys - 15), 120], HB.black); }
+    for (const [x, s] of [[-720, 1], [420, .8]]) k.box([100 * s, 40 * s, 100 * s], [x, Y(ys + 6 + 20 * s), 130], HB.black);
+    k.cyl(40, 52, 40, [-360, Y(ys + 26), 130], HB.black); k.ball(100, [-360, Y(ys + 146), 130], '#f3f0e6', [1, 1, 1]);
+    k.add(new THREE.TorusGeometry(100, 6, 6, 32), [-360, Y(ys + 146), 130], HB.orange, [1, 1, 1], [.4, .5, 0]); k.add(new THREE.TorusGeometry(100, 6, 6, 32), [-360, Y(ys + 146), 130], HB.pacific, [1, 1, 1], [-.5, 1.2, .3]);
+    k.box([170, 60, 120], [60, Y(ys + 36), 130], HB.black);
+    const finShape = (base, h) => { const s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(base, 0); s.quadraticCurveTo(base * .55, h * .35, base * .15, h); s.quadraticCurveTo(base * .1, h * .4, 0, 0); return s; };
+    k.add(indexed(new THREE.ExtrudeGeometry(finShape(150, 250), { depth: 16, bevelEnabled: false })), [-15, Y(ys + 66), 122], HB.orange);
+    k.box([220, 260, 24], [770, Y(ys + 136), 120], HB.black, [-.12, 0, 0]);
+    E.build(k, g);
+    // Gold cups (metal).
+    const gold = detailKit();
+    for (const [x, s] of [[-720, 1], [420, .8]]) { const y0 = ys + 6 + 40 * s; gold.cyl(12 * s, 18 * s, 50 * s, [x, Y(y0 + 25 * s), 130], '#c9a64a'); gold.add(new THREE.CylinderGeometry(64 * s, 26 * s, 120 * s, 20), [x, Y(y0 + 110 * s), 130], '#c9a64a'); for (const d of [-1, 1]) gold.add(new THREE.TorusGeometry(30 * s, 6 * s, 6, 16), [x + d * 66 * s, Y(y0 + 112 * s), 130], '#c9a64a'); }
+    gold.build(g, E.M('#c9a64a', 'metal', { metalness: .6, roughness: .3 }));
+    const plaque = E.panel(g, 180, 210, (c, W, H) => { c.fillStyle = HB.black; c.fillRect(0, 0, W, H); c.strokeStyle = '#c9a64a'; c.lineWidth = 6; c.strokeRect(10, 10, W - 20, H - 20); write(c, 'LEAGUE', W / 2, H * .4, W * .17, '#c9a64a', 'center', '800'); write(c, 'CHAMPIONS', W / 2, H * .56, W * .13, '#c9a64a', 'center', '800'); }, { res: 256, at: [770, Y(ys + 136), 131] });
+    plaque.rotation.x = -.12;
+    // Glass shelf and its LED strip (levels follow the daypart, FIXTURES adds the wall pool).
+    const glass = kit.material('#dfeff2', { transparent: true, opacity: .28, roughness: .05, metalness: .1, depthWrite: false });
+    kit.mesh(g, new THREE.BoxGeometry(1800, 12, 250), glass, [0, Y(ys), 130]).castShadow = false;
+    kit.box(g, [1760, 5, 12], [0, Y(ys - 9), 238], E.glow('#ffe4c0', [.15, .1, .9, .35, 1.1]), 2);
+    // Surf-team longboard: cream deck shell mounted bottom-out, twin orange/black stripes, a black fin.
+    // A unit sphere reshaped to a fuller longboard outline (round nose at −x, narrower tail at +x),
+    // its deck map carrying the stringer stripes and a small SURF TEAM stencil near the tail.
+    const bc = 75, shape = new THREE.SphereGeometry(1, 72, 28), pos = shape.attributes.position;
+    // Longboard planform: a round nose that reaches full width by 35 % of the
+    // length, then a gentle taper to a squared tail; thin rails, a little nose rocker.
+    for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), r = Math.sqrt(Math.max(1e-6, 1 - x * x)), u = (x + 1) / 2;
+        const hw = 255 * (u < .35 ? Math.sin(u / .35 * Math.PI / 2) ** .6 : 1 - .42 * ((u - .35) / .65) ** 2.2);
+        const thick = 35 * (.55 + .45 * Math.min(1, r * 1.6)), rocker = u < .15 ? 30 * ((.15 - u) / .15) ** 2 : 0;
+        pos.setXYZ(i, x * 1150, Math.max(-1, Math.min(1, pos.getY(i) / r)) * hw, Math.max(-1, Math.min(1, pos.getZ(i) / r)) * thick + rocker);
+    }
+    shape.computeVertexNormals();
+    const deck = canvasTexture((c, W, H) => {
+        c.fillStyle = '#f2ece0'; c.fillRect(0, 0, W, H); for (let i = 0; i < 400; i++) { c.fillStyle = '#c9bca024'; c.fillRect(rnd(i) * W, rnd(i + 7) * H, 6, 1); }
+        const row = y => Math.acos(y / 280) / Math.PI * H; // deck y (mm at mid-length) → canvas row
+        c.fillStyle = HB.orange; c.fillRect(0, row(64), W, row(16) - row(64)); c.fillStyle = HB.black; c.fillRect(0, row(-16), W, row(-64) - row(-16)); c.fillStyle = '#f2ece0'; c.fillRect(0, row(3), W, row(-3) - row(3));
+        c.save(); c.translate(W * .356, row(-120)); c.scale(.26, 1); varsity(c, 'SURF TEAM', 0, 0, 30, HB.black, { track: .1 }); c.restore();
+    }, 1024, 512);
+    kit.mesh(g, shape, kit.material('#ffffff', { map: deck, roughness: .3 }), [0, Y(1950), bc]).name = 'Surf team longboard';
+    const fin = detailKit();
+    fin.add(indexed(new THREE.ExtrudeGeometry(finShape(190, 170), { depth: 10, bevelEnabled: false })), [800, Y(1950) + 5, bc + 18], HB.black, [1, 1, 1], [Math.PI / 2, 0, 0]);
+    fin.cyl(12, 12, 10, [1020, Y(1950), bc + 16], HB.black); E.build(fin, g);
+    return g;
+}
+// Showcase pennant string on a wall group (flags flat to the wall), orange / black / cream.
+function wallBunting(kit, E, parent, [x0, y0, z0], [x1, y1, z1], count, sag = 120) {
+    const k = detailKit(), seg = 24, pt = t => [x0 + (x1 - x0) * t, y0 + (y1 - y0) * t - Math.sin(t * Math.PI) * sag, z0 + (z1 - z0) * t];
+    for (let n = 0; n < seg; n++) { const a = pt(n / seg), b = pt((n + 1) / seg), len = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), mid = a.map((v, i) => (v + b[i]) / 2); k.add(new THREE.CylinderGeometry(2.5, 2.5, len, 4), mid, HB.black, [1, 1, 1], [0, -Math.atan2(b[2] - a[2], b[0] - a[0]), Math.PI / 2 - Math.atan2(b[1] - a[1], Math.hypot(b[0] - a[0], b[2] - a[2]))]); }
+    const yaw = -Math.atan2(z1 - z0, x1 - x0);
+    for (let n = 0; n < count; n++) { const at = pt((n + .5) / count); at[1] -= 78; k.add(new THREE.ConeGeometry(78, 156, 3), at, [HB.orange, HB.black, '#ece4d3'][n % 3], [1, 1, .06], [Math.PI, yaw, 0]); }
+    const g = new THREE.Group(); g.name = 'Showcase pennant string'; parent.add(g); E.build(k, g); return g;
+}
 // ---- Lighting fixtures, pools and the sun patch --------------------------
 // Real lights stay within budget (3 room lights + the activity-table lamp +
 // one lounge/reading lamp). Everything else is an emissive fixture plus an
@@ -2211,15 +2646,20 @@ const FIXTURES = {
     },
     highschool(kit, E) {
         const { bz } = kit;
-        pictureLight(kit, E, 'back', -2200, 2440, 1700, [.04, .02, .42, .16, .36], { drop: 1100 });
+        pictureLight(kit, E, 'back', -2200, 2440, 1700, [.04, .02, .42, .16, .36], { drop: 1100, finish: HB.black });
         // Demonstration spot: a ceiling can over the desk and a pool on the slate inlay.
         const can = E.M('#2f3b44', 'metal', { metalness: .5, roughness: .4 });
         kit.mesh(E.ceiling, new THREE.CylinderGeometry(95, 110, 150, 20), can, [0, kit.ceiling - 75, -2600]);
         kit.mesh(E.ceiling, new THREE.CircleGeometry(80, 20), E.glow('#fff4e0', [.4, .35, 1.4, 1.6, 1.5]), [0, kit.ceiling - 151, -2600]).rotation.x = Math.PI / 2;
-        const inlay = kit.byId('demo-floor-inlay'); if (inlay) E.pool(inlay, [0, 12, 120], [2900, 2100], '#fff1da', [.06, .05, .32, .48, .38]);
+        const inlay = kit.byId('demo-floor-inlay'); if (inlay) E.pool(inlay, [0, 12, 120], [2900, 2100], '#fff1da', [.4, .06, .32, .48, .38]);
         // Gallery rail light over the student posters; screen spill; the lit equipment cabinet.
-        pictureLight(kit, E, 'right', 4800, 2700, 2100, [.04, .02, .5, .14, .44], { drop: 1500, heads: 3 });
-        screenHalo(kit, E, 'right', bz + kit.d * .57, 1350, 1500, [.03, .03, .22, .3, .32]);
+        pictureLight(kit, E, 'right', 4700, 2700, 2100, [.04, .02, .5, .14, .44], { drop: 1500, heads: 3 });
+        // Bell-tower print light; the spirit wall's trophy-shelf LED washing the wall; the violin table after school.
+        pictureLight(kit, E, 'back', -4100, 2350, 800, [.03, .02, .36, .22, .34], { drop: 1000, finish: HB.black });
+        pictureLight(kit, E, 'left', kit.layout.desk[1] + 50, 2110, 1200, [.02, .01, .3, .3, .26], { drop: 1100, finish: HB.black });
+        E.pool(kit.left, onWall(kit, 'left', 6700, 1150, 40), [2000, 900], '#ffd9a8', [.03, .02, .3, .12, .42], 'left');
+        tablePool(kit, E, 'student-table-2-2', [1300, 900], '#ffd9a8', [0, 0, .3, 0, .2], 740, [190, 20]);
+        screenHalo(kit, E, 'right', bz + kit.d * .57, 1350, 1500, [.03, .03, .18, .12, .26]);
         const cab = kit.byId('storage'); if (cab) { E.pool(cab, [0, 1050, -150], [1500, 2100], '#fff1d8', [.05, .04, .42, .32, .36], 'back'); kit.box(cab, [1150, 8, 30], [0, kit.options.storage.height - 70, 150], E.glow('#fff4e2', [.2, .15, 1, .8, .9]), 2); }
     },
     college(kit, E) {
@@ -2262,7 +2702,7 @@ const FIXTURES = {
 const EVENT_BANNER = {
     elementary: { text: 'WORKSHOP DAY', at: [-500, 3500], color: '#5d8b78', ink: '#fffaf0', dots: ['#e0b45e', '#88a9bf', '#d58f6c'] },
     middleschool: { text: 'STEM SHOWCASE', at: [0, 3100], y: 2240, color: '#498698', ink: '#ffffff', dots: ['#e07a3f', '#f0c24b', '#9fd3c7'] },
-    highschool: { text: 'PROJECT FAIR', at: [0, 1500], color: '#2f3b44', ink: '#f4efe2', dots: ['#d9a441', '#9fb0b8', '#c97c5d'] },
+    highschool: { text: 'OILER SHOWCASE', at: [0, 1500], color: '#1d1d1f', ink: '#e8702a', dots: ['#ece4d3', '#e8702a', '#2e6f8e'] },
     college: { text: 'DEMO DAY', at: [550, 2300], color: '#a5624a', ink: '#fff8ee', dots: ['#c9b08f', '#5f7d72', '#f2ead8'] },
     university: { text: 'RESEARCH SYMPOSIUM', at: [-600, -1000], color: '#285c4b', ink: '#efe6cc', dots: ['#b39b6a', '#e9e1cf', '#7a2f2f'] }
 };
@@ -2309,8 +2749,23 @@ export function activityMaterials(k, phase, y, kit) {
         if (phase === 4) for (let n = 0; n < 4; n++) k.box([110, 120 + n * 40, 110], [-240 + n * 130, y + 60 + n * 20, 250], ['#f4f2ea', '#c9d4d6'][n % 2]);
         else if (phase !== 3) { k.box([200, 3, 280], [-200, y + 2, 230], '#f4f4ee'); k.box([20, 6, 260], [-60, y + 3, 220], '#c8cfd2'); }
     } else if (id === 'highschool') {
-        if (phase === 4 || phase === 1) for (let n = 0; n < 3; n++) k.box([300, 2, 420], [-200 + n * 70, y + 1 + n * 2, 150 - n * 20], '#f4f4ee', [0, (n - 1) * .12, 0]);
-        else activityNotebook(k, phase, y);
+        if (phase === 0) { // First bell: attendance clipboard and a bell-schedule card.
+            k.box([240, 10, 330], [-80, y + 5, 80], '#2a2b2e'); k.box([220, 3, 300], [-80, y + 11, 85], '#fbf8ef'); k.box([90, 16, 30], [-80, y + 18, -70], '#c8cfd2'); for (let n = 0; n < 9; n++) k.box([170, 2, 3], [-80, y + 13, -30 + n * 26], '#9aa59f');
+            k.box([150, 2, 220], [180, y + 1, 120], HB.orange, [0, .15, 0]); for (let n = 0; n < 6; n++) k.box([110, 2.5, 14], [180, y + 2, 40 + n * 32], n === 4 ? '#e6e0d2' : HB.black, [0, .15, 0]);
+        } else if (phase === 1) { // Wave lab: data sheets and a stopwatch.
+            for (let n = 0; n < 3; n++) k.box([210, 2, 290], [-180 + n * 120, y + 1 + n, 110 - n * 30], '#f4f4ee', [0, (n - 1) * .14, 0]);
+            for (let n = 0; n < 5; n++) k.box([180, 1, 2], [-60, y + 4.5, 40 + n * 40], HB.pacific, [0, .14, 0]);
+            k.cyl(42, 42, 22, [260, y + 11, 160], HB.black); k.cyl(32, 32, 3, [260, y + 23, 160], '#dfe8e4'); k.box([14, 18, 12], [260, y + 14, 110], HB.orange);
+        } else if (phase === 2) { // After-school study: sheet-music binders with orange tabs and a folded music stand.
+            for (let n = 0; n < 3; n++) { k.box([300, 38, 240], [-120 + n * 22, y + 19 + n * 38, 110 - n * 12], HB.black, [0, (n - 1) * .08, 0]); k.box([12, 30, 40], [40 + n * 22, y + 19 + n * 38, 40 - n * 12], HB.orange); }
+            k.box([520, 14, 30], [180, y + 7, -40], '#2a2b2e', [0, .3, 0]); k.box([280, 10, 180], [220, y + 26, 10], '#2a2b2e', [0, .3, 0]);
+        } else if (phase === 3) { // Lesson planning: graded lab notebooks and a red pen.
+            for (let n = 0; n < 5; n++) notebook(k, -120 + n * 6, y + n * 24, 100 - n * 4, [HB.black, HB.pacific, HB.black, HB.orange, HB.charcoal][n]);
+            k.box([10, 10, 140], [180, y + 5, 150], '#c2412f', [0, .5, 0]);
+        } else { // Oiler showcase: judging sheets and three ribbon rosettes.
+            for (let n = 0; n < 3; n++) k.box([210, 2, 290], [-200 + n * 150, y + 1 + n, 110], '#f4f4ee', [0, (n - 1) * .1, 0]);
+            for (let n = 0; n < 3; n++) { const x = -150 + n * 150, col = n === 1 ? HB.black : HB.orange; k.cyl(55, 55, 6, [x, y + 8, -60], col); k.cyl(32, 32, 8, [x, y + 12, -60], n === 1 ? HB.orange : '#f4efe2'); for (const d of [-1, 1]) k.box([30, 3, 110], [x + d * 22, y + 4, 10], col, [0, d * .25, 0]); }
+        }
     } else if (id === 'university') {
         if (phase === 4 || phase === 0) for (let n = 0; n < 6; n++) k.cyl(30, 26, 80, [-180 + n * 70, y + 40, -60], '#f2efe8');
         if (phase === 2 || phase === 3) notebook(k, -150, y, 60, '#285c4b');
@@ -2365,7 +2820,8 @@ function applyStationPhase(root, i, gain = 1) {
 
 // ---- Station role detail (moves and is disposed with the station) -------
 // Stations with a compact LED task lamp: side of the desktop (−1 left, +1 right).
-const STATION_LAMPS = { 'guided-reading': 1, 'window-research': -1, 'research-desk': -1, 'ta-help': -1, 'research-assistant': -1 };
+// (The high-school MMET media desk has none: its slim speakers stand where the lamp would; a screen glow pool instead.)
+const STATION_LAMPS = { 'guided-reading': 1, 'window-research': -1, 'ta-help': -1, 'research-assistant': -1 };
 export function stationDetail(spec, mount, T, { role, sceneId }) {
     const k = detailKit(), extras = [];
     const glowMat = (color, levels) => { const m = new T.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: levels[0], roughness: .4 }); return { m, levels }; };
@@ -2423,17 +2879,49 @@ export function stationDetail(spec, mount, T, { role, sceneId }) {
         pool(1400, 700, '#fff2de', [.06, .06, .34, .46, .3], [0, 3, -40]);
         k.box([600, 3, 400], [200, 1.5, 60], '#3f6b5a'); for (let n = 0; n < 6; n++) k.box([70, 30, 50], [60 + n * 60, 15, 190], ['#e07a3f', '#498698', '#f0c24b'][n % 3]);
     }
+    if (id === 'demonstration-desk' && !desk) {
+        // On the raised shelf, so the class sees them over the desk: a wave tank (paddle at one end,
+        // a pier of three dowels and a beach slope at the other) and a pumpjack model in black and orange.
+        const tx = -390, tz = 0;
+        k.box([590, 14, 170], [tx, 7, tz], HB.black); for (const z of [-72, 72]) k.box([576, 8, 8], [tx, 226, tz + z], HB.black); for (const x of [-284, 284]) for (const z of [-72, 72]) k.box([8, 216, 8], [tx + x, 118, tz + z], HB.black);
+        k.box([10, 190, 120], [tx - 250, 150, tz], HB.orange); k.box([60, 44, 50], [tx - 250, 262, tz], HB.black); k.box([120, 8, 8], [tx - 220, 262, tz], '#c8cfd2');
+        k.box([150, 8, 126], [tx + 205, 62, tz], HB.sand, [0, 0, .42]); for (let n = 0; n < 3; n++) k.cyl(6, 6, 236, [tx + 150 + n * 40, 132, tz - 30 + n * 30], '#7a6248'); k.box([150, 8, 30], [tx + 190, 250, tz], '#7a6248');
+        const glass = new T.MeshStandardMaterial({ color: '#dfeff2', transparent: true, opacity: .2, roughness: .05, metalness: .1, depthWrite: false });
+        add(new T.BoxGeometry(568, 212, 140), glass, [tx, 120, tz]).castShadow = false;
+        const water = new T.MeshStandardMaterial({ color: HB.pacific, transparent: true, opacity: .55, roughness: .15, depthWrite: false });
+        add(new T.BoxGeometry(556, 96, 128), water, [tx, 62, tz]).castShadow = false;
+        const surf = new T.PlaneGeometry(556, 128, 16, 1); surf.rotateX(-Math.PI / 2); { const pos = surf.attributes.position; for (let n = 0; n < pos.count; n++) pos.setY(n, Math.sin((pos.getX(n) + 278) / 556 * TAU * 1.5) * 11 * (1 - (pos.getX(n) + 278) / 556 * .4)); pos.needsUpdate = true; surf.computeVertexNormals(); }
+        add(surf, water, [tx, 118, tz]).castShadow = false;
+        pumpjack(k, 390, 0, 0, .8);
+    }
     if (id === 'demonstration-desk' && desk) {
-        // Newton's cradle and a trolley track.
-        k.box([260, 12, 160], [220, 6, 140], '#2f3b44'); for (const x of [100, 340]) for (const z of [80, 200]) k.cyl(4, 4, 220, [x, 120, z], '#c8cfd2'); k.box([250, 6, 6], [220, 230, 80], '#c8cfd2'); k.box([250, 6, 6], [220, 230, 200], '#c8cfd2');
-        for (let n = 0; n < 5; n++) { k.ball(22, [140 + n * 44, 70, 140], '#c8cfd2'); k.cyl(1, 1, 160, [140 + n * 44, 150, 140], '#9aa8b0'); }
-        k.box([700, 20, 60], [-150, 10, 280], '#9fb0b8'); k.box([120, 60, 60], [-300, 50, 280], '#d9a441');
-        const trace = glowMat('#7cf2a8', [.5, .5, .8, .9, .7]); add(new T.PlaneGeometry(190, 4), trace.m, [-450, 330, 30], trace.levels);
+        // Trolley track, the oscilloscope trace and the demonstration pool.
+        k.box([640, 20, 50], [-40, 10, 335], '#9fb0b8'); k.box([110, 56, 50], [100, 48, 335], HB.orange);
+        const trace = glowMat('#7cf2a8', [.5, .5, .8, .9, .7]); add(new T.PlaneGeometry(190, 4), trace.m, [-480, 330, 290], trace.levels);
         pool(1400, 700, '#fff1da', [.04, .04, .22, .34, .26], [0, 3, 0]);
     }
     if ((id === 'project-review' || id === 'poster-review') && desk) {
         sheet(drawPosterSheet({ id: sceneId, accent: sceneId === 'university' ? '#285c4b' : '#567081' }), 1000, 640, [-40, 3, -40]); k.box([1040, 2, 680], [-40, 1, -40], '#e8e6df');
         for (let n = 0; n < 3; n++) k.box([60, 6, 20], [-480 + n * 440, 4, -350], '#c8cfd2');
+        if (sceneId === 'highschool') {
+            // APA design review: a costume-swatch strip and a black card set model with a proscenium arch.
+            for (let n = 0; n < 6; n++) k.box([56, 3, 70], [-330 + n * 62, 4, 300], [HB.orange, '#8a2f3a', HB.pacific, '#e6d7b8', HB.black, HB.glass][n], [0, (rnd(n + 7) - .5) * .2, 0]);
+            k.box([240, 10, 160], [320, 5, 250], HB.black); k.box([240, 170, 8], [320, 95, 172], HB.black); k.box([150, 110, 10], [320, 70, 176], '#3a3430'); k.box([200, 6, 120], [320, 13, 240], '#7a6248'); k.box([30, 90, 30], [290, 55, 230], HB.orange);
+            // The easel's purple base reads as Oiler black here.
+            mount.traverse(o => { if (o.isMesh && /^Color:48/.test(o.material?.name || '')) { o.material = o.material.clone(); o.material.color.set(HB.black); } });
+        }
+    }
+    if (id === 'student-standing' && sceneId === 'highschool' && desk) {
+        // Surf forecast: a laminated tide-table card and a fin-shaped paperweight.
+        sheet(drawTideCard, 150, 210, [250, 3, -150], [-Math.PI / 2, 0, -.08], 256); k.box([160, 2, 220], [250, 1, -150], '#dfe6e8', [0, .08, 0]);
+        k.box([90, 14, 60], [430, 7, -160], HB.black); const fin = new T.Shape(); fin.moveTo(0, 0); fin.lineTo(80, 0); fin.quadraticCurveTo(45, 25, 12, 80); fin.quadraticCurveTo(8, 30, 0, 0);
+        const fg = new T.ExtrudeGeometry(fin, { depth: 10, bevelEnabled: false }); fg.setIndex([...Array(fg.attributes.position.count).keys()]); k.add(fg, [390, 14, -165], HB.orange);
+    }
+    if (id === 'research-desk' && sceneId === 'highschool' && desk) {
+        // MMET media desk: an audio interface with orange knobs, a sheet-music folder and the monitor's cool spill.
+        k.box([210, 46, 130], [250, 23, -130], HB.black); for (const x of [200, 280]) { k.cyl(16, 16, 16, [x, 54, -110], HB.orange); } k.box([40, 6, 4], [320, 34, -64], '#7ec4ba');
+        k.box([230, 10, 300], [-180, 5, -200], HB.black, [0, .12, 0]); k.box([200, 3, 270], [-176, 11, -198], '#f6f3ea', [0, .12, 0]); for (let n = 0; n < 5; n++) k.box([170, 1, 2], [-176, 13, -300 + n * 40], '#3a3430', [0, .12, 0]);
+        pool(1500, 640, '#cfe1ff', [0, 0, .18, .34, .22], [0, 3, -80]);
     }
     if (id === 'lecturer-lectern' && desk) { sheet(drawLectureNotes, 300, 420, [-120, 3, 40]); sheet(drawLectureNotes, 300, 420, [-430, 3, 60], [-Math.PI / 2, 0, .08]); }
     if (id === 'team-pitch' && desk) for (let n = 0; n < 8; n++) k.box([75, 3, 75], [-40 + n % 4 * 85, 2 + n * .5, -200 + Math.floor(n / 4) * 90], ['#f6d76b', '#f4b6a0', '#cfe0c3', '#c6d7e6'][n % 4], [0, (rnd(n) - .5) * .4, 0]);
@@ -2445,7 +2933,9 @@ export function stationDetail(spec, mount, T, { role, sceneId }) {
         const g = glowMat('#ffe2b0', [.2, .2, .8, 1, .5]); add(new T.BoxGeometry(280, 3, 100), g.m, [-450, 318, -140], g.levels);
         pool(760, 660, '#ffd49a', [0, 0, .66, .82, .34], [-250, 3, -40]);
     }
-    if (id === 'accessible-student' || id === 'accessible-seminar') { if (desk) k.box([180, 2, 120], [0, 1, 300], '#2a6aa8'); }
+    if (id === 'accessible-student' || id === 'accessible-seminar') { if (desk) k.box([180, 2, 120], [0, 1, 300], '#2a6aa8'); if (desk && sceneId === 'highschool') { k.box([10, 2, 300], [-330, 2, 160], HB.orange, [0, .5, 0]); k.box([70, 4, 100], [-250, 3, 290], '#f4f1ea'); } }
+    // High school: the lavender shelf organizers in Oiler orange.
+    if (sceneId === 'highschool') mount.traverse(o => { if (o.isMesh && o.material?.name === 'Material_0' && o.material.color.b > .9 && o.material.color.r < .8) { o.material = o.material.clone(); o.material.color.set(HB.orange); } });
     const group = new T.Group(); group.name = `${spec.name} role detail`;
     const mat = new T.MeshStandardMaterial({ vertexColors: true, roughness: .7 });
     if (!k.build(group, mat)) mat.dispose(); extras.forEach(o => group.add(o));
@@ -2463,6 +2953,15 @@ export function mainDeskDetail({ sceneId, role, THREE: T, add }) {
     for (let n = 0; n < 4; n++) k.box([70, 2, 70], [430 - n % 2 * 80, 1 + n * .4, 200 - Math.floor(n / 2) * 80], ['#f6d76b', '#f4b6a0', '#9fd3c7', '#cfe0c3'][n], [0, (rnd(n + 5) - .5) * .5, 0]);
     k.box([60, 3, 90], [-560, 2, -220], young ? '#e48e6e' : '#2f5446'); k.box([8, 2, 260], [-560, 1, -60], young ? '#7fb3a5' : '#3f4b52', [0, .3, 0]);
     const g = new T.Group(); g.name = 'Teacher desk notes'; k.build(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: .75 })); add(g);
+    if (sceneId === 'highschool') {
+        // Oiler showcase: judging sheets, an orange-and-black rosette and a scoring pen on the teacher's desk.
+        const p = detailKit();
+        for (let n = 0; n < 2; n++) p.box([210, 2, 290], [70 + n * 30, 3 + n * 2, 190 - n * 14], '#f4f4ee', [0, (n - .5) * .12, 0]);
+        for (let n = 0; n < 5; n++) p.box([150, 1, 2], [85, 7, 130 + n * 30], '#2e6f8e', [0, .06, 0]);
+        p.cyl(52, 52, 6, [-330, 4, 170], '#e8702a'); p.cyl(30, 30, 8, [-330, 8, 170], '#1d1d1f'); for (const d of [-1, 1]) p.box([28, 3, 100], [-330 + d * 20, 2, 240], d < 0 ? '#e8702a' : '#1d1d1f', [0, d * .25, 0]);
+        p.box([8, 8, 130], [230, 5, 300], '#1d1d1f', [0, .6, 0]);
+        const party = new T.Group(); party.name = 'Oiler showcase judging'; p.build(party, new T.MeshStandardMaterial({ vertexColors: true, roughness: .7 })); add(party, ['party']);
+    }
 }
 
 // ---- Daily staging (room-life.mjs) --------------------------------------

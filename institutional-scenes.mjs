@@ -1,8 +1,8 @@
 import * as government from './institutional-government.mjs?v=scene-desk-styling-20261010';
-import * as education from './institutional-education.mjs?v=scene-desk-styling-20261010';
+import * as education from './institutional-education.mjs?v=environment-expert-20261014';
 import * as healthcare from './institutional-healthcare.mjs?v=scene-desk-styling-20261010';
 import * as it from './institutional-it.mjs?v=scene-desk-styling-20261010';
-import * as media from './institutional-media.mjs?v=scene-screen-themes-20261013-final';
+import * as media from './institutional-media.mjs?v=environment-expert-20261014';
 
 // Measured public service, education and mobile work settings. Units are mm.
 // Scene IDs intentionally contain only letters, matching saved Groove keys.
@@ -69,10 +69,10 @@ function makeModes(labels, accent, kind) {
         offset: [0, 0], yaw: 0, leds: i > 1, color: ledColors[i === 4 ? 1 : 0]
     }]));
 }
-// Station chairs: a Steelcase prop 1050 mm in front of the desk, turned with it.
+// Station chairs: a Steelcase prop (or the station's `chairId`) 1050 mm in front of the desk, turned with it.
 function stationChair(s) {
     const a = (s.turn || 0) * Math.PI / 180, distance = s.chairDistance ?? 1050;
-    return { id: 'steelcase-leap-v2', at: [s.at[0] + Math.sin(a) * distance, 0, s.at[1] + Math.cos(a) * distance], turn: 180 + (s.turn || 0) };
+    return { id: s.chairId || 'steelcase-leap-v2', at: [s.at[0] + Math.sin(a) * distance, 0, s.at[1] + Math.cos(a) * distance], turn: 180 + (s.turn || 0) };
 }
 const mergeModes = (modes, extra = {}) => { for (const [phase, values] of Object.entries(extra)) modes[phase] = { ...modes[phase], ...values }; return modes; };
 export const INSTITUTIONAL_ROOMS = Object.fromEntries(definitions.map(row => {

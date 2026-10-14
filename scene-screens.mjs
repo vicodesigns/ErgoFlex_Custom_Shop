@@ -25,7 +25,7 @@ export const SCREEN_THEMES = Object.fromEntries([
     ['kindergarten','Little discoveries','learn','#ebc173',['Welcome & weather','Shapes & colours','Family discoveries','Tomorrow’s activities','Shared learning']],
     ['elementary','Learning studio','learn','#a6ce9f',['Morning reading','Project exploration','Family learning','Lesson preparation','Class workshop']],
     ['middleschool','Learning studio','learn','#8fc6db',['Seminar question','Team experiment','Study notes','Lesson preparation','STEM workshop']],
-    ['highschool','Research classroom','learn','#9fb9db',['Class outline','Group investigation','Study review','Lesson preparation','Project presentation']],
+    ['highschool','Surf City science','learn','#e8a06a',['Today’s plan','Wave lab data','Study review','Lesson preparation','Oiler showcase']],
     ['college','College seminar','read','#dab987',['Lecture notes','Working seminar','Evening discussion','Independent study','Group presentation']],
     ['university','University research','read','#9cbfa7',['Lecture outline','Research seminar','Evening lecture','Graduate reading','Symposium findings']],
     ['laboratory','Research instrument demo','metrics','#8fd1c2',['Instrument preparation','Sample experiment','Analysis curves','Instrument watch','Research review']],
@@ -148,7 +148,7 @@ export class SceneScreens {
             const map=external?m.map:entry.native?base.map:on?this.texture(context,entry):null;
             if(m.map!==map){m.map=map;m.needsUpdate=true;}
             m.color?.copy(on?(entry.native||external?base.color:new THREE.Color('#ffffff')):new THREE.Color(entry.native||external?'#000000':'#060709'));
-            if(m.emissive){m.emissiveMap=on?map:base.emissiveMap;m.emissive.set(on?'#c9dbea':'#000000');m.emissiveIntensity=on?(context.phase==='night'?.18:.1):0;}
+            if(m.emissive){m.emissiveMap=on?map:base.emissiveMap;m.emissive.set(on?'#c9dbea':'#000000');m.emissiveIntensity=on?(context.scene==='occmedialab'?({evening:.32,night:.45,party:.3})[context.phase]??.16:context.phase==='night'?.18:.1):0;}
             obj.userData.sceneScreenStatus={key,on,phase:context.phase,theme:context.scene};
         }
         // Keep texture memory bounded after visiting many scenes and phases.

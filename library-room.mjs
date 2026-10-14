@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { roomLifeBaseTransform } from './room-life.mjs?v=library-floorplan-20261013';
+import { roomLifeBaseTransform } from './room-life.mjs?v=environment-expert-20261014';
 import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=library-floorplan-20261013';
+import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 
 // Campus-library concepts, not a survey of the Humboldt pilot site.
 // Architecture and furniture coordinates are millimetres.
@@ -31,9 +32,11 @@ function makeLibraryLayout([id, name, width, depth, height], index, legacy = fal
     // Rear stacks and freestanding double-sided shelves with clear aisles.
     const rearCount = index === 0 ? 1 : index === 1 ? 2 : index === 2 ? 3 : index === 3 ? 4 : 6;
     for (let i = 0; i < rearCount; i++) stacks.push({ id: `rear-${i}`, at: [(i - (rearCount - 1) / 2) * 2000, back + 330], double: false });
-    const columns = index === 1 ? [width / 2 - 2000] : index === 2 ? [0, 3000] : index === 3 ? [-1000, 2000, 5000] : [-2000, 1100, 4200, 7300];
+    let columns = index === 1 ? [width / 2 - 2000] : index === 2 ? [0, 3000] : index === 3 ? [-1000, 2000, 5000] : [-2000, 1100, 4200, 7300];
+    // Abutting sections form real ranges (1860 mm pitch includes the end panels).
+    if (!legacy) columns = index === 3 ? [0, 1860, 3720] : index === 4 ? [-1700, 160, 4100, 5960] : columns;
     let rows = index === 1 ? [2800, 4500] : index === 2 ? [3000, 5400] : index === 3 ? [3000, 5400, 7800] : [3200, 5600, 8000, 10400];
-    if (!legacy) rows = index === 1 ? [3000] : index === 2 ? [4800, 7000] : index === 3 ? [4800, 6350, 7900] : [4800, 7000, 9200, 11400];
+    if (!legacy) rows = index === 1 ? [3000] : index === 2 ? [4800, 7000] : index === 3 ? [4600, 6250, 7900] : [4800, 7000, 9200, 11400];
     if (index) for (const [ci, x] of columns.entries()) for (const [ri, z] of rows.entries()) stacks.push({ id: `stack-${ci}-${ri}`, at: [x, back + z], double: true });
     const lounge = [-width / 2 + (index ? 1450 : 700), front - (index ? 650 : 900)];
     let carrels = index >= 1 ? Array.from({ length: [0, 2, 2, 4, 6][index] }, (_, i) => front - 4000 - i * 1800).map((z, i) => ({ id: `carrel-${i}`, at: [-width / 2 + 420, z] })) : [];
@@ -57,7 +60,7 @@ function makeLibraryLayout([id, name, width, depth, height], index, legacy = fal
     if (index === 0) props.push({ id: 'armchair-leather', at: [lounge[0], 0, lounge[1]] });
     else props.push({ id: 'sofa-leather-couch', at: [lounge[0], 0, lounge[1]] }, { id: 'coffee-table', at: [lounge[0], 0, lounge[1] - 980] },
         { id: 'journal', at: [lounge[0] - 180, 391.2, lounge[1] - 980] });
-    for (const carrel of (index >= 2 ? carrels.slice(0, 2) : [])) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: 90 },
+    for (const carrel of (index >= 2 ? carrels.slice(0, 2) : [])) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: legacy ? 90 : -90 },
         { id: 'journal', at: [carrel.at[0] + 60, 740, carrel.at[1]], turn: 90 });
     props.push({ id: 'monstera', at: [width / 2 - (!legacy && index >= 2 ? 230 : 480), 0, legacy ? front - 550 : index >= 2 ? front - 1100 : back + 2300] });
     // A globe on the lounge side table; the table carries it when moved.
@@ -70,8 +73,20 @@ function makeLibraryLayout([id, name, width, depth, height], index, legacy = fal
         props.push({ id: 'kenney-furniture-laptop', at: [at[0] - 430, 740, at[1] - 260] }, { id: 'journal', at: [at[0] + 480, 740, at[1] + 260], turn: 12 }, { id: 'kenney-furniture-books', at: [at[0] + 30, 740, at[1] + 250] });
     }
     if (research) for (const dx of [-450, 450]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [research[0] + dx, 0, research[1] + (legacy ? 850 : 1000)], turn: 180 });
-    for (const carrel of carrels.slice(2)) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: 90 }, { id: 'journal', at: [carrel.at[0] + 60, 740, carrel.at[1]], turn: 90 });
-    if (index === 1) for (const carrel of carrels) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: 90 }, { id: 'journal', at: [carrel.at[0] + 60, 740, carrel.at[1]], turn: 90 });
+    for (const carrel of carrels.slice(2)) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: legacy ? 90 : -90 }, { id: 'journal', at: [carrel.at[0] + 60, 740, carrel.at[1]], turn: 90 });
+    if (index === 1) for (const carrel of carrels) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [carrel.at[0] + 800, 0, carrel.at[1]], turn: legacy ? 90 : -90 }, { id: 'journal', at: [carrel.at[0] + 60, 740, carrel.at[1]], turn: 90 });
+    if (!legacy && index === 4) {
+        // New books and browsing: low shelving that keeps sightlines open, with
+        // two reading chairs turned to the room and a plant at the run end.
+        for (const x of [-5600, -4500, -3400]) props.push({ id: 'ergoflex-small-bookshelf', at: [x, 0, front - 3800] });
+        for (const x of [-5300, -3900]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [x, 0, front - 2300] });
+        props.push({ id: 'ergoflex-plant-2', at: [-6450, 0, front - 3800] });
+    }
+    if (!legacy && research) {
+        // A bin beside the research table, clear of its light supports.
+        props.push({ id: 'ergoflex-trash-can', at: [research[0] + 1300, 0, research[1] + 150], scale: .8 });
+    }
+    if (!legacy && service) props.push({ id: 'ergoflex-calendar', at: [service[0] + 250, 740, service[1] - 230], turn: -15 });
     return [id, { id, name, width, depth, height, back, index, desk, reading, stacks, lounge, carrels, research, service, props, sideTable, daylight: [-width / 2 + 100, back + depth * .4] }];
 }
 export const LIBRARY_LAYOUTS = Object.fromEntries(sizes.map((s, i) => makeLibraryLayout(s, i)));
@@ -79,17 +94,18 @@ const previousLayouts = Object.fromEntries(sizes.map((s, i) => makeLibraryLayout
 export const libraryLayoutById = id => LIBRARY_LAYOUTS[id] || LIBRARY_LAYOUTS.apartment;
 export const libraryLayoutForSize = size => LIBRARY_LAYOUTS[size === '60x30' ? 'house' : 'apartment'];
 export const LIBRARY_MODES = {
-    morning: { label: 'Morning', description: 'Opening the reading room · daylight and book returns', key: '#ffe8c6', fill: '#d6e8f0', accent: '#c4dcc6', power: 1.55, ambient: .42, bounce: .6, exposure: 1.06, sky: ['#7fb3d1', '#f4e6c8'], practical: .2, wash: .16, colors: ['#f2e6d2', '#c5d3c7'], height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
-    afternoon: { label: 'Afternoon', description: 'Reference research · catalog search and individual study', key: '#fff5e6', fill: '#dbe9ee', accent: '#b9d1c4', power: 1.3, ambient: .46, bounce: .66, exposure: 1.06, sky: ['#9cc6dc', '#eef0e4'], practical: .3, wash: .28, colors: ['#f5ebdb', '#cad7cd'], height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
-    evening: { label: 'Evening', description: 'Evening reading · warm task lights and research notes', key: '#efc7a0', fill: '#b9c6dc', accent: '#e0b07c', power: .72, ambient: .32, bounce: .48, exposure: 1.08, sky: ['#5d76a0', '#f2a565'], practical: .95, wash: .55, colors: ['#f4d8b1', '#ccc5b6'], height: 28, tilt: 12, offset: [0, 80], yaw: 0, leds: true, color: '#4a3f30' },
-    night: { label: 'Late study', description: 'Quiet late study · self service and focused task lighting', key: '#9db4d8', fill: '#93a8c8', accent: '#e8b77e', power: .25, ambient: .24, bounce: .32, exposure: 1.10, sky: ['#0f1f35', '#34506a'], practical: 1.05, wash: .34, colors: ['#f5ddbb', '#c0ccd3'], height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: true, color: '#2f2c26' },
-    party: { label: 'Study group', description: 'Collaborative study · shared sources and discussion notes', key: '#f2dcc0', fill: '#c8dae2', accent: '#b8d4ae', power: .9, ambient: .4, bounce: .52, exposure: 1.1, sky: ['#93a9c8', '#f3cfa6'], practical: .75, wash: .85, colors: ['#f1e2ca', '#c5d3c7'], height: 43.5, tilt: -5, offset: [120, 250], yaw: -12, leds: true, color: '#375642' }
+    morning: { label: 'Morning', description: 'Opening the reading room · daylight and book returns', key: '#ffe8c6', fill: '#d6e8f0', accent: '#c4dcc6', power: 1.55, ambient: .37, bounce: .6, exposure: 1.06, sky: ['#7fb3d1', '#f4e6c8'], practical: .2, wash: .16, colors: ['#f2e6d2', '#c5d3c7'], height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
+    afternoon: { label: 'Afternoon', description: 'Reference research · catalog search and individual study', key: '#fff5e6', fill: '#dbe9ee', accent: '#b9d1c4', power: 1.3, ambient: .41, bounce: .66, exposure: 1.06, sky: ['#9cc6dc', '#eef0e4'], practical: .3, wash: .28, colors: ['#f5ebdb', '#cad7cd'], height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
+    evening: { label: 'Evening', description: 'Evening reading · warm task lights and research notes', key: '#f3b07a', fill: '#b3bfd8', accent: '#e0b07c', power: .46, ambient: .24, bounce: .36, exposure: 1.04, sky: ['#5d76a0', '#f2a565'], practical: 1.15, wash: .45, colors: ['#f4d8b1', '#ccc5b6'], height: 28, tilt: 12, offset: [0, 80], yaw: 0, leds: true, color: '#4a3f30' },
+    night: { label: 'Late study', description: 'Quiet late study · self service and focused task lighting', key: '#9db4d8', fill: '#93a8c8', accent: '#e8b77e', power: .14, ambient: .16, bounce: .22, exposure: 1.04, sky: ['#0f1f35', '#34506a'], practical: 1.3, wash: .12, colors: ['#f5ddbb', '#c0ccd3'], height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: true, color: '#2f2c26' },
+    party: { label: 'Study group', description: 'Collaborative study · shared sources and discussion notes', key: '#f2dcc0', fill: '#c8dae2', accent: '#b8d4ae', power: .9, ambient: .34, bounce: .52, exposure: 1.04, sky: ['#93a9c8', '#f3cfa6'], practical: .75, wash: .85, colors: ['#f1e2ca', '#c5d3c7'], height: 43.5, tilt: -5, offset: [120, 250], yaw: -12, leds: true, color: '#375642' }
 };
 function canvasMap(draw, w = 512, h = 512) {
     const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
     draw(canvas.getContext('2d'), w, h); const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; return map;
 }
 // Stable pseudo-random variation: a rebuilt room is identical every time.
+const CHAIR_SCALE = .82;
 const rnd = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 // Bakes many small parts into one geometry, so a shelf's dressing, a lamp's
 // brass or a table's apron costs one draw call. Optional per-part colour is
@@ -159,8 +175,14 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     const { width: w, depth: d, height: h, back: bz, index } = layout, front = bz + d;
     const modern = index >= 2, carpeted = modern;
     const previous = previousLayouts[layout.id];
+    // The supplied designer chair replaces the low-poly reading chair. Room
+    // chairs keep their saved placement keys; an untouched saved scale of the
+    // old model becomes the new chair's authored scale.
+    room.propReplacements = { 'kenney-furniture-chair-modern-cushion': { id: 'ergoflex-designer-chair', scale: CHAIR_SCALE } };
     room.migrateSavedTransform = (obj, saved) => {
         if (!saved) return saved;
+        if (obj.userData.decorUpgrade === 'ergoflex-designer-chair' && saved.s && ['x', 'y', 'z'].every(a => Math.abs(saved.s[a] - 1) < .00001))
+            saved = { ...saved, s: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z } };
         const id = obj.userData.propId, old = previous;
         let at, turn = 0;
         if (id?.startsWith('reading-table-')) at = old.reading[Number(id.split('-').at(-1))];
@@ -176,18 +198,39 @@ export function buildLibraryRoom(room, root, layout, helpers) {
             const placement = match && old.props[Number(match[1])];
             if (placement && placement.id === id) { at = placement.at; turn = THREE.MathUtils.degToRad(placement.turn || 0); }
         }
-        if (!at) return saved;
-        let position = at.length === 2 ? [at[0], 0, at[1]] : at;
-        if (id === 'research-help-counter' && Math.abs(saved.p.x - (-w / 2 + 2600)) < .01 && Math.abs(saved.p.z - (bz + 4400)) < .01) position = [-w / 2 + 2600, 0, bz + 4400];
-        const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), turn);
+        const poses = [];
+        if (at) {
+            let position = at.length === 2 ? [at[0], 0, at[1]] : at;
+            if (id === 'research-help-counter' && Math.abs(saved.p.x - (-w / 2 + 2600)) < .01 && Math.abs(saved.p.z - (bz + 4400)) < .01) position = [-w / 2 + 2600, 0, bz + 4400];
+            poses.push([position, turn]);
+        }
+        // Earlier revisions of the current plan: carrel chairs faced the room
+        // and the study hall stacks had 990 mm aisles.
+        const current = obj.userData.sceneAssetKey?.match(/:room:(\d+):/), placement = current && layout.props[Number(current[1])];
+        if (id && placement?.id === id && placement.turn === -90) poses.push([placement.at, Math.PI / 2]);
+        const stack = index === 3 && id?.match(/^stack-(\d+)-(\d+)$/);
+        const range = index >= 3 && id?.match(/^stack-(\d+)-(\d+)$/);
+        if (range) {
+            const column = (index === 3 ? [-1000, 2000, 5000] : [-2000, 1100, 4200, 7300])[Number(range[1])], current = layout.stacks.find(s => s.id === id);
+            if (column !== undefined) poses.push([[column, 0, current.at[1]], 0]);
+            if (stack) poses.push([[column ?? current.at[0], 0, bz + [4800, 6350, 7900][Number(stack[2])]], 0]);
+        }
         // Autosave captured untouched authored poses too. Upgrade those only;
         // any translated, rotated or scaled furnishing keeps the owner's edit.
-        if (!position.every((n, i) => Math.abs(saved.p[['x','y','z'][i]] - n) < .01)
-            || ['x','y','z','w'].some(a => Math.abs(saved.q[a] - q[a]) > .00001)
-            || ['x','y','z'].some(a => Math.abs(saved.s[a] - obj.scale[a]) > .00001)) return saved;
+        const untouched = ([position, angle]) => {
+            const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+            return position.every((n, i) => Math.abs(saved.p[['x','y','z'][i]] - n) < .01)
+                && ['x','y','z','w'].every(a => Math.abs(saved.q[a] - q[a]) <= .00001)
+                && ['x','y','z'].every(a => Math.abs(saved.s[a] - obj.scale[a]) <= .00001);
+        };
+        if (!poses.some(untouched)) return saved;
         return { ...saved, ...roomLifeBaseTransform(obj, { p: { x: obj.position.x, y: obj.position.y, z: obj.position.z }, q: { x: obj.quaternion.x, y: obj.quaternion.y, z: obj.quaternion.z, w: obj.quaternion.w }, s: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z } }) };
     };
     room.decorateProp = (object, placement) => {
+        const restyle = finish => { const copies = new Map(); object.traverse(o => { if (!o.isMesh) return; const swap = source => { if (!source?.isMeshStandardMaterial) return source; if (!copies.has(source)) { const mat = source.clone(); finish(mat, source); mat.userData.roomPaletteLocked = true; room.ownedMaterials.add(mat); copies.set(source, mat); } return copies.get(source); }; o.material = Array.isArray(o.material) ? o.material.map(swap) : swap(o.material); }); };
+        // Pastel book blocks take the shelf spine palette; the lounge table is oak.
+        if (placement.id === 'kenney-furniture-books') { let n = 0; restyle(mat => { mat.color.set(['#55806a', '#bd9a58', '#6c8798', '#a65846'][n++ % 4]); mat.roughness = .82; mat.metalness = 0; }); return; }
+        if (placement.id === 'coffee-table') { restyle(mat => { mat.map = oakMap; mat.color.set('#e3c9a0'); mat.roughness = .55; mat.metalness = 0; }); return; }
         if (placement.id !== 'kenney-furniture-chair-modern-cushion') return;
         const copies = new Map();
         object.traverse(o => {
@@ -195,9 +238,12 @@ export function buildLibraryRoom(room, root, layout, helpers) {
             const finish = source => {
                 if (!source?.isMeshStandardMaterial || source.map) return source;
                 if (!copies.has(source)) {
-                    const mat = source.clone(), fabric = /carpet/i.test(source.name);
+                    const mat = source.clone(), fabric = /carpet|leather/i.test(source.name);
                     const table = layout.reading.findIndex(at => Math.abs(at[1] - placement.at[2]) <= 900 && Math.abs(at[0] - placement.at[0]) < 1000);
-                    mat.color.set(fabric ? ['#718575', '#657f8b', '#ad7c62', '#859077'][Math.max(0, table) % 4] : modern ? '#364447' : '#46564e'); mat.roughness = fabric ? .98 : .56; mat.metalness = fabric ? 0 : .3;
+                    // Traditional rooms: green leather on dark bronze. Modern rooms:
+                    // each table group keeps its own woven upholstery colour.
+                    mat.color.set(fabric ? modern ? ['#718575', '#657f8b', '#ad7c62', '#859077'][Math.max(0, table) % 4] : '#3f5e4e' : modern ? '#364447' : '#3b362d');
+                    mat.roughness = fabric ? modern ? .95 : .55 : .4; mat.metalness = fabric ? 0 : .6;
                     mat.userData.roomPaletteLocked = true;
                     room.ownedMaterials.add(mat); copies.set(source, mat);
                 }
@@ -206,6 +252,18 @@ export function buildLibraryRoom(room, root, layout, helpers) {
             o.material = Array.isArray(o.material) ? o.material.map(finish) : finish(o.material);
         });
     };
+    const plasterMap = canvasMap((c, S) => {
+        c.fillStyle = '#ffffff'; c.fillRect(0, 0, S, S);
+        // Each blob is drawn at its wrap offsets so the texture tiles seamlessly.
+        for (let n = 0; n < 140; n++) {
+            const x0 = rnd(n * 3.3) * S, y0 = rnd(n * 7.7) * S, r = 60 + rnd(n * 1.9) * 120;
+            for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) { const x = x0 + ox, y = y0 + oy, g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, n % 2 ? '#00000003' : '#ffffff05'); g.addColorStop(1, '#00000000'); c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); }
+        }
+    });
+    plasterMap.wrapS = plasterMap.wrapT = THREE.RepeatWrapping;
+    // Only the two long wall faces carry the mottled plaster; their UVs span
+    // the whole wall, so each gets a repeat matching its own length.
+    const plaster = length => { const map = plasterMap.clone(); map.repeat.set(length / 4000, h / 4000); const mat = material(modern ? '#ecebe2' : '#e8e2d2', { roughness: .94, map }); mat.userData.roomSurface = 'plaster'; return mat; };
     const chalk = material(modern ? '#ecebe2' : '#e8e2d2', { roughness: .94 }), green = material(['#436c58', '#436c58', '#596f65', '#506b70', '#596b62'][index], { roughness: .86 }), dark = material(modern ? '#354548' : '#344941'), brass = material(modern ? '#b5bbba' : '#b5a06b', { metalness: .72, roughness: .4 });
     const trim = material('#f1ecdf', { roughness: .8 }), dress = material('#ffffff', { vertexColors: true, roughness: .78 });
     const oakMap = canvasMap(c => { c.fillStyle = modern ? '#c1ad8b' : '#ac8960'; c.fillRect(0, 0, 512, 512); for (let x = 0; x < 512; x += 5) { c.strokeStyle = x % 3 ? '#684a2b25' : '#e2c48b35'; c.lineWidth = .8; c.beginPath(); c.moveTo(x, 0); c.bezierCurveTo(x + 8, 150, x - 12, 350, x + 2, 512); c.stroke(); } });
@@ -219,12 +277,12 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         if (carpeted) {
             for (let col = 0; col < 2; col++) for (let row = 0; row < 2; row++) {
                 const x = col * S / 2, y = row * S / 2;
-                c.fillStyle = (index === 3 ? ['#929e9f', '#8e999b', '#99a3a3', '#929e9f'] : ['#a4ac9f', '#9fa798', '#a8afa1', '#a4ac9f'])[col + row * 2]; c.fillRect(x, y, S / 2, S / 2);
-                c.strokeStyle = '#40504412'; c.lineWidth = 1;
+                c.fillStyle = index === 3 ? '#75838a' : '#86907e'; c.fillRect(x, y, S / 2, S / 2);
+                c.strokeStyle = '#40504408'; c.lineWidth = 1;
                 for (let n = 0; n < S / 2; n += 4) { c.beginPath(); c.moveTo(x + (row ? n : 0), y + (row ? 0 : n)); c.lineTo(x + (row ? n : S / 2), y + (row ? S / 2 : n)); c.stroke(); }
-                c.strokeStyle = '#45534616'; c.lineWidth = 3; c.strokeRect(x, y, S / 2, S / 2);
+                c.strokeStyle = '#4553460a'; c.lineWidth = 3; c.strokeRect(x, y, S / 2, S / 2);
             }
-            for (let n = 0; n < 18000; n++) { c.fillStyle = n % 2 ? '#ffffff15' : '#34483c12'; c.fillRect(rnd(n) * S, rnd(n + 13) * S, 1.5, 3); }
+            for (let n = 0; n < 18000; n++) { c.fillStyle = n % 2 ? '#ffffff15' : '#34483c12'; c.fillRect(rnd(n) * S, rnd(n + 13) * S, 2, 4); }
             return;
         }
         const W = S / 8, L = W * 4, tones = ['#b58c60', '#a87f55', '#bd966a', '#a07a51', '#b88f63', '#ad865b', '#c39c6e', '#a57d54'];
@@ -261,10 +319,10 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     const floorRug = (id, size, at, mat, radius) => { const o = box(root, size, at, mat, radius); o.userData.libraryRug = id; return o; };
     floorRug('desk', [1900, 4, 2300], [layout.desk[0], 2, layout.desk[1] + 450], rug('#c7cbb5', '#6f8a74', '#efe8d2', '#b4bba2'), 8);
     const back = new THREE.Group(); back.name = 'Library commons wall'; root.add(back);
-    box(back, [w, h, 80], [0, h / 2, bz - 40], chalk); box(back, [w, 100, 25], [0, 50, bz + 12.5], oak);
+    box(back, [w, h, 80], [0, h / 2, bz - 40], plaster(w)); box(back, [w, 100, 25], [0, 50, bz + 12.5], oak);
     room.walls.push({ obj: back, axis: 'x', limit: bz * root.scale.x });
     const right = new THREE.Group(); right.name = 'Library study wall'; root.add(right);
-    box(right, [80, h, d], [w / 2 + 40, h / 2, bz + d / 2], chalk); box(right, [25, 100, d], [w / 2 - 12.5, 50, bz + d / 2], oak);
+    box(right, [80, h, d], [w / 2 + 40, h / 2, bz + d / 2], plaster(d)); box(right, [25, 100, d], [w / 2 - 12.5, 50, bz + d / 2], oak);
     room.walls.push({ obj: right, axis: 'z', limit: -w / 2 * root.scale.x });
     // Painted panelled wainscot to sill height, an oak chair rail and a
     // plaster cornice: the reading-room shell around the stacks.
@@ -286,6 +344,10 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     box(back, [w, low, 18], [0, low / 2, bz + 9], wainscot(w)); box(right, [18, low, d], [w / 2 - 9, low / 2, bz + d / 2], wainscot(d));
     const rails = kit(); rails.box([w, 40, 34], [0, low, bz + 17]); baked(back, rails, oak, false);
     rails.box([34, 40, d], [w / 2 - 17, low, bz + d / 2]); baked(right, rails, oak, false);
+    if (index >= 3) {
+        const frieze = kit(); frieze.box([w, 60, 6], [0, 2410, bz + 3]); baked(back, frieze, green, false); frieze.box([6, 60, d], [w / 2 - 3, 2410, bz + d / 2]); baked(right, frieze, green, false);
+        const picture = kit(); picture.box([w, 24, 28], [0, 2452, bz + 14]); baked(back, picture, oak, false); picture.box([28, 24, d], [w / 2 - 14, 2452, bz + d / 2]); baked(right, picture, oak, false);
+    }
     const cornice = kit(); cornice.box([w, 70, 60], [0, h - 35, bz + 30]).box([w, 30, 90], [0, h - 85, bz + 45]); baked(back, cornice, trim, false);
     cornice.box([60, 70, d], [w / 2 - 30, h - 35, bz + d / 2]).box([90, 30, d], [w / 2 - 45, h - 85, bz + d / 2]); baked(right, cornice, trim, false);
     const sign = group('commons-sign', 'Library commons identity', [0, 2560 + (h - 3000) * .5, bz + 35], back);
@@ -357,6 +419,9 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         shelf.userData.libraryStack = { double: spec.double, width: 1800, depth: 560, height: 2000 };
         const dep = spec.double ? 560 : 500, sides = spec.double ? [-1, 1] : [1], bookDepth = spec.double ? 240 : 270;
         mesh(shelf, shelfFrame(spec.double), oak);
+        const joined = side => layout.stacks.some(o => o !== spec && o.double && Math.abs(o.at[1] - spec.at[1]) < 1 && Math.abs(o.at[0] - spec.at[0] - side * 1860) < 5);
+        shelf.userData.libraryStack.joined = [joined(-1), joined(1)];
+        if (spec.double) for (const x of [-915, 915]) { if (joined(Math.sign(x))) continue; box(shelf, [30, 1950, 560], [x, 975, 0], oak); box(shelf, [4, 1500, 420], [x * 1.0175, 1050, 0], green); }
         box(shelf, [1750, 1920, 18], [0, 1000, spec.double ? 0 : -dep / 2 + 9], green);
         const matrices = bookMats.map(() => []), tints = bookMats.map(() => []), k = kit();
         const put = (seed, at, size, rot = [0, 0, 0], own = seed) => {
@@ -366,7 +431,7 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         };
         for (const [li, y0] of levels.entries()) for (const bay of [0, 1]) for (const side of sides) {
             const seed = si * 977 + li * 131 + bay * 17 + (side > 0 ? 5 : 0), roll = rnd(seed);
-            const feature = roll < .26 ? 'stack' : roll < .5 ? 'decor' : roll < .68 ? 'lean' : 'full';
+            const feature = spec.double ? roll < .14 ? 'stack' : roll < .24 ? 'lean' : 'full' : roll < .26 ? 'stack' : roll < .5 ? 'decor' : roll < .68 ? 'lean' : 'full';
             const x0 = bay ? 14 : -848, x1 = bay ? 848 : -14, limit = x1 - (feature === 'stack' ? 290 : feature === 'decor' ? 210 : feature === 'lean' ? 130 : 4);
             const z = side * (spec.double ? dep / 2 - 14 - bookDepth / 2 : dep / 2 - 18 - bookDepth / 2), run = 2 + Math.floor(rnd(seed + 2) * 3);
             let x = x0 + 3, n = 0, tallest = 0;
@@ -403,7 +468,7 @@ export function buildLibraryRoom(room, root, layout, helpers) {
             // Wall stacks carry a few objects on the cornice, clear of the sign.
             const top = 2000, rs = rearStacks.indexOf(spec);
             if (rs % 2 === 0) plasterUrn(k, [-620, top, 20]); else smallGlobe(k, [-620, top, 20], si);
-            pottedPlant(k, [640, top, 40], si * 5, 4, dep / 2 + 60);
+            pottedPlant(k, [640, top, 40], si * 5, 0, dep / 2 + 60);
             for (let i = 0; i < 3; i++) k.box([360 - i * 26, 42, 270 - i * 14], [-120 + rnd(si + i) * 30, top + 21 + i * 42, 30], { color: ['#5a3f33', '#2f4a40', '#8a6a44'][i], rot: [0, (rnd(i + si * 7) - .5) * .2, 0] });
         }
         if (spec === ladderStack) {
@@ -434,6 +499,12 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     // Shared reading tables: green leather writing pads let into the oak top,
     // and a pair of banker's lamps on the power rail.
     const shades = [], glow = [];
+    // Visible lamp light: additive pools whose strength follows the mode's
+    // practical level (the same term that drives the task point lights).
+    const pools = createPoolLayer(root, 'Library lamp light pools');
+    let poolMode = LIBRARY_MODES.morning, poolAccent = 1;
+    const lampLevel = (k = 1, quiet = 1) => i => Math.min(.55, poolMode.practical * .38 * poolAccent) * k * (i === 3 ? quiet : 1);
+    const WARM = modern ? '#ffe2bd' : '#ffd29c';
     const shadeMat = () => { const mat = material('#24583d', { emissive: '#2f7a50', emissiveIntensity: .1, roughness: .18, metalness: .15, side: THREE.DoubleSide }); shades.push(mat); return mat; };
     const glowMat = (extra = {}) => { const mat = material('#f2d6a8', { emissive: '#f2d6a8', emissiveIntensity: .3, ...extra }); glow.push(mat); return mat; };
     const bankers = (parent, at, brassKit, glassKit, glowKit) => {
@@ -464,14 +535,17 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         baked(table, pads, leather, false);
         const apron = kit(); apron.box([length - 200, 70, 24], [0, 665, 360]).box([length - 200, 70, 24], [0, 665, -360]);
         baked(table, apron, oak);
-        const legs = kit(), feet = kit();
-        for (const x of [-length / 2 + 220, length / 2 - 220]) { legs.box([75, 700, 600], [x, 350, 0]); feet.box([600, 30, 710], [x, 15, 0]); }
-        legs.box([length - 260, 90, 120], [0, 785, 0]); baked(table, legs, green); baked(table, feet, dark);
+        const legs = kit(), feet = kit(), rail = kit();
+        for (const x of [-length / 2 + 220, length / 2 - 220]) {
+            for (const z of [-250, 250]) { legs.box([70, 690, 70], [x, 355, z]); feet.box([90, 30, 90], [x, 15, z]); }
+            legs.box([40, 60, 500], [x, 120, 0]);
+        }
+        rail.box([length - 260, 90, 80], [0, 785, 0]); baked(table, legs, oak); baked(table, feet, brass); baked(table, rail, dark);
         const outlets = kit(), plates = kit();
         for (const x of [-120, 120]) { outlets.box([200, 5, 80], [x, 832.5, 0]); for (const dx of [-40, 40]) plates.box([10, 2, 22], [x + dx, 836, 0]); }
         baked(table, outlets, dark, false); baked(table, plates, material('#c4c7b7'), false);
         const lampBrass = kit(), glass = kit(), light = kit();
-        for (const x of [-length / 2 + 330, length / 2 - 330]) bankers(table, [x, 830, 0], lampBrass, glass, light);
+        for (const x of [-length / 2 + 330, length / 2 - 330]) { bankers(table, [x, 830, 0], lampBrass, glass, light); pools.add(table, [x, 742, 0], [1050, 800], WARM, lampLevel(1, i ? .28 : 1)); }
         baked(table, lampBrass, brass); baked(table, glass, modern ? dark : shadeMat());
         const diffuser = glowMat(); diffuser.userData.libraryTable = i; baked(table, light, diffuser, false);
         table.userData.libraryZone = 'collaborative';
@@ -486,12 +560,13 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         const g = group(carrel.id, 'Quiet window study carrel', [carrel.at[0], 0, carrel.at[1]]); g.rotation.y = Math.PI / 2;
         g.userData.libraryZone = 'quiet'; g.userData.editableRoomItem = true; g.userData.roomSupportHeights = [740];
         box(g, [1200, 35, 650], [0, 722.5, 0], oak, 8);
-        for (const x of [-575, 575]) box(g, [50, 1250, 650], [x, 625, 0], green, 4);
+        for (const x of [-575, 575]) { box(g, [25, 1250, 650], [x, 625, 0], oak, 4); box(g, [6, 1250, 8], [x, 625, 326], brass); }
         box(g, [1100, 400, 22], [0, 950, -315], material('#a3ac98', { roughness: 1 }), 4);
         const k = kit();
         for (let n = 0, x = -530; n < 7; n++) { const bw = 30 + rnd(n + carrel.at[1]) * 22, bh = 200 + rnd(n * 3) * 45; k.box([bw, bh, 170], [x + bw / 2, 740 + bh / 2, -210], { color: ['#5e8670', '#c0a466', '#7690a0', '#b5705a', '#59656f'][n % 5] }); x += bw + 1; }
         for (let n = 0; n < 4; n++) k.box([150, 110, 2], [-120 + n * 170, 960 + (n % 2) * 60, -303], { color: ['#f2e6a0', '#f4f1e8', '#cfe3d6', '#f0c9b8'][n], rot: [0, 0, (rnd(n) - .5) * .2] });
         baked(g, k, dress); const strip = kit(); strip.box([1000, 6, 40], [0, 1144, -285]); baked(g, strip, glowMat(), false);
+        pools.add(g, [0, 742, -100], [1050, 480], WARM, lampLevel(.9)); pools.add(g, [0, 1000, -306], [1000, 420], WARM, lampLevel(.45), 'back');
         const power = kit(); power.box([110, 45, 4], [430, 802, -302], { color: '#364447' });
         for (const dx of [-24, 24]) for (const dz of [-7, 7]) power.box([4, 9, 2], [430 + dx + dz / 3, 802, -299], { color: '#d2d6ce' });
         power.box([18, 6, 2], [430, 818, -299], { color: '#d2d6ce' }); baked(g, power, dress, false);
@@ -531,6 +606,7 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         const s = new THREE.Vector3(Math.sin(rotY), 0, Math.cos(rotY)), [x, y, z] = at, p = d => [x + s.x * d, y, z + s.z * d];
         brassKit.box([120, 200, 14], p(7), { rot: [0, rotY, 0] }).cyl(8, 8, 120, p(70), { rot: rotY ? [0, 0, Math.PI / 2] : [Math.PI / 2, 0, 0] }).cyl(30, 40, 26, [x + s.x * 130, y - 10, z + s.z * 130]);
         glowKit.cyl(70, 95, 150, [x + s.x * 130, y + 85, z + s.z * 130], { open: true });
+        pools.add(parent, [x + s.x * 4, y + 140, z + s.z * 4], [520, 1150], WARM, lampLevel(.62), rotY ? 'right' : 'back');
     };
     const rearEdge = Math.max(...layout.stacks.filter(s => !s.double).map(s => s.at[0] + 925)), bay = (rearEdge + w / 2) / 2;
     const backBrass = kit(), backGlow = kit(), sideBrass = kit(), sideGlow = kit();
@@ -598,6 +674,13 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         box(ceiling, [1400, 70, 130], [at[0], h - 450, at[1]], green, 5);
         box(ceiling, [1340, 8, 95], [at[0], h - 490, at[1]], glowMat(), 3).castShadow = false;
     }
+    for (const spec of layout.stacks.filter(s => s.double)) {
+        // Canopy light on the stack cornice washes both faces and moves with it.
+        const shelf = room.assets().find(o => o.userData.propId === spec.id), k = kit(), strip = kit();
+        for (const side of [-1, 1]) { k.box([1700, 30, 50], [0, 2015, side * 300]); strip.box([1660, 6, 34], [0, 1997, side * 300]); }
+        baked(shelf, k, dark, false); baked(shelf, strip, glowMat(), false);
+        for (const side of [-1, 1]) pools.add(shelf, [0, 3, side * 740], [1750, 820], '#ffe8c8', lampLevel(.3, .35));
+    }
     // A genuine floor reading lamp keeps its base on the floor and its glowing
     // shade visible in the camera cutaway.
     const lamp = group('reading-lamp', 'Warm lounge reading lamp', [-w / 2 + 280, 0, front - 1950]);
@@ -605,15 +688,18 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     const pleats = canvasMap((c, W, H) => { c.fillStyle = '#e4d3aa'; c.fillRect(0, 0, W, H); for (let x = 0; x < W; x += 8) { c.fillStyle = (x / 8) % 2 ? '#cdb98c' : '#f0e2c0'; c.fillRect(x, 0, 4, H); } c.fillStyle = '#9a7f52'; c.fillRect(0, 0, W, 6); c.fillRect(0, H - 6, W, 6); }, 256, 64);
     const lampShade = material('#ffffff', { map: pleats, side: THREE.DoubleSide, emissive: '#7a5a2c', emissiveMap: pleats }); mesh(lamp, new THREE.CylinderGeometry(170, 230, 330, 28, 1, true), lampShade, [0, 1580, 0]);
     mesh(lamp, new THREE.CylinderGeometry(222, 222, 8, 28), glowMat(), [0, 1420, 0]).castShadow = false;
+    pools.add(lamp, [80, 3, 0], [1800, 1800], WARM, lampLevel(.75)); pools.add(lamp, [-272, 1650, 0], [1100, 1500], WARM, lampLevel(.55), 'left');
     const opsHelpers = { material, mesh, box, group, baked, kit, canvasMap, oak, green, dark, brass, dress, back, right, catalog, cart, ceiling, glowMat, infoMap };
     const operations = buildLibraryOperations(room, layout, opsHelpers);
+    const discussion = room.assets().find(o => o.userData.propId === 'collaboration-whiteboard');
+    if (discussion) pools.add(discussion, [0, 470, 30], [1900, 1300], '#ffe6c4', [0, 0, 0, 0, .32], 'back');
     const campus = buildLibraryCampusDetails(room, layout, opsHelpers);
     const lights = [
-        { at: [layout.desk[0], 2100, layout.desk[1]], task: true, power: 4, range: 4300 },
-        { at: [layout.reading[0][0], 2200, layout.reading[0][1]], task: true, power: 5, range: 5000 },
+        { at: [layout.desk[0], 1650, layout.desk[1] + 450], task: true, power: 4, range: 3200 },
+        { at: [layout.reading[0][0], 1650, layout.reading[0][1]], task: true, power: 5, range: 3600 },
         { at: [index >= 2 ? layout.service[0] / 2 : 0, Math.min(2800, h - 350), bz + d * .43], task: false, power: 6 + index * 1.2, range: d * .8 },
         { at: layout.research ? [layout.research[0], 1950, layout.research[1] + 350] : [-w / 2 + 550, 1600, front - 1850], task: !!layout.research, power: layout.research ? 5 : 3, range: layout.research ? 6200 : 3700 },
-        ...(layout.reading.length > 1 ? [{ at: [layout.reading[1][0], 2200, layout.reading[1][1]], task: true, secondary: true, power: 5, range: 5000 }] : [])
+        ...(layout.reading.length > 1 ? [{ at: [layout.reading[1][0], 1650, layout.reading[1][1]], task: true, secondary: true, power: 5, range: 3600 }] : [])
     ].map(spec => { const light = new THREE.PointLight('#efd8b5', 0, spec.range * root.scale.x, 2); light.position.set(...spec.at); root.add(light); return { ...spec, light, power: spec.power * (root.scale.x * 1000) ** 2 }; });
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = LIBRARY_MODES[modeId] || LIBRARY_MODES.morning;
@@ -622,6 +708,7 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         hourHand.rotation.z = -(time[0] % 12 + time[1] / 60) / 12 * Math.PI * 2; minuteHand.rotation.z = -time[1] / 60 * Math.PI * 2;
         clock.userData.libraryTime = time; operations.setMode(modeId); campus.setMode(modeId);
         glow.forEach(mat => { mat.color.set(mode.colors[0]); mat.emissive.set(mode.colors[0]); const quiet = modeId === 'night' && mat.userData.libraryTable > 0 ? .28 : 1; mat.emissiveIntensity = .1 + mode.practical * accent * quiet; });
+        poolMode = mode; poolAccent = accent; pools.apply(modeId);
         shades.forEach(mat => { mat.emissiveIntensity = .04 + mode.practical ** 2 * .7 * accent; }); lampShade.emissiveIntensity = .1 + mode.practical * .9 * accent;
         lights.forEach(spec => { spec.light.color.set(spec.task ? mode.colors[0] : mode.colors[1]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent * (modeId === 'night' && spec.secondary ? .28 : 1); }); root.userData.atmosphere = modeId;
     };
@@ -705,7 +792,10 @@ function buildLibraryOperations(room, layout, h) {
             c.strokeStyle = '#bcaa7b'; c.lineWidth = 3; c.strokeRect(12, 12, W - 24, H - 24);
         }, 320, 280);
         for (const side of [-1, 1]) {
-            const p = mesh(shelf, new THREE.PlaneGeometry(310, 270), material('#ffffff', { map, roughness: .88 }), [side * 931, 1390, 0]); p.rotation.y = side * Math.PI / 2; p.castShadow = false;
+            if (shelf.userData.libraryStack.joined?.[side > 0 ? 1 : 0]) continue;
+            const at = shelf.userData.libraryStack.double ? 937 : 931;
+            if (at > 931) box(shelf, [6, 300, 340], [side * 934, 1390, 0], brass);
+            const p = mesh(shelf, new THREE.PlaneGeometry(310, 270), material('#ffffff', { map, roughness: .88 }), [side * at, 1390, 0]); p.rotation.y = side * Math.PI / 2; p.castShadow = false;
         }
     }
     const services = [];
@@ -755,14 +845,14 @@ function buildLibraryOperations(room, layout, h) {
     // boards are still editable along the wall, but absorbers cannot turn into
     // floor obstacles or be mistaken for furniture by the interaction binder.
     const fabricMap = canvasMap((c, W, H) => {
-        c.fillStyle = '#b3b4a1'; c.fillRect(0, 0, W, H);
-        for (let n = 0; n < 2800; n++) { c.fillStyle = n % 2 ? '#ffffff18' : '#00000012'; c.fillRect(rnd(n) * W, rnd(n + 9) * H, 2, 5); }
+        c.fillStyle = '#7f8f78'; c.fillRect(0, 0, W, H);
+        for (let n = 0; n < 2800; n++) { c.fillStyle = n % 2 ? '#ffffff18' : '#00000020'; c.fillRect(rnd(n) * W, rnd(n + 9) * H, 2, 5); }
     }, 256, 256);
     const acousticMat = material('#ffffff', { map: fabricMap, roughness: 1 }); acousticMat.userData.roomSurface = 'fabric';
     for (let z = bz + 6100; z < front - 3000; z += 2200) {
         const panel = group('acoustic-' + Math.round(z - bz), 'Library wall acoustic treatment', [w / 2 - 35, 1960, z], right); panel.rotation.y = -Math.PI / 2; panel.userData.presentationOnly = true;
         box(panel, [1320, 800, 40], [0, 0, 0], acousticMat, 10);
-        for (const x of [-440, 0, 440]) box(panel, [8, 730, 6], [x, 0, 23], oak);
+        for (const x of [-520, -260, 0, 260, 520]) box(panel, [14, 730, 6], [x, 0, 23], oak);
     }
     const guide = group('library-wayfinding', 'Library services and quiet study guide', [w / 2 - 32, 2350, bz + (index ? 4600 : 3000)], right); guide.rotation.y = -Math.PI / 2;
     notice(guide, 'QUIET STUDY', index >= 2 ? '← Window carrels    Research help →' : 'Reading seats    Catalog →', [0, 0, 0], [1400, 290]);
@@ -831,11 +921,18 @@ function drawCampusImage(c, image, modeId) {
     const aspect = W / H;
     if (width / height > aspect) { const crop = height * aspect; x += (width - crop) / 2; width = crop; }
     else { const crop = width / aspect; y = (height - crop) / 2; height = crop; }
-    const filters = { morning: 'brightness(0.96) saturate(0.94)', afternoon: 'none', evening: 'brightness(0.58) saturate(0.82)', night: 'brightness(0.16) saturate(0.60)', party: 'brightness(0.88) saturate(0.90)' };
+    const filters = { morning: 'brightness(0.96) saturate(0.94)', afternoon: 'none', evening: 'brightness(0.86) saturate(0.80)', night: 'brightness(0.60) saturate(0.60)', party: 'brightness(0.88) saturate(0.90)' };
     c.save(); c.filter = filters[modeId] || filters.morning;
     c.drawImage(image, x, y, width, height, 0, 0, W, H); c.filter = 'none';
-    if (modeId === 'evening' || modeId === 'night') {
-        c.fillStyle = modeId === 'night' ? '#17305266' : '#bd63252b'; c.fillRect(0, 0, W, H);
+    c.restore(); c.save();
+    if (modeId === 'evening') {
+        // Dusk: a cooling sky over a warm horizon, then a low amber glaze.
+        const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#3b4f7f'); g.addColorStop(.65, '#e08a50'); g.addColorStop(1, '#8a6a58');
+        c.globalCompositeOperation = 'multiply'; c.fillStyle = g; c.fillRect(0, 0, W, H);
+        c.globalCompositeOperation = 'soft-light'; c.globalAlpha = .25; c.fillStyle = '#ff9a5a'; c.fillRect(0, 0, W, H);
+    } else if (modeId === 'night') {
+        c.globalCompositeOperation = 'multiply'; c.fillStyle = '#1d2c48'; c.fillRect(0, 0, W, H);
+        c.globalCompositeOperation = 'source-over'; c.fillStyle = '#17305240'; c.fillRect(0, 0, W, H);
     }
     c.restore();
 }

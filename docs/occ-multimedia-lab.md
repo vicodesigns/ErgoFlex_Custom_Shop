@@ -33,6 +33,47 @@ Five activities: **Pre-production**, **Edit & create**, **Sound & colour**, **Sc
 
 **Hide lab controls** gives a clear presentation view; **Show lab controls** restores the room, time, size and desk tools. Separate desk/item rearranging and individual/group Grooves use the existing editing system.
 
+## Expert lighting and production pass
+
+An expert review rendered all five layouts at all five activities with
+close-ups; this pass acts on it.
+
+- **Activities have their own light**: daylight with blinds partly down for
+  Pre-production and Edit & create; a dim neutral (D65) surround for Sound &
+  colour; a dark house for Screening, where the projection screen is the
+  brightest surface and room light 1 becomes its spill; a warm showcase for
+  Portfolio critique with the work wall lit. Blinds drop per activity
+  (blackout for screening). Station screens are brighter after dark.
+- **Screening**: a projection screen with white case and black masking, a
+  projector beam, a floor spill and per-desk task pools (`room-light-pools.mjs`).
+- **Capture stage**: a chroma-green backdrop with a cove and floor sheet,
+  a credible camera distance (2.2 m stage in compact labs, 3 m otherwise),
+  the supplied camera on the tripod, a supplied interview stool, three
+  closed softboxes with sandbags and an orange talent mark. Camera and stool
+  move with the stage.
+- **Finishes**: a navy acoustic-fabric wainscot with an orange cap replaces the
+  orange band, a charcoal-navy carpet replaces the checkerboard, natural ash
+  diffuser wells, three distinct poster compositions and no floor labels.
+- **Seating and zones**: the critique table moved 1.9 m from the open front,
+  with supplied designer chairs on both sides (and ends in larger labs). The
+  Collaborative and Flagship labs add a screening lounge (supplied couch,
+  rolling review display, two chairs). The pin-up wall is at reach height.
+- **Equipment**: supplied printer and paper tray on the print counter (they move
+  with it), a large-format poster printer in larger labs, a reference
+  bookcase, bins, a supplied plant, and a roofed Voice/Foley booth with a
+  shock-mounted microphone and an ON AIR light.
+
+## Second expert review and polish
+
+An independent panel signed the lab off with polish. Applied: the
+large-format printer uses the lit dressing material; the navy wainscot
+continues on the window wall (under the sill as well); backdrop lights stand
+beside the green screen, out of the camera's frame; the window view is graded
+for Sound & colour and the showcase, with blinds lower for colour work; the
+showcase is warmer with a lit critique table and work wall; five distinct
+student-work pieces; a projector beam that fades from the lens; a navy lounge
+couch (an owned material copy, the shared model stays unchanged).
+
 ## References
 
 The workflow mix is informed by OCC's published [Film & Television facilities](https://orangecoastcollege.edu/academics/vpa/film-television/facilities-equipment.html) and [Digital Media Arts & Design facilities](https://orangecoastcollege.edu/academics/vpa/dmad/facilities.html). The layouts, furniture quantities and decorative project content are original concept choices.

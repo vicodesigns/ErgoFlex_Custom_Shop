@@ -24,7 +24,7 @@ const THEMES = {
     kindergarten: ['LITTLE DISCOVERIES', 'COLOUR / SHAPE / STORY', '#b58d42'],
     elementary: ['LEARNING JOURNAL', 'READ / EXPLORE / CREATE', '#668c6d'],
     middleschool: ['MAKER NOTEBOOK', 'QUESTION / DESIGN / TEST', '#547e81'],
-    highschool: ['CLASS NOTES', 'DISCOVER / DISCUSS / REFLECT', '#677e91'],
+    highschool: ['LAB NOTES', 'OBSERVE / MEASURE / EXPLAIN', '#e8702a'],
     college: ['SEMINAR NOTES', 'READ / COMPARE / DEBATE', '#8b7760'],
     university: ['RESEARCH NOTES', 'QUESTION / EVIDENCE / INSIGHT', '#4b715d'],
     hospital: ['WORKSPACE CHECKLIST', 'PREPARE / CHECK / HAND OVER', '#598b85'],

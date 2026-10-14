@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=scene-screen-themes-20261013-final';
-import { ROOM_DETAIL_PALETTES } from './room-finish-palettes.mjs?v=environment-detail-scale-20261013';
+import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=environment-expert-20261014';
+import { ROOM_DETAIL_PALETTES } from './room-finish-palettes.mjs?v=environment-expert-20261014';
 
 // Authored art, imported GLBs and user transforms are left in their own systems.
 // These finishes apply only to the builders' explicitly tagged room materials.

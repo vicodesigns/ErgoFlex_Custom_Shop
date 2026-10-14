@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { institutionalMap, institutionalFloor, detailKit, notebook, books, plant } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
+import { institutionalMap, detailKit, notebook, books } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
+import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 
 // OCC lab concept, not an as-built plan. All coordinates are room-local mm.
 // Each tier reserves a front capture/critique zone and a clear right-hand entry.
@@ -14,30 +15,55 @@ const TIERS = ['apartment', 'house', 'spacious', 'premium', 'executive'];
 const NAMES = ['Project suite', 'Teaching lab', 'Production lab', 'Collaborative studio', 'Flagship media lab'];
 const COUNTS = [4, 6, 8, 10, 12];
 const phaseIndex = phase => Math.max(0, PHASES.indexOf(phase));
-const prop = (id, x, z, y = 0) => ({ id, at: [x, y, z] });
+const prop = (id, x, z, y = 0, turn = 0, scale) => ({ id, at: [x, y, z], turn, ...(scale ? { scale } : {}) });
+// Compact tiers keep 600+ mm between the capture stage and the last desk row.
+const compactStage = l => l.index === 0 || l.index === 2;
 const roles = ['film-edit', 'sound-mix', 'digital-art', 'accessible-edit', 'colour-grade', 'animation', 'film-edit', 'sound-design', 'digital-art', 'film-edit', 'animation'];
 const roleName = { 'film-edit':'Film editing', 'sound-mix':'Audio & sound mix', 'digital-art':'Digital illustration', 'accessible-edit':'Open access editing', 'colour-grade':'Colour grading', animation:'Animation & motion', 'sound-design':'Sound design' };
 
-export const lighting = { media:{ practical:[.3,.38,.66,.28,.65],wash:[.18,.2,.3,.1,.34],task:'#e8f0fa',bounce:'#a7bfd4' } };
+export const lighting = { media:{ practical:[.3,.38,.66,.28,.65],wash:[.18,.2,.15,.1,.5],task:'#e8f0fa',bounce:'#a7bfd4' } };
 export const sceneOverrides = {
     occmedialab:{
-        tiers:TIERS,
+        tiers:TIERS,wall:'#dcdedc',
         boardTitle:'FROM FIRST IDEA TO FINAL FRAME',
         desk:[prop('journal',-540,140),prop('headphones',530,-110)], shelf:[],
         modes:{
-            morning:{description:'Daylight planning · storyboards, shot lists and equipment prep',height:35,tilt:0,leds:false},
-            afternoon:{description:'Balanced work light · editing, animation and digital art',height:28,tilt:0,leds:false},
-            evening:{description:'Neutral task light · colour decisions and headphone mixing',key:'#dee9f7',fill:'#c6d5e5',power:.6,ambient:.3,practical:.66,exposure:1.08,height:28,tilt:0,color:'#d8e8ff',leds:true},
-            night:{description:'Dim screening wash · projection and quiet listening',key:'#bdcede',fill:'#a1b8d0',power:.18,ambient:.2,practical:.28,exposure:1.12,height:28,tilt:0,color:'#87b4e3',leds:true},
-            party:{description:'Student reel showcase · portfolio critique and shared notes',height:35,tilt:0,practical:.65,power:1.05,ambient:.4,color:'#f3bd79',leds:true}
+            // Daylight with blinds partly down; a dim neutral D65 surround for
+            // colour work; a dark house for screening; a warm showcase evening.
+            morning:{description:'Daylight planning · storyboards, shot lists and equipment prep',ambient:.34,exposure:1.0,height:35,tilt:0,leds:false},
+            afternoon:{description:'Balanced work light · editing, animation and digital art',ambient:.38,exposure:1.0,height:28,tilt:0,leds:false},
+            evening:{description:'Neutral grading surround · colour decisions and headphone mixing',key:'#e6edf7',fill:'#c9d3df',power:.32,ambient:.2,bounce:.3,practical:.55,exposure:1.0,colors:['#f2f4f7','#9fb2c6'],height:28,tilt:0,color:'#d8e8ff',leds:true},
+            night:{description:'Screening · dark house, projection and quiet listening',key:'#8ea6c4',fill:'#7f97b5',power:.1,ambient:.12,bounce:.16,practical:.22,exposure:1.02,height:28,tilt:0,color:'#87b4e3',leds:true},
+            party:{description:'Student reel showcase · portfolio critique and shared notes',key:'#ffe2bf',fill:'#d9cbb8',power:.7,ambient:.25,bounce:.45,practical:.8,exposure:.98,colors:['#ffd9a8','#e3c7a6'],height:35,tilt:0,color:'#f3bd79',leds:true}
         },
         layout(tier,l){
             l.name=NAMES[l.index]+' · '+COUNTS[l.index]+' desks';
             l.desk=[-l.width/2+1800,l.back+2400];
-            l.activity=[l.index?0:1000,l.back+l.depth-700];
+            const w=l.width,bz=l.back,front=bz+l.depth,compact=compactStage(l);
+            // The critique table leaves room for seats on both sides.
+            l.activity=[l.index?0:1000,front-1900];
             l.props[0].at=[l.desk[0],0,l.desk[1]+1050];
-            l.media={desks:COUNTS[l.index],capture:[-l.width/2+1800,l.back+l.depth-1000],print:[-l.width/2+820,l.back+360]};
-            l.props.push(prop('camera-bag',l.width/2-760,l.back+430,1800));
+            const stage=compact?{depth:2200,backdrop:950,camera:-900,z:front-1300,talent:750}:{depth:3000,backdrop:1350,camera:-1250,z:front-1700,talent:1150};
+            l.media={desks:COUNTS[l.index],capture:[-w/2+2000,stage.z],stage,print:[-w/2+820,bz+360]};
+            l.props.push(prop('camera-bag',w/2-760,bz+430,1800));
+            // Appended after the original list so saved placement keys stay put.
+            const [ax,az]=l.activity;
+            for(const dx of [-400,400])l.props.push(prop('ergoflex-designer-chair',ax+dx,az-700,0,0,.8),prop('ergoflex-designer-chair',ax+dx,az+700,0,180,.8));
+            if(l.index>=2)for(const side of [-1,1])l.props.push(prop('ergoflex-designer-chair',ax+side*1000,az,0,side*-90,.8));
+            // Capture: supplied camera on the tripod head and an interview stool;
+            // both travel with the stage (stage local z is mirrored).
+            const [cx,cz]=l.media.capture;
+            l.props.push(prop('ergoflex-camera',cx,cz-stage.camera,1395,180,1.2),prop('ergoflex-tall-office-chair',cx,cz-stage.backdrop+stage.talent,0,0,.9));
+            // Print counter equipment and supplies.
+            l.props.push(prop('ergoflex-printer',-w/2+710,bz+360,900),prop('ergoflex-paper-tray',-w/2+1230,bz+350,900,0));
+            l.props.push(prop('ergoflex-trash-can',l.index>=2?-w/2+3350:-w/2+1700,bz+350,0,0,.8),prop('ergoflex-trash-can',w/2-350,front-2600,0,0,.8));
+            l.props.push(prop('ergoflex-small-bookshelf',w/2-2600,bz+300),prop('ergoflex-plant-2',w/2-350,front-370));
+            if(l.index>=3){
+                // Screening & critique lounge between the last row and the critique table.
+                const lz=front-(l.index===3?4600:6000);
+                l.media.lounge={at:[w*.22,lz],display:[w*.22,front-(l.index===3?2600:3800)]};
+                l.props.push(prop('ergoflex-couch',w*.22,lz),prop('ergoflex-designer-chair',w*.22-1500,lz+500,0,25,.8),prop('ergoflex-designer-chair',w*.22+1500,lz+500,0,-25,.8));
+            }
         }
     }
 };
@@ -53,7 +79,20 @@ export function stations(_id,l){
     });
 }
 export const finish = spec => ({name:spec.name+' · acoustic carpet, navy felt & silver metal',ground:'#626c7c',wood:.58,metal:.3,stone:.58,night:.92,partyDay:true});
-export const floor = (_spec,w,d) => institutionalFloor('carpet',w,d);
+export const floor = (_spec,w,d) => {
+    const map=institutionalMap((c,W,H)=>{
+        for(let row=0;row<2;row++)for(let col=0;col<2;col++){
+            c.fillStyle=['#4d5560','#4a525d','#50585f','#4b535c'][row*2+col];c.fillRect(col*256,row*256,256,256);
+            c.strokeStyle='#c1cbd20c';c.lineWidth=1;
+            for(let n=0;n<85;n++){c.beginPath();const p=n*3;if((row+col)%2){c.moveTo(col*256,row*256+p);c.lineTo(col*256+256,row*256+p);}else{c.moveTo(col*256+p,row*256);c.lineTo(col*256+p,row*256+256);}c.stroke();}
+        }
+        for(let n=0;n<20000;n++){c.fillStyle=n%2?'#7d879426':'#2f353d30';c.fillRect(rnd(n)*W,rnd(n+77)*H,2,4);}
+        c.strokeStyle='#2b313822';c.lineWidth=2;c.strokeRect(0,0,W,H);
+    },512,512);
+    map.wrapS=map.wrapT=THREE.RepeatWrapping;map.repeat.set(w/1000,d/1000);map.anisotropy=4;
+    return {map,roughness:.95,surface:'fabric'};
+};
+const rnd=n=>{const f=Math.sin(n*127.1+311.7)*43758.5453;return f-Math.floor(f);};
 export const options = () => ({trimColor:'#b6c1cd',acousticName:'Navy acoustic absorption panels',signLabel:'OCC · FILM / SOUND / DIGITAL ART',rugColor:null,planter:false,
     boardOnSideWall:true,boardName:'Production storyboard & review board',boardFooter:'#dce5ed',storage:{height:1800,open:false},nightBackground:.6});
 
@@ -103,8 +142,12 @@ function logo(parent,name,size,at,rotation=0){
     const {map,ready}=logoMap(name),m=new THREE.MeshStandardMaterial({map,transparent:true,roughness:.8,depthWrite:false,side:THREE.DoubleSide});m.userData.sharedTextures=true;
     const p=new THREE.Mesh(new THREE.PlaneGeometry(...size),m);p.position.set(...at);p.rotation.y=rotation;p.castShadow=false;parent.add(p);return ready;
 }
+// Media content stays true to colour: a white emissive tint, levels per phase.
+function screenMaterial(kit,variant=0){
+    const m=kit.canvasMat((c,W,H)=>drawScreen(c,W,H,kit.spec,variant));m.emissive.set('#ffffff');m.emissiveMap=m.map;m.emissiveIntensity=.16;m.userData.screenVariant=variant;kit.screenMats.push(m);return m;
+}
 function screen(kit,parent,size,at,variant=0){
-    const m=kit.canvasMat((c,W,H)=>drawScreen(c,W,H,kit.spec,variant));m.emissive.set('#a1b4ce');m.emissiveMap=m.map;m.emissiveIntensity=.16;m.userData.screenVariant=variant;kit.screenMats.push(m);
+    const m=screenMaterial(kit,variant);
     kit.box(parent,[size[0]+40,size[1]+40,55],at,kit.ink,8);return kit.mesh(parent,new THREE.PlaneGeometry(...size),m,[at[0],at[1],at[2]+29]);
 }
 function panel(kit,parent,size,at,color=NAVY){return kit.box(parent,size,at,kit.mat(color,'fabric'),8);}
@@ -123,44 +166,70 @@ function tripod(k,x,y,z,height=1400){
 
 export function furnish(kit){
     const {layout:l,asset,box,mat,byId,label}=kit,w=kit.w,bz=kit.bz,front=kit.front;
+    kit.room.decorateProp=(object,placement)=>{
+        if(placement.id!=='ergoflex-couch')return;const copies=new Map();
+        object.traverse(o=>{if(!o.isMesh)return;const swap=m=>{if(!/upholstery/i.test(m?.name||''))return m;if(!copies.has(m)){const c=m.clone();c.color.set('#2f3a48');c.userData.roomPaletteLocked=true;kit.room.ownedMaterials?.add(c);copies.set(m,c);}return copies.get(m);};o.material=Array.isArray(o.material)?o.material.map(swap):swap(o.material);});
+    };
     const print=kit.cabinet('print-scan',[-w/2+820,0,bz+360],1300,900,false);print.name='Print & scan counter';
-    const k=detailKit();k.box([550,290,360],[-110,1045,0],'#d3d9dc');k.box([460,40,200],[-110,1210,-50],INK);k.box([370,15,250],[-110,920,150],INK);k.box([300,2,280],[-110,933,185],WHITE);
-    k.box([360,70,270],[400,936,-10],INK);k.box([290,4,230],[400,974,-10],'#b7c8cd');books(k,-540,900,-30,3);k.build(print,kit.dress||mat('#ffffff','powder',{vertexColors:true}));label(print,'PRINT / SCAN',[950,110],[0,640,228],NAVY);
+    // The supplied printer and paper tray sit on the counter and move with it.
+    const k=detailKit();books(k,-540,900,-30,3);
+    for(const [id,x,z] of [['ergoflex-printer',-w/2+710,bz+360],['ergoflex-paper-tray',-w/2+1230,bz+350]])kit.room.propSupports.push({obj:print,id,at:[x,900,z]});k.build(print,kit.dress||mat('#ffffff','powder',{vertexColors:true}));label(print,'PRINT / SCAN',[950,110],[0,640,228],NAVY);
+    if(l.index>=2){
+        const lfp=asset('large-format-printer','Large-format poster printer',[-w/2+2350,0,bz+420]),pk=detailKit();
+        pk.box([1600,330,520],[0,960,0],'#c9ced2');pk.box([1560,40,500],[0,1145,0],INK);pk.box([1500,120,180],[0,760,170],'#c9ced2');pk.add(new THREE.CylinderGeometry(55,55,1450,16),[0,740,240],WHITE,[1,1,1],[0,0,Math.PI/2]);
+        for(const x of [-720,720]){pk.box([60,760,60],[x,400,0],SILVER);pk.box([60,40,560],[x,20,0],SILVER);for(const z of [-250,250])pk.ball(28,[x,28,z],INK);}
+        pk.box([1300,8,420],[0,420,250],'#5b6672',[-.35,0,0]);pk.box([140,70,8],[560,1060,264],'#2f6fb0');pk.build(lfp,kit.dress||mat('#ffffff','powder',{vertexColors:true}));
+        label(lfp,'POSTER / LARGE FORMAT',[900,90],[0,1240,270],NAVY);
+    }
     const storage=byId('storage');if(storage){storage.name='Camera & equipment checkout';for(const o of storage.children)if(o.isMesh&&o.position.z>=210)o.visible=false;label(storage,'EQUIPMENT / CHECKOUT',[1120,130],[0,1660,231],NAVY);}
     const critique=byId('activity-table');critique.name='Storyboard & critique table';label(critique,'PLAN / REVIEW',[960,85],[0,680,333],NAVY);
-    for(let n=0;n<2+Math.min(l.index,2);n++)kit.chair('critique-chair-'+n,[l.activity[0]-450+n*360,0,l.activity[1]-880],450,0);
+    // Critique seating is supplied designer chairs around the table (layout props).
     // Large review display and flanking nearfields sit on the back wall.
-    const review=asset('reel-screen','Student reel screening display',[0,0,bz+92],kit.back);screen(kit,review,[Math.min(w*.36,3700),1450],[0,1780,0],3);
+    // A projection screen: white case, black masking border and the reel image.
+    const reelW=Math.min(w*.36,3700),review=asset('reel-screen','Student reel screening display',[0,0,bz+92],kit.back);
+    kit.box(review,[reelW+160,1450+160,40],[0,1780,-8],kit.mat('#eef0ee','powder'),6);kit.box(review,[reelW+60,1450+60,8],[0,1780,16],kit.mat('#111418','fabric'),2);
+    const reel=kit.mesh(review,new THREE.PlaneGeometry(reelW,1450),screenMaterial(kit,3),[0,1780,22]);reel.castShadow=false;kit.reelScreen=reel;
     for(const x of [-1,1]){
         const speaker=asset('review-speaker-'+x,'Wall review speaker',[x*(Math.min(w*.36,3700)/2+250),1730,bz+150],kit.back);box(speaker,[220,520,200],[0,0,0],kit.ink,12);
         for(const [y,r] of [[-75,68],[150,25]]){const cone=kit.mesh(speaker,new THREE.CylinderGeometry(r,r,8,24),kit.mat('#445366','rubber'),[0,y,104]);cone.rotation.x=Math.PI/2;}
     }
     // Capture set: cyclorama roll, camera tripod, two softboxes and floor tape.
-    const stage=asset('capture-stage','Capture stage · camera, backdrop & softboxes',[l.media.capture[0],0,l.media.capture[1]]);
-    stage.rotation.y=Math.PI;
-    box(stage,[2500,15,1600],[0,7.5,-60],mat('#344054','rubber'),14);
-    const roll=panel(kit,stage,[2350,2220,35],[0,1110,650],'#4c966d');
-    box(stage,[2450,32,45],[0,2250,650],kit.metal,6);
-    for(const x of [-1240,1240])box(stage,[30,2270,30],[x,1135,650],kit.ink,4);
-    const capture=detailKit();tripod(capture,0,0,-580,1380);camera(capture,0,1460,-580);capture.box([150,24,160],[0,1370,-580],INK);
-    for(const x of [-920,920]){tripod(capture,x,0,-450,1700);capture.box([38,330,25],[x,1870,-450],INK);}
-    for(const x of [-600,600])capture.box([420,3,28],[x,18,450],ORANGE);capture.build(stage,mat('#ffffff','powder',{vertexColors:true}));
+    // Green-screen practice: talent well off the backdrop, the camera 2+ m back.
+    const sg=l.media.stage,stage=asset('capture-stage','Capture stage · camera, backdrop & softboxes',[l.media.capture[0],0,l.media.capture[1]]);
+    stage.rotation.y=Math.PI;const back=sg.backdrop,cam=sg.camera,mid=(back+cam)/2;
+    box(stage,[sg.depth===3000?2800:2600,15,sg.depth],[0,7.5,mid],mat('#8d9196','stone'),14);
+    const chroma=kit.material('#1fa64a',{roughness:1,side:THREE.DoubleSide});chroma.userData.roomSurface='fabric';
+    const roll=box(stage,[2350,2220,35],[0,1130,back],chroma,4);
+    // Cove sweep and floor sheet so the key never shows a hard corner.
+    const cove=kit.mesh(stage,new THREE.CylinderGeometry(450,450,2350,16,1,true,Math.PI*1.5,Math.PI/2),chroma,[0,465,back-465]);cove.rotation.z=Math.PI/2;
+    box(stage,[2350,4,Math.max(700,back-cam-1700)],[0,17,back-465-Math.max(700,back-cam-1700)/2],chroma,2);
+    box(stage,[2450,32,45],[0,2260,back],kit.metal,6);
+    for(const x of [-1240,1240])box(stage,[30,2270,30],[x,1135,back],kit.ink,4);
+    const capture=detailKit();tripod(capture,0,0,cam,1380);capture.box([150,24,160],[0,1370,cam],INK);
+    const spread=sg.depth===3000?1300:1150,heads=[[-spread,back-650,1750,.8],[spread,back-650,1750,-.8],[-700,cam+500,1600,.6]];
+    for(const [x,z,hgt] of heads){tripod(capture,x,0,z,hgt);capture.box([38,330,25],[x,hgt+170,z],INK);for(let n=0;n<3;n++){const a=n*Math.PI*2/3;capture.ball(55,[x+Math.sin(a)*240,40,z+Math.cos(a)*240],'#2b2f33',[1,.35,.6]);}}
+    // Talent mark: an orange T between the camera and the backdrop.
+    capture.box([420,3,40],[0,18,back-sg.talent+250],ORANGE);capture.box([40,3,300],[0,18,back-sg.talent+380],ORANGE);
+    capture.build(stage,mat('#ffffff','powder',{vertexColors:true}));
+    kit.room.propSupports.push({obj:stage,id:'ergoflex-camera',at:[l.media.capture[0],1395,l.media.capture[1]-cam]},{obj:stage,id:'ergoflex-tall-office-chair',at:[l.media.capture[0],0,l.media.capture[1]-back+sg.talent]});
     kit.mediaDiffusers=[];
-    for(const x of [-920,920]){
-        const head=new THREE.Group();head.position.set(x,1850,-450);head.rotation.y=x<0?.45:-.45;stage.add(head);
-        box(head,[500,480,180],[0,0,-80],kit.ink,15);
-        const glow=kit.material('#f3f5ef',{emissive:'#e6efff',emissiveIntensity:.35,roughness:.75});box(head,[470,450,12],[0,0,18],glow,15);kit.mediaDiffusers.push(glow);
+    for(const [x,z,hgt,turn] of heads){
+        // Softbox: a black four-sided fabric frustum with a white diffuser face.
+        const head=new THREE.Group();head.position.set(x,hgt+150,z);head.rotation.y=turn;stage.add(head);
+        const box4=kit.mesh(head,new THREE.CylinderGeometry(120,340,400,4,1,false),kit.mat('#1b1e22','fabric'),[0,0,-150]);box4.rotation.set(-Math.PI/2,Math.PI/4,0);
+        const glow=kit.material('#f3f5ef',{emissive:'#e6efff',emissiveIntensity:.35,roughness:.75});kit.mesh(head,new THREE.PlaneGeometry(470,470),glow,[0,0,52]).castShadow=false;kit.mediaDiffusers.push(glow);
     }
-    kit.label(stage,'CAPTURE / LIGHT / ACTION',[1450,120],[0,220,720],NAVY);
+    kit.label(stage,'CAPTURE / LIGHT / ACTION',[1450,120],[0,220,back+70],NAVY);
     // Keep stage dressing within its fixture; camera cutaway affects ceilings only.
     roll.userData.mediaBackdrop=true;
-    const ceilingProjector=asset('ceiling-projector','Ceiling-mounted review projector',[0,kit.ceiling-370,bz+3300]);
+    const ceilingProjector=asset('ceiling-projector','Ceiling-mounted review projector',[0,kit.ceiling-370,bz+3300]);ceilingProjector.rotation.y=Math.PI;
     box(ceilingProjector,[380,170,320],[0,0,0],kit.trim,15);kit.mesh(ceilingProjector,new THREE.CylinderGeometry(45,45,12,24),kit.ink,[0,-15,-166]).rotation.x=Math.PI/2;
     box(ceilingProjector,[30,260,30],[0,190,0],kit.metal,4);ceilingProjector.userData.presentationOnly=true;kit.mediaCeiling=[ceilingProjector];
-    const labels=asset('lab-zone-markings','Media lab zone markings');labels.userData.presentationOnly=true;
-    for(const [name,at] of [['EDIT / CREATE',[l.desk[0],22,l.desk[1]+1750]],['SOUND / IMAGE',[w*.2,22,bz+5800]]]){
-        const p=label(labels,name,[1450,160],at,NAVY);p.rotation.x=-Math.PI/2;p.receiveShadow=true;
-    }
+    // Projector beam: an additive open frustum from the lens to the screen.
+    const lens=new THREE.Vector3(0,kit.ceiling-385,bz+3134),corners=[[-1,1],[1,1],[1,-1],[-1,-1]].map(([sx,sy])=>new THREE.Vector3(sx*reelW/2,1780+sy*725,bz+115));
+    const beam=new THREE.BufferGeometry().setFromPoints(corners.flatMap((c,n)=>[lens,c,corners[(n+1)%4]]));beam.setAttribute('color',new THREE.Float32BufferAttribute(corners.flatMap(()=>[1,1,1,.15,.15,.15,.15,.15,.15]),3));
+    const beamMat=new THREE.MeshBasicMaterial({color:'#000000',vertexColors:true,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+    const ray=new THREE.Mesh(beam,beamMat);ray.name='Projector beam';ray.raycast=()=>{};ray.castShadow=false;ray.frustumCulled=false;kit.root.add(ray);kit.mediaCeiling.push(ray);kit.mediaBeam=beamMat;
 }
 export function dressProp(id,k,_g,kit){
     if(id==='storage'){
@@ -168,9 +237,20 @@ export function dressProp(id,k,_g,kit){
         // Open upper doors read as a checkout cabinet, with labelled hard cases.
     }
 }
+// Student work varies: storyboard, type poster, animation cels, colour study, sound.
+function pinupMotif(c,x,y,w,h,n){
+    if(n===0){c.strokeStyle=INK;c.lineWidth=2;for(let r=0;r<3;r++)for(let k=0;k<2;k++){const fx=x+6+k*w/2,fy=y+6+r*h/3;c.strokeRect(fx,fy,w/2-12,h/3-16);c.beginPath();c.arc(fx+20+k*18,fy+h/6,8,0,Math.PI*2);c.moveTo(fx+28+k*18,fy+h/6);c.lineTo(fx+w/2-30,fy+h/3-24);c.stroke();}}
+    else if(n===1){c.fillStyle=ORANGE;c.fillRect(x,y,w,h);c.fillStyle=NAVY;c.font=`900 ${Math.round(w*.24)}px "DejaVu Sans", sans-serif`;c.fillText('FRAME',x+8,y+h*.42);c.fillText('BY',x+8,y+h*.66);c.fillText('FRAME',x+8,y+h*.9);}
+    else if(n===2){for(let k=0;k<4;k++){const cx=x+w*.2+k*w*.2,cy=y+h*(.55-k*.08);c.fillStyle=['#d9e6ef','#c6d8e6','#b3cadd','#a0bcd4'][k];c.fillRect(x+k*w*.06,y+k*h*.05,w*.8,h*.8);c.fillStyle=ORANGE;c.beginPath();c.arc(cx,cy,w*.08,0,Math.PI*2);c.fill();}}
+    else if(n===3){const cx=x+w/2,cy=y+h/2,r=Math.min(w,h)*.42;for(let a=0;a<24;a++){c.fillStyle=`hsl(${a*15},60%,55%)`;c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,r,a*Math.PI/12,(a+1.05)*Math.PI/12);c.fill();}}
+    else{c.fillStyle='#0d1a2a';c.fillRect(x,y,w,h);for(let row=0;row<3;row++){c.strokeStyle=['#80c0d1','#f3ad62','#91bb98'][row];c.lineWidth=2;c.beginPath();for(let k=0;k<60;k++)c.lineTo(x+k*w/60,y+h*(.25+row*.25)+Math.sin(k*.9+row)*Math.sin(k*.2)*h*.09);c.stroke();}}
+}
 function poster(kit,id,title,at,wall,index){
     const g=kit.asset(id,title,at,wall),m=kit.canvasMat((c,W,H)=>{
-        c.fillStyle=index%2?WHITE:NAVY;c.fillRect(0,0,W,H);coastFrame(c,20,55,W-40,H*.58,index);text(c,title.toUpperCase(),22,H-63,21,index%2?NAVY:WHITE);text(c,'OCC / FILM + MEDIA ARTS',22,H-24,12,index%2?NAVY:'#b6cde1');c.fillStyle=ORANGE;c.fillRect(20,20,W-40,9);
+        c.fillStyle=index%2?WHITE:NAVY;c.fillRect(0,0,W,H);
+        if(index%3===0){c.fillStyle=INK;c.fillRect(20,55,W-40,H*.58);for(let n=0;n<3;n++)coastFrame(c,52,78+n*H*.18,W-104,H*.15,n+1);c.fillStyle='#e8e2d6';for(let n=0;n<14;n++){c.fillRect(28,62+n*H*.04,14,16);c.fillRect(W-42,62+n*H*.04,14,16);}}
+        else if(index%3===1){const cx=W/2,cy=55+H*.29,r=H*.25;for(let a=0;a<36;a++){c.fillStyle=`hsl(${a*10},62%,55%)`;c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,r,a*Math.PI/18,(a+1.05)*Math.PI/18);c.fill();}const g=c.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'#ffffffee');g.addColorStop(1,'#ffffff00');c.fillStyle=g;c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.fill();}
+        else{c.fillStyle='#0d1a2a';c.fillRect(20,55,W-40,H*.58);for(let row=0;row<4;row++){c.strokeStyle=['#80c0d1','#f3ad62','#91bb98','#edf0ec'][row];c.lineWidth=2;c.beginPath();for(let n=0;n<120;n++){const v=Math.sin(n*.7+row*2)*Math.sin(n*.13+row)*Math.cos(n*.05);c.lineTo(30+n*(W-60)/120,95+row*H*.13+v*H*.05);}c.stroke();}}text(c,title.toUpperCase(),22,H-63,21,index%2?NAVY:WHITE);text(c,'OCC / FILM + MEDIA ARTS',22,H-24,12,index%2?NAVY:'#b6cde1');c.fillStyle=ORANGE;c.fillRect(20,20,W-40,9);
     },512,720);kit.box(g,[640,900,25],[0,0,-8],kit.ink,5);kit.mesh(g,new THREE.PlaneGeometry(610,865),m,[0,0,6]);return g;
 }
 export function decorate(kit){
@@ -180,6 +260,27 @@ export function decorate(kit){
     const pirate=kit.asset('occ-pirate','OCC Pirates media arts badge',[w/2-620,2450,bz+90],kit.back);ready.push(logo(pirate,'pirate',[540,540],[0,0,0]));
     const title=kit.asset('occ-wordmark','Orange Coast College wordmark',[-w/2+750,2440,bz+90],kit.back);kit.box(title,[740,550,28],[0,0,-17],kit.mat(NAVY,'powder'),8);ready.push(logo(title,'title',[660,490],[0,0,0]));
     kit.byId('wall-clock')?.position.set(-2350,2780,bz+65);
+    // Navy acoustic-fabric wainscot with an orange cap replaces the loud accent
+    // band; the right wall continues it either side of the door.
+    const fabric=kit.material('#ffffff',{roughness:.97,map:institutionalMap((c,W,H)=>{c.fillStyle='#0b2f5f';c.fillRect(0,0,W,H);for(let y=0;y<H;y+=3){c.fillStyle=y%6?'#ffffff07':'#00000012';c.fillRect(0,y,W,1);}for(let x=0;x<W;x+=3){c.fillStyle='#00000009';c.fillRect(x,0,1,H);}},256,256)});
+    fabric.map.wrapS=fabric.map.wrapT=THREE.RepeatWrapping;fabric.map.repeat.set(w/600,2);fabric.userData.roomSurface='fabric';
+    const band=kit.back.children.find(o=>o.isMesh&&o.material===kit.accent&&Math.abs(o.position.y-325)<1);
+    if(band){band.visible=false;}
+    const wk=new THREE.Group();wk.name='Navy acoustic wainscot';wk.userData.presentationOnly=true;kit.back.add(wk);
+    kit.box(wk,[w,1200,14],[0,600,bz+7],fabric,2);kit.box(wk,[w,40,24],[0,1220,bz+12],kit.mat(ORANGE,'powder'),3);
+    const rk=new THREE.Group();rk.name='Navy acoustic wainscot';rk.userData.presentationOnly=true;kit.right.add(rk);
+    const doorA=front-2140,doorB=front-1060;
+    for(const [z0,z1] of [[bz,doorA],[doorB,front]])if(z1-z0>50){const rf=fabric.clone();rf.map=fabric.map.clone();rf.map.repeat.set((z1-z0)/600,2);kit.box(rk,[14,1090,z1-z0],[w/2-25,655,(z0+z1)/2],rf,2);kit.box(rk,[24,40,z1-z0],[w/2-30,1220,(z0+z1)/2],kit.mat(ORANGE,'powder'),3);}
+    const lk=new THREE.Group();lk.name='Navy acoustic wainscot';lk.userData.presentationOnly=true;kit.left.add(lk);
+    const wc=bz+kit.d*.54,wo=kit.d*.48,cap=kit.mat(ORANGE,'powder');
+    for(const [z0,z1,top] of [[bz,wc-wo/2,1200],[wc-wo/2,wc+wo/2,790],[wc+wo/2,front,1200]]){
+        const lf=fabric.clone();lf.map=fabric.map.clone();lf.map.repeat.set((z1-z0)/600,2*top/1200);
+        kit.box(lk,[14,top,z1-z0],[-w/2+7,top/2,(z0+z1)/2],lf,2);kit.box(lk,[24,40,z1-z0],[-w/2+12,top+20,(z0+z1)/2],cap,3);
+    }
+    // Window blinds: partly down for editing, blackout for screening.
+    const slats=institutionalMap((c,W,H)=>{c.fillStyle='#d9dcd8';c.fillRect(0,0,W,H);for(let y=0;y<H;y+=16){c.fillStyle='#b9bdb8';c.fillRect(0,y,W,2);c.fillStyle='#eef0ec';c.fillRect(0,y+3,W,2);}},64,256);
+    slats.wrapT=THREE.RepeatWrapping;slats.repeat.set(1,6);
+    const blind=kit.mesh(kit.window,new THREE.PlaneGeometry(kit.d*.48,1750),kit.material('#ffffff',{map:slats,roughness:.8}),[0,0,12]);blind.castShadow=false;blind.name='Window blind';kit.mediaBlind=blind;
     kit.room.mediaArtReady=Promise.all(ready);
     // Left rear wall has no window opening: art boards and course work sit here.
     const frames=['Story / Screen','Light / Colour','Sound / Silence'];
@@ -190,24 +291,46 @@ export function decorate(kit){
         const ak=detailKit();for(let n=0;n<5;n++){ak.box([210,1050,45],[-560+n*280,0,0],n%2?'#7590a6':NAVY);ak.box([180,7,3],[-560+n*280,-465,24],ORANGE);}ak.build(acoustic,kit.dress);
     }
     const sound=kit.asset('sound-treatment','Sound corner acoustic diffuser',[-w/2+1900,1700,bz+70],kit.back);
-    const k=detailKit();for(let n=0;n<15;n++)k.box([55,880,45+(n%5)*25],[-490+n*70,0,0],n%3===0?ORANGE:'#8198aa');k.build(sound,kit.dress);
+    const k=detailKit();k.box([1080,900,30],[0,0,-10],'#8a6f50');for(let n=0;n<15;n++)k.box([55,880,45+(n%5)*25],[-490+n*70,0,0],n%2?'#b89a74':'#a3865f');k.build(sound,kit.dress);
     kit.label(sound,'LISTEN / MIX',[900,110],[0,590,40],NAVY);
     if(l.index>=1){
-        const pin=kit.asset('student-work-gallery','Student work pin-up wall',[w/2-55,2350,bz+1500],kit.right);pin.rotation.y=-Math.PI/2;
-        panel(kit,pin,[2400,1120,30],[0,0,0],'#a3a9aa');for(let n=0;n<5;n++){const card=kit.mesh(pin,new THREE.PlaneGeometry(400,660),kit.canvasMat((c,W,H)=>{c.fillStyle=WHITE;c.fillRect(0,0,W,H);coastFrame(c,16,32,W-32,H*.65,n);text(c,'STUDENT / '+String(n+1).padStart(2,'0'),16,H-30,18,NAVY);},256,384),[-920+n*460,0,22]);card.rotation.z=(n%2?1:-1)*.025;}
-        kit.label(pin,'STUDENT WORK / IN PROGRESS',[1800,100],[0,690,20],NAVY);
+        const pin=kit.asset('student-work-gallery','Student work pin-up wall',[w/2-55,1450,bz+1500],kit.right);kit.mediaGallery=pin;pin.rotation.y=-Math.PI/2;
+        panel(kit,pin,[2400,1120,30],[0,0,0],'#a3a9aa');for(let n=0;n<5;n++){const card=kit.mesh(pin,new THREE.PlaneGeometry(400,660),kit.canvasMat((c,W,H)=>{c.fillStyle=WHITE;c.fillRect(0,0,W,H);pinupMotif(c,16,32,W-32,H*.65,n);text(c,'STUDENT / '+String(n+1).padStart(2,'0'),16,H-30,18,NAVY);},256,384),[-920+n*460,0,22]);card.rotation.z=(n%2?1:-1)*.025;}
+        kit.label(pin,'STUDENT WORK / IN PROGRESS',[1800,100],[0,640,20],NAVY);
         const booth=kit.asset('voice-foley-booth','Voice & Foley recording corner',[w/2-1050,0,front-3500]),bk=detailKit();
         for(const x of [-610,610]){bk.box([65,1960,850],[x,980,0],NAVY);bk.box([480,45,80],[x,42,0],SILVER);for(const z of [-340,340])bk.ball(28,[x,28,z],INK);}
         bk.box([1220,1600,60],[0,1140,-400],'#536a80');for(let n=0;n<10;n++)bk.box([70,1250,35],[-535+n*120,1100,-358],n%2?NAVY:'#849aac');
-        bk.cyl(150,155,25,[0,13,120],INK);bk.cyl(12,15,1280,[0,655,120],SILVER);bk.box([85,150,70],[0,1430,120],INK);bk.build(booth,kit.dress);
-        const pop=kit.mesh(booth,new THREE.CircleGeometry(70,24),kit.mat('#202b35','fabric'),[0,1430,245]);pop.material.side=THREE.DoubleSide;
+        bk.box([1285,40,900],[0,1980,0],NAVY);
+        // Studio condenser in a shock mount on a boom stand.
+        bk.cyl(150,155,25,[0,13,120],INK);bk.cyl(12,15,1280,[0,655,120],SILVER);bk.box([20,20,260],[0,1300,40],SILVER);
+        bk.add(new THREE.CylinderGeometry(22,22,140,16),[0,1350,-90],'#c9cfd4');bk.add(new THREE.TorusGeometry(48,5,6,20),[0,1350,-90],INK,[1,1,1],[Math.PI/2,0,0]);
+        bk.build(booth,kit.dress);
+        const onAir=kit.material('#e0352b',{emissive:'#ff3b2e',emissiveIntensity:.15,roughness:.4});kit.box(booth,[440,130,60],[0,2070,380],onAir,8);kit.mediaOnAir=onAir;
+        kit.label(booth,'ON AIR',[360,90],[0,2070,412],'#e0352b');
+        const pop=kit.mesh(booth,new THREE.CircleGeometry(70,24),kit.mat('#202b35','fabric'),[0,1350,10]);pop.material.side=THREE.DoubleSide;
         kit.label(booth,'VOICE / FOLEY',[940,110],[0,1880,-359],NAVY);
     }
-    const greenery=kit.asset('media-planter','Media lab planter',[w/2-350,0,front-370]);const pk=detailKit();plant(pk,0,0,0,.95);pk.build(greenery,kit.dress);
+    if(l.media.lounge){
+        // Rolling 75-inch review display facing the screening lounge.
+        const [dx,dz]=l.media.lounge.display,display=kit.asset('mobile-review-display','Rolling review display',[dx,0,dz]);display.rotation.y=Math.PI;
+        const dk=detailKit();dk.box([760,40,560],[0,60,0],INK);for(const x of [-330,330])for(const z of [-230,230])dk.ball(30,[x,30,z],INK);dk.box([90,1300,70],[0,700,0],SILVER);dk.build(display,kit.dress);
+        screen(kit,display,[1660,940],[0,1450,40],1);
+    }
+    pools(kit);
+}
+// Additive pools for the screen, desk columns and the work wall; no lights.
+function pools(kit){
+    const {w,bz,layout:l}=kit,layer=createPoolLayer(kit.root,'Media lab light pools');kit.mediaPools=layer;
+    layer.add(kit.root,[0,4,bz+1400],[4400,2600],'#6f93c8',[.05,.04,.1,.36,.18]);
+    const columns=l.index===0?2:l.index<3?3:4,xs=columns===2?[-w/2+1800,w/2-2100]:Array.from({length:columns},(_,n)=>-w/2+1800+n*(w-3600)/(columns-1));
+    // Only occupied workstation slots get a task-light pool.
+    for(let n=0;n<COUNTS[l.index];n++)layer.add(kit.root,[xs[n%columns],3,bz+2400+Math.floor(n/columns)*4000+300],[1900,1500],'#eef3fb',[.04,.04,.14,.1,.18]);
+    if(kit.mediaGallery)layer.add(kit.mediaGallery,[0,100,40],[2800,1700],'#ffd6a2',[.03,.03,.05,.04,.6],'back');
+    const critique=kit.byId('activity-table');if(critique)layer.add(critique,[0,4,0],[2400,1600],'#ffd9a8',[0,0,.05,.04,.35]);
 }
 export function finishDecor(kit){
     const media=kit.byId('print-scan'),g=kit.asset('media-reference','Colour proof & reference swatches',[0,0,0],media),k=detailKit();
-    for(let n=0;n<12;n++)k.box([23,3,35],[-570+n*24,908,135],['#f4efe5','#6a8eaa','#c56b50','#91ab91','#334c72','#edac57'][n%6]);k.build(g,kit.dress);
+    for(let n=0;n<12;n++)k.box([23,3,35],[140+n*24,908,205],['#f4efe5','#6a8eaa','#c56b50','#91ab91','#334c72','#edac57'][n%6]);k.build(g,kit.dress);
 }
 export function activityMaterials(k,phase,y){
     // Storyboard pages and a clapper slate, instead of generic social snacks.
@@ -218,8 +341,21 @@ export function activityMaterials(k,phase,y){
     for(let n=0;n<5;n++)k.box([18,25,16],[-580+n*40,y+144,30],INK,[0,0,.35]);
     notebook(k,350,y,-160,NAVY);k.box([90,25,60],[530,y+12,-160],INK);
 }
-export function atmosphere(phase,_gain,kit){
+export function atmosphere(phase,gain,kit){
     for(const m of kit.mediaDiffusers||[])m.emissiveIntensity=phase==='afternoon'?.85:phase==='night'?.12:phase==='party'?.55:.3;
+    const p=phaseIndex(phase);
+    for(const m of kit.screenMats)if(m.userData.screenVariant===3)m.emissiveIntensity=[.3,.3,.45,1,.85][p];
+    // Screening and showcase: room light 1 becomes the screen's spill.
+    const spill=kit.lights?.[1];if(spill){
+        spill.userData.authored??={at:spill.position.clone()};
+        if(phase==='night'||phase==='party'){spill.position.set(0,1500,kit.bz+1600);spill.color.set(phase==='night'?'#8fb3e0':'#ffd6aa');spill.intensity=(kit.root.scale.x*1000)**2*(phase==='night'?3.5:2.2)*gain;}
+        else spill.position.copy(spill.userData.authored.at);
+    }
+    if(p===2||p===4){const c=kit.sky.map.image.getContext('2d'),W=c.canvas.width,H=c.canvas.height;c.save();c.globalCompositeOperation='multiply';c.globalAlpha=p===2?.55:.35;c.fillStyle=p===2?'#5a6478':'#c9a27a';c.fillRect(0,0,W,H);c.restore();kit.sky.map.needsUpdate=true;}
+    if(kit.mediaBlind){const drop=[.15,.35,.75,1,.85][p],b=kit.mediaBlind;b.scale.y=drop;b.position.y=875*(1-drop);b.material.map.repeat.y=6*drop;}
+    if(kit.mediaBeam)kit.mediaBeam.color.setScalar([0,0,0,.09,.05][p]);
+    if(kit.mediaOnAir)kit.mediaOnAir.emissiveIntensity=[.15,.15,.8,.8,.3][p];
+    kit.mediaPools?.apply(p,gain);
     if(kit.room.ceilingFixture)for(const g of kit.mediaCeiling||[])if(g.parent!==kit.room.ceilingFixture)kit.room.ceilingFixture.attach(g);
     kit.root.userData.mediaLab={concept:true,phase,deskCount:COUNTS[kit.layout.index],zones:['Editing','Digital art','Audio post','Capture','Print & scan','Critique','Equipment checkout']};
 }
