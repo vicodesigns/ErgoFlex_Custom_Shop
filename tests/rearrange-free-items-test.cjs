@@ -7,7 +7,8 @@ const canvas=document.querySelector('canvas'),scene=new T.Scene(),root=new T.Gro
 const camera=new T.OrthographicCamera(-3000,3000,2250,-2250,1,10000);camera.position.set(0,5000,0);camera.up.set(0,0,-1);camera.lookAt(0,0,0);camera.updateMatrixWorld(true);
 const item=new T.Mesh(new T.BoxGeometry(100,100,100),new T.MeshBasicMaterial());item.position.set(-500,50,0);root.add(item);
 const blocker=new T.Mesh(new T.BoxGeometry(200,200,200),new T.MeshBasicMaterial());blocker.position.set(0,100,0);root.add(blocker);root.updateMatrixWorld(true);
-const room={root,floorBounds:new T.Box3(new T.Vector3(-1500,0,-1500),new T.Vector3(1500,3000,1500))};
+item.name='Chair';blocker.name='Cabinet';
+const room={root,walls:[],assets:()=>[item,blocker],registerInteractionAsset:()=>{},floorBounds:new T.Box3(new T.Vector3(-1500,0,-1500),new T.Vector3(1500,3000,1500))};
 let edits=0;const r=new RoomInteractions({canvas,camera,controls:{enabled:true},scene,room:()=>room,deskBox:()=>new T.Box3(new T.Vector3(-180,0,-180),new T.Vector3(180,500,180)),enabled:()=>document.querySelector('#editing').checked,onEditEnd:()=>edits++});
 r.root=root;r.entries=[{id:'item',obj:item,objects:[item],name:'Chair',surface:'floor',collider:true,movable:true,pushable:true},{id:'blocker',obj:blocker,objects:[blocker],name:'Cabinet',surface:'floor',collider:true,movable:true,pushable:false}];
 window.fixture={r,item,blocker,T,edits:()=>edits,point:x=>{const p=new T.Vector3(x,100,0).project(camera),b=canvas.getBoundingClientRect();return{x:b.left+(p.x+1)*b.width/2,y:b.top+(1-p.y)*b.height/2}}};

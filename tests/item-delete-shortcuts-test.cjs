@@ -25,6 +25,35 @@ const server=http.createServer((req,res)=>{const file=path.join(root,new URL(req
   await p.evaluate(()=>{document.querySelector('[data-object-select]').focus();});await p.keyboard.press('Delete');assert.equal(await p.evaluate(()=>ErgoFlex.sceneDesks.active.state.objects['default-library-iphone'].removed),true,'Object picker accepts Delete');await shortcut(false);
   await p.evaluate(async()=>{const e=ErgoFlex;document.activeElement.blur();e.setRoomScene('product',false);await e.workspaceRoom.ready;await e.workspaceAccessories.ready;await e.sceneDesks.objects.ready;if(!e.currentConfig.accessories.includes('ergo-keyboard'))e.toggleAccessory('ergo-keyboard');await e.workspaceAccessories.ready;e.sceneDesks.objects.syncAccessories();e.sceneDesks.objects.setEditing(true);e.sceneDesks.objects.select('accessory-ergo-keyboard');});
   await p.keyboard.press('Delete');assert.equal(await p.evaluate(()=>ErgoFlex.currentConfig.accessories.includes('ergo-keyboard')),false);await shortcut(false);assert.equal(await p.evaluate(()=>ErgoFlex.currentConfig.accessories.includes('ergo-keyboard')),true,'Product keyboard restores its purchase option');
-  assert.deepEqual(errors,[]);console.log('PASS Delete/Ctrl+Z: linked scene furniture, default iPhone, added model, purchased peripheral, Product purchase option, selection ownership, redo and typing guard.');
+  const productDrop=await p.evaluate(async()=>{
+   const e=ErgoFlex,m=e.sceneDesks,id=await m.objects.add('ergoflex-notebook','desktop');m.objects.change({y:500});document.activeElement.blur();
+   const T=await import('three'),o=m.active.objects.get(id).obj;o.updateWorldMatrix(true,false);
+   return{id,transform:JSON.stringify(m.active.objects.get(id).saved.transform),center:new T.Box3().setFromObject(o).getCenter(new T.Vector3()).toArray(),undo:e.undoCount2};
+  });await p.keyboard.press('ArrowDown');
+  const landedProduct=await p.evaluate(async id=>{const T=await import('three'),e=ErgoFlex,o=e.sceneDesks.active.objects.get(id).obj;return{center:new T.Box3().setFromObject(o).getCenter(new T.Vector3()).toArray(),undo:e.undoCount2};},productDrop.id);
+  assert.ok(landedProduct.center[1]<productDrop.center[1]-.001,'Product item lowers to a real surface');assert.ok(Math.abs(landedProduct.center[0]-productDrop.center[0])<1e-5&&Math.abs(landedProduct.center[2]-productDrop.center[2])<1e-5,'Vertical drop preserves horizontal placement through the transformed CAD mount');assert.equal(landedProduct.undo,productDrop.undo+1);
+  await shortcut(false);assert.equal(await p.evaluate(id=>JSON.stringify(ErgoFlex.sceneDesks.active.objects.get(id).saved.transform),productDrop.id),productDrop.transform,'Product drop supports Ctrl+Z');
+  await p.evaluate(async()=>{const e=ErgoFlex;e.setRoomScene('library',false);await e.workspaceRoom.ready;e.setLibraryLayout('spacious');await e.workspaceRoom.ready;await e.sceneDesks.objects.ready;document.querySelector('#room-rearrange-toggle').checked||document.querySelector('#room-rearrange-toggle').click();});await ready();
+  const carrel=await p.evaluate(()=>{
+   const e=ErgoFlex,r=e.roomInteractions,c=r.entries.find(e=>e.obj.userData.propId==='carrel-0');
+   if(!c)throw Error('Window carrel is not editable');
+   const book=c.objects.find(o=>o.userData.propId==='journal'),entry=r.entries.find(e=>e.obj===book);
+   if(!book||!entry||entry.surface!=='tabletop')throw Error('Carrel book lacks independent selection');
+   const mesh=book.getObjectByProperty('isMesh',true);if(r.entryForHit(mesh)!==entry)throw Error('Clicking a book selects its whole desk');
+   document.activeElement.blur();r.select(entry);window.bookToDrop=book;
+   r.moveObject(book,0,0,e.workspaceRoom.root.scale.x*400);r.rebindSelected();
+   return{high:new window.ErgoFlex.roomInteractions.highlight.box.constructor().setFromObject(book).min.y,level:book.position.y};
+  });await p.keyboard.press('ArrowDown');
+  const dropped=await p.evaluate(async()=>{const T=await import('three'),e=ErgoFlex,c=e.workspaceRoom.assets().find(o=>o.userData.propId==='carrel-0'),top=c.localToWorld(new T.Vector3(0,740,0)).y;return{bottom:new T.Box3().setFromObject(bookToDrop).min.y,top,y:bookToDrop.position.y};});
+  assert.ok(Math.abs(dropped.bottom-dropped.top)<1e-5,'Down Arrow lands the book on the real carrel tabletop');assert.ok(dropped.y<carrel.level);
+  await shortcut(false);assert.ok(Math.abs(await p.evaluate(()=>bookToDrop.position.y)-carrel.level)<1e-5,'Ctrl+Z undoes surface placement');
+  await p.keyboard.press('ArrowDown');
+  await p.evaluate(()=>{const r=ErgoFlex.roomInteractions;r.select(r.entries.find(e=>e.obj===bookToDrop));document.activeElement.blur();});await p.keyboard.press('Delete');assert.equal(await p.evaluate(()=>!!bookToDrop.parent),false,'Book deletes independently');await shortcut(false);
+  const linked=await p.evaluate(()=>{const r=ErgoFlex.roomInteractions,c=r.entries.find(e=>e.obj.userData.propId==='carrel-0');r.select(c);document.activeElement.blur();window.carrelDeleted=c.objects.map(obj=>({obj,parent:obj.parent}));return c.objects.length;});assert.ok(linked>=2);
+  await p.keyboard.press('Delete');assert.equal(await p.evaluate(()=>carrelDeleted.every(i=>!i.obj.parent)),true,'Carrel deletion includes its books');await shortcut(false);assert.equal(await p.evaluate(()=>carrelDeleted.every(i=>i.obj.parent===i.parent)),true,'Undo restores carrel and books');
+  await p.evaluate(()=>{ErgoFlex.roomInteractions.select(ErgoFlex.roomInteractions.entries.find(e=>e.obj.userData.propId==='carrel-0'));document.activeElement.blur();});await p.keyboard.press('Delete');await p.reload({timeout:180000});await p.waitForFunction(()=>window.ErgoFlex?.sceneDesks&&getComputedStyle(document.querySelector('#loader')).display==='none',{timeout:180000});await ready();
+  assert.equal(await p.evaluate(()=>ErgoFlex.workspaceRoom.assets().some(o=>o.userData.propId==='carrel-0')),false,'Removed carrel stays removed after reload');
+  assert.equal(await p.evaluate(()=>ErgoFlex.roomInteractions.entries.some(e=>e.obj.userData.propId==='carrel-1')),true,'The other carrel remains editable');
+  assert.deepEqual(errors,[]);console.log('PASS Delete/Ctrl+Z/Down Arrow: editable window carrels and separate books, surface placement and undo, persistent deletion, linked scene furniture, default iPhone, added model, purchased peripheral, Product purchase option, selection ownership, redo and typing guard.');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});

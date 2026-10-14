@@ -50,7 +50,8 @@
     "test:environment-detail": "node tests/environment-detail-test.cjs",
     "test:prop-scale": "node tests/prop-scale-test.mjs",
     "test:library-product-build": "node tests/library-product-build-test.mjs && node tests/library-product-artwork-test.cjs",
-    "test:free-items": "node tests/rearrange-free-items-test.cjs"
+    "test:free-items": "node tests/rearrange-free-items-test.cjs",
+    "test:item-surface-drop": "node tests/item-surface-drop-test.cjs && node tests/item-delete-shortcuts-test.cjs"
   },
   "repository": {
     "type": "git",

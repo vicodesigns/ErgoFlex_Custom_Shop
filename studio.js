@@ -5,7 +5,7 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=environment-detail-scale-20261013';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=library-floorplan-20261013';
 import { poseIsClear } from './room-groove.mjs?v=library-humboldt-20261013';
-import { SceneDesks } from './scene-desks.mjs?v=library-humboldt-20261013';
+import { SceneDesks } from './scene-desks.mjs?v=item-surface-drop-20261013';
 import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=library-humboldt-20261013';
 import { notebookTransform } from './notebook-transform.mjs';
 import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artwork-size-isolation-20261012';
@@ -17,7 +17,7 @@ import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacle
 import { RoomGroove } from './room-groove-runtime.mjs?v=library-humboldt-20261013';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=library-build-free-items-20261013';
+import { RoomInteractions } from './room-interactions.mjs?v=item-surface-drop-20261013';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=library-humboldt-20261013';
@@ -25,7 +25,7 @@ import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle
 import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
 import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=library-build-free-items-20261013';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
-import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-floorplan-20261013';
+import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=item-surface-drop-20261013';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
 import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
@@ -51,7 +51,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=scene-screen-themes-20261013-final';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=library-floorplan-20261013';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=item-surface-drop-20261013';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=library-humboldt-20261013';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
@@ -1433,7 +1433,7 @@ function initThreeJS() {
             const toolbar=document.getElementById('room-object-controls');if(!toolbar)return;
             toolbar.hidden=!entry;
             toolbar.querySelector('[data-room-object-name]').textContent=entry?.name||'';
-            toolbar.querySelectorAll('[data-room-object-turn]').forEach(button=>button.hidden=entry?.surface!=='floor');
+            toolbar.querySelectorAll('[data-room-object-turn]').forEach(button=>button.hidden=entry?.surface==='wall');
         },
         onStatus:notifyUser,onChange:()=>{
             if(roomGroove?.prepared)roomGroove.reset();
@@ -6311,6 +6311,8 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelMarquee();
         } else if (!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='Delete'||e.key==='Backspace')) {
             if(deleteSelectedWorkspaceItem())e.preventDefault();
+        } else if (!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key==='ArrowDown') {
+            if(sceneDesks?.objects.dropToSurface()||roomInteractions?.dropSelected())e.preventDefault();
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
             e.preventDefault();
             if (e.shiftKey) performRedo(); else performUndo();
@@ -11523,8 +11525,10 @@ function initStudio() {
     const roomCaption = document.createElement('p'); roomCaption.id = 'room-scene-caption'; roomCaption.setAttribute('aria-live', 'polite');
     const interactionHint=document.createElement('p');interactionHint.id='room-interaction-hint';interactionHint.className='studio-note';interactionHint.hidden=true;
     const objectControls=document.createElement('div');objectControls.id='room-object-controls';objectControls.className='room-object-controls';objectControls.hidden=true;
-    objectControls.innerHTML='<span data-room-object-name role="status"></span><button type="button" data-room-object-turn="-15" aria-label="Rotate selected furnishing left 15 degrees">↶ Rotate left</button><button type="button" data-room-object-turn="15" aria-label="Rotate selected furnishing right 15 degrees">Rotate right ↷</button><button type="button" data-room-object-done>Done</button>';
+    objectControls.innerHTML='<span data-room-object-name role="status"></span><button type="button" data-room-object-turn="-15" aria-label="Rotate selected furnishing left 15 degrees">↶ Rotate left</button><button type="button" data-room-object-turn="15" aria-label="Rotate selected furnishing right 15 degrees">Rotate right ↷</button><button type="button" data-room-object-drop title="Down Arrow">↓ Drop to surface</button><button type="button" data-room-object-delete title="Delete">Delete</button><button type="button" data-room-object-done>Done</button>';
     objectControls.querySelectorAll('[data-room-object-turn]').forEach(button=>button.onclick=()=>roomInteractions?.rotateSelected(Number(button.dataset.roomObjectTurn)));
+    objectControls.querySelector('[data-room-object-drop]').onclick=()=>roomInteractions?.dropSelected();
+    objectControls.querySelector('[data-room-object-delete]').onclick=deleteSelectedWorkspaceItem;
     objectControls.querySelector('[data-room-object-done]').onclick=()=>roomInteractions?.select(null);
     const roomControls = MEASURED_ROOM_IDS.map(id => {
         const profile = measuredRoomProfile(id), prefix = profile.prefix;

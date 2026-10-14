@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { surfaceDrop } from './item-surface-drop.mjs';
 import { RoomGrounding } from './room-polish.mjs?v=environment-detail-scale-20261013';
 import { solveFloorMove, overlapArea } from './room-collision.mjs?v=room-regressions-20261007';
 
@@ -30,8 +31,8 @@ export class RoomInteractions {
         // Procedural decorations keep their entire frame/board as one object.
         for(const wall of room.walls)for(const obj of wall.obj.children)if(obj.isGroup)candidates.add(obj);
         for(const obj of candidates){
-            if(obj.userData.sceneDeskId||obj.userData.presentationOnly||wallRoots.has(obj)||obj===room.ceilingFixture||obj.isLight||obj.userData.grooveMarker||architecture.test(obj.name))continue;
-            if([...candidates].some(parent=>parent!==obj&&!wallRoots.has(parent)&&descendant(obj,parent)))continue;
+            if(obj.userData.sceneDeskId||obj.userData.presentationOnly||wallRoots.has(obj)||obj===room.ceilingFixture||obj.isLight||obj.userData.grooveMarker||architecture.test(obj.name)&&!obj.userData.editableRoomItem)continue;
+            if([...candidates].some(parent=>parent!==obj&&!wallRoots.has(parent)&&descendant(obj,parent)&&!(obj.userData.sceneAsset&&parent.userData.sceneAsset)))continue;
             const b=new THREE.Box3().setFromObject(obj),size=b.getSize(new THREE.Vector3());
             if(b.isEmpty()||Math.max(size.x,size.z)<scale*50)continue;
             const attached=room.walls.find(w=>descendant(obj,w.obj)),name=(obj.userData.propId||'')+' '+obj.name;
@@ -44,6 +45,7 @@ export class RoomInteractions {
             if(wall&&obj.userData.propAnchor==='wall')surface='wall';
             else if(b.min.y>=-scale*5&&b.min.y<=scale*120&&b.max.y>scale*.5)surface='floor';
             else if(wall)surface='wall';
+            else if(obj.userData.sceneAsset)surface='tabletop';
             else continue;
             // The floor slab and architectural overlays are not furnishings.
             if(surface==='floor'&&size.x>floor.max.x-floor.min.x-scale*50&&size.z>floor.max.z-floor.min.z-scale*50)continue;
@@ -52,7 +54,7 @@ export class RoomInteractions {
             const pushable=surface==='floor'&&!flat&&portable.test(name)&&Math.max(size.x,size.z)<scale*1300;
             const entry={id:obj.uuid,obj,movable:true,pushable,collider:surface==='floor'&&!flat,surface,wall,
                 name:obj.userData.sceneAssetName||obj.userData.propId||obj.name||(flat?'Floor rug':'Room furnishing'),objects:[obj]};
-            this.entries.push(entry);obj.userData.propAnchor=surface;obj.userData.floorInteraction=surface==='wall'?'wall':pushable?'pushable':'placeable';
+            this.entries.push(entry);obj.userData.propAnchor=surface;obj.userData.floorInteraction=surface==='wall'?'wall':surface==='tabletop'?'tabletop':pushable?'pushable':'placeable';
         }
         // Keep table dressing, equipment and activity kits with their support.
         for(const entry of this.entries.filter(e=>e.surface==='floor'&&e.collider)){
@@ -60,9 +62,10 @@ export class RoomInteractions {
             if(life&&['table','piano','training'].includes(life.role))entry.objects.push(...life.objects);
             const b=new THREE.Box3().setFromObject(entry.obj);
             for(const obj of this.root.children){
-                if(this.entries.some(e=>e.obj===obj)||wallRoots.has(obj)||obj.isLight||obj===room.ceilingFixture)continue;
+                if(this.entries.some(e=>e.obj===obj&&e.surface!=='tabletop')||wallRoots.has(obj)||obj.isLight||obj===room.ceilingFixture)continue;
                 const childBox=new THREE.Box3().setFromObject(obj),c=childBox.getCenter(new THREE.Vector3());
-                if(!childBox.isEmpty()&&childBox.min.y>=b.max.y-scale*45&&childBox.min.y<=b.max.y+scale*45&&c.x>=b.min.x&&c.x<=b.max.x&&c.z>=b.min.z&&c.z<=b.max.z)entry.objects.push(obj);
+                const levels=entry.obj.userData.roomSupportHeights?.map(y=>new THREE.Vector3(0,y,0).applyMatrix4(entry.obj.matrixWorld).y)||[b.max.y];
+                if(!childBox.isEmpty()&&levels.some(y=>Math.abs(childBox.min.y-y)<=scale*45)&&c.x>=b.min.x&&c.x<=b.max.x&&c.z>=b.min.z&&c.z<=b.max.z)entry.objects.push(obj);
             }
             entry.objects=[...new Set(entry.objects)].filter(obj=>!entry.objects.some(parent=>parent!==obj&&descendant(obj,parent)));
         }
@@ -110,7 +113,7 @@ export class RoomInteractions {
         return !this.obstacles().some(o=>overlapArea(floorBox(after),o.box)>Math.max(1e-10,overlapArea(floorBox(before),o.box)+1e-10));
     }
     rotateSelected(degrees) {
-        const entry=this.selected,room=this.room();if(!entry||entry.surface!=='floor'||this.drag||!this.enabled())return false;
+        const entry=this.selected,room=this.room();if(!entry||entry.surface==='wall'||this.drag||!this.enabled())return false;
         const edit=this.onEditStart?.();
         const before=new THREE.Box3().setFromObject(entry.obj),pivot=before.getCenter(new THREE.Vector3());pivot.y=0;
         const matrix=new THREE.Matrix4().makeTranslation(pivot.x,0,pivot.z).multiply(new THREE.Matrix4().makeRotationY(THREE.MathUtils.degToRad(degrees))).multiply(new THREE.Matrix4().makeTranslation(-pivot.x,0,-pivot.z));
@@ -128,6 +131,26 @@ export class RoomInteractions {
         else {this.onEditEnd?.(edit);this.onChange?.();}
         this.highlight.box.setFromObject(entry.obj);return !blocked;
     }
+    rebindSelected() {
+        const obj=this.selected?.obj; this.bind(this.room());
+        if(obj?.parent)this.select(this.entries.find(e=>e.obj===obj)||null);
+    }
+    dropSelected() {
+        const entry=this.selected;
+        if(!entry||this.drag||!this.enabled())return false;
+        const target=surfaceDrop(entry.objects,this.scene);
+        if(!target){this.onStatus?.('No surface below this item.');return true;}
+        if(Math.abs(target.delta)<=target.epsilon)return true;
+        const edit=this.onEditStart?.();
+        this.moveObject(entry.obj,0,0,target.delta);
+        this.onEditEnd?.(edit);this.onChange?.();this.rebindSelected();
+        this.onStatus?.(entry.name+' placed on the surface below. Ctrl+Z to undo.');return true;
+    }
+    entryForHit(object) {
+        // A book's own entry wins over the table's linked-content entry.
+        for(let node=object;node;node=node.parent){const entry=this.entries.find(row=>row.obj===node);if(entry)return entry;}
+        return this.entries.find(row=>row.objects.some(obj=>descendant(object,obj)));
+    }
     point(event) {
         const rect=this.canvas.getBoundingClientRect();this.pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
         this.ray.setFromCamera(this.pointer,this.camera);
@@ -139,14 +162,14 @@ export class RoomInteractions {
         this.point(e);
         const hit=this.ray.intersectObject(this.root||new THREE.Group(),true).find(h=>visible(h.object)&&this.entries.some(row=>row.objects.some(obj=>descendant(h.object,obj))));
         if(!hit){this.select(null);return;}
-        const entry=this.entries.find(row=>row.objects.some(obj=>descendant(hit.object,obj)));
+        const entry=this.entryForHit(hit.object);
         if(!entry){this.select(null);return;}
         const normal=entry.surface==='wall'?new THREE.Vector3(entry.wall.axis==='x'?1:0,0,entry.wall.axis==='z'?1:0):new THREE.Vector3(0,1,0);
         const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,hit.point),anchor=new THREE.Vector3();
         if(!this.ray.ray.intersectPlane(plane,anchor))return;
         this.drag={entry,pointer:e.pointerId,plane,last:anchor.clone(),controlsEnabled:this.controls.enabled,changed:false,edit:this.onEditStart?.()};
         this.controls.enabled=false;this.controls.autoRotate=false;this.canvas.setPointerCapture(e.pointerId);this.canvas.style.cursor='grabbing';this.select(entry);
-        this.onStatus?.(`Drag ${entry.name} along the ${entry.surface}. ${entry.surface==='floor'?'Use the rotation buttons to turn it.':'Release to place it.'}`);
+        this.onStatus?.(`Drag ${entry.name} along the ${entry.surface}. ${entry.surface!=='wall'?'Rotate it or press Down Arrow to place it on a surface.':'Release to place it.'}`);
         e.preventDefault();e.stopImmediatePropagation();
     }
     move(e) {
@@ -173,7 +196,7 @@ export class RoomInteractions {
         const d=this.drag;if(!d||(e&&e.pointerId!==d.pointer))return;
         if(this.canvas.hasPointerCapture(d.pointer))this.canvas.releasePointerCapture(d.pointer);
         this.controls.enabled=d.controlsEnabled;this.canvas.style.cursor='';this.drag=null;
-        if(d.changed){this.onEditEnd?.(d.edit);this.onChange?.();}
+        if(d.changed){this.onEditEnd?.(d.edit);this.onChange?.();this.rebindSelected();}
         if(e){e.preventDefault();e.stopImmediatePropagation();}
     }
 }

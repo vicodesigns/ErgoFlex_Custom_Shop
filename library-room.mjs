@@ -458,6 +458,7 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     }, 512, 128) });
     for (const [i, at] of layout.reading.entries()) {
         const table = group(`reading-table-${i}`, 'Shared student study table', [at[0], 0, at[1]]), length = index ? 2400 : 1800;
+        table.userData.roomSupportHeights = [740];
         box(table, [length, 40, 950], [0, 720, 0], oak, 12);
         const pads = kit(); for (const z of [-260, 260]) pads.add(new THREE.PlaneGeometry(length - 260, 330), [0, 740.4, z], { rot: [-Math.PI / 2, 0, 0] });
         baked(table, pads, leather, false);
@@ -483,7 +484,7 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     }
     for (const carrel of layout.carrels) {
         const g = group(carrel.id, 'Quiet window study carrel', [carrel.at[0], 0, carrel.at[1]]); g.rotation.y = Math.PI / 2;
-        g.userData.libraryZone = 'quiet';
+        g.userData.libraryZone = 'quiet'; g.userData.editableRoomItem = true; g.userData.roomSupportHeights = [740];
         box(g, [1200, 35, 650], [0, 722.5, 0], oak, 8);
         for (const x of [-575, 575]) box(g, [50, 1250, 650], [x, 625, 0], green, 4);
         box(g, [1100, 400, 22], [0, 950, -315], material('#a3ac98', { roughness: 1 }), 4);
@@ -729,7 +730,7 @@ function buildLibraryOperations(room, layout, h) {
         }
     }
     if (layout.research) {
-        const table = group('digital-research-table', 'Digital research and accessible technology table', [layout.research[0], 0, layout.research[1]]); services.push(table);
+        const table = group('digital-research-table', 'Digital research and accessible technology table', [layout.research[0], 0, layout.research[1]]); services.push(table); table.userData.roomSupportHeights = [740];
         box(table, [1800, 40, 750], [0, 720, 0], oak, 8);
         const legs = kit(); for (const x of [-770, 770]) { legs.box([60, 700, 600], [x, 350, 0]); legs.box([440, 28, 680], [x, 14, 0]); } baked(table, legs, steel);
         const cable = kit(); cable.box([1580, 80, 85], [0, 615, -240]).box([1600, 50, 55], [0, 765, -330]); baked(table, cable, green);

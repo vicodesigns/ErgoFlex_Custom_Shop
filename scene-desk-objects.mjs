@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { surfaceDrop } from './item-surface-drop.mjs';
 import { notebookTransform } from './notebook-transform.mjs';
 
 export const DESK_SURFACES={desktop:'Desktop',shelf:'Top shelf','lower-shelf':'Lower shelf','base-shelf':'Base shelf'};
@@ -122,6 +123,19 @@ export class SceneDeskObjects {
         if(Number.isFinite(values.roll))o.rotation.z=THREE.MathUtils.degToRad(values.roll);
         if(Number.isFinite(values.scale))o.scale.copy(item.baseScale).multiplyScalar(Math.max(1,Math.min(500,values.scale))/100);
         o.updateMatrixWorld(true);m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
+    }
+    dropToSurface(){
+        const m=this.manager,item=this.current;
+        if(!this.editing||m.ctx.objectsEditable?.()===false||!item||!shown(item.obj)||m.playing||m.recording||this.drag)return false;
+        const target=surfaceDrop([item.obj],m.ctx.scene);
+        if(!target){m.ctx.status('No surface below this item.');return true;}
+        if(Math.abs(target.delta)<=target.epsilon)return true;
+        const before=m.serialize(),o=item.obj;o.updateWorldMatrix(true,false);
+        const matrix=o.parent.matrixWorld.clone().invert().multiply(new THREE.Matrix4().makeTranslation(0,target.delta,0)).multiply(o.matrixWorld);
+        matrix.decompose(o.position,o.quaternion,o.scale);o.updateMatrixWorld(true);
+        if(m.active.product&&o.userData.accessoryId)item.saved.custom=true;
+        m.persist();m.ctx.edit?.(before,m.serialize());m.sync();
+        m.ctx.status(item.saved.label+' placed on the surface below. Ctrl+Z to undo.');return true;
     }
     remove(){
         const m=this.manager,r=m.active,item=this.current;if(!item||m.playing||m.recording)return false;

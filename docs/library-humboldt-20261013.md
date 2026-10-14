@@ -81,6 +81,23 @@ lights remain within the five-light room budget and add no shadow maps.
   ownership and protected text/number inputs. These shortcuts work in all
   environments and Product view.
 
+## Item editing
+
+Window carrels participate in Rearrange items. Their journals can be selected,
+dragged, rotated and deleted separately; moving or deleting a carrel carries its
+linked journals. Delete and Ctrl+Z cover either selection, with persistent removal.
+Tabletop props are selectable independently of their support furniture.
+
+Down Arrow (or the selected item's Drop to surface button) lowers an item onto
+upward-facing geometry beneath it. It also works for Product desk props, preserves
+horizontal placement through transformed mounts, and records a single undo step.
+It ignores invisible meshes, shader effects, the selected item and its linked
+contents, and raycasts through shelf openings instead of using enclosing boxes.
+
+Verification: `npm run test:item-surface-drop` covers real geometry, carrel/book
+selection, linked and independent deletion, drop/undo, Product props and reload.
+`npm run test:free-items` verifies free dragging and normal desk collision behavior.
+
 ## Research
 
 - [Study Spaces](https://www.humboldt.edu/library/services/use-your-library/study-spaces)
