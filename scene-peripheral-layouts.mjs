@@ -54,6 +54,9 @@ export function seedScenePeripherals(state,sceneId,station='main') {
 export function seedSceneSizeWithPeripherals(source,size) {
     const draft=seedSceneDeskSize(source,size);
     if(!draft)return null;
+    // Both CAD widths share the same charging insert. Its phone keeps that
+    // measured contact point when a new width is first seeded.
+    if(draft.objects['default-library-iphone'])draft.objects['default-library-iphone'].transform.p.x=source.objects['default-library-iphone'].transform.p.x;
     if(source.peripheralSetup==='product-reference-v1'){
         const ref=peripheralReference(source.peripheralRecipe,size);
         const previous=peripheralReference(source.peripheralRecipe,source.size);

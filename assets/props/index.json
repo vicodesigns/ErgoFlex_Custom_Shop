@@ -24136,28 +24136,28 @@
    "file": "assets/props/ergoflex-laptop.glb",
    "anchor": "floor",
    "size": [
-    323.4,
-    208.9,
-    344.1
+    330.8,
+    229.6,
+    235
    ],
    "min": [
-    -158.4,
+    -165.4,
     0,
-    -169.2
+    -117.5
    ],
    "max": [
-    165,
-    208.9,
-    174.9
+    165.4,
+    229.6,
+    117.5
    ],
-   "tris": 1628,
-   "bytes": 17920,
+   "tris": 13330,
+   "bytes": 144128,
    "source": "models/ergoflex-supplied/Laptop1.glb",
    "license": "user-provided",
    "attribution": null,
    "sizeNote": "Estimated real-world dimensions for scene decoration.",
    "collection": "ErgoFlex Collection",
-   "revision": "environment-detail-scale-20261013"
+   "revision": "library-humboldt-20261013"
   },
   {
    "id": "ergoflex-thermal-cup",
@@ -25084,6 +25084,6 @@
    ]
   }
  ],
- "generated": "2026-10-13T23:29:08.946Z",
+ "generated": "2026-10-14T03:25:45.072Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

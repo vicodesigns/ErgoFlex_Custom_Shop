@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { angleDelta, grooveDestination, planGroove, segmentIsClear, poseIsClear } from './room-groove.mjs?v=groove-save-20261007';
+import { angleDelta, grooveDestination, planGroove, segmentIsClear, poseIsClear } from './room-groove.mjs?v=library-humboldt-20261013';
 
 // Cutaway visibility is a camera choice. Hidden walls and furnishings still
 // occupy physical space; architecture is handled by the room bounds.

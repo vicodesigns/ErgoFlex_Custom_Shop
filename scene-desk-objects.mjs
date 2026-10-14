@@ -92,7 +92,7 @@ export class SceneDeskObjects {
         const before=m.serialize();item.saved.artworkVisible=visible===true;
         this.phase(r);m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
     }
-    select(id){this.selected=this.manager.active?.objects?.has(id)?id:null;this.manager.sync();}
+    select(id){this.selected=this.manager.active?.objects?.has(id)?id:null;if(this.selected)this.manager.ctx.objectSelected?.();this.manager.sync();}
     setEditing(on){this.editing=!!on;if(!on)this.endDrag();this.manager.ctx.objectEditing?.(this.editing);this.manager.sync();}
     async add(propId,role=this.role){
         const m=this.manager,r=m.active;if(!r||!r.rig.mounts[role]||this.loading||m.playing||m.recording)return false;
@@ -130,7 +130,7 @@ export class SceneDeskObjects {
             m.ctx.removeAccessory(item.obj.userData.accessoryId);this.selected=null;m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
         }
         item.saved.removed=true;item.obj.visible=false;this.selected=null;
-        if(item.saved.added){r.objects.delete(item.id);delete r.state.objects[item.id];m.ctx.disposeObject?.(item.obj);}
+        if(item.saved.added&&item.id!=='default-library-iphone'){r.objects.delete(item.id);delete r.state.objects[item.id];m.ctx.disposeObject?.(item.obj);}
         m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
     }
     pick(e){

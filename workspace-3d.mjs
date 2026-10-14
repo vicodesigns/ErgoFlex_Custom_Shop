@@ -1,11 +1,11 @@
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=scene-screen-themes-20261013-final';
 import { buildInstitutionalRoom } from './institutional-room.mjs?v=scene-desk-styling-20261010';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=environment-detail-scale-20261013';
-import { polishRoomProp } from './room-polish.mjs?v=environment-detail-scale-20261013';
-import { RoomLife } from './room-life.mjs?v=environment-detail-scale-20261013';
+import { polishRoomProp } from './room-polish.mjs?v=library-humboldt-20261013';
+import { RoomLife } from './room-life.mjs?v=library-humboldt-20261013';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=scene-desk-styling-20261010';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-window-20261011';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-humboldt-20261013';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
@@ -82,7 +82,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=environment-detail-scale-20261013').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=library-humboldt-20261013').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -1240,7 +1240,7 @@ export class WorkspaceRoom {
         if (this.root) disposeTree(this.root);
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
         this.decorateStation = null;
-        this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null;
+        this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null; this.migrateSavedTransform = null;
         this.propSupports = [];
         this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.ceilingSurface = null; this.bounce = null; this.life = null; this.windowViewReady = Promise.resolve();
         if (id === 'product') { this.ready = Promise.resolve(); return; }

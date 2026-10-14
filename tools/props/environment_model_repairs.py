@@ -79,25 +79,36 @@ def improve(id):
     if key=='laptop':
         # The supplied display is mounted obliquely across the deck. Give the
         # laptop a thin hinged panel and keyboard, fitted to its existing base.
-        decks=[o for o in objs if bounds(o)[2].z<.04]
-        deck=max(decks,key=lambda o:bounds(o)[2].x)
-        lo,hi,size=bounds(deck);w=size.x;depth=size.y;top=hi.z
-        for o in objs:
-            if o not in decks:bpy.data.objects.remove(o,do_unlink=True)
-        def cube(name,dims,at,m):
+        # The original deck contains overlapping/slanted CAD fragments. A
+        # single closed aluminium shell prevents missing triangular faces.
+        w=.330;depth=.235;top=.015
+        for o in objs:bpy.data.objects.remove(o,do_unlink=True)
+        def cube(name,dims,at,m,bevel=0):
             bpy.ops.mesh.primitive_cube_add(size=1,location=at)
-            o=bpy.context.object;o.name=name;o.dimensions=dims;bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(m);return o
-        height=w*.62;rear=hi.y-.012
-        cube('Laptop thin display housing',(w*.97,.008,height),(0,rear,top+height/2),graphite)
+            o=bpy.context.object;o.name=name;o.dimensions=dims;bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(m)
+            if bevel:
+                mod=o.modifiers.new('Machined rounded edges','BEVEL');mod.width=bevel;mod.segments=3
+                bpy.ops.object.modifier_apply(modifier=mod.name)
+                mod=o.modifiers.new('Weighted metal normals','WEIGHTED_NORMAL');bpy.ops.object.modifier_apply(modifier=mod.name)
+            return o
+        cube('Laptop closed aluminium deck',(w,depth,top),(0,0,top/2),steel,.004)
+        cube('Laptop keyboard recess',(w*.84,.098,.0007),(0,.034,top+.0003),graphite,.002)
+        height=w*.62;rear=depth/2-.014
+        cube('Laptop thin display housing',(w*.97,.008,height),(0,rear,top+.010+height/2),graphite,.003)
         display=mat('Decor screen glass',(.008,.012,.018),.38)
-        # X/Z plane, front normal -Y -> +Z in the exported Y-up scene.
-        verts=[(-w*.45,rear-.0048,top+height*.06),(w*.45,rear-.0048,top+height*.06),(w*.45,rear-.0048,top+height*.94),(-w*.45,rear-.0048,top+height*.94)]
+        verts=[(-w*.45,rear-.0048,top+.010+height*.06),(w*.45,rear-.0048,top+.010+height*.06),(w*.45,rear-.0048,top+.010+height*.94),(-w*.45,rear-.0048,top+.010+height*.94)]
         data=bpy.data.meshes.new('Laptop active screen');data.from_pydata(verts,[],[(0,1,2,3)]);data.update();uv=data.uv_layers.new(name='UVMap')
         for loop,coord in zip(data.loops,[(0,0),(1,0),(1,1),(0,1)]):uv.data[loop.index].uv=coord
         o=bpy.data.objects.new('Decoration display glass',data);bpy.context.collection.objects.link(o);data.materials.append(display)
         for row in range(5):
-            for col in range(12):cube('Laptop keyboard key',(w*.055,.012,.0018),(-w*.36+col*w*.064,rear-.04-row*.017,top+.001),graphite)
-        cube('Laptop touchpad',(w*.28,depth*.19,.0006),(0,lo.y+depth*.24,top+.0005),steel)
+            for col in range(12):cube('Laptop keyboard key',(w*.055,.012,.0015),(-w*.36+col*w*.064,.069-row*.017,top+.0014),graphite,.0005)
+        cube('Laptop space bar',(.097,.012,.0015),(0,-.011,top+.0014),graphite,.0005)
+        cube('Laptop inset touchpad',(w*.28,depth*.19,.0007),(0,-.070,top+.0005),ivory,.002)
+        for x in [-w/2-.00015,w/2+.00015]:
+            for y in [.028,.063]:cube('Laptop USB-C socket',(.0005,.010,.003),(x,y,.008),graphite,.0002)
+        for x in [-w*.42,w*.42]:
+            for row in range(7):cube('Laptop speaker perforation',(.002,.004,.0005),(x,.064-row*.010,top+.0006),graphite)
+        cube('Laptop continuous hinge',(w*.80,.013,.013),(0,rear,top+.006),graphite,.004)
     elif key=='calendar':
         # Printed numbers follow the inclined face of the supplied stand.
         # The generic month planner remains useful across all scene activities.

@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http'),puppeteer=require('puppeteer');
 const root=path.resolve(__dirname,'..'),out=path.join(root,'scene-shots/environment-detail');fs.mkdirSync(out,{recursive:true});
-const index=JSON.parse(fs.readFileSync(path.join(root,'assets/props/index.json'))),newProps=index.props.filter(p=>p.revision==='environment-detail-scale-20261013');
+const index=JSON.parse(fs.readFileSync(path.join(root,'assets/props/index.json'))),newProps=index.props.filter(p=>p.revision==='environment-detail-scale-20261013'||p.id==='ergoflex-laptop');
 assert.equal(newProps.length,33);
 for(const p of newProps){assert.ok(p.size.every(n=>Number.isFinite(n)&&n>0&&n<3000),p.id+' scale');assert.ok(fs.existsSync(path.join(root,p.file)));assert.ok(fs.existsSync(path.join(root,'assets/props/thumbs',p.id+'.png')));}
 const server=http.createServer((req,res)=>{const file=path.join(root,new URL(req.url,'http://local').pathname.replace(/^\/$/,'/index.html'));if(!file.startsWith(root+path.sep))return res.writeHead(403).end();fs.readFile(file,(e,data)=>{if(e)return res.writeHead(404).end();res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.glb':'model/gltf-binary','.svg':'image/svg+xml'})[path.extname(file)]||'application/octet-stream');res.end(data)})});

@@ -3,10 +3,10 @@ import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261
 import { normalizeCustomLook, normalizeCustomPalette, importCustomLooks, CUSTOM_LOOKS_KEY, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=environment-detail-scale-20261013';
-import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=environment-detail-scale-20261013';
-import { poseIsClear } from './room-groove.mjs';
-import { SceneDesks } from './scene-desks.mjs?v=library-build-free-items-20261013';
-import { applyLibraryProductBuild } from './library-product-build.mjs?v=library-build-free-items-20261013';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=library-humboldt-20261013';
+import { poseIsClear } from './room-groove.mjs?v=library-humboldt-20261013';
+import { SceneDesks } from './scene-desks.mjs?v=library-humboldt-20261013';
+import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=library-humboldt-20261013';
 import { notebookTransform } from './notebook-transform.mjs';
 import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artwork-size-isolation-20261012';
 import { encodeStoredJSON, decodeStoredJSON, compactStoredDesigns } from './browser-design-storage.mjs?v=scene-sized-setups-20261012';
@@ -14,18 +14,18 @@ import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs?v=library-build-free-items-20261013';
 import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=scene-sized-setups-20261012';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
-import { RoomGroove } from './room-groove-runtime.mjs?v=desk-objects-20261010';
+import { RoomGroove } from './room-groove-runtime.mjs?v=library-humboldt-20261013';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
 import { RoomInteractions } from './room-interactions.mjs?v=library-build-free-items-20261013';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
-import { roomPolishLighting } from './room-polish.mjs?v=environment-detail-scale-20261013';
+import { roomPolishLighting } from './room-polish.mjs?v=library-humboldt-20261013';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=scene-screen-themes-20261013-final';
 import { RoomLedSpill } from './room-led-spill.mjs?v=ceiling-bounce-20261011';
 import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=library-build-free-items-20261013';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
-import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-window-20261011';
+import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=library-humboldt-20261013';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
 import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
@@ -51,8 +51,8 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=scene-screen-themes-20261013-final';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=environment-detail-scale-20261013';
-import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=library-humboldt-20261013';
+import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=library-humboldt-20261013';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -405,7 +405,9 @@ async function hydrateSceneAssets(sceneId, token = sceneAssetHydrationToken) {
     for (const obj of defaults) {
         const editorId = sceneAssetEditorId(obj);
         if (state.removed.has(editorId)) { obj.removeFromParent(); continue; }
-        applyPlainLocalTransform(obj, state.transforms.get(editorId));
+        const saved = state.transforms.get(editorId), updated = workspaceRoom?.migrateSavedTransform?.(obj, saved) || saved;
+        if (updated && updated !== saved) state.transforms.set(editorId, updated);
+        applyPlainLocalTransform(obj, updated);
         registerSceneAsset(obj);
     }
     for (const addition of state.added.values()) {
@@ -607,6 +609,7 @@ function initSceneDeskEditing() {
         status:notifyUser,rearrange:()=>roomRearrangeMode==='desks'&&!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active&&!sceneDesks?.playing&&!sceneDesks?.recording,
         objectEditing:on=>setRoomRearrangeMode(on?'items':'off'),
         objectsEditable:()=>!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active,
+        objectSelected:()=>roomInteractions?.select(null),
         seedDeskSize:(_r,source,size)=>seedSceneSizeWithPeripherals(source,size),
         prepareDesk:r=>{
             if(selectedRoomScene!=='library')return;
@@ -660,6 +663,14 @@ function initSceneDeskEditing() {
                     currentLift=heightToLift(Math.max(h,minimumHeightForTilt(t,state.size)));updateMovingObjectsPosition();
                     const tilt=primaryTiltConfig();if(tilt){tilt.currentDeg=t;applyTiltConfig(tilt);}
                     loadedModel.updateWorldMatrix(true,true);workspaceAccessories?.update();
+                    if(selectedRoomScene==='library'&&!state.objects?.['default-library-iphone']){
+                        const charger=[...partRegistry.values()].find(e=>e.name==='Power_7')?.obj,mount=workspaceAccessories.mounts.get('desktop')?.dress;
+                        if(charger?.geometry&&mount){
+                            mount.updateWorldMatrix(true,false);charger.geometry.computeBoundingBox();
+                            const frame=mount.matrixWorld.clone().invert().multiply(charger.matrixWorld),bounds=charger.geometry.boundingBox.clone().applyMatrix4(frame),at=bounds.getCenter(new THREE.Vector3());
+                            seedLibraryChargerPhone(state,[at.x,bounds.max.y+.5,at.z]);
+                        }
+                    }
                     const toRoom=new THREE.Matrix4().makeRotationY(-Math.PI/2)
                         .multiply(new THREE.Matrix4().makeScale(...Array(3).fill(loadedModel.scale.x/workspaceRoom.root.scale.x)))
                         .multiply(loadedModel.matrixWorld.clone().invert());
@@ -686,7 +697,14 @@ function initSceneDeskEditing() {
         },
         restyle:r=>{r.rig?.syncArtwork?.(r.state.artwork);if(r.rig&&r.renderedStyle!==JSON.stringify(r.state.style)){const style=currentDeskStyle();sceneDeskInternal=true;try{applyDeskStyle(r.state.style);r.rig.restyle();r.renderedStyle=JSON.stringify(r.state.style);}finally{applyDeskStyle(style);sceneDeskInternal=false;}}},
         productReady:()=>!!workspaceAccessories&&!!loadedModel,
-        productRig:()=>({mounts:Object.fromEntries([...workspaceAccessories.mounts].filter(([role])=>role!=='floor').map(([role,m])=>[role,m.dress])),setBodyVisible(){},updatePose(){},dispose(){}}),
+        productRig:()=>{
+            // Scene desks own separate peripheral instances. Returning to
+            // Product must rebuild its purchased set before binding objects.
+            workspaceAccessories.sync(currentConfig);
+            const editor=sceneDesks.objects;
+            editor.ready=Promise.all([editor.ready,workspaceAccessories.ready]).then(()=>{if(sceneDesks.active?.product)editor.syncAccessories();});
+            return {mounts:Object.fromEntries([...workspaceAccessories.mounts].filter(([role])=>role!=='floor').map(([role,m])=>[role,m.dress])),setBodyVisible(){},updatePose(){},dispose(){}};
+        },
         resizeProduct:size=>changeDesktopSize(size,{rebuildRoom:false}),
         resizeProductPreset:size=>{if(!activeBuildPreset||selectedRoomScene!=='product'||sceneDeskInternal)return false;changeDesktopSize(size);return true;},
         selectedAccessories:()=>[...currentConfig.accessories],
@@ -812,7 +830,7 @@ function syncRoomRearrangeUI() {
         hint.textContent=roomRearrangeMode==='desks'
             ? 'Drag a desk to move it. Items stay attached to their desk. Use Desks to select or rotate a desk.'
             : roomRearrangeMode==='items'
-                ? 'Drag items through other items and desks to place them freely. Use Desk objects for precise placement and rotation.'
+                ? 'Drag items through other items and desks to place them freely. Select an item and press Delete to remove it; Ctrl+Z / Cmd+Z restores it. Use Desk objects for precise placement and rotation.'
                 : 'Rearranging is off. Drag to orbit the view; click a desk to control it.';
     }
 }
@@ -1411,6 +1429,7 @@ function initThreeJS() {
         room:()=>workspaceRoom,deskBox:deskCollisionBox,deskObject:()=>loadedModel,safety:roomSafety,
         enabled:()=>roomRearrangeMode==='items'&&!!workspaceRoom?.root&&!liveAR?.active&&!isSelectionMode&&!isDraggingTransform&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!roomGroove?.run,
         onSelection:entry=>{
+            if(entry&&sceneDesks?.objects.selected)sceneDesks.objects.select(null);
             const toolbar=document.getElementById('room-object-controls');if(!toolbar)return;
             toolbar.hidden=!entry;
             toolbar.querySelector('[data-room-object-name]').textContent=entry?.name||'';
@@ -1903,6 +1922,7 @@ function applyEntry(entry) {
         buildSceneTree();
         renderSceneAssetList();
         updateSceneLibraryStatus();
+        roomInteractions?.bind(workspaceRoom);
         markEdited();
     }
 }
@@ -5670,6 +5690,12 @@ function deleteSelectedSceneAssets() {
         .map(item => sceneAssetRegistry.get(item.obj.userData?.editorId))
         .filter(Boolean);
     if (!entries.length) return notifyUser('Select one or more scene assets to delete.');
+    return deleteSceneAssetEntries(entries);
+}
+
+function deleteSceneAssetEntries(entries) {
+    if (!entries.length) return false;
+    haltAllMotion(); roomInteractions?.end(); roomGroove?.reset();
     const records = entries.map(sceneAssetRecord);
     records.forEach(record => setSceneAssetPresence(record, false));
     updateTransformProxy();
@@ -5678,7 +5704,27 @@ function deleteSelectedSceneAssets() {
     buildSceneTree();
     renderSceneAssetList();
     updateSceneLibraryStatus();
+    roomInteractions?.bind(workspaceRoom);
     notifyUser(`${records.length} scene asset${records.length === 1 ? '' : 's'} deleted.`);
+    return true;
+}
+
+function deleteSelectedWorkspaceItem() {
+    const editor=sceneDesks?.objects;
+    if(editor?.editing&&sceneDesks.ctx.objectsEditable?.()!==false&&editor.current&&!editor.current.saved.removed){
+        const label=editor.current.saved.label,deleted=editor.remove();
+        if(deleted)notifyUser(label+' deleted. Ctrl+Z to restore.');
+        return deleted;
+    }
+    const selected=roomInteractions?.selected;
+    if(roomRearrangeMode==='items'&&selected&&roomInteractions.enabled()){
+        const entries=[...new Set(selected.objects)].filter(obj=>obj.parent).map(obj=>{
+            registerSceneAsset(obj);return sceneAssetRegistry.get(obj.userData.editorId);
+        }).filter(Boolean);
+        return deleteSceneAssetEntries(entries);
+    }
+    if(setupLayoutOn&&movingObjects.some(item=>item.obj.userData?.sceneAsset))return deleteSelectedSceneAssets();
+    return false;
 }
 
 async function addSceneAsset(propId) {
@@ -6254,7 +6300,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const tag = document.activeElement?.tagName?.toLowerCase();
         const isEditable = document.activeElement?.isContentEditable;
         const textInput=tag==='input'&&!['checkbox','radio','button','submit','reset'].includes(document.activeElement.type);
-        if (textInput || tag === 'textarea' || tag === 'select' || isEditable) return;
+        const objectPicker=document.activeElement?.matches('[data-object-select]');
+        if (textInput || tag === 'textarea' || tag === 'select'&&!objectPicker || isEditable) return;
         if (!document.getElementById('cart-modal').classList.contains('hidden')) return;
         if (e.key === '`') {
             e.preventDefault();
@@ -6262,6 +6309,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.key === 'Escape' && marquee.active) {
             e.preventDefault();
             cancelMarquee();
+        } else if (!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='Delete'||e.key==='Backspace')) {
+            if(deleteSelectedWorkspaceItem())e.preventDefault();
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
             e.preventDefault();
             if (e.shiftKey) performRedo(); else performUndo();
@@ -11673,6 +11722,7 @@ function initStudio() {
         header.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); header.click(); } };
     });
     document.addEventListener('keydown', e => {
+        if(e.defaultPrevented)return;
         const modal = document.getElementById('cart-modal');
         if (!modal.classList.contains('hidden')) {
             if (e.key === 'Escape') { e.preventDefault(); closeDialog(modal); }
@@ -11688,10 +11738,6 @@ function initStudio() {
         const mode = { q: 'none', g: 'unified' }[e.key.toLowerCase()];
         if (mode) { e.preventDefault(); document.querySelector(`input[name="transform_mode"][value="${mode}"]`).click(); }
         if (e.key.toLowerCase() === 'f') { e.preventDefault(); document.getElementById('focus-selected').click(); }
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            const hasSceneAssets = movingObjects.some(item => item.obj.userData?.sceneAsset);
-            if (hasSceneAssets) { e.preventDefault(); deleteSelectedSceneAssets(); }
-        }
     });
 }
 

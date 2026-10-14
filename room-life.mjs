@@ -22,7 +22,7 @@ export const ROOM_STORIES = {
     gallery: ['Curator notes & exhibition walk', 'Catalogue study & sketching', 'Salon conversation & tea', 'Collections quiet, reading corner', 'Opening night & shared catalogues'],
     scifi: ['Mission briefing & equipment check', 'Research samples & analysis', 'Navigation watch & mission notes', 'Robot parked, quiet watch', 'Transit briefing & crew gathering'],
     coworking: ['Coffee & shared planning', 'Collaboration & working notes', 'Community conversation', 'Quiet focus, meeting area tidied', 'Community meetup & refreshments'],
-    library: ['Reading list & returned books', 'Research & shared annotations', 'Quiet reading & study notes', 'Late study, books neatly stacked', 'Study group & shared problem solving']
+    library: ['Book returns & a fresh reading list', 'North Coast research & shared annotations', 'Reading by lamplight & reflection', 'Quiet focus & a tidy table', 'Shared evidence & whiteboard discussion']
 };
 
 const plain = matrix => {

@@ -5,6 +5,18 @@ export const angleDelta = (a, b) => ((b - a + Math.PI) % TAU + TAU) % TAU - Math
 
 export function grooveDestination(id, l, phase) {
     const small = ['apartment', 'house'].includes(l.id), [x, z] = l.desk;
+    if (id === 'library') {
+        // Stage the mobile pilot desk inside its open bay. Crossing the stack
+        // grid toward a generic party center used to aim it into bookcases.
+        const poses = {
+            morning: { x: x - 100, z: z + 140, yaw: -.10 },
+            afternoon: { x: x + 400, z: z + 450, yaw: 0 },
+            evening: { x: x + 700, z: z + 900, yaw: .16 },
+            night: { x: x + 200, z: z + 220, yaw: .04 },
+            party: { x: x + 1200, z: z + 1400, yaw: -.16 }
+        };
+        return poses[phase] || poses.afternoon;
+    }
     const towardWindow = l.daylight?.[0] > x ? 1 : -1;
     const destinations = {
         morning: { x: x + towardWindow * (small ? 300 : 550), z: z + 160, yaw: towardWindow * -.12 },
@@ -16,7 +28,6 @@ export function grooveDestination(id, l, phase) {
     if (id === 'music' && phase === 'party') destinations.party.x = l.width * .08;
     if (id === 'gym' && phase === 'party') destinations.party.z = l.back + l.depth * .4;
     if (id === 'workshop' && phase === 'afternoon') destinations.afternoon.z += 220;
-    if (id === 'library' && phase === 'evening') destinations.evening.x = -l.width * .14;
     if (id === 'scifi' && phase === 'party') destinations.party.z = l.back + l.depth * .42;
     return destinations[phase] || destinations.afternoon;
 }

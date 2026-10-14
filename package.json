@@ -22,6 +22,8 @@
     "test:scifi": "node tests/scifi-room-test.cjs",
     "test:coworking": "node tests/coworking-room-test.cjs",
     "test:library": "node tests/library-room-test.cjs",
+    "test:library-humboldt": "node tests/library-humboldt-test.cjs",
+    "test:item-shortcuts": "node tests/item-delete-shortcuts-test.cjs",
     "test:room-lighting": "node tests/room-lighting-test.cjs",
     "test:room-life": "node tests/room-life-test.cjs",
     "test:scene-desk-styles": "node tests/room-desk-styles-test.cjs",

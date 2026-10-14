@@ -59,6 +59,7 @@ export function polishRoomProp(room, object, placement) {
     const upholstery = palette[0];
     const copies = new Map();
     const finish = source => {
+        if (source?.userData.roomPaletteLocked) return source;
         if (!source?.isMeshStandardMaterial || source.map || !['plant', 'carpet', 'wood', 'metal', 'plastic'].includes(source.name)) return source;
         if (copies.has(source)) return copies.get(source);
         const mat = source.clone();

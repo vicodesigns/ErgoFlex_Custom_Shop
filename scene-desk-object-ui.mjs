@@ -5,7 +5,7 @@ export function mountDeskObjectUI(parent,manager){
     const surfaces=Object.entries(DESK_SURFACES).map(([id,label])=>`<option value="${id}">${label}</option>`).join('');
     panel.innerHTML=`<summary>Objects on this desk</summary>
         <div class="scene-desk-row"><label><input type="checkbox" data-object-edit> Edit desk objects</label><span data-object-count></span><button type="button" data-object-hide>Hide tools to see the desk</button></div>
-        <p class="desk-object-note">Turn on editing to click and drag an object. For monitor alignment, use 0.5 mm position steps and 0.1° turn, tilt and roll. Changes save in this browser; use Undo or Redo to reverse them.</p>
+        <p class="desk-object-note">Turn on editing to click and drag an object. Press Delete to remove the selected item, or Ctrl+Z / Cmd+Z to restore it. For monitor alignment, use 0.5 mm position steps and 0.1° turn, tilt and roll.</p>
         <div class="scene-desk-row"><label>Object <select data-object-select aria-label="Selected desk object"></select></label><button type="button" data-object-remove>Remove object</button></div>
         <fieldset class="desk-object-fields"><legend>Edit selected object</legend><label>Desk part <select data-object-role>${surfaces}</select></label>
         <label>Left / right (mm)<input type="number" step="0.5" min="-5000" max="5000" data-object-x></label>
