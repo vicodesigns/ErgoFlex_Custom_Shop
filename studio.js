@@ -18,6 +18,7 @@ import { RoomGroove } from './room-groove-runtime.mjs?v=library-humboldt-2026101
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
 import { RoomInteractions } from './room-interactions.mjs?v=environment-expert-20261014';
+import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pacing-20261014';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=environment-expert-20261014';
@@ -1465,6 +1466,7 @@ function initThreeJS() {
     }
 
     renderer.xr.enabled = true;
+    renderPacing = new RenderPacing({ controls });
     renderer.setAnimationLoop(animate);
 }
 
@@ -10191,13 +10193,37 @@ function syncViewerSize() {
 // Temp instrumentation: track if we've logged max height
 let _loggedMaxHeight = false;
 
+// Frame pacing (render-pacing.mjs): draw at most 60 fps while anything is
+// changing, trickle when idle, and redraw shadows only when casters move.
+let renderPacing = null, pacedMotion = null, tinyCasterCheckAt = -Infinity;
+function renderActivity() {
+    const room = workspaceRoom?.root ? workspaceRoom : null;
+    // Desk motion is detected by change, so lift/tilt/yaw/glide started from
+    // outside the page (voice, API) also keeps the full frame rate.
+    const motion = `${currentLift}|${deskYaw}|${glideOffset.x}|${glideOffset.z}|${screenProgress}|${primaryTiltConfig()?.currentDeg ?? 0}`;
+    const moved = motion !== pacedMotion; pacedMotion = motion;
+    const moving = !!(moved || glideActive || yawCommand || liftJog || tiltJog || roomGroove?.run || sceneDesks?.playing
+        || sceneDesks?.drag || roomInteractions?.drag || isDraggingTransform);
+    const animating = !!(cameraTween.active || controls?.autoRotate || marquee.active || sceneDesks?.recording || roomSafety.alert
+        || ledEffect.mode !== 'solid' || ledDiagnostic.strip !== null || ledPixels?.active || ledMotion.owner || ledMotion.completionUntil || ledGame.active || ledMusic.active);
+    // Cutaway walls and the ceiling are shadow casters that hide as the camera moves.
+    let signature = room ? room.root.uuid : '';
+    if (room) { for (const wall of room.walls) signature += wall.obj.visible ? 1 : 0; signature += `${room.ceilingSurface?.visible}${room.ceilingFixture?.visible}`; }
+    return { moving, animating, signature };
+}
+
 function animate(time, frame) {
     liveAR?.update(frame, time);
+    // AR and WebXR sessions own their frame timing.
+    const paced = renderPacing && !liveAR?.active && !renderer.xr.isPresenting;
+    const pace = paced ? renderPacing.plan(time, renderActivity()) : null;
+    if (paced && !pace) return;
 
     // withNeutralPose sets motionPaused while it captures or applies geometry, so
     // a frame cannot advance the lift or the glide mid-capture. Rendering still
     // runs, so the viewer does not freeze.
-    const dt = clock.getDelta();
+    // After an idle trickle, start motion from one frame, not the idle gap.
+    const dt = pace?.resumed ? Math.min(clock.getDelta(), 1 / 60) : clock.getDelta();
     if (loadedModel && !motionPaused && !roomSafety.alert) {
         if (liftJog) ledAutoLift = false;
         else if (Math.abs(targetLift-currentLift) > .001) ledAutoLift = true;
@@ -10341,7 +10367,16 @@ function animate(time, frame) {
     syncSafetyUI();
     if(time-touchscreenDrawAt>100){touchscreenDrawAt=time;updateTouchscreenDisplay();}
     roomLedSpill.update(workspaceRoom,ledPixels,{enabled:ledsEnabled&&!liveAR?.active,colour:ledFrameColor,gain:roomLedGain});
-    if (renderer && scene && camera) renderer.render(liveAR?.active ? liveAR.scene : scene, camera);
+    if (renderer && scene && camera) {
+        // Only this render skips shadow redraws; any other render stays exact.
+        if (pace) renderer.shadowMap.autoUpdate = pace.shadows;
+        renderer.render(liveAR?.active ? liveAR.scene : scene, camera);
+        renderer.shadowMap.autoUpdate = true;
+        if (pace && time - tinyCasterCheckAt > 1000) {
+            tinyCasterCheckAt = time;
+            if (pruneTinyCasters(scene)) renderPacing.invalidate();
+        }
+    }
 }
 
 // Studio presentation, customer configuration, and accessible controls.
@@ -11789,6 +11824,7 @@ window.ErgoFlex = {
     get workspaceAccessories() { return workspaceAccessories; },
     get workspaceRoom() { return workspaceRoom; },
     get roomInteractions() { return roomInteractions; },
+    get renderPacing() { return renderPacing; },
     get roomLedSpill() { return roomLedSpill; },
     get roomCollisionBlocked() { return roomCollisionBlocked; },
     get roomScene() { return selectedRoomScene; },
