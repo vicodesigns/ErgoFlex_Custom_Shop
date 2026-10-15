@@ -44,6 +44,8 @@ export const GAMING_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
     if (index === 4) props.push({ id: 'arcade-night-drive', at: [width / 2 - 560, 0, back + 3350], turn: -90 });
     // Later dressing is appended, so earlier placements keep their saved-edit keys.
     props.push({ id: 'lava-lamp', at: [cabinetX + 215, 610, cabinetZ + 150] });
+    // Append new dressing to preserve every existing saved placement key.
+    if(index===1||index===2)props.push({id:'atelier-gaming-streamdeck-cyber',at:[cabinetX-200,610,cabinetZ-145],turn:0});
     return [id, { id, name: names[index], width, depth, height, back, desk, props, compact, large, cabinetX, cabinetZ, loungeZ,
         daylight: [-width / 2 + 100, 450] }];
 }));

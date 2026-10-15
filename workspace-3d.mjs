@@ -1,3 +1,4 @@
+import { atelierSceneGaming, bindGamingGear, applyGamingGearLighting } from './atelier-scene-gaming.mjs?v=gaming-gear-20261014';
 import { atelierSceneDecor, bindDeskDecor, applyDeskDecorLighting } from './atelier-scene-decor.mjs?v=atelier-decor-20261014';
 import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from './campus-scene-furniture.mjs?v=campus-furniture-20261014';
 import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atelier-scene-beds.mjs?v=atelier-beds-20261014';
@@ -25,7 +26,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-size-setups-20261012';
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-gear-20261014';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
 import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=curved-pair-20261012';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
@@ -89,7 +90,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=atelier-decor-20261014').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=gaming-gear-20261014').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -1249,7 +1250,7 @@ export class WorkspaceRoom {
         this.campusRetired=[];this.campusFixtures=[];
         if (this.root) disposeTree(this.root);
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
-        this.atelierDecorGlows = []; this.atelierBedGlows = []; this.atelierLamps = []; this.atelierLampPhase = ['afternoon',1];
+        this.atelierGamingGlows = []; this.atelierDecorGlows = []; this.atelierBedGlows = []; this.atelierLamps = []; this.atelierLampPhase = ['afternoon',1];
         this.decorateStation = null;
         this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null; this.migrateSavedTransform = null; this.propReplacements = null;
         this.propSupports = [];
@@ -1558,6 +1559,13 @@ export class WorkspaceRoom {
                     object.name=lamp.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:lamp.entry.name,decorUpgrade:lamp.id};
                     return {placement,object,lamp};
                 }
+                const gamer=atelierSceneGaming(scene.id,this.roomLayout,placement,PROP_LIBRARY.index);
+                if(gamer){
+                    const model=await PROP_LIBRARY.instance(gamer.id),object=new THREE.Group();
+                    object.scale.setScalar(1000);model.scale.setScalar(gamer.fit);model.rotation.y=gamer.turn;model.position.set(...gamer.offset);object.add(model);
+                    object.name=gamer.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:gamer.entry.name,decorUpgrade:gamer.id,atelierGaming:gamer.entry.atelierGaming};
+                    return {placement,object,gamer};
+                }
                 const decor=atelierSceneDecor(scene.id,placement,PROP_LIBRARY.index);
                 if(decor){
                     const model=await PROP_LIBRARY.instance(decor.id),object=new THREE.Group();
@@ -1580,12 +1588,14 @@ export class WorkspaceRoom {
         }));
         if (token !== this.token) return;
         for (let index = 0; index < placements.length; index++) {
-            const { placement, object, lamp, bed, decor } = placements[index];
+            const { placement, object, lamp, bed, decor, gamer } = placements[index];
             if (!object) { this.missingProps.push(placement.id); continue; }
             if(bed)bindAtelierBed(this,object,bed.entry);
             if(lamp)bindAtelierLamp(this,object,lamp.entry,lamp.fit);
+            if(gamer)bindGamingGear(this,object,gamer.entry);
+            if(placement.id.startsWith('atelier-gaming-')&&!gamer)bindGamingGear(this,object,PROP_LIBRARY.entry(placement.id));
             if(decor)bindDeskDecor(this,object,decor.entry);
-            if(!lamp&&!decor)this.decorateProp?.(object, placement);
+            if(!lamp&&!decor&&!gamer&&!placement.id.startsWith('atelier-gaming-'))this.decorateProp?.(object, placement);
             polishRoomProp(this, object, placement);
             const position = scene.physical ? [...placement.at] : roomPosition(scene, placement);
             // Countertop objects travel with the complete counter, not the lounge zone.
@@ -1632,6 +1642,7 @@ export class WorkspaceRoom {
         bindAtelierBed(this,object,PROP_LIBRARY.entry(propId));
         bindCampusFurniture(this,object,PROP_LIBRARY.entry(propId));
         bindDeskDecor(this,object,PROP_LIBRARY.entry(propId));
+        bindGamingGear(this,object,PROP_LIBRARY.entry(propId));
         markSceneAsset(object, { key, custom: true });
         this.ensureAssetRoot().add(object);
         return object;
@@ -1651,7 +1662,7 @@ export class WorkspaceRoom {
         group.visible = false; this.root.add(group);
         this.bounce = new RoomBounceLight(this);
     }
-    applyAtelierLighting(mode,accent) { applyAtelierLighting(this,mode,accent); applyAtelierBedLighting(this,mode,accent); applyCampusLighting(this,mode,accent); applyDeskDecorLighting(this,mode,accent); }
+    applyAtelierLighting(mode,accent) { applyAtelierLighting(this,mode,accent); applyAtelierBedLighting(this,mode,accent); applyCampusLighting(this,mode,accent); applyDeskDecorLighting(this,mode,accent); applyGamingGearLighting(this,mode,accent); }
     setCeilingEnabled(enabled) { this.ceilingEnabled = !!enabled; }
     update(camera) {
         this.grounding?.update();

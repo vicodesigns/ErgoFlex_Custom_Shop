@@ -66,7 +66,9 @@
     "generate:campus-furniture": "node tools/props/generate-campus-furniture.mjs",
     "test:campus-furniture": "node tests/campus-furniture-test.cjs",
     "generate:desk-decor": "node tools/props/generate-desk-decor.mjs",
-    "test:desk-decor": "node tests/desk-decor-test.cjs"
+    "test:desk-decor": "node tests/desk-decor-test.cjs",
+    "generate:gaming-gear": "node tools/props/generate-gaming-gear.mjs",
+    "test:gaming-gear": "node tests/gaming-gear-test.cjs"
   },
   "repository": {
     "type": "git",

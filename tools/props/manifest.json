@@ -16537,6 +16537,1014 @@
    "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
    "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
    "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-battlestation-cyber",
+   "name": "Atelier gaming · PC & curved display loadout · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-battlestation-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-streamer-cyber",
+   "name": "Atelier gaming · Broadcast & streaming loadout · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-streamer-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-console-cyber",
+   "name": "Atelier gaming · Console lounge loadout · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-console-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-simrig-cyber",
+   "name": "Atelier gaming · Racing wheel & flight throttle loadout · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-simrig-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-battlestation-arctic",
+   "name": "Atelier gaming · PC & curved display loadout · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-battlestation-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-streamer-arctic",
+   "name": "Atelier gaming · Broadcast & streaming loadout · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-streamer-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-console-arctic",
+   "name": "Atelier gaming · Console lounge loadout · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-console-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-simrig-arctic",
+   "name": "Atelier gaming · Racing wheel & flight throttle loadout · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-simrig-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-battlestation-ember",
+   "name": "Atelier gaming · PC & curved display loadout · Graphite · ember orange",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-battlestation-ember",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-streamer-ember",
+   "name": "Atelier gaming · Broadcast & streaming loadout · Graphite · ember orange",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-streamer-ember",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-console-ember",
+   "name": "Atelier gaming · Console lounge loadout · Graphite · ember orange",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-console-ember",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-loadout-simrig-ember",
+   "name": "Atelier gaming · Racing wheel & flight throttle loadout · Graphite · ember orange",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-loadout-simrig-ember",
+   "fit": {
+    "axis": "x",
+    "mm": 945.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-pc-cyber",
+   "name": "Atelier gaming · Liquid-cooled compact PC · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-pc-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 196.51
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-pc-arctic",
+   "name": "Atelier gaming · Liquid-cooled compact PC · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-pc-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 196.51
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-monitor-cyber",
+   "name": "Atelier gaming · Curved display & arm · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-monitor-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 514.84
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-monitor-arctic",
+   "name": "Atelier gaming · Curved display & arm · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-monitor-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 514.84
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-microphone-cyber",
+   "name": "Atelier gaming · XLR microphone & boom · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-microphone-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 402
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-microphone-arctic",
+   "name": "Atelier gaming · XLR microphone & boom · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-microphone-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 402
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-streamdeck-cyber",
+   "name": "Atelier gaming · Macro keypad · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-streamdeck-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 135
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-streamdeck-arctic",
+   "name": "Atelier gaming · Macro keypad · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-streamdeck-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 135
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-mixer-cyber",
+   "name": "Atelier gaming · Four-channel audio mixer · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-mixer-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 175
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-mixer-arctic",
+   "name": "Atelier gaming · Four-channel audio mixer · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-mixer-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 175
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-keylight-cyber",
+   "name": "Atelier gaming · Ring light & camera · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-keylight-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-keylight-arctic",
+   "name": "Atelier gaming · Ring light & camera · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-keylight-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-console-cyber",
+   "name": "Atelier gaming · Vertical gaming console · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-console-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 156
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-console-arctic",
+   "name": "Atelier gaming · Vertical gaming console · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-console-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 156
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-controller-dock-cyber",
+   "name": "Atelier gaming · Dual controllers & charger · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-controller-dock-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 191.56
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-controller-dock-arctic",
+   "name": "Atelier gaming · Dual controllers & charger · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-controller-dock-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 191.56
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-controller-cyber",
+   "name": "Atelier gaming · Wireless pro controller · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-controller-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 159.57
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-controller-arctic",
+   "name": "Atelier gaming · Wireless pro controller · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-controller-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 159.57
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-handheld-cyber",
+   "name": "Atelier gaming · Handheld & display dock · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-handheld-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 265
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-handheld-arctic",
+   "name": "Atelier gaming · Handheld & display dock · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-handheld-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 265
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-wheel-cyber",
+   "name": "Atelier gaming · Direct-drive racing wheel · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-wheel-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 295.42
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-wheel-arctic",
+   "name": "Atelier gaming · Direct-drive racing wheel · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-wheel-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 295.42
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-throttle-cyber",
+   "name": "Atelier gaming · Twin flight throttle · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-throttle-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 155
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-throttle-arctic",
+   "name": "Atelier gaming · Twin flight throttle · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-throttle-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 155
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-shifter-cyber",
+   "name": "Atelier gaming · Metal gate shifter · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-shifter-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 125
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-shifter-arctic",
+   "name": "Atelier gaming · Metal gate shifter · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-shifter-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 125
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-headset-cyber",
+   "name": "Atelier gaming · Headset & RGB stand · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-headset-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 210.38
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-headset-arctic",
+   "name": "Atelier gaming · Headset & RGB stand · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-headset-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 210.38
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-peripherals-cyber",
+   "name": "Atelier gaming · Compact keyboard & gaming mouse · Carbon · cyan & magenta",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-peripherals-cyber",
+   "fit": {
+    "axis": "x",
+    "mm": 426.65
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
+  },
+  {
+   "id": "atelier-gaming-peripherals-arctic",
+   "name": "Atelier gaming · Compact keyboard & gaming mouse · Arctic white · ice & violet",
+   "category": "desk",
+   "collection": "Atelier Gaming",
+   "scenes": [
+    "gaming",
+    "music",
+    "occmedialab",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-gaming-studio.html",
+   "converter": "gaming-generator",
+   "profile": "atelier-gaming-peripherals-arctic",
+   "fit": {
+    "axis": "x",
+    "mm": 426.65
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D pro gaming, streaming and esports generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "gaming-gear-20261014"
   }
  ],
  "screens": [

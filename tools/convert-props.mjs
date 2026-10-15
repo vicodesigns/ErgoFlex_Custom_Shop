@@ -80,6 +80,12 @@ if(decorProps.length){
     if(res.status!==0)throw new Error(`Desk decor generation failed\n${res.stderr}`);
     process.stdout.write(res.stdout);decorProps.forEach(p=>directConverted.add(p.id));
 }
+const gamingProps=selected.filter(prop=>prop.converter==='gaming-generator');
+if(gamingProps.length){
+    const res=run(process.execPath,[join(root,'tools/props/generate-gaming-gear.mjs'),'--only',gamingProps.map(p=>p.id).join(',')],'Gaming gear');
+    if(res.status!==0)throw new Error(`Gaming gear generation failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);gamingProps.forEach(p=>directConverted.add(p.id));
+}
 const packProps = selected.filter(prop => prop.converter === 'gltf-pack');
 if (packProps.length) {
     const res = run(process.execPath, [join(root, 'tools/props/import-packs.mjs'), '--only', packProps.map(prop => prop.id).join(',')], 'glTF packs');
