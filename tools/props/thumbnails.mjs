@@ -48,7 +48,7 @@ window.renderProp = (url) => new Promise((ok, fail) => loader.load(url, (g) => {
     }
     current = g.scene; scene.add(current);
     const box = new THREE.Box3().setFromObject(current), c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
-    const radius = Math.max(s.x, s.y, s.z) * .5 || 1;
+    const radius = s.length() * .5 || 1;
     const dist = radius / Math.sin(THREE.MathUtils.degToRad(15)) * 1.1;
     camera.position.set(c.x + dist * .62, c.y + dist * .45, c.z + dist * .64); camera.lookAt(c);
     camera.near = dist / 100; camera.far = dist * 10; camera.updateProjectionMatrix();
@@ -86,9 +86,9 @@ for (const prop of props) {
     } catch (e) { console.error(`✗ ${prop.id}: ${e.message}`); }
 }
 if (sheet) {
-    const cols = 8, cell = size, label = 28;
+    const cols = 8, cell = size, label = 48;
     const rows = Math.ceil(rendered.length / cols);
-    sheet_html = `<!doctype html><style>body{margin:0;background:#fff;font:12px system-ui}.g{display:grid;grid-template-columns:repeat(${cols},${cell}px)}.c{width:${cell}px;height:${cell + label}px;border:1px solid #ddd;box-sizing:border-box;text-align:center;overflow:hidden}img{width:${cell}px;height:${cell}px;display:block}</style><div class=g>${rendered.map(r => `<div class=c><img src="/assets/props/thumbs/${r.id}.png"><b>${r.id}</b> ${r.viewerSize.join('×')} · ${r.viewerTris}t</div>`).join('')}</div>`;
+    sheet_html = `<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#fff;font:12px system-ui}.g{display:grid;grid-template-columns:repeat(${cols},${cell}px)}.c{width:${cell}px;height:${cell + label}px;border:1px solid #ddd;box-sizing:border-box;text-align:center;overflow:hidden}img{width:${cell}px;height:${cell}px;display:block}</style><div class=g>${rendered.map(r => `<div class=c><img src="/assets/props/thumbs/${r.id}.png"><b>${r.name}</b><br>${r.viewerSize.join('×')} mm · ${r.viewerTris} triangles</div>`).join('')}</div>`;
     await page.setViewport({ width: cols * cell + 2, height: rows * (cell + label) + 2 });
     await page.goto(`http://127.0.0.1:${port}/__sheet.html`, { waitUntil: 'load' });
     await page.screenshot({ path: sheet, fullPage: true });

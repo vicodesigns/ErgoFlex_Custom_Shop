@@ -21,7 +21,8 @@ export function applyLibraryProductBuild(state, entry) {
     if (previous?.id === 'library' && previous.size === state.size && previous.revision === revision) return false;
     const config = draft.config;
     state.style = cleanDeskStyle({ ...config, sheen: draft.surface?.finish || 'satin' });
-    state.accessories = [...config.accessories];
+    state.accessories = config.accessories.filter(id=>state.shelfStation!=='shelf-first-v1'||!(/monitor|^obsbot-tiny-2$/.test(id)));
+    if(state.shelfStation==='shelf-first-v1'&&!state.accessories.includes('shelf-organizer'))state.accessories.push('shelf-organizer');
     state.accessoryFinishes = { ...config.accessoryFinishes };
     state.artwork = cleanArtwork(config.artwork);
     const objects = cleanDeskObjects(draft.room?.desks.main?.objects);

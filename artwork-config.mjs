@@ -55,6 +55,7 @@ export function validArtwork(value) {
             if (layer.coverage !== undefined && !['wrap', 'decal'].includes(layer.coverage)) return false;
             if (layer.repeat !== undefined && !['single', 'grid', 'offset', 'cover'].includes(layer.repeat)) return false;
             if (layer.enabled !== undefined && typeof layer.enabled !== 'boolean') return false;
+            if (layer.backing !== undefined && layer.backing !== 'white-disc') return false;
             for (const key of ['scale', 'x', 'y', 'rotation', 'spacing', 'opacity'])
                 if (layer[key] !== undefined && !Number.isFinite(layer[key])) return false;
         }
@@ -72,6 +73,7 @@ export function cleanArtwork(value) {
         for (const [key, layer] of artworkLayers(surface)) {
             const kind = artworkLayerKind(key);
             layers[key] = { ...defaultArtworkLayer(kind), name: layer.name, image: layer.image,
+                ...(layer.backing === 'white-disc' ? {backing:layer.backing} : {}),
                 enabled: layer.enabled !== false, coverage: layer.coverage || defaultArtworkLayer(kind).coverage,
                 repeat: layer.repeat || defaultArtworkLayer(kind).repeat,
                 scale: number(layer.scale, kind === 'texture' ? 50 : 30, 5, 300),

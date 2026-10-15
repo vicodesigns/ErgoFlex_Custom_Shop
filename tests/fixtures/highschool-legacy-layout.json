@@ -1,0 +1,5389 @@
+{
+  "room": {
+    "desks": {
+      "main": {
+        "pose": {
+          "x": -3749.353579890182,
+          "z": -2044.8521232248484,
+          "yaw": 0
+        },
+        "height": 43.5,
+        "tilt": 0,
+        "lights": {
+          "color": "#ffe0ae",
+          "glow": 24,
+          "enabled": false,
+          "effect": {
+            "mode": "solid",
+            "period": 8
+          },
+          "surfaces": {
+            "desktopStrength": 157,
+            "desktopReach": 100,
+            "desktopWidth": 5,
+            "desktopCone": 100,
+            "desktopEdgeFade": 46,
+            "desktopSharpness": 62,
+            "shelfStrength": 176,
+            "shelfReach": 98,
+            "baseStrength": 54,
+            "baseReach": 20,
+            "topStrength": 143,
+            "topReach": 77,
+            "floorStrength": 156,
+            "floorReach": 4,
+            "floorWidth": 50,
+            "floorSharpness": 73,
+            "leftWingStrength": 111,
+            "leftWingReach": 85,
+            "rightWingStrength": 110,
+            "rightWingReach": 87
+          },
+          "look": null,
+          "motion": true,
+          "music": {
+            "active": false,
+            "fx": 28,
+            "sensitivity": 1,
+            "palette": null,
+            "dj": false,
+            "settings": {
+              "version": 1,
+              "program": "party",
+              "comfort": "standard",
+              "beatAlign": true,
+              "remixPresets": true,
+              "remixSliders": true,
+              "remixPhysics": true,
+              "burstsOn": true,
+              "randomizeOn": true,
+              "remixBursts": true,
+              "dynamicsMode": "wide",
+              "mixStrips": true,
+              "lookWeights": {},
+              "paletteWeights": {},
+              "weights": {
+                "28": 2,
+                "29": 2,
+                "30": 2,
+                "31": 2,
+                "32": 2,
+                "33": 2,
+                "37": 2,
+                "38": 2,
+                "39": 2,
+                "40": 2
+              }
+            },
+            "source": "demo",
+            "sourceName": "Original demo soundtrack"
+          },
+          "game": {
+            "active": false,
+            "source": "demo",
+            "mode": "normal",
+            "content": "colours",
+            "maxBrightness": 1
+          }
+        },
+        "size": "60x30",
+        "phases": {},
+        "objects": {
+          "default-desktop-0": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Laptop",
+            "transform": {
+              "p": {
+                "x": -200.00000000000136,
+                "y": -2.2737367544323206e-13,
+                "z": -20.000000000001137
+              },
+              "q": {
+                "x": 5.95961707322806e-25,
+                "y": 4.235164736271503e-25,
+                "z": -1.0285575569695016e-38,
+                "w": 1
+              },
+              "s": {
+                "x": 1000.0000000000003,
+                "y": 999.9999999999994,
+                "z": 999.9999999999998
+              }
+            }
+          },
+          "default-desktop-1": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Calculator",
+            "transform": {
+              "p": {
+                "x": 299.99999999999955,
+                "y": -4.547473508864641e-13,
+                "z": 139.99999999999886
+              },
+              "q": {
+                "x": 5.95961707322806e-25,
+                "y": 4.235164736271503e-25,
+                "z": -1.0285575569695016e-38,
+                "w": 1
+              },
+              "s": {
+                "x": 1000.0000000000003,
+                "y": 999.9999999999994,
+                "z": 999.9999999999998
+              }
+            }
+          },
+          "default-desktop-2": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Papers",
+            "transform": {
+              "p": {
+                "x": 469.99999999999864,
+                "y": -4.547473508864641e-13,
+                "z": 39.99999999999886
+              },
+              "q": {
+                "x": -1.6608922478513269e-21,
+                "y": -0.0697564737441253,
+                "z": 9.713719047980266e-22,
+                "w": 0.9975640502598243
+              },
+              "s": {
+                "x": 1000,
+                "y": 999.9999999999994,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-3": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Insulated mug",
+            "transform": {
+              "p": {
+                "x": -600.0000000000018,
+                "y": 0,
+                "z": 149.9999999999991
+              },
+              "q": {
+                "x": 5.95961707322806e-25,
+                "y": 4.235164736271503e-25,
+                "z": -1.0285575569695016e-38,
+                "w": 1
+              },
+              "s": {
+                "x": 1000.0000000000003,
+                "y": 999.9999999999994,
+                "z": 999.9999999999998
+              }
+            }
+          },
+          "default-desktop-4": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Teacher desk notes",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "default-desktop-5": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Groove tabletop \u00b7 daily materials",
+            "transform": {
+              "p": {
+                "x": -440.0000000000018,
+                "y": 0.9999999999997726,
+                "z": 149.99999999999955
+              },
+              "q": {
+                "x": 5.959616725148196e-25,
+                "y": 1.0339757656912848e-24,
+                "z": -4.408103815583578e-39,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 0.9999999999999994,
+                "z": 0.9999999999999998
+              }
+            }
+          },
+          "default-shelf-0": {
+            "role": "shelf",
+            "added": false,
+            "removed": true,
+            "label": "Curved gaming monitor",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 4.547473508864641e-13,
+                "z": -9.094947017729282e-13
+              },
+              "q": {
+                "x": 3.1258125418130195e-23,
+                "y": -2.4233807008389487e-30,
+                "z": -1.3552527156068806e-23,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 999.9999999999998,
+                "z": 999.9999999999998
+              }
+            }
+          },
+          "accessory-logitech-mx-master": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Logitech MX Master 3S",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 389.70306429151054,
+                "y": 0,
+                "z": 362.6779879989689
+              },
+              "q": {
+                "x": 0,
+                "y": 1,
+                "z": 0,
+                "w": 6.123233995736766e-17
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-cable-tray": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Under-desk cable tray",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": -22,
+                "z": -80
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-wide-monitor": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Wide landscape monitor",
+            "custom": true,
+            "monitorLayout": "curved-right-v1",
+            "transform": {
+              "p": {
+                "x": 210.91987043094016,
+                "y": -60,
+                "z": 316.0434509766517
+              },
+              "q": {
+                "x": 0.005216039408260327,
+                "y": -0.08715454803830125,
+                "z": -0.0004563443167272475,
+                "w": 0.9961810425013093
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-portrait-monitor": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Portrait monitor",
+            "custom": true,
+            "monitorLayout": "curved-right-v1",
+            "transform": {
+              "p": {
+                "x": -415.03376940493865,
+                "y": -165,
+                "z": 341.0898469658034
+              },
+              "q": {
+                "x": 0,
+                "y": 0.13052619222005157,
+                "z": 0,
+                "w": 0.9914448613738104
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-keyboard-tray": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Keyboard tray",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -6.794651465249938,
+                "y": -28,
+                "z": 202.93331149400944
+              },
+              "q": {
+                "x": 0,
+                "y": 0.07410849019539924,
+                "z": 0,
+                "w": 0.9972501850994857
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-ergo-keyboard": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Ergonomic keyboard",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -5.344666557576775,
+                "y": -47.70061428703271,
+                "z": 435.356380230231
+              },
+              "q": {
+                "x": 0,
+                "y": 0.9999619230641713,
+                "z": 0,
+                "w": 0.008726535498373897
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-monitor-arm-2": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Dual monitor arm",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -5.886719827714427,
+                "y": -30,
+                "z": -129.94032060186723
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-obsbot-tiny-2": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "OBSBOT Tiny 2 webcam / mic",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -43.28562139767581,
+                "y": 305,
+                "z": 275.63923908001897
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "default-desktop-6": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Oiler showcase judging",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "default-desktop-7": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Groove tabletop \u00b7 daily materials",
+            "transform": {
+              "p": {
+                "x": -440.0000000000018,
+                "y": 0.9999999999997726,
+                "z": 149.99999999999955
+              },
+              "q": {
+                "x": 5.959616725148196e-25,
+                "y": 1.0339757656912848e-24,
+                "z": -4.408103815583578e-39,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 0.9999999999999994,
+                "z": 0.9999999999999998
+              }
+            }
+          },
+          "default-shelf-1": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Desktop calendar",
+            "transform": {
+              "p": {
+                "x": -600,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0.08715574274765817,
+                "z": 0,
+                "w": 0.9961946980917455
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-shelf-2": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Pencil cup",
+            "transform": {
+              "p": {
+                "x": 600,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          }
+        },
+        "artwork": {
+          "version": 1,
+          "surfaces": {}
+        },
+        "style": {
+          "woodFinish": "White Birch",
+          "baseFinish": "Space Gray",
+          "trimColor": "#85888c",
+          "sheen": "satin"
+        },
+        "accessories": [
+          "wide-monitor",
+          "portrait-monitor",
+          "keyboard-tray",
+          "ergo-keyboard",
+          "logitech-mx-master",
+          "cable-tray",
+          "monitor-arm-2",
+          "obsbot-tiny-2"
+        ],
+        "accessoryFinishes": {},
+        "peripheralRecipe": "office",
+        "peripheralSetup": "product-reference-v1",
+        "name": "Main desk",
+        "added": false
+      },
+      "station-demonstration-desk": {
+        "pose": {
+          "x": 0,
+          "z": -2600,
+          "yaw": 1.224646799147353e-16
+        },
+        "height": 43.5,
+        "tilt": 0,
+        "lights": {
+          "color": "#ffe0ae",
+          "glow": 24,
+          "enabled": false,
+          "effect": {
+            "mode": "solid",
+            "cycleSeconds": 8
+          },
+          "surfaces": {
+            "desktopStrength": 157,
+            "desktopReach": 100,
+            "desktopWidth": 5,
+            "desktopCone": 100,
+            "desktopEdgeFade": 46,
+            "desktopSharpness": 62,
+            "shelfStrength": 176,
+            "shelfReach": 98,
+            "baseStrength": 54,
+            "baseReach": 20,
+            "topStrength": 143,
+            "topReach": 77,
+            "floorStrength": 156,
+            "floorReach": 4,
+            "floorWidth": 50,
+            "floorSharpness": 73,
+            "leftWingStrength": 111,
+            "leftWingReach": 85,
+            "rightWingStrength": 110,
+            "rightWingReach": 87
+          },
+          "look": null,
+          "motion": true,
+          "music": {
+            "active": false,
+            "fx": 28,
+            "sensitivity": 1,
+            "palette": null,
+            "dj": false,
+            "settings": {
+              "version": 1,
+              "program": "party",
+              "comfort": "standard",
+              "beatAlign": true,
+              "remixPresets": true,
+              "remixSliders": true,
+              "remixPhysics": true,
+              "burstsOn": true,
+              "randomizeOn": true,
+              "remixBursts": true,
+              "dynamicsMode": "wide",
+              "mixStrips": true,
+              "lookWeights": {},
+              "paletteWeights": {},
+              "weights": {
+                "28": 2,
+                "29": 2,
+                "30": 2,
+                "31": 2,
+                "32": 2,
+                "33": 2,
+                "37": 2,
+                "38": 2,
+                "39": 2,
+                "40": 2
+              }
+            },
+            "source": "demo",
+            "sourceName": "Original demo soundtrack"
+          },
+          "game": {
+            "active": false,
+            "source": "demo",
+            "mode": "normal",
+            "content": "colours",
+            "maxBrightness": 1
+          }
+        },
+        "size": "60x30",
+        "phases": {},
+        "objects": {
+          "default-desktop-0": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Oscilloscope",
+            "transform": {
+              "p": {
+                "x": -450,
+                "y": 0,
+                "z": -90
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-1": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Voltage regulator",
+            "transform": {
+              "p": {
+                "x": 40,
+                "y": 0,
+                "z": -110
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-2": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Laptop",
+            "transform": {
+              "p": {
+                "x": 470,
+                "y": 0,
+                "z": 30
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-3": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Multi-tool",
+            "transform": {
+              "p": {
+                "x": -120,
+                "y": 0,
+                "z": 160
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-4": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Physics demonstration desk role detail",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-logitech-mx-master": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Logitech MX Master 3S",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 389.70306429151054,
+                "y": 0,
+                "z": 362.6779879989689
+              },
+              "q": {
+                "x": 0,
+                "y": 1,
+                "z": 0,
+                "w": 6.123233995736766e-17
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-cable-tray": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Under-desk cable tray",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": -22,
+                "z": -80
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-wide-monitor": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Wide landscape monitor",
+            "custom": true,
+            "monitorLayout": "curved-right-v1",
+            "transform": {
+              "p": {
+                "x": 210.91987043094016,
+                "y": -60,
+                "z": 316.0434509766517
+              },
+              "q": {
+                "x": 0.005216039408260327,
+                "y": -0.08715454803830125,
+                "z": -0.0004563443167272475,
+                "w": 0.9961810425013093
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-portrait-monitor": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Portrait monitor",
+            "custom": true,
+            "monitorLayout": "curved-right-v1",
+            "transform": {
+              "p": {
+                "x": -415.03376940493865,
+                "y": -165,
+                "z": 341.0898469658034
+              },
+              "q": {
+                "x": 0,
+                "y": 0.13052619222005157,
+                "z": 0,
+                "w": 0.9914448613738104
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-keyboard-tray": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Keyboard tray",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -6.794651465249938,
+                "y": -28,
+                "z": 202.93331149400944
+              },
+              "q": {
+                "x": 0,
+                "y": 0.07410849019539924,
+                "z": 0,
+                "w": 0.9972501850994857
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-ergo-keyboard": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Ergonomic keyboard",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -5.344666557576775,
+                "y": -47.70061428703271,
+                "z": 435.356380230231
+              },
+              "q": {
+                "x": 0,
+                "y": 0.9999619230641713,
+                "z": 0,
+                "w": 0.008726535498373897
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-monitor-arm-2": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Dual monitor arm",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -5.886719827714427,
+                "y": -30,
+                "z": -129.94032060186723
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-obsbot-tiny-2": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "OBSBOT Tiny 2 webcam / mic",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -43.28562139767581,
+                "y": 305,
+                "z": 275.63923908001897
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "default-shelf-0": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Wave and energy demonstration desk role detail",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          }
+        },
+        "artwork": {
+          "version": 1,
+          "surfaces": {}
+        },
+        "style": {
+          "woodFinish": "White Birch",
+          "baseFinish": "Space Gray",
+          "trimColor": "#85888c",
+          "sheen": "satin"
+        },
+        "accessories": [
+          "wide-monitor",
+          "portrait-monitor",
+          "keyboard-tray",
+          "ergo-keyboard",
+          "logitech-mx-master",
+          "cable-tray",
+          "monitor-arm-2",
+          "obsbot-tiny-2"
+        ],
+        "accessoryFinishes": {},
+        "peripheralRecipe": "office",
+        "peripheralSetup": "product-reference-v1",
+        "name": "Physics demonstration desk",
+        "added": false
+      },
+      "station-student-standing": {
+        "pose": {
+          "x": 4380,
+          "z": 1000,
+          "yaw": 0
+        },
+        "height": 41,
+        "tilt": 0,
+        "lights": {
+          "color": "#ffe0ae",
+          "glow": 24,
+          "enabled": false,
+          "effect": {
+            "mode": "solid",
+            "cycleSeconds": 8
+          },
+          "surfaces": {
+            "desktopStrength": 157,
+            "desktopReach": 100,
+            "desktopWidth": 5,
+            "desktopCone": 100,
+            "desktopEdgeFade": 46,
+            "desktopSharpness": 62,
+            "shelfStrength": 176,
+            "shelfReach": 98,
+            "baseStrength": 54,
+            "baseReach": 20,
+            "topStrength": 143,
+            "topReach": 77,
+            "floorStrength": 156,
+            "floorReach": 4,
+            "floorWidth": 50,
+            "floorSharpness": 73,
+            "leftWingStrength": 111,
+            "leftWingReach": 85,
+            "rightWingStrength": 110,
+            "rightWingReach": 87
+          },
+          "look": null,
+          "motion": true,
+          "music": {
+            "active": false,
+            "fx": 28,
+            "sensitivity": 1,
+            "palette": null,
+            "dj": false,
+            "settings": {
+              "version": 1,
+              "program": "party",
+              "comfort": "standard",
+              "beatAlign": true,
+              "remixPresets": true,
+              "remixSliders": true,
+              "remixPhysics": true,
+              "burstsOn": true,
+              "randomizeOn": true,
+              "remixBursts": true,
+              "dynamicsMode": "wide",
+              "mixStrips": true,
+              "lookWeights": {},
+              "paletteWeights": {},
+              "weights": {
+                "28": 2,
+                "29": 2,
+                "30": 2,
+                "31": 2,
+                "32": 2,
+                "33": 2,
+                "37": 2,
+                "38": 2,
+                "39": 2,
+                "40": 2
+              }
+            },
+            "source": "demo",
+            "sourceName": "Original demo soundtrack"
+          },
+          "game": {
+            "active": false,
+            "source": "demo",
+            "mode": "normal",
+            "content": "colours",
+            "maxBrightness": 1
+          }
+        },
+        "size": "48x30",
+        "phases": {},
+        "objects": {
+          "default-desktop-0": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Laptop",
+            "transform": {
+              "p": {
+                "x": -60,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-1": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Calculator",
+            "transform": {
+              "p": {
+                "x": 420,
+                "y": 0,
+                "z": 120
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-2": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Journal",
+            "transform": {
+              "p": {
+                "x": -460,
+                "y": 0,
+                "z": 130
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-apple-keyboard": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Apple Magic Keyboard",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -102.21924080936385,
+                "y": -6.5,
+                "z": 228.92429271020507
+              },
+              "q": {
+                "x": 0.08715574274765817,
+                "y": 0,
+                "z": 0,
+                "w": 0.9961946980917455
+              },
+              "s": {
+                "x": 1.2,
+                "y": 1.2,
+                "z": 1.2
+              }
+            }
+          },
+          "accessory-magic-mouse": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Apple Magic Mouse",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 244.8532245572961,
+                "y": 0,
+                "z": 213.37818229748677
+              },
+              "q": {
+                "x": 0,
+                "y": -0.7071067811865475,
+                "z": 0,
+                "w": 0.7071067811865476
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-monitor-arm": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Single monitor arm",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -13.001978816510317,
+                "y": 0,
+                "z": -104.41972395899724
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-dell-u2724d": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Dell UltraSharp 27",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 9.477646160520361,
+                "y": -166.26,
+                "z": 313.2442868586432
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1.2,
+                "y": 1.2,
+                "z": 1.2
+              }
+            }
+          },
+          "default-desktop-3": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Surf forecast standing desk role detail",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          }
+        },
+        "artwork": {
+          "version": 1,
+          "surfaces": {}
+        },
+        "style": {
+          "woodFinish": "White Birch",
+          "baseFinish": "White",
+          "trimColor": "#85888c",
+          "sheen": "satin"
+        },
+        "accessories": [
+          "apple-keyboard",
+          "magic-mouse",
+          "monitor-arm",
+          "dell-u2724d"
+        ],
+        "accessoryFinishes": {},
+        "peripheralRecipe": "compact",
+        "peripheralSetup": "product-reference-v1",
+        "name": "Student standing desk",
+        "added": false
+      },
+      "station-window-research": {
+        "pose": {
+          "x": -4300,
+          "z": 1000,
+          "yaw": 0
+        },
+        "height": 28,
+        "tilt": 0,
+        "lights": {
+          "color": "#ffe0ae",
+          "glow": 24,
+          "enabled": false,
+          "effect": {
+            "mode": "solid",
+            "cycleSeconds": 8
+          },
+          "surfaces": {
+            "desktopStrength": 157,
+            "desktopReach": 100,
+            "desktopWidth": 5,
+            "desktopCone": 100,
+            "desktopEdgeFade": 46,
+            "desktopSharpness": 62,
+            "shelfStrength": 176,
+            "shelfReach": 98,
+            "baseStrength": 54,
+            "baseReach": 20,
+            "topStrength": 143,
+            "topReach": 77,
+            "floorStrength": 156,
+            "floorReach": 4,
+            "floorWidth": 50,
+            "floorSharpness": 73,
+            "leftWingStrength": 111,
+            "leftWingReach": 85,
+            "rightWingStrength": 110,
+            "rightWingReach": 87
+          },
+          "look": null,
+          "motion": true,
+          "music": {
+            "active": false,
+            "fx": 28,
+            "sensitivity": 1,
+            "palette": null,
+            "dj": false,
+            "settings": {
+              "version": 1,
+              "program": "party",
+              "comfort": "standard",
+              "beatAlign": true,
+              "remixPresets": true,
+              "remixSliders": true,
+              "remixPhysics": true,
+              "burstsOn": true,
+              "randomizeOn": true,
+              "remixBursts": true,
+              "dynamicsMode": "wide",
+              "mixStrips": true,
+              "lookWeights": {},
+              "paletteWeights": {},
+              "weights": {
+                "28": 2,
+                "29": 2,
+                "30": 2,
+                "31": 2,
+                "32": 2,
+                "33": 2,
+                "37": 2,
+                "38": 2,
+                "39": 2,
+                "40": 2
+              }
+            },
+            "source": "demo",
+            "sourceName": "Original demo soundtrack"
+          },
+          "game": {
+            "active": false,
+            "source": "demo",
+            "mode": "normal",
+            "content": "colours",
+            "maxBrightness": 1
+          }
+        },
+        "size": "48x30",
+        "phases": {},
+        "objects": {
+          "default-desktop-0": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Laptop",
+            "transform": {
+              "p": {
+                "x": -120,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-1": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Books",
+            "transform": {
+              "p": {
+                "x": 400,
+                "y": 0,
+                "z": -100
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-2": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Glasses",
+            "transform": {
+              "p": {
+                "x": 380,
+                "y": 0,
+                "z": 150
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-3": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Research nook desk role detail",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "default-shelf-0": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Paper holder",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "accessory-keyboard-tray": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Keyboard tray",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 10.706814666388823,
+                "y": -28,
+                "z": 212.5002343022698
+              },
+              "q": {
+                "x": 0,
+                "y": 0.06104853953485687,
+                "z": 0,
+                "w": 0.9981347984218669
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-ergo-keyboard": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Ergonomic keyboard",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 0.8311009723180803,
+                "y": -47.70061428703271,
+                "z": 441.88502084065703
+              },
+              "q": {
+                "x": 0,
+                "y": 0.9997620270799091,
+                "z": 0,
+                "w": 0.02181488503456116
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-wide-monitor": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "AETHER 34UW curved ultrawide",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -0.7653064011932884,
+                "y": -80,
+                "z": 335.48439972115665
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-logitech-mx-master": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Logitech MX Master 3S",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 317.5868545442007,
+                "y": 0,
+                "z": 360.40488348463157
+              },
+              "q": {
+                "x": 0,
+                "y": 1,
+                "z": 0,
+                "w": 6.123233995736766e-17
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-monitor-arm": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Single monitor arm",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -5.242921433422435,
+                "y": 0,
+                "z": -100.81619804664822
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "default-shelf-1": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Tabletop leafy planter",
+            "transform": {
+              "p": {
+                "x": 330,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          }
+        },
+        "artwork": {
+          "version": 1,
+          "surfaces": {}
+        },
+        "style": {
+          "woodFinish": "White Birch",
+          "baseFinish": "Space Gray",
+          "trimColor": "#85888c",
+          "sheen": "satin"
+        },
+        "accessories": [
+          "keyboard-tray",
+          "ergo-keyboard",
+          "logitech-mx-master",
+          "wide-monitor",
+          "monitor-arm"
+        ],
+        "accessoryFinishes": {},
+        "peripheralRecipe": "library",
+        "peripheralSetup": "product-reference-v1",
+        "name": "Research nook desk",
+        "added": false
+      },
+      "station-accessible-student": {
+        "pose": {
+          "x": -4299.999999999999,
+          "z": 3799.999999999999,
+          "yaw": 0
+        },
+        "height": 28,
+        "tilt": 0,
+        "lights": {
+          "color": "#ffe0ae",
+          "glow": 24,
+          "enabled": false,
+          "effect": {
+            "mode": "solid",
+            "cycleSeconds": 8
+          },
+          "surfaces": {
+            "desktopStrength": 157,
+            "desktopReach": 100,
+            "desktopWidth": 5,
+            "desktopCone": 100,
+            "desktopEdgeFade": 46,
+            "desktopSharpness": 62,
+            "shelfStrength": 176,
+            "shelfReach": 98,
+            "baseStrength": 54,
+            "baseReach": 20,
+            "topStrength": 143,
+            "topReach": 77,
+            "floorStrength": 156,
+            "floorReach": 4,
+            "floorWidth": 50,
+            "floorSharpness": 73,
+            "leftWingStrength": 111,
+            "leftWingReach": 85,
+            "rightWingStrength": 110,
+            "rightWingReach": 87
+          },
+          "look": null,
+          "motion": true,
+          "music": {
+            "active": false,
+            "fx": 28,
+            "sensitivity": 1,
+            "palette": null,
+            "dj": false,
+            "settings": {
+              "version": 1,
+              "program": "party",
+              "comfort": "standard",
+              "beatAlign": true,
+              "remixPresets": true,
+              "remixSliders": true,
+              "remixPhysics": true,
+              "burstsOn": true,
+              "randomizeOn": true,
+              "remixBursts": true,
+              "dynamicsMode": "wide",
+              "mixStrips": true,
+              "lookWeights": {},
+              "paletteWeights": {},
+              "weights": {
+                "28": 2,
+                "29": 2,
+                "30": 2,
+                "31": 2,
+                "32": 2,
+                "33": 2,
+                "37": 2,
+                "38": 2,
+                "39": 2,
+                "40": 2
+              }
+            },
+            "source": "demo",
+            "sourceName": "Original demo soundtrack"
+          },
+          "game": {
+            "active": false,
+            "source": "demo",
+            "mode": "normal",
+            "content": "colours",
+            "maxBrightness": 1
+          }
+        },
+        "size": "48x30",
+        "phases": {},
+        "objects": {
+          "default-desktop-0": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Tablet PC",
+            "transform": {
+              "p": {
+                "x": -150,
+                "y": 0,
+                "z": -80
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-1": {
+            "role": "desktop",
+            "added": false,
+            "removed": true,
+            "label": "Black office keyboard",
+            "transform": {
+              "p": {
+                "x": -50,
+                "y": 0,
+                "z": 160
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-2": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Over-ear headphones",
+            "transform": {
+              "p": {
+                "x": 470,
+                "y": 0,
+                "z": -90
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-3": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Accessible student desk role detail",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-apple-keyboard": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Apple Magic Keyboard",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -102.21924080936385,
+                "y": -6.5,
+                "z": 228.92429271020507
+              },
+              "q": {
+                "x": 0.08715574274765817,
+                "y": 0,
+                "z": 0,
+                "w": 0.9961946980917455
+              },
+              "s": {
+                "x": 1.2,
+                "y": 1.2,
+                "z": 1.2
+              }
+            }
+          },
+          "accessory-magic-mouse": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Apple Magic Mouse",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 244.8532245572961,
+                "y": 0,
+                "z": 213.37818229748677
+              },
+              "q": {
+                "x": 0,
+                "y": -0.7071067811865475,
+                "z": 0,
+                "w": 0.7071067811865476
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-monitor-arm": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Single monitor arm",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -13.001978816510317,
+                "y": 0,
+                "z": -104.41972395899724
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-dell-u2724d": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Dell UltraSharp 27",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 9.477646160520361,
+                "y": -166.26,
+                "z": 313.2442868586432
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1.2,
+                "y": 1.2,
+                "z": 1.2
+              }
+            }
+          }
+        },
+        "artwork": {
+          "version": 1,
+          "surfaces": {}
+        },
+        "style": {
+          "woodFinish": "White Birch",
+          "baseFinish": "White",
+          "trimColor": "#85888c",
+          "sheen": "satin"
+        },
+        "accessories": [
+          "apple-keyboard",
+          "magic-mouse",
+          "monitor-arm",
+          "dell-u2724d"
+        ],
+        "accessoryFinishes": {},
+        "peripheralRecipe": "compact",
+        "peripheralSetup": "product-reference-v1",
+        "name": "Accessible student desk",
+        "added": false
+      },
+      "station-project-review": {
+        "pose": {
+          "x": -1000,
+          "z": 6700,
+          "yaw": 0
+        },
+        "height": 43.5,
+        "tilt": 25,
+        "lights": {
+          "color": "#ffe0ae",
+          "glow": 24,
+          "enabled": false,
+          "effect": {
+            "mode": "solid",
+            "cycleSeconds": 8
+          },
+          "surfaces": {
+            "desktopStrength": 157,
+            "desktopReach": 100,
+            "desktopWidth": 5,
+            "desktopCone": 100,
+            "desktopEdgeFade": 46,
+            "desktopSharpness": 62,
+            "shelfStrength": 176,
+            "shelfReach": 98,
+            "baseStrength": 54,
+            "baseReach": 20,
+            "topStrength": 143,
+            "topReach": 77,
+            "floorStrength": 156,
+            "floorReach": 4,
+            "floorWidth": 50,
+            "floorSharpness": 73,
+            "leftWingStrength": 111,
+            "leftWingReach": 85,
+            "rightWingStrength": 110,
+            "rightWingReach": 87
+          },
+          "look": null,
+          "motion": true,
+          "music": {
+            "active": false,
+            "fx": 28,
+            "sensitivity": 1,
+            "palette": null,
+            "dj": false,
+            "settings": {
+              "version": 1,
+              "program": "party",
+              "comfort": "standard",
+              "beatAlign": true,
+              "remixPresets": true,
+              "remixSliders": true,
+              "remixPhysics": true,
+              "burstsOn": true,
+              "randomizeOn": true,
+              "remixBursts": true,
+              "dynamicsMode": "wide",
+              "mixStrips": true,
+              "lookWeights": {},
+              "paletteWeights": {},
+              "weights": {
+                "28": 2,
+                "29": 2,
+                "30": 2,
+                "31": 2,
+                "32": 2,
+                "33": 2,
+                "37": 2,
+                "38": 2,
+                "39": 2,
+                "40": 2
+              }
+            },
+            "source": "demo",
+            "sourceName": "Original demo soundtrack"
+          },
+          "game": {
+            "active": false,
+            "source": "demo",
+            "mode": "normal",
+            "content": "colours",
+            "maxBrightness": 1
+          }
+        },
+        "size": "60x30",
+        "phases": {},
+        "objects": {
+          "default-desktop-0": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Metal ruler",
+            "transform": {
+              "p": {
+                "x": 560,
+                "y": 1,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0.7071067811865475,
+                "z": 0,
+                "w": 0.7071067811865476
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-1": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Sketchbook",
+            "transform": {
+              "p": {
+                "x": -580,
+                "y": 1,
+                "z": 160
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-2": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Poster and project review desk role detail",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "default-shelf-0": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Books",
+            "transform": {
+              "p": {
+                "x": -300,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-shelf-1": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Paper stand",
+            "transform": {
+              "p": {
+                "x": 300,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "accessory-apple-keyboard": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Apple Magic Keyboard",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -127.77405101170481,
+                "y": -6.5,
+                "z": 228.92429271020507
+              },
+              "q": {
+                "x": 0.08715574274765817,
+                "y": 0,
+                "z": 0,
+                "w": 0.9961946980917455
+              },
+              "s": {
+                "x": 1.2,
+                "y": 1.2,
+                "z": 1.2
+              }
+            }
+          },
+          "accessory-magic-mouse": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Apple Magic Mouse",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 306.06653069662013,
+                "y": 0,
+                "z": 213.37818229748677
+              },
+              "q": {
+                "x": 0,
+                "y": -0.7071067811865475,
+                "z": 0,
+                "w": 0.7071067811865476
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-monitor-arm": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Single monitor arm",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -16.252473520637896,
+                "y": 0,
+                "z": -104.41972395899724
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-dell-u2724d": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Dell UltraSharp 27",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 11.847057700650453,
+                "y": -166.26,
+                "z": 313.2442868586432
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1.2,
+                "y": 1.2,
+                "z": 1.2
+              }
+            }
+          },
+          "default-desktop-3": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "APA set and costume design review desk role detail",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          }
+        },
+        "artwork": {
+          "version": 1,
+          "surfaces": {}
+        },
+        "style": {
+          "woodFinish": "White Birch",
+          "baseFinish": "Space Gray",
+          "trimColor": "#85888c",
+          "sheen": "satin"
+        },
+        "accessories": [
+          "apple-keyboard",
+          "magic-mouse",
+          "monitor-arm",
+          "dell-u2724d"
+        ],
+        "accessoryFinishes": {},
+        "peripheralRecipe": "compact",
+        "peripheralSetup": "product-reference-v1",
+        "name": "Poster and project review desk",
+        "added": false
+      },
+      "station-research-desk": {
+        "pose": {
+          "x": 1500,
+          "z": 6600,
+          "yaw": 0
+        },
+        "height": 28,
+        "tilt": 0,
+        "lights": {
+          "color": "#ffe0ae",
+          "glow": 24,
+          "enabled": false,
+          "effect": {
+            "mode": "solid",
+            "cycleSeconds": 8
+          },
+          "surfaces": {
+            "desktopStrength": 157,
+            "desktopReach": 100,
+            "desktopWidth": 5,
+            "desktopCone": 100,
+            "desktopEdgeFade": 46,
+            "desktopSharpness": 62,
+            "shelfStrength": 176,
+            "shelfReach": 98,
+            "baseStrength": 54,
+            "baseReach": 20,
+            "topStrength": 143,
+            "topReach": 77,
+            "floorStrength": 156,
+            "floorReach": 4,
+            "floorWidth": 50,
+            "floorSharpness": 73,
+            "leftWingStrength": 111,
+            "leftWingReach": 85,
+            "rightWingStrength": 110,
+            "rightWingReach": 87
+          },
+          "look": null,
+          "motion": true,
+          "music": {
+            "active": false,
+            "fx": 28,
+            "sensitivity": 1,
+            "palette": null,
+            "dj": false,
+            "settings": {
+              "version": 1,
+              "program": "party",
+              "comfort": "standard",
+              "beatAlign": true,
+              "remixPresets": true,
+              "remixSliders": true,
+              "remixPhysics": true,
+              "burstsOn": true,
+              "randomizeOn": true,
+              "remixBursts": true,
+              "dynamicsMode": "wide",
+              "mixStrips": true,
+              "lookWeights": {},
+              "paletteWeights": {},
+              "weights": {
+                "28": 2,
+                "29": 2,
+                "30": 2,
+                "31": 2,
+                "32": 2,
+                "33": 2,
+                "37": 2,
+                "38": 2,
+                "39": 2,
+                "40": 2
+              }
+            },
+            "source": "demo",
+            "sourceName": "Original demo soundtrack"
+          },
+          "game": {
+            "active": false,
+            "source": "demo",
+            "mode": "normal",
+            "content": "colours",
+            "maxBrightness": 1
+          }
+        },
+        "size": "60x30",
+        "phases": {},
+        "objects": {
+          "default-desktop-0": {
+            "role": "desktop",
+            "added": false,
+            "removed": true,
+            "label": "Black office keyboard",
+            "transform": {
+              "p": {
+                "x": -80,
+                "y": 0,
+                "z": 120
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-1": {
+            "role": "desktop",
+            "added": false,
+            "removed": true,
+            "label": "Apple Magic Mouse",
+            "transform": {
+              "p": {
+                "x": 330,
+                "y": 0,
+                "z": 110
+              },
+              "q": {
+                "x": 0,
+                "y": 0.7071067811865475,
+                "z": 0,
+                "w": 0.7071067811865476
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-2": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Journal",
+            "transform": {
+              "p": {
+                "x": -560,
+                "y": 0,
+                "z": 60
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "default-desktop-3": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Plant Small1",
+            "transform": {
+              "p": {
+                "x": 610,
+                "y": 0,
+                "z": -150
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-desktop-4": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Research and data desk role detail",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "default-shelf-0": {
+            "role": "shelf",
+            "added": false,
+            "removed": true,
+            "label": "Computer Screen",
+            "transform": {
+              "p": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "accessory-keyboard-tray": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Keyboard tray",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 13.383518332986029,
+                "y": -28,
+                "z": 212.5002343022698
+              },
+              "q": {
+                "x": 0,
+                "y": 0.06104853953485687,
+                "z": 0,
+                "w": 0.9981347984218669
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-ergo-keyboard": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Ergonomic keyboard",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 1.0388762153976003,
+                "y": -47.70061428703271,
+                "z": 441.88502084065703
+              },
+              "q": {
+                "x": 0,
+                "y": 0.9997620270799091,
+                "z": 0,
+                "w": 0.02181488503456116
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-wide-monitor": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "AETHER 34UW curved ultrawide",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -0.9566330014916105,
+                "y": -80,
+                "z": 335.48439972115665
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-logitech-mx-master": {
+            "role": "desktop",
+            "added": false,
+            "removed": false,
+            "label": "Logitech MX Master 3S",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": 396.98356818025087,
+                "y": 0,
+                "z": 360.40488348463157
+              },
+              "q": {
+                "x": 0,
+                "y": 1,
+                "z": 0,
+                "w": 6.123233995736766e-17
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "accessory-monitor-arm": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Single monitor arm",
+            "custom": true,
+            "transform": {
+              "p": {
+                "x": -6.553651791778043,
+                "y": 0,
+                "z": -100.81619804664822
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          },
+          "default-shelf-1": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Slim studio speaker",
+            "transform": {
+              "p": {
+                "x": -650,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          },
+          "default-shelf-2": {
+            "role": "shelf",
+            "added": false,
+            "removed": false,
+            "label": "Slim studio speaker",
+            "transform": {
+              "p": {
+                "x": 650,
+                "y": 0,
+                "z": 0
+              },
+              "q": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "s": {
+                "x": 1000,
+                "y": 1000,
+                "z": 1000
+              }
+            }
+          }
+        },
+        "artwork": {
+          "version": 1,
+          "surfaces": {}
+        },
+        "style": {
+          "woodFinish": "White Birch",
+          "baseFinish": "White",
+          "trimColor": "#85888c",
+          "sheen": "satin"
+        },
+        "accessories": [
+          "keyboard-tray",
+          "ergo-keyboard",
+          "logitech-mx-master",
+          "wide-monitor",
+          "monitor-arm"
+        ],
+        "accessoryFinishes": {},
+        "peripheralRecipe": "library",
+        "peripheralSetup": "product-reference-v1",
+        "name": "Research and data desk",
+        "added": false
+      }
+    },
+    "deleted": [],
+    "selected": "main"
+  },
+  "assets": {
+    "removed": [],
+    "added": [],
+    "transforms": {
+      "scene:highschool:house:fixture:room-sign": {
+        "p": {
+          "x": 0,
+          "y": 2520,
+          "z": -3950
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:planning-board": {
+        "p": {
+          "x": 1700,
+          "y": 1640,
+          "z": -3935
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:wall-clock": {
+        "p": {
+          "x": -4450,
+          "y": 2450,
+          "z": -3945
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:research-gallery": {
+        "p": {
+          "x": -2700,
+          "y": 1659.9999999999998,
+          "z": -3945
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:presentation-display": {
+        "p": {
+          "x": 4970,
+          "y": 1350,
+          "z": 2839.9999999999995
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:acoustic-panels": {
+        "p": {
+          "x": 4955,
+          "y": 1849.9999999999995,
+          "z": -1120
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:identity-gallery": {
+        "p": {
+          "x": 4955,
+          "y": 1650,
+          "z": 859.9999999999991
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:activity-table": {
+        "p": {
+          "x": 4000,
+          "y": 0,
+          "z": 7299.999999999999
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:storage": {
+        "p": {
+          "x": 4239.999999999999,
+          "y": 0,
+          "z": -3569.999999999999
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:mobile-desk-chair": {
+        "p": {
+          "x": -3750.0000000000005,
+          "y": 0,
+          "z": -1049.9999999999977
+        },
+        "q": {
+          "x": 0,
+          "y": 0.30901699437494723,
+          "z": 0,
+          "w": 0.9510565162951536
+        },
+        "s": {
+          "x": 0.9999999999999999,
+          "y": 1,
+          "z": 0.9999999999999999
+        }
+      },
+      "scene:highschool:house:fixture:student-table-0-0": {
+        "p": {
+          "x": -149.99999999999972,
+          "y": 0,
+          "z": -1700
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-0-0--340": {
+        "p": {
+          "x": -490,
+          "y": 0,
+          "z": -1130.0000000000002
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-0-0-340": {
+        "p": {
+          "x": 190,
+          "y": 0,
+          "z": -1130
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-table-0-1": {
+        "p": {
+          "x": 1699.999999999999,
+          "y": 0,
+          "z": -1700.0000000000002
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-0-1--340": {
+        "p": {
+          "x": 1360,
+          "y": 0,
+          "z": -1130
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-0-1-340": {
+        "p": {
+          "x": 2040,
+          "y": 0,
+          "z": -1130
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-table-1-0": {
+        "p": {
+          "x": -150,
+          "y": 0,
+          "z": -250
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-1-0--340": {
+        "p": {
+          "x": -490.00000000000006,
+          "y": 0,
+          "z": 320
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-1-0-340": {
+        "p": {
+          "x": 190,
+          "y": 0,
+          "z": 320
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-table-1-1": {
+        "p": {
+          "x": 1700,
+          "y": 0,
+          "z": -250
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-1-1--340": {
+        "p": {
+          "x": 1359.9999999999998,
+          "y": 0,
+          "z": 320
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-1-1-340": {
+        "p": {
+          "x": 2040,
+          "y": 0,
+          "z": 320
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-table-2-0": {
+        "p": {
+          "x": -150,
+          "y": 0,
+          "z": 1200
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-2-0--340": {
+        "p": {
+          "x": -490,
+          "y": 0,
+          "z": 1770
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-2-0-340": {
+        "p": {
+          "x": 189.99999999999994,
+          "y": 0,
+          "z": 1770
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-table-2-1": {
+        "p": {
+          "x": 1700,
+          "y": 0,
+          "z": 1200
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-2-1--340": {
+        "p": {
+          "x": 1360,
+          "y": 0,
+          "z": 1770
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-2-1-340": {
+        "p": {
+          "x": 2040,
+          "y": 0,
+          "z": 1770.0000000000005
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-table-3-0": {
+        "p": {
+          "x": -150,
+          "y": 0,
+          "z": 2649.9999999999995
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-3-0--340": {
+        "p": {
+          "x": -490,
+          "y": 0,
+          "z": 3220
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-3-0-340": {
+        "p": {
+          "x": 190,
+          "y": 0,
+          "z": 3220
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-table-3-1": {
+        "p": {
+          "x": 1700.0000000000002,
+          "y": 0,
+          "z": 2649.999999999999
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-3-1--340": {
+        "p": {
+          "x": 1360,
+          "y": 0,
+          "z": 3220
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-3-1-340": {
+        "p": {
+          "x": 2040,
+          "y": 0,
+          "z": 3220
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:desk-zone-rug": {
+        "p": {
+          "x": -3749.9999999999986,
+          "y": 0,
+          "z": -1949.9999999999995
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:corner-planter": {
+        "p": {
+          "x": 4600,
+          "y": 0,
+          "z": 7580.000000000001
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:resource-shelf": {
+        "p": {
+          "x": -300,
+          "y": 0,
+          "z": -3660
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:life:activity": {
+        "p": {
+          "x": 4000,
+          "y": 740.9999999999998,
+          "z": 7299.999999999999
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:station:teacher-desk": {
+        "p": {
+          "x": -2000,
+          "y": 0,
+          "z": -3000.0000000000005
+        },
+        "q": {
+          "x": 0,
+          "y": 1,
+          "z": 0,
+          "w": 6.123233995736765e-17
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:station:assistant-desk": {
+        "p": {
+          "x": -3749.999999999999,
+          "y": 0,
+          "z": 6499.999999999999
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:room:1:steelcase-leap-v2": {
+        "p": {
+          "x": -1999.9999999999998,
+          "y": 0,
+          "z": -4050.000000000001
+        },
+        "q": {
+          "x": 0,
+          "y": -1.224646799147353e-16,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:2:steelcase-leap-v2": {
+        "p": {
+          "x": -3750,
+          "y": 0,
+          "z": 7549.999999999998
+        },
+        "q": {
+          "x": 0,
+          "y": 1,
+          "z": 0,
+          "w": 6.123233995736765e-17
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:desktop:0:journal": {
+        "p": {
+          "x": 159.9999999999991,
+          "y": 0,
+          "z": 70
+        },
+        "q": {
+          "x": 5.959617699657463e-25,
+          "y": -4.591774807899561e-41,
+          "z": 3.3881317890172014e-24,
+          "w": 1
+        },
+        "s": {
+          "x": 1000.0000000000003,
+          "y": 1000,
+          "z": 1000.0000000000001
+        }
+      },
+      "scene:highschool:desktop:1:kenney-furniture-laptop": {
+        "p": {
+          "x": -230.0000000000009,
+          "y": 4.547473508864641e-13,
+          "z": 10
+        },
+        "q": {
+          "x": 5.959617699657463e-25,
+          "y": -4.591774807899561e-41,
+          "z": 3.3881317890172014e-24,
+          "w": 1
+        },
+        "s": {
+          "x": 1000.0000000000003,
+          "y": 1000,
+          "z": 1000.0000000000001
+        }
+      },
+      "scene:highschool:desktop:daily-kit": {
+        "p": {
+          "x": -440.0000000000018,
+          "y": 0.9999999999997726,
+          "z": 149.99999999999955
+        },
+        "q": {
+          "x": 5.959616725148196e-25,
+          "y": 1.0339757656912848e-24,
+          "z": -4.408103815583578e-39,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 0.9999999999999994,
+          "z": 0.9999999999999998
+        }
+      },
+      "scene:highschool:shelf:2:paper-holder": {
+        "p": {
+          "x": 300.00000000000045,
+          "y": 2.2737367544323206e-13,
+          "z": -1.3642420526593924e-12
+        },
+        "q": {
+          "x": 3.1258125418130195e-23,
+          "y": -2.4233807008389487e-30,
+          "z": -1.3552527156068806e-23,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 999.9999999999998,
+          "z": 999.9999999999998
+        }
+      },
+      "scene:highschool:house:fixture:sankey-poster": {
+        "p": {
+          "x": -500,
+          "y": 1749.9999999999995,
+          "z": -3971
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:projector-screen-box": {
+        "p": {
+          "x": 1700,
+          "y": 2560,
+          "z": -3917.9999999999986
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:61:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:62:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:63:0:Push pins": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:goggles-rack": {
+        "p": {
+          "x": 4948.000000000001,
+          "y": 1500,
+          "z": -2000
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:eyewash-sign": {
+        "p": {
+          "x": 4974,
+          "y": 1749.9999999999995,
+          "z": -1000
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:poster-gallery": {
+        "p": {
+          "x": 4973,
+          "y": 1700,
+          "z": 4800
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:64:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:65:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:66:0:Push pins": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:safety-poster": {
+        "p": {
+          "x": -4971,
+          "y": 1800,
+          "z": -3450
+        },
+        "q": {
+          "x": 0,
+          "y": 0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:teacher-timetable": {
+        "p": {
+          "x": -4970,
+          "y": 1900,
+          "z": -2050
+        },
+        "q": {
+          "x": 0,
+          "y": 0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:67:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:68:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-0-0-0": {
+        "p": {
+          "x": -2384.9999999999986,
+          "y": 0,
+          "z": 1069.9999999999982
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-0-0-1": {
+        "p": {
+          "x": -1765,
+          "y": 0,
+          "z": 1070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-0-1-0": {
+        "p": {
+          "x": -234.99999999999994,
+          "y": 0,
+          "z": 1070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-0-1-1": {
+        "p": {
+          "x": 385,
+          "y": 0,
+          "z": 1070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-table-0-2": {
+        "p": {
+          "x": 2225,
+          "y": 0,
+          "z": 500
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-0-2-0": {
+        "p": {
+          "x": 1914.9999999999995,
+          "y": 0,
+          "z": 1070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-0-2-1": {
+        "p": {
+          "x": 2535,
+          "y": 0,
+          "z": 1070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-1-0-0": {
+        "p": {
+          "x": -2385,
+          "y": 0,
+          "z": 3070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-1-0-1": {
+        "p": {
+          "x": -1765,
+          "y": 0,
+          "z": 3070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-1-1-0": {
+        "p": {
+          "x": -235,
+          "y": 0,
+          "z": 3070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-1-1-1": {
+        "p": {
+          "x": 385,
+          "y": 0,
+          "z": 3070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-table-1-2": {
+        "p": {
+          "x": 2225,
+          "y": 0,
+          "z": 2500
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-1-2-0": {
+        "p": {
+          "x": 1915,
+          "y": 0,
+          "z": 3070.0000000000005
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-1-2-1": {
+        "p": {
+          "x": 2534.999999999999,
+          "y": 0,
+          "z": 3070.0000000000005
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-2-0-0": {
+        "p": {
+          "x": -2385,
+          "y": 0,
+          "z": 5070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-2-0-1": {
+        "p": {
+          "x": -1765,
+          "y": 0,
+          "z": 5069.999999999993
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-2-1-0": {
+        "p": {
+          "x": -235,
+          "y": 0,
+          "z": 5070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-2-1-1": {
+        "p": {
+          "x": 385.0000000000001,
+          "y": 0,
+          "z": 5070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-table-2-2": {
+        "p": {
+          "x": 2225,
+          "y": 0,
+          "z": 4499.999999999999
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-2-2-0": {
+        "p": {
+          "x": 1914.9999999999995,
+          "y": 0,
+          "z": 5070
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:student-chair-2-2-1": {
+        "p": {
+          "x": 2534.9999999999964,
+          "y": 0,
+          "z": 5069.999999999996
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:demo-floor-inlay": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": -2600
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:wall-bench": {
+        "p": {
+          "x": 4700,
+          "y": 0,
+          "z": -1649.9999999999995
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:lockers": {
+        "p": {
+          "x": 4830,
+          "y": 0,
+          "z": 7500
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:station:demonstration-desk": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": -2600
+        },
+        "q": {
+          "x": 0,
+          "y": 6.123233995736765e-17,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:station:student-standing": {
+        "p": {
+          "x": 4380,
+          "y": 0,
+          "z": 1000
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:station:window-research": {
+        "p": {
+          "x": -4300,
+          "y": 0,
+          "z": 1000
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:station:accessible-student": {
+        "p": {
+          "x": -4299.999999999999,
+          "y": 0,
+          "z": 3799.9999999999986
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:station:project-review": {
+        "p": {
+          "x": -1000,
+          "y": 0,
+          "z": 6700
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:station:research-desk": {
+        "p": {
+          "x": 1500,
+          "y": 0,
+          "z": 6600
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:room:3:backpack-daypack": {
+        "p": {
+          "x": -1829.9999999999977,
+          "y": 0,
+          "z": 650
+        },
+        "q": {
+          "x": 0,
+          "y": 0.1736481776669303,
+          "z": 0,
+          "w": 0.9848077530122079
+        },
+        "s": {
+          "x": 999.9999999999999,
+          "y": 1000,
+          "z": 999.9999999999999
+        }
+      },
+      "scene:highschool:house:room:4:backpack": {
+        "p": {
+          "x": 320,
+          "y": 0,
+          "z": 2649.9999999999995
+        },
+        "q": {
+          "x": 0,
+          "y": -0.25881904510252074,
+          "z": 0,
+          "w": 0.9659258262890682
+        },
+        "s": {
+          "x": 1000.0000000000001,
+          "y": 1000,
+          "z": 1000.0000000000001
+        }
+      },
+      "scene:highschool:house:room:5:backpack-daypack": {
+        "p": {
+          "x": 2469.9999999999964,
+          "y": 0,
+          "z": 4650
+        },
+        "q": {
+          "x": 0,
+          "y": 0.984807753012208,
+          "z": 0,
+          "w": 0.17364817766693064
+        },
+        "s": {
+          "x": 999.999999999999,
+          "y": 1000,
+          "z": 999.999999999999
+        }
+      },
+      "scene:highschool:house:room:6:backpack": {
+        "p": {
+          "x": -1830,
+          "y": 0,
+          "z": 4649.999999999993
+        },
+        "q": {
+          "x": 0,
+          "y": 0.0871557427476582,
+          "z": 0,
+          "w": 0.9961946980917455
+        },
+        "s": {
+          "x": 999.9999999999997,
+          "y": 1000,
+          "z": 999.9999999999997
+        }
+      },
+      "scene:highschool:house:room:7:water-bottle": {
+        "p": {
+          "x": -2520,
+          "y": 740,
+          "z": 360
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:8:water-bottle": {
+        "p": {
+          "x": 520,
+          "y": 740,
+          "z": 2360
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:9:water-bottle": {
+        "p": {
+          "x": 1780,
+          "y": 740,
+          "z": 360
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:10:water-bottle": {
+        "p": {
+          "x": -379.9999999999999,
+          "y": 740,
+          "z": 4360
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:desktop:0:kenney-furniture-laptop": {
+        "p": {
+          "x": -200.00000000000136,
+          "y": -2.2737367544323206e-13,
+          "z": -20.000000000001137
+        },
+        "q": {
+          "x": 5.95961707322806e-25,
+          "y": 4.235164736271503e-25,
+          "z": -1.0285575569695016e-38,
+          "w": 1
+        },
+        "s": {
+          "x": 1000.0000000000003,
+          "y": 999.9999999999994,
+          "z": 999.9999999999998
+        }
+      },
+      "scene:highschool:desktop:1:calculator": {
+        "p": {
+          "x": 299.99999999999955,
+          "y": -4.547473508864641e-13,
+          "z": 139.99999999999886
+        },
+        "q": {
+          "x": 5.95961707322806e-25,
+          "y": 4.235164736271503e-25,
+          "z": -1.0285575569695016e-38,
+          "w": 1
+        },
+        "s": {
+          "x": 1000.0000000000003,
+          "y": 999.9999999999994,
+          "z": 999.9999999999998
+        }
+      },
+      "scene:highschool:desktop:2:papers": {
+        "p": {
+          "x": 469.99999999999864,
+          "y": -4.547473508864641e-13,
+          "z": 39.99999999999886
+        },
+        "q": {
+          "x": -1.6608922478513269e-21,
+          "y": -0.0697564737441253,
+          "z": 9.713719047980266e-22,
+          "w": 0.9975640502598243
+        },
+        "s": {
+          "x": 1000,
+          "y": 999.9999999999994,
+          "z": 1000
+        }
+      },
+      "scene:highschool:desktop:3:insulated-mug": {
+        "p": {
+          "x": -600.0000000000018,
+          "y": 0,
+          "z": 149.9999999999991
+        },
+        "q": {
+          "x": 5.95961707322806e-25,
+          "y": 4.235164736271503e-25,
+          "z": -1.0285575569695016e-38,
+          "w": 1
+        },
+        "s": {
+          "x": 1000.0000000000003,
+          "y": 999.9999999999994,
+          "z": 999.9999999999998
+        }
+      },
+      "scene:highschool:shelf:4:curved-monitor": {
+        "p": {
+          "x": 0,
+          "y": 4.547473508864641e-13,
+          "z": -9.094947017729282e-13
+        },
+        "q": {
+          "x": 3.1258125418130195e-23,
+          "y": -2.4233807008389487e-30,
+          "z": -1.3552527156068806e-23,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 999.9999999999998,
+          "z": 999.9999999999998
+        }
+      },
+      "scene:highschool:house:placement:66:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:68:0:Push pins": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:69:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:70:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:71:0:Push pins": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:72:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:73:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:bell-tower-print": {
+        "p": {
+          "x": -4100,
+          "y": 1650,
+          "z": -3966
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:83:0:Showcase pennant string": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:84:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:85:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:86:0:Push pins": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:room-number-plaque": {
+        "p": {
+          "x": 4973,
+          "y": 1500,
+          "z": 5795.000000000001
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:87:0:Showcase pennant string": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:88:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:89:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:90:0:Push pins": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:teacher-pennants": {
+        "p": {
+          "x": -4978,
+          "y": 2649.9999999999995,
+          "z": -2750.000000000001
+        },
+        "q": {
+          "x": 0,
+          "y": 0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:fixture:oiler-pride-wall": {
+        "p": {
+          "x": -4978,
+          "y": 1800,
+          "z": 6700
+        },
+        "q": {
+          "x": 0,
+          "y": 0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:91:0:Showcase pennant string": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:92:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:placement:93:0:Wainscot cap rail": {
+        "p": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "scene:highschool:house:room:1:ergoflex-office-chair": {
+        "p": {
+          "x": -4299.999999999999,
+          "y": 0,
+          "z": 2050
+        },
+        "q": {
+          "x": 0,
+          "y": 1,
+          "z": 0,
+          "w": 6.123233995736765e-17
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:2:ergoflex-office-chair": {
+        "p": {
+          "x": 1500,
+          "y": 0,
+          "z": 7650
+        },
+        "q": {
+          "x": 0,
+          "y": 1,
+          "z": 0,
+          "w": 6.123233995736765e-17
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:11:ergoflex-plant-2": {
+        "p": {
+          "x": -3350.000000000001,
+          "y": 0,
+          "z": -3699.9999999999977
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:12:ergoflex-trash-can": {
+        "p": {
+          "x": -2579.9999999999995,
+          "y": 0,
+          "z": -2700
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:13:ergoflex-designer-chair": {
+        "p": {
+          "x": -2420,
+          "y": 0,
+          "z": -1550
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:14:ergoflex-artist-stool": {
+        "p": {
+          "x": 4060,
+          "y": 0,
+          "z": -2000
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:15:ergoflex-artist-stool": {
+        "p": {
+          "x": 4059.9999999999977,
+          "y": 0,
+          "z": -1300
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:16:ergoflex-paper-tray": {
+        "p": {
+          "x": 4699.999999999999,
+          "y": 900,
+          "z": -2499.999999999998
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:17:ergoflex-plant-2": {
+        "p": {
+          "x": 4700,
+          "y": 0,
+          "z": -330
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:18:ergoflex-printer": {
+        "p": {
+          "x": -1800,
+          "y": 1050,
+          "z": -3640
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:19:ergoflex-tall-office-chair": {
+        "p": {
+          "x": -999.9999999999994,
+          "y": 0,
+          "z": 7559.999999999999
+        },
+        "q": {
+          "x": 0,
+          "y": 1,
+          "z": 0,
+          "w": 6.123233995736765e-17
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:20:ergoflex-desktop-pc": {
+        "p": {
+          "x": 2479.9999999999995,
+          "y": 0,
+          "z": 6619.9999999999945
+        },
+        "q": {
+          "x": 0,
+          "y": -0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:21:ergoflex-trash-can": {
+        "p": {
+          "x": 3400,
+          "y": 0,
+          "z": 7760
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:22:ergoflex-trash-can": {
+        "p": {
+          "x": 3849.9999999999995,
+          "y": 0,
+          "z": 7760
+        },
+        "q": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      },
+      "scene:highschool:house:room:23:ergoflex-violin": {
+        "p": {
+          "x": 2420,
+          "y": 740,
+          "z": 4520
+        },
+        "q": {
+          "x": 0,
+          "y": 0.1736481776669303,
+          "z": 0,
+          "w": 0.9848077530122079
+        },
+        "s": {
+          "x": 999.9999999999999,
+          "y": 1000,
+          "z": 999.9999999999999
+        }
+      },
+      "scene:highschool:house:room:24:ergoflex-small-bookshelf": {
+        "p": {
+          "x": -4699.999999999996,
+          "y": 0,
+          "z": 6349.999999999998
+        },
+        "q": {
+          "x": 0,
+          "y": 0.7071067811865475,
+          "z": 0,
+          "w": 0.7071067811865476
+        },
+        "s": {
+          "x": 1000,
+          "y": 1000,
+          "z": 1000
+        }
+      }
+    }
+  }
+}

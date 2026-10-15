@@ -13887,6 +13887,2656 @@
    "repair": "environment-decor",
    "revision": "environment-detail-scale-20261013",
    "sizeNote": "Estimated real-world dimensions for scene decoration."
+  },
+  {
+   "id": "milano-alabaster-2",
+   "name": "Milano sofa · Alabaster bouclé · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-alabaster-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-alabaster-3",
+   "name": "Milano sofa · Alabaster bouclé · 3 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-alabaster-3",
+   "fit": {
+    "axis": "x",
+    "mm": 2200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-moss-2",
+   "name": "Milano sofa · Humboldt moss velvet · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "library"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-moss-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-moss-3",
+   "name": "Milano sofa · Humboldt moss velvet · 3 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "library"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-moss-3",
+   "fit": {
+    "axis": "x",
+    "mm": 2200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-graphite-2",
+   "name": "Milano sofa · Office graphite weave · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-graphite-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-graphite-3",
+   "name": "Milano sofa · Office graphite weave · 3 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-graphite-3",
+   "fit": {
+    "axis": "x",
+    "mm": 2200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-teal-2",
+   "name": "Milano sofa · Co-working petrol weave · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-teal-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-teal-3",
+   "name": "Milano sofa · Co-working petrol weave · 3 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-teal-3",
+   "fit": {
+    "axis": "x",
+    "mm": 2200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-cognac-2",
+   "name": "Milano sofa · Studio cognac leather · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "music",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-cognac-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-cognac-3",
+   "name": "Milano sofa · Studio cognac leather · 3 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "music",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-cognac-3",
+   "fit": {
+    "axis": "x",
+    "mm": 2200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-clay-2",
+   "name": "Milano sofa · Atelier clay velvet · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "creative"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-clay-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-clay-3",
+   "name": "Milano sofa · Atelier clay velvet · 3 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "creative"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-clay-3",
+   "fit": {
+    "axis": "x",
+    "mm": 2200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-chalk-2",
+   "name": "Milano sofa · Gallery chalk bouclé · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-chalk-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-chalk-3",
+   "name": "Milano sofa · Gallery chalk bouclé · 3 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-chalk-3",
+   "fit": {
+    "axis": "x",
+    "mm": 2200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-oat-2",
+   "name": "Milano sofa · Bedroom oat linen · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "bedroom"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-oat-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-midnight-2",
+   "name": "Milano sofa · Gaming midnight velvet · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "gaming"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-midnight-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-midnight-3",
+   "name": "Milano sofa · Gaming midnight velvet · 3 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "gaming"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-midnight-3",
+   "fit": {
+    "axis": "x",
+    "mm": 2200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-coast-2",
+   "name": "Milano sofa · OCC navy & orange · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "occmedialab"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-coast-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-coast-3",
+   "name": "Milano sofa · OCC navy & orange · 3 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "occmedialab"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-coast-3",
+   "fit": {
+    "axis": "x",
+    "mm": 2200
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-cognac-compact-2",
+   "name": "Milano sofa · compact cognac leather · 2 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "music",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-studio.html",
+   "converter": "milano-generator",
+   "profile": "milano-cognac-compact-2",
+   "fit": {
+    "axis": "x",
+    "mm": 1700
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "milano-original-3",
+   "name": "Milano sofa · original architectural lounge · 3 seats",
+   "category": "furniture",
+   "collection": "Milano Seating",
+   "scenes": [
+    "lounge",
+    "music",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/milano-couch-3seat.glb",
+   "converter": "milano-generator",
+   "profile": "milano-original-3",
+   "fit": {
+    "axis": "x",
+    "mm": 2560
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D couch generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched.",
+   "revision": "milano-seating-20261014"
+  },
+  {
+   "id": "atelier-molded-cognac",
+   "name": "Atelier chair · Molded swivel · Cognac & walnut",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "study",
+    "music",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-molded-cognac",
+   "fit": {
+    "axis": "x",
+    "mm": 876.31
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-molded-ivory",
+   "name": "Atelier chair · Molded swivel · Ivory bouclé",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "lounge",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-molded-ivory",
+   "fit": {
+    "axis": "x",
+    "mm": 876.31
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-molded-obsidian",
+   "name": "Atelier chair · Molded swivel · Obsidian leather",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "office",
+    "gaming"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-molded-obsidian",
+   "fit": {
+    "axis": "x",
+    "mm": 876.31
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-molded-moss",
+   "name": "Atelier chair · Molded swivel · Humboldt moss velvet",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "library",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-molded-moss",
+   "fit": {
+    "axis": "x",
+    "mm": 876.31
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-timber-cognac",
+   "name": "Atelier chair · Danish timber · Cognac & walnut",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "study",
+    "music",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-timber-cognac",
+   "fit": {
+    "axis": "x",
+    "mm": 844
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-timber-ivory",
+   "name": "Atelier chair · Danish timber · Ivory bouclé",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "lounge",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-timber-ivory",
+   "fit": {
+    "axis": "x",
+    "mm": 844
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-timber-obsidian",
+   "name": "Atelier chair · Danish timber · Obsidian leather",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "office",
+    "gaming"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-timber-obsidian",
+   "fit": {
+    "axis": "x",
+    "mm": 844
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-timber-moss",
+   "name": "Atelier chair · Danish timber · Humboldt moss velvet",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "library",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-timber-moss",
+   "fit": {
+    "axis": "x",
+    "mm": 844
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-cantilever-cognac",
+   "name": "Atelier chair · Cantilever club · Cognac & walnut",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "study",
+    "music",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-cantilever-cognac",
+   "fit": {
+    "axis": "x",
+    "mm": 832
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-cantilever-ivory",
+   "name": "Atelier chair · Cantilever club · Ivory bouclé",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "lounge",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-cantilever-ivory",
+   "fit": {
+    "axis": "x",
+    "mm": 832
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-cantilever-obsidian",
+   "name": "Atelier chair · Cantilever club · Obsidian leather",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "office",
+    "gaming"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-cantilever-obsidian",
+   "fit": {
+    "axis": "x",
+    "mm": 832
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-cantilever-moss",
+   "name": "Atelier chair · Cantilever club · Humboldt moss velvet",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "library",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-cantilever-moss",
+   "fit": {
+    "axis": "x",
+    "mm": 832
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-timber-clay",
+   "name": "Atelier chair · Danish timber · Clay velvet",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "creative"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-timber-clay",
+   "fit": {
+    "axis": "x",
+    "mm": 844
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-cantilever-coast",
+   "name": "Atelier chair · Cantilever club · OCC navy & orange",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "occmedialab"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-cantilever-coast",
+   "fit": {
+    "axis": "x",
+    "mm": 832
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-ottoman-molded-cognac",
+   "name": "Atelier ottoman · Molded swivel · Cognac & walnut",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "study",
+    "music",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-ottoman-molded-cognac",
+   "fit": {
+    "axis": "x",
+    "mm": 544.8
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-ottoman-timber-ivory",
+   "name": "Atelier ottoman · Danish timber · Ivory bouclé",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "lounge",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-ottoman-timber-ivory",
+   "fit": {
+    "axis": "x",
+    "mm": 561.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-ottoman-timber-moss",
+   "name": "Atelier ottoman · Danish timber · Humboldt moss velvet",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "library",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-ottoman-timber-moss",
+   "fit": {
+    "axis": "x",
+    "mm": 561.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-ottoman-cantilever-obsidian",
+   "name": "Atelier ottoman · Cantilever club · Obsidian leather",
+   "category": "furniture",
+   "collection": "Atelier Luxury Chairs",
+   "scenes": [
+    "office",
+    "gaming"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-chair-studio.html",
+   "converter": "atelier-chair-generator",
+   "profile": "atelier-ottoman-cantilever-obsidian",
+   "fit": {
+    "axis": "x",
+    "mm": 561.2
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D three-frame chair generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Chair and ottoman are independently editable.",
+   "revision": "atelier-seating-20261014"
+  },
+  {
+   "id": "atelier-lamp-arc-warm",
+   "name": "Atelier lamp · Parabolic arc · Walnut & warm brass",
+   "category": "lighting",
+   "collection": "Atelier Lighting",
+   "scenes": [
+    "lounge",
+    "music",
+    "gallery",
+    "bedroom",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-lighting-studio.html",
+   "converter": "atelier-lamp-generator",
+   "profile": "atelier-lamp-arc-warm",
+   "fit": {
+    "axis": "x",
+    "mm": 1161.95
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural lighting generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Runtime glow follows the room daypart.",
+   "revision": "atelier-lighting-20261014"
+  },
+  {
+   "id": "atelier-lamp-arc-stone",
+   "name": "Atelier lamp · Parabolic arc · Ivory stone & silver",
+   "category": "lighting",
+   "collection": "Atelier Lighting",
+   "scenes": [
+    "lounge",
+    "music",
+    "gallery",
+    "bedroom",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-lighting-studio.html",
+   "converter": "atelier-lamp-generator",
+   "profile": "atelier-lamp-arc-stone",
+   "fit": {
+    "axis": "x",
+    "mm": 1161.95
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural lighting generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Runtime glow follows the room daypart.",
+   "revision": "atelier-lighting-20261014"
+  },
+  {
+   "id": "atelier-lamp-mushroom-warm",
+   "name": "Atelier lamp · Mushroom table · Walnut & warm brass",
+   "category": "lighting",
+   "collection": "Atelier Lighting",
+   "scenes": [
+    "bedroom",
+    "study",
+    "library",
+    "office"
+   ],
+   "anchor": "surface",
+   "source": "supplied/atelier-lighting-studio.html",
+   "converter": "atelier-lamp-generator",
+   "profile": "atelier-lamp-mushroom-warm",
+   "fit": {
+    "axis": "x",
+    "mm": 220
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural lighting generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Runtime glow follows the room daypart.",
+   "revision": "atelier-lighting-20261014"
+  },
+  {
+   "id": "atelier-lamp-mushroom-stone",
+   "name": "Atelier lamp · Mushroom table · Ivory stone & silver",
+   "category": "lighting",
+   "collection": "Atelier Lighting",
+   "scenes": [
+    "bedroom",
+    "study",
+    "library",
+    "office"
+   ],
+   "anchor": "surface",
+   "source": "supplied/atelier-lighting-studio.html",
+   "converter": "atelier-lamp-generator",
+   "profile": "atelier-lamp-mushroom-stone",
+   "fit": {
+    "axis": "x",
+    "mm": 220
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural lighting generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Runtime glow follows the room daypart.",
+   "revision": "atelier-lighting-20261014"
+  },
+  {
+   "id": "atelier-lamp-tripod-warm",
+   "name": "Atelier lamp · Danish tripod · Walnut & warm brass",
+   "category": "lighting",
+   "collection": "Atelier Lighting",
+   "scenes": [
+    "lounge",
+    "music",
+    "gallery",
+    "bedroom",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-lighting-studio.html",
+   "converter": "atelier-lamp-generator",
+   "profile": "atelier-lamp-tripod-warm",
+   "fit": {
+    "axis": "x",
+    "mm": 308.28
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural lighting generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Runtime glow follows the room daypart.",
+   "revision": "atelier-lighting-20261014"
+  },
+  {
+   "id": "atelier-lamp-tripod-stone",
+   "name": "Atelier lamp · Danish tripod · Ivory stone & silver",
+   "category": "lighting",
+   "collection": "Atelier Lighting",
+   "scenes": [
+    "lounge",
+    "music",
+    "gallery",
+    "bedroom",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-lighting-studio.html",
+   "converter": "atelier-lamp-generator",
+   "profile": "atelier-lamp-tripod-stone",
+   "fit": {
+    "axis": "x",
+    "mm": 308.28
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural lighting generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Runtime glow follows the room daypart.",
+   "revision": "atelier-lighting-20261014"
+  },
+  {
+   "id": "atelier-lamp-halo-warm",
+   "name": "Atelier lamp · Orb & halo · Walnut & warm brass",
+   "category": "lighting",
+   "collection": "Atelier Lighting",
+   "scenes": [
+    "lounge",
+    "music",
+    "gallery",
+    "bedroom",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-lighting-studio.html",
+   "converter": "atelier-lamp-generator",
+   "profile": "atelier-lamp-halo-warm",
+   "fit": {
+    "axis": "x",
+    "mm": 481.82
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural lighting generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Runtime glow follows the room daypart.",
+   "revision": "atelier-lighting-20261014"
+  },
+  {
+   "id": "atelier-lamp-halo-stone",
+   "name": "Atelier lamp · Orb & halo · Ivory stone & silver",
+   "category": "lighting",
+   "collection": "Atelier Lighting",
+   "scenes": [
+    "lounge",
+    "music",
+    "gallery",
+    "bedroom",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-lighting-studio.html",
+   "converter": "atelier-lamp-generator",
+   "profile": "atelier-lamp-halo-stone",
+   "fit": {
+    "axis": "x",
+    "mm": 481.82
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural lighting generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Runtime glow follows the room daypart.",
+   "revision": "atelier-lighting-20261014"
+  },
+  {
+   "id": "atelier-bed-tatami-compact",
+   "name": "Atelier bed · Compact oak tatami & sage linen",
+   "category": "furniture",
+   "collection": "Atelier Beds",
+   "scenes": [
+    "bedroom"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-bed-studio.html",
+   "converter": "atelier-bed-generator",
+   "profile": "atelier-bed-tatami-compact",
+   "fit": {
+    "axis": "x",
+    "mm": 1580
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural bed generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No room staging or end bench is included.",
+   "revision": "atelier-beds-20261014"
+  },
+  {
+   "id": "atelier-bed-platform-queen",
+   "name": "Atelier bed · Milano platform & warm linen",
+   "category": "furniture",
+   "collection": "Atelier Beds",
+   "scenes": [
+    "bedroom"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-bed-studio.html",
+   "converter": "atelier-bed-generator",
+   "profile": "atelier-bed-platform-queen",
+   "fit": {
+    "axis": "x",
+    "mm": 1960
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural bed generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No room staging or end bench is included.",
+   "revision": "atelier-beds-20261014"
+  },
+  {
+   "id": "atelier-bed-wingback-ivory",
+   "name": "Atelier bed · Ivory wingback & clay throw",
+   "category": "furniture",
+   "collection": "Atelier Beds",
+   "scenes": [
+    "bedroom"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-bed-studio.html",
+   "converter": "atelier-bed-generator",
+   "profile": "atelier-bed-wingback-ivory",
+   "fit": {
+    "axis": "x",
+    "mm": 2045.77
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural bed generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No room staging or end bench is included.",
+   "revision": "atelier-beds-20261014"
+  },
+  {
+   "id": "atelier-bed-canopy-walnut",
+   "name": "Atelier bed · Walnut canopy & sage velvet",
+   "category": "furniture",
+   "collection": "Atelier Beds",
+   "scenes": [
+    "bedroom"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-bed-studio.html",
+   "converter": "atelier-bed-generator",
+   "profile": "atelier-bed-canopy-walnut",
+   "fit": {
+    "axis": "x",
+    "mm": 1920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural bed generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No room staging or end bench is included.",
+   "revision": "atelier-beds-20261014"
+  },
+  {
+   "id": "atelier-bed-platform-graphite",
+   "name": "Atelier bed · Graphite platform & walnut",
+   "category": "furniture",
+   "collection": "Atelier Beds",
+   "scenes": [
+    "bedroom"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-bed-studio.html",
+   "converter": "atelier-bed-generator",
+   "profile": "atelier-bed-platform-graphite",
+   "fit": {
+    "axis": "x",
+    "mm": 1960
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural bed generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No room staging or end bench is included.",
+   "revision": "atelier-beds-20261014"
+  },
+  {
+   "id": "atelier-bed-platform-king",
+   "name": "Atelier bed · King platform with floating shelves",
+   "category": "furniture",
+   "collection": "Atelier Beds",
+   "scenes": [
+    "bedroom"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-bed-studio.html",
+   "converter": "atelier-bed-generator",
+   "profile": "atelier-bed-platform-king",
+   "fit": {
+    "axis": "x",
+    "mm": 2910
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural bed generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No room staging or end bench is included.",
+   "revision": "atelier-beds-20261014"
+  },
+  {
+   "id": "atelier-bed-canopy-king",
+   "name": "Atelier bed · King walnut canopy",
+   "category": "furniture",
+   "collection": "Atelier Beds",
+   "scenes": [
+    "bedroom"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-bed-studio.html",
+   "converter": "atelier-bed-generator",
+   "profile": "atelier-bed-canopy-king",
+   "fit": {
+    "axis": "x",
+    "mm": 2120
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural bed generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No room staging or end bench is included.",
+   "revision": "atelier-beds-20261014"
+  },
+  {
+   "id": "atelier-bed-wingback-king",
+   "name": "Atelier bed · King cloud wingback",
+   "category": "furniture",
+   "collection": "Atelier Beds",
+   "scenes": [
+    "bedroom"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-bed-studio.html",
+   "converter": "atelier-bed-generator",
+   "profile": "atelier-bed-wingback-king",
+   "fit": {
+    "axis": "x",
+    "mm": 2495.77
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural bed generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No room staging or end bench is included.",
+   "revision": "atelier-beds-20261014"
+  },
+  {
+   "id": "atelier-bed-tatami-king",
+   "name": "Atelier bed · King low oak tatami",
+   "category": "furniture",
+   "collection": "Atelier Beds",
+   "scenes": [
+    "bedroom"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-bed-studio.html",
+   "converter": "atelier-bed-generator",
+   "profile": "atelier-bed-tatami-king",
+   "fit": {
+    "axis": "x",
+    "mm": 2530
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D architectural bed generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No room staging or end bench is included.",
+   "revision": "atelier-beds-20261014"
+  },
+  {
+   "id": "campus-pod-nordic",
+   "name": "Atelier campus · Acoustic call pod · Oak, moss & clay",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "coworking",
+    "library",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-pod-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 1450
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-bleacher-nordic",
+   "name": "Atelier campus · Tiered collaboration seating · Oak, moss & clay",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "coworking",
+    "library",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-bleacher-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 2250
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-lockers-nordic",
+   "name": "Atelier campus · Locker bank & bench alcove · Oak, moss & clay",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "coworking",
+    "library",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-lockers-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 1850
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-whiteboard-nordic",
+   "name": "Atelier campus · Rolling board & poufs · Oak, moss & clay",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "coworking",
+    "library",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-whiteboard-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 1478
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-pouf-nordic",
+   "name": "Atelier campus · Upholstered pouf stool · Oak, moss & clay",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "coworking",
+    "library",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-pouf-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 439.4
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-pod-walnut",
+   "name": "Atelier campus · Acoustic call pod · Walnut executive",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-pod-walnut",
+   "fit": {
+    "axis": "x",
+    "mm": 1450
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-bleacher-walnut",
+   "name": "Atelier campus · Tiered collaboration seating · Walnut executive",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-bleacher-walnut",
+   "fit": {
+    "axis": "x",
+    "mm": 2250
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-lockers-walnut",
+   "name": "Atelier campus · Locker bank & bench alcove · Walnut executive",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-lockers-walnut",
+   "fit": {
+    "axis": "x",
+    "mm": 1850
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-whiteboard-walnut",
+   "name": "Atelier campus · Rolling board & poufs · Walnut executive",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-whiteboard-walnut",
+   "fit": {
+    "axis": "x",
+    "mm": 1478
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-pouf-walnut",
+   "name": "Atelier campus · Upholstered pouf stool · Walnut executive",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-pouf-walnut",
+   "fit": {
+    "axis": "x",
+    "mm": 439.4
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-pod-terracotta",
+   "name": "Atelier campus · Acoustic call pod · Campus terracotta",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "college",
+    "university",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-pod-terracotta",
+   "fit": {
+    "axis": "x",
+    "mm": 1450
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-bleacher-terracotta",
+   "name": "Atelier campus · Tiered collaboration seating · Campus terracotta",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "college",
+    "university",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-bleacher-terracotta",
+   "fit": {
+    "axis": "x",
+    "mm": 2250
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-lockers-terracotta",
+   "name": "Atelier campus · Locker bank & bench alcove · Campus terracotta",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "college",
+    "university",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-lockers-terracotta",
+   "fit": {
+    "axis": "x",
+    "mm": 1850
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-whiteboard-terracotta",
+   "name": "Atelier campus · Rolling board & poufs · Campus terracotta",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "college",
+    "university",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-whiteboard-terracotta",
+   "fit": {
+    "axis": "x",
+    "mm": 1478
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-pouf-terracotta",
+   "name": "Atelier campus · Upholstered pouf stool · Campus terracotta",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "college",
+    "university",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-pouf-terracotta",
+   "fit": {
+    "axis": "x",
+    "mm": 439.4
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-pod-slate",
+   "name": "Atelier campus · Acoustic call pod · Slate & silver",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "college",
+    "university"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-pod-slate",
+   "fit": {
+    "axis": "x",
+    "mm": 1450
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-bleacher-slate",
+   "name": "Atelier campus · Tiered collaboration seating · Slate & silver",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "college",
+    "university"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-bleacher-slate",
+   "fit": {
+    "axis": "x",
+    "mm": 2250
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-lockers-slate",
+   "name": "Atelier campus · Locker bank & bench alcove · Slate & silver",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "college",
+    "university"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-lockers-slate",
+   "fit": {
+    "axis": "x",
+    "mm": 1850
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-whiteboard-slate",
+   "name": "Atelier campus · Rolling board & poufs · Slate & silver",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "college",
+    "university"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-whiteboard-slate",
+   "fit": {
+    "axis": "x",
+    "mm": 1478
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-pouf-slate",
+   "name": "Atelier campus · Upholstered pouf stool · Slate & silver",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "college",
+    "university"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-pouf-slate",
+   "fit": {
+    "axis": "x",
+    "mm": 439.4
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-board-compact-nordic",
+   "name": "Atelier campus · Compact rolling board · Oak, moss & clay",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "coworking",
+    "library",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-board-compact-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 1108
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-board-compact-terracotta",
+   "name": "Atelier campus · Compact rolling board · Campus terracotta",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "college",
+    "university",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-board-compact-terracotta",
+   "fit": {
+    "axis": "x",
+    "mm": 1108
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-board-compact-coast",
+   "name": "Atelier campus · Compact rolling board · OCC navy & orange",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "occmedialab"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-board-compact-coast",
+   "fit": {
+    "axis": "x",
+    "mm": 1108
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-wall-board-moss",
+   "name": "Atelier campus · Humboldt shared research board",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "library"
+   ],
+   "anchor": "wall",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-wall-board-moss",
+   "fit": {
+    "axis": "x",
+    "mm": 1390
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-lockers-compact-hbhs",
+   "name": "Atelier campus · Compact lockers · HBHS black & orange",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "highschool"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-lockers-compact-hbhs",
+   "fit": {
+    "axis": "x",
+    "mm": 810
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-lockers-compact-middle",
+   "name": "Atelier campus · Compact lockers · Blue campus steel",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "middleschool"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-lockers-compact-middle",
+   "fit": {
+    "axis": "x",
+    "mm": 810
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-storage-low-walnut",
+   "name": "Atelier campus · Low modular storage · Walnut executive",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-storage-low-walnut",
+   "fit": {
+    "axis": "x",
+    "mm": 1300
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-storage-low-slate",
+   "name": "Atelier campus · Low modular storage · Slate & silver",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "office",
+    "college",
+    "university"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-storage-low-slate",
+   "fit": {
+    "axis": "x",
+    "mm": 1300
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "campus-pod-coast",
+   "name": "Atelier campus · Acoustic media pod · OCC navy & orange",
+   "category": "furniture",
+   "collection": "Atelier Campus",
+   "scenes": [
+    "occmedialab"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-campus-studio.html",
+   "converter": "campus-generator",
+   "profile": "campus-pod-coast",
+   "fit": {
+    "axis": "x",
+    "mm": 1450
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D office and academic furniture generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. No staging walls or rugs are included.",
+   "revision": "campus-furniture-20261014"
+  },
+  {
+   "id": "atelier-decor-stationery-heritage",
+   "name": "Atelier decor · Writing & fountain pen set · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-stationery-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-curiosities-heritage",
+   "name": "Atelier decor · Bookends & armillary collection · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-curiosities-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-mechanical-heritage",
+   "name": "Atelier decor · Mechanical keyboard & tube audio · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-mechanical-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-botanical-heritage",
+   "name": "Atelier decor · Bonsai, zen garden & pour-over · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-botanical-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-stationery-nordic",
+   "name": "Atelier decor · Writing & fountain pen set · Oak & travertine",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "office",
+    "coworking",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-stationery-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-curiosities-nordic",
+   "name": "Atelier decor · Bookends & armillary collection · Oak & travertine",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "office",
+    "coworking",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-curiosities-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-mechanical-nordic",
+   "name": "Atelier decor · Mechanical keyboard & tube audio · Oak & travertine",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "office",
+    "coworking",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-mechanical-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-botanical-nordic",
+   "name": "Atelier decor · Bonsai, zen garden & pour-over · Oak & travertine",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "office",
+    "coworking",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-botanical-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-stationery-obsidian",
+   "name": "Atelier decor · Writing & fountain pen set · Obsidian & copper",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "gaming",
+    "music",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-stationery-obsidian",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-curiosities-obsidian",
+   "name": "Atelier decor · Bookends & armillary collection · Obsidian & copper",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "gaming",
+    "music",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-curiosities-obsidian",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-mechanical-obsidian",
+   "name": "Atelier decor · Mechanical keyboard & tube audio · Obsidian & copper",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "gaming",
+    "music",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-mechanical-obsidian",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-botanical-obsidian",
+   "name": "Atelier decor · Bonsai, zen garden & pour-over · Obsidian & copper",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "gaming",
+    "music",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-botanical-obsidian",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-stationery-matcha",
+   "name": "Atelier decor · Writing & fountain pen set · Kyoto moss & stone",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "library",
+    "creative",
+    "coworking",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-stationery-matcha",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-curiosities-matcha",
+   "name": "Atelier decor · Bookends & armillary collection · Kyoto moss & stone",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "library",
+    "creative",
+    "coworking",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-curiosities-matcha",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-mechanical-matcha",
+   "name": "Atelier decor · Mechanical keyboard & tube audio · Kyoto moss & stone",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "library",
+    "creative",
+    "coworking",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-mechanical-matcha",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-botanical-matcha",
+   "name": "Atelier decor · Bonsai, zen garden & pour-over · Kyoto moss & stone",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "library",
+    "creative",
+    "coworking",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-botanical-matcha",
+   "fit": {
+    "axis": "x",
+    "mm": 780
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-valet-heritage",
+   "name": "Atelier decor · Valet · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-valet-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 260
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-valet-nordic",
+   "name": "Atelier decor · Valet · Oak & travertine",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "office",
+    "coworking",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-valet-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 260
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-journal-heritage",
+   "name": "Atelier decor · Open journal & fountain pen · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-journal-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 314.77
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-journal-nordic",
+   "name": "Atelier decor · Open journal & fountain pen · Oak & travertine",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "office",
+    "coworking",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-journal-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 314.77
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-clock-heritage",
+   "name": "Atelier decor · Clock · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-clock-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 169.59
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-clock-nordic",
+   "name": "Atelier decor · Clock · Oak & travertine",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "office",
+    "coworking",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-clock-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 169.59
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-bookends-heritage",
+   "name": "Atelier decor · Bookends · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-bookends-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 332
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-bookends-nordic",
+   "name": "Atelier decor · Bookends · Oak & travertine",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "office",
+    "coworking",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-bookends-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 332
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-orrery-heritage",
+   "name": "Atelier decor · Armillary sculpture · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-orrery-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 152
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-orrery-nordic",
+   "name": "Atelier decor · Armillary sculpture · Oak & travertine",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "office",
+    "coworking",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-orrery-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 152
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-terrarium-heritage",
+   "name": "Atelier decor · Terrarium · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-terrarium-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 210
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-terrarium-matcha",
+   "name": "Atelier decor · Terrarium · Kyoto moss & stone",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "library",
+    "creative",
+    "coworking",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-terrarium-matcha",
+   "fit": {
+    "axis": "x",
+    "mm": 210
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-zen-heritage",
+   "name": "Atelier decor · Zen · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-zen-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 230
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-zen-matcha",
+   "name": "Atelier decor · Zen · Kyoto moss & stone",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "library",
+    "creative",
+    "coworking",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-zen-matcha",
+   "fit": {
+    "axis": "x",
+    "mm": 230
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-dac-heritage",
+   "name": "Atelier decor · Tube audio amplifier · Heritage walnut & brass",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "study",
+    "office",
+    "library",
+    "lounge"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-dac-heritage",
+   "fit": {
+    "axis": "x",
+    "mm": 170.97
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
+  },
+  {
+   "id": "atelier-decor-dac-nordic",
+   "name": "Atelier decor · Tube audio amplifier · Oak & travertine",
+   "category": "desk",
+   "collection": "Atelier Desk Decor",
+   "scenes": [
+    "office",
+    "coworking",
+    "bedroom",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "supplied/atelier-desk-decor-studio.html",
+   "converter": "desk-decor-generator",
+   "profile": "atelier-decor-dac-nordic",
+   "fit": {
+    "axis": "x",
+    "mm": 170.97
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D desk accessories and tabletop decor generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "desk-decor-20261014"
   }
  ],
  "screens": [

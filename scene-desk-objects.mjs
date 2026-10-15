@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { surfaceDrop } from './item-surface-drop.mjs';
 import { notebookTransform } from './notebook-transform.mjs';
+import { matchingHighschoolDefault } from './hbhs-design.mjs';
+import { DeskAutoStow } from './desk-auto-stow.mjs';
 
 export const DESK_SURFACES={desktop:'Desktop',shelf:'Top shelf','lower-shelf':'Lower shelf','base-shelf':'Base shelf'};
 const phases=['morning','afternoon','evening','night','party'];
@@ -11,17 +13,21 @@ const shown=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;
 // Local transforms belong to a desk surface, never to the room or live CAD.
 // Authored IDs use their stable mount order; added IDs survive project imports.
 export class SceneDeskObjects {
-    constructor(manager){this.manager=manager;this.editing=false;this.selected=null;this.role='desktop';this.loading=false;this.drag=null;this.ready=Promise.resolve();this.library=[];}
+    constructor(manager){this.manager=manager;this.editing=false;this.selected=null;this.role='desktop';this.loading=false;this.drag=null;this.ready=Promise.resolve();this.library=[];this.stow=new DeskAutoStow(this);}
     get current(){return this.manager.active?.objects?.get(this.selected);}
-    capture(r){for(const [id,item] of r.objects||[])if(!item.saved.removed){item.saved.transform=plain(item.obj);r.state.objects[id]=item.saved;}}
+    capture(r){for(const [id,item] of r.objects||[])if(!item.saved.removed){item.saved.transform=this.stow.authored(item);r.state.objects[id]=item.saved;}}
     bind(r){
         if(r.objects)return;
         r.objects=new Map();r.state.objects||={};
+        const highschool=this.manager.ctx.sceneId?.()==='highschool';
+        const previousDefaults=highschool?structuredClone(r.state.objects):null,claimed=new Set();
         for(const [role,mount] of Object.entries(r.rig.mounts))for(const [i,obj] of [...mount.children].entries()){
             if(obj.userData.transientGameScreen)continue;
             const identity=obj.userData.deskObject;
             const id=identity?.desk===r.id?identity.id:'default-'+role+'-'+i;
-            const saved=r.state.objects[id]||{role,added:false,removed:false,label:this.manager.ctx.objectName?.(obj)||obj.name||'Desk object',transform:plain(obj)};
+            const name=this.manager.ctx.objectName?.(obj)||obj.name||'Desk object';
+            const previous=highschool && !identity ? matchingHighschoolDefault(previousDefaults,claimed,id,role,name) : r.state.objects[id];
+            const saved=previous||{role,added:false,removed:false,label:name,transform:plain(obj)};
             this.register(r,id,obj,saved,obj.scale.clone());
         }
         const pending=Object.entries(r.state.objects).filter(([id,s])=>s.added&&!s.removed&&!r.objects.has(id)).map(async([id,saved])=>{
@@ -62,6 +68,7 @@ export class SceneDeskObjects {
     }
     purchaseMount(role){return this.manager.ctx.purchaseMount?.(role);}
     register(r,id,obj,saved,baseScale){
+        const previous=r.objects?.get(id);if(previous)this.stow.restoreItem(previous);
         const mount=r.rig.mounts[saved.role];if(!mount)return;
         // Keep the original object hidden when removed, so defaults never return
         // after switching desks or changing the active daypart.
@@ -94,7 +101,7 @@ export class SceneDeskObjects {
         this.phase(r);m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
     }
     select(id){this.selected=this.manager.active?.objects?.has(id)?id:null;if(this.selected)this.manager.ctx.objectSelected?.();this.manager.sync();}
-    setEditing(on){this.editing=!!on;if(!on)this.endDrag();this.manager.ctx.objectEditing?.(this.editing);this.manager.sync();}
+    setEditing(on){this.editing=!!on;if(on&&this.manager.active)this.stow.restore(this.manager.active);if(!on)this.endDrag();this.manager.ctx.objectEditing?.(this.editing);this.manager.sync();}
     async add(propId,role=this.role){
         const m=this.manager,r=m.active;if(!r||!r.rig.mounts[role]||this.loading||m.playing||m.recording)return false;
         if(Object.keys(r.state.objects||{}).length>=200){m.ctx.status('This desk has reached its 200 object limit.');return false;}
@@ -114,6 +121,7 @@ export class SceneDeskObjects {
     }
     change(values){
         const m=this.manager,item=this.current,r=m.active;if(!item||m.playing||m.recording)return false;
+        this.stow.restore(r);
         const before=m.serialize(),o=item.obj;
         if(r.product&&o.userData.accessoryId)item.saved.custom=true;
         if(values.role&&r.rig.mounts[values.role]){(r.product&&o.userData.accessoryId?this.purchaseMount(values.role):r.rig.mounts[values.role]).add(o);item.saved.role=values.role;this.role=values.role;o.position.y=0;}

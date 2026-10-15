@@ -1,4 +1,5 @@
 import { PRODUCT_CONFIG } from './catalog.mjs';
+import { hbhsPalette, highschoolDeskTone } from './hbhs-design.mjs';
 
 // Catalog finishes, rather than render-only paint names. A physical desk keeps
 // its finish through the day; lighting and activity materials change instead.
@@ -26,7 +27,7 @@ export const ROOM_DESK_STYLES = {
     kindergarten: style('Birch & sunshine', 'Natural Birch', 'White', '#f0c52e', 'Sand'),
     elementary: style('Maple & learning green', 'Maple', 'White', '#286344', 'Sand'),
     middleschool: style('Modern grey maker space', 'Modern Grey', 'White', '#286344', 'Space Gray'),
-    highschool: style('Oiler black & orange', 'Black Birch', 'White', '#e8702a', 'Black'),
+    highschool: style('Oiler black & orange', 'Black Birch', 'Black', '#e8702a', 'White'),
     college: style('Oak & academic navy', 'White Oak', 'Navy', '#1c1c1e', 'Space Gray'),
     university: style('Forest & gold seminar', 'Earthy Forest Green', 'Black', '#f19c00', 'Forest'),
     hospital: style('Clinical white & teal', 'White Birch', 'White', '#004c46', 'Silver'),
@@ -47,6 +48,7 @@ export function cleanRoomDeskStyles(value) {
 }
 export function stationDeskStyle(sceneId, station, index = 0) {
     const palette = ROOM_DESK_STYLES[sceneId]; if (!palette) return null;
+    if (sceneId === 'highschool') return hbhsPalette(highschoolDeskTone(station.id));
     // Paired support desks share the room palette without looking like copies.
     // Role IDs and layouts remain the authority for size, position and tools.
     return { ...palette, baseFinish: index % 2 ? palette.secondary : palette.baseFinish,

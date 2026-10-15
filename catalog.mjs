@@ -1,4 +1,4 @@
-import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=obsbot-tiny-2-20261012';
+import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=hbhs-product-classroom-20261014';
 // Pure catalog and pricing data. No DOM, no Three.js, no module-level mutable
 // state — so the same source is imported by studio.js in the browser and by the
 // test suite in Node. Anything that touches the scene or the page belongs in
@@ -220,6 +220,9 @@ export function accessoryFits(id, size) {
 // Curated starting points. Each is a complete configuration, so applying one
 // leaves nothing half-set.
 export const PRESETS = [
+    { id: 'hbhs', name: 'HBHS · Oilers', blurb: 'Huntington Beach High School: orange trim, the school seal and Oilers graphics. Switch between black & orange and white & orange.',
+      size: '60x30', woodFinish: 'Black Birch', baseFinish: 'Black', trimColor: '#e8702a',
+      accessories: ['monitor-arm', 'flat-monitor', 'keyboard-tray', 'ergo-keyboard', 'logitech-mx-master', 'obsbot-tiny-2'], cameraPreset: 'hero' },
     { id: 'occ', name: 'Orange Coast College', blurb: 'Coast navy, orange trim, a white frame and white ergonomic accessories. Editable official OCC logos on the desktop and side panels.',
       size: '60x30', woodFinish: 'Coast Navy', baseFinish: 'White', trimColor: '#f99239',
       accessories: ['monitor-arm', 'keyboard-tray', 'ergo-keyboard', 'wide-monitor', 'logitech-mx-master'],

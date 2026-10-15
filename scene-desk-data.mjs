@@ -75,6 +75,10 @@ export function cleanSceneDeskVariant(v) {
         ...(accessories?{accessories,accessoryFinishes:finishes}:{}),
         ...(deskId(v.peripheralRecipe)?{peripheralRecipe:v.peripheralRecipe}:{}),
         ...(v.peripheralSetup==='product-reference-v1'?{peripheralSetup:v.peripheralSetup}:{}),
+        ...(v.classroomDesign==='hbhs-mixed-classroom-v1'?{classroomDesign:v.classroomDesign}:{}),
+        ...(v.shelfStation==='shelf-first-v1'?{shelfStation:v.shelfStation}:{}),
+        ...(['occ','hbhs'].includes(v.productArtwork?.id) && ['48x30','60x30'].includes(v.productArtwork.size) && Number.isSafeInteger(v.productArtwork.revision) && v.productArtwork.revision>=0
+            ? {productArtwork:{id:v.productArtwork.id,size:v.productArtwork.size,revision:v.productArtwork.revision}} : {}),
         ...(v.productBuild?.id==='library' && ['48x30','60x30'].includes(v.productBuild.size) && Number.isSafeInteger(v.productBuild.revision) && v.productBuild.revision>=0
             ? {productBuild:{id:'library',size:v.productBuild.size,revision:v.productBuild.revision}} : {})};
 }
@@ -107,7 +111,13 @@ export function cleanSceneDeskData(input) {
                 added:v.added===true,...(Object.keys(sizeSetups).length?{sizeSetups}:{})};
         }
         const deleted=[...new Set((Array.isArray(room?.deleted)?room?.deleted:[]).filter(deskId))].slice(0,24);
-        rooms[key]={desks,deleted,selected:desks[room?.selected]?room?.selected:Object.keys(desks)[0]||null};
+        const activityHome={};
+        for(const [id,sizes] of Object.entries(room?.activityHome||{}))if(desks[id]){
+            const valid={};for(const size of ['48x30','60x30']){const value=cleanDeskSetting(sizes?.[size]);if(value)valid[size]={...value,...(/^[a-f0-9]{8}$/.test(sizes[size].clearance)?{clearance:sizes[size].clearance}:{})};}
+            if(Object.keys(valid).length)activityHome[id]=valid;
+        }
+        rooms[key]={desks,deleted,selected:desks[room?.selected]?room?.selected:Object.keys(desks)[0]||null,
+            ...(Object.keys(activityHome).length?{activityHome}:{})};
     }
     return {version:1,rooms,...(Array.isArray(input?.productAccessories)?{productAccessories:[...new Set(input.productAccessories.filter(deskId))].slice(0,100)}:{})};
 }

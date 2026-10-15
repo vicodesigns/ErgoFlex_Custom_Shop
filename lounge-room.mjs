@@ -288,7 +288,7 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     const SOFAS={'sofa-leather-wood':{seat:.26,back:-.04,front:.33,arm:.76},'sofa-fabric':{seat:.43,back:.14,front:.45,arm:.86}};
     room.decorateProp=(object,placement)=>{
         if(placement.id==='samsung-neo-tv'){const display=mesh(object,new THREE.PlaneGeometry(1.094,.615),new THREE.MeshBasicMaterial({map:filmMap,toneMapped:false}),[0,.3521,.0108]);display.name='Lounge cinema display';display.castShadow=display.receiveShadow=false;return;}
-        const sofa=SOFAS[placement.id];if(!sofa)return;
+        const sofa=SOFAS[placement.id];if(!sofa||object.userData.milanoSofa)return;
         const {seat,back:bk,front:fr,arm}=sofa,pillows=[[-arm,'#b86a48',.25],[-arm+.3,'#d6a756',-.12],[arm-.04,'#6f8a7a',-.28]];
         const dressing=instanced(object,pillowGeo,pillow,pillows.map(([x,col,yaw])=>({at:[x,seat+.16,bk+.06],size:[.18,.17,.075],rot:[-.3,yaw,(x>0?-1:1)*.06],color:col})),true);dressing.name='Lounge throw pillows';
         const fold=box(object,[.4,.07,.3],[arm-.24,seat+.035,fr-.19],knit,.025);fold.rotation.y=.12;fold.name='Lounge knit throw';

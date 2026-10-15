@@ -1,15 +1,22 @@
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
+import { atelierSceneDecor, bindDeskDecor, applyDeskDecorLighting } from './atelier-scene-decor.mjs?v=atelier-decor-20261014';
+import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from './campus-scene-furniture.mjs?v=campus-furniture-20261014';
+import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atelier-scene-beds.mjs?v=atelier-beds-20261014';
+import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=atelier-lighting-20261014';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=hbhs-product-classroom-20261014';
 import { buildInstitutionalRoom } from './institutional-room.mjs?v=environment-expert-20261014';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=environment-expert-20261014';
 import { polishRoomProp } from './room-polish.mjs?v=environment-expert-20261014';
 import { RoomLife } from './room-life.mjs?v=environment-expert-20261014';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
+import { atelierSceneChair } from './atelier-scene-seating.mjs?v=atelier-chairs-20261014';
+import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
+import { migrateHighschoolFixtureTransform } from './hbhs-design.mjs';
 import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=environment-expert-20261014';
 import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=environment-expert-20261014';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
-import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=groove-routines-20261002';
+import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=atelier-beds-20261014';
 import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
 import { RoomBounceLight } from './room-bounce-light.mjs?v=environment-expert-20261014';
@@ -26,7 +33,7 @@ import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-roo
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
 import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
-import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
+import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=milano-seating-20261014';
 
 // Original geometry in millimetres: X is user-right, Z is toward the user.
 // The CAD desk uses X for depth and Z for width. Only the mounting layer maps
@@ -82,7 +89,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=library-humboldt-20261013').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=atelier-decor-20261014').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -752,6 +759,7 @@ export class WorkspaceAccessories {
         }
     }
     layout() {
+        this.onBeforeLayout?.();
         this.applyAccessoryFinishes();
         const selected = new Set(this.config.accessories);
         for (const obj of this.items.values()) { obj.rotation.set(0, 0, 0); obj.scale.setScalar(1); }
@@ -1237,8 +1245,11 @@ export class WorkspaceRoom {
         this.token++;
         this.grounding?.dispose(); this.grounding = null;
         this.ownedMaterials.forEach(mat => mat.dispose()); this.ownedMaterials.clear();
+        for(const retired of this.campusRetired||[])disposeTree(retired);
+        this.campusRetired=[];this.campusFixtures=[];
         if (this.root) disposeTree(this.root);
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
+        this.atelierDecorGlows = []; this.atelierBedGlows = []; this.atelierLamps = []; this.atelierLampPhase = ['afternoon',1];
         this.decorateStation = null;
         this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null; this.migrateSavedTransform = null; this.propReplacements = null;
         this.propSupports = [];
@@ -1320,6 +1331,7 @@ export class WorkspaceRoom {
         else if (id === 'office') buildOfficeRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (INSTITUTIONAL_ROOMS[id]) buildInstitutionalRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else this.buildShell(root, scene);
+        if(id==='highschool')this.migrateSavedTransform=(obj,saved)=>migrateHighschoolFixtureTransform(obj,saved,this.roomLayout);
         if (this.roomLayout) {
             this.buildCeiling();
             this.life = new RoomLife(this, { material, mesh, box, rod, sphere, markSceneAsset });
@@ -1329,6 +1341,8 @@ export class WorkspaceRoom {
         this.ready = Promise.all([this.windowViewReady, this.addProps(root, scene, this.token),
             this.roomLayout?.stations?.length ? this.addOfficeStations(root, options.createStation, this.token) : Promise.resolve()]).then(async () => {
             if (token === this.token) {
+                await upgradeCampusFurniture(this,PROP_LIBRARY,token);
+                if(token!==this.token)return;
                 this.life?.bind();
                 const life=this.life;
                 if (life) { await PROP_LIBRARY.loadIndex(); if(token===this.token) await life.decorate(PROP_LIBRARY,()=>token===this.token); }
@@ -1514,6 +1528,43 @@ export class WorkspaceRoom {
             const scoped = this.propReplacements?.[placement.id];
             const supplied = scoped?.id || replacements[placement.id];
             try {
+                const sofa=milanoSceneSofa(scene.id,this.roomLayout,placement,PROP_LIBRARY.index);
+                if(sofa){
+                    const model=await PROP_LIBRARY.instance(sofa.id),object=new THREE.Group();
+                    // The dimensional fit stays below the editable root, so
+                    // restoring an old user scale cannot undo the fitted size.
+                    object.scale.setScalar(1000);model.scale.setScalar(sofa.fit);model.rotation.y=sofa.flip?Math.PI:0;object.add(model);
+                    object.name=sofa.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:sofa.entry.name,decorUpgrade:sofa.id,milanoSofa:{...sofa.entry.milano,fit:sofa.fit,flip:sofa.flip}};
+                    return {placement,object};
+                }
+                const bed=atelierSceneBed(scene.id,this.roomLayout,placement,PROP_LIBRARY.index);
+                if(bed){
+                    const model=await PROP_LIBRARY.instance(bed.id),object=new THREE.Group();
+                    object.scale.setScalar(1000);model.scale.setScalar(bed.fit);model.rotation.y=bed.flip?Math.PI:0;object.add(model);
+                    object.name=bed.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:bed.entry.name,decorUpgrade:bed.id,atelierBed:{...bed.entry.atelierBed,fit:bed.fit,flip:bed.flip}};
+                    return {placement,object,bed};
+                }
+                const chair=atelierSceneChair(scene.id,placement,PROP_LIBRARY.index);
+                if(chair){
+                    const model=await PROP_LIBRARY.instance(chair.id),object=new THREE.Group();
+                    object.scale.setScalar(1000);model.scale.setScalar(chair.fit);object.add(model);
+                    object.name=chair.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:chair.entry.name,decorUpgrade:chair.id,atelierChair:{...chair.entry.atelier,fit:chair.fit}};
+                    return {placement,object};
+                }
+                const lamp=atelierSceneLamp(scene.id,placement,PROP_LIBRARY.index);
+                if(lamp){
+                    const model=await PROP_LIBRARY.instance(lamp.id),object=new THREE.Group();
+                    object.scale.setScalar(1000);model.scale.setScalar(lamp.fit);object.add(model);
+                    object.name=lamp.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:lamp.entry.name,decorUpgrade:lamp.id};
+                    return {placement,object,lamp};
+                }
+                const decor=atelierSceneDecor(scene.id,placement,PROP_LIBRARY.index);
+                if(decor){
+                    const model=await PROP_LIBRARY.instance(decor.id),object=new THREE.Group();
+                    object.scale.setScalar(1000);model.scale.setScalar(decor.fit);object.add(model);
+                    object.name=decor.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:decor.entry.name,decorUpgrade:decor.id,atelierDecor:decor.entry.atelierDecor};
+                    return {placement,object,decor};
+                }
                 const object = await PROP_LIBRARY.instance(supplied || placement.id);
                 if (supplied) {
                     const old = PROP_LIBRARY.entry(placement.id), next = PROP_LIBRARY.entry(supplied);
@@ -1529,9 +1580,12 @@ export class WorkspaceRoom {
         }));
         if (token !== this.token) return;
         for (let index = 0; index < placements.length; index++) {
-            const { placement, object } = placements[index];
+            const { placement, object, lamp, bed, decor } = placements[index];
             if (!object) { this.missingProps.push(placement.id); continue; }
-            this.decorateProp?.(object, placement);
+            if(bed)bindAtelierBed(this,object,bed.entry);
+            if(lamp)bindAtelierLamp(this,object,lamp.entry,lamp.fit);
+            if(decor)bindDeskDecor(this,object,decor.entry);
+            if(!lamp&&!decor)this.decorateProp?.(object, placement);
             polishRoomProp(this, object, placement);
             const position = scene.physical ? [...placement.at] : roomPosition(scene, placement);
             // Countertop objects travel with the complete counter, not the lounge zone.
@@ -1574,6 +1628,10 @@ export class WorkspaceRoom {
         if (token !== this.token) return null;
         object.position.set(...position);
         object.userData.propAnchor = PROP_LIBRARY.entry(propId)?.anchor;
+        bindAtelierLamp(this,object,PROP_LIBRARY.entry(propId));
+        bindAtelierBed(this,object,PROP_LIBRARY.entry(propId));
+        bindCampusFurniture(this,object,PROP_LIBRARY.entry(propId));
+        bindDeskDecor(this,object,PROP_LIBRARY.entry(propId));
         markSceneAsset(object, { key, custom: true });
         this.ensureAssetRoot().add(object);
         return object;
@@ -1593,6 +1651,7 @@ export class WorkspaceRoom {
         group.visible = false; this.root.add(group);
         this.bounce = new RoomBounceLight(this);
     }
+    applyAtelierLighting(mode,accent) { applyAtelierLighting(this,mode,accent); applyAtelierBedLighting(this,mode,accent); applyCampusLighting(this,mode,accent); applyDeskDecorLighting(this,mode,accent); }
     setCeilingEnabled(enabled) { this.ceilingEnabled = !!enabled; }
     update(camera) {
         this.grounding?.update();

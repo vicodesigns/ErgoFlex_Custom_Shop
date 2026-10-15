@@ -1960,6 +1960,10 @@ const BUILD = {
         const cols = [-2075, 75, 2225], rows = [500, 2500, 4500];
         rows.forEach((z, r) => cols.forEach((x, c) => {
             const t = kit.table(`student-table-${r}-${c}`, 'Student work table', [x, 0, z], 1250, 620, 740, top);
+            // Orange perimeter bands tie the paired student tables to both
+            // black and white ErgoFlex stations without tinting their papers.
+            for(const sx of [-1,1])kit.box(t,[8,28,620],[sx*625,740,0],E.M(HB.orange,'powder'),2);
+            for(const sz of [-1,1])kit.box(t,[1250,28,8],[0,740,sz*310],E.M(HB.orange,'powder'),2);
             [-310, 310].forEach((dx, n) => { const col = shells[(r * 6 + c * 2 + n) % 3], ch = E.recolor(kit.chair(`student-chair-${r}-${c}-${n}`, [x + dx, 0, z + 570], 480, 0), col); if ((r + c) % 2) E.chairUp(ch, t, [dx, 60], [2, 3], 480, col); });
         }));
         E.edge(E.flat('demo-floor-inlay', 'Demonstration zone slate inlay', [0, -2600], [2400, 1600], E.S.slate(), { height: 4 }), [2400, 1600], HB.orange, 26, 6);

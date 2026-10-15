@@ -10,14 +10,29 @@ const SAMPLE_ARTWORK = [
     { id:'humboldt-seal', name:'Cal Poly Humboldt seal', label:'University seal', url:'./assets/artwork/cal-poly-humboldt-seal.webp', type:'image/webp', scale:40 },
     { id:'occ-title', name:'Orange Coast College title', label:'White college title', url:'./assets/artwork/orange-coast-college-title.png', type:'image/png', scale:65 },
     { id:'occ-circle', name:'Orange Coast College circle', label:'Coast circle', url:'./assets/artwork/orange-coast-college-circle.png', type:'image/png', scale:35 },
-    { id:'occ-pirate', name:'Orange Coast College pirate', label:'Pirate mascot', url:'./assets/artwork/orange-coast-college-pirate.png', type:'image/png', scale:38 }
+    { id:'occ-pirate', name:'Orange Coast College pirate', label:'Pirate mascot', url:'./assets/artwork/orange-coast-college-pirate.png', type:'image/png', scale:38 },
+    { id:'hbhs-seal', name:'Huntington Beach High School seal', label:'Official HBHS seal', url:'./assets/artwork/hbhs-seal.png', type:'image/png', scale:35 },
+    { id:'hbhs-oilers-orange', name:'HBHS Oilers lettering · orange', label:'Oilers · orange lettering', url:'./assets/artwork/hbhs-oilers-orange.svg', type:'image/svg+xml', scale:55 },
+    { id:'hbhs-oilers-white', name:'HBHS Oilers lettering · white', label:'Oilers · white lettering', url:'./assets/artwork/hbhs-oilers-white.svg', type:'image/svg+xml', scale:55 }
 ];
 const sampleCache = new Map();
 async function sampleImage(sample) {
     if (!sampleCache.has(sample.id)) sampleCache.set(sample.id, (async()=>{
         const response=await fetch(sample.url);
         if(!response.ok)throw new Error('The sample artwork could not be loaded. Please try again.');
-        return rasterUpload(new File([await response.blob()],sample.name,{type:sample.type}));
+        let blob=await response.blob(), type=sample.type;
+        // Only bundled vector samples enter this path. Uploaded artwork stays
+        // restricted to raster formats; saved samples remain portable WebP.
+        if(type==='image/svg+xml'){
+            const url=URL.createObjectURL(blob);
+            try{
+                const image=await decodedImage(url),canvas=document.createElement('canvas');
+                canvas.width=image.width;canvas.height=image.height;
+                canvas.getContext('2d').drawImage(image,0,0);
+                blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));type='image/png';
+            }finally{URL.revokeObjectURL(url);imageCache.delete(url);}
+        }
+        return rasterUpload(new File([blob],sample.name,{type}));
     })().catch(error=>{sampleCache.delete(sample.id);throw error;}));
     return sampleCache.get(sample.id);
 }
@@ -112,6 +127,11 @@ export function paintArtworkLayer(context, image, layer, width, height) {
     context.rotate(layer.rotation * Math.PI / 180);
     const baseWidth = layer.repeat === 'cover' ? Math.max(width, height * image.width / image.height) : width;
     const w = baseWidth * layer.scale / 100, h = w * image.height / image.width;
+    if(layer.backing==='white-disc'){
+        // A white printed badge under the unmodified transparent school seal
+        // keeps its black artwork legible on a black desk finish.
+        context.fillStyle='#ffffff';context.beginPath();context.ellipse(0,0,w*.442,h*.452,0,0,Math.PI*2);context.fill();
+    }
     if (layer.repeat === 'single' || layer.repeat === 'cover') context.drawImage(image, -w / 2, -h / 2, w, h);
     else {
         const gap = layer.spacing / 100, sx = w * (1 + gap), sy = h * (1 + gap);
@@ -185,6 +205,9 @@ export class SurfaceArtwork {
             <p class="studio-note">Choose the college title, Coast circle or pirate mascot. Each image can be moved, scaled or removed.</p>
             <div class="artwork-sample-grid">${SAMPLE_ARTWORK.filter(s=>s.id.startsWith('occ-')).map(sample=>`<button type="button" data-art-sample="${sample.id}"><img src="${sample.url}" alt=""><span>${sample.label}</span></button>`).join('')}</div>
             <button type="button" data-art-occ-look>Apply Orange Coast College desk</button></section>
+            <section class="artwork-samples" aria-label="Huntington Beach High School samples"><h4>Huntington Beach High School samples</h4>
+            <p class="studio-note">Add the official school seal or Oilers lettering to the selected surface. Move, scale and rotate each graphic separately.</p>
+            <div class="artwork-sample-grid">${SAMPLE_ARTWORK.filter(s=>s.id.startsWith('hbhs-')).map(sample=>`<button type="button" data-art-sample="${sample.id}"><img src="${sample.url}" alt=""><span>${sample.label}</span></button>`).join('')}</div></section>
             <label>Desk surface<select data-art-surface>${[...new Set(ARTWORK_SURFACES.map(s => s.group || 'Desktop & shelves'))].map(group => `<optgroup label="${group}">${ARTWORK_SURFACES.filter(s => (s.group || 'Desktop & shelves') === group).map(s => `<option value="${s.id}">${s.label}</option>`).join('')}</optgroup>`).join('')}</select></label>
             <div class="artwork-actions"><button type="button" data-art-pick aria-pressed="false">Pick in 3D</button><button type="button" data-art-focus>View surface</button></div>
             <div class="artwork-tabs" role="group" aria-label="Artwork layer"><button type="button" data-art-layer="logo" aria-pressed="true">Graphic / logo</button><button type="button" data-art-layer="texture" aria-pressed="false">Texture</button></div>
@@ -331,6 +354,21 @@ export class SurfaceArtwork {
             if(!validArtwork(candidate))throw new Error('Artwork storage is full. Remove an unused layer before adding the sample desk.');
             this.uploadGeneration++;this.uploadTokens.clear();this.onSampleLook?.();this.state=candidate;this.surface='desktop';this.kind='logo';this.selectedLayer='logo';this.root.open=true;this.commit();
             this.notify('Humboldt desk applied: forest green, gold trim, desktop wordmark and seals on both side panels.');return true;
+        }catch(error){this.status(error.message);this.notify(error.message);return false;}
+    }
+    async applyHBHSSamples() {
+        const revision=this.editRevision;
+        try {
+            const sealSample=SAMPLE_ARTWORK.find(s=>s.id==='hbhs-seal'),wordmarkSample=SAMPLE_ARTWORK.find(s=>s.id==='hbhs-oilers-orange');
+            const [seal,wordmark]=await Promise.all([sealSample,wordmarkSample].map(sampleImage));
+            if(revision!==this.editRevision)return false;
+            const candidate=cleanArtwork(this.state),layer=(image,name,scale,x=50,y=50)=>({...defaultArtworkLayer('logo'),image,name,scale,x,y});
+            (candidate.surfaces.desktop||={}).logo=layer(wordmark,wordmarkSample.name,52,50,69);
+            for(const id of ['left-panel','right-panel'])(candidate.surfaces[id]||={}).logo={...layer(seal,sealSample.name,38,54,50),backing:'white-disc'};
+            (candidate.surfaces['footrest-panel']||={}).logo=layer(wordmark,wordmarkSample.name,62);
+            if(!validArtwork(candidate))throw new Error('Artwork storage is full.');
+            this.uploadGeneration++;this.uploadTokens.clear();this.state=candidate;this.surface='desktop';this.kind='logo';this.selectedLayer='logo';this.commit();
+            return true;
         }catch(error){this.status(error.message);this.notify(error.message);return false;}
     }
     async applyOrangeCoastSamples({replaceLegacy=false}={}) {

@@ -63,6 +63,9 @@ export function seedSceneSizeWithPeripherals(source,size) {
         const selectedSource=new Set(source.accessories||[]),originalSource=new Set(previous.config.accessories);
         const removed=new Set([...originalSource].filter(id=>!selectedSource.has(id)));
         draft.accessories=[...new Set([...ref.config.accessories.filter(id=>!removed.has(id)),...[...selectedSource].filter(id=>!originalSource.has(id))])];
+        // A monitor-free station must not acquire a different screen/arm ID
+        // when its other width is seeded. Explicit later additions are retained.
+        if(source.shelfStation==='shelf-first-v1')draft.accessories=draft.accessories.filter(id=>!(/monitor|^obsbot-tiny-2$/.test(id))||selectedSource.has(id));
         draft.accessoryFinishes={...ref.config.accessoryFinishes};
         for(const [id,finish] of Object.entries(source.accessoryFinishes||{}))if(finish!==previous.config.accessoryFinishes?.[id])draft.accessoryFinishes[id]=finish;
         const selected=new Set(draft.accessories.map(id=>'accessory-'+id));

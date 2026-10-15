@@ -167,7 +167,7 @@ function tripod(k,x,y,z,height=1400){
 export function furnish(kit){
     const {layout:l,asset,box,mat,byId,label}=kit,w=kit.w,bz=kit.bz,front=kit.front;
     kit.room.decorateProp=(object,placement)=>{
-        if(placement.id!=='ergoflex-couch')return;const copies=new Map();
+        if(placement.id!=='ergoflex-couch'||object.userData.milanoSofa)return;const copies=new Map();
         object.traverse(o=>{if(!o.isMesh)return;const swap=m=>{if(!/upholstery/i.test(m?.name||''))return m;if(!copies.has(m)){const c=m.clone();c.color.set('#2f3a48');c.userData.roomPaletteLocked=true;kit.room.ownedMaterials?.add(c);copies.set(m,c);}return copies.get(m);};o.material=Array.isArray(o.material)?o.material.map(swap):swap(o.material);});
     };
     const print=kit.cabinet('print-scan',[-w/2+820,0,bz+360],1300,900,false);print.name='Print & scan counter';

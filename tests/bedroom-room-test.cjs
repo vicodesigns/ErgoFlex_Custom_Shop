@@ -80,7 +80,7 @@ const server = http.createServer((req, res) => {
         assert.ok(initial.props.some(p=>p.id==='bedside-0'));
         assert.ok(initial.props.some(p=>p.id==='bed-2'));
         assert.ok(!initial.props.some(p=>p.id==='dressing-island'));
-        assert.ok(Math.abs(initial.props.find(p=>p.id==='bed-2').max[0]-initial.props.find(p=>p.id==='bed-2').min[0]-1600.5)<1,'Compact bed retains its native 1.6 m width');
+        assert.ok(initial.props.find(p=>p.id==='bed-2').max[0]-initial.props.find(p=>p.id==='bed-2').min[0]<=1600.5,'Compact generated bed fits the original bay');
         const checkHeadboard = async id => {
             const points=await page.evaluate(async id=>{
                 const THREE=await import('three'),room=ErgoFlex.workspaceRoom,bed=room.assets().find(o=>o.userData.propId===id);

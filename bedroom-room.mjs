@@ -187,7 +187,7 @@ export function buildBedroomRoom(room, root, layout, helpers) {
         for(let i=0;i<9000;i++){c.fillStyle=i%2?'rgba(255,255,255,.08)':'rgba(80,70,50,.06)';c.fillRect(rnd(i+70)*tw,rnd(i+170)*th,1.4,1.4);}
     },1024,512);
     const artWidth=tier?1400:1130;
-    const art=group('bedroom-landscape','Original quiet landscape',[bed[0],2050,bz+35],0,back);
+    const art=group('bedroom-landscape','Original quiet landscape',[bed[0],tier===3?2430:2050,bz+35],0,back);
     box(art,[artWidth,510,18],[0,0,0],oak,3);box(art,[artWidth-45,465,4],[0,0,12],material('#ffffff',{map:artMap,roughness:.9}));
     // A slim brass picture light washes the canvas in the evening.
     for(const x of [-artWidth/3,artWidth/3])rod(art,[x,240,8],[x,300,100],5,brass);
@@ -337,7 +337,7 @@ export function buildBedroomRoom(room, root, layout, helpers) {
     room.decorateProp=(object,placement)=>{
         if(placement.id==='kenney-furniture-lamp-round-table')halo(object,[0,.36,0],.62,'lamps',.7);
         else if(placement.id==='kenney-furniture-lamp-round-floor')halo(object,[0,1.55,0],.8,'lamps',.75);
-        else if(placement.id==='bed'||placement.id==='bed-2'){
+        else if((placement.id==='bed'||placement.id==='bed-2')&&!object.userData.atelierBed){
             // Native bed frames: bed-2 has its headboard at +Z, bed at -Z.
             const compact=placement.id==='bed-2',foot=compact?-1:1,top=compact?.5:.462,half=compact?.73:.875,end=compact?.88:.9;
             const z=foot*(end-.31);

@@ -1,4 +1,4 @@
-import { mountDeskObjectUI } from './scene-desk-object-ui.mjs?v=library-humboldt-20261013';
+import { mountDeskObjectUI } from './scene-desk-object-ui.mjs?v=desk-auto-stow-20261014';
 export function mountSceneDeskUI(parent,manager){
     const panel=document.createElement('details');panel.className='scene-desk-panel';panel.open=false;
     panel.innerHTML=`<summary><span data-desk-title>Desks</span> <span data-desk-summary></span></summary>
@@ -7,6 +7,7 @@ export function mountSceneDeskUI(parent,manager){
         <button type="button" data-desk-add>Add desk</button><button type="button" data-desk-delete>Delete desk</button>
         <button type="button" data-desk-left aria-label="Rotate selected desk left">↶ 15°</button><button type="button" data-desk-right aria-label="Rotate selected desk right">↷ 15°</button><button type="button" data-desk-save>Save desk setting</button><button type="button" data-desks-save>Save all desks</button></div>
         <p class="desk-object-note">Each desk keeps separate 48″ and 60″ setups, including finishes, accessories, objects and saved Grooves.</p>
+        <p class="desk-object-note" data-desk-stow-status></p>
         <details class="scene-desk-routines"><summary>Desk Grooves <span data-desk-setting></span></summary>
         <div class="scene-desk-row"><button type="button" data-desk-record>Record Groove</button><button type="button" data-desk-play>Play desk Groove</button>
         <button type="button" data-desks-play>Play group Grooves</button><button type="button" data-desks-stop>Stop</button>
@@ -26,6 +27,8 @@ export function mountSceneDeskUI(parent,manager){
     return {panel,sync(){
         panel.hidden=!manager.key;objects.sync();
         const product=!!manager.active?.product;
+        const stow=manager.active?.stowStatus;
+        q('[data-desk-stow-status]').textContent=manager.objects.editing?'Automatic stowing pauses while you rearrange items.':stow?`${stow.count} items organized in shelving${stow.overflow?' · '+stow.overflow+' oversized items stored':''}. Lower to 9° or less to restore your layout.`:'Above 9°, loose desktop items automatically stow in the shelving. Drafting tools stay at 10–49°; painting canvases stay at 50° and above.';
         q('[data-desk-title]').textContent=product?'Desk objects':'Desks';
         panel.querySelector('.scene-desk-row').hidden=product;
         panel.querySelector('.scene-desk-routines').hidden=product;

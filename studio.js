@@ -5,14 +5,18 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=environment-expert-20261014';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=environment-expert-20261014';
 import { poseIsClear } from './room-groove.mjs?v=library-humboldt-20261013';
-import { SceneDesks } from './scene-desks.mjs?v=item-surface-drop-20261013';
-import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=library-humboldt-20261013';
+import { SceneDesks } from './scene-desks.mjs?v=mobile-room-routines-20261014';
+import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=desk-auto-stow-20261014';
+import { applyCollegeProductArtwork } from './college-product-artwork.mjs';
+import { recoverCollegeArtwork } from './college-artwork-recovery.mjs';
 import { notebookTransform } from './notebook-transform.mjs';
-import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=artwork-size-isolation-20261012';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=hbhs-product-classroom-20261014';
+import { hbhsPalette, upgradeHighschoolDesk } from './hbhs-design.mjs';
+import { chooseShelfStations, seedShelfStation, createShelfStationSupplies } from './desk-shelf-stations.mjs';
 import { encodeStoredJSON, decodeStoredJSON, compactStoredDesigns } from './browser-design-storage.mjs?v=scene-sized-setups-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs?v=library-build-free-items-20261013';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=scene-sized-setups-20261012';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=desk-auto-stow-20261014';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=library-humboldt-20261013';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
@@ -22,15 +26,15 @@ import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pac
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=environment-expert-20261014';
-import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=environment-expert-20261014';
+import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=hbhs-product-classroom-20261014';
 import { RoomLedSpill } from './room-led-spill.mjs?v=environment-expert-20261014';
-import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=library-build-free-items-20261013';
+import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=hbhs-product-classroom-20261014';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=environment-expert-20261014';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
 import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
-import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=groove-routines-20261002';
+import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=atelier-decor-20261014';
 import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
 import { LED_EFFECTS, normalizeLedEffect, sampleLedEffect } from './led-effects.mjs?v=led-effects-20261003';
@@ -47,13 +51,13 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits } from './catalog.mjs?v=preset-size-setups-20261012';
+         ACCESSORIES, PRESETS, accessory, accessoryFits } from './catalog.mjs?v=hbhs-product-classroom-20261014';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=environment-expert-20261014';
-import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=library-humboldt-20261013';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=atelier-decor-20261014';
+import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=desk-auto-stow-20261014';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=curved-pair-20261012';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -62,7 +66,7 @@ import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from 
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
-import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=groove-routines-20261002';
+import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=atelier-decor-20261014';
 import { ARWorkspace } from './ar-workspace.mjs?v=compact-controller-20261007';
 import { accessoryIllustration } from './workspace-icons.mjs';
 
@@ -608,14 +612,41 @@ function initSceneDeskEditing() {
         },writeStore:(k,v)=>writeStore(k,{...v,v:1}),changed:(saved=true)=>{markEdited();setRoomSaveStatus(saved?'Saved in this browser':'Could not save. Use Save project to keep your edits.');scheduleBuildPresetSave();},
         room:()=>workspaceRoom,sceneId:()=>selectedRoomScene,phase:()=>measuredRoomProfile()?.mode||'morning',phaseLabel:()=>measuredRoomProfile()?.modes[measuredRoomProfile()?.mode]?.label,
         status:notifyUser,rearrange:()=>roomRearrangeMode==='desks'&&!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active&&!sceneDesks?.playing&&!sceneDesks?.recording,
+        activityCanMove:()=>{
+            if(roomSafety.alert||liveAR?.active||transformControl?.object||isSelectionMode){notifyUser('Finish editing and clear the movement stop before starting a room routine.');return false;}
+            setRoomRearrangeMode('off');controls.autoRotate=false;return true;
+        },
+        activityValid:()=>!roomSafety.alert&&!liveAR?.active&&!transformControl?.object&&roomRearrangeMode==='off'&&!isSelectionMode&&!glideInput.lengthSq()&&!yawCommand&&!liftJog&&!tiltJog&&!glideActive,
         objectEditing:on=>setRoomRearrangeMode(on?'items':'off'),
         objectsEditable:()=>!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active,
         objectSelected:()=>roomInteractions?.select(null),
         seedDeskSize:(_r,source,size)=>seedSceneSizeWithPeripherals(source,size),
+        activityRecipe:()=>activeBuildPreset,
+        surfaceSize:role=>{const m=workspaceAccessories?.mounts.get(role);return m?{width:m.width,depth:m.depth}:null;},
+        configureDeskMix:manager=>{
+            for(const r of chooseShelfStations(manager.records.values())){
+                manager.objects.stow.restore(r);seedShelfStation(r.state);
+                r.peripherals?.dispose();r.peripherals=null;
+                for(const [id,item] of r.objects||[])if(item.obj.userData.accessoryId)r.objects.delete(id);
+                initRoomDeskPeripherals(r);
+                if(manager.active===r)manager.ctx.writeLive(r);
+            }
+        },
         prepareDesk:r=>{
-            if(selectedRoomScene!=='library')return;
+            if(!['library','occmedialab','highschool'].includes(selectedRoomScene))return;
             const saved=cleanBuildPresets(readStore(BUILD_PRESETS_KEY,1,null)||buildPresets);
-            applyLibraryProductBuild(r.state,saved.entries.library);
+            if(selectedRoomScene==='highschool'){
+                // The original standing bay put its right caster 29 mm past
+                // the measured wall at full fold. Upgrade only that untouched
+                // seed position; owner-moved desks keep their authored pose.
+                if(r.spec?.id==='student-standing'&&r.state.pose?.x===4380&&r.state.pose?.z===1000&&r.state.pose?.yaw===0)
+                    r.state.pose.x=r.state.size==='60x30'?4100:4300;
+                upgradeHighschoolDesk(r.state,r.spec?.id||r.id,r.spec?.name||'Science & media teacher desk');
+                applyCollegeProductArtwork(r.state,saved.entries.hbhs,'hbhs');
+                return;
+            }
+            if(selectedRoomScene==='library')applyLibraryProductBuild(r.state,saved.entries.library);
+            else applyCollegeProductArtwork(r.state,saved.entries.occ);
         },
         decorateDesk:initRoomDeskPeripherals,
         defaultLights:base=>{
@@ -741,7 +772,10 @@ function initSceneDeskEditing() {
         sync:refresh
     });
     sceneDesks.objects.editing=roomRearrangeMode==='items';
-    if(workspaceAccessories)workspaceAccessories.onLayout=()=>{sceneDesks.objects.syncAccessories();sceneScreens?.update(true);};
+    if(workspaceAccessories){
+        workspaceAccessories.onBeforeLayout=()=>{const r=sceneDesks.active;if(r?.product)sceneDesks.objects.stow.restore(r);};
+        workspaceAccessories.onLayout=()=>{sceneDesks.objects.syncAccessories();sceneScreens?.update(true);};
+    }
 }
 function initSceneScreenControls(toolbar) {
     const panel=document.createElement('details');panel.className='render-settings scene-screen-controls';panel.id='scene-screen-controls';
@@ -789,6 +823,18 @@ function initSceneScreenControls(toolbar) {
 function initRoomDeskPeripherals(r) {
     if(r.product||!r.rig)return;
     seedScenePeripherals(r.state,selectedRoomScene,r.spec?.id||'main');
+    if(r.state.shelfStation==='shelf-first-v1'){
+        for(const item of r.objects.values())if(item.id.startsWith('default-')&&!item.obj.userData.accessoryId&&!item.obj.userData.shelfStationSupply){
+            let nativeScreen=false;item.obj.traverse(o=>{if(o.userData.govScreen||o.userData.hcScreen||o.userData.itScreen||o.userData.sceneDisplay)nativeScreen=true;});
+            // Older institutional shelves batch screen frames into anonymous
+            // meshes. Replace those with the editable storage kit as well.
+            if(nativeScreen||/monitor|display|screen|laptop|imac/i.test(item.obj.userData.propId+' '+item.saved.label)||(item.saved.role==='shelf'&&!item.obj.userData.propId))item.saved.removed=true;
+        }
+        if(!r.objects.has('default-shelf-files'))for(const {id,role,obj} of createShelfStationSupplies(r.state)){
+            const saved=r.state.objects[id]||{role,added:false,removed:false,label:obj.name,transform:{p:{x:obj.position.x,y:obj.position.y,z:obj.position.z},q:{x:0,y:0,z:0,w:1},s:{x:1,y:1,z:1}}};
+            sceneDesks.objects.register(r,id,obj,saved,new THREE.Vector3(1,1,1));
+        }
+    }
     for(const item of r.objects.values())if(item.id.startsWith('default-')&&isLegacyScenePeripheral(item.obj)){
         item.saved.removed=true;item.obj.visible=false;
     }
@@ -797,6 +843,7 @@ function initRoomDeskPeripherals(r) {
     const module=institutionalModule(selectedRoomScene),update=set.update;
     if(module?.peripheralScreens)set.update=()=>{update();module.peripheralScreens(set,r,sceneDesks.ctx.phase());};
     r.peripherals=set;
+    set.onBeforeLayout=()=>sceneDesks.objects.stow.restore(r);
     set.onLayout=()=>{
         if(sceneDesks.records.get(r.id)!==r||r.peripherals!==set)return;
         for(const [key,item] of r.objects)if(item.obj.userData.accessoryId&&!set.items.has(item.obj.userData.accessoryId)){
@@ -4696,10 +4743,10 @@ function syncSizeChoiceUI() {
     });
 }
 
-function applyConfigToUI() {
+function applyConfigToUI({ rebuildRoom = true } = {}) {
     if (sizeSelect) sizeSelect.value = currentConfig.size;
     syncSizeChoiceUI();
-    syncSizeGeometry();
+    syncSizeGeometry({ rebuildRoom });
     surfaceArtwork?.setState(currentConfig.artwork);
     const woodName = document.getElementById('selected-wood-name');
     const baseName = document.getElementById('selected-base-name');
@@ -5229,6 +5276,14 @@ function syncBuildPresetUI(message) {
     const status = document.getElementById('preset-save-status');
     if (status) status.textContent = message || (preset ? `${preset.name} · ${currentConfig.size === '48x30' ? '48' : '60'}″ setup · edits auto-save separately for each size.` : 'Choose a setup. Your edits will auto-save as its own version.');
     syncArtistCanvasUI();
+    const schoolColors=document.getElementById('hbhs-color-toggle');
+    if(schoolColors){
+        schoolColors.hidden=activeBuildPreset!=='hbhs'||selectedRoomScene!=='product';
+        schoolColors.querySelectorAll('[data-hbhs-tone]').forEach(button=>{
+            button.disabled=applyingBuildPreset;
+            button.setAttribute('aria-pressed',String(currentConfig.woodFinish===hbhsPalette(button.dataset.hbhsTone).woodFinish));
+        });
+    }
 }
 
 function syncArtistCanvasUI() {
@@ -5302,6 +5357,7 @@ function saveBuildPreset() {
         revision, sizeSetups:keptSizes,
         config: cleanConfig(currentConfig), room, ...(activeBuildPreset === 'architect' ? {architectRail:'support-rail-v1'} : {}), ...(activeBuildPreset === 'artist' ? { startPose: 'artist-65-v1', startLighting: 'artist-daytime-40-v1', singleArm: 'rigid-landscape-v1' } : {}),
         ...(activeBuildPreset === 'occ' ? { collegeArtwork: draft?.collegeArtwork || 'occ-v2', trayFinish:'occ-steel-v1',occResizeRecovery:'size-setups-v1' } : {}),
+        ...(activeBuildPreset === 'hbhs' && draft?.schoolArtwork==='hbhs-v1' ? {schoolArtwork:'hbhs-v1'} : {}),
         ...(draft?.initialView ? {initialView:draft.initialView} : {}),
         surface: { finish: surfaceFinish, grain: grainEnabled, visibility: grainVisibility, sheen: grainSheen }
     } } });
@@ -5414,7 +5470,9 @@ async function applyPresetNow(preset, {size} = {}) {
             const grain = document.getElementById('wood-grain'); if (grain) grain.checked = grainEnabled;
         }
         sceneDeskLocation = 'product';
-        applyConfigToUI(); rememberSceneDeskStyle(); applyAccessoryVisibility(); renderAccessories();
+        // The outgoing room must not rebuild while installing a Product recipe:
+        // its cached palette would replace this recipe's finishes and artwork.
+        applyConfigToUI({ rebuildRoom: false }); rememberSceneDeskStyle(); applyAccessoryVisibility(); renderAccessories();
         sceneDeskStyles.product = currentDeskStyle();
         setRoomScene('product', true, { preserveDesk: true });
         syncBuildPresetUI(`Loading ${preset.name}…`);
@@ -5427,6 +5485,7 @@ async function applyPresetNow(preset, {size} = {}) {
         else if (Number.isFinite(preset.startTilt)) applyProjectMotion({ heightInches: Math.max(liftToHeight(currentLift), minimumHeightForTilt(preset.startTilt, currentConfig.size)), tilt: { [primaryTiltConfig()?.name]: preset.startTilt } });
         if (preset.id === 'artist') applyArtistStartingLights(draft);
         if (preset.id === 'occ') await upgradeOrangeCoastArtwork(draft);
+        if (preset.id === 'hbhs') await upgradeHBHSArtwork(draft);
         if (draft?.initialView) restorePresetStartingView(draft.initialView);
         else if (preset.cameraPreset) {
             const select = document.getElementById('camera-view');
@@ -5450,6 +5509,27 @@ async function applyPresetNow(preset, {size} = {}) {
             if (applied) saveBuildPreset();
         }
     }
+}
+
+async function upgradeHBHSArtwork(draft) {
+    if(draft?.schoolArtwork==='hbhs-v1')return;
+    if(!draft?.config.artwork && !await surfaceArtwork.applyHBHSSamples())throw new Error('HBHS artwork could not be loaded.');
+    const current=presetSizeDraft('hbhs');if(current)current.schoolArtwork='hbhs-v1';
+}
+
+async function setHBHSColors(tone) {
+    if(activeBuildPreset!=='hbhs'||selectedRoomScene!=='product'||applyingBuildPreset||!['white','black'].includes(tone))return;
+    if(!flushPresetArtwork())return;
+    const run=buildPresetRun;
+    applyingBuildPreset=true;syncBuildPresetUI();
+    try{
+        currentConfig=cleanConfig({...currentConfig,...hbhsPalette(tone),accessoryFinishes:{...currentConfig.accessoryFinishes,'ergo-keyboard':tone,'logitech-mx-master':tone,'keyboard-tray':'steel'}});
+        applyConfigToUI({rebuildRoom:false});rememberSceneDeskStyle();applyAccessoryVisibility();renderAccessories();
+        await workspaceAccessories.ready;await sceneDesks.objects.ready;
+    }finally{if(run===buildPresetRun){applyingBuildPreset=false;syncSizeChoiceUI();syncBuildPresetUI();}}
+    if(run!==buildPresetRun||activeBuildPreset!=='hbhs'||selectedRoomScene!=='product')return;
+    saveBuildPreset();markEdited();
+    notifyUser(`HBHS · ${tone==='white'?'White':'Black'} & orange saved for this desk size.`);
 }
 
 function buildGuidedConfiguration() {
@@ -5483,7 +5563,10 @@ function buildGuidedConfiguration() {
     const canvasToggle=document.createElement('div');canvasToggle.id='artist-canvas-toggle';canvasToggle.className='artist-canvas-toggle';canvasToggle.hidden=true;
     canvasToggle.innerHTML='<label><input id="artist-show-painting" type="checkbox" checked> Show painting</label><small>Painting fills the canvas.</small>';
     canvasToggle.querySelector('input').onchange=e=>sceneDesks?.objects.setArtwork('accessory-artist-easel',e.target.checked);
-    presets.querySelector('.eyebrow').after(sizeNote,save, status,viewSave,viewStatus,canvasToggle); syncBuildPresetUI();
+    const schoolColors=document.createElement('div');schoolColors.id='hbhs-color-toggle';schoolColors.className='artist-canvas-toggle';schoolColors.hidden=true;
+    schoolColors.innerHTML='<strong>HBHS school colors</strong><div role="group" aria-label="HBHS desk colors"><button type="button" class="btn-secondary" data-hbhs-tone="black">Black & orange</button><button type="button" class="btn-secondary" data-hbhs-tone="white">White & orange</button></div><small>Colors save with this desk size. Your graphics and item positions stay in place.</small>';
+    schoolColors.querySelectorAll('button').forEach(button=>button.onclick=()=>setHBHSColors(button.dataset.hbhsTone).catch(error=>notifyUser(error.message)));
+    presets.querySelector('.eyebrow').after(sizeNote,schoolColors,save,status,viewSave,viewStatus,canvasToggle); syncBuildPresetUI();
 
     const accessories = document.createElement('div');
     accessories.className = 'accessory-block';
@@ -5931,6 +6014,28 @@ function buildPrecisionTools(anchorElement) {
 
 // --- Project panel ----------------------------------------------------------
 
+async function restoreSavedCollegeArtwork() {
+    const response = await fetch('./assets/artwork/saved-college-graphics-20261014.json');
+    if (!response.ok) throw new Error('The saved college graphics could not be loaded.');
+    const recovery = await response.json();
+    if (!flushPresetArtwork()) return false;
+    saveBuildPreset();
+    const active = activeBuildPreset, size = currentConfig.size;
+    const next = recoverCollegeArtwork(readStore(BUILD_PRESETS_KEY, 1, null) || buildPresets, recovery);
+    writeAutosave('before restoring Library and OCC artwork');
+    if (!writeStore(BUILD_PRESETS_KEY, next)) throw new Error('Could not save the recovered college graphics in this browser.');
+    // Prevent the outgoing live desk from immediately autosaving over recovery.
+    activeBuildPreset = null; pendingPresetArtwork = null; buildPresets = next;
+    if (selectedRoomScene === 'product' && ['library','occ'].includes(active))
+        await applyPreset({ id: active }, { size });
+    else if (['library','occmedialab'].includes(selectedRoomScene))
+        setRoomScene(selectedRoomScene, false, { preserveDesk: true });
+    else activeBuildPreset = active;
+    syncBuildPresetUI(); markEdited();
+    notifyUser('Library and OCC artwork restored for 48″ and 60″, with their saved green and navy finishes.');
+    return true;
+}
+
 // Sits beside the rigs-only "Export Animations" button, which keeps working —
 // that exports a definition for baking back into source, this saves the whole
 // edited project.
@@ -5945,11 +6050,19 @@ function buildProjectTools(anchorButton) {
             <button id="project-copy">Copy project JSON</button>
             <button id="project-load">Load project…</button>
             <button id="project-recover">Recover…</button>
+            <button id="college-artwork-recover">Restore Library & OCC graphics</button>
         </div>
         <input id="project-file" type="file" accept="application/json,.json" hidden>
         <p class="studio-note">Saves the whole edited scene: part positions, clones, groups, lift assignments, rigs, finishes, and camera. Autosaves keep the last ${PROJECT_AUTOSAVE_SLOTS} states.</p>
         <div id="project-recovery-list" hidden></div>`;
     anchorButton.parentElement.after(panel);
+
+    document.getElementById('college-artwork-recover').onclick = async event => {
+        const button = event.currentTarget; button.disabled = true;
+        try { await restoreSavedCollegeArtwork(); }
+        catch (error) { notifyUser(error.message); }
+        finally { button.disabled = false; }
+    };
 
     document.getElementById('project-save').onclick = () => {
         try {
@@ -8961,7 +9074,7 @@ function buildMotionRemote() {
     const hubTile=body.querySelector('.hub-tile');
     hubTile.disabled=false;hubTile.className='hub-groove';hubTile.innerHTML='<span aria-hidden="true">▶</span><span>Groove</span>';
     hubTile.setAttribute('aria-label','Start current room Groove');hubTile.title='Start or stop the current room Groove';
-    hubTile.onclick=()=>roomGroove?.run?haltAllMotion():startCurrentGroove();
+    hubTile.onclick=()=>roomGroove?.run||sceneDesks?.playing?haltAllMotion():startCurrentGroove();
     const bulbControl=body.querySelector('.hub-led');
     bulbControl.insertAdjacentHTML('beforeend','<svg class="hub-led-bars" viewBox="0 0 22 20" aria-hidden="true"><path d="M2 18v-4M8 18v-8M14 18V6M20 18V2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span class="hub-led-label">LED</span>');
     applyRemoteTheme(loadRemoteTheme());
@@ -9056,21 +9169,21 @@ function revealPresetChip(chip) {
 }
 
 function goToHeight(inches) {
-    if (roomGroove?.run && !grooveSettingPose) haltAllMotion();
+    if ((roomGroove?.run || sceneDesks?.playing) && !grooveSettingPose) haltAllMotion();
     if (!loadedModel) return;
     manualLiftOverride = false;
     const minimum = minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size);
     targetLift = heightToLift(THREE.MathUtils.clamp(inches, minimum, HEIGHT_MAX));
 }
 function goToTilt(deg) {
-    if (roomGroove?.run && !grooveSettingPose) haltAllMotion();
+    if ((roomGroove?.run || sceneDesks?.playing) && !grooveSettingPose) haltAllMotion();
     const config = primaryTiltConfig();
     if (!config) return;
     tiltTarget = THREE.MathUtils.clamp(deg, config.minDeg,
         Math.min(config.maxDeg, maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size)));
 }
 function goToPose(height, deg) {
-    if (roomGroove?.run && !grooveSettingPose) haltAllMotion();
+    if ((roomGroove?.run || sceneDesks?.playing) && !grooveSettingPose) haltAllMotion();
     const config = primaryTiltConfig();
     if (!loadedModel || !config) return;
     const tilt = THREE.MathUtils.clamp(deg, config.minDeg, config.maxDeg);
@@ -10462,6 +10575,7 @@ function applyRoomLighting() {
                 shell.dataset.roomDark = String(backdrop.dark);
             }
             workspaceRoom.roomAtmosphere?.(measured.mode, accent);
+            workspaceRoom.applyAtelierLighting(measured.mode, accent);
             workspaceRoom.life?.apply(measured.mode);
             workspaceRoom.life?.lightActivity();
             const bounced = ceilingPreviewEnabled && roomBounceEnabled;
@@ -10566,20 +10680,32 @@ function resetCurrentGroovePosition() {
 }
 function syncGrooveUI(state = {}) {
     const phase=document.querySelector('.hub-phase');
-    if(phase)phase.textContent=roomGroove?.run?'Moving to position':measuredRoomProfile()?'Ready to Groove':'Desk preview';
+    if(phase)phase.textContent=sceneDesks?.activities?.run?'Room routine':roomGroove?.run?'Moving to position':measuredRoomProfile()?'Ready to Groove':'Desk preview';
     const button=document.querySelector('.hub-groove');
-    if(button){button.disabled=!measuredRoomProfile()||!loadedModel;button.setAttribute('aria-pressed',String(!!roomGroove?.run));button.setAttribute('aria-label',roomGroove?.run?'Stop room Groove':'Start current room Groove');}
+    if(button){button.disabled=!measuredRoomProfile()||!loadedModel;button.setAttribute('aria-pressed',String(!!roomGroove?.run||!!sceneDesks?.playing));button.setAttribute('aria-label',roomGroove?.run||sceneDesks?.playing?'Stop room movement':'Start current room Groove');}
 
     for (const panel of document.querySelectorAll('.groove-controls')) {
         const start = panel.querySelector('[data-groove-start]');
-        start.disabled = !!roomGroove?.run || !!(roomGroove?.prepared&&!roomGroove.prepared.plan) || panel.dataset.scene !== selectedRoomScene || !loadedModel;
+        start.disabled = !!sceneDesks?.playing || !!roomGroove?.run || !!(roomGroove?.prepared&&!roomGroove.prepared.plan) || panel.dataset.scene !== selectedRoomScene || !loadedModel;
         start.textContent = roomGroove?.prepared?.plan?.ok === false ? 'Check route' : 'Start Groove';
-        panel.querySelector('[data-groove-stop]').disabled = !roomGroove?.run;
+        panel.querySelector('[data-groove-stop]').disabled = !roomGroove?.run&&!sceneDesks?.playing;
         const active = panel.dataset.scene === selectedRoomScene, saved = savedGroovePosition(panel.dataset.scene);
-        panel.querySelector('[data-groove-save]').disabled = !active || !loadedModel || !!roomGroove?.run || !!roomSafety.alert || !!liveAR?.active;
-        panel.querySelector('[data-groove-reset]').disabled = !active || !saved || !!roomGroove?.run;
+        panel.querySelector('[data-groove-save]').disabled = !active || !loadedModel || !!roomGroove?.run || !!sceneDesks?.playing || !!roomSafety.alert || !!liveAR?.active;
+        panel.querySelector('[data-groove-reset]').disabled = !active || !saved || !!roomGroove?.run || !!sceneDesks?.playing;
         panel.querySelector('[data-groove-saved]').textContent = saved ? 'Saved position & lights · this room and desk size' : 'Original position';
         panel.querySelector('[data-groove-status]').textContent = active && state.message && state.status === 'idle' ? state.message : roomGroove?.prepared ? state.message : `${measuredRoomProfile(panel.dataset.scene)?.modes[measuredRoomProfile(panel.dataset.scene)?.mode]?.label || 'Current setting'} Groove · Start to plan a clear route and move the desk.`;
+    }
+    for(const panel of document.querySelectorAll('.room-mobility-controls')){
+        const active=panel.dataset.scene===selectedRoomScene,m=sceneDesks,a=m?.activities;
+        if(!active||!a)continue;
+        const suggestion=a.suggestion,busy=!!m.playing||!!m.recording;
+        panel.querySelector('[data-mobility-title]').textContent=suggestion.title;
+        panel.querySelector('[data-mobility-description]').textContent=suggestion.description;
+        const start=panel.querySelector('[data-mobility-start]');start.textContent=suggestion.kind==='work'?'Return to work layout':'Start room routine';start.disabled=busy||!m.records.size||(suggestion.kind==='work'&&!a.hasHome);
+        panel.querySelector('[data-mobility-return]').disabled=busy||!a.hasHome;
+        panel.querySelector('[data-mobility-return]').hidden=suggestion.kind==='work';
+        panel.querySelector('[data-mobility-stop]').disabled=!m.playing;
+        panel.querySelector('[data-mobility-status]').textContent=a.message||(a.hasHome?'Your activity layout is saved. Return to work layout restores the original positions for each desk size.':'Choose an activity, then start its room routine. Saved desk Grooves take priority; blocked units stay in their bays.');
     }
 }
 async function startCurrentGroove() {
@@ -10758,6 +10884,7 @@ function setKitchenMode(id, moveDesk = true) { setMeasuredRoomMode('kitchen', id
 function setGymMode(id, moveDesk = true) { setMeasuredRoomMode('gym', id, moveDesk); }
 function setStudyMode(id, moveDesk = true) { setMeasuredRoomMode('study', id, moveDesk); }
 function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
+    sceneDesks?.activities?.restoreChairs();
     if (roomGroove?.prepared) { haltAllMotion(); roomGroove.reset(); }
     const profile = measuredRoomProfile(sceneId);
     if (!profile?.modes[id]) return;
@@ -10795,7 +10922,7 @@ function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
         }
         // Desk dressing follows the selected activity even when the desk stays put.
         workspaceAccessories?.setDayDress(id);
-        sceneDesks?.stop();sceneDesks?.sync();
+        sceneDesks?.stop();if(sceneDesks?.activities){sceneDesks.activities.message='';sceneDesks.activities.resolved=null;}sceneDesks?.sync();
         applyRoomLighting();
     }
     syncHomeOfficeUI();
@@ -10907,6 +11034,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
                 if (state) { applyProjectMotion({ heightInches: state.height, tilt: { [primaryTiltConfig()?.name]: state.tilt }, yaw: state.pose.yaw, glide: { x: state.pose.x, z: state.pose.z } }); applyGrooveLights(state.lights); }
                 if (activeBuildPreset === 'artist') applyArtistStartingLights(draft);
                 if (activeBuildPreset === 'occ') await upgradeOrangeCoastArtwork(draft);
+                if (activeBuildPreset === 'hbhs') await upgradeHBHSArtwork(draft);
                 if (draft.initialView) restorePresetStartingView(draft.initialView);
             }
             roomInteractions?.bind(workspaceRoom);roomLedSpill.bind(workspaceRoom);
@@ -11592,6 +11720,11 @@ function initStudio() {
         panel.querySelector('[data-groove-stop]').onclick = haltAllMotion;
         panel.querySelector('[data-groove-save]').onclick = saveCurrentGroovePosition;
         panel.querySelector('[data-groove-reset]').onclick = resetCurrentGroovePosition;
+        panel.insertAdjacentHTML('beforeend','<section class="room-mobility-controls" aria-label="Mobile workspace routines"><strong data-mobility-title></strong><p data-mobility-description></p><div class="scene-desk-row"><button type="button" data-mobility-start>Start room routine</button><button type="button" data-mobility-return>Return to work layout</button><button type="button" data-mobility-stop>Stop</button><span role="status" aria-live="polite" data-mobility-status></span></div><small>ErgoFlex mobility · 65° Storage Mode · paired and group work · wall parking for charging and cleaning</small></section>');
+        panel.querySelector('.room-mobility-controls').dataset.scene=id;
+        panel.querySelector('[data-mobility-start]').onclick=()=>sceneDesks?.activities.start();
+        panel.querySelector('[data-mobility-return]').onclick=()=>sceneDesks?.activities.start(true);
+        panel.querySelector('[data-mobility-stop]').onclick=()=>{haltAllMotion();sceneDesks?.persist();};
         panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => {
             b.title=`Prepare ${profile.modes[b.getAttribute(`data-${prefix}-mode`)].label} Groove`;
             b.onclick = () => prepareGrooveMode(id, b.getAttribute(`data-${prefix}-mode`));
@@ -11663,7 +11796,10 @@ function initStudio() {
             const dock = document.getElementById('motion-dock');
             if (dock && !dock.classList.contains('collapsed')) document.getElementById('motion-dock-toggle')?.click();
             controls.minDistance = DEFAULT_MIN_DISTANCE;
-            camera.position.copy(controls.target).add(new THREE.Vector3(5, 4, 5));
+            // HBHS opens from the entrance side, with the teaching and spirit
+            // walls in view, matching the completed classroom reference.
+            const damping=controls.enableDamping;controls.enableDamping=false;controls.update();controls.enableDamping=damping;
+            camera.position.copy(controls.target).add(new THREE.Vector3(...(selectedRoomScene==='highschool'?[5,4,-5]:[5,4,5])));
             focusObjects(workspaceRoom?.root ? [loadedModel, workspaceRoom.root] : [loadedModel], { animate: true });
             return;
         }
@@ -11917,7 +12053,7 @@ window.ErgoFlex = {
         return count;
     },
     setHeight(h) {
-        if (roomGroove?.run) haltAllMotion();
+        if (roomGroove?.run || sceneDesks?.playing) haltAllMotion();
         manualLiftOverride = true;
         h = THREE.MathUtils.clamp(Number(h) || HEIGHT_MIN,
             minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size), HEIGHT_MAX);

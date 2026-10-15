@@ -44,6 +44,42 @@ if (only) for (const id of only) if (!ids.has(id)) throw new Error(`unknown prop
 
 // 1. Rhino files -> OBJ.
 const jobs = [], directConverted = new Set();
+const milanoProps=selected.filter(prop=>prop.converter==='milano-generator');
+if(milanoProps.length){
+    const res=run(process.execPath,[join(root,'tools/props/generate-milano.mjs'),'--only',milanoProps.map(p=>p.id).join(',')],'Milano seating');
+    if(res.status!==0)throw new Error(`Milano generation failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);milanoProps.forEach(p=>directConverted.add(p.id));
+}
+const atelierProps=selected.filter(prop=>prop.converter==='atelier-chair-generator');
+if(atelierProps.length){
+    const res=run(process.execPath,[join(root,'tools/props/generate-atelier-chairs.mjs'),'--only',atelierProps.map(p=>p.id).join(',')],'Atelier chairs');
+    if(res.status!==0)throw new Error(`Atelier chair generation failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);atelierProps.forEach(p=>directConverted.add(p.id));
+}
+const lightingProps=selected.filter(prop=>prop.converter==='atelier-lamp-generator');
+if(lightingProps.length){
+    const res=run(process.execPath,[join(root,'tools/props/generate-atelier-lamps.mjs'),'--only',lightingProps.map(p=>p.id).join(',')],'Atelier lighting');
+    if(res.status!==0)throw new Error(`Atelier lighting generation failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);lightingProps.forEach(p=>directConverted.add(p.id));
+}
+const bedProps=selected.filter(prop=>prop.converter==='atelier-bed-generator');
+if(bedProps.length){
+    const res=run(process.execPath,[join(root,'tools/props/generate-atelier-beds.mjs'),'--only',bedProps.map(p=>p.id).join(',')],'Atelier beds');
+    if(res.status!==0)throw new Error(`Atelier bed generation failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);bedProps.forEach(p=>directConverted.add(p.id));
+}
+const campusProps=selected.filter(prop=>prop.converter==='campus-generator');
+if(campusProps.length){
+    const res=run(process.execPath,[join(root,'tools/props/generate-campus-furniture.mjs'),'--only',campusProps.map(p=>p.id).join(',')],'Campus furniture');
+    if(res.status!==0)throw new Error(`Campus furniture generation failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);campusProps.forEach(p=>directConverted.add(p.id));
+}
+const decorProps=selected.filter(prop=>prop.converter==='desk-decor-generator');
+if(decorProps.length){
+    const res=run(process.execPath,[join(root,'tools/props/generate-desk-decor.mjs'),'--only',decorProps.map(p=>p.id).join(',')],'Desk decor');
+    if(res.status!==0)throw new Error(`Desk decor generation failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);decorProps.forEach(p=>directConverted.add(p.id));
+}
 const packProps = selected.filter(prop => prop.converter === 'gltf-pack');
 if (packProps.length) {
     const res = run(process.execPath, [join(root, 'tools/props/import-packs.mjs'), '--only', packProps.map(prop => prop.id).join(',')], 'glTF packs');

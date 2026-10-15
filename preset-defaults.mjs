@@ -1,6 +1,7 @@
 // Owner-authored Start From configurations captured through Save project, 2026-10-12.
 // Object coordinates are mount-local millimetres; quaternion order is x/y/z/w.
 import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
+import { HBHS_ORANGE } from './hbhs-design.mjs';
 const surfaces={desktopStrength:157,desktopReach:100,desktopWidth:5,desktopCone:100,desktopEdgeFade:46,desktopSharpness:62,shelfStrength:176,shelfReach:98,baseStrength:54,baseReach:20,topStrength:143,topReach:77,floorStrength:156,floorReach:4,floorWidth:50,floorSharpness:73,leftWingStrength:111,leftWingReach:85,rightWingStrength:110,rightWingReach:87};
 const rows = {
  architect: {size:'60x30',wood:'Warm Ivory',base:'Space Gray',trim:'#85888c',finish:'matte',height:44,tilt:35,glow:49.3,look:'Daytime',accessories:['drafting-kit','task-light','shelf-organizer'],objects:{'drafting-kit':['desktop',[0,0,0]],'task-light':['desktop',[-530,0,-406.814649]],'shelf-organizer':['lower-shelf',[340,0,0]]}},
@@ -23,6 +24,11 @@ const rows = {
 };
 rows.occ = {...rows.library,wood:'Coast Navy',base:'White',trim:'#f99239',finish:'satin',grain:0,
  accessoryFinishes:{'ergo-keyboard':'white','logitech-mx-master':'white','keyboard-tray':'steel'},objects:structuredClone(rows.library.objects)};
+rows.hbhs = {...rows.library,wood:'Black Birch',base:'Black',trim:HBHS_ORANGE,finish:'satin',grain:28,height:40,tilt:-5,glow:25,color:HBHS_ORANGE,
+ accessories:['monitor-arm','flat-monitor','keyboard-tray','ergo-keyboard','logitech-mx-master','obsbot-tiny-2'],
+ accessoryFinishes:{'ergo-keyboard':'black','logitech-mx-master':'black','keyboard-tray':'steel'},objects:structuredClone(rows.library.objects)};
+delete rows.hbhs.objects['wide-monitor'];
+rows.hbhs.objects['flat-monitor']=['shelf',[0,-80,335.4844]];
 export const SHARED_BUILD_PRESETS = Object.fromEntries(Object.entries(rows).map(([id,r])=>{
  const config={size:r.size,woodFinish:r.wood,baseFinish:r.base,trimColor:r.trim,accessories:r.accessories,...(r.accessoryFinishes?{accessoryFinishes:r.accessoryFinishes}:{})};
  const objects=Object.fromEntries(Object.entries(r.objects).map(([name,[role,p,q,scale=1]])=>{

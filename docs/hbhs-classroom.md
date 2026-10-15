@@ -4,8 +4,9 @@ The **High school** stage (Scenes → Educational → School stage → High scho
 is now a "Surf City" science and media classroom **inspired by Huntington
 Beach High School** (HBHS, Huntington Beach, California). It is an
 inspired-by concept, not a measured replica of a real HBHS room. It is not
-affiliated with the school or its district and uses **no official marks**:
-no logo, crest, script wordmark or monogram. All wall text, data and schedules
+affiliated with the school or its district. The room decorations use generic
+lettering; the desk artwork picker now also offers the official HBHS seal at
+the owner's request (14 October). All wall text, data and schedules
 are generic and labelled *sample* where they look like data.
 
 Concept line: **"Surf City physics: from derricks to waves."** The physics and
@@ -115,9 +116,49 @@ assumptions, not facts.
 - Huntington Beach Oil Field: https://en.wikipedia.org/wiki/Huntington_Beach_Oil_Field
 - Marine layer: https://en.wikipedia.org/wiki/Marine_layer
 
-Deliberately left out: official logos and marks, any real person's name
+Deliberately left out of the room decorations: official logos and marks, any real person's name
 (including the auditorium's dedicatee), the surf team's disputed founding
 year, league marks and real show titles.
+
+## Editable desk artwork (14 October 2026)
+
+**Start From → HBHS · Oilers** is a complete editable desk in both 48″ and 60″.
+It uses orange trim (`#e8702a`), Oilers lettering on the desktop and footrest,
+and the school seal on each side panel. The seal has a white printed badge
+underneath its original transparent graphic so it remains readable on black.
+The **Black & orange / White & orange** controls switch the desk finish, frame
+and ergonomic input colors while keeping graphics and item positions. Each
+width saves independently. A landscape ProVision monitor, single arm, brushed
+steel keyboard tray, ergonomic keyboard, MX Master mouse and OBSBOT Tiny 2
+complete the starting setup.
+
+The classroom has four black/orange and three white/orange ErgoFlex stations,
+plus orange perimeter bands on the nine paired student tables. Both widths
+retain their classroom setup. Saved generic grey desk palettes are migrated
+once; later owner finish edits remain editable. Classroom desk graphics take
+their initial decals from the corresponding-width HBHS Product build.
+
+The older browser saved props by their mount's array slot. That could apply a
+procedural group's scale of 1 to a new GLB requiring 1000, or put a new easel
+at the old ruler's position. High school defaults now match their saved names
+and roles before reusing a transform. Changed models use their new authored
+placement. Untouched legacy study-table, periodic-table, acoustic-panel,
+resource-shelf and room-sign positions migrate to the updated room; moved
+fixtures stay authored. Whole room opens from the entrance side to show the
+teaching and spirit walls, matching the reference view.
+
+`npm run test:hbhs` verifies both Product palettes, independent widths and
+reload, the legacy-browser classroom, seven stations, the new frame/easel/
+tablet and wave tank, all five activities, and later owner edits.
+
+Product & finishes → Premium artwork & wraps includes the official school seal
+and orange/white Oilers lettering. The lettering is an original typography
+decoration, not an official athletics wordmark. All three are separate editable
+decals; using a sample does not replace the owner's desk build.
+
+Official seal source: [HBUHSD school logo downloads](https://www.hbuhsd.edu/apps/pages/whyHBUHSD),
+[HBHS-Logo_vector.png](https://www.hbuhsd.edu/apps/download/K6dsoAYssNliIJhIffCX0s3YqmDV7Q7fdsD0ZrWyQRrLrEdD.png/HBHS-Logo_vector.png).
+Original source PNG is preserved at `assets/artwork/hbhs-seal.png`.
 
 ## Verification (13 October 2026)
 

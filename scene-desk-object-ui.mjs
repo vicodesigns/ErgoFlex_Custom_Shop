@@ -1,4 +1,4 @@
-import { DESK_SURFACES } from './scene-desk-objects.mjs?v=artist-finishes-20261012';
+import { DESK_SURFACES } from './scene-desk-objects.mjs?v=desk-auto-stow-20261014';
 
 export function mountDeskObjectUI(parent,manager){
     const editor=manager.objects,panel=document.createElement('details');panel.className='scene-desk-object-panel';

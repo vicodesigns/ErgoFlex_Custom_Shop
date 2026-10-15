@@ -1,6 +1,6 @@
-import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=preset-size-setups-20261012';
+import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=hbhs-product-classroom-20261014';
 import { cleanSceneDeskData } from './scene-desk-data.mjs';
-import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=obsbot-tiny-2-20261012';
+import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=hbhs-product-classroom-20261014';
 import { cleanDeskStyle } from './room-desk-styles.mjs';
 import { minimumHeightForTilt } from './motion-limits.mjs';
 
@@ -89,6 +89,7 @@ function cleanVariant(preset, draft) {
         ...(preset.id === 'artist' ? { startPose: 'artist-65-v1' } : {}),
         ...(preset.id === 'artist' ? { singleArm: 'rigid-landscape-v1' } : {}),
         ...(preset.id === 'occ' && ['occ-v1','occ-v2'].includes(draft.collegeArtwork) ? { collegeArtwork: draft.collegeArtwork } : {}),
+        ...(preset.id === 'hbhs' && draft.schoolArtwork === 'hbhs-v1' ? { schoolArtwork: draft.schoolArtwork } : {}),
         ...(draft.startLighting === 'artist-daytime-40-v1' ? { startLighting: draft.startLighting } : {}),
         surface: {
             finish: ['matte', 'satin', 'gloss'].includes(surface.finish) ? surface.finish : 'gloss',
