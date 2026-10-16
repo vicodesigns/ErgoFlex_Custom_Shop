@@ -86,6 +86,18 @@ if(gamingProps.length){
     if(res.status!==0)throw new Error(`Gaming gear generation failed\n${res.stderr}`);
     process.stdout.write(res.stdout);gamingProps.forEach(p=>directConverted.add(p.id));
 }
+const artistProps=selected.filter(prop=>prop.converter==='artist-generator');
+if(artistProps.length){
+    const res=run(process.execPath,[join(root,'tools/props/generate-artist-gear.mjs'),'--only',artistProps.map(p=>p.id).join(',')],'Artist gear');
+    if(res.status!==0)throw new Error(`Artist gear generation failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);artistProps.forEach(p=>directConverted.add(p.id));
+}
+const conferenceProps=selected.filter(prop=>prop.converter==='conference-chair-import');
+if(conferenceProps.length){
+    const res=run(process.execPath,[join(root,'tools/props/import-conference-chairs.mjs'),'--only',conferenceProps.map(p=>p.id).join(',')],'Conference chairs');
+    if(res.status!==0)throw new Error(`Conference chair import failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);conferenceProps.forEach(p=>directConverted.add(p.id));
+}
 const packProps = selected.filter(prop => prop.converter === 'gltf-pack');
 if (packProps.length) {
     const res = run(process.execPath, [join(root, 'tools/props/import-packs.mjs'), '--only', packProps.map(prop => prop.id).join(',')], 'glTF packs');

@@ -32618,6 +32618,1579 @@
     "archetype": "battlestation",
     "component": "peripherals"
    }
+  },
+  {
+   "id": "atelier-artist-set-tablet-oak",
+   "name": "Atelier artist · Pen display studio · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-tablet-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-tablet-oak.glb",
+   "size": [
+    920,
+    276.99,
+    520
+   ],
+   "min": [
+    -460,
+    0,
+    -260
+   ],
+   "max": [
+    460,
+    276.99,
+    260
+   ],
+   "tris": 7727,
+   "bytes": 123364,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "tablet",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-easel-oak",
+   "name": "Atelier artist · Tabletop painting studio · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-easel-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-easel-oak.glb",
+   "size": [
+    920,
+    640.73,
+    565.93
+   ],
+   "min": [
+    -460,
+    0,
+    -282.97
+   ],
+   "max": [
+    460,
+    640.73,
+    282.97
+   ],
+   "tris": 5134,
+   "bytes": 72648,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "easel",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-sculpture-oak",
+   "name": "Atelier artist · Clay sculpture studio · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-sculpture-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-sculpture-oak.glb",
+   "size": [
+    920,
+    444.25,
+    520
+   ],
+   "min": [
+    -460,
+    0,
+    -260
+   ],
+   "max": [
+    460,
+    444.25,
+    260
+   ],
+   "tris": 4232,
+   "bytes": 45384,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "sculpture",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-ipad-oak",
+   "name": "Atelier artist · Digital illustration studio · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-ipad-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-ipad-oak.glb",
+   "size": [
+    920,
+    276.99,
+    520
+   ],
+   "min": [
+    -460,
+    0,
+    -260
+   ],
+   "max": [
+    460,
+    276.99,
+    260
+   ],
+   "tris": 4214,
+   "bytes": 64192,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "ipad",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-tablet-chalk",
+   "name": "Atelier artist · Pen display studio · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-tablet-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-tablet-chalk.glb",
+   "size": [
+    920,
+    276.99,
+    520
+   ],
+   "min": [
+    -460,
+    0,
+    -260
+   ],
+   "max": [
+    460,
+    276.99,
+    260
+   ],
+   "tris": 7727,
+   "bytes": 123360,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "tablet",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-easel-chalk",
+   "name": "Atelier artist · Tabletop painting studio · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-easel-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-easel-chalk.glb",
+   "size": [
+    920,
+    640.73,
+    565.93
+   ],
+   "min": [
+    -460,
+    0,
+    -282.97
+   ],
+   "max": [
+    460,
+    640.73,
+    282.97
+   ],
+   "tris": 5134,
+   "bytes": 72640,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "easel",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-sculpture-chalk",
+   "name": "Atelier artist · Clay sculpture studio · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-sculpture-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-sculpture-chalk.glb",
+   "size": [
+    920,
+    444.25,
+    520
+   ],
+   "min": [
+    -460,
+    0,
+    -260
+   ],
+   "max": [
+    460,
+    444.25,
+    260
+   ],
+   "tris": 4232,
+   "bytes": 45372,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "sculpture",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-ipad-chalk",
+   "name": "Atelier artist · Digital illustration studio · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-ipad-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-ipad-chalk.glb",
+   "size": [
+    920,
+    276.99,
+    520
+   ],
+   "min": [
+    -460,
+    0,
+    -260
+   ],
+   "max": [
+    460,
+    276.99,
+    260
+   ],
+   "tris": 4214,
+   "bytes": 64184,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "ipad",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-tablet-sage",
+   "name": "Atelier artist · Pen display studio · Walnut & sage",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-tablet-sage",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-tablet-sage.glb",
+   "size": [
+    920,
+    276.99,
+    520
+   ],
+   "min": [
+    -460,
+    0,
+    -260
+   ],
+   "max": [
+    460,
+    276.99,
+    260
+   ],
+   "tris": 7727,
+   "bytes": 123364,
+   "atelierArtist": {
+    "family": "sage",
+    "archetype": "tablet",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-easel-sage",
+   "name": "Atelier artist · Tabletop painting studio · Walnut & sage",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-easel-sage",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-easel-sage.glb",
+   "size": [
+    920,
+    640.73,
+    565.93
+   ],
+   "min": [
+    -460,
+    0,
+    -282.97
+   ],
+   "max": [
+    460,
+    640.73,
+    282.97
+   ],
+   "tris": 5134,
+   "bytes": 72648,
+   "atelierArtist": {
+    "family": "sage",
+    "archetype": "easel",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-sculpture-sage",
+   "name": "Atelier artist · Clay sculpture studio · Walnut & sage",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-sculpture-sage",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-sculpture-sage.glb",
+   "size": [
+    920,
+    444.25,
+    520
+   ],
+   "min": [
+    -460,
+    0,
+    -260
+   ],
+   "max": [
+    460,
+    444.25,
+    260
+   ],
+   "tris": 4232,
+   "bytes": 45380,
+   "atelierArtist": {
+    "family": "sage",
+    "archetype": "sculpture",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-set-ipad-sage",
+   "name": "Atelier artist · Digital illustration studio · Walnut & sage",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-set-ipad-sage",
+   "fit": {
+    "axis": "x",
+    "mm": 920
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-set-ipad-sage.glb",
+   "size": [
+    920,
+    276.99,
+    520
+   ],
+   "min": [
+    -460,
+    0,
+    -260
+   ],
+   "max": [
+    460,
+    276.99,
+    260
+   ],
+   "tris": 4214,
+   "bytes": 64192,
+   "atelierArtist": {
+    "family": "sage",
+    "archetype": "ipad",
+    "component": "complete"
+   }
+  },
+  {
+   "id": "atelier-artist-pen-display-oak",
+   "name": "Atelier artist · Pen display & express dial · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-pen-display-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 590.5
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-pen-display-oak.glb",
+   "size": [
+    590.5,
+    93.07,
+    312.38
+   ],
+   "min": [
+    -295.25,
+    0,
+    -156.19
+   ],
+   "max": [
+    295.25,
+    93.07,
+    156.19
+   ],
+   "tris": 2146,
+   "bytes": 31052,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "tablet",
+    "component": "pen-display"
+   }
+  },
+  {
+   "id": "atelier-artist-pen-display-chalk",
+   "name": "Atelier artist · Pen display & express dial · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-pen-display-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 590.5
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-pen-display-chalk.glb",
+   "size": [
+    590.5,
+    93.07,
+    312.38
+   ],
+   "min": [
+    -295.25,
+    0,
+    -156.19
+   ],
+   "max": [
+    295.25,
+    93.07,
+    156.19
+   ],
+   "tris": 2146,
+   "bytes": 31052,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "tablet",
+    "component": "pen-display"
+   }
+  },
+  {
+   "id": "atelier-artist-table-easel-oak",
+   "name": "Atelier artist · Table easel & painted canvas · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-table-easel-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 380
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-table-easel-oak.glb",
+   "size": [
+    380,
+    629.33,
+    343.93
+   ],
+   "min": [
+    -190,
+    0,
+    -171.97
+   ],
+   "max": [
+    190,
+    629.33,
+    171.97
+   ],
+   "tris": 2430,
+   "bytes": 34736,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "easel",
+    "component": "table-easel"
+   }
+  },
+  {
+   "id": "atelier-artist-table-easel-chalk",
+   "name": "Atelier artist · Table easel & painted canvas · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-table-easel-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 380
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-table-easel-chalk.glb",
+   "size": [
+    380,
+    629.33,
+    343.93
+   ],
+   "min": [
+    -190,
+    0,
+    -171.97
+   ],
+   "max": [
+    190,
+    629.33,
+    171.97
+   ],
+   "tris": 2430,
+   "bytes": 34732,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "easel",
+    "component": "table-easel"
+   }
+  },
+  {
+   "id": "atelier-artist-sculpture-oak",
+   "name": "Atelier artist · Clay study & modeling stand · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-sculpture-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 332.05
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-sculpture-oak.glb",
+   "size": [
+    332.05,
+    436.25,
+    300
+   ],
+   "min": [
+    -166.03,
+    0,
+    -150
+   ],
+   "max": [
+    166.03,
+    436.25,
+    150
+   ],
+   "tris": 3260,
+   "bytes": 33284,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "sculpture",
+    "component": "sculpture"
+   }
+  },
+  {
+   "id": "atelier-artist-sculpture-chalk",
+   "name": "Atelier artist · Clay study & modeling stand · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-sculpture-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 332.05
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-sculpture-chalk.glb",
+   "size": [
+    332.05,
+    436.25,
+    300
+   ],
+   "min": [
+    -166.03,
+    0,
+    -150
+   ],
+   "max": [
+    166.03,
+    436.25,
+    150
+   ],
+   "tris": 3260,
+   "bytes": 33276,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "sculpture",
+    "component": "sculpture"
+   }
+  },
+  {
+   "id": "atelier-artist-slate-oak",
+   "name": "Atelier artist · Illustration tablet & stylus · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-slate-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 280
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-slate-oak.glb",
+   "size": [
+    280,
+    80.28,
+    191.42
+   ],
+   "min": [
+    -140,
+    0,
+    -95.71
+   ],
+   "max": [
+    140,
+    80.28,
+    95.71
+   ],
+   "tris": 1510,
+   "bytes": 24016,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "ipad",
+    "component": "slate"
+   }
+  },
+  {
+   "id": "atelier-artist-slate-chalk",
+   "name": "Atelier artist · Illustration tablet & stylus · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-slate-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 280
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-slate-chalk.glb",
+   "size": [
+    280,
+    80.28,
+    191.42
+   ],
+   "min": [
+    -140,
+    0,
+    -95.71
+   ],
+   "max": [
+    140,
+    80.28,
+    95.71
+   ],
+   "tris": 1510,
+   "bytes": 24016,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "ipad",
+    "component": "slate"
+   }
+  },
+  {
+   "id": "atelier-artist-brushes-oak",
+   "name": "Atelier artist · Ceramic brush pot · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-brushes-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 81.19
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-brushes-oak.glb",
+   "size": [
+    81.19,
+    268.99,
+    68
+   ],
+   "min": [
+    -40.6,
+    0,
+    -34
+   ],
+   "max": [
+    40.6,
+    268.99,
+    34
+   ],
+   "tris": 1732,
+   "bytes": 26448,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "tablet",
+    "component": "brushes"
+   }
+  },
+  {
+   "id": "atelier-artist-brushes-chalk",
+   "name": "Atelier artist · Ceramic brush pot · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-brushes-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 81.19
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-brushes-chalk.glb",
+   "size": [
+    81.19,
+    268.99,
+    68
+   ],
+   "min": [
+    -40.6,
+    0,
+    -34
+   ],
+   "max": [
+    40.6,
+    268.99,
+    34
+   ],
+   "tris": 1732,
+   "bytes": 26444,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "tablet",
+    "component": "brushes"
+   }
+  },
+  {
+   "id": "atelier-artist-palette-oak",
+   "name": "Atelier artist · Paint palette & knife · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-palette-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 242
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-palette-oak.glb",
+   "size": [
+    242,
+    15,
+    162
+   ],
+   "min": [
+    -121,
+    0,
+    -81
+   ],
+   "max": [
+    121,
+    15,
+    81
+   ],
+   "tris": 2877,
+   "bytes": 56780,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "tablet",
+    "component": "palette"
+   }
+  },
+  {
+   "id": "atelier-artist-palette-chalk",
+   "name": "Atelier artist · Paint palette & knife · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-palette-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 242
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-palette-chalk.glb",
+   "size": [
+    242,
+    15,
+    162
+   ],
+   "min": [
+    -121,
+    0,
+    -81
+   ],
+   "max": [
+    121,
+    15,
+    81
+   ],
+   "tris": 2877,
+   "bytes": 56776,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "tablet",
+    "component": "palette"
+   }
+  },
+  {
+   "id": "atelier-artist-stylus-oak",
+   "name": "Atelier artist · Professional stylus · Oak & warm brass",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-stylus-oak",
+   "fit": {
+    "axis": "x",
+    "mm": 157.5
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-stylus-oak.glb",
+   "size": [
+    157.5,
+    13.3,
+    11.6
+   ],
+   "min": [
+    -78.75,
+    0,
+    -5.8
+   ],
+   "max": [
+    78.75,
+    13.3,
+    5.8
+   ],
+   "tris": 320,
+   "bytes": 8212,
+   "atelierArtist": {
+    "family": "oak",
+    "archetype": "tablet",
+    "component": "stylus"
+   }
+  },
+  {
+   "id": "atelier-artist-stylus-chalk",
+   "name": "Atelier artist · Professional stylus · Pale ash & brushed silver",
+   "category": "desk",
+   "collection": "Atelier Artist",
+   "scenes": [
+    "creative",
+    "gallery",
+    "occmedialab",
+    "college"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-artist-studio.html",
+   "converter": "artist-generator",
+   "profile": "atelier-artist-stylus-chalk",
+   "fit": {
+    "axis": "x",
+    "mm": 157.5
+   },
+   "license": "unconfirmed",
+   "attribution": "Owner-supplied Atelier 3D fine art and digital illustrator studio generator",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Individual components are independently editable; no staging desktop is included.",
+   "revision": "artist-gear-20261014",
+   "file": "assets/props/atelier-artist-stylus-chalk.glb",
+   "size": [
+    157.5,
+    13.3,
+    11.6
+   ],
+   "min": [
+    -78.75,
+    0,
+    -5.8
+   ],
+   "max": [
+    78.75,
+    13.3,
+    5.8
+   ],
+   "tris": 320,
+   "bytes": 8212,
+   "atelierArtist": {
+    "family": "chalk",
+    "archetype": "tablet",
+    "component": "stylus"
+   }
+  },
+  {
+   "id": "atelier-sidechair-forest",
+   "name": "Atelier conference side chair · Humboldt forest & bronze",
+   "category": "furniture",
+   "collection": "Atelier Conference Chairs",
+   "scenes": [
+    "library"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-conference-chair-sidechair.glb",
+   "converter": "conference-chair-import",
+   "profile": "atelier-sidechair-forest",
+   "fit": {
+    "axis": "x",
+    "mm": 507.6
+   },
+   "license": "user-provided",
+   "attribution": "Owner-supplied Atelier conference side chair model",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Frame, molded shell and upholstery are finished separately. Shared room chair footprints are tested at both desk widths.",
+   "revision": "conference-chairs-20261015",
+   "file": "assets/props/atelier-sidechair-forest.glb",
+   "size": [
+    507.6,
+    779.74,
+    603.95
+   ],
+   "min": [
+    -253.8,
+    0,
+    -301.97
+   ],
+   "max": [
+    253.8,
+    779.74,
+    301.97
+   ],
+   "tris": 8788,
+   "bytes": 91872,
+   "conferenceChair": {
+    "family": "forest",
+    "scale": 0.94
+   }
+  },
+  {
+   "id": "atelier-sidechair-sage",
+   "name": "Atelier conference side chair · Sage weave & graphite",
+   "category": "furniture",
+   "collection": "Atelier Conference Chairs",
+   "scenes": [
+    "library",
+    "coworking"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-conference-chair-sidechair.glb",
+   "converter": "conference-chair-import",
+   "profile": "atelier-sidechair-sage",
+   "fit": {
+    "axis": "x",
+    "mm": 507.6
+   },
+   "license": "user-provided",
+   "attribution": "Owner-supplied Atelier conference side chair model",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Frame, molded shell and upholstery are finished separately. Shared room chair footprints are tested at both desk widths.",
+   "revision": "conference-chairs-20261015",
+   "file": "assets/props/atelier-sidechair-sage.glb",
+   "size": [
+    507.6,
+    779.74,
+    603.95
+   ],
+   "min": [
+    -253.8,
+    0,
+    -301.97
+   ],
+   "max": [
+    253.8,
+    779.74,
+    301.97
+   ],
+   "tris": 8788,
+   "bytes": 91868,
+   "conferenceChair": {
+    "family": "sage",
+    "scale": 0.94
+   }
+  },
+  {
+   "id": "atelier-sidechair-slate",
+   "name": "Atelier conference side chair · Slate blue & silver",
+   "category": "furniture",
+   "collection": "Atelier Conference Chairs",
+   "scenes": [
+    "library",
+    "office"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-conference-chair-sidechair.glb",
+   "converter": "conference-chair-import",
+   "profile": "atelier-sidechair-slate",
+   "fit": {
+    "axis": "x",
+    "mm": 507.6
+   },
+   "license": "user-provided",
+   "attribution": "Owner-supplied Atelier conference side chair model",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Frame, molded shell and upholstery are finished separately. Shared room chair footprints are tested at both desk widths.",
+   "revision": "conference-chairs-20261015",
+   "file": "assets/props/atelier-sidechair-slate.glb",
+   "size": [
+    507.6,
+    779.74,
+    603.95
+   ],
+   "min": [
+    -253.8,
+    0,
+    -301.97
+   ],
+   "max": [
+    253.8,
+    779.74,
+    301.97
+   ],
+   "tris": 8788,
+   "bytes": 91864,
+   "conferenceChair": {
+    "family": "slate",
+    "scale": 0.94
+   }
+  },
+  {
+   "id": "atelier-sidechair-clay",
+   "name": "Atelier conference side chair · Clay weave & bronze",
+   "category": "furniture",
+   "collection": "Atelier Conference Chairs",
+   "scenes": [
+    "library",
+    "creative"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-conference-chair-sidechair.glb",
+   "converter": "conference-chair-import",
+   "profile": "atelier-sidechair-clay",
+   "fit": {
+    "axis": "x",
+    "mm": 507.6
+   },
+   "license": "user-provided",
+   "attribution": "Owner-supplied Atelier conference side chair model",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Frame, molded shell and upholstery are finished separately. Shared room chair footprints are tested at both desk widths.",
+   "revision": "conference-chairs-20261015",
+   "file": "assets/props/atelier-sidechair-clay.glb",
+   "size": [
+    507.6,
+    779.74,
+    603.95
+   ],
+   "min": [
+    -253.8,
+    0,
+    -301.97
+   ],
+   "max": [
+    253.8,
+    779.74,
+    301.97
+   ],
+   "tris": 8788,
+   "bytes": 91864,
+   "conferenceChair": {
+    "family": "clay",
+    "scale": 0.94
+   }
+  },
+  {
+   "id": "atelier-sidechair-graphite",
+   "name": "Atelier conference side chair · Graphite & brushed steel",
+   "category": "furniture",
+   "collection": "Atelier Conference Chairs",
+   "scenes": [
+    "office",
+    "government"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-conference-chair-sidechair.glb",
+   "converter": "conference-chair-import",
+   "profile": "atelier-sidechair-graphite",
+   "fit": {
+    "axis": "x",
+    "mm": 507.6
+   },
+   "license": "user-provided",
+   "attribution": "Owner-supplied Atelier conference side chair model",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Frame, molded shell and upholstery are finished separately. Shared room chair footprints are tested at both desk widths.",
+   "revision": "conference-chairs-20261015",
+   "file": "assets/props/atelier-sidechair-graphite.glb",
+   "size": [
+    507.6,
+    779.74,
+    603.95
+   ],
+   "min": [
+    -253.8,
+    0,
+    -301.97
+   ],
+   "max": [
+    253.8,
+    779.74,
+    301.97
+   ],
+   "tris": 8788,
+   "bytes": 91868,
+   "conferenceChair": {
+    "family": "graphite",
+    "scale": 0.94
+   }
+  },
+  {
+   "id": "atelier-sidechair-teal",
+   "name": "Atelier conference side chair · Teal & charcoal",
+   "category": "furniture",
+   "collection": "Atelier Conference Chairs",
+   "scenes": [
+    "coworking",
+    "occmedialab"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-conference-chair-sidechair.glb",
+   "converter": "conference-chair-import",
+   "profile": "atelier-sidechair-teal",
+   "fit": {
+    "axis": "x",
+    "mm": 507.6
+   },
+   "license": "user-provided",
+   "attribution": "Owner-supplied Atelier conference side chair model",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Frame, molded shell and upholstery are finished separately. Shared room chair footprints are tested at both desk widths.",
+   "revision": "conference-chairs-20261015",
+   "file": "assets/props/atelier-sidechair-teal.glb",
+   "size": [
+    507.6,
+    779.74,
+    603.95
+   ],
+   "min": [
+    -253.8,
+    0,
+    -301.97
+   ],
+   "max": [
+    253.8,
+    779.74,
+    301.97
+   ],
+   "tris": 8788,
+   "bytes": 91864,
+   "conferenceChair": {
+    "family": "teal",
+    "scale": 0.94
+   }
+  },
+  {
+   "id": "atelier-sidechair-terracotta",
+   "name": "Atelier conference side chair · Terracotta & warm oak",
+   "category": "furniture",
+   "collection": "Atelier Conference Chairs",
+   "scenes": [
+    "kitchen"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-conference-chair-sidechair.glb",
+   "converter": "conference-chair-import",
+   "profile": "atelier-sidechair-terracotta",
+   "fit": {
+    "axis": "x",
+    "mm": 507.6
+   },
+   "license": "user-provided",
+   "attribution": "Owner-supplied Atelier conference side chair model",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Frame, molded shell and upholstery are finished separately. Shared room chair footprints are tested at both desk widths.",
+   "revision": "conference-chairs-20261015",
+   "file": "assets/props/atelier-sidechair-terracotta.glb",
+   "size": [
+    507.6,
+    779.74,
+    603.95
+   ],
+   "min": [
+    -253.8,
+    0,
+    -301.97
+   ],
+   "max": [
+    253.8,
+    779.74,
+    301.97
+   ],
+   "tris": 8788,
+   "bytes": 91868,
+   "conferenceChair": {
+    "family": "terracotta",
+    "scale": 0.94
+   }
+  },
+  {
+   "id": "atelier-sidechair-ivory",
+   "name": "Atelier conference side chair · Ivory weave & oak",
+   "category": "furniture",
+   "collection": "Atelier Conference Chairs",
+   "scenes": [
+    "kitchen",
+    "lounge",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "models/supplied/atelier-conference-chair-sidechair.glb",
+   "converter": "conference-chair-import",
+   "profile": "atelier-sidechair-ivory",
+   "fit": {
+    "axis": "x",
+    "mm": 507.6
+   },
+   "license": "user-provided",
+   "attribution": "Owner-supplied Atelier conference side chair model",
+   "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Frame, molded shell and upholstery are finished separately. Shared room chair footprints are tested at both desk widths.",
+   "revision": "conference-chairs-20261015",
+   "file": "assets/props/atelier-sidechair-ivory.glb",
+   "size": [
+    507.6,
+    779.74,
+    603.95
+   ],
+   "min": [
+    -253.8,
+    0,
+    -301.97
+   ],
+   "max": [
+    253.8,
+    779.74,
+    301.97
+   ],
+   "tris": 8788,
+   "bytes": 91860,
+   "conferenceChair": {
+    "family": "ivory",
+    "scale": 0.94
+   }
   }
  ],
  "screens": [
@@ -32659,6 +34232,6 @@
    ]
   }
  ],
- "generated": "2026-10-15T03:46:38.166Z",
+ "generated": "2026-10-16T00:11:41.391Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

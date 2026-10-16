@@ -1,3 +1,4 @@
+import { artistSceneProp, bindArtistGear, upgradeArtistFixtures } from './atelier-scene-artist.mjs?v=artist-gear-20261014';
 import { atelierSceneGaming, bindGamingGear, applyGamingGearLighting } from './atelier-scene-gaming.mjs?v=gaming-gear-20261014';
 import { atelierSceneDecor, bindDeskDecor, applyDeskDecorLighting } from './atelier-scene-decor.mjs?v=atelier-decor-20261014';
 import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from './campus-scene-furniture.mjs?v=campus-furniture-20261014';
@@ -5,22 +6,22 @@ import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atel
 import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=atelier-lighting-20261014';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=hbhs-product-classroom-20261014';
 import { buildInstitutionalRoom } from './institutional-room.mjs?v=environment-expert-20261014';
-import { refineRoomSurfaces } from './room-refinement.mjs?v=environment-expert-20261014';
-import { polishRoomProp } from './room-polish.mjs?v=environment-expert-20261014';
-import { RoomLife } from './room-life.mjs?v=environment-expert-20261014';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=humboldt-commons-20261015';
+import { polishRoomProp } from './room-polish.mjs?v=humboldt-commons-20261015';
+import { RoomLife } from './room-life.mjs?v=humboldt-commons-20261015';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
-import { atelierSceneChair } from './atelier-scene-seating.mjs?v=atelier-chairs-20261014';
+import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
 import { migrateHighschoolFixtureTransform } from './hbhs-design.mjs';
 import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=environment-expert-20261014';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=environment-expert-20261014';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=conference-chairs-20261015';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=atelier-beds-20261014';
 import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
-import { RoomBounceLight } from './room-bounce-light.mjs?v=environment-expert-20261014';
+import { RoomBounceLight } from './room-bounce-light.mjs?v=humboldt-commons-20261015';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -28,7 +29,7 @@ import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-size-setups-20261
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-gear-20261014';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=curved-pair-20261012';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=artist-gear-20261014';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
@@ -90,7 +91,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=gaming-gear-20261014').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=conference-chairs-20261015').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -1343,6 +1344,7 @@ export class WorkspaceRoom {
             this.roomLayout?.stations?.length ? this.addOfficeStations(root, options.createStation, this.token) : Promise.resolve()]).then(async () => {
             if (token === this.token) {
                 await upgradeCampusFurniture(this,PROP_LIBRARY,token);
+                await upgradeArtistFixtures(this,PROP_LIBRARY,token);
                 if(token!==this.token)return;
                 this.life?.bind();
                 const life=this.life;
@@ -1545,11 +1547,11 @@ export class WorkspaceRoom {
                     object.name=bed.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:bed.entry.name,decorUpgrade:bed.id,atelierBed:{...bed.entry.atelierBed,fit:bed.fit,flip:bed.flip}};
                     return {placement,object,bed};
                 }
-                const chair=atelierSceneChair(scene.id,placement,PROP_LIBRARY.index);
+                const chair=atelierSceneChair(scene.id,placement,PROP_LIBRARY.index,this.roomLayout);
                 if(chair){
                     const model=await PROP_LIBRARY.instance(chair.id),object=new THREE.Group();
-                    object.scale.setScalar(1000);model.scale.setScalar(chair.fit);object.add(model);
-                    object.name=chair.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:chair.entry.name,decorUpgrade:chair.id,atelierChair:{...chair.entry.atelier,fit:chair.fit}};
+                    object.scale.setScalar(1000*(chair.rootScale||1));model.scale.setScalar(chair.fit/(chair.rootScale||1));object.add(model);
+                    object.name=chair.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:chair.entry.name,decorUpgrade:chair.id,atelierChair:{...chair.entry.atelier,fit:chair.fit},...(chair.conference?{conferenceChair:chair.entry.conferenceChair}:{})};
                     return {placement,object};
                 }
                 const lamp=atelierSceneLamp(scene.id,placement,PROP_LIBRARY.index);
@@ -1558,6 +1560,12 @@ export class WorkspaceRoom {
                     object.scale.setScalar(1000);model.scale.setScalar(lamp.fit);object.add(model);
                     object.name=lamp.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:lamp.entry.name,decorUpgrade:lamp.id};
                     return {placement,object,lamp};
+                }
+                const artist=artistSceneProp(scene.id,placement,PROP_LIBRARY.index);
+                if(artist){
+                    const model=await PROP_LIBRARY.instance(artist.id),object=new THREE.Group();object.scale.setScalar(1000);model.scale.setScalar(artist.fit);object.add(model);
+                    object.name=artist.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:artist.entry.name,decorUpgrade:artist.id,atelierArtist:artist.entry.atelierArtist};
+                    return {placement,object,artist};
                 }
                 const gamer=atelierSceneGaming(scene.id,this.roomLayout,placement,PROP_LIBRARY.index);
                 if(gamer){
@@ -1588,14 +1596,16 @@ export class WorkspaceRoom {
         }));
         if (token !== this.token) return;
         for (let index = 0; index < placements.length; index++) {
-            const { placement, object, lamp, bed, decor, gamer } = placements[index];
+            const { placement, object, lamp, bed, decor, gamer, artist } = placements[index];
             if (!object) { this.missingProps.push(placement.id); continue; }
             if(bed)bindAtelierBed(this,object,bed.entry);
             if(lamp)bindAtelierLamp(this,object,lamp.entry,lamp.fit);
+            if(artist)bindArtistGear(this,object,artist.entry);
             if(gamer)bindGamingGear(this,object,gamer.entry);
+            if(placement.id.startsWith('atelier-artist-'))bindArtistGear(this,object,PROP_LIBRARY.entry(placement.id));
             if(placement.id.startsWith('atelier-gaming-')&&!gamer)bindGamingGear(this,object,PROP_LIBRARY.entry(placement.id));
             if(decor)bindDeskDecor(this,object,decor.entry);
-            if(!lamp&&!decor&&!gamer&&!placement.id.startsWith('atelier-gaming-'))this.decorateProp?.(object, placement);
+            if(!lamp&&!decor&&!gamer&&!artist&&!placement.id.startsWith('atelier-gaming-')&&!placement.id.startsWith('atelier-artist-'))this.decorateProp?.(object, placement);
             polishRoomProp(this, object, placement);
             const position = scene.physical ? [...placement.at] : roomPosition(scene, placement);
             // Countertop objects travel with the complete counter, not the lounge zone.
@@ -1643,6 +1653,7 @@ export class WorkspaceRoom {
         bindCampusFurniture(this,object,PROP_LIBRARY.entry(propId));
         bindDeskDecor(this,object,PROP_LIBRARY.entry(propId));
         bindGamingGear(this,object,PROP_LIBRARY.entry(propId));
+        bindArtistGear(this,object,PROP_LIBRARY.entry(propId));
         markSceneAsset(object, { key, custom: true });
         this.ensureAssetRoot().add(object);
         return object;

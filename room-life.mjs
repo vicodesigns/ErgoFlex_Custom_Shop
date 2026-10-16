@@ -44,7 +44,7 @@ export function roomLifeDisplayTransform(obj, transform) {
 function activityAnchor(id, l) {
     // Institutional groups may move their kit with stageAnchor(layout) in their module.
     if (INSTITUTIONAL_ROOMS[id]) return institutionalModule(id)?.stageAnchor?.(l) || { at: l.activity, y: 740, offset: [0, 0], support: 'activity-table', small: true };
-    const front = l.back + l.depth, tier = TIERS.indexOf(l.id), w = l.width;
+    const front = l.back + l.depth, tier = TIERS.indexOf(l.tier || l.id), w = l.width;
     // A named real support and its contact height, in millimetres. The small
     // offset leaves room for the existing books, cups, vases and equipment.
     switch (id) {
@@ -69,7 +69,7 @@ function activityAnchor(id, l) {
 export class RoomLife {
     constructor(room, helpers) {
         this.room = room; this.h = helpers; this.entries = []; this.mode = null; this.bound = false;
-        this.tier = TIERS.indexOf(room.roomLayout.id); this.factor = [.6, .8, 1, 1.2, 1.4][this.tier];
+        this.tier = TIERS.indexOf(room.roomLayout.tier || room.roomLayout.id); this.factor = [.6, .8, 1, 1.2, 1.4][this.tier];
         this.anchor = activityAnchor(room.id, room.roomLayout);
         this.kits = []; this.printedPages = new Map(); this.buildActivities();
     }
@@ -360,6 +360,10 @@ export class RoomLife {
                 angle = [0, .015, .025, 0, .04][phase] * side / f;
             }
         }
+        // A desk standing at a fixed turn (the wall-facing Humboldt commons desk)
+        // pulls its chair back from the desk, not sideways along the wall.
+        const deskTurn = this.room.roomLayout.deskTurn;
+        if (deskTurn && entry.role === 'main-chair') { const a = THREE.MathUtils.degToRad(deskTurn); [x, z] = [x * Math.cos(a) + z * Math.sin(a), -x * Math.sin(a) + z * Math.cos(a)]; }
         // Scene-specific circulation: a microphone comes forward for a live
         // set, an easel turns for visitors, and the robot patrols the bay.
         if (entry.role === 'portable' && phase === 4) {

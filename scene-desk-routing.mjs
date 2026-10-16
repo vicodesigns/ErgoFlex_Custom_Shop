@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { planGroove, poseIsClear, angleDelta } from './room-groove.mjs';
-import { grooveObstacles } from './room-groove-runtime.mjs?v=scene-desk-editor-20261010';
+import { grooveObstacles } from './room-groove-runtime.mjs?v=humboldt-commons-20261015';
 
 export function deskFootprint(record){
     const g=record.group;g.updateWorldMatrix(true,true);

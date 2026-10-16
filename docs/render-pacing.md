@@ -31,8 +31,10 @@ and restores it to `true` afterwards. Any other render (tests, captures, the
 review tools) still redraws shadows exactly.
 
 `pruneTinyCasters(scene)` runs once a second after a render and turns off
-`castShadow` on meshes under 50 mm in world size (each mesh checked once, flag
-`userData.tinyShadowCaster`). In the Library "house" layout that is 639 meshes —
+`castShadow` and `receiveShadow` on meshes under 50 mm in world size (each mesh
+checked once, flag `userData.tinyShadowCaster`). Both flags matter: with VSM
+shadows three.js also draws shadow *receivers* into the shadow map, so the first
+version (cast only, 2026-10-14) left those parts in the shadow pass. In the Library "house" layout that is 639 meshes —
 desk hardware plates, screws, bolt tops, LED strip segments, wheel sub-parts and
 phone parts — about half of all casters. Their shadows are smaller than a
 shadow-map texel; room renders are pixel-identical before and after.

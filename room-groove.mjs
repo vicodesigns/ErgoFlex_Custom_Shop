@@ -5,6 +5,8 @@ export const angleDelta = (a, b) => ((b - a + Math.PI) % TAU + TAU) % TAU - Math
 
 export function grooveDestination(id, l, phase) {
     const small = ['apartment', 'house'].includes(l.id), [x, z] = l.desk;
+    // Bespoke layouts (the wall-facing Humboldt commons desk) carry their own poses.
+    if (l.groovePoses) { const p = l.groovePoses[phase] || l.groovePoses.afternoon; return { x: x + p.dx, z: z + p.dz, yaw: p.yaw }; }
     if (id === 'library') {
         // Stage the mobile pilot desk inside its open bay. Crossing the stack
         // grid toward a generic party center used to aim it into bookcases.

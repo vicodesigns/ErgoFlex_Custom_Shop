@@ -68,7 +68,11 @@
     "generate:desk-decor": "node tools/props/generate-desk-decor.mjs",
     "test:desk-decor": "node tests/desk-decor-test.cjs",
     "generate:gaming-gear": "node tools/props/generate-gaming-gear.mjs",
-    "test:gaming-gear": "node tests/gaming-gear-test.cjs"
+    "test:gaming-gear": "node tests/gaming-gear-test.cjs",
+    "generate:artist-gear": "node tools/props/generate-artist-gear.mjs",
+    "test:artist-gear": "node tests/artist-gear-test.cjs",
+    "import:conference-chairs": "node tools/props/import-conference-chairs.mjs",
+    "test:conference-chairs": "node tests/conference-chairs-test.cjs"
   },
   "repository": {
     "type": "git",

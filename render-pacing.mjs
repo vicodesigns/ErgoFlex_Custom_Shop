@@ -56,6 +56,9 @@ export class RenderPacing {
 // Shadows from screws, washers and other tiny parts are smaller than a texel
 // of the room's shadow map, yet each one is a separate draw in the shadow
 // pass. A large room carried several hundred of these (the desk alone ~600).
+// The viewer uses VSM shadows, and three.js draws VSM *receivers* into the
+// shadow map as well, so a pruned part stops receiving too; otherwise it
+// would stay in the shadow pass.
 // Each mesh is checked once, by its world-space size, after it has rendered
 // with a current world matrix. Instanced and skinned meshes keep their flag.
 const checked = new WeakSet(), box = new THREE.Box3(), size = new THREE.Vector3();
@@ -68,7 +71,7 @@ export function pruneTinyCasters(root, minSize = .05) {
         if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
         if (box.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld).isEmpty()) return;
         box.getSize(size);
-        if (Math.max(size.x, size.y, size.z) < minSize) { o.castShadow = false; o.userData.tinyShadowCaster = true; pruned++; }
+        if (Math.max(size.x, size.y, size.z) < minSize) { o.castShadow = o.receiveShadow = false; o.userData.tinyShadowCaster = true; pruned++; }
     });
     return pruned;
 }

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { roomSurfaceFinish } from './room-polish.mjs?v=environment-expert-20261014';
+import { roomSurfaceFinish } from './room-polish.mjs?v=humboldt-commons-20261015';
 
 // A single sun shadow map serves each measured room. Architectural coordinates
 // are millimetres; targets, shadow bounds and relief are converted through the

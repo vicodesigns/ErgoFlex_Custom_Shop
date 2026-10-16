@@ -1,7 +1,8 @@
 import * as THREE from 'three';
-import { roomLifeBaseTransform } from './room-life.mjs?v=environment-expert-20261014';
+import { roomLifeBaseTransform } from './room-life.mjs?v=humboldt-commons-20261015';
 import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=library-floorplan-20261013';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
+import { makeHumboldtLayout, buildHumboldtCommons } from './library-humboldt-commons.mjs?v=humboldt-commons-20261015';
 
 // Campus-library concepts, not a survey of the Humboldt pilot site.
 // Architecture and furniture coordinates are millimetres.
@@ -89,7 +90,8 @@ function makeLibraryLayout([id, name, width, depth, height], index, legacy = fal
     if (!legacy && service) props.push({ id: 'ergoflex-calendar', at: [service[0] + 250, 740, service[1] - 230], turn: -15 });
     return [id, { id, name, width, depth, height, back, index, desk, reading, stacks, lounge, carrels, research, service, props, sideTable, daylight: [-width / 2 + 100, back + depth * .4] }];
 }
-export const LIBRARY_LAYOUTS = Object.fromEntries(sizes.map((s, i) => makeLibraryLayout(s, i)));
+// The Humboldt-inspired commons is a bespoke sixth layout with its own builder and dayparts.
+export const LIBRARY_LAYOUTS = Object.fromEntries([...sizes.map((s, i) => makeLibraryLayout(s, i)), makeHumboldtLayout()]);
 const previousLayouts = Object.fromEntries(sizes.map((s, i) => makeLibraryLayout(s, i, true)));
 export const libraryLayoutById = id => LIBRARY_LAYOUTS[id] || LIBRARY_LAYOUTS.apartment;
 export const libraryLayoutForSize = size => LIBRARY_LAYOUTS[size === '60x30' ? 'house' : 'apartment'];
@@ -171,17 +173,17 @@ function plasterUrn(k, [x, y, z]) {
     k.box([190, 60, 170], [x, y + 30, z], { color: '#4c3a2c' }).add(new THREE.LatheGeometry(profile, 18), [x, y + 60, z], { color: '#e9e3d4' });
 }
 export function buildLibraryRoom(room, root, layout, helpers) {
+    if (layout.humboldt) return buildHumboldtCommons(room, root, layout, helpers);
     const { material, mesh, box, rod, markSceneAsset } = helpers;
     const { width: w, depth: d, height: h, back: bz, index } = layout, front = bz + d;
     const modern = index >= 2, carpeted = modern;
     const previous = previousLayouts[layout.id];
-    // The supplied designer chair replaces the low-poly reading chair. Room
-    // chairs keep their saved placement keys; an untouched saved scale of the
-    // old model becomes the new chair's authored scale.
+    // The conference-chair upgrade retains the legacy editable root scale.
+    // This fallback also keeps older offline catalogs usable.
     room.propReplacements = { 'kenney-furniture-chair-modern-cushion': { id: 'ergoflex-designer-chair', scale: CHAIR_SCALE } };
     room.migrateSavedTransform = (obj, saved) => {
         if (!saved) return saved;
-        if (obj.userData.decorUpgrade === 'ergoflex-designer-chair' && saved.s && ['x', 'y', 'z'].every(a => Math.abs(saved.s[a] - 1) < .00001))
+        if ((obj.userData.conferenceChair || obj.userData.decorUpgrade === 'ergoflex-designer-chair') && saved.s && ['x', 'y', 'z'].every(a => Math.abs(saved.s[a] - 1) < .00001))
             saved = { ...saved, s: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z } };
         const id = obj.userData.propId, old = previous;
         let at, turn = 0;
@@ -227,6 +229,7 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         return { ...saved, ...roomLifeBaseTransform(obj, { p: { x: obj.position.x, y: obj.position.y, z: obj.position.z }, q: { x: obj.quaternion.x, y: obj.quaternion.y, z: obj.quaternion.z, w: obj.quaternion.w }, s: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z } }) };
     };
     room.decorateProp = (object, placement) => {
+        if(object.userData.conferenceChair)return;
         const restyle = finish => { const copies = new Map(); object.traverse(o => { if (!o.isMesh) return; const swap = source => { if (!source?.isMeshStandardMaterial) return source; if (!copies.has(source)) { const mat = source.clone(); finish(mat, source); mat.userData.roomPaletteLocked = true; room.ownedMaterials.add(mat); copies.set(source, mat); } return copies.get(source); }; o.material = Array.isArray(o.material) ? o.material.map(swap) : swap(o.material); }); };
         // Pastel book blocks take the shelf spine palette; the lounge table is oak.
         if (placement.id === 'kenney-furniture-books') { let n = 0; restyle(mat => { mat.color.set(['#55806a', '#bd9a58', '#6c8798', '#a65846'][n++ % 4]); mat.roughness = .82; mat.metalness = 0; }); return; }

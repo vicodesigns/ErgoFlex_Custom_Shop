@@ -80,7 +80,8 @@ const PHASE_LIGHT = {
     party:     { fill: .82, rim: .36, ambient: .94, bounce: .96, contact: .26 }
 };
 export function roomPolishLighting(room, lights, mode) {
-    const finish = ROOM_FINISHES[room.id], phase = PHASE_LIGHT[mode] || PHASE_LIGHT.afternoon;
+    // A bespoke layout may carry its own finish (the Humboldt commons is grey and white, not forest green).
+    const finish = room.roomLayout?.finish || ROOM_FINISHES[room.id], phase = PHASE_LIGHT[mode] || PHASE_LIGHT.afternoon;
     if (!finish) return;
     const balance = ROOM_BALANCE[room.id];
     lights.fill.intensity *= phase.fill * (balance ? mode === 'night' ? balance.nightFill : mode === 'evening' || mode === 'party' ? balance.eveningFill : balance.dayFill : 1);
@@ -109,7 +110,7 @@ export function roomPolishLighting(room, lights, mode) {
     return { halo, edge, dark };
 }
 export function roomSurfaceFinish(room, mat, kind) {
-    const finish = ROOM_FINISHES[room.id]; if (!finish) return;
+    const finish = room.roomLayout?.finish || ROOM_FINISHES[room.id]; if (!finish) return;
     // Preserve lower authored roughness on polished stone and existing metalness.
     const balance = ROOM_BALANCE[room.id] || {};
     const roughness = { plaster: balance.plaster ?? .88, fabric: balance.fabric ?? .93, rubber: .91, powder: balance.powder ?? .59, wood: finish.wood, metal: finish.metal, stone: finish.stone }[kind];

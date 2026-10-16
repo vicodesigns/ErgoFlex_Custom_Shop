@@ -2,9 +2,9 @@ import { SceneScreens, SCENE_SCREENS_KEY } from './scene-screens.mjs?v=environme
 import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261008';
 import { normalizeCustomLook, normalizeCustomPalette, importCustomLooks, CUSTOM_LOOKS_KEY, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
-import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=environment-expert-20261014';
-import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=environment-expert-20261014';
-import { poseIsClear } from './room-groove.mjs?v=library-humboldt-20261013';
+import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=humboldt-commons-20261015';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=humboldt-commons-20261015';
+import { poseIsClear } from './room-groove.mjs?v=humboldt-commons-20261015';
 import { SceneDesks } from './scene-desks.mjs?v=mobile-room-routines-20261014';
 import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=desk-auto-stow-20261014';
 import { applyCollegeProductArtwork } from './college-product-artwork.mjs';
@@ -18,19 +18,20 @@ import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs?v=library-build-free-items-20261013';
 import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=desk-auto-stow-20261014';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
-import { RoomGroove } from './room-groove-runtime.mjs?v=library-humboldt-20261013';
+import { RoomGroove } from './room-groove-runtime.mjs?v=humboldt-commons-20261015';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=environment-expert-20261014';
-import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pacing-20261014';
+import { RoomInteractions } from './room-interactions.mjs?v=humboldt-commons-20261015';
+import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pacing-vsm-20261015';
+import { SceneTour, tourEnabled } from './scene-tour.mjs?v=scene-tour-groove-20261014b';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
-import { roomPolishLighting } from './room-polish.mjs?v=environment-expert-20261014';
+import { roomPolishLighting } from './room-polish.mjs?v=humboldt-commons-20261015';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=hbhs-product-classroom-20261014';
-import { RoomLedSpill } from './room-led-spill.mjs?v=environment-expert-20261014';
+import { RoomLedSpill } from './room-led-spill.mjs?v=humboldt-commons-20261015';
 import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=hbhs-product-classroom-20261014';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
-import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=environment-expert-20261014';
+import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=conference-chairs-20261015';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
 import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
@@ -56,12 +57,12 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=gaming-gear-20261014';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=conference-chairs-20261015';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=desk-auto-stow-20261014';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-gear-20261014';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
-import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=curved-pair-20261012';
+import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=artist-gear-20261014';
 import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
@@ -1033,7 +1034,7 @@ function measuredRoomProfile(id = selectedRoomScene) {
         const p = INSTITUTIONAL_ROOMS[id], state = institutionalState[id];
         return { id, layouts: p.layouts, modes: p.modes, layout: institutionalLayout(id, state.layout, currentConfig.size), mode: state.mode, prefix: id };
     }
-    if (id === 'library') return { id, layouts: LIBRARY_LAYOUTS, modes: LIBRARY_MODES, layout: selectedLibraryLayout(), mode: libraryMode, prefix: 'library' };
+    if (id === 'library') return { id, layouts: LIBRARY_LAYOUTS, modes: selectedLibraryLayout().modes || LIBRARY_MODES, layout: selectedLibraryLayout(), mode: libraryMode, prefix: 'library' };
     if (id === 'coworking') return { id, layouts: COWORKING_LAYOUTS, modes: COWORKING_MODES, layout: selectedCoworkingLayout(), mode: coworkingMode, prefix: 'coworking' };
     if (id === 'bedroom') return { id, layouts: BEDROOM_LAYOUTS, modes: BEDROOM_MODES, layout: selectedBedroomLayout(), mode: bedroomMode, prefix: 'bedroom' };
     if (id === 'gallery') return { id, layouts: GALLERY_LAYOUTS, modes: GALLERY_MODES, layout: selectedGalleryLayout(), mode: galleryMode, prefix: 'gallery' };
@@ -1515,6 +1516,7 @@ function initThreeJS() {
     renderer.xr.enabled = true;
     renderPacing = new RenderPacing({ controls });
     renderer.setAnimationLoop(animate);
+    mountSceneTour();
 }
 
 // --- Undo system for setup edits ---
@@ -10781,7 +10783,8 @@ function positionHomeDesk(useModePose = false, { preservePosition = false } = {}
     // A room/desktop-size change starts in its authored desk bay. Time-button
     // destinations belong to Groove; an old saved social phase must not spawn
     // a wider, rotated desk inside the bed or a neighbouring workstation.
-    if (!preservePosition) deskYaw = useModePose ? THREE.MathUtils.degToRad(mode.yaw) : 0;
+    // A layout may stand its desk at a fixed turn (the Humboldt commons faces the wall).
+    if (!preservePosition) deskYaw = THREE.MathUtils.degToRad((layout.deskTurn || 0) + (useModePose ? mode.yaw : 0));
     const f = grooveFootprint(), c = Math.cos(deskYaw), s = Math.sin(deskYaw);
     const margin = f.margin ?? 45;
     const ex = Math.abs(c) * (f.halfWidth + margin) + Math.abs(s) * (f.halfDepth + margin) + 25;
@@ -11079,6 +11082,39 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     // threw away wherever you had orbited to. Swapping the backdrop is not a
     // reason to move the viewer.
     requestAnimationFrame(syncViewerSize);
+}
+// Owner's scene tour (scene-tour.mjs): full screen plus next environment,
+// room size and time of day, on development hosts or with ?tour.
+let sceneTour = null;
+function mountSceneTour() {
+    const shell = document.getElementById('viewer-shell');
+    if (!shell || !tourEnabled()) return;
+    // Rooms differ in size, so each tour step frames the whole room again.
+    const frameRoom = () => {
+        const view = document.getElementById('camera-view');
+        if (!view || !workspaceRoom?.roomLayout) return;
+        view.value = 'room'; view.dispatchEvent(new Event('change'));
+    };
+    sceneTour = new SceneTour({
+        shell,
+        scenes: () => ROOM_SCENES.filter(s => s.id !== 'product' && !Object.hasOwn(INSTITUTIONAL_GROUPS, s.id)),
+        current: () => selectedRoomScene,
+        profile: id => measuredRoomProfile(id),
+        setScene: id => setRoomScene(id),
+        setLayout: (sceneId, id) => setMeasuredRoomLayout(sceneId, id),
+        setMode: (sceneId, id) => setMeasuredRoomMode(sceneId, id),
+        ready: async kind => { await workspaceRoom?.ready; if (kind !== 'mode') frameRoom(); },
+        onResize: syncViewerSize,
+        // Same play/stop as the remote's Groove tile: the current time of day's routine.
+        groove: {
+            toggle: () => roomGroove?.run || sceneDesks?.playing ? haltAllMotion() : startCurrentGroove(),
+            active: () => roomGroove?.run || sceneDesks?.playing,
+            available: () => !!measuredRoomProfile() && !!loadedModel
+        }
+    });
+    // Pickers elsewhere in the page also change the scene; keep the label current.
+    document.addEventListener('change', () => requestAnimationFrame(() => sceneTour.sync()));
+    workspaceRoom?.ready?.then(() => sceneTour.sync());
 }
 function notifyUser(message) {
     const toast = document.getElementById('studio-toast');
@@ -11961,6 +11997,7 @@ window.ErgoFlex = {
     get workspaceRoom() { return workspaceRoom; },
     get roomInteractions() { return roomInteractions; },
     get renderPacing() { return renderPacing; },
+    get sceneTour() { return sceneTour; },
     get roomLedSpill() { return roomLedSpill; },
     get roomCollisionBlocked() { return roomCollisionBlocked; },
     get roomScene() { return selectedRoomScene; },

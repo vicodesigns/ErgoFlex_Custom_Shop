@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { surfaceDrop } from './item-surface-drop.mjs';
-import { RoomGrounding } from './room-polish.mjs?v=environment-expert-20261014';
+import { RoomGrounding } from './room-polish.mjs?v=humboldt-commons-20261015';
 import { solveFloorMove, overlapArea } from './room-collision.mjs?v=room-regressions-20261007';
 
 const visible = obj => { for(let p=obj;p;p=p.parent)if(!p.visible)return false;return true; };

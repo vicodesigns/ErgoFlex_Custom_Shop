@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_FINISHES } from './room-polish.mjs?v=environment-expert-20261014';
+import { ROOM_FINISHES } from './room-polish.mjs?v=humboldt-commons-20261015';
 
 // One diffuse bounce from twelve large architectural patches. This is an
 // unoccluded radiosity approximation, not path tracing. Patch illumination is
@@ -48,7 +48,7 @@ export class RoomBounceLight {
         this.uniforms={efBouncePosition:{value:[]},efBounceNormal:{value:[]},efBounceRadiance:{value:[]},efBounceArea:{value:[]},efBounceGain:{value:0}};
         const {width:w,depth:d,height:h,back}=room.roomLayout;
         room.root.updateWorldMatrix(true,true);
-        let floor=new THREE.Color(ROOM_FINISHES[room.id]?.ground||'#827565');
+        let floor=new THREE.Color((room.roomLayout?.finish||ROOM_FINISHES[room.id])?.ground||'#827565');
         // Use the floor's actual texture/colour, not the darker ground tint
         // used by the hemisphere light. This differentiates oak, carpet,
         // clinical vinyl and black rubber without room-specific guesses.

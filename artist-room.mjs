@@ -417,8 +417,9 @@ export function buildArtistRoom(room, root, layout, helpers) {
     rod(entry, [-w / 2 + 65, 1000, doorZ - 270], [-w / 2 + 65, 1000, doorZ - 180], 8, brass);
     room.walls.push({ obj: entry, axis: 'z', limit: w / 2 * root.scale.x, sign: -1 });
 
-    const brushCup = (parent, at, pot = blue) => {
+    const brushCup = (parent, at, pot = blue, id) => {
         const cup = new THREE.Group(); cup.position.set(...at); parent.add(cup);
+        if(id)register(cup,'artist-brushes-'+id,'Artist brushes · '+id);
         mesh(cup, new THREE.CylinderGeometry(47, 38, 90, 20), pot, [0, 45, 0]);
         const handles = [], tips = [];
         for (let i = 0; i < 9; i++) {
@@ -480,7 +481,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
     cards(board, pinned.map(([x, y, sw, sh, cell], k) => ({ at: [x, y, 29 + k * .7], size: [sw, sh], cell, rot: [0, 0, ((k * 5) % 7 - 3) * .018] })));
     instanced(board, ball, gloss, pinned.map(([x, y, , sh], k) => ({ at: [x, y + sh / 2 - 14, 38], size: [7, 7, 6], color: ['#c0473a', '#e2b543', '#3d5577'][k % 3] })), false);
     instanced(board, unit, tint, [{ at: [190, 222, 37], size: [70, 18, 1], rot: [0, 0, .5], color: '#e9b9a6' }, { at: [-60, -40, 37], size: [70, 18, 1], rot: [0, 0, -.4], color: '#b9d1c7' }], false);
-    brushCup(storage, [cx, 900, cz - 350]);
+    brushCup(storage, [cx, 900, cz - 350], blue, 'cabinet');
     const paint = ['#b95d46', '#d9bb63', '#628b89', '#536780'];
     instanced(storage, tube, tint, paint.map((color, i) => ({ at: [cx + (i - 1.5) * 55, 932.5, cz - 100], size: [23, 65, 23], color })));
     instanced(storage, tube, gloss, paint.map((_, i) => ({ at: [cx + (i - 1.5) * 55, 968.5, cz - 100], size: [24, 7, 24], color: '#e9e4d8' })), false);
@@ -587,7 +588,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
         art.rotation.x = -.025;
         rod(easel, [0, 1700, -170], [0, 40, 285], 21, oak);
         box(easel, [80, 30, 90], [0, 15, 285], oak, 3);
-        brushCup(easel, [270, 800, -75]);
+        brushCup(easel, [270, 800, -75], blue, 'easel');
         // Clamp lamp on the mast, angled down onto the canvas.
         const clamp = group(easel, 'Easel clamp lamp', [200, 1800, -120]); clamp.rotation.x = .7;
         mesh(clamp, new THREE.CylinderGeometry(22, 50, 85, 18, 1, true), material('#b8975c', { metalness: .4, roughness: .45, side: THREE.DoubleSide }), [0, 0, 0]);
@@ -619,7 +620,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
             ...[0, 1, 2, 3].map(i => ({ at: [-120 + i * 70, 729, 20 - i * 25], size: [40, 3, 26], rot: [0, i, 0], color: ['#b97a5a', '#7f9a7a', '#d1b36e', '#6f7f9a'][i] }))
         ], false);
         instanced(taboret, tube, gloss, pigments.map((color, i) => ({ at: [-150 + i * 40, 323, 60 - (i % 2) * 30], size: [13, 120, 13], rot: [Math.PI / 2, 0, 0], color })));
-        brushCup(taboret, [165, 720, 160]);
+        brushCup(taboret, [165, 720, 160], blue, 'taboret');
         sphere(taboret, [70, 20, 55], [150, 734, -110], material('#d8cbb0', { roughness: 1 }));
         instanced(taboret, unit, tint, [0, 1, 2].map(i => ({ at: [-30, 318 + i * 18, -110], size: [300, 17, 200], rot: [0, i * .12, 0], color: ['#3e4f5c', '#a24f3c', '#d9cfb8'][i] })));
 
@@ -644,7 +645,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
         for (const x of [-315, 315]) for (const z of [-660, 660]) box(table, [50, 865, 50], [x, 432.5, z], blue, 2);
         box(table, [670, 22, 1330], [0, 310, 0], oak, 3);
         instanced(table, unit, tint, Array.from({ length: 4 }, (_, i) => ({ at: [0, 356 + i % 2 * 80, -460 + Math.floor(i / 2) * 860], size: [590, 70, 180], color: i % 2 ? '#c8b69c' : '#e4dfd1' })));
-        brushCup(table, [-240, 910, -610]);
+        brushCup(table, [-240, 910, -610], blue, 'worktable');
         const matMap = texture((c, tw, th) => {
             c.fillStyle = '#3f6b5a'; c.fillRect(0, 0, tw, th); c.strokeStyle = 'rgba(220,235,225,.45)'; c.lineWidth = 1;
             for (let i = 8; i < tw; i += 16) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i, th); c.moveTo(0, i); c.lineTo(tw, i); c.stroke(); }
