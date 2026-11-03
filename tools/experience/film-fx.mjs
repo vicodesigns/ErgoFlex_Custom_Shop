@@ -1,0 +1,482 @@
+// Render-harness-only film effects. render-cut.cjs imports this module inside
+// the presentation stage iframe (it shares the page's import map, so 'three'
+// is the app's own instance). Nothing in the app imports it; every change it
+// makes lives in the disposable, memory-backed stage and is undone by clear().
+//
+//   fx.install(shot)          after ErgoPresentation.prepare(shot)
+//   await fx.frame(t, sec)    before each ErgoPresentation.bakeFrame
+//   fx.after()                after each bakeFrame
+//   fx.clear()                before the next prepare
+//   fx.listScreens(shot)      screen inventory (render-cut --list-screens)
+//
+// Shot fields (all optional; a shot without them renders exactly as before):
+//   screens:[{target, src, offset=0, fit='cover'|'contain'|'stretch', loop=true,
+//             rotate=0|90|180|270, flipX=false, brightness=1, rate=1}]
+//   ledMode:'media'  ledSource=<target or index into screens>  ledPreset='normal'|'calm'|'intense'|'full'
+//   ledGlow:0…1   LED brightness as a fraction of full (stage default .35)
+//   ledSurfaces:{desktopStrength:0…200, floorStrength, shelfStrength, …}  the app's LED surface sliders
+//   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
+//   sceneGlobals:{environmentScale, exposure}  image-based ambient multiplier, renderer exposure
+//   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
+//   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
+//   accessories:{add:['tablet-pc' | {id, role='desktop', x, y, z, rotation, tilt, roll, scale}], remove:[id]}
+//     catalog accessories (drafting-kit, artist-easel, keyboards…) are toggled
+//     on the prepared desk (and placed if x/z/… are given); library props
+//     (e.g. tablet-pc) are added as desk objects. Both after prepare, both undone.
+import * as THREE from 'three';
+import { sampleScreenColours } from '../../led-screen-sampler.mjs';
+import { accessory } from '../../catalog.mjs';
+
+const api = window.ErgoFlex;
+const sceneRoot = () => { let s = api.loadedModel; while (s?.parent) s = s.parent; return s; };
+const shown = o => { for (let p = o; p; p = p.parent) { if (!p.visible || p.layers.mask === 0) return false; } return true; };
+const within = (o, root) => { for (let p = o; p; p = p.parent) if (p === root) return true; return false; };
+const slug = s => String(s || '').toLowerCase().replace(/^prop:/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const pathOf = (o, root) => { const out = []; for (let p = o; p && p !== root; p = p.parent) out.unshift(p.name || p.type); return out.join(' > '); };
+const SCREENISH = /screen|display|monitor|\btv\b|pixels|marquee/i;
+const NOT_SCREEN = /bezel|housing|chassis|side.?panel|stand\b|arm\b|mount|bracket|clamp|cable|button|trim|shelf|cabinet\b(?!.*screen)|wall\b|light panels|touch_screen|artwork/i;
+// Friendly target aliases (tested against the screen's id and path).
+const DEFAULT_INSET = {};
+const ALIASES = {
+  tv: /Gaming TV display/i, arcade: /game_screen/i, marquee: /marquee/i,
+  'occ-display': /Student reel screening display/i, reel: /Student reel screening display/i,
+  tablet: /Mic_Sur_P3_display/i,
+  'curved-monitor': /wide-monitor.*monitor-screen|stage media/i, media: /stage media/i
+};
+
+// ---------- discovery ----------
+function discover(shot) {
+  const scene = sceneRoot(); scene.updateMatrixWorld(true);
+  const desk = api.loadedModel, room = api.workspaceRoom?.root, list = [], seen = new Set();
+  const push = (obj, info) => {
+    if (!obj?.isMesh || seen.has(obj) || !shown(obj) || obj.userData.filmFx || !obj.geometry?.attributes?.position) return;
+    seen.add(obj); list.push({ obj, path: pathOf(obj, scene), ...info });
+  };
+  // The stage's own curved media screen (kind:'media' only).
+  scene.traverse(o => { if (o.name === 'Cinematic effects') o.traverse(c => { if (c.isMesh && c.material?.isMeshBasicMaterial && c.material.map?.image instanceof HTMLCanvasElement) push(c, { source: 'stage-media', label: 'Stage media screen (curved)', id: 'media' }); }); });
+  const ss = api.sceneScreens; try { ss?.update(true); } catch {}
+  for (const e of ss?.entries || []) {
+    const main = /:main:/.test(e.key), acc = e.key.split(':').pop();
+    push(e.obj, { source: 'scene-screens', key: e.key, label: e.label, portrait: !!e.info?.portrait, main, id: main ? 'main/' + slug(acc) : null });
+  }
+  scene.traverse(o => {
+    if (!o.isMesh || within(o, desk) || seen.has(o)) return;
+    const mats = [].concat(o.material).map(m => m?.name || '').join(' ');
+    if (!(SCREENISH.test(o.name) || SCREENISH.test(mats)) || NOT_SCREEN.test(o.name) || /bezel|housing|chassis/i.test(mats)) return;
+    push(o, { source: 'mesh', label: o.name || mats });
+  });
+  // Ids: main-desk monitors keep 'main/<accessory>', the rest a path slug.
+  const used = new Set();
+  for (const s of list) {
+    if (!s.id) { let a = s.obj; while (a.parent && a.parent !== scene && !(a.userData.propId || a.userData.sceneAssetKey || /^Prop:|^Accessory:/.test(a.name))) a = a.parent; s.id = slug(a === s.obj ? s.obj.parent?.name : a.name) + '/' + slug(s.obj.name || s.label); }
+    let id = s.id, n = 2; while (used.has(id)) id = s.id + '-' + n++; s.id = id; used.add(id);
+  }
+  for (const s of list) s.frame = analyse(s.obj, room);
+  const big = s => s.frame.width * s.frame.height;
+  const mains = list.filter(s => s.main).sort((a, b) => big(b) - big(a));
+  const landscape = mains.filter(s => s.frame.aspect >= 1), portrait = mains.filter(s => s.frame.aspect < 1);
+  landscape.forEach((s, i) => s.alias = 'main-landscape' + (i ? '-' + (i + 1) : ''));
+  portrait.forEach((s, i) => s.alias = 'main-portrait' + (i ? '-' + (i + 1) : ''));
+  const media = list.find(s => s.source === 'stage-media'); if (media && !landscape.length) media.alias = 'main-landscape';
+  return list;
+}
+function resolve(list, target) {
+  if (Number.isInteger(target)) return list[target];
+  const t = String(target);
+  return list.find(s => s.alias === t) || list.find(s => s.id === t) || (ALIASES[t] && list.find(s => ALIASES[t].test(s.id + ' ' + s.path + ' ' + s.label)))
+    || list.find(s => s.obj.name === t) || list.find(s => s.path.toLowerCase().includes(t.toLowerCase()));
+}
+
+// ---------- geometry: a picture frame for any screen mesh ----------
+// Front normal (screenFront, averaged normals, or thinnest local axis facing
+// the room), up = world up projected onto the face, right = up × normal.
+// Curved glass is parametrised by arc length so pictures don't stretch.
+function analyse(obj, room) {
+  obj.updateWorldMatrix(true, false);
+  const g = obj.geometry, pos = g.attributes.position, nrm = g.attributes.normal, M = obj.matrixWorld;
+  const NM = new THREE.Matrix3().getNormalMatrix(M), v = new THREE.Vector3(), step = Math.max(1, Math.floor(pos.count / 8000));
+  const pts = []; for (let i = 0; i < pos.count; i += step) pts.push(v.fromBufferAttribute(pos, i).applyMatrix4(M).clone());
+  const centre = new THREE.Box3().setFromPoints(pts).getCenter(new THREE.Vector3());
+  let n = null;
+  if (obj.userData.screenFront) n = new THREE.Vector3(0, 0, obj.userData.screenFront).applyMatrix3(NM).normalize();
+  else if (nrm) { const avg = new THREE.Vector3(); let c = 0; for (let i = 0; i < nrm.count; i += step, c++) avg.add(v.fromBufferAttribute(nrm, i).applyMatrix3(NM).normalize()); if (avg.length() > .3 * c) n = avg.normalize(); }
+  if (!n) {
+    // Closed or two-sided slabs: the thinnest principal axis of the points.
+    n = thinnestAxis(pts, centre);
+    const toward = room ? new THREE.Box3().setFromObject(room).getCenter(new THREE.Vector3()) : new THREE.Vector3(0, centre.y, 0);
+    if (n.dot(toward.sub(centre)) < 0) n.negate();
+  }
+  const up = new THREE.Vector3(0, 1, 0).addScaledVector(n, -n.y);
+  if (up.length() < .3) up.set(0, 1, 0).applyMatrix3(NM).addScaledVector(n, -new THREE.Vector3(0, 1, 0).applyMatrix3(NM).dot(n));
+  up.normalize(); const right = new THREE.Vector3().crossVectors(up, n).normalize();
+  let rmin = Infinity, rmax = -Infinity, umin = Infinity, umax = -Infinity, dmin = Infinity, dmax = -Infinity;
+  for (const p of pts) { const r = p.dot(right), u = p.dot(up), d = p.dot(n); rmin = Math.min(rmin, r); rmax = Math.max(rmax, r); umin = Math.min(umin, u); umax = Math.max(umax, u); dmin = Math.min(dmin, d); dmax = Math.max(dmax, d); }
+  // Front-most surface profile d(r) → cumulative arc length s(r).
+  const B = 48, chord = Math.max(1e-6, rmax - rmin), prof = new Array(B + 1).fill(-Infinity);
+  for (const p of pts) { const k = Math.round((p.dot(right) - rmin) / chord * B); prof[k] = Math.max(prof[k], p.dot(n)); }
+  for (let k = 0; k <= B; k++) if (!Number.isFinite(prof[k])) { let a = k - 1, b = k + 1; while (a >= 0 && !Number.isFinite(prof[a])) a--; while (b <= B && !Number.isFinite(prof[b])) b++; prof[k] = a < 0 ? prof[b] : b > B ? prof[a] : prof[a] + (prof[b] - prof[a]) * (k - a) / (b - a); }
+  const arc = [0]; for (let k = 1; k <= B; k++) arc.push(arc[k - 1] + Math.hypot(chord / B, prof[k] - prof[k - 1]));
+  const width = arc[B], height = umax - umin, sag = Math.max(...prof) - Math.min(...prof);
+  const curved = sag > .01 * chord;
+  const s = r => { const x = THREE.MathUtils.clamp((r - rmin) / chord * B, 0, B), k = Math.min(B - 1, Math.floor(x)); return arc[k] + (arc[k + 1] - arc[k]) * (x - k); };
+  const surface = r => { const x = THREE.MathUtils.clamp((r - rmin) / chord * B, 0, B), k = Math.min(B - 1, Math.floor(x)); return prof[k] + (prof[k + 1] - prof[k]) * (x - k); };
+  return { centre, n, up, right, rmin, umin, chord, width, height, aspect: width / Math.max(1e-6, height), curved, sag, depth: dmax - dmin, s, surface };
+}
+
+function thinnestAxis(pts, c) {
+  const A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  for (const p of pts) { const d = [p.x - c.x, p.y - c.y, p.z - c.z]; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) A[i][j] += d[i] * d[j]; }
+  // Jacobi rotations on the symmetric covariance.
+  const V = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  for (let sweep = 0; sweep < 30; sweep++) for (const [p, q] of [[0, 1], [0, 2], [1, 2]]) {
+    if (Math.abs(A[p][q]) < 1e-15) continue;
+    const th = (A[q][q] - A[p][p]) / (2 * A[p][q]), t = Math.sign(th || 1) / (Math.abs(th) + Math.sqrt(th * th + 1)), cs = 1 / Math.sqrt(t * t + 1), sn = t * cs;
+    for (let k = 0; k < 3; k++) { const a = A[k][p], b = A[k][q]; A[k][p] = cs * a - sn * b; A[k][q] = sn * a + cs * b; }
+    for (let k = 0; k < 3; k++) { const a = A[p][k], b = A[q][k]; A[p][k] = cs * a - sn * b; A[q][k] = sn * a + cs * b; }
+    for (let k = 0; k < 3; k++) { const a = V[k][p], b = V[k][q]; V[k][p] = cs * a - sn * b; V[k][q] = sn * a + cs * b; }
+  }
+  const i = [0, 1, 2].reduce((m, k) => A[k][k] < A[m][m] ? k : m, 0);
+  return new THREE.Vector3(V[0][i], V[1][i], V[2][i]).normalize();
+}
+
+// Front-face picture geometry in the mesh's own space, offset 0.4 mm forward.
+function pictureGeometry(obj, f) {
+  const g = obj.geometry.index ? obj.geometry.toNonIndexed() : obj.geometry, pos = g.attributes.position, M = obj.matrixWorld, inv = M.clone().invert();
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), e1 = new THREE.Vector3(), e2 = new THREE.Vector3(), fn = new THREE.Vector3(), cen = new THREE.Vector3();
+  const out = [], uv = [], tol = Math.max(.0025, f.depth * .02);
+  for (let i = 0; i < pos.count; i += 3) {
+    a.fromBufferAttribute(pos, i).applyMatrix4(M); b.fromBufferAttribute(pos, i + 1).applyMatrix4(M); c.fromBufferAttribute(pos, i + 2).applyMatrix4(M);
+    fn.crossVectors(e1.subVectors(b, a), e2.subVectors(c, a)); if (fn.lengthSq() < 1e-14) continue; fn.normalize();
+    cen.copy(a).add(b).add(c).divideScalar(3);
+    if (Math.abs(fn.dot(f.n)) < .35 || cen.dot(f.n) < f.surface(cen.dot(f.right)) - tol) continue;
+    for (const p of [a, b, c]) {
+      uv.push(f.s(p.dot(f.right)) / f.width, (p.dot(f.up) - f.umin) / f.height);
+      out.push(...p.clone().addScaledVector(f.n, .0004).applyMatrix4(inv).toArray());
+    }
+  }
+  if (g !== obj.geometry) g.dispose();
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(out, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.computeBoundingSphere(); return geo;
+}
+
+// ---------- inventory ----------
+function cameraFrom(view, aspect) {
+  const cam = new THREE.PerspectiveCamera(view.fov, aspect, .01, 500); cam.position.fromArray(view.position); cam.lookAt(new THREE.Vector3().fromArray(view.target)); cam.updateMatrixWorld(true); return cam;
+}
+export function listScreens(shot, { samples = 9, outW = 1920, outH = 1080 } = {}) {
+  const list = discover(shot), P = window.ErgoPresentation, stats = list.map(() => ({ maxH: 0, maxW: 0, seen: 0 }));
+  for (let k = 0; k < samples; k++) {
+    const t = k / (samples - 1); P.seek(t); const scene = sceneRoot(); scene.updateMatrixWorld(true);
+    const cam = cameraFrom(P.captureCamera(), outW / outH);
+    list.forEach((s, i) => {
+      const f = analyse(s.obj, null), toCam = cam.position.clone().sub(f.centre);
+      if (f.n.dot(toCam) <= 0) return; // seen from behind
+      const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([x, y]) => f.centre.clone().addScaledVector(f.right, x * f.chord / 2).addScaledVector(f.up, y * f.height / 2).project(cam));
+      if (corners.every(p => p.z > 1 || p.z < -1)) return;
+      const xs = corners.map(p => (p.x + 1) / 2 * outW), ys = corners.map(p => (1 - p.y) / 2 * outH);
+      const x0 = Math.max(0, Math.min(...xs)), x1 = Math.min(outW, Math.max(...xs)), y0 = Math.max(0, Math.min(...ys)), y1 = Math.min(outH, Math.max(...ys));
+      if (x1 <= x0 || y1 <= y0) return;
+      const st = stats[i]; st.seen++;
+      // Full (unclipped) projected size: what the clip must resolve.
+      st.maxW = Math.max(st.maxW, Math.max(...xs) - Math.min(...xs)); st.maxH = Math.max(st.maxH, Math.max(...ys) - Math.min(...ys));
+    });
+  }
+  P.seek(0);
+  return list.map((s, i) => {
+    const f = s.frame, st = stats[i], yaw = Math.atan2(f.n.x, f.n.z) * 180 / Math.PI, pitch = Math.asin(THREE.MathUtils.clamp(f.n.y, -1, 1)) * 180 / Math.PI;
+    return { id: s.id, alias: s.alias || null, label: s.label, source: s.source, path: s.path, mesh: s.obj.name,
+      position: f.centre.toArray().map(x => +x.toFixed(3)), widthM: +f.width.toFixed(4), heightM: +f.height.toFixed(4), aspect: +f.aspect.toFixed(4),
+      orientation: f.aspect >= 1 ? 'landscape' : 'portrait', curved: f.curved, sagM: +f.sag.toFixed(4), facingYawDeg: +yaw.toFixed(1), facingPitchDeg: +pitch.toFixed(1),
+      visibleSamples: st.seen + '/' + samples, maxOnScreenPx: [Math.round(st.maxW), Math.round(st.maxH)] };
+  });
+}
+
+// ---------- live screens ----------
+let active = null;
+const loadMedia = src => new Promise((resolve, reject) => {
+  const url = /^(https?:)?\//.test(src) ? src : '/' + src.replace(/^\.?\/+/, '');
+  if (/\.(png|jpe?g|webp|gif)$/i.test(src)) { const img = new Image(); img.onload = () => resolve(img); img.onerror = () => reject(Error('Could not load ' + src)); img.src = url; return; }
+  const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.crossOrigin = 'anonymous';
+  const timer = setTimeout(() => reject(Error('Timed out loading ' + src)), 60000);
+  v.addEventListener('loadeddata', () => { clearTimeout(timer); resolve(v); }, { once: true });
+  v.addEventListener('error', () => { clearTimeout(timer); reject(Error('Could not load ' + src)); }, { once: true });
+  v.src = url; v.load();
+});
+function seek(video, time) {
+  if (Math.abs(video.currentTime - time) <= .001 && video.readyState >= 2) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { cleanup(); reject(Error('A screen clip could not seek for this frame.')); }, 8000);
+    const cleanup = () => { clearTimeout(timer); video.removeEventListener('seeked', done); video.removeEventListener('error', fail); };
+    const done = () => { cleanup(); resolve(); }, fail = () => { cleanup(); reject(Error('A screen clip failed to decode.')); };
+    video.addEventListener('seeked', done, { once: true }); video.addEventListener('error', fail, { once: true }); video.currentTime = time;
+  });
+}
+function draw(sc) {
+  const { ctx2d, canvas, media, spec } = sc, [il, it, ir, ib] = sc.inset, CW = canvas.width, CH = canvas.height;
+  const X0 = Math.round(il * CW), Y0 = Math.round(it * CH), W = CW - X0 - Math.round(ir * CW), H = CH - Y0 - Math.round(ib * CH);
+  const rot = ((Number(spec.rotate) || 0) % 360 + 360) % 360, quarter = rot === 90 || rot === 270;
+  const sw = media.videoWidth || media.naturalWidth, sh = media.videoHeight || media.naturalHeight;
+  // Fit in the rotated frame: the source's own aspect after rotation.
+  const fw = quarter ? H : W, fh = quarter ? W : H, fit = spec.fit || 'cover';
+  let sx = 0, sy = 0, sW = sw, sH = sh, dw = fw, dh = fh;
+  if (fit === 'cover') { const s = Math.max(fw / sw, fh / sh); sW = fw / s; sH = fh / s; sx = (sw - sW) / 2; sy = (sh - sH) / 2; }
+  else if (fit === 'contain') { const s = Math.min(fw / sw, fh / sh); dw = sw * s; dh = sh * s; }
+  ctx2d.setTransform(1, 0, 0, 1, 0, 0); ctx2d.clearRect(0, 0, CW, CH); ctx2d.fillStyle = '#000'; ctx2d.fillRect(X0, Y0, W, H);
+  ctx2d.save(); ctx2d.beginPath(); ctx2d.rect(X0, Y0, W, H); ctx2d.clip(); ctx2d.translate(X0 + W / 2, Y0 + H / 2); ctx2d.rotate(rot * Math.PI / 180); if (spec.flipX) ctx2d.scale(-1, 1);
+  ctx2d.drawImage(media, sx, sy, sW, sH, -dw / 2, -dh / 2, dw, dh); ctx2d.restore(); ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+  sc.texture.needsUpdate = true;
+}
+async function installScreens(shot, list) {
+  const out = [];
+  for (const [i, spec] of (shot.screens || []).entries()) {
+    const target = resolve(list, spec.target ?? i);
+    if (!target) throw Error(`screens[${i}]: no screen matches target "${spec.target}". Run render-cut --list-screens.`);
+    const media = await loadMedia(spec.src), f = target.frame;
+    // inset: [left, top, right, bottom] fractions of the glass left clear (bezels
+    // baked into the mesh texture show through). A number applies to all sides.
+    const inset = Array.isArray(spec.inset) ? spec.inset.map(Number) : Array(4).fill(Number(spec.inset ?? DEFAULT_INSET[target.alias || ''] ?? 0));
+    const long = Math.min(2048, Math.max(512, Number(spec.res) || Math.max(media.videoWidth || media.naturalWidth, media.videoHeight || media.naturalHeight)));
+    const canvas = document.createElement('canvas');
+    if (f.aspect >= 1) { canvas.width = long; canvas.height = Math.max(2, Math.round(long / f.aspect)); } else { canvas.height = long; canvas.width = Math.max(2, Math.round(long * f.aspect)); }
+    const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = api.renderer?.capabilities.getMaxAnisotropy?.() || 1; texture.minFilter = THREE.LinearMipmapLinearFilter;
+    const clearEdge = inset.some(x => x > 0);
+    const material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4, transparent: clearEdge, alphaTest: clearEdge ? .5 : 0 });
+    material.color.setScalar(Number(spec.brightness ?? 1));
+    const mesh = new THREE.Mesh(pictureGeometry(target.obj, f), material); mesh.name = 'Film screen · ' + target.id; mesh.userData.filmFx = true; mesh.castShadow = mesh.receiveShadow = false; mesh.renderOrder = 2;
+    target.obj.add(mesh);
+    const sc = { spec, target, inset, media, canvas, ctx2d: canvas.getContext('2d', { willReadFrequently: true }), texture, mesh };
+    if (!media.duration) draw(sc);
+    out.push(sc);
+  }
+  return out;
+}
+async function updateScreens(screens, chapterSeconds) {
+  await Promise.all(screens.map(async sc => {
+    const v = sc.media; if (!(v instanceof HTMLVideoElement)) return;
+    const rate = Number(sc.spec.rate ?? 1), raw = chapterSeconds * rate + (Number(sc.spec.offset) || 0), d = v.duration;
+    const time = sc.spec.loop === false ? THREE.MathUtils.clamp(raw, 0, Math.max(0, d - .02)) : ((raw % d) + d) % d;
+    // +1.5 ms: land inside the target frame (an exact n/fps boundary can resolve to frame n−1).
+    await seek(v, Math.min(time + .0015, Math.max(0, d - .001))); draw(sc);
+  }));
+}
+
+// ---------- LED media mode (the app's Game Mode screen-sampling path) ----------
+// LedGameMode.sampleLive draws the shared picture at 160×90, runs
+// sampleScreenColours (desktop strips sample successive horizontal bands, the
+// wings sample the matching edges) and eases toward it with a 150 ms time
+// constant. Here the same sampler reads the film screen's canvas and the
+// easing runs on bake time, so the light is deterministic per frame.
+// The app samples the shared picture itself (drawImage(video, 0, 0, 160, 90)),
+// so the source is the clip's video element, not the monitor canvas with its
+// fit/pillarbox. For the stage's own media clip (kind:'media' without screens)
+// a sampler video plays the same file in lockstep with the stage's seeks.
+async function ledSource(shot, screens, list) {
+  const src = shot.ledSource;
+  if (src !== undefined) {
+    const sc = Number.isInteger(src) ? screens[src] : screens.find(s => s.spec.target === src || s.target.id === src || s.target.alias === src);
+    if (sc) return { media: sc.media };
+    const t = resolve(list, src); if (t?.obj.material?.map?.image instanceof HTMLCanvasElement) return { media: t.obj.material.map.image };
+    throw Error('ledSource does not name a screen: ' + src);
+  }
+  if (screens.length) return { media: screens[0].media };
+  if (shot.kind === 'media') {
+    const video = await loadMedia(shot.__stageClip || 'app-reference/assets/desk_viewer/media/ambient-clip.mp4');
+    return { media: video, sampler: true, offset: Number(shot.screenOffset) || 0 };
+  }
+  const main = list.find(s => s.alias === 'main-landscape'), img = main?.obj.material?.map?.image;
+  if (img instanceof HTMLCanvasElement) return { media: img };
+  throw Error('ledMode "media" needs a screen picture: add screens[] or ledSource.');
+}
+async function makeLed(shot, screens, list) {
+  const game = api.ledGameMode, counts = game.counts, small = document.createElement('canvas'); small.width = 160; small.height = 90;
+  return { game, source: await ledSource(shot, screens, list), small, c: small.getContext('2d', { willReadFrequently: true }),
+    gain: Math.max(0, Number(shot.ledGain ?? 1)), target: counts.map(n => new Uint8Array(n * 4)), live: counts.map(n => new Uint8Array(n * 4)), at: null, mode: shot.ledPreset || 'normal', avg: '#000000' };
+}
+async function sampleLed(led, seconds, video) {
+  const src = led.source;
+  if (src.sampler) { const d = src.media.duration; await seek(src.media, Math.min(((seconds + src.offset) % d + d) % d + .0015, d - .001)); }
+  led.c.save(); led.c.translate(160, 0); led.c.scale(-1, 1); led.c.drawImage(src.media, 0, 0, 160, 90); led.c.restore(); // flipped: screen-left lights the desk's left strip end
+  const image = led.c.getImageData(0, 0, 160, 90); sampleScreenColours(led.target, image, { mode: led.mode });
+  // Continuous playback eases like the app; a jump (stills, first frame) snaps.
+  const dt = led.at === null ? Infinity : seconds - led.at, blend = video && dt > 0 && dt <= .25 ? 1 - Math.exp(-dt * 1000 / 150) : 1;
+  const gain = led.gain;
+  led.live.forEach((row, j) => row.forEach((v, i) => { const t = Math.min(255, led.target[j][i] * gain); row[i] = Math.round(v + (t - v) * blend); }));
+  led.at = seconds;
+  let r = 0, g = 0, b = 0; const d = image.data; for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; } const n = d.length / 4;
+  led.avg = '#' + [r, g, b].map(x => Math.max(25, Math.round(x / n)).toString(16).padStart(2, '0')).join('');
+}
+
+// ---------- clocks ----------
+const parseTime = s => { const [h, m = 0, sec = 0] = String(s).split(':').map(Number); return h * 3600 + m * 60 + sec; };
+function paintAnalog(c, S, secondsOfDay, secondAngle) {
+  // Mirrors home-office.mjs paintClock, with real hour/minute/second angles.
+  const hours = secondsOfDay / 3600, minutes = (secondsOfDay / 60) % 60;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#f1ead9'; c.fillRect(0, 0, S, S);
+  c.save(); c.translate(S / 2, S / 2);
+  for (let i = 0; i < 60; i++) { const a = i / 60 * Math.PI * 2, major = i % 5 === 0; c.strokeStyle = major ? '#2c3732' : 'rgba(44,55,50,.55)'; c.lineWidth = major ? 6 : 2; c.beginPath(); c.moveTo(Math.sin(a) * S * (major ? .36 : .41), -Math.cos(a) * S * (major ? .36 : .41)); c.lineTo(Math.sin(a) * S * .45, -Math.cos(a) * S * .45); c.stroke(); }
+  c.lineCap = 'round';
+  const hand = (angle, length, width, color) => { c.strokeStyle = color; c.lineWidth = width; c.beginPath(); c.moveTo(-Math.sin(angle) * S * .05, Math.cos(angle) * S * .05); c.lineTo(Math.sin(angle) * length, -Math.cos(angle) * length); c.stroke(); };
+  hand((hours % 12) / 12 * Math.PI * 2, S * .24, 9, '#2c3732');
+  hand(minutes / 60 * Math.PI * 2, S * .36, 6, '#2c3732');
+  if (secondAngle !== null) hand(secondAngle, S * .4, 2, '#b8573e');
+  c.fillStyle = '#a88a55'; c.beginPath(); c.arc(0, 0, 9, 0, Math.PI * 2); c.fill(); c.restore();
+}
+function paintFlap(c, secondsOfDay) {
+  // Mirrors atelier-desk-decor-generator.mjs split-flap face (24 h).
+  const h = Math.floor(secondsOfDay / 3600) % 24, m = Math.floor(secondsOfDay / 60) % 60;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#14161b'; c.fillRect(0, 0, 512, 256);
+  c.fillStyle = '#20242c'; c.beginPath(); c.roundRect(28, 28, 210, 200, 16); c.roundRect(274, 28, 210, 200, 16); c.fill();
+  c.fillStyle = '#f8fafc'; c.font = '700 128px "JetBrains Mono", monospace'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(String(h).padStart(2, '0'), 133, 132); c.fillText(String(m).padStart(2, '0'), 379, 132);
+  c.fillStyle = '#0b0d11'; c.fillRect(20, 125, 472, 6);
+}
+function findClocks() {
+  const scene = sceneRoot(), desk = api.loadedModel, out = [];
+  scene.traverse(o => {
+    if (!/clock/i.test(o.name) || within(o, desk) || !shown(o) || o.isMesh) return;
+    const canvasMesh = []; o.traverse(c => { const img = c.isMesh && c.material?.map?.image; if (img instanceof HTMLCanvasElement) canvasMesh.push(c); });
+    const hands = o.children.filter(c => c.isGroup && !c.name && c.children.length === 1 && c.children[0].isMesh);
+    if (/Decor component clock/.test(o.name) && canvasMesh.length) out.push({ kind: 'flap', obj: o, map: canvasMesh[0].material.map });
+    else if (hands.length === 2) out.push({ kind: 'hands', obj: o, hour: hands[0], minute: hands[1] });
+    else if (canvasMesh.length && canvasMesh[0].material.map.image.width === canvasMesh[0].material.map.image.height) out.push({ kind: 'analog', obj: o, map: canvasMesh[0].material.map });
+  });
+  return out.map(c => ({ ...c, saved: c.kind === 'hands' ? [c.hour.rotation.z, c.minute.rotation.z] : (() => { const k = document.createElement('canvas'), img = c.map.image; k.width = img.width; k.height = img.height; k.getContext('2d').drawImage(img, 0, 0); return k; })() }));
+}
+function setClocks(clocks, spec, shot, chapterSeconds) {
+  const start = Number(spec.start ?? 0), end = Number(spec.end ?? shot.seconds), from = parseTime(spec.from), to = parseTime(spec.to ?? spec.from);
+  let u = THREE.MathUtils.clamp((chapterSeconds - start) / Math.max(1e-6, end - start), 0, 1);
+  if (spec.ease === 'smooth') u = u * u * (3 - 2 * u);
+  const sod = from + (to - from) * u, mode = spec.second || 'real';
+  const secondAngle = mode === 'hide' ? null : (mode === 'clock' ? sod % 60 : (from % 60) + chapterSeconds) / 60 * Math.PI * 2;
+  for (const c of clocks) {
+    if (c.kind === 'hands') { c.hour.rotation.z = -((sod / 3600) % 12) / 12 * Math.PI * 2; c.minute.rotation.z = -((sod / 60) % 60) / 60 * Math.PI * 2; }
+    else if (c.kind === 'flap') { paintFlap(c.map.image.getContext('2d'), sod); c.map.needsUpdate = true; }
+    else { const img = c.map.image; paintAnalog(img.getContext('2d'), img.width, sod, secondAngle); c.map.needsUpdate = true; }
+  }
+}
+function restoreClocks(clocks) {
+  for (const c of clocks) {
+    if (c.kind === 'hands') { c.hour.rotation.z = c.saved[0]; c.minute.rotation.z = c.saved[1]; }
+    else { const x = c.map.image.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.saved.width, c.saved.height); x.drawImage(c.saved, 0, 0); c.map.needsUpdate = true; }
+  }
+}
+export function listClocks() { return findClocks().map(c => ({ kind: c.kind, name: c.obj.name, path: pathOf(c.obj, sceneRoot()), position: new THREE.Box3().setFromObject(c.obj).getCenter(new THREE.Vector3()).toArray().map(x => +x.toFixed(3)) })); }
+
+// ---------- accessories / desk objects ----------
+const accSpec = raw => typeof raw === 'string' ? { id: raw } : raw;
+const isCatalog = id => !!accessory(id);
+// Library props default to a sensible spot (desk-local mm, like room layouts).
+const PROP_DEFAULTS = { 'tablet-pc': { x: -330, z: 230, rotation: 15 } };
+// Catalog accessories used to be toggled inside applyPreset, but the stage's
+// room install (installRecipe) rebuilds the featured desk and dropped them.
+// They are now toggled after prepare, like library props. These two exports
+// stay as no-ops so older callers keep working.
+export function beforePrepare() {}
+export function unhookPreset() {}
+async function installDeskObjects(shot) {
+  const spec = shot.accessories, out = { added: [], hidden: [], toggled: [] }; if (!spec) return out;
+  const objects = api.sceneDesks?.objects, records = api.sceneDesks?.active?.objects;
+  // Catalog accessories: toggle on the prepared desk, wait for the layout,
+  // then optionally place them like any desk object (key accessory-<id>).
+  const catalogAdd = (spec.add || []).map(accSpec).filter(a => isCatalog(a.id)), catalogRemove = (spec.remove || []).filter(isCatalog);
+  for (const { id } of catalogAdd) if (!api.currentConfig.accessories.includes(id)) { api.toggleAccessory(id); if (api.currentConfig.accessories.includes(id)) out.toggled.push(id); else console.warn('[film-fx] accessories.add: ' + id + ' does not fit this desk size'); }
+  for (const id of catalogRemove) if (api.currentConfig.accessories.includes(id)) { api.toggleAccessory(id); out.toggled.push(id); }
+  if (out.toggled.length) {
+    await api.workspaceAccessories?.ready; await objects?.ready; objects?.syncAccessories();
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    for (const a of catalogAdd) {
+      const change = {}; for (const f of ['x', 'y', 'z', 'rotation', 'tilt', 'roll', 'scale']) if (Number.isFinite(a[f])) change[f] = a[f];
+      if (!Object.keys(change).length) continue;
+      const key = 'accessory-' + a.id; if (!records?.has(key)) { console.warn('[film-fx] accessories.add: no desk object ' + key + ' to place'); continue; }
+      objects.select(key); objects.change(change); objects.select(null);
+    }
+  }
+  for (const raw of spec.add || []) {
+    const a = { ...PROP_DEFAULTS[accSpec(raw).id], ...accSpec(raw) }; if (isCatalog(a.id)) continue;
+    const key = await objects.add(a.id, a.role || 'desktop');
+    if (!key) throw Error('accessories.add: could not add library prop ' + a.id);
+    objects.select(key); const change = {}; for (const f of ['x', 'y', 'z', 'rotation', 'tilt', 'roll', 'scale']) if (Number.isFinite(a[f])) change[f] = a[f];
+    if (Object.keys(change).length) objects.change(change);
+    objects.setEditing(false); objects.select(null);
+    const obj = records?.get(key)?.obj; if (obj) { obj.userData.filmFxProp = a.id; obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); }
+    out.added.push(key);
+  }
+  for (const id of spec.remove || []) {
+    if (isCatalog(id)) continue;
+    for (const [key, item] of records || []) if (key === id || item.saved?.propId === id) { out.hidden.push([item.obj, item.obj.visible]); item.obj.visible = false; }
+  }
+  return out;
+}
+function clearDeskObjects(d) {
+  if (!d) return; const objects = api.sceneDesks?.objects;
+  for (const id of [...d.toggled].reverse()) { try { api.toggleAccessory(id); } catch (e) { console.warn('[film-fx] untoggle', id, e); } }
+  for (const [obj, v] of d.hidden) obj.visible = v;
+  for (const key of d.added) { try { if (api.sceneDesks?.active?.objects?.has(key)) { objects.select(key); objects.remove(); objects.select(null); } } catch (e) { console.warn('[film-fx] remove', key, e); } }
+}
+
+// ---------- public API ----------
+export async function install(shot) {
+  clear();
+  unhookPreset();
+  const wants = shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals;
+  if (!wants) return null;
+  active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
+  active.desk = await installDeskObjects(shot);
+  if (active.desk.added.length || active.desk.toggled.length) await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const list = active.list = discover(shot);
+  active.screens = await installScreens(shot, list);
+  if (shot.ledMode === 'media') {
+    active.led = await makeLed(shot, active.screens, list);
+    api.setLedEffect({ mode: 'solid', period: 6 }, false);
+  }
+  // sceneGlobals: {environmentScale, exposure} — the image-based ambient and the
+  // renderer exposure, multiplied/set for this shot and restored after.
+  if (shot.sceneGlobals) {
+    let sc = api.loadedModel; while (sc.parent) sc = sc.parent; const g = shot.sceneGlobals;
+    active.globals = { env: sc.environmentIntensity, exposure: api.renderer.toneMappingExposure, scene: sc };
+    if (Number.isFinite(g.environmentScale)) sc.environmentIntensity *= g.environmentScale;
+    if (Number.isFinite(g.exposure)) api.renderer.toneMappingExposure = g.exposure;
+  }
+  // ledSurfaces: the app's LED surface sliders (desktopStrength, floorStrength, …), restored after the shot.
+  if (shot.ledSurfaces) { active.surfaces = api.ledSurfaces; for (const [k, v] of Object.entries(shot.ledSurfaces)) api.setLedSurface(k, v, false); }
+  // ledGlow: the app's LED brightness slider as a fraction of full (the stage uses .35).
+  if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
+  if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
+  if (shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
+  if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
+  return { accessories: active.desk.added.length + active.desk.toggled.length, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count };
+}
+export async function frame(t, chapterSeconds, { video = false } = {}) {
+  if (!active) return;
+  if (active.tod) active.tod.apply(chapterSeconds);
+  active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds);
+  if (active.screens.length) await updateScreens(active.screens, chapterSeconds);
+  if (active.clocks.length) setClocks(active.clocks, active.shot.clock, active.shot, chapterSeconds);
+  if (active.led) {
+    const led = active.led; await sampleLed(led, chapterSeconds, video);
+    api.setLedColor(led.avg, false);
+    // The app's Game Mode path: updateLedEffectFrame (inside bakeDraw) asks
+    // ledGame.sample(frame) first and uploads it as linear pixels to the
+    // desk strips, the desk spill and the room spill.
+    led.game.sample = out => { out.forEach((row, i) => row.set(led.live[i])); return true; };
+    led.game.active = true;
+  }
+}
+export function after() {
+  if (active?.led) { delete active.led.game.sample; active.led.game.active = false; }
+}
+export function clear() {
+  if (!active) return;
+  after();
+  for (const sc of active.screens) { sc.mesh.removeFromParent(); sc.mesh.geometry.dispose(); sc.material?.dispose(); sc.mesh.material.dispose(); sc.texture.dispose(); if (sc.media instanceof HTMLVideoElement) { sc.media.removeAttribute('src'); sc.media.load(); } }
+  if (active.led?.source.sampler) { active.led.source.media.removeAttribute('src'); active.led.source.media.load(); }
+  if (active.clocks.length) restoreClocks(active.clocks);
+  if (active.globals) { active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; }
+  if (active.surfaces) for (const [k, v] of Object.entries(active.surfaces)) api.setLedSurface(k, v, false);
+  active.lights?.restore(); active.edits?.restore();
+  active.tod?.restore();
+  clearDeskObjects(active.desk);
+  active = null;
+}
+export { discover };

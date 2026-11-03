@@ -1,0 +1,250 @@
+// sceneEdits + lights for render-cut (harness only; see film-fx.mjs header).
+//
+// sceneEdits:[{match:'<regex on object name>', path:'<regex on the full
+//   "A > B > C" path>' (optional, narrows), materialName:'<regex>',
+//   materialColor:'#hex', materialType:'Basic' (optional: only those
+//   materials), hide:true,
+//   position:[dx,dy,dz] (world metres, added once), rotation:[dx,dy,dz] (deg),
+//   scale:s, material:{color, emissive, roughness, metalness, clearcoat,
+//   clearcoatRoughness, envMapIntensity, emissiveIntensity, opacity,
+//   emissiveScale, opacityScale, colorScale (unlit backdrops), mapBlur (mip
+//   LOD, ~2^lod texels)}, opacity:<multiplier or [[sec,value],…]>,
+//   radialFade:[r0,r1] (lines/meshes fade out between r0 and r1 metres from
+//   the object's own origin), clone:false}]
+//   Material values may be keyframed: [[chapterSeconds, value], …] (linear).
+//   emissiveScale / opacityScale / opacity multiply whatever the app or the
+//   stage writes each frame (time-of-day, the stage's pulse fade …).
+//   Stage aliases for match: @grid @pulse @sweep @pylons @stageLight @floor;
+//   @window = the room's exterior backdrop (home, creative, gym, highschool).
+//   material.brightness: colour gain for unlit backdrops, emissive gain otherwise.
+//   minArea (m²): skip matched meshes smaller than this.
+//   lightType:'<regex on light type>' (PointLight|SpotLight|HemisphereLight|
+//   DirectionalLight|RectAreaLight) selects lights instead; then intensity:
+//   <multiplier | keyframes> and color:'#hex'.
+// lights:[{preset:'productRig', …overrides} | {type:'rect'|'spot'|'point'|
+//   'directional', position:[x,y,z] | at:{az,el,dist} (degrees/metres around
+//   the desk; az 0 = desk front, + = desk's left), target:[x,y,z], color,
+//   intensity, width, height, angle, penumbra, distance, castShadow:false}]
+import * as THREE from 'three';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+
+const api = window.ErgoFlex;
+const sceneRoot = () => { let s = api.loadedModel; while (s?.parent) s = s.parent; return s; };
+const pathOf = (o, root) => { const out = []; for (let p = o; p && p !== root; p = p.parent) out.unshift(p.name || p.type); return out.join(' > '); };
+const keyed = v => Array.isArray(v) && Array.isArray(v[0]);
+const sample = (v, s) => {
+  if (!keyed(v)) return v;
+  if (s <= v[0][0]) return v[0][1]; const last = v[v.length - 1]; if (s >= last[0]) return last[1];
+  let i = 0; while (v[i + 1][0] < s) i++; const [t0, a] = v[i], [t1, b] = v[i + 1];
+  return a + (b - a) * (s - t0) / Math.max(1e-6, t1 - t0);
+};
+
+function stageObjects() {
+  const scene = sceneRoot(), fx = scene.children.find(o => o.name === 'Cinematic effects'), out = { grid: [], pulse: [], sweep: [], pylons: [], stageLight: [], floor: [] };
+  for (const o of fx?.children || []) {
+    if (o.type === 'GridHelper' || o.isLineSegments) out.grid.push(o);
+    else if (o.isMesh && o.geometry?.type === 'RingGeometry') (o.geometry.parameters.thetaLength < 6.28 ? out.sweep : out.pulse).push(o);
+    else if (o.isMesh && o.geometry?.type === 'CylinderGeometry') out.pylons.push(o);
+    else if (o.isLight) out.stageLight.push(o);
+  }
+  scene.traverse(o => { if (o.isMesh && o.material?.isShadowMaterial) out.floor.push(o); });
+  return out;
+}
+function targets(edit) {
+  const scene = sceneRoot(), m = String(edit.match || '');
+  if (m === '@window') { const w = WINDOWS[api.roomScene]; if (!w) { console.warn('[film-fx] @window: no exterior backdrop known for room', api.roomScene); return []; } return targets({ ...edit, ...w, match: '' }); }
+  if (m.startsWith('@')) return stageObjects()[m.slice(1)] || [];
+  if (edit.lightType) {
+    const lt = new RegExp(edit.lightType, 'i'), re = new RegExp(m, edit.flags ?? 'i'), pre = edit.path ? new RegExp(edit.path, 'i') : null, out = [];
+    scene.traverse(o => { if (o.isLight && !o.userData.filmFx && lt.test(o.type) && re.test(o.name) && (!pre || pre.test(pathOf(o, scene)))) out.push(o); });
+    return out;
+  }
+  const re = new RegExp(m, edit.flags ?? 'i'), pre = edit.path ? new RegExp(edit.path, 'i') : null, mok = materialFilter(edit), out = [];
+  scene.traverse(o => {
+    if (o.userData.filmFx) return;
+    if (mok) { if (o.isMesh && o.visible && [].concat(o.material).some(x => x && mok(x)) && re.test(o.name) && (!pre || pre.test(pathOf(o, scene)))) out.push(o); return; }
+    if (re.test(o.name) && (!pre || pre.test(pathOf(o, scene)))) out.push(o);
+  });
+  if (edit.minArea) { const sz = new THREE.Vector3(); for (let i = out.length - 1; i >= 0; i--) { new THREE.Box3().setFromObject(out[i]).getSize(sz); if (Math.max(sz.x * sz.y, sz.y * sz.z, sz.x * sz.z) < edit.minArea) out.splice(i, 1); } }
+  // Drop descendants of other matches (a group and its children both matching).
+  return out.filter(o => !out.some(p => p !== o && (() => { for (let q = o.parent; q; q = q.parent) if (q === p) return true; return false; })()));
+}
+
+// Optional material filters: materialName (regex), materialColor ('#a38c8c'),
+// materialType ('MeshStandardMaterial' or 'Basic'); all given must hold.
+function materialFilter(edit) {
+  if (!edit.materialName && !edit.materialColor && !edit.materialType) return null;
+  const re = edit.materialName ? new RegExp(edit.materialName, 'i') : null, col = edit.materialColor ? new THREE.Color(edit.materialColor).getHex() : null;
+  return m => (!re || re.test(m.name || '')) && (col === null || m.color?.getHex() === col) && (!edit.materialType || m.type.includes(edit.materialType));
+}
+// Window exteriors (painted backdrops behind the glazing) per room, found by
+// --list-screens-style probing: unlit canvas backdrops, or the HBHS emissive pane.
+const WINDOWS = {
+  home: { path: 'Window wall', materialType: 'Basic', minArea: 3 },
+  creative: { path: 'Artist daylight wall', materialType: 'Basic', minArea: 3 },
+  gym: { path: 'daylight and entry wall', materialType: 'Basic', minArea: 3 },
+  highschool: { path: 'Daylight window', materialType: 'Standard', minArea: 10 }
+};
+const PHYSICAL = new Set(['clearcoat', 'clearcoatRoughness', 'sheen', 'transmission', 'iridescence']);
+export function installEdits(shot) {
+  const undo = [], live = [], swapped = new Map();
+  const wrap = (m, field, factor) => {
+    // Instance accessor: everything that writes m[field] is multiplied by factor().
+    const own = Object.getOwnPropertyDescriptor(m, field); let raw = m[field];
+    Object.defineProperty(m, field, { configurable: true, enumerable: true, get: () => raw * factor(), set: v => { raw = v; } });
+    undo.push(() => { delete m[field]; if (own) Object.defineProperty(m, field, own); m[field] = raw; });
+  };
+  for (const [n, edit] of (shot.sceneEdits || []).entries()) {
+    const found = targets(edit);
+    if (!found.length) { console.warn(`[film-fx] sceneEdits[${n}] matched nothing: ${edit.match}`); continue; }
+    edit.__count = found.length;
+    for (const o of found) {
+      if (edit.hide) { const v = o.visible; o.visible = false; undo.push(() => { o.visible = v; }); }
+      if (edit.position) { const p = o.position.clone(), w = o.getWorldPosition(new THREE.Vector3()), to = w.clone().add(new THREE.Vector3(...edit.position)); if (o.parent) { o.parent.worldToLocal(w); o.parent.worldToLocal(to); } o.position.add(to.sub(w)); undo.push(() => o.position.copy(p)); }
+      if (edit.rotation) { const r = o.rotation.clone(); o.rotation.x += THREE.MathUtils.degToRad(edit.rotation[0] || 0); o.rotation.y += THREE.MathUtils.degToRad(edit.rotation[1] || 0); o.rotation.z += THREE.MathUtils.degToRad(edit.rotation[2] || 0); undo.push(() => o.rotation.copy(r)); }
+      if (o.isLight && edit.intensity !== undefined) {
+        // Multiplier on whatever the room/app writes (mode switches, time of day).
+        const cell = { value: sample(edit.intensity, 0) }; wrap(o, 'intensity', () => cell.value);
+        if (keyed(edit.intensity)) live.push(s => { cell.value = sample(edit.intensity, s); });
+      }
+      if (o.isLight && edit.color) { const c = o.color.clone(); o.color.set(edit.color); undo.push(() => o.color.copy(c)); }
+      if (Number.isFinite(edit.scale)) { const s = o.scale.clone(); o.scale.multiplyScalar(edit.scale); undo.push(() => o.scale.copy(s)); }
+      const mat = { ...(edit.material || {}) }; if (edit.opacity !== undefined) mat.opacityScale = edit.opacity;
+      if (!Object.keys(mat).length && !edit.radialFade) continue;
+      const mok = materialFilter(edit);
+      o.traverse(mesh => {
+        if (!mesh.material || mesh.userData.filmFx) return;
+        const list = [].concat(mesh.material), next = list.map(m => {
+          if (!m || (mok && !mok(m))) return m;
+          const needPhysical = Object.keys(mat).some(k => PHYSICAL.has(k)) && !m.isMeshPhysicalMaterial && m.isMeshStandardMaterial;
+          if (!(needPhysical || edit.clone)) return m;
+          if (!swapped.has(m)) {
+            let c; if (needPhysical) { c = new THREE.MeshPhysicalMaterial(); THREE.MeshStandardMaterial.prototype.copy.call(c, m); c.onBeforeCompile = m.onBeforeCompile; c.customProgramCacheKey = m.customProgramCacheKey; } else c = m.clone();
+            c.userData = { ...m.userData, filmFxCopy: true }; swapped.set(m, c);
+          }
+          return swapped.get(m);
+        });
+        if (next.some((m, i) => m !== list[i])) { const orig = mesh.material; mesh.material = Array.isArray(orig) ? next : next[0]; undo.push(() => { mesh.material = orig; }); }
+        // An opaque surface made fadeable joins the transparent pass; keep it
+        // drawn first there, as in the opaque pass (otherwise e.g. the shadow-
+        // catcher floor 2 mm above the grid can win the depth sort and hide it).
+        if (('opacityScale' in mat || 'opacity' in mat || edit.radialFade) && next.some(m => m && !m.transparent)) { const ro = mesh.renderOrder; mesh.renderOrder = Math.min(ro, -1); undo.push(() => { mesh.renderOrder = ro; }); }
+        for (const m of next) {
+          if (!m || (mok && !mok(m) && !m.userData.filmFxCopy) || m.userData.__filmFxEdited?.has(n)) continue;
+          (m.userData.__filmFxEdited ||= new Set()).add(n); undo.push(() => m.userData.__filmFxEdited?.delete(n));
+          for (const [k, v] of Object.entries(mat)) {
+            if (k === 'brightness') { if (m.isMeshBasicMaterial) { const c = m.color.clone(); m.color.multiplyScalar(Number(v)); undo.push(() => m.color.copy(c)); } else { const cell = { value: Number(v) }; wrap(m, 'emissiveIntensity', () => cell.value); } continue; }
+            if (k === 'colorScale') { if (m.color) { const c = m.color.clone(); m.color.multiplyScalar(Number(v)); undo.push(() => m.color.copy(c)); } continue; }
+            if (k === 'mapBlur') { if (m.map) mapBlur(m, Number(v), undo); continue; }
+            if (k === 'emissiveScale' || k === 'opacityScale') {
+              const field = k === 'emissiveScale' ? 'emissiveIntensity' : 'opacity', cell = { value: sample(v, 0) };
+              if (field === 'opacity' && !m.transparent) { m.transparent = true; m.needsUpdate = true; undo.push(() => { m.transparent = false; m.needsUpdate = true; }); }
+              wrap(m, field, () => cell.value); if (keyed(v)) live.push(s => { cell.value = sample(v, s); });
+              continue;
+            }
+            if (!(k in m)) continue;
+            if (m[k]?.isColor) { const c = m[k].clone(); m[k].set(v); undo.push(() => m[k].copy(c)); continue; }
+            const before = m[k]; m[k] = sample(v, 0); undo.push(() => { m[k] = before; });
+            if (k === 'opacity' && !m.transparent) { m.transparent = true; m.needsUpdate = true; undo.push(() => { m.transparent = false; m.needsUpdate = true; }); }
+            if (k === 'clearcoat' && m.clearcoat > 0) m.needsUpdate = true;
+            if (keyed(v)) live.push(s => { m[k] = sample(v, s); });
+          }
+          if (edit.radialFade) radialFade(m, o, edit.radialFade, undo);
+        }
+      });
+    }
+  }
+  return {
+    count: (shot.sceneEdits || []).map(e => e.__count || 0),
+    apply(seconds) { for (const f of live) f(seconds); },
+    restore() { for (const f of undo.reverse()) f(); for (const c of swapped.values()) c.dispose(); }
+  };
+}
+// Out-of-focus backdrop: sample the colour map at a fixed mip LOD (≈ 2^lod texels).
+function mapBlur(m, lod, undo) {
+  const t = m.map, prior = m.onBeforeCompile, key = m.customProgramCacheKey, filt = t.minFilter, gen = t.generateMipmaps;
+  t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; t.needsUpdate = true;
+  m.onBeforeCompile = (shader, renderer) => {
+    prior?.call(m, shader, renderer); shader.uniforms.fxMapLod = { value: lod };
+    shader.fragmentShader = 'uniform float fxMapLod;\n' + shader.fragmentShader.replace('#include <map_fragment>', '#ifdef USE_MAP\n vec4 sampledDiffuseColor = textureLod( map, vMapUv, fxMapLod );\n diffuseColor *= sampledDiffuseColor;\n#endif');
+  };
+  m.customProgramCacheKey = () => (key?.call(m) || '') + '|fx-blur-' + lod; m.needsUpdate = true;
+  undo.push(() => { m.onBeforeCompile = prior; m.customProgramCacheKey = key; m.needsUpdate = true; t.minFilter = filt; t.generateMipmaps = gen; t.needsUpdate = true; });
+}
+function radialFade(m, origin, [r0, r1], undo) {
+  const centre = origin.getWorldPosition(new THREE.Vector3()), prior = m.onBeforeCompile, key = m.customProgramCacheKey;
+  if (!m.transparent) { m.transparent = true; undo.push(() => { m.transparent = false; }); }
+  m.onBeforeCompile = (shader, renderer) => {
+    prior?.call(m, shader, renderer);
+    shader.uniforms.fxFadeCentre = { value: new THREE.Vector2(centre.x, centre.z) }; shader.uniforms.fxFade = { value: new THREE.Vector2(r0, r1) };
+    shader.vertexShader = 'varying vec3 fxWorld;\n' + shader.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n fxWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    shader.fragmentShader = 'varying vec3 fxWorld; uniform vec2 fxFadeCentre; uniform vec2 fxFade;\n' + shader.fragmentShader.replace('#include <opaque_fragment>', 'diffuseColor.a *= 1.0 - smoothstep(fxFade.x, fxFade.y, length(fxWorld.xz - fxFadeCentre));\n#include <opaque_fragment>');
+  };
+  m.customProgramCacheKey = () => (key?.call(m) || '') + `|fx-radial-${r0}-${r1}`; m.needsUpdate = true;
+  undo.push(() => { m.onBeforeCompile = prior; m.customProgramCacheKey = key; m.needsUpdate = true; });
+}
+
+// ---------- extra lights ----------
+const K5600 = '#fff0e0', K7000 = '#eef1ff';
+function productRig(o = {}) {
+  const s = Number(o.scale ?? 1);
+  return [
+    { type: 'rect', name: 'key', at: { az: 45, el: 35, dist: 3.2 }, width: 2, height: 1, color: K5600, intensity: 40 * s, ...o.key },
+    { type: 'spot', name: 'rimLeft', at: { az: 135, el: 28, dist: 3.6 }, angle: 22, penumbra: .55, color: K7000, intensity: 200 * s, ...o.rimLeft },
+    { type: 'spot', name: 'rimRight', at: { az: -135, el: 28, dist: 3.6 }, angle: 22, penumbra: .55, color: K7000, intensity: 200 * s, ...o.rimRight },
+    { type: 'pool', name: 'pool', radius: 1.5, strength: .3 * s, color: '#c9d6e6', ...o.pool },
+    { type: 'contact', name: 'contact', opacity: .7, ...o.contact }
+  ].filter(l => o[l.name] !== false);
+}
+function radial(stops) {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  for (const [at, col] of stops) grad.addColorStop(at, col); g.fillStyle = grad; g.fillRect(0, 0, 256, 256);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+export function installLights(shot) {
+  const specs = [].concat(shot.lights || []).flatMap(l => l.preset === 'productRig' ? productRig(l) : [l]);
+  if (!specs.length) return null;
+  const scene = sceneRoot(), desk = api.loadedModel, group = new THREE.Group(); group.name = 'Film lights'; group.userData.filmFx = true; scene.add(group);
+  desk.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(desk), centre = box.getCenter(new THREE.Vector3()), floorY = box.min.y;
+  // Desk front: from the main monitor glass toward the user (monitors face the seat).
+  const front = new THREE.Vector3(1, 0, 0); { const scr = []; desk.traverse(o => { if (o.name === 'monitor-screen') scr.push(o); }); if (!scr.length) scene.traverse(o => { if (o.name === 'monitor-screen' && /Accessory mount/.test(o.parent?.parent?.parent?.name || '') ) scr.push(o); }); if (scr[0]) { const n = new THREE.Vector3(0, 0, 1).transformDirection(scr[0].matrixWorld); n.y = 0; if (n.lengthSq() > .01) front.copy(n.normalize()); } }
+  const left = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), front).normalize();
+  const place = (l, fallbackY = centre.y) => {
+    if (l.position) return new THREE.Vector3(...l.position);
+    const { az = 0, el = 30, dist = 3 } = l.at || {}, a = THREE.MathUtils.degToRad(az), e = THREE.MathUtils.degToRad(el);
+    return centre.clone().addScaledVector(front, Math.cos(a) * Math.cos(e) * dist).addScaledVector(left, Math.sin(a) * Math.cos(e) * dist).add(new THREE.Vector3(0, Math.sin(e) * dist, 0));
+  };
+  const aim = l => l.target ? new THREE.Vector3(...l.target) : centre.clone();
+  const followers = [];
+  for (const l of specs) {
+    let light = null;
+    if (l.type === 'rect') { RectAreaLightUniformsLib.init(); light = new THREE.RectAreaLight(l.color || '#ffffff', l.intensity ?? 5, l.width ?? 2, l.height ?? 1); light.position.copy(place(l)); light.lookAt(aim(l)); }
+    else if (l.type === 'spot') { light = new THREE.SpotLight(l.color || '#ffffff', l.intensity ?? 20, l.distance ?? 0, THREE.MathUtils.degToRad(l.angle ?? 25), l.penumbra ?? .5, l.decay ?? 2); light.position.copy(place(l)); light.target.position.copy(aim(l)); group.add(light.target); }
+    else if (l.type === 'point') { light = new THREE.PointLight(l.color || '#ffffff', l.intensity ?? 5, l.distance ?? 0, l.decay ?? 2); light.position.copy(place(l)); }
+    else if (l.type === 'directional') { light = new THREE.DirectionalLight(l.color || '#ffffff', l.intensity ?? 1); light.position.copy(place(l)); light.target.position.copy(aim(l)); group.add(light.target); }
+    else if (l.type === 'pool' || l.type === 'contact') {
+      // Floor decals that follow the desk across the void: a soft light pool
+      // (additive) and a contact shadow (multiply-like darkening) under it.
+      const pool = l.type === 'pool', r = pool ? (l.radius ?? 1.5) : (l.radius ?? Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * .62);
+      const c = new THREE.Color(l.color || '#ffffff'), rgb = `${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)}`;
+      const map = pool ? radial([[0, `rgba(${rgb},1)`], [.45, `rgba(${rgb},.55)`], [1, `rgba(${rgb},0)`]]) : radial([[0, 'rgba(0,0,0,1)'], [.55, 'rgba(0,0,0,.75)'], [1, 'rgba(0,0,0,0)']]);
+      const mat = new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, toneMapped: false, opacity: pool ? (l.strength ?? .16) : (l.opacity ?? .7), blending: pool ? THREE.AdditiveBlending : THREE.NormalBlending, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: pool ? -2 : -4 });
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(r * 2, r * 2), mat); m.rotation.x = -Math.PI / 2; m.position.set(centre.x, floorY + (pool ? .002 : .003), centre.z); m.renderOrder = pool ? 1 : 2; m.name = 'Film ' + l.type; m.userData.filmFx = true;
+      if (l.aspect) m.scale.set(l.aspect, 1, 1);
+      group.add(m); followers.push(m); continue;
+    }
+    if (!light) { console.warn('[film-fx] unknown light type', l.type); continue; }
+    light.name = 'Film light · ' + (l.name || l.type); light.castShadow = !!l.castShadow; light.userData.filmFx = true; group.add(light);
+  }
+  return {
+    count: group.children.length,
+    apply() {
+      if (!followers.length) return;
+      // Follow the desk base across the void (ch 1 glide), not its lift.
+      const b = new THREE.Box3().setFromObject(desk), c = b.getCenter(new THREE.Vector3());
+      for (const m of followers) { m.position.x = c.x; m.position.z = c.z; }
+    },
+    restore() { group.traverse(o => { o.geometry?.dispose(); o.material?.map?.dispose(); o.material?.dispose?.(); o.dispose?.(); }); group.removeFromParent(); }
+  };
+}

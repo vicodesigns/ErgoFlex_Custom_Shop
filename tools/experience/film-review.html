@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>ErgoFlex · Film refinement review</title>
+<style>body{margin:0;background:#0b141c;color:#e5f5fc;font:15px system-ui}header{padding:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}button,select,a{padding:10px;background:#173141;color:#e5f5fc;border:1px solid #356577;border-radius:7px}iframe{width:100%;height:60vh;border:0}#stills{display:grid;grid-template-columns:repeat(3,1fr)}img{width:100%}pre{white-space:pre-wrap;padding:16px}a{display:inline-block;margin:8px}#status{padding:12px}progress{width:250px}</style>
+<header><b>Film refinement · HQ4</b><select id="chapter" aria-label="Chapter"></select><button id="load">Load chapter</button><button id="inspect">Contact sheet & clearance inventory</button><button id="bake">Bake chapter · 1080p</button><button id="batch">Bake changed chapters</button><button id="stop">Stop</button><progress id="progress" max="1" value="0"></progress></header>
+<p id="status" role="status">Preparing isolated studio…</p><div id="downloads"></div><iframe id="stage" title="Film review stage" allow="autoplay"></iframe><div id="stills"></div><pre id="report"></pre>
+<script type="module">
+import {renderBake} from '/experience/bake.mjs';import {bakeArchive} from '/experience/bake-archive.mjs';
+const $=id=>document.getElementById(id),ids=[1,2,3,4,5,6,7,8,9,10,11,12],shots=await Promise.all(ids.map(i=>fetch('/exports/cinematic-intro-20261102/shots/'+String(i).padStart(2,'0')+'.json').then(r=>r.json())));
+// This review origin is independent from the editor's :3000 origin.
+const seed=await fetch('/exports/cinematic-intro-20261030/post/college-seed.json').then(r=>r.json());for(const [k,v]of Object.entries(seed))localStorage.setItem(k,v);
+shots.forEach((s,i)=>$('chapter').add(new Option((i+1)+' · '+s.id,i)));
+$('stage').src='/?view=product&presentation=1&tour=1';
+const wait=()=>new Promise(r=>setTimeout(r,100));while(!$('stage').contentWindow.ErgoPresentation)await wait();
+const script=$('stage').contentDocument.createElement('script');script.type='module';script.src='/tools/experience/film-session.mjs';$('stage').contentDocument.body.append(script);while(!$('stage').contentWindow.FilmReview)await wait();
+const stage=$('stage').contentWindow.FilmReview;let busy=false,controller;
+const status=t=>$('status').textContent=t;
+function link(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.textContent='Download '+name;$('downloads').append(a);return a;}
+async function load(){const s=shots[+$('chapter').value];status('Loading '+s.id+'…');const inventory=await stage.prepare(s);$('report').textContent=JSON.stringify({screens:inventory.screens.map(({alias,id,position,widthM,heightM})=>({alias,id,position,widthM,heightM})),furniture:stage.audit()},null,2);status(s.id+' ready · '+s.seconds+' seconds');return s;}
+async function run(fn){if(busy)return;busy=true;controller=new AbortController();try{await fn();}catch(e){status(e.name==='AbortError'?'Stopped':e.message);console.error(e);}finally{busy=false;}}
+$('load').onclick=()=>run(load);
+$('inspect').onclick=()=>run(async()=>{const s=await load();$('stills').replaceChildren();for(const t of [0,.2,.4,.6,.8,1]){if(controller.signal.aborted)break;status('Reviewing '+s.id+' · '+Math.round(t*100)+'%');const img=new Image();img.src=await stage.still(t);img.alt=s.id+' at '+(t*s.seconds).toFixed(1)+' seconds';$('stills').append(img);}status('Contact sheet ready. Furniture inventory below.');});
+async function bake(i){$('chapter').value=i;const s=await load();const blob=await renderBake(stage,s,{signal:controller.signal,profile:{width:1920,height:1080,fps:30,bitrate:14000000},progress:p=>{$('progress').value=p;status('Baking '+s.id+' · '+Math.round(p*100)+'%');}});link(blob,String(i+1).padStart(2,'0')+'.webm');return {blob};}
+$('bake').onclick=()=>run(async()=>{await bake(+$('chapter').value);status('Chapter bake complete.');});
+$('batch').onclick=()=>run(async()=>{const selected=[0,2,7,8,9],records=[];for(const i of selected)records.push(await bake(i));const archive=await bakeArchive({shots:selected.map(i=>shots[i])},records);link(archive,'hq4-chapters.zip');status('All five revised chapters baked · download HQ4 archive.');});
+$('stop').onclick=()=>controller?.abort();await run(load);
+</script></html>
