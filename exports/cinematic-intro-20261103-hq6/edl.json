@@ -1,0 +1,134 @@
+{
+ "fps": 30,
+ "dissolve": 1.5,
+ "total": 188.0,
+ "chapters": [
+  {
+   "index": 1,
+   "id": "awaken",
+   "duration": 34,
+   "start": 0.0,
+   "end": 34.0
+  },
+  {
+   "index": 2,
+   "id": "rise",
+   "duration": 16,
+   "start": 32.5,
+   "end": 48.5
+  },
+  {
+   "index": 3,
+   "id": "create",
+   "duration": 18,
+   "start": 47.0,
+   "end": 65.0
+  },
+  {
+   "index": 4,
+   "id": "commons",
+   "duration": 14,
+   "start": 63.5,
+   "end": 77.5
+  },
+  {
+   "index": 5,
+   "id": "coast",
+   "duration": 11,
+   "start": 76.0,
+   "end": 87.0
+  },
+  {
+   "index": 6,
+   "id": "status",
+   "duration": 16,
+   "start": 85.5,
+   "end": 101.5
+  },
+  {
+   "index": 7,
+   "id": "oilers",
+   "duration": 11,
+   "start": 100.0,
+   "end": 111.0
+  },
+  {
+   "index": 8,
+   "id": "wellness",
+   "duration": 15,
+   "start": 109.5,
+   "end": 124.5
+  },
+  {
+   "index": 9,
+   "id": "awareness",
+   "duration": 12,
+   "start": 123.0,
+   "end": 135.0
+  },
+  {
+   "index": 10,
+   "id": "music",
+   "duration": 14,
+   "start": 133.5,
+   "end": 147.5
+  },
+  {
+   "index": 11,
+   "id": "media",
+   "duration": 14,
+   "start": 146.0,
+   "end": 160.0
+  },
+  {
+   "index": 12,
+   "id": "storage",
+   "duration": 17,
+   "start": 158.5,
+   "end": 175.5
+  },
+  {
+   "index": 13,
+   "id": "hero",
+   "duration": 14,
+   "start": 174.0,
+   "end": 188.0
+  }
+ ],
+ "beats": [
+  {
+   "at": 1.5,
+   "what": "awaken title A: Level up your every day."
+  },
+  {
+   "at": 16,
+   "what": "awaken title B: Meet your digital twin."
+  },
+  {
+   "at": 182.0,
+   "what": "end card: ErgoFlex wordmark"
+  },
+  {
+   "at": 188.0,
+   "what": "cut to black / onboarding"
+  }
+ ],
+ "notes": "Chapter i plays from start to end; consecutive chapters overlap by `dissolve` seconds. Desk-motion hits per chapter are listed in hits once renders lock. transitions: per-transition dissolve length, centred on the same dissolve centres.",
+ "transitions": [
+  [
+   0.8,
+   -0.35
+  ],
+  0.8,
+  0.8,
+  0.6,
+  0.6,
+  0.8,
+  0.8,
+  1.5,
+  1.5,
+  1.0,
+  0.8,
+  1.5
+ ]
+}

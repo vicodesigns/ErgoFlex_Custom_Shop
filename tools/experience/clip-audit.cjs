@@ -6,6 +6,7 @@
 //
 //   node tools/experience/clip-audit.cjs --cut cut.json --shots all --out report.json [--samples 13]
 //   node tools/experience/clip-audit.cjs --cut cut.json --shots 1 --dump     (print the item tree)
+//   ... --desk   print the desk box at every sample (travel distance, scale probes)
 //
 // Items are the named top-level groups of the room (Prop:*, Accessory:*,
 // desk objects) plus the desk model itself. Pairs are flagged when their
@@ -14,8 +15,8 @@
 // accessory legitimately rests on it. Boxes are conservative (axis aligned),
 // so a flag is a candidate to look at, not proof of a visible clip.
 const puppeteer=require('puppeteer-core'),fs=require('fs');
-const opts={cut:null,shots:'all',out:null,samples:13,tol:0.01,dump:false,server:'http://127.0.0.1:3017'};
-for(let i=2;i<process.argv.length;i++){const k=process.argv[i].replace(/^--/,'');if(k==='dump')opts.dump=true;else opts[k]=process.argv[++i];}
+const opts={cut:null,shots:'all',out:null,samples:13,tol:0.01,dump:false,desk:false,server:'http://127.0.0.1:3017'};
+for(let i=2;i<process.argv.length;i++){const k=process.argv[i].replace(/^--/,'');if(k==='dump')opts.dump=true;else if(k==='desk')opts.desk=true;else opts[k]=process.argv[++i];}
 if(!opts.cut){console.error('Usage: clip-audit.cjs --cut cut.json [--shots all|0,1,…] [--samples N] [--tol m] [--out report.json] [--dump]');process.exit(2);}
 const cut=JSON.parse(fs.readFileSync(opts.cut,'utf8'));
 const indices=opts.shots==='all'?cut.shots.map((_,i)=>i):String(opts.shots).split(',').map(Number);
@@ -73,6 +74,7 @@ function collect(){
           return new Function('return ('+src+')')()();
         },t,secs,fx,collect.toString()).catch(e=>{console.log('sample failed',e.message);return[];});
         if(opts.dump&&!first){first=items;console.log(`\n${shot.id} t=${t}`);for(const it of items)console.log(' ',it.kind.padEnd(6),it.name.slice(0,44).padEnd(45),it.min.map(v=>v.toFixed(2)).join(','),'→',it.max.map(v=>v.toFixed(2)).join(','));}
+        if(opts.desk){const d=items.find(i=>i.kind==='desk');if(d)console.log('  desk',(t*shot.seconds).toFixed(2)+'s','min',d.min.map(v=>v.toFixed(3)).join(','),'max',d.max.map(v=>v.toFixed(3)).join(','));}
         const tol=Number(opts.tol);
         for(let a=0;a<items.length;a++)for(let b=a+1;b<items.length;b++){
           const A=items[a],B=items[b];

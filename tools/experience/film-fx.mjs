@@ -19,6 +19,7 @@
 //   sceneGlobals:{environmentScale, exposure}  image-based ambient multiplier, renderer exposure
 //   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
 //   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
+//   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
 //   accessories:{add:['tablet-pc' | {id, role='desktop', x, y, z, rotation, tilt, roll, scale}], remove:[id]}
 //     catalog accessories (drafting-kit, artist-easel, keyboards…) are toggled
 //     on the prepared desk (and placed if x/z/… are given); library props
@@ -419,7 +420,7 @@ function clearDeskObjects(d) {
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals;
+  const wants = shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
@@ -442,6 +443,7 @@ export async function install(shot) {
   if (shot.ledSurfaces) { active.surfaces = api.ledSurfaces; for (const [k, v] of Object.entries(shot.ledSurfaces)) api.setLedSurface(k, v, false); }
   // ledGlow: the app's LED brightness slider as a fraction of full (the stage uses .35).
   if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
+  if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
   if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
   if (shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
   if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
@@ -453,6 +455,7 @@ export async function frame(t, chapterSeconds, { video = false } = {}) {
   active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds);
   if (active.screens.length) await updateScreens(active.screens, chapterSeconds);
   if (active.clocks.length) setClocks(active.clocks, active.shot.clock, active.shot, chapterSeconds);
+  active.status?.frame(chapterSeconds);
   if (active.led) {
     const led = active.led; await sampleLed(led, chapterSeconds, video);
     api.setLedColor(led.avg, false);
@@ -464,6 +467,7 @@ export async function frame(t, chapterSeconds, { video = false } = {}) {
   }
 }
 export function after() {
+  active?.status?.after();
   if (active?.led) { delete active.led.game.sample; active.led.game.active = false; }
 }
 export function clear() {
@@ -474,6 +478,7 @@ export function clear() {
   if (active.clocks.length) restoreClocks(active.clocks);
   if (active.globals) { active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; }
   if (active.surfaces) for (const [k, v] of Object.entries(active.surfaces)) api.setLedSurface(k, v, false);
+  active.status?.clear();
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
   clearDeskObjects(active.desk);

@@ -86,7 +86,7 @@ async function stage(browser){
 }
 
 // Shots that use film-effect fields load the helper into the stage iframe.
-const FX_FIELDS=['screens','ledMode','ledGlow','ledSurfaces','ledGain','sceneGlobals','clock','timeOfDay','accessories','sceneEdits','lights'];
+const FX_FIELDS=['screens','ledMode','ledGlow','ledSurfaces','ledGain','sceneGlobals','clock','timeOfDay','accessories','sceneEdits','lights','ledStatus','obstacles'];
 const usesFx=shot=>FX_FIELDS.some(k=>shot[k]!==undefined);
 async function loadFx(frame){await frame.evaluate(async()=>{if(!window.__filmFx)window.__filmFx=await import('/tools/experience/film-fx.mjs');});}
 async function grab(frame,t,seconds,quality=.96,chapter=seconds,video=false){
