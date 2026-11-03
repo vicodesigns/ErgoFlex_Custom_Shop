@@ -1,0 +1,35 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+WrapStyle: 0
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Title,DejaVu Sans,46,&H00F8F8F8,&H00FFFFFF,&H90000000,&H90000000,-1,0,0,0,100,100,0,0,1,2,1,1,90,90,110,1
+Style: Detail,DejaVu Sans,24,&H00DBE2E2,&H00FFFFFF,&H90000000,&H90000000,0,0,0,0,100,100,0,0,1,1,1,1,90,90,68,1
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.30,0:00:52.00,Title,,0,0,0,,{\fad(350,300)}Meet your digital twin.
+Dialogue: 0,0:00:00.30,0:00:52.00,Detail,,0,0,0,,{\fad(350,300)}Roll in. Rise up. Make it yours.
+Dialogue: 0,0:00:52.50,0:01:12.00,Title,,0,0,0,,{\fad(350,300)}Your height. Your rhythm.
+Dialogue: 0,0:00:52.50,0:01:12.00,Detail,,0,0,0,,{\fad(350,300)}From seated focus to a full 52.5-inch standing height.
+Dialogue: 0,0:01:12.50,0:01:36.00,Title,,0,0,0,,{\fad(350,300)}From focus to creation.
+Dialogue: 0,0:01:12.50,0:01:36.00,Detail,,0,0,0,,{\fad(350,300)}Draft at 25°. Create at 65°. Supplies find their shelf.
+Dialogue: 0,0:01:36.50,0:01:56.00,Title,,0,0,0,,{\fad(350,300)}A place for everyone.
+Dialogue: 0,0:01:36.50,0:01:56.00,Detail,,0,0,0,,{\fad(350,300)}Bring your workspace into the conversation.
+Dialogue: 0,0:01:56.50,0:02:12.00,Title,,0,0,0,,{\fad(350,300)}Ideas become stories.
+Dialogue: 0,0:01:56.50,0:02:12.00,Detail,,0,0,0,,{\fad(350,300)}A personal workstation inside a collaborative media lab.
+Dialogue: 0,0:02:12.50,0:02:28.00,Title,,0,0,0,,{\fad(350,300)}Make room for discovery.
+Dialogue: 0,0:02:12.50,0:02:28.00,Detail,,0,0,0,,{\fad(350,300)}A classroom for different ways of learning.
+Dialogue: 0,0:02:28.50,0:02:48.00,Title,,0,0,0,,{\fad(350,300)}Make movement part of your day.
+Dialogue: 0,0:02:28.50,0:02:48.00,Detail,,0,0,0,,{\fad(350,300)}Pause. Stand. Reset your working posture.
+Dialogue: 0,0:02:48.50,0:03:06.00,Title,,0,0,0,,{\fad(350,300)}Move with awareness.
+Dialogue: 0,0:02:48.50,0:03:06.00,Detail,,0,0,0,,{\fad(350,300)}Virtual proximity sweep · simulated obstacles.
+Dialogue: 0,0:03:06.50,0:03:24.00,Title,,0,0,0,,{\fad(350,300)}Feel the room come alive.
+Dialogue: 0,0:03:06.50,0:03:24.00,Detail,,0,0,0,,{\fad(350,300)}Reactive colour gives the room a different rhythm.
+Dialogue: 0,0:03:24.50,0:03:42.00,Title,,0,0,0,,{\fad(350,300)}Music. Media. In sync.
+Dialogue: 0,0:03:24.50,0:03:42.00,Detail,,0,0,0,,{\fad(350,300)}A curved cinema experience with picture-driven colour.
+Dialogue: 0,0:03:42.50,0:04:04.00,Title,,0,0,0,,{\fad(350,300)}Make room for what’s next.
+Dialogue: 0,0:03:42.50,0:04:04.00,Detail,,0,0,0,,{\fad(350,300)}Tilt to 65°. Park at the wall. Open the floor.
+Dialogue: 0,0:04:04.50,0:04:16.00,Title,,0,0,0,,{\fad(350,300)}Your space. Reimagined.
+Dialogue: 0,0:04:04.50,0:04:16.00,Detail,,0,0,0,,{\fad(350,300)}One desk. A day of possibilities.

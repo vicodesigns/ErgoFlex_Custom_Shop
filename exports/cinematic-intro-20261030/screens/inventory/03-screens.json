@@ -1,0 +1,86 @@
+{
+ "shot": "create",
+ "room": "creative",
+ "seconds": 18,
+ "screens": [
+  {
+   "id": "main/flat-monitor",
+   "alias": "main-landscape",
+   "label": "Cinematic demonstration desk · flat monitor",
+   "source": "scene-screens",
+   "path": "Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:shelf > Accessory:flat-monitor > Prop:ergoflex-flat-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    -1.287,
+    1.72,
+    -0.207
+   ],
+   "widthM": 1.0939,
+   "heightM": 0.6381,
+   "aspect": 1.7143,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 77,
+   "facingPitchDeg": 0,
+   "visibleSamples": "8/9",
+   "maxOnScreenPx": [
+    521,
+    539
+   ]
+  },
+  {
+   "id": "main/portrait-monitor",
+   "alias": "main-portrait",
+   "label": "Cinematic demonstration desk · portrait monitor",
+   "source": "scene-screens",
+   "path": "Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:shelf > Accessory:portrait-monitor > Prop:ergoflex-portrait-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    -1.371,
+    1.857,
+    0.761
+   ],
+   "widthM": 0.6381,
+   "heightM": 1.0939,
+   "aspect": 0.5833,
+   "orientation": "portrait",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 95,
+   "facingPitchDeg": 0,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    329,
+    457
+   ]
+  },
+  {
+   "id": "atelier-artist-slate-chalk/mesh-1",
+   "alias": null,
+   "label": "Prop:atelier-artist-slate-chalk",
+   "source": "scene-screens",
+   "path": "Room:creative > Atelier artist · Illustration tablet & stylus · Pale ash & brushed silver > Prop:atelier-artist-slate-chalk > mesh_1",
+   "mesh": "mesh_1",
+   "position": [
+    4.08,
+    1.436,
+    2.692
+   ],
+   "widthM": 0.3892,
+   "heightM": 0.2685,
+   "aspect": 1.4495,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": -178.3,
+   "facingPitchDeg": 72.8,
+   "visibleSamples": "0/9",
+   "maxOnScreenPx": [
+    0,
+    0
+   ]
+  }
+ ],
+ "clocks": []
+}

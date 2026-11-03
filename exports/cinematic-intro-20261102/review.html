@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ErgoFlex · Refined intro</title>
+<style>
+:root{color-scheme:dark;font:15px/1.5 system-ui;background:#070c12;color:#e6f1fa}body{margin:0}main{max-width:1280px;margin:auto;padding:28px 24px 64px}h1{font-size:30px;margin:4px 0}.eyebrow{color:#63d8f5;font-size:12px;letter-spacing:.16em;text-transform:uppercase}.sub{color:#9cb0c0}video{display:block;width:100%;aspect-ratio:16/9;background:#000;border:1px solid #243849;border-radius:12px}.bar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}button,a{font:inherit;border-radius:8px;border:1px solid #36546a;background:#102332;color:inherit;padding:10px 16px;text-decoration:none;cursor:pointer}button[aria-pressed=true],a.primary{border-color:#63d8f5;background:#12384a}button:focus-visible,a:focus-visible{outline:3px solid #63d8f5;outline-offset:3px}ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;list-style:none;padding:0}li button{text-align:left;width:100%;height:100%}li b,li small{display:block}li small{color:#9cb0c0}#error{color:#ffbe9d}details{margin-top:24px}summary{cursor:pointer}
+</style><main>
+<div class="eyebrow">ErgoFlex · Film review</div><h1>A little more room to move.</h1>
+<p class="sub">Refined intro · 2:53 · 12 chapters · 1080p / 30 fps · original score</p>
+<video id="film" controls playsinline preload="metadata" poster="final/poster.jpg" src="final/ErgoFlex-Intro-1080p-HQ4.mp4"></video>
+<p id="error" hidden>Video unavailable. Please check that the local server is running.</p>
+<div class="bar"><button data-src="final/ErgoFlex-Intro-1080p-HQ4.mp4" aria-pressed="true">Latest refinement · HQ4</button><button data-src="../cinematic-intro-20261030/final/ErgoFlex-Intro-1080p-hq3.mp4" aria-pressed="false">Compare previous · HQ3</button><a class="primary" href="final/ErgoFlex-Intro-1080p-HQ4.mp4" download>Download 1080p movie</a></div>
+<p class="sub" id="version" aria-live="polite">Viewing the latest refinement.</p>
+<h2>Jump to a chapter</h2><ol id="chapters"></ol>
+<details><summary>What changed in this pass</summary><ul><li>One full 360° opening turn, with wider framing for the rotation and final pose.</li><li>Artist display now reports the desk’s actual creative angle.</li><li>Wider proximity camera pass; gaming chair moved clear of the side table.</li><li>More readable furniture and warmer ambient light in movie night.</li><li>Subtle movement sounds mixed beneath the original score.</li></ul><p class="sub">This is a separate rendered review cut. The supplied GoDaddy build and your saved Director edits are preserved.</p></details>
+<script type="module">
+const film=document.querySelector('#film'),version=document.querySelector('#version');
+film.addEventListener('error',()=>document.querySelector('#error').hidden=false);
+film.addEventListener('loadeddata',()=>document.querySelector('#error').hidden=true);
+for(const b of document.querySelectorAll('[data-src]'))b.onclick=()=>{const t=film.currentTime,playing=!film.paused;film.src=b.dataset.src;film.addEventListener('loadedmetadata',()=>{film.currentTime=t;if(playing)film.play().catch(()=>{});},{once:true});document.querySelectorAll('[data-src]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));version.textContent=b.textContent;};
+const edl=await fetch('edl.json').then(r=>r.json()),titles=await fetch('final/titles.json').then(r=>r.json());
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+for(const c of edl.chapters){const t=titles.titles.find(t=>t.chapter===c.id),li=document.createElement('li'),b=document.createElement('button'),at=c.index===1?0:c.start+.75;b.innerHTML=`<small>${String(c.index).padStart(2,'0')} · ${fmt(at)}</small><b>${t?.title||c.id}</b><small>${t?.detail||''}</small>`;b.onclick=()=>{film.currentTime=at;film.play().catch(()=>{});};li.append(b);document.querySelector('#chapters').append(li);}
+</script></main></html>

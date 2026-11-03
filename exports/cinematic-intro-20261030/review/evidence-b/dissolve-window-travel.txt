@@ -1,0 +1,12 @@
+07 head1.5 travel 4.4 cm, rot 0.03 deg, dist to target 4.91 m
+07 tail1.5 travel 14.6 cm, rot 1.87 deg, dist to target 5.06 m
+08 head1.5 travel 10.7 cm, rot 0.23 deg, dist to target 3.69 m
+08 tail1.5 travel 19.4 cm, rot 0.05 deg, dist to target 8.11 m
+09 head1.5 travel 7.5 cm, rot 0.54 deg, dist to target 4.52 m
+09 tail1.5 travel 5.7 cm, rot 1.07 deg, dist to target 2.97 m
+10 head1.5 travel 7.6 cm, rot 0.21 deg, dist to target 4.76 m
+10 tail1.5 travel 5.2 cm, rot 0.20 deg, dist to target 3.26 m
+11 head1.5 travel 1.7 cm, rot 0.02 deg, dist to target 5.84 m
+11 tail1.5 travel 27.2 cm, rot 1.37 deg, dist to target 7.62 m
+12 head1.5 travel 15.6 cm, rot 0.97 deg, dist to target 9.11 m
+12 tail1.5 travel 12.2 cm, rot 0.35 deg, dist to target 12.91 m

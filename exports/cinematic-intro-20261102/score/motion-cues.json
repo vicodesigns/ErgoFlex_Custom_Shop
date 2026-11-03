@@ -1,0 +1,110 @@
+[
+  {
+    "chapter": "awaken",
+    "lane": "wheels",
+    "start": 1.4,
+    "duration": 2.6
+  },
+  {
+    "chapter": "awaken",
+    "lane": "lift",
+    "start": 8,
+    "duration": 2.9
+  },
+  {
+    "chapter": "awaken",
+    "lane": "wheels",
+    "start": 8,
+    "duration": 1.4
+  },
+  {
+    "chapter": "awaken",
+    "lane": "wheels",
+    "start": 12.4,
+    "duration": 5
+  },
+  {
+    "chapter": "awaken",
+    "lane": "lift",
+    "start": 15.5,
+    "duration": 1.93
+  },
+  {
+    "chapter": "awaken",
+    "lane": "tilt",
+    "start": 16.6,
+    "duration": 1.23
+  },
+  {
+    "chapter": "awaken",
+    "lane": "lift",
+    "start": 25,
+    "duration": 2.97
+  },
+  {
+    "chapter": "awaken",
+    "lane": "tilt",
+    "start": 27.1,
+    "duration": 1.05
+  },
+  {
+    "chapter": "rise",
+    "lane": "lift",
+    "start": 34.1,
+    "duration": 4.8
+  },
+  {
+    "chapter": "rise",
+    "lane": "lift",
+    "start": 39.9,
+    "duration": 3.2
+  },
+  {
+    "chapter": "create",
+    "lane": "tilt",
+    "start": 48.4,
+    "duration": 3
+  },
+  {
+    "chapter": "create",
+    "lane": "tilt",
+    "start": 54.9,
+    "duration": 5
+  },
+  {
+    "chapter": "commons",
+    "lane": "wheels",
+    "start": 64.7,
+    "duration": 8.6
+  },
+  {
+    "chapter": "commons",
+    "lane": "wheels",
+    "start": 73.3,
+    "duration": 2.4
+  },
+  {
+    "chapter": "wellness",
+    "lane": "lift",
+    "start": 98.0,
+    "duration": 5
+  },
+  {
+    "chapter": "awareness",
+    "lane": "wheels",
+    "start": 115.5,
+    "duration": 2.8
+  },
+  {
+    "chapter": "storage",
+    "lane": "tilt",
+    "start": 145.5,
+    "duration": 5
+  },
+  {
+    "chapter": "storage",
+    "lane": "wheels",
+    "start": 150.6,
+    "duration": 6.4
+  }
+]

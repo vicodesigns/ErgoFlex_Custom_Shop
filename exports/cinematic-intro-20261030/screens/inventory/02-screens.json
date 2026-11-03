@@ -1,0 +1,97 @@
+{
+ "shot": "rise",
+ "room": "home",
+ "seconds": 16,
+ "screens": [
+  {
+   "id": "main/wide-monitor",
+   "alias": "main-landscape",
+   "label": "Cinematic demonstration desk · wide monitor",
+   "source": "scene-screens",
+   "path": "Room:home > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:shelf > Accessory:wide-monitor > Prop:ergoflex-wide-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    -0.593,
+    1.704,
+    -0.082
+   ],
+   "widthM": 1.2912,
+   "heightM": 0.5395,
+   "aspect": 2.3934,
+   "orientation": "landscape",
+   "curved": true,
+   "sagM": 0.0719,
+   "facingYawDeg": 80,
+   "facingPitchDeg": -0.6,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    595,
+    270
+   ]
+  },
+  {
+   "id": "main/portrait-monitor",
+   "alias": "main-portrait",
+   "label": "Cinematic demonstration desk · portrait monitor",
+   "source": "scene-screens",
+   "path": "Room:home > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:shelf > Accessory:portrait-monitor > Prop:ergoflex-portrait-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    -0.606,
+    1.793,
+    0.904
+   ],
+   "widthM": 0.6381,
+   "heightM": 1.0939,
+   "aspect": 0.5833,
+   "orientation": "portrait",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 105,
+   "facingPitchDeg": 0,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    312,
+    603
+   ]
+  },
+  {
+   "id": "tablet-pc/mic-sur-p3-display-mic-sur-p3-display-0",
+   "alias": null,
+   "label": "Mic_Sur_P3_display_Mic_Sur_P3_display_0",
+   "source": "mesh",
+   "path": "Room:home > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:tablet-pc > Mic_Sur_P3_display_Mic_Sur_P3_display_0",
+   "mesh": "Mic_Sur_P3_display_Mic_Sur_P3_display_0",
+   "position": [
+    -0.833,
+    1.259,
+    0.573
+   ],
+   "widthM": 0.4044,
+   "heightM": 0.2653,
+   "aspect": 1.5247,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 90,
+   "facingPitchDeg": 20.7,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    199,
+    143
+   ]
+  }
+ ],
+ "clocks": [
+  {
+   "kind": "analog",
+   "name": "Wall clock",
+   "path": "Room:home > Storage and art wall > Wall clock",
+   "position": [
+    -1.207,
+    2.957,
+    -2.673
+   ]
+  }
+ ]
+}

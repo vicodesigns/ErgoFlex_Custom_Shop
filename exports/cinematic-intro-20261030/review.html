@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ErgoFlex intro — final cut review</title>
+<style>
+  @font-face{font-family:Poppins;src:url(../../app-reference/assets/google_fonts/Poppins-Regular.ttf)}
+  @font-face{font-family:Poppins;font-weight:600;src:url(../../app-reference/assets/google_fonts/Poppins-SemiBold.ttf)}
+  :root{color-scheme:dark;--blue:#1388ec}
+  body{margin:0;background:#07090d;color:#dfe5ec;font:15px/1.5 Poppins,system-ui,sans-serif}
+  main{max-width:1280px;margin:0 auto;padding:28px 24px 64px}
+  h1{font-weight:600;font-size:22px;margin:0 0 4px}
+  .sub{color:#8a96a3;margin:0 0 20px}
+  video{width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;display:block}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 22px}
+  button,a.btn{background:#141a22;color:#dfe5ec;border:1px solid #243040;border-radius:8px;padding:7px 12px;font:inherit;cursor:pointer;text-decoration:none}
+  button[aria-pressed=true]{border-color:var(--blue);color:#fff}
+  ol{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
+  li button{width:100%;text-align:left;padding:10px 12px}
+  li b{display:block;font-weight:600;color:#fff}
+  li span{color:#8a96a3;font-size:13px}
+  .eyebrow{color:var(--blue);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+  #error{color:#f0a;display:none}
+</style></head>
+<body><main>
+  <h1>ErgoFlex intro — final cut</h1>
+  <p class="sub" id="meta">Loading…</p>
+  <video id="v" controls playsinline preload="auto" poster="final/poster.jpg?r3" src="final/ErgoFlex-Intro-1080p-hq2.mp4"></video>
+  <p id="error">The final video isn't rendered yet.</p>
+  <p class="sub" id="status"></p>
+  <div class="bar">
+    <button data-src="final/ErgoFlex-Intro-1080p-hq2.mp4" aria-pressed="true">Round 3 · final (hq2)</button>
+    <button data-src="final/ErgoFlex-Intro-1080p.mp4" aria-pressed="false">Shipped 1080p (round 2)</button>
+    <button data-src="final/ErgoFlex-Intro-1080p-textless.mp4" aria-pressed="false">1080p · textless</button>
+    <button data-src="final/ErgoFlex-Intro-720p.mp4" aria-pressed="false">720p · titles</button>
+    <a class="btn" href="final/titles.json">titles.json</a>
+    <a class="btn" href="TREATMENT.md">Treatment</a>
+  </div>
+  <ol id="chapters"></ol>
+</main>
+<script type="module">
+const v=document.getElementById('v'),list=document.getElementById('chapters');
+v.addEventListener('error',()=>{document.getElementById('error').style.display='block';});
+v.addEventListener('loadeddata',()=>{document.getElementById('error').style.display='none';});
+// Until the final master exists, show the latest work-in-progress cut.
+const finalReady=(await fetch('final/ErgoFlex-Intro-1080p-hq2.mp4',{method:'HEAD',cache:'no-store'})).ok;
+if(!finalReady){v.src='final/ErgoFlex-Intro-1080p-hq2.mp4?r='+Date.now();v.removeAttribute('poster');document.getElementById('status').textContent='WORK IN PROGRESS — not the final master. Some chapters are still being revised.';}
+fetch('final/status.txt',{cache:'no-store'}).then(r=>r.ok?r.text():'').then(t=>{if(t)document.getElementById('status').textContent=t;});
+for(const b of document.querySelectorAll('[data-src]'))b.onclick=()=>{const t=v.currentTime,playing=!v.paused;v.src=b.dataset.src+'?r='+Date.now();v.currentTime=t;if(playing)v.play();document.querySelectorAll('[data-src]').forEach(x=>x.setAttribute('aria-pressed',x===b));};
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+const [edl,titles]=await Promise.all([fetch('edl.json',{cache:'no-store'}).then(r=>r.json()),fetch('final/titles.json',{cache:'no-store'}).then(r=>r.json()).catch(()=>null)]);
+document.getElementById('meta').textContent=`${fmt(edl.total)} · ${edl.chapters.length} chapters · 1080p30 · rendered on the local GPU, graded, original score`;
+for(const c of edl.chapters){
+  const t=titles?.titles.find(x=>x.chapter===c.id),at=c.index===1?0:c.start+edl.dissolve/2;
+  const li=document.createElement('li'),b=document.createElement('button');
+  b.innerHTML=`<span class="eyebrow">${String(c.index).padStart(2,'0')} · ${t?.eyebrow||c.id}</span><b>${t?.title||c.id}</b><span>${fmt(at)} · ${t?.detail||''}</span>`;
+  b.onclick=()=>{v.currentTime=at;v.play();};li.append(b);list.append(li);
+}
+</script>
+</body></html>

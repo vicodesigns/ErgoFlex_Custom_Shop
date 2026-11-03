@@ -1,0 +1,60 @@
+{
+ "shot": "wellness",
+ "room": "gym",
+ "seconds": 15,
+ "screens": [
+  {
+   "id": "main/dell-u2724d",
+   "alias": "main-landscape",
+   "label": "Cinematic demonstration desk · dell u2724d",
+   "source": "scene-screens",
+   "path": "Room:gym > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:shelf > Accessory:dell-u2724d > monitor-panel > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    -1.08,
+    1.761,
+    0.617
+   ],
+   "widthM": 1.1449,
+   "heightM": 0.644,
+   "aspect": 1.7778,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 90,
+   "facingPitchDeg": 0,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    354,
+    244
+   ]
+  },
+  {
+   "id": "tablet-pc/mic-sur-p3-display-mic-sur-p3-display-0",
+   "alias": null,
+   "label": "Mic_Sur_P3_display_Mic_Sur_P3_display_0",
+   "source": "mesh",
+   "path": "Room:gym > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:tablet-pc > Mic_Sur_P3_display_Mic_Sur_P3_display_0",
+   "mesh": "Mic_Sur_P3_display_Mic_Sur_P3_display_0",
+   "position": [
+    -1.223,
+    1.259,
+    0.902
+   ],
+   "widthM": 0.4044,
+   "heightM": 0.2653,
+   "aspect": 1.5247,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 90,
+   "facingPitchDeg": 20.7,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    127,
+    82
+   ]
+  }
+ ],
+ "clocks": []
+}

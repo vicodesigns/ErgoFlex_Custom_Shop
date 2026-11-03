@@ -1,0 +1,34 @@
+{
+ "shot": "commons",
+ "room": "library",
+ "seconds": 14,
+ "screens": [
+  {
+   "id": "main/wide-monitor",
+   "alias": "main-landscape",
+   "label": "Cinematic demonstration desk · wide monitor",
+   "source": "scene-screens",
+   "path": "Room:library > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:shelf > Accessory:wide-monitor > Prop:ergoflex-wide-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    -2.89,
+    1.673,
+    -12.115
+   ],
+   "widthM": 1.2898,
+   "heightM": 0.5372,
+   "aspect": 2.4011,
+   "orientation": "landscape",
+   "curved": true,
+   "sagM": 0.072,
+   "facingYawDeg": 0,
+   "facingPitchDeg": 0,
+   "visibleSamples": "8/9",
+   "maxOnScreenPx": [
+    447,
+    174
+   ]
+  }
+ ],
+ "clocks": []
+}

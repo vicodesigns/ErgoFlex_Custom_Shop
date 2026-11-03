@@ -1,0 +1,190 @@
+{
+ "shot": "coast",
+ "room": "occmedialab",
+ "seconds": 11,
+ "screens": [
+  {
+   "id": "main/flat-monitor",
+   "alias": "main-landscape",
+   "label": "Cinematic demonstration desk · flat monitor",
+   "source": "scene-screens",
+   "path": "Room:occmedialab > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:shelf > Accessory:flat-monitor > Prop:ergoflex-flat-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    -2.816,
+    1.72,
+    5.012
+   ],
+   "widthM": 1.0939,
+   "heightM": 0.6381,
+   "aspect": 1.7143,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 90,
+   "facingPitchDeg": 0,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    263,
+    221
+   ]
+  },
+  {
+   "id": "ergoflex-wide-monitor/monitor-screen",
+   "alias": null,
+   "label": "Film editing 1 · wide monitor",
+   "source": "scene-screens",
+   "path": "Room:occmedialab > Film editing 1 · ErgoFlex desk > Desk dressing:shelf > Accessory:wide-monitor > Prop:ergoflex-wide-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    -2.778,
+    1.623,
+    -0.322
+   ],
+   "widthM": 1.2912,
+   "heightM": 0.5395,
+   "aspect": 2.3934,
+   "orientation": "landscape",
+   "curved": true,
+   "sagM": 0.0719,
+   "facingYawDeg": 80,
+   "facingPitchDeg": -0.6,
+   "visibleSamples": "5/9",
+   "maxOnScreenPx": [
+    649,
+    274
+   ]
+  },
+  {
+   "id": "ergoflex-portrait-monitor/monitor-screen",
+   "alias": null,
+   "label": "Film editing 1 · portrait monitor",
+   "source": "scene-screens",
+   "path": "Room:occmedialab > Film editing 1 · ErgoFlex desk > Desk dressing:shelf > Accessory:portrait-monitor > Prop:ergoflex-portrait-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    -2.791,
+    1.712,
+    0.664
+   ],
+   "widthM": 0.6381,
+   "heightM": 1.0939,
+   "aspect": 0.5833,
+   "orientation": "portrait",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 105,
+   "facingPitchDeg": 0,
+   "visibleSamples": "6/9",
+   "maxOnScreenPx": [
+    355,
+    470
+   ]
+  },
+  {
+   "id": "ergoflex-flat-monitor/monitor-screen",
+   "alias": null,
+   "label": "Open access editing 4 · flat monitor",
+   "source": "scene-screens",
+   "path": "Room:occmedialab > Open access editing 4 · ErgoFlex desk > Desk dressing:shelf > Accessory:flat-monitor > Prop:ergoflex-flat-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    3.211,
+    1.639,
+    0.028
+   ],
+   "widthM": 1.0939,
+   "heightM": 0.6381,
+   "aspect": 1.7143,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 90,
+   "facingPitchDeg": 0,
+   "visibleSamples": "0/9",
+   "maxOnScreenPx": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "ergoflex-wide-monitor/monitor-screen-2",
+   "alias": null,
+   "label": "Colour grading 5 · wide monitor",
+   "source": "scene-screens",
+   "path": "Room:occmedialab > Colour grading 5 · ErgoFlex desk > Desk dressing:shelf > Accessory:wide-monitor > Prop:ergoflex-wide-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    3.257,
+    1.623,
+    -5.301
+   ],
+   "widthM": 1.2912,
+   "heightM": 0.5395,
+   "aspect": 2.3934,
+   "orientation": "landscape",
+   "curved": true,
+   "sagM": 0.0719,
+   "facingYawDeg": 80,
+   "facingPitchDeg": -0.6,
+   "visibleSamples": "0/9",
+   "maxOnScreenPx": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "ergoflex-portrait-monitor/monitor-screen-2",
+   "alias": null,
+   "label": "Colour grading 5 · portrait monitor",
+   "source": "scene-screens",
+   "path": "Room:occmedialab > Colour grading 5 · ErgoFlex desk > Desk dressing:shelf > Accessory:portrait-monitor > Prop:ergoflex-portrait-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    3.243,
+    1.712,
+    -4.315
+   ],
+   "widthM": 0.6381,
+   "heightM": 1.0939,
+   "aspect": 0.5833,
+   "orientation": "portrait",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 105,
+   "facingPitchDeg": 0,
+   "visibleSamples": "0/9",
+   "maxOnScreenPx": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "student-reel-screening-display/student-reel-screening-display",
+   "alias": null,
+   "label": "Student reel screening display",
+   "source": "scene-screens",
+   "path": "Room:occmedialab > OCC Multimedia Art Lab back wall > Student reel screening display > Mesh",
+   "mesh": "",
+   "position": [
+    -6.366,
+    2.685,
+    0
+   ],
+   "widthM": 5.5398,
+   "heightM": 2.1876,
+   "aspect": 2.5324,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 90,
+   "facingPitchDeg": 0,
+   "visibleSamples": "8/9",
+   "maxOnScreenPx": [
+    3848,
+    1285
+   ]
+  }
+ ],
+ "clocks": []
+}

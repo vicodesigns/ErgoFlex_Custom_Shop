@@ -1,0 +1,126 @@
+{
+ "fps": 30,
+ "dissolve": 1.5,
+ "total": 173.5,
+ "chapters": [
+  {
+   "index": 1,
+   "id": "awaken",
+   "duration": 34,
+   "start": 0,
+   "end": 34
+  },
+  {
+   "index": 2,
+   "id": "rise",
+   "duration": 16,
+   "start": 32.5,
+   "end": 48.5
+  },
+  {
+   "index": 3,
+   "id": "create",
+   "duration": 18,
+   "start": 47.0,
+   "end": 65.0
+  },
+  {
+   "index": 4,
+   "id": "commons",
+   "duration": 14,
+   "start": 63.5,
+   "end": 77.5
+  },
+  {
+   "index": 5,
+   "id": "coast",
+   "duration": 11,
+   "start": 76.0,
+   "end": 87.0
+  },
+  {
+   "index": 6,
+   "id": "oilers",
+   "duration": 11,
+   "start": 85.5,
+   "end": 96.5
+  },
+  {
+   "index": 7,
+   "id": "wellness",
+   "duration": 15,
+   "start": 95.0,
+   "end": 110.0
+  },
+  {
+   "index": 8,
+   "id": "awareness",
+   "duration": 12,
+   "start": 108.5,
+   "end": 120.5
+  },
+  {
+   "index": 9,
+   "id": "music",
+   "duration": 14,
+   "start": 119.0,
+   "end": 133.0
+  },
+  {
+   "index": 10,
+   "id": "media",
+   "duration": 14,
+   "start": 131.5,
+   "end": 145.5
+  },
+  {
+   "index": 11,
+   "id": "storage",
+   "duration": 17,
+   "start": 144.0,
+   "end": 161.0
+  },
+  {
+   "index": 12,
+   "id": "hero",
+   "duration": 14,
+   "start": 159.5,
+   "end": 173.5
+  }
+ ],
+ "beats": [
+  {
+   "at": 1.5,
+   "what": "awaken title A: Level up your every day."
+  },
+  {
+   "at": 16,
+   "what": "awaken title B: Meet your digital twin."
+  },
+  {
+   "at": 167.5,
+   "what": "end card: ErgoFlex wordmark"
+  },
+  {
+   "at": 173.5,
+   "what": "cut to black / onboarding"
+  }
+ ],
+ "notes": "Chapter i plays from start to end; consecutive chapters overlap by `dissolve` seconds. Desk-motion hits per chapter are listed in hits once renders lock. transitions: per-transition dissolve length, centred on the same dissolve centres.",
+ "transitions": [
+  [
+   0.8,
+   -0.35
+  ],
+  0.8,
+  0.8,
+  0.6,
+  0.6,
+  0.8,
+  1.5,
+  1.5,
+  1.0,
+  0.8,
+  1.5
+ ]
+}

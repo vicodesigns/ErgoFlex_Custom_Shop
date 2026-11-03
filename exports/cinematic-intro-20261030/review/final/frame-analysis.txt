@@ -1,0 +1,7 @@
+Whole-film per-frame analysis (64x36 area-downscaled decode of ErgoFlex-Intro-WIP.mp4, 5205 frames)
+- Near-black frames (mean luma < 6): 0.00-0.37 s (fade from black) and 168.30-173.47 s (end card: mostly black frame, desk + wordmark only). No mid-film black frames.
+- Fully static runs >= 5 frames: one, 169.37 s for 2.83 s (end-card hold before fade-out at 172.1). No other frozen stretches.
+- Largest frame-to-frame jumps: all are camera motion or the ch9 beat cuts (121.37, 122.93, 127.63, 129.20) where the room light follows the montage; room-light changes ramp over 4-6 frames (eased, not 1-frame pops).
+- ch10 fastest room change: 140.10 s, left wall luma 15 -> 63 over ~6 frames (0.2 s) on a movie cut.
+- ch3 one-frame prop swap at 57.53 s (see ch3-pop-57.50-57.53-pair.jpg, ch3-swap-56.9-57.7-frames.jpg) - not visible in the luma stats because the frame mean barely changes.
+Audio: integrated -16.0 LUFS, true peak -1.8 dBFS, LRA 5.6 LU; only silence is the final 0.8 s fade.

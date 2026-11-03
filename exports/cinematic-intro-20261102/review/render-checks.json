@@ -1,0 +1,98 @@
+[
+  {
+    "chapter": 1,
+    "reused": false,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 34.0
+  },
+  {
+    "chapter": 2,
+    "reused": true,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 16.0
+  },
+  {
+    "chapter": 3,
+    "reused": false,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 18.0
+  },
+  {
+    "chapter": 4,
+    "reused": true,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 14.0
+  },
+  {
+    "chapter": 5,
+    "reused": true,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 11.0
+  },
+  {
+    "chapter": 6,
+    "reused": true,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 11.0
+  },
+  {
+    "chapter": 7,
+    "reused": true,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 15.0
+  },
+  {
+    "chapter": 8,
+    "reused": false,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 12.0
+  },
+  {
+    "chapter": 9,
+    "reused": false,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 14.0
+  },
+  {
+    "chapter": 10,
+    "reused": false,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 14.0
+  },
+  {
+    "chapter": 11,
+    "reused": true,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 17.0
+  },
+  {
+    "chapter": 12,
+    "reused": true,
+    "width": 1920,
+    "height": 1080,
+    "r_frame_rate": "30/1",
+    "duration": 14.0
+  }
+]

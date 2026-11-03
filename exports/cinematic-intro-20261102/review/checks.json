@@ -1,0 +1,16 @@
+{
+  "chapters": 12,
+  "schedules": "all fit without same-lane overlap",
+  "firstTurn": {
+    "start": 12.4,
+    "end": 17.4,
+    "degrees": 360
+  },
+  "audio": {
+    "integratedLUFS": -16.05,
+    "truePeakDBTP": -1.9
+  },
+  "notes": "Visual verification is recorded separately; these checks cover authored motion and finite camera positions.",
+  "baselineSHA256": "5a654f9270f1dd0a6732dbab66155a9bd374033f4a47934200fc133e81434f46",
+  "referenceMovieUnchanged": true
+}

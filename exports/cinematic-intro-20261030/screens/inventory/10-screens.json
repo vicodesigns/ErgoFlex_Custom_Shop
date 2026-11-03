@@ -1,0 +1,45 @@
+{
+ "shot": "media",
+ "room": "home",
+ "seconds": 14,
+ "screens": [
+  {
+   "id": "media",
+   "alias": "main-landscape",
+   "label": "Stage media screen (curved)",
+   "source": "stage-media",
+   "path": "Cinematic effects > Curved media screen > Group > Mesh",
+   "mesh": "",
+   "position": [
+    -0.654,
+    1.694,
+    -0.094
+   ],
+   "widthM": 1.3101,
+   "heightM": 0.5606,
+   "aspect": 2.3371,
+   "orientation": "landscape",
+   "curved": true,
+   "sagM": 0.0861,
+   "facingYawDeg": 90,
+   "facingPitchDeg": 0,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    894,
+    493
+   ]
+  }
+ ],
+ "clocks": [
+  {
+   "kind": "analog",
+   "name": "Wall clock",
+   "path": "Room:home > Storage and art wall > Wall clock",
+   "position": [
+    -1.207,
+    2.957,
+    -2.673
+   ]
+  }
+ ]
+}

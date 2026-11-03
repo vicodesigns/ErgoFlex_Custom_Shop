@@ -1,0 +1,164 @@
+{
+ "shot": "music",
+ "room": "gaming",
+ "seconds": 14,
+ "screens": [
+  {
+   "id": "main/wide-monitor",
+   "alias": "main-landscape",
+   "label": "Cinematic demonstration desk · wide monitor",
+   "source": "scene-screens",
+   "path": "Room:gaming > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:shelf > Accessory:wide-monitor > Prop:ergoflex-wide-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    -0.598,
+    1.729,
+    0.381
+   ],
+   "widthM": 1.4961,
+   "heightM": 0.6231,
+   "aspect": 2.4011,
+   "orientation": "landscape",
+   "curved": true,
+   "sagM": 0.0835,
+   "facingYawDeg": 90,
+   "facingPitchDeg": 0,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    586,
+    415
+   ]
+  },
+  {
+   "id": "atelier-gaming-handheld-cyber/gaming-handheld-display",
+   "alias": null,
+   "label": "Prop:atelier-gaming-handheld-cyber",
+   "source": "scene-screens",
+   "path": "Room:gaming > Atelier gaming · Handheld & display dock · Carbon · cyan & magenta > Prop:atelier-gaming-handheld-cyber > Gaming_handheld_display",
+   "mesh": "Gaming_handheld_display",
+   "position": [
+    2.696,
+    0.694,
+    0.541
+   ],
+   "widthM": 0.2489,
+   "heightM": 0.1328,
+   "aspect": 1.8748,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 165,
+   "facingPitchDeg": 12.6,
+   "visibleSamples": "0/9",
+   "maxOnScreenPx": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "samsung-neo-tv/gaming-tv-display",
+   "alias": null,
+   "label": "Prop:samsung-neo-tv",
+   "source": "scene-screens",
+   "path": "Room:gaming > Prop:samsung-neo-tv > Gaming TV display",
+   "mesh": "Gaming TV display",
+   "position": [
+    2.414,
+    1.708,
+    -2.458
+   ],
+   "widthM": 1.6505,
+   "heightM": 0.9278,
+   "aspect": 1.7789,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 0,
+   "facingPitchDeg": 0,
+   "visibleSamples": "0/9",
+   "maxOnScreenPx": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "atelier-gaming-streamdeck-cyber/gaming-macro-key-display",
+   "alias": null,
+   "label": "Prop:atelier-gaming-streamdeck-cyber",
+   "source": "scene-screens",
+   "path": "Room:gaming > Prop:atelier-gaming-streamdeck-cyber > Gaming_macro_key_display",
+   "mesh": "Gaming_macro_key_display",
+   "position": [
+    -1.94,
+    1.026,
+    -1.856
+   ],
+   "widthM": 0.1841,
+   "heightM": 0.1177,
+   "aspect": 1.5641,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 90,
+   "facingPitchDeg": -68.2,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    59,
+    13
+   ]
+  },
+  {
+   "id": "arcade-orbit-runner/tilted-game-screen",
+   "alias": null,
+   "label": "Tilted_game_screen",
+   "source": "mesh",
+   "path": "Room:gaming > Prop:arcade-orbit-runner > Orbit_Runner_arcade_cabinet_1 > Tilted_game_screen",
+   "mesh": "Tilted_game_screen",
+   "position": [
+    -0.151,
+    1.999,
+    -1.436
+   ],
+   "widthM": 0.8675,
+   "heightM": 0.6864,
+   "aspect": 1.2637,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 0,
+   "facingPitchDeg": 8.6,
+   "visibleSamples": "9/9",
+   "maxOnScreenPx": [
+    431,
+    325
+   ]
+  },
+  {
+   "id": "arcade-orbit-runner/lit-marquee",
+   "alias": null,
+   "label": "Lit_marquee",
+   "source": "mesh",
+   "path": "Room:gaming > Prop:arcade-orbit-runner > Orbit_Runner_arcade_cabinet_1 > Lit_marquee",
+   "mesh": "Lit_marquee",
+   "position": [
+    -0.151,
+    2.61,
+    -1.361
+   ],
+   "widthM": 0.9203,
+   "heightM": 0.2414,
+   "aspect": 3.8125,
+   "orientation": "landscape",
+   "curved": false,
+   "sagM": 0,
+   "facingYawDeg": 0,
+   "facingPitchDeg": 0,
+   "visibleSamples": "4/9",
+   "maxOnScreenPx": [
+    349,
+    150
+   ]
+  }
+ ],
+ "clocks": []
+}

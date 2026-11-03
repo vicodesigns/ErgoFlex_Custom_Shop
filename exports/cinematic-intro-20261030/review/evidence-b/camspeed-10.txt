@@ -1,0 +1,31 @@
+T 14 key time range 0.0 14.0 n 56
+  0.0 pos 0.017 m/s  rot  0.05 deg/s fov 0.09/s  p=[3.   1.92 2.15] fov=40.0
+  0.5 pos 0.050 m/s  rot  0.14 deg/s fov 0.27/s  p=[2.99 1.92 2.15] fov=40.0
+  1.0 pos 0.084 m/s  rot  0.23 deg/s fov 0.45/s  p=[2.97 1.91 2.14] fov=39.8
+  1.5 pos 0.118 m/s  rot  0.33 deg/s fov 0.62/s  p=[2.93 1.9  2.12] fov=39.6
+  2.0 pos 0.153 m/s  rot  0.43 deg/s fov 0.79/s  p=[2.88 1.88 2.1 ] fov=39.3
+  2.5 pos 0.187 m/s  rot  0.54 deg/s fov 0.97/s  p=[2.81 1.86 2.08] fov=38.9
+  3.0 pos 0.218 m/s  rot  0.67 deg/s fov 1.14/s  p=[2.73 1.84 2.05] fov=38.4
+  3.5 pos 0.226 m/s  rot  0.76 deg/s fov 1.22/s  p=[2.63 1.81 2.01] fov=37.8
+  4.0 pos 0.223 m/s  rot  0.88 deg/s fov 1.28/s  p=[2.53 1.78 1.97] fov=37.2
+  4.5 pos 0.222 m/s  rot  1.09 deg/s fov 1.37/s  p=[2.43 1.75 1.92] fov=36.6
+  5.0 pos 0.234 m/s  rot  1.47 deg/s fov 1.57/s  p=[2.34 1.72 1.87] fov=35.9
+  5.5 pos 0.233 m/s  rot  1.78 deg/s fov 1.65/s  p=[2.24 1.68 1.81] fov=35.1
+  6.0 pos 0.227 m/s  rot  1.99 deg/s fov 1.66/s  p=[2.15 1.65 1.74] fov=34.3
+  6.5 pos 0.197 m/s  rot  1.89 deg/s fov 1.46/s  p=[2.07 1.62 1.67] fov=33.5
+  7.0 pos 0.163 m/s  rot  1.64 deg/s fov 1.21/s  p=[1.99 1.59 1.61] fov=32.7
+  7.5 pos 0.128 m/s  rot  1.32 deg/s fov 0.94/s  p=[1.93 1.57 1.56] fov=32.1
+  8.0 pos 0.094 m/s  rot  0.98 deg/s fov 0.68/s  p=[1.89 1.55 1.52] fov=31.6
+  8.5 pos 0.059 m/s  rot  0.61 deg/s fov 0.43/s  p=[1.85 1.54 1.5 ] fov=31.3
+  9.0 pos 0.024 m/s  rot  0.25 deg/s fov 0.17/s  p=[1.83 1.53 1.48] fov=31.1
+  9.5 pos 0.002 m/s  rot  0.02 deg/s fov 0.01/s  p=[1.82 1.53 1.47] fov=31.0
+ 10.0 pos 0.012 m/s  rot  0.04 deg/s fov 0.07/s  p=[1.82 1.53 1.47] fov=31.0
+ 10.5 pos 0.035 m/s  rot  0.13 deg/s fov 0.21/s  p=[1.82 1.53 1.47] fov=31.0
+ 11.0 pos 0.057 m/s  rot  0.21 deg/s fov 0.34/s  p=[1.8  1.53 1.46] fov=30.9
+ 11.5 pos 0.065 m/s  rot  0.24 deg/s fov 0.38/s  p=[1.78 1.52 1.44] fov=30.7
+ 12.0 pos 0.065 m/s  rot  0.25 deg/s fov 0.38/s  p=[1.75 1.52 1.42] fov=30.5
+ 12.5 pos 0.057 m/s  rot  0.22 deg/s fov 0.34/s  p=[1.72 1.51 1.41] fov=30.3
+ 13.0 pos 0.035 m/s  rot  0.14 deg/s fov 0.21/s  p=[1.7  1.5  1.39] fov=30.1
+ 13.5 pos 0.012 m/s  rot  0.05 deg/s fov 0.07/s  p=[1.68 1.5  1.38] fov=30.0
+max |accel| m/s2 0.481 at 6.4
+min cam y 1.5 max 1.92

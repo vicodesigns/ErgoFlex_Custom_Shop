@@ -1,0 +1,34 @@
+{
+ "shot": "awareness",
+ "room": "product",
+ "seconds": 12,
+ "screens": [
+  {
+   "id": "main/wide-monitor",
+   "alias": "main-landscape",
+   "label": "Product desk · wide monitor",
+   "source": "scene-screens",
+   "path": "Accessory mount:shelf > Accessory:wide-monitor > Prop:ergoflex-wide-monitor > monitor-screen",
+   "mesh": "monitor-screen",
+   "position": [
+    0.248,
+    1.734,
+    0.019
+   ],
+   "widthM": 1.4961,
+   "heightM": 0.6231,
+   "aspect": 2.4011,
+   "orientation": "landscape",
+   "curved": true,
+   "sagM": 0.0835,
+   "facingYawDeg": 90,
+   "facingPitchDeg": 0,
+   "visibleSamples": "0/9",
+   "maxOnScreenPx": [
+    0,
+    0
+   ]
+  }
+ ],
+ "clocks": []
+}
