@@ -36,6 +36,11 @@ if (header) {
     if (originalStudio) { originalStudio.hidden = true; header.append(originalStudio); }
     const actions = header.querySelector('.portal-actions');
     actions.append(appearance());
+    if (!window.__ERGO_PRESENTATION__) {
+        const intro = document.createElement('a'); intro.className = 'portal-action';
+        intro.href = './experience/'; intro.textContent = 'Watch intro';
+        intro.setAttribute('aria-label', 'Watch the ErgoFlex cinematic intro'); actions.append(intro);
+    }
     for (const [node, text] of [[share, 'Share'], [cart, 'Build list']]) {
         if (!node) continue;
         node.className = 'portal-action';

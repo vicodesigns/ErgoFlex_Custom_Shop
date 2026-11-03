@@ -1,41 +1,45 @@
 import { SceneScreens, SCENE_SCREENS_KEY } from './scene-screens.mjs?v=environment-expert-20261014';
+import { measureRoute, routePose } from './experience/timing.mjs';
+import { ItemGizmo, cloneItem, nodeSnapshot, topLevelItems } from './scene-item-editing.mjs?v=item-gumball-clipboard-20261016';
 import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261008';
 import { normalizeCustomLook, normalizeCustomPalette, importCustomLooks, CUSTOM_LOOKS_KEY, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
-import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=humboldt-commons-20261015';
-import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=humboldt-commons-20261015';
+import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=commons-group-work-20261016';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=commons-home-comfort-20261024';
 import { poseIsClear } from './room-groove.mjs?v=humboldt-commons-20261015';
-import { SceneDesks } from './scene-desks.mjs?v=mobile-room-routines-20261014';
-import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=desk-auto-stow-20261014';
+import { SceneDesks } from './scene-desks.mjs?v=item-gumball-clipboard-20261016';
+import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=item-gumball-clipboard-20261016';
+import { loadLibraryArtworkRecovery, libraryArtworkRecovery, repairLibraryArtwork } from './library-artwork-link.mjs?v=humboldt-decals-stow-20261016';
 import { applyCollegeProductArtwork } from './college-product-artwork.mjs';
-import { recoverCollegeArtwork } from './college-artwork-recovery.mjs';
+import { recoverCollegeArtwork } from './college-artwork-recovery.mjs?v=occ-product-isolation-20261016';
 import { notebookTransform } from './notebook-transform.mjs';
-import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=hbhs-product-classroom-20261014';
+import { BUILD_PRESETS_KEY, cleanBuildPresets } from './build-presets.mjs?v=item-gumball-clipboard-20261016';
 import { hbhsPalette, upgradeHighschoolDesk } from './hbhs-design.mjs';
 import { chooseShelfStations, seedShelfStation, createShelfStationSupplies } from './desk-shelf-stations.mjs';
 import { encodeStoredJSON, decodeStoredJSON, compactStoredDesigns } from './browser-design-storage.mjs?v=scene-sized-setups-20261012';
-import { SCENE_DESKS_KEY } from './scene-desk-data.mjs';
+import { SCENE_DESKS_KEY } from './scene-desk-data.mjs?v=item-gumball-clipboard-20261016';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs?v=library-build-free-items-20261013';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=desk-auto-stow-20261014';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=humboldt-decals-stow-20261016';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
-import { RoomGroove } from './room-groove-runtime.mjs?v=humboldt-commons-20261015';
+import { RoomGroove } from './room-groove-runtime.mjs?v=commons-group-work-20261016';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=humboldt-commons-20261015';
+import { RoomInteractions } from './room-interactions.mjs?v=item-gumball-clipboard-20261016';
 import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pacing-vsm-20261015';
-import { SceneTour, tourEnabled } from './scene-tour.mjs?v=scene-tour-groove-20261014b';
+import { SceneTour, tourEnabled } from './scene-tour.mjs?v=item-gumball-clipboard-20261016';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
-import { roomPolishLighting } from './room-polish.mjs?v=humboldt-commons-20261015';
+import { roomPolishLighting } from './room-polish.mjs?v=table-clearance-20261021';
+import { roomViewBounds } from './room-view-bounds.mjs?v=table-clearance-20261021';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=hbhs-product-classroom-20261014';
-import { RoomLedSpill } from './room-led-spill.mjs?v=humboldt-commons-20261015';
+import { RoomLedSpill } from './room-led-spill.mjs?v=commons-group-work-20261016';
 import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=hbhs-product-classroom-20261014';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
-import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=conference-chairs-20261015';
+import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=commons-home-comfort-20261024';
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
-import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
-import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=gaming-gear-20261014';
+import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=gallery-bedroom-20261025';
+import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=gallery-bedroom-20261025';
 import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
 import { LED_EFFECTS, normalizeLedEffect, sampleLedEffect } from './led-effects.mjs?v=led-effects-20261003';
@@ -57,15 +61,15 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=conference-chairs-20261015';
-import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=desk-auto-stow-20261014';
-import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=scene-desk-styling-20261010';
-import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-gear-20261014';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-studio-20261025';
+import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=item-gumball-clipboard-20261016';
+import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=commons-home-comfort-20261024';
+import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-sessions-20261022';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
-import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=artist-gear-20261014';
+import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=artist-studio-20261025';
 import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
-import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
+import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-sessions-20261022';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=gaming-gear-20261014';
 import { ARWorkspace } from './ar-workspace.mjs?v=compact-controller-20261007';
@@ -215,6 +219,9 @@ const sceneAssetRegistry = new Map(); // editorId -> one whole room/desk-dressin
 const sceneAssetStates = new Map();   // room id -> removed defaults, additions and local transforms
 let sceneAssetCounter = 0;
 let sceneAssetHydrationToken = 0;
+let itemGizmo = null, itemClipboard = null, pasteCount = 0, pastingItems = false;
+let sceneCopyDefaults = new Map();
+const copyPrototypeRooms = new Map();
 const SCENE_ASSET_STATE_KEY = 'ergoflex.sceneAssets.v1';
 
 function editorEntry(editorId) {
@@ -408,6 +415,8 @@ async function hydrateSceneAssets(sceneId, token = sceneAssetHydrationToken) {
     if (sceneId !== selectedRoomScene || token !== sceneAssetHydrationToken) return;
     const state = sceneAssetState(sceneId);
     const defaults = [...(workspaceRoom?.assets() || []), ...(workspaceAccessories?.dressAssets() || [])];
+    workspaceRoom?.migrateSavedAssets?.(defaults, state);
+    sceneCopyDefaults = new Map(defaults.map(o => [sceneAssetEditorId(o), o]));
     for (const obj of defaults) {
         const editorId = sceneAssetEditorId(obj);
         if (state.removed.has(editorId)) { obj.removeFromParent(); continue; }
@@ -419,7 +428,7 @@ async function hydrateSceneAssets(sceneId, token = sceneAssetHydrationToken) {
     for (const addition of state.added.values()) {
         if (sceneId !== selectedRoomScene || token !== sceneAssetHydrationToken) return;
         const key = addition.editorId.replace(/^scene:/, '');
-        const object = await workspaceRoom?.addAsset(addition.propId, key, addition.position || [0, 0, 800]);
+        const object = addition.copyRecipe ? await restoreSceneCopy(addition.copyRecipe, key, addition.label) : await workspaceRoom?.addAsset(addition.propId, key, addition.position || [0, 0, 800]);
         if (!object || sceneId !== selectedRoomScene || token !== sceneAssetHydrationToken) continue;
         applyPlainLocalTransform(object, state.transforms.get(addition.editorId));
         registerSceneAsset(object);
@@ -620,7 +629,19 @@ function initSceneDeskEditing() {
         activityValid:()=>!roomSafety.alert&&!liveAR?.active&&!transformControl?.object&&roomRearrangeMode==='off'&&!isSelectionMode&&!glideInput.lengthSq()&&!yawCommand&&!liftJog&&!tiltJog&&!glideActive,
         objectEditing:on=>setRoomRearrangeMode(on?'items':'off'),
         objectsEditable:()=>!isSelectionMode&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!liveAR?.active,
-        objectSelected:()=>roomInteractions?.select(null),
+        objectSelected:()=>{if(itemGizmo?.active&&itemGizmo.active.target!==sceneDesks.objects.current?.obj)itemGizmo.close();roomInteractions?.select(null);},
+        objectDoubleSelected:item=>openItemGizmo('desk',item),objectDragStart:()=>itemGizmo?.close(),
+        loadAccessoryCopy:async id=>{
+            const mounts=Object.fromEntries(['desktop','shelf','lower-shelf','base-shelf','floor'].map(role=>{
+                const group=new THREE.Group();group.userData.surfaceSize={width:1524,depth:762};return [role,group];
+            }));
+            const temp=createSceneAccessorySet(mounts,{...currentConfig,accessories:[id]});
+            try{
+                temp.sync(temp.initialConfig);await temp.ready;
+                const source=temp.items.get(id);if(!source||source.userData.loadError)throw Error('Accessory is unavailable');
+                return cloneItem(source);
+            }finally{temp.dispose();}
+        },
         seedDeskSize:(_r,source,size)=>seedSceneSizeWithPeripherals(source,size),
         activityRecipe:()=>activeBuildPreset,
         surfaceSize:role=>{const m=workspaceAccessories?.mounts.get(role);return m?{width:m.width,depth:m.depth}:null;},
@@ -646,7 +667,10 @@ function initSceneDeskEditing() {
                 applyCollegeProductArtwork(r.state,saved.entries.hbhs,'hbhs');
                 return;
             }
-            if(selectedRoomScene==='library')applyLibraryProductBuild(r.state,saved.entries.library);
+            if(selectedRoomScene==='library'){
+                applyLibraryProductBuild(r.state,saved.entries.library);
+                if(workspaceRoom?.roomLayout?.humboldt)repairLibraryArtwork(r.state,saved.entries.library,libraryArtworkRecovery);
+            }
             else applyCollegeProductArtwork(r.state,saved.entries.occ);
         },
         decorateDesk:initRoomDeskPeripherals,
@@ -879,13 +903,13 @@ function syncRoomRearrangeUI() {
         hint.textContent=roomRearrangeMode==='desks'
             ? 'Drag a desk to move it. Items stay attached to their desk. Use Desks to select or rotate a desk.'
             : roomRearrangeMode==='items'
-                ? 'Drag items through other items and desks to place them freely. Select an item and press Delete to remove it; Ctrl+Z / Cmd+Z restores it. Use Desk objects for precise placement and rotation.'
+                ? 'Drag items freely. Double-tap an item for move, rotate and scale. Ctrl+C / Ctrl+V copy and paste; Delete removes; Ctrl+Z undoes. Escape hides the gumball.'
                 : 'Rearranging is off. Drag to orbit the view; click a desk to control it.';
     }
 }
 
 function setRoomRearrangeMode(mode) {
-    sceneDesks?.endDrag();roomInteractions?.end();roomInteractions?.select(null);
+    itemGizmo?.close();sceneDesks?.endDrag();roomInteractions?.end();roomInteractions?.select(null);
     roomRearrangeMode=['desks','items'].includes(mode)?mode:'off';
     if(sceneDesks){sceneDesks.objects.editing=roomRearrangeMode==='items';sceneDesks.sync();}
     writeStore('ergoflex.roomRearrange',{v:1,enabled:roomRearrangeMode!=='off',mode:roomRearrangeMode});
@@ -1357,6 +1381,7 @@ function initThreeJS() {
     transformControl.addEventListener('dragging-changed', function (event) {
         controls.enabled = !event.value;
         isDraggingTransform = event.value;
+        if(itemGizmo?.active && transformControl.object===itemGizmo.proxy)return;
 
         // Snapshot world matrices at drag start, commit at drag end. commitTransform
         // is the single place an edit is recorded — it pushes the undo entry, stores
@@ -1373,6 +1398,16 @@ function initThreeJS() {
         }
     });
     scene.add(transformControl);
+    itemGizmo = new ItemGizmo({control:transformControl,scene,canvas,
+        before:selection=>{if(selection.kind==='desk'){const saved=sceneDesks.serialize(),item=sceneDesks.objects.current;if(item?.obj.userData.accessoryId&&sceneDesks.active.product)item.saved.custom=true;return saved;}return selection.objects.map(obj=>({obj,before:canonicalTransformPlain(obj)}));},
+        commit:(selection,before)=>{
+            if(selection.kind==='desk'){
+                const item=sceneDesks.objects.current;if(item?.obj.userData.accessoryId&&sceneDesks.active.product)item.saved.custom=true;
+                sceneDesks.persist();const after=sceneDesks.serialize();if(JSON.stringify(before)!==JSON.stringify(after))sceneDesks.ctx.edit?.(before,after);sceneDesks.sync();
+            }else{roomInteractions.onEditEnd(before);roomInteractions.onChange();}
+        },
+        changed:()=>{if(roomInteractions?.selected)roomInteractions.highlight.box.setFromObject(roomInteractions.selected.obj);}
+    });
 
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
@@ -1474,10 +1509,12 @@ function initThreeJS() {
     });
 
     roomInteractions = new RoomInteractions({canvas:renderer.domElement,camera,controls,scene,
+        gizmoPointer:e=>itemGizmo?.ownsPointer(e),onDoubleSelect:entry=>openItemGizmo('room',entry),
         deskPointer:e=>sceneDesks?.down(e),deskMove:e=>sceneDesks?.moveDrag(e),deskEnd:e=>sceneDesks?.endDrag(e),deskEntries:sceneDeskObstacleEntries,
         room:()=>workspaceRoom,deskBox:deskCollisionBox,deskObject:()=>loadedModel,safety:roomSafety,
         enabled:()=>roomRearrangeMode==='items'&&!!workspaceRoom?.root&&!liveAR?.active&&!isSelectionMode&&!isDraggingTransform&&!surfaceArtwork?.picking&&!rigPickMode&&!isPickingPivot&&!roomGroove?.run,
         onSelection:entry=>{
+            if(itemGizmo?.active?.kind==='room'&&entry?.obj!==itemGizmo.active.target||itemGizmo?.active?.kind==='desk'&&entry)itemGizmo.close();
             if(entry&&sceneDesks?.objects.selected)sceneDesks.objects.select(null);
             const toolbar=document.getElementById('room-object-controls');if(!toolbar)return;
             toolbar.hidden=!entry;
@@ -1490,8 +1527,8 @@ function initThreeJS() {
             setRoomSaveStatus('Saving…');
             roomFurnitureSaveTimer=setTimeout(persistSceneAssetStates,350);
         },
-        onEditStart:()=>[...new Set(roomInteractions.entries.flatMap(entry=>entry.objects))]
-            .filter(obj=>obj.parent).map(obj=>({obj,before:canonicalTransformPlain(obj)})),
+        onEditStart:()=>{itemGizmo?.close();return [...new Set(roomInteractions.entries.flatMap(entry=>entry.objects))]
+            .filter(obj=>obj.parent).map(obj=>({obj,before:canonicalTransformPlain(obj)}));},
         onEditEnd:snapshot=>{
             const items=(snapshot||[]).map(item=>({...item,after:canonicalTransformPlain(item.obj)}))
                 .filter(item=>['p','q','s'].some(key=>Object.keys(item.before[key]).some(axis=>Math.abs(item.before[key][axis]-item.after[key][axis])>1e-8)));
@@ -1979,6 +2016,7 @@ function applyEntry(entry) {
 }
 
 function performUndo() {
+    itemGizmo?.close();
     roomInteractions?.end();
     const entry = undoStack.pop();
     if (!entry) return;
@@ -1993,6 +2031,7 @@ function performUndo() {
 }
 
 function performRedo() {
+    itemGizmo?.close();
     roomInteractions?.end();
     const entry = redoStack.pop();
     if (!entry) return;
@@ -2040,7 +2079,7 @@ function showWebGLError() {
 
 // Centers the 3D Gizmo perfectly on the selection
 function updateTransformProxy() {
-    if (!transformProxy || !transformControl) return;
+    if (!transformProxy || !transformControl || itemGizmo?.active) return;
     // While the pivot marker owns the gizmo, selection changes must not steal it back
     if (pivotGizmoOn) return;
 
@@ -5797,6 +5836,7 @@ function deleteSceneAssetEntries(entries) {
 }
 
 function deleteSelectedWorkspaceItem() {
+    itemGizmo?.close();
     const editor=sceneDesks?.objects;
     if(editor?.editing&&sceneDesks.ctx.objectsEditable?.()!==false&&editor.current&&!editor.current.saved.removed){
         const label=editor.current.saved.label,deleted=editor.remove();
@@ -5812,6 +5852,100 @@ function deleteSelectedWorkspaceItem() {
     }
     if(setupLayoutOn&&movingObjects.some(item=>item.obj.userData?.sceneAsset))return deleteSelectedSceneAssets();
     return false;
+}
+
+function openItemGizmo(kind, target) {
+    if (roomRearrangeMode !== 'items' || liveAR?.active) return false;
+    haltAllMotion(); roomGroove?.reset(); itemGizmo?.close();
+    [...movingObjects].forEach(({obj}) => toggleMovingObject(obj, false, true)); updateTransformProxy();
+    isSelectionMode = false; if (selectionModeToggle) selectionModeToggle.checked = false;
+    const selection = kind === 'room'
+        ? { kind, target: target.obj, objects: target.objects, label: target.name }
+        : { kind, target: target.obj, objects: [target.obj], label: target.saved.label, id: target.id };
+    const opened = itemGizmo.open(selection);
+    if (opened) notifyUser('Arrows move · rings rotate · squares scale. Escape hides the gumball.');
+    return opened;
+}
+
+function sceneCopySource(obj) {
+    const room = workspaceRoom, inv = room.root.matrixWorld.clone().invert(); obj.updateWorldMatrix(true, true);
+    const sources = obj.userData.sceneCopyRecipe ? obj.children : [obj];
+    return sources.map(source => ({
+        ...(source.userData.copySource || { origin: { room: selectedRoomScene, layout: room.roomLayout?.id, phase: measuredRoomProfile()?.mode, size: currentConfig.size }, sourceId: sceneAssetEditorId(source), propId: source.userData.propId }),
+        frame: inv.clone().multiply(source.matrixWorld).toArray(), nodes: nodeSnapshot(source), template: cloneItem(source)
+    }));
+}
+
+function copySelectedWorkspaceItems() {
+    if (isDraggingTransform || itemGizmo?.drag || pastingItems) return false;
+    const editor = sceneDesks?.objects;
+    let next;
+    if (editor?.editing && editor.current && !editor.current.saved.removed) next = { kind: 'desk', item: editor.copySelection() };
+    else {
+        const selected = roomInteractions?.selected;
+        const objects = selected && roomRearrangeMode === 'items' ? selected.objects : movingObjects.map(i => i.obj).filter(o => o.userData.sceneAsset);
+        const roots = topLevelItems(objects || []); if (!roots.length) return false;
+        next = { kind: 'room', label: selected?.name || sceneAssetName(roots[0]), sources: roots.flatMap(sceneCopySource) };
+    }
+    if (itemClipboard?.kind === 'desk') disposeWorkspaceObject(itemClipboard.item.template);
+    else itemClipboard?.sources.forEach(s => disposeWorkspaceObject(s.template));
+    itemClipboard = next; pasteCount = 0;
+    notifyUser('Selected item'+(next.sources?.length > 1 ? 's' : '')+' copied. Ctrl+V / Cmd+V to paste.'); return true;
+}
+
+async function sceneCopyPrototype(source) {
+    const current = source.origin.room === selectedRoomScene && source.origin.layout === workspaceRoom.roomLayout?.id;
+    const existing = current && (sceneCopyDefaults.get(source.sourceId) || sceneAssetRegistry.get(source.sourceId)?.obj);
+    if (existing) return existing;
+    if (PROP_LIBRARY.entry(source.propId)) return PROP_LIBRARY.instance(source.propId);
+    const key = JSON.stringify(source.origin);
+    if (!copyPrototypeRooms.has(key)) copyPrototypeRooms.set(key, (async () => {
+        const r = new WorkspaceRoom(new THREE.Scene(), workspaceRoom.scale);
+        r.set(source.origin.room, { layout: source.origin.layout, size: source.origin.size }); await r.ready;
+        r.roomAtmosphere?.(source.origin.phase); r.life?.apply(source.origin.phase); return r;
+    })());
+    const prototype = await copyPrototypeRooms.get(key), object = prototype.assets().find(o => sceneAssetEditorId(o) === source.sourceId);
+    if (!object) throw Error('The original furnishing could not be restored.'); return object;
+}
+
+async function restoreSceneCopy(recipe, key, label, templates = null) {
+    if(!workspaceRoom)return null;
+    const room = workspaceRoom, root = room.ensureAssetRoot(), token = room.token, group = new THREE.Group();
+    group.name = (label || 'Scene item') + ' copy';
+    group.userData = { sceneAsset: true, sceneAssetCustom: true, sceneAssetKey: key, propId: '@scene-copy', sceneAssetName: group.name, editableRoomItem: true, sceneCopyRecipe: recipe };
+    try {
+        for (const [i, source] of recipe.sources.entries()) {
+            const prototype = templates?.[i] || await sceneCopyPrototype(source), copy = cloneItem(prototype, source.nodes);
+            new THREE.Matrix4().fromArray(source.frame).decompose(copy.position, copy.quaternion, copy.scale);
+            copy.userData.copySource = source; group.add(copy);
+        }
+        if (workspaceRoom !== room || room.token !== token) { disposeWorkspaceObject(group); return null; }
+        root.add(group); group.updateMatrixWorld(true); return group;
+    } catch (error) { disposeWorkspaceObject(group); throw error; }
+}
+
+async function pasteSelectedWorkspaceItems() {
+    if (!itemClipboard || pastingItems || itemGizmo?.drag || liveAR?.active) return false;
+    pastingItems = true; itemGizmo?.close(); haltAllMotion();
+    try {
+        if (itemClipboard.kind === 'desk') return !!sceneDesks.objects.pasteSelection(itemClipboard.item, ++pasteCount);
+        const clip = itemClipboard, room = workspaceRoom, state = sceneAssetState(), sceneId = selectedRoomScene;
+        const key = sceneId+':copy:'+crypto.randomUUID(), editorId = 'scene:'+key;
+        const recipe = { sources: clip.sources.map(({template, ...source}) => structuredClone(source)) };
+        const obj = await restoreSceneCopy(recipe, key, clip.label, clip.sources.map(s => s.template));
+        if (!obj || room !== workspaceRoom || sceneId !== selectedRoomScene) return false;
+        const n = ++pasteCount; obj.position.set(n*180, 0, n*120); obj.updateMatrixWorld(true);
+        const bounds = new THREE.Box3().setFromObject(obj).applyMatrix4(room.root.matrixWorld.clone().invert());
+        const floor = room.floorBounds.clone().applyMatrix4(room.root.matrixWorld.clone().invert());
+        obj.position.x += Math.min(Math.max(0, floor.min.x-bounds.min.x), floor.max.x-bounds.max.x);
+        obj.position.z += Math.min(Math.max(0, floor.min.z-bounds.min.z), floor.max.z-bounds.max.z);
+        const addition = { editorId, propId: '@scene-copy', label: clip.label, position: obj.position.toArray(), copyRecipe: recipe };
+        state.added.set(editorId, addition); registerSceneAsset(obj); state.transforms.set(editorId, plainLocalTransform(obj));
+        const record = sceneAssetRecord(sceneAssetRegistry.get(editorId)); transaction({type:'scene-assets',records:[record],present:false});
+        persistSceneAssetStates(); roomInteractions.bind(room); setRoomRearrangeMode('items'); roomInteractions.select(roomInteractions.entries.find(e => e.obj === obj));
+        buildSceneTree(); renderSceneAssetList(); updateSceneLibraryStatus(); notifyUser(clip.label+' pasted. Ctrl+Z to undo.'); return true;
+    } catch (error) { console.error('[Scene items] Paste failed:', error); notifyUser('Could not paste this item.'); return false; }
+    finally { pastingItems = false; }
 }
 
 async function addSceneAsset(propId) {
@@ -5894,7 +6028,7 @@ function renderSceneAssetLibrary() {
         card.type = 'button';
         card.title = `${entry.name} · ${entry.collection || 'Original library'}`;
         const image = document.createElement('img');
-        image.src = `./assets/props/thumbs/${entry.id}.png`;
+        image.src = `./assets/props/thumbs/${entry.id}.png${entry.triangleFinish ? "?v=table-clearance-20261021" : ""}`;
         image.alt = '';
         image.loading = 'lazy';
         const name = document.createElement('span');
@@ -6016,25 +6150,25 @@ function buildPrecisionTools(anchorElement) {
 
 // --- Project panel ----------------------------------------------------------
 
-async function restoreSavedCollegeArtwork() {
+async function restoreSavedCollegeArtwork({ ids = ['library', 'occ'], restorePalette = true } = {}) {
     const response = await fetch('./assets/artwork/saved-college-graphics-20261014.json');
     if (!response.ok) throw new Error('The saved college graphics could not be loaded.');
     const recovery = await response.json();
     if (!flushPresetArtwork()) return false;
     saveBuildPreset();
     const active = activeBuildPreset, size = currentConfig.size;
-    const next = recoverCollegeArtwork(readStore(BUILD_PRESETS_KEY, 1, null) || buildPresets, recovery);
+    const next = recoverCollegeArtwork(readStore(BUILD_PRESETS_KEY, 1, null) || buildPresets, recovery, { ids, restorePalette });
     writeAutosave('before restoring Library and OCC artwork');
     if (!writeStore(BUILD_PRESETS_KEY, next)) throw new Error('Could not save the recovered college graphics in this browser.');
     // Prevent the outgoing live desk from immediately autosaving over recovery.
     activeBuildPreset = null; pendingPresetArtwork = null; buildPresets = next;
-    if (selectedRoomScene === 'product' && ['library','occ'].includes(active))
+    if (selectedRoomScene === 'product' && ids.includes(active))
         await applyPreset({ id: active }, { size });
     else if (['library','occmedialab'].includes(selectedRoomScene))
         setRoomScene(selectedRoomScene, false, { preserveDesk: true });
     else activeBuildPreset = active;
     syncBuildPresetUI(); markEdited();
-    notifyUser('Library and OCC artwork restored for 48″ and 60″, with their saved green and navy finishes.');
+    notifyUser(restorePalette ? 'Library and OCC artwork restored for 48″ and 60″, with their saved green and navy finishes.' : 'OCC graphics restored for 48″ and 60″. Your finishes, accessories and placements are kept.');
     return true;
 }
 
@@ -6053,6 +6187,7 @@ function buildProjectTools(anchorButton) {
             <button id="project-load">Load project…</button>
             <button id="project-recover">Recover…</button>
             <button id="college-artwork-recover">Restore Library & OCC graphics</button>
+            <button id="occ-artwork-recover">Restore OCC graphics only</button>
         </div>
         <input id="project-file" type="file" accept="application/json,.json" hidden>
         <p class="studio-note">Saves the whole edited scene: part positions, clones, groups, lift assignments, rigs, finishes, and camera. Autosaves keep the last ${PROJECT_AUTOSAVE_SLOTS} states.</p>
@@ -6062,6 +6197,12 @@ function buildProjectTools(anchorButton) {
     document.getElementById('college-artwork-recover').onclick = async event => {
         const button = event.currentTarget; button.disabled = true;
         try { await restoreSavedCollegeArtwork(); }
+        catch (error) { notifyUser(error.message); }
+        finally { button.disabled = false; }
+    };
+    document.getElementById('occ-artwork-recover').onclick = async event => {
+        const button = event.currentTarget; button.disabled = true;
+        try { await restoreSavedCollegeArtwork({ ids: ['occ'], restorePalette: false }); }
         catch (error) { notifyUser(error.message); }
         finally { button.disabled = false; }
     };
@@ -6426,6 +6567,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.key === 'Escape' && marquee.active) {
             e.preventDefault();
             cancelMarquee();
+        } else if(e.key==='Escape'&&itemGizmo?.active){
+            e.preventDefault();itemGizmo.close();
+        } else if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key.toLowerCase()==='c'){
+            if(!window.getSelection()?.toString()&&copySelectedWorkspaceItems())e.preventDefault();
+        } else if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key.toLowerCase()==='v'&&itemClipboard){
+            e.preventDefault();void pasteSelectedWorkspaceItems();
         } else if (!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='Delete'||e.key==='Backspace')) {
             if(deleteSelectedWorkspaceItem())e.preventDefault();
         } else if (!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key==='ArrowDown') {
@@ -10286,12 +10433,13 @@ function rebuildRigUI() {
 // Re-fits the renderer to whatever size the viewer container currently is.
 // Called on window resize, on ResizeObserver ticks, and after layout switches.
 function syncViewerSize() {
+    if(window.__ERGO_BAKING__)return;
     if (renderer?.xr.isPresenting) return;
     if (!renderer || !camera || !canvas.parentElement) return;
     const container = canvas.parentElement;
     const w = container.clientWidth;
     const viewerControls = container.querySelector('.viewer-controls');
-    const top = EVENT_DEMO ? 0 : viewerControls ? viewerControls.offsetTop + viewerControls.offsetHeight + 12 : (w < 500 ? 188 : 168);
+    const top = (window.__ERGO_PRESENTATION__ || EVENT_DEMO) ? 0 : viewerControls ? viewerControls.offsetTop + viewerControls.offsetHeight + 12 : (w < 500 ? 188 : 168);
     // The movement panel floats over the canvas rather than displacing it, so its
     // size no longer reaches the camera at all. Coupling them is what made the
     // panel cost the desk ~283px of height, and what forced every tab to reserve
@@ -10327,10 +10475,14 @@ function renderActivity() {
     return { moving, animating, signature };
 }
 
+let presentationBeforeFrame = null, presentationShadowAt = -Infinity, presentationShadowDirty = true, presentationOrbit = false;
 function animate(time, frame) {
+    // The presentation updates its camera and pose immediately before this
+    // renderer's frame, so they cannot drift onto different RAF callbacks.
+    if(window.__ERGO_PRESENTATION__)presentationBeforeFrame?.(time);
     liveAR?.update(frame, time);
     // AR and WebXR sessions own their frame timing.
-    const paced = renderPacing && !liveAR?.active && !renderer.xr.isPresenting;
+    const paced = renderPacing && !liveAR?.active && !renderer.xr.isPresenting && !window.__ERGO_PRESENTATION__;
     const pace = paced ? renderPacing.plan(time, renderActivity()) : null;
     if (paced && !pace) return;
 
@@ -10452,8 +10604,8 @@ function animate(time, frame) {
         boxHelpers.forEach(helper => helper.update());
     }
 
-    if (controls && !liveAR?.active) {
-        updateCameraTween(dt);
+    if (controls && !liveAR?.active && (!presentationBeforeFrame || presentationOrbit)) {
+        if(!presentationBeforeFrame)updateCameraTween(dt);
         controls.update();
         const orbitButton = document.getElementById('rotate-scene');
         if (orbitButton && orbitButton.getAttribute('aria-pressed') !== String(controls.autoRotate)) orbitButton.setAttribute('aria-pressed', String(controls.autoRotate));
@@ -10485,6 +10637,11 @@ function animate(time, frame) {
     if (renderer && scene && camera) {
         // Only this render skips shadow redraws; any other render stays exact.
         if (pace) renderer.shadowMap.autoUpdate = pace.shadows;
+        if(window.__ERGO_PRESENTATION__){
+            const shadowStep=Math.floor(time/(1000/30));
+            renderer.shadowMap.autoUpdate=presentationShadowDirty&&shadowStep!==presentationShadowAt;
+            if(renderer.shadowMap.autoUpdate){presentationShadowAt=shadowStep;presentationShadowDirty=false;}
+        }
         renderer.render(liveAR?.active ? liveAR.scene : scene, camera);
         renderer.shadowMap.autoUpdate = true;
         if (pace && time - tinyCasterCheckAt > 1000) {
@@ -10699,7 +10856,9 @@ function syncGrooveUI(state = {}) {
     }
     for(const panel of document.querySelectorAll('.room-mobility-controls')){
         const active=panel.dataset.scene===selectedRoomScene,m=sceneDesks,a=m?.activities;
-        if(!active||!a)continue;
+        const bespoke=active&&workspaceRoom?.roomLayout?.groupStudy&&m?.records.size===1;
+        panel.hidden=!!bespoke; // This pilot uses its authored time-of-day Grooves.
+        if(!active||!a||bespoke)continue;
         const suggestion=a.suggestion,busy=!!m.playing||!!m.recording;
         panel.querySelector('[data-mobility-title]').textContent=suggestion.title;
         panel.querySelector('[data-mobility-description]').textContent=suggestion.description;
@@ -10793,7 +10952,8 @@ function positionHomeDesk(useModePose = false, { preservePosition = false } = {}
     const fit = (value, min, max) => min > max ? (min + max) / 2 : THREE.MathUtils.clamp(value, min, max);
     const wantedX = preservePosition ? -glideOffset.z / scale : layout.desk[0] + (useModePose ? mode.offset[0] : 0);
     const wantedZ = preservePosition ? glideOffset.x / scale : layout.desk[1] + (useModePose ? mode.offset[1] : 0);
-    const x = fit(wantedX, -layout.width / 2 + ex - ox, layout.width / 2 - ex - ox);
+    const x0 = layout.left ?? -layout.width / 2;
+    const x = fit(wantedX, x0 + ex - ox, x0 + layout.width - ex - ox);
     const z = fit(wantedZ, layout.back + ez - oz, layout.back + layout.depth - ez - oz);
     const next = new THREE.Vector3(z * scale, 0, -x * scale);
     applyGlideOffset(next); glideTarget.copy(glideOffset);
@@ -10811,7 +10971,7 @@ function syncHomeOfficeUI() {
         const panel = document.getElementById(measuredRoomPanelId(id));
         if (!panel) continue;
         panel.hidden = selectedRoomScene !== id;
-        panel.querySelector(`[data-${prefix}-description]`).textContent = profile.modes[profile.mode].description + ' · ' + ROOM_STORIES[id][DAY_PHASES.indexOf(profile.mode)] + (['office', 'coworking'].includes(id) ? ` · ${profile.layout.stations.length + 1} ErgoFlex desks · App controls the Main desk` : '');
+        panel.querySelector(`[data-${prefix}-description]`).textContent = profile.modes[profile.mode].description + ' · ' + (profile.layout.stories || ROOM_STORIES[id])[DAY_PHASES.indexOf(profile.mode)] + (['office', 'coworking'].includes(id) ? ` · ${profile.layout.stations.length + 1} ErgoFlex desks · App controls the Main desk` : '');
         panel.querySelector(`#${prefix}-room-size`).value = profile.layout.id;
         panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-mode`) === profile.mode)));
         panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-size`) === currentConfig.size)));
@@ -10842,7 +11002,7 @@ function setLoungeLayout(id) { setMeasuredRoomLayout('lounge', id); }
 function setKitchenLayout(id) { setMeasuredRoomLayout('kitchen', id); }
 function setGymLayout(id) { setMeasuredRoomLayout('gym', id); }
 function setStudyLayout(id) { setMeasuredRoomLayout('study', id); }
-function setMeasuredRoomLayout(sceneId, id) {
+function setMeasuredRoomLayout(sceneId, id, options = {}) {
     if (!measuredRoomProfile(sceneId)?.layouts[id]) return;
     if (INSTITUTIONAL_ROOMS[sceneId]) institutionalState[sceneId].layout = id;
     else if (sceneId === 'home') homeLayoutId = id;
@@ -10861,7 +11021,7 @@ function setMeasuredRoomLayout(sceneId, id) {
     else if (sceneId === 'library') libraryLayoutId = id;
     else loungeLayoutId = id;
     try { localStorage.setItem(`ergoflex.${sceneId}Layout`, id); } catch {}
-    setRoomScene(sceneId, false);
+    setRoomScene(sceneId, false, options);
     workspaceRoom.ready.then(() => {
         if (selectedRoomScene !== sceneId) return;
         const view = document.getElementById('camera-view');
@@ -10887,6 +11047,7 @@ function setKitchenMode(id, moveDesk = true) { setMeasuredRoomMode('kitchen', id
 function setGymMode(id, moveDesk = true) { setMeasuredRoomMode('gym', id, moveDesk); }
 function setStudyMode(id, moveDesk = true) { setMeasuredRoomMode('study', id, moveDesk); }
 function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
+    itemGizmo?.close();
     sceneDesks?.activities?.restoreChairs();
     if (roomGroove?.prepared) { haltAllMotion(); roomGroove.reset(); }
     const profile = measuredRoomProfile(sceneId);
@@ -10932,6 +11093,16 @@ function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
 }
 
 function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop = !preserveDesk } = {}) {
+    // Room desks share the live renderer, but never own the named Product
+    // recipe. Restore that recipe before Product can autosave the room's decals,
+    // accessories or posture under its name. Project/preset installs preserve
+    // their explicitly supplied desk and bypass this navigation-only path.
+    if (id === 'product' && selectedRoomScene !== 'product' && !preserveDesk && !applyingBuildPreset) {
+        const presetId = activeBuildPreset || (!restoredSharedBuild && buildPresets.active);
+        if (PRESETS.some(p => p.id === presetId))
+            return applyPreset({ id: presetId }).catch(error => { console.error('[Product return]', error); notifyUser('Your saved Product build could not be loaded. Select its Start From card to retry.'); return false; });
+    }
+    itemGizmo?.close();
     saveBuildPreset();
     if (Object.hasOwn(INSTITUTIONAL_GROUPS, id)) {
         const group = INSTITUTIONAL_GROUPS[id];
@@ -10987,7 +11158,13 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     }
     let homeScale;
     if (measured && loadedModel) {
-        const reference = arSizeReference();
+        // A room keeps one physical calibration when its selected desk changes
+        // width. Otherwise restoring a saved 48-inch desk in a larger layout
+        // recalibrates the entire room from the other CAD variant and shifts
+        // furniture relative to the live desk on import.
+        const compact = Object.values(measured.layouts).reduce((a,b)=>a.width*a.depth<=b.width*b.depth?a:b);
+        const referenceSize = measured.layout.desktopSize || (measured.layout.id===compact.id?'48x30':'60x30');
+        const reference = withDeskSize(referenceSize,()=>arSizeReference());
         // Nominal desktop inches establish the room's physical units. An AR
         // calibration preference does not silently resize this architecture.
         homeScale = reference.widthUnits > 0 ? reference.widthUnits / (reference.nominalWidth * 25.4) : 1 / (reference.metersPerUnit * 1000);
@@ -11014,6 +11191,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     const roomReady = workspaceRoom?.ready || Promise.resolve();
     const dressReady = workspaceAccessories?.dress(choice.id) || Promise.resolve();
     const assetsReady = Promise.allSettled([roomReady, dressReady]).then(async results => {
+        if(choice.id==='library' && measured?.layout.humboldt)await loadLibraryArtworkRecovery();
         if (results[0].status === 'rejected') {
             reportSceneWarning('room-props', `Scene props for ${choice.name} could not be loaded (${results[0].reason.message}). The room is shown without them.`);
         }
@@ -11479,7 +11657,11 @@ function focusObjects(objects, { animate = false } = {}) {
     if (!camera || !controls || !objects.length) return;
     camera.fov = 35; camera.updateProjectionMatrix();
     if (loadedModel && objects.includes(loadedModel)) objects = [...objects, ...(workspaceAccessories?.objects() || [])];
-    const box = new THREE.Box3(); objects.forEach(obj => box.expandByObject(obj));
+    const box = new THREE.Box3();
+    objects.forEach(obj => {
+        if (obj === workspaceRoom?.root && workspaceRoom.roomLayout) box.union(roomViewBounds(workspaceRoom));
+        else box.expandByObject(obj);
+    });
     if (box.isEmpty()) return;
     const center = box.getCenter(new THREE.Vector3());
     const direction = camera.position.clone().sub(controls.target).normalize();
@@ -11818,13 +12000,13 @@ function initStudio() {
         if (!camera || !loadedModel) return;
         if (e.target.value === 'inside') {
             if (!workspaceRoom?.roomLayout) { e.target.value = 'hero'; e.target.dispatchEvent(new Event('change')); return; }
-            const { width, depth, height, back } = workspaceRoom.roomLayout;
+            const { width, depth, height, back, insideView } = workspaceRoom.roomLayout;
             workspaceRoom.root.updateWorldMatrix(true, false);
-            const eye = workspaceRoom.root.localToWorld(new THREE.Vector3(width * .23, Math.min(1600, height - 600), back + depth - 900));
-            const target = workspaceRoom.root.localToWorld(new THREE.Vector3(-width * .17, Math.min(1500, height - 700), back + depth * .25));
+            const eye = workspaceRoom.root.localToWorld(new THREE.Vector3(...(insideView?.eye || [width * .23, Math.min(1600, height - 600), back + depth - 900])));
+            const target = workspaceRoom.root.localToWorld(new THREE.Vector3(...(insideView?.target || [-width * .17, Math.min(1500, height - 700), back + depth * .25])));
             // A wide interior lens includes the ceiling and work surfaces in
             // compact rooms. Product and whole-room framing restore 35°.
-            camera.fov = 65; camera.updateProjectionMatrix();
+            camera.fov = insideView?.fov || 65; camera.updateProjectionMatrix();
             controls.minDistance = CLOSEUP_MIN_DISTANCE;
             startCameraTween(eye, target); return;
         }
@@ -12118,6 +12300,8 @@ window.ErgoFlex = {
     saveCurrentGroovePosition, resetCurrentGroovePosition,
     get sceneDesks(){return sceneDesks;},
     get savedGroovePositions() { return normalizeGroovePresets(groovePresets); },
+    get itemGizmo() { return itemGizmo; },
+    copySelectedWorkspaceItems, pasteSelectedWorkspaceItems,
     get grooveState() { return roomGroove?.state || { status: 'idle' }; },
     get grooveRouting() { return roomGroove?.prepared ? roomGroove.snapshot() : null; },
     get deskYaw() { return deskYaw; },
@@ -12299,3 +12483,132 @@ document.querySelectorAll('[data-led-surface]').forEach(slider =>
     slider.addEventListener('input', event => setLedSurface(event.target.dataset.ledSurface, event.target.value)));
 updatePrice();
 initThreeJS();
+
+// Presentation-only adapter. It is never installed in an editing session.
+if (window.__ERGO_PRESENTATION__) {
+    let presentationRoute = null, presentationOrigin = null, directorAnchor = null, bakeViewport = null;
+    const presentationProductOrigins=new Map();
+    import('./experience/stage.mjs').then(({mountStage}) => mountStage({
+        get scene(){return scene;}, get camera(){return camera;}, get renderer(){return renderer;},
+        get controls(){return controls;}, get loadedModel(){return loadedModel;},
+        catalog(){
+            const modes=values=>Object.entries(values||{}).map(([id,m])=>({id,label:m.label||id}));
+            return [{id:'product',name:'Product stage',caption:'A clear view of every detail.',layouts:[],modes:[]},...MEASURED_ROOM_IDS.map(id=>{
+                const p=measuredRoomProfile(id),scene=ROOM_SCENES.find(r=>r.id===id);
+                return {id,name:scene?.name||INSTITUTIONAL_ROOMS[id]?.name||id,caption:scene?.caption||'',modes:modes(p.modes),
+                    layouts:Object.entries(p.layouts).map(([key,l])=>({id:l.id||key,name:l.name||key,modes:modes(l.modes||p.modes)}))};
+            })];
+        },
+        editCamera(on){presentationOrbit=!!on;controls.enabled=!!on;controls.autoRotate=false;},
+        resetProductOrigin(key){
+            if(selectedRoomScene!=='product')return;
+            // Replaying a chapter must start from the authored desk orientation,
+            // rather than saving the last animation sample as its next origin.
+            if(!presentationProductOrigins.has(key))presentationProductOrigins.set(key,{offset:glideOffset.clone(),yaw:deskYaw});
+            const origin=presentationProductOrigins.get(key);deskYaw=origin.yaw;applyDeskTransform();
+            applyGlideOffset(origin.offset.clone());glideTarget.copy(glideOffset);
+        },
+        markAnchor(){
+            presentationOrigin=null;
+            directorAnchor={offset:glideOffset.clone(),yaw:deskYaw,unit:workspaceRoom?.root?.scale.x?workspaceRoom.root.scale.x*25.4:.0254/arSizeReference().metersPerUnit};
+        },
+        placeDirector(p){
+            if(!directorAnchor)return;
+            const yaw=directorAnchor.yaw+THREE.MathUtils.degToRad(p.yaw),turn=yaw-deskYaw;
+            deskYaw=yaw;applyDeskTransform();spinWheelsForYaw(turn);
+            applyGlideOffset(directorAnchor.offset.clone().add(new THREE.Vector3(p.z*directorAnchor.unit,0,-p.x*directorAnchor.unit)),{collide:true});
+            glideTarget.copy(glideOffset);presentationShadowDirty=true;
+        },
+        readDirector(){const a=directorAnchor;return{height:liftToHeight(currentLift),tilt:primaryTiltConfig()?.currentDeg||0,
+            x:a?-(glideOffset.z-a.offset.z)/a.unit:0,z:a?(glideOffset.x-a.offset.x)/a.unit:0,yaw:a?THREE.MathUtils.radToDeg(deskYaw-a.yaw):0};},
+        onFrame(callback){presentationBeforeFrame=callback;},
+        async warm(){
+            workspaceRoom?.update(camera);pruneTinyCasters(scene);
+            // Presentation shadows are soft and update only when geometry
+            // moves. Avoid redrawing large VSM maps for a camera-only pan.
+            scene.traverse(o=>{
+                if(!o.isLight||!o.shadow||Math.max(o.shadow.mapSize.x,o.shadow.mapSize.y)<=1024)return;
+                o.shadow.mapSize.set(1024,1024);
+                o.shadow.map?.dispose();o.shadow.map=null;
+                o.shadow.mapPass?.dispose();o.shadow.mapPass=null;
+            });
+            if(renderer.compileAsync)await renderer.compileAsync(scene,camera);
+            else renderer.compile(scene,camera);
+            renderer.shadowMap.autoUpdate=true;renderer.render(scene,camera);presentationShadowDirty=false;
+        },
+        beginBake(width,height){
+            if(bakeViewport)throw Error('A bake is already running.');
+            const size=renderer.getSize(new THREE.Vector2());bakeViewport={size,pixelRatio:renderer.getPixelRatio(),aspect:camera.aspect};
+            renderer.setAnimationLoop(null);renderer.setPixelRatio(1);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();
+        },
+        endBake(){
+            if(!bakeViewport)return;const saved=bakeViewport;bakeViewport=null;renderer.setPixelRatio(saved.pixelRatio);renderer.setSize(saved.size.x,saved.size.y,false);camera.aspect=saved.aspect;camera.updateProjectionMatrix();requestAnimationFrame(syncViewerSize);
+        },
+        bakeDraw(canvas,seconds){
+            workspaceAccessories?.update();sceneDesks?.update(1/30);updateLedEffectFrame(seconds);workspaceRoom?.update(camera);sceneScreens?.update();
+            roomLedSpill.update(workspaceRoom,ledPixels,{enabled:ledsEnabled,colour:ledFrameColor,gain:roomLedGain});
+            renderer.shadowMap.autoUpdate=presentationShadowDirty;renderer.render(scene,camera);presentationShadowDirty=false;renderer.shadowMap.autoUpdate=true;
+            const source=renderer.domElement;canvas.getContext('2d',{alpha:false}).drawImage(source,0,0,canvas.width,canvas.height);
+        },
+        capture(canvas){
+            workspaceRoom?.update(camera);renderer.shadowMap.autoUpdate=presentationShadowDirty;renderer.render(scene,camera);presentationShadowDirty=false;renderer.shadowMap.autoUpdate=true;
+            const source=renderer.domElement;
+            canvas.width=source.width;canvas.height=source.height;
+            canvas.getContext('2d',{alpha:false}).drawImage(source,0,0);
+        },
+        clearRoomRecipe(room,layout){delete sceneDesks.data.rooms[`${room}/${layout}`];},
+        captureRecipe(){
+            sceneDesks.capture();
+            return structuredClone({...sceneDesks.active?.state,size:currentConfig.size,
+                accessories:currentConfig.accessories,accessoryFinishes:currentConfig.accessoryFinishes||{},
+                artwork:currentConfig.artwork||{v:1,surfaces:{}},style:currentDeskStyle()});
+        },
+        async installRecipe(recipe,size){
+            if(!sceneDesks.key||sceneDesks.key==='product/default')return;
+            sceneDesks.capture();
+            const room=sceneDesks.roomData,previous=sceneDesks.records.get('main');
+            if(!room?.desks.main||!previous)return;
+            // Rebuild only the featured desk. A whole-manager restore disposes
+            // station rigs whose original seed meshes were already replaced.
+            sceneDesks.objects.stow.restore(previous);
+            previous.peripherals?.dispose();
+            if(previous.group)sceneDesks.ctx.unregisterBody?.(previous.group);
+            sceneDesks.ctx.disposeDress?.(previous);previous.rig?.dispose();
+            const state={...recipe,size:size||previous.state.size,pose:previous.state.pose,name:'Cinematic demonstration desk',phases:{},height:30,tilt:0};
+            room.desks.main=state;room.selected='main';room.deleted=room.deleted.filter(id=>id!=='main');
+            const featured={id:'main',state,primary:true};
+            sceneDesks.records.set('main',featured);sceneDesks.selected='main';
+            sceneDesks.ensureRig(featured);sceneDesks.ctx.writeLive(featured);
+            featured.rig.setBodyVisible(false);sceneDesks.ctx.showLive(true,true);sceneDesks.sync();
+            await workspaceAccessories?.ready;await sceneDesks.objects.ready;
+        },
+        pause(on){if(renderer){if(on){workspaceRoom?.update(camera);renderer.shadowMap.autoUpdate=presentationShadowDirty;renderer.render(scene,camera);presentationShadowDirty=false;renderer.shadowMap.autoUpdate=true;}renderer.setAnimationLoop(on ? null : animate);}},
+        pose(height,tilt){
+            manualLiftOverride=true;
+            const h=THREE.MathUtils.clamp(height,minimumHeightForTilt(tilt,currentConfig.size),HEIGHT_MAX);
+            const config=primaryTiltConfig();
+            const lift=heightToLift(h),degree=config?THREE.MathUtils.clamp(tilt,config.minDeg,Math.min(config.maxDeg,maximumTiltForHeight(h,currentConfig.size))):0;
+            const liftChanged=Math.abs(currentLift-lift)>1e-6,tiltChanged=config&&Math.abs(config.currentDeg-degree)>1e-6;
+            if(liftChanged||tiltChanged)presentationShadowDirty=true;
+            currentLift=targetLift=lift;
+            if(tiltChanged){config.currentDeg=degree;applyTiltConfig(config);}
+            if(liftChanged)updateMovingObjectsPosition();
+        },
+        async prepareRoute(phase){
+            await prepareGrooveMode(selectedRoomScene,phase);
+            presentationRoute = roomGroove?.prepared?.plan?.ok ? measureRoute(roomGroove.prepared.plan.route) : null;
+            roomGroove?.removeMarker();
+        },
+        route(t){
+            const pose=routePose(presentationRoute,t);if(pose){presentationShadowDirty=true;grooveController().ctx.move(pose);}
+        },
+        demoMove(x,z,yaw){
+            if(selectedRoomScene!=='product')return;
+            if(!presentationOrigin)presentationOrigin=glideOffset.clone();
+            presentationShadowDirty=true;
+            deskYaw=yaw;applyDeskTransform();
+            applyGlideOffset(presentationOrigin.clone().add(new THREE.Vector3(x,0,z)),{collide:true});
+            glideTarget.copy(glideOffset);
+        }
+    })).catch(error=>parent.postMessage({ergoPresentation:'error',message:error.message},location.origin));
+}

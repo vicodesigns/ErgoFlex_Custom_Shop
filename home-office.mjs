@@ -1,15 +1,17 @@
 import * as THREE from 'three';
+import { HOME_SESSIONS, homeSessionPinboard, buildHomeSessionDetail } from './home-session-detail.mjs?v=home-sessions-20261022';
+import { homeComfortDetails } from './home-comfort-detail.mjs?v=commons-home-comfort-20261024';
 
 // Architectural dimensions and prop positions are millimetres, never resized
 // to make the larger desk fit. The open front is a viewing cutaway.
 export const HOME_LAYOUTS = {
     apartment: { id: 'apartment', name: 'Apartment office', width: 2800, depth: 3200, height: 2600, back: -1050, desk: [0, -310],
         props: [
-            { id: 'steelcase-leap-v2', at: [0, 0, 680], turn: 180 },
-            { id: 'armchair-poppi', at: [690, 0, 1450], turn: -140 },
+            { id: 'steelcase-leap-v2', at: [-120, 0, 600], turn: 180 },
+            { id: 'armchair-poppi', at: [900, 0, 1660], turn: 180 },
             { id: 'journal', at: [80, 451, 1870], turn: 15 },
             { id: 'ficus', at: [-1110, 0, -710] },
-            { id: 'modern-lamp', at: [990, 741, -850] }
+            { id: 'modern-lamp', at: [1040, 741, -850] }
         ] },
     house: { id: 'house', name: 'Dedicated home office', width: 3600, depth: 4200, height: 2700, back: -1450, desk: [-160, -540],
         props: [
@@ -58,8 +60,9 @@ Object.assign(HOME_LAYOUTS, {
 // defaults so existing scene-asset keys and saved edits keep their identities.
 for (const layout of Object.values(HOME_LAYOUTS)) {
     const apartment = layout.id === 'apartment';
-    const cx = apartment ? 995 : layout.width / 2 - 570;
+    const cx = apartment ? 1120 : layout.width / 2 - 570;
     const chair = layout.props.find(p => p.id === 'armchair-poppi');
+    layout.entryZ = apartment ? layout.back + layout.depth - 650 : layout.back + 1300;
     layout.readingLight = apartment ? [-430, 1870] : [-layout.width / 2 + 220, chair.at[2] + 680];
     layout.props.push(
         { id: 'kenney-furniture-books', at: [cx - 80, 1384, layout.back + 110] },
@@ -70,19 +73,52 @@ for (const layout of Object.values(HOME_LAYOUTS)) {
         layout.props.find(p => p.id === 'modern-lamp').at[0] = cx + 200;
         layout.props.push(
             { id: 'kenney-furniture-kitchen-coffee-machine', at: [cx - 220, 741, layout.back + 190] },
-            { id: 'quaternius-guitar', at: [-layout.width / 2 + 85, 650, 150], turn: 90, on: 'wall' }
+            { id: 'quaternius-guitar', at: [-layout.width / 2 + 85, 650, layout.back + layout.depth - 350], turn: 90, on: 'wall' }
         );
     }
 }
 export const homeLayoutForSize = size => HOME_LAYOUTS[size === '60x30' ? 'house' : 'apartment'];
 export const homeLayoutById = id => HOME_LAYOUTS[id] || HOME_LAYOUTS.apartment;
 
+// Older projects captured untouched default positions along with real edits.
+// Update exact old defaults only; retain deliberate moves, turns and scales.
+export function migrateHomeReadingFurniture(obj, saved, layout) {
+    if (!saved?.p || !saved.q || !saved.s) return saved;
+    const rug = obj.userData.homeRug;
+    if(rug && Object.values(saved.s).every(v=>Math.abs(v-1)<.00001) && Math.abs(saved.q.x)+Math.abs(saved.q.y)+Math.abs(saved.q.z)<.00001) {
+        const old=rug==='desk'?[layout.desk[0],2.5,layout.id==='apartment'?480:270]:rug==='reading'?[-970,2.5,1910]:[550,2.5,(layout.id==='executive'?3190:2510)+390];
+        if(['x','y','z'].every((k,i)=>Math.abs(saved.p[k]-old[i])<.1))return {...saved,p:{x:obj.position.x,y:obj.position.y,z:obj.position.z}};
+    }
+    if (layout.id !== 'apartment') {
+        if (obj.userData.propId === 'quaternius-guitar' && Math.abs(saved.p.x - (-layout.width / 2 + 85)) < .1 && Math.abs(saved.p.y - 650) < .1 && Math.abs(saved.p.z - 150) < .1 && Object.values(saved.s).every(v => Math.abs(v - 1000) < .01) && Math.abs(saved.q.x) + Math.abs(saved.q.z) < .00001 && Math.abs(Math.abs((saved.q.y + saved.q.w) * Math.SQRT1_2) - 1) < .00001) return { ...saved, p: { ...saved.p, z: layout.back + layout.depth - 350 } };
+        return saved;
+    }
+    const oldCabinetProp = {
+        'modern-lamp': [990, 741, -850],
+        'kenney-furniture-books': [915, 1384, layout.back + 110],
+        'kenney-furniture-plant-small1': [1035, 1784, layout.back + 110]
+    }[obj.userData.propId];
+    if (oldCabinetProp && ['x','y','z'].every((k,i) => Math.abs(saved.p[k] - oldCabinetProp[i]) < .1) &&
+        Object.values(saved.s).every(v => Math.abs(v - 1000) < .01) && Math.abs(saved.q.x) + Math.abs(saved.q.y) + Math.abs(saved.q.z) < .00001) {
+        const placement = layout.props.find(p => p.id === obj.userData.propId);
+        return { ...saved, p: { x: placement.at[0], y: placement.at[1], z: placement.at[2] } };
+    }
+    const old = { 'steelcase-leap-v2': [0, 680, 180], 'armchair-poppi': [690, 1450, -140] }[obj.userData.propId];
+    if (!old) return saved;
+    const [x, z, turn] = old, a = turn * Math.PI / 360, q = saved.q;
+    if (Math.abs(saved.p.x - x) > .1 || Math.abs(saved.p.y) > .1 || Math.abs(saved.p.z - z) > .1 ||
+        Object.values(saved.s).some(v => Math.abs(v - 1000) > .01) || Math.abs(q.x) > .00001 || Math.abs(q.z) > .00001 ||
+        Math.abs(Math.abs(q.y * Math.sin(a) + q.w * Math.cos(a)) - 1) > .00001) return saved;
+    const placement = layout.props.find(p => p.id === obj.userData.propId), b = placement.turn * Math.PI / 360;
+    return { ...saved, p: { x: placement.at[0], y: placement.at[1], z: placement.at[2] }, q: { x: 0, y: Math.sin(b), z: 0, w: Math.cos(b) } };
+}
+
 export const HOME_MODES = {
     morning: { label: 'Morning', description: 'Fresh daylight · standing work', key: '#ffe8c4', fill: '#d9e8ff', accent: '#ffd6a4', power: 1.85, ambient: .4, bounce: .66, exposure: 1.05, sky: ['#8dbfe2', '#fde4c2'], practical: .12, height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
     afternoon: { label: 'Afternoon', description: 'Soft daylight · seated focus', key: '#fff3dd', fill: '#e4edf6', accent: '#ffd1a1', power: 1.35, ambient: .42, bounce: .65, exposure: 1.08, sky: ['#8cb9d8', '#f4ecdc'], practical: .3, height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
     evening: { label: 'Evening', description: 'Golden hour · reading and planning', key: '#ffaa66', fill: '#bdc5e6', accent: '#ffbd80', power: .82, ambient: .24, bounce: .4, exposure: 1.1, sky: ['#5a6795', '#f6a066'], practical: 1.05, height: 28, tilt: 12, offset: [0, 80], yaw: -4, leds: true, color: '#ffd29b' },
-    night: { label: 'Night', description: 'Warm task lamps · quiet late work', key: '#a7bde8', fill: '#a3b7de', accent: '#ffc883', power: .18, ambient: .15, bounce: .22, exposure: 1.15, sky: ['#0d1630', '#2a3d62'], practical: 1.05, height: 28, tilt: 0, offset: [0, 120], yaw: 0, leds: true, color: '#776c60' },
-    party: { label: 'Party', description: 'Color accents · desk turned toward the room', key: '#b7caff', fill: '#a99cf0', accent: '#f08bcd', power: .3, ambient: .18, bounce: .25, exposure: 1.1, sky: ['#191a44', '#4a3570'], practical: .75, height: 43.5, tilt: 0, offset: [50, 200], yaw: -12, leds: true, color: '#bb70ff' }
+    night: { label: 'Night', description: 'One task light · the house settles', key: '#a7bde8', fill: '#a3b7de', accent: '#ffc883', power: .18, ambient: .21, bounce: .32, exposure: 1.15, sky: ['#0d1630', '#2a3d62'], practical: 1.05, height: 28, tilt: 0, offset: [0, 120], yaw: 0, leds: true, color: '#776c60' },
+    party: { label: 'At home with friends', description: 'Warm shared light · drinks and conversation', key: '#d4c7b5', fill: '#a6b9cd', accent: '#e4b486', power: .38, ambient: .28, bounce: .4, exposure: 1.1, sky: ['#191a44', '#4a3570'], practical: .75, height: 43.5, tilt: 0, offset: [50, 200], yaw: -12, leds: true, color: '#e3b884' }
 };
 // Window view, practical fixtures and textiles per daypart. Emissive and
 // canvas changes only: no extra real-time lights or shadow maps.
@@ -382,6 +418,7 @@ function paintClock(c, S, [hours, minutes]) {
 
 export function buildHomeOffice(room, root, layout, helpers) {
     const { material, mesh, box, rod, sphere } = helpers;
+    const comfort = homeComfortDetails(room, helpers);
     const { width: w, depth: d, height: h, back: bz } = layout;
     const front = bz + d, house = layout.id !== 'apartment', premium = ['premium', 'executive'].includes(layout.id);
     // Small dressing keeps its contact shadow but skips the shadow-map pass.
@@ -397,11 +434,19 @@ export function buildHomeOffice(room, root, layout, helpers) {
     box(root, [w, 30, d], [0, -15, bz + d / 2], oak);
     const rugMap = rugTexture(), juteMap = juteTexture(); juteMap.repeat.set(5, 5);
     const rugMat = material('#ffffff', { map: rugMap, roughness: 1 }), jute = material('#ffffff', { map: juteMap, roughness: 1 });
-    box(root, [house ? 2250 : 1800, 5, house ? 2250 : 1900], [layout.desk[0], 2.5, house ? 270 : 480], rugMat, 6);
-    if (house) box(root, [1550, 5, 1350], [-970, 2.5, 1910], jute, 8);
+    const deskRug={x:layout.desk[0],z:layout.desk[1]+720,width:house?2250:1800,depth:house?2100:1650};
+    root.userData.homeRugs=[deskRug];
+    box(root,[deskRug.width,5,deskRug.depth],[deskRug.x,2.5,deskRug.z],rugMat,6).userData.homeRug='desk';
+    if(house){
+        const chair=layout.props.find(p=>p.id==='armchair-poppi'),tableX=layout.table?.[0]??-475;
+        const left=-w/2+100,right=premium?tableX+350:tableX+300;
+        const rear=Math.max(deskRug.z+deskRug.depth/2+80,chair.at[2]-600),end=Math.min(front-90,chair.at[2]+780);
+        const reading={x:(left+right)/2,z:(rear+end)/2,width:right-left,depth:end-rear};root.userData.homeRugs.push(reading);
+        box(root,[reading.width,5,reading.depth],[reading.x,2.5,reading.z],jute,8).userData.homeRug='reading';
+    }
     const tableAt = layout.table || (house ? [-475, 2100] : [80, 1870]);
     const table = new THREE.Group(); table.name = 'Reading side table'; root.add(table);
-    mesh(table, new THREE.CylinderGeometry(230, 230, 25, 40), joinery, [tableAt[0], 437.5, tableAt[1]]);
+    mesh(table, new THREE.CylinderGeometry(230, 230, 25, 64), comfort.stone, [tableAt[0], 437.5, tableAt[1]]);
     mesh(table, new THREE.CylinderGeometry(75, 95, 415, 32), joinery, [tableAt[0], 217.5, tableAt[1]]);
     mesh(table, new THREE.CylinderGeometry(150, 150, 10, 32), joinery, [tableAt[0], 5, tableAt[1]]);
 
@@ -440,7 +485,8 @@ export function buildHomeOffice(room, root, layout, helpers) {
     box(back, [ww, h - bottom - wh, 80], [wx, (h + bottom + wh) / 2, bz - 40], wallMat);
     box(back, [w, 85, 18], [0, 42.5, bz + 9], trim);
     crown(back, [w, 60, 55], [0, h - 30, bz + 27.5]);
-    const cx = house ? w / 2 - 570 : 995, cw = house ? 920 : 550;
+    // A narrow cabinet leaves a real passage beside either desk width.
+    const cx = house ? w / 2 - 570 : 1120, cw = house ? 920 : 420;
     wainscot(back, -w / 2 + 10, w / 2 - 10, 'x', (u, inset, y) => [u, y, bz + inset], [], [[cx - cw / 2, cx + cw / 2]]);
     const skyCanvas = document.createElement('canvas'); skyCanvas.width = Math.min(1024, Math.round(512 * ww / wh)); skyCanvas.height = 512;
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
@@ -495,7 +541,7 @@ export function buildHomeOffice(room, root, layout, helpers) {
     box(entry, [80, h, d], [-w / 2 - 40, h / 2, bz + d / 2], wallMat);
     box(entry, [18, 85, d], [-w / 2 + 9, 42.5, bz + d / 2], trim);
     crown(entry, [55, 59, d - 55], [-w / 2 + 27.5, h - 30, bz + 55 + (d - 55) / 2]);
-    const doorZ = front - 650;
+    const doorZ = layout.entryZ;
     wainscot(entry, bz + 10, front, 'z', (u, inset, y) => [-w / 2 + inset, y, u], [[doorZ - 455, doorZ + 455]], [], 2);
     box(entry, [24, 2120, 900], [-w / 2 + 14, 1060, doorZ], trim);
     const doorMat = material('#ffffff', { map: panelTexture('#cdbfa8', [[.12, .06, .88, .45], [.12, .52, .88, .94]]), roughness: .6 });
@@ -516,19 +562,21 @@ export function buildHomeOffice(room, root, layout, helpers) {
     // Stoneware vase with dried grasses: two instanced batches, not ten meshes.
     // Set in from the desk-side edge so the grasses' spread stays over the cabinet:
     // Groove measures instanced batches by their full extent, at desktop height.
-    const vaseX = cx - cw / 2 + 107, vaseZ = bz + 250;
-    deco(mesh(cabinet, new THREE.LatheGeometry([[0, 0], [52, 4], [62, 60], [56, 140], [34, 190], [30, 220], [36, 228]].map(([x, y]) => new THREE.Vector2(x, y)), 24), ceramic, [vaseX, 740, vaseZ]));
-    const stems = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 5), material('#b49a72'), 7), plumes = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 8), material('#e6d6b6', { roughness: 1 }), 7);
-    const q = new THREE.Quaternion(), v = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
-    for (let i = 0; i < 7; i++) {
-        const a = i * 2.4, lean = .07 + (i % 3) * .06, len = 330 + (i * 47 % 120), dir = new THREE.Vector3(Math.cos(a) * lean, 1, Math.sin(a) * lean).normalize();
-        q.setFromUnitVectors(up, dir); v.set(0, 0, 0).addScaledVector(dir, len / 2 - 20);
-        stems.setMatrixAt(i, new THREE.Matrix4().compose(v.clone(), q, new THREE.Vector3(3, len, 3)));
-        v.set(0, 0, 0).addScaledVector(dir, len - 10);
-        plumes.setMatrixAt(i, new THREE.Matrix4().compose(v.clone(), q, new THREE.Vector3(26, 95, 26)));
+    if (house) {
+        const vaseX = cx - cw / 2 + 107, vaseZ = bz + 250;
+        deco(mesh(cabinet, new THREE.LatheGeometry([[0, 0], [52, 4], [62, 60], [56, 140], [34, 190], [30, 220], [36, 228]].map(([x, y]) => new THREE.Vector2(x, y)), 24), ceramic, [vaseX, 740, vaseZ]));
+        const stems = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 5), material('#b49a72'), 7), plumes = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 8), material('#e6d6b6', { roughness: 1 }), 7);
+        const q = new THREE.Quaternion(), v = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+        for (let i = 0; i < 7; i++) {
+            const a = i * 2.4, lean = .07 + (i % 3) * .06, len = 330 + (i * 47 % 120), dir = new THREE.Vector3(Math.cos(a) * lean, 1, Math.sin(a) * lean).normalize();
+            q.setFromUnitVectors(up, dir); v.set(0, 0, 0).addScaledVector(dir, len / 2 - 20);
+            stems.setMatrixAt(i, new THREE.Matrix4().compose(v.clone(), q, new THREE.Vector3(3, len, 3)));
+            v.set(0, 0, 0).addScaledVector(dir, len - 10);
+            plumes.setMatrixAt(i, new THREE.Matrix4().compose(v.clone(), q, new THREE.Vector3(26, 95, 26)));
+        }
+        // Instanced batches are anchored at the vase neck.
+        for (const inst of [stems, plumes]) { inst.position.set(vaseX, 950, vaseZ); inst.castShadow = false; inst.receiveShadow = true; inst.computeBoundingSphere(); cabinet.add(inst); }
     }
-    // Instanced batches are anchored at the vase neck.
-    for (const inst of [stems, plumes]) { inst.position.set(vaseX, 950, vaseZ); inst.castShadow = false; inst.receiveShadow = true; inst.computeBoundingSphere(); cabinet.add(inst); }
     // Compact display shelves above storage, clear of the lifting desk.
     const stripMat = material('#e9dcc4', { emissive: '#ffc27a', emissiveIntensity: 0, roughness: .4 });
     const washMat = new THREE.MeshBasicMaterial({ map: washTexture(), color: '#ffc27a', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
@@ -558,8 +606,8 @@ export function buildHomeOffice(room, root, layout, helpers) {
     leaves.castShadow = false; leaves.receiveShadow = true; leaves.computeBoundingSphere(); leaves.name = 'Trailing pothos'; back.add(leaves);
     if (house) {
         // A small wall hanger supports the guitar without filling floor space.
-        const hanger = new THREE.Group(); hanger.name = 'Guitar wall hanger'; hanger.position.set(-w / 2, 1515, 150); entry.add(hanger);
-        room.propSupports.push({obj:hanger,id:'quaternius-guitar',at:[-w/2+85,650,150]});
+        const hanger = new THREE.Group(); hanger.name = 'Guitar wall hanger'; hanger.position.set(-w / 2, 1515, front - 350); entry.add(hanger);
+        room.propSupports.push({obj:hanger,id:'quaternius-guitar',at:[-w/2+85,650,front-350]});
         const black = material('#282b2c', { metalness: .35, roughness: .65 });
         box(hanger, [15, 120, 70], [12, 35, 0], black, 3);
         for (const z of [-25, 25]) rod(hanger, [20, 0, z], [100, 0, z], 7, black);
@@ -581,7 +629,8 @@ export function buildHomeOffice(room, root, layout, helpers) {
     const board = new THREE.Group(); board.name = 'Cork pinboard'; side.add(board);
     board.position.set(w / 2 - 12, 1380, bz + 650); board.rotation.y = -Math.PI / 2;
     deco(box(board, [820, 560, 22], [0, 0, 0], joinery, 4));
-    deco(box(board, [776, 516, 4], [0, 0, 11], material('#ffffff', { map: pinboardTexture(), roughness: .95 })));
+    const boardMap=pinboardTexture(), updateBoard=homeSessionPinboard(boardMap);
+    deco(box(board, [776, 516, 4], [0, 0, 11], material('#ffffff', { map: boardMap, roughness: .95 })));
     const clock = new THREE.Group(); clock.name = 'Wall clock'; side.add(clock);
     clock.position.set(w / 2 - 6, 1960, bz + 650); clock.rotation.y = -Math.PI / 2;
     const clockCanvas = document.createElement('canvas'); clockCanvas.width = clockCanvas.height = 256;
@@ -599,12 +648,7 @@ export function buildHomeOffice(room, root, layout, helpers) {
     const throwRoll = mesh(basket, new THREE.CylinderGeometry(78, 78, 380, 20), material('#ffffff', { map: knitMap, roughness: 1 }), [-25, 420, 10]);
     throwRoll.rotation.set(.18, 0, .32);
     const roll2 = deco(mesh(basket, new THREE.CylinderGeometry(62, 62, 330, 20), material('#e7dcc6', { roughness: 1 }), [45, 395, -40])); roll2.rotation.set(-.2, 0, -.3);
-    // A lumbar cushion on the armchair travels with the chair's own transform.
-    const cushion = material('#c79245', { roughness: 1 });
-    room.decorateProp = (object, placement) => {
-        if (placement.id !== 'armchair-poppi') return;
-        const pillow = box(object, [.42, .27, .13], [0, .5, -.16], cushion, .05); pillow.rotation.x = -.28; pillow.name = 'Lumbar cushion';
-    };
+    room.decorateProp = comfort.decorate;
     if (house) {
         // Low storage along the side leaves a full route from entry to desk.
         const storage=new THREE.Group();storage.name='Low sideboard';root.add(storage);
@@ -623,13 +667,13 @@ export function buildHomeOffice(room, root, layout, helpers) {
     if (premium) {
         // Extra floor area becomes a lounge and a library, not scaled furniture.
         const loungeZ = layout.id === 'executive' ? 3190 : 2510;
-        box(root, [3000, 5, 2080], [550, 2.5, loungeZ + 390], jute, 8);
+        const reading=root.userData.homeRugs[1],left=Math.max(-950,reading.x+reading.width/2+80),right=2150;
+        const lounge={x:(left+right)/2,z:loungeZ+390,width:right-left,depth:2080};root.userData.homeRugs.push(lounge);
+        box(root,[lounge.width,5,lounge.depth],[lounge.x,2.5,lounge.z],jute,8).userData.homeRug='lounge';
         const coffee = new THREE.Group(); coffee.name = 'Lounge coffee table'; root.add(coffee);
         box(coffee, [1050, 35, 520], [700, 380, loungeZ], joinery, 16);
         for (const x of [290,1110]) for (const z of [loungeZ-180,loungeZ+180]) rod(coffee,[x,0,z],[x,365,z],14,brass);
-        deco(box(coffee, [380, 14, 240], [520, 404.5, loungeZ - 40], material('#3d3a36', { roughness: .4 }), 5));
-        deco(mesh(coffee, new THREE.CylinderGeometry(95, 55, 70, 24), ceramic, [520, 446, loungeZ - 40]));
-        for (const [i, color] of ['#b8724f', '#e2d7c3'].entries()) deco(box(coffee, [260 - i * 20, 30, 190 - i * 10], [930, 412.5 + i * 30, loungeZ + 60], material(color, { roughness: .85 }), 3));
+        comfort.lounge(coffee, 700, 397.5, loungeZ, layout.id);
         const bookcase = new THREE.Group(); bookcase.name = 'Built-in library'; side.add(bookcase);
         const z = 1780;
         box(bookcase, [24, 2140, 1500], [w / 2 - 12, 1090, z], sage, 3);
@@ -637,7 +681,15 @@ export function buildHomeOffice(room, root, layout, helpers) {
         box(bookcase, [310, 60, 1500], [w / 2 - 165, 30, z], sage, 3);
         for (const y of [470,870,1270,1670,2070]) {
             box(bookcase,[320,25,1460],[w/2-180,y,z],joinery,2);
-            for (let n=0;n<14;n++) box(bookcase,[140,170+(n%3)*22,35],[w/2-200,y+105,z-650+n*85],material(['#d7c8a8','#61786d','#ad785e'][n%3]),1);
+            for (let n=0;n<14;n++) {
+                // Shelves contain small groups with breathing room and a few
+                // horizontal volumes, rather than fourteen identical uprights.
+                if (n===4 || n===9) continue;
+                const stack=n>=11 && y%800===470;
+                const size=stack?[140,26,175]:[140,155+(n*17+y)%85,32+(n%3)*4];
+                const at=[w/2-200,stack?y+26+(n-11)*28:y+12.5+size[1]/2,stack?z+440:z-650+n*85];
+                box(bookcase,size,at,material(['#d7c8a8','#61786d','#ad785e','#a79c86','#495f5a'][n%5],{roughness:.82}),2);
+            }
         }
         if (layout.id === 'executive') {
             const gallery = new THREE.Group(); gallery.name = 'Gallery art'; gallery.position.set(-w/2+35,1650,1000); gallery.rotation.y=Math.PI/2; entry.add(gallery);
@@ -663,22 +715,24 @@ export function buildHomeOffice(room, root, layout, helpers) {
         makeLight([w / 2 - 500, 150, front - 600], '#b18bdf', 1.5, 2300),
         makeLight([layout.readingLight[0], 1520, layout.readingLight[1]], '#ffdcaa', 2.5, 2600)
     ];
+    const updateSession=buildHomeSessionDetail(room,layout,helpers);
     // Light sources are owned by this room and disappear on scene replacement.
     room.homeAtmosphere = (modeId, accent = 1) => {
         const mode = HOME_MODES[modeId] || HOME_MODES.afternoon, look = HOME_LOOKS[modeId] || HOME_LOOKS.afternoon;
+        updateSession(modeId);updateBoard(modeId);comfort.update(modeId);
         paintView(skyCanvas.getContext('2d'), skyCanvas.width, skyCanvas.height, mode, look);
         skyMap.needsUpdate = true;
         paintClock(clockCanvas.getContext('2d'), 256, look.time); clockMap.needsUpdate = true;
         const drop = Math.max(60, look.shade * wh); blind.scale.y = drop; shadeMap.repeat.set(1, Math.max(1, drop / 210));
-        lights.forEach(({ light, power }, i) => { light.intensity = power * mode.practical * accent * (i === 2 && modeId !== 'party' ? .12 : 1); });
-        lights[2].light.color.set(look.party ? '#b880ff' : '#ffcf99'); glow.emissiveIntensity = .3 + mode.practical;
+        lights.forEach(({light,power},i)=>{light.intensity=power*mode.practical*accent*(HOME_SESSIONS[modeId]||HOME_SESSIONS.afternoon).light[i];});
+        lights[2].light.color.set(look.party ? '#d0b796' : '#ffcf99'); glow.emissiveIntensity = .15 + mode.practical*(HOME_SESSIONS[modeId]||HOME_SESSIONS.afternoon).light[1];
         lights[0].light.color.set(modeId === 'night' ? '#ffc47e' : '#ffcd8f');
-        const strip = Math.min(1.4, look.strip * accent), color = look.party ? '#d06bff' : '#ffc27a';
-        stripMat.emissive.set(color); stripMat.emissiveIntensity = strip * 2.2;
-        washMat.color.set(color); washMat.opacity = Math.min(1, strip * .42); washMat.visible = strip > 0;
-        lampGlow.emissiveIntensity = mode.practical * .9;
+        const strip = Math.min(.85, look.strip * accent * (modeId==='night'?.3:.6)), color = look.party ? '#e9c391' : '#f2ce9e';
+        stripMat.emissive.set(color); stripMat.emissiveIntensity = strip * .9;
+        washMat.color.set(color); washMat.opacity = Math.min(1, strip * .2); washMat.visible = strip > 0;
+        lampGlow.emissiveIntensity = mode.practical * .5;
         bulbMat.color.set(look.fairy ? '#ffffff' : '#8f897d').multiplyScalar(look.fairy ? Math.min(1, .55 + .45 * look.fairy * accent) : 1);
-        const party = ['#ff6fcf', '#7fd0ff', '#ffd27f', '#b48cff'];
+        const party = ['#ecd3ad', '#d1dfdc', '#e5bf8e', '#d9c6ab'];
         for (let i = 0; i < bulbs.count; i++) bulbs.setColorAt(i, lc.set(look.party ? party[i % 4] : look.fairy ? '#ffcf86' : '#f2ede2'));
         bulbs.instanceColor.needsUpdate = true;
     };

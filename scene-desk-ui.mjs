@@ -1,4 +1,4 @@
-import { mountDeskObjectUI } from './scene-desk-object-ui.mjs?v=desk-auto-stow-20261014';
+import { mountDeskObjectUI } from './scene-desk-object-ui.mjs?v=humboldt-decals-stow-20261016';
 export function mountSceneDeskUI(parent,manager){
     const panel=document.createElement('details');panel.className='scene-desk-panel';panel.open=false;
     panel.innerHTML=`<summary><span data-desk-title>Desks</span> <span data-desk-summary></span></summary>
@@ -28,7 +28,7 @@ export function mountSceneDeskUI(parent,manager){
         panel.hidden=!manager.key;objects.sync();
         const product=!!manager.active?.product;
         const stow=manager.active?.stowStatus;
-        q('[data-desk-stow-status]').textContent=manager.objects.editing?'Automatic stowing pauses while you rearrange items.':stow?`${stow.count} items organized in shelving${stow.overflow?' · '+stow.overflow+' oversized items stored':''}. Lower to 9° or less to restore your layout.`:'Above 9°, loose desktop items automatically stow in the shelving. Drafting tools stay at 10–49°; painting canvases stay at 50° and above.';
+        q('[data-desk-stow-status]').textContent=manager.objects.editing&&manager.objects.selected?'The selected item is available for editing; other loose desktop items stow above 9°.':stow?`${stow.count} items organized in shelving${stow.overflow?' · '+stow.overflow+' oversized items stored':''}. Lower to 9° or less to restore your layout.`:'Above 9°, loose desktop items automatically stow in the shelving. Drafting tools stay at 10–49°; painting canvases stay at 50° and above.';
         q('[data-desk-title]').textContent=product?'Desk objects':'Desks';
         panel.querySelector('.scene-desk-row').hidden=product;
         panel.querySelector('.scene-desk-routines').hidden=product;

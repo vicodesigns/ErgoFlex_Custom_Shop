@@ -38,6 +38,7 @@ async function sampleImage(sample) {
 }
 
 function artworkDraft(mode, value) {
+    if (window.__ERGO_PRESENTATION__ && mode !== "readonly") return Promise.resolve(value);
     return new Promise((resolve, reject) => {
         const request = indexedDB.open('ergoflex-artwork', 1);
         request.onupgradeneeded = () => request.result.createObjectStore('drafts');

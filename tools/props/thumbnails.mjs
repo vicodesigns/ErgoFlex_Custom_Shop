@@ -30,6 +30,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { finishTriangleTable } from '/triangle-table-finishes.mjs';
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, alpha: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(1); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
 const scene = new THREE.Scene();
@@ -39,14 +40,14 @@ const camera = new THREE.PerspectiveCamera(30, 1, .01, 1000);
 const key = new THREE.DirectionalLight('#fff', 2.2); key.position.set(3, 6, 4); scene.add(key, new THREE.AmbientLight('#fff', .4));
 const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
 let current = null;
-window.renderProp = (url) => new Promise((ok, fail) => loader.load(url, (g) => {
+window.renderProp = (url, id) => new Promise((ok, fail) => loader.load(url, (g) => {
     if (current) {
         scene.remove(current);
         const geometries = new Set(), materials = new Set(), textures = new Set();
         current.traverse(o => { if (o.isMesh) { geometries.add(o.geometry); for (const m of [].concat(o.material)) { materials.add(m); for (const v of Object.values(m)) if (v?.isTexture) textures.add(v); } } });
         geometries.forEach(g=>g.dispose()); materials.forEach(m=>m.dispose()); textures.forEach(t=>t.dispose());
     }
-    current = g.scene; scene.add(current);
+    current = g.scene; finishTriangleTable(current, id); scene.add(current);
     const box = new THREE.Box3().setFromObject(current), c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
     const radius = s.length() * .5 || 1;
     const dist = radius / Math.sin(THREE.MathUtils.degToRad(15)) * 1.1;
@@ -78,7 +79,7 @@ await page.waitForFunction('window.ready === true', { timeout: 60000 });
 const rendered = [];
 for (const prop of props) {
     try {
-        const r = await page.evaluate((url) => window.renderProp(url), '/' + prop.file);
+        const r = await page.evaluate(({ url, id }) => window.renderProp(url, id), { url: '/' + prop.file, id: prop.id });
         const file = join(root, 'assets/props/thumbs', `${prop.id}.png`);
         writeFileSync(file, Buffer.from(r.png.split(',')[1], 'base64'));
         rendered.push({ ...prop, thumb: file, viewerSize: r.size, viewerTris: r.tris });

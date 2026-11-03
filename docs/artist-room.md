@@ -50,3 +50,32 @@ the desk price or AR export. No painting or 3D printing simulation is included.
 Run `npm run test:artist` for physical bounds, both desk sizes, all five
 posture/light modes, nested artwork edits, scene separation and project restore.
 Website publication requires a refreshed site bundle including artist-room.mjs.
+
+## Studio refinement — 25 October 2026
+
+All five layouts share a connected daily still-life study: charcoal drawing in
+Morning, partial colour in Afternoon, refinement in Evening, a nearly finished
+work during Night clean-up, and the completed piece for Open studio. In the
+small nook this appears in the central framed study; larger studios use the
+floor easel. The editable reference pinboard carries matching session notes.
+
+The painting now rests on its easel bar behind a retaining lip. Its rear brace
+stays behind the canvas, the upper clamp meets the frame, and a supported side
+shelf keeps brushes out of the picture. The taboret has a glass palette,
+charcoal sheets, hand-painted swatches, and a fitted metal cover for clean-up
+and viewing. Drawer cards and pigment bands make the materials chest legible.
+The palette contents follow their editable parent and remain deleted/hidden
+when switching activities. Existing scene asset keys are retained.
+
+Neutral task light supports colour work; warmer picture lights and lanterns
+carry evening and open-studio atmosphere. Night festoons are subdued. Foliage
+stays inside the room, with a smaller fig in the nook to clear the 60″ desk.
+
+Verification:
+
+- `node tests/artist-studio-sessions-test.cjs`: all five layouts and activities,
+  canvas/rest/lip/brace geometry, palette bounds and support, edit visibility,
+  distinct artwork and lighting, and room bounds.
+- `node tests/artist-studio-groove-test.cjs`: 50 clear routes across all layouts,
+  five activities, and both 48″/60″ widths, using isolated browser storage.
+- Visual review: overview and easel/storage views for every layout/activity.

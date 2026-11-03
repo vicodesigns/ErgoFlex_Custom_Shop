@@ -1,5 +1,5 @@
 import { PRESETS, cleanConfig, validConfig, accessory } from './catalog.mjs?v=hbhs-product-classroom-20261014';
-import { cleanSceneDeskData } from './scene-desk-data.mjs';
+import { cleanSceneDeskData } from './scene-desk-data.mjs?v=item-gumball-clipboard-20261016';
 import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=hbhs-product-classroom-20261014';
 import { cleanDeskStyle } from './room-desk-styles.mjs';
 import { minimumHeightForTilt } from './motion-limits.mjs';

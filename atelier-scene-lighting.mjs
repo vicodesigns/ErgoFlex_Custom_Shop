@@ -19,6 +19,7 @@ export function bindAtelierLamp(room,object,entry,fit=1){
  object.userData.atelierLamp={...entry.atelierLamp,fit};applyAtelierLighting(room,...(room.atelierLampPhase||['afternoon',1]));
 }
 export function applyAtelierLighting(room,mode='afternoon',accent=1){
- room.atelierLampPhase=[mode,accent];const level=({morning:.16,afternoon:.3,evening:.85,night:.65,party:1}[mode]??.3)*Math.max(0,accent);
+ room.atelierLampPhase=[mode,accent];const levels=room.id==='bedroom'?{morning:.08,afternoon:.12,evening:.7,night:.08,party:.18}:{morning:.16,afternoon:.3,evening:.85,night:.65,party:1};
+ const level=(levels[mode]??.3)*Math.max(0,accent);
  for(const f of room.atelierLamps||[]){f.light.intensity=f.power*level;for(const g of f.glows)g.material.emissiveIntensity=g.base*level;}
 }

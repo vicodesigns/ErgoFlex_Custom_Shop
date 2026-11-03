@@ -30,10 +30,10 @@ export const sceneOverrides = {
         modes:{
             // Daylight with blinds partly down; a dim neutral D65 surround for
             // colour work; a dark house for screening; a warm showcase evening.
-            morning:{description:'Daylight planning · storyboards, shot lists and equipment prep',ambient:.34,exposure:1.0,height:35,tilt:0,leds:false},
-            afternoon:{description:'Balanced work light · editing, animation and digital art',ambient:.38,exposure:1.0,height:28,tilt:0,leds:false},
-            evening:{description:'Neutral grading surround · colour decisions and headphone mixing',key:'#e6edf7',fill:'#c9d3df',power:.32,ambient:.2,bounce:.3,practical:.55,exposure:1.0,colors:['#f2f4f7','#9fb2c6'],height:28,tilt:0,color:'#d8e8ff',leds:true},
-            night:{description:'Screening · dark house, projection and quiet listening',key:'#8ea6c4',fill:'#7f97b5',power:.1,ambient:.12,bounce:.16,practical:.22,exposure:1.02,height:28,tilt:0,color:'#87b4e3',leds:true},
+            morning:{description:'Daylight planning · call sheets, shot lists and equipment checkout',power:1.1,ambient:.32,exposure:1.0,height:35,tilt:0,leds:false},
+            afternoon:{description:'Balanced work light · rough cuts, print proofs and shared edit notes',power:1.3,ambient:.35,exposure:1.0,height:28,tilt:0,leds:false},
+            evening:{description:'Neutral grading surround · reference swatches, cue sheets and headphone mixing',key:'#e6edf7',fill:'#c9d3df',power:.24,ambient:.22,bounce:.3,practical:.36,exposure:1.0,colors:['#f2f4f7','#9fb2c6'],height:28,tilt:0,color:'#637788',leds:true},
+            night:{description:'Screening · dim workstations, projection and written audience feedback',key:'#8ea6c4',fill:'#7f97b5',power:.1,ambient:.16,bounce:.2,practical:.14,exposure:1.02,height:28,tilt:0,color:'#344653',leds:true},
             party:{description:'Student reel showcase · portfolio critique and shared notes',key:'#ffe2bf',fill:'#d9cbb8',power:.7,ambient:.25,bounce:.45,practical:.8,exposure:.98,colors:['#ffd9a8','#e3c7a6'],height:35,tilt:0,color:'#f3bd79',leds:true}
         },
         layout(tier,l){
@@ -124,11 +124,14 @@ export function drawScreen(c,W,H,_spec,variant=0,phase='morning'){
     }
     text(c,['PREP / SHOT LISTS','EDIT / CREATE','SOUND / COLOUR','SCREENING','PORTFOLIO CRITIQUE'][p],24,H-14,15,'#c2d6e6');
 }
-export function drawBoard(c,W,H,_spec,variant=0){
-    c.fillStyle='#e9edf0';c.fillRect(0,0,W,H);text(c,'FROM FIRST IDEA TO FINAL FRAME',26,45,24,NAVY);
+export function drawBoard(c,W,H,_spec,variant=0,phase='morning'){
+    const p=phaseIndex(phase),statuses=[['Shot list','Crew / kit','Schedule','Location notes'],['Captured','Selects ready','Rough cut 03','Sound pickup'],['Picture lock','Colour pass','Dialogue / FX','Mix review'],['Ready to screen','Audience notes','Next revision','Archive'],['Student reels','Peer feedback','Portfolio edits','Next project']][p];
+    c.fillStyle='#e9edf0';c.fillRect(0,0,W,H);text(c,['PRE-PRODUCTION / COAST STORIES','EDIT / REVIEW / REVISE','SOUND + COLOUR / FINISHING','SCREENING / LISTEN + RESPOND','PORTFOLIOS / WORK IN PROGRESS'][p],26,45,24,NAVY);
     for(let n=0;n<4;n++){const x=25+n*(W-45)/4;c.fillStyle=NAVY;c.fillRect(x,69,(W-65)/4,26);text(c,['PLAN','CAPTURE','EDIT','SHARE'][n],x+8,89,14);
         coastFrame(c,x,110,(W-65)/4,95,(variant+n)%5);text(c,['Shot / coast','Interview','Sound notes','Student reel'][n],x+8,234,13,NAVY);
-        for(let k=0;k<3;k++){c.fillStyle=k===variant%3?ORANGE:'#b2bfcb';c.fillRect(x+8,253+k*21,(W-95)/4,11);}}
+        text(c,statuses[n],x+8,260,12,NAVY);
+        for(let k=0;k<2;k++){c.fillStyle=(n+k)<=p?ORANGE:'#b2bfcb';c.fillRect(x+8,276+k*19,(W-95)/4,8);}}
+    text(c,'STUDENT PRODUCTION / '+['Plan the story','Discuss the rough cut','Check the mix','Collect the feedback','Share the next version'][p],28,H-23,12,NAVY);
 }
 
 const logoMaps=new Map();
@@ -234,6 +237,14 @@ export function furnish(kit){
 export function dressProp(id,k,_g,kit){
     if(id==='storage'){
         for(let n=0;n<3;n++){const y=290+n*420;k.box([1080,24,410],[0,y,0],SILVER);for(let j=0;j<3;j++){const x=-350+j*350;k.box([265,170,250],[x,y+100,5],INK);k.box([65,20,5],[x,y+105,133],ORANGE);k.box([95,10,20],[x,y+193,5],SILVER);}}
+        // Protective case ribs, recessed latches and inventory tape make the
+        // equipment wall read as a working checkout station at close range.
+        for(let row=0;row<3;row++)for(let col=0;col<3;col++){
+            const x=-350+col*350,y=290+row*420;
+            for(const dx of [-100,100]){k.box([18,28,9],[x+dx,y+151,136],SILVER);k.box([14,10,11],[x+dx,y+151,142],INK);}
+            for(const dx of [-78,78])k.box([8,110,9],[x+dx,y+96,135],'#39434b');
+            k.box([79,25,3],[x,y+65,133],WHITE);for(let n=0;n<5;n++)k.box([2+n%2,15,1],[x-28+n*11,y+65,135],INK);
+        }
         // Open upper doors read as a checkout cabinet, with labelled hard cases.
     }
 }
@@ -333,18 +344,19 @@ export function finishDecor(kit){
     for(let n=0;n<12;n++)k.box([23,3,35],[140+n*24,908,205],['#f4efe5','#6a8eaa','#c56b50','#91ab91','#334c72','#edac57'][n%6]);k.build(g,kit.dress);
 }
 export function activityMaterials(k,phase,y){
-    // Storyboard pages and a clapper slate, instead of generic social snacks.
-    for(let n=0;n<(phase===4?5:3);n++){
-        const x=-120+n*150;k.box([130,2,190],[x,y+2,30],WHITE);for(let j=0;j<3;j++)k.box([100,1,40],[x,y+3.2,-25+j*55],['#a4bfc9','#738ba4','#cfa273'][(phase+j)%3]);
-    }
-    k.box([200,120,12],[-490,y+70,30],INK);k.box([210,24,15],[-490,y+144,30],WHITE);
-    for(let n=0;n<5;n++)k.box([18,25,16],[-580+n*40,y+144,30],INK,[0,0,.35]);
-    notebook(k,350,y,-160,NAVY);k.box([90,25,60],[530,y+12,-160],INK);
+    // Printed call sheets, edit tools, grading references and critique papers
+    // are separate editable furniture-local kits in campus-lived-in.mjs.
 }
 export function atmosphere(phase,gain,kit){
-    for(const m of kit.mediaDiffusers||[])m.emissiveIntensity=phase==='afternoon'?.85:phase==='night'?.12:phase==='party'?.55:.3;
+    for(const m of kit.mediaDiffusers||[])m.emissiveIntensity=phase==='afternoon'?.65:phase==='night'?0:phase==='party'?.3:.18;
     const p=phaseIndex(phase);
-    for(const m of kit.screenMats)if(m.userData.screenVariant===3)m.emissiveIntensity=[.3,.3,.45,1,.85][p];
+    for(const m of kit.screenMats)if(m.userData.screenVariant===3)m.emissiveIntensity=[.24,.26,.4,.8,.68][p];
+    if(kit.lights?.[0])kit.lights[0].intensity*=[.85,.8,.55,.3,.7][p];
+    if(kit.mediaBoardPhase!==phase){
+        const face=kit.board?.children.find(o=>o.isMesh&&o.geometry.type==='PlaneGeometry'&&o.material.map?.image?.getContext);
+        if(face){const c=face.material.map.image;drawBoard(c.getContext('2d'),c.width,c.height,kit.spec,0,phase);face.material.map.needsUpdate=true;}
+        kit.mediaBoardPhase=phase;
+    }
     // Screening and showcase: room light 1 becomes the screen's spill.
     const spill=kit.lights?.[1];if(spill){
         spill.userData.authored??={at:spill.position.clone()};
@@ -354,7 +366,7 @@ export function atmosphere(phase,gain,kit){
     if(p===2||p===4){const c=kit.sky.map.image.getContext('2d'),W=c.canvas.width,H=c.canvas.height;c.save();c.globalCompositeOperation='multiply';c.globalAlpha=p===2?.55:.35;c.fillStyle=p===2?'#5a6478':'#c9a27a';c.fillRect(0,0,W,H);c.restore();kit.sky.map.needsUpdate=true;}
     if(kit.mediaBlind){const drop=[.15,.35,.75,1,.85][p],b=kit.mediaBlind;b.scale.y=drop;b.position.y=875*(1-drop);b.material.map.repeat.y=6*drop;}
     if(kit.mediaBeam)kit.mediaBeam.color.setScalar([0,0,0,.09,.05][p]);
-    if(kit.mediaOnAir)kit.mediaOnAir.emissiveIntensity=[.15,.15,.8,.8,.3][p];
+    if(kit.mediaOnAir)kit.mediaOnAir.emissiveIntensity=[.04,.12,.7,.015,.04][p];
     kit.mediaPools?.apply(p,gain);
     if(kit.room.ceilingFixture)for(const g of kit.mediaCeiling||[])if(g.parent!==kit.room.ceilingFixture)kit.room.ceilingFixture.attach(g);
     kit.root.userData.mediaLab={concept:true,phase,deskCount:COUNTS[kit.layout.index],zones:['Editing','Digital art','Audio post','Capture','Print & scan','Critique','Equipment checkout']};

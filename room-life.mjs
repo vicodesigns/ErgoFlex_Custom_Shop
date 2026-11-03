@@ -1,10 +1,19 @@
+import { clearLoungeSeating } from './room-seating-clearance.mjs?v=table-clearance-20261021';
 import * as THREE from 'three';
-import { activityPageMaterial } from './room-activity-print.mjs?v=environment-expert-20261014';
+import { activityPageMaterial } from './room-activity-print.mjs?v=table-clearance-20261021';
 import { ROOM_DETAIL_PALETTES } from './room-finish-palettes.mjs?v=environment-expert-20261014';
+import { enrichActivityKit } from './room-life-detail.mjs?v=environment-realism-20261019';
 import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
+import { settleActivitySupports, bindMeetingSeats, meetingSeatPose } from './room-activity-support.mjs?v=table-clearance-20261021';
+import { detailKit } from './institutional-detail.mjs';
 
 export const DAY_PHASES = ['morning', 'afternoon', 'evening', 'night', 'party'];
 const TIERS = ['apartment', 'house', 'spacious', 'premium', 'executive'];
+// Builders use both numeric tier indexes and named tiers. Treating a numeric
+// tier as a name produced factor=undefined and NaN furniture transforms.
+const tierIndex = layout => Number.isInteger(layout.tier)
+    ? THREE.MathUtils.clamp(layout.tier, 0, TIERS.length - 1)
+    : Math.max(0, TIERS.indexOf(layout.tier || layout.id));
 // Authored activities, rather than the same dinner party in every environment.
 export const ROOM_STORIES = {
     ...Object.fromEntries(Object.entries(INSTITUTIONAL_ROOMS).map(([id, p]) => [id, p.stories])),
@@ -43,33 +52,60 @@ export function roomLifeDisplayTransform(obj, transform) {
 
 function activityAnchor(id, l) {
     // Institutional groups may move their kit with stageAnchor(layout) in their module.
-    if (INSTITUTIONAL_ROOMS[id]) return institutionalModule(id)?.stageAnchor?.(l) || { at: l.activity, y: 740, offset: [0, 0], support: 'activity-table', small: true };
-    const front = l.back + l.depth, tier = TIERS.indexOf(l.tier || l.id), w = l.width;
+    if (INSTITUTIONAL_ROOMS[id]) return institutionalModule(id)?.stageAnchor?.(l) || { at: l.activity, y: 740, offset: [-500, 140], support: 'activity-table', small: true };
+    const front = l.back + l.depth, tier = tierIndex(l), w = l.width;
     // A named real support and its contact height, in millimetres. The small
     // offset leaves room for the existing books, cups, vases and equipment.
     switch (id) {
         case 'home': return { at: [...(l.table || (tier ? [-475, 2100] : [80, 1870]))], y: 450, offset: [110, -60], support: 'Reading side table', small: true };
         case 'gaming': return tier ? { at: [-w / 2 + 1370, l.loungeZ], y: 391.2, offset: [0, 0], support: 'coffee-table' } : { at: [800, l.loungeZ + 100], y: 460, offset: [-170, 0], support: 'kenney-furniture-lounge-sofa-ottoman' };
-        case 'music': return l.large ? { at: [-400, front - 1600], y: 391.2, offset: [180, 120], support: 'coffee-table' } : { at: l.rack, y: 800, offset: [-230, 180], small: true };
+        case 'music': return l.large ? { at: [-400, front - 1600], y: 391.2, offset: [180, 120], support: 'ergoflex-coffee-table' } : { at: l.rack, y: 800, offset: [-230, 180], small: true };
         case 'creative': return l.large ? { at: l.table, y: 910, offset: [120, -100], support: 'artist-worktable' } : { at: l.cabinet, y: 900, offset: [0, 445], small: true };
         case 'study': return { at: l.table, y: 700, offset: [80, -90], support: 'coffee-table-2', small: true };
-        case 'office': return tier ? { at: [-w / 2 + 1650, front - 1500], y: 391.2, offset: [0, 0], support: 'coffee-table' } : { at: [0, front - 420], y: 700, offset: [100, -65], support: 'coffee-table-2', small: true };
+        case 'office': return tier ? { at: [-w / 2 + 1650, front - 1500], y: 391.2, offset: [0, 0], support: 'coffee-table' } : { at: [0, front - 420], y: 740, offset: [-195, 0], support: 'ergoflex-triangle-table', small: true };
         case 'gym': return { at: l.hydration, y: 960, offset: [0, -120], small: true };
         case 'kitchen': return { at: l.dining, y: l.tableHeight, offset: tier ? [-l.tableWidth / 2 + 220, 0] : [-140, -190], support: 'dining-table', small: !tier };
         case 'lounge': return { at: [l.tableX, l.loungeZ], y: 391.2, offset: [0, 0], support: 'coffee-table' };
         case 'workshop': return { at: [0, l.back + 350], y: 900, offset: [0, 0] };
         case 'bedroom': return tier ? { at: [l.reading[0] + 850, front - 480], y: 700, offset: [115, 40], support: 'coffee-table-2', small: true } : { at: l.bedside[0], y: 550, offset: [-90, 80], small: true };
-        case 'gallery': return tier ? { at: [w / 2 - 1600, front - 650], y: 700, offset: [0, 0], support: 'coffee-table-2', small: true } : { at: [250, l.back + 3000], y: 505, offset: [-360, 0], support: 'gallery-bench', small: true };
+        case 'gallery': return tier >= 3 ? { at: [w / 2 - 1800, front - 2100], y: 391.2, offset: [0, 140], support: 'coffee-table' } : tier ? { at: [w / 2 - 1600, front - 650], y: 700, offset: [0, 0], support: 'coffee-table-2', small: true } : { at: [250, l.back + 3000], y: 505, offset: [-360, 0], support: 'gallery-bench', small: true };
         case 'scifi': return { at: l.service, y: 900, offset: [70, 0], small: true };
         case 'coworking': return { at: l.meeting, y: 740, offset: tier ? [-650, 270] : [0, 0], support: 'meeting-table' };
         case 'library': return { at: l.reading[0], y: 740, offset: [tier ? 150 : 0, -240], support: 'reading-table-0' };
     }
 }
 
+// Humboldt commons: chairs read as used rather than staged. The commons
+// publishes each seat's outward direction and daypart state (tucked, free,
+// loose, used, away, turned); offsets are real millimetres, seeded per chair.
+function humboldtChairPose(data, p, phase) {
+    if (!data?.seats?.length) return null;
+    const seat = data.seats.reduce((a, b) => Math.hypot(b.x - p.x, b.z - p.z) < Math.hypot(a.x - p.x, a.z - p.z) ? b : a);
+    if (Math.hypot(seat.x - p.x, seat.z - p.z) > 500) return null;
+    const h = k => { const v = Math.sin((seat.x * .013 + seat.z * .007 + k) * 127.1) * 43758.5453; return v - Math.floor(v); };
+    const h1 = h(1), h2 = h(2), sign = h2 < .5 ? -1 : 1, [nx, nz] = seat.n, state = seat.states[phase];
+    let pull = 0, lat = 0, yaw = 0;
+    if (state === 'tucked') { pull = 15 * h1; yaw = .015 * (2 * h2 - 1); }
+    else if (state === 'free' || state === 'loose') { const k = state === 'loose' ? 1.2 : 1; pull = (20 + 40 * h1) * k; lat = (2 * h2 - 1) * 20; yaw = .04 * (2 * h1 - 1) * k; }
+    else if (state === 'used') { pull = 40 + 50 * h1; lat = (2 * h1 - 1) * 20; yaw = sign * (.04 + .04 * h1); }
+    else if (state === 'away') { pull = 100 + 60 * h1; lat = sign * 30; yaw = sign * (.12 + .06 * h1); }
+    else if (state === 'turned' && data.event) {
+        pull = 80 + 40 * h1; lat = (2 * h2 - 1) * 25;
+        const face = Math.atan2(-nx, -nz), want = Math.atan2(data.event[0] - seat.x, data.event[1] - seat.z);
+        yaw = THREE.MathUtils.clamp(Math.atan2(Math.sin(want - face), Math.cos(want - face)), -.35, .35);
+    }
+    // Café seating has less pullback space between tables. Keep these motions
+    // within the table's own bay, including coats and a chair left slightly out.
+    if (seat.cafe) { pull = Math.min(pull, state === 'away' ? 110 : 80); lat *= .35; yaw = THREE.MathUtils.clamp(yaw, -.12, .12); }
+    // By day, café chairs turn a little toward the hall's glass (+x).
+    if (seat.cafe && (phase === 0 || phase === 1) && state !== 'tucked') { const d = Math.PI / 2 - Math.atan2(-nx, -nz), turn = Math.atan2(Math.sin(d), Math.cos(d)); if (Math.abs(turn) > .3) yaw += .06 * Math.sign(turn); }
+    return [nx * pull - nz * lat, nz * pull + nx * lat, yaw];
+}
+
 export class RoomLife {
     constructor(room, helpers) {
         this.room = room; this.h = helpers; this.entries = []; this.mode = null; this.bound = false;
-        this.tier = TIERS.indexOf(room.roomLayout.tier || room.roomLayout.id); this.factor = [.6, .8, 1, 1.2, 1.4][this.tier];
+        this.tier = tierIndex(room.roomLayout); this.factor = [.6, .8, 1, 1.2, 1.4][this.tier];
         this.anchor = activityAnchor(room.id, room.roomLayout);
         this.kits = []; this.printedPages = new Map(); this.buildActivities();
     }
@@ -87,11 +123,17 @@ export class RoomLife {
         for (let phase = 0; phase < DAY_PHASES.length; phase++) {
             const variant = new THREE.Group(); variant.name = ROOM_STORIES[room.id][phase]; group.add(variant); this.kits.push(variant);
             this.kitPhase = phase; this.makeKit(variant, phase, a.small);
+            enrichActivityKit(this, variant, phase);
         }
         // Larger settings gain a second lived-in spot, not oversized decor.
         if (this.tier >= 2 && ['library', 'coworking', 'office', 'kitchen'].includes(room.id)) {
             const extra = new THREE.Group(); extra.name = 'Shared daily materials'; room.root.add(extra);
             extra.position.copy(group.position); extra.position.x += room.id === 'kitchen' ? 380 : 420;
+            if (room.id === 'kitchen') extra.position.z -= 145;
+            if (room.id === 'library' && l.id === 'humboldt') {
+                extra.position.x = l.reading[0][0] + 980;
+                extra.position.z = l.reading[0][1];
+            }
             h.markSceneAsset(extra, { key: `${room.id}:${l.id}:life:shared` }); this.shared = extra;
             this.book(extra, [-60, 0, 0], '#897760', false); this.cup(extra, [85, 0, 45], false);
         }
@@ -199,6 +241,7 @@ export class RoomLife {
             }
         }
         this.room.root.userData.decorationFinish.suppliedActivityModels=count;
+        this.room.root.userData.decorationFinish.lifeDetail = this.kits.map(k => k.userData.lifeDetail);
     }
     makeKit(g, phase, small) {
         const { h, mats: m, room } = this, id = room.id;
@@ -286,10 +329,29 @@ export class RoomLife {
     snacks(parent, at, count, fruit = false) {
         const { h, mats: m } = this, g = new THREE.Group(); g.position.set(...at); parent.add(g);
         h.mesh(g, new THREE.LatheGeometry([[0,0],[31,0],[34,3],[48,19],[47,22],[44,22],[32,6],[0,6]].map(([x,y])=>new THREE.Vector2(x,y)), 32), m.cream);
-        for (let i = 0; i < count; i++) { const angle = i * 2.4; h.sphere(g, fruit ? [15, 15, 15] : [10, 6, 10], [Math.cos(angle) * (i % 2 ? 24 : 10), 23 + i % 3 * 8, Math.sin(angle) * 22], fruit ? (i % 2 ? m.clay : m.green) : m.paper); }
+        const food = detailKit();
+        for (let i = 0; i < count; i++) {
+            const angle = i * 2.4, x = Math.cos(angle) * (i % 2 ? 24 : 10), y = 23 + i % 3 * 8, z = Math.sin(angle) * 22;
+            if (fruit) {
+                // Small apples and citrus: a shallow dimple, stem and leaf.
+                food.ball(14, [x,y,z], ['#b96841','#a8ad57','#d2a15e'][i%3], [1,1.02,.95]);
+                food.ball(2.5, [x,y+13,z], '#826745', [1,.3,1]);
+                food.cyl(.8,1.2,5,[x,y+15,z],'#6d5942');
+                if(i%2)food.ball(4,[x+4,y+14,z],'#667c48',[1.4,.14,.6],[0,-.4,0]);
+            } else {
+                // Uneven popcorn kernels instead of identical white spheres.
+                food.ball(6,[x,y,z],'#d5b77f',[1.2,.7,1]);
+                for(let n=0;n<3;n++){const a=angle+n*2.1;food.ball(4.6,[x+Math.cos(a)*4,y+2+n%2,z+Math.sin(a)*4],['#e7d5ab','#f0dfb9','#ddc793'][(i+n)%3],[1,.8,1]);}
+            }
+        }
+        this.foodMaterial ||= h.material('#ffffff', {vertexColors:true,roughness:.82});
+        food.build(g,this.foodMaterial);
+        const rim=h.mesh(g,new THREE.TorusGeometry(45.8,.65,5,32),m.cream,[0,22,0]);rim.rotation.x=Math.PI/2;
+        g.userData.activityServing={kind:fruit?'fruit':'popcorn',count};
     }
     bind() {
         const { room, anchor } = this, root = room.root;
+        settleActivitySupports(this);
         root.updateWorldMatrix(true, true);
         const children = [...root.children], claimed = new Set();
         const bounds = obj => new THREE.Box3().setFromObject(obj).applyMatrix4(root.matrixWorld.clone().invert());
@@ -301,7 +363,7 @@ export class RoomLife {
         };
         // Move table and everything resting on it by one root-space transform.
         // Their original parents and editor IDs remain intact.
-        const tables = children.filter(o => /^(coffee-table(-2)?|artist-worktable|music-stage-piano|dining-table|meeting-table|reading-table-\d+|kenney-furniture-lounge-sofa-ottoman)$/.test(o.userData.propId || '') || ['Reading side table', 'Lounge coffee table'].includes(o.name));
+        const tables = children.filter(o => /^(coffee-table(-2)?|ergoflex-coffee-table|ergoflex-triangle-table(-acrylic)?|office-review-table|artist-worktable|music-stage-piano|dining-table|meeting-table|reading-table-\d+|kenney-furniture-lounge-sofa-ottoman)$/.test(o.userData.propId || '') || ['Reading side table', 'Lounge coffee table'].includes(o.name));
         for (const table of tables) {
             if (!table.userData.sceneAsset) this.h.markSceneAsset(table, { key: `${room.id}:${room.roomLayout.id}:life:table:${table.name}` });
             const b = bounds(table), center = b.getCenter(new THREE.Vector3());
@@ -320,18 +382,49 @@ export class RoomLife {
         for (const obj of children) {
             const id = obj.userData.propId || '';
             if (id === 'steelcase-leap-v2') claim([obj], mainChair++ ? 'work-chair' : 'main-chair', obj.position.clone());
+            else if (room.roomLayout.groupStudy && id === 'electric-wheelchair') claim([obj], 'mobility-chair', obj.position.clone());
             else if (/armchair|lounge-chair|chair-cushion|chair-modern|chair-dining|stool-bar|bar-stool|bench-cushion-low/.test(id)) claim([obj], /chair-modern|chair-dining/.test(id) ? 'meeting-chair' : 'reading-chair', obj.position.clone());
             else if (/^(artist-easel|music-vocal-mic|robot-dog|training-zone|weight-bench|tool-cart)$/.test(id) || /tool.*cart/.test(id)) {
                 const linked = id === 'training-zone' ? children.filter(o => o.userData.propId === 'gym-props-3') : [];
                 claim([obj, ...linked], id === 'training-zone' ? 'training' : 'portable', obj.position.clone());
             }
         }
+        if (room.id !== 'library') bindMeetingSeats(this.entries);
+        const owned = new Set(this.entries.flatMap(e => e.objects));
+        this.seatingObstacles = children.filter(o => !owned.has(o) && o.visible && o.userData.propAnchor === 'floor' && /sofa|bed|cabinet|shelf|rack|armchair|chair|plant|planter|lamp/.test(o.userData.propId || '')).map(bounds);
+        this.phasePoses = new Map();
         this.bound = true; const requested = this.mode || 'morning'; this.mode = null; this.apply(requested);
     }
     pose(entry, phase) {
+        if (!this.phasePoses.has(phase)) {
+            const poses = new Map(this.entries.map(e => [e, this.authoredPose(e, phase)]));
+            const report = clearLoungeSeating(this, poses);
+            this.phasePoses.set(phase, { poses, report });
+        }
+        return this.phasePoses.get(phase).poses.get(entry);
+    }
+    authoredPose(entry, phase) {
         const f = this.factor, scene = this.room.id, p = entry.pivot;
+        // Gym zones stay in their measured equipment bays. Session dressing
+        // changes on the mat; shifting whole machines would close the aisles.
+        if (scene === 'gym' && ['training', 'portable', 'reading-chair'].includes(entry.role)) return new THREE.Matrix4();
         if(institutionalModule(scene)?.stableWorkstations&&['main-chair','work-chair'].includes(entry.role))return new THREE.Matrix4();
-        const side = p.x > 0 ? -1 : 1;
+        const group = this.room.roomLayout.groupStudy;
+        if (group && (entry.role === 'mobility-chair' || entry.role === 'main-chair')) {
+            const active = group.phases.includes(DAY_PHASES[phase]);
+            const placement = this.room.roomLayout.props.find(o => o.id === (entry.role === 'mobility-chair' ? 'electric-wheelchair' : 'steelcase-leap-v2'));
+            const target = entry.role === 'mobility-chair' ? (active ? group.wheelchair : [placement.at[0], placement.at[2]]) : active ? group.chairPark : null;
+            // A reversible daypart delta preserves the user's authored furniture
+            // edits. Park the spare task chair; leave the integrated user bay open.
+            if (target) return new THREE.Matrix4().makeTranslation(target[0] - placement.at[0], 0, target[1] - placement.at[2]);
+        }
+        const seatPose = meetingSeatPose(this, entry, phase);
+        if (seatPose) return seatPose;
+        const compactHome = scene === 'home' && this.room.roomLayout.id === 'apartment';
+        // The compact reading bay faces straight into the room. Its lounge
+        // chair stays in that bay; the task chair pulls left into the aisle.
+        if (compactHome && entry.role === 'reading-chair') return new THREE.Matrix4();
+        const side = compactHome && entry.role === 'main-chair' ? -1 : p.x > 0 ? -1 : 1;
         // Each role has a use: pulled-out work seat, a turned reading seat,
         // tucked meeting seats, or portable equipment brought into activity.
         const poses = {
@@ -350,7 +443,9 @@ export class RoomLife {
             // are measured from each seat's own table or window carrel, and
             // don't grow with room size or shove rear seats into the tabletop.
             if (entry.role === 'table') return new THREE.Matrix4();
-            if (entry.role === 'meeting-chair') {
+            const humboldt = this.room.roomLayout.humboldt && entry.role === 'meeting-chair' && humboldtChairPose(this.room.root.userData.humboldtSeats, p, phase);
+            if (humboldt) [x, z, angle] = humboldt.map(v => v / f);
+            else if (entry.role === 'meeting-chair') {
                 const l = this.room.roomLayout;
                 const supports = [...l.reading, ...l.carrels.map(c => c.at), ...(l.research ? [l.research] : [])];
                 const nearest = supports.reduce((a, b) => Math.hypot(p.x-b[0], p.z-b[1]) < Math.hypot(p.x-a[0], p.z-a[1]) ? b : a);
@@ -378,7 +473,8 @@ export class RoomLife {
         if (scene === 'scifi' && entry.role === 'portable') { dx *= 1.6; dz *= 1.6; }
         const delta = new THREE.Matrix4().makeTranslation(p.x, 0, p.z).multiply(new THREE.Matrix4().makeRotationY(angle * f)).multiply(new THREE.Matrix4().makeTranslation(-p.x, 0, -p.z));
         const b = entry.footprint.clone().applyMatrix4(delta), l = this.room.roomLayout;
-        dx = THREE.MathUtils.clamp(dx, -l.width / 2 + 20 - b.min.x, l.width / 2 - 20 - b.max.x);
+        const x0 = l.left ?? -l.width / 2;
+        dx = THREE.MathUtils.clamp(dx, x0 + 20 - b.min.x, x0 + l.width - 20 - b.max.x);
         dz = THREE.MathUtils.clamp(dz, l.back + 20 - b.min.z, l.back + l.depth - 20 - b.max.z);
         return new THREE.Matrix4().makeTranslation(dx, 0, dz).multiply(delta);
     }
@@ -390,7 +486,7 @@ export class RoomLife {
             const [x, z] = o.userData.mealSetting;
             o.visible = phase === 4 || (phase === 2 && x < 0) || (phase === 0 && x < 0 && z > 0);
         });
-        this.room.root.userData.dailyStory = ROOM_STORIES[this.room.id][phase];
+        this.room.root.userData.dailyStory = (this.room.roomLayout.stories || ROOM_STORIES[this.room.id])[phase];
         if (this.mode === mode) return;
         this.mode = mode;
         if (this.bound) for (const entry of this.entries) {
@@ -402,6 +498,7 @@ export class RoomLife {
             }
             entry.delta.copy(next);
         }
+        this.room.root.userData.seatingClearance = this.phasePoses?.get(phase)?.report || [];
         this.room.root.userData.dailyArrangement = { mode, movers: this.entries.length, tier: this.room.roomLayout.id };
     }
     lightActivity() {

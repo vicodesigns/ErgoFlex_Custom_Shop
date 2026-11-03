@@ -66,13 +66,15 @@ export class RoomBounceLight {
             if(size.y>=h*.8 && Math.max(size.x,size.z)>=Math.min(w,d)*.8)wall=reflectance(obj.material);
         });
         const patch=(at,normal,area,albedo,role)=>this.patches.push({at:new THREE.Vector3(...at),normal:new THREE.Vector3(...normal),area,albedo,role,base:new THREE.Color(0),radiance:new THREE.Vector3()});
-        for(const x of [-w/4,w/4])for(const t of [.25,.75])patch([x,h-2,back+d*t],[0,-1,0],w*d/4,ceiling,'ceiling');
-        for(const x of [-w/4,w/4])for(const t of [.25,.75])patch([x,2,back+d*t],[0,1,0],w*d/4,floor,'floor');
-        patch([-w/2+2,h/2,back+d/2],[1,0,0],d*h,wall,'wall');
-        patch([w/2-2,h/2,back+d/2],[-1,0,0],d*h,wall,'wall');
-        patch([0,h/2,back+2],[0,0,1],w*h,wall,'wall');
+        // Asymmetric shells (layout.left) centre the patches on the real room.
+        const x0=room.roomLayout.left??-w/2,cx=x0+w/2;
+        for(const x of [cx-w/4,cx+w/4])for(const t of [.25,.75])patch([x,h-2,back+d*t],[0,-1,0],w*d/4,ceiling,'ceiling');
+        for(const x of [cx-w/4,cx+w/4])for(const t of [.25,.75])patch([x,2,back+d*t],[0,1,0],w*d/4,floor,'floor');
+        patch([x0+2,h/2,back+d/2],[1,0,0],d*h,wall,'wall');
+        patch([x0+w-2,h/2,back+d/2],[-1,0,0],d*h,wall,'wall');
+        patch([cx,h/2,back+2],[0,0,1],w*h,wall,'wall');
         // The viewer's open front is a real aperture, not a reflecting wall.
-        patch([0,h/2,back+d-2],[0,0,-1],0,wall,'aperture');
+        patch([cx,h/2,back+d-2],[0,0,-1],0,wall,'aperture');
         this.refreshGeometry();
         this.uniforms.efBounceRadiance.value=this.patches.map(p=>p.radiance);
     }

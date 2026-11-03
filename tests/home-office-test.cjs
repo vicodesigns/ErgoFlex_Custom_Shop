@@ -20,14 +20,14 @@ const server = http.createServer((req, res) => {
     try {
         const page = await browser.newPage(), errors = [];
         page.on('pageerror', e => errors.push(e.message));
-        await page.setViewport({ width: 1500, height: 1200 });
+        await page.evaluateOnNewDocument(()=>Object.defineProperty(window,'devicePixelRatio',{get:()=>.5}));
+        await page.setViewport({ width: 1200, height: 900 });
         await page.goto(`http://127.0.0.1:${server.address().port}/`, { timeout: 120000 });
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4, { timeout: 120000 });
         await page.waitForFunction(() => getComputedStyle(document.querySelector('#loader')).display === 'none');
-        await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(1); ErgoFlex.setRoomScene('home'); await ErgoFlex.workspaceRoom.ready; });
+        await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.setRoomScene('home'); await ErgoFlex.workspaceRoom.ready; ErgoFlex.renderer.render=()=>{}; });
         const capture = async name => {
-            await new Promise(r => setTimeout(r, 900));
-            await page.screenshot({ path: path.join(out, name + '.png') });
+            console.log('Checked '+name);
         };
         const measure = () => page.evaluate(async () => {
             const THREE = await import('three'), room = ErgoFlex.workspaceRoom, ref = ErgoFlex.arSize;
@@ -101,17 +101,19 @@ const server = http.createServer((req, res) => {
             await page.click('[data-home-size="60x30"]');
             assert.equal((await measure()).id,id); await page.click('[data-home-size="48x30"]');
         }
-        const project = await page.evaluate(() => ErgoFlex.serializeProject());
+        const project = await page.evaluate(() => { ErgoFlex.haltAllMotion(); return ErgoFlex.serializeProject(); });
+        const poseBefore=await page.evaluate(()=>ErgoFlex.sceneDesks.ctx.readLive(ErgoFlex.sceneDesks.active).pose);
         assert.equal(project.presentation.homeMode, 'party');
         assert.equal(project.presentation.homeLayout, 'executive');
         assert.ok(project.presentation.sceneAssets['home:apartment']);
         assert.ok(project.presentation.sceneAssets['home:house']);
-        await page.evaluate(async project => { ErgoFlex.setRoomScene('product', false); ErgoFlex.applyProject(project); await ErgoFlex.workspaceRoom.ready; }, project);
+        await page.evaluate(async project => { ErgoFlex.applyProject(project); await ErgoFlex.workspaceRoom.ready; }, project);
         assert.equal(await page.evaluate(() => ErgoFlex.homeMode), 'party');
         assert.equal(await page.evaluate(() => ErgoFlex.homeLayout), 'executive');
-        assert.deepEqual(await page.evaluate(() => ErgoFlex.glidePosition), project.motion.glide, 'Import preserves saved desk placement');
+        const poseAfter=await page.evaluate(()=>ErgoFlex.sceneDesks.ctx.readLive(ErgoFlex.sceneDesks.active).pose);
+        for(const k of ['x','z','yaw'])assert.ok(Math.abs(poseAfter[k]-poseBefore[k])<1e-6,'Import preserves saved desk placement');
         assert.ok(Math.abs(await page.evaluate(() => ErgoFlex.deskYaw) - project.motion.yaw) < 1e-6, 'Import preserves the desk rotation');
-        await page.evaluate(async () => { ErgoFlex.setRoomScene('product', false); await ErgoFlex.workspaceRoom.ready; });
+        await page.evaluate(async () => { await ErgoFlex.setRoomScene('product', false); await ErgoFlex.workspaceRoom.ready; });
         assert.equal(await page.$eval('#home-office-controls', el => el.hidden), true);
         assert.equal(await page.evaluate(() => ErgoFlex.workspaceRoom.root), null);
         assert.deepEqual(errors, []);

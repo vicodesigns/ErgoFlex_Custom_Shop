@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { cleanSceneDeskData, cleanDeskRecording, sampleDeskRecording, seedSceneDeskSize, SCENE_DESKS_KEY } from './scene-desk-data.mjs';
-import { SceneDeskObjects } from './scene-desk-objects.mjs?v=desk-auto-stow-20261014';
+import { cleanSceneDeskData, cleanDeskRecording, sampleDeskRecording, seedSceneDeskSize, SCENE_DESKS_KEY } from './scene-desk-data.mjs?v=item-gumball-clipboard-20261016';
+import { SceneDeskObjects } from './scene-desk-objects.mjs?v=item-gumball-clipboard-20261016';
 import { SceneDeskActivities } from './scene-desk-activities.mjs?v=mobile-room-routines-20261014';
 
 const descendant=(o,parent)=>{for(let p=o;p;p=p.parent)if(p===parent)return true;return false;};

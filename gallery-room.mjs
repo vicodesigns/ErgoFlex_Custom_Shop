@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { gallerySessionDetails } from './gallery-bedroom-detail.mjs?v=gallery-bedroom-20261025';
 
 const tiers = [
     ['apartment', 'Apartment art collection', 4000, 4600, 2800],
@@ -46,7 +47,7 @@ export const GALLERY_MODES = {
     morning: { label: 'Morning', description: 'Clear daylight · standing curation and planning', key: '#fff2dd', fill: '#e4edf5', accent: '#fff1d6', power: 1.5, ambient: .5, bounce: .7, exposure: 1.04, sky: ['#accada', '#f2e7d1'], practical: .3, wash: .35, colors: ['#ffe4bd', '#e4f0f5'], height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
     afternoon: { label: 'Afternoon', description: 'Soft museum daylight · seated cataloguing', key: '#fff7eb', fill: '#e8eff4', accent: '#eedcc5', power: 1.15, ambient: .48, bounce: .65, exposure: 1.07, sky: ['#b5cedd', '#eee9db'], practical: .45, wash: .5, colors: ['#ffe7c4', '#dceaf2'], height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
     evening: { label: 'Evening', description: 'Warm art lighting · desk angled for sketching', key: '#f6d9bb', fill: '#cfdae7', accent: '#f8c98f', power: .6, ambient: .32, bounce: .42, exposure: 1.12, sky: ['#8e94ae', '#d9b79b'], practical: .85, wash: .8, colors: ['#ffd29b', '#c3dae8'], height: 28, tilt: 39, offset: [0, 80], yaw: 0, leds: true, color: '#ffdda7' },
-    night: { label: 'Night', description: 'After-hours collection · sculptures and artwork in focus', key: '#c9d7e7', fill: '#bdcde1', accent: '#e4ba8a', power: .12, ambient: .13, bounce: .16, exposure: 1.2, sky: ['#172a41', '#344d64'], practical: .6, wash: .9, colors: ['#f5cca0', '#a3c8e0'], height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: false },
+    night: { label: 'Night', description: 'After-hours collection · guides returned and displays softly lit', key: '#c9d7e7', fill: '#bdcde1', accent: '#e4ba8a', power: .12, ambient: .17, bounce: .22, exposure: 1.16, sky: ['#172a41', '#344d64'], practical: .18, wash: .68, colors: ['#f0d8b8', '#d9dce0'], height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: false },
     party: { label: 'Opening night', description: 'Exhibition reception · warm displays and standing desk', key: '#f3dcc6', fill: '#d4deed', accent: '#ffc888', power: .45, ambient: .3, bounce: .4, exposure: 1.14, sky: ['#3d5074', '#9b7d83'], practical: 1, wash: .95, colors: ['#ffd49e', '#adcfe6'], height: 43.5, tilt: 0, offset: [-70, 140], yaw: 8, leds: true, color: '#ffe0b0' }
 };
 // Window sun patch per daypart: depth into the room, sideways skew, tint and strength.
@@ -207,7 +208,8 @@ export function buildGalleryRoom(room, root, layout, helpers) {
     merge(right,alu,[part([14,16,d],[w/2-7,h-46,bz+d/2]),part([70,80,ww+80],[w/2-35,low+wh+70,wz])]);
     // UV-filtering roller blind, a third drawn, glowing softly with daylight.
     const blindMat=material('#f2ede3',{roughness:.95,transparent:true,opacity:.86,emissive:'#fff4e2',emissiveIntensity:.12});
-    box(right,[8,wh*.3,ww-30],[w/2-60,low+wh-wh*.15+10,wz],blindMat).castShadow=false;box(right,[16,22,ww-20],[w/2-60,low+wh*.7+12,wz],alu);
+    const blind=box(right,[8,1,ww-30],[w/2-60,low+wh,wz],blindMat);blind.castShadow=false;blind.name='Gallery daylight blind';
+    const blindRail=box(right,[16,22,ww-20],[w/2-60,low+wh,wz],alu);
     // Low daylight on the floor, reshaped for each daypart in roomAtmosphere.
     const sunMap=texture((c,tw,th)=>{c.filter='blur(5px)';c.fillStyle='#ffffff';const m=tw*.012;c.fillRect(10,14,tw/2-m-10,th-28);c.fillRect(tw/2+m,14,tw/2-m-10,th-28);c.filter='none';
         c.globalCompositeOperation='destination-out';const f=c.createLinearGradient(0,th,0,0);f.addColorStop(0,'#00000000');f.addColorStop(1,'#000000d0');c.fillStyle=f;c.fillRect(0,0,tw,th);},512,256);
@@ -266,11 +268,16 @@ export function buildGalleryRoom(room, root, layout, helpers) {
     const titleMesh=mesh(back,new THREE.PlaneGeometry(titleW,titleW*.375),new THREE.MeshStandardMaterial({map:titleMap,transparent:true,roughness:.9,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),[titleX,h-430-titleW*.1875,bz+2]);titleMesh.castShadow=false;
     if(tier>=2){const hw=Math.min(1600,titleL-featureR-700);artwork('back-horizon',[(featureR+titleL)/2,1900,bz+35],hw,hw*.62,3,0,back,'float');scallop('back',(featureR+titleL)/2,hw*1.5);}
     scallop('back',titleX,titleW*.9);
+    const session=gallerySessionDetails(room,layout,helpers,group,oak,back);
 
     // Plinths: painted body on a shadow-gap toe, honed marble cap and a brass plaque.
     const plinth=(id,name,at,size,body=satin)=>{const g=group(id,name,[at[0],0,at[1]]),cap=size[1]>300?16:22;
         box(g,[size[0]-40,30,size[2]-40],[0,15,0],black,2);box(g,[size[0],size[1]-30-cap,size[2]],[0,(size[1]+30-cap)/2,0],body,3);box(g,[size[0]+8,cap,size[2]+8],[0,size[1]-cap/2,0],marble,2);
-        strip(g,[size[0]-60,6,8],[0,24,size[2]/2-22]);if(size[1]>300)box(g,[200,56,4],[0,size[1]-150,size[2]/2+2],brass,1);
+        strip(g,[size[0]-60,6,8],[0,24,size[2]/2-22]);if(size[1]>300){
+            box(g,[220,70,4],[0,size[1]-150,size[2]/2+2],brass,1);
+            const label=texture((c,tw,th)=>{c.fillStyle='#ebe2d0';c.fillRect(0,0,tw,th);c.fillStyle='#34423e';c.font='600 30px Georgia';c.fillText(id==='thinker-plinth'?'The Thinker':'Vessel study',22,48);c.font='18px sans-serif';c.fillText(id==='thinker-plinth'?'SCULPTURE / COLLECTION 02':'CERAMIC / COLLECTION 03',22,82);},512,112);
+            const text=mesh(g,new THREE.PlaneGeometry(208,58),material('#ffffff',{map:label,roughness:.9}),[0,size[1]-150,size[2]/2+4.2]);text.castShadow=false;
+        }
         pool(at[0],at[1],Math.max(size[0],size[2])*1.9);return g;};
     plinth('thinker-plinth','Stone plinth for The Thinker',layout.thinker,[720,850,640],stone);
     plinth('vase-plinth','Tall ceramic display plinth',layout.vase,[420,1000,420]);
@@ -339,6 +346,9 @@ export function buildGalleryRoom(room, root, layout, helpers) {
     const lights=[{at:[layout.thinker[0],2300,layout.thinker[1]+150],power:3.8},{at:[layout.desk[0],h-450,layout.desk[1]],power:3,task:true},{at:[-w/2+700,2200,front-1200],power:3.2},{at:[w/2-800,2400,bz+d*.55],power:4,channel:1}].map(spec=>{const light=new THREE.PointLight('#ffe4bd',0,5000*root.scale.x,2);light.position.set(...spec.at);root.add(light);return {...spec,light,power:spec.power*(root.scale.x*1000)**2};});
     const tint=new THREE.Color();
     room.roomAtmosphere=(id,accent=1)=>{const mode=GALLERY_MODES[id]||GALLERY_MODES.morning,c=skyCanvas.getContext('2d'),gradient=c.createLinearGradient(0,0,0,512),dark=['night','party'].includes(id);
+        session.update(id);
+        const drop=wh*({morning:.12,afternoon:.24,evening:.42,night:.88,party:.34}[id]??.12);
+        blind.scale.y=drop;blind.position.y=low+wh-drop/2;blindRail.position.y=low+wh-drop;
         gradient.addColorStop(0,mode.sky[0]);gradient.addColorStop(1,mode.sky[1]);c.fillStyle=gradient;c.fillRect(0,0,512,512);
         // A low city skyline outside; windows light up after dark.
         for(let i=0;i<14;i++){const bw=24+hash(i)*34,x=i*38-10,top=300+hash(i+5)*120;c.fillStyle=dark?'#141d2a':id==='evening'?'#6b6670':'#9aa9ad';c.fillRect(x,top,bw,512-top);

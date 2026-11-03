@@ -13,9 +13,9 @@ export function cleanDeskObjects(value) {
         const t=v.transform;
         if(!t||!['p','s'].every(k=>['x','y','z'].every(a=>finite(t[k]?.[a],k==='s'?0.00001:-100000,100000)))||!['x','y','z','w'].every(a=>finite(t.q?.[a],-1,1)))continue;
         if(['x','y','z','w'].reduce((sum,a)=>sum+t.q[a]**2,0)<0.000001)continue;
-        if(v.added&&(!deskId(v.propId)))continue;
+        if(v.added&&!deskId(v.propId)&&!deskId(v.copySource))continue;
         objects[id]={role:v.role,added:v.added===true,removed:v.removed===true,label:String(v.label||'Desk object').slice(0,100),
-            ...(v.added?{propId:v.propId}:{}),...(v.custom?{custom:true}:{}),...(typeof v.artworkVisible==='boolean'?{artworkVisible:v.artworkVisible}:{}),...(v.clampMount==='rear-edge-v1'?{clampMount:v.clampMount}:{}),...(v.monitorLayout==='curved-right-v1'?{monitorLayout:v.monitorLayout}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
+            ...(v.added&&deskId(v.propId)?{propId:v.propId}:{}),...(deskId(v.copySource)?{copySource:v.copySource,copyLabel:String(v.copyLabel||'').slice(0,100),copyNodes:Array.isArray(v.copyNodes)?v.copyNodes.slice(0,10000):[],...(Array.isArray(v.copyBaseScale)&&v.copyBaseScale.length===3&&v.copyBaseScale.every(n=>finite(n,.00001,100000))?{copyBaseScale:v.copyBaseScale}:{}),...(deskId(v.copyAccessory)?{copyAccessory:v.copyAccessory}:{})}:{}),...(v.custom?{custom:true}:{}),...(typeof v.artworkVisible==='boolean'?{artworkVisible:v.artworkVisible}:{}),...(v.clampMount==='rear-edge-v1'?{clampMount:v.clampMount}:{}),...(v.monitorLayout==='curved-right-v1'?{monitorLayout:v.monitorLayout}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
     }
     const wide=objects['accessory-wide-monitor'],portrait=objects['accessory-portrait-monitor'];
     if(wide&&portrait){
@@ -80,7 +80,7 @@ export function cleanSceneDeskVariant(v) {
         ...(['occ','hbhs'].includes(v.productArtwork?.id) && ['48x30','60x30'].includes(v.productArtwork.size) && Number.isSafeInteger(v.productArtwork.revision) && v.productArtwork.revision>=0
             ? {productArtwork:{id:v.productArtwork.id,size:v.productArtwork.size,revision:v.productArtwork.revision}} : {}),
         ...(v.productBuild?.id==='library' && ['48x30','60x30'].includes(v.productBuild.size) && Number.isSafeInteger(v.productBuild.revision) && v.productBuild.revision>=0
-            ? {productBuild:{id:'library',size:v.productBuild.size,revision:v.productBuild.revision}} : {})};
+            ? {productBuild:{id:'library',size:v.productBuild.size,revision:v.productBuild.revision,...(v.productBuild.artworkRepair==='humboldt-product-decals-v1'?{artworkRepair:v.productBuild.artworkRepair}:{})}} : {})};
 }
 export function seedSceneDeskSize(source,size) {
     const draft=cleanSceneDeskVariant({...source,size});

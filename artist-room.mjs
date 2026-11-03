@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { artistStudyMaps, artistSessionDetails } from './artist-studio-detail.mjs?v=artist-studio-20261025';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
 
 // Interior dimensions in millimetres. Room choice and desk size are independent.
@@ -45,7 +46,7 @@ export const ARTIST_MODES = {
     morning: { label: 'Morning', description: 'Soft window light · standing sketch warm-up', key: '#fff0dd', fill: '#dce8f4', accent: '#efd6b4', power: 1.55, ambient: .5, bounce: .72, exposure: 1.05, sky: ['#9fc2da', '#f5e1c6'], practical: .14, wash: .1, colors: ['#f2d8b4', '#c9dbd4'], height: 43.5, tilt: 12, offset: [0, 0], yaw: 0, leds: false },
     afternoon: { label: 'Afternoon', description: 'Balanced daylight · seated drawing and color studies', key: '#fbf6ee', fill: '#dfe9f3', accent: '#e9d4b2', power: 1.3, ambient: .48, bounce: .7, exposure: 1.05, sky: ['#8fb6d5', '#e7eef1'], practical: .3, wash: .18, colors: ['#eed4b0', '#c3d4d2'], height: 28, tilt: 18, offset: [0, 0], yaw: 0, leds: false },
     evening: { label: 'Evening', description: 'Golden-hour painting · standing drawing angle', key: '#ffc994', fill: '#cdd7e8', accent: '#ffb27c', power: .9, ambient: .3, bounce: .44, exposure: 1.08, sky: ['#6c78a6', '#f2aa79'], practical: .8, wash: .5, colors: ['#ffc98f', '#c8b6cc'], height: 43.5, tilt: 30, offset: [0, 80], yaw: -4, leds: true, color: '#ffe1b0' },
-    night: { label: 'Night', description: 'Quiet making · neutral task light with gentle accents', key: '#c4d1e6', fill: '#c2d0e5', accent: '#f3c995', power: .2, ambient: .19, bounce: .26, exposure: 1.08, sky: ['#0f1a2e', '#33435f'], practical: .9, wash: .26, colors: ['#f6d2a2', '#a3b7d2'], height: 28, tilt: 12, offset: [0, 80], yaw: 0, leds: true, color: '#fff1d5' },
+    night: { label: 'Night', description: 'Clean up and review · palette covered, notes for tomorrow', key: '#c4d1e6', fill: '#c2d0e5', accent: '#f3c995', power: .2, ambient: .19, bounce: .26, exposure: 1.08, sky: ['#0f1a2e', '#33435f'], practical: .9, wash: .26, colors: ['#f6d2a2', '#a3b7d2'], height: 28, tilt: 12, offset: [0, 80], yaw: 0, leds: true, color: '#fff1d5' },
     party: { label: 'Open studio', description: 'Share your work · standing desk turned toward visitors', key: '#f1dccb', fill: '#d8dce8', accent: '#ee9f7e', power: .5, ambient: .3, bounce: .42, exposure: 1.1, sky: ['#3f4567', '#bb8574'], practical: .7, wash: .95, colors: ['#ffbf8f', '#a3d4cd'], height: 43.5, tilt: 0, offset: [80, 230], yaw: -12, leds: true, color: '#ffcfac' }
 };
 
@@ -211,7 +212,10 @@ export function buildArtistRoom(room, root, layout, helpers) {
     const clay = material('#b06d55', { roughness: .85 }), blue = material('#5f7b81', { roughness: .85 });
     const metal = material('#4a5150', { metalness: .45, roughness: .55 });
     const sage = material('#7e8c82', { roughness: .7 }), brass = material('#b8975c', { metalness: .75, roughness: .32 });
-    const cast = material('#f2eee5', { roughness: .9 }), glass = material('#cdd8d5', { roughness: .1, metalness: .05 });
+    const cast = material('#f2eee5', { roughness: .9 });
+    const glass = new THREE.MeshPhysicalMaterial({ color: '#d8e3dd', roughness: .16, metalness: 0, transmission: .68, thickness: 8, ior: 1.5 });
+    const studyMaps = artistStudyMaps(painting(1));
+    let activeCanvas, paintTaboret, palettePaint;
     const linen = material('#efe7d8', { roughness: 1, side: THREE.DoubleSide });
     // White bases for instanced batches; each instance carries its own colour.
     const tint = material('#ffffff', { roughness: .78 }), gloss = material('#ffffff', { roughness: .3 });
@@ -351,7 +355,9 @@ export function buildArtistRoom(room, root, layout, helpers) {
     const frame = (parent, width, height, at, seed, label, lit = false) => {
         const art = new THREE.Group(); art.name = label; art.position.set(...at); parent.add(art);
         box(art, [width, height, 32], [0, 0, 0], oak, 3);
-        box(art, [width - 34, height - 34, 8], [0, 0, 20], material('#ffffff', { map: painting(seed), roughness: .9 }));
+        const evolving = label === 'Painting in progress' || (layout.compact && seed === 1);
+        const face = box(art, [width - 34, height - 34, 8], [0, 0, 20], material('#ffffff', { map: evolving ? studyMaps[0] : painting(seed), roughness: .94 }));
+        if (evolving) activeCanvas = face;
         if (lit) {
             rod(art, [0, height / 2 - 4, 6], [0, height / 2 + 64, 70], 7, brass);
             rod(art, [-width * .3, height / 2 + 66, 74], [width * .3, height / 2 + 66, 74], 17, brass).castShadow = false;
@@ -465,11 +471,12 @@ export function buildArtistRoom(room, root, layout, helpers) {
         const z = cz - 40 + i * 62, x = w / 2 - 190;
         jars.push({ at: [x, 1524 + 42, z], size: [26, 84, 26], color: '#d8e2e0' });
         jars.push({ at: [x, 1524 + 28, z], size: [24, 54, 24], color });
+        jars.push({ at: [x, 1524 + 44, z], size: [26.3, 22, 26.3], color });
         jars.push({ at: [x, 1524 + 90, z], size: [27, 12, 27], color: '#2f302f' });
     });
     instanced(side, tube, gloss, jars, false);
     // Pinned sketches and swatches face into the room above the cabinet.
-    const board = new THREE.Group(); board.position.set(w / 2 - 40, 2010, cz); board.rotation.y = -Math.PI / 2; side.add(board);
+    const board = new THREE.Group(); board.name = 'Artist reference pinboard'; register(board, 'artist-reference-board', 'Reference studies and daily studio notes'); board.position.set(w / 2 - 40, 2010, cz); board.rotation.y = -Math.PI / 2; side.add(board);
     box(board, [1040, 720, 30], [0, 0, 0], oak, 3);
     const cork = texture((c, tw, th) => {
         const rnd = random(5); c.fillStyle = '#c2a37a'; c.fillRect(0, 0, tw, th);
@@ -526,8 +533,9 @@ export function buildArtistRoom(room, root, layout, helpers) {
 
     // Back corner: a tall fiddle-leaf fig (larger suites already have a monstera).
     if (!layout.large) {
-        const fig = group(root, 'Artist fiddle-leaf fig', [w / 2 - 300, 0, bz + 300]);
+        const fig = group(root, 'Artist fiddle-leaf fig', [w / 2 - 385, 0, bz + 405]);
         register(fig, 'artist-fig', 'Fiddle-leaf fig in terracotta');
+        if (layout.compact) fig.scale.setScalar(.8); // A smaller specimen leaves the 60-inch desk's route clear.
         mesh(fig, new THREE.CylinderGeometry(170, 130, 330, 24), clay, [0, 165, 0]);
         mesh(fig, new THREE.CylinderGeometry(160, 160, 8, 24), material('#3a3129', { roughness: 1 }), [0, 318, 0]);
         const rnd = random(41), figLeaves = [], stems = [stick([0, 320, 0], [-20, 1050, 10], 16, '#6b5440'), stick([-20, 1050, 10], [30, 1650, -20], 11, '#6b5440')];
@@ -582,13 +590,17 @@ export function buildArtistRoom(room, root, layout, helpers) {
         const easel = new THREE.Group(); easel.name = 'Artist painting easel'; easel.position.set(layout.easel[0], 0, layout.easel[1]); easel.rotation.y = .22; root.add(easel);
         register(easel, 'artist-easel', 'Painting easel and canvas');
         for (const x of [-310, 310]) { box(easel, [65, 30, 650], [x, 15, 0], oak, 3); rod(easel, [x, 40, -170], [x * .85, 1830, -170], 23, oak); }
-        box(easel, [740, 60, 90], [0, 770, -120], oak, 4);
-        box(easel, [540, 40, 50], [0, 1770, -150], oak, 3);
-        const art = frame(easel, 660, 850, [0, 1220, -140], 3, 'Painting in progress');
+        const rest = box(easel, [740, 60, 120], [0, 770, -120], oak, 4); rest.name = 'Easel canvas rest';
+        const lip = box(easel, [740, 38, 14], [0, 819, -58], oak, 2); lip.name = 'Easel retaining lip';
+        box(easel, [540, 40, 50], [0, 1670, -150], oak, 3);
+        // The lowest rotated rear corner sits on the rest; the full canvas is behind the lip.
+        const art = frame(easel, 660, 850, [0, 800 + 425 * Math.cos(.025) + 16 * Math.sin(.025), -140], 3, 'Painting in progress');
         art.rotation.x = -.025;
-        rod(easel, [0, 1700, -170], [0, 40, 285], 21, oak);
-        box(easel, [80, 30, 90], [0, 15, 285], oak, 3);
-        brushCup(easel, [270, 800, -75], blue, 'easel');
+        const rearBrace = rod(easel, [0, 1700, -190], [0, 40, -430], 21, oak); rearBrace.name = 'Easel rear brace';
+        box(easel, [80, 30, 90], [0, 15, -430], oak, 3);
+        box(easel, [190, 24, 220], [455, 788, -90], oak, 3);
+        rod(easel, [310, 680, -130], [455, 775, -90], 8, metal);
+        brushCup(easel, [455, 800, -90], blue, 'easel');
         // Clamp lamp on the mast, angled down onto the canvas.
         const clamp = group(easel, 'Easel clamp lamp', [200, 1800, -120]); clamp.rotation.x = .7;
         mesh(clamp, new THREE.CylinderGeometry(22, 50, 85, 18, 1, true), material('#b8975c', { metalness: .4, roughness: .45, side: THREE.DoubleSide }), [0, 0, 0]);
@@ -608,14 +620,14 @@ export function buildArtistRoom(room, root, layout, helpers) {
         cloth.rotation.y = .22; cloth.name = 'Artist drop cloth';
 
         // Taboret by the window: glass palette, paint tubes and brushes.
-        const taboret = group(root, 'Artist paint taboret', [-w / 2 + 430, 0, layout.easel[1] - 700], .3);
+        const taboret = paintTaboret = group(root, 'Artist paint taboret', [-w / 2 + 430, 0, layout.easel[1] - 700], .3);
         register(taboret, 'artist-taboret', 'Paint taboret and glass palette');
         for (const x of [-205, 205]) for (const z of [-205, 205]) box(taboret, [28, 720, 28], [x, 360, z], metal);
         box(taboret, [470, 30, 470], [0, 705, 0], oak, 4);
         box(taboret, [440, 18, 440], [0, 300, 0], oak, 2);
         box(taboret, [360, 8, 280], [-40, 724, -40], glass, 2);
         const pigments = ['#f4efe3', '#c99a4b', '#e5c24a', '#c0402f', '#8f2f3b', '#2f4f8f', '#2f6b55', '#5a3e2b'];
-        instanced(taboret, ball, gloss, [
+        palettePaint = instanced(taboret, ball, gloss, [
             ...pigments.map((color, i) => ({ at: [-195 + i * 44, 732, -158], size: [17, 8, 14], color })),
             ...[0, 1, 2, 3].map(i => ({ at: [-120 + i * 70, 729, 20 - i * 25], size: [40, 3, 26], rot: [0, i, 0], color: ['#b97a5a', '#7f9a7a', '#d1b36e', '#6f7f9a'][i] }))
         ], false);
@@ -665,6 +677,8 @@ export function buildArtistRoom(room, root, layout, helpers) {
         sphere(sculpture, [65, 85, 65], [95, 1320, 0], ceramic);
         box(root, [1300, 5, 1300], [w / 2 - 680, 2.5, front - 2750], material('#bca185', { roughness: .95 }), 8);
     }
+
+    const session = artistSessionDetails(room, layout, helpers, { board, storage, canvas: activeCanvas, studyMaps, taboret: paintTaboret, palettePaint });
 
     const glow = [];
     const strip = (parent, size, at, channel = 0) => {
@@ -719,15 +733,16 @@ export function buildArtistRoom(room, root, layout, helpers) {
     };
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = ARTIST_MODES[modeId] || ARTIST_MODES.afternoon;
+        session.apply(modeId);
         drawSky(skyCanvas.getContext('2d'), mode, modeId); skyMap.needsUpdate = true;
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .08 + mode.wash * accent; });
-        lights.forEach(spec => { spec.light.color.set(spec.task ? '#fff4e3' : mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent; });
+        lights.forEach(spec => { spec.light.color.set(spec.task ? '#f2f4ee' : mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent; });
         lamp.emissiveIntensity = .15 + mode.practical * .7;
         // Practicals: picture lights, clamp lamp, lantern and festoon.
         lampGlow.emissiveIntensity = (.15 + mode.practical * 1.5) * accent;
         wash.opacity = Math.min(.5, mode.practical * .42) * accent;
         paper.emissiveIntensity = (.04 + mode.practical * 1.2) * accent;
-        bulbs.emissiveIntensity = ({ party: 2.4, evening: .9, night: .5 }[modeId] ?? .03) * accent;
+        bulbs.emissiveIntensity = ({ party: 2.4, evening: .9, night: .16 }[modeId] ?? .03) * accent;
         root.userData.atmosphere = modeId;
     };
     // Explicit surface roles keep detail off artwork and imported models.

@@ -222,8 +222,8 @@ const LIGHT = {
         // Coastal Orange County light: marine-layer morning under 4000K troffers,
         // crisp clear afternoon, Pacific sunset, field lights and the floodlit tower at night.
         modes: [mode('#eef1f2', '#dde6ea', ['#c4ccd2', '#ebe6dc'], 1.05, .46, 1.02, .42, .2, .78, ['#f4efe6', '#c9d2d6']),
-            mode('#fff5e6', '#e2eef3', ['#7fb6da', '#e4eff2'], 1.6, .45, 1.03, .3, .16, .8, ['#f6f0e4', '#c3d0d6']),
-            mode('#ffbe84', '#d6d2e6', ['#6f78a6', '#f5a463'], .62, .27, 1.1, .76, .36, .5, ['#ffd3a0', '#c9c3cf']),
+            mode('#fff5e6', '#e2eef3', ['#7fb6da', '#e4eff2'], 1.32, .4, .99, .27, .16, .72, ['#f6f0e4', '#c3d0d6']),
+            mode('#ffcea0', '#d6d2e6', ['#6f78a6', '#f5a463'], .48, .28, 1.06, .66, .34, .5, ['#ffdfb9', '#c9c3cf']),
             mode('#b0c4e0', '#9cb6d4', ['#0d1a2e', '#26364b'], .1, .07, 1.1, .32, .1, .2, ['#ffd4a0', '#88a2be'], true, '#292724'),
             mode('#ffe0b6', '#dfe0e2', ['#93c0dc', '#f4d3a6'], .86, .36, 1.09, .7, .46, .56, ['#ffe6c6', '#d8d2c8'], true, '#4a200e')],
         // Overcast morning: almost no patch; a long orange patch at sunset.
@@ -1474,7 +1474,7 @@ function finishKit(kit, E) {
     const S = E.S = { mapped, P };
     const t = P.top;
     S.top = t.hpl
-        ? mapped('top', (c, W, H) => drawFleck(c, W, H, { base: t.hpl, flecks: [shade(t.hpl, -.06) + '90', shade(t.hpl, -.12) + '60', '#ffffff80'], count: W * H / 9, size: [1, 1.8], seed: t.seed }), [512, 512], [400, 400], { roughness: .42 })
+        ? mapped('top', (c, W, H) => drawFleck(c, W, H, { base: t.hpl, flecks: [shade(t.hpl, -.06) + '90', shade(t.hpl, -.12) + '60', '#ffffff80'], count: W * H / 9, size: [1, 1.8], seed: t.seed }), [512, 512], [400, 400], { roughness: id === 'highschool' ? .6 : .42 })
         : mapped('top', (c, W, H) => drawWood(c, W, H, t), [1024, 512], [1400, 700], { roughness: t.streak ? .42 : .5 });
     S.oakStage = P.stage && mapped('oak-stage', (c, W, H) => drawPlanks(c, W, H, P.stage), [1024, 1024], [1600, 1600], { roughness: .5, surface: 'wood', rough: (c, W, H) => drawPlanks(c, W, H, P.stage, true) });
     // Upholstery / shells, tinted per chair colour over a shared grey map.
@@ -2222,8 +2222,8 @@ export function dressProp(id, k, g, kit) {
             notebook(k, -330, top, /-a$/.test(id) ? -140 : 140, '#e0b45e'); k.box([210, 3, 290], [330, top + 2, /-a$/.test(id) ? -120 : 120], '#f4f4ee');
             if (/student-table-0-b/.test(id)) { k.box([360, 180, 260], [200, top + 90, -40], '#c9a97a'); k.box([140, 120, 120], [80, top + 240, -60], '#d9bb8c'); for (let n = 0; n < 3; n++) k.box([60, 60, 3], [140 + n * 80, top + 120, 92], '#7fb6d6'); }
         } else if (spec.id === 'highschool') {
-            // Worksheets and calculators at each place (the violin takes the right-hand place on table 2-2).
-            for (const x of [-310, 310]) { if (id === 'student-table-2-2' && x > 0) continue; k.box([210, 2, 290], [x, top + 1, 110], '#f4f4ee'); for (let n = 0; n < 6; n++) k.box([190, 1, 1.5], [x, top + 3, -15 + n * 45], '#a8c3d6'); k.box([75, 14, 150], [x + 170, top + 7, 100], '#2f3b44'); k.box([60, 2, 40], [x + 170, top + 15, 60], HB.orange); }
+            // Student work is furnished per activity by campus-lived-in.mjs.
+            // Keep the structural stretcher here, below the editable tabletop kit.
             k.box([1120, 45, 22], [0, top - 80, -240], HB.black);
         } else if (spec.id === 'college') {
             k.cyl(70, 70, 24, [0, top + 12, 0], '#2f2f2f'); k.cyl(40, 40, 4, [0, top + 25, 0], '#7ec4ba');
@@ -2969,6 +2969,9 @@ export function mainDeskDetail({ sceneId, role, THREE: T, add }) {
 }
 
 // ---- Daily staging (room-life.mjs) --------------------------------------
+// Keep the editable journal in the left-front working bay. The centre/right
+// already belongs to each stage's models, clipboards and changing materials.
+export const stageAnchor = l => ({ at: l.activity, y: 740, offset: [-520, 140], support: 'activity-table', small: true });
 export function stageKit({ h, m, g, y, spec, social, quiet }) {
     if (isYoung(spec)) {
         for (let n = 0; n < (quiet ? 2 : 4); n++) h.box(g, [36, 25 + n * 8, 36], [110 + n % 2 * 55, y + 13 + n * 4, -45 + Math.floor(n / 2) * 65], n % 2 ? m.clay : m.brass, 4);

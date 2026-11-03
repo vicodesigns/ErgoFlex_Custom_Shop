@@ -7,8 +7,9 @@ objects, including catalogue accessories and objects added through Desk objects.
 ## Angles and activities
 
 - At 9° or below, the authored arrangement is shown.
-- Above 9°, loose desktop items pack into the top shelving, then the lower bay.
-  Large equipment can use the base shelf. Objects retain their original scale;
+- Above 9°, keyboards and mice pack flat into the middle shelf. Other loose
+  desktop items use the top shelf; large equipment can use the base shelf.
+  Objects retain their original scale;
   flat supplies may stand in a file bay and bulky lamps may lie on their side.
 - Drafting boards and drafting tools stay at drafting angles (10–49°).
 - Artist canvases and the painter's tool shelf show at easel angles (50°+).
@@ -28,8 +29,10 @@ storage; cables do not join separate devices into a single oversized object. Tou
 
 Packing uses visible geometry in surface-local millimetres, not a guessed unit
 conversion. Shelf occupants and mounted displays reserve space. The broad empty
-span of a monitor arm is not treated as a solid box. The base shelf permits at
-most 24 mm of overhang, allowing a large lamp to rest on its side. A genuinely
+span of a monitor arm is not treated as a solid box. Storage uses the actual
+supporting CAD faces, a 24 mm edge inset, and clearance from shelf panels and
+hardware. Keyboards and mice stay flat and do not stack on other objects.
+A genuinely
 oversized user-added object that cannot fit is hidden temporarily and reported
 as put away; lowering/editing restores it without changing its saved layout.
 
@@ -49,6 +52,13 @@ editable and survive reload. Library Product recipe refreshes preserve the
 shelf-first role while importing the owner's finishes and graphics.
 
 ## Verification
+
+Run `node --experimental-vm-modules tests/desk-shelf-stow-test.mjs` for the
+offline CAD geometry regression. It checks both desk widths, Product and scene
+mount frames, input orientations, middle/top shelf assignment, lip/hardware
+clearance, item overlaps, the 9° threshold, 65° storage, and exact restoration.
+Packing remains stable while the tilt animates within an activity range.
+Existing cinematic bakes need to be regenerated after this storage update.
 
 Run `npm run test:desk-auto-stow`. It uses an isolated local browser/server. It
 checks the 9° boundary, Product recipes, every registered environment at both

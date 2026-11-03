@@ -27,7 +27,8 @@ const server = http.createServer((req, res) => {
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; });
         const names = { home: 'Home', gaming: 'Gaming', music: 'Music', creative: 'Artist', study: 'Study', office: 'Office', gym: 'Gym', kitchen: 'Kitchen', lounge: 'Lounge', workshop: 'Workshop', bedroom: 'Bedroom', gallery: 'Gallery', scifi: 'Scifi', coworking: 'Coworking', library: 'Library' };
-        for (const [id, name] of Object.entries(names)) {
+        const selected = Object.entries(names).filter(([id]) => !process.env.LIGHTING_SCENES || process.env.LIGHTING_SCENES.split(',').includes(id));
+        for (const [id, name] of selected) {
             const result = await page.evaluate(async (id, name) => {
                 const THREE = await import('three');
                 ErgoFlex.setRoomScene(id, false);
@@ -46,7 +47,9 @@ const server = http.createServer((req, res) => {
                     modes.push({ ...state, contained, polish: { ...room.root.userData.polish }, backdrop: getComputedStyle(document.querySelector('#viewer-shell')).backgroundImage });
                 }
                 const grounding = room.grounding;
-                const groundingState = { count: grounding.entries.length, expected: ErgoFlex.roomInteractions.entries.filter(e=>e.surface==='floor'&&e.collider).length,
+                const floorEntries = [...ErgoFlex.roomInteractions.entries,...(ErgoFlex.roomInteractions.deskEntries?.()||[])].filter(e=>e.surface==='floor'&&e.collider);
+                const groundingState = { count: grounding.entries.length, expected: floorEntries.length,
+                    actualNames: grounding.entries.map(e=>e.obj.name), expectedNames: floorEntries.map(e=>e.obj.name),
                     interactive: ErgoFlex.roomInteractions.entries.some(e=>e.obj.userData.presentationOnly), seams: grounding.seams.length };
                 const entry = grounding.entries[0], initial = entry.obj.position.clone(), rotation = entry.obj.quaternion.clone();
                 const before = new THREE.Matrix4(); grounding.mesh.getMatrixAt(0,before);
@@ -61,11 +64,14 @@ const server = http.createServer((req, res) => {
                 grounding.mesh.geometry.addEventListener('dispose',()=>disposedContacts++);
                 const textures = new Set();
                 room.root.traverse(obj => {
+                    // Include room-owned detail maps even on shared GLB
+                    // instances. Screen themes belong to SceneScreens' cache.
+                    obj.ownedTextures?.forEach(texture => textures.add(texture));
                     if (!obj.isMesh) return;
                     for (const mat of Array.isArray(obj.material) ? obj.material : [obj.material]) {
                         if (mat.userData.roomSurface && mat.bumpMap && (!obj.geometry.attributes.uv1 || mat.bumpMap.channel !== 1)) badUVs.push(obj.name);
                         if (obj.userData.sharedProp) imported.push({ surface: !!mat.userData.roomSurface, map: mat.map?.uuid });
-                        else if (!mat.userData.sharedTextures) for (const value of Object.values(mat)) if (value?.isTexture) textures.add(value);
+                        else if (!mat.userData.sharedTextures) for (const value of Object.values(mat)) if (value?.isTexture && !value.userData.sceneScreenContent) textures.add(value);
                     }
                 });
                 window.roomTextureDisposal = { count: textures.size, disposed: 0 };
@@ -78,7 +84,7 @@ const server = http.createServer((req, res) => {
             assert.ok(result.detail.materials >= 4, id + ': tagged room materials have surface detail');
             assert.ok(result.detail.meshes > result.detail.materials, id + ': shared materials retain UVs on every mesh');
             assert.ok(result.groundingState.count > 0, id + ': floor furnishings have contact shadows');
-            assert.equal(result.groundingState.count,result.groundingState.expected,id + ': one instance per floor collider');
+            assert.equal(result.groundingState.count,result.groundingState.expected,id + ': one instance per floor collider '+JSON.stringify(result.groundingState));
             assert.equal(result.groundingState.interactive,false,id + ': presentation meshes are not furniture or obstacles');
             assert.ok(result.groundingState.follows && result.groundingState.hidden,id + ': shadows follow movement/rotation and hide with objects');
             assert.equal(result.disposedContacts,1,id + ': contact geometry is disposed once');
@@ -98,6 +104,6 @@ const server = http.createServer((req, res) => {
             console.log('Lighting and surface detail:', id, result.detail.meshes, 'meshes');
         }
         assert.deepEqual(errors, [], 'No browser errors');
-        console.log('All 15 environments × 5 times passed lighting, finishes, backdrops, shadow movement, coverage and disposal checks.');
+        console.log('All '+selected.length+' environments × 5 times passed lighting, finishes, backdrops, shadow movement, coverage and disposal checks.');
     } finally { await browser.close(); await new Promise(r => server.close(r)); }
 })().catch(error => { console.error(error); process.exitCode = 1; server.close(); });

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { roomSurfaceFinish } from './room-polish.mjs?v=humboldt-commons-20261015';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { roomSurfaceFinish } from './room-polish.mjs?v=table-clearance-20261021';
 
 // A single sun shadow map serves each measured room. Architectural coordinates
 // are millimetres; targets, shadow bounds and relief are converted through the
@@ -16,7 +17,7 @@ export function configureRoomLightRig(room, lights, mode) {
     const { root, roomLayout: layout } = room;
     root.updateWorldMatrix(true, false);
     const { width: w, depth: d, height: h, back } = layout;
-    const center = new THREE.Vector3(0, h * .4, back + d * .5);
+    const x0 = layout.left ?? -w / 2, center = new THREE.Vector3(x0 + w / 2, h * .4, back + d * .5);
     // Home office windows are on the rear wall; the other layouts explicitly
     // declare their left/right window. Use the window's outward normal.
     const window = layout.daylight || [0, back];
@@ -45,7 +46,7 @@ export function configureRoomLightRig(room, lights, mode) {
     const bounds = new THREE.Box3();
     // Include the real floor footprint and wall height, plus the thickness of
     // the shell, rather than the product viewer's fixed +/-5 unit square.
-    for (const x of [-w / 2 - 100, w / 2 + 100]) for (const y of [-40, h + 100]) for (const z of [back - 100, back + d + 100]) {
+    for (const x of [x0 - 100, x0 + w + 100]) for (const y of [-40, h + 100]) for (const z of [back - 100, back + d + 100]) {
         bounds.expandByPoint(root.localToWorld(new THREE.Vector3(x, y, z)).applyMatrix4(camera.matrixWorldInverse));
     }
     const margin = 150 * root.scale.x;
@@ -94,7 +95,7 @@ function surfaceMaps(kind) {
         const a = x / size * Math.PI * 2, b = y / size * Math.PI * 2, n = noise(x, y);
         let value;
         if (kind === 'wood') value = .5 + .15 * Math.sin(a * 13 + .7 * Math.sin(b * 2)) + .09 * Math.sin(a * 43 + 1.2 * Math.sin(b)) + .035 * Math.cos(a * 79) + (n - .5) * .07;
-        else if (kind === 'fabric') value = .5 + .14 * Math.cos(a * 16) + .14 * Math.cos(b * 16) + .07 * Math.sin((a + b) * 8) + (n - .5) * .1;
+        else if (kind === 'fabric') value = .5 + .11 * Math.cos(a * 24) + .11 * Math.cos(b * 24) + .045 * Math.sin((a + b) * 12) + .035 * Math.sin(a * 3 + Math.sin(b * 2)) + (n - .5) * .12;
         else if (kind === 'metal') value = .5 + .11 * Math.sin(a * 61) + .045 * Math.sin(a * 97) + (n - .5) * .04;
         else if (kind === 'stone') value = .52 + .1 * Math.sin(a * 2 + 1.5 * Math.sin(b * 3)) + .035 * Math.sin(a * 11 + Math.sin(b * 2)) + (n - .5) * .09;
         else if (kind === 'rubber') value = .5 + (n - .5) * .55 + .06 * Math.cos(a * 24) * Math.cos(b * 24);
@@ -102,7 +103,7 @@ function surfaceMaps(kind) {
         else value = .5 + (n - .5) * .32 + .035 * Math.sin(a * 3) * Math.cos(b * 4);
         const i = (y * size + x) * 4;
         height[i] = height[i + 1] = height[i + 2] = Math.round(value * 255); height[i + 3] = 255;
-        const range = kind === 'stone' ? 38 : kind === 'metal' ? 30 : kind === 'wood' ? 26 : 14;
+        const range = kind === 'stone' ? 42 : kind === 'metal' ? 36 : kind === 'wood' ? 38 : 18;
         sheen[i] = sheen[i + 1] = sheen[i + 2] = Math.round(255 - range + value * range); sheen[i + 3] = 255;
         color[i] = color[i + 1] = color[i + 2] = Math.round(240 + value * 15); color[i + 3] = 255;
     }
@@ -120,6 +121,24 @@ function surfaceMaps(kind) {
 // their existing UVs and textures. Textures are shared only within this room.
 export function refineRoomSurfaces(room) {
     const { root } = room, maps = new Map(), materials = new Set();
+    // Millimetre-scale eased edges on furniture slabs catch window light.
+    // Shells, thin panels, desk CAD, imported meshes and authored roundovers
+    // are excluded. Shared box geometry receives one shared replacement.
+    const softened = new Map();
+    root.traverse(obj => {
+        const m = obj.material, p = obj.geometry?.parameters;
+        if (!obj.isMesh || obj.isInstancedMesh || obj.userData.sharedProp || obj.geometry.type !== 'BoxGeometry'
+            || !['wood', 'stone', 'powder'].includes(m?.userData?.roomSurface) || !p
+            || p.height < 12 || p.height > 80 || p.width < 200 || p.depth < 160
+            || p.width > 3000 || p.depth > 1600) return;
+        const source = obj.geometry;
+        if (!softened.has(source)) softened.set(source, new RoundedBoxGeometry(p.width, p.height, p.depth, 2, Math.min(2, p.height * .07)));
+        obj.geometry = softened.get(source);
+    });
+    // Geometry can also be shared with an excluded mesh: dispose only when
+    // no remaining object references the original.
+    const inUse = new Set(); root.traverse(o => { if (o.geometry) inUse.add(o.geometry); });
+    for (const original of softened.keys()) if (!inUse.has(original)) original.dispose();
     // Instanced book bands may share brass with lamp stems. Keep those tiny
     // batches flat rather than applying UVs for just one instance to all books.
     root.traverse(obj => {
@@ -159,5 +178,5 @@ export function refineRoomSurfaces(room) {
         if (!mat.map && detail.color) mat.map = detail.color;
         mat.needsUpdate = true;
     });
-    root.userData.surfaceDetail = { meshes, materials: materials.size, types: [...maps.keys()], textureSize: 256 };
+    root.userData.surfaceDetail = { meshes, materials: materials.size, types: [...maps.keys()], textureSize: 256, easedFurnitureEdges: softened.size };
 }

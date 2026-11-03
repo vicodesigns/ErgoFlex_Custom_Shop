@@ -1,4 +1,4 @@
-import { DESK_SURFACES } from './scene-desk-objects.mjs?v=desk-auto-stow-20261014';
+import { DESK_SURFACES } from './scene-desk-objects.mjs?v=humboldt-decals-stow-20261016';
 
 export function mountDeskObjectUI(parent,manager){
     const editor=manager.objects,panel=document.createElement('details');panel.className='scene-desk-object-panel';

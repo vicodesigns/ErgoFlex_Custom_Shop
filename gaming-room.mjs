@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { gamingSessionMaps, buildGamingSessionDetail, migrateGamingSavedFurniture, migrateGamingSavedAssetKeys } from './gaming-session-detail.mjs?v=gaming-sessions-20261022';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
 
 // The same measured room tiers as Home Office, with independent furnishings
@@ -9,14 +10,14 @@ export const GAMING_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
     const compact = id === 'apartment', large = index >= 3;
     const desk = compact ? [-120, -250] : [-180 - index * 65, back + 900];
     const cabinetX = width / 2 - 370, cabinetZ = back + 320;
-    const loungeZ = back + depth - (large ? 1500 : 1150);
+    const loungeZ = back + depth - (large ? 1500 : 1150), gameTable = [400, loungeZ - 100];
     const props = [
         { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180 },
         { id: 'ergoflex-desktop-pc', at: [cabinetX, 610, cabinetZ], turn: 0 },
         { id: 'kenney-furniture-books', at: [cabinetX - 95, 1604, back + 145] },
         { id: 'kenney-furniture-plant-small2', at: [cabinetX + 120, 1934, back + 140] },
         { id: 'kenney-furniture-potted-plant', at: [-width / 2 + 270, 0, large ? back + 1500 : back + 320] },
-        { id: 'kenney-furniture-lamp-square-floor', at: [-width / 2 + 160, 0, back + depth - 280] }
+        { id: 'kenney-furniture-lamp-square-floor', at: [compact ? width / 2 - 180 : -width / 2 + 160, 0, back + depth - 280] }
     ];
     if (compact) props.push(
         { id: 'kenney-furniture-lounge-sofa-ottoman', at: [800, 0, loungeZ + 100] },
@@ -31,8 +32,8 @@ export const GAMING_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
         { id: 'headphones', at: [cabinetX - 190, 610, cabinetZ + 60], turn: -20 }
     );
     if (large) props.push(
-        { id: 'ergoflex-game-table', at: [400, 0, back + depth - 950] },
-        { id: 'game-controller', at: [400, 740, back + depth - 950], turn: -15 },
+        { id: 'ergoflex-game-table', at: [gameTable[0], 0, gameTable[1]] },
+        { id: 'game-controller', at: [gameTable[0], 740, gameTable[1]], turn: -15 },
         { id: 'ergoflex-vision-pro', at: [cabinetX + 140, 610, cabinetZ - 140], turn: -15 },
         { id: 'kenney-furniture-kitchen-coffee-machine', at: [-width / 2 + 370, 790, back + 360], turn: 90 },
         { id: 'monstera', at: [width / 2 - 500, 0, loungeZ - 1050] },
@@ -46,7 +47,8 @@ export const GAMING_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
     props.push({ id: 'lava-lamp', at: [cabinetX + 215, 610, cabinetZ + 150] });
     // Append new dressing to preserve every existing saved placement key.
     if(index===1||index===2)props.push({id:'atelier-gaming-streamdeck-cyber',at:[cabinetX-200,610,cabinetZ-145],turn:0});
-    return [id, { id, name: names[index], width, depth, height, back, desk, props, compact, large, cabinetX, cabinetZ, loungeZ,
+    return [id, { id, name: names[index], width, depth, height, back, desk, props, compact, large, cabinetX, cabinetZ, loungeZ, gameTable,
+        ...(compact ? { groovePoses: {morning:{dx:-100,dz:80,yaw:0},afternoon:{dx:0,dz:0,yaw:0},evening:{dx:-60,dz:150,yaw:.06},night:{dx:-70,dz:30,yaw:0},party:{dx:-100,dz:250,yaw:-.08}} } : {}),
         daylight: [-width / 2 + 100, 450] }];
 }));
 export const gamingLayoutById = id => GAMING_LAYOUTS[id] || GAMING_LAYOUTS.apartment;
@@ -55,11 +57,11 @@ export const gamingLayoutForSize = size => GAMING_LAYOUTS[size === '60x30' ? 'ho
 // `live` lights the on-air box, `stream` the wall key light, `balance` weights the
 // cyan/violet room lights; RGB channel 2 (hex panels) uses the mode accent.
 export const GAMING_MODES = {
-    morning: { label: 'Morning', description: 'Daylight reset · standing stretch and setup', key: '#ffe9cb', fill: '#d5ebff', accent: '#80dce1', power: 1.8, ambient: .6, bounce: .85, exposure: 1.1, sky: ['#89bbd6', '#e8e1cb'], practical: .45, rgb: .16, live: 0, stream: .12, height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false, colors: ['#63d8ef', '#a39ff0'] },
-    afternoon: { label: 'Afternoon', description: 'Balanced daylight · seated play and streaming', key: '#f6eedf', fill: '#d8e6f7', accent: '#99d5e6', power: 1.35, ambient: .52, bounce: .78, exposure: 1.08, sky: ['#a6c5db', '#e9e4d6'], practical: .5, rgb: .3, live: .55, stream: .7, height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false, colors: ['#5be3ec', '#a092ef'] },
-    evening: { label: 'Evening', description: 'Golden-hour window · cyan and violet game lighting', key: '#ffcb94', fill: '#bdc8ef', accent: '#b192f0', power: .78, ambient: .3, bounce: .42, exposure: 1.15, sky: ['#8c85ac', '#dfac89'], practical: .8, rgb: 1, balance: [.72, 1.15], live: 1, stream: .85, height: 28, tilt: 0, offset: [0, 80], yaw: 0, leds: true, color: '#40eaff', colors: ['#40d8ed', '#a27aff'] },
-    night: { label: 'Night', description: 'Low-glare bias lighting · late-night immersion', key: '#bbc9f4', fill: '#bdc8ec', accent: '#af91ed', power: .25, ambient: .24, bounce: .32, exposure: 1.2, sky: ['#17263f', '#344b6b'], practical: .55, rgb: 1.15, balance: [.8, 1.1], live: .35, stream: .18, height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: true, color: '#8b6cff', colors: ['#49dce5', '#9675ff'] },
-    party: { label: 'Party', description: 'Social play · desk turned toward the lounge', key: '#c7d1f7', fill: '#c7b6ee', accent: '#eea0d5', power: .42, ambient: .3, bounce: .38, exposure: 1.16, sky: ['#20283f', '#575076'], practical: .8, rgb: 1.3, live: 1, stream: .45, height: 43.5, tilt: -5, offset: [60, 300], yaw: -12, leds: true, color: '#ff75cf', colors: ['#61deed', '#ff78cb'] }
+    morning: { label: 'Morning', description: 'Daylight reset · charging, coffee and a fresh setup', key: '#ffe9cb', fill: '#d5ebff', accent: '#80dce1', power: 1.8, ambient: .6, bounce: .85, exposure: 1.1, sky: ['#89bbd6', '#e8e1cb'], practical: .3, rgb: .1, live: 0, stream: .05, height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false, colors: ['#63d8ef', '#a39ff0'] },
+    afternoon: { label: 'Afternoon', description: 'Practice & stream · balanced daylight and session notes', key: '#f6eedf', fill: '#d8e6f7', accent: '#99d5e6', power: 1.35, ambient: .52, bounce: .78, exposure: 1.08, sky: ['#a6c5db', '#e9e4d6'], practical: .55, rgb: .24, live: .8, stream: .65, height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false, colors: ['#5be3ec', '#a092ef'] },
+    evening: { label: 'Evening', description: 'Co-op adventure · warm lounge light and shared play', key: '#ffcb94', fill: '#bdc8ef', accent: '#b192f0', power: .78, ambient: .3, bounce: .42, exposure: 1.15, sky: ['#8c85ac', '#dfac89'], practical: .85, rgb: .62, balance: [.65, .8], live: .15, stream: .12, height: 28, tilt: 0, offset: [0, 80], yaw: 0, leds: true, color: '#40eaff', colors: ['#75b8ca', '#b29acb'] },
+    night: { label: 'Night', description: 'Solo exploration · quiet headphones and soft bias lighting', key: '#bbc9f4', fill: '#bdc8ec', accent: '#af91ed', power: .23, ambient: .25, bounce: .34, exposure: 1.1, sky: ['#17263f', '#344b6b'], practical: .26, rgb: .38, balance: [.7, .8], live: .05, stream: .03, height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: true, color: '#8b6cff', colors: ['#8baabc', '#a29cbd'] },
+    party: { label: 'Game night', description: 'Local game night · shared scores and lounge play', key: '#c7d1f7', fill: '#c7b6ee', accent: '#eea0d5', power: .66, ambient: .37, bounce: .48, exposure: 1.1, sky: ['#20283f', '#575076'], practical: .8, rgb: .85, live: .35, stream: .15, height: 43.5, tilt: -5, offset: [60, 300], yaw: -12, leds: true, color: '#ff75cf', colors: ['#8fc4ca', '#d3a0bc'] }
 };
 
 function canvasTexture(draw, width = 512, height = 512) {
@@ -99,9 +101,12 @@ function bake(group, shadows = false) {
 
 export function buildGamingRoom(room, root, layout, helpers) {
     const { material, mesh, box, rod, sphere } = helpers;
+    room.migrateSavedTransform = (obj,saved) => migrateGamingSavedFurniture(obj,saved,layout);
+    room.migrateSavedAssets = (objects,state) => migrateGamingSavedAssetKeys(objects,state,layout);
+    const sessionMaps = gamingSessionMaps();
     const { width: w, depth: d, height: h, back: bz, cabinetX: cx, cabinetZ: cz, loungeZ } = layout;
     const front = bz + d;
-    const wall = material('#625f7a', { roughness: .93 }), trim = material('#20242f', { roughness: .5 }), walnut = material('#6f523c', { roughness: .58 });
+    const wall = material('#626775', { roughness: .93 }), trim = material('#20242f', { roughness: .5 }), walnut = material('#6f523c', { roughness: .58 });
     const black = material('#1d212b', { roughness: .48, metalness: .12 }), felt = material('#2b2f3f', { roughness: 1 });
     const alu = material('#a4acb8', { roughness: .3, metalness: .85 }), ink = material('#141821', { roughness: .4 });
     // Smoked-oak planks with staggered butt joints and individual board tones.
@@ -140,7 +145,9 @@ export function buildGamingRoom(room, root, layout, helpers) {
         }
     });
     const rugMap = rugTexture('#2c2f3f', '#5fc9d4', '#9d86e6');
-    box(root, [layout.compact ? 1850 : 2350, 8, 1850], [layout.desk[0], 4, layout.desk[1] + 650], material('#ffffff', { map: rugMap, roughness: 1 }), 3);
+    const deskRugD = layout.id === 'house' ? 1600 : 1850, deskRugZ = layout.desk[1] + (layout.id === 'house' ? 480 : 650);
+    box(root, [layout.compact ? 1850 : 2350, 8, deskRugD], [layout.desk[0], 4, deskRugZ], material('#ffffff', { map: rugMap, roughness: 1 }), 3).userData.gamingRug='desk';
+    root.userData.gamingRugs = [{x:layout.desk[0],z:deskRugZ,width:layout.compact?1850:2350,depth:deskRugD}];
 
     // Shared glow cards stand in for light spill without adding real lights.
     const glowMap = canvasTexture((c, tw, th) => {
@@ -196,20 +203,26 @@ export function buildGamingRoom(room, root, layout, helpers) {
     for (const z of [rearEnd, wz, forwardEnd]) box(entry, [70, wh + 50, 35], [-w / 2 + 5, low + wh / 2, z], trim);
     for (const y of [low, low + wh]) box(entry, [70, 35, ww + 50], [-w / 2 + 5, y, wz], trim);
     box(entry, [180, 35, ww + 90], [-w / 2 + 50, low - 25, wz], walnut, 3);
-    // A slim door near the open front keeps circulation visually understandable.
-    const doorZ = front - 520;
-    box(entry, [26, 2110, 850], [-w / 2 + 15, 1055, doorZ], trim, 3);
-    box(entry, [28, 2010, 770], [-w / 2 + 32, 1005, doorZ], material('#59606f', { roughness: .55 }), 4);
-    rod(entry, [-w / 2 + 52, 1000, doorZ - 285], [-w / 2 + 52, 1000, doorZ - 210], 8, alu);
+    if (layout.compact) {
+        const doorZ = front - 520;
+        box(entry, [26, 2110, 850], [-w / 2 + 15, 1055, doorZ], trim, 3);
+        box(entry, [28, 2010, 770], [-w / 2 + 32, 1005, doorZ], material('#59606f', { roughness: .55 }), 4);
+        rod(entry, [-w / 2 + 52, 1000, doorZ - 285], [-w / 2 + 52, 1000, doorZ - 210], 8, alu);
+    } else {
+        // Entry is on the open cutaway wall, with a clear approach between
+        // lounge seating and console furniture rather than behind the sofa.
+        box(root,[900,6,120],[250,3,front-60],alu,3).userData.presentationOnly=true;
+    }
     room.walls.push({ obj: entry, axis: 'z', limit: w / 2 * root.scale.x, sign: -1 });
 
     // PC plinth and display shelves have real support heights matching the props.
     const cabinet = new THREE.Group(); cabinet.name = 'PC display cabinet'; back.add(cabinet);
-    box(cabinet, [620, 560, 550], [cx, 300, cz], black, 6);
-    box(cabinet, [650, 30, 570], [cx, 595, cz], walnut, 4);
-    for (const x of [cx - 230, cx + 230]) for (const z of [cz - 205, cz + 205]) rod(cabinet, [x, 0, z], [x, 40, z], 12, alu);
+    const cabinetW = layout.compact ? 520 : 650;
+    box(cabinet, [cabinetW - 30, 560, 550], [cx, 300, cz], black, 6);
+    box(cabinet, [cabinetW, 30, 570], [cx, 595, cz], walnut, 4);
+    for (const x of [cx - cabinetW/2 + 95, cx + cabinetW/2 - 95]) for (const z of [cz - 205, cz + 205]) rod(cabinet, [x, 0, z], [x, 40, z], 12, alu);
     for (const y of [190, 400]) {
-        box(cabinet, [595, 190, 18], [cx, y, cz + 278], black, 3);
+        box(cabinet, [cabinetW - 55, 190, 18], [cx, y, cz + 278], black, 3);
         rod(cabinet, [cx - 75, y + 50, cz + 293], [cx + 75, y + 50, cz + 293], 4, alu);
     }
     for (const y of [1590, 1920]) box(back, [650, 28, 270], [cx, y, bz + 145], walnut, 3);
@@ -220,7 +233,7 @@ export function buildGamingRoom(room, root, layout, helpers) {
     const paint = ({ mat, channel, scale = 1, base }) => {
         const [id, accent] = atmosphere, mode = GAMING_MODES[id] || GAMING_MODES.evening;
         mat.color.set(base || tone(mode, channel)); mat.emissive.set(tone(mode, channel));
-        mat.emissiveIntensity = (.08 + mode.rgb * accent * 1.35) * scale;
+        mat.emissiveIntensity = (.06 + mode.rgb * accent * .85) * scale;
     };
     const strip = (parent, size, position, channel = 0) => {
         const mat = material(channel ? '#ad84ea' : '#74dce5', { emissive: channel ? '#ab78ff' : '#52e0f0', emissiveIntensity: 1.1 });
@@ -232,7 +245,7 @@ export function buildGamingRoom(room, root, layout, helpers) {
     strip(back, [w - 100, 12, 15], [0, 95, bz + 23], 1);
     for (const y of [1590, 1920]) strip(back, [600, 8, 10], [cx, y - 15, bz + 273], 1);
     // Under-plinth glow pools on the floor in front of the PC cabinet.
-    strip(cabinet, [560, 8, 10], [cx, 26, cz + 268], 0);
+    strip(cabinet, [cabinetW - 90, 8, 10], [cx, 26, cz + 268], 0);
     glow(back, [800, 520], [cx, 9, cz + 330], 0, glowMap, .55).rotation.x = -Math.PI / 2;
     // Perimeter cove lines wash the upper walls in the two game channels.
     strip(back, [w - 120, 12, 12], [0, h - 70, bz + 18], 1);
@@ -241,14 +254,8 @@ export function buildGamingRoom(room, root, layout, helpers) {
     glow(side, [d - 120, 620], [w / 2 - 4, h - 380, bz + d / 2], 0, washMap, .7).rotation.y = -Math.PI / 2;
 
     // An original abstract game-world artwork, rather than a brand or game ad.
-    const artMap = canvasTexture((c, tw, th) => {
-        c.fillStyle = '#172237'; c.fillRect(0, 0, tw, th);
-        const g = c.createLinearGradient(0, 0, tw, th); g.addColorStop(0, '#4acee2'); g.addColorStop(1, '#ad79ef');
-        c.strokeStyle = g; c.lineWidth = 7;
-        for (let i = 0; i < 6; i++) { c.beginPath(); c.moveTo(tw * .15, th * (.16 + i * .11)); c.lineTo(tw * .46, th * (.34 + i * .06)); c.lineTo(tw * .85, th * (.13 + i * .1)); c.stroke(); }
-        c.fillStyle = '#d5e5e8'; c.beginPath(); c.arc(tw * .76, th * .2, 18, 0, Math.PI * 2); c.fill();
-    });
-    const art = new THREE.Group(); art.name = 'Abstract gaming artwork'; art.position.set(w / 2 - 24, 1750, layout.compact ? 700 : 350); art.rotation.y = -Math.PI / 2; side.add(art);
+    const artMap = sessionMaps.poster;
+    const art = new THREE.Group(); art.name = 'Abstract gaming artwork'; art.position.set(w/2-24,layout.compact?1750:h-400,layout.compact?700:350); art.rotation.y=-Math.PI/2; side.add(art);
     box(art, [layout.compact ? 650 : 900, 700, 28], [0, 0, 0], trim, 3);
     box(art, [layout.compact ? 610 : 860, 660, 4], [0, 0, 17], material('#ffffff', { map: artMap, roughness: .8 }));
 
@@ -273,6 +280,7 @@ export function buildGamingRoom(room, root, layout, helpers) {
     // the floor lamp's shade becomes an RGB light column on channel two.
     const finishes = { carpet: ['#3a3650', .95, 0], wood: ['#3b2f27', .55, 0], woodDark: ['#262a33', .6, 0], metal: ['#1c2028', .35, .65] };
     room.decorateProp = (object, placement) => {
+        sessions.decorate(object, placement);
         if (placement.id === 'samsung-neo-tv') {
             const bezel = mesh(object, new THREE.PlaneGeometry(1.117, .638), new THREE.MeshBasicMaterial({ color: '#101820' }), [0, .3521, .010]);
             const display = mesh(object, new THREE.PlaneGeometry(1.094, .615), new THREE.MeshBasicMaterial({ map: displayMap, toneMapped: false }), [0, .3521, .0108]);
@@ -304,7 +312,9 @@ export function buildGamingRoom(room, root, layout, helpers) {
     };
 
     if (!layout.compact) {
-        box(root, [2400, 8, Math.min(2400, (front - loungeZ - 60) * 2)], [-w / 2 + 1400, 4, loungeZ], material('#ffffff', { map: rugTexture('#33304a', '#a58ae8', '#5fc9d4'), roughness: 1 }), 3);
+        const rugRear=Math.max(loungeZ-1200,deskRugZ+deskRugD/2+80),rugFront=Math.min(front-70,loungeZ+1200);
+        box(root, [2400,8,rugFront-rugRear], [-w/2+1400,4,(rugRear+rugFront)/2], material('#ffffff', { map: rugTexture('#333442', '#a29ab3', '#85b2bd'), roughness: 1 }), 3).userData.gamingRug='lounge';
+        root.userData.gamingRugs.push({x:-w/2+1400,z:(rugRear+rugFront)/2,width:2400,depth: rugFront-rugRear});
         // TV and console joinery lives along the side; lounge faces across it.
         box(side, [300, 730, 1450], [w / 2 - 160, 390, loungeZ], black, 6);
         box(side, [325, 25, 1475], [w / 2 - 160, 767.5, loungeZ], walnut, 3);
@@ -347,13 +357,8 @@ export function buildGamingRoom(room, root, layout, helpers) {
     bake(neon);
     glow(neon, [720, 560], [0, -10, 6], 1, glowMap, 1.2);
 
-    // On-air light box above the shelves: lit while streaming in the evening.
-    const onAirMap = canvasTexture((c, tw, th) => {
-        c.fillStyle = '#1d0f15'; c.fillRect(0, 0, tw, th);
-        c.strokeStyle = '#ff5d5d'; c.lineWidth = 6; c.strokeRect(16, 16, tw - 32, th - 32);
-        c.font = 'bold 82px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.shadowColor = '#ff2d3c'; c.shadowBlur = 20; c.fillStyle = '#ff6a6a'; c.fillText('ON AIR', tw / 2, th / 2 + 4);
-    }, 512, 160);
+    // The original light-box identity is retained as its activity label changes.
+    const onAirMap = sessionMaps.sign;
     const live = new THREE.Group(); live.name = 'On-air light box'; live.position.set(cx, h - 300, bz); back.add(live);
     flat(box(live, [400, 130, 50], [0, 0, 25], black, 8));
     const liveMat = material('#ffffff', { map: onAirMap, emissive: '#ffffff', emissiveMap: onAirMap, roughness: .35 });
@@ -467,10 +472,15 @@ export function buildGamingRoom(room, root, layout, helpers) {
         const light = new THREE.PointLight(spec.color, 0, spec.range * root.scale.x, 2); light.position.set(...spec.at); root.add(light);
         return { ...spec, light, power: spec.power * (root.scale.x * 1000) ** 2 };
     });
+    // Append new seats after existing floor furnishings so the old anonymous
+    // rug keys retain their ordering in saved projects. The entry threshold is
+    // architecture, not another editable floor furnishing.
+    const sessions = buildGamingSessionDetail(room,layout,helpers);
     const tile = new THREE.Color(), frost = new THREE.Color('#c7cad6');
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = GAMING_MODES[modeId] || GAMING_MODES.evening, dark = mode.power < .5;
         atmosphere = [modeId, accent];
+        sessionMaps.update(modeId); sessions.apply(modeId);
         // Window: sky gradient, sun or moon, and a skyline that lights up after dark.
         const c = skyCanvas.getContext('2d'), gradient = c.createLinearGradient(0, 0, 0, 512);
         gradient.addColorStop(0, mode.sky[0]); gradient.addColorStop(1, mode.sky[1]); c.fillStyle = gradient; c.fillRect(0, 0, 512, 512);
@@ -487,16 +497,16 @@ export function buildGamingRoom(room, root, layout, helpers) {
         }
         skyMap.needsUpdate = true;
         strips.forEach(paint);
-        const lit = Math.min(1.25, mode.rgb * accent), unlit = .12 + .4 * Math.max(0, 1 - lit);
+        const lit = Math.min(.9, mode.rgb * accent), unlit = .12 + .4 * Math.max(0, 1 - lit);
         hexChannels.forEach((channel, i) => hexes.setColorAt(i, tile.set(tone(mode, channel)).multiplyScalar(lit * 1.05).add(color.copy(frost).multiplyScalar(unlit))));
         hexes.instanceColor.needsUpdate = true;
         glows.forEach(({ mat, channel, strength }) => {
-            const level = channel === 'live' ? mode.live : mode.rgb * accent * .55;
-            mat.color.set(channel === 'live' ? '#ff3346' : tone(mode, channel)).multiplyScalar(level * strength);
+            const level = channel === 'live' ? mode.live : mode.rgb * accent * .38;
+            mat.color.set(channel === 'live' ? (modeId === 'afternoon' ? '#f0988d' : '#9bb9c7') : tone(mode, channel)).multiplyScalar(level * strength);
         });
         liveMat.emissiveIntensity = .05 + mode.live * 1.6;
         streamMat.emissiveIntensity = mode.stream * 1.3;
-        lights.forEach(spec => { if (spec.rgb) spec.light.color.set(mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.rgb ? mode.rgb * (mode.balance?.[spec.channel] ?? 1) : mode.practical) * accent; });
+        lights.forEach(spec => { if (spec.rgb) spec.light.color.set('#d2dce7').lerp(new THREE.Color(mode.colors[spec.channel]),modeId==='night'?.36:.58); spec.light.intensity = spec.power * (spec.rgb ? mode.rgb * (mode.balance?.[spec.channel] ?? 1) : mode.practical) * accent; });
         diffuser.emissiveIntensity = .2 + mode.practical * .7;
         root.userData.atmosphere = modeId;
     };

@@ -1,5 +1,5 @@
 import { SCENE_PRODUCT_REFERENCE } from './scene-product-reference.mjs';
-import { cleanDeskObjects, seedSceneDeskSize } from './scene-desk-data.mjs';
+import { cleanDeskObjects, seedSceneDeskSize } from './scene-desk-data.mjs?v=item-gumball-clipboard-20261016';
 
 const clone=value=>JSON.parse(JSON.stringify(value));
 const profiles={

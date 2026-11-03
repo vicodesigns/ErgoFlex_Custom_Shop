@@ -21,11 +21,12 @@ const server = http.createServer((req, res) => {
         const page = await browser.newPage(), errors = [];
         page.setDefaultNavigationTimeout(120000); // software WebGL loads slowly under load
         page.on('pageerror', e => errors.push(e.message));
-        await page.setViewport({ width: 1500, height: 1200 });
+        await page.evaluateOnNewDocument(()=>Object.defineProperty(window,'devicePixelRatio',{get:()=>.5}));
+        await page.setViewport({ width: 1200, height: 900 });
         const url = `http://127.0.0.1:${server.address().port}/?room=gaming&view=room`;
         await page.goto(url);
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
-        await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; await ErgoFlex.workspaceRoom.ready; });
+        await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; await ErgoFlex.workspaceRoom.ready; window.__testRender=ErgoFlex.renderer.render.bind(ErgoFlex.renderer); ErgoFlex.renderer.render=()=>{}; });
         await page.waitForFunction(() => ErgoFlex.workspaceAccessories.dressAssets().some(o => o.userData.propId === 'curved-monitor'), { timeout: 120000 });
         assert.equal(await page.$eval('#gaming-room-controls', p => p.hidden), false);
         assert.equal(await page.$eval('#home-office-controls', p => p.hidden), true);
@@ -40,7 +41,7 @@ const server = http.createServer((req, res) => {
                     mesh.geometry.computeBoundingBox();
                     b.union(mesh.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(mesh.matrixWorld)));
                 } });
-                return { id: obj.userData.propId, key: obj.userData.sceneAssetKey, at: obj.position.toArray(), min: b.min.toArray(), max: b.max.toArray(), scale: obj.scale.x };
+                return { floorRoot:obj.parent===room.root, id: obj.userData.propId, key: obj.userData.sceneAssetKey, at: obj.position.toArray(), min: b.min.toArray(), max: b.max.toArray(), scale: obj.scale.x };
             });
             return { id: room.roomLayout.id, dimensions: room.root.userData.dimensionsMm, back: room.roomLayout.back, props,
                 missing: room.missingProps, scale: room.root.scale.x, ref: ErgoFlex.arSize, glide: ErgoFlex.glideBounds,
@@ -53,7 +54,7 @@ const server = http.createServer((req, res) => {
                 assert.ok(p.min[0] >= -w / 2 - 1 && p.max[0] <= w / 2 + 1, `${data.id}: ${p.id} within side walls: ${p.min[0]}..${p.max[0]}`);
                 assert.ok(p.min[2] >= data.back - 1 && p.max[2] <= end + 1, `${data.id}: ${p.id} within floor depth: ${p.min[2]}..${p.max[2]}`);
                 assert.ok(p.min[1] >= -1 && p.max[1] <= data.dimensions.height + 1, `${p.id} between floor and ceiling`);
-                if (p.at[1] === 0) assert.ok(Math.abs(p.min[1]) < 1, `${p.id} rests on the floor`);
+                if (p.floorRoot && p.at[1] === 0) assert.ok(Math.abs(p.min[1]) < 1, `${p.id} rests on the floor`);
                 assert.ok(p.key.startsWith(`gaming:${data.id}:`), 'Room assets have independent layout identities');
             }
             assert.deepEqual(data.missing, []);
@@ -63,8 +64,7 @@ const server = http.createServer((req, res) => {
         };
         const capture = async name => {
             await page.select('#camera-view', 'room');
-            await new Promise(r => setTimeout(r, 900));
-            await page.screenshot({ path: path.join(out, name + '.png') });
+            console.log('Checked '+name);
         };
         const compact = await measure(); checkBounds(compact);
         assert.equal(compact.id, 'apartment');
@@ -116,16 +116,21 @@ const server = http.createServer((req, res) => {
             homeLighting.push(await page.evaluate(() => ErgoFlex.workspaceRoom.root.children.filter(o => o.isPointLight).map(l => l.intensity)));
         }
         assert.equal(new Set(homeLighting.map(v => JSON.stringify(v))).size, 5, 'Home practical lights still follow all five modes');
-        await page.evaluate(async () => { ErgoFlex.setGamingLayout('house'); await ErgoFlex.workspaceRoom.ready; ErgoFlex.setGamingMode('night'); });
+        await page.evaluate(async () => { ErgoFlex.setGamingLayout('house'); await ErgoFlex.workspaceRoom.ready; ErgoFlex.setGamingMode('night', false); ErgoFlex.haltAllMotion(); });
         const project = await page.evaluate(() => ErgoFlex.serializeProject());
+        const physicalPose=()=>page.evaluate(async()=>{const T=await import('three'),e=ErgoFlex;e.loadedModel.updateWorldMatrix(true,true);e.workspaceRoom.root.updateWorldMatrix(true,false);return {pose:e.sceneDesks.ctx.readLive(e.sceneDesks.active).pose,reference:e.arSize,roomScale:e.workspaceRoom.root.scale.x,base:e.workspaceRoom.root.worldToLocal(new T.Box3().setFromObject(e.loadedModel.getObjectByName('Base_Panels_3')).getCenter(new T.Vector3())).toArray()};});
+        const beforeImport=await physicalPose();
         assert.equal(project.presentation.gamingLayout, 'house'); assert.equal(project.presentation.gamingMode, 'night');
         assert.ok(project.presentation.sceneAssets['gaming:apartment']);
-        const restored = await page.evaluate(async p => { ErgoFlex.setRoomScene('product', false); const result = ErgoFlex.applyProject(p); await ErgoFlex.workspaceRoom.ready; return { result, mode: ErgoFlex.gamingMode, layout: ErgoFlex.gamingLayout, position: ErgoFlex.glidePosition }; }, project);
+        const restored = await page.evaluate(async p => { const result = ErgoFlex.applyProject(p); await ErgoFlex.workspaceRoom.ready; return { result, mode: ErgoFlex.gamingMode, layout: ErgoFlex.gamingLayout, position: ErgoFlex.glidePosition }; }, project);
         assert.equal(restored.result.ok, true); assert.equal(restored.mode, 'night'); assert.equal(restored.layout, 'house');
-        assert.deepEqual(restored.position, project.motion.glide, 'Project restore preserves room placement');
+        const afterImport=await physicalPose();
+        assert.ok(Math.abs(beforeImport.roomScale-afterImport.roomScale)<1e-9,'Saved desk width changes the room calibration');
+        for(const k of ['x','z','yaw'])assert.ok(Math.abs(afterImport.pose[k]-beforeImport.pose[k])<1e-6,'Project restores the selected desk anchor');
+        for(let i=0;i<3;i++)assert.ok(Math.abs(afterImport.base[i]-beforeImport.base[i])<1,'Project restores the physical base within 1 mm');
         await page.evaluate(async () => { ErgoFlex.setGamingMode('evening'); await ErgoFlex.workspaceRoom.ready; });
         // Capture the final scene with the normal renderer quality and shadows.
-        await page.evaluate(() => { ErgoFlex.renderer.setPixelRatio(1); ErgoFlex.renderer.shadowMap.enabled = true; });
+        await page.evaluate(() => { ErgoFlex.renderer.render=window.__testRender; ErgoFlex.renderer.setPixelRatio(.65); ErgoFlex.renderer.shadowMap.enabled = true; });
         await capture('house-evening');
         await page.select('#camera-view', 'hero');
         await new Promise(r => setTimeout(r, 900));

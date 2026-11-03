@@ -48,7 +48,7 @@ export class RoomGroove {
         const room = this.ctx.room, l = room.roomLayout;
         const saved = this.ctx.saved?.(this.prepared.scene, this.prepared.phase);
         return { start: this.ctx.pose(), desired: saved?.pose || grooveDestination(this.prepared.scene, l, this.prepared.phase), exact: !!saved,
-            bounds: { minX: -l.width / 2 + 20, maxX: l.width / 2 - 20, minZ: l.back + 20, maxZ: l.back + l.depth - 20 },
+            bounds: { minX: (l.left ?? -l.width / 2) + 20, maxX: (l.left ?? -l.width / 2) + l.width - 20, minZ: l.back + 20, maxZ: l.back + l.depth - 20 },
             obstacles: grooveObstacles(room), footprint: this.ctx.footprint() };
     }
     async prepare(scene, phase) {

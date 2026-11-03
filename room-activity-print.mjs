@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { drawStudyGraphics, drawStudyCover } from './room-study-graphics.mjs?v=activity-composition-20261020';
 
 // Original printed activity pages, sized to the existing tabletop books. No
 // asset keys, furniture footprints, imported materials or project data change.
@@ -32,9 +33,34 @@ const THEMES = {
     mobileit: ['SERVICE CHECKLIST', 'IDENTIFY / TEST / DEPLOY', '#617b86'],
     occmedialab: ['PRODUCTION NOTES', 'STORY / IMAGE / SOUND', '#d77b23']
 };
-function printMaterial(canvas) {
+function printMaterial(canvas, cloth = false) {
+    const c = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
+    // Fine paper fibres / bookcloth are part of the print atlas. A matching
+    // height map gives grazing light a little relief without extra geometry.
+    const relief = document.createElement('canvas'); relief.width = 128; relief.height = 128;
+    const rc = relief.getContext('2d'), data = rc.createImageData(128, 128);
+    for (let y = 0; y < 128; y++) for (let x = 0; x < 128; x++) {
+        const noise = ((x * 73 + y * 151 + x * y * 17) % 37) / 37;
+        const weave = cloth ? 18 * Math.cos(x * Math.PI / 2) + 12 * Math.cos(y * Math.PI / 2) : 0;
+        const v = 128 + weave + (noise - .5) * (cloth ? 14 : 34), i = (y * 128 + x) * 4;
+        data.data[i] = data.data[i + 1] = data.data[i + 2] = v; data.data[i + 3] = 255;
+    }
+    rc.putImageData(data, 0, 0);
+    c.save(); c.globalAlpha = cloth ? .09 : .045;
+    c.globalCompositeOperation = 'multiply'; c.fillStyle = c.createPattern(relief, 'repeat'); c.fillRect(0, 0, w, h); c.restore();
+    if (cloth) {
+        // Bound spine, lightly worn corners and a stitched inset border.
+        const fold = c.createLinearGradient(0, 0, 22, 0);
+        fold.addColorStop(0, '#202a2780'); fold.addColorStop(.65, '#f9eed422'); fold.addColorStop(1, '#202a2700');
+        c.fillStyle = fold; c.fillRect(0, 0, 22, h);
+        c.save(); c.strokeStyle = '#e7dbc34a'; c.lineWidth = 1; c.setLineDash([3, 4]); c.strokeRect(16, 18, w - 32, h - 36); c.restore();
+    }
     const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4;
-    return new THREE.MeshStandardMaterial({ map, color: '#ffffff', roughness: .95, side: THREE.DoubleSide });
+    const bump = new THREE.CanvasTexture(relief); bump.wrapS = bump.wrapT = THREE.RepeatWrapping;
+    bump.repeat.set(cloth ? 4 : 6, cloth ? 5 : 4); bump.anisotropy = 4;
+    const material = new THREE.MeshStandardMaterial({ map, bumpMap: bump, bumpScale: cloth ? .00010 : .000045, color: '#ffffff', roughness: cloth ? .88 : .95, side: THREE.DoubleSide });
+    material.userData.activityFinish = cloth ? 'woven-bookcloth' : 'paper-fibre';
+    return material;
 }
 export function activityPageMaterial(id, phase = 0, coverColor = null) {
     const [title, subtitle, accent] = THEMES[id] || THEMES.home;
@@ -48,7 +74,8 @@ export function activityPageMaterial(id, phase = 0, coverColor = null) {
         c.fillRect(130, 256, 124, 2); c.font = '12px sans-serif';
         c.fillText(['PLAN', 'CREATE', 'REVIEW', 'REFLECT', 'SHARE'][phase], 192, 298);
         c.font = '11px sans-serif'; c.fillText('FIELD NOTES / ' + String(phase + 1).padStart(2, '0'), 192, 444);
-        return printMaterial(canvas);
+        drawStudyCover(c, id, phase);
+        return printMaterial(canvas, true);
     }
     const canvas = document.createElement('canvas'); canvas.width = 768; canvas.height = 512;
     const c = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
@@ -74,7 +101,7 @@ export function activityPageMaterial(id, phase = 0, coverColor = null) {
     }
     if (id === 'music') {
         c.fillStyle = '#eee8d8'; c.fillRect(40, 118, 305, 294);
-        c.strokeStyle = '#66716a';
+        c.strokeStyle = '#66716a'; c.fillStyle = '#4a5650';
         for (let row = 0; row < 3; row++) {
             for (let line = 0; line < 5; line++) { const y = 150 + row * 94 + line * 9; c.beginPath(); c.moveTo(44, y); c.lineTo(339, y); c.stroke(); }
             for (let n = 0; n < 8; n++) { const x = 65 + n * 36, y = 160 + row * 94 + ((n * 3 + phase) % 5) * 5; c.beginPath(); c.ellipse(x, y, 5, 3.5, -.3, 0, Math.PI * 2); c.fill(); c.fillRect(x + 4, y - 24, 1.5, 24); }
@@ -99,6 +126,16 @@ export function activityPageMaterial(id, phase = 0, coverColor = null) {
         ['One useful idea', 'A question to explore', 'Next small step'].forEach((t, n) => { c.fillText(t, 46, 151 + n * 89); for (let k = 0; k < 2; k++) c.fillRect(46, 164 + n * 89 + k * 19, 230 - k * 38, 2); });
         c.fillStyle = accent; c.fillRect(46, 415, 122, 29); c.fillStyle = '#f9f6ed'; c.font = '10px sans-serif'; c.fillText('NOTES / ' + String(phase + 1).padStart(2, '0'), 57, 433);
     }
+    drawStudyGraphics(c, id, phase, accent);
+    // Marginalia and a folded corner make these working notebooks rather than
+    // pristine generic props. Marks are phase-specific and stay on the page.
+    c.strokeStyle = '#677e82'; c.lineWidth = 1.8;
+    c.font = 'italic 15px Georgia, serif'; c.fillStyle = '#657c80';
+    c.save(); c.translate(450, 451); c.rotate(-.025);
+    c.fillText(['start here', 'check this again', 'pick up tomorrow', 'saved for later', 'compare notes'][phase], 0, 0); c.restore();
+    c.strokeStyle = '#a08861'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(440, 462); c.bezierCurveTo(490, 467, 535, 461, 572, 463); c.stroke();
+    c.fillStyle = '#d8d0ba'; c.beginPath(); c.moveTo(730, 481); c.lineTo(730, 456); c.lineTo(705, 481); c.closePath(); c.fill();
     c.fillStyle = '#8e9587'; c.font = '10px sans-serif'; c.fillText(String(phase * 2 + 1).padStart(2, '0'), 44, 493); c.fillText(String(phase * 2 + 2).padStart(2, '0'), 708, 493);
     return printMaterial(canvas);
 }

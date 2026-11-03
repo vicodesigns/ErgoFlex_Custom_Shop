@@ -1,5 +1,5 @@
 import { cleanArtwork } from './artwork-config.mjs';
-import { cleanDeskObjects } from './scene-desk-data.mjs';
+import { cleanDeskObjects } from './scene-desk-data.mjs?v=item-gumball-clipboard-20261016';
 import { cleanDeskStyle } from './room-desk-styles.mjs';
 
 export const LIBRARY_PHONE_ID = 'default-library-iphone';
@@ -31,6 +31,7 @@ export function applyLibraryProductBuild(state, entry) {
         ...Object.fromEntries(Object.entries(objects).filter(([id, o]) => id.startsWith('accessory-') || o.added))
     };
     state.peripheralRecipe = 'library'; state.peripheralSetup = 'product-reference-v1';
-    state.productBuild = { id: 'library', size: state.size, revision };
+    state.productBuild = { id: 'library', size: state.size, revision,
+        ...(previous?.size === state.size && previous.artworkRepair ? {artworkRepair: previous.artworkRepair} : {}) };
     return true;
 }

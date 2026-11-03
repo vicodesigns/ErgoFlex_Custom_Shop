@@ -24,9 +24,10 @@ const CSS = `
 #scene-tour .tour-label span{opacity:.72;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #scene-tour svg{width:18px;height:18px;flex:none}
 /* Full screen: only the canvas and this toolbar remain. */
-.scene-tour-full{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-height:none!important;
+body #viewer-shell.scene-tour-full{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-height:none!important;
   min-height:0!important;margin:0!important;border-radius:0!important;z-index:2147483000!important;background:#0f141a}
-.scene-tour-full canvas{width:100%!important;height:100%!important}
+#viewer-shell.scene-tour-full > .relative{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
+.scene-tour-full canvas{position:absolute!important;inset:0!important;display:block!important;margin:0!important;width:100%!important;height:100%!important}
 .scene-tour-full .scene-tour-hide{display:none!important}
 html.scene-tour-locked,html.scene-tour-locked body{overflow:hidden!important}
 #scene-tour.tour-collapsed .tour-cycle,#scene-tour.tour-collapsed .tour-label span{display:none}

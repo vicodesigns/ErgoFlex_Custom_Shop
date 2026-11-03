@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { botanicalPlant } from './room-botanical-detail.mjs?v=natural-finishes-20261020';
 
 // Shared drawing and dressing helpers for every institutional group. Group
 // modules (institutional-government/-education/-healthcare/-it.mjs) own their
@@ -131,12 +132,18 @@ export function detailKit() {
         build(parent, material) { if (!parts.length) return; const g = mergeGeometries(parts, false); parts.forEach(p => p.dispose()); const obj = new THREE.Mesh(g, material); obj.name = 'Furnishing detail'; obj.castShadow = obj.receiveShadow = true; parent.add(obj); return obj; }
     }; return api;
 }
-export const books = (k, x, y, z, count = 5) => { for (let i = 0; i < count; i++) { const h = 150 + rnd(i) * 55; k.box([24, h, 125], [x + i * 29, y + h / 2, z], ['#547b75', '#c0a473', '#8e6f65', '#6d8497'][i % 4]); k.box([18, 3, 2], [x + i * 29, y + h - 24, z + 63], '#e9ddbf'); } };
+export const books = (k, x, y, z, count = 5) => { for (let i = 0; i < count; i++) {
+    const h = 150 + rnd(i) * 55, bx = x + i * 29, color = ['#547b75', '#b39b72', '#8e6f65', '#6d8497'][i % 4];
+    k.box([24, h, 125], [bx, y + h / 2, z], color);
+    // Inset page block, cover overhang, spine bands and a small shelf label.
+    k.box([19, 1, 116], [bx, y + h + .1, z + 2], '#d8d1b9');
+    for (const dy of [12, h - 12]) k.box([21, 1.4, 1], [bx, y + dy, z + 63], '#b9b59e');
+    k.box([14, 19, 1], [bx, y + 26, z + 63], '#dfddcb');
+    for (let line = 0; line < 3; line++) k.box([8 - line, .8, .3], [bx, y + 22 + line * 4, z + 63.7], '#6c756e');
+    k.box([17, 3, 1], [bx, y + h - 29, z + 63], '#e9ddbf');
+} };
 export const notebook = (k, x, y, z, color) => { k.box([210, 22, 155], [x, y + 11, z], color); k.box([198, 15, 150], [x + 4, y + 11, z + 2], '#ede8d8'); k.box([212, 2, 156], [x, y + 23, z], color); k.box([130, 3, 5], [x + 15, y + 27, z + 50], '#314b52', [0, .2, 0]); };
-export const plant = (k, x, y, z, size = 1) => {
-    k.cyl(95 * size, 75 * size, 170 * size, [x, y + 85 * size, z], '#b5aa93'); k.cyl(90 * size, 90 * size, 8 * size, [x, y + 168 * size, z], '#554b3b');
-    for (let n = 0; n < 9; n++) { const a = n * 2.4, r = (90 + n % 3 * 25) * size; k.ball(75 * size, [x + Math.cos(a) * r, y + (210 + n * 30) * size, z + Math.sin(a) * r], n % 2 ? '#54795a' : '#365e4b', [.55, 1.5, .8], [0, a, .65]); }
-};
+export const plant = botanicalPlant;
 // Storage-top books, plant and document tray used by non-clinical groups.
 export function storageBooks(k, top) { books(k, -360, top, 20, 6); plant(k, 410, top, 0, .65); }
 export function storageTray(k, top) { k.box([330, 32, 230], [80, top + 16, 0], '#6f8a8b'); k.box([300, 8, 215], [80, top + 36, 0], '#eee9d8'); }

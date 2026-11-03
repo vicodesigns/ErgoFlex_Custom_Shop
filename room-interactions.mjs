@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { DoubleItemTap } from './scene-item-editing.mjs?v=item-gumball-clipboard-20261016';
 import { surfaceDrop } from './item-surface-drop.mjs';
 import { RoomGrounding } from './room-polish.mjs?v=humboldt-commons-20261015';
 import { solveFloorMove, overlapArea } from './room-collision.mjs?v=room-regressions-20261007';
@@ -10,9 +11,9 @@ const architecture = /ceiling|window|curtain|door|daylight|lighting.track|suspen
 const descendant = (obj,parent) => { for(let p=obj;p;p=p.parent)if(p===parent)return true;return false; };
 
 export class RoomInteractions {
-    constructor({canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,onEditStart,onEditEnd,safety,deskPointer,deskMove,deskEnd,deskEntries}) {
-        Object.assign(this,{canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,onEditStart,onEditEnd,safety,deskPointer,deskMove,deskEnd,deskEntries});
-        this.entries=[];this.root=null;this.drag=null;this.selected=null;this.ray=new THREE.Raycaster();this.pointer=new THREE.Vector2();
+    constructor({canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,onEditStart,onEditEnd,onDoubleSelect,gizmoPointer,safety,deskPointer,deskMove,deskEnd,deskEntries}) {
+        Object.assign(this,{canvas,camera,controls,scene,room,deskBox,deskObject,enabled,onChange,onStatus,onSelection,onEditStart,onEditEnd,onDoubleSelect,gizmoPointer,safety,deskPointer,deskMove,deskEnd,deskEntries});
+        this.taps=new DoubleItemTap();this.entries=[];this.root=null;this.drag=null;this.selected=null;this.ray=new THREE.Raycaster();this.pointer=new THREE.Vector2();
         this.highlight=new THREE.Box3Helper(new THREE.Box3(),0x41d4b0);this.highlight.visible=false;scene.add(this.highlight);
         window.addEventListener('pointerdown',e=>this.down(e),true);
         window.addEventListener('pointermove',e=>this.move(e),true);
@@ -156,6 +157,7 @@ export class RoomInteractions {
         this.ray.setFromCamera(this.pointer,this.camera);
     }
     down(e) {
+        if(this.gizmoPointer?.(e))return;
         if(this.deskPointer?.(e))return;
         if(e.target!==this.canvas||e.button!==0||!this.enabled()||e.shiftKey||e.altKey||e.ctrlKey||e.metaKey)return;
         if(this.drag){this.end();return;}
@@ -164,10 +166,11 @@ export class RoomInteractions {
         if(!hit){this.select(null);return;}
         const entry=this.entryForHit(hit.object);
         if(!entry){this.select(null);return;}
+        if(this.taps.test(entry.obj.uuid,e)){this.select(entry);this.onDoubleSelect?.(entry);e.preventDefault();e.stopImmediatePropagation();return;}
         const normal=entry.surface==='wall'?new THREE.Vector3(entry.wall.axis==='x'?1:0,0,entry.wall.axis==='z'?1:0):new THREE.Vector3(0,1,0);
         const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,hit.point),anchor=new THREE.Vector3();
         if(!this.ray.ray.intersectPlane(plane,anchor))return;
-        this.drag={entry,pointer:e.pointerId,plane,last:anchor.clone(),controlsEnabled:this.controls.enabled,changed:false,edit:this.onEditStart?.()};
+        this.drag={entry,pointer:e.pointerId,start:[e.clientX,e.clientY],started:false,plane,last:anchor.clone(),controlsEnabled:this.controls.enabled,changed:false,edit:this.onEditStart?.()};
         this.controls.enabled=false;this.controls.autoRotate=false;this.canvas.setPointerCapture(e.pointerId);this.canvas.style.cursor='grabbing';this.select(entry);
         this.onStatus?.(`Drag ${entry.name} along the ${entry.surface}. ${entry.surface!=='wall'?'Rotate it or press Down Arrow to place it on a surface.':'Release to place it.'}`);
         e.preventDefault();e.stopImmediatePropagation();
@@ -175,6 +178,7 @@ export class RoomInteractions {
     move(e) {
         if(this.deskMove?.(e))return;
         const d=this.drag;if(!d||d.pointer!==e.pointerId)return;
+        if(!d.started&&Math.hypot(e.clientX-d.start[0],e.clientY-d.start[1])<5){e.preventDefault();e.stopImmediatePropagation();return;}d.started=true;
         this.point(e);const point=new THREE.Vector3();
         if(this.ray.ray.intersectPlane(d.plane,point)){
             const room=this.room(),box=new THREE.Box3().setFromObject(d.entry.obj),delta=point.clone().sub(d.last);
@@ -196,6 +200,7 @@ export class RoomInteractions {
         const d=this.drag;if(!d||(e&&e.pointerId!==d.pointer))return;
         if(this.canvas.hasPointerCapture(d.pointer))this.canvas.releasePointerCapture(d.pointer);
         this.controls.enabled=d.controlsEnabled;this.canvas.style.cursor='';this.drag=null;
+        this.taps.remember(d.entry.obj.uuid,e,d.changed);
         if(d.changed){this.onEditEnd?.(d.edit);this.onChange?.();this.rebindSelected();}
         if(e){e.preventDefault();e.stopImmediatePropagation();}
     }

@@ -1,9 +1,8 @@
 # Gaming in Studio
 
-Open `index.html?room=gaming&view=room` or choose **Gaming** in the scene bar.
-Gaming uses the measured Home Office framework, with its own architecture,
-lighting, furnishings, room selection, and saved edits. Evening is the initial
-lighting mode; subsequent choices are remembered locally.
+Open `index.html?room=gaming&view=room&layout=house&tour=1&v=gaming-sessions-20261022` or choose **Gaming** in the scene bar.
+
+Gaming uses the measured Home Office framework, with independent architecture, lighting, furnishings and saved edits. Evening is the initial activity; subsequent choices are remembered locally.
 
 | Room | Interior floor | Ceiling |
 | --- | --- | --- |
@@ -13,54 +12,46 @@ lighting mode; subsequent choices are remembered locally.
 | Gaming lounge | 5.2 × 5.8 m | 3.0 m |
 | Entertainment suite | 6.5 × 7.0 m | 3.2 m |
 
-Room and desktop size are independent. A first visit with the 48″ desk starts
-in the apartment; a first visit with the 60″ desk starts in the dedicated room.
-Afterward, desktop changes retain the chosen room. The nominal desktop width
-calibrates room millimetres; furniture retains its library dimensions.
+## Activity pass — 22 October 2026
 
-## Layout and lighting
+| Activity | Room and tabletop cues | Desk posture |
+| --- | --- | --- |
+| Morning reset | OFFLINE sign, charging cable and folded cleaning cloth, quieter RGB and morning daylight | 43.5″ / −5° |
+| Practice & stream | ON AIR sign, stream run sheet and pen, balanced key light | 28″ / 0° |
+| Co-op adventure | CO-OP sign, save notes and spare coasters, warmer lounge lighting | 28″ / 0° |
+| Solo exploration | QUIET sign, small charging tray and earbuds case, reduced RGB and key-light intensity | 28″ / 0° |
+| Local game night | GAME NIGHT sign, four player colours and a score sheet, brighter shared areas | 43.5″ / −5° |
 
-Each room includes a walnut slatted acoustic wall, original woven floor/rug
-patterns and artwork, a real window opening, display joinery, RGB lighting,
-a curved monitor, keyboard, mouse, controller, headphones, a gaming PC, and
-the supplied Steelcase Leap V2 chair. The apartment has an ottoman/handheld
-console corner. Larger rooms add a sofa, coffee table, and TV console lounge;
-the two largest also gain a refreshment corner and extra seating.
+Wall graphics and the status light update from the same activity state as the player valet. Their canvases are reused. The sign describes the illustrative room activity; it does not indicate an actual broadcast. Existing monitor/TV themes and the **Screens** controls continue to operate independently.
 
-| Mode | Height | Tilt | Desk LEDs |
-| --- | --- | --- | --- |
-| Morning | 43.5″ | −5° | Off |
-| Afternoon | 28″ | 0° | Off |
-| Evening | 28″ | 0° | Cyan |
-| Night | 28″ | 0° | Violet |
-| Party | 43.5″ | −5° | Pink |
+Selecting an activity stages the room and prepares its movement routine. **Start Groove** moves the desk and changes its posture. The compact room uses smaller authored movements that fit both desktop widths; saved custom Groove destinations retain priority.
 
-Modes change window sky, daylight, ambient illumination, ceiling light, RGB
-strips/practicals, desk LEDs, and posture together. Party turns the desk toward
-the lounge; the shared controls can adjust it afterward. RGB uses four point
-lights without extra shadow maps. The TV's otherwise untextured converted
-display has original game-world artwork on this scene instance only.
+## Layout and materials
 
-The open-front cutaway hides individual walls when viewed from outside and
-the ceiling fixture in overhead views. Full-room Glide uses the actual floor
-and desk footprint. It constrains the desk at walls; it does not detect
-collisions with furniture.
+- Smoked wood floor, walnut acoustic slats, neutral graphite walls, brushed metal, fabric trays and upholstered seats.
+- Softer evening and night RGB preserves material contrast and reduces glare from wall panels and practical lights.
+- The apartment PC cabinet is narrow enough for the 60-inch desk. Its floor lamp has moved away from the side entry.
+- Larger layouts use the open front as their entrance, with a visible threshold and clear approach. The old side doorway no longer sits behind the sofa.
+- Desk and lounge rugs maintain a gap instead of overlapping.
+- The two largest rooms have a pair of padded stools at the game table. The table moves back from the entrance, and its existing controller follows it.
+- The activity poster is raised above the arcade cabinets in larger rooms.
+- Four practical lights and the shared sun shadow map remain the lighting budget.
 
-## Editing and projects
+## Desk sizes, editing and restoration
 
-Furniture and desk dressing use the existing Studio asset editor/model picker.
-Room edits are separated under `gaming:<layout-id>` and do not overwrite Home
-Office edits. Projects save the gaming room, mode, all edited layouts, and
-desk movement. Procedural architecture is authored in `gaming-room.mjs`;
-scene props/dressing are composed in `workspace-3d.mjs`.
+The 48- and 60-inch desk choices are independent of room size. Furniture retains its physical dimensions. Each room layout and desktop size keeps the existing separate build state.
 
-The website upload builder includes the new module. Publishing this scene
-requires rebuilding and uploading the site bundle.
+Room calibration stays tied to the layout's reference desk width, so importing a saved smaller desk does not change the room's physical scale. Project restoration checks both the desk anchor and the physical base position.
+
+The new player valet is an editable child of the coffee table or ottoman, so it follows that furnishing when moved, rotated or scaled. Its hidden parent stays hidden when activities change. Old uniquely named fixture edits and deletions are recovered when a procedural list index changes. Only exact untouched legacy positions of the moved lamp, game table, controller, rugs and raised artwork migrate; custom positions, rotations and scales are preserved. Product builds are not changed.
 
 ## Verification
 
-Run `npm run test:gaming` with local networking/browser access. It covers all
-five layouts, both desktops, furniture bounds and floor contact, calibration,
-lighting/postures, room-specific edits, Home Office mode compatibility, and
-project restore. Review images are saved in `/tmp/ef-gaming-review`.
-`node tests/room-glide-test.cjs` checks the shared movement/controller behavior.
+- `node tests/gaming-room-test.cjs`: five layouts, both desktop widths, physical bounds, five postures, independent edits and project restoration.
+- `node tests/gaming-groove-test.cjs`: 50 route combinations, including segment clearance for both widths.
+- `node tests/gaming-sessions-test.cjs`: 25 layout/activity combinations; entrance and seating clearance, rug separation, changing graphics, stable lighting, hidden objects, attached decor and legacy-placement migration.
+- `LIGHTING_SCENES=gaming node tests/room-lighting-test.cjs`: physical material UVs, light/shadow coverage, grounding and resource disposal.
+- `REALISM_SCENES=gaming node tests/environment-realism-test.cjs`: physical materials, activity supports and edit stability.
+- Visual review: `scene-shots/gaming-sessions-20261022/`.
+
+This is a local update; the website has not been published.

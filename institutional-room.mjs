@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
 import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
+import { addCampusLife } from './campus-lived-in.mjs?v=campus-life-20261019';
 
 // Shared architectural kit. The shell (floor, walls, daylight window, door,
 // sign, planning board, ceiling lights) and the common furniture helpers live
@@ -174,6 +175,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     };
     group.furnish(kit);
     const dressAtmosphere = enrichInstitutionalRoom(kit);
+    const campusLife = addCampusLife({ room, root, layout, asset, byId });
     // Slim linear ceiling fixtures disappear with the camera cutaway.
     const ceilingGroup = new THREE.Group(); ceilingGroup.name = 'Ceiling lighting'; root.add(ceilingGroup); room.ceilingFixture = ceilingGroup;
     for (let n = 0; n < 3; n++) {
@@ -205,6 +207,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
             l.intensity = (root.scale.x * 1000) ** 2 * power * gain;
         });
         dressAtmosphere(phase, gain);
+        campusLife.apply(phase, gain);
         root.userData.atmosphere = phase;
     };
     root.userData.dimensionsMm = { width: w, depth: d, height: ceiling };

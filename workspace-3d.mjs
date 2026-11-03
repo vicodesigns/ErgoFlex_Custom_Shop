@@ -1,39 +1,41 @@
+import {shelfStorageSpace} from './desk-shelf-space.mjs';
+import { finishTriangleTable } from './triangle-table-finishes.mjs?v=table-clearance-20261021';
 import { artistSceneProp, bindArtistGear, upgradeArtistFixtures } from './atelier-scene-artist.mjs?v=artist-gear-20261014';
 import { atelierSceneGaming, bindGamingGear, applyGamingGearLighting } from './atelier-scene-gaming.mjs?v=gaming-gear-20261014';
 import { atelierSceneDecor, bindDeskDecor, applyDeskDecorLighting } from './atelier-scene-decor.mjs?v=atelier-decor-20261014';
 import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from './campus-scene-furniture.mjs?v=campus-furniture-20261014';
 import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atelier-scene-beds.mjs?v=atelier-beds-20261014';
-import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=atelier-lighting-20261014';
+import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=gallery-bedroom-20261025';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=hbhs-product-classroom-20261014';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=environment-expert-20261014';
-import { refineRoomSurfaces } from './room-refinement.mjs?v=humboldt-commons-20261015';
-import { polishRoomProp } from './room-polish.mjs?v=humboldt-commons-20261015';
-import { RoomLife } from './room-life.mjs?v=humboldt-commons-20261015';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=campus-life-20261019';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
+import { polishRoomProp } from './room-polish.mjs?v=table-clearance-20261021';
+import { RoomLife } from './room-life.mjs?v=commons-home-comfort-20261024';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
 import { migrateHighschoolFixtureTransform } from './hbhs-design.mjs';
 import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=environment-expert-20261014';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=conference-chairs-20261015';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=commons-home-comfort-20261024';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
-import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=groove-routines-20261002';
-import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=atelier-beds-20261014';
+import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=gallery-bedroom-20261025';
+import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=gallery-bedroom-20261025';
 import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
-import { RoomBounceLight } from './room-bounce-light.mjs?v=humboldt-commons-20261015';
+import { RoomBounceLight } from './room-bounce-light.mjs?v=commons-group-work-20261016';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-size-setups-20261012';
-import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES } from './home-office.mjs?v=scene-desk-styling-20261010';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-gear-20261014';
+import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrateHomeReadingFurniture } from './home-office.mjs?v=commons-home-comfort-20261024';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-sessions-20261022';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=artist-gear-20261014';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=artist-studio-20261025';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
-import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=groove-routines-20261002';
+import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-sessions-20261022';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=milano-seating-20261014';
 
@@ -60,8 +62,9 @@ function rod(parent, from, to, radius, mat) {
     obj.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), delta.normalize()); return obj;
 }
 function disposeTree(root) {
+    const roots = Array.isArray(root) ? root : [root];
     const geometries = new Set(), materials = new Set(), textures = new Set();
-    root.traverse(obj => {
+    for (const tree of roots) tree.traverse(obj => {
         obj.ownedTextures?.forEach(t=>textures.add(t));
         // Library props are clones that share geometry and materials with the
         // cache in PROP_LIBRARY; only the procedural room geometry is owned here.
@@ -77,7 +80,7 @@ function disposeTree(root) {
         }
     });
     geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose());
-    root.removeFromParent();
+    roots.forEach(tree => tree.removeFromParent());
 }
 export const disposeWorkspaceObject = disposeTree;
 
@@ -91,7 +94,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=conference-chairs-20261015').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=table-clearance-20261021').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -132,6 +135,7 @@ export const PROP_LIBRARY = {
         clone.name = `Prop:${id}`; clone.userData.sharedProp = true; clone.userData.propId = id;
         clone.traverse(obj => { obj.userData.sharedProp = true; });
         clone.scale.setScalar(1000);
+        finishTriangleTable(clone, id);
         if (id === 'ergoflex-laptop') clone.traverse(obj => {
             if (!obj.isMesh || obj.material?.name !== 'Decor screen glass') return;
             obj.material=obj.material.clone(); obj.material.userData.sharedTextures=true;
@@ -686,6 +690,14 @@ export class WorkspaceAccessories {
             this.mounts.set(role, { anchor, group, dress, relative: anchor.matrixWorld.clone().invert().multiply(world),
                 depth: (surface.bounds.max.x - surface.bounds.min.x) / millimetreScale,
                 width: (surface.bounds.max.z - surface.bounds.min.z) / millimetreScale });
+        }
+        const shelfHardware=[...registry.values()].filter(e=>/^Top_Shelf/.test(e.name)&&!e.isClone).map(e=>e.obj);
+        for(const [role,m] of this.mounts){
+            for(const target of [m.group,m.dress])target.userData.surfaceSize={width:m.width,depth:m.depth};
+            if(!['shelf','lower-shelf','base-shelf'].includes(role))continue;
+            const world=m.anchor.matrixWorld.clone().multiply(m.relative);
+            m.storageSpace=shelfStorageSpace(m.anchor,world,shelfHardware);
+            for(const target of [m.group,m.dress])target.userData.storageSpace=m.storageSpace;
         }
         if (model) {
             model.updateWorldMatrix(true, false);
@@ -1247,13 +1259,14 @@ export class WorkspaceRoom {
         this.token++;
         this.grounding?.dispose(); this.grounding = null;
         this.ownedMaterials.forEach(mat => mat.dispose()); this.ownedMaterials.clear();
-        for(const retired of this.campusRetired||[])disposeTree(retired);
+        // Upgraded fixtures can share their old surface maps with furnishings
+        // still in the room. Retire the whole room as one ownership set.
+        disposeTree([...(this.campusRetired || []), ...(this.root ? [this.root] : [])]);
         this.campusRetired=[];this.campusFixtures=[];
-        if (this.root) disposeTree(this.root);
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
         this.atelierGamingGlows = []; this.atelierDecorGlows = []; this.atelierBedGlows = []; this.atelierLamps = []; this.atelierLampPhase = ['afternoon',1];
         this.decorateStation = null;
-        this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null; this.migrateSavedTransform = null; this.propReplacements = null;
+        this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null; this.migrateSavedTransform = null; this.migrateSavedAssets = null; this.propReplacements = null;
         this.propSupports = [];
         this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.ceilingSurface = null; this.bounce = null; this.life = null; this.windowViewReady = Promise.resolve();
         if (id === 'product') { this.ready = Promise.resolve(); return; }
@@ -1314,10 +1327,11 @@ export class WorkspaceRoom {
         // conversion. Other scenes retain their existing authored scale.
         root.scale.setScalar(this.roomLayout ? options.scale || this.scale : this.scale); this.scene.add(root);
         if (id === 'home') {
-            buildHomeOffice(this, root, this.homeLayout, { material, mesh, box, rod, sphere });
+            buildHomeOffice(this, root, this.homeLayout, { material, mesh, box, rod, sphere, markSceneAsset });
             this.roomAtmosphere = this.homeAtmosphere;
+            this.migrateSavedTransform = (obj, saved) => migrateHomeReadingFurniture(obj, saved, this.roomLayout);
         }
-        else if (id === 'gaming') buildGamingRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere });
+        else if (id === 'gaming') buildGamingRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'music') buildMusicRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'creative') buildArtistRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'study') buildStudyRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
@@ -1404,7 +1418,8 @@ export class WorkspaceRoom {
         if (!this.root || this.id === 'product') return null;
         let left, right, back, front;
         if (this.roomLayout) {
-            left = -this.roomLayout.width / 2; right = -left;
+            // Asymmetric shells (the Humboldt commons) declare their left wall.
+            left = this.roomLayout.left ?? -this.roomLayout.width / 2; right = left + this.roomLayout.width;
             back = this.roomLayout.back; front = back + this.roomLayout.depth;
         } else {
             const [wide, rear, ahead] = ROOM_ATMOSPHERES[this.id].space;
@@ -1525,12 +1540,13 @@ export class WorkspaceRoom {
             const replacements = {
                 'kenney-furniture-potted-plant': 'ergoflex-plant-2',
                 'monstera': 'ergoflex-plant-2', 'potted-tree': 'ergoflex-plant-1',
+                'decor-plant2': 'ergoflex-plant-2',
                 'kenney-furniture-laptop': 'ergoflex-laptop', 'glasses': 'ergoflex-glasses'
             };
             // A room may choose its own supplied model and an explicit scale.
             const scoped = this.propReplacements?.[placement.id];
-            const supplied = scoped?.id || replacements[placement.id];
-            try {
+                const supplied = scoped?.id || replacements[placement.id];
+                try {
                 const sofa=milanoSceneSofa(scene.id,this.roomLayout,placement,PROP_LIBRARY.index);
                 if(sofa){
                     const model=await PROP_LIBRARY.instance(sofa.id),object=new THREE.Group();
@@ -1584,6 +1600,16 @@ export class WorkspaceRoom {
                 const object = await PROP_LIBRARY.instance(supplied || placement.id);
                 if (supplied) {
                     const old = PROP_LIBRARY.entry(placement.id), next = PROP_LIBRARY.entry(supplied);
+                    if (placement.id === 'decor-plant2') {
+                        // Keep the dimensional fit beneath the editable root:
+                        // saved transforms use the original 1000x metre scale.
+                        const fit = Math.min(1, ...old.size.map((v, i) => v / next.size[i]));
+                        const wrapper = new THREE.Group(); wrapper.scale.setScalar(1000);
+                        object.scale.setScalar(fit); wrapper.add(object);
+                        wrapper.name = 'Natural foliage planter';
+                        wrapper.userData = { sharedProp: true, propId: placement.id, decorUpgrade: supplied, botanicalFit: fit };
+                        return { placement, object: wrapper };
+                    }
                     // Never enlarge the footprint into an existing aisle or
                     // neighbouring tabletop object. Height remains proportional.
                     const fit=scoped?.scale??Math.min(1,old.size[0]/next.size[0],old.size[2]/next.size[2]);

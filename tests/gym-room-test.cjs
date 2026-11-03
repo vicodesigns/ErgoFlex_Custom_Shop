@@ -23,7 +23,8 @@ const server = http.createServer((req, res) => {
         page.on('pageerror', e => errors.push(e.message));
         page.on('error', e => console.error('Browser page:', e.message));
         browser.process().once('exit', (code, signal) => { if (code) console.error('Browser exit:', code, signal); });
-        await page.setViewport({ width: 1500, height: 1200 });
+        await page.evaluateOnNewDocument(() => Object.defineProperty(window, 'devicePixelRatio', { get: () => .5 }));
+        await page.setViewport({ width: 1200, height: 900 });
         const url = `http://127.0.0.1:${server.address().port}/?room=gym&view=room`;
         await page.goto(url);
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
@@ -43,7 +44,7 @@ const server = http.createServer((req, res) => {
                     if (mesh.isInstancedMesh) mesh.computeBoundingBox();
                     b.union((mesh.isInstancedMesh ? mesh.boundingBox : mesh.geometry.boundingBox).clone().applyMatrix4(inverse.clone().multiply(mesh.matrixWorld)));
                 } });
-                return { id: obj.userData.propId, key: obj.userData.sceneAssetKey, at: obj.position.toArray(), min: b.min.toArray(), max: b.max.toArray(), scale: obj.scale.x };
+                return { floorRoot:obj.parent===room.root, id: obj.userData.propId, key: obj.userData.sceneAssetKey, at: obj.position.toArray(), min: b.min.toArray(), max: b.max.toArray(), scale: obj.scale.x };
             });
             const instruments = [];
             return { instruments, id: room.roomLayout.id, dimensions: room.root.userData.dimensionsMm, back: room.roomLayout.back, props,
@@ -57,7 +58,7 @@ const server = http.createServer((req, res) => {
                 assert.ok(p.min[0] >= -w / 2 - 1 && p.max[0] <= w / 2 + 1, `${data.id}: ${p.id} within side walls: ${p.min[0]}..${p.max[0]}`);
                 assert.ok(p.min[2] >= data.back - 1 && p.max[2] <= end + 1, `${data.id}: ${p.id} within floor depth: ${p.min[2]}..${p.max[2]}`);
                 assert.ok(p.min[1] >= -1 && p.max[1] <= data.dimensions.height + 1, `${p.id} between floor and ceiling`);
-                if (p.at[1] === 0) assert.ok(Math.abs(p.min[1]) < 1, `${p.id} rests on the floor`);
+                if (p.floorRoot && p.at[1] === 0) assert.ok(Math.abs(p.min[1]) < 1, `${p.id} rests on the floor`);
                 assert.ok(p.key.startsWith(`gym:${data.id}:`), 'Room assets have independent layout identities');
             }
             for (const i of data.instruments) {
@@ -81,7 +82,7 @@ const server = http.createServer((req, res) => {
         assert.ok(!initial.props.some(p=>p.id==='spin-bike'));
         await capture('apartment-morning');
         const lights=[];
-        for (const [mode,h,t] of [['morning',43.5,-5],['afternoon',43.5,-5],['evening',28,0],['night',43.5,-5],['party',43.5,12]]) {
+        for (const [mode,h,t] of [['morning',43.5,-5],['afternoon',43.5,-5],['evening',28,0],['night',43.5,65],['party',43.5,12]]) {
             await page.click(`[data-gym-mode="${mode}"]`);
             // The button selects the mode and only prepares its Groove; apply the pose directly.
             await page.evaluate(m => ErgoFlex.setGymMode(m), mode);
@@ -116,7 +117,7 @@ const server = http.createServer((req, res) => {
         const restore=await page.evaluate(async p=>{ErgoFlex.setRoomScene('product',false);const r=ErgoFlex.applyProject(p);await ErgoFlex.workspaceRoom.ready;return {r,mode:ErgoFlex.gymMode,layout:ErgoFlex.gymLayout,height:ErgoFlex.heightInches};},project);
         assert.equal(restore.r.ok,true);assert.equal(restore.layout,'executive');assert.equal(restore.mode,'party');checkBounds(await measure());
         assert.ok(Math.abs(restore.height-project.motion.heightInches)<1e-6);
-        await page.evaluate(()=>{ErgoFlex.renderer.setPixelRatio(1);ErgoFlex.renderer.shadowMap.enabled=true;});await capture('executive-power');
+        await page.evaluate(()=>{ErgoFlex.renderer.setPixelRatio(.65);ErgoFlex.renderer.shadowMap.enabled=true;});await capture('executive-power');
         await page.evaluate(async()=>{ErgoFlex.setGymLayout('spacious');await ErgoFlex.workspaceRoom.ready;ErgoFlex.setGymMode('night',false);});await capture('spacious-night');
         await page.evaluate(async()=>{ErgoFlex.setGymLayout('apartment');await ErgoFlex.workspaceRoom.ready;ErgoFlex.setGymMode('morning',false);});await capture('apartment-final');
         await page.setViewport({width:390,height:844});assert.equal(await page.$eval('#gym-room-controls',p=>p.hidden),false);

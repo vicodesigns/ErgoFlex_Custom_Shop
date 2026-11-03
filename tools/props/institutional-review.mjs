@@ -23,11 +23,12 @@
 //   --out DIR          output directory (default /tmp/ef-institutional-shots)
 //   --tiers t1,t2      restrict tiers (default: every tier of each scene)
 //   --phases p1,p2     restrict dayparts (default: all five)
-//   --angles a1,a2     cameras: wide,hero,reverse,activity (default: wide,hero,reverse)
+//   --angles a1,a2     cameras: wide,hero,reverse,activity,reading,lounge,training,reset,commons,cafe,hall
 //   --reference r1,r2  reference rooms (default office,coworking,library; `none` skips)
 //   --ratio 0.75       renderer pixel ratio (viewport is 1280x800)
 //   --activity-details also capture house activity close-ups at afternoon/night
 //   --resume           keep completed layout captures in the same output folder
+//   --fresh-phases     reopen the scene between activities for large software-rendered rooms
 //
 // Memory: exactly one Chromium process exists at a time. It is relaunched per
 // scene (software WebGL leaks between large rooms) and always closed on exit,
@@ -49,7 +50,10 @@ const ANGLES = list('--angles', ['wide', 'hero', 'reverse']);
 const tierFilter = list('--tiers', null);
 const refs = (opt('--reference') === 'none') ? [] : list('--reference', ['office', 'coworking', 'library']);
 const ratio = Number(opt('--ratio', '0.75'));
+// Optional software-renderer preview budget; never changes application defaults.
+const shadowSize = Number(opt('--shadow-size', '0'));
 const activityDetails = args.includes('--activity-details');
+const freshPhases = args.includes('--fresh-phases');
 let only = list('--only', null);
 if (!only) { console.error('Usage: node tools/props/institutional-review.mjs --only security,police [--out DIR] (see header)'); process.exit(2); }
 mkdirSync(outDir, { recursive: true });
@@ -67,6 +71,12 @@ await new Promise(r => server.listen(0, '127.0.0.1', r));
 const url = `http://127.0.0.1:${server.address().port}/`;
 
 let browser = null;
+async function closeBrowser() {
+    if (!browser) return;
+    const closing = browser; browser = null;
+    const watchdog = setTimeout(() => closing.process()?.kill('SIGKILL'), 10000);
+    try { await closing.close(); } finally { clearTimeout(watchdog); }
+}
 const previous = args.includes('--resume') && existsSync(join(outDir, 'report.json'))
     ? JSON.parse(readFileSync(join(outDir, 'report.json'), 'utf8')) : null;
 const errors = previous?.errors || [], report = previous?.report || [];
@@ -106,9 +116,10 @@ async function registryOnly() {
 }
 async function openRoom(id, tier) {
     // Never more than one browser: close the previous one first.
-    if (browser) { await browser.close(); browser = null; }
+    await closeBrowser();
     browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage(); page.setDefaultTimeout(180000); page.setDefaultNavigationTimeout(180000);
+    if (shadowSize) await page.evaluateOnNewDocument(r => Object.defineProperty(window, 'devicePixelRatio', { get: () => r }), ratio);
     page.on('pageerror', e => { errors.push(`${id}: ${e.message}`); console.error('page error:', e.message); });
     page.on('console', m => { if (m.type() === 'error' && /Shader Error|VALIDATE_STATUS|WebGLProgram/.test(m.text())) { errors.push(`${id}: ${m.text()}`); console.error(m.text()); } });
     await page.setViewport({ width: 1280, height: 800 });
@@ -125,6 +136,15 @@ async function openRoom(id, tier) {
     }, ratio);
     await page.addStyleTag({ content: '#motion-dock{visibility:hidden!important}' });
     await page.evaluate(r => { ErgoFlex.setShellMode('studio'); ErgoFlex.renderer.setPixelRatio(r); ErgoFlex.renderer.setAnimationLoop(null); }, ratio);
+    if (shadowSize) await page.evaluate(size => {
+        const e = ErgoFlex;
+        e.roomInteractions.scene.traverse(o => {
+            if (!o.isLight || !o.shadow) return;
+            o.shadow.map?.dispose(); o.shadow.map = null;
+            o.shadow.mapSize.setScalar(size); o.shadow.needsUpdate = true;
+        });
+        e.renderer.shadowMap.autoUpdate = false; e.renderer.shadowMap.needsUpdate = true;
+    }, shadowSize);
     return page;
 }
 async function selectLayout(page, id, tier) {
@@ -134,12 +154,27 @@ async function selectLayout(page, id, tier) {
     }, { id, tier });
 }
 async function shoot(page, id, tier, phase, angle, file) {
-    await page.evaluate(({ id, phase }) => {
+    if (shadowSize) await page.evaluate(() => { ErgoFlex.renderer.shadowMap.needsUpdate = true; });
+    await page.evaluate(async ({ id, phase }) => {
         const THREE = window.__three, ef = ErgoFlex;
+        const phaseKey = ef.workspaceRoom.root.uuid + ':' + phase;
+        if (window.__reviewPhase === phaseKey) return;
         ef.setMeasuredRoomMode(id, phase, false); const look = ef.measuredRoom.modes[phase];
         ef.setLedsEnabled(look.leds); if (look.color) ef.setLedColor(look.color, false);
         ef.setHeight(look.height); ef.setTilt('tilting', look.tilt);
+        // Capture the Commons activity at its authored destination: the shared
+        // table for group work, and the wall bay for closing. Routing is tested
+        // separately; the paused review cannot animate to these positions.
+        if (ef.workspaceRoom.roomLayout?.humboldt && ef.sceneDesks?.active) {
+            const { grooveDestination } = await import('./room-groove.mjs');
+            const r = ef.sceneDesks.active;
+            r.state = { ...r.state, pose: grooveDestination(id, ef.workspaceRoom.roomLayout, phase), height: look.height, tilt: look.tilt };
+            ef.sceneDesks.ctx.writeLive(r);
+        }
         ef.workspaceAccessories.update();
+        // The live frame normally syncs scene-owned accessories and auto-stow
+        // after motion. A paused review must do the same before capturing.
+        ef.sceneDesks?.update(0);
         // The paused render loop would freeze the blue 'Lift up' motion pixels; show the authored colour.
         ef.setLedMotionEnabled?.(false); if (look.color) ef.setLedColor(look.color, false);
         ef.roomLedSpill.update(ef.workspaceRoom, ef.ledPixelRenderer, { enabled: look.leds, colour: new THREE.Color(look.color || ef.ledColor), gain: 1.8 });
@@ -151,6 +186,7 @@ async function shoot(page, id, tier, phase, angle, file) {
             ef.renderer.render(ef.roomInteractions.scene, ef.roomInteractions.camera);
             window.__reviewOverlayRoot = ef.workspaceRoom.root;
         }
+        window.__reviewPhase = phaseKey;
     }, { id, phase });
     await page.evaluate(angle => {
         const THREE = window.__three, ef = ErgoFlex, room = ef.workspaceRoom, { camera, controls } = ef.roomInteractions, l = room.roomLayout;
@@ -162,8 +198,11 @@ async function shoot(page, id, tier, phase, angle, file) {
         controls.enableDamping = false; controls.minDistance = 0.01; controls.maxDistance = 1000;
         let eye, target;
         if (angle === 'wide') {
-            // Fit the whole room from the open front / window corner.
-            const box = new THREE.Box3().setFromObject(room.root).expandByObject(ef.loadedModel), center = box.getCenter(new THREE.Vector3());
+            // Frame the measured architecture. Invisible light pools can carry
+            // presentation-space bounds; including them makes empty overviews.
+            const box = new THREE.Box3(), x0 = l.left ?? -w / 2;
+            for (const x of [x0 - 150, x0 + w + 150]) for (const y of [0, ceiling + 150]) for (const z of [bz - 150, front + 150]) box.expandByPoint(world(x, y, z));
+            const center = box.getCenter(new THREE.Vector3());
             const direction = new THREE.Vector3(5, 4, 5).normalize(), right = new THREE.Vector3().crossVectors(camera.up, direction).normalize(), up = new THREE.Vector3().crossVectors(direction, right).normalize();
             const tanV = Math.tan(camera.fov * Math.PI / 360), tanH = tanV * camera.aspect; let distance = 0;
             for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
@@ -171,12 +210,74 @@ async function shoot(page, id, tier, phase, angle, file) {
                 distance = Math.max(distance, depth + Math.abs(point.dot(up)) / tanV, depth + Math.abs(point.dot(right)) / tanH);
             }
             target = center; eye = center.clone().addScaledVector(direction, distance * 1.05);
+        } else if (angle === 'detail') {
+            const name = room.id === 'gallery' ? 'Curator daily setting' : 'Bedroom daily setting';
+            const setting = room.assets().find(o => o.name === name);
+            if (!setting) throw new Error('No detail setting in ' + room.id);
+            const p = room.root.worldToLocal(setting.getWorldPosition(new THREE.Vector3()));
+            target = world(p.x, p.y + (room.id === 'gallery' ? 120 : 10), p.z);
+            eye = world(p.x + 750, p.y + 750, p.z + 1100);
+        } else if (angle === 'easel') {
+            if (l.compact) {
+                target = world(l.width/2 - 160, 1700, l.cabinet[1]);
+                eye = world(l.width/2 - 2300, 2200, l.cabinet[1] + 1100);
+            } else {
+                target = world(l.easel[0], 1100, l.easel[1] - 100);
+                eye = world(l.easel[0] + 1000, 1650, l.easel[1] + 2200);
+            }
+        } else if (angle === 'bed') {
+            target = world(l.bed[0], 600, l.bed[1]);
+            eye = world(l.bed[0] + 2200, 2200, l.bed[1] + 3000);
+        } else if (angle === 'commons') {
+            eye = world(14000, 10500, 14500); target = world(2200, 1400, -300);
+        } else if (angle === 'cafe') {
+            eye = world(9900, 2450, 9300); target = world(7450, 650, 6100);
+        } else if (angle === 'hall') {
+            eye = world(5300, 2450, 24600); target = world(1000, 1250, 14300);
         } else if (angle === 'hero') {
             eye = world(dx + 2500, 1900, dz + 2300); target = world(dx, 800, dz - 300);
+        } else if (angle === 'training') {
+            const zone = room.assets().find(o => o.userData.propId === 'training-zone');
+            if (!zone) throw new Error('No training zone in ' + room.id);
+            const center = room.root.worldToLocal(zone.getWorldPosition(new THREE.Vector3()));
+            target = world(center.x, 140, center.z);
+            eye = world(center.x + 1800, 2400, center.z + 2200);
+        } else if (angle === 'reading') {
+            const seat = room.life.entries.find(e => e.role === 'reading-chair');
+            if (!seat) throw new Error('No reading chair in ' + room.id + '/' + l.id);
+            const box = new THREE.Box3(); seat.objects.forEach(o => box.union(new THREE.Box3().setFromObject(o)));
+            const center = box.getCenter(new THREE.Vector3());
+            const table = room.life.entries.filter(e => e.role === 'table').sort((a, b) => {
+                const distance = e => new THREE.Box3().setFromObject(e.objects[0]).getCenter(new THREE.Vector3()).distanceTo(center);
+                return distance(a) - distance(b);
+            })[0];
+            table?.objects.forEach(o => box.union(new THREE.Box3().setFromObject(o)));
+            // Include the reading light so its shade is not cropped out of
+            // the material/contact review of the Home office corner.
+            if (room.id === 'home') room.assets().filter(o => o.userData.homeReadingLamp)
+                .forEach(o => box.union(new THREE.Box3().setFromObject(o)));
+            target = box.getCenter(new THREE.Vector3());
+            const span = Math.max(box.getSize(new THREE.Vector3()).length(), 1.6);
+            eye = target.clone().addScaledVector(new THREE.Vector3(.7, 1, 1.6), span * .8);
+        } else if (angle === 'lounge') {
+            const setting = room.assets().find(o => o.name === 'Lounge daily setting');
+            if (!setting) throw new Error('No lounge setting in ' + room.id + '/' + l.id);
+            target = new THREE.Box3().setFromObject(setting).getCenter(new THREE.Vector3());
+            eye = target.clone().add(new THREE.Vector3(.7, 1.05, -.9));
+        } else if (angle === 'reset') {
+            const kit = room.assets().find(o => o.name === 'Home coffee & reset tray');
+            if (!kit) throw new Error('No home reset tray in ' + room.id);
+            target = new THREE.Box3().setFromObject(kit).getCenter(new THREE.Vector3());
+            eye = target.clone().add(new THREE.Vector3(.35, .45, .4));
         } else if (angle === 'activity') {
             const kit = room.life.activity;
-            const box = new THREE.Box3().setFromObject(kit), center = box.getCenter(new THREE.Vector3());
-            target = center; eye = center.clone().add(new THREE.Vector3(.3, .5, .42));
+            const box = new THREE.Box3().setFromObject(kit);
+            if (room.id === 'gaming') {
+                const valet = room.assets().find(o => o.name === 'Player valet · activity details');
+                if (valet) box.union(new THREE.Box3().setFromObject(valet));
+            }
+            const center = box.getCenter(new THREE.Vector3());
+            target = center; eye = center.clone().add(room.id === 'gaming' ? new THREE.Vector3(.8, 1, .9) : new THREE.Vector3(.3, .5, .42));
         } else if (angle === 'desktop') {
             const mount = ef.workspaceAccessories.mounts.get('desktop');
             const kit = mount.dress.children.find(o => o.userData.dayKit);
@@ -190,7 +291,7 @@ async function shoot(page, id, tier, phase, angle, file) {
     }, angle);
     await new Promise(r => setTimeout(r, 100));
     const png = await page.evaluate(() => {
-        const ef = ErgoFlex; ef.renderer.render(ef.roomInteractions.scene, ef.roomInteractions.camera);
+        const ef = ErgoFlex; ef.renderer.setSize(1280,800,false); ef.roomInteractions.camera.aspect=1280/800; ef.roomInteractions.camera.updateProjectionMatrix(); ef.renderer.render(ef.roomInteractions.scene, ef.roomInteractions.camera);
         const source = ef.renderer.domElement, canvas = document.createElement('canvas'); canvas.width = source.width; canvas.height = source.height;
         const c = canvas.getContext('2d'), look = ef.workspaceRoom.root.userData.polish || { halo: '#e9ecef', edge: '#c9ced3' }, W = canvas.width, H = canvas.height;
         c.save(); c.translate(W * .48, H * .32); c.scale(W, H); const gradient = c.createRadialGradient(0, 0, 0, 0, 0, .7); gradient.addColorStop(0, look.halo); gradient.addColorStop(.9, look.edge); gradient.addColorStop(1, look.edge); c.fillStyle = gradient; c.fillRect(-1, -1, 2, 2); c.restore(); c.drawImage(source, 0, 0);
@@ -202,7 +303,7 @@ async function stats(page, id, tier, phase) {
     return page.evaluate(({ id, tier, phase }) => {
         const r = ErgoFlex.workspaceRoom;
         return { id, tier, phase, missing: r.missingProps, stations: r.assets().filter(o => o.userData.officeStation).map(o => ({ key: o.userData.sceneAssetKey, size: o.userData.officeStation.size, turn: o.userData.officeStation.turn })),
-            atmosphere: r.root.userData.institutionalAtmosphere, polish: r.root.userData.polish, story: r.root.userData.dailyStory, surfaceDetail: r.root.userData.surfaceDetail, pointLights: r.root.children.filter(o => o.isPointLight).length, drawCalls: ErgoFlex.renderer.info.render.calls, triangles: ErgoFlex.renderer.info.render.triangles };
+            atmosphere: r.root.userData.institutionalAtmosphere, polish: r.root.userData.polish, story: r.root.userData.dailyStory, gymSession: r.root.userData.gymSession, gamingSession: r.root.userData.gamingSession, homeSession: r.root.userData.homeSession, surfaceDetail: r.root.userData.surfaceDetail, seatingClearance: r.root.userData.seatingClearance, pointLights: r.root.children.filter(o => o.isPointLight).length, drawCalls: ErgoFlex.renderer.info.render.calls, triangles: ErgoFlex.renderer.info.render.triangles };
     }, { id, tier, phase });
 }
 
@@ -222,12 +323,14 @@ try {
             for (let i = report.length - 1; i >= 0; i--) if (report[i].id === id && report[i].tier === tier) report.splice(i, 1);
             await selectLayout(page, id, tier);
             for (const phase of PHASES) {
+                if (freshPhases && phase !== PHASES[0]) page = await openRoom(id, tier);
                 for (const angle of ANGLES) await shoot(page, id, tier, phase, angle, `${id}-${tier}-${phase}-${angle}.png`);
                 if (activityDetails && tier === 'house' && ['afternoon', 'night'].includes(phase) && !ANGLES.includes('activity')) {
                     await shoot(page, id, tier, phase, 'activity', `${id}-${tier}-${phase}-activity.png`);
                     await shoot(page, id, tier, phase, 'desktop', `${id}-${tier}-${phase}-desktop.png`);
                 }
                 report.push(await stats(page, id, tier, phase));
+                writeFileSync(join(outDir, 'report.json'), JSON.stringify({ errors, report }, null, 2));
             }
             writeFileSync(join(outDir, 'report.json'), JSON.stringify({ errors, report }, null, 2));
             console.log(`Reviewed ${id}/${tier}: ${PHASES.length} phases × ${ANGLES.length} angles`);
@@ -243,4 +346,4 @@ try {
     writeFileSync(join(outDir, 'report.json'), JSON.stringify({ errors, report }, null, 2));
     if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1; }
     console.log(`screenshots → ${outDir}`);
-} finally { if (browser) await browser.close(); server.close(); }
+} finally { await closeBrowser(); server.closeAllConnections(); server.close(); }

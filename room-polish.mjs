@@ -54,8 +54,9 @@ export function polishRoomProp(room, object, placement) {
     const palette = ROOM_DETAIL_PALETTES[room.id];
     if (!palette) return;
     const plant = /^kenney-furniture-(plant-small|potted-plant)/.test(placement.id);
-    const seating = /^kenney-furniture-(lounge-sofa|chair-cushion|chair-modern-cushion)$/.test(placement.id);
-    if (!plant && !seating) return;
+    const seating = /^kenney-furniture-(lounge-sofa|chair-cushion|chair-modern-cushion|bench-cushion(?:-low)?)$/.test(placement.id);
+    const furnishing = placement.id.startsWith('kenney-furniture-') && !object.userData.decorUpgrade;
+    if (!plant && !seating && !furnishing) return;
     const upholstery = palette[0];
     const copies = new Map();
     const finish = source => {
@@ -64,13 +65,38 @@ export function polishRoomProp(room, object, placement) {
         if (copies.has(source)) return copies.get(source);
         const mat = source.clone();
         if (source.name === 'plant') { mat.color.set('#4f7857'); mat.roughness = .86; mat.metalness = 0; }
-        else if (source.name === 'carpet') { mat.color.set(upholstery); mat.roughness = .96; mat.metalness = 0; }
+        else if (source.name === 'carpet') {
+            if (seating) mat.color.set(upholstery);
+            mat.roughness = .96; mat.metalness = 0;
+            if (!mat.normalMap && !mat.bumpMap) {
+                mat.bumpMap = roomTextileWeave(room); mat.bumpScale = .00018;
+            }
+        }
         else if (source.name === 'metal') { mat.roughness = .34; mat.metalness = .75; }
         else if (source.name === 'wood') { mat.roughness = .56; mat.metalness = 0; }
         else { mat.roughness = .58; mat.metalness = 0; }
-        mat.userData.sharedTextures = true; copies.set(source, mat); room.ownedMaterials.add(mat); return mat;
+        mat.userData.sharedTextures = true; mat.userData.roomPropFinish = true;
+        copies.set(source, mat); room.ownedMaterials.add(mat); return mat;
     };
     object.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(finish) : finish(o.material); });
+}
+function roomTextileWeave(room) {
+    // One tiny texture per room. Keep imported colour artwork and model UVs;
+    // only unfinished cloth receives this subtle interlaced surface relief.
+    if (room.root.roomTextileWeave) return room.root.roomTextileWeave;
+    const size = 128, pixels = new Uint8Array(size * size * 4);
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+        const warp = Math.cos(x * Math.PI / 2), weft = Math.cos(y * Math.PI / 2);
+        const over = ((x >> 2) + (y >> 2)) % 2;
+        const v = 128 + 30 * (over ? warp + weft * .3 : weft + warp * .3);
+        const i = (y * size + x) * 4; pixels[i] = pixels[i + 1] = pixels[i + 2] = v; pixels[i + 3] = 255;
+    }
+    const texture = new THREE.DataTexture(pixels, size, size);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(6, 6);
+    texture.magFilter = THREE.LinearFilter; texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.generateMipmaps = true; texture.needsUpdate = true;
+    (room.root.ownedTextures ||= []).push(texture); room.root.roomTextileWeave = texture;
+    return texture;
 }
 const PHASE_LIGHT = {
     morning:   { fill: .90, rim: .62, ambient: 1.00, bounce: 1.00, contact: .22 },
@@ -79,11 +105,26 @@ const PHASE_LIGHT = {
     night:     { fill: .83, rim: .22, ambient: .92, bounce: .92, contact: .29 },
     party:     { fill: .82, rim: .36, ambient: .94, bounce: .96, contact: .26 }
 };
+// Reading/art rooms favour diffuse daylight; living rooms retain a little
+// more morning sunlight. These small ratios preserve each authored palette
+// and make the morning/afternoon transition change modelling, not just tint.
+const DIFFUSE_ROOMS = new Set(['library', 'study', 'creative', 'gallery', 'hospital', 'laboratory']);
+const DOMESTIC_ROOMS = new Set(['home', 'bedroom', 'lounge', 'kitchen']);
+const DAYLIGHT_BALANCE = {
+    diffuse: { morning: [ .96, 1.04, 1 ], afternoon: [ .92, 1.06, 1.02 ] },
+    domestic: { morning: [ 1.04, .94, .97 ], afternoon: [ .94, 1.04, 1.02 ] },
+    work: { morning: [ 1.02, .97, .99 ], afternoon: [ .96, 1.03, 1 ] }
+};
 export function roomPolishLighting(room, lights, mode) {
     // A bespoke layout may carry its own finish (the Humboldt commons is grey and white, not forest green).
     const finish = room.roomLayout?.finish || ROOM_FINISHES[room.id], phase = PHASE_LIGHT[mode] || PHASE_LIGHT.afternoon;
     if (!finish) return;
     const balance = ROOM_BALANCE[room.id];
+    const daylightKind = DIFFUSE_ROOMS.has(room.id) ? 'diffuse' : DOMESTIC_ROOMS.has(room.id) ? 'domestic' : 'work';
+    const daylight = room.id === 'scifi' ? null : DAYLIGHT_BALANCE[daylightKind][mode];
+    if (daylight) {
+        lights.key.intensity *= daylight[0]; lights.fill.intensity *= daylight[1]; lights.hemi.intensity *= daylight[2];
+    }
     lights.fill.intensity *= phase.fill * (balance ? mode === 'night' ? balance.nightFill : mode === 'evening' || mode === 'party' ? balance.eveningFill : balance.dayFill : 1);
     if (balance) {
         // Daylight colour rendering stays neutral; night retains the authored
@@ -94,6 +135,15 @@ export function roomPolishLighting(room, lights, mode) {
     }
     lights.rim.intensity *= phase.rim * (balance?.rim || 1) * (mode === 'night' ? finish.night : 1);
     lights.hemi.intensity *= phase.ambient;
+    // Local lamps should carry evening activity. Warm interiors get a less
+    // blue fill, while clinical/technical rooms retain neutral task colours.
+    // These are non-accumulating adjustments: authored lights reset each pass.
+    const residential = ['home', 'bedroom', 'lounge', 'study', 'kitchen'].includes(room.id);
+    const making = ['creative', 'workshop', 'gallery', 'music'].includes(room.id);
+    if (mode === 'evening' || mode === 'night') {
+        lights.fill.color.lerp(new THREE.Color(residential ? '#ded8cd' : '#e3e8e6'), residential ? .2 : making ? .12 : .06);
+        lights.rim.intensity *= residential ? .85 : making ? .92 : 1;
+    }
     lights.hemi.groundColor.set(finish.ground);
     room.scene.environmentIntensity *= phase.bounce;
     room.grounding?.setMode(mode);
@@ -106,7 +156,7 @@ export function roomPolishLighting(room, lights, mode) {
     const halo = '#' + new THREE.Color(backdrop[0]).lerp(tint, .12).getHexString();
     const edge = '#' + new THREE.Color(backdrop[1]).lerp(tint, .10).getHexString();
     const dark = backdropPhase === 'night' || backdropPhase === 'party';
-    room.root.userData.polish = { halo, edge, dark, finish: finish.name, mode, ...phase, contactCount: room.grounding?.entries.length || 0 };
+    room.root.userData.polish = { halo, edge, dark, finish: finish.name, mode, daylight: daylight ? daylightKind : null, ...phase, contactCount: room.grounding?.entries.length || 0 };
     return { halo, edge, dark };
 }
 export function roomSurfaceFinish(room, mat, kind) {

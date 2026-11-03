@@ -25,7 +25,28 @@ function components(geometry){
     geometry.addEventListener('dispose',()=>{cache.get(geometry)?.forEach(part=>part.dispose());cache.delete(geometry);});
     return parts;
 }
+function closedLaptop(root) {
+    if(root.userData.propId!=='kenney-furniture-laptop')return null;
+    // This supplied mesh combines base and lid. Fold its actual lid around
+    // the authored hinge; retain the keys, casing, materials and real scale.
+    const closed=root.clone(true),resources=[],turn=2.036,cs=Math.cos(turn),sn=Math.sin(turn);
+    closed.traverse(o=>{
+        if(!o.isMesh||!o.geometry?.attributes.position)return;
+        const geometry=o.geometry.clone(),p=geometry.attributes.position;
+        for(let i=0;i<p.count;i++){
+            const y=p.getY(i),z=p.getZ(i);
+            if(y<=.03001&&!(y>.02999&&z<-.35))continue;
+            const dy=y-.03,dz=z+.367135;
+            p.setY(i,.06+cs*dy-sn*dz);p.setZ(i,-.367135+sn*dy+cs*dz);
+        }
+        p.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
+        o.geometry=geometry;resources.push(geometry);
+    });
+    closed.name='Closed laptop · shelf storage';closed.stowOwnedResources=resources;
+    return [closed];
+}
 export function compactStowParts(item){
+    const laptop=closedLaptop(item.obj);if(laptop)return laptop;
     const root=item.obj;if(root.userData.propId||root.userData.accessoryId||root.userData.dayKit)return null;
     root.updateWorldMatrix(true,true);const inverse=root.matrixWorld.clone().invert(),sources=[];
     root.traverseVisible(o=>{if(o.isMesh&&!o.material?.isShaderMaterial&&o.material?.blending!==THREE.AdditiveBlending&&o.name!=='Light pool')sources.push(o);});

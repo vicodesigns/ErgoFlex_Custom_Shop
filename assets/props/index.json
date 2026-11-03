@@ -23291,7 +23291,7 @@
   },
   {
    "id": "ergoflex-triangle-table",
-   "name": "Triangular meeting table",
+   "name": "Triangle table · oak & brushed steel",
    "category": "furniture",
    "scenes": [
     "office",
@@ -23321,7 +23321,8 @@
    "license": "user-provided",
    "attribution": null,
    "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
-   "collection": "ErgoFlex Collection"
+   "collection": "ErgoFlex Collection",
+   "triangleFinish": "wood-steel"
   },
   {
    "id": "ergoflex-slim-speaker",
@@ -27778,7 +27779,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-9,
+     -2.086162576020456e-09,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -28031,7 +28032,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-9,
+     -2.086162576020456e-09,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -28283,7 +28284,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-9,
+     -2.086162576020456e-09,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -28538,7 +28539,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-9,
+     -2.086162576020456e-09,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -34191,6 +34192,41 @@
     "family": "ivory",
     "scale": 0.94
    }
+  },
+  {
+   "id": "ergoflex-triangle-table-acrylic",
+   "name": "Triangle table · clear acrylic",
+   "category": "furniture",
+   "scenes": [
+    "office",
+    "coworking",
+    "educational"
+   ],
+   "file": "assets/props/ergoflex-triangle-table.glb",
+   "anchor": "floor",
+   "size": [
+    588.5,
+    740,
+    679.6
+   ],
+   "min": [
+    -294.3,
+    0,
+    -339.8
+   ],
+   "max": [
+    294.3,
+    740,
+    339.8
+   ],
+   "tris": 5754,
+   "bytes": 46952,
+   "source": "models/ergoflex-supplied/Triangle_Table.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
+   "collection": "ErgoFlex Collection",
+   "triangleFinish": "acrylic"
   }
  ],
  "screens": [

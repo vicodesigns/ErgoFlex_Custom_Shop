@@ -74,6 +74,7 @@ export function buildSceneDeskRig({sample,height=28,tilt=0}) {
             if(!m.dress||role==='floor')continue;
             const mount=new THREE.Group();mount.name='Desk dressing:'+role;mount.matrixAutoUpdate=false;
             mount.userData.surfaceSize={width:m.width,depth:m.depth};
+            mount.userData.storageSpace=m.storageSpace;
             mount.matrix.copy(offset).multiply(toRoom).multiply(m.dress.matrixWorld);group.add(mount);mounts[role]=mount;
         }
     });

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { bedroomSessionDetails } from './gallery-bedroom-detail.mjs?v=gallery-bedroom-20261025';
 
 const tiers = [
     ['apartment', 'Apartment bedroom & desk nook', 3800, 4400, 2600],
@@ -8,7 +9,8 @@ const tiers = [
     ['executive', 'Private bedroom & lounge suite', 9000, 9600, 3400]
 ];
 export const BEDROOM_LAYOUTS = Object.fromEntries(tiers.map(([id, name, width, depth, height], tier) => {
-    const back = -1800, front = back + depth, desk = [width / 2 - (tier ? 900 : 800), back + 950];
+    // The compact bay reserves the 60-inch desk's full wheel/trim envelope.
+    const back = -1800, front = back + depth, desk = [width / 2 - (tier ? 900 : 850), back + 950];
     const bed = [-width / 2 + (tier ? 1550 : 1260), back + 1060], bedHalf = tier ? 989.6 : 800.3;
     const bedside = [[bed[0] - bedHalf - (tier ? 280 : 230), back + 400]];
     if (tier >= 2) bedside.push([bed[0] + bedHalf + 280, back + 400]);
@@ -62,7 +64,7 @@ const BEDROOM_FIXTURES = {
     morning: { sun: .62, sunColor: '#ffd8a4', slope: .62, sweep: -.36, halo: .42, shade: .04, lamps: 0, candles: 0, picture: 0, pendant: 0 },
     afternoon: { sun: .5, sunColor: '#fff0d4', slope: 1.45, sweep: .12, halo: .34, shade: .1, lamps: 0, candles: 0, picture: .12, pendant: 0 },
     evening: { sun: .5, sunColor: '#ff9e5c', slope: .36, sweep: .48, halo: .3, shade: .22, lamps: 1, candles: 1, picture: .9, pendant: .55 },
-    night: { sun: .26, slope: 1.3, sweep: -.1, halo: .12, shade: .5, lamps: .3, candles: .7, picture: 0, pendant: 0, moon: '#93acd8' },
+    night: { sun: .12, slope: 1.3, sweep: -.1, halo: .06, shade: .93, lamps: .08, candles: 0, picture: 0, pendant: 0, moon: '#93acd8' },
     party: { sun: .55, sunColor: '#ffe6c0', slope: 1.1, sweep: .25, halo: .4, shade: 0, lamps: .14, candles: 0, picture: .2, pendant: 0 }
 };
 const SKY_SCENES = {
@@ -254,9 +256,7 @@ export function buildBedroomRoom(room, root, layout, helpers) {
     const bench=group('bedroom-bench','Upholstered oak bench at the foot of the bed',[bed[0],0,bz+2480]);
     for(const x of [-520,520])for(const z of [-155,155])rod(bench,[x,0,z],[x,365,z],20,oak);
     box(bench,[1200,55,430],[0,370,0],oak,6);box(bench,[1200,95,440],[0,442.5,0],sage,20);
-    // Bench dressing: a folded knit throw and a short stack of books.
-    box(bench,[380,46,440],[320,513,0],oatKnit,18);box(bench,[360,30,420],[326,551,6],knit,12).rotation.y=.04;
-    box(bench,[230,34,165],[-330,507,-20],material('#556f67',{roughness:.8}),3);box(bench,[210,30,150],[-326,539,-14],material('#c49a6c',{roughness:.85}),3).rotation.y=-.2;
+    const session=bedroomSessionDetails(room,layout,helpers,bench);
     const wardrobeWidth=tier>=3?2400:tier?1600:1000,wardrobeZ=front-(tier>=3?3200:tier?2450:680);
     const wardrobe=group('wardrobe','Oak wardrobe and linen sliding doors',[-w/2+320,0,wardrobeZ],Math.PI/2);
     box(wardrobe,[wardrobeWidth,2200,30],[0,1100,-270],oak,3);for(const x of [-wardrobeWidth/2+15,wardrobeWidth/2-15])box(wardrobe,[30,2200,570],[x,1100,0],oak);
@@ -335,6 +335,7 @@ export function buildBedroomRoom(room, root, layout, helpers) {
     // Library props: lamp shades get a halo, the bed a knit throw and cushions.
     const throwMat=knit,cushionMats=[material('#b98a5c',{roughness:1}),material('#7d8f7f',{map:knitMap,roughness:1}),material('#e8dcc7',{map:knitMap,roughness:1})];
     room.decorateProp=(object,placement)=>{
+        session.decorate(object,placement);
         if(placement.id==='kenney-furniture-lamp-round-table')halo(object,[0,.36,0],.62,'lamps',.7);
         else if(placement.id==='kenney-furniture-lamp-round-floor')halo(object,[0,1.55,0],.8,'lamps',.75);
         else if((placement.id==='bed'||placement.id==='bed-2')&&!object.userData.atelierBed){
@@ -361,6 +362,7 @@ export function buildBedroomRoom(room, root, layout, helpers) {
         c.fillStyle=scene.trees;for(let i=0;i<14;i++){c.beginPath();c.arc(i*40,500,46+(i%3)*12+rnd(i)*8,0,Math.PI*2);c.fill();}
         skyMap.needsUpdate=true;};
     room.roomAtmosphere=(id,accent=1)=>{const mode=BEDROOM_MODES[id]||BEDROOM_MODES.morning,f=BEDROOM_FIXTURES[id]||BEDROOM_FIXTURES.morning;current=[BEDROOM_MODES[id]?id:'morning',accent];
+        session.update(id);
         paintSky(current[0],mode);placeSun(f);romanShade.scale.y=Math.max(70,wh*f.shade+70);romanShade.position.y=low+wh-romanShade.scale.y/2+10;shadeMap.repeat.set(1,romanShade.scale.y/880);
         fixtures.forEach(tune);
         glow.forEach(({mat,channel})=>{mat.color.set(mode.colors[channel]);mat.emissive.set(mode.colors[channel]);mat.emissiveIntensity=.08+mode.wash*accent;});lights.forEach(spec=>{spec.light.color.set(mode.colors[spec.channel||0]);spec.light.intensity=spec.power*(spec.task?mode.practical:mode.wash)*accent;});root.userData.atmosphere=id;};
