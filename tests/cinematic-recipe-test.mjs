@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('../studio.js',import.meta.url),'utf8');
+const body=source.split('async installRecipe(recipe,size){')[1].split('\n        pause(on)')[0].replace(/},\s*$/,'}');
+const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
+const install=new AsyncFunction('sceneDesks','workspaceAccessories','recipe','size',body.slice(0,body.lastIndexOf('}')));
+const station={id:'station-one',state:{name:'Keep me'},rig:{}};
+let disposed=0,written=null;
+const previous={id:'main',state:{size:'60x30',pose:{x:1,z:2,yaw:.3}},group:{},rig:{dispose(){disposed++;}}};
+const manager={key:'occmedialab/house',records:new Map([['main',previous],['station-one',station]]),roomData:{desks:{main:previous.state},deleted:[]},capture(){},objects:{stow:{restore(){}},ready:Promise.resolve()},ctx:{unregisterBody(){},disposeDress(){},writeLive(r){written=r;},showLive(){}},ensureRig(r){r.rig={setBodyVisible(){}};},sync(){}};
+const recipe={accessories:['ergo-keyboard'],artwork:{v:1,surfaces:{}},size:'48x30'};
+await install(manager,{ready:Promise.resolve()},recipe,'60x30');
+assert.equal(manager.records.get('station-one'),station);
+assert.equal(manager.records.size,2);assert.equal(disposed,1);
+assert.equal(written,manager.records.get('main'));
+assert.deepEqual(written.state.pose,{x:1,z:2,yaw:.3});
+assert.equal(written.state.size,'60x30');assert.equal(recipe.size,'48x30');
+console.log('Cinematic recipe: only the featured rig is rebuilt; neighbouring stations, anchor and source recipe survive.');

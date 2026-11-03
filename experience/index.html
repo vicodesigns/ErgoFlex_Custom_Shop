@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>ErgoFlex — A day of possibilities</title><link rel="stylesheet" href="./experience.css"><link rel="stylesheet" href="./director.css"></head>
+<body>
+  <iframe id="stage" title="ErgoFlex cinematic digital twin" tabindex="-1" aria-hidden="true" inert allow="autoplay; fullscreen" src="../?view=product&presentation=1&tour=1"></iframe>
+  <video id="baked-stage" hidden muted playsinline preload="auto" aria-label="Baked chapter playback"></video>
+  <canvas id="transition-frame" hidden aria-hidden="true"></canvas>
+  <div class="shade"></div><div id="curtain"></div>
+  <header><a class="brand" href="../?view=product">ErgoFlex<span> DIGITAL TWIN</span></a><nav><button id="director" disabled>Director Mode</button><button id="sound" aria-pressed="false">Sound off</button><button id="pause">Pause</button><button id="skip">Skip intro ↗</button></nav></header>
+  <div id="loading" role="status">Preparing your digital twin<span>Loading the real 3D environments…</span></div>
+  <main><p id="eyebrow">ONE DESK. A DAY OF POSSIBILITIES.</p><h1 id="title">Meet your digital twin.</h1><p id="detail">Precision in every direction.</p><button id="enter" hidden>Enter Interactive Experience ↗</button></main>
+  <aside id="demo" hidden><span>GUIDED DEMO</span><h2 id="demo-title"></h2><p id="demo-detail"></p><video id="exercise" hidden muted playsinline loop preload="metadata" src="../app-reference/demo_media/diaphragmatic_breathing_01_demo.mp4" aria-label="Guided breathing demonstration"></video></aside>
+  <p id="cut-error" hidden role="alert"></p>
+  <footer><div id="chapters" aria-label="Cinematic chapters"></div><div class="transport"><span id="time">0:00 / 1:25</span><progress id="progress" max="85" value="0" aria-label="Intro progress"></progress><output id="performance" hidden></output><button id="cut">30-second reel</button><button id="replay">Replay</button></div></footer>
+  <script type="module" src="./player.mjs"></script>
+</body></html>

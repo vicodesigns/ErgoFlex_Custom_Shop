@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {loopPreviewTime,resumePreviewTime} from '../experience/preview-transport.mjs';
+import {ShotClock} from '../experience/timing.mjs';
+const clock=new ShotClock();clock.reset(0,true);clock.seek(3,0);
+clock.setRunning(false,1250);
+assert.equal(resumePreviewTime(clock.seconds(5000),3,6),4.25);
+clock.setRunning(true,5000);assert.equal(clock.seconds(5750),5);
+assert.equal(resumePreviewTime(6,3,6),3);
+assert.equal(resumePreviewTime(1,3,6),3);
+assert.equal(loopPreviewTime(6,3,6),3);
+assert.equal(loopPreviewTime(6.125,3,6),3.125);
+assert.equal(loopPreviewTime(15.125,3,6),3.125);
+assert.equal(loopPreviewTime(14.25,0,14),.25);
+assert.throws(()=>loopPreviewTime(3,3,3));
+console.log('Preview transport: pause/resume, completed-range replay, chapter loops and delayed-frame timing passed.');

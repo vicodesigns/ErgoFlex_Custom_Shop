@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {bakeCutQueue} from '../experience/bake-queue.mjs';
+const shots=[{id:'a'},{id:'b'},{id:'c'}],events=[];
+const result=await bakeCutQueue(shots,{cached:async s=>s.id==='b',render:async s=>events.push(s.id)});
+assert.deepEqual(events,['a','c']);assert.deepEqual(result,{completed:3,reused:1,cancelled:false});
+let cancelled=false;const stopped=await bakeCutQueue(shots,{cached:async()=>false,render:async()=>{cancelled=true;},cancelled:()=>cancelled});
+assert.equal(stopped.cancelled,true);assert.equal(stopped.completed,0);
+let count=0;await assert.rejects(bakeCutQueue(shots,{cached:async()=>false,render:async()=>{count++;throw Error('Encoder failed');}}),/Encoder failed/);assert.equal(count,1);
+const cache=new Set(['a']);const resumed=[];await bakeCutQueue(shots,{cached:async s=>cache.has(s.id),render:async s=>resumed.push(s.id)});assert.deepEqual(resumed,['b','c']);
+console.log('Full intro queue: ordered baking, cached reuse, cancellation, resume and stop-on-failure passed.');

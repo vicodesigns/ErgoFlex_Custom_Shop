@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS} from '../experience/timeline-ui.mjs';
+assert.deepEqual(timelineTicks(8,800),[0,1,2,3,4,5,6,7,8]);
+assert.ok(timelineTicks(8,2400).length>timelineTicks(8,800).length);
+assert.equal(timelineTicks(7.25,800).at(-1),7.25);
+const snap=(t,more={})=>snapTimelineTime(t,{seconds:8,step:.1,targets:[0,2.4,4,8],tolerance:.08,...more});
+assert.equal(snap(3.96),4);assert.equal(snap(2.35),2.4);assert.equal(snap(3.14),3.1);
+assert.equal(snap(2.35,{step:0}),2.35);assert.equal(snap(2.35,{bypass:true}),2.35);
+assert.equal(snap(-1),0);assert.equal(snap(9),8);
+assert.equal(adjacentEdit([2.4,4,4.8],2.4,1,8),4);
+assert.equal(adjacentEdit([2.4,4,4.8],4,-1,8),2.4);
+assert.equal(adjacentEdit([],0,-1,8),0);assert.equal(adjacentEdit([],8,1,8),8);
+assert.ok(TIMELINE_ZOOMS.includes(1)&&TIMELINE_ZOOMS.includes(8));
+console.log('Timeline workbench: adaptive shared ruler, edge/keyframe snapping, grid/off/Alt bypass, chapter bounds, adjacent edit navigation and zoom levels verified.');
