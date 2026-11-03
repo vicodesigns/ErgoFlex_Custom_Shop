@@ -12,3 +12,19 @@ scene-shots/
 # studio.js for the picker), so those stay tracked; these do not, and each
 # entry in index.json already records the source it came from.
 assets/props/raw/
+
+# Cinematic intro film: renders, masters and audio live on disk only (GBs each).
+# The json/md/ass/html/py sources beside them are tracked.
+exports/**/*.mp4
+exports/**/*.webm
+exports/**/*.mkv
+exports/**/*.mov
+exports/**/*.wav
+exports/**/*.mp3
+exports/**/frames/
+exports/cinematic-intro-*/review/**/*.jpg
+exports/cinematic-intro-*/shots/**/*.jpg
+tools/experience/screens/**/*.jpg
+
+# Flutter web build output copied in for reference; rebuildable.
+app-reference/
