@@ -121,7 +121,11 @@ async function renderShot(frame,i){
       console.log(`${tag} ${shot.id}: ${fractions.length} stills → ${path.join(opts.out,tag+'-sheet.jpg')} (${((Date.now()-started)/1000).toFixed(1)}s)`);
       return;
     }
-    const outFrames=Math.max(2,Math.round(shot.seconds*fps)),sub=blur,total=(outFrames-1)*sub+1;
+    // shot.renderRange [t0,t1] (chapter seconds): render only that span, end
+    // exclusive, still on the chapter clock (for sub-shots joined in post).
+    const range=Array.isArray(shot.renderRange)?shot.renderRange.map(Number):null;
+    const outFrames=range?Math.max(2,Math.round((range[1]-range[0])*fps)):Math.max(2,Math.round(shot.seconds*fps)),sub=blur,total=(outFrames-1)*sub+1;
+    const n0=range?Math.round(range[0]*fps)*sub:0,chapterFrames=Math.max(2,Math.round(shot.seconds*fps));
     const vf=[];if(sub>1){const open=Math.max(1,Math.round(sub/2));vf.push(`tmix=frames=${open}:weights=${Array(open).fill(1).join(' ')}`,`select=not(mod(n\\,${sub}))`);}
     if(ss>1)vf.push(`scale=${W}:${H}:flags=lanczos`);
     vf.push('setpts=N/('+fps+'*TB)');
@@ -130,7 +134,7 @@ async function renderShot(frame,i){
     const done=new Promise((res,rej)=>ff.on('close',c=>c===0?res():rej(Error('ffmpeg exited '+c))));
     for(let n=0;n<total;n++){
       // Same sampling as the in-browser bake: t spans 0…1 across the chapter.
-      const seconds=n/(fps*sub),t=Math.min(1,seconds/((outFrames-1)/fps));
+      const seconds=(n0+n)/(fps*sub),t=Math.min(1,seconds/((chapterFrames-1)/fps));
       const jpg=await grab(frame,t,seconds+off,.97,seconds,true);
       if(!ff.stdin.write(jpg))await new Promise(r=>ff.stdin.once('drain',r));
       if(n%(fps*sub*2)===0)process.stdout.write(`\r${tag} ${shot.id}: ${Math.round(n/total*100)}%   `);

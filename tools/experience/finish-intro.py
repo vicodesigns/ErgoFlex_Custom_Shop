@@ -38,6 +38,7 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     draft = '--draft' in sys.argv
     wip = '--wip' in sys.argv  # full-res, fast encode, one titled MP4 for review
+    hq_only = '--hq-only' in sys.argv  # full master and the 1080p (CRF 18, 9.5 Mbps cap) + poster; skips textless/720p
     only = sys.argv[sys.argv.index('--only') + 1] if '--only' in sys.argv else None
     d = os.path.abspath(args[0]); out = os.path.join(d, 'final'); os.makedirs(out, exist_ok=True)
     edl = json.load(open(os.path.join(d, 'edl.json')))
@@ -165,7 +166,7 @@ def main():
     hq = os.path.join(out, 'ErgoFlex-Intro-1080p.mp4')
     run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', '-vf', subs, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', '18', '-maxrate', '9500k', '-bufsize', '19M',
          '-pix_fmt', 'yuv420p', '-g', str(fps * 2), '-x264-params', 'aq-mode=3', *COLOR, '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-shortest', '-movflags', '+faststart', hq])
-    for name, vf, rate, ab in [
+    for name, vf, rate, ab in [] if hq_only else [
                                ('ErgoFlex-Intro-1080p-textless.mp4', 'null', '6M', '192k'),
                                ('ErgoFlex-Intro-720p.mp4', subs + ',scale=1280:720:flags=lanczos', '2500k', '128k'),
                                ('ErgoFlex-Intro-720p-textless.mp4', 'scale=1280:720:flags=lanczos', '2500k', '128k')]:

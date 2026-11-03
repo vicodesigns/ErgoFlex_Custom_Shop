@@ -459,6 +459,10 @@ STYLES = {
                pad=0.84, cut=3200, arp='syn', arp_lvl=0.72, bright=0.55, bass='pulse8', bass_lvl=0.85,
                kick='x...x...x...x...', clap='....o.......o...', hat='..x...x...x...x.',
                shaker='o.oxo.oxo.oxo.ox', duck=0.18, energy=0.8),
+    # dark-studio safety chapter between coast and oilers: a breath, not a hole (no sonar: that is awareness)
+    'status': S(prog=[('Dmaj9', 1), ('Bm9', 1), ('Gmaj9', 2), ('Em9', 1), ('F#m7', 1), ('Asus4', 1)], anchor='end',
+                pad=0.84, cut=2200, arp='8', arp_lvl=0.55, bright=0.4, bass='sustain', bass_lvl=0.8,
+                kick='x.......x.......', shaker='..o...o...o...o.', lead='sparkle', duck=0.10, energy=0.65),
     'oilers': S(prog=[('Gmaj9', 1), ('A', 1), ('F#m7', 1), ('Bm9', 1)], turn='A',
                 pad=0.86, cut=3400, arp='16', arp_lvl=0.70, bright=0.62, bass='pulse8', bass_lvl=0.85,
                 kick='x...x...x...x...', clap='....x.......x...', hat='..x...x...x...x.',
@@ -494,7 +498,7 @@ STYLES = {
 }
 
 # macro dynamics (dB on the whole mix, smoothed over the dissolve)
-for _k, _v in dict(twin=0.0, rise=0.0, create=-1.0, commons=0.0, coast=0.5, oilers=0.5, wellness=-2.5,
+for _k, _v in dict(twin=0.0, rise=0.0, create=-1.0, commons=0.0, coast=0.5, status=0.0, oilers=0.5, wellness=-2.5,
                    awareness=-2.0, music=1.5, media=-2.0, storage=(-0.5, 1.0), hero=1.0, groove=0.0).items():
     STYLES[_k]['mixdb'] = _v
 
