@@ -43,7 +43,8 @@
 // --list-screens: print every screen-like mesh (and clock) for the shots,
 //   with world position, size, aspect, facing and on-screen pixel size; also
 //   writes <out>/NN-screens.json.
-// --storage seed.json (localStorage key → string, e.g. saved builds/artwork)
+// --storage seed.json (localStorage key → string, e.g. saved builds/artwork, or
+//   studio-state.json: the shared editing state every studio browser saves to)
 // Options: --screen exports/…/screen-film.mp4 (replace the media clip)
 // --size 1920x1080  --fps 30  --blur 4 (sub-frames per output frame,
 // 180° shutter: half of them are averaged)  --ss 1.5 (supersample, then
@@ -78,7 +79,8 @@ async function stage(browser){
   // --storage <json>: seed this origin's localStorage (e.g. the owner's saved
   // builds and desk artwork) before the stage loads. The stage copies it into
   // memory, so renders never write back to it.
-  if(opts.storage){const seed=JSON.parse(fs.readFileSync(opts.storage,'utf8'));await page.evaluate(s=>{localStorage.clear();for(const [k,v] of Object.entries(s))localStorage.setItem(k,v);},seed);}
+  // A studio-state.json (tools/studio-server.mjs) works too: its current values become the seed.
+  if(opts.storage){let seed=JSON.parse(fs.readFileSync(opts.storage,'utf8'));if(seed.format==='ergoflex-studio-state-v1')seed=Object.fromEntries(Object.entries(seed.keys).filter(([,r])=>!r.deleted).map(([k,r])=>[k,r.value]));await page.evaluate(s=>{localStorage.clear();for(const [k,v] of Object.entries(s))localStorage.setItem(k,v);},seed);}
   await page.evaluate(()=>{document.documentElement.innerHTML='<body style="margin:0;background:#000"><iframe id="s" style="width:1280px;height:720px;border:0" src="/?view=product&presentation=1&tour=1"></iframe></body>';});
   const frame=await (await page.waitForSelector('#s')).contentFrame();
   await frame.waitForFunction(()=>window.ErgoPresentation,{timeout:180000});
