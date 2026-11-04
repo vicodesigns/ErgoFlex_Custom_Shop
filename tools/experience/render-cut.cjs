@@ -88,7 +88,10 @@ async function stage(browser){
 }
 
 // Shots that use film-effect fields load the helper into the stage iframe.
-const FX_FIELDS=['deskObjects','screens','ledMode','ledGlow','ledSurfaces','ledGain','ledColor','sceneGlobals','clock','timeOfDay','accessories','sceneEdits','lights','ledStatus','obstacles','ledFill','floorLight'];
+const FX_FIELDS=['deskObjects','screens','ledMode','ledGlow','ledSurfaces','ledGain','ledColor','sceneGlobals','clock','timeOfDay','accessories','sceneEdits','lights','ledStatus','obstacles','ledFill','floorLight','quality'];
+// --quality hq13 | '{json}': film-quality overrides on every shot (shot.quality wins). See film-quality.mjs.
+const QUALITY=opts.quality?(/^\s*\{/.test(opts.quality)?JSON.parse(opts.quality):opts.quality):null;
+if(QUALITY)for(const s of cut.shots)if(s.quality===undefined)s.quality=QUALITY;
 const usesFx=shot=>FX_FIELDS.some(k=>shot[k]!==undefined);
 async function loadFx(frame){await frame.evaluate(async()=>{if(!window.__filmFx)window.__filmFx=await import('/tools/experience/film-fx.mjs');});}
 async function grab(frame,t,seconds,quality=.96,chapter=seconds,video=false){

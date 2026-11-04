@@ -568,7 +568,7 @@ export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedM
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
@@ -606,6 +606,8 @@ export async function install(shot) {
   if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
   if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
   if (shot.floorLight) active.floor = installFloorLight(shot);
+  // quality: GPU render-box overrides (shadow maps, anisotropy, room reflections, GTAO, selective bloom); film-quality.mjs.
+  if (shot.quality) { active.quality = await (await import('./film-quality.mjs')).installQuality(shot, { screens: active.screens }); if (active.quality) console.log('[film-quality]', JSON.stringify(active.quality.info)); }
   if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
   if (shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
   if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
@@ -619,6 +621,7 @@ export async function frame(t, chapterSeconds, { video = false } = {}) {
     const v = i < 0 ? k.at(-1)[1] : i === 0 ? k[0][1] : k[i - 1][1] + (k[i][1] - k[i - 1][1]) * (chapterSeconds - k[i - 1][0]) / (k[i][0] - k[i - 1][0]);
     active.globals.scene.environmentIntensity = active.globals.env * v;
   }
+  active.quality?.frame();
   active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds);
   if (active.screens.length) await updateScreens(active.screens, chapterSeconds);
   if (active.clocks.length) setClocks(active.clocks, active.shot.clock, active.shot, chapterSeconds);
@@ -647,6 +650,7 @@ export function clear() {
   if (active.surfaces) for (const [k, v] of Object.entries(active.surfaces)) api.setLedSurface(k, v, false);
   if (active.ledColor) api.setLedColor(active.ledColor, false);
   active.status?.clear();
+  active.quality?.restore();
   active.floor?.restore();
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
