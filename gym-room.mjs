@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { gymProgramMaps, buildGymSessionDetail, migrateGymSavedFurniture } from './gym-session-detail.mjs?v=gym-sessions-20261022';
+import { gymProgramMaps, buildGymSessionDetail, migrateGymSavedFurniture } from './gym-session-detail.mjs?v=gym-black-red-20261104';
+import { GYM_MODES, gymTheme } from './gym-theme.mjs?v=gym-black-red-20261104';
 
 // All architecture and original equipment below is authored in millimetres.
 const tiers = [
@@ -32,13 +33,7 @@ export const GYM_LAYOUTS = Object.fromEntries(tiers.map(([id, name, width, depth
 export const gymLayoutById = id => GYM_LAYOUTS[id] || GYM_LAYOUTS.apartment;
 export const gymLayoutForSize = size => GYM_LAYOUTS[size === '60x30' ? 'house' : 'apartment'];
 
-export const GYM_MODES = {
-    morning: { label: 'Morning', description: 'Sunrise mobility · standing coach station', key: '#ffe9c9', fill: '#d6e8f2', accent: '#bded66', power: 1.65, ambient: .44, bounce: .62, exposure: 1.04, sky: ['#87bed5', '#f9dfac'], practical: .3, wash: .24, colors: ['#bbc99a', '#9fc2bc'], sun: [.9, -.36, '#ffcf96', .4], glass: .34, height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
-    afternoon: { label: 'Afternoon', description: 'Daylight strength · workout tracking at standing height', key: '#f3f9ff', fill: '#dcebf3', accent: '#c1ed69', power: 1.75, ambient: .46, bounce: .66, exposure: 1.04, sky: ['#79b7d6', '#dbece8'], practical: .4, wash: .3, colors: ['#b7ce90', '#8fbbb9'], sun: [1.45, .12, '#fff1dc', .26], glass: .4, height: 43.5, tilt: -5, offset: [0, 70], yaw: 0, leds: false },
-    evening: { label: 'Evening', description: 'Recovery & stretching · lowered desk for session notes', key: '#ffc39c', fill: '#c4d6e6', accent: '#75e0ce', power: .72, ambient: .28, bounce: .36, exposure: 1.09, sky: ['#837eaa', '#e5a984'], practical: .78, wash: .34, colors: ['#cfbe94', '#8cbeb2'], sun: [.72, .48, '#ff9e62', .42], glass: .2, height: 28, tilt: 0, offset: [0, 80], yaw: 0, leds: true, color: '#69dec9' },
-    night: { label: 'Night', description: 'Reset & recharge · gear stowed, desk folded, floor clear', key: '#a9c8ec', fill: '#b6cce4', accent: '#55dbe1', power: .15, ambient: .17, bounce: .23, exposure: 1.1, sky: ['#132b48', '#3c5b75'], practical: .45, wash: .18, colors: ['#b8b497', '#8da8af'], sun: [1.2, -.1, '#8fb8ff', .07], glass: .045, height: 43.5, tilt: 65, offset: [50, 180], yaw: -8, leds: true, color: '#aaa487' },
-    party: { label: 'Power circuit', description: 'High-energy circuit · desk turned toward the training zone', key: '#dce6fc', fill: '#d4dfee', accent: '#c3f343', power: 1.2, ambient: .4, bounce: .55, exposure: 1.08, sky: ['#3c4b70', '#8b85a1'], practical: .85, wash: .68, colors: ['#b2ce79', '#77afa6'], sun: [1.2, 0, '#000000', 0], glass: .09, height: 43.5, tilt: 12, offset: [50, 260], yaw: -14, leds: true, color: '#b6f348' }
-};
+export { GYM_MODES };
 
 function texture(draw, width = 512, height = 512) {
     const c = document.createElement('canvas'); c.width = width; c.height = height;
@@ -50,17 +45,19 @@ export function buildGymRoom(room, root, layout, helpers) {
     const { material, mesh, box, rod, sphere, markSceneAsset } = helpers;
     const { width: w, depth: d, height: h, back: bz, tier } = layout, front = bz + d;
     room.migrateSavedTransform = (obj, saved) => migrateGymSavedFurniture(obj, saved, layout);
-    const graphite = material('#242d32', { roughness: .85 }), steel = material('#414e54', { metalness: .7, roughness: .35 });
-    const rubber = material('#111c23', { roughness: .92 }), lime = material('#c0ea50', { roughness: .55 });
-    const silver = material('#becbd0', { metalness: .8, roughness: .28 }), oak = material('#a58560', { roughness: .8 });
-    const ash = material('#c9ab83', { roughness: .74 }), slate = material('#1a252b', { roughness: .8 });
+    // Colourway (gym-theme.mjs): green unless the layout carries another theme.
+    const T = gymTheme(layout.theme), M = T.materials, C = T.canvas, I = T.instances, red = layout.theme === 'blackred';
+    const graphite = material(...M.graphite), steel = material(...M.steel);
+    const rubber = material(...M.rubber), lime = material(...M.lime);
+    const silver = material(...M.silver), oak = material(...M.oak);
+    const ash = material(...M.ash), slate = material(...M.slate);
     const glow = [], washes = [], practicals = [];
     const strip = (parent, size, at, channel = 0) => {
-        const mat = material('#b9ec62', { emissive: '#b9ec62', emissiveIntensity: .3 });
+        const mat = material(C.strip, { emissive: C.strip, emissiveIntensity: .3 });
         const o = box(parent, size, at, mat, 2); o.castShadow = false; glow.push({ mat, channel }); return o;
     };
     // Warm-white practical fixtures (picture light, timer) follow mode.practical.
-    const practical = (parent, size, at, color = '#fff1d8', strength = 1) => {
+    const practical = (parent, size, at, color = C.practical, strength = 1) => {
         const mat = material(color, { emissive: color, emissiveIntensity: .5 });
         const o = box(parent, size, at, mat, 2); o.castShadow = false; practicals.push({ mat, strength }); return o;
     };
@@ -69,7 +66,7 @@ export function buildGymRoom(room, root, layout, helpers) {
         g.userData.propId = id; g.userData.sceneAssetName = name;
         markSceneAsset(g, { key: `gym:${layout.id}:fixture:${id}` }); return g;
     };
-    const label = (parent, text, size, at, color = '#d9f3a5', background = '#1d292f') => {
+    const label = (parent, text, size, at, color = C.label[0], background = C.label[1]) => {
         const map = texture((c, tw, th) => { c.fillStyle = background; c.fillRect(0, 0, tw, th); c.fillStyle = color; c.font = 'bold 58px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, tw / 2, th / 2); }, 1024, 128);
         return box(parent, [size[0], size[1], 4], at, material('#ffffff', { map, roughness: .85 }));
     };
@@ -104,29 +101,29 @@ export function buildGymRoom(room, root, layout, helpers) {
 
     // Interlocking EPDM rubber tiles: 1 m squares with seams and flecks.
     const floorMap = texture((c, tw, th) => {
-        const tones = ['#36424a', '#323e45', '#34404a', '#303b42'];
+        const tones = C.floor.tones;
         for (let i = 0; i < 4; i++) { c.fillStyle = tones[i]; c.fillRect((i % 2) * tw / 2, (i >> 1) * th / 2, tw / 2, th / 2); }
-        for (let i = 0; i < 16000; i++) { const x = (i * 73.71 + (i * i) % 97) % tw, y = (i * 29.37 + (i * 7) % 61) % th; c.fillStyle = ['#a6b2b766', '#8fa7b14d', '#0f181d99', '#c3e96a40', '#5e7c8a55'][i % 5]; c.fillRect(x, y, i % 3 === 0 ? 2 : 1.4, i % 4 === 0 ? 2 : 1.4); }
-        c.strokeStyle = '#151e23'; c.lineWidth = 3;
+        for (let i = 0; i < 16000; i++) { const x = (i * 73.71 + (i * i) % 97) % tw, y = (i * 29.37 + (i * 7) % 61) % th; c.fillStyle = C.floor.flecks[i % 5]; c.fillRect(x, y, i % 3 === 0 ? 2 : 1.4, i % 4 === 0 ? 2 : 1.4); }
+        c.strokeStyle = C.floor.seams[0]; c.lineWidth = 3;
         for (const v of [1.5, tw / 2]) { c.beginPath(); c.moveTo(v, 0); c.lineTo(v, th); c.stroke(); c.beginPath(); c.moveTo(0, v); c.lineTo(tw, v); c.stroke(); }
-        c.strokeStyle = '#4b585f66'; c.lineWidth = 1.5;
+        c.strokeStyle = C.floor.seams[1]; c.lineWidth = 1.5;
         for (const v of [5, tw / 2 + 4]) { c.beginPath(); c.moveTo(v, 0); c.lineTo(v, th); c.stroke(); c.beginPath(); c.moveTo(0, v); c.lineTo(tw, v); c.stroke(); }
     }, 1024, 1024); floorMap.wrapS = floorMap.wrapT = THREE.RepeatWrapping; floorMap.repeat.set(w / 2000, d / 2000);
     box(root, [w, 30, d], [0, -15, bz + d / 2], material('#ffffff', { map: floorMap, roughness: .93 }));
     // Cool microcement walls; one canvas, repeated per wall face so the
     // mottling keeps its physical size on every wall.
     const concreteMap = texture((c, tw, th) => {
-        c.fillStyle = '#86939a'; c.fillRect(0, 0, tw, th);
+        c.fillStyle = C.wall.base; c.fillRect(0, 0, tw, th);
         for (let i = 0; i < 260; i++) {
             const x = (i * 197.3) % tw, y = (i * 83.9 + i * i * .7) % th, r = 40 + (i * 37) % 150, a = .025 + (i % 5) * .007;
-            const tone = i % 4 ? '235,242,245' : '28,38,44';
+            const tone = C.wall.mottle[i % 4 ? 0 : 1];
             for (const ox of [-tw, 0, tw]) for (const oy of [-th, 0, th]) {
                 if (x + ox + r < 0 || x + ox - r > tw || y + oy + r < 0 || y + oy - r > th) continue;
                 const g = c.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r); g.addColorStop(0, `rgba(${tone},${a})`); g.addColorStop(1, `rgba(${tone},0)`);
                 c.fillStyle = g; c.fillRect(x + ox - r, y + oy - r, r * 2, r * 2);
             }
         }
-        for (let i = 0; i < 9000; i++) { c.fillStyle = i % 2 ? '#2a363c40' : '#e6eef033'; c.fillRect((i * 61.17) % tw, (i * 47.83 + i % 13) % th, 1.3, 1.3); }
+        for (let i = 0; i < 9000; i++) { c.fillStyle = C.wall.specks[i % 2 ? 0 : 1]; c.fillRect((i * 61.17) % tw, (i * 47.83 + i % 13) % th, 1.3, 1.3); }
     }, 1024, 1024);
     const concretes = new Map();
     const concrete = (width, height) => {
@@ -152,27 +149,29 @@ export function buildGymRoom(room, root, layout, helpers) {
     wash(wall, [slatW + 40, slatH * .75], [cx, 95 + slatH * .375, bz + 52], 0, .55);
     const art = group('performance-sign', 'MOVE / BUILD / REPEAT training wall', [cx, h - 360, bz + 72], 0, wall);
     const signMap = texture((c, tw, th) => {
-        c.fillStyle = '#14242d'; c.fillRect(0, 0, tw, th);
-        c.fillStyle = '#c2f250'; c.beginPath(); c.moveTo(0, th); c.lineTo(105, 0); c.lineTo(220, 0); c.lineTo(115, th); c.fill();
-        c.fillStyle = '#e5eddf'; c.font = 'italic 900 112px sans-serif'; c.fillText('MOVE.', 255, 137);
-        c.fillStyle = '#c2f250'; c.font = 'bold 24px sans-serif'; c.fillText('BUILD STRENGTH. KEEP MOVING.', 262, 192);
-        c.fillStyle = '#679098'; c.font = '16px sans-serif'; c.fillText('ERGOFLEX   /   YOUR DAILY MOMENTUM', 262, 229);
+        c.fillStyle = C.sign.background; c.fillRect(0, 0, tw, th);
+        c.fillStyle = C.sign.slash; c.beginPath(); c.moveTo(0, th); c.lineTo(105, 0); c.lineTo(220, 0); c.lineTo(115, th); c.fill();
+        c.fillStyle = C.sign.title; c.font = 'italic 900 112px sans-serif'; c.fillText('MOVE.', 255, 137);
+        c.fillStyle = C.sign.line; c.font = 'bold 24px sans-serif'; c.fillText('BUILD STRENGTH. KEEP MOVING.', 262, 192);
+        c.fillStyle = C.sign.footer; c.font = '16px sans-serif'; c.fillText('ERGOFLEX   /   YOUR DAILY MOMENTUM', 262, 229);
     }, 1024, 256);
     box(art, [1520, 380, 25], [0, 0, 0], rubber, 4);
-    box(art, [1480, 350, 4], [0, 0, 16], material('#ffffff', { map: signMap, roughness: .85 }));
+    const signFace = box(art, [1480, 350, 4], [0, 0, 16], material('#ffffff', { map: signMap, roughness: .85 }));
+    // Black & red: the sign is a backlit lightbox; its red slash and lettering glow with the practicals.
+    if (red) { signFace.material.emissive.set('#ffffff'); signFace.material.emissiveMap = signMap; practicals.push({ mat: signFace.material, strength: .4 }); }
     for (const x of [-700, 700]) for (const y of [-150, 150]) rod(art, [x, y, -36], [x, y, -10], 9, silver);
     // Chalk programming board, interval timer and picture light beside the station.
     const boardX = (cx + slatW / 2 + 30 + w / 2) / 2, boardW = Math.min(1000, w / 2 - cx - slatW / 2 - 260), boardY = h * .58;
     const board = group('training-board', 'Chalk workout board and interval timer', [boardX, boardY, bz], 0, wall);
-    const programmes = gymProgramMaps(), chalk = programmes.board;
+    const programmes = gymProgramMaps(T), chalk = programmes.board;
     const boardH = boardW * 720 / 768;
     box(board, [boardW + 50, boardH + 50, 30], [0, 0, 15], oak, 6);
     box(board, [boardW, boardH, 4], [0, 0, 32], material('#ffffff', { map: chalk, roughness: .95 }));
     box(board, [boardW * .7, 22, 50], [0, -boardH / 2 - 30, 40], oak, 3);
-    instanced(board, unit, material('#ffffff', { roughness: .9 }), [['#f2f0ea', -60], ['#c0ea50', 10], ['#6ae3e0', 70]].map(([color, x]) => ({ at: [x, -boardH / 2 - 9, 50], size: [55, 14, 14], color })), false);
+    instanced(board, unit, material('#ffffff', { roughness: .9 }), [-60, 10, 70].map((x, i) => ({ at: [x, -boardH / 2 - 9, 50], size: [55, 14, 14], color: I.chalk[i] })), false);
     rod(board, [-boardW * .38, boardH / 2 + 90, 30], [-boardW * .38, boardH / 2 + 90, 150], 7, steel); rod(board, [boardW * .38, boardH / 2 + 90, 30], [boardW * .38, boardH / 2 + 90, 150], 7, steel);
     box(board, [boardW * .86, 34, 55], [0, boardH / 2 + 90, 165], steel, 8);
-    practical(board, [boardW * .8, 6, 30], [0, boardH / 2 + 72, 168], '#fff1d8', 1.2);
+    practical(board, [boardW * .8, 6, 30], [0, boardH / 2 + 72, 168], C.practical, 1.2);
     wash(board, [boardW + 40, boardH + 40], [0, 0, 40], 'warm', .5, [0, 0, Math.PI]);
     const timerMap = programmes.timer;
     const timerY = Math.min(boardH / 2 + 340, h - boardY - 250);
@@ -186,8 +185,8 @@ export function buildGymRoom(room, root, layout, helpers) {
     // Mirror glass carries a soft painted reflection so it reads as glass
     // without rendering the CAD desk a second time.
     const mirrorMap = texture((c, tw, th) => {
-        const g = c.createLinearGradient(0, 0, 0, th); g.addColorStop(0, '#b9c9cf'); g.addColorStop(.55, '#7f939b'); g.addColorStop(1, '#4b5b62'); c.fillStyle = g; c.fillRect(0, 0, tw, th);
-        c.fillStyle = '#26333a'; c.fillRect(0, th * .8, tw, th * .2);
+        const g = c.createLinearGradient(0, 0, 0, th); g.addColorStop(0, C.mirror[0]); g.addColorStop(.55, C.mirror[1]); g.addColorStop(1, C.mirror[2]); c.fillStyle = g; c.fillRect(0, 0, tw, th);
+        c.fillStyle = C.mirror[3]; c.fillRect(0, th * .8, tw, th * .2);
         c.globalAlpha = .22; c.fillStyle = '#ffffff';
         for (const [x, wd] of [[60, 70], [170, 26], [300, 120], [460, 34]]) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x + wd, 0); c.lineTo(x + wd - 220, th); c.lineTo(x - 220, th); c.fill(); }
         c.globalAlpha = 1;
@@ -240,13 +239,15 @@ export function buildGymRoom(room, root, layout, helpers) {
     const [tx, tz] = layout.training;
     const mat = group('training-zone', 'Mobility mat and circuit markings', [tx, 0, tz]);
     box(mat, [1400, 8, 2200], [0, 4, 0], rubber, 14);
-    for (const x of [-710, 710]) box(mat, [14, 2, 2250], [x, 1, 0], lime);
+    for (const x of [-710, 710]) red ? strip(mat, [14, 2, 2250], [x, 1, 0], 0) : box(mat, [14, 2, 2250], [x, 1, 0], lime);
+    // Black & red closes the mat's LED edge frame, inside the same footprint.
+    if (red) for (const z of [-1118, 1118]) strip(mat, [1434, 2, 14], [0, 1, z], 0);
     for (let i = 0; i < 5; i++) box(mat, [240, 2, 18], [0, 10, -930 + i * 410], steel);
     // The floor plaque reads from the room camera, rather than becoming a wall sign.
     const lane = label(mat, '01 / MOBILITY', [1000, 125], [0, 12, 990]); lane.rotation.x = -Math.PI / 2;
     const coach = group('coach-zone', 'ErgoFlex coaching station floor', [layout.desk[0], 0, layout.desk[1]]);
-    box(coach, [coachW, 3, 1250], [0, 1.5, 100], material('#3b4c53', { roughness: .95 }), 10);
-    for (const x of [-coachW / 2 + 75, coachW / 2 - 75]) box(coach, [12, 2, 1170], [x, 4, 100], lime);
+    box(coach, [coachW, 3, 1250], [0, 1.5, 100], material(...M.coachFloor), 10);
+    for (const x of [-coachW / 2 + 75, coachW / 2 - 75]) red ? strip(coach, [12, 2, 1170], [x, 4, 100], 0) : box(coach, [12, 2, 1170], [x, 4, 100], lime);
 
     const hydrate = group('hydration-station', 'Timber hydration cabinet', [layout.hydration[0], 0, layout.hydration[1]]);
     // A compact cabinet keeps the 60-inch desk's swept footprint clear in
@@ -262,13 +263,13 @@ export function buildGymRoom(room, root, layout, helpers) {
     const shelf = group('refuel-shelf', 'Floating towel, shaker and plant shelf', [-w / 2 + 270, 1480, bz], 0, wall);
     box(shelf, [440, 32, 230], [0, 0, 115], ash, 4);
     for (const x of [-160, 160]) box(shelf, [26, 120, 26], [x, -70, 30], steel);
-    instanced(shelf, unit, material('#ffffff', { roughness: .97 }), ['#eef0ea', '#c0ea50', '#7d8c93', '#eef0ea'].map((color, i) => ({ at: [-135 + (i % 2) * 5, 37 + i * 42, 110], size: [160, 40, 165], color })));
+    instanced(shelf, unit, material('#ffffff', { roughness: .97 }), I.towels.map((color, i) => ({ at: [-135 + (i % 2) * 5, 37 + i * 42, 110], size: [160, 40, 165], color })));
     instanced(shelf, cyl, material('#ffffff', { roughness: .45 }), [
-        { at: [-10, 101, 105], size: [40, 170, 40], color: '#22313a' }, { at: [-10, 196, 105], size: [34, 20, 34], color: '#c0ea50' },
-        { at: [70, 91, 125], size: [36, 150, 36], color: '#4ec9d5' }, { at: [70, 175, 125], size: [30, 18, 30], color: '#e9eee8' },
-        { at: [168, 61, 110], size: [46, 90, 46], color: '#d7d2c6' }
+        { at: [-10, 101, 105], size: [40, 170, 40], color: I.shakers[0] }, { at: [-10, 196, 105], size: [34, 20, 34], color: I.shakers[1] },
+        { at: [70, 91, 125], size: [36, 150, 36], color: I.shakers[2] }, { at: [70, 175, 125], size: [30, 18, 30], color: I.shakers[3] },
+        { at: [168, 61, 110], size: [46, 90, 46], color: I.shakers[4] }
     ]);
-    instanced(shelf, ball, material('#ffffff', { roughness: .7 }), [[-.18, .1, '#5f9a5a'], [.15, -.25, '#7bb066'], [.05, .3, '#4e8950'], [-.28, -.3, '#86b96d'], [.3, .2, '#5f9a5a'], [0, 0, '#6aa45f']].map(([rx, rz, color], i) => ({ at: [168 + rz * 90, 190 - i * 6, 110 + rx * 90], size: [10, 120 - i * 7, 24], rot: [rx, i * .9, rz], color })));
+    instanced(shelf, ball, material('#ffffff', { roughness: .7 }), [[-.18, .1], [.15, -.25], [.05, .3], [-.28, -.3], [.3, .2], [0, 0]].map(([rx, rz], i) => ({ at: [168 + rz * 90, 190 - i * 6, 110 + rx * 90], size: [10, 120 - i * 7, 24], rot: [rx, i * .9, rz], color: I.plants[i] })));
 
     const weights = group('dumbbell-rack', 'Two-tier free weight rack', [w / 2 - 320, 0, bz + 900], -Math.PI / 2);
     for (const x of [-580, 580]) {
@@ -285,7 +286,7 @@ export function buildGymRoom(room, root, layout, helpers) {
             for (const z of [-110, 110]) { heads.push({ at: [x, y + rad + 15, z], size: [rad, 70, rad], rot: [Math.PI / 2, 0, 0] }); caps.push({ at: [x, y + rad + 15, z * 1.33], size: [rad * .45, 6, rad * .45], rot: [Math.PI / 2, 0, 0] }); }
         }
     }
-    instanced(weights, hex, rubber, heads); instanced(weights, cyl, silver, handles); instanced(weights, cyl, silver, caps, false);
+    instanced(weights, hex, rubber, heads); instanced(weights, cyl, silver, handles); instanced(weights, cyl, red ? lime : silver, caps, false);
     label(weights, '02 / STRENGTH', [1140, 95], [0, 1010, 190]);
 
     const bench = (at, turn = 0) => {
@@ -312,7 +313,7 @@ export function buildGymRoom(room, root, layout, helpers) {
         rod(bike, [-270, 1110, -420], [270, 1110, -420], 18, rubber);
         rod(bike, [-260, 1110, -420], [-260, 1180, -570], 18, rubber); rod(bike, [260, 1110, -420], [260, 1180, -570], 18, rubber);
         box(bike, [230, 125, 18], [0, 1160, -450], graphite, 8);
-        label(bike, '24:08', [195, 85], [0, 1160, -437], '#c4f45b');
+        label(bike, '24:08', [195, 85], [0, 1160, -437], I.bikeScreen);
         rod(bike, [-170, 370, 70], [170, 370, 70], 13, silver);
         for (const s of [-1, 1]) box(bike, [100, 35, 160], [s * 200, 370 + s * 100, 70], rubber, 5);
     }
@@ -332,7 +333,7 @@ export function buildGymRoom(room, root, layout, helpers) {
         rod(rack, [-620, 2190, 460], [620, 2190, 460], 20, rubber);
         rod(rack, [-950, 1330, -390], [950, 1330, -390], 15, silver);
         const plates = [];
-        for (const s of [-1, 1]) for (let i = 0; i < 3; i++) plates.push({ at: [s * (760 + i * 40), 1330, -390], size: [210 - i * 35, 36, 210 - i * 35], rot: [0, 0, Math.PI / 2], color: i === 2 ? '#c0ea50' : '#1a252c' });
+        for (const s of [-1, 1]) for (let i = 0; i < 3; i++) plates.push({ at: [s * (760 + i * 40), 1330, -390], size: [210 - i * 35, 36, 210 - i * 35], rot: [0, 0, Math.PI / 2], color: I.plates[i === 2 ? 0 : 1] });
         instanced(rack, cyl, material('#ffffff', { roughness: .85 }), plates);
         label(rack, 'ERGO / STRONG', [1060, 105], [0, 2140, -426]);
         // A low stored box stays out of the lifter's bay.
@@ -340,6 +341,8 @@ export function buildGymRoom(room, root, layout, helpers) {
         // Rubber lifting platform with a timber centre insert.
         box(rack, [1150, 12, 1150], [0, 6, 0], rubber, 4);
         box(rack, [560, 3, 1150], [0, 13.5, 0], ash, 2);
+        // Black & red: an LED edge frame around the platform, within the rack's feet.
+        if (red) for (const s of [-1, 1]) { strip(rack, [12, 3, 1174], [s * 581, 1.5, 0], 0); strip(rack, [1150, 3, 12], [0, 1.5, s * 581], 0); }
     }
     if (tier >= 3) {
         const run = group('treadmill', 'Incline cardio treadmill', [-w / 2 + 710, 0, front - 2500]);
@@ -348,7 +351,7 @@ export function buildGymRoom(room, root, layout, helpers) {
         instanced(run, unit, graphite, Array.from({ length: 11 }, (_, i) => ({ at: [0, 186, -710 + i * 140], size: [610, 2, 4] })), false);
         for (const x of [-385, 385]) { rod(run, [x, 170, -700], [x, 1220, -540], 27, steel); rod(run, [x, 950, -510], [x, 950, 60], 18, rubber); strip(run, [10, 12, 1580], [x, 179, 65], 1); }
         box(run, [790, 210, 110], [0, 1240, -530], graphite, 18);
-        label(run, '06:42  /  8.0', [650, 100], [0, 1250, -470], '#65e3df');
+        label(run, '06:42  /  8.0', [650, 100], [0, 1250, -470], I.treadmillScreen);
     }
     if (tier === 4) {
         const bag = group('boxing-station', 'Freestanding boxing station', [1000, 0, front - 850]);
@@ -356,7 +359,7 @@ export function buildGymRoom(room, root, layout, helpers) {
         rod(bag, [0, 200, 0], [0, 850, 0], 55, steel);
         mesh(bag, new THREE.CylinderGeometry(190, 190, 1050, 32), graphite, [0, 1400, 0]);
         for (const y of [960, 1840]) mesh(bag, new THREE.CylinderGeometry(194, 194, 35, 32), lime, [0, y, 0]);
-        label(bag, 'MOVE', [250, 90], [0, 1450, 193], '#c0ed57');
+        label(bag, 'MOVE', [250, 90], [0, 1450, 193], I.bagText);
     }
 
     // Conditioning corner on the mirror wall: colour-coded kettlebells,
@@ -374,17 +377,17 @@ export function buildGymRoom(room, root, layout, helpers) {
         bells.push({ at: [0, cy, z], size: [r, r * .92, r], color });
         bellHandles.push({ at: [0, cy + r * 1.22, z], size: [r * .7, r * .7, r * .7], rot: [0, Math.PI / 2, 0] });
     };
-    [['#7c64b8', 100], ['#7c64b8', 100], ['#5e9e58', 106], ['#5e9e58', 106]].forEach(([color, r], i) => bell(r, 72, (i - 1.5) * (storeL - 140) / 4, color));
-    [['#4f8fc0', 78], ['#4f8fc0', 78], ['#d9c24a', 84], ['#d9c24a', 84]].forEach(([color, r], i) => bell(r, 432, (i - 1.5) * (storeL - 140) / 4, color));
+    [[I.bells[0][0], 100], [I.bells[0][0], 100], [I.bells[0][1], 106], [I.bells[0][1], 106]].forEach(([color, r], i) => bell(r, 72, (i - 1.5) * (storeL - 140) / 4, color));
+    [[I.bells[1][0], 78], [I.bells[1][0], 78], [I.bells[1][1], 84], [I.bells[1][1], 84]].forEach(([color, r], i) => bell(r, 432, (i - 1.5) * (storeL - 140) / 4, color));
     instanced(conditioning, ball, material('#ffffff', { roughness: .5, metalness: .1 }), bells);
-    instanced(conditioning, new THREE.TorusGeometry(1, .17, 8, 20), material('#6b787e', { metalness: .65, roughness: .38 }), bellHandles);
-    instanced(conditioning, ball, material('#ffffff', { roughness: .82 }), [['#2b3439', -390], ['#c0ea50', -150], ['#2b3439', 80]].map(([color, z], i) => ({ at: [i === 1 ? 20 : -10, 712 + 112 - i * 6, z * k], size: [112 - i * 6, 112 - i * 6, 112 - i * 6], color })));
-    instanced(conditioning, cyl, material('#ffffff', { roughness: .9 }), [['#46c9d6', 300, 0], ['#384850', 420, 0], ['#c0ea50', 360, 1]].map(([color, z, row]) => ({ at: [0, 712 + 62 + row * 112, z * k], size: [62, 380, 62], rot: [0, 0, Math.PI / 2], color })));
+    instanced(conditioning, new THREE.TorusGeometry(1, .17, 8, 20), material(...M.bellHandle), bellHandles);
+    instanced(conditioning, ball, material('#ffffff', { roughness: .82 }), [-390, -150, 80].map((z, i) => ({ at: [i === 1 ? 20 : -10, 712 + 112 - i * 6, z * k], size: [112 - i * 6, 112 - i * 6, 112 - i * 6], color: I.medBalls[i] })));
+    instanced(conditioning, cyl, material('#ffffff', { roughness: .9 }), [[300, 0], [420, 0], [360, 1]].map(([z, row], i) => ({ at: [0, 712 + 62 + row * 112, z * k], size: [62, 380, 62], rot: [0, 0, Math.PI / 2], color: I.mats[i] })));
     const rail = group('accessory-rail', 'Resistance bands, rope and rings rail', [side * w / 2, 1460, storeZ], -side * Math.PI / 2, side > 0 ? right : left);
     box(rail, [storeL, 560, 22], [0, 0, 11], ash, 6);
     instanced(rail, unit, steel, [-.38, -.13, .12, .37].map(f => ({ at: [f * storeL, 210, 70], size: [22, 22, 120] })), false);
     const loops = [];
-    [['#c0ea50', -.38, 1], ['#4ec9d5', -.38, .9], ['#7c64b8', -.13, 1], ['#1d2a30', .12, 1.1]].forEach(([color, f, s], i) => loops.push({ at: [f * storeL + i % 2 * 12, 210 - 150 * s, 95 + i * 6], size: [70 * s, 170 * s, 70 * s], rot: [0, 0, 0], color }));
+    [[-.38, 1], [-.38, .9], [-.13, 1], [.12, 1.1]].forEach(([f, s], i) => loops.push({ at: [f * storeL + i % 2 * 12, 210 - 150 * s, 95 + i * 6], size: [70 * s, 170 * s, 70 * s], rot: [0, 0, 0], color: I.bands[i] }));
     instanced(rail, new THREE.TorusGeometry(1, .09, 8, 26), material('#ffffff', { roughness: .6 }), loops);
     for (const s of [-1, 1]) {
         rod(rail, [.37 * storeL + s * 60, 210, 120], [.37 * storeL + s * 90, -60, 110], 6, rubber);
@@ -395,7 +398,7 @@ export function buildGymRoom(room, root, layout, helpers) {
     // Recovery corner: tactile timber, rolled towels, and a warmer light.
     const recover = group('recovery-wall', 'Recovery slats and towel rail', [-w / 2 + 30, 680, front - 1400], Math.PI / 2, left);
     instanced(recover, unit, oak, Array.from({ length: 17 }, (_, i) => ({ at: [-520 + i * 65, 0, 0], size: [25, 550, 35] })));
-    label(recover, 'BREATHE / RESET', [960, 100], [0, 170, 25], '#e9deca', '#5c675f');
+    label(recover, 'BREATHE / RESET', [960, 100], [0, 170, 25], ...I.recovery);
     const towels = group('towel-storage', 'Towel rail and recovery foam rollers', [w / 2 - 250, 0, front - 270]);
     box(towels, [350, 40, 500], [0, 20, 0], oak, 5);
     for (let i = 0; i < 3; i++) mesh(towels, new THREE.CylinderGeometry(52, 52, 480, 16), i === 1 ? lime : rubber, [(i - 1) * 110, 280, 0]);
@@ -413,19 +416,19 @@ export function buildGymRoom(room, root, layout, helpers) {
         { at: [w / 2 - 750, 1800, front - 1700], power: 3.2, channel: 1 },
         { at: [-w / 2 + 750, 1700, front - 800], power: 2.5, channel: 0, warm: true },
         { at: [tx, h - 420, tz], power: 4.2, channel: 1 }
-    ].map(spec => { const light = new THREE.PointLight('#d2ef9d', 0, 4500 * root.scale.x, 2); light.position.set(...spec.at); root.add(light); return { ...spec, light, power: spec.power * (root.scale.x * 1000) ** 2 }; });
-    const sessions = buildGymSessionDetail(room, layout, { group, box, mesh, rod, material, label, markSceneAsset }, { mat, weights, hydrate });
+    ].map(spec => { const light = new THREE.PointLight(T.lights.point, 0, 4500 * root.scale.x, 2); light.position.set(...spec.at); root.add(light); return { ...spec, light, power: spec.power * (root.scale.x * 1000) ** 2 }; });
+    const sessions = buildGymSessionDetail(room, layout, { group, box, mesh, rod, material, label, markSceneAsset }, { mat, weights, hydrate }, T);
     room.roomAtmosphere = (id, accent = 1) => {
-        const mode = GYM_MODES[id] || GYM_MODES.morning;
+        const mode = T.modes[id] || T.modes.morning;
         programmes.update(id); sessions.apply(id);
         const c = skyCanvas.getContext('2d'), grad = c.createLinearGradient(0, 0, 0, 512); grad.addColorStop(0, mode.sky[0]); grad.addColorStop(1, mode.sky[1]); c.fillStyle = grad; c.fillRect(0, 0, 512, 512);
-        c.fillStyle = '#455f6380'; for (let i = 0; i < 14; i++) c.fillRect(i * 40, 380 + i % 3 * 20, 30, 132); sky.needsUpdate = true;
+        c.fillStyle = C.blinds; for (let i = 0; i < 14; i++) c.fillRect(i * 40, 380 + i % 3 * 20, 30, 132); sky.needsUpdate = true;
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .12 + mode.wash * accent; });
-        washes.forEach(({ mat, channel, strength }) => mat.color.set(channel === 'warm' ? '#ffe2b8' : mode.colors[channel]).multiplyScalar(strength * (channel === 'warm' ? mode.practical : mode.wash) * accent));
+        washes.forEach(({ mat, channel, strength }) => mat.color.set(channel === 'warm' ? T.lights.warmWash : mode.colors[channel]).multiplyScalar(strength * (channel === 'warm' ? mode.practical : mode.wash) * accent));
         practicals.forEach(({ mat, strength }) => { mat.emissiveIntensity = (.25 + mode.practical * 1.1) * strength; });
         glassMat.emissiveIntensity = mode.glass;
         placeSun(mode.sun); sunMat.color.set(mode.sun[2]).multiplyScalar(mode.sun[3]); sunPatch.visible = mode.sun[3] > 0;
-        specs.forEach(spec => { spec.light.color.set(spec.warm ? '#f1d1a6' : '#e3ece9'); if (!spec.warm) spec.light.color.lerp(new THREE.Color(mode.colors[spec.channel]), id === 'party' ? .32 : .12); spec.light.intensity = spec.power * (spec.warm ? mode.practical : mode.wash) * accent; });
+        specs.forEach(spec => { spec.light.color.set(spec.warm ? T.lights.warm : T.lights.cool); if (!spec.warm) spec.light.color.lerp(new THREE.Color(mode.colors[spec.channel]), T.lightTint[id === 'party' ? 1 : 0]); spec.light.intensity = spec.power * (spec.warm ? mode.practical : mode.wash) * accent; });
         root.userData.atmosphere = id;
     };
     // Explicit surface roles keep detail off artwork and imported models.

@@ -35,7 +35,8 @@ import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
-import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-sessions-20261022';
+import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-black-red-20261104';
+import { themedGymLayout } from './gym-theme.mjs?v=gym-black-red-20261104';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=milano-seating-20261014';
 
@@ -1315,7 +1316,7 @@ export class WorkspaceRoom {
             this.roomLayout = options.layout ? kitchenLayoutById(options.layout) : kitchenLayoutForSize(options.size);
             scene = { ...scene, props: this.roomLayout.props, physical: true };
         } else if (id === 'gym') {
-            this.roomLayout = options.layout ? gymLayoutById(options.layout) : gymLayoutForSize(options.size);
+            this.roomLayout = themedGymLayout(options.layout ? gymLayoutById(options.layout) : gymLayoutForSize(options.size), options.gymTheme);
             scene = { ...scene, props: this.roomLayout.props, physical: true };
         } else if (id === 'study') {
             this.roomLayout = options.layout ? studyLayoutById(options.layout) : studyLayoutForSize(options.size);
