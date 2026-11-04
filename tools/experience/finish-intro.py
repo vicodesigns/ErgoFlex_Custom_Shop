@@ -84,7 +84,7 @@ def main():
         ass.append(line(1, 'Eyebrow', 812, t['eyebrow'], 0, 10))
         ass.append(line(1, 'Title', 912, t['title'], 140))
         ass.append(line(1, 'Detail', 970, t['detail'], 380, 10))
-    ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad(900,1300)\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
+    ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad(900,1400)\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
     open(os.path.join(out, 'titles.ass'), 'w').write('\n'.join(ass) + '\n')
 
     if '--titles-only' in sys.argv: return
@@ -96,8 +96,10 @@ def main():
         # Each stays centred on its EDL dissolve centre, so music sync and total hold.
         # An entry may be [duration, shift]: shift (s) moves the dissolve off its
         # centre, e.g. to finish before an on-screen beat. It must stay within the handles.
+        # A third field picks the xfade type (default fade), e.g. [1.5, 0, 'smoothleft'] or
+        # [0.8, 0, 'fadeblack'] for seams where a cross-dissolve would show two desks at once.
         tr = [v if isinstance(v, list) else [v, 0] for v in edl.get('transitions', [X] * (len(ch) - 1))]
-        xd = [min(X, float(v[0])) for v in tr]; xs = [float(v[1]) for v in tr]
+        xd = [min(X, float(v[0])) for v in tr]; xs = [float(v[1]) for v in tr]; xt = [v[2] if len(v) > 2 else 'fade' for v in tr]
         tail_trim = lambda i: X / 2 - xs[i] - xd[i] / 2      # removed from chapter i's end
         head_trim = lambda i: X / 2 + xs[i - 1] - xd[i - 1] / 2  # removed from chapter i's start
         assert all(tail_trim(i) >= -1e-6 and head_trim(i + 1) >= -1e-6 for i in range(len(ch) - 1)), 'dissolve shift exceeds the handles'
@@ -123,7 +125,7 @@ def main():
         prev = 'c0'; acc = span(0)
         for i in range(1, len(ch)):
             xdur = xd[i - 1]; off = acc - xdur
-            filters.append(f'[{prev}][c{i}]xfade=transition=fade:duration={xdur}:offset={off:.4f}[x{i}]')
+            filters.append(f'[{prev}][c{i}]xfade=transition={xt[i - 1]}:duration={xdur}:offset={off:.4f}[x{i}]')
             prev = f'x{i}'; acc = off + span(i)
         li = len(ch)
         inputs += ['-loop', '1', '-framerate', str(fps), '-i', os.path.join(d, 'post', 'logo-color.png'),

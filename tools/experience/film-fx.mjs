@@ -15,8 +15,11 @@
 //   ledMode:'media'  ledSource=<target or index into screens>  ledPreset='normal'|'calm'|'intense'|'full'
 //   ledGlow:0…1   LED brightness as a fraction of full (stage default .35)
 //   ledSurfaces:{desktopStrength:0…200, floorStrength, shelfStrength, …}  the app's LED surface sliders
+//   deskObjects:{<object id>: {p:{x,y,z}, q:{x,y,z,w}}}  place the featured desk's objects as saved
+//     in a studio state (the stage resets a layout room's saved desks to the authored defaults)
+//   ledColor:'#f19c00'  the LED colour for the shot (the app's colour picker), restored after
 //   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
-//   sceneGlobals:{environmentScale, exposure}  image-based ambient multiplier, renderer exposure
+//   sceneGlobals:{environmentScale, exposure}  image-based ambient multiplier (or [[s, scale], …]), renderer exposure
 //   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
 //   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
 //   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
@@ -417,14 +420,26 @@ function clearDeskObjects(d) {
 }
 
 // ---------- public API ----------
+// The desk's bounding-box centre in world space (render-cut --list-objects).
+export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedModel), c = b.getCenter(new THREE.Vector3()); return [c.x, b.min.y, c.z]; }
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles;
+  const wants = shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
-  if (active.desk.added.length || active.desk.toggled.length) await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  if (shot.deskObjects) {
+    // The app's own object editor, as stage.mjs places the keyboard: select, change, deselect.
+    const objects = api.sceneDesks?.objects, deg = THREE.MathUtils.radToDeg; active.desk.placed = [];
+    for (const [id, t] of Object.entries(shot.deskObjects)) {
+      const e = new THREE.Euler().setFromQuaternion(new THREE.Quaternion(t.q.x, t.q.y, t.q.z, t.q.w));
+      objects?.select(id); if (objects?.selected !== id) { console.warn('[film-fx] deskObjects: no object ' + id + ' on the featured desk'); continue; }
+      objects.change({ x: t.p.x, y: t.p.y, z: t.p.z, rotation: deg(e.y), tilt: deg(e.x), roll: deg(e.z) }); active.desk.placed.push(id);
+    }
+    objects?.select(null); await objects?.ready;
+  }
+  if (active.desk.added.length || active.desk.toggled.length || shot.deskObjects) await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const list = active.list = discover(shot);
   active.screens = await installScreens(shot, list);
   if (shot.ledMode === 'media') {
@@ -437,21 +452,29 @@ export async function install(shot) {
     let sc = api.loadedModel; while (sc.parent) sc = sc.parent; const g = shot.sceneGlobals;
     active.globals = { env: sc.environmentIntensity, exposure: api.renderer.toneMappingExposure, scene: sc };
     if (Number.isFinite(g.environmentScale)) sc.environmentIntensity *= g.environmentScale;
+    // Keyframed [[seconds, scale], …] (e.g. lights out at the end of a chapter), applied per frame.
+    else if (Array.isArray(g.environmentScale)) active.globals.envKeys = g.environmentScale;
     if (Number.isFinite(g.exposure)) api.renderer.toneMappingExposure = g.exposure;
   }
   // ledSurfaces: the app's LED surface sliders (desktopStrength, floorStrength, …), restored after the shot.
   if (shot.ledSurfaces) { active.surfaces = api.ledSurfaces; for (const [k, v] of Object.entries(shot.ledSurfaces)) api.setLedSurface(k, v, false); }
+  if (shot.ledColor) { active.ledColor = api.ledColor; api.setLedColor(shot.ledColor, false); }
   // ledGlow: the app's LED brightness slider as a fraction of full (the stage uses .35).
   if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
   if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
   if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
   if (shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
   if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
-  return { accessories: active.desk.added.length + active.desk.toggled.length, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count };
+  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count };
 }
 export async function frame(t, chapterSeconds, { video = false } = {}) {
   if (!active) return;
   if (active.tod) active.tod.apply(chapterSeconds);
+  if (active.globals?.envKeys) {
+    const k = active.globals.envKeys, i = k.findIndex(p => p[0] > chapterSeconds);
+    const v = i < 0 ? k.at(-1)[1] : i === 0 ? k[0][1] : k[i - 1][1] + (k[i][1] - k[i - 1][1]) * (chapterSeconds - k[i - 1][0]) / (k[i][0] - k[i - 1][0]);
+    active.globals.scene.environmentIntensity = active.globals.env * v;
+  }
   active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds);
   if (active.screens.length) await updateScreens(active.screens, chapterSeconds);
   if (active.clocks.length) setClocks(active.clocks, active.shot.clock, active.shot, chapterSeconds);
@@ -478,6 +501,7 @@ export function clear() {
   if (active.clocks.length) restoreClocks(active.clocks);
   if (active.globals) { active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; }
   if (active.surfaces) for (const [k, v] of Object.entries(active.surfaces)) api.setLedSurface(k, v, false);
+  if (active.ledColor) api.setLedColor(active.ledColor, false);
   active.status?.clear();
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();

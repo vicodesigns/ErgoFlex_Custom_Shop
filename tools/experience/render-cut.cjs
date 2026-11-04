@@ -40,7 +40,7 @@
 //   lights:[{preset:'productRig', scale, key/rimLeft/rimRight/pool/contact:
 //     {…}|false} | {type:'rect'|'spot'|'point'|'directional', position|at:
 //     {az,el,dist}, target, color, intensity, width, height, angle, penumbra}]
-// --list-screens: print every screen-like mesh (and clock) for the shots,
+// --list-screens [--list-at 0.5] [--list-objects '^Room:|leap']: print every screen-like mesh (and clock) for the shots,
 //   with world position, size, aspect, facing and on-screen pixel size; also
 //   writes <out>/NN-screens.json.
 // --storage seed.json (localStorage key → string, e.g. saved builds/artwork, or
@@ -88,7 +88,7 @@ async function stage(browser){
 }
 
 // Shots that use film-effect fields load the helper into the stage iframe.
-const FX_FIELDS=['screens','ledMode','ledGlow','ledSurfaces','ledGain','sceneGlobals','clock','timeOfDay','accessories','sceneEdits','lights','ledStatus','obstacles'];
+const FX_FIELDS=['deskObjects','screens','ledMode','ledGlow','ledSurfaces','ledGain','ledColor','sceneGlobals','clock','timeOfDay','accessories','sceneEdits','lights','ledStatus','obstacles'];
 const usesFx=shot=>FX_FIELDS.some(k=>shot[k]!==undefined);
 async function loadFx(frame){await frame.evaluate(async()=>{if(!window.__filmFx)window.__filmFx=await import('/tools/experience/film-fx.mjs');});}
 async function grab(frame,t,seconds,quality=.96,chapter=seconds,video=false){
@@ -150,7 +150,17 @@ async function listShot(frame,i){
   const shot=cut.shots[i],tag=pad(i);await loadFx(frame);
   await frame.evaluate(async s=>{window.__filmFx.clear();window.__filmFx.beforePrepare(s);try{await window.ErgoPresentation.prepare(s);}finally{window.__filmFx.unhookPreset();}},shot);
   if(shot.accessories)await frame.evaluate(s=>window.__filmFx.install({id:s.id,room:s.room,seconds:s.seconds,accessories:s.accessories}),shot);
-  const result=await frame.evaluate(s=>({screens:window.__filmFx.listScreens(s),clocks:window.__filmFx.listClocks()}),shot);
+  // --list-at <fraction>: bake that moment first, so the desk's pose (clips, motion.initial) is applied.
+  const at=opts['list-at']!==undefined?Number(opts['list-at']):null;
+  if(at!==null)await frame.evaluate(async(t,s)=>{window.__rc=document.createElement('canvas');window.__rc.width=320;window.__rc.height=180;window.ErgoPresentation.beginBake(320,180);await window.ErgoPresentation.bakeFrame(t,window.__rc,s);},at,at*shot.seconds);
+  const result=await frame.evaluate((s,re)=>{
+    const out={screens:window.__filmFx.listScreens(s),clocks:window.__filmFx.listClocks()};
+    // --list-objects <regex>: world position and yaw of matching objects (plus the desk's pivot).
+    if(re){const m=window.ErgoFlex.loadedModel;let root=m;while(root.parent)root=root.parent;root.updateMatrixWorld(true);const r=new RegExp(re,'i'),q=o=>{const p=o.getWorldPosition(o.position.clone()),e=new o.quaternion.constructor();o.getWorldQuaternion(e);return {name:o.name,position:[p.x,p.y,p.z].map(v=>+v.toFixed(4)),yaw:+(2*Math.atan2(e.y,e.w)*180/Math.PI).toFixed(2)};};
+      const box=window.__filmFx.deskBox?.();out.objects=[{...q(m),name:'(desk pivot) '+m.name}];if(box)out.objects.push({name:'(desk box centre)',position:box.map(v=>+v.toFixed(4)),yaw:0});root.traverse(o=>{if(o!==m&&r.test(o.name))out.objects.push(q(o));});}
+    return out;},shot,opts['list-objects']||null);
+  if(at!==null)await frame.evaluate(()=>window.ErgoPresentation.endBake());
+  for(const o of result.objects||[])console.log(`  object ${o.name}  at [${o.position.join(', ')}] yaw ${o.yaw}°`);
   await frame.evaluate(()=>window.__filmFx.clear());
   fs.writeFileSync(path.join(opts.out,tag+'-screens.json'),JSON.stringify({shot:shot.id,room:shot.room,seconds:shot.seconds,...result},null,1));
   console.log(`\n${tag} ${shot.id} (${shot.room}${shot.layout?'/'+shot.layout:''}, ${shot.kind}) — ${result.screens.length} screens, ${result.clocks.length} clocks`);

@@ -1,42 +1,55 @@
 #!/usr/bin/env python3
-"""Redo chapter 6 ('status') as the safety chapter (HQ7).
+"""Chapter 6 ('status') as the safety chapter, v2 (HQ8).
 
-    python3 tools/experience/build-safety-chapter.py exports/cinematic-intro-20261103-hq7
+    python3 tools/experience/build-safety-chapter.py exports/cinematic-intro-20261103-hq8
 
 Edits <dir>/review-cut.json, edl.json and titles-src.json in place (the folder
-starts as a copy of HQ6) and writes <dir>/shots/06.json plus
+starts as a copy of HQ7) and writes <dir>/shots/06.json plus
 <dir>/shots/06-subshots.json, a cut with three copies of the chapter that share
 the desk performance and differ only in camera and renderRange:
 
-  A 0.0-5.0   low front 3/4, trucking left like coast's exit    lift up, blue wavefront
-  B 4.2-11.0  the other front 3/4, higher, slow push            green on arrival, 90 deg turn
-  C 10.2-16.0 low front 3/4 of the new heading, crane up        roll forward, amber comet, green
+  A 0.0-3.2   low front 3/4, trucking left like coast's exit    lift up, blue (strip 2 dark)
+  B 2.4-7.1   side 3/4 from the desk's right, desktop height     tilt -5 to 0 (purple), regular, 45 deg turn
+  C 6.3-16.0  low 3/4 across the travel line, crane up           roll to one pylon, amber stop, back up, regular
 A>B and B>C are 0.8 s dips through black while the desk moves (join-subshots.py
---transition fadeblack: Vico's "fade out, fade in at a different angle"). In and out of the chapter are 1.5 s dissolves, like
-every other dark-studio seam. The chapter stays 16 s, so nothing after it moves.
-Direction: /home/ergo/logs/status_chapter_direction_2026-11-03.md. Light colours
-and effects are the app's (film-status.mjs, unchanged); no pylon (ch 9 has the
-proximity stop).
+--transition fadeblack). In and out of the chapter are 1.5 s dissolves. The chapter
+stays 16 s, so nothing after it moves.
+Direction: /home/ergo/logs/safety_chapter_direction_v2_2026-11-03.md (and v1).
+Light colours and effects are the desk's (film-status.mjs). No green and no arrival
+flash: each state fades back to the regular look. The proximity stop holds two of the
+desk's real breaths (one per ~3.1 s) for Vico's "flashes a couple of times".
 """
 import json, os, subprocess, sys, copy, math
 d = sys.argv[1]
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SECONDS = 16
-SUB = {'A': (0.0, 5.0), 'B': (4.2, 11.0), 'C': (10.2, 16.0)}
+SUB = {'A': (0.0, 3.2), 'B': (2.4, 7.1), 'C': (6.3, 16.0)}
 
 def clip(id, lane, kind, start, dur, easing='smooth', label='', **kw):
     c = {'id': id, 'lane': lane, 'kind': kind, 'start': start, 'duration': dur, 'easing': easing, 'label': label}; c.update(kw); return c
 
-# The lift lands (and the green flashes) on the beat at film 91.43 s, where the chime sits.
-# Three motions, eased, at real-desk speeds (lift avg 2.7 in/s, turn peak 32 deg/s, roll peak 7.5 in/s).
-clips = [clip('sf-lift', 'lift', 'lift', 0.4, 5.53, label='Lift up', target=43),
-         clip('sf-turn', 'wheels', 'rotate', 7.2, 4.2, label='Turn', value=90, direction='left'),
-         clip('sf-roll', 'wheels', 'travel', 11.4, 2.8, label='Roll forward', value=14, direction='forward')]
-# One light state per beat: blue, green, comet, comet with amber, green. The left turn is drive
-# mode 5 (HQ6 lit its right turn with mode 6).
-status = [{'at': 0.4, 'dur': 5.53, 'kind': 'lift-up'}, {'at': 5.93, 'dur': 0.9, 'kind': 'target'},
-          {'at': 7.2, 'dur': 4.2, 'kind': 'wheels', 'mode': 5}, {'at': 11.4, 'dur': 2.8, 'kind': 'wheels', 'mode': 3},
-          {'at': 14.2, 'dur': 1.0, 'kind': 'target'}]
+# Real-desk speeds: lift 3.2 in/s avg, tilt 4 deg/s, turn peak 31 deg/s, roll peak 6.6 in/s, back-up peak 3.8 in/s.
+TURN, ROLL, BACK = 45, 7, 3
+clips = [clip('sf-lift', 'lift', 'lift', 0.2, 3.8, label='Lift up', target=40),
+         clip('sf-tilt', 'tilt', 'tilt', 3.4, 1.2, label='Tilt level', target=0),
+         clip('sf-turn', 'wheels', 'rotate', 5.6, 2.2, label='Turn', value=TURN, direction='left'),
+         clip('sf-roll', 'wheels', 'travel', 7.8, 1.6, label='Roll to the pylon', value=ROLL, direction='forward'),
+         clip('sf-back', 'wheels', 'travel', 12.7, 1.2, label='Back away', value=BACK, direction='backward')]
+# One light state per beat; the most recent axis wins (tilt replaces the lift's blue).
+# Proximity starts dark, peaks at 10.95 and 14.05, latched through the back-up; released
+# at 14.1, it fades back to the regular look by 15.1, before the out dissolve's midpoint.
+status = [{'at': 0.2, 'dur': 3.2, 'kind': 'lift-up'}, {'at': 3.4, 'dur': 1.2, 'kind': 'tilt-retract'},
+          {'at': 5.6, 'dur': 2.2, 'kind': 'wheels', 'mode': 5}, {'at': 7.8, 'dur': 1.6, 'kind': 'wheels', 'mode': 3},
+          {'at': 9.4, 'dur': 4.7, 'kind': 'proximity'}]
+# World placement, measured (render-cut --list-screens --list-at, the monitor's track): the turn
+# pivots about (-0.119, 0.052), the stage is 0.0384 units per inch, and the roll runs along f.
+PIVOT, UNIT = (-0.119, 0.052), 0.0384
+f = [math.cos(math.radians(TURN)), 0, math.sin(math.radians(TURN))]
+stop = [PIVOT[0] + ROLL * UNIT * f[0], PIVOT[1] + ROLL * UNIT * f[2]]
+# The pylon stands 1.15 units ahead of the stopped pivot: the base's front plus a gap of
+# more than one pylon diameter.
+pylon = [round(stop[0] + 1.15 * f[0], 3), round(stop[1] + 1.15 * f[2], 3)]
+obstacles = [{'at': pylon, 'radius': 0.09, 'height': 0.5, 'rise': [6.4, 7.0]}]
 
 def key(at, pos, tgt, fov, label=None):
     k = {'at': at, 'position': [round(v, 3) for v in pos], 'target': [round(v, 3) for v in tgt], 'fov': fov}
@@ -53,29 +66,33 @@ def basis(pos, tgt):
 pA, tA = [6.2, 1.45, -3.6], [0.0, 1.2, 0.0]
 fA, rA = basis(pA, tA)
 tA0 = add(tA, rA, 0.15)                       # aim right of the desk: desk sits centre-left
-truck = [-0.3 * 5 * c for c in rA]            # 0.3 /s to camera-left
-push = [0.15 * 5 * c for c in fA]
-camA = {'easeIn': False, 'easeOut': False, 'keys': [
+truck = [-0.25 * 3.2 * c for c in rA]         # 0.25 m/s to camera-left
+push = [0.15 * 3.2 * c for c in fA]
+camA = {'easeIn': False, 'easeOut': True, 'keys': [
     key(0.0, pA, tA0, 30, 'Low front 3/4, trucking left'),
-    key(2.5, add(pA, add(truck, push), 0.5), add(tA0, truck, 0.5), 29),
-    key(5.0, add(pA, add(truck, push)), add(tA0, truck), 28)]}
-# B: the other front 3/4, higher, a slow push; the desk turns against a still frame.
-pB, tB = [4.6, 2.7, 4.3], [0.0, 1.0, 0.0]
+    key(1.6, add(pA, add(truck, push), 0.5), add(tA0, truck, 0.5), 29),
+    key(3.2, add(pA, add(truck, push)), add(tA0, truck), 28)]}
+# B: side 3/4 from the desk's right (+z), lens at desktop height so the front edge reads as a
+# line against black; still while it tilts level, then a 0.1 m/s push. Desk in the right 60 %.
+pB, tB = [3.75, 1.05, 6.5], [0.0, 1.0, 0.0]                # 7.5 m out, 60 deg from the front
 fB, rB = basis(pB, tB)
-tB0 = add(tB, rB, -0.55)                      # desk right of centre (matches A's end)
+tB0 = add(tB, rB, -0.4)
 camB = {'easeIn': False, 'easeOut': False, 'keys': [
-    key(4.2, pB, tB0, 30, 'Other 3/4, higher'),
-    key(7.6, add(pB, fB, 0.2), add(tB0, rB, 0.05), 30),
-    key(11.0, add(pB, fB, 0.4), add(tB0, rB, 0.1), 30)]}
-# C: after the left turn the desk faces world +z (director yaw +90 = right turns +x toward -z); low front-right 3/4 looking down the roll,
-# still until the stop, then crane up and ease back into oilers' opening crane.
-pC, tC = [-3.4, 1.75, 6.4], [0.0, 1.2, 0.6]
-fC, rC = basis(pC, tC)
-tC0 = add(tC, rC, -0.75)
+    key(2.4, pB, tB0, 28, 'Side 3/4, desktop height'),
+    key(4.6, pB, tB0, 28),
+    key(7.1, add(pB, fB, 0.25), tB0, 28)]}
+# C: after the 45 deg left turn the desk heads along f; the camera sits 65 deg off that line
+# (front-left 3/4) so the closing gap to the pylon reads across frame. Still, then from 14.0
+# a 0.3 m/s crane up and back into oilers' opening crane, desk ending centre-right.
+desk_at = [stop[0] + 0.3 * f[0], stop[1] + 0.3 * f[2]]
+M = [(desk_at[0] + pylon[0]) / 2, 0.75, (desk_at[1] + pylon[1]) / 2]   # between the desk and the pylon
+a = math.radians(TURN + 65); pC = [M[0] + 7.2 * math.cos(a), 1.3, M[2] + 7.2 * math.sin(a)]
+fC, rC = basis(pC, M)
+desk_end = [desk_at[0] - BACK * UNIT * f[0], 0.85, desk_at[1] - BACK * UNIT * f[2]]
 camC = {'easeIn': False, 'easeOut': False, 'keys': [
-    key(10.2, pC, tC0, 29, 'Low front 3/4, down the roll'),
-    key(13.8, add(pC, fC, 0.25), tC0, 29),
-    key(16.0, add(add(pC, fC, -2.4), [0, 0.9, 0]), add(add(tC0, rC, -0.25), [0, 0.15, 0]), 29, 'Crane up')]}
+    key(6.3, pC, M, 30, 'Low 3/4 across the roll'),
+    key(14.0, pC, M, 30),
+    key(16.0, add(add(pC, fC, -0.5), [0, 0.45, 0]), add(desk_end, rC, -1.0), 30, 'Crane up')]}
 
 cut = json.load(open(os.path.join(d, 'review-cut.json')))
 i6 = next(i for i, s in enumerate(cut['shots']) if s['id'] == 'status')
@@ -83,9 +100,9 @@ old = cut['shots'][i6]
 shot = {'id': 'status', 'room': 'product', 'kind': 'glide', 'seconds': SECONDS, 'title': 'Safe for everyone around it.',
         'detail': 'Light and sound let everyone know when it moves.', 'preset': old['preset'], 'transition': 1.5,
         'size': old['size'], 'lights': old['lights'],
-        'motion': {'version': 2, 'initial': {'height': 28, 'tilt': 0, 'x': 0, 'z': 0, 'yaw': 0}, 'clips': clips},
+        'motion': {'version': 2, 'initial': {'height': 28, 'tilt': -5, 'x': 0, 'z': 0, 'yaw': 0}, 'clips': clips},
         'ledGlow': 1, 'ledSurfaces': {'desktopStrength': 15, 'floorStrength': 160, 'baseStrength': 120},
-        'ledStatus': status, 'sceneEdits': copy.deepcopy(old['sceneEdits'])}
+        'ledStatus': status, 'obstacles': obstacles, 'sceneEdits': copy.deepcopy(old['sceneEdits'])}
 os.makedirs(os.path.join(d, 'shots'), exist_ok=True)
 subs = []
 for name, cam in (('A', camA), ('B', camB), ('C', camC)):
@@ -93,7 +110,7 @@ for name, cam in (('A', camA), ('B', camB), ('C', camC)):
     f = os.path.join(d, 'shots', f'06{name.lower()}.json'); json.dump(s, open(f, 'w'), indent=1)
     subprocess.run(['node', os.path.join(root, 'tools/experience/camera-spline.mjs'), f], check=True, stdout=subprocess.DEVNULL)
     s = json.load(open(f)); s['renderRange'] = list(SUB[name]); s['subshot'] = name; subs.append(s); os.remove(f)
-json.dump({'name': 'HQ7 safety chapter sub-shots', 'shots': subs}, open(os.path.join(d, 'shots', '06-subshots.json'), 'w'))
+json.dump({'name': 'HQ8 safety chapter sub-shots', 'shots': subs}, open(os.path.join(d, 'shots', '06-subshots.json'), 'w'))
 # The cut keeps one shot for the chapter (B's camera, the title shot) so review tools still read it.
 main = dict(copy.deepcopy(subs[1])); main.pop('renderRange'); main.pop('subshot'); main['subshots'] = {k: v for k, v in SUB.items()}
 json.dump(main, open(os.path.join(d, 'shots', '06.json'), 'w'), indent=1)

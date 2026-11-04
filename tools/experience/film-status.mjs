@@ -3,18 +3,26 @@
 // disposable stage iframe. Nothing in the app imports it.
 //
 //   ledStatus:[{at, dur, kind, mode?}]   times in chapter seconds
-//     kind 'lift-up'      FX34 vertical wavefront, blue   (ColorLiftUp   0,0,255)
-//          'lift-down'    FX34 reversed wavefront, red    (ColorLiftDown 255,0,0)
+//     kind 'lift-up'      FX34 vertical wavefront, blue   (ColorLiftUp   0,0,255); strip 2 dark
+//          'lift-down'    FX34 reversed wavefront, red    (ColorLiftDown 255,0,0); strip 2 dark
+//                         (the API's liftDarkStrips, ergoled_native_anim.go)
+//          'tilt-extend'  FX35 sway, yellow 255,255,0;  'tilt-retract' FX35 reversed, purple 150,0,255
 //          'wheels'       FX36 comet, travel red with caution amber; mode = drive mode 1-10
 //                         1 strafe L, 2 strafe R, 3 fwd, 4 back, 5 CW, 6 CCW,
 //                         7 diag L-fwd, 8 diag L-back, 9 diag R-fwd, 10 diag R-back
-//          'target'       solid green, ColorTargetReached 0,255,0 (fades out over 0.25 s)
+//                         Rotation (5/6): the wings (strips 5, 6) run like the real desk's
+//                         (firmware fxWheels), every other strip keeps the preview's reversal.
 //          'collision'    latched breathing red, the app's roomSafety 'collision' look
-//          'proximity'    latched breathing amber, the app's roomSafety 'ahead' look
+//          'proximity'    latched amber, the desk's FX2 breathe (sx 150: one breath per ~3.1 s,
+//                         ERGOLED_BREATHE_SHAPE 1, dark at the bottom), starting dark
+//     No arrival light: when a state ends the strips fade (fade s, default 1) back to the
+//     regular look, the colour the shot started with, as the desk restores its snapshot.
 //     The animation is the app's own: led-movement.mjs sampleMovementInto (the
 //     source-derived firmware FX 34/35/36), fed to the strips through the same
 //     LedGameMode.sample hook that film-fx uses for media mode.
 //   obstacles:[{x=0, ahead=.4, from='desk'|'base', radius=.09, height=.5, rise:[t0,t1]}]
+//     at:[x, z] places it in world space; heading (deg, + = left turn) and travel (scene units rolled along it) place the pylon
+//     ahead of the desk after a turn and a roll; without them it is ahead along +x.
 //     A simulated pylon, styled like the stage's proximity pylons. ahead is the gap
 //     in scene units between the desk's (or, from:'base', the base's front at the pylon's height) initial front (+x) edge and the pylon's near
 //     face; x is sideways from the desk's centre. rise eases its scale in.
@@ -22,12 +30,14 @@ import * as THREE from 'three';
 import { sampleMovementInto } from '../../led-movement.mjs';
 
 const api = window.ErgoFlex;
-const ZERO = [0, 0, 0, 0], RED = [255, 0, 0, 0], BLUE = [0, 0, 255, 0], AMBER = [255, 70, 0, 0];
+const ZERO = [0, 0, 0, 0], RED = [255, 0, 0, 0], BLUE = [0, 0, 255, 0], AMBER = [255, 70, 0, 0], YELLOW = [255, 255, 0, 0], PURPLE = [150, 0, 255, 0];
 const smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
 
 function movement(ev) {
-  if (ev.kind === 'lift-up') return { fx: 34, ix: 0, sx: 160, colors: [BLUE, BLUE, ZERO] };
-  if (ev.kind === 'lift-down') return { fx: 34, ix: 128, sx: 160, colors: [RED, RED, ZERO] };
+  if (ev.kind === 'lift-up') return { fx: 34, ix: 0, sx: 160, colors: [BLUE, BLUE, ZERO], dark: [2] };
+  if (ev.kind === 'lift-down') return { fx: 34, ix: 128, sx: 160, colors: [RED, RED, ZERO], dark: [2] };
+  if (ev.kind === 'tilt-extend') return { fx: 35, ix: 0, sx: 160, colors: [YELLOW, YELLOW, ZERO] };
+  if (ev.kind === 'tilt-retract') return { fx: 35, ix: 128, sx: 160, colors: [PURPLE, PURPLE, ZERO] };
   if (ev.kind === 'wheels') return { fx: 36, ix: ev.mode, sx: 180, reverseRotation: ev.mode === 5 || ev.mode === 6, colors: [RED, RED, AMBER] };
   return null;
 }
@@ -36,7 +46,8 @@ export function installStatus(shot) {
   const game = api.ledGameMode, counts = game.counts;
   const frame = counts.map(n => new Uint8Array(n * 4)), events = (shot.ledStatus || []).map(e => ({ ...e }));
   const group = new THREE.Group(); group.name = 'Film status'; group.userData.filmFx = true;
-  const pylons = [];
+  const pylons = [], regular = api.ledColor || '#ffffff';
+  const regularRgb = [1, 3, 5].map(i => parseInt(regular.slice(i, i + 2), 16));
   if (shot.obstacles?.length) {
     let scene = api.loadedModel; while (scene.parent) scene = scene.parent; scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(api.loadedModel), c = box.getCenter(new THREE.Vector3());
@@ -54,7 +65,13 @@ export function installStatus(shot) {
       const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r * .85, r, h, 24),
         new THREE.MeshStandardMaterial({ color: 0x163344, metalness: .6, roughness: .3, emissive: 0x0873a4, emissiveIntensity: .6 }));
       // The desk's forward (director +z, the app's wheel mode 3) is world +x; x here is sideways in world z.
-      mesh.position.set((o.from === 'base' ? frontAt(h) : box.max.x) + (o.ahead ?? .4) + r, box.min.y + h / 2, c.z + (o.x ?? 0));
+      const front = (o.from === 'base' ? frontAt(h) : box.max.x) + (o.ahead ?? .4) + r;
+      if (o.at) mesh.position.set(o.at[0], box.min.y + h / 2, o.at[1]);   // explicit world [x, z]
+      else if (o.heading !== undefined) {
+        // Along the desk's heading after a turn, from its pivot (the model's origin).
+        const pv = api.loadedModel.getWorldPosition(new THREE.Vector3()), a = o.heading * Math.PI / 180, d = front - pv.x + (o.travel ?? 0);
+        mesh.position.set(pv.x + Math.cos(a) * d - Math.sin(a) * (o.x ?? 0), box.min.y + h / 2, pv.z + Math.sin(a) * d + Math.cos(a) * (o.x ?? 0));
+      } else mesh.position.set(front, box.min.y + h / 2, c.z + (o.x ?? 0));
       mesh.castShadow = true; mesh.name = 'Film obstacle'; mesh.userData.filmFx = true;
       pylons.push({ mesh, h, y0: box.min.y, rise: o.rise || [0, 0] }); group.add(mesh);
     }
@@ -67,21 +84,40 @@ export function installStatus(shot) {
         p.mesh.visible = u > 0; p.mesh.scale.y = Math.max(.001, u); p.mesh.position.y = p.y0 + p.h * u / 2;
       }
       const ev = events.find(e => seconds >= e.at && seconds < e.at + e.dur);
-      if (!ev) { game.active = false; delete game.sample; return; }
+      const hex = c => '#' + c.slice(0, 3).map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+      if (!ev) {
+        // Fade from the last state's final frame back to the regular look.
+        const done = events.filter(e => e.at + e.dur <= seconds).at(-1), u = done ? (seconds - done.at - done.dur) / (done.fade ?? 1) : 1;
+        if (!done?.last || u >= 1) { api.setLedColor(regular, false); game.active = false; delete game.sample; return; }
+        const k = smooth(u);
+        for (let i = 0; i < frame.length; i++) for (let p = 0; p < frame[i].length; p += 4) for (let c = 0; c < 4; c++) frame[i][p + c] = Math.round(done.last[i][p + c] * (1 - k) + (c < 3 ? regularRgb[c] : 0) * k);
+        api.setLedColor(hex(done.spill.map((v, c) => v * (1 - k) + regularRgb[c] * k)), false);
+        game.sample = out => { out.forEach((row, i) => row.set(frame[i])); return true; };
+        game.active = true; return;
+      }
       const t = seconds - ev.at, m = movement(ev);
-      if (m) sampleMovementInto(frame, { ...m, elapsedMs: t * 1000 });
-      else {
-        let rgb, gain = 1;
-        if (ev.kind === 'target') { rgb = [0, 255, 0]; gain = Math.min(1, (ev.dur - t) / .25); }
-        else {
-          gain = .72 + .28 * Math.sin(t * 3) ** 2; // the app's roomSafety pulse (studio.js updateLedEffectFrame)
-          rgb = ev.kind === 'proximity' ? [255, 145, 8] : [255, 16, 12];
+      if (m) {
+        sampleMovementInto(frame, { ...m, elapsedMs: t * 1000 });
+        if (m.reverseRotation) {
+          // The wings run like the real desk's: re-sample rows 5 and 6 with the physical mode.
+          const wings = counts.map(n => new Uint8Array(n * 4));
+          sampleMovementInto(wings, { ...m, reverseRotation: false, elapsedMs: t * 1000 });
+          frame[5].set(wings[5]); frame[6].set(wings[6]);
         }
+        for (const id of m.dark || []) frame[id].fill(0);
+      } else {
+        let rgb, gain;
+        if (ev.kind === 'proximity') {
+          // FX2 breathe: +0.0671 rad per 33 ms frame (sx 150), pulse = sin(angle / 2).
+          const angle = (t * 1000 / 33 * (0.02 + 150 / 255 * 0.08)) % (2 * Math.PI);
+          gain = Math.sin(angle / 2); rgb = [255, 145, 8];
+        } else { gain = .72 + .28 * Math.sin(t * 3) ** 2; rgb = [255, 16, 12]; } // the app's roomSafety pulse
         for (const row of frame) for (let p = 0; p < row.length; p += 4) row.set([Math.round(rgb[0] * gain), Math.round(rgb[1] * gain), Math.round(rgb[2] * gain), 0], p);
       }
       // The spill on the desk and floor follows the indicator colour, as the app's solid colour does.
-      const hex = c => '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
-      api.setLedColor(m ? hex((ev.kind === 'wheels' ? RED : m.colors[0]).slice(0, 3)) : ev.kind === 'target' ? '#00ff00' : ev.kind === 'proximity' ? '#ff9108' : '#ff100c', false);
+      ev.spill = m ? (ev.kind === 'wheels' ? RED : m.colors[0]).slice(0, 3) : ev.kind === 'proximity' ? [255, 145, 8] : [255, 16, 12];
+      ev.last = frame.map(r => r.slice());
+      api.setLedColor(hex(ev.spill), false);
       game.sample = out => { out.forEach((row, i) => row.set(frame[i])); return true; };
       game.active = true;
     },

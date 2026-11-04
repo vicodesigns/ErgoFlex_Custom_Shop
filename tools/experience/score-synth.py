@@ -490,6 +490,12 @@ STYLES = {
               pad=1.0, cut=4000, arp='16', arp_lvl=0.62, bright=0.6, bass='sustain', bass_lvl=0.95,
               kick='x.......x.......', shaker='..o...o...o...o.', lead='hero', duck=0.1, breath_end=True,
               energy=0.9),
+    # 23 s finale (HQ8): one chord per preset look (gaming, office, artist, OCC, HBHS, gaming),
+    # then Gmaj9 · Asus4 under the headline into the logo hit.
+    'finale': S(prog=[('D/F#', 1), ('Gmaj9', 1), ('Em9', 1), ('Bm9', 1), ('Asus4', 1), ('A', 1), ('Gmaj9', 1), ('Asus4', 1)],
+                anchor='end', pad=1.0, cut=4000, arp='16', arp_lvl=0.62, bright=0.6, bass='sustain', bass_lvl=0.95,
+                kick='x.......x.......', shaker='..o...o...o...o.', lead='hero', duck=0.1, breath_end=True,
+                energy=0.9),
     # generic fallback for chapters added later
     'groove': S(prog=[('Dmaj9', 1), ('Bm9', 1), ('Gmaj9', 1), ('Asus4', 1)], turn='A',
                 pad=0.85, cut=3000, arp='16', arp_lvl=0.68, bright=0.5, bass='pulse8', bass_lvl=0.85,
@@ -643,7 +649,7 @@ def build_plan(edl):
             if style == 'groove' and ci - 1 < len(GROOVE_FALLBACK):
                 style = GROOVE_FALLBACK[(ci - 1) % len(GROOVE_FALLBACK)]
             if ci == len(chs) - 1:
-                style = 'hero'
+                style = 'finale' if chs[ci]['duration'] >= 20 else 'hero'
             name = cid
         sections.append(dict(name=name, style=style, chapter=cid, b0=a0, b1=a1))
 
@@ -1358,6 +1364,7 @@ SECTION_TEXT = {
     'music': 'Gaming room, most rhythm: four-on-the-floor, claps, hats + 16th shaker with swing, 16th syncopated bass, strongest sidechain pump. vi-IV-I-V.',
     'media': 'Movie night: filter closes, Rhodes stabs, half-time kick, darker arp. ii-iii-IV-Vsus.',
     'storage': 'Library storage: build. Filter and arp open up across the section, rising bass line, 16th clap roll into the hero.',
+    'finale': 'Finale: the desk changes through the shop presets, one chord per look (I6 IV ii vi Vsus V), then IV-Vsus into the logo hit.',
     'hero': 'Hero orbit: widest pad, celesta hero motif; drums and arp breathe out for the last 2 beats while the riser pulls into the logo hit. IV-ii-Vsus-V.',
     'tail': 'Logo hit on Dmaj9 (felt impact + sub, Rhodes mallet, shimmer cluster, celesta D-A-D); pad filter closes and everything rings out to silence.',
 }
