@@ -70,6 +70,9 @@ const pad=i=>String(i+1).padStart(2,'0');
 
 async function stage(browser){
   const page=await browser.newPage();
+  // Films always render full motion: the stage pins every frame to the end pose when the OS asks for reduced
+  // motion (Windows over RDP / animation effects off), which froze camera and desk in the first Win HQ13.
+  await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'no-preference'}]);
   // --screen <repo path>: swap the in-scene media clip (ambient-clip.mp4) for
   // a cleared one in this render only. The app's own asset is untouched.
   if(opts.screen){await page.setRequestInterception(true);page.on('request',r=>/\/ambient-clip\.mp4(\?|$)/.test(r.url())?r.continue({url:opts.server+'/'+opts.screen.replace(/^\/+/,'')}):r.continue());}
@@ -90,6 +93,8 @@ async function stage(browser){
   await page.evaluate(()=>{document.documentElement.innerHTML='<body style="margin:0;background:#000"><iframe id="s" style="width:1280px;height:720px;border:0" src="/?view=product&presentation=1&tour=1"></iframe></body>';});
   const frame=await (await page.waitForSelector('#s')).contentFrame();
   await frame.waitForFunction(()=>window.ErgoPresentation,{timeout:180000});
+  const rm=await frame.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches);
+  console.log(`[provenance] reduced-motion ${rm}`);if(rm)throw Error('The stage reports prefers-reduced-motion: reduce; the render would have no camera or desk motion.');
   return frame;
 }
 
