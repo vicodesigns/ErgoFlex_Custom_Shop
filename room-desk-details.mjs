@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { activityPageMaterial } from './room-activity-print.mjs?v=environment-expert-20261014';
+import { activityPageMaterial } from './room-activity-print.mjs?v=gym-black-red-r3-20261104';
 
 const education = new Set(['kindergarten','elementary','middleschool','highschool','college','university']);
 const workOnly = new Set(['hospital','laboratory','mobileit','security','police','government', ...education]);

@@ -1,4 +1,4 @@
-import { ROOM_DESK_STYLES, GYM_BLACKRED_DESK, cleanDeskStyle } from './room-desk-styles.mjs?v=gym-black-red-20261104';
+import { ROOM_DESK_STYLES, GYM_BLACKRED_DESK, cleanDeskStyle } from './room-desk-styles.mjs?v=gym-black-red-r3-20261104';
 
 // Home gym colourways. Plain data and pure helpers (no three.js), so the theme
 // can be tested in node. Green is the authored room and stays the default:

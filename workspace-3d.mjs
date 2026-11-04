@@ -9,13 +9,13 @@ import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './ateli
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=hbhs-product-classroom-20261014';
 import { buildInstitutionalRoom } from './institutional-room.mjs?v=campus-life-20261019';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
-import { polishRoomProp } from './room-polish.mjs?v=table-clearance-20261021';
-import { RoomLife } from './room-life.mjs?v=commons-home-comfort-20261024';
+import { polishRoomProp } from './room-polish.mjs?v=gym-black-red-r3-20261104';
+import { RoomLife } from './room-life.mjs?v=gym-black-red-r3-20261104';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
 import { migrateHighschoolFixtureTransform } from './hbhs-design.mjs';
-import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=environment-expert-20261014';
+import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=gym-black-red-r3-20261104';
 import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=commons-home-comfort-20261024';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
@@ -35,8 +35,8 @@ import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
-import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-black-red-20261104';
-import { themedGymLayout } from './gym-theme.mjs?v=gym-black-red-20261104';
+import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-black-red-r3-20261104';
+import { themedGymLayout } from './gym-theme.mjs?v=gym-black-red-r3-20261104';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=milano-seating-20261014';
 

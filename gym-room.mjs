@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { gymProgramMaps, buildGymSessionDetail, migrateGymSavedFurniture } from './gym-session-detail.mjs?v=gym-black-red-20261104';
-import { GYM_MODES, gymTheme } from './gym-theme.mjs?v=gym-black-red-20261104';
+import { gymProgramMaps, buildGymSessionDetail, migrateGymSavedFurniture } from './gym-session-detail.mjs?v=gym-black-red-r3-20261104';
+import { GYM_MODES, gymTheme } from './gym-theme.mjs?v=gym-black-red-r3-20261104';
 
 // All architecture and original equipment below is authored in millimetres.
 const tiers = [

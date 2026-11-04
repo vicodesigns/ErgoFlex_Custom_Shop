@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { gymTheme } from './gym-theme.mjs?v=gym-black-red-20261104';
+import { gymTheme } from './gym-theme.mjs?v=gym-black-red-r3-20261104';
 
 // Fictional session dressing, not a prescribed exercise programme.
 export const GYM_SESSIONS = {

@@ -2,8 +2,8 @@
 // has the same shape with no green left in it, and the saved-state swaps only
 // touch the authored values of the other colourway.
 import assert from 'node:assert/strict';
-import { GYM_THEMES, GYM_MODES, gymTheme, gymModes, themedGymLayout, themeGymDeskStyle, themeGymLights, themeGymDeskState } from '../gym-theme.mjs?v=gym-black-red-20261104';
-import { ROOM_DESK_STYLES, GYM_BLACKRED_DESK, roomDeskStyle, cleanDeskStyle, cleanRoomDeskStyles } from '../room-desk-styles.mjs?v=gym-black-red-20261104'; // the instance gym-theme.mjs reads
+import { GYM_THEMES, GYM_MODES, gymTheme, gymModes, themedGymLayout, themeGymDeskStyle, themeGymLights, themeGymDeskState } from '../gym-theme.mjs?v=gym-black-red-r3-20261104';
+import { ROOM_DESK_STYLES, GYM_BLACKRED_DESK, roomDeskStyle, cleanDeskStyle, cleanRoomDeskStyles } from '../room-desk-styles.mjs?v=gym-black-red-r3-20261104'; // the instance gym-theme.mjs reads
 import { ROOM_DETAIL_PALETTES } from '../room-finish-palettes.mjs';
 
 // GYM_MODES exactly as authored at 34f383e (gym-room.mjs:35-41), before the colourway toggle.

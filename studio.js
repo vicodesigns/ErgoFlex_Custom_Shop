@@ -1,11 +1,11 @@
-import { SceneScreens, SCENE_SCREENS_KEY } from './scene-screens.mjs?v=environment-expert-20261014';
+import { SceneScreens, SCENE_SCREENS_KEY } from './scene-screens.mjs?v=gym-black-red-r3-20261104';
 import { measureRoute, routePose } from './experience/timing.mjs';
 import { ItemGizmo, cloneItem, nodeSnapshot, topLevelItems } from './scene-item-editing.mjs?v=item-gumball-clipboard-20261016';
 import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261008';
 import { normalizeCustomLook, normalizeCustomPalette, importCustomLooks, CUSTOM_LOOKS_KEY, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=commons-group-work-20261016';
-import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=commons-home-comfort-20261024';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=gym-black-red-r3-20261104';
 import { poseIsClear } from './room-groove.mjs?v=humboldt-commons-20261015';
 import { SceneDesks } from './scene-desks.mjs?v=item-gumball-clipboard-20261016';
 import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=item-gumball-clipboard-20261016';
@@ -29,9 +29,9 @@ import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pac
 import { SceneTour, tourEnabled } from './scene-tour.mjs?v=item-gumball-clipboard-20261016';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
-import { roomPolishLighting } from './room-polish.mjs?v=table-clearance-20261021';
+import { roomPolishLighting } from './room-polish.mjs?v=gym-black-red-r3-20261104';
 import { roomViewBounds } from './room-view-bounds.mjs?v=table-clearance-20261021';
-import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle, roomDeskStyle } from './room-desk-styles.mjs?v=gym-black-red-20261104';
+import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle, roomDeskStyle } from './room-desk-styles.mjs?v=gym-black-red-r3-20261104';
 import { RoomLedSpill } from './room-led-spill.mjs?v=commons-group-work-20261016';
 import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=hbhs-product-classroom-20261014';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
@@ -61,7 +61,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-studio-20261025';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=gym-black-red-r3-20261104';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=item-gumball-clipboard-20261016';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=commons-home-comfort-20261024';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-sessions-20261022';
@@ -69,8 +69,8 @@ import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from 
 import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=artist-studio-20261025';
 import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
-import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-black-red-20261104';
-import { GYM_THEMES, gymModes, themeGymDeskStyle, themeGymLights, themeGymDeskState } from './gym-theme.mjs?v=gym-black-red-20261104';
+import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-black-red-r3-20261104';
+import { GYM_THEMES, gymModes, themeGymDeskStyle, themeGymLights, themeGymDeskState } from './gym-theme.mjs?v=gym-black-red-r3-20261104';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=gaming-gear-20261014';
 import { ARWorkspace } from './ar-workspace.mjs?v=compact-controller-20261007';
