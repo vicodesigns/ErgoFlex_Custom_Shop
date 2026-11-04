@@ -162,7 +162,9 @@ def main():
     # ---- deliverables -------------------------------------------------------
     score = os.path.join(d, 'score', 'score.wav')
     audio_in = ['-i', score] if os.path.exists(score) else ['-f', 'lavfi', '-t', str(total), '-i', 'anullsrc=r=48000:cl=stereo']
-    subs = f"subtitles=filename={os.path.join(out, 'titles.ass')}:fontsdir={FONTS}"
+    # Filter args can't hold a Windows drive colon: use cwd-relative forward-slash paths there.
+    fp = (lambda p: os.path.relpath(p).replace(os.sep, '/')) if os.name == 'nt' else (lambda p: p)
+    subs = f"subtitles=filename={fp(os.path.join(out, 'titles.ass'))}:fontsdir={fp(FONTS)}"
     if wip:
         run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-vf', subs, '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '19', '-pix_fmt', 'yuv420p', *COLOR, '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', os.path.join(out, 'ErgoFlex-Intro-WIP.mp4')])
         return
@@ -179,7 +181,7 @@ def main():
         dst = os.path.join(out, name); log = os.path.join(out, 'x264pass-' + name)
         common = ['-vf', vf, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-b:v', rate, '-maxrate', str(int(float(rate[:-1]) * 1.6)) + rate[-1], '-bufsize', str(int(float(rate[:-1]) * 3)) + rate[-1],
                   '-pix_fmt', 'yuv420p', '-g', str(fps * 2), '-x264-params', 'aq-mode=3', '-passlogfile', log] + COLOR
-        run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, '-map', '0:v', *common, '-pass', '1', '-an', '-f', 'null', '/dev/null'])
+        run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, '-map', '0:v', *common, '-pass', '1', '-an', '-f', 'null', os.devnull])
         run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', *common, '-pass', '2',
              '-c:a', 'aac', '-b:a', ab, '-ar', '48000', '-shortest', '-movflags', '+faststart', dst])
         for f in glob.glob(log + '*'): os.remove(f)
