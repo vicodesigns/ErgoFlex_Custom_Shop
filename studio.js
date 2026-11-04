@@ -31,7 +31,7 @@ import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=table-clearance-20261021';
 import { roomViewBounds } from './room-view-bounds.mjs?v=table-clearance-20261021';
-import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=hbhs-product-classroom-20261014';
+import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle, roomDeskStyle } from './room-desk-styles.mjs?v=gym-black-red-20261104';
 import { RoomLedSpill } from './room-led-spill.mjs?v=commons-group-work-20261016';
 import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=hbhs-product-classroom-20261014';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
@@ -69,7 +69,8 @@ import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from 
 import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=artist-studio-20261025';
 import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
-import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-sessions-20261022';
+import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-black-red-20261104';
+import { GYM_THEMES, gymModes, themeGymDeskStyle, themeGymLights } from './gym-theme.mjs?v=gym-black-red-20261104';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=gaming-gear-20261014';
 import { ARWorkspace } from './ar-workspace.mjs?v=compact-controller-20261007';
@@ -695,7 +696,8 @@ function initSceneDeskEditing() {
                 r.appliedArtwork=artwork;
                 if(r.state.accessories&&JSON.stringify([currentConfig.accessories,currentConfig.accessoryFinishes||{}])!==JSON.stringify([r.state.accessories,r.state.accessoryFinishes||{}])){currentConfig=cleanConfig({...currentConfig,accessories:r.state.accessories,accessoryFinishes:r.state.accessoryFinishes||{}});renderAccessories();updatePrice();}
                 if(currentConfig.size!==r.state.size)changeDesktopSize(r.state.size,{rebuildRoom:false});
-                if(r.state.style&&JSON.stringify(currentDeskStyle())!==JSON.stringify(r.state.style))applyDeskStyle(r.state.style);
+                const style=selectedRoomScene==='gym'?themeGymDeskStyle(r.state.style,gymTheme):r.state.style;
+                if(style&&JSON.stringify(currentDeskStyle())!==JSON.stringify(style))applyDeskStyle(style);
                 currentLift=targetLift=heightToLift(Math.max(r.state.height,minimumHeightForTilt(r.state.tilt,r.state.size)));
                 manualLiftOverride=true;tiltTarget=null;updateMovingObjectsPosition();
                 const tilt=primaryTiltConfig();if(tilt){tilt.currentDeg=r.state.tilt;applyTiltConfig(tilt);}
@@ -808,7 +810,7 @@ function initSceneScreenControls(toolbar) {
     toolbar.append(panel);
     const select=panel.querySelector('#scene-screen-select'),enabled=panel.querySelector('#scene-screens-enabled'),single=panel.querySelector('#scene-screen-enabled');let revision=-1;
     sceneScreens=new SceneScreens({
-        context:()=>{const p=measuredRoomProfile();return {scene:selectedRoomScene,layout:p?.layout.id||'product',phase:p?.mode||'morning',label:p?.modes[p.mode]?.label,preset:activeBuildPreset};},
+        context:()=>{const p=measuredRoomProfile();return {scene:selectedRoomScene,layout:p?.layout.id||'product',phase:p?.mode||'morning',label:p?.modes[p.mode]?.label,preset:activeBuildPreset,accent:selectedRoomScene==='gym'&&GYM_THEMES[gymTheme].screenAccent||undefined};},
         room:()=>workspaceRoom,
         sources:()=>{
             const records=[...sceneDesks?.records.values()||[]],sources=[];
@@ -961,13 +963,15 @@ try {
     if (query.get('room') === 'office' && OFFICE_LAYOUTS[query.get('layout')]) officeLayoutId = query.get('layout');
 } catch {}
 function selectedOfficeLayout() { return officeLayoutId ? officeLayoutById(officeLayoutId) : officeLayoutForSize(currentConfig.size); }
-let gymMode = 'morning', gymLayoutId = null;
+let gymMode = 'morning', gymLayoutId = null, gymTheme = 'green';
 try {
-    const layout = localStorage.getItem('ergoflex.gymLayout'), mode = localStorage.getItem('ergoflex.gymMode');
+    const layout = localStorage.getItem('ergoflex.gymLayout'), mode = localStorage.getItem('ergoflex.gymMode'), theme = localStorage.getItem('ergoflex.gymTheme');
     if (GYM_LAYOUTS[layout]) gymLayoutId = layout;
     if (GYM_MODES[mode]) gymMode = mode;
+    if (GYM_THEMES[theme]) gymTheme = theme;
     const query = new URLSearchParams(location.search);
     if (query.get('room') === 'gym' && GYM_LAYOUTS[query.get('layout')]) gymLayoutId = query.get('layout');
+    if (query.get('room') === 'gym' && GYM_THEMES[query.get('gymTheme')]) gymTheme = query.get('gymTheme');
 } catch {}
 function selectedGymLayout() { return gymLayoutId ? gymLayoutById(gymLayoutId) : gymLayoutForSize(currentConfig.size); }
 let kitchenMode = 'morning', kitchenLayoutId = null;
@@ -1071,7 +1075,7 @@ function measuredRoomProfile(id = selectedRoomScene) {
     if (id === 'office') return { id, layouts: OFFICE_LAYOUTS, modes: OFFICE_MODES, layout: selectedOfficeLayout(), mode: officeMode, prefix: 'office' };
     if (id === 'lounge') return { id, layouts: LOUNGE_LAYOUTS, modes: LOUNGE_MODES, layout: selectedLoungeLayout(), mode: loungeMode, prefix: 'lounge' };
     if (id === 'kitchen') return { id, layouts: KITCHEN_LAYOUTS, modes: KITCHEN_MODES, layout: selectedKitchenLayout(), mode: kitchenMode, prefix: 'kitchen' };
-    if (id === 'gym') return { id, layouts: GYM_LAYOUTS, modes: GYM_MODES, layout: selectedGymLayout(), mode: gymMode, prefix: 'gym' };
+    if (id === 'gym') return { id, layouts: GYM_LAYOUTS, modes: gymModes(gymTheme), layout: selectedGymLayout(), mode: gymMode, prefix: 'gym' };
     if (id === 'study') return { id, layouts: STUDY_LAYOUTS, modes: STUDY_MODES, layout: selectedStudyLayout(), mode: studyMode, prefix: 'study' };
     return null;
 }
@@ -2837,18 +2841,18 @@ function styleDeskForRoom(id, preserve = false) {
     const initial = sceneDeskLocation === null;
     if (initial && (restoredSharedBuild || !sceneDeskStyles.product)) sceneDeskStyles.product = currentDeskStyle();
     if (initial && restoredBuildSize && id !== 'product' && (restoredSharedBuild || !sceneDeskStyles[id])) sceneDeskStyles[id] = currentDeskStyle();
-    if (!(preserve && sceneDeskLocation === id)) applyDeskStyle(sceneDeskStyles[id] || ROOM_DESK_STYLES[id]);
+    if (!(preserve && sceneDeskLocation === id)) applyDeskStyle((id === 'gym' ? themeGymDeskStyle(sceneDeskStyles[id], gymTheme) : sceneDeskStyles[id]) || roomDeskStyle(id, gymTheme));
     sceneDeskLocation = id;
     syncSceneDeskStyleUI();
 }
 function syncSceneDeskStyleUI() {
     const button = document.getElementById('room-desk-palette'); if (!button) return;
-    const theme = ROOM_DESK_STYLES[selectedRoomScene]; button.hidden = !theme;
+    const theme = roomDeskStyle(selectedRoomScene, gymTheme); button.hidden = !theme;
     button.textContent = sceneDeskStyles[selectedRoomScene] ? 'Use scene palette' : 'Scene palette';
     button.title = theme ? `${theme.name} · ${theme.woodFinish} / ${theme.baseFinish} · restore this room’s suggested desk finishes` : '';
 }
 function resetSceneDeskStyle() {
-    const theme = ROOM_DESK_STYLES[selectedRoomScene]; if (!theme) return;
+    const theme = roomDeskStyle(selectedRoomScene, gymTheme); if (!theme) return;
     delete sceneDeskStyles[selectedRoomScene];
     try { localStorage.setItem(SCENE_DESK_STYLES_KEY, JSON.stringify(sceneDeskStyles)); } catch {}
     applyDeskStyle(theme); syncSceneDeskStyleUI();
@@ -4501,6 +4505,7 @@ function serializeProject() {
                 kitchenLayout: selectedKitchenLayout().id,
                 gymMode,
                 gymLayout: selectedGymLayout().id,
+                gymTheme,
                 officeMode,
                 officeLayout: selectedOfficeLayout().id,
                 studyMode,
@@ -4910,6 +4915,8 @@ function applyProjectPresentation(project) {
     if (KITCHEN_LAYOUTS[presentation.kitchenLayout]) kitchenLayoutId = presentation.kitchenLayout;
     if (GYM_MODES[presentation.gymMode]) gymMode = presentation.gymMode;
     if (GYM_LAYOUTS[presentation.gymLayout]) gymLayoutId = presentation.gymLayout;
+    // Projects saved before the colourway toggle carry none: they reopen green, as authored.
+    gymTheme = GYM_THEMES[presentation.gymTheme] ? presentation.gymTheme : 'green';
     if (OFFICE_MODES[presentation.officeMode]) officeMode = presentation.officeMode;
     if (OFFICE_LAYOUTS[presentation.officeLayout]) officeLayoutId = presentation.officeLayout;
     if (STUDY_MODES[presentation.studyMode]) studyMode = presentation.studyMode;
@@ -10775,6 +10782,7 @@ function captureGrooveLights() {
     }));
 }
 function applyGrooveLights(lights) {
+    if (selectedRoomScene === 'gym') lights = themeGymLights(lights, gymTheme);
     const music = lights.music || {}, game = lights.game || {};
     // Saving a recipe never stores a microphone permission or an audio file.
     const sourceAvailable = music.source === 'demo' ||
@@ -10975,6 +10983,7 @@ function syncHomeOfficeUI() {
         panel.querySelector(`#${prefix}-room-size`).value = profile.layout.id;
         panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-mode`) === profile.mode)));
         panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-size`) === currentConfig.size)));
+        if (id === 'gym') panel.querySelectorAll('[data-gym-theme]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.gymTheme === gymTheme)));
     }
     const caption = document.getElementById('room-scene-caption');
     const feet = mm => { const inches = Math.round(mm / 25.4); return `${Math.floor(inches / 12)}′${inches % 12}″`; };
@@ -11045,6 +11054,20 @@ function setWorkshopMode(id, moveDesk = true) { setMeasuredRoomMode('workshop', 
 function setLoungeMode(id, moveDesk = true) { setMeasuredRoomMode('lounge', id, moveDesk); }
 function setKitchenMode(id, moveDesk = true) { setMeasuredRoomMode('kitchen', id, moveDesk); }
 function setGymMode(id, moveDesk = true) { setMeasuredRoomMode('gym', id, moveDesk); }
+// One colourway for the whole gym (every layout and mode). A desk or LED colour
+// still in the other colourway's authored finish follows it; custom ones stay.
+function setGymTheme(id) {
+    if (!GYM_THEMES[id]) return;
+    gymTheme = id;
+    try { localStorage.setItem('ergoflex.gymTheme', id); } catch {}
+    if (selectedRoomScene !== 'gym') { syncHomeOfficeUI(); return; }
+    const saved = sceneDeskStyles.gym, live = currentDeskStyle();
+    if (saved && themeGymDeskStyle(saved, id) !== saved) { delete sceneDeskStyles.gym; try { localStorage.setItem(SCENE_DESK_STYLES_KEY, JSON.stringify(sceneDeskStyles)); } catch {} }
+    if (themeGymDeskStyle(live, id) !== live) applyDeskStyle(GYM_THEMES[id].desk);
+    setRoomScene('gym', false, { preserveDesk: true });
+    const lights = themeGymLights({ color: ledColor }, id); if (lights.color !== ledColor) setLedColor(lights.color, false);
+    syncSceneDeskStyleUI(); sceneScreens?.update(true);
+}
 function setStudyMode(id, moveDesk = true) { setMeasuredRoomMode('study', id, moveDesk); }
 function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
     itemGizmo?.close();
@@ -11170,7 +11193,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
         homeScale = reference.widthUnits > 0 ? reference.widthUnits / (reference.nominalWidth * 25.4) : 1 / (reference.metersPerUnit * 1000);
     }
     roomInteractions?.end();roomInteractions?.select(null);roomLedSpill.dispose();roomCollisionBlocked=false;roomSafety.reset();syncSafetyUI();
-    workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
+    workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id, gymTheme,
         createStation: (['office', 'coworking'].includes(choice.id) || INSTITUTIONAL_ROOMS[choice.id]) && loadedModel ? spec => captureOfficeStation(spec, homeScale, measured.layout.stations.indexOf(spec)) : null });
     workspaceRoom?.setCeilingEnabled(ceilingPreviewEnabled);
     const ceilingControl = document.getElementById('room-ceiling-control');
@@ -11931,6 +11954,8 @@ function initStudio() {
             } else panel.querySelector(`label[for="${prefix}-room-size"]`).textContent = 'Room size';
         }
         panel.querySelector(`#${prefix}-room-size`).onchange = e => setMeasuredRoomLayout(id, e.target.value);
+        if (id === 'gym') { panel.querySelector('.home-layout-choices').insertAdjacentHTML('beforeend', `<span class="gym-theme-choices" role="group" aria-label="Gym colourway" style="display:inline-flex;gap:4px">${Object.values(GYM_THEMES).map(t => `<button type="button" data-gym-theme="${t.id}">${t.label}</button>`).join('')}</span>`);
+            panel.querySelectorAll('[data-gym-theme]').forEach(b => b.onclick = () => setGymTheme(b.dataset.gymTheme)); }
         panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.onclick = () => { sizeSelect.value = b.getAttribute(`data-${prefix}-size`); sizeSelect.dispatchEvent(new Event('change', { bubbles: true })); });
         panel.insertAdjacentHTML('beforeend', '<div class="groove-controls"><button type="button" data-groove-start disabled>Start Groove</button><button type="button" data-groove-stop disabled>Stop</button><button type="button" data-groove-save disabled title="Save the current location, rotation, height, tilt and LED settings for this time of day">Save Groove position</button><button type="button" data-groove-reset disabled title="Restore the original position and lighting preset for this time of day">Reset Groove position</button><span data-groove-saved></span><span data-groove-status role="status">Choose a time, then tap the desk to start its Groove.</span></div>');
         panel.querySelector('.groove-controls').dataset.scene=id;
@@ -12240,6 +12265,8 @@ window.ErgoFlex = {
     get kitchenLayout() { return selectedKitchenLayout().id; },
     setGymMode,
     get gymMode() { return gymMode; },
+    setGymTheme,
+    get gymTheme() { return gymTheme; },
     setGymLayout,
     get gymLayout() { return selectedGymLayout().id; },
     setOfficeMode,

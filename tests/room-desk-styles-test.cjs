@@ -94,6 +94,19 @@ const server = http.createServer((req, res) => {
             if(!legacy.ok || ef.currentConfig.woodFinish!=='Bordeaux') failures.push('older project finish overwritten');
             ef.resetSceneDeskStyle();await ef.workspaceRoom.ready;
             if(ef.currentConfig.woodFinish!=='Earthy Forest Green') failures.push('scene palette reset failed');
+            if(!only || only.includes('gym')){
+                // Gym colourway: the toggle swaps the authored desk, and the scene palette restores the themed one.
+                const desk=()=>['woodFinish','baseFinish','trimColor'].map(k=>ef.currentConfig[k]).join('/');
+                ef.setRoomScene('gym',false);await ef.workspaceRoom.ready;
+                if(desk()!=='Modern Grey/Black/#286344') failures.push('gym: default desk '+desk());
+                ef.setGymTheme('blackred');await ef.workspaceRoom.ready;
+                if(desk()!=='Black Birch/Black/#dc0909') failures.push('gym: black & red desk '+desk());
+                document.querySelector('#wood-finishes [data-finish="Walnut"]').click();
+                ef.resetSceneDeskStyle();await ef.workspaceRoom.ready;
+                if(desk()!=='Black Birch/Black/#dc0909') failures.push('gym: scene palette reset '+desk());
+                ef.setGymTheme('green');await ef.workspaceRoom.ready;
+                if(desk()!=='Modern Grey/Black/#286344') failures.push('gym: back to green '+desk());
+            }
             return {count:Object.keys(ROOM_DESK_STYLES).filter(id=>!only || only.includes(id)).length,failures};
         },only);
         await page.evaluate(async()=>{
