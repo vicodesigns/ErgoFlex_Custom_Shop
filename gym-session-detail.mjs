@@ -175,6 +175,14 @@ export function buildGymSessionDetail(room, layout, h, anchors, T = gymTheme()) 
             return copies.get(m);
         };
         if (tint) object.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(recolour) : recolour(o.material); });
+        // Black & red: a gloss black sleeve over the floor plant's tan pot. The
+        // pot and the foliage share one atlas material, so it is covered, not
+        // recoloured. Units are the GLB mesh's own: pot 0..0.44 high, r <= 0.283.
+        if (T.planter && placement.id === 'decor-plant2') {
+            let pot = null; object.traverse(o => { if (o.isMesh && !pot) pot = o; });
+            const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(.302, .292, .43, 32, 1, true), material(...T.planter));
+            sleeve.name = 'Black planter sleeve'; sleeve.position.y = .215; sleeve.castShadow = sleeve.receiveShadow = true; pot?.add(sleeve);
+        }
         apply(current);
     };
     let current = 'morning';

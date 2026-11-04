@@ -22,8 +22,9 @@ export const GYM_MODES = {
 const BLACKRED_MODE_CHANGES = {
     morning: { key: '#fff0e0', fill: '#dfe3ea', accent: '#ff4d4d', colors: ['#ff3b3b', '#dfe6ee'], wash: .2, exposure: 1.22, ambient: .52 },
     afternoon: { key: '#f6f8ff', fill: '#e2e6ee', accent: '#ff3b30', colors: ['#ff2a2a', '#e4e9f0'], wash: .26, exposure: 1.22, ambient: .54 },
-    evening: { key: '#ffc8a8', fill: '#c9ccd6', accent: '#ff2d2d', colors: ['#e01b24', '#d5d9e2'], wash: .3, color: '#ff1a1a', exposure: 1.2, ambient: .42, bounce: .46 },
-    night: { key: '#b8c4dc', fill: '#a8b0c4', accent: '#b3122a', colors: ['#8a0c16', '#8a94aa'], wash: .28, color: '#8b0d14', exposure: 1.38, ambient: .54, bounce: .46 },
+    // Evening: warm-white key and a warm-white (not orange) sun patch, so the red stays on the edges.
+    evening: { key: '#ffd9c6', fill: '#c9ccd6', accent: '#ff2d2d', colors: ['#e01b24', '#d5d9e2'], wash: .22, color: '#e0101c', exposure: 1.2, ambient: .42, bounce: .46, sun: [.72, .48, '#ffc9a6', .3] },
+    night: { key: '#b8c4dc', fill: '#a8b0c4', accent: '#b3122a', colors: ['#8a0c16', '#a6b0c6'], wash: .34, color: '#c4101e', exposure: 1.38, ambient: .6, bounce: .46 },
     party: { key: '#e6e9f5', fill: '#d8dbe6', accent: '#ff1030', colors: ['#ff0f2e', '#ff3d1f'], wash: .78, color: '#ff0a1e', exposure: 1.16, ambient: .48 }
 };
 
@@ -67,7 +68,7 @@ const GREEN = {
         rackLabel: ['#d5dece', '#293536'], wipeLabel: ['#abbfb2', '#263735'],
         poster: { paper: '#e0dfcc', ink: '#304d48', strokes: ['#5d7e6d', '#a78351', '#447979'] }
     },
-    props: null, dressing: null
+    props: null, dressing: null, planter: null
 };
 
 const BLACKRED = {
@@ -80,8 +81,8 @@ const BLACKRED = {
     materials: {
         graphite: ['#1b1b1d', { roughness: .88 }], steel: ['#2a2a2d', { metalness: .75, roughness: .3 }],
         rubber: ['#0d0d0e', { roughness: .95 }], lime: ['#c8102e', { roughness: .24, metalness: .05 }],
-        silver: ['#d6d8db', { metalness: .92, roughness: .16 }], oak: ['#2e221c', { roughness: .78 }],
-        ash: ['#3d3029', { roughness: .72 }], slate: ['#0b0b0c', { roughness: .9 }],
+        silver: ['#d6d8db', { metalness: .92, roughness: .16 }], oak: ['#171719', { roughness: .45 }],
+        ash: ['#1f1f22', { roughness: .6 }], slate: ['#0b0b0c', { roughness: .9 }],
         coachFloor: ['#151517', { roughness: .95 }], bellHandle: ['#3a3a3d', { metalness: .65, roughness: .38 }]
     },
     canvas: {
@@ -126,7 +127,10 @@ const BLACKRED = {
     },
     // Desk dressing (WorkspaceAccessories): notebook and daily-kit covers,
     // and the sports bottle's blue body.
-    dressing: { accent: '#7a0a16', props: { 'sports-bottle': { Material_001: '#b00d22' } } }
+    // The tablet's blue tiles x red = a black screen with red tiles.
+    dressing: { accent: '#7a0a16', print: '#c8102e', props: { 'sports-bottle': { Material_001: '#b00d22' }, 'tablet-pc': { Mic_Sur_P3_display: '#ff2a2a' } } },
+    // Gloss black sleeve over the floor plant's tan pot; the foliage stays natural.
+    planter: ['#161618', { roughness: .3, metalness: .05 }]
 };
 
 // Null prototype: ids come from localStorage, URLs and imported projects.
@@ -154,7 +158,11 @@ export function themeGymDeskStyle(style, id) {
     if (!value) return style;
     const same = desk => desk.woodFinish === value.woodFinish && desk.baseFinish === value.baseFinish && desk.trimColor.toLowerCase() === value.trimColor;
     if (same(target)) return style;
-    return Object.values(GYM_THEMES).some(t => t.desk !== target && same(t.desk)) ? { ...style, woodFinish: target.woodFinish, baseFinish: target.baseFinish, trimColor: target.trimColor } : style;
+    const source = Object.values(GYM_THEMES).find(t => t.desk !== target && same(t.desk))?.desk;
+    if (!source) return style;
+    // The authored sheen follows the colourway (satin green, gloss black & red); a visitor's own stays.
+    const sheen = value.sheen === (source.sheen || 'satin') ? target.sheen || 'satin' : value.sheen;
+    return { ...style, woodFinish: target.woodFinish, baseFinish: target.baseFinish, trimColor: target.trimColor, sheen };
 }
 export function themeGymLights(lights, id) {
     const target = gymTheme(id).modes, colour = typeof lights?.color === 'string' ? lights.color.toLowerCase() : null;

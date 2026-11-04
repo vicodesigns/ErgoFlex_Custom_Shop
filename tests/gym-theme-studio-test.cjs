@@ -61,7 +61,7 @@ const server = http.createServer((req, res) => {
         s = await state();
         assert.equal(s.layout, 'apartment'); assert.equal(s.layoutTheme, 'blackred'); assert.deepEqual(s.desk, RED); assert.equal(s.led, '#ff0a1e', 'Saved lime LED remapped');
         await page.evaluate(() => ErgoFlex.setGymMode('night'));
-        assert.equal((await state()).led, '#8b0d14'); assert.equal((await state()).theme, 'blackred');
+        assert.equal((await state()).led, '#c4101e'); assert.equal((await state()).theme, 'blackred');
         const screen = await page.evaluate(() => ErgoFlex.sceneScreens?.ctx.context().accent);
         assert.equal(screen, '#ff3b3b', 'Desk screen accent follows the colourway');
 

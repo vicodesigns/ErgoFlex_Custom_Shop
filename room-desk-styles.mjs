@@ -37,7 +37,8 @@ export const ROOM_DESK_STYLES = {
 };
 // The gym's black & red colourway (gym-theme.mjs) uses the catalog's own
 // black-and-red desk. It is not a room id, so it stays out of ROOM_DESK_STYLES.
-export const GYM_BLACKRED_DESK = style('Black & signal red', 'Black Birch', 'Black', '#dc0909');
+// Gloss: a clear-coated black top in the matte black room.
+export const GYM_BLACKRED_DESK = { ...style('Black & signal red', 'Black Birch', 'Black', '#dc0909'), sheen: 'gloss' };
 export const roomDeskStyle = (id, gymTheme) => id === 'gym' && gymTheme === 'blackred' ? GYM_BLACKRED_DESK : ROOM_DESK_STYLES[id];
 export function cleanDeskStyle(value) {
     if (!value || !PRODUCT_CONFIG.woodFinishes.some(f => f.name === value.woodFinish) ||

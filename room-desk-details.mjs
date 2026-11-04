@@ -32,7 +32,7 @@ const titles = {
 
 // One stable scene asset, five children selected by setDayDress. Keep the
 // existing daily-kit footprint and mount, so rearrangement keys still restore.
-export function createDailyDeskKit(id, { box, mesh, rod, material, accent: themed }) {
+export function createDailyDeskKit(id, { box, mesh, rod, material, accent: themed, print }) {
     const kit = new THREE.Group(); kit.name = 'Groove tabletop · daily materials'; kit.userData.dayKit = true;
     const accent = themed || accents[id] || '#52746c', cover = material(accent), paper = material('#e9dfc8'), ink = material('#354b50');
     const ceramic = material('#e6d6b8');
@@ -44,7 +44,7 @@ export function createDailyDeskKit(id, { box, mesh, rod, material, accent: theme
         box(g,[open ? 150 : 100,9,120],[0,8.5,0],paper,1);
         if (!open) box(g,[104,4,125],[0,15,0],cover,2);
         const page = mesh(g, new THREE.PlaneGeometry(open ? 149 : 100,119),
-            activityPageMaterial(id,phase,open ? null : accent),[0,open ? 13.1 : 17.1,0]);
+            activityPageMaterial(id,phase,open ? null : accent,print),[0,open ? 13.1 : 17.1,0]);
         page.rotation.x = -Math.PI/2; page.castShadow = false; page.userData.presentationOnly = true;
         if (open) rod(g,[-47,3,73],[48,3,73],2,cover);
         if (phase === 4 && ['kindergarten','elementary','creative'].includes(id)) {

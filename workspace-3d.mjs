@@ -951,7 +951,7 @@ export class WorkspaceAccessories {
     // Scene dressing on the desk itself: mugs, papers and the like, which
     // follow the desktop as it lifts and tilts. Never priced, never exported
     // to AR, and replaced wholesale when the room changes.
-    // dressing (optional, e.g. the gym black & red colourway): { accent, props: { propId: { materialName: colour } } }.
+    // dressing (optional, e.g. the gym black & red colourway): { accent, print, props: { propId: { materialName: colour } } }.
     async dress(sceneId, dressing = null) {
         const scene = ROOM_SCENES.find(s => s.id === sceneId);
         const token = ++this.dressToken;
@@ -996,7 +996,7 @@ export class WorkspaceAccessories {
         }
         const desktop = this.mounts.get('desktop');
         if (desktop && sceneId !== 'product') {
-            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material, accent: dressing?.accent });
+            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material, accent: dressing?.accent, print: dressing?.print });
             placeDailyDeskKit(kit, desktop.dress.children);
             markSceneAsset(kit, { key: `${sceneId}:desktop:daily-kit`, role: 'desktop' });
             desktop.dress.add(kit);

@@ -36,12 +36,12 @@ assert.equal(layout.theme, undefined, 'The shared layout object is never mutated
 for (const id of [undefined, null, '', 'teal', 'GREEN', '__proto__']) { assert.equal(gymTheme(id), GYM_THEMES.green); assert.equal(gymModes(id), GYM_MODES); }
 
 // The black & red desk is a real catalog desk (the catalog's gaming preset finish).
-assert.deepEqual(cleanDeskStyle(GYM_BLACKRED_DESK), { woodFinish: 'Black Birch', baseFinish: 'Black', trimColor: '#dc0909', sheen: 'satin' });
+assert.deepEqual(cleanDeskStyle(GYM_BLACKRED_DESK), { woodFinish: 'Black Birch', baseFinish: 'Black', trimColor: '#dc0909', sheen: 'gloss' });
 assert.equal(cleanRoomDeskStyles({ gymBlackRed: GYM_BLACKRED_DESK }).gymBlackRed, undefined, 'Not a room id');
 
 // Same shape at every depth, so the room never reads a missing value.
 const shape = (a, b, at) => {
-    if (a === null || b === null) { assert.ok(a === null && b === null || at === 'finish' || at === 'detailPalette' || at === 'screenAccent' || at === 'screenMono' || at === 'book' || at === 'props' || at === 'dressing','null only for green room defaults: ' + at); return; }
+    if (a === null || b === null) { assert.ok(a === null && b === null || at === 'finish' || at === 'detailPalette' || at === 'screenAccent' || at === 'screenMono' || at === 'book' || at === 'props' || at === 'dressing' || at === 'planter', 'null only for green room defaults: ' + at); return; }
     assert.equal(typeof a, typeof b, at); assert.equal(Array.isArray(a), Array.isArray(b), at);
     // Material options are per finish (gloss red adds metalness); their keys may differ.
     if (typeof a !== 'object' || /materials\.\w+\.1$/.test(at)) return;
@@ -53,7 +53,8 @@ const { id: _g, label: _gl, ...green } = GYM_THEMES.green, { id: _b, label: _bl,
 shape(green, blackred, '');
 for (const [id, mode] of Object.entries(GYM_THEMES.blackred.modes)) {
     assert.equal(mode.label, GYM_MODES[id].label); assert.equal(mode.description, GYM_MODES[id].description);
-    for (const k of ['height', 'tilt', 'offset', 'yaw', 'leds', 'sun', 'power']) assert.deepEqual(mode[k], GYM_MODES[id][k], `${id}.${k}: posture and sun are shared`);
+    for (const k of ['height', 'tilt', 'offset', 'yaw', 'leds', 'power']) assert.deepEqual(mode[k], GYM_MODES[id][k], `${id}.${k}: posture is shared`);
+    assert.deepEqual(mode.sun.slice(0, 2), GYM_MODES[id].sun.slice(0, 2), `${id}.sun: the sun direction is shared (colour and strength may differ)`);
     assert.equal(!!mode.color, !!GYM_MODES[id].color);
 }
 
@@ -87,7 +88,8 @@ assert.deepEqual(cleanDeskStyle(themeGymDeskStyle(redDesk, 'green')), greenDesk)
 assert.equal(themeGymDeskStyle(greenDesk, 'green'), greenDesk);
 assert.equal(themeGymDeskStyle(redDesk, 'blackred'), redDesk);
 assert.equal(themeGymDeskStyle({ ...greenDesk, trimColor: '#286344'.toUpperCase() }, 'blackred').woodFinish, 'Black Birch', 'Hex case does not matter');
-assert.equal(themeGymDeskStyle({ ...greenDesk, sheen: 'gloss' }, 'blackred').sheen, 'gloss', 'Sheen is the visitor\'s choice');
+assert.equal(themeGymDeskStyle({ ...greenDesk, sheen: 'matte' }, 'blackred').sheen, 'matte', 'A visitor\'s own sheen stays');
+assert.equal(themeGymDeskStyle({ ...redDesk, sheen: 'matte' }, 'green').sheen, 'matte');
 const custom = { woodFinish: 'Walnut', baseFinish: 'Black', trimColor: '#286344', sheen: 'satin' };
 assert.equal(themeGymDeskStyle(custom, 'blackred'), custom);
 assert.equal(themeGymDeskStyle({ ...greenDesk, woodFinish: 'Walnut' }, 'blackred').woodFinish, 'Walnut');
