@@ -169,8 +169,15 @@ async function listShot(frame,i){
 }
 
 (async()=>{
-  const browser=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',headless:'new',defaultViewport:{width:1280,height:720},
-    args:['--no-sandbox','--autoplay-policy=no-user-gesture-required','--ignore-gpu-blocklist','--enable-gpu-rasterization','--use-angle=vulkan','--enable-features=Vulkan','--mute-audio']});
+  // Provenance: which commit and studio-state rev this render used (Win and Desk 02 renders must be comparable).
+  {const root=path.resolve(__dirname,'..','..');let sha='?',dirty='';try{sha=execFileSync('git',['-C',root,'rev-parse','--short','HEAD']).toString().trim();
+    dirty=execFileSync('git',['-C',root,'status','--porcelain','--untracked-files=no']).toString().trim()?'+dirty':'';}catch{}
+   let rev='?';try{rev=JSON.parse(fs.readFileSync(path.join(root,'studio-state.json'),'utf8')).rev;}catch{}
+   console.log(`[provenance] git ${sha}${dirty} studio-state rev ${rev} host ${require('os').hostname()} ${process.platform} ${new Date().toISOString()}`);}
+  // Windows render box: CHROME_PATH overrides the binary, ANGLE the backend (d3d11 on Windows, vulkan on Linux).
+  const win=process.platform==='win32',angle=process.env.ANGLE||(win?'d3d11':'vulkan');
+  const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH||(win?'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe':'/usr/bin/google-chrome'),headless:'new',defaultViewport:{width:1280,height:720},
+    args:['--no-sandbox','--autoplay-policy=no-user-gesture-required','--ignore-gpu-blocklist','--enable-gpu-rasterization','--use-angle='+angle,...(angle==='vulkan'?['--enable-features=Vulkan']:[]),'--mute-audio']});
   try{const frame=await stage(browser);for(const i of indices)await (opts.listScreens?listShot:renderShot)(frame,i);}
   finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});
