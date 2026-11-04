@@ -106,9 +106,13 @@ const server = http.createServer((req, res) => {
                 if(desk()!=='Black Birch/Black/#dc0909') failures.push('gym: scene palette reset '+desk());
                 ef.setGymTheme('green');await ef.workspaceRoom.ready;
                 if(desk()!=='Modern Grey/Black/#286344') failures.push('gym: back to green '+desk());
+                // The reload checks below expect the university scene.
+                ef.setRoomScene('university',false);await ef.workspaceRoom.ready;
             }
             return {count:Object.keys(ROOM_DESK_STYLES).filter(id=>!only || only.includes(id)).length,failures};
         },only);
+        // Checked before the reload steps, so a later failure cannot hide these.
+        assert.deepEqual(result.failures,[],'Scene finishes, activities and persistence');
         await page.evaluate(async()=>{
             document.querySelector('#wood-finishes [data-finish="Bordeaux"]').click();
             ErgoFlex.setRoomScene('university',true);await ErgoFlex.workspaceRoom.ready;
@@ -129,7 +133,6 @@ const server = http.createServer((req, res) => {
         assert.deepEqual(await page.evaluate(()=>['woodFinish','baseFinish','trimColor'].map(k=>ErgoFlex.currentConfig[k])),
             ['Warm Ivory','White','#f5f5f2'],'Shared build takes precedence over the older room palette');
         assert.deepEqual(errors,[],'No page errors');
-        assert.deepEqual(result.failures,[],'Scene finishes, activities and persistence');
         console.log(`${result.count} catalog palettes × five activities, station styles, uploaded artwork preservation, room switch, product return, project restoration, reset, reload and shared-build precedence passed.`);
     } finally {await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
