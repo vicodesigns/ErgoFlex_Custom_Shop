@@ -80,7 +80,13 @@ async function stage(browser){
   // builds and desk artwork) before the stage loads. The stage copies it into
   // memory, so renders never write back to it.
   // A studio-state.json (tools/studio-server.mjs) works too: its current values become the seed.
-  if(opts.storage){let seed=JSON.parse(fs.readFileSync(opts.storage,'utf8'));if(seed.format==='ergoflex-studio-state-v1')seed=Object.fromEntries(Object.entries(seed.keys).filter(([,r])=>!r.deleted).map(([k,r])=>[k,r.value]));await page.evaluate(s=>{localStorage.clear();for(const [k,v] of Object.entries(s))localStorage.setItem(k,v);},seed);}
+  // --state-keys k1,k2: overlay those keys from the live studio-state.json (repo root, or --state file) on the seed,
+  // e.g. ergoflex.sceneAssets.v1 so Vico's latest scene edits are in the render while the curated seed keeps the rest.
+  if(opts['state-keys']){const st=JSON.parse(fs.readFileSync(opts.state||path.resolve(__dirname,'..','..','studio-state.json'),'utf8')),seed0=opts.storage?null:{};
+    const keys=String(opts['state-keys']).split(',').filter(Boolean),got=keys.filter(k=>st.keys?.[k]&&!st.keys[k].deleted);
+    console.log(`[provenance] state-keys rev ${st.rev}: ${got.map(k=>k+'@'+st.keys[k].rev).join(' ')||'none'}`);
+    opts.__overlay=Object.fromEntries(got.map(k=>[k,st.keys[k].value]));if(seed0)opts.storage=null;}
+  if(opts.storage||opts.__overlay){let seed=opts.storage?JSON.parse(fs.readFileSync(opts.storage,'utf8')):{};if(seed.format==='ergoflex-studio-state-v1')seed=Object.fromEntries(Object.entries(seed.keys).filter(([,r])=>!r.deleted).map(([k,r])=>[k,r.value]));if(opts.__overlay)Object.assign(seed,opts.__overlay);await page.evaluate(s=>{localStorage.clear();for(const [k,v] of Object.entries(s))localStorage.setItem(k,v);},seed);}
   await page.evaluate(()=>{document.documentElement.innerHTML='<body style="margin:0;background:#000"><iframe id="s" style="width:1280px;height:720px;border:0" src="/?view=product&presentation=1&tour=1"></iframe></body>';});
   const frame=await (await page.waitForSelector('#s')).contentFrame();
   await frame.waitForFunction(()=>window.ErgoPresentation,{timeout:180000});
