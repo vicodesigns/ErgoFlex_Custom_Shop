@@ -85,6 +85,9 @@ const report=await page.evaluate(async()=>{
    }
    if(leaks.size)failures.push('Lime left: '+[...leaks].slice(0,12).join(', '));
    blackred[layout].failures=failures;
+   // Back to green on the same room: nothing of black & red may linger.
+   r.set('gym',{layout,scale:.001,gymTheme:'green'});await r.ready;blackred[layout].afterToggle={};
+   for(const phase of phases){r.roomAtmosphere(phase);r.life.apply(phase);r.life.lightActivity();blackred[layout].afterToggle[phase]=fingerprint();}
   }
  }
  r.set('product');return {fingerprint:out,themed:!!theme,blackred};
@@ -93,10 +96,11 @@ const green=Object.fromEntries(Object.entries(report.fingerprint).map(([l,v])=>[
 if(write){fs.mkdirSync(path.dirname(fixture),{recursive:true});fs.writeFileSync(fixture,JSON.stringify(green,null,1)+'\n');console.log('Wrote '+fixture);}
 else{
  const expected=JSON.parse(fs.readFileSync(fixture,'utf8'));
+ assert.ok(report.themed,'gym-theme.mjs loaded (the black & red checks ran)');
  assert.deepEqual(green,expected,'Green gym fingerprint changed: the default room is no longer byte-identical');
  if(report.themed)for(const [l,v] of Object.entries(report.fingerprint))assert.deepEqual(v.explicitGreen,expected[l],l+': gymTheme green differs from the default room');
  console.log('PASS: green gym fingerprint matches for 5 layouts × 5 modes'+(report.themed?' (default and explicit green)':'')+'.');
- if(report.themed){for(const [l,v] of Object.entries(report.blackred))assert.deepEqual(v.failures,[],'black & red '+l);console.log('PASS: black & red builds 5 layouts × 5 modes: same assets, in bounds, themed finish and accents, no lime surfaces.');}
+ if(report.themed){for(const [l,v] of Object.entries(report.blackred)){assert.deepEqual(v.failures,[],'black & red '+l);assert.deepEqual(v.afterToggle,expected[l],l+': green after a black & red build differs');}console.log('PASS: black & red builds 5 layouts × 5 modes: same assets, in bounds, themed finish and accents, no lime surfaces; green after the toggle back is identical.');}
 }
 assert.deepEqual(errors,[]);
 }finally{await browser?.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;server.close();});

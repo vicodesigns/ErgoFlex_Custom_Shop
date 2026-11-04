@@ -146,6 +146,9 @@ export function themedGymLayout(layout, id) {
 // Saved scene desks and Groove lights were authored in one colourway. Swap an
 // exact authored value of another colourway for this one's; custom values
 // (a visitor's own finish or LED colour) pass through untouched.
+// Call these on a colourway CHANGE only (studio setGymTheme), never on load:
+// the black & red desk is also the catalog's Gaming desk, so in the green
+// room it may be the visitor's own choice.
 export function themeGymDeskStyle(style, id) {
     const target = gymTheme(id).desk, value = cleanDeskStyle(style);
     if (!value) return style;
@@ -162,4 +165,19 @@ export function themeGymLights(lights, id) {
         if (mode && target[mode].color) return { ...lights, color: target[mode].color };
     }
     return lights;
+}
+// A saved scene-desk state moved to colourway id: the changed fields (style,
+// lights, per-setting lights), or null when nothing is authored in the other one.
+export function themeGymDeskState(state, id) {
+    if (!state || typeof state !== 'object') return null;
+    const patch = {}, style = themeGymDeskStyle(state.style, id), lights = themeGymLights(state.lights, id);
+    if (style !== state.style) patch.style = style;
+    if (lights !== state.lights) patch.lights = lights;
+    let phases = null;
+    for (const [key, phase] of Object.entries(state.phases || {})) {
+        const moved = themeGymLights(phase?.lights, id);
+        if (moved !== phase?.lights) (phases ||= { ...state.phases })[key] = { ...phase, lights: moved };
+    }
+    if (phases) patch.phases = phases;
+    return Object.keys(patch).length ? patch : null;
 }

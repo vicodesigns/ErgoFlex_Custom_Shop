@@ -34,7 +34,7 @@ const server = http.createServer((req, res) => {
         const result = await page.evaluate(async only => {
             const {ROOM_DESK_STYLES,cleanDeskStyle} = await import('./room-desk-styles.mjs?v=hbhs-classroom-20261013');
             const THREE=await import('three');
-            const ef=ErgoFlex, failures=[], phases=['morning','afternoon','evening','night','party'];
+            const ef=ErgoFlex, failures=[], gymFailures=[], phases=['morning','afternoon','evening','night','party'];
             const canvas=document.createElement('canvas');canvas.width=canvas.height=8;
             const ctx=canvas.getContext('2d');ctx.fillStyle='#cc8945';ctx.fillRect(0,0,8,8);
             ef.surfaceArtwork.setState({version:1,surfaces:{desktop:{logo:{name:'Test graphic',image:canvas.toDataURL('image/png')}}}});
@@ -96,23 +96,23 @@ const server = http.createServer((req, res) => {
             if(ef.currentConfig.woodFinish!=='Earthy Forest Green') failures.push('scene palette reset failed');
             if(!only || only.includes('gym')){
                 // Gym colourway: the toggle swaps the authored desk, and the scene palette restores the themed one.
+                // Own array and assert, so the pre-existing failures above cannot mask these.
                 const desk=()=>['woodFinish','baseFinish','trimColor'].map(k=>ef.currentConfig[k]).join('/');
                 ef.setRoomScene('gym',false);await ef.workspaceRoom.ready;
-                if(desk()!=='Modern Grey/Black/#286344') failures.push('gym: default desk '+desk());
+                if(desk()!=='Modern Grey/Black/#286344') gymFailures.push('gym: default desk '+desk());
                 ef.setGymTheme('blackred');await ef.workspaceRoom.ready;
-                if(desk()!=='Black Birch/Black/#dc0909') failures.push('gym: black & red desk '+desk());
+                if(desk()!=='Black Birch/Black/#dc0909') gymFailures.push('gym: black & red desk '+desk());
                 document.querySelector('#wood-finishes [data-finish="Walnut"]').click();
                 ef.resetSceneDeskStyle();await ef.workspaceRoom.ready;
-                if(desk()!=='Black Birch/Black/#dc0909') failures.push('gym: scene palette reset '+desk());
+                if(desk()!=='Black Birch/Black/#dc0909') gymFailures.push('gym: scene palette reset '+desk());
                 ef.setGymTheme('green');await ef.workspaceRoom.ready;
-                if(desk()!=='Modern Grey/Black/#286344') failures.push('gym: back to green '+desk());
+                if(desk()!=='Modern Grey/Black/#286344') gymFailures.push('gym: back to green '+desk());
                 // The reload checks below expect the university scene.
                 ef.setRoomScene('university',false);await ef.workspaceRoom.ready;
             }
-            return {count:Object.keys(ROOM_DESK_STYLES).filter(id=>!only || only.includes(id)).length,failures};
+            return {count:Object.keys(ROOM_DESK_STYLES).filter(id=>!only || only.includes(id)).length,failures,gymFailures};
         },only);
-        // Checked before the reload steps, so a later failure cannot hide these.
-        assert.deepEqual(result.failures,[],'Scene finishes, activities and persistence');
+        assert.deepEqual(result.gymFailures,[],'Gym colourway desk checks');
         await page.evaluate(async()=>{
             document.querySelector('#wood-finishes [data-finish="Bordeaux"]').click();
             ErgoFlex.setRoomScene('university',true);await ErgoFlex.workspaceRoom.ready;
@@ -133,6 +133,7 @@ const server = http.createServer((req, res) => {
         assert.deepEqual(await page.evaluate(()=>['woodFinish','baseFinish','trimColor'].map(k=>ErgoFlex.currentConfig[k])),
             ['Warm Ivory','White','#f5f5f2'],'Shared build takes precedence over the older room palette');
         assert.deepEqual(errors,[],'No page errors');
+        assert.deepEqual(result.failures,[],'Scene finishes, activities and persistence');
         console.log(`${result.count} catalog palettes × five activities, station styles, uploaded artwork preservation, room switch, product return, project restoration, reset, reload and shared-build precedence passed.`);
     } finally {await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

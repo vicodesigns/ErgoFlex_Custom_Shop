@@ -2,7 +2,7 @@
 // has the same shape with no green left in it, and the saved-state swaps only
 // touch the authored values of the other colourway.
 import assert from 'node:assert/strict';
-import { GYM_THEMES, GYM_MODES, gymTheme, gymModes, themedGymLayout, themeGymDeskStyle, themeGymLights } from '../gym-theme.mjs?v=gym-black-red-20261104';
+import { GYM_THEMES, GYM_MODES, gymTheme, gymModes, themedGymLayout, themeGymDeskStyle, themeGymLights, themeGymDeskState } from '../gym-theme.mjs?v=gym-black-red-20261104';
 import { ROOM_DESK_STYLES, GYM_BLACKRED_DESK, roomDeskStyle, cleanDeskStyle, cleanRoomDeskStyles } from '../room-desk-styles.mjs?v=gym-black-red-20261104'; // the instance gym-theme.mjs reads
 import { ROOM_DETAIL_PALETTES } from '../room-finish-palettes.mjs';
 
@@ -79,7 +79,8 @@ assert.ok(checked > 120, 'The leak scan reached the palette: ' + checked);
 assert.ok(walk('#c0ea50', 'canary') === undefined && leaks.pop() === 'canary #c0ea50', 'The leak scan flags lime');
 assert.ok(hsl(GYM_BLACKRED_DESK.trimColor)[0] < 10, 'Red desk trim');
 
-// Saved scene desks: an exact authored desk of the other colourway swaps; a custom one stays.
+// On a colourway CHANGE (studio setGymTheme only, never on load, see the studio
+// test): an exact authored desk of the other colourway swaps; a custom one stays.
 const greenDesk = cleanDeskStyle(ROOM_DESK_STYLES.gym), redDesk = cleanDeskStyle(GYM_BLACKRED_DESK);
 assert.deepEqual(cleanDeskStyle(themeGymDeskStyle(greenDesk, 'blackred')), redDesk);
 assert.deepEqual(cleanDeskStyle(themeGymDeskStyle(redDesk, 'green')), greenDesk);
@@ -91,6 +92,19 @@ const custom = { woodFinish: 'Walnut', baseFinish: 'Black', trimColor: '#286344'
 assert.equal(themeGymDeskStyle(custom, 'blackred'), custom);
 assert.equal(themeGymDeskStyle({ ...greenDesk, woodFinish: 'Walnut' }, 'blackred').woodFinish, 'Walnut');
 for (const v of [undefined, null, {}]) assert.equal(themeGymDeskStyle(v, 'blackred'), v);
+
+// A whole saved scene-desk state on the toggle: finish, lights and per-setting lights.
+{
+    const lime = GYM_MODES.party.color, red = GYM_THEMES.blackred.modes.party.color;
+    const state = { name: 'Main desk', style: greenDesk, lights: { color: lime, glow: 9 }, phases: { party: { height: 43.5, lights: { color: lime } }, night: { height: 30, lights: { color: '#123456' } } } };
+    const patch = themeGymDeskState(state, 'blackred');
+    assert.deepEqual(cleanDeskStyle(patch.style), redDesk); assert.deepEqual(patch.lights, { color: red, glow: 9 });
+    assert.deepEqual(patch.phases.party, { height: 43.5, lights: { color: red } }); assert.equal(patch.phases.night, state.phases.night, 'Custom setting light kept');
+    assert.equal(state.lights.color, lime, 'The saved state is not mutated'); assert.equal(Object.keys(patch).includes('name'), false);
+    assert.equal(themeGymDeskState(state, 'green'), null, 'Nothing to move within its own colourway');
+    assert.equal(themeGymDeskState({ style: custom, lights: { color: '#33aa66' } }, 'blackred'), null, 'Custom finish and LED stay');
+    for (const v of [undefined, null, 3, {}]) assert.equal(themeGymDeskState(v, 'blackred'), null);
+}
 
 // Saved LED colours: a mode's authored colour maps to the same mode in the other colourway.
 for (const id of Object.keys(GYM_MODES)) {

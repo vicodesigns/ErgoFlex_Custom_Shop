@@ -36,8 +36,11 @@ const server = http.createServer((req, res) => {
                 pressed: [...document.querySelectorAll('[data-gym-theme]')].filter(b => b.getAttribute('aria-pressed') === 'true').map(b => b.dataset.gymTheme) };
         });
         const GREEN = ['Modern Grey', 'Black', '#286344'], RED = ['Black Birch', 'Black', '#dc0909'];
+        // Studio-level look outside the room fingerprint: exposure and the desk screen.
+        const look = () => page.evaluate(() => { const c = ErgoFlex.sceneScreens?.ctx.context(); return { exposure: ErgoFlex.renderer.toneMappingExposure, accent: c?.accent ?? null, mono: c?.mono ?? null, layout: ErgoFlex.workspaceRoom.roomLayout?.id, mode: ErgoFlex.gymMode }; });
 
         await boot('?room=gym&view=room');
+        const look0 = await look();
         let s = await state();
         assert.equal(s.theme, 'green'); assert.equal(s.stored, null); assert.deepEqual(s.desk, GREEN); assert.equal(s.layoutTheme, 'green');
         assert.equal(s.polish, 'Rubber & brushed steel'); assert.deepEqual(s.pressed, ['green'], 'Toggle shows green');
@@ -81,6 +84,28 @@ const server = http.createServer((req, res) => {
         const legacy = JSON.parse(JSON.stringify(project)); delete legacy.presentation.gymTheme;
         assert.equal(await restore(legacy), true);
         s = await state(); assert.equal(s.theme, 'green', 'Old project opens green'); assert.equal(s.layoutTheme, 'green'); assert.equal(s.polish, 'Rubber & brushed steel');
+        // The project's own desk (here the catalog Gaming finish) is authoritative: green never swaps it on load.
+        assert.deepEqual(s.desk, RED, 'Old project keeps its own black & red desk in green');
+        // The same project from before scene desks existed: no saved desk record re-applies the finish,
+        // so this exercises the room's own desk styling on load.
+        const bare = JSON.parse(JSON.stringify(legacy)); bare.presentation.sceneDesks = {};
+        assert.equal(await restore(bare), true);
+        s = await state(); assert.equal(s.theme, 'green'); assert.deepEqual(s.desk, RED, 'Project without scene desks keeps its desk in green');
+        // Green after black & red: the studio-level look is the fresh green one.
+        await page.evaluate(async l => { ErgoFlex.setGymLayout(l.layout); await ErgoFlex.workspaceRoom.ready; ErgoFlex.setGymMode(l.mode); }, look0);
+        assert.deepEqual(await look(), look0, 'Green look after the toggle back');
+
+        // A green visitor's own Gaming desk survives a reload, and a shared Gaming build opens as shared.
+        await page.evaluate(async () => { ErgoFlex.resetSceneDeskStyle(); await ErgoFlex.workspaceRoom.ready; });
+        assert.deepEqual((await state()).desk, GREEN, 'Scene palette before the visitor picks a finish');
+        await page.evaluate(() => { for (const q of ['#wood-finishes [data-finish="Black Birch"]', '#base-finishes [data-finish="Black"]', '[data-trim-color="#dc0909"]']) document.querySelector(q).click(); ErgoFlex.sceneDesks?.persist(); });
+        assert.deepEqual((await state()).desk, RED);
+        await boot('?room=gym');
+        s = await state(); assert.equal(s.theme, 'green'); assert.deepEqual(s.desk, RED, 'Own Gaming desk kept after reload in green');
+        const shared = await page.evaluate(() => ({ ...ErgoFlex.currentConfig, woodFinish: 'Black Birch', baseFinish: 'Black', trimColor: '#dc0909' }));
+        await page.evaluate(() => localStorage.clear());
+        await boot('?room=gym&build=' + encodeURIComponent(JSON.stringify(shared)));
+        s = await state(); assert.equal(s.theme, 'green'); assert.deepEqual(s.desk, RED, 'Shared Gaming build opens with its desk in green');
 
         // Reloads: localStorage persists the choice; ?gymTheme= overrides it for the visit only.
         await page.evaluate(async () => { ErgoFlex.setGymTheme('blackred'); await ErgoFlex.workspaceRoom.ready; });

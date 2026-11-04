@@ -70,7 +70,7 @@ import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } f
 import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-black-red-20261104';
-import { GYM_THEMES, gymModes, themeGymDeskStyle, themeGymLights } from './gym-theme.mjs?v=gym-black-red-20261104';
+import { GYM_THEMES, gymModes, themeGymDeskStyle, themeGymLights, themeGymDeskState } from './gym-theme.mjs?v=gym-black-red-20261104';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=gaming-gear-20261014';
 import { ARWorkspace } from './ar-workspace.mjs?v=compact-controller-20261007';
@@ -696,8 +696,7 @@ function initSceneDeskEditing() {
                 r.appliedArtwork=artwork;
                 if(r.state.accessories&&JSON.stringify([currentConfig.accessories,currentConfig.accessoryFinishes||{}])!==JSON.stringify([r.state.accessories,r.state.accessoryFinishes||{}])){currentConfig=cleanConfig({...currentConfig,accessories:r.state.accessories,accessoryFinishes:r.state.accessoryFinishes||{}});renderAccessories();updatePrice();}
                 if(currentConfig.size!==r.state.size)changeDesktopSize(r.state.size,{rebuildRoom:false});
-                const style=selectedRoomScene==='gym'?themeGymDeskStyle(r.state.style,gymTheme):r.state.style;
-                if(style&&JSON.stringify(currentDeskStyle())!==JSON.stringify(style))applyDeskStyle(style);
+                if(r.state.style&&JSON.stringify(currentDeskStyle())!==JSON.stringify(r.state.style))applyDeskStyle(r.state.style);
                 currentLift=targetLift=heightToLift(Math.max(r.state.height,minimumHeightForTilt(r.state.tilt,r.state.size)));
                 manualLiftOverride=true;tiltTarget=null;updateMovingObjectsPosition();
                 const tilt=primaryTiltConfig();if(tilt){tilt.currentDeg=r.state.tilt;applyTiltConfig(tilt);}
@@ -2841,7 +2840,7 @@ function styleDeskForRoom(id, preserve = false) {
     const initial = sceneDeskLocation === null;
     if (initial && (restoredSharedBuild || !sceneDeskStyles.product)) sceneDeskStyles.product = currentDeskStyle();
     if (initial && restoredBuildSize && id !== 'product' && (restoredSharedBuild || !sceneDeskStyles[id])) sceneDeskStyles[id] = currentDeskStyle();
-    if (!(preserve && sceneDeskLocation === id)) applyDeskStyle((id === 'gym' ? themeGymDeskStyle(sceneDeskStyles[id], gymTheme) : sceneDeskStyles[id]) || roomDeskStyle(id, gymTheme));
+    if (!(preserve && sceneDeskLocation === id)) applyDeskStyle(sceneDeskStyles[id] || roomDeskStyle(id, gymTheme));
     sceneDeskLocation = id;
     syncSceneDeskStyleUI();
 }
@@ -10782,7 +10781,6 @@ function captureGrooveLights() {
     }));
 }
 function applyGrooveLights(lights) {
-    if (selectedRoomScene === 'gym') lights = themeGymLights(lights, gymTheme);
     const music = lights.music || {}, game = lights.game || {};
     // Saving a recipe never stores a microphone permission or an audio file.
     const sourceAvailable = music.source === 'demo' ||
@@ -11056,16 +11054,29 @@ function setKitchenMode(id, moveDesk = true) { setMeasuredRoomMode('kitchen', id
 function setGymMode(id, moveDesk = true) { setMeasuredRoomMode('gym', id, moveDesk); }
 // One colourway for the whole gym (every layout and mode). A desk or LED colour
 // still in the other colourway's authored finish follows it; custom ones stay.
+// The swap happens here, on the toggle, and never on load: the black & red desk
+// is also the catalog's Gaming desk, a finish a visitor may choose in green.
 function setGymTheme(id) {
     if (!GYM_THEMES[id]) return;
     gymTheme = id;
     try { localStorage.setItem('ergoflex.gymTheme', id); } catch {}
-    if (selectedRoomScene !== 'gym') { syncHomeOfficeUI(); return; }
-    const saved = sceneDeskStyles.gym, live = currentDeskStyle();
+    const saved = sceneDeskStyles.gym;
     if (saved && themeGymDeskStyle(saved, id) !== saved) { delete sceneDeskStyles.gym; try { localStorage.setItem(SCENE_DESK_STYLES_KEY, JSON.stringify(sceneDeskStyles)); } catch {} }
-    if (themeGymDeskStyle(live, id) !== live) applyDeskStyle(GYM_THEMES[id].desk);
+    const inGym = selectedRoomScene === 'gym';
+    if (inGym) {
+        const live = currentDeskStyle(); if (themeGymDeskStyle(live, id) !== live) applyDeskStyle(GYM_THEMES[id].desk);
+        const lights = themeGymLights({ color: ledColor }, id); if (lights.color !== ledColor) setLedColor(lights.color, false);
+    }
+    // Saved scene desks of every gym size: finish, lights and per-setting lights.
+    if (sceneDesks) {
+        let changed = false;
+        const move = state => { const patch = themeGymDeskState(state, id); if (patch) { Object.assign(state, patch); changed = true; } };
+        if (sceneDesks.key?.startsWith('gym/')) for (const r of sceneDesks.records.values()) move(r.state);
+        for (const [key, room] of Object.entries(sceneDesks.data.rooms || {})) if (key.startsWith('gym/')) Object.values(room.desks || {}).forEach(move);
+        if (changed) sceneDesks.persist();
+    }
+    if (!inGym) { syncHomeOfficeUI(); return; }
     setRoomScene('gym', false, { preserveDesk: true });
-    const lights = themeGymLights({ color: ledColor }, id); if (lights.color !== ledColor) setLedColor(lights.color, false);
     syncSceneDeskStyleUI(); sceneScreens?.update(true);
 }
 function setStudyMode(id, moveDesk = true) { setMeasuredRoomMode('study', id, moveDesk); }
