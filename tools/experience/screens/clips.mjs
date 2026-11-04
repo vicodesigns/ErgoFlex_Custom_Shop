@@ -32,4 +32,9 @@ export const CLIPS = [
     videos: [{key: 'montage', src: SCREENS + '09-game-montage.mp4', t: 16, scale: '854:-2'}]},
   {id: '11-main', chapter: 11, target: 'main-landscape', role: 'curved: storage mode', w: 1920, h: 800, scene: 'ch11'},
   {id: '12-main', chapter: 12, target: 'main-landscape', role: 'curved: app home / brand loop', w: 1920, h: 800, scene: 'ch12'},
+  // HQ12 finale (shots/13.json, CAPTURE_SHOT + CAPTURE_OUT): the ch12 home/brand loop for the whole 48 s chapter, and the
+  // office look as a financial analyst (local clip time, rendered with --frames 240; the shot plays them with offset -E start).
+  {id: '13-main', chapter: 13, target: 'main-landscape', role: 'curved: app home for the whole finale (Vico: no logo-only monitors)', w: 1920, h: 800, scene: 'ch12', opts: {homeUntil: 1e3}},
+  {id: '13-fin-portrait', chapter: 13, target: 'main-portrait', role: 'portrait: portfolio (financial analyst)', w: 1080, h: 1856, scene: 'ch13p'},
+  {id: '13-fin-wide', chapter: 13, target: 'main-landscape', role: 'curved: markets, DCF model, watchlist', w: 2560, h: 1072, scene: 'ch13w'},
 ];

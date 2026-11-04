@@ -11,9 +11,10 @@ export function tourEnabled(location = window.location) {
 }
 
 const CSS = `
-#scene-tour{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:6px;
+#scene-tour{position:absolute;right:72px;top:18px;z-index:30;display:flex;align-items:center;gap:6px;
   padding:6px;border-radius:14px;background:rgba(15,20,26,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  color:#f3f5f7;font:500 13px/1.2 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.28);max-width:calc(100% - 24px);user-select:none}
+  color:#f3f5f7;font:500 13px/1.2 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.28);max-width:calc(100% - 96px);user-select:none}
+.scene-tour-full #scene-tour{left:50%;right:auto;top:12px;transform:translateX(-50%);max-width:calc(100% - 24px)}
 #scene-tour button{display:flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);
   background:rgba(255,255,255,.08);color:inherit;font:inherit;white-space:nowrap;touch-action:manipulation;cursor:pointer}
 #scene-tour button:active{background:rgba(255,255,255,.2)}

@@ -33,15 +33,21 @@ export function matchingHighschoolDefault(defaults, claimed, id, role, name) {
 
 export function migrateHighschoolFixtureTransform(obj, saved, layout) {
     if (!saved || !layout) return saved;
-    const id=obj.userData.sceneAssetKey?.match(/:fixture:([^:]+)$/)?.[1] || obj.userData.propId;
+    const key=obj.userData.sceneAssetKey || '';
+    const id=key.match(/:fixture:([^:]+)$/)?.[1] || obj.userData.propId;
     const table=id?.match(/^student-table-([0-2])-([01])$/);
-    const old=table ? [Number(table[2]) ? 1700 : -150,0,-1700+Number(table[1])*1450] : {
-        'research-gallery':[-2700,1660,layout.back+55],
-        'acoustic-panels':[layout.width/2-45,1850,-1120],
-        'resource-shelf':[-300,0,layout.back+340],
-        'room-sign':[0,2520,layout.back+50]
+    const candidates=table ? [[Number(table[2]) ? 1700 : -150,0,-1700+Number(table[1])*1450]] : key==='scene:highschool:house:room:7:water-bottle' ? [[-380,740,4360]] : {
+        'research-gallery':[[-2700,1660,layout.back+55]],
+        'acoustic-panels':[[layout.width/2-45,1850,-1120]],
+        'resource-shelf':[[-300,0,layout.back+340]],
+        'room-sign':[[0,2520,layout.back+50],[0,2880,layout.back+50]],
+        'wall-clock':[[-layout.width/2+550,2450,layout.back+55]],
+        'bell-tower-print':[[-4100,1650,layout.back+34]],
+        'sankey-poster':[[-500,1750,layout.back+29]],
+        'teacher-timetable':[[-layout.width/2+30,1560,layout.desk[1]+50]],
+        'poster-gallery':[[layout.width/2-27,1700,4700]]
     }[id];
-    if(!old || !['x','y','z'].every((a,i)=>Math.abs(saved.p[a]-old[i])<.01 && Math.abs(saved.s[a]-1)<.00001))return saved;
+    if(!candidates?.some(old=>['x','y','z'].every((a,i)=>Math.abs(saved.p[a]-old[i])<.01 && Math.abs(saved.s[a]-1)<.00001)))return saved;
     // Automatically captured original placements follow the upgraded room.
     // A deliberately moved, rotated or scaled fixture retains the owner's edit.
     if(!['x','y','z','w'].every(a=>Math.abs(saved.q[a]-obj.quaternion[a])<.00001))return saved;
