@@ -167,9 +167,9 @@ export function detailKit() {
             const rgb = new THREE.Color(color), colors = new Float32Array(g.attributes.position.count * 3); for (let i = 0; i < colors.length; i += 3) { colors[i] = rgb.r; colors[i + 1] = rgb.g; colors[i + 2] = rgb.b; }
             g.setAttribute('color', new THREE.BufferAttribute(colors, 3)); parts.push({ g, finish }); return api;
         },
-        box(size, at, color, rot, finish) { return api.add(new THREE.BoxGeometry(...size), at, color, [1, 1, 1], rot, finish); },
+        box(size, at, color, rot, finish) { return api.add(new THREE.BoxGeometry(...size), at, color, [1, 1, 1], rot || undefined, finish); },
         cyl(r, r2, height, at, color, finish) { return api.add(new THREE.CylinderGeometry(r, r2, height, 16), at, color, [1, 1, 1], [0, 0, 0], finish); },
-        ball(r, at, color, scale, rot, finish) { return api.add(new THREE.SphereGeometry(r, 12, 8), at, color, scale, rot, finish); },
+        ball(r, at, color, scale, rot, finish) { return api.add(new THREE.SphereGeometry(r, 12, 8), at, color, scale || undefined, rot || undefined, finish); },
         build(parent, material) {
             if (!parts.length) return;
             const buckets = new Map();
