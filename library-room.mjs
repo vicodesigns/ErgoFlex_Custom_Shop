@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { detailFinish } from './institutional-detail.mjs?v=material-realism-20261104';
 import { roomLifeBaseTransform } from './room-life.mjs?v=commons-home-comfort-20261024';
 import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=library-floorplan-20261013';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
@@ -270,7 +271,8 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     const chalk = material(modern ? '#ecebe2' : '#e8e2d2', { roughness: .94 }), green = material(['#436c58', '#436c58', '#596f65', '#506b70', '#596b62'][index], { roughness: .86 }), dark = material(modern ? '#354548' : '#344941'), brass = material(modern ? '#b5bbba' : '#b5a06b', { metalness: .72, roughness: .4 });
     const trim = material('#f1ecdf', { roughness: .8 }), dress = material('#ffffff', { vertexColors: true, roughness: .78 });
     const oakMap = canvasMap(c => { c.fillStyle = modern ? '#c1ad8b' : '#ac8960'; c.fillRect(0, 0, 512, 512); for (let x = 0; x < 512; x += 5) { c.strokeStyle = x % 3 ? '#684a2b25' : '#e2c48b35'; c.lineWidth = .8; c.beginPath(); c.moveTo(x, 0); c.bezierCurveTo(x + 8, 150, x - 12, 350, x + 2, 512); c.stroke(); } });
-    const oak = material('#ffffff', { map: oakMap, roughness: .7 });
+    const oak = material('#ffffff', { map: oakMap, roughness: .64 });
+    oak.bumpMap = oakMap.clone(); oak.bumpMap.colorSpace = THREE.NoColorSpace; oak.bumpScale = .08 * root.scale.x; oak.userData.roomFinishLocked = true;
     const register = (obj, id, name) => { obj.userData.propId = id; obj.userData.sceneAssetName = name; markSceneAsset(obj, { key: `library:${layout.id}:fixture:${id}` }); };
     const group = (id, name, at = [0, 0, 0], parent = root) => { const g = new THREE.Group(); g.name = name; g.position.set(...at); parent.add(g); register(g, id, name); return g; };
     const baked = (parent, k, mat, shadow = true) => { const obj = mesh(parent, k.build(), mat); obj.castShadow = shadow; return obj; };
@@ -309,16 +311,17 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     }, 1024, 1024);
     floorMap.wrapS = floorMap.wrapT = THREE.RepeatWrapping; floorMap.repeat.set(w / (carpeted ? 1200 : 680), d / (carpeted ? 1200 : 680)); floorMap.anisotropy = 8;
     const floor = material('#ffffff', { map: floorMap, roughness: carpeted ? .98 : .62 });
+    floor.bumpMap = floorMap.clone(); floor.bumpMap.colorSpace = THREE.NoColorSpace; floor.bumpScale = (carpeted ? .25 : .08) * root.scale.x; floor.userData.roomFinishLocked = true;
     box(root, [w, 30, d], [0, -15, bz + d / 2], floor);
     // Wool rugs: woven border bands and a quiet field pattern.
-    const rug = (field, band, line, motif) => material('#ffffff', { roughness: 1, map: canvasMap((c, S) => {
+    const rug = (field, band, line, motif) => detailFinish(material('#ffffff', { roughness: 1, map: canvasMap((c, S) => {
         c.fillStyle = field; c.fillRect(0, 0, S, S);
         for (let i = 0; i < 2600; i++) { c.fillStyle = rnd(i) > .5 ? '#ffffff0d' : '#0000000d'; c.fillRect(rnd(i * 3) * S, rnd(i * 5) * S, 2, 2); }
         c.strokeStyle = motif; c.lineWidth = 3;
         for (let x = 64; x < S - 40; x += 64) for (let y = 64; y < S - 40; y += 64) { c.beginPath(); c.moveTo(x, y - 18); c.lineTo(x + 18, y); c.lineTo(x, y + 18); c.lineTo(x - 18, y); c.closePath(); c.stroke(); }
         c.strokeStyle = band; c.lineWidth = 34; c.strokeRect(17, 17, S - 34, S - 34);
         c.strokeStyle = line; c.lineWidth = 5; c.strokeRect(44, 44, S - 88, S - 88); c.lineWidth = 3; c.strokeRect(9, 9, S - 18, S - 18);
-    }) });
+    }) }), 'fabric');
     const floorRug = (id, size, at, mat, radius) => { const o = box(root, size, at, mat, radius); o.userData.libraryRug = id; return o; };
     floorRug('desk', [1900, 4, 2300], [layout.desk[0], 2, layout.desk[1] + 450], rug('#c7cbb5', '#6f8a74', '#efe8d2', '#b4bba2'), 8);
     const back = new THREE.Group(); back.name = 'Library commons wall'; root.add(back);
@@ -387,7 +390,7 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     const windowTrim = kit(); windowTrim.box([60, 70, d], [-w / 2 + 30, h - 35, bz + d / 2]).box([90, 30, d], [-w / 2 + 45, h - 85, bz + d / 2]); baked(window, windowTrim, trim, false);
     // Linen drapes on a brass rod frame the daylight without covering it.
     const drapeGeo = (width, height) => { const g = new THREE.PlaneGeometry(width, height, 18, 1), p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin(p.getX(i) / width * Math.PI * 9) * 20); g.computeVertexNormals(); return g; };
-    const linen = material('#e6dcc6', { roughness: 1, side: THREE.DoubleSide }), drapeTop = Math.min(h - 140, low + wh + 220);
+    const linen = detailFinish(material('#e6dcc6', { roughness: 1, side: THREE.DoubleSide }), 'fabric'), drapeTop = Math.min(h - 140, low + wh + 220);
     for (const z of [a - 140, b + 140]) { const drape = mesh(window, drapeGeo(460, drapeTop - 30), linen, [-w / 2 + 68, (drapeTop + 30) / 2, z]); drape.rotation.y = Math.PI / 2; drape.castShadow = false; }
     const rail = kit(); rail.cyl(11, 11, ww + 900, [-w / 2 + 75, drapeTop + 20, wz], { rot: [Math.PI / 2, 0, 0] });
     for (const z of [a - 420, b + 420]) rail.ball(24, [-w / 2 + 75, drapeTop + 20, z]).box([75, 14, 14], [-w / 2 + 37, drapeTop + 20, z]);

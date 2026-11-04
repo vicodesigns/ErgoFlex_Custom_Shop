@@ -541,7 +541,7 @@ const IT_UVP = { powder: [320, 320], brushed: [420, 60], alu: [320, 320], hpl: [
 const IT_CLASSES = ['dress', 'powder', 'chrome', 'brushed', 'alu', 'hpl', 'rubber', 'card', 'poly', 'vent', 'foil', 'coil', 'cable', 'print', 'front', 'glass'];
 function itMaterials(store) {
     if (store.C) return store.C;
-    const std = o => new THREE.MeshStandardMaterial(o);
+    const std = o => { const m = new THREE.MeshStandardMaterial(o); m.userData.roomFinishLocked = true; return m; };
     const maps = store.maps = {
         powder: tex(drawPowder, 256, 256), powderR: tex(drawPowderRough, 128, 128, false), hpl: tex(drawHPL, 256, 256), hplR: tex(drawHPLRough, 128, 128, false),
         brushed: tex(drawBrushed, 256, 64), rubber: tex(drawRubber, 128, 128), card: tex(drawCard, 256, 256), poly: tex(drawPoly, 256, 256), vent: tex(drawVent, 64, 64),
@@ -565,7 +565,7 @@ function itMaterials(store) {
         cable: std({ vertexColors: true, roughness: .42 }),
         print: std({ vertexColors: true, map: maps.labels, roughness: .45 }),
         front: std({ vertexColors: true, map: maps.fronts, roughness: .48, metalness: .08 }),
-        glass: std({ color: '#d2e4e8', transparent: true, opacity: .22, roughness: .05, metalness: .1, depthWrite: false })
+        glass: std({ color: '#d2e4e8', transparent: true, opacity: .22, roughness: .065, metalness: 0, depthWrite: false })
     };
 }
 const STATION_STORE = {};
@@ -1425,8 +1425,8 @@ export function finishDecor() {}
 // and a cable tester; a closed laptop; site map, device checklist
 // and boxed laptops for the team deployment.
 export function activityMaterials(k, phase, y) {
-    const sheet = (x, z, w, d, r = 0, c = '#f2f2ec') => k.box([w, 2, d], [x, y + 1, z], c, [0, r, 0]);
-    if (phase === 0) { k.box([230, 12, 330], [260, y + 6, 40], '#7d5f3f'); sheet(260, 50, 210, 290, 0); for (let n = 0; n < 8; n++) k.box([150, 2, 4], [270, y + 13, -60 + n * 30], '#7d888e'); sheet(-80, 80, 210, 290, .1, '#e8eef2'); }
+    const sheet = (x, z, w, d, r = 0, c = '#f2f2ec', lift = 0) => k.box([w, 2, d], [x, y + lift + 1, z], c, [0, r, 0]);
+    if (phase === 0) { k.box([230, 12, 330], [260, y + 6, 40], '#7d5f3f'); sheet(260, 50, 210, 290, 0, '#f2f2ec', 12); for (let n = 0; n < 8; n++) k.box([150, 2, 4], [270, y + 15, -60 + n * 30], '#7d888e'); sheet(-80, 80, 210, 290, .1, '#e8eef2'); }
     if (phase === 1) for (let n = 0; n < 5; n++) sheet(-120 + n * 110, 60 + (n % 2) * 50, 100, 140, (rnd(n) - .5) * .4, ['#f6d76b', '#f4b6a0', '#bfe0f2', '#c7e6c4', '#f6d76b'][n]);
     if (phase === 2) { k.box([90, 160, 40], [250, y + 20, 60], YELLOW, [Math.PI / 2, 0, .3]); for (let n = 0; n < 3; n++) k.box([180, 30, 120], [-60 + n * 40, y + 15 + n * 30, -40], ['#c9cfd3', '#b99067', '#2b3338'][n]); k.add(new THREE.TorusGeometry(80, 6, 6, 20), [80, y + 6, 160], '#3c7fc4', [1, 1, 1], [Math.PI / 2, 0, 0]); }
     if (phase === 3) k.box([330, 18, 230], [200, y + 9, 40], '#2c3439');

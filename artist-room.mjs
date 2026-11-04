@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { artistStudyMaps, artistSessionDetails } from './artist-studio-detail.mjs?v=artist-studio-20261025';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
 
@@ -26,9 +27,9 @@ export const ARTIST_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
     );
     if (large) props.push(
         { id: 'kenney-furniture-lounge-sofa', at: [650, 0, front - 490] },
-        { id: 'ergoflex-coffee-table', at: [650, 0, front - 1490] },
-        { id: 'sketchbook', at: [470, 391.2, front - 1510], turn: -8 },
-        { id: 'antique-vase', at: [970, 391.2, front - 1480] },
+        { id: 'ergoflex-coffee-table', at: [650, 0, front - 1790] },
+        { id: 'sketchbook', at: [470, 390, front - 1810], turn: -8 },
+        { id: 'antique-vase', at: [970, 390, front - 1780] },
         { id: 'papers', at: [table[0], 910, table[1] - 330], turn: 90 },
         { id: 'ruler-set-square', at: [table[0] + 160, 910, table[1] + 170], turn: 90 },
         { id: 'long-scissors', at: [table[0] - 150, 910, table[1] + 190], turn: 20 },
@@ -210,6 +211,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
     const { width: w, depth: d, height: h, back: bz, cabinet: [cx, cz] } = layout, front = bz + d;
     const oak = material('#b8996f', { roughness: .78 }), chalk = material('#ebe6da', { roughness: .95 });
     const clay = material('#b06d55', { roughness: .85 }), blue = material('#5f7b81', { roughness: .85 });
+    const blueGlaze = material('#5f7b81', { roughness: .3 });
     const metal = material('#4a5150', { metalness: .45, roughness: .55 });
     const sage = material('#7e8c82', { roughness: .7 }), brass = material('#b8975c', { metalness: .75, roughness: .32 });
     const cast = material('#f2eee5', { roughness: .9 });
@@ -423,7 +425,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
     rod(entry, [-w / 2 + 65, 1000, doorZ - 270], [-w / 2 + 65, 1000, doorZ - 180], 8, brass);
     room.walls.push({ obj: entry, axis: 'z', limit: w / 2 * root.scale.x, sign: -1 });
 
-    const brushCup = (parent, at, pot = blue, id) => {
+    const brushCup = (parent, at, pot = blueGlaze, id) => {
         const cup = new THREE.Group(); cup.position.set(...at); parent.add(cup);
         if(id)register(cup,'artist-brushes-'+id,'Artist brushes · '+id);
         mesh(cup, new THREE.CylinderGeometry(47, 38, 90, 20), pot, [0, 45, 0]);
@@ -488,10 +490,18 @@ export function buildArtistRoom(room, root, layout, helpers) {
     cards(board, pinned.map(([x, y, sw, sh, cell], k) => ({ at: [x, y, 29 + k * .7], size: [sw, sh], cell, rot: [0, 0, ((k * 5) % 7 - 3) * .018] })));
     instanced(board, ball, gloss, pinned.map(([x, y, , sh], k) => ({ at: [x, y + sh / 2 - 14, 38], size: [7, 7, 6], color: ['#c0473a', '#e2b543', '#3d5577'][k % 3] })), false);
     instanced(board, unit, tint, [{ at: [190, 222, 37], size: [70, 18, 1], rot: [0, 0, .5], color: '#e9b9a6' }, { at: [-60, -40, 37], size: [70, 18, 1], rot: [0, 0, -.4], color: '#b9d1c7' }], false);
-    brushCup(storage, [cx, 900, cz - 350], blue, 'cabinet');
+    brushCup(storage, [cx, 900, cz - 350], blueGlaze, 'cabinet');
     const paint = ['#b95d46', '#d9bb63', '#628b89', '#536780'];
     instanced(storage, tube, tint, paint.map((color, i) => ({ at: [cx + (i - 1.5) * 55, 932.5, cz - 100], size: [23, 65, 23], color })));
     instanced(storage, tube, gloss, paint.map((_, i) => ({ at: [cx + (i - 1.5) * 55, 968.5, cz - 100], size: [24, 7, 24], color: '#e9e4d8' })), false);
+    // A folded wiping cloth and masking tape sit in the last 100 mm of the
+    // plan chest, clear of the printer's rotated 402 mm footprint.
+    const cleanup = group(storage, 'Linen cloth and paper masking tape', [cx, 900, cz + 465]);
+    register(cleanup, 'artist-cleanup-supplies', 'Wiping cloth and masking tape');
+    box(cleanup, [190, 8, 90], [-100, 4, 0], linen, 3);
+    box(cleanup, [180, 6, 86], [-100, 11, 0], linen, 3);
+    const tape = mesh(cleanup, new THREE.TorusGeometry(27, 8, 8, 28), material('#c9b78f', { roughness: .96 }), [120, 8, 0]);
+    tape.rotation.x = Math.PI / 2;
     if (layout.compact) {
         // The nook has no floor easel, so a cast and a table easel live on the chest.
         bust(storage, [cx + 20, 900, cz + 200], -Math.PI / 2 + .5, .85);
@@ -600,7 +610,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
         box(easel, [80, 30, 90], [0, 15, -430], oak, 3);
         box(easel, [190, 24, 220], [455, 788, -90], oak, 3);
         rod(easel, [310, 680, -130], [455, 775, -90], 8, metal);
-        brushCup(easel, [455, 800, -90], blue, 'easel');
+        brushCup(easel, [455, 800, -90], blueGlaze, 'easel');
         // Clamp lamp on the mast, angled down onto the canvas.
         const clamp = group(easel, 'Easel clamp lamp', [200, 1800, -120]); clamp.rotation.x = .7;
         mesh(clamp, new THREE.CylinderGeometry(22, 50, 85, 18, 1, true), material('#b8975c', { metalness: .4, roughness: .45, side: THREE.DoubleSide }), [0, 0, 0]);
@@ -628,13 +638,13 @@ export function buildArtistRoom(room, root, layout, helpers) {
         box(taboret, [360, 8, 280], [-40, 724, -40], glass, 2);
         const pigments = ['#f4efe3', '#c99a4b', '#e5c24a', '#c0402f', '#8f2f3b', '#2f4f8f', '#2f6b55', '#5a3e2b'];
         palettePaint = instanced(taboret, ball, gloss, [
-            ...pigments.map((color, i) => ({ at: [-195 + i * 44, 732, -158], size: [17, 8, 14], color })),
-            ...[0, 1, 2, 3].map(i => ({ at: [-120 + i * 70, 729, 20 - i * 25], size: [40, 3, 26], rot: [0, i, 0], color: ['#b97a5a', '#7f9a7a', '#d1b36e', '#6f7f9a'][i] }))
+            ...pigments.map((color, i) => ({ at: [-195 + i * 44, 736, -158], size: [17, 8, 14], color })),
+            ...[0, 1, 2, 3].map(i => ({ at: [-120 + i * 70, 731, 20 - i * 25], size: [40, 3, 26], rot: [0, i, 0], color: ['#b97a5a', '#7f9a7a', '#d1b36e', '#6f7f9a'][i] }))
         ], false);
-        instanced(taboret, tube, gloss, pigments.map((color, i) => ({ at: [-150 + i * 40, 323, 60 - (i % 2) * 30], size: [13, 120, 13], rot: [Math.PI / 2, 0, 0], color })));
-        brushCup(taboret, [165, 720, 160], blue, 'taboret');
+        instanced(taboret, tube, gloss, pigments.map((color, i) => ({ at: [-150 + i * 40, 323, 150], size: [13, 120, 13], rot: [Math.PI / 2, 0, 0], color })));
+        brushCup(taboret, [165, 720, 160], blueGlaze, 'taboret');
         sphere(taboret, [70, 20, 55], [150, 734, -110], material('#d8cbb0', { roughness: 1 }));
-        instanced(taboret, unit, tint, [0, 1, 2].map(i => ({ at: [-30, 318 + i * 18, -110], size: [300, 17, 200], rot: [0, i * .12, 0], color: ['#3e4f5c', '#a24f3c', '#d9cfb8'][i] })));
+        instanced(taboret, unit, tint, [0, 1, 2].map(i => ({ at: [-30, 318 + i * 18, -80], size: [300, 17, 200], rot: [0, i * .12, 0], color: ['#3e4f5c', '#a24f3c', '#d9cfb8'][i] })));
 
         // Cast-drawing still life: a draped plinth with a plaster head and solids,
         // tucked into the back corner beside the desk rather than in front of it.
@@ -657,7 +667,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
         for (const x of [-315, 315]) for (const z of [-660, 660]) box(table, [50, 865, 50], [x, 432.5, z], blue, 2);
         box(table, [670, 22, 1330], [0, 310, 0], oak, 3);
         instanced(table, unit, tint, Array.from({ length: 4 }, (_, i) => ({ at: [0, 356 + i % 2 * 80, -460 + Math.floor(i / 2) * 860], size: [590, 70, 180], color: i % 2 ? '#c8b69c' : '#e4dfd1' })));
-        brushCup(table, [-240, 910, -610], blue, 'worktable');
+        brushCup(table, [-240, 910, -610], blueGlaze, 'worktable');
         const matMap = texture((c, tw, th) => {
             c.fillStyle = '#3f6b5a'; c.fillRect(0, 0, tw, th); c.strokeStyle = 'rgba(220,235,225,.45)'; c.lineWidth = 1;
             for (let i = 8; i < tw; i += 16) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i, th); c.moveTo(0, i); c.lineTo(tw, i); c.stroke(); }
@@ -747,5 +757,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
     };
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[oak, 'wood'], [wallMat, 'plaster'], [clay, 'plaster'], [cast, 'plaster'], [chalk, 'plaster'], [blue, 'powder'], [sage, 'powder'], [metal, 'metal'], [brass, 'metal'], [linen, 'fabric']]) mat.userData.roomSurface = surface;
+    creativeMaterialDetail(root, [[oak, 'oak'], [wallMat, 'plaster'], [clay, 'terracotta'], [cast, 'plaster'], [chalk, 'paintedWood'],
+        [blue, 'powder'], [blueGlaze, 'ceramic'], [sage, 'paintedWood'], [metal, 'powder'], [brass, 'brushed'], [linen, 'textile']]);
     room.roomAtmosphere('afternoon'); root.userData.dimensionsMm = { width: w, depth: d, height: h };
 }

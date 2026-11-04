@@ -1,0 +1,597 @@
+[
+  {
+    "room": "childroom",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "home",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          400,
+          1,
+          180
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "bedroom",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          -100,
+          1,
+          0
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "lounge",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          400,
+          1,
+          180
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "kitchen",
+    "phase": "morning",
+    "actualMode": "morning",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          300,
+          1,
+          180
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "gym",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          440,
+          1,
+          230
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "creative",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          440,
+          1,
+          230
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "gaming",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          440,
+          1,
+          230
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "music",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          -260,
+          1,
+          -130
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "gallery",
+    "phase": "morning",
+    "actualMode": "morning",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          440,
+          1,
+          230
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "workshop",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          440,
+          1,
+          230
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "library",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "humboldt",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          100,
+          1,
+          0
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "occmedialab",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "spacious",
+    "size": "48x30",
+    "desks": 8,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "highschool",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 7,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          100,
+          1,
+          -60
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "kindergarten",
+    "phase": "morning",
+    "size": "48x30",
+    "desks": 1,
+    "kits": []
+  },
+  {
+    "room": "elementary",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 5,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          300,
+          1,
+          -120
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "middleschool",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 5,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          100,
+          1,
+          0
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "college",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 6,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          300,
+          1,
+          -120
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "university",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 7,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          -300,
+          1,
+          -60
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "hospital",
+    "phase": "morning",
+    "actualMode": "morning",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 5,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          -300,
+          1,
+          -120
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "laboratory",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 5,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          -440,
+          1,
+          -150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "mobileit",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 5,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          0,
+          1,
+          230
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "government",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 5,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          -200,
+          1,
+          -120
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "police",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 5,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          -200,
+          1,
+          -120
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "security",
+    "phase": "morning",
+    "actualMode": "morning",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 5,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          -400,
+          1,
+          -60
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "office",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 3,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          -200,
+          1,
+          -120
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "coworking",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 3,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          -200,
+          1,
+          -120
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "study",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          460,
+          1,
+          230
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "scifi",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          440,
+          1,
+          230
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  }
+]

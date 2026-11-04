@@ -1,0 +1,482 @@
+[
+  {
+    "file": "institutional-it.mjs",
+    "kind": "it",
+    "phase": 0,
+    "parts": 11,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-it.mjs",
+    "kind": "it",
+    "phase": 1,
+    "parts": 5,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-it.mjs",
+    "kind": "it",
+    "phase": 2,
+    "parts": 5,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-it.mjs",
+    "kind": "it",
+    "phase": 3,
+    "parts": 1,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-it.mjs",
+    "kind": "it",
+    "phase": 4,
+    "parts": 11,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "kindergarten",
+    "phase": 0,
+    "parts": 10,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "kindergarten",
+    "phase": 1,
+    "parts": 2,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "kindergarten",
+    "phase": 2,
+    "parts": 6,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "kindergarten",
+    "phase": 3,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "kindergarten",
+    "phase": 4,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "elementary",
+    "phase": 0,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "elementary",
+    "phase": 1,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "elementary",
+    "phase": 2,
+    "parts": 5,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "elementary",
+    "phase": 3,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "elementary",
+    "phase": 4,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "middleschool",
+    "phase": 0,
+    "parts": 2,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "middleschool",
+    "phase": 1,
+    "parts": 2,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "middleschool",
+    "phase": 2,
+    "parts": 2,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "middleschool",
+    "phase": 3,
+    "parts": 0,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "middleschool",
+    "phase": 4,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "highschool",
+    "phase": 0,
+    "parts": 19,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "highschool",
+    "phase": 1,
+    "parts": 11,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "highschool",
+    "phase": 2,
+    "parts": 8,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "highschool",
+    "phase": 3,
+    "parts": 17,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "highschool",
+    "phase": 4,
+    "parts": 15,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "college",
+    "phase": 0,
+    "parts": 7,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "college",
+    "phase": 1,
+    "parts": 7,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "college",
+    "phase": 2,
+    "parts": 7,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "college",
+    "phase": 3,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "college",
+    "phase": 4,
+    "parts": 7,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "university",
+    "phase": 0,
+    "parts": 6,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "university",
+    "phase": 1,
+    "parts": 0,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "university",
+    "phase": 2,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "university",
+    "phase": 3,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-education.mjs",
+    "kind": "university",
+    "phase": 4,
+    "parts": 6,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-healthcare.mjs",
+    "kind": "hospital",
+    "phase": 0,
+    "parts": 8,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-healthcare.mjs",
+    "kind": "hospital",
+    "phase": 1,
+    "parts": 3,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-healthcare.mjs",
+    "kind": "hospital",
+    "phase": 2,
+    "parts": 9,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-healthcare.mjs",
+    "kind": "hospital",
+    "phase": 3,
+    "parts": 5,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-healthcare.mjs",
+    "kind": "hospital",
+    "phase": 4,
+    "parts": 15,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-healthcare.mjs",
+    "kind": "lab",
+    "phase": 0,
+    "parts": 22,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-healthcare.mjs",
+    "kind": "lab",
+    "phase": 1,
+    "parts": 28,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-healthcare.mjs",
+    "kind": "lab",
+    "phase": 2,
+    "parts": 18,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-healthcare.mjs",
+    "kind": "lab",
+    "phase": 3,
+    "parts": 30,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-healthcare.mjs",
+    "kind": "lab",
+    "phase": 4,
+    "parts": 34,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "operations",
+    "phase": 0,
+    "parts": 9,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "operations",
+    "phase": 1,
+    "parts": 10,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "operations",
+    "phase": 2,
+    "parts": 12,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "operations",
+    "phase": 3,
+    "parts": 9,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "operations",
+    "phase": 4,
+    "parts": 12,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "police",
+    "phase": 0,
+    "parts": 13,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "police",
+    "phase": 1,
+    "parts": 18,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "police",
+    "phase": 2,
+    "parts": 2,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "police",
+    "phase": 3,
+    "parts": 1,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "police",
+    "phase": 4,
+    "parts": 15,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "government",
+    "phase": 0,
+    "parts": 6,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "government",
+    "phase": 1,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "government",
+    "phase": 2,
+    "parts": 13,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "government",
+    "phase": 3,
+    "parts": 4,
+    "underground": [],
+    "overhang": []
+  },
+  {
+    "file": "institutional-government.mjs",
+    "kind": "government",
+    "phase": 4,
+    "parts": 14,
+    "underground": [],
+    "overhang": []
+  }
+]

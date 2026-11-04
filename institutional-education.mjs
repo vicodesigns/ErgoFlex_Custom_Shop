@@ -1469,7 +1469,8 @@ function finishKit(kit, E) {
         const map = canvasTexture(draw, W, H);
         const m = kit.material(color, { map, roughness, ...extra }); if (surface) m.userData.roomSurface = surface;
         if (rough) m.roughnessMap = canvasTexture(rough, Math.max(64, W / 2), Math.max(64, H / 2), false);
-        m.userData.eduUV = [pu, pv]; cache.set(name, m); return m;
+        m.bumpMap = map.clone(); m.bumpMap.colorSpace = THREE.NoColorSpace; m.bumpScale = .08 * kit.root.scale.x;
+        m.userData.roomFinishLocked = true; m.userData.eduUV = [pu, pv]; cache.set(name, m); return m;
     };
     const S = E.S = { mapped, P };
     const t = P.top;
@@ -1483,10 +1484,10 @@ function finishKit(kit, E) {
     S.shell = color => {
         const key = 'shell' + color; if (cache.has(key)) return cache.get(key);
         let m;
-        if (P.shell === 'fabric') { m = kit.material(color, { map: weave, roughness: .95 }); m.userData.eduUV = [40, 40]; m.userData.roomSurface = 'fabric'; }
-        else if (P.shell === 'leather') { m = kit.material(shade(color, .06), { map: pebble, roughness: .55 }); m.userData.eduUV = [220, 220]; }
+        if (P.shell === 'fabric') { m = kit.material(color, { map: weave, roughness: .95 }); m.userData.eduUV = [40, 40]; m.userData.roomSurface = 'fabric'; m.bumpMap = weave.clone(); m.bumpMap.colorSpace = THREE.NoColorSpace; m.bumpScale = .2 * kit.root.scale.x; }
+        else if (P.shell === 'leather') { m = kit.material(shade(color, .06), { map: pebble, roughness: .55 }); m.userData.eduUV = [220, 220]; m.bumpMap = pebble.clone(); m.bumpMap.colorSpace = THREE.NoColorSpace; m.bumpScale = .08 * kit.root.scale.x; }
         else m = kit.material(color, { roughness: .4 }); // polypropylene, untagged keeps its sheen
-        cache.set(key, m); return m;
+        m.userData.roomFinishLocked = true; cache.set(key, m); return m;
     };
     // Floor zones (flat assets).
     S.vinyl = () => mapped('vinyl', (c, W, H) => drawFleck(c, W, H, { base: '#cfe0d8', flecks: ['#9fbcb0a0', '#ffffffa0', '#7f9c90a0', '#e9b9a080'], count: W * H / 90, size: [1, 3], seed: 2 }), [512, 512], [600, 600], { roughness: .38, surface: 'stone' });
@@ -2175,7 +2176,7 @@ export function dressProp(id, k, g, kit) {
             k.box([380, 14, 260], [-40, y + 90, 120], '#2f4f6a', [-.5, 0, 0]); k.box([20, 90, 20], [-40, y + 45, 60], '#9fb0b8');
             pumpjack(k, 90, y, -170, 1.1);
         }
-        if (spec.id === 'college') { k.box([500, 300, 300], [250, y + 150, -60], '#e8e4db'); k.box([340, 160, 200], [250, y + 380, -60], '#a5624a'); k.box([300, 6, 200], [-20, y + 3, 150], '#f2ead8'); }
+        if (spec.id === 'college') { k.box([500, 300, 300], [250, y + 150, -60], '#e8e4db'); k.box([340, 160, 200], [250, y + 380, -60], '#a5624a'); }
         if (spec.id === 'university') {
             k.cyl(70, 60, 240, [430, y + 120, -150], '#2f2f2f'); k.cyl(50, 50, 30, [430, y + 255, -150], '#b39b6a');
             k.cyl(65, 55, 220, [250, y + 110, -170], '#cfe2e6'); for (let n = 0; n < 8; n++) k.cyl(38, 32, 95, [-60 + n % 4 * 85, y + 48, 40 + Math.floor(n / 4) * 95], '#f2efe8');
@@ -2741,38 +2742,50 @@ export function activityMaterials(k, phase, y, kit) {
     const id = kit.spec.id;
     if (id === 'kindergarten') {
         // Welcome / sign-in table: clipboard and name pegs by day, portfolios for families.
-        if (phase === 0) { k.box([240, 10, 330], [80, y + 5, 60], '#8d6a4a'); k.box([220, 3, 300], [80, y + 11, 65], '#fbf6ea'); for (let n = 0; n < 8; n++) k.box([180, 2, 3], [80, y + 13, -60 + n * 30], '#9aa59f'); }
-        if (phase === 2) for (let n = 0; n < 3; n++) { k.box([320, 16, 240], [40 + n * 40, y + 8 + n * 16, 40 - n * 20], ['#dba55d', '#7fb3a5', '#e48e6e'][n], [0, (n - 1) * .1, 0]); k.box([300, 4, 220], [40 + n * 40, y + 17 + n * 16, 40 - n * 20], '#fbf6ea', [0, (n - 1) * .1, 0]); }
-        if (phase === 1 || phase === 4) for (let n = 0; n < (phase === 4 ? 4 : 2); n++) k.box([210, 2, 290], [-120 + n * 150, y + 1 + n, 120 - n * 30], '#fbf6ea', [0, (rnd(n) - .5) * .4, 0]);
+        if (phase === 0) { k.box([240, 10, 330], [-150, y + 5, 60], '#8d6a4a'); k.box([220, 3, 300], [-150, y + 11, 65], '#fbf6ea'); for (let n = 0; n < 8; n++) k.box([180, 2, 3], [-150, y + 13, -60 + n * 30], '#9aa59f'); }
+        if (phase === 2) for (let n = 0; n < 3; n++) { k.box([320, 16, 240], [-230 + n * 30, y + 8 + n * 16, 80 - n * 10], ['#dba55d', '#7fb3a5', '#e48e6e'][n], [0, (n - 1) * .1, 0]); k.box([300, 4, 220], [-230 + n * 30, y + 17 + n * 16, 80 - n * 10], '#fbf6ea', [0, (n - 1) * .1, 0]); }
+        if (phase === 1 || phase === 4) for (let n = 0; n < (phase === 4 ? 4 : 2); n++) k.box([210, 2, 290], [-370 + n * 250, y + 1 + n * .15, 155], '#fbf6ea', [0, (rnd(n) - .5) * .4, 0]);
         if (phase === 3) for (let n = 0; n < 4; n++) k.box([60, 50, 60], [100 + n % 2 * 70, y + 25 + Math.floor(n / 2) * 50, 120], PASTEL[n]);
     } else if (id === 'elementary') {
         if (phase === 2) for (let n = 0; n < 5; n++) k.box([210, 2, 290], [-150 + n * 140, y + 1, 60 + (n % 2) * 40], '#fbf6ea', [0, (rnd(n + 3) - .5) * .3, 0]);
         else if (phase === 1 || phase === 4) { k.box([300, 4, 220], [150, y + 2, 60], '#e48e6e'); k.box([240, 4, 200], [170, y + 6, 70], '#88a9bf'); k.box([30, 90, 30], [380, y + 45, -60], '#f4f1ea'); k.box([120, 12, 50], [-60, y + 6, 160], '#d9534f'); }
         else activityNotebook(k, phase, y);
     } else if (id === 'middleschool') {
-        if (phase === 4) for (let n = 0; n < 4; n++) k.box([110, 120 + n * 40, 110], [-240 + n * 130, y + 60 + n * 20, 250], ['#f4f2ea', '#c9d4d6'][n % 2]);
-        else if (phase !== 3) { k.box([200, 3, 280], [-200, y + 2, 230], '#f4f4ee'); k.box([20, 6, 260], [-60, y + 3, 220], '#c8cfd2'); }
+        if (phase === 4) for (let n = 0; n < 4; n++) k.box([110, 120 + n * 40, 110], [-535 + n % 2 * 135, y + 60 + n * 20, -30 + Math.floor(n / 2) * 175], ['#f4f2ea', '#c9d4d6'][n % 2]);
+        else if (phase !== 3) { k.box([200, 3, 280], [-490, y + 1.5, 60], '#f4f4ee'); k.box([20, 6, 260], [-355, y + 3, 60], '#c8cfd2'); }
     } else if (id === 'highschool') {
         if (phase === 0) { // First bell: attendance clipboard and a bell-schedule card.
-            k.box([240, 10, 330], [-80, y + 5, 80], '#2a2b2e'); k.box([220, 3, 300], [-80, y + 11, 85], '#fbf8ef'); k.box([90, 16, 30], [-80, y + 18, -70], '#c8cfd2'); for (let n = 0; n < 9; n++) k.box([170, 2, 3], [-80, y + 13, -30 + n * 26], '#9aa59f');
+            k.box([240, 10, 330], [-440, y + 5, 80], '#2a2b2e'); k.box([220, 3, 300], [-440, y + 11, 85], '#fbf8ef'); k.box([90, 16, 30], [-440, y + 18, -70], '#c8cfd2'); for (let n = 0; n < 9; n++) k.box([170, 2, 3], [-440, y + 13, -30 + n * 26], '#9aa59f');
             k.box([150, 2, 220], [180, y + 1, 120], HB.orange, [0, .15, 0]); for (let n = 0; n < 6; n++) k.box([110, 2.5, 14], [180, y + 2, 40 + n * 32], n === 4 ? '#e6e0d2' : HB.black, [0, .15, 0]);
         } else if (phase === 1) { // Wave lab: data sheets and a stopwatch.
-            for (let n = 0; n < 3; n++) k.box([210, 2, 290], [-180 + n * 120, y + 1 + n, 110 - n * 30], '#f4f4ee', [0, (n - 1) * .14, 0]);
-            for (let n = 0; n < 5; n++) k.box([180, 1, 2], [-60, y + 4.5, 40 + n * 40], HB.pacific, [0, .14, 0]);
+            for (let n = 0; n < 3; n++) k.box([210, 2, 290], [-490 + n * 50, y + 1 + n, 110 - n * 15], '#f4f4ee', [0, (n - 1) * .14, 0]);
+            for (let n = 0; n < 5; n++) k.box([180, 1, 2], [-440, y + 4.5, 40 + n * 40], HB.pacific, [0, .14, 0]);
             k.cyl(42, 42, 22, [260, y + 11, 160], HB.black); k.cyl(32, 32, 3, [260, y + 23, 160], '#dfe8e4'); k.box([14, 18, 12], [260, y + 14, 110], HB.orange);
         } else if (phase === 2) { // After-school study: sheet-music binders with orange tabs and a folded music stand.
-            for (let n = 0; n < 3; n++) { k.box([300, 38, 240], [-120 + n * 22, y + 19 + n * 38, 110 - n * 12], HB.black, [0, (n - 1) * .08, 0]); k.box([12, 30, 40], [40 + n * 22, y + 19 + n * 38, 40 - n * 12], HB.orange); }
-            k.box([520, 14, 30], [180, y + 7, -40], '#2a2b2e', [0, .3, 0]); k.box([280, 10, 180], [220, y + 26, 10], '#2a2b2e', [0, .3, 0]);
+            for (let n = 0; n < 3; n++) { k.box([300, 38, 240], [-450 + n * 22, y + 19 + n * 38, 110 - n * 12], HB.black, [0, (n - 1) * .08, 0]); k.box([12, 30, 40], [-290 + n * 22, y + 19 + n * 38, 40 - n * 12], HB.orange); }
+            k.box([520, 14, 30], [300, y + 7, 285], '#2a2b2e'); k.box([280, 10, 80], [300, y + 19, 275], '#2a2b2e');
         } else if (phase === 3) { // Lesson planning: graded lab notebooks and a red pen.
-            for (let n = 0; n < 5; n++) notebook(k, -120 + n * 6, y + n * 24, 100 - n * 4, [HB.black, HB.pacific, HB.black, HB.orange, HB.charcoal][n]);
+            for (let n = 0; n < 5; n++) {
+                const x = -440 + n * 6, top = y + n * 24, z = 100 - n * 4, color = [HB.black, HB.pacific, HB.black, HB.orange, HB.charcoal][n];
+                if (n === 4) notebook(k, x, top, z, color);
+                else { // Lower books have no loose pen trapped inside the stack.
+                    k.box([210, 22, 155], [x, top + 11, z], color);
+                    k.box([198, 15, 150], [x + 4, top + 11, z + 2], '#ede8d8');
+                    k.box([212, 2, 156], [x, top + 23, z], color);
+                }
+            }
             k.box([10, 10, 140], [180, y + 5, 150], '#c2412f', [0, .5, 0]);
         } else { // Oiler showcase: judging sheets and three ribbon rosettes.
-            for (let n = 0; n < 3; n++) k.box([210, 2, 290], [-200 + n * 150, y + 1 + n, 110], '#f4f4ee', [0, (n - 1) * .1, 0]);
-            for (let n = 0; n < 3; n++) { const x = -150 + n * 150, col = n === 1 ? HB.black : HB.orange; k.cyl(55, 55, 6, [x, y + 8, -60], col); k.cyl(32, 32, 8, [x, y + 12, -60], n === 1 ? HB.orange : '#f4efe2'); for (const d of [-1, 1]) k.box([30, 3, 110], [x + d * 22, y + 4, 10], col, [0, d * .25, 0]); }
+            for (let n = 0; n < 3; n++) k.box([210, 2, 290], [-490 + n * 70, y + 1 + n, 110], '#f4f4ee', [0, (n - 1) * .1, 0]);
+            for (let n = 0; n < 3; n++) { const x = -150 + n * 150, col = n === 1 ? HB.black : HB.orange; k.cyl(55, 55, 6, [x, y + 8, -60], col); k.cyl(32, 32, 8, [x, y + 12, -60], n === 1 ? HB.orange : '#f4efe2'); for (const d of [-1, 1]) k.box([30, 3, 110], [x + d * 22, y + 4, -15], col, [0, d * .25, 0]); }
         }
+    } else if (id === 'college') {
+        // Working drawings occupy the clear side of the architectural model.
+        notebook(k, -300, y, 130, phase === 3 ? '#5f7d72' : '#a5624a');
+        if (phase !== 3) for (let n = 0; n < 3; n++) k.box([70, 2, 65], [-240 + n * 85, y + 1, 265], ['#ccb996', '#9bb9ac', '#a1b6c1'][n]);
     } else if (id === 'university') {
         if (phase === 4 || phase === 0) for (let n = 0; n < 6; n++) k.cyl(30, 26, 80, [-180 + n * 70, y + 40, -60], '#f2efe8');
-        if (phase === 2 || phase === 3) notebook(k, -150, y, 60, '#285c4b');
+        if (phase === 2 || phase === 3) notebook(k, -250, y, 60, '#285c4b');
     } else activityNotebook(k, phase, y);
 }
 // Second real lamp: the reading floor lamp by the elementary meeting carpet,

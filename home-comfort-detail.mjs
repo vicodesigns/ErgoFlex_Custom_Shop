@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 
 // Local details share the existing furniture roots and physical footprints.
 // Phase changes only switch the contents inside an editable tabletop setting.
@@ -98,7 +99,7 @@ export function homeComfortDetails(room, h) {
         const mug = (g, x, z, filled) => {
             mesh(g, new THREE.CylinderGeometry(46,46,3,28), sage, [x,1.5,z]);
             const cup = mesh(g,cupGeo,ceramic,[x,3,z]);
-            const handle = mesh(g,new THREE.TorusGeometry(17,4,6,20),ceramic,[x+36,37,z]); handle.rotation.y=Math.PI/2;
+            mesh(g,new THREE.TorusGeometry(17,4,6,20),ceramic,[x+36,37,z]);
             if(filled)mesh(g,new THREE.CylinderGeometry(29,29,1,28),tea,[x,61,z]);
             return cup;
         };
@@ -124,6 +125,7 @@ export function homeComfortDetails(room, h) {
             }
         }
     }
+    interiorCraftFinishes(room,{ceramic:[ceramic],linen:[fabric,linen],metal:[bronze]});
     return {
         stone, decorate, lounge,
         update(phase) {

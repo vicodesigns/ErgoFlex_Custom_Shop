@@ -73,7 +73,8 @@
     "generate:artist-gear": "node tools/props/generate-artist-gear.mjs",
     "test:artist-gear": "node tests/artist-gear-test.cjs",
     "import:conference-chairs": "node tools/props/import-conference-chairs.mjs",
-    "test:conference-chairs": "node tests/conference-chairs-test.cjs"
+    "test:conference-chairs": "node tests/conference-chairs-test.cjs",
+    "test:environment-finishes": "node tests/desktop-footprint-test.mjs && node tests/institutional-material-finishes-test.mjs && node tests/child-room-test.mjs"
   },
   "repository": {
     "type": "git",
@@ -90,6 +91,7 @@
   "devDependencies": {
     "@gltf-transform/cli": "^4.5.0",
     "live-server": "^1.2.2",
-    "puppeteer": "^24.38.0"
+    "puppeteer": "^24.38.0",
+    "three": "0.163.0"
   }
 }

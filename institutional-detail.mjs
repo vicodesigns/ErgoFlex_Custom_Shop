@@ -117,36 +117,88 @@ export function drawInstitutionalCampus(c, W, H, phase, sky, spec) {
 // Batch the added small parts by furnishing, keeping both draw calls and
 // collision bounds modest. Dressing inherits its furniture's saved transform.
 // k.build(parent, kit.dress) merges every added part into one vertex-coloured mesh.
+// Finish hints keep paper, textiles and glass out of the same plastic-like
+// highlight. Colour/printed UVs remain untouched; the small linear data map
+// stores height in R and roughness variation in G.
+const FINISHES = {
+    paper: { roughness: 1, metalness: 0, bumpScale: .000035 },
+    fabric: { roughness: 1, metalness: 0, bumpScale: .00022 },
+    rubber: { roughness: .95, metalness: 0, bumpScale: .0001 },
+    ceramic: { roughness: .32, metalness: 0, bumpScale: .000025 },
+    metal: { roughness: .38, metalness: .82, bumpScale: .00002 },
+    glass: { roughness: .075, metalness: 0, transparent: true, opacity: .3, depthWrite: false },
+    liquid: { roughness: .14, metalness: 0, transparent: true, opacity: .72, depthWrite: false }
+};
+const finishCache = new WeakMap();
+export function detailFinish(base, finish) {
+    if (!finish || !FINISHES[finish]) return base;
+    let cache = finishCache.get(base);
+    if (!cache) {
+        cache = new Map(); finishCache.set(base, cache);
+        base.addEventListener('dispose', () => { for (const m of cache.values()) { m.bumpMap?.dispose(); m.dispose(); } finishCache.delete(base); });
+    }
+    if (cache.has(finish)) return cache.get(finish);
+    const m = base.clone(); Object.assign(m, FINISHES[finish]);
+    m.name = `${base.name || 'Furnishing'} · ${finish}`;
+    m.userData.roomFinishLocked = true; m.userData.detailFinish = finish;
+    m.metalnessMap = null; m.roughnessMap = null; m.bumpMap = null;
+    m.dithering = true;
+    if (finish !== 'glass' && finish !== 'liquid') {
+        const size = 64, data = new Uint8Array(size * size * 4);
+        for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+            const i = (y * size + x) * 4, noise = rnd(x * 23.7 + y * 131.3);
+            const thread = ((x % 4 < 2 ? 1 : 0) + (y % 4 < 2 ? 1 : 0)) * .5;
+            const height = finish === 'fabric' ? .3 + thread * .4 + noise * .15 : finish === 'metal' ? .43 + Math.sin(y * 2.7) * .06 + noise * .06 : .4 + noise * .2;
+            data[i] = Math.round(height * 255); data[i + 1] = Math.round((.88 + noise * .12) * 255); data[i + 2] = 0; data[i + 3] = 255;
+        }
+        const map = new THREE.DataTexture(data, size, size); map.name = `${finish} microscopic height / roughness`;
+        map.colorSpace = THREE.NoColorSpace; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(8, 8);
+        map.generateMipmaps = true; map.minFilter = THREE.LinearMipmapLinearFilter; map.magFilter = THREE.LinearFilter; map.anisotropy = 4; map.needsUpdate = true;
+        m.bumpMap = m.roughnessMap = map;
+    }
+    cache.set(finish, m); return m;
+}
 export function detailKit() {
     const parts = [];
     const api = {
-        add(geometry, at, color, scale = [1, 1, 1], rot = [0, 0, 0]) {
-            const g = geometry.toNonIndexed(); geometry.dispose();
+        add(geometry, at, color, scale = [1, 1, 1], rot = [0, 0, 0], finish = null) {
+            const g = geometry.index ? geometry.toNonIndexed() : geometry; if (g !== geometry) geometry.dispose();
             const matrix = new THREE.Matrix4().compose(new THREE.Vector3(...at), new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)), new THREE.Vector3(...scale)); g.applyMatrix4(matrix);
             const rgb = new THREE.Color(color), colors = new Float32Array(g.attributes.position.count * 3); for (let i = 0; i < colors.length; i += 3) { colors[i] = rgb.r; colors[i + 1] = rgb.g; colors[i + 2] = rgb.b; }
-            g.setAttribute('color', new THREE.BufferAttribute(colors, 3)); parts.push(g); return api;
+            g.setAttribute('color', new THREE.BufferAttribute(colors, 3)); parts.push({ g, finish }); return api;
         },
-        box(size, at, color, rot) { return api.add(new THREE.BoxGeometry(...size), at, color, [1, 1, 1], rot); },
-        cyl(r, r2, height, at, color) { return api.add(new THREE.CylinderGeometry(r, r2, height, 16), at, color); },
-        ball(r, at, color, scale, rot) { return api.add(new THREE.SphereGeometry(r, 12, 8), at, color, scale, rot); },
-        build(parent, material) { if (!parts.length) return; const g = mergeGeometries(parts, false); parts.forEach(p => p.dispose()); const obj = new THREE.Mesh(g, material); obj.name = 'Furnishing detail'; obj.castShadow = obj.receiveShadow = true; parent.add(obj); return obj; }
+        box(size, at, color, rot, finish) { return api.add(new THREE.BoxGeometry(...size), at, color, [1, 1, 1], rot, finish); },
+        cyl(r, r2, height, at, color, finish) { return api.add(new THREE.CylinderGeometry(r, r2, height, 16), at, color, [1, 1, 1], [0, 0, 0], finish); },
+        ball(r, at, color, scale, rot, finish) { return api.add(new THREE.SphereGeometry(r, 12, 8), at, color, scale, rot, finish); },
+        build(parent, material) {
+            if (!parts.length) return;
+            const buckets = new Map();
+            for (const { g, finish } of parts) { if (!buckets.has(finish)) buckets.set(finish, []); buckets.get(finish).push(g); }
+            const geometries = [], materials = [];
+            for (const [finish, list] of buckets) { geometries.push(mergeGeometries(list, false)); materials.push(detailFinish(material, finish)); }
+            const g = geometries.length === 1 ? geometries[0] : mergeGeometries(geometries, true);
+            if (geometries.length > 1) geometries.forEach(p => p.dispose());
+            parts.forEach(p => p.g.dispose()); parts.length = 0;
+            const obj = new THREE.Mesh(g, materials.length === 1 ? materials[0] : materials);
+            obj.name = 'Furnishing detail'; obj.castShadow = obj.receiveShadow = true; obj.userData.materialFinishes = [...buckets.keys()]; parent.add(obj); return obj;
+        }
     }; return api;
 }
 export const books = (k, x, y, z, count = 5) => { for (let i = 0; i < count; i++) {
     const h = 150 + rnd(i) * 55, bx = x + i * 29, color = ['#547b75', '#b39b72', '#8e6f65', '#6d8497'][i % 4];
-    k.box([24, h, 125], [bx, y + h / 2, z], color);
+    k.box([24, h, 125], [bx, y + h / 2, z], color, undefined, 'fabric');
     // Inset page block, cover overhang, spine bands and a small shelf label.
-    k.box([19, 1, 116], [bx, y + h + .1, z + 2], '#d8d1b9');
+    k.box([19, 1, 116], [bx, y + h + .1, z + 2], '#d8d1b9', undefined, 'paper');
     for (const dy of [12, h - 12]) k.box([21, 1.4, 1], [bx, y + dy, z + 63], '#b9b59e');
-    k.box([14, 19, 1], [bx, y + 26, z + 63], '#dfddcb');
+    k.box([14, 19, 1], [bx, y + 26, z + 63], '#dfddcb', undefined, 'paper');
     for (let line = 0; line < 3; line++) k.box([8 - line, .8, .3], [bx, y + 22 + line * 4, z + 63.7], '#6c756e');
     k.box([17, 3, 1], [bx, y + h - 29, z + 63], '#e9ddbf');
 } };
-export const notebook = (k, x, y, z, color) => { k.box([210, 22, 155], [x, y + 11, z], color); k.box([198, 15, 150], [x + 4, y + 11, z + 2], '#ede8d8'); k.box([212, 2, 156], [x, y + 23, z], color); k.box([130, 3, 5], [x + 15, y + 27, z + 50], '#314b52', [0, .2, 0]); };
+export const notebook = (k, x, y, z, color) => { k.box([210, 22, 155], [x, y + 11, z], color, undefined, 'fabric'); k.box([198, 15, 150], [x + 4, y + 11, z + 2], '#ede8d8', undefined, 'paper'); k.box([212, 2, 156], [x, y + 23, z], color, undefined, 'fabric'); k.box([130, 3, 5], [x + 15, y + 27, z + 50], '#314b52', [0, .2, 0]); };
 export const plant = botanicalPlant;
 // Storage-top books, plant and document tray used by non-clinical groups.
 export function storageBooks(k, top) { books(k, -360, top, 20, 6); plant(k, 410, top, 0, .65); }
-export function storageTray(k, top) { k.box([330, 32, 230], [80, top + 16, 0], '#6f8a8b'); k.box([300, 8, 215], [80, top + 36, 0], '#eee9d8'); }
+export function storageTray(k, top) { k.box([330, 32, 230], [80, top + 16, 0], '#6f8a8b'); k.box([300, 8, 215], [80, top + 36, 0], '#eee9d8', undefined, 'paper'); }
 // Desk-side workstation dressing (notebook, mouse, keyboard keys, modesty panel).
 export function workstationDetail(k, top) {
     notebook(k, 560, top, 155, '#a0896e'); k.box([160, 3, 180], [410, top + 1.5, 120], '#52636a'); k.ball(28, [410, top + 17, 120], '#a7b3b4', [.8, .5, 1.3]);
@@ -156,7 +208,7 @@ export function workstationDetail(k, top) {
 // Default activity-table materials (notebook and loose sheets).
 export function activityNotebook(k, phase, y) {
     notebook(k, 340, y, -90, phase === 3 ? '#6c8680' : '#b79269');
-    if (phase !== 3) for (let n = 0; n < 3; n++) k.box([70, 2, 65], [240 + n * 85, y + 1, 70], ['#ccb996', '#9bb9ac', '#a1b6c1'][n]);
+    if (phase !== 3) for (let n = 0; n < 3; n++) k.box([70, 2, 65], [240 + n * 85, y + 1, 70], ['#ccb996', '#9bb9ac', '#a1b6c1'][n], undefined, 'paper');
 }
 
 // A framed illustration on the right (side) wall or the left (window) wall,
@@ -283,8 +335,8 @@ function finishInstitutionalAtmosphere(kit) {
     group.finishDecor?.(kit);
     const activity = byId('activity-table');
     if (activity) {
-        const stand = detailKit(); stand.box([95, 130, 10], [-460, 805, -200], '#b7bba9'); stand.box([140, 12, 80], [-460, 746, -200], '#657d7c');
-        stand.build(activity, dress);
+        // The task lamp occupies this corner. Keep its base and stem clear;
+        // activity-specific documents provide the tabletop information.
         // Five compact project setups read as daily activity, not clutter.
         for (let phase = 0; phase < 5; phase++) {
             const g = new THREE.Group(); g.name = spec.modes[phases[phase]].label + ' materials'; activity.add(g); variants.push({ g, phase });

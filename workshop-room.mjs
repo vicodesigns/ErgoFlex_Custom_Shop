@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const tiers = [
@@ -104,7 +105,8 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     const red = material('#b63a2e', { roughness: .45, metalness: .1 }), yellow = material('#e0ad34', { roughness: .5 });
     const paper = material('#ebe7dc', { roughness: .85 }), cardboard = material('#b28b5b', { roughness: .95 });
     const handle = material('#a8784a', { roughness: .55 }), pine = material('#d4ae79', { roughness: .74 }), oak = material('#a1734a', { roughness: .68 }), walnut = material('#6c4a33', { roughness: .62 });
-    const enamel = material('#e8ebe6', { roughness: .38, metalness: .15 }), glass = material('#b8ccc8', { roughness: .12, metalness: .1 });
+    const enamel = material('#e8ebe6', { roughness: .38, metalness: 0 });
+    const glass = new THREE.MeshPhysicalMaterial({ color: '#dce5e0', roughness: .14, metalness: 0, transmission: .58, thickness: 3, ior: 1.5 });
     const woodMap = texture((c, tw, th) => {
         c.fillStyle = '#bb9868'; c.fillRect(0, 0, tw, th);
         for (let i = 0; i < 9; i++) { c.fillStyle = i % 2 ? '#c8a6731c' : '#94704418'; c.fillRect(i * tw / 9, 0, tw / 9, th); }
@@ -300,10 +302,11 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     }
     // Bench top: work in progress, shavings, a mug and a pencil.
     {
-        const gx=-w/2+880;
+        // Keep the glue-up clear of the chop saw's 440 mm footprint.
+        const gx=-w/2+950;
         kbox(bench,[220,18,140],[gx,909,190],pine);for(const s of [-1,1])kbox(bench,[220,120,16],[gx,978,190+s*62],pine);for(const s of [-1,1])kbox(bench,[16,120,108],[gx+s*102,978,190],pine);
         for(const s of [-1,1]){kbox(bench,[8,280,6],[gx+s*60,995,230],silver,[Math.PI/2,0,0]);kbox(bench,[30,24,24],[gx+s*60,995,357],steel);kbox(bench,[30,24,24],[gx+s*60,995,103],steel);}
-        for(let i=0;i<14;i++)kball(bench,[16+hash(i)*14,4,10+hash(i+3)*8],[-w/2+430+hash(i+7)*270,903,190+hash(i+11)*150],pine);
+        for(let i=0;i<14;i++)kball(bench,[16+hash(i)*14,4,10+hash(i+3)*8],[-w/2+430+hash(i+7)*270,904,190+hash(i+11)*150],pine);
         kcyl(bench,[42,38,96],[w/2-1640,948,260],paper);ktorus(bench,[24,7,Math.PI],[w/2-1640+42,950,260],paper,[0,0,-Math.PI/2]);
         krod(bench,[-120,905,250],[40,905,262],4,yellow);
     }
@@ -527,5 +530,8 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     flushKits();
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[plaster, 'plaster'], [paintLow, 'plaster'], [steel, 'metal'], [silver, 'metal'], [orange, 'powder'], [teal, 'powder'], [red, 'powder'], [yellow, 'powder'], [enamel, 'powder'], [rubber, 'rubber'], [ply, 'wood'], [block, 'wood'], [pine, 'wood'], [oak, 'wood'], [walnut, 'wood'], [handle, 'wood'], [slab, 'stone']]) mat.userData.roomSurface = surface;
+    creativeMaterialDetail(root, [[plaster, 'plaster'], [paintLow, 'plaster'], [steel, 'powder'], [silver, 'brushed'],
+        [orange, 'powder'], [teal, 'powder'], [red, 'powder'], [yellow, 'powder'], [enamel, 'ceramic'], [rubber, 'rubber'],
+        [ply, 'oak'], [block, 'oak'], [pine, 'oak'], [oak, 'oak'], [walnut, 'walnut'], [handle, 'oak'], [slab, 'limestone']]);
     room.roomAtmosphere('morning');root.userData.dimensionsMm={width:w,depth:d,height:h};
 }

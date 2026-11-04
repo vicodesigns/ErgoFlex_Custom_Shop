@@ -1,0 +1,527 @@
+[
+  {
+    "room": "childroom",
+    "phase": "morning",
+    "actualMode": "morning",
+    "layout": "apartment",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "apartment",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "apartment",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "apartment",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "apartment",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "morning",
+    "actualMode": "morning",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "house",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "morning",
+    "actualMode": "morning",
+    "layout": "spacious",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "spacious",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "spacious",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "spacious",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "spacious",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "morning",
+    "actualMode": "morning",
+    "layout": "premium",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "premium",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "premium",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "premium",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "premium",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "morning",
+    "actualMode": "morning",
+    "layout": "executive",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "afternoon",
+    "actualMode": "afternoon",
+    "layout": "executive",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "evening",
+    "actualMode": "evening",
+    "layout": "executive",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "night",
+    "actualMode": "night",
+    "layout": "executive",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  },
+  {
+    "room": "childroom",
+    "phase": "party",
+    "actualMode": "party",
+    "layout": "executive",
+    "size": "48x30",
+    "desks": 1,
+    "kits": [
+      {
+        "visible": true,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "overlap": 0,
+        "supported": true,
+        "measured": true
+      }
+    ]
+  }
+]

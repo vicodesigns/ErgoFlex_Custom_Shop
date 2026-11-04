@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 
 const tiers = [
     ['apartment', 'Apartment living lounge', 3600, 4200, 2600],
@@ -301,10 +302,13 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     const sideAt=tier?[layout.sofaX-120,0,loungeZ+1100+200]:[layout.sofaX-220,0,loungeZ-1200];
     const side=group('side-table','Walnut side table with books and candle',sideAt);
     mesh(side,new THREE.CylinderGeometry(185,185,28,32),walnut,[0,516,0]);mesh(side,new THREE.CylinderGeometry(150,165,14,28),brass,[0,7,0]);rod(side,[0,14,0],[0,502,0],20,brass);
-    instanced(side,unit,tint,[[0,'#3f5f5c',210,150],[1,'#c4a46e',190,140],[2,'#9b4f3f',170,125]].map(([i,col,bw,bd])=>({at:[-40,530+20+i*32,-20],size:[bw,30,bd],rot:[0,.25-i*.3,0],color:col})),true);
-    instanced(side,cyl,glaze,[{at:[72,575,66],size:[46,70,46],color:'#ece6da'},{at:[-45,642,-30],size:[34,50,34],color:'#efe5d2'}],true);
-    const succulent=[];foliage(succulent,[72,612,66],12,{length:110,width:38,seed:3});instanced(side,ball,leafMat,succulent);
-    sphere(side,[8,16,8],[-45,682,-30],flame).castShadow=false;
+    // Books sit flush on the 530 mm top, with separate space for the plant.
+    // The candle rests on the final book instead of intersecting its cover.
+    instanced(side,unit,tint,[[0,'#3f5f5c',165,115],[1,'#c4a46e',150,105],[2,'#9b4f3f',135,95]].map(([i,col,bw,bd])=>({at:[-50,545+i*30,-40],size:[bw,30,bd],rot:[0,[-.14,.08,-.06][i],0],color:col})),true);
+    instanced(side,cyl,glaze,[{at:[93,565,58],size:[38,70,38],color:'#ece6da'}],true);
+    mesh(side,new THREE.CylinderGeometry(34,34,50,24),material('#efe5d2',{roughness:.82}),[-50,645,-40]);
+    const succulent=[];foliage(succulent,[93,602,58],12,{length:90,width:30,seed:3});instanced(side,ball,leafMat,succulent);
+    sphere(side,[8,16,8],[-50,686,-40],flame).castShadow=false;
     // Listening station: record cabinet, turntable and album wall.
     const station=tier<2?group('listening-station','Walnut record cabinet and turntable',[w/2-230,0,tier?bz+2585:bz+1500],-Math.PI/2):group('listening-station','Walnut record cabinet and turntable',[(880+arcadeX)/2,0,bz+230]);
     instanced(station,unit,slatWood,[{at:[0,568,0],size:[920,24,410]},{at:[0,122,0],size:[900,24,400]},{at:[-440,345,0],size:[24,430,400]},{at:[440,345,0],size:[24,430,400]},{at:[0,345,0],size:[20,430,390]},{at:[0,345,-194],size:[880,430,12]}],true);
@@ -390,6 +394,7 @@ export function buildLoungeRoom(room, root, layout, helpers) {
         const level={practical:mode.practical,bias:mode.wash,neon:mode.neon,sun:mode.sun,fire:mode.fire};
         washes.forEach(({mat,kind,k})=>{mat.color.set(tone[kind](mode));mat.opacity=Math.min(1,k*level[kind]*accent);});
         lights.forEach(spec=>{spec.light.color.set(spec.task?'#ffe0b6':mode.colors[spec.channel||0]);spec.light.intensity=spec.power*(spec.task?mode.practical:mode.wash)*accent;});root.userData.atmosphere=id;};
+    interiorCraftFinishes(room,{ceramic:[glaze],linen:[shadeMat,pillow,knit],wood:[walnut,slatWood],metal:[brass]});
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[cream, 'plaster'], [trim, 'plaster'], [sage, 'powder'], [dark, 'powder'], [brass, 'metal'], [walnut, 'wood'], [floorMat, 'wood']]) mat.userData.roomSurface = surface;
     room.roomAtmosphere('afternoon');root.userData.dimensionsMm={width:w,depth:d,height:h};

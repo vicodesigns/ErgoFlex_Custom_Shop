@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { bedroomSessionDetails } from './gallery-bedroom-detail.mjs?v=gallery-bedroom-20261025';
 
 const tiers = [
@@ -252,6 +253,14 @@ export function buildBedroomRoom(room, root, layout, helpers) {
         for(const y of [205,400]){box(nightstand,[335,165,10],[0,y,216],linen,3);rod(nightstand,[-55,y+15,228],[55,y+15,228],5,brass);}
         strip(nightstand,[300,8,8],[0,100,185]);
         candle(nightstand,[-140,550,140]);
+        // A small stoneware catchall fits between the lamp and the back corner,
+        // clear of the journal and fully inside the bedside top.
+        const dish = new THREE.Group(); dish.name = 'Bedside ring dish';
+        dish.position.set(140,550,-135); nightstand.add(dish);
+        const dishMat = material('#d7c7ae',{roughness:.38});
+        interiorCraftFinishes(room,{ceramic:[dishMat]});
+        mesh(dish,new THREE.LatheGeometry([[0,0],[29,0],[39,5],[42,12],[39,14],[35,8],[0,6]].map(p=>new THREE.Vector2(...p)),28),dishMat);
+        const ring=mesh(dish,new THREE.TorusGeometry(10,1.5,6,24),brass,[0,7.5,0]);ring.rotation.x=Math.PI/2;
     }
     const bench=group('bedroom-bench','Upholstered oak bench at the foot of the bed',[bed[0],0,bz+2480]);
     for(const x of [-520,520])for(const z of [-155,155])rod(bench,[x,0,z],[x,365,z],20,oak);
@@ -366,6 +375,7 @@ export function buildBedroomRoom(room, root, layout, helpers) {
         paintSky(current[0],mode);placeSun(f);romanShade.scale.y=Math.max(70,wh*f.shade+70);romanShade.position.y=low+wh-romanShade.scale.y/2+10;shadeMap.repeat.set(1,romanShade.scale.y/880);
         fixtures.forEach(tune);
         glow.forEach(({mat,channel})=>{mat.color.set(mode.colors[channel]);mat.emissive.set(mode.colors[channel]);mat.emissiveIntensity=.08+mode.wash*accent;});lights.forEach(spec=>{spec.light.color.set(mode.colors[spec.channel||0]);spec.light.intensity=spec.power*(spec.task?mode.practical:mode.wash)*accent;});root.userData.atmosphere=id;};
+    interiorCraftFinishes(room,{linen:[linen,shadeMat,drapeMat,knit,oatKnit,...cushionMats],wood:[oak],metal:[brass]});
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[cream, 'plaster'], [plaster, 'plaster'], [sage, 'powder'], [linen, 'fabric'], [dark, 'powder'], [brass, 'metal'], [oak, 'wood'], [drapeMat, 'fabric']]) mat.userData.roomSurface = surface;
     room.roomAtmosphere('morning');root.userData.dimensionsMm={width:w,depth:d,height:h};

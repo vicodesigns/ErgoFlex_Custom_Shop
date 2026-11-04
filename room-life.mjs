@@ -27,6 +27,7 @@ export const ROOM_STORIES = {
     kitchen: ['Breakfast & fresh fruit', 'Recipe notes & lunch preparation', 'Two-person supper', 'Table cleared, a cup of tea', 'Dinner party & serving dishes'],
     lounge: ['Coffee & a magazine', 'Reading & a relaxed seat', 'Movie night & shared snacks', 'Quiet sofa corner, table tidied', 'Games, drinks & conversation'],
     workshop: ['Plans & measurement check', 'Tools out, prototype in progress', 'Assembly notes & cleanup', 'Tools stowed, design review', 'Project showcase & maker meetup'],
+    childroom: ['Picture books & wooden blocks', 'Colouring & a little creation', 'Story basket & soft reading light', 'Toys tidied & sleepy stars', 'Shared drawing & the train world'],
     bedroom: ['Coffee & the morning journal', 'Window reading & light work', 'Tea & wind-down reading', 'Book closed, lights softened', 'Weekend breakfast & unhurried reading'],
     gallery: ['Curator notes & exhibition walk', 'Catalogue study & sketching', 'Salon conversation & tea', 'Collections quiet, reading corner', 'Opening night & shared catalogues'],
     scifi: ['Mission briefing & equipment check', 'Research samples & analysis', 'Navigation watch & mission notes', 'Robot parked, quiet watch', 'Transit briefing & crew gathering'],

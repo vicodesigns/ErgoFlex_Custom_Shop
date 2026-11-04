@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import {surfaceSupportsFootprint} from '../desk-shelf-space.mjs';
+const rect=(x0,z0,x1,z1)=>[[x0,z0,x1,z0,x1,z1],[x0,z0,x1,z1,x0,z1]];
+const space={minX:-600,maxX:600,minZ:-300,maxZ:300,triangles:[...rect(-600,-300,600,0),...rect(-600,0,-200,300),...rect(200,0,600,300)]};
+const box=(x0,z0,x1,z1)=>new THREE.Box3(new THREE.Vector3(x0,0,z0),new THREE.Vector3(x1,20,z1));
+assert(surfaceSupportsFootprint(space,box(300,100,480,230)),'Notebook fits the right desktop wing');
+assert(!surfaceSupportsFootprint(space,box(480,100,620,230)),'Reject desktop edge overhang');
+assert(!surfaceSupportsFootprint(space,box(-250,100,250,230)),'Reject bridging the front cutout even when all four corners are supported');
+assert(!surfaceSupportsFootprint(space,box(200,100,380,230)),'Require an eight millimetre edge margin');
+assert(surfaceSupportsFootprint(space,box(-100,-220,100,-30)),'Rear center is supported');
+console.log('Measured desktop footprint: supported wings, edge margin, outside overhang and concave cutout passed.');

@@ -174,6 +174,11 @@ export function furnish(kit){
         object.traverse(o=>{if(!o.isMesh)return;const swap=m=>{if(!/upholstery/i.test(m?.name||''))return m;if(!copies.has(m)){const c=m.clone();c.color.set('#2f3a48');c.userData.roomPaletteLocked=true;kit.room.ownedMaterials?.add(c);copies.set(m,c);}return copies.get(m);};o.material=Array.isArray(o.material)?o.material.map(swap):swap(o.material);});
     };
     const print=kit.cabinet('print-scan',[-w/2+820,0,bz+360],1300,900,false);print.name='Print & scan counter';
+    // A real printer is 563 mm deep. The standard 420 mm storage carcass
+    // needs a 650 mm worktop to support its feet and its front paper path.
+    const worktop=print.children.find(o=>o.isMesh&&Math.abs(o.position.y-885)<1);
+    if(worktop)worktop.geometry.scale(1,1,650/420);
+    print.userData.roomSupportHeights=[900];
     // The supplied printer and paper tray sit on the counter and move with it.
     const k=detailKit();books(k,-540,900,-30,3);
     for(const [id,x,z] of [['ergoflex-printer',-w/2+710,bz+360],['ergoflex-paper-tray',-w/2+1230,bz+350]])kit.room.propSupports.push({obj:print,id,at:[x,900,z]});k.build(print,kit.dress||mat('#ffffff','powder',{vertexColors:true}));label(print,'PRINT / SCAN',[950,110],[0,640,228],NAVY);
@@ -341,7 +346,19 @@ function pools(kit){
 }
 export function finishDecor(kit){
     const media=kit.byId('print-scan'),g=kit.asset('media-reference','Colour proof & reference swatches',[0,0,0],media),k=detailKit();
-    for(let n=0;n<12;n++)k.box([23,3,35],[140+n*24,908,205],['#f4efe5','#6a8eaa','#c56b50','#91ab91','#334c72','#edac57'][n%6]);k.build(g,kit.dress);
+    for(let n=0;n<12;n++)k.box([23,3,35],[140+n*24,901.5,205],['#f4efe5','#6a8eaa','#c56b50','#91ab91','#334c72','#edac57'][n%6]);k.build(g,kit.dress);
+    const finish=kit.asset('media-finishing-tools','Print finishing · tape & binding clips',[-465,900,-180],media),tools=detailKit();
+    // The rear left corner leaves the printer, return tray and proof stack free.
+    tools.box([112,8,58],[0,4,0],INK);
+    for(const z of [-23,23])tools.box([50,34,6],[-24,25,z],INK);
+    tools.add(new THREE.TorusGeometry(22,7,6,20),[-24,32,0],'#cbbf9e');
+    tools.box([12,24,58],[48,20,0],SILVER);
+    tools.box([52.2,1,30],[21.5,41,0],'#d5c8a8',[0,0,-.352]);
+    for(let n=0;n<2;n++){
+        tools.box([24,15,18],[70+n*32,7.5,0],INK);
+        tools.add(new THREE.TorusGeometry(8,1.2,4,12,Math.PI),[70+n*32,21,5],SILVER);
+    }
+    tools.build(finish,kit.dress);
 }
 export function activityMaterials(k,phase,y){
     // Printed call sheets, edit tools, grading references and critique papers

@@ -40,7 +40,12 @@ const SWATCHES = [
     ['cream', '#e7e1d6', .6, 0], ['cotton', '#d9cfbc', .92, 0], ['pinRed', '#c8372d', .4, 0], ['pinBlue', '#2f5fb3', .4, 0]
 ];
 const SWI = new Map(SWATCHES.map((s, i) => [s[0], i]));
-const sw = name => { const i = SWI.get(name); return [((i % 32) * 32 + 16) / AT, 1 - (960 + Math.floor(i / 32) * 32 + 16) / AT]; };
+const textile = name => /^(pack|denim$|parka$|flannel$|tan$|rain$|cotton$)/.test(name);
+const sw = name => {
+    const i = SWI.get(name), x = (i % 32) * 32, y = 960 + Math.floor(i / 32) * 32;
+    // Textiles sample the whole woven tile instead of a single flat colour.
+    return textile(name) ? [(x + 2) / AT, 1 - (y + 30) / AT, (x + 30) / AT, 1 - (y + 2) / AT] : [(x + 16) / AT, 1 - (y + 16) / AT];
+};
 // Printed tiles (px in the 1024 atlas; canvas y runs down, so v = 1 - y).
 const TILES = {
     code: [0, 0, 256, 160], doc: [256, 0, 256, 160], slides: [512, 0, 256, 160], sheet: [768, 0, 256, 160],
@@ -145,8 +150,12 @@ const items = {
     },
     composition: (b, M) => b.box(M, [190, 10, 245], [0, 5, 0], ZERO, sw('charcoal')).box(M, [90, .6, 50], [0, 10.3, -40], ZERO, sw('paper')),
     sticky: (b, M, col) => b.box(M, [76, 1.2, 76], [0, .6, 0], ZERO, sw(col)),
-    highlighter(b, M, col) { b.cyl(M, 8, 8, 118, [0, 8, 0], [0, 0, Math.PI / 2], sw(col), 6).cyl(M, 9, 9, 38, [72, 8, 0], [0, 0, Math.PI / 2], sw(col), 6); },
-    pen: (b, M) => b.cyl(M, 4, 4, 140, [0, 4, 0], [0, 0, Math.PI / 2], sw('packNavy'), 6),
+    highlighter(b, M, col) {
+        // A six-sided barrel rests on its flat side, whose height is r cos30°.
+        const flat = Math.cos(Math.PI / 6);
+        b.cyl(M, 8, 8, 118, [0, 8 * flat, 0], [0, 0, Math.PI / 2], sw(col), 6).cyl(M, 9, 9, 38, [72, 9 * flat, 0], [0, 0, Math.PI / 2], sw(col), 6);
+    },
+    pen: (b, M) => b.cyl(M, 4, 4, 140, [0, 4 * Math.cos(Math.PI / 6), 0], [0, 0, Math.PI / 2], sw('packNavy'), 6),
     calculator: (b, M) => b.box(M, [85, 15, 165], [0, 7.5, 0], ZERO, sw('rubber')).box(M, [65, 1, 24], [0, 15.5, -50], ZERO, sw('calcLcd')),
     headphones(b, M) {
         for (const s of [-1, 1]) b.cyl(M, 45, 45, 35, [s * 80, 17.5, 0], ZERO, sw('charcoal'), 12);
@@ -232,7 +241,10 @@ function drawAtlas(c) {
         c.fillStyle = '#1d1d1d'; c.textAlign = 'left'; c.font = 'bold 19px sans-serif'; [['5:00', 'Share field notes'], ['5:30', 'Maps & methods'], ['6:00', 'Review together']].forEach(([t, l], i) => { c.fillStyle = '#154c3d'; c.fillText(t, x + 16, y + 138 + i * 56); c.fillStyle = '#1d1d1d'; c.font = '17px sans-serif'; c.fillText(l, x + 16, y + 160 + i * 56); c.font = 'bold 19px sans-serif'; });
         c.fillStyle = '#bca56d'; c.fillRect(x + 16, y + h - 42, w - 32, 2); c.fillStyle = '#154c3d'; c.textAlign = 'center'; c.font = 'bold 18px sans-serif'; c.fillText('All welcome', x + w / 2, y + h - 16); }
     // Palette strip.
-    SWATCHES.forEach(([, col], i) => { c.fillStyle = col; c.fillRect((i % 32) * 32, 960 + Math.floor(i / 32) * 32, 32, 32); });
+    SWATCHES.forEach(([name, col], i) => {
+        const x = (i % 32) * 32, y = 960 + Math.floor(i / 32) * 32; c.fillStyle = col; c.fillRect(x, y, 32, 32);
+        if (textile(name)) for (let n = 2; n < 31; n += 4) { c.fillStyle = '#ffffff12'; c.fillRect(x + n, y + 2, 1, 28); c.fillStyle = '#00000014'; c.fillRect(x + 2, y + n, 28, 1); }
+    });
     c.textAlign = 'left';
 }
 // Roughness (G) / metalness (B) at the same layout, quarter resolution.
@@ -370,7 +382,7 @@ export function buildHumboldtLife(ctx) {
     const ormCanvas = document.createElement('canvas'); ormCanvas.width = ormCanvas.height = 256; drawORM(ormCanvas.getContext('2d'), 256);
     const orm = new THREE.CanvasTexture(ormCanvas);
     const lifeMat = own(new THREE.MeshStandardMaterial({ name: 'Humboldt student life atlas', color: '#ffffff', map, emissive: '#ffffff', emissiveMap: glow, emissiveIntensity: .6, roughnessMap: orm, metalnessMap: orm, roughness: 1, metalness: 1 }));
-    lifeMat.userData.roomPaletteLocked = true;
+    lifeMat.userData.roomPaletteLocked = true; lifeMat.userData.roomFinishLocked = true;
     const textures = [map, glow, orm];
     const bake = (parent, b, name, cast = true) => {
         const geo = b.build(); if (!geo) return null;
@@ -427,7 +439,7 @@ export function buildHumboldtLife(ctx) {
             ctxT.cables.push(M);
         } else if (kind === 'R') {
             items.openBook(b, F(M, -90, 0, -195, .06 + j(1) * .1), { cover: pick(COVERS, seed), page: pick(BOOKS, seed) });
-            items.notebook(b, F(M, 270, 4, -165, -.18 + j(2) * .1), { page: pick(NOTEBOOKS, seed + 1), cover: pick(COVERS, seed + 4) });
+            items.notebook(b, F(M, 270, 0, -165, -.18 + j(2) * .1), { page: pick(NOTEBOOKS, seed + 1), cover: pick(COVERS, seed + 4) });
             items.highlighter(b, F(M, 110, 0, -40, 1.2), pick(HIGHLIGHT, seed)); items.highlighter(b, F(M, 150, 0, -30, 1.45), pick(HIGHLIGHT, seed + 1));
             items.bottle(b, F(M, -340, 0, -380), pick(BOTTLES, seed + 3));
         } else if (kind === 'A') {
@@ -477,7 +489,7 @@ export function buildHumboldtLife(ctx) {
                 // A bag on the floor at the outer end of an end seat.
                 if (s.end && t.id !== 'humboldt-table-l1' && rnd(seed + 41) < .75) {
                     const dir = s.end, av = s.side[0] === 'x' ? [0, 1] : [1, 0], fx = s.edge[0] + av[0] * dir * 430 + s.n[0] * 190, fz = s.edge[1] + av[1] * dir * 430 + s.n[1] * 190;
-                    items.backpack(b, F(I, fx, -750, fz, s.yaw + Math.PI / 2 + (rnd(seed + 42) - .5) * .5, 0, -.12), pick(PACKS, seed + 3));
+                    items.backpack(b, F(I, fx, -750 + 153 * Math.sin(.12), fz, s.yaw + Math.PI / 2 + (rnd(seed + 42) - .5) * .5, 0, -.12), pick(PACKS, seed + 3));
                 }
             });
             // Cables from each open laptop to the nearest power module.
@@ -527,7 +539,7 @@ export function buildHumboldtLife(ctx) {
                     const s = order[1] || order[0]; if (s) items.bottle(b, F(I, s.edge[0], 0, s.edge[1], s.yaw).multiply(new THREE.Matrix4().makeTranslation(-120, 0, -240)), 'bottleLilac');
                 } else if (extra === 'umbrella') {
                     const [u, v] = at(L / 2 + 200), dirx = longX ? -1 : 0, dirz = longX ? 0 : -1;
-                    items.umbrella(b, F(I, u, -750, v, 0, dirz * .21, -dirx * .21));
+                    items.umbrella(b, F(I, u, -750 + 30 * Math.sin(.21), v, 0, dirz * .21, -dirx * .21));
                 }
             }
             bake(item, b, `Student life · ${t.id} · ${phase}`);

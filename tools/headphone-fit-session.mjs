@@ -1,0 +1,10 @@
+import * as THREE from 'three';
+const E=window.ErgoFlex,P=window.ErgoPresentation;let item;
+window.HeadphoneFit={
+ async load(room,size){await P.prepare({id:'hook-fit',room,layout:room==='library'?'humboldt':room==='occmedialab'?'spacious':'house',phase:'morning',size,seconds:10,kind:'still',preset:room==='occmedialab'?'occ':room==='gaming'?'gaming':'office'});await E.sceneDesks.objects.ready;await E.workspaceAccessories.ready;item=[...E.sceneDesks.records.values()].flatMap(r=>[...r.objects.values()].map(i=>({r,...i}))).find(i=>i.obj.userData.deskHeadphones&&!i.saved.removed);P.edit(true);await new Promise(r=>setTimeout(r,800));this.frame(1);},
+ frame(side=1){if(!item)return;item.obj.updateWorldMatrix(true,true);const hook=[...item.r.objects.values()].find(i=>i.obj.userData.headphoneHook&&!i.saved.removed)?.obj;
+ const bounds=new THREE.Box3().setFromObject(item.obj);if(hook)bounds.union(new THREE.Box3().setFromObject(hook));const center=bounds.getCenter(new THREE.Vector3()),normal=new THREE.Vector3(1,0,0).transformDirection((hook||item.obj).matrixWorld),camera=E.sceneDesks.ctx.camera,controls=E.sceneDesks.ctx.controls;
+ camera.position.copy(center).addScaledVector(normal,side*.85).addScaledVector(new THREE.Vector3(normal.z,0,-normal.x),.3).add(new THREE.Vector3(0,.19,0));camera.fov=40;controls.maxDistance=100;controls.target.copy(center);camera.near=.005;camera.updateProjectionMatrix();controls.minDistance=.01;controls.update();},
+ async tilt(){E.setHeight(43);E.setTilt('tilting',45);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));this.frame();},
+ report(){return {desks:E.sceneDesks.records.size,headphones:[...E.sceneDesks.records.values()].flatMap(r=>[...r.objects.values()].filter(i=>i.obj.userData.deskHeadphones).map(i=>({desk:r.id,removed:i.saved.removed,role:i.saved.role,revision:i.saved.headphoneSocket,finish:i.obj.userData.headphoneFinish,hookObjects:[...r.objects.values()].filter(x=>x.obj.userData.headphoneHook).map(x=>({id:x.id,position:x.obj.position.toArray()})),position:i.obj.position.toArray(),scale:i.obj.scale.toArray(),sockets:r.rig.mounts.shelf.userData.headphoneSockets}))) };}
+};

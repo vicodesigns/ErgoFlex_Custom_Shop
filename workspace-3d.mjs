@@ -1,3 +1,4 @@
+import {measureHeadphoneSockets,isDeskHeadphone,markDeskHeadphones,finishHeadphonePlug} from './desk-headphone-hook.mjs';
 import {shelfStorageSpace} from './desk-shelf-space.mjs';
 import { finishTriangleTable } from './triangle-table-finishes.mjs?v=table-clearance-20261021';
 import { artistSceneProp, bindArtistGear, upgradeArtistFixtures } from './atelier-scene-artist.mjs?v=artist-gear-20261014';
@@ -20,6 +21,7 @@ import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './lib
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=gallery-bedroom-20261025';
+import { buildChildRoom, CHILD_MODES, childLayoutForSize, childLayoutById } from './child-room.mjs?v=child-room-20261104';
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=gallery-bedroom-20261025';
 import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
@@ -94,7 +96,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=table-clearance-20261021').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=headphone-hook-20261103').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -136,6 +138,8 @@ export const PROP_LIBRARY = {
         clone.traverse(obj => { obj.userData.sharedProp = true; });
         clone.scale.setScalar(1000);
         finishTriangleTable(clone, id);
+        if(id==='ergoflex-headphone-hook'){clone.userData.headphoneHook=true;clone.userData.fixedHardware=true;finishHeadphonePlug(clone);}
+
         if (id === 'ergoflex-laptop') clone.traverse(obj => {
             if (!obj.isMesh || obj.material?.name !== 'Decor screen glass') return;
             obj.material=obj.material.clone(); obj.material.userData.sharedTextures=true;
@@ -156,6 +160,17 @@ export const PROP_LIBRARY = {
         return clone;
     }
 };
+
+export async function loadDeskProp(id){
+ if(!isDeskHeadphone(id))return PROP_LIBRARY.instance(id);
+ await PROP_LIBRARY.loadIndex();
+ if(!PROP_LIBRARY.headphoneHookTemplate)PROP_LIBRARY.headphoneHookTemplate=await PROP_LIBRARY.load('ergoflex-headphone-hook');
+ if(!PROP_LIBRARY.headphoneRecovery)PROP_LIBRARY.headphoneRecovery=await fetch('./assets/props/headphone-placement-recovery.json').then(r=>r.json());
+ const original=await PROP_LIBRARY.instance('headphones');return markDeskHeadphones(original);
+}
+export function cloneHeadphoneHook(){
+ const source=PROP_LIBRARY.headphoneHookTemplate;if(!source)return null;const o=source.clone(true);o.scale.setScalar(1000);o.name='Plug-mounted headphone hook';o.userData={...o.userData,sharedProp:true,propId:'ergoflex-headphone-hook',headphoneHook:true,fixedHardware:true};return finishHeadphonePlug(o);
+}
 
 function markSceneAsset(object, { key, role = 'room', custom = false }) {
     object.userData.sceneAsset = true;
@@ -694,11 +709,15 @@ export class WorkspaceAccessories {
         const shelfHardware=[...registry.values()].filter(e=>/^Top_Shelf/.test(e.name)&&!e.isClone).map(e=>e.obj);
         for(const [role,m] of this.mounts){
             for(const target of [m.group,m.dress])target.userData.surfaceSize={width:m.width,depth:m.depth};
+            if(role==='desktop')m.supportSpace=shelfStorageSpace(m.anchor,m.anchor.matrixWorld.clone().multiply(m.relative));
             if(!['shelf','lower-shelf','base-shelf'].includes(role))continue;
             const world=m.anchor.matrixWorld.clone().multiply(m.relative);
             m.storageSpace=shelfStorageSpace(m.anchor,world,shelfHardware);
             for(const target of [m.group,m.dress])target.userData.storageSpace=m.storageSpace;
         }
+        const headphoneShelf=this.mounts.get('shelf');
+        const headphoneSockets=headphoneShelf?measureHeadphoneSockets(shelfHardware,headphoneShelf.anchor.matrixWorld.clone().multiply(headphoneShelf.relative)):[];
+        for(const m of this.mounts.values())for(const target of [m.group,m.dress])target.userData.headphoneSockets=headphoneSockets;
         if (model) {
             model.updateWorldMatrix(true, false);
             const world = new THREE.Matrix4().compose(new THREE.Vector3(0, .005, 0),
@@ -957,13 +976,13 @@ export class WorkspaceAccessories {
             if (!mount.dress) continue;
             for (const child of [...mount.dress.children]) disposeTree(child);
         }
-        if (!scene || (!scene.desk?.length && !scene.shelf?.length)) return;
+        if (!scene || (!scene.desk?.length && !scene.shelf?.length && sceneId!=='childroom')) return;
         const wanted = [...(scene.desk || []).map(p => ({ ...p, role: 'desktop' })), ...(scene.shelf || []).map(p => ({ ...p, role: 'shelf' }))]
             .map((placement, index) => ({ ...placement, sceneAssetKey: `${scene.id}:${placement.role}:${index}:${placement.id}` }));
         await PROP_LIBRARY.loadIndex();
         const loaded = await Promise.all(wanted.map(async placement => {
             try { return { placement, object: placement.procedural === 'midi' ? createMusicKeyboard()
-                : placement.id === 'journal' ? createDeskNotebook(sceneId, { box, mesh, material }) : await PROP_LIBRARY.instance(placement.id) }; }
+                : placement.id === 'journal' ? createDeskNotebook(sceneId, { box, mesh, material }) : await loadDeskProp(placement.id) }; }
             catch { return { placement, object: null }; }
         }));
         if (token !== this.dressToken) return;
@@ -988,7 +1007,7 @@ export class WorkspaceAccessories {
         const desktop = this.mounts.get('desktop');
         if (desktop && sceneId !== 'product') {
             const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material });
-            placeDailyDeskKit(kit, desktop.dress.children);
+            placeDailyDeskKit(kit, desktop.dress.children, desktop.supportSpace);
             markSceneAsset(kit, { key: `${sceneId}:desktop:daily-kit`, role: 'desktop' });
             desktop.dress.add(kit);
         }
@@ -1149,6 +1168,7 @@ export const ROOM_SCENES = [
       shelf: [ { id: 'curved-monitor', at: [0, 0, 120], turn: 0 } ],
       shell: 'hangar', feature: 'panels', props: scifiLayoutForSize('48x30').props }
 ,
+    { id: 'childroom', name: 'Child’s room', caption: 'Little wonders. Room to grow.', tone: 'warm', desk: [], shelf: [], props: [] },
     { id: 'bedroom', name: 'Bedroom', caption: 'Room to begin. Room to unwind.', tone: 'warm',
       desk: [
         { id: 'table-lamp-plain', at: [-450, 0, -230] },
@@ -1190,7 +1210,14 @@ export const ROOM_SCENES = [
     ...INSTITUTIONAL_IDS.map(id => { const p = INSTITUTIONAL_ROOMS[id]; return { id, name: p.name, caption: p.caption, category: p.category, tone: 'gallery', desk: p.desk || [{ id: 'journal', at: [160, 0, 70] }, { id: 'kenney-furniture-laptop', at: [-230, 0, 10] }], shelf: p.shelf || [{ id: 'paper-holder', at: [300, 0, 0] }], props: [] }; })
 ];
 
+// Quiet calls and study now use the same physical socket as the media desks.
+for(const id of ['office','home','library','coworking']){
+ const room=ROOM_SCENES.find(r=>r.id===id);
+ if(room&&!room.desk.some(p=>isDeskHeadphone(p.id)))room.desk.push({id:'ergoflex-headphones-2',at:[430,0,-180]});
+}
+
 export const ROOM_ATMOSPHERES = {
+    childroom: { ...CHILD_MODES.morning, space: [500, 500, 800] },
     ...Object.fromEntries(INSTITUTIONAL_IDS.map(id => [id, { ...INSTITUTIONAL_ROOMS[id].modes.morning, space: [1000, 1000, 1400] }])),
     product: { label: 'Softbox studio', space: [0, 0, 0], key: '#fff9f0', fill: '#e8f0ff', accent: '#ffffff', power: 1.5, ambient: .35, exposure: .95, bounce: 1.3 },
     office: { label: 'Fresh morning', space: [700, 650, 650], key: '#fff5df', fill: '#dceeff', accent: '#d3f1df', power: 1.8, ambient: .48, exposure: 1.02, bounce: .85 },
@@ -1296,6 +1323,9 @@ export class WorkspaceRoom {
         } else if (id === 'office') {
             this.roomLayout = options.layout ? officeLayoutById(options.layout) : officeLayoutForSize(options.size);
             scene = { ...scene, props: this.roomLayout.props, physical: true };
+        } else if (id === 'childroom') {
+            this.roomLayout = options.layout ? childLayoutById(options.layout) : childLayoutForSize(options.size);
+            scene = { ...scene, props: this.roomLayout.props, physical: true };
         } else if (id === 'bedroom') {
             this.roomLayout = options.layout ? bedroomLayoutById(options.layout) : bedroomLayoutForSize(options.size);
             scene = { ...scene, props: this.roomLayout.props, physical: true };
@@ -1335,6 +1365,7 @@ export class WorkspaceRoom {
         else if (id === 'music') buildMusicRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'creative') buildArtistRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'study') buildStudyRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'childroom') buildChildRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'bedroom') buildBedroomRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'gallery') buildGalleryRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'scifi') buildScifiRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
@@ -1350,7 +1381,7 @@ export class WorkspaceRoom {
         if(id==='highschool')this.migrateSavedTransform=(obj,saved)=>migrateHighschoolFixtureTransform(obj,saved,this.roomLayout);
         if (this.roomLayout) {
             this.buildCeiling();
-            this.life = new RoomLife(this, { material, mesh, box, rod, sphere, markSceneAsset });
+            if(!this.roomLayout.customLife) this.life = new RoomLife(this, { material, mesh, box, rod, sphere, markSceneAsset });
             refineRoomSurfaces(this);
         }
         const token = this.token;
@@ -1391,7 +1422,7 @@ export class WorkspaceRoom {
                 mount.matrixAutoUpdate = false; mount.matrix.copy(mounts[role]); group.add(mount);
                 for (const placement of spec[role] || []) {
                     try {
-                        const object = placement.id === 'journal' ? createDeskNotebook(this.id, { box, mesh, material }) : await PROP_LIBRARY.instance(placement.id);
+                        const object = placement.id === 'journal' ? createDeskNotebook(this.id, { box, mesh, material }) : await loadDeskProp(placement.id);
                         if (token !== this.token) { disposeTree(group); return; }
                         object.position.set(...placement.at); object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
                         mount.add(object);

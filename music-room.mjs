@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
 
 const names = ['Apartment recording nook', 'Home production studio', 'Writing & recording room', 'Producer studio & lounge', 'Production & performance suite'];
@@ -26,8 +27,8 @@ export const MUSIC_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map(
     if (index === 2) props.push({ id: 'armchair-poppi', at: [150, 0, front - 500] });
     if (large) props.push(
         { id: 'kenney-furniture-lounge-sofa', at: [-400, 0, front - 650] },
-        { id: 'ergoflex-coffee-table', at: [-400, 0, front - 1600] },
-        { id: 'journal', at: [-590, 391.2, front - 1650], turn: -12 },
+        { id: 'ergoflex-coffee-table', at: [-400, 0, front - 1950] },
+        { id: 'journal', at: [-590, 390, front - 2000], turn: -12 },
         { id: 'strat-guitar', at: [width / 2 - 540, 0, front - 1800], turn: -35 },
         { id: 'kenney-furniture-kitchen-coffee-machine', at: [-width / 2 + 370, 790, back + 360], turn: 0 },
         { id: 'music-award', at: [-width / 2 + 320, 1554, back + 150] },
@@ -399,6 +400,33 @@ export function buildMusicRoom(room, root, layout, helpers) {
         box(shelf, [300, 28, 570], [w / 2 - 160, y, rz], wood, 3);
         room.propSupports.push(y===1490?{obj:shelf,id:'kenney-furniture-books',at:[w/2-160,1504,rz-120]}:{obj:shelf,id:'kenney-furniture-plant-small2',at:[w/2-165,1874,rz+60]});
     }
+    // An analogue session shelf sits beyond the equipment cabinet, with a
+    // 110 mm gap to its front. Small items share its transform in the editor.
+    const notes = new THREE.Group(); notes.name = 'Lyric notebook and patch cable shelf';
+    notes.position.set(w / 2 - 110, 1100, rz + 660); notes.rotation.y = -Math.PI / 2; root.add(notes);
+    instrument(notes, 'music-session-shelf', 'Lyric notebook and patch cable shelf');
+    box(notes, [400, 22, 180], [0, -11, 0], wood, 3);
+    for (const x of [-145, 145]) {
+        box(notes, [12, 120, 12], [x, -70, -74], metal, 2);
+        rod(notes, [x, -124, -74], [x, -24, 64], 4, brass);
+    }
+    const paper = material('#e5decc', { roughness: .97 });
+    box(notes, [172, 3, 126], [-70, 1.5, 0], moss, 2);
+    box(notes, [166, 14, 120], [-70, 10, 0], paper, 1);
+    box(notes, [172, 3, 126], [-70, 18.5, 0], moss, 2);
+    rod(notes, [-134, 22.8, 24], [-13, 22.8, 20], 2.8, wood);
+    const patch = mesh(notes, new THREE.TorusGeometry(40, 3, 6, 28), cable, [110, 3, -18]); patch.rotation.x = Math.PI / 2;
+    for (const x of [89, 129]) {
+        rod(notes, [x, 4, 39], [x + 14, 4, 53], 3.5, metal);
+        rod(notes, [x + 14, 4, 53], [x + 20, 4, 59], 2, brass);
+    }
+    const noteMap = texture((c, tw, th) => {
+        c.fillStyle = '#d8d0bb'; c.fillRect(0, 0, tw, th); c.fillStyle = '#3e5148';
+        c.font = '600 28px sans-serif'; c.fillText('TAKE / LISTEN / REVISE', 20, 54, tw - 40);
+        c.font = '23px Georgia'; c.fillText('Ideas for the next session', 20, 100, tw - 40);
+    }, 512, 144);
+    const noteLabel = mesh(notes, new THREE.PlaneGeometry(144, 40), material('#ffffff', { map: noteMap, roughness: .97 }), [-70, 20.2, 0]);
+    noteLabel.rotation.x = -Math.PI / 2; noteLabel.castShadow = false;
     for (const sign of [-1, 1]) {
         const x = layout.desk[0] + sign * layout.speakers, z = layout.desk[1] - 260;
         const stand = new THREE.Group(); stand.name = sign < 0 ? 'Left monitor speaker and stand' : 'Right monitor speaker and stand';stand.position.set(x,0,z);root.add(stand);
@@ -596,7 +624,7 @@ export function buildMusicRoom(room, root, layout, helpers) {
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .06 + mode.wash * accent * 1.25; });
         lights.forEach(spec => { if (spec.wash) spec.light.color.set(mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.wash ? mode.wash : mode.practical) * accent; });
         diffuser.emissiveIntensity = .2 + mode.practical * .65;
-        onAirLamp.emissiveIntensity = .12 + mode.wash * .95 * accent;
+        onAirLamp.emissiveIntensity = .06 + ({ morning: .04, afternoon: .65, evening: .95, night: .02, party: 1.25 }[modeId] ?? .3) * accent;
         rackLamp.emissiveIntensity = .22 + mode.practical * .9 * accent;
         jewel.emissiveIntensity = .4 + mode.practical * 1.4 * accent;
         shades.forEach(shadeGlow);
@@ -606,5 +634,7 @@ export function buildMusicRoom(room, root, layout, helpers) {
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[cream, 'plaster'], [wood, 'wood'], [metal, 'metal'], [moss, 'fabric'], [clay, 'fabric'], [curtain, 'fabric'],
         [walnut, 'wood'], [felt, 'fabric'], [brass, 'metal'], [cable, 'rubber'], [floor, 'wood'], [rug, 'fabric'], [fringe, 'fabric']]) mat.userData.roomSurface = surface;
+    creativeMaterialDetail(root, [[cream, 'plaster'], [wood, 'oak'], [trim, 'paintedWood'], [metal, 'powder'], [moss, 'textile'],
+        [clay, 'textile'], [curtain, 'textile'], [walnut, 'walnut'], [felt, 'textile'], [brass, 'brushed'], [cable, 'rubber'], [floor, 'oak']]);
     root.userData.dimensionsMm = { width: w, depth: d, height: h };
 }

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { gamingSessionMaps, buildGamingSessionDetail, migrateGamingSavedFurniture, migrateGamingSavedAssetKeys } from './gaming-session-detail.mjs?v=gaming-sessions-20261022';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
 
@@ -17,7 +18,7 @@ export const GAMING_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
         { id: 'kenney-furniture-books', at: [cabinetX - 95, 1604, back + 145] },
         { id: 'kenney-furniture-plant-small2', at: [cabinetX + 120, 1934, back + 140] },
         { id: 'kenney-furniture-potted-plant', at: [-width / 2 + 270, 0, large ? back + 1500 : back + 320] },
-        { id: 'kenney-furniture-lamp-square-floor', at: [compact ? width / 2 - 180 : -width / 2 + 160, 0, back + depth - 280] }
+        { id: 'kenney-furniture-lamp-square-floor', at: [compact ? width / 2 - 180 : -width / 2 + 1100, 0, back + depth - 280] }
     ];
     if (compact) props.push(
         { id: 'kenney-furniture-lounge-sofa-ottoman', at: [800, 0, loungeZ + 100] },
@@ -29,24 +30,24 @@ export const GAMING_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
         { id: 'game-controller', at: [-width / 2 + 1330, 391.2, loungeZ - 140], turn: 90 },
         { id: 'handheld-console', at: [-width / 2 + 1430, 391.2, loungeZ + 160], turn: 75 },
         { id: 'samsung-neo-tv', at: [width / 2 - 160, 780, loungeZ], turn: -90 },
-        { id: 'headphones', at: [cabinetX - 190, 610, cabinetZ + 60], turn: -20 }
+        { id: 'headphones', at: [cabinetX - 140, 610, cabinetZ + 230], turn: -20 }
     );
     if (large) props.push(
         { id: 'ergoflex-game-table', at: [gameTable[0], 0, gameTable[1]] },
         { id: 'game-controller', at: [gameTable[0], 740, gameTable[1]], turn: -15 },
-        { id: 'ergoflex-vision-pro', at: [cabinetX + 140, 610, cabinetZ - 140], turn: -15 },
+        { id: 'ergoflex-vision-pro', at: [cabinetX + 140, 1200, back + 165], turn: -15 },
         { id: 'kenney-furniture-kitchen-coffee-machine', at: [-width / 2 + 370, 790, back + 360], turn: 90 },
         { id: 'monstera', at: [width / 2 - 500, 0, loungeZ - 1050] },
-        { id: 'kenney-furniture-lounge-chair', at: [width / 2 - 720, 0, loungeZ + 820], turn: -110 }
+        { id: 'kenney-furniture-lounge-chair', at: [width / 2 - 920, 0, loungeZ + 820], turn: -110 }
     );
     // Keep the apartment nook clear; larger rooms gain a real-size retro lane.
     if (index >= 1) props.push({ id: 'arcade-orbit-runner', at: [width / 2 - 520, 0, back + 1350], turn: -90 });
     if (index >= 2) props.push({ id: 'arcade-pixel-garden', at: [width / 2 - 520, 0, back + 2350], turn: -90 });
     if (index === 4) props.push({ id: 'arcade-night-drive', at: [width / 2 - 560, 0, back + 3350], turn: -90 });
     // Later dressing is appended, so earlier placements keep their saved-edit keys.
-    props.push({ id: 'lava-lamp', at: [cabinetX + 215, 610, cabinetZ + 150] });
+    props.push({ id: 'lava-lamp', at: [cabinetX + 170, 610, cabinetZ + 230] });
     // Append new dressing to preserve every existing saved placement key.
-    if(index===1||index===2)props.push({id:'atelier-gaming-streamdeck-cyber',at:[cabinetX-200,610,cabinetZ-145],turn:0});
+    if(index===1||index===2)props.push({id:'atelier-gaming-streamdeck-cyber',at:[cabinetX-200,610,cabinetZ-185],turn:0});
     return [id, { id, name: names[index], width, depth, height, back, desk, props, compact, large, cabinetX, cabinetZ, loungeZ, gameTable,
         ...(compact ? { groovePoses: {morning:{dx:-100,dz:80,yaw:0},afternoon:{dx:0,dz:0,yaw:0},evening:{dx:-60,dz:150,yaw:.06},night:{dx:-70,dz:30,yaw:0},party:{dx:-100,dz:250,yaw:-.08}} } : {}),
         daylight: [-width / 2 + 100, 450] }];
@@ -106,8 +107,8 @@ export function buildGamingRoom(room, root, layout, helpers) {
     const sessionMaps = gamingSessionMaps();
     const { width: w, depth: d, height: h, back: bz, cabinetX: cx, cabinetZ: cz, loungeZ } = layout;
     const front = bz + d;
-    const wall = material('#626775', { roughness: .93 }), trim = material('#20242f', { roughness: .5 }), walnut = material('#6f523c', { roughness: .58 });
-    const black = material('#1d212b', { roughness: .48, metalness: .12 }), felt = material('#2b2f3f', { roughness: 1 });
+    const wall = material('#626775', { roughness: .93 }), trim = material('#20242f', { roughness: .65 }), walnut = material('#6f523c', { roughness: .72 });
+    const black = material('#1d212b', { roughness: .62, metalness: .12 }), felt = material('#2b2f3f', { roughness: 1 });
     const alu = material('#a4acb8', { roughness: .3, metalness: .85 }), ink = material('#141821', { roughness: .4 });
     // Smoked-oak planks with staggered butt joints and individual board tones.
     const floorMap = canvasTexture((c, tw, th) => {
@@ -128,7 +129,8 @@ export function buildGamingRoom(room, root, layout, helpers) {
             c.fillStyle = '#2a1f1650'; c.fillRect(x0 + tw / 6 - 2, 0, 2, th);
         }
     }, 512, 1024); floorMap.repeat.set(w / 1000, d / 1800);
-    box(root, [w, 30, d], [0, -15, bz + d / 2], material('#ffffff', { map: floorMap, roughness: .5 }));
+    const floor = material('#ffffff', { map: floorMap, roughness: .68 });
+    box(root, [w, 30, d], [0, -15, bz + d / 2], floor);
     // Low-pile rugs: a framed geometric border and soft tufted texture.
     const rugTexture = (base, lineA, lineB) => canvasTexture((c, tw, th) => {
         c.fillStyle = base; c.fillRect(0, 0, tw, th);
@@ -219,13 +221,22 @@ export function buildGamingRoom(room, root, layout, helpers) {
     const cabinet = new THREE.Group(); cabinet.name = 'PC display cabinet'; back.add(cabinet);
     const cabinetW = layout.compact ? 520 : 650;
     box(cabinet, [cabinetW - 30, 560, 550], [cx, 300, cz], black, 6);
-    box(cabinet, [cabinetW, 30, 570], [cx, 595, cz], walnut, 4);
+    // The front landing holds the lamp and headphones clear of the PC case.
+    // Their furthest depth is 301 mm; the landing extends 375 mm forwards.
+    box(cabinet, [cabinetW, 30, 660], [cx, 595, cz + 45], walnut, 4);
     for (const x of [cx - cabinetW/2 + 95, cx + cabinetW/2 - 95]) for (const z of [cz - 205, cz + 205]) rod(cabinet, [x, 0, z], [x, 40, z], 12, alu);
     for (const y of [190, 400]) {
         box(cabinet, [cabinetW - 55, 190, 18], [cx, y, cz + 278], black, 3);
         rod(cabinet, [cx - 75, y + 50, cz + 293], [cx + 75, y + 50, cz + 293], 4, alu);
     }
     for (const y of [1590, 1920]) box(back, [650, 28, 270], [cx, y, bz + 145], walnut, 3);
+    if (layout.large) {
+        // A separate charging perch clears the PC by 140 mm vertically.
+        box(back, [300, 24, 300], [cx + 140, 1188, bz + 165], walnut, 3);
+        for (const x of [cx + 35, cx + 245]) {
+            rod(back, [x, 1085, bz + 20], [x, 1174, bz + 250], 5, alu);
+        }
+    }
 
     const strips = [];
     let atmosphere = ['evening', 1];
@@ -513,5 +524,7 @@ export function buildGamingRoom(room, root, layout, helpers) {
     room.roomAtmosphere('evening');
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[wall, 'plaster'], [trim, 'powder'], [walnut, 'wood'], [black, 'powder'], [felt, 'fabric'], [alu, 'metal']]) mat.userData.roomSurface = surface;
+    creativeMaterialDetail(root, [[wall, 'plaster'], [trim, 'paintedWood'], [walnut, 'walnut'], [floor, 'oak'],
+        [black, 'powder'], [felt, 'textile'], [alu, 'brushed'], [ink, 'plastic']]);
     root.userData.dimensionsMm = { width: w, depth: d, height: h };
 }

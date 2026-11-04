@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 
 // Fictional session dressing, not a prescribed exercise programme.
 export const GYM_SESSIONS = {
@@ -102,10 +103,11 @@ export function buildGymSessionDetail(room, layout, h, anchors) {
             box(g, [680, 6, 1780], [0, 11, -30], rubber, 12);
             for (const x of [-330, 330]) box(g, [2, .5, 1710], [x, 14.3, -30], trim);
             if (phase === 'morning') {
-                for (const x of [-225, 225]) { box(g, [150, 90, 230], [x, 59, -610], cork, 8); box(g, [142, 2, 220], [x, 104, -610], trim, 5); }
+                for (const x of [-225, 225]) { box(g, [150, 90, 230], [x, 59, -610], cork, 8); box(g, [142, 2, 220], [x, 105, -610], trim, 1); }
                 const loop = mesh(g, new THREE.TorusGeometry(62, 5, 7, 24), trim, [230, 20, 580]); loop.rotation.x = Math.PI / 2;
             } else {
-                roller(g, [0, 14, -580]);
+                // The 2 mm raised ribs are the roller's actual contact points.
+                roller(g, [0, 16, -580]);
                 for (const x of [-220, 220]) mesh(g, new THREE.SphereGeometry(34, 16, 12), trim, [x, 48, 340]);
             }
             towel(g, [-125, 14, 710]);
@@ -169,5 +171,6 @@ export function buildGymSessionDetail(room, layout, h, anchors) {
         for (const o of equipment) for (const child of o.children) child.visible = originalVisible.get(child) && ['afternoon', 'party'].includes(phase);
         root.userData.gymSession = { phase, ...GYM_SESSIONS[phase], floorClear: phase === 'night' };
     }
+    interiorCraftFinishes(room,{linen:[linen],metal:[steel],rubber:[rubber]});
     apply(current); return { apply, equipment, variants };
 }

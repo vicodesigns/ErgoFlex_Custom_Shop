@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { createChildDeskKit } from './child-room.mjs?v=child-room-20261104';
+import { surfaceSupportsFootprint } from './desk-shelf-space.mjs';
 import { activityPageMaterial } from './room-activity-print.mjs?v=environment-expert-20261014';
 
 const education = new Set(['kindergarten','elementary','middleschool','highschool','college','university']);
@@ -33,6 +35,7 @@ const titles = {
 // One stable scene asset, five children selected by setDayDress. Keep the
 // existing daily-kit footprint and mount, so rearrangement keys still restore.
 export function createDailyDeskKit(id, { box, mesh, rod, material }) {
+    if(id==='childroom')return createChildDeskKit({box,mesh,rod,material});
     const kit = new THREE.Group(); kit.name = 'Groove tabletop · daily materials'; kit.userData.dayKit = true;
     const accent = accents[id] || '#52746c', cover = material(accent), paper = material('#e9dfc8'), ink = material('#354b50');
     const ceramic = material('#e6d6b8');
@@ -74,7 +77,7 @@ export function createDeskNotebook(id, { box, mesh, material }) {
     return g;
 }
 
-export function placeDailyDeskKit(kit, props) {
+export function placeDailyDeskKit(kit, props, supportSpace=null) {
     // Detached shallow resource copies give bounds in desktop millimetres,
     // independent of the desk's current world position, lift and tilt.
     const boxes=[];
@@ -96,7 +99,8 @@ export function placeDailyDeskKit(kit, props) {
             }
         });
     }
-    const shape=new THREE.Box3().setFromObject(kit.clone(true));
+    let shape=new THREE.Box3().setFromObject(kit.clone(true));
+    const unturnedShape=shape.clone();let chosenYaw=0;
     // Prefer the visible front wings. Rear placements can disappear beneath
     // the raised shelf, especially in music and teaching arrangements.
     const candidates=[[-440,150],[440,230],[-440,230],[520,150],[-520,150],
@@ -110,6 +114,7 @@ export function placeDailyDeskKit(kit, props) {
     let chosen=candidates[0],least=Infinity;
     const overlapAt=(x,z)=>{
         const b=shape.clone().translate(new THREE.Vector3(x,1,z));let overlap=0;
+        if(!surfaceSupportsFootprint(supportSpace,b))return Infinity;
         for(const p of boxes){
             const dx=Math.max(0,Math.min(b.max.x+8,p.max.x)-Math.max(b.min.x-8,p.min.x));
             const dz=Math.max(0,Math.min(b.max.z+8,p.max.z)-Math.max(b.min.z-8,p.min.z));
@@ -134,6 +139,23 @@ export function placeDailyDeskKit(kit, props) {
             }
         }
     }
+    // A portrait notebook fits between tools that leave no landscape patch.
+    // Search the same measured face rather than accept an intersection.
+    if(least>0){
+        turnSearch:for(const yaw of [Math.PI/2,-Math.PI/2,Math.PI]){
+            shape=unturnedShape.clone().applyMatrix4(new THREE.Matrix4().makeRotationY(yaw));
+            for(let z=230;z>=-230;z-=20)for(let x=-520;x<=520;x+=20){
+                const overlap=overlapAt(x,z);
+                if(overlap<least){least=overlap;chosen=[x,z];chosenYaw=yaw;}
+                if(overlap===0)break turnSearch;
+            }
+        }
+    }
     kit.position.set(chosen[0],1,chosen[1]);
+    kit.rotation.y=chosenYaw;
     kit.userData.authoredDesktopOverlap=least;
+    kit.userData.authoredDesktopSupported=Number.isFinite(least);
+    // Never float a default kit beyond the curved edge when a custom top has
+    // no suitable supporting patch. Saved editor placements remain independent.
+    kit.visible=Number.isFinite(least);
 }

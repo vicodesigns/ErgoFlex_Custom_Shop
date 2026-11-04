@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 
 // Measured shared spaces. Millimetres throughout, with usable aisles and
 // native-size library furniture. The active ErgoFlex is the rear-left station.
@@ -281,7 +282,7 @@ export function buildCoworkingRoom(room, root, layout, helpers) {
     mesh(coffee, cyl, ceramic, [380, 945, 60]).scale.set(38, 90, 38); mesh(coffee, cyl, ceramic, [380, 996, 60]).scale.set(150, 12, 150);
     noShadow(mesh(coffee, cyl, material('#c8925e', { roughness: .8 }), [380, 1042, 60])).scale.set(108, 80, 108);
     noShadow(mesh(coffee, new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), material('#dfeeee', { transparent: true, opacity: .2, roughness: .05, depthWrite: false }), [380, 1002, 60])).scale.set(160, 190, 160);
-    const cups = []; for (let s = 0; s < 3; s++) for (let k = 0; k < 4 - s % 2; k++) cups.push({ at: [-260 + s * 100, 931 + k * 58, -150], size: [40, 56, 40], color: ['#f3eee4', '#5f7b75', '#f3eee4'][s] });
+    const cups = []; for (let s = 0; s < 3; s++) for (let k = 0; k < 4 - s % 2; k++) cups.push({ at: [-260 + s * 100, 928 + k * 56, -150], size: [40, 56, 40], color: ['#f3eee4', '#5f7b75', '#f3eee4'][s] });
     cups.push({ at: [-860, 990, -120], size: [55, 180, 55], color: '#cfe0dc' }, { at: [-760, 960, -130], size: [36, 120, 36], color: '#cfe0dc' });
     batch(coffee, cyl, tinted, cups, true);
     // Open shelving, glazed tile splashback and an under-shelf LED glow.
@@ -491,9 +492,11 @@ export function buildCoworkingRoom(room, root, layout, helpers) {
         festoonMat.emissiveIntensity = mode.festoon * accent; festoonMat.color.set(mode.festoon > .3 ? '#fff4dc' : '#ebe5d8');
         pools.forEach(({ obj, strength }) => { obj.material.color.set(mode.colors[0]).multiplyScalar(mode.pools * strength * accent); obj.visible = mode.pools * accent > .01; });
         menuMat.emissiveIntensity = .06 + .32 * mode.pools * accent;
-        lights.forEach(spec => { spec.light.color.set(spec.task ? mode.colors[0] : mode.colors[1]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent; });
+        const taskTint = modeId === 'morning' || modeId === 'afternoon' ? '#f1eee5' : mode.colors[0];
+        lights.forEach(spec => { spec.light.color.set(spec.task ? taskTint : mode.colors[1]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent; });
         root.userData.atmosphere = modeId;
     };
+    interiorCraftFinishes(room,{ceramic:[ceramic],linen:[felt,shadeMat],wood:[oak,bark],metal:[brass]});
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[chalk, 'plaster'], [sage, 'powder'], [ink, 'powder'], [oak, 'wood'], [clay, 'plaster'], [brass, 'metal'], [rug, 'fabric'], [rugAlt, 'fabric'], [kilim, 'fabric'], [floor, 'stone'], [bark, 'wood'], [fluted, 'powder']]) mat.userData.roomSurface = surface;
     room.roomAtmosphere('morning'); root.userData.dimensionsMm = { width: w, depth: d, height: h };

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { activityPageMaterial } from './room-activity-print.mjs?v=table-clearance-20261021';
 
 const phases = ['morning', 'afternoon', 'evening', 'night', 'party'];
@@ -68,6 +69,24 @@ export function gallerySessionDetails(room, layout, h, group, oak, back) {
     }
     const setting = new THREE.Group(); setting.name = 'Curator daily setting'; setting.position.y = 800; ledge.add(setting);
     markSceneAsset(setting, { key: `gallery:${layout.id}:fixture:curator-setting` });
+    // A permanent brochure rack uses the outer 88 mm of the ledge. Even the
+    // opening-night pencil bowl ends 15 mm before the rack's left edge.
+    const brochures = new THREE.Group(); brochures.name = 'Collection guides in a bronze rack';
+    brochures.position.set(width / 2 - 56, 800, -24); ledge.add(brochures);
+    box(brochures, [88, 4, 140], [0, 2, 0], k.bronze, 2);
+    box(brochures, [88, 104, 5], [0, 56, -66], k.bronze, 2);
+    for (const x of [-42, 42]) box(brochures, [4, 36, 136], [x, 22, 0], k.bronze, 1);
+    for (let i = 0; i < 3; i++) box(brochures, [70, 96, 2], [0, 52, -61 + i * 3], k.paper, 1);
+    rod(brochures, [-42, 26, 58], [42, 26, 58], 2.5, k.bronze);
+    const guide = canvasMap((c, w, h) => {
+        c.fillStyle = '#ede6d8'; c.fillRect(0, 0, w, h); c.fillStyle = '#506d62';
+        c.fillRect(12, 14, w - 24, h * .43); c.fillStyle = '#d3b78b';
+        c.beginPath(); c.arc(w / 2, h * .25, w * .2, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#34483d'; c.font = '24px Georgia'; c.fillText('Forms in', 14, h * .64);
+        c.fillText('Motion', 14, h * .75); c.font = '13px sans-serif'; c.fillText('COLLECTION GUIDE', 14, h * .9, w - 28);
+    }, 192, 256);
+    const guideFace = mesh(brochures, new THREE.PlaneGeometry(68, 92), material('#ffffff', { map: guide, roughness: .96 }), [0, 52, -53.8]);
+    guideFace.castShadow = false;
     const variants = [], states = [
         ['BEFORE THE DOORS OPEN', 'Condition notes / check the hang'],
         ['LOOK A LITTLE LONGER', 'Collection guide / works on paper'],
@@ -137,6 +156,7 @@ export function gallerySessionDetails(room, layout, h, group, oak, back) {
 export function bedroomSessionDetails(room, layout, h, bench) {
     const { box, mesh, material, markSceneAsset } = h, k = detailKit(room, h);
     const clay = k.textile('#b99581'), sage = k.textile('#849283');
+    interiorCraftFinishes(room,{ceramic:[k.ceramic],linen:[clay,sage],metal:[k.bronze]});
     const setting = new THREE.Group(); setting.name = 'Bedroom daily setting'; setting.position.y = 490; bench.add(setting);
     markSceneAsset(setting, { key: `bedroom:${layout.id}:fixture:bedtime-setting` });
     const variants = [];

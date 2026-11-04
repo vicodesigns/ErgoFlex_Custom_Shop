@@ -15,7 +15,7 @@ export function cleanDeskObjects(value) {
         if(['x','y','z','w'].reduce((sum,a)=>sum+t.q[a]**2,0)<0.000001)continue;
         if(v.added&&!deskId(v.propId)&&!deskId(v.copySource))continue;
         objects[id]={role:v.role,added:v.added===true,removed:v.removed===true,label:String(v.label||'Desk object').slice(0,100),
-            ...(v.added&&deskId(v.propId)?{propId:v.propId}:{}),...(deskId(v.copySource)?{copySource:v.copySource,copyLabel:String(v.copyLabel||'').slice(0,100),copyNodes:Array.isArray(v.copyNodes)?v.copyNodes.slice(0,10000):[],...(Array.isArray(v.copyBaseScale)&&v.copyBaseScale.length===3&&v.copyBaseScale.every(n=>finite(n,.00001,100000))?{copyBaseScale:v.copyBaseScale}:{}),...(deskId(v.copyAccessory)?{copyAccessory:v.copyAccessory}:{})}:{}),...(v.custom?{custom:true}:{}),...(typeof v.artworkVisible==='boolean'?{artworkVisible:v.artworkVisible}:{}),...(v.clampMount==='rear-edge-v1'?{clampMount:v.clampMount}:{}),...(v.monitorLayout==='curved-right-v1'?{monitorLayout:v.monitorLayout}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
+            ...(v.added&&deskId(v.propId)?{propId:v.propId}:{}),...(deskId(v.copySource)?{copySource:v.copySource,copyLabel:String(v.copyLabel||'').slice(0,100),copyNodes:Array.isArray(v.copyNodes)?v.copyNodes.slice(0,10000):[],...(Array.isArray(v.copyBaseScale)&&v.copyBaseScale.length===3&&v.copyBaseScale.every(n=>finite(n,.00001,100000))?{copyBaseScale:v.copyBaseScale}:{}),...(deskId(v.copyAccessory)?{copyAccessory:v.copyAccessory}:{})}:{}),...(v.custom?{custom:true}:{}),...(typeof v.artworkVisible==='boolean'?{artworkVisible:v.artworkVisible}:{}),...(['original-v2','hook-v1'].includes(v.headphoneSocket)?{headphoneSocket:v.headphoneSocket}:{}),...(v.clampMount==='rear-edge-v1'?{clampMount:v.clampMount}:{}),...(v.monitorLayout==='curved-right-v1'?{monitorLayout:v.monitorLayout}:{}),transform:Object.fromEntries(['p','q','s'].map(k=>[k,Object.fromEntries((k==='q'?['x','y','z','w']:['x','y','z']).map(a=>[a,t[k][a]]))]))};
     }
     const wide=objects['accessory-wide-monitor'],portrait=objects['accessory-portrait-monitor'];
     if(wide&&portrait){
@@ -86,7 +86,7 @@ export function seedSceneDeskSize(source,size) {
     const draft=cleanSceneDeskVariant({...source,size});
     if(!draft)return null;
     const ratio=size===source.size?1:size==='48x30'?.8:1.25;
-    for(const object of Object.values(draft.objects))object.transform.p.x*=ratio;
+    for(const object of Object.values(draft.objects))if(!object.headphoneSocket)object.transform.p.x*=ratio;
     draft.height=Math.max(draft.height,minimumHeightForTilt(draft.tilt,size));
     for(const phase of Object.values(draft.phases)){
         phase.height=Math.max(phase.height,minimumHeightForTilt(phase.tilt,size));

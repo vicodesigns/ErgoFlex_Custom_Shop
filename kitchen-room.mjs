@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
@@ -213,7 +214,18 @@ export function buildKitchenRoom(room, root, layout, helpers) {
     const doorMap = texture((c, tw, th) => shaker(c, tw, th, false), 256, 256), doorBump = texture((c, tw, th) => shaker(c, tw, th, true), 256, 256); doorBump.colorSpace = THREE.NoColorSpace;
     const jadeDoor = material('#5a7c72', { map: doorMap, bumpMap: doorBump, bumpScale: 4 * mm, roughness: .62 });
     const ceramic = material('#ffffff', { roughness: .32 }), clearGlass = material('#dfeee9', { roughness: .08, metalness: .1, transparent: true, opacity: .28 });
+    const foodSkin = material('#ffffff',{roughness:.83}), wax = material('#efe7d8',{roughness:.82});
+    clearGlass.depthWrite = false;
     const towelMap = texture((c, tw, th) => { c.fillStyle = '#efe8da'; c.fillRect(0, 0, tw, th); for (const [y, col, s] of [[30, '#c4683f', 14], [56, '#c4683f', 5], [th - 70, '#3f6757', 14], [th - 44, '#3f6757', 5]]) { c.fillStyle = col; c.fillRect(0, y, tw, s); } for (let x = 0; x < tw; x += 3) { c.fillStyle = '#7d6a4f14'; c.fillRect(x, 0, 1, th); } }, 128, 256);
+    const recipeMap = texture((c, tw, th) => {
+        c.fillStyle='#efe5cd';c.fillRect(0,0,tw,th);c.fillStyle='#466957';
+        c.font='bold 33px Georgia';c.textAlign='center';c.fillText('A SEASON',tw/2,57);c.fillText('AT HOME',tw/2,96);
+        c.fillStyle='#c7794b';c.beginPath();c.arc(tw/2,th*.57,tw*.3,0,Math.PI*2);c.fill();
+        c.fillStyle='#e5bd77';c.beginPath();c.ellipse(tw/2,th*.59,tw*.22,th*.09,-.25,0,Math.PI*2);c.fill();
+        c.strokeStyle='#668264';c.lineWidth=5;c.beginPath();c.moveTo(50,th*.79);c.quadraticCurveTo(tw*.4,th*.64,tw*.8,th*.72);c.stroke();
+        c.fillStyle='#466957';c.font='15px sans-serif';c.fillText('EVERYDAY RECIPES',tw/2,th-38);
+    },256,384);
+    const recipeCover = material('#ffffff',{map:recipeMap,roughness:.92});
     // Counter vignettes: crock and oils, fruit and cookbook, canisters, bread board.
     const vignette = (g, kind, x0) => {
         const pot = [], wood = [], items = [], metal = [];
@@ -224,21 +236,33 @@ export function buildKitchenRoom(room, root, layout, helpers) {
             wood.push({ geo: cyl, at: [x0 + 125, 1196, -235], size: [10, 20, 10] }, { geo: cyl, at: [x0 + 200, 1148, -250], size: [9, 18, 9] });
             metal.push({ geo: cyl, at: [x0 - 110, 950, -250], size: [24, 100, 24] }, { geo: ball, at: [x0 - 110, 1010, -250], size: [22, 18, 22] });
         } else if (kind === 'fruit' || kind === 'bowl') {
-            const z0 = kind === 'bowl' ? 140 : 70;
-            pot.push({ geo: lathe([[0, 0], [70, 0], [150, 60], [158, 72], [148, 72], [66, 10], [0, 10]], 28), at: [x0, 900, z0] });
-            for (let i = 0; i < 8; i++) { const t = i * 2.3, r = i ? 70 : 0; items.push({ geo: ball, at: [x0 + Math.cos(t) * r, 958 + (i ? 0 : 22) + (i % 3) * 6, z0 + Math.sin(t) * r * .8], size: [38, 34, 34], rot: [0, t, .3], color: ['#e9c544', '#ef8f2e', '#a9c255', '#e3b93c'][i % 4] }); }
-            if (kind === 'fruit') wood.push({ at: [x0 - 10, 905, -190], size: [260, 10, 150], rot: [0, .12, 0] }, { at: [x0 - 10, 1040, -232], size: [240, 300, 26], rot: [-.32, .12, 0] });
-            if (kind === 'fruit') items.push({ geo: unit, at: [x0 - 10, 1043, -217], size: [222, 282, 6], rot: [-.32, .12, 0], color: '#c4683f' });
+            // The apartment bowl leaves a real gap in front of the coffee maker.
+            const z0 = kind === 'bowl' ? 160 : 70, fs = kind === 'bowl' ? .8 : 1;
+            pot.push({ geo: lathe([[0, 0], [70, 0], [150, 60], [158, 72], [148, 72], [66, 10], [0, 10]], 28), at: [x0, 900, z0], size:[fs,fs,fs] });
+            for (let i = 0; i < 8; i++) { const t = i * 2.3, r = (i ? 70 : 0)*fs; items.push({ geo: ball, at: [x0 + Math.cos(t) * r, 900+(58 + (i ? 0 : 22) + (i % 3) * 6)*fs, z0 + Math.sin(t) * r * .8], size: [38*fs, 34*fs, 34*fs], rot: [0, t, .3], color: ['#e9c544', '#ef8f2e', '#a9c255', '#e3b93c'][i % 4] }); }
+            if (kind === 'fruit') {
+                wood.push({ at: [x0 - 10, 905, -190], size: [260, 10, 150], rot: [0, .12, 0] });
+                const book = new THREE.Group(); book.name='Printed seasonal cookbook';g.add(book);
+                // The lower cover edge rests on the 910 mm stand, including tilt.
+                book.position.set(x0-10,910+13*Math.sin(.32),-185);book.rotation.set(-.32,.12,0,'YXZ');
+                box(book,[240,300,26],[0,150,0],oak,2);
+                box(book,[232,292,23],[0,150,2],cream,1);
+                box(book,[240,300,2],[0,150,15],recipeCover,1);
+            }
         } else if (kind === 'canisters') {
             [[200, -150], [160, -10], [120, 125]].forEach(([ch, dx]) => { pot.push({ geo: cyl, at: [x0 + dx, 900 + ch / 2, -225], size: [66, ch, 66] }); wood.push({ geo: cyl, at: [x0 + dx, 900 + ch + 11, -225], size: [69, 22, 69] }); metal.push({ geo: ball, at: [x0 + dx, 900 + ch + 30, -225], size: [15, 12, 15] }); });
         } else if (kind === 'bread') {
-            wood.push({ at: [x0, 911, 30], size: [420, 22, 250], rot: [0, -.18, 0] }, { geo: cyl, at: [x0 + 245, 911, 75], size: [14, 22, 14], rot: [Math.PI / 2, 0, 0] });
-            items.push({ geo: ball, at: [x0 - 30, 952, 35], size: [140, 62, 82], rot: [0, -.18, 0], color: '#b8783e' }, { geo: ball, at: [x0 - 30, 975, 35], size: [110, 30, 60], rot: [0, -.18, 0], color: '#cf9554' });
-            for (let i = 0; i < 3; i++) items.push({ geo: cyl, at: [x0 + 110 + i * 22, 933, 25], size: [42, 12, 34], rot: [0, 0, Math.PI / 2 - .2], color: '#e8d1a6' });
+            wood.push({ at: [x0, 911, 30], size: [420, 22, 250], rot: [0, -.18, 0] },
+                { at: [x0+226,911,75],size:[70,22,46] },
+                { geo:new THREE.TorusGeometry(18,5,6,24),at:[x0+260,911,75],rot:[Math.PI/2,0,0] });
+            items.push({ geo: ball, at: [x0 - 30, 984, 35], size: [140, 62, 82], rot: [0, -.18, 0], color: '#b8783e' }, { geo: ball, at: [x0 - 30, 1007, 35], size: [110, 30, 60], rot: [0, -.18, 0], color: '#cf9554' });
+            const sliceY=922+42*Math.cos(.2)+6*Math.sin(.2);
+            for (let i = 0; i < 3; i++) items.push({ geo: cyl, at: [x0 + 110 + i * 22, sliceY, 25], size: [42, 12, 34], rot: [0, 0, Math.PI / 2 - .2], color: '#e8d1a6' });
         }
         merged(g, ceramic, pot); merged(g, oak, wood); merged(g, brass, metal);
         // Different primitives cannot share one InstancedMesh; group by geometry.
-        for (const shape of new Set(items.map(i => i.geo))) batch(g, shape, ceramic, items.filter(i => i.geo === shape));
+        const skin=['fruit','bowl','bread'].includes(kind)?foodSkin:ceramic;
+        for (const shape of new Set(items.map(i => i.geo))) batch(g, shape, skin, items.filter(i => i.geo === shape));
     };
     const dressed = tier ? { 3: 'crock', 4: 'fruit', 5: 'canisters', 6: 'bread', 7: 'fruit', 8: 'canisters', 9: 'bread' } : { 0: 'bowl' };
     const displayBays = tier >= 2 ? [3, bays - 2] : [3];
@@ -321,7 +345,7 @@ export function buildKitchenRoom(room, root, layout, helpers) {
         // Mugs on the lower shelf, a stack of bowls and a row of coffee tins above.
         const shelfware = [];
         for (let i = 0; i < 4; i++) shelfware.push({ at: [120 + i * 95, 1535, -90], size: [38, 95, 38], color: ['#f1ebdf', '#c4683f', '#7fa293', '#e9c98f'][i] });
-        for (let i = 0; i < 4; i++) shelfware.push({ at: [-420 + i * 4, 1910 + i * 24, -100], size: [90 - i * 6, 22, 90 - i * 6], color: '#efe8db' });
+        for (let i = 0; i < 4; i++) shelfware.push({ at: [-420 + i * 4, 1898.5 + i * 22, -100], size: [90 - i * 6, 22, 90 - i * 6], color: '#efe8db' });
         for (let i = 0; i < 3; i++) shelfware.push({ at: [-220 + i * 110, 1960, -110], size: [44, 145, 44], color: ['#3f6757', '#b89958', '#c4683f'][i] });
         batch(coffee, cyl, ceramic, shelfware);
         pool(coffee, [0, 901, 40], [1150, 480], { strength: .55, source: 'wash' });
@@ -352,7 +376,7 @@ export function buildKitchenRoom(room, root, layout, helpers) {
     };
     const flameMat = material('#ffd59a', { emissive: '#ffb45e', emissiveIntensity: 0, roughness: 1 }); flames.push(flameMat);
     const candles = (g, spots, y) => {
-        merged(g, ceramic, spots.map(([x, z, ch]) => ({ geo: cyl, at: [x, y + ch / 2, z], size: [14, ch, 14] })));
+        merged(g, wax, spots.map(([x, z, ch]) => ({ geo: cyl, at: [x, y + ch / 2, z], size: [14, ch, 14] })));
         const flame = merged(g, flameMat, spots.map(([x, z, ch]) => ({ geo: ball, at: [x, y + ch + 16, z], size: [7, 16, 7] }))); flame.receiveShadow = false; flame.userData.candleFlame = true; flames.push(flame);
     };
     const rugMat = (base, border, accent) => material('#ffffff', { map: texture((c, tw, th) => {
@@ -380,7 +404,7 @@ export function buildKitchenRoom(room, root, layout, helpers) {
         const sticks = [-1, 1].map(s => [s * Math.min(520, layout.tableWidth / 2 - 420), 0]);
         merged(dining, brass, sticks.flatMap(([x, z]) => [{ geo: cyl, at: [x, 760, z], size: [45, 14, 45] }, { geo: cyl, at: [x, 810, z], size: [11, 100, 11] }, { geo: cyl, at: [x, 862, z], size: [24, 8, 24] }]), true);
         candles(dining, sticks.map(([x, z]) => [x, z, 210]), 866);
-        if (tier >= 2) { batch(dining, ball, ceramic, [0, 1, 2, 3, 4].map(i => ({ at: [-260 + (i % 3) * 50 - 20, 790 + (i > 2 ? 26 : 0), (i % 2 ? 30 : -30)], size: [70, 34, 40], rot: [0, i, 0], color: i % 2 ? '#c98a4b' : '#b8783e' }))); merged(dining, oak, [{ geo: lathe([[0, 0], [120, 0], [150, 55], [140, 55], [112, 8], [0, 8]], 24), at: [-240, 753, 0] }]); }
+        if (tier >= 2) { batch(dining, ball, foodSkin, [0, 1, 2, 3, 4].map(i => ({ at: [-260 + (i % 3) * 50 - 20, 790 + (i > 2 ? 26 : 0), (i % 2 ? 30 : -30)], size: [70, 34, 40], rot: [0, i, 0], color: i % 2 ? '#c98a4b' : '#b8783e' }))); merged(dining, oak, [{ geo: lathe([[0, 0], [120, 0], [150, 55], [140, 55], [112, 8], [0, 8]], 24), at: [-240, 753, 0] }]); }
         pool(dining, [0, 752, 0], [Math.min(1800, layout.tableWidth - 120), 900], { strength: .75 });
     } else {
         mesh(dining, new THREE.CylinderGeometry(440, 440, 45, 40), stone, [0, 707.5, 0]);
@@ -521,11 +545,13 @@ export function buildKitchenRoom(room, root, layout, helpers) {
         pools.forEach(({ obj, strength, source }) => { const k = (source === 'wash' ? mode.wash : mode.practical) * strength * accent; obj.material.color.set(mode.colors[0]).multiplyScalar(k * .55); obj.visible = k > .02; });
         flames.forEach(f => { if (f.isMaterial) f.emissiveIntensity = 2.4 * mode.candles * accent; else f.visible = mode.candles > 0; });
         lights.forEach(spec => {
-            spec.light.color.set(spec.task ? '#ffe0b7' : mode.colors[0]); if (spec.channel) spec.light.color.lerp(tint.set(mode.colors[1]), .3);
+            const day = id === 'morning' || id === 'afternoon';
+            spec.light.color.set(spec.task ? (day ? '#f2eee3' : '#ffe0b7') : mode.colors[0]); if (spec.channel) spec.light.color.lerp(tint.set(mode.colors[1]), .3);
             spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * mode.lamps * accent;
         });
         root.userData.atmosphere = id;
     };
+    interiorCraftFinishes(room,{ceramic:[ceramic],linen:[linen],wood:[oak],metal:[brass,steel]});
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[cream, 'plaster'], [jade, 'powder'], [dark, 'powder'], [brass, 'metal'], [steel, 'metal'], [oak, 'wood'], [stone, 'stone'], [linen, 'fabric']]) mat.userData.roomSurface = surface;
     room.roomAtmosphere('morning'); root.userData.dimensionsMm = { width: w, depth: d, height: h };

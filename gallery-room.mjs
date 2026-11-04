@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { gallerySessionDetails } from './gallery-bedroom-detail.mjs?v=gallery-bedroom-20261025';
 
@@ -24,7 +25,7 @@ export const GALLERY_LAYOUTS = Object.fromEntries(tiers.map(([id, name, width, d
     ];
     if (tier) props.push(
         { id: 'aphrodite', at: [-width / 2 + 560, 120, back + 550], turn: 20 },
-        { id: 'kenney-furniture-potted-plant', at: [width / 2 - 350, 0, back + 2450] }
+        { id: 'kenney-furniture-potted-plant', at: [width / 2 - 350, 0, back + 2600] }
     );
     if (tier && tier < 3) props.push(
         { id: 'armchair-poppi', at: [width / 2 - 700, 0, front - 800], turn: -30 },
@@ -161,7 +162,8 @@ export function buildGalleryRoom(room, root, layout, helpers) {
         for(let i=0;i<1600;i++){c.fillStyle=i%3?'#8f816c20':'#ffffff3a';c.fillRect(x0+hash(k*1999+i)*s,y0+hash(k*733+i*1.7)*s,1+i%2,1+i%2);}
         c.restore();c.strokeStyle='#9f927e';c.lineWidth=1.5;c.strokeRect(x0+.75,y0+.75,s-1.5,s-1.5);}},1024,1024);
     floorMap.wrapS=floorMap.wrapT=THREE.RepeatWrapping;floorMap.repeat.set(w/1800,d/1800);
-    box(root,[w,30,d],[0,-15,bz+d/2],material('#ffffff',{map:floorMap,roughness:.46}));
+    const floor=material('#ffffff',{map:floorMap,roughness:.7});
+    box(root,[w,30,d],[0,-15,bz+d/2],floor);
     const marbleMap=texture((c,tw,th)=>{c.fillStyle='#efece6';c.fillRect(0,0,tw,th);for(let i=0;i<16;i++){c.strokeStyle=i%4?'#9d978f2c':'#7d766d50';c.lineWidth=.6+hash(i)*2.4;c.beginPath();let x=hash(i*7)*tw,y=0;c.moveTo(x,y);while(y<th){x+=(hash(i*13+y)-.5)*70;y+=18+hash(i+y)*30;c.lineTo(x,y);}c.stroke();}});
     const marble=material('#ffffff',{map:marbleMap,roughness:.28});
     const unit=new THREE.PlaneGeometry(1,1);
@@ -306,7 +308,8 @@ export function buildGalleryRoom(room, root, layout, helpers) {
         for(let i=-1;i<10;i++){c.beginPath();c.moveTo(i*sx,0);c.lineTo(i*sx+th,th);c.stroke();c.beginPath();c.moveTo(i*sx,0);c.lineTo(i*sx-th,th);c.stroke();}
         for(let j=0;j<=3;j++)for(let i=0;i<=8;i++){if((i+j)%2)continue;const x=i*sx,y=j*sy,g=c.createRadialGradient(x,y,1,x,y,16);g.addColorStop(0,'#14100e');g.addColorStop(1,'#3b302a00');c.fillStyle=g;c.fillRect(x-16,y-16,32,32);}
         for(let i=0;i<1600;i++){c.fillStyle=i%2?'#ffffff0d':'#0000001a';c.fillRect(hash(i)*tw,hash(i*1.9)*th,2,2);}},512,192);
-    box(bench,[bw-60,40,420],[0,485,0],material('#ffffff',{map:leatherMap,roughness:.5}),12);
+    const leather=material('#ffffff',{map:leatherMap,roughness:.64});
+    box(bench,[bw-60,40,420],[0,485,0],leather,12);
     pool(tier?0:250,bz+3000,bw*1.3);
     if(tier>=3){
         const vitrine=group('collection-case','Glass exhibition case and award',[-1100,0,front-2300]);
@@ -358,7 +361,7 @@ export function buildGalleryRoom(room, root, layout, helpers) {
         washMats.forEach((mat,channel)=>mat.color.set(mode.colors[channel]).multiplyScalar((.05+mode.wash*.3)*accent));
         poolMat.color.set(mode.colors[0]).multiplyScalar((.03+mode.wash*.16)*accent);
         lensMat.emissive.set(mode.colors[0]);lensMat.emissiveIntensity=.4+mode.wash*1.6*accent;
-        artMats.forEach(mat=>mat.emissive.setScalar((.03+mode.wash*.17)*accent));
+        artMats.forEach(mat=>mat.emissive.setScalar((.008+mode.wash*.035)*accent));
         blindMat.emissiveIntensity=dark?.02:mode.power*.12;
         dots.forEach(dot=>{dot.visible=id==='party';});
         const s=SUN[id]||SUN.morning,pos=sunGeo.attributes.position,uv=sunGeo.attributes.uv;
@@ -368,5 +371,8 @@ export function buildGalleryRoom(room, root, layout, helpers) {
     };
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[ivory, 'plaster'], [feature, 'plaster'], [satin, 'powder'], [black, 'powder'], [steel, 'metal'], [alu, 'metal'], [brass, 'metal'], [oak, 'wood'], [oakFrame, 'wood'], [stone, 'stone'], [marble, 'stone']]) mat.userData.roomSurface = surface;
+    creativeMaterialDetail(root, [[ivory, 'plaster'], [feature, 'plaster'], [satin, 'paintedWood'], [black, 'powder'],
+        [steel, 'brushed'], [alu, 'brushed'], [brass, 'brushed'], [oak, 'oak'], [oakFrame, 'oak'], [stone, 'limestone'],
+        [floor, 'limestone'], [marble, 'marble'], [leather, 'leather']]);
     room.roomAtmosphere('morning');root.userData.dimensionsMm={width:w,depth:d,height:h};
 }

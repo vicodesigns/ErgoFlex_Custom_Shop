@@ -65,7 +65,7 @@ function documentAtlas(kind, accent) {
 export function addCampusLife({ room, root, layout, asset, byId, kind = room.id }) {
     if (!TITLES[kind]) return { apply() {} };
     const accent = { library: '#365e4c', occmedialab: '#174e76', highschool: '#bf642b' }[kind];
-    const own = m => { room.ownedMaterials?.add(m); m.userData.roomPaletteLocked = true; return m; };
+    const own = m => { room.ownedMaterials?.add(m); m.userData.roomPaletteLocked = true; m.userData.roomFinishLocked = true; return m; };
     const matte = own(new THREE.MeshStandardMaterial({ name: 'Campus paper, rubber & painted detail', vertexColors: true, roughness: .79, dithering: true }));
     const metal = own(new THREE.MeshStandardMaterial({ name: 'Campus brushed aluminium', vertexColors: true, roughness: .42, metalness: .72, dithering: true }));
     const printed = own(new THREE.MeshStandardMaterial({ name: 'Annotated activity papers', map: documentAtlas(kind, accent), roughness: .96, side: THREE.DoubleSide }));
@@ -82,13 +82,13 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
     };
     const pen = (k, x, z, color = INK) => { k.box([7, 7, 142], [x, 5, z], color, [0, .14, 0]); k.box([8, 8, 22], [x + 8, 5, z + 57], SILVER, [0, .14, 0]); };
     const notebook = (k, x, z, stacked = 0) => {
-        k.box([205, 17, 260], [x, stacked + 8.5, z], accent); k.box([196, 12, 250], [x + 3, stacked + 9, z], PAPER);
-        k.box([205, 2, 260], [x, stacked + 18, z], accent); k.box([10, 2, 262], [x + 65, stacked + 19.5, z], '#bd9660');
+        k.box([205, 17, 260], [x, stacked + 8.5, z], accent, undefined, 'fabric'); k.box([196, 12, 250], [x + 3, stacked + 9, z], PAPER, undefined, 'paper');
+        k.box([205, 2, 260], [x, stacked + 18, z], accent, undefined, 'fabric'); k.box([10, 2, 262], [x + 65, stacked + 19.5, z], '#bd9660');
     };
-    const bottle = (k, x, z) => { k.cyl(30, 33, 190, [x, 95, z], '#79948d'); k.cyl(27, 27, 26, [x, 203, z], INK); k.box([18, 7, 22], [x, 219, z], SILVER); };
+    const bottle = (k, x, z) => { k.cyl(30, 33, 190, [x, 95, z], '#79948d'); k.cyl(27, 27, 26, [x, 203, z], INK, 'rubber'); k.box([18, 7, 22], [x, 219, z], SILVER, undefined, 'metal'); };
     const headphone = (k, x, z) => {
         k.add(new THREE.TorusGeometry(65, 9, 6, 20, Math.PI), [x, 19, z], INK, [1, 1, 1], [Math.PI / 2, 0, 0]);
-        for (const s of [-1, 1]) { k.cyl(30, 30, 25, [x + s * 65, 14, z], INK); k.cyl(22, 22, 27, [x + s * 65, 14, z], '#536976'); }
+        for (const s of [-1, 1]) { k.cyl(30, 30, 25, [x + s * 65, 14, z], INK, 'rubber'); k.cyl(22, 22, 27, [x + s * 65, 14, z], '#536976'); }
     };
     const daily = (support, id, name, at, draw) => {
         const g = asset(`campus-life-${id}`, name, at, support); g.userData.campusLife = { kind, support: support.userData.propId };
@@ -160,7 +160,7 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
             k.build(g, matte);
         });
         const printer = byId('print-scan');
-        if (printer) daily(printer, 'proofs', 'Print proofs & paper offcuts', [0, 906, 0], (g, p) => {
+        if (printer) daily(printer, 'proofs', 'Print proofs & paper offcuts', [0, 900, 0], (g, p) => {
             // Front edge of the print counter, clear of the printer footprint.
             sheet(g, p, [-480, 8, 130], 100, -.025);
             piece(g, 'Paper stock and binding clips', [-480, 0, 130], k => { k.box([110, 6, 140], [0, 3, 0], PAPER); k.box([21, 15, 14], [-38, 13, 53], INK); });
@@ -172,9 +172,10 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
             ['humboldt-table-l1', [-1010, 751, -560], true]
         ]) { const support = byId(id); if (support) taskLight(support, id, at, real); }
         // An editorial display on the otherwise quiet far-end café table.
-        // The existing personal place settings remain on their own table edges.
+        // The centre stays clear for its stoneware vase. This kit occupies a
+        // separate quadrant, with every paper corner inside the 520 mm top.
         const cafe = byId('humboldt-cafe-7');
-        if (cafe) daily(cafe, 'field-reading', 'North coast field reading & workshop notes', [0, 751, 0], (g, p) => {
+        if (cafe) daily(cafe, 'field-reading', 'North coast field reading & workshop notes', [180, 750, 120], (g, p) => {
             const k = detailKit();
             if (p === 3) notebook(k, 0, 0);
             else { sheet(g, p, [0, 2, 0], 220, -.08); pen(k, 150, 15); k.box([65, 1, 65], [110, 3, -100], '#c8b77e'); }

@@ -657,7 +657,9 @@ const UVP = { steel: [260, 260], brushed: [420, 60], oak: [1400, 700], oakV: [70
 const CLASSES = ['dress', 'steel', 'brushed', 'oak', 'oakV', 'hpl', 'fabric', 'rubber', 'glass', 'print', 'paper'];
 function govMaterials(kind, store) {
     if (store.M) return store.M;
-    const std = (o, surface) => { const m = new THREE.MeshStandardMaterial(o); if (surface) m.userData.roomSurface = surface; return m; };
+    const std = (o, surface) => { const m = new THREE.MeshStandardMaterial(o); m.userData.roomFinishLocked = true; if (surface) m.userData.roomSurface = surface;
+        if (o.map && ['wood','fabric','rubber'].includes(surface)) { m.bumpMap = o.map.clone(); m.bumpMap.colorSpace = THREE.NoColorSpace; m.bumpScale = surface === 'fabric' ? .0002 : .00008; }
+        return m; };
     const powder = tex(drawPowder, 256, 256), powderR = tex(drawPowderRough, 128, 128, false), hpl = tex(drawHPL, 256, 256), hplR = tex(drawHPLRough, 128, 128, false);
     const oakH = tex((c, W, H) => drawOak(c, W, H, { seed: 3 }), 1024, 512), oakV = tex((c, W, H) => drawOak(c, W, H, { seed: 11, vertical: true }), 512, 1024);
     const maps = store.maps = { powder, powderR, hpl, hplR, oakH, oakV, brushed: tex(drawBrushed, 256, 64), weave: tex(drawWeave, 128, 128), rubber: tex(drawRubber, 128, 128), limewash: tex(drawLimewash, 512, 512) };
@@ -672,7 +674,7 @@ function govMaterials(kind, store) {
         hpl: std({ vertexColors: true, map: hpl, roughnessMap: hplR, roughness: .68 }),
         fabric: std({ vertexColors: true, map: maps.weave, roughness: .95 }, 'fabric'),
         rubber: std({ vertexColors: true, map: maps.rubber, roughness: .88 }, 'rubber'),
-        glass: std({ color: '#d2e4e8', transparent: true, opacity: .2, roughness: .05, metalness: .1, depthWrite: false }),
+        glass: std({ color: '#d2e4e8', transparent: true, opacity: .2, roughness: .065, metalness: 0, depthWrite: false }),
         print: std({ vertexColors: true, map: labels, roughness: .5 }),
         paper: std({ vertexColors: true, map: paper, roughness: .82, side: THREE.DoubleSide })
     };
@@ -1848,7 +1850,7 @@ function decorateSecurity(kit) {
 function markerTray(K, width, y, z) {
     K.brushed.box([width * .6, 14, 60], [0, y, z], '#b7bfc3'); K.brushed.box([width * .6, 30, 6], [0, y + 10, z + 30], '#b7bfc3');
     ['#1f3f8a', '#c0392b', '#1f7a4a'].forEach((col, n) => K.add(new THREE.CylinderGeometry(9, 9, 130, 8), [-200 + n * 50, y + 16, z + 4], col, [1, 1, 1], [0, 0, Math.PI / 2]));
-    K.box([120, 30, 46], [180, y + 22, z], '#2b2f31'); K.fabric.box([118, 10, 44], [180, y + 4, z], '#d8d8d8');
+    K.box([120, 30, 46], [180, y + 22, z], '#2b2f31'); K.fabric.box([118, 10, 44], [180, y + 5, z], '#d8d8d8');
 }
 function coffeePoint(kit, kind) {
     // Low coffee and water point against the door wall, in front of the door.
@@ -2220,8 +2222,8 @@ export function activityMaterials(k0, phase, y, kit) {
     if (kind === 'operations') {
         // Roster, radios, earpiece box, tablet; handover shows both rosters.
         if (phase === 0 || phase === 4) { paperSheet(k, 1, 180, y, -40, 210, 297, .06); if (phase === 4) paperSheet(k, 1, -120, y + .4, 30, 210, 297, -.1); }
-        if (phase !== 3) { k.rubber.box([60, 140, 34], [380, y + 70, 120], '#1d2427'); k.rubber.box([10, 60, 10], [395, y + 170, 120], '#1d2427'); k.box([150, 45, 110], [-60, y + 22, -180], '#2b3336'); k.box([120, 2, 80], [-60, y + 45.5, -180], '#48aeb0'); }
-        if (phase === 1 || phase === 4) for (const x of [460, 520]) { k.cyl(40, 34, 95, [x, y + 47, -150 + (x - 460) * 2], '#e6e3da'); }
+        if (phase !== 3) { k.rubber.box([60, 140, 34], [380, y + 70, 120], '#1d2427'); k.rubber.box([10, 60, 10], [395, y + 170, 120], '#1d2427'); k.box([150, 45, 110], [-60, y + 22.5, -180], '#2b3336'); k.box([120, 2, 80], [-60, y + 45.5, -180], '#48aeb0'); }
+        if (phase === 1 || phase === 4) for (const x of [460, 520]) { k.cyl(40, 34, 95, [x, y + 47.5, -150 + (x - 460) * 2], '#e6e3da', 'ceramic'); }
         if (phase === 2) for (let n = 0; n < 4; n++) sheet(k, 120 + n * 30, y + n * 2, -60 + n * 25, 210, 297, (n - 2) * .1, '#ffffff', [5, 4, 0, 5][n]);
         if (phase === 3) { notebook(k, 200, y, -40, '#3c4c55'); k.rubber.box([60, 140, 34], [420, y + 70, 100], '#1d2427'); }
         k.hpl.box([200, 12, 280], [-260, y + 6, 40], '#1a2227'); k.box([180, 2, 250], [-260, y + 13, 40], '#3c6f78');
@@ -2230,15 +2232,15 @@ export function activityMaterials(k0, phase, y, kit) {
         if (phase === 0 || phase === 4) for (let n = 0; n < 3; n++) notebook(k, -220 + n * 240, y, 60, ['#234e72', '#5e7480', '#8a7a5c'][n]);
         if (phase === 0) paperSheet(k, 6, 360, y, -120, 297, 210, .05);
         if (phase === 1) { folderStack(k, 200, y, -40, 4); paperSheet(k, 7, -200, y, 20, 210, 297, -.08); }
-        if (phase === 2) { card(k, 160, y, -40, 297, 210, '#efece4', 7); k.cyl(40, 34, 95, [460, y + 47, 140], '#e6e3da'); }
+        if (phase === 2) { card(k, 160, y, -40, 297, 210, '#efece4', 7); k.cyl(40, 34, 95, [460, y + 47.5, 140], '#e6e3da', 'ceramic'); }
         if (phase === 3) k.rubber.box([60, 140, 34], [380, y + 70, 100], '#1d2427');
-        if (phase === 4) for (const x of [420, 500, 560]) k.cyl(40, 34, 95, [x, y + 47, -150 + (x - 420)], '#e6e3da');
+        if (phase === 4) for (const x of [420, 500, 560]) k.cyl(40, 34, 95, [x, y + 47.5, -150 + (x - 420)], '#e6e3da', 'ceramic');
     } else {
         if (phase === 0) for (let n = 0; n < 6; n++) k.box([75, 2, 75], [120 + n % 3 * 85, y + 1, -120 + Math.floor(n / 3) * 85], ['#f2d36b', '#9fd0b4', '#f0a98f'][n % 3]);
         if (phase === 1) { for (let n = 0; n < 3; n++) sheet(k, 160 + n * 25, y + n * 2, -40 + n * 18, 210, 297, (n - 1) * .1, '#ffffff', [0, 4, 0][n]); k.box([110, 20, 70], [460, y + 10, 140], '#2a3b3f'); }
         if (phase === 2) folderStack(k, 220, y, -40, 3, ['#c7d6cc', '#d8c08d', '#c9b07a']);
         if (phase === 3) notebook(k, 300, y, -60, '#6c8680');
-        if (phase === 4) { for (let n = 0; n < 12; n++) k.box([75, 2, 75], [-60 + n % 4 * 85, y + 1, -140 + Math.floor(n / 4) * 85], ['#f2d36b', '#9fd0b4', '#f0a98f', '#a9c7e6'][n % 4]); for (const x of [400, 470]) k.cyl(40, 34, 95, [x, y + 47, 150], '#e6e3da'); }
+        if (phase === 4) { for (let n = 0; n < 12; n++) k.box([75, 2, 75], [-60 + n % 4 * 85, y + 1, -140 + Math.floor(n / 4) * 85], ['#f2d36b', '#9fd0b4', '#f0a98f', '#a9c7e6'][n % 4]); for (const x of [400, 470]) k.cyl(40, 34, 95, [x, y + 47.5, 150], '#e6e3da', 'ceramic'); }
     }
     if (g) k.build(g, roomMats(kit)); else void k0;
 }

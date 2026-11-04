@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 
 const tiers = [
     ['apartment', 'Compact ship quarters', 3800, 4600, 2800],
@@ -117,7 +118,8 @@ export function buildScifiRoom(room, root, layout, helpers) {
         for(let i=0;i<260;i++){c.fillStyle=`rgba(0,0,0,${.04+jitter(i+90)*.07})`;c.beginPath();c.ellipse(jitter(i+91)*tw,jitter(i+92)*tw,3+jitter(i+93)*16,1+jitter(i+94)*4,jitter(i)*3,0,7);c.fill();}
     });
     floorMap.wrapS=floorMap.wrapT=THREE.RepeatWrapping;floorMap.repeat.set(w/2000,d/2000);
-    box(root,[w,35,d],[0,-17.5,bz+d/2],material('#ffffff',{map:floorMap,roughness:.6,metalness:.32}));
+    const deck=material('#ffffff',{map:floorMap,roughness:.72,metalness:0});
+    box(root,[w,35,d],[0,-17.5,bz+d/2],deck);
     // Signage atlas: lit lettering on dark plates, one texture and one draw call per owner.
     const signMap=texture((c)=>{
         c.fillStyle='#0b121b';c.fillRect(0,0,1024,512);c.textBaseline='middle';
@@ -217,7 +219,18 @@ export function buildScifiRoom(room, root, layout, helpers) {
     // The cutaway exposes the service side: access hatches, vents and wall feeds.
     for(const x of [-440,440]){box(service,[760,560,10],[x,470,-343],hull,4);for(let j=0;j<6;j++)box(service,[420,12,6],[x,300+j*30,-350],rubber);atlas(service,[300,75],SIGN.caution,signMat,[x+120,640,-349],[0,Math.PI,0]);for(const sx of [-1,1])for(const y of [215,725])rod(service,[x+sx*350,y,-348],[x+sx*350,y,-354],9,trim);}
     for(const [x,r,mat] of [[-760,22,cable],[-700,16,orange],[720,22,cable]])mesh(service,new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(x,860,-345),new THREE.Vector3(x+30,500,-372),new THREE.Vector3(x,120,-380),new THREE.Vector3(x-20,12,-370)]),16,r,6),mat).castShadow=false;for(let i=0;i<6;i++)box(service,[90,22,10],[650,980+i*36,-293],rubber);
-    frame(service,[650,935,30],[.32,0,0],f=>{box(f,[400,70,300],[0,0,0],dark,8);atlas(f,[180,180],SIGN.keypad,signMat,[-80,36,0],[-Math.PI/2,0,0]);atlas(f,[150,150],SIGN.gauges,signMat,[105,36,0],[-Math.PI/2,0,0]);});
+    // The tilted control deck sits on a fitted wedge above the 900 mm top.
+    // Its former centre height buried the front edge 45 mm into the counter.
+    const deckTilt=.32, deckY=900+35*Math.cos(deckTilt)+150*Math.sin(deckTilt);
+    const rearZ=30-150*Math.cos(deckTilt)-35*Math.sin(deckTilt),frontZ=30+150*Math.cos(deckTilt)-35*Math.sin(deckTilt);
+    const rearY=900+300*Math.sin(deckTilt),wedge=new THREE.BufferGeometry();
+    wedge.setAttribute('position',new THREE.Float32BufferAttribute([
+        460,900,frontZ,460,900,rearZ,460,rearY,rearZ,
+        840,900,frontZ,840,900,rearZ,840,rearY,rearZ
+    ],3));
+    wedge.setIndex([0,2,1,3,4,5,0,1,4,0,4,3,1,2,5,1,5,4,2,0,3,2,3,5]);wedge.computeVertexNormals();
+    mesh(service,wedge,hull);
+    frame(service,[650,deckY,30],[deckTilt,0,0],f=>{box(f,[400,70,300],[0,0,0],dark,8);atlas(f,[180,180],SIGN.keypad,signMat,[-80,36,0],[-Math.PI/2,0,0]);atlas(f,[150,150],SIGN.gauges,signMat,[105,36,0],[-Math.PI/2,0,0]);});
     const holoMat=new THREE.MeshBasicMaterial({color:'#7ceaf4',transparent:true,opacity:.16,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
     const wireMat=new THREE.MeshBasicMaterial({color:'#7ceaf4',wireframe:true,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false});
     mesh(service,new THREE.CylinderGeometry(105,120,50,24),dark,[-700,925,30]);const emitter=mesh(service,new THREE.TorusGeometry(78,7,8,32),glowMats[0],[-700,952,30]);emitter.rotation.x=Math.PI/2;
@@ -388,5 +401,7 @@ export function buildScifiRoom(room, root, layout, helpers) {
     };
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[hull, 'metal'], [pale, 'metal'], [trim, 'metal'], [dark, 'powder'], [rubber, 'rubber'], [orange, 'powder'], [shell, 'powder'], [red, 'powder'], [green, 'powder'], [cable, 'rubber']]) mat.userData.roomSurface = surface;
+    creativeMaterialDetail(root, [[hull, 'powder'], [panelMat, 'powder'], [deck, 'powder'], [pale, 'brushed'], [trim, 'brushed'],
+        [dark, 'powder'], [rubber, 'rubber'], [orange, 'powder'], [shell, 'plastic'], [red, 'powder'], [green, 'powder'], [cable, 'rubber']]);
     room.roomAtmosphere('morning');root.userData.dimensionsMm={width:w,depth:d,height:h};
 }

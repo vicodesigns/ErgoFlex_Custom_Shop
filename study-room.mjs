@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
 
 const names = ['Apartment writing nook', 'Home study & reading room', 'Writer’s study & library', 'Private library & lounge', 'Library & conversation suite'];
@@ -682,6 +683,7 @@ export function buildStudyRoom(room, root, layout, helpers) {
         flameMat.emissiveIntensity = 1.6 + mode.practical * .8;
         root.userData.atmosphere = modeId;
     };
+    interiorCraftFinishes(room,{linen:[linen,shadeMat],wood:[oak],metal:[brass]});
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[oak, 'wood'], [sage, 'plaster'], [paper, 'plaster'], [cream, 'plaster'], [dark, 'powder'], [brass, 'metal'], [linen, 'fabric'], [slate, 'stone']]) mat.userData.roomSurface = surface;
     room.roomAtmosphere('afternoon'); root.userData.dimensionsMm = { width: w, depth: d, height: h };

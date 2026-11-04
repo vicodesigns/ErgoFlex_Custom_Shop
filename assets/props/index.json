@@ -27779,7 +27779,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-09,
+     -2.086162576020456e-9,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -28032,7 +28032,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-09,
+     -2.086162576020456e-9,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -28284,7 +28284,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-09,
+     -2.086162576020456e-9,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -28539,7 +28539,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-09,
+     -2.086162576020456e-9,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -34227,6 +34227,41 @@
    "sizeNote": "Fitted to estimated real-world dimensions for visualization; mounting fit is not verified.",
    "collection": "ErgoFlex Collection",
    "triangleFinish": "acrylic"
+  },
+  {
+   "id": "ergoflex-headphone-hook",
+   "name": "ErgoFlex plug-mounted headphone hook",
+   "category": "desk",
+   "collection": "ErgoFlex Hardware",
+   "scenes": [
+    "office",
+    "home",
+    "gaming",
+    "music",
+    "occmedialab",
+    "highschool",
+    "library"
+   ],
+   "file": "assets/props/ergoflex-headphone-hook.glb",
+   "anchor": "socket",
+   "size": [
+    139.8820336908102,
+    50.32181553542614,
+    37.84575313329697
+   ],
+   "min": [
+    -23.236190900206566,
+    -18.92290450632572,
+    -18.9228318631649
+   ],
+   "max": [
+    116.64584279060364,
+    31.398911029100418,
+    18.922921270132065
+   ],
+   "license": "user-provided",
+   "revision": "headphone-aluminum-20261103",
+   "headphoneHook": true
   }
  ],
  "screens": [

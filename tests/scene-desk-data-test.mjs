@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {cleanSceneDeskData,cleanDeskRecording,sampleDeskRecording,cleanDeskObjects} from '../scene-desk-data.mjs';
+import {cleanSceneDeskData,cleanDeskRecording,sampleDeskRecording,cleanDeskObjects,seedSceneDeskSize} from '../scene-desk-data.mjs';
 const setting={pose:{x:400,z:1200,yaw:.3},height:40,tilt:0,lights:{color:'#286344',enabled:true}};
 const frames=[{t:0,x:0,z:0,yaw:0,height:36,tilt:0},{t:2,x:400,z:800,yaw:Math.PI*2,height:44,tilt:20}];
 const source={version:1,rooms:{'hospital/house':{selected:'station-review',deleted:['main'],desks:{'station-review':{...setting,name:'Review desk',size:'48x30',phases:{night:{...setting,recording:frames}}}}}}};
@@ -46,3 +46,12 @@ assert.deepEqual(narrowSeed.objects['accessory-wide-monitor'].transform,peripher
 assert.equal(sceneSeed.size,'60x30');narrowSeed.objects['accessory-wide-monitor'].transform.p.x=999;
 assert.notEqual(sceneSeed.objects['accessory-wide-monitor'].transform.p.x,999,'new scene variants own their transforms');
 console.log('New widths inherit purchased additions, removals and finish edits while using fitted Product reference positions.');
+
+const socketProps=cleanDeskObjects({
+ 'headphones':{role:'shelf',headphoneSocket:'original-v2',transform:{p:{x:566,y:-214,z:239},q:{x:0,y:0,z:0,w:1},s:{x:1000,y:1000,z:1000}}},
+ 'hook':{role:'shelf',headphoneSocket:'hook-v1',removed:true,transform:{p:{x:517,y:-34,z:239},q:{x:0,y:0,z:0,w:1},s:{x:1000,y:1000,z:1000}}}
+});
+assert.equal(socketProps.headphones.headphoneSocket,'original-v2');assert.equal(socketProps.hook.headphoneSocket,'hook-v1');assert.equal(socketProps.hook.removed,true);
+const socketSize=seedSceneDeskSize({...clean.rooms['hospital/house'].desks['station-review'],size:'48x30',objects:socketProps},'60x30');
+assert.equal(socketSize.objects.hook.transform.p.x,517);assert.equal(socketSize.objects.headphones.transform.p.x,566);
+console.log('Socket attachment revisions, deleted hooks and socket positions survive save/load and desktop resizing.');

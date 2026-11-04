@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { gymProgramMaps, buildGymSessionDetail, migrateGymSavedFurniture } from './gym-session-detail.mjs?v=gym-sessions-20261022';
 
 // All architecture and original equipment below is authored in millimetres.
@@ -428,6 +429,7 @@ export function buildGymRoom(room, root, layout, helpers) {
         specs.forEach(spec => { spec.light.color.set(spec.warm ? '#f1d1a6' : '#e3ece9'); if (!spec.warm) spec.light.color.lerp(new THREE.Color(mode.colors[spec.channel]), id === 'party' ? .32 : .12); spec.light.intensity = spec.power * (spec.warm ? mode.practical : mode.wash) * accent; });
         root.userData.atmosphere = id;
     };
+    interiorCraftFinishes(room,{wood:[oak,ash],metal:[steel,silver],rubber:[rubber]});
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[graphite, 'powder'], [steel, 'metal'], [rubber, 'rubber'], [silver, 'metal'], [oak, 'wood'], [ash, 'wood'], [slate, 'powder'], ...[...concretes.values()].map(m => [m, 'plaster'])]) mat.userData.roomSurface = surface;
     room.roomAtmosphere('morning'); root.userData.dimensionsMm = { width: w, depth: d, height: h };

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 
 // Shared offices are intentionally larger than home rooms: each station has a
 // real ErgoFlex desk, a chair, and an aisle. Architecture is in millimetres.
@@ -80,6 +81,7 @@ export function buildOfficeRoom(room, root, layout, helpers) {
     const oak = material('#a8895f', { roughness: .68 }), dark = material('#263b3d', { roughness: .55 }), bronze = material('#a39672', { metalness: .6, roughness: .36 });
     const linen = material('#e4ddcd', { roughness: 1, side: THREE.DoubleSide }), ceramic = material('#ece6da', { roughness: .4 }), sage = material('#8ea493', { roughness: .78 });
     const tint = material('#ffffff', { roughness: .82 }), glaze = material('#ffffff', { roughness: .38 }), leafy = material('#ffffff', { roughness: .7, side: THREE.DoubleSide }), soil = material('#3a3129', { roughness: 1 });
+    const fruitSkin = material('#ffffff',{roughness:.76});
     const register = (obj, id, name) => { obj.userData.propId = id; obj.userData.sceneAssetName = name; markSceneAsset(obj, { key: `office:${layout.id}:fixture:${id}` }); };
     const group = (parent, name, at = [0, 0, 0], turn = 0) => { const g = new THREE.Group(); g.name = name; g.position.set(...at); g.rotation.y = turn; parent.add(g); return g; };
     const noShadow = obj => { obj.castShadow = false; return obj; };
@@ -336,7 +338,7 @@ export function buildOfficeRoom(room, root, layout, helpers) {
     box(coffee, [300, 14, 190], [-330, 907, bz + 330], oak, 4);
     instanced(coffee, cyl, glaze, [[-385, '#e9e3d6'], [-275, '#466b67']].map(([x, c]) => ({ at: [x, 948, bz + 330], size: [36, 68, 36], color: c })));
     mesh(coffee, new THREE.SphereGeometry(1, 24, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), material('#e8e0d0', { roughness: .4, side: THREE.DoubleSide }), [330, 980, bz + 300]).scale.set(150, 80, 150);
-    instanced(coffee, leaf, glaze, [[-50, 0, '#e9a13b'], [45, 30, '#e3962f'], [0, -55, '#9cbf4a'], [60, -40, '#e9a13b'], [-40, 55, '#d8c04a']].map(([x, z, c], i) => ({ at: [330 + x, 950 + (i > 2 ? 30 : 0), bz + 300 + z], size: [42, 40, 42], color: c })));
+    instanced(coffee, leaf, fruitSkin, [[-50, 0, '#e9a13b'], [45, 30, '#e3962f'], [0, -55, '#9cbf4a'], [60, -40, '#e9a13b'], [-40, 55, '#d8c04a']].map(([x, z, c], i) => ({ at: [330 + x, 950 + (i > 2 ? 30 : 0), bz + 300 + z], size: [42, 40, 42], color: c })));
 
     // Low credenza along the ideas wall wherever the stations leave room.
     const busy = [layout.desk, ...layout.stations.map(s => s.at)].filter(([x]) => x + 800 > w / 2 - 450).map(([, z]) => [z - 650, z + 1450]);
@@ -358,11 +360,12 @@ export function buildOfficeRoom(room, root, layout, helpers) {
         const doors = Math.max(2, Math.round(length / 450));
         for (let i = 1; i < doors; i++) noShadow(box(credenza, [4, 420, 4], [-length / 2 + 15 + i * (length - 30) / doors, 370, 207], dark));
         box(credenza, [length + 20, 24, 420], [0, 612, 0], oak, 4);
-        instanced(credenza, unit, tint, [0, 1, 2].map(k => ({ at: [-length / 2 + 200, 637 + k * 26, 20], rot: [0, (k - 1) * .12, 0], size: [230 - k * 18, 24, 170 - k * 10], color: BOOKS[k * 3 % BOOKS.length] })));
+        instanced(credenza, unit, tint, [0, 1, 2].map(k => ({ at: [-length / 2 + 200, 636 + k * 24, 20], rot: [0, (k - 1) * .12, 0], size: [230 - k * 18, 24, 170 - k * 10], color: BOOKS[k * 3 % BOOKS.length] })));
         mesh(credenza, new THREE.CylinderGeometry(55, 80, 140, 20), ceramic, [length / 2 - 140, 694, 10]);
         instanced(credenza, unit, sage, [0, 1, 2, 3, 4, 5, 6].map(i => ({ at: [length / 2 - 140 + (i - 3) * 14, 900, 10 + (i % 2) * 14], rot: [0, 0, (i - 3) * .09], size: [5, 380, 5] })), false);
         const lamp = group(credenza, 'Credenza table lamp', [length / 2 - 380, 624, 30]);
-        mesh(lamp, new THREE.SphereGeometry(80, 20, 14), ceramic, [0, 80, 0]).scale.y = 1.05;
+        const footProfile = [[0,0],[23,0],[48,12],[68,38],[80,80],[68,122],[48,148],[23,160],[0,160]];
+        mesh(lamp, new THREE.LatheGeometry(footProfile.map(p => new THREE.Vector2(...p)), 28), ceramic);
         noShadow(rod(lamp, [0, 160, 0], [0, 260, 0], 7, bronze));
         noShadow(mesh(lamp, new THREE.CylinderGeometry(105, 135, 180, 28, 1, true), lampMat(), [0, 320, 0]));
     }
@@ -472,11 +475,13 @@ export function buildOfficeRoom(room, root, layout, helpers) {
         for (let i = 0; i < bulbMesh.count; i++) bulbMesh.setColorAt(i, colour.set(lampLevel < .3 ? '#d9d4c8' : modeId === 'party' ? party[i % 4] : warm));
         bulbMesh.instanceColor.needsUpdate = true;
         lights.forEach(spec => {
-            spec.light.color.set(spec.task ? '#efd8b5' : spec.lamp ? (lampLevel > .3 ? '#ffd3a0' : mode.colors[1]) : mode.colors[1]);
+            const day = modeId === 'morning' || modeId === 'afternoon';
+            spec.light.color.set(spec.task ? (day ? '#f1eee5' : '#efd8b5') : spec.lamp ? (lampLevel > .3 ? '#ffd3a0' : mode.colors[1]) : mode.colors[1]);
             spec.light.intensity = spec.power * (spec.task ? mode.practical : spec.lamp ? Math.max(mode.wash * .55, lampLevel * .8) : mode.wash) * accent;
         });
         root.userData.atmosphere = modeId;
     };
+    interiorCraftFinishes(room,{ceramic:[ceramic,glaze],linen:[linen,...lamps],wood:[oak],metal:[bronze]});
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[plaster, 'plaster'], [teal, 'powder'], [oak, 'wood'], [dark, 'powder'], [bronze, 'metal'], [carpet, 'fabric'], [mainRug, 'fabric'], [floor, 'wood'], [linen, 'fabric'], [sage, 'powder']]) mat.userData.roomSurface = surface;
     room.roomAtmosphere('afternoon'); root.userData.dimensionsMm = { width: w, depth: d, height: h };

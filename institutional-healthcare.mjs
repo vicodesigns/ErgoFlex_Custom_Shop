@@ -432,7 +432,7 @@ const props = {
         k.box([280, 9, 200], [x, y + 4.5, z], '#1d2427', [0, yaw, 0]);
         return screenPlane(parent, type, [258, 178], [x, y + 9.6, z], { W: 384, H: 260, levels: levels || [.38, .38, .36, .28, .38], rot: [-Math.PI / 2, 0, yaw] });
     },
-    glasses(k, x, y, z) { for (const s of [-1, 1]) { k.box([62, 38, 4], [x + s * 36, y + 22, z], '#d9e8ee'); k.box([70, 6, 6], [x + s * 36, y + 42, z], '#3a4a52'); k.box([5, 6, 120], [x + s * 72, y + 40, z - 60], '#3a4a52'); } k.box([20, 6, 6], [x, y + 36, z], '#3a4a52'); },
+    glasses(k, x, y, z) { for (const s of [-1, 1]) { k.box([62, 38, 4], [x + s * 36, y + 22, z], '#d9e8ee', undefined, 'glass'); k.box([70, 6, 6], [x + s * 36, y + 42, z], '#3a4a52'); k.box([5, 6, 120], [x + s * 72, y + 40, z - 60], '#3a4a52'); } k.box([20, 6, 6], [x, y + 36, z], '#3a4a52'); },
     microscope(k, x, y, z) {
         // Compound microscope: base, C-arm, stage, objective turret, binocular head.
         k.box([200, 50, 280], [x, y + 25, z], '#eef0ee'); k.cyl(30, 30, 10, [x, y + 54, z + 60], '#fff6d8');
@@ -453,7 +453,7 @@ const props = {
     cuvettes(k, x, y, z) { k.box([130, 30, 50], [x, y + 15, z], '#3b6fa5'); for (let n = 0; n < 6; n++) k.box([12, 45, 12], [x - 50 + n * 20, y + 45, z], n % 2 ? '#f0c24b' : '#d8e6e6'); },
     tubeRack(k, x, y, z, seed = 0) {
         k.box([200, 50, 90], [x, y + 25, z], '#e8eef0'); k.box([200, 4, 90], [x, y + 52, z], '#c9d3d6');
-        for (let n = 0; n < 12; n++) { const tx = x - 82 + (n % 6) * 33, tz = z - 20 + Math.floor(n / 6) * 40; if (rnd(n + seed) < .15) continue; k.cyl(7, 7, 90, [tx, y + 72, tz], '#e9f0f0'); k.cyl(8, 8, 14, [tx, y + 122, tz], ['#d9534f', '#4f8fc0', '#f0c24b'][(n + seed) % 3]); }
+        for (let n = 0; n < 12; n++) { const tx = x - 82 + (n % 6) * 33, tz = z - 20 + Math.floor(n / 6) * 40; if (rnd(n + seed) < .15) continue; k.cyl(7, 7, 90, [tx, y + 72, tz], '#e9f0f0', 'glass'); k.cyl(8, 8, 14, [tx, y + 122, tz], ['#d9534f', '#4f8fc0', '#f0c24b'][(n + seed) % 3]); }
     },
     pipettes(k, x, y, z) {
         // Carousel stand with five single-channel pipettes.
@@ -462,12 +462,17 @@ const props = {
     },
     vortex(k, x, y, z) { k.cyl(60, 70, 70, [x, y + 35, z], '#e8ece9'); k.cyl(30, 30, 16, [x, y + 78, z], '#2b3439'); k.box([40, 10, 4], [x, y + 40, z + 66], '#f0c24b'); },
     miniFuge(k, x, y, z) { k.cyl(105, 110, 120, [x, y + 60, z], '#eef1ee'); k.cyl(95, 95, 10, [x, y + 124, z], '#8fb9c9'); k.box([60, 20, 4], [x, y + 60, z + 108], '#2b3439'); },
-    beaker(k, x, y, z, r = 50, h = 110, liquid = '#d8e6e6') { k.cyl(r, r, h, [x, y + h / 2, z], '#dfeaea'); k.cyl(r - 4, r - 4, h * .5, [x, y + h * .25 + 2, z], liquid); },
-    bottle(k, x, y, z, glass = '#8a5a2b', cap = '#3b6fa5', h = 180, r = 38) { k.cyl(r, r, h * .72, [x, y + h * .36, z], glass); k.cyl(r * .5, r, h * .14, [x, y + h * .79, z], glass); k.cyl(r * .5, r * .5, h * .14, [x, y + h * .93, z], cap); k.box([r * 1.3, h * .28, 2], [x, y + h * .4, z + r], '#f2f2ea'); },
+    beaker(k, x, y, z, r = 50, h = 110, liquid = '#d8e6e6') { k.cyl(r, r, h, [x, y + h / 2, z], '#dfeaea', 'glass'); k.cyl(r - 4, r - 4, h * .5, [x, y + h * .25 + 2, z], liquid, 'liquid'); },
+    bottle(k, x, y, z, glass = '#8a5a2b', cap = '#3b6fa5', h = 180, r = 38) { k.cyl(r, r, h * .72, [x, y + h * .36, z], glass, 'glass'); k.cyl(r * .5, r, h * .14, [x, y + h * .79, z], glass, 'glass'); k.cyl(r * .5, r * .5, h * .14, [x, y + h * .93, z], cap); k.box([r * 1.3, h * .28, 2], [x, y + h * .4, z + r], '#f2f2ea'); },
     washBottle(k, x, y, z, cap = '#e3a23c') { k.cyl(38, 40, 170, [x, y + 85, z], '#f1f4f2'); k.cyl(18, 22, 30, [x, y + 185, z], cap); k.box([6, 6, 90], [x, y + 210, z + 40], '#f1f4f2', [.6, 0, 0]); },
-    flask(k, x, y, z, liquid = '#79c2b3', scale = 1) { const s = scale; k.cyl(15 * s, 62 * s, 120 * s, [x, y + 60 * s, z], '#dfeaea'); k.cyl(15 * s, 15 * s, 60 * s, [x, y + 150 * s, z], '#dfeaea'); k.cyl(30 * s, 58 * s, 55 * s, [x, y + 28 * s, z], liquid); },
+    flask(k, x, y, z, liquid = '#79c2b3', scale = 1) { const s = scale; k.cyl(15 * s, 62 * s, 120 * s, [x, y + 60 * s, z], '#dfeaea', 'glass'); k.cyl(15 * s, 15 * s, 60 * s, [x, y + 150 * s, z], '#dfeaea', 'glass'); k.cyl(30 * s, 58 * s, 55 * s, [x, y + 28 * s, z], liquid, 'liquid'); },
     burner(k, x, y, z) { k.cyl(45, 50, 18, [x, y + 9, z], '#3a4247'); k.cyl(12, 12, 140, [x, y + 88, z], '#b9c2c6'); k.box([60, 12, 12], [x + 30, y + 30, z], '#c9a03c'); },
-    timer(k, x, y, z) { k.box([90, 60, 40], [x, y + 30, z], '#f4f6f2', [-.3, 0, 0]); k.box([70, 26, 3], [x, y + 38, z + 18], '#1d2427', [-.3, 0, 0]); },
+    timer(k, x, y, z) {
+        const tilt = -.3, rise = 30 * Math.cos(tilt) + 20 * Math.abs(Math.sin(tilt));
+        k.box([90, 60, 40], [x, y + rise, z], '#f4f6f2', [tilt, 0, 0]);
+        // The display follows the tilted front face, above the supported base.
+        k.box([70, 26, 3], [x, y + rise + 8 * Math.cos(tilt) - 20.5 * Math.sin(tilt), z + 8 * Math.sin(tilt) + 20.5 * Math.cos(tilt)], '#1d2427', [tilt, 0, 0]);
+    },
     tipBox(k, x, y, z, color = '#3b6fa5') { k.box([125, 70, 85], [x, y + 35, z], color); k.box([125, 6, 85], [x, y + 73, z], '#e9eef0'); for (let n = 0; n < 24; n++) k.cyl(3, 3, 10, [x - 52 + (n % 8) * 15, y + 80, z - 28 + Math.floor(n / 8) * 28], '#d9e3e5'); },
     notebook(k, x, y, z, color = '#2f5e6b') { notebook(k, x, y, z, color); },
     molecule(k, x, y, z) {
@@ -478,7 +483,7 @@ const props = {
     },
     docCam(k, x, y, z) { k.box([160, 20, 200], [x, y + 10, z], '#2b3439'); k.box([18, 300, 18], [x - 60, y + 160, z - 70], '#3b464d', [.25, 0, 0]); k.box([110, 40, 60], [x - 20, y + 300, z - 10], '#2b3439'); k.cyl(14, 14, 8, [x - 20, y + 276, z - 10], '#4a7de0'); },
     slideBox(k, x, y, z) { k.box([110, 30, 80], [x, y + 15, z], '#3b6fa5'); for (let n = 0; n < 6; n++) k.box([75, 2, 25], [x, y + 32, z - 30 + n * 12], '#e9f0f0'); },
-    printout(k, x, y, z, w = 297, d = 210, rot = 0) { k.box([w, 1.5, d], [x, y + .8, z], '#f4f2ea', [0, rot, 0]); for (let n = 0; n < 6; n++) k.box([w * .7, 1, 5], [x, y + 1.8, z - d / 2 + 22 + n * (d - 40) / 5], n === 2 ? '#c9a03c' : '#6f8288', [0, rot, 0]); },
+    printout(k, x, y, z, w = 297, d = 210, rot = 0) { k.box([w, 1.5, d], [x, y + .8, z], '#f4f2ea', [0, rot, 0], 'paper'); for (let n = 0; n < 6; n++) k.box([w * .7, 1, 5], [x, y + 1.8, z - d / 2 + 22 + n * (d - 40) / 5], n === 2 ? '#c9a03c' : '#6f8288', [0, rot, 0]); },
     lanyards(k, x, y, z) { for (let n = 0; n < 4; n++) { k.box([14, 260, 3], [x + n * 60, y - 130, z], ['#2e8b57', '#3b6fa5', '#c8433a', '#7a5aa6'][n]); k.box([54, 82, 4], [x + n * 60, y - 290, z + 2], '#f4f6f2'); } }
 };
 
@@ -672,23 +677,26 @@ function hcMaterials(kit) {
     if (kit.hcM) return kit.hcM;
     const { mat, material } = kit;
     const mapped = (color, draw, [W, H], [pu, pv], extra = {}) => {
-        const m = material(color, { map: surfaceMap(draw, W, H), ...extra }); m.userData.hcUV = [pu, pv]; return m;
+        const map = surfaceMap(draw, W, H), m = material(color, { map, ...extra });
+        m.userData.hcUV = [pu, pv]; m.userData.roomFinishLocked = true;
+        if (extra.bumpScale) { m.bumpMap = map.clone(); m.bumpMap.colorSpace = THREE.NoColorSpace; }
+        return m;
     };
     const powder = (color, roughness = .4) => mapped(color, (c, W, H) => fineFleck(c, W, H, '#f4f4f4', ['#ffffff50', '#b9c0c02a'], W * H / 8, .65), [128, 128], [180, 180], { roughness, metalness: .12 });
-    const fabric = (color) => mapped(color, drawFabric, [128, 128], [70, 70], { roughness: .95 });
+    const fabric = (color) => mapped(color, drawFabric, [128, 128], [70, 70], { roughness: .96, bumpScale: .00016 });
     const epoxy = mapped('#22282b', (c, W, H) => fineFleck(c, W, H, '#f3f3f3', ['#ffffff50', '#a3aaac65', '#5c656433'], W * H / 190, 1), [512, 512], [500, 500], { roughness: .3 });
     const M = kit.hcM = {
         frame: powder('#d9dfe0'), dark: powder('#3a4247', .5), rail: mapped('#a8b4b8', (c, W, H) => { c.fillStyle = '#e6e6e6'; c.fillRect(0, 0, W, H); for (let i = 0; i < 1000; i++) { c.fillStyle = i % 2 ? '#ffffff50' : '#bcbcbc30'; c.fillRect(rnd(i * 2.3) * W, rnd(i * 3.1) * H, 20 + rnd(i) * 80, .6); } }, [256, 64], [220, 70], { metalness: .65, roughness: .3 }),
         mattress: fabric('#b9cfd3'), linen: fabric('#f4f6f2'), blanket: fabric('#a9c5d0'), pillow: fabric('#ffffff'),
         recliner: mapped('#4f7d8a', (c, W, H) => fineFleck(c, W, H, '#eeeeee', ['#ffffff45', '#909b9d30'], W * H / 12, .8), [256, 256], [200, 200], { roughness: .5 }),
-        wood: mapped('#c9a77c', drawOakHPL, [1024, 512], [1400, 700], { roughness: .55 }),
-        woodV: mapped('#c9a77c', (c, W, H) => drawOakHPL(c, W, H, true), [512, 1024], [600, 1400], { roughness: .55 }),
-        bayFloor: mapped('#b89a74', (c, W, H) => drawOakHPL(c, W, H, false, true), [1024, 1024], [1800, 1800], { roughness: .5 }),
+        wood: mapped('#c9a77c', drawOakHPL, [1024, 512], [1400, 700], { roughness: .55, bumpScale: .00008 }),
+        woodV: mapped('#c9a77c', (c, W, H) => drawOakHPL(c, W, H, true), [512, 1024], [600, 1400], { roughness: .55, bumpScale: .00008 }),
+        bayFloor: mapped('#b89a74', (c, W, H) => drawOakHPL(c, W, H, false, true), [1024, 1024], [1800, 1800], { roughness: .5, bumpScale: .00008 }),
         hpl: powder('#eef1ee', .5), epoxy, teal: powder('#608e9d'), yellow: powder('#e1b12c', .45), white: powder('#f2f4f1'), steel: mat('#c9d0d3', 'metal', { metalness: .6, roughness: .3 }),
         tile: mapped('#ffffff', (c, W, H) => { c.fillStyle = '#c9d3cf'; c.fillRect(0, 0, W, H); for (let row = 0; row < 4; row++) for (let col = -1; col < 3; col++) { const x = col * W / 2 + (row % 2) * W / 4, y = row * H / 4; c.fillStyle = '#f2f4f1'; c.fillRect(x + 1.5, y + 1.5, W / 2 - 3, H / 4 - 3); c.fillStyle = '#ffffff60'; c.fillRect(x + 3, y + 3, W / 2 - 6, 1); } }, [512, 512], [600, 600], { roughness: .3 }),
         dryFloor: mapped('#ffffff', (c, W, H) => fineFleck(c, W, H, '#d6d2c4', ['#8f988923', '#ffffff65', '#aaad9950'], 2100, 1.1), [512, 512], [800, 800], { roughness: .4 }),
         cove: powder(kit.spec.kind === 'lab' ? '#7c9a97' : '#97aca8', .48), guard: powder('#9fbdc4', .45),
-        glass: material('#cfe6ea', { transparent: true, opacity: .26, roughness: .08, metalness: .1, depthWrite: false }),
+        glass: material('#cfe6ea', { transparent: true, opacity: .26, roughness: .075, metalness: 0, depthWrite: false }),
         liquid: material('#ffffff', { vertexColors: true, transparent: true, opacity: .62, roughness: .15 })
     };
     // Shell oak is used by the planning table, door and picture frames. Keep
@@ -1365,11 +1373,11 @@ export function activityMaterials(k, phase, y, kit) {
     // Hospital handover table: rounds list, discharge folders, SBAR card and
     // two mugs (the only mugs in the ward), the night log, huddle cards.
     const sbar = (x, z, r = 0) => { k.box([210, 2, 150], [x, y + 1, z], '#f4f2ea', [0, r, 0]); ['#c8433a', '#e1b12c', '#4f8a5b', '#5fa6d6'].forEach((col, n) => k.box([196, 1.5, 28], [x, y + 2.4, z - 51 + n * 34], col, [0, r, 0])); };
-    if (phase === 0) { props.printout(k, 300, y, -60, 297, 210, .1); k.box([236, 11, 330], [120, y + 5, 100], '#6f5a3a', [0, -.12, 0]); }
+    if (phase === 0) { props.printout(k, 300, y, -60, 297, 210, .1); k.box([236, 11, 330], [120, y + 5.5, 100], '#6f5a3a', [0, -.12, 0]); }
     if (phase === 1) for (let n = 0; n < 3; n++) k.box([230, 12, 310], [160 + n * 120, y + 6 + n * 12, -20], ['#a9c5d0', '#cfe1db', '#e3a28c'][n]);
-    if (phase === 2) { sbar(220, -40, .08); for (const [x, z] of [[460, 140], [-60, 160]]) { k.cyl(40, 34, 95, [x, y + 47, z], '#e6d6b8'); k.cyl(36, 36, 3, [x, y + 94, z], '#5a3e2a'); } }
+    if (phase === 2) { sbar(220, -40, .08); for (const [x, z] of [[460, 140], [-60, 160]]) { k.cyl(40, 34, 95, [x, y + 47.5, z], '#e6d6b8', 'ceramic'); k.cyl(36, 36, 3, [x, y + 94, z], '#5a3e2a', 'liquid'); } }
     if (phase === 3) { props.notebook(k, 300, y, -60, '#2f5e6b'); k.box([60, 24, 160], [80, y + 12, 120], '#3a4247'); }
-    if (phase === 4) { sbar(-80, 40, -.06); for (let n = 0; n < 9; n++) k.box([75, 2, 75], [180 + (n % 3) * 90, y + 1, -150 + Math.floor(n / 3) * 90], ['#f2d36b', '#9fd0b4', '#f0a98f'][n % 3], [0, (rnd(n) - .5) * .3, 0]); k.cyl(40, 34, 95, [560, y + 47, 200], '#e6d6b8'); }
+    if (phase === 4) { sbar(-80, 40, -.06); for (let n = 0; n < 9; n++) k.box([75, 2, 75], [180 + (n % 3) * 90, y + 1, -150 + Math.floor(n / 3) * 90], ['#f2d36b', '#9fd0b4', '#f0a98f'][n % 3], [0, (rnd(n) - .5) * .3, 0]); k.cyl(40, 34, 95, [560, y + 47.5, 200], '#e6d6b8', 'ceramic'); }
 }
 // The first care bed carries a reading light (second local lamp).
 export function extraLamps(kit) {

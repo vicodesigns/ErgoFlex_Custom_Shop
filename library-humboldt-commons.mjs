@@ -410,8 +410,10 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const HONEY = '#ab8d66', cafeMap = mapleMap.clone(); cafeMap.repeat.set(1050 / 1800, 1050 / 450);
     const cafeWood = tag(own(material('#ffffff', { map: cafeMap, roughness: .45, vertexColors: true })), 'wood');
     const cafeOak = tag(own(material('#ffffff', { map: cafeMap, roughness: .45 })), 'wood');   // plain variant for life dressings (no colour attribute)
-    const mapleTop = own(material('#ffffff', { map: mapleMap, roughness: .42 }));
-    const laminate = own(material('#e9e4d8', { roughness: .64, bumpMap: mapleMap, bumpScale: .12 })), steelGrey = own(material('#8a8d90', { roughness: .36, metalness: .78, envMapIntensity: .7 }));
+    const mapleTop = own(material('#ffffff', { map: mapleMap, roughness: .5 }));
+    for (const m of [honeyOak, cafeWood, cafeOak, mapleTop]) { m.bumpMap = m.map.clone(); m.bumpMap.colorSpace = THREE.NoColorSpace; m.bumpScale = .08 * s; m.userData.roomFinishLocked = true; }
+    const laminate = own(material('#e9e4d8', { roughness: .64, bumpMap: mapleMap.clone(), bumpScale: .12 * s })), steelGrey = own(material('#8a8d90', { roughness: .36, metalness: .78, envMapIntensity: .7 }));
+    laminate.bumpMap.colorSpace = THREE.NoColorSpace; laminate.userData.roomFinishLocked = steelGrey.userData.roomFinishLocked = true;
     // 2×4 lay-in acoustic tile (1200 × 600 per 512 × 256 px): pinholes and worm
     // fissures, a 24 mm exposed tee that is brighter and proud, and a hairline reveal.
     // The map is its own bump, so refine leaves this material at roughness .95.

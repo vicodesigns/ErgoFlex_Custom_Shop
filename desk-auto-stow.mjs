@@ -15,7 +15,7 @@ const effect=o=>o.isLight||o.material?.isShaderMaterial||o.material?.blending===
 export function deskItemDisposition(item,tilt,recipe='') {
     if(item.saved.role!=='desktop'||tilt<=STOW_ANGLE)return 'stay';
     if(item.obj.isGroup&&!item.obj.children.length)return 'stay';
-    if(effect(item.obj))return 'stay';
+    if(effect(item.obj)||item.obj.userData.fixedHardware)return 'stay';
     // Some older institutional fixtures combine the apron, input rails and
     // their controls in a single mesh. They are mounted hardware, not loose props.
     if(item.obj.isMesh&&item.obj.name==='Furnishing detail'){

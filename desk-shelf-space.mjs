@@ -36,6 +36,19 @@ export function shelfSupportsBox(space,box){
     for(const [x,z] of [[min.x,min.z],[min.x,max.z],[max.x,min.z],[max.x,max.z]])if(!space.triangles.some(triangle=>triangleContains(x,z,triangle)))return false;
     return true;
 }
+// Dense samples also catch the desktop's concave front cutout. Merely testing
+// the corners of a wide notebook can bridge that opening in empty space.
+export function surfaceSupportsFootprint(space,box,margin=8){
+    if(!space?.triangles?.length)return true;
+    const minX=box.min.x-margin,maxX=box.max.x+margin,minZ=box.min.z-margin,maxZ=box.max.z+margin;
+    if(minX<space.minX||maxX>space.maxX||minZ<space.minZ||maxZ>space.maxZ)return false;
+    const nx=Math.max(1,Math.ceil((maxX-minX)/25)),nz=Math.max(1,Math.ceil((maxZ-minZ)/25));
+    for(let ix=0;ix<=nx;ix++)for(let iz=0;iz<=nz;iz++){
+        const x=minX+(maxX-minX)*ix/nx,z=minZ+(maxZ-minZ)*iz/nz;
+        if(!space.triangles.some(t=>triangleContains(x,z,t)))return false;
+    }
+    return true;
+}
 export function inputStowKind(item){
     const data=item.obj.userData,id=`${data.accessoryId||''} ${data.propId||''} ${item.saved.propId||''} ${item.saved.label||''} ${item.obj.name}`.toLowerCase();
     if(/keyboard-tray|keyboard tray/.test(id))return null;

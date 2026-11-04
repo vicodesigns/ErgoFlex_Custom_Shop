@@ -13,11 +13,13 @@ export function humboldtStudyChairs(room, layout, canvasMap) {
         c.fillStyle='#e8e6df';c.fillRect(0,0,w,h);
         for(let y=0;y<h;y+=4)for(let x=0;x<w;x+=4){c.fillStyle=(x+y)%8?'#b8b9b2':'#fffdf3';c.fillRect(x,y,3,1);c.fillRect(x,y+1,1,3);}
     },128,128);weave.wrapS=weave.wrapT=THREE.RepeatWrapping;weave.repeat.set(4,4);
-    const make=(name,color,roughness,extra={})=>{const m=new THREE.MeshStandardMaterial({name,color,roughness,...extra});m.userData.roomPaletteLocked=true;return m;};
+    const make=(name,color,roughness,extra={})=>{const m=new THREE.MeshStandardMaterial({name,color,roughness,...extra});m.userData.roomPaletteLocked=true;m.userData.roomFinishLocked=true;return m;};
     const oak=make('Oiled natural oak','#ffffff',.5,{map:grain}),glides=make('Graphite felt glides','#363a36',.92);
     const palettes={forest:'#3d5e51',lichen:'#838975',oat:'#b9b09b',clay:'#9a7a67'};
     const textiles=Object.fromEntries(Object.entries(palettes).map(([k,c])=>[k,make('Woven wool · '+k,c,.92,{map:weave,bumpMap:weave,bumpScale:.16*room.root.scale.x})]));
     const piping=Object.fromEntries(Object.entries(palettes).map(([k,c])=>[k,make('Upholstery welt · '+k,new THREE.Color(c).multiplyScalar(.77),.9)]));
+    oak.bumpMap=grain.clone();oak.bumpMap.colorSpace=THREE.NoColorSpace;oak.bumpScale=.08*room.root.scale.x;
+    for(const m of Object.values(textiles)){m.bumpMap=weave.clone();m.bumpMap.colorSpace=THREE.NoColorSpace;}
     oak.userData.roomSurface='wood';Object.values(textiles).forEach(m=>m.userData.roomSurface='fabric');
     const parts={oak:[],fabric:[],welt:[],glides:[]};
     const add=(kind,g,at=[0,0,0],rot=[0,0,0])=>{const n=g.index?g.toNonIndexed():g; if(n!==g)g.dispose();n.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...at),new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)),new THREE.Vector3(1,1,1)));parts[kind].push(n);};
@@ -57,7 +59,7 @@ export function humboldtStudyChairs(room, layout, canvasMap) {
 export function humboldtReadingDetails(room, layout, h) {
     const {mesh,material,markSceneAsset}=h,root=room.root,lamps=[];
     const body=material('#716b59',{roughness:.42,metalness:.65}),ceramic=material('#d9d0bb',{roughness:.36}),lens=material('#f2dfbd',{emissive:'#ffd7a1',emissiveIntensity:0,roughness:.5});
-    body.userData.roomPaletteLocked=ceramic.userData.roomPaletteLocked=true;
+    body.userData.roomPaletteLocked=ceramic.userData.roomPaletteLocked=true;body.userData.roomFinishLocked=ceramic.userData.roomFinishLocked=true;
     const shadeGeo=new THREE.LatheGeometry([[0,0],[59,0],[65,5],[61,16],[37,60],[29,65],[0,65]].map(v=>new THREE.Vector2(...v)),32);
     const c=document.createElement('canvas');c.width=c.height=64;const ctx=c.getContext('2d'),fade=ctx.createRadialGradient(32,32,0,32,32,32);fade.addColorStop(0,'#ffffff');fade.addColorStop(.3,'#ffffff88');fade.addColorStop(1,'#ffffff00');ctx.fillStyle=fade;ctx.fillRect(0,0,64,64);const poolMap=new THREE.CanvasTexture(c);
     const add=(table,at,index,cafe)=>{

@@ -1,3 +1,4 @@
+import {headphoneSocketTransform,headphoneHookState,finishDeskHeadphones} from './desk-headphone-hook.mjs';
 import * as THREE from 'three';
 import { DoubleItemTap, cloneItem, nodeSnapshot } from './scene-item-editing.mjs?v=item-gumball-clipboard-20261016';
 import { surfaceDrop } from './item-surface-drop.mjs';
@@ -22,7 +23,8 @@ export class SceneDeskObjects {
         r.objects=new Map();r.state.objects||={};
         const highschool=this.manager.ctx.sceneId?.()==='highschool';
         const previousDefaults=highschool?structuredClone(r.state.objects):null,claimed=new Set();
-        for(const [role,mount] of Object.entries(r.rig.mounts))for(const [i,obj] of [...mount.children].entries()){
+        const defaults=Object.entries(r.rig.mounts).flatMap(([role,mount])=>[...mount.children].map((obj,i)=>({role,obj,i})));
+        for(const {role,obj,i} of defaults){
             if(obj.userData.transientGameScreen)continue;
             const identity=obj.userData.deskObject;
             const id=identity?.desk===r.id?identity.id:'default-'+role+'-'+i;
@@ -73,6 +75,9 @@ export class SceneDeskObjects {
     purchaseMount(role){return this.manager.ctx.purchaseMount?.(role);}
     register(r,id,obj,saved,baseScale){
         const previous=r.objects?.get(id);if(previous)this.stow.restoreItem(previous);
+        saved=headphoneSocketTransform(obj,saved,r.rig.mounts,this.manager.ctx.headphoneRecovery?.()?.[[this.manager.key,r.id,id].join('|')]);
+        if(obj.userData.deskHeadphones)finishDeskHeadphones(obj,r.id);
+        if(obj.userData.headphoneHook&&saved.headphoneSocket!=='hook-v1'){const sockets=r.rig.mounts.shelf?.userData.headphoneSockets||[],socket=sockets.find(s=>s.side===(saved.transform.p.x<0?'left':'right'))||sockets[0];if(socket){const fitted=headphoneHookState(socket);saved={...saved,role:fitted.role,transform:fitted.transform,headphoneSocket:'hook-v1'};}}
         const mount=r.rig.mounts[saved.role];if(!mount)return;
         // Keep the original object hidden when removed, so defaults never return
         // after switching desks or changing the active daypart.
@@ -84,6 +89,10 @@ export class SceneDeskObjects {
         if(Array.isArray(reference)&&reference.length===3&&reference.every(v=>Number.isFinite(v)&&v>0))baseScale=new THREE.Vector3(...reference);
         else obj.userData.deskObjectBaseScale=baseScale.toArray();
         r.state.objects[id]=saved;r.objects.set(id,{id,obj,saved,baseScale});
+        if(obj.userData.deskHeadphones&&!saved.removed){
+            const sockets=r.rig.mounts.shelf?.userData.headphoneSockets||[],side=saved.transform.p.x<0?'left':'right',socket=sockets.find(s=>s.side===side)||sockets[0],hookId='headphone-hook-'+side;
+            if(socket&&!r.objects.has(hookId)){const hook=this.manager.ctx.createHeadphoneHook?.();if(hook)this.register(r,hookId,hook,r.state.objects[hookId]||headphoneHookState(socket),new THREE.Vector3(1000,1000,1000));}
+        }
         this.phase(r);
     }
     phase(r){

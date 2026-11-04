@@ -17,6 +17,7 @@ export const ROOM_FINISHES = {
     kitchen:   { name: 'Jade & honed stone',     ground: '#8a8270', wood: .51, metal: .28, stone: .46, night: .98 },
     lounge:    { name: 'Walnut & soft textiles', ground: '#80715f', wood: .49, metal: .30, stone: .64, night: .92 },
     workshop:  { name: 'Plywood & enamel',       ground: '#767e7a', wood: .64, metal: .38, stone: .80, night: .98 },
+    childroom: { partyDay: true, name: 'Pale oak & woven linen', ground: '#9f997f', wood: .57, metal: .35, stone: .7, night: .92 },
     bedroom:   { partyDay: true, name: 'Linen & pale oak',       ground: '#8c816f', wood: .57, metal: .34, stone: .67, night: .90 },
     gallery:   { name: 'Ivory & honed marble',   ground: '#8b8580', wood: .53, metal: .28, stone: .48, night: 1.02 },
     scifi:     { backdrops: { morning: ['#708f9f','#2c455e'], afternoon: ['#537286','#233c55'], evening: ['#3a517a','#152947'], night: ['#162d47','#071425'], party: ['#384065','#111d39'] }, name: 'Satin hull & titanium',  ground: '#26384b', wood: .55, metal: .37, stone: .62, night: .78 },
@@ -43,6 +44,7 @@ const ROOM_BALANCE = {
     lounge:    { plaster: .93, fabric: .97, powder: .61, dayFill: .94, eveningFill: .88, nightFill: .92, rim: .82, neutral: .12 },
     kitchen:   { plaster: .91, fabric: .94, powder: .54, dayFill: .98, eveningFill: .94, nightFill: .96, rim: .87, neutral: .22 },
     gym:       { plaster: .92, fabric: .96, powder: .63, dayFill: .97, eveningFill: .93, nightFill: .96, rim: .84, neutral: .26 },
+    childroom: { plaster: .96, fabric: .98, powder: .68, dayFill: .96, eveningFill: .9, nightFill: .95, rim: .8, neutral: .16 },
     bedroom:   { plaster: .94, fabric: .98, powder: .64, dayFill: .95, eveningFill: .88, nightFill: .90, rim: .78, neutral: .12 },
     workshop:  { plaster: .94, fabric: .96, powder: .65, dayFill: .98, eveningFill: .97, nightFill: .98, rim: .86, neutral: .26 },
     gallery:   { plaster: .93, fabric: .95, powder: .59, dayFill: .98, eveningFill: .94, nightFill: .98, rim: .86, neutral: .30 },
@@ -73,12 +75,29 @@ export function polishRoomProp(room, object, placement) {
             }
         }
         else if (source.name === 'metal') { mat.roughness = .34; mat.metalness = .75; }
-        else if (source.name === 'wood') { mat.roughness = .56; mat.metalness = 0; }
+        else if (source.name === 'wood') {
+            mat.roughness = .56; mat.metalness = 0;
+            const detail=roomPropWood(room);
+            mat.map=detail.color;mat.bumpMap=detail.height;mat.bumpScale=.08*room.root.scale.x;
+            mat.roughnessMap=detail.roughness;
+        }
         else { mat.roughness = .58; mat.metalness = 0; }
         mat.userData.sharedTextures = true; mat.userData.roomPropFinish = true;
         copies.set(source, mat); room.ownedMaterials.add(mat); return mat;
     };
     object.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(finish) : finish(o.material); });
+}
+function roomPropWood(room){
+    if(room.root.propWoodFinish)return room.root.propWoodFinish;
+    const side=128,color=new Uint8Array(side*side*4),height=color.slice(),roughness=color.slice();
+    for(let y=0;y<side;y++)for(let x=0;x<side;x++){
+        const grain=Math.sin(y*.72+Math.sin(x*.045)*1.7)+.38*Math.sin(y*2.1+Math.sin(x*.09));
+        const i=(y*side+x)*4,v=Math.round(244+grain*7);
+        for(let c=0;c<3;c++){color[i+c]=v;height[i+c]=Math.round(128+grain*20);roughness[i+c]=Math.round(235+grain*10);}
+        color[i+3]=height[i+3]=roughness[i+3]=255;
+    }
+    const texture=(data,srgb=false)=>{const t=new THREE.DataTexture(data,side,side);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.generateMipmaps=true;if(srgb)t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;(room.root.ownedTextures||=[]).push(t);return t;};
+    return room.root.propWoodFinish={color:texture(color,true),height:texture(height),roughness:texture(roughness)};
 }
 function roomTextileWeave(room) {
     // One tiny texture per room. Keep imported colour artwork and model UVs;
@@ -109,7 +128,7 @@ const PHASE_LIGHT = {
 // more morning sunlight. These small ratios preserve each authored palette
 // and make the morning/afternoon transition change modelling, not just tint.
 const DIFFUSE_ROOMS = new Set(['library', 'study', 'creative', 'gallery', 'hospital', 'laboratory']);
-const DOMESTIC_ROOMS = new Set(['home', 'bedroom', 'lounge', 'kitchen']);
+const DOMESTIC_ROOMS = new Set(['home', 'bedroom', 'childroom', 'lounge', 'kitchen']);
 const DAYLIGHT_BALANCE = {
     diffuse: { morning: [ .96, 1.04, 1 ], afternoon: [ .92, 1.06, 1.02 ] },
     domestic: { morning: [ 1.04, .94, .97 ], afternoon: [ .94, 1.04, 1.02 ] },
@@ -138,7 +157,7 @@ export function roomPolishLighting(room, lights, mode) {
     // Local lamps should carry evening activity. Warm interiors get a less
     // blue fill, while clinical/technical rooms retain neutral task colours.
     // These are non-accumulating adjustments: authored lights reset each pass.
-    const residential = ['home', 'bedroom', 'lounge', 'study', 'kitchen'].includes(room.id);
+    const residential = ['home', 'bedroom', 'childroom', 'lounge', 'study', 'kitchen'].includes(room.id);
     const making = ['creative', 'workshop', 'gallery', 'music'].includes(room.id);
     if (mode === 'evening' || mode === 'night') {
         lights.fill.color.lerp(new THREE.Color(residential ? '#ded8cd' : '#e3e8e6'), residential ? .2 : making ? .12 : .06);
@@ -160,6 +179,7 @@ export function roomPolishLighting(room, lights, mode) {
     return { halo, edge, dark };
 }
 export function roomSurfaceFinish(room, mat, kind) {
+    if(mat.userData.roomFinishLocked)return;
     const finish = room.roomLayout?.finish || ROOM_FINISHES[room.id]; if (!finish) return;
     // Preserve lower authored roughness on polished stone and existing metalness.
     const balance = ROOM_BALANCE[room.id] || {};

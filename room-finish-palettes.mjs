@@ -13,6 +13,7 @@ export const ROOM_DETAIL_PALETTES = {
     lounge: ['#74806b', '#a27356', '#eee3d4', '#d9c4ac'],
     kitchen: ['#8ba38e', '#487966', '#eee7d5', '#b9d0bd'],
     gym: ['#647d78', '#408778', '#e4e8dd', '#b7c8bf'],
+    childroom: ['#a7b59b', '#c58d6f', '#f3ead5', '#d8dfcb'],
     bedroom: ['#b29c91', '#aa8274', '#eee4dc', '#e5d7d2'],
     workshop: ['#708389', '#50788b', '#e8dfc8', '#afbdbe'],
     gallery: ['#a59a89', '#977448', '#f1ebdf', '#e9e5dd'],

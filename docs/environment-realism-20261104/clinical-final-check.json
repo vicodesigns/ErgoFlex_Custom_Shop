@@ -1,0 +1,21 @@
+{
+  "room": "hospital",
+  "phase": "afternoon",
+  "actualMode": "afternoon",
+  "layout": "house",
+  "size": "48x30",
+  "desks": 5,
+  "kits": [
+    {
+      "visible": true,
+      "position": [
+        -300,
+        1,
+        -120
+      ],
+      "overlap": 0,
+      "supported": true,
+      "measured": true
+    }
+  ]
+}

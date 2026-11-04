@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 
 export const HOME_SESSIONS = {
     morning: { title:'A fresh start', note:'Coffee / plan / begin', accent:'#b58b57', light:[.55,.5,.05,.2] },
@@ -36,7 +37,9 @@ export function buildHomeSessionDetail(room,layout,h) {
     const mug=(g,x,z,filled)=>{
         const cup=new THREE.Group();cup.position.set(x,8,z);g.add(cup);
         const points=[[0,0],[22,0],[24,4],[28,58],[27,61],[24,61],[21,8],[0,8]].map(p=>new THREE.Vector2(...p));
-        mesh(cup,new THREE.LatheGeometry(points,24),ceramic);const handle=mesh(cup,new THREE.TorusGeometry(13,3,6,20),ceramic,[30,33,0]);handle.rotation.y=Math.PI/2;
+        mesh(cup,new THREE.LatheGeometry(points,24),ceramic);
+        // A handle lies in the vertical radial plane, with both ends meeting the cup.
+        mesh(cup,new THREE.TorusGeometry(13,3,6,20),ceramic,[30,33,0]);
         if(filled)mesh(cup,new THREE.CylinderGeometry(24.5,24.5,.5,24),material('#70543c',{roughness:.25}),[0,52,0]);
         return cup;
     };
@@ -54,5 +57,6 @@ export function buildHomeSessionDetail(room,layout,h) {
             mug(g,-43,-22,false);mug(g,32,23,false);for(let i=0;i<3;i++)mesh(g,new THREE.CylinderGeometry(29,29,2,24),wood,[-42,9+i*2,35]);
         }
     }
+    interiorCraftFinishes(room,{ceramic:[ceramic],linen:[felt],wood:[wood],metal:[metal]});
     return phase=>{variants.forEach(o=>o.visible=o.userData.homeSession===phase);root.userData.homeSession={phase,...HOME_SESSIONS[phase]};};
 }

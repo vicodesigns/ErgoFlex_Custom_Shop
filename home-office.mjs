@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { HOME_SESSIONS, homeSessionPinboard, buildHomeSessionDetail } from './home-session-detail.mjs?v=home-sessions-20261022';
 import { homeComfortDetails } from './home-comfort-detail.mjs?v=commons-home-comfort-20261024';
 
@@ -658,7 +659,9 @@ export function buildHomeOffice(room, root, layout, helpers) {
         for (const z of (premium ? [160, 450, 740] : [310, 750, 1190])) box(storage, [12, 590, premium ? 275 : 410], [w / 2 - 327, 350, z], sage, 2);
         // Sideboard dressing: a ceramic lamp and a short stack of books.
         const top = 690.5, sx = w / 2 - 175, lampZ = boardZ[0] + 170;
-        deco(sphere(storage, [80, 115, 80], [sx, top + 110, lampZ], clay));
+        // A flat foot grounds the lamp; the former ellipsoid cut through the top.
+        const lampProfile = [[0,0],[44,0],[47,5],[45,14],[61,28],[80,79],[76,129],[53,172],[27,195],[25,210],[0,210]];
+        deco(mesh(storage, new THREE.LatheGeometry(lampProfile.map(p => new THREE.Vector2(...p)), 32), ceramic, [sx, top, lampZ]));
         rod(storage, [sx, top + 200, lampZ], [sx, top + 330, lampZ], 6, brass);
         const lampShade = deco(mesh(storage, new THREE.CylinderGeometry(105, 135, 170, 28, 1, true), lampGlow, [sx, top + 385, lampZ]));
         lampShade.name = 'Sideboard lamp shade';
@@ -737,6 +740,7 @@ export function buildHomeOffice(room, root, layout, helpers) {
         bulbs.instanceColor.needsUpdate = true;
     };
     room.homeAtmosphere('afternoon');
+    interiorCraftFinishes(room,{ceramic:[ceramic],linen:[linen,shade,lampGlow],wood:[joinery,oakFrame],metal:[brass]});
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[wallMat, 'plaster'], [oak, 'wood'], [joinery, 'wood'], [oakFrame, 'wood'], [sage, 'powder'], [doorFace, 'powder'], [paint, 'powder'], [trim, 'powder'], [doorMat, 'powder'], [brass, 'metal'], [linen, 'fabric'], [shade, 'fabric'], [rugMat, 'fabric'], [jute, 'fabric'], [woven, 'fabric'], [clay, 'stone'], [ceramic, 'stone']]) mat.userData.roomSurface = surface;
     root.userData.dimensionsMm = { width: w, depth: d, height: h };

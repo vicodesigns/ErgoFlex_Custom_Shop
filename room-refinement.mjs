@@ -153,7 +153,7 @@ export function refineRoomSurfaces(room) {
         const mat = obj.material, kind = mat?.userData?.roomSurface, spec = SURFACES[kind];
         if (!obj.isMesh || obj.isInstancedMesh || !spec || obj.userData.sharedProp || !mat.isMeshStandardMaterial || mat.transparent || mat.emissive.getHex() !== 0) return;
         const geometry = obj.geometry, positions = geometry.attributes.position, normals = geometry.attributes.normal;
-        if (!positions || !normals || (mat.bumpMap && !materials.has(mat))) return;
+        if (!positions || !normals || mat.userData.roomDetailAuthored || (mat.bumpMap && !materials.has(mat))) return;
         const transform = inverse.clone().multiply(obj.matrixWorld), normalTransform = new THREE.Matrix3().getNormalMatrix(transform);
         const uv = new Float32Array(positions.count * 2), p = new THREE.Vector3(), n = new THREE.Vector3();
         for (let i = 0; i < positions.count; i++) {

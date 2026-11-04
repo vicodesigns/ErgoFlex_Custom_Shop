@@ -39,6 +39,7 @@ import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
 import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=gallery-bedroom-20261025';
+import { CHILD_MODES, CHILD_LAYOUTS, childLayoutForSize, childLayoutById } from './child-room.mjs?v=child-room-20261104';
 import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=gallery-bedroom-20261025';
 import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
@@ -61,7 +62,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-studio-20261025';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-studio-20261025';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=item-gumball-clipboard-20261016';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=commons-home-comfort-20261024';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-sessions-20261022';
@@ -775,7 +776,8 @@ function initSceneDeskEditing() {
         retireBody:obj=>{unregisterSceneAsset(obj);disposeWorkspaceObject(obj);},registerBody:registerSceneAsset,unregisterBody:unregisterSceneAsset,
         copyMainDress:mounts=>{for(const [role,m] of workspaceAccessories.mounts)if(m.dress&&mounts[role])for(const obj of m.dress.children){unregisterSceneAsset(obj);const copy=obj.clone(true);copy.traverse(o=>{o.userData={...o.userData,sharedProp:true,sceneAsset:false};delete o.userData.editorId;});mounts[role].add(copy);}},
         disposeDress:r=>{for(const m of Object.values(r.rig?.mounts||{}))for(const child of [...m.children]){unregisterSceneAsset(child);disposeWorkspaceObject(child);}},
-        loadProp:async id=>{await PROP_LIBRARY.loadIndex();return PROP_LIBRARY.instance(id);},propEntry:id=>PROP_LIBRARY.entry(id),
+        loadProp:async id=>{await PROP_LIBRARY.loadIndex();return loadDeskProp(id);},propEntry:id=>PROP_LIBRARY.entry(id),
+        createHeadphoneHook:cloneHeadphoneHook,headphoneRecovery:()=>PROP_LIBRARY.headphoneRecovery,
         objectName:obj=>accessory(obj.userData.accessoryId)?.name||PROP_LIBRARY.entry(obj.userData.propId)?.name||obj.name||sceneAssetName(obj),disposeObject:disposeWorkspaceObject,unregisterProp:unregisterSceneAsset,loadPropIndex:()=>PROP_LIBRARY.loadIndex(),
         halt:()=>haltAllMotion(),dragLive:(x,z)=>{if(roomSafety.alert)return;applyGlideOffset(glideOffset.clone().add(new THREE.Vector3(x,0,z)),{collide:true});glideTarget.copy(glideOffset);workspaceAccessories.update();},
         freePosition:size=>freeDeskPosition(workspaceRoom,sceneDesks.records,size),
@@ -792,7 +794,7 @@ function initSceneDeskEditing() {
             return clear;
         },
         lightDesk:r=>{if(r.id===sceneDesks.selected)applyGrooveLights(r.state.lights);},
-        updateLights:()=>{const seconds=performance.now()/1000;for(const r of sceneDesks.records.values()){if(r.id===sceneDesks.selected||!r.rig)continue;const l=r.state.lights||{},frame=sampleLedEffect(normalizeLedEffect(l.effect),seconds,l.enabled!==false,ledReducedMotion.matches);const color=new THREE.Color(l.color||ledColor);if(frame.hue!==null)color.setHSL(frame.hue,1,.5,THREE.SRGBColorSpace);r.group.traverse(o=>{if(o.material?.userData.sceneDeskMaterial==='led'){if(l.enabled===false)o.material.color.set('#20292b');else o.material.color.copy(color);o.material.emissive.copy(color);o.material.emissiveIntensity=3.6*(l.glow??ledGlow)/100*frame.gain;}});}},
+        updateLights:()=>{const seconds=performance.now()/1000;for(const r of sceneDesks.records.values()){if(r.id===sceneDesks.selected||!r.rig)continue;const l=r.state.lights||{},frame=sampleLedEffect(normalizeLedEffect(l.effect),seconds,l.enabled!==false,ledReducedMotion.matches);const color=new THREE.Color(l.color||ledColor);if(frame.hue!==null)color.setHSL(frame.hue,1,.5,THREE.SRGBColorSpace);r.group.traverse(o=>{for(const mat of [].concat(o.material||[]))if(mat.userData?.sceneDeskMaterial==='led'){if(l.enabled===false)mat.color.set('#20292b');else mat.color.copy(color);mat.emissive.copy(color);mat.emissiveIntensity=3.6*(l.glow??ledGlow)/100*frame.gain;}});}},
         edit:(before,after)=>{if(JSON.stringify(before)!==JSON.stringify(after))transaction({type:'scene-desks',before,after});},
         sync:refresh
     });
@@ -864,7 +866,7 @@ function initRoomDeskPeripherals(r) {
         item.saved.removed=true;item.obj.visible=false;
     }
     const config=cleanConfig({...currentConfig,size:r.state.size,accessories:r.state.accessories,accessoryFinishes:r.state.accessoryFinishes||{}});
-    const set=createSceneAccessorySet(r.rig.mounts,config,()=>r.group.children.find(obj=>obj.isMesh&&String(obj.material?.userData.sceneDeskMaterial).startsWith('wood:'))?.material);
+    const set=createSceneAccessorySet(r.rig.mounts,config,()=>r.group.children.find(obj=>obj.isMesh&&String(obj.material?.userData?.sceneDeskMaterial).startsWith('wood:'))?.material);
     const module=institutionalModule(selectedRoomScene),update=set.update;
     if(module?.peripheralScreens)set.update=()=>{update();module.peripheralScreens(set,r,sceneDesks.ctx.phase());};
     r.peripherals=set;
@@ -1024,6 +1026,13 @@ try {
     if (query.get('room') === 'bedroom' && BEDROOM_LAYOUTS[query.get('layout')]) bedroomLayoutId = query.get('layout');
 } catch {}
 function selectedBedroomLayout() { return bedroomLayoutId ? bedroomLayoutById(bedroomLayoutId) : bedroomLayoutForSize(currentConfig.size); }
+let childMode = 'morning', childLayoutId = null;
+try {
+    const q=new URLSearchParams(location.search),layout=q.get('room')==='childroom'?q.get('layout'):localStorage.getItem('ergoflex.childroomLayout');
+    if(CHILD_LAYOUTS[layout])childLayoutId=layout;
+    const mode=localStorage.getItem('ergoflex.childroomMode');if(CHILD_MODES[mode])childMode=mode;
+} catch {}
+function selectedChildLayout(){return childLayoutById(childLayoutId);}
 let workshopMode = 'morning', workshopLayoutId = null;
 try {
     const layout = localStorage.getItem('ergoflex.workshopLayout'), mode = localStorage.getItem('ergoflex.workshopMode');
@@ -1051,7 +1060,7 @@ const institutionalState = Object.fromEntries(INSTITUTIONAL_IDS.map(id => {
     } catch {}
     return [id, { layout, mode }];
 }));
-const MEASURED_ROOM_IDS = ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'gallery', 'scifi', 'coworking', 'library', ...INSTITUTIONAL_IDS];
+const MEASURED_ROOM_IDS = ['home', 'gaming', 'music', 'creative', 'study', 'office', 'gym', 'kitchen', 'lounge', 'workshop', 'bedroom', 'childroom', 'gallery', 'scifi', 'coworking', 'library', ...INSTITUTIONAL_IDS];
 function measuredRoomPanelId(id) { return id === 'home' ? 'home-office-controls' : `${id}-room-controls`; }
 function measuredRoomProfile(id = selectedRoomScene) {
     if (INSTITUTIONAL_ROOMS[id]) {
@@ -1060,6 +1069,7 @@ function measuredRoomProfile(id = selectedRoomScene) {
     }
     if (id === 'library') return { id, layouts: LIBRARY_LAYOUTS, modes: selectedLibraryLayout().modes || LIBRARY_MODES, layout: selectedLibraryLayout(), mode: libraryMode, prefix: 'library' };
     if (id === 'coworking') return { id, layouts: COWORKING_LAYOUTS, modes: COWORKING_MODES, layout: selectedCoworkingLayout(), mode: coworkingMode, prefix: 'coworking' };
+    if (id === 'childroom') return { id, layouts: CHILD_LAYOUTS, modes: CHILD_MODES, layout: selectedChildLayout(), mode: childMode, prefix: 'childroom' };
     if (id === 'bedroom') return { id, layouts: BEDROOM_LAYOUTS, modes: BEDROOM_MODES, layout: selectedBedroomLayout(), mode: bedroomMode, prefix: 'bedroom' };
     if (id === 'gallery') return { id, layouts: GALLERY_LAYOUTS, modes: GALLERY_MODES, layout: selectedGalleryLayout(), mode: galleryMode, prefix: 'gallery' };
     if (id === 'scifi') return { id, layouts: SCIFI_LAYOUTS, modes: SCIFI_MODES, layout: selectedScifiLayout(), mode: scifiMode, prefix: 'scifi' };
@@ -4483,6 +4493,8 @@ function serializeProject() {
                 musicLayout: selectedMusicLayout().id,
                 artistMode,
                 artistLayout: selectedArtistLayout().id,
+                childMode,
+                childLayout: selectedChildLayout().id,
                 bedroomMode,
                 bedroomLayout: selectedBedroomLayout().id,
                 galleryMode,
@@ -4892,6 +4904,8 @@ function applyProjectPresentation(project) {
     if (MUSIC_LAYOUTS[presentation.musicLayout]) musicLayoutId = presentation.musicLayout;
     if (ARTIST_MODES[presentation.artistMode]) artistMode = presentation.artistMode;
     if (ARTIST_LAYOUTS[presentation.artistLayout]) artistLayoutId = presentation.artistLayout;
+    if (CHILD_MODES[presentation.childMode]) childMode = presentation.childMode;
+    if (CHILD_LAYOUTS[presentation.childLayout]) childLayoutId = presentation.childLayout;
     if (BEDROOM_MODES[presentation.bedroomMode]) bedroomMode = presentation.bedroomMode;
     if (BEDROOM_LAYOUTS[presentation.bedroomLayout]) bedroomLayoutId = presentation.bedroomLayout;
     if (GALLERY_MODES[presentation.galleryMode]) galleryMode = presentation.galleryMode;
@@ -11014,6 +11028,7 @@ function setMeasuredRoomLayout(sceneId, id, options = {}) {
     else if (sceneId === 'gym') gymLayoutId = id;
     else if (sceneId === 'kitchen') kitchenLayoutId = id;
     else if (sceneId === 'workshop') workshopLayoutId = id;
+    else if (sceneId === 'childroom') childLayoutId = id;
     else if (sceneId === 'bedroom') bedroomLayoutId = id;
     else if (sceneId === 'gallery') galleryLayoutId = id;
     else if (sceneId === 'scifi') scifiLayoutId = id;
@@ -11062,6 +11077,7 @@ function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
     else if (sceneId === 'gym') gymMode = id;
     else if (sceneId === 'kitchen') kitchenMode = id;
     else if (sceneId === 'workshop') workshopMode = id;
+    else if (sceneId === 'childroom') childMode = id;
     else if (sceneId === 'bedroom') bedroomMode = id;
     else if (sceneId === 'gallery') galleryMode = id;
     else if (sceneId === 'scifi') scifiMode = id;
@@ -11138,6 +11154,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     if (choice.id === 'music' && !musicLayoutId) musicLayoutId = measured.layout.id;
     if (choice.id === 'creative' && !artistLayoutId) artistLayoutId = measured.layout.id;
     if (choice.id === 'study' && !studyLayoutId) studyLayoutId = measured.layout.id;
+    if (choice.id === 'childroom' && !childLayoutId) childLayoutId = measured.layout.id;
     if (choice.id === 'bedroom' && !bedroomLayoutId) bedroomLayoutId = measured.layout.id;
     if (choice.id === 'gallery' && !galleryLayoutId) galleryLayoutId = measured.layout.id;
     if (choice.id === 'library' && !libraryLayoutId) libraryLayoutId = measured.layout.id;
