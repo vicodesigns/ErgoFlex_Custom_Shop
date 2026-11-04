@@ -178,6 +178,8 @@ async function listShot(frame,i){
   const win=process.platform==='win32',angle=process.env.ANGLE||(win?'d3d11':'vulkan');
   const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH||(win?'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe':'/usr/bin/google-chrome'),headless:'new',defaultViewport:{width:1280,height:720},
     args:['--no-sandbox','--autoplay-policy=no-user-gesture-required','--ignore-gpu-blocklist','--enable-gpu-rasterization','--use-angle='+angle,...(angle==='vulkan'?['--enable-features=Vulkan']:[]),'--mute-audio']});
+  {const pg=await browser.newPage();const gpu=await pg.evaluate(()=>{const gl=document.createElement('canvas').getContext('webgl2');const x=gl&&gl.getExtension('WEBGL_debug_renderer_info');return gl?(x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)):'no webgl2';}).catch(e=>'probe failed: '+e.message);
+   console.log(`[provenance] webgl ${gpu}`);await pg.close();}
   try{const frame=await stage(browser);for(const i of indices)await (opts.listScreens?listShot:renderShot)(frame,i);}
   finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});
