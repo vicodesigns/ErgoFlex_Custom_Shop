@@ -7,6 +7,7 @@
 //          'lift-down'    FX34 reversed wavefront, red    (ColorLiftDown 255,0,0); strip 2 dark
 //                         (the API's liftDarkStrips, ergoled_native_anim.go)
 //          'tilt-extend'  FX35 sway, yellow 255,255,0;  'tilt-retract' FX35 reversed, purple 150,0,255
+//          (Vico, real desk: tilt angle increasing / board steepening = tilt down = purple 'tilt-retract'; back toward flat = yellow-green)
 //          'wheels'       FX36 comet, travel red with caution amber; mode = drive mode 1-10
 //                         1 strafe L, 2 strafe R, 3 fwd, 4 back, 5 CW, 6 CCW,
 //                         7 diag L-fwd, 8 diag L-back, 9 diag R-fwd, 10 diag R-back
@@ -51,6 +52,13 @@ export function installStatus(shot) {
   const group = new THREE.Group(); group.name = 'Film status'; group.userData.filmFx = true;
   const pylons = [], regular = api.ledColor || '#ffffff';
   const regularRgb = [1, 3, 5].map(i => parseInt(regular.slice(i, i + 2), 16));
+  // The status frames go to the strips through the game path, which uploads them as LINEAR bytes
+  // (led-pixel-renderer linearByteToSrgb), while the regular look is the sRGB colour regularRgb. So the
+  // fade aims at the linear byte that the upload turns back into regularRgb: fading to regularRgb itself
+  // ended about 7x too bright (#2b2b2b as linear 43 is sRGB 114), and the floor and desk spill popped off
+  // in one frame at the handoff (cinematography final review 8, film 35.43).
+  const toSrgbByte = v => { const x = v / 255; return Math.round(255 * (x <= .0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - .055)); };
+  const regularLinear = regularRgb.map(c => { let best = 0; for (let b = 0; b < 256; b++) if (Math.abs(toSrgbByte(b) - c) < Math.abs(toSrgbByte(best) - c)) best = b; return best; });
   let fill = null;
   if (shot.ledFill) {
     const b = new THREE.Box3().setFromObject(api.loadedModel), c = b.getCenter(new THREE.Vector3()), f = shot.ledFill;
@@ -101,11 +109,11 @@ export function installStatus(shot) {
       const ev = events.find(e => seconds >= e.at && seconds < e.at + e.dur);
       const hex = c => '#' + c.slice(0, 3).map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
       if (!ev) {
-        // Fade from the last state's final frame back to the regular look.
+        // Fade from the last state's final frame back to the regular look, ending on what it renders.
         const done = events.filter(e => e.at + e.dur <= seconds).at(-1), u = done ? (seconds - done.at - done.dur) / (done.fade ?? 1) : 1;
         if (!done?.last || u >= 1) { api.setLedColor(regular, false); if (fill) fill.intensity = 0; game.active = false; delete game.sample; return; }
         const k = smooth(u);
-        for (let i = 0; i < frame.length; i++) for (let p = 0; p < frame[i].length; p += 4) for (let c = 0; c < 4; c++) frame[i][p + c] = Math.round(done.last[i][p + c] * (1 - k) + (c < 3 ? regularRgb[c] : 0) * k);
+        for (let i = 0; i < frame.length; i++) for (let p = 0; p < frame[i].length; p += 4) for (let c = 0; c < 4; c++) frame[i][p + c] = Math.round(done.last[i][p + c] * (1 - k) + (c < 3 ? regularLinear[c] : 0) * k);
         api.setLedColor(hex(done.spill.map((v, c) => v * (1 - k) + regularRgb[c] * k)), false);
         lightFill(done.spill, done.last.map(r => r.map(v => v * (1 - k))));
         game.sample = out => { out.forEach((row, i) => row.set(frame[i])); return true; };

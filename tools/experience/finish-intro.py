@@ -10,6 +10,8 @@ to <dir>/standin/NN.* for pipeline tests), <dir>/score/score.wav (optional),
   ErgoFlex-Intro-1080p.mp4 / -textless.mp4, ErgoFlex-Intro-720p.mp4 / -textless.mp4
   titles.json (absolute in/out for app overlays), titles.ass, poster.jpg
 --draft renders a fast 960×540 preview (final/draft.mp4) instead.
+--size 2560x1440 masters at that size (chapter renders must match); the HQ file is ErgoFlex-Intro-<H>p.mp4 with the
+  bitrate cap scaled by pixel count. Titles stay authored on the 1920×1080 grid (libass scales PlayRes to the frame).
 """
 import json, os, subprocess, sys, glob
 
@@ -60,7 +62,9 @@ def main():
                    titles=[{k: v for k, v in t.items() if k != 'scrim'} for t in titles], cta=cta, logo=dict(start=round(logo_at, 3))),
               open(os.path.join(out, 'titles.json'), 'w'), indent=1, ensure_ascii=False)
 
-    W, H = (960, 540) if draft else (1920, 1080)
+    size = sys.argv[sys.argv.index('--size') + 1] if '--size' in sys.argv else '1920x1080'
+    W, H = (960, 540) if draft else tuple(int(v) for v in size.split('x'))
+    px = W * H / (1920 * 1080)
     ass = [
         '[Script Info]', 'ScriptType: v4.00+', 'PlayResX: 1920', 'PlayResY: 1080', 'WrapStyle: 2', 'ScaledBorderAndShadow: yes', '',
         '[V4+ Styles]',
@@ -165,8 +169,8 @@ def main():
     if draft:
         run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-vf', subs, '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '24', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', os.path.join(out, 'draft.mp4')])
         return
-    hq = os.path.join(out, 'ErgoFlex-Intro-1080p.mp4')
-    run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', '-vf', subs, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', '18', '-maxrate', '9500k', '-bufsize', '19M',
+    hq = os.path.join(out, f'ErgoFlex-Intro-{H}p.mp4')
+    run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', '-vf', subs, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', '18', '-maxrate', f'{int(9500 * px)}k', '-bufsize', f'{int(19000 * px)}k',
          '-pix_fmt', 'yuv420p', '-g', str(fps * 2), '-x264-params', 'aq-mode=3', *COLOR, '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-shortest', '-movflags', '+faststart', hq])
     for name, vf, rate, ab in [] if hq_only else [
                                ('ErgoFlex-Intro-1080p-textless.mp4', 'null', '6M', '192k'),
@@ -180,7 +184,7 @@ def main():
              '-c:a', 'aac', '-b:a', ab, '-ar', '48000', '-shortest', '-movflags', '+faststart', dst])
         for f in glob.glob(log + '*'): os.remove(f)
     # Poster: the clean end-card frame (desk + wordmark), no burned-in text.
-    run(['ffmpeg', '-v', 'error', '-y', '-i', master, '-vf', f'select=gte(t\\,{total - 2.6:.2f}),scale=1920:1080', '-frames:v', '1', '-q:v', '2', os.path.join(out, 'poster.jpg')])
+    run(['ffmpeg', '-v', 'error', '-y', '-i', master, '-vf', f'select=gte(t\\,{total - 2.6:.2f}),scale={W}:{H}', '-frames:v', '1', '-q:v', '2', os.path.join(out, 'poster.jpg')])
 
 COLOR = ['-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-color_range', 'tv']
 if __name__ == '__main__':

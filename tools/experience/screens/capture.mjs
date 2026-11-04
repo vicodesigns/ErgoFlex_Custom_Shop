@@ -23,7 +23,9 @@ const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../../..');
 const EXPORT = path.join(ROOT, 'exports/cinematic-intro-20261030');
-const OUT = path.join(EXPORT, 'screens');
+// CAPTURE_OUT=<dir> writes the clips elsewhere (e.g. a later work version's screens/), and
+// CAPTURE_SHOT=<shot.json> samples the desk pose from that shot instead of shots/NN.json here.
+const OUT = process.env.CAPTURE_OUT ? path.resolve(ROOT, process.env.CAPTURE_OUT) : path.join(EXPORT, 'screens');
 const CACHE = path.join(HERE, '.cache');
 const FPS = 30;
 const puppeteer = require(path.join(ROOT, 'node_modules/puppeteer-core'));
@@ -41,7 +43,7 @@ if (!clips.length) { console.error('no clips match', wanted); process.exit(1); }
 
 function shotData(chapter) {
   const nn = String(chapter).padStart(2, '0');
-  const shot = JSON.parse(fs.readFileSync(path.join(EXPORT, 'shots', nn + '.json'), 'utf8'));
+  const shot = JSON.parse(fs.readFileSync(process.env.CAPTURE_SHOT ? path.resolve(ROOT, process.env.CAPTURE_SHOT) : path.join(EXPORT, 'shots', nn + '.json'), 'utf8'));
   const seconds = shot.seconds, dur = seconds + 1, rate = 60;
   const poses = [];
   for (let i = 0; i <= dur * rate; i++) poses.push(sampleClipMotion(shot.motion, i / rate));
@@ -111,6 +113,7 @@ async function renderClip(clip) {
       console.log(`${clip.id}: stills -> ${stillDir}`);
       return;
     }
+    fs.mkdirSync(OUT, {recursive: true});
     const out = path.join(OUT, clip.id + '.mp4');
     const tmp = out.replace(/\.mp4$/, '.part.mp4');
     ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',

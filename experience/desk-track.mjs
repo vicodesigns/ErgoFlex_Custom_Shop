@@ -5,7 +5,7 @@ export const DESK_EASINGS=['smooth','linear','hold'];
 export const POSE_FIELDS={lift:['height'],tilt:['tilt'],wheels:['x','z','yaw']};
 const number=(v,min,max,fallback)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):fallback;
 export function cleanPose(v={}){
-  return {height:number(v.height,28,52.5,30),tilt:number(v.tilt,-5,65,0),x:number(v.x,-120,120,0),z:number(v.z,-120,120,0),yaw:number(v.yaw,-3600,3600,0)};
+  return {height:number(v.height,28,52.5,30),tilt:number(v.tilt,-5,65,0),x:number(v.x,-240,240,0),z:number(v.z,-240,240,0),yaw:number(v.yaw,-3600,3600,0)};
 }
 export function cleanDeskTracks(value){
   const tracks={};

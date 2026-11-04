@@ -24,9 +24,15 @@ s['ledSurfaces'] = {'desktopStrength': 180, 'desktopReach': 100, 'desktopWidth':
 for sc in s['screens']:
     if sc['target'] == 'tablet': sc['offset'] = 2.0; sc['loop'] = False   # the tablet's lifts ran ~2 s behind the desk's
 
-# Ch 3 create: the tilt up (12 -> 25 -> 45 deg) shows the real desk's tilt-up yellow-green (Vico: tilt down is purple) on the desk, board and room.
+# Ch 3 create: the board steepens (12 -> 25 -> 45 deg). Vico (round 5): on the real desk steepening is the tilt DOWN, purple;
+# back toward flat is yellow-green. So each tilt clip takes its colour from its direction (the Custom Shop mapping).
 s = by['create']
-s['ledStatus'] = [{'at': c['start'], 'dur': c['duration'], 'kind': 'tilt-extend' if c['target'] > 0 else 'tilt-retract'} for c in s['motion']['clips'] if c['lane'] == 'tilt']
+def tilt_status(motion):
+    a, out = motion['initial'].get('tilt', 0), []
+    for c in sorted((c for c in motion['clips'] if c['lane'] == 'tilt'), key=lambda c: c['start']):
+        out.append({'at': c['start'], 'dur': c['duration'], 'kind': 'tilt-retract' if c['target'] > a else 'tilt-extend'}); a = c['target']
+    return out
+s['ledStatus'] = tilt_status(s['motion'])
 s['ledGlow'] = 0.9; s['ledColor'] = '#808080'; s['ledFill'] = {'intensity': 6}
 s['ledSurfaces'] = {'desktopStrength': 200, 'desktopReach': 100, 'desktopWidth': 40, 'desktopCone': 100, 'shelfStrength': 200,
                     'topStrength': 180, 'baseStrength': 120, 'floorStrength': 190, 'floorReach': 80, 'floorWidth': 100,

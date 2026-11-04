@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ErgoFlex · Refined intro</title>
+<style>
+:root{color-scheme:dark;font:15px/1.5 system-ui;background:#070c12;color:#e6f1fa}body{margin:0}main{max-width:1280px;margin:auto;padding:28px 24px 64px}h1{font-size:30px;margin:4px 0}.eyebrow{color:#63d8f5;font-size:12px;letter-spacing:.16em;text-transform:uppercase}.sub{color:#9cb0c0}video{display:block;width:100%;aspect-ratio:16/9;background:#000;border:1px solid #243849;border-radius:12px}.bar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}button,a{font:inherit;border-radius:8px;border:1px solid #36546a;background:#102332;color:inherit;padding:10px 16px;text-decoration:none;cursor:pointer}button[aria-pressed=true],a.primary{border-color:#63d8f5;background:#12384a}button:focus-visible,a:focus-visible{outline:3px solid #63d8f5;outline-offset:3px}ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;list-style:none;padding:0}li button{text-align:left;width:100%;height:100%}li b,li small{display:block}li small{color:#9cb0c0}#error{color:#ffbe9d}details{margin-top:24px}summary{cursor:pointer}
+</style><main>
+<div class="eyebrow">ErgoFlex · Film review</div><h1>Let’s build yours.</h1>
+<p class="sub">Refined intro HQ11 · 2:58 · 12 chapters · 1440p / 30 fps · original score</p>
+<video id="film" controls playsinline preload="metadata" poster="final/poster.jpg" src="final/ErgoFlex-Intro-1440p-HQ11.mp4"></video>
+<p id="error" hidden>Video unavailable. Please check that the local server is running.</p>
+<div class="bar"><button data-src="final/ErgoFlex-Intro-1440p-HQ11.mp4" aria-pressed="true">Latest · HQ11</button><button data-src="../cinematic-intro-20261103-hq10/final/ErgoFlex-Intro-1440p-HQ10.mp4" aria-pressed="false">Previous · HQ10</button><button data-src="../cinematic-intro-20261103-hq9/final/ErgoFlex-Intro-1080p-HQ9.mp4" aria-pressed="false">Earlier · HQ9</button><a class="primary" href="final/ErgoFlex-Intro-1440p-HQ11.mp4" download>Download 1440p movie</a></div>
+<p class="sub" id="version" aria-live="polite">Viewing the latest refinement.</p>
+<h2>Jump to a chapter</h2><ol id="chapters"></ol>
+<details open><summary>What changed since HQ10 (final expert panel)</summary><ul>
+<li>Commons: the desk now really drives to the head of the table and stops square to the wheelchair, which is pulled up to it and fully in view.</li>
+<li>Opener and finale: the black desks stay black, so every status colour reads true (no more lavender blue); the one-frame light pop is gone; the finale’s OCC glare and the end-card dimming are fixed.</li>
+<li>Storage: the fold and roll run at the real desk’s speeds with purple then red lights, a cleared desk and neutral light.</li>
+<li>Sit · Stand, Tilt, Wellness: framing fixes (tablet, height readout, the 45° board), a drafting stool and a gym seat, the blue lift light in the gym, no loose pencils on the tilted board.</li>
+<li>Sound: the desk’s own lift, tilt and wheel sounds play under its lights. Copy polish and trims bring the film to 2:58.</li></ul><p class="sub">Panel reports and what was left for you to decide are in REVIEW-NOTES.md.</p></details>
+<script type="module">
+const film=document.querySelector('#film'),version=document.querySelector('#version');
+film.addEventListener('error',()=>document.querySelector('#error').hidden=false);
+film.addEventListener('loadeddata',()=>document.querySelector('#error').hidden=true);
+for(const b of document.querySelectorAll('[data-src]'))b.onclick=()=>{const t=film.currentTime,playing=!film.paused;film.src=b.dataset.src;film.addEventListener('loadedmetadata',()=>{film.currentTime=t;if(playing)film.play().catch(()=>{});},{once:true});document.querySelectorAll('[data-src]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));version.textContent=b.textContent;};
+const edl=await fetch('edl.json').then(r=>r.json()),titles=await fetch('final/titles.json').then(r=>r.json());
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+for(const c of edl.chapters){const t=titles.titles.find(t=>t.chapter===c.id),li=document.createElement('li'),b=document.createElement('button'),at=c.index===1?0:c.start+.75;b.innerHTML=`<small>${String(c.index).padStart(2,'0')} · ${fmt(at)}</small><b>${t?.title||c.id}</b><small>${t?.detail||''}</small>`;b.onclick=()=>{film.currentTime=at;film.play().catch(()=>{});};li.append(b);document.querySelector('#chapters').append(li);}
+</script></main></html>

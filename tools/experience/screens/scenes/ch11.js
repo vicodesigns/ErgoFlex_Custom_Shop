@@ -1,11 +1,16 @@
-// Chapter 11 · storage (library). Tilt 0 -> 65° at 1.5-6.5 s, roll to the wall 6.6-13 s, then the screen dims.
+// Chapter 11 · storage (library). Fold to 65° and roll to the wall, timed from the shot's tilt and wheels
+// clips (they may overlap: both steps are then active), then 'Floor is yours' and the screen sleeps.
 (function () {
+  const tiltClip = clipsOf('tilt')[0] || {start: 1.5, duration: 5, target: 65};
+  const rollClip = clipsOf('wheels')[0] || {start: 6.6, duration: 6.4, target: {z: 55}};
+  const FOLD = Number(tiltClip.target) || 65, ROLL = Math.abs(rollClip.target?.z) || 55;
+  const PARK = rollClip.start + rollClip.duration;   // the desk is at rest
   SCENES.ch11 = {
-    dim: t => .82 * sm(seg(t, 14.6, 17.4)),
+    dim: t => .82 * sm(seg(t, PARK + .6, PARK + 1.6)),
     draw(t) {
       backdrop(t, {top: '#0b1424', bot: '#05080f', blobs: [[C.violet, .14], [C.blue, .12]]});
-      g.save(); g.globalAlpha = 1 - sm(seg(t, 13.5, 14.0));
-      const p = pose(t), tiltK = clamp(p.tilt / 65), rollK = clamp(p.z / 55), parked = t >= 13;
+      g.save(); g.globalAlpha = 1 - sm(seg(t, PARK + .1, PARK + .45));
+      const p = pose(t), tiltK = clamp(p.tilt / FOLD), rollK = clamp(Math.abs(p.z) / ROLL), parked = t >= PARK;
       const total = clamp(tiltK * .45 + rollK * .55);
       // header
       appIcon(80, 90, 76, {glow: true});
@@ -20,7 +25,7 @@
       g.beginPath(); g.arc(gx, gy - 120, 260, -p.tilt * Math.PI / 180, 0); g.strokeStyle = C.violet; g.lineWidth = 10; g.stroke();
       T(`${Math.round(p.tilt)}°`, 380, 360, 170, {w: 700, a: 'center'});
       // steps
-      const steps = [['Fold to 65°', tiltK, 1.5], ['Roll to the wall', rollK, 6.6], ['Parked · floor clear', parked ? 1 : 0, 13]];
+      const steps = [[`Fold to ${Math.round(FOLD)}°`, tiltK, tiltClip.start], ['Roll to the wall', rollK, rollClip.start], ['Parked · floor clear', parked ? 1 : 0, PARK]];
       const sx = 760, sw = W - sx - 60;
       steps.forEach(([label, k, t0], i) => {
         const y = 200 + i * 230, active = t >= t0 && k < 1, done = k >= 1;
@@ -35,10 +40,10 @@
       bar(860, 950, W - 920, 40, total, lin(860, 0, W, 0, [[0, C.blue], [1, parked ? C.green : C.violet]]));
       g.restore();
       // sleep moment
-      alpha(sm(seg(t, 13.9, 14.5)), () => {
+      alpha(sm(seg(t, PARK + .3, PARK + .7)), () => {
         icon('moon', W / 2 - 380, H / 2 - 10, 160, C.violet, 14);
         T('Floor is yours', W / 2 - 260, H / 2 + 20, 120, {w: 700});
-        T('Desk parked · 65° · locked', W / 2 - 255, H / 2 + 110, 50, {w: 500, c: C.soft});
+        T(`Desk parked · ${Math.round(FOLD)}° · locked`, W / 2 - 255, H / 2 + 110, 50, {w: 500, c: C.soft});
       });
     },
   };

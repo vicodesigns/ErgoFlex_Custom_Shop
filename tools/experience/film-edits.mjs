@@ -18,6 +18,8 @@
 //   @window = the room's exterior backdrop (home, creative, gym, highschool).
 //   material.brightness: colour gain for unlit backdrops, emissive gain otherwise.
 //   minArea (m²): skip matched meshes smaller than this.
+//   near:[x, z, r]: keep only matches whose world origin lies within r (scene units, xz) of (x, z),
+//   for one of several same-named props (e.g. a single chair at a table).
 //   lightType:'<regex on light type>' (PointLight|SpotLight|HemisphereLight|
 //   DirectionalLight|RectAreaLight) selects lights instead; then intensity:
 //   <multiplier | keyframes> and color:'#hex'.
@@ -25,6 +27,8 @@
 //   'directional', position:[x,y,z] | at:{az,el,dist} (degrees/metres around
 //   the desk; az 0 = desk front, + = desk's left), target:[x,y,z], color,
 //   intensity, width, height, angle, penumbra, distance, castShadow:false}]
+//   Light intensity and pool strength / contact opacity may be keyframed like
+//   material values: [[chapterSeconds, value], …] (linear).
 import * as THREE from 'three';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 
@@ -65,6 +69,7 @@ function targets(edit) {
     if (mok) { if (o.isMesh && o.visible && [].concat(o.material).some(x => x && mok(x)) && re.test(o.name) && (!pre || pre.test(pathOf(o, scene)))) out.push(o); return; }
     if (re.test(o.name) && (!pre || pre.test(pathOf(o, scene)))) out.push(o);
   });
+  if (edit.near) { const [nx, nz, nr] = edit.near, w = new THREE.Vector3(); scene.updateMatrixWorld(true); for (let i = out.length - 1; i >= 0; i--) { out[i].getWorldPosition(w); if (Math.hypot(w.x - nx, w.z - nz) > nr) out.splice(i, 1); } }
   if (edit.minArea) { const sz = new THREE.Vector3(); for (let i = out.length - 1; i >= 0; i--) { new THREE.Box3().setFromObject(out[i]).getSize(sz); if (Math.max(sz.x * sz.y, sz.y * sz.z, sz.x * sz.z) < edit.minArea) out.splice(i, 1); } }
   // Drop descendants of other matches (a group and its children both matching).
   return out.filter(o => !out.some(p => p !== o && (() => { for (let q = o.parent; q; q = q.parent) if (q === p) return true; return false; })()));
@@ -216,30 +221,35 @@ export function installLights(shot) {
     return centre.clone().addScaledVector(front, Math.cos(a) * Math.cos(e) * dist).addScaledVector(left, Math.sin(a) * Math.cos(e) * dist).add(new THREE.Vector3(0, Math.sin(e) * dist, 0));
   };
   const aim = l => l.target ? new THREE.Vector3(...l.target) : centre.clone();
-  const followers = [];
+  const followers = [], keyedLights = [];
   for (const l of specs) {
     let light = null;
-    if (l.type === 'rect') { RectAreaLightUniformsLib.init(); light = new THREE.RectAreaLight(l.color || '#ffffff', l.intensity ?? 5, l.width ?? 2, l.height ?? 1); light.position.copy(place(l)); light.lookAt(aim(l)); }
-    else if (l.type === 'spot') { light = new THREE.SpotLight(l.color || '#ffffff', l.intensity ?? 20, l.distance ?? 0, THREE.MathUtils.degToRad(l.angle ?? 25), l.penumbra ?? .5, l.decay ?? 2); light.position.copy(place(l)); light.target.position.copy(aim(l)); group.add(light.target); }
-    else if (l.type === 'point') { light = new THREE.PointLight(l.color || '#ffffff', l.intensity ?? 5, l.distance ?? 0, l.decay ?? 2); light.position.copy(place(l)); }
-    else if (l.type === 'directional') { light = new THREE.DirectionalLight(l.color || '#ffffff', l.intensity ?? 1); light.position.copy(place(l)); light.target.position.copy(aim(l)); group.add(light.target); }
+    // intensity (lights) and strength/opacity (pool/contact) may be keyframed: [[chapterSeconds, value], …].
+    const k0 = v => sample(v, 0);
+    if (l.type === 'rect') { RectAreaLightUniformsLib.init(); light = new THREE.RectAreaLight(l.color || '#ffffff', k0(l.intensity ?? 5), l.width ?? 2, l.height ?? 1); light.position.copy(place(l)); light.lookAt(aim(l)); }
+    else if (l.type === 'spot') { light = new THREE.SpotLight(l.color || '#ffffff', k0(l.intensity ?? 20), l.distance ?? 0, THREE.MathUtils.degToRad(l.angle ?? 25), l.penumbra ?? .5, l.decay ?? 2); light.position.copy(place(l)); light.target.position.copy(aim(l)); group.add(light.target); }
+    else if (l.type === 'point') { light = new THREE.PointLight(l.color || '#ffffff', k0(l.intensity ?? 5), l.distance ?? 0, l.decay ?? 2); light.position.copy(place(l)); }
+    else if (l.type === 'directional') { light = new THREE.DirectionalLight(l.color || '#ffffff', k0(l.intensity ?? 1)); light.position.copy(place(l)); light.target.position.copy(aim(l)); group.add(light.target); }
     else if (l.type === 'pool' || l.type === 'contact') {
       // Floor decals that follow the desk across the void: a soft light pool
       // (additive) and a contact shadow (multiply-like darkening) under it.
       const pool = l.type === 'pool', r = pool ? (l.radius ?? 1.5) : (l.radius ?? Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * .62);
       const c = new THREE.Color(l.color || '#ffffff'), rgb = `${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)}`;
       const map = pool ? radial([[0, `rgba(${rgb},1)`], [.45, `rgba(${rgb},.55)`], [1, `rgba(${rgb},0)`]]) : radial([[0, 'rgba(0,0,0,1)'], [.55, 'rgba(0,0,0,.75)'], [1, 'rgba(0,0,0,0)']]);
-      const mat = new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, toneMapped: false, opacity: pool ? (l.strength ?? .16) : (l.opacity ?? .7), blending: pool ? THREE.AdditiveBlending : THREE.NormalBlending, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: pool ? -2 : -4 });
+      const mat = new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, toneMapped: false, opacity: k0(pool ? (l.strength ?? .16) : (l.opacity ?? .7)), blending: pool ? THREE.AdditiveBlending : THREE.NormalBlending, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: pool ? -2 : -4 });
       const m = new THREE.Mesh(new THREE.PlaneGeometry(r * 2, r * 2), mat); m.rotation.x = -Math.PI / 2; m.position.set(centre.x, floorY + (pool ? .002 : .003), centre.z); m.renderOrder = pool ? 1 : 2; m.name = 'Film ' + l.type; m.userData.filmFx = true;
       if (l.aspect) m.scale.set(l.aspect, 1, 1);
+      const ko = pool ? l.strength : l.opacity; if (keyed(ko)) keyedLights.push(t => { mat.opacity = sample(ko, t); });
       group.add(m); followers.push(m); continue;
     }
     if (!light) { console.warn('[film-fx] unknown light type', l.type); continue; }
+    if (keyed(l.intensity)) { const lt = light, ki = l.intensity; keyedLights.push(t => { lt.intensity = sample(ki, t); }); }
     light.name = 'Film light · ' + (l.name || l.type); light.castShadow = !!l.castShadow; light.userData.filmFx = true; group.add(light);
   }
   return {
     count: group.children.length,
-    apply() {
+    apply(seconds = 0) {
+      for (const f of keyedLights) f(seconds);
       if (!followers.length) return;
       // Follow the desk base across the void (ch 1 glide), not its lift.
       const b = new THREE.Box3().setFromObject(desk), c = b.getCenter(new THREE.Vector3());
