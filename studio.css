@@ -336,7 +336,8 @@ body.shell-layout.sidebar-collapsed #config-collapse { visibility: visible; poin
 .measured-room-controls button { border: 1px solid #c5ccbd; border-radius: 6px; background: #fff9; color: #354b40; padding: 6px 9px; font-size: 11px; cursor: pointer; }
 .measured-room-controls button[aria-pressed=true] { background: #354f42; color: white; border-color: #354f42; }
 .measured-room-controls button:focus-visible { outline: 2px solid #ad7758; outline-offset: 2px; }
-.gym-theme-choices [data-gym-theme=blackred][aria-pressed=true] { background: #141416; border-color: #c8102e; color: #fff; }
+.gym-theme-choices [data-gym-theme=blackred][aria-pressed=true],
+html[data-portal-theme] #viewer-shell .gym-theme-choices [data-gym-theme=blackred][aria-pressed=true] { background: #141416; border-color: #c8102e; color: #fff; }
 .measured-room-controls p { flex-basis: 100%; margin: 0; font-size: 10px; color: #556a5b; }
 #gaming-room-controls { background: #edf2f8ed; border-color: #d3e7f2; }
 #gaming-room-controls button { border-color: #c0ceda; color: #26374e; }

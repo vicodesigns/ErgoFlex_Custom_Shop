@@ -951,7 +951,7 @@ export class WorkspaceAccessories {
     // Scene dressing on the desk itself: mugs, papers and the like, which
     // follow the desktop as it lifts and tilts. Never priced, never exported
     // to AR, and replaced wholesale when the room changes.
-    // dressing (optional, e.g. the gym black & red colourway): { accent, print, props: { propId: { materialName: colour } } }.
+    // dressing (optional, e.g. the gym black & red colourway): { accent, print, props: { propId: { materialName: colour | { color, untextured } } } }.
     async dress(sceneId, dressing = null) {
         const scene = ROOM_SCENES.find(s => s.id === sceneId);
         const token = ++this.dressToken;
@@ -976,7 +976,11 @@ export class WorkspaceAccessories {
             const tint = dressing?.props?.[placement.id];
             if (tint) object.traverse(obj => {
                 if (!obj.isMesh) return;
-                const own = m => { if (!tint[m?.name]) return m; const c = m.clone(); c.color.set(tint[m.name]); c.userData.sharedTextures = true; (obj.ownedMaterials ||= []).push(c); return c; };
+                const own = m => {
+                    const t = tint[m?.name]; if (!t) return m;
+                    const spec = typeof t === 'string' ? { color: t } : t, c = m.clone(); c.color.set(spec.color); if (spec.untextured) c.map = null;
+                    c.userData.sharedTextures = true; (obj.ownedMaterials ||= []).push(c); return c;
+                };
                 obj.material = Array.isArray(obj.material) ? obj.material.map(own) : own(obj.material);
             });
             object.position.set(...placement.at);

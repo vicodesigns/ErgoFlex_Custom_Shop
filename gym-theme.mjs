@@ -68,13 +68,14 @@ const GREEN = {
         rackLabel: ['#d5dece', '#293536'], wipeLabel: ['#abbfb2', '#263735'],
         poster: { paper: '#e0dfcc', ink: '#304d48', strokes: ['#5d7e6d', '#a78351', '#447979'] }
     },
-    props: null, dressing: null, planter: null
+    props: null, dressing: null
 };
 
 const BLACKRED = {
     id: 'blackred', label: 'Black & red', desk: GYM_BLACKRED_DESK,
     modes: Object.fromEntries(Object.entries(GYM_MODES).map(([id, mode]) => [id, { ...mode, ...BLACKRED_MODE_CHANGES[id] }])),
-    finish: { backdrops: { morning: ['#3a3b3f', '#141416'], afternoon: ['#44464b', '#18191c'], evening: ['#3a2224', '#120a0b'], night: ['#1d0f11', '#060405'], party: ['#3a0c12', '#0c0405'] },
+    // Backdrops a step lighter than the walls so the room's edges hold against them.
+    finish: { backdrops: { morning: ['#5a5c62', '#1c1c1f'], afternoon: ['#5a5c62', '#1c1c1f'], evening: ['#3a2224', '#120a0b'], night: ['#2a1416', '#070506'], party: ['#3a0c12', '#0c0405'] },
         name: 'Matte black & signal red', ground: '#1a1a1c', wood: .62, metal: .24, stone: .5, night: .95 },
     // [textile, accent, paper, glazed ceramic], as ROOM_DETAIL_PALETTES.
     detailPalette: ['#2a2a2d', '#c8102e', '#e6e4e0', '#1c1c1e'], screenAccent: '#ff3b3b', screenMono: true, book: '#7a0a16', lightTint: [.18, .45],
@@ -87,7 +88,7 @@ const BLACKRED = {
     },
     canvas: {
         floor: { tones: ['#252527', '#222224', '#242426', '#202022'], flecks: ['#8a8a8a55', '#6e6e6e40', '#05050599', '#d0202a38', '#4a4a4a55'], seams: ['#0a0a0b', '#3a3a3c66'] },
-        wall: { base: '#3a3a3e', mottle: ['120,120,124', '8,8,10'], specks: ['#0c0c0e40', '#7a7a7e26'] },
+        wall: { base: '#424247', mottle: ['120,120,124', '8,8,10'], specks: ['#0c0c0e40', '#7a7a7e26'] },
         sign: { background: '#0c0c0d', slash: '#e10600', title: '#f4f4f4', line: '#ff2b2b', footer: '#8a8a8f' },
         mirror: ['#8d8f94', '#4f5156', '#24252a', '#141416'],
         label: ['#ece9e6', '#111113'], strip: '#ff2a2a', practical: '#fff1d8', blinds: '#1a1a1c80'
@@ -123,14 +124,16 @@ const BLACKRED = {
         'kenney-furniture-bench-cushion-low': { wood: '#2e221c' },
         // Lime printed pouch x red = a dark red pouch with red print; the
         // orange basketball becomes red with black seams.
-        'hemp-protein': { Material_001: '#ff3b3b' }, basketball: { Basketball: '#ff4040' }
+        'hemp-protein': { Material_001: '#ff3b3b' }, basketball: { Basketball: '#ff4040' },
+        // The floor plant loads as ergoflex-plant-2: its terracotta pot goes black, the leaves stay natural.
+        'decor-plant2': { 'Terracotta planter': '#161618' }
     },
     // Desk dressing (WorkspaceAccessories): notebook and daily-kit covers,
     // and the sports bottle's blue body.
-    // The tablet's blue tiles x red = a black screen with red tiles.
-    dressing: { accent: '#7a0a16', print: '#c8102e', props: { 'sports-bottle': { Material_001: '#b00d22' }, 'tablet-pc': { Mic_Sur_P3_display: '#ff2a2a' } } },
-    // Gloss black sleeve over the floor plant's tan pot; the foliage stays natural.
-    planter: ['#161618', { roughness: .3, metalness: .05 }]
+    // The tablet's blue tiles x red = a black screen with red tiles; its blue
+    // keyboard cover becomes plain matte black ({ color, untextured }).
+    dressing: { accent: '#7a0a16', print: '#c8102e', props: { 'sports-bottle': { Material_001: '#b00d22' },
+        'tablet-pc': { Mic_Sur_P3_display: '#ff2a2a', body: { color: '#1c1c1e', untextured: true }, material: { color: '#2a2a2d', untextured: true } } } }
 };
 
 // Null prototype: ids come from localStorage, URLs and imported projects.
