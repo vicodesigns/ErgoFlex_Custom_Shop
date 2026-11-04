@@ -53,7 +53,7 @@ const ROOM_BALANCE = {
 // Instance-owned material copies: muted upholstery and natural foliage on
 // the small untextured library props. Cached GLBs and mapped fabric stay intact.
 export function polishRoomProp(room, object, placement) {
-    const palette = ROOM_DETAIL_PALETTES[room.id];
+    const palette = room.roomLayout?.detailPalette || ROOM_DETAIL_PALETTES[room.id];
     if (!palette) return;
     const plant = /^kenney-furniture-(plant-small|potted-plant)/.test(placement.id);
     const seating = /^kenney-furniture-(lounge-sofa|chair-cushion|chair-modern-cushion|bench-cushion(?:-low)?)$/.test(placement.id);
