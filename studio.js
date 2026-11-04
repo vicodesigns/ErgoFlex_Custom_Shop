@@ -11212,7 +11212,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     // procedural room standing and is reported in Build checks rather than
     // only in the console.
     const roomReady = workspaceRoom?.ready || Promise.resolve();
-    const dressReady = workspaceAccessories?.dress(choice.id) || Promise.resolve();
+    const dressReady = workspaceAccessories?.dress(choice.id, choice.id === 'gym' ? GYM_THEMES[gymTheme].dressing : null) || Promise.resolve();
     const assetsReady = Promise.allSettled([roomReady, dressReady]).then(async results => {
         if(choice.id==='library' && measured?.layout.humboldt)await loadLibraryArtworkRecovery();
         if (results[0].status === 'rejected') {

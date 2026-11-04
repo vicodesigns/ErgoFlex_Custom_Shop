@@ -17,13 +17,13 @@ export const GYM_MODES = {
 // reads as matte black with red light, never as a red-washed box. Only the
 // listed numbers differ from green (night keeps a dim cool lane on the mirror
 // wall for depth); posture, timing and sun stay the same.
-// Black surfaces absorb light, so exposure and ambient are lifted per mode
+// Black surfaces absorb light, so exposure, ambient and (evening, night) bounce are lifted per mode
 // (tuned against stills) to keep the room from reading as a void.
 const BLACKRED_MODE_CHANGES = {
     morning: { key: '#fff0e0', fill: '#dfe3ea', accent: '#ff4d4d', colors: ['#ff3b3b', '#dfe6ee'], wash: .2, exposure: 1.22, ambient: .52 },
     afternoon: { key: '#f6f8ff', fill: '#e2e6ee', accent: '#ff3b30', colors: ['#ff2a2a', '#e4e9f0'], wash: .26, exposure: 1.22, ambient: .54 },
-    evening: { key: '#ffc8a8', fill: '#c9ccd6', accent: '#ff2d2d', colors: ['#e01b24', '#d5d9e2'], wash: .42, color: '#ff1a1a', exposure: 1.2, ambient: .34 },
-    night: { key: '#b8c4dc', fill: '#a8b0c4', accent: '#b3122a', colors: ['#8a0c16', '#7a8498'], wash: .28, color: '#8b0d14', exposure: 1.32, ambient: .24 },
+    evening: { key: '#ffc8a8', fill: '#c9ccd6', accent: '#ff2d2d', colors: ['#e01b24', '#d5d9e2'], wash: .3, color: '#ff1a1a', exposure: 1.2, ambient: .42, bounce: .46 },
+    night: { key: '#b8c4dc', fill: '#a8b0c4', accent: '#b3122a', colors: ['#8a0c16', '#8a94aa'], wash: .28, color: '#8b0d14', exposure: 1.38, ambient: .54, bounce: .46 },
     party: { key: '#e6e9f5', fill: '#d8dbe6', accent: '#ff1030', colors: ['#ff0f2e', '#ff3d1f'], wash: .78, color: '#ff0a1e', exposure: 1.16, ambient: .48 }
 };
 
@@ -67,7 +67,7 @@ const GREEN = {
         rackLabel: ['#d5dece', '#293536'], wipeLabel: ['#abbfb2', '#263735'],
         poster: { paper: '#e0dfcc', ink: '#304d48', strokes: ['#5d7e6d', '#a78351', '#447979'] }
     },
-    props: null
+    props: null, dressing: null
 };
 
 const BLACKRED = {
@@ -119,8 +119,14 @@ const BLACKRED = {
     props: {
         'gym-props-3': { gym_frame: '#ff2a2a', soft_matt01: '#3a3436', pushup_2: '#b00d22', pushup_3: '#b00d22' },
         'party-speaker': { Orange: '#ff1a1a', Glow: '#ff1a1a', Glow_2: '#ff1a1a', Speaker_Lights: '#ff1a1a' },
-        'kenney-furniture-bench-cushion-low': { wood: '#2e221c' }
-    }
+        'kenney-furniture-bench-cushion-low': { wood: '#2e221c' },
+        // Lime printed pouch x red = a dark red pouch with red print; the
+        // orange basketball becomes red with black seams.
+        'hemp-protein': { Material_001: '#ff3b3b' }, basketball: { Basketball: '#ff4040' }
+    },
+    // Desk dressing (WorkspaceAccessories): notebook and daily-kit covers,
+    // and the sports bottle's blue body.
+    dressing: { accent: '#7a0a16', props: { 'sports-bottle': { Material_001: '#b00d22' } } }
 };
 
 // Null prototype: ids come from localStorage, URLs and imported projects.

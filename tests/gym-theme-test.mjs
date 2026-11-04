@@ -41,7 +41,7 @@ assert.equal(cleanRoomDeskStyles({ gymBlackRed: GYM_BLACKRED_DESK }).gymBlackRed
 
 // Same shape at every depth, so the room never reads a missing value.
 const shape = (a, b, at) => {
-    if (a === null || b === null) { assert.ok(a === null && b === null || at === 'finish' || at === 'detailPalette' || at === 'screenAccent' || at === 'screenMono' || at === 'book' || at === 'props', 'null only for green room defaults: ' + at); return; }
+    if (a === null || b === null) { assert.ok(a === null && b === null || at === 'finish' || at === 'detailPalette' || at === 'screenAccent' || at === 'screenMono' || at === 'book' || at === 'props' || at === 'dressing','null only for green room defaults: ' + at); return; }
     assert.equal(typeof a, typeof b, at); assert.equal(Array.isArray(a), Array.isArray(b), at);
     // Material options are per finish (gloss red adds metalness); their keys may differ.
     if (typeof a !== 'object' || /materials\.\w+\.1$/.test(at)) return;

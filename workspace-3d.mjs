@@ -951,7 +951,8 @@ export class WorkspaceAccessories {
     // Scene dressing on the desk itself: mugs, papers and the like, which
     // follow the desktop as it lifts and tilts. Never priced, never exported
     // to AR, and replaced wholesale when the room changes.
-    async dress(sceneId) {
+    // dressing (optional, e.g. the gym black & red colourway): { accent, props: { propId: { materialName: colour } } }.
+    async dress(sceneId, dressing = null) {
         const scene = ROOM_SCENES.find(s => s.id === sceneId);
         const token = ++this.dressToken;
         for (const mount of this.mounts.values()) {
@@ -964,13 +965,20 @@ export class WorkspaceAccessories {
         await PROP_LIBRARY.loadIndex();
         const loaded = await Promise.all(wanted.map(async placement => {
             try { return { placement, object: placement.procedural === 'midi' ? createMusicKeyboard()
-                : placement.id === 'journal' ? createDeskNotebook(sceneId, { box, mesh, material }) : await PROP_LIBRARY.instance(placement.id) }; }
+                : placement.id === 'journal' ? createDeskNotebook(sceneId, { box, mesh, material, accent: dressing?.accent }) : await PROP_LIBRARY.instance(placement.id) }; }
             catch { return { placement, object: null }; }
         }));
         if (token !== this.dressToken) return;
         for (const { placement, object } of loaded) {
             const mount = this.mounts.get(placement.role);
             if (!object || !mount?.dress) continue;
+            // Recolour by material name on owned copies; the cached GLB materials stay shared.
+            const tint = dressing?.props?.[placement.id];
+            if (tint) object.traverse(obj => {
+                if (!obj.isMesh) return;
+                const own = m => { if (!tint[m?.name]) return m; const c = m.clone(); c.color.set(tint[m.name]); c.userData.sharedTextures = true; (obj.ownedMaterials ||= []).push(c); return c; };
+                obj.material = Array.isArray(obj.material) ? obj.material.map(own) : own(obj.material);
+            });
             object.position.set(...placement.at);
             object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
             markSceneAsset(object, { key: placement.sceneAssetKey, role: placement.role });
@@ -988,7 +996,7 @@ export class WorkspaceAccessories {
         }
         const desktop = this.mounts.get('desktop');
         if (desktop && sceneId !== 'product') {
-            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material });
+            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material, accent: dressing?.accent });
             placeDailyDeskKit(kit, desktop.dress.children);
             markSceneAsset(kit, { key: `${sceneId}:desktop:daily-kit`, role: 'desktop' });
             desktop.dress.add(kit);

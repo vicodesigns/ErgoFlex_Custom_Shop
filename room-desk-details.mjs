@@ -32,9 +32,9 @@ const titles = {
 
 // One stable scene asset, five children selected by setDayDress. Keep the
 // existing daily-kit footprint and mount, so rearrangement keys still restore.
-export function createDailyDeskKit(id, { box, mesh, rod, material }) {
+export function createDailyDeskKit(id, { box, mesh, rod, material, accent: themed }) {
     const kit = new THREE.Group(); kit.name = 'Groove tabletop · daily materials'; kit.userData.dayKit = true;
-    const accent = accents[id] || '#52746c', cover = material(accent), paper = material('#e9dfc8'), ink = material('#354b50');
+    const accent = themed || accents[id] || '#52746c', cover = material(accent), paper = material('#e9dfc8'), ink = material('#354b50');
     const ceramic = material('#e6d6b8');
     const names = education.has(id) ? ['Lesson plan','Learning materials','Review notes','Closed teaching journal','Workshop cards'] : titles[id] || titles.home;
     for (let phase = 0; phase < 5; phase++) {
@@ -62,8 +62,8 @@ export function createDailyDeskKit(id, { box, mesh, rod, material }) {
 
 // The stock journal has an ornate fantasy cover. Keep its horizontal footprint
 // and prop ID, with a plain printed notebook suited to the current workspace.
-export function createDeskNotebook(id, { box, mesh, material }) {
-    const g = new THREE.Group(), accent = accents[id] || '#52746c';
+export function createDeskNotebook(id, { box, mesh, material, accent: themed }) {
+    const g = new THREE.Group(), accent = themed || accents[id] || '#52746c';
     g.name = 'Workspace notebook'; g.userData.propId = 'journal'; g.userData.authoredDeskNotebook = true;
     const cover = material(accent), paper = material('#e9dfc8');
     box(g,[141.6,2,230],[0,1,0],cover,2);
