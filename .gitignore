@@ -28,3 +28,11 @@ tools/experience/screens/**/*.jpg
 
 # Flutter web build output copied in for reference; rebuildable.
 app-reference/
+
+# Cinematic intro: render/assemble logs and the 4 MB studio-state seed snapshots
+# are byte-identical copies repeated in every HQ pass folder; regenerable, so
+# they stay on disk only.
+exports/**/*.log
+exports/cinematic-intro-*/post/state-rev130.json
+exports/cinematic-intro-*/post/occ-seed.json
+exports/cinematic-intro-*/post/finale-seed.json
