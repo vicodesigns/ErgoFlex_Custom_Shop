@@ -103,7 +103,7 @@ const STAGES = {
         activity: [-3400, 7400],
         // Room props are keyed by index (`room:${index}`): new ones are appended after the originals.
         props: [p('backpack-daypack', -1830, 650, 20), p('backpack', 320, 2650, -30), p('backpack-daypack', 2470, 4650, 160), p('backpack', -1830, 4650, 10),
-            p('water-bottle', -2520, 360, 0, 740), p('water-bottle', 520, 2360, 0, 740), p('water-bottle', 1780, 360, 0, 740), p('water-bottle', -380, 4360, 0, 740),
+            p('water-bottle', -2520, 360, 0, 740), p('water-bottle', 520, 2360, 0, 740), p('water-bottle', 1780, 360, 0, 740), p('water-bottle', -2420, 4360, 0, 740),
             // Teacher corner: tall plant, waste bin and a conference chair at the desk end.
             p('ergoflex-plant-2', -3350, -3700), p('ergoflex-trash-can', -2580, -2700), p('ergoflex-designer-chair', -2420, -1550, -90),
             // Lab bench: castored stools, handout tray, plant at the bench end; classroom printer on the resource shelf.
@@ -1282,41 +1282,106 @@ function viewBuilding(c, x, y, w, h, { wall, roof = null, rows = 2, cols = 6, ph
     }
 }
 function viewGround(c, W, H, y, phase, color = '#7fa35e') { const { night, dusk } = viewTone(phase); c.fillStyle = night ? '#1f3a2c' : dusk ? shade(color, -.12) : color; c.fillRect(0, y, W, H - y); }
-// Mexican fan palm: a thin, slightly curved trunk and a small star-shaped crown at `top`.
+// Mexican fan palm: tapered ringed trunk, layered golden thatch skirt and a full crown of arched fronds.
 function viewPalm(c, x, baseY, top, phase) {
-    const { night, dusk } = viewTone(phase), lean = (rnd(x) - .5) * (baseY - top) * .08;
-    c.strokeStyle = night ? '#24221f' : dusk ? '#6e5d4e' : '#8a7a64'; c.lineWidth = 3.5; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(x, baseY); c.quadraticCurveTo(x + lean * .2, (baseY + top) / 2, x + lean, top); c.stroke();
-    const cx = x + lean, r = (baseY - top) * .1, frond = night ? '#18241f' : dusk ? '#4f5a3c' : '#4f7a45';
-    c.strokeStyle = frond; c.lineWidth = 2.5;
-    for (let k = 0; k < 11; k++) { const a = -Math.PI + k * Math.PI / 10 + (rnd(k + x) - .5) * .2, droop = Math.abs(Math.cos(a)) * r * .5; c.beginPath(); c.moveTo(cx, top); c.quadraticCurveTo(cx + Math.cos(a) * r * .7, top + Math.sin(a) * r * .7 - r * .2, cx + Math.cos(a) * r, top + Math.sin(a) * r * .55 + droop); c.stroke(); }
-    c.fillStyle = frond; c.beginPath(); c.ellipse(cx, top, r * .3, r * .22, 0, 0, TAU); c.fill();
-    if (!night) { c.fillStyle = '#7a6a52'; c.fillRect(cx - 2.5, top + r * .15, 5, r * .5); } // dead-frond skirt
+    const { night, dusk } = viewTone(phase), h = baseY - top, lean = (rnd(x) - .5) * h * .09, cx = x + lean;
+    const trunkDark = night ? '#1f1d1a' : dusk ? '#5e4f42' : '#736452', trunkLit = night ? '#2c2924' : dusk ? '#7d6958' : '#96846d';
+    const segs = 22;
+    for (let s = 0; s < segs; s++) {
+        const t0 = s / segs, t1 = (s + 1) / segs, u0 = 1 - t0, u1 = 1 - t1;
+        const px0 = x + lean * (t0 * .35 + t0 * t0 * .65), py0 = baseY - h * t0;
+        const px1 = x + lean * (t1 * .35 + t1 * t1 * .65), py1 = baseY - h * t1;
+        const w0 = (2.2 + u0 * 2.8) * (HScale(h)), w1 = (2.2 + u1 * 2.8) * (HScale(h));
+        c.fillStyle = s % 2 ? trunkDark : trunkLit;
+        c.beginPath(); c.moveTo(px0 - w0, py0); c.lineTo(px0 + w0, py0); c.lineTo(px1 + w1, py1); c.lineTo(px1 - w1, py1); c.closePath(); c.fill();
+    }
+    const r = h * .115;
+    // Layered petiole thatch skirt under the crown (warm golden-brown fan instead of a flat block).
+    const skirtCol = night ? '#26211b' : dusk ? '#6e5840' : '#8a7253', skirtHi = night ? '#332c24' : dusk ? '#856b4e' : '#a68b67';
+    for (let k = 0; k < 7; k++) {
+        const a = Math.PI * .22 + (k / 6) * Math.PI * .56, len = r * (.44 + Math.sin(k / 6 * Math.PI) * .18);
+        c.strokeStyle = k % 2 ? skirtCol : skirtHi; c.lineWidth = Math.max(2, r * .09); c.lineCap = 'round';
+        c.beginPath(); c.moveTo(cx, top + r * .06); c.lineTo(cx + Math.cos(a) * len * .55, top + Math.sin(a) * len); c.stroke();
+    }
+    const frondDark = night ? '#15221d' : dusk ? '#3f4c33' : '#3d6636', frondLit = night ? '#1f3029' : dusk ? '#576644' : '#58874c';
+    c.lineCap = 'round';
+    for (let pass = 0; pass < 2; pass++) {
+        c.strokeStyle = pass ? frondLit : frondDark; c.lineWidth = Math.max(1.8, r * (pass ? .055 : .075));
+        const count = pass ? 9 : 11;
+        for (let k = 0; k < count; k++) {
+            const a = -Math.PI * 1.08 + (k / (count - 1)) * Math.PI * 1.16 + (rnd(k * 3 + x + pass * 19) - .5) * .16;
+            const span = r * (.88 + rnd(k * 7 + x) * .24), droop = Math.abs(Math.cos(a)) * r * .46;
+            const mx = cx + Math.cos(a) * span * .58, my = top + Math.sin(a) * span * .55 - r * .18;
+            const ex = cx + Math.cos(a) * span, ey = top + Math.sin(a) * span * .52 + droop;
+            c.beginPath(); c.moveTo(cx, top); c.quadraticCurveTo(mx, my, ex, ey); c.stroke();
+            // Subtle fan leaflets along each frond rib.
+            c.lineWidth = Math.max(1, r * .028);
+            for (let f = 2; f <= 5; f++) {
+                const ft = f / 6, fx = cx + (mx - cx) * ft * 1.1 + (ex - mx) * ft * .4, fy = top + (my - top) * ft * 1.1 + (ey - my) * ft * .4;
+                c.beginPath(); c.moveTo(fx, fy); c.lineTo(fx + Math.cos(a + .45) * r * .16, fy + Math.sin(a + .45) * r * .16 + r * .06); c.stroke();
+            }
+            c.lineWidth = Math.max(1.8, r * (pass ? .055 : .075));
+        }
+    }
+    c.fillStyle = frondDark; c.beginPath(); c.ellipse(cx, top, r * .24, r * .18, 0, 0, TAU); c.fill();
+}
+const HScale = h => Math.max(.75, h / 320);
+// Multi-lobed coastal live oak & eucalyptus canopy for the high-school quad outlook.
+function viewCoastalCanopy(c, x, y, r, phase, seed = 1) {
+    const { night, dusk } = viewTone(phase);
+    const trunk = night ? '#231f1c' : dusk ? '#4f3f32' : '#5e4b3b';
+    const sh = night ? '#162825' : dusk ? '#3d523b' : '#436942';
+    const mid = night ? '#1e3430' : dusk ? '#4e6748' : '#568050';
+    const hi = night ? '#26403a' : dusk ? '#667f58' : '#6f9962';
+    c.strokeStyle = trunk; c.lineWidth = Math.max(2.5, r * .14); c.lineCap = 'round';
+    c.beginPath(); c.moveTo(x, y + r * .35); c.lineTo(x, y - r * .35);
+    c.moveTo(x, y - r * .1); c.lineTo(x - r * .35, y - r * .55);
+    c.moveTo(x, y - r * .18); c.lineTo(x + r * .38, y - r * .5); c.stroke();
+    const lobes = [[-.48, -.42, .56, .44, sh], [.46, -.4, .54, .42, sh], [0, -.72, .64, .5, sh],
+        [-.36, -.58, .52, .42, mid], [.34, -.56, .5, .4, mid], [0, -.82, .56, .44, mid],
+        [-.22, -.76, .4, .32, hi], [.18, -.7, .36, .28, hi]];
+    lobes.forEach(([dx, dy, rx, ry, col], k) => {
+        const jx = (rnd(seed * 13 + k) - .5) * r * .12, jy = (rnd(seed * 29 + k) - .5) * r * .08;
+        c.fillStyle = col; c.beginPath(); c.ellipse(x + dx * r + jx, y + dy * r + jy, rx * r, ry * r, 0, 0, TAU); c.fill();
+    });
 }
 // The 1926 campanile (stylised): plaster shaft with quoins, corbel band,
 // two round-arched belfry openings per face and a low hipped tile cap.
 function viewTower(c, x, baseY, w, h, phase) {
     const { night, dusk } = viewTone(phase), x0 = x - w / 2;
     // At night the shaft is floodlit (warm plaster against the blue-black sky).
-    const lit = night ? '#c9b490' : dusk ? '#f3b07c' : '#e9dfcb', side = night ? '#8f7c64' : dusk ? '#c9937a' : '#d4c8b0', quoin = night ? '#b39e7c' : dusk ? '#dba088' : '#d9ccb2';
+    const lit = night ? '#ccb792' : dusk ? '#f3b380' : '#ece2ce', side = night ? '#8f7c64' : dusk ? '#c9937a' : '#d4c8b0', quoin = night ? '#b39e7c' : dusk ? '#dba088' : '#d9ccb2';
     const shaftTop = baseY - h * .78, belfry = baseY - h * .93;
-    if (night) { const g = c.createRadialGradient(x, baseY - h * .45, 4, x, baseY - h * .45, h * .55); g.addColorStop(0, '#ffe2b066'); g.addColorStop(1, '#ffe2b000'); c.fillStyle = g; c.fillRect(x - h * .6, baseY - h, h * 1.2, h); }
+    if (night || dusk) { const g = c.createRadialGradient(x, baseY - h * .48, 4, x, baseY - h * .48, h * .58); g.addColorStop(0, night ? '#ffe2b070' : '#ffcf9644'); g.addColorStop(1, '#ffe2b000'); c.fillStyle = g; c.fillRect(x - h * .6, baseY - h * 1.05, h * 1.2, h * 1.05); }
     c.fillStyle = lit; c.fillRect(x0, shaftTop, w * .62, baseY - shaftTop); c.fillStyle = side; c.fillRect(x0 + w * .62, shaftTop, w * .38, baseY - shaftTop);
+    // Stringcourses and plaster pilasters on the 1926 tower shaft.
+    c.fillStyle = night ? '#9e8b6f' : '#dfd3bc';
+    c.fillRect(x0 + w * .08, shaftTop + h * .04, w * .04, baseY - shaftTop - h * .08);
+    c.fillRect(x0 + w * .5, shaftTop + h * .04, w * .04, baseY - shaftTop - h * .08);
     c.fillStyle = quoin; for (let y = shaftTop + 6, n = 0; y < baseY; y += h * .035, n++) { c.fillRect(x0, y, w * (n % 2 ? .08 : .13), h * .028); c.fillRect(x0 + w * (n % 2 ? .92 : .87), y, w * (n % 2 ? .08 : .13), h * .028); }
-    // Small arched window slits on the shaft.
-    c.fillStyle = night ? '#2a2420' : '#8a7f70'; for (const y of [.35, .58]) { c.fillRect(x - w * .06, baseY - h * y, w * .12, h * .06); c.beginPath(); c.arc(x, baseY - h * y, w * .06, Math.PI, TAU); c.fill(); }
+    // Small arched window slits on the shaft with recessed reveals.
+    for (const y of [.35, .58]) {
+        c.fillStyle = side; c.fillRect(x - w * .13, baseY - h * y - 2, w * .15, h * .065);
+        c.fillStyle = night ? '#2a2420' : '#6e6559'; c.fillRect(x - w * .11, baseY - h * y, w * .12, h * .06); c.beginPath(); c.arc(x - w * .05, baseY - h * y, w * .06, Math.PI, TAU); c.fill();
+    }
     // Corbel band of small round arches under the belfry.
-    c.fillStyle = side; c.fillRect(x0 - w * .04, shaftTop - h * .015, w * 1.08, h * .02); c.strokeStyle = night ? '#2c2622' : '#a89a80'; c.lineWidth = 1.5;
+    c.fillStyle = side; c.fillRect(x0 - w * .04, shaftTop - h * .018, w * 1.08, h * .024); c.strokeStyle = night ? '#2c2622' : '#9c8e74'; c.lineWidth = 1.6;
     for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(x0 + w * (k + .5) / 6, shaftTop + h * .012, w / 14, 0, Math.PI); c.stroke(); }
-    // Belfry stage with two tall round-arched openings (warm at night).
+    // Belfry stage with two tall round-arched openings (warm at night) and bell silhouettes.
     c.fillStyle = lit; c.fillRect(x0 - w * .04, belfry, w * 1.08 * .62, shaftTop - belfry); c.fillStyle = side; c.fillRect(x0 - w * .04 + w * 1.08 * .62, belfry, w * 1.08 * .38, shaftTop - belfry);
     for (let k = 0; k < 2; k++) {
         const ow = w * .22, ox = x - w * .3 + k * w * .38, oy = belfry + h * .035, oh = shaftTop - oy - h * .02;
+        c.fillStyle = side; c.fillRect(ox - 2, oy + ow / 2, ow + 4, oh - ow / 2 + 2);
         c.fillStyle = night ? '#ffd88a' : '#3a3430'; c.fillRect(ox, oy + ow / 2, ow, oh - ow / 2); c.beginPath(); c.arc(ox + ow / 2, oy + ow / 2, ow / 2, Math.PI, TAU); c.fill();
+        // Bell silhouette and balustrade at the base of the arch.
+        c.fillStyle = night ? '#4a3822' : '#24201d'; c.beginPath(); c.arc(ox + ow / 2, oy + ow * .65, ow * .26, Math.PI, TAU); c.lineTo(ox + ow * .82, oy + ow * .95); c.lineTo(ox + ow * .18, oy + ow * .95); c.closePath(); c.fill();
+        c.fillStyle = quoin; c.fillRect(ox, oy + oh - h * .012, ow, h * .012);
         if (night) { const g = c.createRadialGradient(ox + ow / 2, oy + oh / 2, 1, ox + ow / 2, oy + oh / 2, w * .5); g.addColorStop(0, '#ffd88a90'); g.addColorStop(1, '#ffd88a00'); c.fillStyle = g; c.fillRect(ox - w * .4, oy - w * .3, ow + w * .8, oh + w * .6); }
     }
-    // Low hipped terracotta cap with a small finial.
+    // Low hipped terracotta cap with Spanish barrel-tile courses and a wrought-iron finial.
     c.fillStyle = night ? '#2c2220' : dusk ? '#a04a30' : '#b4583a'; c.beginPath(); c.moveTo(x0 - w * .12, belfry); c.lineTo(x - w * .18, baseY - h); c.lineTo(x + w * .18, baseY - h); c.lineTo(x0 + w * 1.12, belfry); c.fill();
+    c.strokeStyle = night ? '#1f1715' : '#8c3d25'; c.lineWidth = 1.2;
+    for (let k = -4; k <= 4; k++) { c.beginPath(); c.moveTo(x + k * w * .038, baseY - h + 2); c.lineTo(x + k * w * .12, belfry - 1); c.stroke(); }
     c.fillStyle = night ? '#3a302a' : '#8a3f2a'; c.fillRect(x0 - w * .12, belfry - 2, w * 1.24, 4); c.fillRect(x - 1.5, baseY - h - h * .04, 3, h * .04);
 }
 const VIEWS = {
@@ -1383,8 +1448,8 @@ const VIEWS = {
         // orange doors, Mexican fan palms, a sun-bleached quad and field lights.
         const { night, dusk } = viewTone(phase), party = phase === 'party', gy = H * .8;
         const tone = (day, eve, nite) => night ? nite : dusk ? eve : day;
-        // Distant tree line and a tiny pumpjack silhouette at the horizon (an artistic nod).
-        viewTrees(c, W, H, H * .63, Math.round(W / 70), phase, 11, .5);
+        // Distant eucalyptus/coastal ridge and a tiny pumpjack silhouette at the horizon (an artistic nod).
+        for (let k = 0; k < 14; k++) viewCoastalCanopy(c, (k + .5) * W / 14, H * .625, H * (.048 + rnd(k * 7 + 11) * .022), phase, k + 10);
         c.fillStyle = tone('#a9b2ae', '#8a7f86', '#1d2a33'); c.fillRect(0, H * .615, W, H * .04);
         { const px = W * .6, py = H * .63, s = H * .05; c.strokeStyle = tone('#6d7472', '#5e5660', '#202a30'); c.lineWidth = 2; c.beginPath(); c.moveTo(px - s, py); c.lineTo(px - s * .2, py - s * .7); c.lineTo(px + s * .3, py); c.moveTo(px - s * 1.3, py - s * .55); c.lineTo(px + s * .9, py - s * .85); c.stroke(); }
         // Stadium light standards on the far left (lit at night and for the showcase).
@@ -1393,29 +1458,55 @@ const VIEWS = {
             c.fillStyle = night || party ? '#f6f1dc' : tone('#c8cfd2', '#b9b4b8', '#f6f1dc'); c.fillRect(mx - H * .035, H * .13, H * .07, H * .035);
             if (night || party || dusk) { const g = c.createRadialGradient(mx, H * .15, 2, mx, H * .15, H * (night ? .26 : .16)); g.addColorStop(0, night ? '#fff4d8e0' : '#fff4d880'); g.addColorStop(1, '#fff4d800'); c.fillStyle = g; c.fillRect(mx - H * .3, 0, H * .6, H * .45); }
         }
-        // Auditorium block (cream plaster, tiled roof, three tall round-arched windows) and the bell tower at its end.
+        // Auditorium block (cream plaster, Spanish tiled roof, Lombard frieze & three tall round-arched windows) and the bell tower at its end.
         const ax = W * .705, aw = W * .27, ah = H * .24;
-        c.fillStyle = tone('#e6dbc5', '#d9b79e', '#3e3833'); c.fillRect(ax, gy - ah, aw, ah);
+        c.fillStyle = tone('#e8dec8', '#d9b79e', '#3e3833'); c.fillRect(ax, gy - ah, aw, ah);
+        c.fillStyle = tone('#d6c9ae', '#be9e86', '#2e2925'); c.fillRect(ax, gy - ah, aw, H * .018);
         c.fillStyle = tone('#b4583a', '#9c4a34', '#2c2220'); c.beginPath(); c.moveTo(ax - 6, gy - ah); c.lineTo(ax + aw * .04, gy - ah - H * .045); c.lineTo(ax + aw * .96, gy - ah - H * .045); c.lineTo(ax + aw + 6, gy - ah); c.fill();
-        for (let k = 0; k < 3; k++) { const wx = ax + aw * (.28 + k * .22), ww = aw * .07; c.fillStyle = night ? (k === 1 ? '#ffd88a' : '#5a4a38') : tone('#7d8c92', '#8a7a78', '#2a2c30'); c.fillRect(wx, gy - ah * .82, ww, ah * .7); c.beginPath(); c.arc(wx + ww / 2, gy - ah * .82, ww / 2, Math.PI, TAU); c.fill(); }
+        c.strokeStyle = tone('#8c3d25', '#753220', '#1c1513'); c.lineWidth = 1.4;
+        for (let k = 1; k < 22; k++) { const tx = ax + aw * (k / 22); c.beginPath(); c.moveTo(tx, gy - ah - H * .043); c.lineTo(tx - 4, gy - ah); c.stroke(); }
+        for (let k = 0; k < 3; k++) {
+            const wx = ax + aw * (.28 + k * .22), ww = aw * .072;
+            c.fillStyle = tone('#cbbda2', '#b3947e', '#2c2723'); c.fillRect(wx - 3, gy - ah * .82, ww + 6, ah * .7 + 3); c.beginPath(); c.arc(wx + ww / 2, gy - ah * .82, ww / 2 + 3, Math.PI, TAU); c.fill();
+            c.fillStyle = night ? (k === 1 ? '#ffd88a' : '#5a4a38') : tone('#73868f', '#827372', '#2a2c30');
+            c.fillRect(wx, gy - ah * .82, ww, ah * .7); c.beginPath(); c.arc(wx + ww / 2, gy - ah * .82, ww / 2, Math.PI, TAU); c.fill();
+            c.strokeStyle = tone('#ece2ce', '#d9b79e', '#3e3833'); c.lineWidth = 1.4;
+            c.beginPath(); c.moveTo(wx + ww / 2, gy - ah * .82 - ww / 2); c.lineTo(wx + ww / 2, gy - ah * .12);
+            c.moveTo(wx, gy - ah * .52); c.lineTo(wx + ww, gy - ah * .52); c.stroke();
+        }
         viewTower(c, W * .7, gy, W * .07, H * .72, phase);
-        // 1970s classroom wing: flat roof, black fascia, ribbon windows, orange doors under a covered walkway.
+        // 1970s classroom wing: flat roof, black fascia, ribbon windows with mullions, orange doors under a shaded walkway.
         const wx0 = 0, ww = W * .55, wh = H * .2;
         c.fillStyle = tone('#e2d8c4', '#cdb39f', '#34302c'); c.fillRect(wx0, gy - wh, ww, wh);
+        c.fillStyle = tone('#cbc0ab', '#b39a87', '#262320'); c.fillRect(wx0, gy - wh * .34, ww, wh * .34); // shaded colonnade wall
         c.fillStyle = tone('#1d1d1f', '#1d1d1f', '#121214'); c.fillRect(wx0, gy - wh - H * .03, ww + 6, H * .035);
-        for (let k = 0; k < 14; k++) { const on = night && rnd(k * 3.7) < .35; c.fillStyle = on ? '#ffd88a' : tone('#8fa7b2', '#9a8a86', '#232b31'); c.fillRect(wx0 + W * .012 + k * ww / 14, gy - wh * .78, ww / 14 - W * .008, wh * .32); }
+        c.fillStyle = tone('#e8702a', '#c95c22', '#5c2c14'); c.fillRect(wx0, gy - wh + 1, ww + 4, 3); // Oiler orange fascia pinstripe
+        for (let k = 0; k < 14; k++) {
+            const on = night && rnd(k * 3.7) < .35, rx = wx0 + W * .012 + k * ww / 14, rw = ww / 14 - W * .008, ry = gy - wh * .78, rh = wh * .32;
+            c.fillStyle = on ? '#ffd88a' : tone('#849da8', '#92827f', '#232b31'); c.fillRect(rx, ry, rw, rh);
+            c.strokeStyle = '#2d3134'; c.lineWidth = 1.2; c.strokeRect(rx, ry, rw, rh);
+            c.beginPath(); c.moveTo(rx + rw / 2, ry); c.lineTo(rx + rw / 2, ry + rh); c.stroke();
+        }
         c.fillStyle = tone('#c9bfac', '#b39d8c', '#2a2724'); c.fillRect(wx0, gy - wh * .36, ww, H * .018); // walkway canopy
-        for (let k = 0; k < 9; k++) { c.fillStyle = '#1d1d1f'; c.fillRect(wx0 + W * .02 + k * ww / 8.6, gy - wh * .34, 3, wh * .34); }
-        for (const dx of [.18, .62]) { c.fillStyle = night ? '#6a3a20' : tone('#e8702a', '#d0662c', '#6a3a20'); c.fillRect(wx0 + ww * dx, gy - wh * .32, W * .02, wh * .32); }
-        // Mid-ground canopies and Mexican fan palms spread across the view.
-        viewTrees(c, W, H, gy + H * .02, 2, phase, 41, 1.7);
+        for (const dx of [.18, .62]) {
+            const doorX = wx0 + ww * dx;
+            c.fillStyle = night ? '#6a3a20' : tone('#e8702a', '#d0662c', '#6a3a20'); c.fillRect(doorX, gy - wh * .32, W * .02, wh * .32);
+            c.fillStyle = tone('#9fb7c2', '#8a7f7d', '#3a342e'); c.fillRect(doorX + W * .004, gy - wh * .28, W * .012, wh * .1);
+        }
+        for (let k = 0; k < 9; k++) { c.fillStyle = '#1d1d1f'; c.fillRect(wx0 + W * .02 + k * ww / 8.6, gy - wh * .34, 3.5, wh * .34); }
+        // Mid-ground coastal canopies and Mexican fan palms spread across the view.
+        viewCoastalCanopy(c, W * .21, gy + H * .01, H * .115, phase, 41);
+        viewCoastalCanopy(c, W * .61, gy + H * .015, H * .105, phase, 47);
         [[.08, .5], [.3, .44], [.47, .38], [.59, .47], [.88, .4], [.97, .52]].forEach(([fx, top], n) => viewPalm(c, W * fx, gy + H * (.02 + (n % 2) * .03), gy - H * top, phase));
-        // Sun-bleached lawn and a pale concrete path.
+        // Sun-bleached lawn, concrete quad walk with expansion joints and low quad benches.
         c.fillStyle = tone('#9db57a', '#8a9466', '#1f3326'); c.fillRect(0, gy, W, H - gy);
         for (let i = 0; i < W / 3; i++) { c.fillStyle = i % 2 ? '#ffffff12' : '#0000000e'; c.fillRect(rnd(i * 1.3) * W, gy + rnd(i * 2.7) * (H - gy), 3, 1); }
-        c.fillStyle = tone('#d9d2c2', '#c4b3a0', '#3a3a36'); c.beginPath(); c.moveTo(W * .3, H); c.lineTo(W * .52, gy + 2); c.lineTo(W * .57, gy + 2); c.lineTo(W * .46, H); c.fill(); c.fillRect(0, H * .9, W, H * .03);
+        c.fillStyle = tone('#dbd4c4', '#c4b3a0', '#3a3a36'); c.beginPath(); c.moveTo(W * .3, H); c.lineTo(W * .52, gy + 2); c.lineTo(W * .57, gy + 2); c.lineTo(W * .46, H); c.fill(); c.fillRect(0, H * .9, W, H * .034);
+        c.strokeStyle = tone('#b8b0a0', '#9e8f7f', '#2a2a27'); c.lineWidth = 1.2;
+        for (let x = W * .04; x < W; x += W * .06) { c.beginPath(); c.moveTo(x, H * .9); c.lineTo(x - W * .01, H * .934); c.stroke(); }
+        for (const bx of [W * .16, W * .78]) { c.fillStyle = tone('#35383b', '#2c2e30', '#181a1c'); c.fillRect(bx, H * .882, W * .055, H * .012); c.fillStyle = tone('#b9a07c', '#9c8464', '#383026'); c.fillRect(bx - 2, H * .876, W * .055 + 4, H * .008); }
         // Marine-layer haze softens the first-bell outlook.
-        if (phase === 'morning') { c.fillStyle = '#d8dcdd38'; c.fillRect(0, 0, W, H); }
+        if (phase === 'morning') { c.fillStyle = '#d8dcdd30'; c.fillRect(0, 0, W, H); }
     },
     college(c, W, H, phase) {
         const { night, dusk, lit } = viewTone(phase);
@@ -1614,7 +1705,10 @@ function pinnedSheets(kit, E, stage) {
     const yMid = young ? 560 : 1060, list = [];
     // [wall, along, y, w, h, rot]
     if (young) { for (let n = 0; n < 7; n++) list.push(['right', -900 + n * 500, yMid + (n % 2) * 70, 210, 297, (rnd(n) - .5) * .12]); for (let n = 0; n < 6; n++) list.push(['back', -3600 + n * 330, yMid + (n % 3) * 40, 210, 297, (rnd(n + 9) - .5) * .12]); }
-    else { for (let n = 0; n < 9; n++) list.push(['back', -1250 + n * 310, yMid, 210, 150, (rnd(n) - .5) * .08]); for (let n = 0; n < 8; n++) list.push(['right', -1100 + n * 420, yMid, 150, 180, (rnd(n + 4) - .5) * .1]); }
+    else {
+        [-1250, -940, -630, -320, -10, 300, 2940, 3200].forEach((x, n) => list.push(['back', x, yMid, 210, 150, (rnd(n) - .5) * .08]));
+        [-360, -100, 160, 2150, 2600, 4050, 4550, 5050].forEach((z, n) => list.push(['right', z, yMid, 150, 180, (rnd(n + 4) - .5) * .1]));
+    }
     const sheet = kit.material('#ffffff', { map: canvasTexture((c, W, H) => {
         // 4 x 2 atlas: worksheets, drawings, notices.
         for (let n = 0; n < 8; n++) {
@@ -1623,7 +1717,8 @@ function pinnedSheets(kit, E, stage) {
             else if (n % 3 === 1) { write(c, young ? ['My story', 'Maths', 'Spelling', 'Plants'][n % 4] : ['SURF CLUB', 'APA AUDITIONS', 'LAB 4', 'GO OILERS'][n % 4], x + cw / 2, y + 26, 20, young ? '#5d8b78' : n % 2 ? HB.deep : HB.black, 'center', '800', cw - 16); textLines(c, x + 16, y + 52, cw - 32, 9, 16, '#8a9597', 3); }
             else { c.strokeStyle = '#c9d4d8'; for (let k = 0; k < 8; k++) { c.beginPath(); c.moveTo(x + 10, y + 30 + k * 26); c.lineTo(x + cw - 10, y + 30 + k * 26); c.stroke(); } c.strokeStyle = young ? '#e07a3f' : HB.pacific; c.lineWidth = 3; c.beginPath(); for (let k = 0; k < 10; k++) c.lineTo(x + 20 + k * (cw - 40) / 9, y + ch * .75 - rnd(n * 10 + k) * ch * .5); c.stroke(); c.lineWidth = 1; }
         }
-    }, 1024, 512), roughness: .9, side: THREE.DoubleSide });
+    }, 1024, 512), roughness: .88, side: THREE.DoubleSide });
+    sheet.userData.roomSurface = 'paper';
     const pins = { back: detailKit(), right: detailKit() }, parts = [];
     list.forEach(([wall, along, y, sw, sh, rot], n) => {
         const cell = n % 8, g = new THREE.PlaneGeometry(sw, sh), uv = g.attributes.uv;
@@ -1643,7 +1738,7 @@ function pinnedSheets(kit, E, stage) {
 // daylight pane; the shared hook still updates its own unused canvas).
 function installView(kit, E) {
     const pane = kit.window.children.find(o => o.isMesh && o.material === kit.sky); if (!pane || !VIEWS[kit.spec.id]) return;
-    const aspect = kit.d * .48 / 1750, H = 512, W = Math.min(2048, Math.round(H * aspect / 16) * 16);
+    const aspect = kit.d * .48 / 1750, H = kit.spec.id === 'highschool' ? 768 : 512, W = Math.min(2048, Math.round(H * aspect / 16) * 16);
     const map = canvasTexture(() => {}, W, H); map.wrapS = map.wrapT = THREE.ClampToEdgeWrapping;
     // Unlit by the room: the outlook carries only its own (daypart) emission, like real glazing.
     const m = kit.material('#000000', { emissive: '#ffffff', emissiveMap: map, emissiveIntensity: .9, roughness: .9 });
@@ -1665,13 +1760,13 @@ function glazeCabinet(kit, E, cab, contents) {
     const width = 1250, depth = 420, height = kit.options.storage.height;
     for (const o of [...cab.children]) if (o.isMesh && (o.material === kit.trim || o.material === kit.metal) && o.position.z > depth / 2 - 30) { cab.remove(o); o.geometry.dispose(); }
     const k = detailKit(), frame = kit.spec.id === 'highschool' ? HB.black : '#2f3b44', iw = width - 60;
-    for (let s = 1; s <= 3; s++) k.box([iw, 18, depth - 40], [0, 45 + s * (height - 90) / 4, -5], '#b99a72');
+    for (let s = 1; s <= 3; s++) k.box([iw, 18, depth - 40], [0, 45 + s * (height - 90) / 4, -5], '#b99a72', null, 'wood');
     for (const side of [-1, 1]) {
         const cx = side * width / 4, dw = width / 2 - 30, dh = height - 90, z = depth / 2 + 8;
-        k.box([40, dh, 22], [cx - dw / 2 + 20, height / 2, z], frame); k.box([40, dh, 22], [cx + dw / 2 - 20, height / 2, z], frame);
-        k.box([dw, 50, 22], [cx, height / 2 + dh / 2 - 25, z], frame); k.box([dw, 60, 22], [cx, height / 2 - dh / 2 + 30, z], frame);
-        k.box([14, 260, 24], [side * 40, height / 2, z + 18], '#c8cfd2'); k.box([14, 10, 30], [side * 40, height / 2 + 120, z + 8], '#c8cfd2'); k.box([14, 10, 30], [side * 40, height / 2 - 120, z + 8], '#c8cfd2');
-        k.box([30, 60, 20], [side * (width / 2 - 26), height * .5, z], '#9aa8b0');
+        k.box([40, dh, 22], [cx - dw / 2 + 20, height / 2, z], frame, null, 'metal'); k.box([40, dh, 22], [cx + dw / 2 - 20, height / 2, z], frame, null, 'metal');
+        k.box([dw, 50, 22], [cx, height / 2 + dh / 2 - 25, z], frame, null, 'metal'); k.box([dw, 60, 22], [cx, height / 2 - dh / 2 + 30, z], frame, null, 'metal');
+        k.box([14, 260, 24], [side * 40, height / 2, z + 18], '#c8cfd2', null, 'metal'); k.box([14, 10, 30], [side * 40, height / 2 + 120, z + 8], '#c8cfd2', null, 'metal'); k.box([14, 10, 30], [side * 40, height / 2 - 120, z + 8], '#c8cfd2', null, 'metal');
+        k.box([30, 60, 20], [side * (width / 2 - 26), height * .5, z], '#9aa8b0', null, 'metal');
     }
     const runs = contents(k, height, (height - 90) / 4, iw);
     k.build(cab, E.dress);
@@ -1685,11 +1780,11 @@ const CABINET = {
             const y = s ? 45 + s * gap + 9 : 45;
             for (let n = 0; n < 5; n++) {
                 const x = -iw / 2 + 80 + n * (iw - 160) / 4, kind = (s * 5 + n) % 5;
-                if (kind === 0) { k.box([180, 120, 240], [x, y + 60, -20], [HB.orange, HB.black, HB.glass][s % 3]); k.box([110, 40, 3], [x, y + 80, 101], '#f4f1e8'); }
-                if (kind === 1) for (let q = 0; q < 3; q++) { k.cyl(28, 32, 110 - q * 15, [x - 50 + q * 50, y + 55, 0], '#d7eaef'); k.cyl(30, 30, 6, [x - 50 + q * 50, y + 10 + q * 3, 0], '#9fd3c7'); }
-                if (kind === 2) { k.box([150, 110, 90], [x, y + 55, 0], HB.orange); k.box([100, 50, 4], [x, y + 75, 46], '#1f2f2a'); for (let q = 0; q < 2; q++) k.cyl(8, 8, 60, [x - 40 + q * 80, y + 140, 40], q ? '#d9534f' : '#2f3b44'); }
-                if (kind === 3) { k.box([80, 20, 140], [x, y + 10, 0], '#3f4b52'); k.cyl(12, 12, 180, [x, y + 110, -30], '#4b5a63'); k.box([40, 60, 40], [x, y + 200, 0], '#3f4b52'); k.cyl(20, 14, 70, [x, y + 140, 30], '#2f3b44'); }
-                if (kind === 4) { k.add(new THREE.TorusGeometry(45, 9, 6, 18, Math.PI), [x, y + 55, 0], '#d9534f', [1, 1, 1], [0, 0, Math.PI]); k.cyl(36, 36, 50, [x + 80, y + 25, 0], '#b06a36'); }
+                if (kind === 0) { k.box([180, 120, 240], [x, y + 60, -20], [HB.orange, HB.black, HB.glass][s % 3]); k.box([110, 40, 3], [x, y + 80, 101], '#f4f1e8', null, 'paper'); }
+                if (kind === 1) for (let q = 0; q < 3; q++) { k.cyl(28, 32, 110 - q * 15, [x - 50 + q * 50, y + 55, 0], '#d7eaef', [1, 1, 1], null, 'glass'); k.cyl(30, 30, 6, [x - 50 + q * 50, y + 10 + q * 3, 0], '#9fd3c7', [1, 1, 1], null, 'glass'); }
+                if (kind === 2) { k.box([150, 110, 90], [x, y + 55, 0], HB.orange); k.box([100, 50, 4], [x, y + 75, 46], '#1f2f2a', null, 'glass'); for (let q = 0; q < 2; q++) k.cyl(8, 8, 60, [x - 40 + q * 80, y + 140, 40], q ? '#d9534f' : '#2f3b44', [1, 1, 1], null, 'rubber'); }
+                if (kind === 3) { k.box([80, 20, 140], [x, y + 10, 0], '#3f4b52', null, 'metal'); k.cyl(12, 12, 180, [x, y + 110, -30], '#4b5a63', [1, 1, 1], null, 'metal'); k.box([40, 60, 40], [x, y + 200, 0], '#3f4b52', null, 'metal'); k.cyl(20, 14, 70, [x, y + 140, 30], '#2f3b44', [1, 1, 1], null, 'metal'); }
+                if (kind === 4) { k.add(new THREE.TorusGeometry(45, 9, 6, 18, Math.PI), [x, y + 55, 0], '#d9534f', [1, 1, 1], [0, 0, Math.PI], 'metal'); k.cyl(36, 36, 50, [x + 80, y + 25, 0], '#b06a36', [1, 1, 1], null, 'metal'); }
             }
         }
     },
@@ -1702,12 +1797,23 @@ const CABINET = {
 // library materials are cloned and owned by the room).
 function tintProps(kit) {
     if (kit.spec.id === 'highschool') {
-        // Charcoal waste bins, with one Pacific-blue recycling bin by the lockers.
+        // Charcoal waste bins, one Pacific-blue recycling bin by the lockers, and a charcoal/driftwood bookshelf under the spirit wall.
         kit.room.decorateProp = (object, placement) => {
-            const col = placement.id === 'ergoflex-trash-can' ? (placement.at[0] === 3850 ? HB.pacific : '#3d3f42') : null;
+            const trashCol = placement.id === 'ergoflex-trash-can' ? (placement.at[0] === 3850 ? HB.pacific : '#3d3f42') : null;
+            const shelf = placement.id === 'ergoflex-small-bookshelf';
+            if (!trashCol && !shelf) return;
             object.traverse(o => {
                 if (!o.isMesh) return; const mats = Array.isArray(o.material) ? o.material : [o.material];
-                const next = mats.map(m => { if (!col) return m; const c = m.clone(); c.color.set(col); kit.room.ownedMaterials?.add(c); return c; });
+                const next = mats.map((m, idx) => {
+                    const c = m.clone();
+                    if (trashCol) c.color.set(trashCol);
+                    else if (shelf) {
+                        const l = c.color.r * .3 + c.color.g * .59 + c.color.b * .11;
+                        c.color.set(l < .35 || idx % 2 ? '#2e3236' : '#b9a88a');
+                        c.roughness = .58;
+                    }
+                    kit.room.ownedMaterials?.add(c); return c;
+                });
                 o.material = Array.isArray(o.material) ? next : next[0];
             });
         };
@@ -1957,7 +2063,14 @@ const BUILD = {
         E.build(lk, lockers);
     },
     highschool(kit, E) {
-        const { asset } = kit, top = E.S.top, shells = ['#2a2b2e', '#2a2b2e', '#e2692a']; // one chair in three in Oiler orange
+        const { asset, byId } = kit, top = E.S.top, shells = ['#2a2b2e', '#2a2b2e', '#e2692a']; // one chair in three in Oiler orange
+        const act = byId('activity-table');
+        if (act) {
+            if (act.children[0]?.isMesh) act.children[0].material = top;
+            const edgeMat = E.M(HB.orange, 'powder');
+            for (const sx of [-1, 1]) kit.box(act, [8, 28, 700], [sx * 704, 740, 0], edgeMat, 2);
+            for (const sz of [-1, 1]) kit.box(act, [1400, 28, 8], [0, 740, sz * 354], edgeMat, 2);
+        }
         const cols = [-2075, 75, 2225], rows = [500, 2500, 4500];
         rows.forEach((z, r) => cols.forEach((x, c) => {
             const t = kit.table(`student-table-${r}-${c}`, 'Student work table', [x, 0, z], 1250, 620, 740, top);
@@ -1970,19 +2083,19 @@ const BUILD = {
         E.edge(E.flat('demo-floor-inlay', 'Demonstration zone slate inlay', [0, -2600], [2400, 1600], E.S.slate(), { height: 4 }), [2400, 1600], HB.orange, 26, 6);
         // Lab wall bench with a sink along the door wall (back third): charcoal HPL doors, black epoxy top, stainless sink.
         const bench = asset('wall-bench', 'Lab wall bench with sink', [kit.w / 2 - 300, 0, -1650]);
-        const bk = detailKit(); bk.box([600, 860, 2100], [0, 430, 0], '#2e3236'); bk.box([640, 40, 2140], [0, 880, 0], '#1b1c1e'); bk.box([590, 90, 2090], [10, 45, 0], '#1d1d1f');
-        bk.box([420, 20, 520], [0, 892, -400], '#b9c0c4'); bk.box([380, 6, 480], [0, 903, -400], '#9aa3a8'); bk.box([30, 300, 30], [200, 1050, -400], '#c8cfd2'); bk.box([30, 30, 200], [200, 1190, -330], '#c8cfd2');
-        for (let n = 0; n < 4; n++) { bk.box([8, 700, 470], [-304, 470, -790 + n * 520], '#34393e'); bk.box([10, 18, 140], [-310, 780, -790 + n * 520], '#c8cfd2'); }
-        for (let n = 0; n < 5; n++) bk.cyl(40, 40, 120 + n * 20, [-120 + n % 2 * 120, 960 + n * 10, 300 + n * 110], ['#c8dfe6', HB.orange, HB.glass][n % 3]);
+        const bk = detailKit(); bk.box([600, 860, 2100], [0, 430, 0], '#2e3236'); bk.box([640, 40, 2140], [0, 880, 0], '#1b1c1e', 'ceramic'); bk.box([590, 90, 2090], [10, 45, 0], '#1d1d1f');
+        bk.box([420, 20, 520], [0, 892, -400], '#b9c0c4', 'metal'); bk.box([380, 6, 480], [0, 903, -400], '#9aa3a8', 'metal'); bk.box([30, 300, 30], [200, 1050, -400], '#c8cfd2', 'metal'); bk.box([30, 30, 200], [200, 1190, -330], '#c8cfd2', 'metal');
+        for (let n = 0; n < 4; n++) { bk.box([8, 700, 470], [-304, 470, -790 + n * 520], '#34393e'); bk.box([10, 18, 140], [-310, 780, -790 + n * 520], '#c8cfd2', 'metal'); }
+        for (let n = 0; n < 5; n++) bk.cyl(40, 40, 120 + n * 20, [-120 + n % 2 * 120, 960 + n * 10, 300 + n * 110], ['#c8dfe6', HB.orange, HB.glass][n % 3], [1, 1, 1], [0, 0, 0], n % 3 === 1 ? 'powder' : 'glass');
         E.build(bk, bench);
         // Lockers by the front corner: black body, alternating orange and black doors,
         // brass number plates and a vertical OILERS stencil on both end panels.
         const lockers = asset('lockers', 'Student lockers', [kit.w / 2 - 170, 0, 7500]); lockers.rotation.y = -Math.PI / 2;
-        const lk = detailKit(); lk.box([820, 1850, 300], [0, 925, 0], '#202124'); lk.box([830, 90, 310], [0, 45, 0], '#151617'); lk.box([830, 20, 312], [0, 1860, 0], '#151617');
+        const lk = detailKit(); lk.box([820, 1850, 300], [0, 925, 0], '#202124', 'metal'); lk.box([830, 90, 310], [0, 45, 0], '#151617', 'metal'); lk.box([830, 20, 312], [0, 1860, 0], '#151617', 'metal');
         for (let n = 0; n < 8; n++) {
             const x = -300 + (n % 4) * 200, y = n < 4 ? 1380 : 520, door = (n + (n < 4 ? 0 : 1)) % 2 ? '#2a2b2e' : '#e2692a';
-            lk.box([186, n < 4 ? 900 : 820, 8], [x, y, 152], door); for (let v = 0; v < 5; v++) lk.box([120, 7, 4], [x, y + 360 - v * 18, 157], '#151617');
-            lk.box([16, 70, 10], [x + 70, y - 40, 159], '#c8cfd2'); lk.box([44, 26, 3], [x - 40, y + 240, 157], '#c9b37a');
+            lk.box([186, n < 4 ? 900 : 820, 8], [x, y, 152], door, 'metal'); for (let v = 0; v < 5; v++) lk.box([120, 7, 4], [x, y + 360 - v * 18, 157], '#151617', 'metal');
+            lk.box([16, 70, 10], [x + 70, y - 40, 159], '#c8cfd2', 'metal'); lk.box([44, 26, 3], [x - 40, y + 240, 157], '#c9b37a', 'metal');
         }
         E.build(lk, lockers);
         const stencil = E.tex(drawLockerStencil, 192, 1024, 'powder', .5);
@@ -2152,8 +2265,8 @@ export function dressProp(id, k, g, kit) {
             for (let row = 0; row < 3; row++) for (let col = 0; col < 3; col++) if (col < 2 || row < 2) { const x = -417 + col * 417, y = 178 + row * 275; k.box([150, 50, 3], [x, y + 30, 142], '#f4f6f2'); }
         } else if (spec.id === 'highschool') {
             // Equipment cabinet (glazed in decorate): boxed sets on top in orange, black and sea glass.
-            for (let n = 0; n < 3; n++) { k.box([300, 120, 260], [-380 + n * 330, top + 60 + (n % 2) * 4, 0], [HB.orange, HB.black, HB.glass][n]); k.box([180, 40, 3], [-380 + n * 330, top + 70, 131], '#f4f1e8'); }
-            k.cyl(60, 60, 260, [480, top + 130, 0], '#9fb0b8');
+            for (let n = 0; n < 3; n++) { k.box([300, 120, 260], [-380 + n * 330, top + 60 + (n % 2) * 4, 0], [HB.orange, HB.black, HB.glass][n], [0, 0, 0], 'paper'); k.box([180, 40, 3], [-380 + n * 330, top + 70, 131], '#f4f1e8', [0, 0, 0], 'paper'); }
+            k.cyl(60, 60, 260, [480, top + 130, 0], '#9fb0b8', [1, 1, 1], [0, 0, 0], 'metal');
         } else if (spec.id === 'university') {
             for (let n = 0; n < 4; n++) k.box([260, 300, 380], [-440 + n * 280, top + 150, 0], n % 2 ? '#c9b48f' : '#b3a07c');
             for (let n = 0; n < 4; n++) k.box([180, 60, 3], [-440 + n * 280, top + 200, 192], '#efe8d6');
@@ -2171,9 +2284,9 @@ export function dressProp(id, k, g, kit) {
         }
         if (spec.id === 'highschool') {
             // From derricks to waves: a pumpjack model beside a wind turbine and a solar panel.
-            k.cyl(60, 70, 30, [380, y + 15, -120], '#9fb0b8'); k.cyl(12, 16, 520, [380, y + 290, -120], '#e8ecee'); k.box([60, 50, 80], [380, y + 560, -100], '#e8ecee');
-            for (let n = 0; n < 3; n++) k.box([16, 260, 30], [380 + Math.sin(n * TAU / 3) * 130, y + 560 + Math.cos(n * TAU / 3) * 130, -60], '#f4f6f6', [0, 0, -n * TAU / 3]);
-            k.box([380, 14, 260], [-40, y + 90, 120], '#2f4f6a', [-.5, 0, 0]); k.box([20, 90, 20], [-40, y + 45, 60], '#9fb0b8');
+            k.cyl(60, 70, 30, [380, y + 15, -120], '#9fb0b8', [1, 1, 1], [0, 0, 0], 'metal'); k.cyl(12, 16, 520, [380, y + 290, -120], '#e8ecee', [1, 1, 1], [0, 0, 0], 'metal'); k.box([60, 50, 80], [380, y + 560, -100], '#e8ecee', [0, 0, 0], 'metal');
+            for (let n = 0; n < 3; n++) k.box([16, 260, 30], [380 + Math.sin(n * TAU / 3) * 130, y + 560 + Math.cos(n * TAU / 3) * 130, -60], '#f4f6f6', [0, 0, -n * TAU / 3], 'plastic');
+            k.box([380, 14, 260], [-40, y + 90, 120], '#2f4f6a', [-.5, 0, 0], 'glass'); k.box([20, 90, 20], [-40, y + 45, 60], '#9fb0b8', [0, 0, 0], 'metal');
             pumpjack(k, 90, y, -170, 1.1);
         }
         if (spec.id === 'college') { k.box([500, 300, 300], [250, y + 150, -60], '#e8e4db'); k.box([340, 160, 200], [250, y + 380, -60], '#a5624a'); }

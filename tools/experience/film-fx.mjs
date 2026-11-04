@@ -23,6 +23,8 @@
 //   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
 //   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
 //   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
+//   floorLight:{gain, foot, wings, lobe, max, soft, radius, hideApp}  foot + wing strips lighting the
+//     floor (replaces the app's boxed foot glow), see 'floor light' below
 //   accessories:{add:['tablet-pc' | {id, role='desktop', x, y, z, rotation, tilt, roll, scale}], remove:[id]}
 //     catalog accessories (drafting-kit, artist-easel, keyboards…) are toggled
 //     on the prepared desk (and placed if x/z/… are given); library props
@@ -419,6 +421,146 @@ function clearDeskObjects(d) {
   for (const key of d.added) { try { if (api.sceneDesks?.active?.objects?.has(key)) { objects.select(key); objects.remove(); objects.select(null); } } catch (e) { console.warn('[film-fx] remove', key, e); } }
 }
 
+// ---------- floor light (foot + wing strips onto the floor) ----------
+// The app's 'Foot LED floor glow' is one 60×60 in plane under the base, clipped by
+// an X smoothstep (.43-.5) and by the plane's own Z edge, and its alpha saturates
+// at .6 over most of the pool at the film's strengths: a flat, hard box. The two
+// wing strips (under the desktop's side edges, outboard of the wing panels) light
+// only the panels, never the floor. This replaces the box with irradiance from the
+// real strips: each is a line of Lambertian emitters (cos^lobe about the strip's
+// own -Y, so the pools move with lift and tilt) integrated per floor fragment,
+// E = Σ I·cosθe·cosθr / r² · dl, each sample taking that LED's own pixel (status
+// chases, fades and colours come along). Each wing panel (extended down to the floor
+// for the base leg below it) is a soft-edged rectangle that shadows its strip's rays
+// that cross it, so the floor inboard of the panel stays dark but the light still
+// reaches the floor ahead of and behind the desk. Strip and panel matrices are
+// read in onBeforeRender, so glide, turns, lift and tilt are always current.
+// Strengths are the app's live uniforms (ledGlow × floor/leftWing/rightWing
+// Strength), so ledGlow and ledSurfaces keep driving it. Hue-preserving roll-off:
+// alpha = max·(1−e^(−m/max)) on the brightest channel, so nothing clips to white.
+//   floorLight:{gain=1, foot=1, wings=1, footLift=.25, lobe=1, max=.6, soft=.04, radius=3.2, hideApp=true}
+//     gain: overall; foot / wings: per source; footLift: the foot strip's virtual height gain (scene
+//     units; it hangs only .175 up under the footrest, so its true pool is a narrow band the footrest
+//     hides; the lift stands in for the diffuser and the glossy floor's spread); soft: source radius
+//     (softens the pool right under a strip); radius: fade-out disc around the desk.
+const FLOOR_SEGS = 3, FLOOR_STEPS = 24;
+function installFloorLight(shot) {
+  const spec = { gain: 1, foot: 1, wings: 1, footLift: .25, lobe: 1, max: .6, soft: .04, radius: 3.2, hideApp: true, ...shot.floorLight };
+  const scene = sceneRoot(), desk = api.loadedModel; scene.updateMatrixWorld(true);
+  let app = null; desk.traverse(o => { if (o.name === 'Foot LED floor glow') app = o; });
+  if (!app?.material?.uniforms?.efPixelTexture) { console.warn('[film-fx] floorLight: no bound Foot LED floor glow'); return null; }
+  const byName = n => { let m = null; desk.traverse(o => { if (!m && o.isMesh && o.name === n) m = o; }); return m; };
+  const strips = id => { const out = []; desk.traverse(o => { if (o.isMesh && o.userData.ledPhysicalId === id && !/reflection|bounce/.test(o.name)) out.push(o); }); return out; };
+  const live = list => list.find(m => { for (let p = m; p; p = p.parent) if (!p.visible) return false; return true; });
+  const axisEnds = (mesh, axis) => { const g = mesh.geometry; g.computeBoundingBox(); const b = g.boundingBox, c = b.getCenter(new THREE.Vector3()); const a = c.clone(), z = c.clone(); a[axis] = b.min[axis]; z[axis] = b.max[axis]; return [a, z]; };
+  // Wings: each panel pairs with the strip mesh on its side; its colours follow the
+  // row the app's own panel spill samples (receiverIds leftWing:[5], rightWing:[6]),
+  // so the floor pool and the lit panel above it always read as one light.
+  const wings = ['Desktop_1', 'Desktop_2'].map(name => {
+    const panel = byName(name); if (!panel) return null;
+    const spill = panel.children.find(c => /outer reflection$/.test(c.name));
+    panel.geometry.computeBoundingBox(); const pb = panel.geometry.boundingBox, pc = pb.getCenter(new THREE.Vector3()), size = pb.getSize(new THREE.Vector3());
+    const thin = ['x', 'y', 'z'].reduce((a, k) => size[k] < size[a] ? k : a, 'x');
+    return { panel, mat: spill?.material, row: spill?.material.userData.ledSpillSources?.[0] ?? (name === 'Desktop_1' ? 5 : 6), pc, pb, thin };
+  }).filter(Boolean);
+  const wingStrips = [...strips(5), ...strips(6)];
+  const foot = { mat: app.material, row: 7, meshes: strips(7) };
+  const U = app.material.uniforms, v3 = () => new THREE.Vector3(), arr = f => Array.from({ length: FLOOR_SEGS }, f);
+  const uniforms = {
+    efPixelTexture: U.efPixelTexture, efPixelActive: U.efPixelActive, efPixelRows: U.efPixelRows, efPixelWidth: U.efPixelWidth, efPixelCounts: U.efPixelCounts,
+    ledColor: U.ledColor, segA: { value: arr(v3) }, segB: { value: arr(v3) }, segDir: { value: arr(v3) }, segRow: { value: arr(() => 0) }, segGain: { value: arr(() => 0) }, segLift: { value: arr(v3) },
+    occP: { value: arr(v3) }, occN: { value: arr(v3) }, occU: { value: arr(v3) }, occV: { value: arr(v3) }, occM: { value: arr(() => new THREE.Vector2()) }, centre: { value: new THREE.Vector2() }, radius: { value: spec.radius },
+    maxA: { value: spec.max }, lobe: { value: spec.lobe }, soft2: { value: spec.soft * spec.soft }
+  };
+  const material = new THREE.ShaderMaterial({
+    uniforms, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+    vertexShader: `varying vec3 vWorld; void main() { vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: `
+      uniform sampler2D efPixelTexture; uniform float efPixelActive, efPixelRows, efPixelWidth; uniform float efPixelCounts[8];
+      uniform vec3 ledColor; uniform vec3 segA[${FLOOR_SEGS}], segB[${FLOOR_SEGS}], segDir[${FLOOR_SEGS}], occP[${FLOOR_SEGS}], occN[${FLOOR_SEGS}], segLift[${FLOOR_SEGS}], occU[${FLOOR_SEGS}], occV[${FLOOR_SEGS}];
+      uniform vec2 occM[${FLOOR_SEGS}];
+      uniform float segRow[${FLOOR_SEGS}], segGain[${FLOOR_SEGS}]; uniform vec2 centre; uniform float radius, maxA, lobe, soft2;
+      varying vec3 vWorld;
+      vec3 efLedLinear(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), c)); }
+      vec3 efLedSample(float t, float row) {
+        float count = efPixelCounts[int(row)], pixel = min(count - 1.0, floor(clamp(t, 0.0, 1.0) * count));
+        return efLedLinear(texture2D(efPixelTexture, vec2((pixel + 0.5) / efPixelWidth, (row + 0.5) / efPixelRows)).rgb);
+      }
+      void main() {
+        vec3 E = vec3(0.0);
+        for (int s = 0; s < ${FLOOR_SEGS}; s++) {
+          if (segGain[s] <= 0.0) continue;
+          bool occ = dot(occN[s], occN[s]) > 0.0;
+          vec3 acc = vec3(0.0);
+          for (int k = 0; k < ${FLOOR_STEPS}; k++) {
+            float t = (float(k) + 0.5) / ${FLOOR_STEPS}.0;
+            vec3 S = mix(segA[s], segB[s], t) + segLift[s], d = vWorld - S; float r2 = dot(d, d) + soft2; vec3 l = d * inversesqrt(r2);
+            float lit = 1.0;
+            if (occ) {
+              // Where the ray meets the panel's plane, inside its (soft-edged) rectangle: shadowed.
+              float den = dot(d, occN[s]), x = abs(den) > 1e-5 ? dot(occP[s] - S, occN[s]) / den : -1.0;
+              if (x > 0.0 && x < 1.0) {
+                vec3 X = S + d * x - occP[s]; float u = dot(X, occU[s]) / dot(occU[s], occU[s]), v = dot(X, occV[s]) / dot(occV[s], occV[s]);
+                vec2 m = occM[s];
+                lit = 1.0 - smoothstep(-m.x, m.x, u) * smoothstep(1.0 + m.x, 1.0 - m.x, u) * smoothstep(-m.y, m.y, v) * smoothstep(1.0 + m.y, 1.0 - m.y, v);
+              }
+            }
+            vec3 c = efPixelActive > 0.5 ? efLedSample(t, segRow[s]) : ledColor;
+            acc += c * lit * pow(max(dot(l, segDir[s]), 0.0), lobe) * max(-l.y, 0.0) / r2;
+          }
+          E += acc * segGain[s] * length(segB[s] - segA[s]) / ${FLOOR_STEPS}.0;
+        }
+        E *= 1.0 - smoothstep(radius * 0.6, radius, length(vWorld.xz - centre));
+        float m = max(max(E.r, E.g), E.b);
+        if (m < 1e-5) discard;
+        gl_FragColor = vec4(E / m, maxA * (1.0 - exp(-m / maxA)));
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`
+  });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2 * spec.radius, 2 * spec.radius), material);
+  mesh.name = 'Film floor light'; mesh.userData.filmFx = true; mesh.rotation.x = -Math.PI / 2; mesh.renderOrder = 1; mesh.frustumCulled = false; mesh.raycast = () => {};
+  scene.add(mesh);
+  // K: irradiance → alpha scale, set on the opener's dark stage (status chases light 3-4 of 11-13 LEDs at a time,
+  // the regular look sits at linear ~.09), so gain 1 gives pools as bright as the lit wing panels above them.
+  const K = .225 * spec.gain, M = new THREE.Matrix3(), P = new THREE.Vector3(), down = new THREE.Vector3(0, -1, 0);
+  const setSeg = (i, strip, axis, row, gain, occ) => {
+    const [a, b] = axisEnds(strip, axis); uniforms.segA.value[i].copy(a).applyMatrix4(strip.matrixWorld); uniforms.segB.value[i].copy(b).applyMatrix4(strip.matrixWorld);
+    // Facing: the LED root's own down (the overlay meshes carry import rotations); it tilts with the desktop.
+    let root = strip; while (root.parent && !/^(Desktop|Base|Shelf) LEDs$/.test(root.name)) root = root.parent;
+    uniforms.segDir.value[i].copy(down).applyMatrix3(M.setFromMatrix4(root.matrixWorld)).normalize(); uniforms.segRow.value[i] = row; uniforms.segGain.value[i] = gain;
+    if (occ) { for (const [k, v] of Object.entries(occ)) uniforms[k].value[i].copy(v); } else uniforms.occN.value[i].set(0, 0, 0);
+  };
+  mesh.onBeforeRender = () => {
+    app.getWorldPosition(P); mesh.position.set(P.x, P.y, P.z); mesh.updateMatrixWorld(); uniforms.centre.value.set(P.x, P.z);
+    const fm = live(foot.meshes);
+    // The lift keeps the foot pool's energy (∫E ∝ I), so footLift only spreads it.
+    if (fm) { setSeg(0, fm, 'z', 7, K * spec.foot * foot.mat.uniforms.strength.value, null); uniforms.segLift.value[0].set(0, spec.footLift, 0); } else uniforms.segGain.value[0] = 0;
+    wings.forEach((w, j) => {
+      const i = j + 1; w.panel.updateWorldMatrix(true, false);
+      const pc = w.pc.clone().applyMatrix4(w.panel.matrixWorld);
+      // The strip on this panel's side: the nearest live wing strip mesh (Standard or Extended desktop).
+      let best = null, bd = Infinity; for (const m of wingStrips) { if (!live([m])) continue; const d = new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()).distanceTo(pc); if (d < bd) { bd = d; best = m; } }
+      if (!best || !w.mat) { uniforms.segGain.value[i] = 0; return; }
+      // Panel outer face (its thinnest local axis, on the strip's side) as a world rectangle: corner O, edges U
+      // (along the desk) and V (up), V stretched down to the floor for the base leg under the panel.
+      const sc = new THREE.Box3().setFromObject(best).getCenter(new THREE.Vector3()), W = w.panel.matrixWorld;
+      const n = new THREE.Vector3().setComponent('xyz'.indexOf(w.thin), 1).applyMatrix3(M.setFromMatrix4(W)).normalize(), out = n.dot(sc.clone().sub(pc)) > 0;
+      const [a1, a2] = ['x', 'y', 'z'].filter(k => k !== w.thin), up = k => Math.abs(new THREE.Vector3().setComponent('xyz'.indexOf(k), 1).applyMatrix3(M).normalize().y);
+      const [la, va] = up(a1) > up(a2) ? [a2, a1] : [a1, a2], corner = (l, v) => { const c = w.pc.clone(); c[w.thin] = out ? w.pb.max[w.thin] : w.pb.min[w.thin]; c[la] = l; c[va] = v; return c.applyMatrix4(W); };
+      let O = corner(w.pb.min[la], w.pb.min[va]); const Uv = corner(w.pb.max[la], w.pb.min[va]).sub(O), top = corner(w.pb.min[la], w.pb.max[va]);
+      if (top.y < O.y) { const t = top; top.copy(O); O = t; }
+      let Vv = top.clone().sub(O); if (Vv.y > .05) { O.addScaledVector(Vv, -(O.y - P.y) / Vv.y); Vv = top.clone().sub(O); }
+      if (!out) n.negate();
+      setSeg(i, best, 'x', w.row, K * spec.wings * w.mat.uniforms.strength.value,
+        { occP: O, occN: n, occU: Uv, occV: Vv, occM: new THREE.Vector2(.04 / Uv.length(), .04 / Vv.length()) });
+    });
+  };
+  const hidden = spec.hideApp ? [app, app.visible] : null; if (hidden) app.visible = false;
+  return { restore() { mesh.removeFromParent(); mesh.geometry.dispose(); material.dispose(); if (hidden) hidden[0].visible = hidden[1]; } };
+}
+
 // ---------- public API ----------
 export const Box3 = THREE.Box3;
 // The desk's bounding-box centre in world space (render-cut --list-objects).
@@ -426,7 +568,7 @@ export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedM
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects;
+  const wants = shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
@@ -463,10 +605,11 @@ export async function install(shot) {
   // ledGlow: the app's LED brightness slider as a fraction of full (the stage uses .35).
   if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
   if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
+  if (shot.floorLight) active.floor = installFloorLight(shot);
   if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
   if (shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
   if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
-  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count };
+  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor };
 }
 export async function frame(t, chapterSeconds, { video = false } = {}) {
   if (!active) return;
@@ -504,6 +647,7 @@ export function clear() {
   if (active.surfaces) for (const [k, v] of Object.entries(active.surfaces)) api.setLedSurface(k, v, false);
   if (active.ledColor) api.setLedColor(active.ledColor, false);
   active.status?.clear();
+  active.floor?.restore();
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
   clearDeskObjects(active.desk);

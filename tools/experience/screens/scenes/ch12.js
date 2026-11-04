@@ -1,10 +1,11 @@
 // Chapter 12 · hero (product void). Dark, elegant app home; from ~8.5 s it recedes to a quiet brand loop
-// so it never fights the end card.
+// so it never fights the end card. opts.homeUntil (default 8.0) moves that hand-off; the finale keeps the home.
 (function () {
   SCENES.ch12 = {
-    draw(t) {
+    draw(t, o = {}) {
+      const h0 = o.homeUntil ?? 8.0;
       backdrop(t, {top: '#070c16', bot: '#030509', blobs: [[C.blue, .12]]});
-      const home = 1 - sm(seg(t, 8.0, 9.6));
+      const home = 1 - sm(seg(t, h0, h0 + 1.6));
       alpha(home * sm(seg(t, 0, .8)), () => {
         appIcon(90, 100, 84, {glow: true});
         T('Good evening, Alex', 160, 128, 76, {w: 700});
@@ -24,7 +25,7 @@
         });
       });
       // brand loop
-      const b = sm(seg(t, 8.6, 10.2));
+      const b = sm(seg(t, h0 + .6, h0 + 2.2));
       alpha(b, () => {
         const breathe = .5 + .5 * Math.sin((t - 8.6) * 1.2);
         g.fillStyle = rad(W / 2, H / 2, 900, [[0, hexA(C.blue, .12 + .06 * breathe)], [1, 'rgba(0,0,0,0)']]); g.fillRect(0, 0, W, H);
