@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ErgoFlex · Refined intro</title>
+<style>
+:root{color-scheme:dark;font:15px/1.5 system-ui;background:#070c12;color:#e6f1fa}body{margin:0}main{max-width:1280px;margin:auto;padding:28px 24px 64px}h1{font-size:30px;margin:4px 0}.eyebrow{color:#63d8f5;font-size:12px;letter-spacing:.16em;text-transform:uppercase}.sub{color:#9cb0c0}video{display:block;width:100%;aspect-ratio:16/9;background:#000;border:1px solid #243849;border-radius:12px}.bar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}button,a{font:inherit;border-radius:8px;border:1px solid #36546a;background:#102332;color:inherit;padding:10px 16px;text-decoration:none;cursor:pointer}button[aria-pressed=true],a.primary{border-color:#63d8f5;background:#12384a}button:focus-visible,a:focus-visible{outline:3px solid #63d8f5;outline-offset:3px}ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;list-style:none;padding:0}li button{text-align:left;width:100%;height:100%}li b,li small{display:block}li small{color:#9cb0c0}#error{color:#ffbe9d}details{margin-top:24px}summary{cursor:pointer}
+</style><main>
+<div class="eyebrow">ErgoFlex · Film review</div><h1>Make it yours.</h1>
+<p class="sub">Refined intro HQ9 · 3:17 · 13 chapters · 1080p / 30 fps · original score</p>
+<video id="film" controls playsinline preload="metadata" poster="final/poster.jpg" src="final/ErgoFlex-Intro-1080p-HQ9.mp4"></video>
+<p id="error" hidden>Video unavailable. Please check that the local server is running.</p>
+<div class="bar"><button data-src="final/ErgoFlex-Intro-1080p-HQ9.mp4" aria-pressed="true">Latest · HQ9</button><button data-src="../cinematic-intro-20261103-hq8/final/ErgoFlex-Intro-1080p-HQ8.mp4" aria-pressed="false">Previous · HQ8</button><button data-src="../cinematic-intro-20261103-hq7/final/ErgoFlex-Intro-1080p-HQ7.mp4" aria-pressed="false">Earlier · HQ7</button><button data-src="../cinematic-intro-20261103-hq6/final/ErgoFlex-Intro-1080p-HQ6.mp4" aria-pressed="false">Earlier · HQ6</button><button data-src="../cinematic-intro-20261103/final/ErgoFlex-Intro-1080p-HQ5.mp4" aria-pressed="false">Earlier · HQ5</button><button data-src="../cinematic-intro-20261102/final/ErgoFlex-Intro-1080p-HQ4.mp4" aria-pressed="false">Earlier · HQ4</button><button data-src="../cinematic-intro-20261030/final/ErgoFlex-Intro-1080p-hq3.mp4" aria-pressed="false">Earlier · HQ3</button><a class="primary" href="final/ErgoFlex-Intro-1080p-HQ7.mp4" download>Download 1080p movie</a></div>
+<p class="sub" id="version" aria-live="polite">Viewing the latest refinement.</p>
+<h2>Jump to a chapter</h2><ol id="chapters"></ol>
+<details><summary>What changed since HQ8</summary><ul>
+<li>Sit · Stand (0:33): the desk’s blue lift light plays on both rises, like the Surface Pro shows; the camera keeps the floor in view and no longer doubles back at the end.</li>
+<li>Tilt (0:47): the tilt light (yellow-green going up, as on the real desk) now lights the desk, the drafting board and the room, not just the wall; the camera no longer jerks on its way back (it rests on the side view instead).</li>
+<li>Commons (1:04): the desk rolls up to the white table’s edge; new line “Bring your desk to the table.”</li>
+<li>Safety (1:26): one continuous camera (no fades): it opens 3/4 from above as the desk lifts, flies down for the tilt, then the turn and roll. Proximity is gone from this chapter.</li>
+<li>Sensing (2:03): the desk rolls up to a pylon and stops short, and the amber proximity light shows that it sensed it.</li>
+<li>Make room (2:39): a bright working library at night instead of the gold/green murk.</li>
+<li>Finale (2:54): each desk in its own position (painter, OCC, drafter, Oilers, the professional rising to standing, then gaming down to sitting with the ergonomic keyboard), blended on one continuous camera, with a new product light rig so the desktops no longer wash out.</li></ul><p class="sub">HQ3 to HQ8 are kept as they were.</p></details>
+<script type="module">
+const film=document.querySelector('#film'),version=document.querySelector('#version');
+film.addEventListener('error',()=>document.querySelector('#error').hidden=false);
+film.addEventListener('loadeddata',()=>document.querySelector('#error').hidden=true);
+for(const b of document.querySelectorAll('[data-src]'))b.onclick=()=>{const t=film.currentTime,playing=!film.paused;film.src=b.dataset.src;film.addEventListener('loadedmetadata',()=>{film.currentTime=t;if(playing)film.play().catch(()=>{});},{once:true});document.querySelectorAll('[data-src]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));version.textContent=b.textContent;};
+const edl=await fetch('edl.json').then(r=>r.json()),titles=await fetch('final/titles.json').then(r=>r.json());
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+for(const c of edl.chapters){const t=titles.titles.find(t=>t.chapter===c.id),li=document.createElement('li'),b=document.createElement('button'),at=c.index===1?0:c.start+.75;b.innerHTML=`<small>${String(c.index).padStart(2,'0')} · ${fmt(at)}</small><b>${t?.title||c.id}</b><small>${t?.detail||''}</small>`;b.onclick=()=>{film.currentTime=at;film.play().catch(()=>{});};li.append(b);document.querySelector('#chapters').append(li);}
+</script></main></html>

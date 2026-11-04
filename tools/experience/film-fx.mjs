@@ -420,6 +420,7 @@ function clearDeskObjects(d) {
 }
 
 // ---------- public API ----------
+export const Box3 = THREE.Box3;
 // The desk's bounding-box centre in world space (render-cut --list-objects).
 export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedModel), c = b.getCenter(new THREE.Vector3()); return [c.x, b.min.y, c.z]; }
 export async function install(shot) {

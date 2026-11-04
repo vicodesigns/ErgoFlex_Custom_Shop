@@ -88,7 +88,7 @@ async function stage(browser){
 }
 
 // Shots that use film-effect fields load the helper into the stage iframe.
-const FX_FIELDS=['deskObjects','screens','ledMode','ledGlow','ledSurfaces','ledGain','ledColor','sceneGlobals','clock','timeOfDay','accessories','sceneEdits','lights','ledStatus','obstacles'];
+const FX_FIELDS=['deskObjects','screens','ledMode','ledGlow','ledSurfaces','ledGain','ledColor','sceneGlobals','clock','timeOfDay','accessories','sceneEdits','lights','ledStatus','obstacles','ledFill'];
 const usesFx=shot=>FX_FIELDS.some(k=>shot[k]!==undefined);
 async function loadFx(frame){await frame.evaluate(async()=>{if(!window.__filmFx)window.__filmFx=await import('/tools/experience/film-fx.mjs');});}
 async function grab(frame,t,seconds,quality=.96,chapter=seconds,video=false){
@@ -156,11 +156,11 @@ async function listShot(frame,i){
   const result=await frame.evaluate((s,re)=>{
     const out={screens:window.__filmFx.listScreens(s),clocks:window.__filmFx.listClocks()};
     // --list-objects <regex>: world position and yaw of matching objects (plus the desk's pivot).
-    if(re){const m=window.ErgoFlex.loadedModel;let root=m;while(root.parent)root=root.parent;root.updateMatrixWorld(true);const r=new RegExp(re,'i'),q=o=>{const p=o.getWorldPosition(o.position.clone()),e=new o.quaternion.constructor();o.getWorldQuaternion(e);return {name:o.name,position:[p.x,p.y,p.z].map(v=>+v.toFixed(4)),yaw:+(2*Math.atan2(e.y,e.w)*180/Math.PI).toFixed(2)};};
+    if(re){const m=window.ErgoFlex.loadedModel;let root=m;while(root.parent)root=root.parent;root.updateMatrixWorld(true);const r=new RegExp(re,'i'),q=o=>{const p=o.getWorldPosition(o.position.clone()),e=new o.quaternion.constructor();o.getWorldQuaternion(e);const b=new (window.__filmFx.Box3)().setFromObject(o);return {name:o.name,position:[p.x,p.y,p.z].map(v=>+v.toFixed(4)),yaw:+(2*Math.atan2(e.y,e.w)*180/Math.PI).toFixed(2),box:b.isEmpty()?null:[b.min.x,b.min.z,b.max.x,b.max.z,b.max.y].map(v=>+v.toFixed(3))};};
       const box=window.__filmFx.deskBox?.();out.objects=[{...q(m),name:'(desk pivot) '+m.name}];if(box)out.objects.push({name:'(desk box centre)',position:box.map(v=>+v.toFixed(4)),yaw:0});root.traverse(o=>{if(o!==m&&r.test(o.name))out.objects.push(q(o));});}
     return out;},shot,opts['list-objects']||null);
   if(at!==null)await frame.evaluate(()=>window.ErgoPresentation.endBake());
-  for(const o of result.objects||[])console.log(`  object ${o.name}  at [${o.position.join(', ')}] yaw ${o.yaw}°`);
+  for(const o of result.objects||[])console.log(`  object ${o.name}  at [${o.position.join(', ')}] yaw ${o.yaw}°${o.box?`  box x ${o.box[0]}..${o.box[2]} z ${o.box[1]}..${o.box[3]} top ${o.box[4]}`:''}`);
   await frame.evaluate(()=>window.__filmFx.clear());
   fs.writeFileSync(path.join(opts.out,tag+'-screens.json'),JSON.stringify({shot:shot.id,room:shot.room,seconds:shot.seconds,...result},null,1));
   console.log(`\n${tag} ${shot.id} (${shot.room}${shot.layout?'/'+shot.layout:''}, ${shot.kind}) — ${result.screens.length} screens, ${result.clocks.length} clocks`);

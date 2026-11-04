@@ -20,6 +20,9 @@
 //     The animation is the app's own: led-movement.mjs sampleMovementInto (the
 //     source-derived firmware FX 34/35/36), fed to the strips through the same
 //     LedGameMode.sample hook that film-fx uses for media mode.
+//   ledFill:{intensity=8, distance=3, height=.55}  a point light at the desk that takes the state's colour and
+//     brightness while a state plays (off at rest), so surfaces with no LED receiver (accessories: drafting
+//     board, paper, easel) and the room around the desk catch the strip light too.
 //   obstacles:[{x=0, ahead=.4, from='desk'|'base', radius=.09, height=.5, rise:[t0,t1]}]
 //     at:[x, z] places it in world space; heading (deg, + = left turn) and travel (scene units rolled along it) place the pylon
 //     ahead of the desk after a turn and a roll; without them it is ahead along +x.
@@ -48,6 +51,18 @@ export function installStatus(shot) {
   const group = new THREE.Group(); group.name = 'Film status'; group.userData.filmFx = true;
   const pylons = [], regular = api.ledColor || '#ffffff';
   const regularRgb = [1, 3, 5].map(i => parseInt(regular.slice(i, i + 2), 16));
+  let fill = null;
+  if (shot.ledFill) {
+    const b = new THREE.Box3().setFromObject(api.loadedModel), c = b.getCenter(new THREE.Vector3()), f = shot.ledFill;
+    fill = new THREE.PointLight(0xffffff, 0, f.distance ?? 3, 2); fill.name = 'Film LED fill'; fill.userData.filmFx = true;
+    fill.position.set(c.x, b.min.y + (b.max.y - b.min.y) * (f.height ?? .55), c.z); fill.userData.k = f.intensity ?? 8;
+    let root = api.loadedModel; while (root.parent) root = root.parent; group.add(fill); if (!group.parent) root.add(group);
+  }
+  const lightFill = (rgb, rows) => {
+    if (!fill) return;
+    let sum = 0, n = 0; for (const r of rows) for (let p = 0; p < r.length; p += 4) { sum += Math.max(r[p], r[p + 1], r[p + 2]); n++; }
+    const m = Math.max(...rgb, 1); fill.color.setRGB(rgb[0] / m, rgb[1] / m, rgb[2] / m); fill.intensity = fill.userData.k * (n ? sum / n / 255 : 0);
+  };
   if (shot.obstacles?.length) {
     let scene = api.loadedModel; while (scene.parent) scene = scene.parent; scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(api.loadedModel), c = box.getCenter(new THREE.Vector3());
@@ -88,10 +103,11 @@ export function installStatus(shot) {
       if (!ev) {
         // Fade from the last state's final frame back to the regular look.
         const done = events.filter(e => e.at + e.dur <= seconds).at(-1), u = done ? (seconds - done.at - done.dur) / (done.fade ?? 1) : 1;
-        if (!done?.last || u >= 1) { api.setLedColor(regular, false); game.active = false; delete game.sample; return; }
+        if (!done?.last || u >= 1) { api.setLedColor(regular, false); if (fill) fill.intensity = 0; game.active = false; delete game.sample; return; }
         const k = smooth(u);
         for (let i = 0; i < frame.length; i++) for (let p = 0; p < frame[i].length; p += 4) for (let c = 0; c < 4; c++) frame[i][p + c] = Math.round(done.last[i][p + c] * (1 - k) + (c < 3 ? regularRgb[c] : 0) * k);
         api.setLedColor(hex(done.spill.map((v, c) => v * (1 - k) + regularRgb[c] * k)), false);
+        lightFill(done.spill, done.last.map(r => r.map(v => v * (1 - k))));
         game.sample = out => { out.forEach((row, i) => row.set(frame[i])); return true; };
         game.active = true; return;
       }
@@ -117,11 +133,11 @@ export function installStatus(shot) {
       // The spill on the desk and floor follows the indicator colour, as the app's solid colour does.
       ev.spill = m ? (ev.kind === 'wheels' ? RED : m.colors[0]).slice(0, 3) : ev.kind === 'proximity' ? [255, 145, 8] : [255, 16, 12];
       ev.last = frame.map(r => r.slice());
-      api.setLedColor(hex(ev.spill), false);
+      api.setLedColor(hex(ev.spill), false); lightFill(ev.spill, frame);
       game.sample = out => { out.forEach((row, i) => row.set(frame[i])); return true; };
       game.active = true;
     },
     after() { game.active = false; delete game.sample; },
-    clear() { group.removeFromParent(); for (const p of pylons) { p.mesh.geometry.dispose(); p.mesh.material.dispose(); } game.active = false; delete game.sample; }
+    clear() { group.removeFromParent(); fill?.dispose(); for (const p of pylons) { p.mesh.geometry.dispose(); p.mesh.material.dispose(); } game.active = false; delete game.sample; }
   };
 }
