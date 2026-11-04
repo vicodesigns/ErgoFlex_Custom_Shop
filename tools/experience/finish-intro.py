@@ -43,9 +43,9 @@ def main():
     hq_only = '--hq-only' in sys.argv  # full master and the 1080p (CRF 18, 9.5 Mbps cap) + poster; skips textless/720p
     only = sys.argv[sys.argv.index('--only') + 1] if '--only' in sys.argv else None
     d = os.path.abspath(args[0]); out = os.path.join(d, 'final'); os.makedirs(out, exist_ok=True)
-    edl = json.load(open(os.path.join(d, 'edl.json')))
-    src = json.load(open(os.path.join(d, 'titles-src.json')))
-    grade = json.load(open(os.path.join(d, 'grade.json'))) if os.path.exists(os.path.join(d, 'grade.json')) else {}
+    edl = json.load(open(os.path.join(d, 'edl.json'), encoding='utf-8'))
+    src = json.load(open(os.path.join(d, 'titles-src.json'), encoding='utf-8'))
+    grade = json.load(open(os.path.join(d, 'grade.json'), encoding='utf-8')) if os.path.exists(os.path.join(d, 'grade.json')) else {}
     ch = edl['chapters']; X = edl['dissolve']; total = edl['total']; fps = edl['fps']
     start = {c['id']: c['start'] for c in ch}
 
@@ -60,7 +60,7 @@ def main():
                    placement=dict(anchor='bottom-left', safeArea=0.9, eyebrowColor='#1388EC',
                                   note='Coordinates for a 1920×1080 frame: text left edge x=128; eyebrow/title/detail bottoms at y=812/912/970. Wordmark centered at y=788 (22% of width); CTA centered at y=904.'),
                    titles=[{k: v for k, v in t.items() if k != 'scrim'} for t in titles], cta=cta, logo=dict(start=round(logo_at, 3))),
-              open(os.path.join(out, 'titles.json'), 'w'), indent=1, ensure_ascii=False)
+              open(os.path.join(out, 'titles.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
 
     size = sys.argv[sys.argv.index('--size') + 1] if '--size' in sys.argv else '1920x1080'
     W, H = (960, 540) if draft else tuple(int(v) for v in size.split('x'))
@@ -89,7 +89,7 @@ def main():
         ass.append(line(1, 'Title', 912, t['title'], 140))
         ass.append(line(1, 'Detail', 970, t['detail'], 380, 10))
     ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad(900,1400)\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
-    open(os.path.join(out, 'titles.ass'), 'w').write('\n'.join(ass) + '\n')
+    open(os.path.join(out, 'titles.ass'), 'w', encoding='utf-8').write('\n'.join(ass) + '\n')
 
     if '--titles-only' in sys.argv: return
     # ---- master: grade + dissolves + end card -------------------------------
@@ -154,9 +154,9 @@ def main():
             # Light luma grain dithers gradients in the dark voids.
             f'noise=c0s={3 if not draft else 0}:c0f=t,format=yuv420p,trim=0:{total}[v]')
         filters.append(look)
-        script = os.path.join(out, 'filter.txt'); open(script, 'w').write(';\n'.join(filters))
+        script = os.path.join(out, 'filter.txt'); open(script, 'w', encoding='utf-8').write(';\n'.join(filters))
         enc = ['-c:v', 'libx264', '-preset', 'ultrafast' if draft else 'veryfast' if wip else 'slow', '-crf', '23' if draft else '14' if wip else '9', '-pix_fmt', 'yuv420p'] + COLOR
-        run(['ffmpeg', '-v', 'error', '-stats', '-y', *inputs, '-filter_complex_script', script, '-map', '[v]', '-r', str(fps), *enc, master])
+        run(['ffmpeg', '-v', 'error', '-stats', '-y', *inputs, *FILTER_SCRIPT(script), '-map', '[v]', '-r', str(fps), *enc, master])
 
     if only == 'master': return
     # ---- deliverables -------------------------------------------------------
@@ -188,6 +188,11 @@ def main():
     # Poster: the clean end-card frame (desk + wordmark), no burned-in text.
     run(['ffmpeg', '-v', 'error', '-y', '-i', master, '-vf', f'select=gte(t\\,{total - 2.6:.2f}),scale={W}:{H}', '-frames:v', '1', '-q:v', '2', os.path.join(out, 'poster.jpg')])
 
+def _ffmpeg_major():
+    try: return int(subprocess.run(['ffmpeg', '-version'], capture_output=True, text=True).stdout.split()[2].split('.')[0].lstrip('n'))
+    except Exception: return 6
+# -filter_complex_script was replaced by the '-/filter_complex file' form in ffmpeg 7 and later removed (Win box runs 9.x).
+FILTER_SCRIPT = (lambda f: ['-/filter_complex', f]) if _ffmpeg_major() >= 7 else (lambda f: ['-filter_complex_script', f])
 COLOR = ['-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-color_range', 'tv']
 if __name__ == '__main__':
     main()
