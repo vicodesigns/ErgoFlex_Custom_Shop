@@ -810,7 +810,7 @@ function initSceneScreenControls(toolbar) {
     toolbar.append(panel);
     const select=panel.querySelector('#scene-screen-select'),enabled=panel.querySelector('#scene-screens-enabled'),single=panel.querySelector('#scene-screen-enabled');let revision=-1;
     sceneScreens=new SceneScreens({
-        context:()=>{const p=measuredRoomProfile();return {scene:selectedRoomScene,layout:p?.layout.id||'product',phase:p?.mode||'morning',label:p?.modes[p.mode]?.label,preset:activeBuildPreset,accent:selectedRoomScene==='gym'&&GYM_THEMES[gymTheme].screenAccent||undefined};},
+        context:()=>{const p=measuredRoomProfile();return {scene:selectedRoomScene,layout:p?.layout.id||'product',phase:p?.mode||'morning',label:p?.modes[p.mode]?.label,preset:activeBuildPreset,accent:selectedRoomScene==='gym'&&GYM_THEMES[gymTheme].screenAccent||undefined,mono:selectedRoomScene==='gym'&&GYM_THEMES[gymTheme].screenMono||undefined};},
         room:()=>workspaceRoom,
         sources:()=>{
             const records=[...sceneDesks?.records.values()||[]],sources=[];

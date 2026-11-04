@@ -15,18 +15,21 @@ export const GYM_MODES = {
 // Black & red: red marks the edges (channel 0: feature wall, coach strip, left
 // lane and skirting) while channel 1 stays cool white by day, so the room
 // reads as matte black with red light, never as a red-washed box. Only the
-// listed numbers differ from green; posture, timing and sun stay the same.
+// listed numbers differ from green (night keeps a dim cool lane on the mirror
+// wall for depth); posture, timing and sun stay the same.
+// Black surfaces absorb light, so exposure and ambient are lifted per mode
+// (tuned against stills) to keep the room from reading as a void.
 const BLACKRED_MODE_CHANGES = {
-    morning: { key: '#fff0e0', fill: '#dfe3ea', accent: '#ff4d4d', colors: ['#ff3b3b', '#dfe6ee'], wash: .2, exposure: 1.08 },
-    afternoon: { key: '#f6f8ff', fill: '#e2e6ee', accent: '#ff3b30', colors: ['#ff2a2a', '#e4e9f0'], wash: .26, exposure: 1.08 },
-    evening: { key: '#ffc8a8', fill: '#c9ccd6', accent: '#ff2d2d', colors: ['#e01b24', '#d5d9e2'], wash: .42, color: '#ff1a1a' },
-    night: { key: '#b8c4dc', fill: '#a8b0c4', accent: '#b3122a', colors: ['#7a0c14', '#5c0a10'], wash: .2, color: '#8b0d14' },
-    party: { key: '#e6e9f5', fill: '#d8dbe6', accent: '#ff1030', colors: ['#ff0f2e', '#ff3d1f'], wash: .78, color: '#ff0a1e' }
+    morning: { key: '#fff0e0', fill: '#dfe3ea', accent: '#ff4d4d', colors: ['#ff3b3b', '#dfe6ee'], wash: .2, exposure: 1.22, ambient: .52 },
+    afternoon: { key: '#f6f8ff', fill: '#e2e6ee', accent: '#ff3b30', colors: ['#ff2a2a', '#e4e9f0'], wash: .26, exposure: 1.22, ambient: .54 },
+    evening: { key: '#ffc8a8', fill: '#c9ccd6', accent: '#ff2d2d', colors: ['#e01b24', '#d5d9e2'], wash: .42, color: '#ff1a1a', exposure: 1.2, ambient: .34 },
+    night: { key: '#b8c4dc', fill: '#a8b0c4', accent: '#b3122a', colors: ['#8a0c16', '#7a8498'], wash: .28, color: '#8b0d14', exposure: 1.32, ambient: .24 },
+    party: { key: '#e6e9f5', fill: '#d8dbe6', accent: '#ff1030', colors: ['#ff0f2e', '#ff3d1f'], wash: .78, color: '#ff0a1e', exposure: 1.16, ambient: .48 }
 };
 
 const GREEN = {
     id: 'green', label: 'Green & grey', modes: GYM_MODES, desk: ROOM_DESK_STYLES.gym,
-    finish: null, detailPalette: null, screenAccent: null, book: null, lightTint: [.12, .32],
+    finish: null, detailPalette: null, screenAccent: null, screenMono: null, book: null, lightTint: [.12, .32],
     // [colour, material options] for the room's shared materials (variable names in gym-room.mjs).
     materials: {
         graphite: ['#242d32', { roughness: .85 }], steel: ['#414e54', { metalness: .7, roughness: .35 }],
@@ -73,7 +76,7 @@ const BLACKRED = {
     finish: { backdrops: { morning: ['#3a3b3f', '#141416'], afternoon: ['#44464b', '#18191c'], evening: ['#3a2224', '#120a0b'], night: ['#1d0f11', '#060405'], party: ['#3a0c12', '#0c0405'] },
         name: 'Matte black & signal red', ground: '#1a1a1c', wood: .62, metal: .24, stone: .5, night: .95 },
     // [textile, accent, paper, glazed ceramic], as ROOM_DETAIL_PALETTES.
-    detailPalette: ['#2a2a2d', '#c8102e', '#e6e4e0', '#1c1c1e'], screenAccent: '#ff3b3b', book: '#7a0a16', lightTint: [.18, .45],
+    detailPalette: ['#2a2a2d', '#c8102e', '#e6e4e0', '#1c1c1e'], screenAccent: '#ff3b3b', screenMono: true, book: '#7a0a16', lightTint: [.18, .45],
     materials: {
         graphite: ['#1b1b1d', { roughness: .88 }], steel: ['#2a2a2d', { metalness: .75, roughness: .3 }],
         rubber: ['#0d0d0e', { roughness: .95 }], lime: ['#c8102e', { roughness: .24, metalness: .05 }],
@@ -82,8 +85,8 @@ const BLACKRED = {
         coachFloor: ['#151517', { roughness: .95 }], bellHandle: ['#3a3a3d', { metalness: .65, roughness: .38 }]
     },
     canvas: {
-        floor: { tones: ['#1c1c1e', '#19191b', '#1b1b1d', '#171719'], flecks: ['#8a8a8a55', '#6e6e6e40', '#05050599', '#d0202a38', '#4a4a4a55'], seams: ['#0a0a0b', '#3a3a3c66'] },
-        wall: { base: '#2b2b2e', mottle: ['120,120,124', '8,8,10'], specks: ['#0c0c0e40', '#7a7a7e26'] },
+        floor: { tones: ['#252527', '#222224', '#242426', '#202022'], flecks: ['#8a8a8a55', '#6e6e6e40', '#05050599', '#d0202a38', '#4a4a4a55'], seams: ['#0a0a0b', '#3a3a3c66'] },
+        wall: { base: '#3a3a3e', mottle: ['120,120,124', '8,8,10'], specks: ['#0c0c0e40', '#7a7a7e26'] },
         sign: { background: '#0c0c0d', slash: '#e10600', title: '#f4f4f4', line: '#ff2b2b', footer: '#8a8a8f' },
         mirror: ['#8d8f94', '#4f5156', '#24252a', '#141416'],
         label: ['#ece9e6', '#111113'], strip: '#ff2a2a', practical: '#fff1d8', blinds: '#1a1a1c80'
@@ -98,7 +101,8 @@ const BLACKRED = {
         bands: ['#c8102e', '#7a0a16', '#3a3a3d', '#111113'],
         bikeScreen: '#ff3030', treadmillScreen: '#ff3030', bagText: '#ff3030', recovery: ['#e9e4df', '#1c1c1e']
     },
-    lights: { point: '#ffd9d4', warm: '#f1d1a6', cool: '#e8ecf2', warmWash: '#ffe2b8' },
+    // A neutral picture light: amber over a black board reads as sepia.
+    lights: { point: '#ffd9d4', warm: '#f1d1a6', cool: '#e8ecf2', warmWash: '#f3ece6' },
     sessions: {
         accents: { morning: '#e8736b', afternoon: '#ff3b30', evening: '#e0473f', night: '#a33a3a', party: '#ff1f3d' },
         board: { background: '#111113', erased: '#f2f2f204', title: '#f2f2f2', subtitle: '#a7a7ab', rows: '#e2e2e2', frame: '#4a4a4e', note: '#9a9a9e' },

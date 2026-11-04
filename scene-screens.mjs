@@ -47,6 +47,8 @@ function graph(c,x,y,w,h,phase,color,wave=false){
     c.strokeStyle='#34505f';c.lineWidth=1;for(let i=0;i<5;i++){c.beginPath();c.moveTo(x,y+i*h/4);c.lineTo(x+w,y+i*h/4);c.stroke();}
     c.strokeStyle=color;c.lineWidth=3;c.beginPath();for(let i=0;i<=100;i++){const v=wave?Math.sin(i*.55+phase)*Math.sin(i*.07+1):.25+Math.sin(i*.065+phase)*.23+i*.003;c.lineTo(x+w*i/100,y+h*.5-v*h*.45);}c.stroke();
 }
+// Monochrome UI that keeps only its red accents (the gym's black & red colourway).
+function monoAccent(c,W,H){const img=c.getImageData(0,0,W,H),d=img.data;for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];if(r>40&&r>g*1.6&&r>b*1.6)continue;d[i]=d[i+1]=d[i+2]=Math.round((.2126*r+.7152*g+.0722*b)*.92);}c.putImageData(img,0,0);}
 export function drawSceneScreen(c,W,H,{scene='office',phase='morning',label,variant=0,role='',preset,accent}={}) {
     const productTheme=({occ:'occmedialab',artist:'creative',architect:'workshop',creative:'creative',library:'library',music:'music',gaming:'gaming',office:'office',compact:'home'})[preset];
     const theme=SCREEN_THEMES[scene==='product'?(productTheme||'product'):scene]||SCREEN_THEMES.office,pi=Math.max(0,PHASES.indexOf(phase)),a=accent||theme.accent;
@@ -127,15 +129,15 @@ export class SceneScreens {
         this.entries=found;if(!found.some(e=>e.key===this.selected))this.selected=found[0]?.key||'';
     }
     texture(context,entry){
-        const info=entry.info,{scene,phase,label,preset,accent}=context,variant=info.variant||0;
-        const key=[scene,phase,label,preset,info.role,variant,info.portrait,accent].join('|');if(this.cache.has(key))return this.cache.get(key);
-        const canvas=document.createElement('canvas');canvas.width=960;canvas.height=540;drawSceneScreen(canvas.getContext('2d'),960,540,{scene,phase,label,variant,role:info.role,preset,accent});
+        const info=entry.info,{scene,phase,label,preset,accent,mono}=context,variant=info.variant||0;
+        const key=[scene,phase,label,preset,info.role,variant,info.portrait,accent,mono].join('|');if(this.cache.has(key))return this.cache.get(key);
+        const canvas=document.createElement('canvas');canvas.width=960;canvas.height=540;drawSceneScreen(canvas.getContext('2d'),960,540,{scene,phase,label,variant,role:info.role,preset,accent});if(mono)monoAccent(canvas.getContext('2d'),960,540);
         const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;map.userData.sceneScreenContent=true;
         if(info.portrait){map.center.set(.5,.5);map.rotation=-Math.PI/2;}
         this.cache.set(key,map);return map;
     }
     update(force=false){
-        const context=this.ctx.context(),identity=[context.scene,context.layout,context.phase,context.label,context.preset,context.accent].join('|'),now=performance.now();
+        const context=this.ctx.context(),identity=[context.scene,context.layout,context.phase,context.label,context.preset,context.accent,context.mono].join('|'),now=performance.now();
         if(!force&&identity===this.context&&now-this.at<250)return;
         const changed=identity!==this.context;this.context=identity;
         if(force||changed||now-this.discoveredAt>1000||this.ctx.sourcesChanged?.()){this.discover(context);this.discoveredAt=now;}
