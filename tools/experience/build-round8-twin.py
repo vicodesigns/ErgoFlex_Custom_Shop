@@ -9,6 +9,9 @@ floor glow, no stage cues (no dark start, no wake dim, no hero bookend, no grid 
 Re-run it whenever the cinematographer changes the awaken shot; the framing is derived from the shot's motion.
 
   build-round8-twin.py [<hq dir>]       (default exports/cinematic-intro-20261104-hq14)
+  TWIN_FINISH=pearl build-round8-twin.py   the same twin in Pearl White (wood), White frame and white trim instead of
+      the black/red gaming build, so it does not compete with the real desk: writes post/twin-pearl-cut.json and
+      post/twin-pearl-seed.json (college-seed.json with the gaming build's finishes changed; render with --storage it).
 
 Then (render PC): render-cut --cut <hq>/post/twin-cut.json --shots 0 --video --size 1472x640 ... -> <out>/01.mkv,
 and capture.mjs with TWIN=<that mkv> draws frame round(t * 30) of it into the card (screens/scenes/ch01.js).
@@ -18,7 +21,12 @@ import copy, json, math, os, subprocess, sys
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 H = sys.argv[1] if len(sys.argv) > 1 else os.path.join(root, 'exports/cinematic-intro-20261104-hq14')
 SRC = os.path.join(H, 'shots', '01.json')
-OUT = os.path.join(H, 'post', 'twin-cut.json')
+FINISH = os.environ.get('TWIN_FINISH', '').strip().lower()
+assert FINISH in ('', 'pearl'), 'TWIN_FINISH: pearl or unset'
+OUT = os.path.join(H, 'post', 'twin-pearl-cut.json' if FINISH else 'twin-cut.json')
+SEED_IN = os.path.join(root, 'exports/cinematic-intro-20261030/post/college-seed.json')
+SEED_OUT = os.path.join(H, 'post', 'twin-pearl-seed.json')
+PEARL = {'woodFinish': 'Pearl White', 'baseFinish': 'White', 'trimColor': '#f5f5f2'}   # catalog.mjs names / TRIM_COLORS White
 
 # The twin card in screens/scenes/ch01.js on the 2560x1072 01-main clip is 1458x635 px; the twin renders a hair larger
 # at the same 2.3:1 aspect and is cover-fitted into it.
@@ -38,6 +46,7 @@ FIT = .82                            # >1 = looser
 # Look: the shot's clean product look held steady, less glare from the rims (the camera looks down on the top).
 KEY, RIMS, ENV = 45, 90, 0.8
 KEY_AT = {'az': -40, 'el': 62, 'dist': 3.4}   # high and off the camera's side: no key glare in the glossy top
+if FINISH == 'pearl': KEY, RIMS, ENV = 26, 50, 0.45   # a white desk needs far less light to read on the dark floor
 SLATE = {'type': 'pool', 'name': 'slate', 'radius': 7.5, 'strength': .42, 'color': '#5a6a85'}   # the app's slate floor
 
 
@@ -104,10 +113,22 @@ def twin(shot):
     return t, info
 
 
+def pearl_seed():
+    """The stage loads the shot's preset ('gaming') from the seeded saved builds: change that build's finishes."""
+    seed = json.load(open(SEED_IN)); key = 'ergoflex.buildPresetsV1'
+    pool = json.loads(seed[key]); entries = pool['data']['data']['entries']
+    preset = shot.get('preset', 'gaming'); entry = entries[preset]
+    for e in [entry] + list((entry.get('sizeSetups') or {}).values()): e['config'].update(PEARL)
+    seed[key] = json.dumps(pool, separators=(',', ':'))
+    json.dump(seed, open(SEED_OUT, 'w'))
+    return preset
+
+
 shot = json.load(open(SRC))
 assert shot.get('id') == 'awaken', SRC
 t, (cx, cz, r, d) = twin(shot)
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 json.dump({'name': 'HQ14 digital twin (ch01 monitor card)', 'source': os.path.relpath(SRC, root), 'shots': [t]}, open(OUT, 'w'), indent=1)
+if FINISH == 'pearl': print(f'{os.path.relpath(SEED_OUT, root)}: {pearl_seed()} build -> {PEARL}')
 print(f'{os.path.relpath(OUT, root)}: {t["seconds"]:g} s, {len(t["motion"]["clips"])} clips, {len(t.get("ledStatus", []))} LED states; '
       f'camera az {AZ:g} el {EL:g} fov {FOV:g} at {d:.2f} u, envelope centre ({cx:.3f}, {cz:.3f}) r {r:.2f}; render {SIZE[0]}x{SIZE[1]}')

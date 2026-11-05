@@ -6,6 +6,8 @@ const SCREENS = '/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-2026103
 // target = the harness screen target from INVENTORY.md
 export const CLIPS = [
   {id: '01-main', chapter: 1, target: 'main-landscape', role: 'curved main: digital-twin control', w: 2560, h: 1072, scene: 'ch01'},
+  // Round 8 alternative for the same monitor (Vico: wellness / how the desk helps, no twin): same size, same shot timing.
+  {id: '01-wellness', chapter: 1, target: 'main-landscape', role: 'curved main: wellness routine + focus, no twin', w: 2560, h: 1072, scene: 'ch01w'},
   {id: '02-portrait', chapter: 2, target: 'main-portrait', role: 'portrait: wellness app height + stand', w: 1080, h: 1856, scene: 'ch02p'},
   {id: '02-curved', chapter: 2, target: 'main-landscape', role: 'curved: the workday', w: 2560, h: 1072, scene: 'ch02l'},
   {id: '02-tablet', chapter: 2, target: 'tablet', role: 'tablet: desk remote', w: 1620, h: 1080, scene: 'ch02t'},
