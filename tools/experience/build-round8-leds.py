@@ -103,7 +103,15 @@ GYM = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gym-black-red.js
 TRACE_HIDE = {'match': '^$', 'path': '^Cinematic effects > Line$', 'hide': True}
 
 
+# HQ20 (Vico: the screens "don't look as sharp as they should ... minimize that to like a quarter"): the film-quality
+# glow adds a blurred copy of each screen in display space, which is most of their brightness; at a quarter of it the
+# screens take 1.3x their own brightness to keep their level (stills: screen luma 149 now, 136 at .25 / 1.3x).
+SCREEN_BLOOM, SCREEN_GAIN = .25, 1.3
+
+
 def fix(s):
+    s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM}
+    if s.get('screens'): s['screenGain'] = SCREEN_GAIN
     if s.get('kind') in ('lift', 'tilt'):
         s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e != TRACE_HIDE] + [TRACE_HIDE]
     # HQ16d (Vico: the OCC headphones "not on the headphone hook"): coast's deskObjects (Vico's 2026-11-03 OCC desktop,
@@ -199,4 +207,12 @@ for p in paths:
     if 'shots' in d: d['shots'] = [fix(s) for s in d['shots']]
     else: d = fix(d)
     json.dump(d, open(p, 'w'), indent=1)
+# The finale's sub-shots (shots/13-subshots.json, rendered instead of the hero shot) take only the screen settings.
+sub = os.path.join(H, 'shots', '13-subshots.json')
+if os.path.exists(sub):
+    d = json.load(open(sub))
+    for s in d['shots']:
+        s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM}
+        if s.get('screens'): s['screenGain'] = SCREEN_GAIN
+    json.dump(d, open(sub, 'w'))   # compact, as build-round8-director.py writes it
 print('visualizer LEDs on', [(s['id'], s.get('ledColor'), s.get('sceneGlobals')) for s in json.load(open(paths[0]))['shots'] if s.get('ledReceivers')])

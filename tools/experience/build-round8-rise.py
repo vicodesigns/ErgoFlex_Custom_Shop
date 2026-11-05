@@ -153,7 +153,7 @@ def fix(s):
     wake(s)
     # HQ18b (Vico: the light "looks hazy as opposed to clear"): the LED light on surfaces (desktop, panels, the floor
     # bounce) stays out of the film-quality bloom; the strips and screens keep theirs (film-quality bloomReceivers).
-    s['quality'] = {'bloomReceivers': False}
+    s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'bloomReceivers': False}
     if OWN_CAMERA: s['cameraPlan'] = CAMERA
     s['accessories'] = {'add': [CUP]}
     s['screens'] = [x for x in s.get('screens', []) if 'tablet' not in json.dumps(x)]
