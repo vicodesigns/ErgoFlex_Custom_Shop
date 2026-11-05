@@ -78,7 +78,11 @@ ROOM_LIGHT_BY = {'commons': .8, 'storage': .8}
 # monitor too bright). Picked variant B of peak-pulse stills: the app's room LED spill (walls/floor within ~2 m and the
 # LEDs' share of the architectural bounce; film-fx ledRoomSpill) at 25%, the desktop receiver at half (on top of
 # storage's SURFACE_TRIM) and the monitor clip at 75%. The floor glow and the strips keep their level.
-LIBRARY_LED = {'ledRoomSpill': .25, 'desktopStrength': .5, 'screenBrightness': .75}
+LIBRARY_LED = {'desktopStrength': .5, 'screenBrightness': .75}   # its room spill: DAY_SPILL (was .25, HQ16c)
+# HQ16f (Vico, after the OCC / high school 480p: in daylit rooms the walls should take much less of the desk's LED light,
+# the ambient light washes it out; the floor less too; "do the 15%"): every daylit room chapter's room LED spill
+# (walls and floor within ~2 m, and the LEDs' share of the architectural bounce) at 15%. Night rooms (music, media) keep theirs.
+DAY_ROOMS, DAY_SPILL = ('rise', 'create', 'commons', 'coast', 'oilers', 'wellness', 'storage'), .15
 
 
 def fix(s):
@@ -89,6 +93,7 @@ def fix(s):
         s.get('deskObjects', {}).pop('default-desktop-1', None)
     # HQ16e (Vico: in storage "it's moving to the right, but the status indicator lighting says it's going to the left",
     # the floor comet especially): on the visualizer's strip map the roll's comets ran against the travel; they run with it.
+    if s['id'] in DAY_ROOMS: s.setdefault('sceneGlobals', {})['ledRoomSpill'] = DAY_SPILL
     if s['id'] == 'storage':
         for e in s.get('ledStatus', []):
             if e.get('kind') == 'wheels': e['reverse'] = True
@@ -104,7 +109,6 @@ def fix(s):
     if s['id'] in DAYLIGHT:
         s['timeOfDay'] = [{'at': -1, 'mode': DAYLIGHT[s['id']]}, {'at': 0, 'mode': 'morning'}]
         s['sceneGlobals'].pop('environmentScale', None); s['sceneGlobals'].pop('exposure', None)
-        s['sceneGlobals']['ledRoomSpill'] = LIBRARY_LED['ledRoomSpill']
         for sc in s.get('screens', []): sc['brightness'] = LIBRARY_LED['screenBrightness']
     if s['id'] == 'awaken':
         # Lights off while the camera finds the desk (wheel macro -> base -> silhouette + first title at 8.2 s),
