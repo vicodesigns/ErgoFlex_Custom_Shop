@@ -104,7 +104,8 @@ export function installEdits(shot) {
     if (!found.length) { console.warn(`[film-fx] sceneEdits[${n}] matched nothing: ${edit.match}`); continue; }
     edit.__count = found.length;
     for (const o of found) {
-      if (edit.hide) { const v = o.visible; o.visible = false; undo.push(() => { o.visible = v; }); }
+      // Sticky hide: the app's own per-frame sync (desk dressing, day kits) sets visible back, so hold it false.
+      if (edit.hide) { let raw = o.visible; Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => false, set: v => { raw = v; } }); undo.push(() => { delete o.visible; o.visible = raw; }); }
       if (edit.position) { const p = o.position.clone(), w = o.getWorldPosition(new THREE.Vector3()), to = w.clone().add(new THREE.Vector3(...edit.position)); if (o.parent) { o.parent.worldToLocal(w); o.parent.worldToLocal(to); } o.position.add(to.sub(w)); undo.push(() => o.position.copy(p)); }
       if (edit.rotation) { const r = o.rotation.clone(); o.rotation.x += THREE.MathUtils.degToRad(edit.rotation[0] || 0); o.rotation.y += THREE.MathUtils.degToRad(edit.rotation[1] || 0); o.rotation.z += THREE.MathUtils.degToRad(edit.rotation[2] || 0); undo.push(() => o.rotation.copy(r)); }
       if (o.isLight && edit.intensity !== undefined) {
