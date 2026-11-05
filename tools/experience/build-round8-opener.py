@@ -12,6 +12,8 @@ HQ14e (Vico, after the HQ14 preview and a rewatch of HQ9):
   dashboard (screens/01-main.mp4, made by the screen-clip owner from this shot's motion clips).
   Folded into it: the desk is dark while the camera finds the wheel, switches on (0.3 s, white) at 1.4 s, settles,
   and the wheels start at 3.2 s.
+- HQ14h: lights off through the macro and the dark 12 in roll; the 'ding' at 9.2 s once the desk is in full view; a
+  lit 18 in roll toward the camera (mode 3) after the lowering, then the rise to full height for the hero.
 - A pause between moves: each status colour fades to the neutral white over 1 s and the white then holds 1.5 s
   before the next move (gaps of 2.5 s), so every light settles and the camera has room to adjust.
 - The other side: everything up to the tilts is seen from the desk's +z side (HQ9's side). The camera then keeps
@@ -24,21 +26,21 @@ import glob, json, math, os, subprocess, sys
 
 H = sys.argv[1]
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SECONDS = 51.0
+SECONDS = 57.0
 
 # ---------------------------------------------------------------- desk performance (chapter seconds)
-ON = (1.4, .3)            # lights off -> neutral white (the switch-on)
-ROLL = (3.2, 2.6)         # 12 in forward (mode 3), HQ9's wheels start: 4.6 in/s average, 6.9 peak
+ON = (9.2, .3)            # lights off -> neutral white (the 'ding'), once the desk is in full view at the silhouette
+ROLL = (3.2, 2.6)         # 12 in forward in the dark (no status light), HQ9's wheels start: 4.6 in/s average, 6.9 peak
 LIFT = (11.0, 7.6)        # 28 -> 52.5 in (full height), 3.2 in/s (the real speed)
 TILT_DOWN = (21.1, 3.8)   # 0 -> 15 deg, board steepening: purple ('tilt-retract'); 3.9 deg/s
 TURN = (27.4, 6.7)        # 120 deg LEFT (mode 5): the front swings to the camera and on to the far side; 18 deg/s average
 TILT_BACK = (30.3, 3.8)   # 15 -> 0 deg under the second half of the turn (Vico), yellow-green; ends with the turn
 LOWER = (36.6, 3.75)      # 52.5 -> 40.5 in, about halfway down, red ('lift-down')
-STRAFE = (42.9, 2.6)      # 12 in sideways right (mecanum strafe, mode 2) ...
-LIFT_END = (42.9, 3.75)   # ... while it rises back to full height for the hero (blue wins the LEDs)
+ROLL_LIT = (42.85, 3.4)   # 18 in forward toward the camera with the lights on (mode 3, foot-rest comet), 5.3 in/s
+LIFT_END = (48.75, 3.75)  # back up to full height for the hero, blue
 FADE = 1.0                # each state's fade back to the neutral white; + 1.5 s settled = the 2.5 s gaps
-ROLL_IN, FULL, HALF, TILT_DEG, TURN_DEG, STRAFE_IN = 12, 52.5, 40.5, 15, 120, 12
-SETTLE = (47.4, 49.8)     # stage back to the clean product look once the last light has faded (47.65)
+ROLL_IN, FULL, HALF, TILT_DEG, TURN_DEG, ROLL_LIT_IN = 12, 52.5, 40.5, 15, 120, 18
+SETTLE = (53.25, 55.65)   # stage back to the clean product look once the last light has faded (53.5)
 
 
 def clip(id, lane, kind, start, dur, easing='smooth', label='', **kw):
@@ -52,25 +54,25 @@ CLIPS = [clip('op-roll', 'wheels', 'travel', *ROLL, label='Move forward', value=
          clip('op-turn', 'wheels', 'rotate', *TURN, label='Rotating left', value=TURN_DEG, direction='left'),
          clip('op-tilt-back', 'tilt', 'tilt', *TILT_BACK, label='Tilt level', target=0),
          clip('op-lower', 'lift', 'lift', *LOWER, label='Lift down', target=HALF),
-         clip('op-strafe', 'wheels', 'travel', *STRAFE, label='Move right', value=STRAFE_IN, direction='right'),
+         clip('op-roll-lit', 'wheels', 'travel', *ROLL_LIT, label='Move forward', value=ROLL_LIT_IN, direction='forward'),
          clip('op-lift-end', 'lift', 'lift', *LIFT_END, label='Lift up', target=FULL)]
 # One LED state at a time (film-status: first match, and the fade starts from the last event to end), so the events
-# never overlap: the turn shows its wheels light until the tilt back starts under it, then yellow-green; the closing
-# strafe + rise shows the lift's blue.
+# never overlap: the turn shows its wheels light until the tilt back starts under it, then yellow-green. The opening
+# roll is in the dark (Vico: the light comes on once the desk is in full view); the lit roll comes later.
 STATUS = [{'at': 0, 'dur': ON[0], 'kind': 'off', 'fade': ON[1]},
-          {'at': ROLL[0], 'dur': ROLL[1], 'kind': 'wheels', 'mode': 3, 'fade': FADE},
           {'at': LIFT[0], 'dur': LIFT[1], 'kind': 'lift-up', 'fade': FADE},
           {'at': TILT_DOWN[0], 'dur': TILT_DOWN[1], 'kind': 'tilt-retract', 'fade': FADE},
           {'at': TURN[0], 'dur': round(TILT_BACK[0] - TURN[0], 3), 'kind': 'wheels', 'mode': 5, 'fade': FADE},
           {'at': TILT_BACK[0], 'dur': TILT_BACK[1], 'kind': 'tilt-extend', 'fade': FADE},
           {'at': LOWER[0], 'dur': LOWER[1], 'kind': 'lift-down', 'fade': FADE},
+          {'at': ROLL_LIT[0], 'dur': ROLL_LIT[1], 'kind': 'wheels', 'mode': 3, 'fade': FADE},
           {'at': LIFT_END[0], 'dur': LIFT_END[1], 'kind': 'lift-up', 'fade': FADE}]
 
 # ---------------------------------------------------------------- desk geometry for the camera
 # Desk box centre (x, z) at rest is (0.14, 0); its turn pivot (the model origin) is 0.24 u behind it (build-opener.py,
 # measured with render-cut --list-at). The 12 in roll (0.46 u) goes along +x (forward at yaw 0): centre (0.60, 0),
 # pivot (0.36, 0). A left turn swings the front from +x toward +z (the camera side); after 120 deg the centre is
-# (0.24, 0.21). The strafe goes along the desk's right, world az +30 after the turn. 1 u ~ 26 in.
+# (0.24, 0.21). The lit roll goes along the turned front, world az +120 (toward the camera). 1 u ~ 26 in.
 C_REST, PIVOT, OFF, U = (0.14, 0.0), (0.36, 0.0), 0.24, 1 / 26
 C_ROLL = (C_REST[0] + ROLL_IN * U, 0.0)
 
@@ -84,7 +86,7 @@ def desk(t):
         k = sm((t - ROLL[0]) / ROLL[1]); return 0, (C_REST[0] + ROLL_IN * U * k, 0.0)
     th = TURN_DEG * sm((t - TURN[0]) / TURN[1]); a = math.radians(th)
     c = (PIVOT[0] + OFF * math.cos(a), PIVOT[1] + OFF * math.sin(a))
-    s = STRAFE_IN * U * sm((t - STRAFE[0]) / STRAFE[1]); r = math.radians(TURN_DEG - 90)
+    s = ROLL_LIT_IN * U * sm((t - ROLL_LIT[0]) / ROLL_LIT[1]); r = math.radians(TURN_DEG)   # forward = the turned front
     return th, (round(c[0] + s * math.cos(r), 4), round(c[1] + s * math.sin(r), 4))
 
 
@@ -147,11 +149,14 @@ CAMERA = {'easeIn': True, 'easeOut': False, 'keys': [
     orbit(36.6, 85, 6.00, 3.10, 1.60, 0.00, 32, label='Above the desktop'),
     orbit(40.4, 88, 5.90, 1.85, 1.35, 0.00, 32, label='Rides the red sweep down'),
     orbit(CUTS[3] - .05, 89, 5.90, 1.80, 1.33, 0.00, 32),
-    # 5. The hero: from above the desk strafes across the frame and rises back to full height (the blue wash on the
-    #    desktop and floor), the camera tracks with it; as the light settles and the clean look returns it cranes
-    #    down into a low far-side 3/4 at full height and pushes in.
-    orbit(CUTS[3], 100, 6.40, 3.00, 1.30, 0.00, 33, label='Track from above: strafe and rise', cut=True),
-    orbit(46.7, 90, 6.40, 2.40, 1.50, 0.05, 33),
+    # 5. The finale: a front 3/4 just above the desktop as the desk glides toward the lens (red comet from the foot rest
+    #    across the floor), the camera easing back less than the desk comes so it grows in frame; the rise back to full
+    #    height in blue; then, as the light settles and the clean look returns, a crane down into a low far-side 3/4.
+    orbit(CUTS[3], 96, 7.10, 1.95, 1.00, 0.00, 30, label='Lit roll toward the lens', cut=True),
+    orbit(sum(ROLL_LIT), 92, 6.35, 1.85, 1.05, 0.00, 31),
+    orbit(LIFT_END[0], 90, 6.35, 2.45, 1.20, 0.00, 32, label='Rise to full height: blue'),
+    orbit(sum(LIFT_END), 88, 6.40, 2.35, 1.45, 0.02, 33),
+    orbit(54.6, 86, 6.40, 1.60, 1.42, 0.04, 33),
     orbit(SECONDS, 84, 6.35, 1.05, 1.40, 0.05, 33, label='Clean low hero, full height')]}
 
 # ---------------------------------------------------------------- look
