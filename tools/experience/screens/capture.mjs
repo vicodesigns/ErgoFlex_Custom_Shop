@@ -17,6 +17,7 @@ import {spawn, execFileSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import {fileURLToPath, pathToFileURL} from 'url';
+import crypto from 'crypto';
 import {CLIPS} from './clips.mjs';
 
 const require = createRequire(import.meta.url);
@@ -25,9 +26,15 @@ const ROOT = path.resolve(HERE, '../../..');
 const EXPORT = path.join(ROOT, 'exports/cinematic-intro-20261030');
 // CAPTURE_OUT=<dir> writes the clips elsewhere (e.g. a later work version's screens/), and
 // CAPTURE_SHOT=<shot.json> samples the desk pose from that shot instead of shots/NN.json here.
+// TWIN=<video> puts the real 3D desk in ch01's DIGITAL TWIN card: a render-cut --video of the twin cut
+// (tools/experience/build-round8-twin.py), chapter time 0 at frame 0. The card draws frame round(t * 30)
+// (pre-decoded like the demo clips, held on the last frame). Unset, ch01 draws the 2D side view as before.
+// CHROME_PATH overrides the browser (default: the standard Windows install on win32, else /usr/bin/google-chrome).
 const OUT = process.env.CAPTURE_OUT ? path.resolve(ROOT, process.env.CAPTURE_OUT) : path.join(EXPORT, 'screens');
 const CACHE = path.join(HERE, '.cache');
 const FPS = 30;
+const TWIN = process.env.TWIN ? path.resolve(ROOT, process.env.TWIN) : null;
+const CHROME = process.env.CHROME_PATH || (process.platform === 'win32' ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' : '/usr/bin/google-chrome');
 const puppeteer = require(path.join(ROOT, 'node_modules/puppeteer-core'));
 const {sampleClipMotion} = await import(pathToFileURL(path.join(ROOT, 'experience/desk-clips.mjs')).href);
 
@@ -47,19 +54,19 @@ function shotData(chapter) {
   const seconds = shot.seconds, dur = seconds + 1, rate = 60;
   const poses = [];
   for (let i = 0; i <= dur * rate; i++) poses.push(sampleClipMotion(shot.motion, i / rate));
-  const clips = shot.motion.clips.map(c => ({lane: c.lane, kind: c.kind, start: c.start, duration: c.duration, label: c.label, target: c.target}));
+  const clips = shot.motion.clips.map(c => ({lane: c.lane, kind: c.kind, start: c.start, duration: c.duration, label: c.label, target: c.target, value: c.value, direction: c.direction}));
   return {id: shot.id, chapter, seconds, duration: dur, rate, poses, clips, initial: shot.motion.initial, title: shot.title};
 }
 
 // Demo exercise clips etc. are pre-decoded to jpg frames at 30 fps so the page
 // can draw frame N deterministically (no <video> seeking).
 function prepVideo(v) {
-  const dir = path.join(CACHE, v.key);
+  const dir = path.join(CACHE, v.cache || v.key);
   const done = path.join(dir, '.done');
   if (!fs.existsSync(done)) {
     fs.mkdirSync(dir, {recursive: true});
     const vf = [`fps=${FPS}`, v.scale ? `scale=${v.scale}` : null, v.crop ? `crop=${v.crop}` : null].filter(Boolean).join(',');
-    execFileSync('ffmpeg', ['-v', 'error', '-y', ...(v.ss ? ['-ss', String(v.ss)] : []), '-i', v.src, '-t', String(v.t || 30), '-vf', vf, '-q:v', '3', path.join(dir, 'f%05d.jpg')]);
+    execFileSync('ffmpeg', ['-v', 'error', '-y', ...(v.ss ? ['-ss', String(v.ss)] : []), '-i', v.src, '-t', String(v.t || 30), '-vf', vf, '-q:v', String(v.q || 3), path.join(dir, 'f%05d.jpg')]);
     fs.writeFileSync(done, '');
   }
   const count = fs.readdirSync(dir).filter(f => f.endsWith('.jpg')).length;
@@ -85,10 +92,16 @@ async function renderClip(clip) {
   const shot = shotData(clip.chapter);
   const audio = clip.audio ? prepAudio(clip.chapter, shot.duration) : null;
   const videos = (clip.videos || []).map(prepVideo);
+  if (TWIN && clip.scene === 'ch01') {
+    // Cache per twin file (path, size, mtime), so a re-rendered twin is decoded again.
+    const st = fs.statSync(TWIN), id = crypto.createHash('sha1').update(`${TWIN}|${st.size}|${st.mtimeMs}`).digest('hex').slice(0, 12);
+    videos.push(prepVideo({key: 'twin', cache: 'twin-' + id, src: TWIN, t: shot.duration, q: 2}));
+    console.log(`${clip.id}: twin ${path.relative(ROOT, TWIN)} (${videos.at(-1).count} frames)`);
+  }
   const total = Math.round(shot.duration * FPS);
   const frames = limitFrames ? Math.min(total, Number(limitFrames)) : total;
   const browser = await puppeteer.launch({
-    executablePath: '/usr/bin/google-chrome', headless: 'new',
+    executablePath: CHROME, headless: 'new',
     args: ['--disable-gpu', '--disable-gpu-compositing', '--use-angle=swiftshader', '--allow-file-access-from-files',
       '--disable-dev-shm-usage', '--no-first-run', '--hide-scrollbars', '--mute-audio', '--font-render-hinting=none'],
     defaultViewport: {width: clip.w, height: clip.h, deviceScaleFactor: 1},
