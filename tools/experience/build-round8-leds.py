@@ -74,6 +74,11 @@ SURFACE_TRIM = {'storage': {'desktopStrength': .3}}
 # level: at half it read washed out against the daylit floor (HQ16a, Vico).
 DAYLIGHT = {'commons': 'party', 'storage': 'night'}
 ROOM_LIGHT_BY = {'commons': .8, 'storage': .8}
+# HQ16c (Vico on HQ16b: the full yellow/red status light "bounces off too many walls", and off the desktop too much; the
+# monitor too bright). Picked variant B of peak-pulse stills: the app's room LED spill (walls/floor within ~2 m and the
+# LEDs' share of the architectural bounce; film-fx ledRoomSpill) at 25%, the desktop receiver at half (on top of
+# storage's SURFACE_TRIM) and the monitor clip at 75%. The floor glow and the strips keep their level.
+LIBRARY_LED = {'ledRoomSpill': .25, 'desktopStrength': .5, 'screenBrightness': .75}
 
 
 def fix(s):
@@ -89,6 +94,8 @@ def fix(s):
     if s['id'] in DAYLIGHT:
         s['timeOfDay'] = [{'at': -1, 'mode': DAYLIGHT[s['id']]}, {'at': 0, 'mode': 'morning'}]
         s['sceneGlobals'].pop('environmentScale', None); s['sceneGlobals'].pop('exposure', None)
+        s['sceneGlobals']['ledRoomSpill'] = LIBRARY_LED['ledRoomSpill']
+        for sc in s.get('screens', []): sc['brightness'] = LIBRARY_LED['screenBrightness']
     if s['id'] == 'awaken':
         # Lights off while the camera finds the desk (wheel macro -> base -> silhouette + first title at 8.2 s),
         # then switch on (0.3 s) before the first move at 11 s.
@@ -106,6 +113,7 @@ def fix(s):
     s['ledSurfaces'] = {k: (round(v * (FLOOR_LEVEL if k == 'floorStrength' else LIGHT_LEVEL), 1) if k.endswith('Strength') else v)
                         for k, v in VIEWER_SURFACES.items()}
     for k, f in SURFACE_TRIM.get(s['id'], {}).items(): s['ledSurfaces'][k] = round(s['ledSurfaces'][k] * f, 1)
+    if s['id'] in DAYLIGHT: s['ledSurfaces']['desktopStrength'] = round(s['ledSurfaces']['desktopStrength'] * LIBRARY_LED['desktopStrength'], 1)
     s['ledGlow'] = 1
     FOOT_TOP = {'match': '^Base_Panels_3 LED reflection$', 'hide': True}
     s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e.get('match') != FOOT_TOP['match']] + [FOOT_TOP]

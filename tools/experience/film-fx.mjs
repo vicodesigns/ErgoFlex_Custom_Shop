@@ -25,6 +25,9 @@
 //     on top of whatever the room/timeOfDay/sceneEdits write (and its painted additive light pools). The desk's LED light (strips, spill, floor bounce, the
 //     room LED spill), screens, windows and emissive practicals keep their level, so the desk light reads against a
 //     lower-key room the way it does on the dark stage.
+//     ledRoomSpill: k  the app's room LED spill (room-led-spill.mjs: the desk strips' light on the room's walls and floor
+//     within ~2 m, and their share of the architectural bounce across the room) x k; the desk's own receivers are
+//     ledSurfaces / ledReceivers (Vico, HQ16b: the status light "bounces off too many walls").
 //   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
 //   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
 //   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
@@ -636,6 +639,16 @@ function scaleProp(obj, field, factor) {
   Object.defineProperty(obj, field, { configurable: true, enumerable: true, get: () => get() * factor(), set });
   return () => { const v = get(); delete obj[field]; if (own) Object.defineProperty(obj, field, own); else obj[field] = v; };
 }
+// The room LED spill's uniforms live only in its patched materials' shaders (the app does not expose the RoomLedSpill), so
+// they are found through the renderer once a patched material has compiled; the gain the app writes every frame is scaled.
+function installLedRoomSpill(k) {
+  let undo = null;
+  const find = () => {
+    let u = null; sceneRoot().traverse(o => { if (u || !o.isMesh) return; for (const m of [].concat(o.material || [])) if (!u && m?.customProgramCacheKey?.().includes('room-led-spill')) u = api.renderer.properties.get(m)?.uniforms?.efRoomGain; });
+    if (u) undo = scaleProp(u, 'value', () => k);
+  };
+  return { frame: () => { if (!undo) find(); }, restore: () => undo?.() };
+}
 function installRoomLight(keys) {
   const k = Array.isArray(keys) ? keys : [[0, keys]], cell = { value: keyAt(k, 0) }, f = () => cell.value, undo = [];
   const scene = sceneRoot(), inDesk = o => { for (let p = o; p; p = p.parent) if (p === api.loadedModel || p.userData?.filmFx) return true; return false; };
@@ -715,12 +728,14 @@ export async function install(shot) {
   if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
   // After timeOfDay (which snapshots the raw light levels) and sceneEdits (whose light multipliers it chains to).
   if (shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
+  if (shot.sceneGlobals?.ledRoomSpill !== undefined) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals.ledRoomSpill); active.roomSpill.frame(); }
   return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledReceivers: active.viewerLeds?.info };
 }
 export async function frame(t, chapterSeconds, { video = false } = {}) {
   if (!active) return;
   if (active.tod) active.tod.apply(chapterSeconds);
   active.roomLight?.frame(chapterSeconds);
+  active.roomSpill?.frame();
   if (active.globals?.exposureCell) active.globals.exposureCell.cell.value = keyAt(active.globals.exposureCell.keys, chapterSeconds);
   if (active.globals?.envKeys) {
     const k = active.globals.envKeys, i = k.findIndex(p => p[0] > chapterSeconds);
@@ -760,7 +775,7 @@ export function clear() {
   active.floor?.restore();
   active.wheels?.restore();   // after quality.restore, which hands the render back to this wrapper
   active.viewerLeds?.restore();   // after wheels.restore (installed first, so wrapped by it)
-  active.roomLight?.restore();   // before edits / timeOfDay: it chains to their accessors
+  active.roomSpill?.restore(); active.roomLight?.restore();   // before edits / timeOfDay: it chains to their accessors
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
   clearDeskObjects(active.desk);
