@@ -59,12 +59,16 @@ VIEWER_SURFACES = {'desktopStrength': 157, 'desktopReach': 100, 'desktopWidth': 
 # levels (surface strengths x LIGHT_LEVEL; the floor, the app's foot glow and the ported floor bounce, x FLOOR_LEVEL).
 # The strips themselves keep their brightness.
 LIGHT_LEVEL, FLOOR_LEVEL, FLOOR_BOUNCE = 2 / 3, .5, 130   # FLOOR_BOUNCE: film-viewer-leds APP_SURFACE_DEFAULTS
+# HQ14r (Vico: "all chapters have the right lighting"): storage joins the approved look at the dimmed levels. Its desktop
+# folds to 65 deg and then faces the desktop strip head-on, so at the full desktop level the roll's amber/red turned the
+# whole green Humboldt top gold (test stills); its desktop receiver runs at 30% of the others' (the status light still
+# reads on the floor, the wall and the desktop's edge). Its room keeps its own grade (environmentScale / exposure) under roomLight.
+SURFACE_TRIM = {'storage': {'desktopStrength': .3}}
 
 
 def fix(s):
-    # Storage keeps its own look for now: it rests on the app's storage warm white #fff1dc, and at the visualizer's
-    # levels the red roll washes the whole near-vertical Humboldt desktop red (HQ15 test stills); Vico to decide.
-    if not s.get('ledStatus') or s.get('id') == 'storage':
+    # (Storage stayed on its old look, warm white #fff1dc + floorLight, until HQ14r: see SURFACE_TRIM.)
+    if not s.get('ledStatus'):
         return s
     s['ledColor'] = WHITE_STAGE if s['id'] in STAGE else WHITE_ROOM
     if s['id'] in NEUTRAL: s['ledNeutral'] = NEUTRAL[s['id']]
@@ -88,6 +92,7 @@ def fix(s):
     s['ledReceivers'] = {'mode': 'viewer', 'stripMap': 'viewer', 'floorBounceStrength': round(FLOOR_BOUNCE * FLOOR_LEVEL, 1)}
     s['ledSurfaces'] = {k: (round(v * (FLOOR_LEVEL if k == 'floorStrength' else LIGHT_LEVEL), 1) if k.endswith('Strength') else v)
                         for k, v in VIEWER_SURFACES.items()}
+    for k, f in SURFACE_TRIM.get(s['id'], {}).items(): s['ledSurfaces'][k] = round(s['ledSurfaces'][k] * f, 1)
     s['ledGlow'] = 1
     FOOT_TOP = {'match': '^Base_Panels_3 LED reflection$', 'hide': True}
     s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e.get('match') != FOOT_TOP['match']] + [FOOT_TOP]
