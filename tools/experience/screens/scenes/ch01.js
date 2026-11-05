@@ -5,7 +5,7 @@
 // With TWIN=<video> (capture.mjs) the DIGITAL TWIN card shows the real 3D desk (twinCard) instead of the
 // drawn side view (schematic).
 (function () {
-  const BOOT = 1.5;
+  let BOOT = 1.5, ON = 0, EARLY = 10;   // ON: the desk's lights-on (SHOT.lightsOn); the screen is black before it
   // Merged busy spans of every clip; the longest gap between them is the hold for the "Twin synced" moment.
   function beats() {
     const spans = SHOT.clips.map(c => [c.start, c.start + c.duration]).sort((a, b) => a[0] - b[0]), busy = [];
@@ -134,6 +134,8 @@
   SCENES.ch01 = {
     prefetch(t) { return twinOn() ? [['twin', twinIdx(t)]] : []; },
     draw(t) {
+      if (SHOT.lightsOn && !ON) { ON = SHOT.lightsOn; BOOT = ON + 1.5; EARLY = BOOT + 5; }
+      if (t < ON) { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); return; }
       if (!B) B = beats();
       backdrop(t, {top: '#08101e', bot: '#04060b', blobs: [[C.blue, .16], [C.violet, .06]]});
       const p = pose(t), ui = eo(seg(t, BOOT - .2, BOOT + .8)), endLogo = sm(seg(t, B.end, B.end + 1.2));
@@ -201,13 +203,13 @@
       });
       // ---- boot logo and end logo
       const bootA = 1 - sm(seg(t, BOOT - .3, BOOT + .5));
-      const la = Math.max(bootA * sm(seg(t, 0, .7)), endLogo);
+      const la = Math.max(bootA * sm(seg(t, ON, ON + .7)), endLogo);
       alpha(la, () => {
-        const k = t < 10 ? eo(seg(t, 0, 1.2)) : eo(seg(t, B.end, B.end + 1.6));
+        const k = t < EARLY ? eo(seg(t, ON, ON + 1.2)) : eo(seg(t, B.end, B.end + 1.6));
         g.fillStyle = rad(W / 2, H / 2, 700, [[0, hexA(C.blue, .22 * la)], [1, 'rgba(0,0,0,0)']]); g.fillRect(0, 0, W, H);
         logo(W / 2, H / 2 - 30, lerp(760, 820, k), 1, {glow: hexA(C.blue2, .6), glowR: 50});
-        T(t < 10 ? 'Connecting to your desk' : 'Your partner in health', W / 2, H / 2 + 120, 40, {w: 500, a: 'center', c: C.soft});
-        if (t < 10) bar(W / 2 - 220, H / 2 + 170, 440, 10, eo(seg(t, .2, BOOT)), C.blue);
+        T(t < EARLY ? 'Connecting to your desk' : 'Your partner in health', W / 2, H / 2 + 120, 40, {w: 500, a: 'center', c: C.soft});
+        if (t < EARLY) bar(W / 2 - 220, H / 2 + 170, 440, 10, eo(seg(t, ON + .2, BOOT)), C.blue);
         else { T(`${p.height.toFixed(1)} in  ·  ${Math.round(p.tilt)}°  ·  synced`, W / 2, H / 2 + 180, 32, {w: 600, a: 'center', c: C.blue2}); }
       });
       vignette(.45);

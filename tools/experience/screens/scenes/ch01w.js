@@ -5,7 +5,7 @@
 //   each finished move, the routine checks off each move as it lands, the coach line reacts to the move in progress,
 //   the focus streak and the next-stretch countdown run in real time. Boot logo and end wordmark as ch01.
 (function () {
-  const BOOT = 1.5, STAND_IN = 38;
+  let BOOT = 1.5, ON = 0, EARLY = 10; const STAND_IN = 38;   // ON: the desk's lights-on (SHOT.lightsOn); black before
   function beats() {
     const spans = SHOT.clips.map(c => [c.start, c.start + c.duration]).sort((a, b) => a[0] - b[0]), busy = [];
     for (const s of spans) { const last = busy[busy.length - 1]; if (last && s[0] <= last[1]) last[1] = Math.max(last[1], s[1]); else busy.push(s.slice()); }
@@ -108,6 +108,8 @@
   }
   SCENES.ch01w = {
     draw(t) {
+      if (SHOT.lightsOn && !ON) { ON = SHOT.lightsOn; BOOT = ON + 1.5; EARLY = BOOT + 5; }
+      if (t < ON) { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); return; }
       if (!B) { B = beats(); STEPS = steps(); STAND = standTable(); }
       backdrop(t, {top: '#08101e', bot: '#04060b', blobs: [[C.blue, .16], [C.green, .05]]});
       const p = pose(t), ui = eo(seg(t, BOOT - .2, BOOT + .8)), endLogo = sm(seg(t, B.end, B.end + 1.2));
@@ -127,13 +129,13 @@
         });
       });
       const bootA = 1 - sm(seg(t, BOOT - .3, BOOT + .5));
-      const la = Math.max(bootA * sm(seg(t, 0, .7)), endLogo);
+      const la = Math.max(bootA * sm(seg(t, ON, ON + .7)), endLogo);
       alpha(la, () => {
-        const k = t < 10 ? eo(seg(t, 0, 1.2)) : eo(seg(t, B.end, B.end + 1.6));
+        const k = t < EARLY ? eo(seg(t, ON, ON + 1.2)) : eo(seg(t, B.end, B.end + 1.6));
         g.fillStyle = rad(W / 2, H / 2, 700, [[0, hexA(C.blue, .22 * la)], [1, 'rgba(0,0,0,0)']]); g.fillRect(0, 0, W, H);
         logo(W / 2, H / 2 - 30, lerp(760, 820, k), 1, {glow: hexA(C.blue2, .6), glowR: 50});
-        T(t < 10 ? 'Good afternoon' : 'Your partner in health', W / 2, H / 2 + 120, 40, {w: 500, a: 'center', c: C.soft});
-        if (t < 10) bar(W / 2 - 220, H / 2 + 170, 440, 10, eo(seg(t, .2, BOOT)), C.blue);
+        T(t < EARLY ? 'Good afternoon' : 'Your partner in health', W / 2, H / 2 + 120, 40, {w: 500, a: 'center', c: C.soft});
+        if (t < EARLY) bar(W / 2 - 220, H / 2 + 170, 440, 10, eo(seg(t, ON + .2, BOOT)), C.blue);
         else T(`Wellness ${Math.round(posture(t))}  ·  ${Math.floor((23 * 60 + 18 + standSec(t)) / 60)} min standing  ·  routine done`, W / 2, H / 2 + 180, 32, {w: 600, a: 'center', c: C.green});
       });
       vignette(.45);

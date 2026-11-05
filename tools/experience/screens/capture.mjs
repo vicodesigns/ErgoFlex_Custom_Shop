@@ -55,7 +55,9 @@ function shotData(chapter) {
   const poses = [];
   for (let i = 0; i <= dur * rate; i++) poses.push(sampleClipMotion(shot.motion, i / rate));
   const clips = shot.motion.clips.map(c => ({lane: c.lane, kind: c.kind, start: c.start, duration: c.duration, label: c.label, target: c.target, value: c.value, direction: c.direction}));
-  return {id: shot.id, chapter, seconds, duration: dur, rate, poses, clips, initial: shot.motion.initial, title: shot.title};
+  // lightsOn: the end of a leading 'off' LED state (the desk is dark until then, so its monitor is too); absent otherwise.
+  const off = (shot.ledStatus || []).find(e => e.kind === 'off' && e.at === 0);
+  return {id: shot.id, chapter, seconds, duration: dur, rate, poses, clips, initial: shot.motion.initial, title: shot.title, ...(off ? {lightsOn: off.dur} : {})};
 }
 
 // Demo exercise clips etc. are pre-decoded to jpg frames at 30 fps so the page
