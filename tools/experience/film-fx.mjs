@@ -438,14 +438,15 @@ function clearDeskObjects(d) {
 // Strengths are the app's live uniforms (ledGlow × floor/leftWing/rightWing
 // Strength), so ledGlow and ledSurfaces keep driving it. Hue-preserving roll-off:
 // alpha = max·(1−e^(−m/max)) on the brightest channel, so nothing clips to white.
-//   floorLight:{gain=1, foot=1, wings=1, footLift=.25, lobe=1, max=.6, soft=.04, radius=3.2, hideApp=true}
+//   floorLight:{gain=1, foot=1, wings=1, center=wings (desktop centre strip, id 4), footLift=.25, lobe=1, max=.6, soft=.04, radius=3.2, hideApp=true}
 //     gain: overall; foot / wings: per source; footLift: the foot strip's virtual height gain (scene
 //     units; it hangs only .175 up under the footrest, so its true pool is a narrow band the footrest
 //     hides; the lift stands in for the diffuser and the glossy floor's spread); soft: source radius
 //     (softens the pool right under a strip); radius: fade-out disc around the desk.
-const FLOOR_SEGS = 3, FLOOR_STEPS = 24;
+const FLOOR_SEGS = 4, FLOOR_STEPS = 24;
 function installFloorLight(shot) {
   const spec = { gain: 1, foot: 1, wings: 1, footLift: .25, lobe: 1, max: .6, soft: .04, radius: 3.2, hideApp: true, ...shot.floorLight };
+  spec.center ??= spec.wings; // round 8: the desktop centre strip (id 4) lights the floor under the desk too
   const scene = sceneRoot(), desk = api.loadedModel; scene.updateMatrixWorld(true);
   let app = null; desk.traverse(o => { if (o.name === 'Foot LED floor glow') app = o; });
   if (!app?.material?.uniforms?.efPixelTexture) { console.warn('[film-fx] floorLight: no bound Foot LED floor glow'); return null; }
@@ -465,6 +466,9 @@ function installFloorLight(shot) {
   }).filter(Boolean);
   const wingStrips = [...strips(5), ...strips(6)];
   const foot = { mat: app.material, row: 7, meshes: strips(7) };
+  // Desk Top Center (physical id 4, layer 3): under the desktop, facing down; strength = the app's desktop spill uniform.
+  let centreMat = null; desk.traverse(o => { if (!centreMat && o.material?.uniforms?.strength && /^Desktop(_3)? LED reflection$|Desktop base LED underside reflection/.test(o.name)) centreMat = o.material; });
+  const centre = { mat: centreMat, meshes: strips(4) };
   const U = app.material.uniforms, v3 = () => new THREE.Vector3(), arr = f => Array.from({ length: FLOOR_SEGS }, f);
   const uniforms = {
     efPixelTexture: U.efPixelTexture, efPixelActive: U.efPixelActive, efPixelRows: U.efPixelRows, efPixelWidth: U.efPixelWidth, efPixelCounts: U.efPixelCounts,
@@ -537,6 +541,8 @@ function installFloorLight(shot) {
     const fm = live(foot.meshes);
     // The lift keeps the foot pool's energy (∫E ∝ I), so footLift only spreads it.
     if (fm) { setSeg(0, fm, 'z', 7, K * spec.foot * foot.mat.uniforms.strength.value, null); uniforms.segLift.value[0].set(0, spec.footLift, 0); } else uniforms.segGain.value[0] = 0;
+    const cm = live(centre.meshes);
+    if (cm && centre.mat && spec.center > 0) setSeg(3, cm, 'z', 4, K * spec.center * centre.mat.uniforms.strength.value, null); else uniforms.segGain.value[3] = 0;
     wings.forEach((w, j) => {
       const i = j + 1; w.panel.updateWorldMatrix(true, false);
       const pc = w.pc.clone().applyMatrix4(w.panel.matrixWorld);

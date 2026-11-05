@@ -121,7 +121,13 @@ export function installStatus(shot) {
       }
       const t = seconds - ev.at, m = movement(ev);
       if (m) {
-        sampleMovementInto(frame, { ...m, elapsedMs: t * 1000 });
+        // Lift (FX34): one wavefront per move, foot rest to top shelf going up and top to foot going down,
+        // spread over the event (Vico, round 8: the desk sweeps once with the move). The app's own FX34 frames
+        // are kept; only their clock is mapped: head travel 0 -> 4 layers = phase 0 -> .8, reached at 90% of dur.
+        // sweep:false keeps the firmware's free-running loop.
+        let ms = t * 1000;
+        if (m.fx === 34 && ev.sweep !== false) ms = Math.min(1, t / (ev.dur * .9)) * .8 / (.12 + m.sx / 255 * .28) * 1000;
+        sampleMovementInto(frame, { ...m, elapsedMs: ms });
         if (m.reverseRotation) {
           // The wings run like the real desk's: re-sample rows 5 and 6 with the physical mode.
           const wings = counts.map(n => new Uint8Array(n * 4));
