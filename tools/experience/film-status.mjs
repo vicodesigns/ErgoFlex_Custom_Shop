@@ -11,8 +11,8 @@
 //          'wheels'       FX36 comet, travel red with caution amber; mode = drive mode 1-10
 //                         1 strafe L, 2 strafe R, 3 fwd, 4 back, 5 CW, 6 CCW,
 //                         7 diag L-fwd, 8 diag L-back, 9 diag R-fwd, 10 diag R-back
-//                         Rotation (5/6): the wings (strips 5, 6) run like the real desk's
-//                         (firmware fxWheels), every other strip keeps the preview's reversal.
+//                         Rotation (5/6): every strip runs the firmware direction (fxWheels; the viewer's
+//                         reversal was wrong, Vico 2026-11-04). Forward/back: the foot rest runs the wings' comet.
 //          'collision'    latched breathing red, the app's roomSafety 'collision' look
 //          'off'          all strips dark (and their spill); the event's fade is the switch-on to the regular look
 //          'proximity'    latched amber, the desk's FX2 breathe (sx 150: one breath per ~3.1 s,
@@ -43,7 +43,9 @@ function movement(ev) {
   if (ev.kind === 'lift-down') return { fx: 34, ix: 128, sx: 160, colors: [RED, RED, ZERO], dark: [2] };
   if (ev.kind === 'tilt-extend') return { fx: 35, ix: 0, sx: 160, colors: [YELLOW, YELLOW, ZERO] };
   if (ev.kind === 'tilt-retract') return { fx: 35, ix: 128, sx: 160, colors: [PURPLE, PURPLE, ZERO] };
-  if (ev.kind === 'wheels') return { fx: 36, ix: ev.mode, sx: 180, reverseRotation: ev.mode === 5 || ev.mode === 6, colors: [RED, RED, AMBER] };
+  // Rotation comets run the firmware direction on every strip (Vico confirmed 2026-11-04: the viewer's
+  // "preview correction" reverseRotation flip was wrong; Polish removed it from the demo).
+  if (ev.kind === 'wheels') return { fx: 36, ix: ev.mode, sx: 180, reverseRotation: false, colors: [RED, RED, AMBER] };
   return null;
 }
 
@@ -135,9 +137,9 @@ export function installStatus(shot) {
           sampleMovementInto(wings, { ...m, reverseRotation: false, elapsedMs: t * 1000 });
           frame[5].set(wings[5]); frame[6].set(wings[6]);
         }
-        if (ev.kind === 'wheels' && ev.footComet !== false) {
-          // Vico (HQ14c): the foot rest runs the wings' comet. The firmware gives it a slow red pulse on forward/back
-          // (and a short comet on turns), which starts dark and read as off. Sampled at the foot's own length.
+        if (ev.kind === 'wheels' && (ev.mode === 3 || ev.mode === 4) && ev.footComet !== false) {
+          // Vico (HQ14c): on forward/back the firmware gives the foot rest a slow red pulse that starts dark and read
+          // as off, so it runs the wings' comet there (sampled at the foot's own length). Other modes keep the firmware's.
           const foot = counts.map((n, i) => new Uint8Array((i === 5 ? counts[7] : 1) * 4));
           sampleMovementInto(foot, { ...m, reverseRotation: false, elapsedMs: t * 1000 });
           frame[7].set(foot[5]);
