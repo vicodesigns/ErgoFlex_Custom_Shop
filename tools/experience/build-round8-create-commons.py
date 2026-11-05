@@ -7,6 +7,9 @@ Edits review-cut.json and shots/03.json / shots/04.json in place. Owns only: cre
 (+ the baked camera), its palette sceneEdits and the painted palette accessory; commons' cameraPlan (+ camera).
 Every other field (LED look, lights, screens, other sceneEdits) is left to its owner (build-round8-leds.py ...).
 Values are absolute, so re-running is safe.
+With <hq>/director-camera-<create|commons>.json (Director Mode) that chapter's camera is left to
+build-round8-director.py (run last; it may change the length too); create's authored motion + ledStatus are still
+set here and that pass re-times them from Vico's clips.
 
 Chapter 3, create ("the second time it tilts down it should also raise up to about 50 in, because it comes down and
 clips the little stool with the painter's palette; the palette is all white"):
@@ -84,11 +87,15 @@ PALETTE_HIDE = {'match': '^Mesh_2$', 'path': 'ergoflex-artist-stool', 'hide': Tr
 PALETTE = {'id': 'atelier-artist-palette-oak', 'role': 'base-shelf', 'x': -150, 'z': 620, 'y': 335, 'rotation': 20}
 
 
+def director(cid): return os.path.exists(os.path.join(H, f'director-camera-{cid}.json'))
+
+
 def fix_create(s):
     s['motion'] = CREATE_MOTION
     s['ledStatus'] = CREATE_STATUS
-    s['cameraPlan'] = CREATE_CAMERA
-    s['camera'] = bake(s['seconds'], CREATE_CAMERA)
+    if not director('create'):
+        s['cameraPlan'] = CREATE_CAMERA
+        s['camera'] = bake(s['seconds'], CREATE_CAMERA)
     s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if not (e.get('match') == PALETTE_HIDE['match'] and e.get('path') == PALETTE_HIDE['path'])] + [PALETTE_HIDE]
     acc = s.setdefault('accessories', {}); add = acc.setdefault('add', [])
     acc['add'] = [a for a in add if not (isinstance(a, dict) and a.get('id') == PALETTE['id'])] + [PALETTE]
@@ -107,8 +114,9 @@ COMMONS_CAMERA = {'easeIn': False, 'easeOut': False, 'keys': [
 
 
 def fix_commons(s):
-    s['cameraPlan'] = COMMONS_CAMERA
-    s['camera'] = bake(s['seconds'], COMMONS_CAMERA)
+    if not director('commons'):
+        s['cameraPlan'] = COMMONS_CAMERA
+        s['camera'] = bake(s['seconds'], COMMONS_CAMERA)
     return s
 
 

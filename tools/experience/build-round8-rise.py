@@ -19,7 +19,8 @@ Camera (round 11; HQ10's spline was aimed at the removed tablet and pushed in, t
   the margins and the camera speed of the baked keys.
 Usage: build-round8-rise.py <hq dir> (edits review-cut.json and shots/02.json in place; bakes the camera on
 shots/02.json with camera-spline.mjs and copies camera + cameraPlan into the review-cut's rise shot).
-If <hq>/director-camera-rise.json exists (director-bridge.py import --shot rise, 16 s) its keys replace CAMERA's.
+If <hq>/director-camera-rise.json exists (Director Mode), build-round8-director.py (run last) owns the chapter's
+camera, length, motion and status lights: this builder then sets only the props and skips the camera and its report.
 """
 import json, math, os, subprocess, sys
 
@@ -104,16 +105,11 @@ CAMERA = {'easeIn': False, 'easeOut': False, 'keys': [
     orbit(16.0, 25, 4.75, 1.48, 1.69, -0.05, 48.5, label='Hero 3/4, drifting')]}
 
 DIRECTOR = os.path.join(H, 'director-camera-rise.json')
-if os.path.exists(DIRECTOR):
-    dc = json.load(open(DIRECTOR))
-    if abs(float(dc.get('seconds', SECONDS)) - SECONDS) > 1e-6:
-        print(f'rise: ignoring {DIRECTOR}: made for {dc.get("seconds")} s, the chapter is {SECONDS} s', file=sys.stderr)
-    else:
-        CAMERA['keys'] = dc['keys']; print(f'rise: camera keys from {DIRECTOR}')
+OWN_CAMERA = not os.path.exists(DIRECTOR)    # else build-round8-director.py sets it (and may change the length)
 
 
 def fix(s):
-    s['cameraPlan'] = CAMERA
+    if OWN_CAMERA: s['cameraPlan'] = CAMERA
     s['accessories'] = {'add': [CUP]}
     s['screens'] = [x for x in s.get('screens', []) if 'tablet' not in json.dumps(x)]
     # Keep the edits' order (other builders append theirs): replace ours in place, append only when missing.
@@ -129,15 +125,21 @@ def fix(s):
 # Bake on shots/02.json, then copy camera + cameraPlan into the cut (only the rise shot's camera fields change there).
 shot_path = os.path.join(H, 'shots', '02.json')
 sh = json.load(open(shot_path))
-if sh.get('id') != 'rise' or sh.get('seconds') != SECONDS: sys.exit(f'{shot_path}: not the {SECONDS} s rise shot')
-json.dump(fix(sh), open(shot_path, 'w'), indent=1)
-subprocess.run(['node', os.path.join(ROOT, 'tools/experience/camera-spline.mjs'), shot_path], check=True, stdout=subprocess.DEVNULL)
+if sh.get('id') != 'rise' or (OWN_CAMERA and sh.get('seconds') != SECONDS): sys.exit(f'{shot_path}: not the {SECONDS} s rise shot')
+if OWN_CAMERA:
+    json.dump(fix(sh), open(shot_path, 'w'), indent=1)
+    subprocess.run(['node', os.path.join(ROOT, 'tools/experience/camera-spline.mjs'), shot_path], check=True, stdout=subprocess.DEVNULL)
+elif json.load(open(shot_path)) != fix(json.loads(json.dumps(sh))):
+    json.dump(fix(sh), open(shot_path, 'w'), indent=1)
 sh = json.load(open(shot_path))
 cut_path = os.path.join(H, 'review-cut.json'); cut = json.load(open(cut_path))
 for s in cut['shots']:
     if s['id'] == 'rise':
-        fix(s); s['camera'] = sh['camera']
+        fix(s)
+        if OWN_CAMERA: s['camera'] = sh['camera']
 json.dump(cut, open(cut_path, 'w'), indent=1)
+if not OWN_CAMERA:
+    print(f'rise: props set; camera, length and moves from {DIRECTOR} (build-round8-director.py)'); sys.exit()
 
 
 # ---------------------------------------------------------------- report: speed, outward start, framing

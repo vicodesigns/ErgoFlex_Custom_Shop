@@ -12,7 +12,8 @@ This one has a purpose: the lift (28 -> 43.5 in, 3-8 s, blue status light) and i
 Usage: build-round8-wellness.py <hq dir> (sets only the wellness shot's cameraPlan + camera: bakes shots/08.json
 with camera-spline.mjs and copies both into review-cut.json). Run it under the cut lock:
   flock /tmp/claude-1000/hq14-cut.lock python3 tools/experience/build-round8-wellness.py <hq dir>
-If <hq>/director-camera-wellness.json exists (director-bridge.py import --shot wellness, 13 s) its keys are used.
+If <hq>/director-camera-wellness.json exists (Director Mode), build-round8-director.py (run last) owns the
+chapter's camera, length, motion and status lights, and this builder does nothing.
 """
 import json, math, os, subprocess, sys
 
@@ -70,11 +71,7 @@ CAMERA = {'easeIn': False, 'easeOut': False, 'keys': [
 
 DIRECTOR = os.path.join(H, 'director-camera-wellness.json')
 if os.path.exists(DIRECTOR):
-    dc = json.load(open(DIRECTOR))
-    if abs(float(dc.get('seconds', SECONDS)) - SECONDS) > 1e-6:
-        print(f'wellness: ignoring {DIRECTOR}: made for {dc.get("seconds")} s, the chapter is {SECONDS} s', file=sys.stderr)
-    else:
-        CAMERA['keys'] = dc['keys']; print(f'wellness: camera keys from {DIRECTOR}')
+    print(f'wellness: camera, length and moves from {DIRECTOR} (build-round8-director.py)'); sys.exit()
 
 # Bake on shots/08.json, then copy cameraPlan + camera into the cut's wellness shot (nothing else changes).
 shot_path = os.path.join(H, 'shots', SHOT_FILE)
