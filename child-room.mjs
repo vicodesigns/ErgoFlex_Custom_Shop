@@ -5,10 +5,14 @@ import {CHILD_AGE_STAGES,childAgeStage,childModesForStage} from './child-growth-
 import {enhanceChildGrowth} from './child-growth-detail.mjs';
 import {enhanceChildInteriors} from './child-interior-detail.mjs';
 import {enhanceChildPersonality} from './child-personality-detail.mjs';
+import {enhanceChildMaterials} from './child-material-detail.mjs';
 import {buildEarlyYearsLife} from './early-years-life.mjs';
 import {earlyYearsProfile} from './early-years-profiles.mjs';
 import {drawEarlyMotif} from './early-years-art.mjs';
 import {enhanceEarlyYearsWalls} from './early-years-wall-life.mjs';
+import {enhanceChildLighting} from './child-lighting-detail.mjs';
+import {enhanceChildWalls} from './child-wall-life.mjs';
+import {enhanceChildLivedIn} from './child-lived-in-detail.mjs';
 
 const tiers=[
  ['apartment','Little explorer · cozy room',3800,4400,2700],
@@ -61,8 +65,8 @@ export const CHILD_MODES={
  party:{...mode('Family play','A railway village · shared drawing and picture books',1.0,.44,1.08,['#9dbbd0','#f0e4ce'],['#ffe0ac','#a9cbbb'],.5),fill:'#e2e5de'}
 };
 export const CHILD_LIGHT_CUES={
- morning:{reading:0,moon:0,blind:.04,window:.22},
- afternoon:{reading:.08,moon:0,blind:.1,window:.2},
+ morning:{reading:0,moon:0,blind:.02,window:.22},
+ afternoon:{reading:.08,moon:0,blind:.34,window:.2},
  evening:{reading:1,moon:.15,blind:.4,window:.06},
  night:{reading:0,moon:.26,blind:.9,window:.008},
  party:{reading:.35,moon:0,blind:.07,window:.18}
@@ -115,15 +119,17 @@ export function buildChildRoom(room,root,l,h){
  // Oak floorboards have staggered seams and subdued variation, rather than a
  // uniformly shiny slab. The little room keeps an unobstructed central route.
  const floor=group('floor','Pale oak floor');floor.userData.presentationOnly=true;
- const boards=[];for(let x=-w/2,col=0;x<w/2;x+=180,col++)for(let start=back-(col%3)*300;start<front;start+=900){const z=Math.max(back,start),len=Math.min(start+900,front)-z,bw=Math.min(180,w/2-x);if(len>0)boards.push({at:[x+bw/2,-9,z+len/2],size:[bw-1.5,18,len-1.5]});}
+ // Random-length boards (1.3-2.3 m) with an irregular per-row offset, so the
+ // end joints never line up into a tiled grid.
+ const boards=[];for(let x=-w/2,col=0;x<w/2;x+=180,col++){const bw=Math.min(180,w/2-x);for(let start=back-jitter(col*7+3)*1800,k=0;start<front;k++){const L=1300+Math.floor(jitter(col*31+k*17+5)*5)*250,z=Math.max(back,start),len=Math.min(start+L,front)-z;if(len>0)boards.push({at:[x+bw/2,-9,z+len/2],size:[bw-1.5,18,len-1.5]});start+=L;}}
  const planks=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),oak.clone(),boards.length),matrix=new THREE.Matrix4();boards.forEach((b,i)=>{matrix.compose(new THREE.Vector3(...b.at),new THREE.Quaternion(),new THREE.Vector3(...b.size));planks.setMatrixAt(i,matrix);planks.setColorAt(i,new THREE.Color().setScalar(.94+jitter(i)*.1));});planks.receiveShadow=true;floor.add(planks);
  const rear=new THREE.Group();root.add(rear);box(rear,[w, height,80],[0,height/2,back-40],plaster);box(rear,[w,880,12],[0,440,back+6],sage);box(rear,[w,22,28],[0,891,back+14],oak);box(rear,[w,100,20],[0,50,back+10],cream);room.walls.push({obj:rear,axis:'x',limit:back*root.scale.x});
  const left=new THREE.Group();root.add(left);box(left,[80,height,d],[-w/2-40,height/2,back+d/2],plaster);box(left,[20,100,d],[-w/2+10,50,back+d/2],cream);room.walls.push({obj:left,axis:'z',limit:w/2*root.scale.x,sign:-1});
  const right=new THREE.Group();root.add(right);const windowZ=back+1500,ww=1500,low=850,wh=1450;
  box(right,[80,low,d],[w/2+40,low/2,back+d/2],plaster);box(right,[80,height-low-wh,d],[w/2+40,low+wh+(height-low-wh)/2,back+d/2],plaster);
- for(const [z,len] of [[back+(windowZ-ww/2-back)/2,windowZ-ww/2-back],[(windowZ+ww/2+front)/2,front-windowZ-ww/2]])box(right,[80,wh,len],[w/2+40,low+wh/2,z],plaster);
+ for(const [z,len] of [[back+(windowZ-ww/2-back)/2,windowZ-ww/2-back],[(windowZ+ww/2+front)/2,front-windowZ-ww/2]])box(right,[80,wh+8,len],[w/2+40.6,low+wh/2,z],plaster);// overlap the sill/head bands (no T-junction cracks), 0.6 mm back so the bands win the overlap
  const sky=own(canvasTexture(()=>{})),skyMat=material('#ffffff',{map:sky,roughness:1,emissive:'#c4d7cf',emissiveIntensity:.18});
- const paintSky=id=>{const m=modes[id],canvas=sky.image,c=canvas.getContext('2d'),tw=canvas.width,th=canvas.height;c.clearRect(0,0,tw,th);const grad=c.createLinearGradient(0,0,0,th);grad.addColorStop(0,m.sky[0]);grad.addColorStop(1,m.sky[1]);c.fillStyle=grad;c.fillRect(0,0,tw,th);
+ const paintSky=id=>{const m=modes[id],canvas=sky.image,c=canvas.getContext('2d'),tw=canvas.width,th=canvas.height;c.clearRect(0,0,tw,th);if(lighting.paintSky(c,tw,th,id,m)){sky.needsUpdate=true;return;}const grad=c.createLinearGradient(0,0,0,th);grad.addColorStop(0,m.sky[0]);grad.addColorStop(1,m.sky[1]);c.fillStyle=grad;c.fillRect(0,0,tw,th);
   const sun=id==='morning'?[.75,.26]:id==='evening'?[.12,.68]:[.35,.22];c.fillStyle=id==='night'?'#ead8af':'#f9dfaa';c.beginPath();c.arc(tw*sun[0],th*sun[1],id==='night'?22:34,0,7);c.fill();
   if(id==='night'){c.fillStyle=m.sky[0];c.beginPath();c.arc(tw*sun[0]+11,th*sun[1]-5,21,0,7);c.fill();c.fillStyle='#ddd9c7';for(let i=0;i<25;i++){c.beginPath();c.arc(jitter(i+40)*tw,jitter(i+90)*th*.65,1+i%2,0,7);c.fill();}}
   for(let row=0;row<2;row++){c.fillStyle=id==='night'?['#2d4350','#223943'][row]:id==='evening'?['#879c90','#657f75'][row]:['#a0b8a2','#789a81'][row];for(let i=0;i<8;i++){c.beginPath();c.arc(i*90,th+45+row*45-jitter(i)*65,100,0,7);c.fill();}}sky.needsUpdate=true;};
@@ -221,13 +227,16 @@ export function buildChildRoom(room,root,l,h){
  const materials={oak,cream,coral,blue,mustard,linen,green,ink,paper,plaster,sage},groups={bed:b,nook,rack,cubby,rug,rear,left,right,floor,craft,market,marketGoods};
  const activity=buildChildActivities({root,layout:l,helpers:h,materials,groups,art});
  interiorCraftFinishes(room,{linen:[linen,green],wood:[oak,planks.material]});
- const interiors=enhanceChildInteriors({room,root,layout:l,helpers:h,materials,groups}),stageDecor=enhanceChildGrowth({room,root,layout:l,helpers:h,materials,groups}),personality=enhanceChildPersonality({room,root,layout:l,helpers:h,materials,groups}),earlyLife=buildEarlyYearsLife({root,layout:l,helpers:h,materials,groups,footprint}),wallLife=enhanceEarlyYearsWalls({root,layout:l,helpers:h,materials,groups});let lastSky=null;
+ const interiors=enhanceChildInteriors({room,root,layout:l,helpers:h,materials,groups}),stageDecor=enhanceChildGrowth({room,root,layout:l,helpers:h,materials,groups}),personality=enhanceChildPersonality({room,root,layout:l,helpers:h,materials,groups}),earlyLife=buildEarlyYearsLife({root,layout:l,helpers:h,materials,groups,footprint}),wallLife=enhanceEarlyYearsWalls({root,layout:l,helpers:h,materials,groups}),lighting=enhanceChildLighting({root,layout:l,helpers:h,groups,skyMat});let lastSky=null;
+ enhanceChildMaterials({room,root,layout:l,helpers:h,materials,groups});
  room.roomAtmosphere=(id,accent=1)=>{const phase=modes[id]?id:'morning',m=modes[phase],cue=CHILD_LIGHT_CUES[phase];activity.update(phase);interiors.update(phase);stageDecor.update(phase);personality.update(phase);earlyLife.update(phase);wallLife.update(phase);
   if(lastSky!==phase){paintSky(phase);lastSky=phase;}skyMat.color.set('#ffffff');skyMat.emissiveIntensity=cue.window;skyMat.emissive.set(m.sky[1]);
   blind.scale.y=wh*cue.blind;blind.position.y=low+wh-blind.scale.y/2;
   moonGlow.emissiveIntensity=cue.moon*.9;readingGlow.emissiveIntensity=cue.reading*.8;
   lights.forEach(({light,power,channel})=>{light.intensity=power*cue[channel]*accent;light.color.set(channel==='moon'?'#ffca85':phase==='afternoon'?'#f3e4cb':'#ffd6a0');});
-  root.userData.childLighting={phase,reading:cue.reading,moon:cue.moon,blind:cue.blind,sky:m.sky};root.userData.atmosphere=phase;
+  root.userData.childLighting={phase,reading:cue.reading,moon:cue.moon,blind:cue.blind,sky:m.sky};root.userData.atmosphere=phase;lighting.update(phase,accent);
  };
+ {const walls=enhanceChildWalls({root,layout:l,helpers:h,materials,groups}),base=room.roomAtmosphere;room.roomAtmosphere=(id,accent=1)=>{base(id,accent);walls.update(CHILD_MODES[id]?id:'morning');};}// lived-in walls, built last: placed around existing wall decor
+ {const lived=enhanceChildLivedIn({room,root,layout:l,helpers:h,materials,groups,bounds}),base=room.roomAtmosphere;room.roomAtmosphere=(id,accent=1)=>{base(id,accent);lived.update(CHILD_MODES[id]?id:'morning');};}// lived-in belongings: measured floor clusters + supported clutter
  root.userData.childRoom={ageStage:age,ageLabel:stage.label,deskSize:l.desktopSize,furnitureBounds:bounds};root.userData.dimensionsMm={width:w,depth:d,height};room.roomAtmosphere('morning');
 }

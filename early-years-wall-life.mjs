@@ -15,6 +15,34 @@ export function enhanceEarlyYearsWalls({root,layout:l,helpers:h,materials:m,grou
  const leaf=(c,x,y,rx,ry,a,col)=>{c.fillStyle=col;c.beginPath();c.ellipse(x,y,rx,ry,a,0,Math.PI*2);c.fill();};
  const stroke=(c,pts,col,width=5)=>{c.strokeStyle=col;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();};
  const star=(radius=30)=>{const s=new THREE.Shape();for(let i=0;i<10;i++){const a=Math.PI/2+i*Math.PI/5,r=i%2?radius*.46:radius,x=Math.cos(a)*r,y=Math.sin(a)*r;i?s.lineTo(x,y):s.moveTo(x,y);}s.closePath();return s;};
+ // The sleeping wall: a big hand-painted tree with a swing over the bed, a
+ // moon and stars where the projector stars land at night, drawn in true mm
+ // so nothing is stretched. Profile motifs sit small on the far hills.
+ const rearBottom0=930,rearTop0=l.height-40,muralW=l.width-40,muralH=rearTop0-rearBottom0;
+ function paintSleepWall(c,w,hh){
+  c.save();c.scale(w/muralW,hh/muralH);const W=muralW,H=muralH,bx=l.bed[0]+W/2,ground=H;
+  let sd=71;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
+  const blob=(x,y,rx,ry,col,a=1)=>{c.globalAlpha=a;c.fillStyle=col;c.beginPath();for(let t=0;t<=6.3;t+=.3){const k=1+.12*Math.sin(t*3+x*.01)+.06*Math.sin(t*7);c.lineTo(x+Math.cos(t)*rx*k,y+Math.sin(t)*ry*k);}c.closePath();c.fill();c.globalAlpha=1;};
+  const brush=(pts,col,width)=>{c.strokeStyle=col;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();};
+  // Clouds and a moon with painted stars.
+  const mx=Math.min(W-260,bx+1350),my=H*.24;c.globalAlpha=.35;circle(c,mx,my,250,'#fff5d6');c.globalAlpha=1;circle(c,mx,my,165,'#f6dd96');circle(c,mx+70,my-40,150,'#e9efe9');
+  for(let i=0;i<14;i++){const x=bx-500+r()*1900,y=60+r()*H*.42,s=10+r()*16;c.fillStyle=i%3?'#f6dd96':'#ffffff';c.beginPath();for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,q=k%2?s*.42:s;c.lineTo(x+Math.cos(a)*q,y+Math.sin(a)*q);}c.fill();}
+  for(const [x,y,s] of [[bx+600,H*.12,1],[Math.min(W-500,bx+2100),H*.36,.8]]){for(let i=0;i<4;i++)blob(x+i*90*s,y+(i%2)*20,110*s,55*s,'#ffffff',.75);}
+  // The tree: trunk rises beside the bed, the crown spreads over it.
+  const tx=bx+760,crownX=bx+120,crownY=H*.34;
+  c.fillStyle='#8a6a4f';c.beginPath();c.moveTo(tx-70,ground);c.bezierCurveTo(tx-40,ground-380,tx-120,ground-760,crownX+260,crownY+140);c.lineTo(crownX+330,crownY+190);c.bezierCurveTo(tx+20,ground-760,tx+90,ground-380,tx+90,ground);c.closePath();c.fill();
+  brush([[tx-20,ground-560],[tx+220,ground-860],[tx+330,ground-900]],'#8a6a4f',38);
+  const branch=[[crownX+260,crownY+150],[crownX-200,crownY+210],[crownX-640,crownY+180]];brush(branch,'#7a5c43',44);
+  const greens=[p.second,'#7fa889',p.feature,'#9cbf8f','#5f8c74'];
+  for(let i=0;i<34;i++){const a=r()*Math.PI*2,d=Math.sqrt(r());blob(crownX+Math.cos(a)*d*760,crownY+Math.sin(a)*d*330,160+r()*120,110+r()*70,greens[i%greens.length],.92);}
+  for(let i=0;i<12;i++)circle(c,crownX-600+r()*1300,crownY-250+r()*520,16,i%2?p.accent:'#f2b84b');
+  // A rope swing hangs from the long branch, over the pillows.
+  const sx=crownX-420,sy=crownY+200,seatY=Math.min(H-120,sy+820);brush([[sx-110,sy],[sx-110,seatY]],'#7a5c43',12);brush([[sx+110,sy],[sx+110,seatY]],'#7a5c43',12);
+  c.fillStyle='#a8744f';c.fillRect(sx-150,seatY-8,300,34);
+  // A little bird and a kite caught in the leaves.
+  brush([[crownX+420,crownY-210],[crownX+450,crownY-235],[crownX+480,crownY-210]],p.ink,6);
+  c.restore();
+ }
  const mural=(variant,aspect)=>texture('mural-'+variant,(c,w,hh)=>{
   const figureAspect=Math.max(.4,aspect/2);
   c.save();c.scale(w/1600,hh/800);
@@ -22,7 +50,7 @@ export function enhanceEarlyYearsWalls({root,layout:l,helpers:h,materials:m,grou
   // Uneven, broad painted hills create a room-scale landscape rather than
   // rows of identical framed graphics. The profile supplies its visual story.
   for(let layer=0;layer<3;layer++){
-   c.globalAlpha=variant?[.22,.2,.28][layer]:[.12,.1,.16][layer];c.fillStyle=[p.feature,p.cloth,p.second][layer];c.beginPath();c.moveTo(0,800);
+   c.globalAlpha=variant?[.22,.2,.28][layer]:[.3,.34,.5][layer];c.fillStyle=[p.feature,p.cloth,p.second][layer];c.beginPath();c.moveTo(0,800);
    for(let x=0;x<=1600;x+=16)c.lineTo(x,530+layer*85+Math.sin(x/240+layer+variant)*65);c.lineTo(1600,800);c.closePath();c.fill();
   }c.globalAlpha=1;
   // The sleeping wall is a quiet wash, with the detailed story confined to
@@ -63,13 +91,19 @@ export function enhanceEarlyYearsWalls({root,layout:l,helpers:h,materials:m,grou
   }}
   // A dry-brush speckle layer softens the clean vector edges into painted
   // plaster. This is generated once per room, never during animation.
-  c.globalAlpha=.07;for(let i=0;i<800;i++){const x=(Math.sin(i*37.31)*.5+.5)*1600,y=(Math.sin(i*91.7+6)*.5+.5)*800;c.fillStyle=i%2?'#ffffff':p.ink;c.fillRect(x,y,1+i%3,1+i%2);}c.restore();
+  // (The old sin(i*k) positions formed a regular lattice that minified into a
+  // screen-door grid at the wide camera; a hashed sequence has no lattice.)
+  let seed=variant*977+13;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+  c.globalAlpha=.06;for(let i=0;i<700;i++){const x=rnd()*1600,y=rnd()*800;c.fillStyle=i%2?'#ffffff':p.ink;c.fillRect(x,y,1.5+rnd()*2.5,1.5+rnd()*2);}c.restore();
+  if(!variant)paintSleepWall(c,w,hh);
  },2048,1024);
  const rearBottom=930,rearTop=l.height-40;
- const rearMural=fixture(rear,'early-rear-mural','Hand-painted '+profile.motif+' landscape',[0,(rearBottom+rearTop)/2,l.back+.7]);
+ // 5 mm proud: at 0.7 mm the painted plane z-fought a coplanar wall layer and
+ // showed a woven grid at the wide camera (an 8 mm test removed it outright).
+ const rearMural=fixture(rear,'early-rear-mural','Hand-painted '+profile.motif+' landscape',[0,(rearBottom+rearTop)/2,l.back+5]);
  flat(rearMural,l.width-40,rearTop-rearBottom,mural(0,(l.width-40)/(rearTop-rearBottom)));
  const rightStart=l.back+2700,rightEnd=front-45,rightBottom=740,rightTop=l.height-45;
- const sideMural=fixture(right,'early-right-mural','Wraparound painted play landscape',[l.width/2-.7,(rightBottom+rightTop)/2,(rightStart+rightEnd)/2],-Math.PI/2);
+ const sideMural=fixture(right,'early-right-mural','Wraparound painted play landscape',[l.width/2-3,(rightBottom+rightTop)/2,(rightStart+rightEnd)/2],-Math.PI/2);
  flat(sideMural,rightEnd-rightStart,rightTop-rightBottom,mural(1,(rightEnd-rightStart)/(rightTop-rightBottom)));
 
  // Bunting is high on the rear wall, separate from the existing framed and

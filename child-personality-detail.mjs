@@ -6,10 +6,10 @@ import {drawEarlyMotif} from './early-years-art.mjs';
 // furniture transforms and all additions fit on walls, bedding or the cabinet.
 export const CHILD_PERSONALITY_PALETTES={
  early:{wall:'#fff1dc',dado:'#a7c9d4',feature:'#edbd9c',accent:'#d47c5d',second:'#6eaaa5',cloth:'#e8ad89',ink:'#3f6870',curtain:'#e8c9ab',title:'LITTLE WONDERS',sub:'make a little magic',poster:'SUN / SKY / SEA'},
- primary:{wall:'#f5efd9',dado:'#4e9b9a',feature:'#dfb24f',accent:'#e28d5c',second:'#4a8d9c',cloth:'#e4bd5c',ink:'#245965',curtain:'#b2ceca',title:'CURIOUS ABOUT EVERYTHING',sub:'observe / imagine / make',poster:'SPACE EXPLORER'},
- preteen:{wall:'#eee9df',dado:'#738faa',feature:'#c88770',accent:'#c47b62',second:'#466a87',cloth:'#ca947c',ink:'#304c65',curtain:'#a9bdc9',title:'FIND YOUR OWN VIEW',sub:'photo / sketch / discover',poster:'GO SOMEWHERE NEW'},
- teen:{wall:'#e7e6e2',dado:'#384a71',feature:'#c77960',accent:'#da9a68',second:'#7389ac',cloth:'#bd705c',ink:'#293e5b',curtain:'#a4a9b9',title:'SOUND / FORM',sub:'after hours / original sessions',poster:'MAKE SOME NOISE'},
- college:{wall:'#e7e1d5',dado:'#346971',feature:'#b49a79',accent:'#ce9b6a',second:'#688e8f',cloth:'#b49b7c',ink:'#294f56',curtain:'#c9bb9f',title:'LOCAL TO GLOBAL',sub:'field notes / studio studies',poster:'TAKE THE LONG WAY'}
+ primary:{wall:'#f3e6c6',dado:'#4e9b9a',feature:'#dfb24f',accent:'#e28d5c',second:'#4a8d9c',cloth:'#e4bd5c',ink:'#245965',curtain:'#b2ceca',title:'CURIOUS ABOUT EVERYTHING',sub:'observe / imagine / make',poster:'SPACE EXPLORER'},
+ preteen:{wall:'#ecdbd0',dado:'#738faa',feature:'#c88770',accent:'#c47b62',second:'#466a87',cloth:'#ca947c',ink:'#304c65',curtain:'#a9bdc9',title:'FIND YOUR OWN VIEW',sub:'photo / sketch / discover',poster:'GO SOMEWHERE NEW'},
+ teen:{wall:'#d8d7d1',dado:'#384a71',feature:'#c77960',accent:'#da9a68',second:'#7389ac',cloth:'#bd705c',ink:'#293e5b',curtain:'#a4a9b9',title:'SOUND / FORM',sub:'after hours / original sessions',poster:'MAKE SOME NOISE'},
+ college:{wall:'#e2d2ba',dado:'#346971',feature:'#b49a79',accent:'#ce9b6a',second:'#688e8f',cloth:'#b49b7c',ink:'#294f56',curtain:'#c9bb9f',title:'LOCAL TO GLOBAL',sub:'field notes / studio studies',poster:'TAKE THE LONG WAY'}
 };
 
 export function enhanceChildPersonality({room,root,layout,helpers,materials,groups}){
@@ -60,8 +60,10 @@ export function enhanceChildPersonality({room,root,layout,helpers,materials,grou
  });
  if(early&&rug){
   rug.traverse(o=>{if(o.name==='Woven story river · flat rug print')o.visible=false;});
-  const map=texture('interest-rug',(c,w,h)=>{c.fillStyle='#e9e1ce';c.fillRect(0,0,w,h);c.globalAlpha=.25;drawEarlyMotif(c,w,h,early,{caption:false});c.globalAlpha=1;},1024,768);
-  const rw=layout.tier?2200:1750,rd=layout.tier?1700:1300,print=mesh(rug,new THREE.PlaneGeometry(rw-180,rd-180),mat('#ffffff',.99,{map}),[0,9.15,0]);print.rotation.x=-Math.PI/2;print.name='Woven interest mat · '+early.motif;print.castShadow=false;print.userData.presentationOnly=true;print.userData.dropSurface=false;
+  // The motif is dyed into the woven field (child-material-detail paints the
+  // rug's border, pile and wear underneath), so it is a translucent layer.
+  const map=texture('interest-rug',(c,w,h)=>drawEarlyMotif(c,w,h,early,{caption:false}),768,576);
+  const rw=layout.tier?2200:1750,rd=layout.tier?1700:1300,print=mesh(rug,new THREE.PlaneGeometry(rw-560,rd-560),mat('#ffffff',.99,{map,transparent:true,opacity:.3,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),[0,9.15,0]);print.rotation.x=-Math.PI/2;print.name='Woven interest mat · '+early.motif;print.castShadow=false;print.userData.presentationOnly=true;print.userData.dropSurface=false;
   if(root.userData.childInterior)root.userData.childInterior.rug=early.motif+' woven mat';
  }
  const poster=(parent,id,name,at,width,height,kind,rotation=0,frame=false)=>{const g=fixture(parent,id,name,at);g.rotation.z=rotation;

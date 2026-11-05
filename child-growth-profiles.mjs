@@ -1,6 +1,7 @@
 // Age is an independent scene choice, not a physical fit prescription. Desk
 // widths are editable starting recipes and retain the real motion limits.
 import {earlyYearsProfile} from './early-years-profiles.mjs';
+import {childStageLight} from './child-lighting-profiles.mjs';
 export const CHILD_AGE_STAGES={
  early:{id:'early',label:'Early years · toddler / preschool',short:'Early years',deskSize:'48x30',accessories:[],style:{woodFinish:'Pearl White',baseFinish:'White',trimColor:'#f5f5f2',sheen:'satin'},labels:['Wake & discover','Make & play','Story time','Sleepy stars','Family play'],stories:['Building and sorting invitation','Low drawing tray and colours','An open picture book in the nook','Toys returned and a clear play mat','A railway village and shared stories']},
  primary:{id:'primary',label:'Elementary school',short:'Elementary',deskSize:'48x30',accessories:[],style:{woodFinish:'Pearl White',baseFinish:'White',trimColor:'#286344',sheen:'satin'},labels:['School-day start','Homework & craft','Chapter time','Packed for tomorrow','Build with friends'],stories:['Schoolbag and a fresh reading choice','Workbook and a hands-on project','A chapter in the reading corner','Bag packed and materials organized','Shared craft and a tabletop game']},
@@ -12,7 +13,7 @@ export const childAgeStage=id=>CHILD_AGE_STAGES[id]||CHILD_AGE_STAGES.early;
 export function childModesForStage(age,base,layout){
  const stage=childAgeStage(age),adult=['teen','college'].includes(stage.id),keys=['morning','afternoon','evening','night','party'],early=earlyYearsProfile(layout);
  return Object.fromEntries(keys.map((key,i)=>[key,{...base[key],label:early&&key==='party'?(early.partyParticipants>1?'Play with friends':'Play together'):stage.labels[i],description:early?.activities[key]||stage.stories[i],height:adult&&key==='morning'?43.5:28,tilt:stage.id==='early'?(key==='afternoon'?8:0):key==='evening'?10:0,
-  ...(stage.id!=='early'&&key==='party'?{power:stage.id==='primary'?.95:.5,ambient:.34,sky:['#8298b0','#d6c9b8'],fill:'#c7d2df'}:{})}]));
+  ...(stage.id!=='early'&&key==='party'?{power:stage.id==='primary'?.95:.5,ambient:.34,sky:['#8298b0','#d6c9b8'],fill:'#c7d2df'}:{}),...childStageLight(stage.id,key)}]));
 }
 
 // Upgrade the authored child-room desk once. Owner-moved poses and later finish
