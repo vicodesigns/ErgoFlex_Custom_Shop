@@ -46,7 +46,7 @@ STAGE = {'awaken', 'awareness'}            # the black product stage
 # LED light keeps its level, so the room is lower key and the LEDs read against it as on the stage; EXPOSURE trims the
 # rooms that are still hot (all-white artist room; the commons' white tables and ceiling pools; the rise office).
 ROOM_LIGHT = .55
-EXPOSURE = {'rise': .9, 'create': .7}   # commons .8 until HQ16 (see ROOM_LIGHT_BY)
+EXPOSURE = {'rise': .9, 'create': .7}   # commons .8 until HQ16 (see DAYLIGHT)
 # The visualizer's LED surface levels (app-reference/assets/desk_viewer/led/led-receivers.mjs LED_SURFACE_DEFAULTS,
 # the same numbers as studio.js's): desk-viewer.js runs them with no overrides.
 VIEWER_SURFACES = {'desktopStrength': 157, 'desktopReach': 100, 'desktopWidth': 5, 'desktopCone': 100, 'desktopEdgeFade': 46,
@@ -64,12 +64,16 @@ LIGHT_LEVEL, FLOOR_LEVEL, FLOOR_BOUNCE = 2 / 3, .5, 130   # FLOOR_BOUNCE: film-v
 # whole green Humboldt top gold (test stills); its desktop receiver runs at 30% of the others' (the status light still
 # reads on the floor, the wall and the desktop's edge). Its room keeps its own grade (environmentScale / exposure) under roomLight.
 SURFACE_TRIM = {'storage': {'desktopStrength': .3}}
-# HQ16 (Vico, 2026-11-05, commons: "way too dark ... it looks like at night, it should be a day setting", and "the status
-# indicator lighting is too bright"): the commons gets its room's own daylight back (roomLight 1, no exposure trim; the
-# white study table clips on its top, ~10% of the close frames) and its desk's cast light at half the approved level
-# (every surface strength and the floor bounce x LED_TRIM; the strips keep their brightness).
-ROOM_LIGHT_BY = {'commons': 1.0}
-LED_TRIM = {'commons': .5}
+# HQ16 (Vico, 2026-11-05: the library "looks like at night, it should be a day setting ... make that also for the day",
+# both library chapters). Director Mode's routes light the room for the route's daypart, not the shot's mode: the group
+# route (commons) prepares 'party' (an evening workshop: dusk-navy windows, power .22) and the storage route 'night'
+# (closing). DAYLIGHT keys film-tod's lighting-only daypart blend (dressing, props and the route stay as prepared): the
+# route's own mode before the chapter starts, morning from 0 s (one key alone blends nothing). Under morning light
+# the rooms take roomLight .8 (full: the white study table clips in the close frames); storage drops its old night
+# brightening (environmentScale 1.5, exposure 1.14, build-round4-lighting.py). The status light stays at the approved
+# level: at half it read washed out against the daylit floor (HQ16a, Vico).
+DAYLIGHT = {'commons': 'party', 'storage': 'night'}
+ROOM_LIGHT_BY = {'commons': .8, 'storage': .8}
 
 
 def fix(s):
@@ -82,6 +86,9 @@ def fix(s):
         g = s.setdefault('sceneGlobals', {}); g['roomLight'] = ROOM_LIGHT_BY.get(s['id'], ROOM_LIGHT)
         if s['id'] in EXPOSURE: g['exposureScale'] = EXPOSURE[s['id']]
         else: g.pop('exposureScale', None)
+    if s['id'] in DAYLIGHT:
+        s['timeOfDay'] = [{'at': -1, 'mode': DAYLIGHT[s['id']]}, {'at': 0, 'mode': 'morning'}]
+        s['sceneGlobals'].pop('environmentScale', None); s['sceneGlobals'].pop('exposure', None)
     if s['id'] == 'awaken':
         # Lights off while the camera finds the desk (wheel macro -> base -> silhouette + first title at 8.2 s),
         # then switch on (0.3 s) before the first move at 11 s.
@@ -95,9 +102,8 @@ def fix(s):
     # floor: the app's spill on the foot-rest top (Base_Panels_3, receiver 'base') is hidden.
     s.pop('floorLight', None); s.pop('ledFill', None)
     # The visualizer's strip map (the Custom Shop's is its mirror image along Z): the visualizer is the reference look.
-    t = LED_TRIM.get(s['id'], 1)
-    s['ledReceivers'] = {'mode': 'viewer', 'stripMap': 'viewer', 'floorBounceStrength': round(FLOOR_BOUNCE * FLOOR_LEVEL * t, 1)}
-    s['ledSurfaces'] = {k: (round(v * t * (FLOOR_LEVEL if k == 'floorStrength' else LIGHT_LEVEL), 1) if k.endswith('Strength') else v)
+    s['ledReceivers'] = {'mode': 'viewer', 'stripMap': 'viewer', 'floorBounceStrength': round(FLOOR_BOUNCE * FLOOR_LEVEL, 1)}
+    s['ledSurfaces'] = {k: (round(v * (FLOOR_LEVEL if k == 'floorStrength' else LIGHT_LEVEL), 1) if k.endswith('Strength') else v)
                         for k, v in VIEWER_SURFACES.items()}
     for k, f in SURFACE_TRIM.get(s['id'], {}).items(): s['ledSurfaces'][k] = round(s['ledSurfaces'][k] * f, 1)
     s['ledGlow'] = 1
