@@ -17,7 +17,8 @@ import json, os, subprocess, sys, glob
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 FONTS = os.path.join(ROOT, 'app-reference/assets/google_fonts')
-BLUE = '&H00EC8813&'  # #1388ec as ASS BGR
+BLUE = '&H00EC8813&'
+BOX_A, BOX_BLUR, SCRIM_BLOCK = 'B0', 18, False   # title line boxes: alpha B0 = 31% black, soft edge (HQ20 F); SCRIM_BLOCK True = the old block scrim  # #1388ec as ASS BGR
 
 def run(cmd):
     print('$', ' '.join(c if len(c) < 120 else c[:117] + '…' for c in cmd), flush=True)
@@ -73,21 +74,30 @@ def main():
         'Style: Title,Poppins SemiBold,86,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,-0.6,0,1,0,2,1,0,0,0,1',
         'Style: Detail,Poppins,40,&H00E6DED6,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,0.2,0,1,0,1.5,1,0,0,0,1',
         'Style: Scrim,Poppins,20,&HFF000000,&HFF000000,&HFF000000,&HFF000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1',
+        # HQ20 (Vico: the title scrim was "a giant box ... it should be fitting to the background of the text"; picked F):
+        # each line gets its own soft box sized to its own text (BorderStyle 3: an opaque box from the line's glyph extents,
+        # Outline = padding, OutlineColour = 30% black), same font / size / spacing as the line it sits behind.
+        f'Style: BoxEyebrow,Poppins SemiBold,28,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,6,0,3,16,0,1,0,0,0,1',
+        f'Style: BoxTitle,Poppins SemiBold,86,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,-0.6,0,3,26,0,1,0,0,0,1',
+        f'Style: BoxDetail,Poppins,40,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,0.2,0,3,20,0,1,0,0,0,1',
         'Style: CTA,Poppins Medium,46,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,1.5,0,1,0,1.5,5,0,0,0,1', '',
         '[Events]', 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text']
     X0 = 128
     CTA_Y = 904
     for t in titles:
         a, b = t['start'], t['end']
-        # Soft, blurred scrim behind the text block; fades with it.
-        ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
+        # (Until HQ20: one soft, blurred 1300 x 350 scrim behind the text block, per-title 'scrim' alpha; now fitted line boxes.)
+        if SCRIM_BLOCK: ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
         def line(layer, style, y, text, delay, rise=14):
             dur = int((b - a) * 1000)
             return (f'Dialogue: {layer},{ts(a + delay / 1000)},{ts(b)},{style},,0,0,0,,'
                     f'{{\\an1\\move({X0},{y + rise},{X0},{y},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
-        ass.append(line(1, 'Eyebrow', 812, t['eyebrow'], 0, 10))
-        ass.append(line(1, 'Title', 912, t['title'], 140))
-        ass.append(line(1, 'Detail', 970, t['detail'], 380, 10))
+        def box(style, y, text, delay, rise=14):
+            return (f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Box{style},,0,0,0,,'
+                    f'{{\\an1\\move({X0},{y + rise},{X0},{y},0,900)\\fad(650,420)\\blur{BOX_BLUR}}}{text}')
+        for style, y, key, delay, rise in (('Eyebrow', 812, 'eyebrow', 0, 10), ('Title', 912, 'title', 140, 14), ('Detail', 970, 'detail', 380, 10)):
+            if not SCRIM_BLOCK: ass.append(box(style, y, t[key], delay, rise))
+            ass.append(line(1, style, y, t[key], delay, rise))
     ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad(900,1400)\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
     open(os.path.join(out, 'titles.ass'), 'w', encoding='utf-8').write('\n'.join(ass) + '\n')
 
