@@ -94,6 +94,15 @@ def fix(s):
     # HQ16e (Vico: in storage "it's moving to the right, but the status indicator lighting says it's going to the left",
     # the floor comet especially): on the visualizer's strip map the roll's comets ran against the travel; they run with it.
     if s['id'] in DAY_ROOMS: s.setdefault('sceneGlobals', {})['ledRoomSpill'] = DAY_SPILL
+    # HQ16h (Vico: "all working environments should have that soft white ... during the day a true white, and in the
+    # evening the warm white"). The status chapters already show true white (WHITE_ROOM; rise warms with its clock); the
+    # two rooms without a status light showed the app's blue: they take the app's true white.
+    if s['id'] in ('coast', 'oilers'): s['ledColor'] = '#ffffff'
+    # HQ16h (Vico, high school row 3): the window view had been boosted 2.5x and bloomed to white; at 0.7x it keeps a
+    # soft glow, and the room's own light runs at 75%.
+    if s['id'] == 'oilers':
+        s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e.get('match') != '@window'] + [{'match': '@window', 'material': {'brightness': .7, 'mapBlur': 1.5}}]
+        s.setdefault('sceneGlobals', {})['roomLight'] = .75
     # HQ16g (Vico, movie night "pretty good, bring that to 90%"): the stage's curved media screen and the picture-driven
     # LED light it feeds (ledGain), both at 90%. Idempotent: the base gain is kept in mediaBaseGain.
     if s['id'] == 'media':
