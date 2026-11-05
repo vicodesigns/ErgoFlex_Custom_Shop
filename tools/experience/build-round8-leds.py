@@ -16,7 +16,16 @@ import glob, json, os, sys
 H = sys.argv[1]
 WARM_ROOM, WARM_STAGE = '#ffd8a8', '#5a4938'   # stage: halved after the HQ14 preview (Vico: too bright)
 WHITE_STAGE = '#4c4c4c'   # Vico, HQ14c: true white instead of warm, same brightness as the halved warm (luminance-matched)
-WHITE_ROOM = '#dfdfdf'    # HQ15: the same true white for the room chapters, luminance-matched to WARM_ROOM
+# HQ14k (Vico: every chapter too bright, "fix it to what we have now in chapter 1"): the room chapters use chapter 1's
+# level too. The web demo he signed off shows white at a quarter of its light (WHITE_LIGHT_LEVEL .25,
+# led-pixel-renderer.mjs, demo branch), which the film's renderer lacks; #dfdfdf (luminance-matched to the old warm)
+# drew about 10x the light of chapter 1's #4c4c4c and blew the desktop out on close-ups.
+WHITE_ROOM = WHITE_STAGE
+# Vico's saved "Evening" preset (user_settings, RGBW 255,129,98,98, bri 255 -> about #ffe3c4; Polish 11-04) at chapter 1's level: the "Daytime" true white (bri 221) is #4c4c4c.
+WARM_EVENING = '#52483c'
+# The app's time-based white (Vico): true white by day, warm white from sunset. Rise's clock runs 08:00 -> 17:30 and the
+# room reaches evening at 15.25 s (timeOfDay), so the strips warm with it after the last move has faded (11.6 s).
+NEUTRAL = {'rise': [[0, WHITE_ROOM], [13.4, WHITE_ROOM], [15.6, WARM_EVENING]]}
 STAGE = {'awaken', 'awareness'}            # the black product stage
 # The visualizer's LED surface levels (app-reference/assets/desk_viewer/led/led-receivers.mjs LED_SURFACE_DEFAULTS,
 # the same numbers as studio.js's): desk-viewer.js runs them with no overrides.
@@ -32,6 +41,7 @@ def fix(s):
     if not s.get('ledStatus') or s.get('id') == 'storage':
         return s
     s['ledColor'] = WHITE_STAGE if s['id'] in STAGE else WHITE_ROOM
+    if s['id'] in NEUTRAL: s['ledNeutral'] = NEUTRAL[s['id']]
     if s['id'] == 'awaken':
         # Lights off while the camera finds the desk (wheel macro -> base -> silhouette + first title at 8.2 s),
         # then switch on (0.3 s) before the first move at 11 s.

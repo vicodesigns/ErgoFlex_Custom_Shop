@@ -53,15 +53,26 @@ export function installStatus(shot) {
   const game = api.ledGameMode, counts = game.counts;
   const frame = counts.map(n => new Uint8Array(n * 4)), events = (shot.ledStatus || []).map(e => ({ ...e }));
   const group = new THREE.Group(); group.name = 'Film status'; group.userData.filmFx = true;
-  const pylons = [], regular = api.ledColor || '#ffffff';
-  const regularRgb = [1, 3, 5].map(i => parseInt(regular.slice(i, i + 2), 16));
+  const pylons = [], regular0 = api.ledColor || '#ffffff';
+  const rgbOf = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
   // The status frames go to the strips through the game path, which uploads them as LINEAR bytes
   // (led-pixel-renderer linearByteToSrgb), while the regular look is the sRGB colour regularRgb. So the
   // fade aims at the linear byte that the upload turns back into regularRgb: fading to regularRgb itself
   // ended about 7x too bright (#2b2b2b as linear 43 is sRGB 114), and the floor and desk spill popped off
   // in one frame at the handoff (cinematography final review 8, film 35.43).
   const toSrgbByte = v => { const x = v / 255; return Math.round(255 * (x <= .0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - .055)); };
-  const regularLinear = regularRgb.map(c => { let best = 0; for (let b = 0; b < 256; b++) if (Math.abs(toSrgbByte(b) - c) < Math.abs(toSrgbByte(best) - c)) best = b; return best; });
+  const linearOf = rgb => rgb.map(c => { let best = 0; for (let b = 0; b < 256; b++) if (Math.abs(toSrgbByte(b) - c) < Math.abs(toSrgbByte(best) - c)) best = b; return best; });
+  // ledNeutral:[[seconds, '#hex'], ...] (optional): the regular look changes over the chapter, smoothstep between keys
+  // (Vico, HQ14k: the app's time-based white, true white in the morning, warm white from sunset). Without it the
+  // regular look is the shot's ledColor throughout.
+  const neutral = (shot.ledNeutral || []).map(([at, c]) => [at, rgbOf(c)]).sort((a, b) => a[0] - b[0]);
+  const regularAt = s => {
+    if (!neutral.length) return rgbOf(regular0);
+    const i = neutral.findIndex(k => k[0] > s);
+    if (i === 0) return neutral[0][1]; if (i < 0) return neutral.at(-1)[1];
+    const [a, ca] = neutral[i - 1], [b, cb] = neutral[i], k = smooth((s - a) / (b - a));
+    return ca.map((v, c) => Math.round(v + (cb[c] - v) * k));
+  };
   let fill = null;
   if (shot.ledFill) {
     const b = new THREE.Box3().setFromObject(api.loadedModel), c = b.getCenter(new THREE.Vector3()), f = shot.ledFill;
@@ -111,7 +122,9 @@ export function installStatus(shot) {
       }
       const ev = events.find(e => seconds >= e.at && seconds < e.at + e.dur);
       const hex = c => '#' + c.slice(0, 3).map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+      const regularRgb = regularAt(seconds), regular = hex(regularRgb);
       if (!ev) {
+        const regularLinear = linearOf(regularRgb);
         // Fade from the last state's final frame back to the regular look, ending on what it renders.
         const done = events.filter(e => e.at + e.dur <= seconds).at(-1), u = done ? (seconds - done.at - done.dur) / (done.fade ?? 1) : 1;
         if (!done?.last || u >= 1) { api.setLedColor(regular, false); if (fill) fill.intensity = 0; game.active = false; delete game.sample; return; }
