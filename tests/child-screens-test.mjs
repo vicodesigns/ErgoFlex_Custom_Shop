@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {SceneScreens,cleanScreenSettings,SCREEN_THEMES} from '../scene-screens.mjs';
+let phase='afternoon';
+const context=()=>({scene:'childroom',phase});
+const screens=new SceneScreens({context});
+assert.equal(screens.enabled(),true);
+phase='night';assert.equal(screens.enabled(),false,'bedtime starts with study screens at rest');
+assert.equal(screens.enabled('office'),true,'other environments retain their existing default');
+screens.settings.enabled.childroom=true;
+assert.equal(screens.enabled(),true,'an explicit owner setting takes priority over the bedtime default');
+const saved=cleanScreenSettings(screens.export());
+assert.equal(saved.enabled.childroom,true,'child-room screen preferences persist');
+assert.equal(SCREEN_THEMES.childroom.kind,'read');
+console.log('Child-room bedtime screen defaults, owner overrides and persistence pass.');

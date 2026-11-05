@@ -6,7 +6,7 @@ import { normalizeCustomLook, normalizeCustomPalette, importCustomLooks, CUSTOM_
 import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=commons-group-work-20261016';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=commons-home-comfort-20261024';
-import { poseIsClear } from './room-groove.mjs?v=humboldt-commons-20261015';
+import { poseIsClear, grooveDestination } from './room-groove.mjs?v=humboldt-commons-20261015';
 import { SceneDesks } from './scene-desks.mjs?v=item-gumball-clipboard-20261016';
 import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=item-gumball-clipboard-20261016';
 import { loadLibraryArtworkRecovery, libraryArtworkRecovery, repairLibraryArtwork } from './library-artwork-link.mjs?v=humboldt-decals-stow-20261016';
@@ -26,7 +26,7 @@ import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './r
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
 import { RoomInteractions } from './room-interactions.mjs?v=item-gumball-clipboard-20261016';
 import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pacing-vsm-20261015';
-import { SceneTour, tourEnabled } from './scene-tour.mjs?v=item-gumball-clipboard-20261016';
+import { SceneTour, tourEnabled } from './scene-tour.mjs?v=highschool-setting-20261104';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
 import { roomPolishLighting } from './room-polish.mjs?v=table-clearance-20261021';
@@ -39,7 +39,8 @@ import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById
 import { COWORKING_MODES, COWORKING_LAYOUTS, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
 import { SCIFI_MODES, SCIFI_LAYOUTS, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=groove-routines-20261002';
 import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=gallery-bedroom-20261025';
-import { CHILD_MODES, CHILD_LAYOUTS, childLayoutForSize, childLayoutById } from './child-room.mjs?v=child-room-20261104';
+import { CHILD_AGE_STAGES, childAgeStage, childModesForStage, upgradeChildDesk } from './child-growth-profiles.mjs';
+import { CHILD_MODES, CHILD_LAYOUTS, CHILD_ALL_LAYOUTS, childLayoutsForStage, childLayoutForSize, childLayoutById } from './child-room.mjs?v=child-room-20261104';
 import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=gallery-bedroom-20261025';
 import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
 import * as THREE from 'three';
@@ -656,6 +657,7 @@ function initSceneDeskEditing() {
             }
         },
         prepareDesk:r=>{
+            if(selectedRoomScene==='childroom'){const layout=workspaceRoom.roomLayout,stage=childAgeStage(layout?.ageStage);if(!r.state.accessories){r.state.accessories=[...stage.accessories];r.state.accessoryFinishes={};r.state.style={...stage.style};r.state.peripheralSetup='child-growth-v1';}upgradeChildDesk(r.state,layout);return;}
             if(!['library','occmedialab','highschool'].includes(selectedRoomScene))return;
             const saved=cleanBuildPresets(readStore(BUILD_PRESETS_KEY,1,null)||buildPresets);
             if(selectedRoomScene==='highschool'){
@@ -855,7 +857,7 @@ function initRoomDeskPeripherals(r) {
             let nativeScreen=false;item.obj.traverse(o=>{if(o.userData.govScreen||o.userData.hcScreen||o.userData.itScreen||o.userData.sceneDisplay)nativeScreen=true;});
             // Older institutional shelves batch screen frames into anonymous
             // meshes. Replace those with the editable storage kit as well.
-            if(nativeScreen||/monitor|display|screen|laptop|imac/i.test(item.obj.userData.propId+' '+item.saved.label)||(item.saved.role==='shelf'&&!item.obj.userData.propId))item.saved.removed=true;
+            if(nativeScreen||/monitor|display|screen|laptop|imac/i.test(item.obj.userData.propId+' '+item.saved.label)||(item.saved.role==='shelf'&&!item.obj.userData.propId&&!item.obj.userData.keepShelfDetail))item.saved.removed=true;
         }
         if(!r.objects.has('default-shelf-files'))for(const {id,role,obj} of createShelfStationSupplies(r.state)){
             const saved=r.state.objects[id]||{role,added:false,removed:false,label:obj.name,transform:{p:{x:obj.position.x,y:obj.position.y,z:obj.position.z},q:{x:0,y:0,z:0,w:1},s:{x:1,y:1,z:1}}};
@@ -1026,13 +1028,19 @@ try {
     if (query.get('room') === 'bedroom' && BEDROOM_LAYOUTS[query.get('layout')]) bedroomLayoutId = query.get('layout');
 } catch {}
 function selectedBedroomLayout() { return bedroomLayoutId ? bedroomLayoutById(bedroomLayoutId) : bedroomLayoutForSize(currentConfig.size); }
-let childMode = 'morning', childLayoutId = null;
+let childMode = 'morning', childLayoutId = null, childAgeId='early';
 try {
     const q=new URLSearchParams(location.search),layout=q.get('room')==='childroom'?q.get('layout'):localStorage.getItem('ergoflex.childroomLayout');
-    if(CHILD_LAYOUTS[layout])childLayoutId=layout;
+    const age=q.get('room')==='childroom'?q.get('age'):localStorage.getItem('ergoflex.childroomAge');
+    if(CHILD_ALL_LAYOUTS[layout]){childLayoutId=layout;childAgeId=childLayoutById(layout).ageStage;}
+    if(CHILD_AGE_STAGES[age]){childAgeId=age;const base=childLayoutById(childLayoutId).baseLayoutId;childLayoutId=base+(age==='early'?'':age);}
     const mode=localStorage.getItem('ergoflex.childroomMode');if(CHILD_MODES[mode])childMode=mode;
 } catch {}
-function selectedChildLayout(){return childLayoutById(childLayoutId);}
+function selectedChildLayout(){return childLayoutById(childLayoutId||('house'+(childAgeId==='early'?'':childAgeId)));}
+function setChildAgeStage(age){
+    if(!CHILD_AGE_STAGES[age])return;
+    const base=selectedChildLayout().baseLayoutId;setMeasuredRoomLayout('childroom',base+(age==='early'?'':age));
+}
 let workshopMode = 'morning', workshopLayoutId = null;
 try {
     const layout = localStorage.getItem('ergoflex.workshopLayout'), mode = localStorage.getItem('ergoflex.workshopMode');
@@ -1069,7 +1077,7 @@ function measuredRoomProfile(id = selectedRoomScene) {
     }
     if (id === 'library') return { id, layouts: LIBRARY_LAYOUTS, modes: selectedLibraryLayout().modes || LIBRARY_MODES, layout: selectedLibraryLayout(), mode: libraryMode, prefix: 'library' };
     if (id === 'coworking') return { id, layouts: COWORKING_LAYOUTS, modes: COWORKING_MODES, layout: selectedCoworkingLayout(), mode: coworkingMode, prefix: 'coworking' };
-    if (id === 'childroom') return { id, layouts: CHILD_LAYOUTS, modes: CHILD_MODES, layout: selectedChildLayout(), mode: childMode, prefix: 'childroom' };
+    if (id === 'childroom') return { id, layouts: childLayoutsForStage(childAgeId), modes: childModesForStage(childAgeId,CHILD_MODES,selectedChildLayout()), layout: selectedChildLayout(), mode: childMode, prefix: 'childroom' };
     if (id === 'bedroom') return { id, layouts: BEDROOM_LAYOUTS, modes: BEDROOM_MODES, layout: selectedBedroomLayout(), mode: bedroomMode, prefix: 'bedroom' };
     if (id === 'gallery') return { id, layouts: GALLERY_LAYOUTS, modes: GALLERY_MODES, layout: selectedGalleryLayout(), mode: galleryMode, prefix: 'gallery' };
     if (id === 'scifi') return { id, layouts: SCIFI_LAYOUTS, modes: SCIFI_MODES, layout: selectedScifiLayout(), mode: scifiMode, prefix: 'scifi' };
@@ -2847,18 +2855,19 @@ function styleDeskForRoom(id, preserve = false) {
     const initial = sceneDeskLocation === null;
     if (initial && (restoredSharedBuild || !sceneDeskStyles.product)) sceneDeskStyles.product = currentDeskStyle();
     if (initial && restoredBuildSize && id !== 'product' && (restoredSharedBuild || !sceneDeskStyles[id])) sceneDeskStyles[id] = currentDeskStyle();
-    if (!(preserve && sceneDeskLocation === id)) applyDeskStyle(sceneDeskStyles[id] || ROOM_DESK_STYLES[id]);
+    if (!(preserve && sceneDeskLocation === id)) applyDeskStyle(sceneDeskStyles[id] || roomDeskTheme(id));
     sceneDeskLocation = id;
     syncSceneDeskStyleUI();
 }
+function roomDeskTheme(id){return id==='childroom'?{...childAgeStage(childAgeId).style,name:childAgeStage(childAgeId).short+' workspace'}:ROOM_DESK_STYLES[id];}
 function syncSceneDeskStyleUI() {
     const button = document.getElementById('room-desk-palette'); if (!button) return;
-    const theme = ROOM_DESK_STYLES[selectedRoomScene]; button.hidden = !theme;
+    const theme = roomDeskTheme(selectedRoomScene); button.hidden = !theme;
     button.textContent = sceneDeskStyles[selectedRoomScene] ? 'Use scene palette' : 'Scene palette';
     button.title = theme ? `${theme.name} · ${theme.woodFinish} / ${theme.baseFinish} · restore this room’s suggested desk finishes` : '';
 }
 function resetSceneDeskStyle() {
-    const theme = ROOM_DESK_STYLES[selectedRoomScene]; if (!theme) return;
+    const theme = roomDeskTheme(selectedRoomScene); if (!theme) return;
     delete sceneDeskStyles[selectedRoomScene];
     try { localStorage.setItem(SCENE_DESK_STYLES_KEY, JSON.stringify(sceneDeskStyles)); } catch {}
     applyDeskStyle(theme); syncSceneDeskStyleUI();
@@ -4494,6 +4503,7 @@ function serializeProject() {
                 artistMode,
                 artistLayout: selectedArtistLayout().id,
                 childMode,
+                childAge: childAgeId,
                 childLayout: selectedChildLayout().id,
                 bedroomMode,
                 bedroomLayout: selectedBedroomLayout().id,
@@ -4905,7 +4915,8 @@ function applyProjectPresentation(project) {
     if (ARTIST_MODES[presentation.artistMode]) artistMode = presentation.artistMode;
     if (ARTIST_LAYOUTS[presentation.artistLayout]) artistLayoutId = presentation.artistLayout;
     if (CHILD_MODES[presentation.childMode]) childMode = presentation.childMode;
-    if (CHILD_LAYOUTS[presentation.childLayout]) childLayoutId = presentation.childLayout;
+    if (CHILD_ALL_LAYOUTS[presentation.childLayout]) {childLayoutId=presentation.childLayout;childAgeId=childLayoutById(childLayoutId).ageStage;}
+    else if(CHILD_AGE_STAGES[presentation.childAge])childAgeId=presentation.childAge;
     if (BEDROOM_MODES[presentation.bedroomMode]) bedroomMode = presentation.bedroomMode;
     if (BEDROOM_LAYOUTS[presentation.bedroomLayout]) bedroomLayoutId = presentation.bedroomLayout;
     if (GALLERY_MODES[presentation.galleryMode]) galleryMode = presentation.galleryMode;
@@ -10952,20 +10963,21 @@ function positionHomeDesk(useModePose = false, { preservePosition = false } = {}
     const profile = measuredRoomProfile();
     if (!loadedModel || !workspaceRoom?.roomLayout || !profile) return;
     const layout = workspaceRoom.roomLayout, mode = profile.modes[profile.mode], scale = workspaceRoom.root.scale.x;
+    const activityPose=profile.id==='childroom'&&useModePose?grooveDestination('childroom',layout,profile.mode):null;
     haltAllMotion();
     // A room/desktop-size change starts in its authored desk bay. Time-button
     // destinations belong to Groove; an old saved social phase must not spawn
     // a wider, rotated desk inside the bed or a neighbouring workstation.
     // A layout may stand its desk at a fixed turn (the Humboldt commons faces the wall).
-    if (!preservePosition) deskYaw = THREE.MathUtils.degToRad((layout.deskTurn || 0) + (useModePose ? mode.yaw : 0));
+    if (!preservePosition) deskYaw = activityPose?.yaw??THREE.MathUtils.degToRad((layout.deskTurn || 0) + (useModePose ? mode.yaw : 0));
     const f = grooveFootprint(), c = Math.cos(deskYaw), s = Math.sin(deskYaw);
     const margin = f.margin ?? 45;
     const ex = Math.abs(c) * (f.halfWidth + margin) + Math.abs(s) * (f.halfDepth + margin) + 25;
     const ez = Math.abs(s) * (f.halfWidth + margin) + Math.abs(c) * (f.halfDepth + margin) + 25;
     const ox = c * f.offsetX + s * f.offsetZ, oz = -s * f.offsetX + c * f.offsetZ;
     const fit = (value, min, max) => min > max ? (min + max) / 2 : THREE.MathUtils.clamp(value, min, max);
-    const wantedX = preservePosition ? -glideOffset.z / scale : layout.desk[0] + (useModePose ? mode.offset[0] : 0);
-    const wantedZ = preservePosition ? glideOffset.x / scale : layout.desk[1] + (useModePose ? mode.offset[1] : 0);
+    const wantedX = preservePosition ? -glideOffset.z / scale : activityPose?.x??(layout.desk[0] + (useModePose ? mode.offset[0] : 0));
+    const wantedZ = preservePosition ? glideOffset.x / scale : activityPose?.z??(layout.desk[1] + (useModePose ? mode.offset[1] : 0));
     const x0 = layout.left ?? -layout.width / 2;
     const x = fit(wantedX, x0 + ex - ox, x0 + layout.width - ex - ox);
     const z = fit(wantedZ, layout.back + ez - oz, layout.back + layout.depth - ez - oz);
@@ -10985,7 +10997,13 @@ function syncHomeOfficeUI() {
         const panel = document.getElementById(measuredRoomPanelId(id));
         if (!panel) continue;
         panel.hidden = selectedRoomScene !== id;
-        panel.querySelector(`[data-${prefix}-description]`).textContent = profile.modes[profile.mode].description + ' · ' + (profile.layout.stories || ROOM_STORIES[id])[DAY_PHASES.indexOf(profile.mode)] + (['office', 'coworking'].includes(id) ? ` · ${profile.layout.stations.length + 1} ErgoFlex desks · App controls the Main desk` : '');
+        if(id==='childroom'){
+            const select=panel.querySelector('#childroom-room-size');if(select.dataset.age!==childAgeId){select.innerHTML=Object.values(profile.layouts).map(l=>`<option value="${l.id}">${l.name} · ${l.width/1000} × ${l.depth/1000} m</option>`).join('');select.dataset.age=childAgeId;}
+            const age=panel.querySelector('#childroom-age');if(age)age.value=childAgeId;
+            panel.querySelectorAll('[data-childroom-mode]').forEach(b=>{const m=profile.modes[b.dataset.childroomMode];b.textContent=m.label;b.title='Prepare '+m.label+' Groove';b.setAttribute('aria-label',b.title);});
+        }
+        const description=profile.modes[profile.mode].description,story=(profile.layout.stories || ROOM_STORIES[id])[DAY_PHASES.indexOf(profile.mode)];
+        panel.querySelector(`[data-${prefix}-description]`).textContent = description + (story&&story!==description?' · '+story:'') + (['office', 'coworking'].includes(id) ? ` · ${profile.layout.stations.length + 1} ErgoFlex desks · App controls the Main desk` : '');
         panel.querySelector(`#${prefix}-room-size`).value = profile.layout.id;
         panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-mode`) === profile.mode)));
         panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-size`) === currentConfig.size)));
@@ -11017,6 +11035,7 @@ function setKitchenLayout(id) { setMeasuredRoomLayout('kitchen', id); }
 function setGymLayout(id) { setMeasuredRoomLayout('gym', id); }
 function setStudyLayout(id) { setMeasuredRoomLayout('study', id); }
 function setMeasuredRoomLayout(sceneId, id, options = {}) {
+    if(sceneId==='childroom'&&CHILD_ALL_LAYOUTS[id]){childAgeId=childLayoutById(id).ageStage;try{localStorage.setItem('ergoflex.childroomAge',childAgeId);}catch{}}
     if (!measuredRoomProfile(sceneId)?.layouts[id]) return;
     if (INSTITUTIONAL_ROOMS[sceneId]) institutionalState[sceneId].layout = id;
     else if (sceneId === 'home') homeLayoutId = id;
@@ -11106,6 +11125,7 @@ function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
         applyRoomLighting();
     }
     syncHomeOfficeUI();
+    sceneTour?.sync();
 }
 
 function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop = !preserveDesk } = {}) {
@@ -11206,7 +11226,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     // procedural room standing and is reported in Build checks rather than
     // only in the console.
     const roomReady = workspaceRoom?.ready || Promise.resolve();
-    const dressReady = workspaceAccessories?.dress(choice.id) || Promise.resolve();
+    const dressReady = workspaceAccessories?.dress(choice.id,{ageStage:measured?.layout.ageStage}) || Promise.resolve();
     const assetsReady = Promise.allSettled([roomReady, dressReady]).then(async results => {
         if(choice.id==='library' && measured?.layout.humboldt)await loadLibraryArtworkRecovery();
         if (results[0].status === 'rejected') {
@@ -11296,6 +11316,9 @@ function mountSceneTour() {
         current: () => selectedRoomScene,
         profile: id => measuredRoomProfile(id),
         setScene: id => setRoomScene(id),
+        ageStages:()=>Object.keys(CHILD_AGE_STAGES),
+        setAge:age=>setChildAgeStage(age),
+        ageLabel:age=>childAgeStage(age).short,
         setLayout: (sceneId, id) => setMeasuredRoomLayout(sceneId, id),
         setMode: (sceneId, id) => setMeasuredRoomMode(sceneId, id),
         ready: async kind => { await workspaceRoom?.ready; if (kind !== 'mode') frameRoom(); },
@@ -11933,6 +11956,10 @@ function initStudio() {
         const panel = document.createElement('div'); panel.id = measuredRoomPanelId(id);
         panel.className = 'measured-room-controls'; panel.hidden = true;
         panel.innerHTML = `<div class="home-layout-choices" role="group" aria-label="${ROOM_SCENES.find(s => s.id === id).name} size"><label for="${prefix}-room-size">Room</label><select id="${prefix}-room-size">${Object.values(profile.layouts).map(layout => `<option value="${layout.id}">${layout.name} · ${layout.width / 1000} × ${layout.depth / 1000} m</option>`).join('')}</select><button type="button" data-${prefix}-size="48x30">48″ desk</button><button type="button" data-${prefix}-size="60x30">60″ desk</button></div><div class="home-time-choices" role="group" aria-label="Time of day">${Object.entries(profile.modes).map(([modeId, mode]) => `<button type="button" data-${prefix}-mode="${modeId}" aria-pressed="false">${mode.label}</button>`).join('')}</div><p data-${prefix}-description></p>`;
+        if(id==='childroom'){
+            const age=document.createElement('label');age.className='institutional-setting-label';age.innerHTML=`Life stage <select id="childroom-age" aria-label="Life stage">${Object.values(CHILD_AGE_STAGES).map(a=>`<option value="${a.id}">${a.label}</option>`).join('')}</select>`;
+            age.querySelector('select').value=childAgeId;age.querySelector('select').onchange=e=>setChildAgeStage(e.target.value);panel.querySelector('.home-layout-choices').prepend(age);
+        }
         const groupId = institutionalGroup(id);
         if (groupId) {
             const group = INSTITUTIONAL_GROUPS[groupId];
@@ -12203,6 +12230,8 @@ window.ErgoFlex = {
     roomScenes: ROOM_SCENES,
     setMeasuredRoomLayout,
     setMeasuredRoomMode,
+    setChildAgeStage,
+    get childAgeStage(){return childAgeId;},
     resetSceneDeskStyle,
     get sceneDeskStyles() { return JSON.parse(JSON.stringify(sceneDeskStyles)); },
     get measuredRoom() { return measuredRoomProfile(); },

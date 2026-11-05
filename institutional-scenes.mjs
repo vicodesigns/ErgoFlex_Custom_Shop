@@ -1,5 +1,5 @@
 import * as government from './institutional-government.mjs?v=scene-desk-styling-20261010';
-import * as education from './institutional-education.mjs?v=surface-seating-20261021';
+import * as education from './institutional-education.mjs?v=highschool-setting-20261104';
 import * as healthcare from './institutional-healthcare.mjs?v=scene-desk-styling-20261010';
 import * as it from './institutional-it.mjs?v=scene-desk-styling-20261010';
 import * as media from './institutional-media.mjs?v=campus-life-20261019';

@@ -18,7 +18,7 @@ export const ROOM_DESK_STYLES = {
     kitchen: style('White & garden green', 'White Birch', 'White', '#286344'),
     gym: style('Grey & active green', 'Modern Grey', 'Black', '#286344', 'Space Gray'),
     scifi: style('Brushed silver & graphite', 'Brushed Silver Wrap', 'Space Gray', '#1c1c1e'),
-    childroom: style('Little maker · oak & cream', 'White Oak', 'White', '#f5f5f2', 'Sand'),
+    childroom: style('Pearl-white growing workspace', 'Pearl White', 'White', '#f5f5f2', 'Sand'),
     bedroom: style('Quiet oak & linen', 'White Oak', 'Sand', '#f5f5f2'),
     workshop: style('Maple & graphite', 'Maple', 'Space Gray', '#1c1c1e', 'Black'),
     gallery: style('Ivory & black', 'Warm Ivory', 'Black', '#1c1c1e', 'White'),

@@ -1,0 +1,3458 @@
+[
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "early",
+    "childActivity": {
+      "lowDrawingSurface": false,
+      "phase": "morning",
+      "playMatClear": false,
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#a7c9d4",
+        "feature": "#edbd9c",
+        "wall": "#fff1dc"
+      },
+      "phase": "morning",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1104.2985341491085,
+      "yaw": 0.06,
+      "z": -644.8372723985158
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "apartment",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/apartment"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "afternoon",
+    "ageStage": "early",
+    "childActivity": {
+      "lowDrawingSurface": true,
+      "phase": "afternoon",
+      "playMatClear": false,
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.1,
+      "moon": 0,
+      "phase": "afternoon",
+      "reading": 0.08,
+      "sky": [
+        "#aed4e3",
+        "#fff2dd"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#a7c9d4",
+        "feature": "#edbd9c",
+        "wall": "#fff1dc"
+      },
+      "phase": "afternoon",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1050.000192718216,
+      "yaw": 0,
+      "z": -244.6297082585803
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "house",
+    "phase": "afternoon",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/house"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "early",
+    "childActivity": {
+      "lowDrawingSurface": false,
+      "phase": "evening",
+      "playMatClear": true,
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#a7c9d4",
+        "feature": "#edbd9c",
+        "wall": "#fff1dc"
+      },
+      "phase": "evening",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1324.264418758967,
+      "yaw": -0.08,
+      "z": -324.75447026507885
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "spacious",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/spacious"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "early",
+    "childActivity": {
+      "lowDrawingSurface": false,
+      "phase": "night",
+      "playMatClear": true,
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#a7c9d4",
+        "feature": "#edbd9c",
+        "wall": "#fff1dc"
+      },
+      "phase": "night",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2150.000192718217,
+      "yaw": 0,
+      "z": -494.62970825858025
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "premium",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/premium"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "early",
+    "childActivity": {
+      "lowDrawingSurface": true,
+      "phase": "party",
+      "playMatClear": false,
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#9dbbd0",
+        "#f0e4ce"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#a7c9d4",
+        "feature": "#edbd9c",
+        "wall": "#fff1dc"
+      },
+      "phase": "party",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1991.4048611498552,
+      "yaw": -0.12,
+      "z": -294.9887558651893
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "executive",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/executive"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "early",
+    "childActivity": {
+      "lowDrawingSurface": false,
+      "phase": "morning",
+      "playMatClear": false,
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#a7c9d4",
+        "feature": "#edbd9c",
+        "wall": "#fff1dc"
+      },
+      "phase": "morning",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1154.2985341491085,
+      "yaw": 0.06,
+      "z": -344.83727239851595
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "house",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/house"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "early",
+    "childActivity": {
+      "lowDrawingSurface": false,
+      "phase": "evening",
+      "playMatClear": true,
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#a7c9d4",
+        "feature": "#edbd9c",
+        "wall": "#fff1dc"
+      },
+      "phase": "evening",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 824.2644187589676,
+      "yaw": -0.08,
+      "z": -324.75447026507874
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "house",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/house"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "early",
+    "childActivity": {
+      "lowDrawingSurface": false,
+      "phase": "night",
+      "playMatClear": true,
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#a7c9d4",
+        "feature": "#edbd9c",
+        "wall": "#fff1dc"
+      },
+      "phase": "night",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1150.0001927182152,
+      "yaw": 0,
+      "z": -494.62970825858
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "house",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/house"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "early",
+    "childActivity": {
+      "lowDrawingSurface": true,
+      "phase": "party",
+      "playMatClear": false,
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#9dbbd0",
+        "#f0e4ce"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#a7c9d4",
+        "feature": "#edbd9c",
+        "wall": "#fff1dc"
+      },
+      "phase": "party",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 391.4048611498542,
+      "yaw": -0.12,
+      "z": -294.988755865189
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "house",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/house"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "primary",
+    "childActivity": {
+      "ageStage": "primary",
+      "lowDrawingSurface": false,
+      "phase": "morning",
+      "playMatClear": true,
+      "project": "craft and building",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Nature journal",
+        "Space explorer",
+        "Creative ideas",
+        "Reading club",
+        "Field notes"
+      ],
+      "hobby": "nature magnifier and globe",
+      "palette": "Oak · lagoon · golden ochre",
+      "projects": true,
+      "stage": "primary"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "primary",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#4e9b9a",
+        "feature": "#dfb24f",
+        "wall": "#f5efd9"
+      },
+      "phase": "morning",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1104.2985341491085,
+      "yaw": 0.06,
+      "z": -594.8372723985162
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "apartmentprimary",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/apartmentprimary"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "afternoon",
+    "ageStage": "primary",
+    "childActivity": {
+      "ageStage": "primary",
+      "lowDrawingSurface": true,
+      "phase": "afternoon",
+      "playMatClear": true,
+      "project": "craft and building",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Nature journal",
+        "Space explorer",
+        "Creative ideas",
+        "Reading club",
+        "Field notes"
+      ],
+      "hobby": "nature magnifier and globe",
+      "palette": "Oak · lagoon · golden ochre",
+      "projects": true,
+      "stage": "primary"
+    },
+    "childLighting": {
+      "blind": 0.1,
+      "moon": 0,
+      "phase": "afternoon",
+      "reading": 0.08,
+      "sky": [
+        "#aed4e3",
+        "#fff2dd"
+      ]
+    },
+    "childPersonality": {
+      "age": "primary",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#4e9b9a",
+        "feature": "#dfb24f",
+        "wall": "#f5efd9"
+      },
+      "phase": "afternoon",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1200.000192718216,
+      "yaw": 0,
+      "z": -394.6297082585804
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "houseprimary",
+    "phase": "afternoon",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/houseprimary"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "primary",
+    "childActivity": {
+      "ageStage": "primary",
+      "lowDrawingSurface": false,
+      "phase": "evening",
+      "playMatClear": true,
+      "project": "craft and building",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Nature journal",
+        "Space explorer",
+        "Creative ideas",
+        "Reading club",
+        "Field notes"
+      ],
+      "hobby": "nature magnifier and globe",
+      "palette": "Oak · lagoon · golden ochre",
+      "projects": true,
+      "stage": "primary"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "primary",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#4e9b9a",
+        "feature": "#dfb24f",
+        "wall": "#f5efd9"
+      },
+      "phase": "evening",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1474.264418758967,
+      "yaw": -0.08,
+      "z": -474.7544702650789
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "spaciousprimary",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/spaciousprimary"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "primary",
+    "childActivity": {
+      "ageStage": "primary",
+      "lowDrawingSurface": false,
+      "phase": "night",
+      "playMatClear": true,
+      "project": "craft and building",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Nature journal",
+        "Space explorer",
+        "Creative ideas",
+        "Reading club",
+        "Field notes"
+      ],
+      "hobby": "nature magnifier and globe",
+      "palette": "Oak · lagoon · golden ochre",
+      "projects": true,
+      "stage": "primary"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "primary",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#4e9b9a",
+        "feature": "#dfb24f",
+        "wall": "#f5efd9"
+      },
+      "phase": "night",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2300.000192718216,
+      "yaw": 0,
+      "z": -644.6297082585802
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "premiumprimary",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/premiumprimary"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "primary",
+    "childActivity": {
+      "ageStage": "primary",
+      "lowDrawingSurface": true,
+      "phase": "party",
+      "playMatClear": true,
+      "project": "craft and building",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Nature journal",
+        "Space explorer",
+        "Creative ideas",
+        "Reading club",
+        "Field notes"
+      ],
+      "hobby": "nature magnifier and globe",
+      "palette": "Oak · lagoon · golden ochre",
+      "projects": true,
+      "stage": "primary"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#8298b0",
+        "#d6c9b8"
+      ]
+    },
+    "childPersonality": {
+      "age": "primary",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#4e9b9a",
+        "feature": "#dfb24f",
+        "wall": "#f5efd9"
+      },
+      "phase": "party",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2141.404861149855,
+      "yaw": -0.12,
+      "z": -444.9887558651899
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "executiveprimary",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/executiveprimary"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "primary",
+    "childActivity": {
+      "ageStage": "primary",
+      "lowDrawingSurface": false,
+      "phase": "morning",
+      "playMatClear": true,
+      "project": "craft and building",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Nature journal",
+        "Space explorer",
+        "Creative ideas",
+        "Reading club",
+        "Field notes"
+      ],
+      "hobby": "nature magnifier and globe",
+      "palette": "Oak · lagoon · golden ochre",
+      "projects": true,
+      "stage": "primary"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "primary",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#4e9b9a",
+        "feature": "#dfb24f",
+        "wall": "#f5efd9"
+      },
+      "phase": "morning",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1304.2985341491085,
+      "yaw": 0.06,
+      "z": -494.8372723985159
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "houseprimary",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/houseprimary"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "primary",
+    "childActivity": {
+      "ageStage": "primary",
+      "lowDrawingSurface": false,
+      "phase": "evening",
+      "playMatClear": true,
+      "project": "craft and building",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Nature journal",
+        "Space explorer",
+        "Creative ideas",
+        "Reading club",
+        "Field notes"
+      ],
+      "hobby": "nature magnifier and globe",
+      "palette": "Oak · lagoon · golden ochre",
+      "projects": true,
+      "stage": "primary"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "primary",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#4e9b9a",
+        "feature": "#dfb24f",
+        "wall": "#f5efd9"
+      },
+      "phase": "evening",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 974.2644187589676,
+      "yaw": -0.08,
+      "z": -474.75447026507874
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "houseprimary",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/houseprimary"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "primary",
+    "childActivity": {
+      "ageStage": "primary",
+      "lowDrawingSurface": false,
+      "phase": "night",
+      "playMatClear": true,
+      "project": "craft and building",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Nature journal",
+        "Space explorer",
+        "Creative ideas",
+        "Reading club",
+        "Field notes"
+      ],
+      "hobby": "nature magnifier and globe",
+      "palette": "Oak · lagoon · golden ochre",
+      "projects": true,
+      "stage": "primary"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "primary",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#4e9b9a",
+        "feature": "#dfb24f",
+        "wall": "#f5efd9"
+      },
+      "phase": "night",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1300.0001927182147,
+      "yaw": 0,
+      "z": -644.6297082585801
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "houseprimary",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/houseprimary"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "primary",
+    "childActivity": {
+      "ageStage": "primary",
+      "lowDrawingSurface": true,
+      "phase": "party",
+      "playMatClear": true,
+      "project": "craft and building",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Nature journal",
+        "Space explorer",
+        "Creative ideas",
+        "Reading club",
+        "Field notes"
+      ],
+      "hobby": "nature magnifier and globe",
+      "palette": "Oak · lagoon · golden ochre",
+      "projects": true,
+      "stage": "primary"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#8298b0",
+        "#d6c9b8"
+      ]
+    },
+    "childPersonality": {
+      "age": "primary",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#4e9b9a",
+        "feature": "#dfb24f",
+        "wall": "#f5efd9"
+      },
+      "phase": "party",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 541.404861149854,
+      "yaw": -0.12,
+      "z": -444.98875586518955
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "houseprimary",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/houseprimary"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "magic-mouse",
+      "monitor-arm",
+      "cable-tray"
+    ],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "preteen",
+    "childActivity": {
+      "ageStage": "preteen",
+      "lowDrawingSurface": false,
+      "phase": "morning",
+      "playMatClear": true,
+      "project": "comics and photography",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Sketchbook",
+        "Photo studies",
+        "Music notes",
+        "Reading list",
+        "Field journal"
+      ],
+      "hobby": "camera and sketchbook",
+      "palette": "Natural oak · denim · clay",
+      "projects": true,
+      "stage": "preteen"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "preteen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#738faa",
+        "feature": "#c88770",
+        "wall": "#eee9df"
+      },
+      "phase": "morning",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1104.2985341491085,
+      "yaw": 0.06,
+      "z": -614.8372723985161
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "apartmentpreteen",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/apartmentpreteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "magic-mouse",
+      "monitor-arm",
+      "cable-tray"
+    ],
+    "actualDeskSize": "48x30",
+    "actualMode": "afternoon",
+    "ageStage": "preteen",
+    "childActivity": {
+      "ageStage": "preteen",
+      "lowDrawingSurface": false,
+      "phase": "afternoon",
+      "playMatClear": true,
+      "project": "comics and photography",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Sketchbook",
+        "Photo studies",
+        "Music notes",
+        "Reading list",
+        "Field journal"
+      ],
+      "hobby": "camera and sketchbook",
+      "palette": "Natural oak · denim · clay",
+      "projects": true,
+      "stage": "preteen"
+    },
+    "childLighting": {
+      "blind": 0.1,
+      "moon": 0,
+      "phase": "afternoon",
+      "reading": 0.08,
+      "sky": [
+        "#aed4e3",
+        "#fff2dd"
+      ]
+    },
+    "childPersonality": {
+      "age": "preteen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#738faa",
+        "feature": "#c88770",
+        "wall": "#eee9df"
+      },
+      "phase": "afternoon",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1000.0001927182152,
+      "yaw": 0,
+      "z": -144.62970825857997
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "housepreteen",
+    "phase": "afternoon",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/housepreteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "magic-mouse",
+      "monitor-arm",
+      "cable-tray"
+    ],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "preteen",
+    "childActivity": {
+      "ageStage": "preteen",
+      "lowDrawingSurface": false,
+      "phase": "evening",
+      "playMatClear": true,
+      "project": "comics and photography",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Sketchbook",
+        "Photo studies",
+        "Music notes",
+        "Reading list",
+        "Field journal"
+      ],
+      "hobby": "camera and sketchbook",
+      "palette": "Natural oak · denim · clay",
+      "projects": true,
+      "stage": "preteen"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "preteen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#738faa",
+        "feature": "#c88770",
+        "wall": "#eee9df"
+      },
+      "phase": "evening",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1274.2644187589674,
+      "yaw": -0.08,
+      "z": -224.7544702650791
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "spaciouspreteen",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/spaciouspreteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "magic-mouse",
+      "monitor-arm",
+      "cable-tray"
+    ],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "preteen",
+    "childActivity": {
+      "ageStage": "preteen",
+      "lowDrawingSurface": false,
+      "phase": "night",
+      "playMatClear": true,
+      "project": "comics and photography",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Sketchbook",
+        "Photo studies",
+        "Music notes",
+        "Reading list",
+        "Field journal"
+      ],
+      "hobby": "camera and sketchbook",
+      "palette": "Natural oak · denim · clay",
+      "projects": true,
+      "stage": "preteen"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "preteen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#738faa",
+        "feature": "#c88770",
+        "wall": "#eee9df"
+      },
+      "phase": "night",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2100.0001927182157,
+      "yaw": 0,
+      "z": -394.62970825858054
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "premiumpreteen",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/premiumpreteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "magic-mouse",
+      "monitor-arm",
+      "cable-tray"
+    ],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "preteen",
+    "childActivity": {
+      "ageStage": "preteen",
+      "lowDrawingSurface": false,
+      "phase": "party",
+      "playMatClear": true,
+      "project": "comics and photography",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Sketchbook",
+        "Photo studies",
+        "Music notes",
+        "Reading list",
+        "Field journal"
+      ],
+      "hobby": "camera and sketchbook",
+      "palette": "Natural oak · denim · clay",
+      "projects": true,
+      "stage": "preteen"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#8298b0",
+        "#d6c9b8"
+      ]
+    },
+    "childPersonality": {
+      "age": "preteen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#738faa",
+        "feature": "#c88770",
+        "wall": "#eee9df"
+      },
+      "phase": "party",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1941.4048611498545,
+      "yaw": -0.12,
+      "z": -194.98875586518955
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "executivepreteen",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/executivepreteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "magic-mouse",
+      "monitor-arm",
+      "cable-tray"
+    ],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "preteen",
+    "childActivity": {
+      "ageStage": "preteen",
+      "lowDrawingSurface": false,
+      "phase": "morning",
+      "playMatClear": true,
+      "project": "comics and photography",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Sketchbook",
+        "Photo studies",
+        "Music notes",
+        "Reading list",
+        "Field journal"
+      ],
+      "hobby": "camera and sketchbook",
+      "palette": "Natural oak · denim · clay",
+      "projects": true,
+      "stage": "preteen"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "preteen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#738faa",
+        "feature": "#c88770",
+        "wall": "#eee9df"
+      },
+      "phase": "morning",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1104.2985341491087,
+      "yaw": 0.06,
+      "z": -244.8372723985162
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "housepreteen",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/housepreteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "magic-mouse",
+      "monitor-arm",
+      "cable-tray"
+    ],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "preteen",
+    "childActivity": {
+      "ageStage": "preteen",
+      "lowDrawingSurface": false,
+      "phase": "evening",
+      "playMatClear": true,
+      "project": "comics and photography",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Sketchbook",
+        "Photo studies",
+        "Music notes",
+        "Reading list",
+        "Field journal"
+      ],
+      "hobby": "camera and sketchbook",
+      "palette": "Natural oak · denim · clay",
+      "projects": true,
+      "stage": "preteen"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "preteen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#738faa",
+        "feature": "#c88770",
+        "wall": "#eee9df"
+      },
+      "phase": "evening",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 774.2644187589669,
+      "yaw": -0.08,
+      "z": -224.754470265079
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "housepreteen",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/housepreteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "magic-mouse",
+      "monitor-arm",
+      "cable-tray"
+    ],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "preteen",
+    "childActivity": {
+      "ageStage": "preteen",
+      "lowDrawingSurface": false,
+      "phase": "night",
+      "playMatClear": true,
+      "project": "comics and photography",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Sketchbook",
+        "Photo studies",
+        "Music notes",
+        "Reading list",
+        "Field journal"
+      ],
+      "hobby": "camera and sketchbook",
+      "palette": "Natural oak · denim · clay",
+      "projects": true,
+      "stage": "preteen"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "preteen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#738faa",
+        "feature": "#c88770",
+        "wall": "#eee9df"
+      },
+      "phase": "night",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1100.0001927182157,
+      "yaw": 0,
+      "z": -394.6297082585803
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "housepreteen",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/housepreteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "magic-mouse",
+      "monitor-arm",
+      "cable-tray"
+    ],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "preteen",
+    "childActivity": {
+      "ageStage": "preteen",
+      "lowDrawingSurface": false,
+      "phase": "party",
+      "playMatClear": true,
+      "project": "comics and photography",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Sketchbook",
+        "Photo studies",
+        "Music notes",
+        "Reading list",
+        "Field journal"
+      ],
+      "hobby": "camera and sketchbook",
+      "palette": "Natural oak · denim · clay",
+      "projects": true,
+      "stage": "preteen"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#8298b0",
+        "#d6c9b8"
+      ]
+    },
+    "childPersonality": {
+      "age": "preteen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#738faa",
+        "feature": "#c88770",
+        "wall": "#eee9df"
+      },
+      "phase": "party",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 341.40486114985333,
+      "yaw": -0.12,
+      "z": -194.98875586518923
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "housepreteen",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/housepreteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "morning",
+    "ageStage": "teen",
+    "childActivity": {
+      "ageStage": "teen",
+      "lowDrawingSurface": false,
+      "phase": "morning",
+      "playMatClear": true,
+      "project": "music and portfolio",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Visual portfolio",
+        "Project notes",
+        "Sound & image",
+        "Revision guide",
+        "Personal journal"
+      ],
+      "hobby": "music keyboard and portfolio",
+      "palette": "Smoked oak · slate · olive",
+      "projects": true,
+      "stage": "teen"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "teen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#384a71",
+        "feature": "#c77960",
+        "wall": "#e7e6e2"
+      },
+      "phase": "morning",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 957.8324392748628,
+      "yaw": 0.06,
+      "z": -695.183231766728
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "apartmentteen",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/apartmentteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "afternoon",
+    "ageStage": "teen",
+    "childActivity": {
+      "ageStage": "teen",
+      "lowDrawingSurface": false,
+      "phase": "afternoon",
+      "playMatClear": true,
+      "project": "music and portfolio",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Visual portfolio",
+        "Project notes",
+        "Sound & image",
+        "Revision guide",
+        "Personal journal"
+      ],
+      "hobby": "music keyboard and portfolio",
+      "palette": "Smoked oak · slate · olive",
+      "projects": true,
+      "stage": "teen"
+    },
+    "childLighting": {
+      "blind": 0.1,
+      "moon": 0,
+      "phase": "afternoon",
+      "reading": 0.08,
+      "sky": [
+        "#aed4e3",
+        "#fff2dd"
+      ]
+    },
+    "childPersonality": {
+      "age": "teen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#384a71",
+        "feature": "#c77960",
+        "wall": "#e7e6e2"
+      },
+      "phase": "afternoon",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1050.6464201098174,
+      "yaw": 0,
+      "z": -244.85212322484975
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "houseteen",
+    "phase": "afternoon",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/houseteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "evening",
+    "ageStage": "teen",
+    "childActivity": {
+      "ageStage": "teen",
+      "lowDrawingSurface": false,
+      "phase": "evening",
+      "playMatClear": true,
+      "project": "music and portfolio",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Visual portfolio",
+        "Project notes",
+        "Sound & image",
+        "Revision guide",
+        "Personal journal"
+      ],
+      "hobby": "music keyboard and portfolio",
+      "palette": "Smoked oak · slate · olive",
+      "projects": true,
+      "stage": "teen"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "teen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#384a71",
+        "feature": "#c77960",
+        "wall": "#e7e6e2"
+      },
+      "phase": "evening",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1321.058766454398,
+      "yaw": -0.08,
+      "z": -325.0818470656483
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "spaciousteen",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/spaciousteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "night",
+    "ageStage": "teen",
+    "childActivity": {
+      "ageStage": "teen",
+      "lowDrawingSurface": false,
+      "phase": "night",
+      "playMatClear": true,
+      "project": "music and portfolio",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Visual portfolio",
+        "Project notes",
+        "Sound & image",
+        "Revision guide",
+        "Personal journal"
+      ],
+      "hobby": "music keyboard and portfolio",
+      "palette": "Smoked oak · slate · olive",
+      "projects": true,
+      "stage": "teen"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "teen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#384a71",
+        "feature": "#c77960",
+        "wall": "#e7e6e2"
+      },
+      "phase": "night",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2150.646420109817,
+      "yaw": 0,
+      "z": -494.8521232248495
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "premiumteen",
+    "phase": "night",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/premiumteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "party",
+    "ageStage": "teen",
+    "childActivity": {
+      "ageStage": "teen",
+      "lowDrawingSurface": false,
+      "phase": "party",
+      "playMatClear": true,
+      "project": "music and portfolio",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Visual portfolio",
+        "Project notes",
+        "Sound & image",
+        "Revision guide",
+        "Personal journal"
+      ],
+      "hobby": "music keyboard and portfolio",
+      "palette": "Smoked oak · slate · olive",
+      "projects": true,
+      "stage": "teen"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#8298b0",
+        "#d6c9b8"
+      ]
+    },
+    "childPersonality": {
+      "age": "teen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#384a71",
+        "feature": "#c77960",
+        "wall": "#e7e6e2"
+      },
+      "phase": "party",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1986.2794976856633,
+      "yaw": -0.12,
+      "z": -295.48403979543065
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "executiveteen",
+    "phase": "party",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/executiveteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "morning",
+    "ageStage": "teen",
+    "childActivity": {
+      "ageStage": "teen",
+      "lowDrawingSurface": false,
+      "phase": "morning",
+      "playMatClear": true,
+      "project": "music and portfolio",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Visual portfolio",
+        "Project notes",
+        "Sound & image",
+        "Revision guide",
+        "Personal journal"
+      ],
+      "hobby": "music keyboard and portfolio",
+      "palette": "Smoked oak · slate · olive",
+      "projects": true,
+      "stage": "teen"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "teen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#384a71",
+        "feature": "#c77960",
+        "wall": "#e7e6e2"
+      },
+      "phase": "morning",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1157.8324392748634,
+      "yaw": 0.06,
+      "z": -345.1832317667283
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "houseteen",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/houseteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "evening",
+    "ageStage": "teen",
+    "childActivity": {
+      "ageStage": "teen",
+      "lowDrawingSurface": false,
+      "phase": "evening",
+      "playMatClear": true,
+      "project": "music and portfolio",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Visual portfolio",
+        "Project notes",
+        "Sound & image",
+        "Revision guide",
+        "Personal journal"
+      ],
+      "hobby": "music keyboard and portfolio",
+      "palette": "Smoked oak · slate · olive",
+      "projects": true,
+      "stage": "teen"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "teen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#384a71",
+        "feature": "#c77960",
+        "wall": "#e7e6e2"
+      },
+      "phase": "evening",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 821.0587664543975,
+      "yaw": -0.08,
+      "z": -325.08184706564816
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "houseteen",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/houseteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "night",
+    "ageStage": "teen",
+    "childActivity": {
+      "ageStage": "teen",
+      "lowDrawingSurface": false,
+      "phase": "night",
+      "playMatClear": true,
+      "project": "music and portfolio",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Visual portfolio",
+        "Project notes",
+        "Sound & image",
+        "Revision guide",
+        "Personal journal"
+      ],
+      "hobby": "music keyboard and portfolio",
+      "palette": "Smoked oak · slate · olive",
+      "projects": true,
+      "stage": "teen"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "teen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#384a71",
+        "feature": "#c77960",
+        "wall": "#e7e6e2"
+      },
+      "phase": "night",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1150.6464201098177,
+      "yaw": 0,
+      "z": -494.85212322484927
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "houseteen",
+    "phase": "night",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/houseteen"
+  },
+  {
+    "accessories": [
+      "dell-u2724d",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "party",
+    "ageStage": "teen",
+    "childActivity": {
+      "ageStage": "teen",
+      "lowDrawingSurface": false,
+      "phase": "party",
+      "playMatClear": true,
+      "project": "music and portfolio",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Visual portfolio",
+        "Project notes",
+        "Sound & image",
+        "Revision guide",
+        "Personal journal"
+      ],
+      "hobby": "music keyboard and portfolio",
+      "palette": "Smoked oak · slate · olive",
+      "projects": true,
+      "stage": "teen"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#8298b0",
+        "#d6c9b8"
+      ]
+    },
+    "childPersonality": {
+      "age": "teen",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#384a71",
+        "feature": "#c77960",
+        "wall": "#e7e6e2"
+      },
+      "phase": "party",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 386.2794976856634,
+      "yaw": -0.12,
+      "z": -295.4840397954303
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "houseteen",
+    "phase": "party",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/houseteen"
+  },
+  {
+    "accessories": [
+      "wide-monitor",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "morning",
+    "ageStage": "college",
+    "childActivity": {
+      "ageStage": "college",
+      "lowDrawingSurface": false,
+      "phase": "morning",
+      "playMatClear": true,
+      "project": "annotated research",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Course reader",
+        "Studio research",
+        "Design studies",
+        "Seminar notes",
+        "Field journal"
+      ],
+      "hobby": "coursework and plant",
+      "palette": "Walnut · petrol · warm linen",
+      "projects": true,
+      "stage": "college"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "college",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#346971",
+        "feature": "#b49a79",
+        "wall": "#e7e1d5"
+      },
+      "phase": "morning",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 957.8324392748628,
+      "yaw": 0.06,
+      "z": -595.1832317667283
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "apartmentcollege",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/apartmentcollege"
+  },
+  {
+    "accessories": [
+      "wide-monitor",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "afternoon",
+    "ageStage": "college",
+    "childActivity": {
+      "ageStage": "college",
+      "lowDrawingSurface": false,
+      "phase": "afternoon",
+      "playMatClear": true,
+      "project": "annotated research",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Course reader",
+        "Studio research",
+        "Design studies",
+        "Seminar notes",
+        "Field journal"
+      ],
+      "hobby": "coursework and plant",
+      "palette": "Walnut · petrol · warm linen",
+      "projects": true,
+      "stage": "college"
+    },
+    "childLighting": {
+      "blind": 0.1,
+      "moon": 0,
+      "phase": "afternoon",
+      "reading": 0.08,
+      "sky": [
+        "#aed4e3",
+        "#fff2dd"
+      ]
+    },
+    "childPersonality": {
+      "age": "college",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#346971",
+        "feature": "#b49a79",
+        "wall": "#e7e1d5"
+      },
+      "phase": "afternoon",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 950.6464201098172,
+      "yaw": 0,
+      "z": -394.8521232248495
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "housecollege",
+    "phase": "afternoon",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/housecollege"
+  },
+  {
+    "accessories": [
+      "wide-monitor",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "evening",
+    "ageStage": "college",
+    "childActivity": {
+      "ageStage": "college",
+      "lowDrawingSurface": false,
+      "phase": "evening",
+      "playMatClear": true,
+      "project": "annotated research",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Course reader",
+        "Studio research",
+        "Design studies",
+        "Seminar notes",
+        "Field journal"
+      ],
+      "hobby": "coursework and plant",
+      "palette": "Walnut · petrol · warm linen",
+      "projects": true,
+      "stage": "college"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "college",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#346971",
+        "feature": "#b49a79",
+        "wall": "#e7e1d5"
+      },
+      "phase": "evening",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1221.0587664543975,
+      "yaw": -0.08,
+      "z": -475.0818470656481
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "spaciouscollege",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/spaciouscollege"
+  },
+  {
+    "accessories": [
+      "wide-monitor",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "night",
+    "ageStage": "college",
+    "childActivity": {
+      "ageStage": "college",
+      "lowDrawingSurface": false,
+      "phase": "night",
+      "playMatClear": true,
+      "project": "annotated research",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Course reader",
+        "Studio research",
+        "Design studies",
+        "Seminar notes",
+        "Field journal"
+      ],
+      "hobby": "coursework and plant",
+      "palette": "Walnut · petrol · warm linen",
+      "projects": true,
+      "stage": "college"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "college",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#346971",
+        "feature": "#b49a79",
+        "wall": "#e7e1d5"
+      },
+      "phase": "night",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2050.646420109818,
+      "yaw": 0,
+      "z": -644.85212322485
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "premiumcollege",
+    "phase": "night",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/premiumcollege"
+  },
+  {
+    "accessories": [
+      "wide-monitor",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "party",
+    "ageStage": "college",
+    "childActivity": {
+      "ageStage": "college",
+      "lowDrawingSurface": false,
+      "phase": "party",
+      "playMatClear": true,
+      "project": "annotated research",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Course reader",
+        "Studio research",
+        "Design studies",
+        "Seminar notes",
+        "Field journal"
+      ],
+      "hobby": "coursework and plant",
+      "palette": "Walnut · petrol · warm linen",
+      "projects": true,
+      "stage": "college"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#8298b0",
+        "#d6c9b8"
+      ]
+    },
+    "childPersonality": {
+      "age": "college",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#346971",
+        "feature": "#b49a79",
+        "wall": "#e7e1d5"
+      },
+      "phase": "party",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1886.279497685664,
+      "yaw": -0.12,
+      "z": -445.484039795431
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "executivecollege",
+    "phase": "party",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/executivecollege"
+  },
+  {
+    "accessories": [
+      "wide-monitor",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "morning",
+    "ageStage": "college",
+    "childActivity": {
+      "ageStage": "college",
+      "lowDrawingSurface": false,
+      "phase": "morning",
+      "playMatClear": true,
+      "project": "annotated research",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Course reader",
+        "Studio research",
+        "Design studies",
+        "Seminar notes",
+        "Field journal"
+      ],
+      "hobby": "coursework and plant",
+      "palette": "Walnut · petrol · warm linen",
+      "projects": true,
+      "stage": "college"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "college",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#346971",
+        "feature": "#b49a79",
+        "wall": "#e7e1d5"
+      },
+      "phase": "morning",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1057.8324392748632,
+      "yaw": 0.06,
+      "z": -495.18323176672806
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "housecollege",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/housecollege"
+  },
+  {
+    "accessories": [
+      "wide-monitor",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "evening",
+    "ageStage": "college",
+    "childActivity": {
+      "ageStage": "college",
+      "lowDrawingSurface": false,
+      "phase": "evening",
+      "playMatClear": true,
+      "project": "annotated research",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Course reader",
+        "Studio research",
+        "Design studies",
+        "Seminar notes",
+        "Field journal"
+      ],
+      "hobby": "coursework and plant",
+      "palette": "Walnut · petrol · warm linen",
+      "projects": true,
+      "stage": "college"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "college",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#346971",
+        "feature": "#b49a79",
+        "wall": "#e7e1d5"
+      },
+      "phase": "evening",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 721.0587664543984,
+      "yaw": -0.08,
+      "z": -475.081847065648
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "housecollege",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/housecollege"
+  },
+  {
+    "accessories": [
+      "wide-monitor",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "night",
+    "ageStage": "college",
+    "childActivity": {
+      "ageStage": "college",
+      "lowDrawingSurface": false,
+      "phase": "night",
+      "playMatClear": true,
+      "project": "annotated research",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "books": [
+        "Course reader",
+        "Studio research",
+        "Design studies",
+        "Seminar notes",
+        "Field journal"
+      ],
+      "hobby": "coursework and plant",
+      "palette": "Walnut · petrol · warm linen",
+      "projects": true,
+      "stage": "college"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "college",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#346971",
+        "feature": "#b49a79",
+        "wall": "#e7e1d5"
+      },
+      "phase": "night",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1050.6464201098172,
+      "yaw": 0,
+      "z": -644.8521232248497
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "housecollege",
+    "phase": "night",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/housecollege"
+  },
+  {
+    "accessories": [
+      "wide-monitor",
+      "ergo-keyboard",
+      "logitech-mx-master",
+      "monitor-arm",
+      "keyboard-tray",
+      "cable-tray"
+    ],
+    "actualDeskSize": "60x30",
+    "actualMode": "party",
+    "ageStage": "college",
+    "childActivity": {
+      "ageStage": "college",
+      "lowDrawingSurface": false,
+      "phase": "party",
+      "playMatClear": true,
+      "project": "annotated research",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "books": [
+        "Course reader",
+        "Studio research",
+        "Design studies",
+        "Seminar notes",
+        "Field journal"
+      ],
+      "hobby": "coursework and plant",
+      "palette": "Walnut · petrol · warm linen",
+      "projects": true,
+      "stage": "college"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#8298b0",
+        "#d6c9b8"
+      ]
+    },
+    "childPersonality": {
+      "age": "college",
+      "bag": true,
+      "cloth": true,
+      "mirror": true,
+      "palette": {
+        "dado": "#346971",
+        "feature": "#b49a79",
+        "wall": "#e7e1d5"
+      },
+      "phase": "party",
+      "posters": 5
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 286.27949768566305,
+      "yaw": -0.12,
+      "z": -445.48403979543065
+    },
+    "desks": 1,
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "housecollege",
+    "phase": "party",
+    "room": "childroom",
+    "size": "60x30",
+    "stageKey": "childroom/housecollege"
+  }
+]

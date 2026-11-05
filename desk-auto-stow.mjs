@@ -13,7 +13,9 @@ const effect=o=>o.isLight||o.material?.isShaderMaterial||o.material?.blending===
 // Fixed hardware never gets put away. Work surfaces are retained only for the
 // activity their angle supports. All other loose desktop objects are stowed.
 export function deskItemDisposition(item,tilt,recipe='') {
-    if(item.saved.role!=='desktop'||tilt<=STOW_ANGLE)return 'stay';
+    if(tilt<=STOW_ANGLE)return 'stay';
+    if(item.obj.userData.keepShelfDetail)return 'hide';
+    if(item.saved.role!=='desktop')return 'stay';
     if(item.obj.isGroup&&!item.obj.children.length)return 'stay';
     if(effect(item.obj)||item.obj.userData.fixedHardware)return 'stay';
     // Some older institutional fixtures combine the apron, input rails and
@@ -57,7 +59,7 @@ export class DeskAutoStow {
         if(item.autoStow.matrixAutoUpdate===false){item.obj.matrix.copy(item.autoStow.matrix);item.obj.matrixAutoUpdate=false;item.obj.updateMatrixWorld(true);}
         delete item.autoStow;
     }
-    restore(r){for(const item of r.objects?.values()||[])this.restoreItem(item);delete r.stowSignature;r.stowStatus=null;}
+    restore(r){for(const item of r.objects?.values()||[]){this.restoreItem(item);if(item.obj.userData.keepShelfDetail&&!item.saved.removed)item.obj.visible=true;}delete r.stowSignature;r.stowStatus=null;}
     authored(item){return item.autoStow?.transform||deskTransform(item.obj);}
     mount(r,role,item){return r.product&&item?.obj.userData.accessoryId?this.editor.purchaseMount(role):r.rig?.mounts[role];}
     update(r){
@@ -77,6 +79,7 @@ export class DeskAutoStow {
         const signature=JSON.stringify([r.state.size,angle>=EASEL_ANGLE?'easel':'drafting',recipe,edited,this.editor.manager.ctx.phase(),items.map(i=>[i.id,i.obj.visible,i.obj.children.filter(c=>c.visible).map(c=>c.uuid),this.authored(i)])]);
         if(r.stowSignature===signature){if(r.stowStatus)r.stowStatus.angle=angle;for(const i of wanted)if(i.autoStow?.hidden||i.autoStow?.parts)i.obj.visible=false;return;}
         this.restore(r);r.stowSignature=signature;
+        for(const i of items)if(deskItemDisposition(i,angle,recipe)==='hide')i.obj.visible=false;
         const packing=[];
         for(const item of wanted){
             const parts=compactStowParts(item);

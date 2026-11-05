@@ -16,6 +16,7 @@ export const SCREEN_THEMES = Object.fromEntries([
     ['kitchen','Kitchen notebook','recipe','#e8b078',['Breakfast recipe','Lunch preparation','Supper for two','Tomorrow’s menu','Dinner party menu']],
     ['lounge','Lounge cinema','cinema','#d0a0bc',['Morning magazine','Travel documentary','Movie night','Ambient nightscape','Game night']],
     ['bedroom','Personal journal','read','#b9a8d8',['Morning pages','Reading journal','Wind-down chapter','Night reading','Weekend inspirations']],
+    ['childroom','Ideas & discoveries','read','#a9c6b8',['Plan & discover','Project notebook','Reading & listening','Desk reset','Shared ideas']],
     ['workshop','Design & fabrication','draft','#eab26e',['Measurements & plan','Prototype assembly','Assembly review','Design check','Maker showcase']],
     ['gallery','Gallery collection','art','#d4bd86',['Curator notes','Collection study','Artist conversation','Archive research','Exhibition opening']],
     ['scifi','Orbital systems','space','#71d9e2',['Mission briefing','Sample analysis','Navigation watch','Quiet systems watch','Transit coordination']],
@@ -100,7 +101,10 @@ function landscape(c,x,y,w,h,pi,a){
 const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
 export class SceneScreens {
     constructor(ctx,settings){this.ctx=ctx;this.settings=cleanScreenSettings(settings);this.entries=[];this.known=new WeakMap();this.cache=new Map();this.at=-Infinity;this.discoveredAt=-Infinity;this.context='';this.revision=0;this.selected='';}
-    enabled(scene=this.ctx.context().scene){return this.settings.enabled[scene]??scene!=='product';}
+    enabled(scene=this.ctx.context().scene){
+        const context=this.ctx.context(),quiet=scene==='childroom'&&context.scene===scene&&context.phase==='night';
+        return this.settings.enabled[scene]??(scene!=='product'&&!quiet);
+    }
     export(){return structuredClone(this.settings);}
     restore(value){this.settings=cleanScreenSettings(value);this.update(true);this.ctx.save(this.export());}
     save(){this.ctx.save(this.export());this.update(true);}

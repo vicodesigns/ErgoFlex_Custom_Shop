@@ -47,6 +47,20 @@ assert.equal(sceneSeed.size,'60x30');narrowSeed.objects['accessory-wide-monitor'
 assert.notEqual(sceneSeed.objects['accessory-wide-monitor'].transform.p.x,999,'new scene variants own their transforms');
 console.log('New widths inherit purchased additions, removals and finish edits while using fitted Product reference positions.');
 
+const growingDesk={...setting,size:'48x30',phases:{},objects:{},accessories:['ergo-keyboard','task-light'],accessoryFinishes:{'ergo-keyboard':'white'},peripheralSetup:'child-growth-v1',childDecorRevision:2};
+seedScenePeripherals(growingDesk,'childroom');
+assert.deepEqual(growingDesk.accessories,['ergo-keyboard','task-light'],'growing-room recipes and owner additions survive generic seeding');
+const growingWide=seedSceneSizeWithPeripherals(growingDesk,'60x30');
+assert.deepEqual(growingWide.accessories,growingDesk.accessories,'changing width preserves the stage-specific accessory selection');
+assert.equal(growingWide.accessoryFinishes['ergo-keyboard'],'white');
+const growingSaved=cleanSceneDeskData({rooms:{'childroom/housepreteen':{selected:'main',deleted:[],desks:{main:growingDesk}}}});
+assert.equal(growingSaved.rooms['childroom/housepreteen'].desks.main.peripheralSetup,'child-growth-v1','stage recipes survive persistence');
+assert.equal(growingSaved.rooms['childroom/housepreteen'].desks.main.childDecorRevision,2,'one-time decor migration survives persistence');
+assert.equal(growingWide.childDecorRevision,2,'resizing does not repeat the finish upgrade');
+growingWide.accessories.push('magic-mouse');
+assert.equal(growingDesk.accessories.includes('magic-mouse'),false,'width variants own their accessory lists');
+console.log('Growing-room stage recipes, custom accessories and finishes survive resizing and persistence independently.');
+
 const socketProps=cleanDeskObjects({
  'headphones':{role:'shelf',headphoneSocket:'original-v2',transform:{p:{x:566,y:-214,z:239},q:{x:0,y:0,z:0,w:1},s:{x:1000,y:1000,z:1000}}},
  'hook':{role:'shelf',headphoneSocket:'hook-v1',removed:true,transform:{p:{x:517,y:-34,z:239},q:{x:0,y:0,z:0,w:1},s:{x:1000,y:1000,z:1000}}}

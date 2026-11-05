@@ -969,7 +969,7 @@ export class WorkspaceAccessories {
     // Scene dressing on the desk itself: mugs, papers and the like, which
     // follow the desktop as it lifts and tilts. Never priced, never exported
     // to AR, and replaced wholesale when the room changes.
-    async dress(sceneId) {
+    async dress(sceneId,context={}) {
         const scene = ROOM_SCENES.find(s => s.id === sceneId);
         const token = ++this.dressToken;
         for (const mount of this.mounts.values()) {
@@ -977,8 +977,10 @@ export class WorkspaceAccessories {
             for (const child of [...mount.dress.children]) disposeTree(child);
         }
         if (!scene || (!scene.desk?.length && !scene.shelf?.length && sceneId!=='childroom')) return;
-        const wanted = [...(scene.desk || []).map(p => ({ ...p, role: 'desktop' })), ...(scene.shelf || []).map(p => ({ ...p, role: 'shelf' }))]
-            .map((placement, index) => ({ ...placement, sceneAssetKey: `${scene.id}:${placement.role}:${index}:${placement.id}` }));
+        const placements=[...(scene.desk||[]).map(p=>({...p,role:'desktop'})),...(scene.shelf||[]).map(p=>({...p,role:'shelf'}))];
+        if(sceneId==='childroom'&&['preteen','teen','college'].includes(context.ageStage))placements.push({id:'ergoflex-headphones-2',role:'shelf',at:[430,0,-180]});
+        const assetPrefix=sceneId==='childroom'&&context.ageStage&&context.ageStage!=='early'?sceneId+':'+context.ageStage:sceneId;
+        const wanted=placements.map((placement,index)=>({...placement,sceneAssetKey:`${assetPrefix}:${placement.role}:${index}:${placement.id}`}));
         await PROP_LIBRARY.loadIndex();
         const loaded = await Promise.all(wanted.map(async placement => {
             try { return { placement, object: placement.procedural === 'midi' ? createMusicKeyboard()
@@ -1006,9 +1008,9 @@ export class WorkspaceAccessories {
         }
         const desktop = this.mounts.get('desktop');
         if (desktop && sceneId !== 'product') {
-            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material });
+            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material, ageStage:context.ageStage });
             placeDailyDeskKit(kit, desktop.dress.children, desktop.supportSpace);
-            markSceneAsset(kit, { key: `${sceneId}:desktop:daily-kit`, role: 'desktop' });
+            markSceneAsset(kit, { key: `${assetPrefix}:desktop:daily-kit`, role: 'desktop' });
             desktop.dress.add(kit);
         }
         this.update();

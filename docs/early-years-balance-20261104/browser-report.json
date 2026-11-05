@@ -1,0 +1,2642 @@
+[
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "familiar shapes and a soft reading corner",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "morning",
+      "playMatClear": false,
+      "profile": "little-noticer",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Animals, big shapes, familiar picture books and things to notice",
+      "mirror": true,
+      "palette": {
+        "dado": "#a8bca4",
+        "feature": "#edcf87",
+        "wall": "#f7f0df"
+      },
+      "phase": "morning",
+      "posters": 1,
+      "profile": "little-noticer"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1104.2985341491085,
+      "yaw": 0.06,
+      "z": -644.8372723985158
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside"
+      ],
+      "interest": "Animals, big shapes, familiar picture books and things to notice",
+      "participation": "One resident child; a grown-up joins the shared story",
+      "partyParticipants": 1,
+      "phase": "morning",
+      "profile": "little-noticer",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 5,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "familiar shapes and a soft reading corner",
+      "murals": 2,
+      "paintings": 2,
+      "phase": "morning",
+      "profile": "little-noticer",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "apartment",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/apartment"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "afternoon",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "familiar shapes and a soft reading corner",
+      "lowDrawingSurface": true,
+      "participants": 1,
+      "phase": "afternoon",
+      "playMatClear": false,
+      "profile": "little-noticer",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.1,
+      "moon": 0,
+      "phase": "afternoon",
+      "reading": 0.08,
+      "sky": [
+        "#aed4e3",
+        "#fff2dd"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Animals, big shapes, familiar picture books and things to notice",
+      "mirror": true,
+      "palette": {
+        "dado": "#a8bca4",
+        "feature": "#edcf87",
+        "wall": "#f7f0df"
+      },
+      "phase": "afternoon",
+      "posters": 1,
+      "profile": "little-noticer"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1000.0001927182152,
+      "yaw": 0,
+      "z": -544.6297082585802
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside"
+      ],
+      "interest": "Animals, big shapes, familiar picture books and things to notice",
+      "participation": "One resident child; a grown-up joins the shared story",
+      "partyParticipants": 1,
+      "phase": "afternoon",
+      "profile": "little-noticer",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 5,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "familiar shapes and a soft reading corner",
+      "murals": 2,
+      "paintings": 2,
+      "phase": "afternoon",
+      "profile": "little-noticer",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "apartment",
+    "phase": "afternoon",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/apartment"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "familiar shapes and a soft reading corner",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "evening",
+      "playMatClear": true,
+      "profile": "little-noticer",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Animals, big shapes, familiar picture books and things to notice",
+      "mirror": true,
+      "palette": {
+        "dado": "#a8bca4",
+        "feature": "#edcf87",
+        "wall": "#f7f0df"
+      },
+      "phase": "evening",
+      "posters": 1,
+      "profile": "little-noticer"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 774.2644187589668,
+      "yaw": -0.08,
+      "z": -624.7544702650787
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside"
+      ],
+      "interest": "Animals, big shapes, familiar picture books and things to notice",
+      "participation": "One resident child; a grown-up joins the shared story",
+      "partyParticipants": 1,
+      "phase": "evening",
+      "profile": "little-noticer",
+      "residentChildren": 1,
+      "tidy": true,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 5,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "familiar shapes and a soft reading corner",
+      "murals": 2,
+      "paintings": 2,
+      "phase": "evening",
+      "profile": "little-noticer",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "apartment",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/apartment"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "familiar shapes and a soft reading corner",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "night",
+      "playMatClear": true,
+      "profile": "little-noticer",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Animals, big shapes, familiar picture books and things to notice",
+      "mirror": true,
+      "palette": {
+        "dado": "#a8bca4",
+        "feature": "#edcf87",
+        "wall": "#f7f0df"
+      },
+      "phase": "night",
+      "posters": 1,
+      "profile": "little-noticer"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1100.0001927182154,
+      "yaw": 0,
+      "z": -794.62970825858
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside"
+      ],
+      "interest": "Animals, big shapes, familiar picture books and things to notice",
+      "participation": "One resident child; a grown-up joins the shared story",
+      "partyParticipants": 1,
+      "phase": "night",
+      "profile": "little-noticer",
+      "residentChildren": 1,
+      "tidy": true,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 5,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "familiar shapes and a soft reading corner",
+      "murals": 2,
+      "paintings": 2,
+      "phase": "night",
+      "profile": "little-noticer",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "apartment",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/apartment"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "familiar shapes and a soft reading corner",
+      "lowDrawingSurface": true,
+      "participants": 1,
+      "phase": "party",
+      "playMatClear": false,
+      "profile": "little-noticer",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#9dbbd0",
+        "#f0e4ce"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Animals, big shapes, familiar picture books and things to notice",
+      "mirror": true,
+      "palette": {
+        "dado": "#a8bca4",
+        "feature": "#edcf87",
+        "wall": "#f7f0df"
+      },
+      "phase": "party",
+      "posters": 1,
+      "profile": "little-noticer"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 491.40486114985447,
+      "yaw": -0.12,
+      "z": -594.9887558651894
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside"
+      ],
+      "interest": "Animals, big shapes, familiar picture books and things to notice",
+      "participation": "One resident child; a grown-up joins the shared story",
+      "partyParticipants": 1,
+      "phase": "party",
+      "profile": "little-noticer",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 5,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "familiar shapes and a soft reading corner",
+      "murals": 2,
+      "paintings": 2,
+      "phase": "party",
+      "profile": "little-noticer",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "apartment",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/apartment"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "one pretend market and everyday family stories",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "morning",
+      "playMatClear": false,
+      "profile": "busy-helper",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Family routines, market play, pretend meals and helping",
+      "mirror": true,
+      "palette": {
+        "dado": "#8bb9b1",
+        "feature": "#e5af90",
+        "wall": "#fbefdf"
+      },
+      "phase": "morning",
+      "posters": 1,
+      "profile": "busy-helper"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1154.2985341491085,
+      "yaw": 0.06,
+      "z": -344.83727239851595
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf"
+      ],
+      "interest": "Family routines, market play, pretend meals and helping",
+      "participation": "One resident child; one visiting friend joins pretend play",
+      "partyParticipants": 2,
+      "phase": "morning",
+      "profile": "busy-helper",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "one pretend market and everyday family stories",
+      "murals": 2,
+      "paintings": 3,
+      "phase": "morning",
+      "profile": "busy-helper",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "house",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/house"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "afternoon",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "one pretend market and everyday family stories",
+      "lowDrawingSurface": true,
+      "participants": 1,
+      "phase": "afternoon",
+      "playMatClear": false,
+      "profile": "busy-helper",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.1,
+      "moon": 0,
+      "phase": "afternoon",
+      "reading": 0.08,
+      "sky": [
+        "#aed4e3",
+        "#fff2dd"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Family routines, market play, pretend meals and helping",
+      "mirror": true,
+      "palette": {
+        "dado": "#8bb9b1",
+        "feature": "#e5af90",
+        "wall": "#fbefdf"
+      },
+      "phase": "afternoon",
+      "posters": 1,
+      "profile": "busy-helper"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1050.000192718216,
+      "yaw": 0,
+      "z": -244.6297082585803
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf"
+      ],
+      "interest": "Family routines, market play, pretend meals and helping",
+      "participation": "One resident child; one visiting friend joins pretend play",
+      "partyParticipants": 2,
+      "phase": "afternoon",
+      "profile": "busy-helper",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "one pretend market and everyday family stories",
+      "murals": 2,
+      "paintings": 3,
+      "phase": "afternoon",
+      "profile": "busy-helper",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "house",
+    "phase": "afternoon",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/house"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "one pretend market and everyday family stories",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "evening",
+      "playMatClear": true,
+      "profile": "busy-helper",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Family routines, market play, pretend meals and helping",
+      "mirror": true,
+      "palette": {
+        "dado": "#8bb9b1",
+        "feature": "#e5af90",
+        "wall": "#fbefdf"
+      },
+      "phase": "evening",
+      "posters": 1,
+      "profile": "busy-helper"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 824.2644187589676,
+      "yaw": -0.08,
+      "z": -324.75447026507874
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf"
+      ],
+      "interest": "Family routines, market play, pretend meals and helping",
+      "participation": "One resident child; one visiting friend joins pretend play",
+      "partyParticipants": 2,
+      "phase": "evening",
+      "profile": "busy-helper",
+      "residentChildren": 1,
+      "tidy": true,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "one pretend market and everyday family stories",
+      "murals": 2,
+      "paintings": 3,
+      "phase": "evening",
+      "profile": "busy-helper",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "house",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/house"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "one pretend market and everyday family stories",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "night",
+      "playMatClear": true,
+      "profile": "busy-helper",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Family routines, market play, pretend meals and helping",
+      "mirror": true,
+      "palette": {
+        "dado": "#8bb9b1",
+        "feature": "#e5af90",
+        "wall": "#fbefdf"
+      },
+      "phase": "night",
+      "posters": 1,
+      "profile": "busy-helper"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1150.0001927182152,
+      "yaw": 0,
+      "z": -494.62970825858
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf"
+      ],
+      "interest": "Family routines, market play, pretend meals and helping",
+      "participation": "One resident child; one visiting friend joins pretend play",
+      "partyParticipants": 2,
+      "phase": "night",
+      "profile": "busy-helper",
+      "residentChildren": 1,
+      "tidy": true,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "one pretend market and everyday family stories",
+      "murals": 2,
+      "paintings": 3,
+      "phase": "night",
+      "profile": "busy-helper",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "house",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/house"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "one pretend market and everyday family stories",
+      "lowDrawingSurface": true,
+      "participants": 2,
+      "phase": "party",
+      "playMatClear": false,
+      "profile": "busy-helper",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#9dbbd0",
+        "#f0e4ce"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Family routines, market play, pretend meals and helping",
+      "mirror": true,
+      "palette": {
+        "dado": "#8bb9b1",
+        "feature": "#e5af90",
+        "wall": "#fbefdf"
+      },
+      "phase": "party",
+      "posters": 1,
+      "profile": "busy-helper"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 391.4048611498542,
+      "yaw": -0.12,
+      "z": -294.988755865189
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 2,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf"
+      ],
+      "interest": "Family routines, market play, pretend meals and helping",
+      "participation": "One resident child; one visiting friend joins pretend play",
+      "partyParticipants": 2,
+      "phase": "party",
+      "profile": "busy-helper",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "one pretend market and everyday family stories",
+      "murals": 2,
+      "paintings": 3,
+      "phase": "party",
+      "profile": "busy-helper",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "house",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/house"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "an unfinished bridge and a clear building mat",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "morning",
+      "playMatClear": false,
+      "profile": "little-inventor",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Building, vehicles, colour experiments and how things fit together",
+      "mirror": true,
+      "palette": {
+        "dado": "#8eaebb",
+        "feature": "#d6b36a",
+        "wall": "#f3efdf"
+      },
+      "phase": "morning",
+      "posters": 1,
+      "profile": "little-inventor"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1654.2985341491092,
+      "yaw": 0.06,
+      "z": -344.837272398516
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-play-kitchen"
+      ],
+      "interest": "Building, vehicles, colour experiments and how things fit together",
+      "participation": "One resident child; one visiting friend joins a shared build",
+      "partyParticipants": 2,
+      "phase": "morning",
+      "profile": "little-inventor",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "an unfinished bridge and a clear building mat",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "morning",
+      "profile": "little-inventor",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "spacious",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/spacious"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "afternoon",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "an unfinished bridge and a clear building mat",
+      "lowDrawingSurface": true,
+      "participants": 1,
+      "phase": "afternoon",
+      "playMatClear": false,
+      "profile": "little-inventor",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.1,
+      "moon": 0,
+      "phase": "afternoon",
+      "reading": 0.08,
+      "sky": [
+        "#aed4e3",
+        "#fff2dd"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Building, vehicles, colour experiments and how things fit together",
+      "mirror": true,
+      "palette": {
+        "dado": "#8eaebb",
+        "feature": "#d6b36a",
+        "wall": "#f3efdf"
+      },
+      "phase": "afternoon",
+      "posters": 1,
+      "profile": "little-inventor"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1550.0001927182157,
+      "yaw": 0,
+      "z": -244.62970825858045
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-play-kitchen"
+      ],
+      "interest": "Building, vehicles, colour experiments and how things fit together",
+      "participation": "One resident child; one visiting friend joins a shared build",
+      "partyParticipants": 2,
+      "phase": "afternoon",
+      "profile": "little-inventor",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "an unfinished bridge and a clear building mat",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "afternoon",
+      "profile": "little-inventor",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "spacious",
+    "phase": "afternoon",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/spacious"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "an unfinished bridge and a clear building mat",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "evening",
+      "playMatClear": true,
+      "profile": "little-inventor",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Building, vehicles, colour experiments and how things fit together",
+      "mirror": true,
+      "palette": {
+        "dado": "#8eaebb",
+        "feature": "#d6b36a",
+        "wall": "#f3efdf"
+      },
+      "phase": "evening",
+      "posters": 1,
+      "profile": "little-inventor"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1324.264418758967,
+      "yaw": -0.08,
+      "z": -324.75447026507885
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-play-kitchen"
+      ],
+      "interest": "Building, vehicles, colour experiments and how things fit together",
+      "participation": "One resident child; one visiting friend joins a shared build",
+      "partyParticipants": 2,
+      "phase": "evening",
+      "profile": "little-inventor",
+      "residentChildren": 1,
+      "tidy": true,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "an unfinished bridge and a clear building mat",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "evening",
+      "profile": "little-inventor",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "spacious",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/spacious"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "an unfinished bridge and a clear building mat",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "night",
+      "playMatClear": true,
+      "profile": "little-inventor",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Building, vehicles, colour experiments and how things fit together",
+      "mirror": true,
+      "palette": {
+        "dado": "#8eaebb",
+        "feature": "#d6b36a",
+        "wall": "#f3efdf"
+      },
+      "phase": "night",
+      "posters": 1,
+      "profile": "little-inventor"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1650.000192718216,
+      "yaw": 0,
+      "z": -494.62970825858014
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-play-kitchen"
+      ],
+      "interest": "Building, vehicles, colour experiments and how things fit together",
+      "participation": "One resident child; one visiting friend joins a shared build",
+      "partyParticipants": 2,
+      "phase": "night",
+      "profile": "little-inventor",
+      "residentChildren": 1,
+      "tidy": true,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "an unfinished bridge and a clear building mat",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "night",
+      "profile": "little-inventor",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "spacious",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/spacious"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "an unfinished bridge and a clear building mat",
+      "lowDrawingSurface": true,
+      "participants": 2,
+      "phase": "party",
+      "playMatClear": false,
+      "profile": "little-inventor",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#9dbbd0",
+        "#f0e4ce"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Building, vehicles, colour experiments and how things fit together",
+      "mirror": true,
+      "palette": {
+        "dado": "#8eaebb",
+        "feature": "#d6b36a",
+        "wall": "#f3efdf"
+      },
+      "phase": "party",
+      "posters": 1,
+      "profile": "little-inventor"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 891.4048611498547,
+      "yaw": -0.12,
+      "z": -294.98875586518903
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 2,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-play-kitchen"
+      ],
+      "interest": "Building, vehicles, colour experiments and how things fit together",
+      "participation": "One resident child; one visiting friend joins a shared build",
+      "partyParticipants": 2,
+      "phase": "party",
+      "profile": "little-inventor",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "an unfinished bridge and a clear building mat",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "party",
+      "profile": "little-inventor",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "spacious",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/spacious"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "the little house and one evolving character story",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "morning",
+      "playMatClear": false,
+      "profile": "story-makers",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Characters, pretend places, picture sequences and stories invented with friends",
+      "mirror": true,
+      "palette": {
+        "dado": "#acb2c1",
+        "feature": "#d8a17e",
+        "wall": "#f7eadf"
+      },
+      "phase": "morning",
+      "posters": 1,
+      "profile": "story-makers"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2154.2985341491094,
+      "yaw": 0.06,
+      "z": -344.8372723985161
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-guest-stool-0",
+        "early-play-kitchen",
+        "early-small-world"
+      ],
+      "interest": "Characters, pretend places, picture sequences and stories invented with friends",
+      "participation": "One resident child; two visiting friends join the little-world story",
+      "partyParticipants": 3,
+      "phase": "morning",
+      "profile": "story-makers",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen",
+        "small world"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 9,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "the little house and one evolving character story",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "morning",
+      "profile": "story-makers",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "premium",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/premium"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "afternoon",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "the little house and one evolving character story",
+      "lowDrawingSurface": true,
+      "participants": 1,
+      "phase": "afternoon",
+      "playMatClear": false,
+      "profile": "story-makers",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.1,
+      "moon": 0,
+      "phase": "afternoon",
+      "reading": 0.08,
+      "sky": [
+        "#aed4e3",
+        "#fff2dd"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Characters, pretend places, picture sequences and stories invented with friends",
+      "mirror": true,
+      "palette": {
+        "dado": "#acb2c1",
+        "feature": "#d8a17e",
+        "wall": "#f7eadf"
+      },
+      "phase": "afternoon",
+      "posters": 1,
+      "profile": "story-makers"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2050.000192718216,
+      "yaw": 0,
+      "z": -244.62970825858056
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-guest-stool-0",
+        "early-play-kitchen",
+        "early-small-world"
+      ],
+      "interest": "Characters, pretend places, picture sequences and stories invented with friends",
+      "participation": "One resident child; two visiting friends join the little-world story",
+      "partyParticipants": 3,
+      "phase": "afternoon",
+      "profile": "story-makers",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen",
+        "small world"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 9,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "the little house and one evolving character story",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "afternoon",
+      "profile": "story-makers",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "premium",
+    "phase": "afternoon",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/premium"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "the little house and one evolving character story",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "evening",
+      "playMatClear": true,
+      "profile": "story-makers",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Characters, pretend places, picture sequences and stories invented with friends",
+      "mirror": true,
+      "palette": {
+        "dado": "#acb2c1",
+        "feature": "#d8a17e",
+        "wall": "#f7eadf"
+      },
+      "phase": "evening",
+      "posters": 1,
+      "profile": "story-makers"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1824.264418758968,
+      "yaw": -0.08,
+      "z": -324.75447026507896
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-guest-stool-0",
+        "early-play-kitchen",
+        "early-small-world"
+      ],
+      "interest": "Characters, pretend places, picture sequences and stories invented with friends",
+      "participation": "One resident child; two visiting friends join the little-world story",
+      "partyParticipants": 3,
+      "phase": "evening",
+      "profile": "story-makers",
+      "residentChildren": 1,
+      "tidy": true,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen",
+        "small world"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 9,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "the little house and one evolving character story",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "evening",
+      "profile": "story-makers",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "premium",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/premium"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "the little house and one evolving character story",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "night",
+      "playMatClear": true,
+      "profile": "story-makers",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Characters, pretend places, picture sequences and stories invented with friends",
+      "mirror": true,
+      "palette": {
+        "dado": "#acb2c1",
+        "feature": "#d8a17e",
+        "wall": "#f7eadf"
+      },
+      "phase": "night",
+      "posters": 1,
+      "profile": "story-makers"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2150.000192718217,
+      "yaw": 0,
+      "z": -494.62970825858025
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-guest-stool-0",
+        "early-play-kitchen",
+        "early-small-world"
+      ],
+      "interest": "Characters, pretend places, picture sequences and stories invented with friends",
+      "participation": "One resident child; two visiting friends join the little-world story",
+      "partyParticipants": 3,
+      "phase": "night",
+      "profile": "story-makers",
+      "residentChildren": 1,
+      "tidy": true,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen",
+        "small world"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 9,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "the little house and one evolving character story",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "night",
+      "profile": "story-makers",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "premium",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/premium"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "the little house and one evolving character story",
+      "lowDrawingSurface": true,
+      "participants": 3,
+      "phase": "party",
+      "playMatClear": false,
+      "profile": "story-makers",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#9dbbd0",
+        "#f0e4ce"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Characters, pretend places, picture sequences and stories invented with friends",
+      "mirror": true,
+      "palette": {
+        "dado": "#acb2c1",
+        "feature": "#d8a17e",
+        "wall": "#f7eadf"
+      },
+      "phase": "party",
+      "posters": 1,
+      "profile": "story-makers"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1391.404861149854,
+      "yaw": -0.12,
+      "z": -294.98875586518915
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 3,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-guest-stool-0",
+        "early-play-kitchen",
+        "early-small-world"
+      ],
+      "interest": "Characters, pretend places, picture sequences and stories invented with friends",
+      "participation": "One resident child; two visiting friends join the little-world story",
+      "partyParticipants": 3,
+      "phase": "party",
+      "profile": "story-makers",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen",
+        "small world"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 9,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "the little house and one evolving character story",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "party",
+      "profile": "story-makers",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "premium",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/premium"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "morning",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "a listening bench and an open movement area",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "morning",
+      "playMatClear": false,
+      "profile": "nature-and-rhythm",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.04,
+      "moon": 0,
+      "phase": "morning",
+      "reading": 0,
+      "sky": [
+        "#9bc9df",
+        "#fff1d7"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Wooden sounds, leaf shapes, patterns, movement and group discoveries",
+      "mirror": true,
+      "palette": {
+        "dado": "#9fb8a7",
+        "feature": "#d4b768",
+        "wall": "#f2efdf"
+      },
+      "phase": "morning",
+      "posters": 1,
+      "profile": "nature-and-rhythm"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2754.298534149109,
+      "yaw": 0.06,
+      "z": -344.8372723985163
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-guest-stool-0",
+        "early-guest-stool-1",
+        "early-play-kitchen",
+        "early-small-world",
+        "early-music-nature"
+      ],
+      "interest": "Wooden sounds, leaf shapes, patterns, movement and group discoveries",
+      "participation": "One resident child; three visiting friends join the discovery session",
+      "partyParticipants": 4,
+      "phase": "morning",
+      "profile": "nature-and-rhythm",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen",
+        "small world",
+        "music & nature"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "a listening bench and an open movement area",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "morning",
+      "profile": "nature-and-rhythm",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "executive",
+    "phase": "morning",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/executive"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "afternoon",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "a listening bench and an open movement area",
+      "lowDrawingSurface": true,
+      "participants": 1,
+      "phase": "afternoon",
+      "playMatClear": false,
+      "profile": "nature-and-rhythm",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.1,
+      "moon": 0,
+      "phase": "afternoon",
+      "reading": 0.08,
+      "sky": [
+        "#aed4e3",
+        "#fff2dd"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Wooden sounds, leaf shapes, patterns, movement and group discoveries",
+      "mirror": true,
+      "palette": {
+        "dado": "#9fb8a7",
+        "feature": "#d4b768",
+        "wall": "#f2efdf"
+      },
+      "phase": "afternoon",
+      "posters": 1,
+      "profile": "nature-and-rhythm"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2650.0001927182157,
+      "yaw": 0,
+      "z": -244.6297082585807
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-guest-stool-0",
+        "early-guest-stool-1",
+        "early-play-kitchen",
+        "early-small-world",
+        "early-music-nature"
+      ],
+      "interest": "Wooden sounds, leaf shapes, patterns, movement and group discoveries",
+      "participation": "One resident child; three visiting friends join the discovery session",
+      "partyParticipants": 4,
+      "phase": "afternoon",
+      "profile": "nature-and-rhythm",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen",
+        "small world",
+        "music & nature"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "a listening bench and an open movement area",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "afternoon",
+      "profile": "nature-and-rhythm",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "executive",
+    "phase": "afternoon",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/executive"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "evening",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "a listening bench and an open movement area",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "evening",
+      "playMatClear": true,
+      "profile": "nature-and-rhythm",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.4,
+      "moon": 0.15,
+      "phase": "evening",
+      "reading": 1,
+      "sky": [
+        "#6b88a5",
+        "#f4bc98"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Wooden sounds, leaf shapes, patterns, movement and group discoveries",
+      "mirror": true,
+      "palette": {
+        "dado": "#9fb8a7",
+        "feature": "#d4b768",
+        "wall": "#f2efdf"
+      },
+      "phase": "evening",
+      "posters": 1,
+      "profile": "nature-and-rhythm"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2424.264418758967,
+      "yaw": -0.08,
+      "z": -324.7544702650791
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-guest-stool-0",
+        "early-guest-stool-1",
+        "early-play-kitchen",
+        "early-small-world",
+        "early-music-nature"
+      ],
+      "interest": "Wooden sounds, leaf shapes, patterns, movement and group discoveries",
+      "participation": "One resident child; three visiting friends join the discovery session",
+      "partyParticipants": 4,
+      "phase": "evening",
+      "profile": "nature-and-rhythm",
+      "residentChildren": 1,
+      "tidy": true,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen",
+        "small world",
+        "music & nature"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "a listening bench and an open movement area",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "evening",
+      "profile": "nature-and-rhythm",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "executive",
+    "phase": "evening",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/executive"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "night",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "a listening bench and an open movement area",
+      "lowDrawingSurface": false,
+      "participants": 1,
+      "phase": "night",
+      "playMatClear": true,
+      "profile": "nature-and-rhythm",
+      "readingBook": false
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.9,
+      "moon": 0.26,
+      "phase": "night",
+      "reading": 0,
+      "sky": [
+        "#14253b",
+        "#344c64"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Wooden sounds, leaf shapes, patterns, movement and group discoveries",
+      "mirror": true,
+      "palette": {
+        "dado": "#9fb8a7",
+        "feature": "#d4b768",
+        "wall": "#f2efdf"
+      },
+      "phase": "night",
+      "posters": 1,
+      "profile": "nature-and-rhythm"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 2750.000192718216,
+      "yaw": 0,
+      "z": -494.6297082585804
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 1,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-guest-stool-0",
+        "early-guest-stool-1",
+        "early-play-kitchen",
+        "early-small-world",
+        "early-music-nature"
+      ],
+      "interest": "Wooden sounds, leaf shapes, patterns, movement and group discoveries",
+      "participation": "One resident child; three visiting friends join the discovery session",
+      "partyParticipants": 4,
+      "phase": "night",
+      "profile": "nature-and-rhythm",
+      "residentChildren": 1,
+      "tidy": true,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen",
+        "small world",
+        "music & nature"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "a listening bench and an open movement area",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "night",
+      "profile": "nature-and-rhythm",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "executive",
+    "phase": "night",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/executive"
+  },
+  {
+    "accessories": [],
+    "actualDeskSize": "48x30",
+    "actualMode": "party",
+    "ageStage": "early",
+    "childActivity": {
+      "focus": "a listening bench and an open movement area",
+      "lowDrawingSurface": true,
+      "participants": 4,
+      "phase": "party",
+      "playMatClear": false,
+      "profile": "nature-and-rhythm",
+      "readingBook": true
+    },
+    "childGrowth": {
+      "palette": "Pale oak · sage · dusty blue",
+      "stage": "early"
+    },
+    "childLighting": {
+      "blind": 0.07,
+      "moon": 0,
+      "phase": "party",
+      "reading": 0.35,
+      "sky": [
+        "#9dbbd0",
+        "#f0e4ce"
+      ]
+    },
+    "childPersonality": {
+      "age": "early",
+      "bag": true,
+      "cloth": true,
+      "interest": "Wooden sounds, leaf shapes, patterns, movement and group discoveries",
+      "mirror": true,
+      "palette": {
+        "dado": "#9fb8a7",
+        "feature": "#d4b768",
+        "wall": "#f2efdf"
+      },
+      "phase": "party",
+      "posters": 1,
+      "profile": "nature-and-rhythm"
+    },
+    "deskFinish": "Pearl White",
+    "deskPose": {
+      "x": 1991.4048611498552,
+      "yaw": -0.12,
+      "z": -294.9887558651893
+    },
+    "desks": 1,
+    "earlyYearsLife": {
+      "activeChildren": 4,
+      "floorIds": [
+        "early-bedside",
+        "early-story-pouf",
+        "early-guest-stool-0",
+        "early-guest-stool-1",
+        "early-play-kitchen",
+        "early-small-world",
+        "early-music-nature"
+      ],
+      "interest": "Wooden sounds, leaf shapes, patterns, movement and group discoveries",
+      "participation": "One resident child; three visiting friends join the discovery session",
+      "partyParticipants": 4,
+      "phase": "party",
+      "profile": "nature-and-rhythm",
+      "residentChildren": 1,
+      "tidy": false,
+      "zones": [
+        "sleep",
+        "reading",
+        "building",
+        "drawing",
+        "pretend market",
+        "pretend kitchen",
+        "small world",
+        "music & nature"
+      ]
+    },
+    "earlyYearsWalls": {
+      "bunting": 7,
+      "calmSleepingWall": true,
+      "childArtCenterMm": 1320,
+      "detailedMurals": 1,
+      "displayClusters": 1,
+      "focus": "a listening bench and an open movement area",
+      "murals": 2,
+      "paintings": 4,
+      "phase": "party",
+      "profile": "nature-and-rhythm",
+      "windowClearFromZ": 1100
+    },
+    "kits": [
+      {
+        "measured": true,
+        "overlap": 0,
+        "position": [
+          340,
+          1,
+          150
+        ],
+        "supported": true,
+        "visible": true
+      }
+    ],
+    "layout": "executive",
+    "phase": "party",
+    "room": "childroom",
+    "size": "48x30",
+    "stageKey": "childroom/executive"
+  }
+]

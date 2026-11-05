@@ -29,6 +29,7 @@ export const PRODUCT_CONFIG = {
         { name: "Earthy Forest Green", color: "#203b2b", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
         { name: "Bordeaux", color: "#693b48", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
         { name: "Warm Ivory", color: "#e8dfcd", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
+        { name: "Pearl White", color: "#f4f3ef", price: 0, collection: 'bespoke', quoted: true, surface: 'opaque' },
         { name: "Carbon Weave Wrap", color: "#343b43", price: 0, collection: 'bespoke', quoted: true, surface: 'carbon-wrap' },
         { name: "Brushed Silver Wrap", color: "#b9bdc3", price: 0, collection: 'bespoke', quoted: true, surface: 'metal-wrap' }
     ],
