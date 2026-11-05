@@ -7,6 +7,7 @@
 //   reflections: 512          room cube capture (PMREM) as envMap on glossy/metal materials, instead of the studio env
 //   ao: {intensity, radius}   GTAO ambient occlusion; radius as a fraction of the desk width
 //   bloom: {strength, radius, threshold}  selective bloom on screens, LED strips and emissive fixtures only
+//   screenBloom: 1            the screens' share of the bloom (0 = none: sharp screens; .25 = a quarter). Vico, HQ20.
 //   bloomReceivers: true      false keeps the LED light ON surfaces (the app's '<surface> LED reflection' overlays, the film's
 //                             'LED floor bounce') out of the bloom: lit surfaces, not sources (Vico, HQ18: the light looked hazy)
 // ao/bloom run through an EffectComposer that replaces the main canvas render; tone mapping and output
@@ -112,7 +113,7 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
     blending: THREE.CustomBlending, blendSrc: THREE.DstColorFactor, blendDst: THREE.ZeroFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor,
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
     fragmentShader: 'uniform sampler2D tAO, tMask; uniform float intensity; varying vec2 vUv; void main(){ float lit = step(.002, dot(texture2D(tMask, vUv).rgb, vec3(1.))); gl_FragColor = vec4(vec3(mix(1., texture2D(tAO, vUv).r, intensity * (1. - lit))), 1.); }' }));
-  let bloom = null, others = null, muted = [], black = null, glowQuad = null;
+  let bloom = null, others = null, muted = [], dimmed = [], black = null, glowQuad = null;
   if (q.bloom) {
     bloom = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), q.bloom.strength, q.bloom.radius, q.bloom.threshold);
     // Glow (linear) added over the display-referred canvas: encode to sRGB first, additive blend.
@@ -123,11 +124,16 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
   }
   {
     black = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const screenMeshes = new Set(screens.map(s => s.mesh)); let n = 0; others = []; muted = [];
+    const screenMeshes = new Set(screens.map(s => s.mesh)); let n = 0; others = []; muted = []; dimmed = [];
     scene.traverse(o => { if (!o.isMesh) return;
       const m = [].concat(o.material || [])[0];
       // bloomReceivers false: the surface overlays are hidden (not blacked: their own onBeforeRender needs their shader) in the glow pass.
       if (q.bloomReceivers === false && named(o, RECEIVER)) { muted.push(o); return; }
+      const isScreen = screenMeshes.has(o) || (m?.isMeshBasicMaterial && m.map && named(o, SCREENISH));
+      if (isScreen && q.screenBloom !== undefined && Number(q.screenBloom) < 1) {
+        if (Number(q.screenBloom) <= 0) { others.push(o); return; }
+        dimmed.push(o); n++; return;
+      }
       const glow = !named(o, NOT_BLOOM) && (screenMeshes.has(o) || named(o, LEDISH) || (m?.isMeshBasicMaterial && m.map && named(o, SCREENISH)) || (m?.emissive && luma(m.emissive) * (m.emissiveIntensity ?? 1) > .3));
       if (glow) n++; else others.push(o); });
     info.bloom = n;
@@ -147,8 +153,11 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
         const bg = sc.background, saved = others.map(o => o.material), shown = muted.map(o => o.visible); sc.background = null;
         for (const o of others) o.material = black;
         for (const o of muted) o.visible = false;
+        // screenBloom < 1: the screens draw into the glow set at that fraction of their colour (their own material,
+        // toned down for this pass only), so their bloom is that fraction too.
+        const k = Number(q.screenBloom), dimSaved = [...new Set(dimmed.map(o => [].concat(o.material)[0]).filter(mm => mm?.color))].map(mm => { const c = mm.color.clone(); mm.color.multiplyScalar(k); return [mm, c]; });   // once per shared material
         const ac = this.autoClear; this.autoClear = true;
-        try { this.setRenderTarget(glowRT); direct.call(this, sc, cam); } finally { others.forEach((o, i) => { o.material = saved[i]; }); muted.forEach((o, i) => { o.visible = shown[i]; }); sc.background = bg; this.setRenderTarget(null); this.autoClear = ac; }
+        try { this.setRenderTarget(glowRT); direct.call(this, sc, cam); } finally { others.forEach((o, i) => { o.material = saved[i]; }); muted.forEach((o, i) => { o.visible = shown[i]; }); dimSaved.forEach(([mm, c]) => mm.color.copy(c)); sc.background = bg; this.setRenderTarget(null); this.autoClear = ac; }
       }
       const ac = this.autoClear; this.autoClear = false;
       try {
