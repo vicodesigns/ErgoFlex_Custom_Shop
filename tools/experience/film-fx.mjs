@@ -444,6 +444,47 @@ function clearDeskObjects(d) {
 //     hides; the lift stands in for the diffuser and the glossy floor's spread); soft: source radius
 //     (softens the pool right under a strip); radius: fade-out disc around the desk.
 const FLOOR_SEGS = 4, FLOOR_STEPS = 24;
+// Wheel spin on travel after a turn (Vico, HQ14c: on the roll forward the front and back wheels spun opposite ways).
+// The app spins each mecanum wheel by (dx + latSign * dz) / radius from the desk's WORLD step (studio.js
+// applyGlideOffset), which is right only at yaw 0: after the 90 degree turn a forward roll is spun as a strafe.
+// Each rendered frame this adds the difference to the same formula in the desk's own frame (the step rotated by
+// -yaw), so all four wheels roll forward together. Steps that change the yaw are the app's turn spin and are left alone.
+// The app (studio.js) is unchanged; restore() puts the render back. shot.wheelFix:false turns it off.
+function installWheelFix(shot) {
+  const desk = api.loadedModel, LAT = { Wheel_F_L: 1, Wheel_F_R: -1, Wheel_R_L: -1, Wheel_R_R: 1 }, rigs = [];
+  desk.traverse(o => {
+    const m = /^wheelRig_(Wheel_[FR]_[LR])$/.exec(o.name); if (!m) return;
+    // The app's radius: half the world height of the largest disc, measured unspun.
+    const z = o.rotation.z; o.rotation.z = 0; o.updateMatrixWorld(true);
+    let hub = null, area = 0;
+    for (const c of o.children) { if (!c.isMesh || !c.geometry) continue; c.geometry.computeBoundingBox(); const b = c.geometry.boundingBox, a = (b.max.x - b.min.x) * (b.max.y - b.min.y); if (a > area) { area = a; hub = c; } }
+    const hb = hub ? new THREE.Box3().setFromObject(hub) : null; o.rotation.z = z; o.updateMatrixWorld(true);
+    if (hb) rigs.push({ o, name: m[1], lat: LAT[m[1]], r: Math.max(.02, (hb.max.y - hb.min.y) / 2), corr: 0, base: z, written: z });
+  });
+  if (!rigs.length) return null;
+  const renderer = api.renderer, direct = renderer.render, log = shot.wheelFixDebug ? [] : null;
+  let prev = null;
+  const apply = () => {
+    const p = desk.position, yaw = desk.rotation.y;
+    if (prev) {
+      const dx = p.x - prev.x, dz = p.z - prev.z;
+      var travel = Math.abs(yaw - prev.yaw) < 1e-7 && (dx || dz);
+      if (travel) {
+        const c = Math.cos(yaw), s = Math.sin(yaw), lx = dx * c - dz * s, lz = dx * s + dz * c;
+        for (const g of rigs) g.corr -= ((lx - dx) + g.lat * (lz - dz)) / g.r;
+      }
+    }
+    prev = { x: p.x, z: p.z, yaw };
+    for (const g of rigs) {
+      const was = g.written; if (g.o.rotation.z !== g.written) g.base = g.o.rotation.z; g.written = g.base + g.corr; g.o.rotation.z = g.written;
+      if (log && travel) { g.dApp = (g.dApp || 0) + (g.o.rotation.z - was) - (g.corr - (g.corrWas ?? g.corr)); g.dFix = (g.dFix || 0) + (g.written - was); }
+      g.corrWas = g.corr;
+    }
+    if (log) log.push(1);
+  };
+  renderer.render = function (sc, cam) { apply(); return direct.call(this, sc, cam); };
+  return { count: rigs.length, restore() { renderer.render = direct; if (log?.length > 1) console.error('[film-fx] wheels app/fixed spin on travel steps: ' + rigs.map(g => g.name.slice(6) + ' ' + (g.dApp || 0).toFixed(2) + '/' + (g.dFix || 0).toFixed(2)).join(', ')); } };
+}
 function installFloorLight(shot) {
   const spec = { gain: 1, foot: 1, wings: 1, footLift: .25, lobe: 1, max: .6, soft: .04, radius: 3.2, hideApp: true, ...shot.floorLight };
   spec.center ??= spec.wings; // round 8: the desktop centre strip (id 4) lights the floor under the desk too
@@ -612,6 +653,7 @@ export async function install(shot) {
   if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
   if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
   if (shot.floorLight) active.floor = installFloorLight(shot);
+  if (shot.motion && shot.wheelFix !== false) active.wheels = installWheelFix(shot);   // before quality: its compositor wraps this render
   // quality: GPU render-box overrides (shadow maps, anisotropy, room reflections, GTAO, selective bloom); film-quality.mjs.
   if (shot.quality) { active.quality = await (await import('./film-quality.mjs')).installQuality(shot, { screens: active.screens }); if (active.quality) console.log('[film-quality]', JSON.stringify(active.quality.info)); }
   if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
@@ -658,6 +700,7 @@ export function clear() {
   active.status?.clear();
   active.quality?.restore();
   active.floor?.restore();
+  active.wheels?.restore();   // after quality.restore, which hands the render back to this wrapper
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
   clearDeskObjects(active.desk);

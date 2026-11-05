@@ -135,6 +135,13 @@ export function installStatus(shot) {
           sampleMovementInto(wings, { ...m, reverseRotation: false, elapsedMs: t * 1000 });
           frame[5].set(wings[5]); frame[6].set(wings[6]);
         }
+        if (ev.kind === 'wheels' && ev.footComet !== false) {
+          // Vico (HQ14c): the foot rest runs the wings' comet. The firmware gives it a slow red pulse on forward/back
+          // (and a short comet on turns), which starts dark and read as off. Sampled at the foot's own length.
+          const foot = counts.map((n, i) => new Uint8Array((i === 5 ? counts[7] : 1) * 4));
+          sampleMovementInto(foot, { ...m, reverseRotation: false, elapsedMs: t * 1000 });
+          frame[7].set(foot[5]);
+        }
         for (const id of m.dark || []) frame[id].fill(0);
       } else {
         let rgb, gain;
