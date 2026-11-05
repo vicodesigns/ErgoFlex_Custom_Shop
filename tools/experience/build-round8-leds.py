@@ -93,6 +93,7 @@ LIBRARY_LED = {'desktopStrength': .5, 'screenBrightness': .75}   # its room spil
 # (walls and floor within ~2 m, and the LEDs' share of the architectural bounce) at 15%. Night rooms (music, media) keep theirs.
 DAY_ROOMS, DAY_SPILL = ('rise', 'create', 'commons', 'coast', 'oilers', 'wellness', 'storage'), .15
 MONTAGE = .55   # music: video-game montage screens + their LED light; lighting expert picked B of A .7 / B .55 / C .4 (A still clipped the screen whites)
+POUF = {'x': 1150, 'z': 150, 'rotation': 20}   # gym pouf, base-shelf mount mm
 GYM = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gym-black-red.json')
 
 
@@ -144,6 +145,11 @@ def fix(s):
         s['sceneEdits'] =[e for e in s.get('sceneEdits', []) if not e.get('gymBlackRed')] + [{**e, 'gymBlackRed': True} for e in g.get('sceneEdits', [])]
         # Vico: "the desk, make it also black and red": the gaming desk's finish (preset-defaults gaming: Black Birch, red trim).
         s['deskFinish'] = g.get('deskFinish', {'wood': 'Black Birch', 'trim': '#dc0909'})
+        # HQ18 (Vico: the pouf "in front of the desk ... kind of blocking it ... I like it as a decoration somewhere else"):
+        # off the desk's front-left corner (round 6, x -560 z 470) to beside its right end, toward the dumbbell rack:
+        # out of the low opening frames, still in the wides.
+        for a in s.get('accessories', {}).get('add', []):
+            if a.get('id') == 'campus-pouf-slate': a.update(POUF)
         if g.get('lights'): s['lights'] = [l for l in s.get('lights', []) if not l.get('gymBlackRed')] + [{**l, 'gymBlackRed': True} for l in g['lights']]
     if s['id'] == 'storage':
         for e in s.get('ledStatus', []):
