@@ -132,9 +132,9 @@ CAMERA = {'easeIn': True, 'easeOut': False, 'keys': [
     orbit(CUTS[0], 34, 3.30, 0.28, 0.30, 0.50, 26, label='Low on the foot rest', cut=True),
     orbit(11.4, 36, 3.30, 0.30, 0.34, 0.75, 26, label='Foot rest lights'),
     orbit(13.8, 40, 4.60, 1.45, 1.05, 0.75, 30, label='Eye line: the desk rises past the lens'),
-    orbit(16.6, 44, 5.00, 1.55, 1.30, 0.60, 31),
-    orbit(19.4, 48, 5.30, 1.60, 1.45, 0.62, 31, label='Full height'),
-    orbit(CUTS[1] - .05, 49, 5.35, 1.60, 1.46, 0.62, 31),
+    orbit(16.6, 44, 5.00, 1.55, 1.30, 0.60, 33),   # review 2: fov 33, the monitor stays in frame mid-rise
+    orbit(19.4, 48, 5.30, 1.60, 1.50, 0.62, 35, label='Full height'),   # review 2: monitor top no longer clipped
+    orbit(CUTS[1] - .05, 49, 5.35, 1.60, 1.51, 0.62, 35),
     # 3. The tilt in tight profile at the board's height: the edge steepens against black, a slow lateral dolly
     #    for parallax.
     orbit(CUTS[1], 80, 3.70, 2.30, 1.95, -0.10, 28, label='Board edge, profile', cut=True),
@@ -148,8 +148,9 @@ CAMERA = {'easeIn': True, 'easeOut': False, 'keys': [
     orbit(34.1, 82, 6.15, 1.80, 1.60, 0.00, 32, label='Far side 3/4'),
     orbit(CUTS[3] - .05, 85, 6.05, 1.85, 1.60, 0.00, 32),
     # 5. The lowering, locked: a front 3/4 at desktop height, so the board drops through the frame over the red pool.
-    orbit(CUTS[3], 104, 5.90, 1.40, 1.40, -0.20, 34, label='Locked: the red lowering', cut=True),
-    orbit(CUTS[4] - .05, 105, 5.85, 1.36, 1.36, -0.20, 34),
+    # Review 2: tight and low, so 36.1 and 42.85 both jump in size (wide -> tight -> wide), not a jump cut.
+    orbit(CUTS[3], 112, 4.70, 1.05, 1.40, -0.15, 38, centre=(0.24, 0.208), label='Tight low lock: red lowering', cut=True),
+    orbit(CUTS[4] - .05, 113, 4.65, 1.03, 1.38, -0.15, 38, centre=(0.24, 0.208)),
     # 6. The finale, cut on the roll's first frame: a low lock ahead of the desk (fixed centre) so it rolls at the lens
     #    and grows in frame over its red comet; then a slow low arc and push through the blue rise to full height and the
     #    clean look, landing on a low far-side 3/4 (easeOut false: still moving into the dissolve).
@@ -157,7 +158,7 @@ CAMERA = {'easeIn': True, 'easeOut': False, 'keys': [
     orbit(sum(ROLL_LIT), 131, 6.55, 0.56, 1.12, 0.00, 30, desk(CUTS[4])[1]),
     orbit(LIFT_END[0], 118, 6.00, 0.62, 1.25, 0.00, 31, label='Rise to full height: blue'),
     orbit(sum(LIFT_END), 106, 6.05, 0.66, 1.45, 0.00, 32),
-    orbit(SECONDS, 92, 5.70, 0.50, 1.62, 0.05, 31, label='Clean low hero 3/4, push and arc')]}
+    orbit(SECONDS, 92, 5.70, 0.50, 1.55, 0.05, 35, label='Clean low hero 3/4, push and arc')]}   # review 2: wheels in frame
 
 # ---------------------------------------------------------------- look
 # Dark stage until the switch-on, the status levels while the desk's lights play, the clean product look at the end.
