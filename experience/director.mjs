@@ -97,7 +97,7 @@ export function mountDirector(bridge,catalog,initial){
   }
 
   const status=(message,error=false)=>{for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.classList.toggle('error',error);}};
-  function draft(){clearTimeout(draftTimer);try{library.draft(project);status('Draft kept in this browser · Save cut when ready.');}catch(error){status(`Not saved: ${error.message} Use Export cut.`,true);}}
+  function draft(){clearTimeout(draftTimer);try{library.draft(project);status('Draft kept in this browser · Save cut when ready.');}catch{status('Edit kept in this editor (browser storage is full, so no draft copy) · Export cut sends it to the film.');}}
   function changed(){bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}}
   function commit(fn,{render=false,key=null}={}){
     if(!key||group!==key){undo.push(copy(project));undo=undo.slice(-40);redo=[];}
