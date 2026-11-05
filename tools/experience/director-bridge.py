@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Film chapter <-> the app's Director Mode (experience/), for hand-tuning the camera.
 
-  director-bridge.py link <shot.json> [--base http://localhost:3000]
+  director-bridge.py link <shot.json> [--base http://localhost:3000] [--html page.html] [--json cut.json]
+      --html writes a small page that redirects to the link (a short address to open); --json writes the cut for
+      Director Mode's "Import cut".
       Prints an experience/#cut=... link that opens the chapter as a one-chapter client cut: the desk moves
       (motion clips) and the camera's STORY keys (shot.cameraPlan.keys, not the dense spline bake), each with
       its label, so they can be found and dragged in the Director timeline. Director Mode previews the keys with
@@ -24,7 +26,7 @@ def opt(name, default=None):
 
 cmd = args.pop(0) if args else ''
 if cmd == 'link':
-    base = opt('--base', 'http://localhost:3000')
+    base = opt('--base', 'http://localhost:3000'); html_out, json_out = opt('--html'), opt('--json')
     shot = json.load(open(args[0]))
     plan = sorted(shot['cameraPlan']['keys'], key=lambda k: k['at'])
     T = float(shot['seconds'])
@@ -42,7 +44,11 @@ if cmd == 'link':
            'client': 'ErgoFlex intro film', 'volume': .32, 'shots': [s]}
     raw = json.dumps(cut, separators=(',', ':')).encode()
     if len(raw) > 45000: sys.exit(f'cut is {len(raw)} bytes; links hold 45000. Use Import cut with the JSON instead.')
-    print(f'{base}/experience/#cut=' + base64.urlsafe_b64encode(raw).decode().rstrip('='))
+    enc = base64.urlsafe_b64encode(raw).decode().rstrip('=')
+    if json_out: json.dump(cut, open(json_out, 'w'), indent=1)
+    if html_out: open(html_out, 'w').write(f'<!doctype html><meta charset="utf-8"><title>{cut["name"]} in Director Mode</title>'
+                                            f'<script>location.replace("/experience/#cut={enc}")</script><p>Opening {cut["name"]} in Director Mode…</p>\n')
+    print(f'{base}/experience/#cut={enc}')
 elif cmd == 'import':
     shot_id, plan_path = opt('--shot', 'awaken'), opt('--plan')
     cut, out = json.load(open(args[0])), args[1]

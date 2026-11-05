@@ -41,6 +41,7 @@ LIFT_END = (round(sum(ROLL_LIT) + GAP, 3), 3.75)            # back up to full he
 SETTLE = (round(sum(LIFT_END) + .5, 3), round(sum(LIFT_END) + 1.9, 3))   # stage back to the clean product look
 SECONDS = round(sum(LIFT_END) + 1.9, 2)                     # the hero settles as the chapter dissolves out
 ROLL_IN, FULL, HALF, TILT_DEG, TURN_DEG, ROLL_LIT_IN = 12, 52.5, 40.5, 15, 120, 18
+FIRST_LIFT = 45.5   # Vico, Director Mode 2026-11-04: the first lift stops at 45.5 in (same 7.6 s), not full height
 
 
 def clip(id, lane, kind, start, dur, easing='smooth', label='', **kw):
@@ -49,7 +50,7 @@ def clip(id, lane, kind, start, dur, easing='smooth', label='', **kw):
 
 # Labels feed the monitor's activity log (ch01 reads 'Turn...' labels as pose turns, so the rotate says 'Rotating').
 CLIPS = [clip('op-roll', 'wheels', 'travel', *ROLL, label='Move forward', value=ROLL_IN, direction='forward'),
-         clip('op-lift', 'lift', 'lift', *LIFT, label='Lift up', target=FULL),
+         clip('op-lift', 'lift', 'lift', *LIFT, label='Lift up', target=FIRST_LIFT),
          clip('op-tilt-down', 'tilt', 'tilt', *TILT_DOWN, label='Tilt up', target=TILT_DEG),
          clip('op-turn', 'wheels', 'rotate', *TURN, label='Rotating left', value=TURN_DEG, direction='left'),
          clip('op-tilt-back', 'tilt', 'tilt', *TILT_BACK, label='Tilt level', target=0),
