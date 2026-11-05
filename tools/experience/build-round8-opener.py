@@ -57,17 +57,38 @@ CLIPS = [clip('op-roll', 'wheels', 'travel', *ROLL, label='Move forward', value=
          clip('op-lower', 'lift', 'lift', *LOWER, label='Lift down', target=HALF),
          clip('op-roll-lit', 'wheels', 'travel', *ROLL_LIT, label='Move forward', value=ROLL_LIT_IN, direction='forward'),
          clip('op-lift-end', 'lift', 'lift', *LIFT_END, label='Lift up', target=FULL)]
+# Director Mode edits (director-bridge.py import -> <hq>/director-camera.json 'clips'): Vico's movement changes override
+# these clips by id (start, duration, target/value, easing, label); clips he adds are kept, clips he deletes are dropped.
+# The timing constants below are re-read from the clips, so the status lights, the stage cues and the camera's desk
+# model follow his edit.
+DIRECTOR = os.path.join(H, 'director-camera.json')
+_dc = json.load(open(DIRECTOR)) if os.path.exists(DIRECTOR) else {}
+if _dc.get('clips'):
+    mine = {c['id']: c for c in CLIPS}; out = []
+    for d in sorted(_dc['clips'], key=lambda c: c['start']):
+        c = dict(mine.get(d['id'], {})); c.update({k: v for k, v in d.items() if k in ('id', 'lane', 'kind', 'start', 'duration', 'easing', 'label', 'target', 'value', 'direction', 'path')})
+        out.append(c)
+    CLIPS = out; _by = {c['id']: c for c in CLIPS}; _t = lambda i, d: (_by[i]['start'], _by[i]['duration']) if i in _by else d
+    ROLL, LIFT, TILT_DOWN, TURN, TILT_BACK = _t('op-roll', ROLL), _t('op-lift', LIFT), _t('op-tilt-down', TILT_DOWN), _t('op-turn', TURN), _t('op-tilt-back', TILT_BACK)
+    LOWER, ROLL_LIT, LIFT_END = _t('op-lower', LOWER), _t('op-roll-lit', ROLL_LIT), _t('op-lift-end', LIFT_END)
+    ROLL_IN = _by.get('op-roll', {}).get('value', ROLL_IN); ROLL_LIT_IN = _by.get('op-roll-lit', {}).get('value', ROLL_LIT_IN)
+    TURN_DEG = _by.get('op-turn', {}).get('value', TURN_DEG)
+    if _dc.get('seconds'): SECONDS = float(_dc['seconds'])
+    print(f'awaken: {len(CLIPS)} movement clips from {DIRECTOR}')
+
 # One LED state at a time (film-status: first match, and the fade starts from the last event to end), so the events
 # never overlap: the turn shows its wheels light until the tilt back starts under it, then yellow-green. The opening
 # roll is in the dark (Vico: the light comes on once the desk is in full view); the lit roll comes later.
 STATUS = [{'at': 0, 'dur': ON[0], 'kind': 'off', 'fade': ON[1]},
           {'at': LIFT[0], 'dur': LIFT[1], 'kind': 'lift-up', 'fade': FADE},
           {'at': TILT_DOWN[0], 'dur': TILT_DOWN[1], 'kind': 'tilt-retract', 'fade': FADE},
-          {'at': TURN[0], 'dur': round(TILT_BACK[0] - TURN[0], 3), 'kind': 'wheels', 'mode': 5, 'fade': FADE},
+          {'at': TURN[0], 'dur': round(min(sum(TURN), TILT_BACK[0]) - TURN[0], 3), 'kind': 'wheels', 'mode': 5, 'fade': FADE},
           {'at': TILT_BACK[0], 'dur': TILT_BACK[1], 'kind': 'tilt-extend', 'fade': FADE},
           {'at': LOWER[0], 'dur': LOWER[1], 'kind': 'lift-down', 'fade': FADE},
           {'at': ROLL_LIT[0], 'dur': ROLL_LIT[1], 'kind': 'wheels', 'mode': 3, 'fade': FADE},
           {'at': LIFT_END[0], 'dur': LIFT_END[1], 'kind': 'lift-up', 'fade': FADE}]
+if _dc.get('clips'):   # a movement Vico deleted in Director Mode takes its status light with it
+    STATUS = [e for e, i in zip(STATUS, [None, 'op-lift', 'op-tilt-down', 'op-turn', 'op-tilt-back', 'op-lower', 'op-roll-lit', 'op-lift-end']) if i is None or i in _by]
 
 # ---------------------------------------------------------------- desk geometry for the camera
 # Desk box centre (x, z) at rest is (0.14, 0); its turn pivot (the model origin) is 0.24 u behind it (render-cut

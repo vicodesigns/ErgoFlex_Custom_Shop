@@ -14,7 +14,8 @@
   director-bridge.py import <exported cut.json> <out director-camera.json> [--shot awaken] [--plan shot.json]
       Reads a cut saved with Director Mode's "Export cut" and writes its camera keys back as cameraPlan keys
       (at = time * seconds). Keys keep their 'hold' from the original plan (--plan) when their id is unchanged.
-      build-round8-opener.py uses <hq>/director-camera.json instead of its own keys when that file exists.
+      Its movement clips are written too ('clips'); build-round8-opener.py uses <hq>/director-camera.json's keys
+      instead of its own and its clips over its own by id (and retimes the status lights from them).
 """
 import base64, json, sys
 
@@ -64,7 +65,8 @@ elif cmd == 'import':
         if k.get('label'): e['label'] = k['label']
         if 'hold' in o: e['hold'] = o['hold']
         keys.append(e)
-    json.dump({'source': args[0], 'seconds': T, 'keys': keys}, open(out, 'w'), indent=1)
-    print(f'{len(keys)} camera keys from Director Mode -> {out}')
+    clips = (s.get('motion') or {}).get('clips') or []
+    json.dump({'source': args[0], 'seconds': T, 'keys': keys, **({'clips': clips} if clips else {})}, open(out, 'w'), indent=1)
+    print(f'{len(keys)} camera keys and {len(clips)} movement clips from Director Mode -> {out}')
 else:
     sys.exit(__doc__)
