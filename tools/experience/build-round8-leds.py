@@ -24,6 +24,9 @@ def fix(s):
         # Lights off while the camera finds the desk (wheel macro -> base -> silhouette + first title at 8.2 s),
         # then switch on (0.3 s) before the first move at 11 s.
         s['ledStatus'] = [{'at': 0, 'dur': 9.2, 'kind': 'off', 'fade': .3}] + [e for e in s['ledStatus'] if e.get('kind') != 'off']
+        # Floor (Vico, HQ14c/d): the lift lights the foot rest first and the wide floor with the desktop layer; the foot
+        # strip sits just above the floor, so its pool is a tight hot strip at the shelf (lift .02), not a wide wash.
+        s['floorLight'] = {**s.get('floorLight', {}), 'foot': 4, 'footLift': .02}
         # The stage rig cues (dark until the switch-on, settle, hero bookend) live in build-round8-opener.py,
         # which owns the chapter's timeline and runs after this script.
     return s

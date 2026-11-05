@@ -565,7 +565,10 @@ function installFloorLight(shot) {
       }`
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2 * spec.radius, 2 * spec.radius), material);
-  mesh.name = 'Film floor light'; mesh.userData.filmFx = true; mesh.rotation.x = -Math.PI / 2; mesh.renderOrder = 1; mesh.frustumCulled = false; mesh.raycast = () => {};
+  mesh.name = 'Film floor light'; mesh.userData.filmFx = true; mesh.rotation.x = -Math.PI / 2;
+  // Drawn after the product rig's contact shadow (renderOrder 2), which otherwise blacked out the LED light under the
+  // desk: the dark gap between the wing pools and no hot spot under the foot rest (Vico, HQ14d).
+  mesh.renderOrder = 3; mesh.frustumCulled = false; mesh.raycast = () => {};
   scene.add(mesh);
   // K: irradiance → alpha scale, set on the opener's dark stage (status chases light 3-4 of 11-13 LEDs at a time,
   // the regular look sits at linear ~.09), so gain 1 gives pools as bright as the lit wing panels above them.
@@ -583,7 +586,15 @@ function installFloorLight(shot) {
     // The lift keeps the foot pool's energy (∫E ∝ I), so footLift only spreads it.
     if (fm) { setSeg(0, fm, 'z', 7, K * spec.foot * foot.mat.uniforms.strength.value, null); uniforms.segLift.value[0].set(0, spec.footLift, 0); } else uniforms.segGain.value[0] = 0;
     const cm = live(centre.meshes);
-    if (cm && centre.mat && spec.center > 0) setSeg(3, cm, 'z', 4, K * spec.center * centre.mat.uniforms.strength.value, null); else uniforms.segGain.value[3] = 0;
+    if (cm && centre.mat && spec.center > 0) {
+      setSeg(3, cm, 'z', 4, K * spec.center * centre.mat.uniforms.strength.value, null);
+      // HQ14d (Vico: a dark gap in the floor between the wing pools): straight down, the centre strip's pool lands
+      // under the foot shelf, which hides it. centerAhead (scene units) moves the source toward the desk front and
+      // centerTilt aims it forward, so the pool fills the floor in front of the shelf. The desk front is +x at yaw 0.
+      const yaw = desk.rotation.y, front = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+      uniforms.segLift.value[3].copy(front).multiplyScalar(spec.centerAhead || 0);
+      if (spec.centerTilt) uniforms.segDir.value[3].addScaledVector(front, spec.centerTilt).normalize();
+    } else uniforms.segGain.value[3] = 0;
     wings.forEach((w, j) => {
       const i = j + 1; w.panel.updateWorldMatrix(true, false);
       const pc = w.pc.clone().applyMatrix4(w.panel.matrixWorld);
@@ -604,6 +615,7 @@ function installFloorLight(shot) {
         { occP: O, occN: n, occU: Uv, occV: Vv, occM: new THREE.Vector2(.04 / Uv.length(), .04 / Vv.length()) });
     });
   };
+  if (shot.floorLightDebug) { const ob = mesh.onBeforeRender; let n = 0; mesh.onBeforeRender = (...a) => { ob(...a); if (n++ === 0) console.error('[film-fx] floorLight segs gain ' + uniforms.segGain.value.map(v => v.toFixed(3)).join(',') + ' centre ' + !!live(centre.meshes) + '/' + (centreMat?.name || centreMat?.type || 'none') + ' strips4 ' + centre.meshes.map(m => m.name).join('|').slice(0, 120) + ' foot ' + foot.meshes.length); }; }
   const hidden = spec.hideApp ? [app, app.visible] : null; if (hidden) app.visible = false;
   return { restore() { mesh.removeFromParent(); mesh.geometry.dispose(); material.dispose(); if (hidden) hidden[0].visible = hidden[1]; } };
 }
