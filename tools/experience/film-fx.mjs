@@ -16,6 +16,9 @@
 //   ledGlow:0…1   LED brightness as a fraction of full (stage default .35)
 //   ledSurfaces:{desktopStrength:0…200, floorStrength, shelfStrength, …}  the app's LED surface sliders
 //   deskObjects:{<object id>: {p:{x,y,z}, q:{x,y,z,w}}}  place the featured desk's objects as saved
+//   deskFinish:{wood:'<wood finish name, catalog.mjs>', trim:'#hex (a TRIM_COLORS value)'}  the featured desk's wood and
+//     trim for this shot, through the configurator's own swatches (#wood-finishes / #trim-palette clicks: the app's
+//     species tint, grain photo and trim material), restored after. E.g. the gaming desk: {wood:'Black Birch', trim:'#dc0909'}.
 //     in a studio state (the stage resets a layout room's saved desks to the authored defaults)
 //   ledColor:'#f19c00'  the LED colour for the shot (the app's colour picker), restored after
 //   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
@@ -424,6 +427,15 @@ async function installDeskObjects(shot) {
   }
   return out;
 }
+function installDeskFinish(spec) {
+  const was = { wood: api.currentConfig.woodFinish, trim: api.currentConfig.trimColor };
+  const click = sel => { const el = document.querySelector(sel); if (!el) { console.warn('[film-fx] deskFinish: no swatch ' + sel); return false; } el.click(); return true; };
+  const wood = name => click(`#wood-finishes [data-finish="${CSS.escape(name)}"]`);
+  const trim = hex => click(`#trim-palette [data-trim-color="${CSS.escape(String(hex).toLowerCase())}"]`);
+  const info = { wood: spec.wood ? wood(spec.wood) && spec.wood : undefined, trim: spec.trim ? trim(spec.trim) && spec.trim : undefined };
+  console.log('[film-fx] deskFinish', JSON.stringify(info), 'was', JSON.stringify(was));
+  return { info, restore() { if (info.wood && was.wood) wood(was.wood); if (info.trim && was.trim) trim(was.trim); } };
+}
 function clearDeskObjects(d) {
   if (!d) return; const objects = api.sceneDesks?.objects;
   for (const id of [...d.toggled].reverse()) { try { api.toggleAccessory(id); } catch (e) { console.warn('[film-fx] untoggle', id, e); } }
@@ -673,10 +685,11 @@ export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedM
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
+  if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
   if (shot.deskObjects) {
     // The app's own object editor, as stage.mjs places the keyboard: select, change, deselect.
     const objects = api.sceneDesks?.objects, deg = THREE.MathUtils.radToDeg; active.desk.placed = [];
@@ -779,6 +792,7 @@ export function clear() {
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
   clearDeskObjects(active.desk);
+  active.finish?.restore();
   active = null;
 }
 export { discover };

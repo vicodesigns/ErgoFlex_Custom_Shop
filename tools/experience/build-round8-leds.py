@@ -127,6 +127,8 @@ def fix(s):
         for e in s.get('sceneEdits', []):
             if e.get('match') == '@window' and 'brightness' in e.get('material', {}): e['material']['brightness'] = g.get('windowBrightness', 2.2)
         s['sceneEdits'] =[e for e in s.get('sceneEdits', []) if not e.get('gymBlackRed')] + [{**e, 'gymBlackRed': True} for e in g.get('sceneEdits', [])]
+        # Vico: "the desk, make it also black and red": the gaming desk's finish (preset-defaults gaming: Black Birch, red trim).
+        s['deskFinish'] = g.get('deskFinish', {'wood': 'Black Birch', 'trim': '#dc0909'})
         if g.get('lights'): s['lights'] = [l for l in s.get('lights', []) if not l.get('gymBlackRed')] + [{**l, 'gymBlackRed': True} for l in g['lights']]
     if s['id'] == 'storage':
         for e in s.get('ledStatus', []):
