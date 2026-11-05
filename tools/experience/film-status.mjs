@@ -14,6 +14,7 @@
 //                         Rotation (5/6): the wings (strips 5, 6) run like the real desk's
 //                         (firmware fxWheels), every other strip keeps the preview's reversal.
 //          'collision'    latched breathing red, the app's roomSafety 'collision' look
+//          'off'          all strips dark (and their spill); the event's fade is the switch-on to the regular look
 //          'proximity'    latched amber, the desk's FX2 breathe (sx 150: one breath per ~3.1 s,
 //                         ERGOLED_BREATHE_SHAPE 1, dark at the bottom), starting dark
 //     No arrival light: when a state ends the strips fade (fade s, default 1) back to the
@@ -141,11 +142,12 @@ export function installStatus(shot) {
           // FX2 breathe: +0.0671 rad per 33 ms frame (sx 150), pulse = sin(angle / 2).
           const angle = (t * 1000 / 33 * (0.02 + 150 / 255 * 0.08)) % (2 * Math.PI);
           gain = Math.sin(angle / 2); rgb = [255, 145, 8];
-        } else { gain = .72 + .28 * Math.sin(t * 3) ** 2; rgb = [255, 16, 12]; } // the app's roomSafety pulse
+        } else if (ev.kind === 'off') { gain = 0; rgb = [0, 0, 0]; } // lights off (the opener's dark desk); its fade is the switch-on
+        else { gain = .72 + .28 * Math.sin(t * 3) ** 2; rgb = [255, 16, 12]; } // the app's roomSafety pulse
         for (const row of frame) for (let p = 0; p < row.length; p += 4) row.set([Math.round(rgb[0] * gain), Math.round(rgb[1] * gain), Math.round(rgb[2] * gain), 0], p);
       }
       // The spill on the desk and floor follows the indicator colour, as the app's solid colour does.
-      ev.spill = m ? (ev.kind === 'wheels' ? RED : m.colors[0]).slice(0, 3) : ev.kind === 'proximity' ? [255, 145, 8] : [255, 16, 12];
+      ev.spill = m ? (ev.kind === 'wheels' ? RED : m.colors[0]).slice(0, 3) : ev.kind === 'proximity' ? [255, 145, 8] : ev.kind === 'off' ? [0, 0, 0] : [255, 16, 12];
       ev.last = frame.map(r => r.slice());
       api.setLedColor(hex(ev.spill), false); lightFill(ev.spill, frame);
       game.sample = out => { out.forEach((row, i) => row.set(frame[i])); return true; };

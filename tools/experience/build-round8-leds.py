@@ -10,7 +10,7 @@ Usage: build-round8-leds.py <hq dir>  (review-cut.json and shots/NN.json, in pla
 import glob, json, os, sys
 
 H = sys.argv[1]
-WARM_ROOM, WARM_STAGE = '#ffd8a8', '#b39270'
+WARM_ROOM, WARM_STAGE = '#ffd8a8', '#5a4938'   # stage: halved after the HQ14 preview (Vico: too bright)
 STAGE = {'awaken', 'awareness'}            # the black product stage
 
 
@@ -18,6 +18,10 @@ def fix(s):
     if not s.get('ledStatus') or s.get('id') == 'storage':   # storage already rests on warm white #fff1dc
         return s
     s['ledColor'] = WARM_STAGE if s['id'] in STAGE else WARM_ROOM
+    if s['id'] == 'awaken':
+        # Lights off while the camera finds the desk (wheel macro -> base -> silhouette + first title at 8.2 s),
+        # then switch on (0.3 s) before the first move at 11 s.
+        s['ledStatus'] = [{'at': 0, 'dur': 9.2, 'kind': 'off', 'fade': .3}] + [e for e in s['ledStatus'] if e.get('kind') != 'off']
     return s
 
 
