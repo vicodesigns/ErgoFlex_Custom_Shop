@@ -46,7 +46,7 @@ STAGE = {'awaken', 'awareness'}            # the black product stage
 # LED light keeps its level, so the room is lower key and the LEDs read against it as on the stage; EXPOSURE trims the
 # rooms that are still hot (all-white artist room; the commons' white tables and ceiling pools; the rise office).
 ROOM_LIGHT = .55
-EXPOSURE = {'rise': .9, 'create': .7, 'commons': .8}
+EXPOSURE = {'rise': .9, 'create': .7}   # commons .8 until HQ16 (see ROOM_LIGHT_BY)
 # The visualizer's LED surface levels (app-reference/assets/desk_viewer/led/led-receivers.mjs LED_SURFACE_DEFAULTS,
 # the same numbers as studio.js's): desk-viewer.js runs them with no overrides.
 VIEWER_SURFACES = {'desktopStrength': 157, 'desktopReach': 100, 'desktopWidth': 5, 'desktopCone': 100, 'desktopEdgeFade': 46,
@@ -64,6 +64,12 @@ LIGHT_LEVEL, FLOOR_LEVEL, FLOOR_BOUNCE = 2 / 3, .5, 130   # FLOOR_BOUNCE: film-v
 # whole green Humboldt top gold (test stills); its desktop receiver runs at 30% of the others' (the status light still
 # reads on the floor, the wall and the desktop's edge). Its room keeps its own grade (environmentScale / exposure) under roomLight.
 SURFACE_TRIM = {'storage': {'desktopStrength': .3}}
+# HQ16 (Vico, 2026-11-05, commons: "way too dark ... it looks like at night, it should be a day setting", and "the status
+# indicator lighting is too bright"): the commons gets its room's own daylight back (roomLight 1, no exposure trim; the
+# white study table clips on its top, ~10% of the close frames) and its desk's cast light at half the approved level
+# (every surface strength and the floor bounce x LED_TRIM; the strips keep their brightness).
+ROOM_LIGHT_BY = {'commons': 1.0}
+LED_TRIM = {'commons': .5}
 
 
 def fix(s):
@@ -73,7 +79,7 @@ def fix(s):
     s['ledColor'] = WHITE_STAGE if s['id'] in STAGE else WHITE_ROOM
     if s['id'] in NEUTRAL: s['ledNeutral'] = NEUTRAL[s['id']]
     if s['id'] not in STAGE:
-        g = s.setdefault('sceneGlobals', {}); g['roomLight'] = ROOM_LIGHT
+        g = s.setdefault('sceneGlobals', {}); g['roomLight'] = ROOM_LIGHT_BY.get(s['id'], ROOM_LIGHT)
         if s['id'] in EXPOSURE: g['exposureScale'] = EXPOSURE[s['id']]
         else: g.pop('exposureScale', None)
     if s['id'] == 'awaken':
@@ -89,8 +95,9 @@ def fix(s):
     # floor: the app's spill on the foot-rest top (Base_Panels_3, receiver 'base') is hidden.
     s.pop('floorLight', None); s.pop('ledFill', None)
     # The visualizer's strip map (the Custom Shop's is its mirror image along Z): the visualizer is the reference look.
-    s['ledReceivers'] = {'mode': 'viewer', 'stripMap': 'viewer', 'floorBounceStrength': round(FLOOR_BOUNCE * FLOOR_LEVEL, 1)}
-    s['ledSurfaces'] = {k: (round(v * (FLOOR_LEVEL if k == 'floorStrength' else LIGHT_LEVEL), 1) if k.endswith('Strength') else v)
+    t = LED_TRIM.get(s['id'], 1)
+    s['ledReceivers'] = {'mode': 'viewer', 'stripMap': 'viewer', 'floorBounceStrength': round(FLOOR_BOUNCE * FLOOR_LEVEL * t, 1)}
+    s['ledSurfaces'] = {k: (round(v * t * (FLOOR_LEVEL if k == 'floorStrength' else LIGHT_LEVEL), 1) if k.endswith('Strength') else v)
                         for k, v in VIEWER_SURFACES.items()}
     for k, f in SURFACE_TRIM.get(s['id'], {}).items(): s['ledSurfaces'][k] = round(s['ledSurfaces'][k] * f, 1)
     s['ledGlow'] = 1
