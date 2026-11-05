@@ -82,6 +82,11 @@ LIBRARY_LED = {'ledRoomSpill': .25, 'desktopStrength': .5, 'screenBrightness': .
 
 
 def fix(s):
+    # HQ16d (Vico: the OCC headphones "not on the headphone hook"): coast's deskObjects (Vico's 2026-11-03 OCC desktop,
+    # saved before the plug-mounted hook, 7f0d77a) placed the headphones by hand at their old spot on the hutch post, over
+    # the app's hook migration (desk-headphone-hook.mjs). Without that entry they hang on the hook in the side panel's port.
+    if s['id'] == 'coast':
+        s.get('deskObjects', {}).pop('default-desktop-1', None)
     # (Storage stayed on its old look, warm white #fff1dc + floorLight, until HQ14r: see SURFACE_TRIM.)
     if not s.get('ledStatus'):
         return s
