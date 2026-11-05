@@ -19,7 +19,12 @@
 //     in a studio state (the stage resets a layout room's saved desks to the authored defaults)
 //   ledColor:'#f19c00'  the LED colour for the shot (the app's colour picker), restored after
 //   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
-//   sceneGlobals:{environmentScale, exposure}  image-based ambient multiplier (or [[s, scale], …]), renderer exposure
+//   sceneGlobals:{environmentScale, exposure, exposureScale}  image-based ambient multiplier (or [[s, scale], …]), renderer
+//     exposure, and a multiplier on whatever exposure is set (the room's daypart, timeOfDay's blend; number or [[s, k], …]),
+//     roomLight: k (or [[s, k], …])  the room's own light (its lights, image-based ambient and architectural bounce) x k,
+//     on top of whatever the room/timeOfDay/sceneEdits write (and its painted additive light pools). The desk's LED light (strips, spill, floor bounce, the
+//     room LED spill), screens, windows and emissive practicals keep their level, so the desk light reads against a
+//     lower-key room the way it does on the dark stage.
 //   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
 //   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
 //   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
@@ -623,6 +628,32 @@ function installFloorLight(shot) {
 }
 
 // ---------- public API ----------
+// Multiply obj[field] by factor() for every reader, chaining to an accessor already there (film-edits' light
+// multipliers): writers (the app, timeOfDay) keep setting the raw value. Returns the undo.
+function scaleProp(obj, field, factor) {
+  const own = Object.getOwnPropertyDescriptor(obj, field); let raw = obj[field];
+  const get = own?.get ? () => own.get.call(obj) : () => raw, set = own?.set ? v => own.set.call(obj, v) : v => { raw = v; };
+  Object.defineProperty(obj, field, { configurable: true, enumerable: true, get: () => get() * factor(), set });
+  return () => { const v = get(); delete obj[field]; if (own) Object.defineProperty(obj, field, own); else obj[field] = v; };
+}
+function installRoomLight(keys) {
+  const k = Array.isArray(keys) ? keys : [[0, keys]], cell = { value: keyAt(k, 0) }, f = () => cell.value, undo = [];
+  const scene = sceneRoot(), inDesk = o => { for (let p = o; p; p = p.parent) if (p === api.loadedModel || p.userData?.filmFx) return true; return false; };
+  let n = 0, pools = 0; const seen = new Set();
+  scene.traverse(o => {
+    if (inDesk(o)) return;
+    if (o.isLight) { undo.push(scaleProp(o, 'intensity', f)); n++; return; }
+    // The rooms' painted light (lamp pools on tables, window sun patches, wall washes) is additive unlit overlays:
+    // light too, so it dims with the lights. Screens and LED-named parts keep theirs.
+    if (!(o.isMesh || o.isSprite) || /\bLEDs?\b|screen|display|monitor/i.test(o.name || '')) return;
+    for (const m of [].concat(o.material || [])) if (m && !seen.has(m) && m.blending === THREE.AdditiveBlending && (m.isMeshBasicMaterial || m.isSpriteMaterial)) { seen.add(m); undo.push(scaleProp(m, 'opacity', f)); pools++; }
+  });
+  undo.push(scaleProp(scene, 'environmentIntensity', f));
+  const gain = api.workspaceRoom?.bounce?.uniforms?.efBounceGain; if (gain) undo.push(scaleProp(gain, 'value', f));
+  return { lights: n, pools, frame: s => { cell.value = keyAt(k, s); }, restore: () => { for (const u of undo.reverse()) u(); } };
+}
+// Piecewise-linear [[seconds, value], …] (held before the first key and after the last).
+const keyAt = (k, s) => { const i = k.findIndex(p => p[0] > s); return i < 0 ? k.at(-1)[1] : i === 0 ? k[0][1] : k[i - 1][1] + (k[i][1] - k[i - 1][1]) * (s - k[i - 1][0]) / (k[i][0] - k[i - 1][0]); };
 export const Box3 = THREE.Box3;
 // The desk's bounding-box centre in world space (render-cut --list-objects).
 export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedModel), c = b.getCenter(new THREE.Vector3()); return [c.x, b.min.y, c.z]; }
@@ -659,6 +690,14 @@ export async function install(shot) {
     // Keyframed [[seconds, scale], …] (e.g. lights out at the end of a chapter), applied per frame.
     else if (Array.isArray(g.environmentScale)) active.globals.envKeys = g.environmentScale;
     if (Number.isFinite(g.exposure)) api.renderer.toneMappingExposure = g.exposure;
+    // exposureScale: a grade on top of the room's own exposure. An instance accessor, so timeOfDay's per-frame
+    // blend and the app's mode switches keep writing the raw value and the render reads raw x scale.
+    if (g.exposureScale !== undefined) {
+      const r = api.renderer, own = Object.getOwnPropertyDescriptor(r, 'toneMappingExposure'); let raw = r.toneMappingExposure;
+      const k = Array.isArray(g.exposureScale) ? g.exposureScale : [[0, g.exposureScale]], cell = { value: keyAt(k, 0) };
+      Object.defineProperty(r, 'toneMappingExposure', { configurable: true, enumerable: true, get: () => raw * cell.value, set: v => { raw = v; } });
+      active.globals.exposureCell = { cell, keys: k, undo: () => { delete r.toneMappingExposure; if (own) Object.defineProperty(r, 'toneMappingExposure', own); r.toneMappingExposure = raw; } };
+    }
   }
   // ledSurfaces: the app's LED surface sliders (desktopStrength, floorStrength, …), restored after the shot.
   if (shot.ledSurfaces) { active.surfaces = api.ledSurfaces; for (const [k, v] of Object.entries(shot.ledSurfaces)) api.setLedSurface(k, v, false); }
@@ -674,11 +713,15 @@ export async function install(shot) {
   if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
   if (shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
   if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
-  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, ledReceivers: active.viewerLeds?.info };
+  // After timeOfDay (which snapshots the raw light levels) and sceneEdits (whose light multipliers it chains to).
+  if (shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
+  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledReceivers: active.viewerLeds?.info };
 }
 export async function frame(t, chapterSeconds, { video = false } = {}) {
   if (!active) return;
   if (active.tod) active.tod.apply(chapterSeconds);
+  active.roomLight?.frame(chapterSeconds);
+  if (active.globals?.exposureCell) active.globals.exposureCell.cell.value = keyAt(active.globals.exposureCell.keys, chapterSeconds);
   if (active.globals?.envKeys) {
     const k = active.globals.envKeys, i = k.findIndex(p => p[0] > chapterSeconds);
     const v = i < 0 ? k.at(-1)[1] : i === 0 ? k[0][1] : k[i - 1][1] + (k[i][1] - k[i - 1][1]) * (chapterSeconds - k[i - 1][0]) / (k[i][0] - k[i - 1][0]);
@@ -709,7 +752,7 @@ export function clear() {
   for (const sc of active.screens) { sc.mesh.removeFromParent(); sc.mesh.geometry.dispose(); sc.material?.dispose(); sc.mesh.material.dispose(); sc.texture.dispose(); if (sc.media instanceof HTMLVideoElement) { sc.media.removeAttribute('src'); sc.media.load(); } }
   if (active.led?.source.sampler) { active.led.source.media.removeAttribute('src'); active.led.source.media.load(); }
   if (active.clocks.length) restoreClocks(active.clocks);
-  if (active.globals) { active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; }
+  if (active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; }
   if (active.surfaces) for (const [k, v] of Object.entries(active.surfaces)) api.setLedSurface(k, v, false);
   if (active.ledColor) api.setLedColor(active.ledColor, false);
   active.status?.clear();
@@ -717,6 +760,7 @@ export function clear() {
   active.floor?.restore();
   active.wheels?.restore();   // after quality.restore, which hands the render back to this wrapper
   active.viewerLeds?.restore();   // after wheels.restore (installed first, so wrapped by it)
+  active.roomLight?.restore();   // before edits / timeOfDay: it chains to their accessors
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
   clearDeskObjects(active.desk);
