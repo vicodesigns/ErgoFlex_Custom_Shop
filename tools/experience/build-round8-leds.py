@@ -40,7 +40,9 @@ WARM_EVENING = '#52483c'
 # we like, then in the evening ... that evening warm white that I have in my settings"): rise's day white at RISE_DAY
 # instead of the room quarter level, the evening warm (his saved Evening look) after the second lift has faded (13.6 s,
 # the chapter's moves are 2 s later since HQ18, build-round8-rise.py).
-RISE_DAY = os.environ.get('RISE_DAY', WHITE_STAGE)
+# Vico picked the middle of the 2.7x / 5x stills (#7a7a7a / #a6a6a6, linear .195 / .381): linear .288, 4x chapter 1's
+# #4c4c4c; at chapter 1's own level the white did not read against the daylit room.
+RISE_DAY = os.environ.get('RISE_DAY', '#929292')
 NEUTRAL = {'rise': [[0, RISE_DAY], [13.6, RISE_DAY], [15.6, WARM_EVENING]]}
 STAGE = {'awaken', 'awareness'}            # the black product stage
 # HQ14l room grade (film-fx sceneGlobals.roomLight / exposureScale). The room chapters were lit and exposed as the app's
