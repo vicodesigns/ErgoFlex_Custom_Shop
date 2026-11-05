@@ -25,6 +25,8 @@
 //   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
 //   floorLight:{gain, foot, wings, lobe, max, soft, radius, hideApp}  foot + wing strips lighting the
 //     floor (replaces the app's boxed foot glow), see 'floor light' below
+//   ledReceivers:'viewer' | {mode:'viewer', …}  the app visualizer's LED receivers (floor bounce, wing glow down the
+//     side plates, its wing / desktop constants, indicator level), see film-viewer-leds.mjs. Use instead of floorLight.
 //   accessories:{add:['tablet-pc' | {id, role='desktop', x, y, z, rotation, tilt, roll, scale}], remove:[id]}
 //     catalog accessories (drafting-kit, artist-easel, keyboards…) are toggled
 //     on the prepared desk (and placed if x/z/… are given); library props
@@ -627,7 +629,7 @@ export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedM
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
@@ -665,13 +667,14 @@ export async function install(shot) {
   if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
   if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
   if (shot.floorLight) active.floor = installFloorLight(shot);
+  if (shot.ledReceivers) active.viewerLeds = (await import('./film-viewer-leds.mjs')).installViewerLeds(shot);   // before wheels: both wrap render
   if (shot.motion && shot.wheelFix !== false) active.wheels = installWheelFix(shot);   // before quality: its compositor wraps this render
   // quality: GPU render-box overrides (shadow maps, anisotropy, room reflections, GTAO, selective bloom); film-quality.mjs.
   if (shot.quality) { active.quality = await (await import('./film-quality.mjs')).installQuality(shot, { screens: active.screens }); if (active.quality) console.log('[film-quality]', JSON.stringify(active.quality.info)); }
   if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
   if (shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
   if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
-  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor };
+  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, ledReceivers: active.viewerLeds?.info };
 }
 export async function frame(t, chapterSeconds, { video = false } = {}) {
   if (!active) return;
@@ -713,6 +716,7 @@ export function clear() {
   active.quality?.restore();
   active.floor?.restore();
   active.wheels?.restore();   // after quality.restore, which hands the render back to this wrapper
+  active.viewerLeds?.restore();   // after wheels.restore (installed first, so wrapped by it)
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
   clearDeskObjects(active.desk);

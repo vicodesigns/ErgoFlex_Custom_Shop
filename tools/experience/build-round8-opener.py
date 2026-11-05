@@ -122,7 +122,10 @@ CAMERA = {'easeIn': True, 'easeOut': False, 'keys': [
 
 # ---------------------------------------------------------------- look
 # Dark stage until the switch-on, the status levels while the desk's lights play, the clean product look at the end.
-RIG_KEY = [[0, 6], [ON[0], 6], [sum(ON), 22], [SETTLE[0], 22], [SETTLE[1], 40]]
+# The stage key dips to 4 over the turn (its 22 on top of the amber caution light turned the desktop hot cream; at 4 it
+# reads the visualizer's red-orange), then comes back for the settle and the hero bookend.
+TURN_KEY = (31.2, 32.4, 41.7, 42.5)
+RIG_KEY = [[0, 6], [ON[0], 6], [sum(ON), 22], [TURN_KEY[0], 22], [TURN_KEY[1], 4], [TURN_KEY[2], 4], [TURN_KEY[3], 22], [SETTLE[1], 40]]   # TURN_KEY[3] == SETTLE[0]
 RIG_POOL = [[0, 0], [ON[0], 0], [sum(ON), .1], [SETTLE[0], .1], [SETTLE[1], .3]]
 RIMS = [[0, 120], [9.5, 120], [10.6, 0], [SETTLE[0], 0], [SETTLE[1], 200]]   # out before the crane mirrors them in the top
 ENV = [[0, .15], [ON[0], .15], [sum(ON), .35], [SETTLE[0], .35], [SETTLE[1], 1]]

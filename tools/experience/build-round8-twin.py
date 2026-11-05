@@ -89,7 +89,7 @@ def screens(shot):
 
 def twin(shot):
     keep = ('room', 'kind', 'preset', 'size', 'seconds', 'transition', 'motion', 'ledStatus', 'ledGlow', 'ledColor',
-            'ledSurfaces', 'ledFill', 'floorLight', 'ledPeriod', 'quality')
+            'ledSurfaces', 'ledFill', 'floorLight', 'ledReceivers', 'ledPeriod', 'quality')
     t = {k: copy.deepcopy(shot[k]) for k in keep if k in shot}
     t.update({'id': 'awaken-twin', 'title': '', 'detail': ''})
     t['camera'], info = camera(shot)
