@@ -14,7 +14,10 @@ import * as THREE from 'three';
 const api = window.ErgoFlex;
 const ADDONS = 'three/addons/postprocessing/';
 const SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'bumpMap', 'emissiveMap', 'alphaMap', 'clearcoatNormalMap'];
-const LEDISH = /\bLEDs?\b|LED strip|led-strip/i, NOT_BLOOM = /floor glow|floor light|film floor/i;
+// NOT_BLOOM 'Daylight window' (Vico, HQ16 high school "way too bright ... the lights coming from the window"): the
+// institutional rooms' exterior view is an emissive Standard backdrop, so it joined the glow set and bloomed to white.
+// A window is daylight, not a light source; the other rooms' views are unlit Basic backdrops and never bloomed.
+const LEDISH = /\bLEDs?\b|LED strip|led-strip/i, NOT_BLOOM = /floor glow|floor light|film floor|^Daylight window$/i;
 const SCREENISH = /screen|display|monitor|\btv\b|marquee|stage media/i;
 export const PRESETS = {
   hq13: { shadowMap: 4096, shadowRadius: 2, shadowSamples: 25, anisotropy: 16, reflections: 512,

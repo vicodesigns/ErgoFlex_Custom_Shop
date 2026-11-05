@@ -94,6 +94,12 @@ def fix(s):
     # HQ16e (Vico: in storage "it's moving to the right, but the status indicator lighting says it's going to the left",
     # the floor comet especially): on the visualizer's strip map the roll's comets ran against the travel; they run with it.
     if s['id'] in DAY_ROOMS: s.setdefault('sceneGlobals', {})['ledRoomSpill'] = DAY_SPILL
+    # HQ16g (Vico, movie night "pretty good, bring that to 90%"): the stage's curved media screen and the picture-driven
+    # LED light it feeds (ledGain), both at 90%. Idempotent: the base gain is kept in mediaBaseGain.
+    if s['id'] == 'media':
+        MOVIE = .9
+        s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e.get('match') != '^Curved media screen$'] + [{'match': '^Curved media screen$', 'material': {'brightness': MOVIE}}]
+        s['ledGain'] = round(s.setdefault('mediaBaseGain', s['ledGain']) * MOVIE, 3)
     if s['id'] == 'storage':
         for e in s.get('ledStatus', []):
             if e.get('kind') == 'wheels': e['reverse'] = True
