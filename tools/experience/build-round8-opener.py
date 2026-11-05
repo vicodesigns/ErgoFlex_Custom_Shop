@@ -1,46 +1,46 @@
 #!/usr/bin/env python3
-"""Round 8, chapter 1 (awaken): the opener's timeline, camera and look after Vico's HQ14 previews (2026-11-04).
+"""Round 10, chapter 1 (awaken): the opener's timeline, camera and look after Vico's 57 s round 9d preview (2026-11-04).
 
 Runs after build-round8-leds.py (the neutral colour and the floor light; floorLight is owned there) and owns the
 chapter's performance: motion clips, ledStatus, cameraPlan (+ the baked camera), seconds, the stage-rig cues and the
 monitor clip. Every value is absolute, so it is safe to re-run.
-Usage: build-round8-opener.py <hq dir>  (review-cut.json and shots/01.json, in place)
+Usage: build-round8-opener.py <hq dir>  (review-cut.json and shots/01.json in place; writes previews/awaken-v5-cut.json)
+If <hq>/director-camera.json exists (director-bridge.py import, same chapter seconds) its keys replace CAMERA's.
 
-HQ14e (Vico, after the HQ14 preview and a rewatch of HQ9):
-- The start is HQ9's again: the wheel macro on the +z side, the wheels start rolling (12 in forward, wheels
-  mode 3) while the camera trucks along them and pulls back to the silhouette, and the monitor runs the digital-twin
-  dashboard (screens/01-main.mp4, made by the screen-clip owner from this shot's motion clips).
-  Folded into it: the desk is dark while the camera finds the wheel, switches on (0.3 s, white) at 1.4 s, settles,
-  and the wheels start at 3.2 s.
-- HQ14h: lights off through the macro and the dark 12 in roll; the 'ding' at 9.2 s once the desk is in full view; a
-  lit 18 in roll toward the camera (mode 3) after the lowering, then the rise to full height for the hero.
-- A pause between moves: each status colour fades to the neutral white over 1 s and the white then holds 1.5 s
-  before the next move (gaps of 2.5 s), so every light settles and the camera has room to adjust.
-- The other side: everything up to the tilts is seen from the desk's +z side (HQ9's side). The camera then keeps
-  orbiting left while the desk turns 180 deg right (18 deg/s average, 27 peak: the real desk), so the two add up to
-  a slow ~230 deg reveal (profile, back, far profile) that lands on the far side's front 3/4: the desk ends pointed
-  the opposite way, on the side never shown before. The forward roll moved to the opening (HQ9's wheels), so the
-  chapter ends on the turn and the clean hero push.
+Round 10 (Vico on 9d: hard cuts look bad, the lift start is a poor shot, the monitor crops mid-rise, the 3/4 at the
+lowering is too frontal, 57 s is too long):
+- One continuous camera, no cuts or holds: it flies between vantage points on smooth curves like a drone, and every
+  vantage is reached while the desk is still or slowly moving, so nothing whips.
+- The opener is HQ9's (wheel macro in the dark, the wheels roll, the camera trucks with them and pulls back), but the
+  pull-back is shorter and lands on a low front 3/4 that already frames the whole desk, so the lights switch on there
+  and the lift starts from the same view: no wide -> tight jump at the lift. The camera then cranes up with the rise
+  and eases back so the monitor never touches the frame edge.
+- Gaps between moves are 1.5 s (each status colour fades to the neutral white over 1 s, then 0.5 s settled).
+- The turn (120 deg left) is watched from the +z side, so the front swings to the lens and past it; the back never
+  shows. It lands on a true far-side three-quarter (~40 deg off the front), which the lowering, the lit roll and the
+  hero all keep, with a slow low arc and push to the end.
 """
 import glob, json, math, os, subprocess, sys
 
+if len(sys.argv) != 2: sys.exit(__doc__)
 H = sys.argv[1]
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SECONDS = 57.0
 
 # ---------------------------------------------------------------- desk performance (chapter seconds)
-ON = (9.2, .3)            # lights off -> neutral white (the 'ding'), once the desk is in full view at the silhouette
-ROLL = (3.2, 2.6)         # 12 in forward in the dark (no status light), HQ9's wheels start: 4.6 in/s average, 6.9 peak
-LIFT = (11.0, 7.6)        # 28 -> 52.5 in (full height), 3.2 in/s (the real speed)
-TILT_DOWN = (21.1, 3.8)   # 0 -> 15 deg, board steepening: purple ('tilt-retract'); 3.9 deg/s
-TURN = (27.4, 6.7)        # 120 deg LEFT (mode 5): the front swings to the camera and on to the far side; 18 deg/s average
-TILT_BACK = (30.3, 3.8)   # 15 -> 0 deg under the second half of the turn (Vico), yellow-green; ends with the turn
-LOWER = (36.6, 3.75)      # 52.5 -> 40.5 in, about halfway down, red ('lift-down')
-ROLL_LIT = (42.85, 3.4)   # 18 in forward toward the camera with the lights on (mode 3, foot-rest comet), 5.3 in/s
-LIFT_END = (48.75, 3.75)  # back up to full height for the hero, blue
-FADE = 1.0                # each state's fade back to the neutral white; + 1.5 s settled = the 2.5 s gaps
+GAP = 1.5                 # between moves: the status colour's 1 s fade to white + 0.5 s settled
+FADE = 1.0
+ROLL = (1.8, 2.6)         # 12 in forward in the dark (no status light), HQ9's wheels: 4.6 in/s average, 6.9 peak
+ON = (7.6, .3)            # lights off -> neutral white (the 'ding'), once the pull-back has the whole desk framed (7.5)
+LIFT = (round(sum(ON) + GAP, 3), 7.6)                       # 28 -> 52.5 in (full height), 3.2 in/s (the real speed)
+TILT_DOWN = (round(sum(LIFT) + GAP, 3), 3.8)                # 0 -> 15 deg: purple ('tilt-retract'); 3.9 deg/s
+TURN = (round(sum(TILT_DOWN) + GAP, 3), 6.7)                # 120 deg LEFT (mode 5): 18 deg/s average, 27 peak
+TILT_BACK = (round(sum(TURN) - 3.8, 3), 3.8)                # 15 -> 0 deg under the second half of the turn, yellow-green
+LOWER = (round(sum(TURN) + GAP, 3), 3.75)                   # 52.5 -> 40.5 in, about halfway down, red ('lift-down')
+ROLL_LIT = (round(sum(LOWER) + GAP, 3), 3.4)                # 18 in forward with the lights on (mode 3), 5.3 in/s
+LIFT_END = (round(sum(ROLL_LIT) + GAP, 3), 3.75)            # back up to full height for the hero, blue
+SETTLE = (round(sum(LIFT_END) + .5, 3), round(sum(LIFT_END) + 1.9, 3))   # stage back to the clean product look
+SECONDS = round(sum(LIFT_END) + 1.9, 2)                     # the hero settles as the chapter dissolves out
 ROLL_IN, FULL, HALF, TILT_DEG, TURN_DEG, ROLL_LIT_IN = 12, 52.5, 40.5, 15, 120, 18
-SETTLE = (53.25, 55.65)   # stage back to the clean product look once the last light has faded (53.5)
 
 
 def clip(id, lane, kind, start, dur, easing='smooth', label='', **kw):
@@ -69,10 +69,11 @@ STATUS = [{'at': 0, 'dur': ON[0], 'kind': 'off', 'fade': ON[1]},
           {'at': LIFT_END[0], 'dur': LIFT_END[1], 'kind': 'lift-up', 'fade': FADE}]
 
 # ---------------------------------------------------------------- desk geometry for the camera
-# Desk box centre (x, z) at rest is (0.14, 0); its turn pivot (the model origin) is 0.24 u behind it (build-opener.py,
-# measured with render-cut --list-at). The 12 in roll (0.46 u) goes along +x (forward at yaw 0): centre (0.60, 0),
+# Desk box centre (x, z) at rest is (0.14, 0); its turn pivot (the model origin) is 0.24 u behind it (render-cut
+# --list-at). The 12 in roll (0.46 u) goes along +x (forward at yaw 0, the monitor faces +x): centre (0.60, 0),
 # pivot (0.36, 0). A left turn swings the front from +x toward +z (the camera side); after 120 deg the centre is
-# (0.24, 0.21). The lit roll goes along the turned front, world az +120 (toward the camera). 1 u ~ 26 in.
+# (0.24, 0.21). The lit roll goes along the turned front, world az +120. 1 u ~ 26 in. The leg uprights stand 2.5 u
+# (fixed); the monitor top is 1.96 u at 28 in and 2.9 u at full height.
 C_REST, PIVOT, OFF, U = (0.14, 0.0), (0.36, 0.0), 0.24, 1 / 26
 C_ROLL = (C_REST[0] + ROLL_IN * U, 0.0)
 
@@ -90,7 +91,7 @@ def desk(t):
     return th, (round(c[0] + s * math.cos(r), 4), round(c[1] + s * math.sin(r), 4))
 
 
-def orbit(at, az, dist, cam_y, aim_y, shift, fov, centre=None, label=None, cut=False):
+def orbit(at, az, dist, cam_y, aim_y, shift, fov, centre=None, label=None):
     """A key around the desk: az (deg) from +x toward +z (world), horizontal distance, camera and aim heights, and
     shift (scene units) of the aim along screen-left, so +shift puts the desk right of frame (the title side clear).
     The centre defaults to the desk's centre at that moment."""
@@ -102,7 +103,6 @@ def orbit(at, az, dist, cam_y, aim_y, shift, fov, centre=None, label=None, cut=F
     tx, tz = centre[0] - rx * shift, centre[1] - rz * shift
     k = {'at': at, 'position': [round(px, 3), round(cam_y, 3), round(pz, 3)], 'target': [round(tx, 3), round(aim_y, 3), round(tz, 3)], 'fov': fov}
     if label: k['label'] = label
-    if cut: k['cut'] = True
     return k
 
 
@@ -112,53 +112,52 @@ def key(at, pos, tgt, fov, label=None):
     return k
 
 
-# ---------------------------------------------------------------- camera: six shots, each with one job
+# ---------------------------------------------------------------- camera: one continuous flight, no cuts
 # az is world (the HQ9 side is +z, az ~ +90); the report prints the desk-relative angle (0 front, -: the far side).
-# Each shot settles before its cut (camera-spline: a cut ends the move at rest) and starts from rest.
-CUTS = (9.8, 20.6, 26.6, 36.1, ROLL_LIT[0])
+# Story keys only (camera-spline.mjs bakes one centripetal spline through them), each labelled for Director Mode.
+# The desk sits right of frame while the lower-left titles are up (A 3.6-9.2 s, SAFETY 12.4-18.8 s).
 CAMERA = {'easeIn': True, 'easeOut': False, 'keys': [
-    # 1. HQ9's opening (its cameraPlan, same 12 in roll; keys from the wheel start shifted +1.8 s): wheel macro in the
-    #    dark, the switch-on, the wheels roll, pull back to the silhouette under the first title.
+    # 1. HQ9's opening, 1.4 s earlier: the wheel macro in the dark, the wheels roll, the camera trucks with them, then
+    #    a shorter, slower pull-back that curves out to a low front 3/4 with the whole desk in frame (lights on there).
     key(0.0, [1.123, 0.10, 1.785], [0.093, 0.179, 0.972], 24, 'Wheel macro, desk dark'),
-    key(3.2, [1.400, 0.09, 1.300], [0.172, 0.154, 0.969], 24, 'Wheels start'),
-    key(4.5, [1.844, 0.15, 1.250], [0.406, 0.324, 1.020], 24),
-    key(5.8, [3.179, 0.32, 1.567], [0.515, 0.545, 0.891], 24, 'Roll lands, pull back'),
-    key(7.2, [5.150, 0.95, 2.050], [0.416, 1.160, 0.581], 25),
-    key(8.7, [6.903, 1.50, 2.606], [0.224, 1.369, 0.644], 26.5, 'Silhouette, first title'),
-    orbit(CUTS[0] - .05, 20.5, 6.75, 1.52, 1.37, 0.62, 26.5),
-    # 2. The lift at the eye line (review 1): tight and low on the foot rest (lower third; its LED lights first), then the
-    #    camera holds near the eye line while the desk rises past the lens to full height. Desk right of frame for the
-    #    SAFETY card.
-    orbit(CUTS[0], 34, 3.30, 0.28, 0.30, 0.50, 26, label='Low on the foot rest', cut=True),
-    orbit(11.4, 36, 3.30, 0.30, 0.34, 0.75, 26, label='Foot rest lights'),
-    orbit(13.8, 40, 4.60, 1.45, 1.05, 0.75, 30, label='Eye line: the desk rises past the lens'),
-    orbit(16.6, 44, 5.00, 1.55, 1.30, 0.60, 33),   # review 2: fov 33, the monitor stays in frame mid-rise
-    orbit(19.4, 48, 5.30, 1.60, 1.50, 0.62, 35, label='Full height'),   # review 2: monitor top no longer clipped
-    orbit(CUTS[1] - .05, 49, 5.35, 1.60, 1.51, 0.62, 35),
-    # 3. The tilt in tight profile at the board's height: the edge steepens against black, a slow lateral dolly
-    #    for parallax.
-    orbit(CUTS[1], 80, 3.70, 2.30, 1.95, -0.10, 28, label='Board edge, profile', cut=True),
-    orbit(23.0, 85, 3.60, 2.25, 1.95, -0.05, 28, label='Purple, steepening'),
-    orbit(CUTS[2] - .05, 92, 3.50, 2.20, 1.92, 0.00, 28),
-    # 4. The turn, wide and low: the front swings to the lens and on to the far side, the camera arcs the other way;
-    #    the tilt levels under it.
-    orbit(CUTS[2], 68, 6.40, 1.35, 1.50, 0.00, 32, label='Low wide: the turn', cut=True),
-    orbit(TURN[0], 69, 6.40, 1.36, 1.50, 0.00, 32),
-    orbit(30.8, 75, 6.30, 1.50, 1.55, 0.00, 32, label='Face on, tilt levels'),
-    orbit(34.1, 82, 6.15, 1.80, 1.60, 0.00, 32, label='Far side 3/4'),
-    orbit(CUTS[3] - .05, 85, 6.05, 1.85, 1.60, 0.00, 32),
-    # 5. The lowering, locked: a front 3/4 at desktop height, so the board drops through the frame over the red pool.
-    # Review 2: tight and low, so 36.1 and 42.85 both jump in size (wide -> tight -> wide), not a jump cut.
-    orbit(CUTS[3], 112, 4.70, 1.05, 1.40, -0.15, 38, centre=(0.24, 0.208), label='Tight low lock: red lowering', cut=True),
-    orbit(CUTS[4] - .05, 113, 4.65, 1.03, 1.38, -0.15, 38, centre=(0.24, 0.208)),
-    # 6. The finale, cut on the roll's first frame: a low lock ahead of the desk (fixed centre) so it rolls at the lens
-    #    and grows in frame over its red comet; then a slow low arc and push through the blue rise to full height and the
-    #    clean look, landing on a low far-side 3/4 (easeOut false: still moving into the dissolve).
-    orbit(CUTS[4], 132, 6.60, 0.55, 1.10, 0.00, 30, desk(CUTS[4])[1], label='Low lock: rolls at the lens', cut=True),
-    orbit(sum(ROLL_LIT), 131, 6.55, 0.56, 1.12, 0.00, 30, desk(CUTS[4])[1]),
-    orbit(LIFT_END[0], 118, 6.00, 0.62, 1.25, 0.00, 31, label='Rise to full height: blue'),
-    orbit(sum(LIFT_END), 106, 6.05, 0.66, 1.45, 0.00, 32),
-    orbit(SECONDS, 92, 5.70, 0.50, 1.55, 0.05, 35, label='Clean low hero 3/4, push and arc')]}   # review 2: wheels in frame
+    key(ROLL[0], [1.400, 0.09, 1.300], [0.172, 0.154, 0.969], 24, 'Wheels start'),
+    key(3.1, [1.844, 0.15, 1.250], [0.406, 0.324, 1.020], 24, 'Truck with the wheels'),
+    key(sum(ROLL), [2.75, 0.28, 1.62], [0.52, 0.50, 0.86], 25, 'Roll lands, pull back'),
+    orbit(6.1, 36, 4.25, 0.52, 1.00, 0.35, 28.5, label='Pull back, rising'),
+    orbit(7.5, 35, 5.45, 0.72, 1.26, 0.50, 31.5, label='Whole desk framed: lights on'),
+    # 2. The lift from the same low 3/4: the foot rest lights first (lower third), then the desktop layer; the camera
+    #    keeps easing back as it cranes up with the rise and drifts round toward the profile, so the whole desk
+    #    (monitor top 2.9 u at full height) keeps clear headroom.
+    orbit(LIFT[0], 36, 5.85, 0.78, 1.30, 0.50, 31.5, label='Lift starts: foot rest lights'),
+    orbit(LIFT[0] + 3.8, 43, 6.40, 1.08, 1.52, 0.45, 32, label='Desktop layer: crane with the rise'),
+    orbit(sum(LIFT), 51, 6.90, 1.42, 1.64, 0.35, 32, label='Full height, whole desk'),
+    # 3. On round toward the profile at the board's height for the tilt, the whole desk in frame: the board steepens.
+    orbit(TILT_DOWN[0], 59, 7.05, 1.95, 1.50, 0.25, 31, label='Board height: tilt down (purple)'),
+    orbit(sum(TILT_DOWN), 66, 6.95, 1.85, 1.46, 0.15, 31, label='Tilted'),
+    # 4. Down and out for the turn: the front swings to the lens and on to the far side while the camera arcs slowly
+    #    the same way, landing on a true far-side 3/4; the tilt levels under it.
+    orbit(TURN[0], 71, 6.80, 1.50, 1.62, 0.0, 32, label='Low wide: the turn starts'),
+    orbit(TILT_BACK[0], 75, 6.70, 1.42, 1.62, 0.0, 32, label='Front to the lens, tilt levels'),
+    orbit(sum(TURN), 79, 6.40, 1.28, 1.62, 0.10, 32, label='Far-side 3/4'),
+    # 5. The lowering (red) on the 3/4, the camera sinking with the board.
+    orbit(LOWER[0], 80, 6.10, 1.12, 1.52, 0.10, 33, label='3/4: red lowering'),
+    orbit(sum(LOWER), 81, 5.85, 0.82, 1.30, 0.10, 33, label='Half height, drop low'),
+    # 6. The lit roll toward the lens at wheel height (the camera gives a little ground), then the blue rise and a
+    #    slow low arc and push to the hero 3/4 (easeOut false: still moving into the dissolve).
+    orbit(ROLL_LIT[0], 81, 5.90, 0.62, 1.12, 0.10, 33, label='Low: lit roll toward the lens'),
+    orbit(sum(ROLL_LIT), 79, 5.70, 0.62, 1.18, 0.15, 33.5, label='Roll lands'),
+    orbit(LIFT_END[0], 78, 5.80, 0.66, 1.32, 0.15, 33.5, label='Rise to full height: blue'),
+    orbit(sum(LIFT_END), 75, 6.65, 0.74, 1.62, 0.20, 34, label='Full height'),
+    orbit(SECONDS, 73, 6.40, 0.64, 1.56, 0.25, 35, label='Clean low hero 3/4, push')]}
+
+# Vico's own camera from Director Mode (director-bridge.py import), if any, replaces the authored keys.
+DIRECTOR = os.path.join(H, 'director-camera.json')
+if os.path.exists(DIRECTOR):
+    dc = json.load(open(DIRECTOR))
+    if abs(float(dc.get('seconds', SECONDS)) - SECONDS) > 1e-6:
+        print(f'awaken: ignoring {DIRECTOR}: made for {dc.get("seconds")} s, the chapter is {SECONDS} s', file=sys.stderr)
+    else:
+        CAMERA['keys'] = dc['keys']; print(f'awaken: camera keys from {DIRECTOR}')
 
 # ---------------------------------------------------------------- look
 # Dark stage until the switch-on, the status levels while the desk's lights play, the clean product look at the end.
@@ -167,9 +166,9 @@ CAMERA = {'easeIn': True, 'easeOut': False, 'keys': [
 TURN_KEY = (TURN[0] - .5, TURN[0] + .7, sum(TILT_BACK), sum(TILT_BACK) + 1.0)   # the turn and the tilt back under it (review 1: 22 on the yellow-green read white)
 RIG_KEY = [[0, 6], [ON[0], 6], [sum(ON), 22], [TURN_KEY[0], 22], [TURN_KEY[1], 4], [TURN_KEY[2], 4], [TURN_KEY[3], 22], [SETTLE[0], 22], [SETTLE[1], 40]]
 RIG_POOL = [[0, 0], [ON[0], 0], [sum(ON), .1], [SETTLE[0], .1], [SETTLE[1], .3]]
-RIMS = [[0, 120], [9.5, 120], [10.6, 0], [SETTLE[0], 0], [SETTLE[1], 200]]   # out before the crane mirrors them in the top
+RIMS = [[0, 120], [sum(ON), 120], [LIFT[0] - .4, 0], [SETTLE[0], 0], [SETTLE[1], 200]]   # out before the crane mirrors them in the top
 ENV = [[0, .15], [ON[0], .15], [sum(ON), .35], [SETTLE[0], .35], [SETTLE[1], 1]]
-WAKE = (9.6, 11.6)        # the stage light, pulse ring and overhead key dim before the lift (build-opener.py cue())
+WAKE = (sum(ON) + .1, LIFT[0] + .6)        # the stage light, pulse ring and overhead key dim before the lift (build-opener.py cue())
 
 
 def cue(a, b):
@@ -218,6 +217,13 @@ for s in cut['shots']:
     if s['id'] == 'awaken': s['camera'] = shot['camera']
 json.dump(cut, open(cp, 'w'), indent=1)
 
+# The round's one-chapter preview cut (like previews/awaken-v4-wellness-cut.json: the same monitor clip as v4's).
+pv = os.path.join(H, 'previews')
+if os.path.isdir(pv):
+    prev = os.path.join(pv, 'awaken-v4-wellness-cut.json'); ps = dict(shot)
+    if os.path.exists(prev): ps['screens'] = json.load(open(prev))['shots'][0].get('screens', ps.get('screens'))
+    json.dump({'name': f'awaken round 10 ({SECONDS:g} s, continuous camera)', 'shots': [ps]}, open(os.path.join(pv, 'awaken-v5-cut.json'), 'w'), indent=1)
+
 # ---------------------------------------------------------------- report: camera speed and the view around the desk
 ks = shot['camera']['keys']
 def v(k, n): return k['view'][n]
@@ -230,7 +236,8 @@ for a, b in zip(ks, ks[1:]):
     yb = math.atan2(v(b, 'target')[2] - v(b, 'position')[2], v(b, 'target')[0] - v(b, 'position')[0])
     prof.append(((a['time'] + b['time']) / 2 * SECONDS, sp, abs(math.degrees((yb - ya + math.pi) % (2 * math.pi) - math.pi)) / dt))
 pk = max(prof, key=lambda p: p[1])
-print(f'awaken: {SECONDS:g} s; camera peak {pk[1]:.2f} u/s at {pk[0]:.1f}, yaw <= {max(p[2] for p in prof):.1f} deg/s (cuts at {CUTS})')
+cuts = [k['at'] for k in CAMERA['keys'] if k.get('cut') or k.get('hold')]
+print(f'awaken: {SECONDS:g} s; {len(CAMERA["keys"])} story keys; camera peak {pk[1]:.2f} u/s at {pk[0]:.1f}, yaw <= {max(p[2] for p in prof):.1f} deg/s (cuts/holds: {cuts or "none"})')
 for t0 in range(0, int(SECONDS) + 1, 3):
     w = [p for p in prof if t0 <= p[0] < t0 + 3]
     if w: print(f'  t {t0:4.1f}-{t0 + 3:4.1f}  speed {min(p[1] for p in w):.2f}-{max(p[1] for p in w):.2f} u/s  yaw <= {max(p[2] for p in w):4.1f} deg/s')
@@ -238,4 +245,4 @@ for k in CAMERA['keys']:
     th, c = desk(k['at'])
     az = math.degrees(math.atan2(k['position'][2] - c[1], k['position'][0] - c[0]))
     rel = (az - th + 180) % 360 - 180
-    print(f'  key {k["at"]:5.2f}{" CUT" if k.get("cut") else "    "}  camera az {az:6.1f}  desk-relative {rel:6.1f}  (0 front, +90 the HQ9 side, 180 back)  {k.get("label", "")}')
+    print(f'  key {k["at"]:5.2f}  camera az {az:6.1f}  desk-relative {rel:6.1f}  (0 front, +90 the HQ9 side, 180 back)  {k.get("label", "")}')
