@@ -1,6 +1,6 @@
 {
- "source": "exports/cinematic-intro-20261104-hq14/director-camera.vico-2210.json (Vico 22:10 Director export) + camera polish",
- "seconds": 41.8,
+ "source": "exports/cinematic-intro-20261104-hq14/director-camera.vico-2210.json (Vico 22:10 Director export) + camera polish + final pass (holds, head-on hero)",
+ "seconds": 44.3,
  "keys": [
   {
    "at": 0.0,
@@ -62,10 +62,10 @@
    ],
    "fov": 31.5,
    "label": "Whole desk framed: lights on",
-   "hold": 0.3
+   "hold": 1.1
   },
   {
-   "at": 9.4,
+   "at": 10.2,
    "position": [
     4.983230546045883,
     1.9955727517674275,
@@ -80,7 +80,7 @@
    "label": "Lift starts: foot rest lights"
   },
   {
-   "at": 13.0,
+   "at": 14.5,
    "position": [
     4.338618130406764,
     3.777147291078691,
@@ -92,34 +92,34 @@
     0.10643007048818752
    ],
    "fov": 32,
-   "label": "Desktop layer: crane over the rise",
-   "hold": 0.5
+   "label": "Desktop layer: crane, hold as the lift lands",
+   "hold": 1.0
   },
   {
-   "at": 15.9,
+   "at": 18.2,
    "position": [
-    3.6841,
+    3.8881,
     1.8036,
-    4.8967
+    5.1811
    ],
    "target": [
     0.33,
-    1.56,
+    1.48,
     0.22
    ],
    "fov": 33,
    "label": "Down to board height"
   },
   {
-   "at": 19.4,
+   "at": 21.2,
    "position": [
-    2.1328,
+    2.2265,
     1.6599,
-    5.4991
+    5.7841
    ],
    "target": [
     0.39164669406793523,
-    1.4855,
+    1.4155,
     0.20344605479481864
    ],
    "fov": 33.5,
@@ -127,15 +127,15 @@
    "hold": 0.6
   },
   {
-   "at": 25.4,
+   "at": 27.2,
    "position": [
-    3.489407127954048,
+    3.4894,
     2.4016009703350525,
-    5.4808190945029285
+    5.4808
    ],
    "target": [
     0.5191914010465724,
-    1.350067640661369,
+    1.3101,
     0.15600136214083035
    ],
    "fov": 32,
@@ -143,7 +143,7 @@
    "hold": 0.65
   },
   {
-   "at": 30.0,
+   "at": 31.8,
    "position": [
     3.450865086738622,
     1.6143908805010205,
@@ -159,64 +159,64 @@
    "hold": 1.25
   },
   {
-   "at": 33.0,
+   "at": 34.8,
    "position": [
-    3.2631,
+    2.948,
     2.1677327214780444,
-    5.0705
+    5.2511
    ],
    "target": [
-    0.7438,
+    0.7616,
     1.213576826305871,
-    -0.0081
+    0.0205
    ],
    "fov": 33,
    "label": "Lit roll toward the lens: swing starts"
   },
   {
-   "at": 36.3,
+   "at": 38.1,
    "position": [
-    -0.6468,
-    2.4075,
-    6.283
+    -0.4111,
+    2.41,
+    6.5827
    ],
    "target": [
-    0.2601,
-    1.3103,
-    1.1467
+    0.1638,
+    1.31,
+    1.1129
    ],
    "fov": 33.25,
    "label": "Front-on mid swing"
   },
   {
-   "at": 39.6,
+   "at": 41.4,
    "position": [
-    -4.130665016602991,
-    2.64729801028646,
-    4.810278241810546
+    -2.967,
+    2.4,
+    6.5581
    ],
    "target": [
-    -0.09350341039328895,
-    1.406949532588596,
-    0.9384948259647146
+    0.158,
+    1.43,
+    1.1454
    ],
-   "fov": 33.5,
-   "label": "Far 3/4: lift lands at 48 in"
+   "fov": 33,
+   "label": "3/4: lift lands at 48 in"
   },
   {
-   "at": 41.8,
+   "at": 44.3,
    "position": [
-    -4.481,
-    2.6478,
-    4.2732
+    -3.5359,
+    2.2,
+    5.8735
    ],
    "target": [
-    -0.1113,
-    1.3624,
-    0.859
+    0.158,
+    1.42,
+    1.1454
    ],
-   "fov": 33.54,
-   "label": "Hero 3/4: slow push into the dissolve"
+   "fov": 32.5,
+   "label": "Hero 3/4, more head-on: slow push into the dissolve"
   }
  ],
  "clips": [
@@ -235,7 +235,7 @@
    "id": "op-lift",
    "lane": "lift",
    "kind": "lift",
-   "start": 7.2,
+   "start": 8.0,
    "duration": 7.1,
    "easing": "smooth",
    "label": "Lift up",
@@ -245,8 +245,8 @@
    "id": "op-tilt-down",
    "lane": "tilt",
    "kind": "tilt",
-   "start": 15.9,
-   "duration": 4.399999999999999,
+   "start": 17.7,
+   "duration": 4.4,
    "easing": "smooth",
    "label": "Tilt up",
    "target": 25
@@ -255,7 +255,7 @@
    "id": "op-turn",
    "lane": "wheels",
    "kind": "rotate",
-   "start": 19.700000000000003,
+   "start": 21.5,
    "duration": 6.7,
    "easing": "smooth",
    "label": "Rotating left",
@@ -266,7 +266,7 @@
    "id": "op-tilt-back",
    "lane": "tilt",
    "kind": "tilt",
-   "start": 25.700000000000003,
+   "start": 27.5,
    "duration": 3.8,
    "easing": "smooth",
    "label": "Tilt level",
@@ -276,8 +276,8 @@
    "id": "op-lower",
    "lane": "lift",
    "kind": "lift",
-   "start": 27.5,
-   "duration": 4.300000000000001,
+   "start": 29.3,
+   "duration": 4.3,
    "easing": "smooth",
    "label": "Lift down",
    "target": 35
@@ -286,8 +286,8 @@
    "id": "op-roll-lit",
    "lane": "wheels",
    "kind": "travel",
-   "start": 32.4,
-   "duration": 4.400000000000006,
+   "start": 34.2,
+   "duration": 4.4,
    "easing": "smooth",
    "label": "Move forward",
    "value": 24,
@@ -297,7 +297,7 @@
    "id": "op-lift-end",
    "lane": "lift",
    "kind": "lift",
-   "start": 35.75,
+   "start": 37.55,
    "duration": 3.75,
    "easing": "smooth",
    "label": "Lift up",
