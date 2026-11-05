@@ -129,8 +129,17 @@ export function installStatus(shot) {
         // are kept; only their clock is mapped: head travel 0 -> 4 layers = phase 0 -> .8, reached at 90% of dur.
         // sweep:false keeps the firmware's free-running loop.
         let ms = t * 1000;
-        if (m.fx === 34 && ev.sweep !== false) ms = Math.min(1, t / (ev.dur * .9)) * .8 / (.12 + m.sx / 255 * .28) * 1000;
+        // Stepped (Vico, HQ14g: "the second layer lights up so fast ... it looks almost like one light"): the head rests on
+        // each layer (hold, default .5 of its step) and then moves on, and gamma (default 2.5) on the frame shrinks the
+        // overlap, so the foot rest lights, fades out, and only then the desktop layer comes up. steps:false = the glide.
+        const stepped = m.fx === 34 && ev.sweep !== false && ev.steps !== false;
+        if (m.fx === 34 && ev.sweep !== false) {
+          let travel = Math.min(1, t / (ev.dur * .9)) * 4;
+          if (stepped) { const hold = ev.hold ?? .5, k = Math.min(3, Math.floor(travel)), f = travel - k; travel = k + (f < hold ? 0 : smooth((f - hold) / (1 - hold))); }
+          ms = travel / 5 / (.12 + m.sx / 255 * .28) * 1000;
+        }
         sampleMovementInto(frame, { ...m, elapsedMs: ms });
+        if (stepped) { const g = ev.gamma ?? 2.5; for (const row of frame) for (let p = 0; p < row.length; p++) row[p] = Math.round(255 * (row[p] / 255) ** g); }
         if (m.reverseRotation) {
           // The wings run like the real desk's: re-sample rows 5 and 6 with the physical mode.
           const wings = counts.map(n => new Uint8Array(n * 4));
