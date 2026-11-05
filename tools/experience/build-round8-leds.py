@@ -36,7 +36,12 @@ WHITE_ROOM = _hex([v * WHITE_LIGHT_LEVEL for v in _light(WHITE_STAGE)])   # '#24
 WARM_EVENING = '#52483c'
 # The app's time-based white (Vico): true white by day, warm white from sunset. Rise's clock runs 08:00 -> 17:30 and the
 # room reaches evening at 15.25 s (timeOfDay), so the strips warm with it after the last move has faded (11.6 s).
-NEUTRAL = {'rise': [[0, WHITE_ROOM], [13.4, WHITE_ROOM], [15.6, WARM_EVENING]]}
+# HQ18 (Vico: chapter 2 "doesn't have the lights on ... the morning to have the true white, at the tuned brightness that
+# we like, then in the evening ... that evening warm white that I have in my settings"): rise's day white at RISE_DAY
+# instead of the room quarter level, the evening warm (his saved Evening look) after the second lift has faded (13.6 s,
+# the chapter's moves are 2 s later since HQ18, build-round8-rise.py).
+RISE_DAY = os.environ.get('RISE_DAY', WHITE_STAGE)
+NEUTRAL = {'rise': [[0, RISE_DAY], [13.6, RISE_DAY], [15.6, WARM_EVENING]]}
 STAGE = {'awaken', 'awareness'}            # the black product stage
 # HQ14l room grade (film-fx sceneGlobals.roomLight / exposureScale). The room chapters were lit and exposed as the app's
 # daylight looks (exposure 1.05-1.1, NeutralToneMapping), so white and light-grey surfaces sat on the tone curve's shoulder
@@ -89,7 +94,15 @@ MONTAGE = .55   # music: video-game montage screens + their LED light; lighting 
 GYM = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gym-black-red.json')
 
 
+# HQ18 (Vico: "a weird line that develops as the desk rises ... a blue line"): Director Mode's stage draws a lift trace
+# (an unnamed cyan THREE.Line in 'Cinematic effects', experience/stage.mjs) beside every lift / tilt chapter, growing
+# with the desk. It is a Director preview aid, not part of the film.
+TRACE_HIDE = {'match': '^$', 'path': '^Cinematic effects > Line$', 'hide': True}
+
+
 def fix(s):
+    if s.get('kind') in ('lift', 'tilt'):
+        s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e != TRACE_HIDE] + [TRACE_HIDE]
     # HQ16d (Vico: the OCC headphones "not on the headphone hook"): coast's deskObjects (Vico's 2026-11-03 OCC desktop,
     # saved before the plug-mounted hook, 7f0d77a) placed the headphones by hand at their old spot on the hutch post, over
     # the app's hook migration (desk-headphone-hook.mjs). Without that entry they hang on the hook in the side panel's port.

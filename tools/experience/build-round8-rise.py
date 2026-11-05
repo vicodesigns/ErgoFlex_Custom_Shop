@@ -37,7 +37,14 @@ CUP = {'id': 'ergoflex-thermal-cup', 'x': -330, 'z': 115, 'rotation': 30, 'scale
 # Measured with render-cut --list-objects and checked by projecting into stills: the desk's front faces +x (the
 # chair side), its long axis runs along z; the window wall is behind it (x -2.3), the entry wall at z +2.47.
 # The lift raises everything on the desk by 0.0406 u per inch (portrait monitor top 2.27 u at 28 in, 3.27 at 52.5).
-LIFT1, LIFT2 = (1.6, 4.8, 43.5), (7.4, 3.2, 52.5)      # (start, duration, target in) from the shot's motion clips
+# HQ18 (Vico, 2026-11-05: "start with the lights off, like the user is not there, and then the lights come on and the
+# screens come on, and then it pans out"): the chapter opens on the notebook with the desk asleep (strips off, both
+# monitors black), the strips switch on at LIGHTS_ON and the monitors wake just after, and only then does the camera pull
+# out and the desk rise. Everything after the wake is the round 11 chapter moved WAKE s later (the length stays 16 s:
+# the hold at full height before the evening warm-up gives the time). This builder owns the chapter's moves, status
+# lights, screen wake and daypart keys (absolute values, so re-runs are idempotent).
+WAKE, LIGHTS_ON, LIGHTS_FADE, SCREENS_ON = 2.0, 1.4, .5, (1.7, 2.3)
+LIFT1, LIFT2 = (1.6 + WAKE, 4.8, 43.5), (7.4 + WAKE, 3.2, 52.5)      # (start, duration, target in)
 U = 0.0406
 DESK_C = (-0.70, 0.25)                                 # desk centre (x, z): the orbit pivot
 BOOK = (-0.50, 1.05, 0.90)                             # the open DAILY NOTES notebook + the insulated cup, at 28 in
@@ -91,31 +98,49 @@ def key(at, pos, tgt, fov, label=None):
 CAMERA = {'easeIn': False, 'easeOut': False, 'keys': [
     # 1. On the notebook: DAILY NOTES upright and legible, the cup beside it, the monitor's foot at the top. The
     #    camera is already drifting back (the chapter dissolves in), straight out along its line of sight.
-    near(0.0, 8, 56, 0.72, 30, aim=(-0.47, 1.06, 0.87), label='DAILY NOTES close-up, cup beside'),
-    near(1.6, 10, 30, 1.20, 32, aim=(-0.50, 1.12, 0.86), label='Pull out: the lift starts'),
+    #    HQ18: framed a little wider (the notebook low in frame, the desk's front edge and the portrait monitor above it),
+    #    so the desk waking reads: the strips and both monitors come on while the camera drifts back.
+    near(0.0, 8, 22, 1.30, 40, aim=(-0.55, 1.32, 0.87), label='DAILY NOTES and the sleeping desk'),
+    near(WAKE, 9, 22, 1.45, 41, aim=(-0.55, 1.34, 0.87), label='Desk wakes: lights and screens on'),
+    near(1.6 + WAKE, 11, 23, 1.75, 43, aim=(-0.56, 1.36, 0.86), label='Pull out: the lift starts'),
     # 2. Back and round to the desk's left-front while it rises, near its eye line: the desktop edge and the left lift
     #    column climb against the window, the desk right of frame (title lower-left).
-    orbit(3.6, 31, 2.70, 1.66, 1.55, 0.65, 50, label='Desktop and left column rising'),
-    orbit(6.4, 30, 3.90, 1.78, 1.52, 0.45, 52, label='Comfortable standing: whole desk'),
+    orbit(3.6 + WAKE, 31, 2.70, 1.66, 1.55, 0.65, 50, label='Desktop and left column rising'),
+    orbit(6.4 + WAKE, 30, 3.90, 1.78, 1.52, 0.45, 52, label='Comfortable standing: whole desk'),
     # 3. The second rise: the camera sinks as the desk climbs to full height.
-    orbit(7.4, 30.5, 4.05, 1.74, 1.52, 0.40, 51, label='Second rise starts'),
-    orbit(10.6, 29, 4.30, 1.62, 1.70, 0.15, 53.5, label='Full height 52.5 in'),
+    orbit(7.4 + WAKE, 30.5, 4.05, 1.74, 1.52, 0.40, 51, label='Second rise starts'),
+    orbit(10.6 + WAKE, 29, 4.30, 1.62, 1.70, 0.15, 53.5, label='Full height 52.5 in'),
     # 4. Low hero three-quarter, a slow lateral drift into the dissolve.
-    orbit(13.4, 27, 4.60, 1.52, 1.69, 0.0, 50, label='Low 3/4 at full height'),
+    orbit(13.4 + WAKE, 27, 4.60, 1.52, 1.69, 0.0, 50, label='Low 3/4 at full height'),
     orbit(16.0, 25, 4.75, 1.48, 1.69, -0.05, 48.5, label='Hero 3/4, drifting')]}
 
 DIRECTOR = os.path.join(H, 'director-camera-rise.json')
 OWN_CAMERA = not os.path.exists(DIRECTOR)    # else build-round8-director.py sets it (and may change the length)
 
 
+def wake(s):
+    if not OWN_CAMERA: return
+    s['motion']['clips'] = [{**c, 'start': (LIFT1 if c['id'] == 'comfortable-standing' else LIFT2)[0]} for c in s['motion']['clips']]
+    lifts = [{'at': LIFT1[0], 'dur': LIFT1[1], 'kind': 'lift-up', 'fade': .6}, {'at': LIFT2[0], 'dur': LIFT2[1], 'kind': 'lift-up', 'fade': 1}]
+    s['ledStatus'] = [{'at': 0, 'dur': LIGHTS_ON, 'kind': 'off', 'fade': LIGHTS_FADE}] + lifts
+    for sc in s.get('screens', []):
+        b = sc.get('brightness'); b = b[-1][1] if isinstance(b, list) else (1 if b is None else b)
+        sc['brightness'] = [[0, 0], [SCREENS_ON[0], 0], [SCREENS_ON[1], b]]
+        # The clips show the desk app following the lift (portrait: height and "Rising to standing"): WAKE s later too,
+        # holding their first frame until then (loop false: no wrap to the clip's end).
+        sc['offset'], sc['loop'] = -WAKE, False
+    s['timeOfDay'] = [{'at': 0.75, 'mode': 'morning'}, {'at': 8 + WAKE / 2, 'mode': 'afternoon'}, {'at': 15.25, 'mode': 'evening', 'ease': 'smooth'}]
+
+
 def fix(s):
+    wake(s)
     if OWN_CAMERA: s['cameraPlan'] = CAMERA
     s['accessories'] = {'add': [CUP]}
     s['screens'] = [x for x in s.get('screens', []) if 'tablet' not in json.dumps(x)]
     # Keep the edits' order (other builders append theirs): replace ours in place, append only when missing.
     edits = list(s.get('sceneEdits', []))
     for mine in (MUGS_HIDE, CUP_HIDE):
-        at = [i for i, e in enumerate(edits) if e.get('match') == mine['match']]
+        at = [i for i, e in enumerate(edits) if (e.get('match'), e.get('near'), e.get('path')) == (mine['match'], mine.get('near'), mine.get('path'))]   # '^$' + near / path: several edits share a match
         if at: edits[at[0]] = mine; edits = [e for i, e in enumerate(edits) if i not in at[1:]]
         else: edits.append(mine)
     s['sceneEdits'] = edits
@@ -177,11 +202,11 @@ for t0 in range(0, SECONDS, 2):
 worst = None
 for k in ks:
     t = k['time'] * SECONDS
-    if t < 6.4: continue
+    if t < 6.4 + WAKE: continue
     xs, ys = zip(*[project(k['view'], X) for X in desk_points(t)])
     m = min(min(xs), 960 - max(xs), min(ys), 540 - max(ys))
     if worst is None or m < worst[0]: worst = (m, t, min(xs), max(xs), min(ys), max(ys))
-print(f'  whole desk in frame from 6.4 s: tightest margin {worst[0]:.0f} px at {worst[1]:.1f} s '
+print(f'  whole desk in frame from {6.4 + WAKE:g} s: tightest margin {worst[0]:.0f} px at {worst[1]:.1f} s '
       f'(x {worst[2]:.0f}-{worst[3]:.0f}, y {worst[4]:.0f}-{worst[5]:.0f} of 960x540)')
 for k in CAMERA['keys']:
     p = k['position']; az = math.degrees(math.atan2(p[2] - DESK_C[1], p[0] - DESK_C[0]))

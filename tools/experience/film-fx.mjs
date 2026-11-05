@@ -12,6 +12,7 @@
 // Shot fields (all optional; a shot without them renders exactly as before):
 //   screens:[{target, src, offset=0, fit='cover'|'contain'|'stretch', loop=true,
 //             rotate=0|90|180|270, flipX=false, brightness=1, rate=1}]
+//             brightness may be keyframed [[chapterSeconds, gain], …] (linear), e.g. a screen waking from black.
 //   ledMode:'media'  ledSource=<target or index into screens>  ledPreset='normal'|'calm'|'intense'|'full'
 //   ledGlow:0…1   LED brightness as a fraction of full (stage default .35)
 //   ledSurfaces:{desktopStrength:0…200, floorStrength, shelfStrength, …}  the app's LED surface sliders
@@ -261,7 +262,7 @@ async function installScreens(shot, list) {
     texture.anisotropy = api.renderer?.capabilities.getMaxAnisotropy?.() || 1; texture.minFilter = THREE.LinearMipmapLinearFilter;
     const clearEdge = inset.some(x => x > 0);
     const material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4, transparent: clearEdge, alphaTest: clearEdge ? .5 : 0 });
-    material.color.setScalar(Number(spec.brightness ?? 1));
+    material.color.setScalar(Array.isArray(spec.brightness) ? Number(spec.brightness[0][1]) : Number(spec.brightness ?? 1));
     const mesh = new THREE.Mesh(pictureGeometry(target.obj, f), material); mesh.name = 'Film screen · ' + target.id; mesh.userData.filmFx = true; mesh.castShadow = mesh.receiveShadow = false; mesh.renderOrder = 2;
     target.obj.add(mesh);
     const sc = { spec, target, inset, media, canvas, ctx2d: canvas.getContext('2d', { willReadFrequently: true }), texture, mesh };
@@ -272,6 +273,7 @@ async function installScreens(shot, list) {
 }
 async function updateScreens(screens, chapterSeconds) {
   await Promise.all(screens.map(async sc => {
+    if (Array.isArray(sc.spec.brightness)) sc.mesh.material.color.setScalar(keyAt(sc.spec.brightness, chapterSeconds));
     const v = sc.media; if (!(v instanceof HTMLVideoElement)) return;
     const rate = Number(sc.spec.rate ?? 1), raw = chapterSeconds * rate + (Number(sc.spec.offset) || 0), d = v.duration;
     const time = sc.spec.loop === false ? THREE.MathUtils.clamp(raw, 0, Math.max(0, d - .02)) : ((raw % d) + d) % d;
