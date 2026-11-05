@@ -13,6 +13,8 @@
 //                         7 diag L-fwd, 8 diag L-back, 9 diag R-fwd, 10 diag R-back
 //                         Rotation (5/6): every strip runs the firmware direction (fxWheels; the viewer's
 //                         reversal was wrong, Vico 2026-11-04). Forward/back: the foot rest runs the wings' comet.
+//          reverse:true   (any animated kind) every strip runs its animation the other way along its length (Vico, HQ16e:
+//                         storage's roll moves right on screen while the visualizer map ran the floor comet left).
 //          'collision'    latched breathing red, the app's roomSafety 'collision' look
 //          'off'          all strips dark (and their spill); the event's fade is the switch-on to the regular look
 //          'proximity'    latched amber, the desk's FX2 breathe (sx 150: one breath per ~3.1 s,
@@ -166,6 +168,7 @@ export function installStatus(shot) {
           sampleMovementInto(foot, { ...m, reverseRotation: false, elapsedMs: t * 1000 });
           frame[7].set(foot[5]);
         }
+        if (ev.reverse) for (const row of frame) { const n = row.length / 4, tmp = row.slice(); for (let p = 0; p < n; p++) row.set(tmp.subarray((n - 1 - p) * 4, (n - p) * 4), p * 4); }
         for (const id of m.dark || []) frame[id].fill(0);
       } else {
         let rgb, gain;

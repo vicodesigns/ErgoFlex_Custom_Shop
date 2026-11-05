@@ -87,6 +87,11 @@ def fix(s):
     # the app's hook migration (desk-headphone-hook.mjs). Without that entry they hang on the hook in the side panel's port.
     if s['id'] == 'coast':
         s.get('deskObjects', {}).pop('default-desktop-1', None)
+    # HQ16e (Vico: in storage "it's moving to the right, but the status indicator lighting says it's going to the left",
+    # the floor comet especially): on the visualizer's strip map the roll's comets ran against the travel; they run with it.
+    if s['id'] == 'storage':
+        for e in s.get('ledStatus', []):
+            if e.get('kind') == 'wheels': e['reverse'] = True
     # (Storage stayed on its old look, warm white #fff1dc + floorLight, until HQ14r: see SURFACE_TRIM.)
     if not s.get('ledStatus'):
         return s
