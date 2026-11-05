@@ -31,6 +31,7 @@ GAP = 1.5                 # between moves: the status colour's 1 s fade to white
 FADE = 1.0
 ROLL = (1.8, 2.6)         # 12 in forward in the dark (no status light), HQ9's wheels: 4.6 in/s average, 6.9 peak
 ON = (7.6, .3)            # lights off -> neutral white (the 'ding'), once the pull-back has the whole desk framed (7.5)
+BEAT = .45                # Director clips: lit and still this long before the first lift (ON is re-derived from it)
 LIFT = (round(sum(ON) + GAP, 3), 7.6)                       # 28 -> 52.5 in (full height), 3.2 in/s (the real speed)
 TILT_DOWN = (round(sum(LIFT) + GAP, 3), 3.8)                # 0 -> 15 deg: purple ('tilt-retract'); 3.9 deg/s
 TURN = (round(sum(TILT_DOWN) + GAP, 3), 6.7)                # 120 deg LEFT (mode 5): 18 deg/s average, 27 peak
@@ -74,6 +75,10 @@ if _dc.get('clips'):
     ROLL_IN = _by.get('op-roll', {}).get('value', ROLL_IN); ROLL_LIT_IN = _by.get('op-roll-lit', {}).get('value', ROLL_LIT_IN)
     TURN_DEG = _by.get('op-turn', {}).get('value', TURN_DEG)
     if _dc.get('seconds'): SECONDS = float(_dc['seconds'])
+    # Derived from his clips, not the authored constants: the lights switch on a short beat before the first move
+    # (Vico: dark until the whole desk is framed, then on, then the lift), and the stage settles after the last move.
+    ON = (round(LIFT[0] - BEAT - ON[1], 3), ON[1])
+    SETTLE = (round(sum(LIFT_END) + .5, 3), round(min(SECONDS, sum(LIFT_END) + 1.9), 3))
     print(f'awaken: {len(CLIPS)} movement clips from {DIRECTOR}')
 
 # One LED state at a time (film-status: first match, and the fade starts from the last event to end), so the events
@@ -88,7 +93,18 @@ STATUS = [{'at': 0, 'dur': ON[0], 'kind': 'off', 'fade': ON[1]},
           {'at': ROLL_LIT[0], 'dur': ROLL_LIT[1], 'kind': 'wheels', 'mode': 3, 'fade': FADE},
           {'at': LIFT_END[0], 'dur': LIFT_END[1], 'kind': 'lift-up', 'fade': FADE}]
 if _dc.get('clips'):   # a movement Vico deleted in Director Mode takes its status light with it
-    STATUS = [e for e, i in zip(STATUS, [None, 'op-lift', 'op-tilt-down', 'op-turn', 'op-tilt-back', 'op-lower', 'op-roll-lit', 'op-lift-end']) if i is None or i in _by]
+    ids = [None, 'op-lift', 'op-tilt-down', 'op-turn', 'op-tilt-back', 'op-lower', 'op-roll-lit', 'op-lift-end']
+    # The colour follows each clip's direction (his targets): lift up blue / down red; tilt angle increasing purple
+    # ('tilt-retract'), back toward flat yellow-green ('tilt-extend').
+    kind, h, tl = {}, 28, 0
+    for c in sorted(CLIPS, key=lambda c: c['start']):
+        if c.get('lane') == 'lift' and 'target' in c: kind[c['id']] = 'lift-up' if c['target'] >= h else 'lift-down'; h = c['target']
+        if c.get('lane') == 'tilt' and 'target' in c: kind[c['id']] = 'tilt-retract' if c['target'] > tl else 'tilt-extend'; tl = c['target']
+    STATUS = [dict(e, kind=kind.get(i, e['kind'])) for e, i in zip(STATUS, ids) if i is None or i in _by]
+# Overlapping moves (his edit runs the turn under the tilt, the lowering under the tilt back, the rise under the lit
+# roll): the strips show one state at a time, so each light hands over to the next move's at that move's start.
+STATUS.sort(key=lambda e: e['at'])
+for e, n in zip(STATUS, STATUS[1:]): e['dur'] = round(min(e['at'] + e['dur'], n['at']) - e['at'], 3)
 
 # ---------------------------------------------------------------- desk geometry for the camera
 # Desk box centre (x, z) at rest is (0.14, 0); its turn pivot (the model origin) is 0.24 u behind it (render-cut
@@ -188,7 +204,7 @@ if os.path.exists(DIRECTOR):
 TURN_KEY = (TURN[0] - .5, TURN[0] + .7, sum(TILT_BACK), sum(TILT_BACK) + 1.0)   # the turn and the tilt back under it (review 1: 22 on the yellow-green read white)
 RIG_KEY = [[0, 6], [ON[0], 6], [sum(ON), 22], [TURN_KEY[0], 22], [TURN_KEY[1], 4], [TURN_KEY[2], 4], [TURN_KEY[3], 22], [SETTLE[0], 22], [SETTLE[1], 40]]
 RIG_POOL = [[0, 0], [ON[0], 0], [sum(ON), .1], [SETTLE[0], .1], [SETTLE[1], .3]]
-RIMS = [[0, 120], [sum(ON), 120], [LIFT[0] - .4, 0], [SETTLE[0], 0], [SETTLE[1], 200]]   # out before the crane mirrors them in the top
+RIMS = [[0, 120], [sum(ON), 120], [max(LIFT[0] - .4, sum(ON) + .8), 0], [SETTLE[0], 0], [SETTLE[1], 200]]   # out before the crane mirrors them in the top
 ENV = [[0, .15], [ON[0], .15], [sum(ON), .35], [SETTLE[0], .35], [SETTLE[1], 1]]
 WAKE = (sum(ON) + .1, LIFT[0] + .6)        # the stage light, pulse ring and overhead key dim before the lift (build-opener.py cue())
 
