@@ -1,5 +1,9 @@
-// Chapter 2 · rise (home office, morning -> evening). Lift 28 -> 43.5 (1.6-6.4 s) -> 52.5 (7.4-10.6 s).
+// Chapter 2 · rise (home office, morning -> evening). The portrait app follows the shot's two lift clips (SHOT.clips):
+// round 11 was 28 -> 43.5 (1.6-6.4 s) -> 52.5 (7.4-10.6 s); HQ19 (Vico) sits -> stands -> sits again, with pauses.
 (function () {
+  const LIFTS = (SHOT.clips || []).filter(c => c.kind === 'lift').sort((a, b) => a.start - b.start);
+  const L1 = LIFTS[0] || {start: 1.6, duration: 4.8, target: 43.5}, L2 = LIFTS[1] || {start: 7.4, duration: 3.2, target: 52.5};
+  const E1 = L1.start + L1.duration, E2 = L2.start + L2.duration, UP2 = L2.target > L1.target;
   // Workday clock shared by both screens: 8:00 AM at t=0, ~6:00 PM by the end.
   const CK = [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1040], [17, 1080]];
   const clock = t => { for (let i = 1; i < CK.length; i++) if (t <= CK[i][0]) { const [a, ma] = CK[i - 1], [b, mb] = CK[i]; return lerp(ma, mb, (t - a) / (b - a)); } return 1080; };
@@ -10,6 +14,7 @@
   function heightState(t) {
     const p = pose(t), r = liftRate(t);
     if (r > .05) return {label: 'Rising', col: C.blue2, icon: 'up'};
+    if (r < -.05) return {label: 'Lowering', col: C.coral, icon: 'down'};
     if (p.height >= 52.3) return {label: 'Full height', col: C.teal, icon: 'check'};
     if (p.height >= 43) return {label: 'Standing', col: C.green, icon: 'check'};
     return {label: 'Sitting', col: C.amber, icon: 'desk'};
@@ -56,39 +61,41 @@
       deskGlyph(270, cy + 640, .85, h01, 0, C.blue2);
       // rate readout
       const r = liftRate(t);
-      T(r > .05 ? `▲ ${r.toFixed(1)} in/s` : `${(p.height * 2.54).toFixed(0)} cm`, 520, cy + 520, 44, {w: 600, c: r > .05 ? C.blue2 : C.dim});
-      T(r > .05 ? 'Motor active' : 'Locked', 520, cy + 570, 32, {w: 500, c: C.faint});
+      const moving = Math.abs(r) > .05;
+      T(moving ? `${r > 0 ? '▲' : '▼'} ${Math.abs(r).toFixed(1)} in/s` : `${(p.height * 2.54).toFixed(0)} cm`, 520, cy + 520, 44, {w: 600, c: r > .05 ? C.blue2 : r < -.05 ? C.coral : C.dim});
+      T(moving ? 'Motor active' : 'Locked', 520, cy + 570, 32, {w: 500, c: C.faint});
 
       // ---- lower region: cycles with the action
       const ly = 1065;
-      // A: stand nudge (0..1.9)
-      alpha(win(t, -1, 1.7, .4), () => {
+      // A: stand nudge (until the first lift starts)
+      alpha(win(t, -1, L1.start + .1, .4), () => {
         card(40, ly, W - 80, 300, {r: 40, accent: C.amber});
         iconBadge('bell', 140, ly + 150, 58, C.amber);
         T('Time to stand', 230, ly + 130, 60, {w: 600});
         T('Seated 52 min · tap to rise', 230, ly + 196, 38, {w: 400, c: C.dim});
       });
-      // B: rising progress (1.6..6.6), then second rise (7.4..10.6)
-      const riseA = win(t, 1.6, 7.3, .4), riseB = win(t, 7.2, 10.9, .4);
+      // B: the first lift's progress, then the second move's
+      const first = t < (E1 + L2.start) / 2, riseA = win(t, L1.start, UP2 ? L2.start - .1 : E1 + .7, .4), riseB = win(t, L2.start - .2, E2 + .3, .4);
       alpha(Math.max(riseA, riseB), () => {
-        const target = t < 7 ? 43.5 : 52.5, from = t < 7 ? 28 : 43.5, k = clamp((p.height - from) / (target - from));
-        card(40, ly, W - 80, 300, {r: 40, accent: C.blue});
-        T(t < 7 ? (k > .99 ? 'Standing · nice!' : 'Rising to standing') : 'Going to full height', 90, ly + 100, 50, {w: 600});
-        T(`${fmtH(target)} in`, W - 90, ly + 100, 50, {w: 700, a: 'right', c: C.blue2});
-        bar(90, ly + 150, W - 180, 34, k, lin(90, 0, W - 90, 0, [[0, C.blue], [1, C.teal]]));
+        const target = first ? L1.target : L2.target, from = first ? 28 : L1.target, k = clamp((p.height - from) / (target - from)), down = target < from;
+        const acc = down ? C.coral : C.blue;
+        card(40, ly, W - 80, 300, {r: 40, accent: acc});
+        T(first ? (k > .99 ? 'Standing · nice!' : 'Rising to standing') : down ? (k > .99 ? 'Seated · nice!' : 'Back to sitting') : 'Going to full height', 90, ly + 100, 50, {w: 600});
+        T(`${fmtH(target)} in`, W - 90, ly + 100, 50, {w: 700, a: 'right', c: down ? C.coral : C.blue2});
+        bar(90, ly + 150, W - 180, 34, k, lin(90, 0, W - 90, 0, down ? [[0, C.coral], [1, C.amber]] : [[0, C.blue], [1, C.teal]]));
         T(`${Math.round(k * 100)}%`, 90, ly + 250, 44, {w: 700, c: C.text});
         T('Keep the area clear', W - 90, ly + 250, 34, {w: 400, a: 'right', c: C.dim});
       });
-      // C: standing timer + rings (from 6.4)
-      const standT = Math.max(0, t - 6.4);
-      alpha(win(t, 10.8, 99, .5), () => {
+      // C: standing timer + rings (after the second move)
+      const standT = Math.max(0, Math.min(t, UP2 ? 99 : L2.start) - E1);
+      alpha(win(t, E2 + .2, 99, .5), () => {
         card(40, ly, W - 80, 740, {r: 40});
         const rx = 290, ry = ly + 300;
-        ring(rx, ry, 190, 40, countTo(t, 6.4, 16, .18, .86), C.coral, {glow: 18});
-        ring(rx, ry, 140, 40, countTo(t, 6.4, 16, .3, 1.0), C.green, {glow: 18});
-        ring(rx, ry, 90, 40, countTo(t, 6.4, 16, .12, .74), C.cyan, {glow: 18});
+        ring(rx, ry, 190, 40, countTo(t, E1, 16, .18, .86), C.coral, {glow: 18});
+        ring(rx, ry, 140, 40, countTo(t, E1, 16, .3, 1.0), C.green, {glow: 18});
+        ring(rx, ry, 90, 40, countTo(t, E1, 16, .12, .74), C.cyan, {glow: 18});
         icon('up', rx, ry, 70, C.text, 9);
-        const stats = [['Standing', fmtMS(Math.floor(standT * 7 + 12)), C.green], ['Calories', String(Math.round(countTo(t, 6.4, 16, 96, 168))), C.coral], ['Steps', Math.round(countTo(t, 6.4, 16, 1840, 2612)).toLocaleString('en-US'), C.cyan]];
+        const stats = [['Standing', fmtMS(Math.floor(standT * 7 + 12)), C.green], ['Calories', String(Math.round(countTo(t, E1, 16, 96, 168))), C.coral], ['Steps', Math.round(countTo(t, E1, 16, 1840, 2612)).toLocaleString('en-US'), C.cyan]];
         stats.forEach(([l, v, c], i) => {
           const sy = ly + 150 + i * 150;
           circle(548, sy - 18, 14, c);
@@ -96,11 +103,11 @@
           T(v, 580, sy + 56, 66, {w: 700});
         });
         T('Stand goal', 90, ly + 600, 36, {w: 500, c: C.dim});
-        T(`${Math.min(10, 6 + Math.floor(seg(t, 10.6, 13) * 2 + (t > 10.6 ? 1 : 0)))} / 10 hours`, 90, ly + 660, 50, {w: 700});
-        for (let i = 0; i < 10; i++) { const on = i < (t > 10.6 ? 7 : 6); fillR(500 + i * 48, ly + 618, 36, 48, 10, on ? C.green : 'rgba(255,255,255,0.1)'); }
+        T(`${Math.min(10, 6 + Math.floor(seg(t, E2, E2 + 2.4) * 2 + (t > E2 ? 1 : 0)))} / 10 hours`, 90, ly + 660, 50, {w: 700});
+        for (let i = 0; i < 10; i++) { const on = i < (t > E2 ? 7 : 6); fillR(500 + i * 48, ly + 618, 36, 48, 10, on ? C.green : 'rgba(255,255,255,0.1)'); }
       });
       // Today's rhythm strip (visible until the rings card takes over)
-      alpha(1 - win(t, 10.8, 99, .5), () => {
+      alpha(1 - win(t, E2 + .2, 99, .5), () => {
         const ry = 1400;
         card(40, ry, W - 80, 330, {r: 40});
         T("Today's rhythm", 90, ry + 82, 44, {w: 600});
@@ -112,21 +119,21 @@
           fillR(90 + i * bw + 6, ry + 290 - hh, bw - 12, hh, 10, now ? C.blue2 : stand ? C.green : hexA(C.amber, .7));
         }
       });
-      // D: celebration (10.6..13.4)
-      const cA = win(t, 10.7, 13.6, .5);
+      // D: celebration once standing is reached (round 11: after full height)
+      const c0 = UP2 ? E2 + .1 : E1 + .1, c1 = UP2 ? E2 + 3 : L2.start - .3, cA = win(t, c0, c1, .5);
       alpha(cA, () => {
         g.fillStyle = 'rgba(3,6,12,0.55)'; g.fillRect(0, 0, W, H);
-        const k = back(seg(t, 10.7, 11.3));
+        const k = back(seg(t, c0, c0 + .6));
         at(W / 2, 980, lerp(.7, 1, k), () => {
           card(-440, -330, 880, 660, {r: 56, top: '#173a2f', bot: '#0d1f1c', border: hexA(C.green, .6), accent: C.green});
           circle(0, -150, 110, hexA(C.green, .2)); circle(0, -150, 80, C.green);
           icon('check', 0, -150, 110, '#06231a', 14);
           T('Great job,', 0, 30, 76, {w: 700, a: 'center'});
           T('you stood up!', 0, 118, 76, {w: 700, a: 'center'});
-          T('+1 stand hour · 52.5 in', 0, 210, 40, {w: 500, a: 'center', c: C.green});
+          T(`+1 stand hour · ${fmtH(UP2 ? L2.target : L1.target)} in`, 0, 210, 40, {w: 500, a: 'center', c: C.green});
         });
       });
-      confetti(t, 10.75, W / 2, 840, 90, 620);
+      confetti(t, c0 + .05, W / 2, 840, 90, 620);
       vignette(.35);
     },
   };

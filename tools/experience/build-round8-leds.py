@@ -43,7 +43,7 @@ WARM_EVENING = '#52483c'
 # Vico picked the middle of the 2.7x / 5x stills (#7a7a7a / #a6a6a6, linear .195 / .381): linear .288, 4x chapter 1's
 # #4c4c4c; at chapter 1's own level the white did not read against the daylit room.
 RISE_DAY = os.environ.get('RISE_DAY', '#929292')
-NEUTRAL = {'rise': [[0, RISE_DAY], [13.6, RISE_DAY], [15.6, WARM_EVENING]]}
+NEUTRAL = {'rise': [[0, RISE_DAY], [14.2, RISE_DAY], [15.4, WARM_EVENING]]}   # HQ19: after the lowering (13.2 s) has faded back to white
 STAGE = {'awaken', 'awareness'}            # the black product stage
 # HQ14l room grade (film-fx sceneGlobals.roomLight / exposureScale). The room chapters were lit and exposed as the app's
 # daylight looks (exposure 1.05-1.1, NeutralToneMapping), so white and light-grey surfaces sat on the tone curve's shoulder
