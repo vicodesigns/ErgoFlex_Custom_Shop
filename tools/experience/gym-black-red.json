@@ -1,0 +1,268 @@
+{
+ "sceneEdits": [
+  {
+   "match": "",
+   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "materialColor": "#bbc99a",
+   "material": {
+    "color": "#a8101c",
+    "emissive": "#c0141f"
+   },
+   "note": "room trim strips, channel 0 (morning wash colour)"
+  },
+  {
+   "match": "",
+   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "materialColor": "#9fc2bc",
+   "material": {
+    "color": "#a8101c",
+    "emissive": "#c0141f"
+   },
+   "note": "room trim strips, channel 1"
+  },
+  {
+   "match": "",
+   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "materialType": "Basic",
+   "recolor": [
+    {
+     "hue": [
+      60,
+      185
+     ],
+     "s": 0
+    }
+   ],
+   "note": "additive wall washes: drop the green/teal cast, keep strength"
+  },
+  {
+   "match": "",
+   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED)).*Kettlebell and medicine ball shelf",
+   "recolor": [
+    {
+     "hue": [
+      100,
+      140
+     ],
+     "minChroma": 0.2,
+     "h": 355,
+     "s": 0.85,
+     "l": [
+      [
+       0,
+       0
+      ],
+      [
+       0.3,
+       0.2
+      ],
+      [
+       0.6,
+       0.37
+      ],
+      [
+       0.85,
+       0.45
+      ],
+      [
+       1,
+       0.52
+      ]
+     ]
+    }
+   ],
+   "note": "green kettlebells to red (plant greens elsewhere kept)"
+  },
+  {
+   "match": "",
+   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "materialType": "!Basic",
+   "recolor": [
+    {
+     "hue": [
+      60,
+      102
+     ],
+     "minChroma": 0.2,
+     "h": 355,
+     "s": 0.85,
+     "l": [
+      [
+       0,
+       0
+      ],
+      [
+       0.3,
+       0.2
+      ],
+      [
+       0.6,
+       0.37
+      ],
+      [
+       0.85,
+       0.45
+      ],
+      [
+       1,
+       0.52
+      ]
+     ]
+    },
+    {
+     "hue": [
+      40,
+      60
+     ],
+     "minChroma": 0.3,
+     "h": 355,
+     "s": 0.85,
+     "l": [
+      [
+       0,
+       0
+      ],
+      [
+       0.3,
+       0.2
+      ],
+      [
+       0.6,
+       0.37
+      ],
+      [
+       0.85,
+       0.45
+      ],
+      [
+       1,
+       0.52
+      ]
+     ]
+    },
+    {
+     "hue": [
+      150,
+      300
+     ],
+     "minChroma": 0.2,
+     "s": 0,
+     "l": 0.35
+    },
+    {
+     "maxChroma": 0.2,
+     "s": 0,
+     "l": [
+      [
+       0,
+       0
+      ],
+      [
+       0.1,
+       0.07
+      ],
+      [
+       0.3,
+       0.15
+      ],
+      [
+       0.6,
+       0.34
+      ],
+      [
+       0.78,
+       0.64
+      ],
+      [
+       0.88,
+       0.88
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    }
+   ],
+   "note": "gym shell + equipment: lime/yellow -> deep red, cyan/blue/purple -> charcoal, greys -> charcoal/near-black (whites kept); material colours, instance colours and canvas maps (floor, concrete, MOVE sign, labels, chalk board, timer, mirror)"
+  },
+  {
+   "match": "^Prop:hemp-protein$",
+   "recolor": [
+    {
+     "hue": [
+      60,
+      160
+     ],
+     "minChroma": 0.15,
+     "h": 355,
+     "s": 0.85,
+     "l": [
+      [
+       0,
+       0
+      ],
+      [
+       0.3,
+       0.2
+      ],
+      [
+       0.6,
+       0.37
+      ],
+      [
+       0.85,
+       0.45
+      ],
+      [
+       1,
+       0.52
+      ]
+     ]
+    }
+   ],
+   "note": "green protein tub on the refuel cabinet to red"
+  },
+  {
+   "match": "",
+   "lightType": "Directional|Hemisphere",
+   "recolor": [
+    {
+     "hue": [
+      60,
+      110
+     ],
+     "minChroma": 0.15,
+     "h": 30,
+     "s": 0.5,
+     "l": [
+      [
+       0,
+       0.9
+      ],
+      [
+       1,
+       0.9
+      ]
+     ]
+    }
+   ],
+   "note": "scene rim light takes the gym's lime accent (#bded66): faint warm white"
+  },
+  {
+   "match": "",
+   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "lightType": "PointLight",
+   "recolor": [
+    {
+     "maxChroma": 0.2,
+     "s": 0
+    }
+   ],
+   "note": "room point lights lerp toward the green wash: neutral (warm practical kept)"
+  }
+ ],
+ "lights": [],
+ "notes": "Film-only black/red recolour of the gym (wellness, shot 6). Append these sceneEdits AFTER the shot's existing ones (order matters: the two strip edits match the morning wash colours #bbc99a/#9fc2bc before the recolour edits run). Needs the new 'recolor' and materialType:'!Basic' options in tools/experience/film-edits.mjs. Judged at sceneGlobals.roomLight 0.8 with the existing @window edit's material.brightness lowered 2.75 -> 2.2 (change that existing edit in place; not duplicated here). Desk, desk LEDs, ledColor and ledRoomSpill untouched (paths exclude the desk, Desk dressing, Prop: and LED nodes). Plants stay green. Room cube reflections (film-quality) and the room bounce albedo are captured before sceneEdits, so metals/bounce still see the old grey room (subtle).",
+ "windowBrightness": 2.2
+}

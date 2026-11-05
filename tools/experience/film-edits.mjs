@@ -23,6 +23,16 @@
 //   lightType:'<regex on light type>' (PointLight|SpotLight|HemisphereLight|
 //   DirectionalLight|RectAreaLight) selects lights instead; then intensity:
 //   <multiplier | keyframes> and color:'#hex'.
+//   materialType:'!Basic' (leading !) keeps only materials whose type lacks it.
+//   recolor:[{hue:[h0,h1], minChroma, maxChroma, h, s, sScale, l}, …] remaps
+//   colours in sRGB HSL on the matched objects: material color/emissive,
+//   InstancedMesh per-instance colours, canvas/image colour maps (map,
+//   emissiveMap; copied, alpha kept) and, with lightType, light color/
+//   groundColor. Per colour the first rule whose hue band (degrees; [340,20]
+//   wraps) and chroma (max-min of sRGB, 0…1) hold applies: h = new hue, s = new
+//   HSL saturation (or sScale ×), l = lightness × number or a [[in,out],…]
+//   piecewise curve. Unmatched colours stay. Off unless given (film-only
+//   room recolours, e.g. tools/experience/gym-black-red.json).
 // lights:[{preset:'productRig', …overrides} | {type:'rect'|'spot'|'point'|
 //   'directional', position:[x,y,z] | at:{az,el,dist} (degrees/metres around
 //   the desk; az 0 = desk front, + = desk's left), target:[x,y,z], color,
@@ -80,7 +90,8 @@ function targets(edit) {
 function materialFilter(edit) {
   if (!edit.materialName && !edit.materialColor && !edit.materialType) return null;
   const re = edit.materialName ? new RegExp(edit.materialName, 'i') : null, col = edit.materialColor ? new THREE.Color(edit.materialColor).getHex() : null;
-  return m => (!re || re.test(m.name || '')) && (col === null || m.color?.getHex() === col) && (!edit.materialType || m.type.includes(edit.materialType));
+  const not = String(edit.materialType || '').startsWith('!'), type = not ? edit.materialType.slice(1) : edit.materialType;
+  return m => (!re || re.test(m.name || '')) && (col === null || m.color?.getHex() === col) && (!type || m.type.includes(type) !== not);
 }
 // Window exteriors (painted backdrops behind the glazing) per room, found by
 // --list-screens-style probing: unlit canvas backdrops, or the HBHS emissive pane.
@@ -114,9 +125,11 @@ export function installEdits(shot) {
         if (keyed(edit.intensity)) live.push(s => { cell.value = sample(edit.intensity, s); });
       }
       if (o.isLight && edit.color) { const c = o.color.clone(); o.color.set(edit.color); undo.push(() => o.color.copy(c)); }
+      if (o.isLight && edit.recolor) for (const k of ['color', 'groundColor']) if (o[k]?.isColor) recolorColor(o[k], recolorFn(edit.recolor), undo);
       if (Number.isFinite(edit.scale)) { const s = o.scale.clone(); o.scale.multiplyScalar(edit.scale); undo.push(() => o.scale.copy(s)); }
       const mat = { ...(edit.material || {}) }; if (edit.opacity !== undefined) mat.opacityScale = edit.opacity;
-      if (!Object.keys(mat).length && !edit.radialFade) continue;
+      if (!Object.keys(mat).length && !edit.radialFade && !edit.recolor) continue;
+      const rc = edit.recolor && !o.isLight ? recolorFn(edit.recolor) : null;
       const mok = materialFilter(edit);
       o.traverse(mesh => {
         if (!mesh.material || mesh.userData.filmFx) return;
@@ -134,10 +147,17 @@ export function installEdits(shot) {
         // An opaque surface made fadeable joins the transparent pass; keep it
         // drawn first there, as in the opaque pass (otherwise e.g. the shadow-
         // catcher floor 2 mm above the grid can win the depth sort and hide it).
+        if (rc && mesh.isInstancedMesh && mesh.instanceColor && !mesh.userData.__filmFxRecolor?.has(n) && next.some(m => m && (!mok || mok(m)))) {
+          (mesh.userData.__filmFxRecolor ||= new Set()).add(n); undo.push(() => mesh.userData.__filmFxRecolor?.delete(n));
+          const a = mesh.instanceColor, before = a.array.slice(), c = new THREE.Color();
+          for (let i = 0; i < a.count; i++) { c.fromBufferAttribute(a, i); recolorColor(c, rc); a.setXYZ(i, c.r, c.g, c.b); }
+          a.needsUpdate = true; undo.push(() => { a.array.set(before); a.needsUpdate = true; });
+        }
         if (('opacityScale' in mat || 'opacity' in mat || edit.radialFade) && next.some(m => m && !m.transparent)) { const ro = mesh.renderOrder; mesh.renderOrder = Math.min(ro, -1); undo.push(() => { mesh.renderOrder = ro; }); }
         for (const m of next) {
           if (!m || (mok && !mok(m) && !m.userData.filmFxCopy) || m.userData.__filmFxEdited?.has(n)) continue;
           (m.userData.__filmFxEdited ||= new Set()).add(n); undo.push(() => m.userData.__filmFxEdited?.delete(n));
+          if (rc) { recolorColor(m.color, rc, undo); if (m.emissive?.isColor && m.emissive.getHex() !== 0) recolorColor(m.emissive, rc, undo); for (const k of ['map', 'emissiveMap']) recolorMap(m[k], rc, undo, n); }
           for (const [k, v] of Object.entries(mat)) {
             if (k === 'brightness') { if (m.isMeshBasicMaterial) { const c = m.color.clone(); m.color.multiplyScalar(Number(v)); undo.push(() => m.color.copy(c)); } else { const cell = { value: Number(v) }; wrap(m, 'emissiveIntensity', () => cell.value); } continue; }
             if (k === 'colorScale') { if (m.color) { const c = m.color.clone(); m.color.multiplyScalar(Number(v)); undo.push(() => m.color.copy(c)); } continue; }
@@ -165,6 +185,47 @@ export function installEdits(shot) {
     apply(seconds) { for (const f of live) f(seconds); },
     restore() { for (const f of undo.reverse()) f(); for (const c of swapped.values()) c.dispose(); }
   };
+}
+// ---------- recolor (sceneEdits[].recolor) ----------
+const lcurve = (v, l) => { if (l === undefined) return v; if (!Array.isArray(l)) return v * l; if (v <= l[0][0]) return l[0][1]; for (let i = 1; i < l.length; i++) if (v <= l[i][0]) { const [a, b] = l[i - 1], [c, d] = l[i]; return b + (d - b) * (v - a) / Math.max(1e-6, c - a); } return l[l.length - 1][1]; };
+const hsl2rgb = (h, s, l, o) => { const q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q, f = t => { t = (t % 1 + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; }; o[0] = f(h + 1 / 3); o[1] = f(h); o[2] = f(h - 1 / 3); };
+// sRGB 0…1 in, out[] written; false when no rule applies.
+function recolorFn(spec) {
+  const rules = Array.isArray(spec) ? spec : spec.rules || [];
+  return (r, g, b, out) => {
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), C = max - min, L = (max + min) / 2;
+    let H = 0; if (C > 1e-6) H = 60 * (max === r ? ((g - b) / C + 6) % 6 : max === g ? (b - r) / C + 2 : (r - g) / C + 4);
+    for (const u of rules) {
+      if (C < (u.minChroma ?? 0) || C > (u.maxChroma ?? 1)) continue;
+      if (u.hue) { const [a, z] = u.hue; if (a <= z ? (H < a || H > z) : (H < a && H > z)) continue; }
+      const den = 1 - Math.abs(2 * L - 1), S = den < 1e-6 ? 0 : Math.min(1, C / den);
+      hsl2rgb((u.h ?? H) / 360, Math.min(1, u.s ?? S * (u.sScale ?? 1)), Math.min(1, Math.max(0, lcurve(L, u.l))), out); return true;
+    }
+    return false;
+  };
+}
+function recolorColor(col, rc, undo) {
+  if (!col?.isColor) return;
+  const s = col.getRGB({}, THREE.SRGBColorSpace), o = [0, 0, 0];
+  if (!rc(s.r, s.g, s.b, o)) return; const before = col.clone(); col.setRGB(o[0], o[1], o[2], THREE.SRGBColorSpace); undo?.push(() => col.copy(before));
+}
+const recolored = new WeakMap();   // source image → { [edit index]: recoloured copy }
+function recolorMap(t, rc, undo, n) {
+  const img = t?.image; if (!img || !(img instanceof HTMLCanvasElement || img instanceof HTMLImageElement || (typeof ImageBitmap !== 'undefined' && img instanceof ImageBitmap))) return;
+  if (img.__filmFxRecolorOf !== undefined) return;   // already a recoloured copy
+  const per = recolored.get(img) || {}; recolored.set(img, per);
+  if (!per[n]) {
+    const w = img.width, h = img.height; if (!w || !h) return;
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, w, h), p = d.data, o = [0, 0, 0], cache = new Map();
+    for (let i = 0; i < p.length; i += 4) {
+      const key = p[i] << 16 | p[i + 1] << 8 | p[i + 2]; let v = cache.get(key);
+      if (v === undefined) { v = rc(p[i] / 255, p[i + 1] / 255, p[i + 2] / 255, o) ? (Math.round(o[0] * 255) << 16 | Math.round(o[1] * 255) << 8 | Math.round(o[2] * 255)) : key; cache.set(key, v); }
+      p[i] = v >> 16 & 255; p[i + 1] = v >> 8 & 255; p[i + 2] = v & 255;
+    }
+    g.putImageData(d, 0, 0); c.__filmFxRecolorOf = n; per[n] = c;
+  }
+  t.image = per[n]; t.needsUpdate = true; undo.push(() => { t.image = img; t.needsUpdate = true; });
 }
 // Out-of-focus backdrop: sample the colour map at a fixed mip LOD (≈ 2^lod texels).
 function mapBlur(m, lod, undo) {

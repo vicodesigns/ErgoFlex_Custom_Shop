@@ -73,7 +73,9 @@ SURFACE_TRIM = {'storage': {'desktopStrength': .3}}
 # brightening (environmentScale 1.5, exposure 1.14, build-round4-lighting.py). The status light stays at the approved
 # level: at half it read washed out against the daylit floor (HQ16a, Vico).
 DAYLIGHT = {'commons': 'party', 'storage': 'night'}
-ROOM_LIGHT_BY = {'commons': .8, 'storage': .8}
+# HQ17 (lighting review): the gym at .55 was the film's biggest exposure drop (mean luma ~51 after the high school's ~113),
+# muddy blue-grey under a near-clipping window; .8 lifts it to daytime without more clipping.
+ROOM_LIGHT_BY = {'commons': .8, 'storage': .8, 'wellness': .8}
 # HQ16c (Vico on HQ16b: the full yellow/red status light "bounces off too many walls", and off the desktop too much; the
 # monitor too bright). Picked variant B of peak-pulse stills: the app's room LED spill (walls/floor within ~2 m and the
 # LEDs' share of the architectural bounce; film-fx ledRoomSpill) at 25%, the desktop receiver at half (on top of
@@ -83,6 +85,8 @@ LIBRARY_LED = {'desktopStrength': .5, 'screenBrightness': .75}   # its room spil
 # the ambient light washes it out; the floor less too; "do the 15%"): every daylit room chapter's room LED spill
 # (walls and floor within ~2 m, and the LEDs' share of the architectural bounce) at 15%. Night rooms (music, media) keep theirs.
 DAY_ROOMS, DAY_SPILL = ('rise', 'create', 'commons', 'coast', 'oilers', 'wellness', 'storage'), .15
+MONTAGE = .55   # music: video-game montage screens + their LED light; lighting expert picked B of A .7 / B .55 / C .4 (A still clipped the screen whites)
+GYM = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gym-black-red.json')
 
 
 def fix(s):
@@ -109,6 +113,21 @@ def fix(s):
         MOVIE = .9
         s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e.get('match') != '^Curved media screen$'] + [{'match': '^Curved media screen$', 'material': {'brightness': MOVIE}}]
         s['ledGain'] = round(s.setdefault('mediaBaseGain', s['ledGain']) * MOVIE, 3)
+    # HQ17 (Vico: the video-game montage "too bright"): the gaming room's main monitor and arcade screen, and the
+    # picture-driven LED light (ledGain) they feed, at MONTAGE. Idempotent via musicBaseGain.
+    if s['id'] == 'music':
+        for sc in s.get('screens', []):
+            if sc.get('target') in ('main-landscape', 'arcade'): sc['brightness'] = MONTAGE
+        s['ledGain'] = round(s.setdefault('musicBaseGain', s['ledGain']) * MONTAGE, 3)
+    # HQ17 (Vico: "replace the green and gray gym with a black and red gym" in the film): the gym recolor's
+    # sceneEdits / lights (tools/experience/gym-black-red.json), replacing any earlier copy (tagged gymBlackRed).
+    if s['id'] == 'wellness' and os.path.exists(GYM):
+        g = json.load(open(GYM))
+        # The lighting review: the window at 2.75 was near clipping (and read late-afternoon); 2.2 in place.
+        for e in s.get('sceneEdits', []):
+            if e.get('match') == '@window' and 'brightness' in e.get('material', {}): e['material']['brightness'] = g.get('windowBrightness', 2.2)
+        s['sceneEdits'] =[e for e in s.get('sceneEdits', []) if not e.get('gymBlackRed')] + [{**e, 'gymBlackRed': True} for e in g.get('sceneEdits', [])]
+        if g.get('lights'): s['lights'] = [l for l in s.get('lights', []) if not l.get('gymBlackRed')] + [{**l, 'gymBlackRed': True} for l in g['lights']]
     if s['id'] == 'storage':
         for e in s.get('ledStatus', []):
             if e.get('kind') == 'wheels': e['reverse'] = True
