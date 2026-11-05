@@ -434,14 +434,16 @@ export function installViewerLeds(shot) {
   const appSpills = [];
   model.traverse((o) => { const u = o.material?.uniforms; if (u?.strength && o.material.isShaderMaterial && /LED/.test(o.name) && !o.userData.filmFx) appSpills.push(u); });
   const ours = list.map((e) => e.material.uniforms);
+  // Held once: film-quality's glow pass swaps non-glow meshes to a black material inside render (HQ14g crash on Win).
+  const U = appGlow.material.uniforms, panelU = new Map(list.filter((e) => e.panel).map((e) => [e, e.panel.uniforms]));
   const direct = renderer.render;
   renderer.render = function (sc, cam) {
-    const surfaces = api.ledSurfaces, U = appGlow.material.uniforms;
+    const surfaces = api.ledSurfaces;
     // The app's glow x effect gain, recovered from a receiver it drives (strength = glow * S / 10000 * gain).
     const glow = surfaces.floorStrength > 0 ? U.strength.value * 10000 / surfaces.floorStrength : api.ledsEnabled ? api.ledGlow : 0;
     for (const e of list) {
       if (e.receiver === 'floorBounce') e.material.uniforms.strength.value = glow * spec.floorBounceStrength / 10000;
-      else if (e.panel) { e.material.uniforms.strength.value = e.panel.uniforms.strength.value; e.material.uniforms.fadeReach.value = e.panel.uniforms.fadeReach.value; }
+      else if (e.panel) { const pu = panelU.get(e); e.material.uniforms.strength.value = pu.strength.value; e.material.uniforms.fadeReach.value = pu.fadeReach.value; }
     }
     if (bounce) {
       const r = THREE.MathUtils.clamp((api.heightInches - HEIGHT_MIN) / (HEIGHT_MAX - HEIGHT_MIN), 0, 1);
