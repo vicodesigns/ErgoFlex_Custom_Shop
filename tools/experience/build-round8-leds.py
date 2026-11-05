@@ -54,6 +54,12 @@ VIEWER_SURFACES = {'desktopStrength': 157, 'desktopReach': 100, 'desktopWidth': 
                    'topStrength': 143, 'topReach': 77, 'floorStrength': 156, 'floorReach': 4, 'floorWidth': 50, 'floorSharpness': 73,
                    'leftWingStrength': 111, 'leftWingReach': 85, 'rightWingStrength': 110, 'rightWingReach': 87}
 
+# HQ14q (Vico, 480p of chapter 1: "the status indicator lighting is a little bit too bright, especially the reflections
+# on the ground ... tone it down ... maybe by a third"): the light the strips cast is scaled down from the visualizer's
+# levels (surface strengths x LIGHT_LEVEL; the floor, the app's foot glow and the ported floor bounce, x FLOOR_LEVEL).
+# The strips themselves keep their brightness.
+LIGHT_LEVEL, FLOOR_LEVEL, FLOOR_BOUNCE = 2 / 3, .5, 130   # FLOOR_BOUNCE: film-viewer-leds APP_SURFACE_DEFAULTS
+
 
 def fix(s):
     # Storage keeps its own look for now: it rests on the app's storage warm white #fff1dc, and at the visualizer's
@@ -79,8 +85,9 @@ def fix(s):
     # floor: the app's spill on the foot-rest top (Base_Panels_3, receiver 'base') is hidden.
     s.pop('floorLight', None); s.pop('ledFill', None)
     # The visualizer's strip map (the Custom Shop's is its mirror image along Z): the visualizer is the reference look.
-    s['ledReceivers'] = {'mode': 'viewer', 'stripMap': 'viewer'}
-    s['ledSurfaces'] = dict(VIEWER_SURFACES)
+    s['ledReceivers'] = {'mode': 'viewer', 'stripMap': 'viewer', 'floorBounceStrength': round(FLOOR_BOUNCE * FLOOR_LEVEL, 1)}
+    s['ledSurfaces'] = {k: (round(v * (FLOOR_LEVEL if k == 'floorStrength' else LIGHT_LEVEL), 1) if k.endswith('Strength') else v)
+                        for k, v in VIEWER_SURFACES.items()}
     s['ledGlow'] = 1
     FOOT_TOP = {'match': '^Base_Panels_3 LED reflection$', 'hide': True}
     s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e.get('match') != FOOT_TOP['match']] + [FOOT_TOP]
