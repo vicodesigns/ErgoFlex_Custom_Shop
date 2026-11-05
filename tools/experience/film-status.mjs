@@ -17,6 +17,7 @@
 //                         storage's roll moves right on screen while the visualizer map ran the floor comet left).
 //          'collision'    latched breathing red, the app's roomSafety 'collision' look
 //          'off'          all strips dark (and their spill); the event's fade is the switch-on to the regular look
+//     fadeIn:s (any kind, default 0)  the regular look fades out under the state over its first s seconds (else it cuts).
 //          'proximity'    latched amber, the desk's FX2 breathe (sx 150: one breath per ~3.1 s,
 //                         ERGOLED_BREATHE_SHAPE 1, dark at the bottom), starting dark
 //     No arrival light: when a state ends the strips fade (fade s, default 1) back to the
@@ -182,6 +183,19 @@ export function installStatus(shot) {
       }
       // The spill on the desk and floor follows the indicator colour, as the app's solid colour does.
       ev.spill = m ? (ev.kind === 'wheels' ? RED : m.colors[0]).slice(0, 3) : ev.kind === 'proximity' ? [255, 145, 8] : ev.kind === 'off' ? [0, 0, 0] : [255, 16, 12];
+      // fadeIn (s, default 0): the regular look fades out under the state over its first fadeIn seconds instead of
+      // vanishing on the event's first frame (Vico, HQ18: the white "goes boom, dark really fast" into the lift light;
+      // match the fade back). The state itself plays unscaled on top.
+      const into = Number(ev.fadeIn) || 0;
+      if (into > 0 && t < into) {
+        const k = 1 - smooth(t / into), reg = linearOf(regularRgb);
+        for (const row of frame) for (let p = 0; p < row.length; p += 4) for (let c = 0; c < 3; c++) row[p + c] = Math.min(255, Math.round(row[p + c] + reg[c] * k));
+        const spill = ev.spill.map((v, c) => v * (1 - k) + regularRgb[c] * k);
+        ev.last = frame.map(r => r.slice());
+        api.setLedColor(hex(spill), false); lightFill(spill, frame);
+        game.sample = out => { out.forEach((row, i) => row.set(frame[i])); return true; };
+        game.active = true; return;
+      }
       ev.last = frame.map(r => r.slice());
       api.setLedColor(hex(ev.spill), false); lightFill(ev.spill, frame);
       game.sample = out => { out.forEach((row, i) => row.set(frame[i])); return true; };

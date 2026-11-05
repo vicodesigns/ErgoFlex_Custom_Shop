@@ -31,7 +31,7 @@ SECONDS = 16
 
 CUP_HIDE = {'match': '^$', 'near': [-0.5197, 0.787, 0.02], 'hide': True}   # day kit cup + lid (unnamed cylinders)
 MUGS_HIDE = {'match': '^Prop:painted-mug$', 'hide': True}
-CUP = {'id': 'ergoflex-thermal-cup', 'x': -330, 'z': 115, 'rotation': 30, 'scale': 72}
+CUP = {'id': 'ergoflex-thermal-cup', 'x': -255, 'z': 115, 'rotation': 30, 'scale': 72}   # HQ18b: 7.5 cm right of the notebook (was x -330; Vico: "move that coffee cup a little bit to the right ... see the notes")
 
 # ---------------------------------------------------------------- desk geometry (world units, desk at 28 in)
 # Measured with render-cut --list-objects and checked by projecting into stills: the desk's front faces +x (the
@@ -100,8 +100,10 @@ CAMERA = {'easeIn': False, 'easeOut': False, 'keys': [
     #    camera is already drifting back (the chapter dissolves in), straight out along its line of sight.
     #    HQ18: framed a little wider (the notebook low in frame, the desk's front edge and the portrait monitor above it),
     #    so the desk waking reads: the strips and both monitors come on while the camera drifts back.
-    near(0.0, 8, 22, 1.30, 40, aim=(-0.55, 1.32, 0.87), label='DAILY NOTES and the sleeping desk'),
-    near(WAKE, 9, 22, 1.45, 41, aim=(-0.55, 1.34, 0.87), label='Desk wakes: lights and screens on'),
+    #    HQ18b (Vico: "the book close up needs to be a little bit better, so that it shows the lettering"): closer and
+    #    higher on the notebook again, the portrait monitor's lower screen still at the top of the frame.
+    near(0.0, 8, 50, 0.74, 30, aim=(-0.49, 1.09, 0.88), label='DAILY NOTES and the sleeping desk'),
+    near(WAKE, 9, 46, 0.84, 31, aim=(-0.50, 1.12, 0.88), label='Desk wakes: lights and screens on'),
     near(1.6 + WAKE, 11, 23, 1.75, 43, aim=(-0.56, 1.36, 0.86), label='Pull out: the lift starts'),
     # 2. Back and round to the desk's left-front while it rises, near its eye line: the desktop edge and the left lift
     #    column climb against the window, the desk right of frame (title lower-left).
@@ -121,7 +123,9 @@ OWN_CAMERA = not os.path.exists(DIRECTOR)    # else build-round8-director.py set
 def wake(s):
     if not OWN_CAMERA: return
     s['motion']['clips'] = [{**c, 'start': (LIFT1 if c['id'] == 'comfortable-standing' else LIFT2)[0]} for c in s['motion']['clips']]
-    lifts = [{'at': LIFT1[0], 'dur': LIFT1[1], 'kind': 'lift-up', 'fade': .6}, {'at': LIFT2[0], 'dur': LIFT2[1], 'kind': 'lift-up', 'fade': 1}]
+    # fadeIn (HQ18b, Vico: the white "goes boom, dark really fast" into the lift light; "match" the fade back): the white
+    # fades out under the lift light at the same speed it fades back.
+    lifts = [{'at': LIFT1[0], 'dur': LIFT1[1], 'kind': 'lift-up', 'fade': .6, 'fadeIn': .6}, {'at': LIFT2[0], 'dur': LIFT2[1], 'kind': 'lift-up', 'fade': 1, 'fadeIn': 1}]
     s['ledStatus'] = [{'at': 0, 'dur': LIGHTS_ON, 'kind': 'off', 'fade': LIGHTS_FADE}] + lifts
     for sc in s.get('screens', []):
         b = sc.get('brightness'); b = b[-1][1] if isinstance(b, list) else (1 if b is None else b)
@@ -134,6 +138,9 @@ def wake(s):
 
 def fix(s):
     wake(s)
+    # HQ18b (Vico: the light "looks hazy as opposed to clear"): the LED light on surfaces (desktop, panels, the floor
+    # bounce) stays out of the film-quality bloom; the strips and screens keep theirs (film-quality bloomReceivers).
+    s['quality'] = {'bloomReceivers': False}
     if OWN_CAMERA: s['cameraPlan'] = CAMERA
     s['accessories'] = {'add': [CUP]}
     s['screens'] = [x for x in s.get('screens', []) if 'tablet' not in json.dumps(x)]
