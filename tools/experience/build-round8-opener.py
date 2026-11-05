@@ -112,10 +112,10 @@ def key(at, pos, tgt, fov, label=None):
     return k
 
 
-# ---------------------------------------------------------------- camera: five shots, each with one job
+# ---------------------------------------------------------------- camera: six shots, each with one job
 # az is world (the HQ9 side is +z, az ~ +90); the report prints the desk-relative angle (0 front, -: the far side).
 # Each shot settles before its cut (camera-spline: a cut ends the move at rest) and starts from rest.
-CUTS = (9.8, 20.6, 26.6, 42.2)
+CUTS = (9.8, 20.6, 26.6, 36.1, ROLL_LIT[0])
 CAMERA = {'easeIn': True, 'easeOut': False, 'keys': [
     # 1. HQ9's opening (its cameraPlan, same 12 in roll; keys from the wheel start shifted +1.8 s): wheel macro in the
     #    dark, the switch-on, the wheels roll, pull back to the silhouette under the first title.
@@ -126,44 +126,44 @@ CAMERA = {'easeIn': True, 'easeOut': False, 'keys': [
     key(7.2, [5.150, 0.95, 2.050], [0.416, 1.160, 0.581], 25),
     key(8.7, [6.903, 1.50, 2.606], [0.224, 1.369, 0.644], 26.5, 'Silhouette, first title'),
     orbit(CUTS[0] - .05, 20.5, 6.75, 1.52, 1.37, 0.62, 26.5),
-    # 2. The lift from the floor: a low, close 3/4 on the foot rest (its LED lights first), then a jib that rises
-    #    with the desk and past it, pulling back to the 3/4 from above (the desktop wash and floor pool) as it lands
-    #    at full height. Desk right of frame for the SAFETY card.
-    orbit(CUTS[0], 34, 3.30, 0.28, 0.42, 0.30, 30, label='Low on the foot rest', cut=True),
-    orbit(11.4, 36, 3.30, 0.30, 0.50, 0.32, 30, label='Foot rest lights'),
-    orbit(13.8, 40, 4.40, 1.15, 1.00, 0.55, 32, label='Jib up with the desktop'),
-    orbit(16.6, 46, 5.70, 2.90, 1.40, 0.80, 34),
-    orbit(19.4, 52, 6.40, 4.10, 1.45, 0.85, 35, label='Full height, 3/4 from above'),
-    orbit(CUTS[1] - .05, 54, 6.45, 4.15, 1.45, 0.85, 35),
+    # 2. The lift at the eye line (review 1): tight and low on the foot rest (lower third; its LED lights first), then the
+    #    camera holds near the eye line while the desk rises past the lens to full height. Desk right of frame for the
+    #    SAFETY card.
+    orbit(CUTS[0], 34, 3.30, 0.28, 0.30, 0.50, 26, label='Low on the foot rest', cut=True),
+    orbit(11.4, 36, 3.30, 0.30, 0.34, 0.75, 26, label='Foot rest lights'),
+    orbit(13.8, 40, 4.60, 1.45, 1.05, 0.75, 30, label='Eye line: the desk rises past the lens'),
+    orbit(16.6, 44, 5.00, 1.55, 1.30, 0.60, 31),
+    orbit(19.4, 48, 5.30, 1.60, 1.45, 0.62, 31, label='Full height'),
+    orbit(CUTS[1] - .05, 49, 5.35, 1.60, 1.46, 0.62, 31),
     # 3. The tilt in tight profile at the board's height: the edge steepens against black, a slow lateral dolly
     #    for parallax.
     orbit(CUTS[1], 80, 3.70, 2.30, 1.95, -0.10, 28, label='Board edge, profile', cut=True),
     orbit(23.0, 85, 3.60, 2.25, 1.95, -0.05, 28, label='Purple, steepening'),
     orbit(CUTS[2] - .05, 92, 3.50, 2.20, 1.92, 0.00, 28),
     # 4. The turn, wide and low: the front swings to the lens and on to the far side, the camera arcs the other way;
-    #    the tilt levels under it. Then it rises above the desktop and rides the lowering down (the red sweep).
+    #    the tilt levels under it.
     orbit(CUTS[2], 68, 6.40, 1.35, 1.50, 0.00, 32, label='Low wide: the turn', cut=True),
     orbit(TURN[0], 69, 6.40, 1.36, 1.50, 0.00, 32),
     orbit(30.8, 75, 6.30, 1.50, 1.55, 0.00, 32, label='Face on, tilt levels'),
     orbit(34.1, 82, 6.15, 1.80, 1.60, 0.00, 32, label='Far side 3/4'),
-    orbit(36.6, 85, 6.00, 3.10, 1.60, 0.00, 32, label='Above the desktop'),
-    orbit(40.4, 88, 5.90, 1.85, 1.35, 0.00, 32, label='Rides the red sweep down'),
-    orbit(CUTS[3] - .05, 89, 5.90, 1.80, 1.33, 0.00, 32),
-    # 5. The finale: a front 3/4 just above the desktop as the desk glides toward the lens (red comet from the foot rest
-    #    across the floor), the camera easing back less than the desk comes so it grows in frame; the rise back to full
-    #    height in blue; then, as the light settles and the clean look returns, a crane down into a low far-side 3/4.
-    orbit(CUTS[3], 96, 7.10, 1.95, 1.00, 0.00, 30, label='Lit roll toward the lens', cut=True),
-    orbit(sum(ROLL_LIT), 92, 6.35, 1.85, 1.05, 0.00, 31),
-    orbit(LIFT_END[0], 90, 6.35, 2.45, 1.20, 0.00, 32, label='Rise to full height: blue'),
-    orbit(sum(LIFT_END), 88, 6.40, 2.35, 1.45, 0.02, 33),
-    orbit(54.6, 86, 6.40, 1.60, 1.42, 0.04, 33),
-    orbit(SECONDS, 84, 6.35, 1.05, 1.40, 0.05, 33, label='Clean low hero, full height')]}
+    orbit(CUTS[3] - .05, 85, 6.05, 1.85, 1.60, 0.00, 32),
+    # 5. The lowering, locked: a front 3/4 at desktop height, so the board drops through the frame over the red pool.
+    orbit(CUTS[3], 104, 5.90, 1.40, 1.40, -0.20, 34, label='Locked: the red lowering', cut=True),
+    orbit(CUTS[4] - .05, 105, 5.85, 1.36, 1.36, -0.20, 34),
+    # 6. The finale, cut on the roll's first frame: a low lock ahead of the desk (fixed centre) so it rolls at the lens
+    #    and grows in frame over its red comet; then a slow low arc and push through the blue rise to full height and the
+    #    clean look, landing on a low far-side 3/4 (easeOut false: still moving into the dissolve).
+    orbit(CUTS[4], 132, 6.60, 0.55, 1.10, 0.00, 30, desk(CUTS[4])[1], label='Low lock: rolls at the lens', cut=True),
+    orbit(sum(ROLL_LIT), 131, 6.55, 0.56, 1.12, 0.00, 30, desk(CUTS[4])[1]),
+    orbit(LIFT_END[0], 118, 6.00, 0.62, 1.25, 0.00, 31, label='Rise to full height: blue'),
+    orbit(sum(LIFT_END), 106, 6.05, 0.66, 1.45, 0.00, 32),
+    orbit(SECONDS, 92, 5.70, 0.50, 1.62, 0.05, 31, label='Clean low hero 3/4, push and arc')]}
 
 # ---------------------------------------------------------------- look
 # Dark stage until the switch-on, the status levels while the desk's lights play, the clean product look at the end.
 # The stage key dips to 4 over the turn (its 22 on top of the amber caution light turned the desktop hot cream; at 4 it
 # reads the visualizer's red-orange), then comes back for the settle and the hero bookend.
-TURN_KEY = (TURN[0] - .5, TURN[0] + .7, TILT_BACK[0], TILT_BACK[0] + .8)   # over the turn's wheels light only
+TURN_KEY = (TURN[0] - .5, TURN[0] + .7, sum(TILT_BACK), sum(TILT_BACK) + 1.0)   # the turn and the tilt back under it (review 1: 22 on the yellow-green read white)
 RIG_KEY = [[0, 6], [ON[0], 6], [sum(ON), 22], [TURN_KEY[0], 22], [TURN_KEY[1], 4], [TURN_KEY[2], 4], [TURN_KEY[3], 22], [SETTLE[0], 22], [SETTLE[1], 40]]
 RIG_POOL = [[0, 0], [ON[0], 0], [sum(ON), .1], [SETTLE[0], .1], [SETTLE[1], .3]]
 RIMS = [[0, 120], [9.5, 120], [10.6, 0], [SETTLE[0], 0], [SETTLE[1], 200]]   # out before the crane mirrors them in the top
