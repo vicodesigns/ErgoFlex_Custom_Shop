@@ -26,7 +26,13 @@ def fix(s):
         s['ledStatus'] = [{'at': 0, 'dur': 9.2, 'kind': 'off', 'fade': .3}] + [e for e in s['ledStatus'] if e.get('kind') != 'off']
         # Floor (Vico, HQ14c/d): the lift lights the foot rest first and the wide floor with the desktop layer; the foot
         # strip sits just above the floor, so its pool is a tight hot strip at the shelf (lift .02), not a wide wash.
-        s['floorLight'] = {**s.get('floorLight', {}), 'foot': 4, 'footLift': .02}
+        # HQ14e: the desktop centre strip lights the floor in front like the wings (aimed forward, else its pool lands
+        # under the foot shelf and leaves a dark centre), and the foot strip lights only the floor: the app's spill on the
+        # foot-rest top (Base_Panels_3, receiver 'base', row 7) is hidden; baseStrength stays (it also drives the centre
+        # strip's underside spill, which the floor light's centre gain reads).
+        s['floorLight'] = {**s.get('floorLight', {}), 'foot': 4, 'footLift': .02, 'centerAhead': .5, 'centerTilt': 1.2, 'center': 7}
+        FOOT_TOP = {'match': '^Base_Panels_3 LED reflection$', 'hide': True}
+        s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e.get('match') != FOOT_TOP['match']] + [FOOT_TOP]
         # The stage rig cues (dark until the switch-on, settle, hero bookend) live in build-round8-opener.py,
         # which owns the chapter's timeline and runs after this script.
     return s
