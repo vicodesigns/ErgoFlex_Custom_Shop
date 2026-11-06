@@ -66,9 +66,14 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     return {world,rot,scale};
   }
   // An edit from the prop's state now (after a drag or typed numbers) relative to base().
+  // Turns: of the two Euler triples for the same rotation, the one nearest the film's (a turn about y stays a turn
+  // about y, not ±180° on x and z). Scale: kept between ×0.01 and ×100, never mirrored.
   function editFrom(o,b,{world,rot,scale}={}){
     const {THREE}=tools,w=world||o.getWorldPosition(new THREE.Vector3()),r=rot||o.rotation,s=scale||o.scale,deg=THREE.MathUtils.radToDeg;
-    return {position:w.clone().sub(b.world).toArray().map(r3),rotation:[r.x-b.rot.x,r.y-b.rot.y,r.z-b.rot.z].map(v=>r1(wrapDeg(deg(v)))),scale:[s.x/b.scale.x,s.y/b.scale.y,s.z/b.scale.z].map(v=>Math.round(v*1e4)/1e4)};
+    const [a0,a1,a2]=(r.order||'XYZ').toLowerCase().split(''),alt={[a0]:r[a0]+Math.PI,[a1]:Math.PI-r[a1],[a2]:r[a2]+Math.PI};
+    const turn=e=>['x','y','z'].map(k=>wrapDeg(deg(e[k]-b.rot[k]))),plain=turn(r),other=turn(alt),size=t=>t.reduce((n,v)=>n+Math.abs(v),0);
+    const clamp=v=>Math.round(Math.min(100,Math.max(.01,Math.abs(v)))*1e4)/1e4;
+    return {position:w.clone().sub(b.world).toArray().map(r3),rotation:(size(other)<size(plain)-1e-6?other:plain).map(r1),scale:[s.x/b.scale.x,s.y/b.scale.y,s.z/b.scale.z].map(clamp)};
   }
   function current(){
     if(!sel)return null;if(sel.obj&&!inScene(sel.obj))sel.obj=null;
@@ -91,7 +96,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(!w.__filmEdits)await new Promise((resolve,reject)=>{w.__dirEditsDone=resolve;w.__dirEditsFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-edits.mjs').then(m=>{window.__filmEdits=m;window.__dirEditsDone();},e=>window.__dirEditsFail(e));";w.document.head.append(s);});
     const {THREE,TransformControls}=w.__directorThree,group=new THREE.Group();group.name='Director prop tools';group.userData.directorTools=true;t.scene.add(group);
     const box=new THREE.BoxHelper(undefined,0x63d8f5);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
-    const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(.8);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
+    const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(1.35);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){drag={enabled:t.controls.enabled,obj:gizmo.object};t.controls.enabled=false;startDrag();}else{t.controls.enabled=drag?.enabled??true;endDrag();}});
     gizmo.addEventListener('objectChange',()=>{const o=current();if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
     const raycaster=new THREE.Raycaster(),dom=t.renderer.domElement;let down=null;
@@ -160,7 +165,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const b=base(o),{THREE}=tools,st=installed(o),world=st.position.clone();if(o.parent){o.parent.updateMatrixWorld(true);o.parent.localToWorld(world);}
     const e=editOfKey(sel.key)||{},rotNow=new THREE.Euler(b.rot.x,b.rot.y,b.rot.z,b.rot.order),turn=(e.rotation||[0,0,0]).slice(),fac=(e.scale||[1,1,1]).slice();
     let verb='Moved';
-    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');world['xyz'.indexOf(name[4])]=v;}
+    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');world.setComponent('xyz'.indexOf(name[4]),v);}
     else if(/^pp-r[xyz]$/.test(name)){turn['xyz'.indexOf(name[4])]=wrapDeg(v);verb='Rotated';}
     else if(name==='pp-s'){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');fac[0]=fac[1]=fac[2]=v;verb='Scaled';}
     else if(/^pp-s[xyz]$/.test(name)){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');fac['xyz'.indexOf(name[4])]=v;verb='Scaled';}
