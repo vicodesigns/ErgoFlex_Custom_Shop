@@ -44,7 +44,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 SPLINE = os.path.join(ROOT, 'tools/experience/camera-spline.mjs')
 
 # ================================================================ chapter 3: create
-GAP, FADE = 1.5, 1.0
+# HQ35 (Vico, 2026-11-05: every pause "like a second and a quarter", the white settled and the camera stopped): each
+# colour's 1 s fade back, then 1.25 s of settled white (was 0.5 s); the next colour fades in over 0.6 s like chapters 1
+# and 2. The length stays 18 s (the closing portrait shortens).
+PAUSE, FADE = 1.25, 1.0
+GAP = FADE + PAUSE
 H0, T0, H_LIFT, T_DRAFT, T_TILT = 43.5, 12, 52, 25, 45
 DRAFT = (1.4, 3.0)                                   # 12 -> 25 deg, 4.3 deg/s
 LIFT = (round(sum(DRAFT) + GAP, 3), 2.6)             # 43.5 -> 52 in, 3.27 in/s (the real desk's ~3.2)
@@ -61,8 +65,8 @@ CREATE_MOTION = {'version': 2, 'initial': {'height': H0, 'tilt': T0, 'x': 0, 'z'
     clip('easel', 'tilt', 'tilt', *TILT, f'Tilt · {T_TILT}°', T_TILT)]}
 # Tilt angle increasing (board steepening) = purple 'tilt-retract' (Vico, real desk); lift up = blue.
 CREATE_STATUS = [{'at': DRAFT[0], 'dur': DRAFT[1], 'kind': 'tilt-retract', 'fade': FADE},
-                 {'at': LIFT[0], 'dur': LIFT[1], 'kind': 'lift-up', 'fade': FADE},
-                 {'at': TILT[0], 'dur': TILT[1], 'kind': 'tilt-retract', 'fade': FADE}]
+                 {'at': LIFT[0], 'dur': LIFT[1], 'kind': 'lift-up', 'fade': FADE, 'fadeIn': .6},
+                 {'at': TILT[0], 'dur': TILT[1], 'kind': 'tilt-retract', 'fade': FADE, 'fadeIn': .6}]
 
 
 def key(at, pos, tgt, fov, label=None, **kw):
@@ -74,11 +78,12 @@ def key(at, pos, tgt, fov, label=None, **kw):
 CREATE_CAMERA = {'easeIn': False, 'easeOut': False, 'keys': [
     key(0.0, [0.35, 4.0, 0.85], [-1.341, 1.821, 0.406], 50, 'Top shot'),
     key(DRAFT[0], [0.33, 3.98, 0.65], [-1.326, 1.818, 0.419], 50, 'Drafting tilt (purple)'),
-    key(sum(DRAFT), [0.32, 3.88, 0.15], [-1.30, 1.80, 0.45], 50, 'Drafting angle'),
-    key(LIFT[0] + .4, [0.55, 3.25, -1.15], [-1.26, 1.82, 0.45], 49, 'Front-left 3/4: lift (blue)'),
-    key(sum(LIFT) + .3, [0.45, 2.70, -2.05], [-1.35, 1.80, 0.45], 50, 'Lifted to 50 in, descending'),
-    key(TILT[0] + 1.2, [-1.01, 2.02, -3.05], [-1.70, 1.50, 0.42], 56, 'Side profile: tilt clears the stool', hold=1.4),
-    key(15.4, [0.95, 1.66, -1.95], [-1.22, 1.74, 0.48], 40, 'Front 3/4 easel portrait'),
+    # HQ35: at rest on each pause (hold from the move's end to the next move's start), moving only with the desk.
+    key(sum(DRAFT) + .6, [0.32, 3.88, 0.15], [-1.30, 1.80, 0.45], 50, 'Drafting angle (rest)', hold=round(GAP - .6, 3)),
+    key(LIFT[0] + 1.6, [0.55, 3.25, -1.15], [-1.26, 1.82, 0.45], 49, 'Front-left 3/4: lift (blue)'),
+    key(sum(LIFT) + .6, [0.45, 2.70, -2.05], [-1.35, 1.80, 0.45], 50, 'Lifted to 52 in (rest)', hold=round(GAP - .6, 3)),
+    key(TILT[0] + 2.2, [-1.01, 2.02, -3.05], [-1.70, 1.50, 0.42], 56, 'Side profile: tilt clears the stool', hold=.6),
+    key(16.6, [0.95, 1.66, -1.95], [-1.22, 1.74, 0.48], 40, 'Front 3/4 easel portrait'),
     key(18.0, [1.42, 1.60, -1.18], [-1.25, 1.74, 0.50], 36, 'Portrait push')]}
 
 # The stool's own palette is one untextured white mesh (no paint wells to colour): hide it, and set the Atelier

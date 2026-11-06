@@ -49,7 +49,12 @@ CUP = {'id': 'ergoflex-thermal-cup', 'x': -255, 'z': 115, 'rotation': 30, 'scale
 # the chapter's dissolve (SCREENS_ON), the strips switch on after (LIGHTS_ON + LIGHTS_FADE), ~1.9 s of white, the rise to
 # standing, ~1.8 s of white, the lowering back to sitting, white, then the evening warm-up (build-round8-leds.py NEUTRAL).
 WAKE, LIGHTS_ON, LIGHTS_FADE, SCREENS_ON = 2.0, 1.0, .5, (0.0, 1.0)
-LIFT1, LIFT2 = (3.4, 4.2, 43.5), (10.0, 3.2, 28.0)      # (start, duration, target in)
+# HQ35 (Vico, 2026-11-05: every pause between moves "like a second and a quarter ... so it allows the white to settle in
+# and the camera to stop, and then it goes to the next thing"): 1.25 s of settled white after the lift's fade (was
+# ~1.8 s), the camera at rest through it. The length stays 16 s (the seated hold before the evening warm-up grows).
+PAUSE = 1.25
+LIFT1 = (3.4, 4.2, 43.5)                               # (start, duration, target in)
+LIFT2 = (round(LIFT1[0] + LIFT1[1] + .6 + PAUSE, 3), 3.2, 28.0)
 E1, E2 = LIFT1[0] + LIFT1[1], LIFT2[0] + LIFT2[1]
 CLIP_SHIFT = 0.0   # the portrait app follows the shot's own clips (screens/scenes/ch02.js reads them): recaptured, no offset
 U = 0.0406
@@ -115,10 +120,9 @@ CAMERA = {'easeIn': False, 'easeOut': False, 'keys': [
     # 2. Back and round to the desk's left-front while it rises, near its eye line: the desktop edge and the left lift
     #    column climb against the window, the desk right of frame (title lower-left).
     orbit(LIFT1[0] + 2.2, 31, 2.70, 1.66, 1.55, 0.65, 50, label='Desktop and left column rising'),
-    orbit(E1, 30, 3.90, 1.78, 1.52, 0.45, 52, label='Comfortable standing: whole desk'),
-    # 3. The second rise: the camera sinks as the desk climbs to full height.
-    #    HQ19: a held whole-desk view on the white, then the desk lowers back to sitting as the camera drifts lower.
-    orbit(LIFT2[0], 30.5, 4.05, 1.74, 1.52, 0.40, 51, label='Standing, white: lowering starts'),
+    # 3. HQ19: a held whole-desk view on the white, then the desk lowers back to sitting as the camera drifts lower.
+    #    HQ35: the camera comes to rest as the lift ends and holds, still, through the white until the lowering starts.
+    {**orbit(E1, 30.5, 4.05, 1.74, 1.52, 0.40, 51, label='Standing, white: camera at rest'), 'hold': round(LIFT2[0] - E1, 3)},
     orbit(E2, 29, 3.95, 1.55, 1.38, 0.25, 51, label='Back to sitting'),
     # 4. Low hero three-quarter, a slow lateral drift into the dissolve.
     orbit(15.4, 27, 4.10, 1.48, 1.34, 0.05, 50, label='Low 3/4, seated, evening warm'),
