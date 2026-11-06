@@ -34,7 +34,11 @@ export async function mountStage(ctx) {
   await api.presetReady;
   api.sceneTour.setFull(true,false);
   const style=document.createElement('style');
-  style.textContent='html[data-portal-page=shop] body>header.portal-header,#scene-tour,#motion-dock,.scene-tour-full button,.scene-tour-full [role="status"]{display:none!important}html[data-portal-page=shop] body #viewer-shell.scene-tour-full{top:0!important}body{background:#050a10!important}';
+  // The viewer fills this frame exactly. Under 1050 px wide (Director Mode's 16:9 frame on most screens) the shop's
+  // narrow-layout rule (portal-ui.css: #viewer-shell 780 px tall, 12 px down) outranks scene-tour's full screen, so
+  // the canvas was taller than the frame and the frame showed only its top: never the film's framing.
+  style.textContent='html[data-portal-page=shop] body>header.portal-header,#scene-tour,#motion-dock,.scene-tour-full button,.scene-tour-full [role="status"]{display:none!important}html[data-portal-page=shop] body #viewer-shell.scene-tour-full{top:0!important}'
+    +'html[data-portal-page=shop] body.shell-layout #viewer-shell.scene-tour-full{top:0!important;margin:0!important;height:100vh!important;height:100dvh!important;min-height:0!important}body{background:#050a10!important}';
   document.head.append(style);
   ctx.controls.enabled=false;
   ctx.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
