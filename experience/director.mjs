@@ -157,7 +157,7 @@ export function mountDirector(bridge,catalog,initial){
   }
 
   // The status line that follows an edit names it (first sentence); see editLabel() for edits without one.
-  const status=(message,error=false)=>{if(labelPending&&!error&&message){labelPending.text=message.split(/\.(\s|$)/)[0];labelPending=null;}for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.classList.toggle('error',error);}};
+  const status=(message,error=false)=>{if(labelPending&&!error&&message){labelPending.text=message.split(/\.(\s|$)/)[0];labelPending=null;}for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.title=message;el.classList.toggle('error',error);}};
   function saved(text,title){const el=panel.querySelector('[data-saved]');if(el){el.textContent=text;el.title=title;}}
   function draft(){clearTimeout(draftTimer);try{library.draft(project);saved('Saved ✓','Draft kept in this browser · Export cut sends it to the film');}catch{saved('Not saved','Browser storage is full, so no draft copy · Export cut sends it to the film');}}
   function changed(){filmLook?.poke();bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}}
@@ -875,7 +875,8 @@ export function mountDirector(bridge,catalog,initial){
   }
   for(const el of [panel,timeline])el.addEventListener('click',event=>{const b=event.target.closest('button[data-action]');if(b)action(b.dataset.action,b.dataset.section??Number(b.dataset.index));});
   panel.addEventListener('toggle',event=>{const d=event.target.closest?.('[data-light-section]');if(!d)return;if(d.open)delete lightSectionsShut[d.dataset.lightSection];else lightSectionsShut[d.dataset.lightSection]=true;try{localStorage.setItem('ergoflex.director.lightSections',JSON.stringify(lightSectionsShut));}catch{}},true);
-  panel.addEventListener('click',event=>{const tab=event.target.closest('[data-inspector-tab]');if(tab)showInspector(tab.dataset.inspectorTab);});
+  panel.addEventListener('click',event=>{const tab=event.target.closest('[data-inspector-tab]');if(tab)showInspector(tab.dataset.inspectorTab);
+    const hint=event.target.closest('.director-hint');if(hint&&!event.target.closest('a,button,input,select,textarea,label'))hint.classList.toggle('expanded');});   // long hints show two lines; click for all
   timeline.addEventListener('change',event=>{
     if(event.target.name==='timeline-snap'){snapStep=Number(event.target.value);return;}
     if(event.target.name==='film-chapter'){switchFilm(Number(event.target.value));return;}
