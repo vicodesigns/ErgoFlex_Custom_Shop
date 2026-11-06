@@ -205,7 +205,7 @@ def fix(s):
         else: g.pop('exposureScale', None)
         if s['id'] == 'wellness' and GYM_ENV != 1: g['environmentScale'] = GYM_ENV
         elif s['id'] == 'wellness': g.pop('environmentScale', None)
-    if s['id'] in DAYLIGHT:
+    if s['id'] in DAYLIGHT and s.get('room') == 'library':   # HQ36: storage left the library (build-round8-rooms.py)
         s['timeOfDay'] = [{'at': -1, 'mode': DAYLIGHT[s['id']]}, {'at': 0, 'mode': 'morning'}]
         s['sceneGlobals'].pop('environmentScale', None); s['sceneGlobals'].pop('exposure', None)
         for sc in s.get('screens', []): sc['brightness'] = LIBRARY_LED['screenBrightness']
