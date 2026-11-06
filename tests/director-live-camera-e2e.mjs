@@ -12,19 +12,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import net from 'node:net';
-import {spawn} from 'node:child_process';
-import {fileURLToPath} from 'node:url';
-import puppeteer from 'puppeteer-core';
+import {root,HQ,chapterList,wait,openDirectorBrowser,openChapter,status as statusOf,seek} from './director-e2e-harness.mjs';
 
-const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const HQ=process.env.HQ||'exports/cinematic-intro-20261104-hq14',list=path.join(root,HQ,'director-chapters.json');
 const OUT=process.env.OUT||path.join(os.tmpdir(),'director-live-camera');
 const [W,H]=(process.env.SIZE||'1600x1000').split('x').map(Number);
-if(!fs.existsSync(list)){console.log(`Director live camera e2e: skipped (${HQ}/director-chapters.json is not in this checkout).`);process.exit(0);}
+const all=chapterList();
+if(!all){console.log(`Director live camera e2e: skipped (${HQ}/director-chapters.json is not in this checkout).`);process.exit(0);}
 fs.mkdirSync(OUT,{recursive:true});
 const want=(process.env.CHAPTERS||'').split(',').filter(Boolean);
-const chapters=JSON.parse(fs.readFileSync(list,'utf8')).chapters.filter(c=>!want.length||want.includes(c.id)||want.includes(String(c.n)));
+const chapters=all.filter(c=>!want.length||want.includes(c.id)||want.includes(String(c.n)));
 // Tolerances: the live frame is the CSS 16:9 box rounded to whole pixels, so its aspect (projection [0]) may differ
 // by a fraction of a percent; everything else must match the film.
 const TOL={world:2e-3,fov:1e-3,proj5:1e-4,proj0:6e-3,corr:.6,shift:1};
@@ -39,30 +35,9 @@ function times(shot){
   return [...new Set(out.map(t=>Math.round(Math.min(T-.05,Math.max(.05,t))*100)/100))].slice(0,3);
 }
 
-async function freePort(){return new Promise(r=>{const s=net.createServer().listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>r(p));});});}
-let server=null,base=process.env.BASE;
-if(!base){
-  const port=await freePort(),state=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'director-e2e-')),'studio-state.json');
-  if(fs.existsSync(path.join(root,'studio-state.json')))fs.copyFileSync(path.join(root,'studio-state.json'),state);
-  server=spawn(process.execPath,[path.join(root,'tools/studio-server.mjs'),'--port',String(port),'--host','127.0.0.1','--state',state,'--root',root],{cwd:root,stdio:['ignore','pipe','pipe']});
-  await new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('studio server did not start')),20000);server.stdout.on('data',d=>{if(/studio server/.test(d)){clearTimeout(t);resolve();}});server.once('exit',c=>reject(Error('studio server exited '+c)));});
-  base=`http://127.0.0.1:${port}`;
-}
-const profile=fs.mkdtempSync(path.join(os.tmpdir(),'director-e2e-profile-'));
-const browser=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/bin/google-chrome',headless:'new',userDataDir:profile,defaultViewport:{width:W,height:H},
-  args:['--no-sandbox','--autoplay-policy=no-user-gesture-required','--ignore-gpu-blocklist','--enable-gpu-rasterization','--use-angle=vulkan','--enable-features=Vulkan','--mute-audio']});
-const results=[],errors=[];
+const {base,page,errors,close}=await openDirectorBrowser({width:W,height:H}),results=[];
 try{
-  const page=await browser.newPage(),cdp=await page.createCDPSession();
-  await cdp.send('Browser.setDownloadBehavior',{behavior:'deny'}).catch(()=>{});
-  await cdp.send('Fetch.enable',{patterns:[{urlPattern:'*/__studio/*'},{urlPattern:'*/api/studio-state*'}]});
-  cdp.on('Fetch.requestPaused',e=>{
-    if(/__studio\/(sync|reload)\.js/.test(e.request.url))cdp.send('Fetch.fulfillRequest',{requestId:e.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'text/javascript'}],body:Buffer.from('/* blocked */').toString('base64')}).catch(()=>{});
-    else cdp.send('Fetch.failRequest',{requestId:e.requestId,errorReason:'BlockedByClient'}).catch(()=>{});
-  });
-  page.on('pageerror',e=>errors.push(e.message));
-  page.on('console',m=>{const t=m.text();if(/not exported|does not provide an export|SyntaxError/.test(t))errors.push(t);});
-  const status=()=>page.$eval('#director-panel [data-status]',e=>e.textContent).catch(()=>'');
+  const status=()=>statusOf(page);
   const camera=which=>page.evaluate(which=>{
     const f=which==='live'?document.getElementById('stage'):document.querySelector('iframe[title="Film still renderer"]');
     const {camera}=f.contentWindow.ErgoPresentation.three();camera.updateMatrixWorld(true);
@@ -89,12 +64,9 @@ try{
   },a,b);
   for(const c of chapters){
     const film=JSON.parse(fs.readFileSync(path.join(root,c.shot.replace(/^\//,'')),'utf8'));
-    await page.goto(base+c.page);
-    await page.waitForFunction(()=>location.pathname==='/experience/'&&/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:300000});
-    await new Promise(r=>setTimeout(r,800));
+    await openChapter(page,base,c);
     for(const t of times(film)){
-      await page.evaluate(t=>{const el=document.querySelector('#director-timeline [name="timeline-seconds"]');el.value=String(t);el.dispatchEvent(new Event('change',{bubbles:true}));},t);
-      await new Promise(r=>setTimeout(r,1500));
+      await seek(page,t);await wait(1000);
       const live=await camera('live'),liveImg=await liveShot();
       const count=await page.$$eval('#film-still [data-still-index]',e=>e.length);
       await page.evaluate(()=>document.querySelector('.film-tools [data-action=render-still]').click());
@@ -110,7 +82,7 @@ try{
       console.log(`${r.ok?'ok  ':'FAIL'} ch${c.n} ${c.id} ${t.toFixed(2)} s  world Δ ${r.world.toExponential(1)}  position Δ ${(r.move*1000).toFixed(2)} mm  fov Δ ${r.fov.toExponential(1)}  proj[5] Δ ${r.proj5.toExponential(1)}  aspect ${live.aspect.toFixed(4)}/${still.aspect.toFixed(4)}  image |Δ| ${r.mad.toFixed(1)}, edges corr ${r.corr.toFixed(3)} peak at ${r.shift.join(',')} px`);
     }
   }
-}finally{await browser.close();server?.kill();fs.rmSync(profile,{recursive:true,force:true});}
+}finally{await close();}
 fs.writeFileSync(path.join(OUT,'results.json'),JSON.stringify(results,null,1));
 assert.deepEqual(errors,[],'module / page errors');
 const bad=results.filter(r=>!r.ok);
