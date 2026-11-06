@@ -399,7 +399,8 @@ export function mountDirector(bridge,catalog,initial){
   function lightPanel(){
     const L=lighting(),T=timeOfDay(),item=lightItem(),s=shot().seconds,kind=lightSel?.kind;
     const tod=T?section('tod','Time of day','the sun and sky through the window',`<p class="director-hint">The room blends from each daypart to the next across the gaps.${T.edited?'':' From the film shot until you edit it.'}</p><div class="director-actions"><button data-action="tod-add">+ Time-of-day key</button></div>${kind==='tods'&&item?todInspector(T,item):''}`):'';
-    const room=section('room','Room','brightness, fill light, LED glow',`${globalFields()}${L?.roomLight!==undefined?`<label>LED glow on the room<input name="room-light" type="number" min="0" max="2" step=".05" value="${L.roomLight}"></label>`:''}`);
+    // roomLight scales the room's own lamps, sky fill and bounce (film-fx), not the desk's LEDs: those are the two LED glow fields.
+    const room=section('room','Room','brightness, fill light, LED glow on walls and floor',`${globalFields(['exposureScale','environmentScale'])}${L?.roomLight!==undefined?`<label title="The room's lamps, sky fill and bounce light (not the desk's LEDs)">Room's own light (lamps, sky, bounce)<input name="room-light" type="number" min="0" max="2" step=".05" value="${L.roomLight}"></label>`:''}${globalFields(['ledWallGlow','ledFloorGlow'])}`);
     if(!L)return nowCard()+tod+room+lampsSection();
     const white=section('white','Desk white','the LED colour when no status is showing',`<div class="director-actions"><button data-action="light-key-add">+ White key</button></div>${kind==='neutrals'&&item?whiteInspector(L,item,s):''}`);
     const status=section('status','Desk status','status lights while the desk moves',`<p class="director-hint">${L.edited?'Edited here; Export cut sends them to the film.':'From the film shot; your first edit keeps a copy in this cut.'}</p><div class="director-actions"><button data-action="light-add">+ Status light</button></div>${kind==='lights'&&item?statusInspector(item,s):''}`);
@@ -429,7 +430,8 @@ export function mountDirector(bridge,catalog,initial){
     const t=playhead*shot().seconds,L=lighting(),T=timeOfDay(),rows=[],label=m=>roomModes().find(x=>x.id===m)?.label||m;
     if(T){const keys=[...T.keys].sort((a,b)=>a.at-b.at),i=keys.findIndex(k=>k.at>t);let text;if(i<0)text=label(keys.at(-1).mode);else if(i===0)text=label(keys[0].mode);else{const a=keys[i-1],b=keys[i];text=a.mode===b.mode?label(a.mode):`${label(a.mode)} → ${label(b.mode)} ${Math.round((t-a.at)/(b.at-a.at)*100)}%`;}rows.push(['tod','Time of day',text,daypartAt(T.keys,t)]);}
     rows.push(['room','Room brightness','×'+globalAt('exposureScale',t).toFixed(2)],['room','Fill light','×'+globalAt('environmentScale',t).toFixed(2)]);
-    if(L){const e=L.status.find(e=>t>=e.at&&t<e.at+e.dur),c=e?lightKindColor(e.kind):neutralAt(L.neutral,t);rows.push([e?'status':'white','Desk strip',e?kindLabel(e.kind):whiteName(c)+' '+c,c]);if(L.roomLight!==undefined)rows.push(['room','LED glow on the room',String(L.roomLight)]);}
+    if(L){const e=L.status.find(e=>t>=e.at&&t<e.at+e.dur),c=e?lightKindColor(e.kind):neutralAt(L.neutral,t);rows.push([e?'status':'white','Desk strip',e?kindLabel(e.kind):whiteName(c)+' '+c,c]);if(L.roomLight!==undefined)rows.push(['room',"Room's own light",String(L.roomLight)]);}
+    rows.push(['room','LED glow on the walls','×'+globalAt('ledWallGlow',t).toFixed(2)],['room','LED glow on the floor','×'+globalAt('ledFloorGlow',t).toFixed(2)]);
     const sum=sceneLights.summary();if(sum)rows.push(['lamps','Lamps & sun',sum]);
     return rows;
   }
@@ -438,7 +440,10 @@ export function mountDirector(bridge,catalog,initial){
   function syncNow(){const box=panel.querySelector('[data-lighting-now]');if(box&&!box.closest('[hidden]'))box.innerHTML=nowInner();}
   // Room brightness (exposureScale) and ambient light (environmentScale): the film's value until touched.
   // Keyed values ([[t, v], …]) are edited as one factor on the film's keys and written back scaled.
-  const GLOBALS={exposureScale:['Room brightness',.5,2],environmentScale:['Fill light (soft light from everywhere)',.2,3]};
+  // LED glow on the walls / floor: the desk's LED light in the room x the film's approved level (film-fx ledWallGlow / ledFloorGlow).
+  const GLOBALS={exposureScale:['Room brightness',.5,2],environmentScale:['Fill light (soft light from everywhere)',.2,3],
+    ledWallGlow:['LED glow on the walls',0,4,"The desk's LED light on the walls and furniture nearby; ×1 is the film's look"],
+    ledFloorGlow:['LED glow on the floor',0,4,"The desk's LED light on the floor and rugs (its reflection under the desk); ×1 is the film's look"]};
   function globalFactor(k){
     const own=shot().sceneGlobals?.[k],film=filmShot()?.sceneGlobals?.[k];
     if(Array.isArray(film)){if(!Array.isArray(own)||own.length!==film.length)return {keys:film,value:1};const i=film.findIndex(p=>p[1]);return {keys:film,value:i<0?1:own[i][1]/film[i][1]};}
@@ -446,9 +451,9 @@ export function mountDirector(bridge,catalog,initial){
     return {value:typeof own==='number'?own:typeof film==='number'?film:1};
   }
   const stepsText=v=>{const n=Number((Math.log(v)/Math.log(1.11)).toFixed(1));return (n>0?'+':'')+n+' step'+(Math.abs(n)===1?'':'s')+' of ×1.11';};
-  function globalFields(){
-    return Object.entries(GLOBALS).map(([k,[label,min,max]])=>{const f=globalFactor(k),v=Number(f.value.toFixed(3));
-      return `<label>${label}${f.keys?` <small>(keyed: scales all ${f.keys.length} keys)</small>`:''} <output data-global-steps="${k}">${k==='exposureScale'?stepsText(v):'×'+v}</output><span class="global-slider"><input type="range" name="g-${k}" min="${min}" max="${max}" step=".01" value="${v}"><input type="number" name="gn-${k}" min="${min}" max="${max}" step=".01" value="${v}"></span></label>`;}).join('');
+  function globalFields(keys=Object.keys(GLOBALS)){
+    return keys.map(k=>[k,GLOBALS[k]]).map(([k,[label,min,max,tip]])=>{const f=globalFactor(k),v=Number(f.value.toFixed(3));
+      return `<label${tip?` title="${escape(tip)}"`:''}>${label}${f.keys?` <small>(keyed: scales all ${f.keys.length} keys)</small>`:''} <output data-global-steps="${k}">${k==='exposureScale'?stepsText(v):'×'+v}</output><span class="global-slider"><input type="range" name="g-${k}" min="${min}" max="${max}" step=".01" value="${v}"><input type="number" name="gn-${k}" min="${min}" max="${max}" step=".01" value="${v}"></span></label>`;}).join('');
   }
   function setGlobal(k,v,{key=null,render=true}={}){
     const [label,min,max]=GLOBALS[k];if(!Number.isFinite(v)||v<min||v>max)throw Error(`${label} runs from ${min} to ${max}.`);requireReady();

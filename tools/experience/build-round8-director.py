@@ -226,7 +226,9 @@ def apply(n, cid, f, dc, log):
 
 
 LIGHT_FIELDS = ('ledStatus', 'ledNeutral', 'ledColor', 'lights', 'lightEdits', 'timeOfDay')   # + Scene lights, Time of day (HQ29/32)
-GLOBAL_FIELDS = ('roomLight', 'exposureScale', 'environmentScale')   # the Chapter tab's Room light / Room brightness / Ambient light
+# The Lighting tab's Room section: Room's own light / Room brightness / Fill light / LED glow on the walls / LED glow on the floor
+# (ledWallGlow / ledFloorGlow: x the film's approved LED room spill and floor light; film-fx.mjs sceneGlobals).
+GLOBAL_FIELDS = ('roomLight', 'exposureScale', 'environmentScale', 'ledWallGlow', 'ledFloorGlow')
 
 
 def apply_lighting(cid, f, lighting):

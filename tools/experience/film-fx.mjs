@@ -33,6 +33,12 @@
 //     ledRoomSpill: k  the app's room LED spill (room-led-spill.mjs: the desk strips' light on the room's walls and floor
 //     within ~2 m, and their share of the architectural bounce across the room) x k; the desk's own receivers are
 //     ledSurfaces / ledReceivers (Vico, HQ16b: the status light "bounces off too many walls").
+//     ledWallGlow: k (or [[s, k], …])  the Director's "LED glow on the walls": the room LED spill on everything but the
+//     floor (walls, furniture, the LEDs' share of the architectural bounce) x k on top of ledRoomSpill.
+//     ledFloorGlow: k (or [[s, k], …])  the Director's "LED glow on the floor": the desk's LED light on the floor and
+//     rugs x k: the room LED spill on floor surfaces (at ledRoomSpill x k, whatever the walls take), the visualizer floor
+//     bounce and the app's foot glow. Both default to 1, the film's approved look (Vico, 2026-11-06: "the ground is
+//     usually a different setting than the walls"). roomLight is the room's OWN light, not the desk's LEDs.
 //   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
 //   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
 //   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
@@ -668,17 +674,86 @@ function scaleProp(obj, field, factor) {
   const own = Object.getOwnPropertyDescriptor(obj, field); let raw = obj[field];
   const get = own?.get ? () => own.get.call(obj) : () => raw, set = own?.set ? v => own.set.call(obj, v) : v => { raw = v; };
   Object.defineProperty(obj, field, { configurable: true, enumerable: true, get: () => get() * factor(), set });
-  return () => { const v = get(); delete obj[field]; if (own) Object.defineProperty(obj, field, own); else obj[field] = v; };
+  const undo = () => { const v = get(); delete obj[field]; if (own) Object.defineProperty(obj, field, own); else obj[field] = v; };
+  undo.raw = get;   // the value as written, before this factor
+  return undo;
 }
-// The room LED spill's uniforms live only in its patched materials' shaders (the app does not expose the RoomLedSpill), so
-// they are found through the renderer once a patched material has compiled; the gain the app writes every frame is scaled.
-function installLedRoomSpill(k) {
-  let undo = null;
-  const find = () => {
-    let u = null; sceneRoot().traverse(o => { if (u || !o.isMesh) return; for (const m of [].concat(o.material || [])) if (!u && m?.customProgramCacheKey?.().includes('room-led-spill')) u = api.renderer.properties.get(m)?.uniforms?.efRoomGain; });
-    if (u) undo = scaleProp(u, 'value', () => k);
+// The desk's LED light in the room (sceneGlobals.ledRoomSpill, ledWallGlow, ledFloorGlow; the Director's "LED glow on the
+// walls" / "LED glow on the floor"). The room LED spill's uniforms live only in its patched materials' shaders (the app
+// does not expose the RoomLedSpill), so they are found through the renderer once a patched material has compiled; the
+// gain the app writes every frame is scaled: ledRoomSpill (the film's approved level) x ledWallGlow. The room's floor
+// surfaces (the floor and rugs: thin, at floor level, patched by the spill) take their own copy of the spill's light
+// at ledRoomSpill x ledFloorGlow, and ledFloorGlow scales the desk's own floor light too (the visualizer floor bounce
+// and the app's foot glow; per render through film-viewer-leds, else on the foot glow's strength). 1 = the film as approved.
+const FLOOR_LED_KEY = '|film-floor-led-v1';
+const roomSpillFields = g => !!g && ['ledRoomSpill', 'ledWallGlow', 'ledFloorGlow'].some(k => g[k] !== undefined);
+const keysOf = v => v === undefined || v === null ? null : Array.isArray(v) ? v : [[0, Number(v)]];
+// The spill's light, again, with its own gain: a second copy of efRoomLight for the floor's shader.
+function floorSpillMaterial(spill, gain, onGain) {
+  const mat = spill.clone(), prior = spill.onBeforeCompile, key = spill.customProgramCacheKey();
+  mat.onBeforeCompile = (shader, renderer) => {
+    prior.call(mat, shader, renderer); onGain(shader.uniforms.efRoomGain);
+    const fn = shader.fragmentShader.match(/vec3 efRoomLight\(vec3 albedo\) \{[\s\S]*?\n\}\n/), call = 'outgoingLight+=efRoomLight(diffuseColor.rgb);';
+    if (!fn || !shader.fragmentShader.includes(call)) { console.warn('[film-fx] ledFloorGlow: the room LED spill shader changed; ' + (spill.name || spill.type) + ' keeps the wall level'); return; }
+    shader.uniforms.efFilmFloorGain = gain;
+    shader.fragmentShader = shader.fragmentShader.replace(fn[0], fn[0] + 'uniform float efFilmFloorGain;\n' + fn[0].replace('vec3 efRoomLight(', 'vec3 efRoomLightFloor(').replace(/efRoomGain/g, 'efFilmFloorGain'))
+      .replace(call, 'outgoingLight+=efRoomLightFloor(diffuseColor.rgb);');
   };
-  return { frame: () => { if (!undo) find(); }, restore: () => undo?.() };
+  mat.customProgramCacheKey = () => key + FLOOR_LED_KEY;
+  return mat;
+}
+function installLedRoomSpill(g) {
+  const cell = {}, undo = [];
+  const retune = g => {
+    cell.base = g.ledRoomSpill !== undefined && g.ledRoomSpill !== null && Number.isFinite(Number(g.ledRoomSpill)) ? Number(g.ledRoomSpill) : 1;
+    cell.wk = keysOf(g.ledWallGlow); cell.fk = keysOf(g.ledFloorGlow);
+    cell.wall = cell.wk ? keyAt(cell.wk, 0) : 1; cell.floor = cell.fk ? keyAt(cell.fk, 0) : 1;
+  };
+  retune(g);
+  // Which parts this install set up (floor surfaces split, foot glow scaled): a live edit keeping them retunes in place.
+  const shape = g => `${!!keysOf(g.ledWallGlow)}|${!!keysOf(g.ledFloorGlow)}`, shape0 = shape(g);
+  let gainU = null, gainUndo = null;
+  const rawGain = () => gainUndo ? gainUndo.raw() : gainU ? gainU.value : 0;
+  const find = () => {
+    let u = null; sceneRoot().traverse(o => { if (u || !o.isMesh) return; for (const m of [].concat(o.material || [])) if (!u && m?.customProgramCacheKey?.().includes('room-led-spill') && !m.customProgramCacheKey().includes(FLOOR_LED_KEY)) u = api.renderer.properties.get(m)?.uniforms?.efRoomGain; });
+    if (u) { gainU = u; gainUndo = scaleProp(u, 'value', () => cell.base * cell.wall); undo.push(gainUndo); }
+  };
+  // Floor surfaces: only when the split is in use (a shot with ledRoomSpill alone renders exactly as before).
+  const floors = [];
+  if (cell.wk || cell.fk) {
+    const floorGain = { get value() { return rawGain() * cell.base * cell.floor; }, set value(v) {} };
+    const room = api.workspaceRoom?.root;
+    if (room) {
+      room.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(room), mm = Math.abs(room.getWorldScale(new THREE.Vector3()).x) || 1, b = new THREE.Box3(), made = new Map();
+      // Authored in millimetres (the spill's own ranges): thinner than 50 mm, within 80 mm of the room's lowest point,
+      // over 0.1 m².
+      room.traverse(o => {
+        if (!o.isMesh || !o.visible) return;
+        const mats = [].concat(o.material || []); if (!mats.some(m => m?.customProgramCacheKey?.().includes('room-led-spill'))) return;
+        b.setFromObject(o); if (b.isEmpty()) return;
+        const h = b.max.y - b.min.y, area = (b.max.x - b.min.x) * (b.max.z - b.min.z);
+        if (h > 50 * mm || b.max.y - box.min.y > 80 * mm || area < 1e5 * mm * mm) return;
+        const swap = m => { if (!m?.customProgramCacheKey?.().includes('room-led-spill')) return m; if (!made.has(m)) made.set(m, floorSpillMaterial(m, floorGain, u => { if (!gainU && u) gainU = u; })); return made.get(m); };
+        const original = o.material; o.material = Array.isArray(original) ? original.map(swap) : swap(original);
+        floors.push({ o, original, mine: o.material });
+      });
+      undo.push(() => { for (const f of floors) if (f.o.material === f.mine) f.o.material = f.original; for (const m of made.values()) m.dispose(); });
+    }
+  }
+  // The desk's own floor light: the viewer receivers take the gain per render; without them, the foot glow's strength.
+  if (active?.viewerLeds?.setFloorGain) { active.viewerLeds.setFloorGain(() => cell.floor); undo.push(() => active?.viewerLeds?.setFloorGain(null)); }
+  else if (cell.fk) {
+    let foot = null; api.loadedModel?.traverse(o => { if (!foot && o.name === 'Foot LED floor glow' && o.material?.uniforms?.strength) foot = o; });
+    if (foot) undo.push(scaleProp(foot.material.uniforms.strength, 'value', () => cell.floor));
+  }
+  return {
+    floors: floors.length,
+    frame(s = 0) { if (!gainUndo) find(); if (cell.wk) cell.wall = keyAt(cell.wk, s); if (cell.fk) cell.floor = keyAt(cell.fk, s); },
+    // Director live edits: new values in place while the same parts are in use.
+    retune(g) { if (!roomSpillFields(g) || shape(g) !== shape0) return false; retune(g); return true; },
+    restore: () => { for (const f of undo.reverse()) f(); }
+  };
 }
 function installRoomLight(keys) {
   const k = Array.isArray(keys) ? keys : [[0, keys]], cell = { value: keyAt(k, 0) }, f = () => cell.value, undo = [];
@@ -763,10 +838,10 @@ export async function install(shot) {
   if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
   // After timeOfDay (which snapshots the raw light levels) and sceneEdits (whose light multipliers it chains to).
   if (shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
-  if (shot.sceneGlobals?.ledRoomSpill !== undefined) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals.ledRoomSpill); active.roomSpill.frame(); }
+  if (roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }
   // lightEdits: Director changes to existing lights (experience/light-edits.mjs), after the shot's own lights and edits.
   if (shot.lightEdits?.length) { active.lightEdits = (await import('../../experience/light-edits.mjs')).installLightEdits(shot.lightEdits, sceneRoot()); if (active.lightEdits.missing.length) console.warn('[film-fx] lightEdits: no light at ' + active.lightEdits.missing.join(' | ')); }
-  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledReceivers: active.viewerLeds?.info };
+  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledRoomSpill: active.roomSpill ? { floors: active.roomSpill.floors } : undefined, ledReceivers: active.viewerLeds?.info };
 }
 // Director live edits: apply changed lighting fields in place, without clear() / prepare, so props, screens,
 // accessories and sceneEdits stay. Per-frame data (status, desk white, keyed scales, time-of-day times, light
@@ -803,7 +878,7 @@ export async function update(shot, { onSlow } = {}) {
   }
   if (changed('lights')) tail = Math.min(tail, 2);
   if (gChanged('roomLight')) tail = Math.min(tail, 3);
-  if (gChanged('ledRoomSpill')) tail = Math.min(tail, 4);
+  if ((gChanged('ledRoomSpill') || gChanged('ledWallGlow') || gChanged('ledFloorGlow')) && !(tail > 4 && active.roomSpill?.retune(g1))) tail = Math.min(tail, 4);
   if (changed('lightEdits')) tail = Math.min(tail, 5);
   const slow = globals || tail === 0; if (slow) onSlow?.();
   for (let i = TAIL.length - 1; i >= tail; i--) { active[TAIL[i]]?.restore(); active[TAIL[i]] = null; }
@@ -822,7 +897,7 @@ export async function update(shot, { onSlow } = {}) {
     if (k === 'edits' && shot.sceneEdits) active.edits = (await import('./film-edits.mjs')).installEdits(shot);
     if (k === 'lights' && shot.lights) active.lights = (await import('./film-edits.mjs')).installLights(shot);
     if (k === 'roomLight' && shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
-    if (k === 'roomSpill' && shot.sceneGlobals?.ledRoomSpill !== undefined) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals.ledRoomSpill); active.roomSpill.frame(); }
+    if (k === 'roomSpill' && roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }
     if (k === 'lightEdits' && shot.lightEdits?.length) active.lightEdits = (await import('../../experience/light-edits.mjs')).installLightEdits(shot.lightEdits, sceneRoot());
   }
   return slow ? 'slow' : 'ok';
@@ -833,7 +908,7 @@ export async function frame(t, chapterSeconds, { video = false, screens = true, 
   for (const v of active.desk?.timed || []) v.cell.force = visibleAt(v.keys, chapterSeconds);
   if (active.tod) active.tod.apply(chapterSeconds); lap('timeOfDay');
   active.roomLight?.frame(chapterSeconds);
-  active.roomSpill?.frame();
+  active.roomSpill?.frame(chapterSeconds);
   if (active.globals?.exposureCell) active.globals.exposureCell.cell.value = keyAt(active.globals.exposureCell.keys, chapterSeconds);
   if (active.globals?.envKeys) {
     const k = active.globals.envKeys, i = k.findIndex(p => p[0] > chapterSeconds);

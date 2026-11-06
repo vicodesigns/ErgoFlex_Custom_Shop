@@ -46,4 +46,24 @@ const overlay = () => {
   assert.deepEqual(blend(rug, [0, 0, 0], .4), rug, 'an unlit strip leaves the floor');
   assert.ok(blend([.05, .05, .06], red, .3).every((v, i) => Math.abs(v - Math.min(1, [.05, .05, .06][i] + red[i] * .3)) < .05), 'a dark (stage) floor barely changes');
 }
+// The split travels with the Director's cut: cleaned as numbers or keys, merged over the film shot for Render still.
+{
+  const { cleanLighting } = await import('../experience/film-lighting.mjs');
+  const { filmRenderShot } = await import('../experience/film-render.mjs');
+  const g = cleanLighting({ sceneGlobals: { roomLight: .55, ledWallGlow: 1.5, ledFloorGlow: [[0, 1], [9.45, 2], [12.65, 1]], ledRoomSpill: .15, junk: 3 } }).sceneGlobals;
+  assert.deepEqual(g, { roomLight: .55, ledWallGlow: 1.5, ledFloorGlow: [[0, 1], [9.45, 2], [12.65, 1]] }, 'ledRoomSpill stays the film builder\'s');
+  assert.equal(cleanLighting({ sceneGlobals: { ledFloorGlow: -1 } }).sceneGlobals.ledFloorGlow, 0);
+  const film = { id: 'rise', room: 'home', kind: 'lift', seconds: 16, sceneGlobals: { roomLight: .55, exposureScale: 1.366, ledRoomSpill: .15 } };
+  const merged = filmRenderShot(film, { id: 'rise', room: 'home', kind: 'lift', seconds: 16, sceneGlobals: { roomLight: .55, ledFloorGlow: 1.4 } }, []).sceneGlobals;
+  assert.deepEqual(merged, { roomLight: .55, exposureScale: 1.366, ledRoomSpill: .15, ledFloorGlow: 1.4 });
+}
+// The film builder's import keeps both fields (build-round8-director.py GLOBAL_FIELDS).
+{
+  const fs = await import('node:fs');
+  const py = fs.readFileSync(new URL('../tools/experience/build-round8-director.py', import.meta.url), 'utf8');
+  assert.match(py, /GLOBAL_FIELDS = \([^)]*'ledWallGlow', 'ledFloorGlow'\)/);
+  const director = fs.readFileSync(new URL('../experience/director.mjs', import.meta.url), 'utf8');
+  for (const label of ['LED glow on the walls', 'LED glow on the floor', "Room's own light"]) assert.ok(director.includes(label), label);
+  assert.ok(!director.includes('LED glow on the room'), 'roomLight is the room\'s own light, not an LED glow');
+}
 console.log('cinematic-led-floor-test ok');

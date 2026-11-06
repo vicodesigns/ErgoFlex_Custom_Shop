@@ -1,8 +1,10 @@
 // Film desk lighting (tools/experience/film-status.mjs reads these shot fields):
 //   ledStatus  [{at, dur, kind, fade, fadeIn?, mode?, reverse?}]  one desk-light state at a time (seconds)
 //   ledNeutral [[seconds, '#hex'], …]  the neutral white over time (smoothstep between keys); else ledColor
-//   ledColor   '#hex'  the neutral white;  sceneGlobals.roomLight  room LED spill level
-//   sceneGlobals.exposureScale / environmentScale  room brightness / ambient (image) light: a number or
+//   ledColor   '#hex'  the neutral white;  sceneGlobals.roomLight  the room's own light (its lamps, sky fill and
+//              bounce; film-fx), not the desk's LEDs
+//   sceneGlobals.exposureScale / environmentScale  room brightness / ambient (image) light, and ledWallGlow /
+//              ledFloorGlow  the desk's LED light on the walls / on the floor (x the film's approved level): a number or
 //              keys [[seconds, value], …]; only the fields the Director touched
 // The Director keeps an id on each event / key (third tuple slot) for selection; exportLighting drops them.
 export const LIGHT_KINDS=[['lift-up','Lift up · blue','#2f6bff'],['lift-down','Lift down · red','#ff3b30'],['tilt-retract','Tilt retract · purple','#9600ff'],['tilt-extend','Tilt extend · yellow-green','#d8f000'],['wheels','Wheels · red / amber','#ff5a1f'],['off','Off · dark','#30363c'],['collision','Collision · red breathe','#c4002a'],['proximity','Proximity · amber breathe','#ff9a00']];
@@ -27,7 +29,7 @@ export function cleanLighting(v={}){
   // timeOfDay [{at, mode, ease?}]: the room blends from one daypart preset to the next across each gap.
   if(Array.isArray(v.timeOfDay))out.timeOfDay=v.timeOfDay.slice(0,32).flatMap(k=>typeof k?.mode==='string'&&/^[a-z0-9-]{1,40}$/.test(k.mode)&&num(k.at,0,90,null)!==null?[{id:unique(k.id),at:num(k.at,0,90,0),mode:k.mode,...(k.ease==='smooth'||k.ease==='linear'?{ease:k.ease}:{})}]:[]).sort((a,b)=>a.at-b.at);
   const g=v.sceneGlobals||{},globals={},room=num(g.roomLight,0,4,null);if(room!==null)globals.roomLight=room;
-  for(const k of ['exposureScale','environmentScale']){const x=g[k];if(Array.isArray(x)){const keys=x.slice(0,64).filter(p=>Array.isArray(p)&&Number.isFinite(p[0])&&Number.isFinite(p[1])).map(p=>[num(p[0],0,90,0),num(p[1],0,20,1)]);if(keys.length)globals[k]=keys;}else{const n=num(x,0,20,null);if(n!==null)globals[k]=n;}}
+  for(const k of ['exposureScale','environmentScale','ledWallGlow','ledFloorGlow']){const x=g[k];if(Array.isArray(x)){const keys=x.slice(0,64).filter(p=>Array.isArray(p)&&Number.isFinite(p[0])&&Number.isFinite(p[1])).map(p=>[num(p[0],0,90,0),num(p[1],0,20,1)]);if(keys.length)globals[k]=keys;}else{const n=num(x,0,20,null);if(n!==null)globals[k]=n;}}
   if(Object.keys(globals).length)out.sceneGlobals=globals;
   return out;
 }
