@@ -4,7 +4,8 @@
 //   "A > B > C" path>' (optional, narrows), materialName:'<regex>',
 //   materialColor:'#hex', materialType:'Basic' (optional: only those
 //   materials), hide:true,
-//   position:[dx,dy,dz] (world metres, added once), rotation:[dx,dy,dz] (deg,
+//   position:[dx,dy,dz] (world metres, added once; with space:'local' metres along the parent's own axes, for props
+//   riding on the desk: they keep the offset through lift and tilt whatever pose the edit is installed at), rotation:[dx,dy,dz] (deg,
 //   added to the local Euler), scale:s or [sx,sy,sz] (local, multiplied), hide:false
 //   shows an object an earlier edit hid (back to whatever the app sets), material:{color, emissive, roughness, metalness, clearcoat,
 //   clearcoatRoughness, envMapIntensity, emissiveIntensity, opacity,
@@ -134,7 +135,8 @@ export function installEdits(shot) {
         o.userData.__filmFxRawVisible = () => raw;
         undo.push(() => { delete o.visible; if (own?.get || own?.set) Object.defineProperty(o, 'visible', own); else o.visible = raw; if (prior) o.userData.__filmFxRawVisible = prior; else delete o.userData.__filmFxRawVisible; });
       }
-      if (edit.position) { const p = o.position.clone(), w = o.getWorldPosition(new THREE.Vector3()), to = w.clone().add(new THREE.Vector3(...edit.position)); if (o.parent) { o.parent.worldToLocal(w); o.parent.worldToLocal(to); } o.position.add(to.sub(w)); undo.push(() => o.position.copy(p)); }
+      if (edit.position && edit.space === 'local') { const p = o.position.clone(), s = o.parent ? (o.parent.updateWorldMatrix(true, false), o.parent.getWorldScale(new THREE.Vector3())) : new THREE.Vector3(1, 1, 1); o.position.add(new THREE.Vector3(...edit.position).divide(s)); undo.push(() => o.position.copy(p)); }
+      else if (edit.position) { const p = o.position.clone(), w = o.getWorldPosition(new THREE.Vector3()), to = w.clone().add(new THREE.Vector3(...edit.position)); if (o.parent) { o.parent.worldToLocal(w); o.parent.worldToLocal(to); } o.position.add(to.sub(w)); undo.push(() => o.position.copy(p)); }
       if (edit.rotation) { const r = o.rotation.clone(); o.rotation.x += THREE.MathUtils.degToRad(edit.rotation[0] || 0); o.rotation.y += THREE.MathUtils.degToRad(edit.rotation[1] || 0); o.rotation.z += THREE.MathUtils.degToRad(edit.rotation[2] || 0); undo.push(() => o.rotation.copy(r)); }
       if (o.isLight && edit.intensity !== undefined) {
         // Multiplier on whatever the room/app writes (mode switches, time of day).

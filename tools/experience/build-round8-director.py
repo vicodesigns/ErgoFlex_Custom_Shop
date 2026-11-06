@@ -259,7 +259,7 @@ def apply_lighting(cid, f, lighting):
     return wrote
 
 
-PROP_FIELDS = ('match', 'asset', 'path', 'near', 'label', 'position', 'rotation', 'scale', 'hide')
+PROP_FIELDS = ('match', 'asset', 'path', 'near', 'label', 'space', 'position', 'rotation', 'scale', 'hide')
 
 
 def clean_props(props):
@@ -274,6 +274,7 @@ def clean_props(props):
         if 'hide' in d and not isinstance(d['hide'], bool): d.pop('hide')
         for k in ('asset', 'path', 'label'):
             if k in d and not isinstance(d[k], str): d.pop(k)
+        if d.get('space') != 'local' or 'position' not in d: d.pop('space', None)
         if not any(k in d for k in ('position', 'rotation', 'scale', 'hide')): continue
         d['director'] = True; out.append(d)
     return out

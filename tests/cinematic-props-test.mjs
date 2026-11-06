@@ -68,6 +68,22 @@ assert.equal(mug.visible,true);assert.equal(Object.getOwnPropertyDescriptor(mug,
 {const fx2=installEdits({sceneEdits:[{match:'^Prop:painted-mug$',hide:true}]});assert.equal(mug.visible,false);mug.visible=true;assert.equal(mug.visible,false,'the film\'s sticky hide still holds');fx2.restore();assert.equal(mug.visible,true);}
 {const fx3=installEdits({sceneEdits:[{match:'^Prop:painted-mug$',hide:false}]});assert.equal(mug.visible,true,'hide:false alone changes nothing');fx3.restore();}
 
+// space:'local' (props riding on the desk): metres along the parent's axes, the same offset whatever pose the desk
+// is in when the edit installs (the live stage re-installs mid-lift / mid-tilt; the film at prepare).
+{
+  const top=new THREE.Group();top.name='Scene dressing:desktop';top.scale.setScalar(.001);scene.add(top);
+  const book=new THREE.Group();book.name='Daily notes';book.position.set(100,20,-50);top.add(book);
+  const local=pose=>{top.position.set(...pose.p);top.rotation.set(pose.tilt,0,0);scene.updateMatrixWorld(true);
+    const f=installEdits({sceneEdits:[{match:'^Daily notes$',space:'local',position:[.15,0,-.05],director:true}]});const at=book.position.clone();f.restore();return at;};
+  const a=local({p:[0,.7,0],tilt:0}),b=local({p:[0,1.1,.2],tilt:.6});
+  assert.deepEqual(a.toArray().map(v=>+v.toFixed(6)),[250,20,-100],'0.15 m along the desktop at 0.001 scale = 150 local units');
+  assert.deepEqual(b.toArray(),a.toArray(),'the same local offset at another lift / tilt');
+  assert.deepEqual(cleanPropEdit({match:'^Daily notes$',space:'local',position:[.15,0,0]}),{match:'^Daily notes$',space:'local',position:[.15,0,0]});
+  assert.equal(cleanPropEdit({match:'^A$',space:'world',position:[.1,0,0]}).space,undefined);
+  assert.deepEqual(cleanPropEdit({match:'^A$',space:'local',hide:true}),{match:'^A$',hide:true},'space only with a move');
+  assert.match(describePropEdit({space:'local',position:[.15,0,0]}),/^moved 0.15 m on the desk/);
+  top.removeFromParent();
+}
 // ---- Make permanent: only the confirmed props, in Studio's per-room record
 const studio=JSON.stringify({'home:house':{removed:['scene:home:house:x'],added:[{editorId:'scene:home:house:custom:1',propId:'ficus'}],transforms:{'scene:home:house:custom:1':{p:{x:1,y:0,z:0}}}},'library:humboldt':{removed:[],added:[],transforms:{}}});
 const T={p:{x:500,y:0,z:-250},q:{x:0,y:.13,z:0,w:.99},s:{x:1,y:1.1,z:1}};
@@ -85,7 +101,7 @@ const filmShot={id:'media',room:'music',kind:'room',seconds:12,cameraPlan:{keys:
   sceneEdits:[{match:'^Prop:steelcase-leap-v2$',position:[2.92,0,-1.8],rotation:[0,35,0]},{match:'^Piano bench$',position:[0,0,.35]},{match:'^Gone$',hide:true,director:true}]};
 fs.writeFileSync(path.join(H,'review-cut.json'),JSON.stringify({shots:[filmShot]}));fs.writeFileSync(path.join(H,'shots','10.json'),JSON.stringify(filmShot));
 const link=path.join(tmp,'link.json');py(path.join(tools,'director-bridge.py'),'link',path.join(H,'shots','10.json'),'--json',link);
-const page=JSON.parse(fs.readFileSync(link,'utf8')),mine=[{match:'^Piano bench$',position:[.1,0,0],label:'Piano bench'},{match:'^Prop:painted-mug$',asset:'music:desktop:2:painted-mug',hide:true}];
+const page=JSON.parse(fs.readFileSync(link,'utf8')),mine=[{match:'^Piano bench$',position:[.1,0,0],label:'Piano bench'},{match:'^Daily notes$',path:'^Scene dressing:desktop > Groove tabletop · daily materials > Daily notes$',label:'Daily notes',space:'local',position:[.12,0,0]},{match:'^Prop:painted-mug$',asset:'music:desktop:2:painted-mug',hide:true}];
 const exportOf=propEdits=>{const c=cleanCut({...page,shots:[{...page.shots[0],...(propEdits?{propEdits}:{})}]});const f=path.join(tmp,'Film-chapter-media.json');fs.writeFileSync(f,JSON.stringify(c));return f;};
 const read=f=>JSON.parse(fs.readFileSync(path.join(H,f),'utf8')),edits=()=>read('review-cut.json').shots[0].sceneEdits;
 const script=path.join(tools,'build-round8-director.py');
@@ -95,9 +111,9 @@ assert.deepEqual(edits(),[filmShot.sceneEdits[0],filmShot.sceneEdits[1],...mine.
 assert.deepEqual(read('shots/10.json').sceneEdits,edits(),'the render shot too');
 // A builder or film-cameras sceneEditsAdd rewrites the hand-made edits: the next pass puts his back after them.
 const rc=read('review-cut.json');rc.shots[0].sceneEdits=[{match:'^Prop:steelcase-leap-v2$',position:[3,0,-1.8]},{match:'^Piano bench$',position:[0,0,.4]}];fs.writeFileSync(path.join(H,'review-cut.json'),JSON.stringify(rc));
-py(script,H);assert.deepEqual(edits().map(e=>[e.match,e.position?.[2]??null,!!e.director]),[['^Prop:steelcase-leap-v2$',-1.8,false],['^Piano bench$',.4,false],['^Piano bench$',0,true],['^Prop:painted-mug$',null,true]]);
+py(script,H);assert.deepEqual(edits().map(e=>[e.match,e.position?.[2]??null,!!e.director]),[['^Prop:steelcase-leap-v2$',-1.8,false],['^Piano bench$',.4,false],['^Piano bench$',0,true],['^Daily notes$',0,true],['^Prop:painted-mug$',null,true]]);
 // An export without propEdits keeps them; propEdits [] removes them.
-py(script,H,'--import',exportOf(null));py(script,H);assert.equal(edits().filter(e=>e.director).length,2,'an export that never touched props keeps the earlier ones');
+py(script,H,'--import',exportOf(null));py(script,H);assert.equal(edits().filter(e=>e.director).length,3,'an export that never touched props keeps the earlier ones');
 py(script,H,'--import',exportOf([]));py(script,H);assert.deepEqual(edits().map(e=>e.match),['^Prop:steelcase-leap-v2$','^Piano bench$'],'reset all in the Director clears them from the film');
 fs.rmSync(tmp,{recursive:true,force:true});
 console.log('Director props: cleaning and the cut, the merge after the film\'s hand-made sceneEdits for the live stage and Render still, film-edits world offsets / turns / per-axis scale / hide and show / Studio asset targets / full restore, the Studio write, and the film round trip (import, pass, builders\' edits kept, keep / reset) all verified.');
