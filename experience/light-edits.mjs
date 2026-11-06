@@ -78,6 +78,8 @@ export function installLightEdits(edits,root){
   const done=[],missing=[];
   for(const e of edits||[]){
     const light=findLight(root,e.target);if(!light){missing.push(e.target);continue;}
+    // The film's own place (before this edit), so the Director names a light the same wherever it is moved.
+    if(!light.userData.directorFilmPosition)light.userData.directorFilmPosition=light.getWorldPosition(light.position.clone()).toArray();
     const saved=snapshotLight(light),own=Object.getOwnPropertyDescriptor(light,'intensity');let undoScale=null;
     if(e.intensityScale!==undefined&&e.intensityScale!==1){
       // Chain over any accessor already there (sceneEdits light multipliers): writers keep writing the raw value.

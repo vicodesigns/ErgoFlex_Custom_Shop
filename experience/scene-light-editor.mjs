@@ -37,13 +37,20 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
   const snaps=new Map(),frame=()=>document.getElementById('stage');
   const three=()=>bridge.stage()?.three?.();
   const editing=()=>open()&&bridge.ready()&&!bridge.playback().playing&&!bridge.bakeState().baking;
+  // Where the film puts a light, whatever the Director moved: names come from it, so one light keeps one name
+  // (lane chip, mixer, picker, Selected header, status) before, during and after a move.
+  function filmPlace(l){
+    const u=l.userData.directorFilmPosition;if(u)return l.position.clone().set(...u);
+    const s=snaps.get(l);if(s){const v=s.position.clone();if(!l.parent)return v;l.parent.updateMatrixWorld(true);return l.parent.localToWorld(v);}
+    return l.getWorldPosition(l.position.clone());
+  }
   // Readable names: film rig by its own names, room lamps by the prop they sit in, sun / sky by type.
   function describe(entries){
     const scene=three()?.scene;if(!scene)return [];
     const props=[];scene.traverse(o=>{if(/^Prop:/.test(o.name)&&!isOurs(o))props.push([o.name.slice(5),o.getWorldPosition(o.position.clone())]);});
     const directional=entries.filter(e=>e.light.isDirectionalLight).sort((a,b)=>b.light.intensity-a.light.intensity);let fill=0,room=0,ceiling=0;const addedN={};
     return entries.map(e=>{
-      const l=e.light,type=TYPE[l.type]||l.type.replace(/Light$/,'').toLowerCase(),added=e.path.match(ADDED),pos=l.getWorldPosition(l.position.clone());
+      const l=e.light,type=TYPE[l.type]||l.type.replace(/Light$/,'').toLowerCase(),added=e.path.match(ADDED),pos=filmPlace(l);
       let group='Stage',label;
       if(added){group='Added';const n=addedN[type]=(addedN[type]||0)+1;label=`Added ${type} ${n}`;}
       else if(e.path.startsWith('Film lights >')){group='Film rig';const n=e.path.split('· ').pop();label=RIG_NAMES[n]||`Film ${n}`;}
