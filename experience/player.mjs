@@ -61,7 +61,8 @@ const perf=query.get('perf')==='1',perfSum={seek:0,n:0,fx:0,fxn:0};let perfAt=pe
 function perfNote(kind,ms){if(kind==='seek'){perfSum.seek+=ms;perfSum.n++;}else{perfSum.fx+=ms;perfSum.fxn++;}
   if(performance.now()-perfAt>2000){const parts=Object.entries(perfSum).filter(([k])=>k.startsWith('fx:')).map(([k,v])=>`${k.slice(3)} ${(v/Math.max(1,perfSum.fxn)).toFixed(1)}`).join(', ');console.log(`[perf] ${perfSum.n} seeks ${(perfSum.seek/Math.max(1,perfSum.n)).toFixed(1)} ms each · ${perfSum.fxn} film-fx frames ${(perfSum.fx/Math.max(1,perfSum.fxn)).toFixed(1)} ms each (${parts})`);perfAt=performance.now();for(const k of Object.keys(perfSum))perfSum[k]=0;}}
 let fxLast=0,fxScreensAt=0,fxScrubbed=false,liveFx=null,fxShot=null,fxAt=-1,fxPending=null,fxLights=null,fxTimer=null;
-const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay]);};
+// Film layers the Director edits in place (film-fx update): lighting and its prop edits.
+const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay,l.propEdits]);};
 // film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
 async function stageFx(){
   const win=frame.contentWindow;if(win.__filmFx)return win.__filmFx;
@@ -77,7 +78,7 @@ function filmCameraBake(setup){
 // The renderer's order around prepare: clear, beforePrepare, prepare, unhookPreset, install.
 async function prepareStage(next){
   await filmReady;await fxRefresh;while(fxBusy)await fxRefresh;await fxPending;const setup=filmShots.get(next.id),fx=setup?await stageFx().catch(error=>{console.warn('[film fx]',error.message);return null;}):frame.contentWindow.__filmFx;
-  liveFx=null;fxShot=null;frame.contentWindow.__directorLightsRestore?.();fx?.clear();
+  liveFx=null;fxShot=null;frame.contentWindow.__directorLightsRestore?.();frame.contentWindow.__directorPropsRestore?.();fx?.clear();
   stage().filmCamera?.(setup?filmCameraBake(setup):null);
   if(!setup||!fx)return stage().prepare(next);
   const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);
@@ -98,7 +99,7 @@ async function reinstallFilmLights(){
   const shot=liveFilmShot(setup,s);let held=false;const hold=()=>{if(!held){held=true;stage().hold?.(true);}};
   liveFx=null;
   try{
-    frame.contentWindow.__directorLightsRestore?.();
+    frame.contentWindow.__directorLightsRestore?.();frame.contentWindow.__directorPropsRestore?.();
     let result='full';try{result=fx.update?await fx.update(shot,{onSlow:hold}):'full';}catch(error){console.error('[film fx] update',error);}
     if(result==='full'){hold();fx.clear();await fx.install(shot);}
     liveFx=fx;fxAt=-1;director?.filmApplied?.();

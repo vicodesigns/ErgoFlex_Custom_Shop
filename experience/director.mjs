@@ -6,6 +6,8 @@ import {groupRange,snapGroupDelta,shiftGroup} from './timeline-group.mjs';
 import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS,lightnessOf,withLightness,WHITE_PRESETS} from './film-lighting.mjs';
 import {filmRenderShot,createStillRenderer} from './film-render.mjs';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
+import {createScenePropEditor} from './scene-prop-editor.mjs';
+import {filmPropEdits,propKey} from './prop-edits.mjs';
 import {createFilmLook} from './film-look.mjs';
 import {createStillStrip} from './still-strip.mjs';
 import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './film-chapters.mjs';
@@ -56,7 +58,7 @@ export function mountDirector(bridge,catalog,initial){
   // to and outlined for ~1.5 s. [tab, lighting section id or a selector in the tab's page]. Never moves focus, and
   // while a text field in the inspector has focus nothing switches or scrolls.
   const HOMES={camera:['camera','[data-reveal="camera-key"]'],clip:['groove','.movement-inspector'],tod:['lighting','tod'],room:['lighting','room'],
-    white:['lighting','white'],status:['lighting','status'],lamp:['lighting','lamps'],light:['lighting','lamps'],title:['chapter','[data-reveal="titles"]']};
+    white:['lighting','white'],status:['lighting','status'],lamp:['lighting','lamps'],light:['lighting','lamps'],title:['chapter','[data-reveal="titles"]'],prop:['props','[data-reveal="prop"]']};
   let revealWant=null,pulse=null;
   const typing=()=>{const a=document.activeElement;return !!a&&panel.contains(a)&&(a.isContentEditable||a.tagName==='TEXTAREA'||a.tagName==='INPUT'&&!/^(checkbox|radio|range|color|button|submit|reset)$/.test(a.type));};
   // Film chapters with titles: a title's home is the Title tab (title-editor.mjs); otherwise the Chapter Headline.
@@ -134,7 +136,7 @@ export function mountDirector(bridge,catalog,initial){
     const exact=timeline.querySelector('[name="timeline-seconds"]');if(exact&&document.activeElement!==exact)exact.value=(playhead*shot().seconds).toFixed(2);
   }
   function syncPan(){const viewport=timeline.querySelector('.timeline-viewport'),range=timeline.querySelector('[name="timeline-pan"]');if(viewport&&range&&document.activeElement!==range)range.value=viewport.scrollLeft/Math.max(1,viewport.scrollWidth-viewport.clientWidth)*100;}
-  function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();titleEditor.clear();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
+  function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();sceneProps.deselect();titleEditor.clear();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
   function captureKey(time,label){
     requireReady();const view=bridge.stage().captureCamera();if(!view)throw Error('The camera is not ready.');
     deskEditor.clearSelection();reveal('camera');
@@ -210,7 +212,7 @@ export function mountDirector(bridge,catalog,initial){
   function putTod(keys,{render=true}={}){requireReady();const s=shot();for(const k of keys)if(k.at<0||k.at>s.seconds+1e-6)throw Error(`Time-of-day keys must sit inside the ${s.seconds}-second chapter.`);commit(()=>{shot().timeOfDay=copy(keys).sort((a,b)=>a.at-b.at);},{render});}
   const lightItem=()=>{if(!lightSel)return null;if(lightSel.kind==='tods')return timeOfDay()?.keys.find(k=>k.id===lightSel.id)||null;const L=lighting();if(!L)return null;return lightSel.kind==='lights'?L.status.find(e=>e.id===lightSel.id):L.neutral.find(k=>k[2]===lightSel.id);};
   function selectLight(kind,id){
-    lightSel={kind,id};keyId=null;deskEditor.clearSelection();sceneLights.deselect();titleEditor.clear();const item=lightItem();if(!item)return;
+    lightSel={kind,id};keyId=null;deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();titleEditor.clear();const item=lightItem();if(!item)return;
     reveal(kind==='tods'?'tod':kind==='neutrals'?'white':'status');seekCamera((Array.isArray(item)?item[0]:item.at)/shot().seconds);render();
     const el=timeline.querySelector(`[data-light-clip="${id}"],[data-light-key="${id}"],[data-tod-key="${id}"]`);if(el)el.scrollIntoView({block:'nearest',inline:'nearest'});
   }
@@ -245,10 +247,11 @@ export function mountDirector(bridge,catalog,initial){
     const k=selectedKey();if(k)return row('◆','Camera view · '+k.label,`${r2(k.time*s.seconds)} s`);
     const clipId=deskEditor.selectedId(),clip=clipId&&deskEditor.motion().clips.find(c=>c.id===clipId);if(clip)return row('▬','Desk move · '+clipSummary(clip),`${r2(clip.start)}–${r2(clipEnd(clip))} s`);
     const light=sceneLights.selected()&&sceneLights.lanes().find(x=>x.path===sceneLights.selected());if(light)return row('✺','Scene light · '+light.label,light.edited?'edited':'from the film');
+    const prop=sceneProps.header();if(prop)return row('▣','Prop · '+prop.name,prop.detail);
     return '';
   }
   function syncSelectedHeader(){const el=panel.querySelector('[data-selected-header]');if(el)el.innerHTML=selectedHeader();}
-  function clearSelection(){for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;titleEditor.clear();deskEditor.clearSelection();sceneLights.deselect();render();status('Selection cleared.');}
+  function clearSelection(){for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;titleEditor.clear();deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();render();status('Selection cleared.');}
   // Delete every picked item (lanes keep at least one white / time-of-day key); one undo step.
   function deletePicks(){
     const n=picked();if(!n)return;requireReady();const L=lighting(),T=timeOfDay(),motion=deskEditor.motion(),list=keys().filter(k=>!picks.keys.has(k.id));
@@ -263,17 +266,17 @@ export function mountDirector(bridge,catalog,initial){
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape'||!open||picked()||document.querySelector('dialog[open]')||event.target.closest?.('input,select,textarea'))return;
     if(titleEditor.editing())return;
-    if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||titleEditor.selectedId()))return;
+    if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||titleEditor.selectedId()))return;
     event.preventDefault();event.stopImmediatePropagation();clearSelection();
   },true);
   // Ctrl+Shift+A: every item in the lane under the pointer.
   let hoverRow=null;
   function pickLane(){
     const row=hoverRow;if(!row)return status('Point at a lane, then Ctrl+Shift+A selects everything in it.');
-    sceneLights.deselect();for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of row.querySelectorAll(attr))picks[kind].add(el.dataset[data]);syncPicks();groupStatus();
+    sceneLights.deselect();sceneProps.deselect();for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of row.querySelectorAll(attr))picks[kind].add(el.dataset[data]);syncPicks();groupStatus();
   }
   function togglePick(kind,id){
-    sceneLights.deselect();
+    sceneLights.deselect();sceneProps.deselect();
     if(!picked()){if(keyId)picks.keys.add(keyId);const clip=deskEditor.selectedId();if(clip)picks.clips.add(clip);if(lightItem())picks[lightSel.kind].add(lightSel.id);}
     if(picks[kind].has(id))picks[kind].delete(id);else picks[kind].add(id);syncPicks();groupStatus();
   }
@@ -376,10 +379,12 @@ export function mountDirector(bridge,catalog,initial){
   let laneGroups={};try{laneGroups=JSON.parse(localStorage.getItem('ergoflex.director.laneGroups')||'{}')||{};}catch{}
   const groupClosed=g=>!!laneGroups[g];
   function laneGroupHead(g){
-    const s=shot().seconds,L=lighting(),T=timeOfDay(),ticks=g==='motion'?[...keys().map(k=>k.time*s),...deskEditor.motion().clips.map(c=>c.start)]:g==='titles'?titleEditor.ticks():[...(T?.keys||[]).map(k=>k.at),...(L?.neutral||[]).map(k=>k[0]),...(L?.status||[]).map(e=>e.at)];
-    if(g==='lighting'&&!L&&!T)return '';if(g==='titles'&&!titleEditor.has())return '';
-    return `<div class="lane-group-head" data-lane-group="${g}"><span class="desk-lane-label"><button data-action="group-toggle" data-index="${['motion','lighting','titles'].indexOf(g)}" aria-expanded="${!groupClosed(g)}" title="${groupClosed(g)?'Show':'Hide'} the ${g} lanes${g==='lighting'?' (Shift+L jumps here)':''}">${groupClosed(g)?'▸':'▾'} ${g.toUpperCase()}</button></span><div class="lane-group-summary">${groupClosed(g)?ticks.map(t=>`<i style="left:${t/s*100}%"></i>`).join(''):''}</div></div>`;
+    const s=shot().seconds,L=lighting(),T=timeOfDay(),ticks=g==='motion'?[...keys().map(k=>k.time*s),...deskEditor.motion().clips.map(c=>c.start)]:g==='titles'?titleEditor.ticks():g==='props'?[]:[...(T?.keys||[]).map(k=>k.at),...(L?.neutral||[]).map(k=>k[0]),...(L?.status||[]).map(e=>e.at)];
+    if(g==='lighting'&&!L&&!T)return '';if(g==='titles'&&!titleEditor.has())return '';if(g==='props'&&!filmShot())return '';
+    return `<div class="lane-group-head" data-lane-group="${g}"><span class="desk-lane-label"><button data-action="group-toggle" data-index="${['motion','lighting','titles','props'].indexOf(g)}" aria-expanded="${!groupClosed(g)}" title="${groupClosed(g)?'Show':'Hide'} the ${g} lanes${g==='lighting'?' (Shift+L jumps here)':''}">${groupClosed(g)?'▸':'▾'} ${g.toUpperCase()}</button></span><div class="lane-group-summary">${groupClosed(g)?ticks.map(t=>`<i style="left:${t/s*100}%"></i>`).join(''):''}</div></div>`;
   }
+  // PROPS: the chapter's edited props as chips (hidden ones struck through), click one to select it.
+  function propsGroup(){if(!filmShot())return '';return `${laneGroupHead('props')}<div class="lane-group-body desk-lanes prop-lanes" data-lane-body="props" ${groupClosed('props')?'hidden':''}><div class="desk-lane-row ${sceneProps.editedCount()?'':'empty'}" data-lane-color="props"><span class="desk-lane-label" title="Props moved, turned, scaled or hidden in this chapter (click a prop in the view to edit one)">Props <small data-props-count>${propCount()}</small></span><div class="desk-lane lamps-lane props-lane" data-props-lane>${sceneProps.lane()}</div></div></div>`;}
   function titlesGroup(){if(!titleEditor.has())return '';return `${laneGroupHead('titles')}<div class="lane-group-body desk-lanes title-lanes" data-lane-body="titles" ${groupClosed('titles')?'hidden':''}>${titleEditor.lane()}</div>`;}
   function revealLighting(){const v=timeline.querySelector('.timeline-viewport'),head=timeline.querySelector('[data-lane-group="lighting"]');if(!v||!head)return;if(groupClosed('lighting')){laneGroups.lighting=false;saveGroups();renderTimeline();return revealLighting();}const top=head.offsetTop-timeline.querySelector('.time-ruler-row').offsetHeight;if(top<v.scrollTop||top+head.parentElement.offsetHeight>v.scrollTop+v.clientHeight)v.scrollTop=top;}
   function saveGroups(){try{localStorage.setItem('ergoflex.director.laneGroups',JSON.stringify(laneGroups));}catch{}}
@@ -483,14 +488,29 @@ export function mountDirector(bridge,catalog,initial){
     syncLightTools?.();box.innerHTML=sceneLights.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});repulse();
   }
   const sceneLights=createSceneLightEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneLights,
-    onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId()||titleEditor.selectedId();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();if(had)renderTimeline();syncSelectedHeader();reveal('light');}});
+    onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId()||titleEditor.selectedId()||sceneProps.selected();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneProps.deselect();if(had)renderTimeline();syncSelectedHeader();reveal('light');}});
+  // Props (scene-prop-editor.mjs): click a prop in the view, gizmo, Props tab, Props lane; per chapter only.
+  function renderSceneProps(soft=false){
+    const box=panel.querySelector('[data-scene-props]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null;box.innerHTML=sceneProps.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
+    const lane=timeline.querySelector('[data-props-lane]');if(lane){lane.innerHTML=sceneProps.lane();const n=timeline.querySelector('[data-props-count]');if(n)n.textContent=propCount();}
+    syncLightTools?.();syncSelectedHeader();repulse();
+  }
+  const propCount=()=>{const n=sceneProps.editedCount();return n?n+' edited':'';};
+  // Make permanent: Studio holds these props now, so this chapter's edits for them go (here and in the undo history,
+  // so Undo never stacks them on Studio's new placement).
+  function foldProps(keys){
+    const id=shot().id,film=filmShot(),drop=p=>{for(const s of p.shots){if(s.id!==id)continue;const list=s.propEdits??(filmPropEdits(film).some(e=>keys.has(propKey(e)))?filmPropEdits(film):null);if(list)s.propEdits=list.filter(e=>!keys.has(propKey(e)));}};
+    drop(project);for(const p of [...undo,...redo])drop(p);changed();render();
+  }
+  const sceneProps=createScenePropEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneProps,lightsShowing:()=>sceneLights.showing(),fold:foldProps,
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();renderTimeline();renderSceneProps();reveal('prop');}});
   // Render still: the playhead frame with the film look, rendered in a hidden stage of its own.
   // Render still: the playhead frame with the film look, shown inside the frame with a history strip.
   const still=createStillStrip();
   let bootMs=7000;try{bootMs=Number(localStorage.getItem('ergoflex.director.stillBootMs'))||7000;}catch{}
   // What changed since the previous still: edits added to the undo stack since then, else edits undone,
   // else (an edit outside undo) the project diff; nothing at all when the project is the same.
-  const SHOT_FIELDS={camera:'camera views',motion:'desk moves',timeOfDay:'time of day',ledStatus:'desk status lights',ledNeutral:'desk white',ledColor:'desk colour',lighting:'lighting',sceneGlobals:'room brightness and fill light',sceneLights:'scene lights',filmTitles:'film titles',seconds:'chapter length',title:'chapter title',room:'room',layout:'layout',preset:'desk preset',kind:'shot kind',length:'length',mode:'mode',size:'desk size'};
+  const SHOT_FIELDS={camera:'camera views',motion:'desk moves',timeOfDay:'time of day',ledStatus:'desk status lights',ledNeutral:'desk white',ledColor:'desk colour',lighting:'lighting',sceneGlobals:'room brightness and fill light',sceneLights:'scene lights',lightEdits:'scene lights',lights:'scene lights',propEdits:'props',filmTitles:'film titles',seconds:'chapter length',title:'chapter title',room:'room',layout:'layout',preset:'desk preset',kind:'shot kind',length:'length',mode:'mode',size:'desk size'};
   function listDiff(a=[],b=[],noun,at,fmt){
     if(b.length>a.length)return `${noun} added`+(at?` at ${fmt(at(b.find(x=>!a.some(y=>y.id===x.id))||b.at(-1)))} s`:'');
     if(b.length<a.length)return `${noun} removed`;
@@ -549,9 +569,13 @@ export function mountDirector(bridge,catalog,initial){
     resting:()=>open&&bridge.ready()&&!bridge.playback().playing&&!scrub&&!keyDrag&&!groupDrag&&!marquee&&!stillBusy&&!composing&&!bridge.bakeState().baking,
     async render(){const s=shot(),t=playhead;stills||=createStillRenderer();const url=await stills.render(filmRenderShot(filmShot(),s,keys()),t);return {url,label:(t*s.seconds).toFixed(2)+' s'};}}):null;
   // Viewport light tools (top left of the frame): Lights (L), Move (W), Aim (E).
-  const lightTools=film?(()=>{const el=document.createElement('div');el.className='film-box light-tools';el.innerHTML='<button data-vt="l" aria-pressed="false" title="Show the scene lights in the view (L)">Lights</button><button data-vt="w" title="Move the selected light (W)">Move</button><button data-vt="e" title="Aim the selected spot or sun (E)">Aim</button>';document.body.append(el);
-    el.addEventListener('click',e=>{const b=e.target.closest('[data-vt]');if(b)viewKeys({key:b.dataset.vt,preventDefault(){},target:document.body,ctrlKey:false,metaKey:false,altKey:false,shiftKey:false});});return el;})():null;
-  const syncLightTools=()=>{if(!lightTools)return;lightTools.querySelector('[data-vt=l]').setAttribute('aria-pressed',String(sceneLights.showing()));for(const b of lightTools.querySelectorAll('[data-vt=w],[data-vt=e]'))b.disabled=!sceneLights.selected();};
+  // Viewport tools (top left of the frame): Lights (L), Move (W: the selected light or prop), Aim (E: a light),
+  // Rotate (E: a prop), Scale (T: a prop).
+  const lightTools=film?(()=>{const el=document.createElement('div');el.className='film-box light-tools';el.innerHTML='<button data-vt="l" aria-pressed="false" title="Show the scene lights in the view (L)">Lights</button><button data-vt="w" title="Move the selected light or prop (W)">Move</button><button data-vt="e" title="Aim the selected spot or sun (E)">Aim</button><button data-vt="pe" title="Rotate the selected prop (E)">Rotate</button><button data-vt="t" title="Scale the selected prop (T)">Scale</button>';document.body.append(el);
+    el.addEventListener('click',e=>{const b=e.target.closest('[data-vt]');if(b)viewKeys({key:b.dataset.vt==='pe'?'e':b.dataset.vt,preventDefault(){},target:document.body,ctrlKey:false,metaKey:false,altKey:false,shiftKey:false});});return el;})():null;
+  const syncLightTools=()=>{if(!lightTools)return;const light=!!sceneLights.selected(),prop=!!sceneProps.selected(),m=sceneProps.mode();lightTools.querySelector('[data-vt=l]').setAttribute('aria-pressed',String(sceneLights.showing()));
+    const set=(vt,on,pressed)=>{const b=lightTools.querySelector(`[data-vt=${vt}]`);b.disabled=!on;b.setAttribute('aria-pressed',String(!!(on&&pressed)));};
+    set('w',light||prop,prop&&m==='translate');set('e',light,false);set('pe',prop,m==='rotate');set('t',prop,m==='scale');};
   let orbitHooked=false,pokedAt=-1,pokedPlaying=false;
   function hookOrbit(){if(orbitHooked||!filmLook)return;const dom=bridge.stage()?.three?.()?.renderer?.domElement;if(!dom)return;const poke=()=>filmLook.poke();dom.addEventListener('pointerdown',poke,true);dom.addEventListener('pointermove',e=>{if(e.buttons)poke();},true);dom.addEventListener('wheel',poke,{capture:true,passive:true});orbitHooked=true;}
   // Warm the still stage once the chapter is live, so the first still / film look is quick.
@@ -572,7 +596,7 @@ export function mountDirector(bridge,catalog,initial){
     panel.innerHTML=`
       <div class="director-heading"><div><span class="director-kicker">DIRECTOR MODE</span><h2>Director studio.</h2></div><button data-action="inspector" aria-label="Hide inspector" title="Hide inspector; keep the timeline open">‹</button></div>
       <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button><span class="saved-indicator" data-saved title="Draft kept in this browser"></span></div>${filmPicker()}
-      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
+      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['props']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
       <p data-status role="status" class="director-status">${project.shots.length} chapters · ${Math.round(duration(project.shots))} seconds</p>
       <div data-inspector-page="project">
       <div class="director-actions"><button data-action="new">New cut</button><button data-action="clone">Duplicate cut</button></div>
@@ -605,7 +629,7 @@ export function mountDirector(bridge,catalog,initial){
       <label>Selected camera keyframe<select name="camera-key"><option value="">Select a keyframe…</option>${keys().map(k=>option(k.id,`${k.label} · ${(k.time*s.seconds).toFixed(2)}s`,keyId)).join('')}</select></label>
       ${cameraKey?`<div data-reveal="camera-key"><div class="selection-preview"><button data-action="key-preview" ${keys().at(-1)?.id===cameraKey.id?'disabled title="Last camera view: select an earlier view to preview its move"':''}>▶ Preview camera move</button><button data-action="key-go">Go to view</button></div><label>Keyframe name<input name="key-label" maxlength="60" value="${escape(cameraKey.label)}"></label><div class="director-grid"><label>Keyframe time (seconds)<input name="key-time" type="number" min="0" max="${s.seconds}" step=".05" value="${Number((cameraKey.time*s.seconds).toFixed(3))}"></label><label>Move to next view<select name="key-easing">${CAMERA_EASINGS.map(e=>option(e,({smooth:'Smooth move',linear:'Linear move',hold:'Hold, then cut'})[e],cameraKey.easing)).join('')}</select></label></div><label>Camera route<select name="key-path">${option('linear','Direct line',cameraKey.path||'linear')}${option('orbit','Orbit around subject',cameraKey.path||'linear')}</select></label><label>Field of view (degrees)<input name="key-fov" type="number" min="15" max="80" step="1" value="${cameraKey.view.fov}"></label><div class="director-actions lens-presets">${[[24,'Detail · 24°'],[35,'Balanced · 35°'],[50,'Wide · 50°']].map(([fov,label])=>`<button data-action="lens-${fov}" aria-pressed="${cameraKey.view.fov===fov}">${label}</button>`).join('')}</div><p class="director-hint">Lens buttons update this keyframe. After orbiting or framing the preview, use Update selected view to keep that composition.</p></div>`:''}
 
-      </div><div data-inspector-page="title">${titleEditor.panel()}</div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}</div>`;
+      </div><div data-inspector-page="title">${titleEditor.panel()}</div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}</div><div data-inspector-page="props"><div data-scene-props>${filmShot()?sceneProps.panel():''}</div></div>`;
     showInspector(inspector,false,false);deskEditor.sync();syncTransport();
     if(!revealWant)panel.scrollTop=scroll;
     const replacement=activeName?field(activeName):null;if(replacement){replacement.focus({preventScroll:true});if(selection&&replacement.setSelectionRange)try{replacement.setSelectionRange(...selection);}catch{}}
@@ -627,7 +651,7 @@ export function mountDirector(bridge,catalog,initial){
       <div class="timeline-viewport" tabindex="0" aria-label="Camera and desk timeline"><div class="timeline-content" style="width:${zoom*100}%;--timeline-grid:${(ticks[1]||s.seconds)/s.seconds*100}%">
       <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>
       ${titlesGroup()}${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${keys().slice(0,-1).map((k,i)=>`<span class="camera-segment" style="left:${k.time*100}%;width:${(keys()[i+1].time-k.time)*100}%"><i>${({smooth:'Smooth move',linear:'Linear move',hold:'Hold / cut'})[k.easing]}</i></span>`).join('')}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s"><span>◆</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
-      ${deskEditor.timeline()}</div>${lightLane()}</div></div>
+      ${deskEditor.timeline()}</div>${lightLane()}${propsGroup()}</div></div>
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
     timeline.querySelector('.timeline-viewport').scrollLeft=scroll;
@@ -635,7 +659,7 @@ export function mountDirector(bridge,catalog,initial){
   }
   async function load(){
     const token=++loadToken,position=playhead;status('Loading this chapter…');
-    try{await bridge.editShot(project,selected);if(token===loadToken){automaticCameras.set(shot().id,bridge.stage().cameraKeys());deskEditor.ready();playhead=position;if(!keys().some(k=>k.id===keyId))keyId=null;renderPanel();renderTimeline();if(film&&!timelineFitted&&!document.body.style.getPropertyValue('--director-timeline-height')){fitTimeline();renderTimeline();}hookOrbit();warmStill();bridge.seek(playhead);status('Camera is live. Existing desk movements appear below; select a block to edit it, or add Lift, Tilt or Wheels.');}}catch(error){if(token===loadToken)status(error.message,true);}
+    try{await bridge.editShot(project,selected);if(token===loadToken){automaticCameras.set(shot().id,bridge.stage().cameraKeys());deskEditor.ready();playhead=position;if(!keys().some(k=>k.id===keyId))keyId=null;renderPanel();renderTimeline();if(film&&!timelineFitted&&!document.body.style.getPropertyValue('--director-timeline-height')){fitTimeline();renderTimeline();}hookOrbit();warmStill();if(film&&filmShot())sceneProps.ensure().catch(error=>console.warn('[props]',error.message));bridge.seek(playhead);status('Camera is live. Existing desk movements appear below; select a block to edit it, or add Lift, Tilt or Wheels.');}}catch(error){if(token===loadToken)status(error.message,true);}
   }
   function move(from,to){if(to<0||to>=project.shots.length)return;commit(()=>{const [s]=project.shots.splice(from,1);project.shots.splice(to,0,s);selected=to;},{render:true});load();}
   function exportCut(){const url=URL.createObjectURL(new Blob([JSON.stringify(((c)=>({...c,shots:c.shots.map(exportLighting)}))(cleanCut(project,catalog)),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();syncFilm();status('Cut exported. Import it in Director Mode on another browser.');}
@@ -653,6 +677,7 @@ export function mountDirector(bridge,catalog,initial){
         shiftPicks(delta,name==='sel-align'?'Aligned to the playhead':'Selection moved');return;
       }
       if(name.startsWith('sl-')){await sceneLights.action(name,index);return;}
+      if(name.startsWith('pp-')){await sceneProps.action(name,index);return;}
       if(name==='light-add'||name==='light-key-add'){addLight(name==='light-key-add');return;}
       if(name==='tod-add'){
         const T=timeOfDay();if(!T)return;requireReady();const t=Math.round(playhead*shot().seconds*1000)/1000,near=T.keys.find(k=>Math.abs(k.at-t)<.001);if(near){selectLight('tods',near.id);return;}
@@ -670,7 +695,7 @@ export function mountDirector(bridge,catalog,initial){
       if(name==='lamp-pick'){await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
       if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
       if(name==='now-go'){const id=index;const el=panel.querySelector(`[data-light-section="${id}"]`);if(el){el.open=true;delete lightSectionsShut[id];el.scrollIntoView({block:'start',behavior:'smooth'});}return;}
-      if(name==='group-toggle'){const g=['motion','lighting','titles'][index]||'lighting';laneGroups[g]=!groupClosed(g);saveGroups();renderTimeline();return;}
+      if(name==='group-toggle'){const g=['motion','lighting','titles','props'][index]||'lighting';laneGroups[g]=!groupClosed(g);saveGroups();renderTimeline();return;}
       if(name==='titles'){if(film&&titleEditor.has()){const on=titleEditor.toggleShown();timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(on));status(on?'Film titles shown in the frame.':'Film titles hidden in the frame.');return;}document.body.classList.toggle('preview-titles');timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(document.body.classList.contains('preview-titles')));return;}
       if(name==='chapters'){timeline.classList.toggle('chapters-hidden');timeline.querySelector('[data-action=chapters]')?.setAttribute('aria-pressed',String(!timeline.classList.contains('chapters-hidden')));return;}
       if(name.startsWith('zoom-')){
@@ -874,6 +899,7 @@ export function mountDirector(bridge,catalog,initial){
     if(/^gn?-/.test(name||'')){try{const k=name.replace(/^gn?-/,''),v=Number(value);if(Math.abs(globalFactor(k).value-v)<1e-6){renderPanel();return;}setGlobal(k,v);}catch(error){renderPanel();status(error.message,true);}return;}
     if(name?.startsWith('mx-')){try{await sceneLights.mixerChange(event.target,false);if(name!=='mx-gain'&&name!=='mx-color')renderSceneLights();}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name?.startsWith('sl-')){try{await sceneLights.changed(event.target);}catch(error){renderSceneLights();status(error.message,true);}return;}
+    if(name?.startsWith('pp-')){try{await sceneProps.changed(event.target);}catch(error){renderSceneProps();status(error.message,true);}return;}
     if(name==='light-selected'){const [kind,id]=value.split(':');if(id)selectLight(kind,id);else{lightSel=null;renderPanel();renderTimeline();}return;}
     if(name==='room-light'){try{const v=Number(value);if(value===''||!Number.isFinite(v)||v<0||v>2)throw Error('Room light level runs from 0 to 2.');putLighting({roomLight:v});status('Room light level set to '+v+'.');}catch(error){renderPanel();status(error.message,true);}return;}
     if(name?.startsWith('tod-')){
@@ -946,7 +972,9 @@ export function mountDirector(bridge,catalog,initial){
     else if(k==='r'){event.preventDefault();action('render-still');}
     else if(k==='\\'){event.preventDefault();if(!event.repeat)still.peek(true);}
     else if(k==='l'){event.preventDefault();sceneLights.toggleShow().then(on=>status(on?'Lights shown: click a marker to select it, W move, E aim.':'Lights hidden.'));}
-    else if((k==='w'||k==='e')&&sceneLights.selected()){event.preventDefault();sceneLights.setMode(k==='w'?'move':'aim');status(k==='w'?'Gizmo: move.':'Gizmo: aim.');}}
+    else if((k==='w'||k==='e'||k==='t')&&sceneProps.selected()){event.preventDefault();sceneProps.setMode(k==='w'?'translate':k==='e'?'rotate':'scale');syncLightTools();}
+    else if((k==='w'||k==='e')&&sceneLights.selected()){event.preventDefault();sceneLights.setMode(k==='w'?'move':'aim');status(k==='w'?'Gizmo: move.':'Gizmo: aim.');}
+    else if((k==='delete'||k==='backspace')&&sceneProps.selected()&&!picked()&&!timeline.contains(event.target)&&!panel.contains(event.target)&&!document.querySelector('dialog[open]')){event.preventDefault();sceneProps.hide(true);}}
   document.addEventListener('keydown',viewKeys);
   const peekUp=e=>{if(e.key==='\\')still.peek(false);};document.addEventListener('keyup',peekUp);
   // With the still view open: Esc closes it, ←/→ step through the history (before the timeline's own keys).
@@ -1041,11 +1069,11 @@ export function mountDirector(bridge,catalog,initial){
         url.searchParams.delete('bakeAll');history.replaceState(null,'',url);action('bake-all');
       }
     });}else draft();}
-  const deskEditor=createDeskEditor({panel,timeline,bridge,shot,time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();titleEditor.clear();if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
+  const deskEditor=createDeskEditor({panel,timeline,bridge,shot,time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();sceneProps.deselect();titleEditor.clear();if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
   // Film titles: the TITLES lane, the Title inspector and the title overlay in the frame (titles-src.json beside the film list).
   const titleEditor=createTitleEditor({panel,timeline,shot,time:()=>playhead,seek:seekCamera,commit,status,render,renderTimeline,ready:requireReady,open:()=>open,
     showInspector:tab=>{if(!reveal(tab))showInspector(tab,false,!typing());},
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();sceneLights.deselect();},
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();},
     snapDelta:({raw,edges,width,seconds,alt,exclude})=>{
       const tol=8/width*seconds;
       if(magnet&&!alt){let best=null;const all=snapTargets({titles:new Set([exclude])});for(const [t,name] of all)for(const e of edges){const delta=t-e,off=Math.abs(delta-raw);if(off<=tol&&(!best||off<best.off))best={delta,off,t,name};}if(best)return {delta:best.delta,snap:best};}
@@ -1184,7 +1212,7 @@ export function mountDirector(bridge,catalog,initial){
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
   render();panel.hidden=timeline.hidden=true;
-  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>sceneLights.applied(),
+  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{sceneLights.applied();sceneProps.applied();if(open)renderSceneProps(true);},
     // Selection -> inspector home (HOMES): for lanes and tools outside this module (the Titles lane: reveal('title')).
     reveal,revealHomes:()=>({...structuredClone(HOMES),title:homeOf('title')})};
 }
