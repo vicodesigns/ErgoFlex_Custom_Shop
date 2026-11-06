@@ -23,4 +23,9 @@ assert.ok(viewer.includes("const fragment = (param) => samplingGLSL"), 'one shad
 for (const bit of ['v.xz *= srcShape[', 'srcSat[', 'srcShape[${i}].y != 1.0']) assert.ok(viewer.includes(bit), bit);
 const { hueText } = await import('../tools/experience/film-viewer-leds.mjs');
 assert.equal(hueText(hueText('a\n#include <tonemapping_fragment>\n')), hueText('a\n#include <tonemapping_fragment>\n'), 'hue patch once');
+// Render still / the film: the cut's field merges over the film shot's other globals.
+const { filmRenderShot } = await import('../experience/film-render.mjs');
+const film = { id: 'rise', room: 'home', kind: 'lift', seconds: 16, sceneGlobals: { roomLight: .55, ledRoomSpill: .15 } };
+assert.deepEqual(filmRenderShot(film, { id: 'rise', room: 'home', kind: 'lift', seconds: 16, sceneGlobals: { ledFloorSources: { foot: { x: 10 } } } }, []).sceneGlobals,
+  { roomLight: .55, ledRoomSpill: .15, ledFloorSources: { foot: { x: 10 } } });
 console.log('cinematic-floor-sources-test ok');

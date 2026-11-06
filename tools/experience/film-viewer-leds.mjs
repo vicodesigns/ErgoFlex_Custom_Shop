@@ -627,6 +627,7 @@ export function installViewerLeds(shot) {
       return pts; };
     if (bounce) {
       bounce.updateWorldMatrix(true, false); bounce.onBeforeRender();
+      const unit = model.matrixWorld.getMaxScaleOnAxis();   // model inches -> world (half sizes are world units)
       const u = bounce.material.uniforms, inv = model.matrixWorld.clone().invert(), planeY = new THREE.Vector3().applyMatrix4(bounce.matrixWorld).applyMatrix4(inv).y;
       for (const key of ['center', 'left', 'right']) {
         const idx = bounce.userData.keys.map((k, i) => k === key && u.srcOn.value[i] && (i < u.srcA.value.length) ? i : -1).filter((i) => i >= 0);
@@ -646,7 +647,7 @@ export function installViewerLeds(shot) {
         // Where the strip itself is, dropped straight onto the floor (the alignment reference in the Director).
         const own = all.find((i) => u.srcN.value[i].lengthSq() === 0) ?? all[0], raw = bounce.userData.raw?.[own];
         const strip = raw ? [raw[0].clone().setY(planeY), raw[1].clone().setY(planeY)].map(toW) : null;
-        out.push({ key, on: !c || c.on, points: pts, strip, centre: toW(mid.setY(planeY)), axis: axis.clone().transformDirection(model.matrixWorld), halfLength: (t1 - t0) / 2, halfWidth: (w1 - w0) / 2 });
+        out.push({ key, on: !c || c.on, points: pts, strip, centre: toW(mid.setY(planeY)), axis: axis.clone().transformDirection(model.matrixWorld).setY(0).normalize(), halfLength: (t1 - t0) / 2 * unit, halfWidth: (w1 - w0) / 2 * unit });
       }
     }
     {

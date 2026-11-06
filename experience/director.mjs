@@ -7,6 +7,7 @@ import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,vali
 import {filmRenderShot,createStillRenderer} from './film-render.mjs';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
 import {createScenePropEditor} from './scene-prop-editor.mjs';
+import {createFloorReflectionEditor} from './floor-reflection-editor.mjs';
 import {filmPropEdits,propKey} from './prop-edits.mjs';
 import {createFilmLook} from './film-look.mjs';
 import {createStillStrip} from './still-strip.mjs';
@@ -58,7 +59,7 @@ export function mountDirector(bridge,catalog,initial){
   // to and outlined for ~1.5 s. [tab, lighting section id or a selector in the tab's page]. Never moves focus, and
   // while a text field in the inspector has focus nothing switches or scrolls.
   const HOMES={camera:['camera','[data-reveal="camera-key"]'],clip:['groove','.movement-inspector'],tod:['lighting','tod'],room:['lighting','room'],
-    white:['lighting','white'],status:['lighting','status'],lamp:['lighting','lamps'],light:['lighting','lamps'],title:['chapter','[data-reveal="titles"]'],prop:['props','[data-reveal="prop"]']};
+    white:['lighting','white'],status:['lighting','status'],lamp:['lighting','lamps'],light:['lighting','lamps'],title:['chapter','[data-reveal="titles"]'],prop:['props','[data-reveal="prop"]'],floor:['lighting','room']};
   let revealWant=null,pulse=null;
   const typing=()=>{const a=document.activeElement;return !!a&&panel.contains(a)&&(a.isContentEditable||a.tagName==='TEXTAREA'||a.tagName==='INPUT'&&!/^(checkbox|radio|range|color|button|submit|reset)$/.test(a.type));};
   // Film chapters with titles: a title's home is the Title tab (title-editor.mjs); otherwise the Chapter Headline.
@@ -405,7 +406,7 @@ export function mountDirector(bridge,catalog,initial){
     const L=lighting(),T=timeOfDay(),item=lightItem(),s=shot().seconds,kind=lightSel?.kind;
     const tod=T?section('tod','Time of day','the sun and sky through the window',`<p class="director-hint">The room blends from each daypart to the next across the gaps.${T.edited?'':' From the film shot until you edit it.'}</p><div class="director-actions"><button data-action="tod-add">+ Time-of-day key</button></div>${kind==='tods'&&item?todInspector(T,item):''}`):'';
     // roomLight scales the room's own lamps, sky fill and bounce (film-fx), not the desk's LEDs: those are the two LED glow fields.
-    const room=section('room','Room','brightness, fill light, LED glow on walls and floor',`${globalFields(['exposureScale','environmentScale'])}${L?.roomLight!==undefined?`<label title="The room's lamps, sky fill and bounce light (not the desk's LEDs)">Room's own light (lamps, sky, bounce)<input name="room-light" type="number" min="0" max="2" step=".05" value="${L.roomLight}"></label>`:''}${globalFields(['ledWallGlow','ledFloorGlow'])}`);
+    const room=section('room','Room','brightness, fill light, LED glow on walls and floor',`${globalFields(['exposureScale','environmentScale'])}${L?.roomLight!==undefined?`<label title="The room's lamps, sky fill and bounce light (not the desk's LEDs)">Room's own light (lamps, sky, bounce)<input name="room-light" type="number" min="0" max="2" step=".05" value="${L.roomLight}"></label>`:''}${globalFields(['ledWallGlow','ledFloorGlow'])}${floorRefl.panel()}`);
     if(!L)return nowCard()+tod+room+lampsSection();
     const white=section('white','Desk white','the LED colour when no status is showing',`<div class="director-actions"><button data-action="light-key-add">+ White key</button></div>${kind==='neutrals'&&item?whiteInspector(L,item,s):''}`);
     const status=section('status','Desk status','status lights while the desk moves',`<p class="director-hint">${L.edited?'Edited here; Export cut sends them to the film.':'From the film shot; your first edit keeps a copy in this cut.'}</p><div class="director-actions"><button data-action="light-add">+ Status light</button></div>${kind==='lights'&&item?statusInspector(item,s):''}`);
@@ -504,6 +505,11 @@ export function mountDirector(bridge,catalog,initial){
   }
   const sceneProps=createScenePropEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneProps,lightsShowing:()=>sceneLights.showing(),fold:foldProps,
     onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();renderTimeline();renderSceneProps();reveal('prop');}});
+  // Floor reflections (floor-reflection-editor.mjs): Lighting > Room, per LED source; outlines and drags in the view.
+  const floorShowing=()=>open&&(sceneLights.showing()||inspector==='lighting'&&!document.body.classList.contains('inspector-hidden')&&!!panel.querySelector('[data-light-section="room"]')?.open&&!!panel.querySelector('[data-floor-section]')?.open);
+  const floorRefl=createFloorReflectionEditor({bridge,shot,film:filmShot,commit,status,visible:floorShowing,rerender:()=>{if(inspector==='lighting'&&!typing())renderPanel();else syncSelectedHeader();},
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();renderTimeline();reveal('floor');}});
+  panel.addEventListener('toggle',event=>{if(event.target.matches?.('[data-floor-section]'))floorRefl.setExpanded(event.target.open);},true);
   // Render still: the playhead frame with the film look, rendered in a hidden stage of its own.
   // Render still: the playhead frame with the film look, shown inside the frame with a history strip.
   const still=createStillStrip();
@@ -680,6 +686,7 @@ export function mountDirector(bridge,catalog,initial){
       }
       if(name.startsWith('sl-')){await sceneLights.action(name,index);return;}
       if(name.startsWith('pp-')){await sceneProps.action(name,index);return;}
+      if(name.startsWith('fr-')){await floorRefl.action(name,index);return;}
       if(name==='light-add'||name==='light-key-add'){addLight(name==='light-key-add');return;}
       if(name==='tod-add'){
         const T=timeOfDay();if(!T)return;requireReady();const t=Math.round(playhead*shot().seconds*1000)/1000,near=T.keys.find(k=>Math.abs(k.at-t)<.001);if(near){selectLight('tods',near.id);return;}
@@ -867,6 +874,7 @@ export function mountDirector(bridge,catalog,initial){
     const el=event.target,name=el.name;if(!name)return;
     if(name==='seek'){try{seekCamera(Number(el.value)/100);}catch(error){status(error.message,true);}return;}
     if(name.startsWith('sl-')){try{sceneLights.input(el);}catch(error){status(error.message,true);}return;}
+    if(name.startsWith('fr-')&&el.type==='range'){try{floorRefl.changed(el,{live:true});}catch(error){status(error.message,true);}return;}
     if(name.startsWith('mx-')&&name!=='mx-on'){sceneLights.mixerChange(el,true).catch(error=>status(error.message,true));return;}
     if(/^gn?-/.test(name)){const k=name.replace(/^gn?-/,''),v=Number(el.value),twin=field((name.startsWith('gn-')?'g-':'gn-')+k),out=panel.querySelector(`[data-global-steps="${k}"]`);if(Number.isFinite(v)){if(twin)twin.value=String(v);if(out)out.textContent=k==='exposureScale'?stepsText(v):'×'+v;if(name.startsWith('g-'))try{setGlobal(k,v,{key:name,render:false});}catch(error){status(error.message,true);}}return;}
     // Neutral white sliders and picker edit live; one undo step per drag.
@@ -902,6 +910,7 @@ export function mountDirector(bridge,catalog,initial){
     if(name?.startsWith('mx-')){try{await sceneLights.mixerChange(event.target,false);if(name!=='mx-gain'&&name!=='mx-color')renderSceneLights();}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name?.startsWith('sl-')){try{await sceneLights.changed(event.target);}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name?.startsWith('pp-')){try{await sceneProps.changed(event.target);}catch(error){renderSceneProps();status(error.message,true);}return;}
+    if(name?.startsWith('fr-')){if(event.target.type==='range'){renderPanel();return;}try{floorRefl.changed(event.target);}catch(error){renderPanel();status(error.message,true);}return;}
     if(name==='light-selected'){const [kind,id]=value.split(':');if(id)selectLight(kind,id);else{lightSel=null;renderPanel();renderTimeline();}return;}
     if(name==='room-light'){try{const v=Number(value);if(value===''||!Number.isFinite(v)||v<0||v>2)throw Error('Room light level runs from 0 to 2.');putLighting({roomLight:v});status('Room light level set to '+v+'.');}catch(error){renderPanel();status(error.message,true);}return;}
     if(name?.startsWith('tod-')){
@@ -1214,7 +1223,7 @@ export function mountDirector(bridge,catalog,initial){
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
   render();panel.hidden=timeline.hidden=true;
-  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{sceneLights.applied();sceneProps.applied();if(open)renderSceneProps(true);},
+  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{sceneLights.applied();sceneProps.applied();floorRefl.applied();if(open)renderSceneProps(true);},
     // Selection -> inspector home (HOMES): for lanes and tools outside this module (the Titles lane: reveal('title')).
     reveal,revealHomes:()=>({...structuredClone(HOMES),title:homeOf('title')})};
 }

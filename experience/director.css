@@ -469,3 +469,10 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 #director-panel .inspector-tabs:has([data-inspector-tab=props]) button{flex:1 1 auto;padding-inline:2px;font-size:11px;white-space:nowrap}
 #director-panel .inspector-tabs:has([data-inspector-tab=props]) button[data-action=inspector]{flex:0 0 20px}
 .sel-name small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Floor reflections (Lighting > Room): per LED source, floor-reflection-editor.mjs */
+.floor-section{border-top:1px dashed #a0d9eb25;margin-top:8px;padding-top:4px}
+.floor-section>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;font-weight:600;color:#e8f4f9;padding:4px 0;list-style:none}
+.floor-section>summary::before{content:'▸';color:#8caebd;font-size:11px}.floor-section[open]>summary::before{content:'▾'}
+.floor-section>summary small{font-weight:400;color:#8caebd;font-size:11px}
+#director-panel .floor-sources button[aria-pressed=true]{outline:2px solid #63d8f5}
+.floor-inspector h4{margin:8px 0 2px}
