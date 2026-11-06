@@ -53,6 +53,7 @@ try{
   check(await ev(()=>{const p=document.querySelector('#director-panel [data-inspector-page=title] [data-reveal=title]');return !!p&&(p.classList.contains('reveal-pulse')||!!p.closest('.reveal-pulse'))&&!p.closest('[hidden]');}),'selecting a title reveals the Title tab (reveal pulse on the Title inspector, not the Chapter Headline)');
   check(await ev(()=>{const h=document.querySelector('#director-panel [data-inspector-page=title] [data-reveal=title]');return h&&document.querySelector('[data-inspector-tab=title]').getAttribute('aria-pressed')==='true';}),'reveal(\'title\') home is the Title tab on film chapters');
   check(sel.overlay&&sel.paths===3&&sel.texts.includes('Your height. Your rhythm.')&&Number(sel.time)>5,'the frame shows the title with its 3 fitted shadow boxes at a time it is fully in');
+  check(await ev(()=>document.querySelectorAll('.shape-hint path[data-hint]').length)===3,'the selected title shows its shadow outline (dashed) in the frame');
   if(shots)await page.screenshot({path:path.join(shots,'titles-lane.png')});
   // 3. drag (move) with undo / redo
   await drag([b0.cx,b0.y],[b0.cx+b0.lane*(1/16),b0.y]);
@@ -117,6 +118,9 @@ try{
   check(/Your own shape: 3 parts, 12 points/.test(look.note),'the inspector names the custom shape');
   await page.keyboard.press('Escape');await sleep(300);
   check(!(await ev(()=>document.body.classList.contains('title-shape-editing')))&&await ev(()=>!!document.querySelector('[data-title-clip].selected')),'Esc finishes editing the shape (the title stays selected)');
+  const hint=await ev(()=>{const r=document.querySelectorAll('.shape-hint path')[1].getBoundingClientRect();return [r.x+12,r.y+r.height/2];});await page.mouse.click(...hint);await sleep(400);
+  check(await ev(()=>document.body.classList.contains('title-shape-editing')),'clicking the dashed shadow outline starts editing it');
+  await page.keyboard.press('Enter');await sleep(300);check(!(await ev(()=>document.body.classList.contains('title-shape-editing'))),'Enter finishes editing');
   // 7. Export cut -> import -> titles-src -> finish-intro
   const cut=await exportCut(),ft=cut.shots[0].filmTitles;log('export',JSON.stringify(ft).slice(0,300));
   check(ft?.length===1&&ft[0].title==='Your height, your rhythm.'&&ft[0].rel_in===2.3&&ft[0].timed===true&&ft[0].shadow.paths.length===3&&ft[0].shadow.blur===26&&ft[0].shadow.opacity===.45,'Export cut carries the title copy, timing and shadow shape');

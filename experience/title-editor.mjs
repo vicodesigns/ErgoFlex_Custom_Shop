@@ -208,7 +208,11 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const at=time()*shot().seconds,t=item(),list=editing&&t?[t]:titles().filter(x=>at>=x.rel_in&&at<x.rel_out);
     const key=JSON.stringify([at.toFixed(3),list,editing,shape.pt,[...shape.sel],shape.draft,fontsReady,svg.clientWidth]);if(key===lastKey)return;lastKey=key;
     let defs='',body='';for(const x of list){const c=cardSvg(x,at,editing&&x.id===selected);defs+=c.defs;body+=`<g class="title-card" data-title-card="${x.id}">${c.body}</g>`;}
-    svg.innerHTML=`<defs>${defs}</defs>${body}${editing&&t?editLayer(t):''}`;
+    svg.innerHTML=`<defs>${defs}</defs>${body}${editing&&t?editLayer(t):t&&list.includes(t)?hintLayer(t,at):''}`;
+  }
+  // A selected title shows its shadow's outline (dashed); clicking the shape starts editing it.
+  function hintLayer(t,at){
+    const S=shadowOf(t,measure);return `<g class="shape-hint">${S.paths.map(p=>{const [delay,rise]=pathTiming(p),st=lineState(t,delay,rise,at);return st.on?`<path data-hint d="${svgPath(p)}" transform="translate(0 ${st.dy.toFixed(2)})"><title>Click to edit the shadow shape</title></path>`:'';}).join('')}</g>`;
   }
   // ---- shadow shape editing ---------------------------------------------------------------------------------
   const [AX,AY]=ANCHOR,px=()=>FILM_W/Math.max(1,svg.getBoundingClientRect().width);
@@ -233,6 +237,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     S.paths[pi]=deletePoint(S.paths[pi],k);shape.pt=null;saveShape(S.paths,'Point deleted. Undo brings it back.');
   }
   svg.addEventListener('pointerdown',event=>{
+    if(!editing&&event.button===0&&event.target.closest?.('[data-hint]')&&item()){event.preventDefault();event.stopPropagation();try{ready();setEditing(true);seek(restTime(item())/shot().seconds);render();}catch(error){status(error.message,true);}return;}
     if(!editing||event.button!==0)return;const t=item();if(!t)return;event.preventDefault();event.stopPropagation();
     try{ready();}catch(error){status(error.message,true);return;}
     const el=event.target,S=shadowOf(t,measure),at=filmPoint(event),base=structuredClone(S.paths);

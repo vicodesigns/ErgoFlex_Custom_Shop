@@ -444,3 +444,5 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .inspector-tabs:has([data-inspector-tab=title]){grid-template-columns:repeat(5,minmax(0,1fr)) 25px}
 .inspector-tabs:has([data-inspector-tab=title]):has([data-inspector-tab=lighting]){grid-template-columns:repeat(6,minmax(0,1fr)) 22px;gap:2px}
 .inspector-tabs:has([data-inspector-tab=title]):has([data-inspector-tab=lighting]) button{padding-inline:2px;font-size:10.5px}
+.shape-hint path{fill:transparent;stroke:#ffe7a8;stroke-width:1px;stroke-dasharray:5 4;vector-effect:non-scaling-stroke;opacity:.55;pointer-events:all;cursor:pointer}
+.shape-hint path:hover{opacity:1;fill:#ffe7a80d}
