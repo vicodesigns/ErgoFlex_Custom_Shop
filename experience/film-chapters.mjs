@@ -1,4 +1,5 @@
 import {exportLighting} from './film-lighting.mjs';
+import {mergeSceneLights} from './light-edits.mjs';
 // Film chapter switching: a chapter link carries #cut=…&film=<chapter list>&director=1.
 export function filmLink(hash){
   const params=new URLSearchParams(String(hash||'').replace(/^#/,'')),film=params.get('film');
@@ -39,5 +40,6 @@ export function liveFilmShot(film,shot){
   // Lighting edited in the Director (ledStatus present) replaces the film's.
   if(lit.ledStatus){next.ledStatus=lit.ledStatus;if(lit.ledNeutral)next.ledNeutral=lit.ledNeutral;else delete next.ledNeutral;if(lit.ledColor)next.ledColor=lit.ledColor;}
   if(lit.sceneGlobals?.roomLight!==undefined)next.sceneGlobals={...next.sceneGlobals,roomLight:lit.sceneGlobals.roomLight};
+  delete next.lights;Object.assign(next,mergeSceneLights(film,shot));
   return next;
 }

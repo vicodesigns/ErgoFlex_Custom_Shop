@@ -198,3 +198,8 @@ body.directing #skip{display:none}
 .inspector-tabs:has([data-inspector-tab=lighting]){grid-template-columns:repeat(5,minmax(0,1fr)) 25px}
 .inspector-tabs:has([data-inspector-tab=lighting]) button{padding-inline:4px;font-size:11.5px}
 #director-panel .film-dirty{flex-basis:100%;margin-left:36px}
+/* Scene lights */
+#director-panel [data-scene-lights]{margin-top:16px;border-top:1px solid #a0d9eb25;padding-top:6px}
+#director-panel .director-grid.three-up{grid-template-columns:repeat(3,minmax(0,1fr))}
+#director-panel .scene-light-inspector .director-hint{word-break:break-word}
+#director-panel [data-scene-lights] button[aria-pressed=true]{background:#184451;border-color:#67ddf5;color:#c7f7ff}

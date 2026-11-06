@@ -248,6 +248,8 @@ export async function mountStage(ctx) {
   // Same-origin parent owns this preview; no arbitrary postMessage action dispatcher.
   window.ErgoPresentation={prepare:async next=>{preparing=true;try{return await prepare(next);}finally{preparing=false;}},tick,sound,pause,receive,
     catalog:()=>ctx.catalog(),edit,seek,captureCamera,beginBake,bakeFrame,endBake,
+    // Director scene-light tools (markers, gizmo) work on the live scene, camera and orbit controls.
+    three:()=>({scene:ctx.scene,camera:ctx.camera,renderer:ctx.renderer,controls:ctx.controls}),
     motionDefaults:()=>{
       const result={lift:[],tilt:[],wheels:[]},savedReduced=reduced;
       // Sample the real staged performance, including room routes, in its

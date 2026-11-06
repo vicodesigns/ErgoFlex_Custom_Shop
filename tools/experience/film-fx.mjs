@@ -688,7 +688,7 @@ export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedM
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
@@ -745,6 +745,8 @@ export async function install(shot) {
   // After timeOfDay (which snapshots the raw light levels) and sceneEdits (whose light multipliers it chains to).
   if (shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
   if (shot.sceneGlobals?.ledRoomSpill !== undefined) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals.ledRoomSpill); active.roomSpill.frame(); }
+  // lightEdits: Director changes to existing lights (experience/light-edits.mjs), after the shot's own lights and edits.
+  if (shot.lightEdits?.length) { active.lightEdits = (await import('../../experience/light-edits.mjs')).installLightEdits(shot.lightEdits, sceneRoot()); if (active.lightEdits.missing.length) console.warn('[film-fx] lightEdits: no light at ' + active.lightEdits.missing.join(' | ')); }
   return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledReceivers: active.viewerLeds?.info };
 }
 export async function frame(t, chapterSeconds, { video = false } = {}) {
@@ -759,7 +761,7 @@ export async function frame(t, chapterSeconds, { video = false } = {}) {
     active.globals.scene.environmentIntensity = active.globals.env * v;
   }
   active.quality?.frame();
-  active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds);
+  active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds); active.lightEdits?.apply();
   if (active.screens.length) await updateScreens(active.screens, chapterSeconds);
   if (active.clocks.length) setClocks(active.clocks, active.shot.clock, active.shot, chapterSeconds);
   active.status?.frame(chapterSeconds);
@@ -791,6 +793,7 @@ export function clear() {
   active.floor?.restore();
   active.wheels?.restore();   // after quality.restore, which hands the render back to this wrapper
   active.viewerLeds?.restore();   // after wheels.restore (installed first, so wrapped by it)
+  active.lightEdits?.restore();   // first: its intensity accessor chains over the edits' and roomLight's
   active.roomSpill?.restore(); active.roomLight?.restore();   // before edits / timeOfDay: it chains to their accessors
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();

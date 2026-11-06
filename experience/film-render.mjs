@@ -1,5 +1,6 @@
 import {bakeCameraPlan} from './camera-spline-bake.mjs';
 import {exportLighting} from './film-lighting.mjs';
+import {mergeSceneLights} from './light-edits.mjs';
 // The shot a film render gets: the full built film shot with the Director's edits on top.
 // Camera: the Director keys become cameraPlan keys (at = time × seconds; the film plan's hold / cut
 // kept for plan-NN ids, as director-bridge import does) and are baked like camera-spline.mjs.
@@ -17,6 +18,7 @@ export function filmRenderShot(film,shot,keys){
       if(k.label)e.label=k.label;if(o?.hold!==undefined)e.hold=o.hold;if(o?.cut)e.cut=o.cut;return e;})};
     next.cameraPlan=plan;next.camera={keys:film?.cameraPlan?bakeCameraPlan(plan,seconds):structuredClone(keys)};
   }
+  delete next.lights;Object.assign(next,mergeSceneLights(film,shot));
   if(next.quality===undefined)next.quality='hq13';
   return next;
 }
