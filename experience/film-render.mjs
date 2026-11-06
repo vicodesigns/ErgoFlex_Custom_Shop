@@ -2,8 +2,7 @@ import {bakeCameraPlan} from './camera-spline-bake.mjs';
 import {exportLighting} from './film-lighting.mjs';
 import {mergeSceneLights} from './light-edits.mjs';
 // The shot a film render gets: the full built film shot with the Director's edits on top.
-// Camera: the Director keys become cameraPlan keys (at = time × seconds; the film plan's hold / cut
-// kept for plan-NN ids, as director-bridge import does) and are baked like camera-spline.mjs.
+// Camera: filmCamera below.
 export function filmRenderShot(film,shot,keys){
   const seconds=shot.seconds,next={...structuredClone(film||{}),id:shot.id,room:shot.room,kind:shot.kind,seconds};
   for(const k of ['layout','mode','preset','size','title','detail'])if(shot[k]!==undefined)next[k]=shot[k];
@@ -13,15 +12,22 @@ export function filmRenderShot(film,shot,keys){
   if(lit.ledStatus&&!lit.ledNeutral)delete next.ledNeutral;
   if(shot.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...structuredClone(shot.sceneGlobals)};
   if(lit.timeOfDay)next.timeOfDay=structuredClone(lit.timeOfDay);
-  if(keys?.length){
-    const old=[...(film?.cameraPlan?.keys||[])].sort((a,b)=>a.at-b.at),plan={...(film?.cameraPlan||{}),keys:keys.map(k=>{
-      const o=/^plan-\d+$/.test(k.id)?old[Number(k.id.slice(5))]:null,e={at:Math.round(k.time*seconds*1000)/1000,position:k.view.position,target:k.view.target,fov:k.view.fov??35};
-      if(k.label)e.label=k.label;if(o?.hold!==undefined)e.hold=o.hold;if(o?.cut)e.cut=o.cut;return e;})};
-    next.cameraPlan=plan;next.camera={keys:film?.cameraPlan?bakeCameraPlan(plan,seconds):structuredClone(keys)};
-  }
+  const filmed=filmCamera(film,keys,seconds);
+  if(filmed){next.cameraPlan=filmed.cameraPlan;next.camera=filmed.camera;}
   delete next.lights;Object.assign(next,mergeSceneLights(film,shot));
   if(next.quality===undefined)next.quality='hq13';
   return next;
+}
+// The film's camera for the Director's keys (null without keys: the film shot's own camera stays): the keys
+// become cameraPlan keys (at = time × seconds; the film plan's hold / cut kept for plan-NN ids, as
+// director-bridge import does) baked like camera-spline.mjs. The live stage samples these same baked keys
+// (player.mjs), so the Director's view is the film's frame.
+export function filmCamera(film,keys,seconds){
+  if(!keys?.length)return null;
+  const old=[...(film?.cameraPlan?.keys||[])].sort((a,b)=>a.at-b.at),plan={...(film?.cameraPlan||{}),keys:keys.map(k=>{
+    const o=/^plan-\d+$/.test(k.id)?old[Number(k.id.slice(5))]:null,e={at:Math.round(k.time*seconds*1000)/1000,position:k.view.position,target:k.view.target,fov:k.view.fov??35};
+    if(k.label)e.label=k.label;if(o?.hold!==undefined)e.hold=o.hold;if(o?.cut)e.cut=o.cut;return e;})};
+  return {cameraPlan:plan,camera:{keys:film?.cameraPlan?bakeCameraPlan(plan,seconds):structuredClone(keys)}};
 }
 // Renders single frames with the film look in a hidden stage of its own (the same calls as
 // tools/experience/render-cut.cjs: film-fx around prepare, beginBake, fx.frame, bakeFrame).

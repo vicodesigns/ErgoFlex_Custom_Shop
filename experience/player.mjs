@@ -7,6 +7,7 @@ import {ShotClock} from './timing.mjs';
 import {cleanCut,decodeCut} from './cuts.mjs';
 import {filmLink,loadFilmChapters,loadFilmShot,liveFilmShot} from './film-chapters.mjs';
 import {exportLighting} from './film-lighting.mjs';
+import {filmCamera} from './film-render.mjs';
 const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search), linkQuery=new URLSearchParams(location.hash.slice(1));
 let cut=query.get('cut')==='social'?'social':'full',shots=score(cut),index=-1,playing=true,busy=true,finished=false,generation=0,sound=false,app=null,preparation=Promise.resolve(),hasFrame=false,lastUI=0;
 const clock=new ShotClock(),cover=$('transition-frame');
@@ -67,10 +68,17 @@ async function stageFx(){
   await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
   return win.__filmFx;
 }
+// Film chapters: the live camera is the film's (film-render.mjs filmCamera, what Render still and the 4K use):
+// the Director keys baked through the film shot's cameraPlan. Re-baked only when the keys or the length change.
+function filmCameraBake(setup){
+  let last=null,out=null;
+  return (keys,seconds)=>{const key=JSON.stringify([keys,seconds]);if(key!==last){out=filmCamera(setup,keys,seconds).camera.keys;last=key;}return out;};
+}
 // The renderer's order around prepare: clear, beforePrepare, prepare, unhookPreset, install.
 async function prepareStage(next){
   await filmReady;await fxRefresh;while(fxBusy)await fxRefresh;await fxPending;const setup=filmShots.get(next.id),fx=setup?await stageFx().catch(error=>{console.warn('[film fx]',error.message);return null;}):frame.contentWindow.__filmFx;
   liveFx=null;fxShot=null;frame.contentWindow.__directorLightsRestore?.();fx?.clear();
+  stage().filmCamera?.(setup?filmCameraBake(setup):null);
   if(!setup||!fx)return stage().prepare(next);
   const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);
   let result;try{result=await stage().prepare(next);}finally{fx.unhookPreset();}

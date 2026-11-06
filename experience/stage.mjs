@@ -47,7 +47,14 @@ export async function mountStage(ctx) {
   let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let paused=false, sounds=false, mirror=null, sequence=-1, session=null, preparing=false,lastProgress=0;
   let readProgress=()=>0,deskSpan=1,lastMediaColour=0;
-  let editorMode=false,authoredCamera=null,defaultCameraKeys=[],activeCameraKeys=[];
+  let editorMode=false,authoredCamera=null,defaultCameraKeys=[],activeCameraKeys=[],cameraBake=null;
+  // Film chapters (player.mjs filmCameraBake): the stage plays the film's own camera, the Director keys baked through the
+  // film's cameraPlan (holds, spline, timing) exactly as the still renderer and the 4K get them. cameraKeys() stays the
+  // editable keys.
+  function resolveActive(){
+    const keys=resolveCameraKeys(shot?.camera,defaultCameraKeys);activeCameraKeys=keys;
+    if(cameraBake&&keys.length)try{activeCameraKeys=cameraBake(keys,shot.seconds);}catch(error){console.warn('[stage] film camera',error.message);}
+  }
   const cameraPosition=new THREE.Vector3(),cameraTarget=new THREE.Vector3(),cameraEndPosition=new THREE.Vector3(),cameraEndTarget=new THREE.Vector3();
   const focus=new THREE.Vector3(),offset=new THREE.Vector3();
   const intervals=[];let lastRendered=0;
@@ -69,7 +76,7 @@ export async function mountStage(ctx) {
   }
   function cam(t) {
     if(!start||editorMode)return;
-    if(shot?.camera&&authoredCamera){
+    if((shot?.camera||cameraBake)&&authoredCamera){
       const view=sampleCamera(activeCameraKeys,t);if(!view)return;
       cameraPosition.fromArray(view.position);cameraTarget.fromArray(view.target);
       cameraPosition.sub(cameraTarget).multiplyScalar(Math.min(1,view.aspect)/Math.min(1,ctx.camera.aspect)).add(cameraTarget);
@@ -188,7 +195,7 @@ export async function mountStage(ctx) {
       const p=next.motion.clips?sampleClipMotion(next.motion,0):sampleDeskTracks(tracks,0);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);start=frame(envelope,false);
     }
     defaultCameraKeys=(next.kind==='glide'?[0,.3,.6,1]:[0,1]).map((time,i)=>{cam(time);return{id:'auto-camera-'+i,time,label:time===0?'Start view':time===1?'End view':'Movement view '+i,easing:'smooth',view:captureCamera()};});
-    cam(0);authoredCamera=captureCamera();shot={...next,motion:next.motion?(next.motion.clips?next.motion:{tracks:next.motion.tracks||tracksFromPoses(next.motion.from,next.motion.to)}):undefined};activeCameraKeys=resolveCameraKeys(shot.camera,defaultCameraKeys);cam(0);
+    cam(0);authoredCamera=captureCamera();shot={...next,motion:next.motion?(next.motion.clips?next.motion:{tracks:next.motion.tracks||tracksFromPoses(next.motion.from,next.motion.to)}):undefined};resolveActive();cam(0);
     await ctx.warm();await nextFrame();
     lastRendered=0;intervals.length=0;
     return {id:next.id,room:api.roomScene};
@@ -330,9 +337,11 @@ export async function mountStage(ctx) {
       }finally{seek(0);}
       return keys;
     },
-    cameraTrack:(camera,id)=>{if(shot?.id!==id)return;shot.camera=camera;activeCameraKeys=resolveCameraKeys(camera,defaultCameraKeys);},
+    cameraTrack:(camera,id)=>{if(shot?.id!==id)return;shot.camera=camera;resolveActive();},
+    // Set before prepare (player.mjs prepareStage); null for chapters without a film shot.
+    filmCamera:bake=>{cameraBake=typeof bake==='function'?bake:null;},
     // Director: a new chapter length without re-preparing (the desk motion samples by chapter seconds).
-    secondsTrack:(seconds,id)=>{if(shot?.id===id&&Number.isFinite(seconds))shot.seconds=seconds;},
+    secondsTrack:(seconds,id)=>{if(shot?.id===id&&Number.isFinite(seconds)){shot.seconds=seconds;resolveActive();}},
     motionTrack:(motion,id)=>{if(shot?.id===id)shot.motion=motion?(motion.clips?motion:{tracks:motion.tracks||tracksFromPoses(motion.from,motion.to)}):undefined;},
     previewPose:value=>{const p=cleanPose(value);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);return ctx.readDirector();},capturePose:()=>ctx.readDirector(),
     clock:callback=>{readProgress=callback;},capture:canvas=>ctx.capture(canvas),
