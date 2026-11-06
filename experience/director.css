@@ -224,3 +224,34 @@ body.directing #skip{display:none}
 .desk-lane-label .lane-add{display:block;margin-top:3px;min-height:20px!important;padding:1px 6px!important;font-size:10px!important;border-radius:6px!important}
 #director-timeline .lane-key.start b,#director-timeline .lane-key.start small{left:2px;transform:none}
 #director-timeline .lane-key.end b,#director-timeline .lane-key.end small{left:auto;right:2px;transform:none}
+/* Lane groups and compact lanes (MOTION / LIGHTING) */
+#director-timeline .desk-track-toolbar,#director-timeline .desk-ruler{display:none}
+.lane-group-head{display:flex;align-items:stretch;height:22px;background:#0c1d28;border-top:1px solid #9fcada26;border-bottom:1px solid #9fcada18}
+.lane-group-head .desk-lane-label{display:flex;align-items:center;padding:0 6px}
+#director-timeline .lane-group-head button{min-height:18px;height:18px;padding:0 6px;border:0;background:transparent;color:#9fc3d3;font-size:10px;font-weight:700;letter-spacing:.08em}
+.lane-group-summary{position:relative;flex:1;margin-right:var(--track-right,24px)}
+.lane-group-summary i{position:absolute;top:6px;width:2px;height:10px;background:#9fc3d3aa;border-radius:1px}
+.lane-group-body[hidden]{display:none}
+.camera-lane-row,.timeline-content .camera-track{height:36px}
+.desk-lane-row{height:40px}.desk-lane{height:38px}
+#director-timeline .desk-clip{top:3px;height:32px;min-height:32px}
+.desk-lane-row.empty{height:20px}.desk-lane-row.empty .desk-lane{height:18px}.desk-lane-row.empty .desk-lane-empty{display:none}
+.desk-lane-row.empty .desk-lane-label{flex-direction:row!important;align-items:center;justify-content:space-between}
+.desk-lane-row.empty .lane-add{margin:0!important;min-height:16px!important;height:16px;line-height:14px;padding:0 5px!important;font-size:9.5px!important}
+.desk-lane-row[data-lane-color=light]{height:40px}.light-lane{height:38px}
+#director-timeline .light-clip{top:3px;height:32px;min-height:32px}
+/* Key lanes 36 px: band + keys; a key's label shows on hover or selection */
+.desk-lane-row[data-lane-color=white],.desk-lane-row[data-lane-color=tod]{height:36px}
+.key-lane{height:34px}
+.key-lane .lane-band{top:11px;height:12px}
+.key-lane .lane-blend{top:25px}
+#director-timeline .lane-key{height:34px;min-height:34px;min-width:22px}
+#director-timeline .lane-key i{margin-top:9px;width:14px;height:14px}
+#director-timeline .lane-key b,#director-timeline .lane-key small{display:none}
+#director-timeline .lane-key:hover b,#director-timeline .lane-key.selected b{display:block;top:-15px;padding:1px 6px;border-radius:4px;background:#0b1a24ee;box-shadow:0 0 0 1px #9fcada44;z-index:9}
+#director-timeline .lane-key:hover small,#director-timeline .lane-key.selected small{display:block;top:27px;padding:0 4px;border-radius:3px;background:#0b1a24dd;z-index:9}
+.desk-lane-row[data-lane-color=white] .desk-lane-label,.desk-lane-row[data-lane-color=tod] .desk-lane-label{flex-direction:row!important;align-items:center;justify-content:space-between;gap:4px}
+.desk-lane-label .lane-add{margin-top:0!important;min-height:16px!important;height:16px;line-height:14px;padding:0 5px!important;font-size:9.5px!important}
+.light-lanes{margin-top:0}
+.timeline-content .desk-lane-label{white-space:nowrap}
+.desk-lane-label .lane-add{min-width:18px}
