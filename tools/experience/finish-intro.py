@@ -10,6 +10,11 @@ to <dir>/standin/NN.* for pipeline tests), <dir>/score/score.wav (optional),
   ErgoFlex-Intro-1080p.mp4 / -textless.mp4, ErgoFlex-Intro-720p.mp4 / -textless.mp4
   titles.json (absolute in/out for app overlays), titles.ass, poster.jpg
 --draft renders a fast 960×540 preview (final/draft.mp4) instead.
+--title-still T --bg IMG --out PNG renders one titled frame (T: film seconds, or <chapter>:<chapter seconds>) over IMG
+  with the same titles.ass (pairs with --draft for 960x540), e.g. to compare a title against a Director Mode still.
+Title shadows: a title's optional 'shadow' {blur, opacity, paths} (Director Mode's shadow editor) replaces the fitted
+  line boxes with ASS vector drawings (m / l / b) at the same darkness and softness; blur / opacity alone
+  restyle the fitted boxes. Path points are 1920x1080 pixels relative to the title anchor (128, 912).
 --size 2560x1440 masters at that size (chapter renders must match); the HQ file is ErgoFlex-Intro-<H>p.mp4 with the
   bitrate cap scaled by pixel count. Titles stay authored on the 1920×1080 grid (libass scales PlayRes to the frame).
 """
@@ -19,6 +24,24 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 FONTS = os.path.join(ROOT, 'app-reference/assets/google_fonts')
 BLUE = '&H00EC8813&'
 BOX_A, BOX_BLUR, SCRIM_BLOCK = 'B0', 18, False   # title line boxes: alpha B0 = 31% black, soft edge (HQ20 F); SCRIM_BLOCK True = the old block scrim  # #1388ec as ASS BGR
+
+ANCHOR = (128, 912)   # title anchor: the headline's left edge / bottom line (Director Mode's film-titles.mjs ANCHOR)
+LINE_TIMING = {'eyebrow': (0, 10), 'title': (140, 14), 'detail': (380, 10)}   # (delay ms, rise px) as below
+
+def ass_num(v):
+    v = round(float(v) + 0.0, 2); return str(int(v)) if v == int(v) else f'{v:g}'
+
+def ass_drawing(path):
+    """A shadow path as an ASS drawing in absolute 1920x1080 coordinates (film-titles.mjs assDrawing())."""
+    P, (ax, ay) = path['points'], ANCHOR
+    xy = lambda x, y: f'{ass_num(x + ax)} {ass_num(y + ay)}'
+    out = ['m ' + xy(P[0]['x'], P[0]['y'])]
+    for i, p in enumerate(P):
+        q = P[(i + 1) % len(P)]
+        if not p.get('out') and not q.get('in'): out.append('l ' + xy(q['x'], q['y'])); continue
+        o, n = p.get('out') or [0, 0], q.get('in') or [0, 0]
+        out.append(f"b {xy(p['x'] + o[0], p['y'] + o[1])} {xy(q['x'] + n[0], q['y'] + n[1])} {xy(q['x'], q['y'])}")
+    return ' '.join(out)
 
 def run(cmd):
     print('$', ' '.join(c if len(c) < 120 else c[:117] + '…' for c in cmd), flush=True)
@@ -52,7 +75,8 @@ def main():
 
     # ---- titles.json (absolute) + ASS -------------------------------------
     titles = [dict(id=f"{t['chapter']}-{i}", chapter=t['chapter'], start=round(start[t['chapter']] + t['rel_in'], 3),
-                   end=round(start[t['chapter']] + t['rel_out'], 3), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'], scrim=t.get('scrim'))
+                   end=round(start[t['chapter']] + t['rel_out'], 3), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'], scrim=t.get('scrim'),
+                   shadow=t.get('shadow') or {})
               for i, t in enumerate(src['titles'])]
     logo_at = start[src['logo']['chapter']] + src['logo']['rel_in']
     cta = dict(id='cta', chapter=src['cta']['chapter'], start=round(start[src['cta']['chapter']] + src['cta']['rel_in'], 3),
@@ -60,7 +84,7 @@ def main():
     json.dump(dict(schema='ergoflex.intro-titles', version=1, duration=total, fps=fps,
                    placement=dict(anchor='bottom-left', safeArea=0.9, eyebrowColor='#1388EC',
                                   note='Coordinates for a 1920×1080 frame: text left edge x=128; eyebrow/title/detail bottoms at y=812/912/970. Wordmark centered at y=788 (22% of width); CTA centered at y=904.'),
-                   titles=[{k: v for k, v in t.items() if k != 'scrim'} for t in titles], cta=cta, logo=dict(start=round(logo_at, 3))),
+                   titles=[{k: v for k, v in t.items() if k not in ('scrim', 'shadow')} for t in titles], cta=cta, logo=dict(start=round(logo_at, 3))),
               open(os.path.join(out, 'titles.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
 
     size = sys.argv[sys.argv.index('--size') + 1] if '--size' in sys.argv else '1920x1080'
@@ -92,15 +116,32 @@ def main():
             dur = int((b - a) * 1000)
             return (f'Dialogue: {layer},{ts(a + delay / 1000)},{ts(b)},{style},,0,0,0,,'
                     f'{{\\an1\\move({X0},{y + rise},{X0},{y},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
+        # Director Mode's shadow: blur / opacity restyle the boxes; paths replace them (one drawing each, timed like its line).
+        sh = t['shadow']; blur = ass_num(sh.get('blur', BOX_BLUR))
+        alpha = f"{max(0, min(255, round(255 * (1 - float(sh['opacity']))))):02X}" if 'opacity' in sh else BOX_A
+        tint = f'\\3a&H{alpha}&' if alpha != BOX_A else ''
         def box(style, y, text, delay, rise=14):
             return (f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Box{style},,0,0,0,,'
-                    f'{{\\an1\\move({X0},{y + rise},{X0},{y},0,900)\\fad(650,420)\\blur{BOX_BLUR}}}{text}')
+                    f'{{\\an1\\move({X0},{y + rise},{X0},{y},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
+        for p in sh.get('paths') or []:
+            delay, rise = LINE_TIMING.get(p.get('line'), (0, 10))
+            ass.append(f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Scrim,,0,0,0,,{{\\an7\\move(0,{rise},0,0,0,900)\\fad(650,420)\\p1\\bord0\\shad0'
+                       f'\\1c&H000000&\\1a&H{alpha}&\\blur{blur}}}{ass_drawing(p)}{{\\p0}}')
         for style, y, key, delay, rise in (('Eyebrow', 812, 'eyebrow', 0, 10), ('Title', 912, 'title', 140, 14), ('Detail', 970, 'detail', 380, 10)):
-            if not SCRIM_BLOCK: ass.append(box(style, y, t[key], delay, rise))
+            if not SCRIM_BLOCK and not sh.get('paths'): ass.append(box(style, y, t[key], delay, rise))
             ass.append(line(1, style, y, t[key], delay, rise))
     ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad(900,1400)\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
     open(os.path.join(out, 'titles.ass'), 'w', encoding='utf-8').write('\n'.join(ass) + '\n')
 
+    if '--title-still' in sys.argv:
+        v = sys.argv[sys.argv.index('--title-still') + 1]
+        at = start[v.split(':')[0]] + float(v.split(':')[1]) if ':' in v else float(v)
+        bg, png = sys.argv[sys.argv.index('--bg') + 1], sys.argv[sys.argv.index('--out') + 1]
+        fp = (lambda p: os.path.relpath(p).replace(os.sep, '/')) if os.name == 'nt' else (lambda p: p)
+        run(['ffmpeg', '-v', 'error', '-y', '-loop', '1', '-framerate', str(fps), '-i', bg, '-vf',
+             f"scale={W}:{H}:flags=lanczos,setpts=PTS+{at:.4f}/TB,subtitles=filename={fp(os.path.join(out, 'titles.ass'))}:fontsdir={fp(FONTS)}",
+             '-frames:v', '1', png])
+        return
     if '--titles-only' in sys.argv: return
     # ---- master: grade + dissolves + end card -------------------------------
     master = os.path.join(out, 'draft-textless.mkv' if draft else 'wip-textless.mkv' if wip else 'master-textless.mkv')
