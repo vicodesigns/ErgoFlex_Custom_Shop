@@ -1,6 +1,7 @@
 import {bakeCameraPlan} from './camera-spline-bake.mjs';
 import {exportLighting} from './film-lighting.mjs';
 import {mergeSceneLights} from './light-edits.mjs';
+import {mergePropEdits} from './prop-edits.mjs';
 // The shot a film render gets: the full built film shot with the Director's edits on top.
 // Camera: filmCamera below.
 export function filmRenderShot(film,shot,keys){
@@ -14,7 +15,7 @@ export function filmRenderShot(film,shot,keys){
   if(lit.timeOfDay)next.timeOfDay=structuredClone(lit.timeOfDay);
   const filmed=filmCamera(film,keys,seconds);
   if(filmed){next.cameraPlan=filmed.cameraPlan;next.camera=filmed.camera;}
-  delete next.lights;Object.assign(next,mergeSceneLights(film,shot));
+  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot));
   if(next.quality===undefined)next.quality='hq13';
   return next;
 }
@@ -48,8 +49,8 @@ export function createStillRenderer({width=1280,height=720,src='/?view=product&p
     ready||=boot().catch(error=>{dispose();throw error;});await ready;
     const w=win(),EP=w.ErgoPresentation,fx=w.__filmFx;
     // Prepare once per scene; film-fx alone re-installs when only the film layers changed.
-    const {ledStatus,ledNeutral,ledColor,sceneGlobals,camera,cameraPlan,lights,lightEdits,timeOfDay,...scene}=shot,key=JSON.stringify(scene),setup=JSON.stringify(shot);
-    // Lighting-only changes update the film layers in place; anything else re-prepares the room first.
+    const {ledStatus,ledNeutral,ledColor,sceneGlobals,camera,cameraPlan,lights,lightEdits,timeOfDay,sceneEdits,...scene}=shot,key=JSON.stringify(scene),setup=JSON.stringify(shot);
+    // Lighting and prop (sceneEdits) changes update the film layers in place; anything else re-prepares the room first.
     let full=key!==prepared;
     if(!full&&setup!==setupKey){let r='full';try{r=fx.update?await fx.update(shot):'full';}catch(error){console.warn('[still] update',error);}if(r==='full')full=true;else setupKey=setup;}
     if(full){

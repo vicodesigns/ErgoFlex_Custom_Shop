@@ -31,6 +31,12 @@
       shadow) rewrites that chapter's entries in <hq>/titles-src.json (backup first: titles-src.pre-director-<id>-<time>.json;
       unchanged titles leave the file alone). Titles he retimed get director_timing: true, which titles-after-cut.py
       keeps as set (it only flags a break of the 1.5 s-after-cut rule).
+      Props: an export whose shot has 'propEdits' (Director Mode's Props: move / turn / scale / hide, film sceneEdits
+      format, experience/prop-edits.mjs) keeps them in director-camera-<id>.json as 'props' (an export without the
+      field keeps the props imported before). The pass writes them into the chapter's sceneEdits after the hand-made
+      ones, each marked director: true, replacing the earlier director: true entries; the builders' and
+      film-cameras sceneEditsAdd entries are never touched, and the Director's entries are offsets from the film's
+      placement, so they keep what Vico saw however the hand-made edits for that prop change.
 """
 import copy, glob, html, json, os, re, subprocess, sys, tempfile, time
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the repo
@@ -253,12 +259,52 @@ def apply_lighting(cid, f, lighting):
     return wrote
 
 
+PROP_FIELDS = ('match', 'asset', 'path', 'near', 'label', 'position', 'rotation', 'scale', 'hide')
+
+
+def clean_props(props):
+    """Director Mode's prop edits (experience/prop-edits.mjs cleanPropEdit), as film sceneEdits marked director: true."""
+    out = []
+    vec = lambda v: isinstance(v, list) and len(v) == 3 and all(isinstance(x, (int, float)) and not isinstance(x, bool) and abs(x) < 1e4 for x in v)
+    for e in props if isinstance(props, list) else []:
+        if not isinstance(e, dict) or not isinstance(e.get('match'), str): continue
+        d = {k: copy.deepcopy(e[k]) for k in PROP_FIELDS if k in e}
+        for k in ('near', 'position', 'rotation', 'scale'):
+            if k in d and not vec(d[k]): d.pop(k)
+        if 'hide' in d and not isinstance(d['hide'], bool): d.pop('hide')
+        for k in ('asset', 'path', 'label'):
+            if k in d and not isinstance(d[k], str): d.pop(k)
+        if not any(k in d for k in ('position', 'rotation', 'scale', 'hide')): continue
+        d['director'] = True; out.append(d)
+    return out
+
+
+def apply_props(cid, f, props):
+    """The chapter's sceneEdits: its hand-made entries as they are, then the Director's (replacing earlier director: true)."""
+    mine = clean_props(props)
+    paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
+    wrote = []
+    for p in paths:
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') != cid: continue
+            hand = [e for e in s.get('sceneEdits') or [] if not e.get('director')]
+            if hand or mine: s['sceneEdits'] = hand + copy.deepcopy(mine)
+            else: s.pop('sceneEdits', None)
+        if dump(p, d): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
 def run_pass():
     for n, cid, f in chapters():
         p = director_file(cid)
         if os.path.exists(p) and load(p).get('lighting'):
             w = apply_lighting(cid, f, load(p)['lighting'])
             print(f'ch{n:02d} {cid}: Director lighting ({", ".join(sorted(load(p)["lighting"]))}) -> {", ".join(w) or "no change"}')
+        if os.path.exists(p) and 'props' in load(p):
+            w = apply_props(cid, f, load(p)['props'])
+            print(f'ch{n:02d} {cid}: Director props ({len(load(p)["props"])}) -> {", ".join(w) or "no change"}')
     for n, cid, f in chapters():
         if cid == 'awaken': continue
         p = director_file(cid)
@@ -409,6 +455,7 @@ def run_import(export):
         cid = next((c for c in sorted(known, key=len, reverse=True) if name.startswith(f'Film-chapter-{c}')), None)
     if cid not in known: sys.exit(f'{export}: not a film chapter')
     n, f = known[cid]
+    before = load(director_file(cid)) if os.path.exists(director_file(cid)) else {}
     cmd = ['python3', BRIDGE, 'import', export, director_file(cid), '--shot', cid, '--plan', plan_source(cid, f)]
     subprocess.run(cmd, check=True, stdout=sys.stderr)
     # The Lighting lane's edits ride in the export's shot; keep them beside the camera keys and clips (run_pass applies them).
@@ -419,7 +466,11 @@ def run_import(export):
     dc = load(director_file(cid))
     if lighting: dc['lighting'] = lighting
     else: dc.pop('lighting', None)
+    # Props: the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
+    if isinstance(shot.get('propEdits'), list): dc['props'] = [{k: v for k, v in e.items() if k != 'director'} for e in clean_props(shot['propEdits'])]
+    elif 'props' in before: dc['props'] = before['props']
     dump(director_file(cid), dc)
+    if 'props' in dc: print(f'{cid}: Director props -> {len(dc["props"])} prop edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if isinstance(shot.get('filmTitles'), list):
         lines = []; wrote = import_titles(cid, shot['filmTitles'], float(shot.get('seconds') or dc['seconds']), lines.append)
         print(f'{cid}: Director titles -> {", ".join(wrote) or "titles-src.json unchanged"}', file=sys.stderr)

@@ -849,11 +849,12 @@ export async function install(shot) {
 // Returns 'ok' (in place, synchronous for data-only changes), 'slow' (time-of-day modes or a scene-globals
 // shape change re-captured the room: onSlow() ran first so the caller can hold the frame) or 'full' (a field
 // that needs install: the caller runs clear() + install()).
-const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles'];
+// sceneEdits too (the Director's prop edits): the edits layer and everything chained after it re-install in place.
+const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits'];
 const TAIL = ['tod', 'edits', 'lights', 'roomLight', 'roomSpill', 'lightEdits'];
 export async function update(shot, { onSlow } = {}) {
   if (!active) return 'full';
-  const prev = active.shot, same = (a, b) => JSON.stringify(a) === JSON.stringify(b), changed = k => !same(prev[k], shot[k]);
+  const prev = active.shot, bare = v => JSON.stringify(v, (k, x) => k === '__count' ? undefined : x), same = (a, b) => bare(a) === bare(b), changed = k => !same(prev[k], shot[k]);
   for (const k of new Set([...Object.keys(prev), ...Object.keys(shot)])) if (!LIVE_FIELDS.includes(k) && changed(k)) return 'full';
   const g0 = prev.sceneGlobals || {}, g1 = shot.sceneGlobals || {}, gChanged = k => !same(g0[k], g1[k]);
   let tail = TAIL.length, globals = false, status = false;
@@ -876,6 +877,7 @@ export async function update(shot, { onSlow } = {}) {
     const seq = x => [...(x || [])].sort((a, b) => a.at - b.at).map(k => k.mode).join();
     if (!(active.tod?.retime && prev.timeOfDay?.length && shot.timeOfDay?.length && seq(prev.timeOfDay) === seq(shot.timeOfDay) && active.tod.retime(shot.timeOfDay))) tail = 0;
   }
+  if (changed('sceneEdits')) tail = Math.min(tail, 1);
   if (changed('lights')) tail = Math.min(tail, 2);
   if (gChanged('roomLight')) tail = Math.min(tail, 3);
   if ((gChanged('ledRoomSpill') || gChanged('ledWallGlow') || gChanged('ledFloorGlow')) && !(tail > 4 && active.roomSpill?.retune(g1))) tail = Math.min(tail, 4);

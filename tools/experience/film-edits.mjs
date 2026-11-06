@@ -4,8 +4,9 @@
 //   "A > B > C" path>' (optional, narrows), materialName:'<regex>',
 //   materialColor:'#hex', materialType:'Basic' (optional: only those
 //   materials), hide:true,
-//   position:[dx,dy,dz] (world metres, added once), rotation:[dx,dy,dz] (deg),
-//   scale:s, material:{color, emissive, roughness, metalness, clearcoat,
+//   position:[dx,dy,dz] (world metres, added once), rotation:[dx,dy,dz] (deg,
+//   added to the local Euler), scale:s or [sx,sy,sz] (local, multiplied), hide:false
+//   shows an object an earlier edit hid (back to whatever the app sets), material:{color, emissive, roughness, metalness, clearcoat,
 //   clearcoatRoughness, envMapIntensity, emissiveIntensity, opacity,
 //   emissiveScale, opacityScale, colorScale (unlit backdrops), mapBlur (mip
 //   LOD, ~2^lod texels)}, opacity:<multiplier or [[sec,value],…]>,
@@ -20,6 +21,10 @@
 //   minArea (m²): skip matched meshes smaller than this.
 //   near:[x, z, r]: keep only matches whose world origin lies within r (scene units, xz) of (x, z),
 //   for one of several same-named props (e.g. a single chair at a table).
+//   asset:'<Studio scene asset key>' keeps only the object whose userData.sceneAssetKey is that key (one of many
+//   same-named room props, wherever it stands; the Director targets Studio props this way).
+//   director:true marks the Director's own prop edits (experience/prop-edits.mjs): offsets from the film's
+//   placement, applied after every hand-made edit; build-round8-director.py replaces them on import.
 //   lightType:'<regex on light type>' (PointLight|SpotLight|HemisphereLight|
 //   DirectionalLight|RectAreaLight) selects lights instead; then intensity:
 //   <multiplier | keyframes> and color:'#hex'.
@@ -64,6 +69,8 @@ function stageObjects() {
   scene.traverse(o => { if (o.isMesh && o.material?.isShadowMaterial) out.floor.push(o); });
   return out;
 }
+// The objects one sceneEdit acts on (the Director checks its prop targets with this, in the stage frame).
+export function editTargets(edit) { return targets(edit); }
 function targets(edit) {
   const scene = sceneRoot(), m = String(edit.match || '');
   if (m === '@window') { const w = WINDOWS[api.roomScene]; if (!w) { console.warn('[film-fx] @window: no exterior backdrop known for room', api.roomScene); return []; } return targets({ ...edit, ...w, match: '' }); }
@@ -79,6 +86,7 @@ function targets(edit) {
     if (mok) { if (o.isMesh && o.visible && [].concat(o.material).some(x => x && mok(x)) && re.test(o.name) && (!pre || pre.test(pathOf(o, scene)))) out.push(o); return; }
     if (re.test(o.name) && (!pre || pre.test(pathOf(o, scene)))) out.push(o);
   });
+  if (edit.asset) for (let i = out.length - 1; i >= 0; i--) if (out[i].userData.sceneAssetKey !== edit.asset) out.splice(i, 1);
   if (edit.near) { const [nx, nz, nr] = edit.near, w = new THREE.Vector3(); scene.updateMatrixWorld(true); for (let i = out.length - 1; i >= 0; i--) { out[i].getWorldPosition(w); if (Math.hypot(w.x - nx, w.z - nz) > nr) out.splice(i, 1); } }
   if (edit.minArea) { const sz = new THREE.Vector3(); for (let i = out.length - 1; i >= 0; i--) { new THREE.Box3().setFromObject(out[i]).getSize(sz); if (Math.max(sz.x * sz.y, sz.y * sz.z, sz.x * sz.z) < edit.minArea) out.splice(i, 1); } }
   // Drop descendants of other matches (a group and its children both matching).
@@ -115,8 +123,17 @@ export function installEdits(shot) {
     if (!found.length) { console.warn(`[film-fx] sceneEdits[${n}] matched nothing: ${edit.match}`); continue; }
     edit.__count = found.length;
     for (const o of found) {
+      // Which edits act on each object (the Director reads its own director:true entry and the film's moves here).
+      (o.userData.__filmFxEdits ||= []).push(edit); undo.push(() => { const a = o.userData.__filmFxEdits, i = a ? a.lastIndexOf(edit) : -1; if (i >= 0) a.splice(i, 1); if (a && !a.length) delete o.userData.__filmFxEdits; });
       // Sticky hide: the app's own per-frame sync (desk dressing, day kits) sets visible back, so hold it false.
-      if (edit.hide) { let raw = o.visible; Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => false, set: v => { raw = v; } }); undo.push(() => { delete o.visible; o.visible = raw; }); }
+      // hide:false (a later edit, e.g. the Director's) shows it again: the raw value under an earlier sticky hide.
+      if (typeof edit.hide === 'boolean' && (edit.hide || o.userData.__filmFxRawVisible)) {
+        const own = Object.getOwnPropertyDescriptor(o, 'visible'), prior = o.userData.__filmFxRawVisible, hidden = edit.hide;
+        let raw = prior ? prior() : o.visible;
+        Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => hidden ? false : raw, set: v => { raw = v; own?.set?.call(o, v); } });
+        o.userData.__filmFxRawVisible = () => raw;
+        undo.push(() => { delete o.visible; if (own?.get || own?.set) Object.defineProperty(o, 'visible', own); else o.visible = raw; if (prior) o.userData.__filmFxRawVisible = prior; else delete o.userData.__filmFxRawVisible; });
+      }
       if (edit.position) { const p = o.position.clone(), w = o.getWorldPosition(new THREE.Vector3()), to = w.clone().add(new THREE.Vector3(...edit.position)); if (o.parent) { o.parent.worldToLocal(w); o.parent.worldToLocal(to); } o.position.add(to.sub(w)); undo.push(() => o.position.copy(p)); }
       if (edit.rotation) { const r = o.rotation.clone(); o.rotation.x += THREE.MathUtils.degToRad(edit.rotation[0] || 0); o.rotation.y += THREE.MathUtils.degToRad(edit.rotation[1] || 0); o.rotation.z += THREE.MathUtils.degToRad(edit.rotation[2] || 0); undo.push(() => o.rotation.copy(r)); }
       if (o.isLight && edit.intensity !== undefined) {
@@ -127,6 +144,7 @@ export function installEdits(shot) {
       if (o.isLight && edit.color) { const c = o.color.clone(); o.color.set(edit.color); undo.push(() => o.color.copy(c)); }
       if (o.isLight && edit.recolor) for (const k of ['color', 'groundColor']) if (o[k]?.isColor) recolorColor(o[k], recolorFn(edit.recolor), undo);
       if (Number.isFinite(edit.scale)) { const s = o.scale.clone(); o.scale.multiplyScalar(edit.scale); undo.push(() => o.scale.copy(s)); }
+      else if (Array.isArray(edit.scale) && edit.scale.length === 3 && edit.scale.every(Number.isFinite)) { const s = o.scale.clone(); o.scale.multiply(new THREE.Vector3(...edit.scale)); undo.push(() => o.scale.copy(s)); }
       const mat = { ...(edit.material || {}) }; if (edit.opacity !== undefined) mat.opacityScale = edit.opacity;
       if (!Object.keys(mat).length && !edit.radialFade && !edit.recolor) continue;
       const rc = edit.recolor && !o.isLight ? recolorFn(edit.recolor) : null;
