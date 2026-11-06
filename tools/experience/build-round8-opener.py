@@ -113,6 +113,9 @@ if _dc.get('clips'):   # a movement Vico deleted in Director Mode takes its stat
 # roll): the strips show one state at a time, so each light hands over to the next move's at that move's start.
 STATUS.sort(key=lambda e: e['at'])
 for e, n in zip(STATUS, STATUS[1:]): e['dur'] = round(min(e['at'] + e['dur'], n['at']) - e['at'], 3)
+# HQ26 (Vico): every move that starts after a white pause fades in from the white (as the first lift and rise do).
+for p, e in zip(STATUS, STATUS[1:]):
+    if e['at'] - (p['at'] + p['dur'] + p.get('fade', 0)) >= .5 - 1e-6: e['fadeIn'] = .6
 
 # ---------------------------------------------------------------- desk geometry for the camera
 # Desk box centre (x, z) at rest is (0.14, 0); its turn pivot (the model origin) is 0.24 u behind it (render-cut
