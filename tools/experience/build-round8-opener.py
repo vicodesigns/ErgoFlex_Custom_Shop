@@ -85,8 +85,7 @@ if _dc.get('clips'):
     # cut has no dead hold at the end.
     LAST = max(c['start'] + c['duration'] for c in CLIPS)
     if 'op-lift-end' not in _by: LIFT_END = (LAST - LIFT_END[1], LIFT_END[1])   # only feeds the settle and the camera tail
-    LAST = max([LAST] + [k['at'] for k in _dc.get('keys', [])])
-    SECONDS = round(min(SECONDS, LAST + TAIL), 2)
+    SECONDS = round(min(SECONDS, max([LAST + TAIL] + [k['at'] for k in _dc.get('keys', [])])), 2)   # a key may sit at the very end (push into the dissolve)
     SETTLE = (round(LAST + .5, 3), round(min(SECONDS, LAST + 1.9), 3))
     print(f'awaken: {len(CLIPS)} movement clips from {DIRECTOR}, {SECONDS:g} s')
 
