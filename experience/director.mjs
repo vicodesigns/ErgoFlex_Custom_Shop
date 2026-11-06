@@ -98,6 +98,7 @@ export function mountDirector(bridge,catalog,initial){
   function snapTime(value,{pixels=1000,bypass=false,excludeClip,excludeKey,excludePlayhead=false}={}){
     return snapTimelineTime(value,{seconds:shot().seconds,step:snapStep,bypass,targets:[0,shot().seconds,...(excludePlayhead?[]:[playhead*shot().seconds]),...keys().filter(k=>k.id!==excludeKey).map(k=>k.time*shot().seconds),...deskEditor.boundaries(excludeClip)],tolerance:8*shot().seconds/pixels});
   }
+  let orbitBase=null;   // see liveView (Film look follows an orbit)
   // A live orbit can still be coasting (OrbitControls damping): spend what is left at once, so the next seek puts the
   // camera exactly on the keys.
   function stopOrbit(){const c=bridge.stage()?.three?.()?.controls;if(!c?.update)return;const d=c.enableDamping;c.enableDamping=false;try{c.update();}finally{c.enableDamping=d;}}
@@ -110,7 +111,7 @@ export function mountDirector(bridge,catalog,initial){
       easing:i===0||i===plan.length-1?'smooth':'linear',view:{position:[...k.position],target:[...k.target],fov:k.fov??35,aspect:16/9}}));
   }
   function requireReady(){if(!bridge.ready())throw Error('Wait for this chapter to finish loading.');}
-  function seekCamera(time){requireReady();playhead=Math.max(0,Math.min(1,time));bridge.seek(playhead);syncPlayhead();}
+  function seekCamera(time){requireReady();orbitBase=null;playhead=Math.max(0,Math.min(1,time));bridge.seek(playhead);syncPlayhead();}
   function syncTransport(){
     const bake=bridge.bakeState(),bakeLabel=BAKE_PROFILE.height+'p / '+BAKE_PROFILE.fps+' fps',state=bridge.playback(),active=state.playing&&state.index===selected,label=state.busy?'Loading chapter…':active?'❚❚ Pause chapter':'▶ Play chapter';
     for(const root of [panel,timeline]){
@@ -153,7 +154,7 @@ export function mountDirector(bridge,catalog,initial){
   function syncPan(){const viewport=timeline.querySelector('.timeline-viewport'),range=timeline.querySelector('[name="timeline-pan"]');if(viewport&&range&&document.activeElement!==range)range.value=viewport.scrollLeft/Math.max(1,viewport.scrollWidth-viewport.clientWidth)*100;}
   function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();sceneProps.deselect();titleEditor.clear();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
   function captureKey(time,label){
-    requireReady();const view=bridge.stage().captureCamera();if(!view)throw Error('The camera is not ready.');
+    requireReady();const view=bridge.stage().captureCamera();if(!view)throw Error('The camera is not ready.');orbitBase=null;
     deskEditor.clearSelection();reveal('camera');
     const existing=keys().find(k=>Math.abs(k.time-time)<.001);if(!existing&&keys().length>=64)throw Error('A chapter can hold up to 64 camera keyframes.');
     commit(()=>{const list=ensureKeys();if(existing){const key=list.find(k=>k.id===existing.id);key.view=view;keyId=key.id;}else{const key={id:crypto.randomUUID(),time,label:label||'Camera view '+(list.length+1),easing:'smooth',path:'orbit',view};list.push(key);keyId=key.id;}list.sort((a,b)=>a.time-b.time);},{render:true});
@@ -589,7 +590,19 @@ export function mountDirector(bridge,catalog,initial){
   // Film look (F): the real render crossfaded over the 16:9 frame whenever the view rests.
   const filmLook=film?createFilmLook({status,onStill:()=>action('render-still'),
     resting:()=>open&&bridge.ready()&&!bridge.playback().playing&&!scrub&&!keyDrag&&!groupDrag&&!marquee&&!stillBusy&&!composing&&!bridge.bakeState().baking,
-    async render(){const s=shot(),t=playhead;stills||=createStillRenderer();const url=await stills.render(filmRenderShot(filmShot(),s,keys()),t);return {url,label:(t*s.seconds).toFixed(2)+' s'};}}):null;
+    async render(){
+      const s=shot(),t=playhead,view=liveView(),job=filmRenderShot(filmShot(),s,keys());
+      // Orbited away from the keys: the film look shows the user's view (held for the whole chapter), not the saved one.
+      if(view){job.camera={keys:[0,1].map(time=>({id:'live-'+time,time,label:'Your view',easing:'linear',view}))};delete job.cameraPlan;
+        status((selectedKey()?'Update selected view':'+ Add camera keyframe')+' keeps this camera.');}
+      stills||=createStillRenderer();const url=await stills.render(job,t);return {url,label:(t*s.seconds).toFixed(2)+' s'+(view?' · your view (not saved)':'')};}}):null;
+  // The view the keys put the stage camera in (taken when an orbit, pan or zoom starts; dropped on a seek, play or
+  // capture). While the live camera differs from it, Film look and Split's film side render the live camera.
+  const viewNums=v=>[...v.position,...v.target,v.fov];
+  function liveView(){
+    if(!orbitBase)return null;stopOrbit();const view=bridge.stage()?.captureCamera();if(!view)return null;
+    const a=viewNums(view),b=viewNums(orbitBase);return a.some((x,i)=>Math.abs(x-b[i])>1e-4)?view:null;
+  }
   // Viewport light tools (top left of the frame): Lights (L), Move (W), Aim (E).
   // Viewport tools (top left of the frame): Lights (L), Move (W: the selected light or prop), Aim (E: a light),
   // Rotate (E: a prop), Scale (T: a prop).
@@ -599,7 +612,7 @@ export function mountDirector(bridge,catalog,initial){
     const set=(vt,on,pressed)=>{const b=lightTools.querySelector(`[data-vt=${vt}]`);b.disabled=!on;b.setAttribute('aria-pressed',String(!!(on&&pressed)));};
     set('w',light||prop,prop&&m==='translate');set('e',light,false);set('pe',prop,m==='rotate');set('t',prop,m==='scale');};
   let orbitHooked=false,pokedAt=-1,pokedPlaying=false;
-  function hookOrbit(){if(orbitHooked||!filmLook)return;const dom=bridge.stage()?.three?.()?.renderer?.domElement;if(!dom)return;const poke=()=>filmLook.poke();dom.addEventListener('pointerdown',poke,true);dom.addEventListener('pointermove',e=>{if(e.buttons)poke();},true);dom.addEventListener('wheel',poke,{capture:true,passive:true});orbitHooked=true;}
+  function hookOrbit(){if(orbitHooked||!filmLook)return;const dom=bridge.stage()?.three?.()?.renderer?.domElement;if(!dom)return;const poke=()=>filmLook.poke(),start=()=>{if(!orbitBase&&!bridge.playback().playing)orbitBase=bridge.stage()?.captureCamera()||null;poke();};dom.addEventListener('pointerdown',start,true);dom.addEventListener('pointermove',e=>{if(e.buttons)poke();},true);dom.addEventListener('wheel',start,{capture:true,passive:true});orbitHooked=true;}
   // Warm the still stage once the chapter is live, so the first still / film look is quick.
   let warmed=false;
   function warmStill(){if(warmed||!film||!filmShot())return;warmed=true;(window.requestIdleCallback||(f=>setTimeout(f,1200)))(()=>{if(stillBusy)return;stills||=createStillRenderer();stills.render(filmRenderShot(filmShot(),shot(),keys()),playhead).catch(()=>{});},{timeout:4000});}
@@ -681,7 +694,7 @@ export function mountDirector(bridge,catalog,initial){
   }
   async function load(){
     const token=++loadToken,position=playhead;status('Loading this chapter…');
-    try{await bridge.editShot(project,selected);if(token===loadToken){automaticCameras.set(shot().id,bridge.stage().cameraKeys());deskEditor.ready();playhead=position;if(!keys().some(k=>k.id===keyId))keyId=null;renderPanel();renderTimeline();if(film&&!timelineFitted&&!document.body.style.getPropertyValue('--director-timeline-height')){fitTimeline();renderTimeline();}hookOrbit();warmStill();if(film&&filmShot())sceneProps.ensure().catch(error=>console.warn('[props]',error.message));bridge.seek(playhead);status('Camera is live. Existing desk movements appear below; select a block to edit it, or add Lift, Tilt or Wheels.');}}catch(error){if(token===loadToken)status(error.message,true);}
+    try{await bridge.editShot(project,selected);if(token===loadToken){automaticCameras.set(shot().id,bridge.stage().cameraKeys());deskEditor.ready();playhead=position;if(!keys().some(k=>k.id===keyId))keyId=null;renderPanel();renderTimeline();if(film&&!timelineFitted&&!document.body.style.getPropertyValue('--director-timeline-height')){fitTimeline();renderTimeline();}hookOrbit();warmStill();if(film&&filmShot())sceneProps.ensure().catch(error=>console.warn('[props]',error.message));orbitBase=null;bridge.seek(playhead);status('Camera is live. Existing desk movements appear below; select a block to edit it, or add Lift, Tilt or Wheels.');}}catch(error){if(token===loadToken)status(error.message,true);}
   }
   function move(from,to){if(to<0||to>=project.shots.length)return;commit(()=>{const [s]=project.shots.splice(from,1);project.shots.splice(to,0,s);selected=to;},{render:true});load();}
   function exportCut(){const url=URL.createObjectURL(new Blob([JSON.stringify(((c)=>({...c,shots:c.shots.map(exportLighting)}))(cleanCut(project,catalog)),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();fresh.exported(project);syncFilm();status('Cut exported. Import it in Director Mode on another browser.');}
@@ -862,7 +875,7 @@ export function mountDirector(bridge,catalog,initial){
       }
       if(name==='key-add'){captureKey(playhead);return;}
       if(name==='key-update'){
-        requireReady();if(!selectedKey())return;const view=bridge.stage().captureCamera();
+        requireReady();if(!selectedKey())return;const view=bridge.stage().captureCamera();orbitBase=null;
         commit(()=>{ensureKeys().find(k=>k.id===keyId).view=view;},{render:true});status('Selected camera view updated.');return;
       }
       if(name==='key-delete'){
@@ -1256,7 +1269,7 @@ export function mountDirector(bridge,catalog,initial){
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
   render();panel.hidden=timeline.hidden=true;
-  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{sceneLights.applied();sceneProps.applied();floorRefl.applied();if(open)renderSceneProps(true);},
+  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;if(p)orbitBase=null;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{sceneLights.applied();sceneProps.applied();floorRefl.applied();if(open)renderSceneProps(true);},
     // Selection -> inspector home (HOMES): for lanes and tools outside this module (the Titles lane: reveal('title')).
     reveal,revealHomes:()=>({...structuredClone(HOMES),title:homeOf('title')})};
 }
