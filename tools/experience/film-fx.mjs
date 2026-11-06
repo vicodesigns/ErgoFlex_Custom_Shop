@@ -827,10 +827,11 @@ export async function update(shot, { onSlow } = {}) {
   }
   return slow ? 'slow' : 'ok';
 }
-export async function frame(t, chapterSeconds, { video = false } = {}) {
+export async function frame(t, chapterSeconds, { video = false, screens = true, timing = null } = {}) {
   if (!active) return;
+  let mark = timing ? performance.now() : 0; const lap = name => { if (!timing) return; const now = performance.now(); timing[name] = (timing[name] || 0) + now - mark; mark = now; };
   for (const v of active.desk?.timed || []) v.cell.force = visibleAt(v.keys, chapterSeconds);
-  if (active.tod) active.tod.apply(chapterSeconds);
+  if (active.tod) active.tod.apply(chapterSeconds); lap('timeOfDay');
   active.roomLight?.frame(chapterSeconds);
   active.roomSpill?.frame();
   if (active.globals?.exposureCell) active.globals.exposureCell.cell.value = keyAt(active.globals.exposureCell.keys, chapterSeconds);
@@ -840,10 +841,10 @@ export async function frame(t, chapterSeconds, { video = false } = {}) {
     active.globals.scene.environmentIntensity = active.globals.env * v;
   }
   active.quality?.frame();
-  active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds); active.lightEdits?.apply();
-  if (active.screens.length) await updateScreens(active.screens, chapterSeconds);
+  active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds); active.lightEdits?.apply(); lap('lights');
+  if (active.screens.length && screens) { await updateScreens(active.screens, chapterSeconds); lap('screens'); }
   if (active.clocks.length) setClocks(active.clocks, active.shot.clock, active.shot, chapterSeconds);
-  active.status?.frame(chapterSeconds);
+  active.status?.frame(chapterSeconds); lap('status');
   if (active.led) {
     const led = active.led; await sampleLed(led, chapterSeconds, video);
     api.setLedColor(led.avg, false);

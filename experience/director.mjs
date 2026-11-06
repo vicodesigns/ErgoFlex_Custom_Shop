@@ -851,8 +851,10 @@ export function mountDirector(bridge,catalog,initial){
   // Shift+L: jump to the lighting lanes.
   document.addEventListener('keydown',event=>{if(!open||!event.shiftKey||event.ctrlKey||event.metaKey||event.altKey||event.key.toLowerCase()!=='l'||event.target.closest?.('input,select,textarea,[contenteditable]'))return;event.preventDefault();revealLighting();});
   function resizeTimeline(height){document.body.style.setProperty('--director-timeline-height',Math.max(300,Math.min(innerHeight*.65,720,height))+'px');}
+  let scrubWant=null,scrubFrame=0;
   function scrubRuler(event){
-    const box=scrub.getBoundingClientRect();seekCamera(snapTime((event.clientX-box.left)/box.width*shot().seconds,{pixels:box.width,bypass:event.altKey,excludePlayhead:true})/shot().seconds);
+    const box=scrub.getBoundingClientRect();scrubWant=snapTime((event.clientX-box.left)/box.width*shot().seconds,{pixels:box.width,bypass:event.altKey,excludePlayhead:true})/shot().seconds;
+    if(!scrubFrame)scrubFrame=requestAnimationFrame(()=>{scrubFrame=0;if(scrubWant===null)return;const t=scrubWant;scrubWant=null;try{seekCamera(t);}catch(error){status(error.message,true);}});
   }
   timeline.addEventListener('pointerdown',event=>{
     if(event.button!==0)return;
@@ -1064,5 +1066,5 @@ export function mountDirector(bridge,catalog,initial){
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
   render();panel.hidden=timeline.hidden=true;
-  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},filmApplied:()=>sceneLights.applied()};
+  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>sceneLights.applied()};
 }

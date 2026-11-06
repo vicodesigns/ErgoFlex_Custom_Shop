@@ -118,7 +118,7 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
     for(const e of list){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:tools.icons[iconType(e.light)],depthTest:false,depthWrite:false,transparent:true,sizeAttenuation:false,toneMapped:false}));m.renderOrder=999;m.userData.path=e.path;m.userData.light=e.light;group.add(m);}
   }
   function tick(){
-    requestAnimationFrame(tick);if(!tools)return;const {group,gizmo,t}=tools;const live=editing();refresh();
+    requestAnimationFrame(tick);if(!tools)return;const {group,gizmo,t}=tools;const live=editing();refresh();if(show&&live&&(gizmo.dragging||group.visible))bridge.stage()?.wake?.(300);
     group.visible=show&&live;
     const px=1/Math.max(200,t.renderer.domElement.clientHeight||600);
     if(group.visible)for(const m of group.children){const l=m.userData.light;if(!l.parent)continue;l.getWorldPosition(m.position);m.material.color.copy(l.color);m.material.map=tools.icons[(l.visible?'':'off-')+iconType(l)];m.material.opacity=l.visible?1:.6;m.scale.setScalar((m.userData.path===selected?36:28)*px);}

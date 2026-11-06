@@ -13,9 +13,16 @@ import {cleanPose,cleanCamera,defaultPreset} from './cuts.mjs';
 export async function mountStage(ctx) {
   // hold(): keep showing the last drawn frame (no render loop) while the Director re-applies film layers, so the
   // view never shows a half-dressed room. Pause requests made meanwhile are kept and applied on release.
-  const rawPause=ctx.pause.bind(ctx);let held=0,wantPause=false;
-  ctx.pause=on=>{wantPause=!!on;if(!held)rawPause(on);};
-  const hold=on=>{if(on){if(!held++)rawPause(true);}else if(held&&!--held)rawPause(wantPause);};
+  const rawPause=ctx.pause.bind(ctx);let held=0,wantPause=false,sleeping=false,sleepTimer=0;
+  ctx.pause=on=>{wantPause=!!on;if(!held&&!(sleeping&&!on))rawPause(on);if(!on)wake();};
+  const hold=on=>{if(on){if(!held++)rawPause(true);}else if(held&&!--held)rawPause(wantPause||sleeping);};
+  // Render on demand while editing: after 800 ms with no input, seek, edit or film-fx change the loop stops
+  // (the last frame stays); wake() restarts it. Playback, bakes and preparing never sleep.
+  function wake(ms=800){
+    if(sleeping){sleeping=false;if(!held&&!wantPause)rawPause(false);}
+    clearTimeout(sleepTimer);sleepTimer=setTimeout(()=>{if(editorMode&&paused&&!held&&!preparing&&!window.__ERGO_BAKING__&&!wantPause){sleeping=true;rawPause(true);}},ms);
+  }
+  for(const type of ['pointerdown','pointermove','wheel','keydown'])addEventListener(type,()=>wake(),{capture:true,passive:true});
   if (!window.__ERGO_PRESENTATION__) return;
   const api = window.ErgoFlex;
   const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
@@ -209,8 +216,8 @@ export async function mountStage(ctx) {
   async function sound(on){sounds=on;if(shot?.kind==='music'){api.ledMusicMode.setSound(on);if(on)await api.ledMusicMode.start();else api.ledMusicMode.stop();}}
   function pause(on){paused=on;if(preparing)return;ctx.pause(on&&(!editorMode||document.hidden));if(video){if(on)video.pause();else video.play().catch(()=>{});}if(on)api.ledMusicMode?.pause();else if(shot?.kind==='music'&&sounds)api.ledMusicMode?.start();}
   function captureCamera(){return cleanCamera({position:ctx.camera.position.toArray(),target:ctx.controls.target.toArray(),fov:ctx.camera.fov,aspect:ctx.camera.aspect});}
-  function edit(on){editorMode=!!on;ctx.editCamera(editorMode);if(editorMode){paused=true;ctx.pause(false);}else ctx.pause(paused);}
-  function seek(t){const was=paused,editing=editorMode;paused=false;editorMode=false;tick(Math.max(0,Math.min(1,t)));editorMode=editing;paused=was;if(!editing)ctx.pause(paused);}
+  function edit(on){wake();editorMode=!!on;ctx.editCamera(editorMode);if(editorMode){paused=true;ctx.pause(false);}else ctx.pause(paused);}
+  function seek(t){wake();const was=paused,editing=editorMode;paused=false;editorMode=false;tick(Math.max(0,Math.min(1,t)));editorMode=editing;paused=was;if(!editing)ctx.pause(paused);}
   let bakeSession=null;
   function beginBake(width,height){
     if(bakeSession)throw Error('A bake is already running.');
@@ -254,7 +261,7 @@ export async function mountStage(ctx) {
   window.ErgoPresentation={prepare:async next=>{preparing=true;try{return await prepare(next);}finally{preparing=false;}},tick,sound,pause,receive,
     catalog:()=>ctx.catalog(),edit,seek,captureCamera,beginBake,bakeFrame,endBake,
     // Director scene-light tools (markers, gizmo) work on the live scene, camera and orbit controls.
-    three:()=>({scene:ctx.scene,camera:ctx.camera,renderer:ctx.renderer,controls:ctx.controls}),hold,
+    three:()=>({scene:ctx.scene,camera:ctx.camera,renderer:ctx.renderer,controls:ctx.controls}),hold,wake:ms=>wake(ms),sleeping:()=>sleeping,
     motionDefaults:()=>{
       const result={lift:[],tilt:[],wheels:[]},savedReduced=reduced;
       // Sample the real staged performance, including room routes, in its

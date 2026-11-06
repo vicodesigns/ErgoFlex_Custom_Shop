@@ -55,7 +55,11 @@ function chime(final=false){
   }catch{}
 }
 const stage=()=>frame.contentWindow.ErgoPresentation;
-let liveFx=null,fxShot=null,fxAt=-1,fxPending=null,fxLights=null,fxTimer=null;
+// ?perf=1: where the time goes while editing (Director seeks, film-fx frames), summed every 2 s in the console.
+const perf=query.get('perf')==='1',perfSum={seek:0,n:0,fx:0,fxn:0};let perfAt=performance.now(),perfBusy=false;
+function perfNote(kind,ms){if(kind==='seek'){perfSum.seek+=ms;perfSum.n++;}else{perfSum.fx+=ms;perfSum.fxn++;}
+  if(performance.now()-perfAt>2000){const parts=Object.entries(perfSum).filter(([k])=>k.startsWith('fx:')).map(([k,v])=>`${k.slice(3)} ${(v/Math.max(1,perfSum.fxn)).toFixed(1)}`).join(', ');console.log(`[perf] ${perfSum.n} seeks ${(perfSum.seek/Math.max(1,perfSum.n)).toFixed(1)} ms each · ${perfSum.fxn} film-fx frames ${(perfSum.fx/Math.max(1,perfSum.fxn)).toFixed(1)} ms each (${parts})`);perfAt=performance.now();for(const k of Object.keys(perfSum))perfSum[k]=0;}}
+let fxLast=0,fxScreensAt=0,fxScrubbed=false,liveFx=null,fxShot=null,fxAt=-1,fxPending=null,fxLights=null,fxTimer=null;
 const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay]);};
 // film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
 async function stageFx(){
@@ -97,8 +101,11 @@ async function reinstallFilmLights(){
 function filmFrame(){
   requestAnimationFrame(filmFrame);
   if(!liveFx||fxPending||busy||index<0||activeBake||bakeController||shots[index]?.id!==fxShot)return;
-  const s=shots[index],at=clock.progress(performance.now(),s.seconds)*s.seconds,fx=liveFx;if(Math.abs(at-fxAt)<1/30)return;
-  fxAt=at;fxPending=fx.frame(at,at,{video:false}).then(()=>fx.after()).catch(error=>console.warn('[film fx]',error.message)).finally(()=>{fxPending=null;});
+  const s=shots[index],at=clock.progress(performance.now(),s.seconds)*s.seconds,fx=liveFx,now=performance.now(),scrubbing=director?.scrubbing?.();
+  if(scrubbing&&now-fxLast<100)return;if(!scrubbing&&fxScrubbed){fxScrubbed=false;fxAt=-1;}if(scrubbing)fxScrubbed=true;
+  if(Math.abs(at-fxAt)<1/30)return;fxLast=now;stage()?.wake?.();
+  const drawScreens=!scrubbing&&(!playing||now-fxScreensAt>=250);if(drawScreens)fxScreensAt=now;
+  fxAt=at;const fxStart=performance.now(),timing=perf?{}:null;fxPending=fx.frame(at,at,{video:false,screens:drawScreens,timing}).then(()=>{fx.after();if(perf){perfNote('fx',performance.now()-fxStart);for(const [k,v] of Object.entries(timing))perfSum['fx:'+k]=(perfSum['fx:'+k]||0)+v;}}).catch(error=>console.warn('[film fx]',error.message)).finally(()=>{fxPending=null;});
 }
 requestAnimationFrame(filmFrame);
 const seen=()=>{try{localStorage.setItem('ergoflex.cinematicSeen.v1','1');}catch{}};
@@ -330,12 +337,12 @@ async function openDirector(){
     },
     async downloadBake(){const {record}=await cachedBake(shots[index]);if(!record)throw Error('Bake this chapter first.');const url=URL.createObjectURL(record.blob),a=document.createElement('a');a.href=url;a.download='ergoflex-'+shots[index].id+'.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);},
     editMode(on){if(bakeController)return;directorOpen=on;if(!on)previewOnly=false;playing=false;clock.setRunning(false,performance.now());stage().edit(on);stage().pause(true);frame.inert=!on;$('pause').textContent='Play';$('director').textContent=on?'Close editor':'Director Mode';syncAudio();},
-    update(value){const position=index>=0?clock.progress(performance.now(),shots[index].seconds):0;applyClient(value);
+    update(value){stage()?.wake?.();const position=index>=0?clock.progress(performance.now(),shots[index].seconds):0;applyClient(value);
       if(fxShot&&shots[index]?.id===fxShot){const key=lightsKey(shots[index]);if(key!==fxLights){fxLights=key;cancelAnimationFrame(fxTimer);fxTimer=requestAnimationFrame(()=>refreshFilmLights());}}clearTimeout(bakeRefreshTimer);bakeRefreshTimer=setTimeout(refreshBakeStatus,200);if(activeBake){liveAt(position);return;}if(shots[index]){stage().secondsTrack?.(shots[index].seconds,shots[index].id);stage().cameraTrack(shots[index].camera,shots[index].id);stage().motionTrack(shots[index].motion,shots[index].id);}if(directorOpen){playing=false;clock.setRunning(false,performance.now());stage().edit(true);frame.inert=false;$('pause').textContent='Play';syncAudio();}},
     async editShot(value,i){applyClient(value);previewOnly=true;playing=false;if(!await playShot(i,{forceLive:true}))throw Error('The chapter could not be loaded. Choose a different layout or retry.');},
     async preview(value,i){applyClient(value);previewOnly=true;playing=true;stage().edit(false);await playShot(i);},
     play(value){applyClient(value);previewOnly=false;playing=true;stage().edit(false);playShot(0);},
-    seek(t){if(busy)return;previewRange=null;if(activeBake){liveAt(t);return;}playing=false;clock.setRunning(false,performance.now());clock.seek(t*shots[index].seconds,performance.now());stage().seek(t);stage().edit(true);frame.inert=false;$('pause').textContent='Play';caption(shots[index],t);const elapsed=shots.slice(0,index).reduce((n,s)=>n+s.seconds,0)+t*shots[index].seconds,total=shots.reduce((n,s)=>n+s.seconds,0),format=n=>Math.floor(n/60)+':'+String(Math.floor(n%60)).padStart(2,'0');$('progress').value=elapsed;$('time').textContent=format(elapsed)+' / '+format(total);syncAudio();},
+    seek(t){if(busy)return;if(perf&&!perfBusy){perfBusy=true;const a=performance.now();try{this.seek(t);}finally{perfBusy=false;perfNote('seek',performance.now()-a);}return;}previewRange=null;if(activeBake){liveAt(t);return;}playing=false;clock.setRunning(false,performance.now());clock.seek(t*shots[index].seconds,performance.now());stage().seek(t);stage().edit(true);frame.inert=false;$('pause').textContent='Play';caption(shots[index],t);const elapsed=shots.slice(0,index).reduce((n,s)=>n+s.seconds,0)+t*shots[index].seconds,total=shots.reduce((n,s)=>n+s.seconds,0),format=n=>Math.floor(n/60)+':'+String(Math.floor(n%60)).padStart(2,'0');$('progress').value=elapsed;$('time').textContent=format(elapsed)+' / '+format(total);syncAudio();},
     pose(value){if(busy)return null;if(activeBake){liveAt(clock.progress(performance.now(),shots[index].seconds));return null;}stage().edit(true);return stage().previewPose(value);}
   },stage().catalog(),clientCut);
   director.open();
