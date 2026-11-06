@@ -1,0 +1,60 @@
+/* Director design system (loaded after director.css).
+   Tokens first, then the inspector, the timeline and the frame tools. Scoped to the Director's own surfaces
+   (#director-panel, #director-timeline, the frame's .film-tools / .light-tools / still view) so the stage and the
+   portal UI keep theirs. Low-specificity bases use :where() so the per-widget rules in director.css still win. */
+:root{
+  /* Surfaces: 0 = app, 1 = panel, 2 = card / group, 3 = control, 4 = control hover */
+  --df-surface-0:#080c11;--df-surface-1:#0f151c;--df-surface-2:#151d26;--df-surface-3:#1c2631;--df-surface-4:#25323f;
+  --df-input:#0a1017;--df-overlay:#0b1016e6;
+  --df-border-1:#ffffff0f;--df-border-2:#ffffff1c;--df-border-3:#ffffff33;
+  /* Text (contrast on --df-surface-1): 1 ≈ 16:1, 2 ≈ 9:1, 3 ≈ 5.6:1 (AA), 4 = disabled only */
+  --df-text-1:#eef3f8;--df-text-2:#b7c3cf;--df-text-3:#8a97a6;--df-text-4:#5b6674;
+  /* Accent (brand cyan), selection (amber), semantic */
+  --df-accent:#5cd3f6;--df-accent-hover:#86e1fb;--df-accent-ink:#03121a;--df-accent-text:#8fe2fb;
+  --df-accent-soft:#5cd3f61f;--df-accent-line:#5cd3f673;
+  --df-select:#ffc85c;--df-select-soft:#ffc85c24;--df-select-text:#ffe2a6;
+  --df-danger:#ff7a72;--df-danger-soft:#ff7a721f;--df-success:#62d69d;--df-warning:#ffb547;
+  --df-playhead:#ff5c63;
+  /* Timeline lanes: one hue family each, same lightness so no lane shouts */
+  --df-lane-titles:#a99bff;--df-lane-camera:#5cd3f6;--df-lane-lift:#8fa8ff;--df-lane-tilt:#f2b765;--df-lane-wheels:#62d69d;
+  --df-lane-light:#f5d76e;--df-lane-white:#d6dee6;--df-lane-tod:#f59f72;--df-lane-room:#74d5c5;--df-lane-lamps:#f3c56f;--df-lane-props:#f29bc0;
+  /* Shape, space, type */
+  --df-r-1:4px;--df-r-2:6px;--df-r-3:8px;--df-r-4:12px;
+  --df-s-1:2px;--df-s-2:4px;--df-s-3:6px;--df-s-4:8px;--df-s-5:12px;--df-s-6:16px;
+  --df-font:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--df-mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+  --df-fs-2xs:9.5px;--df-fs-xs:10.5px;--df-fs-sm:11.5px;--df-fs-md:12.5px;--df-fs-lg:14px;--df-fs-xl:16px;
+  --df-shadow:0 12px 40px #0009,0 1px 0 #ffffff08 inset;
+  --df-focus:0 0 0 2px var(--df-surface-1),0 0 0 4px var(--df-accent);
+}
+
+/* ---------- Shared: surfaces, buttons, fields ---------- */
+#director-panel,#director-timeline{font-family:var(--df-font);color:var(--df-text-1);background:var(--df-surface-1);border:1px solid var(--df-border-2);box-shadow:var(--df-shadow);font-size:var(--df-fs-md)}
+#director-panel button,#director-timeline button{min-height:28px;border-radius:var(--df-r-2);padding:4px 10px;font-size:var(--df-fs-sm)}
+:where(#director-panel,#director-timeline) button{background:var(--df-surface-3);border:1px solid var(--df-border-2);color:var(--df-text-1);font-weight:500;line-height:1.2;transition:background-color .12s,border-color .12s,color .12s;backdrop-filter:none}
+:where(#director-panel,#director-timeline) button:hover{background:var(--df-surface-4);border-color:var(--df-border-3)}
+:where(#director-panel,#director-timeline) button:active{background:#2d3b4a}
+:where(#director-panel,#director-timeline) button[aria-pressed=true]{background:var(--df-accent-soft);border-color:var(--df-accent-line);color:var(--df-accent-text)}
+#director-panel button:focus-visible,#director-timeline button:focus-visible,.film-tools button:focus-visible,.light-tools button:focus-visible{outline:none;box-shadow:var(--df-focus)}
+/* Primary */
+#director-panel .primary,#director-timeline .chapter-transport{background:var(--df-accent);color:var(--df-accent-ink);border:1px solid transparent;font-weight:650}
+#director-panel .primary:hover,#director-timeline .chapter-transport:hover{background:var(--df-accent-hover)}
+/* Destructive */
+#director-panel [data-desk-action=delete],#director-panel [data-action=key-delete],#director-panel [data-action=remove],#director-panel [data-action=delete-cut],#director-panel [data-action=sel-delete],#director-panel [data-action$=-delete],#director-timeline [data-action=remove]{color:#ffb1ab;border-color:#ff7a7244;background:var(--df-danger-soft)}
+#director-panel [data-desk-action=delete]:hover,#director-panel [data-action=key-delete]:hover,#director-panel [data-action=remove]:hover,#director-panel [data-action=delete-cut]:hover,#director-panel [data-action=sel-delete]:hover,#director-panel [data-action$=-delete]:hover,#director-timeline [data-action=remove]:hover{background:#ff7a7233;border-color:var(--df-danger);color:#ffd0cc}
+/* Disabled: flat, dashed edge, dim text; never confused with an enabled control */
+#director-panel button:disabled,#director-timeline button:disabled,#director-panel .primary:disabled,#director-panel button:disabled:hover,#director-timeline button:disabled:hover{opacity:1;background:transparent;border:1px dashed var(--df-border-2);color:var(--df-text-4);box-shadow:none;cursor:not-allowed}
+.chapter-pacing button:disabled{opacity:1}
+/* Fields */
+#director-panel label{gap:4px;color:var(--df-text-2);font-size:var(--df-fs-sm);font-weight:500;margin:8px 0}
+#director-panel input:not([type=checkbox]):not([type=range]),#director-panel select,#director-panel textarea{min-height:30px;padding:5px 8px;border:1px solid var(--df-border-2);border-radius:var(--df-r-2);background:var(--df-input);color:var(--df-text-1);font-size:var(--df-fs-md);transition:border-color .12s}
+#director-panel input[type=number]{font-family:var(--df-mono);font-size:var(--df-fs-sm);font-variant-numeric:tabular-nums}
+#director-panel input:not([type=checkbox]):not([type=range]):hover,#director-panel select:hover,#director-panel textarea:hover{border-color:var(--df-border-3)}
+#director-panel input:not([type=checkbox]):not([type=range]):focus,#director-panel select:focus,#director-panel textarea:focus{outline:none;border-color:var(--df-accent);box-shadow:0 0 0 3px var(--df-accent-soft)}
+#director-panel input:disabled,#director-panel select:disabled{color:var(--df-text-4);border-style:dashed;cursor:not-allowed}
+#director-panel input[type=range]{accent-color:var(--df-accent);min-height:20px}
+#director-panel input[type=checkbox],#director-timeline input[type=checkbox]{accent-color:var(--df-accent)}
+#director-panel .director-grid{gap:6px 8px}
+#director-panel .director-grid label{margin:6px 0}
+#director-panel .director-actions{gap:6px;margin:8px 0}
+#director-panel hr{border-top-color:var(--df-border-1);margin:12px 0}
+#director-panel .director-kicker{font-size:var(--df-fs-2xs);letter-spacing:.14em;font-weight:650;color:var(--df-text-3)}
