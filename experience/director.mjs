@@ -28,7 +28,7 @@ export function mountDirector(bridge,catalog,initial){
   const library=new CutLibrary(storage);
   let project=initial?{...makeCut(initial.name,initial.shots),client:initial.client,volume:initial.volume}:library.current()||makeCut();
   project=cleanCut(project,catalog);
-  let selected=0,undo=[],redo=[],group=null,draftTimer,open=false,loadToken=0,composing=false;
+  let selected=0,undo=[],redo=[],undoLabels=[],redoLabels=[],labelPending=null,stillMark=null,group=null,draftTimer,open=false,loadToken=0,composing=false;
   const choices=new Map(),automaticCameras=new Map();
   let keyId=null,playhead=0,keyDrag=null,suppressKeyClickUntil=0;
   let magnet=true,inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null,focusSelection=false;
@@ -108,8 +108,8 @@ export function mountDirector(bridge,catalog,initial){
     status('Camera keyframe captured. Drag its diamond on the timeline to change its timing.');
   }
 
-  let editPending=false,lastEdit='';
-  const status=(message,error=false)=>{if(editPending&&!error&&message){lastEdit=message.split(/\.(\s|$)/)[0];editPending=false;}for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.classList.toggle('error',error);}};
+  // The status line that follows an edit names it (first sentence); see editLabel() for edits without one.
+  const status=(message,error=false)=>{if(labelPending&&!error&&message){labelPending.text=message.split(/\.(\s|$)/)[0];labelPending=null;}for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.classList.toggle('error',error);}};
   function saved(text,title){const el=panel.querySelector('[data-saved]');if(el){el.textContent=text;el.title=title;}}
   function draft(){clearTimeout(draftTimer);try{library.draft(project);saved('Saved ✓','Draft kept in this browser · Export cut sends it to the film');}catch{saved('Not saved','Browser storage is full, so no draft copy · Export cut sends it to the film');}}
   function changed(){filmLook?.poke();bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}}
@@ -443,17 +443,57 @@ export function mountDirector(bridge,catalog,initial){
   // Render still: the playhead frame with the film look, shown inside the frame with a history strip.
   const still=createStillStrip();
   let bootMs=7000;try{bootMs=Number(localStorage.getItem('ergoflex.director.stillBootMs'))||7000;}catch{}
+  // What changed since the previous still: edits added to the undo stack since then, else edits undone,
+  // else (an edit outside undo) the project diff; nothing at all when the project is the same.
+  const SHOT_FIELDS={camera:'camera views',motion:'desk moves',timeOfDay:'time of day',ledStatus:'desk status lights',ledNeutral:'desk white',ledColor:'desk colour',lighting:'lighting',sceneGlobals:'room brightness and fill light',sceneLights:'scene lights',seconds:'chapter length',title:'chapter title',room:'room',layout:'layout',preset:'desk preset',kind:'shot kind',length:'length',mode:'mode',size:'desk size'};
+  function listDiff(a=[],b=[],noun,at,fmt){
+    if(b.length>a.length)return `${noun} added`+(at?` at ${fmt(at(b.find(x=>!a.some(y=>y.id===x.id))||b.at(-1)))} s`:'');
+    if(b.length<a.length)return `${noun} removed`;
+    if(at){const m=b.find(x=>{const y=a.find(y=>y.id===x.id);return y&&at(y)!==at(x);});if(m)return `${noun} moved to ${fmt(at(m))} s`;}
+    return `${noun} changed`;
+  }
+  function diffText(a,b){
+    if(!a||!b)return 'edits';
+    if(a.shots.length!==b.shots.length)return b.shots.length>a.shots.length?'chapter added':'chapter removed';
+    for(let i=0;i<b.shots.length;i++){
+      const x=a.shots[i],y=b.shots[i];if(JSON.stringify(x)===JSON.stringify(y))continue;
+      const fields=[...new Set([...Object.keys(x),...Object.keys(y)])].filter(k=>JSON.stringify(x[k])!==JSON.stringify(y[k]));
+      const one=k=>{
+        if(k==='timeOfDay'){const ka=x.timeOfDay||[],kb=y.timeOfDay||[];if(ka.length===kb.length&&!kb.some(k=>{const o=ka.find(o=>o.id===k.id);return o&&o.at!==k.at;})){const m=kb.find(k=>{const o=ka.find(o=>o.id===k.id);return o&&o.mode!==k.mode;});if(m)return `time-of-day key at ${r2(m.at)} s set to ${roomModes().find(r=>r.id===m.mode)?.label||m.mode}`;}return listDiff(ka,kb,'time-of-day key',k=>k.at,r2);}
+        if(k==='camera')return listDiff(x.camera?.keys,y.camera?.keys,'camera view',k=>k.time,v=>r2(v*y.seconds));
+        if(k==='motion')return listDiff(x.motion?.clips,y.motion?.clips,'desk move',c=>c.start,r2);
+        return (SHOT_FIELDS[k]||k)+' changed';
+      };
+      return fields.slice(0,2).map(one).join(' and ')+(fields.length>2?` (+${fields.length-2} more)`:'');
+    }
+    return 'edits';
+  }
+  const capital=t=>t.charAt(0).toUpperCase()+t.slice(1);
+  function editLabel(l){return l.text||capital(diffText(l.before,l.after));}
+  function stillCaption(){
+    const json=JSON.stringify(project),mark={json,labels:undoLabels.slice(),project:copy(project)};
+    if(stillMark&&stillMark.json===json)return {mark,text:'no edits since the last still'};
+    const prev=stillMark?.labels||[],now=new Set(undoLabels),had=new Set(prev);
+    let last=-1;prev.forEach((l,i)=>{if(now.has(l))last=i;});
+    const added=undoLabels.filter(l=>!had.has(l)),removed=last<0&&undoLabels.length>=40?[]:prev.slice(last+1);
+    const more=n=>n>1?` (+${n-1} more)`:'';
+    let text;
+    if(added.length)text='after: '+editLabel(added.at(-1))+more(added.length);
+    else if(removed.length)text='after: undid '+editLabel(removed.at(-1))+more(removed.length);
+    else text=stillMark?'after: '+capital(diffText(stillMark.project,project)):'no edits yet';
+    return {mark,text};
+  }
   async function renderStill(){
     if(stillBusy)return;requireReady();if(!deskEditor.flush())return;
     const s=shot(),t=playhead,seconds=Number((t*s.seconds).toFixed(2)),name=`Film-${s.id}-${seconds.toFixed(2)}s.jpg`,film=filmShot();
-    const job=filmRenderShot(film,s,keys()),started=performance.now(),first=!stills?.warm?.();stillBusy=true;
+    const job=filmRenderShot(film,s,keys()),started=performance.now(),first=!stills?.warm?.(),caption=stillCaption();stillBusy=true;
     const title=()=>first?`Preparing film stage (first still only) · ${Math.round((performance.now()-started)/1000)} / ${Math.round(bootMs/1000)} s`:`Rendering ${s.id} at ${seconds.toFixed(2)} s… ${Math.round((performance.now()-started)/1000)} s`;
     still.busy(title(),film?'Film shot with your Director edits, film quality on.':'No film shot for this chapter: rendering the Director cut alone.',{expected:first?bootMs:0});
     const timer=setInterval(()=>{const text=title();status(text);still.progress(text);},500);
     try{
       stills||=createStillRenderer();const url=await stills.render(job,t),took=performance.now()-started;
       if(first)try{localStorage.setItem('ergoflex.director.stillBootMs',String(Math.round(took)));bootMs=took;}catch{}
-      still.add({url,name,seconds:seconds,note:`${Math.round(took/100)/10} s to render`,after:lastEdit});lastEdit='';editPending=false;
+      still.add({url,name,seconds:seconds,note:`${Math.round(took/100)/10} s to render`,detail:caption.text});stillMark=caption.mark;group=null;
       status('Still rendered: '+name+' · R renders another, \\ compares with the live view, Shift-click a thumbnail for A/B.');
     }catch(error){console.error('[render still]',error);still.error(error.message);status('Render still failed: '+error.message,true);stills?.dispose();stills=null;}
     finally{clearInterval(timer);stillBusy=false;}
@@ -473,10 +513,10 @@ export function mountDirector(bridge,catalog,initial){
   let warmed=false;
   function warmStill(){if(warmed||!film||!filmShot())return;warmed=true;(window.requestIdleCallback||(f=>setTimeout(f,1200)))(()=>{if(stillBusy)return;stills||=createStillRenderer();stills.render(filmRenderShot(filmShot(),shot(),keys()),playhead).catch(()=>{});},{timeout:4000});}
   function commit(fn,{render=false,key=null}={}){
-    if(!key||group!==key){undo.push(copy(project));undo=undo.slice(-40);redo=[];}
-    group=key;fn();editPending=true;changed();if(render)renderPanel();
+    if(!key||group!==key){const before=copy(project);undo.push(before);undo=undo.slice(-40);undoLabels.push({before,after:null,text:null});undoLabels=undoLabels.slice(-40);redo=[];redoLabels=[];}
+    group=key;fn();const top=undoLabels.at(-1);if(top){top.after=copy(project);top.text=null;labelPending=top;setTimeout(()=>{if(labelPending===top)labelPending=null;});}changed();if(render)renderPanel();
   }
-  function loadProject(value,keepDraft=true){if(keepDraft)draft();project=cleanCut(value,catalog);for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId=null;playhead=0;undo=[];redo=[];group=null;changed();render();load();}
+  function loadProject(value,keepDraft=true){if(keepDraft)draft();project=cleanCut(value,catalog);for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId=null;playhead=0;undo=[];redo=[];undoLabels=[];redoLabels=[];labelPending=null;group=null;changed();render();load();}
   function render(){renderPanel();renderTimeline();}
   function renderPanel(){
     const scroll=panel.scrollTop,active=panel.contains(document.activeElement)?document.activeElement:null;
@@ -703,10 +743,11 @@ export function mountDirector(bridge,catalog,initial){
       if(name==='undo'||name==='redo'){
         const source=name==='undo'?undo:redo,target=name==='undo'?redo:undo;if(!source.length)return;
         const before=project.shots[selected];target.push(copy(project));project=source.pop();selected=Math.min(selected,project.shots.length-1);
+        const moved=(name==='undo'?undoLabels:redoLabels).pop();if(moved)(name==='undo'?redoLabels:undoLabels).push(moved);labelPending=null;group=null;
         // Only a different scene needs the chapter re-prepared; everything else is applied like a normal edit.
         const after=project.shots[selected],rebuild=!before||!after||before.id!==after.id||['room','layout','mode','kind','preset','size'].some(k=>before[k]!==after[k]);
         changed();render();if(rebuild){await load();return;}
-        deskEditor.ready();if(!keys().some(k=>k.id===keyId))keyId=null;seekCamera(playhead);status(name==='undo'?'Undone.':'Redone.');return;
+        deskEditor.ready();if(!keys().some(k=>k.id===keyId))keyId=null;seekCamera(playhead);status((name==='undo'?'Undone':'Redone')+(moved?': '+editLabel(moved):'')+'.');return;
       }
       if(name==='select'){clearPicks();selected=index;keyId=null;playhead=0;inspector='chapter';render();await load();return;}
       if(name==='up'||name==='down'){move(index,index+(name==='up'?-1:1));return;}
@@ -795,6 +836,7 @@ export function mountDirector(bridge,catalog,initial){
         if(name==='tod-time'){const n=Number(value);if(value===''||!Number.isFinite(n)||n<0||n>shot().seconds)throw Error('Enter a time inside the chapter.');if(T.keys.some(k=>k.id!==item.id&&Math.abs(k.at-n)<.001))throw Error('There is already a time-of-day key at that time.');next.at=n;}
         if(name==='tod-mode')next.mode=value;if(name==='tod-ease'){if(value==='smooth')next.ease='smooth';else delete next.ease;}
         putTod(T.keys.map(k=>k.id===item.id?next:k));seekCamera(next.at/shot().seconds);
+        status(name==='tod-time'?`Time-of-day key moved to ${r2(next.at)} s.`:name==='tod-mode'?`Time-of-day key set to ${roomModes().find(m=>m.id===next.mode)?.label||next.mode}.`:'Time-of-day blend changed.');
       }catch(error){renderPanel();status(error.message,true);}
       return;
     }
@@ -1016,7 +1058,7 @@ export function mountDirector(bridge,catalog,initial){
       const d=groupDrag;groupDrag=null;suppressGroupClickUntil=performance.now()+300;endDragFeedback(d);
       if(event.type==='pointercancel'){renderTimeline();return;}
       if(!d.moved){clearPicks();try{if(d.kind==='keys')selectKey(d.id);else if(d.kind==='clips')deskEditor.select(d.id);else selectLight(d.kind,d.id);}catch(error){status(error.message,true);}return;}
-      try{shiftPicks(d.delta,d.set===picks?'Selection moved':'Moved',d.set);if(d.set!==picks)selectLight(d.kind,d.id);}catch(error){renderTimeline();status(error.message,true);}
+      try{shiftPicks(d.delta,d.set===picks?'Selection moved':({keys:'Camera view',clips:'Desk move',lights:'Status light',neutrals:'White key',tods:'Time-of-day key'}[d.kind]||'Item')+' moved',d.set);if(d.set!==picks)selectLight(d.kind,d.id);}catch(error){renderTimeline();status(error.message,true);}
       return;
     }
     if(lightTrim){

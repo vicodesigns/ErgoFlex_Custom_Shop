@@ -36,7 +36,7 @@ export function createStillStrip(){
       drawStrip();show(true);
     },
     progress(text){const p=stage.querySelector('[data-still-progress]');if(p)p.textContent=text;},
-    add(item){clearInterval(progressTimer);history.unshift({...item,label:`${item.seconds.toFixed(2)} s · ${clock(new Date())}`,detail:item.after?'after: '+item.after:'no edits since the last still'});history.length=Math.min(history.length,12);pinned=0;compare=null;draw();show(true);},
+    add(item){clearInterval(progressTimer);history.unshift({...item,label:`${item.seconds.toFixed(2)} s · ${clock(new Date())}`,detail:item.detail||'no edits since the last still'});history.length=Math.min(history.length,12);pinned=0;compare=null;draw();show(true);},
     error(message){clearInterval(progressTimer);stage.innerHTML=`<div class="still-busy"><span class="director-kicker">RENDER STILL</span><p class="error" role="alert">The still could not be rendered: ${escape(message)}</p></div>`;show(true);},
     close(){clearInterval(progressTimer);show(false);},
     step(d){if(!history.length)return;pinned=(pinned+d+history.length)%history.length;compare=null;draw();show(true);},
