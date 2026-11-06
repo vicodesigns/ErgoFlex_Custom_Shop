@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {cleanLighting,exportLighting,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,brightnessOf,validateStatus,WARM,whiteName,daypartAt} from '../experience/film-lighting.mjs';
+import {cleanLighting,exportLighting,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,brightnessOf,validateStatus,WARM,whiteName,daypartAt,lightnessOf,withLightness,WHITE_PRESETS} from '../experience/film-lighting.mjs';
 import {shiftGroup} from '../experience/timeline-group.mjs';
 import {bakeCameraPlan} from '../experience/camera-spline-bake.mjs';
 import {filmRenderShot} from '../experience/film-render.mjs';
@@ -58,4 +58,8 @@ const moved=shiftGroup({seconds:16,keys:[],clips:[],tods:tod},{keys:new Set(),cl
 assert.throws(()=>shiftGroup({seconds:16,keys:[],clips:[],tods:tod},{keys:new Set(),clips:new Set(),tods:new Set([tod[1].id])},6.25),/same time/);
 assert.equal(daypartAt(tod,0),'#ffcf8a');assert.equal(daypartAt(tod,20),'#ff8a4a');assert.ok(!['#fff3d6','#ff8a4a'].includes(daypartAt(tod,12)));
 assert.equal(whiteName('#929292'),'True white');assert.equal(whiteName('#52483c'),'Warm white');assert.equal(filmRenderShot(rise,{...directorShot,timeOfDay:tod},dkeys).timeOfDay[2].ease,'smooth');
+// Absolute brightness (CIE L*) keeps the hue; presets cover true white to off.
+assert.ok(near(lightnessOf('#ffffff'),100,.01)&&near(lightnessOf('#000000'),0,.01));assert.ok(near(lightnessOf('#929292'),60.6,.2));
+const lit60=withLightness('#52483c',60);assert.ok(near(lightnessOf(lit60),60,.6));assert.ok(near(warmthOf(lit60),warmthOf('#52483c'),.03));
+assert.equal(withLightness('#929292',0),'#000000');assert.deepEqual(WHITE_PRESETS.map(p=>p[0]),['True white','Soft white','Warm white','Sunset','Off']);
 console.log('Film lighting: clean/export round trip, neutral white over time, linear brightness and warmth, light states and colour keys in group moves, the browser camera bake (matches camera-spline.mjs) and the render shot merge verified.');

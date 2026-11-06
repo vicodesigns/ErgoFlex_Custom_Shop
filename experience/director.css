@@ -325,3 +325,12 @@ body.film-look-split .film-look.shown .film-wipe{display:block}
 .light-tools [data-vt=l]{left:8px}.light-tools [data-vt=w]{left:72px}.light-tools [data-vt=e]{left:132px}
 .light-tools button[aria-pressed=true]{background:#9ff0ff;color:#04121a}
 .light-tools button:disabled{opacity:.45}
+/* Desk white lane: hue band, brightness line, diamond keys */
+.white-line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.white-line polyline{fill:none;stroke:#ffffff;stroke-width:2;vector-effect:non-scaling-stroke;opacity:.9}
+#director-timeline .white-lane .lane-key i,#director-timeline .tod-lane .lane-key i{border-radius:2px;transform:rotate(45deg);width:12px;height:12px;margin-top:10px}
+#director-timeline .white-lane .lane-key:hover i,#director-timeline .tod-lane .lane-key:hover i{transform:rotate(45deg) scale(1.15)}
+.white-presets{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+#director-panel .white-presets button{display:flex;align-items:center;gap:5px;min-height:26px;padding:2px 8px;font-size:11px}
+#director-panel .white-presets button[aria-pressed=true]{outline:2px solid #ffd27a}
+.white-presets i{width:10px;height:10px;border-radius:2px;box-shadow:0 0 0 1px #fff8}

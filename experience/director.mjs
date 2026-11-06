@@ -3,7 +3,7 @@ import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
 import {paceChapter} from './chapter-timing.mjs';
 import {validateClipSchedule,sampledMotionToClips,legacyMotionToClips,cleanClipMotion,findClipInsertion} from './desk-clips.mjs';
 import {groupRange,snapGroupDelta,shiftGroup} from './timeline-group.mjs';
-import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS} from './film-lighting.mjs';
+import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS,lightnessOf,withLightness,WHITE_PRESETS} from './film-lighting.mjs';
 import {filmRenderShot,createStillRenderer} from './film-render.mjs';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
 import {createFilmLook} from './film-look.mjs';
@@ -233,8 +233,8 @@ export function mountDirector(bridge,catalog,initial){
     const status=L?`<div class="desk-lane-row" data-lane-color="light"><span class="desk-lane-label" title="The film's desk status lights">Desk status</span><div class="desk-lane light-lane" data-light-lane role="group" aria-label="Desk status lights timeline"><div class="desk-lane-line"></div>
       ${L.status.map(e=>`<button class="desk-clip light-clip ${on('lights',e.id)?'selected':''}" data-light-clip="${e.id}" style="left:${e.at/s*100}%;width:${e.dur/s*100}%;--lane:${lightKindColor(e.kind)}" aria-pressed="${on('lights',e.id)}" aria-label="Light state ${escape(kindLabel(e.kind))}, ${r2(e.at)} to ${r2(e.at+e.dur)} seconds" title="${escape(kindLabel(e.kind))} · ${r2(e.at)}–${r2(e.at+e.dur)}s · fade ${e.fade??1}s${e.fadeIn?` · fade in ${e.fadeIn}s`:''}"><span class="clip-resize" data-resize="start" title="Trim start"></span><strong>${escape(e.kind)}${e.kind==='wheels'&&e.mode?' '+e.mode:''}</strong><small>${r2(e.at)}–${r2(e.at+e.dur)}s</small><span class="clip-resize" data-resize="end" title="Trim end"></span></button>`).join('')}
       ${L.status.length?'':'<span class="desk-lane-empty">No light states · + Light adds one at the playhead</span>'}<div class="light-now" data-light-now></div><div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>
-      `:'',white=L?`<div class="desk-lane-row" data-lane-color="white"><span class="desk-lane-label" title="The neutral white between status lights, over the chapter">Desk white<button data-action="light-key-add" class="lane-add" title="Add a white key at the playhead with the colour there" aria-label="Add a white key">+</button></span><div class="desk-lane key-lane white-lane" data-light-lane role="group" aria-label="Desk white over time"><div class="lane-band" style="background:linear-gradient(90deg,${band(t=>neutralAt(L.neutral,t))})"></div>
-      ${spans(L.neutral,k=>k[0],(a,b)=>a[1]===b[1])}${L.neutral.map((k,i)=>chip('neutrals','data-light-key',k[2],k[0],k[1],whiteName(k[1]),k[1],i)).join('')}<div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>`:'';
+      `:'',white=L?`<div class="desk-lane-row" data-lane-color="white"><span class="desk-lane-label" title="The neutral white between status lights, over the chapter">Desk white<button data-action="light-key-add" class="lane-add" title="Add a white key at the playhead with the colour there" aria-label="Add a white key">+</button></span><div class="desk-lane key-lane white-lane" data-light-lane role="group" aria-label="Desk white over time"><div class="lane-band" style="background:linear-gradient(90deg,${band(t=>withWarmth('#d9d9d9',warmthOf(neutralAt(L.neutral,t))))})"></div>
+      ${spans(L.neutral,k=>k[0],(a,b)=>a[1]===b[1])}${whiteLine(L,s)}${L.neutral.map((k,i)=>chip('neutrals','data-light-key',k[2],k[0],k[1],whiteName(k[1]),Math.round(lightnessOf(k[1]))+'% bright · '+k[1],i)).join('')}<div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>`:'';
     const label=m=>roomModes().find(x=>x.id===m)?.label||m;
     const tod=T?`<div class="desk-lane-row" data-lane-color="tod"><span class="desk-lane-label" title="The room's time of day: it blends from one daypart to the next">Time of day<button data-action="tod-add" class="lane-add" title="Add a time-of-day key at the playhead" aria-label="Add a time-of-day key">+</button></span><div class="desk-lane key-lane tod-lane" data-light-lane role="group" aria-label="Room time of day"><div class="lane-band" style="background:linear-gradient(90deg,${band(t=>daypartAt(T.keys,t))})"></div>
       ${spans(T.keys,k=>k.at,(a,b)=>a.mode===b.mode)}${T.keys.map((k,i)=>chip('tods','data-tod-key',k.id,k.at,DAYPART_TINTS[k.mode]||'#8899aa',label(k.mode),k.ease==='smooth'?'smooth blend':'blend',i)).join('')}<div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>`:'';
@@ -261,6 +261,8 @@ export function mountDirector(bridge,catalog,initial){
     const v=timeline.querySelector('.timeline-viewport');if(!v)return;const need=timeline.getBoundingClientRect().height+(v.scrollHeight-v.clientHeight)+2;
     resizeTimeline(Math.min(need,innerHeight*.5));timelineFitted=true;
   }
+  // Brightness of the desk white over the chapter as a line in the lane (L*, top = 100 %).
+  function whiteLine(L,s){const pts=Array.from({length:49},(_,i)=>{const t=i/48*s;return `${(i/48*1000).toFixed(1)},${(30-lightnessOf(neutralAt(L.neutral,t))/100*26).toFixed(2)}`;}).join(' ');return `<svg class="white-line" viewBox="0 0 1000 34" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}"/></svg>`;}
   function syncLightNow(){const bar=timeline.querySelector('[data-light-now]'),L=bar&&lighting();if(!L)return;bar.style.left=playhead*100+'%';bar.style.background=lightAt(L,playhead*shot().seconds);}
   // The Lighting tab, broad to narrow in lane order: Lighting now, Time of day, Room, Desk white, Desk status,
   // Lamps & sun. Each section edits one thing; the lanes are the picker.
@@ -284,9 +286,10 @@ export function mountDirector(bridge,catalog,initial){
       <div class="director-actions"><button data-action="light-delete">Delete status light</button></div></div>`;}
   function whiteInspector(L,k,s){return `<div class="movement-inspector light-inspector"><h4>White key · ${escape(whiteName(k[1]))}</h4>
       <label>Time (seconds)<input name="neutral-time" type="number" min="0" max="${s}" step=".05" value="${r2(k[0])}"></label>
-      <div class="director-grid neutral-colour"><label>Colour<input name="neutral-color" type="color" value="${k[1]}"></label><label>Hex<input name="neutral-hex" maxlength="7" value="${k[1]}" spellcheck="false"></label></div>
-      <label>Brightness <output data-neutral-bright>×1.00</output><input name="neutral-bright" type="range" min=".2" max="3" step=".01" value="1" data-base="${k[1]}"></label>
-      <label>Warmth <output data-neutral-warm>${Math.round(warmthOf(k[1])*100)}%</output><input name="neutral-warm" type="range" min="0" max="1" step=".01" value="${warmthOf(k[1]).toFixed(2)}" data-base="${k[1]}"></label>
+      <div class="white-presets">${WHITE_PRESETS.map(([name,hex])=>`<button data-action="white-preset" data-section="${hex}" aria-pressed="${k[1]===hex}" title="${name} ${hex}"><i style="background:${hex}"></i>${name}</button>`).join('')}</div>
+      <label>Brightness <output data-neutral-bright>${Math.round(lightnessOf(k[1]))}%</output><span class="global-slider"><input name="neutral-bright" type="range" min="0" max="100" step="1" value="${Math.round(lightnessOf(k[1]))}" data-base="${k[1]}"><input name="neutral-bright-n" type="number" min="0" max="100" step="1" value="${Math.round(lightnessOf(k[1]))}"></span></label>
+      <label>Warmth <small>(0 true white · 100 sunset warm)</small> <output data-neutral-warm>${Math.round(warmthOf(k[1])*100)}%</output><input name="neutral-warm" type="range" min="0" max="1" step=".01" value="${warmthOf(k[1]).toFixed(2)}" data-base="${k[1]}"></label>
+      <details class="light-details"><summary>More</summary><div class="director-grid neutral-colour"><label>Colour<input name="neutral-color" type="color" value="${k[1]}"></label><label>Hex<input name="neutral-hex" maxlength="7" value="${k[1]}" spellcheck="false"></label></div></details>
       <div class="director-actions"><button data-action="light-delete" ${L.neutral.length<=1?'disabled title="The desk white needs at least one key"':''}>Delete white key</button></div></div>`;}
   function todInspector(T,item){const modes=roomModes(),s=shot().seconds;return `<div class="movement-inspector"><h4>Time-of-day key</h4>
       <div class="director-grid"><label>Time (seconds)<input name="tod-time" type="number" min="0" max="${s}" step=".05" value="${r2(item.at)}"></label><label>Daypart<select name="tod-mode">${modes.map(m=>option(m.id,m.label,item.mode)).join('')}${modes.some(m=>m.id===item.mode)?'':option(item.mode,item.mode,item.mode)}</select></label></div>
@@ -482,6 +485,7 @@ export function mountDirector(bridge,catalog,initial){
       if(name==='film-prev'||name==='film-next'){const i=filmIndex();switchFilm(name==='film-prev'?i-1:i<0?0:i+1);return;}
       if(name==='inspector'){document.body.classList.toggle('inspector-hidden');return;}
       if(name==='lamp-pick'){showInspector('lighting',true);const d=panel.querySelector('[data-light-section="lamps"]');if(d)d.open=true;await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
+      if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
       if(name==='now-go'){const id=index;const el=panel.querySelector(`[data-light-section="${id}"]`);if(el){el.open=true;delete lightSectionsShut[id];el.scrollIntoView({block:'start',behavior:'smooth'});}return;}
       if(name==='group-toggle'){const g=index===0?'motion':'lighting';laneGroups[g]=!groupClosed(g);saveGroups();renderTimeline();return;}
       if(name==='titles'){document.body.classList.toggle('preview-titles');timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(document.body.classList.contains('preview-titles')));return;}
@@ -655,11 +659,13 @@ export function mountDirector(bridge,catalog,initial){
     if(name.startsWith('mx-')&&name!=='mx-on'){sceneLights.mixerChange(el,true).catch(error=>status(error.message,true));return;}
     if(/^gn?-/.test(name)){const k=name.replace(/^gn?-/,''),v=Number(el.value),twin=field((name.startsWith('gn-')?'g-':'gn-')+k),out=panel.querySelector(`[data-global-steps="${k}"]`);if(Number.isFinite(v)){if(twin)twin.value=String(v);if(out)out.textContent=k==='exposureScale'?stepsText(v):'×'+v;if(name.startsWith('g-'))try{setGlobal(k,v,{key:name,render:false});}catch(error){status(error.message,true);}}return;}
     // Neutral white sliders and picker edit live; one undo step per drag.
-    if(['neutral-bright','neutral-warm','neutral-color'].includes(name)&&lightItem()){
+    if(['neutral-bright','neutral-bright-n','neutral-warm','neutral-color'].includes(name)&&lightItem()){
       try{
-        const v=Number(el.value),color=name==='neutral-color'?el.value:name==='neutral-bright'?scaleColor(el.dataset.base,v):withWarmth(el.dataset.base,v);
-        editLight({color},{key:name,render:false});
-        const out=panel.querySelector(name==='neutral-bright'?'[data-neutral-bright]':'[data-neutral-warm]');if(out&&name!=='neutral-color')out.textContent=name==='neutral-bright'?'×'+v.toFixed(2):Math.round(v*100)+'%';
+        const v=Number(el.value),base=field('neutral-bright')?.dataset.base||lightItem()[1];if(!Number.isFinite(v))return;
+        const color=name==='neutral-color'?el.value:name.startsWith('neutral-bright')?withLightness(base==='#000000'?'#929292':base,Math.max(0,Math.min(100,v))):withWarmth(base,v);
+        editLight({color},{key:name.replace('-n',''),render:false});
+        if(name.startsWith('neutral-bright')){const out=panel.querySelector('[data-neutral-bright]');if(out)out.textContent=Math.round(v)+'%';const twin=field(name==='neutral-bright'?'neutral-bright-n':'neutral-bright');if(twin)twin.value=String(Math.round(v));}
+        if(name==='neutral-warm'){const out=panel.querySelector('[data-neutral-warm]');if(out)out.textContent=Math.round(v*100)+'%';}
         for(const f of ['neutral-color','neutral-hex'])if(f!==name){const input=field(f);if(input)input.value=color;}
       }catch(error){status(error.message,true);}return;
     }
@@ -697,7 +703,7 @@ export function mountDirector(bridge,catalog,initial){
     }
     if(name?.startsWith('light-')||name?.startsWith('neutral-')){
       try{
-        if(['neutral-bright','neutral-warm','neutral-color'].includes(name)){renderPanel();return;}
+        if(['neutral-bright','neutral-bright-n','neutral-warm','neutral-color'].includes(name)){renderPanel();return;}
         const n=Number(value),need=()=>{if(value===''||!Number.isFinite(n)||n<0)throw Error('Enter a time in seconds.');return n;};
         const change=name==='light-kind'?{kind:value,...(value==='wheels'&&!lightItem().mode?{mode:3}:{})}:name==='light-mode'?{mode:Number(value)}:name==='light-at'?{at:need()}:name==='light-dur'?{dur:Math.max(.05,need())}:name==='light-fade'?{fade:need()}:name==='light-fadein'?{fadeIn:need()}:name==='neutral-time'?{time:Math.min(shot().seconds,need())}:null;
         if(name==='neutral-hex'){const hex=value.trim().replace(/^#?/,'#').toLowerCase();if(!/^#[0-9a-f]{6}$/.test(hex))throw Error('Enter a colour as #rrggbb.');editLight({color:hex});}

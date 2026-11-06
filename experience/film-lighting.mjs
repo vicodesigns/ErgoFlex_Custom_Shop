@@ -53,6 +53,14 @@ export function warmthOf(hex){
 }
 export function withWarmth(hex,w){const c=toLinear(hex),l=luma(c)||1e-4,{warm}=hues();return toHex(warm.map(v=>l*(1+(v-1)*w)));}
 export const brightnessOf=hex=>luma(toLinear(hex));
+// Perceptual lightness (CIE L*, 0-100) and a colour with the same chromaticity at another lightness.
+export function lightnessOf(hex){const y=luma(toLinear(hex));return y>216/24389?116*Math.cbrt(y)-16:y*24389/27;}
+export function withLightness(hex,L){
+  const target=L<=8?L*27/24389:((L+16)/116)**3,c=toLinear(hex),y=luma(c);
+  if(target<=0)return '#000000';if(y<=1e-6)return toHex([target,target,target]);return toHex(c.map(v=>v*target/y));
+}
+// Presets for the desk white: the film's day white, softer and warmer whites, the evening warm, off.
+export const WHITE_PRESETS=[['True white','#929292'],['Soft white','#8f877c'],['Warm white','#7a6a55'],['Sunset','#52483c'],['Off','#000000']];
 const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
 export function neutralAt(keys,t){
   if(!keys.length)return '#ffffff';const i=keys.findIndex(k=>k[0]>t);if(i<0)return keys.at(-1)[1];if(i===0)return keys[0][1];
