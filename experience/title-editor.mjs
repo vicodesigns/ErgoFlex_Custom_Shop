@@ -184,6 +184,28 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     if(name==='pt-smooth'||name==='pt-sharp'){const [pi,k]=shape.pt||[];if(pi===undefined)return;const S=shadowOf(t,measure),p=S.paths[pi].points[k],isSmooth=!!(p.in||p.out);if((name==='pt-smooth')===isSmooth)return;S.paths[pi]=toggleSmooth(S.paths[pi],k);saveShape(S.paths,name==='pt-smooth'?'Point made smooth: drag its handles to shape the curve.':'Point made sharp.');return;}
     if(name==='pt-delete'){deleteSelectedPoint();return;}
   }
+  // ---- Render still: the film titles burned onto the 3D still, like finish-intro.py burns them onto the film --------
+  // The same cards the frame overlay draws (cardSvg: copy, fitted or custom shadow, fade / rise at that time), as one
+  // 1920 x 1080 SVG with the fonts embedded (an SVG image cannot reach the page's fonts), drawn over the JPEG.
+  // No titles (none at that time, or the toolbar's Titles off): the still comes back as it is.
+  let fontCss=null;
+  const b64=buf=>{const u=new Uint8Array(buf);let out='';for(let i=0;i<u.length;i+=32768)out+=String.fromCharCode(...u.subarray(i,i+32768));return btoa(out);};
+  const embeddedFonts=()=>fontCss||=Promise.all([['Poppins-SemiBold.ttf',600],['Poppins-Regular.ttf',400]].map(async([file,w])=>{
+    const r=await fetch(FONT_URL+file);if(!r.ok)throw Error('title font unavailable');return `@font-face{font-family:"${FAMILY[w]}";font-weight:${w};src:url(data:font/ttf;base64,${b64(await r.arrayBuffer())}) format("truetype");}`;})).then(a=>a.join(''),e=>{fontCss=null;throw e;});
+  function stillTitles(seconds){return shown&&has()?titles().filter(x=>seconds>=x.rel_in&&seconds<x.rel_out):[];}
+  async function compositeStill(url,seconds){
+    const list=stillTitles(seconds);if(!list.length)return url;
+    await fontsLoaded;const css=await embeddedFonts();let defs='',body='';
+    for(const x of list){const c=cardSvg(x,seconds,false);defs+=c.defs;body+=`<g class="title-card">${c.body}</g>`;}
+    const svgText=`<svg xmlns="${NS}" width="${FILM_W}" height="1080" viewBox="0 0 ${FILM_W} 1080"><style>${css}</style><defs>${defs}</defs>${body}</svg>`;
+    const load=src=>new Promise((ok,fail)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>fail(Error('The title layer could not be drawn.'));i.src=src;});
+    const blob=URL.createObjectURL(new Blob([svgText],{type:'image/svg+xml'}));
+    try{
+      const [still,layer]=await Promise.all([load(url),load(blob)]);
+      const c=document.createElement('canvas');c.width=still.naturalWidth;c.height=still.naturalHeight;const g=c.getContext('2d');
+      g.drawImage(still,0,0);g.drawImage(layer,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.92);
+    }finally{URL.revokeObjectURL(blob);}
+  }
   // ---- overlay (the 16:9 frame) -----------------------------------------------------------------------------
   const box=document.createElement('div');box.className='film-box title-overlay';box.setAttribute('aria-hidden','true');
   const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox',`0 0 ${FILM_W} 1080`);svg.setAttribute('preserveAspectRatio','none');svg.classList.add('title-svg');box.append(svg);document.body.append(box);
@@ -302,7 +324,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   return {
     setSource(v){source=v;fromFilm.clear();lastKey='';},has,titles,ticks,lane,snapTargets,panel:panelHtml,chapterFields,header,
     selectedId:()=>selected,select,clear,editing:()=>editing,sync,fontsLoaded,measure,
-    toggleShown(){shown=!shown;lastKey='';sync();return shown;},shown:()=>shown,
+    toggleShown(){shown=!shown;lastKey='';sync();return shown;},shown:()=>shown,compositeStill,stillTitles:seconds=>stillTitles(seconds).length,
     fitted:t=>fittedPaths(t,measure),
   };
 }

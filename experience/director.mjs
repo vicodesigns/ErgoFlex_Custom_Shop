@@ -556,9 +556,11 @@ export function mountDirector(bridge,catalog,initial){
     still.busy(title(),film?'Film shot with your Director edits, film quality on.':'No film shot for this chapter: rendering the Director cut alone.',{expected:first?bootMs:0});
     const timer=setInterval(()=>{const text=title();status(text);still.progress(text);},500);
     try{
-      stills||=createStillRenderer();const url=await stills.render(job,t),took=performance.now()-started;
+      stills||=createStillRenderer();const shot3d=await stills.render(job,t),took=performance.now()-started;
+      // The chapter's film titles on top (as finish-intro burns them in), unless Titles is off in the toolbar.
+      let url=shot3d,titled=0;try{titled=titleEditor.stillTitles(seconds);if(titled)url=await titleEditor.compositeStill(shot3d,seconds);}catch(error){console.warn('[render still] titles',error.message);titled=0;}
       if(first)try{localStorage.setItem('ergoflex.director.stillBootMs',String(Math.round(took)));bootMs=took;}catch{}
-      still.add({url,name,seconds:seconds,note:`${Math.round(took/100)/10} s to render`,detail:caption.text});stillMark=caption.mark;group=null;
+      still.add({url,name,seconds:seconds,note:`${Math.round(took/100)/10} s to render${titled?` · ${titled===1?'title':titled+' titles'} on`:''}`,detail:caption.text});stillMark=caption.mark;group=null;
       status('Still rendered: '+name+' · R renders another, \\ compares with the live view, Shift-click a thumbnail for A/B.');
     }catch(error){console.error('[render still]',error);still.error(error.message);status('Render still failed: '+error.message,true);stills?.dispose();stills=null;}
     finally{clearInterval(timer);stillBusy=false;}
