@@ -10,7 +10,9 @@
     const spans = SHOT.clips.map(c => [c.start, c.start + c.duration]).sort((a, b) => a[0] - b[0]), busy = [];
     for (const s of spans) { const last = busy[busy.length - 1]; if (last && s[0] <= last[1]) last[1] = Math.max(last[1], s[1]); else busy.push(s.slice()); }
     const lastEnd = busy.length ? busy[busy.length - 1][1] : 0;
-    return {end: Math.max(SHOT.seconds - 3.6, lastEnd + 1)};
+    // HQ27 (Vico: "when the logo pops back in at the end ... a second and a half, so it's clearly on the screen"): the end
+    // logo is fully in (end + 1.2) at least 1.5 s before the chapter's 0.35 s dissolve starts.
+    return {end: Math.max(lastEnd + .3, Math.min(lastEnd + 1, SHOT.seconds - .35 - 1.5 - 1.2))};
   }
   let B = null, STEPS = null, STAND = null;
   // One routine step per move (lift / tilt / wheels), in the shot's order, with the wellness reason it serves.
@@ -112,8 +114,11 @@
       if (t < ON) { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); return; }
       if (!B) { B = beats(); STEPS = steps(); STAND = standTable(); }
       backdrop(t, {top: '#08101e', bot: '#04060b', blobs: [[C.blue, .16], [C.green, .05]]});
-      const p = pose(t), ui = eo(seg(t, BOOT - .2, BOOT + .8)), endLogo = sm(seg(t, B.end, B.end + 1.2));
-      alpha(ui * (1 - endLogo * .85), () => {
+      // HQ27 (Vico: the boot logo -> app change at ~8 s was rough): no crossfade. The boot bar fills, the logo holds, fades
+      // fully out (BOOT-.6 .. BOOT+.2), then the app fades in (BOOT+.3 .. BOOT+1.2). At the end the same in reverse: the app
+      // fades out (end .. end+.6), then the logo fades in (end+.5 .. end+1.2).
+      const p = pose(t), ui = eo(seg(t, BOOT + .3, BOOT + 1.2)), uiOut = sm(seg(t, B.end, B.end + .6)), endLogo = sm(seg(t, B.end + .5, B.end + 1.2));
+      alpha(ui * (1 - uiOut), () => {
         at(0, (1 - ui) * 40, 1, () => {
           appIcon(78, 70, 64, {glow: true});
           T('ErgoFlex', 128, 84, 44, {w: 700});
@@ -128,14 +133,14 @@
           coach(t, rx, 710, RW, 340);
         });
       });
-      const bootA = 1 - sm(seg(t, BOOT - .3, BOOT + .5));
+      const bootA = 1 - sm(seg(t, BOOT - .6, BOOT + .2));
       const la = Math.max(bootA * sm(seg(t, ON, ON + .7)), endLogo);
       alpha(la, () => {
-        const k = t < EARLY ? eo(seg(t, ON, ON + 1.2)) : eo(seg(t, B.end, B.end + 1.6));
+        const k = t < EARLY ? eo(seg(t, ON, ON + 1.2)) : eo(seg(t, B.end + .5, B.end + 2.2));
         g.fillStyle = rad(W / 2, H / 2, 700, [[0, hexA(C.blue, .22 * la)], [1, 'rgba(0,0,0,0)']]); g.fillRect(0, 0, W, H);
         logo(W / 2, H / 2 - 30, lerp(760, 820, k), 1, {glow: hexA(C.blue2, .6), glowR: 50});
         T(t < EARLY ? 'Good afternoon' : 'Your partner in health', W / 2, H / 2 + 120, 40, {w: 500, a: 'center', c: C.soft});
-        if (t < EARLY) bar(W / 2 - 220, H / 2 + 170, 440, 10, eo(seg(t, ON + .2, BOOT)), C.blue);
+        if (t < EARLY) bar(W / 2 - 220, H / 2 + 170, 440, 10, eo(seg(t, ON + .2, BOOT - .7)), C.blue);
         else T(`Wellness ${Math.round(posture(t))}  ·  ${Math.floor((23 * 60 + 18 + standSec(t)) / 60)} min standing  ·  routine done`, W / 2, H / 2 + 180, 32, {w: 600, a: 'center', c: C.green});
       });
       vignette(.45);
