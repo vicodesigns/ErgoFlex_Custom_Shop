@@ -70,7 +70,7 @@ TICK = 1.11
 TICKS = {'rise': 2, 'create': 2, 'commons': 2, 'coast': 2, 'oilers': 2, 'wellness': 2, 'storage': 2}
 # The gym (black and red) still reads like evening at 2 ticks (Vico: "it should be like the morning, bright, like the
 # early riser"): more of the room's own ambient (image-based) light on top, sceneGlobals.environmentScale.
-GYM_ENV = float(os.environ.get('GYM_ENV', '1'))
+GYM_ENV = float(os.environ.get('GYM_ENV', '1.6'))   # HQ30: Vico picked C (lighter charcoal + this morning ambient)
 # The visualizer's LED surface levels (app-reference/assets/desk_viewer/led/led-receivers.mjs LED_SURFACE_DEFAULTS,
 # the same numbers as studio.js's): desk-viewer.js runs them with no overrides.
 VIEWER_SURFACES = {'desktopStrength': 157, 'desktopReach': 100, 'desktopWidth': 5, 'desktopCone': 100, 'desktopEdgeFade': 46,
