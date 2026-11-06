@@ -30,7 +30,7 @@ export function mountDirector(bridge,catalog,initial){
   let selected=0,undo=[],redo=[],group=null,draftTimer,open=false,loadToken=0,composing=false;
   const choices=new Map(),automaticCameras=new Map();
   let keyId=null,playhead=0,keyDrag=null,suppressKeyClickUntil=0;
-  let inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null,focusSelection=false;
+  let magnet=true,inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null,focusSelection=false;
   // Timeline group selection (camera keys + desk clips) and the film chapter list.
   const picks={keys:new Set(),clips:new Set(),lights:new Set(),neutrals:new Set(),tods:new Set()};let lightSel=null,stills=null,stillBusy=false,marquee=null,groupDrag=null,suppressGroupClickUntil=0;
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
@@ -256,10 +256,47 @@ export function mountDirector(bridge,catalog,initial){
     seekCamera(position/next.seconds);
     status(`${message} ${next.delta>0?'+':''}${Number(next.delta.toFixed(3))}s${longer?` · chapter lengthened to ${next.seconds}s`:''}. Undo restores the previous timing.`);
   }
+  // Magnet: every edge and key that is not moving, the playhead and the chapter ends, within 8 px.
+  function snapTargets(set){
+    const s=shot().seconds,out=[],L=lighting(),T=timeOfDay(),moving=(kind,id)=>set[kind]?.has(id);
+    for(const c of deskEditor.motion().clips)if(!moving('clips',c.id))out.push([c.start,`${clipSummary(c)} start`],[clipEnd(c),`${clipSummary(c)} end`]);
+    if(L)for(const e of L.status)if(!moving('lights',e.id))out.push([e.at,`${kindLabel(e.kind)} start`],[e.at+e.dur,`${kindLabel(e.kind)} end`]);
+    for(const k of keys())if(!moving('keys',k.id))out.push([k.time*s,`camera view ${k.label}`]);
+    if(L)for(const k of L.neutral)if(!moving('neutrals',k[2]))out.push([k[0],whiteName(k[1])+' key']);
+    for(const k of T?.keys||[])if(!moving('tods',k.id))out.push([k.at,(roomModes().find(m=>m.id===k.mode)?.label||k.mode)+' key']);
+    out.push([playhead*s,'the playhead'],[0,'the chapter start'],[s,'the chapter end']);
+    return out;
+  }
+  function grabbedSpan(d){
+    const b=d.base,i=d.id,s=b.seconds;
+    if(d.kind==='keys'){const k=b.keys.find(k=>k.id===i);return k&&[k.time*s,k.time*s];}
+    if(d.kind==='clips'){const c=b.clips.find(c=>c.id===i);return c&&[c.start,clipEnd(c)];}
+    if(d.kind==='lights'){const e=b.lights?.find(e=>e.id===i);return e&&[e.at,e.at+e.dur];}
+    if(d.kind==='neutrals'){const k=b.neutrals?.find(k=>k[2]===i);return k&&[k[0],k[0]];}
+    const k=b.tods?.find(k=>k.id===i);return k&&[k.at,k.at];
+  }
+  function magnetDelta(d,raw){
+    if(!magnet)return null;const span=grabbedSpan(d);if(!span)return null;const tol=8/d.width*d.base.seconds;let best=null;
+    for(const [t,name] of snapTargets(d.set))for(const [edge,label] of [[span[0],'start'],[span[1],'end']]){const delta=t-edge,off=Math.abs(delta-raw);if(off<=tol&&(!best||off<best.off))best={delta,off,t,name,edge:label};}
+    return best;
+  }
+  // Drag feedback: a ghost at the origin, a chip at the cursor, a guide line when snapped.
+  function dragFeedback(d,event){
+    const content=timeline.querySelector('.timeline-content'),s=d.base.seconds;if(!content)return;
+    if(!d.ghosts){d.ghosts=[];for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of timeline.querySelectorAll(attr))if(d.set[kind]?.has(el.dataset[data])){const g=el.cloneNode(true);g.removeAttribute('data-key');g.removeAttribute('data-desk-clip');g.removeAttribute('data-light-clip');g.removeAttribute('data-light-key');g.removeAttribute('data-tod-key');g.classList.add('drag-ghost');g.classList.remove('grouped','selected','invalid');g.style.left=el.dataset.originLeft||el.style.left;el.parentElement.insertBefore(g,el);d.ghosts.push(g);}}
+    d.chip||=Object.assign(document.createElement('div'),{className:'drag-chip'});if(!d.chip.isConnected)document.body.append(d.chip);
+    const span=grabbedSpan(d),n=span?[span[0]+d.delta,span[1]+d.delta]:null,sign=d.delta>=0?'+':'−';
+    d.chip.textContent=`${sign}${Math.abs(d.delta).toFixed(2)} s`+(n?` → ${n[0]===n[1]?r2(n[0])+' s':r2(n[0])+'–'+r2(n[1])+' s'}`:'')+(d.snap?` · snapped to ${d.snap.name}`:'');
+    Object.assign(d.chip.style,{left:event.clientX+'px',top:event.clientY-12+'px'});
+    d.guide||=Object.assign(document.createElement('div'),{className:'snap-guide'});
+    if(d.snap){if(!d.guide.isConnected)content.append(d.guide);const row=content.querySelector('.camera-lane-row,.desk-lane-row'),lane=row?.querySelector('.camera-track,.desk-lane');const lr=lane?.getBoundingClientRect(),cr=content.getBoundingClientRect();if(lr)d.guide.style.left=(lr.left-cr.left+d.snap.t/s*lr.width)+'px';d.guide.dataset.name='snapped to '+d.snap.name;}
+    else d.guide.remove();
+  }
+  function endDragFeedback(d){for(const g of d.ghosts||[])g.remove();d.chip?.remove();d.guide?.remove();}
   function previewGroup(d){
     const s=d.base.seconds;let valid=true,next=null;try{next=shiftGroup(d.base,d.set,d.delta);}catch{valid=false;}
     const at={keys:k=>k.time*s,clips:c=>c.start,lights:e=>e.at,neutrals:k=>k[0],tods:k=>k.at},find={keys:id=>d.base.keys.find(k=>k.id===id),clips:id=>d.base.clips.find(c=>c.id===id),lights:id=>d.base.lights?.find(e=>e.id===id),neutrals:id=>d.base.neutrals?.find(k=>k[2]===id),tods:id=>d.base.tods?.find(k=>k.id===id)};
-    for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of timeline.querySelectorAll(attr)){const id=el.dataset[data];if(!d.set[kind]?.has(id))continue;const item=find[kind](id);if(item){el.style.left=(at[kind](item)+d.delta)/s*100+'%';el.classList.toggle('invalid',!valid);}}
+    for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of timeline.querySelectorAll(attr)){const id=el.dataset[data];if(!d.set[kind]?.has(id))continue;const item=find[kind](id);if(item){el.dataset.originLeft||=el.style.left;el.style.left=(at[kind](item)+d.delta)/s*100+'%';const small=el.querySelector('small'),a=at[kind](item)+d.delta;if(small)small.textContent=kind==='clips'?`${r2(a)}–${r2(a+item.duration)}s · ${r2(item.duration)}s`:kind==='lights'?`${r2(a)}–${r2(a+item.dur)}s`:kind==='keys'?`${a.toFixed(1)}s`:small.textContent;el.classList.toggle('invalid',!valid);}}
     const count=Object.values(d.set).reduce((n,v)=>n+v.size,0);
     status(valid?`Moving ${count} item${count===1?'':'s'} ${d.delta>0?'+':''}${Number(d.delta.toFixed(3))}s${next.seconds>s?` · chapter becomes ${next.seconds}s`:''} · Alt: bypass snap`:'Those positions overlap another movement, light state or key.',!valid);
   }
@@ -489,7 +526,7 @@ export function mountDirector(bridge,catalog,initial){
       <div class="chapter-cards">${project.shots.map((s,i)=>`<div class="chapter-card ${i===selected?'selected':''}" draggable="true" data-index="${i}"><button data-action="select" data-index="${i}" aria-current="${i===selected}" aria-label="Edit chapter ${i+1}: ${escape(s.title)}"><span>${String(i+1).padStart(2,'0')} · ${s.seconds}s</span><strong>${escape(s.title)}</strong><small>${escape(catalog.find(r=>r.id===s.room)?.name||s.room)} · ${escape((catalog.find(r=>r.id===s.room)?.layouts.find(l=>l.id===s.layout)?.modes||catalog.find(r=>r.id===s.room)?.modes||[]).find(m=>m.id===s.mode)?.label||'Studio')}</small></button><div><button data-action="up" data-index="${i}" aria-label="Move chapter ${i+1} earlier" ${i===0?'disabled':''}>←</button><button data-action="down" data-index="${i}" aria-label="Move chapter ${i+1} later" ${i===project.shots.length-1?'disabled':''}>→</button></div></div>`).join('')}</div>
       <div class="workbench-toolbar"><strong title="${escape(s.title)}"><span>CHAPTER ${String(selected+1).padStart(2,'0')}</span> ${escape(s.title)}</strong><span class="workbench-count">${keys().length} views · ${deskEditor.count()} moves</span>
       <div class="track-palette"><button data-action="key-add">+ Camera view</button>${deskEditor.tools()}${lighting()?'<button data-action="light-add" class="light-add" title="Add a light state at the playhead (Shift-click: a neutral colour key)">+ Light</button>':''}</div>
-      <label class="snap-control">Snap <select name="timeline-snap" aria-label="Timeline snapping">${[[0,'Off'],[.1,'0.1s'],[.5,'0.5s'],[1,'1s']].map(([v,label])=>option(v,label,snapStep)).join('')}</select></label>
+      <button data-action="magnet" class="magnet" aria-pressed="${magnet}" title="Magnet: snap to movement edges, keys, the playhead and the chapter ends (S); Alt bypasses">Magnet</button><label class="snap-control">Snap <select name="timeline-snap" aria-label="Timeline snapping">${[[0,'Off'],[.1,'0.1s'],[.5,'0.5s'],[1,'1s']].map(([v,label])=>option(v,label,snapStep)).join('')}</select></label>
       <div class="timeline-zoom"><button data-action="zoom-out" aria-label="Zoom timeline out" ${zoom===1?'disabled':''}>−</button><button data-action="zoom-fit" aria-label="Fit chapter to timeline" title="Fit the whole chapter">${zoom===1?'Fit':'Fit · '+zoom+'×'}</button><button data-action="zoom-in" aria-label="Zoom timeline in" ${zoom===8?'disabled':''}>+</button></div></div>
       <div class="timeline-viewport" tabindex="0" aria-label="Camera and desk timeline"><div class="timeline-content" style="width:${zoom*100}%;--timeline-grid:${(ticks[1]||s.seconds)/s.seconds*100}%">
       <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>
@@ -510,6 +547,7 @@ export function mountDirector(bridge,catalog,initial){
     try{
       if(composing)return;
       group=null;
+      if(name==='magnet'){magnet=!magnet;timeline.querySelector('[data-action=magnet]')?.setAttribute('aria-pressed',String(magnet));status(magnet?'Magnet on: drags snap to edges, keys and the playhead.':'Magnet off: drags snap to the grid only.');return;}
       if(name==='render-still'){await renderStill();return;}
       if(name==='sel-clear'){clearSelection();return;}
       if(name==='sel-delete'){deletePicks();return;}
@@ -806,6 +844,7 @@ export function mountDirector(bridge,catalog,initial){
   // F: Live / Film look / Split; G: thirds and title-safe guides.
   // Also bound in the stage frame (after an orbit the keys go there).
   function viewKeys(event){if(!open||!filmLook||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.target.closest?.('input,select,textarea,[contenteditable]'))return;const k=event.key.toLowerCase();if(k==='f'){event.preventDefault();filmLook.cycle();}else if(k==='g'){event.preventDefault();filmLook.toggleGuides();}
+    else if(k==='s'){event.preventDefault();action('magnet');}
     else if(k==='l'){event.preventDefault();sceneLights.toggleShow().then(on=>status(on?'Lights shown: click a marker to select it, W move, E aim.':'Lights hidden.'));}
     else if((k==='w'||k==='e')&&sceneLights.selected()){event.preventDefault();sceneLights.setMode(k==='w'?'move':'aim');status(k==='w'?'Gizmo: move.':'Gizmo: aim.');}}
   document.addEventListener('keydown',viewKeys);
@@ -922,11 +961,13 @@ export function mountDirector(bridge,catalog,initial){
   timeline.addEventListener('pointermove',event=>{
     if(groupDrag){
       const d=groupDrag;if(Math.abs(event.clientX-d.start)>3)d.moved=true;if(!d.moved)return;
-      const [lo,hi]=groupRange(d.base,d.set);d.delta=Math.max(lo,Math.min(hi,snapGroupDelta((event.clientX-d.start)/d.width*d.base.seconds,snapStep,event.altKey)));previewGroup(d);return;
+      const [lo,hi]=groupRange(d.base,d.set),raw=(event.clientX-d.start)/d.width*d.base.seconds,m=event.altKey?null:magnetDelta(d,raw);d.snap=m;
+      d.delta=Math.max(lo,Math.min(hi,m?m.delta:snapGroupDelta(raw,snapStep,event.altKey)));previewGroup(d);dragFeedback(d,event);return;
     }
     if(lightTrim){
       const d=lightTrim,s=d.base.seconds;if(Math.abs(event.clientX-d.start)>3)d.moved=true;if(!d.moved)return;
-      const delta=snapGroupDelta((event.clientX-d.start)/d.width*s,snapStep,event.altKey),o=d.original,end=o.at+o.dur;
+      const o=d.original,end=o.at+o.dur,raw=(event.clientX-d.start)/d.width*s,edgeT=d.edge==='start'?o.at:end,tol=8/d.width*s;let delta=snapGroupDelta(raw,snapStep,event.altKey);
+      if(magnet&&!event.altKey){let best=null;for(const [t] of snapTargets({lights:new Set([o.id])})){const off=Math.abs(t-edgeT-raw);if(off<=tol&&(!best||off<best[0]))best=[off,t-edgeT];}if(best)delta=best[1];}
       const at=d.edge==='start'?Math.max(0,Math.min(end-.05,o.at+delta)):o.at,dur=d.edge==='start'?end-at:Math.max(.05,Math.min(s-o.at,o.dur+delta));
       d.candidate={...o,at:Math.round(at*1e6)/1e6,dur:Math.round(dur*1e6)/1e6};d.item.style.left=d.candidate.at/s*100+'%';d.item.style.width=d.candidate.dur/s*100+'%';
       let valid=true;try{validateStatus(d.base.lights.map(e=>e.id===o.id?d.candidate:e),s);}catch{valid=false;}d.item.classList.toggle('invalid',!valid);
@@ -951,7 +992,7 @@ export function mountDirector(bridge,catalog,initial){
   }
   function endGroupGesture(event){
     if(groupDrag){
-      const d=groupDrag;groupDrag=null;suppressGroupClickUntil=performance.now()+300;
+      const d=groupDrag;groupDrag=null;suppressGroupClickUntil=performance.now()+300;endDragFeedback(d);
       if(event.type==='pointercancel'){renderTimeline();return;}
       if(!d.moved){clearPicks();try{if(d.kind==='keys')selectKey(d.id);else if(d.kind==='clips')deskEditor.select(d.id);else selectLight(d.kind,d.id);}catch(error){status(error.message,true);}return;}
       try{shiftPicks(d.delta,d.set===picks?'Selection moved':'Moved',d.set);if(d.set!==picks)selectLight(d.kind,d.id);}catch(error){renderTimeline();status(error.message,true);}
