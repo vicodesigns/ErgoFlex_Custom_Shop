@@ -71,6 +71,8 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
   const entry=()=>list.find(e=>e.path===selected)||null;
   const editOf=path=>shot().lightEdits?.find(e=>e.target===path)||null;
   const addedOf=name=>shot().lights?.find(l=>l.name===name)||null;
+  // Light edits in this chapter: changed film lights plus the Director's added lights.
+  const editedCount=()=>(shot().lightEdits?.length||0)+(shot().lights?.length||0);
   // Film-keyed intensity (e.g. chapter 1's productRig key) or a room under time of day.
   function keyedNote(e){
     const f=film(),name=e.path.startsWith('Film lights >')?e.path.split('· ').pop():null;
@@ -178,6 +180,7 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
     refresh(true);const e=entry(),groups=['Film rig','Room','Stage','Added'];
     const head=`<h4>Scene lights</h4><p class="director-hint">The chapter's lamps, sun / sky and film rig after the film setup. Select one here or click its marker in the view; the gizmo moves it (spots and suns: Aim).</p>
       <div class="director-actions"><label class="director-check"><input type="checkbox" name="sl-show" ${show?'checked':''}>Show lights</label><button data-action="sl-add-point">+ Point</button><button data-action="sl-add-spot">+ Spot</button><button data-action="sl-add-rect">+ Area (soft)</button></div>
+      <div class="director-actions"><button data-action="sl-reset-all" ${editedCount()?'':'disabled'} title="Every lamp, sun, sky and rig light back to the film, added lights removed: one step, Undo brings them back">Reset all lights to the film${editedCount()?' ('+editedCount()+')':''}</button></div>
       ${mixer()}<label>Scene light<select name="sl-select"><option value="">Choose a light…</option>${groups.map(g=>{const items=list.filter(x=>x.group===g);return items.length?`<optgroup label="${g}">${items.map(x=>`<option value="${escape(x.path)}" ${x.path===selected?'selected':''}>${escape(x.label)}${editOf(x.path)?' · edited':''}${x.light.visible?'':' · off'}</option>`).join('')}</optgroup>`:'';}).join('')}</select></label>`;
     if(!e)return head;
     const l=e.light,a=e.added?addedOf(e.added):null,hex='#'+l.color.getHexString(),pos=l.getWorldPosition(l.position.clone()).toArray(),note=e.added?'':keyedNote(e);
@@ -200,6 +203,12 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
     if(name==='sl-solo'){refresh(true);setSolo(arg);rerender();status(solo?'Solo: only '+(list.find(x=>x.path===solo)?.label||'this light')+' (preview, not saved).':'Solo off.');return;}
     if(name==='sl-reset-row'){const was=selected;selected=arg;const e=entry();if(e)await action(e.added?'sl-delete':'sl-reset');selected=e?.added?null:was;rerender();return;}
     if(name==='sl-move'||name==='sl-aim'){mode=name.slice(3);rerender();return;}
+    if(name==='sl-reset-all'){
+      const n=editedCount();if(!n){status('No light edits in this chapter: the lights are the film\'s.');return;}
+      if(entry()?.added)selected=null;
+      commit(()=>{const s=shot();delete s.lightEdits;delete s.lights;},{render:false});rerender();
+      status(`All lights back to the film (${n} edit${n===1?'':'s'} cleared). Undo brings them back.`);return;
+    }
     if(name.startsWith('sl-add-')){
       const type=name.slice(7),{camera,controls}=three(),t=controls.target.toArray(),p=camera.position.toArray(),at=t.map((v,i)=>r3(v+(p[i]-v)*.45+(i===1?.6:0)));
       const id='director-'+crypto.randomUUID().slice(0,8),l={name:id,type,position:at,color:'#fff2e0',intensity:type==='point'?20:type==='spot'?120:15,...(type==='point'?{distance:0,decay:2}:{}),...(type==='spot'?{target:t.map(r3),angle:30,penumbra:.5,distance:0,decay:2}:{}),...(type==='rect'?{target:t.map(r3),width:1,height:.6}:{})};
@@ -236,7 +245,7 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
     const parts=[n('Room')&&`${n('Room')} lamp${n('Room')===1?'':'s'}`,suns&&'1 sun',suns>1&&`${suns-1} fill${suns===2?'':'s'}`,n('Film rig')&&`${n('Film rig')} rig`,n('Added')&&`${n('Added')} added`].filter(Boolean);
     return parts.join(', ')+(edited?` · ${edited} edited`:'');
   }
-  return {panel,action,input,changed,select,lanes,summary,mixerChange,selected:()=>selected,
+  return {panel,action,input,changed,select,lanes,summary,mixerChange,editedCount,selected:()=>selected,
     deselect(){if(selected===null)return;selected=null;rerender();},
     toggleShow:async()=>{show=!show;if(show)await ensure();rerender();return show;},setMode:m=>{mode=m;rerender();},showing:()=>show,
     // Called after film-fx (re)installs: the light objects are new, the list and markers follow.

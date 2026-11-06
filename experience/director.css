@@ -403,3 +403,4 @@ body.film-look-split .film-look.shown .film-wipe{display:block}
 @keyframes reveal-pulse{0%{outline-color:#ffd27a00;box-shadow:0 0 0 0 #ffd27a00}18%{outline-color:#ffd27aee;box-shadow:0 0 0 6px #ffd27a26}70%{outline-color:#ffd27a99;box-shadow:0 0 0 3px #ffd27a14}100%{outline-color:#ffd27a00;box-shadow:0 0 0 0 #ffd27a00}}
 #director-panel .reveal-pulse{outline:2px solid #ffd27a00;outline-offset:3px;border-radius:10px;animation:reveal-pulse 1.5s ease-out both}
 @media(prefers-reduced-motion:reduce){#director-panel .reveal-pulse{animation:none;outline-color:#ffd27acc}}
+#director-timeline .lamp-chip.lamp-reset{border-style:dashed;color:#ffd9a0;background:transparent}
