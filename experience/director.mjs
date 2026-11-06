@@ -303,7 +303,7 @@ export function mountDirector(bridge,catalog,initial){
     resizeTimeline(Math.min(need,innerHeight*.5));timelineFitted=true;
   }
   // Brightness of the desk white over the chapter as a line in the lane (L*, top = 100 %).
-  function whiteLine(L,s){const pts=Array.from({length:49},(_,i)=>{const t=i/48*s;return `${(i/48*1000).toFixed(1)},${(30-lightnessOf(neutralAt(L.neutral,t))/100*26).toFixed(2)}`;}).join(' ');return `<svg class="white-line" viewBox="0 0 1000 34" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}"/></svg>`;}
+  function whiteLine(L,s){const pts=Array.from({length:49},(_,i)=>{const t=i/48*s;return `${(i/48*1000).toFixed(1)},${(30-lightnessOf(neutralAt(L.neutral,t))/100*26).toFixed(2)}`;}).join(' ');return `<svg class="white-line" viewBox="0 0 1000 34" preserveAspectRatio="none" aria-hidden="true"><polyline class="under" points="${pts}"/><polyline points="${pts}"/></svg>`;}
   function syncLightNow(){const bar=timeline.querySelector('[data-light-now]'),L=bar&&lighting();if(!L)return;bar.style.left=playhead*100+'%';bar.style.background=lightAt(L,playhead*shot().seconds);}
   // The Lighting tab, broad to narrow in lane order: Lighting now, Time of day, Room, Desk white, Desk status,
   // Lamps & sun. Each section edits one thing; the lanes are the picker.

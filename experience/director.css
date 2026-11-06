@@ -365,3 +365,4 @@ body.film-look-split .film-look.shown .film-wipe{display:block}
 .mixer-row{grid-template-columns:20px 26px minmax(0,1fr) 64px 34px 24px 24px}
 #director-panel .mixer-row input[type=range]{width:64px}
 #director-panel .mixer-name{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.15;padding:3px 4px;word-break:normal}
+.white-line polyline.under{stroke:#000;stroke-width:4.5;opacity:.65}
