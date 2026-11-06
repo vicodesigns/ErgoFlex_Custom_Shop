@@ -39,7 +39,7 @@ export function liveFilmShot(film,shot){
   const next={...film,id:shot.id,seconds:shot.seconds},lit=exportLighting(shot);if(shot.motion)next.motion=shot.motion;delete next.quality;
   // Lighting edited in the Director (ledStatus present) replaces the film's.
   if(lit.ledStatus){next.ledStatus=lit.ledStatus;if(lit.ledNeutral)next.ledNeutral=lit.ledNeutral;else delete next.ledNeutral;if(lit.ledColor)next.ledColor=lit.ledColor;}
-  if(lit.sceneGlobals?.roomLight!==undefined)next.sceneGlobals={...next.sceneGlobals,roomLight:lit.sceneGlobals.roomLight};
+  if(lit.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...lit.sceneGlobals};
   delete next.lights;Object.assign(next,mergeSceneLights(film,shot));
   return next;
 }

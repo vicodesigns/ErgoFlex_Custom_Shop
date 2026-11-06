@@ -11,7 +11,7 @@ export function filmRenderShot(film,shot,keys){
   const lit=exportLighting(shot);
   for(const k of ['ledStatus','ledNeutral','ledColor'])if(lit[k]!==undefined)next[k]=structuredClone(lit[k]);
   if(lit.ledStatus&&!lit.ledNeutral)delete next.ledNeutral;
-  if(shot.sceneGlobals?.roomLight!==undefined)next.sceneGlobals={...next.sceneGlobals,roomLight:shot.sceneGlobals.roomLight};
+  if(shot.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...structuredClone(shot.sceneGlobals)};
   if(keys?.length){
     const old=[...(film?.cameraPlan?.keys||[])].sort((a,b)=>a.at-b.at),plan={...(film?.cameraPlan||{}),keys:keys.map(k=>{
       const o=/^plan-\d+$/.test(k.id)?old[Number(k.id.slice(5))]:null,e={at:Math.round(k.time*seconds*1000)/1000,position:k.view.position,target:k.view.target,fov:k.view.fov??35};

@@ -9,7 +9,7 @@ const near=(a,b,e=1e-6)=>Math.abs(a-b)<=e;
 // Cleaning keeps the film's fields (ids added for the Director), export drops the ids.
 const lit=cleanLighting({ledStatus:[{at:9.25,dur:6.9,kind:'lift-up',fade:1,fadeIn:.6},{at:0,dur:7.45,kind:'off',fade:.3},{at:2,dur:1,kind:'bogus'},{at:25.55,dur:6,kind:'wheels',fade:1,mode:5,reverse:true}],ledNeutral:[[14.2,'#929292'],[0,'#929292'],[15.4,'#52483C']],ledColor:'#242424',sceneGlobals:{roomLight:.55,exposureScale:.9}});
 assert.deepEqual(lit.ledStatus.map(e=>e.kind),['off','lift-up','wheels']);assert.ok(lit.ledStatus.every(e=>typeof e.id==='string'));
-assert.deepEqual(lit.ledNeutral.map(k=>k[0]),[0,14.2,15.4]);assert.equal(lit.ledNeutral[2][1],'#52483c');assert.deepEqual(lit.sceneGlobals,{roomLight:.55});
+assert.deepEqual(lit.ledNeutral.map(k=>k[0]),[0,14.2,15.4]);assert.equal(lit.ledNeutral[2][1],'#52483c');assert.deepEqual(lit.sceneGlobals,{roomLight:.55,exposureScale:.9});
 const out=exportLighting({id:'rise',...lit});
 assert.deepEqual(out.ledStatus[2],{at:25.55,dur:6,kind:'wheels',fade:1,mode:5,reverse:true});assert.deepEqual(out.ledNeutral[2],[15.4,'#52483c']);
 assert.deepEqual(Object.keys(cleanShot({id:'x',room:'product'})).includes('ledStatus'),false,'no lighting fields until edited');
@@ -45,4 +45,9 @@ assert.equal(job.cameraPlan.keys[3].at,6);assert.equal(job.camera.keys.at(-1).ti
 assert.equal(job.ledNeutral,undefined);assert.equal(job.sceneGlobals.roomLight,.3);assert.equal(job.sceneGlobals.exposureScale,.9);assert.deepEqual(job.sceneEdits,rise.sceneEdits);assert.deepEqual(job.quality,rise.quality);
 assert.equal(filmRenderShot({...rise,quality:undefined},{...directorShot,ledStatus:undefined},dkeys).quality,'hq13');
 assert.deepEqual(filmRenderShot(rise,{id:'rise',room:'home',kind:'lift',seconds:16},dkeys).ledNeutral,rise.ledNeutral,'unedited lighting stays the film\'s');
+// Room brightness / ambient light: numbers or keys, only the touched fields, merged over the film's.
+const g=cleanLighting({sceneGlobals:{exposureScale:1.23,environmentScale:[[0,.3],[7.75,.7]],junk:1}}).sceneGlobals;
+assert.deepEqual(g,{exposureScale:1.23,environmentScale:[[0,.3],[7.75,.7]]});
+const withGlobals=filmRenderShot({...rise,sceneGlobals:{roomLight:.55,exposureScale:.9,ledRoomSpill:.15}},{...directorShot,sceneGlobals:{roomLight:.55,environmentScale:2}},dkeys).sceneGlobals;
+assert.deepEqual(withGlobals,{roomLight:.55,exposureScale:.9,ledRoomSpill:.15,environmentScale:2});
 console.log('Film lighting: clean/export round trip, neutral white over time, linear brightness and warmth, light states and colour keys in group moves, the browser camera bake (matches camera-spline.mjs) and the render shot merge verified.');

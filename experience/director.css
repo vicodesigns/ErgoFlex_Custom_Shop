@@ -203,3 +203,5 @@ body.directing #skip{display:none}
 #director-panel .director-grid.three-up{grid-template-columns:repeat(3,minmax(0,1fr))}
 #director-panel .scene-light-inspector .director-hint{word-break:break-word}
 #director-panel [data-scene-lights] button[aria-pressed=true]{background:#184451;border-color:#67ddf5;color:#c7f7ff}
+#director-panel .global-slider{display:grid;grid-template-columns:1fr 84px;gap:8px;align-items:center}
+#director-panel label output[data-global-steps]{color:#ffe7a8;font-variant-numeric:tabular-nums}

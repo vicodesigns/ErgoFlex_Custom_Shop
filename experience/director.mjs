@@ -158,7 +158,7 @@ export function mountDirector(bridge,catalog,initial){
     const s=shot();validateStatus(status,s.seconds);
     s.ledStatus=copy(status).sort((a,b)=>a.at-b.at);
     if(L.implicit&&neutral.length===1&&neutral[0][0]===0){s.ledColor=neutral[0][1];delete s.ledNeutral;}else{s.ledNeutral=copy(neutral).sort((a,b)=>a[0]-b[0]);s.ledColor=L.color;}
-    if(roomLight!==undefined&&roomLight!==null)s.sceneGlobals={roomLight};
+    if(roomLight!==undefined&&roomLight!==null)s.sceneGlobals={...s.sceneGlobals,roomLight};
   }
   function putLighting(change,{key=null,render=true}={}){const L=lighting();if(!L)return;requireReady();commit(()=>writeLighting(L,change),{render,key});}
   const lightItem=()=>{const L=lighting();if(!L||!lightSel)return null;return lightSel.kind==='lights'?L.status.find(e=>e.id===lightSel.id):L.neutral.find(k=>k[2]===lightSel.id);};
@@ -241,6 +241,26 @@ export function mountDirector(bridge,catalog,initial){
       <p class="director-hint">Brightness scales the colour in linear light (relative to this key's colour). Warmth goes from true white to the evening warm ${'#52483c'} at the same brightness.</p>
       <div class="director-actions"><button data-action="light-delete" ${L.neutral.length<=1?'disabled title="The neutral white needs at least one key"':''}>Delete colour key</button></div></div>`;
   }
+  // Room brightness (exposureScale) and ambient light (environmentScale): the film's value until touched.
+  // Keyed values ([[t, v], …]) are edited as one factor on the film's keys and written back scaled.
+  const GLOBALS={exposureScale:['Room brightness',.5,2],environmentScale:['Ambient light',.2,3]};
+  function globalFactor(k){
+    const own=shot().sceneGlobals?.[k],film=filmShot()?.sceneGlobals?.[k];
+    if(Array.isArray(film)){if(!Array.isArray(own)||own.length!==film.length)return {keys:film,value:1};const i=film.findIndex(p=>p[1]);return {keys:film,value:i<0?1:own[i][1]/film[i][1]};}
+    if(Array.isArray(own))return {keys:own,value:1};
+    return {value:typeof own==='number'?own:typeof film==='number'?film:1};
+  }
+  const stepsText=v=>{const n=Number((Math.log(v)/Math.log(1.11)).toFixed(1));return (n>0?'+':'')+n+' step'+(Math.abs(n)===1?'':'s')+' of ×1.11';};
+  function globalFields(){
+    return Object.entries(GLOBALS).map(([k,[label,min,max]])=>{const f=globalFactor(k),v=Number(f.value.toFixed(3));
+      return `<label>${label}${f.keys?` <small>(keyed: scales all ${f.keys.length} keys)</small>`:''} <output data-global-steps="${k}">${k==='exposureScale'?stepsText(v):'×'+v}</output><span class="global-slider"><input type="range" name="g-${k}" min="${min}" max="${max}" step=".01" value="${v}"><input type="number" name="gn-${k}" min="${min}" max="${max}" step=".01" value="${v}"></span></label>`;}).join('');
+  }
+  function setGlobal(k,v){
+    const [label,min,max]=GLOBALS[k];if(!Number.isFinite(v)||v<min||v>max)throw Error(`${label} runs from ${min} to ${max}.`);requireReady();
+    const f=globalFactor(k),r=x=>Math.round(x*10000)/10000;
+    commit(()=>{const s=shot();s.sceneGlobals={...s.sceneGlobals,[k]:f.keys?f.keys.map(([t,x])=>[t,r(x*v)]):r(v)};},{render:true});
+    status(`${label} ${f.keys?'×'+v+' on every key':'set to '+v}${k==='exposureScale'?' ('+stepsText(v)+')':''}. Render still shows the film look.`);
+  }
   // One light item changed: states stay one at a time, colour keys stay sorted.
   function editLight(change,{key=null,render=true}={}){
     const L=lighting(),item=lightItem();if(!item)return;
@@ -312,7 +332,7 @@ export function mountDirector(bridge,catalog,initial){
       <div data-inspector-page="chapter"><h3>Chapter ${selected+1} <span class="inspector-subtitle">of ${project.shots.length}</span></h3><div class="director-actions"><button data-action="add">+ Add chapter</button><button data-action="duplicate">Duplicate chapter</button><button data-action="remove" ${project.shots.length===1?'disabled':''}>Remove chapter</button>${selected===0?'<button data-action="rebuild-opening">✦ Rebuild opening</button><button data-action="camera-holds">4s holds at every view</button>':''}</div>
       <label>Headline<input name="title" maxlength="140" value="${escape(s.title)}"></label>
       <label>Supporting text<textarea name="detail" rows="2" maxlength="260">${escape(s.detail)}</textarea></label>
-      <div class="director-grid"><label>Duration (seconds)<input name="seconds" type="number" min="2" max="90" step=".5" value="${s.seconds}"></label><label>Blend into shot (seconds)<input name="transition" type="number" min="0" max="3" step=".1" value="${s.transition}"></label></div>${lighting()?.roomLight!==undefined?`<label>Room light level (LED spill in the room)<input name="room-light" type="number" min="0" max="2" step=".05" value="${lighting().roomLight}"></label>`:''}
+      <div class="director-grid"><label>Duration (seconds)<input name="seconds" type="number" min="2" max="90" step=".5" value="${s.seconds}"></label><label>Blend into shot (seconds)<input name="transition" type="number" min="0" max="3" step=".1" value="${s.transition}"></label></div>${lighting()?.roomLight!==undefined?`<label>Room light level (LED spill in the room)<input name="room-light" type="number" min="0" max="2" step=".05" value="${lighting().roomLight}"></label>`:''}${filmShot()?globalFields():''}
       <fieldset class="chapter-pacing"><legend>Chapter pacing</legend>
       <div class="director-actions"><button data-action="pace-faster" ${s.seconds*.8<2?'disabled':''}>20% shorter</button><button data-action="pace-slower" ${s.seconds*1.25>90?'disabled':''}>25% longer</button><button data-action="pace-hold" ${s.seconds+2>90?'disabled':''}>+ 2s ending hold</button></div>
       <p class="director-hint">Shorter / longer retimes camera and all movements together. Ending hold keeps their timing and pauses on the final pose. Undo restores the previous timing.</p></fieldset>
@@ -540,6 +560,7 @@ export function mountDirector(bridge,catalog,initial){
     const el=event.target,name=el.name;if(!name)return;
     if(name==='seek'){try{seekCamera(Number(el.value)/100);}catch(error){status(error.message,true);}return;}
     if(name.startsWith('sl-')){try{sceneLights.input(el);}catch(error){status(error.message,true);}return;}
+    if(/^gn?-/.test(name)){const k=name.replace(/^gn?-/,''),v=Number(el.value),twin=field((name.startsWith('gn-')?'g-':'gn-')+k),out=panel.querySelector(`[data-global-steps="${k}"]`);if(Number.isFinite(v)){if(twin)twin.value=String(v);if(out)out.textContent=k==='exposureScale'?stepsText(v):'×'+v;}return;}
     // Neutral white sliders and picker edit live; one undo step per drag.
     if(['neutral-bright','neutral-warm','neutral-color'].includes(name)&&lightItem()){
       try{
@@ -567,6 +588,7 @@ export function mountDirector(bridge,catalog,initial){
   panel.addEventListener('change',async event=>{
     const name=event.target.name,value=event.target.value;group=null;
     if(name==='film-chapter'){switchFilm(Number(value));return;}
+    if(/^gn?-/.test(name||'')){try{setGlobal(name.replace(/^gn?-/,''),Number(value));}catch(error){renderPanel();status(error.message,true);}return;}
     if(name?.startsWith('sl-')){try{await sceneLights.changed(event.target);}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name==='light-selected'){const [kind,id]=value.split(':');if(id)selectLight(kind,id);else{lightSel=null;renderPanel();renderTimeline();}return;}
     if(name==='room-light'){try{const v=Number(value);if(value===''||!Number.isFinite(v)||v<0||v>2)throw Error('Room light level runs from 0 to 2.');putLighting({roomLight:v});status('Room light level set to '+v+'.');}catch(error){renderPanel();status(error.message,true);}return;}

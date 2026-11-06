@@ -2,6 +2,8 @@
 //   ledStatus  [{at, dur, kind, fade, fadeIn?, mode?, reverse?}]  one desk-light state at a time (seconds)
 //   ledNeutral [[seconds, '#hex'], …]  the neutral white over time (smoothstep between keys); else ledColor
 //   ledColor   '#hex'  the neutral white;  sceneGlobals.roomLight  room LED spill level
+//   sceneGlobals.exposureScale / environmentScale  room brightness / ambient (image) light: a number or
+//              keys [[seconds, value], …]; only the fields the Director touched
 // The Director keeps an id on each event / key (third tuple slot) for selection; exportLighting drops them.
 export const LIGHT_KINDS=[['lift-up','Lift up · blue','#2f6bff'],['lift-down','Lift down · red','#ff3b30'],['tilt-retract','Tilt retract · purple','#9600ff'],['tilt-extend','Tilt extend · yellow-green','#d8f000'],['wheels','Wheels · red / amber','#ff5a1f'],['off','Off · dark','#30363c'],['collision','Collision · red breathe','#c4002a'],['proximity','Proximity · amber breathe','#ff9a00']];
 export const WHEEL_MODES=['Strafe left','Strafe right','Forward','Back','Rotate CW','Rotate CCW','Diagonal left-forward','Diagonal left-back','Diagonal right-forward','Diagonal right-back'];
@@ -22,7 +24,9 @@ export function cleanLighting(v={}){
   }).sort((a,b)=>a.at-b.at);
   if(Array.isArray(v.ledNeutral))out.ledNeutral=v.ledNeutral.slice(0,64).flatMap(k=>Array.isArray(k)&&num(k[0],0,90,null)!==null&&hexOk(k[1])?[[num(k[0],0,90,0),k[1].toLowerCase(),unique(k[2])]]:[]).sort((a,b)=>a[0]-b[0]);
   if(hexOk(v.ledColor))out.ledColor=v.ledColor.toLowerCase();
-  const room=num(v.sceneGlobals?.roomLight,0,4,null);if(room!==null)out.sceneGlobals={roomLight:room};
+  const g=v.sceneGlobals||{},globals={},room=num(g.roomLight,0,4,null);if(room!==null)globals.roomLight=room;
+  for(const k of ['exposureScale','environmentScale']){const x=g[k];if(Array.isArray(x)){const keys=x.slice(0,64).filter(p=>Array.isArray(p)&&Number.isFinite(p[0])&&Number.isFinite(p[1])).map(p=>[num(p[0],0,90,0),num(p[1],0,20,1)]);if(keys.length)globals[k]=keys;}else{const n=num(x,0,20,null);if(n!==null)globals[k]=n;}}
+  if(Object.keys(globals).length)out.sceneGlobals=globals;
   return out;
 }
 // The film's own field shapes: no Director ids.
