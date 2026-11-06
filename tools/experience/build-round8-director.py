@@ -221,7 +221,8 @@ def apply(n, cid, f, dc, log):
     return wrote
 
 
-LIGHT_FIELDS = ('ledStatus', 'ledNeutral', 'ledColor', 'lights', 'lightEdits')   # + the Scene lights panel (HQ29)
+LIGHT_FIELDS = ('ledStatus', 'ledNeutral', 'ledColor', 'lights', 'lightEdits', 'timeOfDay')   # + Scene lights, Time of day (HQ29/32)
+GLOBAL_FIELDS = ('roomLight', 'exposureScale', 'environmentScale')   # the Chapter tab's Room light / Room brightness / Ambient light
 
 
 def apply_lighting(cid, f, lighting):
@@ -235,8 +236,13 @@ def apply_lighting(cid, f, lighting):
         for s in (d['shots'] if 'shots' in d else [d]):
             if s.get('id') != cid: continue
             for k in LIGHT_FIELDS:
-                if k in lighting: s[k] = copy.deepcopy(lighting[k])
-            if 'roomLight' in lighting and 'roomLight' in (s.get('sceneGlobals') or {}): s['sceneGlobals']['roomLight'] = lighting['roomLight']
+                if k not in lighting: continue
+                if k == 'lights':   # the Director's own lights (director-*) are ADDED to the film's; same name replaces
+                    mine = copy.deepcopy(lighting['lights']); names = {l.get('name') for l in mine}
+                    s['lights'] = [l for l in s.get('lights') or [] if not str(l.get('name', '')).startswith('director-') and l.get('name') not in names] + mine
+                else: s[k] = copy.deepcopy(lighting[k])
+            for k in GLOBAL_FIELDS:
+                if k in lighting: s.setdefault('sceneGlobals', {})[k] = copy.deepcopy(lighting[k])
         if dump(p, d): wrote.append(os.path.relpath(p, H))
     return wrote
 
@@ -345,7 +351,8 @@ def run_import(export):
     # The Lighting lane's edits ride in the export's shot; keep them beside the camera keys and clips (run_pass applies them).
     shot = (d.get('shots') or [{}])[0]
     lighting = {k: shot[k] for k in LIGHT_FIELDS if k in shot}
-    if 'roomLight' in (shot.get('sceneGlobals') or {}): lighting['roomLight'] = shot['sceneGlobals']['roomLight']
+    for k in GLOBAL_FIELDS:
+        if k in (shot.get('sceneGlobals') or {}): lighting[k] = shot['sceneGlobals'][k]
     dc = load(director_file(cid))
     if lighting: dc['lighting'] = lighting
     else: dc.pop('lighting', None)
