@@ -252,13 +252,17 @@ def run_pages(ids, downloads):
     for n, cid, page, js, src, cs, mine in rows:
         T, cT = float(src['seconds']), float(cs['seconds'])
         trim = f'; the film uses the first {cT:g} s' if cT < T - 1e-6 else ''
-        li.append(f'<li><a href="{html.escape(page)}">Chapter {n}: {html.escape(cid)}</a> <small>{T:g} s, '
+        li.append(f'<li><a href="{html.escape(page)}" target="ergoflex-director" onclick="mark(this)">Chapter {n}: {html.escape(cid)}</a> <small>{T:g} s, '
                   f'{len(src["cameraPlan"]["keys"])} camera keys, {len((src.get("motion") or {}).get("clips") or [])} desk moves{trim}'
                   f'{"; your Director edit is in" if mine else ""} &middot; import file {html.escape(js)}</small></li>')
     open(os.path.join(H, 'director-index.html'), 'w').write(
         '<!doctype html><meta charset="utf-8"><title>ErgoFlex film: Director Mode chapters</title>\n'
         '<script>if(location.hostname==="localhost")location.hostname="127.0.0.1"</script>\n'
-        '<style>body{font:16px/1.6 system-ui,sans-serif;margin:2em;max-width:60em}small{color:#666}</style>\n'
+        '<style>body{font:16px/1.6 system-ui,sans-serif;margin:2em;max-width:60em}small{color:#666}a.on{font-weight:700}a.on::after{content:"  \\2190  open"}</style>\n'
+        # Vico (HQ26): no way to step to the next chapter inside Director Mode. Every chapter link opens in ONE named
+        # Director tab ("ergoflex-director"), replacing the chapter before it, so this list is the chapter switcher and
+        # tabs never pile up (each Director tab holds two of Chrome's six :3000 connections: the 'Preparing' trap).
+        '<script>function mark(a){document.querySelectorAll("a.on").forEach(x=>x.classList.remove("on"));a.classList.add("on")}</script>\n'
         '<h1>ErgoFlex film: Director Mode chapters</h1>\n'
         '<p>Open a chapter, tune the camera keys and desk moves, then <b>Export cut</b>: the film picks the export up '
         'from Downloads. If a page does not open the cut, use Director Mode\'s <b>Import cut</b> with the chapter\'s '
