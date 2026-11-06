@@ -45,6 +45,9 @@ WARM_EVENING = '#52483c'
 RISE_DAY = os.environ.get('RISE_DAY', '#929292')
 NEUTRAL = {'rise': [[0, RISE_DAY], [14.2, RISE_DAY], [15.4, WARM_EVENING]]}   # HQ19: after the lowering (13.2 s) has faded back to white
 STAGE = {'awaken', 'awareness'}            # the black product stage
+# HQ24 (Vico: with the bloom gone the LEDs read darker; chapter 1's white "too dark, double the brightness"): chapter 1's
+# white at three times its light (linear .072 -> .217; Vico picked 3x over the 2x still). The sensing stage keeps #4c4c4c.
+WHITE_BY = {'awaken': os.environ.get('AWAKEN_WHITE', '#808080')}
 # HQ14l room grade (film-fx sceneGlobals.roomLight / exposureScale). The room chapters were lit and exposed as the app's
 # daylight looks (exposure 1.05-1.1, NeutralToneMapping), so white and light-grey surfaces sat on the tone curve's shoulder
 # (create: mean luma ~165, up to 20% of the frame clipped; commons up to 13%, its white study tables and walls blown), and
@@ -175,7 +178,7 @@ def fix(s):
     # (Storage stayed on its old look, warm white #fff1dc + floorLight, until HQ14r: see SURFACE_TRIM.)
     if not s.get('ledStatus'):
         return s
-    s['ledColor'] = WHITE_STAGE if s['id'] in STAGE else WHITE_ROOM
+    s['ledColor'] = WHITE_BY.get(s['id'], WHITE_STAGE if s['id'] in STAGE else WHITE_ROOM)
     if s['id'] in NEUTRAL: s['ledNeutral'] = NEUTRAL[s['id']]
     if s['id'] not in STAGE:
         g = s.setdefault('sceneGlobals', {}); g['roomLight'] = ROOM_LIGHT_BY.get(s['id'], ROOM_LIGHT)
