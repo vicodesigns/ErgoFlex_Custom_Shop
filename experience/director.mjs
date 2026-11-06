@@ -31,7 +31,7 @@ export function mountDirector(bridge,catalog,initial){
   let selected=0,undo=[],redo=[],undoLabels=[],redoLabels=[],labelPending=null,stillMark=null,group=null,draftTimer,open=false,loadToken=0,composing=false;
   const choices=new Map(),automaticCameras=new Map();
   let keyId=null,playhead=0,keyDrag=null,suppressKeyClickUntil=0;
-  let magnet=true,inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null,focusSelection=false;
+  let magnet=true,inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null;
   // Timeline group selection (camera keys + desk clips) and the film chapter list.
   const picks={keys:new Set(),clips:new Set(),lights:new Set(),neutrals:new Set(),tods:new Set()};let lightSel=null,stills=null,stillBusy=false,marquee=null,groupDrag=null,suppressGroupClickUntil=0;
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
@@ -45,12 +45,44 @@ export function mountDirector(bridge,catalog,initial){
   const shot=()=>project.shots[selected];
   const keys=()=>resolveCameraKeys(shot().camera,automaticCameras.get(shot().id)||[]);
   const selectedKey=()=>keys().find(k=>k.id===keyId);
-  function showInspector(tab,selection=false,reveal=true){
-    if(selection)focusSelection=true;
-    inspector=tab;if(reveal)document.body.classList.remove('inspector-hidden');if(tab==='lighting')queueMicrotask(()=>syncNow());
+  function showInspector(tab,selection=false,unhide=true){
+    inspector=tab;if(unhide)document.body.classList.remove('inspector-hidden');if(tab==='lighting')queueMicrotask(()=>syncNow());
     for(const page of panel.querySelectorAll('[data-inspector-page]'))page.hidden=page.dataset.inspectorPage!==tab;
     for(const button of panel.querySelectorAll('[data-inspector-tab]'))button.setAttribute('aria-pressed',String(button.dataset.inspectorTab===tab));
     panel.scrollTop=0;
+  }
+  // Selecting anything opens its home in the inspector: the tab its settings live in, that section open, scrolled
+  // to and outlined for ~1.5 s. [tab, lighting section id or a selector in the tab's page]. Never moves focus, and
+  // while a text field in the inspector has focus nothing switches or scrolls.
+  const HOMES={camera:['camera','[data-reveal="camera-key"]'],clip:['groove','.movement-inspector'],tod:['lighting','tod'],room:['lighting','room'],
+    white:['lighting','white'],status:['lighting','status'],lamp:['lighting','lamps'],light:['lighting','lamps'],title:['chapter','[data-reveal="titles"]']};
+  let revealWant=null,pulse=null;
+  const typing=()=>{const a=document.activeElement;return !!a&&panel.contains(a)&&(a.isContentEditable||a.tagName==='TEXTAREA'||a.tagName==='INPUT'&&!/^(checkbox|radio|range|color|button|submit|reset)$/.test(a.type));};
+  function reveal(type){
+    const home=HOMES[type];if(!home||typing())return false;
+    if(inspector!==home[0]||document.body.classList.contains('inspector-hidden'))showInspector(home[0]);
+    revealWant=type;requestAnimationFrame(()=>requestAnimationFrame(applyReveal));return true;
+  }
+  function revealTarget(type){
+    const [tab,where]=HOMES[type],page=panel.querySelector(`[data-inspector-page="${tab}"]`);if(!page)return {};
+    if(/^[\[.#]/.test(where))return {target:page.querySelector(where)};
+    const section=page.querySelector(`[data-light-section="${where}"]`);
+    return {section,target:section?.querySelector('.light-inspector,.scene-light-inspector,.movement-inspector')||section};
+  }
+  function applyReveal(){
+    const type=revealWant;revealWant=null;if(!type||inspector!==HOMES[type][0]||typing())return;
+    const {section,target}=revealTarget(type);if(!target)return;
+    if(section&&!section.open){section.open=true;delete lightSectionsShut[section.dataset.lightSection];}
+    const top=target.getBoundingClientRect().top-panel.getBoundingClientRect().top+panel.scrollTop;
+    panel.scrollTo({top:Math.max(0,top-Math.min(120,panel.clientHeight*.15)),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    pulse={type,at:performance.now()};repulse();
+  }
+  // The outline survives re-renders of the panel within its 1.5 s (it resumes where it was).
+  function repulse(){
+    if(!pulse)return;const age=performance.now()-pulse.at;if(age>1500){pulse=null;return;}
+    const {target}=revealTarget(pulse.type);if(!target||target.classList.contains('reveal-pulse'))return;
+    target.style.animationDelay=-age+'ms';target.classList.add('reveal-pulse');
+    setTimeout(()=>{target.classList.remove('reveal-pulse');target.style.animationDelay='';},1500-age);
   }
   function editTimes(){return [...keys().map(k=>k.time*shot().seconds),...deskEditor.boundaries()];}
   function snapTime(value,{pixels=1000,bypass=false,excludeClip,excludeKey,excludePlayhead=false}={}){
@@ -99,10 +131,10 @@ export function mountDirector(bridge,catalog,initial){
     const exact=timeline.querySelector('[name="timeline-seconds"]');if(exact&&document.activeElement!==exact)exact.value=(playhead*shot().seconds).toFixed(2);
   }
   function syncPan(){const viewport=timeline.querySelector('.timeline-viewport'),range=timeline.querySelector('[name="timeline-pan"]');if(viewport&&range&&document.activeElement!==range)range.value=viewport.scrollLeft/Math.max(1,viewport.scrollWidth-viewport.clientWidth)*100;}
-  function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();const k=selectedKey();if(!k)return;deskEditor.clearSelection();showInspector('camera',true);seekCamera(k.time);renderPanel();renderTimeline();}
+  function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
   function captureKey(time,label){
     requireReady();const view=bridge.stage().captureCamera();if(!view)throw Error('The camera is not ready.');
-    deskEditor.clearSelection();showInspector('camera');
+    deskEditor.clearSelection();reveal('camera');
     const existing=keys().find(k=>Math.abs(k.time-time)<.001);if(!existing&&keys().length>=64)throw Error('A chapter can hold up to 64 camera keyframes.');
     commit(()=>{const list=ensureKeys();if(existing){const key=list.find(k=>k.id===existing.id);key.view=view;keyId=key.id;}else{const key={id:crypto.randomUUID(),time,label:label||'Camera view '+(list.length+1),easing:'smooth',path:'orbit',view};list.push(key);keyId=key.id;}list.sort((a,b)=>a.time-b.time);},{render:true});
     status('Camera keyframe captured. Drag its diamond on the timeline to change its timing.');
@@ -176,7 +208,7 @@ export function mountDirector(bridge,catalog,initial){
   const lightItem=()=>{if(!lightSel)return null;if(lightSel.kind==='tods')return timeOfDay()?.keys.find(k=>k.id===lightSel.id)||null;const L=lighting();if(!L)return null;return lightSel.kind==='lights'?L.status.find(e=>e.id===lightSel.id):L.neutral.find(k=>k[2]===lightSel.id);};
   function selectLight(kind,id){
     lightSel={kind,id};keyId=null;deskEditor.clearSelection();sceneLights.deselect();const item=lightItem();if(!item)return;
-    showInspector('lighting',true);seekCamera((Array.isArray(item)?item[0]:item.at)/shot().seconds);render();
+    reveal(kind==='tods'?'tod':kind==='neutrals'?'white':'status');seekCamera((Array.isArray(item)?item[0]:item.at)/shot().seconds);render();
     const el=timeline.querySelector(`[data-light-clip="${id}"],[data-light-key="${id}"],[data-tod-key="${id}"]`);if(el)el.scrollIntoView({block:'nearest',inline:'nearest'});
   }
   // Group selection: marquee or Shift/Ctrl-click camera keys, desk clips and lighting, then move them together.
@@ -435,10 +467,10 @@ export function mountDirector(bridge,catalog,initial){
   // Scene lights (room lamps, sun / sky, film rig, added lights) live in their own module.
   function renderSceneLights(){
     const box=panel.querySelector('[data-scene-lights]');if(!box)return;const active=box.contains(document.activeElement)?document.activeElement.name:null;
-    syncLightTools?.();box.innerHTML=sceneLights.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});
+    syncLightTools?.();box.innerHTML=sceneLights.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});repulse();
   }
   const sceneLights=createSceneLightEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneLights,
-    onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();if(had)renderTimeline();syncSelectedHeader();}});
+    onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();if(had)renderTimeline();syncSelectedHeader();reveal('light');}});
   // Render still: the playhead frame with the film look, rendered in a hidden stage of its own.
   // Render still: the playhead frame with the film look, shown inside the frame with a history strip.
   const still=createStillStrip();
@@ -539,8 +571,8 @@ export function mountDirector(bridge,catalog,initial){
       <p class="director-hint">Links include your cut settings. Recipients need access to this server.</p>
       <label>Music volume<input name="volume" type="range" min="0" max="1" step=".01" value="${project.volume}"></label><div class="director-actions"><button data-action="play" class="primary">▶ Play client cut</button><button data-action="bake-all">Bake full intro · 1080p</button><button data-action="bake-export-all">Export all baked chapters</button><button data-action="delete-cut">Delete saved cut</button></div></div>
       <div data-inspector-page="chapter"><h3>Chapter ${selected+1} <span class="inspector-subtitle">of ${project.shots.length}</span></h3><div class="director-actions"><button data-action="add">+ Add chapter</button><button data-action="duplicate">Duplicate chapter</button><button data-action="remove" ${project.shots.length===1?'disabled':''}>Remove chapter</button>${selected===0?'<button data-action="rebuild-opening">✦ Rebuild opening</button><button data-action="camera-holds">4s holds at every view</button>':''}</div>
-      <label>Headline<input name="title" maxlength="140" value="${escape(s.title)}"></label>
-      <label>Supporting text<textarea name="detail" rows="2" maxlength="260">${escape(s.detail)}</textarea></label>
+      <div data-reveal="titles"><label>Headline<input name="title" maxlength="140" value="${escape(s.title)}"></label>
+      <label>Supporting text<textarea name="detail" rows="2" maxlength="260">${escape(s.detail)}</textarea></label></div>
       <div class="director-grid"><label>Duration (seconds)<input name="seconds" type="number" min="2" max="90" step=".5" value="${s.seconds}"></label><label>Blend into shot (seconds)<input name="transition" type="number" min="0" max="3" step=".1" value="${s.transition}"></label></div>
       <fieldset class="chapter-pacing"><legend>Chapter pacing</legend>
       <div class="director-actions"><button data-action="pace-faster" ${s.seconds*.8<2?'disabled':''}>20% shorter</button><button data-action="pace-slower" ${s.seconds*1.25>90?'disabled':''}>25% longer</button><button data-action="pace-hold" ${s.seconds+2>90?'disabled':''}>+ 2s ending hold</button></div>
@@ -558,12 +590,13 @@ export function mountDirector(bridge,catalog,initial){
       <p class="director-hint">Select a diamond below to edit its view. Scrub to a time, orbit the camera, then add a keyframe. Dashed diamonds are automatic views until you edit them.</p>
       <div class="director-actions"><button data-action="key-add">+ Add camera keyframe</button><button data-action="key-update" class="primary" ${cameraKey?'':'disabled'}>Update selected view</button><button data-action="key-duplicate" title="Duplicate selected camera view (Ctrl/Cmd+D)" ${cameraKey?'':'disabled'}>Duplicate keyframe</button><button data-action="key-delete" ${cameraKey?'':'disabled'}>Delete keyframe</button></div>
       <label>Selected camera keyframe<select name="camera-key"><option value="">Select a keyframe…</option>${keys().map(k=>option(k.id,`${k.label} · ${(k.time*s.seconds).toFixed(2)}s`,keyId)).join('')}</select></label>
-      ${cameraKey?`<div class="selection-preview"><button data-action="key-preview" ${keys().at(-1)?.id===cameraKey.id?'disabled title="Last camera view: select an earlier view to preview its move"':''}>▶ Preview camera move</button><button data-action="key-go">Go to view</button></div><label>Keyframe name<input name="key-label" maxlength="60" value="${escape(cameraKey.label)}"></label><div class="director-grid"><label>Keyframe time (seconds)<input name="key-time" type="number" min="0" max="${s.seconds}" step=".05" value="${Number((cameraKey.time*s.seconds).toFixed(3))}"></label><label>Move to next view<select name="key-easing">${CAMERA_EASINGS.map(e=>option(e,({smooth:'Smooth move',linear:'Linear move',hold:'Hold, then cut'})[e],cameraKey.easing)).join('')}</select></label></div><label>Camera route<select name="key-path">${option('linear','Direct line',cameraKey.path||'linear')}${option('orbit','Orbit around subject',cameraKey.path||'linear')}</select></label><label>Field of view (degrees)<input name="key-fov" type="number" min="15" max="80" step="1" value="${cameraKey.view.fov}"></label><div class="director-actions lens-presets">${[[24,'Detail · 24°'],[35,'Balanced · 35°'],[50,'Wide · 50°']].map(([fov,label])=>`<button data-action="lens-${fov}" aria-pressed="${cameraKey.view.fov===fov}">${label}</button>`).join('')}</div><p class="director-hint">Lens buttons update this keyframe. After orbiting or framing the preview, use Update selected view to keep that composition.</p>`:''}
+      ${cameraKey?`<div data-reveal="camera-key"><div class="selection-preview"><button data-action="key-preview" ${keys().at(-1)?.id===cameraKey.id?'disabled title="Last camera view: select an earlier view to preview its move"':''}>▶ Preview camera move</button><button data-action="key-go">Go to view</button></div><label>Keyframe name<input name="key-label" maxlength="60" value="${escape(cameraKey.label)}"></label><div class="director-grid"><label>Keyframe time (seconds)<input name="key-time" type="number" min="0" max="${s.seconds}" step=".05" value="${Number((cameraKey.time*s.seconds).toFixed(3))}"></label><label>Move to next view<select name="key-easing">${CAMERA_EASINGS.map(e=>option(e,({smooth:'Smooth move',linear:'Linear move',hold:'Hold, then cut'})[e],cameraKey.easing)).join('')}</select></label></div><label>Camera route<select name="key-path">${option('linear','Direct line',cameraKey.path||'linear')}${option('orbit','Orbit around subject',cameraKey.path||'linear')}</select></label><label>Field of view (degrees)<input name="key-fov" type="number" min="15" max="80" step="1" value="${cameraKey.view.fov}"></label><div class="director-actions lens-presets">${[[24,'Detail · 24°'],[35,'Balanced · 35°'],[50,'Wide · 50°']].map(([fov,label])=>`<button data-action="lens-${fov}" aria-pressed="${cameraKey.view.fov===fov}">${label}</button>`).join('')}</div><p class="director-hint">Lens buttons update this keyframe. After orbiting or framing the preview, use Update selected view to keep that composition.</p></div>`:''}
 
       </div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}</div>`;
     showInspector(inspector,false,false);deskEditor.sync();syncTransport();
-    if(focusSelection){const target=inspector==='groove'?panel.querySelector('.movement-inspector'):panel.querySelector('[name="key-label"]')?.closest('label');if(target)panel.scrollTop=Math.max(0,target.offsetTop-panel.clientHeight*.25);focusSelection=false;}
-    else {panel.scrollTop=scroll;const replacement=activeName?field(activeName):null;if(replacement){replacement.focus({preventScroll:true});if(selection&&replacement.setSelectionRange)try{replacement.setSelectionRange(...selection);}catch{}}}
+    if(!revealWant)panel.scrollTop=scroll;
+    const replacement=activeName?field(activeName):null;if(replacement){replacement.focus({preventScroll:true});if(selection&&replacement.setSelectionRange)try{replacement.setSelectionRange(...selection);}catch{}}
+    repulse();
   }
   function renderTimeline(){
     const scroll=timeline.querySelector('.timeline-viewport')?.scrollLeft||0,s=shot();
@@ -621,7 +654,7 @@ export function mountDirector(bridge,catalog,initial){
       }
       if(name==='film-prev'||name==='film-next'){const i=filmIndex();switchFilm(name==='film-prev'?i-1:i<0?0:i+1);return;}
       if(name==='inspector'){document.body.classList.toggle('inspector-hidden');return;}
-      if(name==='lamp-pick'){showInspector('lighting',true);const d=panel.querySelector('[data-light-section="lamps"]');if(d)d.open=true;await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
+      if(name==='lamp-pick'){await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
       if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
       if(name==='now-go'){const id=index;const el=panel.querySelector(`[data-light-section="${id}"]`);if(el){el.open=true;delete lightSectionsShut[id];el.scrollIntoView({block:'start',behavior:'smooth'});}return;}
       if(name==='group-toggle'){const g=index===0?'motion':'lighting';laneGroups[g]=!groupClosed(g);saveGroups();renderTimeline();return;}
@@ -889,7 +922,7 @@ export function mountDirector(bridge,catalog,initial){
   });
   timeline.addEventListener('pointerup',event=>{
     if(!keyDrag)return;const d=keyDrag;keyDrag=null;suppressKeyClickUntil=performance.now()+250;
-    try{if(d.moved){deskEditor.clearSelection();showInspector('camera',true);const list=moveCameraKey(keys(),d.id,d.time);commit(()=>{shot().camera={keys:copy(list)};keyId=d.id;},{render:true});seekCamera(d.time);status('Camera keyframe moved.');}else selectKey(d.id);}catch(error){renderTimeline();status(error.message,true);}
+    try{if(d.moved){deskEditor.clearSelection();reveal('camera');const list=moveCameraKey(keys(),d.id,d.time);commit(()=>{shot().camera={keys:copy(list)};keyId=d.id;},{render:true});seekCamera(d.time);status('Camera keyframe moved.');}else selectKey(d.id);}catch(error){renderTimeline();status(error.message,true);}
   });
   timeline.addEventListener('pointercancel',()=>{keyDrag=null;renderTimeline();});
   timeline.addEventListener('dblclick',event=>{if(!event.target.closest('.timeline-resize'))return;if(timelineFitted){document.body.style.removeProperty('--director-timeline-height');timelineFitted=false;requestAnimationFrame(()=>renderTimeline());}else{fitTimeline();requestAnimationFrame(()=>renderTimeline());}});
@@ -995,7 +1028,7 @@ export function mountDirector(bridge,catalog,initial){
         url.searchParams.delete('bakeAll');history.replaceState(null,'',url);action('bake-all');
       }
     });}else draft();}
-  const deskEditor=createDeskEditor({panel,timeline,bridge,shot,time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();showInspector(tab,true);}});
+  const deskEditor=createDeskEditor({panel,timeline,bridge,shot,time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
   // Group gestures run in the capture phase so they take over from single-item drags.
   // Lighting items have no editor of their own: a plain drag moves (or trims) just that item.
   const viewport=()=>timeline.querySelector('.timeline-viewport');
@@ -1074,7 +1107,7 @@ export function mountDirector(bridge,catalog,initial){
   timeline.addEventListener('click',event=>{if(performance.now()<suppressGroupClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
   // Room lane: drag the brightness / fill line up or down (×2 per 7 lane px, log scale); one undo step per drag.
   let roomDrag=null;
-  timeline.addEventListener('pointerdown',event=>{const hit=event.target.closest?.('[data-room-line]');if(!hit||event.button!==0)return;event.preventDefault();event.stopImmediatePropagation();
+  timeline.addEventListener('pointerdown',event=>{const hit=event.target.closest?.('[data-room-line]');if(!hit||event.button!==0)return;event.preventDefault();event.stopImmediatePropagation();reveal('room');
     try{requireReady();const k=event.altKey?'environmentScale':hit.dataset.roomLine,box=hit.closest('svg').getBoundingClientRect();roomDrag={k,y:event.clientY,scale:34/box.height,start:globalFactor(k).value,key:'room-'+k+'-'+Date.now()};viewport().setPointerCapture(event.pointerId);}catch(error){status(error.message,true);}},true);
   timeline.addEventListener('pointermove',event=>{if(!roomDrag)return;const d=roomDrag,[,min,max]=GLOBALS[d.k],v=Math.max(min,Math.min(max,Math.round(d.start*2**(-(event.clientY-d.y)/40)*100)/100));if(v===d.last)return;d.last=v;try{setGlobal(d.k,v,{key:d.key,render:false});}catch(error){status(error.message,true);}});
   for(const type of ['pointerup','pointercancel'])timeline.addEventListener(type,()=>{if(!roomDrag)return;roomDrag=null;suppressGroupClickUntil=performance.now()+300;renderPanel();},true);
@@ -1127,5 +1160,7 @@ export function mountDirector(bridge,catalog,initial){
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
   render();panel.hidden=timeline.hidden=true;
-  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>sceneLights.applied()};
+  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>sceneLights.applied(),
+    // Selection -> inspector home (HOMES): for lanes and tools outside this module (the Titles lane: reveal('title')).
+    reveal,revealHomes:()=>structuredClone(HOMES)};
 }
