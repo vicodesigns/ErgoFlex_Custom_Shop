@@ -283,3 +283,32 @@
 #director-timeline .timeline-bake-summary{color:#9eecd0}
 #director-timeline .timeline-pan{color:var(--df-text-3)}
 #director-timeline .timeline-pan input{accent-color:var(--df-accent)}
+
+/* ---------- Frame tools and stills ---------- */
+/* Left: one segmented group (Lights | Move · Aim · Rotate · Scale); right: Render still (primary) + view toggles */
+.light-tools::before{content:'';position:absolute;top:6px;left:6px;width:290px;height:34px;border-radius:var(--df-r-3);background:var(--df-overlay);border:1px solid var(--df-border-2);box-shadow:0 4px 14px #0006;box-sizing:border-box;pointer-events:none}
+.light-tools button,.film-tools button,.still-opener button{min-height:28px;height:28px;top:9px;padding:0 8px;border-radius:var(--df-r-2);border:1px solid transparent;background:transparent;color:var(--df-text-1);font:600 var(--df-fs-sm)/1 var(--df-font);letter-spacing:0;backdrop-filter:none;transition:background-color .12s,color .12s}
+.light-tools button:hover:not(:disabled),.film-tools button:hover{background:var(--df-surface-4)}
+.light-tools [data-vt=l]{left:9px;width:58px}
+.light-tools [data-vt=w]{left:73px;width:54px}.light-tools [data-vt=e]{left:129px;width:46px}.light-tools [data-vt=pe]{left:177px;width:62px}.light-tools [data-vt=t]{left:241px;width:52px}
+.light-tools [data-vt=l]::after{content:'';position:absolute;right:-4px;top:5px;bottom:5px;width:1px;background:var(--df-border-3)}
+.light-tools button[aria-pressed=true],.film-tools button[aria-pressed=true]{background:var(--df-accent-soft);border-color:var(--df-accent-line);color:var(--df-accent-text)}
+.light-tools button:disabled{opacity:1;color:var(--df-text-4);background:transparent;cursor:not-allowed}
+.film-tools-row{top:6px;right:6px;gap:2px;padding:3px;border-radius:var(--df-r-3);background:var(--df-overlay);border:1px solid var(--df-border-2);box-shadow:0 4px 14px #0006}
+.film-tools-row button{position:static}
+.film-tools .render-still{background:var(--df-accent);color:var(--df-accent-ink);border-color:transparent;margin-right:4px;padding:0 11px}
+.film-tools .render-still:hover{background:var(--df-accent-hover)!important}
+.film-tools .render-still:disabled{background:var(--df-surface-3);color:var(--df-text-4);cursor:progress}
+.still-opener button{position:absolute;top:auto;right:8px;bottom:8px;background:var(--df-overlay);border-color:var(--df-border-2)}
+.film-look-badge{background:var(--df-overlay);color:var(--df-select-text);font:650 var(--df-fs-xs) var(--df-font);border:1px solid var(--df-border-2)}
+/* Still strip */
+.still-strip{height:66px;gap:6px;padding:5px 8px;background:#06090ddd;border-top:1px solid var(--df-border-2);scrollbar-width:thin;scrollbar-color:#3a4857 transparent}
+.still-thumb{border-radius:var(--df-r-1);outline:1px solid var(--df-border-3);outline-offset:0;transition:outline-color .12s}
+.still-thumb:hover{outline-color:#ffffff88}
+.still-thumb figcaption{font:500 9.5px/1.25 var(--df-font);background:linear-gradient(#0000,#000d 40%);padding:6px 4px 2px}
+.still-thumb figcaption span{color:var(--df-select-text)}
+.still-thumb.pinned{outline:2px solid var(--df-select)}.still-thumb.compare{outline:2px solid var(--df-accent)}
+.still-view .still-close{background:var(--df-overlay);border-color:var(--df-border-3);border-radius:var(--df-r-2)}
+.still-caption{font:500 var(--df-fs-md) var(--df-font)}
+.still-caption a.primary{background:var(--df-accent);color:var(--df-accent-ink);border-radius:var(--df-r-2);font-weight:650}
+.still-busy .director-kicker{color:var(--df-text-3);letter-spacing:.14em}
