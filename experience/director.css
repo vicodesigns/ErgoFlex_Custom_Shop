@@ -404,3 +404,43 @@ body.film-look-split .film-look.shown .film-wipe{display:block}
 #director-panel .reveal-pulse{outline:2px solid #ffd27a00;outline-offset:3px;border-radius:10px;animation:reveal-pulse 1.5s ease-out both}
 @media(prefers-reduced-motion:reduce){#director-panel .reveal-pulse{animation:none;outline-color:#ffd27acc}}
 #director-timeline .lamp-chip.lamp-reset{border-style:dashed;color:#ffd9a0;background:transparent}
+/* Film titles: the TITLES lane, the Title inspector and the title overlay / shadow shape editor in the frame */
+[data-lane-color=titles]{--lane:#c9b6ff;height:40px}
+.title-lane{position:relative}
+.title-clip{top:3px;height:32px;min-height:32px;background:color-mix(in srgb,var(--lane) 24%,#0d1820)}
+.title-clip strong em{font-style:normal;font-weight:700;color:#7fc0ff;letter-spacing:.08em;font-size:9px}
+.title-clip.early{border-left:3px solid #ffbf6a}
+.title-clip.early small{color:#ffcf8a}
+.title-cut-zone{position:absolute;top:0;bottom:0;left:0;background:repeating-linear-gradient(135deg,#ffffff08 0 5px,transparent 5px 10px);border-right:1px solid #ffffff14;pointer-events:none}
+.title-rule{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed #ffbf6a99;pointer-events:none;z-index:1}
+.title-rule i{position:absolute;bottom:1px;left:3px;font:600 8px system-ui;color:#ffbf6acc;white-space:nowrap;font-style:normal;letter-spacing:.02em}
+.title-list{display:flex;flex-direction:column;gap:4px;margin:6px 0 10px}
+.title-pick{display:grid;grid-template-columns:18px 1fr auto;gap:6px;align-items:center;text-align:left;padding:5px 8px;border-radius:7px;font-size:11px}
+.title-pick em{font-style:normal;color:#7fc0ff;font-size:9px;font-weight:700;letter-spacing:.08em}
+.title-pick small{color:#8caebd;font-variant-numeric:tabular-nums}
+.title-pick.selected{outline:2px solid #ffd27a;outline-offset:1px}
+.title-warning{margin:4px 0;padding:6px 9px;border-radius:7px;background:#3a2a10;border:1px solid #ffbf6a55;color:#ffd9a0;font-size:11px}
+.title-shadow{border:1px solid #9fcada33;border-radius:10px;padding:8px 10px;margin-top:10px}
+.title-shadow legend{font-size:11px;font-weight:700;color:#cfe8f2;padding:0 4px}
+.title-overlay{z-index:15}
+.title-overlay[hidden]{display:none!important}
+.title-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+body.title-shape-editing .title-overlay{pointer-events:auto}
+.shape-edit .se-bg{pointer-events:all;cursor:default}
+.shape-edit .se-body{fill:transparent;pointer-events:fill;cursor:move}
+.shape-edit .se-edge{fill:none;stroke:transparent;pointer-events:stroke;cursor:copy}
+.shape-edit .se-outline{fill:none;stroke:#ffe7a8;stroke-width:1.2px;vector-effect:non-scaling-stroke;pointer-events:none;opacity:.75}
+.shape-edit .se-outline.sel{stroke:#9ff0ff;opacity:1;fill:#9ff0ff12}
+.shape-edit .se-frame{fill:none;stroke:#9ff0ff;stroke-dasharray:4 3;stroke-width:1px;vector-effect:non-scaling-stroke;pointer-events:none}
+.shape-edit .se-scale{fill:#0b1520;stroke:#9ff0ff;stroke-width:1.2px;vector-effect:non-scaling-stroke;pointer-events:all}
+.shape-edit .se-scale[data-scale=nw],.shape-edit .se-scale[data-scale=se]{cursor:nwse-resize}
+.shape-edit .se-scale[data-scale=ne],.shape-edit .se-scale[data-scale=sw]{cursor:nesw-resize}
+.shape-edit .se-scale[data-scale=n],.shape-edit .se-scale[data-scale=s]{cursor:ns-resize}
+.shape-edit .se-scale[data-scale=e],.shape-edit .se-scale[data-scale=w]{cursor:ew-resize}
+.shape-edit .se-pt{fill:#fff;stroke:#1b6fd8;stroke-width:1.5px;vector-effect:non-scaling-stroke;pointer-events:all;cursor:pointer}
+.shape-edit .se-pt.on{fill:#1b6fd8;stroke:#fff}
+.shape-edit .se-hline{stroke:#9ff0ff;stroke-width:1px;vector-effect:non-scaling-stroke;pointer-events:none}
+.shape-edit .se-handle{fill:#9ff0ff;stroke:#0b1520;stroke-width:1px;vector-effect:non-scaling-stroke;pointer-events:all;cursor:pointer}
+.inspector-tabs:has([data-inspector-tab=title]){grid-template-columns:repeat(5,minmax(0,1fr)) 25px}
+.inspector-tabs:has([data-inspector-tab=title]):has([data-inspector-tab=lighting]){grid-template-columns:repeat(6,minmax(0,1fr)) 22px;gap:2px}
+.inspector-tabs:has([data-inspector-tab=title]):has([data-inspector-tab=lighting]) button{padding-inline:2px;font-size:10.5px}

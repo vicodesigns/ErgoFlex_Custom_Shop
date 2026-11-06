@@ -11,6 +11,7 @@ import {createStillStrip} from './still-strip.mjs';
 import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './film-chapters.mjs';
 import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS} from './timeline-ui.mjs';
 import {createDeskEditor} from './desk-editor.mjs';
+import {createTitleEditor,loadTitleSource} from './title-editor.mjs';
 import {score} from './score.mjs';
 import {makeOpeningShot} from './opening.mjs';
 import {showcaseShots,showcaseViews} from './showcase.mjs';
@@ -58,19 +59,21 @@ export function mountDirector(bridge,catalog,initial){
     white:['lighting','white'],status:['lighting','status'],lamp:['lighting','lamps'],light:['lighting','lamps'],title:['chapter','[data-reveal="titles"]']};
   let revealWant=null,pulse=null;
   const typing=()=>{const a=document.activeElement;return !!a&&panel.contains(a)&&(a.isContentEditable||a.tagName==='TEXTAREA'||a.tagName==='INPUT'&&!/^(checkbox|radio|range|color|button|submit|reset)$/.test(a.type));};
+  // Film chapters with titles: a title's home is the Title tab (title-editor.mjs); otherwise the Chapter Headline.
+  const homeOf=type=>type==='title'&&titleEditor?.has()?['title','[data-reveal="title"]']:HOMES[type];
   function reveal(type){
-    const home=HOMES[type];if(!home||typing())return false;
+    const home=homeOf(type);if(!home||typing())return false;
     if(inspector!==home[0]||document.body.classList.contains('inspector-hidden'))showInspector(home[0]);
     revealWant=type;requestAnimationFrame(()=>requestAnimationFrame(applyReveal));return true;
   }
   function revealTarget(type){
-    const [tab,where]=HOMES[type],page=panel.querySelector(`[data-inspector-page="${tab}"]`);if(!page)return {};
+    const [tab,where]=homeOf(type),page=panel.querySelector(`[data-inspector-page="${tab}"]`);if(!page)return {};
     if(/^[\[.#]/.test(where))return {target:page.querySelector(where)};
     const section=page.querySelector(`[data-light-section="${where}"]`);
     return {section,target:section?.querySelector('.light-inspector,.scene-light-inspector,.movement-inspector')||section};
   }
   function applyReveal(){
-    const type=revealWant;revealWant=null;if(!type||inspector!==HOMES[type][0]||typing())return;
+    const type=revealWant;revealWant=null;if(!type||inspector!==homeOf(type)[0]||typing())return;
     const {section,target}=revealTarget(type);if(!target)return;
     if(section&&!section.open){section.open=true;delete lightSectionsShut[section.dataset.lightSection];}
     const top=target.getBoundingClientRect().top-panel.getBoundingClientRect().top+panel.scrollTop;
@@ -126,12 +129,12 @@ export function mountDirector(bridge,catalog,initial){
     const line=timeline.querySelector('[data-track-playhead]');if(line)line.style.left=(playhead*100)+'%';
     const label=timeline.querySelector('[data-track-time]');if(label)label.textContent=(playhead*shot().seconds).toFixed(2)+'s / '+shot().seconds+'s';
     for(const line of timeline.querySelectorAll('[data-shared-playhead]'))line.style.left=playhead*100+'%';
-    syncLightNow();syncNow();if(playhead!==pokedAt){pokedAt=playhead;filmLook?.poke();}
+    syncLightNow();syncNow();titleEditor.sync();if(playhead!==pokedAt){pokedAt=playhead;filmLook?.poke();}
     const ruler=timeline.querySelector('.time-ruler');if(ruler)ruler.setAttribute('aria-valuenow',(playhead*shot().seconds).toFixed(2));
     const exact=timeline.querySelector('[name="timeline-seconds"]');if(exact&&document.activeElement!==exact)exact.value=(playhead*shot().seconds).toFixed(2);
   }
   function syncPan(){const viewport=timeline.querySelector('.timeline-viewport'),range=timeline.querySelector('[name="timeline-pan"]');if(viewport&&range&&document.activeElement!==range)range.value=viewport.scrollLeft/Math.max(1,viewport.scrollWidth-viewport.clientWidth)*100;}
-  function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
+  function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();titleEditor.clear();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
   function captureKey(time,label){
     requireReady();const view=bridge.stage().captureCamera();if(!view)throw Error('The camera is not ready.');
     deskEditor.clearSelection();reveal('camera');
@@ -207,7 +210,7 @@ export function mountDirector(bridge,catalog,initial){
   function putTod(keys,{render=true}={}){requireReady();const s=shot();for(const k of keys)if(k.at<0||k.at>s.seconds+1e-6)throw Error(`Time-of-day keys must sit inside the ${s.seconds}-second chapter.`);commit(()=>{shot().timeOfDay=copy(keys).sort((a,b)=>a.at-b.at);},{render});}
   const lightItem=()=>{if(!lightSel)return null;if(lightSel.kind==='tods')return timeOfDay()?.keys.find(k=>k.id===lightSel.id)||null;const L=lighting();if(!L)return null;return lightSel.kind==='lights'?L.status.find(e=>e.id===lightSel.id):L.neutral.find(k=>k[2]===lightSel.id);};
   function selectLight(kind,id){
-    lightSel={kind,id};keyId=null;deskEditor.clearSelection();sceneLights.deselect();const item=lightItem();if(!item)return;
+    lightSel={kind,id};keyId=null;deskEditor.clearSelection();sceneLights.deselect();titleEditor.clear();const item=lightItem();if(!item)return;
     reveal(kind==='tods'?'tod':kind==='neutrals'?'white':'status');seekCamera((Array.isArray(item)?item[0]:item.at)/shot().seconds);render();
     const el=timeline.querySelector(`[data-light-clip="${id}"],[data-light-key="${id}"],[data-tod-key="${id}"]`);if(el)el.scrollIntoView({block:'nearest',inline:'nearest'});
   }
@@ -233,6 +236,7 @@ export function mountDirector(bridge,catalog,initial){
     const n=picked();
     if(n){const c=(v,one,many)=>v?`${v} ${v===1?one:many}`:'',parts=[c(picks.keys.size,'camera view','camera views'),c(picks.clips.size,'move','moves'),c(picks.lights.size,'status light','status lights'),c(picks.neutrals.size,'white key','white keys'),c(picks.tods.size,'time-of-day key','time-of-day keys')].filter(Boolean).join(', ');
       return `<div class="sel-row"><span class="sel-icon">▦</span><span class="sel-name"><b>${n} items</b><small>${parts}</small></span><button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div><div class="sel-batch"><label>Move by<input name="sel-move" type="number" step=".1" value="1"> s</label><button data-action="sel-move">Move</button><button data-action="sel-align" title="Move the selection so its first item starts at the playhead">Align to playhead</button><button data-action="sel-delete" title="Delete the selection (Delete)">Delete</button></div>`;}
+    const th=titleEditor.header();if(th)return th;
     const row=(icon,name,detail)=>`<div class="sel-row"><span class="sel-icon">${icon}</span><span class="sel-name"><b>${escape(name)}</b><small>${escape(detail)}</small></span><button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div>`;
     const item=lightItem(),s=shot();
     if(item&&lightSel?.kind==='lights')return row('▬','Desk status · '+kindLabel(item.kind),`${r2(item.at)}–${r2(item.at+item.dur)} s`);
@@ -244,7 +248,7 @@ export function mountDirector(bridge,catalog,initial){
     return '';
   }
   function syncSelectedHeader(){const el=panel.querySelector('[data-selected-header]');if(el)el.innerHTML=selectedHeader();}
-  function clearSelection(){for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();sceneLights.deselect();render();status('Selection cleared.');}
+  function clearSelection(){for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;titleEditor.clear();deskEditor.clearSelection();sceneLights.deselect();render();status('Selection cleared.');}
   // Delete every picked item (lanes keep at least one white / time-of-day key); one undo step.
   function deletePicks(){
     const n=picked();if(!n)return;requireReady();const L=lighting(),T=timeOfDay(),motion=deskEditor.motion(),list=keys().filter(k=>!picks.keys.has(k.id));
@@ -258,7 +262,8 @@ export function mountDirector(bridge,catalog,initial){
   }
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape'||!open||picked()||document.querySelector('dialog[open]')||event.target.closest?.('input,select,textarea'))return;
-    if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()))return;
+    if(titleEditor.editing())return;
+    if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||titleEditor.selectedId()))return;
     event.preventDefault();event.stopImmediatePropagation();clearSelection();
   },true);
   // Ctrl+Shift+A: every item in the lane under the pointer.
@@ -298,6 +303,7 @@ export function mountDirector(bridge,catalog,initial){
     for(const k of keys())if(!moving('keys',k.id))out.push([k.time*s,`camera view ${k.label}`]);
     if(L)for(const k of L.neutral)if(!moving('neutrals',k[2]))out.push([k[0],whiteName(k[1])+' key']);
     for(const k of T?.keys||[])if(!moving('tods',k.id))out.push([k.at,(roomModes().find(m=>m.id===k.mode)?.label||k.mode)+' key']);
+    out.push(...titleEditor.snapTargets(set.titles?[...set.titles][0]:null));
     out.push([playhead*s,'the playhead'],[0,'the chapter start'],[s,'the chapter end']);
     return out;
   }
@@ -307,6 +313,7 @@ export function mountDirector(bridge,catalog,initial){
     if(d.kind==='clips'){const c=b.clips.find(c=>c.id===i);return c&&[c.start,clipEnd(c)];}
     if(d.kind==='lights'){const e=b.lights?.find(e=>e.id===i);return e&&[e.at,e.at+e.dur];}
     if(d.kind==='neutrals'){const k=b.neutrals?.find(k=>k[2]===i);return k&&[k[0],k[0]];}
+    if(d.kind==='titles'){const t=b.titles?.find(t=>t.id===i);return t&&(d.edge==='start'?[t.rel_in,t.rel_in]:d.edge==='end'?[t.rel_out,t.rel_out]:[t.rel_in,t.rel_out]);}
     const k=b.tods?.find(k=>k.id===i);return k&&[k.at,k.at];
   }
   function magnetDelta(d,raw){
@@ -369,10 +376,11 @@ export function mountDirector(bridge,catalog,initial){
   let laneGroups={};try{laneGroups=JSON.parse(localStorage.getItem('ergoflex.director.laneGroups')||'{}')||{};}catch{}
   const groupClosed=g=>!!laneGroups[g];
   function laneGroupHead(g){
-    const s=shot().seconds,L=lighting(),T=timeOfDay(),ticks=g==='motion'?[...keys().map(k=>k.time*s),...deskEditor.motion().clips.map(c=>c.start)]:[...(T?.keys||[]).map(k=>k.at),...(L?.neutral||[]).map(k=>k[0]),...(L?.status||[]).map(e=>e.at)];
-    if(g==='lighting'&&!L&&!T)return '';
-    return `<div class="lane-group-head" data-lane-group="${g}"><span class="desk-lane-label"><button data-action="group-toggle" data-index="${g==='motion'?0:1}" aria-expanded="${!groupClosed(g)}" title="${groupClosed(g)?'Show':'Hide'} the ${g} lanes${g==='lighting'?' (Shift+L jumps here)':''}">${groupClosed(g)?'▸':'▾'} ${g==='motion'?'MOTION':'LIGHTING'}</button></span><div class="lane-group-summary">${groupClosed(g)?ticks.map(t=>`<i style="left:${t/s*100}%"></i>`).join(''):''}</div></div>`;
+    const s=shot().seconds,L=lighting(),T=timeOfDay(),ticks=g==='motion'?[...keys().map(k=>k.time*s),...deskEditor.motion().clips.map(c=>c.start)]:g==='titles'?titleEditor.ticks():[...(T?.keys||[]).map(k=>k.at),...(L?.neutral||[]).map(k=>k[0]),...(L?.status||[]).map(e=>e.at)];
+    if(g==='lighting'&&!L&&!T)return '';if(g==='titles'&&!titleEditor.has())return '';
+    return `<div class="lane-group-head" data-lane-group="${g}"><span class="desk-lane-label"><button data-action="group-toggle" data-index="${['motion','lighting','titles'].indexOf(g)}" aria-expanded="${!groupClosed(g)}" title="${groupClosed(g)?'Show':'Hide'} the ${g} lanes${g==='lighting'?' (Shift+L jumps here)':''}">${groupClosed(g)?'▸':'▾'} ${g.toUpperCase()}</button></span><div class="lane-group-summary">${groupClosed(g)?ticks.map(t=>`<i style="left:${t/s*100}%"></i>`).join(''):''}</div></div>`;
   }
+  function titlesGroup(){if(!titleEditor.has())return '';return `${laneGroupHead('titles')}<div class="lane-group-body desk-lanes title-lanes" data-lane-body="titles" ${groupClosed('titles')?'hidden':''}>${titleEditor.lane()}</div>`;}
   function revealLighting(){const v=timeline.querySelector('.timeline-viewport'),head=timeline.querySelector('[data-lane-group="lighting"]');if(!v||!head)return;if(groupClosed('lighting')){laneGroups.lighting=false;saveGroups();renderTimeline();return revealLighting();}const top=head.offsetTop-timeline.querySelector('.time-ruler-row').offsetHeight;if(top<v.scrollTop||top+head.parentElement.offsetHeight>v.scrollTop+v.clientHeight)v.scrollTop=top;}
   function saveGroups(){try{localStorage.setItem('ergoflex.director.laneGroups',JSON.stringify(laneGroups));}catch{}}
   // Fit: the timeline tall enough for every lane (capped by the layout); film chapters open fitted.
@@ -470,14 +478,14 @@ export function mountDirector(bridge,catalog,initial){
     syncLightTools?.();box.innerHTML=sceneLights.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});repulse();
   }
   const sceneLights=createSceneLightEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneLights,
-    onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();if(had)renderTimeline();syncSelectedHeader();reveal('light');}});
+    onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId()||titleEditor.selectedId();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();if(had)renderTimeline();syncSelectedHeader();reveal('light');}});
   // Render still: the playhead frame with the film look, rendered in a hidden stage of its own.
   // Render still: the playhead frame with the film look, shown inside the frame with a history strip.
   const still=createStillStrip();
   let bootMs=7000;try{bootMs=Number(localStorage.getItem('ergoflex.director.stillBootMs'))||7000;}catch{}
   // What changed since the previous still: edits added to the undo stack since then, else edits undone,
   // else (an edit outside undo) the project diff; nothing at all when the project is the same.
-  const SHOT_FIELDS={camera:'camera views',motion:'desk moves',timeOfDay:'time of day',ledStatus:'desk status lights',ledNeutral:'desk white',ledColor:'desk colour',lighting:'lighting',sceneGlobals:'room brightness and fill light',sceneLights:'scene lights',seconds:'chapter length',title:'chapter title',room:'room',layout:'layout',preset:'desk preset',kind:'shot kind',length:'length',mode:'mode',size:'desk size'};
+  const SHOT_FIELDS={camera:'camera views',motion:'desk moves',timeOfDay:'time of day',ledStatus:'desk status lights',ledNeutral:'desk white',ledColor:'desk colour',lighting:'lighting',sceneGlobals:'room brightness and fill light',sceneLights:'scene lights',filmTitles:'film titles',seconds:'chapter length',title:'chapter title',room:'room',layout:'layout',preset:'desk preset',kind:'shot kind',length:'length',mode:'mode',size:'desk size'};
   function listDiff(a=[],b=[],noun,at,fmt){
     if(b.length>a.length)return `${noun} added`+(at?` at ${fmt(at(b.find(x=>!a.some(y=>y.id===x.id))||b.at(-1)))} s`:'');
     if(b.length<a.length)return `${noun} removed`;
@@ -559,7 +567,7 @@ export function mountDirector(bridge,catalog,initial){
     panel.innerHTML=`
       <div class="director-heading"><div><span class="director-kicker">DIRECTOR MODE</span><h2>Director studio.</h2></div><button data-action="inspector" aria-label="Hide inspector" title="Hide inspector; keep the timeline open">‹</button></div>
       <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button><span class="saved-indicator" data-saved title="Draft kept in this browser"></span></div>${filmPicker()}
-      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter','camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
+      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
       <p data-status role="status" class="director-status">${project.shots.length} chapters · ${Math.round(duration(project.shots))} seconds</p>
       <div data-inspector-page="project">
       <div class="director-actions"><button data-action="new">New cut</button><button data-action="clone">Duplicate cut</button></div>
@@ -571,8 +579,8 @@ export function mountDirector(bridge,catalog,initial){
       <p class="director-hint">Links include your cut settings. Recipients need access to this server.</p>
       <label>Music volume<input name="volume" type="range" min="0" max="1" step=".01" value="${project.volume}"></label><div class="director-actions"><button data-action="play" class="primary">▶ Play client cut</button><button data-action="bake-all">Bake full intro · 1080p</button><button data-action="bake-export-all">Export all baked chapters</button><button data-action="delete-cut">Delete saved cut</button></div></div>
       <div data-inspector-page="chapter"><h3>Chapter ${selected+1} <span class="inspector-subtitle">of ${project.shots.length}</span></h3><div class="director-actions"><button data-action="add">+ Add chapter</button><button data-action="duplicate">Duplicate chapter</button><button data-action="remove" ${project.shots.length===1?'disabled':''}>Remove chapter</button>${selected===0?'<button data-action="rebuild-opening">✦ Rebuild opening</button><button data-action="camera-holds">4s holds at every view</button>':''}</div>
-      <div data-reveal="titles"><label>Headline<input name="title" maxlength="140" value="${escape(s.title)}"></label>
-      <label>Supporting text<textarea name="detail" rows="2" maxlength="260">${escape(s.detail)}</textarea></label></div>
+      <div data-reveal="titles">${titleEditor.chapterFields()??`<label>Headline<input name="title" maxlength="140" value="${escape(s.title)}"></label>
+      <label>Supporting text<textarea name="detail" rows="2" maxlength="260">${escape(s.detail)}</textarea></label>`}</div>
       <div class="director-grid"><label>Duration (seconds)<input name="seconds" type="number" min="2" max="90" step=".5" value="${s.seconds}"></label><label>Blend into shot (seconds)<input name="transition" type="number" min="0" max="3" step=".1" value="${s.transition}"></label></div>
       <fieldset class="chapter-pacing"><legend>Chapter pacing</legend>
       <div class="director-actions"><button data-action="pace-faster" ${s.seconds*.8<2?'disabled':''}>20% shorter</button><button data-action="pace-slower" ${s.seconds*1.25>90?'disabled':''}>25% longer</button><button data-action="pace-hold" ${s.seconds+2>90?'disabled':''}>+ 2s ending hold</button></div>
@@ -592,7 +600,7 @@ export function mountDirector(bridge,catalog,initial){
       <label>Selected camera keyframe<select name="camera-key"><option value="">Select a keyframe…</option>${keys().map(k=>option(k.id,`${k.label} · ${(k.time*s.seconds).toFixed(2)}s`,keyId)).join('')}</select></label>
       ${cameraKey?`<div data-reveal="camera-key"><div class="selection-preview"><button data-action="key-preview" ${keys().at(-1)?.id===cameraKey.id?'disabled title="Last camera view: select an earlier view to preview its move"':''}>▶ Preview camera move</button><button data-action="key-go">Go to view</button></div><label>Keyframe name<input name="key-label" maxlength="60" value="${escape(cameraKey.label)}"></label><div class="director-grid"><label>Keyframe time (seconds)<input name="key-time" type="number" min="0" max="${s.seconds}" step=".05" value="${Number((cameraKey.time*s.seconds).toFixed(3))}"></label><label>Move to next view<select name="key-easing">${CAMERA_EASINGS.map(e=>option(e,({smooth:'Smooth move',linear:'Linear move',hold:'Hold, then cut'})[e],cameraKey.easing)).join('')}</select></label></div><label>Camera route<select name="key-path">${option('linear','Direct line',cameraKey.path||'linear')}${option('orbit','Orbit around subject',cameraKey.path||'linear')}</select></label><label>Field of view (degrees)<input name="key-fov" type="number" min="15" max="80" step="1" value="${cameraKey.view.fov}"></label><div class="director-actions lens-presets">${[[24,'Detail · 24°'],[35,'Balanced · 35°'],[50,'Wide · 50°']].map(([fov,label])=>`<button data-action="lens-${fov}" aria-pressed="${cameraKey.view.fov===fov}">${label}</button>`).join('')}</div><p class="director-hint">Lens buttons update this keyframe. After orbiting or framing the preview, use Update selected view to keep that composition.</p></div>`:''}
 
-      </div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}</div>`;
+      </div><div data-inspector-page="title">${titleEditor.panel()}</div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}</div>`;
     showInspector(inspector,false,false);deskEditor.sync();syncTransport();
     if(!revealWant)panel.scrollTop=scroll;
     const replacement=activeName?field(activeName):null;if(replacement){replacement.focus({preventScroll:true});if(selection&&replacement.setSelectionRange)try{replacement.setSelectionRange(...selection);}catch{}}
@@ -605,7 +613,7 @@ export function mountDirector(bridge,catalog,initial){
       <div class="timeline-toolbar"><div class="timeline-project"><strong>${escape(project.name)}</strong><span>${project.shots.length} chapters · ${Math.round(duration(project.shots))}s</span></div>${filmPicker()}
       <div class="timeline-transport"><button data-action="undo" aria-label="Undo edit" title="Undo (Ctrl/Cmd+Z)">↶</button><button data-action="redo" aria-label="Redo edit" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)">↷</button><button data-action="edit-prev" aria-label="Previous edit" title="Previous camera view or movement edge">|‹</button><button data-action="preview-loop" aria-pressed="${!!bridge.playback().loop}" title="Repeat the chapter or selected camera / Groove preview">${bridge.playback().loop?'Loop on':'Loop off'}</button><button data-action="preview" aria-label="Restart chapter" title="Restart chapter">↻</button><button data-action="chapter-toggle" class="chapter-transport">▶ Play chapter</button><button data-action="edit-next" aria-label="Next edit" title="Next camera view or movement edge">›|</button>
       <label class="timeline-timecode"><input name="timeline-seconds" aria-label="Chapter playhead seconds" type="number" min="0" max="${s.seconds}" step=".033333" value="${(playhead*s.seconds).toFixed(2)}"><span>/ ${s.seconds}s</span></label></div>
-      <div class="timeline-project-actions"><button data-action="inspector" aria-label="Toggle inspector">Inspector</button><button data-action="titles" aria-label="Toggle preview titles" aria-pressed="${document.body.classList.contains('preview-titles')}">Titles</button><button data-action="chapters" aria-label="Toggle chapter strip" aria-pressed="${!timeline.classList.contains('chapters-hidden')}">Chapters</button><button data-action="bake">Bake chapter</button><button data-action="add">+ Chapter</button><button data-action="duplicate">Duplicate chapter</button><button data-action="remove" ${project.shots.length===1?'disabled':''}>Remove chapter</button></div></div>
+      <div class="timeline-project-actions"><button data-action="inspector" aria-label="Toggle inspector">Inspector</button><button data-action="titles" aria-label="Toggle preview titles" title="${film&&titleEditor.has()?'Show or hide the film titles in the frame':'Show or hide the chapter titles'}" aria-pressed="${film&&titleEditor.has()?titleEditor.shown():document.body.classList.contains('preview-titles')}">Titles</button><button data-action="chapters" aria-label="Toggle chapter strip" aria-pressed="${!timeline.classList.contains('chapters-hidden')}">Chapters</button><button data-action="bake">Bake chapter</button><button data-action="add">+ Chapter</button><button data-action="duplicate">Duplicate chapter</button><button data-action="remove" ${project.shots.length===1?'disabled':''}>Remove chapter</button></div></div>
       <div class="chapter-cards">${project.shots.map((s,i)=>`<div class="chapter-card ${i===selected?'selected':''}" draggable="true" data-index="${i}"><button data-action="select" data-index="${i}" aria-current="${i===selected}" aria-label="Edit chapter ${i+1}: ${escape(s.title)}"><span>${String(i+1).padStart(2,'0')} · ${s.seconds}s</span><strong>${escape(s.title)}</strong><small>${escape(catalog.find(r=>r.id===s.room)?.name||s.room)} · ${escape((catalog.find(r=>r.id===s.room)?.layouts.find(l=>l.id===s.layout)?.modes||catalog.find(r=>r.id===s.room)?.modes||[]).find(m=>m.id===s.mode)?.label||'Studio')}</small></button><div><button data-action="up" data-index="${i}" aria-label="Move chapter ${i+1} earlier" ${i===0?'disabled':''}>←</button><button data-action="down" data-index="${i}" aria-label="Move chapter ${i+1} later" ${i===project.shots.length-1?'disabled':''}>→</button></div></div>`).join('')}</div>
       <div class="workbench-toolbar"><strong title="${escape(s.title)}"><span>CHAPTER ${String(selected+1).padStart(2,'0')}</span> ${escape(s.title)}</strong><span class="workbench-count">${keys().length} views · ${deskEditor.count()} moves</span>
       <div class="track-palette"><button data-action="key-add">+ Camera view</button>${deskEditor.tools()}${lighting()?'<button data-action="light-add" class="light-add" title="Add a light state at the playhead (Shift-click: a neutral colour key)">+ Light</button>':''}</div>
@@ -613,7 +621,7 @@ export function mountDirector(bridge,catalog,initial){
       <div class="timeline-zoom"><button data-action="zoom-out" aria-label="Zoom timeline out" ${zoom===1?'disabled':''}>−</button><button data-action="zoom-fit" aria-label="Fit chapter to timeline" title="Fit the whole chapter">${zoom===1?'Fit':'Fit · '+zoom+'×'}</button><button data-action="zoom-in" aria-label="Zoom timeline in" ${zoom===8?'disabled':''}>+</button></div></div>
       <div class="timeline-viewport" tabindex="0" aria-label="Camera and desk timeline"><div class="timeline-content" style="width:${zoom*100}%;--timeline-grid:${(ticks[1]||s.seconds)/s.seconds*100}%">
       <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>
-      ${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${keys().slice(0,-1).map((k,i)=>`<span class="camera-segment" style="left:${k.time*100}%;width:${(keys()[i+1].time-k.time)*100}%"><i>${({smooth:'Smooth move',linear:'Linear move',hold:'Hold / cut'})[k.easing]}</i></span>`).join('')}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s"><span>◆</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
+      ${titlesGroup()}${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${keys().slice(0,-1).map((k,i)=>`<span class="camera-segment" style="left:${k.time*100}%;width:${(keys()[i+1].time-k.time)*100}%"><i>${({smooth:'Smooth move',linear:'Linear move',hold:'Hold / cut'})[k.easing]}</i></span>`).join('')}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s"><span>◆</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
       ${deskEditor.timeline()}</div>${lightLane()}</div></div>
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
@@ -657,8 +665,8 @@ export function mountDirector(bridge,catalog,initial){
       if(name==='lamp-pick'){await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
       if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
       if(name==='now-go'){const id=index;const el=panel.querySelector(`[data-light-section="${id}"]`);if(el){el.open=true;delete lightSectionsShut[id];el.scrollIntoView({block:'start',behavior:'smooth'});}return;}
-      if(name==='group-toggle'){const g=index===0?'motion':'lighting';laneGroups[g]=!groupClosed(g);saveGroups();renderTimeline();return;}
-      if(name==='titles'){document.body.classList.toggle('preview-titles');timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(document.body.classList.contains('preview-titles')));return;}
+      if(name==='group-toggle'){const g=['motion','lighting','titles'][index]||'lighting';laneGroups[g]=!groupClosed(g);saveGroups();renderTimeline();return;}
+      if(name==='titles'){if(film&&titleEditor.has()){const on=titleEditor.toggleShown();timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(on));status(on?'Film titles shown in the frame.':'Film titles hidden in the frame.');return;}document.body.classList.toggle('preview-titles');timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(document.body.classList.contains('preview-titles')));return;}
       if(name==='chapters'){timeline.classList.toggle('chapters-hidden');timeline.querySelector('[data-action=chapters]')?.setAttribute('aria-pressed',String(!timeline.classList.contains('chapters-hidden')));return;}
       if(name.startsWith('zoom-')){
         const i=TIMELINE_ZOOMS.indexOf(zoom);zoom=name==='zoom-fit'?1:TIMELINE_ZOOMS[Math.max(0,Math.min(TIMELINE_ZOOMS.length-1,i+(name==='zoom-in'?1:-1)))];renderTimeline();
@@ -968,7 +976,7 @@ export function mountDirector(bridge,catalog,initial){
     if(event.defaultPrevented)return;
     if(event.code==='Space'){event.preventDefault();action('chapter-toggle');return;}
     if(['+','=','-'].includes(event.key)){event.preventDefault();action(event.key==='-'?'zoom-out':'zoom-in');return;}
-    if(event.target.closest('[data-key],[data-desk-clip]'))return;
+    if(event.target.closest('[data-key],[data-desk-clip],[data-title-clip]'))return;
     if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){
       event.preventDefault();try{const seconds=shot().seconds,t=event.key==='Home'?0:event.key==='End'?seconds:playhead*seconds+(event.shiftKey?1:1/30)*(event.key==='ArrowLeft'?-1:1);seekCamera(t/seconds);}catch(error){status(error.message,true);}
     }
@@ -1020,7 +1028,7 @@ export function mountDirector(bridge,catalog,initial){
       }catch(error){picker.querySelector('[data-picker-status]').textContent=error.message;}
     }
   });
-  function setOpen(value){deskEditor.stop();if(bridge.bakeState().baking&&!value){status('Cancel the bake before closing the editor.');return;}open=value;document.body.classList.toggle('directing',open);document.body.classList.toggle('film-frame',open&&!!film);filmLook?.visible(open);panel.hidden=timeline.hidden=!open;bridge.editMode(open);if(open){if(matchMedia('(max-width:700px)').matches)document.body.classList.add('inspector-hidden');render();load().then(()=>{
+  function setOpen(value){deskEditor.stop();if(bridge.bakeState().baking&&!value){status('Cancel the bake before closing the editor.');return;}open=value;document.body.classList.toggle('directing',open);document.body.classList.toggle('film-frame',open&&!!film);filmLook?.visible(open);panel.hidden=timeline.hidden=!open;bridge.editMode(open);titleEditor.sync();if(open){if(matchMedia('(max-width:700px)').matches)document.body.classList.add('inspector-hidden');render();load().then(()=>{
       const url=new URL(location.href);
       if(open&&url.searchParams.get('cinematic')==='1'&&bridge.ready()){
         url.searchParams.delete('cinematic');history.replaceState(null,'',url);action('cinematic-pass');
@@ -1028,7 +1036,18 @@ export function mountDirector(bridge,catalog,initial){
         url.searchParams.delete('bakeAll');history.replaceState(null,'',url);action('bake-all');
       }
     });}else draft();}
-  const deskEditor=createDeskEditor({panel,timeline,bridge,shot,time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
+  const deskEditor=createDeskEditor({panel,timeline,bridge,shot,time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();titleEditor.clear();if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
+  // Film titles: the TITLES lane, the Title inspector and the title overlay in the frame (titles-src.json beside the film list).
+  const titleEditor=createTitleEditor({panel,timeline,shot,time:()=>playhead,seek:seekCamera,commit,status,render,renderTimeline,ready:requireReady,open:()=>open,
+    showInspector:tab=>{if(!reveal(tab))showInspector(tab,false,!typing());},
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();sceneLights.deselect();},
+    snapDelta:({raw,edges,width,seconds,alt,exclude})=>{
+      const tol=8/width*seconds;
+      if(magnet&&!alt){let best=null;const all=snapTargets({titles:new Set([exclude])});for(const [t,name] of all)for(const e of edges){const delta=t-e,off=Math.abs(delta-raw);if(off<=tol&&(!best||off<best.off))best={delta,off,t,name};}if(best)return {delta:best.delta,snap:best};}
+      return {delta:snapGroupDelta(raw,snapStep,alt),snap:null};
+    },
+    dragFeedback:(d,event)=>dragFeedback(d,event),endDragFeedback:d=>endDragFeedback(d)});
+  if(film)loadTitleSource(film.film).then(v=>{titleEditor.setSource(v);render();},error=>console.warn('[titles]',error.message));
   // Group gestures run in the capture phase so they take over from single-item drags.
   // Lighting items have no editor of their own: a plain drag moves (or trims) just that item.
   const viewport=()=>timeline.querySelector('.timeline-viewport');
@@ -1162,5 +1181,5 @@ export function mountDirector(bridge,catalog,initial){
   render();panel.hidden=timeline.hidden=true;
   return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>sceneLights.applied(),
     // Selection -> inspector home (HOMES): for lanes and tools outside this module (the Titles lane: reveal('title')).
-    reveal,revealHomes:()=>structuredClone(HOMES)};
+    reveal,revealHomes:()=>({...structuredClone(HOMES),title:homeOf('title')})};
 }

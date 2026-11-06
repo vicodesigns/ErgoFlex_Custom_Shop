@@ -74,9 +74,9 @@ try{
   done.push(`one light name ("${n0.header}") in header, inspector, picker, mixer and lane chip, before and after a move`);
   await expectHome('lamp chip',async()=>{await page.evaluate(()=>{document.getElementById('director-panel').scrollTop=0;});await click('#director-timeline .lamp-chip[data-action="lamp-pick"]')();},'lighting','[data-light-section="lamps"] .scene-light-inspector');
   // Typing in an inspector field: a selection does not switch the tab, scroll or take focus.
-  await goTab('chapter');await page.focus('#director-panel [name="title"]');
+  await goTab('chapter');await page.focus('#director-panel [data-inspector-page="chapter"] [name="title"], #director-panel [data-inspector-page="chapter"] [name="ft-title"]');   // ft-title: the film title (title-editor.mjs) when titles-src.json is beside the chapter list
   await page.evaluate(()=>document.querySelector('#director-timeline .lamp-chip[data-action="lamp-pick"]').click());await wait(900);
-  assert.equal(await tab(),'chapter','typing: the tab stays');assert.equal(await page.evaluate(()=>document.activeElement?.name),'title','typing: focus stays in the Headline');
+  assert.equal(await tab(),'chapter','typing: the tab stays');assert.ok(['title','ft-title'].includes(await page.evaluate(()=>document.activeElement?.name)),'typing: focus stays in the Headline');
   done.push('no tab switch or focus change while typing');
   await page.evaluate(()=>document.activeElement.blur());
   // Reset all lights to the film: one step, Undo brings the edits back.

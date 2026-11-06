@@ -1,0 +1,43 @@
+{
+ "schema": "ergoflex.intro-titles",
+ "version": 1,
+ "note": "Test fixture: the hq14 titles for awaken and rise.",
+ "titles": [
+  {
+   "chapter": "awaken",
+   "rel_in": 3.6,
+   "rel_out": 9.2,
+   "eyebrow": "ERGOFLEX",
+   "title": "Level up your every day.",
+   "detail": "Better health. Clearer focus. More joy in your work."
+  },
+  {
+   "chapter": "awaken",
+   "rel_in": 13.2,
+   "rel_out": 19.6,
+   "eyebrow": "SAFETY",
+   "title": "Safe for everyone around it.",
+   "detail": "Light and sound tell the room when it moves.",
+   "scrim": "60"
+  },
+  {
+   "chapter": "rise",
+   "rel_in": 3.6,
+   "rel_out": 9.4,
+   "eyebrow": "SIT · STAND",
+   "title": "Your height. Your rhythm.",
+   "detail": "Sit to focus. Rise to 52.5″ to recharge.",
+   "scrim": "38"
+  }
+ ],
+ "cta": {
+  "chapter": "create",
+  "rel_in": 20,
+  "rel_out": null,
+  "text": "Let’s build yours."
+ },
+ "logo": {
+  "chapter": "create",
+  "rel_in": 19
+ }
+}
