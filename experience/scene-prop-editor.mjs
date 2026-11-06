@@ -1,9 +1,14 @@
-import {cleanPropEdit,propKey,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
+import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
+import {createPropLibrary,deskItem} from './prop-library.mjs';
 // Director "Props": click a prop in the view (not in light mode) to select it, then move / rotate / scale it with
 // the gizmo (W / E / T, Shift snaps) or the Prop inspector, hide it (Delete), reset it. Edits go to the chapter's
 // cut shot (shot.propEdits, film sceneEdits format, prop-edits.mjs); film-fx applies them after the film's own
 // sceneEdits on the live stage, in Render still and in the film. Studio is never written, except by
 // "Make permanent in Studio…", which Vico confirms prop by prop.
+// "+ Add prop" (Props tab, timeline "+ Prop"): the library browser (prop-library.mjs); the pick goes on the desktop
+// under the screen centre (desk-sized items) or on the floor in front of the camera, selected with the gizmo. Its
+// edit is an add entry (prop-edits.mjs cleanAddEdit: its own transform in the desk's or the room's frame); Delete or
+// Reset to the film removes it.
 // A gizmo drag moves the live object at once (restored by __directorPropsRestore before film-fx re-installs).
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const r3=v=>Math.round(v*1000)/1000,r1=v=>Math.round(v*10)/10;
@@ -11,14 +16,14 @@ const wrapDeg=d=>{d=((d+180)%360+360)%360-180;return Math.abs(d)<1e-6?0:d;};
 const MODES={translate:'Move',rotate:'Rotate',scale:'Scale'},VERB={translate:'Moved',rotate:'Rotated',scale:'Scaled'};
 const STATE_KEY='ergoflex.sceneAssets.v1';
 export function createScenePropEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},lightsShowing=()=>false,fold=()=>{}}){
-  let sel=null,mode='translate',tools=null,booting=null,drag=null,snapping=false,pending=null,dialogPlan=null;
+  let sel=null,mode='translate',tools=null,booting=null,drag=null,snapping=false,pending=null,dialogPlan=null,placing=false;
   const snaps=new Map(),frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow;
   const three=()=>bridge.stage()?.three?.();
   const editing=()=>open()&&bridge.ready()&&!bridge.playback().playing&&!bridge.bakeState().baking;
   const sceneOf=()=>three()?.scene||null;
   // Every user-facing text says the friendly name ('Steelcase leap v2'); the raw object name ('Prop:steelcase-leap-v2')
   // only shows in tooltips and the inspector's small grey line.
-  const label=o=>propName(o?.name),nice=n=>propName(n||'');
+  const label=o=>o?.userData?.directorAdd?.label||propName(o?.name),nice=n=>propName(n||'');
   // ---- the cut
   const edits=()=>effectivePropEdits(film(),shot());
   const editOfKey=key=>edits().find(e=>propKey(e)===key)||null;
@@ -40,6 +45,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function meaningful(o,{above=null}={}){
     const scene=sceneOf(),desk=win()?.ErgoFlex?.loadedModel;let fallback=null,skipping=!!above;
     for(let p=o;p&&p!==scene;p=p.parent){
+      if(p.userData?.directorAdd&&!skipping)return p;
       if(p===desk)return skipping?null:fallback;
       if(skipping){if(p===above)skipping=false;continue;}
       if(p.parent?.userData?.dayKit)return p;
@@ -87,6 +93,67 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const position=b.local?(o.parent?o.parent.worldToLocal(w.clone()):w.clone()).sub(b.local).multiply(parentScale(o)):w.clone().sub(b.world);
     return {space:b.local?'local':undefined,position:position.toArray().map(r3),rotation:(size(other)<size(plain)-1e-6?other:plain).map(r1),scale:[s.x/b.scale.x,s.y/b.scale.y,s.z/b.scale.z].map(clamp)};
   }
+  // ---- added props: their own transform in the parent's frame (prop-edits.mjs cleanAddEdit)
+  const parentK=o=>{const {THREE}=tools;if(!o.parent)return 1;o.parent.updateWorldMatrix(true,false);return o.parent.getWorldScale(new THREE.Vector3()).x||1;};
+  const libScale=o=>1000*win().__filmEdits.mmScale()/parentK(o);
+  function addFrom(o,e,{position,rotation,scale}={}){
+    const k=parentK(o),b=libScale(o),deg=tools.THREE.MathUtils.radToDeg;
+    return cleanAddEdit({...e,position:position||o.position.toArray().map(v=>r3(v*k)),rotation:rotation||[o.rotation.x,o.rotation.y,o.rotation.z].map(v=>r1(wrapDeg(deg(v)))),
+      scale:scale||[o.scale.x/b,o.scale.y/b,o.scale.z/b].map(v=>Math.round(Math.min(100,Math.max(.01,Math.abs(v)))*1e4)/1e4)});
+  }
+  function changedAdd(o,e,name,v){
+    let next=null,verb='Moved';
+    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');const {THREE}=tools,w=o.getWorldPosition(new THREE.Vector3());w.setComponent('xyz'.indexOf(name[4]),v);
+      const local=o.parent?o.parent.worldToLocal(w):w,k=parentK(o);next={position:local.toArray().map(x=>r3(x*k))};}
+    else if(/^pp-r[xyz]$/.test(name)){const r=e.rotation.slice();r['xyz'.indexOf(name[4])]=r1(wrapDeg(v));next={rotation:r};verb='Rotated';}
+    else if(name==='pp-s'){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');next={scale:[v,v,v]};verb='Scaled';}
+    else if(/^pp-s[xyz]$/.test(name)){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');const f=e.scale.slice();f['xyz'.indexOf(name[4])]=v;next={scale:f};verb='Scaled';}
+    else return;
+    write(sel.key,cleanAddEdit({...e,...next}),`${verb} ${label(o)}.`);
+  }
+  // Where a new prop goes: desk-sized items on the featured desk's desktop where the screen centre's ray meets it
+  // (kept on the top), else on the floor where that ray meets it (or 1.5 m ahead), turned to face the camera.
+  function placement(entry){
+    const {THREE,t}=tools,E=win().__filmEdits,cam=t.camera,kind=deskItem(entry)&&E.addParent('desk')?'desk':'room',parent=E.addParent(kind);
+    parent.updateWorldMatrix(true,false);cam.updateMatrixWorld();
+    const k=parent.getWorldScale(new THREE.Vector3()).x||1,ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(0,0),cam);
+    const origin=new THREE.Vector3().setFromMatrixPosition(parent.matrixWorld),up=new THREE.Vector3(0,1,0).transformDirection(parent.matrixWorld);
+    const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(kind==='desk'?up:new THREE.Vector3(0,1,0),origin);
+    let hit=ray.ray.intersectPlane(plane,new THREE.Vector3());
+    const camPos=cam.getWorldPosition(new THREE.Vector3());
+    const mm=E.mmScale();   // scene units per millimetre
+    if(kind==='room'&&(!hit||hit.distanceTo(camPos)>4000*mm)){const f=cam.getWorldDirection(new THREE.Vector3());f.y=0;if(f.lengthSq()<1e-6)f.set(0,0,-1);hit=camPos.clone().addScaledVector(f.normalize(),1500*mm);hit.y=origin.y;}
+    const local=hit?parent.worldToLocal(hit.clone()):new THREE.Vector3();local.y=0;
+    if(kind==='desk'){
+      // Keep it on the top: the desktop's measured size (mm, width across local x, depth across local z), less the item.
+      const size=parent.userData.surfaceSize,half=Math.max(...entry.size)/2+20;
+      if(size?.width&&size?.depth){local.x=THREE.MathUtils.clamp(local.x,-Math.max(0,size.width/2-half),Math.max(0,size.width/2-half));local.z=THREE.MathUtils.clamp(local.z,-Math.max(0,size.depth/2-half),Math.max(0,size.depth/2-half));}
+      else if(!hit||local.length()>400)local.set(0,0,0);
+    }
+    const toCam=parent.worldToLocal(camPos.clone()).sub(local),yaw=Math.atan2(toCam.x,toCam.z)*180/Math.PI;
+    return {kind,position:local.toArray().map(v=>r3(v*k)),rotation:[0,r1(wrapDeg(yaw)),0]};
+  }
+  // Click-to-place: the surface under the cursor. On the featured desk's top it rides the desk; anywhere else it stands
+  // in the room at that point (a table, a shelf, the floor), keeping the way it faces.
+  function placeAt(o,e,point){
+    const {THREE}=tools,E=win().__filmEdits,top=E.addParent('desk');let kind='room';
+    if(top){top.updateWorldMatrix(true,false);const l=top.worldToLocal(point.clone()),size=top.userData.surfaceSize;if(Math.abs(l.y)<40&&(!size||Math.abs(l.x)<=size.width/2+20&&Math.abs(l.z)<=size.depth/2+20))kind='desk';}
+    const parent=E.addParent(kind);parent.updateWorldMatrix(true,false);const k=parent.getWorldScale(new THREE.Vector3()).x||1,local=parent.worldToLocal(point.clone());if(kind==='desk')local.y=0;
+    let rotation=e.rotation;
+    if(kind!==e.parent){const q=parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(o.getWorldQuaternion(new THREE.Quaternion())),r=new THREE.Euler().setFromQuaternion(q);rotation=[r.x,r.y,r.z].map(v=>r1(wrapDeg(v*180/Math.PI)));}
+    write(sel.key,cleanAddEdit({...e,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation}),`Placed ${label(o)} ${kind==='desk'?'on the desk (it rides the lift and tilt)':'there, in the room'}.`);
+  }
+  async function addProp(entry){
+    await ensure();if(!editing()){status('Pause the chapter first: props are added on the paused frame.',true);return;}
+    const at=placement(entry),e=cleanAddEdit({add:{asset:entry.id},id:newAddId(),label:entry.name,parent:at.kind,position:at.position,rotation:at.rotation,scale:[1,1,1]});
+    if(!e)throw Error(`${entry.name} can't be added (its library id is unusual).`);
+    const key=propKey(e);write(key,e,`Added ${entry.name} ${at.kind==='desk'?'on the desk (it rides the lift and tilt)':'on the floor in front of the camera'}: W move · E rotate · T scale · Shift snaps · Delete removes it.`);
+    sel={key,target:{match:e.match,label:e.label},obj:null};onSelect();rerender();
+    return e;
+  }
+  const library=createPropLibrary({status,room:()=>shot()?.room,roomName:()=>shot()?.room,
+    load:async()=>{await ensure();return (await win().__filmEdits.propLibrary()).index.props;},
+    onPick:entry=>{addProp(entry).catch(error=>status(error.message,true));}});
   function current(){
     if(!sel)return null;if(sel.obj&&!inScene(sel.obj))sel.obj=null;
     if(!sel.obj&&tools)sel.obj=find(sel.key);return sel.obj;
@@ -112,10 +179,12 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){drag={enabled:t.controls.enabled,obj:gizmo.object};t.controls.enabled=false;startDrag();}else{t.controls.enabled=drag?.enabled??true;endDrag();}});
     gizmo.addEventListener('objectChange',()=>{const o=current();if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
     const raycaster=new THREE.Raycaster(),dom=t.renderer.domElement;let down=null;
-    dom.addEventListener('pointerdown',ev=>{down=ev.button===0&&!gizmo.dragging&&!gizmo.axis?{x:ev.clientX,y:ev.clientY,alt:ev.altKey}:null;},true);
+    dom.addEventListener('pointerdown',ev=>{down=ev.button===0&&(placing||!gizmo.dragging&&!gizmo.axis)?{x:ev.clientX,y:ev.clientY,alt:ev.altKey}:null;},true);
     dom.addEventListener('pointerup',ev=>{
       const d=down;down=null;if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||gizmo.dragging||w.__directorDragging||lightsShowing()||!editing())return;
       const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
+      if(placing){const now=current(),e=sel&&editOfKey(sel.key);placing=false;
+        if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point);else{status('Nothing there to put it on.',true);rerender();}return;}}
       const hit=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object));
       const now=current(),o=hit&&(d.alt&&now&&isAncestor(now,hit.object)?meaningful(hit.object,{above:now}):meaningful(hit.object));
       if(!o){if(sel){deselect();status('Nothing to edit there: click a prop (furniture, lamps, desk items). Esc deselects.');}return;}
@@ -132,13 +201,15 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function tick(){
     requestAnimationFrame(tick);if(!tools)return;const {gizmo,box,t}=tools,live=editing(),o=live?current():null;
     if(o){box.setFromObject(o);box.visible=true;box.material.opacity=shown(o)?1:.45;if(gizmo.dragging)bridge.stage()?.wake?.(300);}else box.visible=false;
-    if(o&&shown(o)){if(gizmo.object!==o)gizmo.attach(o);gizmo.setMode(mode);gizmo.setSpace(mode==='scale'?'local':'world');gizmo.visible=gizmo.enabled=true;}
+    if(o&&shown(o)&&!placing){if(gizmo.object!==o)gizmo.attach(o);gizmo.setMode(mode);gizmo.setSpace(mode==='scale'?'local':'world');gizmo.visible=gizmo.enabled=true;}
     else if(!gizmo.dragging){if(gizmo.object)gizmo.detach();gizmo.visible=gizmo.enabled=false;}
   }
   function startDrag(){const o=drag?.obj;if(!o)return;if(!snaps.has(o))snaps.set(o,{position:o.position.clone(),quaternion:o.quaternion.clone(),scale:o.scale.clone()});drag.base=base(o);}
   function endDrag(){
     const o=drag?.obj,b=drag?.base;drag=null;if(!o||!b||!sel)return;
-    try{const e=editOfKey(sel.key)||sel.target,next={...sel.target,...(e||{}),...editFrom(o,b)};
+    try{const e=editOfKey(sel.key)||sel.target;
+      if(isAddEdit(e)){write(sel.key,addFrom(o,e),`${VERB[mode]} ${label(o)}.`);return;}
+      const next={...sel.target,...(e||{}),...editFrom(o,b)};
       if(JSON.stringify(cleanPropEdit(next))===JSON.stringify(e?cleanPropEdit(e):null)){status(label(o)+' did not move.');return;}
       write(sel.key,next,`${VERB[mode]} ${label(o)}. Undo puts it back; Render still shows the film look.`);}
     catch(error){status(error.message,true);}
@@ -149,7 +220,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const t={match:target.match,...(target.asset?{asset:target.asset}:{}),...(target.path?{path:target.path}:{}),...(target.near?{near:target.near}:{}),label:target.label||o.name||''};
     sel={key:propKey(t),target:t,obj:o};onSelect();rerender();
     const moves=handMoves(o).length?' The film also places it by hand; your edit adds to that.':'';
-    status(`${label(o)} selected · W move · E rotate · T scale · Shift snaps · Delete hides it in this chapter · Alt-click picks what it sits on.${moves}`);
+    const added=isAddEdit(filmEdit(o));
+    status(`${label(o)} selected · W move · E rotate · T scale · Shift snaps · ${added?'Delete removes it (added in this chapter)':'Delete hides it in this chapter'} · Alt-click picks what it sits on.${moves}`);
   }
   function select(key){
     if(!tools){ensure().then(()=>select(key)).catch(error=>status(error.message,true));return;}
@@ -157,7 +229,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     sel={key,target:e?{match:e.match,...(e.asset?{asset:e.asset}:{}),...(e.path?{path:e.path}:{}),...(e.near?{near:e.near}:{}),label:e.label}:sel?.target,obj:o};onSelect();rerender();
     status(o?`${label(o)} selected${o&&!shown(o)?' (hidden in this chapter: untick Hide to bring it back)':''}.`:`${e?.label?nice(e.label):'That prop'} is not in the room right now (the film setup did not find it).`,!o);
   }
-  function deselect(){if(!sel)return;sel=null;rerender();}
+  function deselect(){placing=false;if(!sel)return;sel=null;rerender();}
   // ---- edits from the inspector and keys
   function apply(change,text){
     const o=current();if(!sel)return;const e=editOfKey(sel.key)||{},next={...sel.target,...e,...change};
@@ -165,15 +237,19 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     write(sel.key,next,text);
   }
   function hide(on=true){
-    const o=current();if(!sel)return false;const name=o?label(o):nice(sel.target.label),filmHides=o&&(o.userData.__filmFxEdits||[]).some(e=>!e.director&&e.hide);
+    const o=current();if(!sel)return false;
+    if(isAddEdit(editOfKey(sel.key))){remove();return true;}const name=o?label(o):nice(sel.target.label),filmHides=o&&(o.userData.__filmFxEdits||[]).some(e=>!e.director&&e.hide);
     apply({hide:on?true:filmHides?false:undefined},on?`Hid ${name} in this chapter. Undo, or untick Hide in Props, brings it back.`:`Showed ${name} again.`);return true;
   }
-  function reset(){if(!sel)return;const name=sel.target.label?nice(sel.target.label):'The prop';if(!editOfKey(sel.key)){status(name+' is already where the film puts it.');return;}write(sel.key,null,`${name} back to the film.`);}
-  function resetAll(){const n=editedCount();if(!n){status('No prop edits in this chapter: the props are the film\'s.');return;}commit(()=>{shot().propEdits=[];},{render:false});status(`All props back to the film (${n} edit${n===1?'':'s'} cleared). Undo brings them back.`);rerender();}
+  // An added prop: Delete, Reset to the film and Remove all take it out of the chapter (Undo brings it back).
+  function remove(){if(!sel)return;const e=editOfKey(sel.key);if(!isAddEdit(e))return;const name=e.label||nice(e.match);write(sel.key,null,`Removed ${name} (added in this chapter). Undo brings it back.`);sel=null;rerender();}
+  function reset(){if(!sel)return;if(isAddEdit(editOfKey(sel.key))){remove();return;}const name=sel.target.label?nice(sel.target.label):'The prop';if(!editOfKey(sel.key)){status(name+' is already where the film puts it.');return;}write(sel.key,null,`${name} back to the film.`);}
+  function resetAll(){const n=editedCount();if(!n){status('No prop edits in this chapter: the props are the film\'s.');return;}const a=edits().filter(isAddEdit).length;commit(()=>{shot().propEdits=[];},{render:false});if(sel&&a)sel=null;status(`All props back to the film (${n} edit${n===1?'':'s'} cleared${a?`, ${a} added prop${a===1?'':'s'} removed`:''}). Undo brings them back.`);rerender();}
   async function changed(el){
     await ensure();const o=current();if(!sel||!o)return;const name=el.name,v=Number(el.value);
     if(name==='pp-hide'){hide(el.checked);return;}
     if(el.value===''||!Number.isFinite(v))throw Error('Enter a number.');
+    const added=editOfKey(sel.key);if(isAddEdit(added)){changedAdd(o,added,name,v);return;}
     const b=base(o),{THREE}=tools,st=installed(o),world=st.position.clone();if(o.parent){o.parent.updateMatrixWorld(true);o.parent.localToWorld(world);}
     const e=editOfKey(sel.key)||{},rotNow=new THREE.Euler(b.rot.x,b.rot.y,b.rot.z,b.rot.order),turn=(e.rotation||[0,0,0]).slice(),fac=(e.scale||[1,1,1]).slice();
     let verb='Moved';
@@ -196,8 +272,9 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // [{edit, key, name, change, obj, editorId, ok, why, transform | remove}]
   function plan(){
     const room=studioRoom(),{THREE}=tools||{};
-    return edits().map(e=>{
-      const key=propKey(e),o=tools&&find(key),raw=e.label||o?.name||'',name=nice(raw),row={edit:e,key,name,raw,change:describePropEdit(e),obj:o};
+    return edits().map((e,i)=>{
+      const key=propKey(e),o=tools&&find(key),raw=e.label||o?.name||'',name=isAddEdit(e)?(e.label||nice(e.add.asset)):nice(raw),row={edit:e,key,name,raw,change:describePropEdit(e),obj:o};
+      if(isAddEdit(e))return addPlan(row,e,o,room,i);
       if(o&&onDeskItself(o))return {...row,ok:false,why:ON_DESK};
       if(room.reason)return {...row,ok:false,why:room.reason};
       if(!o)return {...row,ok:false,why:'Not in the room right now: the film setup did not find it.'};
@@ -214,6 +291,16 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();M.decompose(p,q,s);
       return {...row,ok:true,editorId,transform:{p:{x:p.x,y:p.y,z:p.z},q:{x:q.x,y:q.y,z:q.z,w:q.w},s:{x:s.x,y:s.y,z:s.z}},local:{p:o.position.clone(),q:o.quaternion.clone(),s:o.scale.clone()},sceneId:room.id};
     });
+  }
+  // An added prop becomes a new Studio item in the room (as Studio's own library Add makes one); not on the desk.
+  function addPlan(row,e,o,room,i){
+    if(e.parent==='desk')return {...row,ok:false,why:'Added on the desk: it travels with the desk, so Studio\'s room layout can\'t hold it. Keep it as a chapter edit.'};
+    if(room.reason)return {...row,ok:false,why:room.reason};
+    if(!o)return {...row,ok:false,why:'Not on the stage right now (still loading).'};
+    if(o.parent!==room.api.workspaceRoom?.root)return {...row,ok:false,why:'Not in this room\'s Studio layout (the stage has no room here).'};
+    if(snaps.has(o))return {...row,ok:false,why:'Finish the drag first.'};
+    const key=`${shot().room}:custom:${Date.now()}-${i}:${e.add.asset}`,t={p:{x:o.position.x,y:o.position.y,z:o.position.z},q:{x:o.quaternion.x,y:o.quaternion.y,z:o.quaternion.z,w:o.quaternion.w},s:{x:o.scale.x,y:o.scale.y,z:o.scale.z}};
+    return {...row,ok:true,editorId:'scene:'+key,studioKey:key,add:{propId:e.add.asset,position:[t.p.x,t.p.y,t.p.z]},transform:t,local:{p:o.position.clone(),q:o.quaternion.clone(),s:o.scale.clone()},sceneId:room.id,change:row.change+' → a new item in the room in Studio'};
   }
   function permanentState(){
     const room=tools?studioRoom():{reason:'The Props tools are still starting.'};if(room.reason)return {ok:false,why:room.reason};
@@ -241,13 +328,13 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   async function makePermanent(rows){
     const sceneId=rows[0].sceneId||studioRoom().id,api=studioRoom().api,sync=window.__studioState;
     const got=await fetch('/api/studio-state',{cache:'no-store'});if(!got.ok)throw Error(`Studio's state is unavailable (${got.status}).`);
-    const base=(await got.json()).values?.[STATE_KEY]??null,value=writeSceneAssets(base,sceneId,rows.map(r=>({editorId:r.editorId,...(r.remove?{remove:true}:{transform:r.transform})})));
+    const base=(await got.json()).values?.[STATE_KEY]??null,value=writeSceneAssets(base,sceneId,rows.map(r=>({editorId:r.editorId,...(r.add?{add:r.add,transform:r.transform}:r.remove?{remove:true}:{transform:r.transform})})));
     const posted=await fetch('/api/studio-state',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({client:sync?.client||'director-'+Math.random().toString(36).slice(2,10),by:'Director',changes:[{key:STATE_KEY,value,base}]})});
     if(!posted.ok)throw Error(`Studio did not take the change (${posted.status}).`);const result=(await posted.json()).results?.[0];if(!result||result.skipped||result.error)throw Error('Studio did not take the change: '+(result?.skipped||result?.error||'no answer'));
     // This page's copy of the shared state (no second write: the sync script sees it as its own base) and the stage's memory.
     try{const stored=(await (await fetch('/api/studio-state',{cache:'no-store'})).json()).values?.[STATE_KEY];if(stored){sync?.base?.set(STATE_KEY,stored);localStorage.setItem(STATE_KEY,stored);}}catch{}
     const mem=api.sceneAssetStates.get(sceneId);
-    for(const r of rows){if(!mem)break;if(r.remove){const a=mem.added;if(a?.has?.(r.editorId)){a.delete(r.editorId);mem.transforms.delete(r.editorId);}else mem.removed.add(r.editorId);}else mem.transforms.set(r.editorId,r.transform);}
+    for(const r of rows){if(!mem)break;if(r.add){mem.added?.set?.(r.editorId,{editorId:r.editorId,propId:r.add.propId,position:r.add.position});mem.transforms.set(r.editorId,r.transform);continue;}if(r.remove){const a=mem.added;if(a?.has?.(r.editorId)){a.delete(r.editorId);mem.transforms.delete(r.editorId);}else mem.removed.add(r.editorId);}else mem.transforms.set(r.editorId,r.transform);}
     // The props keep their place on the stage once the chapter's edits are folded in (film-fx re-installs without them).
     pending={rows,keys:new Set(rows.map(r=>r.key))};fold(pending.keys);
     if(sel&&pending.keys.has(sel.key))sel=null;
@@ -259,10 +346,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(!three()?.scene)return '<h3>Props</h3><p class="director-hint">Loading the chapter…</p>';
     const o=current(),e=sel&&editOfKey(sel.key),st=permanentState(),n=editedCount();
     const head=`<h3>Props</h3><p class="director-hint">Click a prop in the view to select it (not while Lights are shown). W move · E rotate · T scale · Shift snaps · Delete hides it. Edits stay in this chapter: Studio does not change.</p>
-      <div class="director-actions"><button data-action="pp-reset-all" ${n?'':'disabled'} title="Every prop back to the film in this chapter: one step, Undo brings them back">Reset all props to the film${n?' ('+n+')':''}</button><button data-action="pp-permanent" ${st.ok?'':'disabled'} title="${escape(st.ok?'Write these prop edits into Studio\'s room layout (you confirm each one)':st.why)}">Make permanent in Studio…</button></div>${st.ok?'':`<p class="director-hint" data-permanent-why>${escape(st.why)}</p>`}`;
+      <div class="director-actions"><button data-action="pp-add" class="prop-add-button" title="Add a model from the prop library: it goes on the desk or the floor in front of the camera, ready to move">+ Add prop</button><button data-action="pp-reset-all" ${n?'':'disabled'} title="Every prop back to the film in this chapter: one step, Undo brings them back">Reset all props to the film${n?' ('+n+')':''}</button><button data-action="pp-permanent" ${st.ok?'':'disabled'} title="${escape(st.ok?'Write these prop edits into Studio\'s room layout (you confirm each one)':st.why)}">Make permanent in Studio…</button></div>${st.ok?'':`<p class="director-hint" data-permanent-why>${escape(st.why)}</p>`}`;
     if(!sel)return head+'<p class="director-hint">No prop selected.</p>';
     if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4 title="${escape(sel.target.label||'')}">${escape(nice(sel.target.label))}</h4><p class="director-hint">Not in the room right now (the film setup did not find it).</p><div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
-    if(!tools)return head;const b=base(o),{THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),turn=e?.rotation||[0,0,0],fac=e?.scale||[1,1,1],uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4;
+    if(!tools)return head;if(isAddEdit(e))return head+addPanel(o,e);const b=base(o),{THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),turn=e?.rotation||[0,0,0],fac=e?.scale||[1,1,1],uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4;
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
     const studio=plan().find(r=>r.key===sel.key),hidden=e?.hide===true||!shown(o),moved=b?o.getWorldPosition(new THREE.Vector3()).distanceTo(b.world):0;
     return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4>${escape(propName(o.name))}</h4><p class="director-hint prop-name">${escape(o.name||'Unnamed')}${o.userData.sceneAssetKey?' · Studio item':''}</p>
@@ -275,8 +362,23 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'} title="This prop back to where the film puts it">Reset to the film</button></div>
       <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be made permanent.':'Studio: '+escape(studio.why)):onDeskItself(o)?'Studio: '+escape(ON_DESK):'Studio: unchanged (edit the prop to make it permanent later).'}</p></div>`;
   }
+  function addPanel(o,e){
+    const {THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),fac=e.scale,uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4,studio=plan().find(r=>r.key===sel.key);
+    const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
+    return `<div class="movement-inspector prop-inspector prop-added" data-reveal="prop"><h4>${escape(label(o))}</h4><p class="director-hint prop-name">+ Added in this chapter · ${escape(e.add.asset)} · ${e.parent==='desk'?'on the desk (rides lift and tilt)':'in the room'}</p>
+      <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'T'})">${t}</button>`).join('')}</div>
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]),.01)).join('')}</div>
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-r'+k,'Turn '+k+' (°)',r1(e.rotation[i]),1)).join('')}</div>
+      <label>Scale ×<input name="pp-s" type="number" min=".01" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
+      <div class="director-actions"><button data-action="pp-place" aria-pressed="${placing}" title="Then click a surface in the view: the desktop (it rides the desk), a table, a shelf or the floor">Place on a surface…</button><button data-action="pp-remove" title="Take it out of this chapter (Delete): Undo brings it back">Remove from this chapter</button></div>
+      <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be added to the room for good (Make permanent in Studio…).':'Studio: '+escape(studio.why)):''}</p></div>`;
+  }
   async function action(name,arg){
+    if(name==='pp-add'){library.open();return;}
     await ensure();
+    if(name==='pp-remove'){remove();return;}
+    if(name==='pp-place'){const o=current();if(!o||!isAddEdit(editOfKey(sel.key)))return;placing=!placing;rerender();status(placing?`Click a surface in the view to put ${label(o)} there (the desktop, a table, the floor). Click Place again to cancel.`:'Placing cancelled.');return;}
     if(name==='pp-pick'){select(arg);return;}
     if(name==='pp-reset-all'){resetAll();return;}
     if(name==='pp-permanent'){openPermanent();return;}
@@ -288,17 +390,20 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // Props lane: edited props as chips (hidden ones struck through), click to select; reset-all chip.
   function lane(){
     const list=edits();
-    return `${list.map(e=>{const k=propKey(e),hiddenChip=e.hide===true;return `<button class="lamp-chip prop-chip ${hiddenChip?'prop-hidden':''} ${sel?.key===k?'selected':''}" data-action="pp-pick" data-section="${escape(k)}" title="${escape((e.label||e.match)+' · '+describePropEdit(e))}${hiddenChip?' · click, then untick Hide to bring it back':''}">${escape(propName(e.label||e.match.replace(/^\^|\$$/g,'').replace(/\\/g,'')))}</button>`;}).join('')}${list.length?'<button class="lamp-chip lamp-reset" data-action="pp-reset-all" title="Every prop back to the film: one step, Undo brings them back">↺ Reset all props to the film</button>':'<span class="desk-lane-empty">Click a prop in the view to move, turn, scale or hide it in this chapter</span>'}`;
+    return `${list.map(e=>{const k=propKey(e),hiddenChip=e.hide===true,added=isAddEdit(e);return `<button class="lamp-chip prop-chip ${hiddenChip?'prop-hidden':''} ${added?'prop-added':''} ${sel?.key===k?'selected':''}" data-action="pp-pick" data-section="${escape(k)}" title="${escape((e.label||e.match)+' · '+describePropEdit(e))}${hiddenChip?' · click, then untick Hide to bring it back':''}${added?' · Delete removes it':''}">${added?'<b aria-label="added">+</b>':''}${escape(added?(e.label||propName(e.add.asset)):propName(e.label||e.match.replace(/^\^|\$$/g,'').replace(/\\/g,'')))}</button>`;}).join('')}${list.length?'<button class="lamp-chip lamp-reset" data-action="pp-reset-all" title="Every prop back to the film, added ones removed: one step, Undo brings them back">↺ Reset all props to the film</button>':'<span class="desk-lane-empty">Click a prop in the view to move, turn, scale or hide it in this chapter, or + Prop to add one</span>'}`;
   }
   // After film-fx (re)installs: objects may be new; folded-in props keep their Studio place on the stage.
   function applied(){
     found=null;if(sel?.obj&&!inScene(sel.obj))sel.obj=null;
     if(pending&&!edits().some(e=>pending.keys.has(propKey(e)))){
-      for(const r of pending.rows){const o=r.obj;if(!o||!inScene(o))continue;if(r.remove)o.removeFromParent();else{o.position.copy(r.local.p);o.quaternion.copy(r.local.q);o.scale.copy(r.local.s);o.updateMatrixWorld(true);}}
+      // Added props: the chapter's copy is gone with its edit; Studio's own item stands in its place (as Studio loads it).
+      for(const r of pending.rows.filter(r=>r.add)){const room=win()?.ErgoFlex?.workspaceRoom;room?.addAsset(r.add.propId,r.studioKey,r.add.position).then(obj=>{if(!obj)return;obj.position.copy(r.local.p);obj.quaternion.copy(r.local.q);obj.scale.copy(r.local.s);obj.updateMatrixWorld(true);bridge.stage()?.wake?.(300);}).catch(error=>console.warn('[props] Studio copy',error));}
+      for(const r of pending.rows){const o=r.obj;if(r.add||!o||!inScene(o))continue;if(r.remove)o.removeFromParent();else{o.position.copy(r.local.p);o.quaternion.copy(r.local.q);o.scale.copy(r.local.s);o.updateMatrixWorld(true);}}
       pending=null;bridge.stage()?.wake?.(300);
     }
   }
   return {panel,lane,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,
     selected:()=>sel?.key||null,selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
-    header:()=>sel?{name:propName(current()?.name||sel.target.label),detail:(editOfKey(sel.key)?describePropEdit(editOfKey(sel.key)):'from the film')}:null};
+    addProp,openLibrary:()=>library.open(),library:()=>library,
+    header:()=>sel?{name:current()?label(current()):nice(sel.target.label),detail:(editOfKey(sel.key)?describePropEdit(editOfKey(sel.key)):'from the film')}:null};
 }
