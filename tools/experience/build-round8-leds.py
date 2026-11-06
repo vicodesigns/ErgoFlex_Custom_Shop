@@ -107,10 +107,17 @@ TRACE_HIDE = {'match': '^$', 'path': '^Cinematic effects > Line$', 'hide': True}
 # glow adds a blurred copy of each screen in display space, which is most of their brightness; at a quarter of it the
 # screens take 1.3x their own brightness to keep their level (stills: screen luma 149 now, 136 at .25 / 1.3x).
 SCREEN_BLOOM, SCREEN_GAIN = .25, 1.3
+# HQ21 (Vico on HQ20: the OCC "looks hazy ... like a bloom", the game screen washed out; "remove bloom from everything
+# except ... the outside lighting"): the film-quality bloom only on the rooms' daylight windows / exterior backdrops.
+# Screens keep the 1.3x gain (no-glow stills, picked).
+BLOOM_ONLY = 'window|daylight'
+# HQ21 (Vico: the sensing chapter's warning and movement light "too bright"; picked 40% of the stills): the light the
+# status states cast (every receiver strength and the floor bounce) in that chapter; the strips keep their level.
+STATUS_LEVEL = {'awareness': .4}
 
 
 def fix(s):
-    s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM}
+    s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM, 'bloomOnly': BLOOM_ONLY}
     if s.get('screens'): s['screenGain'] = SCREEN_GAIN
     if s.get('kind') in ('lift', 'tilt'):
         s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e != TRACE_HIDE] + [TRACE_HIDE]
@@ -192,6 +199,10 @@ def fix(s):
     s['ledSurfaces'] = {k: (round(v * (FLOOR_LEVEL if k == 'floorStrength' else LIGHT_LEVEL), 1) if k.endswith('Strength') else v)
                         for k, v in VIEWER_SURFACES.items()}
     for k, f in SURFACE_TRIM.get(s['id'], {}).items(): s['ledSurfaces'][k] = round(s['ledSurfaces'][k] * f, 1)
+    if s['id'] in STATUS_LEVEL:
+        k = STATUS_LEVEL[s['id']]
+        s['ledSurfaces'] = {n: (round(v * k, 1) if n.endswith('Strength') else v) for n, v in s['ledSurfaces'].items()}
+        s['ledReceivers']['floorBounceStrength'] = round(s['ledReceivers']['floorBounceStrength'] * k, 1)
     if s['id'] in DAYLIGHT: s['ledSurfaces']['desktopStrength'] = round(s['ledSurfaces']['desktopStrength'] * LIBRARY_LED['desktopStrength'], 1)
     s['ledGlow'] = 1
     FOOT_TOP = {'match': '^Base_Panels_3 LED reflection$', 'hide': True}
@@ -212,7 +223,7 @@ sub = os.path.join(H, 'shots', '13-subshots.json')
 if os.path.exists(sub):
     d = json.load(open(sub))
     for s in d['shots']:
-        s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM}
+        s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM, 'bloomOnly': BLOOM_ONLY}
         if s.get('screens'): s['screenGain'] = SCREEN_GAIN
     json.dump(d, open(sub, 'w'))   # compact, as build-round8-director.py writes it
 print('visualizer LEDs on', [(s['id'], s.get('ledColor'), s.get('sceneGlobals')) for s in json.load(open(paths[0]))['shots'] if s.get('ledReceivers')])

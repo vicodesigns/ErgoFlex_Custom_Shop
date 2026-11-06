@@ -7,6 +7,8 @@
 //   reflections: 512          room cube capture (PMREM) as envMap on glossy/metal materials, instead of the studio env
 //   ao: {intensity, radius}   GTAO ambient occlusion; radius as a fraction of the desk width
 //   bloom: {strength, radius, threshold}  selective bloom on screens, LED strips and emissive fixtures only
+//   bloomOnly: '<regex>'      only meshes under a node whose name matches keep the bloom (HQ21, Vico: no bloom on screens,
+//                             desk light or LEDs; only the light from outside: 'window|daylight')
 //   screenBloom: 1            the screens' share of the bloom (0 = none: sharp screens; .25 = a quarter). Vico, HQ20.
 //   bloomReceivers: true      false keeps the LED light ON surfaces (the app's '<surface> LED reflection' overlays, the film's
 //                             'LED floor bounce') out of the bloom: lit surfaces, not sources (Vico, HQ18: the light looked hazy)
@@ -125,8 +127,10 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
   {
     black = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const screenMeshes = new Set(screens.map(s => s.mesh)); let n = 0; others = []; muted = []; dimmed = [];
+    const bloomOnly = q.bloomOnly ? new RegExp(q.bloomOnly, 'i') : null;
     scene.traverse(o => { if (!o.isMesh) return;
       const m = [].concat(o.material || [])[0];
+      if (bloomOnly) { if (named(o, bloomOnly)) n++; else others.push(o); return; }
       // bloomReceivers false: the surface overlays are hidden (not blacked: their own onBeforeRender needs their shader) in the glow pass.
       if (q.bloomReceivers === false && named(o, RECEIVER)) { muted.push(o); return; }
       const isScreen = screenMeshes.has(o) || (m?.isMeshBasicMaterial && m.map && named(o, SCREENISH));
