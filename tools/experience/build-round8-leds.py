@@ -62,7 +62,7 @@ FLOOR_EVEN = {'awaken': {'bounce': 2.0, 'foot': .5}}
 # LED light keeps its level, so the room is lower key and the LEDs read against it as on the stage; EXPOSURE trims the
 # rooms that are still hot (all-white artist room; the commons' white tables and ceiling pools; the rise office).
 ROOM_LIGHT = .55
-EXPOSURE = {'rise': .9, 'create': .7}   # commons .8 until HQ16 (see DAYLIGHT)
+EXPOSURE = {'rise': 1.0, 'create': .7}   # commons .8 until HQ16 (see DAYLIGHT); rise .9 -> 1.0 HQ28 (Vico: a tick up, it looks dark)
 # The visualizer's LED surface levels (app-reference/assets/desk_viewer/led/led-receivers.mjs LED_SURFACE_DEFAULTS,
 # the same numbers as studio.js's): desk-viewer.js runs them with no overrides.
 VIEWER_SURFACES = {'desktopStrength': 157, 'desktopReach': 100, 'desktopWidth': 5, 'desktopCone': 100, 'desktopEdgeFade': 46,
