@@ -6,6 +6,7 @@ import {groupRange,snapGroupDelta,shiftGroup} from './timeline-group.mjs';
 import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS} from './film-lighting.mjs';
 import {filmRenderShot,createStillRenderer} from './film-render.mjs';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
+import {createFilmLook} from './film-look.mjs';
 import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './film-chapters.mjs';
 import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS} from './timeline-ui.mjs';
 import {createDeskEditor} from './desk-editor.mjs';
@@ -92,7 +93,7 @@ export function mountDirector(bridge,catalog,initial){
     const line=timeline.querySelector('[data-track-playhead]');if(line)line.style.left=(playhead*100)+'%';
     const label=timeline.querySelector('[data-track-time]');if(label)label.textContent=(playhead*shot().seconds).toFixed(2)+'s / '+shot().seconds+'s';
     for(const line of timeline.querySelectorAll('[data-shared-playhead]'))line.style.left=playhead*100+'%';
-    syncLightNow();syncNow();
+    syncLightNow();syncNow();if(playhead!==pokedAt){pokedAt=playhead;filmLook?.poke();}
     const ruler=timeline.querySelector('.time-ruler');if(ruler)ruler.setAttribute('aria-valuenow',(playhead*shot().seconds).toFixed(2));
     const exact=timeline.querySelector('[name="timeline-seconds"]');if(exact&&document.activeElement!==exact)exact.value=(playhead*shot().seconds).toFixed(2);
   }
@@ -108,7 +109,7 @@ export function mountDirector(bridge,catalog,initial){
 
   const status=(message,error=false)=>{for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.classList.toggle('error',error);}};
   function draft(){clearTimeout(draftTimer);try{library.draft(project);status('Draft kept in this browser · Save cut when ready.');}catch{status('Edit kept in this editor (browser storage is full, so no draft copy) · Export cut sends it to the film.');}}
-  function changed(){bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}}
+  function changed(){filmLook?.poke();bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}}
   // Film chapters: a dropdown that reloads this tab with another chapter's page.
   const filmIndex=()=>filmChapterIndex(filmChapters,project.shots.map(s=>s.id));
   const unexported=()=>signature()!==exported;
@@ -258,7 +259,7 @@ export function mountDirector(bridge,catalog,initial){
   let timelineFitted=false;
   function fitTimeline(){
     const v=timeline.querySelector('.timeline-viewport');if(!v)return;const need=timeline.getBoundingClientRect().height+(v.scrollHeight-v.clientHeight)+2;
-    resizeTimeline(need);timelineFitted=true;
+    resizeTimeline(Math.min(need,innerHeight*.5));timelineFitted=true;
   }
   function syncLightNow(){const bar=timeline.querySelector('[data-light-now]'),L=bar&&lighting();if(!L)return;bar.style.left=playhead*100+'%';bar.style.background=lightAt(L,playhead*shot().seconds);}
   // The Lighting tab, broad to narrow in lane order: Lighting now, Time of day, Room, Desk white, Desk status,
@@ -366,6 +367,15 @@ export function mountDirector(bridge,catalog,initial){
     finally{clearInterval(timer);stillBusy=false;}
   }
   addEventListener('pagehide',()=>stills?.dispose());
+  // Film look (F): the real render crossfaded over the 16:9 frame whenever the view rests.
+  const filmLook=film?createFilmLook({status,
+    resting:()=>open&&bridge.ready()&&!bridge.playback().playing&&!scrub&&!keyDrag&&!groupDrag&&!marquee&&!stillBusy&&!composing&&!bridge.bakeState().baking,
+    async render(){const s=shot(),t=playhead;stills||=createStillRenderer();const url=await stills.render(filmRenderShot(filmShot(),s,keys()),t);return {url,label:(t*s.seconds).toFixed(2)+' s'};}}):null;
+  let orbitHooked=false,pokedAt=-1,pokedPlaying=false;
+  function hookOrbit(){if(orbitHooked||!filmLook)return;const dom=bridge.stage()?.three?.()?.renderer?.domElement;if(!dom)return;const poke=()=>filmLook.poke();dom.addEventListener('pointerdown',poke,true);dom.addEventListener('pointermove',e=>{if(e.buttons)poke();},true);dom.addEventListener('wheel',poke,{capture:true,passive:true});orbitHooked=true;}
+  // Warm the still stage once the chapter is live, so the first still / film look is quick.
+  let warmed=false;
+  function warmStill(){if(warmed||!film||!filmShot())return;warmed=true;(window.requestIdleCallback||(f=>setTimeout(f,1200)))(()=>{if(stillBusy)return;stills||=createStillRenderer();stills.render(filmRenderShot(filmShot(),shot(),keys()),playhead).catch(()=>{});},{timeout:4000});}
   function commit(fn,{render=false,key=null}={}){
     if(!key||group!==key){undo.push(copy(project));undo=undo.slice(-40);redo=[];}
     group=key;fn();changed();if(render)renderPanel();
@@ -443,7 +453,7 @@ export function mountDirector(bridge,catalog,initial){
   }
   async function load(){
     const token=++loadToken,position=playhead;status('Loading this chapter…');
-    try{await bridge.editShot(project,selected);if(token===loadToken){automaticCameras.set(shot().id,bridge.stage().cameraKeys());deskEditor.ready();playhead=position;if(!keys().some(k=>k.id===keyId))keyId=null;renderPanel();renderTimeline();if(film&&!timelineFitted&&!document.body.style.getPropertyValue('--director-timeline-height')){fitTimeline();renderTimeline();}bridge.seek(playhead);status('Camera is live. Existing desk movements appear below; select a block to edit it, or add Lift, Tilt or Wheels.');}}catch(error){if(token===loadToken)status(error.message,true);}
+    try{await bridge.editShot(project,selected);if(token===loadToken){automaticCameras.set(shot().id,bridge.stage().cameraKeys());deskEditor.ready();playhead=position;if(!keys().some(k=>k.id===keyId))keyId=null;renderPanel();renderTimeline();if(film&&!timelineFitted&&!document.body.style.getPropertyValue('--director-timeline-height')){fitTimeline();renderTimeline();}hookOrbit();warmStill();bridge.seek(playhead);status('Camera is live. Existing desk movements appear below; select a block to edit it, or add Lift, Tilt or Wheels.');}}catch(error){if(token===loadToken)status(error.message,true);}
   }
   function move(from,to){if(to<0||to>=project.shots.length)return;commit(()=>{const [s]=project.shots.splice(from,1);project.shots.splice(to,0,s);selected=to;},{render:true});load();}
   function exportCut(){const url=URL.createObjectURL(new Blob([JSON.stringify(((c)=>({...c,shots:c.shots.map(exportLighting)}))(cleanCut(project,catalog)),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();syncFilm();status('Cut exported. Import it in Director Mode on another browser.');}
@@ -732,6 +742,10 @@ export function mountDirector(bridge,catalog,initial){
   });
   timeline.addEventListener('pointercancel',()=>{keyDrag=null;renderTimeline();});
   timeline.addEventListener('dblclick',event=>{if(!event.target.closest('.timeline-resize'))return;if(timelineFitted){document.body.style.removeProperty('--director-timeline-height');timelineFitted=false;requestAnimationFrame(()=>renderTimeline());}else{fitTimeline();requestAnimationFrame(()=>renderTimeline());}});
+  // F: Live / Film look / Split; G: thirds and title-safe guides.
+  // Also bound in the stage frame (after an orbit the keys go there).
+  function viewKeys(event){if(!open||!filmLook||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.target.closest?.('input,select,textarea,[contenteditable]'))return;const k=event.key.toLowerCase();if(k==='f'){event.preventDefault();filmLook.cycle();}else if(k==='g'){event.preventDefault();filmLook.toggleGuides();}}
+  document.addEventListener('keydown',viewKeys);
   // Shift+L: jump to the lighting lanes.
   document.addEventListener('keydown',event=>{if(!open||!event.shiftKey||event.ctrlKey||event.metaKey||event.altKey||event.key.toLowerCase()!=='l'||event.target.closest?.('input,select,textarea,[contenteditable]'))return;event.preventDefault();revealLighting();});
   function resizeTimeline(height){document.body.style.setProperty('--director-timeline-height',Math.max(300,Math.min(innerHeight*.65,720,height))+'px');}
@@ -808,7 +822,7 @@ export function mountDirector(bridge,catalog,initial){
       }catch(error){picker.querySelector('[data-picker-status]').textContent=error.message;}
     }
   });
-  function setOpen(value){deskEditor.stop();if(bridge.bakeState().baking&&!value){status('Cancel the bake before closing the editor.');return;}open=value;document.body.classList.toggle('directing',open);panel.hidden=timeline.hidden=!open;bridge.editMode(open);if(open){if(matchMedia('(max-width:700px)').matches)document.body.classList.add('inspector-hidden');render();load().then(()=>{
+  function setOpen(value){deskEditor.stop();if(bridge.bakeState().baking&&!value){status('Cancel the bake before closing the editor.');return;}open=value;document.body.classList.toggle('directing',open);document.body.classList.toggle('film-frame',open&&!!film);filmLook?.visible(open);panel.hidden=timeline.hidden=!open;bridge.editMode(open);if(open){if(matchMedia('(max-width:700px)').matches)document.body.classList.add('inspector-hidden');render();load().then(()=>{
       const url=new URL(location.href);
       if(open&&url.searchParams.get('cinematic')==='1'&&bridge.ready()){
         url.searchParams.delete('cinematic');history.replaceState(null,'',url);action('cinematic-pass');
@@ -926,13 +940,13 @@ export function mountDirector(bridge,catalog,initial){
   const preview=document.getElementById('stage');let previewDocument;
   function bindPreviewHistory(){
     const next=preview?.contentDocument;if(!next||next===previewDocument)return;
-    previewDocument?.removeEventListener('keydown',historyShortcut,true);
-    previewDocument=next;previewDocument.addEventListener('keydown',historyShortcut,true);
+    previewDocument?.removeEventListener('keydown',historyShortcut,true);previewDocument?.removeEventListener('keydown',viewKeys);
+    previewDocument=next;previewDocument.addEventListener('keydown',historyShortcut,true);previewDocument.addEventListener('keydown',viewKeys);
   }
   preview?.addEventListener('load',bindPreviewHistory);bindPreviewHistory();
   addEventListener('pagehide',()=>{deskEditor.stop();draft();});
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
   render();panel.hidden=timeline.hidden=true;
-  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:syncTransport,toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},filmApplied:()=>sceneLights.applied()};
+  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},filmApplied:()=>sceneLights.applied()};
 }

@@ -36,7 +36,9 @@ export function createStillRenderer({width=1280,height=720,src='/?view=product&p
     const w=win();
     await new Promise((resolve,reject)=>{w.__filmFxDone=resolve;w.__filmFxFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";w.document.head.append(s);});
   }
-  async function render(shot,t){
+  let queue=Promise.resolve();
+  const render=(shot,t)=>(queue=queue.then(()=>renderNow(shot,t),()=>renderNow(shot,t)));
+  async function renderNow(shot,t){
     ready||=boot().catch(error=>{dispose();throw error;});await ready;
     const w=win(),EP=w.ErgoPresentation,fx=w.__filmFx;
     // Prepare once per scene; film-fx alone re-installs when only the film layers changed.
