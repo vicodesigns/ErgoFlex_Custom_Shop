@@ -43,7 +43,7 @@
 //
 //   ledReceivers:'viewer' | {mode:'viewer', floorBounce=true, legWings=true, wingFallBelow=true, bands=true,
 //                 wingRows='beside'|'app', indicatorLift=true, stripMap='app'|'viewer', appFloorGlow=true,
-//                 floorBounceStrength=130, floorBounceReach=100}
+//                 floorBounceStrength=130, floorBounceReach=100, wingFloorGain=0.6 (the wing faces' share of the floor)}
 import * as THREE from 'three';
 
 const api = window.ErgoFlex;
@@ -403,7 +403,7 @@ export function installViewerLeds(shot) {
       const outward = Math.sign(wb.getCenter(new THREE.Vector3()).z + 327.1) || 1;
       const z = (outward > 0 ? wb.max.z : wb.min.z) + 1.5 * outward;
       const strip = pixels.bindings.find((b) => b.part === w.strip) || pixels.bindings.find((b) => b.stripId === w.id);
-      return { id: w.id, frame: w.wing, gain: WING_FLOOR_GAIN, normal: new THREE.Vector3(0, 0, outward),
+      return { id: w.id, frame: w.wing, gain: spec.wingFloorGain ?? WING_FLOOR_GAIN, normal: new THREE.Vector3(0, 0, outward),
         a: new THREE.Vector3(strip.min, WING_GLOW_Y, z), b: new THREE.Vector3(strip.max, WING_GLOW_Y, z) };
     };
     const sides = wingInfo.map((w) => ({ wing: w.wing, outward: Math.sign(wingZ(w.wing) + 327.1) || 1 }));

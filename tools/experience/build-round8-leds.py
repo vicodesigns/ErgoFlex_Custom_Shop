@@ -46,8 +46,14 @@ RISE_DAY = os.environ.get('RISE_DAY', '#929292')
 NEUTRAL = {'rise': [[0, RISE_DAY], [14.2, RISE_DAY], [15.4, WARM_EVENING]]}   # HQ19: after the lowering (13.2 s) has faded back to white
 STAGE = {'awaken', 'awareness'}            # the black product stage
 # HQ24 (Vico: with the bloom gone the LEDs read darker; chapter 1's white "too dark, double the brightness"): chapter 1's
-# white at three times its light (linear .072 -> .217; Vico picked 3x over the 2x still). The sensing stage keeps #4c4c4c.
-WHITE_BY = {'awaken': os.environ.get('AWAKEN_WHITE', '#808080')}
+# white at 2.5x its light (linear .072 -> .181; he saw 2x and 3x stills, then asked for 2.5x). The sensing stage keeps #4c4c4c.
+WHITE_BY = {'awaken': os.environ.get('AWAKEN_WHITE', '#767676')}
+# HQ24 (Vico: "the wings are not illuminating the ground as much as the center desktop ... it should be all even"): the
+# wing faces' share of the floor bounce (film-viewer-leds WING_FLOOR_GAIN 0.6).
+# Stills at the 2.5x white: the wing gain alone barely moved the side pools (3x: +12%), so chapter 1 takes wings 5x (3.0),
+# the floor bounce 2x (65 -> 130) and the foot glow under the desk halved (floorStrength 78 -> 39): sides +60-90%.
+WING_FLOOR_BY = {'awaken': float(os.environ.get('AWAKEN_WING_FLOOR', '3.0'))}
+FLOOR_EVEN = {'awaken': {'bounce': 2.0, 'foot': .5}}
 # HQ14l room grade (film-fx sceneGlobals.roomLight / exposureScale). The room chapters were lit and exposed as the app's
 # daylight looks (exposure 1.05-1.1, NeutralToneMapping), so white and light-grey surfaces sat on the tone curve's shoulder
 # (create: mean luma ~165, up to 20% of the frame clipped; commons up to 13%, its white study tables and walls blown), and
@@ -204,6 +210,10 @@ def fix(s):
     s['ledReceivers'] = {'mode': 'viewer', 'stripMap': 'viewer', 'floorBounceStrength': round(FLOOR_BOUNCE * FLOOR_LEVEL, 1)}
     s['ledSurfaces'] = {k: (round(v * (FLOOR_LEVEL if k == 'floorStrength' else LIGHT_LEVEL), 1) if k.endswith('Strength') else v)
                         for k, v in VIEWER_SURFACES.items()}
+    if s['id'] in WING_FLOOR_BY: s['ledReceivers']['wingFloorGain'] = WING_FLOOR_BY[s['id']]
+    if s['id'] in FLOOR_EVEN:
+        s['ledReceivers']['floorBounceStrength'] = round(s['ledReceivers']['floorBounceStrength'] * FLOOR_EVEN[s['id']]['bounce'], 1)
+        s['ledSurfaces']['floorStrength'] = round(s['ledSurfaces']['floorStrength'] * FLOOR_EVEN[s['id']]['foot'], 1)
     for k, f in SURFACE_TRIM.get(s['id'], {}).items(): s['ledSurfaces'][k] = round(s['ledSurfaces'][k] * f, 1)
     if s['id'] in STATUS_LEVEL:
         k = STATUS_LEVEL[s['id']]

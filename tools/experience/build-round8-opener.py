@@ -42,6 +42,7 @@ LIFT_END = (round(sum(ROLL_LIT) + GAP, 3), 3.75)            # back up to full he
 SETTLE = (round(sum(LIFT_END) + .5, 3), round(sum(LIFT_END) + 1.9, 3))   # stage back to the clean product look
 SECONDS = round(sum(LIFT_END) + 1.9, 2)                     # the hero settles as the chapter dissolves out
 ROLL_IN, FULL, HALF, TILT_DEG, TURN_DEG, ROLL_LIT_IN = 12, 52.5, 40.5, 15, 120, 18
+TAIL = 1.9          # the chapter ends this long after the last move (the settle), as the hero always did
 FIRST_LIFT = 45.5   # Vico, Director Mode 2026-11-04: the first lift stops at 45.5 in (same 7.6 s), not full height
 
 
@@ -78,8 +79,15 @@ if _dc.get('clips'):
     # Derived from his clips, not the authored constants: the lights switch on a short beat before the first move
     # (Vico: dark until the whole desk is framed, then on, then the lift), and the stage settles after the last move.
     ON = (round(LIFT[0] - BEAT - ON[1], 3), ON[1])
-    SETTLE = (round(sum(LIFT_END) + .5, 3), round(min(SECONDS, sum(LIFT_END) + 1.9), 3))
-    print(f'awaken: {len(CLIPS)} movement clips from {DIRECTOR}')
+    # HQ24 (Vico deleted the hero lift and cut the end): the stage settles after his LAST move, whichever it is, and the
+    # chapter ends TAIL after it (or after his last camera key, if later), so a Director project left longer than the
+    # cut has no dead hold at the end.
+    LAST = max(c['start'] + c['duration'] for c in CLIPS)
+    if 'op-lift-end' not in _by: LIFT_END = (LAST - LIFT_END[1], LIFT_END[1])   # only feeds the settle and the camera tail
+    LAST = max([LAST] + [k['at'] for k in _dc.get('keys', [])])
+    SECONDS = round(min(SECONDS, LAST + TAIL), 2)
+    SETTLE = (round(LAST + .5, 3), round(min(SECONDS, LAST + 1.9), 3))
+    print(f'awaken: {len(CLIPS)} movement clips from {DIRECTOR}, {SECONDS:g} s')
 
 # One LED state at a time (film-status: first match, and the fade starts from the last event to end), so the events
 # never overlap: the turn shows its wheels light until the tilt back starts under it, then yellow-green. The opening
@@ -192,7 +200,7 @@ CAMERA = {'easeIn': True, 'easeOut': False, 'keys': [
 DIRECTOR = os.path.join(H, 'director-camera.json')
 if os.path.exists(DIRECTOR):
     dc = json.load(open(DIRECTOR))
-    if abs(float(dc.get('seconds', SECONDS)) - SECONDS) > 1e-6:
+    if float(dc.get('seconds', SECONDS)) + 1e-6 < SECONDS or max(k['at'] for k in dc['keys']) > SECONDS + 1e-6:
         print(f'awaken: ignoring {DIRECTOR}: made for {dc.get("seconds")} s, the chapter is {SECONDS} s', file=sys.stderr)
     else:
         CAMERA['keys'] = dc['keys']; print(f'awaken: camera keys from {DIRECTOR}')
