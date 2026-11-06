@@ -220,7 +220,8 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const S=shapeFor(t),k=px(),h=5.5*k,parts=[`<rect class="se-bg" x="0" y="0" width="${FILM_W}" height="1080" fill="transparent"/>`];
     S.paths.forEach((p,pi)=>{const d=svgPath(p);parts.push(`<path class="se-body" data-body="${pi}" d="${d}"/><path class="se-edge" data-edge="${pi}" d="${d}" stroke-width="${12*k}"/><path class="se-outline ${shape.sel.has(pi)?'sel':''}" d="${d}"/>`);});
     const sel=[...shape.sel].filter(i=>S.paths[i]),bb=sel.length?bounds(sel.map(i=>S.paths[i])):null;
-    if(bb){const [x0,y0,x1,y1]=[bb.x0+AX,bb.y0+AY,bb.x1+AX,bb.y1+AY],m=[(x0+x1)/2,(y0+y1)/2];
+    // the resize frame sits a little outside the shape, so its squares never cover the points
+    if(bb){const g=9*k,[x0,y0,x1,y1]=[bb.x0+AX-g,bb.y0+AY-g,bb.x1+AX+g,bb.y1+AY+g],m=[(x0+x1)/2,(y0+y1)/2];
       parts.push(`<rect class="se-frame" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}"/>`);
       for(const [c,x,y] of [['nw',x0,y0],['n',m[0],y0],['ne',x1,y0],['e',x1,m[1]],['se',x1,y1],['s',m[0],y1],['sw',x0,y1],['w',x0,m[1]]])parts.push(`<rect class="se-scale" data-scale="${c}" x="${x-h}" y="${y-h}" width="${2*h}" height="${2*h}"><title>Drag to resize (Shift keeps proportions, Alt from the centre)</title></rect>`);}
     if(shape.pt){const [pi,j]=shape.pt,p=S.paths[pi]?.points[j];if(p)for(const w of ['in','out'])if(p[w]){const hx=p.x+p[w][0]+AX,hy=p.y+p[w][1]+AY;parts.push(`<line class="se-hline" x1="${p.x+AX}" y1="${p.y+AY}" x2="${hx}" y2="${hy}"/><circle class="se-handle" data-h="${pi}:${j}:${w}" cx="${hx}" cy="${hy}" r="${h*.9}"><title>Drag to curve · Alt-drag breaks the handle</title></circle>`);}}
