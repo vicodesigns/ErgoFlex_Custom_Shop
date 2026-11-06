@@ -115,6 +115,26 @@
    ]
   }
  },
+ "sceneEditsAdd": [
+  {
+   "match": "^Supplied_phone_part_1$",
+   "path": "Prop:ergoflex-phone",
+   "label": "Phone: no puck under its back",
+   "note": "The supplied iPhone's white-metal frame mesh (Mesh_1, Metal_Textured_White_#2) carries a MagSafe-style disc on the back plane (74 mm, file metres y 0-3.2 mm), 5.6 mm wider than the body on one side: lying screen up it shows as a white, silver-rimmed half-circle beside the phone. Cut out here; the frame stays.",
+   "dropFaces": {
+    "min": [
+     -0.0395,
+     -0.0005,
+     -0.048
+    ],
+    "max": [
+     0.035,
+     0.00325,
+     0.0268
+    ]
+   }
+  }
+ ],
  "accessoriesAdd": [
   {
    "id": "ergoflex-phone",

@@ -13,6 +13,8 @@
 //   LOD, ~2^lod texels)}, opacity:<multiplier or [[sec,value],…]>,
 //   radialFade:[r0,r1] (lines/meshes fade out between r0 and r1 metres from
 //   the object's own origin), clone:false}]
+//   dropFaces:{min:[x,y,z], max:[x,y,z]}: removes the matched meshes' triangles lying wholly inside that box, in each
+//   mesh's glTF node space (metres of the supplied file), e.g. the MagSafe-style puck merged into the phone's frame.
 //   Material values may be keyframed: [[chapterSeconds, value], …] (linear).
 //   emissiveScale / opacityScale / opacity multiply whatever the app or the
 //   stage writes each frame (time-of-day, the stage's pulse fade …).
@@ -204,6 +206,20 @@ export function installEdits(shot) {
       if (o.isLight && edit.recolor) for (const k of ['color', 'groundColor']) if (o[k]?.isColor) recolorColor(o[k], recolorFn(edit.recolor), undo);
       if (Number.isFinite(edit.scale)) { const s = o.scale.clone(); o.scale.multiplyScalar(edit.scale); undo.push(() => o.scale.copy(s)); }
       else if (Array.isArray(edit.scale) && edit.scale.length === 3 && edit.scale.every(Number.isFinite)) { const s = o.scale.clone(); o.scale.multiply(new THREE.Vector3(...edit.scale)); undo.push(() => o.scale.copy(s)); }
+      if (edit.dropFaces) {
+        // Cut triangles out of a supplied model: those whose three corners lie in the box {min,max}, in the mesh's
+        // node space (its own glTF transform applied, so quantized models measure in the file's metres).
+        const lo = new THREE.Vector3(...edit.dropFaces.min), hi = new THREE.Vector3(...edit.dropFaces.max), box = new THREE.Box3(lo, hi), v = new THREE.Vector3();
+        o.traverse(mesh => {
+          if (!mesh.isMesh || mesh.userData.filmFx || !mesh.geometry?.attributes.position) return;
+          const g = mesh.geometry, pos = g.attributes.position, idx = g.index, n = idx ? idx.count : pos.count, kept = [];
+          mesh.updateMatrix(); const inside = i => box.containsPoint(v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrix));
+          for (let t = 0; t < n; t += 3) { const a = idx ? idx.getX(t) : t, b = idx ? idx.getX(t + 1) : t + 1, c = idx ? idx.getX(t + 2) : t + 2; if (!(inside(a) && inside(b) && inside(c))) kept.push(a, b, c); }
+          if (kept.length === n) return;
+          const cut = g.clone(); cut.setIndex(kept); mesh.geometry = cut; edit.__dropped = (edit.__dropped || 0) + (n - kept.length) / 3;
+          undo.push(() => { mesh.geometry = g; cut.dispose(); });
+        });
+      }
       const mat = { ...(edit.material || {}) }; if (edit.opacity !== undefined) mat.opacityScale = edit.opacity;
       if (!Object.keys(mat).length && !edit.radialFade && !edit.recolor) continue;
       const rc = edit.recolor && !o.isLight ? recolorFn(edit.recolor) : null;
