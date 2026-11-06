@@ -1,3 +1,4 @@
+import {exportLighting} from './film-lighting.mjs';
 // Film chapter switching: a chapter link carries #cut=…&film=<chapter list>&director=1.
 export function filmLink(hash){
   const params=new URLSearchParams(String(hash||'').replace(/^#/,'')),film=params.get('film');
@@ -33,4 +34,10 @@ export async function loadFilmShot(url,id,fetcher=globalThis.fetch){
   return shot;
 }
 // Live preview: the film setup with the Director's story edits; GPU quality passes stay off.
-export function liveFilmShot(film,shot){const next={...film,id:shot.id,seconds:shot.seconds};if(shot.motion)next.motion=shot.motion;delete next.quality;return next;}
+export function liveFilmShot(film,shot){
+  const next={...film,id:shot.id,seconds:shot.seconds},lit=exportLighting(shot);if(shot.motion)next.motion=shot.motion;delete next.quality;
+  // Lighting edited in the Director (ledStatus present) replaces the film's.
+  if(lit.ledStatus){next.ledStatus=lit.ledStatus;if(lit.ledNeutral)next.ledNeutral=lit.ledNeutral;else delete next.ledNeutral;if(lit.ledColor)next.ledColor=lit.ledColor;}
+  if(lit.sceneGlobals?.roomLight!==undefined)next.sceneGlobals={...next.sceneGlobals,roomLight:lit.sceneGlobals.roomLight};
+  return next;
+}

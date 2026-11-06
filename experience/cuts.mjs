@@ -4,6 +4,7 @@ export {cleanPose} from './desk-track.mjs';
 import {cleanCameraKeys,cleanCamera} from './camera-track.mjs';
 export {cleanCamera} from './camera-track.mjs';
 import {score} from './score.mjs';
+import {cleanLighting} from './film-lighting.mjs';
 export const CUTS_KEY='ergoflex.clientCuts.v1';
 export const KINDS=[['room','Explore the room'],['hero','Desk showcase'],['glide','Omni-wheel movement'],['lift','Sit to stand'],['tilt','Drafting / easel'],['group','Group-work Groove'],['storage','Storage Groove'],['wellness','Movement break'],['proximity','Proximity demo'],['music','Music lighting'],['media','Curved-screen media']];
 export const PRESET_IDS=['office','artist','gaming','music','library','compact','creative','architect','occ','hbhs'];
@@ -38,6 +39,8 @@ export function cleanShot(v={},catalog){
   const from=cleanCamera(v.camera?.from),to=cleanCamera(v.camera?.to);
   const keys=cleanCameraKeys(v.camera?.keys);
   if(keys.length)shot.camera={keys};else if(from||to)shot.camera={...(from?{from}:{}),...(to?{to}:{} )};
+  // Film lighting edited in the Director (absent until then).
+  Object.assign(shot,cleanLighting(v));
   return shot;
 }
 export function cleanCut(value,catalog){
