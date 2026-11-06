@@ -127,7 +127,9 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
   {
     black = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const screenMeshes = new Set(screens.map(s => s.mesh)); let n = 0; others = []; muted = []; dimmed = [];
-    const bloomOnly = q.bloomOnly ? new RegExp(q.bloomOnly, 'i') : null;
+    // The glow set is also the AO mask (no AO on light sources): with the bloom off, bloomOnly / screenBloom would only
+    // take screens and LEDs out of the mask and AO would darken them (HQ22: the OCC monitors looked turned down).
+    const bloomOnly = q.bloom && q.bloomOnly ? new RegExp(q.bloomOnly, 'i') : null;
     scene.traverse(o => { if (!o.isMesh) return;
       const m = [].concat(o.material || [])[0];
       // Meshes with their own onBeforeRender (the film's LED floor bounce reads its shader's uniforms there) and the LED
@@ -137,7 +139,7 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
       // bloomReceivers false: the surface overlays are hidden (not blacked: their own onBeforeRender needs their shader) in the glow pass.
       if (q.bloomReceivers === false && named(o, RECEIVER)) { muted.push(o); return; }
       const isScreen = screenMeshes.has(o) || (m?.isMeshBasicMaterial && m.map && named(o, SCREENISH));
-      if (isScreen && q.screenBloom !== undefined && Number(q.screenBloom) < 1) {
+      if (q.bloom && isScreen && q.screenBloom !== undefined && Number(q.screenBloom) < 1) {
         if (Number(q.screenBloom) <= 0) { others.push(o); return; }
         dimmed.push(o); n++; return;
       }
