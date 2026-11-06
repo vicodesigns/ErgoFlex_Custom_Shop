@@ -61,5 +61,5 @@ assert.equal(whiteName('#929292'),'True white');assert.equal(whiteName('#52483c'
 // Absolute brightness (CIE L*) keeps the hue; presets cover true white to off.
 assert.ok(near(lightnessOf('#ffffff'),100,.01)&&near(lightnessOf('#000000'),0,.01));assert.ok(near(lightnessOf('#929292'),60.6,.2));
 const lit60=withLightness('#52483c',60);assert.ok(near(lightnessOf(lit60),60,.6));assert.ok(near(warmthOf(lit60),warmthOf('#52483c'),.03));
-assert.equal(withLightness('#929292',0),'#000000');assert.deepEqual(WHITE_PRESETS.map(p=>p[0]),['True white','Soft white','Warm white','Sunset','Off']);
+assert.equal(withLightness('#929292',0),'#000000');assert.deepEqual(WHITE_PRESETS.map(p=>p[0]),['True white','Soft white','Golden white','Warm white','Off']);
 console.log('Film lighting: clean/export round trip, neutral white over time, linear brightness and warmth, light states and colour keys in group moves, the browser camera bake (matches camera-spline.mjs) and the render shot merge verified.');

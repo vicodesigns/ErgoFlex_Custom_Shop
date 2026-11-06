@@ -60,14 +60,14 @@ export function withLightness(hex,L){
   if(target<=0)return '#000000';if(y<=1e-6)return toHex([target,target,target]);return toHex(c.map(v=>v*target/y));
 }
 // Presets for the desk white: the film's day white, softer and warmer whites, the evening warm, off.
-export const WHITE_PRESETS=[['True white','#929292'],['Soft white','#8f877c'],['Warm white','#7a6a55'],['Sunset','#52483c'],['Off','#000000']];
+export const WHITE_PRESETS=[['True white','#929292'],['Soft white','#8f877c'],['Golden white','#7a6a55'],['Warm white','#52483c'],['Off','#000000']];
 const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
 export function neutralAt(keys,t){
   if(!keys.length)return '#ffffff';const i=keys.findIndex(k=>k[0]>t);if(i<0)return keys.at(-1)[1];if(i===0)return keys[0][1];
   const a=keys[i-1],b=keys[i],u=smooth((t-a[0])/Math.max(1e-6,b[0]-a[0])),x=toLinear(a[1]),y=toLinear(b[1]);return toHex(x.map((v,n)=>v+(y[n]-v)*u));
 }
 // Desk white key names by warmth; daypart tints for the Time of day lane.
-export const whiteName=hex=>{const w=warmthOf(hex);return w<.2?'True white':w>.65?'Warm white':'Custom white';};
+export const whiteName=hex=>{const p=WHITE_PRESETS.find(p=>p[1]===String(hex).toLowerCase());if(p)return p[0];if(lightnessOf(hex)<1)return 'Off';const w=warmthOf(hex);return w<.2?'True white':w<.55?'Soft white':w<.88?'Golden white':'Warm white';};
 export const DAYPART_TINTS={morning:'#ffcf8a',day:'#fff3d6',afternoon:'#fff3d6',evening:'#ff8a4a',sunset:'#ff8a4a',night:'#2d3a78',party:'#b04cff',focus:'#dfe9ff',calm:'#9fc7ff'};
 export function daypartAt(keys,t){
   const tint=m=>DAYPART_TINTS[m]||'#8899aa';if(!keys.length)return '#8899aa';const i=keys.findIndex(k=>k.at>t);if(i<0)return tint(keys.at(-1).mode);if(i===0)return tint(keys[0].mode);
