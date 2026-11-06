@@ -149,6 +149,24 @@ try{
     check(near(both.live.p,both.still.p)&&near(both.live.s,both.still.s)&&near(both.liveRot,both.stillRot,1e-4),'Render still places the edited prop exactly as the live view');
     check(!both.monitorShown,'Render still hides the hidden prop too');
   }
+  // ---- Render still carries the film titles (Titles on), and none with Titles off
+  if(process.env.STILLS!=='0'){
+    await page.click('[data-title-clip]');await wait(400);await page.evaluate(()=>document.querySelector('[data-title-action=go]').click());await wait(900);
+    const on=await stillOf(path.join(shots,'still-title-on.jpg')),noteOn=await page.$eval('#film-still .still-caption',e=>e.textContent);
+    await page.evaluate(()=>document.querySelector('#director-timeline [data-action=titles]').click());await wait(400);
+    const off=await stillOf(path.join(shots,'still-title-off.jpg'));
+    await page.evaluate(()=>document.querySelector('#director-timeline [data-action=titles]').click());await wait(400);
+    // Mean |difference| inside the title block (film grid x 128-1100, y 760-1000) and outside it.
+    const diff=await page.evaluate(async(a,b)=>{const img=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});const [A,B]=await Promise.all([img(a),img(b)]);
+      const px=I=>{const c=document.createElement('canvas');c.width=I.naturalWidth;c.height=I.naturalHeight;const g=c.getContext('2d');g.drawImage(I,0,0);return g.getImageData(0,0,c.width,c.height);};
+      const da=px(A),db=px(B),W=da.width,H=da.height,k=W/1920;let ins=0,ni=0,out=0,no=0,bright=0;
+      for(let y=0;y<H;y+=2)for(let x=0;x<W;x+=2){const i=(y*W+x)*4,d=(Math.abs(da.data[i]-db.data[i])+Math.abs(da.data[i+1]-db.data[i+1])+Math.abs(da.data[i+2]-db.data[i+2]))/3,inside=x>=128*k&&x<=1100*k&&y>=760*k&&y<=1000*k;
+        if(inside){ins+=d;ni++;if(da.data[i]>235&&da.data[i+1]>235&&da.data[i+2]>235&&!(db.data[i]>235&&db.data[i+1]>235&&db.data[i+2]>235))bright++;}else{out+=d;no++;}}
+      return {inside:ins/ni,outside:out/no,bright};},on,off);
+    check(diff.inside>6&&diff.bright>40&&diff.outside<2.5,`Render still with Titles on carries the chapter title (title block Δ ${diff.inside.toFixed(1)}, ${diff.bright} new white text pixels; elsewhere Δ ${diff.outside.toFixed(2)})`);
+    check(/title on/.test(noteOn),'its caption says the title is on: '+noteOn.replace(/Download JPG$/,''));
+    check(fs.readFileSync(path.join(shots,'still-title-off.jpg')).length>0&&diff.inside>6,'with Titles off the still has no title (the 3D still alone)');
+  }
   // ---- Export cut -> import -> review-cut sceneEdits (temp copy of the chapter)
   const mine=await draft();
   await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
@@ -164,6 +182,7 @@ try{
   check(JSON.stringify(built.sceneEdits)===JSON.stringify([...hand,...mine.map(e=>({...e,director:true}))]),'review-cut sceneEdits: the hand-made edits, then his (director: true)');
   check(JSON.stringify(filmPropEdits(built))===JSON.stringify(mine),'reopened from the rebuilt film, the Director shows the same prop edits');
   // ---- Make permanent in Studio (scratch state): the chair can, the accessory can't
+  await page.evaluate(()=>document.querySelector('[data-inspector-tab=props]').click());await wait(400);
   const why=await page.$eval('#director-panel [data-action=pp-permanent]',b=>[b.disabled,b.title]);check(!why[0],'Make permanent in Studio… enabled in a Studio layout room');
   await page.click('#director-panel [data-action=pp-permanent]');await wait(400);
   const rows=await page.$$eval('#prop-permanent li',l=>l.map(li=>[li.textContent.replace(/\s+/g,' ').trim(),li.querySelector('input').disabled]));
