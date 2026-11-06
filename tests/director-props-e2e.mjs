@@ -79,6 +79,8 @@ async function stillOf(file){
   await page.keyboard.press('Escape');await wait(400);return url;   // back to the live view
 }
 try{
+  // ONLY=desk-kit: just the chapter 2 desk-kit section (quick focused run).
+  let d;if(process.env.ONLY!=='desk-kit'){
   // ---- commons (library:humboldt): select
   await openChapter('commons');
   const studio0=await studioAssets();
@@ -96,7 +98,7 @@ try{
   await dragHandle(['X','Y','Z'],'radial');
   check(/^Moved Prop:steelcase-leap-v2/.test(await status()),'gizmo drag: "Moved Prop:steelcase-leap-v2"');
   await until(async()=>(await draft())?.[0]?.position,'draft position');
-  let d=await draft();const p1=await until(async()=>{const p=await pose(CHAIR);return near(p.p,p0.p.map((v,i)=>v+d[0].position[i]))&&p;},'live chair follows the move');
+  d=await draft();const p1=await until(async()=>{const p=await pose(CHAIR);return near(p.p,p0.p.map((v,i)=>v+d[0].position[i]))&&p;},'live chair follows the move');
   check(near(p1.p,p0.p.map((v,i)=>v+d[0].position[i])),'the film edit is the world offset of the drag');
   await page.keyboard.press('e');await wait(200);check(await page.evaluate(()=>__gizmo()?.mode==='rotate'),'E: rotate gizmo');
   await dragHandle(['Y'],'tangent');check(/^Rotated /.test(await status()),'gizmo rotate drag');
@@ -179,6 +181,52 @@ try{
   check(JSON.stringify(Object.fromEntries(Object.entries(studio1['library:humboldt'].transforms).filter(([k])=>!/steelcase/.test(k))))===JSON.stringify(Object.fromEntries(Object.entries(old.transforms).filter(([k])=>!/steelcase/.test(k)))),'no other prop changed in Studio');
   d=await draft();check(d.length===1&&/wide-monitor/.test(d[0].match),'the chair\'s chapter edit is folded in; the accessory hide stays');
   const chairAfter=await pose(CHAIR);check(near(chairAfter.p,chairBefore.p)&&near(chairAfter.s,chairBefore.s),'the chair stays where he put it on the stage');
+  }
+  // ---- chapter 2 (rise): the desk's daily kit (the open notebook) rides the lift
+  await openChapter('rise');
+  const seekTo=async sec=>{await page.evaluate(t=>{const el=document.querySelector('#director-timeline [name="timeline-seconds"]');el.value=String(t);el.dispatchEvent(new Event('change',{bubbles:true}));},sec);await wait(900);};
+  // The film desk's shown notebook (in this room: the cinematic demonstration desk's dressing; the product desk's
+  // dressing, with a same-named twin, is hidden) in a scene: world position.
+  const KIT=/(^|> )(Scene|Desk) dressing:desktop > Groove tabletop · daily materials > [^>]+$/;
+  const bookIn=async(where,name)=>page.evaluate((src,n,w)=>{const live=__t().t.scene,sc=w==='still'?(()=>{let s=[...document.querySelectorAll('iframe')].find(f=>f.title==='Film still renderer').contentWindow.ErgoFlex.loadedModel;while(s.parent)s=s.parent;return s;})():live;
+    const re=new RegExp(src),path=o=>{const a=[];for(let p=o;p&&p!==sc;p=p.parent)a.unshift(p.name||p.type);return a.join(' > ');};
+    const o=__find(x=>x.parent?.userData?.dayKit&&re.test(path(x))&&(!n||x.name===n)&&(()=>{for(let p=x;p;p=p.parent)if(!p.visible)return false;return true;})(),sc);
+    if(!o)return null;o.updateWorldMatrix(true,false);const v=o.getWorldPosition(o.position.clone());return {name:o.name,w:v.toArray()};},KIT.source,name||null,where);
+  await seekTo(3);const shown3=await bookIn('live');check(!!shown3,'chapter 2 shows the desk\'s open notebook'+(shown3?` ("${shown3.name}")`:''));
+  const BOOK=shown3.name,base3=shown3.w,base8=(await seekTo(8),await bookIn('live',BOOK)).w;await seekTo(3);
+  check(base8[1]-base3[1]>.05,`the desk lifts between 3 s and 8 s (notebook y ${base3[1].toFixed(3)} -> ${base8[1].toFixed(3)} m)`);
+  await page.evaluate(()=>document.querySelector('[data-inspector-tab=props]').click());await wait(300);
+  // Click a visible point of the notebook (a ray through it must hit it first).
+  const hitAt=await page.evaluate((src,n)=>{const {t,T}=__t(),f=document.getElementById('stage'),re=new RegExp(src),sc=t.scene,path=o=>{const a=[];for(let p=o;p&&p!==sc;p=p.parent)a.unshift(p.name||p.type);return a.join(' > ');};
+    const o=__find(x=>x.name===n&&x.parent?.userData?.dayKit&&re.test(path(x))&&(()=>{for(let p=x;p;p=p.parent)if(!p.visible)return false;return true;})()),inside=m=>{for(let q=m;q;q=q.parent)if(q===o)return true;return false;},shown=m=>{for(let q=m;q;q=q.parent)if(!q.visible)return false;return true;};
+    const rc=new T.Raycaster(),r=t.renderer.domElement.getBoundingClientRect(),fr=f.getBoundingClientRect();let at=null;
+    o.traverse(m=>{if(at||!m.isMesh)return;const c=new T.Box3().setFromObject(m).getCenter(new T.Vector3()).project(t.camera);rc.setFromCamera(new T.Vector2(c.x,c.y),t.camera);
+      const h=rc.intersectObject(sc,true).find(h=>h.object.isMesh&&shown(h.object)&&!(()=>{for(let q=h.object;q;q=q.parent)if(q.userData?.directorTools||q.isTransformControls)return true;return false;})());
+      if(h&&inside(h.object))at={x:fr.left+r.left+(c.x+1)/2*r.width,y:fr.top+r.top+(1-c.y)/2*r.height};});return at;},KIT.source,BOOK);
+  check(!!hitAt,'the notebook is in view and unobstructed');
+  await page.mouse.click(hitAt.x,hitAt.y);await wait(900);
+  check(await page.evaluate(()=>__gizmo()?.object?.name)===BOOK,`clicking the notebook on the desk selects the notebook itself ("${BOOK}", not one page mesh)`);
+  const note=await page.$eval('[data-studio-note]',e=>e.textContent);check(/sits on the desk and travels with it/.test(note),'Make permanent stays blocked for it: '+note);
+  const bx=Number(await page.$eval('#director-panel [name=pp-px]',e=>e.value));await setField('pp-px',(bx+.1).toFixed(3));
+  d=await until(async()=>{const x=await draft();return x?.find(e=>e.label===BOOK)&&x;},'notebook edit');const bookEdit=d.find(e=>e.label===BOOK);
+  check(bookEdit.space==='local'&&Math.abs(Math.hypot(...bookEdit.position)-.1)<2e-3&&KIT.test(bookEdit.path.replace(/^\^|\$$/g,'').replace(/\\/g,'')),'the 10 cm move is kept in the desk\'s own frame, targeted by its path: '+JSON.stringify(bookEdit));
+  check(/moved 0\.1 m on the desk/.test(await page.$eval('[data-selected-header]',e=>e.textContent)),'Selected header: "moved 0.1 m on the desk"');
+  const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
+  const atT={};for(const sec of [3,8]){
+    await seekTo(sec);await stillOf(path.join(shots,`rise-notebook-${sec}s.jpg`));
+    atT[sec]={still:(await bookIn('still',BOOK)).w,live:(await bookIn('live',BOOK)).w,base:sec===3?base3:base8};
+  }
+  check([3,8].every(s=>dist(atT[s].still,atT[s].live)<1e-3),'Render still places the moved notebook exactly as the live view at 3 s and 8 s '+JSON.stringify(atT));
+  check([3,8].every(s=>Math.abs(dist(atT[s].still,atT[s].base)-.1)<2e-3&&Math.abs(atT[s].still[1]-atT[s].base[1])<1e-3),'Render still at 3 s and 8 s: 10 cm from the film\'s spot, on the desktop (same height as the film\'s notebook) through the lift');
+  // Export cut -> build-round8-director --import + pass, against a scratch copy: the chapter's sceneEdits get it.
+  const had=new Set(fs.readdirSync(downloads));await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  const riseFile=await until(()=>fs.readdirSync(downloads).find(f=>!had.has(f)&&f.endsWith('.json')),'rise export download');
+  const H2=path.join(tmp,'hq-rise');fs.mkdirSync(path.join(H2,'shots'),{recursive:true});fs.copyFileSync(path.join(root,HQ,'review-cut.json'),path.join(H2,'review-cut.json'));
+  for(const f of fs.readdirSync(path.join(root,HQ,'shots')))if(/^\d\d\.json$/.test(f)&&JSON.parse(fs.readFileSync(path.join(root,HQ,'shots',f),'utf8')).id==='rise')fs.copyFileSync(path.join(root,HQ,'shots',f),path.join(H2,'shots',f));
+  const ex2=path.join(tmp,'Film-chapter-rise-e2e.json');fs.copyFileSync(path.join(downloads,riseFile),ex2);
+  execFileSync('python3',[path.join(root,'tools/experience/build-round8-director.py'),H2,'--import',ex2],{stdio:'ignore'});execFileSync('python3',[path.join(root,'tools/experience/build-round8-director.py'),H2],{stdio:'ignore'});
+  const riseBuilt=JSON.parse(fs.readFileSync(path.join(H2,'review-cut.json'),'utf8')).shots.find(s=>s.id==='rise'),got=(riseBuilt.sceneEdits||[]).find(e=>e.director&&e.label===BOOK);
+  check(!!got&&JSON.stringify(got)===JSON.stringify({...bookEdit,director:true}),'Export -> import: rise\'s sceneEdits carry the notebook edit (space local, director: true)');
   // ---- disabled case: the product stage (chapter 1) has no Studio layout
   await openChapter('awaken');await page.evaluate(()=>document.querySelector('[data-inspector-tab=props]').click());await wait(500);
   const off=await page.$eval('#director-panel [data-action=pp-permanent]',b=>[b.disabled,b.title,document.querySelector('[data-permanent-why]')?.textContent]);
