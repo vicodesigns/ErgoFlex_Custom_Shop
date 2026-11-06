@@ -76,6 +76,7 @@ try{
   // 6. shadow editing
   await ev(()=>document.querySelector('[data-title-action=edit-shadow]').click());await sleep(500);
   let sh=await shapeState();log('edit mode',JSON.stringify(sh));
+  check(await statusText()==='Editing the shadow: drag points · double-click smooth/sharp · Alt-drag breaks a handle · Enter when done','while the shape is edited, the message line shows the editing hint (not the chapter count): '+await statusText());
   check(sh.pts===12&&sh.scale===8&&await ev(()=>document.body.classList.contains('title-shape-editing')),'Edit shadow shape: 12 points (3 fitted boxes) and 8 resize squares around the whole shadow');
   if(shots)await page.screenshot({path:path.join(shots,'shadow-edit-fitted.png')});
   const titleBox=await ev(()=>{const p=document.querySelectorAll('.se-outline')[1].getBBox();return [p.x,p.y,p.width,p.height];});
@@ -121,6 +122,7 @@ try{
   const hint=await ev(()=>{const r=document.querySelectorAll('.shape-hint path')[1].getBoundingClientRect();return [r.x+12,r.y+r.height/2];});await page.mouse.click(...hint);await sleep(400);
   check(await ev(()=>document.body.classList.contains('title-shape-editing')),'clicking the dashed shadow outline starts editing it');
   await page.keyboard.press('Enter');await sleep(300);check(!(await ev(()=>document.body.classList.contains('title-shape-editing'))),'Enter finishes editing');
+  check(/^\d+ chapters? · \d+ seconds$/.test(await statusText()),'editing done: the message line is back to the normal one: '+await statusText());
   // 7. Export cut -> import -> titles-src -> finish-intro
   const cut=await exportCut(),ft=cut.shots[0].filmTitles;log('export',JSON.stringify(ft).slice(0,300));
   check(ft?.length===1&&ft[0].title==='Your height, your rhythm.'&&ft[0].rel_in===2.3&&ft[0].timed===true&&ft[0].shadow.paths.length===3&&ft[0].shadow.blur===26&&ft[0].shadow.opacity===.45,'Export cut carries the title copy, timing and shadow shape');

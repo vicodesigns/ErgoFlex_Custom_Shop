@@ -53,11 +53,13 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     render();status('Title selected. Drag its block to move it, its edges to trim, or edit its copy and shadow in Title.');
   }
   function clear(){if(!selected&&!editing)return false;selected=null;setEditing(false,false);return true;}
+  // While the shape is edited, the inspector's message line keeps this hint (director.mjs renders it there).
+  const SHAPE_HINT='Editing the shadow: drag points · double-click smooth/sharp · Alt-drag breaks a handle · Enter when done';
   function setEditing(on,announce=true){
     if(on&&!item())return;editing=on;shape.pt=null;shape.sel=on?new Set(shadowOf(item(),measure).paths.map((_,i)=>i)):new Set();
     document.body.classList.toggle('title-shape-editing',editing);lastKey='';sync();
     const b=panel.querySelector('[data-title-action=edit-shadow]');if(b){b.setAttribute('aria-pressed',String(editing));b.textContent=editing?'Done editing shape':'Edit shadow shape';}
-    if(announce)status(editing?'Editing the shadow: click a point to select it, drag handles to curve, click an edge to add a point, Delete removes it, drag inside to move, the corner squares scale. Esc when done.':'Shadow editing done.');
+    if(announce)status(editing?SHAPE_HINT:'Shadow editing done.');
   }
   // ---- timeline lane ----------------------------------------------------------------------------------------
   function ticks(){return titles().map(t=>t.rel_in);}
@@ -323,7 +325,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   addEventListener('resize',()=>{lastKey='';sync();});
   return {
     setSource(v){source=v;fromFilm.clear();lastKey='';},has,titles,ticks,lane,snapTargets,panel:panelHtml,chapterFields,header,
-    selectedId:()=>selected,select,clear,editing:()=>editing,sync,fontsLoaded,measure,
+    selectedId:()=>selected,select,clear,editing:()=>editing,editHint:()=>editing?SHAPE_HINT:null,sync,fontsLoaded,measure,
     toggleShown(){shown=!shown;lastKey='';sync();return shown;},shown:()=>shown,compositeStill,stillTitles:seconds=>stillTitles(seconds).length,
     fitted:t=>fittedPaths(t,measure),
   };
