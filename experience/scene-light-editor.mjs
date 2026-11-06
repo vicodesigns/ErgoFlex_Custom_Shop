@@ -9,6 +9,29 @@ const TYPE={PointLight:'point',SpotLight:'spot',RectAreaLight:'area',Directional
 const r3=v=>Math.round(v*1000)/1000,deg=r=>r*180/Math.PI;
 const ADDED=/^Film lights > Film light · (director-[A-Za-z0-9_-]+)$/;
 const isOurs=o=>{for(let p=o;p;p=p.parent)if(p.userData?.directorTools)return true;return false;};
+const RIG_NAMES={key:'Key light',rimLeft:'Rim light left',rimRight:'Rim light right'};
+const PROP_NAMES={'kenney-furniture-books':'Bookshelf lamp','ergoflex-plant-2':'Light by the plant','modern-lamp':'Table lamp','ficus':'Light by the ficus','kenney-furniture-plant-small1':'Light by the plant','armchair-poppi':'Light by the armchair','journal':'Desk light'};
+export function friendlyProp(name){
+  if(PROP_NAMES[name])return PROP_NAMES[name];
+  const clean=name.replace(/^(kenney-furniture-|ergoflex-|quaternius-|kenney-)/,'').replace(/[-_]?\d+$/,'').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/[-_]/g,' ').toLowerCase().trim();
+  return /lamp|light/.test(clean)?clean[0].toUpperCase()+clean.slice(1):'Light by the '+clean;
+}
+const iconType=l=>l.isDirectionalLight?'sun':l.isSpotLight?'spot':l.isRectAreaLight?'panel':l.isHemisphereLight?'sky':'bulb';
+function makeIcons(win,THREE){
+  const out={};
+  for(const kind of ['bulb','sun','spot','panel','sky'])for(const off of [false,true]){
+    const c=win.document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.lineWidth=5;g.strokeStyle='#fff';g.fillStyle='#fff';
+    const shape=()=>{g.beginPath();if(kind==='bulb'){g.arc(32,27,13,0,7);g.moveTo(25,42);g.lineTo(39,42);g.moveTo(26,49);g.lineTo(38,49);}
+      else if(kind==='sun'){g.arc(32,32,11,0,7);for(let i=0;i<8;i++){const a=i*Math.PI/4;g.moveTo(32+Math.cos(a)*17,32+Math.sin(a)*17);g.lineTo(32+Math.cos(a)*27,32+Math.sin(a)*27);}}
+      else if(kind==='spot'){g.moveTo(24,12);g.lineTo(40,12);g.lineTo(52,52);g.lineTo(12,52);g.closePath();}
+      else if(kind==='panel'){g.rect(12,18,40,28);}
+      else {g.arc(32,40,20,Math.PI,0);g.lineTo(12,40);}};
+    shape();g.stroke();if(!off&&kind!=='sun'&&kind!=='sky'){shape();g.globalAlpha=.55;g.fill();g.globalAlpha=1;}if(!off&&kind==='sun'){g.beginPath();g.arc(32,32,11,0,7);g.fill();}
+    g.beginPath();g.lineWidth=3;g.globalAlpha=.9;g.arc(32,32,30,0,7);g.stroke();
+    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;out[(off?'off-':'')+kind]=t;
+  }
+  return out;
+}
 export function createSceneLightEditor({bridge,shot,film,commit,status,open,rerender}){
   let selected=null,show=false,mode='move',tools=null,booting=null,list=[],listAt=0,listSig='',drag=null;
   const snaps=new Map(),frame=()=>document.getElementById('stage');
@@ -18,16 +41,16 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
   function describe(entries){
     const scene=three()?.scene;if(!scene)return [];
     const props=[];scene.traverse(o=>{if(/^Prop:/.test(o.name)&&!isOurs(o))props.push([o.name.slice(5),o.getWorldPosition(o.position.clone())]);});
-    const directional=entries.filter(e=>e.light.isDirectionalLight).sort((a,b)=>b.light.intensity-a.light.intensity);let fill=0,room=0;
+    const directional=entries.filter(e=>e.light.isDirectionalLight).sort((a,b)=>b.light.intensity-a.light.intensity);let fill=0,room=0,ceiling=0;const addedN={};
     return entries.map(e=>{
       const l=e.light,type=TYPE[l.type]||l.type.replace(/Light$/,'').toLowerCase(),added=e.path.match(ADDED),pos=l.getWorldPosition(l.position.clone());
       let group='Stage',label;
-      if(added){group='Added';label=`${type} · ${added[1].slice(9,13)}`;}
-      else if(e.path.startsWith('Film lights >')){group='Film rig';label=`${e.path.split('· ').pop()} (${type})`;}
-      else if(/^Room:/.test(e.path)){group='Room';const near=props.map(([n,p])=>[n,p.distanceTo(pos)]).sort((a,b)=>a[1]-b[1])[0];label=near&&near[1]<1.2?`${type} by ${near[0]}`:`${type} ${++room}`;}
-      else if(l.isHemisphereLight)label='Sky / ambient (hemisphere)';
-      else if(l.isDirectionalLight)label=directional[0]===e?'Sun / key (directional)':`Fill ${++fill} (directional)`;
-      else if(e.path.startsWith('Cinematic effects'))label=`Stage glow (${type})`;
+      if(added){group='Added';const n=addedN[type]=(addedN[type]||0)+1;label=`Added ${type} ${n}`;}
+      else if(e.path.startsWith('Film lights >')){group='Film rig';const n=e.path.split('· ').pop();label=RIG_NAMES[n]||`Film ${n}`;}
+      else if(/^Room:/.test(e.path)){group='Room';const near=props.map(([n,p])=>[n,p.distanceTo(pos)]).sort((a,b)=>a[1]-b[1])[0];label=near&&near[1]<1.2?friendlyProp(near[0]):pos.y>2.2?`Ceiling light ${++ceiling}`:`Room light ${++room}`;}
+      else if(l.isHemisphereLight)label='Sky glow';
+      else if(l.isDirectionalLight)label=directional[0]===e?'Sun':`Fill light ${++fill}`;
+      else if(e.path.startsWith('Cinematic effects'))label='Stage glow';
       else label=`${type} ${e.path.split(' > ').pop()}`;
       return {...e,group,label,type,added:added?.[1]||null};
     });
@@ -86,20 +109,21 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
       raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);raycaster.camera=t.camera;
       const hit=raycaster.intersectObjects(group.children,false).find(h=>h.object.userData.path!==selected);if(!hit)return;ev.stopImmediatePropagation();ev.preventDefault();select(hit.object.userData.path);
     },true);
-    win.__directorLightsRestore=()=>{for(const [l,s] of snaps)restoreLight(l,s);snaps.clear();};
-    tools={THREE,group,gizmo,icon,t};rebuildMarkers();requestAnimationFrame(tick);return tools;
+    win.__directorLightsRestore=()=>{for(const [l,v] of soloSaved)if(l.parent)l.visible=v;soloSaved.clear();solo=null;for(const [l,s] of snaps)restoreLight(l,s);snaps.clear();};
+    tools={THREE,group,gizmo,icon,t,icons:makeIcons(win,THREE)};rebuildMarkers();requestAnimationFrame(tick);return tools;
   }
   const ensure=()=>booting||=boot().catch(error=>{booting=null;throw error;});
   function rebuildMarkers(){
     if(!tools)return;const {THREE,group,icon}=tools;for(const m of [...group.children]){m.material.dispose();group.remove(m);}
-    for(const e of list){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:icon,depthTest:false,depthWrite:false,transparent:true,sizeAttenuation:false,toneMapped:false}));m.renderOrder=999;m.userData.path=e.path;m.userData.light=e.light;group.add(m);}
+    for(const e of list){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:tools.icons[iconType(e.light)],depthTest:false,depthWrite:false,transparent:true,sizeAttenuation:false,toneMapped:false}));m.renderOrder=999;m.userData.path=e.path;m.userData.light=e.light;group.add(m);}
   }
   function tick(){
     requestAnimationFrame(tick);if(!tools)return;const {group,gizmo,t}=tools;const live=editing();refresh();
     group.visible=show&&live;
-    if(group.visible)for(const m of group.children){const l=m.userData.light;if(!l.parent)continue;l.getWorldPosition(m.position);m.material.color.copy(l.color);m.material.opacity=l.visible?1:.35;m.scale.setScalar(m.userData.path===selected?.05:.032);}
+    const px=1/Math.max(200,t.renderer.domElement.clientHeight||600);
+    if(group.visible)for(const m of group.children){const l=m.userData.light;if(!l.parent)continue;l.getWorldPosition(m.position);m.material.color.copy(l.color);m.material.map=tools.icons[(l.visible?'':'off-')+iconType(l)];m.material.opacity=l.visible?1:.6;m.scale.setScalar((m.userData.path===selected?36:28)*px);}
     const e=entry(),target=e&&(mode==='aim'&&e.light.target&&!e.light.isRectAreaLight?e.light.target:e.light),movable=e&&!e.light.isHemisphereLight&&!e.light.isAmbientLight;
-    if(live&&movable){if(gizmo.object!==target){if(!target.parent)t.scene.add(target);gizmo.attach(target);}gizmo.visible=gizmo.enabled=true;}
+    if(show&&live&&movable){if(gizmo.object!==target){if(!target.parent)t.scene.add(target);gizmo.attach(target);}gizmo.visible=gizmo.enabled=true;}
     else if(!gizmo.dragging){if(gizmo.object)gizmo.detach();gizmo.visible=gizmo.enabled=false;}
   }
   function startDrag(){
@@ -118,17 +142,40 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
     drag=null;
   }
   function select(path){selected=path;refresh(true);rerender();const e=entry();if(e)status(`${e.label} selected · drag the gizmo to ${mode==='aim'?'aim':'move'} it.`);}
+  // Light mixer: one row per light, the fastest way to dim, recolour or switch lights. Brightness is a factor
+  // of the film's own value (log slider, 0.1 to 4); Solo previews one light alone (live only, not saved).
+  let solo=null;const soloSaved=new Map();
+  function setSolo(path){
+    for(const [l,v] of soloSaved)if(l.parent)l.visible=v;soloSaved.clear();solo=solo===path?null:path;
+    if(solo)for(const e of list)if(e.path!==solo&&!e.light.isHemisphereLight){soloSaved.set(e.light,e.light.visible);e.light.visible=false;}
+  }
+  const ADDED_BASE={point:20,spot:120,rect:15};
+  function factorOf(e){if(e.added){const a=addedOf(e.added);return a?(a.intensity??ADDED_BASE[a.type])/ADDED_BASE[a.type]:1;}return editOf(e.path)?.intensityScale??1;}
+  const toSlider=f=>Math.round(Math.log10(Math.max(.1,Math.min(4,f)))*1000)/1000,fromSlider=v=>Math.round(10**Number(v)*100)/100;
+  function mixer(){
+    const groups=[['Sun & sky',e=>e.light.isDirectionalLight||e.light.isHemisphereLight],['Room lamps',e=>e.group==='Room'],['Film rig',e=>e.group==='Film rig'||e.group==='Stage'&&!e.light.isDirectionalLight&&!e.light.isHemisphereLight],['Added',e=>e.group==='Added']];
+    return `<div class="light-mixer" role="table" aria-label="Light mixer">${groups.map(([name,test])=>{const rows=list.filter(test);return rows.length?`<div class="mixer-group">${name}</div>${rows.map(e=>{const f=factorOf(e),edited=!!(e.added||editOf(e.path));return `<div class="mixer-row ${e.path===selected?'selected':''}" data-mixer="${escape(e.path)}" role="row"><input type="checkbox" name="mx-on" ${e.light.visible?'checked':''} title="On / off" aria-label="${escape(e.label)} on"><input type="color" name="mx-color" value="#${e.light.color.getHexString()}" title="Colour" aria-label="${escape(e.label)} colour"><button class="mixer-name" data-action="sl-pick" data-section="${escape(e.path)}" title="Select ${escape(e.label)}">${edited?'<i class="mixer-edited" title="Edited"></i>':''}${escape(e.label)}</button>${e.light.isHemisphereLight&&!edited&&false?'':`<input type="range" name="mx-gain" min="-1" max="0.602" step="0.01" value="${toSlider(f)}" title="Brightness ×${f.toFixed(2)} of the film" aria-label="${escape(e.label)} brightness"><output>×${f.toFixed(2)}</output>`}<button class="mixer-solo" data-action="sl-solo" data-section="${escape(e.path)}" aria-pressed="${solo===e.path}" title="Solo: show only this light (preview, not saved)">S</button><button class="mixer-reset" data-action="sl-reset-row" data-section="${escape(e.path)}" ${editOf(e.path)||e.added?'':'disabled'} title="${e.added?'Delete this added light':'Back to the film'}">↺</button></div>`;}).join('')}`:'';}).join('')}</div>`;
+  }
+  async function mixerChange(el,live){
+    const row=el.closest('[data-mixer]'),e=row&&list.find(x=>x.path===row.dataset.mixer);if(!e)return false;await ensure();
+    if(el.name==='mx-on'){change(e,{visible:el.checked});return true;}
+    if(el.name==='mx-color'){change(e,{color:el.value},live?'mx-color-'+e.path:null);return true;}
+    if(el.name==='mx-gain'){const f=fromSlider(el.value),out=row.querySelector('output');if(out)out.textContent='×'+f.toFixed(2);
+      if(e.added){const a=addedOf(e.added);change(e,{intensity:Math.round(ADDED_BASE[a.type]*f*100)/100},live?'mx-gain-'+e.path:null);}
+      else editExisting(e.path,{intensityScale:f},live?'mx-gain-'+e.path:null);return true;}
+    return false;
+  }
   // ---- inspector
   function panel(){
     if(!three()?.scene)return '<h4>Scene lights</h4><p class="director-hint">Loading the chapter…</p>';
     refresh(true);const e=entry(),groups=['Film rig','Room','Stage','Added'];
     const head=`<h4>Scene lights</h4><p class="director-hint">The chapter's lamps, sun / sky and film rig after the film setup. Select one here or click its marker in the view; the gizmo moves it (spots and suns: Aim).</p>
       <div class="director-actions"><label class="director-check"><input type="checkbox" name="sl-show" ${show?'checked':''}>Show lights</label><button data-action="sl-add-point">+ Point</button><button data-action="sl-add-spot">+ Spot</button><button data-action="sl-add-rect">+ Area (soft)</button></div>
-      <label>Scene light<select name="sl-select"><option value="">Choose a light…</option>${groups.map(g=>{const items=list.filter(x=>x.group===g);return items.length?`<optgroup label="${g}">${items.map(x=>`<option value="${escape(x.path)}" ${x.path===selected?'selected':''}>${escape(x.label)}${editOf(x.path)?' · edited':''}${x.light.visible?'':' · off'}</option>`).join('')}</optgroup>`:'';}).join('')}</select></label>`;
+      ${mixer()}<label>Scene light<select name="sl-select"><option value="">Choose a light…</option>${groups.map(g=>{const items=list.filter(x=>x.group===g);return items.length?`<optgroup label="${g}">${items.map(x=>`<option value="${escape(x.path)}" ${x.path===selected?'selected':''}>${escape(x.label)}${editOf(x.path)?' · edited':''}${x.light.visible?'':' · off'}</option>`).join('')}</optgroup>`:'';}).join('')}</select></label>`;
     if(!e)return head;
     const l=e.light,a=e.added?addedOf(e.added):null,hex='#'+l.color.getHexString(),pos=l.getWorldPosition(l.position.clone()).toArray(),note=e.added?'':keyedNote(e);
     const aimable=!!l.target&&!l.isRectAreaLight,num=(name,label,value,step,min=0,max='')=>`<label>${label}<input name="${name}" type="number" step="${step}" min="${min}" ${max!==''?`max="${max}"`:''} value="${r3(value)}"></label>`;
-    return head+`<div class="movement-inspector scene-light-inspector"><h4>${escape(e.label)}</h4><p class="director-hint">${escape(e.path)}</p>
+    return head+`<div class="movement-inspector scene-light-inspector"><h4>${escape(e.label)}</h4><details class="light-details"><summary>Details</summary><p class="director-hint">${escape(e.path)}</p></details>
       <div class="director-actions"><label class="director-check"><input type="checkbox" name="sl-on" ${l.visible?'checked':''}>On</label><label class="director-check"><input type="checkbox" name="sl-shadow" ${l.castShadow?'checked':''} ${l.isHemisphereLight||l.isRectAreaLight?'disabled':''}>Casts shadow</label></div>
       ${a?`<label>Type<select name="sl-type">${ADDED_TYPES.map(([id,label])=>`<option value="${id}" ${a.type===id?'selected':''}>${label}</option>`).join('')}</select></label>`:`<p class="director-hint">Type: ${escape(e.type)} (fixed for existing lights)</p>`}
       ${aimable||!l.isHemisphereLight?`<div class="director-actions"><button data-action="sl-move" aria-pressed="${mode==='move'}">Move</button>${aimable?`<button data-action="sl-aim" aria-pressed="${mode==='aim'}">Aim</button>`:''}</div>`:''}
@@ -140,8 +187,11 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
       ${l.isHemisphereLight||l.isAmbientLight?'':`<div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('sl-p'+k,'Position '+k,pos[i],.05,-1000)).join('')}</div>`}
       <div class="director-actions">${e.added?'<button data-action="sl-delete">Delete light</button>':`<button data-action="sl-reset" ${editOf(e.path)?'':'disabled'}>Reset to the film</button>`}</div></div>`;
   }
-  async function action(name){
+  async function action(name,arg){
     await ensure();
+    if(name==='sl-pick'){select(arg);return;}
+    if(name==='sl-solo'){refresh(true);setSolo(arg);rerender();status(solo?'Solo: only '+(list.find(x=>x.path===solo)?.label||'this light')+' (preview, not saved).':'Solo off.');return;}
+    if(name==='sl-reset-row'){const was=selected;selected=arg;const e=entry();if(e)await action(e.added?'sl-delete':'sl-reset');selected=e?.added?null:was;rerender();return;}
     if(name==='sl-move'||name==='sl-aim'){mode=name.slice(3);rerender();return;}
     if(name.startsWith('sl-add-')){
       const type=name.slice(7),{camera,controls}=three(),t=controls.target.toArray(),p=camera.position.toArray(),at=t.map((v,i)=>r3(v+(p[i]-v)*.45+(i===1?.6:0)));
@@ -179,7 +229,8 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
     const parts=[n('Room')&&`${n('Room')} lamp${n('Room')===1?'':'s'}`,suns&&'1 sun',suns>1&&`${suns-1} fill${suns===2?'':'s'}`,n('Film rig')&&`${n('Film rig')} rig`,n('Added')&&`${n('Added')} added`].filter(Boolean);
     return parts.join(', ')+(edited?` · ${edited} edited`:'');
   }
-  return {panel,action,input,changed,select,lanes,summary,selected:()=>selected,
+  return {panel,action,input,changed,select,lanes,summary,mixerChange,selected:()=>selected,
+    toggleShow:async()=>{show=!show;if(show)await ensure();rerender();return show;},setMode:m=>{mode=m;rerender();},showing:()=>show,
     // Called after film-fx (re)installs: the light objects are new, the list and markers follow.
     applied(){listSig='';refresh(true);}};
 }

@@ -306,3 +306,22 @@ body.film-look-split .film-look.shown .film-wipe{display:block}
 .film-tools button{position:absolute;top:8px;pointer-events:auto;min-height:26px;padding:3px 10px;border-radius:8px;border:1px solid #ffe7a866;background:#0b1520cc;color:#ffe7a8;font:600 11px system-ui}
 .film-tools [data-film-mode]{right:8px}.film-tools [data-film-guides]{right:96px}
 .film-tools button[aria-pressed=true]{background:#ffe7a8;color:#1b1406}
+/* Light mixer */
+.light-mixer{margin:8px 0 10px;display:flex;flex-direction:column;gap:2px}
+.mixer-group{font-size:10px;letter-spacing:.08em;color:#8caebd;text-transform:uppercase;margin:6px 0 2px}
+.mixer-row{display:grid;grid-template-columns:20px 26px minmax(0,1fr) 78px 34px 24px 24px;align-items:center;gap:4px;min-height:30px;border-radius:6px;padding:0 2px}
+.mixer-row.selected{background:#ffd27a1f;box-shadow:inset 0 0 0 1px #ffd27a66}
+#director-panel .mixer-row input[type=checkbox]{margin:0;width:16px;height:16px}
+#director-panel .mixer-row input[type=color]{width:24px;height:22px;min-height:0;padding:0;border:0;background:none}
+#director-panel .mixer-row input[type=range]{width:78px}
+#director-panel .mixer-row output{font-size:10px;color:#ffe7a8;font-variant-numeric:tabular-nums}
+#director-panel .mixer-name{min-height:24px;padding:2px 4px;border:0;background:transparent;color:#e8f4f9;font-size:12px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#director-panel .mixer-solo,#director-panel .mixer-reset{min-height:22px;height:22px;padding:0;font-size:11px}
+#director-panel .mixer-solo[aria-pressed=true]{background:#ffd27a;color:#1b1406}
+.mixer-edited{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ffd27a;margin-right:5px;vertical-align:middle}
+.light-details summary{font-size:11px;color:#8caebd;cursor:pointer}
+.light-tools{background:transparent}
+.light-tools button{position:absolute;top:8px;pointer-events:auto;min-height:26px;padding:3px 10px;border-radius:8px;border:1px solid #9fcada66;background:#0b1520cc;color:#cfe8f2;font:600 11px system-ui}
+.light-tools [data-vt=l]{left:8px}.light-tools [data-vt=w]{left:72px}.light-tools [data-vt=e]{left:132px}
+.light-tools button[aria-pressed=true]{background:#9ff0ff;color:#04121a}
+.light-tools button:disabled{opacity:.45}

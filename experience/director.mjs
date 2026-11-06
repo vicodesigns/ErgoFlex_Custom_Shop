@@ -344,7 +344,7 @@ export function mountDirector(bridge,catalog,initial){
   // Scene lights (room lamps, sun / sky, film rig, added lights) live in their own module.
   function renderSceneLights(){
     const box=panel.querySelector('[data-scene-lights]');if(!box)return;const active=box.contains(document.activeElement)?document.activeElement.name:null;
-    box.innerHTML=sceneLights.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});
+    syncLightTools?.();box.innerHTML=sceneLights.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});
   }
   const sceneLights=createSceneLightEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneLights});
   // Render still: the playhead frame with the film look, rendered in a hidden stage of its own.
@@ -371,6 +371,10 @@ export function mountDirector(bridge,catalog,initial){
   const filmLook=film?createFilmLook({status,
     resting:()=>open&&bridge.ready()&&!bridge.playback().playing&&!scrub&&!keyDrag&&!groupDrag&&!marquee&&!stillBusy&&!composing&&!bridge.bakeState().baking,
     async render(){const s=shot(),t=playhead;stills||=createStillRenderer();const url=await stills.render(filmRenderShot(filmShot(),s,keys()),t);return {url,label:(t*s.seconds).toFixed(2)+' s'};}}):null;
+  // Viewport light tools (top left of the frame): Lights (L), Move (W), Aim (E).
+  const lightTools=film?(()=>{const el=document.createElement('div');el.className='film-box light-tools';el.innerHTML='<button data-vt="l" aria-pressed="false" title="Show the scene lights in the view (L)">Lights</button><button data-vt="w" title="Move the selected light (W)">Move</button><button data-vt="e" title="Aim the selected spot or sun (E)">Aim</button>';document.body.append(el);
+    el.addEventListener('click',e=>{const b=e.target.closest('[data-vt]');if(b)viewKeys({key:b.dataset.vt,preventDefault(){},target:document.body,ctrlKey:false,metaKey:false,altKey:false,shiftKey:false});});return el;})():null;
+  const syncLightTools=()=>{if(!lightTools)return;lightTools.querySelector('[data-vt=l]').setAttribute('aria-pressed',String(sceneLights.showing()));for(const b of lightTools.querySelectorAll('[data-vt=w],[data-vt=e]'))b.disabled=!sceneLights.selected();};
   let orbitHooked=false,pokedAt=-1,pokedPlaying=false;
   function hookOrbit(){if(orbitHooked||!filmLook)return;const dom=bridge.stage()?.three?.()?.renderer?.domElement;if(!dom)return;const poke=()=>filmLook.poke();dom.addEventListener('pointerdown',poke,true);dom.addEventListener('pointermove',e=>{if(e.buttons)poke();},true);dom.addEventListener('wheel',poke,{capture:true,passive:true});orbitHooked=true;}
   // Warm the still stage once the chapter is live, so the first still / film look is quick.
@@ -462,7 +466,7 @@ export function mountDirector(bridge,catalog,initial){
       if(composing)return;
       group=null;
       if(name==='render-still'){await renderStill();return;}
-      if(name.startsWith('sl-')){await sceneLights.action(name);return;}
+      if(name.startsWith('sl-')){await sceneLights.action(name,index);return;}
       if(name==='light-add'||name==='light-key-add'){addLight(name==='light-key-add');return;}
       if(name==='tod-add'){
         const T=timeOfDay();if(!T)return;requireReady();const t=Math.round(playhead*shot().seconds*1000)/1000,near=T.keys.find(k=>Math.abs(k.at-t)<.001);if(near){selectLight('tods',near.id);return;}
@@ -648,6 +652,7 @@ export function mountDirector(bridge,catalog,initial){
     const el=event.target,name=el.name;if(!name)return;
     if(name==='seek'){try{seekCamera(Number(el.value)/100);}catch(error){status(error.message,true);}return;}
     if(name.startsWith('sl-')){try{sceneLights.input(el);}catch(error){status(error.message,true);}return;}
+    if(name.startsWith('mx-')&&name!=='mx-on'){sceneLights.mixerChange(el,true).catch(error=>status(error.message,true));return;}
     if(/^gn?-/.test(name)){const k=name.replace(/^gn?-/,''),v=Number(el.value),twin=field((name.startsWith('gn-')?'g-':'gn-')+k),out=panel.querySelector(`[data-global-steps="${k}"]`);if(Number.isFinite(v)){if(twin)twin.value=String(v);if(out)out.textContent=k==='exposureScale'?stepsText(v):'×'+v;if(name.startsWith('g-'))try{setGlobal(k,v,{key:name,render:false});}catch(error){status(error.message,true);}}return;}
     // Neutral white sliders and picker edit live; one undo step per drag.
     if(['neutral-bright','neutral-warm','neutral-color'].includes(name)&&lightItem()){
@@ -677,6 +682,7 @@ export function mountDirector(bridge,catalog,initial){
     const name=event.target.name,value=event.target.value;group=null;
     if(name==='film-chapter'){switchFilm(Number(value));return;}
     if(/^gn?-/.test(name||'')){try{const k=name.replace(/^gn?-/,''),v=Number(value);if(Math.abs(globalFactor(k).value-v)<1e-6){renderPanel();return;}setGlobal(k,v);}catch(error){renderPanel();status(error.message,true);}return;}
+    if(name?.startsWith('mx-')){try{await sceneLights.mixerChange(event.target,false);if(name!=='mx-gain'&&name!=='mx-color')renderSceneLights();}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name?.startsWith('sl-')){try{await sceneLights.changed(event.target);}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name==='light-selected'){const [kind,id]=value.split(':');if(id)selectLight(kind,id);else{lightSel=null;renderPanel();renderTimeline();}return;}
     if(name==='room-light'){try{const v=Number(value);if(value===''||!Number.isFinite(v)||v<0||v>2)throw Error('Room light level runs from 0 to 2.');putLighting({roomLight:v});status('Room light level set to '+v+'.');}catch(error){renderPanel();status(error.message,true);}return;}
@@ -744,7 +750,9 @@ export function mountDirector(bridge,catalog,initial){
   timeline.addEventListener('dblclick',event=>{if(!event.target.closest('.timeline-resize'))return;if(timelineFitted){document.body.style.removeProperty('--director-timeline-height');timelineFitted=false;requestAnimationFrame(()=>renderTimeline());}else{fitTimeline();requestAnimationFrame(()=>renderTimeline());}});
   // F: Live / Film look / Split; G: thirds and title-safe guides.
   // Also bound in the stage frame (after an orbit the keys go there).
-  function viewKeys(event){if(!open||!filmLook||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.target.closest?.('input,select,textarea,[contenteditable]'))return;const k=event.key.toLowerCase();if(k==='f'){event.preventDefault();filmLook.cycle();}else if(k==='g'){event.preventDefault();filmLook.toggleGuides();}}
+  function viewKeys(event){if(!open||!filmLook||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.target.closest?.('input,select,textarea,[contenteditable]'))return;const k=event.key.toLowerCase();if(k==='f'){event.preventDefault();filmLook.cycle();}else if(k==='g'){event.preventDefault();filmLook.toggleGuides();}
+    else if(k==='l'){event.preventDefault();sceneLights.toggleShow().then(on=>status(on?'Lights shown: click a marker to select it, W move, E aim.':'Lights hidden.'));}
+    else if((k==='w'||k==='e')&&sceneLights.selected()){event.preventDefault();sceneLights.setMode(k==='w'?'move':'aim');status(k==='w'?'Gizmo: move.':'Gizmo: aim.');}}
   document.addEventListener('keydown',viewKeys);
   // Shift+L: jump to the lighting lanes.
   document.addEventListener('keydown',event=>{if(!open||!event.shiftKey||event.ctrlKey||event.metaKey||event.altKey||event.key.toLowerCase()!=='l'||event.target.closest?.('input,select,textarea,[contenteditable]'))return;event.preventDefault();revealLighting();});
