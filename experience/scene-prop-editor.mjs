@@ -16,7 +16,9 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   const three=()=>bridge.stage()?.three?.();
   const editing=()=>open()&&bridge.ready()&&!bridge.playback().playing&&!bridge.bakeState().baking;
   const sceneOf=()=>three()?.scene||null;
-  const label=o=>o?.name||'Unnamed prop';
+  // Every user-facing text says the friendly name ('Steelcase leap v2'); the raw object name ('Prop:steelcase-leap-v2')
+  // only shows in tooltips and the inspector's small grey line.
+  const label=o=>propName(o?.name),nice=n=>propName(n||'');
   // ---- the cut
   const edits=()=>effectivePropEdits(film(),shot());
   const editOfKey=key=>edits().find(e=>propKey(e)===key)||null;
@@ -134,7 +136,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // ---- selection
   function pick(o){
     let target;try{target=filmEdit(o)?cleanPropEdit(filmEdit(o))||targetFor(o):targetFor(o);}catch(error){status(error.message,true);return;}
-    const t={match:target.match,...(target.asset?{asset:target.asset}:{}),...(target.path?{path:target.path}:{}),...(target.near?{near:target.near}:{}),label:target.label||label(o)};
+    const t={match:target.match,...(target.asset?{asset:target.asset}:{}),...(target.path?{path:target.path}:{}),...(target.near?{near:target.near}:{}),label:target.label||o.name||''};
     sel={key:propKey(t),target:t,obj:o};onSelect();rerender();
     const moves=handMoves(o).length?' The film also places it by hand; your edit adds to that.':'';
     status(`${label(o)} selected · W move · E rotate · T scale · Shift snaps · Delete hides it in this chapter · Alt-click picks what it sits on.${moves}`);
@@ -143,7 +145,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(!tools){ensure().then(()=>select(key)).catch(error=>status(error.message,true));return;}
     const e=editOfKey(key),o=find(key);if(!e&&!o)return;
     sel={key,target:e?{match:e.match,...(e.asset?{asset:e.asset}:{}),...(e.path?{path:e.path}:{}),...(e.near?{near:e.near}:{}),label:e.label}:sel?.target,obj:o};onSelect();rerender();
-    status(o?`${label(o)} selected${o&&!shown(o)?' (hidden in this chapter: untick Hide to bring it back)':''}.`:`${e?.label||'That prop'} is not in the room right now (the film setup did not find it).`,!o);
+    status(o?`${label(o)} selected${o&&!shown(o)?' (hidden in this chapter: untick Hide to bring it back)':''}.`:`${e?.label?nice(e.label):'That prop'} is not in the room right now (the film setup did not find it).`,!o);
   }
   function deselect(){if(!sel)return;sel=null;rerender();}
   // ---- edits from the inspector and keys
@@ -153,10 +155,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     write(sel.key,next,text);
   }
   function hide(on=true){
-    const o=current();if(!sel)return false;const name=o?label(o):sel.target.label,filmHides=o&&(o.userData.__filmFxEdits||[]).some(e=>!e.director&&e.hide);
+    const o=current();if(!sel)return false;const name=o?label(o):nice(sel.target.label),filmHides=o&&(o.userData.__filmFxEdits||[]).some(e=>!e.director&&e.hide);
     apply({hide:on?true:filmHides?false:undefined},on?`Hid ${name} in this chapter. Undo, or untick Hide in Props, brings it back.`:`Showed ${name} again.`);return true;
   }
-  function reset(){if(!sel)return;const name=sel.target.label||'The prop';if(!editOfKey(sel.key)){status(name+' is already where the film puts it.');return;}write(sel.key,null,`${name} back to the film.`);}
+  function reset(){if(!sel)return;const name=sel.target.label?nice(sel.target.label):'The prop';if(!editOfKey(sel.key)){status(name+' is already where the film puts it.');return;}write(sel.key,null,`${name} back to the film.`);}
   function resetAll(){const n=editedCount();if(!n){status('No prop edits in this chapter: the props are the film\'s.');return;}commit(()=>{shot().propEdits=[];},{render:false});status(`All props back to the film (${n} edit${n===1?'':'s'} cleared). Undo brings them back.`);rerender();}
   async function changed(el){
     await ensure();const o=current();if(!sel||!o)return;const name=el.name,v=Number(el.value);
@@ -185,7 +187,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function plan(){
     const room=studioRoom(),{THREE}=tools||{};
     return edits().map(e=>{
-      const key=propKey(e),o=tools&&find(key),name=e.label||o?.name||'Prop',row={edit:e,key,name,change:describePropEdit(e),obj:o};
+      const key=propKey(e),o=tools&&find(key),raw=e.label||o?.name||'',name=nice(raw),row={edit:e,key,name,raw,change:describePropEdit(e),obj:o};
       if(room.reason)return {...row,ok:false,why:room.reason};
       if(!o)return {...row,ok:false,why:'Not in the room right now: the film setup did not find it.'};
       if(/^Accessory:/.test(o.name)||!o.userData.sceneAssetKey)return {...row,ok:false,why:/^Accessory:/.test(o.name)?'A desk accessory: it belongs to the desk build, not the room\'s Studio layout.':'Built by the app with the room, not a saved Studio item, so Studio can\'t keep a change to it.'};
@@ -213,7 +215,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const room=studioRoom();dialogPlan=st.rows;
     dialog.innerHTML=`<div class="director-heading"><div><span class="director-kicker">MAKE PERMANENT IN STUDIO</span><h2 id="prop-permanent-title">Write these props to Studio?</h2></div></div>
       <p>Studio's <b>${escape(room.id||'')}</b> room keeps exactly these changes, for Studio and for every chapter in that room. This chapter's edits for them are then folded in (Studio holds them). Nothing else in Studio changes.</p>
-      <ul class="prop-permanent-list">${st.rows.map((r,i)=>`<li class="${r.ok?'':'blocked'}"><label class="director-check"><input type="checkbox" data-permanent="${i}" ${r.ok?'checked':'disabled'}><span><b>${escape(r.name)}</b> · ${escape(r.change)}${r.ok?'':`<small>${escape(r.why)}</small>`}</span></label></li>`).join('')}</ul>
+      <ul class="prop-permanent-list">${st.rows.map((r,i)=>`<li class="${r.ok?'':'blocked'}"><label class="director-check"><input type="checkbox" data-permanent="${i}" ${r.ok?'checked':'disabled'}><span><b title="${escape(r.raw)}">${escape(r.name)}</b> · ${escape(r.change)}${r.ok?'':`<small>${escape(r.why)}</small>`}</span></label></li>`).join('')}</ul>
       <div class="director-actions"><button data-permanent-go class="primary" ${st.ok?'':'disabled'}>Write ${st.n||0} prop${st.n===1?'':'s'} to Studio</button><button data-permanent-cancel>Cancel</button></div><p class="director-hint" data-permanent-status role="status"></p>`;
     dialog.showModal();dialog.querySelector('[data-permanent-cancel]').focus();
   }
@@ -248,7 +250,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const head=`<h3>Props</h3><p class="director-hint">Click a prop in the view to select it (not while Lights are shown). W move · E rotate · T scale · Shift snaps · Delete hides it. Edits stay in this chapter: Studio does not change.</p>
       <div class="director-actions"><button data-action="pp-reset-all" ${n?'':'disabled'} title="Every prop back to the film in this chapter: one step, Undo brings them back">Reset all props to the film${n?' ('+n+')':''}</button><button data-action="pp-permanent" ${st.ok?'':'disabled'} title="${escape(st.ok?'Write these prop edits into Studio\'s room layout (you confirm each one)':st.why)}">Make permanent in Studio…</button></div>${st.ok?'':`<p class="director-hint" data-permanent-why>${escape(st.why)}</p>`}`;
     if(!sel)return head+'<p class="director-hint">No prop selected.</p>';
-    if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4>${escape(sel.target.label||'Prop')}</h4><p class="director-hint">Not in the room right now (the film setup did not find it).</p><div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
+    if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4 title="${escape(sel.target.label||'')}">${escape(nice(sel.target.label))}</h4><p class="director-hint">Not in the room right now (the film setup did not find it).</p><div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
     if(!tools)return head;const b=base(o),{THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),turn=e?.rotation||[0,0,0],fac=e?.scale||[1,1,1],uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4;
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
     const studio=plan().find(r=>r.key===sel.key),hidden=e?.hide===true||!shown(o),moved=b?o.getWorldPosition(new THREE.Vector3()).distanceTo(b.world):0;

@@ -89,12 +89,13 @@ try{
     pulse:!!document.querySelector('[data-reveal=prop].reveal-pulse'),move:document.querySelector('.light-tools [data-vt=w]').getAttribute('aria-pressed'),rotate:!document.querySelector('.light-tools [data-vt=pe]').disabled,scale:!document.querySelector('.light-tools [data-vt=t]').disabled,name:document.querySelector('.prop-inspector h4')?.textContent}));
   check(sel.gizmo===CHAIR,'click selects the prop root (gizmo on '+CHAIR+')');check(sel.tab==='props'&&sel.pulse,'selecting reveals the Prop section in the Props tab (pulse)');
   check(/Prop · Steelcase leap v2/.test(sel.header),'Selected header names the prop');check(sel.move==='true'&&sel.rotate&&sel.scale,'frame tools: Move pressed, Rotate and Scale enabled');
-  check(/selected/.test(await status()),'status: selected');
+  check(/^Steelcase leap v2 selected/.test(await status()),'status: "Steelcase leap v2 selected"');
+  check(await page.evaluate(()=>!/Prop:/.test(document.querySelector('[data-selected-header]').textContent+document.querySelector('.prop-inspector h4').textContent)&&/Prop:steelcase-leap-v2/.test(document.querySelector('.prop-inspector .prop-name').textContent)),'one name everywhere; the raw id only in the inspector\'s grey line');
   await page.screenshot({path:path.join(shots,'props-selected.png')});
   // ---- gizmo: move, rotate, scale (real drags)
   const p0=await pose(CHAIR);
   await dragHandle(['X','Y','Z'],'radial');
-  check(/^Moved Prop:steelcase-leap-v2/.test(await status()),'gizmo drag: "Moved Prop:steelcase-leap-v2"');
+  check(/^Moved Steelcase leap v2\./.test(await status()),'gizmo drag: "Moved Steelcase leap v2" (the friendly name)');
   await until(async()=>(await draft())?.[0]?.position,'draft position');
   let d=await draft();const p1=await until(async()=>{const p=await pose(CHAIR);return near(p.p,p0.p.map((v,i)=>v+d[0].position[i]))&&p;},'live chair follows the move');
   check(near(p1.p,p0.p.map((v,i)=>v+d[0].position[i])),'the film edit is the world offset of the drag');
@@ -113,19 +114,19 @@ try{
   const sNow=(await pose(CHAIR)).s,sBase=p0.s;check(near(sNow.map((v,i)=>v/sBase[i]),[1.25,1.4,1.25],3e-3),'live scale follows');
   // ---- undo / redo
   await page.keyboard.down('Control');await page.keyboard.press('z');await page.keyboard.up('Control');await wait(800);
-  check(/^Undone: Scaled Prop:steelcase-leap-v2/.test(await status()),'Undo names the step: '+await status());d=await draft();check(near(d[0].scale,[1.25,1.25,1.25],1e-4),'undo restores the scale');
+  check(/^Undone: Scaled Steelcase leap v2/.test(await status()),'Undo names the step: '+await status());d=await draft();check(near(d[0].scale,[1.25,1.25,1.25],1e-4),'undo restores the scale');
   await page.keyboard.down('Control');await page.keyboard.press('y');await page.keyboard.up('Control');await wait(800);d=await draft();check(near(d[0].scale,[1.25,1.4,1.25],1e-4),'redo');
   // ---- hide (Delete), undo, then the monitor (a desk accessory) hidden with the checkbox
   await page.mouse.move(5,5);await page.evaluate(()=>document.activeElement?.blur());
   await page.keyboard.press('Delete');await wait(1000);
-  check(/^Hid Prop:steelcase-leap-v2 in this chapter/.test(await status()),'Delete hides it in this chapter');check(!(await pose(CHAIR)).visible,'hidden on the stage');
+  check(/^Hid Steelcase leap v2 in this chapter/.test(await status()),'Delete hides it in this chapter');check(!(await pose(CHAIR)).visible,'hidden on the stage');
   check(await page.$eval('[data-props-lane] .prop-chip.prop-hidden',e=>/Steelcase/.test(e.textContent)).catch(()=>false),'hidden prop: struck-through chip');
   await page.keyboard.down('Control');await page.keyboard.press('z');await page.keyboard.up('Control');await wait(1000);check((await pose(CHAIR)).visible,'undo shows it again');
   await page.keyboard.press('Escape');await wait(300);check(!(await page.evaluate(()=>__gizmo()?.object?.name)),'Esc deselects the prop');
   const mon=await page.evaluate(n=>__screen(__find(x=>x.name===n)),MONITOR);await page.mouse.click(mon.x,mon.y);await wait(900);
   check(await page.evaluate(()=>__gizmo()?.object?.name)==='Accessory:wide-monitor','a desk item selects its accessory (Accessory:wide-monitor)');
   await page.evaluate(()=>document.querySelector('#director-panel [name=pp-hide]').click());await wait(1000);
-  check(/^Hid Accessory:wide-monitor/.test(await status())&&!(await pose('Accessory:wide-monitor')).visible,'Hide in this chapter (checkbox)');
+  check(/^Hid Wide monitor in this chapter/.test(await status())&&!(await pose('Accessory:wide-monitor')).visible,'Hide in this chapter (checkbox)');
   // ---- lane chips
   const chips=await page.$$eval('[data-props-lane] button',l=>l.map(b=>[b.textContent,b.className]));
   check(chips.length===3&&/Reset all props/.test(chips[2][0])&&/prop-hidden/.test(chips[1][1]),'Props lane: 2 chips (the hidden one struck through) + reset-all: '+chips.map(c=>c[0]).join(' | '));
@@ -140,7 +141,7 @@ try{
     await page.evaluate(()=>{const f=[...document.querySelectorAll('[data-action=sel-clear]')][0];f?.click();});
     await stillOf(path.join(shots,'still-after.jpg'));
     check(!fs.readFileSync(path.join(shots,'still-after.jpg')).equals(fs.readFileSync(path.join(shots,'still-before.jpg'))),'the after still differs from the before still');
-    check(/after: Hid Accessory:wide-monitor in this chapter/.test(await page.$eval('#film-still .still-caption',e=>e.textContent)),'its caption names the last edit ("after: Hid Accessory:wide-monitor in this chapter")');
+    check(/after: Hid Wide monitor in this chapter/.test(await page.$eval('#film-still .still-caption',e=>e.textContent)),'its caption names the last edit ("after: Hid Wide monitor in this chapter")');
     const both=await page.evaluate(()=>{const still=[...document.querySelectorAll('iframe')].find(f=>f.title==='Film still renderer').contentWindow,sScene=(()=>{let s=still.ErgoFlex.loadedModel;while(s.parent)s=s.parent;return s;})();
       const live=__find(x=>x.name==='Prop:steelcase-leap-v2'),there=__find(x=>x.userData.sceneAssetKey===live.userData.sceneAssetKey,sScene),T=__t().T;
       const P=o=>{o.updateWorldMatrix(true,false);const v=new still.ErgoFlex.loadedModel.position.constructor();return {p:o.getWorldPosition(v.clone()).toArray(),s:o.getWorldScale(v.clone()).toArray()};};
@@ -186,12 +187,12 @@ try{
   const why=await page.$eval('#director-panel [data-action=pp-permanent]',b=>[b.disabled,b.title]);check(!why[0],'Make permanent in Studio… enabled in a Studio layout room');
   await page.click('#director-panel [data-action=pp-permanent]');await wait(400);
   const rows=await page.$$eval('#prop-permanent li',l=>l.map(li=>[li.textContent.replace(/\s+/g,' ').trim(),li.querySelector('input').disabled]));
-  check(rows.length===2&&!rows[0][1]&&/Prop:steelcase-leap-v2 · moved .* m.*turned .*scaled/.test(rows[0][0]),'confirm panel lists the chair and exactly its change: '+rows[0][0]);
+  check(rows.length===2&&!rows[0][1]&&/^Steelcase leap v2 · moved .* m.*turned .*scaled/.test(rows[0][0])&&!/Prop:/.test(rows.join()),'confirm panel lists the chair and exactly its change: '+rows[0][0]);
   check(rows[1][1]&&/desk accessory/.test(rows[1][0]),'the accessory is listed but blocked: '+rows[1][0]);
   await page.screenshot({path:path.join(shots,'props-permanent-confirm.png')});
   const chairBefore=await pose(CHAIR);
   await page.click('#prop-permanent [data-permanent-go]');
-  await until(async()=>/^Made 1 prop permanent in Studio \(library:humboldt\)/.test(await status()),'make permanent',20000);await wait(2000);
+  await until(async()=>/^Made 1 prop permanent in Studio \(library:humboldt\): Steelcase leap v2\./.test(await status()),'make permanent',20000);await wait(2000);
   const studio1=JSON.parse(await studioAssets()),edited=studio1['library:humboldt'].transforms['scene:library:humboldt:room:0:steelcase-leap-v2'],old=JSON.parse(studio0)['library:humboldt'];
   check(!!edited&&JSON.stringify(edited)!==JSON.stringify(old.transforms['scene:library:humboldt:room:0:steelcase-leap-v2']),'Studio state: the chair\'s transform written through POST /api/studio-state');
   const changedKeys=Object.keys(studio1).filter(k=>JSON.stringify(studio1[k])!==JSON.stringify(JSON.parse(studio0)[k]));check(changedKeys.join()==='library:humboldt','only the library:humboldt room changed');
