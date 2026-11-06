@@ -59,7 +59,7 @@ export function mountDirector(bridge,catalog,initial){
   // to and outlined for ~1.5 s. [tab, lighting section id or a selector in the tab's page]. Never moves focus, and
   // while a text field in the inspector has focus nothing switches or scrolls.
   const HOMES={camera:['camera','[data-reveal="camera-key"]'],clip:['groove','.movement-inspector'],tod:['lighting','tod'],room:['lighting','room'],
-    white:['lighting','white'],status:['lighting','status'],lamp:['lighting','lamps'],light:['lighting','lamps'],title:['chapter','[data-reveal="titles"]'],prop:['props','[data-reveal="prop"]'],floor:['lighting','room']};
+    white:['lighting','white'],status:['lighting','status'],lamp:['lighting','lamps'],light:['lighting','lamps'],title:['chapter','[data-reveal="titles"]'],prop:['props','[data-reveal="prop"]'],floor:['lighting','[data-reveal="floor"]']};
   let revealWant=null,pulse=null;
   const typing=()=>{const a=document.activeElement;return !!a&&panel.contains(a)&&(a.isContentEditable||a.tagName==='TEXTAREA'||a.tagName==='INPUT'&&!/^(checkbox|radio|range|color|button|submit|reset)$/.test(a.type));};
   // Film chapters with titles: a title's home is the Title tab (title-editor.mjs); otherwise the Chapter Headline.
@@ -508,7 +508,7 @@ export function mountDirector(bridge,catalog,initial){
   // Floor reflections (floor-reflection-editor.mjs): Lighting > Room, per LED source; outlines and drags in the view.
   const floorShowing=()=>open&&(sceneLights.showing()||inspector==='lighting'&&!document.body.classList.contains('inspector-hidden')&&!!panel.querySelector('[data-light-section="room"]')?.open&&!!panel.querySelector('[data-floor-section]')?.open);
   const floorRefl=createFloorReflectionEditor({bridge,shot,film:filmShot,commit,status,visible:floorShowing,rerender:()=>{if(inspector==='lighting'&&!typing())renderPanel();else syncSelectedHeader();},
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();renderTimeline();reveal('floor');}});
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();delete lightSectionsShut.room;const r=panel.querySelector('[data-light-section="room"]');if(r)r.open=true;renderTimeline();reveal('floor');}});
   panel.addEventListener('toggle',event=>{if(event.target.matches?.('[data-floor-section]'))floorRefl.setExpanded(event.target.open);},true);
   // Render still: the playhead frame with the film look, rendered in a hidden stage of its own.
   // Render still: the playhead frame with the film look, shown inside the frame with a history strip.

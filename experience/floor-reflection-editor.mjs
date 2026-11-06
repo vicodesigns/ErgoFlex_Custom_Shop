@@ -43,7 +43,7 @@ export function createFloorReflectionEditor({bridge,shot,film,commit,status,rere
       <div class="director-actions"><button data-action="fr-reset" ${edited(s)?'':'disabled'} title="This source's floor reflection back to the film">Reset to the film</button></div>`
       :'<p class="director-hint">Pick a source, or click its pool on the floor in the view.</p>';
     return `<details class="floor-section" data-floor-section ${expanded?'open':''}><summary><span>Floor reflections</span><small>each LED strip's light on the floor</small></summary>
-      <div class="light-inspector floor-inspector" data-reveal="floor"><p class="director-hint">Outlines show on the floor while this is open (or Lights are shown): click a pool to pick it, drag it to move it, drag its dots for length (end) and spread (side).</p>
+      <div class="floor-inspector" data-reveal="floor"><p class="director-hint">Outlines show on the floor while this is open (or Lights are shown): click a pool to pick it, drag it to move it, drag its dots for length (end) and spread (side).</p>
       ${picker}${body}<div class="director-actions"><button data-action="fr-reset-all" ${any?'':'disabled'} title="Every source's floor reflection back to the film: one step, Undo brings them back">Reset all floor reflections</button></div></div></details>`;
   }
   function pick(id,{fromView=false}={}){
