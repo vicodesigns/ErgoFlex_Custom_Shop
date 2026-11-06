@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {groupRange,snapGroupDelta,shiftGroup} from '../experience/timeline-group.mjs';
-import {filmLink,cleanFilmChapters,filmChapterLabel,filmChapterIndex,loadFilmChapters} from '../experience/film-chapters.mjs';
+import {filmLink,cleanFilmChapters,filmChapterLabel,filmChapterIndex,loadFilmChapters,loadFilmShot,liveFilmShot} from '../experience/film-chapters.mjs';
 const view={position:[1,1,1],target:[0,0,0],fov:35,aspect:16/9};
 const base={seconds:10,keys:[{id:'a',time:0,easing:'hold',view},{id:'b',time:.5,easing:'smooth',view},{id:'c',time:1,easing:'linear',view}],
   clips:[{id:'l1',lane:'lift',kind:'lift',start:1,duration:2,target:40},{id:'l2',lane:'lift',kind:'lift',start:6,duration:3,target:30},{id:'t1',lane:'tilt',kind:'tilt',start:4,duration:2,target:20}]};
@@ -33,4 +33,13 @@ assert.throws(()=>cleanFilmChapters({chapters:[]},'http://127.0.0.1/'));
 await assert.rejects(loadFilmChapters('https://elsewhere.example/c.json','http://127.0.0.1:3000/experience/'),/this server/);
 const loaded=await loadFilmChapters('/f/c.json','http://127.0.0.1:3000/experience/',async url=>({ok:true,json:async()=>({chapters:[{n:1,id:'awaken',seconds:4,page:'/p.html'}],url})}));
 assert.equal(loaded[0].url,'http://127.0.0.1:3000/p.html');
+// Film shots: the chapter's full built shot dresses the live stage; quality passes stay off live.
+const withShot=cleanFilmChapters({chapters:[{n:1,id:'rise',page:'/p.html',shot:'director-film/rise.json'},{n:2,id:'x',page:'/q.html',shot:'https://elsewhere.example/x.json'}]},'http://127.0.0.1:3000/exports/x/director-chapters.json');
+assert.equal(withShot[0].shot,'http://127.0.0.1:3000/exports/x/director-film/rise.json');assert.equal(withShot[1].shot,null);
+const filmShot={id:'rise',seconds:16,sceneEdits:[{match:'^Prop:painted-mug$',hide:true}],quality:{bloom:false},motion:{clips:[1]}};
+assert.equal((await loadFilmShot('/s.json','rise',async()=>({ok:true,json:async()=>filmShot}))).sceneEdits.length,1);
+assert.equal((await loadFilmShot('/c.json','rise',async()=>({ok:true,json:async()=>({shots:[{id:'a'},filmShot]})}))).id,'rise');
+await assert.rejects(loadFilmShot('/s.json','awaken',async()=>({ok:true,json:async()=>filmShot})),/does not match/);
+const live=liveFilmShot(filmShot,{id:'rise',seconds:18,motion:{clips:[2]}});
+assert.equal(live.seconds,18);assert.deepEqual(live.motion,{clips:[2]});assert.equal(live.quality,undefined);assert.equal(live.sceneEdits,filmShot.sceneEdits);assert.ok(filmShot.quality);
 console.log('Timeline groups: shared delta for camera keys and desk clips, 0 / 90 s clamps, chapter growth with keys kept at or before the end, re-sorting and collision refusal; film chapter links, list cleaning and labels verified.');

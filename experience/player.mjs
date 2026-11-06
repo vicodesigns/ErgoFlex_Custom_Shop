@@ -5,12 +5,17 @@ import {BakeCache,bakeKey,bakeDefinition,sourceSnapshot,renderBake,BAKE_PROFILE}
 import {score,safeReturn} from './score.mjs';
 import {ShotClock} from './timing.mjs';
 import {cleanCut,decodeCut} from './cuts.mjs';
+import {filmLink,loadFilmChapters,loadFilmShot,liveFilmShot} from './film-chapters.mjs';
 const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search), linkQuery=new URLSearchParams(location.hash.slice(1));
 let cut=query.get('cut')==='social'?'social':'full',shots=score(cut),index=-1,playing=true,busy=true,finished=false,generation=0,sound=false,app=null,preparation=Promise.resolve(),hasFrame=false,lastUI=0;
 const clock=new ShotClock(),cover=$('transition-frame');
 let director=null,directorOpen=false,previewOnly=false,clientCut=null,preparedShot=null,previewRange=null,loopPreview=false;
 try{const linked=linkQuery.get('cut');if(linked){clientCut=decodeCut(linked);cut='client';shots=clientCut.shots;}}
 catch(error){$('cut-error').hidden=false;$('cut-error').textContent=error.message;}
+// Film chapter links: the chapter list's "shot" (the full built film shot) dresses the live
+// stage with the film's own setup (props, hidden objects, desk finish, screens, room light).
+const filmShots=new Map(),film=filmLink(location.hash);
+const filmReady=film&&clientCut?loadFilmChapters(film.film).then(list=>Promise.all(list.filter(c=>c.shot&&clientCut.shots.some(s=>s.id===c.id)).map(c=>loadFilmShot(c.shot,c.id).then(s=>filmShots.set(c.id,s))))).catch(error=>console.warn('[film setup]',error.message)):Promise.resolve();
 const nextPaint=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const track=new Audio('../assets/led/music/neon-flight-demo.mp3');track.loop=true;track.volume=.32;
@@ -49,6 +54,31 @@ function chime(final=false){
   }catch{}
 }
 const stage=()=>frame.contentWindow.ErgoPresentation;
+let liveFx=null,fxShot=null,fxAt=-1,fxPending=null;
+// film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
+async function stageFx(){
+  const win=frame.contentWindow;if(win.__filmFx)return win.__filmFx;
+  await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
+  return win.__filmFx;
+}
+// The renderer's order around prepare: clear, beforePrepare, prepare, unhookPreset, install.
+async function prepareStage(next){
+  await filmReady;await fxPending;const setup=filmShots.get(next.id),fx=setup?await stageFx().catch(error=>{console.warn('[film fx]',error.message);return null;}):frame.contentWindow.__filmFx;
+  liveFx=null;fxShot=null;fx?.clear();
+  if(!setup||!fx)return stage().prepare(next);
+  const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);
+  let result;try{result=await stage().prepare(next);}finally{fx.unhookPreset();}
+  try{await fx.install(shot);liveFx=fx;fxShot=next.id;fxAt=-1;}catch(error){console.error('[film fx]',error);fx.clear();director?.setStatus('The film setup could not be applied: '+error.message);}
+  return result;
+}
+// Time-varying film parts (screens, time of day, keyed lights) follow the chapter clock.
+function filmFrame(){
+  requestAnimationFrame(filmFrame);
+  if(!liveFx||fxPending||busy||index<0||activeBake||bakeController||shots[index]?.id!==fxShot)return;
+  const s=shots[index],at=clock.progress(performance.now(),s.seconds)*s.seconds,fx=liveFx;if(Math.abs(at-fxAt)<1/30)return;
+  fxAt=at;fxPending=fx.frame(at,at,{video:false}).then(()=>fx.after()).catch(error=>console.warn('[film fx]',error.message)).finally(()=>{fxPending=null;});
+}
+requestAnimationFrame(filmFrame);
 const seen=()=>{try{localStorage.setItem('ergoflex.cinematicSeen.v1','1');}catch{}};
 const returnTo=safeReturn(query.get('return'),location.href);
 function exit(){seen();track.pause();location.assign(returnTo);}
@@ -98,7 +128,7 @@ async function playShot(i,{position=0,forceLive=false,range=null}={}){
     if(token!==generation)return;
     if(record){try{await showBaked(record,position);}catch{record=null;clearBaked();}}
     if(!record){
-      preparation=preparation.catch(()=>{}).then(()=>token===generation?stage().prepare(next):null);
+      preparation=preparation.catch(()=>{}).then(()=>token===generation?prepareStage(next):null);
       await preparation;if(token!==generation)return;clearBaked();
       stage().reduced(reduced.matches);stage().pause(false);stage().tick(position);stage().pause(!playing||document.hidden);
     }

@@ -11,8 +11,8 @@ export function cleanFilmChapters(value,base){
     if(typeof c?.page!=='string'||typeof c.id!=='string'||!c.id)return [];
     let url;try{url=new URL(c.page,base);}catch{return [];}
     if(url.origin!==origin)return [];
-    const seconds=Number(c.seconds);
-    return [{n:Number.isInteger(c.n)?c.n:i+1,id:c.id.slice(0,80),title:typeof c.title==='string'?c.title.slice(0,140):'',seconds:typeof c.seconds!=='boolean'&&c.seconds!=null&&Number.isFinite(seconds)?seconds:null,url:url.href}];
+    const seconds=Number(c.seconds);let shot=null;try{if(typeof c.shot==='string'){const u=new URL(c.shot,base);if(u.origin===origin)shot=u.href;}}catch{}
+    return [{shot,n:Number.isInteger(c.n)?c.n:i+1,id:c.id.slice(0,80),title:typeof c.title==='string'?c.title.slice(0,140):'',seconds:typeof c.seconds!=='boolean'&&c.seconds!=null&&Number.isFinite(seconds)?seconds:null,url:url.href}];
   });
   if(!chapters.length)throw Error('The film chapter list has no chapters.');
   return chapters;
@@ -24,3 +24,13 @@ export async function loadFilmChapters(film,base=location.href,fetcher=globalThi
   const response=await fetcher(url.href,{cache:'no-store'});if(!response.ok)throw Error(`Film chapter list unavailable (${response.status}).`);
   return cleanFilmChapters(await response.json(),url.href);
 }
+// The full built film shot for a chapter (what the renderer gets): its film-only setup
+// (sceneEdits, accessories, screens, lights, LED fields…) dresses the Director's live stage.
+export async function loadFilmShot(url,id,fetcher=globalThis.fetch){
+  const response=await fetcher(url,{cache:'no-store'});if(!response.ok)throw Error(`Film shot unavailable (${response.status}).`);
+  const value=await response.json(),shot=Array.isArray(value?.shots)?value.shots.find(s=>s.id===id):value;
+  if(!shot||typeof shot!=='object'||shot.id!==id)throw Error('The film shot does not match chapter '+id+'.');
+  return shot;
+}
+// Live preview: the film setup with the Director's story edits; GPU quality passes stay off.
+export function liveFilmShot(film,shot){const next={...film,id:shot.id,seconds:shot.seconds};if(shot.motion)next.motion=shot.motion;delete next.quality;return next;}
