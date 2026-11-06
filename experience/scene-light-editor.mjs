@@ -172,7 +172,14 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
       :name==='sl-width'?{width:need(.01,50)}:name==='sl-height'?{height:need(.01,50)}:/^sl-p[xyz]$/.test(name)?{position:pos()}:null;
     if(!v)return;change(e,v);rerender();status(e.label+' updated'+(v.intensity!==undefined&&!e.added?' (intensity scale '+(editOf(e.path)?.intensityScale??1)+'×)':'')+'.');
   }
-  return {panel,action,input,changed,select,selected:()=>selected,
+  // Lanes / Lighting now: every light with its colour, edited when the cut changes it (or added it).
+  function lanes(){if(!three()?.scene)return [];refresh();return list.map(e=>({path:e.path,label:e.label,color:'#'+e.light.color.getHexString(),edited:!!(e.added||editOf(e.path)),selected:e.path===selected}));}
+  function summary(){
+    if(!three()?.scene)return '';refresh();const n=g=>list.filter(e=>e.group===g).length,suns=list.filter(e=>e.light.isDirectionalLight).length,edited=list.filter(e=>e.added||editOf(e.path)).length;
+    const parts=[n('Room')&&`${n('Room')} lamp${n('Room')===1?'':'s'}`,suns&&'1 sun',suns>1&&`${suns-1} fill${suns===2?'':'s'}`,n('Film rig')&&`${n('Film rig')} rig`,n('Added')&&`${n('Added')} added`].filter(Boolean);
+    return parts.join(', ')+(edited?` · ${edited} edited`:'');
+  }
+  return {panel,action,input,changed,select,lanes,summary,selected:()=>selected,
     // Called after film-fx (re)installs: the light objects are new, the list and markers follow.
     applied(){listSig='';refresh(true);}};
 }

@@ -45,7 +45,7 @@ export function mountDirector(bridge,catalog,initial){
   const selectedKey=()=>keys().find(k=>k.id===keyId);
   function showInspector(tab,selection=false,reveal=true){
     if(selection)focusSelection=true;
-    inspector=tab;if(reveal)document.body.classList.remove('inspector-hidden');
+    inspector=tab;if(reveal)document.body.classList.remove('inspector-hidden');if(tab==='lighting')queueMicrotask(()=>syncNow());
     for(const page of panel.querySelectorAll('[data-inspector-page]'))page.hidden=page.dataset.inspectorPage!==tab;
     for(const button of panel.querySelectorAll('[data-inspector-tab]'))button.setAttribute('aria-pressed',String(button.dataset.inspectorTab===tab));
     panel.scrollTop=0;
@@ -92,7 +92,7 @@ export function mountDirector(bridge,catalog,initial){
     const line=timeline.querySelector('[data-track-playhead]');if(line)line.style.left=(playhead*100)+'%';
     const label=timeline.querySelector('[data-track-time]');if(label)label.textContent=(playhead*shot().seconds).toFixed(2)+'s / '+shot().seconds+'s';
     for(const line of timeline.querySelectorAll('[data-shared-playhead]'))line.style.left=playhead*100+'%';
-    syncLightNow();
+    syncLightNow();syncNow();
     const ruler=timeline.querySelector('.time-ruler');if(ruler)ruler.setAttribute('aria-valuenow',(playhead*shot().seconds).toFixed(2));
     const exact=timeline.querySelector('[name="timeline-seconds"]');if(exact&&document.activeElement!==exact)exact.value=(playhead*shot().seconds).toFixed(2);
   }
@@ -237,7 +237,12 @@ export function mountDirector(bridge,catalog,initial){
     const label=m=>roomModes().find(x=>x.id===m)?.label||m;
     const tod=T?`<div class="desk-lane-row" data-lane-color="tod"><span class="desk-lane-label" title="The room's time of day: it blends from one daypart to the next">Time of day<button data-action="tod-add" class="lane-add" title="Add a time-of-day key at the playhead" aria-label="Add a time-of-day key">+</button></span><div class="desk-lane key-lane tod-lane" data-light-lane role="group" aria-label="Room time of day"><div class="lane-band" style="background:linear-gradient(90deg,${band(t=>daypartAt(T.keys,t))})"></div>
       ${spans(T.keys,k=>k.at,(a,b)=>a.mode===b.mode)}${T.keys.map((k,i)=>chip('tods','data-tod-key',k.id,k.at,DAYPART_TINTS[k.mode]||'#8899aa',label(k.mode),k.ease==='smooth'?'smooth blend':'blend',i)).join('')}<div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>`:'';
-    return `${laneGroupHead('lighting')}<div class="lane-group-body desk-lanes light-lanes" data-lane-body="lighting" ${groupClosed('lighting')?'hidden':''}>${tod}${white}${status}</div>`;
+    // Room: brightness (solid) and fill light (dotted) over the chapter, log scale around ×1; drag a line up / down.
+    const line=k=>Array.from({length:49},(_,i)=>{const t=i/48*s;return `${(i/48*1000).toFixed(1)},${(17-Math.log2(Math.max(.1,globalAt(k,t)))*10).toFixed(2)}`;}).join(' ');
+    const room=filmShot()?`<div class="desk-lane-row" data-lane-color="room"><span class="desk-lane-label" title="Room brightness (solid) and fill light (dotted): drag a line up or down">Room</span><div class="desk-lane key-lane room-lane" data-light-lane><svg class="room-lines" viewBox="0 0 1000 34" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="1000" y1="17" y2="17" class="room-mid"/><polyline class="room-line room-exposure" points="${line('exposureScale')}"/><polyline class="room-line room-fill" points="${line('environmentScale')}"/><polyline class="room-hit fill-hit" data-room-line="environmentScale" points="${line('environmentScale')}"><title>Fill light ×${globalFactor('environmentScale').value.toFixed(2)} · drag up / down</title></polyline><polyline class="room-hit" data-room-line="exposureScale" points="${line('exposureScale')}"><title>Room brightness ×${globalFactor('exposureScale').value.toFixed(2)} · drag up / down (Alt: fill light)</title></polyline></svg><div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>`:'';
+    const lampList=sceneLights.lanes(),edited=lampList.filter(x=>x.edited);
+    const lamps=filmShot()?`<div class="desk-lane-row ${edited.length?'':'empty'}" data-lane-color="lamps"><span class="desk-lane-label" title="Room lamps, sun and sky, film rig: edited lights show here">Lamps &amp; sun <small>${lampList.length}${edited.length?' · '+edited.length+' edited':''}</small></span><div class="desk-lane lamps-lane">${edited.map(x=>`<button class="lamp-chip ${x.selected?'selected':''}" data-action="lamp-pick" data-section="${escape(x.path)}" title="${escape(x.label)} · edited"><i style="background:${x.color}"></i>${escape(x.label)}</button>`).join('')}</div></div>`:'';
+    return `${laneGroupHead('lighting')}<div class="lane-group-body desk-lanes light-lanes" data-lane-body="lighting" ${groupClosed('lighting')?'hidden':''}>${tod}${room}${white}${status}${lamps}</div>`;
   }
   // Lane groups (MOTION, LIGHTING): collapsible, remembered in this browser; a collapsed group shows its items as ticks.
   let laneGroups={};try{laneGroups=JSON.parse(localStorage.getItem('ergoflex.director.laneGroups')||'{}')||{};}catch{}
@@ -256,30 +261,52 @@ export function mountDirector(bridge,catalog,initial){
     resizeTimeline(need);timelineFitted=true;
   }
   function syncLightNow(){const bar=timeline.querySelector('[data-light-now]'),L=bar&&lighting();if(!L)return;bar.style.left=playhead*100+'%';bar.style.background=lightAt(L,playhead*shot().seconds);}
+  // The Lighting tab, broad to narrow in lane order: Lighting now, Time of day, Room, Desk white, Desk status,
+  // Lamps & sun. Each section edits one thing; the lanes are the picker.
+  let lightSectionsShut={};try{lightSectionsShut=JSON.parse(localStorage.getItem('ergoflex.director.lightSections')||'{}')||{};}catch{}
+  const section=(id,title,tag,body)=>`<details class="light-section" data-light-section="${id}" ${lightSectionsShut[id]?'':'open'}><summary><span>${title}</span>${tag?`<small>${tag}</small>`:''}</summary><div class="light-section-body">${body}</div></details>`;
   function lightPanel(){
-    const L=lighting();if(!L)return todPanel();const item=lightItem(),s=shot().seconds;
-    const head=`<h3>Desk lighting</h3><p class="director-hint">The film's status lights and neutral white. ${L.edited?'Edited here; Export cut sends them to the film.':'From the film shot; your first edit keeps a copy in this cut.'} The live preview approximates the strips; Render still shows the real film look.</p>
-      <div class="director-actions"><button data-action="light-add">+ Light state</button><button data-action="light-key-add">+ Colour key</button>${film?'<button data-action="render-still" class="primary">Render still</button>':''}</div>
-      <label>Selected light<select name="light-selected"><option value="">Choose a light state or colour key…</option>${L.status.map(e=>option('lights:'+e.id,`${kindLabel(e.kind)} · ${r2(e.at)}–${r2(e.at+e.dur)}s`,lightSel?.kind+':'+lightSel?.id)).join('')}${L.neutral.map(k=>option('neutrals:'+k[2],`Neutral white ${k[1]} · ${r2(k[0])}s`,lightSel?.kind+':'+lightSel?.id)).join('')}</select></label>`;
-    if(!item||lightSel.kind==='tods')return head+todPanel();
-    if(lightSel.kind==='lights'){const e=item;return head+`<div class="movement-inspector light-inspector"><h4 style="--lane:${lightKindColor(e.kind)}">Light state</h4>
+    const L=lighting(),T=timeOfDay(),item=lightItem(),s=shot().seconds,kind=lightSel?.kind;
+    const tod=T?section('tod','Time of day','the sun and sky through the window',`<p class="director-hint">The room blends from each daypart to the next across the gaps.${T.edited?'':' From the film shot until you edit it.'}</p><div class="director-actions"><button data-action="tod-add">+ Time-of-day key</button></div>${kind==='tods'&&item?todInspector(T,item):''}`):'';
+    const room=section('room','Room','brightness, fill light, LED glow',`${globalFields()}${L?.roomLight!==undefined?`<label>LED glow on the room<input name="room-light" type="number" min="0" max="2" step=".05" value="${L.roomLight}"></label>`:''}`);
+    if(!L)return nowCard()+tod+room+lampsSection();
+    const white=section('white','Desk white','the LED colour when no status is showing',`<div class="director-actions"><button data-action="light-key-add">+ White key</button></div>${kind==='neutrals'&&item?whiteInspector(L,item,s):''}`);
+    const status=section('status','Desk status','status lights while the desk moves',`<p class="director-hint">${L.edited?'Edited here; Export cut sends them to the film.':'From the film shot; your first edit keeps a copy in this cut.'}</p><div class="director-actions"><button data-action="light-add">+ Status light</button></div>${kind==='lights'&&item?statusInspector(item,s):''}`);
+    return nowCard()+tod+room+white+status+lampsSection();
+  }
+  const lampsSection=()=>section('lamps','Lamps & sun','room lamps, sun and sky, film rig',`<div data-scene-lights>${sceneLights.panel()}</div>`);
+  function statusInspector(e,s){return `<div class="movement-inspector light-inspector"><h4 style="--lane:${lightKindColor(e.kind)}">Status light</h4>
       <label>State<select name="light-kind">${LIGHT_KINDS.map(([id,label])=>option(id,label,e.kind)).join('')}</select></label>
       ${e.kind==='wheels'?`<label>Drive mode<select name="light-mode">${WHEEL_MODES.map((label,i)=>option(String(i+1),`${i+1} · ${label}`,String(e.mode??3))).join('')}</select></label>`:''}
       <div class="director-grid"><label>Start (seconds)<input name="light-at" type="number" min="0" max="${s}" step=".05" value="${r2(e.at)}"></label><label>Duration (seconds)<input name="light-dur" type="number" min=".05" max="${s}" step=".05" value="${r2(e.dur)}"></label></div>
-      <div class="director-grid"><label>Fade out (seconds)<input name="light-fade" type="number" min="0" max="10" step=".05" value="${e.fade??1}"></label><label>Fade in (seconds)<input name="light-fadein" type="number" min="0" max="10" step=".05" value="${e.fadeIn??0}"></label></div>
-      <p class="director-hint">Fade in: the neutral white fades out under the state over that time. Fade out: back to the neutral white when the state ends.</p>
-      <div class="director-actions"><button data-action="light-delete">Delete light state</button></div></div>`+todPanel();}
-    const k=item;return head+`<div class="movement-inspector light-inspector"><h4>Neutral white key</h4>
+      <div class="director-grid"><label title="How long the white takes to give way to the state">Fade in (seconds)<input name="light-fadein" type="number" min="0" max="10" step=".05" value="${e.fadeIn??0}"></label><label title="How long the strip takes to go back to the white">Fade out (seconds)<input name="light-fade" type="number" min="0" max="10" step=".05" value="${e.fade??1}"></label></div>
+      <div class="director-actions"><button data-action="light-delete">Delete status light</button></div></div>`;}
+  function whiteInspector(L,k,s){return `<div class="movement-inspector light-inspector"><h4>White key · ${escape(whiteName(k[1]))}</h4>
       <label>Time (seconds)<input name="neutral-time" type="number" min="0" max="${s}" step=".05" value="${r2(k[0])}"></label>
       <div class="director-grid neutral-colour"><label>Colour<input name="neutral-color" type="color" value="${k[1]}"></label><label>Hex<input name="neutral-hex" maxlength="7" value="${k[1]}" spellcheck="false"></label></div>
       <label>Brightness <output data-neutral-bright>×1.00</output><input name="neutral-bright" type="range" min=".2" max="3" step=".01" value="1" data-base="${k[1]}"></label>
       <label>Warmth <output data-neutral-warm>${Math.round(warmthOf(k[1])*100)}%</output><input name="neutral-warm" type="range" min="0" max="1" step=".01" value="${warmthOf(k[1]).toFixed(2)}" data-base="${k[1]}"></label>
-      <p class="director-hint">Brightness scales the colour in linear light (relative to this key's colour). Warmth goes from true white to the evening warm ${'#52483c'} at the same brightness.</p>
-      <div class="director-actions"><button data-action="light-delete" ${L.neutral.length<=1?'disabled title="The neutral white needs at least one key"':''}>Delete colour key</button></div></div>`+todPanel();
+      <div class="director-actions"><button data-action="light-delete" ${L.neutral.length<=1?'disabled title="The desk white needs at least one key"':''}>Delete white key</button></div></div>`;}
+  function todInspector(T,item){const modes=roomModes(),s=shot().seconds;return `<div class="movement-inspector"><h4>Time-of-day key</h4>
+      <div class="director-grid"><label>Time (seconds)<input name="tod-time" type="number" min="0" max="${s}" step=".05" value="${r2(item.at)}"></label><label>Daypart<select name="tod-mode">${modes.map(m=>option(m.id,m.label,item.mode)).join('')}${modes.some(m=>m.id===item.mode)?'':option(item.mode,item.mode,item.mode)}</select></label></div>
+      <label>Blend into this daypart<select name="tod-ease">${option('linear','Even',item.ease||'linear')}${option('smooth','Smooth (ease in and out)',item.ease||'linear')}</select></label>
+      <div class="director-actions"><button data-action="light-delete" ${T.keys.length<=1?'disabled':''}>Delete time-of-day key</button></div></div>`;}
+  // "Lighting now": what lights the frame at the playhead, one row per section (click to go there).
+  function globalAt(k,t){const own=shot().sceneGlobals?.[k],f=filmShot()?.sceneGlobals?.[k],v=own??f;if(Array.isArray(v)){const i=v.findIndex(p=>p[0]>t);return i<0?v.at(-1)[1]:i===0?v[0][1]:v[i-1][1]+(v[i][1]-v[i-1][1])*(t-v[i-1][0])/(v[i][0]-v[i-1][0]);}return typeof v==='number'?v:1;}
+  function nowRows(){
+    const t=playhead*shot().seconds,L=lighting(),T=timeOfDay(),rows=[],label=m=>roomModes().find(x=>x.id===m)?.label||m;
+    if(T){const keys=[...T.keys].sort((a,b)=>a.at-b.at),i=keys.findIndex(k=>k.at>t);let text;if(i<0)text=label(keys.at(-1).mode);else if(i===0)text=label(keys[0].mode);else{const a=keys[i-1],b=keys[i];text=a.mode===b.mode?label(a.mode):`${label(a.mode)} → ${label(b.mode)} ${Math.round((t-a.at)/(b.at-a.at)*100)}%`;}rows.push(['tod','Time of day',text,daypartAt(T.keys,t)]);}
+    rows.push(['room','Room brightness','×'+globalAt('exposureScale',t).toFixed(2)],['room','Fill light','×'+globalAt('environmentScale',t).toFixed(2)]);
+    if(L){const e=L.status.find(e=>t>=e.at&&t<e.at+e.dur),c=e?lightKindColor(e.kind):neutralAt(L.neutral,t);rows.push([e?'status':'white','Desk strip',e?kindLabel(e.kind):whiteName(c)+' '+c,c]);if(L.roomLight!==undefined)rows.push(['room','LED glow on the room',String(L.roomLight)]);}
+    const sum=sceneLights.summary();if(sum)rows.push(['lamps','Lamps & sun',sum]);
+    return rows;
   }
+  function nowCard(){return `<div class="lighting-now" data-lighting-now>${nowInner()}</div>`;}
+  function nowInner(){return `<div class="lighting-now-head">LIGHTING NOW · ${(playhead*shot().seconds).toFixed(2)} s</div>${nowRows().map(([id,name,value,swatch])=>`<button class="now-row" data-action="now-go" data-section="${id}"><span>${name}</span><b>${swatch?`<i style="background:${swatch}"></i>`:''}${escape(value)}</b></button>`).join('')}`;}
+  function syncNow(){const box=panel.querySelector('[data-lighting-now]');if(box&&!box.closest('[hidden]'))box.innerHTML=nowInner();}
   // Room brightness (exposureScale) and ambient light (environmentScale): the film's value until touched.
   // Keyed values ([[t, v], …]) are edited as one factor on the film's keys and written back scaled.
-  const GLOBALS={exposureScale:['Room brightness',.5,2],environmentScale:['Ambient light',.2,3]};
+  const GLOBALS={exposureScale:['Room brightness',.5,2],environmentScale:['Fill light (soft light from everywhere)',.2,3]};
   function globalFactor(k){
     const own=shot().sceneGlobals?.[k],film=filmShot()?.sceneGlobals?.[k];
     if(Array.isArray(film)){if(!Array.isArray(own)||own.length!==film.length)return {keys:film,value:1};const i=film.findIndex(p=>p[1]);return {keys:film,value:i<0?1:own[i][1]/film[i][1]};}
@@ -296,13 +323,6 @@ export function mountDirector(bridge,catalog,initial){
     const f=globalFactor(k),r=x=>Math.round(x*10000)/10000;
     commit(()=>{const s=shot();s.sceneGlobals={...s.sceneGlobals,[k]:f.keys?f.keys.map(([t,x])=>[t,r(x*v)]):r(v)};},{render,key});
     status(`${label} ${f.keys?'×'+v+' on every key':'set to '+v}${k==='exposureScale'?' ('+stepsText(v)+')':''}. Render still shows the film look.`);
-  }
-  function todPanel(){
-    const T=timeOfDay();if(!T)return '';const item=lightSel?.kind==='tods'?lightItem():null,modes=roomModes(),s=shot().seconds;
-    return `<hr><h3>Time of day</h3><p class="director-hint">The room blends from each daypart to the next across the gaps: the sunset that warms the desk white. ${T.edited?'Edited here; Export cut writes timeOfDay.':'From the film shot; your first edit keeps a copy in this cut.'}</p><div class="director-actions"><button data-action="tod-add">+ Time-of-day key</button></div>`+(item?`<div class="movement-inspector"><h4>Time-of-day key</h4>
-      <div class="director-grid"><label>Time (seconds)<input name="tod-time" type="number" min="0" max="${s}" step=".05" value="${r2(item.at)}"></label><label>Daypart<select name="tod-mode">${modes.map(m=>option(m.id,m.label,item.mode)).join('')}${modes.some(m=>m.id===item.mode)?'':option(item.mode,item.mode,item.mode)}</select></label></div>
-      <label>Blend into this daypart<select name="tod-ease">${option('linear','Even',item.ease||'linear')}${option('smooth','Smooth (ease in and out)',item.ease||'linear')}</select></label>
-      <div class="director-actions"><button data-action="light-delete" ${T.keys.length<=1?'disabled':''}>Delete time-of-day key</button></div></div>`:'');
   }
   // One light item changed: states stay one at a time, colour keys stay sorted.
   function editLight(change,{key=null,render=true}={}){
@@ -361,7 +381,7 @@ export function mountDirector(bridge,catalog,initial){
     panel.innerHTML=`
       <div class="director-heading"><div><span class="director-kicker">DIRECTOR MODE</span><h2>Director studio.</h2></div><button data-action="inspector" aria-label="Hide inspector" title="Hide inspector; keep the timeline open">‹</button></div>
       <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button></div>${filmPicker()}
-      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter','camera','groove',...(lighting()||timeOfDay()?['lighting']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav>
+      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter','camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav>
       <p data-status role="status" class="director-status">${project.shots.length} chapters · ${Math.round(duration(project.shots))} seconds</p>
       <div data-inspector-page="project">
       <div class="director-actions"><button data-action="new">New cut</button><button data-action="clone">Duplicate cut</button></div>
@@ -375,12 +395,12 @@ export function mountDirector(bridge,catalog,initial){
       <div data-inspector-page="chapter"><h3>Chapter ${selected+1} <span class="inspector-subtitle">of ${project.shots.length}</span></h3><div class="director-actions"><button data-action="add">+ Add chapter</button><button data-action="duplicate">Duplicate chapter</button><button data-action="remove" ${project.shots.length===1?'disabled':''}>Remove chapter</button>${selected===0?'<button data-action="rebuild-opening">✦ Rebuild opening</button><button data-action="camera-holds">4s holds at every view</button>':''}</div>
       <label>Headline<input name="title" maxlength="140" value="${escape(s.title)}"></label>
       <label>Supporting text<textarea name="detail" rows="2" maxlength="260">${escape(s.detail)}</textarea></label>
-      <div class="director-grid"><label>Duration (seconds)<input name="seconds" type="number" min="2" max="90" step=".5" value="${s.seconds}"></label><label>Blend into shot (seconds)<input name="transition" type="number" min="0" max="3" step=".1" value="${s.transition}"></label></div>${lighting()?.roomLight!==undefined?`<label>Room light level (LED spill in the room)<input name="room-light" type="number" min="0" max="2" step=".05" value="${lighting().roomLight}"></label>`:''}${filmShot()?globalFields():''}
+      <div class="director-grid"><label>Duration (seconds)<input name="seconds" type="number" min="2" max="90" step=".5" value="${s.seconds}"></label><label>Blend into shot (seconds)<input name="transition" type="number" min="0" max="3" step=".1" value="${s.transition}"></label></div>
       <fieldset class="chapter-pacing"><legend>Chapter pacing</legend>
       <div class="director-actions"><button data-action="pace-faster" ${s.seconds*.8<2?'disabled':''}>20% shorter</button><button data-action="pace-slower" ${s.seconds*1.25>90?'disabled':''}>25% longer</button><button data-action="pace-hold" ${s.seconds+2>90?'disabled':''}>+ 2s ending hold</button></div>
       <p class="director-hint">Shorter / longer retimes camera and all movements together. Ending hold keeps their timing and pauses on the final pose. Undo restores the previous timing.</p></fieldset>
       <label>Environment<select name="room">${catalog.map(r=>option(r.id,r.name,s.room)).join('')}</select></label>
-      <div class="director-grid"><label>Room size / layout<select name="layout" ${room?.layouts.length?'':'disabled'}>${room?.layouts.length?room.layouts.map(l=>option(l.id,l.name,s.layout)).join(''):'<option>Product stage</option>'}</select></label><label>Time / activity<select name="mode" ${modes.length?'':'disabled'}>${modes.length?modes.map(m=>option(m.id,m.label,s.mode)).join(''):'<option>Studio</option>'}</select></label></div>
+      <div class="director-grid"><label>Room size / layout<select name="layout" ${room?.layouts.length?'':'disabled'}>${room?.layouts.length?room.layouts.map(l=>option(l.id,l.name,s.layout)).join(''):'<option>Product stage</option>'}</select></label><label>Time / activity${timeOfDay()?' <small>(driven by the Time of day lane)</small>':''}<select name="mode" ${modes.length&&!timeOfDay()?'':'disabled'} ${timeOfDay()?'title="The Time of day lane in Lighting drives the room\'s daypart"':''}>${modes.length?modes.map(m=>option(m.id,m.label,s.mode)).join(''):'<option>Studio</option>'}</select></label></div>
       <label>Feature / animation<select name="kind">${KINDS.map(([id,name])=>option(id,name,s.kind)).join('')}</select></label>
       <div class="director-grid"><label>Desk build<select name="preset">${PRESET_IDS.map(id=>option(id,({occ:'Orange Coast College',hbhs:'HBHS Oilers',library:'Humboldt / Library'})[id]||id[0].toUpperCase()+id.slice(1),s.preset)).join('')}</select></label><label>Desk width<select name="size">${option('48x30','48″',s.size)}${option('60x30','60″',s.size)}</select></label></div>
       <div class="director-actions"><button data-action="load">Load / reset shot</button><button data-action="chapter-toggle" class="primary">▶ Play chapter</button><button data-action="preview">↻ Restart chapter</button></div>
@@ -394,7 +414,7 @@ export function mountDirector(bridge,catalog,initial){
       <label>Selected camera keyframe<select name="camera-key"><option value="">Select a keyframe…</option>${keys().map(k=>option(k.id,`${k.label} · ${(k.time*s.seconds).toFixed(2)}s`,keyId)).join('')}</select></label>
       ${cameraKey?`<div class="selection-preview"><button data-action="key-preview" ${keys().at(-1)?.id===cameraKey.id?'disabled title="Last camera view: select an earlier view to preview its move"':''}>▶ Preview camera move</button><button data-action="key-go">Go to view</button></div><label>Keyframe name<input name="key-label" maxlength="60" value="${escape(cameraKey.label)}"></label><div class="director-grid"><label>Keyframe time (seconds)<input name="key-time" type="number" min="0" max="${s.seconds}" step=".05" value="${Number((cameraKey.time*s.seconds).toFixed(3))}"></label><label>Move to next view<select name="key-easing">${CAMERA_EASINGS.map(e=>option(e,({smooth:'Smooth move',linear:'Linear move',hold:'Hold, then cut'})[e],cameraKey.easing)).join('')}</select></label></div><label>Camera route<select name="key-path">${option('linear','Direct line',cameraKey.path||'linear')}${option('orbit','Orbit around subject',cameraKey.path||'linear')}</select></label><label>Field of view (degrees)<input name="key-fov" type="number" min="15" max="80" step="1" value="${cameraKey.view.fov}"></label><div class="director-actions lens-presets">${[[24,'Detail · 24°'],[35,'Balanced · 35°'],[50,'Wide · 50°']].map(([fov,label])=>`<button data-action="lens-${fov}" aria-pressed="${cameraKey.view.fov===fov}">${label}</button>`).join('')}</div><p class="director-hint">Lens buttons update this keyframe. After orbiting or framing the preview, use Update selected view to keep that composition.</p>`:''}
 
-      </div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}<div data-scene-lights>${sceneLights.panel()}</div></div>`;
+      </div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}</div>`;
     showInspector(inspector,false,false);deskEditor.sync();syncTransport();
     if(focusSelection){const target=inspector==='groove'?panel.querySelector('.movement-inspector'):panel.querySelector('[name="key-label"]')?.closest('label');if(target)panel.scrollTop=Math.max(0,target.offsetTop-panel.clientHeight*.25);focusSelection=false;}
     else {panel.scrollTop=scroll;const replacement=activeName?field(activeName):null;if(replacement){replacement.focus({preventScroll:true});if(selection&&replacement.setSelectionRange)try{replacement.setSelectionRange(...selection);}catch{}}}
@@ -447,6 +467,8 @@ export function mountDirector(bridge,catalog,initial){
       }
       if(name==='film-prev'||name==='film-next'){const i=filmIndex();switchFilm(name==='film-prev'?i-1:i<0?0:i+1);return;}
       if(name==='inspector'){document.body.classList.toggle('inspector-hidden');return;}
+      if(name==='lamp-pick'){showInspector('lighting',true);const d=panel.querySelector('[data-light-section="lamps"]');if(d)d.open=true;await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
+      if(name==='now-go'){const id=index;const el=panel.querySelector(`[data-light-section="${id}"]`);if(el){el.open=true;delete lightSectionsShut[id];el.scrollIntoView({block:'start',behavior:'smooth'});}return;}
       if(name==='group-toggle'){const g=index===0?'motion':'lighting';laneGroups[g]=!groupClosed(g);saveGroups();renderTimeline();return;}
       if(name==='titles'){document.body.classList.toggle('preview-titles');timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(document.body.classList.contains('preview-titles')));return;}
       if(name==='chapters'){timeline.classList.toggle('chapters-hidden');timeline.querySelector('[data-action=chapters]')?.setAttribute('aria-pressed',String(!timeline.classList.contains('chapters-hidden')));return;}
@@ -599,7 +621,8 @@ export function mountDirector(bridge,catalog,initial){
 
     }catch(error){status(error.message,true);}
   }
-  for(const el of [panel,timeline])el.addEventListener('click',event=>{const b=event.target.closest('button[data-action]');if(b)action(b.dataset.action,Number(b.dataset.index));});
+  for(const el of [panel,timeline])el.addEventListener('click',event=>{const b=event.target.closest('button[data-action]');if(b)action(b.dataset.action,b.dataset.section??Number(b.dataset.index));});
+  panel.addEventListener('toggle',event=>{const d=event.target.closest?.('[data-light-section]');if(!d)return;if(d.open)delete lightSectionsShut[d.dataset.lightSection];else lightSectionsShut[d.dataset.lightSection]=true;try{localStorage.setItem('ergoflex.director.lightSections',JSON.stringify(lightSectionsShut));}catch{}},true);
   panel.addEventListener('click',event=>{const tab=event.target.closest('[data-inspector-tab]');if(tab)showInspector(tab.dataset.inspectorTab);});
   timeline.addEventListener('change',event=>{
     if(event.target.name==='timeline-snap'){snapStep=Number(event.target.value);return;}
@@ -813,7 +836,7 @@ export function mountDirector(bridge,catalog,initial){
       else groupDrag={id,kind,start:event.clientX,width,delta:0,moved:false,base,set:grouped?picks:{[kind]:new Set([id])}};
       viewport().setPointerCapture(event.pointerId);item.focus({preventScroll:true});return;
     }
-    if(!event.target.closest('.timeline-content')||event.target.closest('.time-ruler,button,select,input,label,.desk-track-toolbar,.track-heading,.desk-lane-label'))return;
+    if(!event.target.closest('.timeline-content')||event.target.closest('.time-ruler,button,select,input,label,.desk-track-toolbar,.track-heading,.desk-lane-label,[data-room-line],.lamps-lane,.lane-group-head'))return;
     event.preventDefault();viewport().focus({preventScroll:true});
     marquee={x:event.clientX,y:event.clientY,add:event.shiftKey||event.ctrlKey||event.metaKey,base:Object.fromEntries(Object.entries(picks).map(([k,v])=>[k,new Set(v)])),box:null};
   },true);
@@ -858,10 +881,16 @@ export function mountDirector(bridge,catalog,initial){
   }
   for(const type of ['pointerup','pointercancel'])timeline.addEventListener(type,endGroupGesture,true);
   timeline.addEventListener('click',event=>{if(performance.now()<suppressGroupClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
+  // Room lane: drag the brightness / fill line up or down (×2 per 7 lane px, log scale); one undo step per drag.
+  let roomDrag=null;
+  timeline.addEventListener('pointerdown',event=>{const hit=event.target.closest?.('[data-room-line]');if(!hit||event.button!==0)return;event.preventDefault();event.stopImmediatePropagation();
+    try{requireReady();const k=event.altKey?'environmentScale':hit.dataset.roomLine,box=hit.closest('svg').getBoundingClientRect();roomDrag={k,y:event.clientY,scale:34/box.height,start:globalFactor(k).value,key:'room-'+k+'-'+Date.now()};viewport().setPointerCapture(event.pointerId);}catch(error){status(error.message,true);}},true);
+  timeline.addEventListener('pointermove',event=>{if(!roomDrag)return;const d=roomDrag,[,min,max]=GLOBALS[d.k],v=Math.max(min,Math.min(max,Math.round(d.start*2**(-(event.clientY-d.y)/40)*100)/100));if(v===d.last)return;d.last=v;try{setGlobal(d.k,v,{key:d.key,render:false});}catch(error){status(error.message,true);}});
+  for(const type of ['pointerup','pointercancel'])timeline.addEventListener(type,()=>{if(!roomDrag)return;roomDrag=null;suppressGroupClickUntil=performance.now()+300;renderPanel();},true);
   // Shift + "+ Light" adds a neutral colour key instead of a light state.
   timeline.addEventListener('click',event=>{const b=event.target.closest('[data-action="light-add"]');if(b&&event.shiftKey){event.preventDefault();event.stopImmediatePropagation();action('light-key-add');}},true);
   // A click on the lighting lane moves the playhead, like the other lanes.
-  timeline.addEventListener('click',event=>{const rail=event.target.closest('[data-light-lane]');if(!rail||event.target.closest('[data-light-clip],[data-light-key],[data-tod-key],button'))return;try{const box=rail.getBoundingClientRect();seekCamera(Math.max(0,Math.min(1,(event.clientX-box.left)/box.width)));}catch(error){status(error.message,true);}});
+  timeline.addEventListener('click',event=>{const rail=event.target.closest('[data-light-lane]');if(!rail||event.target.closest('[data-light-clip],[data-light-key],[data-tod-key],button,[data-room-line]'))return;try{const box=rail.getBoundingClientRect();seekCamera(Math.max(0,Math.min(1,(event.clientX-box.left)/box.width)));}catch(error){status(error.message,true);}});
   timeline.addEventListener('keydown',event=>{
     const item=event.target.closest('[data-light-clip],[data-light-key],[data-tod-key]');if(!item||!['Delete','Backspace'].includes(event.key)||picked())return;
     event.preventDefault();const [kind,id]=itemOf(item);lightSel={kind,id};action('light-delete');
