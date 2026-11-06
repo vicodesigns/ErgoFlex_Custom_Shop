@@ -43,11 +43,14 @@ export function createStillRenderer({width=1280,height=720,src='/?view=product&p
     const w=win(),EP=w.ErgoPresentation,fx=w.__filmFx;
     // Prepare once per scene; film-fx alone re-installs when only the film layers changed.
     const {ledStatus,ledNeutral,ledColor,sceneGlobals,camera,cameraPlan,lights,lightEdits,timeOfDay,...scene}=shot,key=JSON.stringify(scene),setup=JSON.stringify(shot);
-    if(key!==prepared){
+    // Lighting-only changes update the film layers in place; anything else re-prepares the room first.
+    let full=key!==prepared;
+    if(!full&&setup!==setupKey){let r='full';try{r=fx.update?await fx.update(shot):'full';}catch(error){console.warn('[still] update',error);}if(r==='full')full=true;else setupKey=setup;}
+    if(full){
       fx.clear();fx.beforePrepare(shot);prepared=null;setupKey=null;
       try{await EP.prepare(shot);}finally{fx.unhookPreset();}prepared=key;
+      await fx.install(shot);setupKey=setup;
     }
-    if(setup!==setupKey){fx.clear();await fx.install(shot);setupKey=setup;}
     // prepare reads the camera on the way in; later camera-only edits go straight to the track.
     EP.cameraTrack?.(shot.camera,shot.id);EP.reduced?.(false);
     if(shot.kind==='music'&&shot.ledMode!=='media'){const now=w.performance.now;w.performance.now=()=>0;try{w.ErgoFlex.setLedEffect({mode:'spectrum',period:Number(shot.ledPeriod)||6},false);}finally{w.performance.now=now;}}

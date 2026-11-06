@@ -717,7 +717,7 @@ function installGlobals(shot) {
     const r = api.renderer, own = Object.getOwnPropertyDescriptor(r, 'toneMappingExposure'); let raw = r.toneMappingExposure;
     const k = Array.isArray(g.exposureScale) ? g.exposureScale : [[0, g.exposureScale]], cell = { value: keyAt(k, 0) };
     Object.defineProperty(r, 'toneMappingExposure', { configurable: true, enumerable: true, get: () => raw * cell.value, set: v => { raw = v; } });
-    active.globals.exposureCell = { cell, keys: k, undo: () => { delete r.toneMappingExposure; if (own) Object.defineProperty(r, 'toneMappingExposure', own); r.toneMappingExposure = raw; } };
+    active.globals.exposureCell = { cell, keys: k, capture: cell.value, undo: () => { delete r.toneMappingExposure; if (own) Object.defineProperty(r, 'toneMappingExposure', own); r.toneMappingExposure = raw; } };
   }
 }
 export async function install(shot) {
@@ -787,7 +787,13 @@ export async function update(shot, { onSlow } = {}) {
     const expFast = !gChanged('exposureScale') || (G?.exposureCell && g1.exposureScale !== undefined);
     if (!gChanged('exposure') && envFast && expFast) {
       if (gChanged('environmentScale')) G.envKeys = g1.environmentScale;
-      if (gChanged('exposureScale')) { const k = Array.isArray(g1.exposureScale) ? g1.exposureScale : [[0, g1.exposureScale]]; G.exposureCell.keys = k; G.exposureCell.cell.value = keyAt(k, 0); }
+      if (gChanged('exposureScale')) {
+        let k = Array.isArray(g1.exposureScale) ? g1.exposureScale : [[0, g1.exposureScale]];
+        // timeOfDay snapshotted the exposure through the scale it saw at install and writes that back as the raw
+        // value, so a fresh install multiplies by the new scale twice. Match it without re-capturing the room.
+        if (active.tod && G.exposureCell.capture) { const f = keyAt(k, 0) / G.exposureCell.capture; k = k.map(([t, v]) => [t, v * f]); }
+        G.exposureCell.keys = k; G.exposureCell.cell.value = keyAt(k, 0);
+      }
     } else { globals = true; tail = 0; }
   }
   if (changed('ledColor') || changed('ledStatus') || changed('ledNeutral') || changed('obstacles')) status = true;
