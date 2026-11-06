@@ -12,6 +12,7 @@ export function filmRenderShot(film,shot,keys){
   for(const k of ['ledStatus','ledNeutral','ledColor'])if(lit[k]!==undefined)next[k]=structuredClone(lit[k]);
   if(lit.ledStatus&&!lit.ledNeutral)delete next.ledNeutral;
   if(shot.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...structuredClone(shot.sceneGlobals)};
+  if(lit.timeOfDay)next.timeOfDay=structuredClone(lit.timeOfDay);
   if(keys?.length){
     const old=[...(film?.cameraPlan?.keys||[])].sort((a,b)=>a.at-b.at),plan={...(film?.cameraPlan||{}),keys:keys.map(k=>{
       const o=/^plan-\d+$/.test(k.id)?old[Number(k.id.slice(5))]:null,e={at:Math.round(k.time*seconds*1000)/1000,position:k.view.position,target:k.view.target,fov:k.view.fov??35};
@@ -39,7 +40,7 @@ export function createStillRenderer({width=1280,height=720,src='/?view=product&p
     ready||=boot().catch(error=>{dispose();throw error;});await ready;
     const w=win(),EP=w.ErgoPresentation,fx=w.__filmFx;
     // Prepare once per scene; film-fx alone re-installs when only the film layers changed.
-    const {ledStatus,ledNeutral,ledColor,sceneGlobals,camera,cameraPlan,...scene}=shot,key=JSON.stringify(scene),setup=JSON.stringify(shot);
+    const {ledStatus,ledNeutral,ledColor,sceneGlobals,camera,cameraPlan,lights,lightEdits,timeOfDay,...scene}=shot,key=JSON.stringify(scene),setup=JSON.stringify(shot);
     if(key!==prepared){
       fx.clear();fx.beforePrepare(shot);prepared=null;setupKey=null;
       try{await EP.prepare(shot);}finally{fx.unhookPreset();}prepared=key;

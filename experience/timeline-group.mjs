@@ -6,9 +6,9 @@ import {validateStatus} from './film-lighting.mjs';
 // the end lengthen the chapter.
 export const CHAPTER_MAX=90;
 const tidy=v=>Math.round(v*1e6)/1e6,has=(set,id)=>!!set?.has(id);
-function pickedTimes({seconds,keys,clips,lights=[],neutrals=[]},picks){
+function pickedTimes({seconds,keys,clips,lights=[],neutrals=[],tods=[]},picks){
   return [...keys.filter(k=>has(picks.keys,k.id)).map(k=>[k.time*seconds,k.time*seconds]),...clips.filter(c=>has(picks.clips,c.id)).map(c=>[c.start,clipEnd(c)]),
-    ...lights.filter(e=>has(picks.lights,e.id)).map(e=>[e.at,e.at+e.dur]),...neutrals.filter(k=>has(picks.neutrals,k[2])).map(k=>[k[0],k[0]])];
+    ...lights.filter(e=>has(picks.lights,e.id)).map(e=>[e.at,e.at+e.dur]),...neutrals.filter(k=>has(picks.neutrals,k[2])).map(k=>[k[0],k[0]]),...tods.filter(k=>has(picks.tods,k.id)).map(k=>[k.at,k.at])];
 }
 // The deltas (seconds) that keep the group at or after 0 and inside the chapter limit.
 export function groupRange(base,picks,max=CHAPTER_MAX){
@@ -29,6 +29,10 @@ export function shiftGroup(base,picks,delta,max=CHAPTER_MAX){
   if(base.neutrals){
     next.neutrals=base.neutrals.map(k=>has(picks.neutrals,k[2])?[tidy(k[0]+d),k[1],k[2]]:k).sort((a,b)=>a[0]-b[0]);
     for(let i=1;i<next.neutrals.length;i++)if(next.neutrals[i][0]-next.neutrals[i-1][0]<.001&&(has(picks.neutrals,next.neutrals[i][2])||has(picks.neutrals,next.neutrals[i-1][2])))throw Error('Two light colour keys would land at the same time. Move the selection a little further.');
+  }
+  if(base.tods){
+    next.tods=base.tods.map(k=>has(picks.tods,k.id)?{...k,at:tidy(k.at+d)}:k).sort((a,b)=>a.at-b.at);
+    for(let i=1;i<next.tods.length;i++)if(next.tods[i].at-next.tods[i-1].at<.001&&(has(picks.tods,next.tods[i].id)||has(picks.tods,next.tods[i-1].id)))throw Error('Two time-of-day keys would land at the same time. Move the selection a little further.');
   }
   return next;
 }

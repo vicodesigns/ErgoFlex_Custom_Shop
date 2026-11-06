@@ -205,3 +205,22 @@ body.directing #skip{display:none}
 #director-panel [data-scene-lights] button[aria-pressed=true]{background:#184451;border-color:#67ddf5;color:#c7f7ff}
 #director-panel .global-slider{display:grid;grid-template-columns:1fr 84px;gap:8px;align-items:center}
 #director-panel label output[data-global-steps]{color:#ffe7a8;font-variant-numeric:tabular-nums}
+/* Desk white and Time of day lanes: the colour over time as a band, big labelled keys, blend spans */
+.desk-lane-row[data-lane-color=white],.desk-lane-row[data-lane-color=tod]{height:58px;--lane:#e9eef2}
+.desk-lane-row[data-lane-color=tod]{--lane:#ffcf8a}
+.key-lane{height:56px;overflow:visible}
+.key-lane .lane-band{position:absolute;left:0;right:0;top:21px;height:14px;border-radius:4px;box-shadow:inset 0 0 0 1px #ffffff22}
+.key-lane .lane-blend{position:absolute;top:37px;height:3px;border-radius:2px;background:repeating-linear-gradient(90deg,#ffe7a8 0 6px,transparent 6px 10px);opacity:.8;pointer-events:none}
+#director-timeline .lane-key{position:absolute;top:0;height:56px;min-height:56px;min-width:28px;transform:translateX(-50%);padding:0 4px;border:0;border-radius:6px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:0;cursor:ew-resize;z-index:4;touch-action:none;user-select:none}
+#director-timeline .lane-key i{order:2;display:block;width:16px;height:16px;margin-top:20px;border-radius:50%;border:2px solid #eaf6fb;box-shadow:0 0 0 2px #0008}
+#director-timeline .lane-key b{order:1;position:absolute;top:1px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:600;color:#eef8fc;white-space:nowrap;text-shadow:0 1px 3px #000}
+#director-timeline .lane-key small{order:3;position:absolute;top:40px;left:50%;transform:translateX(-50%);font-size:9px;color:#a9c3cf;white-space:nowrap;text-shadow:0 1px 3px #000}
+#director-timeline .lane-key.low b{top:40px}#director-timeline .lane-key.low small{top:1px}
+#director-timeline .lane-key:hover i{transform:scale(1.15)}
+#director-timeline .lane-key.selected i{border-color:#ffc977;box-shadow:0 0 0 3px #ffc97766}
+#director-timeline .lane-key.selected b{color:#ffe3ad}
+#director-timeline .lane-key.grouped i{border-color:#9ff0ff;box-shadow:0 0 0 3px #62d9f5aa}
+#director-timeline .lane-key.invalid i{border-color:#ff786e}
+.desk-lane-label .lane-add{display:block;margin-top:3px;min-height:20px!important;padding:1px 6px!important;font-size:10px!important;border-radius:6px!important}
+#director-timeline .lane-key.start b,#director-timeline .lane-key.start small{left:2px;transform:none}
+#director-timeline .lane-key.end b,#director-timeline .lane-key.end small{left:auto;right:2px;transform:none}

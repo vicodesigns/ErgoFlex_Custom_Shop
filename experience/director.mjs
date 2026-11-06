@@ -3,7 +3,7 @@ import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
 import {paceChapter} from './chapter-timing.mjs';
 import {validateClipSchedule,sampledMotionToClips,legacyMotionToClips,cleanClipMotion,findClipInsertion} from './desk-clips.mjs';
 import {groupRange,snapGroupDelta,shiftGroup} from './timeline-group.mjs';
-import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth} from './film-lighting.mjs';
+import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS} from './film-lighting.mjs';
 import {filmRenderShot,createStillRenderer} from './film-render.mjs';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
 import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './film-chapters.mjs';
@@ -31,7 +31,7 @@ export function mountDirector(bridge,catalog,initial){
   let keyId=null,playhead=0,keyDrag=null,suppressKeyClickUntil=0;
   let inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null,focusSelection=false;
   // Timeline group selection (camera keys + desk clips) and the film chapter list.
-  const picks={keys:new Set(),clips:new Set(),lights:new Set(),neutrals:new Set()};let lightSel=null,stills=null,stillBusy=false,marquee=null,groupDrag=null,suppressGroupClickUntil=0;
+  const picks={keys:new Set(),clips:new Set(),lights:new Set(),neutrals:new Set(),tods:new Set()};let lightSel=null,stills=null,stillBusy=false,marquee=null,groupDrag=null,suppressGroupClickUntil=0;
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
   let filmChapters=null,filmError='',exported=signature();
   const panel=document.createElement('section');panel.id='director-panel';panel.setAttribute('aria-label','Director controls');
@@ -161,17 +161,25 @@ export function mountDirector(bridge,catalog,initial){
     if(roomLight!==undefined&&roomLight!==null)s.sceneGlobals={...s.sceneGlobals,roomLight};
   }
   function putLighting(change,{key=null,render=true}={}){const L=lighting();if(!L)return;requireReady();commit(()=>writeLighting(L,change),{render,key});}
-  const lightItem=()=>{const L=lighting();if(!L||!lightSel)return null;return lightSel.kind==='lights'?L.status.find(e=>e.id===lightSel.id):L.neutral.find(k=>k[2]===lightSel.id);};
+  // Time of day: the room's daypart keys (film shot until edited).
+  const filmTods=new Map();
+  function timeOfDay(){
+    const s=shot();if(s.timeOfDay)return {keys:s.timeOfDay,edited:true};const f=filmShot();if(!f?.timeOfDay?.length)return null;
+    let c=filmTods.get(s.id);if(!c){c=cleanLighting({timeOfDay:f.timeOfDay}).timeOfDay;filmTods.set(s.id,c);}return {keys:c,edited:false};
+  }
+  const roomModes=()=>{const s=shot(),room=catalog.find(r=>r.id===s.room),layout=room?.layouts.find(l=>l.id===s.layout);return layout?.modes||room?.modes||[];};
+  function putTod(keys,{render=true}={}){requireReady();const s=shot();for(const k of keys)if(k.at<0||k.at>s.seconds+1e-6)throw Error(`Time-of-day keys must sit inside the ${s.seconds}-second chapter.`);commit(()=>{shot().timeOfDay=copy(keys).sort((a,b)=>a.at-b.at);},{render});}
+  const lightItem=()=>{if(!lightSel)return null;if(lightSel.kind==='tods')return timeOfDay()?.keys.find(k=>k.id===lightSel.id)||null;const L=lighting();if(!L)return null;return lightSel.kind==='lights'?L.status.find(e=>e.id===lightSel.id):L.neutral.find(k=>k[2]===lightSel.id);};
   function selectLight(kind,id){
     lightSel={kind,id};keyId=null;deskEditor.clearSelection();const item=lightItem();if(!item)return;
-    showInspector('lighting',true);seekCamera((kind==='lights'?item.at:item[0])/shot().seconds);render();
+    showInspector('lighting',true);seekCamera((Array.isArray(item)?item[0]:item.at)/shot().seconds);render();
   }
   // Group selection: marquee or Shift/Ctrl-click camera keys, desk clips and lighting, then move them together.
-  const KINDS_ON_TIMELINE=[['keys','[data-key]','key'],['clips','[data-desk-clip]','deskClip'],['lights','[data-light-clip]','lightClip'],['neutrals','[data-light-key]','lightKey']];
+  const KINDS_ON_TIMELINE=[['keys','[data-key]','key'],['clips','[data-desk-clip]','deskClip'],['lights','[data-light-clip]','lightClip'],['neutrals','[data-light-key]','lightKey'],['tods','[data-tod-key]','todKey']];
   const itemOf=el=>{for(const [kind,attr,data] of KINDS_ON_TIMELINE)if(el.matches(attr))return [kind,el.dataset[data]];return null;};
   const picked=()=>Object.values(picks).reduce((n,set)=>n+set.size,0);
   function syncPicks(){
-    const L=lighting(),ids={keys:new Set(keys().map(k=>k.id)),clips:new Set(deskEditor.motion().clips.map(c=>c.id)),lights:new Set(L?.status.map(e=>e.id)),neutrals:new Set(L?.neutral.map(k=>k[2]))};
+    const L=lighting(),ids={keys:new Set(keys().map(k=>k.id)),clips:new Set(deskEditor.motion().clips.map(c=>c.id)),lights:new Set(L?.status.map(e=>e.id)),neutrals:new Set(L?.neutral.map(k=>k[2])),tods:new Set(timeOfDay()?.keys.map(k=>k.id))};
     for(const [kind,attr,data] of KINDS_ON_TIMELINE){
       for(const id of picks[kind])if(!ids[kind].has(id))picks[kind].delete(id);
       for(const el of timeline.querySelectorAll(attr))el.classList.toggle('grouped',picks[kind].has(el.dataset[data]));
@@ -179,7 +187,7 @@ export function mountDirector(bridge,catalog,initial){
     timeline.classList.toggle('has-group',picked()>0);
   }
   function groupStatus(){
-    const n=(v,one,many)=>v?`${v} ${v===1?one:many}`:'',parts=[n(picks.keys.size,'camera view','camera views'),n(picks.clips.size,'move','moves'),n(picks.lights.size,'light state','light states'),n(picks.neutrals.size,'colour key','colour keys')].filter(Boolean);
+    const n=(v,one,many)=>v?`${v} ${v===1?one:many}`:'',parts=[n(picks.keys.size,'camera view','camera views'),n(picks.clips.size,'move','moves'),n(picks.lights.size,'light state','light states'),n(picks.neutrals.size,'white key','white keys'),n(picks.tods.size,'time-of-day key','time-of-day keys')].filter(Boolean);
     status(picked()?`${parts.join(' · ')} selected · drag one to move them together · ←/→ nudge (Shift ×10) · Esc clears`:'Selection cleared.');
   }
   function clearPicks(){if(!picked())return;for(const set of Object.values(picks))set.clear();syncPicks();}
@@ -190,22 +198,24 @@ export function mountDirector(bridge,catalog,initial){
   function pickAll(){
     const L=lighting();for(const k of keys())picks.keys.add(k.id);for(const c of deskEditor.motion().clips)picks.clips.add(c.id);
     if(L){for(const e of L.status)picks.lights.add(e.id);for(const k of L.neutral)picks.neutrals.add(k[2]);}
+    for(const k of timeOfDay()?.keys||[])picks.tods.add(k.id);
     syncPicks();groupStatus();
   }
-  const groupBase=()=>{const L=lighting();return {seconds:shot().seconds,keys:copy(keys()),clips:copy(deskEditor.motion().clips),...(L?{lights:copy(L.status),neutrals:copy(L.neutral)}:{})};};
+  const groupBase=()=>{const L=lighting();return {seconds:shot().seconds,keys:copy(keys()),clips:copy(deskEditor.motion().clips),...(L?{lights:copy(L.status),neutrals:copy(L.neutral)}:{}),...(timeOfDay()?{tods:copy(timeOfDay().keys)}:{})};};
   function shiftPicks(delta,message,set=picks){
     requireReady();const base=groupBase(),next=shiftGroup(base,set,delta);if(Math.abs(next.delta)<1e-9){renderTimeline();status('The selection is already at the start of the chapter.');return;}
     const motion=deskEditor.motion(),longer=next.seconds!==base.seconds,position=playhead*base.seconds,L=lighting(),lit=set.lights?.size||set.neutrals?.size;
     commit(()=>{
       const s=shot();s.seconds=next.seconds;if(next.keys.length&&(set.keys?.size||longer))s.camera={keys:next.keys};if(set.clips?.size||longer)s.motion=cleanClipMotion({...copy(motion),clips:next.clips},next.seconds);
       if(lit)writeLighting(L,{status:next.lights,neutral:next.neutrals});
+      if(set.tods?.size)s.timeOfDay=next.tods;
     },{render:true});
     seekCamera(position/next.seconds);
     status(`${message} ${next.delta>0?'+':''}${Number(next.delta.toFixed(3))}s${longer?` · chapter lengthened to ${next.seconds}s`:''}. Undo restores the previous timing.`);
   }
   function previewGroup(d){
     const s=d.base.seconds;let valid=true,next=null;try{next=shiftGroup(d.base,d.set,d.delta);}catch{valid=false;}
-    const at={keys:k=>k.time*s,clips:c=>c.start,lights:e=>e.at,neutrals:k=>k[0]},find={keys:id=>d.base.keys.find(k=>k.id===id),clips:id=>d.base.clips.find(c=>c.id===id),lights:id=>d.base.lights?.find(e=>e.id===id),neutrals:id=>d.base.neutrals?.find(k=>k[2]===id)};
+    const at={keys:k=>k.time*s,clips:c=>c.start,lights:e=>e.at,neutrals:k=>k[0],tods:k=>k.at},find={keys:id=>d.base.keys.find(k=>k.id===id),clips:id=>d.base.clips.find(c=>c.id===id),lights:id=>d.base.lights?.find(e=>e.id===id),neutrals:id=>d.base.neutrals?.find(k=>k[2]===id),tods:id=>d.base.tods?.find(k=>k.id===id)};
     for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of timeline.querySelectorAll(attr)){const id=el.dataset[data];if(!d.set[kind]?.has(id))continue;const item=find[kind](id);if(item){el.style.left=(at[kind](item)+d.delta)/s*100+'%';el.classList.toggle('invalid',!valid);}}
     const count=Object.values(d.set).reduce((n,v)=>n+v.size,0);
     status(valid?`Moving ${count} item${count===1?'':'s'} ${d.delta>0?'+':''}${Number(d.delta.toFixed(3))}s${next.seconds>s?` · chapter becomes ${next.seconds}s`:''} · Alt: bypass snap`:'Those positions overlap another movement, light state or key.',!valid);
@@ -213,33 +223,42 @@ export function mountDirector(bridge,catalog,initial){
   // Lighting lane: light states as blocks, the neutral white's keys as diamonds above them.
   const kindLabel=kind=>LIGHT_KINDS.find(k=>k[0]===kind)?.[1]||kind,r2=v=>Number(v.toFixed(2));
   function lightLane(){
-    const L=lighting();if(!L)return '';const s=shot().seconds,on=(kind,id)=>lightSel?.kind===kind&&lightSel.id===id;
-    return `<div class="desk-lanes light-lanes"><div class="desk-lane-row" data-lane-color="light"><span class="desk-lane-label" title="Film desk lighting: status states and the neutral white">Lighting</span><div class="desk-lane light-lane" data-light-lane role="group" aria-label="Desk lighting timeline"><div class="desk-lane-line"></div>
+    const L=lighting(),T=timeOfDay();if(!L&&!T)return '';const s=shot().seconds,on=(kind,id)=>lightSel?.kind===kind&&lightSel.id===id;
+    const band=at=>Array.from({length:49},(_,i)=>`${at(i/48*s)} ${(i/48*100).toFixed(2)}%`).join(',');
+    // Labelled keys alternate above / below the band so neighbours stay readable; spans mark the blends.
+    const chip=(kind,attr,id,t,swatch,name,detail,i)=>`<button class="lane-key ${i%2?'low':''} ${t/s<.06?'start':t/s>.94?'end':''} ${on(kind,id)?'selected':''}" ${attr}="${id}" style="left:${t/s*100}%" aria-pressed="${on(kind,id)}" aria-label="${escape(name)} ${escape(detail)} at ${r2(t)} seconds" title="${escape(name)} · ${escape(detail)} · ${r2(t)}s (drag to retime)"><i style="background:${swatch}"></i><b>${escape(name)}</b><small>${escape(detail)} · ${r2(t)}s</small></button>`;
+    const spans=(list,at,same)=>list.slice(1).map((k,i)=>same(list[i],k)?'':`<span class="lane-blend" style="left:${at(list[i])/s*100}%;width:${(at(k)-at(list[i]))/s*100}%" title="Blends ${r2(at(list[i]))} → ${r2(at(k))}s"></span>`).join('');
+    const status=L?`<div class="desk-lane-row" data-lane-color="light"><span class="desk-lane-label" title="The film's desk status lights">Desk status</span><div class="desk-lane light-lane" data-light-lane role="group" aria-label="Desk status lights timeline"><div class="desk-lane-line"></div>
       ${L.status.map(e=>`<button class="desk-clip light-clip ${on('lights',e.id)?'selected':''}" data-light-clip="${e.id}" style="left:${e.at/s*100}%;width:${e.dur/s*100}%;--lane:${lightKindColor(e.kind)}" aria-pressed="${on('lights',e.id)}" aria-label="Light state ${escape(kindLabel(e.kind))}, ${r2(e.at)} to ${r2(e.at+e.dur)} seconds" title="${escape(kindLabel(e.kind))} · ${r2(e.at)}–${r2(e.at+e.dur)}s · fade ${e.fade??1}s${e.fadeIn?` · fade in ${e.fadeIn}s`:''}"><span class="clip-resize" data-resize="start" title="Trim start"></span><strong>${escape(e.kind)}${e.kind==='wheels'&&e.mode?' '+e.mode:''}</strong><small>${r2(e.at)}–${r2(e.at+e.dur)}s</small><span class="clip-resize" data-resize="end" title="Trim end"></span></button>`).join('')}
-      ${L.neutral.map(k=>`<button class="camera-key light-key ${on('neutrals',k[2])?'selected':''}" data-light-key="${k[2]}" style="left:${k[0]/s*100}%;--key:${k[1]}" aria-pressed="${on('neutrals',k[2])}" aria-label="Neutral white ${k[1]} at ${r2(k[0])} seconds" title="Neutral white ${k[1]} · ${r2(k[0])}s"><span>◆</span></button>`).join('')}
-      ${L.status.length?'':'<span class="desk-lane-empty">No light states · + Light adds one at the playhead</span>'}<div class="light-now" data-light-now></div><div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div></div>`;
+      ${L.status.length?'':'<span class="desk-lane-empty">No light states · + Light adds one at the playhead</span>'}<div class="light-now" data-light-now></div><div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>
+      <div class="desk-lane-row" data-lane-color="white"><span class="desk-lane-label" title="The neutral white between status lights, over the chapter">Desk white<button data-action="light-key-add" class="lane-add" title="Add a white key at the playhead with the colour there">+ Key</button></span><div class="desk-lane key-lane white-lane" data-light-lane role="group" aria-label="Desk white over time"><div class="lane-band" style="background:linear-gradient(90deg,${band(t=>neutralAt(L.neutral,t))})"></div>
+      ${spans(L.neutral,k=>k[0],(a,b)=>a[1]===b[1])}${L.neutral.map((k,i)=>chip('neutrals','data-light-key',k[2],k[0],k[1],whiteName(k[1]),k[1],i)).join('')}<div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>`:'';
+    const label=m=>roomModes().find(x=>x.id===m)?.label||m;
+    const tod=T?`<div class="desk-lane-row" data-lane-color="tod"><span class="desk-lane-label" title="The room's time of day: it blends from one daypart to the next">Time of day<button data-action="tod-add" class="lane-add" title="Add a time-of-day key at the playhead">+ Key</button></span><div class="desk-lane key-lane tod-lane" data-light-lane role="group" aria-label="Room time of day"><div class="lane-band" style="background:linear-gradient(90deg,${band(t=>daypartAt(T.keys,t))})"></div>
+      ${spans(T.keys,k=>k.at,(a,b)=>a.mode===b.mode)}${T.keys.map((k,i)=>chip('tods','data-tod-key',k.id,k.at,DAYPART_TINTS[k.mode]||'#8899aa',label(k.mode),k.ease==='smooth'?'smooth blend':'blend',i)).join('')}<div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>`:'';
+    return `<div class="desk-lanes light-lanes">${status}${tod}</div>`;
   }
   function syncLightNow(){const bar=timeline.querySelector('[data-light-now]'),L=bar&&lighting();if(!L)return;bar.style.left=playhead*100+'%';bar.style.background=lightAt(L,playhead*shot().seconds);}
   function lightPanel(){
-    const L=lighting();if(!L)return '';const item=lightItem(),s=shot().seconds;
+    const L=lighting();if(!L)return todPanel();const item=lightItem(),s=shot().seconds;
     const head=`<h3>Desk lighting</h3><p class="director-hint">The film's status lights and neutral white. ${L.edited?'Edited here; Export cut sends them to the film.':'From the film shot; your first edit keeps a copy in this cut.'} The live preview approximates the strips; Render still shows the real film look.</p>
       <div class="director-actions"><button data-action="light-add">+ Light state</button><button data-action="light-key-add">+ Colour key</button>${film?'<button data-action="render-still" class="primary">Render still</button>':''}</div>
       <label>Selected light<select name="light-selected"><option value="">Choose a light state or colour key…</option>${L.status.map(e=>option('lights:'+e.id,`${kindLabel(e.kind)} · ${r2(e.at)}–${r2(e.at+e.dur)}s`,lightSel?.kind+':'+lightSel?.id)).join('')}${L.neutral.map(k=>option('neutrals:'+k[2],`Neutral white ${k[1]} · ${r2(k[0])}s`,lightSel?.kind+':'+lightSel?.id)).join('')}</select></label>`;
-    if(!item)return head;
+    if(!item||lightSel.kind==='tods')return head+todPanel();
     if(lightSel.kind==='lights'){const e=item;return head+`<div class="movement-inspector light-inspector"><h4 style="--lane:${lightKindColor(e.kind)}">Light state</h4>
       <label>State<select name="light-kind">${LIGHT_KINDS.map(([id,label])=>option(id,label,e.kind)).join('')}</select></label>
       ${e.kind==='wheels'?`<label>Drive mode<select name="light-mode">${WHEEL_MODES.map((label,i)=>option(String(i+1),`${i+1} · ${label}`,String(e.mode??3))).join('')}</select></label>`:''}
       <div class="director-grid"><label>Start (seconds)<input name="light-at" type="number" min="0" max="${s}" step=".05" value="${r2(e.at)}"></label><label>Duration (seconds)<input name="light-dur" type="number" min=".05" max="${s}" step=".05" value="${r2(e.dur)}"></label></div>
       <div class="director-grid"><label>Fade out (seconds)<input name="light-fade" type="number" min="0" max="10" step=".05" value="${e.fade??1}"></label><label>Fade in (seconds)<input name="light-fadein" type="number" min="0" max="10" step=".05" value="${e.fadeIn??0}"></label></div>
       <p class="director-hint">Fade in: the neutral white fades out under the state over that time. Fade out: back to the neutral white when the state ends.</p>
-      <div class="director-actions"><button data-action="light-delete">Delete light state</button></div></div>`;}
+      <div class="director-actions"><button data-action="light-delete">Delete light state</button></div></div>`+todPanel();}
     const k=item;return head+`<div class="movement-inspector light-inspector"><h4>Neutral white key</h4>
       <label>Time (seconds)<input name="neutral-time" type="number" min="0" max="${s}" step=".05" value="${r2(k[0])}"></label>
       <div class="director-grid neutral-colour"><label>Colour<input name="neutral-color" type="color" value="${k[1]}"></label><label>Hex<input name="neutral-hex" maxlength="7" value="${k[1]}" spellcheck="false"></label></div>
       <label>Brightness <output data-neutral-bright>×1.00</output><input name="neutral-bright" type="range" min=".2" max="3" step=".01" value="1" data-base="${k[1]}"></label>
       <label>Warmth <output data-neutral-warm>${Math.round(warmthOf(k[1])*100)}%</output><input name="neutral-warm" type="range" min="0" max="1" step=".01" value="${warmthOf(k[1]).toFixed(2)}" data-base="${k[1]}"></label>
       <p class="director-hint">Brightness scales the colour in linear light (relative to this key's colour). Warmth goes from true white to the evening warm ${'#52483c'} at the same brightness.</p>
-      <div class="director-actions"><button data-action="light-delete" ${L.neutral.length<=1?'disabled title="The neutral white needs at least one key"':''}>Delete colour key</button></div></div>`;
+      <div class="director-actions"><button data-action="light-delete" ${L.neutral.length<=1?'disabled title="The neutral white needs at least one key"':''}>Delete colour key</button></div></div>`+todPanel();
   }
   // Room brightness (exposureScale) and ambient light (environmentScale): the film's value until touched.
   // Keyed values ([[t, v], …]) are edited as one factor on the film's keys and written back scaled.
@@ -260,6 +279,13 @@ export function mountDirector(bridge,catalog,initial){
     const f=globalFactor(k),r=x=>Math.round(x*10000)/10000;
     commit(()=>{const s=shot();s.sceneGlobals={...s.sceneGlobals,[k]:f.keys?f.keys.map(([t,x])=>[t,r(x*v)]):r(v)};},{render:true});
     status(`${label} ${f.keys?'×'+v+' on every key':'set to '+v}${k==='exposureScale'?' ('+stepsText(v)+')':''}. Render still shows the film look.`);
+  }
+  function todPanel(){
+    const T=timeOfDay();if(!T)return '';const item=lightSel?.kind==='tods'?lightItem():null,modes=roomModes(),s=shot().seconds;
+    return `<hr><h3>Time of day</h3><p class="director-hint">The room blends from each daypart to the next across the gaps: the sunset that warms the desk white. ${T.edited?'Edited here; Export cut writes timeOfDay.':'From the film shot; your first edit keeps a copy in this cut.'}</p><div class="director-actions"><button data-action="tod-add">+ Time-of-day key</button></div>`+(item?`<div class="movement-inspector"><h4>Time-of-day key</h4>
+      <div class="director-grid"><label>Time (seconds)<input name="tod-time" type="number" min="0" max="${s}" step=".05" value="${r2(item.at)}"></label><label>Daypart<select name="tod-mode">${modes.map(m=>option(m.id,m.label,item.mode)).join('')}${modes.some(m=>m.id===item.mode)?'':option(item.mode,item.mode,item.mode)}</select></label></div>
+      <label>Blend into this daypart<select name="tod-ease">${option('linear','Even',item.ease||'linear')}${option('smooth','Smooth (ease in and out)',item.ease||'linear')}</select></label>
+      <div class="director-actions"><button data-action="light-delete" ${T.keys.length<=1?'disabled':''}>Delete time-of-day key</button></div></div>`:'');
   }
   // One light item changed: states stay one at a time, colour keys stay sorted.
   function editLight(change,{key=null,render=true}={}){
@@ -318,7 +344,7 @@ export function mountDirector(bridge,catalog,initial){
     panel.innerHTML=`
       <div class="director-heading"><div><span class="director-kicker">DIRECTOR MODE</span><h2>Director studio.</h2></div><button data-action="inspector" aria-label="Hide inspector" title="Hide inspector; keep the timeline open">‹</button></div>
       <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button></div>${filmPicker()}
-      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter','camera','groove',...(lighting()?['lighting']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav>
+      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter','camera','groove',...(lighting()||timeOfDay()?['lighting']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav>
       <p data-status role="status" class="director-status">${project.shots.length} chapters · ${Math.round(duration(project.shots))} seconds</p>
       <div data-inspector-page="project">
       <div class="director-actions"><button data-action="new">New cut</button><button data-action="clone">Duplicate cut</button></div>
@@ -391,6 +417,12 @@ export function mountDirector(bridge,catalog,initial){
       if(name==='render-still'){await renderStill();return;}
       if(name.startsWith('sl-')){await sceneLights.action(name);return;}
       if(name==='light-add'||name==='light-key-add'){addLight(name==='light-key-add');return;}
+      if(name==='tod-add'){
+        const T=timeOfDay();if(!T)return;requireReady();const t=Math.round(playhead*shot().seconds*1000)/1000,near=T.keys.find(k=>Math.abs(k.at-t)<.001);if(near){selectLight('tods',near.id);return;}
+        const prev=[...T.keys].reverse().find(k=>k.at<=t)||T.keys[0],key={id:crypto.randomUUID(),at:t,mode:prev?.mode||roomModes()[0]?.id||'morning'};
+        putTod([...T.keys,key]);selectLight('tods',key.id);status('Time-of-day key added at '+r2(t)+'s. Choose its daypart in Lighting.');return;
+      }
+      if(name==='light-delete'&&lightSel?.kind==='tods'){const T=timeOfDay(),item=lightItem();if(!item||T.keys.length<=1)return;putTod(T.keys.filter(k=>k.id!==item.id));lightSel=null;render();status('Deleted. Undo restores it.');return;}
       if(name==='light-delete'){
         const L=lighting(),item=lightItem();if(!item)return;
         if(lightSel.kind==='lights')putLighting({status:L.status.filter(e=>e.id!==item.id)});else{if(L.neutral.length<=1)return;putLighting({neutral:L.neutral.filter(k=>k[2]!==item[2])});}
@@ -592,6 +624,15 @@ export function mountDirector(bridge,catalog,initial){
     if(name?.startsWith('sl-')){try{await sceneLights.changed(event.target);}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name==='light-selected'){const [kind,id]=value.split(':');if(id)selectLight(kind,id);else{lightSel=null;renderPanel();renderTimeline();}return;}
     if(name==='room-light'){try{const v=Number(value);if(value===''||!Number.isFinite(v)||v<0||v>2)throw Error('Room light level runs from 0 to 2.');putLighting({roomLight:v});status('Room light level set to '+v+'.');}catch(error){renderPanel();status(error.message,true);}return;}
+    if(name?.startsWith('tod-')){
+      try{
+        const T=timeOfDay(),item=lightItem();if(!T||!item)return;let next={...item};
+        if(name==='tod-time'){const n=Number(value);if(value===''||!Number.isFinite(n)||n<0||n>shot().seconds)throw Error('Enter a time inside the chapter.');if(T.keys.some(k=>k.id!==item.id&&Math.abs(k.at-n)<.001))throw Error('There is already a time-of-day key at that time.');next.at=n;}
+        if(name==='tod-mode')next.mode=value;if(name==='tod-ease'){if(value==='smooth')next.ease='smooth';else delete next.ease;}
+        putTod(T.keys.map(k=>k.id===item.id?next:k));seekCamera(next.at/shot().seconds);
+      }catch(error){renderPanel();status(error.message,true);}
+      return;
+    }
     if(name?.startsWith('light-')||name?.startsWith('neutral-')){
       try{
         if(['neutral-bright','neutral-warm','neutral-color'].includes(name)){renderPanel();return;}
@@ -599,7 +640,7 @@ export function mountDirector(bridge,catalog,initial){
         const change=name==='light-kind'?{kind:value,...(value==='wheels'&&!lightItem().mode?{mode:3}:{})}:name==='light-mode'?{mode:Number(value)}:name==='light-at'?{at:need()}:name==='light-dur'?{dur:Math.max(.05,need())}:name==='light-fade'?{fade:need()}:name==='light-fadein'?{fadeIn:need()}:name==='neutral-time'?{time:Math.min(shot().seconds,need())}:null;
         if(name==='neutral-hex'){const hex=value.trim().replace(/^#?/,'#').toLowerCase();if(!/^#[0-9a-f]{6}$/.test(hex))throw Error('Enter a colour as #rrggbb.');editLight({color:hex});}
         else if(change)editLight(change);
-        const item=lightItem();if(item)seekCamera((lightSel.kind==='lights'?item.at:item[0])/shot().seconds);
+        const item=lightItem();if(item)seekCamera((Array.isArray(item)?item[0]:item.at)/shot().seconds);
       }catch(error){renderPanel();status(error.message,true);}
       return;
     }
@@ -732,9 +773,9 @@ export function mountDirector(bridge,catalog,initial){
   const viewport=()=>timeline.querySelector('.timeline-viewport');
   timeline.addEventListener('pointerdown',event=>{
     if(event.button!==0||composing||bridge.bakeState().baking)return;
-    const item=event.target.closest('[data-key],[data-desk-clip],[data-light-clip],[data-light-key]');
+    const item=event.target.closest('[data-key],[data-desk-clip],[data-light-clip],[data-light-key],[data-tod-key]');
     if(item){
-      const [kind,id]=itemOf(item),light=kind==='lights'||kind==='neutrals',edge=event.target.closest('[data-resize]')?.dataset.resize;
+      const [kind,id]=itemOf(item),light=kind==='lights'||kind==='neutrals'||kind==='tods',edge=event.target.closest('[data-resize]')?.dataset.resize;
       if(event.shiftKey||event.ctrlKey||event.metaKey){event.preventDefault();event.stopImmediatePropagation();suppressGroupClickUntil=performance.now()+400;item.focus({preventScroll:true});togglePick(kind,id);return;}
       const grouped=picks[kind].has(id);
       if(!grouped){clearPicks();if(!light)return;}
@@ -794,9 +835,9 @@ export function mountDirector(bridge,catalog,initial){
   // Shift + "+ Light" adds a neutral colour key instead of a light state.
   timeline.addEventListener('click',event=>{const b=event.target.closest('[data-action="light-add"]');if(b&&event.shiftKey){event.preventDefault();event.stopImmediatePropagation();action('light-key-add');}},true);
   // A click on the lighting lane moves the playhead, like the other lanes.
-  timeline.addEventListener('click',event=>{const rail=event.target.closest('[data-light-lane]');if(!rail||event.target.closest('[data-light-clip],[data-light-key]'))return;try{const box=rail.getBoundingClientRect();seekCamera(Math.max(0,Math.min(1,(event.clientX-box.left)/box.width)));}catch(error){status(error.message,true);}});
+  timeline.addEventListener('click',event=>{const rail=event.target.closest('[data-light-lane]');if(!rail||event.target.closest('[data-light-clip],[data-light-key],[data-tod-key],button'))return;try{const box=rail.getBoundingClientRect();seekCamera(Math.max(0,Math.min(1,(event.clientX-box.left)/box.width)));}catch(error){status(error.message,true);}});
   timeline.addEventListener('keydown',event=>{
-    const item=event.target.closest('[data-light-clip],[data-light-key]');if(!item||!['Delete','Backspace'].includes(event.key)||picked())return;
+    const item=event.target.closest('[data-light-clip],[data-light-key],[data-tod-key]');if(!item||!['Delete','Backspace'].includes(event.key)||picked())return;
     event.preventDefault();const [kind,id]=itemOf(item);lightSel={kind,id};action('light-delete');
   });
   document.addEventListener('keydown',event=>{

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {cleanLighting,exportLighting,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,brightnessOf,validateStatus,WARM} from '../experience/film-lighting.mjs';
+import {cleanLighting,exportLighting,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,brightnessOf,validateStatus,WARM,whiteName,daypartAt} from '../experience/film-lighting.mjs';
 import {shiftGroup} from '../experience/timeline-group.mjs';
 import {bakeCameraPlan} from '../experience/camera-spline-bake.mjs';
 import {filmRenderShot} from '../experience/film-render.mjs';
@@ -50,4 +50,12 @@ const g=cleanLighting({sceneGlobals:{exposureScale:1.23,environmentScale:[[0,.3]
 assert.deepEqual(g,{exposureScale:1.23,environmentScale:[[0,.3],[7.75,.7]]});
 const withGlobals=filmRenderShot({...rise,sceneGlobals:{roomLight:.55,exposureScale:.9,ledRoomSpill:.15}},{...directorShot,sceneGlobals:{roomLight:.55,environmentScale:2}},dkeys).sceneGlobals;
 assert.deepEqual(withGlobals,{roomLight:.55,exposureScale:.9,ledRoomSpill:.15,environmentScale:2});
+// Time of day: cleaned with ids, exported in the film's shape, moved with the group, tints blend between dayparts.
+const tod=cleanLighting({timeOfDay:[{at:9,mode:'afternoon'},{at:.75,mode:'morning'},{at:15.25,mode:'evening',ease:'smooth'},{at:3,mode:'Bad Mode'}]}).timeOfDay;
+assert.deepEqual(tod.map(k=>[k.at,k.mode,k.ease]),[[.75,'morning',undefined],[9,'afternoon',undefined],[15.25,'evening','smooth']]);
+assert.deepEqual(exportLighting({timeOfDay:tod}).timeOfDay,[{at:.75,mode:'morning'},{at:9,mode:'afternoon'},{at:15.25,mode:'evening',ease:'smooth'}]);
+const moved=shiftGroup({seconds:16,keys:[],clips:[],tods:tod},{keys:new Set(),clips:new Set(),tods:new Set([tod[2].id])},.5);assert.equal(moved.tods[2].at,15.75);assert.equal(moved.seconds,16);
+assert.throws(()=>shiftGroup({seconds:16,keys:[],clips:[],tods:tod},{keys:new Set(),clips:new Set(),tods:new Set([tod[1].id])},6.25),/same time/);
+assert.equal(daypartAt(tod,0),'#ffcf8a');assert.equal(daypartAt(tod,20),'#ff8a4a');assert.ok(!['#fff3d6','#ff8a4a'].includes(daypartAt(tod,12)));
+assert.equal(whiteName('#929292'),'True white');assert.equal(whiteName('#52483c'),'Warm white');assert.equal(filmRenderShot(rise,{...directorShot,timeOfDay:tod},dkeys).timeOfDay[2].ease,'smooth');
 console.log('Film lighting: clean/export round trip, neutral white over time, linear brightness and warmth, light states and colour keys in group moves, the browser camera bake (matches camera-spline.mjs) and the render shot merge verified.');

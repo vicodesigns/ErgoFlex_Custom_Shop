@@ -24,6 +24,8 @@ export function cleanLighting(v={}){
   }).sort((a,b)=>a.at-b.at);
   if(Array.isArray(v.ledNeutral))out.ledNeutral=v.ledNeutral.slice(0,64).flatMap(k=>Array.isArray(k)&&num(k[0],0,90,null)!==null&&hexOk(k[1])?[[num(k[0],0,90,0),k[1].toLowerCase(),unique(k[2])]]:[]).sort((a,b)=>a[0]-b[0]);
   if(hexOk(v.ledColor))out.ledColor=v.ledColor.toLowerCase();
+  // timeOfDay [{at, mode, ease?}]: the room blends from one daypart preset to the next across each gap.
+  if(Array.isArray(v.timeOfDay))out.timeOfDay=v.timeOfDay.slice(0,32).flatMap(k=>typeof k?.mode==='string'&&/^[a-z0-9-]{1,40}$/.test(k.mode)&&num(k.at,0,90,null)!==null?[{id:unique(k.id),at:num(k.at,0,90,0),mode:k.mode,...(k.ease==='smooth'||k.ease==='linear'?{ease:k.ease}:{})}]:[]).sort((a,b)=>a.at-b.at);
   const g=v.sceneGlobals||{},globals={},room=num(g.roomLight,0,4,null);if(room!==null)globals.roomLight=room;
   for(const k of ['exposureScale','environmentScale']){const x=g[k];if(Array.isArray(x)){const keys=x.slice(0,64).filter(p=>Array.isArray(p)&&Number.isFinite(p[0])&&Number.isFinite(p[1])).map(p=>[num(p[0],0,90,0),num(p[1],0,20,1)]);if(keys.length)globals[k]=keys;}else{const n=num(x,0,20,null);if(n!==null)globals[k]=n;}}
   if(Object.keys(globals).length)out.sceneGlobals=globals;
@@ -34,6 +36,7 @@ export function exportLighting(shot){
   const s={...shot};
   if(Array.isArray(s.ledStatus))s.ledStatus=s.ledStatus.map(({id,...e})=>e);
   if(Array.isArray(s.ledNeutral))s.ledNeutral=s.ledNeutral.map(k=>[k[0],k[1]]);
+  if(Array.isArray(s.timeOfDay))s.timeOfDay=s.timeOfDay.map(({id,...k})=>k);
   return s;
 }
 // Linear-light colour helpers (sRGB transfer).
@@ -54,6 +57,13 @@ const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
 export function neutralAt(keys,t){
   if(!keys.length)return '#ffffff';const i=keys.findIndex(k=>k[0]>t);if(i<0)return keys.at(-1)[1];if(i===0)return keys[0][1];
   const a=keys[i-1],b=keys[i],u=smooth((t-a[0])/Math.max(1e-6,b[0]-a[0])),x=toLinear(a[1]),y=toLinear(b[1]);return toHex(x.map((v,n)=>v+(y[n]-v)*u));
+}
+// Desk white key names by warmth; daypart tints for the Time of day lane.
+export const whiteName=hex=>{const w=warmthOf(hex);return w<.2?'True white':w>.65?'Warm white':'Custom white';};
+export const DAYPART_TINTS={morning:'#ffcf8a',day:'#fff3d6',afternoon:'#fff3d6',evening:'#ff8a4a',sunset:'#ff8a4a',night:'#2d3a78',party:'#b04cff',focus:'#dfe9ff',calm:'#9fc7ff'};
+export function daypartAt(keys,t){
+  const tint=m=>DAYPART_TINTS[m]||'#8899aa';if(!keys.length)return '#8899aa';const i=keys.findIndex(k=>k.at>t);if(i<0)return tint(keys.at(-1).mode);if(i===0)return tint(keys[0].mode);
+  const a=keys[i-1],b=keys[i];let u=(t-a.at)/Math.max(1e-6,b.at-a.at);if(b.ease==='smooth')u=smooth(u);const x=toLinear(tint(a.mode)),y=toLinear(tint(b.mode));return toHex(x.map((v,n)=>v+(y[n]-v)*u));
 }
 export const statusAt=(events,t)=>events.find(e=>t>=e.at&&t<e.at+e.dur)||null;
 // The strip colour at a time: the active state's colour, else the neutral white.

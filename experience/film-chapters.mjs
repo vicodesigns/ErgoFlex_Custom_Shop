@@ -40,6 +40,7 @@ export function liveFilmShot(film,shot){
   // Lighting edited in the Director (ledStatus present) replaces the film's.
   if(lit.ledStatus){next.ledStatus=lit.ledStatus;if(lit.ledNeutral)next.ledNeutral=lit.ledNeutral;else delete next.ledNeutral;if(lit.ledColor)next.ledColor=lit.ledColor;}
   if(lit.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...lit.sceneGlobals};
+  if(lit.timeOfDay)next.timeOfDay=lit.timeOfDay;
   delete next.lights;Object.assign(next,mergeSceneLights(film,shot));
   return next;
 }
