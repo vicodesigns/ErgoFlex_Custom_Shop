@@ -1,0 +1,335 @@
+{
+ "id": "create",
+ "notes": "HQ36, Vico's new story (2026-11-05): digital, drafting, oil painting. 22.5 s (+4.5). Opens on the studio's painting easel, still life and cast bust in the window light, glides past them and settles on the desk: flat at 0 deg with a pen display (digital), lifts to 52 in (blue; keeps the stool clearance), tilts 0->40 deg (purple): at 9 deg the pen display is put away and the drafting kit + easel rail appear, the painter's side shelf pops in at ~28 deg; then 40->55 deg (purple): the app's auto-stow swaps to the artist easel and painting at 50 deg, shelf stays. Camera rests through each 1.25 s white pause and ends on a slow push on the painting, stool and palette in front. Needs film-fx accessories.add[].visible (timed visibility). Keyboard tray, keyboard, mouse and the small pen tablet are off this desk.",
+ "set": {
+  "seconds": 22.5,
+  "motion": {
+   "version": 2,
+   "initial": {
+    "height": 43.5,
+    "tilt": 0,
+    "x": 0,
+    "z": 0,
+    "yaw": 0
+   },
+   "clips": [
+    {
+     "id": "stand-to-draw",
+     "lane": "lift",
+     "kind": "lift",
+     "start": 4.2,
+     "duration": 2.6,
+     "easing": "smooth",
+     "label": "Lift up \u00b7 52 in",
+     "target": 52
+    },
+    {
+     "id": "drafting",
+     "lane": "tilt",
+     "kind": "tilt",
+     "start": 9.05,
+     "duration": 5.6,
+     "easing": "smooth",
+     "label": "Drafting \u00b7 40\u00b0",
+     "target": 40
+    },
+    {
+     "id": "painting",
+     "lane": "tilt",
+     "kind": "tilt",
+     "start": 16.9,
+     "duration": 2.6,
+     "easing": "smooth",
+     "label": "Easel \u00b7 55\u00b0",
+     "target": 55
+    }
+   ]
+  },
+  "ledStatus": [
+   {
+    "at": 4.2,
+    "dur": 2.6,
+    "kind": "lift-up",
+    "fade": 1.0
+   },
+   {
+    "at": 9.05,
+    "dur": 5.6,
+    "kind": "tilt-retract",
+    "fade": 1.0,
+    "fadeIn": 0.6
+   },
+   {
+    "at": 16.9,
+    "dur": 2.6,
+    "kind": "tilt-retract",
+    "fade": 1.0,
+    "fadeIn": 0.6
+   }
+  ],
+  "accessories": {
+   "add": [
+    {
+     "id": "drafting-kit",
+     "visible": [
+      [
+       0,
+       0
+      ],
+      [
+       10.78,
+       null
+      ]
+     ]
+    },
+    {
+     "id": "easel-rail",
+     "visible": [
+      [
+       0,
+       0
+      ],
+      [
+       10.78,
+       null
+      ]
+     ]
+    },
+    {
+     "id": "artist-easel",
+     "x": 0.29,
+     "y": -58,
+     "z": 8,
+     "rotation": 180,
+     "visible": [
+      [
+       0,
+       0
+      ],
+      [
+       10.78,
+       null
+      ]
+     ]
+    },
+    {
+     "id": "painter-shelf",
+     "x": 794.4,
+     "y": -143.5,
+     "z": 204.6,
+     "tilt": -65,
+     "visible": [
+      [
+       0,
+       0
+      ],
+      [
+       12.6,
+       1
+      ]
+     ]
+    },
+    {
+     "id": "ergoflex-artist-stool",
+     "role": "base-shelf",
+     "x": -150,
+     "z": 620,
+     "rotation": -15
+    },
+    {
+     "id": "atelier-artist-palette-oak",
+     "role": "base-shelf",
+     "x": -150,
+     "z": 620,
+     "y": 335,
+     "rotation": 20
+    },
+    {
+     "id": "atelier-artist-pen-display-oak",
+     "role": "desktop",
+     "x": -40,
+     "z": 110,
+     "rotation": 0,
+     "scale": 100,
+     "visible": [
+      [
+       10.78,
+       0
+      ]
+     ]
+    }
+   ],
+   "remove": [
+    "drawing-tablet",
+    "keyboard-tray",
+    "ergo-keyboard",
+    "logitech-mx-master"
+   ]
+  },
+  "cameraPlan": {
+   "easeIn": false,
+   "easeOut": false,
+   "keys": [
+    {
+     "at": 0.0,
+     "position": [
+      5.0,
+      2.35,
+      1.35
+     ],
+     "target": [
+      2.1,
+      1.55,
+      2.7
+     ],
+     "fov": 42,
+     "label": "Easel and still life in the window light"
+    },
+    {
+     "at": 2.4,
+     "position": [
+      3.75,
+      2.4,
+      1.5
+     ],
+     "target": [
+      0.0,
+      1.6,
+      1.6
+     ],
+     "fov": 43,
+     "label": "Past the easel and taboret"
+    },
+    {
+     "at": 4.2,
+     "position": [
+      2.4,
+      2.55,
+      1.7
+     ],
+     "target": [
+      -1.15,
+      1.8,
+      0.85
+     ],
+     "fov": 44,
+     "label": "Desk: lift (blue), desk right of the title"
+    },
+    {
+     "at": 7.4,
+     "position": [
+      1.6,
+      2.6,
+      1.7
+     ],
+     "target": [
+      -1.35,
+      1.75,
+      0.75
+     ],
+     "fov": 46,
+     "label": "Pen display at 52 in (rest)",
+     "hold": 1.65
+    },
+    {
+     "at": 12.4,
+     "position": [
+      1.5,
+      2.45,
+      -0.35
+     ],
+     "target": [
+      -1.4,
+      1.65,
+      0.25
+     ],
+     "fov": 44,
+     "label": "Front-right: board rises, drafting appears, side shelf pops in"
+    },
+    {
+     "at": 15.25,
+     "position": [
+      0.85,
+      2.25,
+      -1.85
+     ],
+     "target": [
+      -1.45,
+      1.5,
+      0.3
+     ],
+     "fov": 44,
+     "label": "Front-right 3/4: drafting at 40 deg (rest)",
+     "hold": 1.65
+    },
+    {
+     "at": 19.4,
+     "position": [
+      0.95,
+      1.75,
+      -1.35
+     ],
+     "target": [
+      -1.45,
+      1.35,
+      0.25
+     ],
+     "fov": 44,
+     "label": "Easel: the oil painting appears, stool and palette in front"
+    },
+    {
+     "at": 22.5,
+     "position": [
+      0.7,
+      1.72,
+      -1.1
+     ],
+     "target": [
+      -1.5,
+      1.38,
+      0.2
+     ],
+     "fov": 42,
+     "label": "Gentle push on the painting"
+    }
+   ]
+  }
+ },
+ "sceneEditsAdd": [
+  {
+   "match": "",
+   "path": "ergoflex-painter-shelf",
+   "materialName": "^Artist clear acrylic$",
+   "material": {
+    "transmission": 0,
+    "color": "#f1f4f5",
+    "roughness": 0.3
+   }
+  },
+  {
+   "match": "",
+   "path": "ergoflex-painter-shelf",
+   "materialName": "^Brush ochre handle$",
+   "material": {
+    "color": "#e3a33a"
+   }
+  },
+  {
+   "match": "",
+   "path": "ergoflex-painter-shelf",
+   "materialName": "^Brush sage handle$",
+   "material": {
+    "color": "#2f9c82"
+   }
+  },
+  {
+   "match": "",
+   "path": "ergoflex-painter-shelf",
+   "materialName": "^Brush walnut handle$",
+   "material": {
+    "color": "#c23b2e"
+   }
+  }
+ ],
+ "screenShift": 4.7
+}

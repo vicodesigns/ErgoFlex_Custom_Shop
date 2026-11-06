@@ -44,6 +44,11 @@
 //     catalog accessories (drafting-kit, artist-easel, keyboards…) are toggled
 //     on the prepared desk (and placed if x/z/… are given); library props
 //     (e.g. tablet-pc) are added as desk objects. Both after prepare, both undone.
+//     visible:[[chapterSeconds, 0|1], …] on an add entry (catalog or library): from each key on, the item is held
+//     hidden (0) or shown (1) whatever the app writes (auto-stow, day phases); null hands it back to the app, as
+//     before the first key.
+//     A catalog id already on the preset's desk is listed in add just to time it. E.g. a side shelf that pops in
+//     during a tilt the app would hide it at: {id:'painter-shelf', visible:[[0,0],[9.5,1]]}.
 import * as THREE from 'three';
 import { sampleScreenColours } from '../../led-screen-sampler.mjs';
 import { accessory } from '../../catalog.mjs';
@@ -397,7 +402,7 @@ const PROP_DEFAULTS = { 'tablet-pc': { x: -330, z: 230, rotation: 15 } };
 export function beforePrepare() {}
 export function unhookPreset() {}
 async function installDeskObjects(shot) {
-  const spec = shot.accessories, out = { added: [], hidden: [], toggled: [] }; if (!spec) return out;
+  const spec = shot.accessories, out = { added: [], hidden: [], toggled: [], timed: [] }; if (!spec) return out;
   const objects = api.sceneDesks?.objects, records = api.sceneDesks?.active?.objects;
   // Catalog accessories: toggle on the prepared desk, wait for the layout,
   // then optionally place them like any desk object (key accessory-<id>).
@@ -423,13 +428,23 @@ async function installDeskObjects(shot) {
     objects.setEditing(false); objects.select(null);
     const obj = records?.get(key)?.obj; if (obj) { obj.userData.filmFxProp = a.id; obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); }
     out.added.push(key);
+    if (Array.isArray(a.visible)) timeVisible(out, records?.get(key)?.obj, a);
   }
+  for (const a of catalogAdd) if (Array.isArray(a.visible)) timeVisible(out, records?.get('accessory-' + a.id)?.obj, a);
   for (const id of spec.remove || []) {
     if (isCatalog(id)) continue;
     for (const [key, item] of records || []) if (key === id || item.saved?.propId === id) { out.hidden.push([item.obj, item.obj.visible]); item.obj.visible = false; }
   }
   return out;
 }
+// accessories.add[].visible: a sticky visibility override (like sceneEdits' hide) switched by chapter time in frame().
+function timeVisible(out, obj, a) {
+  if (!obj) { console.warn('[film-fx] accessories.add: no desk object for ' + a.id + ' to time'); return; }
+  const keys = [...a.visible].sort((p, q) => p[0] - q[0]), cell = { force: null }; let raw = obj.visible;
+  Object.defineProperty(obj, 'visible', { configurable: true, enumerable: true, get: () => cell.force === null ? raw : cell.force, set: v => { raw = v; } });
+  out.timed.push({ keys, cell, undo: () => { delete obj.visible; obj.visible = raw; } });
+}
+const visibleAt = (keys, s) => { let v = null; for (const [at, on] of keys) if (s >= at) v = on === null ? null : !!on; return v; };
 function installDeskFinish(spec) {
   const was = { wood: api.currentConfig.woodFinish, trim: api.currentConfig.trimColor };
   const click = sel => { const el = document.querySelector(sel); if (!el) { console.warn('[film-fx] deskFinish: no swatch ' + sel); return false; } el.click(); return true; };
@@ -441,6 +456,7 @@ function installDeskFinish(spec) {
 }
 function clearDeskObjects(d) {
   if (!d) return; const objects = api.sceneDesks?.objects;
+  for (const v of d.timed || []) v.undo();
   for (const id of [...d.toggled].reverse()) { try { api.toggleAccessory(id); } catch (e) { console.warn('[film-fx] untoggle', id, e); } }
   for (const [obj, v] of d.hidden) obj.visible = v;
   for (const key of d.added) { try { if (api.sceneDesks?.active?.objects?.has(key)) { objects.select(key); objects.remove(); objects.select(null); } } catch (e) { console.warn('[film-fx] remove', key, e); } }
@@ -807,6 +823,7 @@ export async function update(shot, { onSlow } = {}) {
 }
 export async function frame(t, chapterSeconds, { video = false } = {}) {
   if (!active) return;
+  for (const v of active.desk?.timed || []) v.cell.force = visibleAt(v.keys, chapterSeconds);
   if (active.tod) active.tod.apply(chapterSeconds);
   active.roomLight?.frame(chapterSeconds);
   active.roomSpill?.frame();

@@ -10,7 +10,8 @@ chapter with a director-camera-<id>.json).
 tools/experience/film-cameras/<id>.json:
   {"id": "<chapter id>", "notes": "...", "set": {<shot field>: <value>, ...},
    "sceneEditsAdd": [<sceneEdit>, ...],            # appended (an earlier copy with the same match/path/near replaced)
-   "subshots": {"<index>": {"set": {...}}}}        # hero only: shots/13-subshots.json entries
+   "subshots": {"<index>": {"set": {...}}},        # hero only: shots/13-subshots.json entries
+   "screenShift": <s>}                             # monitor clips start <s> later (offset - s, loop off: first frame held)
 "set" replaces whole fields (seconds, cameraPlan, motion, ledStatus, accessories, timeOfDay, screens, ...). A set
 cameraPlan is baked to "camera" with camera-spline.mjs at the shot's (new) length. Values are absolute: re-runs are safe.
 """
@@ -44,6 +45,10 @@ def apply(s, o):
     if o.get('sceneEditsAdd'):
         add = o['sceneEditsAdd']
         s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if not any(same(e, a) for a in add)] + add
+    if o.get('screenShift'):   # the chapter grew at its start: its monitor clips start that much later, first frame held
+        for sc in s.get('screens', []):
+            if 'base' not in sc: sc['base'] = {'offset': sc.get('offset', 0), 'loop': sc.get('loop', True)}
+            sc['offset'], sc['loop'] = round(sc['base']['offset'] - o['screenShift'], 3), False
     if 'cameraPlan' in o.get('set', {}): s['camera'] = bake(s['seconds'], s['cameraPlan'])
     return s
 

@@ -1,0 +1,100 @@
+{
+ "id": "coast",
+ "notes": "HQ36: opens wide on the lab's reel wall (screening display, OCC banner and marks, clock, speakers, bookshelf, Film editing 1 bay), glides down the aisle and arcs to the window side to settle on the hero edit suite with the reel behind it. Chapter 9.5 -> 12 s (no moves or status lights in this chapter). Projector beam hidden (rendered as a black wedge); hero chair pulled 1.9 m toward the aisle so it no longer blocks the desk. | main: the hero suite chair hidden (moved, it still crossed the lower right at 6.5-8.5 s).",
+ "set": {
+  "seconds": 12.0,
+  "cameraPlan": {
+   "keys": [
+    {
+     "at": 0,
+     "position": [
+      1.8,
+      2.5,
+      -4.1
+     ],
+     "target": [
+      -6.3,
+      1.3,
+      -0.3
+     ],
+     "fov": 44,
+     "label": "The lab: reel wall, signage, edit bays"
+    },
+    {
+     "at": 3.3,
+     "position": [
+      1.7,
+      2.42,
+      -0.9
+     ],
+     "target": [
+      -6.3,
+      1.42,
+      1.3
+     ],
+     "fov": 44
+    },
+    {
+     "at": 7.1,
+     "position": [
+      0.95,
+      2.18,
+      3.5
+     ],
+     "target": [
+      -4.3,
+      1.55,
+      3.6
+     ],
+     "fov": 43
+    },
+    {
+     "at": 10.3,
+     "position": [
+      -0.15,
+      1.98,
+      6.4
+     ],
+     "target": [
+      -2.85,
+      1.42,
+      4.75
+     ],
+     "fov": 41,
+     "label": "Hero edit suite"
+    },
+    {
+     "at": 12.0,
+     "position": [
+      -0.5,
+      1.92,
+      6.62
+     ],
+     "target": [
+      -2.9,
+      1.42,
+      4.72
+     ],
+     "fov": 40
+    }
+   ],
+   "easeIn": false,
+   "easeOut": false
+  }
+ },
+ "sceneEditsAdd": [
+  {
+   "match": "^Projector beam$",
+   "hide": true
+  },
+  {
+   "match": "^Prop:steelcase-leap-v2$",
+   "near": [
+    -1.333,
+    4.979,
+    0.3
+   ],
+   "hide": true
+  }
+ ]
+}

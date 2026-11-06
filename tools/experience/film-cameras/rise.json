@@ -1,0 +1,118 @@
+{
+ "id": "rise",
+ "notes": "HQ36: notebook open and wake kept (0-2 s). The pull-out cranes up to a high wide from the ficus corner while the desk rises (window, fairy lights, ficus, wall shelves with books, clock, pinboard), then comes down to the eye-line 3/4 at rest through the 1.25 s white (7.6-9.45). Lowering and evening: a slow push in (4.05 to 3.15 u) on the same side, so the pinboard, shelves and sideboard lamp come forward behind the desk. The front and the far side were tested: the chair blocks the desk there.",
+ "set": {
+  "cameraPlan": {
+   "easeIn": false,
+   "easeOut": false,
+   "keys": [
+    {
+     "at": 0.0,
+     "position": [
+      -0.019,
+      1.657,
+      0.946
+     ],
+     "target": [
+      -0.49,
+      1.09,
+      0.88
+     ],
+     "fov": 30,
+     "label": "DAILY NOTES and the sleeping desk"
+    },
+    {
+     "at": 2.0,
+     "position": [
+      0.076,
+      1.724,
+      0.971
+     ],
+     "target": [
+      -0.5,
+      1.12,
+      0.88
+     ],
+     "fov": 31,
+     "label": "Desk wakes: lights and screens on"
+    },
+    {
+     "at": 4.2,
+     "position": [
+      1.4,
+      2.25,
+      1.5
+     ],
+     "target": [
+      -0.86,
+      1.32,
+      0.78
+     ],
+     "fov": 41,
+     "label": "Up and back off the notebook: desk top and window"
+    },
+    {
+     "at": 5.9,
+     "position": [
+      2.036,
+      2.4,
+      2.095
+     ],
+     "target": [
+      -1.008,
+      1.65,
+      0.706
+     ],
+     "fov": 48,
+     "label": "High wide: window, ficus, shelves, clock and pinboard"
+    },
+    {
+     "at": 7.6,
+     "position": [
+      2.79,
+      1.85,
+      2.306
+     ],
+     "target": [
+      -0.903,
+      1.55,
+      0.595
+     ],
+     "fov": 51,
+     "label": "Standing, white: camera at rest",
+     "hold": 1.85
+    },
+    {
+     "at": 12.65,
+     "position": [
+      2.235,
+      1.65,
+      2.156
+     ],
+     "target": [
+      -0.754,
+      1.36,
+      0.334
+     ],
+     "fov": 50.5,
+     "label": "Settle in as it lowers: shelves and pinboard behind"
+    },
+    {
+     "at": 16.0,
+     "position": [
+      1.88,
+      1.55,
+      2.057
+     ],
+     "target": [
+      -0.7,
+      1.3,
+      0.25
+     ],
+     "fov": 51,
+     "label": "Seated, evening window: slow push"
+    }
+   ]
+  }
+ }
+}

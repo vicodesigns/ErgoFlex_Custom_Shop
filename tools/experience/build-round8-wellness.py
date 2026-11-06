@@ -70,6 +70,9 @@ CAMERA = {'easeIn': False, 'easeOut': False, 'keys': [
     orbit(13.0, 14, 4.30, 1.30, 1.38, 0.0, 50, label='Pull back: the gym reveal')]}
 
 DIRECTOR = os.path.join(H, 'director-camera-wellness.json')
+OVERRIDE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'film-cameras', 'wellness.json')
+if os.path.exists(OVERRIDE):   # HQ36: the chapter's camera, length and lift come from build-round8-cameras.py
+    print(f'wellness: camera, length and lift from {OVERRIDE} (build-round8-cameras.py)'); sys.exit()
 if os.path.exists(DIRECTOR):
     print(f'wellness: camera, length and moves from {DIRECTOR} (build-round8-director.py)'); sys.exit()
 

@@ -1,0 +1,134 @@
+{
+ "id": "wellness",
+ "notes": "HQ36: opens wide from the mirror-wall side on the sunlit window, bike and BREATHE/RESET recovery corner, glides in and pans right onto the desk; desk centred three-quarter-front for the lift, arcing to the front; ends drifting left so the dumbbell rack, mirror and 08:00 timer join. +3 s (16 s): lift and its blue block moved 3 -> 6 s.",
+ "set": {
+  "seconds": 16.0,
+  "motion": {
+   "version": 2,
+   "initial": {
+    "height": 28,
+    "tilt": 0,
+    "x": 0,
+    "z": 0,
+    "yaw": 0
+   },
+   "clips": [
+    {
+     "id": "stand-break",
+     "lane": "lift",
+     "kind": "lift",
+     "start": 6.0,
+     "duration": 5,
+     "easing": "smooth",
+     "label": "Stand and reset",
+     "target": 43.5
+    }
+   ]
+  },
+  "ledStatus": [
+   {
+    "at": 6.0,
+    "dur": 5,
+    "kind": "lift-up",
+    "fade": 1
+   }
+  ],
+  "cameraPlan": {
+   "easeIn": false,
+   "easeOut": false,
+   "keys": [
+    {
+     "at": 0.0,
+     "position": [
+      4.6,
+      2.3,
+      -2.2
+     ],
+     "target": [
+      1.4,
+      1.4,
+      2.5
+     ],
+     "fov": 48,
+     "label": "Wide from the mirror wall: window, bike, mat"
+    },
+    {
+     "at": 3.0,
+     "position": [
+      3.55,
+      1.75,
+      -1.6
+     ],
+     "target": [
+      -0.3,
+      1.2,
+      1.9
+     ],
+     "fov": 47,
+     "label": "Glide in, pan right"
+    },
+    {
+     "at": 6.0,
+     "position": [
+      2.75,
+      1.35,
+      -0.95
+     ],
+     "target": [
+      -1.1,
+      1.15,
+      0.55
+     ],
+     "fov": 48,
+     "label": "Lift starts: desk centred, three-quarter front"
+    },
+    {
+     "at": 8.5,
+     "position": [
+      2.75,
+      1.4,
+      -0.3
+     ],
+     "target": [
+      -1.1,
+      1.3,
+      0.6
+     ],
+     "fov": 49,
+     "label": "Arc toward the front with the rise"
+    },
+    {
+     "at": 11.0,
+     "position": [
+      2.85,
+      1.5,
+      0.35
+     ],
+     "target": [
+      -1.1,
+      1.4,
+      0.64
+     ],
+     "fov": 49,
+     "label": "Standing height: whole desk"
+    },
+    {
+     "at": 16.0,
+     "position": [
+      3.1,
+      1.65,
+      1.15
+     ],
+     "target": [
+      -1.2,
+      1.45,
+      0.35
+     ],
+     "fov": 49,
+     "label": "Drift left: rack and mirror join, into the dissolve"
+    }
+   ]
+  }
+ },
+ "screenShift": 3
+}

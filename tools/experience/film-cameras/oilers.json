@@ -1,0 +1,118 @@
+{
+ "id": "oilers",
+ "notes": "Opens square on the HOME OF THE OILERS spirit wall (banner, surf-team longboard, trophies), glides along the window wall over the APA set-design desk past the bell-tower view, turns to the teacher corner and settles on the demonstration desk with a slow push. 11 s -> 14 s for the reveal (no moves, status or offsets to shift). The desk's task chair is moved 1.26 m toward the window so it no longer covers the hero desk.",
+ "set": {
+  "seconds": 14,
+  "cameraPlan": {
+   "easeIn": false,
+   "easeOut": false,
+   "keys": [
+    {
+     "at": 0,
+     "position": [
+      9.8,
+      2.35,
+      4.6
+     ],
+     "target": [
+      9.95,
+      2.95,
+      7.4
+     ],
+     "fov": 42,
+     "label": "Home of the Oilers: banner, surf-team longboard, trophies"
+    },
+    {
+     "at": 2.6,
+     "position": [
+      7.6,
+      2.5,
+      4.05
+     ],
+     "target": [
+      6.0,
+      2.45,
+      7.4
+     ],
+     "fov": 42,
+     "label": "Over the APA set-design desk"
+    },
+    {
+     "at": 5.4,
+     "position": [
+      4.4,
+      2.6,
+      3.6
+     ],
+     "target": [
+      -0.6,
+      2.1,
+      7.0
+     ],
+     "fov": 42,
+     "label": "Along the window: bell tower, toward the teacher corner"
+    },
+    {
+     "at": 8.4,
+     "position": [
+      1.7,
+      2.5,
+      3.1
+     ],
+     "target": [
+      -2.7,
+      1.55,
+      6.0
+     ],
+     "fov": 42,
+     "label": "Turn to the demonstration desk"
+    },
+    {
+     "at": 11.2,
+     "position": [
+      0.75,
+      2.4,
+      3.25
+     ],
+     "target": [
+      -2.95,
+      1.5,
+      5.8
+     ],
+     "fov": 42
+    },
+    {
+     "at": 14,
+     "position": [
+      0.2,
+      2.33,
+      3.45
+     ],
+     "target": [
+      -3.0,
+      1.48,
+      5.78
+     ],
+     "fov": 41.5,
+     "label": "Settle on the demonstration desk"
+    }
+   ]
+  }
+ },
+ "sceneEditsAdd": [
+  {
+   "match": "^Task chair$",
+   "near": [
+    -1.222,
+    5.452,
+    0.3
+   ],
+   "position": [
+    0.37,
+    0,
+    1.2
+   ]
+  }
+ ],
+ "screenShift": 2
+}
