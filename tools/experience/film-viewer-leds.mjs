@@ -43,7 +43,10 @@
 //
 //   ledReceivers:'viewer' | {mode:'viewer', floorBounce=true, legWings=true, wingFallBelow=true, bands=true,
 //                 wingRows='beside'|'app', indicatorLift=true, stripMap='app'|'viewer', appFloorGlow=true,
-//                 floorBounceStrength=130, floorBounceReach=100, wingFloorGain=0.6 (the wing faces' share of the floor)}
+//                 floorBounceStrength=130, floorBounceReach=100, wingFloorGain=0.6 (the wing faces' share of the floor),
+//                 floorHue=true, floorTint=FLOOR_TINT, floorTintMax=FLOOR_TINT_MAX (the floor's LED colour in lit rooms, below)}
+//   The returned handle's setFloorGain(() => k) scales the floor bounce and the foot glow per render (film-fx's
+//   sceneGlobals.ledFloorGlow, the Director's "LED glow on the floor").
 import * as THREE from 'three';
 
 const api = window.ErgoFlex;
@@ -110,6 +113,60 @@ const OVERLAY = {
   polygonOffsetFactor: -1,
   polygonOffsetUnits: -1,
 };
+
+// ---- the floor's LED colour in lit rooms (Vico, 2026-11-06: in chapter 2 the red lift-down "looks white" on the
+// floor and the blue lift-up wrong on the carpet, while the desk's other surfaces read). Two causes, both in display space:
+//   1. The floor overlays (the bounce, the app's foot glow) tone-map their LED colour at the room's exposure: rise
+//      runs at ~2.0 (its morning exposure x the HQ29 ticks), and NeutralToneMapping rolls a colour that bright toward
+//      white (red 1/.03/.03 comes out pink, ~.98/.40/.40 sRGB; at the stage's .95 it stays ~.94/.14/.14).
+//   2. They are added on top of an already tone-mapped, sunlit cream rug (~.84/.71/.62): red has no headroom
+//      left (R clips) and the overlay's G/B lift the other channels, so the pool turns pale (stills: the red pool
+//      added +16/+18/+18 to the rug, more green and blue than red).
+// floorHue tone-maps the floor overlays' colour at no more than exposure 1 (the stage's look; chapters at <= 1 are
+// unchanged). floorTint is the LED light's dominance where it is strong: a multiply pass under each overlay pulls the
+// floor's other channels toward the LED's hue in proportion to the pool's strength (its alpha x the colour's
+// brightness), so the pool reads as the LED colour on a bright floor as it does on the dark stage. A dark floor barely
+// changes (dark x factor), white light does not tint, an unlit strip does not darken.
+export const FLOOR_TINT = 1.6, FLOOR_TINT_MAX = .75;   // picked from 2.2|.85 (flat red, the rug pattern gone), 1.6|.75, 1.2|.65 (coral)
+const HUE_AT_ONE = `#if defined( TONE_MAPPING )
+        gl_FragColor.rgb /= max( toneMappingExposure, 1.0 );
+        #endif
+        #include <tonemapping_fragment>`;
+const TINT_OUT = `#include <colorspace_fragment>
+        {
+          float efTintPeak = max( max( gl_FragColor.r, gl_FragColor.g ), gl_FragColor.b );
+          vec3 efTintHue = gl_FragColor.rgb / max( efTintPeak, 1e-4 );
+          float efTintAmount = min( efFloorTintMax, efFloorTint * clamp( gl_FragColor.a, 0.0, 1.0 ) * clamp( efTintPeak, 0.0, 1.0 ) );
+          gl_FragColor = vec4( mix( vec3( 1.0 ), efTintHue, efTintAmount ), 1.0 );
+        }`;
+// The overlay's colour at exposure <= 1, patched into its fragment shader (returns the undo, or null).
+export function floorHue(material) {
+  const before = material.fragmentShader;
+  if (!before.includes('#include <tonemapping_fragment>') || before.includes('toneMappingExposure, 1.0')) return null;
+  material.fragmentShader = before.replace('#include <tonemapping_fragment>', HUE_AT_ONE); material.needsUpdate = true;
+  return () => { material.fragmentShader = before; material.needsUpdate = true; };
+}
+// The tint pass for an additive floor overlay: its own shader on the same uniform objects (every strength / colour
+// the app or this module writes reaches both), drawn just before it as a multiply. A child, so it moves and scales with it.
+export function addFloorTint(overlay, tint) {
+  const src = overlay.material;
+  if (!src.fragmentShader.includes('#include <colorspace_fragment>')) return null;
+  const material = new THREE.ShaderMaterial({
+    uniforms: { ...src.uniforms, efFloorTint: tint.amount, efFloorTintMax: tint.max }, vertexShader: src.vertexShader,
+    fragmentShader: 'uniform float efFloorTint;\nuniform float efFloorTintMax;\n' + src.fragmentShader.replace('#include <colorspace_fragment>', TINT_OUT),
+    transparent: true, depthWrite: false, side: src.side, polygonOffset: src.polygonOffset, polygonOffsetFactor: src.polygonOffsetFactor, polygonOffsetUnits: src.polygonOffsetUnits,
+    blending: THREE.CustomBlending, blendSrc: THREE.ZeroFactor, blendDst: THREE.SrcColorFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor,
+  });
+  const mesh = new THREE.Mesh(overlay.geometry, material);
+  mesh.name = `${overlay.name} tint`; mesh.userData.filmFx = true; mesh.userData.noCameraFit = true;
+  mesh.renderOrder = overlay.renderOrder - .5; mesh.raycast = () => {}; mesh.castShadow = mesh.receiveShadow = false; mesh.frustumCulled = overlay.frustumCulled;
+  // The bounce sets its uniforms in its own onBeforeRender; the tint draws first, so it runs it too. Either way a hook of
+  // its own keeps it out of film-quality's black glow-pass swap (it is hidden there, as the bounce is).
+  const own = overlay.onBeforeRender;
+  mesh.onBeforeRender = own !== THREE.Object3D.prototype.onBeforeRender ? (...a) => own.apply(overlay, a) : () => {};
+  overlay.add(mesh);
+  return () => { mesh.removeFromParent(); material.dispose(); };
+}
 
 // ---- addLegWingSpill (verbatim shader) ----
 function addLegWingSpill(list, plate, wing, receiver, sourceId) {
@@ -321,7 +378,8 @@ const shownIn = (o) => { for (let p = o; p; p = p.parent) if (!p.visible) return
 export function installViewerLeds(shot) {
   const raw = shot.ledReceivers;
   const spec = { floorBounce: true, legWings: true, wingFallBelow: true, bands: true, wingRows: 'beside', indicatorLift: true,
-    stripMap: 'app', appFloorGlow: true, ...APP_SURFACE_DEFAULTS, ...(typeof raw === 'object' ? raw : {}) };
+    stripMap: 'app', appFloorGlow: true, floorHue: true, floorTint: FLOOR_TINT, floorTintMax: FLOOR_TINT_MAX,
+    ...APP_SURFACE_DEFAULTS, ...(typeof raw === 'object' ? raw : {}) };
   const model = api.loadedModel, pixels = api.ledPixelRenderer, renderer = api.renderer;
   if (!model || !pixels) { console.warn('[viewer-leds] no desk or LED pixel renderer'); return null; }
   let scene = model; while (scene.parent) scene = scene.parent; scene.updateMatrixWorld(true);
@@ -412,6 +470,13 @@ export function installViewerLeds(shot) {
   }
   // The app's foot floor glow: kept (the visualizer keeps it), drawn over the stage's contact shadow.
   { const vis = appGlow.visible, ro = appGlow.renderOrder; appGlow.visible = spec.appFloorGlow !== false; appGlow.renderOrder = 3; undo.push(() => { appGlow.visible = vis; appGlow.renderOrder = ro; }); }
+  // The floor's LED colour in lit rooms (see floorHue / addFloorTint): both floor overlays, the bounce and the foot glow.
+  const tint = { amount: { value: Math.max(0, Number(spec.floorTint) || 0) }, max: { value: THREE.MathUtils.clamp(Number(spec.floorTintMax) || 0, 0, 1) } };
+  for (const o of [bounce, appGlow]) {
+    if (!o) continue;
+    if (spec.floorHue) { const u = floorHue(o.material); if (u) undo.push(u); }
+    if (tint.amount.value > 0) { const u = addFloorTint(o, tint); if (u) undo.push(u); }
+  }
 
   // Pixel uploads: the indicator level (and optionally the visualizer's strip map).
   let lift = 1;
@@ -436,11 +501,21 @@ export function installViewerLeds(shot) {
   const ours = list.map((e) => e.material.uniforms);
   // Held once: film-quality's glow pass swaps non-glow meshes to a black material inside render (HQ14g crash on Win).
   const U = appGlow.material.uniforms, panelU = new Map(list.filter((e) => e.panel).map((e) => [e, e.panel.uniforms]));
+  // floorGain(): the Director's "LED glow on the floor" (film-fx sceneGlobals.ledFloorGlow), on the bounce and the
+  // foot glow for this render only (the app writes the foot glow's strength every frame).
+  let floorGain = () => 1;
   const direct = renderer.render;
   renderer.render = function (sc, cam) {
+    const fk = Math.max(0, Number(floorGain()) || 0), foot = U.strength.value;
+    if (fk === 1) return draw.call(this, sc, cam);
+    U.strength.value = foot * fk;
+    try { return draw.call(this, sc, cam, fk); } finally { U.strength.value = foot; }
+  };
+  function draw(sc, cam, fk = 1) {
     const surfaces = api.ledSurfaces;
     // The app's glow x effect gain, recovered from a receiver it drives (strength = glow * S / 10000 * gain).
-    const glow = surfaces.floorStrength > 0 ? U.strength.value * 10000 / surfaces.floorStrength : api.ledsEnabled ? api.ledGlow : 0;
+    // (U.strength carries the floor gain already; the fallback takes it explicitly.)
+    const glow = surfaces.floorStrength > 0 ? U.strength.value * 10000 / surfaces.floorStrength : (api.ledsEnabled ? api.ledGlow : 0) * fk;
     for (const e of list) {
       if (e.receiver === 'floorBounce') e.material.uniforms.strength.value = glow * spec.floorBounceStrength / 10000;
       else if (e.panel) { const pu = panelU.get(e); e.material.uniforms.strength.value = pu.strength.value; e.material.uniforms.fadeReach.value = pu.fadeReach.value; }
@@ -454,10 +529,11 @@ export function installViewerLeds(shot) {
     const all = [...appSpills, ...ours], saved = all.map((u) => u.strength.value), power = pixels.uniforms.efPixelPower.value;
     all.forEach((u) => { u.strength.value *= k; }); pixels.uniforms.efPixelPower.value = power * k;
     try { return direct.call(this, sc, cam); } finally { all.forEach((u, i) => { u.strength.value = saved[i]; }); pixels.uniforms.efPixelPower.value = power; }
-  };
+  }
   undo.push(() => { renderer.render = direct; });
 
   const info = { wings: wingInfo.map((w) => `${w.wing.name}:${w.id}${w.outer?.material.userData.ledSpillSources?.[0] !== w.id ? ' (app ' + w.outer?.material.userData.ledSpillSources?.[0] + ')' : ''}`),
-    legs: list.filter((e) => e.panel).length, bounceSources: bounce ? bounce.material.uniforms.srcA.value.length : 0, stripMap: spec.stripMap };
-  return { info, restore() { for (const f of undo.reverse()) { try { f(); } catch (e) { console.warn('[viewer-leds] restore', e); } } } };
+    legs: list.filter((e) => e.panel).length, bounceSources: bounce ? bounce.material.uniforms.srcA.value.length : 0, stripMap: spec.stripMap,
+    floorTint: tint.amount.value, floorHue: !!spec.floorHue };
+  return { info, setFloorGain(f) { floorGain = typeof f === 'function' ? f : () => 1; }, restore() { for (const f of undo.reverse()) { try { f(); } catch (e) { console.warn('[viewer-leds] restore', e); } } } };
 }
