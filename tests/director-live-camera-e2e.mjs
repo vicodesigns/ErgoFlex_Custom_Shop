@@ -46,7 +46,7 @@ try{
   // The visible live frame (the stage iframe's box) as Vico sees it, without the page's overlays on it (the frame's
   // buttons, the chapter's demo card, captions, the shade gradient): only the render is compared.
   async function liveShot(){
-    await page.addStyleTag({content:'body.directing .film-tools,body.directing .light-tools,body.directing .still-opener,body.directing #demo,body.directing main,body.directing footer,body.directing .shade{visibility:hidden!important}'}).then(h=>page.evaluate(()=>document.head.lastElementChild.id='e2e-hide'));
+    await page.addStyleTag({content:'body.directing .film-tools,body.directing .light-tools,body.directing .title-overlay,body.directing .still-opener,body.directing #demo,body.directing main,body.directing footer,body.directing .shade{visibility:hidden!important}'}).then(h=>page.evaluate(()=>document.head.lastElementChild.id='e2e-hide'));
     const r=await page.$eval('#stage',e=>{const b=e.getBoundingClientRect();return {x:b.left,y:b.top,width:b.width,height:b.height};});
     const png=await page.screenshot({clip:r,encoding:'base64'});await page.evaluate(()=>document.getElementById('e2e-hide')?.remove());return 'data:image/png;base64,'+png;
   }
