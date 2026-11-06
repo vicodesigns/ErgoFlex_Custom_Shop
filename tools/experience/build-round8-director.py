@@ -221,7 +221,7 @@ def apply(n, cid, f, dc, log):
     return wrote
 
 
-LIGHT_FIELDS = ('ledStatus', 'ledNeutral', 'ledColor')
+LIGHT_FIELDS = ('ledStatus', 'ledNeutral', 'ledColor', 'lights', 'lightEdits')   # + the Scene lights panel (HQ29)
 
 
 def apply_lighting(cid, f, lighting):
