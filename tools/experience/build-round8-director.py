@@ -8,7 +8,7 @@
       - seconds = the import's (the render length: shots/NN.json; a review-cut chapter trimmed shorter than its render
         (coast, music, media) keeps its trim, clamped to the new length). A length change is reported: the EDL and
         the score are NOT retimed here.
-      - cameraPlan.keys = the import's keys (hold kept by director-bridge --plan), the plan's other fields kept;
+      - cameraPlan.keys = the import's keys (hold and cut kept by director-bridge --plan), the plan's other fields kept;
         camera re-baked from it with camera-spline.mjs.
       - motion clips overridden by id from the import ('clips'): fields id lane kind start duration easing label
         target value direction path; clips he added are kept, clips he deleted are dropped.
