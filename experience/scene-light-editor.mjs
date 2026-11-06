@@ -32,7 +32,7 @@ function makeIcons(win,THREE){
   }
   return out;
 }
-export function createSceneLightEditor({bridge,shot,film,commit,status,open,rerender}){
+export function createSceneLightEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{}}){
   let selected=null,show=false,mode='move',tools=null,booting=null,list=[],listAt=0,listSig='',drag=null;
   const snaps=new Map(),frame=()=>document.getElementById('stage');
   const three=()=>bridge.stage()?.three?.();
@@ -141,7 +141,7 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
     }catch(error){status(error.message,true);}
     drag=null;
   }
-  function select(path){selected=path;refresh(true);rerender();const e=entry();if(e)status(`${e.label} selected · drag the gizmo to ${mode==='aim'?'aim':'move'} it.`);}
+  function select(path){selected=path;onSelect();refresh(true);rerender();const e=entry();if(e)status(`${e.label} selected · drag the gizmo to ${mode==='aim'?'aim':'move'} it.`);}
   // Light mixer: one row per light, the fastest way to dim, recolour or switch lights. Brightness is a factor
   // of the film's own value (log slider, 0.1 to 4); Solo previews one light alone (live only, not saved).
   let solo=null;const soloSaved=new Map();
@@ -230,6 +230,7 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
     return parts.join(', ')+(edited?` · ${edited} edited`:'');
   }
   return {panel,action,input,changed,select,lanes,summary,mixerChange,selected:()=>selected,
+    deselect(){if(selected===null)return;selected=null;rerender();},
     toggleShow:async()=>{show=!show;if(show)await ensure();rerender();return show;},setMode:m=>{mode=m;rerender();},showing:()=>show,
     // Called after film-fx (re)installs: the light objects are new, the list and markers follow.
     applied(){listSig='';refresh(true);}};
