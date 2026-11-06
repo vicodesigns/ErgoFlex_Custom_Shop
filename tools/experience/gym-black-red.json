@@ -147,7 +147,7 @@
      ],
      "minChroma": 0.2,
      "s": 0,
-     "l": 0.46
+     "l": 0.42
     },
     {
      "maxChroma": 0.2,
@@ -159,19 +159,19 @@
       ],
       [
        0.1,
-       0.14
+       0.12
       ],
       [
        0.3,
-       0.28
+       0.25
       ],
       [
        0.6,
-       0.46
+       0.42
       ],
       [
        0.78,
-       0.68
+       0.66
       ],
       [
        0.88,
@@ -184,7 +184,7 @@
      ]
     }
    ],
-   "note": "gym shell + equipment: lime/yellow -> deep red, cyan/blue/purple -> charcoal, greys -> charcoal/near-black (whites kept); material colours, instance colours and canvas maps (floor, concrete, MOVE sign, labels, chalk board, timer, mirror) | HQ30 (Vico picked C): greys and blues to a lighter charcoal (grey curve .3->.32, .6->.5; blues .5), not near-black | HQ32 (Vico: darken the charcoal a little now the rooms are brighter): .3->.28, .6->.46, blues .46"
+   "note": "gym shell + equipment: lime/yellow -> deep red, cyan/blue/purple -> charcoal, greys -> charcoal/near-black (whites kept); material colours, instance colours and canvas maps (floor, concrete, MOVE sign, labels, chalk board, timer, mirror) | HQ30 (Vico picked C): greys and blues to a lighter charcoal (grey curve .3->.32, .6->.5; blues .5), not near-black | HQ32 (Vico: darken the charcoal a little now the rooms are brighter): .3->.28, .6->.46, blues .46 | HQ33 (Vico picked 2): charcoal A .3->.25, .6->.42, blues .42"
   },
   {
    "match": "^Prop:hemp-protein$",
