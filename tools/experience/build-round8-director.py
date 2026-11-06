@@ -27,8 +27,12 @@
   build-round8-director.py <hq dir> --import <exported cut.json>
       Reads the chapter id from the export, runs director-bridge.py import into director-camera.json (awaken) or
       director-camera-<id>.json with --shot <id> --plan <its shot>, prints the id. Run it under the cut lock.
+      Film titles: an export whose shot has 'filmTitles' (Director Mode's Titles lane / Title inspector: copy, in / out,
+      shadow) rewrites that chapter's entries in <hq>/titles-src.json (backup first: titles-src.pre-director-<id>-<time>.json;
+      unchanged titles leave the file alone). Titles he retimed get director_timing: true, which titles-after-cut.py
+      keeps as set (it only flags a break of the 1.5 s-after-cut rule).
 """
-import copy, glob, html, json, os, re, subprocess, sys, tempfile
+import copy, glob, html, json, os, re, subprocess, sys, tempfile, time
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the repo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -338,6 +342,63 @@ def run_pages(ids, downloads):
         'import file in Downloads.</p>\n<ol>\n' + '\n'.join(li) + '\n</ol>\n')
 
 
+TITLE_TEXT = (('eyebrow', 60), ('title', 140), ('detail', 260))
+
+
+def clean_shadow(v):
+    """Director Mode's title shadow: {blur?, opacity?, paths?: [{line?, points: [{x, y, in?, out?, smooth?}]}]} (film-titles.mjs)."""
+    if not isinstance(v, dict): return None
+    out, num = {}, lambda x, lo, hi: max(lo, min(hi, round(float(x), 3)))
+    if 'blur' in v: out['blur'] = num(v['blur'], 0, 80)
+    if 'opacity' in v: out['opacity'] = num(v['opacity'], 0, 1)
+    paths = []
+    for p in v.get('paths') or []:
+        pts = []
+        for q in (p.get('points') or [])[:96]:
+            e = {'x': num(q['x'], -4000, 4000), 'y': num(q['y'], -4000, 4000)}
+            for k in ('in', 'out'):
+                if isinstance(q.get(k), list) and len(q[k]) == 2: e[k] = [num(q[k][0], -4000, 4000), num(q[k][1], -4000, 4000)]
+            if q.get('smooth') and ('in' in e or 'out' in e): e['smooth'] = True
+            pts.append(e)
+        if len(pts) >= 3: paths.append(({'line': p['line']} if p.get('line') in ('eyebrow', 'title', 'detail') else {}) | {'points': pts})
+    if paths: out['paths'] = paths
+    return out or None
+
+
+def import_titles(cid, titles, seconds, log):
+    """The export's filmTitles -> the chapter's entries in titles-src.json (ids <chapter>-<n>: its n-th title there)."""
+    p = os.path.join(H, 'titles-src.json'); src = load(p)
+    old_idx = [i for i, t in enumerate(src['titles']) if t.get('chapter') == cid]
+    mine = {f'{cid}-{n}': src['titles'][i] for n, i in enumerate(old_idx)}
+    new, was = [], []
+    for d in sorted(titles, key=lambda t: float(t['rel_in'])):
+        e = copy.deepcopy(mine.get(d.get('id'), {'chapter': cid})); e['chapter'] = cid
+        a, b = round(float(d['rel_in']), 3), round(float(d['rel_out']), 3)
+        if not (0 <= a < b <= seconds + 1e-6): sys.exit(f'{cid}: title {d.get("title")!r} {a}-{b} s lies outside the {seconds:g} s chapter')
+        e['rel_in'], e['rel_out'] = a, b
+        for k, n in TITLE_TEXT: e[k] = str(d.get(k) or '')[:n]
+        sh = clean_shadow(d.get('shadow'))
+        if sh: e['shadow'] = sh
+        else: e.pop('shadow', None)
+        if d.get('timed'): e['director_timing'] = True
+        else: e.pop('director_timing', None)
+        new.append(e); was.append(mine.get(d.get('id'), {}))
+    if [src['titles'][i] for i in old_idx] == new: return []
+    at = old_idx[0] if old_idx else len(src['titles'])
+    rest = [t for t in src['titles'] if t.get('chapter') != cid]
+    at = sum(1 for i, t in enumerate(src['titles']) if i < at and t.get('chapter') != cid)
+    tag = f'director-{cid}-{time.strftime("%Y%m%d-%H%M%S")}'
+    open(os.path.join(H, f'titles-src.pre-{tag}.json'), 'w', encoding='utf-8').write(open(p, encoding='utf-8').read())
+    src['titles'] = rest[:at] + new + rest[at:]
+    json.dump(src, open(p, 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
+    gone = len(old_idx) - sum(1 for o in was if o)
+    if gone > 0: log(f'    {gone} title(s) of {cid} no longer in the export: removed')
+    for e, old in zip(new, was):
+        what = [k for k in ('rel_in', 'rel_out', 'eyebrow', 'title', 'detail', 'shadow') if old.get(k) != e.get(k)]
+        log(f'    title {e["rel_in"]:g}-{e["rel_out"]:g} s {e["title"]!r}: {", ".join(what) or "unchanged"}{" (timing set in Director)" if e.get("director_timing") else ""}')
+    return [f'titles-src.json (backup titles-src.pre-{tag}.json)']
+
+
 def run_import(export):
     d = load(export); cid = (d.get('shots') or [{}])[0].get('id')
     known = {c: (n, f) for n, c, f in chapters()}
@@ -357,6 +418,10 @@ def run_import(export):
     if lighting: dc['lighting'] = lighting
     else: dc.pop('lighting', None)
     dump(director_file(cid), dc)
+    if isinstance(shot.get('filmTitles'), list):
+        lines = []; wrote = import_titles(cid, shot['filmTitles'], float(shot.get('seconds') or dc['seconds']), lines.append)
+        print(f'{cid}: Director titles -> {", ".join(wrote) or "titles-src.json unchanged"}', file=sys.stderr)
+        for l in lines: print(l, file=sys.stderr)
     print(cid)
 
 
