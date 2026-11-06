@@ -65,6 +65,12 @@ try{
   for(const c of chapters){
     const film=JSON.parse(fs.readFileSync(path.join(root,c.shot.replace(/^\//,'')),'utf8'));
     await openChapter(page,base,c);
+    // Both frames title-free: Render still burns in the film titles while they are shown (title-editor stillTitles),
+    // and the live shot hides the title overlay, so the toolbar Titles toggle goes off for the comparison.
+    if(await page.$eval('#director-timeline [data-action=titles]',b=>b.getAttribute('aria-pressed')==='true').catch(()=>false)){
+      await page.click('#director-timeline [data-action=titles]');await wait(300);
+      assert.equal(await page.$eval('#director-timeline [data-action=titles]',b=>b.getAttribute('aria-pressed')),'false',`${c.id}: Titles toggle off`);
+    }
     for(const t of times(film)){
       await seek(page,t);await wait(1000);
       const live=await camera('live'),liveImg=await liveShot();
