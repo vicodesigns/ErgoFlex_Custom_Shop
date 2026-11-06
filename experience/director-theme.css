@@ -312,3 +312,7 @@
 .still-caption{font:500 var(--df-fs-md) var(--df-font)}
 .still-caption a.primary{background:var(--df-accent);color:var(--df-accent-ink);border-radius:var(--df-r-2);font-weight:650}
 .still-busy .director-kicker{color:var(--df-text-3);letter-spacing:.14em}
+/* Section titles stay on one line; their descriptions take what is left */
+#director-panel .light-section>summary>span,#director-panel .floor-section>summary>span{flex:none;white-space:nowrap}
+#director-panel .light-section>summary small,#director-panel .floor-section>summary small{flex:1}
+#director-panel .floor-section .floor-inspector{margin:4px 0;padding:4px 0;border:0;background:transparent}
