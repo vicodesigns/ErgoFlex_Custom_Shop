@@ -31,7 +31,8 @@ GAP = 1.5                 # between moves: the status colour's 1 s fade to white
 FADE = 1.0
 ROLL = (1.8, 2.6)         # 12 in forward in the dark (no status light), HQ9's wheels: 4.6 in/s average, 6.9 peak
 ON = (7.6, .3)            # lights off -> neutral white (the 'ding'), once the pull-back has the whole desk framed (7.5)
-BEAT = .45                # Director clips: lit and still this long before the first lift (ON is re-derived from it)
+BEAT = 1.5                # Director clips: lit and still this long before the first lift (ON is re-derived from it).
+                          # HQ25 (Vico: 'you can't even suck in that it just turned on'): 1.5 s of white, was .45
 LIFT = (round(sum(ON) + GAP, 3), 7.6)                       # 28 -> 52.5 in (full height), 3.2 in/s (the real speed)
 TILT_DOWN = (round(sum(LIFT) + GAP, 3), 3.8)                # 0 -> 15 deg: purple ('tilt-retract'); 3.9 deg/s
 TURN = (round(sum(TILT_DOWN) + GAP, 3), 6.7)                # 120 deg LEFT (mode 5): 18 deg/s average, 27 peak
@@ -93,7 +94,7 @@ if _dc.get('clips'):
 # never overlap: the turn shows its wheels light until the tilt back starts under it, then yellow-green. The opening
 # roll is in the dark (Vico: the light comes on once the desk is in full view); the lit roll comes later.
 STATUS = [{'at': 0, 'dur': ON[0], 'kind': 'off', 'fade': ON[1]},
-          {'at': LIFT[0], 'dur': LIFT[1], 'kind': 'lift-up', 'fade': FADE},
+          {'at': LIFT[0], 'dur': LIFT[1], 'kind': 'lift-up', 'fade': FADE, 'fadeIn': .6},   # the white fades into the lift light (as rise)
           {'at': TILT_DOWN[0], 'dur': TILT_DOWN[1], 'kind': 'tilt-retract', 'fade': FADE},
           {'at': TURN[0], 'dur': round(min(sum(TURN), TILT_BACK[0]) - TURN[0], 3), 'kind': 'wheels', 'mode': 5, 'fade': FADE},
           {'at': TILT_BACK[0], 'dur': TILT_BACK[1], 'kind': 'tilt-extend', 'fade': FADE},
