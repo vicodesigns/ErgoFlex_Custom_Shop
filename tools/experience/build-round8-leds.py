@@ -107,6 +107,7 @@ TRACE_HIDE = {'match': '^$', 'path': '^Cinematic effects > Line$', 'hide': True}
 # glow adds a blurred copy of each screen in display space, which is most of their brightness; at a quarter of it the
 # screens take 1.3x their own brightness to keep their level (stills: screen luma 149 now, 136 at .25 / 1.3x).
 SCREEN_BLOOM, SCREEN_GAIN = .25, 1.3
+SCREEN_GAIN_BY = {'coast': 1.8}   # HQ23: the OCC monitors at 1.8x (close-up stills, recommended; Vico: "increase monitor brightness")
 # HQ21 (Vico on HQ20: the OCC "looks hazy ... like a bloom", the game screen washed out; "remove bloom from everything
 # except ... the outside lighting"): the film-quality bloom only on the rooms' daylight windows / exterior backdrops.
 # Screens keep the 1.3x gain (no-glow stills, picked).
@@ -120,7 +121,7 @@ STATUS_LEVEL = {'awareness': .4}
 
 def fix(s):
     s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM, 'bloomOnly': BLOOM_ONLY, **({'bloom': False} if BLOOM_OFF else {})}
-    if s.get('screens'): s['screenGain'] = SCREEN_GAIN
+    if s.get('screens'): s['screenGain'] = SCREEN_GAIN_BY.get(s['id'], SCREEN_GAIN)
     if s.get('kind') in ('lift', 'tilt'):
         s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e != TRACE_HIDE] + [TRACE_HIDE]
     # HQ16d (Vico: the OCC headphones "not on the headphone hook"): coast's deskObjects (Vico's 2026-11-03 OCC desktop,
