@@ -130,7 +130,10 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
     const bloomOnly = q.bloomOnly ? new RegExp(q.bloomOnly, 'i') : null;
     scene.traverse(o => { if (!o.isMesh) return;
       const m = [].concat(o.material || [])[0];
-      if (bloomOnly) { if (named(o, bloomOnly)) n++; else others.push(o); return; }
+      // Meshes with their own onBeforeRender (the film's LED floor bounce reads its shader's uniforms there) and the LED
+      // surface overlays are hidden in the glow pass, never swapped to the black material (HQ21 crash on awareness).
+      const custom = o.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender;
+      if (bloomOnly) { if (named(o, bloomOnly)) n++; else if (custom || named(o, RECEIVER)) muted.push(o); else others.push(o); return; }
       // bloomReceivers false: the surface overlays are hidden (not blacked: their own onBeforeRender needs their shader) in the glow pass.
       if (q.bloomReceivers === false && named(o, RECEIVER)) { muted.push(o); return; }
       const isScreen = screenMeshes.has(o) || (m?.isMeshBasicMaterial && m.map && named(o, SCREENISH));
