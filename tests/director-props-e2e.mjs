@@ -74,7 +74,7 @@ async function stillOf(file){
   const before=await page.$$eval('.still-strip img, .still-view img, [data-still] img',l=>l.length).catch(()=>0);
   await page.keyboard.press('r');
   await until(async()=>/Still rendered/.test(await status()),'Render still',240000);
-  const url=await page.evaluate(()=>{const imgs=[...document.querySelectorAll('img')].filter(i=>i.src.startsWith('data:image/jpeg'));return imgs.at(-1)?.src||null;});
+  const url=await page.evaluate(()=>document.querySelector('#film-still img.still-main')?.src||null);
   if(url&&file)fs.writeFileSync(file,Buffer.from(url.split(',')[1],'base64'));
   await page.keyboard.press('Escape');await wait(400);return url;   // back to the live view
 }
@@ -139,6 +139,8 @@ try{
   if(process.env.STILLS!=='0'){
     await page.evaluate(()=>{const f=[...document.querySelectorAll('[data-action=sel-clear]')][0];f?.click();});
     await stillOf(path.join(shots,'still-after.jpg'));
+    check(!fs.readFileSync(path.join(shots,'still-after.jpg')).equals(fs.readFileSync(path.join(shots,'still-before.jpg'))),'the after still differs from the before still');
+    check(/after: Hid Accessory:wide-monitor in this chapter/.test(await page.$eval('#film-still .still-caption',e=>e.textContent)),'its caption names the last edit ("after: Hid Accessory:wide-monitor in this chapter")');
     const both=await page.evaluate(()=>{const still=[...document.querySelectorAll('iframe')].find(f=>f.title==='Film still renderer').contentWindow,sScene=(()=>{let s=still.ErgoFlex.loadedModel;while(s.parent)s=s.parent;return s;})();
       const live=__find(x=>x.name==='Prop:steelcase-leap-v2'),there=__find(x=>x.userData.sceneAssetKey===live.userData.sceneAssetKey,sScene),T=__t().T;
       const P=o=>{o.updateWorldMatrix(true,false);const v=new still.ErgoFlex.loadedModel.position.constructor();return {p:o.getWorldPosition(v.clone()).toArray(),s:o.getWorldScale(v.clone()).toArray()};};

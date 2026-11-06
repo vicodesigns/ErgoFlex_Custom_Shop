@@ -468,3 +468,4 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .inspector-tabs:has([data-inspector-tab=props]){display:flex;gap:1px}
 #director-panel .inspector-tabs:has([data-inspector-tab=props]) button{flex:1 1 auto;padding-inline:2px;font-size:11px;white-space:nowrap}
 #director-panel .inspector-tabs:has([data-inspector-tab=props]) button[data-action=inspector]{flex:0 0 20px}
+.sel-name small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
