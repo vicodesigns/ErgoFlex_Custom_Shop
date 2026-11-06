@@ -360,8 +360,10 @@ body.film-look-split .film-look.shown .film-wipe{display:block}
 /* Drag feedback */
 #director-timeline .drag-ghost{opacity:.4;pointer-events:none;outline:1px dashed #ffffff88}
 .drag-chip{position:fixed;transform:translate(-50%,-100%);z-index:2147483001;pointer-events:none;padding:3px 8px;border-radius:6px;background:#0b1520f2;border:1px solid #ffd27a88;color:#ffe7b0;font:600 11px system-ui;white-space:nowrap;box-shadow:0 4px 14px #0008}
-.snap-guide{position:absolute;top:0;bottom:0;width:1px;background:#ffc977;z-index:8;pointer-events:none}
-.snap-guide::after{content:attr(data-name);position:absolute;top:2px;left:4px;font:10px system-ui;color:#ffc977;background:#0b1520e0;padding:0 4px;border-radius:3px;white-space:nowrap}
+.timeline-content{position:relative}
+.snap-guide{position:absolute;top:0;bottom:0;width:1px;background:#ffc977;z-index:6;pointer-events:none}
+.snap-guide-name{position:absolute;top:3px;left:4px;font:10px system-ui;color:#ffc977;background:#0b1520e0;padding:0 4px;border-radius:3px;white-space:nowrap}
+.snap-guide.flip .snap-guide-name{left:auto;right:4px}
 #director-timeline .magnet{min-height:26px;padding:2px 9px;font-size:11px}
 #director-timeline .magnet[aria-pressed=true]{background:#3a2f12;border-color:#ffc977;color:#ffe3ad}
 /* Trim handles: 10 px hit zone, a 3 px bar on hover */

@@ -290,8 +290,16 @@ export function mountDirector(bridge,catalog,initial){
     const span=grabbedSpan(d),n=span?[span[0]+d.delta,span[1]+d.delta]:null,sign=d.delta>=0?'+':'−';
     d.chip.textContent=`${sign}${Math.abs(d.delta).toFixed(2)} s`+(n?` → ${n[0]===n[1]?r2(n[0])+' s':r2(n[0])+'–'+r2(n[1])+' s'}`:'')+(d.snap?` · snapped to ${d.snap.name}`:'');
     Object.assign(d.chip.style,{left:event.clientX+'px',top:event.clientY-12+'px'});
-    d.guide||=Object.assign(document.createElement('div'),{className:'snap-guide'});
-    if(d.snap){if(!d.guide.isConnected)content.append(d.guide);const row=content.querySelector('.camera-lane-row,.desk-lane-row'),lane=row?.querySelector('.camera-track,.desk-lane');const lr=lane?.getBoundingClientRect(),cr=content.getBoundingClientRect();if(lr)d.guide.style.left=(lr.left-cr.left+d.snap.t/s*lr.width)+'px';d.guide.dataset.name='snapped to '+d.snap.name;}
+    if(!d.guide){d.guide=Object.assign(document.createElement('div'),{className:'snap-guide'});d.guide.append(Object.assign(document.createElement('span'),{className:'snap-guide-name'}));}
+    if(d.snap){
+      if(!d.guide.isConnected)content.append(d.guide);
+      const row=content.querySelector('.camera-lane-row,.desk-lane-row'),lane=row?.querySelector('.camera-track,.desk-lane'),lr=lane?.getBoundingClientRect(),cr=content.getBoundingClientRect();
+      const vr=content.closest('.timeline-viewport')?.getBoundingClientRect()||cr,ruler=content.querySelector('.time-ruler-row')?.getBoundingClientRect(),top=Math.max(ruler?ruler.bottom:vr.top,vr.top);
+      // the line runs from under the (sticky) ruler down the lanes; the name sits just under the ruler, flipped left near the right edge
+      const x=lr?lr.left-cr.left+d.snap.t/s*lr.width:0;d.guide.style.left=x+'px';d.guide.style.top=(top-cr.top)+'px';
+      const name=d.guide.firstChild;name.textContent='snapped to '+d.snap.name;d.guide.dataset.name=name.textContent;
+      d.guide.classList.toggle('flip',cr.left+x+name.offsetWidth+12>vr.right);
+    }
     else d.guide.remove();
   }
   function endDragFeedback(d){for(const g of d.ghosts||[])g.remove();d.chip?.remove();d.guide?.remove();}
