@@ -39,6 +39,9 @@
 //     rugs x k: the room LED spill on floor surfaces (at ledRoomSpill x k, whatever the walls take), the visualizer floor
 //     bounce and the app's foot glow. Both default to 1, the film's approved look (Vico, 2026-11-06: "the ground is
 //     usually a different setting than the walls"). roomLight is the room's OWN light, not the desk's LEDs.
+//     ledFloorSources: {foot, center, left, right: {on, x, z (cm; x toward the right wing, z toward the front), spread,
+//     length, edge (softness), brightness, saturation (x)}}  the floor reflection of each LED source (film-viewer-leds:
+//     the foot glow and the floor bounce's strips); fields left out are the film's (experience/film-lighting.mjs).
 //   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
 //   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
 //   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
@@ -774,6 +777,10 @@ function installRoomLight(keys) {
 // Piecewise-linear [[seconds, value], …] (held before the first key and after the last).
 const keyAt = (k, s) => { const i = k.findIndex(p => p[0] > s); return i < 0 ? k.at(-1)[1] : i === 0 ? k[0][1] : k[i - 1][1] + (k[i][1] - k[i - 1][1]) * (s - k[i - 1][0]) / (k[i][0] - k[i - 1][0]); };
 export const Box3 = THREE.Box3;
+// Director: the floor reflections' pools (world-space outlines per source: foot, center, left, right) on the live stage,
+// and a preview of ledFloorSources while a handle is dragged (undefined: back to the installed shot's).
+export const floorPools = () => active?.viewerLeds?.pools?.() ?? [];
+export const previewFloorSources = (v) => active?.viewerLeds?.setSources?.(v === undefined ? active.shot.sceneGlobals?.ledFloorSources ?? null : v);
 // The desk's bounding-box centre in world space (render-cut --list-objects).
 export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedModel), c = b.getCenter(new THREE.Vector3()); return [c.x, b.min.y, c.z]; }
 // sceneGlobals: {environmentScale, exposure} — the image-based ambient and the
@@ -830,6 +837,7 @@ export async function install(shot) {
   if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
   if (shot.floorLight) active.floor = installFloorLight(shot);
   if (shot.ledReceivers) active.viewerLeds = (await import('./film-viewer-leds.mjs')).installViewerLeds(shot);   // before wheels: both wrap render
+  if (shot.sceneGlobals?.ledFloorSources) active.viewerLeds?.setSources?.(shot.sceneGlobals.ledFloorSources);
   if (shot.motion && shot.wheelFix !== false) active.wheels = installWheelFix(shot);   // before quality: its compositor wraps this render
   // quality: GPU render-box overrides (shadow maps, anisotropy, room reflections, GTAO, selective bloom); film-quality.mjs.
   if (shot.quality) { active.quality = await (await import('./film-quality.mjs')).installQuality(shot, { screens: active.screens }); if (active.quality) console.log('[film-quality]', JSON.stringify(active.quality.info)); }
@@ -873,6 +881,8 @@ export async function update(shot, { onSlow } = {}) {
     } else { globals = true; tail = 0; }
   }
   if (changed('ledColor') || changed('ledStatus') || changed('ledNeutral') || changed('obstacles')) status = true;
+  // Floor reflections per source: data only, in place.
+  if (gChanged('ledFloorSources')) active.viewerLeds?.setSources?.(g1.ledFloorSources ?? null);
   if (changed('timeOfDay')) {
     const seq = x => [...(x || [])].sort((a, b) => a.at - b.at).map(k => k.mode).join();
     if (!(active.tod?.retime && prev.timeOfDay?.length && shot.timeOfDay?.length && seq(prev.timeOfDay) === seq(shot.timeOfDay) && active.tod.retime(shot.timeOfDay))) tail = 0;

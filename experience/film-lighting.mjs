@@ -30,6 +30,7 @@ export function cleanLighting(v={}){
   if(Array.isArray(v.timeOfDay))out.timeOfDay=v.timeOfDay.slice(0,32).flatMap(k=>typeof k?.mode==='string'&&/^[a-z0-9-]{1,40}$/.test(k.mode)&&num(k.at,0,90,null)!==null?[{id:unique(k.id),at:num(k.at,0,90,0),mode:k.mode,...(k.ease==='smooth'||k.ease==='linear'?{ease:k.ease}:{})}]:[]).sort((a,b)=>a.at-b.at);
   const g=v.sceneGlobals||{},globals={},room=num(g.roomLight,0,4,null);if(room!==null)globals.roomLight=room;
   for(const k of ['exposureScale','environmentScale','ledWallGlow','ledFloorGlow']){const x=g[k];if(Array.isArray(x)){const keys=x.slice(0,64).filter(p=>Array.isArray(p)&&Number.isFinite(p[0])&&Number.isFinite(p[1])).map(p=>[num(p[0],0,90,0),num(p[1],0,20,1)]);if(keys.length)globals[k]=keys;}else{const n=num(x,0,20,null);if(n!==null)globals[k]=n;}}
+  {const f=cleanFloorSources(g.ledFloorSources);if(f)globals.ledFloorSources=f;}
   if(Object.keys(globals).length)out.sceneGlobals=globals;
   return out;
 }
@@ -82,4 +83,31 @@ export function validateStatus(events,seconds){
   const list=[...events].sort((a,b)=>a.at-b.at);
   for(const e of list)if(e.at<0||e.dur<=0||e.at+e.dur>seconds+1e-5)throw Error(`Light states must fit inside the ${seconds}-second chapter.`);
   for(let i=1;i<list.length;i++)if(list[i].at<list[i-1].at+list[i-1].dur-1e-5)throw Error('Two light states cannot overlap: the desk shows one state at a time.');
+}
+
+// Floor reflections, per LED source (sceneGlobals.ledFloorSources; film-viewer-leds.mjs draws them): the desk's four
+// strips that light the floor. Each field is relative to the film's approved look (offsets in cm from where the strip
+// projects, x toward the right wing, z toward the desk's front; the rest are multipliers); a source or field left out is
+// the film's. Only the fields that differ from the defaults are kept.
+export const FLOOR_SOURCES=[['foot','Footrest strip'],['center','Centre strip (under the desktop)'],['left','Left side strip (front to back)'],['right','Right side strip (front to back)']];
+export const FLOOR_SOURCE_FIELDS={on:['On',null,null,true],x:['Across (cm)',-100,100,0],z:['Front / back (cm)',-100,100,0],spread:['Spread ×',.25,4,1],length:['Length ×',.25,3,1],
+  edge:['Edge softness ×',.25,4,1],brightness:['Brightness ×',0,4,1],saturation:['Saturation ×',0,3,1]};
+export function cleanFloorSources(v){
+  if(!v||typeof v!=='object'||Array.isArray(v))return null;const out={};
+  for(const [id] of FLOOR_SOURCES){const src=v[id];if(!src||typeof src!=='object')continue;const o={};
+    for(const [k,[,min,max,def]] of Object.entries(FLOOR_SOURCE_FIELDS)){const x=src[k];if(x===undefined||x===null)continue;
+      if(k==='on'){if(typeof x==='boolean'&&x!==def)o.on=x;continue;}
+      const n=num(x,min,max,null);if(n!==null&&Math.abs(n-def)>1e-9)o[k]=Math.round(n*1000)/1000;}
+    if(Object.keys(o).length)out[id]=o;}
+  return Object.keys(out).length?out:null;
+}
+// One source's settings with the film's defaults filled in.
+export const floorSourceAt=(v,id)=>Object.fromEntries(Object.entries(FLOOR_SOURCE_FIELDS).map(([k,f])=>[k,v?.[id]?.[k]??f[3]]));
+// One source's change in words (status lines, the picker's tooltips).
+export function describeFloorSource(v){
+  const d=floorSourceAt(null,'x'),parts=[],r1=v=>Math.round(v*10)/10,r2=v=>Math.round(v*100)/100;if(!v)return 'as the film';
+  if(v.on===false)return 'off';
+  if(v.x||v.z)parts.push(`moved ${v.x?`${v.x>0?'+':''}${r1(v.x)} cm across`:''}${v.x&&v.z?', ':''}${v.z?`${v.z>0?'+':''}${r1(v.z)} cm front/back`:''}`);
+  for(const k of ['spread','length','edge','brightness','saturation'])if(v[k]!==undefined&&v[k]!==d[k])parts.push(`${FLOOR_SOURCE_FIELDS[k][0].replace(' ×','').toLowerCase()} ×${r2(v[k])}`);
+  return parts.join(' · ')||'as the film';
 }

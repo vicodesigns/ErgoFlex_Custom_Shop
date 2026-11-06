@@ -61,7 +61,7 @@ const overlay = () => {
 {
   const fs = await import('node:fs');
   const py = fs.readFileSync(new URL('../tools/experience/build-round8-director.py', import.meta.url), 'utf8');
-  assert.match(py, /GLOBAL_FIELDS = \([^)]*'ledWallGlow', 'ledFloorGlow'\)/);
+  assert.match(py, /GLOBAL_FIELDS = \([^)]*'ledWallGlow', 'ledFloorGlow'/);
   const director = fs.readFileSync(new URL('../experience/director.mjs', import.meta.url), 'utf8');
   for (const label of ['LED glow on the walls', 'LED glow on the floor', "Room's own light"]) assert.ok(director.includes(label), label);
   assert.ok(!director.includes('LED glow on the room'), 'roomLight is the room\'s own light, not an LED glow');
