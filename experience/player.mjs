@@ -65,7 +65,7 @@ async function stageFx(){
 }
 // The renderer's order around prepare: clear, beforePrepare, prepare, unhookPreset, install.
 async function prepareStage(next){
-  await filmReady;await fxRefresh;await fxPending;const setup=filmShots.get(next.id),fx=setup?await stageFx().catch(error=>{console.warn('[film fx]',error.message);return null;}):frame.contentWindow.__filmFx;
+  await filmReady;await fxRefresh;while(fxBusy)await fxRefresh;await fxPending;const setup=filmShots.get(next.id),fx=setup?await stageFx().catch(error=>{console.warn('[film fx]',error.message);return null;}):frame.contentWindow.__filmFx;
   liveFx=null;fxShot=null;frame.contentWindow.__directorLightsRestore?.();fx?.clear();
   if(!setup||!fx)return stage().prepare(next);
   const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);
@@ -74,13 +74,24 @@ async function prepareStage(next){
   return result;
 }
 // Lighting edits re-install the film layers (no re-prepare), so the live strips follow the Director.
-let fxRefresh=Promise.resolve();
-function refreshFilmLights(){fxRefresh=fxRefresh.then(reinstallFilmLights,reinstallFilmLights);return fxRefresh;}
+// Lighting edits update the film layers in place (film-fx update): no clear(), so props, screens and scene
+// edits stay. Slow paths (new daypart modes, a full re-install) hold the last frame until the new setup is in.
+// Requests coalesce: one update in flight, the latest cut applied when it finishes.
+let fxRefresh=Promise.resolve(),fxBusy=false,fxAgain=false;
+function refreshFilmLights(){if(fxBusy){fxAgain=true;return fxRefresh;}fxBusy=true;fxRefresh=(async()=>{try{do{fxAgain=false;await reinstallFilmLights();}while(fxAgain);}finally{fxBusy=false;}})();return fxRefresh;}
 async function reinstallFilmLights(){
   // Not under a Director gizmo drag: the dragged light would jump back mid-gesture.
   while(frame.contentWindow.__directorDragging)await new Promise(r=>setTimeout(r,100));
   await fxPending;const s=shots[index],setup=s&&filmShots.get(s.id),fx=liveFx;if(!fx||busy||!setup||s.id!==fxShot||activeBake||bakeController)return;
-  liveFx=null;try{frame.contentWindow.__directorLightsRestore?.();fx.clear();await fx.install(liveFilmShot(setup,s));liveFx=fx;fxAt=-1;director?.filmApplied?.();}catch(error){console.error('[film fx]',error);}
+  const shot=liveFilmShot(setup,s);let held=false;const hold=()=>{if(!held){held=true;stage().hold?.(true);}};
+  liveFx=null;
+  try{
+    frame.contentWindow.__directorLightsRestore?.();
+    let result='full';try{result=fx.update?await fx.update(shot,{onSlow:hold}):'full';}catch(error){console.error('[film fx] update',error);}
+    if(result==='full'){hold();fx.clear();await fx.install(shot);}
+    liveFx=fx;fxAt=-1;director?.filmApplied?.();
+  }catch(error){console.error('[film fx]',error);}
+  finally{if(held)stage().hold(false);}
 }
 // Time-varying film parts (screens, time of day, keyed lights) follow the chapter clock.
 function filmFrame(){
@@ -320,7 +331,7 @@ async function openDirector(){
     async downloadBake(){const {record}=await cachedBake(shots[index]);if(!record)throw Error('Bake this chapter first.');const url=URL.createObjectURL(record.blob),a=document.createElement('a');a.href=url;a.download='ergoflex-'+shots[index].id+'.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);},
     editMode(on){if(bakeController)return;directorOpen=on;if(!on)previewOnly=false;playing=false;clock.setRunning(false,performance.now());stage().edit(on);stage().pause(true);frame.inert=!on;$('pause').textContent='Play';$('director').textContent=on?'Close editor':'Director Mode';syncAudio();},
     update(value){const position=index>=0?clock.progress(performance.now(),shots[index].seconds):0;applyClient(value);
-      if(fxShot&&shots[index]?.id===fxShot){const key=lightsKey(shots[index]);if(key!==fxLights){fxLights=key;clearTimeout(fxTimer);fxTimer=setTimeout(refreshFilmLights,350);}}clearTimeout(bakeRefreshTimer);bakeRefreshTimer=setTimeout(refreshBakeStatus,200);if(activeBake){liveAt(position);return;}if(shots[index]){stage().cameraTrack(shots[index].camera,shots[index].id);stage().motionTrack(shots[index].motion,shots[index].id);}if(directorOpen){playing=false;clock.setRunning(false,performance.now());stage().edit(true);frame.inert=false;$('pause').textContent='Play';syncAudio();}},
+      if(fxShot&&shots[index]?.id===fxShot){const key=lightsKey(shots[index]);if(key!==fxLights){fxLights=key;cancelAnimationFrame(fxTimer);fxTimer=requestAnimationFrame(()=>refreshFilmLights());}}clearTimeout(bakeRefreshTimer);bakeRefreshTimer=setTimeout(refreshBakeStatus,200);if(activeBake){liveAt(position);return;}if(shots[index]){stage().secondsTrack?.(shots[index].seconds,shots[index].id);stage().cameraTrack(shots[index].camera,shots[index].id);stage().motionTrack(shots[index].motion,shots[index].id);}if(directorOpen){playing=false;clock.setRunning(false,performance.now());stage().edit(true);frame.inert=false;$('pause').textContent='Play';syncAudio();}},
     async editShot(value,i){applyClient(value);previewOnly=true;playing=false;if(!await playShot(i,{forceLive:true}))throw Error('The chapter could not be loaded. Choose a different layout or retry.');},
     async preview(value,i){applyClient(value);previewOnly=true;playing=true;stage().edit(false);await playShot(i);},
     play(value){applyClient(value);previewOnly=false;playing=true;stage().edit(false);playShot(0);},

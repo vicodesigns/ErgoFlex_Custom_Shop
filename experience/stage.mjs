@@ -11,6 +11,11 @@ import {cleanPose,cleanCamera,defaultPreset} from './cuts.mjs';
 
 // This adapter exists only in a disposable, memory-backed preview iframe.
 export async function mountStage(ctx) {
+  // hold(): keep showing the last drawn frame (no render loop) while the Director re-applies film layers, so the
+  // view never shows a half-dressed room. Pause requests made meanwhile are kept and applied on release.
+  const rawPause=ctx.pause.bind(ctx);let held=0,wantPause=false;
+  ctx.pause=on=>{wantPause=!!on;if(!held)rawPause(on);};
+  const hold=on=>{if(on){if(!held++)rawPause(true);}else if(held&&!--held)rawPause(wantPause);};
   if (!window.__ERGO_PRESENTATION__) return;
   const api = window.ErgoFlex;
   const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
@@ -249,7 +254,7 @@ export async function mountStage(ctx) {
   window.ErgoPresentation={prepare:async next=>{preparing=true;try{return await prepare(next);}finally{preparing=false;}},tick,sound,pause,receive,
     catalog:()=>ctx.catalog(),edit,seek,captureCamera,beginBake,bakeFrame,endBake,
     // Director scene-light tools (markers, gizmo) work on the live scene, camera and orbit controls.
-    three:()=>({scene:ctx.scene,camera:ctx.camera,renderer:ctx.renderer,controls:ctx.controls}),
+    three:()=>({scene:ctx.scene,camera:ctx.camera,renderer:ctx.renderer,controls:ctx.controls}),hold,
     motionDefaults:()=>{
       const result={lift:[],tilt:[],wheels:[]},savedReduced=reduced;
       // Sample the real staged performance, including room routes, in its
@@ -315,6 +320,8 @@ export async function mountStage(ctx) {
       return keys;
     },
     cameraTrack:(camera,id)=>{if(shot?.id!==id)return;shot.camera=camera;activeCameraKeys=resolveCameraKeys(camera,defaultCameraKeys);},
+    // Director: a new chapter length without re-preparing (the desk motion samples by chapter seconds).
+    secondsTrack:(seconds,id)=>{if(shot?.id===id&&Number.isFinite(seconds))shot.seconds=seconds;},
     motionTrack:(motion,id)=>{if(shot?.id===id)shot.motion=motion?(motion.clips?motion:{tracks:motion.tracks||tracksFromPoses(motion.from,motion.to)}):undefined;},
     previewPose:value=>{const p=cleanPose(value);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);return ctx.readDirector();},capturePose:()=>ctx.readDirector(),
     clock:callback=>{readProgress=callback;},capture:canvas=>ctx.capture(canvas),

@@ -106,6 +106,8 @@ export async function installTimeOfDay(shot) {
   };
   return {
     channels: channels.length, canvases: canvases.length,
+    // Director: new times / blends for the same daypart sequence, without re-capturing the room.
+    retime(next) { const n = [...next].sort((a, b) => a.at - b.at); if (n.length !== keys.length || n.some((k, i) => k.mode !== keys[i].mode)) return false; n.forEach((k, i) => { keys[i] = { ...keys[i], at: k.at, ease: k.ease }; }); return true; },
     apply(seconds) {
       const [a, b, u] = segment(seconds);
       for (const c of channels) {

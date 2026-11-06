@@ -685,6 +685,25 @@ const keyAt = (k, s) => { const i = k.findIndex(p => p[0] > s); return i < 0 ? k
 export const Box3 = THREE.Box3;
 // The desk's bounding-box centre in world space (render-cut --list-objects).
 export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedModel), c = b.getCenter(new THREE.Vector3()); return [c.x, b.min.y, c.z]; }
+// sceneGlobals: {environmentScale, exposure} — the image-based ambient and the
+// renderer exposure, multiplied/set for this shot and restored after.
+function installGlobals(shot) {
+  if (!shot.sceneGlobals) return;
+  let sc = api.loadedModel; while (sc.parent) sc = sc.parent; const g = shot.sceneGlobals;
+  active.globals = { env: sc.environmentIntensity, exposure: api.renderer.toneMappingExposure, scene: sc };
+  if (Number.isFinite(g.environmentScale)) sc.environmentIntensity *= g.environmentScale;
+  // Keyframed [[seconds, scale], …] (e.g. lights out at the end of a chapter), applied per frame.
+  else if (Array.isArray(g.environmentScale)) active.globals.envKeys = g.environmentScale;
+  if (Number.isFinite(g.exposure)) api.renderer.toneMappingExposure = g.exposure;
+  // exposureScale: a grade on top of the room's own exposure. An instance accessor, so timeOfDay's per-frame
+  // blend and the app's mode switches keep writing the raw value and the render reads raw x scale.
+  if (g.exposureScale !== undefined) {
+    const r = api.renderer, own = Object.getOwnPropertyDescriptor(r, 'toneMappingExposure'); let raw = r.toneMappingExposure;
+    const k = Array.isArray(g.exposureScale) ? g.exposureScale : [[0, g.exposureScale]], cell = { value: keyAt(k, 0) };
+    Object.defineProperty(r, 'toneMappingExposure', { configurable: true, enumerable: true, get: () => raw * cell.value, set: v => { raw = v; } });
+    active.globals.exposureCell = { cell, keys: k, undo: () => { delete r.toneMappingExposure; if (own) Object.defineProperty(r, 'toneMappingExposure', own); r.toneMappingExposure = raw; } };
+  }
+}
 export async function install(shot) {
   clear();
   unhookPreset();
@@ -710,26 +729,10 @@ export async function install(shot) {
     active.led = await makeLed(shot, active.screens, list);
     api.setLedEffect({ mode: 'solid', period: 6 }, false);
   }
-  // sceneGlobals: {environmentScale, exposure} — the image-based ambient and the
-  // renderer exposure, multiplied/set for this shot and restored after.
-  if (shot.sceneGlobals) {
-    let sc = api.loadedModel; while (sc.parent) sc = sc.parent; const g = shot.sceneGlobals;
-    active.globals = { env: sc.environmentIntensity, exposure: api.renderer.toneMappingExposure, scene: sc };
-    if (Number.isFinite(g.environmentScale)) sc.environmentIntensity *= g.environmentScale;
-    // Keyframed [[seconds, scale], …] (e.g. lights out at the end of a chapter), applied per frame.
-    else if (Array.isArray(g.environmentScale)) active.globals.envKeys = g.environmentScale;
-    if (Number.isFinite(g.exposure)) api.renderer.toneMappingExposure = g.exposure;
-    // exposureScale: a grade on top of the room's own exposure. An instance accessor, so timeOfDay's per-frame
-    // blend and the app's mode switches keep writing the raw value and the render reads raw x scale.
-    if (g.exposureScale !== undefined) {
-      const r = api.renderer, own = Object.getOwnPropertyDescriptor(r, 'toneMappingExposure'); let raw = r.toneMappingExposure;
-      const k = Array.isArray(g.exposureScale) ? g.exposureScale : [[0, g.exposureScale]], cell = { value: keyAt(k, 0) };
-      Object.defineProperty(r, 'toneMappingExposure', { configurable: true, enumerable: true, get: () => raw * cell.value, set: v => { raw = v; } });
-      active.globals.exposureCell = { cell, keys: k, undo: () => { delete r.toneMappingExposure; if (own) Object.defineProperty(r, 'toneMappingExposure', own); r.toneMappingExposure = raw; } };
-    }
-  }
+  installGlobals(shot);
   // ledSurfaces: the app's LED surface sliders (desktopStrength, floorStrength, …), restored after the shot.
   if (shot.ledSurfaces) { active.surfaces = api.ledSurfaces; for (const [k, v] of Object.entries(shot.ledSurfaces)) api.setLedSurface(k, v, false); }
+  active.ledColor0 = api.ledColor;   // the stage's own colour (Director update)
   if (shot.ledColor) { active.ledColor = api.ledColor; api.setLedColor(shot.ledColor, false); }
   // ledGlow: the app's LED brightness slider as a fraction of full (the stage uses .35).
   if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
@@ -748,6 +751,59 @@ export async function install(shot) {
   // lightEdits: Director changes to existing lights (experience/light-edits.mjs), after the shot's own lights and edits.
   if (shot.lightEdits?.length) { active.lightEdits = (await import('../../experience/light-edits.mjs')).installLightEdits(shot.lightEdits, sceneRoot()); if (active.lightEdits.missing.length) console.warn('[film-fx] lightEdits: no light at ' + active.lightEdits.missing.join(' | ')); }
   return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledReceivers: active.viewerLeds?.info };
+}
+// Director live edits: apply changed lighting fields in place, without clear() / prepare, so props, screens,
+// accessories and sceneEdits stay. Per-frame data (status, desk white, keyed scales, time-of-day times, light
+// edits) is swapped; layers that chain onto each other are undone and re-installed together, last first.
+// Returns 'ok' (in place, synchronous for data-only changes), 'slow' (time-of-day modes or a scene-globals
+// shape change re-captured the room: onSlow() ran first so the caller can hold the frame) or 'full' (a field
+// that needs install: the caller runs clear() + install()).
+const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles'];
+const TAIL = ['tod', 'edits', 'lights', 'roomLight', 'roomSpill', 'lightEdits'];
+export async function update(shot, { onSlow } = {}) {
+  if (!active) return 'full';
+  const prev = active.shot, same = (a, b) => JSON.stringify(a) === JSON.stringify(b), changed = k => !same(prev[k], shot[k]);
+  for (const k of new Set([...Object.keys(prev), ...Object.keys(shot)])) if (!LIVE_FIELDS.includes(k) && changed(k)) return 'full';
+  const g0 = prev.sceneGlobals || {}, g1 = shot.sceneGlobals || {}, gChanged = k => !same(g0[k], g1[k]);
+  let tail = TAIL.length, globals = false, status = false;
+  if (gChanged('exposure') || gChanged('environmentScale') || gChanged('exposureScale')) {
+    const G = active.globals, envFast = !gChanged('environmentScale') || (Array.isArray(g0.environmentScale) && Array.isArray(g1.environmentScale) && G?.envKeys);
+    const expFast = !gChanged('exposureScale') || (G?.exposureCell && g1.exposureScale !== undefined);
+    if (!gChanged('exposure') && envFast && expFast) {
+      if (gChanged('environmentScale')) G.envKeys = g1.environmentScale;
+      if (gChanged('exposureScale')) { const k = Array.isArray(g1.exposureScale) ? g1.exposureScale : [[0, g1.exposureScale]]; G.exposureCell.keys = k; G.exposureCell.cell.value = keyAt(k, 0); }
+    } else { globals = true; tail = 0; }
+  }
+  if (changed('ledColor') || changed('ledStatus') || changed('ledNeutral') || changed('obstacles')) status = true;
+  if (changed('timeOfDay')) {
+    const seq = x => [...(x || [])].sort((a, b) => a.at - b.at).map(k => k.mode).join();
+    if (!(active.tod?.retime && prev.timeOfDay?.length && shot.timeOfDay?.length && seq(prev.timeOfDay) === seq(shot.timeOfDay) && active.tod.retime(shot.timeOfDay))) tail = 0;
+  }
+  if (changed('lights')) tail = Math.min(tail, 2);
+  if (gChanged('roomLight')) tail = Math.min(tail, 3);
+  if (gChanged('ledRoomSpill')) tail = Math.min(tail, 4);
+  if (changed('lightEdits')) tail = Math.min(tail, 5);
+  const slow = globals || tail === 0; if (slow) onSlow?.();
+  for (let i = TAIL.length - 1; i >= tail; i--) { active[TAIL[i]]?.restore(); active[TAIL[i]] = null; }
+  if (globals && active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; active.globals = null; }
+  if (status) { active.status?.clear(); active.status = null; }
+  active.shot = shot;
+  if (globals) installGlobals(shot);
+  if (status) {
+    if (shot.ledColor && active.ledColor === undefined) active.ledColor = active.ledColor0;
+    api.setLedColor(shot.ledColor || active.ledColor || active.ledColor0, false);
+    if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
+  }
+  for (let i = tail; i < TAIL.length; i++) {
+    const k = TAIL[i];
+    if (k === 'tod' && shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
+    if (k === 'edits' && shot.sceneEdits) active.edits = (await import('./film-edits.mjs')).installEdits(shot);
+    if (k === 'lights' && shot.lights) active.lights = (await import('./film-edits.mjs')).installLights(shot);
+    if (k === 'roomLight' && shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
+    if (k === 'roomSpill' && shot.sceneGlobals?.ledRoomSpill !== undefined) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals.ledRoomSpill); active.roomSpill.frame(); }
+    if (k === 'lightEdits' && shot.lightEdits?.length) active.lightEdits = (await import('../../experience/light-edits.mjs')).installLightEdits(shot.lightEdits, sceneRoot());
+  }
+  return slow ? 'slow' : 'ok';
 }
 export async function frame(t, chapterSeconds, { video = false } = {}) {
   if (!active) return;

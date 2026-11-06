@@ -274,10 +274,10 @@ export function mountDirector(bridge,catalog,initial){
     return Object.entries(GLOBALS).map(([k,[label,min,max]])=>{const f=globalFactor(k),v=Number(f.value.toFixed(3));
       return `<label>${label}${f.keys?` <small>(keyed: scales all ${f.keys.length} keys)</small>`:''} <output data-global-steps="${k}">${k==='exposureScale'?stepsText(v):'×'+v}</output><span class="global-slider"><input type="range" name="g-${k}" min="${min}" max="${max}" step=".01" value="${v}"><input type="number" name="gn-${k}" min="${min}" max="${max}" step=".01" value="${v}"></span></label>`;}).join('');
   }
-  function setGlobal(k,v){
+  function setGlobal(k,v,{key=null,render=true}={}){
     const [label,min,max]=GLOBALS[k];if(!Number.isFinite(v)||v<min||v>max)throw Error(`${label} runs from ${min} to ${max}.`);requireReady();
     const f=globalFactor(k),r=x=>Math.round(x*10000)/10000;
-    commit(()=>{const s=shot();s.sceneGlobals={...s.sceneGlobals,[k]:f.keys?f.keys.map(([t,x])=>[t,r(x*v)]):r(v)};},{render:true});
+    commit(()=>{const s=shot();s.sceneGlobals={...s.sceneGlobals,[k]:f.keys?f.keys.map(([t,x])=>[t,r(x*v)]):r(v)};},{render,key});
     status(`${label} ${f.keys?'×'+v+' on every key':'set to '+v}${k==='exposureScale'?' ('+stepsText(v)+')':''}. Render still shows the film look.`);
   }
   function todPanel(){
@@ -546,7 +546,12 @@ export function mountDirector(bridge,catalog,initial){
       if(name==='link'){const url=new URL('./',location.href);url.search='';url.hash='cut='+encodeCut(project);await navigator.clipboard.writeText(url.href);status('Presentation link copied. It includes this cut’s settings.');return;}
       if(name==='delete-cut'){clearTimeout(draftTimer);library.remove(project.id);loadProject(makeCut('New client cut'),false);return;}
       if(name==='undo'||name==='redo'){
-        const source=name==='undo'?undo:redo,target=name==='undo'?redo:undo;if(!source.length)return;target.push(copy(project));project=source.pop();selected=Math.min(selected,project.shots.length-1);changed();render();await load();return;
+        const source=name==='undo'?undo:redo,target=name==='undo'?redo:undo;if(!source.length)return;
+        const before=project.shots[selected];target.push(copy(project));project=source.pop();selected=Math.min(selected,project.shots.length-1);
+        // Only a different scene needs the chapter re-prepared; everything else is applied like a normal edit.
+        const after=project.shots[selected],rebuild=!before||!after||before.id!==after.id||['room','layout','mode','kind','preset','size'].some(k=>before[k]!==after[k]);
+        changed();render();if(rebuild){await load();return;}
+        deskEditor.ready();if(!keys().some(k=>k.id===keyId))keyId=null;seekCamera(playhead);status(name==='undo'?'Undone.':'Redone.');return;
       }
       if(name==='select'){clearPicks();selected=index;keyId=null;playhead=0;inspector='chapter';render();await load();return;}
       if(name==='up'||name==='down'){move(index,index+(name==='up'?-1:1));return;}
@@ -592,7 +597,7 @@ export function mountDirector(bridge,catalog,initial){
     const el=event.target,name=el.name;if(!name)return;
     if(name==='seek'){try{seekCamera(Number(el.value)/100);}catch(error){status(error.message,true);}return;}
     if(name.startsWith('sl-')){try{sceneLights.input(el);}catch(error){status(error.message,true);}return;}
-    if(/^gn?-/.test(name)){const k=name.replace(/^gn?-/,''),v=Number(el.value),twin=field((name.startsWith('gn-')?'g-':'gn-')+k),out=panel.querySelector(`[data-global-steps="${k}"]`);if(Number.isFinite(v)){if(twin)twin.value=String(v);if(out)out.textContent=k==='exposureScale'?stepsText(v):'×'+v;}return;}
+    if(/^gn?-/.test(name)){const k=name.replace(/^gn?-/,''),v=Number(el.value),twin=field((name.startsWith('gn-')?'g-':'gn-')+k),out=panel.querySelector(`[data-global-steps="${k}"]`);if(Number.isFinite(v)){if(twin)twin.value=String(v);if(out)out.textContent=k==='exposureScale'?stepsText(v):'×'+v;if(name.startsWith('g-'))try{setGlobal(k,v,{key:name,render:false});}catch(error){status(error.message,true);}}return;}
     // Neutral white sliders and picker edit live; one undo step per drag.
     if(['neutral-bright','neutral-warm','neutral-color'].includes(name)&&lightItem()){
       try{
@@ -620,7 +625,7 @@ export function mountDirector(bridge,catalog,initial){
   panel.addEventListener('change',async event=>{
     const name=event.target.name,value=event.target.value;group=null;
     if(name==='film-chapter'){switchFilm(Number(value));return;}
-    if(/^gn?-/.test(name||'')){try{setGlobal(name.replace(/^gn?-/,''),Number(value));}catch(error){renderPanel();status(error.message,true);}return;}
+    if(/^gn?-/.test(name||'')){try{const k=name.replace(/^gn?-/,''),v=Number(value);if(Math.abs(globalFactor(k).value-v)<1e-6){renderPanel();return;}setGlobal(k,v);}catch(error){renderPanel();status(error.message,true);}return;}
     if(name?.startsWith('sl-')){try{await sceneLights.changed(event.target);}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name==='light-selected'){const [kind,id]=value.split(':');if(id)selectLight(kind,id);else{lightSel=null;renderPanel();renderTimeline();}return;}
     if(name==='room-light'){try{const v=Number(value);if(value===''||!Number.isFinite(v)||v<0||v>2)throw Error('Room light level runs from 0 to 2.');putLighting({roomLight:v});status('Room light level set to '+v+'.');}catch(error){renderPanel();status(error.message,true);}return;}
