@@ -111,13 +111,15 @@ SCREEN_BLOOM, SCREEN_GAIN = .25, 1.3
 # except ... the outside lighting"): the film-quality bloom only on the rooms' daylight windows / exterior backdrops.
 # Screens keep the 1.3x gain (no-glow stills, picked).
 BLOOM_ONLY = 'window|daylight'
+# HQ22 (Vico: the window bloom "is still too much ... washing everything out" in the OCC): no bloom at all.
+BLOOM_OFF = True
 # HQ21 (Vico: the sensing chapter's warning and movement light "too bright"; picked 40% of the stills): the light the
 # status states cast (every receiver strength and the floor bounce) in that chapter; the strips keep their level.
 STATUS_LEVEL = {'awareness': .4}
 
 
 def fix(s):
-    s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM, 'bloomOnly': BLOOM_ONLY}
+    s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM, 'bloomOnly': BLOOM_ONLY, **({'bloom': False} if BLOOM_OFF else {})}
     if s.get('screens'): s['screenGain'] = SCREEN_GAIN
     if s.get('kind') in ('lift', 'tilt'):
         s['sceneEdits'] = [e for e in s.get('sceneEdits', []) if e != TRACE_HIDE] + [TRACE_HIDE]
@@ -223,7 +225,7 @@ sub = os.path.join(H, 'shots', '13-subshots.json')
 if os.path.exists(sub):
     d = json.load(open(sub))
     for s in d['shots']:
-        s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM, 'bloomOnly': BLOOM_ONLY}
+        s['quality'] = {**(s.get('quality') if isinstance(s.get('quality'), dict) else {}), 'screenBloom': SCREEN_BLOOM, 'bloomOnly': BLOOM_ONLY, **({'bloom': False} if BLOOM_OFF else {})}
         if s.get('screens'): s['screenGain'] = SCREEN_GAIN
     json.dump(d, open(sub, 'w'))   # compact, as build-round8-director.py writes it
 print('visualizer LEDs on', [(s['id'], s.get('ledColor'), s.get('sceneGlobals')) for s in json.load(open(paths[0]))['shots'] if s.get('ledReceivers')])
