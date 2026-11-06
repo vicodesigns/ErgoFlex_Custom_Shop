@@ -4,7 +4,7 @@
   build-round8-director.py <hq dir>
       The pass. Runs LAST in the builder chain (leds -> opener -> rise -> wellness -> create-commons -> this), under
       flock /tmp/claude-1000/hq14-cut.lock. For every chapter but awaken with <hq>/director-camera-<id>.json
-      (director-bridge.py import --shot <id> --plan <its shot>):
+      (director-bridge.py import re, --shot <id> --plan <its shot>):
       - seconds = the import's (the render length: shots/NN.json; a review-cut chapter trimmed shorter than its render
         (coast, music, media) keeps its trim, clamped to the new length). A length change is reported: the EDL and
         the score are NOT retimed here.
@@ -28,7 +28,8 @@
       Reads the chapter id from the export, runs director-bridge.py import into director-camera.json (awaken) or
       director-camera-<id>.json with --shot <id> --plan <its shot>, prints the id. Run it under the cut lock.
 """
-import copy, glob, html, json, os, subprocess, sys, tempfile
+import copy, glob, html, json, os, re, subprocess, sys, tempfile
+root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the repo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -220,7 +221,32 @@ def apply(n, cid, f, dc, log):
     return wrote
 
 
+LIGHT_FIELDS = ('ledStatus', 'ledNeutral', 'ledColor')
+
+
+def apply_lighting(cid, f, lighting):
+    """HQ29: Director Mode's Lighting lane (Export cut carries ledStatus / ledNeutral / ledColor / sceneGlobals.roomLight
+    in the film's own shapes). Vico's values win over the builders': written last, into every copy of the chapter."""
+    paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
+    wrote = []
+    for p in paths:
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') != cid: continue
+            for k in LIGHT_FIELDS:
+                if k in lighting: s[k] = copy.deepcopy(lighting[k])
+            if 'roomLight' in lighting and 'roomLight' in (s.get('sceneGlobals') or {}): s['sceneGlobals']['roomLight'] = lighting['roomLight']
+        if dump(p, d): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
 def run_pass():
+    for n, cid, f in chapters():
+        p = director_file(cid)
+        if os.path.exists(p) and load(p).get('lighting'):
+            w = apply_lighting(cid, f, load(p)['lighting'])
+            print(f'ch{n:02d} {cid}: Director lighting ({", ".join(sorted(load(p)["lighting"]))}) -> {", ".join(w) or "no change"}')
     for n, cid, f in chapters():
         if cid == 'awaken': continue
         p = director_file(cid)
@@ -237,6 +263,42 @@ def page_names(n, cid, downloads):
     return os.path.join(H, page), os.path.join(downloads, f'ErgoFlex-film-ch{n:02d}-{cid}-director.json')
 
 
+def local_clip(src):
+    """A monitor clip that exists on this machine (the hq14 recaptures live on the Win render box): the clip, the
+    20261030 clip of the same name, or chapter 1's 20261030 01-main; None if there is none."""
+    alts = [src, src.replace('cinematic-intro-20261104-hq14', 'cinematic-intro-20261030'),
+            re.sub(r'/01-[a-z]+\.mp4$', '/01-main.mp4', src.replace('cinematic-intro-20261104-hq14', 'cinematic-intro-20261030'))]
+    return next((a for a in alts if os.path.isfile(os.path.join(root, a))), None)
+
+
+def film_list(rows):
+    """HQ28 (Vico: the Director showed the app's default props, not the film's; no way to step between chapters):
+    <hq>/director-film/<id>.json is each chapter's FULL built film shot (what the renderer gets; chapter 1 is
+    previews/awaken-v5-cut.json's), with its monitor clips pointed at copies on this machine, and
+    <hq>/director-chapters.json lists the chapters. Each chapter page links /experience/#cut=..&film=<list>&director=1:
+    the Director applies the film shot's setup to its live stage, shows a chapter picker and opens itself."""
+    os.makedirs(os.path.join(H, 'director-film'), exist_ok=True)
+    full = {s['id']: s for s in load(CUT)['shots']}
+    v5 = os.path.join(H, 'previews', 'awaken-v5-cut.json')
+    if os.path.exists(v5): full['awaken'] = load(v5)['shots'][0]
+    base, items = '/' + H.strip('/'), []
+    for n, cid, page, js, src, cs, mine in rows:
+        shot = json.loads(json.dumps(full[cid]))
+        screens = []
+        for sc in shot.get('screens') or []:
+            c = local_clip(sc.get('src', ''))
+            if c: screens.append(dict(sc, src=c))
+        if 'screens' in shot: shot['screens'] = screens
+        dump(os.path.join(H, 'director-film', f'{cid}.json'), shot)
+        items.append({'n': n, 'id': cid, 'title': src.get('title', ''), 'seconds': float(src['seconds']),
+                      'page': f'{base}/{page}', 'shot': f'{base}/director-film/{cid}.json'})
+        pf = os.path.join(H, page); h = open(pf).read()
+        h2 = re.sub(r'(location\.replace\("/experience/#cut=[A-Za-z0-9+/=_%-]+)(?:&film=[^"&]*)?(?:&director=1)?"\)',
+                    lambda m: m.group(1) + f'&film={base}/director-chapters.json&director=1")', h)
+        if h2 != h: open(pf, 'w').write(h2)
+    dump(os.path.join(H, 'director-chapters.json'), {'chapters': items})
+
+
 def run_pages(ids, downloads):
     rows = []
     for n, cid, f in chapters():
@@ -248,6 +310,7 @@ def run_pages(ids, downloads):
         cs = next(s for s in load(CUT)['shots'] if s['id'] == cid)
         rows.append((n, cid, os.path.basename(page), os.path.basename(js), src, cs, os.path.exists(director_file(cid))))
     if not ids: print(f'{len(rows)} director pages and import files ({downloads})')
+    film_list(rows)
     li = []
     for n, cid, page, js, src, cs, mine in rows:
         T, cT = float(src['seconds']), float(cs['seconds'])
@@ -279,6 +342,14 @@ def run_import(export):
     n, f = known[cid]
     cmd = ['python3', BRIDGE, 'import', export, director_file(cid), '--shot', cid, '--plan', plan_source(cid, f)]
     subprocess.run(cmd, check=True, stdout=sys.stderr)
+    # The Lighting lane's edits ride in the export's shot; keep them beside the camera keys and clips (run_pass applies them).
+    shot = (d.get('shots') or [{}])[0]
+    lighting = {k: shot[k] for k in LIGHT_FIELDS if k in shot}
+    if 'roomLight' in (shot.get('sceneGlobals') or {}): lighting['roomLight'] = shot['sceneGlobals']['roomLight']
+    dc = load(director_file(cid))
+    if lighting: dc['lighting'] = lighting
+    else: dc.pop('lighting', None)
+    dump(director_file(cid), dc)
     print(cid)
 
 
