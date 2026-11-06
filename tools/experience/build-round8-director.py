@@ -262,11 +262,37 @@ def apply_lighting(cid, f, lighting):
 PROP_FIELDS = ('match', 'asset', 'path', 'near', 'label', 'space', 'position', 'rotation', 'scale', 'hide')
 
 
+ADD_ASSET = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$')
+ADD_ID = re.compile(r'^[A-Za-z0-9]{1,16}$')
+
+
+def clean_add(e):
+    """An added library prop (experience/prop-edits.mjs cleanAddEdit): {add: {asset}, id, match, label, parent, position,
+    rotation, scale}, its own transform in the parent's frame (desk: rides the desktop; room: the room)."""
+    add = e.get('add'); asset = add if isinstance(add, str) else add.get('asset') if isinstance(add, dict) else None
+    if not isinstance(asset, str) or not ADD_ASSET.match(asset) or not isinstance(e.get('id'), str) or not ADD_ID.match(e['id']): return None
+    num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool)
+    vec = lambda v, d: [x for x in v] if isinstance(v, list) and len(v) == 3 and all(num(x) and abs(x) < 1e4 for x in v) else d
+    name = f'Added prop:{asset}#{e["id"]}'
+    d = {'add': {'asset': asset}, 'id': e['id'], 'match': '^' + re.sub(r'([.*+?^${}()|\[\]\\/])', r'\\\1', name) + '$'}
+    if isinstance(e.get('label'), str) and len(e['label']) <= 120: d['label'] = e['label']
+    d['parent'] = 'desk' if e.get('parent') == 'desk' else 'room'
+    d['position'] = vec(e.get('position'), [0, 0, 0]); d['rotation'] = vec(e.get('rotation'), [0, 0, 0])
+    sc = vec(e.get('scale'), None)
+    d['scale'] = sc if sc and all(.001 <= x <= 1000 for x in sc) else [1, 1, 1]
+    d['director'] = True
+    return d
+
+
 def clean_props(props):
     """Director Mode's prop edits (experience/prop-edits.mjs cleanPropEdit), as film sceneEdits marked director: true."""
     out = []
     vec = lambda v: isinstance(v, list) and len(v) == 3 and all(isinstance(x, (int, float)) and not isinstance(x, bool) and abs(x) < 1e4 for x in v)
     for e in props if isinstance(props, list) else []:
+        if isinstance(e, dict) and e.get('add') is not None:
+            a = clean_add(e)
+            if a: out.append(a)
+            continue
         if not isinstance(e, dict) or not isinstance(e.get('match'), str): continue
         d = {k: copy.deepcopy(e[k]) for k in PROP_FIELDS if k in e}
         for k in ('near', 'position', 'rotation', 'scale'):

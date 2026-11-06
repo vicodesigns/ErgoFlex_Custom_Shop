@@ -880,7 +880,7 @@ export async function install(shot) {
   if (shot.quality) { active.quality = await (await import('./film-quality.mjs')).installQuality(shot, { screens: active.screens }); if (active.quality) console.log('[film-quality]', JSON.stringify(active.quality.info)); }
   if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
   if (shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
-  if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
+  if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) { await E.prepareAdds(shot); active.edits = E.installEdits(shot); } if (shot.lights) active.lights = E.installLights(shot); }
   // After timeOfDay (which snapshots the raw light levels) and sceneEdits (whose light multipliers it chains to).
   if (shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
   if (roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }
@@ -943,7 +943,7 @@ export async function update(shot, { onSlow } = {}) {
   for (let i = tail; i < TAIL.length; i++) {
     const k = TAIL[i];
     if (k === 'tod' && shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
-    if (k === 'edits' && shot.sceneEdits) active.edits = (await import('./film-edits.mjs')).installEdits(shot);
+    if (k === 'edits' && shot.sceneEdits) { const E = await import('./film-edits.mjs'); await E.prepareAdds(shot); active.edits = E.installEdits(shot); }
     if (k === 'lights' && shot.lights) active.lights = (await import('./film-edits.mjs')).installLights(shot);
     if (k === 'roomLight' && shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
     if (k === 'roomSpill' && roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }

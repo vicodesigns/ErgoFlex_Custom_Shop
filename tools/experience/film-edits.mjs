@@ -24,6 +24,11 @@
 //   for one of several same-named props (e.g. a single chair at a table).
 //   asset:'<Studio scene asset key>' keeps only the object whose userData.sceneAssetKey is that key (one of many
 //   same-named room props, wherever it stands; the Director targets Studio props this way).
+//   add:{asset:'<assets/props id>'}, id, parent:'desk'|'room', position, rotation, scale (with director:true): a library
+//   prop the film doesn't have (experience/prop-edits.mjs cleanAddEdit), placed in its parent's frame (desk: the
+//   featured desk's desktop dressing, riding lift and tilt; room: the room's asset root, else the stage). Loaded by
+//   prepareAdds(shot) (await it before installEdits; film-fx does) through Studio's own PROP_LIBRARY (workspace-3d.mjs,
+//   the same module instance and GLB cache as the app), named 'Added prop:<asset>#<id>', removed by restore().
 //   director:true marks the Director's own prop edits (experience/prop-edits.mjs): offsets from the film's
 //   placement, applied after every hand-made edit; build-round8-director.py replaces them on import.
 //   lightType:'<regex on light type>' (PointLight|SpotLight|HemisphereLight|
@@ -110,6 +115,57 @@ const WINDOWS = {
   gym: { path: 'daylight and entry wall', materialType: 'Basic', minArea: 3 },
   highschool: { path: 'Daylight window', materialType: 'Standard', minArea: 10 }
 };
+// ---------- added props (sceneEdits[].add) ----------
+// Studio's prop library, the very module the app imported (same URL, so the same PROP_LIBRARY and GLB cache).
+let library = null;
+export function propLibrary() {
+  return library ||= (async () => {
+    let url = performance.getEntriesByType('resource').map(e => e.name).find(n => /\/workspace-3d\.mjs(\?|$)/.test(n));
+    if (!url) { try { const src = await (await fetch('/studio.js', { cache: 'force-cache' })).text(), m = /from '\.\/(workspace-3d\.mjs[^']*)'/.exec(src); if (m) url = '/' + m[1]; } catch {} }
+    const mod = await import(url || '/workspace-3d.mjs');
+    await mod.PROP_LIBRARY.loadIndex(); return mod.PROP_LIBRARY;
+  })().catch(error => { library = null; throw error; });
+}
+const prepared = new WeakMap();
+// Load every added prop of the shot (cached GLBs, fresh instances) so installEdits can place them synchronously.
+export async function prepareAdds(shot, library = null) {   // library: tests pass a stand-in for PROP_LIBRARY
+  const adds = (shot.sceneEdits || []).filter(e => e?.add);
+  if (!adds.length) return 0;
+  const lib = library || await propLibrary();
+  await Promise.all(adds.map(async e => {
+    const asset = typeof e.add === 'string' ? e.add : e.add.asset;
+    if (!lib.entry(asset)) { console.warn('[film-fx] sceneEdits add: no library prop ' + asset); return; }
+    try { prepared.set(e, await lib.instance(asset)); } catch (error) { console.warn('[film-fx] sceneEdits add: ' + asset + ' could not load', error); }
+  }));
+  return adds.length;
+}
+const shownTree = o => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
+const inScene = (o, scene) => { for (let p = o; p; p = p.parent) if (p === scene) return true; return false; };
+// Where an added prop lives: 'desk' = the featured desk's desktop (a scene desk's dressing, else the product desk's
+// accessory mount); 'room' = the room's asset root, else the stage.
+export function addParent(kind) {
+  const scene = sceneRoot();
+  if (kind === 'desk') {
+    const rig = api.sceneDesks?.active?.rig?.mounts?.desktop; if (rig && inScene(rig, scene)) return rig;
+    const m = api.workspaceAccessories?.mounts?.get('desktop'); if (m?.group && inScene(m.group, scene)) return m.group;
+    return null;
+  }
+  const root = api.workspaceRoom?.root; return root && inScene(root, scene) && shownTree(root) ? root : scene;
+}
+// Scene units per millimetre (a library instance is in millimetres at scale 1000 under a millimetre parent).
+export const mmScale = () => api.workspaceAccessories?.scale || api.workspaceRoom?.scale || .001;
+function installAdd(edit, n, undo) {
+  const o = prepared.get(edit); if (!o) { console.warn(`[film-fx] sceneEdits[${n}] add: ${edit.add?.asset || edit.add} not loaded (prepareAdds first)`); return; }
+  const parent = addParent(edit.parent); if (!parent) { console.warn(`[film-fx] sceneEdits[${n}] add: no desk to put ${edit.add?.asset || edit.add} on`); return; }
+  const asset = typeof edit.add === 'string' ? edit.add : edit.add.asset;
+  parent.updateWorldMatrix(true, false); const k = parent.getWorldScale(new THREE.Vector3()).x || 1, base = 1000 * mmScale() / k;
+  o.name = `Added prop:${asset}#${edit.id}`; o.userData.directorAdd = { asset, id: edit.id, label: edit.label || asset, parent: edit.parent === 'desk' ? 'desk' : 'room' };
+  const p = edit.position || [0, 0, 0], r = edit.rotation || [0, 0, 0], s = edit.scale || [1, 1, 1], d = THREE.MathUtils.degToRad;
+  o.position.set(p[0] / k, p[1] / k, p[2] / k); o.rotation.set(d(r[0]), d(r[1]), d(r[2])); o.scale.set(base * s[0], base * s[1], base * s[2]);
+  parent.add(o); o.updateMatrixWorld(true);
+  (o.userData.__filmFxEdits ||= []).push(edit); edit.__count = 1;
+  undo.push(() => { o.removeFromParent(); delete o.userData.__filmFxEdits; prepared.delete(edit); });
+}
 const PHYSICAL = new Set(['clearcoat', 'clearcoatRoughness', 'sheen', 'transmission', 'iridescence']);
 export function installEdits(shot) {
   const undo = [], live = [], swapped = new Map();
@@ -120,6 +176,7 @@ export function installEdits(shot) {
     undo.push(() => { delete m[field]; if (own) Object.defineProperty(m, field, own); m[field] = raw; });
   };
   for (const [n, edit] of (shot.sceneEdits || []).entries()) {
+    if (edit?.add) { installAdd(edit, n, undo); continue; }
     const found = targets(edit);
     if (!found.length) { console.warn(`[film-fx] sceneEdits[${n}] matched nothing: ${edit.match}`); continue; }
     edit.__count = found.length;

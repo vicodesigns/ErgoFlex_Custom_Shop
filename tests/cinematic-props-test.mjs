@@ -10,7 +10,8 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import * as THREE from 'three';
-import {cleanPropEdit,cleanPropEdits,mergePropEdits,effectivePropEdits,filmPropEdits,propKey,describePropEdit,writeSceneAssets,propName,escapeRegex,studioSceneIds} from '../experience/prop-edits.mjs';
+import {cleanPropEdit,cleanPropEdits,mergePropEdits,effectivePropEdits,filmPropEdits,propKey,describePropEdit,writeSceneAssets,propName,escapeRegex,studioSceneIds,cleanAddEdit,isAddEdit,addMatch} from '../experience/prop-edits.mjs';
+import {filterEntries,deskItem,sizeText} from '../experience/prop-library.mjs';
 import {cleanShot,cleanCut} from '../experience/cuts.mjs';
 import {liveFilmShot} from '../experience/film-chapters.mjs';
 import {filmRenderShot} from '../experience/film-render.mjs';
@@ -84,6 +85,51 @@ assert.equal(mug.visible,true);assert.equal(Object.getOwnPropertyDescriptor(mug,
   assert.match(describePropEdit({space:'local',position:[.15,0,0]}),/^moved 0.15 m on the desk/);
   top.removeFromParent();
 }
+// ---- added props (the library browser): cleaning, naming, the library filters, film-edits installs them in the
+// desk's or the room's frame (riding the desk's lift / tilt) and restore takes them out
+{
+  const raw={add:{asset:'ergoflex-phone'},id:'ab12x',label:'Smartphone',parent:'desk',position:[.123456,0,-.05],rotation:[0,30,0],scale:1.2,junk:1};
+  const a=cleanPropEdit(raw);
+  assert.deepEqual(a,{add:{asset:'ergoflex-phone'},id:'ab12x',match:'^Added prop:ergoflex-phone#ab12x$',label:'Smartphone',parent:'desk',position:[.1235,0,-.05],rotation:[0,30,0],scale:[1.2,1.2,1.2]});
+  assert.ok(isAddEdit(a));assert.equal(cleanAddEdit({add:{asset:'../x'},id:'a'}),null,'a bad asset id is dropped');assert.equal(cleanAddEdit({add:{asset:'mug'},id:'a b'}),null);
+  assert.deepEqual(cleanPropEdit({add:'mug',id:'q1'}),{add:{asset:'mug'},id:'q1',match:addMatch('mug','q1'),parent:'room',position:[0,0,0],rotation:[0,0,0],scale:[1,1,1]},'an add with no move is still an edit (it adds the prop)');
+  assert.equal(propName('Added prop:ergoflex-phone#ab12x'),'Phone');
+  assert.equal(describePropEdit(a),'added on the desk, scaled ×1.2');assert.equal(describePropEdit({...a,parent:'room',scale:[1,1,1]}),'added to the room');
+  assert.deepEqual(cleanPropEdits({propEdits:[a,{...a,id:'zz9'},{...a,position:[0,0,0]}]}).propEdits.map(e=>e.id),['ab12x','zz9'],'one entry per added prop (its id)');
+  assert.deepEqual(mergePropEdits({sceneEdits:[]},{propEdits:[a]}).sceneEdits,[{...a,director:true}]);
+  const lib=[{id:'ergoflex-phone',name:'Smartphone',category:'electronics',scenes:['office'],size:[78.3,12,147],anchor:'floor'},{id:'sofa',name:'Sofa',category:'furniture',scenes:['home'],size:[2000,800,900],anchor:'floor'},{id:'office-phone',name:'Office phone',category:'desk',scenes:['office','home'],size:[172,92,220],anchor:'floor'}];
+  assert.deepEqual(filterEntries(lib,{query:'phone'}).map(e=>e.id),['ergoflex-phone','office-phone'],'search: name and id');
+  assert.deepEqual(filterEntries(lib,{query:'phone',fits:true,room:'home'}).map(e=>e.id),['office-phone'],'fits this room: its scenes');
+  assert.deepEqual(filterEntries(lib,{category:'furniture'}).map(e=>e.id),['sofa']);
+  assert.deepEqual(lib.map(deskItem),[true,false,true],'small things go on the desk, furniture on the floor');
+  assert.equal(sizeText([78.3,12,147]),'7.8 × 1.2 × 14.7 cm');assert.equal(sizeText([2000,800,900]),'2 × 0.8 × 0.9 m');
+  // film-edits: a desktop dressing (0.001 scale, lifted and tilted) and the room's asset root (rotated, offset).
+  const E=await import('../tools/experience/film-edits.mjs');
+  const top=new THREE.Group();top.name='Scene dressing:desktop';top.scale.setScalar(.001);desk.add(top);
+  const assets=new THREE.Group();assets.name='Scene assets:home';assets.scale.setScalar(.001);room.add(assets);
+  Object.assign(window.ErgoFlex,{sceneDesks:{active:{rig:{mounts:{desktop:top}}}},workspaceRoom:{root:assets,scale:.001},workspaceAccessories:{scale:.001}});
+  const fake={entry:id=>({id}),instance:async id=>{const g=new THREE.Group();g.name='Prop:'+id;g.userData.propId=id;g.scale.setScalar(1000);g.add(new THREE.Mesh(new THREE.BoxGeometry(.08,.012,.15)));return g;}};
+  const install=async(edits,pose)=>{top.position.set(...pose.p);top.rotation.set(pose.tilt,0,0);scene.updateMatrixWorld(true);const shot={sceneEdits:edits.map(e=>({...e,director:true}))};
+    assert.equal(await E.prepareAdds(shot,fake),edits.length);const f=E.installEdits(shot);return f;};
+  const roomAdd=cleanAddEdit({add:{asset:'sofa'},id:'r1',parent:'room',position:[.5,0,1],rotation:[0,90,0],scale:[1,1,1]});
+  let f=await install([a,roomAdd],{p:[0,.7,0],tilt:0});
+  const phone=E.editTargets({match:a.match});assert.equal(phone.length,1,'the added phone is a target by its name');
+  assert.equal(phone[0].parent,top,'on the desktop dressing');assert.deepEqual(phone[0].position.toArray().map(v=>+v.toFixed(4)),[123.5,0,-50],'position: scene units along the desktop\'s axes');
+  assert.deepEqual(phone[0].scale.toArray().map(v=>+v.toFixed(4)),[1200,1200,1200],'library scale 1000 × 1.2');assert.equal(+(phone[0].rotation.y*180/Math.PI).toFixed(4),30);
+  assert.deepEqual(phone[0].userData.directorAdd,{asset:'ergoflex-phone',id:'ab12x',label:'Smartphone',parent:'desk'});assert.equal(phone[0].userData.__filmFxEdits[0].id,'ab12x');
+  const sofa=E.editTargets({match:roomAdd.match})[0];assert.equal(sofa.parent,assets,'a room prop in the room\'s asset root');
+  const lifted=()=>{scene.updateMatrixWorld(true);return phone[0].getWorldPosition(new THREE.Vector3());};
+  const at0=lifted();top.position.y=1.1;top.rotation.x=.3;const at1=lifted();assert.ok(at1.y-at0.y>.3,'it rides the lift');
+  assert.deepEqual(f.count,[1,1]);f.restore();assert.equal(E.editTargets({match:a.match}).length,0,'restore takes the added props out');assert.equal(assets.children.length,0);
+  f=await install([a],{p:[0,1.1,.2],tilt:.6});assert.deepEqual(E.editTargets({match:a.match})[0].position.toArray().map(v=>+v.toFixed(4)),[123.5,0,-50],'the same desktop place at another lift / tilt');f.restore();
+  {const f2=E.installEdits({sceneEdits:[{...a,director:true}]});assert.equal(E.editTargets({match:a.match}).length,0,'not prepared: skipped with a warning, no throw');f2.restore();}
+  assert.equal(E.addParent('desk'),top);assert.equal(E.addParent('room'),assets);
+  top.removeFromParent();assets.removeFromParent();for(const k of ['sceneDesks','workspaceRoom','workspaceAccessories'])delete window.ErgoFlex[k];
+  // Make permanent: a room add becomes a Studio item (added + its transform).
+  const t={p:{x:500,y:0,z:1000},q:{x:0,y:.7071,z:0,w:.7071},s:{x:1000,y:1000,z:1000}};
+  const st=JSON.parse(writeSceneAssets(null,'home:house',[{editorId:'scene:home:custom:1-0:sofa',add:{propId:'sofa',position:[500,0,1000]},transform:t}]));
+  assert.deepEqual(st['home:house'],{removed:[],added:[{editorId:'scene:home:custom:1-0:sofa',propId:'sofa',position:[500,0,1000]}],transforms:{'scene:home:custom:1-0:sofa':t}});
+}
 // ---- Make permanent: only the confirmed props, in Studio's per-room record
 const studio=JSON.stringify({'home:house':{removed:['scene:home:house:x'],added:[{editorId:'scene:home:house:custom:1',propId:'ficus'}],transforms:{'scene:home:house:custom:1':{p:{x:1,y:0,z:0}}}},'library:humboldt':{removed:[],added:[],transforms:{}}});
 const T={p:{x:500,y:0,z:-250},q:{x:0,y:.13,z:0,w:.99},s:{x:1,y:1.1,z:1}};
@@ -115,5 +161,12 @@ py(script,H);assert.deepEqual(edits().map(e=>[e.match,e.position?.[2]??null,!!e.
 // An export without propEdits keeps them; propEdits [] removes them.
 py(script,H,'--import',exportOf(null));py(script,H);assert.equal(edits().filter(e=>e.director).length,3,'an export that never touched props keeps the earlier ones');
 py(script,H,'--import',exportOf([]));py(script,H);assert.deepEqual(edits().map(e=>e.match),['^Prop:steelcase-leap-v2$','^Piano bench$'],'reset all in the Director clears them from the film');
+// Added props through Export cut -> import -> pass: kept as add entries, after the hand-made edits.
+{const add=cleanAddEdit({add:{asset:'ergoflex-phone'},id:'ph0ne',label:'Smartphone',parent:'desk',position:[.1,0,-.05],rotation:[0,15,0],scale:[1,1,1]});
+  py(script,H,'--import',exportOf([mine[0],add]));py(script,H);
+  assert.deepEqual(edits().filter(e=>e.director),[{...mine[0],director:true},{...add,director:true}],'the added phone survives the round trip as it was exported');
+  assert.deepEqual(filmPropEdits(read('review-cut.json').shots[0]),[mine[0],add],'and reopens as the same Director edits');
+  py(script,H,'--import',exportOf([]));py(script,H);}
 fs.rmSync(tmp,{recursive:true,force:true});
+console.log('Added props: cleaning, the library filters, film-edits install on the desk / in the room (riding the lift, restored), Make permanent as a Studio item, the round trip.');
 console.log('Director props: cleaning and the cut, the merge after the film\'s hand-made sceneEdits for the live stage and Render still, film-edits world offsets / turns / per-axis scale / hide and show / Studio asset targets / full restore, the Studio write, and the film round trip (import, pass, builders\' edits kept, keep / reset) all verified.');
