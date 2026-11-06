@@ -62,7 +62,15 @@ FLOOR_EVEN = {'awaken': {'bounce': 2.0, 'foot': .5}}
 # LED light keeps its level, so the room is lower key and the LEDs read against it as on the stage; EXPOSURE trims the
 # rooms that are still hot (all-white artist room; the commons' white tables and ceiling pools; the rise office).
 ROOM_LIGHT = .55
-EXPOSURE = {'rise': 1.0, 'create': .7}   # commons .8 until HQ16 (see DAYLIGHT); rise .9 -> 1.0 HQ28 (Vico: a tick up, it looks dark)
+EXPOSURE = {'rise': .9, 'create': .7}   # commons .8 until HQ16 (see DAYLIGHT)
+# HQ29 (Vico, after the bloom came out: "all those environments are dark ... show me 2 ticks on everything except for movie
+# and video game"): every room chapter's exposure x TICK^2 (a tick = +11%, about +12% frame brightness); music and media
+# (the night rooms) stay. The stage chapters (awaken, awareness, hero) aren't rooms.
+TICK = 1.11
+TICKS = {'rise': 2, 'create': 2, 'commons': 2, 'coast': 2, 'oilers': 2, 'wellness': 2, 'storage': 2}
+# The gym (black and red) still reads like evening at 2 ticks (Vico: "it should be like the morning, bright, like the
+# early riser"): more of the room's own ambient (image-based) light on top, sceneGlobals.environmentScale.
+GYM_ENV = float(os.environ.get('GYM_ENV', '1'))
 # The visualizer's LED surface levels (app-reference/assets/desk_viewer/led/led-receivers.mjs LED_SURFACE_DEFAULTS,
 # the same numbers as studio.js's): desk-viewer.js runs them with no overrides.
 VIEWER_SURFACES = {'desktopStrength': 157, 'desktopReach': 100, 'desktopWidth': 5, 'desktopCone': 100, 'desktopEdgeFade': 46,
@@ -183,13 +191,18 @@ def fix(s):
             if e.get('kind') == 'wheels': e['reverse'] = True
     # (Storage stayed on its old look, warm white #fff1dc + floorLight, until HQ14r: see SURFACE_TRIM.)
     if not s.get('ledStatus'):
+        if s['id'] in TICKS:   # coast, oilers: no desk status lights, but their rooms take the ticks too
+            s.setdefault('sceneGlobals', {})['exposureScale'] = round(EXPOSURE.get(s['id'], 1.0) * TICK ** TICKS[s['id']], 3)
         return s
     s['ledColor'] = WHITE_BY.get(s['id'], WHITE_STAGE if s['id'] in STAGE else WHITE_ROOM)
     if s['id'] in NEUTRAL: s['ledNeutral'] = NEUTRAL[s['id']]
     if s['id'] not in STAGE:
         g = s.setdefault('sceneGlobals', {}); g['roomLight'] = ROOM_LIGHT_BY.get(s['id'], ROOM_LIGHT)
-        if s['id'] in EXPOSURE: g['exposureScale'] = EXPOSURE[s['id']]
+        e = EXPOSURE.get(s['id'], 1.0) * TICK ** TICKS.get(s['id'], 0)
+        if abs(e - 1) > 1e-9: g['exposureScale'] = round(e, 3)
         else: g.pop('exposureScale', None)
+        if s['id'] == 'wellness' and GYM_ENV != 1: g['environmentScale'] = GYM_ENV
+        elif s['id'] == 'wellness': g.pop('environmentScale', None)
     if s['id'] in DAYLIGHT:
         s['timeOfDay'] = [{'at': -1, 'mode': DAYLIGHT[s['id']]}, {'at': 0, 'mode': 'morning'}]
         s['sceneGlobals'].pop('environmentScale', None); s['sceneGlobals'].pop('exposure', None)
