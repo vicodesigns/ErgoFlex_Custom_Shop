@@ -23,6 +23,8 @@
       Director pages + import files (all chapters if no id): <hq>/director-chNN-<id>.html (chapter 1:
       director-ch01.html) and DIR/ErgoFlex-film-chNN-<id>-director.json (DIR default ~/Downloads), and
       <hq>/director-index.html linking every chapter page. Open via http://127.0.0.1:3000/<hq>/director-index.html.
+      Every page cut gets 'filmVersion' (hash of the cut) and 'filmUpdated' (UTC time that version was first built),
+      its director-chapters.json entry the same as 'version' / 'updated': a reloaded Director tab takes the newer page cut (experience/film-fresh.mjs).
 
   build-round8-director.py <hq dir> --import <exported cut.json>
       Reads the chapter id from the export, runs director-bridge.py import into director-camera.json (awaken) or
@@ -38,7 +40,7 @@
       film-cameras sceneEditsAdd entries are never touched, and the Director's entries are offsets from the film's
       placement, so they keep what Vico saw however the hand-made edits for that prop change.
 """
-import copy, glob, html, json, os, re, subprocess, sys, tempfile, time
+import base64, copy, glob, hashlib, html, json, os, re, subprocess, sys, tempfile, time
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the repo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -367,6 +369,8 @@ def film_list(rows):
     v5 = os.path.join(H, 'previews', 'awaken-v5-cut.json')
     if os.path.exists(v5): full['awaken'] = load(v5)['shots'][0]
     base, items = '/' + H.strip('/'), []
+    cl = os.path.join(H, 'director-chapters.json')
+    before = {c.get('id'): c for c in load(cl).get('chapters', [])} if os.path.exists(cl) else {}
     for n, cid, page, js, src, cs, mine in rows:
         shot = json.loads(json.dumps(full[cid]))
         screens = []
@@ -378,10 +382,28 @@ def film_list(rows):
         items.append({'n': n, 'id': cid, 'title': src.get('title', ''), 'seconds': float(src['seconds']),
                       'page': f'{base}/{page}', 'shot': f'{base}/director-film/{cid}.json'})
         pf = os.path.join(H, page); h = open(pf).read()
+        version, updated, h = stamp_page(h, before.get(cid, {}))
+        items[-1].update(version=version, updated=updated)
         h2 = re.sub(r'(location\.replace\("/experience/#cut=[A-Za-z0-9+/=_%-]+)(?:&film=[^"&]*)?(?:&director=1)?"\)',
                     lambda m: m.group(1) + f'&film={base}/director-chapters.json&director=1")', h)
-        if h2 != h: open(pf, 'w').write(h2)
+        if h2 != open(pf).read(): open(pf, 'w').write(h2)
     dump(os.path.join(H, 'director-chapters.json'), {'chapters': items})
+
+
+def stamp_page(h, prev):
+    """Reload fix (a reloaded Director tab kept the cut its URL hash was opened with, and its next Export cut sent those
+    stale values back): every chapter page's cut carries 'filmVersion' (a hash of the cut without the stamp) and
+    'filmUpdated' (UTC time that version was first built here, kept while the cut is unchanged; 'version' is the cut
+    schema's), and director-chapters.json lists both per chapter as 'version' / 'updated'. On load the Director compares the hash's stamp with the list's and takes the page's newer cut."""
+    m = re.search(r'#cut=([A-Za-z0-9_-]+)', h)
+    if not m: return '', '', h
+    cut = json.loads(base64.urlsafe_b64decode(m.group(1) + '=' * (-len(m.group(1)) % 4)))
+    cut.pop('filmVersion', None); cut.pop('filmUpdated', None)
+    version = hashlib.sha1(json.dumps(cut, sort_keys=True, separators=(',', ':')).encode()).hexdigest()[:12]
+    updated = prev.get('updated') if prev.get('version') == version and prev.get('updated') else time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+    cut['filmVersion'], cut['filmUpdated'] = version, updated
+    enc = base64.urlsafe_b64encode(json.dumps(cut, separators=(',', ':')).encode()).decode().rstrip('=')
+    return version, updated, h[:m.start(1)] + enc + h[m.end(1):]
 
 
 def run_pages(ids, downloads):

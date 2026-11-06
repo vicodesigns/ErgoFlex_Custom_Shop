@@ -15,7 +15,7 @@ export function cleanFilmChapters(value,base){
     let url;try{url=new URL(c.page,base);}catch{return [];}
     if(url.origin!==origin)return [];
     const seconds=Number(c.seconds);let shot=null;try{if(typeof c.shot==='string'){const u=new URL(c.shot,base);if(u.origin===origin)shot=u.href;}}catch{}
-    return [{shot,n:Number.isInteger(c.n)?c.n:i+1,id:c.id.slice(0,80),title:typeof c.title==='string'?c.title.slice(0,140):'',seconds:typeof c.seconds!=='boolean'&&c.seconds!=null&&Number.isFinite(seconds)?seconds:null,url:url.href}];
+    return [{shot,n:Number.isInteger(c.n)?c.n:i+1,id:c.id.slice(0,80),title:typeof c.title==='string'?c.title.slice(0,140):'',seconds:typeof c.seconds!=='boolean'&&c.seconds!=null&&Number.isFinite(seconds)?seconds:null,url:url.href,version:typeof c.version==='string'?c.version.slice(0,40):'',updated:typeof c.updated==='string'?c.updated.slice(0,40):''}];
   });
   if(!chapters.length)throw Error('The film chapter list has no chapters.');
   return chapters;

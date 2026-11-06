@@ -6,6 +6,7 @@ import {score,safeReturn} from './score.mjs';
 import {ShotClock} from './timing.mjs';
 import {cleanCut,decodeCut} from './cuts.mjs';
 import {filmLink,loadFilmChapters,loadFilmShot,liveFilmShot} from './film-chapters.mjs';
+import {latestFilmCut,withCut,filmFresh} from './film-fresh.mjs';
 import {exportLighting} from './film-lighting.mjs';
 import {filmCamera} from './film-render.mjs';
 const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search), linkQuery=new URLSearchParams(location.hash.slice(1));
@@ -14,6 +15,16 @@ const clock=new ShotClock(),cover=$('transition-frame');
 let director=null,directorOpen=false,previewOnly=false,clientCut=null,preparedShot=null,previewRange=null,loopPreview=false;
 try{const linked=linkQuery.get('cut');if(linked){clientCut=decodeCut(linked);cut='client';shots=clientCut.shots;}}
 catch(error){$('cut-error').hidden=false;$('cut-error').textContent=error.message;}
+// A film chapter tab reloaded after an import takes the film's newer cut, not the one its hash was opened with
+// (film-fresh.mjs); the hash is rewritten so later reloads stay current. A stage 'ready' that arrives during the
+// check is replayed once the message listener below exists.
+let earlyReady=null;const holdReady=e=>{if(e.data?.ergoPresentation==='ready')earlyReady=e;};
+if(clientCut&&filmLink(location.hash)?.director)try{
+  addEventListener('message',holdReady);
+  const latest=await Promise.race([latestFilmCut(filmLink(location.hash).film,location.hash),new Promise((_,reject)=>setTimeout(()=>reject(Error('timed out')),15000))]);
+  if(latest){filmFresh.state=latest;if(latest.newer){history.replaceState(history.state,'',withCut(location.hash,latest.enc));clientCut=decodeCut(latest.enc);shots=clientCut.shots;}}
+}catch(error){console.warn('[film fresh]',error.message);}
+finally{removeEventListener('message',holdReady);}
 // Film chapter links: the chapter list's "shot" (the full built film shot) dresses the live
 // stage with the film's own setup (props, hidden objects, desk finish, screens, room light).
 const filmShots=new Map(),film=filmLink(location.hash);
@@ -377,3 +388,4 @@ addEventListener('message',e=>{
   }
 });
 chapters();document.body.classList.add('loading');requestAnimationFrame(draw);
+if(earlyReady)dispatchEvent(new MessageEvent('message',{data:earlyReady.data,origin:earlyReady.origin,source:earlyReady.source}));

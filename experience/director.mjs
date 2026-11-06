@@ -12,6 +12,7 @@ import {filmPropEdits,propKey} from './prop-edits.mjs';
 import {createFilmLook} from './film-look.mjs';
 import {createStillStrip} from './still-strip.mjs';
 import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './film-chapters.mjs';
+import {createFilmFresh} from './film-fresh.mjs';
 import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS} from './timeline-ui.mjs';
 import {createDeskEditor} from './desk-editor.mjs';
 import {createTitleEditor,loadTitleSource} from './title-editor.mjs';
@@ -40,6 +41,9 @@ export function mountDirector(bridge,catalog,initial){
   const picks={keys:new Set(),clips:new Set(),lights:new Set(),neutrals:new Set(),tods:new Set()};let lightSel=null,stills=null,stillBusy=false,marquee=null,groupDrag=null,suppressGroupClickUntil=0;
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
   let filmChapters=null,filmError='',exported=signature();
+  // A film chapter reloaded after an import: the film's newer cut, an unexported draft to keep or drop, stale-export warning.
+  const fresh=createFilmFresh(film,project,{storage,catalog,escape,render:()=>renderFilm(),status:m=>status(m),load:(cut,asExported)=>{loadProject(cut,false);if(asExported)exported=signature();syncFilm();}});
+  {const d=fresh.initialDraft();if(d)project=cleanCut(d,catalog);}
   const panel=document.createElement('section');panel.id='director-panel';panel.setAttribute('aria-label','Director controls');
   const timeline=document.createElement('section');timeline.id='director-timeline';timeline.setAttribute('aria-label','Chapter timeline');
   const picker=document.createElement('dialog');picker.id='scene-picker';picker.setAttribute('aria-label','Choose client environments');
@@ -159,7 +163,7 @@ export function mountDirector(bridge,catalog,initial){
   // The status line that follows an edit names it (first sentence); see editLabel() for edits without one.
   const status=(message,error=false)=>{if(labelPending&&!error&&message){labelPending.text=message.split(/\.(\s|$)/)[0];labelPending=null;}for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.title=message;el.classList.toggle('error',error);}};
   function saved(text,title){const el=panel.querySelector('[data-saved]');if(el){el.textContent=text;el.title=title;}}
-  function draft(){clearTimeout(draftTimer);try{library.draft(project);saved('Saved ✓','Draft kept in this browser · Export cut sends it to the film');}catch{saved('Not saved','Browser storage is full, so no draft copy · Export cut sends it to the film');}}
+  function draft(){clearTimeout(draftTimer);fresh.noteDraft(project,unexported());try{library.draft(project);saved('Saved ✓','Draft kept in this browser · Export cut sends it to the film');}catch{saved('Not saved','Browser storage is full, so no draft copy · Export cut sends it to the film');}}
   function changed(){filmLook?.poke();bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}}
   // Film chapters: a dropdown that reloads this tab with another chapter's page.
   const filmIndex=()=>filmChapterIndex(filmChapters,project.shots.map(s=>s.id));
@@ -168,7 +172,7 @@ export function mountDirector(bridge,catalog,initial){
     if(!film)return '';
     if(!filmChapters)return `<div class="film-chapter-picker" data-film-picker><span class="director-hint">${filmError?escape(filmError):'Loading film chapters…'}</span></div>`;
     const i=filmIndex();
-    return `<div class="film-chapter-picker" data-film-picker><button data-action="film-prev" aria-label="Previous film chapter" title="Previous film chapter" ${i<=0?'disabled':''}>‹</button><label><span>Film chapter</span><select name="film-chapter" aria-label="Film chapter" title="Switch film chapter (reloads this tab)">${i<0?'<option value="-1" selected>Choose a chapter…</option>':''}${filmChapters.map((c,n)=>option(String(n),filmChapterLabel(c),String(i))).join('')}</select></label><button data-action="film-next" aria-label="Next film chapter" title="Next film chapter" ${i<0&&filmChapters.length?'':i>=filmChapters.length-1?'disabled':''}>›</button><span class="film-dirty" data-film-dirty title="Edited since the last Export cut" ${unexported()?'':'hidden'}>● not exported</span></div>`;
+    return `<div class="film-chapter-picker" data-film-picker><button data-action="film-prev" aria-label="Previous film chapter" title="Previous film chapter" ${i<=0?'disabled':''}>‹</button><label><span>Film chapter</span><select name="film-chapter" aria-label="Film chapter" title="Switch film chapter (reloads this tab)">${i<0?'<option value="-1" selected>Choose a chapter…</option>':''}${filmChapters.map((c,n)=>option(String(n),filmChapterLabel(c),String(i))).join('')}</select></label><button data-action="film-next" aria-label="Next film chapter" title="Next film chapter" ${i<0&&filmChapters.length?'':i>=filmChapters.length-1?'disabled':''}>›</button><span class="film-dirty" data-film-dirty title="Edited since the last Export cut" ${unexported()?'':'hidden'}>● not exported</span>${fresh.noticeHTML()}</div>`;
   }
   function syncFilm(){
     if(!film)return;const dirty=unexported(),i=String(filmIndex());
@@ -187,12 +191,12 @@ export function mountDirector(bridge,catalog,initial){
     switcher.showModal();switcher.querySelector('[data-switch=export]').focus();
   }
   function goFilm(target){deskEditor.stop();status('Opening film chapter '+filmChapterLabel(target)+'…');for(const el of document.querySelectorAll('[data-film-picker] button,[data-film-picker] select'))el.disabled=true;location.assign(target.url);}
-  switcher.addEventListener('click',event=>{
+  switcher.addEventListener('click',async event=>{
     const choice=event.target.closest('[data-switch]')?.dataset.switch;if(!choice)return;
     const target=filmChapters?.[Number(switcher.dataset.target)];switcher.close();
     if(choice==='cancel'||!target){syncFilm();return;}
     if(choice==='go'){goFilm(target);return;}
-    action('save-export');if(unexported())return;
+    await action('save-export');if(unexported())return;
     // Give the download a moment to leave before the page unloads its blob URL.
     status('Cut exported · opening '+filmChapterLabel(target)+'…');setTimeout(()=>goFilm(target),900);
   });
@@ -680,11 +684,13 @@ export function mountDirector(bridge,catalog,initial){
     try{await bridge.editShot(project,selected);if(token===loadToken){automaticCameras.set(shot().id,bridge.stage().cameraKeys());deskEditor.ready();playhead=position;if(!keys().some(k=>k.id===keyId))keyId=null;renderPanel();renderTimeline();if(film&&!timelineFitted&&!document.body.style.getPropertyValue('--director-timeline-height')){fitTimeline();renderTimeline();}hookOrbit();warmStill();if(film&&filmShot())sceneProps.ensure().catch(error=>console.warn('[props]',error.message));bridge.seek(playhead);status('Camera is live. Existing desk movements appear below; select a block to edit it, or add Lift, Tilt or Wheels.');}}catch(error){if(token===loadToken)status(error.message,true);}
   }
   function move(from,to){if(to<0||to>=project.shots.length)return;commit(()=>{const [s]=project.shots.splice(from,1);project.shots.splice(to,0,s);selected=to;},{render:true});load();}
-  function exportCut(){const url=URL.createObjectURL(new Blob([JSON.stringify(((c)=>({...c,shots:c.shots.map(exportLighting)}))(cleanCut(project,catalog)),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();syncFilm();status('Cut exported. Import it in Director Mode on another browser.');}
+  function exportCut(){const url=URL.createObjectURL(new Blob([JSON.stringify(((c)=>({...c,shots:c.shots.map(exportLighting)}))(cleanCut(project,catalog)),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();fresh.exported(project);syncFilm();status('Cut exported. Import it in Director Mode on another browser.');}
   async function action(name,index){
     try{
       if(composing)return;
       group=null;
+      if((name==='save-export'||name==='export')&&index!=='stale-ok'&&await fresh.guardExport(project,unexported(),()=>action(name,'stale-ok')))return;
+      if(name==='film-keep-draft'||name==='film-use-film'){fresh.choose(name==='film-keep-draft'?'draft':'film');return;}
       if(name==='magnet'){magnet=!magnet;timeline.querySelector('[data-action=magnet]')?.setAttribute('aria-pressed',String(magnet));status(magnet?'Magnet on: drags snap to edges, keys and the playhead.':'Magnet off: drags snap to the grid only.');return;}
       if(name==='render-still'){await renderStill();return;}
       if(name==='sel-clear'){clearSelection();return;}

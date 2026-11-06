@@ -476,3 +476,17 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .floor-section>summary small{font-weight:400;color:#8caebd;font-size:11px}
 #director-panel .floor-sources button[aria-pressed=true]{outline:2px solid #63d8f5}
 .floor-inspector h4{margin:8px 0 2px}
+/* Film chapter freshness (film-fresh.mjs): the quiet "latest film version" notice and the stale-export warning. */
+.film-fresh{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:4px 2px 0;font-size:11px;line-height:1.45;color:#94afbf}
+.film-fresh .film-fresh-draft{color:#ffc977}
+.film-fresh .film-fresh-choice{display:flex;gap:4px}
+#director-panel .film-chapter-picker .film-fresh button{min-height:24px;min-width:0;padding:2px 8px;font-size:11px;border:1px solid #7dcbe640;color:#cfe9f3}
+#director-panel .film-chapter-picker .film-fresh button[aria-pressed="true"]{background:#65dcff26;border-color:#65dcff;color:#e5f7fd}
+#director-timeline .film-fresh{display:none}
+#director-panel .film-chapter-picker:has(.film-fresh){flex-wrap:wrap}
+#film-stale{position:fixed;width:min(520px,92vw);border-radius:18px;padding:22px;color:#edf6fc;background:#0d1924f8;border:1px solid #8bc5df40;box-shadow:0 20px 80px #000a;font-size:13px;line-height:1.5}
+#film-stale::backdrop{background:#020a11a8;backdrop-filter:blur(6px)}
+#film-stale h2{margin:4px 0 8px;font-size:20px}
+#film-stale ul{margin:0 0 14px;padding-left:18px;color:#ffc977}
+#film-stale button{min-height:34px;border-radius:9px;padding:6px 12px;font-size:12px}
+#film-stale .primary{background:#65dcff;color:#041018;font-weight:700;border:0}
