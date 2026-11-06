@@ -13,6 +13,8 @@
 //   screens:[{target, src, offset=0, fit='cover'|'contain'|'stretch', loop=true,
 //             rotate=0|90|180|270, flipX=false, brightness=1, rate=1}]
 //             brightness may be keyframed [[chapterSeconds, gain], …] (linear), e.g. a screen waking from black.
+//             blend:'add' draws the picture additively over the glass (black = the glass's own reflections stay),
+//             for a small screen in the frame such as the phone on the desk (target 'phone').
 //   screenGain:1   multiplies every screen's brightness (HQ20: 1.3 with film-quality screenBloom .25, the screens' glow cut to a quarter).
 //   ledMode:'media'  ledSource=<target or index into screens>  ledPreset='normal'|'calm'|'intense'|'full'
 //   ledGlow:0…1   LED brightness as a fraction of full (stage default .35)
@@ -56,6 +58,8 @@
 //     visible:[[chapterSeconds, 0|1], …] on an add entry (catalog or library): from each key on, the item is held
 //     hidden (0) or shown (1) whatever the app writes (auto-stow, day phases); null hands it back to the app, as
 //     before the first key.
+//     A library prop with a screen (PROP_SCREENS: 'ergoflex-phone') joins the screen targets as 'phone' ('phone-2', …),
+//     so screens:[{target:'phone', src, blend:'add'}] lights its glass; it rides the desk like any desk object.
 //     A catalog id already on the preset's desk is listed in add just to time it. E.g. a side shelf that pops in
 //     during a tilt the app would hide it at: {id:'painter-shelf', visible:[[0,0],[9.5,1]]}.
 import * as THREE from 'three';
@@ -79,6 +83,28 @@ const ALIASES = {
   'curved-monitor': /wide-monitor.*monitor-screen|stage media/i, media: /stage media/i
 };
 
+// Library props whose glass can take a screen clip. The phone's GLB has no single front-glass mesh (its top is a body
+// slab plus a bezel rim), so the film adds its own glass: a rounded rectangle in the prop's own metres (rect x0, z0,
+// x1, z1 at height y), invisible itself, that the picture is fitted to like any screen mesh. normal / up: the picture's
+// facing and up in the prop's axes (the phone lies screen up, +y, its top, the camera end, toward +z).
+const PROP_SCREENS = {
+  'ergoflex-phone': { rect: [-.0338, -.0712, .0338, .0712], y: .01205, radius: .0088, normal: [0, 1, 0], up: [0, 0, 1], alias: 'phone', label: 'Smartphone screen' }
+};
+function propGlass(prop, ps) {
+  let glass = prop.children.find(c => c.userData.filmFxGlass);
+  if (glass) return glass;
+  const [x0, z0, x1, z1] = ps.rect, r = ps.radius, shape = new THREE.Shape();
+  // In the shape's x/y = the prop's x and -z (rotateX below lays it flat, facing +y).
+  shape.moveTo(x0 + r, -z1); shape.lineTo(x1 - r, -z1); shape.quadraticCurveTo(x1, -z1, x1, -z1 + r);
+  shape.lineTo(x1, -z0 - r); shape.quadraticCurveTo(x1, -z0, x1 - r, -z0); shape.lineTo(x0 + r, -z0);
+  shape.quadraticCurveTo(x0, -z0, x0, -z0 - r); shape.lineTo(x0, -z1 + r); shape.quadraticCurveTo(x0, -z1, x0 + r, -z1);
+  const geo = new THREE.ShapeGeometry(shape, 6); geo.rotateX(-Math.PI / 2); geo.translate(0, ps.y, 0);
+  glass = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+  glass.name = ps.label + ' glass'; glass.userData.filmFxGlass = true; glass.userData.screenNormal = ps.normal; glass.userData.screenUp = ps.up;
+  glass.castShadow = glass.receiveShadow = false; glass.raycast = () => {};
+  prop.add(glass); return glass;
+}
+
 // ---------- discovery ----------
 function discover(shot) {
   const scene = sceneRoot(); scene.updateMatrixWorld(true);
@@ -94,6 +120,13 @@ function discover(shot) {
     const main = /:main:/.test(e.key), acc = e.key.split(':').pop();
     push(e.obj, { source: 'scene-screens', key: e.key, label: e.label, portrait: !!e.info?.portrait, main, id: main ? 'main/' + slug(acc) : null });
   }
+  // Screens of library props added by accessories.add (the phone on the desk): their glass, with its own frame axes.
+  const propN = {};
+  scene.traverse(o => {
+    const ps = PROP_SCREENS[o.userData.filmFxProp]; if (!ps) return;
+    const glass = propGlass(o, ps), n = propN[ps.alias] = (propN[ps.alias] || 0) + 1;
+    push(glass, { source: 'prop', label: ps.label, id: 'prop/' + o.userData.filmFxProp + (n > 1 ? '-' + n : ''), alias: ps.alias + (n > 1 ? '-' + n : '') });
+  });
   scene.traverse(o => {
     if (!o.isMesh || within(o, desk) || seen.has(o)) return;
     const mats = [].concat(o.material).map(m => m?.name || '').join(' ');
@@ -133,7 +166,8 @@ function analyse(obj, room) {
   const pts = []; for (let i = 0; i < pos.count; i += step) pts.push(v.fromBufferAttribute(pos, i).applyMatrix4(M).clone());
   const centre = new THREE.Box3().setFromPoints(pts).getCenter(new THREE.Vector3());
   let n = null;
-  if (obj.userData.screenFront) n = new THREE.Vector3(0, 0, obj.userData.screenFront).applyMatrix3(NM).normalize();
+  if (obj.userData.screenNormal) n = new THREE.Vector3(...obj.userData.screenNormal).applyMatrix3(NM).normalize();
+  else if (obj.userData.screenFront) n = new THREE.Vector3(0, 0, obj.userData.screenFront).applyMatrix3(NM).normalize();
   else if (nrm) { const avg = new THREE.Vector3(); let c = 0; for (let i = 0; i < nrm.count; i += step, c++) avg.add(v.fromBufferAttribute(nrm, i).applyMatrix3(NM).normalize()); if (avg.length() > .3 * c) n = avg.normalize(); }
   if (!n) {
     // Closed or two-sided slabs: the thinnest principal axis of the points.
@@ -141,7 +175,9 @@ function analyse(obj, room) {
     const toward = room ? new THREE.Box3().setFromObject(room).getCenter(new THREE.Vector3()) : new THREE.Vector3(0, centre.y, 0);
     if (n.dot(toward.sub(centre)) < 0) n.negate();
   }
-  const up = new THREE.Vector3(0, 1, 0).addScaledVector(n, -n.y);
+  // screenUp (the mesh's own axes): the picture's up for glass lying flat, where world up has no say.
+  const up = obj.userData.screenUp ? new THREE.Vector3(...obj.userData.screenUp).transformDirection(M) : new THREE.Vector3(0, 1, 0);
+  up.addScaledVector(n, -up.dot(n));
   if (up.length() < .3) up.set(0, 1, 0).applyMatrix3(NM).addScaledVector(n, -new THREE.Vector3(0, 1, 0).applyMatrix3(NM).dot(n));
   up.normalize(); const right = new THREE.Vector3().crossVectors(up, n).normalize();
   let rmin = Infinity, rmax = -Infinity, umin = Infinity, umax = -Infinity, dmin = Infinity, dmax = -Infinity;
@@ -275,8 +311,9 @@ async function installScreens(shot, list) {
     if (f.aspect >= 1) { canvas.width = long; canvas.height = Math.max(2, Math.round(long / f.aspect)); } else { canvas.height = long; canvas.width = Math.max(2, Math.round(long * f.aspect)); }
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = api.renderer?.capabilities.getMaxAnisotropy?.() || 1; texture.minFilter = THREE.LinearMipmapLinearFilter;
-    const clearEdge = inset.some(x => x > 0);
-    const material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4, transparent: clearEdge, alphaTest: clearEdge ? .5 : 0 });
+    const clearEdge = inset.some(x => x > 0), add = spec.blend === 'add';
+    const material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4, transparent: clearEdge || add, alphaTest: clearEdge ? .5 : 0,
+      ...(add ? { blending: THREE.AdditiveBlending, depthWrite: false } : {}) });
     material.color.setScalar((Array.isArray(spec.brightness) ? Number(spec.brightness[0][1]) : Number(spec.brightness ?? 1)) * (Number(shot.screenGain) || 1));
     const mesh = new THREE.Mesh(pictureGeometry(target.obj, f), material); mesh.name = 'Film screen · ' + target.id; mesh.userData.filmFx = true; mesh.castShadow = mesh.receiveShadow = false; mesh.renderOrder = 2;
     target.obj.add(mesh);
