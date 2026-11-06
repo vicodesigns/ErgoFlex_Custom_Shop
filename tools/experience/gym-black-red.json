@@ -147,7 +147,7 @@
      ],
      "minChroma": 0.2,
      "s": 0,
-     "l": 0.5
+     "l": 0.46
     },
     {
      "maxChroma": 0.2,
@@ -159,19 +159,19 @@
       ],
       [
        0.1,
-       0.16
+       0.14
       ],
       [
        0.3,
-       0.32
+       0.28
       ],
       [
        0.6,
-       0.5
+       0.46
       ],
       [
        0.78,
-       0.7
+       0.68
       ],
       [
        0.88,
@@ -184,7 +184,7 @@
      ]
     }
    ],
-   "note": "gym shell + equipment: lime/yellow -> deep red, cyan/blue/purple -> charcoal, greys -> charcoal/near-black (whites kept); material colours, instance colours and canvas maps (floor, concrete, MOVE sign, labels, chalk board, timer, mirror) | HQ30 (Vico picked C): greys and blues to a lighter charcoal (grey curve .3->.32, .6->.5; blues .5), not near-black"
+   "note": "gym shell + equipment: lime/yellow -> deep red, cyan/blue/purple -> charcoal, greys -> charcoal/near-black (whites kept); material colours, instance colours and canvas maps (floor, concrete, MOVE sign, labels, chalk board, timer, mirror) | HQ30 (Vico picked C): greys and blues to a lighter charcoal (grey curve .3->.32, .6->.5; blues .5), not near-black | HQ32 (Vico: darken the charcoal a little now the rooms are brighter): .3->.28, .6->.46, blues .46"
   },
   {
    "match": "^Prop:hemp-protein$",
