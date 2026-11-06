@@ -3,12 +3,12 @@
 // once; the next rest renders again. Modes: live | film | split (a draggable wipe: live left, film right).
 // Also: thirds / title-safe guides (G). The overlay sits in the same .film-box as the stage frame.
 const MODES=['live','film','split'],LABEL={live:'Live',film:'Film look',split:'Split'};
-export function createFilmLook({render,resting,status=()=>{}}){
+export function createFilmLook({render,resting,status=()=>{},onStill=null}){
   let mode='live',guides=false,timer=0,generation=0,shownFor=null,wipe=.5,dragging=false;
   const box=document.createElement('div');box.className='film-box film-look';box.setAttribute('aria-hidden','true');
   box.innerHTML='<img alt="" draggable="false"><div class="film-guides"></div><span class="film-look-badge"></span><span class="film-wipe" title="Drag to move the wipe"></span>';
   const tools=document.createElement('div');tools.className='film-box film-tools';
-  tools.innerHTML='<button data-film-mode title="Live / Film look / Split (F)">Live</button><button data-film-guides aria-pressed="false" title="Thirds and title-safe guides (G)">Guides</button>';
+  tools.innerHTML=`<div class="film-tools-row">${onStill?'<button data-action="render-still" class="render-still" title="Render the frame at the playhead with the film look: status lights, screens, quality (R)">Render still</button>':''}<button data-film-guides aria-pressed="false" title="Thirds and title-safe guides (G)">Guides</button><button data-film-mode title="Live / Film look / Split (F)">Live</button></div>`;
   document.body.append(box,tools);
   const img=box.querySelector('img'),badge=box.querySelector('.film-look-badge'),handle=box.querySelector('.film-wipe');
   function sync(){
@@ -28,7 +28,7 @@ export function createFilmLook({render,resting,status=()=>{}}){
     },350);
   }
   function setMode(next){mode=next;sync();poke();status(mode==='live'?'Live view.':mode==='film'?'Film look: pause anywhere to see the real render.':'Split: live left, film right. Drag the wipe.');}
-  tools.addEventListener('click',e=>{if(e.target.closest('[data-film-mode]'))setMode(MODES[(MODES.indexOf(mode)+1)%MODES.length]);if(e.target.closest('[data-film-guides]')){guides=!guides;sync();}});
+  tools.addEventListener('click',e=>{if(e.target.closest('[data-action=render-still]'))onStill?.();if(e.target.closest('[data-film-mode]'))setMode(MODES[(MODES.indexOf(mode)+1)%MODES.length]);if(e.target.closest('[data-film-guides]')){guides=!guides;sync();}});
   handle.addEventListener('pointerdown',e=>{dragging=true;handle.setPointerCapture(e.pointerId);e.preventDefault();});
   handle.addEventListener('pointermove',e=>{if(!dragging)return;const r=box.getBoundingClientRect();wipe=Math.max(.02,Math.min(.98,(e.clientX-r.left)/r.width));sync();});
   handle.addEventListener('pointerup',()=>{dragging=false;});

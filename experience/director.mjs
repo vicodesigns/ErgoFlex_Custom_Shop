@@ -7,6 +7,7 @@ import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,vali
 import {filmRenderShot,createStillRenderer} from './film-render.mjs';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
 import {createFilmLook} from './film-look.mjs';
+import {createStillStrip} from './still-strip.mjs';
 import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './film-chapters.mjs';
 import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS} from './timeline-ui.mjs';
 import {createDeskEditor} from './desk-editor.mjs';
@@ -107,7 +108,8 @@ export function mountDirector(bridge,catalog,initial){
     status('Camera keyframe captured. Drag its diamond on the timeline to change its timing.');
   }
 
-  const status=(message,error=false)=>{for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.classList.toggle('error',error);}};
+  let editPending=false,lastEdit='';
+  const status=(message,error=false)=>{if(editPending&&!error&&message){lastEdit=message.split(/\.(\s|$)/)[0];editPending=false;}for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.classList.toggle('error',error);}};
   function saved(text,title){const el=panel.querySelector('[data-saved]');if(el){el.textContent=text;el.title=title;}}
   function draft(){clearTimeout(draftTimer);try{library.draft(project);saved('Saved ✓','Draft kept in this browser · Export cut sends it to the film');}catch{saved('Not saved','Browser storage is full, so no draft copy · Export cut sends it to the film');}}
   function changed(){filmLook?.poke();bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}}
@@ -430,27 +432,27 @@ export function mountDirector(bridge,catalog,initial){
   const sceneLights=createSceneLightEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneLights,
     onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();if(had)renderTimeline();syncSelectedHeader();}});
   // Render still: the playhead frame with the film look, rendered in a hidden stage of its own.
-  const still=document.createElement('dialog');still.id='film-still';still.setAttribute('aria-label','Rendered still');document.body.append(still);
-  still.addEventListener('click',event=>{if(event.target.closest('[data-still-keep]'))return;if(!stillBusy)still.close();});
-  still.addEventListener('cancel',event=>{if(stillBusy)event.preventDefault();});
+  // Render still: the playhead frame with the film look, shown inside the frame with a history strip.
+  const still=createStillStrip();
+  let bootMs=7000;try{bootMs=Number(localStorage.getItem('ergoflex.director.stillBootMs'))||7000;}catch{}
   async function renderStill(){
     if(stillBusy)return;requireReady();if(!deskEditor.flush())return;
     const s=shot(),t=playhead,seconds=Number((t*s.seconds).toFixed(2)),name=`Film-${s.id}-${seconds.toFixed(2)}s.jpg`,film=filmShot();
-    const job=filmRenderShot(film,s,keys()),started=performance.now();stillBusy=true;
-    const show=html=>{still.innerHTML=html;if(!still.open)still.showModal();};
-    const progress=()=>{const text=`Rendering ${s.id} at ${seconds.toFixed(2)} s… ${Math.round((performance.now()-started)/1000)} s`;status(text);const p=still.querySelector('[data-still-progress]');if(p)p.textContent=text;};
-    show(`<div class="still-busy"><span class="director-kicker">RENDER STILL</span><p data-still-progress role="status"></p><p class="director-hint">${film?'Film shot with your Director edits, film quality on.':'No film shot for this chapter: rendering the Director cut alone.'} The first still loads a second stage; later ones are quicker.</p></div>`);progress();
-    const timer=setInterval(progress,500);
+    const job=filmRenderShot(film,s,keys()),started=performance.now(),first=!stills?.warm?.();stillBusy=true;
+    const title=()=>first?`Preparing film stage (first still only) · ${Math.round((performance.now()-started)/1000)} / ${Math.round(bootMs/1000)} s`:`Rendering ${s.id} at ${seconds.toFixed(2)} s… ${Math.round((performance.now()-started)/1000)} s`;
+    still.busy(title(),film?'Film shot with your Director edits, film quality on.':'No film shot for this chapter: rendering the Director cut alone.',{expected:first?bootMs:0});
+    const timer=setInterval(()=>{const text=title();status(text);still.progress(text);},500);
     try{
-      stills||=createStillRenderer();const url=await stills.render(job,t);
-      show(`<figure><img src="${url}" alt="Rendered still of ${escape(s.id)} at ${seconds.toFixed(2)} seconds" width="1280" height="720"><figcaption><span>${escape(name)} · ${Math.round((performance.now()-started)/100)/10} s to render · click to dismiss</span><a data-still-keep class="primary" href="${url}" download="${escape(name)}">Download JPG</a></figcaption></figure>`);
-      status('Still rendered: '+name+'.');
-    }catch(error){console.error('[render still]',error);show(`<div class="still-busy"><span class="director-kicker">RENDER STILL</span><p class="error" role="alert">The still could not be rendered: ${escape(error.message)}</p><p class="director-hint">Click to dismiss.</p></div>`);status('Render still failed: '+error.message,true);stills?.dispose();stills=null;}
+      stills||=createStillRenderer();const url=await stills.render(job,t),took=performance.now()-started;
+      if(first)try{localStorage.setItem('ergoflex.director.stillBootMs',String(Math.round(took)));bootMs=took;}catch{}
+      still.add({url,name,seconds:seconds,note:`${Math.round(took/100)/10} s to render`,after:lastEdit});lastEdit='';editPending=false;
+      status('Still rendered: '+name+' · R renders another, \\ compares with the live view, Shift-click a thumbnail for A/B.');
+    }catch(error){console.error('[render still]',error);still.error(error.message);status('Render still failed: '+error.message,true);stills?.dispose();stills=null;}
     finally{clearInterval(timer);stillBusy=false;}
   }
   addEventListener('pagehide',()=>stills?.dispose());
   // Film look (F): the real render crossfaded over the 16:9 frame whenever the view rests.
-  const filmLook=film?createFilmLook({status,
+  const filmLook=film?createFilmLook({status,onStill:()=>action('render-still'),
     resting:()=>open&&bridge.ready()&&!bridge.playback().playing&&!scrub&&!keyDrag&&!groupDrag&&!marquee&&!stillBusy&&!composing&&!bridge.bakeState().baking,
     async render(){const s=shot(),t=playhead;stills||=createStillRenderer();const url=await stills.render(filmRenderShot(filmShot(),s,keys()),t);return {url,label:(t*s.seconds).toFixed(2)+' s'};}}):null;
   // Viewport light tools (top left of the frame): Lights (L), Move (W), Aim (E).
@@ -464,7 +466,7 @@ export function mountDirector(bridge,catalog,initial){
   function warmStill(){if(warmed||!film||!filmShot())return;warmed=true;(window.requestIdleCallback||(f=>setTimeout(f,1200)))(()=>{if(stillBusy)return;stills||=createStillRenderer();stills.render(filmRenderShot(filmShot(),shot(),keys()),playhead).catch(()=>{});},{timeout:4000});}
   function commit(fn,{render=false,key=null}={}){
     if(!key||group!==key){undo.push(copy(project));undo=undo.slice(-40);redo=[];}
-    group=key;fn();changed();if(render)renderPanel();
+    group=key;fn();editPending=true;changed();if(render)renderPanel();
   }
   function loadProject(value,keepDraft=true){if(keepDraft)draft();project=cleanCut(value,catalog);for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId=null;playhead=0;undo=[];redo=[];group=null;changed();render();load();}
   function render(){renderPanel();renderTimeline();}
@@ -522,7 +524,7 @@ export function mountDirector(bridge,catalog,initial){
       <div class="timeline-toolbar"><div class="timeline-project"><strong>${escape(project.name)}</strong><span>${project.shots.length} chapters · ${Math.round(duration(project.shots))}s</span></div>${filmPicker()}
       <div class="timeline-transport"><button data-action="undo" aria-label="Undo edit" title="Undo (Ctrl/Cmd+Z)">↶</button><button data-action="redo" aria-label="Redo edit" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)">↷</button><button data-action="edit-prev" aria-label="Previous edit" title="Previous camera view or movement edge">|‹</button><button data-action="preview-loop" aria-pressed="${!!bridge.playback().loop}" title="Repeat the chapter or selected camera / Groove preview">${bridge.playback().loop?'Loop on':'Loop off'}</button><button data-action="preview" aria-label="Restart chapter" title="Restart chapter">↻</button><button data-action="chapter-toggle" class="chapter-transport">▶ Play chapter</button><button data-action="edit-next" aria-label="Next edit" title="Next camera view or movement edge">›|</button>
       <label class="timeline-timecode"><input name="timeline-seconds" aria-label="Chapter playhead seconds" type="number" min="0" max="${s.seconds}" step=".033333" value="${(playhead*s.seconds).toFixed(2)}"><span>/ ${s.seconds}s</span></label></div>
-      <div class="timeline-project-actions">${film?'<button data-action="render-still" class="render-still" title="Render the frame at the playhead with the film look (status lights, screens, quality)">Render still</button>':''}<button data-action="inspector" aria-label="Toggle inspector">Inspector</button><button data-action="titles" aria-label="Toggle preview titles" aria-pressed="${document.body.classList.contains('preview-titles')}">Titles</button><button data-action="chapters" aria-label="Toggle chapter strip" aria-pressed="${!timeline.classList.contains('chapters-hidden')}">Chapters</button><button data-action="bake">Bake chapter</button><button data-action="add">+ Chapter</button><button data-action="duplicate">Duplicate chapter</button><button data-action="remove" ${project.shots.length===1?'disabled':''}>Remove chapter</button></div></div>
+      <div class="timeline-project-actions"><button data-action="inspector" aria-label="Toggle inspector">Inspector</button><button data-action="titles" aria-label="Toggle preview titles" aria-pressed="${document.body.classList.contains('preview-titles')}">Titles</button><button data-action="chapters" aria-label="Toggle chapter strip" aria-pressed="${!timeline.classList.contains('chapters-hidden')}">Chapters</button><button data-action="bake">Bake chapter</button><button data-action="add">+ Chapter</button><button data-action="duplicate">Duplicate chapter</button><button data-action="remove" ${project.shots.length===1?'disabled':''}>Remove chapter</button></div></div>
       <div class="chapter-cards">${project.shots.map((s,i)=>`<div class="chapter-card ${i===selected?'selected':''}" draggable="true" data-index="${i}"><button data-action="select" data-index="${i}" aria-current="${i===selected}" aria-label="Edit chapter ${i+1}: ${escape(s.title)}"><span>${String(i+1).padStart(2,'0')} · ${s.seconds}s</span><strong>${escape(s.title)}</strong><small>${escape(catalog.find(r=>r.id===s.room)?.name||s.room)} · ${escape((catalog.find(r=>r.id===s.room)?.layouts.find(l=>l.id===s.layout)?.modes||catalog.find(r=>r.id===s.room)?.modes||[]).find(m=>m.id===s.mode)?.label||'Studio')}</small></button><div><button data-action="up" data-index="${i}" aria-label="Move chapter ${i+1} earlier" ${i===0?'disabled':''}>←</button><button data-action="down" data-index="${i}" aria-label="Move chapter ${i+1} later" ${i===project.shots.length-1?'disabled':''}>→</button></div></div>`).join('')}</div>
       <div class="workbench-toolbar"><strong title="${escape(s.title)}"><span>CHAPTER ${String(selected+1).padStart(2,'0')}</span> ${escape(s.title)}</strong><span class="workbench-count">${keys().length} views · ${deskEditor.count()} moves</span>
       <div class="track-palette"><button data-action="key-add">+ Camera view</button>${deskEditor.tools()}${lighting()?'<button data-action="light-add" class="light-add" title="Add a light state at the playhead (Shift-click: a neutral colour key)">+ Light</button>':''}</div>
@@ -845,9 +847,18 @@ export function mountDirector(bridge,catalog,initial){
   // Also bound in the stage frame (after an orbit the keys go there).
   function viewKeys(event){if(!open||!filmLook||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.target.closest?.('input,select,textarea,[contenteditable]'))return;const k=event.key.toLowerCase();if(k==='f'){event.preventDefault();filmLook.cycle();}else if(k==='g'){event.preventDefault();filmLook.toggleGuides();}
     else if(k==='s'){event.preventDefault();action('magnet');}
+    else if(k==='r'){event.preventDefault();action('render-still');}
+    else if(k==='\\'){event.preventDefault();if(!event.repeat)still.peek(true);}
     else if(k==='l'){event.preventDefault();sceneLights.toggleShow().then(on=>status(on?'Lights shown: click a marker to select it, W move, E aim.':'Lights hidden.'));}
     else if((k==='w'||k==='e')&&sceneLights.selected()){event.preventDefault();sceneLights.setMode(k==='w'?'move':'aim');status(k==='w'?'Gizmo: move.':'Gizmo: aim.');}}
   document.addEventListener('keydown',viewKeys);
+  const peekUp=e=>{if(e.key==='\\')still.peek(false);};document.addEventListener('keyup',peekUp);
+  // With the still view open: Esc closes it, ←/→ step through the history (before the timeline's own keys).
+  addEventListener('keydown',event=>{
+    if(!open||!still.open||event.target.closest?.('input,select,textarea'))return;
+    if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();still.close();return;}
+    if((event.key==='ArrowLeft'||event.key==='ArrowRight')&&!event.shiftKey&&!event.altKey){event.preventDefault();event.stopImmediatePropagation();still.step(event.key==='ArrowLeft'?1:-1);}
+  },true);
   // Shift+L: jump to the lighting lanes.
   document.addEventListener('keydown',event=>{if(!open||!event.shiftKey||event.ctrlKey||event.metaKey||event.altKey||event.key.toLowerCase()!=='l'||event.target.closest?.('input,select,textarea,[contenteditable]'))return;event.preventDefault();revealLighting();});
   function resizeTimeline(height){document.body.style.setProperty('--director-timeline-height',Math.max(300,Math.min(innerHeight*.65,720,height))+'px');}
@@ -1059,7 +1070,7 @@ export function mountDirector(bridge,catalog,initial){
   function bindPreviewHistory(){
     const next=preview?.contentDocument;if(!next||next===previewDocument)return;
     previewDocument?.removeEventListener('keydown',historyShortcut,true);previewDocument?.removeEventListener('keydown',viewKeys);
-    previewDocument=next;previewDocument.addEventListener('keydown',historyShortcut,true);previewDocument.addEventListener('keydown',viewKeys);
+    previewDocument=next;previewDocument.addEventListener('keydown',historyShortcut,true);previewDocument.addEventListener('keydown',viewKeys);previewDocument.addEventListener('keyup',peekUp);
   }
   preview?.addEventListener('load',bindPreviewHistory);bindPreviewHistory();
   addEventListener('pagehide',()=>{deskEditor.stop();draft();});

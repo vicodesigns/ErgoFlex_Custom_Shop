@@ -62,5 +62,5 @@ export function createStillRenderer({width=1280,height=720,src='/?view=product&p
     return canvas.toDataURL('image/jpeg',.92);
   }
   function dispose(){frame?.remove();frame=null;ready=null;prepared=null;setupKey=null;}
-  return {render,dispose};
+  return {render,dispose,warm:()=>!!prepared};
 }
