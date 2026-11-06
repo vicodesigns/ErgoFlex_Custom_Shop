@@ -5,11 +5,11 @@ import {BakeCache,bakeKey,bakeDefinition,sourceSnapshot,renderBake,BAKE_PROFILE}
 import {score,safeReturn} from './score.mjs';
 import {ShotClock} from './timing.mjs';
 import {cleanCut,decodeCut} from './cuts.mjs';
-const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search);
+const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search), linkQuery=new URLSearchParams(location.hash.slice(1));
 let cut=query.get('cut')==='social'?'social':'full',shots=score(cut),index=-1,playing=true,busy=true,finished=false,generation=0,sound=false,app=null,preparation=Promise.resolve(),hasFrame=false,lastUI=0;
 const clock=new ShotClock(),cover=$('transition-frame');
 let director=null,directorOpen=false,previewOnly=false,clientCut=null,preparedShot=null,previewRange=null,loopPreview=false;
-try{const linked=new URLSearchParams(location.hash.slice(1)).get('cut');if(linked){clientCut=decodeCut(linked);cut='client';shots=clientCut.shots;}}
+try{const linked=linkQuery.get('cut');if(linked){clientCut=decodeCut(linked);cut='client';shots=clientCut.shots;}}
 catch(error){$('cut-error').hidden=false;$('cut-error').textContent=error.message;}
 const nextPaint=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -294,7 +294,8 @@ addEventListener('message',e=>{
     $('director').disabled=false;
     stage().clock(()=>busy||index<0?0:Math.min(previewRange?previewRange.end/shots[index].seconds:1,clock.progress(performance.now(),shots[index].seconds)));
     if(clientCut){try{applyClient(cleanCut(clientCut,stage().catalog()));}catch(error){$('cut-error').hidden=false;$('cut-error').textContent=error.message;clientCut=null;cut='full';shots=score();chapters();}}
-    if(query.get('director')==='1'){openDirector().catch(error=>{$('cut-error').hidden=false;$('cut-error').textContent=error.message;});return;}
+    // Film chapter links (#cut=…&director=1) open straight into Director Mode.
+    if(query.get('director')==='1'||linkQuery.get('director')==='1'){if(!director)openDirector().catch(error=>{$('cut-error').hidden=false;$('cut-error').textContent=error.message;});return;}
     if(query.get('app')==='1'){playing=false;playShot(shots.length-1).then(openApp);}else {
       playing=!reduced.matches&&query.get('paused')!=='1';
       const chapter=shots.findIndex(s=>s.id===query.get('chapter'));playShot(chapter<0?0:chapter);
