@@ -9,6 +9,7 @@ import {filmLink,loadFilmChapters,loadFilmShot,liveFilmShot} from './film-chapte
 import {latestFilmCut,withCut,filmFresh} from './film-fresh.mjs';
 import {exportLighting} from './film-lighting.mjs';
 import {filmCamera} from './film-render.mjs';
+import {deskVersions,versionAt,versionShot,loadFilmSubshots,loadStorageSeed} from './desk-versions.mjs';
 const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search), linkQuery=new URLSearchParams(location.hash.slice(1));
 let cut=query.get('cut')==='social'?'social':'full',shots=score(cut),index=-1,playing=true,busy=true,finished=false,generation=0,sound=false,app=null,preparation=Promise.resolve(),hasFrame=false,lastUI=0;
 const clock=new ShotClock(),cover=$('transition-frame');
@@ -28,7 +29,23 @@ finally{removeEventListener('message',holdReady);}
 // Film chapter links: the chapter list's "shot" (the full built film shot) dresses the live
 // stage with the film's own setup (props, hidden objects, desk finish, screens, room light).
 const filmShots=new Map(),film=filmLink(location.hash);
-const filmReady=film&&clientCut?loadFilmChapters(film.film).then(list=>Promise.all(list.filter(c=>c.shot&&clientCut.shots.some(s=>s.id===c.id)).map(c=>loadFilmShot(c.shot,c.id).then(s=>filmShots.set(c.id,s))))).catch(error=>console.warn('[film setup]',error.message)):Promise.resolve();
+// Chapters the film renders as sub-shots (the finale): their sub-shots file (desk-versions.mjs). The stage shows the
+// desk of the sub-shot the Director picked (deskVersion), else the one at the chapter's start.
+const filmSubshots=new Map(),deskVersion=new Map();
+const subshotsOf=(id,url,s)=>s?.subshots?loadFilmSubshots(url,id).then(list=>filmSubshots.set(id,list)).catch(error=>{console.warn('[desk versions]',error.message);filmSubshots.set(id,null);}):null;
+const filmReady=film&&clientCut?loadFilmChapters(film.film).then(list=>Promise.all(list.filter(c=>c.shot&&clientCut.shots.some(s=>s.id===c.id)).map(c=>loadFilmShot(c.shot,c.id).then(s=>{filmShots.set(c.id,s);return subshotsOf(c.id,c.shot,s);})))).catch(error=>console.warn('[film setup]',error.message)):Promise.resolve();
+function activeVersion(id){if(deskVersion.has(id))return deskVersion.get(id);const list=deskVersions(filmShots.get(id),filmSubshots.get(id));return list.length?versionAt(list,0):null;}
+const filmSetup=id=>{const v=activeVersion(id);return v?.setup||filmShots.get(id);};
+// The finale renders with a storage seed (its saved builds are the presets' desks): the stage's memory-only storage
+// takes the seed's keys while a desk version is on and gets its own values back after.
+const seeds=new Map();let seededKeys=null,fxError=null;
+function storageSeed(id){const url=filmSubshots.get(id)?.storage;if(!url)return null;if(!seeds.has(url))seeds.set(url,loadStorageSeed(url).then(values=>({url,values}),error=>{seeds.delete(url);console.warn('[desk versions] seed',error.message);return null;}));return seeds.get(url);}
+const seedNow=id=>{const url=filmSubshots.get(id)?.storage,p=url&&seeds.get(url);return p?.done||null;};
+function seedStage(seed){
+  const win=frame.contentWindow;if(!win?.__ERGO_PRESENTATION__)return;const ls=win.localStorage;
+  if(seededKeys){for(const [k,v] of seededKeys)if(v===null)ls.removeItem(k);else ls.setItem(k,v);seededKeys=null;}
+  if(!seed)return;seededKeys=new Map();for(const [k,v] of Object.entries(seed.values)){seededKeys.set(k,ls.getItem(k));ls.setItem(k,v);}
+}
 const nextPaint=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const track=new Audio('../assets/led/music/neon-flight-demo.mp3');track.loop=true;track.volume=.32;
@@ -88,13 +105,15 @@ function filmCameraBake(setup){
 }
 // The renderer's order around prepare: clear, beforePrepare, prepare, unhookPreset, install.
 async function prepareStage(next){
-  await filmReady;await fxRefresh;while(fxBusy)await fxRefresh;await fxPending;const setup=filmShots.get(next.id),fx=setup?await stageFx().catch(error=>{console.warn('[film fx]',error.message);return null;}):frame.contentWindow.__filmFx;
+  await filmReady;await fxRefresh;while(fxBusy)await fxRefresh;await fxPending;const version=activeVersion(next.id),setup=filmSetup(next.id),fx=setup?await stageFx().catch(error=>{console.warn('[film fx]',error.message);return null;}):frame.contentWindow.__filmFx;
   liveFx=null;fxShot=null;frame.contentWindow.__directorLightsRestore?.();frame.contentWindow.__directorPropsRestore?.();fx?.clear();
   stage().filmCamera?.(setup?filmCameraBake(setup):null);
+  next=versionShot(next,version);
+  const seed=version?await storageSeed(next.id):null;if(seed)seeds.get(seed.url).done=seed;seedStage(seed);
   if(!setup||!fx)return stage().prepare(next);
   const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);
   let result;try{result=await stage().prepare(next);}finally{fx.unhookPreset();}
-  try{await fx.install(shot);liveFx=fx;fxShot=next.id;fxAt=-1;fxLights=lightsKey(next);director?.filmApplied?.();}catch(error){console.error('[film fx]',error);fx.clear();director?.setStatus('The film setup could not be applied: '+error.message);}
+  fxError=null;try{await fx.install(shot);liveFx=fx;fxShot=next.id;fxAt=-1;fxLights=lightsKey(next);director?.filmApplied?.();}catch(error){console.error('[film fx]',error);fx.clear();fxError=error.message;director?.setStatus('The film setup could not be applied: '+error.message);}
   return result;
 }
 // Lighting edits re-install the film layers (no re-prepare), so the live strips follow the Director.
@@ -106,7 +125,7 @@ function refreshFilmLights(){if(fxBusy){fxAgain=true;return fxRefresh;}fxBusy=tr
 async function reinstallFilmLights(){
   // Not under a Director gizmo drag: the dragged light would jump back mid-gesture.
   while(frame.contentWindow.__directorDragging)await new Promise(r=>setTimeout(r,100));
-  await fxPending;const s=shots[index],setup=s&&filmShots.get(s.id),fx=liveFx;if(!fx||busy||!setup||s.id!==fxShot||activeBake||bakeController)return;
+  await fxPending;const s=shots[index],setup=s&&filmSetup(s.id),fx=liveFx;if(!fx||busy||!setup||s.id!==fxShot||activeBake||bakeController)return;
   const shot=liveFilmShot(setup,s);let held=false;const hold=()=>{if(!held){held=true;stage().hold?.(true);}};
   liveFx=null;
   try{
@@ -332,6 +351,16 @@ async function openDirector(){
     stage,
     ready:()=>!busy,
     filmShot:id=>filmShots.get(id)||null,
+    filmSubshots:id=>filmSubshots.get(id)||null,deskVersion:id=>activeVersion(id),deskStorage:id=>activeVersion(id)?seedNow(id):null,
+    // A different desk version: re-prepare the stage with that sub-shot's film shot at the same position (the cover
+    // holds the last frame meanwhile), playing on if it was playing.
+    async setDeskVersion(value,i,version){
+      if(bakeController||busy)throw Error('Wait for this chapter to finish loading.');
+      const id=value.shots[i]?.id;if(!id)return false;deskVersion.set(id,version||null);
+      const position=index===i?Math.min(1,clock.progress(performance.now(),shots[index].seconds)):0;applyClient(value);
+      if(!await playShot(i,{position,forceLive:true,range:previewRange}))throw Error('The chapter could not be loaded with this desk.');
+      if(fxError)throw Error('the film setup could not be applied: '+fxError);return true;
+    },
     playback:()=>({playing,busy,index,range:previewRange,loop:loopPreview}),toggleChapter,
     setPreviewLoop(on){loopPreview=!!on;director?.transportChanged();},
     async previewRange(value,i,range){

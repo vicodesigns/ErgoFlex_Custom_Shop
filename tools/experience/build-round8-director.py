@@ -400,6 +400,20 @@ def film_list(rows):
             if c: screens.append(dict(sc, src=c))
         if 'screens' in shot: shot['screens'] = screens
         dump(os.path.join(H, 'director-film', f'{cid}.json'), shot)
+        # Chapters the film renders as sub-shots (hero: shots/13-subshots.json, one desk build each): the Director's
+        # Desk versions lane and live stage use them (experience/desk-versions.mjs), clips local like the shot's.
+        sp = os.path.join(H, 'shots', '13-subshots.json')
+        if shot.get('subshots') and cid == 'hero' and os.path.exists(sp):
+            subs = []
+            for x in load(sp)['shots']:
+                x = json.loads(json.dumps(x))
+                if 'screens' in x: x['screens'] = [dict(sc, src=c) for sc in x['screens'] for c in [local_clip(sc.get('src', ''))] if c]
+                subs.append(x)
+            # The finale renders with --storage post/finale-seed.json (render-finale.sh): its saved builds are the
+            # presets' desks, so the Director's stage takes them too (in its memory-only storage).
+            seed = os.path.join(H, 'post', 'finale-seed.json')
+            dump(os.path.join(H, 'director-film', f'{cid}-subshots.json'), {'name': load(sp).get('name', ''), 'shots': subs,
+                 **({'storage': f'{base}/post/finale-seed.json'} if os.path.exists(seed) else {})}, indent=None)
         items.append({'n': n, 'id': cid, 'title': src.get('title', ''), 'seconds': float(src['seconds']),
                       'page': f'{base}/{page}', 'shot': f'{base}/director-film/{cid}.json'})
         pf = os.path.join(H, page); h = open(pf).read()

@@ -33,7 +33,7 @@ export function filmCamera(film,keys,seconds){
 // Renders single frames with the film look in a hidden stage of its own (the same calls as
 // tools/experience/render-cut.cjs: film-fx around prepare, beginBake, fx.frame, bakeFrame).
 export function createStillRenderer({width=1280,height=720,src='/?view=product&presentation=1&tour=1'}={}){
-  let frame=null,ready=null,prepared=null,setupKey=null;
+  let frame=null,ready=null,prepared=null,setupKey=null,seeded=null;
   const win=()=>frame.contentWindow;
   async function boot(){
     frame=document.createElement('iframe');frame.src=src;frame.title='Film still renderer';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;
@@ -49,11 +49,14 @@ export function createStillRenderer({width=1280,height=720,src='/?view=product&p
     ready||=boot().catch(error=>{dispose();throw error;});await ready;
     const w=win(),EP=w.ErgoPresentation,fx=w.__filmFx;
     // Prepare once per scene; film-fx alone re-installs when only the film layers changed.
-    const {ledStatus,ledNeutral,ledColor,sceneGlobals,camera,cameraPlan,lights,lightEdits,timeOfDay,sceneEdits,...scene}=shot,key=JSON.stringify(scene),setup=JSON.stringify(shot);
+    const {ledStatus,ledNeutral,ledColor,sceneGlobals,camera,cameraPlan,lights,lightEdits,timeOfDay,sceneEdits,...scene}=shot,storage=shot.__storage||null,key=JSON.stringify(scene)+'|'+(storage?.url||''),setup=JSON.stringify(shot);
     // Lighting and prop (sceneEdits) changes update the film layers in place; anything else re-prepares the room first.
     let full=key!==prepared;
     if(!full&&setup!==setupKey){let r='full';try{r=fx.update?await fx.update(shot):'full';}catch(error){console.warn('[still] update',error);}if(r==='full')full=true;else setupKey=setup;}
     if(full){
+      // A render storage seed (desk-versions.mjs: the finale's --storage) goes into this stage's memory-only storage.
+      if(w.__ERGO_PRESENTATION__){const ls=w.localStorage;if(seeded){for(const [k,v] of seeded)if(v===null)ls.removeItem(k);else ls.setItem(k,v);seeded=null;}
+        if(storage){seeded=new Map();for(const [k,v] of Object.entries(storage.values)){seeded.set(k,ls.getItem(k));ls.setItem(k,v);}}}
       fx.clear();fx.beforePrepare(shot);prepared=null;setupKey=null;
       try{await EP.prepare(shot);}finally{fx.unhookPreset();}prepared=key;
       await fx.install(shot);setupKey=setup;
@@ -68,6 +71,6 @@ export function createStillRenderer({width=1280,height=720,src='/?view=product&p
     finally{fx.after();EP.endBake();}
     return canvas.toDataURL('image/jpeg',.92);
   }
-  function dispose(){frame?.remove();frame=null;ready=null;prepared=null;setupKey=null;}
+  function dispose(){frame?.remove();frame=null;ready=null;prepared=null;setupKey=null;seeded=null;}
   return {render,dispose,warm:()=>!!prepared};
 }

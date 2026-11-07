@@ -16,6 +16,7 @@ import {createFilmFresh} from './film-fresh.mjs';
 import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS} from './timeline-ui.mjs';
 import {createDeskEditor} from './desk-editor.mjs';
 import {createStartPose} from './start-pose.mjs';
+import {createDeskVersions} from './desk-versions.mjs';
 import {createTitleEditor,loadTitleSource} from './title-editor.mjs';
 import {score} from './score.mjs';
 import {makeOpeningShot} from './opening.mjs';
@@ -148,7 +149,7 @@ export function mountDirector(bridge,catalog,initial){
     const line=timeline.querySelector('[data-track-playhead]');if(line)line.style.left=(playhead*100)+'%';
     const label=timeline.querySelector('[data-track-time]');if(label)label.textContent=(playhead*shot().seconds).toFixed(2)+'s / '+shot().seconds+'s';
     for(const line of timeline.querySelectorAll('[data-shared-playhead]'))line.style.left=playhead*100+'%';
-    syncLightNow();syncNow();titleEditor.sync();if(playhead!==pokedAt){pokedAt=playhead;filmLook?.poke();}
+    syncLightNow();syncNow();titleEditor.sync();deskVersions.sync(playhead);if(playhead!==pokedAt){pokedAt=playhead;filmLook?.poke();}
     const ruler=timeline.querySelector('.time-ruler');if(ruler)ruler.setAttribute('aria-valuenow',(playhead*shot().seconds).toFixed(2));
     const exact=timeline.querySelector('[name="timeline-seconds"]');if(exact&&document.activeElement!==exact)exact.value=(playhead*shot().seconds).toFixed(2);
   }
@@ -205,6 +206,8 @@ export function mountDirector(bridge,catalog,initial){
   switcher.addEventListener('close',()=>syncFilm());
   // Film lighting: the cut's own fields once edited, else the film shot's (ids kept per chapter).
   const filmShot=()=>bridge.filmShot?.(shot().id)||null,filmLights=new Map();
+  // Chapters the film renders as sub-shots (the finale): one desk per sub-shot on the stage, its lane and badge.
+  const deskVersions=createDeskVersions({bridge,shot,project:()=>project,selected:()=>selected,seek:t=>seekCamera(t),status,escape,scrubbing:()=>!!scrub||!!groupDrag||!!keyDrag,isOpen:()=>open});
   function lighting(){
     const s=shot();let src=s.ledStatus?s:null,edited=!!src;
     if(!src){const f=filmShot();if(!f)return null;src=filmLights.get(s.id);if(!src){src=cleanLighting({ledStatus:f.ledStatus||[],ledNeutral:f.ledNeutral,ledColor:f.ledColor||'#ffffff',sceneGlobals:f.sceneGlobals});filmLights.set(s.id,src);}}
@@ -574,7 +577,7 @@ export function mountDirector(bridge,catalog,initial){
   async function renderStill(){
     if(stillBusy)return;requireReady();if(!deskEditor.flush())return;
     const s=shot(),t=playhead,seconds=Number((t*s.seconds).toFixed(2)),name=`Film-${s.id}-${seconds.toFixed(2)}s.jpg`,film=filmShot();
-    const job=filmRenderShot(film,s,keys()),started=performance.now(),first=!stills?.warm?.(),caption=stillCaption();stillBusy=true;
+    const job=deskVersions.renderShot(film,s,keys(),seconds),started=performance.now(),first=!stills?.warm?.(),caption=stillCaption();stillBusy=true;
     const title=()=>first?`Preparing film stage (first still only) · ${Math.round((performance.now()-started)/1000)} / ${Math.round(bootMs/1000)} s`:`Rendering ${s.id} at ${seconds.toFixed(2)} s… ${Math.round((performance.now()-started)/1000)} s`;
     still.busy(title(),film?'Film shot with your Director edits, film quality on.':'No film shot for this chapter: rendering the Director cut alone.',{expected:first?bootMs:0});
     const timer=setInterval(()=>{const text=title();status(text);still.progress(text);},500);
@@ -593,7 +596,7 @@ export function mountDirector(bridge,catalog,initial){
   const filmLook=film?createFilmLook({status,onStill:()=>action('render-still'),
     resting:()=>open&&bridge.ready()&&!bridge.playback().playing&&!scrub&&!keyDrag&&!groupDrag&&!marquee&&!stillBusy&&!composing&&!bridge.bakeState().baking,
     async render(){
-      const s=shot(),t=playhead,view=liveView(),job=filmRenderShot(filmShot(),s,keys());
+      const s=shot(),t=playhead,view=liveView(),job=deskVersions.renderShot(filmShot(),s,keys(),t*s.seconds);
       // Orbited away from the keys: the film look shows the user's view (held for the whole chapter), not the saved one.
       if(view){job.camera={keys:[0,1].map(time=>({id:'live-'+time,time,label:'Your view',easing:'linear',view}))};delete job.cameraPlan;
         status((selectedKey()?'Update selected view':'+ Add camera keyframe')+' keeps this camera.');}
@@ -617,7 +620,7 @@ export function mountDirector(bridge,catalog,initial){
   function hookOrbit(){if(orbitHooked||!filmLook)return;const dom=bridge.stage()?.three?.()?.renderer?.domElement;if(!dom)return;const poke=()=>filmLook.poke(),start=()=>{if(!orbitBase&&!bridge.playback().playing)orbitBase=bridge.stage()?.captureCamera()||null;poke();};dom.addEventListener('pointerdown',start,true);dom.addEventListener('pointermove',e=>{if(e.buttons)poke();},true);dom.addEventListener('wheel',start,{capture:true,passive:true});orbitHooked=true;}
   // Warm the still stage once the chapter is live, so the first still / film look is quick.
   let warmed=false;
-  function warmStill(){if(warmed||!film||!filmShot())return;warmed=true;(window.requestIdleCallback||(f=>setTimeout(f,1200)))(()=>{if(stillBusy)return;stills||=createStillRenderer();stills.render(filmRenderShot(filmShot(),shot(),keys()),playhead).catch(()=>{});},{timeout:4000});}
+  function warmStill(){if(warmed||!film||!filmShot())return;warmed=true;(window.requestIdleCallback||(f=>setTimeout(f,1200)))(()=>{if(stillBusy)return;stills||=createStillRenderer();stills.render(deskVersions.renderShot(filmShot(),shot(),keys(),playhead*shot().seconds),playhead).catch(()=>{});},{timeout:4000});}
   function commit(fn,{render=false,key=null}={}){
     if(!key||group!==key){const before=copy(project);undo.push(before);undo=undo.slice(-40);undoLabels.push({before,after:null,text:null});undoLabels=undoLabels.slice(-40);redo=[];redoLabels=[];}
     group=key;fn();const top=undoLabels.at(-1);if(top){top.after=copy(project);top.text=null;labelPending=top;setTimeout(()=>{if(labelPending===top)labelPending=null;});}changed();if(render)renderPanel();
@@ -688,7 +691,7 @@ export function mountDirector(bridge,catalog,initial){
       <div class="timeline-zoom"><button data-action="zoom-out" aria-label="Zoom timeline out" ${zoom===1?'disabled':''}>−</button><button data-action="zoom-fit" aria-label="Fit chapter to timeline" title="Fit the whole chapter">${zoom===1?'Fit':'Fit · '+zoom+'×'}</button><button data-action="zoom-in" aria-label="Zoom timeline in" ${zoom===8?'disabled':''}>+</button></div></div>
       <div class="timeline-viewport" tabindex="0" aria-label="Camera and desk timeline"><div class="timeline-content" style="width:${zoom*100}%;--timeline-grid:${(ticks[1]||s.seconds)/s.seconds*100}%">
       <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>
-      ${titlesGroup()}${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${keys().slice(0,-1).map((k,i)=>`<span class="camera-segment" style="left:${k.time*100}%;width:${(keys()[i+1].time-k.time)*100}%"><i>${({smooth:'Smooth move',linear:'Linear move',hold:'Hold / cut'})[k.easing]}</i></span>`).join('')}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s"><span>◆</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
+      ${deskVersions.lane()}${titlesGroup()}${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${keys().slice(0,-1).map((k,i)=>`<span class="camera-segment" style="left:${k.time*100}%;width:${(keys()[i+1].time-k.time)*100}%"><i>${({smooth:'Smooth move',linear:'Linear move',hold:'Hold / cut'})[k.easing]}</i></span>`).join('')}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s"><span>◆</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
       ${deskEditor.timeline()}</div>${lightLane()}${propsGroup()}</div></div>
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
@@ -994,6 +997,7 @@ export function mountDirector(bridge,catalog,initial){
     }
   });
   timeline.addEventListener('dragstart',event=>{if(event.target.closest('.camera-key, .desk-key')){event.preventDefault();return;}const card=event.target.closest('[data-index]');if(card){event.dataTransfer.setData('text/plain',card.dataset.index);event.dataTransfer.effectAllowed='move';}});
+  timeline.addEventListener('click',event=>deskVersions.click(event));
   timeline.addEventListener('dragover',event=>{if(event.target.closest('.chapter-card'))event.preventDefault();});
   timeline.addEventListener('drop',event=>{const card=event.target.closest('.chapter-card');if(!card)return;event.preventDefault();const from=Number(event.dataTransfer.getData('text/plain'));if(Number.isInteger(from)&&from>=0&&from<project.shots.length)move(from,Number(card.dataset.index));});
   timeline.addEventListener('click',event=>{
