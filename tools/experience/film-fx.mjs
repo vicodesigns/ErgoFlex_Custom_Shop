@@ -28,6 +28,9 @@
 //     (scene-desks.mjs stations, never the featured desk: its pose is the motion model's) set to a height / tilt for the
 //     shot, through the app's own rig (rig.updatePose) and auto-stow (desk-auto-stow.mjs), restored after. tilt 65 at
 //     43.5 is the Custom Shop's 65° Storage Mode: the desktop's loose objects are put away or hidden as in Studio.
+//   sceneDeskEdits:[{desk:'<room desk record id>', size, initial?, clips:[lift / tilt clips]}]  the Director's per-desk
+//     choreography (experience/desk-choreo.mjs, shot.deskEdits): each listed room desk plays its clips by chapter time, held
+//     inside its size's lift / tilt limits, restored after. The featured desk is never touched.
 //   ledColor:'#f19c00'  the LED colour for the shot (the app's colour picker), restored after
 //   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
 //   sceneGlobals:{environmentScale, exposure, exposureScale}  image-based ambient multiplier (or [[s, scale], …]), renderer
@@ -69,6 +72,7 @@
 import * as THREE from 'three';
 import { sampleScreenColours } from '../../led-screen-sampler.mjs';
 import { accessory } from '../../catalog.mjs';
+import { createDeskChoreo } from '../../experience/desk-choreo.mjs';
 
 const api = window.ErgoFlex;
 const sceneRoot = () => { let s = api.loadedModel; while (s?.parent) s = s.parent; return s; };
@@ -864,12 +868,14 @@ function installGlobals(shot) {
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneDeskEdits?.some(e => e.clips?.length);
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
+  // Each room desk's own lift / tilt clips (experience/desk-choreo.mjs, the Director's Desk menu), sampled in frame().
+  if (shot.sceneDeskEdits?.some(e => e.clips?.length)) { active.deskChoreo = createDeskChoreo(api); active.deskChoreo.set(shot.sceneDeskEdits); }
   if (shot.deskObjects) {
     // The app's own object editor, as stage.mjs places the keyboard: select, change, deselect.
     const objects = api.sceneDesks?.objects, deg = THREE.MathUtils.radToDeg; active.desk.placed = [];
@@ -978,6 +984,7 @@ export async function frame(t, chapterSeconds, { video = false, screens = true, 
   if (!active) return;
   let mark = timing ? performance.now() : 0; const lap = name => { if (!timing) return; const now = performance.now(); timing[name] = (timing[name] || 0) + now - mark; mark = now; };
   for (const v of active.desk?.timed || []) v.cell.force = visibleAt(v.keys, chapterSeconds);
+  active.deskChoreo?.apply(chapterSeconds);
   if (active.tod) active.tod.apply(chapterSeconds); lap('timeOfDay');
   active.roomLight?.frame(chapterSeconds);
   active.roomSpill?.frame(chapterSeconds);
@@ -1026,6 +1033,7 @@ export function clear() {
   active.tod?.restore();
   clearDeskObjects(active.desk);
   active.finish?.restore();
+  active.deskChoreo?.restore();
   active.deskPoses?.restore();
   active = null;
 }

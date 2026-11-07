@@ -7,6 +7,7 @@ import {score} from './score.mjs';
 import {cleanLighting} from './film-lighting.mjs';
 import {cleanSceneLights} from './light-edits.mjs';
 import {cleanPropEdits} from './prop-edits.mjs';
+import {cleanDeskChoreo} from './desk-choreo.mjs';
 import {cleanFilmTitles} from './film-titles.mjs';
 export const CUTS_KEY='ergoflex.clientCuts.v1';
 export const KINDS=[['room','Explore the room'],['hero','Desk showcase'],['glide','Omni-wheel movement'],['lift','Sit to stand'],['tilt','Drafting / easel'],['group','Group-work Groove'],['storage','Storage Groove'],['wellness','Movement break'],['proximity','Proximity demo'],['music','Music lighting'],['media','Curved-screen media']];
@@ -44,6 +45,8 @@ export function cleanShot(v={},catalog){
   if(keys.length)shot.camera={keys};else if(from||to)shot.camera={...(from?{from}:{}),...(to?{to}:{} )};
   // Film lighting edited in the Director (absent until then).
   Object.assign(shot,cleanLighting(v),cleanSceneLights(v),cleanPropEdits(v));
+  // Per-desk lift / tilt clips of the room's other desks (desk-choreo.mjs).
+  Object.assign(shot,cleanDeskChoreo(v,shot.seconds));
   // Film titles edited in the Director (absent until then): copy, timing, shadow shape.
   const titles=cleanFilmTitles(v.filmTitles,shot.seconds);if(titles?.length)shot.filmTitles=titles;
   return shot;

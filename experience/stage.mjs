@@ -8,6 +8,7 @@ import { accessory } from '../catalog.mjs';
 import { SHARED_BUILD_PRESETS } from '../preset-defaults.mjs';
 import { OPENING_VIEWS } from './opening.mjs';
 import {cleanPose,cleanCamera,defaultPreset} from './cuts.mjs';
+import {createDeskChoreo,roomDesks} from './desk-choreo.mjs';
 
 // This adapter exists only in a disposable, memory-backed preview iframe.
 export async function mountStage(ctx) {
@@ -25,6 +26,8 @@ export async function mountStage(ctx) {
   for(const type of ['pointerdown','pointermove','wheel','keydown'])addEventListener(type,()=>wake(),{capture:true,passive:true});
   if (!window.__ERGO_PRESENTATION__) return;
   const api = window.ErgoFlex;
+  // Every room desk's own lift / tilt clips (shot.deskEdits, desk-choreo.mjs), sampled with the chapter clock.
+  const deskChoreo = createDeskChoreo(api);
   const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
   const wait = async predicate => {
     const deadline = performance.now() + 120000;
@@ -196,6 +199,7 @@ export async function mountStage(ctx) {
     }
     defaultCameraKeys=(next.kind==='glide'?[0,.3,.6,1]:[0,1]).map((time,i)=>{cam(time);return{id:'auto-camera-'+i,time,label:time===0?'Start view':time===1?'End view':'Movement view '+i,easing:'smooth',view:captureCamera()};});
     cam(0);authoredCamera=captureCamera();shot={...next,motion:next.motion?(next.motion.clips?next.motion:{tracks:next.motion.tracks||tracksFromPoses(next.motion.from,next.motion.to)}):undefined};resolveActive();cam(0);
+    deskChoreo.restore();deskChoreo.set(next.deskEdits);
     await ctx.warm();await nextFrame();
     lastRendered=0;intervals.length=0;
     return {id:next.id,room:api.roomScene};
@@ -221,6 +225,7 @@ export async function mountStage(ctx) {
     }
     if(kind==='wellness'&&!shot.motion)ctx.pose(28+15.5*ease((t-.25)/.45),0);
     if(shot.motion){const p=shot.motion.clips?sampleClipMotion(shot.motion,t*shot.seconds):sampleDeskTracks(shot.motion.tracks,t);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);}
+    if(deskChoreo.count())deskChoreo.apply(t*shot.seconds);
     if(kind==='media'&&media){const now=performance.now(),updated=media.update(now);if(updated&&now-lastMediaColour>=100){lastMediaColour=now;try{const p=media.ctx2d.getImageData(Math.floor(media.canvas.width/2),Math.floor(media.canvas.height/2),1,1).data;api.setLedColor('#'+[p[0],p[1],p[2]].map(v=>Math.max(25,v).toString(16).padStart(2,'0')).join(''),false);}catch{}}}
     cam(t);
   }
@@ -344,6 +349,9 @@ export async function mountStage(ctx) {
     filmCamera:bake=>{cameraBake=typeof bake==='function'?bake:null;},
     // Director: a new chapter length without re-preparing (the desk motion samples by chapter seconds).
     secondsTrack:(seconds,id)=>{if(shot?.id===id&&Number.isFinite(seconds)){shot.seconds=seconds;resolveActive();}},
+    // Director: the chapter's per-desk clips changed (desk-choreo.mjs); the desks are re-posed at the current time.
+    deskEditsTrack:(edits,id)=>{if(shot?.id!==id)return;shot.deskEdits=edits;deskChoreo.set(edits);seek(lastProgress);},
+    roomDesks:()=>roomDesks(api,deskChoreo),deskBase:id=>deskChoreo.baseOf(id),
     motionTrack:(motion,id)=>{if(shot?.id===id)shot.motion=motion?(motion.clips?motion:{tracks:motion.tracks||tracksFromPoses(motion.from,motion.to)}):undefined;},
     previewPose:value=>{const p=cleanPose(value);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);return ctx.readDirector();},capturePose:()=>ctx.readDirector(),
     clock:callback=>{readProgress=callback;},capture:canvas=>ctx.capture(canvas),

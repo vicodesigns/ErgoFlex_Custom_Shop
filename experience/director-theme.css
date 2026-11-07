@@ -346,3 +346,17 @@ body.directing.film-frame .desk-version-badge:not([hidden]){display:block;positi
 #director-panel .start-pose-presets.start-pose-forms{grid-template-columns:repeat(3,minmax(0,1fr))}
 #director-panel .start-pose-presets button{min-width:0;padding:4px 6px}
 #director-panel .start-pose-presets [data-start-pose=current]{border-style:dashed}
+
+/* Every room desk's own Lift / Tilt timeline (desk-choreo.mjs): the Desk menu and the compact "Other desks" rows */
+#director-timeline .choreo-pick{display:inline-flex;align-items:center;gap:6px;color:var(--df-text-2);font-size:var(--df-fs-sm)}
+#director-timeline .choreo-pick select{min-height:26px;max-width:220px;padding:2px 8px;background:var(--df-surface-2);border:1px solid var(--df-line,#ffffff24);border-radius:var(--df-r-2);color:var(--df-text-1);font-size:var(--df-fs-sm)}
+#director-timeline .choreo-others{border-top:1px dashed #ffffff1c;margin-top:2px}
+#director-timeline .desk-lane-row.choreo-row{height:24px;--lane:var(--df-text-3)}
+#director-timeline .choreo-row .desk-lane-label{display:flex;align-items:baseline;gap:6px;overflow:hidden;color:var(--df-text-3)}
+#director-timeline .choreo-row .desk-lane-label{flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;padding:0 6px 0 10px}
+#director-timeline .choreo-row .desk-lane-label b{flex:1 1 auto;min-width:0;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--df-fs-xs)}
+#director-timeline .choreo-row .desk-lane-label small{display:none}
+#director-timeline .choreo-row .desk-lane{height:22px}
+#director-timeline .choreo-clip{position:absolute;top:5px;height:12px;min-height:12px;min-width:4px;padding:0;border:1px solid color-mix(in srgb,var(--lane) 55%,transparent);border-radius:3px;background:color-mix(in srgb,var(--lane) 30%,transparent);opacity:.75;cursor:pointer;--lane:var(--df-lane-lift)}
+#director-timeline .choreo-clip[data-lane-color=tilt]{--lane:var(--df-lane-tilt)}
+#director-timeline .choreo-clip:hover,#director-timeline .choreo-clip:focus-visible{opacity:1;background:color-mix(in srgb,var(--lane) 55%,transparent);outline:none}
