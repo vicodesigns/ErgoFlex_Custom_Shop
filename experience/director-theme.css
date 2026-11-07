@@ -346,3 +346,21 @@ body.directing.film-frame .desk-version-badge:not([hidden]){display:block;positi
 #director-panel .start-pose-presets.start-pose-forms{grid-template-columns:repeat(3,minmax(0,1fr))}
 #director-panel .start-pose-presets button{min-width:0;padding:4px 6px}
 #director-panel .start-pose-presets [data-start-pose=current]{border-style:dashed}
+
+/* Desks (scene-desk-editor.mjs): the room's other ErgoFlex desks */
+#director-panel .desk-list{list-style:none;margin:6px 0;padding:0;display:grid;gap:4px}
+#director-panel .desk-row{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;text-align:left;padding:6px 8px}
+#director-panel .desk-row .desk-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#director-panel .desk-row small{color:var(--df-text-3);white-space:nowrap}
+#director-panel .desk-row .desk-star{color:var(--df-text-3);text-align:center}
+#director-panel .desk-row.is-featured .desk-star{color:var(--df-accent-text)}
+#director-panel .desk-row.is-edited .desk-star{color:var(--df-accent-text)}
+#director-panel .desk-row[aria-pressed="true"]{outline:2px solid var(--df-accent-text);outline-offset:-2px}
+#director-panel .desk-size{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:6px 0}
+#director-panel .desk-pos{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:4px 8px;margin:6px 0}
+#director-panel .desk-num{margin:0}
+#director-panel .desk-num span{display:flex;align-items:center;gap:6px}
+#director-panel .desk-num input{width:100%;min-width:0;font-family:var(--df-mono);text-align:right}
+#director-panel .desk-num em{font-style:normal;font-size:var(--df-fs-sm);color:var(--df-text-3)}
+#director-panel .desk-nudge{display:flex;gap:3px}
+#director-panel .desk-nudge button{padding:4px 6px;min-width:34px;font-family:var(--df-mono)}
