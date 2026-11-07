@@ -1,6 +1,6 @@
 {
  "id": "wellness",
- "notes": "HQ36: opens wide from the mirror-wall side on the sunlit window, bike and BREATHE/RESET recovery corner, glides in and pans right onto the desk; desk centred three-quarter-front for the lift, arcing to the front; ends drifting left so the dumbbell rack, mirror and 08:00 timer join. +3 s (16 s): lift and its blue block moved 3 -> 6 s.",
+ "notes": "HQ36: opens wide from the mirror-wall side on the sunlit window, bike and BREATHE/RESET recovery corner, glides in and pans right onto the desk; desk centred three-quarter-front for the lift, arcing to the front; ends drifting left so the dumbbell rack, mirror and 08:00 timer join. +3 s (16 s): lift and its blue block moved 3 -> 6 s. | Wellness pass (Vico 17:03 'missing the keyboard tray, spacing of the stuff on the desk'): the ErgoFlex keyboard tray at the Custom Shop's 60x30 product-reference mount (x 9.5, y -28, z 201, 7 deg), the Magic Keyboard on it as the reference places it (tilt 10) and the Magic Mouse on the tray's right end; desktop re-spaced (deskObjects, desk-local mm, +x right, +z front): tablet with the Hold timer left wing angled to the user, green journal front-left beside it, water bottle back-right corner, notes card front-right; monitor stand and cutout left clear. Camera: director-camera-wellness.json (wellness pass).",
  "set": {
   "seconds": 16.0,
   "motion": {
@@ -128,6 +128,93 @@
      "label": "Drift left: rack and mirror join, into the dissolve"
     }
    ]
+  },
+  "accessories": {
+   "add": [
+    {
+     "id": "campus-pouf-slate",
+     "role": "base-shelf",
+     "x": 1150,
+     "z": 150,
+     "rotation": 20
+    },
+    {
+     "id": "keyboard-tray",
+     "x": 9.53,
+     "y": -28,
+     "z": 201.03,
+     "rotation": 7
+    },
+    {
+     "id": "apple-keyboard",
+     "x": 0.24,
+     "y": -55.5,
+     "z": 433,
+     "rotation": 0,
+     "tilt": 10
+    },
+    {
+     "id": "magic-mouse",
+     "x": 245,
+     "y": -47.7,
+     "z": 440,
+     "rotation": -90
+    }
+   ]
+  },
+  "deskObjects": {
+   "default-desktop-1": {
+    "p": {
+     "x": -400,
+     "y": 0,
+     "z": 10
+    },
+    "q": {
+     "x": 0,
+     "y": 0.121869,
+     "z": 0,
+     "w": 0.992546
+    }
+   },
+   "default-desktop-2": {
+    "p": {
+     "x": -590,
+     "y": 0,
+     "z": 135
+    },
+    "q": {
+     "x": 0,
+     "y": 0.069756,
+     "z": 0,
+     "w": 0.997564
+    }
+   },
+   "default-desktop-0": {
+    "p": {
+     "x": 650,
+     "y": 0,
+     "z": -50
+    },
+    "q": {
+     "x": 0,
+     "y": 0.0,
+     "z": 0,
+     "w": 1.0
+    }
+   },
+   "default-desktop-3": {
+    "p": {
+     "x": 450,
+     "y": 1,
+     "z": 180
+    },
+    "q": {
+     "x": 0,
+     "y": -0.087156,
+     "z": 0,
+     "w": 0.996195
+    }
+   }
   }
  },
  "screenShift": 3
