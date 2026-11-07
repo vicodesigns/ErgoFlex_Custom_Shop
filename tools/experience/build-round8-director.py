@@ -41,6 +41,10 @@
       ones, each marked director: true, replacing the earlier director: true entries; the builders' and
       film-cameras sceneEditsAdd entries are never touched, and the Director's entries are offsets from the film's
       placement, so they keep what Vico saw however the hand-made edits for that prop change.
+      Branding: an export whose shot has 'brandingEdits' (Director Mode's Branding tab: the school stickers / logos of
+      every desk in the room, experience/branding-edits.mjs) keeps them in director-camera-<id>.json as 'branding' (an
+      export without the field keeps the branding imported before). The pass writes them onto the chapter's film shot
+      (review-cut.json and the chapter's shot file) as 'sceneBranding'; render-cut passes it to film-fx.
 """
 import base64, copy, glob, hashlib, html, json, os, re, subprocess, sys, tempfile, time
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the repo
@@ -346,6 +350,44 @@ def apply_props(cid, f, props):
     return wrote
 
 
+BRANDING_FIELDS = {'surface': str, 'enabled': bool, 'x': (-100, 200), 'y': (-100, 200), 'scale': (5, 300), 'rotation': (-180, 180)}
+
+
+def clean_branding(b):
+    """Director Mode's branding overlay (experience/branding-edits.mjs cleanBranding): {room, artwork:{version, surfaces}}; None if not one."""
+    if not isinstance(b, dict) or not isinstance(b.get('room'), str) or not re.fullmatch(r'[a-z0-9-]{1,40}', b['room']): return None
+    surfaces, n = {}, 0
+    for sid, layers in ((b.get('artwork') or {}).get('surfaces') or {}).items():
+        if not isinstance(layers, dict) or not re.fullmatch(r'[a-z-]{1,40}', sid or ''): continue
+        for key, e in layers.items():
+            if not re.fullmatch(r'(logo|texture)(-[2-8])?', key) or not isinstance(e, dict) or n >= 64: continue
+            d = {}
+            if isinstance(e.get('name'), str) and len(e['name']) <= 160: d['name'] = e['name']
+            if isinstance(e.get('surface'), str) and re.fullmatch(r'[a-z-]{1,40}', e['surface']): d['surface'] = e['surface']
+            if isinstance(e.get('enabled'), bool): d['enabled'] = e['enabled']
+            for k, (lo, hi) in ((k, v) for k, v in BRANDING_FIELDS.items() if isinstance(v, tuple)):
+                v = e.get(k)
+                if isinstance(v, (int, float)) and not isinstance(v, bool): d[k] = round(min(hi, max(lo, v)), 2)
+            if any(k in d for k in BRANDING_FIELDS): surfaces.setdefault(sid, {})[key] = d; n += 1
+    return {'room': b['room'], 'artwork': {'version': 1, 'surfaces': surfaces}}
+
+
+def apply_branding(cid, f, branding):
+    """The chapter's film shot gets sceneBranding (film-fx installs it on every desk of the room); an empty overlay removes it."""
+    mine = clean_branding(branding)
+    paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
+    wrote = []
+    for p in paths:
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') != cid: continue
+            if mine and mine['artwork']['surfaces']: s['sceneBranding'] = copy.deepcopy(mine)
+            else: s.pop('sceneBranding', None)
+        if dump(p, d): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
 def run_pass():
     for n, cid, f in chapters():
         p = director_file(cid)
@@ -355,6 +397,9 @@ def run_pass():
         if os.path.exists(p) and 'props' in load(p):
             w = apply_props(cid, f, load(p)['props'])
             print(f'ch{n:02d} {cid}: Director props ({len(load(p)["props"])}) -> {", ".join(w) or "no change"}')
+        if os.path.exists(p) and 'branding' in load(p):
+            w = apply_branding(cid, f, load(p)['branding'])
+            print(f'ch{n:02d} {cid}: Director branding -> {", ".join(w) or "no change"}')
     for n, cid, f in chapters():
         if cid == 'awaken': continue
         p = director_file(cid)
@@ -557,7 +602,11 @@ def run_import(export):
     # Props: the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
     if isinstance(shot.get('propEdits'), list): dc['props'] = [{k: v for k, v in e.items() if k != 'director'} for e in clean_props(shot['propEdits'])]
     elif 'props' in before: dc['props'] = before['props']
+    # Branding: the export's overlay (empty = he reset it); an export without the field keeps the earlier import's.
+    if isinstance(shot.get('brandingEdits'), dict) and clean_branding(shot['brandingEdits']): dc['branding'] = clean_branding(shot['brandingEdits'])
+    elif 'branding' in before: dc['branding'] = before['branding']
     dump(director_file(cid), dc)
+    if 'branding' in dc: print(f'{cid}: Director branding -> {sum(len(v) for v in dc["branding"]["artwork"]["surfaces"].values())} graphic edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'props' in dc: print(f'{cid}: Director props -> {len(dc["props"])} prop edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if isinstance(shot.get('filmTitles'), list):
         lines = []; wrote = import_titles(cid, shot['filmTitles'], float(shot.get('seconds') or dc['seconds']), lines.append)
