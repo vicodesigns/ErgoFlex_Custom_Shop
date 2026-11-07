@@ -1,8 +1,8 @@
 import {addCameraHolds} from './camera-holds.mjs';
 import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
-import {paceChapter} from './chapter-timing.mjs';
-import {validateClipSchedule,sampledMotionToClips,legacyMotionToClips,cleanClipMotion,findClipInsertion,clipSummary,clipEnd} from './desk-clips.mjs';
-import {groupRange,snapGroupDelta,shiftGroup} from './timeline-group.mjs';
+import {paceChapter,lengthenChapter,chapterFloor,shortenChapter} from './chapter-timing.mjs';
+import {validateClipSchedule,sampledMotionToClips,legacyMotionToClips,cleanClipMotion,planClipInsertion,clipSummary,clipEnd} from './desk-clips.mjs';
+import {groupRange,snapGroupDelta,shiftGroup,CHAPTER_MAX} from './timeline-group.mjs';
 import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS,lightnessOf,withLightness,WHITE_PRESETS} from './film-lighting.mjs';
 import {filmRenderShot,createStillRenderer} from './film-render.mjs';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
@@ -309,6 +309,15 @@ export function mountDirector(bridge,catalog,initial){
     syncPicks();groupStatus();
   }
   const groupBase=()=>{const L=lighting();return {seconds:shot().seconds,keys:copy(keys()),clips:copy(deskEditor.motion().clips),...(L?{lights:copy(L.status),neutrals:copy(L.neutral)}:{}),...(timeOfDay()?{tods:copy(timeOfDay().keys)}:{})};};
+  // Change the chapter length without moving anything that is already there (see chapter-timing.mjs); one undo step.
+  // `at` seconds puts the playhead there afterwards; `apply(next)` adds the new item inside the same step.
+  function resizeChapter(seconds,{motion=deskEditor.motion(),message='Chapter length changed',at=null,apply=null}={}){
+    requireReady();const old=shot().seconds,position=playhead*old,longer=seconds>old+1e-9;
+    const next=(longer?lengthenChapter:shortenChapter)(shot(),motion,keys(),seconds);
+    commit(()=>{project.shots[selected]=next;apply?.(next);},{render:true});
+    seekCamera(at!==null?at/seconds:Math.min(1,position/seconds));
+    status(`${message?message+' · chapter':'Chapter'} ${longer?'lengthened':'shortened'} to ${Number(seconds.toFixed(3))}s. Undo restores the previous timing.`);
+  }
   function shiftPicks(delta,message,set=picks){
     requireReady();const base=groupBase(),next=shiftGroup(base,set,delta);if(Math.abs(next.delta)<1e-9){renderTimeline();status('The selection is already at the start of the chapter.');return;}
     const motion=deskEditor.motion(),longer=next.seconds!==base.seconds,position=playhead*base.seconds,L=lighting(),lit=set.lights?.size||set.neutrals?.size;
@@ -500,8 +509,9 @@ export function mountDirector(bridge,catalog,initial){
       const near=L.neutral.find(k=>Math.abs(k[0]-t)<.001);if(near){selectLight('neutrals',near[2]);return;}
       const k=[t,neutralAt(L.neutral,t),crypto.randomUUID()];putLighting({neutral:[...L.neutral,k]});selectLight('neutrals',k[2]);status('Colour key added at '+r2(t)+'s. Set its colour, brightness and warmth in Lighting.');return;
     }
-    const space=findClipInsertion(L.status.map(e=>({lane:'light',start:e.at,duration:e.dur})),'light',t,s,3);if(!space)throw Error('The lighting lane is full. Shorten a light state first.');
+    const space=planClipInsertion(L.status.map(e=>({lane:'light',start:e.at,duration:e.dur})),'light',t,s,3);if(!space)throw Error('The lighting lane is full. Shorten a light state first.');
     const e={id:crypto.randomUUID(),at:Math.round(space.start*1000)/1000,dur:Math.round(space.duration*1000)/1000,kind:'lift-up',fade:1,fadeIn:.6};
+    if(space.seconds>s+1e-9){resizeChapter(space.seconds,{message:'Light state added at '+e.at.toFixed(1)+'s',at:e.at,apply:()=>writeLighting(L,{status:[...L.status,e]})});selectLight('lights',e.id);return;}
     putLighting({status:[...L.status,e]});selectLight('lights',e.id);status('Light state added at '+r2(e.at)+'s. Choose its state and fades in Lighting.');
   }
   // Scene lights (room lamps, sun / sky, film rig, added lights) live in their own module.
@@ -700,7 +710,7 @@ export function mountDirector(bridge,catalog,initial){
       <button data-action="magnet" class="magnet" aria-pressed="${magnet}" title="Magnet: snap to movement edges, keys, the playhead and the chapter ends (S); Alt bypasses">Magnet</button><label class="snap-control">Snap <select name="timeline-snap" aria-label="Timeline snapping">${[[0,'Off'],[.1,'0.1s'],[.5,'0.5s'],[1,'1s']].map(([v,label])=>option(v,label,snapStep)).join('')}</select></label>
       <div class="timeline-zoom"><button data-action="zoom-out" aria-label="Zoom timeline out" ${zoom===1?'disabled':''}>−</button><button data-action="zoom-fit" aria-label="Fit chapter to timeline" title="Fit the whole chapter">${zoom===1?'Fit':'Fit · '+zoom+'×'}</button><button data-action="zoom-in" aria-label="Zoom timeline in" ${zoom===8?'disabled':''}>+</button></div></div>
       <div class="timeline-viewport" tabindex="0" aria-label="Camera and desk timeline"><div class="timeline-content" style="width:${zoom*100}%;--timeline-grid:${(ticks[1]||s.seconds)/s.seconds*100}%">
-      <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>
+      <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div><button class="chapter-end-handle" data-chapter-end type="button" aria-label="Chapter length: drag to change" title="Drag to change the chapter length (snaps to 0.5 s, Alt: free). Nothing already placed moves; the camera holds its last view."><i></i></button></div>
       ${deskVersions.lane()}${titlesGroup()}${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${keys().slice(0,-1).map((k,i)=>`<span class="camera-segment" style="left:${k.time*100}%;width:${(keys()[i+1].time-k.time)*100}%"><i>${({smooth:'Smooth move',linear:'Linear move',hold:'Hold / cut'})[k.easing]}</i></span>`).join('')}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s"><span>◆</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
       ${deskEditor.timeline()}</div>${lightLane()}${propsGroup()}</div></div>
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
@@ -1135,7 +1145,7 @@ export function mountDirector(bridge,catalog,initial){
         url.searchParams.delete('bakeAll');history.replaceState(null,'',url);action('bake-all');
       }
     });}else draft();}
-  const deskEditor=createDeskEditor({panel,timeline,bridge,shot,time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();sceneProps.deselect();titleEditor.clear();if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
+  const deskEditor=createDeskEditor({panel,timeline,bridge,shot,time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,lengthen:(seconds,motion,message,at)=>resizeChapter(seconds,{motion,message,at}),focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();sceneProps.deselect();titleEditor.clear();if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
   const startPose=createStartPose({panel,shot,motion:()=>deskEditor.motion(),time:()=>playhead,seek:seekCamera,commit,status,ready:requireReady});
   // Render tab (film chapters only): Send = Export cut when this chapter has unexported edits, then a Render-request-*.json download.
   const downloadText=(name,text)=>{const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
@@ -1228,6 +1238,42 @@ export function mountDirector(bridge,catalog,initial){
   }
   for(const type of ['pointerup','pointercancel'])timeline.addEventListener(type,endGroupGesture,true);
   timeline.addEventListener('click',event=>{if(performance.now()<suppressGroupClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
+  // End handle: drag the right end of the ruler to change the chapter length (0.5 s steps, Alt: free, 2-90 s).
+  // Everything already placed keeps its seconds; the camera holds its last view over added time; shortening stops
+  // at the end of the last item. One undo step.
+  let endDrag=null;
+  function chapterShortest(){
+    const L=lighting(),T=timeOfDay(),s=shot().seconds,titles=(titleEditor.titles?.()||[]).map(t=>t.rel_out).filter(t=>t<s-.01);
+    return chapterFloor(shot(),deskEditor.motion(),keys(),[...(L?[...L.status.map(e=>e.at+e.dur),...L.neutral.map(k=>k[0])]:[]),...(T?.keys||[]).map(k=>k.at),...titles]);
+  }
+  function endDragMove(event){
+    const d=endDrag,raw=d.seconds+(event.clientX-d.x)/d.width*d.seconds,min=event.altKey?d.floor:Math.ceil(d.floor*2-1e-9)/2;
+    let v=event.altKey?Math.round(raw*100)/100:Math.round(raw*2)/2,hint='';
+    if(v<min){v=min;hint=`Shortest ${Number(min.toFixed(2))} s: the last item ends there.`;}
+    if(v>CHAPTER_MAX){v=CHAPTER_MAX;hint='A chapter can be 90 s at most.';}
+    d.value=v;const x=d.left+v/d.seconds*d.width,vr=viewport().getBoundingClientRect(),rr=d.ruler.getBoundingClientRect();
+    d.ghost.style.left=Math.min(x,innerWidth-8)+'px';d.ghost.style.top=rr.top+'px';d.ghost.style.height=Math.max(0,vr.bottom-rr.top)+'px';
+    d.ghost.firstChild.textContent=`${Number(v.toFixed(2))} s${Math.abs(v-d.seconds)<1e-9?'':` (${v>d.seconds?'+':'−'}${Number(Math.abs(v-d.seconds).toFixed(2))} s)`}`;
+    d.ghost.dataset.hint=hint;d.ghost.classList.toggle('limit',!!hint);
+    status(hint||`Chapter length ${Number(v.toFixed(2))} s${v>d.seconds?' · the camera holds its last view over the added time':''} · Alt: free`);
+  }
+  timeline.addEventListener('pointerdown',event=>{
+    const h=event.target.closest?.('[data-chapter-end]');if(!h||event.button!==0||composing||bridge.bakeState().baking)return;
+    event.preventDefault();event.stopImmediatePropagation();
+    try{
+      requireReady();if(!deskEditor.flush())return;
+      const ruler=timeline.querySelector('.time-ruler'),box=ruler.getBoundingClientRect(),ghost=document.createElement('div');
+      ghost.className='chapter-end-ghost';ghost.append(document.createElement('b'));document.body.append(ghost);
+      endDrag={x:event.clientX,width:box.width,left:box.left,ruler,seconds:shot().seconds,value:shot().seconds,floor:chapterShortest(),ghost,h};
+      h.setPointerCapture(event.pointerId);h.classList.add('dragging');endDragMove(event);
+    }catch(error){status(error.message,true);}
+  },true);
+  timeline.addEventListener('pointermove',event=>{if(endDrag)endDragMove(event);});
+  for(const type of ['pointerup','pointercancel'])timeline.addEventListener(type,event=>{
+    if(!endDrag)return;const d=endDrag;endDrag=null;d.ghost.remove();d.h.classList.remove('dragging');suppressGroupClickUntil=performance.now()+300;
+    if(event.type==='pointercancel'||Math.abs(d.value-d.seconds)<1e-9){status('Chapter length unchanged.');return;}
+    try{resizeChapter(d.value);}catch(error){renderTimeline();status(error.message,true);}
+  },true);
   // Room lane: drag the brightness / fill line up or down (×2 per 7 lane px, log scale); one undo step per drag.
   let roomDrag=null;
   timeline.addEventListener('pointerdown',event=>{const hit=event.target.closest?.('[data-room-line]');if(!hit||event.button!==0)return;event.preventDefault();event.stopImmediatePropagation();reveal('room');

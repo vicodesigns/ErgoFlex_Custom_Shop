@@ -1,11 +1,11 @@
 import {DESK_LANES,POSE_FIELDS,cleanPose,simplifyDeskLane} from './desk-track.mjs';
-import {motionForShot,sampledMotionToClips,legacyMotionToClips,cleanClip,putClip,duplicateClip,findClipInsertion,clipEnd,clipTarget,clipDistance,clipSpeedUnit,clipSpeedPresets,clipSpeedSetting,retimeClipBySpeed,clipSummary,sampleClipMotion,validateClipSchedule} from './desk-clips.mjs';
+import {motionForShot,sampledMotionToClips,legacyMotionToClips,cleanClip,putClip,duplicateClip,planClipInsertion,clipEnd,clipTarget,clipDistance,clipSpeedUnit,clipSpeedPresets,clipSpeedSetting,retimeClipBySpeed,clipSummary,sampleClipMotion,validateClipSchedule} from './desk-clips.mjs';
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={lift:'Lift',tilt:'Tilt',wheels:'Wheels'};
 const fields=[['height','Height',28,52.5,.1],['tilt','Tilt',-5,65,.1],['x','Sideways',-120,120,.5],['z','Forward / back',-120,120,.5],['yaw','Turn',-3600,3600,1]];
 const round=n=>Number(n.toFixed(3));
 const option=(v,label,current)=>`<option value="${v}" ${v===current?'selected':''}>${escape(label)}</option>`;
-export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,render,status,preview=()=>Promise.resolve(),focus=()=>{},snap=(value)=>Math.round(value*20)/20}){
+export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,render,status,preview=()=>Promise.resolve(),focus=()=>{},snap=(value)=>Math.round(value*20)/20,lengthen=null}){
   let selected=null,drag=null,suppress=0,recording=null,jog=null,lastTiming=null,paletteDrag=null,paletteSuppress=0,dirty=false,pointerAction=false;
   const initial=new Map(),automatic=new Map();
   const motion=()=>{
@@ -34,11 +34,13 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
   }
   function select(id){ready();lastTiming=null;selected=id;focus('groove');const c=clip();if(c)seek(c.start/shot().seconds);render();status('Movement selected. Edit its settings in Groove, or drag its block or trim handles.');}
   function add(lane,preferred=now(),kind=lane==='wheels'?'rotate':lane){
-    ready();focus('groove');const m=motion(),space=findClipInsertion(m.clips,lane,preferred,shot().seconds);
+    ready();focus('groove');const m=motion(),space=planClipInsertion(m.clips,lane,preferred,shot().seconds);
     if(!space)throw Error(`The ${names[lane]} lane is full. Shorten a movement or lengthen this chapter.`);
-    const {start,duration}=space;
+    const {start,duration}=space,longer=space.seconds>shot().seconds+1e-9;
     const from=sampleClipMotion(m,start),c=cleanClip({lane,start,duration,kind,target:lane==='lift'?(from.height<45?52.5:28):(from.tilt<30?35:0),value:kind==='travel'?12:360,direction:kind==='travel'?'forward':'right'});
-    selected=c.id;save(putClip(m,c,shot().seconds),{at:start,message:`${names[lane]} movement added at ${round(start)}s. Set its duration, speed and direction below.`});
+    selected=c.id;
+    if(longer&&lengthen){const next=putClip(m,c,space.seconds);lastTiming=null;dirty=false;lengthen(space.seconds,next,`${names[lane]} added at ${start.toFixed(1)}s`,start);return;}
+    save(putClip(m,c,shot().seconds),{at:start,message:`${names[lane]} movement added at ${round(start)}s. Set its duration, speed and direction below.`});
   }
   function applyForm(){
     const c=clip();if(!c)return;const read=(n,fallback)=>panel.querySelector(`[name="desk-clip-${n}"]`)?.value??fallback;
@@ -134,14 +136,18 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
   timeline.addEventListener('click',e=>{if(performance.now()<suppress)return;const b=e.target.closest('[data-desk-clip]');if(b){guarded(()=>select(b.dataset.deskClip));return;}const rail=e.target.closest('[data-desk-lane]');if(rail)guarded(()=>{const box=rail.getBoundingClientRect();seek(Math.max(0,Math.min(1,(e.clientX-box.left)/box.width)));sync();});});
   timeline.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-desk-clip]');if(!b||e.button!==0)return;guarded(()=>{ready();const c=motion().clips.find(c=>c.id===b.dataset.deskClip),rail=b.closest('[data-desk-lane]');drag={id:c.id,original:c,marker:b,rail,start:e.clientX,edge:e.target.closest('[data-resize]')?.dataset.resize,moved:false,candidate:c};rail.setPointerCapture(e.pointerId);e.preventDefault();});});
   timeline.addEventListener('pointermove',e=>{if(!drag)return;const d=drag,box=d.rail.getBoundingClientRect();if(Math.abs(e.clientX-d.start)>3)d.moved=true;if(!d.moved)return;const delta=(e.clientX-d.start)/box.width*shot().seconds,c={...d.original},options={pixels:box.width,bypass:e.altKey,excludeClip:c.id};
-    if(d.edge==='end')c.duration=Math.max(.05,Math.min(shot().seconds-c.start,snap(clipEnd(d.original)+delta,options)-c.start));
+    // Past the chapter end is allowed: letting go there lengthens the chapter (the snap helper stops at the end, so it is bypassed beyond it).
+    const free=v=>v>shot().seconds?(options.bypass?v:Math.round(v*10)/10):snap(v,options),room=90;
+    if(d.edge==='end')c.duration=Math.max(.05,Math.min(room-c.start,free(clipEnd(d.original)+delta)-c.start));
     else if(d.edge==='start'){c.start=Math.max(0,Math.min(clipEnd(d.original)-.05,snap(d.original.start+delta,options)));c.duration=clipEnd(d.original)-c.start;}
-    else c.start=Math.max(0,Math.min(shot().seconds-c.duration,snap(d.original.start+delta,options)));
+    else c.start=Math.max(0,Math.min(room-c.duration,free(d.original.start+delta)));
     d.candidate=c;d.marker.style.left=c.start/shot().seconds*100+'%';d.marker.style.width=c.duration/shot().seconds*100+'%';
-    try{validateClipSchedule([...motion().clips.filter(v=>v.id!==c.id),c],shot().seconds);d.marker.classList.remove('invalid');}catch{d.marker.classList.add('invalid');}
+    try{validateClipSchedule([...motion().clips.filter(v=>v.id!==c.id),c],Math.max(shot().seconds,clipEnd(c)));d.marker.classList.remove('invalid');}catch{d.marker.classList.add('invalid');}
     const text=d.marker.querySelector('small');if(text)text.textContent=`${round(c.start)}s · ${round(c.duration)}s`;
   });
-  timeline.addEventListener('pointerup',()=>{if(!drag)return;const d=drag;drag=null;suppress=performance.now()+250;guarded(()=>{if(!d.moved){select(d.id);return;}selected=d.id;focus('groove');save(putClip(motion(),d.candidate,shot().seconds),{at:d.candidate.start,message:d.edge?'Movement resized; speed updated.':'Movement moved.'});});});
+  timeline.addEventListener('pointerup',()=>{if(!drag)return;const d=drag;drag=null;suppress=performance.now()+250;guarded(()=>{if(!d.moved){select(d.id);return;}selected=d.id;focus('groove');const need=Math.max(shot().seconds,Math.ceil(clipEnd(d.candidate)*1000-1e-6)/1000),message=d.edge?'Movement resized; speed updated.':'Movement moved.';
+    if(need>shot().seconds&&lengthen){lastTiming=null;dirty=false;lengthen(need,putClip(motion(),d.candidate,need),message.replace(/[.;].*$/,''),d.candidate.start);return;}
+    save(putClip(motion(),d.candidate,shot().seconds),{at:d.candidate.start,message});});});
   timeline.addEventListener('pointercancel',()=>{drag=null;render();});
   timeline.addEventListener('keydown',e=>{const b=e.target.closest('[data-desk-clip]');if(!b||!['ArrowLeft','ArrowRight','Delete','Backspace'].includes(e.key))return;e.preventDefault();guarded(()=>{selected=b.dataset.deskClip;if(['Delete','Backspace'].includes(e.key)){action('delete');return;}const c=clip(),start=c.start+(e.shiftKey?1:.1)*(e.key==='ArrowLeft'?-1:1);if(start<0||start+c.duration>shot().seconds+.00001)throw Error('Keep the whole movement inside the chapter.');update({start});timeline.querySelector(`[data-desk-clip="${selected}"]`)?.focus();});});
   timeline.addEventListener('dragover',e=>{const rail=e.target.closest('[data-desk-lane]');if(rail&&[...e.dataTransfer.types].includes('application/x-ergoflex-movement')){e.preventDefault();e.dataTransfer.dropEffect='copy';}});

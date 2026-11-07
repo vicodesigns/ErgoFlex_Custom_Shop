@@ -135,6 +135,25 @@ export function findClipInsertion(clips,lane,preferred,seconds,duration=3){
   const gap=gaps.find(([a,b])=>b>preferred)||gaps[0];if(!gap)return null;
   return {start:gap[0],duration:Math.min(duration,gap[1]-gap[0])};
 }
+// Where a new clip goes: at `preferred` (the playhead). If it would run past the chapter end the chapter grows
+// (`seconds` in the result) just enough to hold it; only when the playhead sits inside an existing clip does it
+// move to the nearest free gap. Never jumps to 0.
+export function planClipInsertion(clips,lane,preferred,seconds,duration=3,max=90){
+  const eps=.00001,r=v=>Math.round(v*1000)/1000,list=clips.filter(c=>c.lane===lane).sort((a,b)=>a.start-b.start);
+  const p=Math.max(0,Math.min(max-.5,preferred)),fit=(start,d)=>({start:r(start),duration:r(d),seconds:Math.max(seconds,Math.min(max,Math.ceil((start+d)*1000-1e-6)/1000))});
+  if(!list.some(c=>c.start<p-eps&&clipEnd(c)>p+eps)){
+    const next=list.find(c=>c.start>=p-eps),room=(next?next.start:max)-p;
+    if(room>=duration-eps)return fit(p,duration);
+    if(next&&room>=.25)return fit(p,room);
+  }
+  const gaps=[];let cursor=0;
+  for(const c of list){if(c.start-cursor>=.25)gaps.push([cursor,c.start]);cursor=Math.max(cursor,clipEnd(c));}
+  if(max-cursor>=.25)gaps.push([cursor,max]);
+  const dist=([a,b])=>p<a?a-p:p>b?p-b:0,sorted=gaps.sort((x,y)=>dist(x)-dist(y)),
+    gap=sorted.find(([a,b])=>b-a>=duration-eps)||sorted[0];
+  if(!gap)return null;
+  const d=Math.min(duration,gap[1]-gap[0]);return fit(Math.max(gap[0],Math.min(p,gap[1]-d)),d);
+}
 export function clipDistance(motion,c){
   const p=sampleClipMotion(motion,c.start),q=clipTarget(c,p);
   if(c.path){
