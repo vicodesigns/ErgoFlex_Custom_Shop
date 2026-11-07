@@ -61,7 +61,7 @@ try{
   const tab=()=>page.$eval('#director-panel [data-inspector-tab][aria-pressed=true]',b=>b.dataset.inspectorTab);
   const rows=()=>page.$$eval('#director-panel [data-desk-list] .desk-row',l=>l.map(b=>({id:b.dataset.section,text:b.textContent.replace(/\s+/g,' ').trim(),featured:b.classList.contains('is-featured'),on:b.getAttribute('aria-pressed')==='true'})));
   const live=async(fn,what,ms=30000)=>until(fn,what,ms);   // the stage re-applies a moment after the edit
-  await wait(2500);
+  await until(()=>page.evaluate(()=>__t().desks.records.size>1),'the room\'s desks on the stage',90000);await wait(2500);
 
   // ---- the Desks list: every desk record of the room, the featured one marked, named by state.name
   await click('#director-panel [data-inspector-tab=desks]');
