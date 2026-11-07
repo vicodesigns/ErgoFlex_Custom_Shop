@@ -346,3 +346,14 @@ body.directing.film-frame .desk-version-badge:not([hidden]){display:block;positi
 #director-panel .start-pose-presets.start-pose-forms{grid-template-columns:repeat(3,minmax(0,1fr))}
 #director-panel .start-pose-presets button{min-width:0;padding:4px 6px}
 #director-panel .start-pose-presets [data-start-pose=current]{border-style:dashed}
+
+/* ---------- Render tab: Render preview (render-request.mjs) ---------- */
+#director-panel .render-box textarea{width:100%;resize:vertical;min-height:44px}
+#director-panel .render-box .render-estimate{margin:6px 0}
+#director-panel .render-box [data-render-send]{width:100%;min-height:34px}
+#director-panel .render-result{margin:8px 0 2px;color:var(--df-success,#7be0a4);font-size:var(--df-fs-sm)}
+#director-panel .render-result:empty{display:none}
+#director-panel .render-box h4{margin:12px 0 4px;font-size:var(--df-fs-2xs);letter-spacing:.08em;text-transform:uppercase;color:var(--df-text-3);font-weight:650}
+#director-panel .render-recent{list-style:none;margin:0;padding:0;font-size:var(--df-fs-sm);color:var(--df-text-2)}
+#director-panel .render-recent li{padding:3px 0;border-top:1px solid var(--df-border-1)}
+#director-panel .render-recent li span{color:var(--df-text-3)}
