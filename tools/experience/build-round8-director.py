@@ -416,6 +416,20 @@ def clean_desks(desks):
     return list(out.values())
 
 
+def clean_build(b):
+    """A desk build as the Director cleaned it (experience/desk-build.mjs cleanDeskBuild): finishes, trim, [{id, slot}]."""
+    if not isinstance(b, dict): return None
+    out = {}
+    for k in ('woodFinish', 'baseFinish'):
+        if isinstance(b.get(k), str) and 0 < len(b[k]) <= 60: out[k] = b[k]
+    if isinstance(b.get('trimColor'), str) and re.match(r'^#[0-9a-fA-F]{6}$', b['trimColor']): out['trimColor'] = b['trimColor'].lower()
+    if isinstance(b.get('accessories'), list):
+        acc = [{'id': a['id'], 'slot': a['slot']} for a in b['accessories'][:60] if isinstance(a, dict) and isinstance(a.get('id'), str)
+               and a.get('slot') in ('desktop', 'shelf', 'lower-shelf', 'base-shelf')]
+        out['accessories'] = acc
+    return out or None
+
+
 def apply_desks(cid, f, desks):
     """The chapter's film shot gets sceneDeskEdits (the Director's desk edits); none removes the field."""
     mine = clean_desks(desks)
@@ -428,6 +442,21 @@ def apply_desks(cid, f, desks):
             if s.get('id') != cid: continue
             if mine: s['sceneDeskEdits'] = copy.deepcopy(mine)
             else: s.pop('sceneDeskEdits', None)
+        if dump(p, d): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
+def apply_featured_build(cid, f, build):
+    """The chapter's film shot gets featuredBuild (the Director's Build tab on the featured desk); none removes the field."""
+    paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
+    wrote = []
+    for p in paths:
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') != cid: continue
+            if build: s['featuredBuild'] = copy.deepcopy(build)
+            else: s.pop('featuredBuild', None)
         if dump(p, d): wrote.append(os.path.relpath(p, H))
     return wrote
 
@@ -447,6 +476,11 @@ def run_pass():
         if os.path.exists(p) and 'desks' in load(p):
             w = apply_desks(cid, f, load(p)['desks'])
             print(f'ch{n:02d} {cid}: Director desks ({len(clean_desks(load(p)["desks"]))}) -> {", ".join(w) or "no change"}')
+    for n, cid, f in chapters():
+        p = director_file(cid)
+        if os.path.exists(p) and 'build' in load(p):
+            w = apply_featured_build(cid, f, clean_build(load(p)['build']))
+            print(f'ch{n:02d} {cid}: Director featured desk build -> {", ".join(w) or "no change"}')
     for n, cid, f in chapters():
         if cid == 'awaken': continue
         p = director_file(cid)
@@ -655,7 +689,13 @@ def run_import(export):
     # Desks (the room's other ErgoFlex desks): the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
     if isinstance(shot.get('deskEdits'), list): dc['desks'] = clean_desks(shot['deskEdits'])
     elif 'desks' in before: dc['desks'] = before['desks']
+    # Featured desk build (Build tab): the export's deskBuild ({} = he reset it); an export without the field keeps the earlier import's.
+    if isinstance(shot.get('deskBuild'), dict):
+        if clean_build(shot['deskBuild']): dc['build'] = clean_build(shot['deskBuild'])
+        else: dc.pop('build', None)
+    elif 'build' in before: dc['build'] = before['build']
     dump(director_file(cid), dc)
+    if 'build' in dc: print(f'{cid}: Director featured desk build kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'branding' in dc: print(f'{cid}: Director branding -> {sum(len(v) for v in dc["branding"]["artwork"]["surfaces"].values())} graphic edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'desks' in dc: print(f'{cid}: Director desks -> {len(dc["desks"])} desk edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'props' in dc: print(f'{cid}: Director props -> {len(dc["props"])} prop edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)

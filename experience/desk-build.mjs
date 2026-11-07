@@ -47,6 +47,13 @@ export function cleanDeskBuild(b){
   const acc=cleanBuildAccessories(b.accessories);if(acc)out.accessories=acc;
   return Object.keys(out).length?out:null;
 }
+// The featured desk's build lives on the shot itself: shot.deskBuild (same fields as a room desk's build). Absent: the film
+// shot's own featuredBuild (an earlier Export cut, imported by build-round8-director.py as director-camera 'build'). Present
+// (even {}): replaces it. Film layers carry it as featuredBuild (film-fx installFeaturedBuild).
+export const cleanDeskBuildField=v=>v&&typeof v.deskBuild==='object'&&v.deskBuild?{deskBuild:cleanDeskBuild(v.deskBuild)||{}}:{};
+export const filmFeaturedBuild=film=>cleanDeskBuild(film?.featuredBuild);
+export const effectiveFeaturedBuild=(film,shot)=>shot?.deskBuild&&typeof shot.deskBuild==='object'?cleanDeskBuild(shot.deskBuild):filmFeaturedBuild(film);
+export const mergeFeaturedBuild=(film,shot)=>{if(!shot?.deskBuild||typeof shot.deskBuild!=='object')return {};const b=cleanDeskBuild(shot.deskBuild);return b?{featuredBuild:b}:{featuredBuild:undefined};};
 export const buildOf=(shot,desk)=>shot?.deskEdits?.find(e=>e.desk===desk)?.build||null;
 // shot.deskEdits with this desk's build replaced (null: removed; an entry left with nothing else goes too).
 export function withDeskBuild(list,desk,name,build){
@@ -83,6 +90,7 @@ export const slotless=id=>{const item=accessory(id);return !item||item.visual===
 
 // ---- the stage (runtime)
 const memory=api=>(api.sceneDesks.__deskBuild||=new Map());
+export const FEATURED='featured';
 export const roomDesks=api=>{const d=api?.sceneDesks;return d?[...d.records.values()].filter(r=>r.id!==d.selected&&!r.primary):[];};
 const record=(api,id)=>api?.sceneDesks?.records.get(id)||null;
 const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
@@ -105,7 +113,7 @@ function restyle(api,r,style){
   if(r.id===d.selected)d.ctx.writeLive(r);else d.ctx.restyle(r);
 }
 // A spot on a slot's surface that is clear of the others there: spread along the width, centre first.
-function spot(r,slot,index){
+export function spot(r,slot,index){
   const size=r.rig.mounts[slot]?.userData.surfaceSize,w=size?.width||1100,steps=[0,-.3,.3,-.15,.15,-.42,.42];
   return {p:{x:Math.round(w*steps[index%steps.length]),y:0,z:0},q:{x:0,y:0,z:0,w:1},s:{x:1,y:1,z:1}};
 }
