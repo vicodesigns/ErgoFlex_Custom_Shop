@@ -15,7 +15,8 @@ import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './fil
 import {createFilmFresh} from './film-fresh.mjs';
 import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS} from './timeline-ui.mjs';
 import {createDeskEditor} from './desk-editor.mjs';
-import {createChoreoTarget,validateDeskEdits,effectiveDeskEdits} from './desk-choreo.mjs';
+import {createChoreoTarget,validateDeskEdits} from './desk-choreo.mjs';
+import {effectiveDeskEdits} from './desk-edits.mjs';
 import {createStartPose} from './start-pose.mjs';
 import {createDeskVersions} from './desk-versions.mjs';
 import {createTitleEditor,loadTitleSource} from './title-editor.mjs';
@@ -536,7 +537,7 @@ export function mountDirector(bridge,catalog,initial){
   let bootMs=7000;try{bootMs=Number(localStorage.getItem('ergoflex.director.stillBootMs'))||7000;}catch{}
   // What changed since the previous still: edits added to the undo stack since then, else edits undone,
   // else (an edit outside undo) the project diff; nothing at all when the project is the same.
-  const SHOT_FIELDS={camera:'camera views',motion:'desk moves',timeOfDay:'time of day',ledStatus:'desk status lights',ledNeutral:'desk white',ledColor:'desk colour',lighting:'lighting',sceneGlobals:'room brightness and fill light',sceneLights:'scene lights',lightEdits:'scene lights',lights:'scene lights',propEdits:'props',filmTitles:'film titles',seconds:'chapter length',title:'chapter title',room:'room',layout:'layout',preset:'desk preset',kind:'shot kind',length:'length',mode:'mode',size:'desk size'};
+  const SHOT_FIELDS={camera:'camera views',motion:'desk moves',timeOfDay:'time of day',ledStatus:'desk status lights',ledNeutral:'desk white',ledColor:'desk colour',lighting:'lighting',sceneGlobals:'room brightness and fill light',sceneLights:'scene lights',lightEdits:'scene lights',lights:'scene lights',propEdits:'props',deskEdits:'desks',filmTitles:'film titles',seconds:'chapter length',title:'chapter title',room:'room',layout:'layout',preset:'desk preset',kind:'shot kind',length:'length',mode:'mode',size:'desk size'};
   function listDiff(a=[],b=[],noun,at,fmt){
     if(b.length>a.length)return `${noun} added`+(at?` at ${fmt(at(b.find(x=>!a.some(y=>y.id===x.id))||b.at(-1)))} s`:'');
     if(b.length<a.length)return `${noun} removed`;

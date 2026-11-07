@@ -61,18 +61,13 @@ export function cleanDeskChoreo(v={},seconds){
   for(const e of v.deskEdits.slice(0,48)){
     if(typeof e?.desk!=='string'||!/^[\w.:~-]{1,80}$/.test(e.desk))continue;
     const out={...structuredClone(e),desk:e.desk};
-    out.clips=cleanDeskClips(e.clips,seconds);
+    if(e.clips!==undefined)out.clips=cleanDeskClips(e.clips,seconds);
     if(typeof e.name==='string')out.name=e.name.slice(0,80);else delete out.name;
     if(e.size!==undefined)out.size=sizeKey(e.size);
     if(e.initial)out.initial=limitDeskPose(e.initial,out.size);
     by.set(out.desk,out);
   }
   return {deskEdits:[...by.values()]};
-}
-// What the stage plays for a chapter: the Director's deskEdits, else the film shot's sceneDeskEdits (an import).
-export function effectiveDeskEdits(film,shot){
-  if(Array.isArray(shot?.deskEdits))return shot.deskEdits;
-  return cleanDeskChoreo({deskEdits:film?.sceneDeskEdits},shot?.seconds||film?.seconds).deskEdits||[];
 }
 export const hasChoreo=e=>Array.isArray(e?.clips)&&e.clips.length>0;
 // The throw the Director uses when a shorter chapter would cut a desk's movement off.
@@ -102,8 +97,8 @@ const keep=(e)=>Object.keys(e).some(k=>!['desk','name','size','clips'].includes(
 export function putDeskClips(shot,desk,meta,clips){
   const list=(shot.deskEdits||[]).filter(e=>e.desk!==desk),old=(shot.deskEdits||[]).find(e=>e.desk===desk);
   const entry={...(old||{}),desk,name:meta.name??old?.name,size:meta.size??old?.size,clips:cleanDeskClips(clips,shot.seconds)};
-  if(entry.name===undefined)delete entry.name;if(entry.size===undefined)delete entry.size;
-  if(entry.clips.length||keep(entry)){list.push(entry);shot.deskEdits=list;}else if(list.length)shot.deskEdits=list;else delete shot.deskEdits;
+  if(entry.name===undefined)delete entry.name;if(entry.size===undefined)delete entry.size;const n=entry.clips.length;if(!n)delete entry.clips;
+  if(n||keep(entry)){list.push(entry);shot.deskEdits=list;}else if(list.length)shot.deskEdits=list;else delete shot.deskEdits;
   return shot;
 }
 // A Proxy of the shot whose `motion` is the desk's clips, so desk-editor.mjs edits any desk exactly as it edits the

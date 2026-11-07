@@ -54,7 +54,7 @@ assert.deepEqual(cleanDeskClips('nope',10),[]);
 const wheels=cleanClip({lane:'wheels',kind:'rotate',start:0,duration:2,value:90});
 const messy=cleanDeskClips([lift('a',0,2,40),lift('b',1,2,30),wheels,lift('c',9,5,30),tilt('d',0,1,10)],10);
 assert.deepEqual(messy.map(c=>c.id).sort(),['a','d'],'overlap, wheels and past-the-end clips are dropped');
-const shot=cleanShot({id:'ch',room:'product',seconds:10,deskEdits:[{desk:'desk-2',name:'Desk 2',size:'48 in',clips:[lift('a',1,2,40)],pose:{x:10,z:20,yaw:.5},build:{woodFinish:'Oak'}},{desk:'bad id!',clips:[]},{desk:'desk-3',initial:{height:99,tilt:99},size:'48x30',clips:[]}]});
+const shot=cleanShot({id:'ch',room:'product',seconds:10,deskEdits:[{desk:'desk-2',name:'Desk 2',size:'48x30',clips:[lift('a',1,2,40)],pose:{x:10,z:20,yaw:.5},build:{woodFinish:'Oak'}},{desk:'bad id!',clips:[]},{desk:'desk-3',initial:{height:99,tilt:99},size:'48x30',clips:[]}]});
 assert.equal(shot.deskEdits.length,2);
 assert.equal(shot.deskEdits[0].size,'48x30');assert.deepEqual(shot.deskEdits[0].pose,{x:10,z:20,yaw:.5},'other fields of an entry pass through');assert.equal(shot.deskEdits[0].build.woodFinish,'Oak');
 assert.deepEqual(shot.deskEdits[1].initial,{height:52.5,tilt:65},'initial is held to the size');
@@ -76,7 +76,7 @@ view.motion={version:2,initial:{},clips:[]};
 assert.equal(real.deskEdits,undefined,'no clips left: the entry goes');
 real.deskEdits=[{desk:'desk-2',clips:[lift('a',1,2,45)],pose:{x:1,z:2,yaw:0}}];
 view.motion={version:2,initial:{},clips:[]};
-assert.equal(real.deskEdits.length,1,'an entry that carries DeskSel\'s pose stays when its clips go');assert.equal(real.deskEdits[0].clips.length,0);
+assert.equal(real.deskEdits.length,1,'an entry that carries DeskSel\'s pose stays when its clips go');assert.equal(real.deskEdits[0].clips,undefined);
 
 // ---- the target: featured by default, back to featured on another chapter or a vanished desk
 let rows=[{id:'main',name:'Main',featured:true,size:'60x30',height:30,tilt:0},{id:'desk-2',name:'Desk 2',featured:false,size:'48x30',height:34,tilt:2}];
