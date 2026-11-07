@@ -30,9 +30,37 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   const editedCount=()=>edits().length;
   // Every prop write: seeds shot.propEdits from the film's earlier-exported entries first (like camera keys).
   function write(key,next,text,{undoKey=null}={}){
+    if(next&&!cleanPropEdit(next)&&!isNoopEdit(next)){status(`${CANT_SAVE}: ${UNUSUAL}`,true);rerender();return;}
     commit(()=>{const s=shot(),list=edits().filter(e=>propKey(e)!==key),clean=next&&cleanPropEdit(next);s.propEdits=clean?[...list,clean]:list;},{key:undoKey,render:false});
     status(text);rerender();
   }
+  // ---- what can't be kept
+  // The status text whenever a selected item can't become a Director edit (said when it's selected and when it's moved).
+  const CANT_SAVE='This item can\'t be saved in the film yet',UNUSUAL='its name is too long or unusual for a film edit.';
+  const isNoopEdit=e=>!e.position&&!e.rotation&&!e.scale&&e.hide===undefined;
+  // Why the film couldn't keep an edit to o with target t ('' = it can): the cleaned edit must find exactly o again.
+  function unrecordable(o,t){
+    const probe=cleanPropEdit({...t,position:[.1,0,0]});if(!probe)return UNUSUAL;
+    let f;try{f=win().__filmEdits.editTargets(probe);}catch{return 'the film can\'t look it up.';}
+    return f.length===1&&f[0]===o?'':f.some(x=>x===o)?'the film can\'t tell it apart from other items with the same name.':'the film can\'t find it again by its name.';
+  }
+  // Studio's own room editing also lives in the stage (studio.js RoomInteractions and the scene desks' object editor:
+  // click-drag moves a furnishing or a desk item, Delete removes it, a double click opens Studio's item gizmo). Its
+  // window capture listener runs before the Director's and stops the click, so in a room with Studio furnishings (the
+  // Humboldt library) the Director never saw the click and Studio's drag moved the prop where nothing records it (the
+  // stage's storage is throwaway). In Director Mode the Director owns the pointer: Studio's item editing is off here.
+  // Anything Studio still moves says so in the status line.
+  const MUTED=Symbol('director');
+  function muteStudioEditing(){
+    const api=win()?.ErgoFlex;if(!api)return;
+    const ri=api.roomInteractions;
+    if(ri&&!ri[MUTED]){ri[MUTED]=true;try{ri.end?.();ri.select?.(null);}catch{}ri.enabled=()=>false;
+      const end=ri.onEditEnd;ri.onEditEnd=edit=>{studioMoved();return end?.(edit);};}
+    const ctx=api.sceneDesks?.ctx,objects=api.sceneDesks?.objects;
+    if(ctx&&!ctx[MUTED]){ctx[MUTED]=true;try{objects?.endDrag?.();}catch{}ctx.objectsEditable=()=>false;ctx.rearrange=()=>false;}
+    if(api.itemGizmo?.active)try{api.itemGizmo.close();}catch{}
+  }
+  function studioMoved(){status(`${CANT_SAVE}: Studio's room editing moved it, not the Director. Undo in Studio or reload the chapter, then click it and use the Director's gizmo.`,true);}
   // ---- stage objects
   const filmEdit=o=>(o?.userData.__filmFxEdits||[]).filter(e=>e.director).at(-1)||null;
   const handMoves=o=>(o?.userData.__filmFxEdits||[]).filter(e=>!e.director&&(e.position||e.rotation||e.scale!==undefined));
@@ -173,11 +201,12 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const w=win(),t=three();if(!t)throw Error('The stage is still loading.');
     if(!w.__directorThree)await new Promise((resolve,reject)=>{w.__dirThreeDone=resolve;w.__dirThreeFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="Promise.all([import('three'),import('three/addons/controls/TransformControls.js')]).then(([T,C])=>{window.__directorThree={THREE:T,TransformControls:C.TransformControls};window.__dirThreeDone();},e=>window.__dirThreeFail(e));";w.document.head.append(s);});
     if(!w.__filmEdits)await new Promise((resolve,reject)=>{w.__dirEditsDone=resolve;w.__dirEditsFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-edits.mjs').then(m=>{window.__filmEdits=m;window.__dirEditsDone();},e=>window.__dirEditsFail(e));";w.document.head.append(s);});
+    muteStudioEditing();
     const {THREE,TransformControls}=w.__directorThree,group=new THREE.Group();group.name='Director prop tools';group.userData.directorTools=true;t.scene.add(group);
     const box=new THREE.BoxHelper(undefined,0x63d8f5);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(1.35);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){drag={enabled:t.controls.enabled,obj:gizmo.object};t.controls.enabled=false;startDrag();}else{t.controls.enabled=drag?.enabled??true;endDrag();}});
-    gizmo.addEventListener('objectChange',()=>{const o=current();if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
+    gizmo.addEventListener('objectChange',()=>{const o=current();if(o&&sel?.blocked){status(`${CANT_SAVE}: ${sel.blocked} It goes back when you let go.`,true);return;}if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
     const raycaster=new THREE.Raycaster(),dom=t.renderer.domElement;let down=null;
     dom.addEventListener('pointerdown',ev=>{down=ev.button===0&&(placing||!gizmo.dragging&&!gizmo.axis)?{x:ev.clientX,y:ev.clientY,alt:ev.altKey}:null;},true);
     dom.addEventListener('pointerup',ev=>{
@@ -199,7 +228,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   const ensure=()=>booting||=boot().then(t=>{rerender();return t;},error=>{booting=null;throw error;});
   function syncSnap(){if(!tools)return;const g=tools.gizmo;g.setTranslationSnap(snapping?.05:null);g.setRotationSnap(snapping?tools.THREE.MathUtils.degToRad(15):null);g.setScaleSnap(snapping?.1:null);}
   function tick(){
-    requestAnimationFrame(tick);if(!tools)return;const {gizmo,box,t}=tools,live=editing(),o=live?current():null;
+    requestAnimationFrame(tick);if(!tools)return;muteStudioEditing();const {gizmo,box,t}=tools,live=editing(),o=live?current():null;
     if(o){box.setFromObject(o);box.visible=true;box.material.opacity=shown(o)?1:.45;if(gizmo.dragging)bridge.stage()?.wake?.(300);}else box.visible=false;
     if(o&&shown(o)&&!placing){if(gizmo.object!==o)gizmo.attach(o);gizmo.setMode(mode);gizmo.setSpace(mode==='scale'?'local':'world');gizmo.visible=gizmo.enabled=true;}
     else if(!gizmo.dragging){if(gizmo.object)gizmo.detach();gizmo.visible=gizmo.enabled=false;}
@@ -207,6 +236,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function startDrag(){const o=drag?.obj;if(!o)return;if(!snaps.has(o))snaps.set(o,{position:o.position.clone(),quaternion:o.quaternion.clone(),scale:o.scale.clone()});drag.base=base(o);}
   function endDrag(){
     const o=drag?.obj,b=drag?.base;drag=null;if(!o||!b||!sel)return;
+    if(sel.blocked){const s=snaps.get(o);if(s){o.position.copy(s.position);o.quaternion.copy(s.quaternion);o.scale.copy(s.scale);o.updateMatrixWorld(true);bridge.stage()?.wake?.(300);}status(`${CANT_SAVE}: ${sel.blocked} It is back where the film puts it.`,true);return;}
     try{const e=editOfKey(sel.key)||sel.target;
       if(isAddEdit(e)){write(sel.key,addFrom(o,e),`${VERB[mode]} ${label(o)}.`);return;}
       const next={...sel.target,...(e||{}),...editFrom(o,b)};
@@ -216,9 +246,11 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   // ---- selection
   function pick(o){
-    let target;try{target=filmEdit(o)?cleanPropEdit(filmEdit(o))||targetFor(o):targetFor(o);}catch(error){status(error.message,true);return;}
+    let target;try{target=filmEdit(o)?cleanPropEdit(filmEdit(o))||targetFor(o):targetFor(o);}catch(error){sel=null;onSelect();rerender();status(`${CANT_SAVE}: ${error.message}`,true);return;}
     const t={match:target.match,...(target.asset?{asset:target.asset}:{}),...(target.path?{path:target.path}:{}),...(target.near?{near:target.near}:{}),label:target.label||o.name||''};
-    sel={key:propKey(t),target:t,obj:o};onSelect();rerender();
+    const blocked=isAddEdit(filmEdit(o))?'':unrecordable(o,t);
+    sel={key:propKey(t),target:t,obj:o,blocked};onSelect();rerender();
+    if(blocked){status(`${CANT_SAVE}: ${blocked} Moving ${label(o)} here won't be kept.`,true);return;}
     const moves=handMoves(o).length?' The film also places it by hand; your edit adds to that.':'';
     const added=isAddEdit(filmEdit(o));
     status(`${label(o)} selected · W move · E rotate · T scale · Shift snaps · ${added?'Delete removes it (added in this chapter)':'Delete hides it in this chapter'} · Alt-click picks what it sits on.${moves}`);
@@ -237,7 +269,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     write(sel.key,next,text);
   }
   function hide(on=true){
-    const o=current();if(!sel)return false;
+    const o=current();if(!sel)return false;if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return true;}
     if(isAddEdit(editOfKey(sel.key))){remove();return true;}const name=o?label(o):nice(sel.target.label),filmHides=o&&(o.userData.__filmFxEdits||[]).some(e=>!e.director&&e.hide);
     apply({hide:on?true:filmHides?false:undefined},on?`Hid ${name} in this chapter. Undo, or untick Hide in Props, brings it back.`:`Showed ${name} again.`);return true;
   }
@@ -247,6 +279,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function resetAll(){const n=editedCount();if(!n){status('No prop edits in this chapter: the props are the film\'s.');return;}const a=edits().filter(isAddEdit).length;commit(()=>{shot().propEdits=[];},{render:false});if(sel&&a)sel=null;status(`All props back to the film (${n} edit${n===1?'':'s'} cleared${a?`, ${a} added prop${a===1?'':'s'} removed`:''}). Undo brings them back.`);rerender();}
   async function changed(el){
     await ensure();const o=current();if(!sel||!o)return;const name=el.name,v=Number(el.value);
+    if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);rerender();return;}
     if(name==='pp-hide'){hide(el.checked);return;}
     if(el.value===''||!Number.isFinite(v))throw Error('Enter a number.');
     const added=editOfKey(sel.key);if(isAddEdit(added)){changedAdd(o,added,name,v);return;}
