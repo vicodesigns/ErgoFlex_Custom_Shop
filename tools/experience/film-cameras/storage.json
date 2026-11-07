@@ -1,6 +1,6 @@
 {
  "id": "storage",
- "notes": "HQ36: opens on window light across the pegboard, bench and MAKE/REPAIR/REPEAT sign, then rises and pulls back as the desk enters frame and centres for the fold. It holds the desk centred through the roll and ends on a slow push at the desk stowed by the window, floor clear. The chapter is 19 s (+2); motion and status are shifted +1.5 s so the reveal plays before the fold. Natural Birch with black trim; the Humboldt artwork meshes are hidden.",
+ "notes": "HQ36: opens on window light across the pegboard, bench and MAKE/REPAIR/REPEAT sign, then rises and pulls back as the desk enters frame and centres for the fold. It holds the desk centred through the roll and ends on a slow push at the desk stowed by the window, floor clear. The chapter is 19 s (+2); motion and status are shifted +1.5 s so the reveal plays before the fold. Natural Birch with black trim; the Humboldt artwork meshes are hidden. FP4 final pass: the bar stool's salmon seat recoloured charcoal #2b2d2f (birch legs kept) and moved into the corner by the door, out of the fold frames' lens line and the parked end frame.",
  "set": {
   "seconds": 19,
   "motion": {
@@ -1528,6 +1528,21 @@
   {
    "match": "^Artwork ",
    "hide": true
+  },
+  {
+   "match": "^Prop:kenney-furniture-stool-bar-square$",
+   "position": [
+    2.855,
+    0,
+    -5.16
+   ]
+  },
+  {
+   "match": "^Mesh_stoolBarSquare_1$",
+   "material": {
+    "color": "#2b2d2f",
+    "roughness": 0.85
+   }
   }
  ]
 }

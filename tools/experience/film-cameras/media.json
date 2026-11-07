@@ -1,6 +1,6 @@
 {
  "id": "media",
- "notes": "Music studio at night: open on the piano corner and city window with the movie glowing at right, arc across the room front past the guitar/record wall, then push in square and centred on the ultrawide (same 1.5 m wide-monitor as ch9, ~50% of frame vs ~38% in ch9's end). Chair moved off-camera to the live-room rug (it read as a dark shape at the rack); piano bench tucked 0.35 toward the piano. 11 s unchanged, 60 samples, peak 0.48 u/s, 9 deg/s.",
+ "notes": "Music studio at night: open on the piano corner and city window with the movie glowing at right, arc across the room front past the guitar/record wall, then push in square and centred on the ultrawide (same 1.5 m wide-monitor as ch9, ~50% of frame vs ~38% in ch9's end). Chair moved off-camera to the live-room rug (it read as a dark shape at the rack); piano bench tucked 0.35 toward the piano. 11 s unchanged, 60 samples, peak 0.48 u/s, 9 deg/s. FP4 final pass: the ultrawide's movie at 90% (screensAdd), matching its picture-driven LED light (ledGain = mediaBaseGain x 0.9, build-round8-leds.py).",
  "set": {
   "cameraPlan": {
    "easeIn": false,
@@ -104,6 +104,14 @@
     0,
     0.35
    ]
+  }
+ ],
+ "screensAdd": [
+  {
+   "target": "main-landscape",
+   "src": "app-reference/assets/desk_viewer/media/ambient-clip.mp4",
+   "offset": 40,
+   "brightness": 0.9
   }
  ]
 }
