@@ -3,6 +3,7 @@ import {mergeSceneLights} from './light-edits.mjs';
 import {mergePropEdits} from './prop-edits.mjs';
 import {mergeBranding} from './branding-edits.mjs';
 import {mergeDeskEdits} from './desk-edits.mjs';
+import {mergeFeaturedBuild} from './desk-build.mjs';
 // Film chapter switching: a chapter link carries #cut=…&film=<chapter list>&director=1.
 export function filmLink(hash){
   const params=new URLSearchParams(String(hash||'').replace(/^#/,'')),film=params.get('film');
@@ -44,6 +45,6 @@ export function liveFilmShot(film,shot){
   if(lit.ledStatus){next.ledStatus=lit.ledStatus;if(lit.ledNeutral)next.ledNeutral=lit.ledNeutral;else delete next.ledNeutral;if(lit.ledColor)next.ledColor=lit.ledColor;}
   if(lit.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...lit.sceneGlobals};
   if(lit.timeOfDay)next.timeOfDay=lit.timeOfDay;
-  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergeBranding(film,shot),mergeDeskEdits(film,shot));
+  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergeBranding(film,shot),mergeDeskEdits(film,shot),mergeFeaturedBuild(film,shot));
   return next;
 }

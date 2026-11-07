@@ -24,6 +24,9 @@
 //     trim for this shot, through the configurator's own swatches (#wood-finishes / #trim-palette clicks: the app's
 //     species tint, grain photo and trim material), restored after. E.g. the gaming desk: {wood:'Black Birch', trim:'#dc0909'}.
 //     in a studio state (the stage resets a layout room's saved desks to the authored defaults)
+//   featuredBuild:{woodFinish, baseFinish, trimColor, accessories:[{id, slot}]}  Director Build tab on the featured desk
+//     (shot.deskBuild -> importer director-camera 'build' -> here): finishes via the swatches, the desk's complete accessory
+//     set with the slot of each (desktop | shelf | lower-shelf | base-shelf), restored after (installFeaturedBuild).
 //   sceneDeskPoses:[{desk:'<regex on a room desk's id or name>', height:43.5, tilt:65}]  the room's other ErgoFlex desks
 //     (scene-desks.mjs stations, never the featured desk: its pose is the motion model's) set to a height / tilt for the
 //     shot, through the app's own rig (rig.updatePose) and auto-stow (desk-auto-stow.mjs), restored after. tilt 65 at
@@ -522,11 +525,47 @@ function installSceneDeskPoses(list) {
 function installDeskFinish(spec) {
   const was = { wood: api.currentConfig.woodFinish, trim: api.currentConfig.trimColor };
   const click = sel => { const el = document.querySelector(sel); if (!el) { console.warn('[film-fx] deskFinish: no swatch ' + sel); return false; } el.click(); return true; };
+  const was2 = { base: api.currentConfig.baseFinish };
   const wood = name => click(`#wood-finishes [data-finish="${CSS.escape(name)}"]`);
+  const base = name => click(`#base-finishes [data-finish="${CSS.escape(name)}"]`);
   const trim = hex => click(`#trim-palette [data-trim-color="${CSS.escape(String(hex).toLowerCase())}"]`);
-  const info = { wood: spec.wood ? wood(spec.wood) && spec.wood : undefined, trim: spec.trim ? trim(spec.trim) && spec.trim : undefined };
+  const info = { wood: spec.wood ? wood(spec.wood) && spec.wood : undefined, base: spec.base ? base(spec.base) && spec.base : undefined, trim: spec.trim ? trim(spec.trim) && spec.trim : undefined };
   console.log('[film-fx] deskFinish', JSON.stringify(info), 'was', JSON.stringify(was));
-  return { info, restore() { if (info.wood && was.wood) wood(was.wood); if (info.trim && was.trim) trim(was.trim); } };
+  return { info, restore() { if (info.wood && was.wood) wood(was.wood); if (info.base && was2.base) base(was2.base); if (info.trim && was.trim) trim(was.trim); } };
+}
+// The featured desk's build (Director Build tab, shot.featuredBuild = {woodFinish, baseFinish, trimColor, accessories:[{id, slot}]}):
+// finishes through the configurator's swatches (installDeskFinish), accessories toggled in / out like accessories.add / remove
+// until the desk has exactly this set, each moved onto its slot (desktop / shelf / lower-shelf / base-shelf). Restored by clear().
+async function installFeaturedBuild(build) {
+  const DB = await import('../../experience/desk-build.mjs'), objects = api.sceneDesks?.objects, rec = () => api.sceneDesks?.active;
+  const frames = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const finish = (build.woodFinish || build.baseFinish || build.trimColor) ? installDeskFinish({ wood: build.woodFinish, base: build.baseFinish, trim: build.trimColor }) : null;
+  const was = { accessories: [...api.currentConfig.accessories], roles: {} }, fresh = new Set(), flip = id => { try { api.toggleAccessory(id); } catch (e) { console.warn('[film-fx] featuredBuild toggle', id, e); } };
+  if (build.accessories) {
+    const want = new Set(build.accessories.map(a => a.id));
+    for (const id of want) if (!api.currentConfig.accessories.includes(id)) { flip(id); if (api.currentConfig.accessories.includes(id)) fresh.add(id); else console.warn('[film-fx] featuredBuild: ' + id + ' does not fit this desk size'); }
+    for (const id of [...api.currentConfig.accessories]) if (!want.has(id)) flip(id);
+    await api.workspaceAccessories?.ready; await objects?.ready; objects?.syncAccessories(); await frames();
+    const r = rec(), per = {};
+    for (const { id, slot } of build.accessories) {
+      const item = r?.objects?.get('accessory-' + id);
+      if (!item || !objects || DB.slotless(id) || item.saved.role === slot) continue;
+      was.roles[id] = { role: item.saved.role, transform: structuredClone(item.saved.transform) };
+      item.saved.role = slot; item.saved.removed = false;
+      if (!(fresh.has(id) && slot === DB.naturalSlot(id))) item.saved.transform = DB.spot(r, slot, per[slot] = per[slot] || 0), per[slot]++;
+      objects.register(r, item.id, item.obj, item.saved, item.baseScale);
+    }
+    if (Object.keys(was.roles).length || fresh.size) { await frames(); api.sceneDesks?.sync?.(); }
+  }
+  return {
+    info: { finish: finish?.info, accessories: build.accessories?.map(a => a.id + '@' + a.slot) },
+    restore() {
+      const r = rec(), now = api.currentConfig.accessories;
+      for (const [id, o] of Object.entries(was.roles)) { const item = r?.objects?.get('accessory-' + id); if (!item || !objects) continue; item.saved.role = o.role; item.saved.transform = o.transform; objects.register(r, item.id, item.obj, item.saved, item.baseScale); }
+      if (build.accessories) { for (const id of [...now]) if (!was.accessories.includes(id)) flip(id); for (const id of was.accessories) if (!api.currentConfig.accessories.includes(id)) flip(id); }
+      finish?.restore();
+    },
+  };
 }
 function clearDeskObjects(d) {
   if (!d) return; const objects = api.sceneDesks?.objects;
@@ -870,11 +909,12 @@ function installGlobals(shot) {
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length || shot.featuredBuild;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
+  if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
   if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
   // School branding on every room desk (after the poses: a rig re-poses its artwork with it).
@@ -927,7 +967,7 @@ export async function install(shot) {
 // shape change re-captured the room: onSlow() ran first so the caller can hold the frame) or 'full' (a field
 // that needs install: the caller runs clear() + install()).
 // sceneEdits too (the Director's prop edits): the edits layer and everything chained after it re-install in place.
-const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding', 'sceneDeskEdits'];
+const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding', 'sceneDeskEdits', 'featuredBuild'];
 const TAIL = ['tod', 'edits', 'lights', 'roomLight', 'roomSpill', 'lightEdits'];
 export async function update(shot, { onSlow } = {}) {
   if (!active) return 'full';
@@ -975,6 +1015,11 @@ export async function update(shot, { onSlow } = {}) {
   if (changed('sceneDeskEdits')) {
     active.deskEdits?.restore(); active.deskEdits = null;
     if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
+  }
+  // featuredBuild (the Director's Build tab on the featured desk): swatches and accessories back, then applied again.
+  if (changed('featuredBuild')) {
+    active.featured?.restore(); active.featured = null;
+    if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild);
   }
   if (globals) installGlobals(shot);
   if (status) {
@@ -1044,6 +1089,7 @@ export function clear() {
   active.roomSpill?.restore(); active.roomLight?.restore();   // before edits / timeOfDay: it chains to their accessors
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
+  active.featured?.restore();   // before the film's own accessories / finish go back
   clearDeskObjects(active.desk);
   active.finish?.restore();
   active.branding?.restore();   // before the poses go back: it only swaps the desks' artwork

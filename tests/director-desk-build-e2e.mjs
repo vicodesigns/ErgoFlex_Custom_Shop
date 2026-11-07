@@ -48,13 +48,13 @@ try{
   // ---- which rooms get the tab
   check((await tabs()).includes('Build'),'gym (chapter 7): the Build tab shows');
   await click('#director-panel [data-inspector-tab=build]');
-  check(/only the featured desk/.test(await page.$eval('#director-panel [data-inspector-page=build]',e=>e.textContent)),'gym: a hint says the room has only the featured desk');
-  for(const room of ['library','occmedialab','highschool']){await setRoom(room);check(!(await tabs()).includes('Build'),`${room} (school / college / library): no Build tab`);}
+  check(/featured desk/i.test(await page.$eval('#director-panel [data-inspector-page=build]',e=>e.textContent))&&!(await page.$('#director-panel [name=build-desk]')),'gym: the Build tab is the featured desk\'s, no picker (no other desks)');
+  for(const room of ['library','occmedialab','highschool']){await setRoom(room);check((await tabs()).includes('Build')&&!(await page.$('#director-panel [name=build-desk]')),`${room} (school / college / library): the Build tab is the featured desk's only`);}
   await setRoom('hospital');
   check((await tabs()).includes('Build'),'hospital: the Build tab shows');
   await click('#director-panel [data-inspector-tab=build]');
   const desks=await page.$$eval('#director-panel [name=build-desk] option',o=>o.map(x=>x.value));
-  check(desks.length===2&&desks.includes(DESK),`the Desk picker lists the room's other desks (${desks.join(', ')})`);
+  check(desks.length===3&&desks[0]==='featured'&&desks.includes(DESK),`the Desk picker lists the featured desk first, then the room's other desks (${desks.join(', ')})`);
   await page.select('#director-panel [name=build-desk]',DESK);await wait(500);
   const before=await stageDesk(DESK);
   check(before.style.woodFinish==='White Birch'&&before.style.baseFinish==='Silver','the desk starts as the room has it (White Birch / Silver)');
