@@ -1,6 +1,6 @@
 {
  "id": "wellness",
- "notes": "HQ36: opens wide from the mirror-wall side on the sunlit window, bike and BREATHE/RESET recovery corner, glides in and pans right onto the desk; desk centred three-quarter-front for the lift, arcing to the front; ends drifting left so the dumbbell rack, mirror and 08:00 timer join. +3 s (16 s): lift and its blue block moved 3 -> 6 s. | Wellness pass (Vico 17:03 'missing the keyboard tray, spacing of the stuff on the desk'): the ErgoFlex keyboard tray at the Custom Shop's 60x30 product-reference mount (x 9.5, y -28, z 201, 7 deg), the Magic Keyboard on it as the reference places it (tilt 10) and the Magic Mouse on the tray's right end; desktop re-spaced (deskObjects, desk-local mm, +x right, +z front): tablet with the Hold timer left wing angled to the user, green journal front-left beside it, water bottle back-right corner, notes card front-right; monitor stand and cutout left clear. Camera: director-camera-wellness.json (wellness pass).",
+ "notes": "HQ36: opens wide from the mirror-wall side on the sunlit window, bike and BREATHE/RESET recovery corner, glides in and pans right onto the desk; desk centred three-quarter-front for the lift, arcing to the front; ends drifting left so the dumbbell rack, mirror and 08:00 timer join. +3 s (16 s): lift and its blue block moved 3 -> 6 s. | Wellness pass (Vico 17:03 'missing the keyboard tray, spacing of the stuff on the desk'): the ErgoFlex keyboard tray at the Custom Shop's 60x30 product-reference mount (x 9.5, y -28, z 201, 7 deg), the Magic Keyboard on it as the reference places it (tilt 10) and the Magic Mouse on the tray's right end; desktop re-spaced (deskObjects, desk-local mm, +x right, +z front): tablet with the Hold timer left wing angled to the user, green journal front-left beside it, water bottle back-right corner, notes card front-right; monitor stand and cutout left clear. Camera: director-camera-wellness.json (wellness pass). | Final pass (FP3): gym palette: the slate pouf recoloured black with a gym-red top, the tan mat under the desk (the window sun patch on the floor) neutral daylight at half strength, the blue water bottle red, the cyan/magenta party speaker kept as the gym sound system with its rings in gym red; the broad-leaf planter terracotta pot black and its lime drip glaze dark soil (the tall indoor planter read as a celery stalk here); a dumbbell on the base shelf (decor P3).",
  "set": {
   "seconds": 16.0,
   "motion": {
@@ -217,5 +217,121 @@
    }
   }
  },
- "screenShift": 3
+ "screenShift": 3,
+ "sceneEditsAdd": [
+  {
+   "match": "^Prop:campus-pouf-slate$",
+   "recolor": [
+    {
+     "hue": [
+      180,
+      270
+     ],
+     "minChroma": 0.04,
+     "s": 0.04,
+     "l": 0.35
+    },
+    {
+     "hue": [
+      15,
+      65
+     ],
+     "minChroma": 0.04,
+     "h": 0,
+     "s": 0.7,
+     "l": 0.7
+    }
+   ],
+   "fp3": true
+  },
+  {
+   "match": "^Window sun patch$",
+   "recolor": [
+    {
+     "hue": [
+      0,
+      360
+     ],
+     "s": 0.05
+    }
+   ],
+   "opacity": 0.5,
+   "fp3": true
+  },
+  {
+   "match": "^Prop:sports-bottle$",
+   "recolor": [
+    {
+     "hue": [
+      160,
+      280
+     ],
+     "minChroma": 0.04,
+     "h": 0,
+     "s": 0.7,
+     "l": 0.85
+    }
+   ],
+   "fp3": true
+  },
+  {
+   "match": "^Prop:party-speaker$",
+   "near": [
+    0.453,
+    -2.836,
+    0.3
+   ],
+   "recolor": [
+    {
+     "hue": [
+      150,
+      345
+     ],
+     "minChroma": 0.04,
+     "h": 0,
+     "s": 0.85
+    }
+   ],
+   "fp3": true
+  },
+  {
+   "match": "^Prop:ergoflex-plant-2$",
+   "near": [
+    -0.151,
+    2.806,
+    0.3
+   ],
+   "recolor": [
+    {
+     "hue": [
+      5,
+      45
+     ],
+     "minChroma": 0.08,
+     "s": 0.03,
+     "l": 0.22
+    },
+    {
+     "hue": [
+      50,
+      82
+     ],
+     "minChroma": 0.08,
+     "h": 25,
+     "s": 0.3,
+     "l": 0.3
+    }
+   ],
+   "fp3": true
+  }
+ ],
+ "accessoriesAdd": [
+  {
+   "id": "dumbbell",
+   "role": "base-shelf",
+   "x": -250,
+   "z": 40,
+   "rotation": 80
+  }
+ ]
 }

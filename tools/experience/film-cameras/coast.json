@@ -1,6 +1,6 @@
 {
  "id": "coast",
- "notes": "HQ36: opens wide on the lab's reel wall (screening display, OCC banner and marks, clock, speakers, bookshelf, Film editing 1 bay), glides down the aisle and arcs to the window side to settle on the hero edit suite with the reel behind it. Chapter 9.5 -> 12 s (no moves or status lights in this chapter). Projector beam hidden (rendered as a black wedge); hero chair pulled 1.9 m toward the aisle so it no longer blocks the desk. | main: the hero suite chair hidden (moved, it still crossed the lower right at 6.5-8.5 s).",
+ "notes": "HQ36: opens wide on the lab's reel wall (screening display, OCC banner and marks, clock, speakers, bookshelf, Film editing 1 bay), glides down the aisle and arcs to the window side to settle on the hero edit suite with the reel behind it. Chapter 9.5 -> 12 s (no moves or status lights in this chapter). Projector beam hidden (rendered as a black wedge); hero chair pulled 1.9 m toward the aisle so it no longer blocks the desk. | main: the hero suite chair hidden (moved, it still crossed the lower right at 6.5-8.5 s). | Final pass (FP3): the edit suite's own camera on the left wing (decor P2); the room's planter is never in frame, so no swap.",
  "set": {
   "seconds": 12.0,
   "cameraPlan": {
@@ -95,6 +95,14 @@
     0.3
    ],
    "hide": true
+  }
+ ],
+ "accessoriesAdd": [
+  {
+   "id": "ergoflex-camera",
+   "x": -560,
+   "z": -180,
+   "rotation": 30
   }
  ]
 }

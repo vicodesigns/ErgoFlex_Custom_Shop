@@ -1,6 +1,6 @@
 {
  "id": "oilers",
- "notes": "Opens square on the HOME OF THE OILERS spirit wall (banner, surf-team longboard, trophies), glides along the window wall over the APA set-design desk past the bell-tower view, turns to the teacher corner and settles on the demonstration desk with a slow push. 11 s -> 14 s for the reveal (no moves, status or offsets to shift). The desk's task chair is moved 1.26 m toward the window so it no longer covers the hero desk. HQ (Vico 16:52, his new low opening on the spirit wall: 'the background, which looks like a blank wall, needs to be improved, and the desk should be put into storage mode, nothing on top of it, and fully tilted'): the APA set-design review desk stays in the app's 65 deg Storage Mode at 43.5 in for the whole chapter (set.sceneDeskPoses, film-fx: the app's rig pose and auto-stow, so its desktop is put away as in Studio); the featured demonstration desk the camera settles on keeps working, so no move and no status light. The room's open front (x 12.07, the misty void left of the opening frame) is closed for this chapter with a wall in the room's beige, charcoal wainscot and orange rail, five HBHS black-and-orange lockers, team balls and a trophy on top, two bulletin boards and team photos.",
+ "notes": "Opens square on the HOME OF THE OILERS spirit wall (banner, surf-team longboard, trophies), glides along the window wall over the APA set-design desk past the bell-tower view, turns to the teacher corner and settles on the demonstration desk with a slow push. 11 s -> 14 s for the reveal (no moves, status or offsets to shift). The desk's task chair is moved 1.26 m toward the window so it no longer covers the hero desk. HQ (Vico 16:52, his new low opening on the spirit wall: 'the background, which looks like a blank wall, needs to be improved, and the desk should be put into storage mode, nothing on top of it, and fully tilted'): the APA set-design review desk stays in the app's 65 deg Storage Mode at 43.5 in for the whole chapter (set.sceneDeskPoses, film-fx: the app's rig pose and auto-stow, so its desktop is put away as in Studio); the featured demonstration desk the camera settles on keeps working, so no move and no status light. The room's open front (x 12.07, the misty void left of the opening frame) is closed for this chapter with a wall in the room's beige, charcoal wainscot and orange rail, five HBHS black-and-orange lockers, team balls and a trophy on top, two bulletin boards and team photos. | Final pass (FP3): opener clutter cleared (the student work table, its two stools, its activity dressing and backpack stood in front of the lockers in the 0 s frame); the broad-leaf planter right of the demonstration desk swapped for a ficus; pencil cup on the teacher's desk (decor P3); the black Leap chair moved 0.4 m further (x 0.37 -> 0.77) so it leaves the hero frame's lower left.",
  "set": {
   "seconds": 14,
   "cameraPlan": {
@@ -115,7 +115,7 @@
     0.3
    ],
    "position": [
-    0.37,
+    0.77,
     0,
     1.2
    ]
@@ -479,7 +479,100 @@
     1.5,
     1
    ]
+  },
+  {
+   "match": "^Student work table$",
+   "near": [
+    6.789,
+    3.131,
+    0.3
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "match": "^Student investigation & work in progress",
+   "near": [
+    6.789,
+    3.131,
+    0.3
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "match": "^Task chair$",
+   "near": [
+    7.649,
+    3.598,
+    0.25
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "match": "^Task chair$",
+   "near": [
+    7.649,
+    2.663,
+    0.25
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "match": "^Prop:backpack$",
+   "near": [
+    7.015,
+    2.761,
+    0.25
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "match": "^Prop:ergoflex-plant-2$",
+   "near": [
+    -5.582,
+    5.054,
+    0.3
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "add": {
+    "asset": "ficus"
+   },
+   "id": "oilfc",
+   "match": "^Added prop:ficus#oilfc$",
+   "label": "Ficus (planter swap)",
+   "parent": "room",
+   "position": [
+    -5.054,
+    0,
+    -5.582
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "fp3": true
   }
  ],
- "screenShift": 2
+ "screenShift": 2,
+ "accessoriesAdd": [
+  {
+   "id": "ergoflex-pencil-cup",
+   "x": 600,
+   "z": -230,
+   "rotation": 0
+  }
+ ]
 }
