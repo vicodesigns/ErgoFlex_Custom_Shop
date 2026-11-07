@@ -88,8 +88,17 @@ try{
   d=await draftShot();check(d.brandingEdits.artwork.surfaces.desktop.logo.surface===undefined&&(await desks()).every(x=>!layer(x,'upper-shelf','logo')),'Undo takes the surface move back (one step) on every desk');
   await setField('br-surface','desktop');   // a no-op change keeps the edit on the desktop
 
-  // ---- Export cut -> importer -> review-cut sceneBranding (temp copy of the chapter)
   const mine=(await draftShot()).brandingEdits;
+  // ---- reload: the Director keeps it, the desks follow it again
+  await openChapter(page,base,chapter);
+  const mine0=(await draftShot()).brandingEdits;const re=await draftShot();check(JSON.stringify(re.brandingEdits)===JSON.stringify(mine0),'after a reload the draft still holds the edit');
+  await until(async()=>{const x=(await desks()).filter(y=>layer(y,'desktop','logo'));return x.length&&x.every(y=>near(layer(y,'desktop','logo').rotation,15,.01));},'desks follow after reload').catch(async e=>{console.log('DEBUG',JSON.stringify({mine,desks:(await desks()).map(x=>[x.id,x.art.desktop?.logo])}));throw e;});
+  check(true,'after the reload every desk of the room shows the edited lettering again');
+  await click('#director-panel [data-inspector-tab=branding]');
+  const after=await until(()=>page.$eval('#director-panel [name="br-rot"]',e=>Number(e.value)).catch(()=>null),'panel');
+  check(after===15,'the Branding tab reads the edit back (turn 15°)');
+  // ---- Export cut -> importer -> review-cut sceneBranding (temp copy of the chapter)
+  await click('#director-panel [data-inspector-tab=chapter]');
   await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));
@@ -114,16 +123,8 @@ try{
   execFileSync('python3',[py,H,'--import',path.join(tmp,'Film-chapter-oilers-clear.json')],{stdio:'ignore'});execFileSync('python3',[py,H],{stdio:'ignore'});
   check(JSON.parse(fs.readFileSync(path.join(H,'review-cut.json'),'utf8')).shots.find(s=>s.id==='oilers').sceneBranding===undefined,'an empty overlay (Reset all) removes sceneBranding from the film');
 
-  // ---- reload: the Director keeps it, the desks follow it again
-  await openChapter(page,base,chapter);
-  const re=await draftShot();check(JSON.stringify(re.brandingEdits)===JSON.stringify(mine),'after a reload the draft still holds the edit');
-  await until(async()=>{const x=(await desks()).filter(y=>layer(y,'desktop','logo'));return x.length&&x.every(y=>near(layer(y,'desktop','logo').rotation,15,.01));},'desks follow after reload');
-  check(true,'after the reload every desk of the room shows the edited lettering again');
-  await click('#director-panel [data-inspector-tab=branding]');
-  const after=await until(()=>page.$eval('#director-panel [name="br-rot"]',e=>Number(e.value)).catch(()=>null),'panel');
-  check(after===15,'the Branding tab reads the edit back (turn 15°)');
   // ---- Reset all branding
-  await click('#director-panel [data-action=br-reset-all]');await wait(1500);
+  await click('#director-panel [data-inspector-tab=branding]');await click('#director-panel [data-action=br-reset-all]');await wait(1500);
   const reset=await desks();
   check(reset.filter(x=>layer(x,'desktop','logo')).every(x=>near(layer(x,'desktop','logo').x,own0.x,.01)&&near(layer(x,'desktop','logo').rotation,0,.01)),'Reset all branding puts every desk back as Studio has it');
   check(errors.length===0,'no page errors'+(errors.length?': '+errors.slice(0,3).join(' | '):''));
