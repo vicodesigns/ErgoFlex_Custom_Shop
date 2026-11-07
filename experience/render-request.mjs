@@ -29,10 +29,10 @@ export async function sha256Hex(text){
   let h=0x811c9dc5;for(const b of bytes){h^=b;h=Math.imul(h,0x01000193)>>>0;}return h.toString(16).padStart(8,'0').repeat(8);   // no SubtleCrypto (plain http off localhost)
 }
 // v:1 request. `signature` identifies the exact cut the page showed; `exportSha` is the sha256 of the Export cut file sent with it (null when nothing was unexported).
-export const makeRequest=({scope,chapter,resolution,note,created,signature,exportSha,estimate})=>({v:1,scope,chapter,resolution,note:String(note||'').trim().slice(0,300),created:created.toISOString(),signature,exportSha:exportSha||null,estimateMinutes:Math.round(estimate*10)/10});
+export const makeRequest=({scope,chapter,resolution,note,created,signature,exportSha,estimate,force})=>({v:1,scope,chapter,resolution,note:String(note||'').trim().slice(0,300),created:created.toISOString(),signature,exportSha:exportSha||null,estimateMinutes:Math.round(estimate*10)/10,...(force&&scope==='film'?{force:true}:{})});   // force: re-render every chapter instead of reusing the render PC's cache
 
 export function createRenderRequest({panel,chapters,shot,signature,unexported,exportNow,status,escape,storage,now=()=>new Date(),download,settle=900}){
-  const form={scope:'chapter',resolution:'720p',note:''};let busy=false,result='',recent=[];
+  const form={scope:'chapter',resolution:'720p',note:'',force:false};let busy=false,result='',recent=[];
   try{recent=JSON.parse(storage.getItem(KEY))||[];if(!Array.isArray(recent))recent=[];}catch{recent=[];}
   const filmSeconds=()=>chapters()?.reduce((n,c)=>n+(Number(c.seconds)||0),0)||FILM_SECONDS;
   const estimate=()=>estimateMinutes({scope:form.scope,resolution:form.resolution,seconds:shot().seconds,filmSeconds:filmSeconds()});
@@ -42,6 +42,7 @@ export function createRenderRequest({panel,chapters,shot,signature,unexported,ex
   const recentHTML=()=>recent.length?`<h4>Recent requests</h4><ul class="render-recent">${recent.map(r=>`<li><b>${escape(r.scope==='film'?'Whole film':'Chapter '+r.chapter)}</b> · ${escape(r.resolution)} · ${escape(clock(r.created))}${r.note?` <span>${escape(r.note)}</span>`:''}</li>`).join('')}</ul>`:'';
   function refresh(){
     const e=panel.querySelector('[data-render-estimate]');if(e)e.textContent=estimateText();
+    const fr=panel.querySelector('[data-render-force-row]');if(fr)fr.hidden=form.scope!=='film';
     const b=panel.querySelector('[data-render-send]');if(b){b.disabled=busy;b.textContent=busy?'Sending…':'Send to render PC';}
     const r=panel.querySelector('[data-render-result]');if(r)r.innerHTML=result;
     const l=panel.querySelector('[data-render-recent]');if(l)l.innerHTML=recentHTML();
@@ -56,7 +57,7 @@ export function createRenderRequest({panel,chapters,shot,signature,unexported,ex
         exportSha=await sha256Hex(text);did=true;
         await new Promise(r=>setTimeout(r,settle));   // let the Export cut download leave before the request's
       }
-      const created=now(),est=estimate(),req=makeRequest({scope:form.scope,chapter:s.id,resolution:form.resolution,note:form.note,created,signature:(await sha256Hex(signature())).slice(0,16),exportSha,estimate:est});
+      const created=now(),est=estimate(),req=makeRequest({scope:form.scope,chapter:s.id,resolution:form.resolution,note:form.note,created,signature:(await sha256Hex(signature())).slice(0,16),exportSha,estimate:est,force:form.force});
       download(requestFileName({scope:form.scope,chapter:s.id,resolution:form.resolution,date:created}),JSON.stringify(req,null,2));
       remember({scope:req.scope,chapter:req.chapter,resolution:req.resolution,note:req.note,created:req.created,estimate:req.estimateMinutes});
       result=`<b>Queued for the render PC</b> · ${escape(clock(req.created))} · ${escape(waitText(est))} once it starts${did?' · cut exported first':''}`;
@@ -65,7 +66,7 @@ export function createRenderRequest({panel,chapters,shot,signature,unexported,ex
     finally{busy=false;refresh();}
   }
   panel.addEventListener('input',e=>{const n=e.target.name;if(n==='render-note')form.note=e.target.value;});
-  panel.addEventListener('change',e=>{const n=e.target.name;if(n==='render-scope'){form.scope=e.target.value==='film'?'film':'chapter';refresh();}else if(n==='render-res'){if(RESOLUTIONS.includes(e.target.value))form.resolution=e.target.value;refresh();}else if(n==='render-note')form.note=e.target.value;});
+  panel.addEventListener('change',e=>{const n=e.target.name;if(n==='render-scope'){form.scope=e.target.value==='film'?'film':'chapter';refresh();}else if(n==='render-res'){if(RESOLUTIONS.includes(e.target.value))form.resolution=e.target.value;refresh();}else if(n==='render-force'){form.force=!!e.target.checked;refresh();}else if(n==='render-note')form.note=e.target.value;});
   panel.addEventListener('click',e=>{if(e.target.closest('[data-render-send]'))send();});
   return {
     send,form,recent:()=>recent,
@@ -75,6 +76,7 @@ export function createRenderRequest({panel,chapters,shot,signature,unexported,ex
       <p class="director-hint">Asks the render PC for an MP4 of what you see here. Unexported edits are exported first, so the render matches the stage.</p>
       <fieldset class="chapter-pacing render-box" data-render-box><legend>Render request</legend>
       <div class="director-grid"><label>What to render<select name="render-scope">${opt('chapter',`This chapter (${escape(s.id)})`,form.scope)}${opt('film','Whole film',form.scope)}</select></label><label>Resolution<select name="render-res">${RESOLUTIONS.map(r=>opt(r,r,form.resolution)).join('')}</select></label></div>
+      <label class="render-force" data-render-force-row ${form.scope==='film'?'':'hidden'}><input type="checkbox" name="render-force" ${form.force?'checked':''}> Re-render every chapter (otherwise chapters you have not changed reuse their earlier render)</label>
       <label>Note for the render PC<textarea name="render-note" rows="2" maxlength="300" placeholder="e.g. check the new lift move at 6 s">${escape(form.note)}</textarea></label>
       <p class="director-hint render-estimate" data-render-estimate>${escape(estimateText())}</p>
       <div class="director-actions"><button data-render-send class="primary" ${busy?'disabled':''}>${busy?'Sending…':'Send to render PC'}</button></div>

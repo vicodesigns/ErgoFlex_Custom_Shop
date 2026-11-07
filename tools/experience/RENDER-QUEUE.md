@@ -25,6 +25,9 @@ Every **60 s** `GET <base>/exports/render-queue/queue.json` (`Cache-Control: no-
   "cut": "exports/cinematic-intro-20261104-req-20261107T143012-freeze-rev380/request/cut.json",
   "shots": "0",                                // render-cut.cjs --shots value: "0" (one-shot cut) or "all" (the full review cut)
   "estimateMinutes": 2.9,                      // what Director told Vico
+  "chapterKeys": {"awaken": "48155a97…", …},   // chapter id -> cache key (all 12 for scope film, only the chapter for scope chapter); see 3b
+  "epoch": "1",                                // render-epoch.txt when the keys were computed (already inside every key)
+  "force": false,                              // true = "Re-render every chapter": ignore the cache for this job (still store the renders)
   "warning": "…",                              // only if set: the freeze may lack the export he sent (see 5)
   "status": "queued"
 }]}
@@ -59,6 +62,31 @@ With your existing pipeline, from the clone with the overlay, at the job's resol
   `grade.json`, titles from `titles-src.json`, its score) to an MP4. Hero keeps its sub-shot handling.
 * **scope film**: `job.cut` is the whole review cut (identical to `hq14/review-cut.json` in the manifest). Render every chapter,
   then assemble with `finish-intro.py` as for HQ14 (`edl.json`, `titles-src.json`, `score/` are in the manifest).
+
+## 3b. Chapter cache (render only what changed)
+
+A chapter's key (`tools/experience/chapter-keys.py`, computed by the desk from the frozen film data at the job's resolution) is a
+sha256 over everything that decides its frames: its render shot(s), seed file, media clips, the resolution and `render-epoch.txt`.
+Same key = same frames, so an earlier render at that resolution can be reused. Cache dir on the render PC:
+
+    F:\ErgoFlex_Render\cache\<resolution>\<chapter id>-<key>.mkv        e.g.  cache\4K\rise-3efc1943…ac4c.mkv   (the key is the full 64 hex chars)
+
+* **scope film**: for each chapter in `job.chapterKeys` (film order): if `force` is not true and the cache file exists, copy it to
+  `renders\NN.mkv` (NN = the chapter's index, `01`..`12`; `finish-intro.py` reads those). Otherwise render it as in 3 and, when it
+  succeeded, copy the mkv into the cache (write `<name>.part`, rename when complete) and to `renders\NN.mkv`. Then assemble with
+  `finish-intro.py` as before. Put in the caption which chapters were reused and which rendered. Render the missing ones in
+  parallel as you do now. A film job with no `chapterKeys` (the desk could not compute them) renders every chapter.
+* **scope chapter**: render as in 3, and also store the mkv in the cache under `job.chapterKeys[job.chapter]`. (Chapter jobs
+  render the one chapter anyway; a cache hit is a valid shortcut if you want it, but then say so in the caption.)
+* A render that failed or was cut short is never cached. Delete a cache file if you doubt it; the next job re-renders that chapter.
+* `epoch` in a key changes every key at once: a new epoch = a full re-render, by design. Keys of other resolutions never collide.
+* Housekeeping: you may delete cache files not used by the last few jobs when disk is short (about 1 GB per 4K chapter).
+
+**Seeding the cache from the HQ41 4K film.** The 4K chapter mkvs of HQ41 sit in `renders\` on the render PC (`01.mkv`..`12.mkv`).
+The desk writes `cache-seed.json` (`{epoch, resolution:"4K", hq41:{chapter:key|null}, current:{…}, unchanged:[…], index:{chapter:NN}}`).
+Once, for every chapter whose `hq41` key is not null (and only if `epoch` is the job's epoch): copy `renders\<NN>.mkv` to
+`cache\4K\<chapter>-<key>.mkv` with `NN = index[chapter]`. Chapters with a null key changed since HQ41 (or cannot be proven
+unchanged) and must be rendered. Do this before the first film job at 4K, and only while `renders\` still holds the HQ41 files.
 
 Do not render from anything outside the manifest: the freeze is the point. Name the MP4 `<job id>-<scope or chapter>-<res>.mp4`.
 
