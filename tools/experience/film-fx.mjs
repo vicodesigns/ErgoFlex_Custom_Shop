@@ -24,6 +24,10 @@
 //     trim for this shot, through the configurator's own swatches (#wood-finishes / #trim-palette clicks: the app's
 //     species tint, grain photo and trim material), restored after. E.g. the gaming desk: {wood:'Black Birch', trim:'#dc0909'}.
 //     in a studio state (the stage resets a layout room's saved desks to the authored defaults)
+//   sceneDeskPoses:[{desk:'<regex on a room desk's id or name>', height:43.5, tilt:65}]  the room's other ErgoFlex desks
+//     (scene-desks.mjs stations, never the featured desk: its pose is the motion model's) set to a height / tilt for the
+//     shot, through the app's own rig (rig.updatePose) and auto-stow (desk-auto-stow.mjs), restored after. tilt 65 at
+//     43.5 is the Custom Shop's 65° Storage Mode: the desktop's loose objects are put away or hidden as in Studio.
 //   ledColor:'#f19c00'  the LED colour for the shot (the app's colour picker), restored after
 //   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
 //   sceneGlobals:{environmentScale, exposure, exposureScale}  image-based ambient multiplier (or [[s, scale], …]), renderer
@@ -491,6 +495,24 @@ function timeVisible(out, obj, a) {
   out.timed.push({ keys, cell, undo: () => { delete obj.visible; obj.visible = raw; } });
 }
 const visibleAt = (keys, s) => { let v = null; for (const [at, on] of keys) if (s >= at) v = on === null ? null : !!on; return v; };
+function installSceneDeskPoses(list) {
+  const desks = api.sceneDesks, undo = [], posed = [];
+  for (const p of list) {
+    const re = new RegExp(p.desk, 'i'); let hit = 0;
+    for (const r of desks?.records?.values() || []) {
+      if (r.id === desks.selected || r.primary || !(re.test(r.id) || re.test(r.state?.name || ''))) continue;
+      if (!r.rig) desks.ensureRig(r);
+      const was = { height: r.state.height, tilt: r.state.tilt, poseAt: r.poseAt };
+      if (Number.isFinite(p.height)) r.state.height = p.height;
+      if (Number.isFinite(p.tilt)) r.state.tilt = p.tilt;
+      r.rig.updatePose(r.state.height, r.state.tilt); r.poseAt = `${r.state.height}:${r.state.tilt}`;
+      desks.objects?.stow?.update(r); hit++; posed.push(r.id);
+      undo.push(() => { r.state.height = was.height; r.state.tilt = was.tilt; r.rig.updatePose(was.height, was.tilt); r.poseAt = was.poseAt; desks.objects?.stow?.update(r); });
+    }
+    if (!hit) console.warn('[film-fx] sceneDeskPoses: no room desk matches ' + p.desk);
+  }
+  return { posed, restore() { for (const f of undo.reverse()) f(); } };
+}
 function installDeskFinish(spec) {
   const was = { wood: api.currentConfig.woodFinish, trim: api.currentConfig.trimColor };
   const click = sel => { const el = document.querySelector(sel); if (!el) { console.warn('[film-fx] deskFinish: no swatch ' + sel); return false; } el.click(); return true; };
@@ -842,11 +864,12 @@ function installGlobals(shot) {
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
+  if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
   if (shot.deskObjects) {
     // The app's own object editor, as stage.mjs places the keyboard: select, change, deselect.
     const objects = api.sceneDesks?.objects, deg = THREE.MathUtils.radToDeg; active.desk.placed = [];
@@ -1003,6 +1026,7 @@ export function clear() {
   active.tod?.restore();
   clearDeskObjects(active.desk);
   active.finish?.restore();
+  active.deskPoses?.restore();
   active = null;
 }
 export { discover };
