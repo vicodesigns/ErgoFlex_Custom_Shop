@@ -1,6 +1,6 @@
 {
  "id": "create",
- "notes": "HQ36, Vico's new story (2026-11-05): digital, drafting, oil painting. 22.5 s (+4.5). Opens on the studio's painting easel, still life and cast bust in the window light, glides past them and settles on the desk: flat at 0 deg with a pen display (digital), lifts to 52 in (blue; keeps the stool clearance), tilts 0->40 deg (purple): at 9 deg the pen display is put away and the drafting kit + easel rail appear, the painter's side shelf pops in at ~28 deg; then 40->55 deg (purple): the app's auto-stow swaps to the artist easel and painting at 50 deg, shelf stays. Camera rests through each 1.25 s white pause and ends on a slow push on the painting, stool and palette in front. Needs film-fx accessories.add[].visible (timed visibility). Keyboard tray, keyboard, mouse and the small pen tablet are off this desk.",
+ "notes": "HQ36, Vico's new story (2026-11-05): digital, drafting, oil painting. 22.5 s (+4.5). Opens on the studio's painting easel, still life and cast bust in the window light, glides past them and settles on the desk: flat at 0 deg with a pen display (digital), lifts to 52 in (blue; keeps the stool clearance), tilts 0->40 deg (purple): at 9 deg the pen display is put away and the drafting kit + easel rail appear, the painter's side shelf pops in at ~28 deg; then 40->55 deg (purple): the app's auto-stow swaps to the artist easel and painting at 50 deg, shelf stays. Camera rests through each 1.25 s white pause and ends on a slow push on the painting, stool and palette in front. Needs film-fx accessories.add[].visible (timed visibility). Keyboard tray, keyboard, mouse and the small pen tablet are off this desk. Ch3 easel fix (Vico, 2026-11-06: 'the painting graphic itself needs to be also rotated 180, just the graphic' / 'the easel bar for the drafting items are still there'): the drafting act's items (drafting kit with the wireframe plan, and the easel rail = the drafting bar across the board's front edge) fade out 16.9-18.7 s and are held hidden from 18.8 s; the artist easel (placement unchanged, rotation 180) fades in 17.5-19.3 s and only its painting texture is turned 180 deg (film-edits material.mapRotation). Timing used to hand the rail and kit back to the app (visible null), which kept the rail.",
  "set": {
   "seconds": 22.5,
   "motion": {
@@ -78,7 +78,11 @@
       ],
       [
        10.78,
-       null
+       1
+      ],
+      [
+       18.8,
+       0
       ]
      ]
     },
@@ -91,7 +95,11 @@
       ],
       [
        10.78,
-       null
+       1
+      ],
+      [
+       18.8,
+       0
       ]
      ]
     },
@@ -107,8 +115,8 @@
        0
       ],
       [
-       10.78,
-       null
+       17.4,
+       1
       ]
      ]
     },
@@ -328,6 +336,52 @@
    "materialName": "^Brush walnut handle$",
    "material": {
     "color": "#c23b2e"
+   }
+  },
+  {
+   "match": "^Accessory:drafting-kit$",
+   "opacity": [
+    [
+     16.9,
+     1
+    ],
+    [
+     18.7,
+     0
+    ]
+   ]
+  },
+  {
+   "match": "^Accessory:easel-rail$",
+   "opacity": [
+    [
+     16.9,
+     1
+    ],
+    [
+     18.7,
+     0
+    ]
+   ]
+  },
+  {
+   "match": "^Accessory:artist-easel$",
+   "opacity": [
+    [
+     17.5,
+     0
+    ],
+    [
+     19.3,
+     1
+    ]
+   ]
+  },
+  {
+   "match": "^Artist painting$",
+   "path": "Accessory:artist-easel",
+   "material": {
+    "mapRotation": 180
    }
   }
  ],

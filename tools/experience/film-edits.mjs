@@ -10,7 +10,8 @@
 //   shows an object an earlier edit hid (back to whatever the app sets), material:{color, emissive, roughness, metalness, clearcoat,
 //   clearcoatRoughness, envMapIntensity, emissiveIntensity, opacity,
 //   emissiveScale, opacityScale, colorScale (unlit backdrops), mapBlur (mip
-//   LOD, ~2^lod texels)}, opacity:<multiplier or [[sec,value],…]>,
+//   LOD, ~2^lod texels), mapRotation (deg: the colour map turned about its centre, e.g. 180 for a picture
+//   the right way up on a prop placed upside down)}, opacity:<multiplier or [[sec,value],…]>,
 //   radialFade:[r0,r1] (lines/meshes fade out between r0 and r1 metres from
 //   the object's own origin), clone:false}]
 //   dropFaces:{min:[x,y,z], max:[x,y,z]}: removes the matched meshes' triangles lying wholly inside that box, in each
@@ -255,6 +256,7 @@ export function installEdits(shot) {
             if (k === 'brightness') { if (m.isMeshBasicMaterial) { const c = m.color.clone(); m.color.multiplyScalar(Number(v)); undo.push(() => m.color.copy(c)); } else { const cell = { value: Number(v) }; wrap(m, 'emissiveIntensity', () => cell.value); } continue; }
             if (k === 'colorScale') { if (m.color) { const c = m.color.clone(); m.color.multiplyScalar(Number(v)); undo.push(() => m.color.copy(c)); } continue; }
             if (k === 'mapBlur') { if (m.map) mapBlur(m, Number(v), undo); continue; }
+            if (k === 'mapRotation') { const t = m.map; if (t) { const c = t.center.clone(), r = t.rotation; t.center.set(.5, .5); t.rotation = THREE.MathUtils.degToRad(Number(v)); undo.push(() => { t.center.copy(c); t.rotation = r; }); } continue; }
             if (k === 'emissiveScale' || k === 'opacityScale') {
               const field = k === 'emissiveScale' ? 'emissiveIntensity' : 'opacity', cell = { value: sample(v, 0) };
               if (field === 'opacity' && !m.transparent) { m.transparent = true; m.needsUpdate = true; undo.push(() => { m.transparent = false; m.needsUpdate = true; }); }
