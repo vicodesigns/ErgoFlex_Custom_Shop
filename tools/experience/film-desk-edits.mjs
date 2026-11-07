@@ -68,6 +68,7 @@ export function installDeskEdits(list, api) {
     // What puts it back: the whole state (with its other-size setups) and the pose; a resized desk is rebuilt from it.
     const was = { state: clone(r.state), size: r.state.size };
     const entry = { edit, record: r, was };
+    r.deskEditWas = was;   // the Director's panel reads the film's own size from here
     try { applyDesk(ctx, entry); entries.push(entry); } catch (error) { console.warn('[film-fx] sceneDeskEdits ' + edit.desk, error); entries.push(entry); }
   }
   if (missing.length) console.warn('[film-fx] sceneDeskEdits: no other room desk ' + missing.join(', '));
@@ -79,7 +80,7 @@ export function installDeskEdits(list, api) {
     restore() {
       choreo.restore();   // each desk back to its start pose first, then the rest of the edit below
       for (const e of entries.reverse()) {
-        const r = e.record; if (desks.records.get(r.id) !== r) continue;
+        const r = e.record; delete r.deskEditWas; if (desks.records.get(r.id) !== r) continue;
         if (e.edit.build) import('../../experience/desk-build.mjs').then(m => m.restoreBuild(api, r.id));   // before a size rebuild: the room's own style / accessories back
         const prior = clone(e.was.state);
         if (r.state.size !== e.was.size) rebuildRecord(desks, r, prior);

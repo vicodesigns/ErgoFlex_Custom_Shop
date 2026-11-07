@@ -24,7 +24,7 @@ export function cleanDeskEdit(e){
   if(typeof e.name==='string'&&e.name&&e.name.length<=80)out.name=e.name;
   if(DESK_SIZES.includes(e.size))out.size=e.size;
   const p=e.pose;if(p&&finite(p.x)&&finite(p.z)&&finite(p.yaw)&&Math.abs(p.x)<1e5&&Math.abs(p.z)<1e5&&Math.abs(p.yaw)<1e4)out.pose={x:r3(p.x),z:r3(p.z),yaw:Math.round(p.yaw*1e5)/1e5};
-  const i=e.initial;if(i&&finite(i.height)&&finite(i.tilt))out.initial=clampStartPose(i,out.size||'60x30',out.size?'height':'height');
+  const i=e.initial;if(i&&finite(i.height)&&finite(i.tilt))out.initial=clampStartPose(i,out.size||'48x30')   // the looser desk; the stage clamps for the desk's real size;
   // DeskChoreo / DeskBuild own their cleaning; here they pass through when sane.
   if(Array.isArray(e.clips)&&e.clips.length&&e.clips.length<=200&&e.clips.every(c=>c&&typeof c==='object')&&jsonSize(e.clips)<=200000)out.clips=structuredClone(e.clips);
   const build=cleanDeskBuild(e.build);if(build)out.build=build;   // desk-build.mjs

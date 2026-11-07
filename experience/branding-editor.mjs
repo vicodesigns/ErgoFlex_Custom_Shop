@@ -9,7 +9,7 @@ import {roomDesks,surfaceSizes} from './branding-live.mjs';
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const r1=v=>Math.round(v*10)/10,r2=v=>Math.round(v*100)/100;
 const clampN=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
-export function createBrandingEditor({bridge,shot,film,commit,status,open,rerender}){
+export function createBrandingEditor({bridge,shot,film,commit,status,open,rerender,selection=()=>null}){
   let ref=null,selId=null,sizes=new Map(),sizing=null,drag=null,images=new Map(),dragLive=null,lastCommit=0;
   const win=()=>document.getElementById('stage')?.contentWindow||null;
   const available=()=>isSchoolRoom(shot()?.room);
@@ -19,6 +19,8 @@ export function createBrandingEditor({bridge,shot,film,commit,status,open,rerend
   // The desk the list is read from: the chosen one, else the first with branding (featured first).
   function refDesk(i){
     const withArt=i.desks.filter(d=>brandingElements(d.base).length);
+    // The Desks tab's selection (director.mjs selectRoomDesk) leads; no selection = the featured desk. The temporary picker below is for a selected desk without graphics.
+    const want=selection(),led=want&&withArt.find(d=>d.id===want);if(led)return led;
     return i.desks.find(d=>d.id===ref&&brandingElements(d.base).length)||withArt.find(d=>d.selected)||withArt.find(d=>d.primary)||withArt[0]||null;
   }
   function ensureSizes(desk){
@@ -88,7 +90,9 @@ export function createBrandingEditor({bridge,shot,film,commit,status,open,rerend
         <label class="director-check"><input type="checkbox" name="br-show" ${v.enabled===false?'':'checked'}>Show this graphic</label>
         <div class="director-actions"><button data-action="br-center" ${dims?'':'disabled'}>Center on the surface</button><button data-action="br-reset" ${v.edited?'':'disabled'} title="This graphic back to where the desks have it">Reset this graphic</button></div></div>`;
     }
-    return head+`<label>Desk shown<select name="br-desk">${i.desks.filter(x=>brandingElements(x.base).length).map(x=>`<option value="${escape(x.id)}" ${x.id===d.id?'selected':''}>${escape(x.name)} · ${escape(x.size.replace('x30','″').replace(/x\d+$/,'″'))}</option>`).join('')}</select></label>
+    const followed=!!selection()&&selection()===d.id;
+    const picker=followed?`<p class="director-hint">Showing the desk selected in the Desks tab.</p>`:`<label>Desk shown<select name="br-desk">${i.desks.filter(x=>brandingElements(x.base).length).map(x=>`<option value="${escape(x.id)}" ${x.id===d.id?'selected':''}>${escape(x.name)} · ${escape(x.size.replace('x30','″').replace(/x\d+$/,'″'))}</option>`).join('')}</select></label>`;
+    return head+picker+`
       <p class="director-hint">Graphics on this desk (${same} desk${same===1?'':'s'} of this size carry them; the rest of the room follows where it has the same graphic).</p>
       <div class="prop-chips">${chips}</div>${form}
       <div class="director-actions"><button data-action="br-reset-all" ${n?'':'disabled'} title="Every graphic back to where the desks have it: one step, Undo brings it back">Reset all branding${n?' ('+n+')':''}</button></div>`;

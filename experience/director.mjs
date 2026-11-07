@@ -20,6 +20,7 @@ import {createChoreoTarget,validateDeskEdits} from './desk-choreo.mjs';
 import {effectiveDeskEdits} from './desk-edits.mjs';
 import {createStartPose} from './start-pose.mjs';
 import {createRenderRequest} from './render-request.mjs';
+import {createSceneDeskEditor} from './scene-desk-editor.mjs';
 import {createDeskVersions} from './desk-versions.mjs';
 import {createDeskBuildPanel} from './desk-build-panel.mjs';
 import {createTitleEditor,loadTitleSource} from './title-editor.mjs';
@@ -70,7 +71,7 @@ export function mountDirector(bridge,catalog,initial){
   // to and outlined for ~1.5 s. [tab, lighting section id or a selector in the tab's page]. Never moves focus, and
   // while a text field in the inspector has focus nothing switches or scrolls.
   const HOMES={camera:['camera','[data-reveal="camera-key"]'],clip:['groove','.movement-inspector'],tod:['lighting','tod'],room:['lighting','room'],
-    white:['lighting','white'],status:['lighting','status'],lamp:['lighting','lamps'],light:['lighting','lamps'],title:['chapter','[data-reveal="titles"]'],prop:['props','[data-reveal="prop"]'],floor:['lighting','[data-reveal="floor"]']};
+    white:['lighting','white'],status:['lighting','status'],lamp:['lighting','lamps'],light:['lighting','lamps'],title:['chapter','[data-reveal="titles"]'],prop:['props','[data-reveal="prop"]'],desk:['desks','[data-reveal="desk"]'],floor:['lighting','[data-reveal="floor"]']};
   let revealWant=null,pulse=null;
   const typing=()=>{const a=document.activeElement;return !!a&&panel.contains(a)&&(a.isContentEditable||a.tagName==='TEXTAREA'||a.tagName==='INPUT'&&!/^(checkbox|radio|range|color|button|submit|reset)$/.test(a.type));};
   // Film chapters with titles: a title's home is the Title tab (title-editor.mjs); otherwise the Chapter Headline.
@@ -159,7 +160,7 @@ export function mountDirector(bridge,catalog,initial){
     const exact=timeline.querySelector('[name="timeline-seconds"]');if(exact&&document.activeElement!==exact)exact.value=(playhead*shot().seconds).toFixed(2);
   }
   function syncPan(){const viewport=timeline.querySelector('.timeline-viewport'),range=timeline.querySelector('[name="timeline-pan"]');if(viewport&&range&&document.activeElement!==range)range.value=viewport.scrollLeft/Math.max(1,viewport.scrollWidth-viewport.clientWidth)*100;}
-  function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();sceneProps.deselect();titleEditor.clear();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
+  function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();sceneProps.deselect();deskSel.deselect();titleEditor.clear();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
   function captureKey(time,label){
     requireReady();const view=bridge.stage().captureCamera();if(!view)throw Error('The camera is not ready.');orbitBase=null;
     deskEditor.clearSelection();reveal('camera');
@@ -237,7 +238,7 @@ export function mountDirector(bridge,catalog,initial){
   function putTod(keys,{render=true}={}){requireReady();const s=shot();for(const k of keys)if(k.at<0||k.at>s.seconds+1e-6)throw Error(`Time-of-day keys must sit inside the ${s.seconds}-second chapter.`);commit(()=>{shot().timeOfDay=copy(keys).sort((a,b)=>a.at-b.at);},{render});}
   const lightItem=()=>{if(!lightSel)return null;if(lightSel.kind==='tods')return timeOfDay()?.keys.find(k=>k.id===lightSel.id)||null;const L=lighting();if(!L)return null;return lightSel.kind==='lights'?L.status.find(e=>e.id===lightSel.id):L.neutral.find(k=>k[2]===lightSel.id);};
   function selectLight(kind,id){
-    lightSel={kind,id};keyId=null;deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();titleEditor.clear();const item=lightItem();if(!item)return;
+    lightSel={kind,id};keyId=null;deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();deskSel.deselect();titleEditor.clear();const item=lightItem();if(!item)return;
     reveal(kind==='tods'?'tod':kind==='neutrals'?'white':'status');seekCamera((Array.isArray(item)?item[0]:item.at)/shot().seconds);render();
     const el=timeline.querySelector(`[data-light-clip="${id}"],[data-light-key="${id}"],[data-tod-key="${id}"]`);if(el)el.scrollIntoView({block:'nearest',inline:'nearest'});
   }
@@ -273,10 +274,11 @@ export function mountDirector(bridge,catalog,initial){
     const clipId=deskEditor.selectedId(),clip=clipId&&deskEditor.motion().clips.find(c=>c.id===clipId);if(clip)return row('▬','Desk move · '+clipSummary(clip),`${r2(clip.start)}–${r2(clipEnd(clip))} s`);
     const light=sceneLights.selected()&&sceneLights.lanes().find(x=>x.path===sceneLights.selected());if(light)return row('✺','Scene light · '+light.label,light.edited?'edited':'from the film');
     const prop=sceneProps.header();if(prop)return row('▣','Prop · '+prop.name,prop.detail);
+    const desk=deskSel.header();if(desk)return row('▭','Desk · '+desk.name,desk.detail);
     return '';
   }
   function syncSelectedHeader(){const el=panel.querySelector('[data-selected-header]');if(el)el.innerHTML=selectedHeader();}
-  function clearSelection(){for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;titleEditor.clear();deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();render();status('Selection cleared.');}
+  function clearSelection(){for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;titleEditor.clear();deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();deskSel.deselect();render();status('Selection cleared.');}
   // Delete every picked item (lanes keep at least one white / time-of-day key); one undo step.
   function deletePicks(){
     const n=picked();if(!n)return;requireReady();const L=lighting(),T=timeOfDay(),motion=deskEditor.motion(),list=keys().filter(k=>!picks.keys.has(k.id));
@@ -291,17 +293,17 @@ export function mountDirector(bridge,catalog,initial){
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape'||!open||picked()||document.querySelector('dialog[open]')||event.target.closest?.('input,select,textarea'))return;
     if(titleEditor.editing())return;
-    if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||titleEditor.selectedId()))return;
+    if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||deskSel.selected()||titleEditor.selectedId()))return;
     event.preventDefault();event.stopImmediatePropagation();clearSelection();
   },true);
   // Ctrl+Shift+A: every item in the lane under the pointer.
   let hoverRow=null;
   function pickLane(){
     const row=hoverRow;if(!row)return status('Point at a lane, then Ctrl+Shift+A selects everything in it.');
-    sceneLights.deselect();sceneProps.deselect();for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of row.querySelectorAll(attr))picks[kind].add(el.dataset[data]);syncPicks();groupStatus();
+    sceneLights.deselect();sceneProps.deselect();deskSel.deselect();for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of row.querySelectorAll(attr))picks[kind].add(el.dataset[data]);syncPicks();groupStatus();
   }
   function togglePick(kind,id){
-    sceneLights.deselect();sceneProps.deselect();
+    sceneLights.deselect();sceneProps.deselect();deskSel.deselect();
     if(!picked()){if(keyId)picks.keys.add(keyId);const clip=deskEditor.selectedId();if(clip)picks.clips.add(clip);if(lightItem())picks[lightSel.kind].add(lightSel.id);}
     if(picks[kind].has(id))picks[kind].delete(id);else picks[kind].add(id);syncPicks();groupStatus();
   }
@@ -526,7 +528,7 @@ export function mountDirector(bridge,catalog,initial){
     syncLightTools?.();box.innerHTML=sceneLights.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});repulse();
   }
   const sceneLights=createSceneLightEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneLights,
-    onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId()||titleEditor.selectedId()||sceneProps.selected();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneProps.deselect();if(had)renderTimeline();syncSelectedHeader();reveal('light');}});
+    onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId()||titleEditor.selectedId()||sceneProps.selected();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneProps.deselect();deskSel.deselect();if(had)renderTimeline();syncSelectedHeader();reveal('light');}});
   // Props (scene-prop-editor.mjs): click a prop in the view, gizmo, Props tab, Props lane; per chapter only.
   function renderSceneProps(soft=false){
     const box=panel.querySelector('[data-scene-props]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null;box.innerHTML=sceneProps.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
@@ -539,7 +541,7 @@ export function mountDirector(bridge,catalog,initial){
     const active=box.contains(document.activeElement)?document.activeElement.name:null;box.innerHTML=branding.panel();branding.mount(box);
     if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});repulse();
   }
-  const branding=createBrandingEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderBranding});
+  const branding=createBrandingEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderBranding,selection:()=>deskSel.selected()});
   const propCount=()=>{const n=sceneProps.editedCount();return n?n+' edited':'';};
   // Make permanent: Studio holds these props now, so this chapter's edits for them go (here and in the undo history,
   // so Undo never stacks them on Studio's new placement).
@@ -548,11 +550,26 @@ export function mountDirector(bridge,catalog,initial){
     drop(project);for(const p of [...undo,...redo])drop(p);changed();render();
   }
   const sceneProps=createScenePropEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneProps,lightsShowing:()=>sceneLights.showing(),fold:foldProps,
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();renderTimeline();renderSceneProps();reveal('prop');}});
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();deskSel.deselect();renderTimeline();renderSceneProps();reveal('prop');}});
+  // Desks (scene-desk-editor.mjs): every other ErgoFlex desk in the room: the Desks tab, a click in the view, size / place / start; per chapter only.
+  function renderSceneDesks(soft=false){
+    const box=panel.querySelector('[data-scene-desks]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null;box.innerHTML=deskSel.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
+    syncSelectedHeader();repulse();
+  }
+  // The ONE place a room desk selection arrives (Desks list, click on a desk in the view, Esc, empty click, Featured desk):
+  // id = the api.sceneDesks record id, null = back to the featured desk. Add `choreo.pick(id)` on the marked line.
+  function selectRoomDesk(id){
+    // One selection drives everything: the Groove timeline (every room desk has its own Lift / Tilt lanes), the Build tab's desk and the
+    // Branding tab's shown desk read deskSel.selected() (null = the featured desk) through their `selection` options.
+    choreo.pick(id||null);   // re-renders the panel and timeline when the desk changed
+  }
+  const deskSel=createSceneDeskEditor({bridge,onPick:selectRoomDesk,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneDesks,lightsShowing:()=>sceneLights.showing(),
+    inTab:()=>inspector==='desks'&&!document.body.classList.contains('inspector-hidden'),showFeatured:()=>showInspector('groove'),
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();renderTimeline();reveal('desk');}});
   // Floor reflections (floor-reflection-editor.mjs): Lighting > Room, per LED source; outlines and drags in the view.
   const floorShowing=()=>open&&(sceneLights.showing()||inspector==='lighting'&&!document.body.classList.contains('inspector-hidden')&&!!panel.querySelector('[data-light-section="room"]')?.open&&!!panel.querySelector('[data-floor-section]')?.open);
   const floorRefl=createFloorReflectionEditor({bridge,shot,film:filmShot,commit,status,visible:floorShowing,rerender:()=>{if(inspector==='lighting'&&!typing())renderPanel();else syncSelectedHeader();},
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();delete lightSectionsShut.room;const r=panel.querySelector('[data-light-section="room"]');if(r)r.open=true;renderTimeline();reveal('floor');}});
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();deskSel.deselect();delete lightSectionsShut.room;const r=panel.querySelector('[data-light-section="room"]');if(r)r.open=true;renderTimeline();reveal('floor');}});
   panel.addEventListener('toggle',event=>{if(event.target.matches?.('[data-floor-section]'))floorRefl.setExpanded(event.target.open);},true);
   // Render still: the playhead frame with the film look, rendered in a hidden stage of its own.
   // Render still: the playhead frame with the film look, shown inside the frame with a history strip.
@@ -661,7 +678,7 @@ export function mountDirector(bridge,catalog,initial){
     panel.innerHTML=`
       <div class="director-heading"><div><span class="director-kicker">DIRECTOR MODE</span><h2>Director studio.</h2></div><button data-action="inspector" aria-label="Hide inspector" title="Hide inspector; keep the timeline open">‹</button></div>
       <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button><span class="saved-indicator" data-saved title="Draft kept in this browser"></span></div>${filmPicker()}
-      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['props']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(film?['render']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
+      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['props','desks']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(film?['render']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
       <p data-status role="status" class="director-status">${escape(titleEditor.editHint?.()||`${project.shots.length} chapters · ${Math.round(duration(project.shots))} seconds`)}</p>
       <div data-inspector-page="project">
       <div class="director-actions"><button data-action="new">New cut</button><button data-action="clone">Duplicate cut</button></div>
@@ -695,7 +712,7 @@ export function mountDirector(bridge,catalog,initial){
       <label>Selected camera keyframe<select name="camera-key"><option value="">Select a keyframe…</option>${keys().map(k=>option(k.id,`${k.label} · ${(k.time*s.seconds).toFixed(2)}s`,keyId)).join('')}</select></label>
       ${cameraKey?`<div data-reveal="camera-key"><div class="selection-preview"><button data-action="key-preview" ${keys().at(-1)?.id===cameraKey.id?'disabled title="Last camera view: select an earlier view to preview its move"':''}>▶ Preview camera move</button><button data-action="key-go">Go to view</button></div><label>Keyframe name<input name="key-label" maxlength="60" value="${escape(cameraKey.label)}"></label><div class="director-grid"><label>Keyframe time (seconds)<input name="key-time" type="number" min="0" max="${s.seconds}" step=".05" value="${Number((cameraKey.time*s.seconds).toFixed(3))}"></label><label>Move to next view<select name="key-easing">${CAMERA_EASINGS.map(e=>option(e,({smooth:'Smooth move',linear:'Linear move',hold:'Hold, then cut'})[e],cameraKey.easing)).join('')}</select></label></div><label>Camera route<select name="key-path">${option('linear','Direct line',cameraKey.path||'linear')}${option('orbit','Orbit around subject',cameraKey.path||'linear')}</select></label><label>Field of view (degrees)<input name="key-fov" type="number" min="15" max="80" step="1" value="${cameraKey.view.fov}"></label><div class="director-actions lens-presets">${[[24,'Detail · 24°'],[35,'Balanced · 35°'],[50,'Wide · 50°']].map(([fov,label])=>`<button data-action="lens-${fov}" aria-pressed="${cameraKey.view.fov===fov}">${label}</button>`).join('')}</div><p class="director-hint">Lens buttons update this keyframe. After orbiting or framing the preview, use Update selected view to keep that composition.</p></div>`:''}
 
-      </div><div data-inspector-page="title">${titleEditor.panel()}</div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}</div><div data-inspector-page="props"><div data-scene-props>${filmShot()?sceneProps.panel():''}</div></div><div data-inspector-page="branding"><div data-scene-branding>${filmShot()?branding.panel():''}</div></div><div data-inspector-page="build">${filmShot()?deskBuild.panel():''}</div>${film?renderRequest.panel():''}`;
+      </div><div data-inspector-page="title">${titleEditor.panel()}</div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}</div><div data-inspector-page="props"><div data-scene-props>${filmShot()?sceneProps.panel():''}</div></div><div data-inspector-page="desks"><div data-scene-desks>${filmShot()?deskSel.panel():''}</div></div><div data-inspector-page="branding"><div data-scene-branding>${filmShot()?branding.panel():''}</div></div><div data-inspector-page="build">${filmShot()?deskBuild.panel():''}</div>${film?renderRequest.panel():''}`;
     branding.mount(panel.querySelector('[data-scene-branding]'));
     showInspector(inspector,false,false);deskEditor.sync();syncTransport();
     if(!revealWant)panel.scrollTop=scroll;
@@ -748,6 +765,7 @@ export function mountDirector(bridge,catalog,initial){
       if(name.startsWith('sl-')){await sceneLights.action(name,index);return;}
       if(name.startsWith('pp-')){await sceneProps.action(name,index);return;}
       if(name.startsWith('br-')){await branding.action(name,index);return;}
+      if(name.startsWith('dk-')){await deskSel.action(name,index);return;}
       if(name.startsWith('fr-')){await floorRefl.action(name,index);return;}
       if(name==='light-add'||name==='light-key-add'){addLight(name==='light-key-add');return;}
       if(name==='tod-add'){
@@ -943,6 +961,7 @@ export function mountDirector(bridge,catalog,initial){
     const el=event.target,name=el.name;if(!name)return;
     if(name==='seek'){try{seekCamera(Number(el.value)/100);}catch(error){status(error.message,true);}return;}
     if(name.startsWith('sl-')){try{sceneLights.input(el);}catch(error){status(error.message,true);}return;}
+    if(name.startsWith('dk-')&&el.type==='range'){try{deskSel.changed(el,{live:true});}catch(error){status(error.message,true);}return;}
     if(name.startsWith('fr-')&&el.type==='range'){try{floorRefl.changed(el,{live:true});}catch(error){status(error.message,true);}return;}
     if(name.startsWith('mx-')&&name!=='mx-on'){sceneLights.mixerChange(el,true).catch(error=>status(error.message,true));return;}
     if(/^gn?-/.test(name)){const k=name.replace(/^gn?-/,''),v=Number(el.value),twin=field((name.startsWith('gn-')?'g-':'gn-')+k),out=panel.querySelector(`[data-global-steps="${k}"]`);if(Number.isFinite(v)){if(twin)twin.value=String(v);if(out)out.textContent=k==='exposureScale'?stepsText(v):'×'+v;if(name.startsWith('g-'))try{setGlobal(k,v,{key:name,render:false});}catch(error){status(error.message,true);}}return;}
@@ -980,6 +999,7 @@ export function mountDirector(bridge,catalog,initial){
     if(name?.startsWith('sl-')){try{await sceneLights.changed(event.target);}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name?.startsWith('pp-')){try{await sceneProps.changed(event.target);}catch(error){renderSceneProps();status(error.message,true);}return;}
     if(name?.startsWith('br-')){try{branding.changed(event.target);}catch(error){renderBranding();status(error.message,true);}return;}
+    if(name?.startsWith('dk-')){if(event.target.type==='range'){renderSceneDesks();return;}try{deskSel.changed(event.target);}catch(error){renderSceneDesks();status(error.message,true);}return;}
     if(name?.startsWith('fr-')){if(event.target.type==='range'){renderPanel();return;}try{floorRefl.changed(event.target);}catch(error){renderPanel();status(error.message,true);}return;}
     if(name==='light-selected'){const [kind,id]=value.split(':');if(id)selectLight(kind,id);else{lightSel=null;renderPanel();renderTimeline();}return;}
     if(name==='room-light'){try{const v=Number(value);if(value===''||!Number.isFinite(v)||v<0||v>2)throw Error('Room light level runs from 0 to 2.');putLighting({roomLight:v});status('Room light level set to '+v+'.');}catch(error){renderPanel();status(error.message,true);}return;}
@@ -1153,18 +1173,18 @@ export function mountDirector(bridge,catalog,initial){
     });}else draft();}
   // Every room desk has its own Lift / Tilt timeline (desk-choreo.mjs): the open desk's clips are what the desk editor sees.
   const choreo=createChoreoTarget({realShot:()=>shot(),baseline:()=>filmShot()?effectiveDeskEdits(filmShot(),{}):null,roster:()=>bridge.ready()?bridge.stage().roomDesks?.()||[]:[],onChange:()=>{deskEditor.clearSelection();render();}});
-  const deskEditor=createDeskEditor({panel,timeline,bridge,shot:choreo.shot,choreo,time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,lengthen:(seconds,motion,message,at)=>resizeChapter(seconds,{motion,message,at}),focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();sceneProps.deselect();titleEditor.clear();if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
+  const deskEditor=createDeskEditor({panel,timeline,bridge,shot:choreo.shot,choreo:{...choreo,pick:id=>{if(id)deskSel.select(id,{announce:false});else deskSel.deselect();}},time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,lengthen:(seconds,motion,message,at)=>resizeChapter(seconds,{motion,message,at}),focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();sceneProps.deselect();deskSel.deselect();titleEditor.clear();if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
   const startPose=createStartPose({panel,shot,motion:()=>deskEditor.featuredMotion(),time:()=>playhead,seek:seekCamera,commit,status,ready:requireReady});
   // Render tab (film chapters only): Send = Export cut when this chapter has unexported edits, then a Render-request-*.json download.
   const downloadText=(name,text)=>{const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
   const renderRequest=createRenderRequest({panel,chapters:()=>filmChapters,shot,signature,unexported,status,escape,storage,download:downloadText,
     exportNow:async()=>{if(await fresh.guardExport(project,true,()=>{}))return null;clearTimeout(draftTimer);try{project=library.save(project);}catch{}const text=exportCut();renderPanel();return text;}});
   // Build tab: the selected room desk's materials, trim and accessories (desk-build-panel.mjs).
-  const deskBuild=createDeskBuildPanel({panel,shot,film:filmShot,commit,status,rerender:()=>renderPanel(),ready:()=>open&&bridge.ready()});
+  const deskBuild=createDeskBuildPanel({panel,shot,film:filmShot,commit,status,rerender:()=>renderPanel(),ready:()=>open&&bridge.ready(),selection:()=>deskSel.selected()});
   // Film titles: the TITLES lane, the Title inspector and the title overlay in the frame (titles-src.json beside the film list).
   const titleEditor=createTitleEditor({panel,timeline,shot,time:()=>playhead,seek:seekCamera,commit,status,render,renderTimeline,ready:requireReady,open:()=>open,
     showInspector:tab=>{if(!reveal(tab))showInspector(tab,false,!typing());},
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();},
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();deskSel.deselect();},
     snapDelta:({raw,edges,width,seconds,alt,exclude})=>{
       const tol=8/width*seconds;
       if(magnet&&!alt){let best=null;const all=snapTargets({titles:new Set([exclude])});for(const [t,name] of all)for(const e of edges){const delta=t-e,off=Math.abs(delta-raw);if(off<=tol&&(!best||off<best.off))best={delta,off,t,name};}if(best)return {delta:best.delta,snap:best};}
@@ -1342,14 +1362,14 @@ export function mountDirector(bridge,catalog,initial){
     if(event.key!=='Escape'||!open)return;event.preventDefault();event.stopImmediatePropagation();
     if(still.open){still.close();return;}
     if(picked()){clearPicks();groupStatus();return;}
-    if(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||titleEditor.selectedId())clearSelection();
+    if(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||deskSel.selected()||titleEditor.selectedId())clearSelection();
   }
   preview?.addEventListener('load',bindPreviewHistory);bindPreviewHistory();
   addEventListener('pagehide',()=>{deskEditor.stop();draft();});
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
   render();panel.hidden=timeline.hidden=true;
-  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;if(p)orbitBase=null;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{if(inspector==='build'&&open)renderPanel();sceneLights.applied();sceneProps.applied();floorRefl.applied();if(open){renderSceneProps(true);renderBranding(true);}},
+  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;if(p)orbitBase=null;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{if(inspector==='build'&&open)renderPanel();sceneLights.applied();sceneProps.applied();floorRefl.applied();deskSel.applied();if(open){renderSceneProps(true);renderSceneDesks(true);renderBranding(true);}},
     // Selection -> inspector home (HOMES): for lanes and tools outside this module (the Titles lane: reveal('title')).
     reveal,revealHomes:()=>({...structuredClone(HOMES),title:homeOf('title')})};
 }
