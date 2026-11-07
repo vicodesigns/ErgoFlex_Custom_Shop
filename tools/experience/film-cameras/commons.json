@@ -1765,5 +1765,14 @@
    ]
   }
  },
- "screenShift": 2
+ "screenShift": 2,
+ "accessoriesAdd": [
+  {
+   "id": "backpack-leather",
+   "role": "base-shelf",
+   "x": -280,
+   "z": 0,
+   "rotation": 15
+  }
+ ]
 }

@@ -430,6 +430,45 @@
    "materialColor": "#262e33",
    "hide": true,
    "note": "FP2: the parallel rule's tick marks"
+  },
+  {
+   "add": {
+    "asset": "decor-bamboo"
+   },
+   "id": "fp2bamboo",
+   "match": "^Added prop:decor-bamboo#fp2bamboo$",
+   "label": "Bamboo behind the bust",
+   "parent": "room",
+   "position": [
+    -3.5454,
+    0,
+    -2.3535
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.85,
+    0.85,
+    0.85
+   ],
+   "note": "FP2 planter repeat (notes-decor whole film 1): the room's second identical ergoflex-plant-2 (behind the bust, final hero frame) is hidden by the Director prop edit and replaced here with decor-bamboo (room frame: Room:creative is yawed 90 deg, so local (x, z) = (-world z, world x)). Hand-made, not a Director add, so the recolor below can follow it."
+  },
+  {
+   "match": "^Added prop:decor-bamboo#fp2bamboo$",
+   "recolor": [
+    {
+     "hue": [
+      50,
+      170
+     ],
+     "sScale": 0.55,
+     "l": 0.68
+    }
+   ],
+   "note": "FP2: the pack bamboo's bright lime atlas taken down to a deep sage so it sits with the room's sage, terracotta and white"
   }
  ],
  "screenShift": 4.7
