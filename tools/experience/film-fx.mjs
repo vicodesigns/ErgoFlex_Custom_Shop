@@ -28,6 +28,9 @@
 //     (scene-desks.mjs stations, never the featured desk: its pose is the motion model's) set to a height / tilt for the
 //     shot, through the app's own rig (rig.updatePose) and auto-stow (desk-auto-stow.mjs), restored after. tilt 65 at
 //     43.5 is the Custom Shop's 65° Storage Mode: the desktop's loose objects are put away or hidden as in Studio.
+//   sceneBranding:{room, artwork:{surfaces:{<surface>:{<layer>:{name, surface?, enabled?, x?, y?, scale?, rotation?}}}}}  the
+//     school stickers / logos of EVERY desk in the room (the featured one too): a sparse overlay on each desk's own artwork
+//     (experience/branding-edits.mjs, Director's Branding tab), through the scene desks' artwork rigs, restored after.
 //   ledColor:'#f19c00'  the LED colour for the shot (the app's colour picker), restored after
 //   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
 //   sceneGlobals:{environmentScale, exposure, exposureScale}  image-based ambient multiplier (or [[s, scale], …]), renderer
@@ -864,12 +867,14 @@ function installGlobals(shot) {
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
+  // School branding on every room desk (after the poses: a rig re-poses its artwork with it).
+  if (shot.sceneBranding) { active.branding = (await import('../../experience/branding-live.mjs')).installBranding(shot.sceneBranding, window); await active.branding.ready; }
   if (shot.deskObjects) {
     // The app's own object editor, as stage.mjs places the keyboard: select, change, deselect.
     const objects = api.sceneDesks?.objects, deg = THREE.MathUtils.radToDeg; active.desk.placed = [];
@@ -918,7 +923,7 @@ export async function install(shot) {
 // shape change re-captured the room: onSlow() ran first so the caller can hold the frame) or 'full' (a field
 // that needs install: the caller runs clear() + install()).
 // sceneEdits too (the Director's prop edits): the edits layer and everything chained after it re-install in place.
-const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits'];
+const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding'];
 const TAIL = ['tod', 'edits', 'lights', 'roomLight', 'roomSpill', 'lightEdits'];
 export async function update(shot, { onSlow } = {}) {
   if (!active) return 'full';
@@ -952,6 +957,11 @@ export async function update(shot, { onSlow } = {}) {
   if (gChanged('roomLight')) tail = Math.min(tail, 3);
   if ((gChanged('ledRoomSpill') || gChanged('ledWallGlow') || gChanged('ledFloorGlow')) && !(tail > 4 && active.roomSpill?.retune(g1))) tail = Math.min(tail, 4);
   if (changed('lightEdits')) tail = Math.min(tail, 5);
+  // sceneBranding (the Director's Branding tab) is independent of the lighting chain: re-applied on its own, in place.
+  if (changed('sceneBranding')) {
+    await active.branding?.restore(); active.branding = null;
+    if (shot.sceneBranding) { active.branding = (await import('../../experience/branding-live.mjs')).installBranding(shot.sceneBranding, window); await active.branding.ready; }
+  }
   const slow = globals || tail === 0; if (slow) onSlow?.();
   for (let i = TAIL.length - 1; i >= tail; i--) { active[TAIL[i]]?.restore(); active[TAIL[i]] = null; }
   if (globals && active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; active.globals = null; }
@@ -1026,6 +1036,7 @@ export function clear() {
   active.tod?.restore();
   clearDeskObjects(active.desk);
   active.finish?.restore();
+  active.branding?.restore();   // before the poses go back: it only swaps the desks' artwork
   active.deskPoses?.restore();
   active = null;
 }
