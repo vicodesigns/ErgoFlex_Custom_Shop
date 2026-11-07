@@ -5,7 +5,8 @@
 // "Desk" picker (TEMP, listed from the stage's room desks); with a selection the picker is hidden.
 import {accessory} from '../catalog.mjs';
 import {SLOTS,slotLabel,naturalSlot,slotless,woodSwatches,baseSwatches,trimSwatches,presetBuilds,presetBuild,cleanDeskBuild,cleanBuildAccessories,
-  catalogAccessories,roomDesks,readDesk,effectiveDeskEdits,withDeskBuild,hasBuildTab,isBrandingRoom} from './desk-build.mjs';
+  catalogAccessories,roomDesks,readDesk,withDeskBuild,hasBuildTab,isBrandingRoom} from './desk-build.mjs';
+import {effectiveDeskEdits} from './desk-edits.mjs';
 import {presetSwatch} from './desk-versions.mjs';
 
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

@@ -873,7 +873,7 @@ export async function install(shot) {
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
-  if (shot.sceneDeskEdits?.length) active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api);
+  if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
   if (shot.deskObjects) {
     // The app's own object editor, as stage.mjs places the keyboard: select, change, deselect.
     const objects = api.sceneDesks?.objects, deg = THREE.MathUtils.radToDeg; active.desk.placed = [];
@@ -964,7 +964,7 @@ export async function update(shot, { onSlow } = {}) {
   // sceneDeskEdits (the Director's desk edits): restore and re-apply on the room's desks, in place.
   if (changed('sceneDeskEdits')) {
     active.deskEdits?.restore(); active.deskEdits = null;
-    if (shot.sceneDeskEdits?.length) active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api);
+    if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
   }
   if (globals) installGlobals(shot);
   if (status) {

@@ -11,6 +11,7 @@
 // shot.deskEdits absent: the film shot's own sceneDeskEdits (an earlier Export cut, imported by
 // build-round8-director.py as director-camera 'desks') are the Director's edits. Present (even []): they replace those.
 import {clampStartPose} from './start-pose.mjs';
+import {cleanDeskBuild} from './desk-build.mjs';
 export const DESK_SIZES=['48x30','60x30'];
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 const r3=v=>Math.round(v*1e3)/1e3;
@@ -26,7 +27,7 @@ export function cleanDeskEdit(e){
   const i=e.initial;if(i&&finite(i.height)&&finite(i.tilt))out.initial=clampStartPose(i,out.size||'60x30',out.size?'height':'height');
   // DeskChoreo / DeskBuild own their cleaning; here they pass through when sane.
   if(Array.isArray(e.clips)&&e.clips.length&&e.clips.length<=200&&e.clips.every(c=>c&&typeof c==='object')&&jsonSize(e.clips)<=200000)out.clips=structuredClone(e.clips);
-  if(e.build&&typeof e.build==='object'&&!Array.isArray(e.build)&&jsonSize(e.build)<=50000)out.build=structuredClone(e.build);
+  const build=cleanDeskBuild(e.build);if(build)out.build=build;   // desk-build.mjs
   return Object.keys(out).some(k=>k!=='desk'&&k!=='name')?out:null;
 }
 export function cleanDeskEdits(v={}){

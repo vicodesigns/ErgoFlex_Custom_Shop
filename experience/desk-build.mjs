@@ -47,20 +47,6 @@ export function cleanDeskBuild(b){
   const acc=cleanBuildAccessories(b.accessories);if(acc)out.accessories=acc;
   return Object.keys(out).length?out:null;
 }
-// shot.deskEdits as the cut keeps it. DeskSel / DeskChoreo own size, pose, initial and clips: every other key of an entry
-// is carried along untouched (JSON copy), `build` is cleaned here, and a build-only entry needs only `desk`.
-export function cleanDeskEdits(v={}){
-  if(!Array.isArray(v.deskEdits))return {};
-  const by=new Map();
-  for(const e of v.deskEdits.slice(0,40)){
-    if(!e||typeof e!=='object'||typeof e.desk!=='string'||!DESK_ID.test(e.desk))continue;
-    let copy;try{copy=JSON.parse(JSON.stringify(e));}catch{continue;}
-    const build=cleanDeskBuild(e.build);delete copy.build;if(build)copy.build=build;
-    if(typeof copy.name==='string')copy.name=copy.name.slice(0,100);
-    by.set(e.desk,copy);
-  }
-  return {deskEdits:[...by.values()]};
-}
 export const buildOf=(shot,desk)=>shot?.deskEdits?.find(e=>e.desk===desk)?.build||null;
 // shot.deskEdits with this desk's build replaced (null: removed; an entry left with nothing else goes too).
 export function withDeskBuild(list,desk,name,build){
@@ -71,12 +57,6 @@ export function withDeskBuild(list,desk,name,build){
   if(!bare)next.push(entry);
   return next.sort((a,b)=>a.desk.localeCompare(b.desk));
 }
-
-// The chapter's desks as the film shot carries them (film.sceneDeskEdits: an earlier Export cut, imported) and as the
-// Director holds them now (shot.deskEdits, which replaces the film's once it is present, even as []).
-export const effectiveDeskEdits=(film,shot)=>structuredClone(Array.isArray(shot?.deskEdits)?shot.deskEdits:Array.isArray(film?.sceneDeskEdits)?film.sceneDeskEdits:[]);
-// For film-render.mjs / film-chapters.mjs: the film shot's sceneDeskEdits with the Director's on top ({} = as the film has them).
-export const mergeDeskEdits=(film,shot)=>Array.isArray(shot?.deskEdits)?{sceneDeskEdits:structuredClone(shot.deskEdits)}:{};
 
 // ---- catalog views for the panel
 export const woodSwatches=()=>PRODUCT_CONFIG.woodFinishes.map(f=>({name:f.name,color:f.color}));

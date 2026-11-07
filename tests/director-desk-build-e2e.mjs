@@ -93,10 +93,21 @@ try{
 
   // ---- undo
   await click('#director-panel [data-action=undo]');
-  const undone=await until(async()=>{const d=await stageDesk(DESK);return d.accessories.includes('logitech-mx-master')?d:null;},'undo brings the mouse back');
+  const undone=await until(async()=>{const d=await stageDesk(DESK);return d.accessories.includes('logitech-mx-master')&&d.placed['logitech-mx-master']&&d.placed['ergo-keyboard']?.role==='base-shelf'?d:null;},'undo brings the mouse back').catch(()=>null);
   check(!!undone&&undone.placed['ergo-keyboard']?.role==='base-shelf','Undo: the mouse is back, the keyboard stays on the base shelf');
   await click('#director-panel [data-action=redo]');
   check(!!await until(async()=>{const d=await stageDesk(DESK);return !d.accessories.includes('logitech-mx-master')?d:null;},'redo removes it again'),'Redo: the mouse is removed again');
+
+  // ---- reload keeps it (the draft: an exported cut is the film's, so the draft is dropped once it is exported)
+  await page.reload();
+  await page.waitForFunction(()=>location.pathname==='/experience/'&&/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:300000});
+  await wait(3000);
+  await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab=build]')?.click());await wait(1500);
+  const re=await until(async()=>{const d=await stageDesk(DESK);return d&&d.style.woodFinish==='Coast Navy'&&d.placed['drawing-tablet']?.role==='lower-shelf'?d:null;},'the reloaded stage has the build',90000).catch(()=>null);
+  check(!!re,'reload: the stage desk still has Coast Navy and the tablet on the second shelf'+(re?'':' '+JSON.stringify(await stageDesk(DESK))));
+  check(!!re&&re.placed['ergo-keyboard']?.role==='base-shelf'&&!re.accessories.includes('logitech-mx-master'),'reload: keyboard on the base shelf, mouse still removed');
+  check((await page.$$eval('#director-panel [data-build-pick=wood][aria-pressed=true]',b=>b.map(x=>x.title))).join()==='Coast Navy','reload: the Build tab shows Coast Navy pressed');
+  await wait(1500);await page.screenshot({path:path.join(shots,'build-reloaded.png')});
 
   // ---- export
   const cdp=await page.createCDPSession();await cdp.send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloads});
@@ -107,17 +118,6 @@ try{
   const exSlots=Object.fromEntries((entry?.build?.accessories||[]).map(a=>[a.id,a.slot]));
   check(exSlots['drawing-tablet']==='lower-shelf'&&exSlots['ergo-keyboard']==='base-shelf'&&!('logitech-mx-master' in exSlots),'Export cut: build.accessories carries the slots '+JSON.stringify(exSlots));
   check(entry?.name==='Medication administration','Export cut: the desk name is kept as a label');
-
-  // ---- reload keeps it
-  await page.reload();
-  await page.waitForFunction(()=>location.pathname==='/experience/'&&/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:300000});
-  await wait(3000);
-  await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab=build]')?.click());await wait(1500);
-  const re=await until(async()=>{const d=await stageDesk(DESK);return d&&d.style.woodFinish==='Coast Navy'&&d.placed['drawing-tablet']?.role==='lower-shelf'?d:null;},'the reloaded stage has the build',90000).catch(()=>null);
-  check(!!re,'reload: the stage desk still has Coast Navy and the tablet on the second shelf');
-  check(!!re&&re.placed['ergo-keyboard']?.role==='base-shelf'&&!re.accessories.includes('logitech-mx-master'),'reload: keyboard on the base shelf, mouse still removed');
-  check((await page.$$eval('#director-panel [data-build-pick=wood][aria-pressed=true]',b=>b.map(x=>x.title))).join()==='Coast Navy','reload: the Build tab shows Coast Navy pressed');
-  await wait(1500);await page.screenshot({path:path.join(shots,'build-reloaded.png')});
 
   // ---- reset
   await click('#director-panel [data-build-reset]');
