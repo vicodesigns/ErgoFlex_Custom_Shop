@@ -102,7 +102,10 @@
        0
       ]
      ],
-     "roll": 180
+     "x": 0,
+     "y": -66,
+     "z": 300,
+     "rotation": 180
     },
     {
      "id": "artist-easel",
@@ -411,7 +414,7 @@
    "match": "^Artist painting$",
    "path": "Accessory:artist-easel",
    "material": {
-    "mapRotation": 0
+    "mapRotation": 180
    }
   }
  ],
