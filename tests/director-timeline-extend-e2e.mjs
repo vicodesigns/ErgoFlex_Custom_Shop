@@ -35,6 +35,8 @@ try{
 
   // ---- (a) playhead at the end -> Tilt lands there, the chapter grows, earlier items keep their seconds
   await seek(page,end);
+  // The hero chapter switches desk versions at the end (desk-versions.mjs): let it settle before adding.
+  await page.waitForFunction(()=>!/Switching the desk/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:60000});await wait(800);
   await page.click('#director-timeline [data-desk-add="tilt"]');await wait(2000);
   const s1=await snap(),tilt=s1?.clips.find(c=>!s0?.clips.some(o=>o.id===c.id)&&c.lane==='tilt');
   check(!!tilt,'a new tilt clip exists');
