@@ -15,6 +15,7 @@ import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './fil
 import {createFilmFresh} from './film-fresh.mjs';
 import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS} from './timeline-ui.mjs';
 import {createDeskEditor} from './desk-editor.mjs';
+import {createStartPose} from './start-pose.mjs';
 import {createTitleEditor,loadTitleSource} from './title-editor.mjs';
 import {score} from './score.mjs';
 import {makeOpeningShot} from './opening.mjs';
@@ -547,6 +548,7 @@ export function mountDirector(bridge,catalog,initial){
       const one=k=>{
         if(k==='timeOfDay'){const ka=x.timeOfDay||[],kb=y.timeOfDay||[];if(ka.length===kb.length&&!kb.some(k=>{const o=ka.find(o=>o.id===k.id);return o&&o.at!==k.at;})){const m=kb.find(k=>{const o=ka.find(o=>o.id===k.id);return o&&o.mode!==k.mode;});if(m)return `time-of-day key at ${r2(m.at)} s set to ${roomModes().find(r=>r.id===m.mode)?.label||m.mode}`;}return listDiff(ka,kb,'time-of-day key',k=>k.at,r2);}
         if(k==='camera')return listDiff(x.camera?.keys,y.camera?.keys,'camera view',k=>k.time,v=>r2(v*y.seconds));
+        if(k==='motion'&&JSON.stringify(x.motion?.clips)===JSON.stringify(y.motion?.clips)&&JSON.stringify(x.motion?.initial)!==JSON.stringify(y.motion?.initial))return 'starting position';
         if(k==='motion')return listDiff(x.motion?.clips,y.motion?.clips,'desk move',c=>c.start,r2);
         return (SHOT_FIELDS[k]||k)+' changed';
       };
@@ -653,6 +655,7 @@ export function mountDirector(bridge,catalog,initial){
       <div class="director-grid"><label>Room size / layout<select name="layout" ${room?.layouts.length?'':'disabled'}>${room?.layouts.length?room.layouts.map(l=>option(l.id,l.name,s.layout)).join(''):'<option>Product stage</option>'}</select></label><label>Time / activity${timeOfDay()?' <small>(driven by the Time of day lane)</small>':''}<select name="mode" ${modes.length&&!timeOfDay()?'':'disabled'} ${timeOfDay()?'title="The Time of day lane in Lighting drives the room\'s daypart"':''}>${modes.length?modes.map(m=>option(m.id,m.label,s.mode)).join(''):'<option>Studio</option>'}</select></label></div>
       <label>Feature / animation<select name="kind">${KINDS.map(([id,name])=>option(id,name,s.kind)).join('')}</select></label>
       <div class="director-grid"><label>Desk build<select name="preset">${PRESET_IDS.map(id=>option(id,({occ:'Orange Coast College',hbhs:'HBHS Oilers',library:'Humboldt / Library'})[id]||id[0].toUpperCase()+id.slice(1),s.preset)).join('')}</select></label><label>Desk width<select name="size">${option('48x30','48″',s.size)}${option('60x30','60″',s.size)}</select></label></div>
+      ${startPose.panel()}
       <div class="director-actions"><button data-action="load">Load / reset shot</button><button data-action="chapter-toggle" class="primary">▶ Play chapter</button><button data-action="preview">↻ Restart chapter</button></div>
       <div class="bake-controls"><div class="director-actions"><button data-action="bake">Bake chapter</button><button data-action="bake-all">Bake full intro · 1080p</button><button data-action="bake-download">Download 3D video</button></div><label class="director-check"><input type="checkbox" name="baked-playback" checked>Use baked playback when available</label><p data-bake-summary role="status" class="director-hint"></p><p class="director-hint">Bake renders every frame in advance. Clips stay in this browser; editing the chapter requires a new bake.</p></div>
       </div><div data-inspector-page="camera"><h3>Camera keyframes</h3><p class="director-hint">Drag the scene to orbit. Scroll or pinch to zoom. Right-drag to pan. Then capture a view.</p>
@@ -1117,6 +1120,7 @@ export function mountDirector(bridge,catalog,initial){
       }
     });}else draft();}
   const deskEditor=createDeskEditor({panel,timeline,bridge,shot,time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();sceneProps.deselect();titleEditor.clear();if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
+  const startPose=createStartPose({panel,shot,motion:()=>deskEditor.motion(),time:()=>playhead,seek:seekCamera,commit,status,ready:requireReady});
   // Film titles: the TITLES lane, the Title inspector and the title overlay in the frame (titles-src.json beside the film list).
   const titleEditor=createTitleEditor({panel,timeline,shot,time:()=>playhead,seek:seekCamera,commit,status,render,renderTimeline,ready:requireReady,open:()=>open,
     showInspector:tab=>{if(!reveal(tab))showInspector(tab,false,!typing());},

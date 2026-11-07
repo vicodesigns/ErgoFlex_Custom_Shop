@@ -316,3 +316,16 @@
 #director-panel .light-section>summary>span,#director-panel .floor-section>summary>span{flex:none;white-space:nowrap}
 #director-panel .light-section>summary small,#director-panel .floor-section>summary small{flex:1}
 #director-panel .floor-section .floor-inspector{margin:4px 0;padding:4px 0;border:0;background:transparent}
+
+/* ---------- Chapter tab: Starting position (start-pose.mjs) ---------- */
+#director-panel .start-pose-head{display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 4px;font-size:var(--df-fs-sm);color:var(--df-text-3)}
+#director-panel .start-pose-head output{font-family:var(--df-mono);font-size:var(--df-fs-md);color:var(--df-accent-text)}
+#director-panel .start-pose-row{display:grid;grid-template-columns:48px minmax(0,1fr) 68px 14px;align-items:center;gap:8px;margin:4px 0}
+#director-panel .start-pose-row label{margin:0;color:var(--df-text-2)}
+#director-panel .start-pose-row input[type=range]{width:100%;margin:0}
+#director-panel .start-pose-row input[type=number]{width:100%;min-width:0;font-family:var(--df-mono);text-align:right}
+#director-panel .start-pose-unit{font-size:var(--df-fs-sm);color:var(--df-text-3)}
+#director-panel .start-pose-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:6px 0}
+#director-panel .start-pose-presets.start-pose-forms{grid-template-columns:repeat(3,minmax(0,1fr))}
+#director-panel .start-pose-presets button{min-width:0;padding:4px 6px}
+#director-panel .start-pose-presets [data-start-pose=current]{border-style:dashed}

@@ -13,6 +13,8 @@
       - motion clips overridden by id from the import ('clips'): fields id lane kind start duration easing label
         target value direction path; clips he added are kept, clips he deleted are dropped.
       - ledStatus re-timed for the clips whose start/duration changed (or that he deleted), see retime_status().
+      - motion.initial height / tilt = the import's 'initial' (the Chapter tab's Starting position; x / z / yaw kept),
+        see start_pose(); a lift / tilt move that now runs the other way swaps its status light's colour pair.
       Writes the chapter's shots/NN.json (oilers has none: review-cut only), its review-cut.json entry and, for hero,
       every sub-shot in shots/13-subshots.json (renderRange kept; the last one follows a length change). Files are
       only rewritten when their content changes, so chapters without a director file are left byte-for-byte alone.
@@ -119,7 +121,21 @@ def directions(clips, initial):
     return out
 
 
-def retime_status(events, old_clips, new_clips, old_T, new_T, initial, log):
+def start_pose(initial, mine, log):
+    """The Chapter tab's Starting position (Director's motion.initial height / tilt) over the film's start pose; its
+    wheels start (x, z, yaw) is kept. Clips are untouched: each still runs from the pose before it to its target."""
+    out = dict(initial)
+    for k, lo, hi in (('height', 28, 52.5), ('tilt', -5, 65)):
+        v = mine.get(k)
+        if isinstance(v, (int, float)) and not isinstance(v, bool): out[k] = round(min(hi, max(lo, float(v))), 3)
+    for k in ('height', 'tilt'):
+        if isinstance(out.get(k), float) and out[k] == int(out[k]): out[k] = int(out[k])
+    if (out.get('height'), out.get('tilt')) != (initial.get('height'), initial.get('tilt')):
+        log(f'    starting position {initial.get("height")}" / {initial.get("tilt")} deg -> {out["height"]}" / {out["tilt"]} deg')
+    return out
+
+
+def retime_status(events, old_clips, new_clips, old_T, new_T, initial, log, new_initial=None):
     """Status lights after his movement edits. An event belongs to the clip on its lane (lift-*, tilt-*, wheels) that
     is running when it starts (the one starting with it first, else the latest started). For a clip he moved or
     stretched, its events map linearly from the old span to the new one (commons' one drive keeps its mode-6 ->
@@ -133,7 +149,7 @@ def retime_status(events, old_clips, new_clips, old_T, new_T, initial, log):
     end = lambda c: c['start'] + c['duration']
     changed = {i for i, c in old_by.items() if i not in new_by or abs(new_by[i]['start'] - c['start']) > 1e-4
                or abs(new_by[i]['duration'] - c['duration']) > 1e-4}
-    d_old, d_new = directions(old_clips, initial), directions(new_clips, initial)
+    d_old, d_new = directions(old_clips, initial), directions(new_clips, initial if new_initial is None else new_initial)
     reversed_ = {i for i in d_old if i in d_new and d_old[i] != d_new[i]}
     if not events or (not changed and not reversed_ and abs(new_T - old_T) < 1e-6): return events
     starts = [e['at'] for e in events]
@@ -183,18 +199,23 @@ def apply(n, cid, f, dc, log):
     if bad: sys.exit(f'{cid}: camera keys at {bad} lie outside the {new_T} s chapter')
     camera = bake(new_T, plan)
     motion, status = src.get('motion'), src.get('ledStatus')
+    old_initial = copy.deepcopy((motion or {}).get('initial'))
     if 'clips' in dc and (motion or dc['clips']):
         motion = dict(motion or {'version': 2, 'initial': {'height': 30, 'tilt': 0, 'x': 0, 'z': 0, 'yaw': 0}})
         old_clips = motion.get('clips') or []
         motion['clips'] = merge_clips(old_clips, dc['clips'])
         late = [c['id'] for c in motion['clips'] if c['start'] + c['duration'] > new_T + 1e-4]
         if late: sys.exit(f'{cid}: clips {late} run past the {new_T} s chapter')
-        if status: status = retime_status(status, old_clips, motion['clips'], old_T, new_T, motion.get('initial'), log)
+        if isinstance(dc.get('initial'), dict) and motion.get('initial'):
+            motion['initial'] = start_pose(motion['initial'], dc['initial'], log)
+        if status: status = retime_status(status, old_clips, motion['clips'], old_T, new_T, old_initial, log, motion.get('initial'))
         gone = sorted({c['id'] for c in old_clips} - {c['id'] for c in motion['clips']})
         added = sorted({c['id'] for c in motion['clips']} - {c['id'] for c in old_clips})
         moved = [c['id'] for c in old_clips if c['id'] not in gone and next(x for x in motion['clips'] if x['id'] == c['id']) != c]
         if gone or added or moved: log(f'    clips: changed {moved or "-"}, deleted {gone or "-"}, added {added or "-"} (added clips get no status light)')
     elif 'clips' not in dc: log('    import has no clips: motion and status lights left as they are')
+    if motion is not None and isinstance(dc.get('initial'), dict) and not ('clips' in dc and (src.get('motion') or dc['clips'])):
+        motion = dict(motion); motion['initial'] = start_pose(motion.get('initial') or {'height': 30, 'tilt': 0, 'x': 0, 'z': 0, 'yaw': 0}, dc['initial'], log)
 
     def put(s, seconds):
         s['seconds'] = seconds; s['cameraPlan'] = copy.deepcopy(plan); s['camera'] = copy.deepcopy(camera)
@@ -513,6 +534,10 @@ def run_import(export):
     for k in GLOBAL_FIELDS:
         if k in (shot.get('sceneGlobals') or {}): lighting[k] = shot['sceneGlobals'][k]
     dc = load(director_file(cid))
+    # Starting position (Chapter tab): the export's motion.initial height / tilt; an export without motion keeps the earlier import's.
+    start = (shot.get('motion') or {}).get('initial')
+    if isinstance(start, dict) and any(k in start for k in ('height', 'tilt')): dc['initial'] = {k: start[k] for k in ('height', 'tilt') if k in start}
+    elif 'initial' in before: dc['initial'] = before['initial']
     if lighting: dc['lighting'] = lighting
     else: dc.pop('lighting', None)
     # Props: the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
