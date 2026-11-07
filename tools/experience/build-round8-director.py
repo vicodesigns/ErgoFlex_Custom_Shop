@@ -41,6 +41,10 @@
       ones, each marked director: true, replacing the earlier director: true entries; the builders' and
       film-cameras sceneEditsAdd entries are never touched, and the Director's entries are offsets from the film's
       placement, so they keep what Vico saw however the hand-made edits for that prop change.
+      Desks: an export whose shot has 'deskEdits' (Director Mode's Desks: size, place and starting height / tilt of the
+      room's other ErgoFlex desks, experience/desk-edits.mjs; later per-desk moves and builds) keeps them in
+      director-camera-<id>.json as 'desks' (an export without the field keeps the earlier import's). The pass writes them
+      onto the chapter's film shot as 'sceneDeskEdits' (tools/experience/film-desk-edits.mjs installs them).
 """
 import base64, copy, glob, hashlib, html, json, os, re, subprocess, sys, tempfile, time
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the repo
@@ -346,6 +350,46 @@ def apply_props(cid, f, props):
     return wrote
 
 
+DESK_ID = re.compile(r'^[a-z][a-z0-9-]{0,79}$')
+DESK_SIZES = ('48x30', '60x30')
+
+
+def clean_desks(desks):
+    """Director Mode's desk edits (experience/desk-edits.mjs cleanDeskEdit) as the film shot's sceneDeskEdits. Size, pose and
+    initial are checked here; clips (DeskChoreo) and build (DeskBuild) pass through as the Director cleaned them."""
+    num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool) and x == x and abs(x) != float('inf')
+    out = {}
+    for e in desks if isinstance(desks, list) else []:
+        if not isinstance(e, dict) or not isinstance(e.get('desk'), str) or not DESK_ID.match(e['desk']): continue
+        d = {'desk': e['desk']}
+        if isinstance(e.get('name'), str) and 0 < len(e['name']) <= 80: d['name'] = e['name']
+        if e.get('size') in DESK_SIZES: d['size'] = e['size']
+        p = e.get('pose')
+        if isinstance(p, dict) and all(num(p.get(k)) for k in ('x', 'z', 'yaw')): d['pose'] = {k: p[k] for k in ('x', 'z', 'yaw')}
+        i = e.get('initial')
+        if isinstance(i, dict) and all(num(i.get(k)) for k in ('height', 'tilt')): d['initial'] = {k: i[k] for k in ('height', 'tilt')}
+        if isinstance(e.get('clips'), list) and e['clips'] and all(isinstance(c, dict) for c in e['clips']): d['clips'] = copy.deepcopy(e['clips'])
+        if isinstance(e.get('build'), dict) and e['build']: d['build'] = copy.deepcopy(e['build'])
+        if any(k not in ('desk', 'name') for k in d): out[d['desk']] = d
+    return list(out.values())
+
+
+def apply_desks(cid, f, desks):
+    """The chapter's film shot gets sceneDeskEdits (the Director's desk edits); none removes the field."""
+    mine = clean_desks(desks)
+    paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
+    wrote = []
+    for p in paths:
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') != cid: continue
+            if mine: s['sceneDeskEdits'] = copy.deepcopy(mine)
+            else: s.pop('sceneDeskEdits', None)
+        if dump(p, d): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
 def run_pass():
     for n, cid, f in chapters():
         p = director_file(cid)
@@ -355,6 +399,9 @@ def run_pass():
         if os.path.exists(p) and 'props' in load(p):
             w = apply_props(cid, f, load(p)['props'])
             print(f'ch{n:02d} {cid}: Director props ({len(load(p)["props"])}) -> {", ".join(w) or "no change"}')
+        if os.path.exists(p) and 'desks' in load(p):
+            w = apply_desks(cid, f, load(p)['desks'])
+            print(f'ch{n:02d} {cid}: Director desks ({len(clean_desks(load(p)["desks"]))}) -> {", ".join(w) or "no change"}')
     for n, cid, f in chapters():
         if cid == 'awaken': continue
         p = director_file(cid)
@@ -557,7 +604,11 @@ def run_import(export):
     # Props: the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
     if isinstance(shot.get('propEdits'), list): dc['props'] = [{k: v for k, v in e.items() if k != 'director'} for e in clean_props(shot['propEdits'])]
     elif 'props' in before: dc['props'] = before['props']
+    # Desks (the room's other ErgoFlex desks): the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
+    if isinstance(shot.get('deskEdits'), list): dc['desks'] = clean_desks(shot['deskEdits'])
+    elif 'desks' in before: dc['desks'] = before['desks']
     dump(director_file(cid), dc)
+    if 'desks' in dc: print(f'{cid}: Director desks -> {len(dc["desks"])} desk edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'props' in dc: print(f'{cid}: Director props -> {len(dc["props"])} prop edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if isinstance(shot.get('filmTitles'), list):
         lines = []; wrote = import_titles(cid, shot['filmTitles'], float(shot.get('seconds') or dc['seconds']), lines.append)
