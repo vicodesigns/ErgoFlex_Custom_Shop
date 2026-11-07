@@ -45,5 +45,8 @@ export function liveFilmShot(film,shot){
   if(lit.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...lit.sceneGlobals};
   if(lit.timeOfDay)next.timeOfDay=lit.timeOfDay;
   delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergeBranding(film,shot),mergeDeskEdits(film,shot));
+  // Room desks' lift / tilt clips are the live stage's (it samples shot.deskEdits, else the film's sceneDeskEdits; player.mjs):
+  // the film layer keeps the rest of a desk edit (size, pose, build) and does not play the clips a second time.
+  if(next.sceneDeskEdits)next.sceneDeskEdits=next.sceneDeskEdits.map(e=>({...e,clips:[]}));
   return next;
 }

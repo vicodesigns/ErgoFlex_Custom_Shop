@@ -8,6 +8,7 @@ import {cleanLighting} from './film-lighting.mjs';
 import {cleanSceneLights} from './light-edits.mjs';
 import {cleanPropEdits} from './prop-edits.mjs';
 import {cleanBrandingEdits} from './branding-edits.mjs';
+import {cleanDeskChoreo} from './desk-choreo.mjs';
 import {cleanDeskEdits} from './desk-edits.mjs';
 import {cleanFilmTitles} from './film-titles.mjs';
 export const CUTS_KEY='ergoflex.clientCuts.v1';
@@ -46,6 +47,8 @@ export function cleanShot(v={},catalog){
   if(keys.length)shot.camera={keys};else if(from||to)shot.camera={...(from?{from}:{}),...(to?{to}:{} )};
   // Film lighting edited in the Director (absent until then).
   Object.assign(shot,cleanLighting(v),cleanSceneLights(v),cleanPropEdits(v),cleanBrandingEdits(v),cleanDeskEdits(v));
+  // Clips: lift / tilt only, valid and non-overlapping (desk-choreo.mjs).
+  if(shot.deskEdits)shot.deskEdits=cleanDeskChoreo({deskEdits:shot.deskEdits},shot.seconds).deskEdits;
   // Film titles edited in the Director (absent until then): copy, timing, shadow shape.
   const titles=cleanFilmTitles(v.filmTitles,shot.seconds);if(titles?.length)shot.filmTitles=titles;
   return shot;

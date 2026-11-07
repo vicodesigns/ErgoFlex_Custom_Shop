@@ -8,6 +8,7 @@
 //   entry = {edit, record, was}   edit = the cleaned deskEdits entry; record = the api.sceneDesks record; was = restore data
 import {seedSceneDeskSize} from '../../scene-desk-data.mjs';
 import {clampStartPose} from '../../experience/start-pose.mjs';
+import {createDeskChoreo} from '../../experience/desk-choreo.mjs';
 const clone = v => JSON.parse(JSON.stringify(v));
 
 // Rebuild a (not featured) record with another saved state: the model of its size, its dressing carried over.
@@ -54,11 +55,12 @@ export function applyDesk(ctx, entry) {
   // accessories load a moment later: entry.pending settles when they are in (installDeskEdits().ready).
   if (edit.build) entry.pending = import('../../experience/desk-build.mjs').then(m => m.applyBuild(ctx.api, r.id, edit.build)).catch(e => console.warn('[film-fx] desk build ' + r.id, e));
 }
-// CLIPS HOOK (DeskChoreo): edit.clips sampled at the chapter time -> setRecordPose / pose for this desk.
+// CLIPS HOOK (DeskChoreo): edit.clips sampled at the chapter time (desk-choreo.mjs createDeskChoreo, in installDeskEdits)
+// -> the desk's rig, held to its size's lift / tilt limits. Nothing per desk is left to do here.
 export function frameDesk(ctx, entry, seconds) {}
 
 export function installDeskEdits(list, api) {
-  const desks = api.sceneDesks, ctx = { api, desks }, entries = [], missing = [];
+  const desks = api.sceneDesks, ctx = { api, desks }, entries = [], missing = [], choreo = createDeskChoreo(api);
   for (const edit of list || []) {
     const r = desks?.records?.get(edit.desk);
     if (!r || r.id === desks.selected || r.product) { missing.push(edit.desk); continue; }
@@ -69,11 +71,13 @@ export function installDeskEdits(list, api) {
     try { applyDesk(ctx, entry); entries.push(entry); } catch (error) { console.warn('[film-fx] sceneDeskEdits ' + edit.desk, error); entries.push(entry); }
   }
   if (missing.length) console.warn('[film-fx] sceneDeskEdits: no other room desk ' + missing.join(', '));
+  choreo.set(entries.map(e => e.edit));
   return {
     desks: entries.map(e => e.record.id), missing,
     ready: Promise.all(entries.map(e => e.pending).filter(Boolean)),
-    frame(seconds) { for (const e of entries) frameDesk(ctx, e, seconds); },
+    frame(seconds) { for (const e of entries) frameDesk(ctx, e, seconds); choreo.apply(seconds); },
     restore() {
+      choreo.restore();   // each desk back to its start pose first, then the rest of the edit below
       for (const e of entries.reverse()) {
         const r = e.record; if (desks.records.get(r.id) !== r) continue;
         if (e.edit.build) import('../../experience/desk-build.mjs').then(m => m.restoreBuild(api, r.id));   // before a size rebuild: the room's own style / accessories back
