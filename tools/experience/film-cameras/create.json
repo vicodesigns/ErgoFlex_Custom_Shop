@@ -416,6 +416,20 @@
    "material": {
     "mapRotation": 180
    }
+  },
+  {
+   "match": "",
+   "path": "Accessory:drafting-kit",
+   "materialColor": "#bbc1c1",
+   "hide": true,
+   "note": "FP2: the kit's own silver parallel rule (z 235 mm) sat 65 mm behind the easel rail (z 300) and rendered as a second dark bar across the board's front (render PC, 12.4 s). The rail is the drafting bar now; the kit's rule and its tick marks are hidden for the film."
+  },
+  {
+   "match": "",
+   "path": "Accessory:drafting-kit",
+   "materialColor": "#262e33",
+   "hide": true,
+   "note": "FP2: the parallel rule's tick marks"
   }
  ],
  "screenShift": 4.7

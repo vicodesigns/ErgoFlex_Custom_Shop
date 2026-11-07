@@ -143,6 +143,13 @@
    "z": 191.2,
    "rotation": 141,
    "scale": 100
+  },
+  {
+   "id": "backpack-leather",
+   "role": "base-shelf",
+   "x": 320,
+   "z": 20,
+   "rotation": -18
   }
  ],
  "screensAdd": [

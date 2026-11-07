@@ -30,7 +30,7 @@ print(json.dumps([once, twice]))`;
 const shot = {id: 'rise', seconds: 16, accessories: {add: [{id: 'ergoflex-thermal-cup', x: -255, z: 115}]},
   screens: [{target: 'main-landscape', src: 'a.mp4'}, {target: 'main-portrait', src: 'b.mp4'}], sceneEdits: [{match: 'x', hide: true, director: true}]};
 const [once, twice] = JSON.parse(execFileSync('python3', ['-c', PY, path.join(EXP, 'build-round8-cameras.py'), path.join(EXP, 'film-cameras/rise.json'), JSON.stringify(shot)], {encoding: 'utf8'}));
-assert.deepEqual(once.accessories.add.map(a => a.id), ['ergoflex-thermal-cup', 'ergoflex-phone'], 'the cup stays, the phone joins');
+assert.deepEqual(once.accessories.add.map(a => a.id), ['ergoflex-thermal-cup', 'ergoflex-phone', 'backpack-leather'], 'the cup stays, the phone and the base-shelf backpack (final pass) join');
 assert.deepEqual(once.screens.map(s => s.target), ['main-landscape', 'main-portrait', 'phone'], 'monitor clips stay, the phone joins');
 assert.deepEqual(twice.accessories, once.accessories, 're-runs do not duplicate the phone');
 assert.deepEqual(twice.screens, once.screens, 're-runs do not duplicate its screen');
