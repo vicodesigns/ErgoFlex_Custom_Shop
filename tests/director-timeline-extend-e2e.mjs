@@ -35,7 +35,7 @@ try{
 
   // ---- (a) playhead at the end -> Tilt lands there, the chapter grows, earlier items keep their seconds
   await seek(page,end);
-  await page.click('#director-timeline [data-desk-add="tilt"]');await wait(1200);
+  await page.click('#director-timeline [data-desk-add="tilt"]');await wait(2000);
   const s1=await snap(),tilt=s1?.clips.find(c=>!s0?.clips.some(o=>o.id===c.id)&&c.lane==='tilt');
   check(!!tilt,'a new tilt clip exists');
   check(tilt&&near(tilt.start,end),`the tilt starts at the playhead (${tilt?.start}s, not 0)`);
@@ -76,6 +76,15 @@ try{
   check(near(b3.seconds,b1.seconds,.05),`Undo after the shorten returns to ${b1.seconds}s (${b3.seconds}s)`);
   await undo();b3=await snap();
   check(near(b3.seconds,b0.seconds,.05)&&b3.keys.length===b0.keys.length,`Undo after the lengthen returns to ${b0.seconds}s (${b3.seconds}s, ${b3.keys.length} camera views)`);
+
+  // ---- (d) dragging a block past the end grows the chapter and keeps the block's length
+  const d0=await snap(),lastClip=[...d0.clips].sort((a,b)=>b.start-a.start)[0],wd=await px();
+  const cbox=await (await page.$(`#director-timeline [data-desk-clip="${lastClip.id}"]`)).boundingBox(),cx=cbox.x+Math.min(30,cbox.width/2),cy=cbox.y+cbox.height/2,over=(d0.seconds-lastClip.start-lastClip.duration+5)/d0.seconds*wd;
+  await page.mouse.move(cx,cy);await page.mouse.down();await page.mouse.move(cx+over/2,cy,{steps:6});await page.mouse.move(cx+over,cy,{steps:6});await wait(300);
+  const dragStatus=await status();await page.mouse.up();await wait(1200);
+  const d1=await snap(),moved=d1.clips.find(c=>c.id===lastClip.id);
+  check(moved&&moved.start>lastClip.start+4&&d1.seconds>d0.seconds+1&&near(moved.duration,lastClip.duration,.06),`dragging the last block past the end: it moved ${lastClip.start.toFixed(2)} -> ${moved?.start.toFixed(2)}s and the chapter grew ${d0.seconds} -> ${d1.seconds}s (live: "${dragStatus}")`);
+  await undo();
   fs.writeFileSync(path.join(shots,'state.json'),JSON.stringify({s0,s1,s2},null,1));
   check(errors.length===0,'no module errors'+(errors.length?': '+errors[0]:''));
 }catch(e){check(false,'exception: '+(e.stack||e));}

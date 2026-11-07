@@ -1236,7 +1236,7 @@ export function mountDirector(bridge,catalog,initial){
     if(v<min){v=min;hint=`Shortest ${Number(min.toFixed(2))} s: the last item ends there.`;}
     if(v>CHAPTER_MAX){v=CHAPTER_MAX;hint='A chapter can be 90 s at most.';}
     d.value=v;const x=d.left+v/d.seconds*d.width,vr=viewport().getBoundingClientRect(),rr=d.ruler.getBoundingClientRect();
-    d.ghost.style.left=x+'px';d.ghost.style.top=rr.top+'px';d.ghost.style.height=Math.max(0,vr.bottom-rr.top)+'px';
+    d.ghost.style.left=Math.min(x,innerWidth-8)+'px';d.ghost.style.top=rr.top+'px';d.ghost.style.height=Math.max(0,vr.bottom-rr.top)+'px';
     d.ghost.firstChild.textContent=`${Number(v.toFixed(2))} s${Math.abs(v-d.seconds)<1e-9?'':` (${v>d.seconds?'+':'−'}${Number(Math.abs(v-d.seconds).toFixed(2))} s)`}`;
     d.ghost.dataset.hint=hint;d.ghost.classList.toggle('limit',!!hint);
     status(hint||`Chapter length ${Number(v.toFixed(2))} s${v>d.seconds?' · the camera holds its last view over the added time':''} · Alt: free`);
