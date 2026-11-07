@@ -31,6 +31,9 @@
 //   sceneBranding:{room, artwork:{surfaces:{<surface>:{<layer>:{name, surface?, enabled?, x?, y?, scale?, rotation?}}}}}  the
 //     school stickers / logos of EVERY desk in the room (the featured one too): a sparse overlay on each desk's own artwork
 //     (experience/branding-edits.mjs, Director's Branding tab), through the scene desks' artwork rigs, restored after.
+//   sceneDeskEdits:[{desk:'<scene desk record id>', size?, pose?:{x,z,yaw}, initial?:{height,tilt}, clips?, build?}]  Director
+//     desk edits (experience/desk-edits.mjs, film-desk-edits.mjs): the room's other desks resized, placed and started at a
+//     height / tilt, applied after sceneDeskPoses and restored after.
 //   ledColor:'#f19c00'  the LED colour for the shot (the app's colour picker), restored after
 //   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
 //   sceneGlobals:{environmentScale, exposure, exposureScale}  image-based ambient multiplier (or [[s, scale], …]), renderer
@@ -867,12 +870,13 @@ function installGlobals(shot) {
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
+  if (shot.sceneDeskEdits?.length) active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api);
   // School branding on every room desk (after the poses: a rig re-poses its artwork with it).
   if (shot.sceneBranding) { active.branding = (await import('../../experience/branding-live.mjs')).installBranding(shot.sceneBranding, window); await active.branding.ready; }
   if (shot.deskObjects) {
@@ -914,7 +918,7 @@ export async function install(shot) {
   if (roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }
   // lightEdits: Director changes to existing lights (experience/light-edits.mjs), after the shot's own lights and edits.
   if (shot.lightEdits?.length) { active.lightEdits = (await import('../../experience/light-edits.mjs')).installLightEdits(shot.lightEdits, sceneRoot()); if (active.lightEdits.missing.length) console.warn('[film-fx] lightEdits: no light at ' + active.lightEdits.missing.join(' | ')); }
-  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledRoomSpill: active.roomSpill ? { floors: active.roomSpill.floors } : undefined, ledReceivers: active.viewerLeds?.info };
+  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledRoomSpill: active.roomSpill ? { floors: active.roomSpill.floors } : undefined, ledReceivers: active.viewerLeds?.info, deskEdits: active.deskEdits ? { desks: active.deskEdits.desks, missing: active.deskEdits.missing } : undefined };
 }
 // Director live edits: apply changed lighting fields in place, without clear() / prepare, so props, screens,
 // accessories and sceneEdits stay. Per-frame data (status, desk white, keyed scales, time-of-day times, light
@@ -923,7 +927,7 @@ export async function install(shot) {
 // shape change re-captured the room: onSlow() ran first so the caller can hold the frame) or 'full' (a field
 // that needs install: the caller runs clear() + install()).
 // sceneEdits too (the Director's prop edits): the edits layer and everything chained after it re-install in place.
-const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding'];
+const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding', 'sceneDeskEdits'];
 const TAIL = ['tod', 'edits', 'lights', 'roomLight', 'roomSpill', 'lightEdits'];
 export async function update(shot, { onSlow } = {}) {
   if (!active) return 'full';
@@ -967,6 +971,11 @@ export async function update(shot, { onSlow } = {}) {
   if (globals && active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; active.globals = null; }
   if (status) { active.status?.clear(); active.status = null; }
   active.shot = shot;
+  // sceneDeskEdits (the Director's desk edits): restore and re-apply on the room's desks, in place.
+  if (changed('sceneDeskEdits')) {
+    active.deskEdits?.restore(); active.deskEdits = null;
+    if (shot.sceneDeskEdits?.length) active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api);
+  }
   if (globals) installGlobals(shot);
   if (status) {
     if (shot.ledColor && active.ledColor === undefined) active.ledColor = active.ledColor0;
@@ -989,6 +998,7 @@ export async function frame(t, chapterSeconds, { video = false, screens = true, 
   let mark = timing ? performance.now() : 0; const lap = name => { if (!timing) return; const now = performance.now(); timing[name] = (timing[name] || 0) + now - mark; mark = now; };
   for (const v of active.desk?.timed || []) v.cell.force = visibleAt(v.keys, chapterSeconds);
   if (active.tod) active.tod.apply(chapterSeconds); lap('timeOfDay');
+  active.deskEdits?.frame(chapterSeconds);   // the other desks' own moves by chapter time (film-desk-edits.mjs)
   active.roomLight?.frame(chapterSeconds);
   active.roomSpill?.frame(chapterSeconds);
   if (active.globals?.exposureCell) active.globals.exposureCell.cell.value = keyAt(active.globals.exposureCell.keys, chapterSeconds);
@@ -1037,6 +1047,7 @@ export function clear() {
   clearDeskObjects(active.desk);
   active.finish?.restore();
   active.branding?.restore();   // before the poses go back: it only swaps the desks' artwork
+  active.deskEdits?.restore();   // before deskPoses (installed after it)
   active.deskPoses?.restore();
   active = null;
 }
