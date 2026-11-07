@@ -513,6 +513,9 @@ function installSceneDeskPoses(list) {
   }
   return { posed, restore() { for (const f of undo.reverse()) f(); } };
 }
+// sceneDeskEdits[].build: the Director's Build tab for a room desk (experience/desk-build.mjs: finishes, accessories and
+// the slot each one goes in, applied to the record's own style / accessory set; restore() puts the room's build back).
+async function installSceneDeskBuilds(list, previous = null) { return (await import('../../experience/desk-build.mjs')).installDeskBuilds(api, list, previous); }
 function installDeskFinish(spec) {
   const was = { wood: api.currentConfig.woodFinish, trim: api.currentConfig.trimColor };
   const click = sel => { const el = document.querySelector(sel); if (!el) { console.warn('[film-fx] deskFinish: no swatch ' + sel); return false; } el.click(); return true; };
@@ -864,12 +867,13 @@ function installGlobals(shot) {
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneDeskEdits?.length;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
+  if (shot.sceneDeskEdits?.length) active.deskBuilds = await installSceneDeskBuilds(shot.sceneDeskEdits);
   if (shot.deskObjects) {
     // The app's own object editor, as stage.mjs places the keyboard: select, change, deselect.
     const objects = api.sceneDesks?.objects, deg = THREE.MathUtils.radToDeg; active.desk.placed = [];
@@ -918,7 +922,7 @@ export async function install(shot) {
 // shape change re-captured the room: onSlow() ran first so the caller can hold the frame) or 'full' (a field
 // that needs install: the caller runs clear() + install()).
 // sceneEdits too (the Director's prop edits): the edits layer and everything chained after it re-install in place.
-const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits'];
+const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneDeskEdits'];
 const TAIL = ['tod', 'edits', 'lights', 'roomLight', 'roomSpill', 'lightEdits'];
 export async function update(shot, { onSlow } = {}) {
   if (!active) return 'full';
@@ -952,6 +956,8 @@ export async function update(shot, { onSlow } = {}) {
   if (gChanged('roomLight')) tail = Math.min(tail, 3);
   if ((gChanged('ledRoomSpill') || gChanged('ledWallGlow') || gChanged('ledFloorGlow')) && !(tail > 4 && active.roomSpill?.retune(g1))) tail = Math.min(tail, 4);
   if (changed('lightEdits')) tail = Math.min(tail, 5);
+  // The Build tab's desks (sceneDeskEdits): re-applied in place, no re-install of anything else.
+  if (changed('sceneDeskEdits')) { active.deskBuilds = await installSceneDeskBuilds(shot.sceneDeskEdits || [], active.deskBuilds); }
   const slow = globals || tail === 0; if (slow) onSlow?.();
   for (let i = TAIL.length - 1; i >= tail; i--) { active[TAIL[i]]?.restore(); active[TAIL[i]] = null; }
   if (globals && active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; active.globals = null; }
@@ -1027,6 +1033,7 @@ export function clear() {
   clearDeskObjects(active.desk);
   active.finish?.restore();
   active.deskPoses?.restore();
+  active.deskBuilds?.restore();
   active = null;
 }
 export { discover };

@@ -2,6 +2,7 @@ import {bakeCameraPlan} from './camera-spline-bake.mjs';
 import {exportLighting} from './film-lighting.mjs';
 import {mergeSceneLights} from './light-edits.mjs';
 import {mergePropEdits} from './prop-edits.mjs';
+import {mergeDeskEdits} from './desk-build.mjs';
 // The shot a film render gets: the full built film shot with the Director's edits on top.
 // Camera: filmCamera below.
 export function filmRenderShot(film,shot,keys){
@@ -15,7 +16,7 @@ export function filmRenderShot(film,shot,keys){
   if(lit.timeOfDay)next.timeOfDay=structuredClone(lit.timeOfDay);
   const filmed=filmCamera(film,keys,seconds);
   if(filmed){next.cameraPlan=filmed.cameraPlan;next.camera=filmed.camera;}
-  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot));
+  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergeDeskEdits(film,shot));
   if(next.quality===undefined)next.quality='hq13';
   return next;
 }
