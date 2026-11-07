@@ -7,7 +7,7 @@ import {score} from './score.mjs';
 import {cleanLighting} from './film-lighting.mjs';
 import {cleanSceneLights} from './light-edits.mjs';
 import {cleanPropEdits} from './prop-edits.mjs';
-import {cleanDeskEdits} from './desk-build.mjs';
+import {cleanDeskEdits} from './desk-edits.mjs';
 import {cleanFilmTitles} from './film-titles.mjs';
 export const CUTS_KEY='ergoflex.clientCuts.v1';
 export const KINDS=[['room','Explore the room'],['hero','Desk showcase'],['glide','Omni-wheel movement'],['lift','Sit to stand'],['tilt','Drafting / easel'],['group','Group-work Groove'],['storage','Storage Groove'],['wellness','Movement break'],['proximity','Proximity demo'],['music','Music lighting'],['media','Curved-screen media']];

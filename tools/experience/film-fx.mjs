@@ -28,6 +28,9 @@
 //     (scene-desks.mjs stations, never the featured desk: its pose is the motion model's) set to a height / tilt for the
 //     shot, through the app's own rig (rig.updatePose) and auto-stow (desk-auto-stow.mjs), restored after. tilt 65 at
 //     43.5 is the Custom Shop's 65° Storage Mode: the desktop's loose objects are put away or hidden as in Studio.
+//   sceneDeskEdits:[{desk:'<scene desk record id>', size?, pose?:{x,z,yaw}, initial?:{height,tilt}, clips?, build?}]  Director
+//     desk edits (experience/desk-edits.mjs, film-desk-edits.mjs): the room's other desks resized, placed and started at a
+//     height / tilt, applied after sceneDeskPoses and restored after.
 //   ledColor:'#f19c00'  the LED colour for the shot (the app's colour picker), restored after
 //   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
 //   sceneGlobals:{environmentScale, exposure, exposureScale}  image-based ambient multiplier (or [[s, scale], …]), renderer
@@ -513,9 +516,6 @@ function installSceneDeskPoses(list) {
   }
   return { posed, restore() { for (const f of undo.reverse()) f(); } };
 }
-// sceneDeskEdits[].build: the Director's Build tab for a room desk (experience/desk-build.mjs: finishes, accessories and
-// the slot each one goes in, applied to the record's own style / accessory set; restore() puts the room's build back).
-async function installSceneDeskBuilds(list, previous = null) { return (await import('../../experience/desk-build.mjs')).installDeskBuilds(api, list, previous); }
 function installDeskFinish(spec) {
   const was = { wood: api.currentConfig.woodFinish, trim: api.currentConfig.trimColor };
   const click = sel => { const el = document.querySelector(sel); if (!el) { console.warn('[film-fx] deskFinish: no swatch ' + sel); return false; } el.click(); return true; };
@@ -873,7 +873,7 @@ export async function install(shot) {
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
-  if (shot.sceneDeskEdits?.length) active.deskBuilds = await installSceneDeskBuilds(shot.sceneDeskEdits);
+  if (shot.sceneDeskEdits?.length) active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api);
   if (shot.deskObjects) {
     // The app's own object editor, as stage.mjs places the keyboard: select, change, deselect.
     const objects = api.sceneDesks?.objects, deg = THREE.MathUtils.radToDeg; active.desk.placed = [];
@@ -913,7 +913,7 @@ export async function install(shot) {
   if (roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }
   // lightEdits: Director changes to existing lights (experience/light-edits.mjs), after the shot's own lights and edits.
   if (shot.lightEdits?.length) { active.lightEdits = (await import('../../experience/light-edits.mjs')).installLightEdits(shot.lightEdits, sceneRoot()); if (active.lightEdits.missing.length) console.warn('[film-fx] lightEdits: no light at ' + active.lightEdits.missing.join(' | ')); }
-  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledRoomSpill: active.roomSpill ? { floors: active.roomSpill.floors } : undefined, ledReceivers: active.viewerLeds?.info };
+  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledRoomSpill: active.roomSpill ? { floors: active.roomSpill.floors } : undefined, ledReceivers: active.viewerLeds?.info, deskEdits: active.deskEdits ? { desks: active.deskEdits.desks, missing: active.deskEdits.missing } : undefined };
 }
 // Director live edits: apply changed lighting fields in place, without clear() / prepare, so props, screens,
 // accessories and sceneEdits stay. Per-frame data (status, desk white, keyed scales, time-of-day times, light
@@ -956,13 +956,16 @@ export async function update(shot, { onSlow } = {}) {
   if (gChanged('roomLight')) tail = Math.min(tail, 3);
   if ((gChanged('ledRoomSpill') || gChanged('ledWallGlow') || gChanged('ledFloorGlow')) && !(tail > 4 && active.roomSpill?.retune(g1))) tail = Math.min(tail, 4);
   if (changed('lightEdits')) tail = Math.min(tail, 5);
-  // The Build tab's desks (sceneDeskEdits): re-applied in place, no re-install of anything else.
-  if (changed('sceneDeskEdits')) { active.deskBuilds = await installSceneDeskBuilds(shot.sceneDeskEdits || [], active.deskBuilds); }
   const slow = globals || tail === 0; if (slow) onSlow?.();
   for (let i = TAIL.length - 1; i >= tail; i--) { active[TAIL[i]]?.restore(); active[TAIL[i]] = null; }
   if (globals && active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; active.globals = null; }
   if (status) { active.status?.clear(); active.status = null; }
   active.shot = shot;
+  // sceneDeskEdits (the Director's desk edits): restore and re-apply on the room's desks, in place.
+  if (changed('sceneDeskEdits')) {
+    active.deskEdits?.restore(); active.deskEdits = null;
+    if (shot.sceneDeskEdits?.length) active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api);
+  }
   if (globals) installGlobals(shot);
   if (status) {
     if (shot.ledColor && active.ledColor === undefined) active.ledColor = active.ledColor0;
@@ -985,6 +988,7 @@ export async function frame(t, chapterSeconds, { video = false, screens = true, 
   let mark = timing ? performance.now() : 0; const lap = name => { if (!timing) return; const now = performance.now(); timing[name] = (timing[name] || 0) + now - mark; mark = now; };
   for (const v of active.desk?.timed || []) v.cell.force = visibleAt(v.keys, chapterSeconds);
   if (active.tod) active.tod.apply(chapterSeconds); lap('timeOfDay');
+  active.deskEdits?.frame(chapterSeconds);   // the other desks' own moves by chapter time (film-desk-edits.mjs)
   active.roomLight?.frame(chapterSeconds);
   active.roomSpill?.frame(chapterSeconds);
   if (active.globals?.exposureCell) active.globals.exposureCell.cell.value = keyAt(active.globals.exposureCell.keys, chapterSeconds);
@@ -1032,8 +1036,8 @@ export function clear() {
   active.tod?.restore();
   clearDeskObjects(active.desk);
   active.finish?.restore();
+  active.deskEdits?.restore();   // before deskPoses (installed after it)
   active.deskPoses?.restore();
-  active.deskBuilds?.restore();
   active = null;
 }
 export { discover };

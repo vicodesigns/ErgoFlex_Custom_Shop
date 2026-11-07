@@ -1,7 +1,7 @@
 import {exportLighting} from './film-lighting.mjs';
 import {mergeSceneLights} from './light-edits.mjs';
 import {mergePropEdits} from './prop-edits.mjs';
-import {mergeDeskEdits} from './desk-build.mjs';
+import {mergeDeskEdits} from './desk-edits.mjs';
 // Film chapter switching: a chapter link carries #cut=…&film=<chapter list>&director=1.
 export function filmLink(hash){
   const params=new URLSearchParams(String(hash||'').replace(/^#/,'')),film=params.get('film');
