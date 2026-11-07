@@ -50,7 +50,9 @@ export function applyDesk(ctx, entry) {
   if (!r.rig) desks.ensureRig(r);
   if (edit.pose) { r.state.pose = { ...edit.pose }; desks.place(r); }
   if (edit.initial) { const p = clampStartPose(edit.initial, r.state.size); setRecordPose(desks, r, p.height, p.tilt); }
-  // BUILD HOOK (DeskBuild): edit.build -> wood / base / trim / accessories on this desk.
+  // BUILD HOOK (DeskBuild): edit.build -> wood / base / trim / accessories on this desk (experience/desk-build.mjs). The
+  // accessories load a moment later: entry.pending settles when they are in (installDeskEdits().ready).
+  if (edit.build) entry.pending = import('../../experience/desk-build.mjs').then(m => m.applyBuild(ctx.api, r.id, edit.build)).catch(e => console.warn('[film-fx] desk build ' + r.id, e));
 }
 // CLIPS HOOK (DeskChoreo): edit.clips sampled at the chapter time -> setRecordPose / pose for this desk.
 export function frameDesk(ctx, entry, seconds) {}
@@ -69,10 +71,12 @@ export function installDeskEdits(list, api) {
   if (missing.length) console.warn('[film-fx] sceneDeskEdits: no other room desk ' + missing.join(', '));
   return {
     desks: entries.map(e => e.record.id), missing,
+    ready: Promise.all(entries.map(e => e.pending).filter(Boolean)),
     frame(seconds) { for (const e of entries) frameDesk(ctx, e, seconds); },
     restore() {
       for (const e of entries.reverse()) {
         const r = e.record; if (desks.records.get(r.id) !== r) continue;
+        if (e.edit.build) import('../../experience/desk-build.mjs').then(m => m.restoreBuild(api, r.id));   // before a size rebuild: the room's own style / accessories back
         const prior = clone(e.was.state);
         if (r.state.size !== e.was.size) rebuildRecord(desks, r, prior);
         else { r.state.pose = prior.pose; desks.place(r); setRecordPose(desks, r, prior.height, prior.tilt); }
