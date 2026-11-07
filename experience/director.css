@@ -490,3 +490,9 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 #film-stale ul{margin:0 0 14px;padding-left:18px;color:#ffc977}
 #film-stale button{min-height:34px;border-radius:9px;padding:6px 12px;font-size:12px}
 #film-stale .primary{background:#65dcff;color:#041018;font-weight:700;border:0}
+.chapter-end-handle{position:absolute;right:1px;top:1px;bottom:1px;width:20px;padding:0;border:1px solid #6fd0e8aa;border-radius:4px;background:#12384a;cursor:ew-resize;touch-action:none;display:grid;place-items:center}
+.chapter-end-handle i{width:6px;height:12px;border-left:2px solid #8ee3f7;border-right:2px solid #8ee3f7}
+.chapter-end-handle:hover,.chapter-end-handle.dragging,.chapter-end-handle:focus-visible{background:#1c5670;outline:0;box-shadow:0 0 0 2px #8ee3f755}
+.chapter-end-ghost{position:fixed;z-index:60;width:0;border-left:2px dashed #8ee3f7;pointer-events:none}
+.chapter-end-ghost b{position:absolute;top:26px;right:6px;white-space:nowrap;padding:3px 8px;border-radius:5px;background:#0a1b26;border:1px solid #8ee3f7;color:#dff7ff;font:600 12px/1.3 var(--df-mono,monospace)}
+.chapter-end-ghost.limit{border-left-color:#ffb86b}.chapter-end-ghost.limit b{border-color:#ffb86b;color:#ffd9ae}
