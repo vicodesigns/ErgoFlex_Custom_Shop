@@ -1,5 +1,6 @@
 import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
 import {createPropLibrary,deskItem} from './prop-library.mjs';
+import {groupPanelHtml,groupCentreDelta,pickMode} from './prop-selection.mjs';
 // Director "Props": click a prop in the view (not in light mode) to select it, then move / rotate / scale it with
 // the gizmo (W / E / T, Shift snaps) or the Prop inspector, hide it (Delete), reset it. Edits go to the chapter's
 // cut shot (shot.propEdits, film sceneEdits format, prop-edits.mjs); film-fx applies them after the film's own
@@ -9,6 +10,8 @@ import {createPropLibrary,deskItem} from './prop-library.mjs';
 // under the screen centre (desk-sized items) or on the floor in front of the camera, selected with the gizmo. Its
 // edit is an add entry (prop-edits.mjs cleanAddEdit: its own transform in the desk's or the room's frame); Delete or
 // Reset to the film removes it.
+// Multi-select (prop-selection.mjs): Shift+click adds, Ctrl/Cmd+click toggles, click empty clears; everything selected
+// (room props and desk items alike, all are prop edits) moves, turns, hides and resets together, one undo step each.
 // A gizmo drag moves the live object at once (restored by __directorPropsRestore before film-fx re-installs).
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const r3=v=>Math.round(v*1000)/1000,r1=v=>Math.round(v*10)/10;
@@ -16,7 +19,7 @@ const wrapDeg=d=>{d=((d+180)%360+360)%360-180;return Math.abs(d)<1e-6?0:d;};
 const MODES={translate:'Move',rotate:'Rotate',scale:'Scale'},VERB={translate:'Moved',rotate:'Rotated',scale:'Scaled'};
 const STATE_KEY='ergoflex.sceneAssets.v1';
 export function createScenePropEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},lightsShowing=()=>false,fold=()=>{}}){
-  let sel=null,mode='translate',tools=null,booting=null,drag=null,snapping=false,pending=null,dialogPlan=null,placing=false;
+  let sel=null,others=[],lockedKeys=()=>new Set(),itemsCache=null,itemsAt=0,flash=null,pivotAt=0,pivotDirty=true,mode='translate',tools=null,booting=null,drag=null,snapping=false,pending=null,dialogPlan=null,placing=false;
   const snaps=new Map(),frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow;
   const three=()=>bridge.stage()?.three?.();
   const editing=()=>open()&&bridge.ready()&&!bridge.playback().playing&&!bridge.bakeState().baking;
@@ -33,6 +36,12 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(next&&!cleanPropEdit(next)&&!isNoopEdit(next)){status(`${CANT_SAVE}: ${UNUSUAL}`,true);rerender();return;}
     commit(()=>{const s=shot(),list=edits().filter(e=>propKey(e)!==key),clean=next&&cleanPropEdit(next);s.propEdits=clean?[...list,clean]:list;},{key:undoKey,render:false});
     status(text);rerender();
+  }
+  // One undo step for several props at once: changes [{key, next | null}].
+  function writeMany(changes,text,also=null){
+    for(const c of changes)if(c.next&&!cleanPropEdit(c.next)&&!isNoopEdit(c.next)){status(`${CANT_SAVE}: ${UNUSUAL}`,true);rerender();return;}
+    commit(()=>{const keys=new Set(changes.map(c=>c.key)),list=edits().filter(e=>!keys.has(propKey(e)));for(const c of changes){const clean=c.next&&cleanPropEdit(c.next);if(clean)list.push(clean);}shot().propEdits=list;also?.();},{key:null,render:false});
+    pivotDirty=true;status(text);rerender();
   }
   // ---- what can't be kept
   // The status text whenever a selected item can't become a Director edit (said when it's selected and when it's moved).
@@ -182,19 +191,20 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   const library=createPropLibrary({status,room:()=>shot()?.room,roomName:()=>shot()?.room,
     load:async()=>{await ensure();return (await win().__filmEdits.propLibrary()).index.props;},
     onPick:entry=>{addProp(entry).catch(error=>status(error.message,true));}});
-  function current(){
-    if(!sel)return null;if(sel.obj&&!inScene(sel.obj))sel.obj=null;
-    if(!sel.obj&&tools)sel.obj=find(sel.key);return sel.obj;
-  }
+  function objOf(m){if(m.obj&&!inScene(m.obj))m.obj=null;if(!m.obj&&tools)m.obj=find(m.key,m.target);return m.obj;}
+  const current=()=>sel?objOf(sel):null;
+  const members=()=>sel?[...others,sel]:[];
+  const isSel=key=>members().some(m=>m.key===key);
+  const group=()=>others.length>0;
   // Installed Director entries by prop key (one scene walk, kept until film-fx re-installs or for 1 s).
   let found=null,foundAt=0;
   function installedIndex(){
     const scene=sceneOf();if(!scene)return new Map();if(found&&performance.now()-foundAt<1000)return found;
     found=new Map();foundAt=performance.now();scene.traverse(o=>{for(const e of o.userData.__filmFxEdits||[])if(e.director&&!found.has(propKey(e)))found.set(propKey(e),o);});return found;
   }
-  function find(key){
+  function find(key,target){
     const scene=sceneOf();if(!scene)return null;const hit=installedIndex().get(key);if(hit&&inScene(hit))return hit;
-    const e=editOfKey(key)||sel?.target;if(!e||!win()?.__filmEdits)return null;const f=win().__filmEdits.editTargets(e);return f.length===1?f[0]:null;
+    const e=editOfKey(key)||target||sel?.target;if(!e||!win()?.__filmEdits)return null;const f=win().__filmEdits.editTargets(e);return f.length===1?f[0]:null;
   }
   // ---- stage tools: gizmo, selection box, picking
   async function boot(){
@@ -206,7 +216,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const box=new THREE.BoxHelper(undefined,0x63d8f5);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(1.35);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){drag={enabled:t.controls.enabled,obj:gizmo.object};t.controls.enabled=false;startDrag();}else{t.controls.enabled=drag?.enabled??true;endDrag();}});
-    gizmo.addEventListener('objectChange',()=>{const o=current();if(o&&sel?.blocked){status(`${CANT_SAVE}: ${sel.blocked} It goes back when you let go.`,true);return;}if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
+    gizmo.addEventListener('objectChange',()=>{if(drag?.grp){moveGroupLive();status(`${mode==='translate'?'Moving ':'Turning '}${drag.grp.items.length} items together…`+(snapping?' (snapping)':' · Shift snaps'));return;}const o=current();if(o&&sel?.blocked){status(`${CANT_SAVE}: ${sel.blocked} It goes back when you let go.`,true);return;}if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
     const raycaster=new THREE.Raycaster(),dom=t.renderer.domElement;let down=null;
     dom.addEventListener('pointerdown',ev=>{down=ev.button===0&&(placing||!gizmo.dragging&&!gizmo.axis)?{x:ev.clientX,y:ev.clientY,alt:ev.altKey}:null;},true);
     dom.addEventListener('pointerup',ev=>{
@@ -216,25 +226,84 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
         if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point);else{status('Nothing there to put it on.',true);rerender();}return;}}
       const hit=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object));
       const now=current(),o=hit&&(d.alt&&now&&isAncestor(now,hit.object)?meaningful(hit.object,{above:now}):meaningful(hit.object));
-      if(!o){if(sel){deselect();status('Nothing to edit there: click a prop (furniture, lamps, desk items). Esc deselects.');}return;}
-      pick(o);
+      const how=pickMode(ev);
+      if(!o){if(sel&&how==='replace'){deselect();status('Nothing to edit there: click a prop (furniture, lamps, desk items). Esc deselects.');}return;}
+      pick(o,{how});
     },true);
     const keys=e=>{const on=e.shiftKey;if(on!==snapping){snapping=on;syncSnap();}};
     for(const doc of [document,w.document]){doc.addEventListener('keydown',keys,true);doc.addEventListener('keyup',keys,true);}
     w.__directorPropsRestore=()=>{for(const [o,s] of snaps){o.position.copy(s.position);o.quaternion.copy(s.quaternion);o.scale.copy(s.scale);o.updateMatrixWorld(true);}snaps.clear();};
-    tools={THREE,group,box,gizmo,t};syncSnap();requestAnimationFrame(tick);return tools;
+    const pivot=new THREE.Object3D();pivot.name='Director group pivot';pivot.userData.directorTools=true;group.add(pivot);
+    const boxes=[box],fbox=new THREE.BoxHelper(undefined,0xffd166);fbox.material.depthTest=false;fbox.material.transparent=true;fbox.renderOrder=999;fbox.visible=false;group.add(fbox);
+    tools={THREE,group,box,boxes,fbox,pivot,gizmo,t};syncSnap();requestAnimationFrame(tick);return tools;
   }
   const isAncestor=(a,o)=>{for(let p=o;p;p=p.parent)if(p===a)return true;return false;};
   const ensure=()=>booting||=boot().then(t=>{rerender();return t;},error=>{booting=null;throw error;});
   function syncSnap(){if(!tools)return;const g=tools.gizmo;g.setTranslationSnap(snapping?.05:null);g.setRotationSnap(snapping?tools.THREE.MathUtils.degToRad(15):null);g.setScaleSnap(snapping?.1:null);}
-  function tick(){
-    requestAnimationFrame(tick);if(!tools)return;muteStudioEditing();const {gizmo,box,t}=tools,live=editing(),o=live?current():null;
-    if(o){box.setFromObject(o);box.visible=true;box.material.opacity=shown(o)?1:.45;if(gizmo.dragging)bridge.stage()?.wake?.(300);}else box.visible=false;
-    if(o&&shown(o)&&!placing){if(gizmo.object!==o)gizmo.attach(o);gizmo.setMode(mode);gizmo.setSpace(mode==='scale'?'local':'world');gizmo.visible=gizmo.enabled=true;}
-    else if(!gizmo.dragging){if(gizmo.object)gizmo.detach();gizmo.visible=gizmo.enabled=false;}
+  // Highlight boxes (one per selected item), the group pivot (centre of the movable ones) and the gizmo.
+  function syncBoxes(objs){
+    const {THREE,group:g,boxes}=tools;
+    while(boxes.length<objs.length){const b=new THREE.BoxHelper(undefined,0x63d8f5);b.material.depthTest=false;b.material.transparent=true;b.renderOrder=998;g.add(b);boxes.push(b);}
+    boxes.forEach((b,i)=>{const o=objs[i];if(o){b.setFromObject(o);b.visible=true;b.material.opacity=shown(o)?1:.45;}else b.visible=false;});
   }
-  function startDrag(){const o=drag?.obj;if(!o)return;if(!snaps.has(o))snaps.set(o,{position:o.position.clone(),quaternion:o.quaternion.clone(),scale:o.scale.clone()});drag.base=base(o);}
+  function recentre(movable){
+    const {THREE,pivot}=tools;if(!pivotDirty&&performance.now()-pivotAt<400)return;pivotDirty=false;pivotAt=performance.now();
+    const box=new THREE.Box3();for(const o of movable)box.union(new THREE.Box3().setFromObject(o));
+    if(box.isEmpty())return;box.getCenter(pivot.position);pivot.quaternion.identity();pivot.scale.set(1,1,1);pivot.updateMatrixWorld(true);
+  }
+  function tick(){
+    requestAnimationFrame(tick);if(!tools)return;muteStudioEditing();const {gizmo,fbox,pivot,t}=tools,live=editing();
+    const ms=live?members():[],objs=ms.map(objOf),o=live?current():null;
+    syncBoxes(live?objs.map(x=>x||null).filter(Boolean):[]);
+    if(live&&flash&&flash.until>performance.now()&&inScene(flash.obj)){fbox.setFromObject(flash.obj);fbox.visible=true;fbox.material.opacity=.45+.55*Math.abs(Math.sin((flash.until-performance.now())/130));bridge.stage()?.wake?.(100);}else{fbox.visible=false;flash=null;}
+    if(live&&group()&&mode==='scale')mode='translate';
+    const movable=ms.map((m,i)=>m.blocked?null:objs[i]).filter(x=>x&&shown(x));
+    if(live&&group()&&movable.length&&!placing){
+      if(!gizmo.dragging){recentre(movable);}
+      if(gizmo.object!==pivot)gizmo.attach(pivot);gizmo.setMode(mode);gizmo.setSpace('world');gizmo.visible=gizmo.enabled=true;
+    }
+    else if(o&&shown(o)&&!placing&&!group()){if(gizmo.object!==o)gizmo.attach(o);gizmo.setMode(mode);gizmo.setSpace(mode==='scale'?'local':'world');gizmo.visible=gizmo.enabled=true;}
+    else if(!gizmo.dragging){if(gizmo.object)gizmo.detach();gizmo.visible=gizmo.enabled=false;}
+    if(gizmo.dragging)bridge.stage()?.wake?.(300);
+  }
+  // ---- moving several at once: the gizmo drags the pivot; every item gets the pivot's change (world matrix delta)
+  function beginGroup(){
+    const {pivot}=tools;pivot.updateMatrixWorld(true);
+    const items=members().map(m=>({m,o:objOf(m)})).filter(x=>x.o&&!x.m.blocked).map(({m,o})=>{if(!snaps.has(o))snaps.set(o,{position:o.position.clone(),quaternion:o.quaternion.clone(),scale:o.scale.clone()});o.updateWorldMatrix(true,false);return {m,o,b:base(o),m0:o.matrixWorld.clone()};});
+    return {p0:pivot.matrixWorld.clone(),items};
+  }
+  function applyDelta(g,D){
+    const {THREE}=tools;
+    for(const it of g.items){const p=it.o.parent;p?.updateWorldMatrix(true,false);const inv=p?p.matrixWorld.clone().invert():new THREE.Matrix4();inv.multiply(D.clone().multiply(it.m0)).decompose(it.o.position,it.o.quaternion,it.o.scale);it.o.updateMatrixWorld(true);}
+    bridge.stage()?.wake?.(300);
+  }
+  function moveGroupLive(){const g=drag.grp,{pivot}=tools;pivot.updateMatrixWorld(true);applyDelta(g,pivot.matrixWorld.clone().multiply(g.p0.clone().invert()));}
+  function endGroup(g,text){
+    const changes=[];let skipped=members().length-g.items.length;
+    for(const it of g.items){
+      try{const e=editOfKey(it.m.key);let next;
+        if(isAddEdit(e))next=addFrom(it.o,e);else next={...it.m.target,...(e||{}),...editFrom(it.o,it.b)};
+        if(JSON.stringify(cleanPropEdit(next))===JSON.stringify(e?cleanPropEdit(e):null))continue;changes.push({key:it.m.key,next});}
+      catch(error){skipped++;console.warn('[props] group',error.message);}
+    }
+    if(!changes.length){status('Nothing moved.');rerender();return;}
+    writeMany(changes,`${text} ${changes.length} items together${skipped?` (${skipped} could not be saved and stayed put)`:''}. One Undo puts them all back.`);
+  }
+  // Typed moves (inches / degrees, relative) on the group panel: the same path as a drag.
+  function groupChanged(el){
+    const name=el.name,v=Number(el.value);
+    if(name==='pp-hide'){hide(el.checked);return;}
+    if(el.value===''||!Number.isFinite(v))throw Error('Enter a number.');
+    const {THREE,pivot}=tools,mm=win().__filmEdits.mmScale(),movable=members().map(objOf).filter(Boolean);pivotDirty=true;recentre(movable);
+    let D,text;
+    if(/^pp-gm[xyz]$/.test(name)){if(Math.abs(v)>1000)throw Error('Moves run up to 1000 inches.');const d=[0,0,0];d['xyz'.indexOf(name[5])]=v*25.4*mm;D=new THREE.Matrix4().makeTranslation(...d);text='Moved';}
+    else if(name==='pp-gry'){D=groupCentreDelta(THREE,pivot.position,THREE.MathUtils.degToRad(wrapDeg(v)));text='Turned';}
+    else return;
+    const g=beginGroup();applyDelta(g,D);endGroup(g,text);
+  }
+    function startDrag(){const o=drag?.obj;if(!o)return;if(o===tools.pivot){drag.grp=beginGroup();return;}if(!snaps.has(o))snaps.set(o,{position:o.position.clone(),quaternion:o.quaternion.clone(),scale:o.scale.clone()});drag.base=base(o);}
   function endDrag(){
+    if(drag?.grp){const g=drag.grp;drag=null;pivotDirty=true;endGroup(g,mode==='translate'?'Moved':'Turned');return;}
     const o=drag?.obj,b=drag?.base;drag=null;if(!o||!b||!sel)return;
     if(sel.blocked){const s=snaps.get(o);if(s){o.position.copy(s.position);o.quaternion.copy(s.quaternion);o.scale.copy(s.scale);o.updateMatrixWorld(true);bridge.stage()?.wake?.(300);}status(`${CANT_SAVE}: ${sel.blocked} It is back where the film puts it.`,true);return;}
     try{const e=editOfKey(sel.key)||sel.target;
@@ -245,23 +314,35 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     catch(error){status(error.message,true);}
   }
   // ---- selection
-  function pick(o){
-    let target;try{target=filmEdit(o)?cleanPropEdit(filmEdit(o))||targetFor(o):targetFor(o);}catch(error){sel=null;onSelect();rerender();status(`${CANT_SAVE}: ${error.message}`,true);return;}
+  // how: 'replace' (click), 'add' (Shift+click), 'toggle' (Ctrl/Cmd+click).
+  function pick(o,{how='replace'}={}){
+    let target;try{target=filmEdit(o)?cleanPropEdit(filmEdit(o))||targetFor(o):targetFor(o);}catch(error){if(how==='replace'){sel=null;others=[];onSelect();rerender();}status(`${CANT_SAVE}: ${error.message}`,true);return;}
     const t={match:target.match,...(target.asset?{asset:target.asset}:{}),...(target.path?{path:target.path}:{}),...(target.near?{near:target.near}:{}),label:target.label||o.name||''};
-    const blocked=isAddEdit(filmEdit(o))?'':unrecordable(o,t);
-    sel={key:propKey(t),target:t,obj:o,blocked};onSelect();rerender();
+    const key=propKey(t);
+    if(lockedKeys().has(key)){status(`${label(o)} is locked in a layer: unlock the layer in Layers to pick it in the view.`,true);return;}
+    const blocked=isAddEdit(filmEdit(o))?'':unrecordable(o,t),entry={key,target:t,obj:o,blocked};
+    if(how==='replace')setMembers([entry]);
+    else if(how==='toggle'&&isSel(key)){setMembers(members().filter(m=>m.key!==key));status(`${label(o)} removed from the selection (${members().length} selected).`);return;}
+    else setMembers([...members().filter(m=>m.key!==key),entry]);
+    if(group()){status(`${members().length} selected (${members().map(m=>nice(m.target.label)).slice(0,4).join(', ')}${members().length>4?'…':''}) · they move together · Shift+click adds, Ctrl+click adds or removes, click empty space clears.`);return;}
     if(blocked){status(`${CANT_SAVE}: ${blocked} Moving ${label(o)} here won't be kept.`,true);return;}
     const moves=handMoves(o).length?' The film also places it by hand; your edit adds to that.':'';
     const added=isAddEdit(filmEdit(o));
-    status(`${label(o)} selected · W move · E rotate · T scale · Shift snaps · ${added?'Delete removes it (added in this chapter)':'Delete hides it in this chapter'} · Alt-click picks what it sits on.${moves}`);
+    status(`${label(o)} selected · W move · E rotate · T scale · Shift snaps · ${added?'Delete removes it (added in this chapter)':'Delete hides it in this chapter'} · Alt-click picks what it sits on · Shift+click adds more.${moves}`);
   }
-  function select(key){
-    if(!tools){ensure().then(()=>select(key)).catch(error=>status(error.message,true));return;}
+  // The selection, last entry = the one the single-prop inspector shows.
+  function setMembers(list){
+    sel=list.at(-1)||null;others=list.slice(0,-1);pivotDirty=true;if(group()&&mode==='scale')mode='translate';onSelect();rerender();
+  }
+  function select(key,{how='replace'}={}){
+    if(!tools){ensure().then(()=>select(key,{how})).catch(error=>status(error.message,true));return;}
     const e=editOfKey(key),o=find(key);if(!e&&!o)return;
-    sel={key,target:e?{match:e.match,...(e.asset?{asset:e.asset}:{}),...(e.path?{path:e.path}:{}),...(e.near?{near:e.near}:{}),label:e.label}:sel?.target,obj:o};onSelect();rerender();
+    const entry={key,target:e?{match:e.match,...(e.asset?{asset:e.asset}:{}),...(e.path?{path:e.path}:{}),...(e.near?{near:e.near}:{}),label:e.label}:items().find(i=>i.key===key)?.target||sel?.target,obj:o};
+    if(how==='toggle'&&isSel(key))setMembers(members().filter(m=>m.key!==key));
+    else setMembers(how==='replace'?[entry]:[...members().filter(m=>m.key!==key),entry]);
     status(o?`${label(o)} selected${o&&!shown(o)?' (hidden in this chapter: untick Hide to bring it back)':''}.`:`${e?.label?nice(e.label):'That prop'} is not in the room right now (the film setup did not find it).`,!o);
   }
-  function deselect(){placing=false;if(!sel)return;sel=null;rerender();}
+  function deselect(){placing=false;if(!sel)return;sel=null;others=[];rerender();}
   // ---- edits from the inspector and keys
   function apply(change,text){
     const o=current();if(!sel)return;const e=editOfKey(sel.key)||{},next={...sel.target,...e,...change};
@@ -269,16 +350,32 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     write(sel.key,next,text);
   }
   function hide(on=true){
+    if(group()){hideItems(members(),on);return true;}
     const o=current();if(!sel)return false;if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return true;}
     if(isAddEdit(editOfKey(sel.key))){remove();return true;}const name=o?label(o):nice(sel.target.label),filmHides=o&&(o.userData.__filmFxEdits||[]).some(e=>!e.director&&e.hide);
     apply({hide:on?true:filmHides?false:undefined},on?`Hid ${name} in this chapter. Undo, or untick Hide in Props, brings it back.`:`Showed ${name} again.`);return true;
   }
+  // Hide / show several (the selection, or a layer's items [{key, target}]) as ordinary per-chapter hide edits: one undo step.
+  function hideItems(list,on,also=null){
+    const changes=[];let skipped=0;
+    for(const m of list){
+      if(m.blocked){skipped++;continue;}
+      const e=editOfKey(m.key),o=m.obj&&inScene(m.obj)?m.obj:find(m.key,m.target),target=m.target||items().find(i=>i.key===m.key)?.target;
+      if(!target&&!e){skipped++;continue;}
+      if(isAddEdit(e)){if(on)changes.push({key:m.key,next:null});continue;}
+      const filmHides=o&&(o.userData.__filmFxEdits||[]).some(x=>!x.director&&x.hide);
+      changes.push({key:m.key,next:{...(target||{}),...(e||{}),hide:on?true:filmHides?false:undefined}});
+    }
+    for(const c of changes)if(c.next&&c.next.hide===undefined)delete c.next.hide;
+    if(!changes.length){if(also)commit(also,{key:null,render:false});status(skipped?`${CANT_SAVE}: ${skipped} of them can't be kept in the film.`:'Nothing to change.',!!skipped);return;}
+    writeMany(changes,`${on?'Hid':'Showed'} ${changes.length} item${changes.length===1?'':'s'} in this chapter${skipped?` (${skipped} can't be kept in the film)`:''}. One Undo brings ${on?'them back':'the change back'}.`,also);
+  }
   // An added prop: Delete, Reset to the film and Remove all take it out of the chapter (Undo brings it back).
-  function remove(){if(!sel)return;const e=editOfKey(sel.key);if(!isAddEdit(e))return;const name=e.label||nice(e.match);write(sel.key,null,`Removed ${name} (added in this chapter). Undo brings it back.`);sel=null;rerender();}
-  function reset(){if(!sel)return;if(isAddEdit(editOfKey(sel.key))){remove();return;}const name=sel.target.label?nice(sel.target.label):'The prop';if(!editOfKey(sel.key)){status(name+' is already where the film puts it.');return;}write(sel.key,null,`${name} back to the film.`);}
+  function remove(){if(!sel)return;const e=editOfKey(sel.key);if(!isAddEdit(e))return;const name=e.label||nice(e.match);write(sel.key,null,`Removed ${name} (added in this chapter). Undo brings it back.`);sel=null;others=[];rerender();}
+  function reset(){if(!sel)return;if(group()){const list=members().filter(m=>editOfKey(m.key));if(!list.length){status('They are already where the film puts them.');return;}writeMany(list.map(m=>({key:m.key,next:null})),`${list.length} items back to the film. One Undo brings them back.`);return;}if(isAddEdit(editOfKey(sel.key))){remove();return;}const name=sel.target.label?nice(sel.target.label):'The prop';if(!editOfKey(sel.key)){status(name+' is already where the film puts it.');return;}write(sel.key,null,`${name} back to the film.`);}
   function resetAll(){const n=editedCount();if(!n){status('No prop edits in this chapter: the props are the film\'s.');return;}const a=edits().filter(isAddEdit).length;commit(()=>{shot().propEdits=[];},{render:false});if(sel&&a)sel=null;status(`All props back to the film (${n} edit${n===1?'':'s'} cleared${a?`, ${a} added prop${a===1?'':'s'} removed`:''}). Undo brings them back.`);rerender();}
   async function changed(el){
-    await ensure();const o=current();if(!sel||!o)return;const name=el.name,v=Number(el.value);
+    await ensure();if(group()){groupChanged(el);return;}const o=current();if(!sel||!o)return;const name=el.name,v=Number(el.value);
     if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);rerender();return;}
     if(name==='pp-hide'){hide(el.checked);return;}
     if(el.value===''||!Number.isFinite(v))throw Error('Enter a number.');
@@ -295,6 +392,30 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const next={...sel.target,...e,...editFrom(o,b,{world,rot:rotNow,scale:b.scale.clone().multiply(new THREE.Vector3(...fac))})};
     write(sel.key,next,`${verb} ${label(o)}.`);
   }
+  // ---- the chapter's editable things, for the Layers tab: [{key, target, obj, name, desk, hidden}]
+  function items(){
+    if(!tools||!three()?.scene)return [];if(itemsCache&&performance.now()-itemsAt<1500)return itemsCache;
+    const seen=new Set(),out=[];
+    sceneOf().traverse(x=>{if(!x.isMesh||isOurs(x))return;const o=meaningful(x);if(!o||seen.has(o))return;seen.add(o);
+      try{const t=filmEdit(o)?cleanPropEdit(filmEdit(o))||targetFor(o):targetFor(o),key=propKey({match:t.match,asset:t.asset,path:t.path,near:t.near});
+        if(out.some(i=>i.key===key))return;
+        out.push({key,target:{match:t.match,...(t.asset?{asset:t.asset}:{}),...(t.path?{path:t.path}:{}),...(t.near?{near:t.near}:{}),label:t.label||o.name||''},obj:o,name:label(o),desk:onDeskItself(o)||ridesDesk(o),hidden:!shown(o)||editOfKey(key)?.hide===true,area:areaOf(o)});}catch{}
+    });
+    itemsAt=performance.now();return itemsCache=out;
+  }
+  // Room area: the nearest named group the prop sits in below the room's root ('' when it sits straight in the room).
+  function areaOf(o){const root=win()?.ErgoFlex?.workspaceRoom?.root;let name='';for(let p=o.parent;p&&p!==root&&p!==sceneOf();p=p.parent){if(p.userData?.dayKit||/^(Scene dressing|Accessory mount|Desk dressing|Accessory):/.test(p.name))return '';if(p.name&&!/^(Group|Object3D|Scene)$/i.test(p.name)&&!/^Prop:|^Studio/.test(p.name))name=p.name;}return name;}
+  // Select by keys (the Layers list): how replace | add | toggle. Items the film can't keep are still selected (and say so).
+  async function selectKeys(keys,how='replace'){
+    await ensure();const list=items(),entries=[];
+    for(const k of keys){const i=list.find(x=>x.key===k);if(!i)continue;entries.push({key:k,target:i.target,obj:i.obj,blocked:isAddEdit(filmEdit(i.obj))?'':unrecordable(i.obj,i.target)});}
+    if(!entries.length){if(how==='replace')setMembers([]);return 0;}
+    let next;if(how==='replace')next=entries;else if(how==='toggle'){const rm=new Set(entries.map(e=>e.key).filter(isSel));next=[...members().filter(m=>!rm.has(m.key)),...entries.filter(e=>!rm.has(e.key))];}else next=[...members().filter(m=>!entries.some(e=>e.key===m.key)),...entries];
+    setMembers(next);
+    status(next.length>1?`${next.length} selected · they move together (W move · E rotate).`:`${label(next[0].obj)} selected · W move · E rotate · T scale · Delete hides it.`);return entries.length;
+  }
+  // "Shows where it is": a pulsing outline on the stage for ~1.5 s.
+  function flashKey(key){const o=items().find(i=>i.key===key)?.obj;if(o)flash={obj:o,until:performance.now()+1500};}
   // ---- Make permanent in Studio: Studio's own room state through the studio server, never the file.
   function studioRoom(){
     const api=win()?.ErgoFlex;if(!api?.sceneAssetStates)return {reason:'The stage is still loading.'};
@@ -370,7 +491,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     for(const r of rows){if(!mem)break;if(r.add){mem.added?.set?.(r.editorId,{editorId:r.editorId,propId:r.add.propId,position:r.add.position});mem.transforms.set(r.editorId,r.transform);continue;}if(r.remove){const a=mem.added;if(a?.has?.(r.editorId)){a.delete(r.editorId);mem.transforms.delete(r.editorId);}else mem.removed.add(r.editorId);}else mem.transforms.set(r.editorId,r.transform);}
     // The props keep their place on the stage once the chapter's edits are folded in (film-fx re-installs without them).
     pending={rows,keys:new Set(rows.map(r=>r.key))};fold(pending.keys);
-    if(sel&&pending.keys.has(sel.key))sel=null;
+    if(group())setMembers(members().filter(m=>!pending.keys.has(m.key)));else if(sel&&pending.keys.has(sel.key))sel=null;
     status(`Made ${rows.length} prop${rows.length===1?'':'s'} permanent in Studio (${sceneId}): ${rows.map(r=>r.name).join(', ')}. This chapter's edits for them are folded in; Export cut so the film follows.`);
     rerender();
   }
@@ -380,7 +501,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const o=current(),e=sel&&editOfKey(sel.key),st=permanentState(),n=editedCount();
     const head=`<h3>Props</h3><p class="director-hint">Click a prop in the view to select it (not while Lights are shown). W move · E rotate · T scale · Shift snaps · Delete hides it. Edits stay in this chapter: Studio does not change.</p>
       <div class="director-actions"><button data-action="pp-add" class="prop-add-button" title="Add a model from the prop library: it goes on the desk or the floor in front of the camera, ready to move">+ Add prop</button><button data-action="pp-reset-all" ${n?'':'disabled'} title="Every prop back to the film in this chapter: one step, Undo brings them back">Reset all props to the film${n?' ('+n+')':''}</button><button data-action="pp-permanent" ${st.ok?'':'disabled'} title="${escape(st.ok?'Write these prop edits into Studio\'s room layout (you confirm each one)':st.why)}">Make permanent in Studio…</button></div>${st.ok?'':`<p class="director-hint" data-permanent-why>${escape(st.why)}</p>`}`;
-    if(!sel)return head+'<p class="director-hint">No prop selected.</p>';
+    if(!sel)return head+'<p class="director-hint">No prop selected. Shift+click adds to the selection, Ctrl+click adds or removes.</p>';
+    if(group())return head+groupPanelHtml({members:members().map(m=>({key:m.key,name:nice(m.target.label||''),desk:!!(objOf(m)&&(onDeskItself(objOf(m))||ridesDesk(objOf(m)))),hidden:editOfKey(m.key)?.hide===true||(!!objOf(m)&&!shown(objOf(m))),blocked:m.blocked,missing:!objOf(m)})),mode,escape,edited:members().some(m=>editOfKey(m.key))});
     if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4 title="${escape(sel.target.label||'')}">${escape(nice(sel.target.label))}</h4><p class="director-hint">Not in the room right now (the film setup did not find it).</p><div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
     if(!tools)return head;if(isAddEdit(e))return head+addPanel(o,e);const b=base(o),{THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),turn=e?.rotation||[0,0,0],fac=e?.scale||[1,1,1],uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4;
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
@@ -413,21 +535,23 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(name==='pp-remove'){remove();return;}
     if(name==='pp-place'){const o=current();if(!o||!isAddEdit(editOfKey(sel.key)))return;placing=!placing;rerender();status(placing?`Click a surface in the view to put ${label(o)} there (the desktop, a table, the floor). Click Place again to cancel.`:'Placing cancelled.');return;}
     if(name==='pp-pick'){select(arg);return;}
+    if(name==='pp-unsel'){setMembers(members().filter(m=>m.key!==arg));return;}
+    if(name==='pp-clear'){deselect();onSelect();status('Selection cleared.');return;}
     if(name==='pp-reset-all'){resetAll();return;}
     if(name==='pp-permanent'){openPermanent();return;}
     if(name==='pp-reset'){reset();return;}
     if(name==='pp-parent'){const o=current(),p=o&&meaningful(o.parent);if(p)pick(p);return;}
     if(name.startsWith('pp-mode-')){setMode(name.slice(8));return;}
   }
-  function setMode(m){if(!MODES[m])return;mode=m;rerender();status(`Gizmo: ${MODES[m].toLowerCase()}${sel?'':' (select a prop first)'}.`);}
+  function setMode(m){if(!MODES[m])return;if(group()&&m==='scale'){status('Scale works on one item at a time: select one item, or move and turn the group.',true);return;}mode=m;rerender();status(`Gizmo: ${MODES[m].toLowerCase()}${sel?'':' (select a prop first)'}.`);}
   // Props lane: edited props as chips (hidden ones struck through), click to select; reset-all chip.
   function lane(){
     const list=edits();
-    return `${list.map(e=>{const k=propKey(e),hiddenChip=e.hide===true,added=isAddEdit(e);return `<button class="lamp-chip prop-chip ${hiddenChip?'prop-hidden':''} ${added?'prop-added':''} ${sel?.key===k?'selected':''}" data-action="pp-pick" data-section="${escape(k)}" title="${escape((e.label||e.match)+' · '+describePropEdit(e))}${hiddenChip?' · click, then untick Hide to bring it back':''}${added?' · Delete removes it':''}">${added?'<b aria-label="added">+</b>':''}${escape(added?(e.label||propName(e.add.asset)):propName(e.label||e.match.replace(/^\^|\$$/g,'').replace(/\\/g,'')))}</button>`;}).join('')}${list.length?'<button class="lamp-chip lamp-reset" data-action="pp-reset-all" title="Every prop back to the film, added ones removed: one step, Undo brings them back">↺ Reset all props to the film</button>':'<span class="desk-lane-empty">Click a prop in the view to move, turn, scale or hide it in this chapter, or + Prop to add one</span>'}`;
+    return `${list.map(e=>{const k=propKey(e),hiddenChip=e.hide===true,added=isAddEdit(e);return `<button class="lamp-chip prop-chip ${hiddenChip?'prop-hidden':''} ${added?'prop-added':''} ${isSel(k)?'selected':''}" data-action="pp-pick" data-section="${escape(k)}" title="${escape((e.label||e.match)+' · '+describePropEdit(e))}${hiddenChip?' · click, then untick Hide to bring it back':''}${added?' · Delete removes it':''}">${added?'<b aria-label="added">+</b>':''}${escape(added?(e.label||propName(e.add.asset)):propName(e.label||e.match.replace(/^\^|\$$/g,'').replace(/\\/g,'')))}</button>`;}).join('')}${list.length?'<button class="lamp-chip lamp-reset" data-action="pp-reset-all" title="Every prop back to the film, added ones removed: one step, Undo brings them back">↺ Reset all props to the film</button>':'<span class="desk-lane-empty">Click a prop in the view to move, turn, scale or hide it in this chapter, or + Prop to add one</span>'}`;
   }
   // After film-fx (re)installs: objects may be new; folded-in props keep their Studio place on the stage.
   function applied(){
-    found=null;if(sel?.obj&&!inScene(sel.obj))sel.obj=null;
+    found=null;itemsCache=null;pivotDirty=true;for(const m of members())if(m.obj&&!inScene(m.obj))m.obj=null;
     if(pending&&!edits().some(e=>pending.keys.has(propKey(e)))){
       // Added props: the chapter's copy is gone with its edit; Studio's own item stands in its place (as Studio loads it).
       for(const r of pending.rows.filter(r=>r.add)){const room=win()?.ErgoFlex?.workspaceRoom;room?.addAsset(r.add.propId,r.studioKey,r.add.position).then(obj=>{if(!obj)return;obj.position.copy(r.local.p);obj.quaternion.copy(r.local.q);obj.scale.copy(r.local.s);obj.updateMatrixWorld(true);bridge.stage()?.wake?.(300);}).catch(error=>console.warn('[props] Studio copy',error));}
@@ -436,7 +560,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     }
   }
   return {panel,lane,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,
-    selected:()=>sel?.key||null,selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
+    selected:()=>sel?.key||null,selectedKeys:()=>members().map(m=>m.key),selectKeys,items,hideItems:(keys,on,also)=>hideItems(keys.map(k=>{const i=items().find(x=>x.key===k);return i?{key:k,target:i.target,obj:i.obj}:{key:k};}),on,also),
+    flashKey,setLocked:fn=>{lockedKeys=fn;},isHidden:key=>{const e=editOfKey(key);if(e)return e.hide===true;const i=items().find(x=>x.key===key);return !!i&&i.hidden;},selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
     addProp,openLibrary:()=>library.open(),library:()=>library,
-    header:()=>sel?{name:current()?label(current()):nice(sel.target.label),detail:(editOfKey(sel.key)?describePropEdit(editOfKey(sel.key)):'from the film')}:null};
+    header:()=>group()?{name:`${members().length} selected`,detail:'moving, turning and hiding together'}:sel?{name:current()?label(current()):nice(sel.target.label),detail:(editOfKey(sel.key)?describePropEdit(editOfKey(sel.key)):'from the film')}:null};
 }
