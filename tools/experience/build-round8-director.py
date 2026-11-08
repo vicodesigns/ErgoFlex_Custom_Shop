@@ -732,6 +732,9 @@ def run_import(export):
     # Props: the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
     if isinstance(shot.get('propEdits'), list): dc['props'] = [{k: v for k, v in e.items() if k != 'director'} for e in clean_props(shot['propEdits'])]
     elif 'props' in before: dc['props'] = before['props']
+    # Prop layers (Layers tab: named groups of props, with eye / lock): no film effect, the hide edits above carry it; kept for the Director only.
+    if isinstance(shot.get('propLayers'), list): dc['propLayers'] = [l for l in shot['propLayers'] if isinstance(l, dict)][:60]
+    elif 'propLayers' in before: dc['propLayers'] = before['propLayers']
     # Branding: the export's overlay (empty = he reset it); an export without the field keeps the earlier import's.
     if isinstance(shot.get('brandingEdits'), dict) and clean_branding(shot['brandingEdits']): dc['branding'] = clean_branding(shot['brandingEdits'])
     elif 'branding' in before: dc['branding'] = before['branding']
