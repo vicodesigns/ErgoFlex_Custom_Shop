@@ -407,3 +407,12 @@ body.directing.film-frame .desk-version-badge:not([hidden]){display:block;positi
 #director-panel .desk-num em{font-style:normal;font-size:var(--df-fs-sm);color:var(--df-text-3)}
 #director-panel .desk-nudge{display:flex;gap:3px}
 #director-panel .desk-nudge button{padding:4px 6px;min-width:34px;font-family:var(--df-mono)}
+
+/* Desk versions, editable: the seam between two desks drags to retime them; a desk drags to reorder. */
+#director-timeline .timeline-content .desk-version{touch-action:none;user-select:none;-webkit-user-select:none}
+#director-timeline .timeline-content .desk-version.picked{outline:2px solid var(--df-select-text);outline-offset:-2px}
+#director-timeline .desk-version-seam{position:absolute;top:2px;height:36px;width:12px;margin-left:-6px;z-index:4;cursor:ew-resize;touch-action:none}
+#director-timeline .desk-version-seam::after{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;border-radius:1px;background:#ffffffb0;box-shadow:0 0 0 1px #0008}
+#director-timeline .desk-version-seam:hover::after{background:var(--df-select-text)}
+#director-timeline .desk-version-drop{position:absolute;top:2px;height:36px;z-index:5;pointer-events:none;border:2px dashed var(--df-select-text);border-radius:var(--df-r-2);background:#ffffff1a;box-sizing:border-box}
+.build-desk-times{display:flex;gap:10px;margin:6px 0}.build-desk-times label{display:flex;align-items:center;gap:4px}.build-desk-times input{width:70px}

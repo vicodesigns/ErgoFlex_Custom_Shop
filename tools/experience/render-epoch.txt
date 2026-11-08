@@ -1,0 +1,4 @@
+# Bump this number when a code change alters the rendered pixels of chapters whose data did not change
+# (renderer, scene code, props, lighting, shaders). A new epoch changes every chapter key, so the next film render
+# re-renders every chapter. Data edits (cameras, lights, desk builds, screens, seeds) never need a bump.
+1

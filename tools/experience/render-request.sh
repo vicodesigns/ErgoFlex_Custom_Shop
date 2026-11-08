@@ -10,6 +10,9 @@
 #      files, same filter as the manual flow), and the cut the render PC renders: <freeze>/request/cut.json (chapter scope:
 #      a one-shot cut, shots[chapterIndex] of review-cut.json; film scope: all of review-cut.json) plus request.json,
 #      both listed in the manifest,
+#      The job also carries chapterKeys (chapter id -> cache key, all 12 for a film, one for a chapter; chapter-keys.py over the
+#      FROZEN film data at the job's resolution), epoch (render-epoch.txt) and force (the request's "force": true = ignore the
+#      render PC's chapter cache). Without keys (chapter-keys.py failed) the render PC renders everything.
 #   3. appends the job to <root>/exports/render-queue/queue.json (atomic write; exports/ is served and not watched).
 # Protocol for the render PC: tools/experience/RENDER-QUEUE.md. Prints the job id on the last line.
 #
@@ -69,7 +72,7 @@ MANIFEST=$(echo "$OUT" | tail -1 | cut -d: -f1); F=${MANIFEST%/manifest.txt}
 LIVE=$(git -C "$ROOT" status --porcelain -- '*.mjs' '*.js' '*.cjs' | { grep -vE "exports/|tools/experience/|experience/|institutional-|campus-lived-in" || true; } | cut -c4- | sed 's/.* -> //')
 python3 "$HERE/pin-inputs.py" "$ROOT" "$F" $PIN_ALWAYS $LIVE
 mkdir -p "$ROOT/$F/request"; cp "$REQ" "$ROOT/$F/request/request.json"
-python3 - "$ROOT" "$HQ" "$F" "$SCOPE" "$CHAPTER" "$RES" "$ID" "$WARN" <<'PY'
+RENDER_REQ_HERE="$HERE" python3 - "$ROOT" "$HQ" "$F" "$SCOPE" "$CHAPTER" "$RES" "$ID" "$WARN" <<'PY'
 import hashlib, json, os, sys, time
 root, hq, F, scope, chapter, res, jid, warn = sys.argv[1:9]
 os.chdir(root)
@@ -87,7 +90,14 @@ open(mp, 'w').write('\n'.join(lines) + '\n')
 H = {'480p': 480, '720p': 720, '1080p': 1080, '4K': 2160}
 job = {'id': jid, 'created': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'scope': scope, 'chapter': chapter, 'chapterIndex': index,
        'resolution': res, 'height': H[res], 'note': req.get('note') or '', 'manifest': mp, 'cut': cutp, 'shots': '0' if scope == 'chapter' else 'all',
-       'requestCreated': req.get('created'), 'clientSignature': req.get('signature'), 'status': 'queued'}
+       'requestCreated': req.get('created'), 'clientSignature': req.get('signature'), 'force': req.get('force') is True, 'status': 'queued'}
+# chapter cache keys from the frozen copy of the film data (the freeze overlays the repo: freeze file first, live file otherwise)
+import subprocess
+kp = subprocess.run([sys.executable, os.path.join(os.environ['RENDER_REQ_HERE'], 'chapter-keys.py'), hq, '--root', root, '--overlay', F,
+                     '--resolution', res, '--json'] + ([] if scope == 'film' else ['--chapter', chapter]), capture_output=True, text=True)
+if kp.returncode == 0:
+    ck = json.loads(kp.stdout); job['chapterKeys'] = ck['keys']; job['epoch'] = ck['epoch']
+else: print('WARNING: chapter keys not computed (the render PC renders every chapter): ' + kp.stderr.strip()[-300:], file=sys.stderr)
 if req.get('estimateMinutes') is not None: job['estimateMinutes'] = req['estimateMinutes']
 if warn: job['warning'] = warn
 # queue.json: read-modify-write under its own lock, replaced atomically so the render PC never fetches half a file

@@ -20,7 +20,7 @@ def sh(*a, **k): return subprocess.run(list(a), capture_output=True, text=True, 
 try:
     live_before = os.path.exists(os.path.join(LIVE, 'exports/render-queue'))
     assert sh('git', 'clone', '-q', '--local', WT, R).returncode == 0
-    sh('rsync', '-a', '--exclude=*.mp4', '--exclude=*.mkv', '--exclude=*.m4a', '--exclude=*.wav', '--exclude=final', '--exclude=renders*', '--exclude=previews', f'{WT}/{HQ}/', f'{R}/{HQ}/')
+    sh('rsync', '-a', '--exclude=*.mp4', '--exclude=*.mkv', '--exclude=*.m4a', '--exclude=*.wav', '--exclude=final', '--exclude=renders*', f'{WT}/{HQ}/', f'{R}/{HQ}/')
     # the tools under test come from the worktree (the clone has HEAD's, which may not have them yet)
     shutil.copytree(f'{WT}/tools/experience', f'{R}/tools/experience', dirs_exist_ok=True, ignore=shutil.ignore_patterns('screens', '__pycache__'))
     with open(f'{R}/campus-lived-in.mjs', 'a') as f: f.write('\n// the film owner edited this\n')      # not another session's: frozen as edited
@@ -63,6 +63,13 @@ try:
     q = json.load(open(f'{R}/exports/render-queue/queue.json')); j2 = q['jobs'][1]
     check(len(q['jobs']) == 2 and j2['id'] > j['id'] and j2['scope'] == 'film' and j2['height'] == 2160 and j2['shots'] == 'all', 'second job appended after the first, 4K film')
     check(json.load(open(f"{R}/{j2['cut']}")) == review, 'film cut = the whole review-cut.json')
+    # chapter cache keys: computed from the frozen copy, at the job's resolution, 12 for a film / 1 for a chapter; force defaults to false
+    import importlib.util
+    sp = importlib.util.spec_from_file_location('ck', f'{WT}/tools/experience/chapter-keys.py'); ck = importlib.util.module_from_spec(sp); sp.loader.exec_module(ck)
+    want = {c: k for _, c, k in ck.chapter_keys(HQ, '4K', R, os.path.join(R, j2['manifest'].rsplit('/', 1)[0]))}
+    check(list(j2.get('chapterKeys', {})) == ids and j2['chapterKeys'] == want and j2.get('epoch') == ck.read_epoch(f'{WT}/tools/experience') and j2.get('force') is False, 'film job: chapterKeys for all 12 chapters + epoch + force:false')
+    check(j['chapterKeys'] == {'create': {**{c: k for _, c, k in ck.chapter_keys(HQ, '720p', R, os.path.join(R, F))}}['create']}, 'chapter job: only its own key, at 720p')
+    check(j['chapterKeys']['create'] != j2['chapterKeys']['create'], 'the same chapter has another key at 4K')
     check(not [f for f in os.listdir(f'{R}/exports/render-queue') if f.endswith('.tmp')], 'no temp files left by the atomic write')
     # ---- waits for the cut lock
     held = subprocess.Popen(['flock', lock, 'sleep', '4']); time.sleep(.5); t0 = time.time()

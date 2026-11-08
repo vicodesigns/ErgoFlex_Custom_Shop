@@ -12,7 +12,8 @@ import {presetSwatch} from './desk-versions.mjs';
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sizeLabel=s=>s==='48x30'?'48″':s==='60x30'?'60″':String(s||'');
 
-export function createDeskBuildPanel({panel,shot,film,commit,status,rerender,ready,selection=()=>null}){
+const VERSIONS_NOTE=`<p class="director-hint" data-build-versions><b>Use the Desk versions lane to change a desk’s model.</b> This chapter shows several desks one after another; pick one in the lane and use the Desk version tab for its model, name and order. Finishes and accessories here apply to the whole chapter, every desk in it.</p>`;
+export function createDeskBuildPanel({panel,shot,film,commit,status,rerender,ready,selection=()=>null,versions=()=>false}){
   let picked=null,openAdd=false;
   const win=()=>document.getElementById('stage')?.contentWindow||null,api=()=>win()?.ErgoFlex||null;
   const live=()=>{try{return ready?.()!==false&&!!api()?.sceneDesks?.records;}catch{return false;}};
@@ -68,14 +69,14 @@ export function createDeskBuildPanel({panel,shot,film,commit,status,rerender,rea
     return `<button type="button" data-build-preset="${escape(p.id)}" style="--wood:${w.wood};--trim:${w.trim};--base:${w.base}" title="${escape(p.name)} · ${escape(w.woodName)} top, ${escape(w.baseName)} frame, ${p.accessories.length} accessories. Replaces this desk's finishes and accessories."><i class="build-preset-swatch" aria-hidden="true"></i><span>${escape(p.name)}</span></button>`;}).join('')}</div>`;
 
   function content(){
-    if(!live())return '<h3>Build</h3><p class="director-hint">The room is loading…</p>';
+    if(!live())return '<h3>Build</h3>'+(versions()?VERSIONS_NOTE:'')+'<p class="director-hint">The room is loading…</p>';
     // School, college and library rooms: their other desks use the Branding tab; the featured desk's finishes and accessories stay here.
     const list=hasBuildTab(room())?desks():[];
     const id=current(),edited=!!held(id),d=intended(id);
     const picker=selection()||!list.length?'':`<label class="build-desk">Desk<select name="build-desk"><option value="${FEATURED}" ${featured(id)?'selected':''}>${featuredName} · ${sizeLabel(readFeatured().size)}</option>${list.map(r=>`<option value="${escape(r.id)}" ${r.id===id?'selected':''}>${escape(r.state.name)} · ${sizeLabel(r.state.size)}</option>`).join('')}</select></label>`;
     return `<h3>Build <span class="inspector-subtitle">${escape(d.name)} · ${sizeLabel(d.size)}</span></h3>${picker}
       <p class="director-hint">Materials, trim and accessories for ${featured(id)?'the featured desk':'this desk'}, like the store’s configurator. Size is on the desk’s own panel. ${edited?'Edited here; Export cut sends it to the film.':'As the chapter has it; your first change is kept in this cut.'}</p>
-      <fieldset class="chapter-pacing build-box"><legend>Start from a build preset</legend>${presetChips()}</fieldset>
+      ${featured(id)&&versions()?VERSIONS_NOTE:`<fieldset class="chapter-pacing build-box"><legend>Start from a build preset</legend>${presetChips()}</fieldset>`}
       <fieldset class="chapter-pacing build-box"><legend>Desktop finish <small data-build-name="wood">${escape(d.woodFinish||'')}</small></legend>${swatches('wood',woodSwatches(),d.woodFinish)}</fieldset>
       <fieldset class="chapter-pacing build-box"><legend>Frame finish <small data-build-name="base">${escape(d.baseFinish||'')}</small></legend>${swatches('base',baseSwatches(),d.baseFinish)}</fieldset>
       <fieldset class="chapter-pacing build-box"><legend>Trim colour <small data-build-name="trim">${escape(trimSwatches().find(t=>t.color===d.trimColor)?.name||d.trimColor||'')}</small></legend>${swatches('trim',trimSwatches(),d.trimColor)}</fieldset>

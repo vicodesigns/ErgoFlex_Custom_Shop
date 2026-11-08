@@ -11,6 +11,7 @@ import {cleanBrandingEdits} from './branding-edits.mjs';
 import {cleanDeskChoreo} from './desk-choreo.mjs';
 import {cleanDeskEdits} from './desk-edits.mjs';
 import {cleanDeskBuildField} from './desk-build.mjs';
+import {cleanDeskVersionsField} from './desk-versions-edit.mjs';
 import {cleanFilmTitles} from './film-titles.mjs';
 export const CUTS_KEY='ergoflex.clientCuts.v1';
 export const KINDS=[['room','Explore the room'],['hero','Desk showcase'],['glide','Omni-wheel movement'],['lift','Sit to stand'],['tilt','Drafting / easel'],['group','Group-work Groove'],['storage','Storage Groove'],['wellness','Movement break'],['proximity','Proximity demo'],['music','Music lighting'],['media','Curved-screen media']];
@@ -47,7 +48,7 @@ export function cleanShot(v={},catalog){
   const keys=cleanCameraKeys(v.camera?.keys);
   if(keys.length)shot.camera={keys};else if(from||to)shot.camera={...(from?{from}:{}),...(to?{to}:{} )};
   // Film lighting edited in the Director (absent until then).
-  Object.assign(shot,cleanLighting(v),cleanSceneLights(v),cleanPropEdits(v),cleanBrandingEdits(v),cleanDeskEdits(v),cleanDeskBuildField(v));
+  Object.assign(shot,cleanLighting(v),cleanSceneLights(v),cleanPropEdits(v),cleanBrandingEdits(v),cleanDeskEdits(v),cleanDeskBuildField(v),cleanDeskVersionsField(v));
   // Clips: lift / tilt only, valid and non-overlapping (desk-choreo.mjs).
   if(shot.deskEdits)shot.deskEdits=cleanDeskChoreo({deskEdits:shot.deskEdits},shot.seconds).deskEdits;
   // Film titles edited in the Director (absent until then): copy, timing, shadow shape.
