@@ -35,6 +35,10 @@
       shadow) rewrites that chapter's entries in <hq>/titles-src.json (backup first: titles-src.pre-director-<id>-<time>.json;
       unchanged titles leave the file alone). Titles he retimed get director_timing: true, which titles-after-cut.py
       keeps as set (it only flags a break of the 1.5 s-after-cut rule).
+      Desk versions (hero): an export whose shot has 'deskVersions' ([{n, preset, name, start, end}] in time order: the six
+      sub-shots' desk model, label and renderRange) keeps them in director-camera-hero.json as 'versions' (an export without
+      the field keeps the earlier import's). The pass rewrites shots/13-subshots.json (preset, renderRange, name and the
+      model's dressing per sub-shot) and the film shot's subshots map + presets (tools/experience/desk-versions-apply.mjs).
       Props: an export whose shot has 'propEdits' (Director Mode's Props: move / turn / scale / hide, film sceneEdits
       format, experience/prop-edits.mjs) keeps them in director-camera-<id>.json as 'props' (an export without the
       field keeps the props imported before). The pass writes them into the chapter's sceneEdits after the hand-made
@@ -461,6 +465,46 @@ def apply_featured_build(cid, f, build):
     return wrote
 
 
+def clean_versions(v):
+    """Desk versions as the Director cleaned them (experience/desk-versions-edit.mjs cleanDeskVersionList): hero's six
+    desks [{n, preset, name, start, end}] in time order, or None."""
+    if not isinstance(v, list) or not 2 <= len(v) <= 12: return None
+    out = []
+    for e in v:
+        if not isinstance(e, dict) or not re.match(r'^[A-Z]$', str(e.get('n', ''))) or not re.match(r'^[a-z0-9-]{1,40}$', str(e.get('preset', ''))): return None
+        try: a, b = float(e['start']), float(e['end'])
+        except (KeyError, TypeError, ValueError): return None
+        if not (0 <= a < b <= 600): return None
+        out.append({'n': e['n'], 'preset': e['preset'], 'name': re.sub(r'[\x00-\x1f]', ' ', str(e.get('name') or '')).strip()[:40],
+                    'start': round(a, 2), 'end': round(b, 2)})
+    if len({e['n'] for e in out}) != len(out): return None
+    return sorted(out, key=lambda e: (e['start'], e['n']))
+
+
+def apply_versions(cid, f, versions):
+    """Chapter 12 (hero): the Director's Desk versions (order, length, model, name) -> shots/13-subshots.json (each
+    sub-shot's preset, renderRange, name and the model's own dressing: experience/desk-versions-edit.mjs, run through
+    node so the film and the live stage resolve the same thing) and the film shot's subshots map + presets (review-cut.json,
+    shots/13.json). Idempotent. The slots keep the camera, light rig and desk performance; seams stay at overlap midpoints."""
+    sp = os.path.join(H, 'shots', '13-subshots.json')
+    if cid != 'hero' or not os.path.exists(sp): return []
+    sub = load(sp)
+    r = subprocess.run(['node', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'desk-versions-apply.mjs')],
+                       input=json.dumps({'subshots': sub['shots'], 'versions': versions}), capture_output=True, text=True)
+    if r.returncode: sys.exit(f'{cid}: desk versions could not be applied: {r.stderr.strip().splitlines()[-1] if r.stderr.strip() else r.returncode}')
+    out = json.loads(r.stdout); wrote = []
+    sub['shots'] = out['subshots']
+    if dump(sp, sub, indent=None): wrote.append('shots/13-subshots.json')
+    for p in [CUT] + ([f] if f else []):
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') != cid: continue
+            s['subshots'] = copy.deepcopy(out['film']['subshots']); s['presets'] = list(out['film']['presets'])
+        if dump(p, d): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
 def run_pass():
     for n, cid, f in chapters():
         p = director_file(cid)
@@ -481,6 +525,11 @@ def run_pass():
         if os.path.exists(p) and 'build' in load(p):
             w = apply_featured_build(cid, f, clean_build(load(p)['build']))
             print(f'ch{n:02d} {cid}: Director featured desk build -> {", ".join(w) or "no change"}')
+    for n, cid, f in chapters():
+        p = director_file(cid)
+        if os.path.exists(p) and clean_versions(load(p).get('versions')):
+            w = apply_versions(cid, f, clean_versions(load(p)['versions']))
+            print(f'ch{n:02d} {cid}: Director desk versions -> {", ".join(w) or "no change"}')
     for n, cid, f in chapters():
         if cid == 'awaken': continue
         p = director_file(cid)
@@ -694,7 +743,13 @@ def run_import(export):
         if clean_build(shot['deskBuild']): dc['build'] = clean_build(shot['deskBuild'])
         else: dc.pop('build', None)
     elif 'build' in before: dc['build'] = before['build']
+    # Desk versions (chapter 12's Desk version panel and lane): the export's list; an export without it keeps the earlier import's.
+    if 'deskVersions' in shot:
+        if clean_versions(shot['deskVersions']): dc['versions'] = clean_versions(shot['deskVersions'])
+        else: print(f'{cid}: Director desk versions ignored (not a valid list)', file=sys.stderr)
+    elif 'versions' in before: dc['versions'] = before['versions']
     dump(director_file(cid), dc)
+    if 'versions' in dc: print(f'{cid}: Director desk versions ({" ".join(v["n"] + "=" + v["preset"] for v in dc["versions"])}) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'build' in dc: print(f'{cid}: Director featured desk build kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'branding' in dc: print(f'{cid}: Director branding -> {sum(len(v) for v in dc["branding"]["artwork"]["surfaces"].values())} graphic edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'desks' in dc: print(f'{cid}: Director desks -> {len(dc["desks"])} desk edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
