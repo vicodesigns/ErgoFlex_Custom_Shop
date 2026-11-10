@@ -30,8 +30,18 @@ const browser=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/b
 const page=await browser.newPage(),cdp=await page.createCDPSession(),errors=[];
 await cdp.send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloads});
 // Live reload off (this checkout may change under the test); the shared-state sync stays on, against the temp state.
-await cdp.send('Fetch.enable',{patterns:[{urlPattern:'*/__studio/reload.js'}]});
-cdp.on('Fetch.requestPaused',e=>cdp.send('Fetch.fulfillRequest',{requestId:e.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'text/javascript'}],body:Buffer.from('/* blocked */').toString('base64')}).catch(()=>{}));
+// The chapter films now carry director edits of their own (Commons: 33) (sceneEdits with director:true). This test is about the
+// editor's mechanics on an unedited chapter (chip counts, one draft entry per change), so the editor is served the
+// film without them; every other request goes through untouched.
+await cdp.send('Fetch.enable',{patterns:[{urlPattern:'*/__studio/reload.js'},{urlPattern:'*/director-film/*.json*'}]});
+cdp.on('Fetch.requestPaused',async e=>{
+  if(/director-film\/[\w-]+\.json/.test(e.request.url)){
+    try{const film=JSON.parse(fs.readFileSync(path.join(root,HQ,'director-film',e.request.url.match(/director-film\/([\w-]+\.json)/)[1]),'utf8'));film.sceneEdits=(film.sceneEdits||[]).filter(x=>!x.director);
+      return await cdp.send('Fetch.fulfillRequest',{requestId:e.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'application/json'},{name:'cache-control',value:'no-store'}],body:Buffer.from(JSON.stringify(film)).toString('base64')});}
+    catch{return cdp.send('Fetch.continueRequest',{requestId:e.requestId}).catch(()=>{});}
+  }
+  cdp.send('Fetch.fulfillRequest',{requestId:e.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'text/javascript'}],body:Buffer.from('/* blocked */').toString('base64')}).catch(()=>{});
+});
 page.on('pageerror',e=>errors.push(e.message));
 page.on('console',m=>{const t=m.text();if(/not exported|does not provide an export|SyntaxError/.test(t))errors.push(t);if(process.env.LOG)console.log('[page]',t.slice(0,240));});
 const passed=[],check=(ok,what)=>{assert.ok(ok,what);passed.push(what);};
