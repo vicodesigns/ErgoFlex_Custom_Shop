@@ -35903,6 +35903,72 @@
     "character": "kai",
     "pose": "wheel-roll"
    }
+  },
+  {
+   "id": "people-maya-stretch",
+   "name": "Maya, stretching at her desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-stretch.glb",
+   "anchor": "floor",
+   "size": [
+    655.2,
+    1697.9,
+    371.1
+   ],
+   "min": [
+    -327.6,
+    0,
+    -189.5
+   ],
+   "max": [
+    327.6,
+    1697.9,
+    181.6
+   ],
+   "tris": 37662,
+   "bytes": 931536,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "stretch-open"
+   }
+  },
+  {
+   "id": "people-omar-wheel-watch",
+   "name": "Omar, watching a screen (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-omar-wheel-watch.glb",
+   "anchor": "floor",
+   "size": [
+    640,
+    1405.7,
+    987
+   ],
+   "min": [
+    -320,
+    0,
+    -370
+   ],
+   "max": [
+    320,
+    1405.7,
+    617
+   ],
+   "tris": 37336,
+   "bytes": 756340,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "omar",
+    "pose": "wheel-watch"
+   }
   }
  ],
  "screens": [

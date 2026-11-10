@@ -190,6 +190,14 @@ def stretch(k):
             'foot_l': {'at': _s(k, .13, .0, .07 / k), 'toes': (.2, -1, 0)}, 'foot_r': {'at': _s(k, -.13, .0, .07 / k), 'toes': (-.2, -1, 0)}}
 
 
+def stretch_open(k):
+    """A break at the desk: hands behind the head, elbows wide, chest open, a small arch back."""
+    return {'spine': (-1, -2, -3), 'neck': -2, 'head': -3,
+            'hand_l': {'at': _s(k, .13, .17, 1.585), 'fingers': (-1, -.1, .15), 'palm': (0, -1, .1), 'elbow': (.55, .1, .05), 'curl': .3, 'thumb': .25},
+            'hand_r': {'at': _s(k, -.13, .17, 1.585), 'fingers': (1, -.1, .15), 'palm': (0, -1, .1), 'elbow': (-.55, .1, .05), 'curl': .3, 'thumb': .25},
+            'foot_l': {'at': _s(k, .13, .0, .07 / k), 'toes': (.22, -1, 0)}, 'foot_r': {'at': _s(k, -.13, .02, .07 / k), 'toes': (-.25, -1, 0)}}
+
+
 def cane_stand(k):
     """Standing with a walking stick in the right hand, a little weight on it."""
     return {'spine': (4, 6, 6), 'neck': -4, 'head': -6, 'pelvis_offset': (0, 0, -.01),
@@ -256,6 +264,13 @@ POSES = {
         'hand_r': {'at': (-.305, .0, WHEEL_SEAT + .075), 'fingers': (0, -.6, -1), 'palm': (1, 0, 0), 'elbow': (-.2, .4, .2), 'curl': .7, 'thumb': .3},
         'foot_l': {'at': (.085, -.41, .235), 'toes': (.1, -1, 0)}, 'foot_r': {'at': (-.085, -.41, .235), 'toes': (-.1, -1, 0)},
     },
+    # In a wheelchair, at ease: sitting back, hands on the thighs, eyes up on a screen.
+    'wheel-watch': {
+        'pelvis': (0, .03, WHEEL_SEAT + .095), 'pelvis_pitch': -3, 'spine': (0, 2, 3), 'neck': -4, 'head': -6,
+        'hand_l': {'at': (.15, -.3, WHEEL_SEAT + .19), 'fingers': (-.2, -1, -.25), 'palm': (0, 0, -1), 'elbow': (.3, .3, -.1), 'curl': .35, 'thumb': .2},
+        'hand_r': {'at': (-.15, -.3, WHEEL_SEAT + .19), 'fingers': (.2, -1, -.25), 'palm': (0, 0, -1), 'elbow': (-.3, .3, -.1), 'curl': .35, 'thumb': .2},
+        'foot_l': {'at': (.085, -.41, .235), 'toes': (.1, -1, 0)}, 'foot_r': {'at': (-.085, -.41, .235), 'toes': (-.1, -1, 0)},
+    },
     # On a sofa, leaning in with a controller.
     'sit-controller': {
         'pelvis': (0, .0, LOUNGE + .09), 'pelvis_pitch': 14, 'spine': (8, 8, 6), 'neck': -8, 'head': -10,
@@ -272,6 +287,7 @@ POSES = {
     },
     'stand-paint': stand_paint,
     'stretch': stretch,
+    'stretch-open': stretch_open,
     'cane-stand': cane_stand,
     'white-cane': white_cane,
     # At a table, writing: leaning in, pen in the right hand, left forearm on the table.
@@ -325,6 +341,7 @@ POSES = {
 OUTPUTS = [
     {'id': 'people-maya-sit-type', 'character': 'maya', 'pose': 'sit-type', 'height': 28, 'name': 'Maya, typing at the desk (seated)'},
     {'id': 'people-maya-sit-type-30', 'character': 'maya', 'pose': 'sit-type', 'height': 30, 'name': 'Maya, typing at the desk at 30 in (seated)'},
+    {'id': 'people-maya-stretch', 'character': 'maya', 'pose': 'stretch-open', 'name': 'Maya, stretching at her desk'},
     {'id': 'people-maya-stand-phone', 'character': 'maya', 'pose': 'stand-phone', 'name': 'Maya, with the desk app on her phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-maya-stand-type', 'character': 'maya', 'pose': 'stand-type', 'height': 43.5, 'name': 'Maya, typing at the desk (standing)'},
     {'id': 'people-andre-sit-type', 'character': 'andre', 'pose': 'sit-type', 'height': 28, 'name': 'Andre, typing at the desk (seated)'},
@@ -360,6 +377,7 @@ OUTPUTS = [
     {'id': 'people-ava-sit-write', 'character': 'ava', 'pose': 'sit-write', 'name': 'Ava, writing at a table', 'held': [('pen', {'side': 'r'})]},
     {'id': 'people-eli-sit-listen', 'character': 'eli', 'pose': 'sit-listen', 'name': 'Eli, listening at a table'},
     {'id': 'people-sofia-sit-laptop', 'character': 'sofia', 'pose': 'sit-laptop', 'name': 'Sofia, at a laptop'},
+    {'id': 'people-omar-wheel-watch', 'character': 'omar', 'pose': 'wheel-watch', 'name': 'Omar, watching a screen (wheelchair)', 'held': [('wheelchair', {})]},
     {'id': 'people-omar-wheel-roll', 'character': 'omar', 'pose': 'wheel-roll', 'name': 'Omar, rolling (wheelchair)', 'held': [('wheelchair', {})]},
     {'id': 'people-lin-stand-paint', 'character': 'lin', 'pose': 'stand-paint', 'name': 'Lin, painting at an easel', 'held': [('brush', {'side': 'r'}), ('palette', {'side': 'l'})]},
     {'id': 'people-lin-sit-type', 'character': 'lin', 'pose': 'sit-type', 'height': 28, 'name': 'Lin, typing at the desk (seated)'},

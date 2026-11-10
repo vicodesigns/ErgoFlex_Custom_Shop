@@ -133,10 +133,13 @@ def oilers(s):
 
 @chapter
 def wellness(s):
-    # Gym: Maya works seated, then standing; Priya stretches by the mirrors, clear of the opening frame.
-    people(s, only=['people-maya-sit-type', 'people-maya-sit-type-30', 'people-maya-stand-type', 'people-priya-stretch'],
-           place={'people-priya-stretch': {'at': [780, -1050], 'turn': 180}})
-
+    # Gym: "Pause. Stretch. Breathe. Reset." Maya works seated; when the desk starts to rise she gets up and
+    # stretches while it climbs, then works on her feet. Her chair stays, pushed back toward the bike. Priya
+    # stretches at the mobility board, clear of the plant. His camera, unchanged.
+    people(s, only=['people-maya-sit-type', 'people-maya-stand-type', 'people-priya-stretch'],
+           cast=[{'key': 'maya-break', 'id': 'people-maya-stretch', 'at': [-421, 350], 'turn': 180}],
+           place={'people-priya-stretch': {'at': [1250, -1000], 'turn': 180}},
+           when={'maya-break': [[6.6, 10.35, .3, .35]]}, chair={'back': 100, 'side': -700, 'turn': 60})
 
 @chapter
 def awareness(s):
@@ -149,8 +152,34 @@ def awareness(s):
 
 @chapter
 def music(s):
-    # Gaming room: a friend on the sofa; the desk's screen is the subject, so nobody sits in front of it.
-    people(s, only=['people-kai-sit-controller'])
+    # Gaming room: Kai plays from the sofa, turned toward the desk's screen. He sits at the near end so the opening
+    # looks over his shoulder at the desk, and the camera passes on his right on its way to the front.
+    people(s, only=['people-kai-sit-controller'], place={'people-kai-sit-controller': {'at': [-1400, 1230], 'turn': 118, 'y': 70}})
+    cam(s, [
+        key(0, (-1843, 1758, 2615), (494, 715, 264), 48, 'Over Kai on the sofa: light panels, stream wall, the desk'),
+        key(4.5, (-1100, 1500, 2500), (-100, 800, -300), 46, 'Past him, toward the desk'),
+        key(4.6, (-1100, 1500, 2500), (-100, 800, -300), 46, 'Past him (hold)'),
+        key(9.2, (-168, 1454, 2052), (-141, 976, -486), 43.5, 'The desk plays along'),
+        key(9.4, (-168, 1454, 2052), (-141, 976, -486), 43.5, 'The desk plays along (hold)'),
+        key(10.65, (-168, 1454, 2052), (-141, 976, -486), 43.5, 'The desk plays along: at rest'),
+        key(12.5, (-164, 1388, 1753), (-141, 1008, -486), 41.8, 'One slow push into the dissolve'),
+    ])
+
+@chapter
+def media(s):
+    # Movie night in the music studio: Omar has rolled up to the right of the desk to watch. The camera comes round
+    # behind him as in his cut, then pushes further in than his did, past Omar's shoulder, until the picture and the
+    # light it throws fill the frame.
+    people(s, only=[], cast=[{'key': 'omar', 'id': 'people-omar-wheel-watch', 'at': [620, 720], 'turn': 207}])
+    cam(s, [
+        key(0, (1054, 957, 2240), (-362, 761, 394), 46, 'Behind Omar: piano corner, the city at night'),
+        key(4, (55, 991, 2274), (-477, 928, 0), 44, 'Round behind him'),
+        key(7, (-113, 937, 2041), (-122, 832, -495), 40, 'Centred on the desk, Omar at the right'),
+        key(7.1, (-113, 937, 2041), (-122, 832, -495), 40, 'Centred (hold)'),
+        key(9.6, (-114, 925, 1600), (-122, 840, -495), 37, 'Push on the ultrawide'),
+        key(11.4, (-115, 915, 1250), (-122, 850, -495), 34, 'Past his shoulder, into the picture'),
+        key(17, (-115, 915, 1250), (-122, 850, -495), 34, 'Ending hold'),
+    ])
 
 
 @chapter
