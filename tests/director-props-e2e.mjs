@@ -198,6 +198,56 @@ try{
   check(JSON.stringify(Object.fromEntries(Object.entries(studio1['library:humboldt'].transforms).filter(([k])=>!/steelcase/.test(k))))===JSON.stringify(Object.fromEntries(Object.entries(old.transforms).filter(([k])=>!/steelcase/.test(k)))),'no other prop changed in Studio');
   d=await draft();check(d.length===1&&/wide-monitor/.test(d[0].match),'the chair\'s chapter edit is folded in; the accessory hide stays');
   const chairAfter=await pose(CHAIR);check(near(chairAfter.p,chairBefore.p)&&near(chairAfter.s,chairBefore.s),'the chair stays where he put it on the stage');
+  // ---- chapter 2 (rise): the desk's daily kit (the open notebook) rides the lift; Reset camera to the film
+  await openChapter('rise');
+  const seekTo=async sec=>{await page.evaluate(t=>{const el=document.querySelector('#director-timeline [name="timeline-seconds"]');el.value=String(t);el.dispatchEvent(new Event('change',{bubbles:true}));},sec);await wait(700);};
+  const camAt=async sec=>{await seekTo(sec);return page.evaluate(()=>{const c=__t().t.camera;c.updateMatrixWorld(true);return [...c.matrixWorld.elements,c.fov];});};
+  const TIMES=[2,6,12],film0=[];for(const t of TIMES)film0.push(await camAt(t));
+  await seekTo(3);
+  // a visible mesh point of the open notebook (the day kit item shown now)
+  const book=await page.evaluate(()=>{const {t,T}=__t(),f=document.getElementById('stage');let o=null;t.scene.traverse(x=>{if(!o&&x.parent?.userData?.dayKit&&(()=>{for(let p=x;p;p=p.parent)if(!p.visible)return false;return true;})())o=x;});if(!o)return null;
+    const rc=new T.Raycaster(),inside=m=>{for(let q=m;q;q=q.parent)if(q===o)return true;return false;},shown=m=>{for(let q=m;q;q=q.parent)if(!q.visible)return false;return true;};
+    const r=t.renderer.domElement.getBoundingClientRect(),fr=f.getBoundingClientRect();let at=null;
+    o.traverse(m=>{if(at||!m.isMesh)return;const c=new T.Box3().setFromObject(m).getCenter(new T.Vector3()).project(t.camera);rc.setFromCamera(new T.Vector2(c.x,c.y),t.camera);
+      const h=rc.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!h.object.parent?.isTransformControls&&!/TransformControls/.test(h.object.parent?.type||''));if(h&&inside(h.object))at={x:fr.left+r.left+(c.x+1)/2*r.width,y:fr.top+r.top+(1-c.y)/2*r.height};});
+    return at&&{name:o.name,...at};});
+  check(!!book,'chapter 2 has the desk\'s open notebook in view'+(book?` ("${book.name}")`:''));
+  await page.mouse.click(book.x,book.y);await wait(900);
+  check(await page.evaluate(()=>__gizmo()?.object?.name)===book.name,'clicking the notebook on the desk selects it ("'+book.name+'")');
+  const studioNote=await page.$eval('[data-studio-note]',e=>e.textContent);check(/sits on the desk/.test(studioNote),'Make permanent stays blocked for it: '+studioNote);
+  const bx=Number(await page.$eval('#director-panel [name=pp-px]',e=>e.value));await setField('pp-px',(bx+.12).toFixed(3));
+  d=await until(async()=>{const x=await draft();return x?.find(e=>e.label===book.name)&&x;},'notebook edit');const bookEdit=d.find(e=>e.label===book.name);
+  check(bookEdit.space==='local'&&Math.hypot(...bookEdit.position)>.1,'the move is kept in the desk\'s own frame (space local): '+JSON.stringify(bookEdit.position));
+  // Render still at 3 s and 8 s: the notebook keeps its place on the desktop (its kit's frame) through the lift, as in the live view.
+  const onDesk=async(sec,file)=>{await seekTo(sec);await stillOf(file);
+    return page.evaluate(n=>{const still=[...document.querySelectorAll('iframe')].find(f=>f.title==='Film still renderer').contentWindow;let ss=still.ErgoFlex.loadedModel;while(ss.parent)ss=ss.parent;
+      // the same notebook in both stages: same name, its day kit, the same path (not the room's demonstration desk's)
+      const path=(o,sc)=>{const a=[];for(let p=o;p&&p!==sc;p=p.parent)a.unshift(p.name||p.type);return a.join(' > ');},live=__t().t.scene,mine=__gizmo()?.object||null;
+      const pick=(sc,want)=>{let o=null;sc.traverse(x=>{if(!o&&x.name===n&&x.parent?.userData?.dayKit&&(!want||path(x,sc)===want))o=x;});return o;};
+      const lv=mine&&mine.name===n?mine:pick(live),want=path(lv,live),sv=pick(ss,want);
+      const rel=o=>{o.updateWorldMatrix(true,false);const w=o.getWorldPosition(o.position.clone());const l=o.parent.parent.worldToLocal(w.clone());return {w:w.toArray().map(v=>+v.toFixed(4)),l:l.toArray().map(v=>+v.toFixed(3))};};
+      return {path:want,still:rel(sv),live:rel(lv)};},book.name);};
+  const at3=await onDesk(3,path.join(shots,'rise-notebook-3s.jpg')),at8=await onDesk(8,path.join(shots,'rise-notebook-8s.jpg'));
+  check(near(at3.still.w,at3.live.w,1e-3)&&near(at8.still.w,at8.live.w,1e-3),'Render still = live view for the moved notebook at 3 s and 8 s '+JSON.stringify({path:at3.path,at3,at8}));
+  check(near(at3.still.l,at8.still.l,1e-3*Math.max(1,...at3.still.l.map(Math.abs))),'it stays at the same spot on the desktop at 3 s and 8 s');
+  check(Math.abs(at8.still.w[1]-at3.still.w[1])>.01,`the desk lifted between them (notebook y ${at3.still.w[1].toFixed(3)} -> ${at8.still.w[1].toFixed(3)} m), and it rode along`);
+  // Orbit the view: no camera key changes; add a key from the orbit, then Reset camera to the film.
+  await page.keyboard.press('Escape');await wait(300);
+  const keysBefore=await page.evaluate(()=>{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return JSON.stringify((v.drafts[v.active]).shots[0].camera);});
+  const fr=await page.evaluate(()=>{const r=document.getElementById('stage').getBoundingClientRect();return {x:r.left+r.width*.5,y:r.top+r.height*.55};});
+  await page.mouse.move(fr.x,fr.y);await page.mouse.down();for(let i=1;i<=8;i++){await page.mouse.move(fr.x+i*18,fr.y-i*4);await wait(30);}await page.mouse.up();await wait(1200);
+  const keysAfter=await page.evaluate(()=>{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return JSON.stringify((v.drafts[v.active]).shots[0].camera);});
+  check(keysBefore===keysAfter,'orbiting the live view does not change any camera key');
+  await page.evaluate(()=>document.querySelector('#director-timeline [data-action=key-add]').click());await wait(800);
+  await page.evaluate(()=>document.querySelector('[data-inspector-tab=camera]').click());await wait(300);
+  const label=await page.$eval('#director-panel [data-action=camera-clear]',b=>b.textContent);check(label==='Reset camera to the film','film chapter: the button reads "Reset camera to the film"');
+  await page.mouse.move(fr.x,fr.y);await page.mouse.down();for(let i=1;i<=8;i++){await page.mouse.move(fr.x-i*15,fr.y+i*3);await wait(30);}await page.mouse.up();await wait(600);
+  await page.click('#director-panel [data-action=camera-clear]');await wait(1200);
+  check(/^Camera reset to the film/.test(await status()),'status: '+await status());
+  const after=[];for(const t of TIMES)after.push(await camAt(t));
+  check(after.every((m,i)=>near(m,film0[i],1e-6)),'after the reset the live camera matrices equal the film\'s at 2, 6 and 12 s');
+  await page.keyboard.down('Control');await page.keyboard.press('z');await page.keyboard.up('Control');await wait(800);
+  check(/^Undone: Camera reset to the film/.test(await status()),'one undo step: '+await status());
   // ---- disabled case: the product stage (chapter 1) has no Studio layout
   await openChapter('awaken');await page.evaluate(()=>document.querySelector('[data-inspector-tab=props]').click());await wait(500);
   const off=await page.$eval('#director-panel [data-action=pp-permanent]',b=>[b.disabled,b.title,document.querySelector('[data-permanent-why]')?.textContent]);

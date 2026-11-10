@@ -33,17 +33,24 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   const inScene=o=>{const scene=sceneOf();for(let p=o;p;p=p.parent)if(p===scene)return true;return false;};
   const shown=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
   const isOurs=o=>{for(let p=o;p;p=p.parent)if(p.userData?.directorTools||p.userData?.filmFx||p.isTransformControls||/^Cinematic effects$|^Film lights$/.test(p.name))return true;return false;};
-  // The prop a click means: the innermost Studio scene asset or desk accessory, else the library prop (Prop:…).
+  // The prop a click means: one item of the desk's daily kit (the open notebook…), the innermost Studio scene asset or
+  // desk accessory, else the library prop (Prop:…). On the desk model itself only such props count, never its parts.
   function meaningful(o,{above=null}={}){
     const scene=sceneOf(),desk=win()?.ErgoFlex?.loadedModel;let fallback=null,skipping=!!above;
     for(let p=o;p&&p!==scene;p=p.parent){
-      if(p===desk)return null;
+      if(p===desk)return skipping?null:fallback;
       if(skipping){if(p===above)skipping=false;continue;}
-      if(p.userData?.sceneAsset||/^Accessory:/.test(p.name))return p;
+      if(p.parent?.userData?.dayKit)return p;
+      if(p.userData?.sceneAsset||p.userData?.dayKit||/^Accessory:/.test(p.name))return p;
       if(!fallback&&(/^Prop:/.test(p.name)||p.userData?.propId))fallback=p;
     }
     return skipping?null:fallback;
   }
+  // Props riding on the desk (on the desk model, its daily kit, its mounts and dressing): their edits are kept along
+  // the parent's own axes (space:'local'), so they follow lift and tilt whatever pose the edit is installed at.
+  function ridesDesk(o){const desk=win()?.ErgoFlex?.loadedModel;for(let p=o?.parent;p;p=p.parent)if(p===desk||p.userData?.dayKit||/^(Scene dressing|Accessory mount|Desk dressing):/.test(p.name))return true;return false;}
+  const ON_DESK='It sits on the desk (part of the desk\'s daily kit), which travels with the desk; Studio\'s room layout doesn\'t hold it. Keep it as a chapter edit.';
+  const onDeskItself=o=>{const desk=win()?.ErgoFlex?.loadedModel;for(let p=o;p;p=p.parent)if(p===desk||p.userData?.dayKit)return true;return false;};
   // The film target for a prop: its name, plus its Studio key, path or position when others share the name.
   function targetFor(o){
     const E=win().__filmEdits,t={match:'^'+escapeRegex(o.name||'')+'$',label:o.name||'Unnamed prop'},only=x=>{const f=E.editTargets(x);return f.length===1&&f[0]===o;};
@@ -57,13 +64,15 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   // The prop as film-fx placed it (before any live drag) and where it is without the Director's edit.
   function installed(o){const s=snaps.get(o);return s?{position:s.position.clone(),rotation:o.rotation.clone().setFromQuaternion(s.quaternion,o.rotation.order),scale:s.scale.clone()}:{position:o.position.clone(),rotation:o.rotation.clone(),scale:o.scale.clone()};}
+  const parentScale=o=>{const {THREE}=tools;if(!o.parent)return new THREE.Vector3(1,1,1);o.parent.updateWorldMatrix(true,false);return o.parent.getWorldScale(new THREE.Vector3());};
   function base(o){
     const {THREE}=tools,E=filmEdit(o),st=installed(o);o.parent?.updateMatrixWorld(true);
-    const world=st.position.clone();if(o.parent)o.parent.localToWorld(world);
-    if(E?.position)world.sub(new THREE.Vector3(...E.position));
+    const local=st.position.clone();if(E?.position&&E.space==='local')local.sub(new THREE.Vector3(...E.position).divide(parentScale(o)));
+    const world=local.clone();if(o.parent)o.parent.localToWorld(world);
+    if(E?.position&&E.space!=='local')world.sub(new THREE.Vector3(...E.position));
     const rot=st.rotation.clone();if(E?.rotation){rot.x-=THREE.MathUtils.degToRad(E.rotation[0]||0);rot.y-=THREE.MathUtils.degToRad(E.rotation[1]||0);rot.z-=THREE.MathUtils.degToRad(E.rotation[2]||0);}
     const scale=st.scale.clone();if(Array.isArray(E?.scale))scale.divide(new THREE.Vector3(...E.scale));else if(Number.isFinite(E?.scale))scale.divideScalar(E.scale);
-    return {world,rot,scale};
+    const out={world,rot,scale};if(ridesDesk(o)){out.local=o.parent?o.parent.worldToLocal(world.clone()):world.clone();}return out;
   }
   // An edit from the prop's state now (after a drag or typed numbers) relative to base().
   // Turns: of the two Euler triples for the same rotation, the one nearest the film's (a turn about y stays a turn
@@ -73,7 +82,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const [a0,a1,a2]=(r.order||'XYZ').toLowerCase().split(''),alt={[a0]:r[a0]+Math.PI,[a1]:Math.PI-r[a1],[a2]:r[a2]+Math.PI};
     const turn=e=>['x','y','z'].map(k=>wrapDeg(deg(e[k]-b.rot[k]))),plain=turn(r),other=turn(alt),size=t=>t.reduce((n,v)=>n+Math.abs(v),0);
     const clamp=v=>Math.round(Math.min(100,Math.max(.01,Math.abs(v)))*1e4)/1e4;
-    return {position:w.clone().sub(b.world).toArray().map(r3),rotation:(size(other)<size(plain)-1e-6?other:plain).map(r1),scale:[s.x/b.scale.x,s.y/b.scale.y,s.z/b.scale.z].map(clamp)};
+    const position=b.local?(o.parent?o.parent.worldToLocal(w.clone()):w.clone()).sub(b.local).multiply(parentScale(o)):w.clone().sub(b.world);
+    return {space:b.local?'local':undefined,position:position.toArray().map(r3),rotation:(size(other)<size(plain)-1e-6?other:plain).map(r1),scale:[s.x/b.scale.x,s.y/b.scale.y,s.z/b.scale.z].map(clamp)};
   }
   function current(){
     if(!sel)return null;if(sel.obj&&!inScene(sel.obj))sel.obj=null;
@@ -188,6 +198,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const key=propKey(e),o=tools&&find(key),name=e.label||o?.name||'Prop',row={edit:e,key,name,change:describePropEdit(e),obj:o};
       if(room.reason)return {...row,ok:false,why:room.reason};
       if(!o)return {...row,ok:false,why:'Not in the room right now: the film setup did not find it.'};
+      if(onDeskItself(o))return {...row,ok:false,why:ON_DESK};
       if(/^Accessory:/.test(o.name)||!o.userData.sceneAssetKey)return {...row,ok:false,why:/^Accessory:/.test(o.name)?'A desk accessory: it belongs to the desk build, not the room\'s Studio layout.':'Built by the app with the room, not a saved Studio item, so Studio can\'t keep a change to it.'};
       const editorId='scene:'+o.userData.sceneAssetKey;
       if(!room.api.sceneAssetRegistry.has(editorId))return {...row,ok:false,why:'Studio does not list this prop in this room\'s layout.'};
@@ -260,7 +271,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
       <label class="director-check"><input type="checkbox" name="pp-hide" ${hidden?'checked':''}>Hide in this chapter</label>
       <div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'} title="This prop back to where the film puts it">Reset to the film</button></div>
-      <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be made permanent.':'Studio: '+escape(studio.why)):'Studio: unchanged (edit the prop to make it permanent later).'}</p></div>`;
+      <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be made permanent.':'Studio: '+escape(studio.why)):onDeskItself(o)?'Studio: '+escape(ON_DESK):'Studio: unchanged (edit the prop to make it permanent later).'}</p></div>`;
   }
   async function action(name,arg){
     await ensure();

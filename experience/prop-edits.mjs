@@ -3,7 +3,8 @@
 // live stage, Render still and the film as the chapter's sceneEdits: the film's hand-made edits first, then these,
 // marked director:true.
 //   {match:'^<object name>$', asset?:'<Studio scene asset key>', path?:'<regex on the full path>', near?:[x, z, r],
-//    label?, position?:[dx,dy,dz] world metres from the film's place, rotation?:[dx,dy,dz] degrees added to the
+//    label?, position?:[dx,dy,dz] world metres from the film's place (space:'local': metres along the parent's axes,
+//    for props riding on the desk, so they follow its lift and tilt), rotation?:[dx,dy,dz] degrees added to the
 //    local Euler, scale?:[sx,sy,sz] local factors, hide?:true | false (false shows a prop the film hides)}
 // shot.propEdits absent: the film shot's own director:true entries (an earlier Export cut, imported by
 // build-round8-director.py) are the Director's edits. Present (even []): they replace those entries.
@@ -23,7 +24,7 @@ export function cleanPropEdit(e){
   const out={match},path=text(e.path,400),asset=text(e.asset,200),label=text(e.label,120);
   if(asset)out.asset=asset;if(path&&validRegex(path))out.path=path;
   const near=vec(e.near);if(near&&near[2]>0)out.near=near;
-  if(label)out.label=label;
+  if(label)out.label=label;if(e.space==='local')out.space='local';
   const position=vec(e.position),rotation=vec(e.rotation),scale=Array.isArray(e.scale)?vec(e.scale,n=>n>=.001&&n<=1000):finite(e.scale)&&e.scale>=.001&&e.scale<=1000?[e.scale,e.scale,e.scale].map(r4):undefined;
   if(!zero(position))out.position=position;if(!zero(rotation))out.rotation=rotation;if(!one(scale))out.scale=scale;
   if(typeof e.hide==='boolean')out.hide=e.hide;
@@ -54,7 +55,7 @@ const len=v=>Math.hypot(...v),deg=v=>Number(v.toFixed(1)),m=v=>Number(v.toFixed(
 // "moved 0.32 m (x +0.20, z −0.25), turned 15° about y, scaled ×1.2, hidden".
 export function describePropEdit(e){
   const parts=[],axes=v=>v.map((n,i)=>Math.abs(n)<5e-4?'':`${'xyz'[i]} ${n>0?'+':'−'}${m(Math.abs(n))}`).filter(Boolean).join(', ');
-  if(e.position)parts.push(`moved ${m(len(e.position))} m (${axes(e.position)})`);
+  if(e.position)parts.push(`moved ${m(len(e.position))} m${e.space==='local'?' on the desk':''} (${axes(e.position)})`);
   if(e.rotation){const r=e.rotation.map((n,i)=>Math.abs(n)<.05?'':`${deg(n)}° about ${'xyz'[i]}`).filter(Boolean);parts.push('turned '+r.join(', '));}
   if(e.scale){const [x,y,z]=e.scale;parts.push(Math.abs(x-y)<1e-4&&Math.abs(y-z)<1e-4?`scaled ×${Number(x.toFixed(3))}`:`scaled ×${e.scale.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`);}
   if(e.hide===true)parts.push('hidden');if(e.hide===false)parts.push('shown (the film hides it)');

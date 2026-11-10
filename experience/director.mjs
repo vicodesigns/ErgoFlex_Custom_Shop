@@ -93,7 +93,17 @@ export function mountDirector(bridge,catalog,initial){
   function snapTime(value,{pixels=1000,bypass=false,excludeClip,excludeKey,excludePlayhead=false}={}){
     return snapTimelineTime(value,{seconds:shot().seconds,step:snapStep,bypass,targets:[0,shot().seconds,...(excludePlayhead?[]:[playhead*shot().seconds]),...keys().filter(k=>k.id!==excludeKey).map(k=>k.time*shot().seconds),...deskEditor.boundaries(excludeClip)],tolerance:8*shot().seconds/pixels});
   }
+  // A live orbit can still be coasting (OrbitControls damping): spend what is left at once, so the next seek puts the
+  // camera exactly on the keys.
+  function stopOrbit(){const c=bridge.stage()?.three?.()?.controls;if(!c?.update)return;const d=c.enableDamping;c.enableDamping=false;try{c.update();}finally{c.enableDamping=d;}}
   function ensureKeys(){shot().camera={keys:copy(keys())};return shot().camera.keys;}
+  // The film shot's story keys as a chapter page gets them (tools/experience/director-bridge.py link: plan-NN ids,
+  // time = at / seconds, smooth first and last, linear between), so Render still and the live view bake the film's path.
+  function filmCameraKeys(f){
+    const plan=[...(f?.cameraPlan?.keys||[])].sort((a,b)=>a.at-b.at),T=Number(f?.seconds)||shot().seconds;if(!plan.length)return null;
+    return plan.slice(0,64).map((k,i)=>({id:'plan-'+String(i).padStart(2,'0'),time:Math.round(k.at/T*1e6)/1e6,label:String(k.label||`Key ${i+1} at ${k.at.toFixed(1)} s`).slice(0,60),
+      easing:i===0||i===plan.length-1?'smooth':'linear',view:{position:[...k.position],target:[...k.target],fov:k.fov??35,aspect:16/9}}));
+  }
   function requireReady(){if(!bridge.ready())throw Error('Wait for this chapter to finish loading.');}
   function seekCamera(time){requireReady();playhead=Math.max(0,Math.min(1,time));bridge.seek(playhead);syncPlayhead();}
   function syncTransport(){
@@ -624,7 +634,7 @@ export function mountDirector(bridge,catalog,initial){
       <div class="bake-controls"><div class="director-actions"><button data-action="bake">Bake chapter</button><button data-action="bake-all">Bake full intro · 1080p</button><button data-action="bake-download">Download 3D video</button></div><label class="director-check"><input type="checkbox" name="baked-playback" checked>Use baked playback when available</label><p data-bake-summary role="status" class="director-hint"></p><p class="director-hint">Bake renders every frame in advance. Clips stay in this browser; editing the chapter requires a new bake.</p></div>
       </div><div data-inspector-page="camera"><h3>Camera keyframes</h3><p class="director-hint">Drag the scene to orbit. Scroll or pinch to zoom. Right-drag to pan. Then capture a view.</p>
       <div class="director-actions camera-framing"><button data-action="frame-desk">Frame desk</button><button data-action="frame-room" ${s.room==='product'?'disabled':''}>Frame room</button></div>
-      <div class="director-actions"><button data-action="camera-from">${s.camera&&keys().some(k=>k.time===0)?'✓ ':''}Capture start view</button><button data-action="camera-to">${s.camera&&keys().some(k=>k.time===1)?'✓ ':''}Capture end view</button><button data-action="camera-clear">Reset camera</button></div>
+      <div class="director-actions"><button data-action="camera-from">${s.camera&&keys().some(k=>k.time===0)?'✓ ':''}Capture start view</button><button data-action="camera-to">${s.camera&&keys().some(k=>k.time===1)?'✓ ':''}Capture end view</button><button data-action="camera-clear" ${film&&filmShot()?'title="The film\'s own camera keys for this chapter, as the film shot has them (one undo step)"':''}>${film&&filmShot()?'Reset camera to the film':'Reset camera'}</button></div>
       <label>Preview position<input name="seek" type="range" min="0" max="100" step=".01" value="${playhead*100}"></label>
       <p class="director-hint">Select a diamond below to edit its view. Scrub to a time, orbit the camera, then add a keyframe. Dashed diamonds are automatic views until you edit them.</p>
       <div class="director-actions"><button data-action="key-add">+ Add camera keyframe</button><button data-action="key-update" class="primary" ${cameraKey?'':'disabled'}>Update selected view</button><button data-action="key-duplicate" title="Duplicate selected camera view (Ctrl/Cmd+D)" ${cameraKey?'':'disabled'}>Duplicate keyframe</button><button data-action="key-delete" ${cameraKey?'':'disabled'}>Delete keyframe</button></div>
@@ -828,7 +838,13 @@ export function mountDirector(bridge,catalog,initial){
       if(name==='remove'){if(project.shots.length<=1)return;commit(()=>{project.shots.splice(selected,1);selected=Math.min(selected,project.shots.length-1);},{render:true});await load();return;}
       if(name.startsWith('camera-')){
         requireReady();
-        if(name==='camera-clear'){commit(()=>delete shot().camera,{render:true});keyId=null;await load();return;}
+        if(name==='camera-clear'){
+          // Film chapters: back to the film's own keys (its cameraPlan, as the chapter page opened them); the film's
+          // path is never dropped. Other cuts: no keys (the automatic views), as before.
+          const original=film&&filmShot()?filmCameraKeys(filmShot()):null;
+          if(original){commit(()=>{shot().camera={keys:original};},{render:true});keyId=null;stopOrbit();seekCamera(playhead);status('Camera reset to the film: its '+original.length+' camera keys are back. Undo brings your keys back.');return;}
+          commit(()=>delete shot().camera,{render:true});keyId=null;await load();return;
+        }
         captureKey(name==='camera-from'?0:1,name==='camera-from'?'Start view':'End view');return;
       }
       if(name==='key-add'){captureKey(playhead);return;}
@@ -1207,7 +1223,17 @@ export function mountDirector(bridge,catalog,initial){
   function bindPreviewHistory(){
     const next=preview?.contentDocument;if(!next||next===previewDocument)return;
     previewDocument?.removeEventListener('keydown',historyShortcut,true);previewDocument?.removeEventListener('keydown',viewKeys);
-    previewDocument=next;previewDocument.addEventListener('keydown',historyShortcut,true);previewDocument.addEventListener('keydown',viewKeys);previewDocument.addEventListener('keyup',peekUp);
+    previewDocument?.removeEventListener('keydown',stageEscape,true);
+    previewDocument=next;previewDocument.addEventListener('keydown',historyShortcut,true);previewDocument.addEventListener('keydown',viewKeys);previewDocument.addEventListener('keyup',peekUp);previewDocument.addEventListener('keydown',stageEscape,true);
+  }
+  // Esc with the 3D view focused (after clicking a prop or a light): the Director's Esc (close the still, clear the
+  // selection), never the stage page's own, which leaves its full-frame tour view and re-sizes the camera (the live
+  // view then no longer matched the film's framing).
+  function stageEscape(event){
+    if(event.key!=='Escape'||!open)return;event.preventDefault();event.stopImmediatePropagation();
+    if(still.open){still.close();return;}
+    if(picked()){clearPicks();groupStatus();return;}
+    if(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||titleEditor.selectedId())clearSelection();
   }
   preview?.addEventListener('load',bindPreviewHistory);bindPreviewHistory();
   addEventListener('pagehide',()=>{deskEditor.stop();draft();});
