@@ -74,22 +74,62 @@ def create(s):
 
 @chapter
 def commons(s):
-    # Humboldt commons: Rosa, who is of short stature, works standing at the desk; students at the tables, people
-    # crossing the hall.
-    people(s, only=['people-rosa-stand-type-30', 'people-leo-sit-write', 'people-zoe-sit-laptop', 'people-eli-sit-listen', 'people-zoe-walk', 'people-ben-white-cane', 'people-grace-cane-stand'])
-
+    # Humboldt commons. Mia, in the power wheelchair at the head of the table, calls the desk from her phone; her
+    # teammates are already working. The desk leaves the wall and drives to her. As it docks the film cuts to her
+    # side of the table: hands on the keyboard, the team across from her, the hall behind.
+    people(s, only=['people-leo-sit-write', 'people-zoe-sit-laptop', 'people-eli-sit-listen', 'people-zoe-walk', 'people-ben-white-cane', 'people-grace-cane-stand'],
+           cast=[{'key': 'mia-waits', 'id': 'people-mia-sit-phone', 'at': [7600, 2760], 'turn': 180, 'y': 75},
+                 {'key': 'mia-works', 'id': 'people-mia-sit-type-30', 'at': [7600, 2740], 'turn': 180, 'y': 60},
+                 {'key': 'mate-right', 'id': 'people-sofia-sit-laptop', 'at': [6100, 476], 'turn': -3, 'y': 20},
+                 {'key': 'mate-left', 'id': 'people-kai-sit-write', 'at': [4868, 297], 'turn': -19, 'y': 20}],
+           when={'mia-waits': [[0, 12.785, 0, 0]], 'mia-works': [[12.785, 99, 0, 0]]})
+    # Her wheelchair is drawn up to where the desk will stop (400 mm nearer than his cut has it), so she is seated
+    # in it with her hands on the keyboard when the desk arrives.
+    for e in s['sceneEdits']:
+        if e.get('match') == '^Prop:electric-wheelchair$': e['position'] = [round(e['position'][0] - 400 * K, 4), e['position'][1], e['position'][2]]
+    # His route to the table, a little higher and wider over it so the teammates are whole in the frame.
+    cam(s, [
+        key(0, (1435, 1489, -6399), (6795, -27, -1308), 58, 'Eagle eye: the double-height commons'),
+        key(2, (2785, 2058, -2840), (7735, 970, -1411), 55, 'Glide in high over the tables'),
+        key(5.6, (2350, 2450, 650), (8153, 597, -1392), 46, 'The desk turns off the wall; the team at the table below'),
+        key(8.6, (3050, 2300, 180), (8153, 530, -928), 42, 'Whole desk on the drive'),
+        key(10.8, (3977, 1955, 1591), (8020, 563, 133), 41, 'Track right along the table'),
+        key(12.75, (4850, 1560, 2800), (7560, 760, 1650), 43, 'The desk reaches the table head, Mia waiting'),
+        key(12.8, (8350, 1450, 3350), (6500, 850, 1500), 42, 'Her side: hands on the keyboard, the team across the table', cut=True),
+        key(16, (8470, 1340, 3080), (6380, 900, 1640), 40, 'Slow push over her shoulder'),
+    ])
 
 @chapter
 def coast(s):
-    # OCC media lab: the other stations are in use; the featured desk stays free for the over-the-keyboard shots.
-    people(s, **{'except': ['people-maya-sit-type', 'people-maya-sit-type-30', 'people-maya-stand-type']})
-
+    # OCC media lab: the bays are in use (Maya edits at the centre one, which the camera comes down the aisle
+    # over); the featured suite is the free one. It rises for whoever is watching, and the camera ends where its
+    # user would stand. His camera, unchanged.
+    people(s, **{'except': ['people-maya-sit-type', 'people-maya-sit-type-30', 'people-maya-stand-type', 'people-noah-sit-laptop']},
+           cast=[{'key': 'bay-1', 'id': 'people-maya-sit-type', 'station': 'film-edit-01', 'desk': 'sit'}])
 
 @chapter
 def oilers(s):
-    # High school: the whole class, minus the seat the camera flies through.
-    people(s, **{'except': ['people-ava-sit-write']})
-
+    # High school: the whole class, minus the seat the camera flies through. Kai, in his wheelchair, is at the
+    # set-design desk (tilted up as a drafting board in the film, so he is not typing). Noah has the featured desk.
+    # His tour of the room lands on Noah seated at it; the film cuts to the desktop as it rises, then to the window
+    # side: Noah on his feet at the raised desk, the class behind him.
+    people(s, **{'except': ['people-ava-sit-write', 'people-maya-sit-type', 'people-maya-stand-type', 'people-kai-wheel-type', 'people-noah-sit-type']},
+           cast=[{'key': 'kai', 'id': 'people-kai-wheel-roll', 'at': [-4300, 4735], 'turn': 180},
+                 {'key': 'noah-sits', 'id': 'people-noah-sit-type-30', 'desk': 'sit'},
+                 {'key': 'noah-stands', 'id': 'people-noah-stand-type', 'desk': 'stand'}],
+           when={'noah-sits': [[0, 8.25, 0, 0]], 'noah-stands': [[10.69, 99, 0, 0]]}, chair={'back': 250, 'side': -780, 'turn': 35})
+    cam(s, [
+        key(0, (-2148, 398, 3318), (-5190, 1104, 6660), 42, 'Home of the Oilers: banner, longboard, Kai at the set-design desk'),
+        key(0.6, (-2148, 398, 3318), (-5190, 1104, 6660), 42, 'Home of the Oilers (hold)'),
+        key(3, (-2121, 1624, 4772), (-7404, 1067, 5235), 42, 'Over the set-design desk: crane up'),
+        key(5.6, (156, 1989, 2996), (-4642, 1301, -378), 42, 'Along the window'),
+        key(7.8, (-1650, 1063, 765), (-3861, 944, -1879), 42, 'Noah at the featured desk'),
+        key(8.2, (-1650, 1063, 765), (-3861, 944, -1879), 42, 'The lift starts (hold)'),
+        key(8.25, (-3000, 1000, -900), (-3800, 800, -2000), 40, 'The desktop, rising', cut=True),
+        key(10.65, (-2950, 1330, -950), (-3800, 1130, -2000), 40, 'Up with the desktop'),
+        key(10.7, (-4900, 1550, -1700), (-3600, 1150, -1400), 52, 'Noah on his feet, the class behind him', cut=True),
+        key(14, (-4790, 1500, -1640), (-3600, 1160, -1400), 50, 'Slow push'),
+    ])
 
 @chapter
 def wellness(s):

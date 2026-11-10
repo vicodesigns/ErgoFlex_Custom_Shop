@@ -17,7 +17,7 @@
 //                                                     (`turn` degrees to correct a model; `along` / `depth` mm to slide)
 //   { id, near: [x, z], face: [x, z] }                seated on the chair nearest that spot, facing a point (a table)
 //   { id, by: '<prop id>', reach }                    standing in front of that furniture, facing it
-//   { id, at: [x, z], turn }                          standing at a spot
+//   { id, at: [x, z], turn, y }                       at a spot (y mm lifts a seated pose onto a seat that is not a prop)
 //   seat: mm                                          the seat height the pose was built for; the person is raised or
 //                                                     lowered (a little) onto the real seat
 //   layout: '<layout id>'                             only in that room layout;  modes: [...] only in those dayparts
@@ -209,8 +209,8 @@ export class RoomPeople {
         } else if (spec.by) {
             const yaw = anchor.rotation.y; object.position.copy(anchor.position).addScaledVector(frontOf(yaw), spec.reach ?? 600); object.position.y = 0;
             object.rotation.y = yaw + Math.PI + turn - Math.PI * (spec.turn ? 1 : 0);
-        } else { object.position.set(spec.at[0], 0, spec.at[1]); object.rotation.y = turn; }
-        if (spec.seat) object.position.y = this.seatLift(object, spec, anchor);
+        } else { object.position.set(spec.at[0], spec.y || 0, spec.at[1]); object.rotation.y = turn; }
+        if (spec.seat && anchor) object.position.y = this.seatLift(object, spec, anchor);
     }
     // How far the person moves up or down so the pose's seat height meets the real seat under the pelvis.
     seatLift(object, spec, anchor) {

@@ -23,7 +23,7 @@ def race(caucasian=0., african=0., asian=0.):
 
 CHARACTERS = {
     'maya': {
-        'name': 'Maya', 'phenotype': {'gender': .0, 'age': .42, 'muscle': .45, 'weight': .5, 'height': .5, 'proportions': .6, 'race': race(.55, .2, .25)},
+        'name': 'Maya', 'phenotype': {'gender': .0, 'age': .42, 'muscle': .45, 'weight': .5, 'height': .61, 'proportions': .6, 'race': race(.55, .2, .25)},
         'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'ponytail01', 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
         'tint': {'toigo_basic_tucked_t-shirt': (.8, .76, .68), 'toigo_wool_pants': (.2, .26, .34)},
@@ -48,7 +48,7 @@ CHARACTERS = {
         'tint': {'namuhekam_male_polo_shirt': (.72, .3, .12), 'toigo_wool_pants': (.13, .14, .17)},
     },
     'zoe': {
-        'name': 'Zoe', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .45, 'weight': .48, 'height': .48, 'proportions': .6, 'race': race(.05, .9, .05)},
+        'name': 'Zoe', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .45, 'weight': .48, 'height': .59, 'proportions': .6, 'race': race(.05, .9, .05)},
         'skin': 'young_african_female', 'eyes': 'brown', 'hair': 'afro01', 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
         'tint': {'toigo_basic_tucked_t-shirt': (.82, .6, .16), 'toigo_wool_pants': (.2, .27, .4)},
@@ -59,7 +59,7 @@ CHARACTERS = {
         'clothes': ['male_casualsuit03', 'shoes01', 'spamrakuen_tbm_glasses_frames_01'],
     },
     'lin': {
-        'name': 'Lin', 'phenotype': {'gender': .0, 'age': .55, 'muscle': .4, 'weight': .45, 'height': .45, 'proportions': .6, 'race': race(.05, 0, .95)},
+        'name': 'Lin', 'phenotype': {'gender': .0, 'age': .55, 'muscle': .4, 'weight': .45, 'height': .535, 'proportions': .6, 'race': race(.05, 0, .95)},
         'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'toigo_blunt_bob_with_bangs', 'hair_tint': (.05, .045, .045), 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'toigo_flats'],
         'tint': {'toigo_basic_tucked_t-shirt': (.2, .22, .26), 'toigo_wool_pants': (.36, .38, .28), 'toigo_flats': (.1, .1, .1)},
@@ -88,7 +88,7 @@ CHARACTERS = {
         'tint': {'toigo_basic_tucked_t-shirt': (.6, .14, .32), 'toigo_wool_pants': (.12, .12, .14), 'toigo_flats': (.5, .12, .25)},
     },
     'priya': {
-        'name': 'Priya', 'phenotype': {'gender': .0, 'age': .45, 'muscle': .55, 'weight': .45, 'height': .5, 'proportions': .65, 'race': race(.35, .15, .5)},
+        'name': 'Priya', 'phenotype': {'gender': .0, 'age': .45, 'muscle': .55, 'weight': .45, 'height': .6, 'proportions': .65, 'race': race(.35, .15, .5)},
         'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'braid01', 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes02',
         'clothes': ['female_sportsuit01', 'shoes05'],
     },
@@ -98,7 +98,7 @@ CHARACTERS = {
         'clothes': ['male_worksuit01', 'shoes02'],
     },
     'mia': {
-        'name': 'Mia', 'phenotype': {'gender': .0, 'age': .32, 'muscle': .4, 'weight': .45, 'height': .45, 'proportions': .6, 'race': race(1, 0, 0)},
+        'name': 'Mia', 'phenotype': {'gender': .0, 'age': .32, 'muscle': .4, 'weight': .45, 'height': .59, 'proportions': .6, 'race': race(1, 0, 0)},
         'skin': 'young_caucasian_female', 'eyes': 'blue', 'hair': 'toigo_curled_under_bob', 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_fisherman_sweater', 'toigo_wool_pants', 'shoes06'],
         'tint': {'toigo_fisherman_sweater': (.3, .45, .4), 'toigo_wool_pants': (.2, .22, .3)},
@@ -109,13 +109,13 @@ CHARACTERS = {
         'clothes': ['male_casualsuit06', 'shoes04'],
     },
     'noah': {
-        'name': 'Noah', 'phenotype': {'gender': 1., 'age': .34, 'muscle': .55, 'weight': .45, 'height': .55, 'proportions': .6, 'race': race(.1, .85, .05)},
+        'name': 'Noah', 'phenotype': {'gender': 1., 'age': .34, 'muscle': .55, 'weight': .45, 'height': .63, 'proportions': .6, 'race': race(.1, .85, .05)},
         'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'afro01', 'eyebrows': 'eyebrow008', 'eyelashes': 'eyelashes01',
         'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes05'],
         'tint': {'namuhekam_male_polo_shirt': (.85, .82, .76), 'cortu_cargo_pants': (.16, .18, .22)},
     },
     'ava': {
-        'name': 'Ava', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .4, 'weight': .42, 'height': .42, 'proportions': .6, 'race': race(.1, 0, .9)},
+        'name': 'Ava', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .4, 'weight': .42, 'height': .64, 'proportions': .6, 'race': race(.1, 0, .9)},
         'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'ponytail01', 'hair_tint': (.06, .05, .05), 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes04'],
         'tint': {'toigo_basic_tucked_t-shirt': (.82, .8, .76), 'toigo_wool_pants': (.3, .2, .24)},
@@ -126,7 +126,7 @@ CHARACTERS = {
         'clothes': ['male_casualsuit01', 'shoes06'],
     },
     'sofia': {
-        'name': 'Sofia', 'phenotype': {'gender': .0, 'age': .34, 'muscle': .45, 'weight': .52, 'height': .46, 'proportions': .55, 'race': race(.65, .15, .2)},
+        'name': 'Sofia', 'phenotype': {'gender': .0, 'age': .34, 'muscle': .45, 'weight': .52, 'height': .58, 'proportions': .55, 'race': race(.65, .15, .2)},
         'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'braid01', 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes03',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'toigo_flats'],
         'tint': {'toigo_basic_tucked_t-shirt': (.2, .4, .55), 'toigo_wool_pants': (.72, .68, .6), 'toigo_flats': (.15, .15, .2)},
@@ -336,6 +336,7 @@ OUTPUTS = [
     {'id': 'people-kai-sit-write', 'character': 'kai', 'pose': 'sit-write', 'name': 'Kai, writing at a table', 'held': [('pen', {'side': 'r'})]},
     {'id': 'people-kai-sit-controller', 'character': 'kai', 'pose': 'sit-controller', 'name': 'Kai, on the sofa with a controller', 'held': [('gamepad', {})]},
     {'id': 'people-kai-wheel-type', 'character': 'kai', 'pose': 'wheel-type', 'height': 28, 'name': 'Kai, at the desk (wheelchair)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
+    {'id': 'people-kai-wheel-roll', 'character': 'kai', 'pose': 'wheel-roll', 'name': 'Kai, rolling (wheelchair)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
     {'id': 'people-zoe-sit-laptop', 'character': 'zoe', 'pose': 'sit-laptop', 'name': 'Zoe, at a laptop'},
     {'id': 'people-zoe-walk', 'character': 'zoe', 'pose': 'walk', 'name': 'Zoe, walking with a backpack', 'held': [('backpack', {})]},
     {'id': 'people-zoe-stand-type', 'character': 'zoe', 'pose': 'stand-type', 'height': 41, 'name': 'Zoe, at a standing desk (41 in)'},
@@ -353,6 +354,7 @@ OUTPUTS = [
     {'id': 'people-noah-stand-type', 'character': 'noah', 'pose': 'stand-type', 'height': 43.5, 'name': 'Noah, typing at the desk (standing)'},
     {'id': 'people-mia-sit-type-30', 'character': 'mia', 'pose': 'sit-type', 'height': 30, 'name': 'Mia, typing at the desk at 30 in (seated)'},
     {'id': 'people-mia-stand-type', 'character': 'mia', 'pose': 'stand-type', 'height': 43.5, 'name': 'Mia, typing at the desk (standing)'},
+    {'id': 'people-mia-sit-phone', 'character': 'mia', 'pose': 'sit-phone', 'name': 'Mia, seated with her phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-lin-sit-type-30', 'character': 'lin', 'pose': 'sit-type', 'height': 30, 'name': 'Lin, typing at the desk at 30 in (seated)'},
     {'id': 'people-lin-sit-phone', 'character': 'lin', 'pose': 'sit-phone', 'name': 'Lin, seated with her phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-ava-sit-write', 'character': 'ava', 'pose': 'sit-write', 'name': 'Ava, writing at a table', 'held': [('pen', {'side': 'r'})]},
