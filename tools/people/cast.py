@@ -324,8 +324,11 @@ POSES = {
 # id -> character, pose, library name, what they hold.
 OUTPUTS = [
     {'id': 'people-maya-sit-type', 'character': 'maya', 'pose': 'sit-type', 'height': 28, 'name': 'Maya, typing at the desk (seated)'},
+    {'id': 'people-maya-sit-type-30', 'character': 'maya', 'pose': 'sit-type', 'height': 30, 'name': 'Maya, typing at the desk at 30 in (seated)'},
+    {'id': 'people-maya-stand-phone', 'character': 'maya', 'pose': 'stand-phone', 'name': 'Maya, with the desk app on her phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-maya-stand-type', 'character': 'maya', 'pose': 'stand-type', 'height': 43.5, 'name': 'Maya, typing at the desk (standing)'},
     {'id': 'people-andre-sit-type', 'character': 'andre', 'pose': 'sit-type', 'height': 28, 'name': 'Andre, typing at the desk (seated)'},
+    {'id': 'people-andre-sit-type-30', 'character': 'andre', 'pose': 'sit-type', 'height': 30, 'name': 'Andre, typing at the desk at 30 in (seated)'},
     {'id': 'people-andre-stand-type', 'character': 'andre', 'pose': 'stand-type', 'height': 43.5, 'name': 'Andre, typing at the desk (standing)'},
     {'id': 'people-andre-stand-phone', 'character': 'andre', 'pose': 'stand-phone', 'name': 'Andre, with the desk app on his phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-grace-sit-read', 'character': 'grace', 'pose': 'sit-read', 'name': 'Grace, reading in an armchair', 'held': [('book', {'side': 'l'})]},
@@ -345,6 +348,7 @@ OUTPUTS = [
     {'id': 'people-hale-stand-present', 'character': 'hale', 'pose': 'stand-present', 'name': 'Mr Hale, presenting', 'held': [('tablet', {'side': 'l'})]},
     {'id': 'people-omar-wheel-type', 'character': 'omar', 'pose': 'wheel-type', 'height': 31, 'name': 'Omar, typing at the desk (wheelchair)', 'held': [('wheelchair', {})]},
     {'id': 'people-omar-wheel-type-28', 'character': 'omar', 'pose': 'wheel-type', 'height': 28, 'name': 'Omar, typing at the desk at 28 in (wheelchair)', 'held': [('wheelchair', {})]},
+    {'id': 'people-lin-sit-type-30', 'character': 'lin', 'pose': 'sit-type', 'height': 30, 'name': 'Lin, typing at the desk at 30 in (seated)'},
     {'id': 'people-lin-sit-phone', 'character': 'lin', 'pose': 'sit-phone', 'name': 'Lin, seated with her phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-ava-sit-write', 'character': 'ava', 'pose': 'sit-write', 'name': 'Ava, writing at a table', 'held': [('pen', {'side': 'r'})]},
     {'id': 'people-eli-sit-listen', 'character': 'eli', 'pose': 'sit-listen', 'name': 'Eli, listening at a table'},
@@ -353,6 +357,7 @@ OUTPUTS = [
     {'id': 'people-lin-stand-paint', 'character': 'lin', 'pose': 'stand-paint', 'name': 'Lin, painting at an easel', 'held': [('brush', {'side': 'r'}), ('palette', {'side': 'l'})]},
     {'id': 'people-lin-sit-type', 'character': 'lin', 'pose': 'sit-type', 'height': 28, 'name': 'Lin, typing at the desk (seated)'},
     {'id': 'people-sam-sit-game', 'character': 'sam', 'pose': 'sit-type', 'height': 28, 'name': 'Sam, gaming at the desk', 'held': [('headphones', {}), ('prosthesis', {'side': 'r'})]},
+    {'id': 'people-sam-sit-game-30', 'character': 'sam', 'pose': 'sit-type', 'height': 30, 'name': 'Sam, gaming at the desk at 30 in', 'held': [('headphones', {}), ('prosthesis', {'side': 'r'})]},
     {'id': 'people-sam-stand-type', 'character': 'sam', 'pose': 'stand-type', 'height': 43.5, 'name': 'Sam, at the desk (standing)', 'held': [('prosthesis', {'side': 'r'})]},
     {'id': 'people-priya-stretch', 'character': 'priya', 'pose': 'stretch', 'name': 'Priya, stretching'},
     {'id': 'people-priya-sit-phone', 'character': 'priya', 'pose': 'sit-phone', 'name': 'Priya, seated with her phone', 'held': [('phone', {'side': 'r'})]},

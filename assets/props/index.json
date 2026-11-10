@@ -35464,6 +35464,175 @@
     "character": "sofia",
     "pose": "sit-laptop"
    }
+  },
+  {
+   "id": "people-maya-sit-type-30",
+   "name": "Maya, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-sit-type-30.glb",
+   "anchor": "floor",
+   "size": [
+    416.8,
+    1228.5,
+    700.6
+   ],
+   "min": [
+    -208.4,
+    0,
+    -137.3
+   ],
+   "max": [
+    208.4,
+    1228.5,
+    563.3
+   ],
+   "tris": 37646,
+   "bytes": 933772,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "sit-type",
+    "deskHeight": 30
+   }
+  },
+  {
+   "id": "people-maya-stand-phone",
+   "name": "Maya, with the desk app on her phone",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-stand-phone.glb",
+   "anchor": "floor",
+   "size": [
+    457.4,
+    1490.5,
+    369.9
+   ],
+   "min": [
+    -219.8,
+    0,
+    -106.1
+   ],
+   "max": [
+    237.6,
+    1490.5,
+    263.8
+   ],
+   "tris": 36638,
+   "bytes": 929952,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "stand-phone"
+   }
+  },
+  {
+   "id": "people-andre-sit-type-30",
+   "name": "Andre, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-sit-type-30.glb",
+   "anchor": "floor",
+   "size": [
+    564.2,
+    1347.9,
+    731.1
+   ],
+   "min": [
+    -282.4,
+    0,
+    -125.6
+   ],
+   "max": [
+    281.8,
+    1347.9,
+    605.5
+   ],
+   "tris": 35002,
+   "bytes": 796172,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "sit-type",
+    "deskHeight": 30
+   }
+  },
+  {
+   "id": "people-lin-sit-type-30",
+   "name": "Lin, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-sit-type-30.glb",
+   "anchor": "floor",
+   "size": [
+    409.2,
+    1235.5,
+    703.9
+   ],
+   "min": [
+    -204.6,
+    0,
+    -137.1
+   ],
+   "max": [
+    204.6,
+    1235.5,
+    566.8
+   ],
+   "tris": 49407,
+   "bytes": 897424,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "sit-type",
+    "deskHeight": 30
+   }
+  },
+  {
+   "id": "people-sam-sit-game-30",
+   "name": "Sam, gaming at the desk at 30 in",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-sit-game-30.glb",
+   "anchor": "floor",
+   "size": [
+    523.9,
+    1347.2,
+    725.7
+   ],
+   "min": [
+    -262.2,
+    0,
+    -125.6
+   ],
+   "max": [
+    261.7,
+    1347.2,
+    600.1
+   ],
+   "tris": 34128,
+   "bytes": 873684,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "sit-type",
+    "deskHeight": 30
+   }
   }
  ],
  "screens": [

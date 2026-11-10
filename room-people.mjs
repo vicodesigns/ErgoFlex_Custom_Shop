@@ -29,20 +29,21 @@ import * as THREE from 'three';
 // How far in front of a desk's anchor the person's pelvis is (mm): keyboard edge to wrists to pelvis.
 const REACH = { sit: 945, wheel: 935, stand: 890 };
 const HEIGHT_FIT = 1.4;                       // inches either side of the height a desk pose was built for
+const HEIGHT_SOLID = .45;                     // within this the person is fully there; beyond it they fade out to HEIGHT_FIT
 const TASK_CHAIR = 'steelcase-leap-v2';       // seat 435 mm: what the seated desk poses were built on
 const CHAIRS = /chair|stool/i;
 
 export const ROOM_PEOPLE = {
     home: [
-        { id: 'people-maya-sit-type', desk: 'sit' }, { id: 'people-maya-stand-type', desk: 'stand' },
+        { id: 'people-maya-sit-type', desk: 'sit' }, { id: 'people-maya-sit-type-30', desk: 'sit' }, { id: 'people-maya-stand-type', desk: 'stand' },
         { id: 'people-grace-sit-read', on: 'armchair-poppi', seat: 420 }
     ],
     gaming: [
-        { id: 'people-sam-sit-game', desk: 'sit' }, { id: 'people-sam-stand-type', desk: 'stand' },
+        { id: 'people-sam-sit-game', desk: 'sit' }, { id: 'people-sam-sit-game-30', desk: 'sit' }, { id: 'people-sam-stand-type', desk: 'stand' },
         { id: 'people-kai-sit-controller', on: 'kenney-furniture-lounge-sofa', seat: 420, along: -330, depth: -60 }
     ],
     music: [
-        { id: 'people-andre-sit-type', desk: 'sit' }, { id: 'people-andre-stand-type', desk: 'stand' }
+        { id: 'people-andre-sit-type', desk: 'sit' }, { id: 'people-andre-sit-type-30', desk: 'sit' }, { id: 'people-andre-stand-type', desk: 'stand' }
     ],
     creative: [
         { id: 'people-lin-stand-paint', by: 'artist-easel', reach: 640 },
@@ -70,7 +71,7 @@ export const ROOM_PEOPLE = {
         { id: 'people-hale-stand-present', layout: 'house', at: [2600, -3250], turn: 0 }
     ],
     occmedialab: [
-        { id: 'people-maya-sit-type', desk: 'sit' }, { id: 'people-maya-stand-type', desk: 'stand' },
+        { id: 'people-maya-sit-type', desk: 'sit' }, { id: 'people-maya-sit-type-30', desk: 'sit' }, { id: 'people-maya-stand-type', desk: 'stand' },
         { id: 'people-andre-sit-type', station: 'sound-mix-02', desk: 'sit' },
         { id: 'people-lin-sit-type', station: 'digital-art-03', desk: 'sit' },
         { id: 'people-omar-wheel-type-28', station: 'accessible-edit-04', desk: 'wheel' },
@@ -100,9 +101,9 @@ export class RoomPeople {
         this.ray = new THREE.Raycaster();
     }
     specs() { const layout = this.room.roomLayout?.id; return (ROOM_PEOPLE[this.room.id] || []).filter(s => !s.layout || s.layout === layout); }
-    // filter: { only: [ids], except: [ids] } narrows who is shown (the film leaves out people whose pose a chapter's
-    // desk moves would break).
-    setFilter(filter) { this.filter = filter || null; }
+    // filter: { only: [ids], except: [ids], place: { '<id>': { at: [x, z], turn } } } narrows who is shown and moves
+    // people for one use (the film leaves out people a chapter's desk moves would break, and clears its camera path).
+    setFilter(filter) { this.filter = filter || null; this.placed = false; }
     allowed(id) { const f = this.filter; return !f || ((!f.only || f.only.includes(id)) && !(f.except || []).includes(id)); }
     get available() { return this.specs().length > 0; }
     // Loading is deferred to the first time the toggle is on: nobody pays for models they never see.
@@ -123,10 +124,22 @@ export class RoomPeople {
             if (!object) continue;
             object.name = 'Person:' + spec.id; object.userData.person = spec; object.userData.personFit = this.library.entry(spec.id)?.person?.deskHeight ?? null; object.visible = false;
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
+            if (spec.desk && !spec.station) this.ownMaterials(object);
             root.add(object); this.people.push(object);
             if (spec.station) this.atStation(object, spec);
             else if (!spec.desk && !spec.beside) this.settle(object, spec);
         }
+    }
+    // The featured desk's people fade with the desk height, so they need materials of their own (textures stay shared).
+    ownMaterials(object) {
+        const copies = new Map(); object.userData.personMaterials = [];
+        object.traverse(o => { if (!o.isMesh) return; o.material = [].concat(o.material).map(m => { if (!copies.has(m)) { const c = m.clone(); c.userData.sharedTextures = true; c.userData.solid = { transparent: m.transparent, opacity: m.opacity }; copies.set(m, c); object.userData.personMaterials.push(c); } return copies.get(m); })[0]; });
+    }
+    fade(object, amount) {
+        if (object.userData.personFade === amount) return; object.userData.personFade = amount;
+        for (const m of object.userData.personMaterials || []) { const solid = amount >= 1; m.transparent = solid ? m.userData.solid.transparent : true; m.opacity = m.userData.solid.opacity * amount; m.needsUpdate = true; }
+        const chair = object.userData.personChair; if (chair) chair.visible = object.visible && amount > .5;
+        object.traverse(o => { if (o.isMesh) o.castShadow = amount > .5; });
     }
     props(id) { return this.room.assets().filter(o => o.userData.propId === id || o.userData.decorUpgrade === id); }
     centreOf(object) { return this.room.root.worldToLocal(new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3())); }
@@ -174,18 +187,29 @@ export class RoomPeople {
     update(state) {
         if (!this.enabled || !this.people.length) return;
         const height = state?.height ?? 28, pose = state?.pose, mode = state?.mode; let working = false;
+        if (!this.placed) {
+            this.placed = true;
+            for (const object of this.people) {
+                const spot = this.filter?.place?.[object.userData.person.id]; if (!spot) continue;
+                object.position.set(spot.at[0], spot.y ?? 0, spot.at[1]); object.rotation.y = THREE.MathUtils.degToRad(spot.turn || 0); object.userData.personMissing = false;
+            }
+        }
         for (const object of this.people) {
             const spec = object.userData.person, fit = object.userData.personFit;
             let on = !object.userData.personMissing && this.allowed(spec.id) && (!spec.modes || spec.modes.includes(mode));
             if (spec.desk && !spec.station) {
-                on = on && !!pose && !working && (fit === null || Math.abs(height - fit) <= HEIGHT_FIT);
-                if (on) { const yaw = pose.yaw || 0; object.position.set(pose.x - 6, 0, pose.z).addScaledVector(frontOf(yaw), spec.reach ?? REACH[spec.desk]); object.rotation.y = yaw + Math.PI; working = true; }
+                const off = fit === null ? 0 : Math.abs(height - fit);
+                on = on && !!pose && !working && off <= HEIGHT_FIT;
+                if (on) { object.userData.personAmount = 1 - THREE.MathUtils.smoothstep(off, HEIGHT_SOLID, HEIGHT_FIT); const yaw = pose.yaw || 0; object.position.set(pose.x - 6, 0, pose.z).addScaledVector(frontOf(yaw), spec.reach ?? REACH[spec.desk]); object.rotation.y = yaw + Math.PI; working = true; }
+            } else if (spec.beside && this.filter?.place?.[spec.id]) {
+                // placed for this use: stays where it was put
             } else if (spec.beside && pose) {
                 const yaw = pose.yaw || 0, c = Math.cos(yaw), s = Math.sin(yaw), [dx, dz] = spec.beside;
                 object.position.set(pose.x + dx * c + dz * s, 0, pose.z - dx * s + dz * c);
                 object.rotation.y = Math.atan2(pose.x - object.position.x, pose.z + 350 - object.position.z);   // toward the desk's working edge
             } else if (spec.beside) on = false;
             this.show(object, on);
+            if (on && object.userData.personMaterials) this.fade(object, object.userData.personAmount ?? 1);
         }
         this.clearChairs();
     }
@@ -203,7 +227,7 @@ export class RoomPeople {
     restoreChairs() { for (const [chair, visible] of this.hidden) chair.visible = visible; this.hidden.clear(); }
     dispose() {
         this.restoreChairs();
-        for (const object of this.people) { object.userData.personChair?.removeFromParent(); object.removeFromParent(); }
+        for (const object of this.people) { object.userData.personChair?.removeFromParent(); object.removeFromParent(); for (const m of object.userData.personMaterials || []) m.dispose(); }
         this.people = []; this.built = null;
     }
 }

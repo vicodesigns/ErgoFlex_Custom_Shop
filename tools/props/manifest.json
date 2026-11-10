@@ -18632,6 +18632,46 @@
    "scenes": [],
    "converter": "people-generator",
    "collection": "people"
+  },
+  {
+   "id": "people-maya-sit-type-30",
+   "name": "Maya, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-maya-stand-phone",
+   "name": "Maya, with the desk app on her phone",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-andre-sit-type-30",
+   "name": "Andre, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-sit-type-30",
+   "name": "Lin, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sam-sit-game-30",
+   "name": "Sam, gaming at the desk at 30 in",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
   }
  ],
  "screens": [
