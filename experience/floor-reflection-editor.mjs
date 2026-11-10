@@ -9,6 +9,7 @@ export {describeFloorSource};
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const LABEL=Object.fromEntries(FLOOR_SOURCES),SHORT={foot:'Footrest',center:'Centre',left:'Left side',right:'Right side'};
 const r1=v=>Math.round(v*10)/10,r2=v=>Math.round(v*100)/100;
+const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
 const lower=id=>(LABEL[id]||id).replace(/ \(.*\)$/,'').replace(/^./,c=>c.toLowerCase());
 export function createFloorReflectionEditor({bridge,shot,film,commit,status,rerender,visible,onSelect=()=>{}}){
   let sel=null,expanded=false,tools=null,booting=null,drag=null,poolsAt=0,pools=[];
@@ -37,7 +38,7 @@ export function createFloorReflectionEditor({bridge,shot,film,commit,status,rere
     if(!available())return '';
     const any=FLOOR_SOURCES.some(([id])=>edited(id)),s=sel;
     const picker=`<div class="director-actions floor-sources" role="group" aria-label="Floor reflection source">${FLOOR_SOURCES.map(([id])=>`<button data-action="fr-pick" data-section="${id}" aria-pressed="${s===id}" title="${escape(LABEL[id])} · ${escape(describeFloorSource(values()[id]))}">${SHORT[id]}${edited(id)?' •':''}</button>`).join('')}</div>`;
-    const body=s?`<h4>${escape(LABEL[s])}</h4><p class="director-hint">${escape(describeFloorSource(values()[s]))}. Across: + toward the right wing. Front / back: + toward the desk's front.</p>
+    const body=s?`<h4>${escape(LABEL[s])}</h4><p class="director-hint">${escape(cap(describeFloorSource(values()[s])))}. Across: + toward the right wing. Front / back: + toward the desk's front.</p>
       ${field(s,'on')}<div class="director-grid">${field(s,'x')}${field(s,'z')}</div>
       ${['spread','length','edge','brightness','saturation'].map(k=>field(s,k)).join('')}
       <div class="director-actions"><button data-action="fr-reset" ${edited(s)?'':'disabled'} title="This source's floor reflection back to the film">Reset to the film</button></div>`
@@ -48,7 +49,7 @@ export function createFloorReflectionEditor({bridge,shot,film,commit,status,rere
   }
   function pick(id,{fromView=false}={}){
     if(!LABEL[id])return;sel=id;expanded=true;onSelect();rerender();bridge.stage()?.wake?.(300);
-    status(`${LABEL[id]} selected${fromView?' · drag the pool to move it, its dots for length and spread':''}. ${describeFloorSource(values()[id])}.`);
+    status(`${LABEL[id]} selected · ${describeFloorSource(values()[id])}${fromView?' · drag the pool to move it, its dots for length and spread':''}.`);
   }
   function deselect(){if(!sel)return;sel=null;rerender();}
   async function action(name,arg){

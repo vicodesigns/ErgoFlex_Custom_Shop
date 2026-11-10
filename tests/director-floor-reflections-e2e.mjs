@@ -36,6 +36,7 @@ try{
   const L=before.find(p=>p.key==='left'),at=await page.evaluate(c=>__fr.screen(c),L.c);
   await page.mouse.click(at.x,at.y);await wait(600);
   check(/Left side strip.*selected/.test(await status(page)),'clicking a pool selects its source ('+(await status(page)).slice(0,80)+')');
+  check(/^Left side strip \(front to back\) selected · as the film · drag the pool/.test(await status(page)),'one clean sentence: '+(await status(page)));
   check(await page.$eval('#director-panel [data-action="fr-pick"][data-section="left"]',b=>b.getAttribute('aria-pressed')==='true'),'the source picker follows');
   // Drag the pool: it moves on the floor, one undo step, a named status line.
   await page.mouse.move(at.x,at.y);await page.mouse.down();for(let i=1;i<=10;i++){await page.mouse.move(at.x+i*8,at.y+i*3);await wait(30);}await page.mouse.up();await wait(900);
