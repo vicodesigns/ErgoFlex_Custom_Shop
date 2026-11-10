@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { attachVista } from './window-vista.mjs?v=window-vista-20261110';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 
 // Measured shared spaces. Millimetres throughout, with usable aisles and

@@ -46,7 +46,8 @@ export async function mountStage(ctx) {
   ctx.controls.enabled=false;
   ctx.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
   const extras = new THREE.Group(); extras.name='Cinematic effects'; ctx.scene.add(extras);
-  let shot=null, start=null, media=null, video=null, hidden=[], grid=null, pylons=[], sweep=null, light=null, pulse=null, floorCenter=null, trace=null;
+  const ringAt = new THREE.Vector3();
+  let shot=null, start=null, media=null, video=null, hidden=[], grid=null, pylons=[], sweep=null, light=null, pulse=null, floorCenter=null, trace=null, ringHome=null;
   let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let paused=false, sounds=false, mirror=null, sequence=-1, session=null, preparing=false,lastProgress=0;
   let readProgress=()=>0,deskSpan=1,lastMediaColour=0;
@@ -98,6 +99,8 @@ export async function mountStage(ctx) {
     floorCenter=new THREE.Vector3(c.x,b.min.y+sz.y*.12,c.z);
     pulse=new THREE.Mesh(new THREE.RingGeometry(w*.5,w*.51,96),new THREE.MeshBasicMaterial({color:0x27c6ff,side:THREE.DoubleSide,transparent:true,opacity:.8,depthWrite:false}));
     pulse.rotation.x=-Math.PI/2;pulse.position.set(c.x,b.min.y+.003,c.z);extras.add(pulse);
+    // The rings are the desk's: they stay centred under it when it rolls (ringHome: the centre and the desk's place at the start).
+    ringHome={c:c.clone(),p:ctx.loadedModel.getWorldPosition(new THREE.Vector3())};
     light=new THREE.PointLight(0x46ceff,w*2,w*5,2);light.position.set(c.x+w,b.min.y+w,c.z+w);extras.add(light);
     ctx.scene.background=new THREE.Color('#050a10');
     return {b,w,c};
@@ -227,6 +230,7 @@ export async function mountStage(ctx) {
     }
     if(kind==='wellness'&&!shot.motion)ctx.pose(28+15.5*ease((t-.25)/.45),0);
     if(shot.motion){const p=shot.motion.clips?sampleClipMotion(shot.motion,t*shot.seconds):sampleDeskTracks(shot.motion.tracks,t);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);}
+    if(ringHome&&(pulse||sweep)){const d=ctx.loadedModel.getWorldPosition(ringAt).sub(ringHome.p);for(const ring of [pulse,sweep])if(ring){ring.position.x=ringHome.c.x+d.x;ring.position.z=ringHome.c.z+d.z;}}
     if(deskChoreo.count())deskChoreo.apply(t*shot.seconds);
     if(shot.people)api.setRoomPeopleTime?.(t*shot.seconds);
     if(kind==='media'&&media){const now=performance.now(),updated=media.update(now);if(updated&&now-lastMediaColour>=100){lastMediaColour=now;try{const p=media.ctx2d.getImageData(Math.floor(media.canvas.width/2),Math.floor(media.canvas.height/2),1,1).data;api.setLedColor('#'+[p[0],p[1],p[2]].map(v=>Math.max(25,v).toString(16).padStart(2,'0')).join(''),false);}catch{}}}

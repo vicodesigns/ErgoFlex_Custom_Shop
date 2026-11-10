@@ -87,6 +87,7 @@ def start_on_carpet(shot, z_mm):
         led[0]['dur'] = round(t_turn - led[0]['at'], 3); led[1]['at'] = t_turn; led[1]['dur'] = round(end - t_turn, 3)
 
 
+AHEAD_DOG = 1.25                                  # stage units from the desk's front to the dog's middle
 CHAPTERS = {}
 def chapter(fn): CHAPTERS[fn.__name__] = fn; return fn
 
@@ -200,26 +201,17 @@ def wellness(s):
 
 @chapter
 def awareness(s):
-    # "It sees what's in its way": the thing in the way is a person, not a pylon. Grace stands with her walking
-    # stick where the pylon rose; the desk rolls toward her and stops. A person is deeper than the pylon, so she
-    # stands further ahead: the desk's stopping point is unchanged and ends a hand's width from her stick.
+    # "It sees what's in its way". Vico (2026-11-10): not a person here; a pet, or back to his pylon. A Labrador
+    # stands in the desk's way, nose toward it; the desk rolls up and stops short of the dog. The dog is longer than
+    # the pylon was thick, so it stands further ahead and the desk's stopping point is unchanged. His camera.
     if s.get('obstacles'):
-        s['obstacles'] = [dict(o, person='people-grace-cane-stand', ahead=1.1) if i == 0 else o for i, o in enumerate(s['obstacles'])]
-    # The stage light is cold and comes from behind; a soft warm lamp from the camera side, aimed at her, keeps her
-    # skin a skin colour. (Spot angles are degrees; positions are stage units.)
-    s['lights'] = list(s.get('lights') or []) + [{'type': 'spot', 'name': 'person key', 'position': [1.2, 3.2, 1.9], 'target': [2.36, 1.85, -0.05],
-                                                  'color': '#ffd6ac', 'intensity': 50, 'angle': 24, 'penumbra': .85}]
-    # His camera; the closing arc aims a little higher and wider so Grace's head stays in the frame as it comes in.
-    cam(s, [
-        key(0, (-3578, 1604, -915), (73, 639, 414), 37, 'High stage reveal: Grace ahead of the desk'),
-        key(0.1, (-3578, 1604, -915), (73, 639, 414), 37, 'High stage reveal (hold)'),
-        key(2.7, (-3491, 1579, 1993), (105, 736, 390), 36, 'Roll starts: desk, gap, Grace left to right'),
-        key(3.8, (-3491, 1579, 1993), (105, 736, 390), 36, 'Roll: frame held'),
-        key(5, (-3854, 1074, 944), (33, 696, 398), 35, 'Side-on profile: camera at rest before the stop'),
-        key(6.8, (-3854, 1074, 944), (33, 696, 398), 35, 'Stopped: amber, the gap reads (hold)'),
-        key(9.4, (-3318, 1061, 2105), (33, 780, 398), 35, 'Slow arc toward the front'),
-        key(12, (-2553, 1047, 2977), (13, 810, 411), 35, 'Front three-quarter: stopped safely, into the fade'),
-    ])
+        s['obstacles'] = [dict(o, person='dog-detailed', ahead=AHEAD_DOG) if i == 0 else o for i, o in enumerate(s['obstacles'])]
+    # The stage light is cold and comes from behind; a soft warm lamp from the camera side keeps the dog's coat warm.
+    # (Spot angles are degrees; positions are stage units.)
+    s['lights'] = list(s.get('lights') or []) + [{'type': 'spot', 'name': 'pet key', 'position': [1.5, 2.4, 2.0], 'target': [2.5, .3, -0.05],
+                                                  'color': '#ffd6ac', 'intensity': 34, 'angle': 26, 'penumbra': .85}]
+    # His closing arc ends close to the dog: its last two keys look a little lower and wider so the dog is whole.
+    his_camera(s, {9.4: {'look': (33, 640, 398), 'fov': 35.5}, 12: {'look': (13, 600, 411), 'fov': 39}})
 
 
 @chapter

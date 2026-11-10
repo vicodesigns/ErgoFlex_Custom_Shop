@@ -15,7 +15,7 @@ person in the room makes necessary:
 | coast (OCC media lab) | the other bays are in use | nothing |
 | oilers (high school) | Kai in his wheelchair at the set-design desk; the class; Noah at the featured desk: seated, on his feet as it rises, typing standing | nothing |
 | wellness (gym) | Maya sits, stretches while the desk rises, works standing; Priya at the mobility board | nothing |
-| awareness | Grace with her walking stick where the pylon rose | a warm lamp on her; the closing arc aims higher so her head stays in frame |
+| awareness | a Labrador stands where the pylon rose (Vico: a pet or the pylon, not a person) | a warm lamp on the dog; the last two camera keys look a little lower and wider so the dog is whole; the floor rings travel with the desk |
 | music (gaming room) | Kai plays from the sofa; his opening looks over Kai's shoulder | nothing |
 | media (movie night) | Omar watches from his wheelchair at the right; his closing push leaves him behind | nothing |
 | storage (workshop) | Andre with the desk app (he steps in a second after the opening frame), Jo at the bench | the tracking shot at 13.2 s looks a little further right so Andre is not half in it |

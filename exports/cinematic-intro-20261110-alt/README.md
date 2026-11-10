@@ -27,7 +27,7 @@ Rebuild after any change to his cut, list the differences, or mix the two:
 | coast (OCC media lab) | the bays are in use (Maya at the centre bay); the featured suite stays free | his, unchanged |
 | oilers (high school) | Kai in his wheelchair at the set-design desk; the class; Noah at the featured desk, seated then standing | his tour to Noah seated; cut at 8.25 s to the desktop rising; cut at 10.7 s to Noah standing, the class behind |
 | wellness (gym) | Maya sits, gets up and stretches while the desk rises, then works standing; Priya stretches at the board | his, unchanged |
-| awareness | Grace with her walking stick stands where the pylon rose; a warm lamp on her | his; the closing arc aims higher so her head stays in frame |
+| awareness | a Labrador stands where the pylon rose (Vico: a pet or the pylon, not a person); a warm lamp on the dog | his; the last two keys look a little lower and wider so the dog is whole; the floor rings travel with the desk |
 | music (gaming room) | Kai plays from the sofa, turned to the desk's screen | opens over Kai's shoulder and passes on his right; his front view |
 | media (movie night) | Omar watches from his wheelchair, right of the desk | his route; the push goes further in, past Omar's shoulder |
 | storage (workshop) | Andre taps the desk app, left of the desk and out of its path; Jo at the bench | opens on Andre's tap, pulls back to his wide; his from there (tracking shot nudged to clear Andre) |

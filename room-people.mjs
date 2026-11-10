@@ -290,7 +290,8 @@ export class RoomPeople {
     show(object, on) {
         object.visible = on;
         const chair = object.userData.personChair;
-        if (chair) { chair.visible = on; if (on) { chair.position.set(object.position.x, 0, object.position.z); chair.rotation.y = object.rotation.y - Math.PI; } }
+        // the chair faces the way its user faces: toward the desk (it was turned half round, backrest against the user's chest)
+        if (chair) { chair.visible = on; if (on) { chair.position.set(object.position.x, 0, object.position.z); chair.rotation.y = object.rotation.y; } }
     }
     // filter.chair: one task chair that stays. It is under the seated desk user while they are there (`seated` 0..1)
     // and slides back from the desk when they are not.
@@ -302,7 +303,7 @@ export class RoomPeople {
         const away = 1 - THREE.MathUtils.smoothstep(seated, 0, 1);
         for (const o of chairs) o.userData.personChair.visible = false;
         keep.visible = true; keep.position.copy(base).addScaledVector(front, (park.back ?? 620) * away).addScaledVector(side, (park.side ?? 0) * away);
-        keep.rotation.y = yaw + THREE.MathUtils.degToRad((park.turn ?? 0) * away);
+        keep.rotation.y = yaw + Math.PI + THREE.MathUtils.degToRad((park.turn ?? 0) * away);
         this.chairSpot = keep.position; this.chairHome = base;
     }
     // state: { height (inches), mode, pose: { x, z, yaw }, keyboard: { x, z } | null, time } of the featured desk, room

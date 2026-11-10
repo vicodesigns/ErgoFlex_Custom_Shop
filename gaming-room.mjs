@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { attachVista } from './window-vista.mjs?v=window-vista-20261110';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { gamingSessionMaps, buildGamingSessionDetail, migrateGamingSavedFurniture, migrateGamingSavedAssetKeys } from './gaming-session-detail.mjs?v=gaming-sessions-20261022';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
