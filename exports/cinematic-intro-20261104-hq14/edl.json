@@ -1,91 +1,91 @@
 {
  "fps": 30,
  "dissolve": 1.5,
- "total": 208.3,
+ "total": 235.35,
  "chapters": [
   {
    "index": 1,
    "id": "awaken",
-   "duration": 44.3,
+   "duration": 44.85,
    "start": 0.0,
-   "end": 44.3
+   "end": 44.85
   },
   {
    "index": 2,
    "id": "rise",
-   "duration": 16,
-   "start": 42.8,
-   "end": 58.8
+   "duration": 18,
+   "start": 43.35,
+   "end": 61.35
   },
   {
    "index": 3,
    "id": "create",
-   "duration": 18,
-   "start": 57.3,
-   "end": 75.3
+   "duration": 23.5,
+   "start": 59.85,
+   "end": 83.35
   },
   {
    "index": 4,
    "id": "commons",
-   "duration": 14,
-   "start": 73.8,
-   "end": 87.8
+   "duration": 16,
+   "start": 81.85,
+   "end": 97.85
   },
   {
    "index": 5,
    "id": "coast",
-   "duration": 9.5,
-   "start": 86.3,
-   "end": 95.8
+   "duration": 14.5,
+   "start": 96.35,
+   "end": 110.85
   },
   {
    "index": 6,
    "id": "oilers",
-   "duration": 11,
-   "start": 94.3,
-   "end": 105.3
+   "duration": 14,
+   "start": 109.35,
+   "end": 123.35
   },
   {
    "index": 7,
    "id": "wellness",
-   "duration": 13,
-   "start": 103.8,
-   "end": 116.8
+   "duration": 16,
+   "start": 121.85,
+   "end": 137.85
   },
   {
    "index": 8,
    "id": "awareness",
    "duration": 12,
-   "start": 115.3,
-   "end": 127.3
+   "start": 136.35,
+   "end": 148.35
   },
   {
    "index": 9,
    "id": "music",
-   "duration": 11,
-   "start": 125.8,
-   "end": 136.8
+   "duration": 12.5,
+   "start": 146.85,
+   "end": 159.35
   },
   {
    "index": 10,
    "id": "media",
    "duration": 11,
-   "start": 135.3,
-   "end": 146.3
+   "start": 157.85,
+   "end": 168.85
   },
   {
    "index": 11,
    "id": "storage",
-   "duration": 17,
-   "start": 144.8,
-   "end": 161.8
+   "duration": 21.5,
+   "start": 167.35,
+   "end": 188.85
   },
   {
    "index": 12,
    "id": "hero",
    "duration": 48,
-   "start": 160.3,
-   "end": 208.3
+   "start": 187.35,
+   "end": 235.35
   }
  ],
  "beats": [
@@ -98,11 +98,11 @@
    "what": "awaken title B: Safe for everyone around it."
   },
   {
-   "at": 201.46,
+   "at": 228.51,
    "what": "end card: ErgoFlex wordmark"
   },
   {
-   "at": 208.3,
+   "at": 235.35,
    "what": "cut to black / onboarding"
   }
  ],
