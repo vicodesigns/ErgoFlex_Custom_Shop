@@ -4295,7 +4295,7 @@ function loadModel() {
         applyAccessoryVisibility();
         if (!workspaceRoom) {
             workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
-            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null });
+            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard() });
         }
         // Startup already chose the room's desktop. Rebuilding the model must
         // retain any explicit size selected since then.
@@ -10753,6 +10753,28 @@ let studioGrid = null;
 let isolatedVisibility = null;
 let dialogReturnFocus = null;
 let toastTimer;
+// Where the featured desk's keyboard is (room millimetres), tray or desktop: the person at the desk lines up on it.
+// The box is measured again every half second; in between the last answer stands (it only moves with the desk, and
+// then the people follow the desk pose anyway).
+let featuredKeyboardCache = { at: -Infinity, desk: null, offset: null };
+function featuredKeyboard() {
+    const root = workspaceRoom?.root, desk = sceneDesks?.active; if (!root || !desk?.objects) return null;
+    const pose = sceneDesks.ctx.readLive(desk).pose, now = performance.now(), cache = featuredKeyboardCache;
+    if (cache.desk !== desk || now - cache.at > 500) {
+        cache.at = now; cache.desk = desk; cache.offset = null;
+        for (const [key, item] of desk.objects) {
+            const label = key + ' ' + (item.obj?.userData?.propId || '') + ' ' + (item.obj?.name || '');
+            if (!/keyboard/i.test(label) || /tray/i.test(label) || item.saved?.removed || !item.obj?.visible) continue;
+            const centre = root.worldToLocal(new THREE.Box3().setFromObject(item.obj).getCenter(new THREE.Vector3()));
+            // Kept in the desk's own frame, so it stays right while the desk glides and turns between measurements.
+            const dx = centre.x - pose.x, dz = centre.z - pose.z, c = Math.cos(pose.yaw || 0), s = Math.sin(pose.yaw || 0);
+            cache.offset = { side: dx * c - dz * s, ahead: dx * s + dz * c }; break;
+        }
+    }
+    if (!cache.offset) return null;
+    const c = Math.cos(pose.yaw || 0), s = Math.sin(pose.yaw || 0), { side, ahead } = cache.offset;
+    return { x: pose.x + side * c + ahead * s, z: pose.z - side * s + ahead * c };
+}
 function syncRoomPeople() {
     const control = document.getElementById('room-people-control'), available = !!workspaceRoom?.people?.available;
     if (control) { control.hidden = !available; control.querySelector('input').checked = roomPeopleEnabled; }

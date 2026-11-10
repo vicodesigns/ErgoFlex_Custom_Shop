@@ -26,8 +26,10 @@
 // through sceneEdits `add`.
 import * as THREE from 'three';
 
-// How far in front of a desk's anchor the person's pelvis is (mm): keyboard edge to wrists to pelvis.
+// How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
+// behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
 const REACH = { sit: 945, wheel: 935, stand: 890 };
+const BEHIND_KEYS = { sit: 470, wheel: 460, stand: 415 };
 const HEIGHT_FIT = 1.4;                       // inches either side of the height a desk pose was built for
 const HEIGHT_SOLID = .45;                     // within this the person is fully there; beyond it they fade out to HEIGHT_FIT
 const TASK_CHAIR = 'steelcase-leap-v2';       // seat 435 mm: what the seated desk poses were built on
@@ -200,7 +202,8 @@ export class RoomPeople {
         const chair = object.userData.personChair;
         if (chair) { chair.visible = on; if (on) { chair.position.set(object.position.x, 0, object.position.z); chair.rotation.y = object.rotation.y - Math.PI; } }
     }
-    // state: { height (inches), mode, pose: { x, z, yaw } } of the featured desk; called every frame while enabled.
+    // state: { height (inches), mode, pose: { x, z, yaw }, keyboard: { x, z } | null } of the featured desk, room
+    // millimetres; called every frame while enabled. With a keyboard the person lines up on it, not on the desk anchor.
     update(state) {
         if (!this.enabled || !this.people.length) return;
         const height = state?.height ?? 28, pose = state?.pose, mode = state?.mode; let working = false;
@@ -217,7 +220,13 @@ export class RoomPeople {
             if (spec.desk && !spec.station) {
                 const off = fit === null ? 0 : Math.abs(height - fit);
                 on = on && !!pose && !working && off <= HEIGHT_FIT;
-                if (on) { object.userData.personAmount = 1 - THREE.MathUtils.smoothstep(off, HEIGHT_SOLID, HEIGHT_FIT); const yaw = pose.yaw || 0; object.position.set(pose.x - 6, 0, pose.z).addScaledVector(frontOf(yaw), spec.reach ?? REACH[spec.desk]); object.rotation.y = yaw + Math.PI; working = true; }
+                if (on) {
+                    object.userData.personAmount = 1 - THREE.MathUtils.smoothstep(off, HEIGHT_SOLID, HEIGHT_FIT);
+                    const yaw = pose.yaw || 0, front = frontOf(yaw), keys = state.keyboard, short = (spec.reach ?? REACH[spec.desk]) - REACH[spec.desk];
+                    if (keys) object.position.set(keys.x, 0, keys.z).addScaledVector(front, BEHIND_KEYS[spec.desk] + short);
+                    else object.position.set(pose.x - 6, 0, pose.z).addScaledVector(front, REACH[spec.desk] + short);
+                    object.rotation.y = yaw + Math.PI; working = true;
+                }
             } else if (spec.beside && this.filter?.place?.[spec.id]) {
                 // placed for this use: stays where it was put
             } else if (spec.beside && pose) {

@@ -51,6 +51,9 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     assert.deepEqual(shown(people).filter(id => /maya/.test(id)), ['people-maya-stand-type']);
     const standing = people.people.find(o => o.userData.person.id === 'people-maya-stand-type');
     assert.ok(Math.abs(standing.position.x - (94 + 890)) < 1 && Math.abs(standing.position.z + 500) < 1, 'follows the desk when it turns');
+    // With the keyboard's position known, the person lines up on the keyboard (a desktop keyboard sits further in).
+    people.update({ height: 43.5, pose: { x: 100, z: -500, yaw: 0 }, keyboard: { x: 60, z: -240 } });
+    assert.deepEqual([standing.position.x, standing.position.z], [60, 175]);
     await people.setEnabled(false); assert.deepEqual(shown(people), []);
     people.dispose(); assert.equal(people.people.length, 0);
 }
