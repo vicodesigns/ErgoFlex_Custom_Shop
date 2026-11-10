@@ -210,7 +210,10 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
       status(`All lights back to the film (${n} edit${n===1?'':'s'} cleared). Undo brings them back.`);return;
     }
     if(name.startsWith('sl-add-')){
-      const type=name.slice(7),{camera,controls}=three(),t=controls.target.toArray(),p=camera.position.toArray(),at=t.map((v,i)=>r3(v+(p[i]-v)*.45+(i===1?.6:0)));
+      const type=name.slice(7),{camera,controls}=three(),t0=controls.target.toArray(),p=camera.position.toArray();
+      // Each added light is fanned out sideways (alternating right / left of the view's centre) so several never sit on one spot: a marker you can pick, a gizmo you can drag.
+      const side=(n=>{const k=Math.ceil(n/2)*.4*(n%2?1:-1),f=[t0[0]-p[0],t0[2]-p[2]],len=Math.hypot(...f)||1;return [-f[1]/len*k,0,f[0]/len*k];})((shot().lights||[]).length),
+        t=t0.map((v,i)=>v+side[i]),at=t0.map((v,i)=>r3(v+(p[i]-v)*.45+(i===1?.6:0)+side[i]));
       const id='director-'+crypto.randomUUID().slice(0,8),l={name:id,type,position:at,color:'#fff2e0',intensity:type==='point'?20:type==='spot'?120:15,...(type==='point'?{distance:0,decay:2}:{}),...(type==='spot'?{target:t.map(r3),angle:30,penumbra:.5,distance:0,decay:2}:{}),...(type==='rect'?{target:t.map(r3),width:1,height:.6}:{})};
       commit(()=>{const s=shot();s.lights=[...(s.lights||[]),l];},{render:false});selected='Film lights > Film light · '+id;show=true;mode='move';rerender();
       status(`Added a ${ADDED_TYPES.find(x=>x[0]===type)[1].toLowerCase()} light by the camera's view. Drag its gizmo; Export cut sends it to the film.`);return;
