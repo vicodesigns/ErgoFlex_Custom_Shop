@@ -447,6 +447,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     await ensure();
     if(!sel){status('Select a prop first, then drop it onto the surface below.',true);return;}
     if(!editing()){status('Pause the chapter first: props are moved on the paused frame.',true);return;}
+    if(group()){dropGroup(dropMode);return;}
     const o=current();if(!o){status('That prop is not in the room right now.',true);return;}
     if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return;}
     if(!shown(o)){status(`${label(o)} is hidden in this chapter: untick Hide first.`,true);return;}
@@ -454,6 +455,28 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(!r.ok){if(!had)snaps.delete(o);status(r.reason,true);rerender();return;}
     if(r.rests){if(!had)snaps.delete(o);status(r.text);return;}
     try{writeLive(o,r.base,r.text);}catch(error){status(error.message,true);}
+  }
+  // Several selected: each drops straight down on its own (lowest first, so a stack settles from the bottom up),
+  // all written as one undo step. Items that can't be saved, are hidden, already rest or have nothing below stay put.
+  function dropGroup(dropMode){
+    const dropped=[],rested=[],stuck=[],skipped=[];
+    const list=members().map(m=>({m,o:objOf(m)})).sort((a,b)=>(a.o?a.o.getWorldPosition(new tools.THREE.Vector3()).y:0)-(b.o?b.o.getWorldPosition(new tools.THREE.Vector3()).y:0));
+    for(const {m,o} of list){
+      if(!o||m.blocked||!shown(o)){skipped.push(m);continue;}
+      const had=snaps.has(o),r=dropObject(o,dropMode);
+      if(!r.ok){if(!had)snaps.delete(o);stuck.push(r.reason);continue;}
+      if(r.rests){if(!had)snaps.delete(o);rested.push(m);continue;}
+      dropped.push({m,o,b:r.base});
+    }
+    const changes=[];
+    for(const it of dropped){
+      try{const e=editOfKey(it.m.key);const next=isAddEdit(e)?addFrom(it.o,e):{...it.m.target,...(e||{}),...editFrom(it.o,it.b)};
+        if(JSON.stringify(cleanPropEdit(next))===JSON.stringify(e?cleanPropEdit(e):null))continue;changes.push({key:it.m.key,next});}
+      catch(error){skipped.push(it.m);console.warn('[props] group drop',error.message);}
+    }
+    const notes=[rested.length?`${rested.length} already rested`:'',stuck.length?`${stuck.length} had nothing below`:'',skipped.length?`${skipped.length} could not be moved`:''].filter(Boolean).join(', ');
+    if(!changes.length){status(stuck[0]||(rested.length?'They already rest on the surface below.':'Nothing to drop.')+(skipped.length?` (${skipped.length} could not be moved)`:''),!!stuck.length);rerender();return;}
+    writeMany(changes,`Dropped ${changes.length} items onto the surface below${notes?` (${notes})`:''}. One Undo puts them all back.`);
   }
   // ---- Make permanent in Studio: Studio's own room state through the studio server, never the file.
   function studioRoom(){
@@ -541,7 +564,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const head=`<h3>Props</h3><p class="director-hint">Click a prop in the view to select it (not while Lights are shown). W move · E rotate · T scale · Shift snaps · Delete hides it. Edits stay in this chapter: Studio does not change.</p>
       <div class="director-actions"><button data-action="pp-add" class="prop-add-button" title="Add a model from the prop library: it goes on the desk or the floor in front of the camera, ready to move">+ Add prop</button><button data-action="pp-reset-all" ${n?'':'disabled'} title="Every prop back to the film in this chapter: one step, Undo brings them back">Reset all props to the film${n?' ('+n+')':''}</button><button data-action="pp-permanent" ${st.ok?'':'disabled'} title="${escape(st.ok?'Write these prop edits into Studio\'s room layout (you confirm each one)':st.why)}">Make permanent in Studio…</button></div>${st.ok?'':`<p class="director-hint" data-permanent-why>${escape(st.why)}</p>`}`;
     if(!sel)return head+'<p class="director-hint">No prop selected. Shift+click adds to the selection, Ctrl+click adds or removes.</p>';
-    if(group())return head+groupPanelHtml({members:members().map(m=>({key:m.key,name:nice(m.target.label||''),desk:!!(objOf(m)&&(onDeskItself(objOf(m))||ridesDesk(objOf(m)))),hidden:editOfKey(m.key)?.hide===true||(!!objOf(m)&&!shown(objOf(m))),blocked:m.blocked,missing:!objOf(m)})),mode,escape,edited:members().some(m=>editOfKey(m.key))});
+    if(group())return head+groupPanelHtml({members:members().map(m=>({key:m.key,name:nice(m.target.label||''),desk:!!(objOf(m)&&(onDeskItself(objOf(m))||ridesDesk(objOf(m)))),hidden:editOfKey(m.key)?.hide===true||(!!objOf(m)&&!shown(objOf(m))),blocked:m.blocked,missing:!objOf(m)})),mode,escape,edited:members().some(m=>editOfKey(m.key)),extra:dropButtons()});
     if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4 title="${escape(sel.target.label||'')}">${escape(nice(sel.target.label))}</h4><p class="director-hint">Not in the room right now (the film setup did not find it).</p><div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
     if(!tools)return head;if(isAddEdit(e))return head+addPanel(o,e);const b=base(o),{THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),turn=e?.rotation||[0,0,0],fac=e?.scale||[1,1,1],uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4;
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;

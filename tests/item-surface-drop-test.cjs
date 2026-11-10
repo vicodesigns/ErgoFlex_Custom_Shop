@@ -34,6 +34,11 @@ const result={};
 {
  const scene=base(),item=box(scene,[400,20,300],[0,730,0]),linked=box(scene,[400,20,300],[0,700,0]);result.linked=surfaceDrop([item,linked],scene);
 }
+{
+ const scene=base(),decal=box(scene,[300,5,300],[0,2.5,0]);const item=box(scene,[100,20,100],[0,900,0]);result.decal=surfaceDrop([item],scene);
+ const thick=base();box(thick,[300,40,300],[0,20,0]);const item2=box(thick,[100,20,100],[0,900,0]);result.thick=surfaceDrop([item2],thick);
+ const glass=base();box(glass,[300,8,300],[0,734,0]);const item3=box(glass,[100,20,100],[0,900,0]);result.glass=surfaceDrop([item3],glass);
+}
 window.results=result;
 </script>`;
 const server=http.createServer((req,res)=>{if(req.url==='/fixture'){res.setHeader('Content-Type','text/html');return res.end(fixture);}const file=path.join(root,new URL(req.url,'http://local').pathname);fs.readFile(file,(err,data)=>{if(err)return res.writeHead(404).end();res.setHeader('Content-Type','text/javascript');res.end(data);});});
@@ -42,5 +47,6 @@ const server=http.createServer((req,res)=>{if(req.url==='/fixture'){res.setHeade
  assert.equal(r.table.height,740);assert.equal(r.table.delta,-150);assert.equal(r.repeat.delta,0);
  assert.equal(r.hole.height,0,'Raycasts pass through a real shelf opening');assert.equal(r.instance.height,740);
  assert.ok(Math.abs(r.slope.height-(500+50/Math.sqrt(3)))<1e-4,'Sloping tops use actual geometry');assert.equal(r.underside.height,0,'Downward-facing surfaces do not catch an item');assert.equal(r.linked.height,0,'Linked selected contents are excluded');
+ assert.equal(r.decal.height,0,'A 5 mm floor decal is not a surface: it rests on the floor under it');assert.equal(r.thick.height,40,'A 40 mm rug is a surface');assert.equal(r.glass.height,738,'A thin glass shelf with nothing under it still counts');
  console.log('PASS surface drop: tabletop, floor, shelf opening, sloped surface, instanced geometry, hidden/shader/underside rejection, linked selection and repeat placement.');
 }finally{await browser?.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;server.close();});

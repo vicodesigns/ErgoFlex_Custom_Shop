@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { DoubleItemTap } from './scene-item-editing.mjs?v=item-gumball-clipboard-20261016';
-import { surfaceDrop } from './item-surface-drop.mjs';
+import { surfaceDrop, usable, mmOf } from './item-surface-drop.mjs';
+import { dropToSurface } from './experience/drop-to-surface.mjs';
 import { RoomGrounding } from './room-polish.mjs?v=humboldt-commons-20261015';
 import { solveFloorMove, overlapArea } from './room-collision.mjs?v=room-regressions-20261007';
 
@@ -136,9 +137,19 @@ export class RoomInteractions {
         const obj=this.selected?.obj; this.bind(this.room());
         if(obj?.parent)this.select(this.entries.find(e=>e.obj===obj)||null);
     }
-    dropSelected() {
+    // mode 'drop' (the Down Arrow): straight down onto what is below. 'flat': level it first, then drop it.
+    // 'align': tilt it to the surface under it (a ramp, a tilted desktop), then drop it. Flat and align use the
+    // Director's shared experience/drop-to-surface.mjs on the one furnishing (mm = world units per millimetre, from the furnishing's parent scale).
+    dropSelected(mode='drop') {
         const entry=this.selected;
         if(!entry||this.drag||!this.enabled())return false;
+        if(mode!=='drop'){
+            if(entry.objects.length!==1){this.onStatus?.('Drop flat and Align to surface work on one furnishing at a time.');return true;}
+            const edit=this.onEditStart?.(),r=dropToSurface({THREE,scene:this.scene,obj:entry.obj,mode,mm:mmOf(entry.obj),skip:o=>!usable(o)});
+            if(!r.ok){this.onStatus?.(r.reason);return true;}
+            this.onEditEnd?.(edit);this.onChange?.();this.rebindSelected();
+            this.onStatus?.(entry.name+(mode==='align'?' tilted to the surface below and placed on it.':' levelled and placed on the surface below.')+' Ctrl+Z to undo.');return true;
+        }
         const target=surfaceDrop(entry.objects,this.scene);
         if(!target){this.onStatus?.('No surface below this item.');return true;}
         if(Math.abs(target.delta)<=target.epsilon)return true;

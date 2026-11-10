@@ -9,9 +9,13 @@
 // scene meshes except obj itself and anything skip(object) says is a tool or helper; the surface is the highest hit at
 // or below the prop's own bottom (+ a small tolerance), so a prop sunk into a surface pops up onto it.
 // Returns {ok:true, distance (world units: how far its lowest point went down, - = it rose), surface (the mesh hit), normal, rotated}
+// Thin sheets (a floor sign, a rug edge, a sticker: a mesh no thicker than DECAL_MM) that lie on something within
+// DECAL_ON_MM are not surfaces: the prop rests on what is under them. A thin sheet with nothing right under it (a glass
+// shelf) still counts.
 // or {ok:false, reason} with obj untouched. mm = world units per millimetre (the stage's world is in metres: .001).
-const TOLERANCE_MM=60,REST_MM=.5,INSET=.06;
+const TOLERANCE_MM=60,REST_MM=.5,INSET=.06,DECAL_MM=12,DECAL_ON_MM=15;
 const visibleChain=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
+const thin=(THREE,o,mm)=>{const b=new THREE.Box3().setFromObject(o);return !b.isEmpty()&&b.max.y-b.min.y<=DECAL_MM*mm;};
 const within=(a,o)=>{for(let p=o;p;p=p.parent)if(p===a)return true;return false;};
 function solid(h,skip){
   const o=h.object,m=Array.isArray(o.material)?o.material[h.face?.materialIndex??0]:o.material;
@@ -50,8 +54,13 @@ export function dropToSurface({THREE,scene,obj,mode='drop',mm=.001,skip=null}){
   const ray=new THREE.Raycaster(),down=new THREE.Vector3(0,-1,0),up=new THREE.Vector3(0,1,0),tol=TOLERANCE_MM*mm;
   const cast=(x,y,z)=>{
     const top=Math.max(...c.map(p=>p.y))+10*mm;ray.set(new THREE.Vector3(x,top,z),down);
-    const hit=ray.intersectObject(scene,true).find(h=>!within(obj,h.object)&&solid(h,skip)&&h.point.y<=y+tol);
-    if(!hit)return null;const n=hit.face?hit.face.normal.clone().transformDirection(hit.object.matrixWorld):up.clone();if(n.y<0)n.negate();return {hit,n};
+    const hits=ray.intersectObject(scene,true).filter(h=>!within(obj,h.object)&&solid(h,skip));
+    let hit=hits.find(h=>h.point.y<=y+tol);
+    if(!hit)return null;
+    while(thin(THREE,hit.object,mm)){   // a decal: rest on what it lies on
+      const next=hits.slice(hits.indexOf(hit)+1).find(h=>h.object!==hit.object);
+      if(!next||hit.point.y-next.point.y>DECAL_ON_MM*mm)break;hit=next;
+    }const n=hit.face?hit.face.normal.clone().transformDirection(hit.object.matrixWorld):up.clone();if(n.y<0)n.negate();return {hit,n};
   };
   const aabbBottom=()=>{const b=new THREE.Box3().setFromPoints(c),m=b.getCenter(new THREE.Vector3());return new THREE.Vector3(m.x,b.min.y,m.z);};
   let rotated=false,normal=up.clone();

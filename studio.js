@@ -7,7 +7,7 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=commons-group-work-20261016';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=commons-home-comfort-20261024';
 import { poseIsClear, grooveDestination } from './room-groove.mjs?v=humboldt-commons-20261015';
-import { SceneDesks } from './scene-desks.mjs?v=item-gumball-clipboard-20261016';
+import { SceneDesks } from './scene-desks.mjs?v=drop-flat-align-20261110';
 import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=item-gumball-clipboard-20261016';
 import { loadLibraryArtworkRecovery, libraryArtworkRecovery, repairLibraryArtwork } from './library-artwork-link.mjs?v=humboldt-decals-stow-20261016';
 import { applyCollegeProductArtwork } from './college-product-artwork.mjs';
@@ -24,7 +24,7 @@ import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacle
 import { RoomGroove } from './room-groove-runtime.mjs?v=commons-group-work-20261016';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=item-gumball-clipboard-20261016';
+import { RoomInteractions } from './room-interactions.mjs?v=drop-flat-align-20261110';
 import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pacing-vsm-20261015';
 import { SceneTour, tourEnabled } from './scene-tour.mjs?v=highschool-setting-20261104';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
@@ -6621,8 +6621,10 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();void pasteSelectedWorkspaceItems();
         } else if (!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='Delete'||e.key==='Backspace')) {
             if(deleteSelectedWorkspaceItem())e.preventDefault();
-        } else if (!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key==='ArrowDown') {
-            if(sceneDesks?.objects.dropToSurface()||roomInteractions?.dropSelected())e.preventDefault();
+        } else if (!e.ctrlKey&&!e.metaKey&&e.key==='ArrowDown') {
+            // Down Arrow drops; Shift+Down levels then drops; Alt+Down tilts to the surface then drops (room furnishings and desk objects).
+            const dropMode=e.altKey?'align':e.shiftKey?'flat':'drop';
+            if(sceneDesks?.objects.dropToSurface(dropMode)||roomInteractions?.dropSelected(dropMode))e.preventDefault();
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
             e.preventDefault();
             if (e.shiftKey) performRedo(); else performUndo();
@@ -12013,9 +12015,11 @@ function initStudio() {
     const roomCaption = document.createElement('p'); roomCaption.id = 'room-scene-caption'; roomCaption.setAttribute('aria-live', 'polite');
     const interactionHint=document.createElement('p');interactionHint.id='room-interaction-hint';interactionHint.className='studio-note';interactionHint.hidden=true;
     const objectControls=document.createElement('div');objectControls.id='room-object-controls';objectControls.className='room-object-controls';objectControls.hidden=true;
-    objectControls.innerHTML='<span data-room-object-name role="status"></span><button type="button" data-room-object-turn="-15" aria-label="Rotate selected furnishing left 15 degrees">↶ Rotate left</button><button type="button" data-room-object-turn="15" aria-label="Rotate selected furnishing right 15 degrees">Rotate right ↷</button><button type="button" data-room-object-drop title="Down Arrow">↓ Drop to surface</button><button type="button" data-room-object-delete title="Delete">Delete</button><button type="button" data-room-object-done>Done</button>';
+    objectControls.innerHTML='<span data-room-object-name role="status"></span><button type="button" data-room-object-turn="-15" aria-label="Rotate selected furnishing left 15 degrees">↶ Rotate left</button><button type="button" data-room-object-turn="15" aria-label="Rotate selected furnishing right 15 degrees">Rotate right ↷</button><button type="button" data-room-object-drop title="Down Arrow">↓ Drop to surface</button><button type="button" data-room-object-drop-flat title="Shift+Down Arrow: level it, then drop it">Drop flat</button><button type="button" data-room-object-drop-align title="Alt+Down Arrow: tilt it to the surface under it (a ramp, a tilted desktop), then drop it">Align to surface</button><button type="button" data-room-object-delete title="Delete">Delete</button><button type="button" data-room-object-done>Done</button>';
     objectControls.querySelectorAll('[data-room-object-turn]').forEach(button=>button.onclick=()=>roomInteractions?.rotateSelected(Number(button.dataset.roomObjectTurn)));
     objectControls.querySelector('[data-room-object-drop]').onclick=()=>roomInteractions?.dropSelected();
+    objectControls.querySelector('[data-room-object-drop-flat]').onclick=()=>roomInteractions?.dropSelected('flat');
+    objectControls.querySelector('[data-room-object-drop-align]').onclick=()=>roomInteractions?.dropSelected('align');
     objectControls.querySelector('[data-room-object-delete]').onclick=deleteSelectedWorkspaceItem;
     objectControls.querySelector('[data-room-object-done]').onclick=()=>roomInteractions?.select(null);
     const roomControls = MEASURED_ROOM_IDS.map(id => {
