@@ -124,3 +124,36 @@ the model's own materials and keeps the brightness of the fabric's texture, so f
 
 Not there yet: other outfits per person, custom characters (sliders for build, age, height), a people lane in the
 timeline, and a walk along a path. Test: `tests/director-people-e2e.mjs`.
+
+## Director: pose mode (added November 10, 2026)
+
+Double-click a person in the view, or press **Fine-tune pose…** in the People tab. The person's skeleton comes in (nothing moves) and dots appear on the joints.
+
+- **Blue dots** turn a joint. Click one, then drag the rings, or type Bend / Twist / Side in the People tab.
+- **Orange dots** are the hands and feet. Drag the arrows (W) and the whole arm or leg follows; the hand or foot keeps facing the way it did. E turns the wrist or ankle itself.
+- **Fingers**: Open / Close per hand, a step at a time.
+- **Copy to the other side** mirrors an arm's or a leg's adjustments. **Reset joint** (or Delete), **Reset arm / leg / torso**, **Reset the whole pose** go back to the posture as built.
+- Every change is one Undo step. **Done**, Esc, or a double-click on empty space leaves pose mode; the pose stays.
+
+How it works:
+
+- Every people model now carries its skeleton (MPFB "game_engine" rig, 54 bones). The mesh is baked in its posture and that posture is the skeleton's rest pose, so an untouched skeleton changes nothing. The Studio and the film draw people as plain meshes; only a person with adjustments is drawn skinned (`room-people.mjs` `rig()` / `pose()`, `workspace-3d.mjs` `PROP_LIBRARY.rigInstance()`).
+- Adjustments live in the chapter's cast: `cast[i].pose = { '<bone>': [x, y, z, w] }`, a turn of that bone from the built posture (`experience/people-edits.mjs` `cleanPose`). Export cut carries them into the film chapter's `people` (`build-round8-director.py` `clean_people`).
+- Changing the character keeps the adjustments; changing the posture drops them.
+- Things in the hands follow the hand; a wheelchair stays where it is.
+- Code: `experience/scene-pose-editor.mjs`. Test: `tests/director-pose-e2e.mjs`.
+
+## The whole library is built
+
+Every character exists in every posture (desk postures at each desk height): 495 models, `python3 tools/people/build.py --all` (about ten minutes). The People tab's character grid and Posture list swap instantly; nothing is "built on request" any more. Only the 54 models the rooms use are in `tools/props/manifest.json`; all are in `assets/props/index.json` and `assets/props/people.json`.
+
+## Director: the Cut menu (added November 10, 2026)
+
+The timeline's chapter picker starts with **Cut**: the film's cuts (`exports/film-cuts.json`). Choosing one opens the same chapter of that cut. **＋ Duplicate this cut…** copies the cut you are in to a new one and opens it.
+
+- A cut is a folder under `exports/` with a `review-cut.json`. Vico's cut (`exports/cinematic-intro-20261104-hq14`) is the master. Every other cut has a `cut.json` (`id`, `name`, `note`, `from`).
+- Each cut's chapters are projects of their own in the browser (`film-<cut>-<chapter>`), so drafts and exports of one cut never land in another.
+- Export cut and **Send to render PC** work in every cut: the request names the cut, the export is imported into that cut's folder, and the render job is the master's freeze with the cut's film data laid over it (`tools/experience/render-request.sh`).
+- Tools: `python3 tools/experience/film-cuts.py list | adopt | duplicate | pages`. Duplicate from the Director needs the studio server's `/__film/duplicate` (a server started before November 10 must be restarted once).
+- Not built: deleting or renaming a cut from the Director (remove the folder and run `film-cuts.py list`), and the builder chain for cuts other than the master (their chapters take Director edits; the opener's and the finale's special builders run for the master only).
+- Tests: `tests/director-cuts-e2e.mjs`, `tests/render-request-cut-test.py`.

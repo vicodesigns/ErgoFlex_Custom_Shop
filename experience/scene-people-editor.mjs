@@ -8,8 +8,8 @@ import {createPoseEditor} from './scene-pose-editor.mjs';
 // live stage, Render still and the film as the chapter's `people` (room-people.mjs). The first edit copies the cast
 // the film shows into the chapter, so every person is then an entry of its own.
 // The models are posed library props (assets/props/people-*.glb, catalogued in assets/props/people.json: characters,
-// postures, what is built). A character in a posture nobody has built yet is built on request by the studio server
-// (/__people/build, tools/people/build.py; about ten seconds), where that is available.
+// postures, what is built). Every character is built in every posture (tools/people/build.py --all); should one be
+// missing, the studio server builds it on request (/__people/build), where that is available.
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
 const r1=v=>Math.round(v*10)/10;
@@ -106,6 +106,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   // ---- pose mode (scene-pose-editor.mjs)
   const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,rerender,personName:e=>e?personName(e):'',editing});
+  const poseEditor=pose;     // swap() has a `pose` argument of its own
   // ---- selection
   function select(key,{announce=true}={}){
     const e=entry(key);if(!e){deselect();return;}
@@ -124,7 +125,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     let id=modelFor(c,p,m?.deskHeight??null);
     if(!id){id=await build(wantedId(c,p));if(!id)return;}
     const info=catalog.poses[p],name=catalog.characters[c]?.name||cap(c);
-    if(p!==m?.pose)pose.exit();
+    if(p!==m?.pose)poseEditor.exit();
     edit(key,x=>{
       x.id=id;if(p!==m?.pose)delete x.pose;      // fine tuning belongs to the posture it was made on
       if(info.desk){const role=info.stance==='seated'?'sit':info.stance==='wheelchair'?'wheel':'stand';if(!x.desk){x.desk=role;delete x.at;delete x.turn;delete x.y;delete x.beside;}else x.desk=role;}

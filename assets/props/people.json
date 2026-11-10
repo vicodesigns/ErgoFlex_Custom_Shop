@@ -7,7 +7,7 @@
    "age": "young adult",
    "years": 21,
    "heritage": "Mixed",
-   "height": 165,
+   "height": 166,
    "outfit": [
     "toigo_basic_tucked_t-shirt",
     "toigo_wool_pants",
@@ -24,7 +24,7 @@
    "age": "young adult",
    "years": 25,
    "heritage": "African",
-   "height": 180,
+   "height": 182,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "cortu_cargo_pants",
@@ -42,7 +42,7 @@
    "age": "senior",
    "years": 72,
    "heritage": "European",
-   "height": 154,
+   "height": 159,
    "outfit": [
     "toigo_fisherman_sweater",
     "toigo_wool_pants",
@@ -62,7 +62,7 @@
    "age": "teen",
    "years": 17,
    "heritage": "Asian",
-   "height": 174,
+   "height": 145,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "toigo_wool_pants",
@@ -79,7 +79,7 @@
    "age": "teen",
    "years": 17,
    "heritage": "African",
-   "height": 157,
+   "height": 158,
    "outfit": [
     "toigo_basic_tucked_t-shirt",
     "toigo_wool_pants",
@@ -112,7 +112,7 @@
    "age": "young adult",
    "years": 32,
    "heritage": "Asian",
-   "height": 154,
+   "height": 155,
    "outfit": [
     "toigo_basic_tucked_t-shirt",
     "toigo_wool_pants",
@@ -131,7 +131,7 @@
    "age": "young adult",
    "years": 38,
    "heritage": "Mixed",
-   "height": 180,
+   "height": 175,
    "outfit": [
     "male_casualsuit05",
     "shoes02"
@@ -146,7 +146,7 @@
    "age": "young adult",
    "years": 22,
    "heritage": "European",
-   "height": 174,
+   "height": 176,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "cortu_cargo_pants",
@@ -164,7 +164,7 @@
    "age": "senior",
    "years": 64,
    "heritage": "African",
-   "height": 177,
+   "height": 179,
    "outfit": [
     "toigo_fisherman_sweater",
     "toigo_wool_pants",
@@ -203,7 +203,7 @@
    "age": "young adult",
    "years": 23,
    "heritage": "Mixed",
-   "height": 164,
+   "height": 165,
    "outfit": [
     "female_sportsuit01",
     "shoes05"
@@ -216,7 +216,7 @@
    "age": "adult",
    "years": 41,
    "heritage": "European",
-   "height": 162,
+   "height": 168,
    "outfit": [
     "male_worksuit01",
     "shoes02"
@@ -248,7 +248,7 @@
    "age": "teen",
    "years": 16,
    "heritage": "Mixed",
-   "height": 167,
+   "height": 146,
    "outfit": [
     "male_casualsuit06",
     "shoes04"
@@ -263,7 +263,7 @@
    "age": "teen",
    "years": 17,
    "heritage": "African",
-   "height": 178,
+   "height": 179,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "cortu_cargo_pants",
@@ -280,7 +280,7 @@
    "age": "teen",
    "years": 17,
    "heritage": "Asian",
-   "height": 169,
+   "height": 152,
    "outfit": [
     "toigo_basic_tucked_t-shirt",
     "toigo_wool_pants",
@@ -298,7 +298,7 @@
    "age": "teen",
    "years": 17,
    "heritage": "European",
-   "height": 180,
+   "height": 156,
    "outfit": [
     "male_casualsuit01",
     "shoes06"
@@ -313,7 +313,7 @@
    "age": "teen",
    "years": 17,
    "heritage": "Mixed",
-   "height": 162,
+   "height": 151,
    "outfit": [
     "toigo_basic_tucked_t-shirt",
     "toigo_wool_pants",
@@ -851,6 +851,3014 @@
    "pose": "stand-wait",
    "name": "Zoe: standing by, arms loose",
    "aids": []
+  },
+  "people-maya-stand-type-low": {
+   "character": "maya",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Maya: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-maya-stand-type-low-30": {
+   "character": "maya",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Maya: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-maya-wheel-type": {
+   "character": "maya",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Maya: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-maya-wheel-type-31": {
+   "character": "maya",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Maya: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-maya-stand-present": {
+   "character": "maya",
+   "pose": "stand-present",
+   "name": "Maya: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-maya-stand-work": {
+   "character": "maya",
+   "pose": "stand-work",
+   "name": "Maya: working at a bench",
+   "aids": []
+  },
+  "people-maya-stand-paint": {
+   "character": "maya",
+   "pose": "stand-paint",
+   "name": "Maya: painting at an easel",
+   "aids": []
+  },
+  "people-maya-stretch-2": {
+   "character": "maya",
+   "pose": "stretch",
+   "name": "Maya: stretching, arms overhead",
+   "aids": []
+  },
+  "people-maya-cane-stand": {
+   "character": "maya",
+   "pose": "cane-stand",
+   "name": "Maya: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-maya-white-cane": {
+   "character": "maya",
+   "pose": "white-cane",
+   "name": "Maya: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-maya-walk": {
+   "character": "maya",
+   "pose": "walk",
+   "name": "Maya: walking",
+   "aids": []
+  },
+  "people-maya-sit-write": {
+   "character": "maya",
+   "pose": "sit-write",
+   "name": "Maya: writing at a table",
+   "aids": []
+  },
+  "people-maya-sit-laptop": {
+   "character": "maya",
+   "pose": "sit-laptop",
+   "name": "Maya: at a laptop",
+   "aids": []
+  },
+  "people-maya-sit-read": {
+   "character": "maya",
+   "pose": "sit-read",
+   "name": "Maya: reading",
+   "aids": []
+  },
+  "people-maya-sit-listen": {
+   "character": "maya",
+   "pose": "sit-listen",
+   "name": "Maya: listening at a table",
+   "aids": []
+  },
+  "people-maya-sit-raise": {
+   "character": "maya",
+   "pose": "sit-raise",
+   "name": "Maya: hand raised",
+   "aids": []
+  },
+  "people-maya-sit-phone": {
+   "character": "maya",
+   "pose": "sit-phone",
+   "name": "Maya: seated, phone in hand",
+   "aids": []
+  },
+  "people-maya-sit-controller": {
+   "character": "maya",
+   "pose": "sit-controller",
+   "name": "Maya: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-maya-wheel-roll": {
+   "character": "maya",
+   "pose": "wheel-roll",
+   "name": "Maya: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-maya-wheel-watch": {
+   "character": "maya",
+   "pose": "wheel-watch",
+   "name": "Maya: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-andre-stand-type-low": {
+   "character": "andre",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Andre: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-andre-stand-type-low-30": {
+   "character": "andre",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Andre: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-andre-wheel-type": {
+   "character": "andre",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Andre: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-andre-wheel-type-31": {
+   "character": "andre",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Andre: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-andre-stand-wait": {
+   "character": "andre",
+   "pose": "stand-wait",
+   "name": "Andre: standing by, arms loose",
+   "aids": []
+  },
+  "people-andre-stand-present": {
+   "character": "andre",
+   "pose": "stand-present",
+   "name": "Andre: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-andre-stand-work": {
+   "character": "andre",
+   "pose": "stand-work",
+   "name": "Andre: working at a bench",
+   "aids": []
+  },
+  "people-andre-stand-paint": {
+   "character": "andre",
+   "pose": "stand-paint",
+   "name": "Andre: painting at an easel",
+   "aids": []
+  },
+  "people-andre-stretch": {
+   "character": "andre",
+   "pose": "stretch",
+   "name": "Andre: stretching, arms overhead",
+   "aids": []
+  },
+  "people-andre-stretch-open": {
+   "character": "andre",
+   "pose": "stretch-open",
+   "name": "Andre: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-andre-cane-stand": {
+   "character": "andre",
+   "pose": "cane-stand",
+   "name": "Andre: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-andre-white-cane": {
+   "character": "andre",
+   "pose": "white-cane",
+   "name": "Andre: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-andre-walk": {
+   "character": "andre",
+   "pose": "walk",
+   "name": "Andre: walking",
+   "aids": []
+  },
+  "people-andre-sit-write": {
+   "character": "andre",
+   "pose": "sit-write",
+   "name": "Andre: writing at a table",
+   "aids": []
+  },
+  "people-andre-sit-laptop": {
+   "character": "andre",
+   "pose": "sit-laptop",
+   "name": "Andre: at a laptop",
+   "aids": []
+  },
+  "people-andre-sit-read": {
+   "character": "andre",
+   "pose": "sit-read",
+   "name": "Andre: reading",
+   "aids": []
+  },
+  "people-andre-sit-listen": {
+   "character": "andre",
+   "pose": "sit-listen",
+   "name": "Andre: listening at a table",
+   "aids": []
+  },
+  "people-andre-sit-raise": {
+   "character": "andre",
+   "pose": "sit-raise",
+   "name": "Andre: hand raised",
+   "aids": []
+  },
+  "people-andre-sit-phone": {
+   "character": "andre",
+   "pose": "sit-phone",
+   "name": "Andre: seated, phone in hand",
+   "aids": []
+  },
+  "people-andre-sit-controller": {
+   "character": "andre",
+   "pose": "sit-controller",
+   "name": "Andre: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-andre-wheel-roll": {
+   "character": "andre",
+   "pose": "wheel-roll",
+   "name": "Andre: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-andre-wheel-watch": {
+   "character": "andre",
+   "pose": "wheel-watch",
+   "name": "Andre: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-grace-sit-type": {
+   "character": "grace",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Grace: typing at the desk, seated",
+   "aids": []
+  },
+  "people-grace-sit-type-30": {
+   "character": "grace",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Grace: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-grace-stand-type": {
+   "character": "grace",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Grace: typing at the desk, standing",
+   "aids": []
+  },
+  "people-grace-stand-type-low": {
+   "character": "grace",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Grace: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-grace-stand-type-low-30": {
+   "character": "grace",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Grace: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-grace-wheel-type": {
+   "character": "grace",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Grace: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-grace-wheel-type-31": {
+   "character": "grace",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Grace: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-grace-stand-wait": {
+   "character": "grace",
+   "pose": "stand-wait",
+   "name": "Grace: standing by, arms loose",
+   "aids": []
+  },
+  "people-grace-stand-phone": {
+   "character": "grace",
+   "pose": "stand-phone",
+   "name": "Grace: standing, phone in hand",
+   "aids": []
+  },
+  "people-grace-stand-present": {
+   "character": "grace",
+   "pose": "stand-present",
+   "name": "Grace: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-grace-stand-work": {
+   "character": "grace",
+   "pose": "stand-work",
+   "name": "Grace: working at a bench",
+   "aids": []
+  },
+  "people-grace-stand-paint": {
+   "character": "grace",
+   "pose": "stand-paint",
+   "name": "Grace: painting at an easel",
+   "aids": []
+  },
+  "people-grace-stretch": {
+   "character": "grace",
+   "pose": "stretch",
+   "name": "Grace: stretching, arms overhead",
+   "aids": []
+  },
+  "people-grace-stretch-open": {
+   "character": "grace",
+   "pose": "stretch-open",
+   "name": "Grace: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-grace-white-cane": {
+   "character": "grace",
+   "pose": "white-cane",
+   "name": "Grace: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-grace-walk": {
+   "character": "grace",
+   "pose": "walk",
+   "name": "Grace: walking",
+   "aids": []
+  },
+  "people-grace-sit-write": {
+   "character": "grace",
+   "pose": "sit-write",
+   "name": "Grace: writing at a table",
+   "aids": []
+  },
+  "people-grace-sit-laptop": {
+   "character": "grace",
+   "pose": "sit-laptop",
+   "name": "Grace: at a laptop",
+   "aids": []
+  },
+  "people-grace-sit-listen": {
+   "character": "grace",
+   "pose": "sit-listen",
+   "name": "Grace: listening at a table",
+   "aids": []
+  },
+  "people-grace-sit-raise": {
+   "character": "grace",
+   "pose": "sit-raise",
+   "name": "Grace: hand raised",
+   "aids": []
+  },
+  "people-grace-sit-phone": {
+   "character": "grace",
+   "pose": "sit-phone",
+   "name": "Grace: seated, phone in hand",
+   "aids": []
+  },
+  "people-grace-sit-controller": {
+   "character": "grace",
+   "pose": "sit-controller",
+   "name": "Grace: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-grace-wheel-roll": {
+   "character": "grace",
+   "pose": "wheel-roll",
+   "name": "Grace: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-grace-wheel-watch": {
+   "character": "grace",
+   "pose": "wheel-watch",
+   "name": "Grace: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-kai-sit-type": {
+   "character": "kai",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Kai: typing at the desk, seated",
+   "aids": []
+  },
+  "people-kai-sit-type-30": {
+   "character": "kai",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Kai: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-kai-stand-type": {
+   "character": "kai",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Kai: typing at the desk, standing",
+   "aids": []
+  },
+  "people-kai-stand-type-low": {
+   "character": "kai",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Kai: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-kai-stand-type-low-30": {
+   "character": "kai",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Kai: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-kai-wheel-type-31": {
+   "character": "kai",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Kai: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-kai-stand-wait": {
+   "character": "kai",
+   "pose": "stand-wait",
+   "name": "Kai: standing by, arms loose",
+   "aids": []
+  },
+  "people-kai-stand-phone": {
+   "character": "kai",
+   "pose": "stand-phone",
+   "name": "Kai: standing, phone in hand",
+   "aids": []
+  },
+  "people-kai-stand-present": {
+   "character": "kai",
+   "pose": "stand-present",
+   "name": "Kai: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-kai-stand-work": {
+   "character": "kai",
+   "pose": "stand-work",
+   "name": "Kai: working at a bench",
+   "aids": []
+  },
+  "people-kai-stand-paint": {
+   "character": "kai",
+   "pose": "stand-paint",
+   "name": "Kai: painting at an easel",
+   "aids": []
+  },
+  "people-kai-stretch": {
+   "character": "kai",
+   "pose": "stretch",
+   "name": "Kai: stretching, arms overhead",
+   "aids": []
+  },
+  "people-kai-stretch-open": {
+   "character": "kai",
+   "pose": "stretch-open",
+   "name": "Kai: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-kai-cane-stand": {
+   "character": "kai",
+   "pose": "cane-stand",
+   "name": "Kai: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-kai-white-cane": {
+   "character": "kai",
+   "pose": "white-cane",
+   "name": "Kai: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-kai-walk": {
+   "character": "kai",
+   "pose": "walk",
+   "name": "Kai: walking",
+   "aids": []
+  },
+  "people-kai-sit-laptop": {
+   "character": "kai",
+   "pose": "sit-laptop",
+   "name": "Kai: at a laptop",
+   "aids": []
+  },
+  "people-kai-sit-read": {
+   "character": "kai",
+   "pose": "sit-read",
+   "name": "Kai: reading",
+   "aids": []
+  },
+  "people-kai-sit-listen": {
+   "character": "kai",
+   "pose": "sit-listen",
+   "name": "Kai: listening at a table",
+   "aids": []
+  },
+  "people-kai-sit-raise": {
+   "character": "kai",
+   "pose": "sit-raise",
+   "name": "Kai: hand raised",
+   "aids": []
+  },
+  "people-kai-sit-phone": {
+   "character": "kai",
+   "pose": "sit-phone",
+   "name": "Kai: seated, phone in hand",
+   "aids": []
+  },
+  "people-kai-wheel-watch": {
+   "character": "kai",
+   "pose": "wheel-watch",
+   "name": "Kai: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-zoe-sit-type": {
+   "character": "zoe",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Zoe: typing at the desk, seated",
+   "aids": []
+  },
+  "people-zoe-sit-type-30": {
+   "character": "zoe",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Zoe: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-zoe-stand-type-43_5": {
+   "character": "zoe",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Zoe: typing at the desk, standing",
+   "aids": []
+  },
+  "people-zoe-stand-type-low": {
+   "character": "zoe",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Zoe: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-zoe-stand-type-low-30": {
+   "character": "zoe",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Zoe: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-zoe-wheel-type": {
+   "character": "zoe",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Zoe: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-zoe-wheel-type-31": {
+   "character": "zoe",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Zoe: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-zoe-stand-phone": {
+   "character": "zoe",
+   "pose": "stand-phone",
+   "name": "Zoe: standing, phone in hand",
+   "aids": []
+  },
+  "people-zoe-stand-present": {
+   "character": "zoe",
+   "pose": "stand-present",
+   "name": "Zoe: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-zoe-stand-work": {
+   "character": "zoe",
+   "pose": "stand-work",
+   "name": "Zoe: working at a bench",
+   "aids": []
+  },
+  "people-zoe-stand-paint": {
+   "character": "zoe",
+   "pose": "stand-paint",
+   "name": "Zoe: painting at an easel",
+   "aids": []
+  },
+  "people-zoe-stretch": {
+   "character": "zoe",
+   "pose": "stretch",
+   "name": "Zoe: stretching, arms overhead",
+   "aids": []
+  },
+  "people-zoe-stretch-open": {
+   "character": "zoe",
+   "pose": "stretch-open",
+   "name": "Zoe: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-zoe-cane-stand": {
+   "character": "zoe",
+   "pose": "cane-stand",
+   "name": "Zoe: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-zoe-white-cane": {
+   "character": "zoe",
+   "pose": "white-cane",
+   "name": "Zoe: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-zoe-sit-write": {
+   "character": "zoe",
+   "pose": "sit-write",
+   "name": "Zoe: writing at a table",
+   "aids": []
+  },
+  "people-zoe-sit-read": {
+   "character": "zoe",
+   "pose": "sit-read",
+   "name": "Zoe: reading",
+   "aids": []
+  },
+  "people-zoe-sit-listen": {
+   "character": "zoe",
+   "pose": "sit-listen",
+   "name": "Zoe: listening at a table",
+   "aids": []
+  },
+  "people-zoe-sit-raise": {
+   "character": "zoe",
+   "pose": "sit-raise",
+   "name": "Zoe: hand raised",
+   "aids": []
+  },
+  "people-zoe-sit-phone": {
+   "character": "zoe",
+   "pose": "sit-phone",
+   "name": "Zoe: seated, phone in hand",
+   "aids": []
+  },
+  "people-zoe-sit-controller": {
+   "character": "zoe",
+   "pose": "sit-controller",
+   "name": "Zoe: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-zoe-wheel-roll": {
+   "character": "zoe",
+   "pose": "wheel-roll",
+   "name": "Zoe: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-zoe-wheel-watch": {
+   "character": "zoe",
+   "pose": "wheel-watch",
+   "name": "Zoe: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-hale-sit-type": {
+   "character": "hale",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Mr Hale: typing at the desk, seated",
+   "aids": []
+  },
+  "people-hale-sit-type-30": {
+   "character": "hale",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Mr Hale: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-hale-stand-type": {
+   "character": "hale",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Mr Hale: typing at the desk, standing",
+   "aids": []
+  },
+  "people-hale-stand-type-low": {
+   "character": "hale",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Mr Hale: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-hale-stand-type-low-30": {
+   "character": "hale",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Mr Hale: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-hale-wheel-type": {
+   "character": "hale",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Mr Hale: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-hale-wheel-type-31": {
+   "character": "hale",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Mr Hale: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-hale-stand-wait": {
+   "character": "hale",
+   "pose": "stand-wait",
+   "name": "Mr Hale: standing by, arms loose",
+   "aids": []
+  },
+  "people-hale-stand-phone": {
+   "character": "hale",
+   "pose": "stand-phone",
+   "name": "Mr Hale: standing, phone in hand",
+   "aids": []
+  },
+  "people-hale-stand-work": {
+   "character": "hale",
+   "pose": "stand-work",
+   "name": "Mr Hale: working at a bench",
+   "aids": []
+  },
+  "people-hale-stand-paint": {
+   "character": "hale",
+   "pose": "stand-paint",
+   "name": "Mr Hale: painting at an easel",
+   "aids": []
+  },
+  "people-hale-stretch": {
+   "character": "hale",
+   "pose": "stretch",
+   "name": "Mr Hale: stretching, arms overhead",
+   "aids": []
+  },
+  "people-hale-stretch-open": {
+   "character": "hale",
+   "pose": "stretch-open",
+   "name": "Mr Hale: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-hale-cane-stand": {
+   "character": "hale",
+   "pose": "cane-stand",
+   "name": "Mr Hale: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-hale-white-cane": {
+   "character": "hale",
+   "pose": "white-cane",
+   "name": "Mr Hale: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-hale-walk": {
+   "character": "hale",
+   "pose": "walk",
+   "name": "Mr Hale: walking",
+   "aids": []
+  },
+  "people-hale-sit-write": {
+   "character": "hale",
+   "pose": "sit-write",
+   "name": "Mr Hale: writing at a table",
+   "aids": []
+  },
+  "people-hale-sit-laptop": {
+   "character": "hale",
+   "pose": "sit-laptop",
+   "name": "Mr Hale: at a laptop",
+   "aids": []
+  },
+  "people-hale-sit-read": {
+   "character": "hale",
+   "pose": "sit-read",
+   "name": "Mr Hale: reading",
+   "aids": []
+  },
+  "people-hale-sit-listen": {
+   "character": "hale",
+   "pose": "sit-listen",
+   "name": "Mr Hale: listening at a table",
+   "aids": []
+  },
+  "people-hale-sit-raise": {
+   "character": "hale",
+   "pose": "sit-raise",
+   "name": "Mr Hale: hand raised",
+   "aids": []
+  },
+  "people-hale-sit-phone": {
+   "character": "hale",
+   "pose": "sit-phone",
+   "name": "Mr Hale: seated, phone in hand",
+   "aids": []
+  },
+  "people-hale-sit-controller": {
+   "character": "hale",
+   "pose": "sit-controller",
+   "name": "Mr Hale: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-hale-wheel-roll": {
+   "character": "hale",
+   "pose": "wheel-roll",
+   "name": "Mr Hale: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-hale-wheel-watch": {
+   "character": "hale",
+   "pose": "wheel-watch",
+   "name": "Mr Hale: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-lin-stand-type-low": {
+   "character": "lin",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Lin: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-lin-stand-type-low-30": {
+   "character": "lin",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Lin: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-lin-wheel-type": {
+   "character": "lin",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Lin: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-lin-wheel-type-31": {
+   "character": "lin",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Lin: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-lin-stand-wait": {
+   "character": "lin",
+   "pose": "stand-wait",
+   "name": "Lin: standing by, arms loose",
+   "aids": []
+  },
+  "people-lin-stand-phone": {
+   "character": "lin",
+   "pose": "stand-phone",
+   "name": "Lin: standing, phone in hand",
+   "aids": []
+  },
+  "people-lin-stand-present": {
+   "character": "lin",
+   "pose": "stand-present",
+   "name": "Lin: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-lin-stand-work": {
+   "character": "lin",
+   "pose": "stand-work",
+   "name": "Lin: working at a bench",
+   "aids": []
+  },
+  "people-lin-stretch": {
+   "character": "lin",
+   "pose": "stretch",
+   "name": "Lin: stretching, arms overhead",
+   "aids": []
+  },
+  "people-lin-stretch-open": {
+   "character": "lin",
+   "pose": "stretch-open",
+   "name": "Lin: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-lin-cane-stand": {
+   "character": "lin",
+   "pose": "cane-stand",
+   "name": "Lin: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-lin-white-cane": {
+   "character": "lin",
+   "pose": "white-cane",
+   "name": "Lin: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-lin-walk": {
+   "character": "lin",
+   "pose": "walk",
+   "name": "Lin: walking",
+   "aids": []
+  },
+  "people-lin-sit-write": {
+   "character": "lin",
+   "pose": "sit-write",
+   "name": "Lin: writing at a table",
+   "aids": []
+  },
+  "people-lin-sit-laptop": {
+   "character": "lin",
+   "pose": "sit-laptop",
+   "name": "Lin: at a laptop",
+   "aids": []
+  },
+  "people-lin-sit-read": {
+   "character": "lin",
+   "pose": "sit-read",
+   "name": "Lin: reading",
+   "aids": []
+  },
+  "people-lin-sit-listen": {
+   "character": "lin",
+   "pose": "sit-listen",
+   "name": "Lin: listening at a table",
+   "aids": []
+  },
+  "people-lin-sit-raise": {
+   "character": "lin",
+   "pose": "sit-raise",
+   "name": "Lin: hand raised",
+   "aids": []
+  },
+  "people-lin-sit-controller": {
+   "character": "lin",
+   "pose": "sit-controller",
+   "name": "Lin: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-lin-wheel-roll": {
+   "character": "lin",
+   "pose": "wheel-roll",
+   "name": "Lin: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-lin-wheel-watch": {
+   "character": "lin",
+   "pose": "wheel-watch",
+   "name": "Lin: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-omar-sit-type": {
+   "character": "omar",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Omar: typing at the desk, seated",
+   "aids": []
+  },
+  "people-omar-sit-type-30": {
+   "character": "omar",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Omar: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-omar-stand-type": {
+   "character": "omar",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Omar: typing at the desk, standing",
+   "aids": []
+  },
+  "people-omar-stand-type-low": {
+   "character": "omar",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Omar: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-omar-stand-type-low-30": {
+   "character": "omar",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Omar: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-omar-stand-wait": {
+   "character": "omar",
+   "pose": "stand-wait",
+   "name": "Omar: standing by, arms loose",
+   "aids": []
+  },
+  "people-omar-stand-phone": {
+   "character": "omar",
+   "pose": "stand-phone",
+   "name": "Omar: standing, phone in hand",
+   "aids": []
+  },
+  "people-omar-stand-present": {
+   "character": "omar",
+   "pose": "stand-present",
+   "name": "Omar: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-omar-stand-work": {
+   "character": "omar",
+   "pose": "stand-work",
+   "name": "Omar: working at a bench",
+   "aids": []
+  },
+  "people-omar-stand-paint": {
+   "character": "omar",
+   "pose": "stand-paint",
+   "name": "Omar: painting at an easel",
+   "aids": []
+  },
+  "people-omar-stretch": {
+   "character": "omar",
+   "pose": "stretch",
+   "name": "Omar: stretching, arms overhead",
+   "aids": []
+  },
+  "people-omar-stretch-open": {
+   "character": "omar",
+   "pose": "stretch-open",
+   "name": "Omar: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-omar-cane-stand": {
+   "character": "omar",
+   "pose": "cane-stand",
+   "name": "Omar: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-omar-white-cane": {
+   "character": "omar",
+   "pose": "white-cane",
+   "name": "Omar: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-omar-walk": {
+   "character": "omar",
+   "pose": "walk",
+   "name": "Omar: walking",
+   "aids": []
+  },
+  "people-omar-sit-write": {
+   "character": "omar",
+   "pose": "sit-write",
+   "name": "Omar: writing at a table",
+   "aids": []
+  },
+  "people-omar-sit-laptop": {
+   "character": "omar",
+   "pose": "sit-laptop",
+   "name": "Omar: at a laptop",
+   "aids": []
+  },
+  "people-omar-sit-read": {
+   "character": "omar",
+   "pose": "sit-read",
+   "name": "Omar: reading",
+   "aids": []
+  },
+  "people-omar-sit-listen": {
+   "character": "omar",
+   "pose": "sit-listen",
+   "name": "Omar: listening at a table",
+   "aids": []
+  },
+  "people-omar-sit-raise": {
+   "character": "omar",
+   "pose": "sit-raise",
+   "name": "Omar: hand raised",
+   "aids": []
+  },
+  "people-omar-sit-phone": {
+   "character": "omar",
+   "pose": "sit-phone",
+   "name": "Omar: seated, phone in hand",
+   "aids": []
+  },
+  "people-omar-sit-controller": {
+   "character": "omar",
+   "pose": "sit-controller",
+   "name": "Omar: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-sam-stand-type-low": {
+   "character": "sam",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Sam: at the desk on a low setting, standing",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-stand-type-low-30": {
+   "character": "sam",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Sam: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-wheel-type": {
+   "character": "sam",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Sam: typing at the desk, in a wheelchair",
+   "aids": [
+    "prosthesis",
+    "wheelchair"
+   ]
+  },
+  "people-sam-wheel-type-31": {
+   "character": "sam",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Sam: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "prosthesis",
+    "wheelchair"
+   ]
+  },
+  "people-sam-stand-wait": {
+   "character": "sam",
+   "pose": "stand-wait",
+   "name": "Sam: standing by, arms loose",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-stand-phone": {
+   "character": "sam",
+   "pose": "stand-phone",
+   "name": "Sam: standing, phone in hand",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-stand-present": {
+   "character": "sam",
+   "pose": "stand-present",
+   "name": "Sam: presenting, tablet on the arm",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-stand-work": {
+   "character": "sam",
+   "pose": "stand-work",
+   "name": "Sam: working at a bench",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-stand-paint": {
+   "character": "sam",
+   "pose": "stand-paint",
+   "name": "Sam: painting at an easel",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-stretch": {
+   "character": "sam",
+   "pose": "stretch",
+   "name": "Sam: stretching, arms overhead",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-stretch-open": {
+   "character": "sam",
+   "pose": "stretch-open",
+   "name": "Sam: stretching, hands behind the head",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-cane-stand": {
+   "character": "sam",
+   "pose": "cane-stand",
+   "name": "Sam: standing with a walking stick",
+   "aids": [
+    "prosthesis",
+    "walking stick"
+   ]
+  },
+  "people-sam-white-cane": {
+   "character": "sam",
+   "pose": "white-cane",
+   "name": "Sam: walking with a white cane",
+   "aids": [
+    "prosthesis",
+    "white cane"
+   ]
+  },
+  "people-sam-walk": {
+   "character": "sam",
+   "pose": "walk",
+   "name": "Sam: walking",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-sit-write": {
+   "character": "sam",
+   "pose": "sit-write",
+   "name": "Sam: writing at a table",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-sit-laptop": {
+   "character": "sam",
+   "pose": "sit-laptop",
+   "name": "Sam: at a laptop",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-sit-read": {
+   "character": "sam",
+   "pose": "sit-read",
+   "name": "Sam: reading",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-sit-listen": {
+   "character": "sam",
+   "pose": "sit-listen",
+   "name": "Sam: listening at a table",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-sit-raise": {
+   "character": "sam",
+   "pose": "sit-raise",
+   "name": "Sam: hand raised",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-sit-phone": {
+   "character": "sam",
+   "pose": "sit-phone",
+   "name": "Sam: seated, phone in hand",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-sit-controller": {
+   "character": "sam",
+   "pose": "sit-controller",
+   "name": "Sam: on a sofa with a game controller",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-wheel-roll": {
+   "character": "sam",
+   "pose": "wheel-roll",
+   "name": "Sam: rolling, in a wheelchair",
+   "aids": [
+    "prosthesis",
+    "wheelchair"
+   ]
+  },
+  "people-sam-wheel-watch": {
+   "character": "sam",
+   "pose": "wheel-watch",
+   "name": "Sam: watching a screen, in a wheelchair",
+   "aids": [
+    "prosthesis",
+    "wheelchair"
+   ]
+  },
+  "people-ben-sit-type": {
+   "character": "ben",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Ben: typing at the desk, seated",
+   "aids": []
+  },
+  "people-ben-sit-type-30": {
+   "character": "ben",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Ben: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-ben-stand-type": {
+   "character": "ben",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Ben: typing at the desk, standing",
+   "aids": []
+  },
+  "people-ben-stand-type-low": {
+   "character": "ben",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Ben: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-ben-stand-type-low-30": {
+   "character": "ben",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Ben: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-ben-wheel-type": {
+   "character": "ben",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Ben: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-ben-wheel-type-31": {
+   "character": "ben",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Ben: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-ben-stand-wait": {
+   "character": "ben",
+   "pose": "stand-wait",
+   "name": "Ben: standing by, arms loose",
+   "aids": []
+  },
+  "people-ben-stand-phone": {
+   "character": "ben",
+   "pose": "stand-phone",
+   "name": "Ben: standing, phone in hand",
+   "aids": []
+  },
+  "people-ben-stand-present": {
+   "character": "ben",
+   "pose": "stand-present",
+   "name": "Ben: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-ben-stand-work": {
+   "character": "ben",
+   "pose": "stand-work",
+   "name": "Ben: working at a bench",
+   "aids": []
+  },
+  "people-ben-stand-paint": {
+   "character": "ben",
+   "pose": "stand-paint",
+   "name": "Ben: painting at an easel",
+   "aids": []
+  },
+  "people-ben-stretch": {
+   "character": "ben",
+   "pose": "stretch",
+   "name": "Ben: stretching, arms overhead",
+   "aids": []
+  },
+  "people-ben-stretch-open": {
+   "character": "ben",
+   "pose": "stretch-open",
+   "name": "Ben: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-ben-cane-stand": {
+   "character": "ben",
+   "pose": "cane-stand",
+   "name": "Ben: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-ben-walk": {
+   "character": "ben",
+   "pose": "walk",
+   "name": "Ben: walking",
+   "aids": []
+  },
+  "people-ben-sit-write": {
+   "character": "ben",
+   "pose": "sit-write",
+   "name": "Ben: writing at a table",
+   "aids": []
+  },
+  "people-ben-sit-laptop": {
+   "character": "ben",
+   "pose": "sit-laptop",
+   "name": "Ben: at a laptop",
+   "aids": []
+  },
+  "people-ben-sit-read": {
+   "character": "ben",
+   "pose": "sit-read",
+   "name": "Ben: reading",
+   "aids": []
+  },
+  "people-ben-sit-listen": {
+   "character": "ben",
+   "pose": "sit-listen",
+   "name": "Ben: listening at a table",
+   "aids": []
+  },
+  "people-ben-sit-raise": {
+   "character": "ben",
+   "pose": "sit-raise",
+   "name": "Ben: hand raised",
+   "aids": []
+  },
+  "people-ben-sit-phone": {
+   "character": "ben",
+   "pose": "sit-phone",
+   "name": "Ben: seated, phone in hand",
+   "aids": []
+  },
+  "people-ben-sit-controller": {
+   "character": "ben",
+   "pose": "sit-controller",
+   "name": "Ben: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-ben-wheel-roll": {
+   "character": "ben",
+   "pose": "wheel-roll",
+   "name": "Ben: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-ben-wheel-watch": {
+   "character": "ben",
+   "pose": "wheel-watch",
+   "name": "Ben: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-rosa-sit-type": {
+   "character": "rosa",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Rosa: typing at the desk, seated",
+   "aids": []
+  },
+  "people-rosa-sit-type-30": {
+   "character": "rosa",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Rosa: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-rosa-stand-type": {
+   "character": "rosa",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Rosa: typing at the desk, standing",
+   "aids": []
+  },
+  "people-rosa-wheel-type": {
+   "character": "rosa",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Rosa: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-rosa-wheel-type-31": {
+   "character": "rosa",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Rosa: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-rosa-stand-wait": {
+   "character": "rosa",
+   "pose": "stand-wait",
+   "name": "Rosa: standing by, arms loose",
+   "aids": []
+  },
+  "people-rosa-stand-phone": {
+   "character": "rosa",
+   "pose": "stand-phone",
+   "name": "Rosa: standing, phone in hand",
+   "aids": []
+  },
+  "people-rosa-stand-present": {
+   "character": "rosa",
+   "pose": "stand-present",
+   "name": "Rosa: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-rosa-stand-work": {
+   "character": "rosa",
+   "pose": "stand-work",
+   "name": "Rosa: working at a bench",
+   "aids": []
+  },
+  "people-rosa-stand-paint": {
+   "character": "rosa",
+   "pose": "stand-paint",
+   "name": "Rosa: painting at an easel",
+   "aids": []
+  },
+  "people-rosa-stretch": {
+   "character": "rosa",
+   "pose": "stretch",
+   "name": "Rosa: stretching, arms overhead",
+   "aids": []
+  },
+  "people-rosa-stretch-open": {
+   "character": "rosa",
+   "pose": "stretch-open",
+   "name": "Rosa: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-rosa-cane-stand": {
+   "character": "rosa",
+   "pose": "cane-stand",
+   "name": "Rosa: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-rosa-white-cane": {
+   "character": "rosa",
+   "pose": "white-cane",
+   "name": "Rosa: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-rosa-walk": {
+   "character": "rosa",
+   "pose": "walk",
+   "name": "Rosa: walking",
+   "aids": []
+  },
+  "people-rosa-sit-write": {
+   "character": "rosa",
+   "pose": "sit-write",
+   "name": "Rosa: writing at a table",
+   "aids": []
+  },
+  "people-rosa-sit-laptop": {
+   "character": "rosa",
+   "pose": "sit-laptop",
+   "name": "Rosa: at a laptop",
+   "aids": []
+  },
+  "people-rosa-sit-read": {
+   "character": "rosa",
+   "pose": "sit-read",
+   "name": "Rosa: reading",
+   "aids": []
+  },
+  "people-rosa-sit-listen": {
+   "character": "rosa",
+   "pose": "sit-listen",
+   "name": "Rosa: listening at a table",
+   "aids": []
+  },
+  "people-rosa-sit-raise": {
+   "character": "rosa",
+   "pose": "sit-raise",
+   "name": "Rosa: hand raised",
+   "aids": []
+  },
+  "people-rosa-sit-phone": {
+   "character": "rosa",
+   "pose": "sit-phone",
+   "name": "Rosa: seated, phone in hand",
+   "aids": []
+  },
+  "people-rosa-sit-controller": {
+   "character": "rosa",
+   "pose": "sit-controller",
+   "name": "Rosa: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-rosa-wheel-roll": {
+   "character": "rosa",
+   "pose": "wheel-roll",
+   "name": "Rosa: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-rosa-wheel-watch": {
+   "character": "rosa",
+   "pose": "wheel-watch",
+   "name": "Rosa: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-priya-sit-type": {
+   "character": "priya",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Priya: typing at the desk, seated",
+   "aids": []
+  },
+  "people-priya-sit-type-30": {
+   "character": "priya",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Priya: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-priya-stand-type": {
+   "character": "priya",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Priya: typing at the desk, standing",
+   "aids": []
+  },
+  "people-priya-stand-type-low": {
+   "character": "priya",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Priya: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-priya-stand-type-low-30": {
+   "character": "priya",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Priya: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-priya-wheel-type": {
+   "character": "priya",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Priya: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-priya-wheel-type-31": {
+   "character": "priya",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Priya: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-priya-stand-wait": {
+   "character": "priya",
+   "pose": "stand-wait",
+   "name": "Priya: standing by, arms loose",
+   "aids": []
+  },
+  "people-priya-stand-phone": {
+   "character": "priya",
+   "pose": "stand-phone",
+   "name": "Priya: standing, phone in hand",
+   "aids": []
+  },
+  "people-priya-stand-present": {
+   "character": "priya",
+   "pose": "stand-present",
+   "name": "Priya: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-priya-stand-work": {
+   "character": "priya",
+   "pose": "stand-work",
+   "name": "Priya: working at a bench",
+   "aids": []
+  },
+  "people-priya-stand-paint": {
+   "character": "priya",
+   "pose": "stand-paint",
+   "name": "Priya: painting at an easel",
+   "aids": []
+  },
+  "people-priya-stretch-open": {
+   "character": "priya",
+   "pose": "stretch-open",
+   "name": "Priya: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-priya-cane-stand": {
+   "character": "priya",
+   "pose": "cane-stand",
+   "name": "Priya: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-priya-white-cane": {
+   "character": "priya",
+   "pose": "white-cane",
+   "name": "Priya: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-priya-walk": {
+   "character": "priya",
+   "pose": "walk",
+   "name": "Priya: walking",
+   "aids": []
+  },
+  "people-priya-sit-write": {
+   "character": "priya",
+   "pose": "sit-write",
+   "name": "Priya: writing at a table",
+   "aids": []
+  },
+  "people-priya-sit-laptop": {
+   "character": "priya",
+   "pose": "sit-laptop",
+   "name": "Priya: at a laptop",
+   "aids": []
+  },
+  "people-priya-sit-read": {
+   "character": "priya",
+   "pose": "sit-read",
+   "name": "Priya: reading",
+   "aids": []
+  },
+  "people-priya-sit-listen": {
+   "character": "priya",
+   "pose": "sit-listen",
+   "name": "Priya: listening at a table",
+   "aids": []
+  },
+  "people-priya-sit-raise": {
+   "character": "priya",
+   "pose": "sit-raise",
+   "name": "Priya: hand raised",
+   "aids": []
+  },
+  "people-priya-sit-controller": {
+   "character": "priya",
+   "pose": "sit-controller",
+   "name": "Priya: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-priya-wheel-roll": {
+   "character": "priya",
+   "pose": "wheel-roll",
+   "name": "Priya: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-priya-wheel-watch": {
+   "character": "priya",
+   "pose": "wheel-watch",
+   "name": "Priya: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-jo-sit-type": {
+   "character": "jo",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Jo: typing at the desk, seated",
+   "aids": []
+  },
+  "people-jo-sit-type-30": {
+   "character": "jo",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Jo: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-jo-stand-type": {
+   "character": "jo",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Jo: typing at the desk, standing",
+   "aids": []
+  },
+  "people-jo-stand-type-low": {
+   "character": "jo",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Jo: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-jo-stand-type-low-30": {
+   "character": "jo",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Jo: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-jo-wheel-type": {
+   "character": "jo",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Jo: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-jo-wheel-type-31": {
+   "character": "jo",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Jo: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-jo-stand-wait": {
+   "character": "jo",
+   "pose": "stand-wait",
+   "name": "Jo: standing by, arms loose",
+   "aids": []
+  },
+  "people-jo-stand-phone": {
+   "character": "jo",
+   "pose": "stand-phone",
+   "name": "Jo: standing, phone in hand",
+   "aids": []
+  },
+  "people-jo-stand-present": {
+   "character": "jo",
+   "pose": "stand-present",
+   "name": "Jo: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-jo-stand-paint": {
+   "character": "jo",
+   "pose": "stand-paint",
+   "name": "Jo: painting at an easel",
+   "aids": []
+  },
+  "people-jo-stretch": {
+   "character": "jo",
+   "pose": "stretch",
+   "name": "Jo: stretching, arms overhead",
+   "aids": []
+  },
+  "people-jo-stretch-open": {
+   "character": "jo",
+   "pose": "stretch-open",
+   "name": "Jo: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-jo-cane-stand": {
+   "character": "jo",
+   "pose": "cane-stand",
+   "name": "Jo: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-jo-white-cane": {
+   "character": "jo",
+   "pose": "white-cane",
+   "name": "Jo: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-jo-walk": {
+   "character": "jo",
+   "pose": "walk",
+   "name": "Jo: walking",
+   "aids": []
+  },
+  "people-jo-sit-write": {
+   "character": "jo",
+   "pose": "sit-write",
+   "name": "Jo: writing at a table",
+   "aids": []
+  },
+  "people-jo-sit-laptop": {
+   "character": "jo",
+   "pose": "sit-laptop",
+   "name": "Jo: at a laptop",
+   "aids": []
+  },
+  "people-jo-sit-read": {
+   "character": "jo",
+   "pose": "sit-read",
+   "name": "Jo: reading",
+   "aids": []
+  },
+  "people-jo-sit-listen": {
+   "character": "jo",
+   "pose": "sit-listen",
+   "name": "Jo: listening at a table",
+   "aids": []
+  },
+  "people-jo-sit-raise": {
+   "character": "jo",
+   "pose": "sit-raise",
+   "name": "Jo: hand raised",
+   "aids": []
+  },
+  "people-jo-sit-phone": {
+   "character": "jo",
+   "pose": "sit-phone",
+   "name": "Jo: seated, phone in hand",
+   "aids": []
+  },
+  "people-jo-sit-controller": {
+   "character": "jo",
+   "pose": "sit-controller",
+   "name": "Jo: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-jo-wheel-roll": {
+   "character": "jo",
+   "pose": "wheel-roll",
+   "name": "Jo: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-jo-wheel-watch": {
+   "character": "jo",
+   "pose": "wheel-watch",
+   "name": "Jo: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-mia-stand-type-low": {
+   "character": "mia",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Mia: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-mia-stand-type-low-30": {
+   "character": "mia",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Mia: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-mia-wheel-type": {
+   "character": "mia",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Mia: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-mia-wheel-type-31": {
+   "character": "mia",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Mia: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-mia-stand-wait": {
+   "character": "mia",
+   "pose": "stand-wait",
+   "name": "Mia: standing by, arms loose",
+   "aids": []
+  },
+  "people-mia-stand-phone": {
+   "character": "mia",
+   "pose": "stand-phone",
+   "name": "Mia: standing, phone in hand",
+   "aids": []
+  },
+  "people-mia-stand-present": {
+   "character": "mia",
+   "pose": "stand-present",
+   "name": "Mia: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-mia-stand-work": {
+   "character": "mia",
+   "pose": "stand-work",
+   "name": "Mia: working at a bench",
+   "aids": []
+  },
+  "people-mia-stand-paint": {
+   "character": "mia",
+   "pose": "stand-paint",
+   "name": "Mia: painting at an easel",
+   "aids": []
+  },
+  "people-mia-stretch": {
+   "character": "mia",
+   "pose": "stretch",
+   "name": "Mia: stretching, arms overhead",
+   "aids": []
+  },
+  "people-mia-stretch-open": {
+   "character": "mia",
+   "pose": "stretch-open",
+   "name": "Mia: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-mia-cane-stand": {
+   "character": "mia",
+   "pose": "cane-stand",
+   "name": "Mia: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-mia-white-cane": {
+   "character": "mia",
+   "pose": "white-cane",
+   "name": "Mia: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-mia-walk": {
+   "character": "mia",
+   "pose": "walk",
+   "name": "Mia: walking",
+   "aids": []
+  },
+  "people-mia-sit-write": {
+   "character": "mia",
+   "pose": "sit-write",
+   "name": "Mia: writing at a table",
+   "aids": []
+  },
+  "people-mia-sit-laptop": {
+   "character": "mia",
+   "pose": "sit-laptop",
+   "name": "Mia: at a laptop",
+   "aids": []
+  },
+  "people-mia-sit-read": {
+   "character": "mia",
+   "pose": "sit-read",
+   "name": "Mia: reading",
+   "aids": []
+  },
+  "people-mia-sit-raise": {
+   "character": "mia",
+   "pose": "sit-raise",
+   "name": "Mia: hand raised",
+   "aids": []
+  },
+  "people-mia-sit-controller": {
+   "character": "mia",
+   "pose": "sit-controller",
+   "name": "Mia: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-mia-wheel-roll": {
+   "character": "mia",
+   "pose": "wheel-roll",
+   "name": "Mia: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-mia-wheel-watch": {
+   "character": "mia",
+   "pose": "wheel-watch",
+   "name": "Mia: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-leo-sit-type": {
+   "character": "leo",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Leo: typing at the desk, seated",
+   "aids": []
+  },
+  "people-leo-sit-type-30": {
+   "character": "leo",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Leo: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-leo-stand-type": {
+   "character": "leo",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Leo: typing at the desk, standing",
+   "aids": []
+  },
+  "people-leo-stand-type-low": {
+   "character": "leo",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Leo: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-leo-stand-type-low-30": {
+   "character": "leo",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Leo: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-leo-wheel-type": {
+   "character": "leo",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Leo: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-leo-wheel-type-31": {
+   "character": "leo",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Leo: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-leo-stand-wait": {
+   "character": "leo",
+   "pose": "stand-wait",
+   "name": "Leo: standing by, arms loose",
+   "aids": []
+  },
+  "people-leo-stand-phone": {
+   "character": "leo",
+   "pose": "stand-phone",
+   "name": "Leo: standing, phone in hand",
+   "aids": []
+  },
+  "people-leo-stand-present": {
+   "character": "leo",
+   "pose": "stand-present",
+   "name": "Leo: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-leo-stand-work": {
+   "character": "leo",
+   "pose": "stand-work",
+   "name": "Leo: working at a bench",
+   "aids": []
+  },
+  "people-leo-stand-paint": {
+   "character": "leo",
+   "pose": "stand-paint",
+   "name": "Leo: painting at an easel",
+   "aids": []
+  },
+  "people-leo-stretch": {
+   "character": "leo",
+   "pose": "stretch",
+   "name": "Leo: stretching, arms overhead",
+   "aids": []
+  },
+  "people-leo-stretch-open": {
+   "character": "leo",
+   "pose": "stretch-open",
+   "name": "Leo: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-leo-cane-stand": {
+   "character": "leo",
+   "pose": "cane-stand",
+   "name": "Leo: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-leo-white-cane": {
+   "character": "leo",
+   "pose": "white-cane",
+   "name": "Leo: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-leo-walk": {
+   "character": "leo",
+   "pose": "walk",
+   "name": "Leo: walking",
+   "aids": []
+  },
+  "people-leo-sit-laptop": {
+   "character": "leo",
+   "pose": "sit-laptop",
+   "name": "Leo: at a laptop",
+   "aids": []
+  },
+  "people-leo-sit-read": {
+   "character": "leo",
+   "pose": "sit-read",
+   "name": "Leo: reading",
+   "aids": []
+  },
+  "people-leo-sit-listen": {
+   "character": "leo",
+   "pose": "sit-listen",
+   "name": "Leo: listening at a table",
+   "aids": []
+  },
+  "people-leo-sit-phone": {
+   "character": "leo",
+   "pose": "sit-phone",
+   "name": "Leo: seated, phone in hand",
+   "aids": []
+  },
+  "people-leo-sit-controller": {
+   "character": "leo",
+   "pose": "sit-controller",
+   "name": "Leo: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-leo-wheel-roll": {
+   "character": "leo",
+   "pose": "wheel-roll",
+   "name": "Leo: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-leo-wheel-watch": {
+   "character": "leo",
+   "pose": "wheel-watch",
+   "name": "Leo: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-noah-stand-type-low": {
+   "character": "noah",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Noah: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-noah-stand-type-low-30": {
+   "character": "noah",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Noah: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-noah-wheel-type": {
+   "character": "noah",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Noah: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-noah-wheel-type-31": {
+   "character": "noah",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Noah: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-noah-stand-phone": {
+   "character": "noah",
+   "pose": "stand-phone",
+   "name": "Noah: standing, phone in hand",
+   "aids": []
+  },
+  "people-noah-stand-present": {
+   "character": "noah",
+   "pose": "stand-present",
+   "name": "Noah: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-noah-stand-work": {
+   "character": "noah",
+   "pose": "stand-work",
+   "name": "Noah: working at a bench",
+   "aids": []
+  },
+  "people-noah-stand-paint": {
+   "character": "noah",
+   "pose": "stand-paint",
+   "name": "Noah: painting at an easel",
+   "aids": []
+  },
+  "people-noah-stretch": {
+   "character": "noah",
+   "pose": "stretch",
+   "name": "Noah: stretching, arms overhead",
+   "aids": []
+  },
+  "people-noah-stretch-open": {
+   "character": "noah",
+   "pose": "stretch-open",
+   "name": "Noah: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-noah-cane-stand": {
+   "character": "noah",
+   "pose": "cane-stand",
+   "name": "Noah: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-noah-white-cane": {
+   "character": "noah",
+   "pose": "white-cane",
+   "name": "Noah: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-noah-walk": {
+   "character": "noah",
+   "pose": "walk",
+   "name": "Noah: walking",
+   "aids": []
+  },
+  "people-noah-sit-write": {
+   "character": "noah",
+   "pose": "sit-write",
+   "name": "Noah: writing at a table",
+   "aids": []
+  },
+  "people-noah-sit-read": {
+   "character": "noah",
+   "pose": "sit-read",
+   "name": "Noah: reading",
+   "aids": []
+  },
+  "people-noah-sit-listen": {
+   "character": "noah",
+   "pose": "sit-listen",
+   "name": "Noah: listening at a table",
+   "aids": []
+  },
+  "people-noah-sit-raise": {
+   "character": "noah",
+   "pose": "sit-raise",
+   "name": "Noah: hand raised",
+   "aids": []
+  },
+  "people-noah-sit-phone": {
+   "character": "noah",
+   "pose": "sit-phone",
+   "name": "Noah: seated, phone in hand",
+   "aids": []
+  },
+  "people-noah-sit-controller": {
+   "character": "noah",
+   "pose": "sit-controller",
+   "name": "Noah: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-noah-wheel-roll": {
+   "character": "noah",
+   "pose": "wheel-roll",
+   "name": "Noah: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-noah-wheel-watch": {
+   "character": "noah",
+   "pose": "wheel-watch",
+   "name": "Noah: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-ava-sit-type": {
+   "character": "ava",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Ava: typing at the desk, seated",
+   "aids": []
+  },
+  "people-ava-sit-type-30": {
+   "character": "ava",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Ava: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-ava-stand-type": {
+   "character": "ava",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Ava: typing at the desk, standing",
+   "aids": []
+  },
+  "people-ava-stand-type-low": {
+   "character": "ava",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Ava: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-ava-stand-type-low-30": {
+   "character": "ava",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Ava: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-ava-wheel-type": {
+   "character": "ava",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Ava: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-ava-wheel-type-31": {
+   "character": "ava",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Ava: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-ava-stand-wait": {
+   "character": "ava",
+   "pose": "stand-wait",
+   "name": "Ava: standing by, arms loose",
+   "aids": []
+  },
+  "people-ava-stand-phone": {
+   "character": "ava",
+   "pose": "stand-phone",
+   "name": "Ava: standing, phone in hand",
+   "aids": []
+  },
+  "people-ava-stand-present": {
+   "character": "ava",
+   "pose": "stand-present",
+   "name": "Ava: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-ava-stand-work": {
+   "character": "ava",
+   "pose": "stand-work",
+   "name": "Ava: working at a bench",
+   "aids": []
+  },
+  "people-ava-stand-paint": {
+   "character": "ava",
+   "pose": "stand-paint",
+   "name": "Ava: painting at an easel",
+   "aids": []
+  },
+  "people-ava-stretch": {
+   "character": "ava",
+   "pose": "stretch",
+   "name": "Ava: stretching, arms overhead",
+   "aids": []
+  },
+  "people-ava-stretch-open": {
+   "character": "ava",
+   "pose": "stretch-open",
+   "name": "Ava: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-ava-cane-stand": {
+   "character": "ava",
+   "pose": "cane-stand",
+   "name": "Ava: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-ava-white-cane": {
+   "character": "ava",
+   "pose": "white-cane",
+   "name": "Ava: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-ava-walk": {
+   "character": "ava",
+   "pose": "walk",
+   "name": "Ava: walking",
+   "aids": []
+  },
+  "people-ava-sit-laptop": {
+   "character": "ava",
+   "pose": "sit-laptop",
+   "name": "Ava: at a laptop",
+   "aids": []
+  },
+  "people-ava-sit-read": {
+   "character": "ava",
+   "pose": "sit-read",
+   "name": "Ava: reading",
+   "aids": []
+  },
+  "people-ava-sit-listen": {
+   "character": "ava",
+   "pose": "sit-listen",
+   "name": "Ava: listening at a table",
+   "aids": []
+  },
+  "people-ava-sit-raise": {
+   "character": "ava",
+   "pose": "sit-raise",
+   "name": "Ava: hand raised",
+   "aids": []
+  },
+  "people-ava-sit-phone": {
+   "character": "ava",
+   "pose": "sit-phone",
+   "name": "Ava: seated, phone in hand",
+   "aids": []
+  },
+  "people-ava-sit-controller": {
+   "character": "ava",
+   "pose": "sit-controller",
+   "name": "Ava: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-ava-wheel-roll": {
+   "character": "ava",
+   "pose": "wheel-roll",
+   "name": "Ava: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-ava-wheel-watch": {
+   "character": "ava",
+   "pose": "wheel-watch",
+   "name": "Ava: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-eli-sit-type": {
+   "character": "eli",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Eli: typing at the desk, seated",
+   "aids": []
+  },
+  "people-eli-sit-type-30": {
+   "character": "eli",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Eli: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-eli-stand-type": {
+   "character": "eli",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Eli: typing at the desk, standing",
+   "aids": []
+  },
+  "people-eli-stand-type-low": {
+   "character": "eli",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Eli: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-eli-stand-type-low-30": {
+   "character": "eli",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Eli: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-eli-wheel-type": {
+   "character": "eli",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Eli: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-eli-wheel-type-31": {
+   "character": "eli",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Eli: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-eli-stand-wait": {
+   "character": "eli",
+   "pose": "stand-wait",
+   "name": "Eli: standing by, arms loose",
+   "aids": []
+  },
+  "people-eli-stand-phone": {
+   "character": "eli",
+   "pose": "stand-phone",
+   "name": "Eli: standing, phone in hand",
+   "aids": []
+  },
+  "people-eli-stand-present": {
+   "character": "eli",
+   "pose": "stand-present",
+   "name": "Eli: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-eli-stand-work": {
+   "character": "eli",
+   "pose": "stand-work",
+   "name": "Eli: working at a bench",
+   "aids": []
+  },
+  "people-eli-stand-paint": {
+   "character": "eli",
+   "pose": "stand-paint",
+   "name": "Eli: painting at an easel",
+   "aids": []
+  },
+  "people-eli-stretch": {
+   "character": "eli",
+   "pose": "stretch",
+   "name": "Eli: stretching, arms overhead",
+   "aids": []
+  },
+  "people-eli-stretch-open": {
+   "character": "eli",
+   "pose": "stretch-open",
+   "name": "Eli: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-eli-cane-stand": {
+   "character": "eli",
+   "pose": "cane-stand",
+   "name": "Eli: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-eli-white-cane": {
+   "character": "eli",
+   "pose": "white-cane",
+   "name": "Eli: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-eli-walk": {
+   "character": "eli",
+   "pose": "walk",
+   "name": "Eli: walking",
+   "aids": []
+  },
+  "people-eli-sit-write": {
+   "character": "eli",
+   "pose": "sit-write",
+   "name": "Eli: writing at a table",
+   "aids": []
+  },
+  "people-eli-sit-laptop": {
+   "character": "eli",
+   "pose": "sit-laptop",
+   "name": "Eli: at a laptop",
+   "aids": []
+  },
+  "people-eli-sit-read": {
+   "character": "eli",
+   "pose": "sit-read",
+   "name": "Eli: reading",
+   "aids": []
+  },
+  "people-eli-sit-raise": {
+   "character": "eli",
+   "pose": "sit-raise",
+   "name": "Eli: hand raised",
+   "aids": []
+  },
+  "people-eli-sit-phone": {
+   "character": "eli",
+   "pose": "sit-phone",
+   "name": "Eli: seated, phone in hand",
+   "aids": []
+  },
+  "people-eli-sit-controller": {
+   "character": "eli",
+   "pose": "sit-controller",
+   "name": "Eli: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-eli-wheel-roll": {
+   "character": "eli",
+   "pose": "wheel-roll",
+   "name": "Eli: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-eli-wheel-watch": {
+   "character": "eli",
+   "pose": "wheel-watch",
+   "name": "Eli: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-sofia-sit-type": {
+   "character": "sofia",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Sofia: typing at the desk, seated",
+   "aids": []
+  },
+  "people-sofia-sit-type-30": {
+   "character": "sofia",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Sofia: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-sofia-stand-type": {
+   "character": "sofia",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Sofia: typing at the desk, standing",
+   "aids": []
+  },
+  "people-sofia-stand-type-low": {
+   "character": "sofia",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Sofia: at the desk on a low setting, standing",
+   "aids": []
+  },
+  "people-sofia-stand-type-low-30": {
+   "character": "sofia",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Sofia: at the desk on a low setting, standing (desk at 30 in)",
+   "aids": []
+  },
+  "people-sofia-wheel-type": {
+   "character": "sofia",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Sofia: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-sofia-wheel-type-31": {
+   "character": "sofia",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Sofia: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-sofia-stand-wait": {
+   "character": "sofia",
+   "pose": "stand-wait",
+   "name": "Sofia: standing by, arms loose",
+   "aids": []
+  },
+  "people-sofia-stand-phone": {
+   "character": "sofia",
+   "pose": "stand-phone",
+   "name": "Sofia: standing, phone in hand",
+   "aids": []
+  },
+  "people-sofia-stand-present": {
+   "character": "sofia",
+   "pose": "stand-present",
+   "name": "Sofia: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-sofia-stand-work": {
+   "character": "sofia",
+   "pose": "stand-work",
+   "name": "Sofia: working at a bench",
+   "aids": []
+  },
+  "people-sofia-stand-paint": {
+   "character": "sofia",
+   "pose": "stand-paint",
+   "name": "Sofia: painting at an easel",
+   "aids": []
+  },
+  "people-sofia-stretch": {
+   "character": "sofia",
+   "pose": "stretch",
+   "name": "Sofia: stretching, arms overhead",
+   "aids": []
+  },
+  "people-sofia-stretch-open": {
+   "character": "sofia",
+   "pose": "stretch-open",
+   "name": "Sofia: stretching, hands behind the head",
+   "aids": []
+  },
+  "people-sofia-cane-stand": {
+   "character": "sofia",
+   "pose": "cane-stand",
+   "name": "Sofia: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-sofia-white-cane": {
+   "character": "sofia",
+   "pose": "white-cane",
+   "name": "Sofia: walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-sofia-walk": {
+   "character": "sofia",
+   "pose": "walk",
+   "name": "Sofia: walking",
+   "aids": []
+  },
+  "people-sofia-sit-write": {
+   "character": "sofia",
+   "pose": "sit-write",
+   "name": "Sofia: writing at a table",
+   "aids": []
+  },
+  "people-sofia-sit-read": {
+   "character": "sofia",
+   "pose": "sit-read",
+   "name": "Sofia: reading",
+   "aids": []
+  },
+  "people-sofia-sit-listen": {
+   "character": "sofia",
+   "pose": "sit-listen",
+   "name": "Sofia: listening at a table",
+   "aids": []
+  },
+  "people-sofia-sit-raise": {
+   "character": "sofia",
+   "pose": "sit-raise",
+   "name": "Sofia: hand raised",
+   "aids": []
+  },
+  "people-sofia-sit-phone": {
+   "character": "sofia",
+   "pose": "sit-phone",
+   "name": "Sofia: seated, phone in hand",
+   "aids": []
+  },
+  "people-sofia-sit-controller": {
+   "character": "sofia",
+   "pose": "sit-controller",
+   "name": "Sofia: on a sofa with a game controller",
+   "aids": []
+  },
+  "people-sofia-wheel-roll": {
+   "character": "sofia",
+   "pose": "wheel-roll",
+   "name": "Sofia: rolling, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-sofia-wheel-watch": {
+   "character": "sofia",
+   "pose": "wheel-watch",
+   "name": "Sofia: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
   }
  }
 }

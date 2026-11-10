@@ -84,7 +84,7 @@ try{
   await snap('03-library');
   check(await page.$$eval('#people-library .pl-card',l=>l.length>=40),'the library lists the built people');
   await page.evaluate(()=>{[...document.querySelectorAll('#people-library [data-pe-filter="stance"]')].find(b=>b.dataset.peValue==='wheelchair').click();});
-  await until(async()=>(await page.$$eval('#people-library .pl-card',l=>l.length))<20,'the library filters by posture');
+  await until(async()=>{const n=await page.$$eval('#people-library .pl-card',l=>l.length);return n>0&&n<150;},'the library filters by posture');
   await page.evaluate(()=>{[...document.querySelectorAll('#people-library .pl-card')].find(b=>/watching|rolling/i.test(b.textContent)).click();});
   await until(async()=>(await page.$$('#director-panel .people-row')).length===n0+1,'the added person is listed');
   await until(async()=>(await live()).some(p=>/wheel/.test(p.id)&&p.visible),'the added person is on the stage');
