@@ -423,3 +423,11 @@ body.directing.film-frame .desk-version-badge:not([hidden]){display:block;positi
 #director-timeline .timeline-content .desk-lane-row.layered>.desk-lane{height:calc(var(--rows) * var(--row-h) + 4px)}
 #director-timeline .timeline-content .desk-lane-row.layered .desk-lane-line{display:none}
 #director-timeline .timeline-content .desk-lane-row.layered .desk-clip{top:calc(var(--row,0) * var(--row-h) + 3px);height:calc(var(--row-h) - 3px);min-height:0}
+/* Lamps & sun / Props: chips wrap onto more rows instead of being clipped (a chip past the lane edge could not be reached). */
+#director-timeline .timeline-content .desk-lane-row[data-lane-color=lamps],#director-timeline .timeline-content .desk-lane-row[data-lane-color=props]{height:auto;min-height:36px}
+#director-timeline .timeline-content .desk-lane-row[data-lane-color=lamps].empty,#director-timeline .timeline-content .desk-lane-row[data-lane-color=props].empty{min-height:20px}
+#director-timeline .timeline-content .desk-lane-row[data-lane-color=lamps]>.lamps-lane,#director-timeline .timeline-content .desk-lane-row[data-lane-color=props]>.lamps-lane{height:auto;min-height:34px;flex-wrap:wrap;align-content:center;padding:4px 6px;overflow:visible}
+#director-timeline .timeline-content .desk-lane-row.empty>.lamps-lane{min-height:18px;padding:0 6px}
+/* Camera segments: the move name only when the segment is wide enough to show it whole (49 keys in the hero chapter overprinted it). */
+#director-timeline .camera-segment{container-type:inline-size}
+@container (max-width:84px){#director-timeline .camera-segment i{display:none}}
