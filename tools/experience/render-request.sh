@@ -16,6 +16,11 @@
 #   3. appends the job to <root>/exports/render-queue/queue.json (atomic write; exports/ is served and not watched).
 # Protocol for the render PC: tools/experience/RENDER-QUEUE.md. Prints the job id on the last line.
 #
+# Another cut of the film (the Director's Cut menu, tools/experience/film-cuts.py): a request with "cut": "exports/<dir>"
+# (a folder with cut.json + review-cut.json) imports the export into THAT folder and renders that cut: the freeze is the
+# master's ($HQ) with the cut's film data (review-cut.json, shots/, titles-src.json, edl.json, the finale seed) laid
+# over the master's paths, so the render PC needs nothing new. The job carries cutDir / cutName.
+#
 # Env: HQ (exports/cinematic-intro-20261104-hq14), RENDER_LOCK, PIN_ALWAYS (institutional-media.mjs),
 #      RENDER_REQ_IMPORT_WAIT (240 s to see the export in director-exports/; 0 = don't wait), RENDER_REQ_SETTLE (10 s the
 #      watcher gets to take the lock after it copied the export), RENDER_REQ_LOCK_WAIT (900 s).
@@ -68,22 +73,31 @@ except Exception: sys.exit('created must be an ISO timestamp')
 if not isinstance(r.get('signature'),str) or not re.fullmatch(r'[0-9a-f]{16}',r['signature']): sys.exit('signature must be 16 lowercase hex characters')
 sha=r.get('exportSha')
 if sha is not None and (not isinstance(sha,str) or not re.fullmatch(r'[0-9a-f]{64}',sha)): sys.exit('exportSha must be null or 64 lowercase hex characters')
-print(r['scope'],r['chapter'],r['resolution'],sha or '-')
+cut=r.get('cut')
+if cut is not None and (not isinstance(cut,str) or not re.fullmatch(r'exports/[A-Za-z0-9][A-Za-z0-9._-]{0,80}',cut)): sys.exit('cut must be exports/<folder>')
+print(r['scope'],r['chapter'],r['resolution'],sha or '-',cut or '-')
 PY
 ); then
   bridge_log warning REJECTED "reason=$(printf '%s' "$META" | tr '\n' ' ' | cut -c1-240)"
   echo "rejected render request: $META" >&2; BRIDGE_STATE=rejected; exit 2
 fi
-read -r SCOPE CHAPTER RES EXPORT_SHA <<< "$META"
+read -r SCOPE CHAPTER RES EXPORT_SHA CUT <<< "$META"
+# CUT: the folder this request edits and renders (the master unless the request names another cut)
+if [ "$CUT" = "-" ] || [ "$CUT" = "$HQ" ]; then CUT=$HQ; EXPECT_ID="film-$CHAPTER"
+elif [ -f "$ROOT/$CUT/cut.json" ] && [ -f "$ROOT/$CUT/review-cut.json" ]; then EXPECT_ID="film-$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['id'])" "$ROOT/$CUT/cut.json")-$CHAPTER"
+else bridge_log warning REJECTED "reason=unknown-cut:$CUT"; echo "rejected render request: $CUT is not a film cut" >&2; BRIDGE_STATE=rejected; exit 2; fi
 STAMP=$(date -u +%Y%m%dT%H%M%S); ID=req-$STAMP
 N=1; BASEID=$ID; while grep -q "\"id\": \"$ID\"" "$Q/queue.json" 2>/dev/null; do N=$((N+1)); ID=$BASEID-$N; done
 TAG=$ID; WARN=
 
 # ---- 1. wait for the Export cut that came with the request (or import it from the request's folder if the watcher didn't)
 REQ_DIR=$(dirname "$REQ")
-FOUND_EXPORT=$(python3 - "$ROOT/$HQ/director-exports" "$REQ_DIR" "$EXPORT_SHA" "$CHAPTER" "$ROOT/$HQ/review-cut.json" <<'PY'
-import glob, hashlib, os, sys, time
-exp_dir, req_dir, sha, chapter, rev_cut = sys.argv[1:6]
+FOUND_EXPORT=$(python3 - "$ROOT/$CUT/director-exports" "$REQ_DIR" "$EXPORT_SHA" "$CHAPTER" "$ROOT/$CUT/review-cut.json" "$EXPECT_ID" <<'PY'
+import glob, hashlib, json, os, sys, time
+exp_dir, req_dir, sha, chapter, rev_cut, expect = sys.argv[1:7]
+def mine(p):       # an export of this cut's chapter (each cut's chapters are projects of their own: film-<cut>-<chapter>)
+    try: return json.load(open(p)).get('id') == expect
+    except Exception: return False
 def file_sha(p):
     try: return hashlib.sha256(open(p, 'rb').read()).hexdigest() if os.path.isfile(p) else ''
     except OSError: return ''
@@ -104,7 +118,7 @@ else:
         for p in glob.glob(os.path.join(req_dir, f'Film-chapter-{chapter}-*.json')):
             try:
                 m = os.path.getmtime(p)
-                if m > rev_mtime and time.time() - m < 3600 and file_sha(p) not in existing:
+                if m > rev_mtime and time.time() - m < 3600 and file_sha(p) not in existing and mine(p):
                     candidates.append((m, p))
             except OSError: pass
     if candidates:
@@ -113,7 +127,7 @@ PY
 )
 if [ -z "$FOUND_EXPORT" ] && [ "$EXPORT_SHA" != "-" ] && [ "${RENDER_REQ_IMPORT_WAIT:-240}" -gt 0 ]; then
   echo "waiting for the import of export ${EXPORT_SHA:0:12}…"
-  if python3 - "$ROOT/$HQ/director-exports" "$EXPORT_SHA" "${RENDER_REQ_IMPORT_WAIT:-240}" <<'PY'
+  if python3 - "$ROOT/$CUT/director-exports" "$EXPORT_SHA" "${RENDER_REQ_IMPORT_WAIT:-240}" <<'PY'
 import hashlib, os, sys, time
 d, sha, limit = sys.argv[1], sys.argv[2], float(sys.argv[3]); end = time.time() + limit
 while True:
@@ -135,15 +149,15 @@ fi
 exec 9>"$LOCK"
 flock -w "${RENDER_REQ_LOCK_WAIT:-900}" 9 || { echo "cut lock busy for too long: $LOCK" >&2; exit 1; }
 if [ -n "$FOUND_EXPORT" ] && [ -f "$FOUND_EXPORT" ]; then
-  mkdir -p "$ROOT/$HQ/director-exports"
+  mkdir -p "$ROOT/$CUT/director-exports"
   FSHA=$(sha256sum "$FOUND_EXPORT" | cut -d' ' -f1)
   SAFE_BASE=$(basename "$FOUND_EXPORT" | tr ' ()' '___')
-  DEST="$ROOT/$HQ/director-exports/export-${FSHA:0:12}-$SAFE_BASE"
+  DEST="$ROOT/$CUT/director-exports/export-${FSHA:0:12}-$SAFE_BASE"
   cp -p "$FOUND_EXPORT" "$DEST"
-  echo "importing export $(basename "$FOUND_EXPORT") (${FSHA:0:12}) into $HQ…"
-  python3 "$HERE/build-round8-director.py" "$ROOT/$HQ" --import "$DEST"
-  python3 "$HERE/build-round8-director.py" "$ROOT/$HQ"
-  python3 "$HERE/build-round8-director.py" "$ROOT/$HQ" --pages "$CHAPTER"
+  echo "importing export $(basename "$FOUND_EXPORT") (${FSHA:0:12}) into $CUT…"
+  python3 "$HERE/build-round8-director.py" "$ROOT/$CUT" --import "$DEST"
+  python3 "$HERE/build-round8-director.py" "$ROOT/$CUT"
+  if [ "$CUT" = "$HQ" ]; then python3 "$HERE/build-round8-director.py" "$ROOT/$HQ" --pages "$CHAPTER"; else python3 "$HERE/film-cuts.py" pages "$CUT" "$CHAPTER"; fi
 fi
 python3 "$HERE/finish-intro.py" "$ROOT/$HQ" --titles-only
 OUT=$("$HERE/freeze-inputs.sh" "$ROOT" "$TAG" "$HQ"); echo "$OUT"
@@ -152,11 +166,25 @@ LIVE=$(git -C "$ROOT" status --porcelain -- '*.mjs' '*.js' '*.cjs' | { grep -vE 
 python3 "$HERE/pin-inputs.py" "$ROOT" "$F" $PIN_ALWAYS $LIVE
 python3 "$HERE/render-source-fixes.py" "$ROOT/$F"
 mkdir -p "$ROOT/$F/request"; cp "$REQ" "$ROOT/$F/request/request.json"
-RENDER_REQ_HERE="$HERE" python3 - "$ROOT" "$HQ" "$F" "$SCOPE" "$CHAPTER" "$RES" "$ID" "$WARN" "$REQUEST_SHA" <<'PY'
-import hashlib, json, os, sys, time
-root, hq, F, scope, chapter, res, jid, warn, request_sha = sys.argv[1:10]
+RENDER_REQ_HERE="$HERE" python3 - "$ROOT" "$HQ" "$F" "$SCOPE" "$CHAPTER" "$RES" "$ID" "$WARN" "$REQUEST_SHA" "$CUT" <<'PY'
+import glob, hashlib, json, os, sys, time
+root, hq, F, scope, chapter, res, jid, warn, request_sha, cutdir = sys.argv[1:11]
 os.chdir(root)
-review = json.load(open(f'{hq}/review-cut.json'))
+review = json.load(open(f'{cutdir}/review-cut.json'))
+if cutdir != hq:
+    # another cut: its film data takes the master's place in this job's freeze (the manifest's line for the master's
+    # path points at the copy), so everything downstream renders this cut
+    mp0 = f'{F}/manifest.txt'; L = open(mp0).read().rstrip('\n').split('\n'); laid = 0
+    for pat in ('review-cut.json', 'titles-src.json', 'edl.json', 'shots/*.json', 'post/finale-seed.json', 'previews/awaken-v5-cut.json'):
+        for src in sorted(glob.glob(f'{cutdir}/{pat}')):
+            path = f'{hq}/{os.path.relpath(src, cutdir)}'; dst = f'{F}/{path}'; data = open(src, 'rb').read()
+            os.makedirs(os.path.dirname(dst), exist_ok=True); open(dst, 'wb').write(data)
+            line = f'{hashlib.sha256(data).hexdigest()} {len(data)} {path} {dst}'
+            at = [i for i, l in enumerate(L) if i and len(l.split(' ')) >= 3 and l.split(' ')[2] == path]
+            if at: L[at[0]] = line
+            else: L.append(line)
+            laid += 1
+    open(mp0, 'w').write('\n'.join(L) + '\n'); print(f'cut {cutdir}: {laid} file(s) laid over {hq} in the freeze')
 ids = [s['id'] for s in review['shots']]
 if chapter not in ids: sys.exit(f'chapter {chapter!r} is not in {hq}/review-cut.json ({", ".join(ids)})')
 index = ids.index(chapter); req = json.load(open(f'{F}/request/request.json'))
@@ -171,6 +199,7 @@ H = {'480p': 480, '720p': 720, '1080p': 1080, '4K': 2160}
 job = {'id': jid, 'created': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'scope': scope, 'chapter': chapter, 'chapterIndex': index,
        'resolution': res, 'height': H[res], 'note': req.get('note') or '', 'manifest': mp, 'cut': cutp, 'shots': '0' if scope == 'chapter' else 'all',
        'requestCreated': req.get('created'), 'clientSignature': req.get('signature'), 'requestSha': request_sha, 'force': req.get('force') is True, 'status': 'queued'}
+if cutdir != hq: job['cutDir'] = cutdir; job['cutName'] = json.load(open(f'{cutdir}/cut.json')).get('name', '')
 # chapter cache keys from the frozen copy of the film data (the freeze overlays the repo: freeze file first, live file otherwise)
 import subprocess
 kp = subprocess.run([sys.executable, os.path.join(os.environ['RENDER_REQ_HERE'], 'chapter-keys.py'), hq, '--root', root, '--overlay', F,

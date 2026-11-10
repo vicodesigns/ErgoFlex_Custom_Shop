@@ -677,13 +677,28 @@ def stamp_page(h, prev):
     return version, updated, h[:m.start(1)] + enc + h[m.end(1):]
 
 
+def brand(page, js, cid):
+    """A cut other than the master (it has a cut.json: tools/experience/film-cuts.py): its chapters open in the Director
+    as projects of their own (id film-<cut>-<chapter>, client = the cut's name), so the browser's drafts and the exports
+    of one cut are never taken for another's."""
+    cj = os.path.join(H, 'cut.json')
+    if not os.path.exists(cj): return
+    c = load(cj)
+    def mark(cut): cut['id'] = f"film-{c['id']}-{cid}"; cut['client'] = str(c['name'])[:100]; return cut
+    h = open(page).read(); m = re.search(r'#cut=([A-Za-z0-9_-]+)', h)
+    if m:
+        cut = mark(json.loads(base64.urlsafe_b64decode(m.group(1) + '=' * (-len(m.group(1)) % 4))))
+        open(page, 'w').write(h[:m.start(1)] + base64.urlsafe_b64encode(json.dumps(cut, separators=(',', ':')).encode()).decode().rstrip('=') + h[m.end(1):])
+    if os.path.exists(js): json.dump(mark(load(js)), open(js, 'w'))
+
+
 def run_pages(ids, downloads):
     rows = []
     for n, cid, f in chapters():
         page, js = page_names(n, cid, downloads)
         if not ids or cid in ids:
             cmd = ['python3', BRIDGE, 'link', plan_source(cid, f), '--html', page, '--json', js] + ([] if f else ['--shot', cid])
-            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
+            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL); brand(page, js, cid)
         src = load(f) if f else next(s for s in load(CUT)['shots'] if s['id'] == cid)
         cs = next(s for s in load(CUT)['shots'] if s['id'] == cid)
         rows.append((n, cid, os.path.basename(page), os.path.basename(js), src, cs, os.path.exists(director_file(cid))))

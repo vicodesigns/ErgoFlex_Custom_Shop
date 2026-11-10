@@ -574,3 +574,10 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .pose-grip{display:grid;grid-template-columns:auto 1fr 1fr;gap:5px 6px;align-items:center;font-size:11px;color:#9fb7c6}
 .pose-grip button{min-height:26px}
 .people-tuned{align-self:center;margin:0}
+/* Cut menu (film-cuts.py): which cut of the film this tab edits */
+.film-chapter-picker .film-cut select{max-width:170px;border-color:#ffc97799;color:#ffe2b0}
+#director-panel .film-chapter-picker .film-cut{flex-basis:100%}
+#film-cut-new{width:min(460px,92vw);padding:18px;border:1px solid #8bc5df55;border-radius:16px;background:#0a161e;color:#edf6fc}
+#film-cut-new::backdrop{background:#02080cb8}
+#film-cut-new label{display:grid;gap:4px;margin:10px 0 14px;font-size:11px;color:#9fb7c6}
+#film-cut-new input{min-height:34px;padding:5px 9px;font-size:14px}

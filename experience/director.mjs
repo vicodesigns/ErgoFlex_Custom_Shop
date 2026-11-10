@@ -50,7 +50,7 @@ export function mountDirector(bridge,catalog,initial){
   // Timeline group selection (camera keys + desk clips) and the film chapter list.
   const picks={keys:new Set(),clips:new Set(),lights:new Set(),neutrals:new Set(),tods:new Set()};let lightSel=null,stills=null,stillBusy=false,marquee=null,groupDrag=null,suppressGroupClickUntil=0;
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
-  let filmChapters=null,filmError='',exported=signature();
+  let filmChapters=null,filmCuts=null,filmError='',exported=signature();
   // A film chapter reloaded after an import: the film's newer cut, an unexported draft to keep or drop, stale-export warning.
   const fresh=createFilmFresh(film,project,{storage,catalog,escape,render:()=>renderFilm(),status:m=>status(m),load:(cut,asExported)=>{loadProject(cut,false);if(asExported)exported=signature();syncFilm();}});
   {const d=fresh.initialDraft();if(d)project=cleanCut(d,catalog);}
@@ -183,35 +183,66 @@ export function mountDirector(bridge,catalog,initial){
     if(!film)return '';
     if(!filmChapters)return `<div class="film-chapter-picker" data-film-picker><span class="director-hint">${filmError?escape(filmError):'Loading film chapters…'}</span></div>`;
     const i=filmIndex();
-    return `<div class="film-chapter-picker" data-film-picker><button data-action="film-prev" aria-label="Previous film chapter" title="Previous film chapter" ${i<=0?'disabled':''}>‹</button><label><span>Film chapter</span><select name="film-chapter" aria-label="Film chapter" title="Switch film chapter (reloads this tab)">${i<0?'<option value="-1" selected>Choose a chapter…</option>':''}${filmChapters.map((c,n)=>option(String(n),filmChapterLabel(c),String(i))).join('')}</select></label><button data-action="film-next" aria-label="Next film chapter" title="Next film chapter" ${i<0&&filmChapters.length?'':i>=filmChapters.length-1?'disabled':''}>›</button><span class="film-dirty" data-film-dirty title="Edited since the last Export cut" ${unexported()?'':'hidden'}>● not exported</span>${fresh.noticeHTML()}</div>`;
+    return `<div class="film-chapter-picker" data-film-picker>${cutPicker()}<button data-action="film-prev" aria-label="Previous film chapter" title="Previous film chapter" ${i<=0?'disabled':''}>‹</button><label><span>Film chapter</span><select name="film-chapter" aria-label="Film chapter" title="Switch film chapter (reloads this tab)">${i<0?'<option value="-1" selected>Choose a chapter…</option>':''}${filmChapters.map((c,n)=>option(String(n),filmChapterLabel(c),String(i))).join('')}</select></label><button data-action="film-next" aria-label="Next film chapter" title="Next film chapter" ${i<0&&filmChapters.length?'':i>=filmChapters.length-1?'disabled':''}>›</button><span class="film-dirty" data-film-dirty title="Edited since the last Export cut" ${unexported()?'':'hidden'}>● not exported</span>${fresh.noticeHTML()}</div>`;
   }
   function syncFilm(){
     if(!film)return;const dirty=unexported(),i=String(filmIndex());
     for(const el of document.querySelectorAll('[data-film-dirty]'))el.hidden=!dirty;
     for(const el of document.querySelectorAll('select[name="film-chapter"]'))if(el.value!==i)el.value=i;
   }
+  // Cuts of the film (exports/film-cuts.json, tools/experience/film-cuts.py): switch to the same chapter of another cut,
+  // or copy this cut into a new one (the studio server's /__film/duplicate) and go on editing there.
+  const cutDir=film?film.film.replace(/\/director-chapters\.json.*$/,''):null,myCut=()=>filmCuts?.find(c=>c.dir===cutDir)||null;
+  function cutPicker(){
+    if(!filmCuts?.length)return '';const mine=myCut();
+    return `<label class="film-cut" title="${escape(mine?.note||'Which cut of the film this tab is editing')}"><span>Cut</span><select name="film-cut" aria-label="Film cut">${mine?'':'<option value="" selected>This cut</option>'}${filmCuts.map(c=>`<option value="${escape(c.id)}" ${c===mine?'selected':''}>${escape(c.name)}</option>`).join('')}<option value="__new">＋ Duplicate this cut…</option></select></label>`;
+  }
+  async function switchCut(id){
+    if(id==='__new'){newCut();return;}
+    const cut=filmCuts?.find(c=>c.id===id);if(!cut||cut===myCut()){renderFilm();return;}
+    try{const list=await loadFilmChapters(cut.chapters),target=list.find(c=>c.id===shot().id)||list[0];switchTo({...target,cut:cut.name});}
+    catch(error){status('That cut could not be opened: '+error.message,true);renderFilm();}
+  }
+  const cutDialog=document.createElement('dialog');cutDialog.id='film-cut-new';cutDialog.setAttribute('aria-labelledby','film-cut-new-title');document.body.append(cutDialog);
+  function newCut(){
+    const from=myCut();
+    cutDialog.innerHTML=`<form method="dialog"><div class="director-heading"><div><span class="director-kicker">NEW CUT</span><h2 id="film-cut-new-title">Duplicate ${escape(from?.name||'this cut')}</h2></div></div><p>Makes a copy of every chapter of this cut as it is in the film now. Your edits there never touch ${escape(from?.name||'this cut')}.${unexported()?' <b>This chapter has unexported edits: Export cut first if the copy should have them.</b>':''}</p><label>Name<input name="cut-name" maxlength="60" required autocomplete="off" value="${escape((from?.name||'Cut')+' copy')}"></label><div class="director-actions"><button value="make" class="primary">Duplicate and open</button><button value="cancel" formnovalidate>Cancel</button></div></form>`;
+    cutDialog.returnValue='';cutDialog.showModal();const input=cutDialog.querySelector('input');input.focus();input.select();
+  }
+  cutDialog.addEventListener('close',async()=>{
+    const name=cutDialog.querySelector('input')?.value.trim();renderFilm();if(cutDialog.returnValue!=='make'||!name)return;
+    status(`Making “${name}”…`);
+    try{
+      const r=await fetch('/__film/duplicate?from='+encodeURIComponent(cutDir)+'&name='+encodeURIComponent(name),{method:'POST'});
+      if(!r.ok){let why='';try{why=(await r.json()).error||'';}catch{}throw Error(r.status===404||r.status===405?'this studio server is older than the Cut menu; restart it once, or run: python3 tools/experience/film-cuts.py duplicate '+cutDir.replace(/^\//,'')+' "'+name+'"':why||'the copy failed');}
+      const made=await r.json(),list=await loadFilmChapters(made.chapters),target=list.find(c=>c.id===shot().id)||list[0];
+      status(`“${name}” is ready · opening it…`);goFilm({...target,cut:name});
+    }catch(error){status('No new cut: '+error.message,true);}
+  });
   function renderFilm(){for(const el of document.querySelectorAll('[data-film-picker]'))el.outerHTML=filmPicker();syncTransport();}
+  if(film)fetch('/exports/film-cuts.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(v=>{filmCuts=Array.isArray(v?.cuts)?v.cuts.filter(c=>c&&typeof c.id==='string'&&typeof c.name==='string'&&typeof c.dir==='string'&&typeof c.chapters==='string'):null;},()=>{}).finally(()=>renderFilm());
   if(film)loadFilmChapters(film.film).then(list=>{filmChapters=list;filmError='';},error=>{filmError='Film chapters unavailable: '+error.message;}).finally(renderFilm);
   const switcher=document.createElement('dialog');switcher.id='film-switch';switcher.setAttribute('aria-labelledby','film-switch-title');document.body.append(switcher);
-  function switchFilm(n){
-    const target=filmChapters?.[n];if(!target||n===filmIndex()){syncFilm();return;}
-    if(!deskEditor.flush()){syncFilm();return;}
+  let switchTarget=null;const targetLabel=t=>(t.cut?t.cut+' · ':'')+filmChapterLabel(t);
+  function switchFilm(n){const target=filmChapters?.[n];if(!target||n===filmIndex()){syncFilm();return;}switchTo(target);}
+  function switchTo(target){
+    if(!deskEditor.flush()){renderFilm();return;}
     if(!unexported()){goFilm(target);return;}
-    switcher.dataset.target=String(n);
-    switcher.innerHTML=`<div class="director-heading"><div><span class="director-kicker">SWITCH FILM CHAPTER</span><h2 id="film-switch-title">Export your edits first?</h2></div></div><p>This chapter changed since the last Export cut. Opening <b>${escape(filmChapterLabel(target))}</b> reloads this tab; unexported edits only stay as a browser draft.</p><div class="director-actions"><button data-switch="export" class="primary">Export cut, then switch</button><button data-switch="go">Switch without exporting</button><button data-switch="cancel">Cancel</button></div>`;
+    switchTarget=target;
+    switcher.innerHTML=`<div class="director-heading"><div><span class="director-kicker">${target.cut?'SWITCH CUT':'SWITCH FILM CHAPTER'}</span><h2 id="film-switch-title">Export your edits first?</h2></div></div><p>This chapter changed since the last Export cut. Opening <b>${escape(targetLabel(target))}</b> reloads this tab; unexported edits only stay as a browser draft.</p><div class="director-actions"><button data-switch="export" class="primary">Export cut, then switch</button><button data-switch="go">Switch without exporting</button><button data-switch="cancel">Cancel</button></div>`;
     switcher.showModal();switcher.querySelector('[data-switch=export]').focus();
   }
-  function goFilm(target){deskEditor.stop();status('Opening film chapter '+filmChapterLabel(target)+'…');for(const el of document.querySelectorAll('[data-film-picker] button,[data-film-picker] select'))el.disabled=true;location.assign(target.url);}
+  function goFilm(target){deskEditor.stop();status('Opening '+(target.cut?targetLabel(target):'film chapter '+filmChapterLabel(target))+'…');for(const el of document.querySelectorAll('[data-film-picker] button,[data-film-picker] select'))el.disabled=true;location.assign(target.url);}
   switcher.addEventListener('click',async event=>{
     const choice=event.target.closest('[data-switch]')?.dataset.switch;if(!choice)return;
-    const target=filmChapters?.[Number(switcher.dataset.target)];switcher.close();
-    if(choice==='cancel'||!target){syncFilm();return;}
+    const target=switchTarget;switchTarget=null;switcher.close();
+    if(choice==='cancel'||!target){renderFilm();return;}
     if(choice==='go'){goFilm(target);return;}
     await action('save-export');if(unexported())return;
     // Give the download a moment to leave before the page unloads its blob URL.
-    status('Cut exported · opening '+filmChapterLabel(target)+'…');setTimeout(()=>goFilm(target),900);
+    status('Cut exported · opening '+targetLabel(target)+'…');setTimeout(()=>goFilm(target),900);
   });
-  switcher.addEventListener('close',()=>syncFilm());
+  switcher.addEventListener('close',()=>renderFilm());
   // Film lighting: the cut's own fields once edited, else the film shot's (ids kept per chapter).
   const filmShot=()=>bridge.filmShot?.(shot().id)||null,filmLights=new Map();
   // Chapters the film renders as sub-shots (the finale): one desk per sub-shot on the stage, its lane and badge.
@@ -971,6 +1002,7 @@ export function mountDirector(bridge,catalog,initial){
   timeline.addEventListener('change',event=>{
     if(event.target.name==='timeline-snap'){snapStep=Number(event.target.value);return;}
     if(event.target.name==='film-chapter'){switchFilm(Number(event.target.value));return;}
+    if(event.target.name==='film-cut'){switchCut(event.target.value);return;}
     if(event.target.name==='timeline-seconds'){try{if(event.target.value!=='')seekCamera(Number(event.target.value)/shot().seconds);}catch(error){status(error.message,true);}}
   });
   timeline.addEventListener('input',event=>{
@@ -1015,6 +1047,7 @@ export function mountDirector(bridge,catalog,initial){
   panel.addEventListener('change',async event=>{
     const name=event.target.name,value=event.target.value;group=null;
     if(name==='film-chapter'){switchFilm(Number(value));return;}
+    if(name==='film-cut'){switchCut(value);return;}
     if(/^gn?-/.test(name||'')){try{const k=name.replace(/^gn?-/,''),v=Number(value);if(Math.abs(globalFactor(k).value-v)<1e-6){renderPanel();return;}setGlobal(k,v);}catch(error){renderPanel();status(error.message,true);}return;}
     if(name?.startsWith('mx-')){try{await sceneLights.mixerChange(event.target,false);if(name!=='mx-gain'&&name!=='mx-color')renderSceneLights();}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name?.startsWith('sl-')){try{await sceneLights.changed(event.target);}catch(error){renderSceneLights();status(error.message,true);}return;}
@@ -1202,7 +1235,7 @@ export function mountDirector(bridge,catalog,initial){
   const startPose=createStartPose({panel,shot,motion:()=>deskEditor.featuredMotion(),time:()=>playhead,seek:seekCamera,commit,status,ready:requireReady});
   // Render tab (film chapters only): Send = Export cut when this chapter has unexported edits, then a Render-request-*.json download.
   const downloadText=(name,text)=>{const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
-  const renderRequest=createRenderRequest({panel,chapters:()=>filmChapters,shot,signature,unexported,status,escape,storage,download:downloadText,
+  const renderRequest=createRenderRequest({panel,cut:()=>myCut()&&!myCut().master?cutDir.replace(/^\//,''):null,chapters:()=>filmChapters,shot,signature,unexported,status,escape,storage,download:downloadText,
     exportNow:async()=>{if(await fresh.guardExport(project,true,()=>{}))return null;clearTimeout(draftTimer);try{project=library.save(project);}catch{}const text=exportCut();renderPanel();return text;}});
   // Build tab: the selected desk's (default: the featured desk's) materials, trim and accessories (desk-build-panel.mjs).
   const deskBuild=createDeskBuildPanel({panel,shot,film:filmShot,commit,status,rerender:()=>renderPanel(),ready:()=>open&&bridge.ready(),selection:()=>deskSel.selected()||'featured',versions:()=>deskVersions.has()});   // no Desks-tab selection = the featured desk; the panel's own picker stays hidden

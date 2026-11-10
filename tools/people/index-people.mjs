@@ -13,7 +13,7 @@ const keepManifest = process.argv.includes('--no-manifest');
 const manifest = JSON.parse(readFileSync(manifestFile, 'utf8')), index = JSON.parse(readFileSync(indexFile, 'utf8'));
 // Existing entries keep their place; new ones go to the end.
 const upsert = (list, entry) => { const i = list.findIndex(p => p.id === entry.id); if (i < 0) list.push(entry); else list[i] = entry; };
-for (const r of results) { upsert(manifest.props, r.manifest); upsert(index.props, r.index); }
+for (const r of results) { if (r.manifest) upsert(manifest.props, r.manifest); upsert(index.props, r.index); }
 if (!keepManifest) writeFileSync(manifestFile, JSON.stringify(manifest, null, 1) + '\n');
 writeFileSync(indexFile, JSON.stringify(index, null, 1) + '\n');
 console.log(`${results.length} people indexed`);

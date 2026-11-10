@@ -29,9 +29,9 @@ export async function sha256Hex(text){
   let h=0x811c9dc5;for(const b of bytes){h^=b;h=Math.imul(h,0x01000193)>>>0;}return h.toString(16).padStart(8,'0').repeat(8);   // no SubtleCrypto (plain http off localhost)
 }
 // v:1 request. `signature` identifies the exact cut the page showed; `exportSha` is the sha256 of the Export cut file sent with it (null when nothing was unexported).
-export const makeRequest=({scope,chapter,resolution,note,created,signature,exportSha,estimate,force})=>({v:1,scope,chapter,resolution,note:String(note||'').trim().slice(0,300),created:created.toISOString(),signature,exportSha:exportSha||null,estimateMinutes:Math.round(estimate*10)/10,...(force&&scope==='film'?{force:true}:{})});   // force: re-render every chapter instead of reusing the render PC's cache
+export const makeRequest=({scope,chapter,resolution,note,created,signature,exportSha,estimate,force,cut})=>({v:1,scope,chapter,resolution,...(cut?{cut}:{}),note:String(note||'').trim().slice(0,300),created:created.toISOString(),signature,exportSha:exportSha||null,estimateMinutes:Math.round(estimate*10)/10,...(force&&scope==='film'?{force:true}:{})});   // force: re-render every chapter instead of reusing the render PC's cache
 
-export function createRenderRequest({panel,chapters,shot,signature,unexported,exportNow,status,escape,storage,now=()=>new Date(),download,settle=900}){
+export function createRenderRequest({panel,chapters,shot,signature,unexported,exportNow,status,escape,storage,now=()=>new Date(),download,settle=900,cut=()=>null}){
   const form={scope:'chapter',resolution:'720p',note:'',force:false};let busy=false,result='',recent=[];
   try{recent=JSON.parse(storage.getItem(KEY))||[];if(!Array.isArray(recent))recent=[];}catch{recent=[];}
   const filmSeconds=()=>chapters()?.reduce((n,c)=>n+(Number(c.seconds)||0),0)||FILM_SECONDS;
@@ -57,7 +57,7 @@ export function createRenderRequest({panel,chapters,shot,signature,unexported,ex
         exportSha=await sha256Hex(text);did=true;
         await new Promise(r=>setTimeout(r,settle));   // let the Export cut download leave before the request's
       }
-      const created=now(),est=estimate(),req=makeRequest({scope:form.scope,chapter:s.id,resolution:form.resolution,note:form.note,created,signature:(await sha256Hex(signature())).slice(0,16),exportSha,estimate:est,force:form.force});
+      const created=now(),est=estimate(),req=makeRequest({cut:cut(),scope:form.scope,chapter:s.id,resolution:form.resolution,note:form.note,created,signature:(await sha256Hex(signature())).slice(0,16),exportSha,estimate:est,force:form.force});
       download(requestFileName({scope:form.scope,chapter:s.id,resolution:form.resolution,date:created}),JSON.stringify(req,null,2));
       remember({scope:req.scope,chapter:req.chapter,resolution:req.resolution,note:req.note,created:req.created,estimate:req.estimateMinutes});
       result=`<b>Queued for the render PC</b> · ${escape(clock(req.created))} · ${escape(waitText(est))} once it starts${did?' · cut exported first':''}`;

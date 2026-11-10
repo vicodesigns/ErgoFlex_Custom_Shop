@@ -448,9 +448,27 @@ def output(model_id):
     if not pose: raise KeyError(model_id)
     label, _stance, where, _seat, held = POSE_INFO[pose]
     out = {'id': model_id, 'character': who, 'pose': pose, 'name': '%s: %s' % (CHARACTERS[who]['name'], label[0].lower() + label[1:]), 'held': list(held)}
+    if CHARACTERS[who].get('prosthesis'): out['held'].append(('prosthesis', {'side': CHARACTERS[who]['prosthesis']}))
     if where == 'desk':
         extra = tail[len(pose) + 1:]; out['height'] = float(extra.replace('_', '.')) if extra else DESK_HEIGHTS[pose][0]
         if out['height'] == int(out['height']): out['height'] = int(out['height'])
-    elif tail != pose: raise KeyError(model_id)
+    elif tail not in (pose, pose + '-2'): raise KeyError(model_id)      # '-2': the plain id is a listed model in another pose
+    return out
+
+
+def all_outputs():
+    """Every character in every posture, desk postures at each of their desk heights: the listed OUTPUTS, then the rest
+    under ids output() understands (python3 tools/people/build.py --all)."""
+    have = {(o['character'], o['pose'], o.get('height')) for o in OUTPUTS}; ids = {o['id'] for o in OUTPUTS}; out = list(OUTPUTS)
+    for who in CHARACTERS:
+        for pose, (_label, _stance, where, _seat, _held) in POSE_INFO.items():
+            for h in (DESK_HEIGHTS[pose] if where == 'desk' else (None,)):
+                if (who, pose, h) in have: continue
+                inches = None if h is None else str(h).replace('.', '_')
+                mid = 'people-%s-%s' % (who, pose) + ('' if h is None or h == DESK_HEIGHTS[pose][0] else '-' + inches)
+                if mid in ids: mid = 'people-%s-%s-%s' % (who, pose, inches or '2')
+                o = output(mid); assert (o['character'], o['pose'], o.get('height')) == (who, pose, h), mid
+                if h is not None and h != DESK_HEIGHTS[pose][0]: o['name'] += ' (desk at %s in)' % h
+                ids.add(mid); out.append(o)
     return out
 
