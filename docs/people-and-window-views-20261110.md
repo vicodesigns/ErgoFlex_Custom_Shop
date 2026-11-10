@@ -93,3 +93,31 @@ In the film, a chapter's `@window` edit takes `vista: { brightness, soften, zoom
   simply hidden until the desk reaches a height a pose was built for.
 - The opening chapter cannot be rendered on the desk machine: its screen clip (`hq14/screens/01-main.mp4`) only exists
   on the render PC.
+
+## Director: the People tab (added November 10, 2026)
+
+`experience/scene-people-editor.mjs` + `experience/people-edits.mjs`. On a film chapter the inspector has a People tab:
+
+- the chapter's cast as a list (who, what they are doing, where, the seconds they are there); the eye takes a person out
+  and keeps the entry; "Bring in the room's people" copies the room's standing cast into a chapter that has none;
+- click a person in the view or in the list: move, turn and scale with the gizmo (W / E / T) or the fields, lift,
+  "Face the desk", "Face the camera", duplicate, remove (Delete);
+- Character (filters: sex, age, heritage) and Posture (standing, seated, wheelchair, walking; desk postures follow the
+  film desk and show while it is at their height); a combination nobody has built is built on request;
+- "In the room": the whole chapter, or In / Out seconds with fades;
+- "+ Add person": the people library (search; filters for women / men, posture, wheelchair / walking stick / white cane /
+  prosthesis).
+
+The edits are `shot.peopleEdits = { cast: [{ key, id, hide?, desk | at + turn + y | beside, scale }], when, chair, fade }`
+in the cut. They reach the live stage at once (`stage.peopleTrack`), travel in Export cut, and
+`build-round8-director.py` writes them into the film chapter as `people: { only: [], cast, when }`. The first edit copies
+the cast the film shows into the chapter, so every person is an entry of its own from then on.
+
+`assets/props/people.json` (`tools/people/catalog.py`, rewritten by every build) lists the characters (name, sex, age,
+heritage, height, outfit), the postures and the built models. `cast.output('people-<character>-<posture>')` makes any
+combination buildable; the studio server builds one on `POST /__people/build?id=...` (from the desk machine only,
+about eight seconds, thumbnail included). Models built this way are untracked files until committed;
+`freeze-inputs.sh` puts them into a render freeze.
+
+Not there yet: clothing colours and outfits per person, custom characters (sliders for build, age, height), a people
+lane in the timeline, and a walk along a path. Test: `tests/director-people-e2e.mjs`.
