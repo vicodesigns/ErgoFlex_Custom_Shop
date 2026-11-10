@@ -1,0 +1,856 @@
+{
+ "v": 1,
+ "characters": {
+  "maya": {
+   "name": "Maya",
+   "sex": "woman",
+   "age": "young adult",
+   "years": 21,
+   "heritage": "Mixed",
+   "height": 165,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "toigo_wool_pants",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#e6e1d6",
+    "bottom": "#7b8a9c"
+   }
+  },
+  "andre": {
+   "name": "Andre",
+   "sex": "man",
+   "age": "young adult",
+   "years": 25,
+   "heritage": "African",
+   "height": 180,
+   "outfit": [
+    "namuhekam_male_polo_shirt",
+    "cortu_cargo_pants",
+    "shoes04"
+   ],
+   "colors": {
+    "top": "#6fa09c",
+    "bottom": "#bab1a2",
+    "hair": "#413e3b"
+   }
+  },
+  "grace": {
+   "name": "Grace",
+   "sex": "woman",
+   "age": "senior",
+   "years": 72,
+   "heritage": "European",
+   "height": 154,
+   "outfit": [
+    "toigo_fisherman_sweater",
+    "toigo_wool_pants",
+    "toigo_flats",
+    "spamrakuen_tbm_glasses_frames_01"
+   ],
+   "colors": {
+    "top": "#ba9498",
+    "bottom": "#807b78",
+    "shoes": "#615a5a",
+    "hair": "#cdccca"
+   }
+  },
+  "kai": {
+   "name": "Kai",
+   "sex": "man",
+   "age": "teen",
+   "years": 17,
+   "heritage": "Asian",
+   "height": 174,
+   "outfit": [
+    "namuhekam_male_polo_shirt",
+    "toigo_wool_pants",
+    "shoes06"
+   ],
+   "colors": {
+    "top": "#dc9461",
+    "bottom": "#656872"
+   }
+  },
+  "zoe": {
+   "name": "Zoe",
+   "sex": "woman",
+   "age": "teen",
+   "years": 17,
+   "heritage": "African",
+   "height": 157,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "toigo_wool_pants",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#e9ca6f",
+    "bottom": "#7b8da8"
+   }
+  },
+  "hale": {
+   "name": "Mr Hale",
+   "sex": "man",
+   "age": "adult",
+   "years": 51,
+   "heritage": "European",
+   "height": 175,
+   "outfit": [
+    "male_casualsuit03",
+    "shoes01",
+    "spamrakuen_tbm_glasses_frames_01"
+   ],
+   "colors": {
+    "hair": "#b1b0ae"
+   }
+  },
+  "lin": {
+   "name": "Lin",
+   "sex": "woman",
+   "age": "young adult",
+   "years": 32,
+   "heritage": "Asian",
+   "height": 154,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "toigo_wool_pants",
+    "toigo_flats"
+   ],
+   "colors": {
+    "top": "#7b808a",
+    "bottom": "#a0a48f",
+    "shoes": "#5a5a5a",
+    "hair": "#413e3e"
+   }
+  },
+  "omar": {
+   "name": "Omar",
+   "sex": "man",
+   "age": "young adult",
+   "years": 38,
+   "heritage": "Mixed",
+   "height": 180,
+   "outfit": [
+    "male_casualsuit05",
+    "shoes02"
+   ],
+   "colors": {
+    "hair": "#474141"
+   }
+  },
+  "sam": {
+   "name": "Sam",
+   "sex": "man",
+   "age": "young adult",
+   "years": 22,
+   "heritage": "European",
+   "height": 174,
+   "outfit": [
+    "namuhekam_male_polo_shirt",
+    "cortu_cargo_pants",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#61656f",
+    "bottom": "#aca89c",
+    "hair": "#947b61"
+   }
+  },
+  "ben": {
+   "name": "Ben",
+   "sex": "man",
+   "age": "senior",
+   "years": 64,
+   "heritage": "African",
+   "height": 177,
+   "outfit": [
+    "toigo_fisherman_sweater",
+    "toigo_wool_pants",
+    "shoes01",
+    "toigo_round_glasses_leopard"
+   ],
+   "colors": {
+    "top": "#687b98",
+    "bottom": "#948d83",
+    "glasses": "#343434",
+    "hair": "#bababa"
+   }
+  },
+  "rosa": {
+   "name": "Rosa",
+   "sex": "woman",
+   "age": "young adult",
+   "years": 25,
+   "heritage": "European",
+   "height": 122,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "toigo_wool_pants",
+    "toigo_flats"
+   ],
+   "colors": {
+    "top": "#ca6898",
+    "bottom": "#616168",
+    "shoes": "#ba6188",
+    "hair": "#614c41"
+   }
+  },
+  "priya": {
+   "name": "Priya",
+   "sex": "woman",
+   "age": "young adult",
+   "years": 23,
+   "heritage": "Mixed",
+   "height": 164,
+   "outfit": [
+    "female_sportsuit01",
+    "shoes05"
+   ],
+   "colors": {}
+  },
+  "jo": {
+   "name": "Jo",
+   "sex": "woman",
+   "age": "adult",
+   "years": 41,
+   "heritage": "European",
+   "height": 162,
+   "outfit": [
+    "male_worksuit01",
+    "shoes02"
+   ],
+   "colors": {
+    "hair": "#ac7b5a"
+   }
+  },
+  "mia": {
+   "name": "Mia",
+   "sex": "woman",
+   "age": "teen",
+   "years": 16,
+   "heritage": "European",
+   "height": 152,
+   "outfit": [
+    "toigo_fisherman_sweater",
+    "toigo_wool_pants",
+    "shoes06"
+   ],
+   "colors": {
+    "top": "#94b1a8",
+    "bottom": "#7b8094"
+   }
+  },
+  "leo": {
+   "name": "Leo",
+   "sex": "man",
+   "age": "teen",
+   "years": 16,
+   "heritage": "Mixed",
+   "height": 167,
+   "outfit": [
+    "male_casualsuit06",
+    "shoes04"
+   ],
+   "colors": {
+    "hair": "#4c413b"
+   }
+  },
+  "noah": {
+   "name": "Noah",
+   "sex": "man",
+   "age": "teen",
+   "years": 17,
+   "heritage": "African",
+   "height": 178,
+   "outfit": [
+    "namuhekam_male_polo_shirt",
+    "cortu_cargo_pants",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#ede9e1",
+    "bottom": "#6f7580"
+   }
+  },
+  "ava": {
+   "name": "Ava",
+   "sex": "woman",
+   "age": "teen",
+   "years": 17,
+   "heritage": "Asian",
+   "height": 169,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "toigo_wool_pants",
+    "shoes04"
+   ],
+   "colors": {
+    "top": "#e9e6e1",
+    "bottom": "#947b85",
+    "hair": "#474141"
+   }
+  },
+  "eli": {
+   "name": "Eli",
+   "sex": "man",
+   "age": "teen",
+   "years": 17,
+   "heritage": "European",
+   "height": 180,
+   "outfit": [
+    "male_casualsuit01",
+    "shoes06"
+   ],
+   "colors": {
+    "hair": "#baa07b"
+   }
+  },
+  "sofia": {
+   "name": "Sofia",
+   "sex": "woman",
+   "age": "teen",
+   "years": 17,
+   "heritage": "Mixed",
+   "height": 162,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "toigo_wool_pants",
+    "toigo_flats"
+   ],
+   "colors": {
+    "top": "#7ba8c2",
+    "bottom": "#dcd6ca",
+    "shoes": "#6c6c7b"
+   }
+  }
+ },
+ "poses": {
+  "sit-type": {
+   "label": "Typing at the desk, seated",
+   "stance": "seated",
+   "desk": true,
+   "seat": 435,
+   "heights": [
+    28,
+    30
+   ]
+  },
+  "stand-type": {
+   "label": "Typing at the desk, standing",
+   "stance": "standing",
+   "desk": true,
+   "seat": 0,
+   "heights": [
+    43.5
+   ]
+  },
+  "stand-type-low": {
+   "label": "At the desk on a low setting, standing",
+   "stance": "standing",
+   "desk": true,
+   "seat": 0,
+   "heights": [
+    28,
+    30
+   ]
+  },
+  "wheel-type": {
+   "label": "Typing at the desk, in a wheelchair",
+   "stance": "wheelchair",
+   "desk": true,
+   "seat": 0,
+   "heights": [
+    28,
+    31
+   ]
+  },
+  "stand-wait": {
+   "label": "Standing by, arms loose",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-phone": {
+   "label": "Standing, phone in hand",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-present": {
+   "label": "Presenting, tablet on the arm",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-work": {
+   "label": "Working at a bench",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-paint": {
+   "label": "Painting at an easel",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stretch": {
+   "label": "Stretching, arms overhead",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stretch-open": {
+   "label": "Stretching, hands behind the head",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "cane-stand": {
+   "label": "Standing with a walking stick",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "white-cane": {
+   "label": "Walking with a white cane",
+   "stance": "walking",
+   "desk": false,
+   "seat": 0
+  },
+  "walk": {
+   "label": "Walking",
+   "stance": "walking",
+   "desk": false,
+   "seat": 0
+  },
+  "sit-write": {
+   "label": "Writing at a table",
+   "stance": "seated",
+   "desk": false,
+   "seat": 450
+  },
+  "sit-laptop": {
+   "label": "At a laptop",
+   "stance": "seated",
+   "desk": false,
+   "seat": 450
+  },
+  "sit-read": {
+   "label": "Reading",
+   "stance": "seated",
+   "desk": false,
+   "seat": 420
+  },
+  "sit-listen": {
+   "label": "Listening at a table",
+   "stance": "seated",
+   "desk": false,
+   "seat": 450
+  },
+  "sit-raise": {
+   "label": "Hand raised",
+   "stance": "seated",
+   "desk": false,
+   "seat": 450
+  },
+  "sit-phone": {
+   "label": "Seated, phone in hand",
+   "stance": "seated",
+   "desk": false,
+   "seat": 420
+  },
+  "sit-controller": {
+   "label": "On a sofa with a game controller",
+   "stance": "seated",
+   "desk": false,
+   "seat": 420
+  },
+  "wheel-roll": {
+   "label": "Rolling, in a wheelchair",
+   "stance": "wheelchair",
+   "desk": false,
+   "seat": 0
+  },
+  "wheel-watch": {
+   "label": "Watching a screen, in a wheelchair",
+   "stance": "wheelchair",
+   "desk": false,
+   "seat": 0
+  }
+ },
+ "models": {
+  "people-maya-sit-type": {
+   "character": "maya",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Maya, typing at the desk (seated)",
+   "aids": []
+  },
+  "people-maya-stand-type": {
+   "character": "maya",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Maya, typing at the desk (standing)",
+   "aids": []
+  },
+  "people-andre-sit-type": {
+   "character": "andre",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Andre, typing at the desk (seated)",
+   "aids": []
+  },
+  "people-andre-stand-type": {
+   "character": "andre",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Andre, typing at the desk (standing)",
+   "aids": []
+  },
+  "people-andre-stand-phone": {
+   "character": "andre",
+   "pose": "stand-phone",
+   "name": "Andre, with the desk app on his phone",
+   "aids": []
+  },
+  "people-grace-sit-read": {
+   "character": "grace",
+   "pose": "sit-read",
+   "name": "Grace, reading in an armchair",
+   "aids": []
+  },
+  "people-kai-sit-write": {
+   "character": "kai",
+   "pose": "sit-write",
+   "name": "Kai, writing at a table",
+   "aids": []
+  },
+  "people-zoe-sit-laptop": {
+   "character": "zoe",
+   "pose": "sit-laptop",
+   "name": "Zoe, at a laptop",
+   "aids": []
+  },
+  "people-zoe-walk": {
+   "character": "zoe",
+   "pose": "walk",
+   "name": "Zoe, walking with a backpack",
+   "aids": []
+  },
+  "people-hale-stand-present": {
+   "character": "hale",
+   "pose": "stand-present",
+   "name": "Mr Hale, presenting",
+   "aids": []
+  },
+  "people-omar-wheel-type": {
+   "character": "omar",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Omar, typing at the desk (wheelchair)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-omar-wheel-roll": {
+   "character": "omar",
+   "pose": "wheel-roll",
+   "name": "Omar, rolling (wheelchair)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-lin-stand-paint": {
+   "character": "lin",
+   "pose": "stand-paint",
+   "name": "Lin, painting at an easel",
+   "aids": []
+  },
+  "people-sam-sit-game": {
+   "character": "sam",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Sam, gaming at the desk",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-stand-type": {
+   "character": "sam",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Sam, at the desk (standing)",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-kai-sit-controller": {
+   "character": "kai",
+   "pose": "sit-controller",
+   "name": "Kai, on the sofa with a controller",
+   "aids": []
+  },
+  "people-priya-stretch": {
+   "character": "priya",
+   "pose": "stretch",
+   "name": "Priya, stretching",
+   "aids": []
+  },
+  "people-jo-stand-work": {
+   "character": "jo",
+   "pose": "stand-work",
+   "name": "Jo, working at the bench",
+   "aids": []
+  },
+  "people-grace-cane-stand": {
+   "character": "grace",
+   "pose": "cane-stand",
+   "name": "Grace, standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-ben-white-cane": {
+   "character": "ben",
+   "pose": "white-cane",
+   "name": "Ben, walking with a white cane",
+   "aids": [
+    "white cane"
+   ]
+  },
+  "people-rosa-stand-type-low": {
+   "character": "rosa",
+   "pose": "stand-type-low",
+   "deskHeight": 28,
+   "name": "Rosa, at the desk on its lowest setting (standing)",
+   "aids": []
+  },
+  "people-kai-wheel-type": {
+   "character": "kai",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Kai, at the desk (wheelchair)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-zoe-stand-type": {
+   "character": "zoe",
+   "pose": "stand-type",
+   "deskHeight": 41,
+   "name": "Zoe, at a standing desk (41 in)",
+   "aids": []
+  },
+  "people-mia-sit-listen": {
+   "character": "mia",
+   "pose": "sit-listen",
+   "name": "Mia, listening at a table",
+   "aids": []
+  },
+  "people-mia-sit-type": {
+   "character": "mia",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Mia, typing at the desk (seated)",
+   "aids": []
+  },
+  "people-leo-sit-raise": {
+   "character": "leo",
+   "pose": "sit-raise",
+   "name": "Leo, hand up at a table",
+   "aids": []
+  },
+  "people-leo-sit-write": {
+   "character": "leo",
+   "pose": "sit-write",
+   "name": "Leo, writing at a table",
+   "aids": []
+  },
+  "people-noah-sit-laptop": {
+   "character": "noah",
+   "pose": "sit-laptop",
+   "name": "Noah, at a laptop",
+   "aids": []
+  },
+  "people-noah-sit-type": {
+   "character": "noah",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Noah, typing at the desk (seated)",
+   "aids": []
+  },
+  "people-lin-sit-type": {
+   "character": "lin",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Lin, typing at the desk (seated)",
+   "aids": []
+  },
+  "people-priya-sit-phone": {
+   "character": "priya",
+   "pose": "sit-phone",
+   "name": "Priya, seated with her phone",
+   "aids": []
+  },
+  "people-omar-wheel-type-28": {
+   "character": "omar",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Omar, typing at the desk at 28 in (wheelchair)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-lin-sit-phone": {
+   "character": "lin",
+   "pose": "sit-phone",
+   "name": "Lin, seated with her phone",
+   "aids": []
+  },
+  "people-ava-sit-write": {
+   "character": "ava",
+   "pose": "sit-write",
+   "name": "Ava, writing at a table",
+   "aids": []
+  },
+  "people-eli-sit-listen": {
+   "character": "eli",
+   "pose": "sit-listen",
+   "name": "Eli, listening at a table",
+   "aids": []
+  },
+  "people-sofia-sit-laptop": {
+   "character": "sofia",
+   "pose": "sit-laptop",
+   "name": "Sofia, at a laptop",
+   "aids": []
+  },
+  "people-maya-sit-type-30": {
+   "character": "maya",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Maya, typing at the desk at 30 in (seated)",
+   "aids": []
+  },
+  "people-maya-stand-phone": {
+   "character": "maya",
+   "pose": "stand-phone",
+   "name": "Maya, with the desk app on her phone",
+   "aids": []
+  },
+  "people-andre-sit-type-30": {
+   "character": "andre",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Andre, typing at the desk at 30 in (seated)",
+   "aids": []
+  },
+  "people-lin-sit-type-30": {
+   "character": "lin",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Lin, typing at the desk at 30 in (seated)",
+   "aids": []
+  },
+  "people-sam-sit-game-30": {
+   "character": "sam",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Sam, gaming at the desk at 30 in",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-rosa-stand-type-30": {
+   "character": "rosa",
+   "pose": "stand-type-low",
+   "deskHeight": 30,
+   "name": "Rosa, at the desk at 30 in (standing)",
+   "aids": []
+  },
+  "people-lin-stand-type": {
+   "character": "lin",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Lin, typing at the desk (standing)",
+   "aids": []
+  },
+  "people-noah-sit-type-30": {
+   "character": "noah",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Noah, typing at the desk at 30 in (seated)",
+   "aids": []
+  },
+  "people-noah-stand-type": {
+   "character": "noah",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Noah, typing at the desk (standing)",
+   "aids": []
+  },
+  "people-mia-sit-type-30": {
+   "character": "mia",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Mia, typing at the desk at 30 in (seated)",
+   "aids": []
+  },
+  "people-mia-stand-type": {
+   "character": "mia",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Mia, typing at the desk (standing)",
+   "aids": []
+  },
+  "people-mia-sit-phone": {
+   "character": "mia",
+   "pose": "sit-phone",
+   "name": "Mia, seated with her phone",
+   "aids": []
+  },
+  "people-kai-wheel-roll": {
+   "character": "kai",
+   "pose": "wheel-roll",
+   "name": "Kai, rolling (wheelchair)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-maya-stretch": {
+   "character": "maya",
+   "pose": "stretch-open",
+   "name": "Maya, stretching at her desk",
+   "aids": []
+  },
+  "people-omar-wheel-watch": {
+   "character": "omar",
+   "pose": "wheel-watch",
+   "name": "Omar, watching a screen (wheelchair)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-maya-stand-wait": {
+   "character": "maya",
+   "pose": "stand-wait",
+   "name": "Maya, on her feet while the desk moves",
+   "aids": []
+  },
+  "people-noah-stand-wait": {
+   "character": "noah",
+   "pose": "stand-wait",
+   "name": "Noah, on his feet while the desk moves",
+   "aids": []
+  },
+  "people-zoe-stand-wait": {
+   "character": "zoe",
+   "pose": "stand-wait",
+   "name": "Zoe: standing by, arms loose",
+   "aids": []
+  }
+ }
+}

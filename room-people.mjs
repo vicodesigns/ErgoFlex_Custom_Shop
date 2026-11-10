@@ -18,6 +18,7 @@
 //   { id, near: [x, z], face: [x, z] }                seated on the chair nearest that spot, facing a point (a table)
 //   { id, by: '<prop id>', reach }                    standing in front of that furniture, facing it
 //   { id, at: [x, z], turn, y }                       at a spot (y mm lifts a seated pose onto a seat that is not a prop)
+//   scale: n                                          a factor on the model's size (any placement; 1 = as built)
 //   seat: mm                                          the seat height the pose was built for; the person is raised or
 //                                                     lowered (a little) onto the real seat
 //   layout: '<layout id>'                             only in that room layout;  modes: [...] only in those dayparts
@@ -129,10 +130,36 @@ export class RoomPeople {
     //                                         (default .5; 0 cuts). Without a time (the Studio) everyone is simply there.
     //   chair: { back, side, turn }           the featured desk's task chair stays in the room when its user is not
     //                                         seated: pushed back and aside (mm, the desk's frame) and turned (degrees)
+    // Only a change of who is in the cast (model, key, desk role) rebuilds; moving, turning, scaling or re-timing an
+    // extra person re-places the model that is already there (the Director edits these live).
     setFilter(filter) {
-        const cast = JSON.stringify(filter?.cast || []) + JSON.stringify(Object.keys(filter?.when || {}));
+        const cast = JSON.stringify((filter?.cast || []).map(c => [c.key || c.id, c.id, c.desk || '', c.station || ''])) + JSON.stringify(Object.keys(filter?.when || {}));
         if (this.built && cast !== this.castKey) this.dispose();
         this.castKey = cast; this.filter = filter || null; this.placed = false;
+    }
+    // The size a placement asks for, on top of the size the model was loaded at.
+    resize(object, spec) {
+        const base = object.userData.personBase ||= object.scale.clone(), k = Number.isFinite(spec.scale) && spec.scale > 0 ? spec.scale : 1;
+        object.scale.copy(base).multiplyScalar(k); object.userData.personChair?.scale.copy(object.userData.personChairBase ||= object.userData.personChair.scale.clone()).multiplyScalar(k);
+    }
+    byKey(key) { return this.people.find(o => this.keyOf(o.userData.person) === key) || null; }
+    // Who is in the room now (for the Director's People tab), room millimetres and degrees.
+    list() {
+        return this.people.map(o => { const s = o.userData.person; return { key: this.keyOf(s), id: s.id, extra: !!s.extra, desk: s.desk || null, station: s.station || null,
+            at: [Math.round(o.position.x), Math.round(o.position.z)], y: Math.round(o.position.y), turn: Math.round(THREE.MathUtils.radToDeg(o.rotation.y) * 10) / 10, scale: s.scale || 1,
+            allowed: this.allowed(s), missing: !!o.userData.personMissing, visible: o.visible, amount: o.userData.personAmount ?? 1 }; });
+    }
+    // The cast as plain placements a film can keep: desk and station people as they are (they follow their desk),
+    // everyone else at the spot and facing they have settled into (`on`, `by`, `near` resolved).
+    resolved() {
+        return this.people.filter(o => this.allowed(o.userData.person) && !o.userData.personMissing).map(o => {
+            const s = o.userData.person, out = { key: this.keyOf(s), id: s.id };
+            if (s.desk) { out.desk = s.desk; if (s.station) out.station = s.station; if (s.reach !== undefined) out.reach = s.reach; }
+            else if (s.beside && !s.at) out.beside = s.beside;
+            else { out.at = [Math.round(o.position.x), Math.round(o.position.z)]; out.turn = Math.round(THREE.MathUtils.radToDeg(o.rotation.y) * 10) / 10; if (Math.abs(o.position.y) > .5) out.y = Math.round(o.position.y); }
+            if (s.scale && s.scale !== 1) out.scale = s.scale;
+            return out;
+        });
     }
     keyOf(spec) { return spec.key || spec.id; }
     allowed(spec) { const f = this.filter, k = this.keyOf(spec), has = list => list.includes(k) || list.includes(spec.id); return !f || spec.extra || ((!f.only || has(f.only)) && !has(f.except || [])); }
@@ -166,7 +193,7 @@ export class RoomPeople {
             object.name = 'Person:' + spec.id; object.userData.person = spec; object.userData.personFit = this.library.entry(spec.id)?.person?.deskHeight ?? null; object.visible = false;
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
             if ((spec.desk && !spec.station) || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
-            root.add(object); this.people.push(object);
+            root.add(object); this.people.push(object); this.resize(object, spec);
             if (spec.station) this.atStation(object, spec);
             else if (!spec.desk && !spec.beside) this.settle(object, spec);
         }
@@ -246,8 +273,15 @@ export class RoomPeople {
         if (!this.placed) {
             this.placed = true;
             for (const object of this.people) {
+                // an extra person takes the placement the filter has for it now (it may have been moved since it was built)
+                const now = object.userData.person.extra && (this.filter?.cast || []).find(c => this.keyOf(c) === this.keyOf(object.userData.person));
+                if (now) {
+                    const spec = object.userData.person = { ...now, extra: true }; object.userData.personMissing = false; this.resize(object, spec);
+                    if (spec.station) this.atStation(object, spec); else if (!spec.desk && !spec.beside) this.settle(object, spec);
+                }
                 const spot = this.filter?.place?.[this.keyOf(object.userData.person)] || this.filter?.place?.[object.userData.person.id]; if (!spot) continue;
                 object.position.set(spot.at[0], spot.y ?? 0, spot.at[1]); object.rotation.y = THREE.MathUtils.degToRad(spot.turn || 0); object.userData.personMissing = false;
+                if (Number.isFinite(spot.scale)) this.resize(object, { scale: spot.scale });
             }
         }
         for (const object of this.people) {

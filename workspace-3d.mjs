@@ -104,6 +104,8 @@ export const PROP_LIBRARY = {
         }
         return this.indexPromise;
     },
+    // After a model was built on request (the Director's People tab): read the index again.
+    reloadIndex() { this.indexPromise = fetch(PROP_BASE + 'index.json?t=' + Date.now(), { cache: 'no-store' }).then(r => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }).then(index => { this.index = index; return index; }); return this.indexPromise; },
     entry(id) { return this.index?.props.find(p => p.id === id) || null; },
     load(id) {
         if (!this.cache.has(id)) {

@@ -10778,7 +10778,7 @@ function featuredKeyboard() {
     return { x: pose.x + side * c + ahead * s, z: pose.z - side * s + ahead * c };
 }
 function syncRoomPeople() {
-    const control = document.getElementById('room-people-control'), available = !!workspaceRoom?.people?.available;
+    const control = document.getElementById('room-people-control'), available = !!workspaceRoom?.people && (workspaceRoom.people.available || !!roomPeopleFilter?.cast?.length);   // a film can cast a room that has no people of its own
     if (control) { control.hidden = !available; control.querySelector('input').checked = roomPeopleEnabled; }
     return (workspaceRoom?.setPeopleEnabled(roomPeopleEnabled && available, roomPeopleFilter) || Promise.resolve())
         .then(() => { presentationShadowDirty = true; renderPacing?.invalidate(); }).catch(error => console.warn('[people]', error));

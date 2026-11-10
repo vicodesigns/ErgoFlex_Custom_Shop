@@ -17,7 +17,7 @@ import cast, pose_lib, held  # noqa: E402
 argv = sys.argv[sys.argv.index('--') + 1:]
 OUT_ID, OUT_DIR = argv[0], argv[1]
 PREVIEW = argv[argv.index('--preview') + 1] if '--preview' in argv else None
-spec = next(o for o in cast.OUTPUTS if o['id'] == OUT_ID)
+spec = cast.output(OUT_ID)
 who = cast.CHARACTERS[spec['character']]
 
 bpy.ops.wm.read_factory_settings(use_empty=True)

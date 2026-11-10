@@ -36035,6 +36035,39 @@
     "character": "noah",
     "pose": "stand-wait"
    }
+  },
+  {
+   "id": "people-zoe-stand-wait",
+   "name": "Zoe: standing by, arms loose",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    487.6,
+    1573.6,
+    332.4
+   ],
+   "min": [
+    -244.1,
+    0,
+    -118.8
+   ],
+   "max": [
+    243.5,
+    1573.6,
+    213.6
+   ],
+   "tris": 33628,
+   "bytes": 1066540,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "stand-wait"
+   }
   }
  ],
  "screens": [

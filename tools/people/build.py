@@ -24,8 +24,9 @@ args = sys.argv[1:]
 jobs = int(args[args.index('--jobs') + 1]) if '--jobs' in args else 4
 keep = '--keep' in args
 preview = args[args.index('--preview') + 1] if '--preview' in args else None   # folder for two Cycles views per person
+no_manifest = '--no-manifest' in args                      # built on request: leave tools/props/manifest.json alone
 only = [a for i, a in enumerate(args) if not a.startswith('--') and (i == 0 or args[i - 1] not in ('--jobs', '--preview'))]
-outputs = [o for o in cast.OUTPUTS if not only or o['id'] in only]
+outputs = [cast.output(i) for i in only] if only else list(cast.OUTPUTS)      # an id nobody listed: people-<character>-<pose>
 work = os.path.join(tempfile.gettempdir(), 'ergoflex-people'); os.makedirs(work, exist_ok=True)
 
 
@@ -68,6 +69,7 @@ with ThreadPoolExecutor(jobs) as pool:
         results.append({'manifest': spec, 'index': entry})
         print(f"ok {o['id']:34} {result['tris']:6} tris {entry['bytes'] // 1024:5} KB  {' x '.join(str(round(v)) for v in result['size'])} mm")
 results_file = os.path.join(work, 'results.json'); json.dump(results, open(results_file, 'w'))
-subprocess.run(['node', os.path.join(HERE, 'index-people.mjs'), results_file], check=True)
+subprocess.run(['node', os.path.join(HERE, 'index-people.mjs'), results_file] + (['--no-manifest'] if no_manifest else []), check=True)
+subprocess.run([sys.executable, os.path.join(HERE, 'catalog.py')], check=True)
 print(f"{len(outputs) - failed} built, {failed} failed")
 sys.exit(1 if failed else 0)

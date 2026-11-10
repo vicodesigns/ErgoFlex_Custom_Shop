@@ -18,6 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import send from 'send';
+import { execFile } from 'node:child_process';
 import chokidar from 'chokidar';
 import { SPECS, SHARED_KEY, mergeWrite, changedEntries } from './studio-state/merge.mjs';
 import { load, write } from './studio-state/file.mjs';
@@ -64,7 +65,7 @@ const readBody = (req, limit = 64 << 20) => new Promise((ok, fail) => {
   req.on('data', c => { n += c.length; if (n > limit) { fail(Error('body too large')); req.destroy(); } else parts.push(c); });
   req.on('end', () => ok(Buffer.concat(parts).toString('utf8'))); req.on('error', fail);
 });
-const clients = new Set();
+const clients = new Set(), peopleBuilds = new Map();
 const CLIENT_JS = fs.readFileSync(path.join(here, 'studio-state/sync.js'), 'utf8');
 const RELOAD_JS = `(()=>{const es=new EventSource('/__studio/events');es.onmessage=e=>{if(e.data==='css'){for(const l of document.querySelectorAll('link[rel=stylesheet]')){const u=new URL(l.href);u.searchParams.set('_r',Date.now());l.href=u.href;}}else if(e.data==='reload')location.reload();};})();`;
 
@@ -86,6 +87,23 @@ async function handle(req, res) {
     const results = (Array.isArray(body.changes) ? body.changes : []).map(c => applyChange(c, client, by));
     save();
     return json(res, 200, { rev: state.rev, results });
+  }
+  // People built on request (the Director's People tab): a character in a posture nobody has built yet.
+  //   POST /__people/build?id=people-<character>-<posture>   -> { id, built }   (tools/people/build.py, then a thumbnail)
+  // Only from this machine, only ids the cast knows; one build at a time per id. Writes assets/props only (not watched).
+  if (p === '/__people/build' && req.method === 'POST') {
+    const id = url.searchParams.get('id') || '', local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+    if (!local) return json(res, 403, { error: 'People are built from the desk machine only.' });
+    if (!/^people-[a-z]{2,20}-[a-z][a-z0-9_.-]{1,50}$/.test(id)) return json(res, 400, { error: 'Not a people model id.' });
+    const glb = path.join(root, 'assets/props', id + '.glb'), had = fs.existsSync(glb);
+    if (!had) {
+      if (!peopleBuilds.has(id)) peopleBuilds.set(id, new Promise((ok, fail) => execFile('python3', [path.join(root, 'tools/people/build.py'), id, '--jobs', '1', '--no-manifest'], { cwd: root, timeout: 180000, maxBuffer: 8 << 20 },
+        (error, out, err) => error ? fail(Error((out + err).split('\n').filter(Boolean).slice(-3).join(' ') || error.message)) : ok()))
+        .then(() => new Promise(ok => execFile('node', [path.join(root, 'tools/props/thumbnails.mjs'), '--only', id], { cwd: root, timeout: 120000 }, () => ok())))
+        .finally(() => peopleBuilds.delete(id)));
+      try { await peopleBuilds.get(id); } catch (e) { return json(res, 500, { error: String(e.message).slice(0, 400) }); }
+    }
+    return json(res, 200, { id, built: !had });
   }
   if (p === '/__studio/sync.js') { res.writeHead(200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }); return res.end(CLIENT_JS); }
   if (p === '/__studio/reload.js') { res.writeHead(200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }); return res.end(RELOAD_JS); }

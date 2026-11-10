@@ -1,6 +1,7 @@
 import {exportLighting} from './film-lighting.mjs';
 import {mergeSceneLights} from './light-edits.mjs';
 import {mergePropEdits} from './prop-edits.mjs';
+import {mergePeople} from './people-edits.mjs';
 import {mergeBranding} from './branding-edits.mjs';
 import {mergeDeskEdits} from './desk-edits.mjs';
 import {mergeFeaturedBuild} from './desk-build.mjs';
@@ -46,7 +47,7 @@ export function liveFilmShot(film,shot){
   if(lit.ledStatus){next.ledStatus=lit.ledStatus;if(lit.ledNeutral)next.ledNeutral=lit.ledNeutral;else delete next.ledNeutral;if(lit.ledColor)next.ledColor=lit.ledColor;}
   if(lit.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...lit.sceneGlobals};
   if(lit.timeOfDay)next.timeOfDay=lit.timeOfDay;
-  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergeBranding(film,shot),mergeDeskEdits(film,shot),mergeFeaturedBuild(film,shot));
+  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergePeople(film,shot),mergeBranding(film,shot),mergeDeskEdits(film,shot),mergeFeaturedBuild(film,shot));
   // Room desks' lift / tilt clips are the live stage's (it samples shot.deskEdits, else the film's sceneDeskEdits; player.mjs):
   // the film layer keeps the rest of a desk edit (size, pose, build) and does not play the clips a second time.
   if(next.sceneDeskEdits)next.sceneDeskEdits=next.sceneDeskEdits.map(e=>({...e,clips:[]}));

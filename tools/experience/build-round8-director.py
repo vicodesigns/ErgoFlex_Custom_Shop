@@ -54,7 +54,7 @@
       director-camera-<id>.json as 'desks' (an export without the field keeps the earlier import's). The pass writes them
       onto the chapter's film shot as 'sceneDeskEdits' (tools/experience/film-desk-edits.mjs installs them).
 """
-import base64, copy, glob, hashlib, html, json, os, re, subprocess, sys, tempfile, time
+import base64, copy, glob, hashlib, html, json, math, os, re, subprocess, sys, tempfile, time
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the repo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -358,6 +358,59 @@ def apply_props(cid, f, props):
     return wrote
 
 
+def clean_people(v):
+    """Director Mode's cast for a chapter (experience/people-edits.mjs cleanPeople): {cast: [...], when, chair, fade}; None if not one."""
+    if not isinstance(v, dict) or not isinstance(v.get('cast'), list): return None
+    num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+    cast, seen = [], set()
+    for e in v['cast'][:80]:
+        if not isinstance(e, dict) or not isinstance(e.get('id'), str) or not re.fullmatch(r'people-[A-Za-z0-9][A-Za-z0-9._-]{0,90}', e['id']): continue
+        key = e.get('key') if isinstance(e.get('key'), str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,47}', e['key']) else e['id'][:48]
+        if key in seen: continue
+        out = {'key': key, 'id': e['id']}
+        if e.get('hide') is True: out['hide'] = True
+        if e.get('desk') in ('sit', 'stand', 'wheel'):
+            out['desk'] = e['desk']
+            if isinstance(e.get('station'), str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,60}', e['station']): out['station'] = e['station']
+            if num(e.get('reach')) and 0 <= e['reach'] <= 3000: out['reach'] = round(e['reach'])
+        elif isinstance(e.get('at'), list) and len(e['at']) == 2 and all(num(x) and abs(x) <= 100000 for x in e['at']):
+            out['at'] = [round(x) for x in e['at']]; out['turn'] = round(float(e['turn']), 1) if num(e.get('turn')) else 0
+            if num(e.get('y')) and .5 <= abs(e['y']) <= 5000: out['y'] = round(e['y'])
+        elif isinstance(e.get('beside'), list) and len(e['beside']) == 2 and all(num(x) and abs(x) <= 20000 for x in e['beside']): out['beside'] = [round(x) for x in e['beside']]
+        else: continue
+        if num(e.get('scale')) and .2 <= e['scale'] <= 3 and abs(e['scale'] - 1) > 1e-3: out['scale'] = round(e['scale'], 3)
+        seen.add(key); cast.append(out)
+    res = {'cast': cast}; when = {}
+    for key, spans in (v.get('when') or {}).items() if isinstance(v.get('when'), dict) else []:
+        good = [[round(float(x), 3) for x in s[:4]] for s in spans[:8] if isinstance(s, list) and len(s) >= 2 and all(num(x) and x >= 0 for x in s[:4]) and s[1] - s[0] >= .01] if isinstance(spans, list) else []
+        if key in seen and good: when[key] = good
+    if when: res['when'] = when
+    c = v.get('chair')
+    if isinstance(c, dict) and any(num(c.get(k)) for k in ('back', 'side', 'turn')): res['chair'] = {k: (c[k] if num(c.get(k)) else d) for k, d in (('back', 620), ('side', 0), ('turn', 0))}
+    if num(v.get('fade')) and 0 <= v['fade'] <= 5: res['fade'] = v['fade']
+    return res
+
+
+def apply_people(cid, f, people):
+    """The chapter's `people` (room-people.mjs filter): nobody of the room's own cast, the Director's cast instead."""
+    mine = clean_people(people)
+    if mine is None: return []
+    cast = [{k: v for k, v in e.items() if k != 'hide'} for e in mine['cast'] if not e.get('hide')]; keys = {e['key'] for e in cast}
+    film = {'only': [], 'cast': cast}
+    when = {k: v for k, v in (mine.get('when') or {}).items() if k in keys}
+    if when: film['when'] = when
+    for k in ('chair', 'fade'):
+        if k in mine: film[k] = mine[k]
+    wrote = []
+    for p in [CUT] + ([f] if f else []):
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') == cid: s['people'] = copy.deepcopy(film)
+        if dump(p, d): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
 BRANDING_FIELDS = {'surface': str, 'enabled': bool, 'x': (-100, 200), 'y': (-100, 200), 'scale': (5, 300), 'rotation': (-180, 180)}
 
 
@@ -514,6 +567,9 @@ def run_pass():
         if os.path.exists(p) and 'props' in load(p):
             w = apply_props(cid, f, load(p)['props'])
             print(f'ch{n:02d} {cid}: Director props ({len(load(p)["props"])}) -> {", ".join(w) or "no change"}')
+        if os.path.exists(p) and 'people' in load(p):
+            w = apply_people(cid, f, load(p)['people'])
+            print(f'ch{n:02d} {cid}: Director people ({len([e for e in load(p)["people"].get("cast", []) if not e.get("hide")])}) -> {", ".join(w) or "no change"}')
         if os.path.exists(p) and 'branding' in load(p):
             w = apply_branding(cid, f, load(p)['branding'])
             print(f'ch{n:02d} {cid}: Director branding -> {", ".join(w) or "no change"}')
@@ -736,6 +792,9 @@ def run_import(export):
     # Props: the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
     if isinstance(shot.get('propEdits'), list): dc['props'] = [{k: v for k, v in e.items() if k != 'director'} for e in clean_props(shot['propEdits'])]
     elif 'props' in before: dc['props'] = before['props']
+    # People: the export's cast (People tab); an export without the field keeps the earlier import's.
+    if clean_people(shot.get('peopleEdits')) is not None: dc['people'] = clean_people(shot['peopleEdits'])
+    elif 'people' in before: dc['people'] = before['people']
     # Prop layers (Layers tab: named groups of props, with eye / lock): no film effect, the hide edits above carry it; kept for the Director only.
     if isinstance(shot.get('propLayers'), list): dc['propLayers'] = [l for l in shot['propLayers'] if isinstance(l, dict)][:60]
     elif 'propLayers' in before: dc['propLayers'] = before['propLayers']

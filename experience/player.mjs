@@ -91,6 +91,7 @@ function perfNote(kind,ms){if(kind==='seek'){perfSum.seek+=ms;perfSum.n++;}else{
   if(performance.now()-perfAt>2000){const parts=Object.entries(perfSum).filter(([k])=>k.startsWith('fx:')).map(([k,v])=>`${k.slice(3)} ${(v/Math.max(1,perfSum.fxn)).toFixed(1)}`).join(', ');console.log(`[perf] ${perfSum.n} seeks ${(perfSum.seek/Math.max(1,perfSum.n)).toFixed(1)} ms each · ${perfSum.fxn} film-fx frames ${(perfSum.fx/Math.max(1,perfSum.fxn)).toFixed(1)} ms each (${parts})`);perfAt=performance.now();for(const k of Object.keys(perfSum))perfSum[k]=0;}}
 let fxLast=0,fxScreensAt=0,fxScrubbed=false,liveFx=null,fxShot=null,fxAt=-1,fxPending=null,fxLights=null,fxTimer=null;
 // Film layers the Director edits in place (film-fx update): lighting and its prop edits.
+let fxPeople='null';
 const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay,l.propEdits,l.brandingEdits,l.deskEdits,l.deskBuild]);};
 // film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
 async function stageFx(){
@@ -114,7 +115,9 @@ async function prepareStage(next){
   const seed=version?await storageSeed(next.id):null;if(seed)seeds.get(seed.url).done=seed;seedStage(seed);
   if(!setup||!fx)return stage().prepare(next);
   const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);
-  let result;try{result=await stage().prepare(next);}finally{fx.unhookPreset();}
+  // The stage casts the room from the shot it prepares: the film's people with the Director's cast over them.
+  fxPeople=JSON.stringify(shot.people??null);
+  let result;try{result=await stage().prepare(shot.people?{...next,people:shot.people}:next);}finally{fx.unhookPreset();}
   fxError=null;try{await fx.install(shot);liveFx=fx;fxShot=next.id;fxAt=-1;fxLights=lightsKey(next);director?.filmApplied?.();}catch(error){console.error('[film fx]',error);fx.clear();fxError=error.message;director?.setStatus('The film setup could not be applied: '+error.message);}
   return result;
 }
@@ -389,6 +392,7 @@ async function openDirector(){
     async downloadBake(){const {record}=await cachedBake(shots[index]);if(!record)throw Error('Bake this chapter first.');const url=URL.createObjectURL(record.blob),a=document.createElement('a');a.href=url;a.download='ergoflex-'+shots[index].id+'.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);},
     editMode(on){if(bakeController)return;directorOpen=on;if(!on)previewOnly=false;playing=false;clock.setRunning(false,performance.now());stage().edit(on);stage().pause(true);frame.inert=!on;$('pause').textContent='Play';$('director').textContent=on?'Close editor':'Director Mode';syncAudio();},
     update(value){stage()?.wake?.();const position=index>=0?clock.progress(performance.now(),shots[index].seconds):0;applyClient(value);
+      {const s=shots[index],setup=s&&filmSetup(s.id);if(setup){const cast=liveFilmShot(setup,s).people??null,pk=JSON.stringify(cast);if(pk!==fxPeople){fxPeople=pk;stage().peopleTrack?.(cast,s.id);}}}
       if(fxShot&&shots[index]?.id===fxShot){const key=lightsKey(shots[index]);if(key!==fxLights){fxLights=key;cancelAnimationFrame(fxTimer);fxTimer=requestAnimationFrame(()=>refreshFilmLights());}}clearTimeout(bakeRefreshTimer);bakeRefreshTimer=setTimeout(refreshBakeStatus,200);if(activeBake){liveAt(position);return;}if(shots[index]){stage().secondsTrack?.(shots[index].seconds,shots[index].id);stage().cameraTrack(shots[index].camera,shots[index].id);stage().motionTrack(shots[index].motion,shots[index].id);stage().deskEditsTrack?.(effectiveDeskEdits(filmSetup(shots[index].id),shots[index]),shots[index].id);}if(directorOpen){playing=false;clock.setRunning(false,performance.now());stage().edit(true);frame.inert=false;$('pause').textContent='Play';syncAudio();}},
     async editShot(value,i){applyClient(value);previewOnly=true;playing=false;if(!await playShot(i,{forceLive:true}))throw Error('The chapter could not be loaded. Choose a different layout or retry.');},
     async preview(value,i){applyClient(value);previewOnly=true;playing=true;stage().edit(false);await playShot(i);},

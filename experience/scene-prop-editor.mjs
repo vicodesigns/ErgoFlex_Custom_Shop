@@ -19,7 +19,7 @@ const r3=v=>Math.round(v*1000)/1000,r1=v=>Math.round(v*10)/10;
 const wrapDeg=d=>{d=((d+180)%360+360)%360-180;return Math.abs(d)<1e-6?0:d;};
 const MODES={translate:'Move',rotate:'Rotate',scale:'Scale'},VERB={translate:'Moved',rotate:'Rotated',scale:'Scaled'};
 const STATE_KEY='ergoflex.sceneAssets.v1';
-export function createScenePropEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},lightsShowing=()=>false,fold=()=>{}}){
+export function createScenePropEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},lightsShowing=()=>false,fold=()=>{},person=()=>false}){
   let sel=null,others=[],lockedKeys=()=>new Set(),itemsCache=null,itemsAt=0,flash=null,pivotAt=0,pivotDirty=true,mode='translate',tools=null,booting=null,drag=null,snapping=false,pending=null,dialogPlan=null,placing=false;
   const snaps=new Map(),frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow;
   const three=()=>bridge.stage()?.three?.();
@@ -226,6 +226,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       if(placing){const now=current(),e=sel&&editOfKey(sel.key);placing=false;
         if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point);else{status('Nothing there to put it on.',true);rerender();}return;}}
       const hit=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object));
+      // People are not props: a click on one selects them in the People tab (scene-people-editor.mjs).
+      if(hit&&!placing&&person(hit.object)){if(sel)deselect();return;}
       const now=current(),o=hit&&(d.alt&&now&&isAncestor(now,hit.object)?meaningful(hit.object,{above:now}):meaningful(hit.object));
       const how=pickMode(ev);
       if(!o){if(sel&&how==='replace'){deselect();status('Nothing to edit there: click a prop (furniture, lamps, desk items). Esc deselects.');}return;}

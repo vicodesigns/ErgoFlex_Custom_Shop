@@ -401,3 +401,56 @@ OUTPUTS = [
     {'id': 'people-rosa-stand-type-low', 'character': 'rosa', 'pose': 'stand-type-low', 'height': 28, 'name': 'Rosa, at the desk on its lowest setting (standing)'},
     {'id': 'people-rosa-stand-type-30', 'character': 'rosa', 'pose': 'stand-type-low', 'height': 30, 'name': 'Rosa, at the desk at 30 in (standing)'},
 ]
+
+
+# ---- every pose, for the people catalog (assets/props/people.json) and for models built on request
+# label, stance (standing | seated | wheelchair | walking), where it belongs ('desk' = at the featured desk, built
+# for a desk height), the seat height it was posed on (mm), and what the person holds unless the output says otherwise.
+POSE_INFO = {
+    'sit-type': ('Typing at the desk, seated', 'seated', 'desk', 435, []),
+    'stand-type': ('Typing at the desk, standing', 'standing', 'desk', 0, []),
+    'stand-type-low': ('At the desk on a low setting, standing', 'standing', 'desk', 0, []),
+    'wheel-type': ('Typing at the desk, in a wheelchair', 'wheelchair', 'desk', 0, [('wheelchair', {})]),
+    'stand-wait': ('Standing by, arms loose', 'standing', '', 0, []),
+    'stand-phone': ('Standing, phone in hand', 'standing', '', 0, [('phone', {'side': 'r'})]),
+    'stand-present': ('Presenting, tablet on the arm', 'standing', '', 0, [('tablet', {'side': 'l'})]),
+    'stand-work': ('Working at a bench', 'standing', '', 0, [('screwdriver', {'side': 'r'})]),
+    'stand-paint': ('Painting at an easel', 'standing', '', 0, [('brush', {'side': 'r'}), ('palette', {'side': 'l'})]),
+    'stretch': ('Stretching, arms overhead', 'standing', '', 0, []),
+    'stretch-open': ('Stretching, hands behind the head', 'standing', '', 0, []),
+    'cane-stand': ('Standing with a walking stick', 'standing', '', 0, [('cane', {'side': 'r'})]),
+    'white-cane': ('Walking with a white cane', 'walking', '', 0, [('cane', {'side': 'r', 'white': True})]),
+    'walk': ('Walking', 'walking', '', 0, []),
+    'sit-write': ('Writing at a table', 'seated', '', 450, [('pen', {'side': 'r'})]),
+    'sit-laptop': ('At a laptop', 'seated', '', 450, []),
+    'sit-read': ('Reading', 'seated', '', 420, [('book', {'side': 'l'})]),
+    'sit-listen': ('Listening at a table', 'seated', '', 450, []),
+    'sit-raise': ('Hand raised', 'seated', '', 450, []),
+    'sit-phone': ('Seated, phone in hand', 'seated', '', 420, [('phone', {'side': 'r'})]),
+    'sit-controller': ('On a sofa with a game controller', 'seated', '', 420, [('gamepad', {})]),
+    'wheel-roll': ('Rolling, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {})]),
+    'wheel-watch': ('Watching a screen, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {})]),
+}
+DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31)}
+
+
+def output(model_id):
+    """The output for a model id: one of OUTPUTS, or, for a character and pose nobody listed, one made up from the id
+    'people-<character>-<pose>' ('-<inches>' after a desk pose for another desk height)."""
+    known = next((o for o in OUTPUTS if o['id'] == model_id), None)
+    if known: return known
+    if not model_id.startswith('people-'): raise KeyError(model_id)
+    rest = model_id[len('people-'):]
+    who = next((c for c in sorted(CHARACTERS, key=len, reverse=True) if rest.startswith(c + '-')), None)
+    if not who: raise KeyError(model_id)
+    tail = rest[len(who) + 1:]
+    pose = next((p for p in sorted(POSE_INFO, key=len, reverse=True) if tail == p or tail.startswith(p + '-')), None)
+    if not pose: raise KeyError(model_id)
+    label, _stance, where, _seat, held = POSE_INFO[pose]
+    out = {'id': model_id, 'character': who, 'pose': pose, 'name': '%s: %s' % (CHARACTERS[who]['name'], label[0].lower() + label[1:]), 'held': list(held)}
+    if where == 'desk':
+        extra = tail[len(pose) + 1:]; out['height'] = float(extra.replace('_', '.')) if extra else DESK_HEIGHTS[pose][0]
+        if out['height'] == int(out['height']): out['height'] = int(out['height'])
+    elif tail != pose: raise KeyError(model_id)
+    return out
+

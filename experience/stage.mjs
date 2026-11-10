@@ -355,6 +355,8 @@ export async function mountStage(ctx) {
     // Director: the chapter's per-desk clips changed (desk-choreo.mjs); the desks are re-posed at the current time.
     deskEditsTrack:(edits,id)=>{if(shot?.id!==id)return;shot.deskEdits=edits;deskChoreo.set(edits);seek(lastProgress);},
     roomDesks:()=>roomDesks(api,deskChoreo),deskBase:id=>deskChoreo.baseOf(id),
+    // The Director's People tab: the chapter's cast changed (room-people.mjs filter; true = the room's own people).
+    peopleTrack:(people,id)=>{if(shot?.id!==id)return null;if(people)shot.people=people;else delete shot.people;return api.setRoomPeople?.(!!people,people&&typeof people==='object'?people:null);},
     motionTrack:(motion,id)=>{if(shot?.id===id)shot.motion=motion?(motion.clips?motion:{tracks:motion.tracks||tracksFromPoses(motion.from,motion.to)}):undefined;},
     previewPose:value=>{const p=cleanPose(value);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);return ctx.readDirector();},capturePose:()=>ctx.readDirector(),
     clock:callback=>{readProgress=callback;},capture:canvas=>ctx.capture(canvas),
