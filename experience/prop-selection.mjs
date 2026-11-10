@@ -8,7 +8,7 @@ export function groupCentreDelta(THREE,centre,radians){
   return new THREE.Matrix4().makeTranslation(centre.x,centre.y,centre.z).multiply(new THREE.Matrix4().makeRotationY(radians)).multiply(new THREE.Matrix4().makeTranslation(-centre.x,-centre.y,-centre.z));
 }
 // The Props tab while several things are selected: the list, relative move / turn fields (inches, degrees), hide, reset.
-export function groupPanelHtml({members,mode,escape,edited}){
+export function groupPanelHtml({members,mode,escape,edited,extra=''}){
   const n=members.length,allHidden=members.every(m=>m.hidden),num=(name,text,step)=>`<label>${text}<input name="${name}" type="number" step="${step}" value="0"></label>`;
   return `<div class="movement-inspector prop-inspector prop-group" data-reveal="prop"><h4>${n} selected</h4>
     <p class="director-hint">They move, turn and hide together. Shift+click adds, Ctrl+click adds or removes, click empty space or Esc clears.</p>
@@ -17,6 +17,7 @@ export function groupPanelHtml({members,mode,escape,edited}){
     <p class="director-hint">Or type a move from where they are now:</p>
     <div class="director-grid three-up">${num('pp-gmx','Right (x″)',1)}${num('pp-gmy','Up (y″)',1)}${num('pp-gmz','Toward you (z″)',1)}</div>
     <div class="director-grid three-up">${num('pp-gry','Turn about the centre (°)',5)}</div>
+    ${extra}
     <label class="director-check"><input type="checkbox" name="pp-hide" ${allHidden?'checked':''}>Hide all in this chapter</label>
     <div class="director-actions"><button data-action="ly-new" title="Name these as a layer in the Layers tab">New layer from selection…</button><button data-action="pp-reset" ${edited?'':'disabled'} title="Every selected prop back to where the film puts it">Reset selected to the film</button><button data-action="pp-clear">Clear selection</button></div></div>`;
 }

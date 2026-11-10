@@ -66,6 +66,25 @@ try{
   check(Math.abs(dist(arm0,arm1)-inch5)<inch5*.03&&Math.abs(dist(mon0,mon1)-inch5)<inch5*.03,`both moved by 5″ (arm ${(dist(arm0,arm1)/25.4/mm).toFixed(2)}″, monitor ${(dist(mon0,mon1)/25.4/mm).toFixed(2)}″)`);
   check(Math.abs((arm1[0]-arm0[0])-(mon1[0]-mon0[0]))<1e-4,'their offset to each other is kept');
   let d=await draft();check(d.propEdits?.length===2&&d.propEdits.every(e=>e.position),'two prop edits written (one per item): '+JSON.stringify(d.propEdits?.map(e=>e.match)));
+  // Drop to surface with both selected: raise the pair 10", Drop -> each falls back onto what it stood on, one Undo step
+  {
+    const b={a:(await pose(ARM)).p,m:(await pose(MON)).p};
+    await setField('pp-gmy',10);await wait(1500);
+    const up={a:(await pose(ARM)).p,m:(await pose(MON)).p};
+    check(up.a[1]-b.a[1]>inch5*1.5&&up.m[1]-b.m[1]>inch5*1.5,`both raised about 10″ (arm +${((up.a[1]-b.a[1])/25.4/mm).toFixed(1)}″, monitor +${((up.m[1]-b.m[1])/25.4/mm).toFixed(1)}″)`);
+    check((await page.$$eval('#director-panel .prop-drop button',l=>l.length))===3,'the group panel has the three drop buttons');
+    await click('#director-panel [data-action=pp-drop]');await wait(1800);
+    const dn={a:(await pose(ARM)).p,m:(await pose(MON)).p};
+    // the arm and the monitor are mounted (they float), so they come down onto whatever is below them, not necessarily where they began
+    check(up.a[1]-dn.a[1]>inch5*.5&&up.m[1]-dn.m[1]>inch5*.5,`Drop with two selected: both came down (arm -${((up.a[1]-dn.a[1])/25.4/mm).toFixed(1)}\u2033, monitor -${((up.m[1]-dn.m[1])/25.4/mm).toFixed(1)}\u2033)`);
+    check(/^Dropped 2 items/.test(await status()),'one message for the pair: '+await status());
+    d=await draft();check(d.propEdits?.length===2,'still one edit per item after the drop');
+    await click('#director-panel [data-action=undo]');await wait(3500);
+    const ud={a:(await pose(ARM)).p,m:(await pose(MON)).p};check(dist(ud.a,up.a)<1e-3&&dist(ud.m,up.m)<1e-3,'one Undo puts the pair back up');
+    await click('#director-panel [data-action=undo]');await wait(3500);
+    const u2={a:(await pose(ARM)).p,m:(await pose(MON)).p};check(dist(u2.a,b.a)<1e-3&&dist(u2.m,b.m)<1e-3,'another Undo takes back the raise');
+    await view();await wait(500);
+  }
   // turn about the centre keeps the pair rigid
   await setField('pp-gry',90);await wait(1500);
   const arm2=(await pose(ARM)).p,mon2=(await pose(MON)).p;check(Math.abs(dist(arm1,mon1)-dist(arm2,mon2))<1e-3&&dist(arm1,arm2)>1e-3,'turning 90° about the centre keeps their distance');
