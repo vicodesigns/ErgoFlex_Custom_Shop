@@ -83,7 +83,7 @@ export class SceneDesks {
             }
         }
         // Seed the main anchor with the current model before applying a stored pose.
-        if(this.records.has('main')){const r=this.records.get('main');this.ensureRig(r);if(!saved.desks.main){const {pose,height,tilt}=this.ctx.readLive(r);Object.assign(r.state,{pose,height,tilt});}}
+        if(this.records.has('main')){const r=this.records.get('main');this.ensureRig(r);if(!saved.desks.main){const {pose,height,tilt}=this.ctx.readLive(r),posture=room.roomLayout.initialDeskPostures?.[this.ctx.phase?.()];Object.assign(r.state,{pose,height,tilt},posture||{});}}
         this.ctx.configureDeskMix?.(this);
         this.selected=this.records.has(saved.selected)?saved.selected:this.records.keys().next().value||null;
         if(this.active){this.ensureRig(this.active);this.ctx.activate?.(this.active);this.ctx.writeLive(this.active);this.active.rig.setBodyVisible(false);}

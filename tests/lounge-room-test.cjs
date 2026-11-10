@@ -24,7 +24,7 @@ const server = http.createServer((req, res) => {
         page.on('error', e => console.error('Browser page:', e.message));
         browser.process().once('exit', (code, signal) => { if (code) console.error('Browser exit:', code, signal); });
         await page.setViewport({ width: 1500, height: 1200 });
-        const url = `http://127.0.0.1:${server.address().port}/?room=lounge&view=room`;
+        const url = `http://127.0.0.1:${server.address().port}/?room=lounge&view=room&style=earthy`;
         await page.goto(url);
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; await ErgoFlex.workspaceRoom.ready; });

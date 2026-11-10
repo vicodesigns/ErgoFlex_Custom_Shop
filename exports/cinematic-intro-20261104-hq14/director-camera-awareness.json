@@ -1,0 +1,166 @@
+{
+ "source": "/tmp/claude-1000/-home-ergo-ErgoFlex-Custom-Shop/415ac7b2-6cf6-4cc4-9386-66d6bb6f1395/scratchpad/finalpass/out/Film-chapter-awareness-final.json",
+ "seconds": 12.0,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    -1.3797,
+    2.4203,
+    5.3973
+   ],
+   "target": [
+    0.6246404619728458,
+    0.9646621351172813,
+    -0.10962679979620095
+   ],
+   "fov": 37,
+   "label": "High stage reveal: pylon rises ahead of the desk (az -20)"
+  },
+  {
+   "at": 0.1,
+   "position": [
+    -1.3797,
+    2.4203,
+    5.3973
+   ],
+   "target": [
+    0.6246404619728458,
+    0.9646621351172813,
+    -0.10962679979620095
+   ],
+   "fov": 37,
+   "label": "High stage reveal (hold)"
+  },
+  {
+   "at": 2.7,
+   "position": [
+    3.006230040726073,
+    2.3824787398282163,
+    5.266191079151751
+   ],
+   "target": [
+    0.5886508901111545,
+    1.110928721169477,
+    -0.15893190106763583
+   ],
+   "fov": 35.99992035021353,
+   "label": "Roll starts: desk, gap, pylon left to right"
+  },
+  {
+   "at": 3.8,
+   "position": [
+    3.006230040726073,
+    2.3824787398282163,
+    5.266191079151751
+   ],
+   "target": [
+    0.5886508901111545,
+    1.110928721169477,
+    -0.15893190106763583
+   ],
+   "fov": 35.99992035021353,
+   "label": "Roll: frame held"
+  },
+  {
+   "at": 5.0,
+   "position": [
+    1.4243,
+    1.62,
+    5.815
+   ],
+   "target": [
+    0.6,
+    1.05,
+    -0.05
+   ],
+   "fov": 35.0,
+   "label": "Side-on profile: camera at rest before the stop (5.4)"
+  },
+  {
+   "at": 6.8,
+   "position": [
+    1.4243,
+    1.62,
+    5.815
+   ],
+   "target": [
+    0.6,
+    1.05,
+    -0.05
+   ],
+   "fov": 35.0,
+   "label": "Stopped: amber, the gap reads (hold)"
+  },
+  {
+   "at": 9.4,
+   "position": [
+    3.1757,
+    1.6,
+    5.005
+   ],
+   "target": [
+    0.6,
+    1.05,
+    -0.05
+   ],
+   "fov": 34.0,
+   "label": "Slow arc toward the front"
+  },
+  {
+   "at": 12.0,
+   "position": [
+    4.491,
+    1.58,
+    3.851
+   ],
+   "target": [
+    0.62,
+    1.05,
+    -0.02
+   ],
+   "fov": 33.0,
+   "label": "Front three-quarter: stopped safely, into the fade"
+  }
+ ],
+ "clips": [
+  {
+   "id": "aw-roll",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 2.7,
+   "duration": 2.7,
+   "easing": "smooth",
+   "label": "Roll toward the pylon",
+   "value": 20,
+   "direction": "forward"
+  }
+ ],
+ "initial": {
+  "height": 30,
+  "tilt": 0
+ },
+ "lighting": {
+  "ledStatus": [
+   {
+    "at": 2.65,
+    "dur": 2.75,
+    "kind": "wheels",
+    "mode": 3
+   },
+   {
+    "at": 5.4,
+    "dur": 3.6,
+    "kind": "proximity"
+   }
+  ],
+  "ledNeutral": [
+   [
+    0,
+    "#b0b0b0"
+   ]
+  ],
+  "ledColor": "#a8a8a8",
+  "ledFloorGlow": 3.45
+ }
+}

@@ -1,0 +1,70 @@
+{
+ "epoch": "1",
+ "resolution": "4K",
+ "hq41": {
+  "awaken": null,
+  "rise": "3efc194316397ed688da6fb246aae99b7bbcb72a3f02c69233c7dd161716ac4c",
+  "create": null,
+  "commons": "b69289367a3ae3f19d5d5b38d72ab8e69c0e985b6eb5e247d4645c3ce2cadfdb",
+  "coast": null,
+  "oilers": null,
+  "wellness": "3cc4a1eab52c3741e35f9e1816d82918761b610da130e3ad800e3a6f09849784",
+  "awareness": "402faa4e5b2a44b0803e8cbfa761652163319e4c07d1e6f129524c5268b2e48e",
+  "music": "235684092a32172ad88646fb6aa3311b46ef6689b11f856886d70a05312ac4f7",
+  "media": "19ca00f800530b61f7fd9c44b760b6c05402dcc19eb19c258928879a63f363a6",
+  "storage": null,
+  "hero": "dbac1ffc9501cddc6b043543c7922ca5026246c28f6ee87ce314c086f26f7c14"
+ },
+ "current": {
+  "awaken": "48155a97c177030c4cc28b078a6b61153284e33cb48af2664065902786dc54e9",
+  "rise": "3efc194316397ed688da6fb246aae99b7bbcb72a3f02c69233c7dd161716ac4c",
+  "create": "d712b2b69b319dfef88d280a760f10b23b15723db21b3a20ded4c7d6614f5b4d",
+  "commons": "b69289367a3ae3f19d5d5b38d72ab8e69c0e985b6eb5e247d4645c3ce2cadfdb",
+  "coast": "e9fa6a1c63e8d13f70e19f6ed9806ac6ac7a1cfca3c1fd1c454e6cc07a9788a5",
+  "oilers": "719cc4da7911249545b176a7b000fbc3b4bdefa19f0c16d6733db38f17b529e4",
+  "wellness": "3cc4a1eab52c3741e35f9e1816d82918761b610da130e3ad800e3a6f09849784",
+  "awareness": "402faa4e5b2a44b0803e8cbfa761652163319e4c07d1e6f129524c5268b2e48e",
+  "music": "235684092a32172ad88646fb6aa3311b46ef6689b11f856886d70a05312ac4f7",
+  "media": "19ca00f800530b61f7fd9c44b760b6c05402dcc19eb19c258928879a63f363a6",
+  "storage": "cbe7c3ceafc0158ef59cf62d444fe5a7671e95a0727f7b1845f5155c6789ed8d",
+  "hero": "dbac1ffc9501cddc6b043543c7922ca5026246c28f6ee87ce314c086f26f7c14"
+ },
+ "unchanged": [
+  "rise",
+  "commons",
+  "wellness",
+  "awareness",
+  "music",
+  "media",
+  "hero"
+ ],
+ "index": {
+  "awaken": 1,
+  "rise": 2,
+  "create": 3,
+  "commons": 4,
+  "coast": 5,
+  "oilers": 6,
+  "wellness": 7,
+  "awareness": 8,
+  "music": 9,
+  "media": 10,
+  "storage": 11,
+  "hero": 12
+ },
+ "hq41Notes": {
+  "awaken": "previews/awaken-v5-cut.json differs from the freeze manifest (changed since HQ41)",
+  "rise": "shots/02.json identical to the freeze",
+  "create": "shots/03.json differs from the freeze manifest (changed since HQ41)",
+  "commons": "shots/04.json identical to the freeze",
+  "coast": "shots/05.json differs from the freeze manifest (changed since HQ41)",
+  "oilers": "oilers has no shots/NN.json mirror, review-cut.json as a whole changed since the freeze, and director-camera-oilers.json changed after it: cannot be verified",
+  "wellness": "shots/08.json identical to the freeze",
+  "awareness": "shots/09.json identical to the freeze",
+  "music": "shots/10.json identical to the freeze",
+  "media": "shots/11.json identical to the freeze",
+  "storage": "shots/12.json differs from the freeze manifest (changed since HQ41)",
+  "hero": "shots/13-subshots.json identical to the freeze"
+ },
+ "note": "hq41 keys only for chapters whose film data is provably identical to the HQ41 freeze (manifest sha of the shot mirror file == live); null = changed or unverifiable, do not seed. Index = NN of renders\\NN.mkv."
+}

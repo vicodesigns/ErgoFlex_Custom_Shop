@@ -1,0 +1,9598 @@
+{
+ "id": "storage",
+ "room": "workshop",
+ "kind": "storage",
+ "seconds": 24.978,
+ "title": "Make room for what\u2019s next.",
+ "detail": "One tap: fold to 65\u00b0, roll to the wall.",
+ "preset": "library",
+ "transition": 1.1,
+ "size": "60x30",
+ "layout": "house",
+ "mode": "morning",
+ "motion": {
+  "version": 2,
+  "initial": {
+   "height": 43.5,
+   "tilt": 0,
+   "x": 55.118,
+   "z": 25.591,
+   "yaw": 0
+  },
+  "clips": [
+   {
+    "id": "builtin-tilt-0",
+    "lane": "tilt",
+    "kind": "tilt",
+    "start": 2.5,
+    "duration": 10.0,
+    "easing": "linear",
+    "label": "Fold to 65\u00b0",
+    "target": 65,
+    "path": [
+     {
+      "time": 0,
+      "pose": {
+       "tilt": 0
+      }
+     },
+     {
+      "time": 0.01,
+      "pose": {
+       "tilt": 0.0576
+      }
+     },
+     {
+      "time": 0.02,
+      "pose": {
+       "tilt": 0.2305
+      }
+     },
+     {
+      "time": 0.03,
+      "pose": {
+       "tilt": 0.5186
+      }
+     },
+     {
+      "time": 0.04,
+      "pose": {
+       "tilt": 0.922
+      }
+     },
+     {
+      "time": 0.05,
+      "pose": {
+       "tilt": 1.4406
+      }
+     },
+     {
+      "time": 0.06,
+      "pose": {
+       "tilt": 2.0745
+      }
+     },
+     {
+      "time": 0.07,
+      "pose": {
+       "tilt": 2.766
+      }
+     },
+     {
+      "time": 0.08,
+      "pose": {
+       "tilt": 3.4574
+      }
+     },
+     {
+      "time": 0.09,
+      "pose": {
+       "tilt": 4.1489
+      }
+     },
+     {
+      "time": 0.1,
+      "pose": {
+       "tilt": 4.8404
+      }
+     },
+     {
+      "time": 0.11,
+      "pose": {
+       "tilt": 5.5319
+      }
+     },
+     {
+      "time": 0.12,
+      "pose": {
+       "tilt": 6.2234
+      }
+     },
+     {
+      "time": 0.13,
+      "pose": {
+       "tilt": 6.9149
+      }
+     },
+     {
+      "time": 0.14,
+      "pose": {
+       "tilt": 7.6064
+      }
+     },
+     {
+      "time": 0.15,
+      "pose": {
+       "tilt": 8.2979
+      }
+     },
+     {
+      "time": 0.16,
+      "pose": {
+       "tilt": 8.9894
+      }
+     },
+     {
+      "time": 0.17,
+      "pose": {
+       "tilt": 9.6809
+      }
+     },
+     {
+      "time": 0.18,
+      "pose": {
+       "tilt": 10.3723
+      }
+     },
+     {
+      "time": 0.19,
+      "pose": {
+       "tilt": 11.0638
+      }
+     },
+     {
+      "time": 0.2,
+      "pose": {
+       "tilt": 11.7553
+      }
+     },
+     {
+      "time": 0.21,
+      "pose": {
+       "tilt": 12.4468
+      }
+     },
+     {
+      "time": 0.22,
+      "pose": {
+       "tilt": 13.1383
+      }
+     },
+     {
+      "time": 0.23,
+      "pose": {
+       "tilt": 13.8298
+      }
+     },
+     {
+      "time": 0.24,
+      "pose": {
+       "tilt": 14.5213
+      }
+     },
+     {
+      "time": 0.25,
+      "pose": {
+       "tilt": 15.2128
+      }
+     },
+     {
+      "time": 0.26,
+      "pose": {
+       "tilt": 15.9043
+      }
+     },
+     {
+      "time": 0.27,
+      "pose": {
+       "tilt": 16.5957
+      }
+     },
+     {
+      "time": 0.28,
+      "pose": {
+       "tilt": 17.2872
+      }
+     },
+     {
+      "time": 0.29,
+      "pose": {
+       "tilt": 17.9787
+      }
+     },
+     {
+      "time": 0.3,
+      "pose": {
+       "tilt": 18.6702
+      }
+     },
+     {
+      "time": 0.31,
+      "pose": {
+       "tilt": 19.3617
+      }
+     },
+     {
+      "time": 0.32,
+      "pose": {
+       "tilt": 20.0532
+      }
+     },
+     {
+      "time": 0.33,
+      "pose": {
+       "tilt": 20.7447
+      }
+     },
+     {
+      "time": 0.34,
+      "pose": {
+       "tilt": 21.4362
+      }
+     },
+     {
+      "time": 0.35,
+      "pose": {
+       "tilt": 22.1277
+      }
+     },
+     {
+      "time": 0.36,
+      "pose": {
+       "tilt": 22.8191
+      }
+     },
+     {
+      "time": 0.37,
+      "pose": {
+       "tilt": 23.5106
+      }
+     },
+     {
+      "time": 0.38,
+      "pose": {
+       "tilt": 24.2021
+      }
+     },
+     {
+      "time": 0.39,
+      "pose": {
+       "tilt": 24.8936
+      }
+     },
+     {
+      "time": 0.4,
+      "pose": {
+       "tilt": 25.5851
+      }
+     },
+     {
+      "time": 0.41,
+      "pose": {
+       "tilt": 26.2766
+      }
+     },
+     {
+      "time": 0.42,
+      "pose": {
+       "tilt": 26.9681
+      }
+     },
+     {
+      "time": 0.43,
+      "pose": {
+       "tilt": 27.6596
+      }
+     },
+     {
+      "time": 0.44,
+      "pose": {
+       "tilt": 28.3511
+      }
+     },
+     {
+      "time": 0.45,
+      "pose": {
+       "tilt": 29.0426
+      }
+     },
+     {
+      "time": 0.46,
+      "pose": {
+       "tilt": 29.734
+      }
+     },
+     {
+      "time": 0.47,
+      "pose": {
+       "tilt": 30.4255
+      }
+     },
+     {
+      "time": 0.48,
+      "pose": {
+       "tilt": 31.117
+      }
+     },
+     {
+      "time": 0.49,
+      "pose": {
+       "tilt": 31.8085
+      }
+     },
+     {
+      "time": 0.5,
+      "pose": {
+       "tilt": 32.5
+      }
+     },
+     {
+      "time": 0.51,
+      "pose": {
+       "tilt": 33.1915
+      }
+     },
+     {
+      "time": 0.52,
+      "pose": {
+       "tilt": 33.883
+      }
+     },
+     {
+      "time": 0.53,
+      "pose": {
+       "tilt": 34.5745
+      }
+     },
+     {
+      "time": 0.54,
+      "pose": {
+       "tilt": 35.266
+      }
+     },
+     {
+      "time": 0.55,
+      "pose": {
+       "tilt": 35.9574
+      }
+     },
+     {
+      "time": 0.56,
+      "pose": {
+       "tilt": 36.6489
+      }
+     },
+     {
+      "time": 0.57,
+      "pose": {
+       "tilt": 37.3404
+      }
+     },
+     {
+      "time": 0.58,
+      "pose": {
+       "tilt": 38.0319
+      }
+     },
+     {
+      "time": 0.59,
+      "pose": {
+       "tilt": 38.7234
+      }
+     },
+     {
+      "time": 0.6,
+      "pose": {
+       "tilt": 39.4149
+      }
+     },
+     {
+      "time": 0.61,
+      "pose": {
+       "tilt": 40.1064
+      }
+     },
+     {
+      "time": 0.62,
+      "pose": {
+       "tilt": 40.7979
+      }
+     },
+     {
+      "time": 0.63,
+      "pose": {
+       "tilt": 41.4894
+      }
+     },
+     {
+      "time": 0.64,
+      "pose": {
+       "tilt": 42.1809
+      }
+     },
+     {
+      "time": 0.65,
+      "pose": {
+       "tilt": 42.8723
+      }
+     },
+     {
+      "time": 0.66,
+      "pose": {
+       "tilt": 43.5638
+      }
+     },
+     {
+      "time": 0.67,
+      "pose": {
+       "tilt": 44.2553
+      }
+     },
+     {
+      "time": 0.68,
+      "pose": {
+       "tilt": 44.9468
+      }
+     },
+     {
+      "time": 0.69,
+      "pose": {
+       "tilt": 45.6383
+      }
+     },
+     {
+      "time": 0.7,
+      "pose": {
+       "tilt": 46.3298
+      }
+     },
+     {
+      "time": 0.71,
+      "pose": {
+       "tilt": 47.0213
+      }
+     },
+     {
+      "time": 0.72,
+      "pose": {
+       "tilt": 47.7128
+      }
+     },
+     {
+      "time": 0.73,
+      "pose": {
+       "tilt": 48.4043
+      }
+     },
+     {
+      "time": 0.74,
+      "pose": {
+       "tilt": 49.0957
+      }
+     },
+     {
+      "time": 0.75,
+      "pose": {
+       "tilt": 49.7872
+      }
+     },
+     {
+      "time": 0.76,
+      "pose": {
+       "tilt": 50.4787
+      }
+     },
+     {
+      "time": 0.77,
+      "pose": {
+       "tilt": 51.1702
+      }
+     },
+     {
+      "time": 0.78,
+      "pose": {
+       "tilt": 51.8617
+      }
+     },
+     {
+      "time": 0.79,
+      "pose": {
+       "tilt": 52.5532
+      }
+     },
+     {
+      "time": 0.8,
+      "pose": {
+       "tilt": 53.2447
+      }
+     },
+     {
+      "time": 0.81,
+      "pose": {
+       "tilt": 53.9362
+      }
+     },
+     {
+      "time": 0.82,
+      "pose": {
+       "tilt": 54.6277
+      }
+     },
+     {
+      "time": 0.83,
+      "pose": {
+       "tilt": 55.3191
+      }
+     },
+     {
+      "time": 0.84,
+      "pose": {
+       "tilt": 56.0106
+      }
+     },
+     {
+      "time": 0.85,
+      "pose": {
+       "tilt": 56.7021
+      }
+     },
+     {
+      "time": 0.86,
+      "pose": {
+       "tilt": 57.3936
+      }
+     },
+     {
+      "time": 0.87,
+      "pose": {
+       "tilt": 58.0851
+      }
+     },
+     {
+      "time": 0.88,
+      "pose": {
+       "tilt": 58.7766
+      }
+     },
+     {
+      "time": 0.89,
+      "pose": {
+       "tilt": 59.4681
+      }
+     },
+     {
+      "time": 0.9,
+      "pose": {
+       "tilt": 60.1596
+      }
+     },
+     {
+      "time": 0.91,
+      "pose": {
+       "tilt": 60.8511
+      }
+     },
+     {
+      "time": 0.92,
+      "pose": {
+       "tilt": 61.5426
+      }
+     },
+     {
+      "time": 0.93,
+      "pose": {
+       "tilt": 62.234
+      }
+     },
+     {
+      "time": 0.94,
+      "pose": {
+       "tilt": 62.9255
+      }
+     },
+     {
+      "time": 0.95,
+      "pose": {
+       "tilt": 63.5594
+      }
+     },
+     {
+      "time": 0.96,
+      "pose": {
+       "tilt": 64.078
+      }
+     },
+     {
+      "time": 0.97,
+      "pose": {
+       "tilt": 64.4814
+      }
+     },
+     {
+      "time": 0.98,
+      "pose": {
+       "tilt": 64.7695
+      }
+     },
+     {
+      "time": 0.99,
+      "pose": {
+       "tilt": 64.9424
+      }
+     },
+     {
+      "time": 1,
+      "pose": {
+       "tilt": 65
+      }
+     }
+    ]
+   },
+   {
+    "id": "d2e4c43f-6210-43af-8d20-fe2c9a7caa9a",
+    "lane": "lift",
+    "kind": "lift",
+    "start": 6.9,
+    "duration": 3.0,
+    "easing": "linear",
+    "label": "",
+    "target": 52.5
+   },
+   {
+    "id": "5ea0ea02-1cb2-449a-8034-814879e82b98",
+    "lane": "wheels",
+    "kind": "travel",
+    "start": 7.7,
+    "duration": 5.5,
+    "easing": "linear",
+    "label": "",
+    "value": 57,
+    "direction": "forward"
+   },
+   {
+    "id": "storage-roll",
+    "lane": "wheels",
+    "kind": "travel",
+    "start": 13.2,
+    "duration": 5.1,
+    "easing": "linear",
+    "label": "",
+    "target": {
+     "x": 0,
+     "z": 0,
+     "yaw": 0
+    },
+    "path": [
+     {
+      "time": 0,
+      "pose": {
+       "x": 55.1181,
+       "z": 25.5906,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.010638,
+      "pose": {
+       "x": 55.0901,
+       "z": 25.5775,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.021277,
+      "pose": {
+       "x": 55.0061,
+       "z": 25.5385,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.031915,
+      "pose": {
+       "x": 54.866,
+       "z": 25.4735,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.042553,
+      "pose": {
+       "x": 54.67,
+       "z": 25.3825,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.053191,
+      "pose": {
+       "x": 54.4179,
+       "z": 25.2655,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.06383,
+      "pose": {
+       "x": 54.1099,
+       "z": 25.1224,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.074468,
+      "pose": {
+       "x": 53.7458,
+       "z": 24.9534,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.085106,
+      "pose": {
+       "x": 53.3257,
+       "z": 24.7583,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.095745,
+      "pose": {
+       "x": 52.8495,
+       "z": 24.5373,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.106383,
+      "pose": {
+       "x": 52.3174,
+       "z": 24.2902,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.117021,
+      "pose": {
+       "x": 51.7292,
+       "z": 24.0171,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.12766,
+      "pose": {
+       "x": 51.0851,
+       "z": 23.7181,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.138298,
+      "pose": {
+       "x": 50.4129,
+       "z": 23.406,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.148936,
+      "pose": {
+       "x": 49.7407,
+       "z": 23.0939,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.159574,
+      "pose": {
+       "x": 49.0686,
+       "z": 22.7818,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.170213,
+      "pose": {
+       "x": 48.3964,
+       "z": 22.4697,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.180851,
+      "pose": {
+       "x": 47.7242,
+       "z": 22.1577,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.191489,
+      "pose": {
+       "x": 47.0521,
+       "z": 21.8456,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.202128,
+      "pose": {
+       "x": 46.3799,
+       "z": 21.5335,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.212766,
+      "pose": {
+       "x": 45.7077,
+       "z": 21.2214,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.223404,
+      "pose": {
+       "x": 45.0356,
+       "z": 20.9094,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.234043,
+      "pose": {
+       "x": 44.3633,
+       "z": 20.5973,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.244681,
+      "pose": {
+       "x": 43.6912,
+       "z": 20.2852,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.255319,
+      "pose": {
+       "x": 43.019,
+       "z": 19.9731,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.265957,
+      "pose": {
+       "x": 42.3468,
+       "z": 19.661,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.276596,
+      "pose": {
+       "x": 41.6747,
+       "z": 19.349,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.287234,
+      "pose": {
+       "x": 41.0025,
+       "z": 19.0369,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.297872,
+      "pose": {
+       "x": 40.3303,
+       "z": 18.7248,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.308511,
+      "pose": {
+       "x": 39.6582,
+       "z": 18.4127,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.319149,
+      "pose": {
+       "x": 38.986,
+       "z": 18.1006,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.329787,
+      "pose": {
+       "x": 38.3138,
+       "z": 17.7886,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.340426,
+      "pose": {
+       "x": 37.6416,
+       "z": 17.4765,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.351064,
+      "pose": {
+       "x": 36.9695,
+       "z": 17.1644,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.361702,
+      "pose": {
+       "x": 36.2973,
+       "z": 16.8523,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.37234,
+      "pose": {
+       "x": 35.6251,
+       "z": 16.5402,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.382979,
+      "pose": {
+       "x": 34.9529,
+       "z": 16.2282,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.393617,
+      "pose": {
+       "x": 34.2808,
+       "z": 15.9161,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.404255,
+      "pose": {
+       "x": 33.6086,
+       "z": 15.604,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.414894,
+      "pose": {
+       "x": 32.9364,
+       "z": 15.2919,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.425532,
+      "pose": {
+       "x": 32.2643,
+       "z": 14.9798,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.43617,
+      "pose": {
+       "x": 31.5921,
+       "z": 14.6677,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.446809,
+      "pose": {
+       "x": 30.9199,
+       "z": 14.3557,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.457447,
+      "pose": {
+       "x": 30.2477,
+       "z": 14.0436,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.468085,
+      "pose": {
+       "x": 29.5756,
+       "z": 13.7315,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.478723,
+      "pose": {
+       "x": 28.9034,
+       "z": 13.4194,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.489362,
+      "pose": {
+       "x": 28.2312,
+       "z": 13.1073,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.5,
+      "pose": {
+       "x": 27.5591,
+       "z": 12.7953,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.510638,
+      "pose": {
+       "x": 26.8869,
+       "z": 12.4832,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.521277,
+      "pose": {
+       "x": 26.2147,
+       "z": 12.1711,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.531915,
+      "pose": {
+       "x": 25.5425,
+       "z": 11.859,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.542553,
+      "pose": {
+       "x": 24.8704,
+       "z": 11.547,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.553191,
+      "pose": {
+       "x": 24.1982,
+       "z": 11.2349,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.56383,
+      "pose": {
+       "x": 23.526,
+       "z": 10.9228,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.574468,
+      "pose": {
+       "x": 22.8538,
+       "z": 10.6107,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.585106,
+      "pose": {
+       "x": 22.1817,
+       "z": 10.2986,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.595745,
+      "pose": {
+       "x": 21.5095,
+       "z": 9.9866,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.606383,
+      "pose": {
+       "x": 20.8373,
+       "z": 9.6745,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.617021,
+      "pose": {
+       "x": 20.1652,
+       "z": 9.3624,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.62766,
+      "pose": {
+       "x": 19.493,
+       "z": 9.0503,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.638298,
+      "pose": {
+       "x": 18.8208,
+       "z": 8.7382,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.648936,
+      "pose": {
+       "x": 18.1487,
+       "z": 8.4262,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.659574,
+      "pose": {
+       "x": 17.4765,
+       "z": 8.1141,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.670213,
+      "pose": {
+       "x": 16.8043,
+       "z": 7.802,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.680851,
+      "pose": {
+       "x": 16.1321,
+       "z": 7.4899,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.691489,
+      "pose": {
+       "x": 15.4599,
+       "z": 7.1778,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.702128,
+      "pose": {
+       "x": 14.7878,
+       "z": 6.8658,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.712766,
+      "pose": {
+       "x": 14.1156,
+       "z": 6.5537,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.723404,
+      "pose": {
+       "x": 13.4434,
+       "z": 6.2416,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.734043,
+      "pose": {
+       "x": 12.7713,
+       "z": 5.9295,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.744681,
+      "pose": {
+       "x": 12.0991,
+       "z": 5.6174,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.755319,
+      "pose": {
+       "x": 11.4269,
+       "z": 5.3054,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.765957,
+      "pose": {
+       "x": 10.7548,
+       "z": 4.9933,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.776596,
+      "pose": {
+       "x": 10.0826,
+       "z": 4.6812,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.787234,
+      "pose": {
+       "x": 9.4104,
+       "z": 4.3691,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.797872,
+      "pose": {
+       "x": 8.7383,
+       "z": 4.057,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.808511,
+      "pose": {
+       "x": 8.066,
+       "z": 3.7449,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.819149,
+      "pose": {
+       "x": 7.3939,
+       "z": 3.4329,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.829787,
+      "pose": {
+       "x": 6.7217,
+       "z": 3.1208,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.840426,
+      "pose": {
+       "x": 6.0495,
+       "z": 2.8087,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.851064,
+      "pose": {
+       "x": 5.3774,
+       "z": 2.4966,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.861702,
+      "pose": {
+       "x": 4.7052,
+       "z": 2.1846,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.87234,
+      "pose": {
+       "x": 4.033,
+       "z": 1.8725,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.882979,
+      "pose": {
+       "x": 3.3889,
+       "z": 1.5734,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.893617,
+      "pose": {
+       "x": 2.8007,
+       "z": 1.3003,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.904255,
+      "pose": {
+       "x": 2.2686,
+       "z": 1.0533,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.914894,
+      "pose": {
+       "x": 1.7924,
+       "z": 0.8322,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.925532,
+      "pose": {
+       "x": 1.3723,
+       "z": 0.6372,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.93617,
+      "pose": {
+       "x": 1.0083,
+       "z": 0.4681,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.946809,
+      "pose": {
+       "x": 0.7002,
+       "z": 0.3251,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.957447,
+      "pose": {
+       "x": 0.4481,
+       "z": 0.2081,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.968085,
+      "pose": {
+       "x": 0.2521,
+       "z": 0.117,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.978723,
+      "pose": {
+       "x": 0.112,
+       "z": 0.052,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 0.989362,
+      "pose": {
+       "x": 0.028,
+       "z": 0.013,
+       "yaw": 0
+      }
+     },
+     {
+      "time": 1,
+      "pose": {
+       "x": 0,
+       "z": 0,
+       "yaw": 0
+      }
+     }
+    ],
+    "value": 60,
+    "direction": "right"
+   },
+   {
+    "id": "fd16bf28-f7a4-4fe5-bde7-e3afcc94628e",
+    "lane": "wheels",
+    "kind": "rotate",
+    "start": 18.3,
+    "duration": 3.6,
+    "easing": "linear",
+    "label": "",
+    "value": 90,
+    "direction": "left"
+   }
+  ]
+ },
+ "cameraPlan": {
+  "easeIn": false,
+  "easeOut": false,
+  "keys": [
+   {
+    "at": 0.0,
+    "position": [
+     4.84424371304072,
+     1.8744391909157971,
+     2.6052659453341875
+    ],
+    "target": [
+     0.7788471192075741,
+     0.871669587194933,
+     -1.9570335282695601
+    ],
+    "fov": 40,
+    "label": "Window light across the tool wall"
+   },
+   {
+    "at": 0.7,
+    "position": [
+     4.84424371304072,
+     1.8744391909157971,
+     2.6052659453341875
+    ],
+    "target": [
+     0.7788471192075741,
+     0.871669587194933,
+     -1.9570335282695601
+    ],
+    "fov": 40,
+    "label": "Window light across the tool wall copy"
+   },
+   {
+    "at": 1.6,
+    "position": [
+     4.159297764659966,
+     2.7235813727213336,
+     1.2643207830039704
+    ],
+    "target": [
+     0.5256611326326303,
+     1.1446985081077254,
+     -1.9265657590504877
+    ],
+    "fov": 39.99986961316583,
+    "label": "Window light across the tool wall copy copy"
+   },
+   {
+    "at": 2.3,
+    "position": [
+     4.159297764659966,
+     2.7235813727213336,
+     1.2643207830039704
+    ],
+    "target": [
+     0.5256611326326303,
+     1.1446985081077254,
+     -1.9265657590504877
+    ],
+    "fov": 39.99986961316583,
+    "label": "Window light across the tool wall copy copy copy"
+   },
+   {
+    "at": 3.5,
+    "position": [
+     6.6589,
+     2.9253,
+     -0.7451
+    ],
+    "target": [
+     0.4121,
+     0.6464,
+     -0.2623
+    ],
+    "fov": 40.001,
+    "label": "Window light across the tool wall copy copy"
+   },
+   {
+    "at": 4.3,
+    "position": [
+     6.6589,
+     2.9253,
+     -0.7451
+    ],
+    "target": [
+     0.4121,
+     0.6464,
+     -0.2623
+    ],
+    "fov": 40.001,
+    "label": "Window light across the tool wall copy copy copy"
+   },
+   {
+    "at": 6.0,
+    "position": [
+     4.399774518199843,
+     2.014419193160368,
+     -2.8835783727178907
+    ],
+    "target": [
+     1.2667277423978585,
+     1.0404323805934745,
+     0.24171977395240862
+    ],
+    "fov": 43.99975919943126,
+    "label": "Desk folding, centred (no dip)"
+   },
+   {
+    "at": 8.3,
+    "position": [
+     4.399774518199843,
+     2.014419193160368,
+     -2.8835783727178907
+    ],
+    "target": [
+     1.2667277423978585,
+     1.0404323805934745,
+     0.24171977395240862
+    ],
+    "fov": 43.99975919943126,
+    "label": "Desk folding, centred (no dip) copy"
+   },
+   {
+    "at": 10.0,
+    "position": [
+     7.365675928691772,
+     1.715238215771651,
+     -0.27422241229807603
+    ],
+    "target": [
+     0.6550591843087494,
+     1.1780552182925854,
+     -0.3825798703506394
+    ],
+    "fov": 42.00024455271499,
+    "label": "Roll begins"
+   },
+   {
+    "at": 13.2,
+    "position": [
+     6.678996830256377,
+     1.48462446845121,
+     2.9449464273261974
+    ],
+    "target": [
+     1.5261074919017916,
+     0.8919080454243009,
+     -1.7141712785710086
+    ],
+    "fov": 41.00040001659876,
+    "label": "Track the roll"
+   },
+   {
+    "at": 14.0,
+    "position": [
+     6.678996830256377,
+     1.48462446845121,
+     2.9449464273261974
+    ],
+    "target": [
+     1.5261074919017916,
+     0.8919080454243009,
+     -1.7141712785710086
+    ],
+    "fov": 41.00040001659876,
+    "label": "Track the roll copy"
+   },
+   {
+    "at": 17.3,
+    "position": [
+     7.126877264902884,
+     1.454836734967428,
+     1.4060400661060728
+    ],
+    "target": [
+     3.919347857073128,
+     1.3035053285965763,
+     -0.9017222693931608
+    ],
+    "fov": 41.9962083015676,
+    "label": "Parked: floor clear, matched to the finale"
+   },
+   {
+    "at": 19.6,
+    "position": [
+     6.456201547164879,
+     1.3923263573954778,
+     2.4319545807872323
+    ],
+    "target": [
+     3.5490723151281043,
+     1.3322894268761811,
+     -0.5909817398430904
+    ],
+    "fov": 41.99999996942317,
+    "label": "Drift with the finale orbit into the dissolve copy"
+   },
+   {
+    "at": 20.5,
+    "position": [
+     6.456201547164879,
+     1.3923263573954778,
+     2.4319545807872323
+    ],
+    "target": [
+     3.5490723151281043,
+     1.3322894268761811,
+     -0.5909817398430904
+    ],
+    "fov": 41.99999996942317,
+    "label": "Drift with the finale orbit into the dissolve copy copy"
+   },
+   {
+    "at": 22.1,
+    "position": [
+     6.703923166396544,
+     1.0229182605407892,
+     1.7199390386330076
+    ],
+    "target": [
+     3.2880204725539155,
+     1.4152751188494959,
+     -1.5488612433793243
+    ],
+    "fov": 41.99999999997601,
+    "label": "Ending hold"
+   },
+   {
+    "at": 22.5,
+    "position": [
+     6.703923166396544,
+     1.0229182605407892,
+     1.7199390386330076
+    ],
+    "target": [
+     3.2880204725539155,
+     1.4152751188494959,
+     -1.5488612433793243
+    ],
+    "fov": 41.99999999997601,
+    "label": "Ending hold copy"
+   },
+   {
+    "at": 24.978,
+    "position": [
+     6.703923166396544,
+     1.0229182605407892,
+     1.7199390386330076
+    ],
+    "target": [
+     3.2880204725539155,
+     1.4152751188494959,
+     -1.5488612433793243
+    ],
+    "fov": 41.99999999997601,
+    "label": "Ending hold"
+   }
+  ]
+ },
+ "sceneEdits": [
+  {
+   "match": "^Accessory:drafting-kit$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Prop:kenney-furniture-laptop$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Workspace notebook$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Prop:ergoflex-mx-master-mouse$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Mouse pad$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Accessory:ergo-keyboard$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Prop:headphones$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Prop:multi-tool$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Prop:caliper$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Prop:painters-tape$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Prop:walkie-talkie$",
+   "hide": true,
+   "scale": 0.0001
+  },
+  {
+   "match": "^Base_Panels_3 LED reflection$",
+   "hide": true
+  },
+  {
+   "match": "^Artwork ",
+   "hide": true
+  },
+  {
+   "match": "^Prop:kenney-furniture-stool-bar-square$",
+   "position": [
+    2.855,
+    0,
+    -5.16
+   ]
+  },
+  {
+   "match": "^Mesh_stoolBarSquare_1$",
+   "material": {
+    "color": "#2b2d2f",
+    "roughness": 0.85
+   }
+  },
+  {
+   "match": "^Prop:kenney-furniture-stool-bar-square$",
+   "asset": "workshop:house:room:7:kenney-furniture-stool-bar-square",
+   "label": "Prop:kenney-furniture-stool-bar-square",
+   "position": [
+    0.423,
+    0,
+    0
+   ],
+   "director": true
+  },
+  {
+   "match": "^Prop:oscilloscope$",
+   "asset": "workshop:house:room:3:oscilloscope",
+   "label": "Prop:oscilloscope",
+   "scale": [
+    0.35,
+    0.35,
+    0.35
+   ],
+   "director": true
+  },
+  {
+   "match": "^Prop:toolbox-industrial$",
+   "asset": "workshop:house:room:10:toolbox-industrial",
+   "label": "Prop:toolbox-industrial",
+   "position": [
+    -0.474,
+    0,
+    5.518
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "director": true
+  },
+  {
+   "match": "^Prop:tool-cart$",
+   "asset": "workshop:house:room:6:tool-cart",
+   "label": "Prop:tool-cart",
+   "position": [
+    0,
+    0,
+    5.975
+   ],
+   "rotation": [
+    0,
+    -180,
+    0
+   ],
+   "director": true
+  },
+  {
+   "match": "^Air compressor and hose reel$",
+   "asset": "workshop:house:fixture:air-compressor",
+   "label": "Air compressor and hose reel",
+   "position": [
+    0.552,
+    0,
+    6.024
+   ],
+   "rotation": [
+    0,
+    -180,
+    0
+   ],
+   "director": true
+  },
+  {
+   "match": "^Prop:shop-machine$",
+   "asset": "workshop:house:room:9:shop-machine",
+   "label": "Prop:shop-machine",
+   "position": [
+    0.347,
+    0.009,
+    0
+   ],
+   "scale": [
+    1.5,
+    1.5,
+    1.5
+   ],
+   "director": true
+  },
+  {
+   "match": "^$",
+   "asset": "workshop:house:placement:2:0:",
+   "label": "Unnamed prop",
+   "position": [
+    3.047,
+    0,
+    -6.3
+   ],
+   "director": true
+  },
+  {
+   "match": "^Shop clock and safe-days board$",
+   "asset": "workshop:house:fixture:shop-clock",
+   "label": "Shop clock and safe-days board",
+   "position": [
+    0.533,
+    0.252,
+    0
+   ],
+   "director": true
+  },
+  {
+   "match": "^Workshop project drawings and build checklist$",
+   "asset": "workshop:house:fixture:project-board",
+   "label": "Workshop project drawings and build checklist",
+   "position": [
+    -0.084,
+    -0.088,
+    0
+   ],
+   "scale": [
+    0.86,
+    0.86,
+    0.86
+   ],
+   "director": true
+  },
+  {
+   "match": "^Accessory:easel-rail$",
+   "label": "Accessory:easel-rail",
+   "hide": true,
+   "director": true
+  },
+  {
+   "match": "^Tool checklist$",
+   "path": "^Room:workshop > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Tool checklist$",
+   "label": "Tool checklist",
+   "hide": true,
+   "director": true
+  },
+  {
+   "match": "^Companion droid prototype$",
+   "asset": "workshop:toy-story:droid-prototype",
+   "label": "Companion droid prototype",
+   "space": "local",
+   "position": [
+    0.079,
+    0,
+    0.058
+   ],
+   "scale": [
+    0.75,
+    0.75,
+    0.75
+   ],
+   "director": true
+  },
+  {
+   "match": "^Smart robot figure \u00b7 Robo-Pal$",
+   "asset": "workshop:toy-story:robo-pal",
+   "label": "Smart robot figure \u00b7 Robo-Pal",
+   "rotation": [
+    0,
+    47,
+    0
+   ],
+   "scale": [
+    0.75,
+    0.75,
+    0.75
+   ],
+   "director": true
+  },
+  {
+   "match": "^Robot diagnostic test dock$",
+   "asset": "workshop:toy-story:test-dock",
+   "label": "Robot diagnostic test dock",
+   "space": "local",
+   "position": [
+    0,
+    0,
+    -0.133
+   ],
+   "director": true
+  },
+  {
+   "match": "^Maker building bricks$",
+   "asset": "workshop:toy-story:lego-bricks",
+   "label": "Maker building bricks",
+   "space": "local",
+   "position": [
+    -0.2,
+    0,
+    0.122
+   ],
+   "director": true
+  },
+  {
+   "match": "^Servo arm sub-assembly$",
+   "asset": "workshop:toy-story:servo-arm",
+   "label": "Servo arm sub-assembly",
+   "space": "local",
+   "position": [
+    0.08,
+    0,
+    0
+   ],
+   "director": true
+  },
+  {
+   "match": "^Workshop multi-tool$",
+   "asset": "workshop:toy-story:multi-tool",
+   "label": "Workshop multi-tool",
+   "space": "local",
+   "position": [
+    -0.512,
+    0.021,
+    0
+   ],
+   "rotation": [
+    95.1,
+    18.5,
+    91
+   ],
+   "director": true
+  },
+  {
+   "match": "^Robot RC test controller$",
+   "asset": "workshop:toy-story:rc-controller",
+   "label": "Robot RC test controller",
+   "space": "local",
+   "position": [
+    0.408,
+    1.669,
+    -0.197
+   ],
+   "scale": [
+    0.85,
+    0.85,
+    0.85
+   ],
+   "director": true
+  }
+ ],
+ "sceneGlobals": {
+  "ledRoomSpill": 0.15,
+  "roomLight": 0.8,
+  "exposureScale": 1.232
+ },
+ "ledGlow": 1,
+ "ledSurfaces": {
+  "desktopStrength": 15.7,
+  "desktopReach": 100,
+  "desktopWidth": 5,
+  "desktopCone": 100,
+  "desktopEdgeFade": 46,
+  "desktopSharpness": 62,
+  "shelfStrength": 117.3,
+  "shelfReach": 98,
+  "baseStrength": 36.0,
+  "baseReach": 20,
+  "topStrength": 95.3,
+  "topReach": 77,
+  "floorStrength": 78.0,
+  "floorReach": 4,
+  "floorWidth": 50,
+  "floorSharpness": 73,
+  "leftWingStrength": 74.0,
+  "leftWingReach": 85,
+  "rightWingStrength": 73.3,
+  "rightWingReach": 87
+ },
+ "ledStatus": [
+  {
+   "at": 2.5,
+   "dur": 4.4,
+   "kind": "tilt-retract"
+  },
+  {
+   "at": 6.9,
+   "dur": 0.8,
+   "kind": "lift-up",
+   "fade": 1,
+   "fadeIn": 0.6
+  },
+  {
+   "at": 7.7,
+   "dur": 5.5,
+   "kind": "wheels",
+   "mode": 3,
+   "reverse": true
+  },
+  {
+   "at": 13.2,
+   "dur": 5.1,
+   "kind": "wheels",
+   "fade": 1,
+   "fadeIn": 0.6,
+   "mode": 2
+  },
+  {
+   "at": 18.3,
+   "dur": 3.678,
+   "kind": "wheels",
+   "fade": 1,
+   "fadeIn": 0.6,
+   "mode": 5
+  }
+ ],
+ "ledColor": "#242424",
+ "ledReceivers": {
+  "mode": "viewer",
+  "stripMap": "viewer",
+  "floorBounceStrength": 65.0
+ },
+ "timeOfDay": [
+  {
+   "at": 0,
+   "mode": "morning"
+  },
+  {
+   "at": 8.3,
+   "mode": "morning"
+  },
+  {
+   "at": 22.2,
+   "mode": "evening"
+  }
+ ],
+ "quality": {
+  "screenBloom": 0.25,
+  "bloomOnly": "window|daylight",
+  "bloom": false
+ },
+ "screenGain": 1.3,
+ "camera": {
+  "keys": [
+   {
+    "id": "spline-0-0",
+    "time": 0,
+    "label": "Window light across the tool wall",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.84424371304072,
+      1.8744391909157971,
+      2.6052659453341875
+     ],
+     "target": [
+      0.7788471192075741,
+      0.871669587194933,
+      -1.9570335282695601
+     ],
+     "fov": 40,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-1",
+    "time": 0.002688172043010753,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.844243713051162,
+      1.8744391909028533,
+      2.6052659453546285
+     ],
+     "target": [
+      0.7788471192114337,
+      0.8716695871907711,
+      -1.9570335282700242
+     ],
+     "fov": 40,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-2",
+    "time": 0.005376344086021506,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.844243713082221,
+      1.874439190864346,
+      2.605265945415438
+     ],
+     "target": [
+      0.7788471192229153,
+      0.8716695871783897,
+      -1.9570335282714058
+     ],
+     "fov": 40.00000000000001,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-3",
+    "time": 0.008064516129032258,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.844243713133443,
+      1.8744391908008473,
+      2.605265945515713
+     ],
+     "target": [
+      0.7788471192418484,
+      0.8716695871579727,
+      -1.9570335282736848
+     ],
+     "fov": 40.00000000000002,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-4",
+    "time": 0.010752688172043012,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.844243713204373,
+      1.8744391907129128,
+      2.605265945654577
+     ],
+     "target": [
+      0.7788471192680675,
+      0.8716695871296987,
+      -1.9570335282768396
+     ],
+     "fov": 40.00000000000003,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-5",
+    "time": 0.013440860215053764,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.844243713294561,
+      1.8744391906011055,
+      2.605265945831141
+     ],
+     "target": [
+      0.7788471193014046,
+      0.8716695870937486,
+      -1.9570335282808515
+     ],
+     "fov": 40.00000000000006,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-6",
+    "time": 0.016129032258064516,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.844243713403561,
+      1.874439190465977,
+      2.6052659460445335
+     ],
+     "target": [
+      0.7788471193416957,
+      0.8716695870503,
+      -1.9570335282857
+     ],
+     "fov": 40.00000000000007,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-7",
+    "time": 0.01881720430107527,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.8442437135309255,
+      1.8744391903080795,
+      2.6052659462938808
+     ],
+     "target": [
+      0.7788471193887753,
+      0.8716695869995306,
+      -1.9570335282913653
+     ],
+     "fov": 40.000000000000085,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-8",
+    "time": 0.021505376344086023,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.844243713464705,
+      1.8744391903901754,
+      2.605265946164238
+     ],
+     "target": [
+      0.7788471193642972,
+      0.8716695870259272,
+      -1.9570335282884201
+     ],
+     "fov": 40.000000000000085,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-9",
+    "time": 0.02419354838709677,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.844243713301954,
+      1.8744391905919402,
+      2.605265945845615
+     ],
+     "target": [
+      0.7788471193041374,
+      0.8716695870908017,
+      -1.9570335282811802
+     ],
+     "fov": 40.00000000000006,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-10",
+    "time": 0.026881720430107527,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.844243713122213,
+      1.874439190814766,
+      2.605265945493734
+     ],
+     "target": [
+      0.7788471192376982,
+      0.871669587162448,
+      -1.9570335282731852
+     ],
+     "fov": 40.000000000000014,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-11",
+    "time": 0.029569892473118285,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.840579179365778,
+      1.8789821919034981,
+      2.5980917460923796
+     ],
+     "target": [
+      0.7774925472504565,
+      0.8731303209613279,
+      -1.956870522463792
+     ],
+     "fov": 39.999999302416654,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-12",
+    "time": 0.03225806451612903,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.818104457225523,
+      1.9068445869410786,
+      2.554092113712937
+     ],
+     "target": [
+      0.7691849067546304,
+      0.8820890558048577,
+      -1.9558708017572757
+     ],
+     "fov": 39.99999502410622,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-13",
+    "time": 0.03494623655913978,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.778130383068589,
+      1.9564013039716819,
+      2.4758333233869916
+     ],
+     "target": [
+      0.7544087402170022,
+      0.8980232742014794,
+      -1.9540926747831473
+     ],
+     "fov": 39.99998741460811,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-14",
+    "time": 0.03763440860215054,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.724070431837372,
+      2.023420584902244,
+      2.369998066969681
+     ],
+     "target": [
+      0.7344258173030638,
+      0.9195723178654212,
+      -1.9516879797533122
+     ],
+     "fov": 39.99997712372548,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-15",
+    "time": 0.040322580645161296,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.659339997262335,
+      2.103668292877513,
+      2.243272792800578
+     ],
+     "target": [
+      0.7104986169481684,
+      0.9453747636561607,
+      -1.9488086402279807
+     ],
+     "fov": 39.999964801585705,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-16",
+    "time": 0.043010752688172046,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.5873487711350265,
+      2.1929173598577827,
+      2.102332786316984
+     ],
+     "target": [
+      0.6838875104004094,
+      0.9740714613018532,
+      -1.9456063261346994
+     ],
+     "fov": 39.99995109730006,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-17",
+    "time": 0.0456989247311828,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.511509941646468,
+      2.2869363832419527,
+      1.9538601779886644
+     ],
+     "target": [
+      0.6558541613303205,
+      1.004301866821815,
+      -1.9422328629289616
+     ],
+     "fov": 39.999936660541564,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-18",
+    "time": 0.04838709677419354,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.435236934317882,
+      2.381493666205787,
+      1.804537562917345
+     ],
+     "target": [
+      0.6276603211370083,
+      1.0347053416290715,
+      -1.9388400866219473
+     ],
+     "fov": 39.99992214115247,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-19",
+    "time": 0.051075268817204304,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.361943172831029,
+      2.4723575142025482,
+      1.6610475326131517
+     ],
+     "target": [
+      0.6005677405402128,
+      1.0639212478696045,
+      -1.9355798331447407
+     ],
+     "fov": 39.9999081888991,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-20",
+    "time": 0.053763440860215055,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.295042079798805,
+      2.5552962340228853,
+      1.530072676461193
+     ],
+     "target": [
+      0.5758381698592846,
+      1.0905889481203974,
+      -1.93260393837861
+     ],
+     "fov": 39.999895453550096,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-21",
+    "time": 0.056451612903225805,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.237947076643898,
+      2.626078133913712,
+      1.4182955815628948
+     ],
+     "target": [
+      0.554733358981557,
+      1.1133478054246218,
+      -1.9300642381527933
+     ],
+     "fov": 39.99988458490006,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-22",
+    "time": 0.05913978494623657,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.1940715817705385,
+      2.6804715258778273,
+      1.3323988290743847
+     ],
+     "target": [
+      0.5385150566728067,
+      1.1308371840365425,
+      -1.9281125681633369
+     ],
+     "fov": 39.99987623273641,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-23",
+    "time": 0.06182795698924731,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.16682899336919,
+      2.714244746972942,
+      1.2790649605968099
+     ],
+     "target": [
+      0.5284450042292429,
+      1.1416964562633252,
+      -1.926900763204831
+     ],
+     "fov": 39.99987104681628,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-24",
+    "time": 0.06451612903225806,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.159297764606377,
+      2.7235813727859632,
+      1.2643207829028325
+     ],
+     "target": [
+      0.525661132613389,
+      1.1446985081288141,
+      -1.9265657590490746
+     ],
+     "fov": 39.999869613165814,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-25",
+    "time": 0.06720430107526881,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.159297764279346,
+      2.7235813731047203,
+      1.2643207824438627
+     ],
+     "target": [
+      0.525661132519749,
+      1.1446985082460943,
+      -1.9265657590811514
+     ],
+     "fov": 39.99986961316573,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-26",
+    "time": 0.06989247311827956,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.159297763922869,
+      2.7235813733057648,
+      1.2643207822497842
+     ],
+     "target": [
+      0.5256611324637027,
+      1.1446985083518384,
+      -1.9265657591948742
+     ],
+     "fov": 39.99986961316562,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-27",
+    "time": 0.07258064516129033,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.159297763639198,
+      2.7235813733367125,
+      1.264320782365222
+     ],
+     "target": [
+      0.5256611324596656,
+      1.1446985084165142,
+      -1.9265657593547842
+     ],
+     "fov": 39.9998696131655,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-28",
+    "time": 0.07526881720430108,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.159297763503429,
+      2.723581373279724,
+      1.2643207825706426
+     ],
+     "target": [
+      0.5256611324803043,
+      1.1446985084366328,
+      -1.9265657594699435
+     ],
+     "fov": 39.99986961316543,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-29",
+    "time": 0.07795698924731183,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.1592977634427735,
+      2.723581373202712,
+      1.2643207827702319
+     ],
+     "target": [
+      0.5256611325057299,
+      1.1446985084378416,
+      -1.9265657595491215
+     ],
+     "fov": 39.999869613165394,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-30",
+    "time": 0.08064516129032259,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.159297763428932,
+      2.7235813731092273,
+      1.264320782974546
+     ],
+     "target": [
+      0.5256611325353947,
+      1.1446985084266617,
+      -1.9265657596080255
+     ],
+     "fov": 39.99986961316536,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-31",
+    "time": 0.08333333333333333,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.159297763482691,
+      2.723581372983795,
+      1.26432078320274
+     ],
+     "target": [
+      0.5256611325737456,
+      1.1446985083963614,
+      -1.9265657596420391
+     ],
+     "fov": 39.999869613165366,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-32",
+    "time": 0.08602150537634409,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.159297763692659,
+      2.723581372828471,
+      1.2643207833942445
+     ],
+     "target": [
+      0.5256611326183591,
+      1.1446985083285075,
+      -1.9265657595949084
+     ],
+     "fov": 39.99986961316543,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-33",
+    "time": 0.08870967741935484,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.159297764073185,
+      2.7235813727279066,
+      1.264320783362898
+     ],
+     "target": [
+      0.5256611326423372,
+      1.1446985082328394,
+      -1.9265657594121663
+     ],
+     "fov": 39.99986961316559,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-34",
+    "time": 0.0913978494623656,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.159297764532464,
+      2.7235813727131766,
+      1.26432078310201
+     ],
+     "target": [
+      0.5256611326377527,
+      1.144698508133465,
+      -1.9265657591342333
+     ],
+     "fov": 39.99986961316577,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-35",
+    "time": 0.09408602150537634,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.171993567174339,
+      2.7246059276764556,
+      1.2541146753804402
+     ],
+     "target": [
+      0.5250843409764661,
+      1.1421675856421676,
+      -1.9181127383618906
+     ],
+     "fov": 39.999875354546845,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-36",
+    "time": 0.09677419354838708,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.226172494387115,
+      2.728978182857363,
+      1.2105604407092414
+     ],
+     "target": [
+      0.5226229012112742,
+      1.1313669557580535,
+      -1.882039745567728
+     ],
+     "fov": 39.999899855703866,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-37",
+    "time": 0.09946236559139784,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.318173000899419,
+      2.7364026504875234,
+      1.1366015814879464
+     ],
+     "target": [
+      0.518443163501551,
+      1.1130265516363933,
+      -1.8207846824068254
+     ],
+     "fov": 39.999941460778224,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-38",
+    "time": 0.10215053763440861,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.442679083590635,
+      2.74645032756569,
+      1.0365116125195426
+     ],
+     "target": [
+      0.5127866428076366,
+      1.0882061244586323,
+      -1.7378870088139973
+     ],
+     "fov": 39.99999776577179,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-39",
+    "time": 0.10483870967741936,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.59446693961417,
+      2.758699651686702,
+      0.9144899291547663
+     ],
+     "target": [
+      0.5058906652774793,
+      1.0579470451797328,
+      -1.6368247966565177
+     ],
+     "fov": 40.00006640829083,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-40",
+    "time": 0.10752688172043011,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.768274290083452,
+      2.7727259554129713,
+      0.7747668574839444
+     ],
+     "target": [
+      0.4979943050886765,
+      1.0232983549952763,
+      -1.5211017356151482
+     ],
+     "fov": 40.00014500859985,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-41",
+    "time": 0.11021505376344086,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.95883699256666,
+      2.788104420921372,
+      0.6215742217058398
+     ],
+     "target": [
+      0.48933672108378695,
+      0.9853094666008654,
+      -1.3942227561494782
+     ],
+     "fov": 40.000231186142095,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-42",
+    "time": 0.11290322580645161,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.160916589386419,
+      2.8044123031499053,
+      0.4591231981239515
+     ],
+     "target": [
+      0.480155905203258,
+      0.9450246724083335,
+      -1.259675687483557
+     ],
+     "fov": 40.000322571939236,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-43",
+    "time": 0.11559139784946237,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.369241606591624,
+      2.8212241926165014,
+      0.29165150472095874
+     ],
+     "target": [
+      0.4706913493729748,
+      0.9034948466597059,
+      -1.1209703414966374
+     ],
+     "fov": 40.00041678205291,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-44",
+    "time": 0.11827956989247314,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.578567335911104,
+      2.838116839845699,
+      0.12337534263096989
+     ],
+     "target": [
+      0.4611813295089793,
+      0.8617655278283671,
+      -0.981598709132872
+     ],
+     "fov": 40.00051144473386,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-45",
+    "time": 0.12096774193548387,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.783639242143535,
+      2.854666202314216,
+      -0.04148118716544788
+     ],
+     "target": [
+      0.45186456798038144,
+      0.8208842134000046,
+      -0.8450593242435314
+     ],
+     "fov": 40.00060418373157,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-46",
+    "time": 0.12365591397849462,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.979197939068349,
+      2.8704478460230303,
+      -0.1986900839834291
+     ],
+     "target": [
+      0.44298000754742084,
+      0.781899367911944,
+      -0.7148539505340632
+     ],
+     "fov": 40.00069262061548,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-47",
+    "time": 0.12634408602150538,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.1599883509548095,
+      2.885037684837975,
+      -0.344026812316527
+     ],
+     "target": [
+      0.4347663951359738,
+      0.7458585966045086,
+      -0.594481481739155
+     ],
+     "fov": 40.00077437885153,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-48",
+    "time": 0.12903225806451613,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.3207675091717945,
+      2.8980126096599546,
+      -0.473276569505429
+     ],
+     "target": [
+      0.4274619276280065,
+      0.7138070911526284,
+      -0.4874327505449978
+     ],
+     "fov": 40.00084708745419,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-49",
+    "time": 0.13172043010752688,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.45624733275622,
+      2.908945870821281,
+      -0.5821882872753872
+     ],
+     "target": [
+      0.42130685143317104,
+      0.6867990364241844,
+      -0.3972286259646629
+     ],
+     "fov": 40.00090835506984,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-50",
+    "time": 0.13440860215053763,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.561234546694829,
+      2.9174183695169797,
+      -0.6665871114777088
+     ],
+     "target": [
+      0.41653710576808023,
+      0.6658697176166026,
+      -0.32732685406510376
+     ],
+     "fov": 40.00095583307937,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-51",
+    "time": 0.13709677419354838,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.630401160409138,
+      2.9230001353575097,
+      -0.7221898906422634
+     ],
+     "target": [
+      0.41339475020336164,
+      0.6520812756243417,
+      -0.28127487617467406
+     ],
+     "fov": 40.0009871120614,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-52",
+    "time": 0.13978494623655913,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.658560131307576,
+      2.9252725724976796,
+      -0.7448267808436048
+     ],
+     "target": [
+      0.4121154408061891,
+      0.6464677532048904,
+      -0.2625262887348291
+     ],
+     "fov": 40.000999846303415,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-53",
+    "time": 0.1424731182795699,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.658900000391567,
+      2.925300000040108,
+      -0.7451000002685925
+     ],
+     "target": [
+      0.4120999999734276,
+      0.6463999999225983,
+      -0.26229999976274365
+     ],
+     "fov": 40.00099999995346,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-54",
+    "time": 0.14516129032258066,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.658900000801243,
+      2.9253000001041025,
+      -0.7451000004300271
+     ],
+     "target": [
+      0.41209999992288804,
+      0.6463999998433211,
+      -0.26229999957523953
+     ],
+     "fov": 40.000999999783836,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-55",
+    "time": 0.1478494623655914,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.658900001153929,
+      2.9253000001861675,
+      -0.7451000004226044
+     ],
+     "target": [
+      0.412099999851539,
+      0.6463999997771563,
+      -0.2622999994881612
+     ],
+     "fov": 40.00099999948971,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-56",
+    "time": 0.15053763440860216,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.658900001387991,
+      2.9253000002680283,
+      -0.745100000268962
+     ],
+     "target": [
+      0.41209999977590883,
+      0.6463999997353643,
+      -0.26229999950589133
+     ],
+     "fov": 40.000999999144106,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-57",
+    "time": 0.1532258064516129,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.658900001491114,
+      2.9253000003278227,
+      -0.7451000000724739
+     ],
+     "target": [
+      0.4120999997180962,
+      0.6463999997187861,
+      -0.2622999995791067
+     ],
+     "fov": 40.00099999886157,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-58",
+    "time": 0.15591397849462366,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.6589000015122135,
+      2.9253000003675402,
+      -0.745099999883096
+     ],
+     "target": [
+      0.41209999967790045,
+      0.6463999997175189,
+      -0.2622999996698395
+     ],
+     "fov": 40.00099999865288,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-59",
+    "time": 0.1586021505376344,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.658900001471658,
+      2.9253000003914122,
+      -0.745099999703152
+     ],
+     "target": [
+      0.41209999965172495,
+      0.6463999997277023,
+      -0.2622999997716635
+     ],
+     "fov": 40.000999998503836,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-60",
+    "time": 0.16129032258064518,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.658900001354783,
+      2.9253000003951217,
+      -0.7450999995378693
+     ],
+     "target": [
+      0.4120999996434713,
+      0.6463999997520173,
+      -0.2622999998857007
+     ],
+     "fov": 40.00099999843165,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-61",
+    "time": 0.1639784946236559,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.658900001129851,
+      2.925300000362735,
+      -0.7450999994343129
+     ],
+     "target": [
+      0.412099999668383,
+      0.6463999997957572,
+      -0.262299999996227
+     ],
+     "fov": 40.0009999985097,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-62",
+    "time": 0.16666666666666666,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.658900000807383,
+      2.9253000002830674,
+      -0.7450999994662533
+     ],
+     "target": [
+      0.41209999973840206,
+      0.6463999998558949,
+      -0.2623000000630715
+     ],
+     "fov": 40.00099999880405,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-63",
+    "time": 0.1693548387096774,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.6589000004311325,
+      2.925300000162759,
+      -0.7450999996519966
+     ],
+     "target": [
+      0.41209999984833184,
+      0.6463999999239466,
+      -0.26230000006566556
+     ],
+     "fov": 40.00099999929767,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-64",
+    "time": 0.17204301075268819,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.65890000001752,
+      2.9253000000070477,
+      -0.7450999999835073
+     ],
+     "target": [
+      0.41209999999338953,
+      0.6463999999969428,
+      -0.26230000000386217
+     ],
+     "fov": 40.00099999996908,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-65",
+    "time": 0.17473118279569894,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.649418218871953,
+      2.921476939920184,
+      -0.7540754128494267
+     ],
+     "target": [
+      0.41568696020426105,
+      0.6480537942758979,
+      -0.2601845773643259
+     ],
+     "fov": 40.01778320209303,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-66",
+    "time": 0.1774193548387097,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.620417450457246,
+      2.9097838119631634,
+      -0.7815274143162352
+     ],
+     "target": [
+      0.4266579582452534,
+      0.6531120532827656,
+      -0.2537143919509866
+     ],
+     "fov": 40.06911593699588,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-67",
+    "time": 0.18010752688172044,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.573508932421175,
+      2.890870268160057,
+      -0.8259308138286302
+     ],
+     "target": [
+      0.44440346250845425,
+      0.661293748005492,
+      -0.24324891721416383
+     ],
+     "fov": 40.15214623769238,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-68",
+    "time": 0.1827956989247312,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.510433956784546,
+      2.865438398542973,
+      -0.8856373119181274
+     ],
+     "target": [
+      0.4682647417804596,
+      0.6722951655924221,
+      -0.22917664224779954
+     ],
+     "fov": 40.26379193469974,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-69",
+    "time": 0.18548387096774194,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.43279251265514,
+      2.8341333197227034,
+      -0.9591323658385669
+     ],
+     "target": [
+      0.49763651977521,
+      0.685837238978655,
+      -0.21185453091098908
+     ],
+     "fov": 40.401220971503605,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-70",
+    "time": 0.1881720430107527,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.342323794327621,
+      2.797656275925336,
+      -1.0447696618248172
+     ],
+     "target": [
+      0.5318608588507295,
+      0.7016166211949191,
+      -0.1916706042856729
+     ],
+     "fov": 40.56135489172519,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-71",
+    "time": 0.19086021505376344,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.240635517863989,
+      2.756655499270686,
+      -1.1410273428293365
+     ],
+     "target": [
+      0.5703295596121769,
+      0.7193528974560349,
+      -0.16898355014471822
+     ],
+     "fov": 40.74134796173993,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-72",
+    "time": 0.19354838709677416,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.129450262523763,
+      2.7118255347977858,
+      -1.246274822801035
+     ],
+     "target": [
+      0.6123909698885344,
+      0.7387456187546404,
+      -0.14417768269165956
+     ],
+     "fov": 40.93815113454639,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-73",
+    "time": 0.19623655913978497,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.010397098386509,
+      2.6638232245748155,
+      -1.3589700310893025
+     ],
+     "target": [
+      0.6574288120603708,
+      0.7595106457801021,
+      -0.11761645386136815
+     ],
+     "fov": 41.148880878938975,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-74",
+    "time": 0.1989247311827957,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.885176694453796,
+      2.6133342794133463,
+      -1.4775031217827939
+     ],
+     "target": [
+      0.7047997226062224,
+      0.7813513510688883,
+      -0.0896792895955018
+     ],
+     "fov": 41.37052693010442,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-75",
+    "time": 0.20161290322580644,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.755438778412488,
+      2.561023870543088,
+      -1.6003124698339457
+     ],
+     "target": [
+      0.7538796091316884,
+      0.8039799922516973,
+      -0.06073425062127527
+     ],
+     "fov": 41.60016919190984,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-76",
+    "time": 0.20430107526881722,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.622866428707232,
+      2.507570616247768,
+      -1.7258048804837531
+     ],
+     "target": [
+      0.8040317626308754,
+      0.8271030099747942,
+      -0.031156838356732726
+     ],
+     "fov": 41.83482853565202,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-77",
+    "time": 0.20698924731182797,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.48912390521362,
+      2.453645547147212,
+      -1.8524049725578262
+     ],
+     "target": [
+      0.8546265931683561,
+      0.8504301271908477,
+      -0.001318355721621478
+     ],
+     "fov": 42.07155914246668,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-78",
+    "time": 0.20967741935483872,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.355882805240885,
+      2.3999226523278794,
+      -1.9785304193007596
+     ],
+     "target": [
+      0.905031735059576,
+      0.8736697870663823,
+      0.028408257353810792
+     ],
+     "fov": 42.30740220585209,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-79",
+    "time": 0.21236559139784947,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.224815823399516,
+      2.347076363294789,
+      -2.102597855264456
+     ],
+     "target": [
+      0.954614407513191,
+      0.8965302413836246,
+      0.05764981613137939
+     ],
+     "fov": 42.53939697711684,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-80",
+    "time": 0.21505376344086022,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.097589164212396,
+      2.295778494760981,
+      -2.223030058476907
+     ],
+     "target": [
+      1.0027442849329993,
+      0.918720873907863,
+      0.08603458383022355
+     ],
+     "fov": 42.76459419520257,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-81",
+    "time": 0.21774193548387097,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.975877876859139,
+      2.246704427595148,
+      -2.3382414346552713
+     ],
+     "target": [
+      1.048787695788676,
+      0.9399495257410633,
+      0.11318885039610285
+     ],
+     "fov": 42.98002894371415,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-82",
+    "time": 0.22043010752688172,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.861348844960992,
+      2.2005262503210625,
+      -2.4466541190052538
+     ],
+     "target": [
+      1.0921140575864485,
+      0.9599254622040706,
+      0.13874072754240607
+     ],
+     "fov": 43.18275075957779,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-83",
+    "time": 0.22311827956989247,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.755673410065041,
+      2.1579178488953863,
+      -2.546686026871739
+     ],
+     "target": [
+      1.1320911013941115,
+      0.9783571710747585,
+      0.16231733240035762
+     ],
+     "fov": 43.36980128901526,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-84",
+    "time": 0.22580645161290322,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.660525183946888,
+      2.1195540246298474,
+      -2.636752924614375
+     ],
+     "target": [
+      1.1680856994529631,
+      0.9949527441625415,
+      0.18354527560524986
+     ],
+     "fov": 43.53821815984647,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-85",
+    "time": 0.22849462365591394,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.577565770935124,
+      2.08610473743108,
+      -2.7152819447893464
+     ],
+     "target": [
+      1.1994692664227447,
+      1.0094223675913818,
+      0.20205384670057386
+     ],
+     "fov": 43.68506025368849,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-86",
+    "time": 0.23118279569892475,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.5084815055334415,
+      2.0582499184249303,
+      -2.7806768104750144
+     ],
+     "target": [
+      1.2256038615346134,
+      1.021471914097549,
+      0.21746681783064975
+     ],
+     "fov": 43.80734267845878,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-87",
+    "time": 0.23387096774193547,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.454918327253737,
+      2.03665321145104,
+      -2.8313794824817844
+     ],
+     "target": [
+      1.2458668254549188,
+      1.0308143020351044,
+      0.22941697342243628
+     ],
+     "fov": 43.902152043244044,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-88",
+    "time": 0.23655913978494628,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.418581029970604,
+      2.022001990465716,
+      -2.8657762103267994
+     ],
+     "target": [
+      1.2596132342280066,
+      1.0371521844895568,
+      0.23752396726172612
+     ],
+     "fov": 43.96647078205184,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-89",
+    "time": 0.239247311827957,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.401095103291556,
+      2.014951653895111,
+      -2.8823283126035
+     ],
+     "target": [
+      1.2662281647229623,
+      1.0402020466471442,
+      0.24142514622819433
+     ],
+     "fov": 43.9974217012143,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-90",
+    "time": 0.24193548387096775,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774518083901,
+      2.0144191931149136,
+      -2.8835783728274693
+     ],
+     "target": [
+      1.2667277424412777,
+      1.04043238061313,
+      0.2417197739782433
+     ],
+     "fov": 43.99975919963368,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-91",
+    "time": 0.2446236559139785,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517914943,
+      2.014419193053494,
+      -2.883578372986515
+     ],
+     "target": [
+      1.2667277425029062,
+      1.0404323806396627,
+      0.24171977401577088
+     ],
+     "fov": 43.99975919991817,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-92",
+    "time": 0.24731182795698925,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517759813,
+      2.0144191930024897,
+      -2.883578373131831
+     ],
+     "target": [
+      1.2667277425576513,
+      1.0404323806616629,
+      0.24171977405009223
+     ],
+     "fov": 43.999759200167645,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-93",
+    "time": 0.25,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.3997745176178835,
+      2.0144191929607453,
+      -2.883578373264129
+     ],
+     "target": [
+      1.2667277426060586,
+      1.0404323806796358,
+      0.2417197740813698
+     ],
+     "fov": 43.99975920038521,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-94",
+    "time": 0.25268817204301075,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517488512,
+      2.014419192927191,
+      -2.8835783733841254
+     ],
+     "target": [
+      1.2667277426486478,
+      1.0404323806940492,
+      0.24171977410976758
+     ],
+     "fov": 43.999759200573756,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-95",
+    "time": 0.2553763440860215,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517371002,
+      2.0144191929008306,
+      -2.8835783734925737
+     ],
+     "target": [
+      1.2667277426859267,
+      1.0404323807053366,
+      0.24171977413545856
+     ],
+     "fov": 43.99975920073606,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-96",
+    "time": 0.25806451612903225,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.39977451726455,
+      2.0144191928807436,
+      -2.8835783735903133
+     ],
+     "target": [
+      1.266727742718403,
+      1.0404323807139009,
+      0.24171977415863705
+     ],
+     "fov": 43.999759200874834,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-97",
+    "time": 0.260752688172043,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517168364,
+      2.01441919286611,
+      -2.8835783736781626
+     ],
+     "target": [
+      1.2667277427465469,
+      1.0404323807200986,
+      0.24171977417949247
+     ],
+     "fov": 43.999759200992585,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-98",
+    "time": 0.26344086021505375,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517081613,
+      2.014419192856208,
+      -2.8835783737569574
+     ],
+     "target": [
+      1.2667277427708052,
+      1.0404323807242444,
+      0.2417197741982197
+     ],
+     "fov": 43.99975920109162,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-99",
+    "time": 0.2661290322580645,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517003414,
+      2.0144191928504207,
+      -2.8835783738275667
+     ],
+     "target": [
+      1.2667277427916006,
+      1.0404323807266067,
+      0.2417197742150219
+     ],
+     "fov": 43.99975920117407,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-100",
+    "time": 0.26881720430107525,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516932807,
+      2.014419192848253,
+      -2.883578373890918
+     ],
+     "target": [
+      1.2667277428093329,
+      1.0404323807273999,
+      0.24171977423011665
+     ],
+     "fov": 43.99975920124187,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-101",
+    "time": 0.271505376344086,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516868895,
+      2.0144191928493713,
+      -2.883578373947853
+     ],
+     "target": [
+      1.2667277428243326,
+      1.0404323807267688,
+      0.24171977424370267
+     ],
+     "fov": 43.99975920129654,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-102",
+    "time": 0.27419354838709675,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516810716,
+      2.0144191928536386,
+      -2.88357837399925
+     ],
+     "target": [
+      1.2667277428368777,
+      1.0404323807247704,
+      0.24171977425598914
+     ],
+     "fov": 43.999759201339245,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-103",
+    "time": 0.2768817204301075,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516757321,
+      2.0144191928612356,
+      -2.8835783740459338
+     ],
+     "target": [
+      1.2667277428471353,
+      1.0404323807213247,
+      0.24171977426717323
+     ],
+     "fov": 43.99975920137044,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-104",
+    "time": 0.27956989247311825,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516707868,
+      2.0144191928729027,
+      -2.883578374088556
+     ],
+     "target": [
+      1.2667277428550543,
+      1.0404323807161044,
+      0.24171977427741542
+     ],
+     "fov": 43.99975920138925,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-105",
+    "time": 0.28225806451612906,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.39977451666202,
+      2.0144191928906543,
+      -2.883578374127154
+     ],
+     "target": [
+      1.2667277428600292,
+      1.0404323807082265,
+      0.24171977428673797
+     ],
+     "fov": 43.999759201391626,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-106",
+    "time": 0.2849462365591398,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516622365,
+      2.0144191929201947,
+      -2.883578374158655
+     ],
+     "target": [
+      1.2667277428594883,
+      1.0404323806951978,
+      0.24171977429444566
+     ],
+     "fov": 43.99975920136282,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-107",
+    "time": 0.28763440860215056,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516610348,
+      2.014419192968169,
+      -2.883578374163031
+     ],
+     "target": [
+      1.2667277428460046,
+      1.0404323806741549,
+      0.2417197742958055
+     ],
+     "fov": 43.999759201269285,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-108",
+    "time": 0.2903225806451613,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516634125,
+      2.0144191930073982,
+      -2.883578374136595
+     ],
+     "target": [
+      1.2667277428268917,
+      1.0404323806570224,
+      0.24171977428975913
+     ],
+     "fov": 43.999759201162746,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-109",
+    "time": 0.29301075268817206,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516669142,
+      2.014419193036283,
+      -2.8835783741014898
+     ],
+     "target": [
+      1.266727742808604,
+      1.040432380644446,
+      0.241719774281577
+     ],
+     "fov": 43.999759201068656,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-110",
+    "time": 0.2956989247311828,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516710191,
+      2.0144191930602453,
+      -2.88357837406165
+     ],
+     "target": [
+      1.2667277427905452,
+      1.04043238063404,
+      0.24171977427223348
+     ],
+     "fov": 43.99975920097989,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-111",
+    "time": 0.29838709677419356,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.3997745167567865,
+      2.0144191930814137,
+      -2.8835783740172283
+     ],
+     "target": [
+      1.2667277427721055,
+      1.04043238062487,
+      0.2417197742617783
+     ],
+     "fov": 43.99975920089224,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-112",
+    "time": 0.3010752688172043,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516809398,
+      2.014419193100722,
+      -2.88357837396768
+     ],
+     "target": [
+      1.2667277427528532,
+      1.040432380616528,
+      0.24171977425008828
+     ],
+     "fov": 43.99975920080326,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-113",
+    "time": 0.30376344086021506,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516868866,
+      2.0144191931185973,
+      -2.8835783739121963
+     ],
+     "target": [
+      1.2667277427324393,
+      1.040432380608829,
+      0.2417197742369733
+     ],
+     "fov": 43.99975920071126,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-114",
+    "time": 0.3064516129032258,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774516936172,
+      2.0144191931351667,
+      -2.8835783738498866
+     ],
+     "target": [
+      1.266727742710585,
+      1.0404323806017195,
+      0.2417197742222216
+     ],
+     "fov": 43.9997592006151,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-115",
+    "time": 0.30913978494623656,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517012355,
+      2.0144191931503546,
+      -2.8835783737798297
+     ],
+     "target": [
+      1.2667277426870662,
+      1.0404323805952345,
+      0.24171977420561347
+     ],
+     "fov": 43.99975920051402,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-116",
+    "time": 0.3118279569892473,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517098489,
+      2.0144191931639366,
+      -2.8835783737010976
+     ],
+     "target": [
+      1.2667277426616996,
+      1.040432380589475,
+      0.24171977418692542
+     ],
+     "fov": 43.99975920040754,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-117",
+    "time": 0.31451612903225806,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.3997745171957305,
+      2.0144191931755704,
+      -2.883578373612704
+     ],
+     "target": [
+      1.2667277426343257,
+      1.0404323805845936,
+      0.24171977416592044
+     ],
+     "fov": 43.99975920029535,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-118",
+    "time": 0.3172043010752688,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517305169,
+      2.014419193184792,
+      -2.8835783735137364
+     ],
+     "target": [
+      1.26672774260484,
+      1.040432380580796,
+      0.2417197741423776
+     ],
+     "fov": 43.99975920017752,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-119",
+    "time": 0.31989247311827956,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517427993,
+      2.0144191931910442,
+      -2.8835783734032057
+     ],
+     "target": [
+      1.2667277425731454,
+      1.0404323805783287,
+      0.24171977411605744
+     ],
+     "fov": 43.99975920005419,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-120",
+    "time": 0.32258064516129037,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517565318,
+      2.0144191931936684,
+      -2.8835783732802067
+     ],
+     "target": [
+      1.2667277425392007,
+      1.0404323805774833,
+      0.24171977408673972
+     ],
+     "fov": 43.99975919992579,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-121",
+    "time": 0.32526881720430106,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774517718288,
+      2.0144191931919146,
+      -2.8835783731438145
+     ],
+     "target": [
+      1.2667277425029848,
+      1.0404323805785898,
+      0.2417197740541987
+     ],
+     "fov": 43.99975919979292,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-122",
+    "time": 0.3279569892473118,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.3997745178880034,
+      2.014419193184948,
+      -2.8835783729931537
+     ],
+     "target": [
+      1.2667277424645174,
+      1.0404323805820168,
+      0.24171977401822062
+     ],
+     "fov": 43.99975919965644,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-123",
+    "time": 0.33064516129032256,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.399774518075575,
+      2.014419193171852,
+      -2.8835783728273605
+     ],
+     "target": [
+      1.2667277424238461,
+      1.040432380588169,
+      0.2417197739785926
+     ],
+     "fov": 43.99975919951733,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-124",
+    "time": 0.3333333333333333,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.4015568768709725,
+      2.014275230774257,
+      -2.8824670954966423
+     ],
+     "target": [
+      1.266273006132186,
+      1.0405454674234087,
+      0.24152097226768374
+     ],
+     "fov": 43.99873236701367,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-125",
+    "time": 0.33602150537634407,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.42246128833254,
+      2.0125799228832566,
+      -2.869346217866968
+     ],
+     "target": [
+      1.2609562736953004,
+      1.0418660044100039,
+      0.2391556378574993
+     ],
+     "fov": 43.98665577053164,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-126",
+    "time": 0.3387096774193548,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.465317641861942,
+      2.009083678154618,
+      -2.842183360207622
+     ],
+     "target": [
+      1.2501066775125924,
+      1.0445557187917123,
+      0.234204664660923
+     ],
+     "fov": 43.96179655746076,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-127",
+    "time": 0.34139784946236557,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.52840788742557,
+      2.003902534953619,
+      -2.8017599140476688
+     ],
+     "target": [
+      1.234217834579086,
+      1.0484863303099148,
+      0.2267477968148956
+     ],
+     "fov": 43.92503363873136,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-128",
+    "time": 0.34408602150537637,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.6099394127738185,
+      1.9971585190737642,
+      -2.7489033130538467
+     ],
+     "target": [
+      1.2138024702449037,
+      1.053524798201431,
+      0.2168729226603574
+     ],
+     "fov": 43.877288710408024,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-129",
+    "time": 0.3467741935483871,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.70817211112458,
+      1.988969214542099,
+      -2.684405693556485
+     ],
+     "target": [
+      1.1893604026298472,
+      1.0595412427424975,
+      0.2046610854294486
+     ],
+     "fov": 43.819452239946244,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-130",
+    "time": 0.34946236559139787,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.821323199830712,
+      1.9794555941824847,
+      -2.609085058214449
+     ],
+     "target": [
+      1.1614024792869893,
+      1.066403027199662,
+      0.19019780207419387
+     ],
+     "fov": 43.75243899701435,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-131",
+    "time": 0.3521505376344086,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      4.947623515411771,
+      1.9687373400029915,
+      -2.5237484858151893
+     ],
+     "target": [
+      1.1304365371854543,
+      1.0739782171615389,
+      0.17356613131664886
+     ],
+     "fov": 43.67715497451425,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-132",
+    "time": 0.3548387096774194,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.085300036874655,
+      1.956934252483633,
+      -2.4292029984427126
+     ],
+     "target": [
+      1.096971867132576,
+      1.0821344697354136,
+      0.15484861167110775
+     ],
+     "fov": 43.59450744576908,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-133",
+    "time": 0.35752688172043007,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.232549958867335,
+      1.9441684703441386,
+      -2.3262733281527375
+     ],
+     "target": [
+      1.06152552299398,
+      1.0907374950646416,
+      0.13413077164150589
+     ],
+     "fov": 43.50542051407391,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-134",
+    "time": 0.3602150537634409,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.3876027378011955,
+      1.930559080468468,
+      -2.215758405614989
+     ],
+     "target": [
+      1.024607412552753,
+      1.0996546720186875,
+      0.11149234577283548
+     ],
+     "fov": 43.41079752075088,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-135",
+    "time": 0.3629032258064517,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.548621403206742,
+      1.9162306915667333,
+      -2.0985005728339807
+     ],
+     "target": [
+      0.9867440105781954,
+      1.1087492975149618,
+      0.08702124803218506
+     ],
+     "fov": 43.311580839496045,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-136",
+    "time": 0.3655913978494624,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.713814694304363,
+      1.9013035560192013,
+      -1.9753052026370685
+     ],
+     "target": [
+      0.9484517457514832,
+      1.1178870053361503,
+      0.060797023908404316
+     ],
+     "fov": 43.20868326987254,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-137",
+    "time": 0.3682795698924731,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      5.881333539429025,
+      1.8859027199059268,
+      -1.8470152966312945
+     ],
+     "target": [
+      0.9102614938654033,
+      1.1269298666658751,
+      0.0329062787670705
+     ],
+     "fov": 43.10305152280368,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-138",
+    "time": 0.3709677419354839,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.049328235379962,
+      1.870152942243489,
+      -1.714469939933343
+     ],
+     "target": [
+      0.872705114167578,
+      1.1357396259505212,
+      0.003434024281993936
+     ],
+     "fov": 42.99563102409994,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-139",
+    "time": 0.3736559139784946,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.215918585294359,
+      1.8541814496800617,
+      -1.578527289216583
+     ],
+     "target": [
+      0.8363222345191657,
+      1.144176096812377,
+      -0.027531303816973385
+     ],
+     "fov": 42.88738478983173,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-140",
+    "time": 0.3763440860215054,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.379197849463546,
+      1.8381177254496732,
+      -1.4400634870757423
+     ],
+     "target": [
+      0.8016589805834904,
+      1.1520975043469182,
+      -0.05989775451302115
+     ],
+     "fov": 42.779291677358266,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-141",
+    "time": 0.3790322580645161,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.537215777048874,
+      1.8220954931674966,
+      -1.2999910602394074
+     ],
+     "target": [
+      0.7692708132683019,
+      1.159359928539574,
+      -0.09356495017362143
+     ],
+     "fov": 42.67235915230678,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-142",
+    "time": 0.3817204301075269,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.687975316911889,
+      1.8062538176244747,
+      -1.1592716176170483
+     ],
+     "target": [
+      0.7397213365488756,
+      1.1658178037135825,
+      -0.12841960888115203
+     ],
+     "fov": 42.56762925712427,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-143",
+    "time": 0.3844086021505376,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.8294454509134646,
+      1.7907370940099165,
+      -1.0189209269021213
+     ],
+     "target": [
+      0.7135765281798261,
+      1.1713256025825785,
+      -0.16433192657576529
+     ],
+     "fov": 42.466176221253846,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-144",
+    "time": 0.3870967741935483,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.959505064782629,
+      1.775704046592114,
+      -0.8801008374291359
+     ],
+     "target": [
+      0.6914081991337089,
+      1.1757380611448145,
+      -0.20112733759545362
+     ],
+     "fov": 42.36916057781776,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-145",
+    "time": 0.3897849462365591,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.076014584789557,
+      1.7613258820998388,
+      -0.7441248421265667
+     ],
+     "target": [
+      0.6737661342971665,
+      1.1789180643935784,
+      -0.23857511305808363
+     ],
+     "fov": 42.27780710949751,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-146",
+    "time": 0.39247311827956993,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.17683503345242,
+      1.747795632116395,
+      -0.6125849292191825
+     ],
+     "target": [
+      0.6611467624993814,
+      1.1807470823445312,
+      -0.2763369231959418
+     ],
+     "fov": 42.19344694906744,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-147",
+    "time": 0.3951612903225806,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.25997309050841,
+      1.7353337399719713,
+      -0.4874817481758463
+     ],
+     "target": [
+      0.6539140576341907,
+      1.1811490463818775,
+      -0.31389784241078333
+     ],
+     "fov": 42.11751841299879,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-148",
+    "time": 0.3978494623655914,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.323892714031856,
+      1.7241908616468484,
+      -0.3713869275335547
+     ],
+     "target": [
+      0.6521519981136684,
+      1.1801338387197873,
+      -0.3504634241753814
+     ],
+     "fov": 42.051523911368164,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-149",
+    "time": 0.40053763440860213,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.368119984694717,
+      1.7146327869016982,
+      -0.267496570159918
+     ],
+     "target": [
+      0.6554280979669292,
+      1.1778643077957553,
+      -0.3848609117493595
+     ],
+     "fov": 41.99684624088181,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-150",
+    "time": 0.4032258064516129,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.397831555207038,
+      1.705912257704004,
+      -0.16838682475980882
+     ],
+     "target": [
+      0.6632222196670507,
+      1.1743898106186468,
+      -0.4192878358769915
+     ],
+     "fov": 41.948897605384886,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-151",
+    "time": 0.40591397849462363,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.418138051684678,
+      1.6973644040991334,
+      -0.06765740992403069
+     ],
+     "target": [
+      0.6748436423713597,
+      1.1698208536853782,
+      -0.4555550681259432
+     ],
+     "fov": 41.90350411137855,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-152",
+    "time": 0.40860215053763443,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.430823146469087,
+      1.6890065620744772,
+      0.03374596588891183
+     ],
+     "target": [
+      0.6894446942702515,
+      1.164407469880617,
+      -0.493067061753131
+     ],
+     "fov": 41.860425478817774,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-153",
+    "time": 0.4112903225806452,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.43728134644602,
+      1.6808381050046326,
+      0.13526471960167358
+     ],
+     "target": [
+      0.7063971423608972,
+      1.158333115288715,
+      -0.5314280081300577
+     ],
+     "fov": 41.81940468332829,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-154",
+    "time": 0.41397849462365593,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.43859170751859,
+      1.6728497235450384,
+      0.23657913141432946
+     ],
+     "target": [
+      0.7252363306817791,
+      1.1517322637532215,
+      -0.5703750718053315
+     ],
+     "fov": 41.780199797386146,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-155",
+    "time": 0.4166666666666667,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.435593453017079,
+      1.6650335686896838,
+      0.33744830436059314
+     ],
+     "target": [
+      0.7456023591702543,
+      1.1447089845549099,
+      -0.609706832127684
+     ],
+     "fov": 41.7426196951302,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-156",
+    "time": 0.41935483870967744,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.428951116266041,
+      1.6573805684960408,
+      0.43771790768550145
+     ],
+     "target": [
+      0.7672171921798487,
+      1.1373432618645944,
+      -0.6492778575880301
+     ],
+     "fov": 41.706499099964105,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-157",
+    "time": 0.4220430107526882,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.419200146786283,
+      1.6498837635848493,
+      0.53725912206315
+     ],
+     "target": [
+      0.7898559495139705,
+      1.1296998402341882,
+      -0.6889692417348299
+     ],
+     "fov": 41.671706548836525,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-158",
+    "time": 0.42473118279569894,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.406779186899502,
+      1.6425371114335177,
+      0.635970770474471
+     ],
+     "target": [
+      0.8133352387973305,
+      1.121831469185273,
+      -0.728685256305049
+     ],
+     "fov": 41.638132681551575,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-159",
+    "time": 0.42741935483870963,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.392055713962022,
+      1.6353367665238663,
+      0.7337525790068204
+     ],
+     "target": [
+      0.8374984616525372,
+      1.113783371874609,
+      -0.7683397149924218
+     ],
+     "fov": 41.605691815143295,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-160",
+    "time": 0.43010752688172044,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.37533970548256,
+      1.6282790508451392,
+      0.8305254996475652
+     ],
+     "target": [
+      0.8622145790980005,
+      1.1055933271251388,
+      -0.8078620545490353
+     ],
+     "fov": 41.57430955566441,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-161",
+    "time": 0.43279569892473124,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.356899183032128,
+      1.621361982263452,
+      0.9262059092693176
+     ],
+     "target": [
+      0.8873673743440276,
+      1.0972950162215285,
+      -0.8471853653068778
+     ],
+     "fov": 41.543927422380065,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-162",
+    "time": 0.43548387096774194,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.336967231195844,
+      1.614584096735594,
+      1.0207177738851103
+     ],
+     "target": [
+      0.9128551478778548,
+      1.0889179502764121,
+      -0.8862501809307044
+     ],
+     "fov": 41.51449582448753,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-163",
+    "time": 0.4381720430107527,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.315752094226227,
+      1.6079454276468033,
+      1.1139760606248772
+     ],
+     "target": [
+      0.9385837757104734,
+      1.0804896327741302,
+      -0.924996769658573
+     ],
+     "fov": 41.48597699938535,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-164",
+    "time": 0.44086021505376344,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.293438555640394,
+      1.6014460526112964,
+      1.2059047045092393
+     ],
+     "target": [
+      0.964469621087374,
+      1.0720345093626185,
+      -0.9633718928468229
+     ],
+     "fov": 41.458337672879345,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-165",
+    "time": 0.4435483870967742,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.270194281083004,
+      1.5950868018711728,
+      1.2964249998711992
+     ],
+     "target": [
+      0.9904349469809457,
+      1.0635754053901953,
+      -1.001323503645222
+     ],
+     "fov": 41.431551359436384,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-166",
+    "time": 0.44623655913978494,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.246172854915605,
+      1.5888690932201737,
+      1.3854564711621302
+     ],
+     "target": [
+      1.0164069462795058,
+      1.0551337865751278,
+      -1.0388006909305352
+     ],
+     "fov": 41.40559700410057,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-167",
+    "time": 0.4489247311827957,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.22151592362731,
+      1.5827947583057749,
+      1.472918216694902
+     ],
+     "target": [
+      1.0423171963412265,
+      1.0467298945112031,
+      -1.0757539212172227
+     ],
+     "fov": 41.38045774469857,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-168",
+    "time": 0.45161290322580644,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.196355285493844,
+      1.576866014435291,
+      1.5587284190820594
+     ],
+     "target": [
+      1.068100783884722,
+      1.0383829984652753,
+      -1.1121345796963371
+     ],
+     "fov": 41.356120393870924,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-169",
+    "time": 0.4543010752688172,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.17081433466393,
+      1.571085381283551,
+      1.6428048204334298
+     ],
+     "target": [
+      1.093695855434859,
+      1.0301115152811753,
+      -1.1478949671527992
+     ],
+     "fov": 41.33257476965797,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-170",
+    "time": 0.4569892473118279,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.145007647163237,
+      1.565455278929864,
+      1.725070015368495
+     ],
+     "target": [
+      1.1190447820377603,
+      1.0219326139056328,
+      -1.1829903970203244
+     ],
+     "fov": 41.30981181026996,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-171",
+    "time": 0.4596774193548387,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.119046956937237,
+      1.5599790758931726,
+      1.8054356611652729
+     ],
+     "target": [
+      1.1440889112148211,
+      1.0138638925458145,
+      -1.2173723270942172
+     ],
+     "fov": 41.28782759791784,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-172",
+    "time": 0.4623655913978495,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.093038255581366,
+      1.554660192020052,
+      1.883815093781133
+     ],
+     "target": [
+      1.1687720588868773,
+      1.0059222352947388,
+      -1.250993605102641
+     ],
+     "fov": 41.26661951095202,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-173",
+    "time": 0.4650537634408602,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.06708185697944,
+      1.5495019724663912,
+      1.9601249082324612
+     ],
+     "target": [
+      1.1930407866971113,
+      0.998123713813491,
+      -1.2838090705220082
+     ],
+     "fov": 41.24618559737294,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-174",
+    "time": 0.46774193548387094,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.041270470228714,
+      1.5445072190601399,
+      2.034291716348705
+     ],
+     "target": [
+      1.2168464121887492,
+      0.9904829356930407,
+      -1.3157784126093992
+     ],
+     "fov": 41.226522639940335,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-175",
+    "time": 0.47043010752688175,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.015704083505906,
+      1.5396809374420963,
+      2.1062110753040955
+     ],
+     "target": [
+      1.2401316051223183,
+      0.983017337627772,
+      -1.346848390445369
+     ],
+     "fov": 41.20763684564483,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-176",
+    "time": 0.47311827956989255,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.990468591465637,
+      1.5350261095284392,
+      2.1758100696006237
+     ],
+     "target": [
+      1.262850322394831,
+      0.9757407808326499,
+      -1.3769797560896233
+     ],
+     "fov": 41.18952711670046,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-177",
+    "time": 0.47580645161290325,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.965652633239655,
+      1.5305468587551156,
+      2.243000114934482
+     ],
+     "target": [
+      1.2849525048492167,
+      0.9686684565779298,
+      -1.4061268575140118
+     ],
+     "fov": 41.172197423718195,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-178",
+    "time": 0.478494623655914,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.941345783988694,
+      1.5262479597080318,
+      2.3076839450126165
+     ],
+     "target": [
+      1.3063860867767763,
+      0.9618162317675818,
+      -1.4342405697604277
+     ],
+     "fov": 41.155654743040245,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-179",
+    "time": 0.48118279569892475,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.917623667620836,
+      1.5221321740460447,
+      2.369795625325892
+     ],
+     "target": [
+      1.3271101990731358,
+      0.9551964257582171,
+      -1.4612856669675687
+     ],
+     "fov": 41.1398987729921,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-180",
+    "time": 0.4838709677419355,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.894578729320279,
+      1.518205588990739,
+      2.429219988232395
+     ],
+     "target": [
+      1.347068287067804,
+      0.9488263971672711,
+      -1.4872057419110316
+     ],
+     "fov": 41.12494237017139,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-181",
+    "time": 0.48655913978494625,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.872279709406674,
+      1.5144705679648225,
+      2.4858989732030254
+     ],
+     "target": [
+      1.3662235589502119,
+      0.9427172194627785,
+      -1.5119694980242335
+     ],
+     "fov": 41.110784543938586,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-182",
+    "time": 0.489247311827957,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.850816140949615,
+      1.5109333001062761,
+      2.539717296361368
+     ],
+     "target": [
+      1.3845205272504009,
+      0.9368859534680838,
+      -1.5355208594038077
+     ],
+     "fov": 41.09743917836595,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-183",
+    "time": 0.49193548387096775,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.830258654274053,
+      1.5075970854131542,
+      2.590604188575574
+     ],
+     "target": [
+      1.401919268508125,
+      0.9313447161814772,
+      -1.5578233786805509
+     ],
+     "fov": 41.084909507191625,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-184",
+    "time": 0.4946236559139785,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.810685069457448,
+      1.5044666702935916,
+      2.638467518707508
+     ],
+     "target": [
+      1.418373094120093,
+      0.9261077996844493,
+      -1.5788314320694274
+     ],
+     "fov": 41.073204510083976,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-185",
+    "time": 0.4973118279569892,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.792179249842528,
+      1.5015479456164154,
+      2.6831981092351516
+     ],
+     "target": [
+      1.43382980257716,
+      0.9211912638290207,
+      -1.5984920336869761
+     ],
+     "fov": 41.06233764875331,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-186",
+    "time": 0.5,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.7747956408516865,
+      1.4988423741412582,
+      2.7247551903162703
+     ],
+     "target": [
+      1.4482612483895216,
+      0.9166035323423203,
+      -1.6167824093595002
+     ],
+     "fov": 41.05230614273342,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-187",
+    "time": 0.5026881720430108,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.758629887898864,
+      1.4963580391905391,
+      2.7629968451324194
+     ],
+     "target": [
+      1.4616045763584335,
+      0.9123640786585462,
+      -1.633635410894506
+     ],
+     "fov": 41.04313200237945,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-188",
+    "time": 0.5053763440860215,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.743744699106058,
+      1.4940980401367492,
+      2.797858081005446
+     ],
+     "target": [
+      1.473823928664003,
+      0.9084838044283239,
+      -1.6490178445569932
+     ],
+     "fov": 41.034818925679545,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-189",
+    "time": 0.5080645161290323,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.730206355673278,
+      1.4920662233001576,
+      2.8292629305295147
+     ],
+     "target": [
+      1.4848800170312482,
+      0.9049747160913182,
+      -1.6628918178221266
+     ],
+     "fov": 41.02737360323096,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-190",
+    "time": 0.510752688172043,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.718101875924978,
+      1.4902696592335893,
+      2.857085894093327
+     ],
+     "target": [
+      1.4947163456967174,
+      0.9018542900744312,
+      -1.6751976354617983
+     ],
+     "fov": 41.020814676517126,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-191",
+    "time": 0.5134408602150538,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.70749263722284,
+      1.4887116889661347,
+      2.881259438773557
+     ],
+     "target": [
+      1.503297070014479,
+      0.8991334573592147,
+      -1.6859012948955023
+     ],
+     "fov": 41.015147264519136,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-192",
+    "time": 0.5161290322580645,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.698441135541497,
+      1.487395979120398,
+      2.9017114260588888
+     ],
+     "target": [
+      1.5105850481995826,
+      0.8968235726019951,
+      -1.6949668708710692
+     ],
+     "fov": 41.01037787080824,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-193",
+    "time": 0.5188172043010753,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.691034172383003,
+      1.4863298157840241,
+      2.918313696501981
+     ],
+     "target": [
+      1.5165233581396054,
+      0.8949422663842878,
+      -1.7023336692398716
+     ],
+     "fov": 41.0065262275652,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-194",
+    "time": 0.521505376344086,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.685340919244283,
+      1.48551797713162,
+      2.930977227816646
+     ],
+     "target": [
+      1.521069139655963,
+      0.8935027166502872,
+      -1.7079583837578274
+     ],
+     "fov": 41.003603044595046,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-195",
+    "time": 0.5241935483870968,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.681405697514723,
+      1.484961829981889,
+      2.9396665866624248
+     ],
+     "target": [
+      1.5241990526250373,
+      0.8925119300353513,
+      -1.711821608461546
+     ],
+     "fov": 41.00160691722895,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-196",
+    "time": 0.5268817204301075,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.679319764455987,
+      1.4846694799707822,
+      2.944241354541432
+     ],
+     "target": [
+      1.5258521692482294,
+      0.8919888199364404,
+      -1.7138573405158475
+     ],
+     "fov": 41.0005607638757,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-197",
+    "time": 0.5295698924731183,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678996830209833,
+      1.4846244684360799,
+      2.944946427542834
+     ],
+     "target": [
+      1.5261074919525996,
+      0.8919080454042805,
+      -1.7141712786611085
+     ],
+     "fov": 41.000400016530044,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-198",
+    "time": 0.532258064516129,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678996830107696,
+      1.4846244684068457,
+      2.9449464280058906
+     ],
+     "target": [
+      1.5261074919988724,
+      0.8919080453553914,
+      -1.7141712788575956
+     ],
+     "fov": 41.00040001637166,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-199",
+    "time": 0.5349462365591398,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.6789968300217435,
+      1.4846244683876422,
+      2.944946428378767
+     ],
+     "target": [
+      1.5261074919491202,
+      0.8919080453075122,
+      -1.7141712790212646
+     ],
+     "fov": 41.00040001622807,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-200",
+    "time": 0.5376344086021505,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678996829952027,
+      1.4846244683774443,
+      2.9449464286644766
+     ],
+     "target": [
+      1.526107491820374,
+      0.8919080452619623,
+      -1.714171279152346
+     ],
+     "fov": 41.00040001610136,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-201",
+    "time": 0.5403225806451613,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678996829896935,
+      1.4846244683755097,
+      2.944946428871197
+     ],
+     "target": [
+      1.5261074916179944,
+      0.8919080452183219,
+      -1.7141712792540262
+     ],
+     "fov": 41.00040001598955,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-202",
+    "time": 0.543010752688172,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.67899682985704,
+      1.4846244683852015,
+      2.944946428986368
+     ],
+     "target": [
+      1.5261074912891557,
+      0.8919080451728733,
+      -1.7141712793242028
+     ],
+     "fov": 41.00040001588742,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-203",
+    "time": 0.5456989247311828,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678996829865291,
+      1.4846244684079535,
+      2.944946428885511
+     ],
+     "target": [
+      1.5261074909503236,
+      0.8919080451513668,
+      -1.7141712793019872
+     ],
+     "fov": 41.00040001586133,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-204",
+    "time": 0.5483870967741935,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678996829906773,
+      1.4846244684263468,
+      2.9449464286771514
+     ],
+     "target": [
+      1.5261074908243886,
+      0.8919080451630844,
+      -1.7141712792201544
+     ],
+     "fov": 41.00040001591322,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-205",
+    "time": 0.5510752688172043,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678996829965117,
+      1.4846244684404555,
+      2.944946428420716
+     ],
+     "target": [
+      1.52610749084051,
+      0.8919080451942419,
+      -1.7141712791087282
+     ],
+     "fov": 41.000400016008626,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-206",
+    "time": 0.553763440860215,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678996830033186,
+      1.484624468449729,
+      2.9449464281438766
+     ],
+     "target": [
+      1.5261074909774541,
+      0.8919080452395707,
+      -1.7141712789809531
+     ],
+     "fov": 41.00040001613365,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-207",
+    "time": 0.5564516129032258,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678996830111968,
+      1.4846244684544354,
+      2.9449464278422313
+     ],
+     "target": [
+      1.5261074912349815,
+      0.8919080452995549,
+      -1.714171278834948
+     ],
+     "fov": 41.00040001628985,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-208",
+    "time": 0.5591397849462365,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678996830204127,
+      1.4846244684539007,
+      2.944946427508164
+     ],
+     "target": [
+      1.526107491635488,
+      0.8919080453772638,
+      -1.7141712786660315
+     ],
+     "fov": 41.000400016484086,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-209",
+    "time": 0.5618279569892473,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.679122184860164,
+      1.4846225411642653,
+      2.9445922182046367
+     ],
+     "target": [
+      1.5265850274870338,
+      0.8919846404162359,
+      -1.7140352830838341
+     ],
+     "fov": 41.000589268972035,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-210",
+    "time": 0.5645161290322581,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.680131973434752,
+      1.4846068120130245,
+      2.9417364673901236
+     ],
+     "target": [
+      1.5304379139119606,
+      0.8926028765334686,
+      -1.7129368689108804
+     ],
+     "fov": 41.00211663003154,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-211",
+    "time": 0.5672043010752689,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.682124563945132,
+      1.4845750801927349,
+      2.9360930038136286
+     ],
+     "target": [
+      1.538061534568905,
+      0.8938270054227723,
+      -1.7107595018710395
+     ],
+     "fov": 41.005140217473226,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-212",
+    "time": 0.5698924731182796,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.685061875692923,
+      1.4845271825338908,
+      2.927760494763543
+     ],
+     "target": [
+      1.5493332812831504,
+      0.895638267660908,
+      -1.7075338204026953
+     ],
+     "fov": 41.00961298798194,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-213",
+    "time": 0.5725806451612904,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.688905707837357,
+      1.484462954126097,
+      2.916837904204937
+     ],
+     "target": [
+      1.5641301957974725,
+      0.8980178520162052,
+      -1.7032905421447793
+     ],
+     "fov": 41.01548776690081,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-214",
+    "time": 0.5752688172043011,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.693615357292098,
+      1.4843822694989743,
+      2.903431278123574
+     ],
+     "target": [
+      1.5823197585969386,
+      0.9009454124931885,
+      -1.6980631131782775
+     ],
+     "fov": 41.02271358840083,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-215",
+    "time": 0.5779569892473119,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.699148133504859,
+      1.4842850386858712,
+      2.8876523374777716
+     ],
+     "target": [
+      1.6037617305085157,
+      0.904399358901322,
+      -1.691887206309704
+     ],
+     "fov": 41.031236416941354,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-216",
+    "time": 0.5806451612903226,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.705473167298491,
+      1.4841709596655241,
+      2.869579038336831
+     ],
+     "target": [
+      1.6283618147931795,
+      0.9083655067444243,
+      -1.6847852373870502
+     ],
+     "fov": 41.041020487197684,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-217",
+    "time": 0.5833333333333334,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.712552173795416,
+      1.4840398505053936,
+      2.849310363527452
+     ],
+     "target": [
+      1.6559972824952442,
+      0.9128251037461592,
+      -1.67678775407296
+     ],
+     "fov": 41.05201875324883,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-218",
+    "time": 0.5860215053763441,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.720346801728804,
+      1.4838915246004059,
+      2.8269454154907026
+     ],
+     "target": [
+      1.6865453225873874,
+      0.9177593913595571,
+      -1.667925294862418
+     ],
+     "fov": 41.06418414841795,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-219",
+    "time": 0.5887096774193549,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.728814238697259,
+      1.483725877289525,
+      2.802596061761794
+     ],
+     "target": [
+      1.7198657286948251,
+      0.9231468047137699,
+      -1.6582334285432332
+     ],
+     "fov": 41.07746268450002,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-220",
+    "time": 0.5913978494623656,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.737917089536311,
+      1.4835426962397054,
+      2.7763585715035166
+     ],
+     "target": [
+      1.7558396629434467,
+      0.9289692358967088,
+      -1.6477414990780554
+     ],
+     "fov": 41.091808892190926,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-221",
+    "time": 0.5940860215053764,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.747620834423561,
+      1.4833416988528731,
+      2.748320778210403
+     ],
+     "target": [
+      1.7943600226048515,
+      0.9352104908198894,
+      -1.6364753595111559
+     ],
+     "fov": 41.107182006896494,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-222",
+    "time": 0.5967741935483871,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.757886907725053,
+      1.4831226716416526,
+      2.7185820298467522
+     ],
+     "target": [
+      1.8353040853571563,
+      0.9418518617047765,
+      -1.6244653506049949
+     ],
+     "fov": 41.12353505942604,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-223",
+    "time": 0.5994623655913979,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.768674926308667,
+      1.4828854315449642,
+      2.687246839646773
+     ],
+     "target": [
+      1.8785421306954722,
+      0.9488735152841657,
+      -1.6117438202910597
+     ],
+     "fov": 41.14081830212123,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-224",
+    "time": 0.6021505376344086,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.779943142985059,
+      1.4826298205114983,
+      2.6544236234436545
+     ],
+     "target": [
+      1.9239391205081993,
+      0.9562547604727409,
+      -1.5983446539822552
+     ],
+     "fov": 41.15897987148844,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-225",
+    "time": 0.6048387096774194,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.791658261892351,
+      1.4823554761520352,
+      2.6201960284136487
+     ],
+     "target": [
+      1.971394444034634,
+      0.9639805183028392,
+      -1.5842915074059665
+     ],
+     "fov": 41.177981701725734,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-226",
+    "time": 0.6075268817204301,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.803781379111538,
+      1.4820621432269203,
+      2.5846637979981333
+     ],
+     "target": [
+      2.0207854988323075,
+      0.9720321570763986,
+      -1.5696144188424266
+     ],
+     "fov": 41.19777696833501,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-227",
+    "time": 0.6102150537634409,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.8162713357612645,
+      1.4817496073675347,
+      2.5479331214212415
+     ],
+     "target": [
+      2.071980906152784,
+      0.9803896298968925,
+      -1.5543459613884179
+     ],
+     "fov": 41.21831535573568,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-228",
+    "time": 0.6129032258064516,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.829088367948317,
+      1.4814176064376512,
+      2.5101059319674186
+     ],
+     "target": [
+      2.1248553911151187,
+      0.989033900780305,
+      -1.5385168194002434
+     ],
+     "fov": 41.239549021902015,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-229",
+    "time": 0.6155913978494624,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.842196800187268,
+      1.4810657483143927,
+      2.471271809278523
+     ],
+     "target": [
+      2.1793012672790635,
+      0.997948836139134,
+      -1.5221522846673465
+     ],
+     "fov": 41.261437233954595,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-230",
+    "time": 0.6182795698924731,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.8555571702430695,
+      1.4806937099144792,
+      2.431531162148793
+     ],
+     "target": [
+      2.2351960982324126,
+      1.0071159234519456,
+      -1.5052819113674567
+     ],
+     "fov": 41.28393339114436,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-231",
+    "time": 0.6209677419354839,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.869126375849944,
+      1.4803012470033337,
+      2.3909949580762104
+     ],
+     "target": [
+      2.292402894211696,
+      1.0165142881756914,
+      -1.4879395290918853
+     ],
+     "fov": 41.30698507774474,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-232",
+    "time": 0.6236559139784946,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.88286872278794,
+      1.4798878716694657,
+      2.3497516828171
+     ],
+     "target": [
+      2.3508167798807826,
+      1.0261283639529541,
+      -1.4701490799400911
+     ],
+     "fov": 41.330552873585205,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-233",
+    "time": 0.6263440860215054,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.896744351027179,
+      1.4794531713054853,
+      2.3079017277318057
+     ],
+     "target": [
+      2.4103166724567853,
+      1.0359399711780444,
+      -1.451939186022872
+     ],
+     "fov": 41.3545909121156,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-234",
+    "time": 0.6290322580645161,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.91071107033839,
+      1.4789967646592386,
+      2.265552015113785
+     ],
+     "target": [
+      2.4707727465341174,
+      1.0459295333737528,
+      -1.4333409336647474
+     ],
+     "fov": 41.379049871120095,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-235",
+    "time": 0.6317204301075269,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.924730653150405,
+      1.4785180899306698,
+      2.222796842334013
+     ],
+     "target": [
+      2.532073861082992,
+      1.0560806158160285,
+      -1.4143794044667617
+     ],
+     "fov": 41.40388808055995,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-236",
+    "time": 0.6344086021505376,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.938762165573168,
+      1.478016606254326,
+      2.179737907149457
+     ],
+     "target": [
+      2.5940991855935476,
+      1.0663752546536087,
+      -1.3950823213078811
+     ],
+     "fov": 41.42906007307039,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-237",
+    "time": 0.6370967741935484,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.952764183592628,
+      1.477491714765104,
+      2.136477510045568
+     ],
+     "target": [
+      2.656727988444316,
+      1.0767955812468357,
+      -1.3754770043673918
+     ],
+     "fov": 41.45452055594709,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-238",
+    "time": 0.6397849462365591,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.966695588165363,
+      1.476942712184218,
+      2.093115899418419
+     ],
+     "target": [
+      2.7198436916426663,
+      1.0873245139383105,
+      -1.3555890209680088
+     ],
+     "fov": 41.480226088766614,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-239",
+    "time": 0.6424731182795699,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.980514633711804,
+      1.47636880278105,
+      2.0497538756308384
+     ],
+     "target": [
+      2.7833303928581286,
+      1.0979452030472558,
+      -1.335443162590848
+     ],
+     "fov": 41.50613370988934,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-240",
+    "time": 0.6451612903225807,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.994178001905286,
+      1.4757691153582906,
+      2.006495493696957
+     ],
+     "target": [
+      2.8470691878649133,
+      1.1086404380579178,
+      -1.3150645061110833
+     ],
+     "fov": 41.53219947403126,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-241",
+    "time": 0.6478494623655914,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.007642803571093,
+      1.4751425852314362,
+      1.963441365347545
+     ],
+     "target": [
+      2.9109484139138564,
+      1.1193943962519053,
+      -1.2944749980262722
+     ],
+     "fov": 41.55838269204214,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-242",
+    "time": 0.6505376344086021,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.020863413093955,
+      1.4744880536510248,
+      1.9206982096154328
+     ],
+     "target": [
+      2.974850067999068,
+      1.1301904027959775,
+      -1.2736976124033532
+     ],
+     "fov": 41.58464044352972,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-243",
+    "time": 0.6532258064516129,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.033795360987767,
+      1.4738040229107954,
+      1.878365645211524
+     ],
+     "target": [
+      3.0386701866983583,
+      1.1410144236507327,
+      -1.2527494894246556
+     ],
+     "fov": 41.61093603605427,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-244",
+    "time": 0.6559139784946236,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.046388099082802,
+      1.473088954840706,
+      1.8365588686216539
+     ],
+     "target": [
+      3.1022856676987582,
+      1.1518495171264818,
+      -1.2316524543669347
+     ],
+     "fov": 41.637225469101516,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-245",
+    "time": 0.6586021505376343,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.0585955962107,
+      1.4723405786752903,
+      1.7953723976452922
+     ],
+     "target": [
+      3.1656105104825585,
+      1.1626854954881702,
+      -1.210413976426582
+     ],
+     "fov": 41.66348081681268,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-246",
+    "time": 0.6612903225806451,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.070362123633178,
+      1.4715565484963409,
+      1.7549254755200223
+     ],
+     "target": [
+      3.228528499292581,
+      1.1735075961132284,
+      -1.189048848050125
+     ],
+     "fov": 41.68966264226505,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-247",
+    "time": 0.6639784946236559,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.081630558997269,
+      1.4707337656514106,
+      1.7153320431408008
+     ],
+     "target": [
+      3.290941334190708,
+      1.184304867389522,
+      -1.167562335045003
+     ],
+     "fov": 41.7157402091125,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-248",
+    "time": 0.6666666666666666,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.0923391951202515,
+      1.4698682198262683,
+      1.6767072737897002
+     ],
+     "target": [
+      3.352762713976254,
+      1.1950694714835115,
+      -1.1459506729533808
+     ],
+     "fov": 41.7416895665175,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-249",
+    "time": 0.6693548387096775,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.102418640882642,
+      1.4689546821560158,
+      1.6391720985132867
+     ],
+     "target": [
+      3.4139171661649206,
+      1.2057969259502381,
+      -1.1241993740484293
+     ],
+     "fov": 41.76749381834145,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-250",
+    "time": 0.6720430107526881,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.111787808971119,
+      1.4679861899440154,
+      1.6028576567802653
+     ],
+     "target": [
+      3.4743420715162343,
+      1.216487127080169,
+      -1.1022793532614152
+     ],
+     "fov": 41.793145118221474,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-251",
+    "time": 0.6747311827956989,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.120347244135179,
+      1.4669532480509337,
+      1.5679133922189554
+     ],
+     "target": [
+      3.53398928357805,
+      1.2271457008461013,
+      -1.08014131654717
+     ],
+     "fov": 41.81864717425434,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-252",
+    "time": 0.6774193548387096,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.127969024247805,
+      1.4658423138239232,
+      1.5345156519123482
+     ],
+     "target": [
+      3.592836767167054,
+      1.2377878921795238,
+      -1.0577029000881035
+     ],
+     "fov": 41.844023314435724,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-253",
+    "time": 0.6801075268817205,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.134483454203569,
+      1.46463163866312,
+      1.502853208976448
+     ],
+     "target": [
+      3.650968798971716,
+      1.2484567117275538,
+      -1.0348008948993532
+     ],
+     "fov": 41.86935729005053,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-254",
+    "time": 0.6827956989247311,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.139623454068936,
+      1.463286661613529,
+      1.4732192161982853
+     ],
+     "target": [
+      3.708527957806707,
+      1.2592218481298783,
+      -1.0111737062982538
+     ],
+     "fov": 41.894785538689256,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-255",
+    "time": 0.6854838709677419,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.14292549455899,
+      1.4617427714762985,
+      1.4460672015763731
+     ],
+     "target": [
+      3.7659005682663858,
+      1.2702321288989864,
+      -0.9863013197653783
+     ],
+     "fov": 41.920609459802805,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-256",
+    "time": 0.6881720430107527,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.143375503662946,
+      1.4598549339793168,
+      1.4223453964244537
+     ],
+     "target": [
+      3.8240422929133686,
+      1.281835329127361,
+      -0.9589935730613139
+     ],
+     "fov": 41.94753983390382,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-257",
+    "time": 0.6908602150537634,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.137686490220473,
+      1.457190779598214,
+      1.4055778508551948
+     ],
+     "target": [
+      3.8849185553125967,
+      1.2949314136594803,
+      -0.925930845477751
+     ],
+     "fov": 41.97735383246865,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-258",
+    "time": 0.6935483870967742,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.119234070441997,
+      1.4536031937563942,
+      1.411511241576939
+     ],
+     "target": [
+      3.930762764788456,
+      1.3069721367697413,
+      -0.8907499495405885
+     ],
+     "fov": 42.00352501875251,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-259",
+    "time": 0.696236559139785,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.094566140329307,
+      1.4503047920477465,
+      1.4373185704474332
+     ],
+     "target": [
+      3.9471204600790553,
+      1.3140488844687013,
+      -0.8650729910469922
+     ],
+     "fov": 42.01761013657608,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-260",
+    "time": 0.6989247311827957,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.0682579837364266,
+      1.4472397163817685,
+      1.470244549321329
+     ],
+     "target": [
+      3.950986521616329,
+      1.318870035081687,
+      -0.844142851527134
+     ],
+     "fov": 42.02631449176157,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-261",
+    "time": 0.7016129032258066,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.041394445463849,
+      1.4443321218411498,
+      1.506517589107451
+     ],
+     "target": [
+      3.9482686105587605,
+      1.3224547960417048,
+      -0.8259389681491278
+     ],
+     "fov": 42.03210165883944,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-262",
+    "time": 0.7043010752688172,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      7.014340724959412,
+      1.4415404223308652,
+      1.5446764162119577
+     ],
+     "target": [
+      3.9414370815879822,
+      1.3252429585263283,
+      -0.8095522359335922
+     ],
+     "fov": 42.03602502443559,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-263",
+    "time": 0.706989247311828,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.9872395301882495,
+      1.438838041768508,
+      1.584026768744499
+     ],
+     "target": [
+      3.9317670355394347,
+      1.327468566623656,
+      -0.7944801763866262
+     ],
+     "fov": 42.038640326373496,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-264",
+    "time": 0.7096774193548387,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.960157145245457,
+      1.4362074641964835,
+      1.6241844476681138
+     ],
+     "target": [
+      3.9200058848282797,
+      1.3292714775258312,
+      -0.7804156542944695
+     ],
+     "fov": 42.04027787403837,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-265",
+    "time": 0.7123655913978495,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.933141838844843,
+      1.4336378862800494,
+      1.6648929736457696
+     ],
+     "target": [
+      3.906639343882727,
+      1.3307417805269535,
+      -0.767162843253452
+     ],
+     "fov": 42.04115095951109,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-266",
+    "time": 0.7150537634408601,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.9062482437481645,
+      1.43112379456602,
+      1.705942191470756
+     ],
+     "target": [
+      3.892015739387659,
+      1.3319410047887028,
+      -0.7545958348171828
+     ],
+     "fov": 42.04140728927412,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-267",
+    "time": 0.717741935483871,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.8795196907690235,
+      1.428661419380465,
+      1.7471726206886125
+     ],
+     "target": [
+      3.8763932432131494,
+      1.3329143179401783,
+      -0.7426233682977064
+     ],
+     "fov": 42.041155594977866,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-268",
+    "time": 0.7204301075268817,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.853011504788958,
+      1.4262498992784067,
+      1.7884278027495224
+     ],
+     "target": [
+      3.859982939537538,
+      1.333695590252981,
+      -0.7311852678915053
+     ],
+     "fov": 42.0404795539454,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-269",
+    "time": 0.7231182795698925,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.826782388260371,
+      1.4238898561959092,
+      1.8295600603711004
+     ],
+     "target": [
+      3.8429627201293,
+      1.334311509054518,
+      -0.7202395851083087
+     ],
+     "fov": 42.0394465151829,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-270",
+    "time": 0.7258064516129034,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.800892690599961,
+      1.4215828735592304,
+      1.870428840862609
+     ],
+     "target": [
+      3.8254871465783795,
+      1.3347838247303718,
+      -0.7097566553771584
+     ],
+     "fov": 42.03811254180329,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-271",
+    "time": 0.728494623655914,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.775404603195087,
+      1.4193312813704921,
+      1.9108976357740373
+     ],
+     "target": [
+      3.8076945505609805,
+      1.3351307461791468,
+      -0.6997158648514621
+     ],
+     "fov": 42.03652566302577,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-272",
+    "time": 0.7311827956989247,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.750383921037714,
+      1.417138153388653,
+      1.9508292926735396
+     ],
+     "target": [
+      3.789713016898728,
+      1.3353678710921653,
+      -0.6901040851900111
+     ],
+     "fov": 42.0347281950543,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-273",
+    "time": 0.7338709677419355,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.725896927603171,
+      1.4150069229315712,
+      1.9900896601241627
+     ],
+     "target": [
+      3.7716614791954624,
+      1.3355088848771122,
+      -0.6809128920628227
+     ],
+     "fov": 42.032758068608345,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-274",
+    "time": 0.7365591397849462,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.702012110992035,
+      1.4129414577274604,
+      2.028543946778508
+     ],
+     "target": [
+      3.7536532203603152,
+      1.3355659995495281,
+      -0.6721381468386882
+     ],
+     "fov": 42.030650006905155,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-275",
+    "time": 0.7392473118279569,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.678798536497989,
+      1.4109458628390839,
+      2.0660586690155043
+     ],
+     "target": [
+      3.735796335893496,
+      1.3355502969694324,
+      -0.663778595307432
+     ],
+     "fov": 42.028436168398756,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-276",
+    "time": 0.7419354838709677,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.656324960480382,
+      1.409024365805553,
+      2.1025026213148674
+     ],
+     "target": [
+      3.718194212645132,
+      1.3354719611987589,
+      -0.6558349970416082
+     ],
+     "fov": 42.02614660203449,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-277",
+    "time": 0.7446236559139785,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.634662100100048,
+      1.4071814812900656,
+      2.137742844502888
+     ],
+     "target": [
+      3.700948188930014,
+      1.3353404635569612,
+      -0.6483105082852694
+     ],
+     "fov": 42.02380988913184,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-278",
+    "time": 0.7473118279569892,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.613881690182145,
+      1.4054219055414907,
+      2.171645857902016
+     ],
+     "target": [
+      3.6841575630077568,
+      1.3351647093363102,
+      -0.6412099934522548
+     ],
+     "fov": 42.02145339470205,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-279",
+    "time": 0.7499999999999999,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.594055388439505,
+      1.403750405743454,
+      2.204079231295749
+     ],
+     "target": [
+      3.667919246769463,
+      1.334953136604255,
+      -0.6345393952181214
+     ],
+     "fov": 42.01910339389605,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-280",
+    "time": 0.7526881720430108,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.575255336492321,
+      1.402171854182603,
+      2.2349105103654687
+     ],
+     "target": [
+      3.6523286193459352,
+      1.33471380131175,
+      -0.6283057359529481
+     ],
+     "fov": 42.01678532174009,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-281",
+    "time": 0.7553763440860215,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.5575532629306315,
+      1.4006911422201678,
+      2.2640085597630017
+     ],
+     "target": [
+      3.637479104676542,
+      1.3344544303940464,
+      -0.6225166675678369
+     ],
+     "fov": 42.014523812132644,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-282",
+    "time": 0.7580645161290323,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.541019971987329,
+      1.399313130055753,
+      2.2912443144765016
+     ],
+     "target": [
+      3.6234619666197725,
+      1.3341824592619504,
+      -0.6171801978086391
+     ],
+     "fov": 42.01234273667536,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-283",
+    "time": 0.7607526881720431,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.525730264599001,
+      1.3980430492635234,
+      2.3164825822695922
+     ],
+     "target": [
+      3.610370709690479,
+      1.3339051586380182,
+      -0.6123061699873009
+     ],
+     "fov": 42.01026596021728,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-284",
+    "time": 0.7634408602150538,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.511757716926972,
+      1.3968860602462303,
+      2.3395905574393394
+     ],
+     "target": [
+      3.5982968727460616,
+      1.3336295929417266,
+      -0.6079044728175258
+     ],
+     "fov": 42.00831675471309,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-285",
+    "time": 0.7661290322580645,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.499176239724131,
+      1.3958473780765064,
+      2.3604352028004314
+     ],
+     "target": [
+      3.587331474800307,
+      1.3333626707856243,
+      -0.6039854849132961
+     ],
+     "fov": 42.00651806238554,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-286",
+    "time": 0.7688172043010753,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.488060059806826,
+      1.3949322669491628,
+      2.3788832323706925
+     ],
+     "target": [
+      3.577565119485453,
+      1.3331111687923876,
+      -0.6005600116953611
+     ],
+     "fov": 42.004892549274196,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-287",
+    "time": 0.771505376344086,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.478479897569297,
+      1.3941457234119026,
+      2.3948074300694584
+     ],
+     "target": [
+      3.569084699504087,
+      1.3328816577195957,
+      -0.5976380776469722
+     ],
+     "fov": 42.003462075489544,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-288",
+    "time": 0.7741935483870966,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.470505477576574,
+      1.3934926827704117,
+      2.4080824800011422
+     ],
+     "target": [
+      3.5619756105003706,
+      1.332680560891231,
+      -0.5952296960835788
+     ],
+     "fov": 42.00224806601801,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-289",
+    "time": 0.7768817204301075,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.464218121661593,
+      1.3929790450731687,
+      2.418563939510521
+     ],
+     "target": [
+      3.5563331363518156,
+      1.3325145036323136,
+      -0.5933485970085617
+     ],
+     "fov": 42.001273501835,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-290",
+    "time": 0.7795698924731183,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.459692978017056,
+      1.3926102154915987,
+      2.426117770860707
+     ],
+     "target": [
+      3.552246736404201,
+      1.3323898911763983,
+      -0.5920067983873312
+     ],
+     "fov": 42.00056027477915,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-291",
+    "time": 0.782258064516129,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456996821174711,
+      1.3923909301391661,
+      2.4306240750632044
+     ],
+     "target": [
+      3.549797904642116,
+      1.3323128171425043,
+      -0.5912140270363022
+     ],
+     "fov": 42.000128769123656,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-292",
+    "time": 0.7849462365591399,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.4562015471364615,
+      1.3923263573929445,
+      2.4319545808307974
+     ],
+     "target": [
+      3.5490723151125327,
+      1.332289426877373,
+      -0.5909817398296767
+     ],
+     "fov": 41.99999996942334,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-293",
+    "time": 0.7876344086021505,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.4562015468751595,
+      1.3923263573823599,
+      2.4319545812421923
+     ],
+     "target": [
+      3.5490723149822254,
+      1.3322894268853032,
+      -0.5909817396790298
+     ],
+     "fov": 41.99999996942476,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-294",
+    "time": 0.7903225806451613,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201546675496,
+      1.3923263573959312,
+      2.431954581574921
+     ],
+     "target": [
+      3.54907231490461,
+      1.332289426886197,
+      -0.5909817395173944
+     ],
+     "fov": 41.99999996942577,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-295",
+    "time": 0.793010752688172,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201546528,
+      1.3923263574273197,
+      2.431954581838843
+     ],
+     "target": [
+      3.5490723148689267,
+      1.3322894268817616,
+      -0.5909817393521019
+     ],
+     "fov": 41.99999996942644,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-296",
+    "time": 0.7956989247311828,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201546423452,
+      1.3923263574724474,
+      2.431954582045334
+     ],
+     "target": [
+      3.5490723148668213,
+      1.3322894268731607,
+      -0.590981739185795
+     ],
+     "fov": 41.999999969426845,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-297",
+    "time": 0.7983870967741934,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.4562015463556905,
+      1.3923263575311675,
+      2.431954582204179
+     ],
+     "target": [
+      3.5490723148953283,
+      1.3322894268605565,
+      -0.5909817390146983
+     ],
+     "fov": 41.99999996942699,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-298",
+    "time": 0.8010752688172043,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201546329965,
+      1.3923263576108469,
+      2.431954582313183
+     ],
+     "target": [
+      3.549072314964315,
+      1.3322894268420835,
+      -0.5909817388264725
+     ],
+     "fov": 41.999999969426845,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-299",
+    "time": 0.803763440860215,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201546383292,
+      1.39232635770788,
+      2.4319545823097375
+     ],
+     "target": [
+      3.5490723150870664,
+      1.3322894268178365,
+      -0.5909817386534252
+     ],
+     "fov": 41.99999996942621,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-300",
+    "time": 0.8064516129032258,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201546493301,
+      1.3923263577627962,
+      2.431954582179361
+     ],
+     "target": [
+      3.5490723151930705,
+      1.3322894268024623,
+      -0.590981738608457
+     ],
+     "fov": 41.99999996942543,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-301",
+    "time": 0.8091397849462366,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201546615824,
+      1.3923263577741254,
+      2.4319545819918638
+     ],
+     "target": [
+      3.549072315260623,
+      1.3322894267972254,
+      -0.5909817386654194
+     ],
+     "fov": 41.99999996942475,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-302",
+    "time": 0.8118279569892473,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201546739349,
+      1.3923263577507696,
+      2.4319545817733212
+     ],
+     "target": [
+      3.54907231529348,
+      1.3322894268002408,
+      -0.5909817387975513
+     ],
+     "fov": 41.999999969424174,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-303",
+    "time": 0.8145161290322581,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201546865448,
+      1.392326357693546,
+      2.4319545815218957
+     ],
+     "target": [
+      3.5490723152931865,
+      1.3322894268112808,
+      -0.5909817390041414
+     ],
+     "fov": 41.9999999694237,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-304",
+    "time": 0.8172043010752689,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201546994719,
+      1.3923263575967841,
+      2.4319545812318135
+     ],
+     "target": [
+      3.549072315254269,
+      1.332289426831686,
+      -0.5909817392977674
+     ],
+     "fov": 41.99999996942336,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-305",
+    "time": 0.8198924731182795,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456201547125055,
+      1.3923263574516502,
+      2.431954580898968
+     ],
+     "target": [
+      3.5490723151668138,
+      1.332289426863607,
+      -0.5909817396960054
+     ],
+     "fov": 41.999999969423186,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-306",
+    "time": 0.8225806451612904,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.456814467745514,
+      1.3914123563245673,
+      2.4301928896559963
+     ],
+     "target": [
+      3.5484264124916565,
+      1.3324947526716904,
+      -0.5933517552800048
+     ],
+     "fov": 41.99999996949842,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-307",
+    "time": 0.8252688172043011,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.459768012404844,
+      1.387007963543116,
+      2.421703643911687
+     ],
+     "target": [
+      3.545313933742795,
+      1.333484177608037,
+      -0.6047723971307853
+     ],
+     "fov": 41.999999969865684,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-308",
+    "time": 0.8279569892473119,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.4649668232079485,
+      1.3792553789647246,
+      2.4067609267410965
+     ],
+     "target": [
+      3.5398353681508277,
+      1.3352257571814579,
+      -0.624874939360216
+     ],
+     "fov": 41.99999997050065,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-309",
+    "time": 0.8306451612903225,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.472192178930892,
+      1.3684807646393384,
+      2.3859933991060807
+     ],
+     "target": [
+      3.5322212066129155,
+      1.3376462207096418,
+      -0.6528136399693145
+     ],
+     "fov": 41.999999971386494,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-310",
+    "time": 0.8333333333333334,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.481224351484551,
+      1.35501178408319,
+      2.3600326159639886
+     ],
+     "target": [
+      3.5227030010794085,
+      1.340671960213455,
+      -0.6877388636402133
+     ],
+     "fov": 41.99999997250076,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-311",
+    "time": 0.8360215053763441,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.491843608904207,
+      1.3391761065728227,
+      2.329510143382913
+     ],
+     "target": [
+      3.5115123075678287,
+      1.344229366418956,
+      -0.7288009601149569
+     ],
+     "fov": 41.99999997381393,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-312",
+    "time": 0.8387096774193549,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.50383021825173,
+      1.3213014028666308,
+      2.295057550278904
+     ],
+     "target": [
+      3.4988806831467203,
+      1.3482448297197946,
+      -0.7751502752969454
+     ],
+     "fov": 41.999999975303986,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-313",
+    "time": 0.8413978494623657,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.5169644462266225,
+      1.3017153442285685,
+      2.257306406546242
+     ],
+     "target": [
+      3.4850396852361856,
+      1.3526447403953403,
+      -0.8259371537784874
+     ],
+     "fov": 41.9999999769147,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-314",
+    "time": 0.8440860215053764,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.531026559419731,
+      1.2807456021121995,
+      2.216888282447859
+     ],
+     "target": [
+      3.4702208713985345,
+      1.3573554886836845,
+      -0.8803119396548372
+     ],
+     "fov": 41.99999997866213,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-315",
+    "time": 0.8467741935483871,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.545796824367724,
+      1.2587198480355326,
+      2.1744347483659374
+     ],
+     "target": [
+      3.454655799234663,
+      1.3623034648078098,
+      -0.9374249768599393
+     ],
+     "fov": 41.99999998047403,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-316",
+    "time": 0.8494623655913979,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.5610555076170645,
+      1.2359657535077342,
+      2.130577374665985
+     ],
+     "target": [
+      3.4385760263397973,
+      1.3674150589926617,
+      -0.996426609349836
+     ],
+     "fov": 41.999999982365615,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-317",
+    "time": 0.8521505376344086,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.576582875762889,
+      1.2128109899753943,
+      2.085947731596595
+     ],
+     "target": [
+      3.4222131102688076,
+      1.3726166614765138,
+      -1.0564671812428559
+     ],
+     "fov": 41.99999998426628,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-318",
+    "time": 0.8548387096774193,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.5921591954638625,
+      1.189583228768796,
+      2.041177389176202
+     ],
+     "target": [
+      3.4057986084923755,
+      1.3778346625249815,
+      -1.1166970369577773
+     ],
+     "fov": 41.999999986195895,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-319",
+    "time": 0.8575268817204301,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.607564733523709,
+      1.1666101410230827,
+      1.9968979170537913
+     ],
+     "target": [
+      3.3895640783444088,
+      1.3829954524476868,
+      -1.1762665214169905
+     ],
+     "fov": 41.99999998808261,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-320",
+    "time": 0.8602150537634409,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.622579756940521,
+      1.1442193975668573,
+      1.9537408842845043
+     ],
+     "target": [
+      3.3737410769389173,
+      1.3880254216202306,
+      -1.2343259803405744
+     ],
+     "fov": 41.99999998995523,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-321",
+    "time": 0.8629032258064516,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.636984864785876,
+      1.122738174043812,
+      1.9123369054794954
+     ],
+     "target": [
+      3.3585608114562877,
+      1.3928510716633202,
+      -1.2900270434708245
+     ],
+     "fov": 41.999999991713224,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-322",
+    "time": 0.8655913978494625,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.6505604912240655,
+      1.1024938920098144,
+      1.8733170692317875
+     ],
+     "target": [
+      3.344254662860388,
+      1.3973988489516789,
+      -1.3425207028917885
+     ],
+     "fov": 41.99999999339359,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-323",
+    "time": 0.8682795698924731,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.663086713466433,
+      1.0838145053082735,
+      1.8373134900932775
+     ],
+     "target": [
+      3.3310543882628885,
+      1.4015950802859765,
+      -1.3909565704667841
+     ],
+     "fov": 41.99999999494195,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-324",
+    "time": 0.8709677419354839,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.6743437979978575,
+      1.0670276855500105,
+      1.8049577386278086
+     ],
+     "target": [
+      3.3191915453362,
+      1.4053661558678763,
+      -1.4344849898836696
+     ],
+     "fov": 41.999999996322806,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-325",
+    "time": 0.8736559139784946,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.684112011099517,
+      1.052461104631357,
+      1.7768813859473738
+     ],
+     "target": [
+      3.3088976919494875,
+      1.408638465834832,
+      -1.4722563040954177
+     ],
+     "fov": 41.99999999753958,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-326",
+    "time": 0.8763440860215054,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.692171618685274,
+      1.0404424350095844,
+      1.753716004247727
+     ],
+     "target": [
+      3.300404386371052,
+      1.4113384001988902,
+      -1.5034208545978278
+     ],
+     "fov": 41.999999998527564,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-327",
+    "time": 0.879032258064516,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.698302885524333,
+      1.0312993508438624,
+      1.7360931690020303
+     ],
+     "target": [
+      3.293943188068699,
+      1.4133923485901678,
+      -1.527128978475179
+     ],
+     "fov": 41.99999999928429,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-328",
+    "time": 0.8817204301075269,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.702286070282233,
+      1.0253595353960518,
+      1.724644473230832
+     ],
+     "target": [
+      3.2897456629452555,
+      1.4147266985932216,
+      -1.5425309892072196
+     ],
+     "fov": 41.999999999772804,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-329",
+    "time": 0.8844086021505376,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703901167210945,
+      1.0229510662253423,
+      1.7200022699413295
+     ],
+     "target": [
+      3.2880436555444352,
+      1.415267749215594,
+      -1.548776177856655
+     ],
+     "fov": 41.99999999997363,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-330",
+    "time": 0.8870967741935484,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166524543,
+      1.0229182603499145,
+      1.7199390382651067
+     ],
+     "target": [
+      3.2880204724190287,
+      1.415275118892375,
+      -1.5488612438742642
+     ],
+     "fov": 41.999999999976005,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-331",
+    "time": 0.8897849462365592,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166658969,
+      1.0229182601494555,
+      1.7199390378787318
+     ],
+     "target": [
+      3.2880204722773696,
+      1.4152751189374073,
+      -1.5488612443940568
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-332",
+    "time": 0.8924731182795699,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.7039231665683445,
+      1.0229182602845976,
+      1.7199390381392115
+     ],
+     "target": [
+      3.288020472372871,
+      1.415275118907048,
+      -1.5488612440436318
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-333",
+    "time": 0.8951612903225806,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166479053,
+      1.0229182604177502,
+      1.7199390383958564
+     ],
+     "target": [
+      3.2880204724669664,
+      1.415275118877136,
+      -1.5488612436983658
+     ],
+     "fov": 41.99999999997602,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-334",
+    "time": 0.8978494623655914,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166420117,
+      1.022918260505636,
+      1.7199390385652515
+     ],
+     "target": [
+      3.288020472529074,
+      1.4152751188573927,
+      -1.5488612434704772
+     ],
+     "fov": 41.99999999997602,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-335",
+    "time": 0.9005376344086022,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396722,
+      1.022918260540524,
+      1.7199390386324966
+     ],
+     "target": [
+      3.288020472553728,
+      1.4152751188495558,
+      -1.548861243380011
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-336",
+    "time": 0.9032258064516129,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396543,
+      1.0229182605407892,
+      1.7199390386330078
+     ],
+     "target": [
+      3.288020472553915,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-337",
+    "time": 0.9059139784946236,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396544,
+      1.0229182605407892,
+      1.7199390386330078
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-338",
+    "time": 0.9086021505376344,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.022918260540789,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-339",
+    "time": 0.9112903225806451,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396544,
+      1.0229182605407892,
+      1.7199390386330071
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793245
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-340",
+    "time": 0.9139784946236558,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396545,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-341",
+    "time": 0.9166666666666666,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793238
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-342",
+    "time": 0.9193548387096774,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396544,
+      1.0229182605407892,
+      1.7199390386330071
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-343",
+    "time": 0.9220430107526881,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494956,
+      -1.5488612433793243
+     ],
+     "fov": 41.999999999976005,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-344",
+    "time": 0.924731182795699,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494956,
+      -1.5488612433793243
+     ],
+     "fov": 41.999999999976005,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-345",
+    "time": 0.9274193548387096,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539164,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-346",
+    "time": 0.9301075268817204,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-347",
+    "time": 0.9327956989247311,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-348",
+    "time": 0.9354838709677419,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.022918260540789,
+      1.7199390386330076
+     ],
+     "target": [
+      3.288020472553916,
+      1.4152751188494959,
+      -1.548861243379324
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-349",
+    "time": 0.9381720430107527,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.022918260540789,
+      1.7199390386330076
+     ],
+     "target": [
+      3.288020472553916,
+      1.4152751188494959,
+      -1.548861243379324
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-350",
+    "time": 0.9408602150537635,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539146,
+      1.4152751188494959,
+      -1.548861243379324
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-351",
+    "time": 0.9435483870967742,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.288020472553916,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-352",
+    "time": 0.9462365591397851,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.288020472553916,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-353",
+    "time": 0.9489247311827957,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.288020472553916,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-354",
+    "time": 0.9516129032258065,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396544,
+      1.0229182605407892,
+      1.7199390386330073
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-355",
+    "time": 0.9543010752688172,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396545,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.288020472553915,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-356",
+    "time": 0.956989247311828,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396545,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.288020472553915,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-357",
+    "time": 0.9596774193548386,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396545,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.288020472553915,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-358",
+    "time": 0.9623655913978495,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396544,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539146,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-359",
+    "time": 0.9650537634408602,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396544,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539146,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-360",
+    "time": 0.967741935483871,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396544,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539146,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-361",
+    "time": 0.9704301075268816,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396544,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539146,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-362",
+    "time": 0.9731182795698925,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396544,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.2880204725539146,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997601,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-363",
+    "time": 0.9758064516129032,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396545,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.288020472553915,
+      1.4152751188494959,
+      -1.548861243379324
+     ],
+     "fov": 41.999999999976005,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-364",
+    "time": 0.978494623655914,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330073
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997602,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-365",
+    "time": 0.9811827956989249,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396545,
+      1.0229182605407892,
+      1.7199390386330076
+     ],
+     "target": [
+      3.288020472553915,
+      1.4152751188494959,
+      -1.548861243379324
+     ],
+     "fov": 41.999999999976005,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-366",
+    "time": 0.9838709677419355,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330073
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997602,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-367",
+    "time": 0.9865591397849462,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330073
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997602,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-368",
+    "time": 0.989247311827957,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330073
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997602,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-369",
+    "time": 0.9919354838709677,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330073
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997602,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-370",
+    "time": 0.9946236559139784,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330073
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997602,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-371",
+    "time": 0.9973118279569892,
+    "label": "\u00b7",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330073
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997602,
+     "aspect": 1.7777777777777777
+    }
+   },
+   {
+    "id": "spline-0-372",
+    "time": 1,
+    "label": "Ending hold",
+    "easing": "linear",
+    "view": {
+     "position": [
+      6.703923166396542,
+      1.0229182605407892,
+      1.7199390386330073
+     ],
+     "target": [
+      3.2880204725539155,
+      1.4152751188494959,
+      -1.5488612433793243
+     ],
+     "fov": 41.99999999997602,
+     "aspect": 1.7777777777777777
+    }
+   }
+  ]
+ },
+ "deskFinish": {
+  "wood": "Natural Birch",
+  "trim": "#1c1c1e"
+ },
+ "featuredBuild": {
+  "woodFinish": "Natural Birch",
+  "trimColor": "#f19c00"
+ },
+ "workshopToyStory": "robo-pal-v5-stationary-organizer"
+}

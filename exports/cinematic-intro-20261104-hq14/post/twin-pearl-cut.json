@@ -1,0 +1,323 @@
+{
+ "name": "HQ14 digital twin (ch01 monitor card)",
+ "source": "exports/cinematic-intro-20261104-hq14/shots/01.json",
+ "shots": [
+  {
+   "room": "product",
+   "kind": "glide",
+   "preset": "gaming",
+   "size": "60x30",
+   "seconds": 51,
+   "transition": 0.35,
+   "motion": {
+    "version": 2,
+    "initial": {
+     "height": 28,
+     "tilt": 0,
+     "x": 0,
+     "z": 0,
+     "yaw": 0
+    },
+    "clips": [
+     {
+      "id": "op-roll",
+      "lane": "wheels",
+      "kind": "travel",
+      "start": 3.2,
+      "duration": 2.6,
+      "easing": "smooth",
+      "label": "Move forward",
+      "value": 12,
+      "direction": "forward"
+     },
+     {
+      "id": "op-lift",
+      "lane": "lift",
+      "kind": "lift",
+      "start": 11,
+      "duration": 7.6,
+      "easing": "smooth",
+      "label": "Lift up",
+      "target": 52.5
+     },
+     {
+      "id": "op-tilt-down",
+      "lane": "tilt",
+      "kind": "tilt",
+      "start": 21.1,
+      "duration": 3.8,
+      "easing": "smooth",
+      "label": "Tilt up",
+      "target": 15
+     },
+     {
+      "id": "op-turn",
+      "lane": "wheels",
+      "kind": "rotate",
+      "start": 27.4,
+      "duration": 6.7,
+      "easing": "smooth",
+      "label": "Rotating left",
+      "value": 120,
+      "direction": "left"
+     },
+     {
+      "id": "op-tilt-back",
+      "lane": "tilt",
+      "kind": "tilt",
+      "start": 30.3,
+      "duration": 3.8,
+      "easing": "smooth",
+      "label": "Tilt level",
+      "target": 0
+     },
+     {
+      "id": "op-lower",
+      "lane": "lift",
+      "kind": "lift",
+      "start": 36.6,
+      "duration": 3.75,
+      "easing": "smooth",
+      "label": "Lift down",
+      "target": 40.5
+     },
+     {
+      "id": "op-strafe",
+      "lane": "wheels",
+      "kind": "travel",
+      "start": 42.9,
+      "duration": 2.6,
+      "easing": "smooth",
+      "label": "Move right",
+      "value": 12,
+      "direction": "right"
+     },
+     {
+      "id": "op-lift-end",
+      "lane": "lift",
+      "kind": "lift",
+      "start": 42.9,
+      "duration": 3.75,
+      "easing": "smooth",
+      "label": "Lift up",
+      "target": 52.5
+     }
+    ]
+   },
+   "ledStatus": [
+    {
+     "at": 0,
+     "dur": 1.4,
+     "kind": "off",
+     "fade": 0.3
+    },
+    {
+     "at": 3.2,
+     "dur": 2.6,
+     "kind": "wheels",
+     "mode": 3,
+     "fade": 1
+    },
+    {
+     "at": 11,
+     "dur": 7.6,
+     "kind": "lift-up",
+     "fade": 1
+    },
+    {
+     "at": 21.1,
+     "dur": 3.8,
+     "kind": "tilt-retract",
+     "fade": 1
+    },
+    {
+     "at": 27.4,
+     "dur": 2.9,
+     "kind": "wheels",
+     "mode": 5,
+     "fade": 1
+    },
+    {
+     "at": 30.3,
+     "dur": 3.8,
+     "kind": "tilt-extend",
+     "fade": 1
+    },
+    {
+     "at": 36.6,
+     "dur": 3.75,
+     "kind": "lift-down",
+     "fade": 1
+    },
+    {
+     "at": 42.9,
+     "dur": 3.75,
+     "kind": "lift-up",
+     "fade": 1
+    }
+   ],
+   "ledGlow": 1,
+   "ledColor": "#4c4c4c",
+   "ledSurfaces": {
+    "desktopStrength": 157,
+    "desktopReach": 100,
+    "desktopWidth": 5,
+    "desktopCone": 100,
+    "desktopEdgeFade": 46,
+    "desktopSharpness": 62,
+    "shelfStrength": 176,
+    "shelfReach": 98,
+    "baseStrength": 54,
+    "baseReach": 20,
+    "topStrength": 143,
+    "topReach": 77,
+    "floorStrength": 156,
+    "floorReach": 4,
+    "floorWidth": 50,
+    "floorSharpness": 73,
+    "leftWingStrength": 111,
+    "leftWingReach": 85,
+    "rightWingStrength": 110,
+    "rightWingReach": 87
+   },
+   "ledReceivers": {
+    "mode": "viewer",
+    "stripMap": "viewer"
+   },
+   "id": "awaken-twin",
+   "title": "",
+   "detail": "",
+   "camera": {
+    "keys": [
+     {
+      "id": "twin-0",
+      "time": 0,
+      "label": "App visualizer view",
+      "easing": "linear",
+      "view": {
+       "position": [
+        5.7049,
+        3.9637,
+        4.3713
+       ],
+       "target": [
+        0.3906,
+        1.375,
+        0.2193
+       ],
+       "fov": 30.0,
+       "aspect": 2.3
+      }
+     },
+     {
+      "id": "twin-1",
+      "time": 1,
+      "label": "App visualizer view",
+      "easing": "linear",
+      "view": {
+       "position": [
+        5.7049,
+        3.9637,
+        4.3713
+       ],
+       "target": [
+        0.3906,
+        1.375,
+        0.2193
+       ],
+       "fov": 30.0,
+       "aspect": 2.3
+      }
+     }
+    ]
+   },
+   "screens": [
+    {
+     "target": "main-landscape",
+     "src": "exports/cinematic-intro-20261104-hq14/post/opener-screen.png",
+     "loop": false
+    }
+   ],
+   "sceneEdits": [
+    {
+     "match": "^Wheel_[FR]_[LR]",
+     "materialColor": "#a38c8c",
+     "material": {
+      "color": "#2a2a2e",
+      "roughness": 0.45,
+      "metalness": 0,
+      "clearcoat": 0.3,
+      "clearcoatRoughness": 0.25
+     }
+    },
+    {
+     "match": "^Wheel_[FR]_[LR]",
+     "materialColor": "#2a2a2a",
+     "materialType": "Physical",
+     "material": {
+      "metalness": 1,
+      "roughness": 0.3
+     }
+    },
+    {
+     "match": "^(Desktop|Top_Shelf)(_\\d+)?$",
+     "material": {
+      "envMapIntensity": 0.35,
+      "clearcoat": 0.25,
+      "clearcoatRoughness": 0.55
+     }
+    },
+    {
+     "match": "^Base_Panels_3 LED reflection$",
+     "hide": true
+    },
+    {
+     "match": "@grid",
+     "hide": true
+    },
+    {
+     "match": "@pulse",
+     "hide": true
+    },
+    {
+     "match": "@stageLight",
+     "intensity": 0.35
+    },
+    {
+     "lightType": "DirectionalLight",
+     "intensity": 0.45
+    }
+   ],
+   "lights": [
+    {
+     "preset": "productRig",
+     "key": {
+      "intensity": 26,
+      "at": {
+       "az": -40,
+       "el": 62,
+       "dist": 3.4
+      }
+     },
+     "rimLeft": {
+      "intensity": 50
+     },
+     "rimRight": {
+      "intensity": 50
+     },
+     "pool": false
+    },
+    {
+     "type": "pool",
+     "name": "slate",
+     "radius": 7.5,
+     "strength": 0.42,
+     "color": "#5a6a85"
+    }
+   ],
+   "sceneGlobals": {
+    "environmentScale": 0.45
+   }
+  }
+ ]
+}

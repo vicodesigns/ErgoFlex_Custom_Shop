@@ -103,6 +103,7 @@ async function handle(req, res) {
     html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, '<script src="/__studio/reload.js"></script>\n</body>') : html + '<script src="/__studio/reload.js"></script>';
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(html);
   }
+  if (/\.(m?js|cjs|json|css)$/i.test(p)) res.setHeader('cache-control', 'no-store');
   send(req, p, { root, index: ['index.html'], dotfiles: 'deny' })
     .on('error', e => { res.statusCode = e.status || 500; res.end(); })
     .on('directory', () => { res.statusCode = 301; res.setHeader('location', p + '/'); res.end(); })

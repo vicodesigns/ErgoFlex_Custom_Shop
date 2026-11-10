@@ -1,0 +1,430 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-20261104-hq14/director-exports/export-c46930b90a8b-Film-chapter-create-23-5-s-.json",
+ "seconds": 23.5,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    5.611759503843693,
+    2.3873406281318044,
+    2.7841808963908505
+   ],
+   "target": [
+    2.1081660333541032,
+    1.6351442108051475,
+    2.546030397979478
+   ],
+   "fov": 42.00000000000001,
+   "label": "Easel and still life in the window light"
+  },
+  {
+   "at": 2.4,
+   "position": [
+    3.7465237758619656,
+    1.8210809852164138,
+    2.39134899997657
+   ],
+   "target": [
+    4.916137293307227e-05,
+    1.599940073399223,
+    1.5997180711314056
+   ],
+   "fov": 42.999954227807024,
+   "label": "Past the easel and taboret"
+  },
+  {
+   "at": 4.2,
+   "position": [
+    2.6049328129716063,
+    1.826457619567577,
+    2.1606180780935986
+   ],
+   "target": [
+    -0.935335364139553,
+    1.515207871357039,
+    0.3705439296456631
+   ],
+   "fov": 44.00013760462598,
+   "label": "Desk: lift (blue), desk right of the title"
+  },
+  {
+   "at": 7.4,
+   "position": [
+    2.7000370068401245,
+    2.75,
+    1.6796192278136974
+   ],
+   "target": [
+    -1.3331429080796293,
+    1.7612824813647714,
+    0.3399335828599409
+   ],
+   "fov": 46,
+   "label": "Pen display at 52 in"
+  },
+  {
+   "at": 9.05,
+   "position": [
+    2.7000370068401245,
+    2.75,
+    1.6796192278136974
+   ],
+   "target": [
+    -1.3331429080796293,
+    1.7612824813647714,
+    0.3399335828599409
+   ],
+   "fov": 46,
+   "label": "Pen display at 52 in: hold"
+  },
+  {
+   "at": 12.4,
+   "position": [
+    0.8618169062117025,
+    2.25,
+    -1.5578996220009236
+   ],
+   "target": [
+    -1.4223088574687395,
+    1.6771765595317245,
+    0.22893262969234482
+   ],
+   "fov": 44.000223951862026,
+   "label": "Front-right: board rises, drafting appears, side shelf pops"
+  },
+  {
+   "at": 15.25,
+   "position": [
+    1.4944084461003384,
+    1.6637248988620437,
+    -3.3408988427992816
+   ],
+   "target": [
+    -1.3845963504944954,
+    1.5264708909991735,
+    0.3248913137213632
+   ],
+   "fov": 44,
+   "label": "Front-right 3/4: drafting at 40 deg (rest)"
+  },
+  {
+   "at": 16.9,
+   "position": [
+    1.4944084461003384,
+    1.6637248988620437,
+    -3.3408988427992816
+   ],
+   "target": [
+    -1.3845963504944954,
+    1.5264708909991735,
+    0.3248913137213632
+   ],
+   "fov": 44,
+   "label": "Front-right 3/4: drafting at 40 deg (rest): hold"
+  },
+  {
+   "at": 19.4,
+   "position": [
+    0.95,
+    1.75,
+    -1.35
+   ],
+   "target": [
+    -1.45,
+    1.43,
+    0.25
+   ],
+   "fov": 44,
+   "label": "Easel: the oil painting appears, stool and palette in front"
+  },
+  {
+   "at": 23.5,
+   "position": [
+    0.5473812063620077,
+    1.72,
+    -1.3582779584642948
+   ],
+   "target": [
+    -1.5,
+    1.5,
+    0.2
+   ],
+   "fov": 42,
+   "label": "Gentle push on the painting"
+  }
+ ],
+ "clips": [
+  {
+   "id": "b5418102-1403-4470-9f42-8efd6dfbddaa",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 1.5,
+   "duration": 1.9,
+   "easing": "linear",
+   "label": "",
+   "target": 7
+  },
+  {
+   "id": "stand-to-draw",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 4.2,
+   "duration": 2.6,
+   "easing": "smooth",
+   "label": "Lift up \u00b7 52 in",
+   "target": 52
+  },
+  {
+   "id": "drafting",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 6.8,
+   "duration": 5.6,
+   "easing": "smooth",
+   "label": "Drafting \u00b7 40\u00b0",
+   "target": 40
+  },
+  {
+   "id": "painting",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 16.9,
+   "duration": 2.6,
+   "easing": "smooth",
+   "label": "Easel \u00b7 55\u00b0",
+   "target": 55
+  }
+ ],
+ "initial": {
+  "height": 43.5,
+  "tilt": 0
+ },
+ "lighting": {
+  "ledStatus": [
+   {
+    "at": 4.2,
+    "dur": 2.6,
+    "kind": "lift-up",
+    "fade": 1
+   },
+   {
+    "at": 6.799998,
+    "dur": 5.6,
+    "kind": "tilt-retract",
+    "fade": 1,
+    "fadeIn": 0.6
+   },
+   {
+    "at": 16.9,
+    "dur": 2.6,
+    "kind": "tilt-retract",
+    "fade": 1,
+    "fadeIn": 0.6
+   }
+  ],
+  "ledColor": "#242424",
+  "roomLight": 0.95,
+  "exposureScale": 1.27,
+  "ledWallGlow": 1.3
+ },
+ "props": [
+  {
+   "match": "^Artist materials worktable$",
+   "asset": "creative:premium:fixture:artist-worktable",
+   "label": "Artist materials worktable",
+   "position": [
+    0,
+    0,
+    0.365
+   ]
+  },
+  {
+   "match": "^Colour studies \u00b7 daily activity$",
+   "asset": "creative:premium:life:activity",
+   "label": "Colour studies \u00b7 daily activity",
+   "position": [
+    0.792,
+    0,
+    1.012
+   ]
+  },
+  {
+   "match": "^Artist painting easel$",
+   "asset": "creative:premium:fixture:artist-easel",
+   "label": "Artist painting easel",
+   "position": [
+    0,
+    0,
+    0.161
+   ]
+  },
+  {
+   "match": "^$",
+   "asset": "creative:premium:placement:0:0:",
+   "label": "Unnamed prop",
+   "position": [
+    -0.279,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:long-scissors$",
+   "asset": "creative:premium:room:12:long-scissors",
+   "label": "Prop:long-scissors",
+   "position": [
+    -0.168,
+    0,
+    0.248
+   ],
+   "rotation": [
+    0,
+    121.3,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:ruler-set-square$",
+   "asset": "creative:premium:room:11:ruler-set-square",
+   "label": "Prop:ruler-set-square",
+   "position": [
+    -0.116,
+    0,
+    0.33
+   ],
+   "rotation": [
+    0,
+    -11.5,
+    0
+   ]
+  },
+  {
+   "match": "^Atelier artist \u00b7 Illustration tablet & stylus \u00b7 Pale ash & brushed silver$",
+   "asset": "creative:premium:room:10:papers",
+   "label": "Atelier artist \u00b7 Illustration tablet & stylus \u00b7 Pale ash & brushed silver",
+   "position": [
+    0,
+    0,
+    0.597
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-artist-stool$",
+   "label": "Prop:ergoflex-artist-stool",
+   "space": "local",
+   "position": [
+    0.176,
+    0,
+    0.633
+   ]
+  },
+  {
+   "match": "^Prop:atelier-artist-palette-oak$",
+   "label": "Prop:atelier-artist-palette-oak",
+   "space": "local",
+   "position": [
+    3.798,
+    0.645,
+    -0.332
+   ]
+  },
+  {
+   "match": "^Accessory:painter-shelf$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Accessory:painter-shelf$",
+   "label": "Accessory:painter-shelf",
+   "space": "local",
+   "position": [
+    0,
+    -0.127,
+    -0.135
+   ],
+   "rotation": [
+    31.9,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:atelier-artist-pen-display-oak$",
+   "label": "Prop:atelier-artist-pen-display-oak",
+   "space": "local",
+   "position": [
+    0.689,
+    0,
+    0
+   ],
+   "hide": true
+  },
+  {
+   "match": "^Prop:painted-mug$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:painted-mug$",
+   "label": "Prop:painted-mug",
+   "space": "local",
+   "position": [
+    0,
+    0,
+    0.179
+   ],
+   "hide": true
+  },
+  {
+   "match": "^Prop:sketchbook$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:sketchbook$",
+   "label": "Prop:sketchbook",
+   "hide": true
+  },
+  {
+   "match": "^Prop:apple-pencil$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:apple-pencil$",
+   "label": "Prop:apple-pencil",
+   "space": "local",
+   "position": [
+    -0.154,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-drawing-tablet$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:ergoflex-drawing-tablet$",
+   "label": "Prop:ergoflex-drawing-tablet",
+   "space": "local",
+   "position": [
+    1.111,
+    0,
+    0.275
+   ],
+   "rotation": [
+    0,
+    -26.7,
+    0
+   ]
+  },
+  {
+   "match": "^Colour palette$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Colour palette$",
+   "label": "Colour palette",
+   "space": "local",
+   "position": [
+    -1.547,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    36.2,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-plant-2$",
+   "near": [
+    -2.3535,
+    3.5454,
+    0.3
+   ],
+   "label": "Prop:ergoflex-plant-2 (behind the bust)",
+   "hide": true
+  }
+ ]
+}

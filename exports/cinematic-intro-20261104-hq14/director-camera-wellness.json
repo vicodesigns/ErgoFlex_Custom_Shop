@@ -1,125 +1,125 @@
 {
- "source": "/tmp/claude-1000/-home-ergo-ErgoFlex-Custom-Shop/415ac7b2-6cf6-4cc4-9386-66d6bb6f1395/scratchpad/wellness/Film-chapter-wellness-final.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-20261104-hq14/director-exports/export-a619747817b5-Film-chapter-wellness-16-s- (1).json",
  "seconds": 16.0,
  "keys": [
   {
    "at": 0.0,
    "position": [
-    5.183139233250278,
-    1.9042976808485441,
-    -2.0511990947368686
+    5.1831,
+    1.9043,
+    -2.0512
    ],
    "target": [
-    -0.9026011026089602,
-    0.7905991349528552,
-    0.779388664247685
+    -0.9026,
+    0.7906,
+    0.7794
    ],
-   "fov": 47.00022783723319,
+   "fov": 47,
    "label": "Wide from the mirror wall: window, bike, mat"
   },
   {
    "at": 3.0,
    "position": [
-    4.1366339348934975,
-    1.3990213386777466,
-    -1.0344647612339446
+    4.1366,
+    1.399,
+    -1.0345
    ],
    "target": [
-    -0.7630631017513969,
-    1.1331604743815498,
-    0.781948117524925
+    -0.7631,
+    1.1332,
+    0.7819
    ],
-   "fov": 47.000132496473825,
+   "fov": 47,
    "label": "Glide in, pan right"
   },
   {
    "at": 5.8,
    "position": [
-    2.7927086510226378,
-    2.022564303811649,
-    -0.5449127113113513
+    2.7927,
+    2.0226,
+    -0.5449
    ],
    "target": [
-    -1.099931483427906,
-    1.1500386832259355,
-    0.5500483735283673
+    -1.0999,
+    1.15,
+    0.55
    ],
-   "fov": 47.999969564470916,
+   "fov": 48,
    "label": "Lift starts: desk centred, three-quarter front"
   },
   {
    "at": 6.2,
    "position": [
-    2.7927086510226378,
-    2.022564303811649,
-    -0.5449127113113513
+    2.7927,
+    2.0226,
+    -0.5449
    ],
    "target": [
-    -1.099931483427906,
-    1.1500386832259355,
-    0.5500483735283673
+    -1.0999,
+    1.15,
+    0.55
    ],
-   "fov": 47.999969564470916,
+   "fov": 48,
    "label": "Lift starts: hold"
   },
   {
    "at": 8.5,
    "position": [
-    2.653506562302274,
-    2.3275700787120472,
-    1.3049204629603421
+    3.2572,
+    1.5,
+    -0.8953
    ],
    "target": [
-    -1.1000331743804188,
-    1.299975697443414,
-    0.5999711515828723
+    -0.9664,
+    1.1068,
+    0.642
    ],
-   "fov": 48.999874523853066,
-   "label": "Arc toward the front with the rise: screens and tray"
+   "fov": 46,
+   "label": "Crane down with the rise: screens and tray"
   },
   {
    "at": 12.0,
    "position": [
-    3.9095779331381366,
-    0.40078292517197944,
-    -1.4557615362996885
+    3.9096,
+    0.5508,
+    -1.4558
    ],
    "target": [
-    -0.7631545263669649,
-    1.1330958197053862,
-    0.7818998948166386
+    -0.7632,
+    1.1331,
+    0.7819
    ],
-   "fov": 47.000287119062165,
+   "fov": 41,
    "label": "Standing: low hero lands as the blue fades"
   },
   {
    "at": 13.25,
    "position": [
-    3.9095779331381366,
-    0.40078292517197944,
-    -1.4557615362996885
+    3.9096,
+    0.5508,
+    -1.4558
    ],
    "target": [
-    -0.7631545263669649,
-    1.1330958197053862,
-    0.7818998948166386
+    -0.7632,
+    1.1331,
+    0.7819
    ],
-   "fov": 47.000287119062165,
+   "fov": 41,
    "label": "Standing: settled white, camera at rest"
   },
   {
    "at": 16.0,
    "position": [
-    2.4106577159243794,
-    0.849122181429372,
-    -1.5345874492954301
+    2.4107,
+    0.8491,
+    -1.5346
    ],
    "target": [
-    -1.2000000000000002,
-    1.4500000000000004,
-    0.35000000000000026
+    -1.2,
+    1.45,
+    0.35
    ],
-   "fov": 49,
+   "fov": 42,
    "label": "Push in low, into the dissolve"
   }
  ],
@@ -133,6 +133,101 @@
    "easing": "smooth",
    "label": "Stand and reset",
    "target": 43.5
+  }
+ ],
+ "initial": {
+  "height": 28,
+  "tilt": 0
+ },
+ "props": [
+  {
+   "match": "^Warm-up plan$",
+   "path": "^Room:gym > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Warm-up plan$",
+   "label": "Warm-up plan",
+   "space": "local",
+   "position": [
+    0.035,
+    0,
+    0.199
+   ]
+  },
+  {
+   "match": "^Natural foliage planter$",
+   "asset": "gym:house:room:1:decor-plant2",
+   "label": "Natural foliage planter",
+   "position": [
+    -2.118,
+    0.001,
+    -3.991
+   ]
+  },
+  {
+   "match": "^Prop:campus-pouf-slate$",
+   "label": "Prop:campus-pouf-slate",
+   "space": "local",
+   "position": [
+    0.628,
+    -0.179,
+    -0.801
+   ],
+   "scale": [
+    1,
+    1.0187,
+    1
+   ]
+  },
+  {
+   "match": "^Prop:party-speaker$",
+   "asset": "gym:house:room:2:party-speaker",
+   "label": "Prop:party-speaker",
+   "position": [
+    -0.264,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    -80.4,
+    0
+   ]
+  },
+  {
+   "match": "^Workspace notebook$",
+   "path": "^Room:gym > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Workspace notebook$",
+   "label": "Workspace notebook",
+   "hide": true
+  },
+  {
+   "match": "^Prop:tablet-pc$",
+   "path": "^Room:gym > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:tablet-pc$",
+   "label": "Prop:tablet-pc",
+   "space": "local",
+   "position": [
+    0,
+    0,
+    0.263
+   ],
+   "rotation": [
+    0,
+    8.3,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:sports-bottle$",
+   "path": "^Room:gym > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:sports-bottle$",
+   "label": "Prop:sports-bottle",
+   "space": "local",
+   "position": [
+    -0.163,
+    0,
+    0.143
+   ],
+   "scale": [
+    0.71,
+    0.71,
+    0.71
+   ]
   }
  ]
 }

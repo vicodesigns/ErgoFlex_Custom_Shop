@@ -29,6 +29,13 @@ preserved through project export/import. Full-floor Glide respects the room
 boundaries; furniture collision avoidance is not simulated. Inspiration props
 do not affect pricing and are excluded from AR export.
 
+The November 9 promo polish uses broader, softer morning/afternoon daylight
+with stronger opposing fill, restrained teal and warm oxide equipment paint,
+and separate satin concrete, powder-coat, steel and timber highlight responses.
+Imported equipment paint is cloned per Workshop instance. This is shared by
+the live Studio and Director Storage chapter; saved camera tracks, prop
+transforms, desk movement and film exposure controls continue to apply.
+
 Verification: `npm run test:workshop`. The screenshot helper supports
 `--workshop-layout` and `--workshop-mode`. The website package file list includes
 the module. This local update does not publish it.

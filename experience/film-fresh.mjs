@@ -109,7 +109,7 @@ export function createFilmFresh(film,project,hooks){
   function adopt(now,cut){base={cut:structuredClone(cut||base.cut),version:now.stamp.version};if(cut)filmCut=structuredClone(cut);if(now.enc)history.replaceState(history.state,'',withCut(location.hash,now.enc));}
   // Export cut from a tab the film has moved past: true when the warning took over (Export anyway / Load the latest).
   async function guardExport(cut,dirty,exportAnyway){
-    const now=await filmChapterNow(film.film,id,{known:base.version}).catch(error=>{console.warn('[film fresh]',error.message);return null;});
+    const now=await Promise.race([filmChapterNow(film.film,id,{known:base.version}),new Promise(r=>setTimeout(()=>r(null),1500))]).catch(error=>{console.warn('[film fresh]',error.message);return null;});
     if(!now?.enc)return false;                                                              // same version, or unreachable
     if(Date.parse(now.stamp.updated)<Date.parse(exportedAt))return false;              // this tab's export is not in yet
     let latest;try{latest=cleanCut(rawCut(now.enc),hooks.catalog);}catch{return false;}

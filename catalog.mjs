@@ -1,4 +1,4 @@
-import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=hbhs-product-classroom-20261014';
+import { SHARED_BUILD_PRESETS } from './preset-defaults.mjs?v=20261110-stationary-organizer';
 // Pure catalog and pricing data. No DOM, no Three.js, no module-level mutable
 // state — so the same source is imported by studio.js in the browser and by the
 // test suite in Node. Anything that touches the scene or the page belongs in
@@ -201,7 +201,7 @@ export const ACCESSORIES = [
       description: 'Supplied mechanical keyboard, on the desktop or keyboard tray.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'drawing-tablet', name: 'Drawing tablet', category: 'Desktop', visual: 'mat', propId: 'ergoflex-drawing-tablet',
       description: 'A pen tablet for illustration and digital design.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
-    { id: 'shelf-organizer', name: 'Shelf organizer', category: 'Desktop', visual: 'mat', propId: 'ergoflex-shelf-organizer', mount: 'lower-shelf',
+    { id: 'shelf-organizer', name: 'Shelf organizer', category: 'Desktop', visual: 'mat', propId: 'ergoflex-shelf-organizer', mount: 'base-shelf',
       description: 'Compartment storage for tools and small supplies.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },
     { id: 'easel-rail', name: 'Easel accessory rail', category: 'Support', visual: 'tray', propId: 'ergoflex-easel-accessory',
       description: 'Size-matched art accessory rail for Standard and Extended desktops.', price: 0, quoted: true, compatibleSizes: ['48x30', '60x30'] },

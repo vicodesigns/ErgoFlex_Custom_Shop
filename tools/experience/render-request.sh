@@ -27,24 +27,91 @@ PIN_ALWAYS=${PIN_ALWAYS-institutional-media.mjs}
 [ -f "$ROOT/$HQ/review-cut.json" ] || { echo "no $HQ/review-cut.json under $ROOT" >&2; exit 1; }
 Q=$ROOT/exports/render-queue; mkdir -p "$Q"
 
-# ---- validate the request; prints: scope chapter resolution exportSha
-read -r SCOPE CHAPTER RES EXPORT_SHA < <(python3 - "$REQ" <<'PY'
-import json, re, sys
-r = json.load(open(sys.argv[1]))
-ok = r.get('v') == 1 and r.get('scope') in ('chapter', 'film') and r.get('resolution') in ('480p', '720p', '1080p', '4K') \
-    and isinstance(r.get('chapter'), str) and re.fullmatch(r'[a-z0-9-]{1,40}', r['chapter'] or '')
-if not ok: sys.exit('bad render request: need v:1, scope chapter|film, resolution 480p|720p|1080p|4K, chapter id')
-sha = r.get('exportSha') or '-'
-if sha != '-' and not re.fullmatch(r'[0-9a-f]{64}', sha): sys.exit('bad exportSha')
-print(r['scope'], r['chapter'], r['resolution'], sha)
+# shared-folder bridge: idempotency + durable event log
+BRIDGE_LOG=$Q/bridge.log
+REQUEST_SHA=$(sha256sum "$REQ" | cut -d' ' -f1)
+BRIDGE_STATE=processing
+bridge_log() { printf '%s level=%s event=%s request=%s sha=%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2" "$(basename "$REQ")" "$REQUEST_SHA" "${3:-}" >> "$BRIDGE_LOG"; }
+bridge_exit() { local rc=$?; if [ "$rc" -ne 0 ] && [ "$BRIDGE_STATE" = processing ]; then bridge_log error FAILED "exit=$rc"; fi; }
+trap bridge_exit EXIT
+
+if [ ! -f "$ROOT/$HQ/review-cut.json" ]; then bridge_log error REJECTED "reason=missing-review-cut"; echo "no $HQ/review-cut.json under $ROOT" >&2; BRIDGE_STATE=rejected; exit 1; fi
+
+# Serialize enqueues and check the request fingerprint before freezing expensive inputs.
+exec 8>"$Q/.bridge.lock"
+flock -w "${RENDER_REQ_LOCK_WAIT:-900}" 8 || { bridge_log error FAILED "reason=bridge-lock-timeout"; exit 1; }
+if [ -f "$Q/queue.json" ]; then
+  EXISTING=$(python3 - "$Q/queue.json" "$REQUEST_SHA" <<'PY'
+import json,sys
+try: jobs=json.load(open(sys.argv[1])).get('jobs',[])
+except Exception: jobs=[]
+for j in jobs:
+    if j.get('requestSha')==sys.argv[2]:
+        print(j.get('id','')); break
 PY
 )
+  if [ -n "$EXISTING" ]; then BRIDGE_STATE=duplicate; bridge_log info ALREADY_QUEUED "job=$EXISTING"; echo "already queued $EXISTING"; echo "$EXISTING"; exit 0; fi
+fi
+
+# ---- validate the request; prints: scope chapter resolution exportSha
+if ! META=$(python3 - "$REQ" <<'PY'
+import datetime, json, re, sys
+try:
+    r=json.load(open(sys.argv[1]))
+except Exception as e:
+    sys.exit('invalid JSON: '+str(e))
+ok = r.get('v') == 1 and r.get('scope') in ('chapter', 'film') and r.get('resolution') in ('480p', '720p', '1080p', '4K') and isinstance(r.get('chapter'), str) and re.fullmatch(r'[a-z0-9-]{1,40}', r.get('chapter',''))
+if not ok: sys.exit('need v:1, scope chapter|film, a valid chapter id, and resolution 480p|720p|1080p|4K')
+if not isinstance(r.get('created'),str): sys.exit('created must be an ISO timestamp')
+try: datetime.datetime.fromisoformat(r['created'].replace('Z','+00:00'))
+except Exception: sys.exit('created must be an ISO timestamp')
+if not isinstance(r.get('signature'),str) or not re.fullmatch(r'[0-9a-f]{16}',r['signature']): sys.exit('signature must be 16 lowercase hex characters')
+sha=r.get('exportSha')
+if sha is not None and (not isinstance(sha,str) or not re.fullmatch(r'[0-9a-f]{64}',sha)): sys.exit('exportSha must be null or 64 lowercase hex characters')
+print(r['scope'],r['chapter'],r['resolution'],sha or '-')
+PY
+); then
+  bridge_log warning REJECTED "reason=$(printf '%s' "$META" | tr '\n' ' ' | cut -c1-240)"
+  echo "rejected render request: $META" >&2; BRIDGE_STATE=rejected; exit 2
+fi
+read -r SCOPE CHAPTER RES EXPORT_SHA <<< "$META"
 STAMP=$(date -u +%Y%m%dT%H%M%S); ID=req-$STAMP
 N=1; BASEID=$ID; while grep -q "\"id\": \"$ID\"" "$Q/queue.json" 2>/dev/null; do N=$((N+1)); ID=$BASEID-$N; done
 TAG=$ID; WARN=
 
-# ---- 1. wait for the Export cut that came with the request
-if [ "$EXPORT_SHA" != "-" ] && [ "${RENDER_REQ_IMPORT_WAIT:-240}" -gt 0 ]; then
+# ---- 1. wait for the Export cut that came with the request (or import it from the request's folder if the watcher didn't)
+REQ_DIR=$(dirname "$REQ")
+FOUND_EXPORT=$(python3 - "$ROOT/$HQ/director-exports" "$REQ_DIR" "$EXPORT_SHA" "$CHAPTER" "$ROOT/$HQ/review-cut.json" <<'PY'
+import glob, hashlib, os, sys, time
+exp_dir, req_dir, sha, chapter, rev_cut = sys.argv[1:6]
+def file_sha(p):
+    try: return hashlib.sha256(open(p, 'rb').read()).hexdigest() if os.path.isfile(p) else ''
+    except OSError: return ''
+if sha != '-':
+    if os.path.isdir(exp_dir) and any(file_sha(os.path.join(exp_dir, n)) == sha for n in os.listdir(exp_dir)):
+        sys.exit(0)
+    if os.path.isdir(req_dir):
+        for n in sorted(os.listdir(req_dir)):
+            p = os.path.join(req_dir, n)
+            if n.endswith('.json') and not n.startswith('Render-request-') and file_sha(p) == sha:
+                print(p); sys.exit(0)
+else:
+    # When the user clicked Export cut just before Send to render PC, exportSha is null; pick up a newer Film-chapter-<chapter>*.json in REQ_DIR.
+    rev_mtime = os.path.getmtime(rev_cut) if os.path.isfile(rev_cut) else 0
+    existing = {file_sha(os.path.join(exp_dir, n)) for n in os.listdir(exp_dir)} if os.path.isdir(exp_dir) else set()
+    candidates = []
+    if os.path.isdir(req_dir):
+        for p in glob.glob(os.path.join(req_dir, f'Film-chapter-{chapter}-*.json')):
+            try:
+                m = os.path.getmtime(p)
+                if m > rev_mtime and time.time() - m < 3600 and file_sha(p) not in existing:
+                    candidates.append((m, p))
+            except OSError: pass
+    if candidates:
+        print( max(candidates)[1] )
+PY
+)
+if [ -z "$FOUND_EXPORT" ] && [ "$EXPORT_SHA" != "-" ] && [ "${RENDER_REQ_IMPORT_WAIT:-240}" -gt 0 ]; then
   echo "waiting for the import of export ${EXPORT_SHA:0:12}…"
   if python3 - "$ROOT/$HQ/director-exports" "$EXPORT_SHA" "${RENDER_REQ_IMPORT_WAIT:-240}" <<'PY'
 import hashlib, os, sys, time
@@ -67,14 +134,27 @@ fi
 # ---- 2. freeze under the cut lock
 exec 9>"$LOCK"
 flock -w "${RENDER_REQ_LOCK_WAIT:-900}" 9 || { echo "cut lock busy for too long: $LOCK" >&2; exit 1; }
+if [ -n "$FOUND_EXPORT" ] && [ -f "$FOUND_EXPORT" ]; then
+  mkdir -p "$ROOT/$HQ/director-exports"
+  FSHA=$(sha256sum "$FOUND_EXPORT" | cut -d' ' -f1)
+  SAFE_BASE=$(basename "$FOUND_EXPORT" | tr ' ()' '___')
+  DEST="$ROOT/$HQ/director-exports/export-${FSHA:0:12}-$SAFE_BASE"
+  cp -p "$FOUND_EXPORT" "$DEST"
+  echo "importing export $(basename "$FOUND_EXPORT") (${FSHA:0:12}) into $HQ…"
+  python3 "$HERE/build-round8-director.py" "$ROOT/$HQ" --import "$DEST"
+  python3 "$HERE/build-round8-director.py" "$ROOT/$HQ"
+  python3 "$HERE/build-round8-director.py" "$ROOT/$HQ" --pages "$CHAPTER"
+fi
+python3 "$HERE/finish-intro.py" "$ROOT/$HQ" --titles-only
 OUT=$("$HERE/freeze-inputs.sh" "$ROOT" "$TAG" "$HQ"); echo "$OUT"
 MANIFEST=$(echo "$OUT" | tail -1 | cut -d: -f1); F=${MANIFEST%/manifest.txt}
-LIVE=$(git -C "$ROOT" status --porcelain -- '*.mjs' '*.js' '*.cjs' | { grep -vE "exports/|tools/experience/|experience/|institutional-|campus-lived-in" || true; } | cut -c4- | sed 's/.* -> //')
+LIVE=$(git -C "$ROOT" status --porcelain -- '*.mjs' '*.js' '*.cjs' | { grep -vE "exports/|tools/experience/|experience/|workshop-room\.mjs|workspace-3d\.mjs|catalog\.mjs|scene-product-reference\.mjs|preset-defaults\.mjs|scene-peripheral-layouts\.mjs|institutional-|campus-lived-in" || true; } | cut -c4- | sed 's/.* -> //')
 python3 "$HERE/pin-inputs.py" "$ROOT" "$F" $PIN_ALWAYS $LIVE
+python3 "$HERE/render-source-fixes.py" "$ROOT/$F"
 mkdir -p "$ROOT/$F/request"; cp "$REQ" "$ROOT/$F/request/request.json"
-RENDER_REQ_HERE="$HERE" python3 - "$ROOT" "$HQ" "$F" "$SCOPE" "$CHAPTER" "$RES" "$ID" "$WARN" <<'PY'
+RENDER_REQ_HERE="$HERE" python3 - "$ROOT" "$HQ" "$F" "$SCOPE" "$CHAPTER" "$RES" "$ID" "$WARN" "$REQUEST_SHA" <<'PY'
 import hashlib, json, os, sys, time
-root, hq, F, scope, chapter, res, jid, warn = sys.argv[1:9]
+root, hq, F, scope, chapter, res, jid, warn, request_sha = sys.argv[1:10]
 os.chdir(root)
 review = json.load(open(f'{hq}/review-cut.json'))
 ids = [s['id'] for s in review['shots']]
@@ -90,7 +170,7 @@ open(mp, 'w').write('\n'.join(lines) + '\n')
 H = {'480p': 480, '720p': 720, '1080p': 1080, '4K': 2160}
 job = {'id': jid, 'created': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'scope': scope, 'chapter': chapter, 'chapterIndex': index,
        'resolution': res, 'height': H[res], 'note': req.get('note') or '', 'manifest': mp, 'cut': cutp, 'shots': '0' if scope == 'chapter' else 'all',
-       'requestCreated': req.get('created'), 'clientSignature': req.get('signature'), 'force': req.get('force') is True, 'status': 'queued'}
+       'requestCreated': req.get('created'), 'clientSignature': req.get('signature'), 'requestSha': request_sha, 'force': req.get('force') is True, 'status': 'queued'}
 # chapter cache keys from the frozen copy of the film data (the freeze overlays the repo: freeze file first, live file otherwise)
 import subprocess
 kp = subprocess.run([sys.executable, os.path.join(os.environ['RENDER_REQ_HERE'], 'chapter-keys.py'), hq, '--root', root, '--overlay', F,
@@ -106,9 +186,14 @@ qd = 'exports/render-queue'; os.makedirs(qd, exist_ok=True)
 with open(f'{qd}/.queue.lock', 'w') as lk:
     fcntl.flock(lk, fcntl.LOCK_EX)
     qp = f'{qd}/queue.json'; q = json.load(open(qp)) if os.path.exists(qp) else {'jobs': []}
+    if any(j.get('requestSha') == request_sha for j in q['jobs']):
+        print('duplicate request already queued: ' + next(j['id'] for j in q['jobs'] if j.get('requestSha') == request_sha)); sys.exit(0)
     if any(j['id'] == jid for j in q['jobs']): sys.exit('duplicate job id ' + jid)
     q['jobs'].append(job); tmp = f'{qd}/.queue.json.{os.getpid()}.tmp'
     open(tmp, 'w').write(json.dumps(q, indent=1)); os.replace(tmp, qp)
 print(f'queued {jid}: {scope} {chapter} {res} -> {mp}')
 print(jid)
 PY
+
+BRIDGE_STATE=accepted
+bridge_log info ACCEPTED "job=$ID scope=$SCOPE chapter=$CHAPTER resolution=$RES"

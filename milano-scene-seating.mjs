@@ -1,3 +1,4 @@
+import {loungeDesign} from './lounge-design.mjs';
 // Keep original placement IDs: room edits, rotations and deletions continue to
 // address the same furnishing after its model is upgraded.
 export const MILANO_SCENE_FAMILIES={lounge:'alabaster',library:'moss',office:'graphite',coworking:'teal',music:'cognac',study:'cognac-compact',creative:'clay',gallery:'chalk',bedroom:'oat',gaming:'midnight',occmedialab:'coast'};
@@ -5,7 +6,7 @@ const sofas=new Set(['sofa','sofa-fabric','sofa-leather-couch','sofa-leather-woo
 export function milanoSceneSofa(scene,layout,placement,index){
     if(!sofas.has(placement.id)||!MILANO_SCENE_FAMILIES[scene])return null;
     const old=index.props.find(p=>p.id===placement.id);if(!old?.size)return null;
-    const family=placement.id==='sofa-leather-wood'?'cognac-compact':MILANO_SCENE_FAMILIES[scene];
+    const family=scene==='lounge'?loungeDesign(layout).sofa:placement.id==='sofa-leather-wood'?'cognac-compact':MILANO_SCENE_FAMILIES[scene];
     const candidates=index.props.filter(p=>p.milano?.family===family).map(entry=>({entry,fit:Math.min(1,old.size[0]/entry.size[0],old.size[2]/entry.size[2])}));
     // Prefer three proper seat modules when they fit. Smaller rooms get a
     // genuine two-seat model; no axis stretching or miniature seating.

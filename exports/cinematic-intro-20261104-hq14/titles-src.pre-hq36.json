@@ -1,0 +1,127 @@
+{
+ "schema": "ergoflex.intro-titles",
+ "version": 1,
+ "note": "in/out are seconds from the start of the film. Chapter-relative times live in titles-src. Placement: lower-left, inside the 90% safe area. The end card shows the ErgoFlex wordmark (graphic, present in the textless master) plus the \"cta\" line.",
+ "titles": [
+  {
+   "chapter": "awaken",
+   "rel_in": 3.6,
+   "rel_out": 9.2,
+   "eyebrow": "ERGOFLEX",
+   "title": "Level up your every day.",
+   "detail": "Better health. Clearer focus. More joy in your work."
+  },
+  {
+   "chapter": "awaken",
+   "rel_in": 13.2,
+   "rel_out": 19.6,
+   "eyebrow": "SAFETY",
+   "title": "Safe for everyone around it.",
+   "detail": "Light and sound tell the room when it moves.",
+   "scrim": "60"
+  },
+  {
+   "chapter": "rise",
+   "rel_in": 3.6,
+   "rel_out": 9.4,
+   "eyebrow": "SIT · STAND",
+   "title": "Your height. Your rhythm.",
+   "detail": "Sit to focus. Rise to 52.5″ to recharge.",
+   "scrim": "38"
+  },
+  {
+   "chapter": "create",
+   "rel_in": 1.6,
+   "rel_out": 7.6,
+   "eyebrow": "TILT",
+   "title": "Angle it to your art.",
+   "detail": "From drafting to digital painting. Everything within reach.",
+   "scrim": "38"
+  },
+  {
+   "chapter": "commons",
+   "rel_in": 2.4,
+   "rel_out": 8.2,
+   "eyebrow": "GLIDE",
+   "title": "A place for everyone.",
+   "detail": "Same table. Same project. Same team.",
+   "scrim": "60"
+  },
+  {
+   "chapter": "coast",
+   "rel_in": 1.6,
+   "rel_out": 6.9,
+   "eyebrow": "STUDIO",
+   "title": "Ideas become stories.",
+   "detail": "Your own edit suite inside a shared media lab."
+  },
+  {
+   "chapter": "oilers",
+   "rel_in": 4.3,
+   "rel_out": 9.3,
+   "eyebrow": "CLASSROOM",
+   "title": "Space to discover.",
+   "detail": "Built for how each student learns.",
+   "scrim": "70"
+  },
+  {
+   "chapter": "wellness",
+   "rel_in": 1.6,
+   "rel_out": 7.4,
+   "eyebrow": "WELLNESS",
+   "title": "Build movement into your day.",
+   "detail": "Pause. Stretch. Breathe. Reset.",
+   "scrim": "70"
+  },
+  {
+   "chapter": "awareness",
+   "rel_in": 3.6,
+   "rel_out": 9.8,
+   "eyebrow": "SENSING",
+   "title": "It sees what’s in its way.",
+   "detail": "Proximity sensors stop the roll before contact."
+  },
+  {
+   "chapter": "music",
+   "rel_in": 1.6,
+   "rel_out": 7.2,
+   "eyebrow": "GAMING",
+   "title": "Feel the room come alive.",
+   "detail": "Light that plays along with the game."
+  },
+  {
+   "chapter": "media",
+   "rel_in": 1.6,
+   "rel_out": 7.2,
+   "eyebrow": "CINEMA",
+   "title": "Movie night, upgraded.",
+   "detail": "Ambient color drawn from every scene."
+  },
+  {
+   "chapter": "storage",
+   "rel_in": 2.6,
+   "rel_out": 9.6,
+   "eyebrow": "STORAGE",
+   "title": "Make room for what’s next.",
+   "detail": "One tap: fold to 65°, roll to the wall."
+  },
+  {
+   "chapter": "hero",
+   "rel_in": 34.47,
+   "rel_out": 39.78,
+   "eyebrow": "CUSTOM SHOP",
+   "title": "One desk. Every part of your day.",
+   "detail": ""
+  }
+ ],
+ "cta": {
+  "chapter": "hero",
+  "rel_in": 42.96,
+  "rel_out": null,
+  "text": "Let’s build yours."
+ },
+ "logo": {
+  "chapter": "hero",
+  "rel_in": 41.54
+ }
+}

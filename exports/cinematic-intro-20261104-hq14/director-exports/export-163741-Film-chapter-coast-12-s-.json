@@ -1,0 +1,159 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "7a6c382a-ccea-423f-a967-3e317e2fa570",
+  "name": "Film chapter: coast (12 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "2026-11-07T00:37:36.152Z",
+  "shots": [
+    {
+      "id": "coast",
+      "room": "occmedialab",
+      "kind": "room",
+      "seconds": 12,
+      "title": "Ideas become stories.",
+      "detail": "Your own edit suite inside a shared media lab.",
+      "preset": "occ",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 30,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": []
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "The lab: reel wall, signage, edit bays",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                2.440885415884126,
+                2.4343043506315922,
+                -6.074726224315202
+              ],
+              "target": [
+                -5.166542188972585,
+                1.4110994122313911,
+                0.9892677295392931
+              ],
+              "fov": 44,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.275,
+            "label": "Key 2 at 3.3 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.8689506955463182,
+                2.220011459976885,
+                -0.7762335830781629
+              ],
+              "target": [
+                -6.311189617949341,
+                1.2451292351670058,
+                0.6280769584745728
+              ],
+              "fov": 43.999940543075105,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.591667,
+            "label": "Key 3 at 7.1 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.445971928811657,
+                2.239503264410431,
+                3.4906173015960027
+              ],
+              "target": [
+                -4.300041550931697,
+                1.5499560287642828,
+                3.5998598587885033
+              ],
+              "fov": 42.9999303200776,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.8416666666666668,
+            "label": "Hero edit suite",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.49093598335295363,
+                2.7260662850294235,
+                7.0482283248863435
+              ],
+              "target": [
+                -2.7345126898382275,
+                1.1870061829109084,
+                4.676347148192645
+              ],
+              "fov": 40.000193383736864,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "a40d8342-1b27-4f58-be91-b87aa806c61a",
+            "time": 0.9083333333333333,
+            "label": "Hero edit suite copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -0.5000001262940348,
+                1.9199999949249322,
+                6.620000168753594
+              ],
+              "target": [
+                -2.9000001262939112,
+                1.4199999949249849,
+                4.720000168753432
+              ],
+              "fov": 40,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 1,
+            "label": "Key 5 at 12.0 s",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                -0.5,
+                1.92,
+                6.62
+              ],
+              "target": [
+                -2.9,
+                1.42,
+                4.72
+              ],
+              "fov": 40,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

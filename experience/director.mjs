@@ -40,7 +40,7 @@ const copy=value=>structuredClone(value);
 export function mountDirector(bridge,catalog,initial){
   let storage;try{storage=localStorage;}catch{storage={getItem:()=>null,setItem:()=>{throw Error('Browser storage is unavailable. Export this cut to keep it.');}};}
   const library=new CutLibrary(storage);
-  let project=initial?{...makeCut(initial.name,initial.shots),client:initial.client,volume:initial.volume}:library.current()||makeCut();
+  let project=initial?(library.get(initial.id)||{...makeCut(initial.name,initial.shots),id:initial.id,client:initial.client,volume:initial.volume}):library.current()||makeCut();
   project=cleanCut(project,catalog);
   let selected=0,undo=[],redo=[],undoLabels=[],redoLabels=[],labelPending=null,stillMark=null,group=null,draftTimer,open=false,loadToken=0,composing=false;
   const choices=new Map(),automaticCameras=new Map();

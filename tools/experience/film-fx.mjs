@@ -529,9 +529,35 @@ function installDeskFinish(spec) {
   const wood = name => click(`#wood-finishes [data-finish="${CSS.escape(name)}"]`);
   const base = name => click(`#base-finishes [data-finish="${CSS.escape(name)}"]`);
   const trim = hex => click(`#trim-palette [data-trim-color="${CSS.escape(String(hex).toLowerCase())}"]`);
+  const syncActiveDeskFinish = () => {
+    const r = api.sceneDesks?.active;
+    if (!r) return;
+    if (r.state?.style) {
+      if (api.currentConfig?.woodFinish) r.state.style.woodFinish = api.currentConfig.woodFinish;
+      if (api.currentConfig?.baseFinish) r.state.style.baseFinish = api.currentConfig.baseFinish;
+      if (api.currentConfig?.trimColor) r.state.style.trimColor = api.currentConfig.trimColor;
+    }
+    r.rig?.restyle?.();
+    r.peripherals?.update?.();
+    let liveWood = null;
+    api.loadedModel?.traverse?.(o => { if (!liveWood && o.isMesh && o.name === 'Desktop_3' && o.material) liveWood = o.material; });
+    if (liveWood && r.rig?.mounts) {
+      for (const m of Object.values(r.rig.mounts)) {
+        m?.traverse?.(o => {
+          if (o.isMesh && (o.userData?.artistShelfWood || o.name === 'Organizer desk finish')) {
+            o.material.copy(liveWood);
+            o.material.name = 'Artist shelf wood';
+            o.material.userData.sharedTextures = true;
+            o.material.needsUpdate = true;
+          }
+        });
+      }
+    }
+  };
   const info = { wood: spec.wood ? wood(spec.wood) && spec.wood : undefined, base: spec.base ? base(spec.base) && spec.base : undefined, trim: spec.trim ? trim(spec.trim) && spec.trim : undefined };
+  syncActiveDeskFinish();
   console.log('[film-fx] deskFinish', JSON.stringify(info), 'was', JSON.stringify(was));
-  return { info, restore() { if (info.wood && was.wood) wood(was.wood); if (info.base && was2.base) base(was2.base); if (info.trim && was.trim) trim(was.trim); } };
+  return { info, restore() { if (info.wood && was.wood) wood(was.wood); if (info.base && was2.base) base(was2.base); if (info.trim && was.trim) trim(was.trim); syncActiveDeskFinish(); } };
 }
 // The featured desk's build (Director Build tab, shot.featuredBuild = {woodFinish, baseFinish, trimColor, accessories:[{id, slot}]}):
 // finishes through the configurator's swatches (installDeskFinish), accessories toggled in / out like accessories.add / remove
@@ -605,17 +631,28 @@ const FLOOR_SEGS = 4, FLOOR_STEPS = 24;
 // -yaw), so all four wheels roll forward together. Steps that change the yaw are the app's turn spin and are left alone.
 // The app (studio.js) is unchanged; restore() puts the render back. shot.wheelFix:false turns it off.
 function installWheelFix(shot) {
-  const desk = api.loadedModel, LAT = { Wheel_F_L: 1, Wheel_F_R: -1, Wheel_R_L: -1, Wheel_R_R: 1 }, rigs = [];
+  const desk = api.loadedModel, LAT = { Wheel_F_L: 1, Wheel_F_R: -1, Wheel_R_L: -1, Wheel_R_R: 1 }, rigs = [], matUndo = [];
+  const hubMat = new THREE.MeshPhysicalMaterial({ color: 0xf4f7fb, metalness: 0.92, roughness: 0.16, clearcoat: 0.35, clearcoatRoughness: 0.12, ior: 2.4, envMapIntensity: 1.6 });
+  const rollerMat = new THREE.MeshPhysicalMaterial({ color: 0x525862, metalness: 0.52, roughness: 0.24, clearcoat: 0.48, clearcoatRoughness: 0.16, ior: 1.8, envMapIntensity: 1.55 });
   desk.traverse(o => {
     const m = /^wheelRig_(Wheel_[FR]_[LR])$/.exec(o.name); if (!m) return;
     // The app's radius: half the world height of the largest disc, measured unspun.
     const z = o.rotation.z; o.rotation.z = 0; o.updateMatrixWorld(true);
     let hub = null, area = 0;
-    for (const c of o.children) { if (!c.isMesh || !c.geometry) continue; c.geometry.computeBoundingBox(); const b = c.geometry.boundingBox, a = (b.max.x - b.min.x) * (b.max.y - b.min.y); if (a > area) { area = a; hub = c; } }
+    for (const c of o.children) {
+      if (!c.isMesh || !c.geometry) continue;
+      c.geometry.computeBoundingBox();
+      const b = c.geometry.boundingBox, a = (b.max.x - b.min.x) * (b.max.y - b.min.y);
+      if (a > area) { area = a; hub = c; }
+      const mat = c.material, hex = mat?.color?.getHexString?.()?.toLowerCase?.() || '';
+      const isHubPlate = hex === 'a38c8c' || hex === '5e4343' || hex === 'ffffff' || (mat?.roughness >= 0.9 && mat?.metalness >= 0.9);
+      matUndo.push({ mesh: c, mat });
+      c.material = isHubPlate ? hubMat : rollerMat;
+    }
     const hb = hub ? new THREE.Box3().setFromObject(hub) : null; o.rotation.z = z; o.updateMatrixWorld(true);
     if (hb) rigs.push({ o, name: m[1], lat: LAT[m[1]], r: Math.max(.02, (hb.max.y - hb.min.y) / 2), corr: 0, base: z, written: z });
   });
-  if (!rigs.length) return null;
+  if (!rigs.length) { hubMat.dispose(); rollerMat.dispose(); return null; }
   const renderer = api.renderer, direct = renderer.render, log = shot.wheelFixDebug ? [] : null;
   let prev = null;
   const apply = () => {
@@ -637,7 +674,15 @@ function installWheelFix(shot) {
     if (log) log.push(1);
   };
   renderer.render = function (sc, cam) { apply(); return direct.call(this, sc, cam); };
-  return { count: rigs.length, restore() { renderer.render = direct; if (log?.length > 1) console.error('[film-fx] wheels app/fixed spin on travel steps: ' + rigs.map(g => g.name.slice(6) + ' ' + (g.dApp || 0).toFixed(2) + '/' + (g.dFix || 0).toFixed(2)).join(', ')); } };
+  return {
+    count: rigs.length,
+    restore() {
+      renderer.render = direct;
+      for (const u of matUndo) u.mesh.material = u.mat;
+      hubMat.dispose(); rollerMat.dispose();
+      if (log?.length > 1) console.error('[film-fx] wheels app/fixed spin on travel steps: ' + rigs.map(g => g.name.slice(6) + ' ' + (g.dApp || 0).toFixed(2) + '/' + (g.dFix || 0).toFixed(2)).join(', '));
+    }
+  };
 }
 function installFloorLight(shot) {
   const spec = { gain: 1, foot: 1, wings: 1, footLift: .25, lobe: 1, max: .6, soft: .04, radius: 3.2, hideApp: true, ...shot.floorLight };
@@ -915,6 +960,7 @@ export async function install(shot) {
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
   if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild);
+  if (shot.room === 'workshop') active.workshopToyStory = await (await import('./workshop-toy-story.mjs?v=20261110-stationary-organizer')).installWorkshopToyStory(api);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
   if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
   // School branding on every room desk (after the poses: a rig re-poses its artwork with it).
@@ -1043,6 +1089,7 @@ export async function frame(t, chapterSeconds, { video = false, screens = true, 
   let mark = timing ? performance.now() : 0; const lap = name => { if (!timing) return; const now = performance.now(); timing[name] = (timing[name] || 0) + now - mark; mark = now; };
   for (const v of active.desk?.timed || []) v.cell.force = visibleAt(v.keys, chapterSeconds);
   if (active.tod) active.tod.apply(chapterSeconds); lap('timeOfDay');
+  active.workshopToyStory?.frame(chapterSeconds);
   active.deskEdits?.frame(chapterSeconds);   // the other desks' own moves by chapter time (film-desk-edits.mjs)
   active.roomLight?.frame(chapterSeconds);
   active.roomSpill?.frame(chapterSeconds);
@@ -1089,6 +1136,7 @@ export function clear() {
   active.roomSpill?.restore(); active.roomLight?.restore();   // before edits / timeOfDay: it chains to their accessors
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
+  active.workshopToyStory?.restore();
   active.featured?.restore();   // before the film's own accessories / finish go back
   clearDeskObjects(active.desk);
   active.finish?.restore();

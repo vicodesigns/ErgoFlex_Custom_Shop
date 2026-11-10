@@ -1,0 +1,309 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "193b3300-1c88-46cc-911c-4867538d7fec",
+  "name": "Film chapter: music (12.5 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "2026-11-07T01:35:41.738Z",
+  "shots": [
+    {
+      "id": "music",
+      "room": "gaming",
+      "kind": "music",
+      "seconds": 12.5,
+      "title": "Feel the room come alive.",
+      "detail": "Light that plays along with the game.",
+      "preset": "gaming",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 30,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "122d4193-3cc9-4b70-96c5-10c0f0c6beb3",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 6.3,
+            "duration": 3,
+            "easing": "linear",
+            "label": "",
+            "target": 47
+          },
+          {
+            "id": "a3ba9010-22a1-48cc-9890-395fc2898545",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 6.3,
+            "duration": 3,
+            "easing": "linear",
+            "label": "",
+            "target": 5
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Light panels, posters, stream wall",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                3.944865508914801,
+                2.6520218911238835,
+                2.780803015431352
+              ],
+              "target": [
+                0.39783946285239324,
+                1.0791978800671471,
+                -0.7450321307431882
+              ],
+              "fov": 48,
+              "aspect": 1.7779578606158832
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.36,
+            "label": "Past Orbit Runner",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.8394907444420547,
+                2.104267426116513,
+                2.5687316965699796
+              ],
+              "target": [
+                -0.4009582311080538,
+                1.0364997615773621,
+                -0.3555806245222078
+              ],
+              "fov": 45.999892857672485,
+              "aspect": 1.7779578606158832
+            }
+          },
+          {
+            "id": "537ae139-fc0a-4e0d-9c6c-0743fe40890a",
+            "time": 0.36800000000000005,
+            "label": "Past Orbit Runner copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.8394907444420547,
+                2.104267426116513,
+                2.5687316965699796
+              ],
+              "target": [
+                -0.4009582311080538,
+                1.0364997615773621,
+                -0.3555806245222078
+              ],
+              "fov": 45.999892857672485,
+              "aspect": 1.7779578606158832
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.7360000000000001,
+            "label": "The desk plays along",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.09526768023614,
+                2.1936837152380706,
+                0.2527533954220421
+              ],
+              "target": [
+                -0.7327820219355488,
+                1.4731338090557882,
+                0.21242914645008765
+              ],
+              "fov": 43.50062056282101,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "ee65191f-f7f7-4a0c-b6bd-25144d1679ba",
+            "time": 0.752,
+            "label": "The desk plays along copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.09526768023614,
+                2.1936837152380706,
+                0.2527533954220421
+              ],
+              "target": [
+                -0.7327820219355488,
+                1.4731338090557882,
+                0.21242914645008765
+              ],
+              "fov": 43.50062056282101,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "2bd1c3f0-1ea2-40bb-9f78-6bf1d3a6c0a4",
+            "time": 0.84,
+            "label": "Key 4 at 10.5 s copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.3853429333354508,
+                2.051265121432721,
+                2.0847761182442506
+              ],
+              "target": [
+                -0.8713514397381116,
+                1.9390318288747967,
+                0.3574376625961815
+              ],
+              "fov": 42.201149368792784,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.8480000000000001,
+            "label": "Key 4 at 10.5 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.3853429333354508,
+                2.051265121432721,
+                2.0847761182442506
+              ],
+              "target": [
+                -0.8713514397381116,
+                1.9390318288747967,
+                0.3574376625961815
+              ],
+              "fov": 42.201149368792784,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 1,
+            "label": "Slow push, dissolve",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                2.888554445452948,
+                2.3272538826802647,
+                2.395202105970526
+              ],
+              "target": [
+                -0.7240888345885367,
+                1.3727991605438483,
+                0.22899018738102245
+              ],
+              "fov": 42.2,
+              "aspect": 1.7774011299435029
+            }
+          }
+        ]
+      },
+      "propEdits": [
+        {
+          "match": "^$",
+          "asset": "gaming:house:placement:0:0:",
+          "label": "Unnamed prop",
+          "position": [
+            -0.374,
+            0,
+            -0.07
+          ]
+        }
+      ],
+      "filmTitles": [
+        {
+          "id": "music-0",
+          "rel_in": 2.65,
+          "rel_out": 8.25,
+          "eyebrow": "GAMING",
+          "title": "Feel the room come alive.",
+          "detail": "Light that plays along with the game.",
+          "shadow": {
+            "paths": [
+              {
+                "line": "eyebrow",
+                "points": [
+                  {
+                    "x": -10.54,
+                    "y": -132.41
+                  },
+                  {
+                    "x": 105.7,
+                    "y": -133.15
+                  },
+                  {
+                    "x": 108.69,
+                    "y": -96.82
+                  },
+                  {
+                    "x": -16.43,
+                    "y": -96.32
+                  }
+                ]
+              },
+              {
+                "line": "title",
+                "points": [
+                  {
+                    "x": -16.67,
+                    "y": -78.59
+                  },
+                  {
+                    "x": 622.75,
+                    "y": -75.36
+                  },
+                  {
+                    "x": 625,
+                    "y": -10.78
+                  },
+                  {
+                    "x": -16.15,
+                    "y": -16.83
+                  }
+                ]
+              },
+              {
+                "line": "detail",
+                "points": [
+                  {
+                    "x": -11.75,
+                    "y": 10.25
+                  },
+                  {
+                    "x": 442.24,
+                    "y": 12.37
+                  },
+                  {
+                    "x": 441.03,
+                    "y": 65.28
+                  },
+                  {
+                    "x": -12.04,
+                    "y": 59.83
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

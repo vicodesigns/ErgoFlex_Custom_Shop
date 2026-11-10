@@ -1,0 +1,249 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "b9bd063e-55b3-4a81-a2f5-08a84423585d",
+  "name": "Film chapter: awareness (12 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "2026-11-07T01:12:05.770Z",
+  "shots": [
+    {
+      "id": "awareness",
+      "room": "product",
+      "kind": "proximity",
+      "seconds": 12,
+      "title": "It sees what’s in its way.",
+      "detail": "Proximity sensors stop the roll before contact.",
+      "preset": "gaming",
+      "transition": 1.1,
+      "size": "60x30",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 30,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "aw-roll",
+            "lane": "wheels",
+            "kind": "travel",
+            "start": 6,
+            "duration": 2.4,
+            "easing": "smooth",
+            "label": "Roll toward the pylon",
+            "value": 9.7,
+            "direction": "forward"
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "High stage reveal: pylon rises ahead of the desk",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                -3.7030406031449066,
+                2.370756892586704,
+                3.860435612415426
+              ],
+              "target": [
+                0.6470168613565997,
+                0.9150882811814981,
+                -0.0664625208831887
+              ],
+              "fov": 37,
+              "aspect": 1.7774030354131534
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.225,
+            "label": "Key 2 at 2.8 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.006230040726073,
+                2.3824787398282163,
+                5.266191079151751
+              ],
+              "target": [
+                0.5886508901111545,
+                1.110928721169477,
+                -0.15893190106763583
+              ],
+              "fov": 35.99992035021353,
+              "aspect": 1.7774030354131534
+            }
+          },
+          {
+            "id": "a8e9fc00-4f09-424d-9adf-3c4c9bdd425b",
+            "time": 0.25833333333333336,
+            "label": "Key 2 at 2.8 s copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.006230040726073,
+                2.3824787398282163,
+                5.266191079151751
+              ],
+              "target": [
+                0.5886508901111545,
+                1.110928721169477,
+                -0.15893190106763583
+              ],
+              "fov": 35.99992035021353,
+              "aspect": 1.7774030354131534
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.483333,
+            "label": "Square profile: desk, gap, pylon; frame nearly locked so the",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.461166593679725,
+                1.1690659190792962,
+                -0.09136378633011684
+              ],
+              "target": [
+                0.42550733295225157,
+                0.8735612768963714,
+                0.016073158424513387
+              ],
+              "fov": 34.999984054801985,
+              "aspect": 1.7774030354131534
+            }
+          },
+          {
+            "id": "4e84e52f-b1f4-4c7a-bb8c-d3a512ab619b",
+            "time": 0.4916666666666667,
+            "label": "Square profile: desk, gap, pylon; frame nearly locked so the",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.461166593679725,
+                1.1690659190792962,
+                -0.09136378633011684
+              ],
+              "target": [
+                0.42550733295225157,
+                0.8735612768963714,
+                0.016073158424513387
+              ],
+              "fov": 34.999984054801985,
+              "aspect": 1.7774030354131534
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.716667,
+            "label": "Stopped: amber; camera lets the stop land",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.147026990482593,
+                1.9007696925524418,
+                -3.643555873637937
+              ],
+              "target": [
+                0.4884303811649044,
+                0.9873811333051827,
+                -0.0029534554299811
+              ],
+              "fov": 34.99904443938275,
+              "aspect": 1.7774030354131534
+            }
+          },
+          {
+            "id": "93bbfaa6-57eb-4524-8a05-50202a8a6d9b",
+            "time": 0.8333333333333334,
+            "label": "Stopped: amber; camera lets the stop land copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.147026990482593,
+                1.9007696925524418,
+                -3.643555873637937
+              ],
+              "target": [
+                0.4884303811649044,
+                0.9873811333051827,
+                -0.0029534554299811
+              ],
+              "fov": 34.99904443938275,
+              "aspect": 1.7774030354131534
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.9083333333333333,
+            "label": "Key 5 at 9.6 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.9273938705059772,
+                0.8287286095988183,
+                -5.683207927213696
+              ],
+              "target": [
+                0.6197942431331491,
+                0.9500393935360704,
+                -0.000018150239967985296
+              ],
+              "fov": 34.90001594071491,
+              "aspect": 1.7774030354131534
+            }
+          },
+          {
+            "id": "dcc1b1ed-e182-42af-ba84-7d9330669b7b",
+            "time": 0.9750000000000001,
+            "label": "Key 5 at 9.6 s copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -1.566111104535389,
+                2.1745543256419317,
+                -3.618707393982096
+              ],
+              "target": [
+                1.3548847634789416,
+                0.6741100548456253,
+                -0.21229633505028925
+              ],
+              "fov": 34.90001594071491,
+              "aspect": 1.7774030354131534
+            }
+          },
+          {
+            "id": "f682f11b-f3b3-4116-b096-a6d225c0dd08",
+            "time": 1,
+            "label": "Key 5 at 9.6 s copy copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -1.566111104535389,
+                2.1745543256419317,
+                -3.618707393982096
+              ],
+              "target": [
+                1.3548847634789416,
+                0.6741100548456253,
+                -0.21229633505028925
+              ],
+              "fov": 34.90001594071491,
+              "aspect": 1.7774030354131534
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

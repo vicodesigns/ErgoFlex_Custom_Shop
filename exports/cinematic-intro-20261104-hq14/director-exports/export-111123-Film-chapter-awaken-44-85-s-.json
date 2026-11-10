@@ -1,0 +1,611 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "cf7bb751-681b-4b05-99f6-3a02df08f0b5",
+  "name": "Film chapter: awaken (44.85 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "2026-11-07T19:11:18.229Z",
+  "shots": [
+    {
+      "id": "awaken",
+      "room": "product",
+      "kind": "glide",
+      "seconds": 44.85,
+      "title": "Level up your every day.",
+      "detail": "Better health. Clearer focus. More joy in your work.",
+      "preset": "gaming",
+      "transition": 0.35,
+      "size": "60x30",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 28,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "op-roll",
+            "lane": "wheels",
+            "kind": "travel",
+            "start": 2,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Move forward",
+            "value": 12,
+            "direction": "forward"
+          },
+          {
+            "id": "op-lift",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 9.25,
+            "duration": 6.9,
+            "easing": "smooth",
+            "label": "Lift up",
+            "target": 45.5
+          },
+          {
+            "id": "op-tilt-down",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 18.65,
+            "duration": 5.950000000000003,
+            "easing": "smooth",
+            "label": "Tilt up",
+            "target": 65
+          },
+          {
+            "id": "8fd6bb67-5297-4296-a82b-e38b974d9b58",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 21.1,
+            "duration": 3,
+            "easing": "linear",
+            "label": "",
+            "target": 52.5
+          },
+          {
+            "id": "op-turn",
+            "lane": "wheels",
+            "kind": "rotate",
+            "start": 25.55,
+            "duration": 6.7,
+            "easing": "smooth",
+            "label": "Rotating left",
+            "value": 100,
+            "direction": "left"
+          },
+          {
+            "id": "op-tilt-back",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 31.55,
+            "duration": 4.150000000000002,
+            "easing": "smooth",
+            "label": "Tilt level",
+            "target": 0
+          },
+          {
+            "id": "op-lower",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 35,
+            "duration": 4.55,
+            "easing": "smooth",
+            "label": "Lift down",
+            "target": 28
+          },
+          {
+            "id": "op-roll-lit",
+            "lane": "wheels",
+            "kind": "travel",
+            "start": 37.05,
+            "duration": 4.400000000000006,
+            "easing": "smooth",
+            "label": "Move forward",
+            "value": 24,
+            "direction": "forward"
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Wheel macro, desk dark",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                1.1244,
+                0.2203,
+                1.7861
+              ],
+              "target": [
+                0.093,
+                0.179,
+                0.972
+              ],
+              "fov": 24,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.040134,
+            "label": "Wheels start",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4,
+                0.09,
+                1.3
+              ],
+              "target": [
+                0.172,
+                0.154,
+                0.969
+              ],
+              "fov": 24,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.044593,
+            "label": "Wheels start (hold)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4,
+                0.09,
+                1.3
+              ],
+              "target": [
+                0.172,
+                0.154,
+                0.969
+              ],
+              "fov": 24,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.098105,
+            "label": "Roll lands, pull back",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.2307,
+                0.7246,
+                1.9925
+              ],
+              "target": [
+                0.5787,
+                0.4111,
+                0.7892
+              ],
+              "fov": 25,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.118172,
+            "label": "Roll landed, keep pulling back",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.2633,
+                1.1098,
+                2.7614
+              ],
+              "target": [
+                0.5274,
+                0.7937,
+                0.5364
+              ],
+              "fov": 27.89,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.138239,
+            "label": "Whole desk framed: lights on",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.8167,
+                1.6738,
+                3.5422
+              ],
+              "target": [
+                0.4719,
+                1.208,
+                0.2625
+              ],
+              "fov": 31.03,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 0.153846,
+            "label": "Settling on the whole desk",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.9564,
+                1.9336,
+                3.8603
+              ],
+              "target": [
+                0.4639,
+                1.2678,
+                0.223
+              ],
+              "fov": 31.48,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 0.164994,
+            "label": "Lift starts: foot rest lights",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.9832,
+                1.9956,
+                3.9339
+              ],
+              "target": [
+                0.4636,
+                1.2701,
+                0.2215
+              ],
+              "fov": 31.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-09",
+            "time": 0.206243,
+            "label": "Lift starts: foot rest lights copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.9399,
+                2.1154,
+                3.992
+              ],
+              "target": [
+                0.4543,
+                1.2958,
+                0.2339
+              ],
+              "fov": 31.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-10",
+            "time": 0.306577,
+            "label": "Desktop layer: crane over the rise",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.3386,
+                3.7771,
+                4.7977
+              ],
+              "target": [
+                0.4237,
+                1.3665,
+                0.2915
+              ],
+              "fov": 32,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-12",
+            "time": 0.313266,
+            "label": "Desktop layer: crane over the rise (hold)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.3386,
+                3.7771,
+                4.7977
+              ],
+              "target": [
+                0.4237,
+                1.3665,
+                0.2915
+              ],
+              "fov": 32,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-13",
+            "time": 0.377926,
+            "label": "Down to board height",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.764921225317342,
+                1.5360702312299301,
+                4.8491135423212794
+              ],
+              "target": [
+                0.1673,
+                1.3552242359211797,
+                0.3477
+              ],
+              "fov": 33,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-15",
+            "time": 0.429208,
+            "label": "Down to board height (hold)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.764921225317342,
+                1.5360702312299301,
+                4.8491135423212794
+              ],
+              "target": [
+                0.1673,
+                1.3552242359211797,
+                0.3477
+              ],
+              "fov": 33,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-16",
+            "time": 0.493868,
+            "label": "Tilt down (purple), turn starts",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.198073040772165,
+                1.5156617853281091,
+                5.291569373859656
+              ],
+              "target": [
+                0.5161078027437697,
+                1.3463642410689443,
+                0.1769979843573465
+              ],
+              "fov": 33.499931381815806,
+              "aspect": 1.7779816513761468
+            }
+          },
+          {
+            "id": "plan-18",
+            "time": 0.57748,
+            "label": "Tilt down (purple), turn starts (hold)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.1662377235781092,
+                0.7970264938039066,
+                5.868993768693195
+              ],
+              "target": [
+                0.4781526300777705,
+                1.407602634852337,
+                0.20954614175994368
+              ],
+              "fov": 33.49395232098911,
+              "aspect": 1.7779816513761468
+            }
+          },
+          {
+            "id": "plan-19",
+            "time": 0.696767,
+            "label": "Far-side 3/4: turn lands",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.5062707904776094,
+                2.4812362649326496,
+                5.455622461130267
+              ],
+              "target": [
+                0.5361574631049191,
+                1.4297999899386857,
+                0.1308054707543326
+              ],
+              "fov": 32.00004969673453,
+              "aspect": 1.7779816513761468
+            }
+          },
+          {
+            "id": "0f6f9ede-aa11-4a9f-bac5-ed6c3c4eeaa5",
+            "time": 0.7190635451505016,
+            "label": "Far-side 3/4: turn lands copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.5062707904776094,
+                2.4812362649326496,
+                5.455622461130267
+              ],
+              "target": [
+                0.5361574631049191,
+                1.4297999899386857,
+                0.1308054707543326
+              ],
+              "fov": 32.00004969673453,
+              "aspect": 1.7779816513761468
+            }
+          },
+          {
+            "id": "plan-22",
+            "time": 0.799331,
+            "label": "3/4: red lowering",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.4509,
+                1.9,
+                5.3859
+              ],
+              "target": [
+                0.5406,
+                1.4224,
+                0.0126
+              ],
+              "fov": 33,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-23",
+            "time": 0.829431,
+            "label": "Lit roll toward the lens: swing starts",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.2631,
+                1.95,
+                5.0705
+              ],
+              "target": [
+                0.7438,
+                1.2136,
+                -0.0081
+              ],
+              "fov": 33,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-24",
+            "time": 0.896321,
+            "label": "Across the front: the roll comes to the lens",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -0.432,
+                1.82,
+                6.029
+              ],
+              "target": [
+                0.1895,
+                1.26,
+                0.967
+              ],
+              "fov": 33.3,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-25",
+            "time": 0.947603,
+            "label": "Hero 3/4: slow push into the dissolve",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -2.9278,
+                1.78,
+                5.3927
+              ],
+              "target": [
+                0.061,
+                1.31,
+                1.0749
+              ],
+              "fov": 33.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-26",
+            "time": 1,
+            "label": "Push into the dissolve",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                -3.088,
+                1.74,
+                5.0139
+              ],
+              "target": [
+                0.0661,
+                1.31,
+                1.0683
+              ],
+              "fov": 33,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "ledStatus": [
+        {
+          "at": 0,
+          "dur": 7.45,
+          "kind": "off",
+          "fade": 0.3
+        },
+        {
+          "at": 9.25,
+          "dur": 6.9,
+          "kind": "lift-up",
+          "fade": 1,
+          "fadeIn": 0.6
+        },
+        {
+          "at": 18.65,
+          "dur": 5.95,
+          "kind": "tilt-retract",
+          "fade": 1,
+          "fadeIn": 0.6
+        },
+        {
+          "at": 25.55,
+          "dur": 6,
+          "kind": "wheels",
+          "fade": 1,
+          "fadeIn": 0.6,
+          "mode": 5
+        },
+        {
+          "at": 31.55,
+          "dur": 1.55,
+          "kind": "tilt-extend",
+          "fade": 1
+        },
+        {
+          "at": 33.1,
+          "dur": 3.95,
+          "kind": "lift-down",
+          "fade": 1
+        },
+        {
+          "at": 37.05,
+          "dur": 4.400000000000006,
+          "kind": "wheels",
+          "fade": 1,
+          "mode": 3
+        }
+      ],
+      "ledColor": "#767676"
+    }
+  ]
+}

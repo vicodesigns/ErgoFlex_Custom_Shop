@@ -1,0 +1,168 @@
+{
+ "source": "/home/ergo/Downloads/Film-chapter-rise-16-s- (1).json",
+ "seconds": 16.0,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    -0.019,
+    1.657,
+    0.946
+   ],
+   "target": [
+    -0.49,
+    1.09,
+    0.88
+   ],
+   "fov": 30,
+   "label": "DAILY NOTES and the sleeping desk"
+  },
+  {
+   "at": 2.0,
+   "position": [
+    0.076,
+    1.724,
+    0.971
+   ],
+   "target": [
+    -0.5,
+    1.12,
+    0.88
+   ],
+   "fov": 31,
+   "label": "Desk wakes: lights and screens on"
+  },
+  {
+   "at": 4.2,
+   "position": [
+    1.4,
+    2.25,
+    1.5
+   ],
+   "target": [
+    -0.86,
+    1.32,
+    0.78
+   ],
+   "fov": 41,
+   "label": "Up and back off the notebook: desk top and window"
+  },
+  {
+   "at": 5.9,
+   "position": [
+    2.036,
+    2.4,
+    2.095
+   ],
+   "target": [
+    -1.008,
+    1.65,
+    0.706
+   ],
+   "fov": 48,
+   "label": "High wide: window, ficus, shelves, clock and pinboard"
+  },
+  {
+   "at": 7.6,
+   "position": [
+    2.79,
+    1.85,
+    2.306
+   ],
+   "target": [
+    -0.903,
+    1.55,
+    0.595
+   ],
+   "fov": 51,
+   "label": "Standing, white: camera at rest",
+   "hold": 1.85
+  },
+  {
+   "at": 12.65,
+   "position": [
+    2.235,
+    1.65,
+    2.156
+   ],
+   "target": [
+    -0.754,
+    1.36,
+    0.334
+   ],
+   "fov": 50.5,
+   "label": "Settle in as it lowers: shelves and pinboard behind"
+  },
+  {
+   "at": 16.0,
+   "position": [
+    1.88,
+    1.55,
+    2.057
+   ],
+   "target": [
+    -0.7,
+    1.3,
+    0.25
+   ],
+   "fov": 51,
+   "label": "Seated, evening window: slow push"
+  }
+ ],
+ "clips": [
+  {
+   "id": "comfortable-standing",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 3.4,
+   "duration": 4.2,
+   "easing": "smooth",
+   "label": "Rise to comfortable standing",
+   "target": 43.5
+  },
+  {
+   "id": "full-height",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 10,
+   "duration": 3.2,
+   "easing": "smooth",
+   "label": "Back to sitting",
+   "target": 28
+  }
+ ],
+ "props": [
+  {
+   "match": "^Workspace notebook$",
+   "path": "^Room:home > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Workspace notebook$",
+   "label": "Workspace notebook",
+   "hide": true
+  },
+  {
+   "match": "^Daily planning$",
+   "path": "^Room:home > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Daily planning$",
+   "label": "Daily planning",
+   "space": "local",
+   "position": [
+    -0.098,
+    0,
+    -0.062
+   ],
+   "rotation": [
+    0,
+    44.9,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-thermal-cup$",
+   "label": "Prop:ergoflex-thermal-cup",
+   "space": "local",
+   "position": [
+    -0.52,
+    0,
+    0.392
+   ]
+  }
+ ]
+}

@@ -17,6 +17,7 @@
     "test:gym": "node tests/gym-room-test.cjs",
     "test:kitchen": "node tests/kitchen-room-test.cjs",
     "test:lounge": "node tests/lounge-room-test.cjs",
+    "test:lounge-design": "node tests/lounge-design-test.mjs",
     "test:workshop": "node tests/workshop-room-test.cjs",
     "test:bedroom": "node tests/bedroom-room-test.cjs",
     "test:gallery": "node tests/gallery-room-test.cjs",

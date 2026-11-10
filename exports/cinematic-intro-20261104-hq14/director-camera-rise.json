@@ -1,0 +1,287 @@
+{
+ "source": "/tmp/claude-1000/-home-ergo-ErgoFlex-Custom-Shop/415ac7b2-6cf6-4cc4-9386-66d6bb6f1395/scratchpad/finalpass/out/fp2/Film-chapter-rise-final.json",
+ "seconds": 18.0,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    0.14148306748932715,
+    1.5808533152580795,
+    1.0242989554549016
+   ],
+   "target": [
+    -0.4735368643950818,
+    1.0652403301229472,
+    0.9431015884855715
+   ],
+   "fov": 30.000000000000004,
+   "label": "DAILY NOTES and the sleeping desk"
+  },
+  {
+   "at": 2.0,
+   "position": [
+    0.0757350167867415,
+    1.7226143260577607,
+    0.9856212571660291
+   ],
+   "target": [
+    -0.4864768948228069,
+    1.1060213450711327,
+    0.8906986467388635
+   ],
+   "fov": 31.00176818795182,
+   "label": "Desk wakes: lights and screens on"
+  },
+  {
+   "at": 4.5,
+   "position": [
+    2.7133,
+    2.7103,
+    2.0485
+   ],
+   "target": [
+    -0.5971948334035099,
+    1.1626306250918728,
+    0.3510701496284761
+   ],
+   "fov": 39.5,
+   "label": "Up and back off the notebook: desk top and window"
+  },
+  {
+   "at": 5.6,
+   "position": [
+    2.524163110388781,
+    2.7639875635234645,
+    2.0857530679773455
+   ],
+   "target": [
+    -0.7094686758119407,
+    1.3745131886193964,
+    0.3420649957210968
+   ],
+   "fov": 45.0,
+   "label": "High wide: window, ficus, shelves, clock and pinboard"
+  },
+  {
+   "at": 7.6,
+   "position": [
+    2.8290912628959575,
+    0.9580335520381302,
+    1.8977231673565074
+   ],
+   "target": [
+    -0.5188328716980848,
+    1.4815329537526918,
+    -0.13075073954236272
+   ],
+   "fov": 51,
+   "label": "Standing, white: camera at rest"
+  },
+  {
+   "at": 9.45,
+   "position": [
+    2.8290912628959575,
+    0.9580335520381302,
+    1.8977231673565074
+   ],
+   "target": [
+    -0.5188328716980848,
+    1.4815329537526918,
+    -0.13075073954236272
+   ],
+   "fov": 51,
+   "label": "Standing, white: hold"
+  },
+  {
+   "at": 12.65,
+   "position": [
+    2.235,
+    1.65,
+    2.156
+   ],
+   "target": [
+    -0.754,
+    1.36,
+    0.334
+   ],
+   "fov": 50.5,
+   "label": "Settle in as it lowers: shelves and pinboard behind"
+  },
+  {
+   "at": 14.9,
+   "position": [
+    2.235,
+    1.65,
+    2.156
+   ],
+   "target": [
+    -0.754,
+    1.36,
+    0.334
+   ],
+   "fov": 50.5,
+   "label": "Seated, white: hold"
+  },
+  {
+   "at": 16.5,
+   "position": [
+    2.3079,
+    2.25,
+    1.0
+   ],
+   "target": [
+    -0.72,
+    1.32,
+    0.27
+   ],
+   "fov": 51,
+   "label": "Fly-by: rising across the front"
+  },
+  {
+   "at": 18.0,
+   "position": [
+    1.4267,
+    2.185,
+    -0.0195
+   ],
+   "target": [
+    -0.7,
+    1.3,
+    -0.25
+   ],
+   "fov": 51.00000000000001,
+   "label": "Fly-by: push in past the desk, into create"
+  }
+ ],
+ "clips": [
+  {
+   "id": "comfortable-standing",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 3.4,
+   "duration": 4.2,
+   "easing": "smooth",
+   "label": "Rise to comfortable standing",
+   "target": 43.5
+  },
+  {
+   "id": "full-height",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 9.45,
+   "duration": 3.2,
+   "easing": "smooth",
+   "label": "Back to sitting",
+   "target": 28
+  }
+ ],
+ "initial": {
+  "height": 28,
+  "tilt": 0
+ },
+ "lighting": {
+  "ledNeutral": [
+   [
+    0,
+    "#929292"
+   ],
+   [
+    14.9,
+    "#929292"
+   ],
+   [
+    16.5,
+    "#52483c"
+   ]
+  ],
+  "timeOfDay": [
+   {
+    "at": 0.75,
+    "mode": "morning"
+   },
+   {
+    "at": 9.0,
+    "mode": "afternoon"
+   },
+   {
+    "at": 16.5,
+    "mode": "evening",
+    "ease": "smooth"
+   }
+  ]
+ },
+ "props": [
+  {
+   "match": "^Workspace notebook$",
+   "path": "^Room:home > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Workspace notebook$",
+   "label": "Workspace notebook",
+   "hide": true
+  },
+  {
+   "match": "^Prop:ergoflex-thermal-cup$",
+   "label": "Prop:ergoflex-thermal-cup",
+   "space": "local",
+   "position": [
+    1.248,
+    0,
+    0.109
+   ]
+  },
+  {
+   "match": "^Daily planning$",
+   "path": "^Room:home > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Daily planning$",
+   "label": "Daily planning",
+   "space": "local",
+   "position": [
+    -0.163,
+    0,
+    -0.021
+   ],
+   "rotation": [
+    0,
+    44.2,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:ficus$",
+   "asset": "home:house:room:4:ficus",
+   "label": "Prop:ficus",
+   "position": [
+    0,
+    0,
+    0.075
+   ]
+  },
+  {
+   "match": "^$",
+   "asset": "home:house:placement:0:0:",
+   "label": "Unnamed prop",
+   "position": [
+    -0.299,
+    0,
+    -0.006
+   ]
+  },
+  {
+   "match": "^Prop:steelcase-leap-v2$",
+   "asset": "home:house:room:0:steelcase-leap-v2",
+   "label": "Prop:steelcase-leap-v2",
+   "position": [
+    0.08,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-phone$",
+   "label": "Prop:ergoflex-phone",
+   "space": "local",
+   "position": [
+    0.012,
+    -0.003,
+    -0.004
+   ]
+  }
+ ]
+}

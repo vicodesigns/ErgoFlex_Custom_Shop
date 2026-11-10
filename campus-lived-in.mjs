@@ -152,18 +152,18 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
             const k = detailKit();
             const count = [3, 2, 1, 4, 4][p];
             for (let n = 0; n < count; n++) sheet(g, p, [-210 + n * 180, 2 + n * .6, 75 + (n % 2) * 22], 154, (n - 1) * .04);
-            if (p === 0) { notebook(k, 360, -110); k.box([200, 112, 14], [-170, 60, -130], INK); k.box([210, 22, 18], [-170, 128, -130], PAPER); for (let n = 0; n < 5; n++) k.box([18, 23, 19], [-250 + n * 40, 128, -130], INK, [0, 0, .4]); }
-            if (p === 1) { k.box([100, 17, 64], [290, 8.5, -145], SILVER); k.box([80, 2, 40], [290, 18, -145], INK); headphone(k, -180, -130); pen(k, 100, -115); }
-            if (p === 2) { headphone(k, 110, -90); k.box([180, 40, 105], [400, 20, -130], INK); for (let n = 0; n < 4; n++) k.cyl(8, 8, 7, [340 + n * 40, 44, -130], n ? SILVER : '#d98a3e'); for (let n = 0; n < 8; n++) k.box([17, 2, 45], [-180 + n * 25, 2, -120], ['#ddddce', '#a6aaa6', '#708c94', '#314654'][n % 4]); }
+            if (p === 0) { notebook(k, 360, -110); k.box([200, 112, 14], [-170, 60, -130], INK, undefined, 'metal'); k.box([210, 22, 18], [-170, 128, -130], PAPER, undefined, 'paper'); for (let n = 0; n < 5; n++) k.box([18, 23, 19], [-250 + n * 40, 128, -130], INK, [0, 0, .4], 'metal'); }
+            if (p === 1) { k.box([100, 17, 64], [290, 8.5, -145], SILVER, undefined, 'metal'); k.box([80, 2, 40], [290, 18, -145], INK, undefined, 'rubber'); headphone(k, -180, -130); pen(k, 100, -115); }
+            if (p === 2) { headphone(k, 110, -90); k.box([180, 40, 105], [400, 20, -130], INK, undefined, 'metal'); for (let n = 0; n < 4; n++) k.cyl(8, 8, 7, [340 + n * 40, 44, -130], n ? SILVER : '#d98a3e', 'metal'); for (let n = 0; n < 8; n++) k.box([17, 2, 45], [-180 + n * 25, 2, -120], ['#ddddce', '#a6aaa6', '#708c94', '#314654'][n % 4], undefined, 'paper'); }
             if (p === 3) { for (let n = 0; n < 4; n++) pen(k, -190 + n * 180, -125); }
-            if (p === 4) { for (let n = 0; n < 4; n++) { k.box([55, 1, 60], [-100 + n * 85, 2, -150], ['#d8bc68', '#95b7ba', '#b8c9a4'][n % 3]); pen(k, 490, 90); } }
+            if (p === 4) { for (let n = 0; n < 4; n++) { k.box([55, 1, 60], [-100 + n * 85, 2, -150], ['#d8bc68', '#95b7ba', '#b8c9a4'][n % 3], undefined, 'paper'); pen(k, 490, 90); } }
             k.build(g, matte);
         });
         const printer = byId('print-scan');
         if (printer) daily(printer, 'proofs', 'Print proofs & paper offcuts', [0, 900, 0], (g, p) => {
             // Front edge of the print counter, clear of the printer footprint.
             sheet(g, p, [-480, 8, 130], 100, -.025);
-            piece(g, 'Paper stock and binding clips', [-480, 0, 130], k => { k.box([110, 6, 140], [0, 3, 0], PAPER); k.box([21, 15, 14], [-38, 13, 53], INK); });
+            piece(g, 'Paper stock and binding clips', [-480, 0, 130], k => { k.box([110, 6, 140], [0, 3, 0], PAPER, undefined, 'paper'); k.box([21, 15, 14], [-38, 13, 53], INK, undefined, 'metal'); });
         });
     } else {
         for (const [id, at, real] of [

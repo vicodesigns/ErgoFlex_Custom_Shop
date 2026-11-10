@@ -1,0 +1,15 @@
+{
+  "checkedStates": 100,
+  "matrix": {
+    "styles": 2,
+    "roomLayoutsPerStyle": 5,
+    "deskWidths": 2,
+    "activities": 5
+  },
+  "outsideCases": 0,
+  "floorFurnitureOverlapCases": 0,
+  "missingPropCases": 0,
+  "minimumBarWindowClearanceMm": 205,
+  "specialistReview": "Visual sign-off for approved Premium seating and overview renders; no concrete design blocker reported.",
+  "scope": "Authored layout bounds and conservative floor-furniture overlap checks, not arbitrary later owner edits or dynamic collision planning."
+}

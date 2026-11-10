@@ -95,7 +95,7 @@ const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus
 // film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
 async function stageFx(){
   const win=frame.contentWindow;if(win.__filmFx)return win.__filmFx;
-  await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
+  await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs?v=20261110-stationary-organizer').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
   return win.__filmFx;
 }
 // Film chapters: the live camera is the film's (film-render.mjs filmCamera, what Render still and the 4K use):

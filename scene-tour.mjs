@@ -58,6 +58,7 @@ export class SceneTour {
             <button type="button" data-tour="full" aria-pressed="false" title="Full screen">${ICON.full}<span class="tour-word">Full</span></button>
             <button type="button" class="tour-cycle" data-tour="scene" title="Next environment">${ICON.room}<span class="tour-word">Room</span></button>
             <button type="button" class="tour-cycle" data-tour="age" title="Next life stage" hidden>Age</button>
+            <button type="button" class="tour-cycle" data-tour="style" title="Next lounge style" hidden>Style</button>
             <button type="button" class="tour-cycle" data-tour="layout" title="Next room size">${ICON.size}<span class="tour-word">Size</span></button>
             <button type="button" class="tour-cycle" data-tour="mode" title="Next time of day">${ICON.time}<span class="tour-word">Time</span></button>
             <button type="button" class="tour-cycle" data-tour="groove" aria-pressed="false" title="Play this time of day's Groove routine">${ICON.play}<span class="tour-word">Groove</span></button>
@@ -91,6 +92,7 @@ export class SceneTour {
     list(kind) {
         const id = this.ctx.current(), profile = this.ctx.profile(id);
         if (kind === 'age') return {ids:id==='childroom'?(this.ctx.ageStages?.()||[]):[],at:profile?.layout.ageStage};
+        if (kind === 'style') return {ids:id==='lounge'?(this.ctx.loungeStyles?.()||[]):[],at:profile?.layout.style};
         if (kind === 'scene') return { ids: this.ctx.scenes().map(s => s.id), at: id };
         if (!profile) return { ids: [], at: null };
         if (kind === 'layout') return { ids: Object.keys(profile.layouts), at: profile.layout?.id };
@@ -104,6 +106,7 @@ export class SceneTour {
         try {
             if (kind === 'scene') this.ctx.setScene(next);
             else if (kind === 'age') this.ctx.setAge?.(next);
+            else if (kind === 'style') this.ctx.setLoungeStyle?.(next);
             else if (kind === 'layout') this.ctx.setLayout(scene, next);
             else this.ctx.setMode(scene, next);
             this.sync();
@@ -114,6 +117,7 @@ export class SceneTour {
         const id = this.ctx.current(), scene = this.ctx.scenes().find(s => s.id === id), profile = this.ctx.profile(id);
         const layout = profile?.layout, mode = profile?.modes?.[profile.mode];
         this.bar.querySelector('[data-tour="age"]').hidden=id!=='childroom';
+        this.bar.querySelector('[data-tour="style"]').hidden=id!=='lounge';
         this.bar.querySelector('.tour-label strong').textContent = (scene?.name || id)+(id==='childroom'?' · '+(this.ctx.ageLabel?.(layout?.ageStage)||''): '');
         this.bar.querySelector('.tour-label span').textContent = profile ? [layout?.name || layout?.id, mode?.label || profile.mode].filter(Boolean).join(' · ') : 'No room sizes';
         for (const kind of ['layout', 'mode']) this.bar.querySelector(`[data-tour="${kind}"]`).disabled = this.list(kind).ids.length < 2;

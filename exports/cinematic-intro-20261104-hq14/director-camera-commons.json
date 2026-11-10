@@ -1,0 +1,2107 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-20261104-hq14/director-exports/export-c68cadf5c5b7-Film-chapter-commons-16-s- (2).json",
+ "seconds": 16.0,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    -9.653786369250708,
+    2.246918284136255,
+    -2.16504842866299
+   ],
+   "target": [
+    -1.9733369195220571,
+    -0.041419029522739736,
+    -10.250838552987258
+   ],
+   "fov": 58,
+   "label": "Eagle eye: the double-height commons, suspended light frames"
+  },
+  {
+   "at": 2.0,
+   "position": [
+    -4.285065715042239,
+    3.1046471738962906,
+    -4.2019881236445205
+   ],
+   "target": [
+    -2.128130133441211,
+    1.4630127187306508,
+    -11.669517048465087
+   ],
+   "fov": 54.997512870773875,
+   "label": "Glide in high over the tables"
+  },
+  {
+   "at": 5.6,
+   "position": [
+    0.9,
+    3.45,
+    -4.2
+   ],
+   "target": [
+    -2.1,
+    0.9,
+    -12.3
+   ],
+   "fov": 44,
+   "label": "Swoop lands as the desk turns off the wall"
+  },
+  {
+   "at": 8.6,
+   "position": [
+    0.2,
+    3.3,
+    -5
+   ],
+   "target": [
+    -1.4,
+    0.8,
+    -12.3
+   ],
+   "fov": 41,
+   "label": "Whole desk on the drive, over the chairs"
+  },
+  {
+   "at": 10.8,
+   "position": [
+    2.4,
+    2.95,
+    -6
+   ],
+   "target": [
+    0.2,
+    0.85,
+    -12.1
+   ],
+   "fov": 41,
+   "label": "Track right toward the table"
+  },
+  {
+   "at": 13.4,
+   "position": [
+    4.85,
+    2.05,
+    -7.75
+   ],
+   "target": [
+    3,
+    1.17,
+    -11.5
+   ],
+   "fov": 44,
+   "label": "Group: desk at the table head"
+  },
+  {
+   "at": 16.0,
+   "position": [
+    5.45,
+    2,
+    -7.62
+   ],
+   "target": [
+    3.25,
+    1.15,
+    -11.4
+   ],
+   "fov": 43,
+   "label": "Group, wheelchair whole (in front of the campus board)"
+  }
+ ],
+ "clips": [
+  {
+   "id": "61c87afa-11f0-499e-b962-8f666fc0ee37",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 3.8,
+   "duration": 3,
+   "easing": "linear",
+   "label": "",
+   "target": 32
+  },
+  {
+   "id": "builtin-wheels-0",
+   "lane": "wheels",
+   "kind": "pose",
+   "start": 4.2,
+   "duration": 9.2,
+   "easing": "linear",
+   "label": "Drive to the table",
+   "target": {
+    "x": -25.25,
+    "z": 140.9,
+    "yaw": 90
+   },
+   "path": [
+    {
+     "time": 0,
+     "pose": {
+      "x": 0,
+      "z": 46,
+      "yaw": 0
+     }
+    },
+    {
+     "time": 0.005,
+     "pose": {
+      "x": -0.0192,
+      "z": 46,
+      "yaw": 0.0437
+     }
+    },
+    {
+     "time": 0.01,
+     "pose": {
+      "x": -0.077,
+      "z": 46.0001,
+      "yaw": 0.1747
+     }
+    },
+    {
+     "time": 0.015,
+     "pose": {
+      "x": -0.1732,
+      "z": 46.0006,
+      "yaw": 0.393
+     }
+    },
+    {
+     "time": 0.02,
+     "pose": {
+      "x": -0.3079,
+      "z": 46.0019,
+      "yaw": 0.6987
+     }
+    },
+    {
+     "time": 0.025,
+     "pose": {
+      "x": -0.4811,
+      "z": 46.0046,
+      "yaw": 1.0917
+     }
+    },
+    {
+     "time": 0.03,
+     "pose": {
+      "x": -0.6927,
+      "z": 46.0095,
+      "yaw": 1.572
+     }
+    },
+    {
+     "time": 0.035,
+     "pose": {
+      "x": -0.9427,
+      "z": 46.0176,
+      "yaw": 2.1397
+     }
+    },
+    {
+     "time": 0.04,
+     "pose": {
+      "x": -1.2311,
+      "z": 46.03,
+      "yaw": 2.7946
+     }
+    },
+    {
+     "time": 0.045,
+     "pose": {
+      "x": -1.5577,
+      "z": 46.0481,
+      "yaw": 3.537
+     }
+    },
+    {
+     "time": 0.05,
+     "pose": {
+      "x": -1.9225,
+      "z": 46.0733,
+      "yaw": 4.3666
+     }
+    },
+    {
+     "time": 0.055,
+     "pose": {
+      "x": -2.3252,
+      "z": 46.1073,
+      "yaw": 5.2836
+     }
+    },
+    {
+     "time": 0.06,
+     "pose": {
+      "x": -2.7655,
+      "z": 46.1519,
+      "yaw": 6.288
+     }
+    },
+    {
+     "time": 0.065,
+     "pose": {
+      "x": -3.2432,
+      "z": 46.2091,
+      "yaw": 7.3796
+     }
+    },
+    {
+     "time": 0.07,
+     "pose": {
+      "x": -3.7577,
+      "z": 46.2812,
+      "yaw": 8.5586
+     }
+    },
+    {
+     "time": 0.075,
+     "pose": {
+      "x": -4.3086,
+      "z": 46.3703,
+      "yaw": 9.8249
+     }
+    },
+    {
+     "time": 0.08,
+     "pose": {
+      "x": -4.888,
+      "z": 46.4776,
+      "yaw": 11.1621
+     }
+    },
+    {
+     "time": 0.085,
+     "pose": {
+      "x": -5.4675,
+      "z": 46.5991,
+      "yaw": 12.5056
+     }
+    },
+    {
+     "time": 0.09,
+     "pose": {
+      "x": -6.044,
+      "z": 46.734,
+      "yaw": 13.8492
+     }
+    },
+    {
+     "time": 0.095,
+     "pose": {
+      "x": -6.6172,
+      "z": 46.8825,
+      "yaw": 15.1928
+     }
+    },
+    {
+     "time": 0.1,
+     "pose": {
+      "x": -7.1868,
+      "z": 47.0444,
+      "yaw": 16.5364
+     }
+    },
+    {
+     "time": 0.105,
+     "pose": {
+      "x": -7.7523,
+      "z": 47.2195,
+      "yaw": 17.88
+     }
+    },
+    {
+     "time": 0.11,
+     "pose": {
+      "x": -8.3137,
+      "z": 47.4079,
+      "yaw": 19.2235
+     }
+    },
+    {
+     "time": 0.115,
+     "pose": {
+      "x": -8.8704,
+      "z": 47.6094,
+      "yaw": 20.5671
+     }
+    },
+    {
+     "time": 0.12,
+     "pose": {
+      "x": -9.4223,
+      "z": 47.8239,
+      "yaw": 21.9107
+     }
+    },
+    {
+     "time": 0.125,
+     "pose": {
+      "x": -9.969,
+      "z": 48.0513,
+      "yaw": 23.2543
+     }
+    },
+    {
+     "time": 0.13,
+     "pose": {
+      "x": -10.5102,
+      "z": 48.2914,
+      "yaw": 24.5979
+     }
+    },
+    {
+     "time": 0.135,
+     "pose": {
+      "x": -11.0457,
+      "z": 48.5441,
+      "yaw": 25.9414
+     }
+    },
+    {
+     "time": 0.14,
+     "pose": {
+      "x": -11.575,
+      "z": 48.8094,
+      "yaw": 27.285
+     }
+    },
+    {
+     "time": 0.145,
+     "pose": {
+      "x": -12.098,
+      "z": 49.087,
+      "yaw": 28.6286
+     }
+    },
+    {
+     "time": 0.15,
+     "pose": {
+      "x": -12.6144,
+      "z": 49.3767,
+      "yaw": 29.9722
+     }
+    },
+    {
+     "time": 0.155,
+     "pose": {
+      "x": -13.1238,
+      "z": 49.6785,
+      "yaw": 31.3158
+     }
+    },
+    {
+     "time": 0.16,
+     "pose": {
+      "x": -13.626,
+      "z": 49.9922,
+      "yaw": 32.6593
+     }
+    },
+    {
+     "time": 0.165,
+     "pose": {
+      "x": -14.1207,
+      "z": 50.3175,
+      "yaw": 34.0029
+     }
+    },
+    {
+     "time": 0.17,
+     "pose": {
+      "x": -14.6076,
+      "z": 50.6544,
+      "yaw": 35.3465
+     }
+    },
+    {
+     "time": 0.175,
+     "pose": {
+      "x": -15.0865,
+      "z": 51.0026,
+      "yaw": 36.6901
+     }
+    },
+    {
+     "time": 0.18,
+     "pose": {
+      "x": -15.5571,
+      "z": 51.3619,
+      "yaw": 38.0337
+     }
+    },
+    {
+     "time": 0.185,
+     "pose": {
+      "x": -16.0192,
+      "z": 51.7321,
+      "yaw": 39.3772
+     }
+    },
+    {
+     "time": 0.19,
+     "pose": {
+      "x": -16.4724,
+      "z": 52.1131,
+      "yaw": 40.7208
+     }
+    },
+    {
+     "time": 0.195,
+     "pose": {
+      "x": -16.9166,
+      "z": 52.5046,
+      "yaw": 42.0644
+     }
+    },
+    {
+     "time": 0.2,
+     "pose": {
+      "x": -17.3515,
+      "z": 52.9064,
+      "yaw": 43.408
+     }
+    },
+    {
+     "time": 0.205,
+     "pose": {
+      "x": -17.7769,
+      "z": 53.3183,
+      "yaw": 44.7516
+     }
+    },
+    {
+     "time": 0.21,
+     "pose": {
+      "x": -18.1924,
+      "z": 53.7401,
+      "yaw": 46.0951
+     }
+    },
+    {
+     "time": 0.215,
+     "pose": {
+      "x": -18.598,
+      "z": 54.1714,
+      "yaw": 47.4387
+     }
+    },
+    {
+     "time": 0.22,
+     "pose": {
+      "x": -18.9933,
+      "z": 54.6122,
+      "yaw": 48.7823
+     }
+    },
+    {
+     "time": 0.225,
+     "pose": {
+      "x": -19.3782,
+      "z": 55.0621,
+      "yaw": 50.1259
+     }
+    },
+    {
+     "time": 0.23,
+     "pose": {
+      "x": -19.7525,
+      "z": 55.521,
+      "yaw": 51.4695
+     }
+    },
+    {
+     "time": 0.235,
+     "pose": {
+      "x": -20.1159,
+      "z": 55.9884,
+      "yaw": 52.813
+     }
+    },
+    {
+     "time": 0.24,
+     "pose": {
+      "x": -20.4682,
+      "z": 56.4643,
+      "yaw": 54.1566
+     }
+    },
+    {
+     "time": 0.245,
+     "pose": {
+      "x": -20.8092,
+      "z": 56.9483,
+      "yaw": 55.5002
+     }
+    },
+    {
+     "time": 0.25,
+     "pose": {
+      "x": -21.1389,
+      "z": 57.4402,
+      "yaw": 56.8438
+     }
+    },
+    {
+     "time": 0.255,
+     "pose": {
+      "x": -21.4569,
+      "z": 57.9396,
+      "yaw": 58.1874
+     }
+    },
+    {
+     "time": 0.26,
+     "pose": {
+      "x": -21.7631,
+      "z": 58.4464,
+      "yaw": 59.5309
+     }
+    },
+    {
+     "time": 0.265,
+     "pose": {
+      "x": -22.0573,
+      "z": 58.9602,
+      "yaw": 60.8745
+     }
+    },
+    {
+     "time": 0.27,
+     "pose": {
+      "x": -22.3394,
+      "z": 59.4808,
+      "yaw": 62.2181
+     }
+    },
+    {
+     "time": 0.275,
+     "pose": {
+      "x": -22.6092,
+      "z": 60.0078,
+      "yaw": 63.5617
+     }
+    },
+    {
+     "time": 0.28,
+     "pose": {
+      "x": -22.8666,
+      "z": 60.5411,
+      "yaw": 64.9053
+     }
+    },
+    {
+     "time": 0.285,
+     "pose": {
+      "x": -23.1114,
+      "z": 61.0802,
+      "yaw": 66.2488
+     }
+    },
+    {
+     "time": 0.29,
+     "pose": {
+      "x": -23.3435,
+      "z": 61.6249,
+      "yaw": 67.5924
+     }
+    },
+    {
+     "time": 0.295,
+     "pose": {
+      "x": -23.5628,
+      "z": 62.1749,
+      "yaw": 68.936
+     }
+    },
+    {
+     "time": 0.3,
+     "pose": {
+      "x": -23.7691,
+      "z": 62.7299,
+      "yaw": 70.2796
+     }
+    },
+    {
+     "time": 0.305,
+     "pose": {
+      "x": -23.9623,
+      "z": 63.2895,
+      "yaw": 71.6232
+     }
+    },
+    {
+     "time": 0.31,
+     "pose": {
+      "x": -24.1424,
+      "z": 63.8536,
+      "yaw": 72.9667
+     }
+    },
+    {
+     "time": 0.315,
+     "pose": {
+      "x": -24.3092,
+      "z": 64.4217,
+      "yaw": 74.3103
+     }
+    },
+    {
+     "time": 0.32,
+     "pose": {
+      "x": -24.4626,
+      "z": 64.9936,
+      "yaw": 75.6539
+     }
+    },
+    {
+     "time": 0.325,
+     "pose": {
+      "x": -24.6026,
+      "z": 65.5689,
+      "yaw": 76.9975
+     }
+    },
+    {
+     "time": 0.33,
+     "pose": {
+      "x": -24.729,
+      "z": 66.1473,
+      "yaw": 78.3411
+     }
+    },
+    {
+     "time": 0.335,
+     "pose": {
+      "x": -24.8419,
+      "z": 66.7286,
+      "yaw": 79.6846
+     }
+    },
+    {
+     "time": 0.34,
+     "pose": {
+      "x": -24.9411,
+      "z": 67.3123,
+      "yaw": 81.0282
+     }
+    },
+    {
+     "time": 0.345,
+     "pose": {
+      "x": -25.0265,
+      "z": 67.8982,
+      "yaw": 82.3718
+     }
+    },
+    {
+     "time": 0.35,
+     "pose": {
+      "x": -25.0983,
+      "z": 68.4859,
+      "yaw": 83.7154
+     }
+    },
+    {
+     "time": 0.355,
+     "pose": {
+      "x": -25.1562,
+      "z": 69.0752,
+      "yaw": 85.059
+     }
+    },
+    {
+     "time": 0.36,
+     "pose": {
+      "x": -25.2002,
+      "z": 69.6657,
+      "yaw": 86.4025
+     }
+    },
+    {
+     "time": 0.365,
+     "pose": {
+      "x": -25.2305,
+      "z": 70.257,
+      "yaw": 87.7461
+     }
+    },
+    {
+     "time": 0.37,
+     "pose": {
+      "x": -25.2468,
+      "z": 70.8489,
+      "yaw": 89.0897
+     }
+    },
+    {
+     "time": 0.375,
+     "pose": {
+      "x": -25.25,
+      "z": 71.4409,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.38,
+     "pose": {
+      "x": -25.25,
+      "z": 72.0331,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.385,
+     "pose": {
+      "x": -25.25,
+      "z": 72.6252,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.39,
+     "pose": {
+      "x": -25.25,
+      "z": 73.2173,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.395,
+     "pose": {
+      "x": -25.25,
+      "z": 73.8094,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.4,
+     "pose": {
+      "x": -25.25,
+      "z": 74.4015,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.405,
+     "pose": {
+      "x": -25.25,
+      "z": 74.9936,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.41,
+     "pose": {
+      "x": -25.25,
+      "z": 75.5857,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.415,
+     "pose": {
+      "x": -25.25,
+      "z": 76.1778,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.42,
+     "pose": {
+      "x": -25.25,
+      "z": 76.7699,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.425,
+     "pose": {
+      "x": -25.25,
+      "z": 77.362,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.43,
+     "pose": {
+      "x": -25.25,
+      "z": 77.9542,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.435,
+     "pose": {
+      "x": -25.25,
+      "z": 78.5463,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.44,
+     "pose": {
+      "x": -25.25,
+      "z": 79.1384,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.445,
+     "pose": {
+      "x": -25.25,
+      "z": 79.7305,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.45,
+     "pose": {
+      "x": -25.25,
+      "z": 80.3226,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.455,
+     "pose": {
+      "x": -25.25,
+      "z": 80.9147,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.46,
+     "pose": {
+      "x": -25.25,
+      "z": 81.5068,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.465,
+     "pose": {
+      "x": -25.25,
+      "z": 82.0989,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.47,
+     "pose": {
+      "x": -25.25,
+      "z": 82.691,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.475,
+     "pose": {
+      "x": -25.25,
+      "z": 83.2831,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.48,
+     "pose": {
+      "x": -25.25,
+      "z": 83.8753,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.485,
+     "pose": {
+      "x": -25.25,
+      "z": 84.4674,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.49,
+     "pose": {
+      "x": -25.25,
+      "z": 85.0595,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.495,
+     "pose": {
+      "x": -25.25,
+      "z": 85.6516,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.5,
+     "pose": {
+      "x": -25.25,
+      "z": 86.2437,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.505,
+     "pose": {
+      "x": -25.25,
+      "z": 86.8358,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.51,
+     "pose": {
+      "x": -25.25,
+      "z": 87.4279,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.515,
+     "pose": {
+      "x": -25.25,
+      "z": 88.02,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.52,
+     "pose": {
+      "x": -25.25,
+      "z": 88.6121,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.525,
+     "pose": {
+      "x": -25.25,
+      "z": 89.2042,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.53,
+     "pose": {
+      "x": -25.25,
+      "z": 89.7964,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.535,
+     "pose": {
+      "x": -25.25,
+      "z": 90.3885,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.54,
+     "pose": {
+      "x": -25.25,
+      "z": 90.9806,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.545,
+     "pose": {
+      "x": -25.25,
+      "z": 91.5727,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.55,
+     "pose": {
+      "x": -25.25,
+      "z": 92.1648,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.555,
+     "pose": {
+      "x": -25.25,
+      "z": 92.7569,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.56,
+     "pose": {
+      "x": -25.25,
+      "z": 93.349,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.565,
+     "pose": {
+      "x": -25.25,
+      "z": 93.9411,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.57,
+     "pose": {
+      "x": -25.25,
+      "z": 94.5332,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.575,
+     "pose": {
+      "x": -25.25,
+      "z": 95.1253,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.58,
+     "pose": {
+      "x": -25.25,
+      "z": 95.7175,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.585,
+     "pose": {
+      "x": -25.25,
+      "z": 96.3096,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.59,
+     "pose": {
+      "x": -25.25,
+      "z": 96.9017,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.595,
+     "pose": {
+      "x": -25.25,
+      "z": 97.4938,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.6,
+     "pose": {
+      "x": -25.25,
+      "z": 98.0859,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.605,
+     "pose": {
+      "x": -25.25,
+      "z": 98.678,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.61,
+     "pose": {
+      "x": -25.25,
+      "z": 99.2701,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.615,
+     "pose": {
+      "x": -25.25,
+      "z": 99.8622,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.62,
+     "pose": {
+      "x": -25.25,
+      "z": 100.4543,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.625,
+     "pose": {
+      "x": -25.25,
+      "z": 101.0464,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.63,
+     "pose": {
+      "x": -25.25,
+      "z": 101.6386,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.635,
+     "pose": {
+      "x": -25.25,
+      "z": 102.2307,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.64,
+     "pose": {
+      "x": -25.25,
+      "z": 102.8228,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.645,
+     "pose": {
+      "x": -25.25,
+      "z": 103.4149,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.65,
+     "pose": {
+      "x": -25.25,
+      "z": 104.007,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.655,
+     "pose": {
+      "x": -25.25,
+      "z": 104.5991,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.66,
+     "pose": {
+      "x": -25.25,
+      "z": 105.1912,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.665,
+     "pose": {
+      "x": -25.25,
+      "z": 105.7833,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.67,
+     "pose": {
+      "x": -25.25,
+      "z": 106.3754,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.675,
+     "pose": {
+      "x": -25.25,
+      "z": 106.9675,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.68,
+     "pose": {
+      "x": -25.25,
+      "z": 107.5597,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.685,
+     "pose": {
+      "x": -25.25,
+      "z": 108.1518,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.69,
+     "pose": {
+      "x": -25.25,
+      "z": 108.7439,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.695,
+     "pose": {
+      "x": -25.25,
+      "z": 109.336,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.7,
+     "pose": {
+      "x": -25.25,
+      "z": 109.9281,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.705,
+     "pose": {
+      "x": -25.25,
+      "z": 110.5202,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.71,
+     "pose": {
+      "x": -25.25,
+      "z": 111.1123,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.715,
+     "pose": {
+      "x": -25.25,
+      "z": 111.7044,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.72,
+     "pose": {
+      "x": -25.25,
+      "z": 112.2965,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.725,
+     "pose": {
+      "x": -25.25,
+      "z": 112.8886,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.73,
+     "pose": {
+      "x": -25.25,
+      "z": 113.4808,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.735,
+     "pose": {
+      "x": -25.25,
+      "z": 114.0729,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.74,
+     "pose": {
+      "x": -25.25,
+      "z": 114.665,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.745,
+     "pose": {
+      "x": -25.25,
+      "z": 115.2571,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.75,
+     "pose": {
+      "x": -25.25,
+      "z": 115.8492,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.755,
+     "pose": {
+      "x": -25.25,
+      "z": 116.4413,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.76,
+     "pose": {
+      "x": -25.25,
+      "z": 117.0334,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.765,
+     "pose": {
+      "x": -25.25,
+      "z": 117.6255,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.77,
+     "pose": {
+      "x": -25.25,
+      "z": 118.2176,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.775,
+     "pose": {
+      "x": -25.25,
+      "z": 118.8097,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.78,
+     "pose": {
+      "x": -25.25,
+      "z": 119.4019,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.785,
+     "pose": {
+      "x": -25.25,
+      "z": 119.994,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.79,
+     "pose": {
+      "x": -25.25,
+      "z": 120.5861,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.795,
+     "pose": {
+      "x": -25.25,
+      "z": 121.1782,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.8,
+     "pose": {
+      "x": -25.25,
+      "z": 121.7703,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.805,
+     "pose": {
+      "x": -25.25,
+      "z": 122.3624,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.81,
+     "pose": {
+      "x": -25.25,
+      "z": 122.9545,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.815,
+     "pose": {
+      "x": -25.25,
+      "z": 123.5466,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.82,
+     "pose": {
+      "x": -25.25,
+      "z": 124.1387,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.825,
+     "pose": {
+      "x": -25.25,
+      "z": 124.7308,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.83,
+     "pose": {
+      "x": -25.25,
+      "z": 125.323,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.835,
+     "pose": {
+      "x": -25.25,
+      "z": 125.9151,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.84,
+     "pose": {
+      "x": -25.25,
+      "z": 126.5072,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.845,
+     "pose": {
+      "x": -25.25,
+      "z": 127.0993,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.85,
+     "pose": {
+      "x": -25.25,
+      "z": 127.6914,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.855,
+     "pose": {
+      "x": -25.25,
+      "z": 128.2835,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.86,
+     "pose": {
+      "x": -25.25,
+      "z": 128.8756,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.865,
+     "pose": {
+      "x": -25.25,
+      "z": 129.4677,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.87,
+     "pose": {
+      "x": -25.25,
+      "z": 130.0598,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.875,
+     "pose": {
+      "x": -25.25,
+      "z": 130.6519,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.88,
+     "pose": {
+      "x": -25.25,
+      "z": 131.2441,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.885,
+     "pose": {
+      "x": -25.25,
+      "z": 131.8362,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.89,
+     "pose": {
+      "x": -25.25,
+      "z": 132.4283,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.895,
+     "pose": {
+      "x": -25.25,
+      "z": 133.0204,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.9,
+     "pose": {
+      "x": -25.25,
+      "z": 133.6125,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.905,
+     "pose": {
+      "x": -25.25,
+      "z": 134.2046,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.91,
+     "pose": {
+      "x": -25.25,
+      "z": 134.7967,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.915,
+     "pose": {
+      "x": -25.25,
+      "z": 135.3888,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.92,
+     "pose": {
+      "x": -25.25,
+      "z": 135.9809,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.925,
+     "pose": {
+      "x": -25.25,
+      "z": 136.5702,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.93,
+     "pose": {
+      "x": -25.25,
+      "z": 137.1283,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.935,
+     "pose": {
+      "x": -25.25,
+      "z": 137.6478,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.94,
+     "pose": {
+      "x": -25.25,
+      "z": 138.1289,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.945,
+     "pose": {
+      "x": -25.25,
+      "z": 138.5715,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.95,
+     "pose": {
+      "x": -25.25,
+      "z": 138.9756,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.955,
+     "pose": {
+      "x": -25.25,
+      "z": 139.3413,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.96,
+     "pose": {
+      "x": -25.25,
+      "z": 139.6684,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.965,
+     "pose": {
+      "x": -25.25,
+      "z": 139.9571,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.97,
+     "pose": {
+      "x": -25.25,
+      "z": 140.2072,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.975,
+     "pose": {
+      "x": -25.25,
+      "z": 140.4189,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.98,
+     "pose": {
+      "x": -25.25,
+      "z": 140.5921,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.985,
+     "pose": {
+      "x": -25.25,
+      "z": 140.7268,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.99,
+     "pose": {
+      "x": -25.25,
+      "z": 140.823,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 0.995,
+     "pose": {
+      "x": -25.25,
+      "z": 140.8808,
+      "yaw": 90
+     }
+    },
+    {
+     "time": 1,
+     "pose": {
+      "x": -25.25,
+      "z": 140.9,
+      "yaw": 90
+     }
+    }
+   ]
+  },
+  {
+   "id": "d72dde0b-d2a1-4a4f-84f8-34faff93213c",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 9.9,
+   "duration": 3,
+   "easing": "linear",
+   "label": "",
+   "target": 0
+  }
+ ],
+ "initial": {
+  "height": 48.5,
+  "tilt": -5
+ },
+ "props": [
+  {
+   "match": "^Prop:ergoflex-plant-2$",
+   "near": [
+    6.4872,
+    -12.9745,
+    0.3
+   ],
+   "label": "Prop:ergoflex-plant-2 (right of the table)",
+   "hide": true
+  },
+  {
+   "add": {
+    "asset": "ergoflex-plant-1"
+   },
+   "id": "fp2plant1",
+   "match": "^Added prop:ergoflex-plant-1#fp2plant1$",
+   "label": "Tall indoor planter (FP2: replaces the repeated planter)",
+   "parent": "room",
+   "position": [
+    12.9745,
+    0,
+    6.4872
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "match": "^Commons study table$",
+   "asset": "library:humboldt:fixture:humboldt-table-s1",
+   "label": "Commons study table",
+   "position": [
+    -5.713,
+    0,
+    -3.259
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:38:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    -5.283,
+    0,
+    -3.687
+   ]
+  },
+  {
+   "match": "^Proposed ErgoFlex pilot \u00b7 green study bay$",
+   "asset": "library:humboldt:fixture:humboldt-pilot-bay",
+   "label": "Proposed ErgoFlex pilot \u00b7 green study bay",
+   "position": [
+    0,
+    0,
+    -1.484
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:40:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    -5.672,
+    0,
+    -3.887
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:39:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    -5.767,
+    0,
+    -3.227
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:41:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    -5.767,
+    0,
+    -3.227
+   ]
+  },
+  {
+   "match": "^Commons material palette study$",
+   "asset": "library:humboldt:fixture:humboldt-material-notice",
+   "label": "Commons material palette study",
+   "position": [
+    0.015,
+    0,
+    0.016
+   ]
+  },
+  {
+   "match": "^Flexible study \u00b7 pilot concept sign$",
+   "asset": "library:humboldt:fixture:humboldt-pilot-header",
+   "label": "Flexible study \u00b7 pilot concept sign",
+   "position": [
+    -0.498,
+    -1.186,
+    0
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:37:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    0,
+    0,
+    -1.515
+   ]
+  },
+  {
+   "match": "^Commons study table$",
+   "asset": "library:humboldt:fixture:humboldt-table-g2",
+   "label": "Commons study table",
+   "position": [
+    0,
+    0,
+    -1.515
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:33:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    0,
+    0,
+    -1.515
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:35:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    0,
+    0,
+    -1.52
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 lichen$",
+   "asset": "library:humboldt:room:32:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 lichen",
+   "position": [
+    0,
+    0,
+    -1.52
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 lichen$",
+   "asset": "library:humboldt:room:34:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 lichen",
+   "position": [
+    0,
+    0,
+    -1.55
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 lichen$",
+   "asset": "library:humboldt:room:36:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 lichen",
+   "position": [
+    0,
+    0,
+    -1.55
+   ]
+  },
+  {
+   "match": "^Commons study table$",
+   "asset": "library:humboldt:fixture:humboldt-table-b3",
+   "label": "Commons study table",
+   "position": [
+    0,
+    0,
+    -0.771
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:20:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    0,
+    0,
+    -0.771
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:22:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    0,
+    0,
+    -0.771
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:21:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    0,
+    0,
+    -0.771
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:23:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    0,
+    0,
+    -0.771
+   ]
+  },
+  {
+   "match": "^Commons reading lamp$",
+   "asset": "library:humboldt:fixture:reading-lamp-2",
+   "label": "Commons reading lamp",
+   "position": [
+    0,
+    0,
+    -0.771
+   ]
+  },
+  {
+   "match": "^Commons study materials$",
+   "asset": "library:humboldt:fixture:humboldt-study-kit-2",
+   "label": "Commons study materials",
+   "position": [
+    0,
+    0,
+    -0.771
+   ]
+  },
+  {
+   "match": "^Prop:steelcase-leap-v2$",
+   "asset": "library:humboldt:room:0:steelcase-leap-v2",
+   "label": "Prop:steelcase-leap-v2",
+   "position": [
+    3.853,
+    0,
+    3.683
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 lichen$",
+   "asset": "library:humboldt:room:10:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 lichen",
+   "position": [
+    0,
+    0,
+    0.847
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 lichen$",
+   "asset": "library:humboldt:room:12:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 lichen",
+   "position": [
+    0,
+    0,
+    0.847
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 lichen$",
+   "asset": "library:humboldt:room:14:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 lichen",
+   "position": [
+    0,
+    0,
+    0.847
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 lichen$",
+   "asset": "library:humboldt:room:11:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 lichen",
+   "position": [
+    0,
+    0,
+    0.847
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 lichen$",
+   "asset": "library:humboldt:room:13:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 lichen",
+   "position": [
+    0,
+    0,
+    0.847
+   ]
+  },
+  {
+   "match": "^Oak study chair \u00b7 lichen$",
+   "asset": "library:humboldt:room:15:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 lichen",
+   "position": [
+    0,
+    0,
+    0.847
+   ]
+  },
+  {
+   "match": "^Commons study table$",
+   "asset": "library:humboldt:fixture:reading-table-0",
+   "label": "Commons study table",
+   "position": [
+    0,
+    0,
+    0.847
+   ]
+  },
+  {
+   "match": "^Commons study materials$",
+   "asset": "library:humboldt:fixture:humboldt-study-kit-4",
+   "label": "Commons study materials",
+   "position": [
+    0,
+    0,
+    -0.077
+   ]
+  }
+ ]
+}

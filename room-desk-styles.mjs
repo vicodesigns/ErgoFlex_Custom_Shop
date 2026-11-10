@@ -14,7 +14,7 @@ export const ROOM_DESK_STYLES = {
     gaming: style('Carbon & red', 'Carbon Weave Wrap', 'Black', '#dc0909', 'Space Gray'),
     creative: style('Ivory atelier', 'Warm Ivory', 'Sand', '#85888c', 'White'),
     study: style('Walnut & forest', 'Walnut', 'Forest', '#286344', 'Black'),
-    lounge: style('Walnut & warm gold', 'Walnut', 'Sand', '#f19c00'),
+    lounge: style('Ivory & graphite lounge', 'Warm Ivory', 'Black', '#85888c'),
     kitchen: style('White & garden green', 'White Birch', 'White', '#286344'),
     gym: style('Grey & active green', 'Modern Grey', 'Black', '#286344', 'Space Gray'),
     scifi: style('Brushed silver & graphite', 'Brushed Silver Wrap', 'Space Gray', '#1c1c1e'),

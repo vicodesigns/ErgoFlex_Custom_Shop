@@ -1,0 +1,147 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-20261104-hq14/director-exports/export-285a2ab7105a-Film-chapter-media-11-s- (1).json",
+ "seconds": 17.0,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    3.38,
+    1.4442,
+    -1.5908
+   ],
+   "target": [
+    0.594,
+    1.1484,
+    0.5466
+   ],
+   "fov": 46,
+   "label": "Piano corner and the city at night"
+  },
+  {
+   "at": 4.0,
+   "position": [
+    3.4314,
+    1.4945,
+    -0.0832
+   ],
+   "target": [
+    -0.0002,
+    1.3999,
+    0.7194
+   ],
+   "fov": 43.999,
+   "label": "Key 2 at 4.0 s"
+  },
+  {
+   "at": 7.0,
+   "position": [
+    3.079,
+    1.4138,
+    0.1704
+   ],
+   "target": [
+    -0.7468,
+    1.2554,
+    0.1837
+   ],
+   "fov": 39.997,
+   "label": "Guitar wall and records: centred on the desk"
+  },
+  {
+   "at": 7.1,
+   "position": [
+    3.079,
+    1.4138,
+    0.1704
+   ],
+   "target": [
+    -0.7468,
+    1.2554,
+    0.1837
+   ],
+   "fov": 39.997,
+   "label": "Guitar wall and records (hold)"
+  },
+  {
+   "at": 9.6,
+   "position": [
+    2.6294,
+    1.3952,
+    0.1719
+   ],
+   "target": [
+    -0.7468,
+    1.2554,
+    0.1837
+   ],
+   "fov": 38,
+   "label": "Straight push on the ultrawide"
+  },
+  {
+   "at": 11.0,
+   "position": [
+    2.3796,
+    1.3849,
+    0.1728
+   ],
+   "target": [
+    -0.7468,
+    1.2554,
+    0.1837
+   ],
+   "fov": 36,
+   "label": "Push on into the black"
+  },
+  {
+   "at": 17.0,
+   "position": [
+    2.3796,
+    1.3849,
+    0.1728
+   ],
+   "target": [
+    -0.7468,
+    1.2554,
+    0.1837
+   ],
+   "fov": 36,
+   "label": "Ending hold"
+  }
+ ],
+ "clips": [],
+ "initial": {
+  "height": 30,
+  "tilt": 0
+ },
+ "props": [
+  {
+   "match": "^Prop:ergoflex-plant-2$",
+   "label": "Broad leaf planter (film: swapped)",
+   "hide": true
+  },
+  {
+   "add": {
+    "asset": "ficus"
+   },
+   "id": "fp10f",
+   "match": "^Added prop:ficus#fp10f$",
+   "label": "Ficus",
+   "parent": "room",
+   "position": [
+    -2.323,
+    0,
+    0.075
+   ],
+   "rotation": [
+    0,
+    20,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  }
+ ]
+}

@@ -23,7 +23,7 @@ import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-roo
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=gallery-bedroom-20261025';
 import { buildChildRoom, CHILD_MODES, childLayoutForSize, childLayoutById } from './child-room.mjs?v=child-room-20261104';
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=gallery-bedroom-20261025';
-import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
+import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=workshop-polish-20261109';
 import * as THREE from 'three';
 import { RoomBounceLight } from './room-bounce-light.mjs?v=commons-group-work-20261016';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -426,8 +426,10 @@ function prepareArtistPainting(root) {
     const uv = new Float32Array(position.count * 2), point = new THREE.Vector3();
     for (let i=0;i<position.count;i++) {
         point.fromBufferAttribute(position,i).applyMatrix4(toRoot);
-        uv[i*2]=(point.x-bounds.min.x)/(bounds.max.x-bounds.min.x);
-        uv[i*2+1]=(point.z-bounds.min.z)/(bounds.max.z-bounds.min.z);
+        // The easel's board faces the opposite way the painting image was
+        // authored, so the image reads upside down without this 180° turn.
+        uv[i*2]=1-(point.x-bounds.min.x)/(bounds.max.x-bounds.min.x);
+        uv[i*2+1]=1-(point.z-bounds.min.z)/(bounds.max.z-bounds.min.z);
     }
     geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2)); canvas.geometry=geometry; canvas.userData.sharedProp=false;
     const sheet=document.createElement('canvas'); sheet.width=1600;sheet.height=Math.round(1600*(bounds.max.z-bounds.min.z)/(bounds.max.x-bounds.min.x));
@@ -1393,6 +1395,7 @@ export class WorkspaceRoom {
                 await upgradeCampusFurniture(this,PROP_LIBRARY,token);
                 await upgradeArtistFixtures(this,PROP_LIBRARY,token);
                 if(token!==this.token)return;
+                if(id==='workshop')polishWorkshopEquipment(this);
                 this.life?.bind();
                 const life=this.life;
                 if (life) { await PROP_LIBRARY.loadIndex(); if(token===this.token) await life.decorate(PROP_LIBRARY,()=>token===this.token); }

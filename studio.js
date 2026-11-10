@@ -58,13 +58,13 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdown, validConfig, cleanConfig,
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
-         ACCESSORIES, PRESETS, accessory, accessoryFits } from './catalog.mjs?v=hbhs-product-classroom-20261014';
+         ACCESSORIES, PRESETS, accessory, accessoryFits } from './catalog.mjs?v=20261110-stationary-organizer';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-studio-20261025';
-import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=item-gumball-clipboard-20261016';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=artist-studio-20261110';
+import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=20261110-stationary-organizer';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=commons-home-comfort-20261024';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-sessions-20261022';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=curved-pair-20261012';
@@ -73,7 +73,8 @@ import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from 
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-sessions-20261022';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
-import { LOUNGE_MODES, LOUNGE_LAYOUTS, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=gaming-gear-20261014';
+import { LOUNGE_MODES, LOUNGE_LAYOUTS, LOUNGE_STYLES, loungeLayoutsForStyle, loungeModesForStyle, loungeLayoutIdForStyle, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=gaming-gear-20261014';
+import { loungeDeskTheme, upgradeLoungeDesk } from './lounge-design.mjs';
 import { ARWorkspace } from './ar-workspace.mjs?v=compact-controller-20261007';
 import { accessoryIllustration } from './workspace-icons.mjs';
 
@@ -657,6 +658,7 @@ function initSceneDeskEditing() {
             }
         },
         prepareDesk:r=>{
+            if(selectedRoomScene==='lounge'){upgradeLoungeDesk(r.state,workspaceRoom.roomLayout);return;}
             if(selectedRoomScene==='childroom'){const layout=workspaceRoom.roomLayout,stage=childAgeStage(layout?.ageStage);if(!r.state.accessories){r.state.accessories=[...stage.accessories];r.state.accessoryFinishes={};r.state.style={...stage.style};r.state.peripheralSetup='child-growth-v1';}upgradeChildDesk(r.state,layout);return;}
             if(!['library','occmedialab','highschool'].includes(selectedRoomScene))return;
             const saved=cleanBuildPresets(readStore(BUILD_PRESETS_KEY,1,null)||buildPresets);
@@ -868,7 +870,7 @@ function initRoomDeskPeripherals(r) {
         item.saved.removed=true;item.obj.visible=false;
     }
     const config=cleanConfig({...currentConfig,size:r.state.size,accessories:r.state.accessories,accessoryFinishes:r.state.accessoryFinishes||{}});
-    const set=createSceneAccessorySet(r.rig.mounts,config,()=>r.group.children.find(obj=>obj.isMesh&&String(obj.material?.userData?.sceneDeskMaterial).startsWith('wood:'))?.material);
+    const set=createSceneAccessorySet(r.rig.mounts,config,()=>(r.id===sceneDesks.selected&&woodMaterials.get('desktop'))||r.group.children.find(obj=>obj.isMesh&&String(obj.material?.userData?.sceneDeskMaterial).startsWith('wood:'))?.material);
     const module=institutionalModule(selectedRoomScene),update=set.update;
     if(module?.peripheralScreens)set.update=()=>{update();module.peripheralScreens(set,r,sceneDesks.ctx.phase());};
     r.peripherals=set;
@@ -1050,15 +1052,22 @@ try {
     if (query.get('room') === 'workshop' && WORKSHOP_LAYOUTS[query.get('layout')]) workshopLayoutId = query.get('layout');
 } catch {}
 function selectedWorkshopLayout() { return workshopLayoutId ? workshopLayoutById(workshopLayoutId) : workshopLayoutForSize(currentConfig.size); }
-let loungeMode = 'afternoon', loungeLayoutId = null;
+let loungeMode = 'afternoon', loungeLayoutId = null, loungeStyleId='contemporary';
 try {
     const layout = localStorage.getItem('ergoflex.loungeLayout'), mode = localStorage.getItem('ergoflex.loungeMode');
-    if (LOUNGE_LAYOUTS[layout]) loungeLayoutId = layout;
+    const savedStyle=localStorage.getItem('ergoflex.loungeStyle');if(LOUNGE_STYLES[savedStyle])loungeStyleId=savedStyle;
+    if (LOUNGE_LAYOUTS[layout]) loungeLayoutId = loungeLayoutIdForStyle(layout,loungeStyleId);
     if (LOUNGE_MODES[mode]) loungeMode = mode;
     const query = new URLSearchParams(location.search);
-    if (query.get('room') === 'lounge' && LOUNGE_LAYOUTS[query.get('layout')]) loungeLayoutId = query.get('layout');
+    if(query.get('room')==='lounge'){
+        if(LOUNGE_STYLES[query.get('style')])loungeStyleId=query.get('style');
+        else if(query.get('layout')?.endsWith('contemporary'))loungeStyleId='contemporary';
+        const requested=query.get('layout')||loungeLayoutId;if(LOUNGE_LAYOUTS[requested])loungeLayoutId=loungeLayoutIdForStyle(requested,loungeStyleId);
+    }
 } catch {}
-function selectedLoungeLayout() { return loungeLayoutId ? loungeLayoutById(loungeLayoutId) : loungeLayoutForSize(currentConfig.size); }
+function selectedLoungeLayout() { return loungeLayoutId ? loungeLayoutById(loungeLayoutId) : loungeLayoutForSize(currentConfig.size,loungeStyleId); }
+function setLoungeStyle(style){if(!LOUNGE_STYLES[style])return;const base=selectedLoungeLayout().baseLayoutId;setMeasuredRoomLayout('lounge',loungeLayoutIdForStyle(base,style));}
+
 const institutionalState = Object.fromEntries(INSTITUTIONAL_IDS.map(id => {
     const p = INSTITUTIONAL_ROOMS[id]; let layout = null, mode = 'morning';
     try {
@@ -1087,7 +1096,7 @@ function measuredRoomProfile(id = selectedRoomScene) {
     if (id === 'music') return { id, layouts: MUSIC_LAYOUTS, modes: MUSIC_MODES, layout: selectedMusicLayout(), mode: musicMode, prefix: 'music' };
     if (id === 'creative') return { id, layouts: ARTIST_LAYOUTS, modes: ARTIST_MODES, layout: selectedArtistLayout(), mode: artistMode, prefix: 'artist' };
     if (id === 'office') return { id, layouts: OFFICE_LAYOUTS, modes: OFFICE_MODES, layout: selectedOfficeLayout(), mode: officeMode, prefix: 'office' };
-    if (id === 'lounge') return { id, layouts: LOUNGE_LAYOUTS, modes: LOUNGE_MODES, layout: selectedLoungeLayout(), mode: loungeMode, prefix: 'lounge' };
+    if (id === 'lounge') return { id, layouts: loungeLayoutsForStyle(loungeStyleId), modes: loungeModesForStyle(loungeStyleId), layout: selectedLoungeLayout(), mode: loungeMode, prefix: 'lounge' };
     if (id === 'kitchen') return { id, layouts: KITCHEN_LAYOUTS, modes: KITCHEN_MODES, layout: selectedKitchenLayout(), mode: kitchenMode, prefix: 'kitchen' };
     if (id === 'gym') return { id, layouts: GYM_LAYOUTS, modes: GYM_MODES, layout: selectedGymLayout(), mode: gymMode, prefix: 'gym' };
     if (id === 'study') return { id, layouts: STUDY_LAYOUTS, modes: STUDY_MODES, layout: selectedStudyLayout(), mode: studyMode, prefix: 'study' };
@@ -1108,7 +1117,7 @@ textureLoader.setCrossOrigin('anonymous');
 
 const BIRCH_COLORS = ["eaeda2", "ebee87", "ffff00", "bbff00"];
 const BASE_PAINT_COLORS = ["4fa5bd", "51b8d3", "51d0ef", "d4b3e6", "ffbbff", "689bad"];
-const POLISHED_ALUMINUM_COLORS = ["e8e800", "7ec7f9", "ce8ca4", "000000", "4db6c1", "e7e7e7", "00ffff", "ff0000", "6288aa", "bbffe0", "babb95", "a5f1d0"];
+const POLISHED_ALUMINUM_COLORS = ["e8e800", "7ec7f9", "ce8ca4", "000000", "4db6c1", "e7e7e7", "00ffff", "ff0000", "6288aa", "bbffe0", "babb95", "a5f1d0", "a38c8c", "5e4343"];
 const BLACK_PLASTIC_COLORS = ["0000ff", "e6dabd"];
 const BLACK_METAL_COLORS = ["7c5f5f", "75b4bd"];
 
@@ -2827,7 +2836,12 @@ function currentDeskStyle() {
 }
 function rememberSceneDeskStyle() {
     if(sceneDeskInternal)return;
-    if(sceneDesks?.active&&sceneDesks.selected!=='main'){sceneDesks.active.state.style=currentDeskStyle();sceneDesks.persist();return;}
+    if(sceneDesks?.active){
+        sceneDesks.active.state.style=currentDeskStyle();
+        sceneDesks.active.rig?.restyle?.();
+        sceneDesks.active.peripherals?.update?.();
+        if(sceneDesks.selected!=='main'){sceneDesks.persist();return;}
+    }
     if (!sceneDeskLocation) return;
     sceneDeskStyles[sceneDeskLocation] = currentDeskStyle();
     try { localStorage.setItem(SCENE_DESK_STYLES_KEY, JSON.stringify(sceneDeskStyles)); } catch {}
@@ -2859,7 +2873,7 @@ function styleDeskForRoom(id, preserve = false) {
     sceneDeskLocation = id;
     syncSceneDeskStyleUI();
 }
-function roomDeskTheme(id){return id==='childroom'?{...childAgeStage(childAgeId).style,name:childAgeStage(childAgeId).short+' workspace'}:ROOM_DESK_STYLES[id];}
+function roomDeskTheme(id){return id==='lounge'?loungeDeskTheme(selectedLoungeLayout()):id==='childroom'?{...childAgeStage(childAgeId).style,name:childAgeStage(childAgeId).short+' workspace'}:ROOM_DESK_STYLES[id];}
 function syncSceneDeskStyleUI() {
     const button = document.getElementById('room-desk-palette'); if (!button) return;
     const theme = roomDeskTheme(selectedRoomScene); button.hidden = !theme;
@@ -4519,6 +4533,7 @@ function serializeProject() {
                 workshopLayout: selectedWorkshopLayout().id,
                 loungeMode,
                 loungeLayout: selectedLoungeLayout().id,
+                loungeStyle:loungeStyleId,
                 kitchenMode,
                 kitchenLayout: selectedKitchenLayout().id,
                 gymMode,
@@ -4930,7 +4945,7 @@ function applyProjectPresentation(project) {
     if (WORKSHOP_MODES[presentation.workshopMode]) workshopMode = presentation.workshopMode;
     if (WORKSHOP_LAYOUTS[presentation.workshopLayout]) workshopLayoutId = presentation.workshopLayout;
     if (LOUNGE_MODES[presentation.loungeMode]) loungeMode = presentation.loungeMode;
-    if (LOUNGE_LAYOUTS[presentation.loungeLayout]) loungeLayoutId = presentation.loungeLayout;
+    if (LOUNGE_LAYOUTS[presentation.loungeLayout]) {loungeLayoutId = presentation.loungeLayout;loungeStyleId=LOUNGE_LAYOUTS[loungeLayoutId].style;}
     if (KITCHEN_MODES[presentation.kitchenMode]) kitchenMode = presentation.kitchenMode;
     if (KITCHEN_LAYOUTS[presentation.kitchenLayout]) kitchenLayoutId = presentation.kitchenLayout;
     if (GYM_MODES[presentation.gymMode]) gymMode = presentation.gymMode;
@@ -7072,11 +7087,13 @@ function getOrCreateBlackPlasticMaterial() {
 function getOrCreateBlackMetalMaterial() {
     if (!sharedBlackMetalMaterial) {
         sharedBlackMetalMaterial = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color("#2a2a2a"),
-            metalness: 0.85,
-            roughness: 0.3,
+            color: new THREE.Color("#525862"),
+            metalness: 0.52,
+            roughness: 0.24,
+            clearcoat: 0.48,
+            clearcoatRoughness: 0.16,
             ior: 1.8,
-            envMapIntensity: 1.2
+            envMapIntensity: 1.55
         });
     }
     return sharedBlackMetalMaterial;
@@ -10997,6 +11014,7 @@ function syncHomeOfficeUI() {
         const panel = document.getElementById(measuredRoomPanelId(id));
         if (!panel) continue;
         panel.hidden = selectedRoomScene !== id;
+        if(id==='lounge'){const select=panel.querySelector('#lounge-room-size');if(select.dataset.style!==loungeStyleId){select.innerHTML=Object.values(profile.layouts).map(l=>`<option value="${l.id}">${l.name} · ${l.width/1000} × ${l.depth/1000} m</option>`).join('');select.dataset.style=loungeStyleId;}const style=panel.querySelector('#lounge-style');if(style)style.value=loungeStyleId;}
         if(id==='childroom'){
             const select=panel.querySelector('#childroom-room-size');if(select.dataset.age!==childAgeId){select.innerHTML=Object.values(profile.layouts).map(l=>`<option value="${l.id}">${l.name} · ${l.width/1000} × ${l.depth/1000} m</option>`).join('');select.dataset.age=childAgeId;}
             const age=panel.querySelector('#childroom-age');if(age)age.value=childAgeId;
@@ -11036,7 +11054,7 @@ function setGymLayout(id) { setMeasuredRoomLayout('gym', id); }
 function setStudyLayout(id) { setMeasuredRoomLayout('study', id); }
 function setMeasuredRoomLayout(sceneId, id, options = {}) {
     if(sceneId==='childroom'&&CHILD_ALL_LAYOUTS[id]){childAgeId=childLayoutById(id).ageStage;try{localStorage.setItem('ergoflex.childroomAge',childAgeId);}catch{}}
-    if (!measuredRoomProfile(sceneId)?.layouts[id]) return;
+    if (!(sceneId==='lounge'?LOUNGE_LAYOUTS:measuredRoomProfile(sceneId)?.layouts)?.[id]) return;
     if (INSTITUTIONAL_ROOMS[sceneId]) institutionalState[sceneId].layout = id;
     else if (sceneId === 'home') homeLayoutId = id;
     else if (sceneId === 'gaming') gamingLayoutId = id;
@@ -11053,7 +11071,7 @@ function setMeasuredRoomLayout(sceneId, id, options = {}) {
     else if (sceneId === 'scifi') scifiLayoutId = id;
     else if (sceneId === 'coworking') coworkingLayoutId = id;
     else if (sceneId === 'library') libraryLayoutId = id;
-    else loungeLayoutId = id;
+    else {loungeLayoutId = id;loungeStyleId=LOUNGE_LAYOUTS[id].style;try{localStorage.setItem('ergoflex.loungeStyle',loungeStyleId);}catch{}}
     try { localStorage.setItem(`ergoflex.${sceneId}Layout`, id); } catch {}
     setRoomScene(sceneId, false, options);
     workspaceRoom.ready.then(() => {
@@ -11319,6 +11337,8 @@ function mountSceneTour() {
         ageStages:()=>Object.keys(CHILD_AGE_STAGES),
         setAge:age=>setChildAgeStage(age),
         ageLabel:age=>childAgeStage(age).short,
+        loungeStyles:()=>Object.keys(LOUNGE_STYLES),
+        setLoungeStyle:style=>setLoungeStyle(style),
         setLayout: (sceneId, id) => setMeasuredRoomLayout(sceneId, id),
         setMode: (sceneId, id) => setMeasuredRoomMode(sceneId, id),
         ready: async kind => { await workspaceRoom?.ready; if (kind !== 'mode') frameRoom(); },
@@ -11960,6 +11980,7 @@ function initStudio() {
             const age=document.createElement('label');age.className='institutional-setting-label';age.innerHTML=`Life stage <select id="childroom-age" aria-label="Life stage">${Object.values(CHILD_AGE_STAGES).map(a=>`<option value="${a.id}">${a.label}</option>`).join('')}</select>`;
             age.querySelector('select').value=childAgeId;age.querySelector('select').onchange=e=>setChildAgeStage(e.target.value);panel.querySelector('.home-layout-choices').prepend(age);
         }
+        if(id==='lounge'){const style=document.createElement('label');style.className='institutional-setting-label';style.innerHTML=`Style <select id="lounge-style" aria-label="Lounge style">${Object.entries(LOUNGE_STYLES).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select>`;style.querySelector('select').value=loungeStyleId;style.querySelector('select').onchange=e=>setLoungeStyle(e.target.value);panel.querySelector('.home-layout-choices').prepend(style);}
         const groupId = institutionalGroup(id);
         if (groupId) {
             const group = INSTITUTIONAL_GROUPS[groupId];
@@ -12279,6 +12300,7 @@ window.ErgoFlex = {
     setLoungeMode,
     get loungeMode() { return loungeMode; },
     setLoungeLayout,
+    setLoungeStyle,
     get loungeLayout() { return selectedLoungeLayout().id; },
     setKitchenMode,
     get kitchenMode() { return kitchenMode; },
@@ -12562,7 +12584,12 @@ if (window.__ERGO_PRESENTATION__) {
             if(!directorAnchor)return;
             const yaw=directorAnchor.yaw+THREE.MathUtils.degToRad(p.yaw),turn=yaw-deskYaw;
             deskYaw=yaw;applyDeskTransform();spinWheelsForYaw(turn);
-            applyGlideOffset(directorAnchor.offset.clone().add(new THREE.Vector3(p.z*directorAnchor.unit,0,-p.x*directorAnchor.unit)),{collide:true});
+            // Director samples absolute authored poses (including out-of-order
+            // seeks). Interactive collision sweeps depend on the previous frame
+            // and can freeze a Travel clip after a room or prop edit. Keep those
+            // sweeps on manual driving; movie choreography must be deterministic.
+            roomCollisionBlocked=false;
+            applyGlideOffset(directorAnchor.offset.clone().add(new THREE.Vector3(p.z*directorAnchor.unit,0,-p.x*directorAnchor.unit)));
             glideTarget.copy(glideOffset);presentationShadowDirty=true;
         },
         readDirector(){const a=directorAnchor;return{height:liftToHeight(currentLift),tilt:primaryTiltConfig()?.currentDeg||0,

@@ -564,7 +564,7 @@ def film_list(rows):
     full = {s['id']: s for s in load(CUT)['shots']}
     v5 = os.path.join(H, 'previews', 'awaken-v5-cut.json')
     if os.path.exists(v5): full['awaken'] = load(v5)['shots'][0]
-    base, items = '/' + H.strip('/'), []
+    base, items = '/' + os.path.relpath(os.path.abspath(H), root).strip('/'), []
     cl = os.path.join(H, 'director-chapters.json')
     before = {c.get('id'): c for c in load(cl).get('chapters', [])} if os.path.exists(cl) else {}
     for n, cid, page, js, src, cs, mine in rows:
@@ -720,6 +720,10 @@ def run_import(export):
     # The Lighting lane's edits ride in the export's shot; keep them beside the camera keys and clips (run_pass applies them).
     shot = (d.get('shots') or [{}])[0]
     lighting = {k: shot[k] for k in LIGHT_FIELDS if k in shot}
+    if isinstance(lighting.get('timeOfDay'), list) and len(lighting['timeOfDay']) >= 2:
+        tod = lighting['timeOfDay']
+        if tod[0].get('at') == 0 and tod[0].get('mode') == 'night' and tod[1].get('at') == 0 and tod[1].get('mode') != 'night':
+            lighting['timeOfDay'] = tod[1:]
     for k in GLOBAL_FIELDS:
         if k in (shot.get('sceneGlobals') or {}): lighting[k] = shot['sceneGlobals'][k]
     dc = load(director_file(cid))

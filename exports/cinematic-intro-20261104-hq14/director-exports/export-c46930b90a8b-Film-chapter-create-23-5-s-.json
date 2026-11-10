@@ -1,0 +1,308 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-create",
+  "name": "Film chapter: create (23.5 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "",
+  "shots": [
+    {
+      "id": "create",
+      "room": "creative",
+      "kind": "tilt",
+      "seconds": 23.5,
+      "title": "Angle it to your art.",
+      "detail": "From drafting to digital painting. Everything within reach.",
+      "preset": "artist",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "premium",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 43.5,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "b5418102-1403-4470-9f42-8efd6dfbddaa",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 1.5,
+            "duration": 1.9,
+            "easing": "linear",
+            "label": "",
+            "target": 7
+          },
+          {
+            "id": "stand-to-draw",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 4.2,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Lift up · 52 in",
+            "target": 52
+          },
+          {
+            "id": "drafting",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 6.8,
+            "duration": 5.6,
+            "easing": "smooth",
+            "label": "Drafting · 40°",
+            "target": 40
+          },
+          {
+            "id": "painting",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 16.9,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Easel · 55°",
+            "target": 55
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Easel and still life in the window light",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                5.611759503843693,
+                2.3873406281318044,
+                2.7841808963908505
+              ],
+              "target": [
+                2.1081660333541032,
+                1.6351442108051475,
+                2.546030397979478
+              ],
+              "fov": 42.00000000000001,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.102128,
+            "label": "Past the easel and taboret",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.7465237758619656,
+                1.8210809852164138,
+                2.39134899997657
+              ],
+              "target": [
+                0.00004916137293307227,
+                1.599940073399223,
+                1.5997180711314056
+              ],
+              "fov": 42.999954227807024,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.178723,
+            "label": "Desk: lift (blue), desk right of the title",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.6049328129716063,
+                1.826457619567577,
+                2.1606180780935986
+              ],
+              "target": [
+                -0.935335364139553,
+                1.515207871357039,
+                0.3705439296456631
+              ],
+              "fov": 44.00013760462598,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.314894,
+            "label": "Pen display at 52 in",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.7000370068401245,
+                2.75,
+                1.6796192278136974
+              ],
+              "target": [
+                -1.3331429080796293,
+                1.7612824813647714,
+                0.3399335828599409
+              ],
+              "fov": 46,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.385106,
+            "label": "Pen display at 52 in: hold",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.7000370068401245,
+                2.75,
+                1.6796192278136974
+              ],
+              "target": [
+                -1.3331429080796293,
+                1.7612824813647714,
+                0.3399335828599409
+              ],
+              "fov": 46,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.52766,
+            "label": "Front-right: board rises, drafting appears, side shelf pops",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.8618169062117025,
+                2.25,
+                -1.5578996220009236
+              ],
+              "target": [
+                -1.4223088574687395,
+                1.6771765595317245,
+                0.22893262969234482
+              ],
+              "fov": 44.000223951862026,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.648936,
+            "label": "Front-right 3/4: drafting at 40 deg (rest)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4944084461003384,
+                1.6637248988620437,
+                -3.3408988427992816
+              ],
+              "target": [
+                -1.3845963504944954,
+                1.5264708909991735,
+                0.3248913137213632
+              ],
+              "fov": 44,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 0.719149,
+            "label": "Front-right 3/4: drafting at 40 deg (rest): hold",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4944084461003384,
+                1.6637248988620437,
+                -3.3408988427992816
+              ],
+              "target": [
+                -1.3845963504944954,
+                1.5264708909991735,
+                0.3248913137213632
+              ],
+              "fov": 44,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 0.825532,
+            "label": "Easel: the oil painting appears, stool and palette in front",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.95,
+                1.75,
+                -1.35
+              ],
+              "target": [
+                -1.45,
+                1.43,
+                0.25
+              ],
+              "fov": 44,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-09",
+            "time": 1,
+            "label": "Gentle push on the painting",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                0.5473812063620077,
+                1.72,
+                -1.3582779584642948
+              ],
+              "target": [
+                -1.5,
+                1.5,
+                0.2
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "ledStatus": [
+        {
+          "at": 4.2,
+          "dur": 2.6,
+          "kind": "lift-up",
+          "fade": 1
+        },
+        {
+          "at": 6.799998,
+          "dur": 5.6,
+          "kind": "tilt-retract",
+          "fade": 1,
+          "fadeIn": 0.6
+        },
+        {
+          "at": 16.9,
+          "dur": 2.6,
+          "kind": "tilt-retract",
+          "fade": 1,
+          "fadeIn": 0.6
+        }
+      ],
+      "ledColor": "#242424",
+      "sceneGlobals": {
+        "roomLight": 0.95,
+        "exposureScale": 1.27,
+        "ledWallGlow": 1.3
+      }
+    }
+  ]
+}

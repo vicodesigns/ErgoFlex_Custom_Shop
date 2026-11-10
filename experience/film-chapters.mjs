@@ -5,8 +5,9 @@ import {mergeBranding} from './branding-edits.mjs';
 import {mergeDeskEdits} from './desk-edits.mjs';
 import {mergeFeaturedBuild} from './desk-build.mjs';
 // Film chapter switching: a chapter link carries #cut=…&film=<chapter list>&director=1.
+const stripRepoPrefix=s=>typeof s==='string'?s.replace(/^\/home\/ergo\/ErgoFlex_Custom_Shop(?=\/)/,''):s;
 export function filmLink(hash){
-  const params=new URLSearchParams(String(hash||'').replace(/^#/,'')),film=params.get('film');
+  const params=new URLSearchParams(String(hash||'').replace(/^#/,'')),film=stripRepoPrefix(params.get('film'));
   return film?{film,director:params.get('director')==='1'}:null;
 }
 // Pages resolve against the list's own URL and must stay on this server.
@@ -15,9 +16,9 @@ export function cleanFilmChapters(value,base){
   const origin=new URL(base).origin;
   const chapters=value.chapters.slice(0,200).flatMap((c,i)=>{
     if(typeof c?.page!=='string'||typeof c.id!=='string'||!c.id)return [];
-    let url;try{url=new URL(c.page,base);}catch{return [];}
+    let url;try{url=new URL(stripRepoPrefix(c.page),base);}catch{return [];}
     if(url.origin!==origin)return [];
-    const seconds=Number(c.seconds);let shot=null;try{if(typeof c.shot==='string'){const u=new URL(c.shot,base);if(u.origin===origin)shot=u.href;}}catch{}
+    const seconds=Number(c.seconds);let shot=null;try{if(typeof c.shot==='string'){const u=new URL(stripRepoPrefix(c.shot),base);if(u.origin===origin)shot=u.href;}}catch{}
     return [{shot,n:Number.isInteger(c.n)?c.n:i+1,id:c.id.slice(0,80),title:typeof c.title==='string'?c.title.slice(0,140):'',seconds:typeof c.seconds!=='boolean'&&c.seconds!=null&&Number.isFinite(seconds)?seconds:null,url:url.href,version:typeof c.version==='string'?c.version.slice(0,40):'',updated:typeof c.updated==='string'?c.updated.slice(0,40):''}];
   });
   if(!chapters.length)throw Error('The film chapter list has no chapters.');

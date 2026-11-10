@@ -409,6 +409,7 @@ export class RoomLife {
         // Gym zones stay in their measured equipment bays. Session dressing
         // changes on the mat; shifting whole machines would close the aisles.
         if (scene === 'gym' && ['training', 'portable', 'reading-chair'].includes(entry.role)) return new THREE.Matrix4();
+        if (scene === 'lounge' && ['main-chair','table'].includes(entry.role)) return new THREE.Matrix4();
         if(institutionalModule(scene)?.stableWorkstations&&['main-chair','work-chair'].includes(entry.role))return new THREE.Matrix4();
         const group = this.room.roomLayout.groupStudy;
         if (group && (entry.role === 'mobility-chair' || entry.role === 'main-chair')) {

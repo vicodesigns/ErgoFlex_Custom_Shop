@@ -1,0 +1,459 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "be15f00c-4274-4f63-bb1f-14403384433d",
+  "name": "Film chapter: create (22.5 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "2026-11-06T23:18:23.093Z",
+  "shots": [
+    {
+      "id": "create",
+      "room": "creative",
+      "kind": "tilt",
+      "seconds": 22.5,
+      "title": "Angle it to your art.",
+      "detail": "From digital to drafting to oil. Everything within reach.",
+      "preset": "artist",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "premium",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 43.5,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "stand-to-draw",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 4.2,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Lift up · 52 in",
+            "target": 52
+          },
+          {
+            "id": "drafting",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 9.05,
+            "duration": 5.6,
+            "easing": "smooth",
+            "label": "Drafting · 40°",
+            "target": 40
+          },
+          {
+            "id": "painting",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 16.9,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Easel · 55°",
+            "target": 55
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Easel and still life in the window light",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                5.611759503843693,
+                1.7873406281318045,
+                2.7841808963908505
+              ],
+              "target": [
+                2.1081660333541032,
+                1.52991102615646,
+                2.546030397979478
+              ],
+              "fov": 42.00000000000001,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.106667,
+            "label": "Past the easel and taboret",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.7465237758619656,
+                1.8210809852164138,
+                2.39134899997657
+              ],
+              "target": [
+                0.00004916137293307227,
+                1.599940073399223,
+                1.5997180711314056
+              ],
+              "fov": 42.999954227807024,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.186667,
+            "label": "Desk: lift (blue), desk right of the title",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.6049328129716063,
+                1.826457619567577,
+                2.1606180780935986
+              ],
+              "target": [
+                -0.935335364139553,
+                1.515207871357039,
+                0.3705439296456631
+              ],
+              "fov": 44.00013760462598,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.328889,
+            "label": "Pen display at 52 in (rest)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.7000370068401245,
+                3.1219938208814506,
+                1.6796192278136974
+              ],
+              "target": [
+                -1.3331429080796293,
+                1.7612824813647714,
+                0.3399335828599409
+              ],
+              "fov": 46,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.551111,
+            "label": "Front-right: board rises, drafting appears, side shelf pops",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.31410522434335886,
+                2.401750436381423,
+                -1.1294342050115467
+              ],
+              "target": [
+                -1.4223088574687395,
+                1.6771765595317245,
+                0.22893262969234482
+              ],
+              "fov": 44.000223951862026,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.677778,
+            "label": "Front-right 3/4: drafting at 40 deg (rest)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4944084461003384,
+                1.6637248988620437,
+                -3.3408988427992816
+              ],
+              "target": [
+                -1.3845963504944954,
+                1.5264708909991735,
+                0.3248913137213632
+              ],
+              "fov": 44,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.862222,
+            "label": "Easel: the oil painting appears, stool and palette in front",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.95,
+                1.75,
+                -1.35
+              ],
+              "target": [
+                -1.45,
+                1.35,
+                0.25
+              ],
+              "fov": 44,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 1,
+            "label": "Gentle push on the painting",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                0.7,
+                1.72,
+                -1.1
+              ],
+              "target": [
+                -1.5,
+                1.38,
+                0.2
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "ledStatus": [
+        {
+          "at": 4.2,
+          "dur": 2.6,
+          "kind": "lift-up",
+          "fade": 1
+        },
+        {
+          "at": 9.05,
+          "dur": 5.6,
+          "kind": "tilt-retract",
+          "fade": 1,
+          "fadeIn": 0.6
+        },
+        {
+          "at": 16.9,
+          "dur": 2.6,
+          "kind": "tilt-retract",
+          "fade": 1,
+          "fadeIn": 0.6
+        }
+      ],
+      "ledColor": "#242424",
+      "sceneGlobals": {
+        "roomLight": 0.85,
+        "exposureScale": 1.25,
+        "environmentScale": 1.02
+      },
+      "lightEdits": [
+        {
+          "target": "DirectionalLight",
+          "intensityScale": 1.82
+        }
+      ],
+      "propEdits": [
+        {
+          "match": "^Artist materials worktable$",
+          "asset": "creative:premium:fixture:artist-worktable",
+          "label": "Artist materials worktable",
+          "position": [
+            0,
+            0,
+            0.365
+          ]
+        },
+        {
+          "match": "^Colour studies · daily activity$",
+          "asset": "creative:premium:life:activity",
+          "label": "Colour studies · daily activity",
+          "position": [
+            0.792,
+            0,
+            1.012
+          ]
+        },
+        {
+          "match": "^Artist painting easel$",
+          "asset": "creative:premium:fixture:artist-easel",
+          "label": "Artist painting easel",
+          "position": [
+            0,
+            0,
+            0.161
+          ]
+        },
+        {
+          "match": "^$",
+          "asset": "creative:premium:placement:0:0:",
+          "label": "Unnamed prop",
+          "position": [
+            -0.279,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:long-scissors$",
+          "asset": "creative:premium:room:12:long-scissors",
+          "label": "Prop:long-scissors",
+          "position": [
+            -0.168,
+            0,
+            0.248
+          ],
+          "rotation": [
+            0,
+            121.3,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:ruler-set-square$",
+          "asset": "creative:premium:room:11:ruler-set-square",
+          "label": "Prop:ruler-set-square",
+          "position": [
+            -0.116,
+            0,
+            0.33
+          ],
+          "rotation": [
+            0,
+            -11.5,
+            0
+          ]
+        },
+        {
+          "match": "^Atelier artist · Illustration tablet & stylus · Pale ash & brushed silver$",
+          "asset": "creative:premium:room:10:papers",
+          "label": "Atelier artist · Illustration tablet & stylus · Pale ash & brushed silver",
+          "position": [
+            0,
+            0,
+            0.597
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-artist-stool$",
+          "label": "Prop:ergoflex-artist-stool",
+          "space": "local",
+          "position": [
+            0.176,
+            0,
+            0.633
+          ]
+        },
+        {
+          "match": "^Prop:atelier-artist-palette-oak$",
+          "label": "Prop:atelier-artist-palette-oak",
+          "space": "local",
+          "position": [
+            3.798,
+            0.645,
+            -0.332
+          ]
+        },
+        {
+          "match": "^Accessory:painter-shelf$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Accessory:painter-shelf$",
+          "label": "Accessory:painter-shelf",
+          "space": "local",
+          "position": [
+            0,
+            -0.127,
+            -0.135
+          ],
+          "rotation": [
+            31.9,
+            0,
+            0
+          ]
+        }
+      ],
+      "filmTitles": [
+        {
+          "id": "create-0",
+          "rel_in": 2.65,
+          "rel_out": 8.65,
+          "eyebrow": "TILT",
+          "title": "Angle it to your art.",
+          "detail": "From digital to drafting to oil. Everything within reach.",
+          "shadow": {
+            "paths": [
+              {
+                "line": "eyebrow",
+                "points": [
+                  {
+                    "x": -10.6,
+                    "y": -131.6
+                  },
+                  {
+                    "x": 55.79,
+                    "y": -133.66
+                  },
+                  {
+                    "x": 55.26,
+                    "y": -97.34
+                  },
+                  {
+                    "x": -12.52,
+                    "y": -95.45
+                  }
+                ]
+              },
+              {
+                "line": "title",
+                "points": [
+                  {
+                    "x": -6.2,
+                    "y": -71.7
+                  },
+                  {
+                    "x": 461.65,
+                    "y": -72.28
+                  },
+                  {
+                    "x": 463.13,
+                    "y": -19.39
+                  },
+                  {
+                    "x": -7.65,
+                    "y": -10.06
+                  }
+                ]
+              },
+              {
+                "line": "detail",
+                "points": [
+                  {
+                    "x": -8.95,
+                    "y": 14.04
+                  },
+                  {
+                    "x": 617.89,
+                    "y": 12.11
+                  },
+                  {
+                    "x": 620.45,
+                    "y": 58.09
+                  },
+                  {
+                    "x": -8.72,
+                    "y": 61.41
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
