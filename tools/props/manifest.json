@@ -18512,6 +18512,126 @@
    "scenes": [],
    "converter": "people-generator",
    "collection": "people"
+  },
+  {
+   "id": "people-kai-wheel-type",
+   "name": "Kai, at the desk (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-zoe-stand-type",
+   "name": "Zoe, at a standing desk (41 in)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-mia-sit-listen",
+   "name": "Mia, listening at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-mia-sit-type",
+   "name": "Mia, typing at the desk (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-leo-sit-raise",
+   "name": "Leo, hand up at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-leo-sit-write",
+   "name": "Leo, writing at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-sit-laptop",
+   "name": "Noah, at a laptop",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-sit-type",
+   "name": "Noah, typing at the desk (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-sit-type",
+   "name": "Lin, typing at the desk (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-priya-sit-phone",
+   "name": "Priya, seated with her phone",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-omar-wheel-type-28",
+   "name": "Omar, typing at the desk at 28 in (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-sit-phone",
+   "name": "Lin, seated with her phone",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-ava-sit-write",
+   "name": "Ava, writing at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-eli-sit-listen",
+   "name": "Eli, listening at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sofia-sit-laptop",
+   "name": "Sofia, at a laptop",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
   }
  ],
  "screens": [

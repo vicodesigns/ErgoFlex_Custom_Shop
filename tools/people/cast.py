@@ -7,13 +7,13 @@ over the origin, so a seated person drops onto a chair placed at the same spot
 with the same turn. See pose_lib.py for the pose fields.
 
 Furniture the seated and desk poses are built for (measured in the app):
-  task chair seat 0.435 m; keyboard top 0.732 m at the 28 in desk height and
-  1.126 m at 43.5 in; wrists rest ~0.40 m in front of the pelvis.
+  task chair seat 0.435 m; keyboard top 0.678 m at the 28 in desk height, 0.759 m
+  at 31 in and 1.095 m at 43.5 in; wrists rest ~0.40 m in front of the pelvis.
 """
 
 SEAT = .435          # Steelcase Leap seat
-KEYS_SIT = .732      # keyboard top, desk at 28 in
-KEYS_STAND = 1.126   # keyboard top, desk at 43.5 in
+KEYS_SIT = .678      # keyboard top, desk at 28 in
+KEYS_STAND = 1.095   # keyboard top, desk at 43.5 in
 
 
 def race(caucasian=0., african=0., asian=0.):
@@ -50,8 +50,8 @@ CHARACTERS = {
     'zoe': {
         'name': 'Zoe', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .45, 'weight': .48, 'height': .48, 'proportions': .6, 'race': race(.05, .9, .05)},
         'skin': 'young_african_female', 'eyes': 'brown', 'hair': 'afro01', 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
-        'clothes': ['joepal_crude_t-shirt_female', 'toigo_wool_pants', 'shoes05'],
-        'tint': {'joepal_crude_t-shirt_female': (.82, .6, .16), 'toigo_wool_pants': (.2, .27, .4)},
+        'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
+        'tint': {'toigo_basic_tucked_t-shirt': (.82, .6, .16), 'toigo_wool_pants': (.2, .27, .4)},
     },
     'hale': {
         'name': 'Mr Hale', 'phenotype': {'gender': 1., 'age': .7, 'muscle': .45, 'weight': .58, 'height': .52, 'proportions': .5, 'race': race(1, 0, 0)},
@@ -96,6 +96,40 @@ CHARACTERS = {
         'name': 'Jo', 'phenotype': {'gender': .0, 'age': .62, 'muscle': .55, 'weight': .55, 'height': .55, 'proportions': .5, 'race': race(1, 0, 0)},
         'skin': 'middleage_caucasian_female', 'eyes': 'bluegreen', 'hair': 'bob01', 'hair_tint': (.42, .2, .1), 'eyebrows': 'eyebrow004', 'eyelashes': 'eyelashes01',
         'clothes': ['male_worksuit01', 'shoes02'],
+    },
+    'mia': {
+        'name': 'Mia', 'phenotype': {'gender': .0, 'age': .32, 'muscle': .4, 'weight': .45, 'height': .45, 'proportions': .6, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_female', 'eyes': 'blue', 'hair': 'toigo_curled_under_bob', 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
+        'clothes': ['toigo_fisherman_sweater', 'toigo_wool_pants', 'shoes06'],
+        'tint': {'toigo_fisherman_sweater': (.3, .45, .4), 'toigo_wool_pants': (.2, .22, .3)},
+    },
+    'leo': {
+        'name': 'Leo', 'phenotype': {'gender': 1., 'age': .32, 'muscle': .5, 'weight': .55, 'height': .4, 'proportions': .5, 'race': race(.6, .15, .25)},
+        'skin': 'young_caucasian_male', 'eyes': 'brown', 'hair': 'culturalibre_hair_01', 'hair_tint': (.07, .05, .04), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
+        'clothes': ['male_casualsuit06', 'shoes04'],
+    },
+    'noah': {
+        'name': 'Noah', 'phenotype': {'gender': 1., 'age': .34, 'muscle': .55, 'weight': .45, 'height': .55, 'proportions': .6, 'race': race(.1, .85, .05)},
+        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'afro01', 'eyebrows': 'eyebrow008', 'eyelashes': 'eyelashes01',
+        'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes05'],
+        'tint': {'namuhekam_male_polo_shirt': (.85, .82, .76), 'cortu_cargo_pants': (.16, .18, .22)},
+    },
+    'ava': {
+        'name': 'Ava', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .4, 'weight': .42, 'height': .42, 'proportions': .6, 'race': race(.1, 0, .9)},
+        'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'ponytail01', 'hair_tint': (.06, .05, .05), 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
+        'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes04'],
+        'tint': {'toigo_basic_tucked_t-shirt': (.82, .8, .76), 'toigo_wool_pants': (.3, .2, .24)},
+    },
+    'eli': {
+        'name': 'Eli', 'phenotype': {'gender': 1., 'age': .33, 'muscle': .45, 'weight': .5, 'height': .5, 'proportions': .55, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_male', 'eyes': 'blue', 'hair': 'short01', 'hair_tint': (.5, .36, .2), 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes01',
+        'clothes': ['male_casualsuit01', 'shoes06'],
+    },
+    'sofia': {
+        'name': 'Sofia', 'phenotype': {'gender': .0, 'age': .34, 'muscle': .45, 'weight': .52, 'height': .46, 'proportions': .55, 'race': race(.65, .15, .2)},
+        'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'braid01', 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes03',
+        'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'toigo_flats'],
+        'tint': {'toigo_basic_tucked_t-shirt': (.2, .4, .55), 'toigo_wool_pants': (.72, .68, .6), 'toigo_flats': (.15, .15, .2)},
     },
 }
 
@@ -174,16 +208,47 @@ def white_cane(k):
 
 
 WHEEL_SEAT = .5      # manual wheelchair seat
-KEYS_WHEEL = .808    # keyboard top with the desk at 31 in, raised so the knees clear the tray
+
+
+def keys_at(inches):
+    """Keyboard top (m) at a desk height setting: measured 0.678 at 28 in, 0.759 at 31 in, 1.095 at 43.5 in."""
+    return .678 + (inches - 28) * .0269
+
+
+def sit_type(inches=28):
+    """Seated at the desk, both hands on the keyboard, eyes on the screen."""
+    keys = keys_at(inches)
+    return {'pelvis': (0, .02, SEAT + .09), 'pelvis_pitch': 2, 'spine': (3, 4, 4), 'neck': 2, 'head': -2,
+            'hand_l': {'at': (.14, -.385, keys + .04), 'elbow': (.16, .28, -.3), **_TYPE_L},
+            'hand_r': {'at': (-.14, -.385, keys + .04), 'elbow': (-.16, .28, -.3), **_TYPE_R},
+            'foot_l': {'at': (.12, -.40, .075), 'toes': (.2, -1, 0)}, 'foot_r': {'at': (-.13, -.33, .075), 'toes': (-.22, -1, 0)}}
+
+
+def stand_type(inches=43.5, reach=.33):
+    """Standing at the raised desk, typing. The feet sit a little behind the pelvis line: weight forward."""
+    keys = keys_at(inches)
+    return {'spine': (2, 3, 3), 'neck': 5, 'head': 4,
+            'hand_l': {'at': (.14, -reach, keys + .04), 'elbow': (.2, .3, -.35), **_TYPE_L},
+            'hand_r': {'at': (-.14, -reach, keys + .04), 'elbow': (-.2, .3, -.35), **_TYPE_R},
+            'foot_l': {'at': (.11, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.12, .06, .07), 'toes': (-.3, -1, 0)}}
+
+
+def wheel_type(inches=31):
+    """In a manual wheelchair at the desk; 31 in lets the knees roll under the keyboard tray."""
+    keys = keys_at(inches)
+    return {'pelvis': (0, .03, WHEEL_SEAT + .095), 'pelvis_pitch': 2, 'spine': (3, 4, 4), 'neck': 2, 'head': -2,
+            'hand_l': {'at': (.14, -.375, keys + .04), 'elbow': (.16, .28, -.3), **_TYPE_L},
+            'hand_r': {'at': (-.14, -.375, keys + .04), 'elbow': (-.16, .28, -.3), **_TYPE_R},
+            'foot_l': {'at': (.085, -.41, .235), 'toes': (.1, -1, 0)}, 'foot_r': {'at': (-.085, -.41, .235), 'toes': (-.1, -1, 0)}}
+
+
+# Desk poses take the desk height (inches) from the output's 'height'.
+DESK_POSES = {'sit-type': sit_type, 'stand-type': stand_type, 'wheel-type': wheel_type,
+              # Standing at the desk's lowest setting: the working height for a person of short stature.
+              'stand-type-low': lambda inches=28: dict(stand_type(inches, .27), spine=(1, 2, 2), neck=0, head=-4)}
+KEYS_WHEEL = .759    # keyboard top with the desk at 31 in, raised so the knees clear the tray
 
 POSES = {
-    # In a manual wheelchair at the desk (desk at 31 in).
-    'wheel-type': {
-        'pelvis': (0, .03, WHEEL_SEAT + .095), 'pelvis_pitch': 2, 'spine': (3, 4, 4), 'neck': 2, 'head': -2,
-        'hand_l': {'at': (.14, -.375, KEYS_WHEEL + .04), 'elbow': (.16, .28, -.3), **_TYPE_L},
-        'hand_r': {'at': (-.14, -.375, KEYS_WHEEL + .04), 'elbow': (-.16, .28, -.3), **_TYPE_R},
-        'foot_l': {'at': (.085, -.41, .235), 'toes': (.1, -1, 0)}, 'foot_r': {'at': (-.085, -.41, .235), 'toes': (-.1, -1, 0)},
-    },
     # Rolling: both hands on the handrims, looking ahead.
     'wheel-roll': {
         'pelvis': (0, .03, WHEEL_SEAT + .095), 'pelvis_pitch': 6, 'spine': (5, 6, 4), 'neck': -8, 'head': -8, 'head_yaw': 10,
@@ -205,31 +270,10 @@ POSES = {
         'hand_r': {'at': (-.1, -.36, 1.03), 'fingers': (.6, -.8, -.1), 'palm': (.3, .3, -1), 'elbow': (-.3, .25, -.2), 'curl': .8, 'thumb': .6},
         'foot_l': {'at': (.12, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.13, .07, .07), 'toes': (-.3, -1, 0)},
     },
-    # Standing at the desk's lowest setting (28 in): the working height for a person of short stature.
-    'stand-type-low': {
-        'spine': (1, 2, 2), 'neck': 0, 'head': -4,
-        'hand_l': {'at': (.13, -.27, KEYS_SIT + .04), 'elbow': (.2, .3, -.3), **_TYPE_L},
-        'hand_r': {'at': (-.13, -.27, KEYS_SIT + .04), 'elbow': (-.2, .3, -.3), **_TYPE_R},
-        'foot_l': {'at': (.1, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.11, .05, .07), 'toes': (-.3, -1, 0)},
-    },
     'stand-paint': stand_paint,
     'stretch': stretch,
     'cane-stand': cane_stand,
     'white-cane': white_cane,
-    # Seated at the desk, both hands on the keyboard, eyes on the screen.
-    'sit-type': {
-        'pelvis': (0, .02, SEAT + .09), 'pelvis_pitch': 2, 'spine': (3, 4, 4), 'neck': 2, 'head': -2,
-        'hand_l': {'at': (.14, -.385, KEYS_SIT + .04), 'elbow': (.16, .28, -.3), **_TYPE_L},
-        'hand_r': {'at': (-.14, -.385, KEYS_SIT + .04), 'elbow': (-.16, .28, -.3), **_TYPE_R},
-        'foot_l': {'at': (.12, -.40, .075), 'toes': (.2, -1, 0)}, 'foot_r': {'at': (-.13, -.33, .075), 'toes': (-.22, -1, 0)},
-    },
-    # Standing at the raised desk, typing. The feet sit a little behind the pelvis line: weight forward.
-    'stand-type': {
-        'spine': (2, 3, 3), 'neck': 5, 'head': 4,
-        'hand_l': {'at': (.14, -.33, KEYS_STAND + .04), 'elbow': (.2, .3, -.35), **_TYPE_L},
-        'hand_r': {'at': (-.14, -.33, KEYS_STAND + .04), 'elbow': (-.2, .3, -.35), **_TYPE_R},
-        'foot_l': {'at': (.11, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.12, .06, .07), 'toes': (-.3, -1, 0)},
-    },
     # At a table, writing: leaning in, pen in the right hand, left forearm on the table.
     'sit-write': {
         'pelvis': (0, .0, CHAIR + .09), 'pelvis_pitch': 8, 'spine': (7, 9, 8), 'neck': 12, 'head': 14, 'head_yaw': -6,
@@ -251,6 +295,27 @@ POSES = {
         'hand_r': {'at': (-.105, -.25, LOUNGE + .4), 'fingers': (.35, -.45, .8), 'palm': (.25, .75, .6), 'elbow': (-.25, .2, -.3), 'curl': .3, 'thumb': .1},
         'foot_l': {'at': (.15, -.42, .075), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.13, -.5, .075), 'toes': (-.2, -1, 0)},
     },
+    # At a table, listening: forearms on the table, head up toward the front of the room.
+    'sit-listen': {
+        'pelvis': (0, .0, CHAIR + .09), 'pelvis_pitch': 4, 'spine': (3, 4, 3), 'neck': -4, 'head': -6, 'head_yaw': 8,
+        'hand_l': {'at': (.15, -.32, TABLE + .028), 'fingers': (-.6, -1, -.05), 'palm': (0, 0, -1), 'elbow': (.3, .15, -.25), 'curl': .25, 'thumb': .15},
+        'hand_r': {'at': (-.05, -.36, TABLE + .05), 'fingers': (.7, -.9, -.05), 'palm': (.2, 0, -1), 'elbow': (-.3, .15, -.25), 'curl': .3, 'thumb': .2},
+        'foot_l': {'at': (.13, -.34, .075), 'toes': (.2, -1, 0)}, 'foot_r': {'at': (-.12, -.26, .075), 'toes': (-.2, -1, 0)},
+    },
+    # At a table with a hand up.
+    'sit-raise': {
+        'pelvis': (0, .0, CHAIR + .09), 'pelvis_pitch': 2, 'spine': (1, 1, 0), 'neck': -6, 'head': -8,
+        'hand_r': {'at': (-.24, -.05, CHAIR + 1.08), 'fingers': (.05, -.05, 1), 'palm': (.2, -1, 0), 'elbow': (-.3, -.1, .1), 'curl': .1, 'thumb': .1, 'spread': .3},
+        'hand_l': {'at': (.14, -.33, TABLE + .028), 'fingers': (-.5, -1, -.05), 'palm': (0, 0, -1), 'elbow': (.3, .15, -.25), 'curl': .2, 'thumb': .1},
+        'foot_l': {'at': (.13, -.3, .075), 'toes': (.2, -1, 0)}, 'foot_r': {'at': (-.13, -.3, .075), 'toes': (-.2, -1, 0)},
+    },
+    # Seated anywhere (bench, lounge chair, power wheelchair), phone in both hands in the lap.
+    'sit-phone': {
+        'pelvis': (0, .02, LOUNGE + .09), 'pelvis_pitch': 0, 'spine': (4, 6, 6), 'neck': 14, 'head': 16,
+        'hand_r': {'at': (-.05, -.3, LOUNGE + .3), 'fingers': (.3, -.5, .8), 'palm': (.3, .8, .5), 'elbow': (-.3, .15, -.2), 'curl': .6, 'thumb': .4},
+        'hand_l': {'at': (.09, -.27, LOUNGE + .27), 'fingers': (-.5, -.6, .6), 'palm': (-.3, .7, .6), 'elbow': (.3, .15, -.2), 'curl': .5, 'thumb': .3},
+        'foot_l': {'at': (.12, -.4, .075), 'toes': (.2, -1, 0)}, 'foot_r': {'at': (-.12, -.36, .075), 'toes': (-.2, -1, 0)},
+    },
     'stand-phone': stand_phone,
     'stand-present': stand_present,
     'walk': walk,
@@ -258,25 +323,40 @@ POSES = {
 
 # id -> character, pose, library name, what they hold.
 OUTPUTS = [
-    {'id': 'people-maya-sit-type', 'character': 'maya', 'pose': 'sit-type', 'name': 'Maya, typing at the desk (seated)'},
-    {'id': 'people-maya-stand-type', 'character': 'maya', 'pose': 'stand-type', 'name': 'Maya, typing at the desk (standing)'},
-    {'id': 'people-andre-sit-type', 'character': 'andre', 'pose': 'sit-type', 'name': 'Andre, typing at the desk (seated)'},
-    {'id': 'people-andre-stand-type', 'character': 'andre', 'pose': 'stand-type', 'name': 'Andre, typing at the desk (standing)'},
+    {'id': 'people-maya-sit-type', 'character': 'maya', 'pose': 'sit-type', 'height': 28, 'name': 'Maya, typing at the desk (seated)'},
+    {'id': 'people-maya-stand-type', 'character': 'maya', 'pose': 'stand-type', 'height': 43.5, 'name': 'Maya, typing at the desk (standing)'},
+    {'id': 'people-andre-sit-type', 'character': 'andre', 'pose': 'sit-type', 'height': 28, 'name': 'Andre, typing at the desk (seated)'},
+    {'id': 'people-andre-stand-type', 'character': 'andre', 'pose': 'stand-type', 'height': 43.5, 'name': 'Andre, typing at the desk (standing)'},
     {'id': 'people-andre-stand-phone', 'character': 'andre', 'pose': 'stand-phone', 'name': 'Andre, with the desk app on his phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-grace-sit-read', 'character': 'grace', 'pose': 'sit-read', 'name': 'Grace, reading in an armchair', 'held': [('book', {'side': 'l'})]},
+    {'id': 'people-grace-cane-stand', 'character': 'grace', 'pose': 'cane-stand', 'name': 'Grace, standing with a walking stick', 'held': [('cane', {'side': 'r'})]},
     {'id': 'people-kai-sit-write', 'character': 'kai', 'pose': 'sit-write', 'name': 'Kai, writing at a table', 'held': [('pen', {'side': 'r'})]},
+    {'id': 'people-kai-sit-controller', 'character': 'kai', 'pose': 'sit-controller', 'name': 'Kai, on the sofa with a controller', 'held': [('gamepad', {})]},
+    {'id': 'people-kai-wheel-type', 'character': 'kai', 'pose': 'wheel-type', 'height': 28, 'name': 'Kai, at the desk (wheelchair)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
     {'id': 'people-zoe-sit-laptop', 'character': 'zoe', 'pose': 'sit-laptop', 'name': 'Zoe, at a laptop'},
     {'id': 'people-zoe-walk', 'character': 'zoe', 'pose': 'walk', 'name': 'Zoe, walking with a backpack', 'held': [('backpack', {})]},
+    {'id': 'people-zoe-stand-type', 'character': 'zoe', 'pose': 'stand-type', 'height': 41, 'name': 'Zoe, at a standing desk (41 in)'},
+    {'id': 'people-mia-sit-listen', 'character': 'mia', 'pose': 'sit-listen', 'name': 'Mia, listening at a table'},
+    {'id': 'people-mia-sit-type', 'character': 'mia', 'pose': 'sit-type', 'height': 28, 'name': 'Mia, typing at the desk (seated)'},
+    {'id': 'people-leo-sit-raise', 'character': 'leo', 'pose': 'sit-raise', 'name': 'Leo, hand up at a table'},
+    {'id': 'people-leo-sit-write', 'character': 'leo', 'pose': 'sit-write', 'name': 'Leo, writing at a table', 'held': [('pen', {'side': 'r'})]},
+    {'id': 'people-noah-sit-laptop', 'character': 'noah', 'pose': 'sit-laptop', 'name': 'Noah, at a laptop'},
+    {'id': 'people-noah-sit-type', 'character': 'noah', 'pose': 'sit-type', 'height': 28, 'name': 'Noah, typing at the desk (seated)'},
     {'id': 'people-hale-stand-present', 'character': 'hale', 'pose': 'stand-present', 'name': 'Mr Hale, presenting', 'held': [('tablet', {'side': 'l'})]},
-    {'id': 'people-omar-wheel-type', 'character': 'omar', 'pose': 'wheel-type', 'name': 'Omar, typing at the desk (wheelchair)', 'held': [('wheelchair', {})]},
+    {'id': 'people-omar-wheel-type', 'character': 'omar', 'pose': 'wheel-type', 'height': 31, 'name': 'Omar, typing at the desk (wheelchair)', 'held': [('wheelchair', {})]},
+    {'id': 'people-omar-wheel-type-28', 'character': 'omar', 'pose': 'wheel-type', 'height': 28, 'name': 'Omar, typing at the desk at 28 in (wheelchair)', 'held': [('wheelchair', {})]},
+    {'id': 'people-lin-sit-phone', 'character': 'lin', 'pose': 'sit-phone', 'name': 'Lin, seated with her phone', 'held': [('phone', {'side': 'r'})]},
+    {'id': 'people-ava-sit-write', 'character': 'ava', 'pose': 'sit-write', 'name': 'Ava, writing at a table', 'held': [('pen', {'side': 'r'})]},
+    {'id': 'people-eli-sit-listen', 'character': 'eli', 'pose': 'sit-listen', 'name': 'Eli, listening at a table'},
+    {'id': 'people-sofia-sit-laptop', 'character': 'sofia', 'pose': 'sit-laptop', 'name': 'Sofia, at a laptop'},
     {'id': 'people-omar-wheel-roll', 'character': 'omar', 'pose': 'wheel-roll', 'name': 'Omar, rolling (wheelchair)', 'held': [('wheelchair', {})]},
     {'id': 'people-lin-stand-paint', 'character': 'lin', 'pose': 'stand-paint', 'name': 'Lin, painting at an easel', 'held': [('brush', {'side': 'r'}), ('palette', {'side': 'l'})]},
-    {'id': 'people-sam-sit-game', 'character': 'sam', 'pose': 'sit-type', 'name': 'Sam, gaming at the desk', 'held': [('headphones', {}), ('prosthesis', {'side': 'r'})]},
-    {'id': 'people-sam-stand-type', 'character': 'sam', 'pose': 'stand-type', 'name': 'Sam, at the desk (standing)', 'held': [('prosthesis', {'side': 'r'})]},
-    {'id': 'people-kai-sit-controller', 'character': 'kai', 'pose': 'sit-controller', 'name': 'Kai, on the sofa with a controller', 'held': [('gamepad', {})]},
+    {'id': 'people-lin-sit-type', 'character': 'lin', 'pose': 'sit-type', 'height': 28, 'name': 'Lin, typing at the desk (seated)'},
+    {'id': 'people-sam-sit-game', 'character': 'sam', 'pose': 'sit-type', 'height': 28, 'name': 'Sam, gaming at the desk', 'held': [('headphones', {}), ('prosthesis', {'side': 'r'})]},
+    {'id': 'people-sam-stand-type', 'character': 'sam', 'pose': 'stand-type', 'height': 43.5, 'name': 'Sam, at the desk (standing)', 'held': [('prosthesis', {'side': 'r'})]},
     {'id': 'people-priya-stretch', 'character': 'priya', 'pose': 'stretch', 'name': 'Priya, stretching'},
+    {'id': 'people-priya-sit-phone', 'character': 'priya', 'pose': 'sit-phone', 'name': 'Priya, seated with her phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-jo-stand-work', 'character': 'jo', 'pose': 'stand-work', 'name': 'Jo, working at the bench', 'held': [('screwdriver', {'side': 'r'})]},
-    {'id': 'people-grace-cane-stand', 'character': 'grace', 'pose': 'cane-stand', 'name': 'Grace, standing with a walking stick', 'held': [('cane', {'side': 'r'})]},
     {'id': 'people-ben-white-cane', 'character': 'ben', 'pose': 'white-cane', 'name': 'Ben, walking with a white cane', 'held': [('cane', {'side': 'r', 'white': True})]},
-    {'id': 'people-rosa-stand-type-low', 'character': 'rosa', 'pose': 'stand-type-low', 'name': 'Rosa, at the desk on its lowest setting (standing)'},
+    {'id': 'people-rosa-stand-type-low', 'character': 'rosa', 'pose': 'stand-type-low', 'height': 28, 'name': 'Rosa, at the desk on its lowest setting (standing)'},
 ]

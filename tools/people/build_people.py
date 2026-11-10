@@ -118,7 +118,7 @@ if amputee:
 
 # ---- pose ------------------------------------------------------------------------------------------
 bpy.context.view_layer.objects.active = rig
-pose = cast.POSES[spec['pose']]
+pose = cast.DESK_POSES[spec['pose']](spec['height']) if spec['pose'] in cast.DESK_POSES else cast.POSES[spec['pose']]
 if callable(pose):
     # Free-standing poses are written for a 1.70 m person and scale with the character.
     k = (rig.matrix_world @ rig.data.bones['head'].head_local).z / 1.47

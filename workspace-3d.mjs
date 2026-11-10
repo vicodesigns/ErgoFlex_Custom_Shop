@@ -12,6 +12,7 @@ import { buildInstitutionalRoom } from './institutional-room.mjs?v=campus-life-2
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
 import { polishRoomProp } from './room-polish.mjs?v=table-clearance-20261021';
 import { RoomLife } from './room-life.mjs?v=commons-home-comfort-20261024';
+import { RoomPeople } from './room-people.mjs?v=room-people-20261110';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
@@ -1282,12 +1283,16 @@ export class WorkspaceRoom {
         this.root = null; this.walls = []; this.token = 0; this.ready = Promise.resolve();
         this.missingProps = [];
         this.ceilingEnabled = false; this.ceilingSurface = null;
+        // People in the room (room-people.mjs): the Studio sets peopleState to a function returning the featured desk's
+        // { height, mode, pose }.
+        this.peopleEnabled = false; this.people = null; this.peopleState = null;
         this.ownedMaterials = new Set();
     }
     set(id, options = {}) {
         if (!ROOM_SCENES.some(s => s.id === id)) id = 'product';
         // Any prop load still in flight belongs to the room being replaced.
         this.token++;
+        this.people?.dispose(); this.people = null;
         this.grounding?.dispose(); this.grounding = null;
         this.ownedMaterials.forEach(mat => mat.dispose()); this.ownedMaterials.clear();
         // Upgraded fixtures can share their old surface maps with furnishings
@@ -1401,6 +1406,8 @@ export class WorkspaceRoom {
                 if (life) { await PROP_LIBRARY.loadIndex(); if(token===this.token) await life.decorate(PROP_LIBRARY,()=>token===this.token); }
             }
         });
+        this.people = new RoomPeople(this, PROP_LIBRARY);
+        if (this.peopleEnabled) this.people.setEnabled(true).catch(error => console.warn('[people]', error));
     }
     // Extra ErgoFlex desks (office, coworking and institutional layouts).
     // Station spec: { id, name, at: [x, z], size?: '48x30'|'60x30', turn?: degrees,
@@ -1737,6 +1744,8 @@ export class WorkspaceRoom {
     }
     applyAtelierLighting(mode,accent) { applyAtelierLighting(this,mode,accent); applyAtelierBedLighting(this,mode,accent); applyCampusLighting(this,mode,accent); applyDeskDecorLighting(this,mode,accent); applyGamingGearLighting(this,mode,accent); }
     setCeilingEnabled(enabled) { this.ceilingEnabled = !!enabled; }
+    // Resolves once the room's people are loaded and placed (or hidden).
+    setPeopleEnabled(enabled, filter = null) { this.peopleEnabled = !!enabled; this.people?.setFilter(filter); return this.people ? this.people.setEnabled(this.peopleEnabled) : Promise.resolve(); }
     update(camera) {
         this.grounding?.update();
         for (const wall of this.walls) wall.obj.visible = (wall.sign || 1) * (camera.position[wall.axis] - wall.limit) > .05;
@@ -1749,5 +1758,6 @@ export class WorkspaceRoom {
                 if (group === this.ceilingSurface) group.visible = this.ceilingEnabled && below;
                 else if (group === this.ceilingFixture || /^Ceiling /i.test(group.name)) group.visible = below;
         }
+        if (this.people?.enabled) this.people.update(this.peopleState?.());
     }
 }

@@ -63,7 +63,7 @@ with ThreadPoolExecutor(jobs) as pool:
         entry = {'id': o['id'], 'name': o['name'], 'category': 'people', 'scenes': o.get('scenes', []), 'file': f"assets/props/{o['id']}.glb", 'anchor': 'floor',
                  'size': result['size'], 'min': result['min'], 'max': result['max'], 'tris': result['tris'], 'bytes': os.path.getsize(out),
                  'source': 'tools/people/cast.py', 'license': 'CC0 (MakeHuman / MPFB assets)', 'attribution': None, 'collection': 'people',
-                 'person': {'character': o['character'], 'pose': o['pose']}}
+                 'person': {'character': o['character'], 'pose': o['pose'], **({'deskHeight': o['height']} if 'height' in o else {})}}
         spec = {'id': o['id'], 'name': o['name'], 'category': 'people', 'scenes': o.get('scenes', []), 'converter': 'people-generator', 'collection': 'people'}
         results.append({'manifest': spec, 'index': entry})
         print(f"ok {o['id']:34} {result['tris']:6} tris {entry['bytes'] // 1024:5} KB  {' x '.join(str(round(v)) for v in result['size'])} mm")

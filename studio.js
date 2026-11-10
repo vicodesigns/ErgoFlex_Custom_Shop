@@ -585,6 +585,9 @@ try {
 } catch (_) {}
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
 let ceilingPreviewEnabled = new URLSearchParams(location.search).get('ceiling') === 'on' || readStore('ergoflex.ceilingPreview', 1, null)?.enabled === true;
+// People living and working in the room (room-people.mjs). Off by default: the models load on first use.
+let roomPeopleEnabled = new URLSearchParams(location.search).get('people') === 'on' || readStore('ergoflex.roomPeople', 1, null)?.enabled === true;
+let roomPeopleMode = null, roomPeopleFilter = null;
 let roomBounceEnabled = readStore('ergoflex.roomBounce', 1, null)?.enabled !== false;
 let sceneDesks=null,sceneDeskUI=null,sceneDeskInternal=false;
 let roomInteractions = null, roomFurnitureSaveTimer = null, roomCollisionBlocked = false;
@@ -4290,7 +4293,10 @@ function loadModel() {
         withNeutralPose(() => { workspaceAccessories = new WorkspaceAccessories(scene, partRegistry, millimetreScale, loadedModel); });
         workspaceAccessories.onLayout=()=>sceneDesks?.objects.syncAccessories();
         applyAccessoryVisibility();
-        if (!workspaceRoom) workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
+        if (!workspaceRoom) {
+            workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
+            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null });
+        }
         // Startup already chose the room's desktop. Rebuilding the model must
         // retain any explicit size selected since then.
         setRoomScene(selectedRoomScene, false, { defaultDesktop: false });
@@ -10747,9 +10753,22 @@ let studioGrid = null;
 let isolatedVisibility = null;
 let dialogReturnFocus = null;
 let toastTimer;
+function syncRoomPeople() {
+    const control = document.getElementById('room-people-control'), available = !!workspaceRoom?.people?.available;
+    if (control) { control.hidden = !available; control.querySelector('input').checked = roomPeopleEnabled; }
+    return (workspaceRoom?.setPeopleEnabled(roomPeopleEnabled && available, roomPeopleFilter) || Promise.resolve())
+        .then(() => { presentationShadowDirty = true; renderPacing?.invalidate(); }).catch(error => console.warn('[people]', error));
+}
+// filter (film only): { only: [ids], except: [ids] }; not stored.
+function setRoomPeople(on, filter = null) {
+    roomPeopleEnabled = !!on; roomPeopleFilter = filter;
+    if (!window.__ERGO_PRESENTATION__) writeStore('ergoflex.roomPeople', { v: 1, enabled: roomPeopleEnabled });
+    return syncRoomPeople();
+}
 function applyRoomLighting() {
     const measured = measuredRoomProfile();
     const profile = measured ? measured.modes[measured.mode] : ROOM_ATMOSPHERES[selectedRoomScene];
+    roomPeopleMode = measured?.mode || null;
     const settings = roomLightSettings[selectedRoomScene] || {};
     const exposure = settings.exposure ?? profile.exposure;
     const daylight = settings.daylight ?? 1;
@@ -11228,6 +11247,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
         createStation: (['office', 'coworking'].includes(choice.id) || INSTITUTIONAL_ROOMS[choice.id]) && loadedModel ? spec => captureOfficeStation(spec, homeScale, measured.layout.stations.indexOf(spec)) : null });
     workspaceRoom?.setCeilingEnabled(ceilingPreviewEnabled);
+    syncRoomPeople();
     const ceilingControl = document.getElementById('room-ceiling-control');
     if (ceilingControl) { ceilingControl.hidden = !workspaceRoom?.roomLayout; ceilingControl.querySelector('input').checked = ceilingPreviewEnabled; }
     const bounceControl = document.getElementById('room-bounce-control');
@@ -11933,6 +11953,11 @@ function initStudio() {
         roomBounceEnabled = e.target.checked; writeStore('ergoflex.roomBounce', { v: 1, enabled: roomBounceEnabled }); applyRoomLighting();
     };
     toolbar.append(bounceControl);
+    const peopleControl = document.createElement('label'); peopleControl.id = 'room-people-control'; peopleControl.hidden = true;
+    peopleControl.className = 'check-label'; peopleControl.title = 'Show people living and working in this room. The person at the desk sits or stands with the desk height.';
+    peopleControl.innerHTML = '<input type="checkbox" id="room-people-toggle"><span>People</span>';
+    peopleControl.querySelector('input').onchange = e => setRoomPeople(e.target.checked);
+    toolbar.append(peopleControl);
     const deskRearrangeControl=document.createElement('label');deskRearrangeControl.id='room-rearrange-desks-control';deskRearrangeControl.hidden=true;
     deskRearrangeControl.innerHTML='<input type="checkbox" id="room-rearrange-desks-toggle" aria-describedby="room-interaction-hint"><span>Rearrange desks</span>';
     deskRearrangeControl.querySelector('input').onchange=e=>setRoomRearrangeMode(e.target.checked?'desks':'off');
@@ -12256,6 +12281,7 @@ window.ErgoFlex = {
     resetSceneDeskStyle,
     get sceneDeskStyles() { return JSON.parse(JSON.stringify(sceneDeskStyles)); },
     get measuredRoom() { return measuredRoomProfile(); },
+    setRoomPeople, get roomPeople() { return roomPeopleEnabled; },
     setRoomScene,
     setHomeMode,
     get homeMode() { return homeMode; },
