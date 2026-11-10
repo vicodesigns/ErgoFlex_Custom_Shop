@@ -81,6 +81,7 @@ export const ROOM_PEOPLE = {
     ],
     library: [
         { id: 'people-rosa-stand-type-low', layout: 'humboldt', desk: 'stand', reach: 830 },
+        { id: 'people-rosa-stand-type-30', layout: 'humboldt', desk: 'stand', reach: 830 },
         { id: 'people-andre-stand-type', layout: 'humboldt', desk: 'stand' },
         { id: 'people-lin-sit-phone', layout: 'humboldt', on: 'electric-wheelchair', seat: 420 },
         { id: 'people-leo-sit-write', layout: 'humboldt', near: [-800, -5970], face: [-800, -5200], seat: 450 },

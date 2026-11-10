@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 
 // Measured shared spaces. Millimetres throughout, with usable aisles and
@@ -224,6 +225,8 @@ export function buildCoworkingRoom(room, root, layout, helpers) {
     box(window, [20, 85, d], [-w / 2 + 10, 42.5, bz + d / 2], oak);
     const skyMap = canvasMap(() => {}, 1024, 512), sky = skyMap.image;
     const pane = mesh(window, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]); pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'city'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     for (let z = a; z <= b + 1; z += ww / 4) box(window, [55, wh + 35, 32], [-w / 2 + 16, low + wh / 2, z], ink);
     for (const y of [low, low + wh]) box(window, [55, 35, ww + 40], [-w / 2 + 16, y, wz], ink);
     box(window, [230, 28, ww + 140], [-w / 2 + 112, low + 2, wz], oak, 4);
@@ -482,7 +485,7 @@ export function buildCoworkingRoom(room, root, layout, helpers) {
             }
         }
         c.fillStyle = trees; for (let i = 0; i < 34; i++) { c.beginPath(); c.arc(i * 32 + hash(i) * 12, H - 18 - hash(i + 5) * 26, 26 + hash(i + 9) * 16, 0, Math.PI * 2); c.fill(); }
-        skyMap.needsUpdate = true;
+        skyMap.needsUpdate = true; windowVista.setPhase(modeId);
     };
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = COWORKING_MODES[modeId] || COWORKING_MODES.morning;

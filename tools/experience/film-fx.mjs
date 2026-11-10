@@ -989,7 +989,7 @@ export async function install(shot) {
   if (shot.ledColor) { active.ledColor = api.ledColor; api.setLedColor(shot.ledColor, false); }
   // ledGlow: the app's LED brightness slider as a fraction of full (the stage uses .35).
   if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
-  if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
+  if (shot.ledStatus || shot.obstacles) { const S = await import('./film-status.mjs'); await S.prepareObstacles(shot); active.status = S.installStatus(shot); }
   if (shot.floorLight) active.floor = installFloorLight(shot);
   if (shot.ledReceivers) active.viewerLeds = (await import('./film-viewer-leds.mjs')).installViewerLeds(shot);   // before wheels: both wrap render
   if (shot.sceneGlobals?.ledFloorSources) active.viewerLeds?.setSources?.(shot.sceneGlobals.ledFloorSources);
@@ -1071,7 +1071,7 @@ export async function update(shot, { onSlow } = {}) {
   if (status) {
     if (shot.ledColor && active.ledColor === undefined) active.ledColor = active.ledColor0;
     api.setLedColor(shot.ledColor || active.ledColor || active.ledColor0, false);
-    if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
+    if (shot.ledStatus || shot.obstacles) { const S = await import('./film-status.mjs'); await S.prepareObstacles(shot); active.status = S.installStatus(shot); }
   }
   for (let i = tail; i < TAIL.length; i++) {
     const k = TAIL[i];

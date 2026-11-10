@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 
 // Shared offices are intentionally larger than home rooms: each station has a
@@ -314,6 +315,8 @@ export function buildOfficeRoom(room, root, layout, helpers) {
     box(windowWall, [80, h - low - wh, ww], [-w / 2 - 40, (h + low + wh) / 2, wz], plaster);
     const skyMap = canvasMap(() => {}); const skyCanvas = skyMap.image;
     const pane = mesh(windowWall, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]); pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'city'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     for (let z = a; z <= b + 1; z += ww / 3) box(windowWall, [60, wh + 35, 30], [-w / 2 + 15, low + wh / 2, z], dark);
     for (const y of [low, low + wh]) box(windowWall, [60, 35, ww + 45], [-w / 2 + 15, y, wz], dark);
     noShadow(box(windowWall, [24, 22, ww], [-w / 2 + 10, low + wh * .62, wz], dark));
@@ -463,7 +466,7 @@ export function buildOfficeRoom(room, root, layout, helpers) {
         });
         c.fillStyle = dark ? '#132019' : modeId === 'evening' ? '#46523f' : '#6c8a62';
         for (let i = 0; i < 18; i++) { c.beginPath(); c.arc(i * 31 + jitter(i) * 12, 505 - jitter(i + 4) * 18, 22 + jitter(i + 6) * 16, 0, Math.PI * 2); c.fill(); }
-        skyMap.needsUpdate = true;
+        skyMap.needsUpdate = true; windowVista.setPhase(modeId);
     };
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = OFFICE_MODES[modeId] || OFFICE_MODES.afternoon, lampLevel = mode.lamp ?? mode.practical;

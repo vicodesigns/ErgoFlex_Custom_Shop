@@ -364,4 +364,5 @@ OUTPUTS = [
     {'id': 'people-jo-stand-work', 'character': 'jo', 'pose': 'stand-work', 'name': 'Jo, working at the bench', 'held': [('screwdriver', {'side': 'r'})]},
     {'id': 'people-ben-white-cane', 'character': 'ben', 'pose': 'white-cane', 'name': 'Ben, walking with a white cane', 'held': [('cane', {'side': 'r', 'white': True})]},
     {'id': 'people-rosa-stand-type-low', 'character': 'rosa', 'pose': 'stand-type-low', 'height': 28, 'name': 'Rosa, at the desk on its lowest setting (standing)'},
+    {'id': 'people-rosa-stand-type-30', 'character': 'rosa', 'pose': 'stand-type-low', 'height': 30, 'name': 'Rosa, at the desk at 30 in (standing)'},
 ]

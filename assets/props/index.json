@@ -35633,6 +35633,40 @@
     "pose": "sit-type",
     "deskHeight": 30
    }
+  },
+  {
+   "id": "people-rosa-stand-type-30",
+   "name": "Rosa, at the desk at 30 in (standing)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-rosa-stand-type-30.glb",
+   "anchor": "floor",
+   "size": [
+    414.8,
+    1218,
+    496.5
+   ],
+   "min": [
+    -207.3,
+    0,
+    -111.2
+   ],
+   "max": [
+    207.5,
+    1218,
+    385.3
+   ],
+   "tris": 48392,
+   "bytes": 897816,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "rosa",
+    "pose": "stand-type-low",
+    "deskHeight": 30
+   }
   }
  ],
  "screens": [

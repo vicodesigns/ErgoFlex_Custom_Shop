@@ -31,6 +31,9 @@
 //   obstacles:[{x=0, ahead=.4, from='desk'|'base', radius=.09, height=.5, rise:[t0,t1]}]
 //     at:[x, z] places it in world space; heading (deg, + = left turn) and travel (scene units rolled along it) place the pylon
 //     ahead of the desk after a turn and a roll; without them it is ahead along +x.
+//     person:'<library id>' puts that posed person (assets/props, category people) there instead of the pylon,
+//     facing the desk, from the first frame (rise is ignored); turn (deg) adds to the facing. prepareObstacles(shot)
+//     loads them first (film-fx awaits it).
 //     A simulated pylon, styled like the stage's proximity pylons. ahead is the gap
 //     in scene units between the desk's (or, from:'base', the base's front at the pylon's height) initial front (+x) edge and the pylon's near
 //     face; x is sideways from the desk's centre. rise eases its scale in.
@@ -50,6 +53,15 @@ function movement(ev) {
   // "preview correction" reverseRotation flip was wrong; Polish removed it from the demo).
   if (ev.kind === 'wheels') return { fx: 36, ix: ev.mode, sx: 180, reverseRotation: false, colors: [RED, RED, AMBER] };
   return null;
+}
+
+// People who stand in for a pylon: loaded through the film's prop library before installStatus places them.
+const obstaclePeople = new WeakMap();
+export async function prepareObstacles(shot) {
+  const wanted = (shot.obstacles || []).filter(o => o?.person); if (!wanted.length) return 0;
+  const { propLibrary } = await import('./film-edits.mjs'), library = await propLibrary();
+  await Promise.all(wanted.map(async o => { try { obstaclePeople.set(o, await library.instance(o.person)); } catch (error) { console.warn('[film-status] obstacle person ' + o.person + ' did not load', error); } }));
+  return wanted.length;
 }
 
 export function installStatus(shot) {
@@ -102,7 +114,8 @@ export function installStatus(shot) {
     };
     for (const o of shot.obstacles) {
       const r = o.radius ?? .09, h = o.height ?? .5;
-      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r * .85, r, h, 24),
+      const person = o.person && obstaclePeople.get(o);
+      const mesh = person || new THREE.Mesh(new THREE.CylinderGeometry(r * .85, r, h, 24),
         new THREE.MeshStandardMaterial({ color: 0x163344, metalness: .6, roughness: .3, emissive: 0x0873a4, emissiveIntensity: .6 }));
       // The desk's forward (director +z, the app's wheel mode 3) is world +x; x here is sideways in world z.
       const front = (o.from === 'base' ? frontAt(h) : box.max.x) + (o.ahead ?? .4) + r;
@@ -113,6 +126,13 @@ export function installStatus(shot) {
         mesh.position.set(pv.x + Math.cos(a) * d - Math.sin(a) * (o.x ?? 0), box.min.y + h / 2, pv.z + Math.sin(a) * d + Math.cos(a) * (o.x ?? 0));
       } else mesh.position.set(front, box.min.y + h / 2, c.z + (o.x ?? 0));
       mesh.castShadow = true; mesh.name = 'Film obstacle'; mesh.userData.filmFx = true;
+      if (person) {
+        // A library instance is millimetres at scale 1000: bring it to scene units, feet on the stage floor, facing the desk.
+        const k = api.workspaceAccessories?.scale || api.workspaceRoom?.scale || .001;
+        person.scale.setScalar(1000 * k); person.position.y = box.min.y;
+        person.rotation.y = Math.atan2(c.x - person.position.x, c.z - person.position.z) + THREE.MathUtils.degToRad(o.turn || 0);
+        person.traverse(m => { if (m.isMesh) m.castShadow = true; }); group.add(person); continue;
+      }
       pylons.push({ mesh, h, y0: box.min.y, rise: o.rise || [0, 0] }); group.add(mesh);
     }
     scene.add(group);

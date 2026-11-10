@@ -16,8 +16,9 @@ PEOPLE = {
     'rise': {'only': ['people-maya-sit-type']},
     # Artist studio: Lin paints at the easel while the desk shows its tilt.
     'create': {'only': ['people-lin-stand-paint']},
-    # Humboldt commons: students at the tables, people crossing the hall.
-    'commons': {'only': ['people-leo-sit-write', 'people-zoe-sit-laptop', 'people-eli-sit-listen', 'people-zoe-walk', 'people-ben-white-cane', 'people-grace-cane-stand']},
+    # Humboldt commons: Rosa, who is of short stature, works standing at the desk; students at the tables, people
+    # crossing the hall.
+    'commons': {'only': ['people-rosa-stand-type-30', 'people-leo-sit-write', 'people-zoe-sit-laptop', 'people-eli-sit-listen', 'people-zoe-walk', 'people-ben-white-cane', 'people-grace-cane-stand']},
     # OCC media lab: the other stations are in use; the featured desk stays free for the over-the-keyboard shots.
     'coast': {'except': ['people-maya-sit-type', 'people-maya-sit-type-30', 'people-maya-stand-type']},
     # High school: the whole class, minus the seat the camera flies through.
@@ -32,6 +33,10 @@ PEOPLE = {
 }
 for shot in cut['shots']:
     if shot['id'] in PEOPLE: shot['people'] = PEOPLE[shot['id']]
+    # "It sees what's in its way": the thing in the way is a person, not a pylon. Grace stands with her walking
+    # stick where the pylon rose; the desk rolls toward her and stops.
+    if shot['id'] == 'awareness' and shot.get('obstacles'):
+        shot['obstacles'] = [dict(o, person='people-grace-cane-stand') if i == 0 else o for i, o in enumerate(shot['obstacles'])]
 cut['name'] = (cut.get('name') or 'Review cut') + ' · alternate (people)'
 json.dump(cut, open(out, 'w'), indent=1)
 print('alternate cut:', out, {s['id']: bool(s.get('people')) for s in cut['shots']})
