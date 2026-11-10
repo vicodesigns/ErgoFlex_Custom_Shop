@@ -553,7 +553,7 @@ export function mountDirector(bridge,catalog,initial){
     const id=shot().id,film=filmShot(),drop=p=>{for(const s of p.shots){if(s.id!==id)continue;const list=s.propEdits??(filmPropEdits(film).some(e=>keys.has(propKey(e)))?filmPropEdits(film):null);if(list)s.propEdits=list.filter(e=>!keys.has(propKey(e)));}};
     drop(project);for(const p of [...undo,...redo])drop(p);changed();render();
   }
-  const sceneProps=createScenePropEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneProps,lightsShowing:()=>sceneLights.showing(),fold:foldProps,person:o=>scenePeople.pickObject(o),
+  const sceneProps=createScenePropEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneProps,lightsShowing:()=>sceneLights.showing(),fold:foldProps,person:o=>scenePeople.pickObject(o),blocked:()=>!!scenePeople.posing(),
     onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();deskSel.deselect();renderTimeline();renderSceneProps();if(inspector!=='layers')reveal('prop');}});
   // People (scene-people-editor.mjs): the chapter's cast; click a person in the view, gizmo, People tab; per chapter only.
   function renderPeople(soft=false){

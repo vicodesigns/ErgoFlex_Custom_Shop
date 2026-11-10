@@ -7,7 +7,9 @@
 //               beside: [dx, dz],                            or near the film desk, in its frame
 //               at: [x, z], turn, y,                         or at a spot: room millimetres, degrees, lift in mm
 //               scale,                                       size factor (1 = as built)
-//               colors: { top, bottom, shoes, hair } } ],    '#rrggbb' for those parts of the model (absent: as built)
+//               colors: { top, bottom, shoes, hair },        '#rrggbb' for those parts of the model (absent: as built)
+//               pose: { '<bone>': [x, y, z, w] } } ],        pose fine tuning: that bone turned from the built pose (quaternion,
+//                                                            the bone's own frame; experience/pose-editor.mjs)
 //     when: { '<key>': [[t0, t1, fadeIn?, fadeOut?], ...] }, the seconds of the chapter that person is there (absent: all of it)
 //     chair: { back, side, turn }, fade                      as in the film's people filter
 //   }
@@ -19,6 +21,20 @@ const r1=v=>Math.round(v*10)/10,r3=v=>Math.round(v*1000)/1000;
 const KEY=/^[a-z0-9][a-z0-9_-]{0,47}$/i,MODEL=/^people-[a-z0-9][a-z0-9._-]{0,90}$/i,STATION=/^[a-z0-9][a-z0-9_-]{0,60}$/i;
 export const PARTS=['top','bottom','shoes','hair'];
 const pair=(v,max)=>Array.isArray(v)&&v.length===2&&v.every(n=>finite(n)&&Math.abs(n)<=max)?v.map(n=>Math.round(n)):undefined;
+// A pose: bone name -> unit quaternion (4 decimals); turns under a hundredth of a degree are dropped.
+const BONE=/^[A-Za-z][A-Za-z0-9_]{0,39}$/;
+export function cleanPose(v){
+  if(!v||typeof v!=='object'||Array.isArray(v))return null;
+  const out={};
+  for(const [name,q] of Object.entries(v).slice(0,80)){
+    if(!BONE.test(name)||!Array.isArray(q)||q.length!==4||!q.every(finite))continue;
+    const n=Math.hypot(...q);if(n<1e-6)continue;
+    const s=q[3]<0?-1/n:1/n,u=q.map(c=>Math.round(c*s*10000)/10000);
+    if(Math.hypot(u[0],u[1],u[2])<1e-4)continue;
+    out[name]=u;
+  }
+  return Object.keys(out).length?out:null;
+}
 export function cleanPerson(e){
   if(!e||typeof e!=='object'||typeof e.id!=='string'||!MODEL.test(e.id))return null;
   const key=typeof e.key==='string'&&KEY.test(e.key)?e.key:e.id.slice(0,48),out={key,id:e.id};
@@ -33,6 +49,7 @@ export function cleanPerson(e){
   if(finite(e.scale)&&e.scale>=.2&&e.scale<=3&&Math.abs(e.scale-1)>1e-3)out.scale=r3(e.scale);
   const colors={};for(const part of PARTS)if(typeof e.colors?.[part]==='string'&&/^#[0-9a-f]{6}$/i.test(e.colors[part]))colors[part]=e.colors[part].toLowerCase();
   if(Object.keys(colors).length)out.colors=colors;
+  const pose=cleanPose(e.pose);if(pose)out.pose=pose;
   return out;
 }
 export function cleanSpans(v,seconds=Infinity){

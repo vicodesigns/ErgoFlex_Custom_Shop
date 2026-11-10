@@ -12,7 +12,7 @@ import { buildInstitutionalRoom } from './institutional-room.mjs?v=people-vistas
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
 import { polishRoomProp } from './room-polish.mjs?v=table-clearance-20261021';
 import { RoomLife } from './room-life.mjs?v=commons-home-comfort-20261024';
-import { RoomPeople } from './room-people.mjs?v=room-people-20261110d';
+import { RoomPeople } from './room-people.mjs?v=room-people-20261110e';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
@@ -94,7 +94,7 @@ export const disposeWorkspaceObject = disposeTree;
 // geometry and materials, so they are never disposed with a room.
 const PROP_BASE = './assets/props/';
 export const PROP_LIBRARY = {
-    loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
+    loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(), rigs: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
             this.indexPromise = fetch(PROP_BASE + 'index.json?v=people-vistas-20261110').then(r => {
@@ -113,6 +113,21 @@ export const PROP_LIBRARY = {
             const entry = this.entry(id);
             const url = entry ? './' + entry.file + '?v=' + encodeURIComponent(entry.revision || 'prop-unit-scale-20261013') : `${PROP_BASE}${id}.glb?v=prop-unit-scale-20261013`;
             this.cache.set(id, new Promise((resolve, reject) => this.loader.load(url, gltf => {
+                // A model with a skeleton (the people: baked in their pose, which is the skeleton's rest pose) is used as
+                // plain meshes; the skinned original is kept for rigInstance() (the Director's pose fine-tuning).
+                let skinned = false; gltf.scene.traverse(obj => { if (obj.isSkinnedMesh) skinned = true; });
+                if (skinned) {
+                    const rig = gltf.scene, still = new THREE.Group(); still.name = rig.name; rig.updateMatrixWorld(true);
+                    rig.traverse(obj => {
+                        if (!obj.isMesh) return;
+                        obj.castShadow = true; obj.receiveShadow = true;
+                        const mesh = new THREE.Mesh(obj.geometry, obj.material); mesh.name = obj.name;
+                        // where the rest pose puts the vertices (a skinned mesh's own node is ignored; compressed positions are unpacked by the bind matrices)
+                        const bind = obj.isSkinnedMesh ? new THREE.Matrix4().multiplyMatrices(obj.skeleton.bones[0].matrixWorld, obj.skeleton.boneInverses[0]) : obj.matrixWorld;
+                        bind.decompose(mesh.position, mesh.quaternion, mesh.scale); still.add(mesh);
+                    });
+                    this.rigs.set(id, rig); gltf.scene = still;
+                }
                 gltf.scene.traverse(obj => {
                     if (!obj.isMesh) return;
                     obj.castShadow = true; obj.receiveShadow = true;
@@ -132,6 +147,16 @@ export const PROP_LIBRARY = {
             }, undefined, err => { this.cache.delete(id); this.failures.set(id, err); reject(err); })));
         }
         return this.cache.get(id);
+    },
+    // A fresh instance with its own skeleton (null for a model without one): bones by name under the returned root.
+    async rigInstance(id) {
+        const source = await this.load(id), rig = this.rigs.get(id); if (!rig) return null;
+        const { clone: skeletonClone } = await import('three/addons/utils/SkeletonUtils.js');
+        let clone = skeletonClone(rig); const factor = source.userData.propUnitCorrection;
+        if (factor) { const normalized = new THREE.Group(); clone.scale.multiplyScalar(factor); normalized.add(clone); normalized.userData.propUnitCorrection = factor; clone = normalized; }
+        clone.name = `Prop:${id}`; clone.userData.propId = id; clone.traverse(obj => { obj.userData.sharedProp = true; if (obj.isSkinnedMesh) obj.frustumCulled = false; });
+        clone.scale.setScalar(1000);
+        return clone;
     },
     // A fresh instance in millimetres, ready to be parented into a room.
     async instance(id) {

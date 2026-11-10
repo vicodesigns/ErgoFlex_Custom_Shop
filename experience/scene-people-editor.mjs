@@ -1,8 +1,10 @@
 import {cleanPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
+import {createPoseEditor} from './scene-pose-editor.mjs';
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
 // select them, then move / turn / scale them with the gizmo (W / E / T) or the fields, change who they are
 // (character) and what they are doing (posture), set the seconds they are in the room, duplicate or remove them, and
-// add people from the library. Edits go to the chapter's cut shot (shot.peopleEdits, people-edits.mjs) and reach the
+// add people from the library. Double-click a person (or Fine-tune pose) for pose mode: the joints of that person's
+// skeleton can be turned and the hands and feet dragged (scene-pose-editor.mjs). Edits go to the chapter's cut shot (shot.peopleEdits, people-edits.mjs) and reach the
 // live stage, Render still and the film as the chapter's `people` (room-people.mjs). The first edit copies the cast
 // the film shows into the chapter, so every person is then an entry of its own.
 // The models are posed library props (assets/props/people-*.glb, catalogued in assets/props/people.json: characters,
@@ -61,13 +63,22 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     let orbit=true;
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;}else{t.controls.enabled=orbit;endDrag();}});
     gizmo.addEventListener('objectChange',()=>{const e=sel&&entry(sel);if(e)status(`${mode==='translate'?'Moving':mode==='rotate'?'Turning':'Scaling'} ${personName(e)}…`);});
-    tools={THREE,group,box,gizmo,t};requestAnimationFrame(tick);return tools;
+    // Double-click a person: pose mode (the first click of the pair has selected them). Double-click elsewhere leaves it.
+    t.renderer.domElement.addEventListener('dblclick',ev=>{
+      if(!editing()||lightsShowing())return;const k=pose.personAt(ev);
+      if(k&&entry(k)){ev.preventDefault();ev.stopPropagation();if(sel!==k)select(k,{announce:false});pose.enter(k);}
+      else if(k){select(k);status('Their first change copies the film\'s cast into this chapter: move or change them once, then double-click to pose.');}
+      else if(pose.active())pose.exit();
+    },true);
+    tools={THREE,TransformControls,group,box,gizmo,t};requestAnimationFrame(tick);return tools;
   }
   const ensure=()=>booting||=boot().catch(error=>{booting=null;throw error;});
   const objectOf=key=>stagePeople()?.byKey?.(key)||null;
   const free=e=>!!e&&!e.desk&&!e.beside;
   function tick(){
     if(!tools)return;requestAnimationFrame(tick);
+    pose.tick();
+    if(pose.active()){tools.box.visible=false;if(tools.gizmo.object&&!tools.gizmo.dragging)tools.gizmo.detach();tools.gizmo.visible=tools.gizmo.enabled=false;return;}
     const {box,gizmo}=tools,e=sel&&entry(sel),o=e&&objectOf(sel),on=!!o&&o.visible&&editing()&&!lightsShowing();
     box.visible=on;if(on)box.setFromObject(o);
     const grab=on&&free(e)&&!busy;
@@ -93,14 +104,17 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const dir=ahead.sub(eye).normalize(),reach=dir.y<-.05?Math.min(6000,Math.max(1500,-eye.y/dir.y)):3000,p=eye.clone().addScaledVector(dir,reach);
     return {at:[Math.round(p.x),Math.round(p.z)],turn:r1(THREE.MathUtils.radToDeg(Math.atan2(eye.x-p.x,eye.z-p.z)))};
   }
+  // ---- pose mode (scene-pose-editor.mjs)
+  const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,rerender,personName:e=>e?personName(e):'',editing});
   // ---- selection
   function select(key,{announce=true}={}){
     const e=entry(key);if(!e){deselect();return;}
+    if(pose.active()&&pose.active()!==key)pose.exit();
     sel=key;onSelect();ensure().catch(error=>status(error.message,true));loadCatalog();
     if(announce)status(`${personName(e)} selected: ${free(e)?'W moves, E turns, T scales; Delete removes.':'they follow the desk. Choose “Free spot” in the People tab to move them by hand.'}`);
     rerender();
   }
-  function deselect(){if(!sel)return;sel=null;rerender();}
+  function deselect(){pose.exit();if(!sel)return;sel=null;rerender();}
   // A click in the view on a person's model (scene-prop-editor.mjs hands it over).
   function pickObject(o){const people=stagePeople();for(let p=o;p;p=p.parent)if(p.userData?.person){select(people.keyOf(p.userData.person));return true;}return false;}
   // ---- changes
@@ -110,8 +124,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     let id=modelFor(c,p,m?.deskHeight??null);
     if(!id){id=await build(wantedId(c,p));if(!id)return;}
     const info=catalog.poses[p],name=catalog.characters[c]?.name||cap(c);
+    if(p!==m?.pose)pose.exit();
     edit(key,x=>{
-      x.id=id;
+      x.id=id;if(p!==m?.pose)delete x.pose;      // fine tuning belongs to the posture it was made on
       if(info.desk){const role=info.stance==='seated'?'sit':info.stance==='wheelchair'?'wheel':'stand';if(!x.desk){x.desk=role;delete x.at;delete x.turn;delete x.y;delete x.beside;}else x.desk=role;}
       else if(x.desk){const o=objectOf(key),spot=o&&tools?read(o):floorSpot();delete x.desk;delete x.station;delete x.reach;x.at=spot.at;x.turn=spot.turn;}
     },`${name}: ${info.label.toLowerCase()}.`);
@@ -155,6 +170,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       'Timing updated.',{undoKey:'people-when-'+key});
   }
   async function changed(el){
+    if(pose.changed(el))return;
     const name=el.name,e=sel&&entry(sel),v=Number(el.value);
     if(name==='pe-sex'||name==='pe-age'||name==='pe-heritage'){filters[name.slice(3)]=el.value;rerender();return;}
     if(!e)return;
@@ -177,6 +193,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-fout'){const t=num(0,5);setSpan(sel,s=>{s[3]=t;});return;}
   }
   async function action(name,index){
+    if(pose.action(name,index))return;
+    if(name==='pe-pose-enter'){if(sel){await ensure();pose.enter(sel);}return;}
     if(name==='pe-add'){openLibrary();return;}
     if(name==='pe-row'){const key=rowKeys[index];if(key)select(key);return;}
     if(name==='pe-lane'){const key=laneKeys[index];if(key)select(key);return;}
@@ -200,7 +218,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       commit(()=>{delete shot().peopleEdits;},{render:false});sel=null;status('People reset: the chapter shows the film\'s cast again. Undo brings your cast back.');rerender();return;
     }
   }
-  function setMode(m){if(!MODES[m])return;mode=m;rerender();status(`People gizmo: ${MODES[m]}.`);}
+  function setMode(m){if(pose.active()){pose.setMode(m);return;}if(!MODES[m])return;mode=m;rerender();status(`People gizmo: ${MODES[m]}.`);}
   // ---- the library dialog
   const dialog=document.createElement('dialog');dialog.id='people-library';dialog.className='people-library';dialog.setAttribute('aria-labelledby','people-library-title');document.body.append(dialog);
   const chip=(group,value,label,n)=>`<button type="button" class="lamp-chip pl-chip" data-pe-filter="${group}" data-pe-value="${escape(value)}" aria-pressed="${lib[group]===value}">${escape(label)}${n===undefined?'':` <small>${n}</small>`}</button>`;
@@ -241,6 +259,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const poses=STANCES.map(st=>[st,Object.entries(catalog.poses).filter(([,x])=>x.stance===st)]).filter(([,l])=>l.length);
     const built=id=>!!(m&&modelFor(m.character,id));
     const here=!o?'Loading the model…':o.visible?'':s&&!isFree?'':s?`Not in the room at ${r1(time())} s.`:isFree?'':'Not showing now: a desk posture shows only while the desk is at the height it was built for.';
+    const head=`<div class="people-head"><img src="${thumb(e.id)}" alt=""><div><strong>${escape(c?.name||personName(e))}</strong><small>${escape(c?[c.sex,c.age,c.height?Math.round(c.height*(e.scale||1))+' cm':''].filter(Boolean).join(' · '):e.id)}</small><small>${escape(doing(e))}${m?.aids?.length?' · '+escape(m.aids.join(', ')):''}</small></div></div>`;
+    if(pose.active()===e.key)return pose.panel(head);
+    const tuned=Object.keys(e.pose||{}).length;
     return `<section class="people-selected" data-reveal="person">
       <div class="people-head"><img src="${thumb(e.id)}" alt=""><div><strong>${escape(c?.name||personName(e))}</strong><small>${escape(c?[c.sex,c.age,c.height?Math.round(c.height*(e.scale||1))+' cm':''].filter(Boolean).join(' · '):e.id)}</small><small>${escape(doing(e))}${m?.aids?.length?' · '+escape(m.aids.join(', ')):''}</small></div></div>
       ${busy?`<p class="director-hint people-busy">Building ${escape(busy.replace(/^people-/,''))}…</p>`:''}${here?`<p class="director-hint">${escape(here.trim())}</p>`:''}
@@ -249,6 +270,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <div class="people-chars" role="listbox" aria-label="Character">${chars.map(([id,x],i)=>`<button type="button" data-action="pe-char" data-index="${i}" role="option" aria-selected="${id===m?.character}" title="${escape(`${x.name}: ${x.sex}, ${x.age}, ${x.heritage}, ${x.height} cm`)}${m&&!modelFor(id,m.pose)?' (this posture is built on request)':''}"><img src="${face_(id)}" alt="" loading="lazy"><span>${escape(x.name)}</span></button>`).join('')||'<p class="director-hint">Nobody matches these filters.</p>'}</div>
       <h4>Posture</h4>
       <select name="pe-pose" aria-label="Posture">${poses.map(([st,list])=>`<optgroup label="${cap(st)}">${list.map(([id,x])=>`<option value="${id}" ${id===p?.id?'selected':''}>${escape(x.label)}${x.desk?' · at the desk':''}${built(id)?'':' · built on request'}</option>`).join('')}</optgroup>`).join('')}</select>
+      <div class="director-actions"><button type="button" data-action="pe-pose-enter" title="Turn joints and drag hands and feet to get the posture just right (or double-click the person in the view)">Fine-tune pose…</button><span class="director-hint people-tuned">${tuned?`${tuned} joint${tuned===1?'':'s'} adjusted`:'or double-click them in the view'}</span></div>
       <h4>Place</h4>
       ${select_('pe-anchor',isFree?'free':'desk',[['free','Free spot (move by hand)'],['desk',e.station?'At a desk in the room':'At the film desk (follows it)']])}
       ${isFree?`<div class="director-row people-fields">${field('X',`pe-x`,e.at[0],{step:10,unit:'mm'})}${field('Z','pe-z',e.at[1],{step:10,unit:'mm'})}${field('Turn','pe-turn',e.turn||0,{step:5,min:-360,max:360,unit:'°'})}${field('Lift','pe-y',e.y||0,{step:5,unit:'mm',title:'Raises a seated person onto a seat, or anyone onto a step'})}</div>
@@ -280,8 +302,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     return list.map((e,i)=>(spans(e.key)||[[0,T]]).map(([a,b])=>{const x=Math.max(0,a)/T*100,w=Math.max(.6,(Math.min(b,T)-Math.max(0,a))/T*100);
       return `<button type="button" class="people-bar ${e.key===sel?'selected':''}" data-action="pe-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${1+i*(36/list.length)}px;height:${h}px" title="${escape(personName(e))}: ${escape(doing(e))} · ${escape(spanText(spans(e.key),T))}">${h>=10?escape(personName(e)):''}</button>`;}).join('')).join('');
   }
-  const header=()=>{const e=sel&&entry(sel);return e?{name:personName(e),detail:doing(e)}:null;};
+  const header=()=>{const e=sel&&entry(sel);return e?{name:personName(e),detail:pose.active()===sel?'Pose mode'+(pose.joint()?' · '+pose.jointLabel():''):doing(e)}:null;};
   // After the film setup is (re)applied or the cut changes: the selection may be gone.
-  function applied(){if(sel&&!entry(sel))sel=null;}
-  return {panel,lane,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove,applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
+  function applied(){if(sel&&!entry(sel)){pose.exit();sel=null;}ensure().catch(()=>null);}
+  return {panel,lane,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){pose.resetJoint();return;}remove(k);},posing:()=>pose.active(),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
 }

@@ -20,6 +20,9 @@
 //   { id, at: [x, z], turn, y }                       at a spot (y mm lifts a seated pose onto a seat that is not a prop)
 //   scale: n                                          a factor on the model's size (any placement; 1 = as built)
 //   colors: { top, bottom, shoes, hair: '#rrggbb' }   recolours those parts of the model (the fabric's shading is kept)
+//   pose: { '<bone>': [x, y, z, w] }                  fine tuning: turns that bone of the model's skeleton from the pose it
+//                                                     was built in (a quaternion in the bone's own frame; the Director's
+//                                                     pose mode writes these). Only such a person is drawn skinned.
 //   seat: mm                                          the seat height the pose was built for; the person is raised or
 //                                                     lowered (a little) onto the real seat
 //   layout: '<layout id>'                             only in that room layout;  modes: [...] only in those dayparts
@@ -131,7 +134,7 @@ const DEFAULT_CREW = {
 };
 const castFor = (id, layout) => { const own = (ROOM_PEOPLE[id] || []).filter(s => !s.layout || s.layout === layout); return own.length ? own : DEFAULT_CREW[id] ? crew(DEFAULT_CREW[id]) : []; };
 
-const down = new THREE.Vector3(0, -1, 0);
+const down = new THREE.Vector3(0, -1, 0), poseTurn = new THREE.Quaternion();
 const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 
 export class RoomPeople {
@@ -154,6 +157,35 @@ export class RoomPeople {
         const cast = JSON.stringify((filter?.cast || []).map(c => [c.key || c.id, c.id, c.desk || '', c.station || ''])) + JSON.stringify(Object.keys(filter?.when || {}));
         if (this.built && cast !== this.castKey) this.dispose();
         this.castKey = cast; this.filter = filter || null; this.placed = false;
+        // someone already in the room who now has a pose gets their skeleton before anyone waiting on `built` goes on
+        if (this.built && (filter?.cast || []).some(c => c.pose)) this.built = this.built.then(() => this.rigPosed());
+    }
+    posed(spec) { return !!spec.pose && Object.keys(spec.pose).length > 0; }
+    async rigPosed() {
+        await Promise.all(this.people.map(object => { const now = this.current(object); return now && this.posed(now) && !object.userData.personRig ? this.rig(object) : null; }));
+    }
+    // The placement the filter has now for an extra person (it may have been edited since the model was built).
+    current(object) { const spec = object.userData.person; return spec.extra ? (this.filter?.cast || []).find(c => this.keyOf(c) === this.keyOf(spec)) || null : null; }
+    // The same person with a skeleton, in the same place (the Director's pose mode, a placement with `pose`).
+    rig(object) {
+        if (object.userData.personRig) return Promise.resolve(object);
+        return object.userData.personRigging ||= (async () => {
+            const spec = object.userData.person, rigged = await this.library.rigInstance?.(spec.id).catch(() => null), at = this.people.indexOf(object);
+            if (!rigged || at < 0) { delete object.userData.personRigging; return object; }
+            const bones = new Map(), rest = new Map(); rigged.traverse(o => { if (o.isBone) { bones.set(o.name, o); rest.set(o.name, o.quaternion.clone()); } });
+            rigged.name = object.name; rigged.position.copy(object.position); rigged.rotation.copy(object.rotation); rigged.visible = object.visible;
+            for (const k of ['person', 'personFit', 'personChair', 'personChairBase', 'personMissing', 'personAmount']) if (object.userData[k] !== undefined) rigged.userData[k] = object.userData[k];
+            rigged.userData.personRig = { bones, rest };
+            if (object.userData.personMaterials) { for (const m of object.userData.personMaterials) m.dispose(); this.ownMaterials(rigged); }
+            object.parent?.add(rigged); object.removeFromParent(); this.people[at] = rigged;
+            const now = this.current(rigged) || spec; this.resize(rigged, now); this.recolor(rigged, now); this.pose(rigged, now);
+            return rigged;
+        })();
+    }
+    // spec.pose on the skeleton: every bone at the pose the model was built in, turned by its entry.
+    pose(object, spec) {
+        const rig = object.userData.personRig; if (!rig) return;
+        for (const [name, bone] of rig.bones) { const d = spec.pose?.[name]; bone.quaternion.copy(rig.rest.get(name)); if (Array.isArray(d) && d.length === 4) bone.quaternion.multiply(poseTurn.fromArray(d)).normalize(); }
     }
     // The size a placement asks for, on top of the size the model was loaded at.
     resize(object, spec) {
@@ -187,7 +219,7 @@ export class RoomPeople {
     list() {
         return this.people.map(o => { const s = o.userData.person; return { key: this.keyOf(s), id: s.id, extra: !!s.extra, desk: s.desk || null, station: s.station || null,
             at: [Math.round(o.position.x), Math.round(o.position.z)], y: Math.round(o.position.y), turn: Math.round(THREE.MathUtils.radToDeg(o.rotation.y) * 10) / 10, scale: s.scale || 1,
-            allowed: this.allowed(s), missing: !!o.userData.personMissing, visible: o.visible, amount: o.userData.personAmount ?? 1 }; });
+            allowed: this.allowed(s), missing: !!o.userData.personMissing, visible: o.visible, amount: o.userData.personAmount ?? 1, rigged: !!o.userData.personRig }; });
     }
     // The cast as plain placements a film can keep: desk and station people as they are (they follow their desk),
     // everyone else at the spot and facing they have settled into (`on`, `by`, `near` resolved).
@@ -199,6 +231,7 @@ export class RoomPeople {
             else { out.at = [Math.round(o.position.x), Math.round(o.position.z)]; out.turn = Math.round(THREE.MathUtils.radToDeg(o.rotation.y) * 10) / 10; if (Math.abs(o.position.y) > .5) out.y = Math.round(o.position.y); }
             if (s.scale && s.scale !== 1) out.scale = s.scale;
             if (s.colors) out.colors = { ...s.colors };
+            if (s.pose) out.pose = structuredClone(s.pose);
             return out;
         });
     }
@@ -228,6 +261,7 @@ export class RoomPeople {
         await room.ready; await this.library.loadIndex();
         const load = async id => { try { return await this.library.instance(id); } catch (error) { console.warn('[people] ' + id + ' did not load:', error?.message || error); return null; } };
         const loaded = await Promise.all(specs.map(async spec => ({ spec, object: await load(spec.id), chair: spec.desk === 'sit' ? await load(TASK_CHAIR) : null })));
+        const posed = [];
         if (token !== room.token || root !== room.root) return;
         for (const { spec, object, chair } of loaded) {
             if (!object) continue;
@@ -235,9 +269,11 @@ export class RoomPeople {
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
             if ((spec.desk && !spec.station) || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
             root.add(object); this.people.push(object); this.resize(object, spec); this.recolor(object, spec);
+            if (this.posed(spec)) posed.push(object);
             if (spec.station) this.atStation(object, spec);
             else if (!spec.desk && !spec.beside) this.settle(object, spec);
         }
+        await Promise.all(posed.map(object => this.rig(object)));
     }
     // The featured desk's people fade with the desk height, so they need materials of their own (textures stay shared).
     ownMaterials(object) {
@@ -319,6 +355,7 @@ export class RoomPeople {
                 const now = object.userData.person.extra && (this.filter?.cast || []).find(c => this.keyOf(c) === this.keyOf(object.userData.person));
                 if (now) {
                     const spec = object.userData.person = { ...now, extra: true }; object.userData.personMissing = false; this.resize(object, spec); this.recolor(object, spec);
+                    if (object.userData.personRig) this.pose(object, spec); else if (this.posed(spec)) this.rig(object);
                     if (spec.station) this.atStation(object, spec); else if (!spec.desk && !spec.beside) this.settle(object, spec);
                 }
                 const spot = this.filter?.place?.[this.keyOf(object.userData.person)] || this.filter?.place?.[object.userData.person.id]; if (!spot) continue;

@@ -1,4 +1,7 @@
-"""Build one posed person as a static GLB (run inside Blender 4.2 with MPFB installed).
+"""Build one posed person as a GLB with its skeleton (run inside Blender 4.2 with MPFB installed).
+
+The mesh is baked in the pose and the pose is made the skeleton's rest pose: untouched, the skeleton changes nothing
+(the Studio and the film show the model as a plain mesh); the Director's pose mode turns its bones for fine tuning.
 
     BLENDER_USER_RESOURCES=~/blender/mpfb-user blender -b --python tools/people/build_people.py -- <output id> <out dir> [--preview png]
 
@@ -131,7 +134,14 @@ if who.get('limbs'):
     pose = dict(pose, limbs=who['limbs'])
     if 'pelvis' not in pose: off = pose.get('pelvis_offset', (0, 0, 0)); pose['pelvis_offset'] = (off[0], off[1], off[2] - drop)
 pose_lib.apply_pose(rig, pose)
-extras = held.build(rig, [(kind, dict(kw)) for kind, kw in spec.get('held', [])])
+# What each held thing follows when the Director fine-tunes the pose (the wheelchair stays where it is).
+HELD_BONE = {'gamepad': 'hand_r', 'backpack': 'spine_03', 'headphones': 'head', 'wheelchair': None, 'prosthesis': 'calf_{side}'}
+extras, extra_bone = [], {}
+for kind, kw in spec.get('held', []):
+    made = held.BUILDERS[kind](rig, **dict(kw)); extras += made
+    for o in made: extra_bone[o.name] = (HELD_BONE[kind] if kind in HELD_BONE else 'hand_{side}')
+    for o in made:
+        if extra_bone[o.name]: extra_bone[o.name] = extra_bone[o.name].format(side=kw.get('side', 'r'))
 
 # ---- bake to one static mesh -------------------------------------------------------------------
 dg = bpy.context.evaluated_depsgraph_get(); baked = []
@@ -139,7 +149,18 @@ for o in meshes:
     me = bpy.data.meshes.new_from_object(o.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)
     if not len(me.polygons): continue
     b = bpy.data.objects.new(o.name + '.baked', me); b.matrix_world = o.matrix_world.copy(); bpy.context.scene.collection.objects.link(b); baked.append(b)
-for o in meshes + [rig]: bpy.data.objects.remove(o)
+for o in meshes: bpy.data.objects.remove(o)
+# The pose becomes the rest pose, and the skeleton gets one bone that never moves (for what stands on the floor).
+for o in bpy.context.selected_objects: o.select_set(False)
+rig.select_set(True); bpy.context.view_layer.objects.active = rig
+bpy.ops.object.mode_set(mode='POSE'); bpy.ops.pose.armature_apply(selected=False)
+bpy.ops.object.mode_set(mode='EDIT')
+still = rig.data.edit_bones.new('still'); still.head = (0, 0, 0); still.tail = (0, 0, .1)
+bpy.ops.object.mode_set(mode='OBJECT'); rig.select_set(False)
+for o in extras:
+    if o.type != 'MESH': continue
+    for g in list(o.vertex_groups): o.vertex_groups.remove(g)
+    o.vertex_groups.new(name=extra_bone.get(o.name) or 'still').add(range(len(o.data.vertices)), 1., 'REPLACE')
 baked += extras
 
 # Skin under clothing pokes through once the body is posed. Any body face with cloth just outside it goes.
@@ -174,7 +195,7 @@ for c in cloth:
     c.data.calc_loop_triangles(); n = len(c.data.loop_triangles)
     if n > 14000:
         mod = c.modifiers.new('Budget', 'DECIMATE'); mod.ratio = 14000 / n
-        me = bpy.data.meshes.new_from_object(c.evaluated_get(bpy.context.evaluated_depsgraph_get())); c.modifiers.clear(); old = c.data; c.data = me; bpy.data.meshes.remove(old)
+        dg2 = bpy.context.evaluated_depsgraph_get(); me = bpy.data.meshes.new_from_object(c.evaluated_get(dg2), preserve_all_data_layers=True, depsgraph=dg2); c.modifiers.clear(); old = c.data; c.data = me; bpy.data.meshes.remove(old)
 trees = [tree_of(c) for c in cloth]
 cull_under(body, trees, .035)
 # A garment can push further out through the one over it than skin does (a trouser yoke through the back of a shirt).
@@ -183,11 +204,18 @@ bpy.ops.object.select_all(action='DESELECT')
 for b in baked: b.select_set(True)
 bpy.context.view_layer.objects.active = baked[0]; bpy.ops.object.join(); person = bpy.context.object; person.name = OUT_ID
 bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-for g in list(person.vertex_groups): person.vertex_groups.remove(g)
+bone_names = {b.name for b in rig.data.bones}
+for g in list(person.vertex_groups):
+    if g.name not in bone_names: person.vertex_groups.remove(g)
+loose = [v.index for v in person.data.vertices if not v.groups]
+if loose: (person.vertex_groups.get('still') or person.vertex_groups.new(name='still')).add(loose, 1., 'REPLACE')
 bpy.ops.object.shade_smooth()
 # Feet on the floor: the lowest point of the model sits at Z = 0.
 low = min((person.matrix_world @ v.co).z for v in person.data.vertices)
-if spec.get('ground', True): person.location.z -= low; bpy.ops.object.transform_apply(location=True)
+if spec.get('ground', True): person.location.z -= low; rig.location.z -= low
+rig.select_set(True); bpy.ops.object.transform_apply(location=True, rotation=True, scale=True); rig.select_set(False)
+person.parent = rig; person.matrix_parent_inverse.identity()
+person.modifiers.new('Skeleton', 'ARMATURE').object = rig
 
 person.data.calc_loop_triangles()
 co = np.array([v.co[:] for v in person.data.vertices])
@@ -195,12 +223,14 @@ result = {'id': OUT_ID, 'ok': True, 'tris': len(person.data.loop_triangles),
           # glTF axes (Y up): x = x, y = z, z = -y; millimetres.
           'min': [round(float(co[:, 0].min()) * 1000, 1), round(float(co[:, 2].min()) * 1000, 1), round(float(-co[:, 1].max()) * 1000, 1)],
           'max': [round(float(co[:, 0].max()) * 1000, 1), round(float(co[:, 2].max()) * 1000, 1), round(float(-co[:, 1].min()) * 1000, 1)],
-          'alpha': {m.name: m.get('alpha', 'OPAQUE') for m in person.data.materials}}
+          'alpha': {m.name: m.get('alpha', 'OPAQUE') for m in person.data.materials}, 'bones': len(rig.data.bones), 'loose': len(loose)}
 result['size'] = [round(result['max'][i] - result['min'][i], 1) for i in range(3)]
 
 os.makedirs(OUT_DIR, exist_ok=True)
+rig.select_set(True); person.select_set(True)
 bpy.ops.export_scene.gltf(filepath=os.path.join(OUT_DIR, OUT_ID + '.glb'), export_format='GLB', use_selection=True, export_apply=True,
-                          export_yup=True, export_materials='EXPORT', export_image_format='AUTO', export_animations=False, export_skins=False, export_morph=False)
+                          export_yup=True, export_materials='EXPORT', export_image_format='AUTO', export_animations=False, export_skins=True, export_morph=False,
+                          export_def_bones=False, export_rest_position_armature=True)
 print('RESULT ' + json.dumps(result))
 
 if PREVIEW:

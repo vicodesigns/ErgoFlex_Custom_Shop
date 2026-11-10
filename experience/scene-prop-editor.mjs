@@ -19,7 +19,7 @@ const r3=v=>Math.round(v*1000)/1000,r1=v=>Math.round(v*10)/10;
 const wrapDeg=d=>{d=((d+180)%360+360)%360-180;return Math.abs(d)<1e-6?0:d;};
 const MODES={translate:'Move',rotate:'Rotate',scale:'Scale'},VERB={translate:'Moved',rotate:'Rotated',scale:'Scaled'};
 const STATE_KEY='ergoflex.sceneAssets.v1';
-export function createScenePropEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},lightsShowing=()=>false,fold=()=>{},person=()=>false}){
+export function createScenePropEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},lightsShowing=()=>false,fold=()=>{},person=()=>false,blocked=()=>false}){
   let sel=null,others=[],lockedKeys=()=>new Set(),itemsCache=null,itemsAt=0,flash=null,pivotAt=0,pivotDirty=true,mode='translate',tools=null,booting=null,drag=null,snapping=false,pending=null,dialogPlan=null,placing=false;
   const snaps=new Map(),frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow;
   const three=()=>bridge.stage()?.three?.();
@@ -221,7 +221,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const raycaster=new THREE.Raycaster(),dom=t.renderer.domElement;let down=null;
     dom.addEventListener('pointerdown',ev=>{down=ev.button===0&&(placing||!gizmo.dragging&&!gizmo.axis)?{x:ev.clientX,y:ev.clientY,alt:ev.altKey}:null;},true);
     dom.addEventListener('pointerup',ev=>{
-      const d=down;down=null;if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||gizmo.dragging||w.__directorDragging||lightsShowing()||!editing())return;
+      const d=down;down=null;if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||gizmo.dragging||w.__directorDragging||lightsShowing()||!editing()||blocked())return;
       const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
       if(placing){const now=current(),e=sel&&editOfKey(sel.key);placing=false;
         if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point);else{status('Nothing there to put it on.',true);rerender();}return;}}

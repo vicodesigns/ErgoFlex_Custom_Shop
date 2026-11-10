@@ -381,6 +381,9 @@ def clean_people(v):
         if num(e.get('scale')) and .2 <= e['scale'] <= 3 and abs(e['scale'] - 1) > 1e-3: out['scale'] = round(e['scale'], 3)
         colors = {k: v.lower() for k, v in (e.get('colors') or {}).items() if k in ('top', 'bottom', 'shoes', 'hair') and isinstance(v, str) and re.fullmatch(r'#[0-9a-fA-F]{6}', v)} if isinstance(e.get('colors'), dict) else {}
         if colors: out['colors'] = colors
+        # pose fine tuning (experience/people-edits.mjs cleanPose): bone -> quaternion, as the Director cleaned it
+        pose = {k: [round(float(x), 4) for x in q] for k, q in (e.get('pose') or {}).items() if re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,39}', k) and isinstance(q, list) and len(q) == 4 and all(num(x) and abs(x) <= 1.0001 for x in q)} if isinstance(e.get('pose'), dict) else {}
+        if pose: out['pose'] = dict(list(pose.items())[:80])
         seen.add(key); cast.append(out)
     res = {'cast': cast}; when = {}
     for key, spans in (v.get('when') or {}).items() if isinstance(v.get('when'), dict) else []:

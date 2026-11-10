@@ -34285,8 +34285,8 @@
     1285.5,
     579.5
    ],
-   "tris": 37688,
-   "bytes": 934080,
+   "tris": 37630,
+   "bytes": 998972,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -34319,8 +34319,8 @@
     1644.5,
     453.4
    ],
-   "tris": 37666,
-   "bytes": 931664,
+   "tris": 37610,
+   "bytes": 996372,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -35487,8 +35487,8 @@
     1285.5,
     579.5
    ],
-   "tris": 37688,
-   "bytes": 934084,
+   "tris": 37630,
+   "bytes": 999028,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -35521,8 +35521,8 @@
     1628.4,
     286
    ],
-   "tris": 36946,
-   "bytes": 931236,
+   "tris": 36886,
+   "bytes": 997004,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -35993,7 +35993,7 @@
     210.5
    ],
    "tris": 37124,
-   "bytes": 929320,
+   "bytes": 994424,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,

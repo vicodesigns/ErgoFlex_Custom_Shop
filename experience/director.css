@@ -565,3 +565,12 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .people-lane{position:relative;overflow:hidden}
 .people-bar{position:absolute;min-height:0;min-width:0;padding:0 4px;border-radius:4px;border:1px solid #ff9bd2aa;background:#ff9bd240;color:#ffe3f3;font-size:9px;line-height:1;text-align:left;white-space:nowrap;overflow:hidden;cursor:pointer}
 .people-bar.selected{background:#ff9bd2;color:#1a0a14;border-color:#fff}
+/* Pose mode (scene-pose-editor.mjs) */
+.people-pose-bar{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid #ffb44a66;border-radius:9px;background:#1d1608}
+.people-pose-bar strong{font-size:12.5px;color:#ffd9a0}.people-pose-bar span{flex:1;font-size:10.5px;color:#9fb7c6}
+.people-pose-bar button{min-height:26px;padding:2px 12px}
+.people-pose .pose-fk{color:#7fd7ff}.people-pose .pose-ik{color:#ffb44a}
+.people-pose .pose-angles{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pose-grip{display:grid;grid-template-columns:auto 1fr 1fr;gap:5px 6px;align-items:center;font-size:11px;color:#9fb7c6}
+.pose-grip button{min-height:26px}
+.people-tuned{align-self:center;margin:0}
