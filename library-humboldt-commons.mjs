@@ -14,7 +14,7 @@ import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-202
 // open front at +14000), y up. Prop turn θ faces (sin θ, 0, cos θ).
 const W = 18000, D = 21000, H = 7200, BACK = -D / 3, FRONT = BACK + D;
 const SOFFIT = 3600, CAFE_SOFFIT = 3000, SOFFIT_X = 4800, CAFE_Z = 11600, BAND_Z = 5000;
-const DESK = [8240, -1850];
+const DESK = [7350, -1850];
 // The high ceiling slopes from 4800 at the back wall to 7200 at z 5000, then runs flat.
 const SLOPE_Z = 5000, slopeY = z => z < SLOPE_Z ? 4800 + (z - BACK) / (SLOPE_Z - BACK) * 2400 : H, SLOPE = Math.atan2(2400, SLOPE_Z - BACK);
 const rnd = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
