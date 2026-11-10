@@ -118,6 +118,19 @@ const WINDOWS = {
   gym: { path: 'daylight and entry wall', materialType: 'Basic', minArea: 3 },
   highschool: { path: 'Daylight window', materialType: 'Standard', minArea: 10 }
 };
+// A room whose window is a photographed vista (window-vista.mjs) takes `vista: { brightness, soften, zoom, horizon }`
+// on its @window edit: brightness multiplies the daypart grade, the others replace the vista's own values. The
+// painted-backdrop keys of the same edit (material.brightness, mapBlur) were tuned for the canvas and are skipped.
+function vistaEdit(edit, undo) {
+  const panes = []; sceneRoot().traverse(o => { if (o.isMesh && o.userData.windowVista && o.material?.uniforms?.gain) panes.push(o); });
+  if (!panes.length) return false;
+  for (const pane of panes) {
+    const u = pane.material.uniforms, v = edit.vista || {};
+    if (v.brightness !== undefined) { const before = u.gain.value.clone(); u.gain.value.multiplyScalar(Number(v.brightness)); undo.push(() => u.gain.value.copy(before)); }
+    for (const [key, name] of [['soften', 'soften'], ['zoom', 'zoom'], ['horizon', 'horizon']]) if (v[key] !== undefined) { const before = u[name].value; u[name].value = Number(v[key]); undo.push(() => { u[name].value = before; }); }
+  }
+  return true;
+}
 // ---------- added props (sceneEdits[].add) ----------
 // Studio's prop library, the very module the app imported (same URL, so the same PROP_LIBRARY and GLB cache).
 let library = null;
@@ -180,6 +193,7 @@ export function installEdits(shot) {
   };
   for (const [n, edit] of (shot.sceneEdits || []).entries()) {
     if (edit?.add) { installAdd(edit, n, undo); continue; }
+    if (edit?.match === '@window' && vistaEdit(edit, undo)) continue;
     const found = targets(edit);
     if (!found.length) { console.warn(`[film-fx] sceneEdits[${n}] matched nothing: ${edit.match}`); continue; }
     edit.__count = found.length;

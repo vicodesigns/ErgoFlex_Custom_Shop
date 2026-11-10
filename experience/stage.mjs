@@ -170,6 +170,8 @@ export async function mountStage(ctx) {
     ctx.pose(next.kind==='tilt'?43.5:30,0);
     if(next.room==='product')ctx.resetProductOrigin(preset+':'+(next.size||'60x30'));
     api.workspaceRoom?.setCeilingEnabled(false);
+    // People in the room (room-people.mjs): shot.people is true, or { only: [ids], except: [ids] }. Off unless the shot asks.
+    await api.setRoomPeople?.(!!next.people,next.people&&typeof next.people==='object'?next.people:null);
     if(next.mode)api.setMeasuredRoomMode(next.room,next.mode,false);
     if(['music','media'].includes(next.kind))api.setMeasuredRoomMode(next.room,'night',false);
     ctx.controls.enabled=false;api.haltAllMotion();
