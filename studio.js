@@ -7,7 +7,7 @@ import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=commons-group-work-20261016';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=commons-home-comfort-20261024';
 import { poseIsClear, grooveDestination } from './room-groove.mjs?v=humboldt-commons-20261015';
-import { SceneDesks } from './scene-desks.mjs?v=item-gumball-clipboard-20261016';
+import { SceneDesks } from './scene-desks.mjs?v=drop-flat-align-20261110';
 import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=item-gumball-clipboard-20261016';
 import { loadLibraryArtworkRecovery, libraryArtworkRecovery, repairLibraryArtwork } from './library-artwork-link.mjs?v=humboldt-decals-stow-20261016';
 import { applyCollegeProductArtwork } from './college-product-artwork.mjs';
@@ -6616,9 +6616,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='Delete'||e.key==='Backspace')) {
             if(deleteSelectedWorkspaceItem())e.preventDefault();
         } else if (!e.ctrlKey&&!e.metaKey&&e.key==='ArrowDown') {
-            // Down Arrow drops; Shift+Down levels then drops; Alt+Down tilts to the surface then drops (room furnishings).
+            // Down Arrow drops; Shift+Down levels then drops; Alt+Down tilts to the surface then drops (room furnishings and desk objects).
             const dropMode=e.altKey?'align':e.shiftKey?'flat':'drop';
-            if(dropMode==='drop'?(sceneDesks?.objects.dropToSurface()||roomInteractions?.dropSelected()):roomInteractions?.dropSelected(dropMode))e.preventDefault();
+            if(sceneDesks?.objects.dropToSurface(dropMode)||roomInteractions?.dropSelected(dropMode))e.preventDefault();
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
             e.preventDefault();
             if (e.shiftKey) performRedo(); else performUndo();
