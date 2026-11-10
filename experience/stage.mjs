@@ -228,6 +228,7 @@ export async function mountStage(ctx) {
     if(kind==='wellness'&&!shot.motion)ctx.pose(28+15.5*ease((t-.25)/.45),0);
     if(shot.motion){const p=shot.motion.clips?sampleClipMotion(shot.motion,t*shot.seconds):sampleDeskTracks(shot.motion.tracks,t);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);}
     if(deskChoreo.count())deskChoreo.apply(t*shot.seconds);
+    if(shot.people)api.setRoomPeopleTime?.(t*shot.seconds);
     if(kind==='media'&&media){const now=performance.now(),updated=media.update(now);if(updated&&now-lastMediaColour>=100){lastMediaColour=now;try{const p=media.ctx2d.getImageData(Math.floor(media.canvas.width/2),Math.floor(media.canvas.height/2),1,1).data;api.setLedColor('#'+[p[0],p[1],p[2]].map(v=>Math.max(25,v).toString(16).padStart(2,'0')).join(''),false);}catch{}}}
     cam(t);
   }

@@ -587,7 +587,7 @@ let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'prod
 let ceilingPreviewEnabled = new URLSearchParams(location.search).get('ceiling') === 'on' || readStore('ergoflex.ceilingPreview', 1, null)?.enabled === true;
 // People living and working in the room (room-people.mjs). Off by default: the models load on first use.
 let roomPeopleEnabled = new URLSearchParams(location.search).get('people') === 'on' || readStore('ergoflex.roomPeople', 1, null)?.enabled === true;
-let roomPeopleMode = null, roomPeopleFilter = null;
+let roomPeopleMode = null, roomPeopleFilter = null, roomPeopleTime = null;   // time: seconds into a film chapter (the stage sets it), else null
 let roomBounceEnabled = readStore('ergoflex.roomBounce', 1, null)?.enabled !== false;
 let sceneDesks=null,sceneDeskUI=null,sceneDeskInternal=false;
 let roomInteractions = null, roomFurnitureSaveTimer = null, roomCollisionBlocked = false;
@@ -4295,7 +4295,7 @@ function loadModel() {
         applyAccessoryVisibility();
         if (!workspaceRoom) {
             workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
-            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard() });
+            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard(), time: roomPeopleTime });
         }
         // Startup already chose the room's desktop. Rebuilding the model must
         // retain any explicit size selected since then.
@@ -10783,7 +10783,7 @@ function syncRoomPeople() {
 }
 // filter (film only): { only: [ids], except: [ids] }; not stored.
 function setRoomPeople(on, filter = null) {
-    roomPeopleEnabled = !!on; roomPeopleFilter = filter;
+    roomPeopleEnabled = !!on; roomPeopleFilter = filter; roomPeopleTime = null;
     if (!window.__ERGO_PRESENTATION__) writeStore('ergoflex.roomPeople', { v: 1, enabled: roomPeopleEnabled });
     return syncRoomPeople();
 }
@@ -12303,7 +12303,7 @@ window.ErgoFlex = {
     resetSceneDeskStyle,
     get sceneDeskStyles() { return JSON.parse(JSON.stringify(sceneDeskStyles)); },
     get measuredRoom() { return measuredRoomProfile(); },
-    setRoomPeople, get roomPeople() { return roomPeopleEnabled; },
+    setRoomPeople, get roomPeople() { return roomPeopleEnabled; }, setRoomPeopleTime(seconds) { roomPeopleTime = Number.isFinite(seconds) ? seconds : null; },
     setRoomScene,
     setHomeMode,
     get homeMode() { return homeMode; },
