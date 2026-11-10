@@ -31,7 +31,7 @@ const REACH = { sit: 945, wheel: 935, stand: 890 };
 const HEIGHT_FIT = 1.4;                       // inches either side of the height a desk pose was built for
 const HEIGHT_SOLID = .45;                     // within this the person is fully there; beyond it they fade out to HEIGHT_FIT
 const TASK_CHAIR = 'steelcase-leap-v2';       // seat 435 mm: what the seated desk poses were built on
-const CHAIRS = /chair|stool/i;
+const CHAIRS = /chair|stool|steelcase-leap|aeron/i;
 
 export const ROOM_PEOPLE = {
     home: [
