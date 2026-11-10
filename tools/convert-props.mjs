@@ -98,6 +98,17 @@ if(conferenceProps.length){
     if(res.status!==0)throw new Error(`Conference chair import failed\n${res.stderr}`);
     process.stdout.write(res.stdout);conferenceProps.forEach(p=>directConverted.add(p.id));
 }
+// Posed people are built by tools/people/build.py (Blender + MPFB, not on every machine): a full
+// conversion keeps their existing models and index entries; `--only <people id>` rebuilds them.
+const peopleProps = selected.filter(prop => prop.converter === 'people-generator');
+if (peopleProps.length) {
+    if (only) {
+        const res = run(PYTHON, [join(root, 'tools/people/build.py'), ...peopleProps.map(p => p.id)], 'People');
+        if (res.status !== 0) throw new Error(`People build failed\n${res.stdout}\n${res.stderr}`);
+        process.stdout.write(res.stdout);
+    }
+    peopleProps.forEach(p => directConverted.add(p.id));
+}
 const packProps = selected.filter(prop => prop.converter === 'gltf-pack');
 if (packProps.length) {
     const res = run(process.execPath, [join(root, 'tools/props/import-packs.mjs'), '--only', packProps.map(prop => prop.id).join(',')], 'glTF packs');
