@@ -34262,6 +34262,699 @@
    "license": "user-provided",
    "revision": "headphone-aluminum-20261103",
    "headphoneHook": true
+  },
+  {
+   "id": "people-maya-sit-type",
+   "name": "Maya, typing at the desk (seated)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-sit-type.glb",
+   "anchor": "floor",
+   "size": [
+    416.8,
+    1228.5,
+    700.6
+   ],
+   "min": [
+    -208.4,
+    0,
+    -137.3
+   ],
+   "max": [
+    208.4,
+    1228.5,
+    563.3
+   ],
+   "tris": 37646,
+   "bytes": 933760,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "sit-type"
+   }
+  },
+  {
+   "id": "people-maya-stand-type",
+   "name": "Maya, typing at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-stand-type.glb",
+   "anchor": "floor",
+   "size": [
+    488.2,
+    1506.5,
+    559.5
+   ],
+   "min": [
+    -244.1,
+    0,
+    -116.6
+   ],
+   "max": [
+    244.1,
+    1506.5,
+    442.9
+   ],
+   "tris": 37572,
+   "bytes": 931356,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "stand-type"
+   }
+  },
+  {
+   "id": "people-andre-sit-type",
+   "name": "Andre, typing at the desk (seated)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-sit-type.glb",
+   "anchor": "floor",
+   "size": [
+    564.2,
+    1347.9,
+    731.1
+   ],
+   "min": [
+    -282.4,
+    0,
+    -125.6
+   ],
+   "max": [
+    281.8,
+    1347.9,
+    605.5
+   ],
+   "tris": 35002,
+   "bytes": 796164,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "sit-type"
+   }
+  },
+  {
+   "id": "people-andre-stand-type",
+   "name": "Andre, typing at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-type.glb",
+   "anchor": "floor",
+   "size": [
+    578.8,
+    1804.6,
+    638.5
+   ],
+   "min": [
+    -289.7,
+    0,
+    -155.8
+   ],
+   "max": [
+    289.1,
+    1804.6,
+    482.7
+   ],
+   "tris": 34844,
+   "bytes": 792868,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-type"
+   }
+  },
+  {
+   "id": "people-andre-stand-phone",
+   "name": "Andre, with the desk app on his phone",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-phone.glb",
+   "anchor": "floor",
+   "size": [
+    587.9,
+    1795.6,
+    455
+   ],
+   "min": [
+    -291,
+    0,
+    -139.8
+   ],
+   "max": [
+    296.9,
+    1795.6,
+    315.2
+   ],
+   "tris": 34314,
+   "bytes": 793276,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-phone"
+   }
+  },
+  {
+   "id": "people-grace-sit-read",
+   "name": "Grace, reading in an armchair",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-grace-sit-read.glb",
+   "anchor": "floor",
+   "size": [
+    537.7,
+    1295.7,
+    838.8
+   ],
+   "min": [
+    -247.5,
+    0,
+    -150.2
+   ],
+   "max": [
+    290.2,
+    1295.7,
+    688.6
+   ],
+   "tris": 49459,
+   "bytes": 1217736,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "grace",
+    "pose": "sit-read"
+   }
+  },
+  {
+   "id": "people-kai-sit-write",
+   "name": "Kai, writing at a table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-kai-sit-write.glb",
+   "anchor": "floor",
+   "size": [
+    579.2,
+    1125.7,
+    574.7
+   ],
+   "min": [
+    -261.8,
+    0,
+    -105.2
+   ],
+   "max": [
+    317.4,
+    1125.7,
+    469.5
+   ],
+   "tris": 34334,
+   "bytes": 815408,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "kai",
+    "pose": "sit-write"
+   }
+  },
+  {
+   "id": "people-zoe-sit-laptop",
+   "name": "Zoe, at a laptop",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-sit-laptop.glb",
+   "anchor": "floor",
+   "size": [
+    425.2,
+    1212.8,
+    629.7
+   ],
+   "min": [
+    -212.6,
+    0,
+    -113.1
+   ],
+   "max": [
+    212.6,
+    1212.8,
+    516.6
+   ],
+   "tris": 33672,
+   "bytes": 1033668,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "sit-laptop"
+   }
+  },
+  {
+   "id": "people-zoe-walk",
+   "name": "Zoe, walking with a backpack",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-walk.glb",
+   "anchor": "floor",
+   "size": [
+    455.4,
+    1465.8,
+    755.4
+   ],
+   "min": [
+    -235,
+    0,
+    -315.8
+   ],
+   "max": [
+    220.4,
+    1465.8,
+    439.6
+   ],
+   "tris": 33762,
+   "bytes": 1034876,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "walk"
+   }
+  },
+  {
+   "id": "people-hale-stand-present",
+   "name": "Mr Hale, presenting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-hale-stand-present.glb",
+   "anchor": "floor",
+   "size": [
+    1025.9,
+    1754.7,
+    633.4
+   ],
+   "min": [
+    -709.6,
+    0,
+    -133.1
+   ],
+   "max": [
+    316.3,
+    1754.7,
+    500.3
+   ],
+   "tris": 34646,
+   "bytes": 1323616,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "hale",
+    "pose": "stand-present"
+   }
+  },
+  {
+   "id": "people-omar-wheel-type",
+   "name": "Omar, typing at the desk (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-omar-wheel-type.glb",
+   "anchor": "floor",
+   "size": [
+    640,
+    1373.4,
+    981.4
+   ],
+   "min": [
+    -320,
+    0,
+    -370
+   ],
+   "max": [
+    320,
+    1373.4,
+    611.4
+   ],
+   "tris": 40376,
+   "bytes": 771276,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "omar",
+    "pose": "wheel-type"
+   }
+  },
+  {
+   "id": "people-omar-wheel-roll",
+   "name": "Omar, rolling (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-omar-wheel-roll.glb",
+   "anchor": "floor",
+   "size": [
+    727.8,
+    1358.2,
+    975.9
+   ],
+   "min": [
+    -363.9,
+    0,
+    -370
+   ],
+   "max": [
+    363.9,
+    1358.2,
+    605.9
+   ],
+   "tris": 40382,
+   "bytes": 771292,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "omar",
+    "pose": "wheel-roll"
+   }
+  },
+  {
+   "id": "people-lin-stand-paint",
+   "name": "Lin, painting at an easel",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-stand-paint.glb",
+   "anchor": "floor",
+   "size": [
+    655.6,
+    1495.1,
+    793
+   ],
+   "min": [
+    -258.2,
+    0,
+    -141.5
+   ],
+   "max": [
+    397.4,
+    1495.1,
+    651.5
+   ],
+   "tris": 49700,
+   "bytes": 906652,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "stand-paint"
+   }
+  },
+  {
+   "id": "people-sam-sit-game",
+   "name": "Sam, gaming at the desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-sit-game.glb",
+   "anchor": "floor",
+   "size": [
+    524,
+    1347.2,
+    725.7
+   ],
+   "min": [
+    -262.2,
+    0,
+    -125.6
+   ],
+   "max": [
+    261.8,
+    1347.2,
+    600.1
+   ],
+   "tris": 34128,
+   "bytes": 873664,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "sit-type"
+   }
+  },
+  {
+   "id": "people-sam-stand-type",
+   "name": "Sam, at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-stand-type.glb",
+   "anchor": "floor",
+   "size": [
+    540.6,
+    1739.8,
+    605.7
+   ],
+   "min": [
+    -270.6,
+    0,
+    -133.3
+   ],
+   "max": [
+    270,
+    1739.8,
+    472.4
+   ],
+   "tris": 33504,
+   "bytes": 866676,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "stand-type"
+   }
+  },
+  {
+   "id": "people-kai-sit-controller",
+   "name": "Kai, on the sofa with a controller",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-kai-sit-controller.glb",
+   "anchor": "floor",
+   "size": [
+    525.2,
+    1128,
+    685.3
+   ],
+   "min": [
+    -262.6,
+    0,
+    -106.4
+   ],
+   "max": [
+    262.6,
+    1128,
+    578.9
+   ],
+   "tris": 34424,
+   "bytes": 815324,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "kai",
+    "pose": "sit-controller"
+   }
+  },
+  {
+   "id": "people-priya-stretch",
+   "name": "Priya, stretching",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-priya-stretch.glb",
+   "anchor": "floor",
+   "size": [
+    425.8,
+    1797.7,
+    308.2
+   ],
+   "min": [
+    -191.8,
+    0,
+    -142.8
+   ],
+   "max": [
+    234,
+    1797.7,
+    165.4
+   ],
+   "tris": 37006,
+   "bytes": 715120,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "priya",
+    "pose": "stretch"
+   }
+  },
+  {
+   "id": "people-jo-stand-work",
+   "name": "Jo, working at the bench",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jo-stand-work.glb",
+   "anchor": "floor",
+   "size": [
+    527.8,
+    1619.8,
+    678.4
+   ],
+   "min": [
+    -259.1,
+    0,
+    -159.2
+   ],
+   "max": [
+    268.7,
+    1619.8,
+    519.2
+   ],
+   "tris": 42180,
+   "bytes": 888996,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jo",
+    "pose": "stand-work"
+   }
+  },
+  {
+   "id": "people-grace-cane-stand",
+   "name": "Grace, standing with a walking stick",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-grace-cane-stand.glb",
+   "anchor": "floor",
+   "size": [
+    572.3,
+    1543.9,
+    398.3
+   ],
+   "min": [
+    -320.6,
+    0,
+    -100.7
+   ],
+   "max": [
+    251.7,
+    1543.9,
+    297.6
+   ],
+   "tris": 48669,
+   "bytes": 1211704,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "grace",
+    "pose": "cane-stand"
+   }
+  },
+  {
+   "id": "people-ben-white-cane",
+   "name": "Ben, walking with a white cane",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ben-white-cane.glb",
+   "anchor": "floor",
+   "size": [
+    549.6,
+    1767.8,
+    1098.2
+   ],
+   "min": [
+    -259.3,
+    0,
+    -294.1
+   ],
+   "max": [
+    290.3,
+    1767.8,
+    804.1
+   ],
+   "tris": 38760,
+   "bytes": 1083728,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ben",
+    "pose": "white-cane"
+   }
+  },
+  {
+   "id": "people-rosa-stand-type-low",
+   "name": "Rosa, at the desk on its lowest setting (standing)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-rosa-stand-type-low.glb",
+   "anchor": "floor",
+   "size": [
+    413.8,
+    1218,
+    494.5
+   ],
+   "min": [
+    -206.8,
+    0,
+    -109.2
+   ],
+   "max": [
+    207,
+    1218,
+    385.3
+   ],
+   "tris": 48387,
+   "bytes": 898136,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "rosa",
+    "pose": "stand-type-low"
+   }
   }
  ],
  "screens": [

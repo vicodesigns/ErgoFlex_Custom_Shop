@@ -23,13 +23,14 @@ ENV = dict(os.environ, BLENDER_USER_RESOURCES=os.environ.get('BLENDER_USER_RESOU
 args = sys.argv[1:]
 jobs = int(args[args.index('--jobs') + 1]) if '--jobs' in args else 4
 keep = '--keep' in args
-only = [a for i, a in enumerate(args) if not a.startswith('--') and (i == 0 or args[i - 1] != '--jobs')]
+preview = args[args.index('--preview') + 1] if '--preview' in args else None   # folder for two Cycles views per person
+only = [a for i, a in enumerate(args) if not a.startswith('--') and (i == 0 or args[i - 1] not in ('--jobs', '--preview'))]
 outputs = [o for o in cast.OUTPUTS if not only or o['id'] in only]
 work = os.path.join(tempfile.gettempdir(), 'ergoflex-people'); os.makedirs(work, exist_ok=True)
 
 
 def blender(o):
-    r = subprocess.run([BLENDER, '-b', '--python-exit-code', '1', '--python', os.path.join(HERE, 'build_people.py'), '--', o['id'], work],
+    r = subprocess.run([BLENDER, '-b', '--python-exit-code', '1', '--python', os.path.join(HERE, 'build_people.py'), '--', o['id'], work] + (['--preview', os.path.join(preview, o['id'])] if preview else []),
                        capture_output=True, text=True, env=ENV)
     line = next((l for l in r.stdout.splitlines() if l.startswith('RESULT ')), None)
     if r.returncode or not line: return o, None, (r.stdout[-1500:] + r.stderr[-1500:])

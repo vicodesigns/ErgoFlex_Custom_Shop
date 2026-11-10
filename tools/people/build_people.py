@@ -12,7 +12,7 @@ from mathutils import Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import cast, pose_lib  # noqa: E402
+import cast, pose_lib, held  # noqa: E402
 
 argv = sys.argv[sys.argv.index('--') + 1:]
 OUT_ID, OUT_DIR = argv[0], argv[1]
@@ -99,9 +99,39 @@ for o in meshes:
                     ins = [l.from_node for i in node.inputs for l in i.links]; node = next((n for n in ins if n.type == 'TEX_IMAGE'), ins[0] if ins else None)
                 if node and node.image: node.image = tint_image(node.image, tint)
 
+# ---- knee-length shorts: a pair of trousers loses everything that follows the calves and feet ---------
+for o in meshes:
+    kind = o.name.split('.', 1)[-1]
+    if kind not in who.get('crop', []): continue
+    groups = {g.index: g.name for g in o.vertex_groups}; lower = {'calf_l', 'calf_r', 'foot_l', 'foot_r', 'ball_l', 'ball_r'}
+    gone = [v.index for v in o.data.vertices if sum(g.weight for g in v.groups if groups.get(g.group) in lower) > .5]
+    vg = o.vertex_groups.new(name='cropped'); vg.add(gone, 1., 'REPLACE')
+    mod = o.modifiers.new('Cropped', 'MASK'); mod.vertex_group = 'cropped'; mod.invert_vertex_group = True
+
+# ---- limb difference: the lower leg below the knee is removed; held.prosthesis() replaces it ----------
+amputee = who.get('prosthesis')
+if amputee:
+    groups = {g.index: g.name for g in base.vertex_groups}; lower = {f'calf_{amputee}', f'foot_{amputee}', f'ball_{amputee}'}
+    gone = [v.index for v in base.data.vertices if sum(g.weight for g in v.groups if groups.get(g.group) in lower) > .55]
+    vg = base.vertex_groups.new(name='amputated'); vg.add(gone, 1., 'REPLACE')
+    mod = base.modifiers.new('Amputated', 'MASK'); mod.vertex_group = 'amputated'; mod.invert_vertex_group = True
+
 # ---- pose ------------------------------------------------------------------------------------------
 bpy.context.view_layer.objects.active = rig
-pose_lib.apply_pose(rig, cast.POSES[spec['pose']])
+pose = cast.POSES[spec['pose']]
+if callable(pose):
+    # Free-standing poses are written for a 1.70 m person and scale with the character.
+    k = (rig.matrix_world @ rig.data.bones['head'].head_local).z / 1.47
+    if who.get('limbs'):
+        k -= sum(rig.data.bones[b].length for b in ('thigh_l', 'calf_l')) * (1 - who['limbs'][0]) / 1.47
+    pose = pose(k)
+if who.get('limbs'):
+    # Shorter legs: the pelvis comes down by what the thigh and calf lose.
+    drop = sum(rig.data.bones[b].length for b in ('thigh_l', 'calf_l')) * (1 - who['limbs'][0])
+    pose = dict(pose, limbs=who['limbs'])
+    if 'pelvis' not in pose: off = pose.get('pelvis_offset', (0, 0, 0)); pose['pelvis_offset'] = (off[0], off[1], off[2] - drop)
+pose_lib.apply_pose(rig, pose)
+extras = held.build(rig, [(kind, dict(kw)) for kind, kw in spec.get('held', [])])
 
 # ---- bake to one static mesh -------------------------------------------------------------------
 dg = bpy.context.evaluated_depsgraph_get(); baked = []
@@ -110,22 +140,43 @@ for o in meshes:
     if not len(me.polygons): continue
     b = bpy.data.objects.new(o.name + '.baked', me); b.matrix_world = o.matrix_world.copy(); bpy.context.scene.collection.objects.link(b); baked.append(b)
 for o in meshes + [rig]: bpy.data.objects.remove(o)
+baked += extras
 
 # Skin under clothing pokes through once the body is posed. Any body face with cloth just outside it goes.
 from mathutils.bvhtree import BVHTree  # noqa: E402
 import bmesh  # noqa: E402
 body = next(b for b in baked if b.name == base_name + '.baked')
-cloth = [b for b in baked if b is not body and not any(k in b.name.lower() for k in ('low-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses')) and not (who.get('hair') and who['hair'] in b.name)]
-trees = []
+SMALL = ('low-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses')
+cloth = [b for b in baked if b is not body and b not in extras and not any(k in b.name.lower() for k in SMALL) and not (who.get('hair') and who['hair'] in b.name)]
+# Outer garments first, in the order the character lists them: each layer loses the faces a layer above it covers.
+order = {name: i for i, name in enumerate(who['clothes'])}
+cloth.sort(key=lambda b: order.get(b.name.split('.', 1)[-1].replace('.baked', ''), 99))
+
+
+def tree_of(o):
+    bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); t = BVHTree.FromBMesh(bm); bm.free(); return t
+
+
+def cull_under(o, trees, reach):
+    if not trees: return
+    bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); bm.normal_update()
+    # Covered: a layer above lies just outside the face, or the face has pushed out through that layer.
+    def hidden(f):
+        c = f.calc_center_median()
+        return any(t.ray_cast(c + f.normal * .0005, f.normal, reach)[0] is not None or t.ray_cast(c - f.normal * .0005, -f.normal, .018)[0] is not None for t in trees)
+    covered = [f for f in bm.faces if hidden(f)]
+    bmesh.ops.delete(bm, geom=covered, context='FACES'); bm.transform(o.matrix_world.inverted()); bm.to_mesh(o.data); bm.free()
+
+
+# Heavy garments (knitwear, long skirts) come down to a budget; the silhouette survives it.
 for c in cloth:
-    bm = bmesh.new(); bm.from_mesh(c.data); bm.transform(c.matrix_world); trees.append(BVHTree.FromBMesh(bm)); bm.free()
-bm = bmesh.new(); bm.from_mesh(body.data); bm.transform(body.matrix_world); bm.normal_update()
-covered = []
-for f in bm.faces:
-    c = f.calc_center_median(); n = f.normal
-    if any(t.ray_cast(c + n * .0005, n, .035)[0] is not None for t in trees): covered.append(f)
-bmesh.ops.delete(bm, geom=covered, context='FACES')
-bm.transform(body.matrix_world.inverted()); bm.to_mesh(body.data); bm.free()
+    c.data.calc_loop_triangles(); n = len(c.data.loop_triangles)
+    if n > 14000:
+        mod = c.modifiers.new('Budget', 'DECIMATE'); mod.ratio = 14000 / n
+        me = bpy.data.meshes.new_from_object(c.evaluated_get(bpy.context.evaluated_depsgraph_get())); c.modifiers.clear(); old = c.data; c.data = me; bpy.data.meshes.remove(old)
+trees = [tree_of(c) for c in cloth]
+cull_under(body, trees, .035)
+for i, c in enumerate(cloth[1:], 1): cull_under(c, trees[:i], .025)
 bpy.ops.object.select_all(action='DESELECT')
 for b in baked: b.select_set(True)
 bpy.context.view_layer.objects.active = baked[0]; bpy.ops.object.join(); person = bpy.context.object; person.name = OUT_ID

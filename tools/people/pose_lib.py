@@ -134,12 +134,19 @@ def apply_pose(rig, pose):
     bpy.context.view_layer.objects.active = rig
     for b in rig.pose.bones:
         b.rotation_mode = 'QUATERNION'; b.location = (0, 0, 0); b.rotation_quaternion = (1, 0, 0, 0); b.scale = (1, 1, 1)
+    # Short limbs (short stature): the long bones shrink along their length only; hands and feet keep their size.
+    limbs = pose.get('limbs')
+    if limbs:
+        for side in ('l', 'r'):
+            for name, child in (('thigh', 'calf'), ('calf', 'foot'), ('upperarm', 'lowerarm'), ('lowerarm', 'hand')):
+                rig.data.bones[f'{child}_{side}'].inherit_scale = 'NONE'
+                rig.pose.bones[f'{name}_{side}'].scale = (1, limbs[0] if name in ('thigh', 'calf') else limbs[1], 1)
     _update()
     X, Y, Z = (1, 0, 0), (0, 1, 0), (0, 0, 1)
 
     # Pelvis: position, then yaw / pitch / roll about its head.
     world = bone_world(rig, 'pelvis'); rest_head = world.translation.copy()
-    at = Vector(pose.get('pelvis', rest_head))
+    at = Vector(pose.get('pelvis', rest_head)) + Vector(pose.get('pelvis_offset', (0, 0, 0)))
     set_bone_world(rig, 'pelvis', Matrix.Translation(at - rest_head) @ world)
     rotate_world(rig, 'pelvis', Z, pose.get('pelvis_yaw', 0))
     rotate_world(rig, 'pelvis', X, pose.get('pelvis_pitch', 0))   # a positive turn about X tips the top toward -Y (forward)
