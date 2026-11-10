@@ -35667,6 +35667,176 @@
     "pose": "stand-type-low",
     "deskHeight": 30
    }
+  },
+  {
+   "id": "people-lin-stand-type",
+   "name": "Lin, typing at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-stand-type.glb",
+   "anchor": "floor",
+   "size": [
+    483.6,
+    1489.7,
+    550.4
+   ],
+   "min": [
+    -241.8,
+    0,
+    -109.3
+   ],
+   "max": [
+    241.8,
+    1489.7,
+    441.1
+   ],
+   "tris": 49323,
+   "bytes": 894408,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "stand-type",
+    "deskHeight": 43.5
+   }
+  },
+  {
+   "id": "people-noah-sit-type-30",
+   "name": "Noah, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-sit-type-30.glb",
+   "anchor": "floor",
+   "size": [
+    498.1,
+    1300.4,
+    711.1
+   ],
+   "min": [
+    -249.2,
+    0,
+    -121
+   ],
+   "max": [
+    248.9,
+    1300.4,
+    590.1
+   ],
+   "tris": 33692,
+   "bytes": 1136328,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "sit-type",
+    "deskHeight": 30
+   }
+  },
+  {
+   "id": "people-noah-stand-type",
+   "name": "Noah, typing at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-type.glb",
+   "anchor": "floor",
+   "size": [
+    516.6,
+    1657.1,
+    612.2
+   ],
+   "min": [
+    -258.6,
+    0,
+    -149.3
+   ],
+   "max": [
+    258,
+    1657.1,
+    462.9
+   ],
+   "tris": 33524,
+   "bytes": 1132924,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-type",
+    "deskHeight": 43.5
+   }
+  },
+  {
+   "id": "people-mia-sit-type-30",
+   "name": "Mia, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-sit-type-30.glb",
+   "anchor": "floor",
+   "size": [
+    404.2,
+    1176,
+    680.4
+   ],
+   "min": [
+    -202.1,
+    0,
+    -130.1
+   ],
+   "max": [
+    202.1,
+    1176,
+    550.3
+   ],
+   "tris": 34686,
+   "bytes": 1326424,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "sit-type",
+    "deskHeight": 30
+   }
+  },
+  {
+   "id": "people-mia-stand-type",
+   "name": "Mia, typing at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-stand-type.glb",
+   "anchor": "floor",
+   "size": [
+    490.4,
+    1400.9,
+    549.1
+   ],
+   "min": [
+    -245.2,
+    0,
+    -113.6
+   ],
+   "max": [
+    245.2,
+    1400.9,
+    435.5
+   ],
+   "tris": 34636,
+   "bytes": 1324576,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "stand-type",
+    "deskHeight": 43.5
+   }
   }
  ],
  "screens": [

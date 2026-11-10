@@ -15,7 +15,10 @@
 `room-people.mjs` → `ROOM_PEOPLE`. Home, gaming, music studio, artist studio, gym, workshop, high school, OCC media lab
 and the Humboldt commons have casts. The high school and the media lab seat a wheelchair user at their accessible desk;
 the commons has a short-statured user standing at the desk's lowest setting, a white-cane user and a walking-stick user;
-one gamer has a below-knee prosthesis. Other rooms show no People control until they get a cast.
+one gamer has a below-knee prosthesis. Every other adult room (office, co-working, bedroom, lounge, kitchen, study,
+gallery, classic library, sci-fi and the remaining institutional rooms) gets one desk user who sits or stands with the
+desk (`DEFAULT_CREW`). The children's rooms (child room, kindergarten, elementary) have no cast yet: the models are
+adults and teenagers.
 
 ## The film
 
@@ -50,6 +53,9 @@ switch to a photograph taken after dark. The painted canvas stays as the fallbac
 | Workshop | yard |
 | High school, OCC media lab | coast |
 | Kindergarten, elementary | garden |
+| Office, co-working, lounge, gallery | city (dusk skyline after dark) |
+| Bedroom, kitchen | garden |
+| Study | campus |
 | Other institutional rooms | campus or city |
 
 In the film, a chapter's `@window` edit takes `vista: { brightness, soften, zoom, horizon }`. The older
@@ -57,5 +63,7 @@ In the film, a chapter's `@window` edit takes `vista: { brightness, soften, zoom
 
 ## Not done yet
 
-Office, co-working, bedroom, lounge, kitchen, study, gallery, child rooms and the classic library still have painted
-window views and no cast.
+- The child rooms and the classic library still have painted window views; the children's rooms have no cast.
+- The film's alternate cut adds people and the new windows only; its cameras and chapter timing are Vico's.
+- The opening chapter cannot be rendered on the desk machine: its screen clip (`hq14/screens/01-main.mp4`) only exists
+  on the render PC.

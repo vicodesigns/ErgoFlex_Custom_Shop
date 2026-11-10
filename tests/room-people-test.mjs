@@ -15,6 +15,12 @@ for (const [room, specs] of Object.entries(ROOM_PEOPLE)) for (const spec of spec
     if (spec.desk) assert.ok(Number.isFinite(entry.person?.deskHeight), spec.id + ' records the desk height its pose fits');
 }
 
+{   // Rooms without their own cast get a desk user; children's rooms get nobody.
+    const cast = id => new RoomPeople({ id, roomLayout: { id: 'house' } }, null).specs();
+    assert.deepEqual(cast('office').map(s => s.desk), ['sit', 'sit', 'stand']);
+    for (const spec of cast('office')) assert.ok(entries.get(spec.id)?.person?.deskHeight, spec.id + ' is built');
+    assert.deepEqual(cast('childroom'), []); assert.deepEqual(cast('kindergarten'), []); assert.deepEqual(cast('product'), []);
+}
 const library = {
     loadIndex: async () => index, entry: id => entries.get(id) || null,
     instance: async id => { const g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.BoxGeometry(.4, 1.2, .4), new THREE.MeshStandardMaterial())); g.scale.setScalar(1000); g.userData.propId = id; return g; }

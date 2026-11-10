@@ -93,6 +93,22 @@ export const ROOM_PEOPLE = {
     ]
 };
 
+// Rooms without a cast of their own still get someone at the featured desk, seated or standing with its height.
+// Children's rooms are left out: these are adults and teenagers, and those desks are set for children.
+const DESK_CREW = {
+    maya: ['people-maya-sit-type', 'people-maya-sit-type-30', 'people-maya-stand-type'],
+    andre: ['people-andre-sit-type', 'people-andre-sit-type-30', 'people-andre-stand-type'],
+    lin: ['people-lin-sit-type', 'people-lin-sit-type-30', 'people-lin-stand-type'],
+    noah: ['people-noah-sit-type', 'people-noah-sit-type-30', 'people-noah-stand-type'],
+    mia: ['people-mia-sit-type', 'people-mia-sit-type-30', 'people-mia-stand-type']
+};
+const crew = who => DESK_CREW[who].map(id => ({ id, desk: /stand/.test(id) ? 'stand' : 'sit' }));
+const DEFAULT_CREW = {
+    office: 'andre', coworking: 'lin', bedroom: 'mia', lounge: 'noah', kitchen: 'maya', study: 'noah', gallery: 'lin', library: 'mia', scifi: 'andre',
+    middleschool: 'mia', college: 'noah', university: 'lin', hospital: 'lin', laboratory: 'andre', mobileit: 'noah', government: 'andre', police: 'maya', security: 'andre'
+};
+const castFor = (id, layout) => { const own = (ROOM_PEOPLE[id] || []).filter(s => !s.layout || s.layout === layout); return own.length ? own : DEFAULT_CREW[id] ? crew(DEFAULT_CREW[id]) : []; };
+
 const down = new THREE.Vector3(0, -1, 0);
 const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 
@@ -101,7 +117,7 @@ export class RoomPeople {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
         this.ray = new THREE.Raycaster();
     }
-    specs() { const layout = this.room.roomLayout?.id; return (ROOM_PEOPLE[this.room.id] || []).filter(s => !s.layout || s.layout === layout); }
+    specs() { return castFor(this.room.id, this.room.roomLayout?.id); }
     // filter: { only: [ids], except: [ids], place: { '<id>': { at: [x, z], turn } } } narrows who is shown and moves
     // people for one use (the film leaves out people a chapter's desk moves would break, and clears its camera path).
     setFilter(filter) { this.filter = filter || null; this.placed = false; }
