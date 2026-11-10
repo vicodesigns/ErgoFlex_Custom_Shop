@@ -7,7 +7,7 @@ import { atelierSceneDecor, bindDeskDecor, applyDeskDecorLighting } from './atel
 import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from './campus-scene-furniture.mjs?v=campus-furniture-20261014';
 import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atelier-scene-beds.mjs?v=atelier-beds-20261014';
 import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=gallery-bedroom-20261025';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=hbhs-product-classroom-20261014';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=label-fix-20261110';
 import { buildInstitutionalRoom } from './institutional-room.mjs?v=people-vistas-20261110';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
 import { polishRoomProp } from './room-polish.mjs?v=table-clearance-20261021';

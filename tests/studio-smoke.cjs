@@ -278,8 +278,12 @@ function ErgoFlexDeviceMatches(size, id) {
         left: read('Desktop_1 LED wing outer reflection'),
         right: read('Desktop_2 LED wing outer reflection'),
         saved: ErgoFlex.serializeProject().presentation.ledSurfaces,
-        controlsFit: document.querySelector('#leds-content').scrollHeight <
-          parseFloat(getComputedStyle(document.querySelector('#leds-content')).maxHeight),
+        // The portal theme lets an expanded section grow (max-height: none); the older stylesheet caps it. Either way
+        // nothing may be clipped: the content fits inside the box it is drawn in.
+        controlsFit: (() => {
+          const el = document.querySelector('#leds-content'), cap = parseFloat(getComputedStyle(el).maxHeight);
+          return Number.isFinite(cap) ? el.scrollHeight < cap : el.scrollHeight <= el.clientHeight + 1;
+        })(),
         controlCount: document.querySelectorAll('#leds-content [data-led-surface]').length
       };
     });
@@ -1024,11 +1028,11 @@ function ErgoFlexDeviceMatches(size, id) {
       const held = ErgoFlex.deskYaw;
       await new Promise(r => setTimeout(r, 400));
       out.driftAfterRelease = ErgoFlex.deskYaw - held;
-      // under the threshold, and inside the dish, must both leave the yaw alone
+      // under the threshold (the ring reads a twist as more than 3 degrees; 2 keeps clear of float rounding at exactly 3), and inside the dish, must both leave the yaw alone
       const before = ErgoFlex.deskYaw;
-      ev('pointerdown', at(0, 0.85)); ev('pointermove', at(3, 0.85));
+      ev('pointerdown', at(0, 0.85)); ev('pointermove', at(2, 0.85));
       out.belowThreshold = ErgoFlex.yawCommand;
-      ev('pointerup', at(3, 0.85));
+      ev('pointerup', at(2, 0.85));
       ev('pointerdown', at(0, 0.2));
       out.insideDish = ErgoFlex.yawCommand;
       ev('pointerup', at(0, 0.2));
