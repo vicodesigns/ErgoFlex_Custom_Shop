@@ -158,6 +158,13 @@ def stand_phone(k):
             'foot_l': {'at': _s(k, .10, .0, .07 / k), 'toes': (.3, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .04, .07 / k), 'toes': (-.35, -1, 0)}}
 
 
+def stand_wait(k):
+    """Standing where the desk user stands, arms loose, eyes on the desktop: on their feet while the desk moves."""
+    return {'spine': (1, 2, 2), 'neck': 7, 'head': 8, 'head_yaw': -4,
+            'hand_l': _hang(k, 'l', -.03), 'hand_r': _hang(k, 'r', -.06),
+            'foot_l': {'at': (.11, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.12, .06, .07), 'toes': (-.3, -1, 0)}}
+
+
 def stand_present(k):
     """Facing the room, right arm out toward the board, tablet on the left forearm."""
     return {'spine': (0, 1, 1), 'spine_twist': -10, 'neck': 0, 'head': -2, 'head_yaw': 12,
@@ -333,6 +340,7 @@ POSES = {
         'foot_l': {'at': (.12, -.4, .075), 'toes': (.2, -1, 0)}, 'foot_r': {'at': (-.12, -.36, .075), 'toes': (-.2, -1, 0)},
     },
     'stand-phone': stand_phone,
+    'stand-wait': stand_wait,
     'stand-present': stand_present,
     'walk': walk,
 }
@@ -344,6 +352,7 @@ OUTPUTS = [
     {'id': 'people-maya-stretch', 'character': 'maya', 'pose': 'stretch-open', 'name': 'Maya, stretching at her desk'},
     {'id': 'people-maya-stand-phone', 'character': 'maya', 'pose': 'stand-phone', 'name': 'Maya, with the desk app on her phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-maya-stand-type', 'character': 'maya', 'pose': 'stand-type', 'height': 43.5, 'name': 'Maya, typing at the desk (standing)'},
+    {'id': 'people-maya-stand-wait', 'character': 'maya', 'pose': 'stand-wait', 'name': 'Maya, on her feet while the desk moves'},
     {'id': 'people-andre-sit-type', 'character': 'andre', 'pose': 'sit-type', 'height': 28, 'name': 'Andre, typing at the desk (seated)'},
     {'id': 'people-andre-sit-type-30', 'character': 'andre', 'pose': 'sit-type', 'height': 30, 'name': 'Andre, typing at the desk at 30 in (seated)'},
     {'id': 'people-andre-stand-type', 'character': 'andre', 'pose': 'stand-type', 'height': 43.5, 'name': 'Andre, typing at the desk (standing)'},
@@ -369,6 +378,7 @@ OUTPUTS = [
     {'id': 'people-lin-stand-type', 'character': 'lin', 'pose': 'stand-type', 'height': 43.5, 'name': 'Lin, typing at the desk (standing)'},
     {'id': 'people-noah-sit-type-30', 'character': 'noah', 'pose': 'sit-type', 'height': 30, 'name': 'Noah, typing at the desk at 30 in (seated)'},
     {'id': 'people-noah-stand-type', 'character': 'noah', 'pose': 'stand-type', 'height': 43.5, 'name': 'Noah, typing at the desk (standing)'},
+    {'id': 'people-noah-stand-wait', 'character': 'noah', 'pose': 'stand-wait', 'name': 'Noah, on his feet while the desk moves'},
     {'id': 'people-mia-sit-type-30', 'character': 'mia', 'pose': 'sit-type', 'height': 30, 'name': 'Mia, typing at the desk at 30 in (seated)'},
     {'id': 'people-mia-stand-type', 'character': 'mia', 'pose': 'stand-type', 'height': 43.5, 'name': 'Mia, typing at the desk (standing)'},
     {'id': 'people-mia-sit-phone', 'character': 'mia', 'pose': 'sit-phone', 'name': 'Mia, seated with her phone', 'held': [('phone', {'side': 'r'})]},

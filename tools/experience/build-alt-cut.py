@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-"""The alternate cut: Vico's hq14 review cut, reworked chapter by chapter, written beside it.
+"""Two cuts built from Vico's hq14 review cut and written beside it.
 
-    python3 tools/experience/build-alt-cut.py <hq14 review-cut.json> <out review-cut.json> [--only id,id]
+    python3 tools/experience/build-alt-cut.py <hq14 review-cut.json> <out review-cut.json> [--variant alt|people] [--only id,id]
+
+  --variant people   his cut with people in it: his cameras, his props, his timing. The cast of each chapter, and only
+                     the polish a person in the room makes necessary (noted per chapter below).
+  --variant alt      the alternate cut (default): the same cast, with the camera and the casting reworked per chapter.
 
 Nothing in the source cut is changed. Every chapter keeps its length and its desk moves (clips, status lights,
 screens, daypart keys) to the frame, so any chapter of this cut can replace the same chapter of his one for one:
@@ -15,6 +19,9 @@ import json, math, os, subprocess, sys, tempfile
 
 src, out = sys.argv[1], sys.argv[2]
 ONLY = sys.argv[sys.argv.index('--only') + 1].split(',') if '--only' in sys.argv else None
+VARIANT = sys.argv[sys.argv.index('--variant') + 1] if '--variant' in sys.argv else 'alt'
+if VARIANT not in ('alt', 'people'): sys.exit('--variant alt|people')
+ALT = VARIANT == 'alt'                            # False: his cameras stay
 HERE = os.path.dirname(os.path.abspath(__file__))
 cut = json.load(open(src))
 
@@ -40,6 +47,46 @@ def people(shot, **cast):
     shot['people'] = cast
 
 
+def his_camera(shot, change):
+    """His camera with a few story keys re-aimed: change = {seconds: {'eye': mm, 'look': mm, 'fov': n}} (any of them)."""
+    keys = [dict(k) for k in shot['cameraPlan']['keys']]
+    for at, new in change.items():
+        hit = [k for k in keys if abs(k['at'] - at) < 1e-3]
+        if not hit: sys.exit('%s: no camera key at %s s' % (shot['id'], at))
+        for k in hit:
+            if 'eye' in new: k['position'] = W(*new['eye'])
+            if 'look' in new: k['target'] = W(*new['look'])
+            if 'fov' in new: k['fov'] = new['fov']
+    cam(shot, keys, shot['cameraPlan'].get('easeIn', False), shot['cameraPlan'].get('easeOut', False))
+
+
+def start_on_carpet(shot, z_mm):
+    """Commons: the desk waits centred on the green study-bay carpet (Vico moved the carpet and the bay's boards in
+    Director; the desk still stood at the carpet's right edge). Its first position moves along the wall to room
+    z = z_mm; the quarter turn off the wall is the same shape, the straight run to the table is longer, the whole
+    drive keeps its start and its length in seconds, and the status light changes where the turn now ends."""
+    m = shot['motion']; clip = next(c for c in m['clips'] if c['lane'] == 'wheels'); path = clip['path']
+    z_was = -744.4; dz = (z_mm - z_was) / 25.4                      # inches; the desk's z at pose z 46 is -744 mm
+    pts = [(p['pose']['x'], p['pose']['z'], p['pose']['yaw']) for p in path]
+    d = [0.0]
+    for a, b in zip(pts, pts[1:]): d.append(d[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+    turn = next(i for i, q in enumerate(pts) if abs(q[2] - pts[-1][2]) < 1e-6)   # first sample with the final heading
+    arc, old, new = d[turn], d[-1], d[-1] - dz
+    def at(s):                                                       # pose at distance s along the new path
+        if s >= arc: return (pts[-1][0], pts[turn][1] + dz + (s - arc), pts[-1][2])
+        i = max(k for k in range(turn + 1) if d[k] <= s + 1e-9); j = min(i + 1, turn); f = (s - d[i]) / (d[j] - d[i]) if d[j] > d[i] else 0
+        return tuple(pts[i][n] + (pts[j][n] - pts[i][n]) * f + (dz if n == 1 else 0) for n in range(3))
+    for p, s in zip(path, d):
+        x, z, yaw = at(s / old * new); p['pose'] = {'x': round(x, 4), 'z': round(z, 4), 'yaw': round(yaw, 4)}
+    m['initial'] = dict(m['initial'], z=round(m['initial']['z'] + dz, 4))
+    # the turn's status light (wheels mode 6) hands over to the drive's (mode 3) where the turn ends
+    frac = next(path[i]['time'] for i in range(len(path)) if d[i] / old * new >= arc - 1e-6)
+    t_turn = round(clip['start'] + clip['duration'] * frac, 3); led = shot.get('ledStatus') or []
+    if len(led) == 2 and all(e.get('kind') == 'wheels' for e in led):
+        end = led[1]['at'] + led[1]['dur']
+        led[0]['dur'] = round(t_turn - led[0]['at'], 3); led[1]['at'] = t_turn; led[1]['dur'] = round(end - t_turn, 3)
+
+
 CHAPTERS = {}
 def chapter(fn): CHAPTERS[fn.__name__] = fn; return fn
 
@@ -48,8 +95,11 @@ def chapter(fn): CHAPTERS[fn.__name__] = fn; return fn
 def rise(s):
     # Home, one day in 18 seconds (the clock runs 08:00 to 17:30). Maya types seated in the morning, is on her feet
     # at the raised desk at midday, and sits again as the light turns to evening. Her chair stays in the room,
-    # pushed back while she stands.
-    people(s, only=['people-maya-sit-type', 'people-maya-stand-type'], chair={'back': 300, 'side': 760, 'turn': -42})
+    # pushed back while she stands. While the desk is moving (3.4-7.6 s up, 9.45-12.65 s down) she is on her feet
+    # at it, hands off the keys.
+    people(s, only=['people-maya-sit-type', 'people-maya-stand-type'], chair={'back': 300, 'side': 760, 'turn': -42},
+           cast=[{'key': 'maya-waits', 'id': 'people-maya-stand-wait', 'at': [-167, 405], 'turn': 180}],
+           when={'maya-waits': [[3.75, 7.4, .4, .4], [9.65, 12.5, .4, .4]]})
 
 
 @chapter
@@ -57,6 +107,8 @@ def create(s):
     # Artist studio, his three acts (digital, drafting, oil) with the painter in them. Lin is at her easel as the
     # chapter opens and the camera passes beside her to the desk. After the board has tilted into the oil painting
     # the film cuts: it is later, and she is painting on the desk.
+    if not ALT:                                   # his cut: Lin paints at her easel for the whole chapter, at the canvas's left
+        people(s, only=['people-lin-stand-paint'], place={'people-lin-stand-paint': {'at': [-2380, 2380], 'turn': 158}}); return   # edge, so his opening passes beside her
     people(s, only=['people-lin-stand-paint'], cast=[{'key': 'lin-desk', 'id': 'people-lin-stand-paint', 'at': [-200, -130], 'turn': 180}],
            when={'lin-desk': [[19.5, 99, 0, 0]], 'people-lin-stand-paint': [[0, 14]]})
     cam(s, [
@@ -82,11 +134,14 @@ def commons(s):
                  {'key': 'mia-works', 'id': 'people-mia-sit-type-30', 'at': [7600, 2740], 'turn': 180, 'y': 60},
                  {'key': 'mate-right', 'id': 'people-sofia-sit-laptop', 'at': [6100, 476], 'turn': -3, 'y': 20},
                  {'key': 'mate-left', 'id': 'people-kai-sit-write', 'at': [4868, 297], 'turn': -19, 'y': 20}],
-           when={'mia-waits': [[0, 12.785, 0, 0]], 'mia-works': [[12.785, 99, 0, 0]]})
+           when={'mia-waits': [[0, 12.785, 0, 0]], 'mia-works': [[12.785, 99, 0, 0]]} if ALT else
+                {'mia-waits': [[0, 13.1, 0, .5]], 'mia-works': [[12.6, 99, .5, 0]]})
+    start_on_carpet(s, -1657)
     # Her wheelchair is drawn up to where the desk will stop (400 mm nearer than his cut has it), so she is seated
     # in it with her hands on the keyboard when the desk arrives.
     for e in s['sceneEdits']:
         if e.get('match') == '^Prop:electric-wheelchair$': e['position'] = [round(e['position'][0] - 400 * K, 4), e['position'][1], e['position'][2]]
+    if not ALT: return                            # his cut: his camera; Mia puts the phone down in a short dissolve
     # His route to the table, a little higher and wider over it so the teammates are whole in the frame.
     cam(s, [
         key(0, (1435, 1489, -6399), (6795, -27, -1308), 58, 'Eagle eye: the double-height commons'),
@@ -116,8 +171,10 @@ def oilers(s):
     people(s, **{'except': ['people-ava-sit-write', 'people-maya-sit-type', 'people-maya-stand-type', 'people-kai-wheel-type', 'people-noah-sit-type']},
            cast=[{'key': 'kai', 'id': 'people-kai-wheel-roll', 'at': [-4300, 4735], 'turn': 180},
                  {'key': 'noah-sits', 'id': 'people-noah-sit-type-30', 'desk': 'sit'},
-                 {'key': 'noah-stands', 'id': 'people-noah-stand-type', 'desk': 'stand'}],
-           when={'noah-sits': [[0, 8.25, 0, 0]], 'noah-stands': [[10.69, 99, 0, 0]]}, chair={'back': 250, 'side': -780, 'turn': 35})
+                 {'key': 'noah-stands', 'id': 'people-noah-stand-type', 'desk': 'stand'}] +
+                ([] if ALT else [{'key': 'noah-waits', 'id': 'people-noah-stand-wait', 'at': [-3757, -1155], 'turn': 180}]),
+           when={'noah-sits': [[0, 8.25, 0, 0]], 'noah-stands': [[10.69, 99, 0, 0]]} if ALT else {'noah-waits': [[8.3, 10.7, .4, .4]]}, chair={'back': 250, 'side': -780, 'turn': 35})
+    if not ALT: return                            # his cut: his camera; Noah gets up as the desk rises
     cam(s, [
         key(0, (-2148, 398, 3318), (-5190, 1104, 6660), 42, 'Home of the Oilers: banner, longboard, Kai at the set-design desk'),
         key(0.6, (-2148, 398, 3318), (-5190, 1104, 6660), 42, 'Home of the Oilers (hold)'),
@@ -170,6 +227,7 @@ def music(s):
     # Gaming room: Kai plays from the sofa, turned toward the desk's screen. He sits at the near end so the opening
     # looks over his shoulder at the desk, and the camera passes on his right on its way to the front.
     people(s, only=['people-kai-sit-controller'], place={'people-kai-sit-controller': {'at': [-1400, 1230], 'turn': 118, 'y': 70}})
+    if not ALT: return
     cam(s, [
         key(0, (-1843, 1758, 2615), (494, 715, 264), 48, 'Over Kai on the sofa: light panels, stream wall, the desk'),
         key(4.5, (-1100, 1500, 2500), (-100, 800, -300), 46, 'Past him, toward the desk'),
@@ -185,7 +243,9 @@ def media(s):
     # Movie night in the music studio: Omar has rolled up to the right of the desk to watch. The camera comes round
     # behind him as in his cut, then pushes further in than his did, past Omar's shoulder, until the picture and the
     # light it throws fill the frame.
-    people(s, only=[], cast=[{'key': 'omar', 'id': 'people-omar-wheel-watch', 'at': [620, 720], 'turn': 207}])
+    # In his cut Omar sits further right, so his closing push leaves him behind instead of cropping his knee.
+    people(s, only=[], cast=[dict({'key': 'omar', 'id': 'people-omar-wheel-watch'}, **({'at': [620, 720], 'turn': 207} if ALT else {'at': [930, 720], 'turn': 200}))])
+    if not ALT: return
     cam(s, [
         key(0, (1054, 957, 2240), (-362, 761, 394), 46, 'Behind Omar: piano corner, the city at night'),
         key(4, (55, 991, 2274), (-477, 928, 0), 44, 'Round behind him'),
@@ -203,6 +263,12 @@ def storage(s):
     # past him and parks at the wall. Jo works at the bench behind. The desk's path (x -660..860 while it rolls to
     # the front, then right to the rack) stays clear of both.
     people(s, only=['people-jo-stand-work', 'people-andre-stand-phone'], place={'people-andre-stand-phone': {'at': [-1350, 1550], 'turn': 100}})
+    if not ALT:
+        # His cut: his camera. Andre steps in just after the opening frame has moved off him (his elbow was in its
+        # left edge), and the tracking shot looks a little further right so he is not half in it.
+        s['people']['when'] = {'people-andre-stand-phone': [[1.0, 99, .5, 0]]}
+        his_camera(s, {13.2: {'eye': (-1500, 984, 4500), 'look': (1400, 600, 1300), 'fov': 40}, 14: {'eye': (-1500, 984, 4500), 'look': (1400, 600, 1300), 'fov': 40}})
+        return
     # The chapter opens on the tap, then pulls back and up to his wide as the board starts to fold. From there on
     # the camera is his.
     cam(s, [
@@ -226,6 +292,6 @@ def storage(s):
 for shot in cut['shots']:
     fn = CHAPTERS.get(shot['id'])
     if fn and (not ONLY or shot['id'] in ONLY): fn(shot)
-cut['name'] = (cut.get('name') or 'Review cut') + ' · alternate'
+cut['name'] = (cut.get('name') or 'Review cut') + (' · alternate' if ALT else ' · with people')
 json.dump(cut, open(out, 'w'), indent=1)
-print('alternate cut:', out, {s['id']: bool(s.get('people')) for s in cut['shots']})
+print(VARIANT, 'cut:', out, {s['id']: bool(s.get('people')) for s in cut['shots']})

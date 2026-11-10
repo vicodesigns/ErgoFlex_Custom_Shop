@@ -5,20 +5,25 @@
 
 Every chapter here has **his length and his desk moves** (clips, status lights, screens, daypart keys), so any
 chapter can replace the same chapter of his cut one for one: titles, score and dissolves stay where they are.
-What differs is who is in the room and when, where the camera goes, and a few props.
+What differs is who is in the room and when, where the camera goes, and a few props. One desk move differs, at his
+request: in commons the desk starts centred on the green carpet.
+
+A third cut sits beside this one: `exports/cinematic-intro-20261110-people/`, his cut with the same people and his
+own cameras (`--variant people`).
 
 Rebuild after any change to his cut, list the differences, or mix the two:
 
     python3 tools/experience/build-alt-cut.py exports/cinematic-intro-20261104-hq14/review-cut.json exports/cinematic-intro-20261110-alt/review-cut.json
+    python3 tools/experience/build-alt-cut.py exports/cinematic-intro-20261104-hq14/review-cut.json exports/cinematic-intro-20261110-people/review-cut.json --variant people
     python3 tools/experience/pick-chapters.py <his cut> <this cut> --list
     python3 tools/experience/pick-chapters.py <his cut> <this cut> mixed.json --alt create,commons,storage
 
 | Chapter | People | Camera |
 | --- | --- | --- |
 | awaken (opener) | none | his, unchanged |
-| rise (home) | Maya types seated, stands at the raised desk at midday, sits again in the evening; her chair stays, pushed back while she stands | his, unchanged |
+| rise (home) | Maya types seated, is on her feet while the desk moves, types standing at midday, sits again in the evening; her chair stays, pushed back while she stands | his, unchanged |
 | create (artist studio) | Lin at her easel; after the board tilts into the oil painting, Lin painting on the desk | opens beside Lin instead of through her; his middle; one cut at 19.5 s to Lin at the desk |
-| commons (Humboldt) | Mia in the power wheelchair calls the desk from her phone, then works at it; two teammates at the table; students, a white-cane user and a walking-stick user in the hall | his route, a little higher over the table; one cut at 12.8 s to Mia's side of the table |
+| commons (Humboldt) | Mia in the power wheelchair calls the desk from her phone, then works at it; two teammates at the table; students, a white-cane user and a walking-stick user in the hall. The desk starts centred on the green carpet | his route, a little higher over the table; one cut at 12.8 s to Mia's side of the table |
 | coast (OCC media lab) | the bays are in use (Maya at the centre bay); the featured suite stays free | his, unchanged |
 | oilers (high school) | Kai in his wheelchair at the set-design desk; the class; Noah at the featured desk, seated then standing | his tour to Noah seated; cut at 8.25 s to the desktop rising; cut at 10.7 s to Noah standing, the class behind |
 | wellness (gym) | Maya sits, gets up and stretches while the desk rises, then works standing; Priya stretches at the board | his, unchanged |
@@ -39,5 +44,5 @@ Not for Director yet: his Director runs on `main`, which has no people, and his 
 Director exports into the hq14 cut. Opening these chapters in Director needs the branch merged and the watcher
 taught to keep the two cuts apart.
 
-Known rough edges: where a person changes pose inside one shot (rise, wellness) the two poses dissolve into each
-other over about half a second; Noah's and Sam's shirts show a small notch at the back hem when seen from behind.
+Known rough edge: where a person changes pose inside one shot (rise, wellness, and oilers in the cut with people)
+the two poses dissolve into each other over about half a second.

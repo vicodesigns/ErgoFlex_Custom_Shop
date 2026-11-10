@@ -18752,6 +18752,22 @@
    "scenes": [],
    "converter": "people-generator",
    "collection": "people"
+  },
+  {
+   "id": "people-maya-stand-wait",
+   "name": "Maya, on her feet while the desk moves",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-stand-wait",
+   "name": "Noah, on his feet while the desk moves",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
   }
  ],
  "screens": [

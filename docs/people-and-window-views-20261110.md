@@ -83,10 +83,13 @@ In the film, a chapter's `@window` edit takes `vista: { brightness, soften, zoom
 ## Not done yet
 
 - The child rooms and the classic library still have painted window views; the children's rooms have no cast.
-- The alternate cut leaves the opener and the finale as Vico has them (no people on the dark stage, and their framing
-  is tied to the titles and the end card).
-- The alternate cut is not in Director: it needs this branch merged, and the import watcher kept from writing an
-  alternate chapter into his cut.
-- Where a person changes pose inside one shot, the two poses dissolve into each other.
+- Both new cuts (`exports/cinematic-intro-20261110-people/`: his cut with people; `-alt/`: the alternate) leave the
+  opener and the finale as Vico has them (no people on the dark stage, and their framing is tied to the titles and
+  the end card).
+- Neither is in Director: Director pages and the import watcher only know the hq14 folder, and an export of one of
+  these chapters must not be written into his cut.
+- Where a person changes pose inside one shot, the two poses dissolve into each other. While a desk is moving its
+  user stands at it in the `stand-wait` pose (a film `cast` entry with `when`); in the Studio the desk user is
+  simply hidden until the desk reaches a height a pose was built for.
 - The opening chapter cannot be rendered on the desk machine: its screen clip (`hq14/screens/01-main.mp4`) only exists
   on the render PC.

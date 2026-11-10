@@ -35969,6 +35969,72 @@
     "character": "omar",
     "pose": "wheel-watch"
    }
+  },
+  {
+   "id": "people-maya-stand-wait",
+   "name": "Maya, on her feet while the desk moves",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    516.1,
+    1646.6,
+    330.4
+   ],
+   "min": [
+    -258.4,
+    0,
+    -119.9
+   ],
+   "max": [
+    257.7,
+    1646.6,
+    210.5
+   ],
+   "tris": 37124,
+   "bytes": 929320,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "stand-wait"
+   }
+  },
+  {
+   "id": "people-noah-stand-wait",
+   "name": "Noah, on his feet while the desk moves",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    560.2,
+    1777.6,
+    410.8
+   ],
+   "min": [
+    -280.4,
+    0,
+    -154.3
+   ],
+   "max": [
+    279.8,
+    1777.6,
+    256.5
+   ],
+   "tris": 32554,
+   "bytes": 1128476,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-wait"
+   }
   }
  ],
  "screens": [
