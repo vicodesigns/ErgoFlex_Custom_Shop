@@ -416,3 +416,10 @@ body.directing.film-frame .desk-version-badge:not([hidden]){display:block;positi
 #director-timeline .desk-version-seam:hover::after{background:var(--df-select-text)}
 #director-timeline .desk-version-drop{position:absolute;top:2px;height:36px;z-index:5;pointer-events:none;border:2px dashed var(--df-select-text);border-radius:var(--df-r-2);background:#ffffff1a;box-sizing:border-box}
 .build-desk-times{display:flex;gap:10px;margin:6px 0}.build-desk-times label{display:flex;align-items:center;gap:4px}.build-desk-times input{width:70px}
+
+/* ---- Timeline layers: items that cover the same seconds stack into sub-rows (experience/lane-rows.mjs).
+   The row carries --rows, each item --row; a lane without overlap is not .layered and keeps its one-row height. */
+#director-timeline .timeline-content .desk-lane-row.layered{--row-h:34px;height:calc(var(--rows) * var(--row-h) + 6px)}
+#director-timeline .timeline-content .desk-lane-row.layered>.desk-lane{height:calc(var(--rows) * var(--row-h) + 4px)}
+#director-timeline .timeline-content .desk-lane-row.layered .desk-lane-line{display:none}
+#director-timeline .timeline-content .desk-lane-row.layered .desk-clip{top:calc(var(--row,0) * var(--row-h) + 3px);height:calc(var(--row-h) - 3px);min-height:0}

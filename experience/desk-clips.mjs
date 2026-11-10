@@ -22,9 +22,18 @@ export function cleanClip(v={}){
   }
   return c;
 }
+// A turn and a glide (or two glides, two turns) may play together on the Wheels lane: each only adds its own heading or
+// travel, so concurrent ones sum. Lift and tilt clips set an absolute height / tilt, and a saved wheel path or a hold
+// owns the whole lane: those never overlap another clip of their lane.
+export const CONCURRENT_KINDS=['rotate','travel'];
+export const canOverlap=(a,b)=>a.lane==='wheels'&&b.lane==='wheels'&&CONCURRENT_KINDS.includes(a.kind)&&CONCURRENT_KINDS.includes(b.kind);
+function laneOverlaps(list){
+  for(let i=1;i<list.length;i++)for(let j=i-1;j>=0;j--)if(list[i].start<clipEnd(list[j])-.00001&&!canOverlap(list[i],list[j]))return [list[j],list[i]];
+  return null;
+}
 export function validateClipSchedule(clips,seconds){
   for(const c of clips){if(c.start<0||c.duration<=0||clipEnd(c)>seconds+.00001)throw Error(`This movement must fit inside the ${seconds}-second chapter.`);}
-  for(const lane of DESK_LANES){const list=clips.filter(c=>c.lane===lane).sort((a,b)=>a.start-b.start);for(let i=1;i<list.length;i++)if(list[i].start<clipEnd(list[i-1])-.00001)throw Error(`Two ${lane==='wheels'?'Wheels':lane==='lift'?'Lift':'Tilt'} movements cannot overlap. Move one to an open time; different lanes can play together.`);}
+  for(const lane of DESK_LANES){const list=clips.filter(c=>c.lane===lane).sort((a,b)=>a.start-b.start);if(laneOverlaps(list))throw Error(lane==='wheels'?'A turn and a glide can play together, but a saved wheel movement or a hold cannot overlap another Wheels movement. Move one to an open time.':`Two ${lane==='lift'?'Lift':'Tilt'} movements cannot overlap: a desk is at one height and tilt at a time. Move one to an open time; Lift, Tilt and Wheels play together.`);}
 }
 export function cleanClipMotion(value,seconds){
   if(!Array.isArray(value?.clips)||value.clips.length>1536)throw Error('A chapter can contain up to 1536 movement clips.');
@@ -48,7 +57,9 @@ export function clipTarget(c,from){
 export function sampleClipMotion(motion,seconds){
   const pose=cleanPose(motion.initial),t=Math.max(0,Number(seconds)||0);
   for(const lane of DESK_LANES){
-    for(const c of motion.clips.filter(c=>c.lane===lane).sort((a,b)=>a.start-b.start)){
+    const list=motion.clips.filter(c=>c.lane===lane).sort((a,b)=>a.start-b.start);
+    if(list.some((c,i)=>i&&c.start<clipEnd(list[i-1])-.00001)){sampleOverlapping(pose,lane,list,t);continue;}
+    for(const c of list){
       if(t<c.start)break;
       const target=clipTarget(c,pose),fraction=Math.max(0,Math.min(1,(t-c.start)/c.duration)),u=fraction===1?1:c.easing==='hold'?0:c.easing==='smooth'?fraction*fraction*(3-2*fraction):fraction;
       if(c.path){
@@ -62,6 +73,26 @@ export function sampleClipMotion(motion,seconds){
     }
   }
   return pose;
+}
+// A lane with clips playing together (turn + glide): every clip adds its own change, measured from the lane's pose at the
+// clip's start (the earlier clips as far as they have got by then), so the changes sum. Lanes without overlap never come here.
+function sampleOverlapping(pose,lane,list,t){
+  const fields=POSE_FIELDS[lane],base={...pose},change=(c,from,at)=>{
+    if(at<c.start)return null;
+    const target=clipTarget(c,from),fraction=Math.max(0,Math.min(1,(at-c.start)/c.duration)),u=fraction===1?1:c.easing==='hold'?0:c.easing==='smooth'?fraction*fraction*(3-2*fraction):fraction,out={};
+    if(c.path){
+      const path=c.path,first=path[0],last=path.at(-1),i=path.findIndex(k=>k.time>=u),b=path[i<0?path.length-1:i],a=path[Math.max(0,i-1)],v=(u-a.time)/(b.time-a.time||1);
+      for(const f of fields)out[f]=a.pose[f]+(b.pose[f]-a.pose[f])*v-first.pose[f]+u*(target[f]-from[f]-(last.pose[f]-first.pose[f]));
+    }else for(const f of fields)out[f]=(target[f]-from[f])*u;
+    return out;
+  };
+  const starts=[];
+  for(const c of list){
+    const from={...base};
+    for(let i=0;i<starts.length;i++){const d=change(list[i],starts[i],c.start);if(d)for(const f of fields)from[f]+=d[f];}
+    starts.push(from);
+  }
+  for(let i=0;i<list.length;i++){const d=change(list[i],starts[i],t);if(d)for(const f of fields)pose[f]+=d[f];}
 }
 export function legacyMotionToClips(motion,seconds){
   if(Array.isArray(motion?.clips)){
@@ -138,8 +169,9 @@ export function findClipInsertion(clips,lane,preferred,seconds,duration=3){
 // Where a new clip goes: at `preferred` (the playhead). If it would run past the chapter end the chapter grows
 // (`seconds` in the result) just enough to hold it; only when the playhead sits inside an existing clip does it
 // move to the nearest free gap. Never jumps to 0.
-export function planClipInsertion(clips,lane,preferred,seconds,duration=3,max=90){
-  const eps=.00001,r=v=>Math.round(v*1000)/1000,list=clips.filter(c=>c.lane===lane).sort((a,b)=>a.start-b.start);
+export function planClipInsertion(clips,lane,preferred,seconds,duration=3,max=90,kind=null){
+  // A turn or glide may sit over other turns and glides (canOverlap): only the lane's other clips block it.
+  const eps=.00001,r=v=>Math.round(v*1000)/1000,list=clips.filter(c=>c.lane===lane&&!(lane==='wheels'&&CONCURRENT_KINDS.includes(kind)&&CONCURRENT_KINDS.includes(c.kind))).sort((a,b)=>a.start-b.start);
   const p=Math.max(0,Math.min(max-.5,preferred)),fit=(start,d)=>({start:r(start),duration:r(d),seconds:Math.max(seconds,Math.min(max,Math.ceil((start+d)*1000-1e-6)/1000))});
   if(!list.some(c=>c.start<p-eps&&clipEnd(c)>p+eps)){
     const next=list.find(c=>c.start>=p-eps),room=(next?next.start:max)-p;
@@ -183,7 +215,7 @@ export function retimeClipBySpeed(motion,c,speed,seconds){
   if(!Number.isFinite(speed)||speed<=0)throw Error('Speed must be greater than zero.');
   const distance=clipDistance(motion,c);if(distance<.0001)throw Error('Set a target or distance before setting speed.');
   const duration=distance/speed;
-  const next=motion.clips.filter(other=>other.lane===c.lane&&other.id!==c.id&&other.start>=c.start).sort((a,b)=>a.start-b.start)[0];
+  const next=motion.clips.filter(other=>other.lane===c.lane&&other.id!==c.id&&other.start>=c.start&&!canOverlap(c,other)).sort((a,b)=>a.start-b.start)[0];
   const available=Math.max(0,Math.min(seconds,next?.start??seconds)-c.start);
   if(duration>available+.00001)throw Error(`This speed needs ${Number(duration.toFixed(3))}s, but only ${Number(available.toFixed(3))}s is open here. Choose a faster speed, reduce the movement amount, or make more room on the timeline.`);
   return {...c,duration};
