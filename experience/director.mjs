@@ -969,7 +969,9 @@ export function mountDirector(bridge,catalog,initial){
   for(const el of [panel,timeline])el.addEventListener('click',event=>{const b=event.target.closest('button[data-action]');if(b)action(b.dataset.action,b.dataset.section??Number(b.dataset.index));});
   panel.addEventListener('toggle',event=>{const d=event.target.closest?.('[data-light-section]');if(!d)return;if(d.open)delete lightSectionsShut[d.dataset.lightSection];else lightSectionsShut[d.dataset.lightSection]=true;try{localStorage.setItem('ergoflex.director.lightSections',JSON.stringify(lightSectionsShut));}catch{}},true);
   panel.addEventListener('click',event=>{const tab=event.target.closest('[data-inspector-tab]');if(tab)showInspector(tab.dataset.inspectorTab);
-    const hint=event.target.closest('.director-hint');if(hint&&!event.target.closest('a,button,input,select,textarea,label'))hint.classList.toggle('expanded');});   // long hints show two lines; click for all
+    const hint=event.target.closest('.director-hint');if(hint&&!event.target.closest('a,button,input,select,textarea,label'))hint.classList.toggle('expanded');});   // long hints show three lines; click for all
+  // A hint that is cut says so on hover (it was an unmarked "…": the click-to-read-all was undiscoverable).
+  panel.addEventListener('pointerover',event=>{const h=event.target.closest?.('.director-hint');if(h&&!h.classList.contains('expanded')&&h.scrollHeight>h.clientHeight+1)h.title='Click to read all of it';else if(h&&h.title==='Click to read all of it'&&h.classList.contains('expanded'))h.removeAttribute('title');});
   timeline.addEventListener('change',event=>{
     if(event.target.name==='timeline-snap'){snapStep=Number(event.target.value);return;}
     if(event.target.name==='film-chapter'){switchFilm(Number(event.target.value));return;}
