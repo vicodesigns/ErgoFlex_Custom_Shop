@@ -22,10 +22,25 @@ adults and teenagers.
 
 ## The film
 
-A shot takes `people: true`, or `people: { only: [ids], except: [ids], place: { '<id>': { at: [x, z], turn } } }`
-(`experience/stage.mjs`). Shots without it have nobody, as before. `tools/experience/build-alt-cut.py` writes the
-alternate cut: Vico's review cut, unchanged, plus a cast per chapter. People are named `Person:<id>` in the scene, so
-`sceneEdits` can hide or move them, and `sceneEdits` `add` can place any library person by hand.
+A shot takes `people: true`, or a cast for that chapter (`experience/stage.mjs`, `room-people.mjs` `setFilter`):
+
+    people: {
+      only: [keys], except: [keys],                  who of the room's own cast is in
+      place: { '<key>': { at: [x, z], turn, y } },   moves someone (room millimetres)
+      cast: [ { key, id, at | desk | station | on | by, ... } ],   extra people, placed like the room's own
+      when: { '<key>': [[t0, t1, fadeIn, fadeOut], ...] },         the seconds of the chapter each is there (fade .5 s; 0 cuts)
+      chair: { back, side, turn }                    the desk user's chair stays in the room, pushed back while they stand
+    }
+
+A key is a placement's `key` (one model can be cast twice) or its id. The stage passes the chapter's time to the
+people each frame, so `when` holds in the film and in Director; in the Studio there is no time and everyone is there.
+Shots without `people` have nobody, as before.
+
+`tools/experience/build-alt-cut.py` writes the alternate cut from Vico's review cut: the same lengths and desk moves,
+with a cast and, where the people change the story, a reworked camera per chapter (see
+`exports/cinematic-intro-20261110-alt/README.md`). `tools/experience/pick-chapters.py` lists the differences and mixes
+the two cuts chapter by chapter. Camera positions in the builder are room millimetres; one stage unit is 662.84 mm
+and the room root turns x into -z (`W()` in the builder).
 
 ## Building people
 
@@ -36,6 +51,10 @@ hold or use (phone, book, pen, cane, white cane, wheelchair, prosthesis, headpho
 the keyboard top is 678 mm at 28 in, 759 mm at 31 in and 1095 mm at 43.5 in, measured in the app. Each model is about
 35–50 thousand triangles and 0.7–1.2 MB. `node tools/props/thumbnails.mjs --collection people` renders the library
 thumbnails. Test: `npm run test:room-people`.
+
+Heights: the `height` setting is about 1.29 m per unit (0.5 is 1.51 m for an adult woman, 1.80 m for a man). The adult
+women are set to 1.52 to 1.64 m and Noah to 1.77 m, so a 43.5 in standing desk meets their elbows. A new pose is a
+few lines in `cast.py` and builds in about six seconds; `--preview dir` renders two views to check it.
 
 ## Window views
 
@@ -64,6 +83,10 @@ In the film, a chapter's `@window` edit takes `vista: { brightness, soften, zoom
 ## Not done yet
 
 - The child rooms and the classic library still have painted window views; the children's rooms have no cast.
-- The film's alternate cut adds people and the new windows only; its cameras and chapter timing are Vico's.
+- The alternate cut leaves the opener and the finale as Vico has them (no people on the dark stage, and their framing
+  is tied to the titles and the end card).
+- The alternate cut is not in Director: it needs this branch merged, and the import watcher kept from writing an
+  alternate chapter into his cut.
+- Where a person changes pose inside one shot, the two poses dissolve into each other.
 - The opening chapter cannot be rendered on the desk machine: its screen clip (`hq14/screens/01-main.mp4`) only exists
   on the render PC.

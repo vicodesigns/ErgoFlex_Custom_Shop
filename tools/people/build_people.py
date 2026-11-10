@@ -157,13 +157,14 @@ def tree_of(o):
     bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); t = BVHTree.FromBMesh(bm); bm.free(); return t
 
 
-def cull_under(o, trees, reach):
+def cull_under(o, trees, reach, through=.018):
     if not trees: return
     bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); bm.normal_update()
-    # Covered: a layer above lies just outside the face, or the face has pushed out through that layer.
+    # Covered: a layer above lies just outside the face (within `reach`), or the face has pushed out through that
+    # layer (by up to `through`).
     def hidden(f):
         c = f.calc_center_median()
-        return any(t.ray_cast(c + f.normal * .0005, f.normal, reach)[0] is not None or t.ray_cast(c - f.normal * .0005, -f.normal, .018)[0] is not None for t in trees)
+        return any(t.ray_cast(c + f.normal * .0005, f.normal, reach)[0] is not None or t.ray_cast(c - f.normal * .0005, -f.normal, through)[0] is not None for t in trees)
     covered = [f for f in bm.faces if hidden(f)]
     bmesh.ops.delete(bm, geom=covered, context='FACES'); bm.transform(o.matrix_world.inverted()); bm.to_mesh(o.data); bm.free()
 
@@ -176,7 +177,8 @@ for c in cloth:
         me = bpy.data.meshes.new_from_object(c.evaluated_get(bpy.context.evaluated_depsgraph_get())); c.modifiers.clear(); old = c.data; c.data = me; bpy.data.meshes.remove(old)
 trees = [tree_of(c) for c in cloth]
 cull_under(body, trees, .035)
-for i, c in enumerate(cloth[1:], 1): cull_under(c, trees[:i], .025)
+# A garment can push further out through the one over it than skin does (a trouser yoke through the back of a shirt).
+for i, c in enumerate(cloth[1:], 1): cull_under(c, trees[:i], .025, .045)
 bpy.ops.object.select_all(action='DESELECT')
 for b in baked: b.select_set(True)
 bpy.context.view_layer.objects.active = baked[0]; bpy.ops.object.join(); person = bpy.context.object; person.name = OUT_ID

@@ -78,4 +78,29 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     const zoe = people.people.find(o => o.userData.person.id === 'people-zoe-stand-type');
     assert.deepEqual([zoe.position.x, zoe.position.z], [4380, 1890]);
 }
-console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, stations.');
+{   // Film casting: extra people (one model twice, by key), the seconds each is there for, and a chair that stays.
+    const { room, chair } = makeRoom('creative'), people = new RoomPeople(room, library);
+    people.setFilter({ only: [], cast: [{ key: 'at-easel', id: 'people-lin-stand-paint', at: [-1700, 2500], turn: 0 }, { key: 'at-desk', id: 'people-lin-stand-paint', at: [-200, -130], turn: 180, y: 40 }],
+        when: { 'at-easel': [[0, 14]], 'at-desk': [[19.5, 99, 0, 0]] } });
+    await people.setEnabled(true);
+    const keys = () => people.people.filter(o => o.visible).map(o => o.userData.person.key);
+    people.update({ height: 43.5, pose: { x: 0, z: 0, yaw: 0 }, time: 2 }); assert.deepEqual(keys(), ['at-easel']);
+    const easel = people.people.find(o => o.userData.person.key === 'at-easel'), desk = people.people.find(o => o.userData.person.key === 'at-desk');
+    assert.equal(easel.userData.personFade, 1, 'there from the first frame: no fade in at the start of a chapter');
+    people.update({ height: 43.5, pose: { x: 0, z: 0, yaw: 0 }, time: 13.8 }); assert.ok(easel.userData.personFade > 0 && easel.userData.personFade < 1, 'fades out over the last half second');
+    people.update({ height: 43.5, pose: { x: 0, z: 0, yaw: 0 }, time: 19.49 }); assert.deepEqual(keys(), []);
+    people.update({ height: 43.5, pose: { x: 0, z: 0, yaw: 0 }, time: 19.5 }); assert.deepEqual(keys(), ['at-desk']);
+    assert.equal(desk.userData.personFade, 1, 'a zero fade cuts');
+    assert.deepEqual([desk.position.x, desk.position.y, desk.position.z], [-200, 40, -130]);
+    people.update({ height: 43.5, pose: { x: 0, z: 0, yaw: 0 } }); assert.deepEqual(keys(), ['at-easel', 'at-desk'], 'without a film time everyone is there');
+    // A different cast rebuilds the room's people.
+    people.setFilter({ only: ['people-maya-sit-type', 'people-maya-stand-type'], chair: { back: 300, side: 760, turn: -42 } }); await people.setEnabled(true);
+    assert.ok(!people.people.some(o => o.userData.person.key), 'the earlier chapter\'s extras are gone');
+    people.update({ height: 28, pose: { x: 100, z: -500, yaw: 0 }, keyboard: { x: 100, z: -30 } });
+    const seat = people.people.find(o => o.userData.person.id === 'people-maya-sit-type').userData.personChair;
+    assert.deepEqual([seat.visible, seat.position.x, seat.position.z], [true, 100, 440], 'under her while she sits');
+    people.update({ height: 36, pose: { x: 100, z: -500, yaw: 0 }, keyboard: { x: 100, z: -30 } });
+    assert.deepEqual(shown(people), []); assert.deepEqual([seat.visible, seat.position.x, seat.position.z], [true, 860, 740], 'pushed back and aside while she is up');
+    assert.equal(chair.visible, false, "the room's own chair stays out while hers is in the room");
+}
+console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations.');

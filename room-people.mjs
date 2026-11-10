@@ -235,7 +235,7 @@ export class RoomPeople {
         for (const o of chairs) o.userData.personChair.visible = false;
         keep.visible = true; keep.position.copy(base).addScaledVector(front, (park.back ?? 620) * away).addScaledVector(side, (park.side ?? 0) * away);
         keep.rotation.y = yaw + THREE.MathUtils.degToRad((park.turn ?? 0) * away);
-        this.chairSpot = keep.position;
+        this.chairSpot = keep.position; this.chairHome = base;
     }
     // state: { height (inches), mode, pose: { x, z, yaw }, keyboard: { x, z } | null, time } of the featured desk, room
     // millimetres; called every frame while enabled. With a keyboard the person lines up on it, not on the desk anchor.
@@ -276,7 +276,7 @@ export class RoomPeople {
             if (on && object.userData.personMaterials) this.fade(object, object.userData.personAmount ?? 1);
             if (on && spec.desk === 'sit' && !spec.station) seated = Math.max(seated, object.userData.personAmount ?? 1);
         }
-        this.chairSpot = null;
+        this.chairSpot = this.chairHome = null;
         if (this.filter?.chair) this.stayChair(state, seated, pose?.yaw || 0);
         this.clearChairs();
     }
@@ -284,7 +284,7 @@ export class RoomPeople {
     // stand where the chair was, or roll in on their own wheels).
     clearChairs() {
         const spots = this.people.filter(o => o.visible && o.userData.person.desk).map(o => o.position);
-        if (this.chairSpot) spots.push(this.chairSpot);
+        if (this.chairSpot) spots.push(this.chairSpot, this.chairHome);   // the room's own desk chair stays out while the film's is in the room
         for (const chair of this.room.assets()) {
             if (!CHAIRS.test((chair.userData.propId || '') + ' ' + (chair.userData.decorUpgrade || '')) || /student-chair|bar|artist/.test(chair.userData.propId || '')) continue;
             const centre = this.centreOf(chair).setY(0), blocked = spots.some(p => Math.hypot(p.x - centre.x, p.z - centre.z) < 850);
