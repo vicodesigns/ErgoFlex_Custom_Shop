@@ -34,9 +34,10 @@ PEOPLE = {
 for shot in cut['shots']:
     if shot['id'] in PEOPLE: shot['people'] = PEOPLE[shot['id']]
     # "It sees what's in its way": the thing in the way is a person, not a pylon. Grace stands with her walking
-    # stick where the pylon rose; the desk rolls toward her and stops.
+    # stick where the pylon rose; the desk rolls toward her and stops. A person is deeper than the pylon, so she
+    # stands further ahead: the desk's stopping point is unchanged and ends a hand's width from her stick.
     if shot['id'] == 'awareness' and shot.get('obstacles'):
-        shot['obstacles'] = [dict(o, person='people-grace-cane-stand') if i == 0 else o for i, o in enumerate(shot['obstacles'])]
+        shot['obstacles'] = [dict(o, person='people-grace-cane-stand', ahead=1.1) if i == 0 else o for i, o in enumerate(shot['obstacles'])]
 cut['name'] = (cut.get('name') or 'Review cut') + ' · alternate (people)'
 json.dump(cut, open(out, 'w'), indent=1)
 print('alternate cut:', out, {s['id']: bool(s.get('people')) for s in cut['shots']})
