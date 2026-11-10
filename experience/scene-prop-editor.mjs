@@ -1,6 +1,7 @@
 import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
 import {createPropLibrary,deskItem} from './prop-library.mjs';
 import {groupPanelHtml,groupCentreDelta,pickMode} from './prop-selection.mjs';
+import {dropToSurface} from './drop-to-surface.mjs';
 // Director "Props": click a prop in the view (not in light mode) to select it, then move / rotate / scale it with
 // the gizmo (W / E / T, Shift snaps) or the Prop inspector, hide it (Delete), reset it. Edits go to the chapter's
 // cut shot (shot.propEdits, film sceneEdits format, prop-edits.mjs); film-fx applies them after the film's own
@@ -232,6 +233,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     },true);
     const keys=e=>{const on=e.shiftKey;if(on!==snapping){snapping=on;syncSnap();}};
     for(const doc of [document,w.document]){doc.addEventListener('keydown',keys,true);doc.addEventListener('keyup',keys,true);}
+    // End: drop the selected prop onto the surface below it (Shift+End: drop flat, Alt+End: align to the surface).
+    const endKey=e=>{if(e.key!=='End'||e.ctrlKey||e.metaKey||!sel||!editing()||lightsShowing()||e.target?.closest?.('input,select,textarea,[contenteditable],#director-timeline')||document.querySelector('dialog[open]'))return;
+      e.preventDefault();e.stopPropagation();dropSelected(e.altKey?'align':e.shiftKey?'flat':'drop').catch(error=>status(error.message,true));};
+    for(const doc of [document,w.document])doc.addEventListener('keydown',endKey,true);
     w.__directorPropsRestore=()=>{for(const [o,s] of snaps){o.position.copy(s.position);o.quaternion.copy(s.quaternion);o.scale.copy(s.scale);o.updateMatrixWorld(true);}snaps.clear();};
     const pivot=new THREE.Object3D();pivot.name='Director group pivot';pivot.userData.directorTools=true;group.add(pivot);
     const boxes=[box],fbox=new THREE.BoxHelper(undefined,0xffd166);fbox.material.depthTest=false;fbox.material.transparent=true;fbox.renderOrder=999;fbox.visible=false;group.add(fbox);
@@ -416,6 +421,40 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   // "Shows where it is": a pulsing outline on the stage for ~1.5 s.
   function flashKey(key){const o=items().find(i=>i.key===key)?.obj;if(o)flash={obj:o,until:performance.now()+1500};}
+  // ---- Drop to surface (drop-to-surface.mjs): the prop straight down onto what is below it.
+  const surfaceName=obj=>{const m=meaningful(obj);if(m)return label(m);for(let p=obj;p;p=p.parent){const n=p.name&&!/^(Mesh|Object3D|Group|Scene|Cube|Plane)[\d._]*$/i.test(p.name)?p.name:'';if(n)return /^Room:/.test(n)?'the room':nice(n.replace(/^(Prop|Accessory|Desk dressing|Scene dressing):\s*/,''));}return 'the surface';};
+  // One object: moves (and for flat / align turns) it live and says what happened; nothing is written. A caller with
+  // several objects drops each, then writes each with writeLive. Returns {ok,reason} or {ok,o,base,distance,surface,text}.
+  function dropObject(o,dropMode='drop'){
+    if(!snaps.has(o))snaps.set(o,{position:o.position.clone(),quaternion:o.quaternion.clone(),scale:o.scale.clone()});
+    const b=base(o),was={p:o.position.clone(),q:o.quaternion.clone()},r=dropToSurface({THREE:tools.THREE,scene:sceneOf(),obj:o,mode:dropMode,mm:.001,skip:isOurs});
+    if(!r.ok)return r;
+    const inches=r.distance/.0254,abs=Math.abs(inches),surface=surfaceName(r.surface);
+    const text=abs<.02?`${label(o)} already rests on ${surface}${r.rotated?' (now '+(dropMode==='align'?'aligned to it':'upright')+')':''}.`
+      :`${inches>0?'Dropped':'Raised'} ${abs.toFixed(1)}\u2033 onto ${surface}${r.rotated?(dropMode==='align'?', aligned to it':', upright')+'':''}.`;
+    const rests=abs<.02&&!r.rotated;if(rests){o.position.copy(was.p);o.quaternion.copy(was.q);o.updateMatrixWorld(true);}   // already on it: no edit
+    return {...r,o,base:b,text,rests};
+  }
+  // The edit for an object moved live (a gizmo drag's end, or a drop), written as one undo step.
+  function writeLive(o,b,text){
+    const e=editOfKey(sel.key)||sel.target;
+    if(isAddEdit(e)){write(sel.key,addFrom(o,e),text);return true;}
+    const next={...sel.target,...(e||{}),...editFrom(o,b)};
+    if(JSON.stringify(cleanPropEdit(next))===JSON.stringify(e?cleanPropEdit(e):null)){status(text);return false;}
+    write(sel.key,next,text);return true;
+  }
+  async function dropSelected(dropMode='drop'){
+    await ensure();
+    if(!sel){status('Select a prop first, then drop it onto the surface below.',true);return;}
+    if(!editing()){status('Pause the chapter first: props are moved on the paused frame.',true);return;}
+    const o=current();if(!o){status('That prop is not in the room right now.',true);return;}
+    if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return;}
+    if(!shown(o)){status(`${label(o)} is hidden in this chapter: untick Hide first.`,true);return;}
+    const had=snaps.has(o),r=dropObject(o,dropMode);
+    if(!r.ok){if(!had)snaps.delete(o);status(r.reason,true);rerender();return;}
+    if(r.rests){if(!had)snaps.delete(o);status(r.text);return;}
+    try{writeLive(o,r.base,r.text);}catch(error){status(error.message,true);}
+  }
   // ---- Make permanent in Studio: Studio's own room state through the studio server, never the file.
   function studioRoom(){
     const api=win()?.ErgoFlex;if(!api?.sceneAssetStates)return {reason:'The stage is still loading.'};
@@ -513,6 +552,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-r'+k,'Turn '+k+' (°)',r1(turn[i]),1)).join('')}</div>
       <label>Scale ×<input name="pp-s" type="number" min=".01" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
+      ${dropButtons()}
       <label class="director-check"><input type="checkbox" name="pp-hide" ${hidden?'checked':''}>Hide in this chapter</label>
       <div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'} title="This prop back to where the film puts it">Reset to the film</button></div>
       <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be made permanent.':'Studio: '+escape(studio.why)):onDeskItself(o)?'Studio: '+escape(ON_DESK):'Studio: unchanged (edit the prop to make it permanent later).'}</p></div>`;
@@ -526,13 +566,16 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-r'+k,'Turn '+k+' (°)',r1(e.rotation[i]),1)).join('')}</div>
       <label>Scale ×<input name="pp-s" type="number" min=".01" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
+      ${dropButtons()}
       <div class="director-actions"><button data-action="pp-place" aria-pressed="${placing}" title="Then click a surface in the view: the desktop (it rides the desk), a table, a shelf or the floor">Place on a surface…</button><button data-action="pp-remove" title="Take it out of this chapter (Delete): Undo brings it back">Remove from this chapter</button></div>
       <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be added to the room for good (Make permanent in Studio…).':'Studio: '+escape(studio.why)):''}</p></div>`;
   }
+  const dropButtons=()=>`<div class="director-actions prop-drop"><button data-action="pp-drop" title="Move it straight down until it rests on the surface below (End)">Drop to surface</button><button data-action="pp-drop-flat" title="Level it (no tilt or roll), then drop it onto the surface below (Shift+End)">Drop flat</button><button data-action="pp-drop-align" title="Tilt it to the surface under it (a ramp, the tilted desktop), then drop it (Alt+End)">Align to surface</button></div>`;
   async function action(name,arg){
     if(name==='pp-add'){library.open();return;}
     await ensure();
     if(name==='pp-remove'){remove();return;}
+    if(name==='pp-drop'||name==='pp-drop-flat'||name==='pp-drop-align'){await dropSelected(name==='pp-drop-flat'?'flat':name==='pp-drop-align'?'align':'drop');return;}
     if(name==='pp-place'){const o=current();if(!o||!isAddEdit(editOfKey(sel.key)))return;placing=!placing;rerender();status(placing?`Click a surface in the view to put ${label(o)} there (the desktop, a table, the floor). Click Place again to cancel.`:'Placing cancelled.');return;}
     if(name==='pp-pick'){select(arg);return;}
     if(name==='pp-unsel'){setMembers(members().filter(m=>m.key!==arg));return;}
@@ -562,6 +605,6 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   return {panel,lane,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,
     selected:()=>sel?.key||null,selectedKeys:()=>members().map(m=>m.key),selectKeys,items,hideItems:(keys,on,also)=>hideItems(keys.map(k=>{const i=items().find(x=>x.key===k);return i?{key:k,target:i.target,obj:i.obj}:{key:k};}),on,also),
     flashKey,setLocked:fn=>{lockedKeys=fn;},isHidden:key=>{const e=editOfKey(key);if(e)return e.hide===true;const i=items().find(x=>x.key===key);return !!i&&i.hidden;},selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
-    addProp,openLibrary:()=>library.open(),library:()=>library,
+    addProp,dropSelected,dropObject,writeLive,openLibrary:()=>library.open(),library:()=>library,
     header:()=>group()?{name:`${members().length} selected`,detail:'moving, turning and hiding together'}:sel?{name:current()?label(current()):nice(sel.target.label),detail:(editOfKey(sel.key)?describePropEdit(editOfKey(sel.key)):'from the film')}:null};
 }
