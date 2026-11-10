@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { gymProgramMaps, buildGymSessionDetail, migrateGymSavedFurniture } from './gym-session-detail.mjs?v=gym-sessions-20261022';
 
@@ -210,6 +211,8 @@ export function buildGymRoom(room, root, layout, helpers) {
     const skyCanvas = document.createElement('canvas'); skyCanvas.width = skyCanvas.height = 512;
     const sky = new THREE.CanvasTexture(skyCanvas); sky.colorSpace = THREE.SRGBColorSpace;
     const pane = mesh(left, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: sky }), [-w / 2 - 51, low + wh / 2, wz]); pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'city'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     for (const z of [a, wz, b]) box(left, [65, wh + 40, 30], [-w / 2 + 10, low + wh / 2, z], steel);
     for (const y of [low, low + wh]) box(left, [65, 30, ww + 40], [-w / 2 + 10, y, wz], steel);
     box(left, [180, 30, ww + 70], [-w / 2 + 50, low - 15, wz], oak, 3);
@@ -420,7 +423,7 @@ export function buildGymRoom(room, root, layout, helpers) {
         const mode = GYM_MODES[id] || GYM_MODES.morning;
         programmes.update(id); sessions.apply(id);
         const c = skyCanvas.getContext('2d'), grad = c.createLinearGradient(0, 0, 0, 512); grad.addColorStop(0, mode.sky[0]); grad.addColorStop(1, mode.sky[1]); c.fillStyle = grad; c.fillRect(0, 0, 512, 512);
-        c.fillStyle = '#455f6380'; for (let i = 0; i < 14; i++) c.fillRect(i * 40, 380 + i % 3 * 20, 30, 132); sky.needsUpdate = true;
+        c.fillStyle = '#455f6380'; for (let i = 0; i < 14; i++) c.fillRect(i * 40, 380 + i % 3 * 20, 30, 132); sky.needsUpdate = true; windowVista.setPhase(id);
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .12 + mode.wash * accent; });
         washes.forEach(({ mat, channel, strength }) => mat.color.set(channel === 'warm' ? '#ffe2b8' : mode.colors[channel]).multiplyScalar(strength * (channel === 'warm' ? mode.practical : mode.wash) * accent));
         practicals.forEach(({ mat, strength }) => { mat.emissiveIntensity = (.25 + mode.practical * 1.1) * strength; });

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
@@ -220,6 +221,8 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     wallBox(left,[2,940,a-bz],[-w/2+1,630,(a+bz)/2],paintLow);wallBox(left,[2,940,front-b],[-w/2+1,630,(front+b)/2],paintLow);wallBox(left,[2,890,ww],[-w/2+1,605,wz],paintLow);
     const skyCanvas=document.createElement('canvas');skyCanvas.width=skyCanvas.height=512;const skyMap=new THREE.CanvasTexture(skyCanvas);skyMap.colorSpace=THREE.SRGBColorSpace;
     const pane=mesh(left,new THREE.PlaneGeometry(ww,wh),new THREE.MeshBasicMaterial({map:skyMap}),[-w/2-52,low+wh/2,wz]);pane.rotation.y=Math.PI/2;pane.castShadow=pane.receiveShadow=false;
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'yard'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     for(const z of [a,wz,b])box(left,[65,wh+50,30],[-w/2+10,low+wh/2,z],steel);for(const y of [low,low+wh])box(left,[65,30,ww+60],[-w/2+10,y,wz],steel);box(left,[170,30,ww+80],[-w/2+50,low-15,wz],ply);
     for(const z of [(a+wz)/2,(wz+b)/2])kbox(left,[30,16,ww/2-40],[-w/2+10,low+wh*.55,z],steel);
     // Window sill: a potted cutting, a jar of pencils and a coffee can of brushes.
@@ -575,7 +578,7 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
         c.fillStyle=near;c.fillRect(250,330,190,182);c.beginPath();c.moveTo(236,334);c.lineTo(345,270);c.lineTo(454,334);c.fill();
         c.fillStyle=night||id==='evening'?'#f2c46e':'#a7b9bd';c.fillRect(290,370,46,40);c.fillRect(370,370,46,40);
         c.fillStyle=near;for(let x=0;x<512;x+=26)c.fillRect(x,446,18,66);c.fillRect(0,462,512,8);
-        skyMap.needsUpdate=true;
+        skyMap.needsUpdate=true; windowVista.setPhase(id);
     };
     room.roomAtmosphere=(id,accent=1)=>{
         const mode=WORKSHOP_MODES[id]||WORKSHOP_MODES.morning;paintSky(mode,id);

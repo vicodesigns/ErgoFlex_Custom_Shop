@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { HOME_SESSIONS, homeSessionPinboard, buildHomeSessionDetail } from './home-session-detail.mjs?v=home-sessions-20261022';
 import { homeComfortDetails } from './home-comfort-detail.mjs?v=commons-home-comfort-20261024';
@@ -492,6 +493,8 @@ export function buildHomeOffice(room, root, layout, helpers) {
     const skyCanvas = document.createElement('canvas'); skyCanvas.width = Math.min(1024, Math.round(512 * ww / wh)); skyCanvas.height = 512;
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const sky = box(back, [ww, wh, 8], [wx, bottom + wh / 2, bz - 65], new THREE.MeshBasicMaterial({ map: skyMap }));
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(sky, 'garden'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     sky.castShadow = false; sky.receiveShadow = false;
     for (const x of [left, wx, right]) box(back, [35, wh + 65, 65], [x, bottom + wh / 2, bz + 8], trim);
     for (const y of [bottom, bottom + wh / 2, bottom + wh]) box(back, [ww + 65, 35, 65], [wx, y, bz + 8], trim);
@@ -724,7 +727,7 @@ export function buildHomeOffice(room, root, layout, helpers) {
         const mode = HOME_MODES[modeId] || HOME_MODES.afternoon, look = HOME_LOOKS[modeId] || HOME_LOOKS.afternoon;
         updateSession(modeId);updateBoard(modeId);comfort.update(modeId);
         paintView(skyCanvas.getContext('2d'), skyCanvas.width, skyCanvas.height, mode, look);
-        skyMap.needsUpdate = true;
+        skyMap.needsUpdate = true; windowVista.setPhase(modeId);
         paintClock(clockCanvas.getContext('2d'), 256, look.time); clockMap.needsUpdate = true;
         const drop = Math.max(60, look.shade * wh); blind.scale.y = drop; shadeMap.repeat.set(1, Math.max(1, drop / 210));
         lights.forEach(({light,power},i)=>{light.intensity=power*mode.practical*accent*(HOME_SESSIONS[modeId]||HOME_SESSIONS.afternoon).light[i];});

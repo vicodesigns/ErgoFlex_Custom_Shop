@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { gamingSessionMaps, buildGamingSessionDetail, migrateGamingSavedFurniture, migrateGamingSavedAssetKeys } from './gaming-session-detail.mjs?v=gaming-sessions-20261022';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
@@ -201,6 +202,8 @@ export function buildGamingRoom(room, root, layout, helpers) {
     const skyCanvas = document.createElement('canvas'); skyCanvas.width = skyCanvas.height = 512;
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const pane = mesh(entry, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]);
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'city-neon'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     for (const z of [rearEnd, wz, forwardEnd]) box(entry, [70, wh + 50, 35], [-w / 2 + 5, low + wh / 2, z], trim);
     for (const y of [low, low + wh]) box(entry, [70, 35, ww + 50], [-w / 2 + 5, y, wz], trim);
@@ -506,7 +509,7 @@ export function buildGamingRoom(room, root, layout, helpers) {
             for (let y = top + 10; y < 500; y += 16) for (let x = bx + 5; x < bx + bw - 5; x += 9)
                 if ((x * 7 + y * 3 + i) % 5 < 2) { c.fillStyle = (x + y) % 3 ? '#ffd58a' : '#7fe3f0'; c.fillRect(x, y, 4, 6); }
         }
-        skyMap.needsUpdate = true;
+        skyMap.needsUpdate = true; windowVista.setPhase(modeId);
         strips.forEach(paint);
         const lit = Math.min(.9, mode.rgb * accent), unlit = .12 + .4 * Math.max(0, 1 - lit);
         hexChannels.forEach((channel, i) => hexes.setColorAt(i, tile.set(tone(mode, channel)).multiplyScalar(lit * 1.05).add(color.copy(frost).multiplyScalar(unlit))));

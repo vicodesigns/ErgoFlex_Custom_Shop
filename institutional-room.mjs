@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
 import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=environment-expert-20261014';
 import { addCampusLife } from './campus-lived-in.mjs?v=occ-medialab-20261105';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110';
 
 // Shared architectural kit. The shell (floor, walls, daylight window, door,
 // sign, planning board, ceiling lights) and the common furniture helpers live
@@ -26,6 +27,12 @@ const defaultOptions = spec => ({
     storage: { height: 1200, open: false }, chairDetailHeight: 480, nightBackground: .55,
     lampSupport: null
 });
+// What each setting looks out on (window-vista.mjs). Huntington Beach and Costa Mesa are on the coast.
+const WINDOW_VISTAS = {
+    highschool: 'coast', occmedialab: 'coast', kindergarten: 'garden', elementary: 'garden',
+    hospital: 'city', laboratory: 'city', mobileit: 'city', government: 'city', police: 'city', security: 'city'
+};
+
 export function buildInstitutionalRoom(room, root, layout, h) {
     const spec = INSTITUTIONAL_ROOMS[room.id], group = institutionalModule(room.id), { box, mesh, rod, sphere, material, markSceneAsset } = h;
     const options = { ...defaultOptions(spec), ...group.options?.(spec) };
@@ -147,7 +154,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     room.walls.push({ obj: left, axis: 'z', limit: w / 2 * root.scale.x, sign: -1 });
     const window = new THREE.Group(); window.name = 'Daylight window'; window.position.set(-w / 2 + 15, 1700, bz + d * .54); window.rotation.y = Math.PI / 2; left.add(window);
     const sky = canvasMat(() => {}, 512, 512);
-    mesh(window, new THREE.PlaneGeometry(d * .48, 1750), sky);
+    const skyPane = mesh(window, new THREE.PlaneGeometry(d * .48, 1750), sky);
     for (const x of [-d * .24, 0, d * .24]) box(window, [45, 1840, 80], [x, 0, 5], trim, 3);
     for (const y of [-900, 900]) box(window, [d * .48 + 80, 50, 140], [0, y, 10], trim, 3);
     const door = new THREE.Group(); door.name = 'Room entry door'; right.add(door); door.position.set(w / 2 - 18, 0, front - 1600); door.rotation.y = -Math.PI / 2;
@@ -175,6 +182,8 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     };
     group.furnish(kit);
     const dressAtmosphere = enrichInstitutionalRoom(kit);
+    // The photographed outlook takes over the daylight pane once it has loaded, whichever material a group module left on it.
+    const windowVista = attachVista(skyPane, WINDOW_VISTAS[spec.id] || 'campus'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     const campusLife = addCampusLife({ room, root, layout, asset, byId });
     // Slim linear ceiling fixtures disappear with the camera cutaway.
     const ceilingGroup = new THREE.Group(); ceilingGroup.name = 'Ceiling lighting'; root.add(ceilingGroup); room.ceilingFixture = ceilingGroup;
@@ -189,6 +198,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     room.roomAtmosphere = (phase, gain = 1) => {
         const mode = spec.modes[phase] || spec.modes.morning;
         drawInstitutionalCampus(sky.map.image.getContext('2d'), 512, 512, phase, mode.sky, spec); sky.map.needsUpdate = true;
+        windowVista.setPhase(phase);
         glow.emissiveIntensity = .15 + mode.practical * gain;
         screenMats.forEach(m => {
             // Screens stay readable without lighting the whole watch room.
