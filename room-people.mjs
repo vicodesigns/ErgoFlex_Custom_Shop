@@ -19,6 +19,7 @@
 //   { id, by: '<prop id>', reach }                    standing in front of that furniture, facing it
 //   { id, at: [x, z], turn, y }                       at a spot (y mm lifts a seated pose onto a seat that is not a prop)
 //   scale: n                                          a factor on the model's size (any placement; 1 = as built)
+//   colors: { top, bottom, shoes, hair: '#rrggbb' }   recolours those parts of the model (the fabric's shading is kept)
 //   seat: mm                                          the seat height the pose was built for; the person is raised or
 //                                                     lowered (a little) onto the real seat
 //   layout: '<layout id>'                             only in that room layout;  modes: [...] only in those dayparts
@@ -36,6 +37,23 @@ const HEIGHT_FIT = 1.4;                       // inches either side of the heigh
 const HEIGHT_SOLID = .45;                     // within this the person is fully there; beyond it they fade out to HEIGHT_FIT
 const TASK_CHAIR = 'steelcase-leap-v2';       // seat 435 mm: what the seated desk poses were built on
 const CHAIRS = /chair|stool|steelcase-leap|aeron/i;
+// Which part of a person a material is (MakeHuman names: 'Human.<asset>'); null = skin, eyes, teeth, things held.
+const NOT_WORN = /^(body|low-poly|teeth|tongue|eyebrow|eyelashes|eyes)/i, PARTS = { glasses: /glasses/i, shoes: /shoe|flats|boot|sneaker/i, bottom: /pants|skirt|jeans|shorts|trousers/i, hair: /hair|ponytail|afro|bob|braid|bun|^short\d|^long\d|mohawk|pigtail/i };
+export const partOf = name => { if (!/^Human\./.test(name || '')) return null; const n = name.slice(6); if (NOT_WORN.test(n)) return null; for (const [part, re] of Object.entries(PARTS)) if (re.test(n)) return part; return 'top'; };
+const lumCache = new WeakMap();
+// The average brightness of a garment's texture (linear), so a new colour keeps the weave and the folds at their contrast.
+function textureLuminance(map) {
+    const image = map?.image; if (!image || typeof document === 'undefined') return .2;
+    if (lumCache.has(image)) return lumCache.get(image);
+    let value = .2;
+    try {
+        const c = document.createElement('canvas'); c.width = c.height = 24; const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(image, 0, 0, 24, 24);
+        const d = g.getImageData(0, 0, 24, 24).data, lin = v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; let sum = 0, n = 0;
+        for (let i = 0; i < d.length; i += 4) { if (d[i + 3] < 128) continue; const l = .2126 * lin(d[i]) + .7152 * lin(d[i + 1]) + .0722 * lin(d[i + 2]); if (l > .004 && l < .97) { sum += l; n++; } }
+        if (n > 20) value = sum / n;
+    } catch { /* a texture the canvas cannot read keeps the default */ }
+    lumCache.set(image, value); return value;
+}
 
 export const ROOM_PEOPLE = {
     home: [
@@ -142,7 +160,29 @@ export class RoomPeople {
         const base = object.userData.personBase ||= object.scale.clone(), k = Number.isFinite(spec.scale) && spec.scale > 0 ? spec.scale : 1;
         object.scale.copy(base).multiplyScalar(k); object.userData.personChair?.scale.copy(object.userData.personChairBase ||= object.userData.personChair.scale.clone()).multiplyScalar(k);
     }
-    byKey(key) { return this.people.find(o => this.keyOf(o.userData.person) === key) || null; }
+    // spec.colors: each named part takes the new colour, shaded by the brightness of its own texture.
+    recolor(object, spec) {
+        const colors = spec.colors || null; if (!colors && !object.userData.personTinted) return;
+        if (!object.userData.personMaterials) this.ownMaterials(object);
+        object.userData.personTinted = !!colors;
+        for (const m of object.userData.personMaterials) {
+            const hex = colors?.[partOf(m.name)];
+            if (!m.userData.tint) {
+                if (!hex) continue;
+                const tint = m.userData.tint = { color: { value: new THREE.Vector4(1, 1, 1, .2) }, on: { value: 0 } };
+                m.onBeforeCompile = shader => {
+                    shader.uniforms.personTint = tint.color; shader.uniforms.personTintOn = tint.on;
+                    shader.fragmentShader = 'uniform vec4 personTint;\nuniform float personTintOn;\n' + shader.fragmentShader.replace('#include <map_fragment>',
+                        '#include <map_fragment>\n\tif (personTintOn > .5) { float pl = dot(diffuseColor.rgb, vec3(.2126, .7152, .0722)); diffuseColor.rgb = personTint.rgb * clamp(pl / max(personTint.a, .01), 0., 2.4); }');
+                };
+                m.customProgramCacheKey = () => 'person-tint'; m.needsUpdate = true;
+            }
+            const tint = m.userData.tint; tint.on.value = hex ? 1 : 0;
+            if (hex) { const c = new THREE.Color(hex); tint.color.value.set(c.r, c.g, c.b, textureLuminance(m.map)); }
+        }
+    }
+    // The person shown under that key (a film's own entry wins over a room person of the same name it has replaced).
+    byKey(key) { const all = this.people.filter(o => this.keyOf(o.userData.person) === key); return all.find(o => this.allowed(o.userData.person)) || all[0] || null; }
     // Who is in the room now (for the Director's People tab), room millimetres and degrees.
     list() {
         return this.people.map(o => { const s = o.userData.person; return { key: this.keyOf(s), id: s.id, extra: !!s.extra, desk: s.desk || null, station: s.station || null,
@@ -158,6 +198,7 @@ export class RoomPeople {
             else if (s.beside && !s.at) out.beside = s.beside;
             else { out.at = [Math.round(o.position.x), Math.round(o.position.z)]; out.turn = Math.round(THREE.MathUtils.radToDeg(o.rotation.y) * 10) / 10; if (Math.abs(o.position.y) > .5) out.y = Math.round(o.position.y); }
             if (s.scale && s.scale !== 1) out.scale = s.scale;
+            if (s.colors) out.colors = { ...s.colors };
             return out;
         });
     }
@@ -193,7 +234,7 @@ export class RoomPeople {
             object.name = 'Person:' + spec.id; object.userData.person = spec; object.userData.personFit = this.library.entry(spec.id)?.person?.deskHeight ?? null; object.visible = false;
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
             if ((spec.desk && !spec.station) || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
-            root.add(object); this.people.push(object); this.resize(object, spec);
+            root.add(object); this.people.push(object); this.resize(object, spec); this.recolor(object, spec);
             if (spec.station) this.atStation(object, spec);
             else if (!spec.desk && !spec.beside) this.settle(object, spec);
         }
@@ -276,7 +317,7 @@ export class RoomPeople {
                 // an extra person takes the placement the filter has for it now (it may have been moved since it was built)
                 const now = object.userData.person.extra && (this.filter?.cast || []).find(c => this.keyOf(c) === this.keyOf(object.userData.person));
                 if (now) {
-                    const spec = object.userData.person = { ...now, extra: true }; object.userData.personMissing = false; this.resize(object, spec);
+                    const spec = object.userData.person = { ...now, extra: true }; object.userData.personMissing = false; this.resize(object, spec); this.recolor(object, spec);
                     if (spec.station) this.atStation(object, spec); else if (!spec.desk && !spec.beside) this.settle(object, spec);
                 }
                 const spot = this.filter?.place?.[this.keyOf(object.userData.person)] || this.filter?.place?.[object.userData.person.id]; if (!spot) continue;

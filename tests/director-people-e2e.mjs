@@ -60,6 +60,10 @@ try{
   const moved=await until(async()=>{const p=(await live()).find(p=>p.key===before.key);return p&&Math.abs(p.at[0]-(before.at[0]+400))<2&&Math.abs(p.turn-45)<1&&Math.abs(p.scale-1.1)<.01?p:null;},'the stage follows the fields');
   check(moved,'move, turn and size reach the live stage: '+JSON.stringify({at:moved.at,turn:moved.turn,scale:moved.scale}));
 
+  // clothes: a colour for the top reaches the model's own materials
+  await setField('pe-color-top','#b02a2a');
+  await until(()=>page.evaluate(k=>{const o=document.getElementById('stage').contentWindow.ErgoFlex.workspaceRoom.people.byKey(k);return !!o?.userData.personTinted&&o.userData.personMaterials.some(m=>m.userData.tint?.on.value===1);},before.key),'the top is recoloured on the stage');
+  passed.push('a clothing colour recolours the person on the stage');
   // posture and character
   const pose0=await page.$eval('#director-panel [name="pe-pose"]',e=>e.value);
   const other=await page.$$eval('#director-panel [name="pe-pose"] option',l=>l.filter(o=>!/built on request|at the desk/.test(o.textContent)).map(o=>o.value));

@@ -556,3 +556,8 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 #people-library::backdrop{background:#02080cb8}
 #people-library .pe-gap{width:14px}
 #people-library .pl-card img{object-position:50% 10%}
+.people-colors{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.people-colors label{display:grid;gap:3px;font-size:10.5px;color:#9fb7c6}
+.people-colors span{display:flex;gap:3px;align-items:center}
+.people-colors input[type=color]{width:100%;height:28px;padding:0;border:1px solid #8bc5df40;border-radius:7px;background:none;cursor:pointer}
+.people-colors button{min-width:22px;min-height:22px;padding:0;border-radius:6px;font-size:12px}

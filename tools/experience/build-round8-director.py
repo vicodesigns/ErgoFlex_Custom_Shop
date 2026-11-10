@@ -379,6 +379,8 @@ def clean_people(v):
         elif isinstance(e.get('beside'), list) and len(e['beside']) == 2 and all(num(x) and abs(x) <= 20000 for x in e['beside']): out['beside'] = [round(x) for x in e['beside']]
         else: continue
         if num(e.get('scale')) and .2 <= e['scale'] <= 3 and abs(e['scale'] - 1) > 1e-3: out['scale'] = round(e['scale'], 3)
+        colors = {k: v.lower() for k, v in (e.get('colors') or {}).items() if k in ('top', 'bottom', 'shoes', 'hair') and isinstance(v, str) and re.fullmatch(r'#[0-9a-fA-F]{6}', v)} if isinstance(e.get('colors'), dict) else {}
+        if colors: out['colors'] = colors
         seen.add(key); cast.append(out)
     res = {'cast': cast}; when = {}
     for key, spans in (v.get('when') or {}).items() if isinstance(v.get('when'), dict) else []:

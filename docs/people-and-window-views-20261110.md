@@ -119,5 +119,8 @@ combination buildable; the studio server builds one on `POST /__people/build?id=
 about eight seconds, thumbnail included). Models built this way are untracked files until committed;
 `freeze-inputs.sh` puts them into a render freeze.
 
-Not there yet: clothing colours and outfits per person, custom characters (sliders for build, age, height), a people
-lane in the timeline, and a walk along a path. Test: `tests/director-people-e2e.mjs`.
+Clothes and hair: a colour each for top, bottom, shoes and hair (`colors` on the entry; room-people.mjs recolours
+the model's own materials and keeps the brightness of the fabric's texture, so folds and weave stay).
+
+Not there yet: other outfits per person, custom characters (sliders for build, age, height), a people lane in the
+timeline, and a walk along a path. Test: `tests/director-people-e2e.mjs`.

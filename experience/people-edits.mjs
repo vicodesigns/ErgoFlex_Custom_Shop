@@ -6,7 +6,8 @@
 //               reach?,                                      the model), or at one of the room's other desks
 //               beside: [dx, dz],                            or near the film desk, in its frame
 //               at: [x, z], turn, y,                         or at a spot: room millimetres, degrees, lift in mm
-//               scale } ],                                   size factor (1 = as built)
+//               scale,                                       size factor (1 = as built)
+//               colors: { top, bottom, shoes, hair } } ],    '#rrggbb' for those parts of the model (absent: as built)
 //     when: { '<key>': [[t0, t1, fadeIn?, fadeOut?], ...] }, the seconds of the chapter that person is there (absent: all of it)
 //     chair: { back, side, turn }, fade                      as in the film's people filter
 //   }
@@ -16,6 +17,7 @@
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 const r1=v=>Math.round(v*10)/10,r3=v=>Math.round(v*1000)/1000;
 const KEY=/^[a-z0-9][a-z0-9_-]{0,47}$/i,MODEL=/^people-[a-z0-9][a-z0-9._-]{0,90}$/i,STATION=/^[a-z0-9][a-z0-9_-]{0,60}$/i;
+export const PARTS=['top','bottom','shoes','hair'];
 const pair=(v,max)=>Array.isArray(v)&&v.length===2&&v.every(n=>finite(n)&&Math.abs(n)<=max)?v.map(n=>Math.round(n)):undefined;
 export function cleanPerson(e){
   if(!e||typeof e!=='object'||typeof e.id!=='string'||!MODEL.test(e.id))return null;
@@ -29,6 +31,8 @@ export function cleanPerson(e){
     else return null;
   }
   if(finite(e.scale)&&e.scale>=.2&&e.scale<=3&&Math.abs(e.scale-1)>1e-3)out.scale=r3(e.scale);
+  const colors={};for(const part of PARTS)if(typeof e.colors?.[part]==='string'&&/^#[0-9a-f]{6}$/i.test(e.colors[part]))colors[part]=e.colors[part].toLowerCase();
+  if(Object.keys(colors).length)out.colors=colors;
   return out;
 }
 export function cleanSpans(v,seconds=Infinity){

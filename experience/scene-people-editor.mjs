@@ -1,4 +1,4 @@
-import {cleanPeople,effectivePeople,newKey,spanText} from './people-edits.mjs';
+import {cleanPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
 // select them, then move / turn / scale them with the gizmo (W / E / T) or the fields, change who they are
 // (character) and what they are doing (posture), set the seconds they are in the room, duplicate or remove them, and
@@ -159,6 +159,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(!e)return;
     const who=personName(e),num=(lo,hi)=>{if(el.value.trim()===''||!Number.isFinite(v))throw Error('Type a number.');return Math.min(hi,Math.max(lo,v));};
     if(name==='pe-pose'){await swap(sel,null,el.value);return;}
+    if(name?.startsWith('pe-color-')){const part=name.slice(9);if(!PARTS.includes(part)||!/^#[0-9a-f]{6}$/i.test(el.value))return;edit(sel,x=>{(x.colors||={})[part]=el.value.toLowerCase();},`${who}: ${part} recoloured.`,{undoKey:'people-color-'+part+sel});return;}
     if(name==='pe-anchor'){
       if(el.value==='free'){const o=objectOf(sel),spot=o&&tools?read(o):floorSpot();edit(sel,x=>{delete x.desk;delete x.station;delete x.reach;delete x.beside;x.at=spot.at;x.turn=spot.turn;},`${who} stays where they are now and no longer follows the desk.`);}
       else{const p=poseOf(e.id);edit(sel,x=>{delete x.at;delete x.turn;delete x.y;delete x.beside;x.desk=p?.stance==='seated'?'sit':p?.stance==='wheelchair'?'wheel':'stand';},`${who} is at the film desk and follows it.`);}
@@ -180,6 +181,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-eye'){const key=rowKeys[index],e=key&&entry(key);if(e)edit(key,x=>{if(x.hide)delete x.hide;else x.hide=true;},e.hide?`${personName(e)} is back in the chapter.`:`${personName(e)} is out of this chapter (kept in the list).`);return;}
     if(name==='pe-char'){const c=charIds[index];if(c&&sel)await swap(sel,c,null);return;}
     if(name==='pe-remove'){remove();return;}
+    if(name==='pe-color-reset'){const part=PARTS[index],e=sel&&entry(sel);if(e?.colors?.[part])edit(sel,x=>{delete x.colors[part];if(!Object.keys(x.colors).length)delete x.colors;},`${personName(e)}: ${part} as built.`);return;}
     if(name==='pe-duplicate'){duplicate();return;}
     if(name==='pe-face-camera'){face('camera');return;}
     if(name==='pe-face-desk'){face('desk');return;}
@@ -250,6 +252,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       ${isFree?`<div class="director-row people-fields">${field('X',`pe-x`,e.at[0],{step:10,unit:'mm'})}${field('Z','pe-z',e.at[1],{step:10,unit:'mm'})}${field('Turn','pe-turn',e.turn||0,{step:5,min:-360,max:360,unit:'°'})}${field('Lift','pe-y',e.y||0,{step:5,unit:'mm',title:'Raises a seated person onto a seat, or anyone onto a step'})}</div>
       <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:'<p class="director-hint">They stand or sit where the desk needs them and move with it. A desk posture shows only while the desk is at the height it was built for.</p>'}
       <div class="director-row people-fields">${field('Size','pe-scale',Math.round((e.scale||1)*100),{step:1,min:20,max:300,unit:'%',title:'100 % is the size the character was built at'})}</div>
+      <h4>Clothes and hair</h4>
+      <div class="people-colors">${PARTS.map((part,i)=>{const mine=e.colors?.[part],was=c?.colors?.[part]||'#8a8f96';return `<label title="${mine?'Recoloured':'As built'}: ${part}">${cap(part)}<span><input type="color" name="pe-color-${part}" value="${escape(mine||was)}">${mine?`<button type="button" data-action="pe-color-reset" data-index="${i}" title="Back to the colour the character was built with">↺</button>`:''}</span></label>`;}).join('')}</div>
+      <p class="director-hint">Outfit: ${escape((c?.outfit||[]).map(g=>g.replace(/^[a-z]+_/,'').replace(/[_-]+/g,' ').replace(/\d+$/,'').trim()).join(', ')||'as built')}. A colour keeps the fabric's folds and weave.</p>
       <h4>In the room</h4>
       <label class="director-check"><input type="checkbox" name="pe-whole" ${s?'':'checked'}>The whole chapter</label>
       ${s?`<div class="director-row people-fields">${field('In','pe-in',s[0],{step:.1,min:0,max:T,unit:'s'})}${field('Out','pe-out',Math.min(s[1],T),{step:.1,min:0,max:T,unit:'s'})}${field('Fade in','pe-fin',s[2]??.5,{step:.1,min:0,max:5,unit:'s'})}${field('Fade out','pe-fout',s[3]??.5,{step:.1,min:0,max:5,unit:'s'})}</div>
