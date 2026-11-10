@@ -132,7 +132,9 @@ async function handle(req, res) {
 const IGNORED = ['exports', 'node_modules', '.git', 'assets/props', 'models', 'scene-shots'].map(d => path.join(root, d));
 const ignored = f => { const a = path.resolve(f); return a === stateFile || a === stateFile + '.tmp' || IGNORED.some(d => a === d || a.startsWith(d + path.sep)); };
 let reloadTimer = null, pendingCss = true;
-chokidar.watch(root, { ignored, ignoreInitial: true }).on('all', (event, f) => {
+// --no-watch: no live reload (tests: each watching server takes thousands of the machine's file watches, and a
+// server that cannot get one dies with ENOSPC).
+if (!process.argv.includes('--no-watch')) chokidar.watch(root, { ignored, ignoreInitial: true }).on('error', e => console.error('[studio server] live reload is off:', e.message)).on('all', (event, f) => {
   if (ignored(f)) return;
   pendingCss = pendingCss && f.endsWith('.css');
   clearTimeout(reloadTimer);

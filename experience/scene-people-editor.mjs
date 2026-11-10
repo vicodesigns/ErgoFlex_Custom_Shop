@@ -15,7 +15,7 @@ const MODES={translate:'Move',rotate:'Turn',scale:'Scale'};
 const STANCES=['standing','seated','wheelchair','walking'];
 const thumb=id=>`/assets/props/thumbs/${encodeURIComponent(id)}.png`;
 export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rerender,time=()=>0,onSelect=()=>{},lightsShowing=()=>false}){
-  let sel=null,catalog=null,loading=null,tools=null,booting=null,mode='translate',busy=null,rowKeys=[],charIds=[],shown=[];
+  let sel=null,catalog=null,loading=null,tools=null,booting=null,mode='translate',busy=null,rowKeys=[],laneKeys=[],charIds=[],shown=[];
   const filters={sex:'all',age:'all',heritage:'all'},lib={query:'',sex:'all',stance:'all',aid:'all'};
   const frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow,three=()=>bridge.stage()?.three?.();
   const stagePeople=()=>win()?.ErgoFlex?.workspaceRoom?.people||null;
@@ -85,10 +85,11 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     edit(sel,p=>{if(mode==='translate'){p.at=now.at;p.y=Math.max(-2000,now.y);}else if(mode==='rotate')p.turn=now.turn;else p.scale=Math.min(3,Math.max(.2,now.scale));},
       mode==='translate'?`Moved ${name}.`:mode==='rotate'?`Turned ${name} to ${now.turn}°.`:`${name} is now ${Math.round(now.scale*100)} % of their built size.`);
   }
-  // Where a new person goes: on the floor in front of the camera, facing it.
+  // Where a new person goes: on the floor in the lower middle of the view, facing the camera.
   function floorSpot(){
     const t=three(),THREE=tools?.THREE,root=win()?.ErgoFlex?.workspaceRoom?.root;if(!t||!THREE||!root)return {at:[0,1500],turn:180};
-    root.updateWorldMatrix(true,false);const eye=root.worldToLocal(t.camera.getWorldPosition(new THREE.Vector3())),ahead=root.worldToLocal(t.camera.getWorldPosition(new THREE.Vector3()).add(t.camera.getWorldDirection(new THREE.Vector3())));
+    // through the lower middle of the frame (the floor nearer the camera, in front of what the shot is looking at)
+    root.updateWorldMatrix(true,false);t.camera.updateMatrixWorld();const eye=root.worldToLocal(t.camera.getWorldPosition(new THREE.Vector3())),ahead=root.worldToLocal(new THREE.Vector3(0,-.62,.5).unproject(t.camera));
     const dir=ahead.sub(eye).normalize(),reach=dir.y<-.05?Math.min(6000,Math.max(1500,-eye.y/dir.y)):3000,p=eye.clone().addScaledVector(dir,reach);
     return {at:[Math.round(p.x),Math.round(p.z)],turn:r1(THREE.MathUtils.radToDeg(Math.atan2(eye.x-p.x,eye.z-p.z)))};
   }
@@ -178,6 +179,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   async function action(name,index){
     if(name==='pe-add'){openLibrary();return;}
     if(name==='pe-row'){const key=rowKeys[index];if(key)select(key);return;}
+    if(name==='pe-lane'){const key=laneKeys[index];if(key)select(key);return;}
     if(name==='pe-eye'){const key=rowKeys[index],e=key&&entry(key);if(e)edit(key,x=>{if(x.hide)delete x.hide;else x.hide=true;},e.hide?`${personName(e)} is back in the chapter.`:`${personName(e)} is out of this chapter (kept in the list).`);return;}
     if(name==='pe-char'){const c=charIds[index];if(c&&sel)await swap(sel,c,null);return;}
     if(name==='pe-remove'){remove();return;}
@@ -271,8 +273,15 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <p class="director-hint">${mine?'This chapter has its own cast.':list.length?'This is the film\'s cast. Your first change copies it into the chapter.':'Add people from the library, or bring in the people who live in this room.'} Click a person in the view or in the list.</p>
       <div class="people-list">${list.map(row).join('')}</div>${e?selectedPanel(e):''}`;
   }
+  // The timeline's People lane: one bar per person over the seconds they are in the room.
+  function lane(){
+    const T=seconds()||1,list=cast().filter(e=>!e.hide);laneKeys=list.map(e=>e.key);if(!list.length)return '';
+    const h=Math.max(5,Math.min(15,Math.floor(36/list.length)));
+    return list.map((e,i)=>(spans(e.key)||[[0,T]]).map(([a,b])=>{const x=Math.max(0,a)/T*100,w=Math.max(.6,(Math.min(b,T)-Math.max(0,a))/T*100);
+      return `<button type="button" class="people-bar ${e.key===sel?'selected':''}" data-action="pe-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${1+i*(36/list.length)}px;height:${h}px" title="${escape(personName(e))}: ${escape(doing(e))} · ${escape(spanText(spans(e.key),T))}">${h>=10?escape(personName(e)):''}</button>`;}).join('')).join('');
+  }
   const header=()=>{const e=sel&&entry(sel);return e?{name:personName(e),detail:doing(e)}:null;};
   // After the film setup is (re)applied or the cut changes: the selection may be gone.
   function applied(){if(sel&&!entry(sel))sel=null;}
-  return {panel,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove,applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
+  return {panel,lane,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove,applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
 }
