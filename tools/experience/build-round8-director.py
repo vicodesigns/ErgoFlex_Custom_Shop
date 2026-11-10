@@ -476,7 +476,8 @@ def clean_versions(v):
         except (KeyError, TypeError, ValueError): return None
         if not (0 <= a < b <= 600): return None
         out.append({'n': e['n'], 'preset': e['preset'], 'name': re.sub(r'[\x00-\x1f]', ' ', str(e.get('name') or '')).strip()[:40],
-                    'start': round(a, 2), 'end': round(b, 2)})
+                    'start': round(a, 2), 'end': round(b, 2),
+                    **({'build': clean_build(e['build'])} if clean_build(e.get('build')) else {})})
     if len({e['n'] for e in out}) != len(out): return None
     return sorted(out, key=lambda e: (e['start'], e['n']))
 

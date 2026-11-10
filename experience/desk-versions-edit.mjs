@@ -14,6 +14,20 @@ export const labelOf=id=>NAMES[id]||(String(id||'Desk')[0].toUpperCase()+String(
 export const MIN_SHOWN=2;                       // s a desk is shown at least
 const BUNDLE=['kind','preset','lights','sceneEdits','screens','sceneGlobals','accessories'];
 const DARK=new Set(['gaming','hbhs']),DARK_TOP={clearcoat:0,specularIntensity:0.05},EXPOSURE={gaming:.95,hbhs:.95,office:.85,occ:.85,architect:.70,artist:.65};
+// A desk version's own build (the Build tab): finishes, trim and the complete accessory set with slots; same shape as
+// desk-build.mjs cleanDeskBuild (kept here so node can use it without the catalog). Written to the sub-shot as featuredBuild.
+const SLOT_IDS=['desktop','shelf','lower-shelf','base-shelf'];
+export function cleanBuild(b){
+  if(!b||typeof b!=='object')return null;
+  const out={};
+  for(const k of ['woodFinish','baseFinish'])if(typeof b[k]==='string'&&b[k]&&b[k].length<=60)out[k]=b[k];
+  if(typeof b.trimColor==='string'&&/^#[0-9a-f]{6}$/i.test(b.trimColor))out.trimColor=b.trimColor.toLowerCase();
+  if(Array.isArray(b.accessories)){
+    const seen=new Set();
+    out.accessories=b.accessories.slice(0,60).filter(a=>a&&typeof a.id==='string'&&/^[a-z0-9-]{1,60}$/.test(a.id)&&SLOT_IDS.includes(a.slot)&&!seen.has(a.id)&&seen.add(a.id)).map(a=>({id:a.id,slot:a.slot}));
+  }
+  return Object.keys(out).length?out:null;
+}
 const num=(v,lo,hi)=>Number.isFinite(Number(v))?Math.max(lo,Math.min(hi,Number(v))):null;
 const r2=x=>Math.round(x*100)/100;
 const clone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v));
@@ -27,7 +41,8 @@ export function cleanDeskVersionList(value){
     const preset=String(e.preset||'');if(!/^[a-z0-9-]{1,40}$/.test(preset))return null;
     const start=num(e.start,0,600),end=num(e.end,0,600);if(start===null||end===null||end<=start)return null;
     const name=String(e.name??'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,40);
-    out.push({n:e.n,preset,name,start:r2(start),end:r2(end)});
+    const build=cleanBuild(e.build);
+    out.push({n:e.n,preset,name,start:r2(start),end:r2(end),...(build?{build}:{})});
   }
   if(new Set(out.map(e=>e.n)).size!==out.length)return null;
   out.sort((a,b)=>a.start-b.start||a.n.localeCompare(b.n));
@@ -88,6 +103,7 @@ export function resolveSubshots(subs,versions){
       out.screens=mainScreen?[clone(mainScreen)]:[];
       out.lights=(out.lights||[]).map(l=>l?.name==='kicker'?{...l,intensity:18}:l);
     }
+    const build=cleanBuild(v.build);if(build)out.featuredBuild=build;else delete out.featuredBuild;   // the desk's own Build tab edits, this sub-shot only
     if(v.name&&v.name!==labelOf(v.preset))out.name=v.name;else delete out.name;
     return out;
   }).filter(Boolean);
@@ -98,7 +114,7 @@ export const resolveFilm=(film,versions)=>({...film,subshots:Object.fromEntries(
 // The list the Director shows: the film's own, with shot.deskVersions over it when it names the same slots.
 export function effectiveVersions(base,edits){
   const e=cleanDeskVersionList(edits);
-  if(!e||e.length!==base.length||!e.every((v,i)=>v.n===base[i].n))return base.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end}));
+  if(!e||e.length!==base.length||!e.every((v,i)=>v.n===base[i].n))return base.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end,...(v.build?{build:v.build}:{})}));
   return e;
 }
 // "Model-specific dressing" a model change resets, for the panel's hint.

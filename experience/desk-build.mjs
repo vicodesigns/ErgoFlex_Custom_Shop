@@ -53,7 +53,9 @@ export function cleanDeskBuild(b){
 export const cleanDeskBuildField=v=>v&&typeof v.deskBuild==='object'&&v.deskBuild?{deskBuild:cleanDeskBuild(v.deskBuild)||{}}:{};
 export const filmFeaturedBuild=film=>cleanDeskBuild(film?.featuredBuild);
 export const effectiveFeaturedBuild=(film,shot)=>shot?.deskBuild&&typeof shot.deskBuild==='object'?cleanDeskBuild(shot.deskBuild):filmFeaturedBuild(film);
-export const mergeFeaturedBuild=(film,shot)=>{if(!shot?.deskBuild||typeof shot.deskBuild!=='object')return {};const b=cleanDeskBuild(shot.deskBuild);return b?{featuredBuild:b}:{featuredBuild:undefined};};
+// A chapter the film renders as sub-shots (hero: one desk per sub-shot) has no chapter-wide build: each desk version carries
+// its own (sub-shot featuredBuild, desk-versions-edit.mjs), so shot.deskBuild is not applied there.
+export const mergeFeaturedBuild=(film,shot)=>{if(film?.subshot||film?.subshots)return {};if(!shot?.deskBuild||typeof shot.deskBuild!=='object')return {};const b=cleanDeskBuild(shot.deskBuild);return b?{featuredBuild:b}:{featuredBuild:undefined};};
 export const buildOf=(shot,desk)=>shot?.deskEdits?.find(e=>e.desk===desk)?.build||null;
 // shot.deskEdits with this desk's build replaced (null: removed; an entry left with nothing else goes too).
 export function withDeskBuild(list,desk,name,build){

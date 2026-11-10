@@ -386,3 +386,5 @@ body.directing.film-frame .desk-version-badge:not([hidden]){display:block;positi
 #director-timeline .desk-version-seam:hover::after{background:var(--df-select-text)}
 #director-timeline .desk-version-drop{position:absolute;top:2px;height:36px;z-index:5;pointer-events:none;border:2px dashed var(--df-select-text);border-radius:var(--df-r-2);background:#ffffff1a;box-sizing:border-box}
 .build-desk-times{display:flex;gap:10px;margin:6px 0}.build-desk-times label{display:flex;align-items:center;gap:4px}.build-desk-times input{width:70px}
+.director-warning{padding:8px 10px;border:1px solid #b9812e;border-radius:var(--df-r-2);background:#b9812e22}
+.director-warning button{margin-left:6px}

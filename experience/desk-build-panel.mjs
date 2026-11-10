@@ -7,14 +7,14 @@ import {accessory} from '../catalog.mjs';
 import {SLOTS,slotLabel,naturalSlot,slotless,woodSwatches,baseSwatches,trimSwatches,presetBuilds,presetBuild,cleanDeskBuild,cleanBuildAccessories,
   catalogAccessories,roomDesks,readDesk,withDeskBuild,hasBuildTab,isBrandingRoom,FEATURED,effectiveFeaturedBuild,filmFeaturedBuild} from './desk-build.mjs';
 import {effectiveDeskEdits} from './desk-edits.mjs';
-import {presetSwatch} from './desk-versions.mjs';
+import {presetSwatch,presetLabel} from './desk-versions.mjs';
 
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sizeLabel=s=>s==='48x30'?'48″':s==='60x30'?'60″':String(s||'');
 
-const VERSIONS_NOTE=`<p class="director-hint" data-build-versions><b>Use the Desk versions lane to change a desk’s model.</b> This chapter shows several desks one after another; pick one in the lane and use the Desk version tab for its model, name and order. Finishes and accessories here apply to the whole chapter, every desk in it.</p>`;
-export function createDeskBuildPanel({panel,shot,film,commit,status,rerender,ready,selection=()=>null,versions=()=>false}){
-  let picked=null,openAdd=false;
+const VERSIONS_NOTE=`<p class="director-hint" data-build-versions><b>Use the Desk versions lane to change a desk’s model.</b> Finishes and accessories here are for the desk version you are editing only; its model, name, order and length are in the Desk version tab.</p>`;
+export function createDeskBuildPanel({panel,shot,film,commit,status,rerender,ready,selection=()=>null,versions=null}){
+  let picked=null,openAdd=false,retry=0;
   const win=()=>document.getElementById('stage')?.contentWindow||null,api=()=>win()?.ErgoFlex||null;
   const live=()=>{try{return ready?.()!==false&&!!api()?.sceneDesks?.records;}catch{return false;}};
   const room=()=>shot()?.room;
@@ -22,11 +22,13 @@ export function createDeskBuildPanel({panel,shot,film,commit,status,rerender,rea
   // The featured desk comes first and is the default; the room's other desks follow (a selection of the featured desk's own record id is it too).
   const current=()=>{const want=selection()||picked,list=desks();return list.find(r=>r.id===want)?.id||FEATURED;};
   const featured=id=>id===FEATURED;
+  // Chapters the film renders as sub-shots: the featured desk's build is the desk version's own (desk-versions.mjs).
+  const perVersion=()=>!!versions?.active();
   const featuredName='Featured desk';
   const edits=()=>effectiveDeskEdits(film(),shot());
   const entry=id=>edits().find(e=>e.desk===id)||null;
   // The build as the Director holds it (what the stage was told); the desk's own live reading fills the rest.
-  const held=id=>featured(id)?effectiveFeaturedBuild(film(),shot()):entry(id)?.build||null;
+  const held=id=>featured(id)?(perVersion()?cleanDeskBuild(versions.build()):effectiveFeaturedBuild(film(),shot())):entry(id)?.build||null;
   // The featured desk as the stage has it: the configurator's own config, each accessory with the slot it sits in.
   function readFeatured(){
     const a=api(),c=a.currentConfig,objs=a.sceneDesks?.active?.objects;
@@ -38,6 +40,7 @@ export function createDeskBuildPanel({panel,shot,film,commit,status,rerender,rea
   function intended(id){const d=featured(id)?readFeatured():readDesk(api(),id),b=held(id)||{};return {...d,...(b.woodFinish?{woodFinish:b.woodFinish}:{}),...(b.baseFinish?{baseFinish:b.baseFinish}:{}),...(b.trimColor?{trimColor:b.trimColor}:{}),...(b.accessories?{accessories:b.accessories}:{})};}
   function write(id,build,text){
     const r=api()?.sceneDesks?.records.get(id),clean=build&&cleanDeskBuild(build);
+    if(featured(id)&&perVersion()){versions.set(clean||null,text);rerender();return;}
     if(featured(id))commit(()=>{if(clean)shot().deskBuild=clean;else if(filmFeaturedBuild(film()))shot().deskBuild={};else delete shot().deskBuild;},{render:false});
     else commit(()=>{shot().deskEdits=withDeskBuild(edits(),id,r?.state.name,clean||null);},{render:false});
     status(text);rerender();
@@ -48,6 +51,12 @@ export function createDeskBuildPanel({panel,shot,film,commit,status,rerender,rea
     if(accessories&&!b.accessories)b.accessories=intended(id)?.accessories||[];
     return b;
   };
+  // An older whole-chapter change (shot.deskBuild) on a chapter with desk versions: no longer applied; named after the model it matches.
+  function legacyBuild(){
+    const b=shot()?.deskBuild&&cleanDeskBuild(shot().deskBuild);if(!b)return null;
+    const m=presetBuilds().find(p=>(!b.woodFinish||p.woodFinish===b.woodFinish)&&(!b.baseFinish||p.baseFinish===b.baseFinish)&&(!b.trimColor||String(p.trimColor).toLowerCase()===b.trimColor));
+    return {name:m?presetLabel(m.id):''};
+  }
   const kindName={wood:'Desktop finish',base:'Frame finish',trim:'Trim colour'};
   const field={wood:'woodFinish',base:'baseFinish',trim:'trimColor'};
 
@@ -69,23 +78,27 @@ export function createDeskBuildPanel({panel,shot,film,commit,status,rerender,rea
     return `<button type="button" data-build-preset="${escape(p.id)}" style="--wood:${w.wood};--trim:${w.trim};--base:${w.base}" title="${escape(p.name)} · ${escape(w.woodName)} top, ${escape(w.baseName)} frame, ${p.accessories.length} accessories. Replaces this desk's finishes and accessories."><i class="build-preset-swatch" aria-hidden="true"></i><span>${escape(p.name)}</span></button>`;}).join('')}</div>`;
 
   function content(){
-    if(!live())return '<h3>Build</h3>'+(versions()?VERSIONS_NOTE:'')+'<p class="director-hint">The room is loading…</p>';
+    if(!live()){if(!retry)retry=setTimeout(()=>{retry=0;if(panel.querySelector('[data-inspector-page=build]')?.hidden===false)rerender();},500);}   // the stage is switching: look again shortly
+    if(!live())return '<h3>Build</h3>'+(perVersion()?VERSIONS_NOTE:'')+'<p class="director-hint">The room is loading…</p>';
     // School, college and library rooms: their other desks use the Branding tab; the featured desk's finishes and accessories stay here.
     const list=hasBuildTab(room())?desks():[];
     const id=current(),edited=!!held(id),d=intended(id);
     const picker=selection()||!list.length?'':`<label class="build-desk">Desk<select name="build-desk"><option value="${FEATURED}" ${featured(id)?'selected':''}>${featuredName} · ${sizeLabel(readFeatured().size)}</option>${list.map(r=>`<option value="${escape(r.id)}" ${r.id===id?'selected':''}>${escape(r.state.name)} · ${sizeLabel(r.state.size)}</option>`).join('')}</select></label>`;
-    return `<h3>Build <span class="inspector-subtitle">${escape(d.name)} · ${sizeLabel(d.size)}</span></h3>${picker}
-      <p class="director-hint">Materials, trim and accessories for ${featured(id)?'the featured desk':'this desk'}, like the store’s configurator. Size is on the desk’s own panel. ${edited?'Edited here; Export cut sends it to the film.':'As the chapter has it; your first change is kept in this cut.'}</p>
-      ${featured(id)&&versions()?VERSIONS_NOTE:`<fieldset class="chapter-pacing build-box"><legend>Start from a build preset</legend>${presetChips()}</fieldset>`}
+    const pv=featured(id)&&perVersion(),legacy=pv&&legacyBuild();
+    return `<h3>Build <span class="inspector-subtitle">${pv?escape(versions.label()):escape(d.name)+' · '+sizeLabel(d.size)}</span></h3>${legacy?`<div class="director-hint director-warning" data-build-legacy><b>An older whole-chapter build change is set${legacy.name?` (${escape(legacy.name)})`:''}.</b> It only affected the preview. <button type="button" data-build-legacy-remove>Remove it</button></div>`:''}${pv?'<p class="director-hint" data-build-editing>Editing this desk version only. Click another desk in the Desk versions lane, or move the playhead into it, to edit that one.</p>':''}${picker}
+      <p class="director-hint">Materials, trim and accessories for ${pv?'this desk version':featured(id)?'the featured desk':'this desk'}, like the store’s configurator. Size is on the desk’s own panel. ${edited?'Edited here; Export cut sends it to the film.':pv?'As its model has it; your first change is kept in this cut.':'As the chapter has it; your first change is kept in this cut.'}</p>
+      ${featured(id)&&perVersion()?VERSIONS_NOTE:`<fieldset class="chapter-pacing build-box"><legend>Start from a build preset</legend>${presetChips()}</fieldset>`}
       <fieldset class="chapter-pacing build-box"><legend>Desktop finish <small data-build-name="wood">${escape(d.woodFinish||'')}</small></legend>${swatches('wood',woodSwatches(),d.woodFinish)}</fieldset>
       <fieldset class="chapter-pacing build-box"><legend>Frame finish <small data-build-name="base">${escape(d.baseFinish||'')}</small></legend>${swatches('base',baseSwatches(),d.baseFinish)}</fieldset>
       <fieldset class="chapter-pacing build-box"><legend>Trim colour <small data-build-name="trim">${escape(trimSwatches().find(t=>t.color===d.trimColor)?.name||d.trimColor||'')}</small></legend>${swatches('trim',trimSwatches(),d.trimColor)}</fieldset>
       <fieldset class="chapter-pacing build-box"><legend>Accessories <small>${d.accessories.length}</small></legend>${d.loaded?accessoryRows(d)+addRow(d):'<p class="director-hint">This desk’s accessories are not loaded yet.</p>'}
         <p class="director-hint">Desktop, top shelf, second shelf or the shelf at the base. A second keyboard, mouse or display replaces the first, as in the store.</p></fieldset>
-      <div class="director-actions"><button type="button" data-build-reset ${edited?'':'disabled'}>Reset this desk to the room</button></div>`;
+      <div class="director-actions"><button type="button" data-build-reset ${edited?'':'disabled'}>${pv?'Reset to model defaults':'Reset this desk to the room'}</button></div>`;
   }
 
   function onClick(event){
+    const lr=event.target.closest?.('[data-build-legacy-remove]');
+    if(lr&&panel.contains(lr)){commit(()=>{delete shot().deskBuild;},{render:false});status('The older whole-chapter build change is removed.');rerender();return;}
     const b=event.target.closest?.('[data-build-pick],[data-build-preset],[data-build-remove],[data-build-add],[data-build-reset]');if(!b||!panel.contains(b))return;
     const id=current();if(!id||!live())return;
     try{

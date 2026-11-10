@@ -29,6 +29,7 @@ const settled=()=>page.evaluate(()=>!document.body.classList.contains('loading')
 const click=async sel=>{await page.evaluate(s=>document.querySelector(s).click(),sel);await wait(400);};
 const laneBox=()=>page.$eval('.desk-versions-lane',e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};});
 async function drag(from,to,steps=12){await page.mouse.move(from.x,from.y);await page.mouse.down();for(let i=1;i<=steps;i++){await page.mouse.move(from.x+(to.x-from.x)*i/steps,from.y+(to.y-from.y)*i/steps);await wait(20);}await page.mouse.up();await wait(500);}
+page.on('console',m=>{if(m.type()==='error'||/TypeError|ReferenceError/.test(m.text()))console.log('     console '+m.type()+': '+m.text().slice(0,300));});
 try{
   await openChapter(page,base,chapter);
   const order0=await laneText();
@@ -61,6 +62,35 @@ try{
   check((await laneText()).includes('D · Studio music room'),'renamed on the lane: '+await laneText());
   check(await badge()==='Desk D · Studio music room','renamed on the badge: '+await badge());
 
+  // ---- Build tab per desk version: B's trim orange changes only B
+  const trimOf=async(t)=>{await seek(page,t);await until(async()=>await settled(),'settled');await wait(1500);return (await stage()).trim.toLowerCase();};
+  const trimA0=await trimOf(2),trimC0=await trimOf(17);
+  await page.evaluate(()=>document.querySelector('#director-timeline [data-desk-version="B"]').click());await wait(600);
+  await click('#director-panel [data-inspector-tab="build"]');await until(()=>page.$('#director-panel [data-build-editing]'),'Build tab ready',60000);
+  check(/Desk B · Artist/.test(await page.$eval('#director-panel [data-inspector-page=build] h3',e=>e.textContent)),'Build tab header: '+await page.$eval('#director-panel [data-inspector-page=build] h3',e=>e.textContent));
+  check(await page.$('#director-panel [data-build-editing]')!==null,'Build tab says clicking another desk in the lane switches');
+  await click('#director-panel [data-build-pick=trim][data-value="#f99239"]');
+  await until(async()=>(await stage()).trim.toLowerCase()==='#f99239'&&await settled(),'B takes the orange trim');
+  check(true,'B (artist) now has the orange trim on the stage');
+  const trimA1=await trimOf(2),trimC1=await trimOf(17);
+  check(trimA1===trimA0&&trimC1===trimC0&&trimA1!=='#f99239'&&trimC1!=='#f99239',`A (${trimA1}) and C (${trimC1}) keep their own trim`);
+  check((await trimOf(8))==='#f99239','back on B the orange trim is still there');
+  let bd=(await draft())?.deskVersions;
+  check(bd?.[1].build?.trimColor==='#f99239'&&!bd[0].build&&!bd[2].build&&!(await draft()).deskBuild,'draft: deskVersions[1].build has the trim; no chapter-wide deskBuild');
+  // a model change clears the build
+  await page.evaluate(()=>document.querySelector('#director-timeline [data-desk-version="B"]').click());await wait(500);
+  await click('#director-panel [data-inspector-tab="version"]');
+  await page.select('#director-panel [name="dv-model"]','library');await wait(800);
+  bd=(await draft())?.deskVersions;check(bd?.[1].preset==='library'&&!bd[1].build,'changing B to Library clears its build overrides');
+  await page.select('#director-panel [name="dv-model"]','artist');await wait(800);
+  await until(async()=>await settled(),'settled');
+  await click('#director-panel [data-inspector-tab="build"]');await until(()=>page.$('#director-panel [data-build-editing]'),'Build tab ready',60000);
+  await click('#director-panel [data-build-pick=trim][data-value="#f99239"]');await wait(800);
+  check((await draft())?.deskVersions?.[1].build?.trimColor==='#f99239','B orange again (kept for the export)');
+  await click('#director-panel [data-inspector-tab="build"]');
+  check(/Reset to model defaults/.test(await page.$eval('#director-panel [data-build-reset]',e=>e.textContent)),'Reset to model defaults is there');
+  await page.screenshot({path:path.join(shots,'4-build-per-desk.png')});
+
   // ---- drag B (Artist) onto place 3 (swap order; slots stay)
   let L=await laneBox(),segs=await lane(),B=segs[1],C=segs[2];
   const at=s=>({x:L.x+(s.left+s.width/2)/100*L.w,y:L.y+L.h/2});
@@ -70,8 +100,11 @@ try{
   check(JSON.stringify(slots)===JSON.stringify(segs.map(s=>[s.left,s.width].join())),'the time slots stay where they were');
 
   // ---- drag the A | B seam +2 s (5.0 -> 7.0)
-  L=await laneBox();const seamX=L.x+5/48*L.w,dx=2/48*L.w;
+  await until(async()=>await settled(),'settled before the seam drag');L=await laneBox();const seamX=L.x+5/48*L.w,dx=2/48*L.w;
+  console.log('     seam target:',JSON.stringify(await page.evaluate(([x,y])=>{const e=document.elementFromPoint(x,y);return {cls:e?.className,tag:e?.tagName,seamLeft:document.querySelector('[data-desk-seam="0"]')?.style.left};},[seamX,L.y+L.h/2])),JSON.stringify(L));
+  await page.evaluate(()=>{window.__pd=[];document.addEventListener('pointerdown',e=>window.__pd.push(e.target.className+'/'+e.button),true);document.addEventListener('pointerup',e=>window.__pd.push('up:'+e.target.className),true);});
   await drag({x:seamX,y:L.y+L.h/2},{x:seamX+dx,y:L.y+L.h/2});
+  console.log('     pointer log:',JSON.stringify(await page.evaluate(()=>window.__pd)),await page.$eval('#director-panel [data-status]',e=>e.textContent));
   let dv=(await draft())?.deskVersions;
   check(dv&&Math.abs(dv[0].end-7.3)<.15&&Math.abs(dv[1].start-6.7)<.15,`seam A|B moved 2 s: A ${dv?.[0].start}-${dv?.[0].end}, B ${dv?.[1].start}-${dv?.[1].end}`);
   check(dv&&Math.abs((dv[0].end-dv[1].start)-.6)<.02,'the crossfade overlap keeps its width (0.6 s)');
@@ -91,6 +124,7 @@ try{
 
   // ---- undo is one step per edit
   const count=async()=>JSON.stringify((await draft())?.deskVersions||null);
+  await until(async()=>await settled(),'settled');await wait(800);
   const withEnd=await count();await click('#director-panel [data-action=undo]');check(await count()!==withEnd,'Undo steps back one edit');await click('#director-panel [data-action=redo]');
 
   // ---- export
@@ -115,8 +149,26 @@ try{
   check(sub.every((s,i)=>Math.abs(s.renderRange[0]-ex[i].start)<.011&&Math.abs(s.renderRange[1]-ex[i].end)<.011&&s.renderRange[0]<s.renderRange[1]),'renderRanges follow the export');
   check(sub[3].name==='Studio music room'&&!(sub[3].accessories&&sub[3].accessories.add)&&sub[3].screens.length===1,'music sub-shot: its name, none of HBHS\'s screens or dressing');
   check(!JSON.stringify(sub[3].sceneEdits).includes('Top_Shelf')===false?true:true,'(dark-top rule only for gaming / hbhs)');
+  const withBuild=sub.filter(x=>x.featuredBuild);
+  check(withBuild.length===1&&withBuild[0].preset==='artist'&&withBuild[0].featuredBuild.trimColor==='#f99239','pass: only the artist sub-shot carries featuredBuild (trim #f99239) '+withBuild.map(x=>x.subshot+x.preset));
   check(JSON.stringify(Object.keys(cut.subshots))==='["A","B","C","D","E","F"]'&&cut.presets.join()===sub.map(s=>s.preset).join()&&cut.subshots.B[0]===sub[1].renderRange[0],'film shot: subshots map and presets follow');
   check(sub[0].renderRange[0]===0&&sub[5].renderRange[1]===cut.seconds,'first starts at 0, last ends at the chapter length '+cut.seconds);
+  // ---- an older whole-chapter deskBuild: warning, Remove clears it in one undo step
+  // (a chapter link whose cut carries the old shot.deskBuild, as an earlier Director session left it)
+  const seedBuild=await page.evaluate(async()=>{const {presetBuild}=await import('/experience/desk-build.mjs');return presetBuild('music');});
+  const url=await page.evaluate(sb=>{const h=location.hash,m=/cut=([A-Za-z0-9_-]+)/.exec(h),dec=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(m[1].replaceAll('-','+').replaceAll('_','/')),c=>c.charCodeAt(0))));
+    dec.shots[0].deskBuild=sb;let bin='';new TextEncoder().encode(JSON.stringify(dec)).forEach(b=>bin+=String.fromCharCode(b));
+    return location.pathname+h.replace(m[1],btoa(bin).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,''));},seedBuild);
+  const seeded=!!seedBuild;
+  await page.goto(base+url);await page.waitForFunction(()=>/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:300000});await wait(1500);
+  await click('#director-panel [data-inspector-tab="build"]');
+  await until(()=>page.$('#director-panel [data-build-legacy]'),'legacy warning',20000).catch(()=>{});
+  const warn=await page.$eval('#director-panel [data-build-legacy]',e=>e.textContent).catch(()=>'');
+  check(seeded&&/An older whole-chapter build change is set \(Music\)\. It only affected the preview\./.test(warn),'old deskBuild warning: '+warn.slice(0,120));
+  await click('#director-panel [data-build-legacy-remove]');
+  check(await page.$('#director-panel [data-build-legacy]')===null&&!(await draft())?.deskBuild,'Remove it clears shot.deskBuild');
+  await click('#director-panel [data-action=undo]');await click('#director-panel [data-inspector-tab="build"]');
+  check(await page.$('#director-panel [data-build-legacy]')!==null,'Undo brings it back: one step');
   check(!errors.length,'no page errors'+(errors.length?': '+errors.join(' | '):''));
   fs.writeFileSync(path.join(shots,'subshots-summary.txt'),sub.map(s=>`${s.subshot} ${s.preset} ${s.renderRange} ${s.name||''}`).join('\n'));
 }catch(error){failures.push(error.message);console.error(error);await page.screenshot({path:path.join(shots,'failure.png')}).catch(()=>{});}

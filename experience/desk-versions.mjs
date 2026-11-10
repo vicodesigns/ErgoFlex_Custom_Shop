@@ -11,7 +11,7 @@
 import {PRESETS,PRODUCT_CONFIG} from '../catalog.mjs';
 import {SHARED_BUILD_PRESETS} from '../preset-defaults.mjs';
 import {filmRenderShot} from './film-render.mjs';
-import {NAMES,effectiveVersions,resolveSubshots,resolveFilm,moveVersion,moveSeam,seamsOf,shown,MIN_SHOWN,labelOf,RESET_NOTE,cleanDeskVersionList} from './desk-versions-edit.mjs';
+import {NAMES,effectiveVersions,resolveSubshots,resolveFilm,moveVersion,moveSeam,seamsOf,shown,MIN_SHOWN,labelOf,RESET_NOTE,cleanDeskVersionList,cleanBuild} from './desk-versions-edit.mjs';
 
 export const presetLabel=id=>NAMES[id]||PRESETS.find(p=>p.id===id)?.name||String(id||'Desk');
 // The build's own colours: desktop finish, frame, trim (preset-defaults.mjs wins over the catalog card, as applyPreset).
@@ -32,7 +32,7 @@ function deskVersionsBase(film,subshots){
   const presets=Array.isArray(film.presets)?film.presets:[],subs=Array.isArray(subshots)?subshots:Array.isArray(subshots?.shots)?subshots.shots:[];
   const list=Object.entries(map).filter(([,r])=>Array.isArray(r)&&r.length===2&&r.every(Number.isFinite)).sort((a,b)=>a[1][0]-b[1][0]||a[0].localeCompare(b[0]))
     .map(([n,[start,end]],i)=>{const setup=subs.find(s=>s?.subshot===n)||null,preset=setup?.preset||presets[i]||film.preset;
-      return {n,preset,label:setup?.name||presetLabel(preset),sig:n+'|'+preset,start,end,setup,kind:setup?.kind||null,swatch:presetSwatch(preset)};});
+      return {n,preset,label:setup?.name||presetLabel(preset),build:cleanBuild(setup?.featuredBuild),sig:n+'|'+preset+'|'+JSON.stringify(cleanBuild(setup?.featuredBuild)||''),start,end,setup,kind:setup?.kind||null,swatch:presetSwatch(preset)};});
   for(const [i,v] of list.entries()){
     const prev=list[i-1],next=list[i+1];
     v.from=prev?(prev.end>v.start?(v.start+prev.end)/2:v.start):0;
@@ -61,8 +61,8 @@ export async function loadStorageSeed(url,fetcher=globalThis.fetch){
 }
 
 // Director UI: the lane, the frame badge and the switching (debounced while scrubbing; one switch in flight).
-export function createDeskVersions({bridge,shot,project,selected,seek,status,escape,scrubbing,isOpen,panel=null,commit=null,endGroup=()=>{},showTab=()=>{},rerender=()=>{}}){
-  let timer=0,busy=false,want=null,lastText='',pickedN=null,lastPlayhead=0,drag=null,memo=null;
+export function createDeskVersions({bridge,shot,project,selected,seek,status,escape,scrubbing,isOpen,panel=null,commit=null,endGroup=()=>{},showTab=()=>{},rerender=()=>{},onCurrent=()=>{}}){
+  let timer=0,busy=false,want=null,lastText='',pickedN=null,lastPlayhead=0,drag=null,memo=null,lastN=null;
   const badge=document.createElement('div');badge.className='desk-version-badge';badge.hidden=true;badge.setAttribute('role','status');badge.setAttribute('aria-live','polite');document.body.append(badge);
   // The film's six desks with the cut's edits (shot.deskVersions) on top; kept until the film data or the edits change.
   const list=()=>{
@@ -71,7 +71,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     if(memo&&memo.film===film&&memo.subs===subs&&memo.id===s.id&&memo.key===JSON.stringify(edits||null))return memo.list;
     memo={film,subs,id:s.id,key:JSON.stringify(edits||null),list:deskVersions(film,subs,edits)};return memo.list;
   };
-  const asEdits=l=>l.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end}));
+  const asEdits=l=>l.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end,...(v.build?{build:v.build}:{})}));
   const edited=()=>!!cleanDeskVersionList(shot()?.deskVersions);
   const fmt=x=>Number(x.toFixed(2));
   function lane(){
@@ -89,6 +89,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     lastPlayhead=playhead;const s=shot(),v=s?current(playhead*s.seconds):null;
     badge.hidden=!v||!isOpen();
     if(!v){want=null;return;}
+    if(v.n!==lastN){lastN=v.n;if(pickedN&&pickedN!==v.n)pickedN=null;onCurrent(v);}   // the playhead moved into another desk: edits follow it
     const text=`Desk ${v.n} · ${v.label}`;if(text!==lastText||badge.dataset.sig!==v.sig){badge.dataset.sig=v.sig;lastText=text;badge.textContent=text;badge.title=`Film sub-shot ${v.n}: the ${v.preset} preset (${fmt(v.start)}–${fmt(v.end)} s)`;}
     const now=document.querySelector('#director-timeline [data-desk-version-now]');if(now&&now.textContent!==v.n)now.textContent=v.n;
     for(const b of document.querySelectorAll('#director-timeline [data-desk-version]'))b.classList.toggle('current',b.dataset.deskVersion===v.n);
@@ -119,7 +120,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const l=list(),i=l.findIndex(x=>x.n===n);if(i<0||l[i].preset===preset)return;
     const next=asEdits(l),old=next[i];
     // The name follows the model unless it was renamed.
-    next[i]={...old,preset,name:!old.name||old.name===presetLabel(old.preset)?'':old.name};
+    next[i]={...old,preset,name:!old.name||old.name===presetLabel(old.preset)?'':old.name};delete next[i].build;   // a new model starts from its own build
     write(next,`Desk ${n} is now ${presetLabel(preset)}: finishes, accessories and artwork follow the model; ${RESET_NOTE}`);
   }
   function setName(n,name){
@@ -137,6 +138,13 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const l=list(),from=l.findIndex(x=>x.n===n);if(from<0||from===to)return;
     const next=moveVersion(asEdits(l),from,to);
     write(next,`Desk ${l[from].label} moved to place ${to+1}; the time slots stay, the desks move between them.`);
+  }
+  // The desk the Build tab edits: the one picked in the lane, else the one under the playhead.
+  const editing=()=>{const l=list();return l.find(x=>x.n===pickedN)||(l.length?current(lastPlayhead*total()):null)||l[0]||null;};
+  function setBuild(build,text){
+    const l=list(),v=editing();if(!v)return;const i=l.indexOf(v),next=asEdits(l),b=cleanBuild(build);
+    if(b)next[i]={...next[i],build:b};else delete next[i].build;
+    write(next,text||`Desk ${v.n} · ${v.label}: ${b?'its own build saved':'back to the model\u2019s defaults'}.`);
   }
   function reset(){commit(()=>{delete shot().deskVersions;});status('Desk versions are back to the film’s order, lengths and models.');rerender();sync(lastPlayhead);}
   const timeAt=event=>{const r=document.querySelector('#director-timeline .desk-versions-lane').getBoundingClientRect();return Math.max(0,Math.min(total(),(event.clientX-r.left)/r.width*total()));};
@@ -204,5 +212,5 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
   document.addEventListener('pointerdown',event=>{if(event.target.closest?.('#director-timeline'))down(event);});
   return {lane,sync,click,current:()=>{const s=shot();return s?bridge.deskVersion?.(s.id)||null:null;},renderShot:(film,s,keys,seconds)=>{const v=current(seconds),job=versionRenderShot(film,s,keys,v),seed=v&&bridge.deskStorage?.(s.id);
     // The still renderer's stage takes the render's storage seed too (film-render.mjs; not part of the shot's JSON).
-    if(seed)Object.defineProperty(job,'__storage',{value:seed,enumerable:false});return job;},has:()=>list().length>0,panel:panelHtml,list,select,edited};
+    if(seed)Object.defineProperty(job,'__storage',{value:seed,enumerable:false});return job;},has:()=>list().length>0,panel:panelHtml,list,select,edited,editing,setBuild,editLabel:()=>{const v=editing();return v?`Desk ${v.n} · ${v.label}`:'';}};
 }

@@ -14,34 +14,170 @@
   {
    "chapter": "awaken",
    "rel_in": 13.2,
-   "rel_out": 19.6,
+   "rel_out": 18.4,
    "eyebrow": "SAFETY",
    "title": "Safe for everyone around it.",
    "detail": "Light and sound tell the room when it moves.",
-   "scrim": "60"
+   "scrim": "60",
+   "director_timing": true
   },
   {
    "chapter": "rise",
-   "rel_in": 1.6,
-   "rel_out": 7.4,
+   "rel_in": 3.6,
+   "rel_out": 9.4,
    "eyebrow": "SIT · STAND",
    "title": "Your height. Your rhythm.",
-   "detail": "Sit to focus. Rise to 52.5″ to recharge.",
-   "scrim": "38"
+   "detail": "Sit to focus. Rise to 43.5″ to recharge.",
+   "scrim": "38",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -5.77,
+        "y": -132.38
+       },
+       {
+        "x": 162.2,
+        "y": -133.55
+       },
+       {
+        "x": 160.57,
+        "y": -98.31
+       },
+       {
+        "x": -6.95,
+        "y": -98.74
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -6.97,
+        "y": -79.8
+       },
+       {
+        "x": 623.22,
+        "y": -79.47
+       },
+       {
+        "x": 626.13,
+        "y": -4.09
+       },
+       {
+        "x": -7.63,
+        "y": -5.64
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -5.89,
+        "y": 9.84
+       },
+       {
+        "x": 427.58,
+        "y": 16.15
+       },
+       {
+        "x": 431.72,
+        "y": 57.86
+       },
+       {
+        "x": -8.23,
+        "y": 56.32
+       }
+      ]
+     }
+    ]
+   }
   },
   {
    "chapter": "create",
-   "rel_in": 1.6,
-   "rel_out": 7.6,
+   "rel_in": 3.6,
+   "rel_out": 9.6,
    "eyebrow": "TILT",
    "title": "Angle it to your art.",
-   "detail": "From drafting to digital painting. Everything within reach.",
-   "scrim": "38"
+   "detail": "From digital to drafting to oil. Everything within reach.",
+   "scrim": "38",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -10.6,
+        "y": -131.6
+       },
+       {
+        "x": 55.79,
+        "y": -133.66
+       },
+       {
+        "x": 55.26,
+        "y": -97.34
+       },
+       {
+        "x": -12.52,
+        "y": -95.45
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -6.2,
+        "y": -71.7
+       },
+       {
+        "x": 461.65,
+        "y": -72.28
+       },
+       {
+        "x": 463.13,
+        "y": -19.39
+       },
+       {
+        "x": -7.65,
+        "y": -10.06
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -8.95,
+        "y": 14.04
+       },
+       {
+        "x": 617.89,
+        "y": 12.11
+       },
+       {
+        "x": 620.45,
+        "y": 58.09
+       },
+       {
+        "x": -8.72,
+        "y": 61.41
+       }
+      ]
+     }
+    ]
+   },
+   "director_timing": true
   },
   {
    "chapter": "commons",
-   "rel_in": 2.4,
-   "rel_out": 8.2,
+   "rel_in": 2.65,
+   "rel_out": 8.45,
    "eyebrow": "GLIDE",
    "title": "A place for everyone.",
    "detail": "Same table. Same project. Same team.",
@@ -49,25 +185,93 @@
   },
   {
    "chapter": "coast",
-   "rel_in": 1.6,
-   "rel_out": 6.9,
+   "rel_in": 2.65,
+   "rel_out": 7.95,
    "eyebrow": "STUDIO",
    "title": "Ideas become stories.",
-   "detail": "Your own edit suite inside a shared media lab."
+   "detail": "Your own edit suite inside a shared media lab.",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -5.6,
+        "y": -129.51
+       },
+       {
+        "x": 96.04,
+        "y": -133.24
+       },
+       {
+        "x": 98.64,
+        "y": -99.91
+       },
+       {
+        "x": -6.57,
+        "y": -99.4
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -11.17,
+        "y": -77.92
+       },
+       {
+        "x": 538.08,
+        "y": -80.6
+       },
+       {
+        "x": 539.83,
+        "y": -13.76
+       },
+       {
+        "x": -12.61,
+        "y": -13.27
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -6.57,
+        "y": 11.45
+       },
+       {
+        "x": 537.23,
+        "y": 20.29
+       },
+       {
+        "x": 535.17,
+        "y": 56.01
+       },
+       {
+        "x": -4.33,
+        "y": 59.31
+       }
+      ]
+     }
+    ]
+   }
   },
   {
    "chapter": "oilers",
-   "rel_in": 4.3,
-   "rel_out": 9.3,
+   "rel_in": 3.4,
+   "rel_out": 8.0,
    "eyebrow": "CLASSROOM",
    "title": "Space to discover.",
    "detail": "Built for how each student learns.",
-   "scrim": "70"
+   "scrim": "70",
+   "director_timing": true
   },
   {
    "chapter": "wellness",
-   "rel_in": 1.6,
-   "rel_out": 7.4,
+   "rel_in": 2.65,
+   "rel_out": 8.45,
    "eyebrow": "WELLNESS",
    "title": "Build movement into your day.",
    "detail": "Pause. Stretch. Breathe. Reset.",
@@ -83,27 +287,161 @@
   },
   {
    "chapter": "music",
-   "rel_in": 1.6,
-   "rel_out": 7.2,
+   "rel_in": 2.65,
+   "rel_out": 8.25,
    "eyebrow": "GAMING",
    "title": "Feel the room come alive.",
-   "detail": "Light that plays along with the game."
+   "detail": "Light that plays along with the game.",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -10.54,
+        "y": -132.41
+       },
+       {
+        "x": 105.7,
+        "y": -133.15
+       },
+       {
+        "x": 108.69,
+        "y": -96.82
+       },
+       {
+        "x": -16.43,
+        "y": -96.32
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -16.67,
+        "y": -78.59
+       },
+       {
+        "x": 622.75,
+        "y": -75.36
+       },
+       {
+        "x": 625.0,
+        "y": -10.78
+       },
+       {
+        "x": -16.15,
+        "y": -16.83
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -11.75,
+        "y": 10.25
+       },
+       {
+        "x": 442.24,
+        "y": 12.37
+       },
+       {
+        "x": 441.03,
+        "y": 65.28
+       },
+       {
+        "x": -12.04,
+        "y": 59.83
+       }
+      ]
+     }
+    ]
+   }
   },
   {
    "chapter": "media",
-   "rel_in": 1.6,
-   "rel_out": 7.2,
+   "rel_in": 2.75,
+   "rel_out": 8.35,
    "eyebrow": "CINEMA",
    "title": "Movie night, upgraded.",
    "detail": "Ambient color drawn from every scene."
   },
   {
    "chapter": "storage",
-   "rel_in": 2.6,
-   "rel_out": 9.6,
+   "rel_in": 2.75,
+   "rel_out": 9.75,
    "eyebrow": "STORAGE",
    "title": "Make room for what’s next.",
-   "detail": "One tap: fold to 65°, roll to the wall."
+   "detail": "One tap: fold to 65°, roll to the wall.",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -10.95,
+        "y": -132.91
+       },
+       {
+        "x": 120.42,
+        "y": -134.53
+       },
+       {
+        "x": 131.47,
+        "y": -93.5
+       },
+       {
+        "x": -15.7,
+        "y": -90.72
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -10.28,
+        "y": -77.81
+       },
+       {
+        "x": 655.03,
+        "y": -82.87
+       },
+       {
+        "x": 655.83,
+        "y": -6.96
+       },
+       {
+        "x": -8.35,
+        "y": -1.44
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -15.12,
+        "y": 15.69
+       },
+       {
+        "x": 418.21,
+        "y": 10.28
+       },
+       {
+        "x": 416.83,
+        "y": 62.04
+       },
+       {
+        "x": -12.24,
+        "y": 59.58
+       }
+      ]
+     }
+    ]
+   }
   },
   {
    "chapter": "hero",

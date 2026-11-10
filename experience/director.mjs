@@ -211,7 +211,7 @@ export function mountDirector(bridge,catalog,initial){
   const filmShot=()=>bridge.filmShot?.(shot().id)||null,filmLights=new Map();
   // Chapters the film renders as sub-shots (the finale): one desk per sub-shot on the stage, its lane and badge.
   const deskVersions=createDeskVersions({bridge,shot,project:()=>project,selected:()=>selected,seek:t=>seekCamera(t),status,escape,scrubbing:()=>!!scrub||!!groupDrag||!!keyDrag,isOpen:()=>open,
-    panel,commit:(fn,o)=>commit(fn,o),endGroup:()=>{group=null;},rerender:()=>renderPanel(),showTab:()=>{inspector='version';renderPanel();showInspector('version');}});
+    panel,commit:(fn,o)=>commit(fn,o),endGroup:()=>{group=null;},rerender:()=>renderPanel(),showTab:()=>{inspector='version';renderPanel();showInspector('version');},onCurrent:()=>{if((inspector==='build'||inspector==='version')&&open&&!typing())renderPanel();}});
   function lighting(){
     const s=shot();let src=s.ledStatus?s:null,edited=!!src;
     if(!src){const f=filmShot();if(!f)return null;src=filmLights.get(s.id);if(!src){src=cleanLighting({ledStatus:f.ledStatus||[],ledNeutral:f.ledNeutral,ledColor:f.ledColor||'#ffffff',sceneGlobals:f.sceneGlobals});filmLights.set(s.id,src);}}
@@ -923,7 +923,7 @@ export function mountDirector(bridge,catalog,initial){
   }
   for(const el of [panel,timeline])el.addEventListener('click',event=>{const b=event.target.closest('button[data-action]');if(b)action(b.dataset.action,b.dataset.section??Number(b.dataset.index));});
   panel.addEventListener('toggle',event=>{const d=event.target.closest?.('[data-light-section]');if(!d)return;if(d.open)delete lightSectionsShut[d.dataset.lightSection];else lightSectionsShut[d.dataset.lightSection]=true;try{localStorage.setItem('ergoflex.director.lightSections',JSON.stringify(lightSectionsShut));}catch{}},true);
-  panel.addEventListener('click',event=>{const tab=event.target.closest('[data-inspector-tab]');if(tab)showInspector(tab.dataset.inspectorTab);
+  panel.addEventListener('click',event=>{const tab=event.target.closest('[data-inspector-tab]');if(tab){showInspector(tab.dataset.inspectorTab);if(tab.dataset.inspectorTab==='build'&&deskVersions.has())renderPanel();}
     const hint=event.target.closest('.director-hint');if(hint&&!event.target.closest('a,button,input,select,textarea,label'))hint.classList.toggle('expanded');});   // long hints show two lines; click for all
   timeline.addEventListener('change',event=>{
     if(event.target.name==='timeline-snap'){snapStep=Number(event.target.value);return;}
@@ -1154,7 +1154,7 @@ export function mountDirector(bridge,catalog,initial){
   const renderRequest=createRenderRequest({panel,chapters:()=>filmChapters,shot,signature,unexported,status,escape,storage,download:downloadText,
     exportNow:async()=>{if(await fresh.guardExport(project,true,()=>{}))return null;clearTimeout(draftTimer);try{project=library.save(project);}catch{}const text=exportCut();renderPanel();return text;}});
   // Build tab: the selected room desk's materials, trim and accessories (desk-build-panel.mjs).
-  const deskBuild=createDeskBuildPanel({panel,shot,film:filmShot,commit,status,rerender:()=>renderPanel(),ready:()=>open&&bridge.ready(),versions:()=>deskVersions.has()});
+  const deskBuild=createDeskBuildPanel({panel,shot,film:filmShot,commit,status,rerender:()=>renderPanel(),ready:()=>open&&bridge.ready(),versions:{active:()=>deskVersions.has(),label:()=>deskVersions.editLabel(),build:()=>deskVersions.editing()?.build||null,set:(b,t)=>deskVersions.setBuild(b,t)}});
   // Film titles: the TITLES lane, the Title inspector and the title overlay in the frame (titles-src.json beside the film list).
   const titleEditor=createTitleEditor({panel,timeline,shot,time:()=>playhead,seek:seekCamera,commit,status,render,renderTimeline,ready:requireReady,open:()=>open,
     showInspector:tab=>{if(!reveal(tab))showInspector(tab,false,!typing());},
