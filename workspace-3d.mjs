@@ -26,7 +26,7 @@ import { buildChildRoom, CHILD_MODES, childLayoutForSize, childLayoutById } from
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=polish-20261111f';
 import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=polish-20261111f';
 import * as THREE from 'three';
-import { RoomBounceLight } from './room-bounce-light.mjs?v=commons-group-work-20261016';
+import { RoomBounceLight } from './room-bounce-light.mjs?v=polish-20261111f';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -38,7 +38,7 @@ import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261111f';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=polish-20261111f';
-import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=people-gym-20261110';
+import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=polish-20261111f';
 import { themedGymLayout } from './gym-theme.mjs?v=polish-20261111f';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=polish-20261111f';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=people-vistas-20261110';

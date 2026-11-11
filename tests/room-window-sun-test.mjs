@@ -16,7 +16,8 @@ for (const hour of ['morning', 'afternoon', 'evening']) {
 }
 sun.set('morning'); assert.ok(zAt(true) < zAt(false) - 300, 'the morning sun slants it towards the back of the room');
 sun.set('evening'); assert.ok(zAt(true) > zAt(false) + 300, 'the evening sun towards the front');
-const morning = box().max.x - box().min.x; sun.set('afternoon'); assert.ok(box().max.x - box().min.x < morning, 'short at midday, long in the evening');
+const evening = box().max.x - box().min.x; sun.set('morning'); const morning = box().max.x - box().min.x; sun.set('afternoon'); const midday = box().max.x - box().min.x;
+assert.ok(midday < morning && midday < evening, 'short at midday, long in the morning and the evening');
 for (const hour of ['night', 'party']) { sun.set(hour); assert.ok(!sun.mesh.visible, hour + ': no daylight on the floor'); }
 sun.set('evening', .5); const half = sun.mesh.material.color.r; sun.set('evening', 1); assert.ok(Math.abs(sun.mesh.material.color.r - half * 2) < 1e-6, 'it dims with the room (accent)');
 // a narrow room cuts the reach short; a room too narrow has no patch
@@ -26,6 +27,9 @@ const closet = windowSun(root, { x: -900, from: 0, to: 1000, span: 1800 }); clos
 // a window in the right-hand wall: the same light, mirrored
 const right = windowSun(root, { x: w / 2, inward: -1, from: 0, to: 3000, span: w }); right.set('morning'); right.mesh.geometry.computeBoundingBox();
 assert.ok(right.mesh.geometry.boundingBox.max.x < w / 2 - 100 && right.mesh.geometry.boundingBox.min.x > -w / 2 + 399, 'a right-hand window lights the floor to its left');
+const zOf = (patch, far) => { const p = patch.mesh.geometry.attributes.position, uv = patch.mesh.geometry.attributes.uv; let n = 0, z = 0; for (let i = 0; i < p.count; i++) if ((uv.getY(i) > .5) === far) { z += p.getZ(i); n++; } return z / n; };
+assert.ok(zOf(right, true) > zOf(right, false) + 300, 'and its slant is the mirror image: the same morning sun falls towards the front from a window in the other wall');
+right.set('evening'); assert.ok(zOf(right, true) < zOf(right, false) - 300, 'the evening sun towards the back');
 // a room's own hours (a daytime party)
 const weekend = windowSun(root, { x: -w / 2, from: 0, to: 3000, span: w, hours: { ...WINDOW_SUN, party: WINDOW_SUN.morning } }); weekend.set('party'); assert.ok(weekend.mesh.visible, 'a room can give its own hours');
 console.log('PASS window sun: by day and not by night, inside the room, slant, reach, accent, mirrored, a room\'s own hours.');

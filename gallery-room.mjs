@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { gallerySessionDetails } from './gallery-bedroom-detail.mjs?v=gallery-bedroom-20261025';
+import { gallerySessionDetails } from './gallery-bedroom-detail.mjs?v=polish-20261111f';
 
 const tiers = [
     ['apartment', 'Apartment art collection', 4000, 4600, 2800],

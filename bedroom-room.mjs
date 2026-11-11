@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
-import { bedroomSessionDetails } from './gallery-bedroom-detail.mjs?v=gallery-bedroom-20261025';
+import { bedroomSessionDetails } from './gallery-bedroom-detail.mjs?v=polish-20261111f';
 
 const tiers = [
     ['apartment', 'Apartment bedroom & desk nook', 3800, 4400, 2600],
@@ -232,10 +232,10 @@ export function buildBedroomRoom(room, root, layout, helpers) {
     leaves(sill,[...Array(14)].map((_,i)=>{const ang=i*2.4,r=i<9?40+i*6:70;return i<9?[sx+Math.cos(ang)*r,985+(i%3)*28,a+190+Math.sin(ang)*r,46,14,30,.5,ang,.4]:[sx-70-(i-9)*6,930-(i-9)*55,a+150+(i%2)*80,32,10,24,1.2,i,.3];}));
     candle(sill,[sx,850,b-170],.9);
     box(sill,[150,30,215],[sx,865,b-400],material('#6f8a7e',{roughness:.8}),3);box(sill,[138,26,200],[sx+4,893,b-395],material('#e5d8bd',{roughness:.85}),3).rotation.y=.18;
-    const sunMap=texture((c,tw,th)=>{c.filter='blur(5px)';c.fillStyle='#ffffff';const m=tw*40/ww;c.fillRect(24,24,tw/2-m/2-24,th-48);c.fillRect(tw/2+m/2,24,tw/2-m/2-24,th-48);},512,256);
+    const sunMap=texture((c,tw,th)=>{c.filter='blur(10px)';c.fillStyle='#ffffff';const m=tw*40/ww;c.fillRect(24,24,tw/2-m/2-24,th-48);c.fillRect(tw/2+m/2,24,tw/2-m/2-24,th-48);},512,256);
     const sunGeometry=new THREE.BufferGeometry();sunGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(12),3));
     sunGeometry.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,1,1,0,1],2));sunGeometry.setIndex([0,1,2,0,2,3]);
-    const sunMat=additive(sunMap);sunMat.side=THREE.DoubleSide;const sunPatch=mesh(root,sunGeometry,sunMat);sunPatch.name='Window sun patch';sunPatch.castShadow=sunPatch.receiveShadow=false;sunPatch.renderOrder=2;fixture(sunPatch,'sun',sunMat,.9);
+    const sunMat=additive(sunMap);sunMat.side=THREE.DoubleSide;const sunPatch=mesh(root,sunGeometry,sunMat);sunPatch.name='Window sun patch';sunPatch.castShadow=sunPatch.receiveShadow=false;sunPatch.renderOrder=2;fixture(sunPatch,'sun',sunMat,.5);   // (at .9 it burnt the floor to flat white with a hard edge)
     const placeSun=f=>{const p=sunGeometry.attributes.position,top=low+wh*(1-f.shade);
         [[a,low],[b,low],[b,top],[a,top]].forEach(([z,y],i)=>{const run=y/f.slope;p.setXYZ(i,Math.max(-w/2+40,w/2-run),6,Math.min(front-40,Math.max(bz+40,z-f.sweep*run)));});
         p.needsUpdate=true;sunGeometry.computeBoundingSphere();sunGeometry.computeBoundingBox();};

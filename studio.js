@@ -24,7 +24,7 @@ import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacle
 import { RoomGroove } from './room-groove-runtime.mjs?v=commons-group-work-20261016';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=drop-flat-align-20261110';
+import { RoomInteractions } from './room-interactions.mjs?v=polish-20261111f';
 import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pacing-vsm-20261015';
 import { SceneTour, tourEnabled } from './scene-tour.mjs?v=highschool-setting-20261104';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
@@ -32,7 +32,7 @@ import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-2026
 import { roomPolishLighting } from './room-polish.mjs?v=polish-20261111f';
 import { roomViewBounds } from './room-view-bounds.mjs?v=table-clearance-20261021';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle, roomDeskStyle } from './room-desk-styles.mjs?v=polish-20261111f';
-import { RoomLedSpill } from './room-led-spill.mjs?v=commons-group-work-20261016';
+import { RoomLedSpill } from './room-led-spill.mjs?v=polish-20261111f';
 import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=hbhs-product-classroom-20261014';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
 import { LIBRARY_MODES, LIBRARY_LAYOUTS, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=polish-20261111f';
@@ -71,7 +71,7 @@ import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from 
 import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261111f';
 import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261111f';
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=polish-20261111f';
-import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=people-gym-20261110';
+import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=polish-20261111f';
 import { GYM_THEMES, gymModes, themeGymDeskStyle, themeGymLights, themeGymDeskState } from './gym-theme.mjs?v=polish-20261111f';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=polish-20261111f';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, LOUNGE_STYLES, loungeLayoutsForStyle, loungeModesForStyle, loungeLayoutIdForStyle, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=gaming-gear-20261014';
