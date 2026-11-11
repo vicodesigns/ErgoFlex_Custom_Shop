@@ -50,7 +50,7 @@ export const ARTIST_MODES = {
     morning: { label: 'Morning', description: 'Soft window light · standing sketch warm-up', key: '#fff0dd', fill: '#dce8f4', accent: '#efd6b4', power: 1.55, ambient: .5, bounce: .72, exposure: 1.05, sky: ['#9fc2da', '#f5e1c6'], practical: .14, wash: .1, colors: ['#f2d8b4', '#c9dbd4'], height: 43.5, tilt: 12, offset: [0, 0], yaw: 0, leds: false },
     afternoon: { label: 'Afternoon', description: 'Balanced daylight · seated drawing and color studies', key: '#fbf6ee', fill: '#dfe9f3', accent: '#e9d4b2', power: 1.3, ambient: .48, bounce: .7, exposure: 1.05, sky: ['#8fb6d5', '#e7eef1'], practical: .3, wash: .18, colors: ['#eed4b0', '#c3d4d2'], height: 28, tilt: 18, offset: [0, 0], yaw: 0, leds: false },
     evening: { label: 'Evening', description: 'Golden-hour painting · standing drawing angle', key: '#ffc994', fill: '#cdd7e8', accent: '#ffb27c', power: .9, ambient: .3, bounce: .44, exposure: 1.08, sky: ['#6c78a6', '#f2aa79'], practical: .8, wash: .5, colors: ['#ffc98f', '#c8b6cc'], height: 43.5, tilt: 30, offset: [0, 80], yaw: -4, leds: true, color: '#ffe1b0' },
-    night: { label: 'Night', description: 'Clean up and review · palette covered, notes for tomorrow', key: '#c4d1e6', fill: '#c2d0e5', accent: '#f3c995', power: .15, ambient: .12, bounce: .18, exposure: 1.08, sky: ['#0f1a2e', '#33435f'], practical: .95, wash: .26, colors: ['#f6d2a2', '#a3b7d2'], height: 28, tilt: 12, offset: [0, 80], yaw: 0, leds: true, color: '#fff1d5' },
+    night: { label: 'Night', description: 'Clean up and review · palette covered, notes for tomorrow', key: '#c4d1e6', fill: '#c2d0e5', accent: '#f3c995', power: .1, ambient: .07, bounce: .1, exposure: 1.02, sky: ['#0f1a2e', '#33435f'], practical: .95, wash: .2, colors: ['#f6d2a2', '#a3b7d2'], height: 28, tilt: 12, offset: [0, 80], yaw: 0, leds: true, color: '#fff1d5' },
     party: { label: 'Open studio', description: 'Share your work · standing desk turned toward visitors', key: '#f1dccb', fill: '#d8dce8', accent: '#ee9f7e', power: .5, ambient: .3, bounce: .42, exposure: 1.1, sky: ['#3f4567', '#bb8574'], practical: .7, wash: .95, colors: ['#ffbf8f', '#a3d4cd'], height: 43.5, tilt: 0, offset: [80, 230], yaw: -12, leds: true, color: '#ffcfac' }
 };
 
@@ -761,7 +761,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = ARTIST_MODES[modeId] || ARTIST_MODES.afternoon;
         session.apply(modeId);
-        poolGain.v = accent; pools.apply(modeId); sun.update(modeId);
+        poolGain.v = accent * (layout.id === 'apartment' ? .45 : 1); pools.apply(modeId); sun.update(modeId);   // the small room's lamps light a small room
         drawSky(skyCanvas.getContext('2d'), mode, modeId); skyMap.needsUpdate = true; windowVista.setPhase(modeId);
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .08 + mode.wash * accent; });
         lights.forEach(spec => { spec.light.color.set(spec.task ? '#f2f4ee' : mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent; });

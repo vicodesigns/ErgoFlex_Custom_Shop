@@ -638,7 +638,7 @@ export function buildMusicRoom(room, root, layout, helpers) {
         const mode = MUSIC_MODES[modeId] || MUSIC_MODES.afternoon;
         session.mode = modeId in MUSIC_MODES ? modeId : 'afternoon'; session.accent = accent;
         drawSky(modeId, mode);
-        poolGain.v = accent; pools.apply(modeId); sun.update(modeId);
+        poolGain.v = accent * (layout.id === 'apartment' ? .45 : 1); pools.apply(modeId); sun.update(modeId);   // the small room's lamp lights a small room
         // (The city photograph after dark is a dusk exposure. It stays as it is: the film's night chapter was shot against it.)
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .06 + mode.wash * accent * 1.25; });
         lights.forEach(spec => { if (spec.wash) spec.light.color.set(mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.wash ? mode.wash : mode.practical) * accent; });

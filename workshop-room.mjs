@@ -585,7 +585,7 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     // The garage window prints its four lights on the slab: low and long in the
     // morning, short at midday, gone at night when the bench lamps take over.
     const sun = createSunPatch(root, layout, [{ wall: 'left', at: -w / 2, from: a + 20, to: b - 20, bottom: low + 20, top: low + wh - 20, bars: 1, rows: 2 }], {
-        levels: { morning: ['#ffdfb0', .5], afternoon: ['#fff3e0', .3], evening: ['#ffa060', .45], night: ['#000000', 0], party: ['#ffb070', .25] },
+        levels: { morning: ['#ffdfb0', .28], afternoon: ['#fff3e0', .3], evening: ['#ffa060', .45], night: ['#000000', 0], party: ['#000000', 0] },   // no sun at the after-dark party; a quiet morning print beside the film's desk
         angles: { morning: { elevation: .6, sweep: -.38 }, afternoon: { elevation: 1.25, sweep: .14 } }
     });
     const pools = createPoolLayer(root, 'Workshop bench light pools'), poolGain = { v: 1 };

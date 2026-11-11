@@ -476,7 +476,7 @@ function homeDropZone(root, entry, layout, h, { brass, joinery, sage, clay, cera
     // away with the wall instead of floating in the overview.
     const pair = name => { const floor = new THREE.Group(), wall = new THREE.Group(); floor.name = wall.name = name; root.add(floor); entry.add(wall); return [floor, wall]; };
     const [day, dayWall] = pair('Day by the door');
-    coat(dayWall, -210, '#4f5d6b'); tote(day, [fx + 30, 0, z + 170], '#d8c9a8', .35); shoes(day, [fx + 40, 0, z - 230], '#e9e4dc', '#f6f3ee', 1.2);
+    coat(dayWall, -210, '#4f5d6b'); tote(day, [fx + 30, 0, z - 40], '#d8c9a8', .35); shoes(day, [fx + 40, 0, z - 420], '#e9e4dc', '#f6f3ee', 1.2);   // clear of the armchair's side
     const post = parcel(root, [fx + 110, 0, z - 30], -.25);
     const [night, nightWall] = pair('Put away by the door');
     tote(nightWall, [x + 120, 1250, z + 210], '#d8c9a8', Math.PI / 2).rotation.z = .05;
@@ -810,13 +810,14 @@ export function buildHomeOffice(room, root, layout, helpers) {
     // landing of the lamps that are on. Both are additive overlays, not lights.
     // Pale oak and a cream rug need a stronger print than the darker rooms to read.
     const sun = createSunPatch(root, layout, [{ wall: 'back', at: bz, from: left + 20, to: right - 20, bottom: bottom + 20, top: bottom + wh - 20, bars: 1, rows: 2 }], {
-        levels: { morning: ['#ffd9a8', .85], afternoon: ['#fff0d8', .5], evening: ['#ff9a52', .95], night: ['#000000', 0], party: ['#000000', 0] }
+        levels: { morning: ['#ffd9a8', .6], afternoon: ['#fff0d8', .5], evening: ['#ff9a52', .95], night: ['#000000', 0], party: ['#000000', 0] }
     });
-    // The real thing: a shadow-casting sun through the glazing (one per room).
-    // globalThis.__efSun = 'patch' | 'none' switches back for A/B checks.
+    // A shadow-casting sun through the glazing (a SpotLight with the window as its cookie) exists as an experiment only:
+    // it veiled the window in the film's morning, costs a shadow pass and recompiles the room's materials when it switches
+    // on. It is built only when asked for (globalThis.__efSun = 'light' before the room loads); the room uses the patch.
     const sunWindow = [{ wall: 'back', at: bz, from: left + 18, to: right - 18, bottom: bottom + 18, top: bottom + wh - 18, bars: 1, rows: 2 }];
-    const sunLight = createSunLight(root, layout, sunWindow);
-    const sunMode = () => globalThis.__efSun || 'light';
+    const sunLight = globalThis.__efSun === 'light' ? createSunLight(root, layout, sunWindow) : null;
+    const sunMode = () => sunLight ? 'light' : 'patch';
     const pools = createPoolLayer(root, 'Home lamp light pools'), poolGain = { v: 1 };
     const lampLevel = (k, by) => i => Math.min(.55, by[i] * .5 * poolGain.v) * k;
     // Pools are sized and placed per layout: the apartment's reading lamp
@@ -834,7 +835,7 @@ export function buildHomeOffice(room, root, layout, helpers) {
         const mode = HOME_MODES[modeId] || HOME_MODES.afternoon, look = HOME_LOOKS[modeId] || HOME_LOOKS.afternoon;
         updateSession(modeId);updateBoard(modeId);comfort.update(modeId);
         poolGain.v = accent; pools.apply(modeId); dropZone(modeId);
-        const sm = sunMode(); sun.update(sm === 'patch' ? modeId : 'night'); sunLight.update(sm === 'light' ? modeId : 'night');
+        const sm = sunMode(); sun.update(sm === 'patch' ? modeId : 'night'); sunLight?.update(modeId);
         paintView(skyCanvas.getContext('2d'), skyCanvas.width, skyCanvas.height, mode, look);
         skyMap.needsUpdate = true; windowVista.setPhase(modeId);
         // The garden photograph is a daylight picture: grade it down to golden hour in the evening.
