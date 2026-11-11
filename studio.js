@@ -12681,6 +12681,9 @@ document.querySelectorAll('[data-led-surface]').forEach(slider =>
     slider.addEventListener('input', event => setLedSurface(event.target.dataset.ledSurface, event.target.value)));
 updatePrice();
 initThreeJS();
+// Studio UI shell (studio-shell.mjs, loaded by index.html only): regroups the controls built above into the
+// bar, menus and groups. It moves nodes, never re-creates them. Not in a presentation frame or the event demo.
+if (!EVENT_DEMO && !window.__ERGO_PRESENTATION__) window.ErgoStudioShell?.mount({ syncViewerSize });
 
 // Presentation-only adapter. It is never installed in an editing session.
 if (window.__ERGO_PRESENTATION__) {

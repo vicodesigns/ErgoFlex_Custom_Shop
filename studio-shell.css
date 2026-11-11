@@ -1,0 +1,202 @@
+/* Studio UI shell (studio-shell.mjs). Every rule is scoped to html.ui-shell, which the shell sets only when it
+   mounts: never in a presentation frame and never on product-demo.html, so those pages are styled as before.
+   Colours, radii and type come from the portal tokens (portal-ui.css); nothing here introduces a new palette. */
+html.ui-shell { --vb-h: 34px; --vb-gap: 6px; --vb-radius: 8px; --vb-top: 84px; }
+@media (pointer: coarse) { html.ui-shell { --vb-h: 40px; } }
+
+/* ---- Title card: one compact card in the corner instead of a banner. ---- */
+html.ui-shell #viewer-shell .viewer-heading { top: 12px; left: 12px; right: auto; max-width: min(340px, calc(100% - 96px)); padding: 7px 12px 8px; border-radius: 12px; }
+html.ui-shell #viewer-shell .viewer-heading .eyebrow { font-size: 9px; letter-spacing: 1.4px; margin: 0 0 2px; }
+html.ui-shell #viewer-shell .viewer-heading h2 { font-size: 16px; line-height: 1.25; letter-spacing: -.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.ui-shell #viewer-shell .viewer-heading p { margin-top: 1px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The Store's floating "Show options" button sits in the same corner while the panel is hidden. */
+html.ui-shell body.sidebar-collapsed #viewer-shell .viewer-heading { left: 150px; }
+
+/* ---- The bar: two rows on one surface, at the top of the 3D view. ---- */
+html.ui-shell #viewer-shell #scene-controls.vb {
+    top: var(--vb-top); left: 12px; right: 74px; z-index: 16;
+    display: flex; flex-direction: column; gap: 0; padding: 0;
+    border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-glass); color: var(--ui-text);
+    box-shadow: var(--ui-shadow);
+}
+html.ui-shell #viewer-shell #scene-controls.vb.vb-menu-open { z-index: 60; }
+html.ui-shell #scene-controls .vb-row { position: static; display: flex; flex-wrap: wrap; align-items: center; gap: var(--vb-gap); min-width: 0; margin: 0; padding: 6px 8px; }
+html.ui-shell #scene-controls .vb-row + .vb-row { border-top: 1px solid var(--ui-border); }
+html.ui-shell #scene-controls .vb-spacer { flex: 1 1 0; min-width: 0; }
+
+/* One control family for everything on the bar and in its menus. */
+html.ui-shell #viewer-shell #scene-controls :is(.vb-row > button, .vb-row > label, .vb-menu > summary, .vb-pop button, .vb-pop select, .measured-room-controls button, .measured-room-controls select, #room-scene-select) {
+    box-sizing: border-box; min-height: var(--vb-h); padding: 5px 10px; margin: 0;
+    border: 1px solid var(--ui-border); border-radius: var(--vb-radius); background: var(--ui-card); color: var(--ui-text);
+    font: inherit; font-size: 12px; line-height: 1.3; box-shadow: none;
+}
+html.ui-shell #viewer-shell #scene-controls :is(.vb-row > button, .vb-menu > summary, .vb-pop button, .measured-room-controls button):hover:not(:disabled) { background: var(--ui-soft); border-color: var(--ui-muted); }
+html.ui-shell #viewer-shell #scene-controls :is(button[aria-pressed=true], .vb-menu[open] > summary) { background: var(--ui-accent); border-color: var(--ui-accent); color: var(--ui-on-accent); font-weight: 600; }
+html.ui-shell #viewer-shell #scene-controls .vb-row > label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+html.ui-shell #viewer-shell #scene-controls .vb-row > label > span { color: var(--ui-text); font-size: 12px; }
+html.ui-shell #viewer-shell #scene-controls .vb-row > label:has(input:checked) { background: var(--ui-selected); border-color: var(--ui-accent); }
+html.ui-shell #viewer-shell #scene-controls .vb-row > label:has(input:disabled) { opacity: .55; cursor: not-allowed; }
+html.ui-shell #viewer-shell #scene-controls #room-save-status { background: none; padding: 0 4px; color: var(--ui-muted); font-size: 11px; }
+
+/* Row 1: scene. */
+html.ui-shell #scene-controls .scene-switcher { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--vb-gap); margin: 0; min-width: 0; }
+html.ui-shell #viewer-shell #scene-controls .scenes-label { padding: 0 2px 0 4px; background: none; color: var(--ui-muted); font-size: 10px; letter-spacing: 1.1px; }
+html.ui-shell #viewer-shell #scene-controls #room-scene-select { flex: none; width: 168px; max-width: none; min-width: 0; font-weight: 600; }
+html.ui-shell #viewer-shell #scene-controls .measured-room-controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--vb-gap) 12px; width: auto; max-width: 100%; min-width: 0;
+    margin: 0; padding: 0 0 0 12px; border: 0; border-left: 1px solid var(--ui-border); border-radius: 0; background: none; box-shadow: none;
+}
+html.ui-shell #viewer-shell #scene-controls .measured-room-controls > div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; width: auto; min-width: 0; }
+html.ui-shell #viewer-shell #scene-controls .measured-room-controls :is(label, .institutional-setting-label) { display: inline-flex; align-items: center; gap: 6px; color: var(--ui-muted); font-size: 11px; }
+html.ui-shell #viewer-shell #scene-controls .measured-room-controls select { max-width: 210px; }
+html.ui-shell #viewer-shell #scene-controls .groove-controls [data-groove-start]:not(:disabled) { background: var(--ui-accent); border-color: var(--ui-accent); color: var(--ui-on-accent); font-weight: 600; }
+
+/* ---- Menus: a <details> whose summary is the button and whose .vb-pop floats over the canvas. ---- */
+html.ui-shell #scene-controls .vb-menu { position: static; z-index: auto; margin: 0; padding: 0; border: 0; background: none; box-shadow: none; max-width: none; color: inherit; }
+html.ui-shell #scene-controls .vb-menu > summary { display: inline-flex; align-items: center; gap: 6px; list-style: none; cursor: pointer; user-select: none; white-space: nowrap; font-weight: 500; }
+html.ui-shell #scene-controls .vb-menu > summary::-webkit-details-marker { display: none; }
+html.ui-shell #scene-controls .vb-menu > summary::after { content: ''; width: 6px; height: 6px; margin: -3px 1px 0 2px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); opacity: .7; }
+html.ui-shell #scene-controls .vb-menu[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
+html.ui-shell #scene-controls .vb-menu > summary span { color: inherit; font-weight: 400; opacity: .8; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+html.ui-shell #viewer-shell #scene-controls .vb-menu > .vb-pop {
+    position: absolute; z-index: 5; top: 100%; left: 0; right: auto; box-sizing: border-box;
+    width: max-content; min-width: 260px; max-width: min(560px, 100%); max-height: min(560px, 70vh); overflow: auto; overscroll-behavior: contain;
+    display: grid; gap: 10px; align-content: start; margin: 0; padding: 12px;
+    border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-panel); color: var(--ui-text);
+    box-shadow: 0 14px 40px #0b1a1438; font-size: 12px; line-height: 1.45; scrollbar-width: thin; scrollbar-color: var(--ui-border) transparent;
+}
+html.ui-shell #scene-controls .vb-pop-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -2px 0 0; }
+html.ui-shell #scene-controls .vb-pop-head strong { font-size: 13px; font-weight: 650; color: var(--ui-text); }
+html.ui-shell #viewer-shell #scene-controls .vb-pop-head .vb-pop-close { min-height: 28px; width: 28px; padding: 0; border-color: transparent; background: none; font-size: 18px; line-height: 1; color: var(--ui-muted); }
+html.ui-shell #scene-controls .vb-pop-row { display: flex; flex-wrap: wrap; gap: var(--vb-gap); }
+html.ui-shell #scene-controls .vb-pop :is(p, small, output) { margin: 0; color: var(--ui-muted); font-size: 12px; }
+html.ui-shell #scene-controls .vb-pop > label { display: grid; gap: 5px; font-size: 12px; color: var(--ui-text); }
+html.ui-shell #scene-controls .vb-pop > label.check-label, html.ui-shell #scene-controls .vb-pop > label:has(> input[type=checkbox]) { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+html.ui-shell #scene-controls .vb-pop > label > span { color: var(--ui-muted); font-size: 11px; }
+html.ui-shell #scene-controls .vb-pop > label:has(> input[type=checkbox]) > span { color: var(--ui-text); font-size: 12px; }
+html.ui-shell #scene-controls .vb-pop select { width: 100%; max-width: none; }
+html.ui-shell #scene-controls .vb-pop input[type=range] { width: 100%; }
+html.ui-shell #scene-controls .vb-pop .camera-shortcuts { display: flex; flex-wrap: wrap; gap: var(--vb-gap); }
+html.ui-shell body:not(.setup-layout) #scene-controls .vb-pop .camera-shortcuts { display: none; }
+
+/* All scenes: the chips as a browsable grid. */
+html.ui-shell #viewer-shell #scene-controls #vb-scenes-menu > .vb-pop { width: min(560px, 100%); }
+html.ui-shell #viewer-shell #scene-controls .vb-pop .scene-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--vb-gap); overflow: visible; padding: 0; }
+html.ui-shell #viewer-shell #scene-controls .vb-pop .scene-options button { display: flex; flex: none; justify-content: flex-start; gap: 8px; text-align: left; }
+html.ui-shell #viewer-shell #scene-controls .vb-pop .scene-options .scene-dot { display: block; flex: none; }
+html.ui-shell #viewer-shell #scene-controls #room-scene-caption { margin: 0; padding: 0; background: none; color: var(--ui-muted); font-size: 11px; width: auto; min-height: 0; }
+
+/* Groove & routines (one per room, inside that room's panel). */
+html.ui-shell #viewer-shell #scene-controls .vb-room-more > .vb-pop { width: min(460px, 100%); }
+html.ui-shell #scene-controls .vb-room-more .vb-pop [data-groove-saved], html.ui-shell #scene-controls .vb-room-more .vb-pop [data-groove-status] { flex: none; color: var(--ui-muted); font-size: 11px; }
+html.ui-shell #scene-controls .vb-room-more .room-mobility-controls { margin: 2px 0 0; padding: 10px 0 0; border: 0; border-top: 1px solid var(--ui-border); border-radius: 0; background: none; color: var(--ui-text); }
+html.ui-shell #scene-controls .vb-room-more .room-mobility-controls strong { color: var(--ui-text); }
+html.ui-shell #scene-controls .vb-room-more .room-mobility-controls small { color: var(--ui-muted); }
+html.ui-shell #scene-controls .vb-room-more .room-mobility-controls [data-mobility-status] { min-width: 0; flex: 1 1 100%; }
+
+/* Light & quality, Screens (studio.js's own disclosures) and Desks. */
+html.ui-shell #viewer-shell #scene-controls :is(#vb-light-menu, .render-settings:not(.scene-screen-controls)) > .vb-pop { width: 270px; }
+html.ui-shell #viewer-shell #scene-controls .scene-screen-controls > .vb-pop { width: 320px; }
+html.ui-shell #viewer-shell #scene-controls .scene-desk-panel > .vb-pop { width: min(640px, 100%); }
+html.ui-shell #scene-controls .scene-desk-panel > .vb-pop .scene-desk-row { margin-top: 0; }
+html.ui-shell #scene-controls .scene-desk-panel[hidden] { display: none; }
+
+/* Things that belong to the canvas, not to the bar: they float under it and never change its height. */
+html.ui-shell #viewer-shell #scene-controls #room-object-controls { position: absolute; top: calc(100% + 10px); left: 0; z-index: 2; max-width: 100%; margin: 0; }
+html.ui-shell #viewer-shell #scene-controls .vb-hint {
+    position: absolute; top: calc(100% + 10px); left: 0; z-index: 1; max-width: min(560px, 100%); margin: 0; padding: 5px 10px;
+    border: 1px solid var(--ui-border); border-radius: 10px; background: var(--ui-glass); color: var(--ui-muted); font-size: 11px; line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    /* It lies over the corner of the canvas: a drag or a box-select that starts there must reach the canvas. */
+    pointer-events: none;
+}
+html.ui-shell #viewer-shell #scene-controls .vb-hint[hidden] { display: none; }
+html.ui-shell #scene-controls:has(#room-object-controls:not([hidden])) .vb-hint, html.ui-shell #scene-controls.vb-menu-open .vb-hint { display: none; }
+
+/* Panel and Find, at the end of the tools row. */
+html.ui-shell #scene-controls .vb-find { display: inline-flex; align-items: center; gap: 7px; }
+html.ui-shell #scene-controls .vb-find-glyph { width: 9px; height: 9px; border: 1.5px solid currentColor; border-radius: 50%; position: relative; margin-right: 3px; }
+html.ui-shell #scene-controls .vb-find-glyph::after { content: ''; position: absolute; left: 8px; top: 8px; width: 5px; height: 1.5px; background: currentColor; transform: rotate(45deg); transform-origin: left center; }
+html.ui-shell #scene-controls .vb-find kbd { font: 10px/1 ui-monospace, monospace; padding: 3px 5px; border: 1px solid var(--ui-border); border-radius: 4px; color: var(--ui-muted); }
+
+/* Viewer extras keep their place and take the same surface. */
+html.ui-shell #viewer-shell .lab-preview-toggle { border-color: var(--ui-border); background: var(--ui-card); color: var(--ui-text); min-height: var(--vb-h); }
+html.ui-shell #viewer-shell .absolute.top-4.right-4 { top: 12px; right: 12px; }
+html.ui-shell #viewer-shell .absolute.top-4.right-4 button { width: 40px; height: 40px; }
+
+/* ---- Studio: hide the left panel so the 3D view takes the screen (the Store has its own control). ---- */
+html.ui-shell body.shell-layout.setup-layout.ui-sidebar-hidden { --shell-sidebar-w: 0px; }
+html.ui-shell body.shell-layout.setup-layout.ui-sidebar-hidden #setup-resizer { display: none; }
+html.ui-shell body.shell-layout.setup-layout.ui-sidebar-hidden #setup-sidebar { visibility: hidden; pointer-events: none; border-right: 0; }
+
+/* ---- Editor tools: collapsible groups. ---- */
+html.ui-shell #setup-sidebar .ui-group { margin-top: 12px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-card); }
+html.ui-shell #setup-sidebar .ui-group > .ui-group-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; padding: 10px 14px;
+    border: 0; border-radius: 12px; background: none; color: var(--ui-text); font-size: 13px; font-weight: 650; text-align: left;
+}
+html.ui-shell #setup-sidebar .ui-group > .ui-group-head:hover { background: var(--ui-soft); }
+html.ui-shell #setup-sidebar .ui-group > .ui-group-head::after { content: ''; width: 7px; height: 7px; margin-right: 4px; border: solid var(--ui-muted); border-width: 0 1.5px 1.5px 0; transform: rotate(-45deg); transition: transform .15s ease; }
+html.ui-shell #setup-sidebar .ui-group > .ui-group-head[aria-expanded=true]::after { transform: rotate(45deg); }
+html.ui-shell #setup-sidebar .ui-group > .ui-group-body { display: grid; gap: 12px; padding: 2px 14px 14px; min-width: 0; }
+html.ui-shell #setup-sidebar .ui-group > .ui-group-body > * { margin: 0; min-width: 0; }
+/* Inside a group the old cards drop their own frame: one frame per group, separators between blocks. */
+html.ui-shell #setup-sidebar .ui-group > .ui-group-body > :is(.precision-tools, .scene-asset-tools, .project-tools, [class*=border]) {
+    padding: 12px 0 0; border: 0; border-top: 1px solid var(--ui-border); border-radius: 0; background: none; box-shadow: none;
+}
+html.ui-shell #setup-sidebar .ui-group > .ui-group-body > :first-child { padding-top: 0; border-top: 0; }
+html.ui-shell #setup-sidebar .ui-group > .ui-group-body > p { padding: 10px 12px; border-radius: 8px; background: var(--ui-soft); color: var(--ui-muted); }
+html.ui-shell #setup-sidebar #debug-panel-header { padding: 0 2px 4px; }
+html.ui-shell #setup-sidebar #anim-debugger { gap: 4px; }
+
+/* ---- Desk tab: expert LED sliders behind one disclosure. ---- */
+html.ui-shell #setup-sidebar .ui-more { border: 1px solid var(--ui-border); border-radius: 10px; background: var(--ui-card); }
+html.ui-shell #setup-sidebar .ui-more > summary { display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 8px 12px; cursor: pointer; list-style: none; font-size: 12px; font-weight: 600; color: var(--ui-text); }
+html.ui-shell #setup-sidebar .ui-more > summary::-webkit-details-marker { display: none; }
+html.ui-shell #setup-sidebar .ui-more > summary::after { content: ''; width: 6px; height: 6px; margin-right: 4px; border: solid var(--ui-muted); border-width: 0 1.5px 1.5px 0; transform: rotate(-45deg); }
+html.ui-shell #setup-sidebar .ui-more[open] > summary::after { transform: rotate(45deg); }
+html.ui-shell #setup-sidebar .ui-more > .ui-more-body { display: grid; gap: 10px; padding: 2px 12px 12px; }
+html.ui-shell #setup-sidebar .ui-more > .ui-more-body > :first-child { border-top: 0; padding-top: 0; }
+
+/* ---- Quick find. ---- */
+.ui-find { position: fixed; inset: 0; z-index: 150; display: flex; justify-content: center; align-items: flex-start; padding: 12vh 16px 16px; background: #06120d66; }
+.ui-find[hidden] { display: none; }
+.ui-find-box { width: min(560px, 100%); max-height: 72vh; display: flex; flex-direction: column; border: 1px solid var(--ui-border); border-radius: 14px; background: var(--ui-panel); color: var(--ui-text); box-shadow: 0 24px 70px #0006; overflow: hidden; }
+.ui-find-box input { box-sizing: border-box; width: 100%; min-height: 48px; padding: 12px 16px; border: 0; border-bottom: 1px solid var(--ui-border); background: transparent; color: var(--ui-text); font: inherit; font-size: 15px; outline-offset: -3px; }
+.ui-find-box ul { list-style: none; margin: 0; padding: 6px; overflow: auto; overscroll-behavior: contain; }
+.ui-find-box li { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; min-height: 40px; box-sizing: border-box; padding: 9px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.ui-find-box li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-find-box li small { flex: none; color: var(--ui-muted); font-size: 11px; }
+.ui-find-box li[aria-selected=true], .ui-find-box li[role=option]:hover { background: var(--ui-selected); }
+.ui-find-box li.ui-find-empty { color: var(--ui-muted); cursor: default; }
+.ui-find-hint { margin: 0; padding: 8px 16px; border-top: 1px solid var(--ui-border); color: var(--ui-muted); font-size: 11px; }
+.ui-found { outline: 3px solid var(--ui-focus) !important; outline-offset: 3px !important; animation: ui-found 1.6s ease-out; }
+@keyframes ui-found { 0%, 60% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--ui-focus) 35%, transparent); } 100% { box-shadow: 0 0 0 6px transparent; } }
+@media (prefers-reduced-motion: reduce) { .ui-found { animation: none; } }
+
+/* ---- Phones: rows scroll sideways instead of stacking; menus open as bottom sheets. ---- */
+@media (max-width: 760px) {
+    html.ui-shell { --vb-top: 78px; }
+    html.ui-shell #viewer-shell .viewer-heading { top: 10px; left: 10px; max-width: calc(100% - 76px); }
+    html.ui-shell #viewer-shell #scene-controls.vb { left: 8px; right: 62px; }
+    html.ui-shell #scene-controls .vb-row { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding: 6px; -webkit-overflow-scrolling: touch;
+        mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent); -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent); }
+    html.ui-shell #scene-controls .vb-row::-webkit-scrollbar { display: none; }
+    html.ui-shell #scene-controls .vb-row > *, html.ui-shell #scene-controls .measured-room-controls > *, html.ui-shell #scene-controls .measured-room-controls > div > * { flex: none; }
+    html.ui-shell #viewer-shell #scene-controls :is(.measured-room-controls, .measured-room-controls > div) { flex-wrap: nowrap; max-width: none; }
+    html.ui-shell #viewer-shell #scene-controls .studio-toolbar { padding-right: 6px; }
+    html.ui-shell #scene-controls .vb-spacer, html.ui-shell #scene-controls .vb-find kbd, html.ui-shell #scene-controls #ui-panel-toggle { display: none; }
+    html.ui-shell #viewer-shell #scene-controls .vb-menu > .vb-pop {
+        position: fixed; inset: auto 0 0 0 !important; z-index: 90; width: auto !important; min-width: 0; max-width: none;
+        max-height: min(62dvh, 560px) !important; padding: 14px 14px calc(16px + env(safe-area-inset-bottom));
+        border-radius: 18px 18px 0 0; border-width: 1px 0 0; box-shadow: 0 -12px 40px #0b1a1450;
+    }
+    html.ui-shell #scene-controls .vb-pop-head { position: sticky; top: -14px; z-index: 1; margin: -14px -14px 0; padding: 12px 14px 8px; background: var(--ui-panel); }
+    html.ui-shell #scene-controls .vb-pop-head::before { content: ''; position: absolute; top: 5px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--ui-border); }
+    html.ui-shell #viewer-shell #scene-controls .vb-pop-head .vb-pop-close { min-height: 40px; width: 40px; font-size: 22px; }
+    html.ui-shell #viewer-shell #scene-controls .vb-pop .scene-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0; }
+    html.ui-shell #viewer-shell #scene-controls .vb-pop .scene-options button { min-height: 40px; padding: 5px 10px; font-size: 12px; }
+    html.ui-shell #viewer-shell #scene-controls .vb-hint { max-width: 100%; }
+    /* The sheet is fixed to the screen; lift the viewer above the options panel and under the header while one is open. */
+    html.ui-shell body.ui-menu-open #viewer-shell { z-index: 70; }
+}
