@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { RoomPeople } from '../room-people.mjs';
-import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, solveStill, solveChange, STAND_UP } from '../room-people-motion.mjs';
+import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, solveStill, solveChange, walkPlan, solveWalk, STAND_UP } from '../room-people-motion.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rigOf = who => new PersonRig(JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8')));
@@ -192,6 +192,26 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     }
 }
 
+// ---- a walk: footprints that stay put, legs that reach them, knees that bend forward, built postures at both ends
+for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
+    const rig = rigOf(who), key = rig.key(`people-${who}-stand-wait`), plan = walkPlan(rig, key, key, [[0, 0], [0, 3], [2, 4.5]]), total = plan.steps.length;
+    assert.ok(plan.steps.length >= 8 && Math.abs(plan.length - 5.5) < 1e-9);
+    solveWalk(rig, plan, 0); assert.ok(worst(rig, key) < 1e-6, who + ': starts in the posture as built'); solveWalk(rig, plan, total); assert.ok(worst(rig, key) < 1e-6, who + ': ends in it');
+    const hold = [null, null]; let last = null, lastRoot = null;
+    for (let g = 0; g <= total + 1e-9; g += 1 / 50) {
+        const root = { ...solveWalk(rig, plan, g) }, c = Math.cos(root.yaw), sn = Math.sin(root.yaw), world = v => new THREE.Vector3(root.x + v.x * c + v.z * sn, v.y, root.z - v.x * sn + v.z * c);
+        ['l', 'r'].forEach((s, which) => {
+            const [thigh, calf, foot, ball] = rig.side[s].leg, inAir = plan.steps.some(st => st.which === which && g > st.g0 && g < st.g1 + .18), at = world(rig.wp[ball]);
+            if (inAir) hold[which] = null; else if (!hold[which]) hold[which] = at; else assert.ok(at.distanceTo(hold[which]) < .004, `${who}: the ${s} foot stays on its footprint at step ${g.toFixed(2)} (${at.distanceTo(hold[which]).toFixed(4)})`);
+            assert.ok(rig.wp[ball].y > .005 && rig.wp[foot].y > .04, who + ': feet above the floor');
+            const mid = rig.wp[thigh].clone().lerp(rig.wp[foot], .5); assert.ok(rig.wp[calf].z > mid.z - .015, `${who}: knee bends forward at step ${g.toFixed(2)}`);
+        });
+        const now = rig.wp.map(world); if (last) for (let i = 0; i < rig.n; i++) assert.ok(now[i].distanceTo(last[i]) < .12, `${who}: ${rig.names[i]} does not jump at step ${g.toFixed(2)}`); last = now;
+        if (lastRoot) assert.ok(Math.hypot(root.x - lastRoot.x, root.z - lastRoot.z) < .03 && Math.abs(root.yaw - lastRoot.yaw) < .08, who + ': the hips travel smoothly'); lastRoot = root;
+    }
+    solveWalk(rig, plan, 4.37); const a = snapshot(rig); solveWalk(rig, plan, 9); solveWalk(rig, plan, 4.37); assert.deepEqual(snapshot(rig), a, who + ': same step, same pose');
+}
+
 // ---- in the room (room-people.mjs): one person at the desk at every height, their chair, the film's time path
 {
     const entries = new Map(index.props.map(p => [p.id, p])), dataOf = who => JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8'));
@@ -278,9 +298,23 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
         people.setFilter({ only: [], cast }); await people.setEnabled(true); await first; await new Promise(r => setTimeout(r, 20));
         assert.ok(!people.people.some(o => /omar/.test(o.userData.person.id)) && !room.root.children.some(o => /omar/.test(o.name)), 'the replaced cast is not in the room');
     }
+    // a film's walker: standing at the start, walking the path, standing at its end; the same second is the same stride
+    {
+        people.setFilter({ only: [], cast: [{ key: 'walker', id: 'people-zoe-stand-wait', at: [0, 1000], turn: 0, walk: { path: [[0, 1000], [0, 3500], [1500, 4500]], start: 2 } }] }); await people.setEnabled(true);
+        const see = time => { people.update({ ...desk, height: 28, time, now: 0 }); const o = people.byKey('walker'); return [o.position.x, o.position.z, o.rotation.y]; };
+        see(0); await new Promise(r => setTimeout(r, 30)); const start = see(0);
+        assert.ok(people.byKey('walker').userData.personLife?.plan, 'the walk is planned');
+        assert.ok(Math.hypot(start[0], start[1] - 1000) < 1 && Math.abs(start[2]) < 1e-6, 'before the start she stands at the head of the path, facing along it');
+        assert.deepEqual(see(1.9), start);
+        const length = 2500 + Math.hypot(1500, 1000), plan = people.byKey('walker').userData.personLife.plan; let last = see(2), gone = 0;
+        for (let t = 2; t <= 2 + plan.seconds + .001; t += .05) { const p = see(t), d = Math.hypot(p[0] - last[0], p[1] - last[1]); assert.ok(d < 90, 'no jump along the path at ' + t.toFixed(2) + ' (' + d.toFixed(0) + ' mm)'); gone += d; last = p; }
+        assert.ok(Math.abs(gone - length) < 60, 'she walks the length of the path (' + gone.toFixed(0) + ' of ' + length.toFixed(0) + ' mm)');
+        const end = see(2 + plan.seconds + 1); assert.ok(Math.hypot(end[0] - 1500, end[1] - 4500) < 1, 'and stands at its end');
+        const mid = see(5); const bones = quat(people.byKey('walker'), 'thigh_l'); see(8); see(3); assert.deepEqual(see(5), mid); assert.deepEqual(quat(people.byKey('walker'), 'thigh_l'), bones, 'scrubbed back: the same stride');
+    }
     // the still models for one use of the room
     people.setFilter({ only: [], cast, motion: false }); await people.setEnabled(true);
     assert.equal(people.actors.length, 0); people.update({ ...desk, height: 36, time: 5 }); assert.deepEqual(shown(), [], 'motion off: nobody between the built heights, as before');
     people.dispose();
 }
-console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart.');
+console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path.');

@@ -25,13 +25,17 @@
 //                                                     pose mode writes these). Only such a person is drawn skinned.
 //   seat: mm                                          the seat height the pose was built for; the person is raised or
 //                                                     lowered (a little) onto the real seat
+//   walk: { path: [[x, z], ...] | to: [x, z], start: seconds, pace: steps a second, then: '<model id>' }
+//                                                     film only, on a standing person: from `start` they walk the path
+//                                                     (from where they stand, or along `path`) and stand at its end, in
+//                                                     the posture of `then` if given; they face along the path at both ends
 //   layout: '<layout id>'                             only in that room layout;  modes: [...] only in those dayparts
 //   key: '<name>'                                     a name for this placement when one model is used twice
 // Not scene assets: the Studio's Rearrange mode and saved room edits leave them
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
-import { PersonRig, DeskActor, solveStill, solveChange, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-20261110a';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-20261110a';
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
@@ -523,6 +527,7 @@ export class RoomPeople {
             const life = object.userData.personLife, on = chosen.includes(object);
             if (life === undefined) { if (on) { object.userData.personLife = null; this.enliven(object).catch(error => console.warn('[people]', error)); } continue; }
             if (!life || !object.userData.personRig || (!on && !life.live)) continue;
+            if (object.userData.person.walk && on) { this.walkAlong(object, life, object.userData.person.walk, film ? time : null, hold); continue; }
             // out of the nearest few: back to the posture as built, once
             solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: on ? 1 : 0, taps: film || dt < .05 });
             drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = on;
@@ -603,6 +608,20 @@ export class RoomPeople {
             o.position.copy(home.position); o.rotation.y = home.turn; o.userData.personChanging = false;
         }
         this.dirty = true;
+    }
+    // A film's walker (a placement with `walk`): at the start of the path until `start`, then walking it, then standing
+    // at its end. Footprints are planned once per path, so the same second is always the same stride.
+    walkAlong(object, life, walk, time, hold) {
+        const sign = JSON.stringify(walk);
+        if (life.walkSign !== sign) {
+            const path = (walk.path || [walk.from || [object.position.x, object.position.z], walk.to]).map(([x, z]) => [x / 1000, z / 1000]);
+            life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined }) : null;
+        }
+        if (!life.plan) return;
+        const g = life.plan.at(time === null ? 0 : Math.max(0, time - (walk.start || 0))), root = solveWalk(life.rig, life.plan, g);
+        drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold);
+        object.position.x = root.x * 1000; object.position.z = root.z * 1000; object.rotation.y = root.yaw; life.live = true;
+        if (g > 0 && g < life.plan.steps.length) this.dirty = true;
     }
     get lively() { return this.enabled && this.people.some(o => o.visible && (o.userData.personLife?.live || o.userData.personDriven)); }
     async enliven(object) {
