@@ -173,7 +173,7 @@ CHARACTERS = {
         'name': 'Theo', 'phenotype': {'gender': 1., 'age': .146, 'muscle': .5, 'weight': .5, 'height': 0.55, 'proportions': .5, 'race': race(.05, .95, 0)},
         'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short01', 'hair_tint': (.05, .04, .035), 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
         'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes06'],
-        'tint': {'namuhekam_male_polo_shirt': (.9, .75, .2), 'cortu_cargo_pants': (.2, .3, .45)},
+        'tint': {'namuhekam_male_polo_shirt': (.92, .48, .16), 'cortu_cargo_pants': (.2, .3, .45)},
     },
     'ines': {
         'name': 'Ines', 'phenotype': {'gender': .0, 'age': .167, 'muscle': .45, 'weight': .47, 'height': 0.635, 'proportions': .5, 'race': race(.6, .15, .25)},

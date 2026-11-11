@@ -26,6 +26,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const editing=()=>open()&&bridge.ready()&&!bridge.playback().playing&&!bridge.bakeState().baking;
   const seconds=()=>shot()?.seconds||0;
   // ---- the catalog
+  const sexIs=(sex,want)=>sex===want||(want==='woman'&&sex==='girl')||(want==='man'&&sex==='boy');   // Women and Men include the girls and the boys
   const loadCatalog=()=>loading||=fetch('/assets/props/people.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('The people catalog is missing (assets/props/people.json).');return r.json();}).then(c=>{catalog=c;rerender();return c;},error=>{loading=null;status(error.message,true);return null;});
   const modelOf=id=>catalog?.models?.[id]||null;
   const who=id=>{const m=modelOf(id);return m&&catalog.characters[m.character]?{...catalog.characters[m.character],id:m.character}:null;};
@@ -185,8 +186,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const kid=catalog.characters[c]?.age==='child';
     if(/^kid-/.test(p)!==kid){
       const info=catalog.poses[p]||{},up=info.stance==='standing'||info.stance==='walking',floor=/floor|kneel/.test(p);
-      const to=kid?(info.desk?(up?'kid-stand-desk':'kid-sit-desk'):floor?'kid-sit-floor':up?'kid-stand':'kid-sit-e')
-        :(info.desk?(up?'stand-type':'sit-type'):floor?'sit-floor':up?'stand-wait':'sit-chat');
+      // (seated away from a desk means a seat that was there for the other: on the floor is right wherever they are)
+      const to=kid?(info.desk?(up?'kid-stand-desk':'kid-sit-desk'):up?'kid-stand':'kid-sit-floor')
+        :(info.desk?(up?'stand-type':'sit-type'):up?'stand-wait':'sit-floor');
       p=catalog.poses[to]?to:kid?'kid-stand':'stand-wait';
     }
     let id=modelFor(c,p,m?.deskHeight??null);
@@ -299,7 +301,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function libraryList(){
     const words=lib.query.toLowerCase().split(/\s+/).filter(Boolean);
     shown=Object.entries(catalog.models).map(([id,m])=>({id,...m,c:catalog.characters[m.character]||{},p:catalog.poses[m.pose]||{}}))
-      .filter(m=>(lib.sex==='all'||m.c.sex===lib.sex)&&(lib.stance==='all'||m.p.stance===lib.stance)&&(lib.aid==='all'||m.aids.includes(lib.aid))&&words.every(w=>`${m.name} ${m.c.sex} ${m.c.age} ${m.c.heritage} ${m.p.stance} ${m.aids.join(' ')}`.toLowerCase().includes(w)));
+      .filter(m=>(lib.sex==='all'||sexIs(m.c.sex,lib.sex))&&(lib.stance==='all'||m.p.stance===lib.stance)&&(lib.aid==='all'||m.aids.includes(lib.aid))&&words.every(w=>`${m.name} ${m.c.sex} ${m.c.age} ${m.c.heritage} ${m.p.stance} ${m.aids.join(' ')}`.toLowerCase().includes(w)));
     dialog.querySelector('[data-pe-count]').textContent=`${shown.length} of ${Object.keys(catalog.models).length} people`;
     dialog.querySelector('[data-pe-results]').innerHTML=shown.length?`<div class="pl-grid">${shown.map((m,i)=>`<button type="button" class="pl-card" data-pe-pick="${i}" title="${escape(m.name)}"><img src="${thumb(m.id)}" alt="" loading="lazy" decoding="async" onerror="this.classList.add('pl-nothumb')"><span class="pl-name">${escape(m.name)}</span><small>${escape([m.c.sex,m.c.age,m.c.height?m.c.height+' cm':'',...m.aids].filter(Boolean).join(' · '))}</small></button>`).join('')}</div>`:'<p class="director-hint">Nobody matches. Clear a filter or the search.</p>';
   }
@@ -326,7 +328,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function selectedPanel(e){
     const c=who(e.id),p=poseOf(e.id),m=modelOf(e.id),s=spans(e.key)?.[0]||null,T=seconds(),o=objectOf(e.key),isFree=free(e);
     if(!catalog)return '<p class="director-hint">Loading the people catalog…</p>';
-    const chars=Object.entries(catalog.characters).filter(([,x])=>(filters.sex==='all'||x.sex===filters.sex)&&(filters.age==='all'||x.age===filters.age)&&(filters.heritage==='all'||x.heritage===filters.heritage));
+    const chars=Object.entries(catalog.characters).filter(([,x])=>(filters.sex==='all'||sexIs(x.sex,filters.sex))&&(filters.age==='all'||x.age===filters.age)&&(filters.heritage==='all'||x.heritage===filters.heritage));
     charIds=chars.map(([id])=>id);
     const face_=id=>{const any=Object.entries(catalog.models).find(([,x])=>x.character===id);return any?thumb(any[0]):'';};
     const uniq=k=>[...new Set(Object.values(catalog.characters).map(x=>x[k]))];

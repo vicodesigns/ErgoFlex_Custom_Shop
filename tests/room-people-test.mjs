@@ -69,6 +69,32 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     people.update({ mode: 'evening', height: 28, pose: { x: 1200, z: -400, yaw: 0 } });
     assert.ok(!nora.visible && !seat.copy.visible && chair.visible, 'in the evening she reads on the floor: the copy is gone and the room\'s chair is back');
     await people.setEnabled(false); assert.ok(chair.visible && [...people.kidSeats.values()].every(k => !k.copy.visible), 'people off: the room as it was');
+    // a chair the room has pushed further back than the adults' 1.3 m is still out while its copy is under the child
+    await people.setEnabled(true); chair.position.set(1200, 0, 2050);
+    people.update({ mode: 'afternoon', height: 28, pose: { x: 1200, z: -400, yaw: 0 } });
+    assert.ok(!chair.visible && [...people.kidSeats.values()].some(k => k.copy.visible), 'a chair pushed 1.5 m back does not stand in the room twice');
+    // what a film chapter takes over, and a child the Director puts at the desk (no chair flag): no task chair, the room's seat
+    const taken = people.resolved().find(c => c.id === 'people-nora-kid-sit-desk');
+    assert.ok(taken && taken.desk === 'sit' && taken.chair === false, 'the hour\'s cast hands the seat on with the child');
+    people.dispose(); assert.equal(people.kidSeats.size, 0, 'dispose takes the copies out');
+    const film = new RoomPeople(room, library); film.setFilter({ only: [], cast: [{ key: 'kid', id: 'people-jun-kid-sit-desk', desk: 'sit' }] }); await film.setEnabled(true);
+    chair.position.set(1200, 0, 550); film.update({ mode: 'afternoon', height: 28, pose: { x: 1200, z: -400, yaw: 0 }, time: 1, now: 0 });
+    const jun = film.people.find(o => o.userData.person.id === 'people-jun-kid-sit-desk');
+    assert.ok(jun?.visible && !jun.userData.personChair && film.actors.every(a => !a.chair), 'a child at the film desk brings no task chair');
+    assert.ok([...film.kidSeats.values()].some(k => k.copy.visible && k.source === chair) && !chair.visible, 'and sits on a copy of the room\'s seat');
+    film.dispose();
+}
+{   // Round a rug: at that angle and distance from its middle, facing it; a room without the rug leaves the person out.
+    const { room } = makeRoom('kindergarten', { id: 'apartment' }), rug = new THREE.Group(); rug.add(new THREE.Mesh(new THREE.BoxGeometry(1800, 10, 1800))); rug.position.set(-1745, 0, 3300); rug.userData.propId = 'circle-rug'; room.root.add(rug);
+    const people = new RoomPeople(room, library); await people.setEnabled(true); people.update({ mode: 'morning', height: 43.5, pose: { x: -1750, z: -500, yaw: 0 } });
+    const tess = people.people.find(o => o.userData.person.id === 'people-tess-kid-sit-floor'), a = THREE.MathUtils.degToRad(200);
+    assert.ok(tess.visible && Math.abs(tess.position.x - (-1745 + Math.sin(a) * 560)) < 1 && Math.abs(tess.position.z - (3300 + Math.cos(a) * 560)) < 1, 'Tess sits 560 mm from the middle of the rug, at 200 degrees');
+    const facing = new THREE.Vector3(Math.sin(tess.rotation.y), 0, Math.cos(tess.rotation.y)), toMiddle = new THREE.Vector3(-1745 - tess.position.x, 0, 3300 - tess.position.z).normalize();
+    assert.ok(facing.dot(toMiddle) > .999, 'facing the middle of it');
+    rug.position.set(-1000, 0, 3000); people.update({ mode: 'afternoon', height: 35, pose: { x: -1750, z: -500, yaw: 0 } }); people.update({ mode: 'morning', height: 43.5, pose: { x: -1750, z: -500, yaw: 0 } });
+    assert.ok(Math.abs(tess.position.x - (-1000 + Math.sin(a) * 560)) < 1, 'and follows the rug when the room moves it for another hour');
+    assert.ok(people.people.filter(o => o.userData.person.on === 'story-rocker').every(o => !o.visible), 'no rocker in this room: the teacher is not shown hovering');
+    people.dispose();
 }
 {   // Home: seated at 28 in, nobody in between, standing at 43.5 in; the person follows the desk and brings a chair.
     const { room, chair } = makeRoom('home'), people = new RoomPeople(room, library);

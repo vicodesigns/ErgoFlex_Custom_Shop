@@ -69,6 +69,20 @@ for (const who of characters) {
     assert.deepEqual([settleDesk(lowStand, 29).tau, settleDesk(lowStand, 29).k, settleDesk(lowStand, 40).tau, settleDesk(lowStand, 40).k], [STAND_UP, 1, STAND_UP, 0]);
 }
 
+// ---- a child drawing at the desk: hands stay on a top tilted for drawing, leave it past 12 degrees, in the Studio and on a film's track
+{
+    const nora = new DeskActor(rigOf('nora')); nora.configure([member('people-nora-kid-sit-desk', 'sit', 470)]);
+    assert.equal(nora.draws, true, 'a child at the desk draws');
+    const hands = tilt => { nora.state = null; nora.drive({ height: 28, tilt, time: null, dt: 0 }); return nora.state.k; };
+    assert.deepEqual([hands(0), hands(8), hands(12), hands(20)], [1, 1, 1, 0], 'on the top to 12 degrees, off beyond');
+    const track = { seconds: 12, heightAt: () => 28, tiltAt: t => t < 4 ? 0 : t < 8 ? 10 : 30 };
+    const at = t => { nora.drive({ height: 28, time: t, track }); return nora.state.k; };
+    assert.equal(at(2), 1); assert.equal(at(6), 1, 'a 10 degree drawing tilt in a film keeps the hands on'); assert.ok(at(11.5) < .05, 'a 30 degree tilt takes them off');
+    const maya = new DeskActor(rigOf('maya')); maya.configure(crew('maya')); assert.equal(maya.draws, false);
+    maya.state = null; maya.drive({ height: 28, tilt: 8, time: null, dt: 0 }); assert.equal(maya.state.k, 0, 'an adult typist still takes the hands off a tilted top');
+    nora.configure([member('people-nora-kid-stand-wait', 'stand', 415)]); assert.equal(nora.draws, false, 'recomputed when the cast changes');
+}
+
 // ---- the pose
 for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     const rig = rigOf(who), actor = new DeskActor(rig); actor.configure(crew(who));

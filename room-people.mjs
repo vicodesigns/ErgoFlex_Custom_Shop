@@ -51,6 +51,9 @@ const HEIGHT_FIT = 1.4;                       // inches either side of the heigh
 const LIVELY = 4;                             // Studio: how many people besides the desk user breathe and shift (the nearest to the camera)
 const HEIGHT_SOLID = .45;                     // within this the person is fully there; beyond it they fade out to HEIGHT_FIT
 const TASK_CHAIR = 'steelcase-leap-v2';       // seat 435 mm: what the seated desk poses were built on
+// A child's seated desk posture is built on the room's own study seat (495 mm), not on the task chair: said with
+// chair: false, and implied by the model (a film or the Director placing a child at the desk needs no flag).
+const ownSeat = spec => spec.desk === 'sit' && (spec.chair === false || /-kid-sit-desk(-|$)/.test(spec.id));
 const CHAIRS = /chair|stool|steelcase-leap|aeron/i;
 // Which part of a person a material is (MakeHuman names: 'Human.<asset>'); null = skin, eyes, teeth, things held.
 const NOT_WORN = /^(body|low-poly|teeth|tongue|eyebrow|eyelashes|eyes)/i, PARTS = { glasses: /glasses/i, shoes: /shoe|flats|boot|sneaker/i, bottom: /pants|skirt|jeans|shorts|trousers/i, hair: /hair|ponytail|afro|bob|braid|bun|^short\d|^long\d|mohawk|pigtail/i };
@@ -500,7 +503,7 @@ export class RoomPeople {
         const now = s => !s.modes || this.modeNow === undefined || s.modes.includes(this.modeNow) || this.named(s);
         return this.people.filter(o => this.allowed(o.userData.person) && !o.userData.personMissing && !o.userData.person.variant && now(o.userData.person)).map(o => {
             const s = o.userData.person, out = { key: this.keyOf(s), id: s.id };
-            if (s.desk) { out.desk = s.desk; if (s.station) out.station = s.station; if (s.reach !== undefined) out.reach = s.reach; }
+            if (s.desk) { out.desk = s.desk; if (s.station) out.station = s.station; if (s.reach !== undefined) out.reach = s.reach; if (s.chair === false) out.chair = false; }
             else if (s.beside && !s.at) out.beside = s.beside;
             else { out.at = [Math.round(o.position.x), Math.round(o.position.z)]; out.turn = Math.round(THREE.MathUtils.radToDeg(o.rotation.y) * 10) / 10; if (Math.abs(o.position.y) > .5) out.y = Math.round(o.position.y); }
             if (s.scale && s.scale !== 1) out.scale = s.scale;
@@ -540,7 +543,7 @@ export class RoomPeople {
         await room.ready; await this.library.loadIndex();
         const specs = this.withFamilies(this.specs());
         const load = async id => { try { return await this.library.instance(id); } catch (error) { console.warn('[people] ' + id + ' did not load:', error?.message || error); return null; } };
-        const loaded = await Promise.all(specs.map(async spec => ({ spec, object: await load(spec.id), chair: spec.desk === 'sit' && spec.chair !== false ? await load(TASK_CHAIR) : null })));
+        const loaded = await Promise.all(specs.map(async spec => ({ spec, object: await load(spec.id), chair: spec.desk === 'sit' && !ownSeat(spec) ? await load(TASK_CHAIR) : null })));
         const posed = [];
         // (a cast that was replaced while its models loaded is dropped: its people would stay in the room for good)
         if (token !== room.token || root !== room.root || cast !== this.generation) return;
@@ -974,21 +977,31 @@ export class RoomPeople {
     // own: a copy of the room's seat, under them and facing the desk with them, while the room's (hidden by
     // clearChairs) stays where it is, so nothing the Studio saves about the room's furniture changes.
     seatChildren() {
-        const seats = this.kidSeats ||= new Map();
+        const seats = this.kidSeats ||= new Map(), live = new Set();
         for (const person of this.people) {
-            const spec = person.userData.person, on = person.visible && spec.desk === 'sit' && spec.chair === false; let seat = seats.get(person);
-            if (!on) { if (seat) seat.copy.visible = false; continue; }
+            const spec = person.userData.person; if (!ownSeat(spec)) continue;
+            // (keyed by the placement, not the object: a person drawn again with a skeleton is a new object in the same seat)
+            const key = this.keyOf(spec) + '|' + spec.id, on = person.visible && (person.userData.personFade === undefined || person.userData.personFade > .5); let seat = seats.get(key);
+            if (!on) continue;
             if (!seat || seat.mode !== this.modeNow || !seat.source.parent) {
-                seat?.copy.removeFromParent(); seats.delete(person);
+                if (seat) { seat.copy.removeFromParent(); seats.delete(key); }
                 const at = this.room.root.worldToLocal(person.getWorldPosition(new THREE.Vector3())).setY(0);
                 const source = this.room.assets().filter(c => (c.visible || this.hidden.has(c)) && CHAIRS.test((c.userData.propId || '') + ' ' + (c.userData.decorUpgrade || '')) && !/armchair|lounge|sofa|student-chair|^lived-/i.test(c.userData.propId || ''))   // (lived-chair-…: the clothes over the chair back, part of the chair)
                     .map(c => ({ c, d: this.centreOf(c).setY(0).distanceTo(at) })).filter(x => x.d < 1600).sort((a, b) => a.d - b.d)[0]?.c;
                 if (!source) continue;
-                const copy = source.clone(true); copy.traverse(o => { o.userData = {}; }); copy.name = 'The seat under ' + (spec.key || spec.id);
-                person.parent.add(copy); seat = { source, copy, mode: this.modeNow, y: source.position.y }; seats.set(person, seat);
+                const copy = source.clone(true);
+                // the clothes the room hangs over the chair back by the hour stay on the room's chair: nobody sits against them
+                for (const o of [...copy.children]) if (/^lived-/.test(o.userData.propId || '') || o.userData.childLivedIn) copy.remove(o);
+                copy.traverse(o => { o.userData = {}; }); copy.name = 'The seat under ' + (spec.key || spec.id);
+                seat = { source, copy, mode: this.modeNow, y: source.position.y }; seats.set(key, seat);
             }
+            live.add(key);
+            if (seat.copy.parent !== person.parent) person.parent.add(seat.copy);
+            // the room's own chair is out while its copy is under the child, however far the room has pushed it back
+            if (!this.hidden.has(seat.source)) { this.hidden.set(seat.source, seat.source.visible); seat.source.visible = false; }
             seat.copy.visible = true; seat.copy.position.set(person.position.x, seat.y, person.position.z); seat.copy.rotation.set(0, person.rotation.y, 0);   // (the child's seats face +z, as the child does)
         }
+        for (const [key, seat] of seats) if (!live.has(key)) seat.copy.visible = false;
     }
     returnSeats() { for (const seat of (this.kidSeats || new Map()).values()) seat.copy.visible = false; }
     dispose() {

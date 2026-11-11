@@ -31,6 +31,7 @@ export const HANDS_FIT = 1.4;          // inches below a built desk height the h
 const SIT_REACH_UP = 2;                // a seated typist's forearms follow the keys this far above the built height, then they stand
 const STAND_REACH_DOWN = 6.5;          // a standing typist follows the keys this far below the built height (arms nearly straight)
 const TILT_FLAT = 4;                   // degrees of desktop tilt beyond which the hands leave the keys (drafting)
+const DRAW_TILT = 12;                  // … and beyond which a child drawing on the top takes their hands off it
 const LEAD = 3.2;                      // sitting down starts when a lowering desk is this far above sitting height
 const NEAR = 1.3;                      // the hands go back to the keys when the desk is this close to where it stops
 const ROLL = .265;                     // metres the chair rolls back before its user stands (their feet end under them)
@@ -320,11 +321,11 @@ export class DeskActor {
     // or null), track: { seconds, heightAt(seconds), tiltAt(seconds) } (film), tilt (degrees now), dt (Studio, seconds
     // since the last call) }
     drive(input) {
-        // a child drawing at the desk works on the tilted top (up to a drafting 12 degrees): the hands stay on it
-        const { height } = input, tilt = this.draws && Math.abs(input.tilt || 0) <= 12 ? 0 : input.tilt || 0; let state;
+        // a child drawing at the desk works on the tilted top (up to DRAW_TILT): the hands stay on it
+        const { height } = input, tilt = this.draws && Math.abs(input.tilt || 0) <= DRAW_TILT ? 0 : input.tilt || 0; let state;
         if (Number.isFinite(input.time)) {
             // (a desk held somewhere the track does not have it, a pose being previewed in the Director, is taken as it stands)
-            if (input.track && Math.abs(input.track.heightAt(input.time) - height) < .6) { if (!this.sim || this.sim.track !== input.track) { this.sim = simulateDesk(this.desc, input.track.heightAt, input.track.seconds, 60, this.draws ? null : input.track.tiltAt || null); this.sim.track = input.track; } state = this.sim.at(input.time); }
+            if (input.track && Math.abs(input.track.heightAt(input.time) - height) < .6) { if (!this.sim || this.sim.track !== input.track) { this.sim = simulateDesk(this.desc, input.track.heightAt, input.track.seconds, 60, this.draws && input.track.tiltAt ? t => { const a = input.track.tiltAt(t); return Math.abs(a || 0) <= DRAW_TILT ? 0 : a; } : input.track.tiltAt || null); this.sim.track = input.track; } state = this.sim.at(input.time); }
             else state = settleDesk(this.desc, height, tilt);    // a time without the desk's track: no history to stand up from
             this.state = state; this.clock = input.time;
         } else {
