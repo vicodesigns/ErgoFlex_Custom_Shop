@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
-import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, STAND_UP } from '../room-people-motion.mjs';
+import { RoomPeople } from '../room-people.mjs';
+import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, solveStill, STAND_UP } from '../room-people-motion.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rigOf = who => new PersonRig(JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8')));
@@ -146,4 +147,86 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     for (let i = 0; i < 60 * 13; i++) { h = Math.min(43.5, h + 1.55 / 60); maya.drive({ height: h, target: 43.5, time: null, dt: 1 / 60 }); }
     assert.ok(maya.state.tau === STAND_UP && maya.state.k === 1 && maya.shown.id === 'people-maya-stand-type' && !maya.moving, 'standing and typing after the rise');
 }
-console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life.');
+// ---- life in people who stay where they are
+{
+    for (const [who, pose, id] of [['grace', 'sit-read', 'people-grace-sit-read'], ['zoe', 'stand-type', 'people-zoe-stand-type'], ['leo', 'sit-write', 'people-leo-sit-write'], ['andre', 'stand-phone', 'people-andre-stand-phone'], ['kai', 'wheel-type', 'people-kai-wheel-type'], ['grace', 'cane-stand', 'people-grace-cane-stand']]) {
+        const rig = rigOf(who), key = rig.key(id), seed = 77; assert.equal(key.pose, pose);
+        solveStill(rig, key, { time: 5, seed, life: 0 }); assert.ok(worst(rig, key) < 1e-9, id + ': without life it is the model as built');
+        let turned = false, most = 0;
+        for (let time = 0; time < 90; time += .21) {
+            solveStill(rig, key, { time, seed });
+            for (const s of ['l', 'r']) {
+                const foot = rig.side[s].leg[2], hand = rig.side[s].arm[3];
+                assert.ok(rig.wp[foot].distanceTo(key.wp[foot]) < 2e-4, `${id}: ${s} foot stays put at ${time.toFixed(1)}`);
+                if (/type|write|cane/.test(pose) && !(pose === 'cane-stand' && s === 'l')) assert.ok(rig.wp[hand].distanceTo(key.wp[hand]) < (pose === 'wheel-type' ? .005 : .002), `${id}: ${s} hand stays where it rests`);   // Kai's arms are at full stretch at the 28 in desk as built
+            }
+            const right = rig.wp[rig.side.r.arm[3]].distanceTo(key.wp[rig.side.r.arm[3]]); if (pose === 'sit-read' && right > .03) turned = true;
+            most = Math.max(most, rig.wp[rig.b.head].distanceTo(key.wp[rig.b.head]));
+            assert.ok(rig.wp[rig.b.head].distanceTo(key.wp[rig.b.head]) < .035, id + ': the head stays about where it was');
+        }
+        assert.ok(most > .0005, id + ': there is life in it');
+        if (pose === 'sit-read') assert.ok(turned, 'the reader turns a page within a minute and a half');
+        solveStill(rig, key, { time: 33.3, seed }); const a = snapshot(rig); solveStill(rig, key, { time: 2, seed }); solveStill(rig, key, { time: 33.3, seed });
+        assert.deepEqual(snapshot(rig), a, id + ': same time and seed, same pose');
+    }
+}
+// ---- in the room (room-people.mjs): one person at the desk at every height, their chair, the film's time path
+{
+    const entries = new Map(index.props.map(p => [p.id, p])), dataOf = who => JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8'));
+    const plain = async id => { const g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.BoxGeometry(.4, 1.2, .4), new THREE.MeshStandardMaterial())); g.scale.setScalar(1000); g.userData.propId = id; return g; };
+    const library = {
+        loadIndex: async () => index, entry: id => entries.get(id) || null, instance: plain, rigData: async who => dataOf(who),
+        rigInstance: async id => {
+            const data = dataOf(entries.get(id).person.character), g = await plain(id), bones = data.bones.map(name => { const b = new THREE.Bone(); b.name = name; return b; });
+            data.bones.forEach((name, i) => { (data.parents[i] < 0 ? g : bones[data.parents[i]]).add(bones[i]); bones[i].position.fromArray(data.offsets, i * 3); bones[i].quaternion.fromArray(data.postures[id].q, i * 4); });
+            bones[data.bones.indexOf('Root')].position.fromArray(data.postures[id].root); bones[data.bones.indexOf('pelvis')].position.fromArray(data.postures[id].pelvis);
+            return g;
+        }
+    };
+    const makeRoom = id => { const rootGroup = new THREE.Group(), chair = new THREE.Group(); chair.add(new THREE.Mesh(new THREE.BoxGeometry(600, 900, 600))); chair.position.set(0, 0, 900); chair.userData.propId = 'steelcase-leap-v2'; rootGroup.add(chair);
+        return { room: { id, root: rootGroup, token: 1, ready: Promise.resolve(), roomLayout: { id: 'house' }, assets: () => rootGroup.children.filter(o => o.userData.propId && !o.name.startsWith('Person')), peopleState: null }, chair }; };
+    const cast = [{ key: 'sits', id: 'people-maya-sit-type', desk: 'sit' }, { key: 'sits30', id: 'people-maya-sit-type-30', desk: 'sit' }, { key: 'stands', id: 'people-maya-stand-type', desk: 'stand' }];
+    const { room, chair } = makeRoom('office'), people = new RoomPeople(room, library); people.setFilter({ only: [], cast, life: false });
+    await people.setEnabled(true);
+    people.update({ pose: { x: 100, z: -500, yaw: 0 }, height: 28, time: 0, now: 0 });
+    assert.equal(people.actors.filter(a => a.members.length).length, 1, 'the three models are one person'); const actor = people.actors.find(a => a.members.length);
+    const desk = { pose: { x: 100, z: -500, yaw: 0 }, keyboard: { x: 60, z: -240 } }, shown = () => people.people.filter(o => o.visible).map(o => o.userData.person.id);
+    const quat = (o, bone) => o.userData.personRig.bones.get(bone).quaternion.toArray(), built = (id, bone) => { const d = dataOf('maya'), i = d.bones.indexOf(bone); return d.postures[id].q.slice(i * 4, i * 4 + 4); };
+    const close = (a, b, eps = 1e-4) => a.every((v, i) => Math.abs(v - b[i]) < eps);
+    // film path: the same person at every second of a rise, never nobody; the chair stays in the room, behind them
+    const track = { seconds: 14, heightAt: t => 28 + 15.5 * Math.min(1, Math.max(0, (t - 1) / 10)) };
+    const at = time => { people.update({ ...desk, height: track.heightAt(time), time, track, now: 0 }); return shown(); };
+    assert.deepEqual(at(0), ['people-maya-sit-type']);
+    const sits = people.byKey('sits'); assert.ok(close(quat(sits, 'upperarm_l'), built('people-maya-sit-type', 'upperarm_l')), 'seated at 28 in she is the model as built');
+    assert.deepEqual([sits.position.x, sits.position.z], [60, 230], 'seated 470 mm behind the keys');
+    assert.ok(actor.chair.visible && actor.chair.position.distanceTo(sits.position) < 1 && chair.visible === false, 'on her chair; the room\'s own chair has stepped aside');
+    for (let t = 0; t <= 14; t += .1) assert.equal(at(t).length, 1, 'one model of her at ' + t.toFixed(1) + ' s');
+    assert.deepEqual(at(2.2), ['people-maya-sit-type-30'], 'at 29.9 in the 30 in model is the one drawn'); assert.ok(actor.chair.position.z > 230 + 150 && actor.chair.position.z < 230 + 300, 'the chair rolls back with her');
+    assert.ok(people.dirty, 'she moved: the film redraws her shadow');
+    assert.deepEqual(at(6), ['people-maya-stand-type']); assert.ok(close(quat(people.byKey('stands'), 'upperarm_l'), built('people-maya-stand-wait', 'upperarm_l')), 'standing by while the desk rises');
+    assert.ok(Math.abs(actor.chair.position.z - (230 + 415)) < 2 && actor.chair.visible, 'the chair is left 415 mm back');
+    assert.deepEqual(at(13), ['people-maya-stand-type']); assert.ok(close(quat(people.byKey('stands'), 'upperarm_l'), built('people-maya-stand-type', 'upperarm_l')), 'typing again at 43.5 in, as built');
+    assert.deepEqual([people.byKey('stands').position.x, people.byKey('stands').position.z], [60, 175]);
+    at(2.2); const again = quat(people.byKey('sits30'), 'thigh_l'); at(9); at(2.2);
+    assert.deepEqual(quat(people.byKey('sits30'), 'thigh_l'), again, 'scrubbing back to a second gives the same bones');
+    // her own fine tuning (the Director's pose mode) turns the bone from where the motion has it
+    people.setFilter({ only: [], cast: cast.map(c => c.key === 'stands' ? { ...c, pose: { head: [0, .2, 0, .98] } } : c), life: false }); await people.built; at(13);
+    const tuned = new THREE.Quaternion().fromArray(built('people-maya-stand-type', 'head')).multiply(new THREE.Quaternion(0, .2, 0, .98)).normalize().toArray();
+    assert.ok(close(quat(people.byKey('stands'), 'head'), tuned), 'a pose adjustment sits on top of the motion');
+    // a parked chair (the film's people.chair) is where the film puts it while she stands
+    people.setFilter({ only: [], cast, life: false, chair: { back: 300, side: 760, turn: -42 } }); await people.built; at(13);
+    assert.ok(Math.abs(actor.chair.position.x - (60 + 760)) < 2 && Math.abs(actor.chair.position.z - 530) < 2, 'parked where the chapter says');
+    // Studio path: the live height, stepped; a jump of the desk is taken as it stands
+    people.setFilter({ only: [], cast, life: false }); await people.built;
+    let now = 0, h = 28; const live = (target, steps) => { for (let i = 0; i < steps; i++) { now += 1000 / 60; h += Math.sign(target - h) * Math.min(Math.abs(target - h), 1.55 / 60); people.update({ ...desk, height: h, target: Math.abs(target - h) > 1e-3 ? target : null, time: null, now }); assert.equal(shown().length, 1); } };
+    live(28, 2); assert.deepEqual(shown(), ['people-maya-sit-type']); assert.equal(people.moving, false);
+    live(43.5, 120); assert.ok(people.moving, 'on her way up two seconds after the desk set off');
+    live(43.5, 600); assert.deepEqual(shown(), ['people-maya-stand-type']); assert.ok(!people.moving && actor.state.k === 1);
+    live(36, 400); assert.deepEqual(shown(), ['people-maya-stand-type']); assert.equal(actor.state.k, 0, 'a desk stopped at 36 in: standing by');
+    live(28, 600); assert.deepEqual(shown(), ['people-maya-sit-type']); assert.ok(actor.state.k === 1 && Math.abs(actor.chair.position.z - 230) < 1, 'seated and typing, the chair back under her');
+    // the still models for one use of the room
+    people.setFilter({ only: [], cast, motion: false }); await people.setEnabled(true);
+    assert.equal(people.actors.length, 0); people.update({ ...desk, height: 36, time: 5 }); assert.deepEqual(shown(), [], 'motion off: nobody between the built heights, as before');
+    people.dispose();
+}
+console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top).');

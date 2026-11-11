@@ -42,7 +42,7 @@ try{
     const c=obj.getWorldPosition(new obj.position.constructor());c.y+=1.2;c.project(t.camera);const r=f.getBoundingClientRect();
     return Math.abs(c.x)<.9&&Math.abs(c.y)<.9?{x:r.left+(c.x+1)/2*r.width,y:r.top+(1-c.y)/2*r.height,key:o.key}:null;}),'a person in the view');
   const key=spot.key,before=await person(key);
-  check(before&&!before.rigged,'before pose mode the person is a plain model');
+  check(before&&before.rigged,'the person at the desk is drawn with their skeleton before pose mode too (they move with the desk)');
   await snap('01-before');
   // ---- double-click: pose mode, the skeleton comes in and nothing moves
   await page.mouse.click(spot.x,spot.y,{clickCount:2,delay:40});

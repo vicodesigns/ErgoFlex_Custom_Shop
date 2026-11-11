@@ -10520,6 +10520,7 @@ function renderActivity() {
     const moving = !!(moved || glideActive || yawCommand || liftJog || tiltJog || roomGroove?.run || sceneDesks?.playing
         || sceneDesks?.drag || roomInteractions?.drag || isDraggingTransform || workspaceRoom?.people?.moving);
     const animating = !!(cameraTween.active || controls?.autoRotate || marquee.active || sceneDesks?.recording || roomSafety.alert
+        || (workspaceRoom?.people?.lively && performance.now() - renderPacing.lastInput < 20000)      // people breathe at full rate for a while after the last input, then at the idle rate
         || ledEffect.mode !== 'solid' || ledDiagnostic.strip !== null || ledPixels?.active || ledMotion.owner || ledMotion.completionUntil || ledGame.active || ledMusic.active);
     // Cutaway walls and the ceiling are shadow casters that hide as the camera moves.
     let signature = room ? room.root.uuid : '';
@@ -10527,6 +10528,8 @@ function renderActivity() {
     return { moving, animating, signature };
 }
 
+// A person at the desk who moved since the last frame (room-people.mjs) moves their shadow: the film redraws shadows only on request.
+function peopleShadows() { const people = workspaceRoom?.people; if (people?.dirty) { people.dirty = false; presentationShadowDirty = true; } }
 let presentationBeforeFrame = null, presentationShadowAt = -Infinity, presentationShadowDirty = true, presentationOrbit = false;
 function animate(time, frame) {
     // The presentation updates its camera and pose immediately before this
@@ -10681,7 +10684,7 @@ function animate(time, frame) {
         ledGame.syncUI(ledSounds.error || (ledMotion.owner ? `${ledMotion.owner.name} · movement cue` : ''));
         ledMusic.syncUI(true);
     }
-    if (camera && !liveAR?.active) workspaceRoom?.update(camera);
+    if (camera && !liveAR?.active) { workspaceRoom?.update(camera); peopleShadows(); }
     sceneScreens?.update();
     syncSafetyUI();
     if(time-touchscreenDrawAt>100){touchscreenDrawAt=time;updateTouchscreenDisplay();}
@@ -12672,13 +12675,13 @@ if (window.__ERGO_PRESENTATION__) {
             if(!bakeViewport)return;const saved=bakeViewport;bakeViewport=null;renderer.setPixelRatio(saved.pixelRatio);renderer.setSize(saved.size.x,saved.size.y,false);camera.aspect=saved.aspect;camera.updateProjectionMatrix();requestAnimationFrame(syncViewerSize);
         },
         bakeDraw(canvas,seconds){
-            workspaceAccessories?.update();sceneDesks?.update(1/30);updateLedEffectFrame(seconds);workspaceRoom?.update(camera);sceneScreens?.update();
+            workspaceAccessories?.update();sceneDesks?.update(1/30);updateLedEffectFrame(seconds);workspaceRoom?.update(camera);peopleShadows();sceneScreens?.update();
             roomLedSpill.update(workspaceRoom,ledPixels,{enabled:ledsEnabled,colour:ledFrameColor,gain:roomLedGain});
             renderer.shadowMap.autoUpdate=presentationShadowDirty;renderer.render(scene,camera);presentationShadowDirty=false;renderer.shadowMap.autoUpdate=true;
             const source=renderer.domElement;canvas.getContext('2d',{alpha:false}).drawImage(source,0,0,canvas.width,canvas.height);
         },
         capture(canvas){
-            workspaceRoom?.update(camera);renderer.shadowMap.autoUpdate=presentationShadowDirty;renderer.render(scene,camera);presentationShadowDirty=false;renderer.shadowMap.autoUpdate=true;
+            workspaceRoom?.update(camera);peopleShadows();renderer.shadowMap.autoUpdate=presentationShadowDirty;renderer.render(scene,camera);presentationShadowDirty=false;renderer.shadowMap.autoUpdate=true;
             const source=renderer.domElement;
             canvas.width=source.width;canvas.height=source.height;
             canvas.getContext('2d',{alpha:false}).drawImage(source,0,0);
@@ -12709,7 +12712,7 @@ if (window.__ERGO_PRESENTATION__) {
             featured.rig.setBodyVisible(false);sceneDesks.ctx.showLive(true,true);sceneDesks.sync();
             await workspaceAccessories?.ready;await sceneDesks.objects.ready;
         },
-        pause(on){if(renderer){if(on){workspaceRoom?.update(camera);renderer.shadowMap.autoUpdate=presentationShadowDirty;renderer.render(scene,camera);presentationShadowDirty=false;renderer.shadowMap.autoUpdate=true;}renderer.setAnimationLoop(on ? null : animate);}},
+        pause(on){if(renderer){if(on){workspaceRoom?.update(camera);peopleShadows();renderer.shadowMap.autoUpdate=presentationShadowDirty;renderer.render(scene,camera);presentationShadowDirty=false;renderer.shadowMap.autoUpdate=true;}renderer.setAnimationLoop(on ? null : animate);}},
         pose(height,tilt){
             manualLiftOverride=true;
             const h=THREE.MathUtils.clamp(height,minimumHeightForTilt(tilt,currentConfig.size),HEIGHT_MAX);

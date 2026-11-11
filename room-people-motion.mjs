@@ -34,6 +34,7 @@ const TILT_FLAT = 4;                   // degrees of desktop tilt beyond which t
 const LEAD = 3.2;                      // sitting down starts when a lowering desk is this far above sitting height
 const NEAR = 1.3;                      // the hands go back to the keys when the desk is this close to where it stops
 const ROLL = .265;                     // metres the chair rolls back before its user stands (their feet end under them)
+const SWAP = 1.45;                     // seconds into standing up at which the standing model takes over from the seated one
 const NUDGE = .15;                     // and how much further the calves push it as the knees straighten
 
 // ---- driver --------------------------------------------------------------------------------------------------
@@ -160,7 +161,7 @@ export const seedOf = text => { let h = 2166136261; for (const c of String(text)
 // input: { tau, k, height (inches), time (seconds, for the life in the pose; null = none), seed, life: 0..1 }
 // Leaves the pose in rig.lq / rig.lp (fk() current) and returns { stance: 'sit' | 'stand', chair: { back, turn } }
 // (metres the chair has rolled back from under the seated person, degrees it has turned).
-const turn = Q(), turn2 = Q(), handQ = Q(), footQ = Q(), spot = V(), dir = V(), up = V(), hip = V();
+const turn = Q(), turn2 = Q(), handQ = Q(), footQ = Q(), spot = V(), dir = V(), up = V(), hip = V(), keysAt = V(), awayAt = V();
 const away = { l: [Q(), Q(), Q(), Q()], r: [Q(), Q(), Q(), Q()] }, onKeys = { l: [Q(), Q(), Q(), Q()], r: [Q(), Q(), Q(), Q()] };
 // Two postures of one stance blended by desk height: which two, how much of the second, and how far the keys are
 // above the height the blend is built for (metres).
@@ -176,6 +177,18 @@ const blendQ = (out, pair, i) => pair.w > 0 ? out.slerpQuaternions(pair.a.q[i], 
 const blendV = (out, pair, i) => pair.w > 0 ? out.lerpVectors(pair.a.wp[i], pair.b.wp[i], pair.w) : out.copy(pair.a.wp[i]);
 const blendW = (out, pair, i) => pair.w > 0 ? out.slerpQuaternions(pair.a.wq[i], pair.b.wq[i], pair.w) : out.copy(pair.a.wq[i]);
 
+// Typing: in bursts with pauses, one finger of each hand at a time dips onto a key (the two hands half a beat apart).
+function tapKeys(rig, s, time, seed, life) {
+    const { fingers, arm } = rig.side[s], busy = ss(-.15, .1, noise(time * .31 + (s === 'l' ? 0 : .4), seed + 21)) * life, beat = time * (6.1 + hash(3, seed) * 1.6) + (s === 'l' ? 0 : .5), n = Math.floor(beat), x = beat - n;
+    const which = Math.floor(hash(n, seed + (s === 'l' ? 40 : 41)) * 5.99) % 5, tap = Math.sin(Math.PI * x) ** 2 * busy * (hash(n, seed + 50) < .82 ? 1 : 0);
+    if (tap <= 0) return;
+    fingers.forEach((i, at) => {
+        const finger = Math.floor(at / 3), joint = at % 3; if (finger !== which) return;
+        rig.lq[i].multiply(turn.setFromAxisAngle(X, tap * (joint === 0 ? .2 : joint === 1 ? .1 : .05) * (rig.names[i].startsWith('thumb') ? .5 : 1)));
+    });
+    rig.lq[arm[3]].multiply(turn.setFromAxisAngle(X, tap * .012));
+}
+
 export function solveDesk(rig, keys, input) {
     const mobile = keys.sit.length > 0 && keys.stand.length > 0, tau = mobile ? input.tau : keys.sit.length ? 0 : STAND_UP;
     const k = clamp01(input.k), ke = k * k * (3 - 2 * k), height = input.height, time = input.time, life = time === null || time === undefined ? 0 : input.life ?? 1, seed = input.seed | 0;
@@ -183,7 +196,7 @@ export function solveDesk(rig, keys, input) {
     const b = rig.b, standing = tau >= STAND_UP / 2;
     // how far along each part of standing up is
     const roll = ss(.05, .85, tau), rise = clamp01((tau - .95) / 1.4), core = sit ? ss(1.05, 2.4, tau) : 1, legs = sit ? ss(.95, 2.3, tau) : 1;
-    const lean = THREE.MathUtils.degToRad(36) * ss(.5, 1.28, tau) * (1 - ss(1.32, 2.45, tau));
+    const lean = THREE.MathUtils.degToRad(36) * ss(.5, 1.28, tau) * (1 - ss(1.32, 2.25, tau));
     // ---- core: pelvis, spine, neck and head turn from the seated posture to the standing one
     const standQ = (out, i) => type && wait ? out.slerpQuaternions(wait.q[i], tq.copy(type.w > 0 ? tw.slerpQuaternions(type.a.q[i], type.b.q[i], type.w) : type.a.q[i]), ke) : out.copy((wait || type.a).q[i]);
     for (let i = 0; i < rig.n; i++) {
@@ -211,7 +224,7 @@ export function solveDesk(rig, keys, input) {
     rig.placePelvis(pelvis); rig.fk();
     // the trunk leans in over the feet to stand up (hips most, then the spine), and the head stays up
     if (lean > 1e-4) {
-        for (const [bone, share] of [[b.pelvis, .52], [b.spine_01, .2], [b.spine_02, .16], [b.spine_03, .12], [b.neck_01, -.3], [b.head, -.42]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, lean * share)); rig.fk(); }
+        for (const [bone, share] of [[b.pelvis, .52], [b.spine_01, .2], [b.spine_02, .16], [b.spine_03, .12], [b.neck_01, -.34], [b.head, -.5]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, lean * share)); rig.fk(); }
     }
     if (life > 0) {
         // breathing lifts the chest; the hips roll into the standing leg; the head drifts and now and then looks down at
@@ -255,24 +268,23 @@ export function solveDesk(rig, keys, input) {
                 blendV(spot, keyed, hand); spot.y += lift; blendW(handQ, keyed, hand);
                 rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ);
             }
-            arm.forEach((i, n) => onKeys[s][n].copy(rig.lq[i]));
+            arm.forEach((i, n) => onKeys[s][n].copy(rig.lq[i])); keysAt.copy(rig.wp[hand]);
         }
+        const between = ke > 0 && ke < 1 && keyed;
+        if (between) { arm.forEach((i, n) => rig.lq[i].copy(away[s][n])); rig.fk(); awayAt.copy(rig.wp[hand]); }
         arm.forEach((i, n) => { rig.lq[i].copy(away[s][n]); if (ke > 0 && keyed) rig.lq[i].slerp(onKeys[s][n], ke); });
         rig.fk();
-        // between the two the hand lifts clear of the desk's edge
-        if (ke > 0 && ke < 1 && keyed) { spot.copy(rig.wp[hand]); spot.y += .045 * Math.sin(Math.PI * ke); handQ.copy(rig.wq[hand]); rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ); }
+        // between the two the wrist comes up and over the desk's edge: on the way to the keys it rises first and then
+        // goes forward, on the way off it draws back before it drops
+        if (between) {
+            const upFirst = 1 - (1 - ke) ** 2.4, thenIn = ke ** 2.2;
+            spot.set(lerp(awayAt.x, keysAt.x, ke), lerp(awayAt.y, keysAt.y, upFirst) + .03 * Math.sin(Math.PI * ke), lerp(awayAt.z, keysAt.z, thenIn));
+            handQ.copy(rig.wq[hand]); rig.reach(upper, lower, hand, spot); rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ);
+        }
         // fingers: curled for the keys, looser away from them; typing taps them in bursts
         const loose = wait || keyed.a;
         for (const i of fingers) { rig.lq[i].copy(loose.q[i]); if (ke > 0 && keyed) rig.lq[i].slerp(blendQ(tq, keyed, i), ke); }
-        if (life > 0 && ke > .98 && keyed) {
-            const busy = ss(-.15, .1, noise(time * .31 + (s === 'l' ? 0 : .4), seed + 21)) * life, beat = time * (6.1 + hash(3, seed) * 1.6) + (s === 'l' ? 0 : .5), n = Math.floor(beat), x = beat - n;
-            const which = Math.floor(hash(n, seed + (s === 'l' ? 40 : 41)) * 5.99), tap = Math.sin(Math.PI * x) ** 2 * busy * (hash(n, seed + 50) < .82 ? 1 : 0);
-            fingers.forEach((i, at) => {
-                const finger = Math.floor(at / 3), joint = at % 3; if (finger !== (which % 5) || tap <= 0) return;
-                rig.lq[i].multiply(turn.setFromAxisAngle(X, tap * (joint === 0 ? .2 : joint === 1 ? .1 : .05) * (rig.names[i].startsWith('thumb') ? .5 : 1)));
-            });
-            rig.lq[hand].multiply(turn.setFromAxisAngle(X, tap * .012));
-        }
+        if (life > 0 && ke > .98 && keyed && input.taps !== false) tapKeys(rig, s, time, seed, life);
     }
     rig.fk();
     return { stance: standing ? 'stand' : 'sit', chair: { back: ROLL * roll + NUDGE * ss(1.15, 2.05, tau), turn: 0 }, lean };
@@ -283,7 +295,7 @@ export function solveDesk(rig, keys, input) {
 // the keys to where that model stands), scale (mm per model metre) }]. Seated and standing models of one character
 // make one person who gets up and sits down; one stance alone keeps it and only takes the hands off the keys.
 export class DeskActor {
-    constructor(rig) { this.rig = rig; this.character = rig.character; this.seed = seedOf(rig.character); this.members = []; this.state = null; this.sim = null; this.life = hash(9, this.seed) * 60; this.out = null; this.shown = null; this.height = null; }
+    constructor(rig) { this.rig = rig; this.character = rig.character; this.seed = seedOf(rig.character); this.members = []; this.state = null; this.sim = null; this.life = hash(9, this.seed) * 60; this.out = null; this.shown = null; this.height = null; this.swapAt = SWAP; }
     configure(members) {
         const seat = members.find(m => m.role !== 'stand')?.role || null;
         // someone in a wheelchair stays in it: their standing model, if the cast has one, is another person
@@ -308,7 +320,8 @@ export class DeskActor {
     drive(input) {
         const { height } = input, tilt = input.tilt || 0; let state;
         if (Number.isFinite(input.time)) {
-            if (input.track) { if (!this.sim || this.sim.track !== input.track) { this.sim = simulateDesk(this.desc, input.track.heightAt, input.track.seconds, 60, input.track.tiltAt || null); this.sim.track = input.track; } state = this.sim.at(input.time); }
+            // (a desk held somewhere the track does not have it, a pose being previewed in the Director, is taken as it stands)
+            if (input.track && Math.abs(input.track.heightAt(input.time) - height) < .6) { if (!this.sim || this.sim.track !== input.track) { this.sim = simulateDesk(this.desc, input.track.heightAt, input.track.seconds, 60, input.track.tiltAt || null); this.sim.track = input.track; } state = this.sim.at(input.time); }
             else state = settleDesk(this.desc, height, tilt);    // a time without the desk's track: no history to stand up from
             this.state = state; this.clock = input.time;
         } else {
@@ -319,22 +332,68 @@ export class DeskActor {
             this.life += dt; this.clock = this.life; state = this.state;
         }
         this.height = height;
-        this.out = solveDesk(this.rig, this.keys, { tau: state.tau, k: state.k, height, time: input.life === false ? null : this.clock, seed: this.seed });
+        this.out = solveDesk(this.rig, this.keys, { tau: state.tau, k: state.k, height, time: input.life === false ? null : this.clock, seed: this.seed, taps: input.taps });
         // the model that is drawn: the one built for this stance, nearest this desk height
-        const stance = this.out.stance, of = this.members.filter(m => (m.role === 'stand') === (stance === 'stand'));
+        const stance = !this.mobile ? this.out.stance : state.tau >= this.swapAt ? 'stand' : 'sit', of = this.members.filter(m => (m.role === 'stand') === (stance === 'stand'));
         this.shown = of.sort((a, b) => Math.abs((a.key.deskHeight ?? height) - height) - Math.abs((b.key.deskHeight ?? height) - height))[0] || null;
         return this.out;
     }
     // The solved pose on the drawn model's bones. A person's own fine tuning (`pose`, the Director's pose mode) turns
     // each bone from where the motion has it; `rest` is kept at the motion's pose so the editor measures from it.
-    apply(member, pose = null, hold = false) {
-        const rig = this.rig, drawn = member.object.userData.personRig; if (!drawn) return;
-        for (let i = 0; i < rig.n; i++) {
-            const name = rig.names[i], bone = drawn.bones.get(name); if (!bone || name === 'still') continue;
-            const rest = drawn.rest.get(name); rest.copy(rig.lq[i]);
-            if (hold) continue;
-            bone.quaternion.copy(rest); const d = pose?.[name]; if (Array.isArray(d) && d.length === 4) bone.quaternion.multiply(tq.fromArray(d)).normalize();
-            if (name === 'Root') { bone.position.copy(rig.lp[i]); bone.position.z -= member.dz; } else if (name === 'pelvis') bone.position.copy(rig.lp[i]);
+    apply(member, pose = null, hold = false) { drawPose(this.rig, member.object.userData.personRig, member.dz, pose, hold); }
+}
+// A solved pose (rig.lq, rig.lp) on a drawn model's bones (drawn: { bones, rest }, room-people.mjs rig()); dz: metres
+// the model's own frame is ahead of the solver's. `pose`: the person's own fine tuning, a turn per bone from where
+// the motion has it. `hold`: leave the bones alone (someone is dragging one in the Director).
+export function drawPose(rig, drawn, dz = 0, pose = null, hold = false) {
+    if (!drawn) return;
+    for (let i = 0; i < rig.n; i++) {
+        const name = rig.names[i], bone = drawn.bones.get(name); if (!bone || name === 'still') continue;
+        const rest = drawn.rest.get(name); rest.copy(rig.lq[i]);
+        if (hold) continue;
+        bone.quaternion.copy(rest); const d = pose?.[name]; if (Array.isArray(d) && d.length === 4) bone.quaternion.multiply(tq.fromArray(d)).normalize();
+        if (name === 'Root') { bone.position.copy(rig.lp[i]); bone.position.z -= dz; } else if (name === 'pelvis') bone.position.copy(rig.lp[i]);
+    }
+}
+
+// ---- someone who stays where they are -----------------------------------------------------------------------------
+// The posture as built with life in it: breathing, a head that drifts, a shift of weight for those on their feet
+// (feet pinned), typing fingers, a page turned by a reader. Hands that rest on something (keys, a table, a bench, a
+// stick) stay exactly where they are. key: rig.key(id). input: { time, seed, life: 0..1 }. Pure.
+const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-type-low': 'lr', 'wheel-type': 'lr', 'sit-laptop': 'lr', 'sit-write': 'lr', 'sit-listen': 'lr', 'sit-raise': 'l', 'stand-work': 'lr', 'cane-stand': 'r', 'wheel-roll': 'lr', 'wheel-watch': 'lr' };
+const TYPES = new Set(['sit-type', 'stand-type', 'stand-type-low', 'wheel-type', 'sit-laptop']);
+const ON_FEET = new Set(['stand-type', 'stand-type-low', 'stand-wait', 'stand-phone', 'stand-present', 'stand-work', 'stand-paint', 'cane-stand']);
+const INTENT = new Set(['sit-read', 'sit-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller']);      // eyes on what the hands hold
+export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane';
+export function solveStill(rig, key, input) {
+    const time = input.time ?? 0, seed = input.seed | 0, life = input.life ?? 1, b = rig.b, pose = key.pose;
+    rig.load(key);
+    if (!(life > 0)) { rig.fk(); return; }
+    const standing = ON_FEET.has(pose), sway = standing ? noise(time * .11 + 7.3, seed) * .014 * life : 0;
+    const breath = Math.sin(time * Math.PI * 2 / (3.7 + hash(1, seed) * 1.2) + hash(2, seed) * 6.28) * life;
+    if (standing) { spot.copy(key.wp[b.pelvis]); spot.x += sway; spot.y -= (.005 + Math.abs(sway) * .2) * life; rig.placePelvis(spot); }
+    rig.fk();
+    if (standing) { rig.turnWorld(b.pelvis, turn.setFromAxisAngle(Z, sway * 1.3)); rig.fk(); rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Z, -sway * 1.1)); rig.fk(); }
+    rig.turnWorld(b.spine_02, turn.setFromAxisAngle(X, -.008 * breath)); rig.fk(); rig.turnWorld(b.spine_03, turn.setFromAxisAngle(X, -.011 * breath)); rig.fk();
+    const fixed = INTENT.has(pose) ? .35 : 1, glance = INTENT.has(pose) ? 0 : ss(.62, .8, noise(time * .16 + 31, seed));
+    const yaw = (noise(time * .19, seed + 5) * .07 + noise(time * .053 + 3, seed + 6) * .09) * life * fixed, nod = (noise(time * .23 + 11, seed + 7) * .03 * fixed + glance * .14) * life;
+    rig.turnWorld(b.neck_01, turn.setFromAxisAngle(Y, yaw * .4).multiply(turn2.setFromAxisAngle(X, nod * .4 + .004 * breath))); rig.fk();
+    rig.turnWorld(b.head, turn.setFromAxisAngle(Y, yaw * .6).multiply(turn2.setFromAxisAngle(X, nod * .6))); rig.fk();
+    if (standing) for (const s of ['l', 'r']) { const [thigh, calf, foot] = rig.side[s].leg; rig.reach(thigh, calf, foot, key.wp[foot]); rig.reach(thigh, calf, foot, key.wp[foot]); rig.setWorld(foot, key.wq[foot]); }
+    const resting = RESTING[pose] || '';
+    for (const s of ['l', 'r']) {
+        const [, upper, lower, hand] = rig.side[s].arm;
+        if (resting.includes(s)) { rig.reach(upper, lower, hand, key.wp[hand]); rig.reach(upper, lower, hand, key.wp[hand]); rig.setWorld(hand, key.wq[hand]); }
+        if (TYPES.has(pose) && input.taps !== false) tapKeys(rig, s, time, seed, life);
+    }
+    // a reader turns a page now and then: the right hand lets go, crosses the page and comes back
+    if (pose === 'sit-read') {
+        const period = 17 + hash(4, seed) * 12, n = Math.floor(time / period), at = (n + .15 + hash(n, seed + 60) * .6) * period, u = (time - at) / 2.3;
+        if (u > 0 && u < 1) {
+            const [, upper, lower, hand] = rig.side.r.arm, other = rig.wp[rig.side.l.arm[3]], over = Math.sin(Math.PI * u) ** 2 * life;
+            rig.fk(); handQ.copy(rig.wq[hand]); spot.copy(rig.wp[hand]).lerp(other, .5 * over); spot.addScaledVector(Y, .025 * Math.sin(Math.PI * u) * life);
+            rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ);
         }
     }
+    rig.fk();
 }

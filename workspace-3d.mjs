@@ -1799,6 +1799,6 @@ export class WorkspaceRoom {
                 if (group === this.ceilingSurface) group.visible = this.ceilingEnabled && below;
                 else if (group === this.ceilingFixture || /^Ceiling /i.test(group.name)) group.visible = below;
         }
-        if (this.people?.enabled) this.people.update(this.peopleState?.());
+        if (this.people?.enabled) { if (this.root) this.people.eye = this.root.worldToLocal(camera.getWorldPosition(new THREE.Vector3())); this.people.update(this.peopleState?.()); }
     }
 }

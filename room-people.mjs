@@ -31,13 +31,14 @@
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
-import { PersonRig, DeskActor } from './room-people-motion.mjs?v=people-motion-20261110a';
+import { PersonRig, DeskActor, solveStill, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-20261110a';
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
 const REACH = { sit: 945, wheel: 935, stand: 890 };
 const BEHIND_KEYS = { sit: 470, wheel: 460, stand: 415 };
 const HEIGHT_FIT = 1.4;                       // inches either side of the height a desk pose was built for
+const LIVELY = 4;                             // Studio: how many people besides the desk user breathe and shift (the nearest to the camera)
 const HEIGHT_SOLID = .45;                     // within this the person is fully there; beyond it they fade out to HEIGHT_FIT
 const TASK_CHAIR = 'steelcase-leap-v2';       // seat 435 mm: what the seated desk poses were built on
 const CHAIRS = /chair|stool|steelcase-leap|aeron/i;
@@ -153,7 +154,8 @@ const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 export class RoomPeople {
     constructor(room, library) {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
-        this.actors = []; this.clock = null;
+        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = [];
+        this.dirty = false;       // dirty: someone moved since the Studio last looked (their shadow has to follow)
         this.ray = new THREE.Raycaster();
     }
     specs() { return [...castFor(this.room.id, this.room.roomLayout?.id), ...(this.filter?.cast || []).map(spec => ({ ...spec, extra: true }))]; }
@@ -435,7 +437,8 @@ export class RoomPeople {
         // desk belongs to at this height when the cast has more than one (the nearest built height wins)
         const driven = this.actors.filter(a => a.members.length);
         for (const actor of driven) {
-            actor.drive({ height, target: state?.target, tilt: state?.tilt, time, track: state?.track || null, dt, life: this.filter?.life === false ? false : undefined });
+            actor.drive({ height, target: state?.target, tilt: state?.tilt, time, track: state?.track || null, dt, life: this.filter?.life === false ? false : undefined, taps: time !== null || dt < .05 });
+            const sign = actor.state.tau.toFixed(3) + '|' + actor.state.k.toFixed(3) + '|' + actor.shown?.id; if (sign !== actor.drawnAs) { actor.drawnAs = sign; this.dirty = true; }
             actor.off = Math.min(...actor.members.map(m => m.key.deskHeight === null ? 0 : Math.abs(height - m.key.deskHeight)));
             if (actor.mobile) { const fits = actor.members.map(m => m.key.deskHeight); if (height >= Math.min(...fits) && height <= Math.max(...fits)) actor.off = 0; }
         }
@@ -488,7 +491,44 @@ export class RoomPeople {
         this.chairSpot = this.chairHome = null;
         if (this.filter?.chair) this.stayChair(state, seated, pose?.yaw || 0);
         for (const actor of driven) this.chairOf(actor, state);
+        this.liven(time, dt, now);
         this.clearChairs();
+    }
+    // Life in the people who stay where they are (room-people-motion.mjs solveStill): breathing, a drifting head, a
+    // shift of weight, typing fingers, a page turned. They are drawn skinned for it. In a film everyone in the shot;
+    // in the Studio the LIVELY nearest to the camera (this.eye, room millimetres), picked again twice a second.
+    // Walkers are left alone. filter.life === false: nobody.
+    liven(time, dt, now) {
+        if (!this.library.rigData || this.filter?.life === false) return;
+        const film = time !== null; this.lifeClock = film ? time : this.lifeClock + Math.min(.1, Math.max(0, dt));
+        const pool = this.people.filter(o => o.visible && !o.userData.personDriven && !o.userData.personStill);
+        let chosen = pool;
+        if (!film && pool.length > LIVELY) {
+            if (now - this.pickedAt > 500) {
+                this.pickedAt = now; const eye = this.eye, far = o => eye ? o.position.distanceToSquared(eye) : 0;
+                this.picked = [...pool].sort((a, b) => far(a) - far(b)).slice(0, LIVELY).map(o => o.userData.person);
+            }
+            chosen = pool.filter(o => this.picked.includes(o.userData.person));
+        }
+        const hold = typeof window !== 'undefined' && !!window.__directorDragging;
+        for (const object of pool) {
+            const life = object.userData.personLife, on = chosen.includes(object);
+            if (life === undefined) { if (on) { object.userData.personLife = null; this.enliven(object).catch(error => console.warn('[people]', error)); } continue; }
+            if (!life || !object.userData.personRig || (!on && !life.live)) continue;
+            // out of the nearest few: back to the posture as built, once
+            solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: on ? 1 : 0, taps: film || dt < .05 });
+            drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = on;
+        }
+    }
+    get lively() { return this.enabled && this.people.some(o => o.visible && (o.userData.personLife?.live || o.userData.personDriven)); }
+    async enliven(object) {
+        const spec = object.userData.person, person = this.library.entry(spec.id)?.person, still = o => { o.userData.personStill = true; };
+        if (!person || !livelyPose(person.pose)) return still(object);
+        const data = await this.library.rigData(person.character).catch(() => null); if (!data) return still(object);
+        if (!this.rigsOf.has(person.character)) this.rigsOf.set(person.character, new PersonRig(data));
+        const rig = this.rigsOf.get(person.character); if (!rig.has(spec.id)) return still(object);
+        const drawn = await this.rig(object); if (!drawn.userData.personRig) return still(drawn);
+        drawn.userData.personLife = { rig, key: rig.key(spec.id), seed: seedOf(this.keyOf(spec)), live: false };
     }
     // A moving person's task chair: under them while they sit, rolled back with them before they stand, and left a
     // little further back (or where filter.chair parks it) while they are on their feet.
@@ -499,7 +539,7 @@ export class RoomPeople {
         const yaw = pose.yaw || 0, front = frontOf(yaw), side = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)), sitter = actor.members.find(m => m.role === 'sit');
         const short = sitter ? sitter.behind - BEHIND_KEYS.sit : 0;
         const home = state.keyboard ? new THREE.Vector3(state.keyboard.x, 0, state.keyboard.z).addScaledVector(front, BEHIND_KEYS.sit + short) : new THREE.Vector3(pose.x - 6, 0, pose.z).addScaledVector(front, REACH.sit + short);
-        const out = actor.out.chair, park = this.filter?.chair, parked = park ? THREE.MathUtils.smoothstep(actor.state.tau, 1.3, 2.7) : 0, back = out.back * 1000;
+        const out = actor.out.chair, park = this.filter?.chair, parked = park ? THREE.MathUtils.smoothstep(actor.state.tau, 1.3, 2.5) : 0, back = out.back * 1000;
         chair.position.copy(home).addScaledVector(front, park ? back + ((park.back ?? 620) - back) * parked : back).addScaledVector(side, (park?.side ?? 0) * parked);
         chair.rotation.y = yaw + Math.PI + THREE.MathUtils.degToRad(park ? (park.turn ?? 0) * parked : out.turn);
         this.chairSpot = chair.position; this.chairHome = home;
