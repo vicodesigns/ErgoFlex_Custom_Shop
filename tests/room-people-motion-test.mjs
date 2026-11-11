@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { RoomPeople } from '../room-people.mjs';
-import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, solveStill, STAND_UP } from '../room-people-motion.mjs';
+import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, solveStill, solveChange, STAND_UP } from '../room-people-motion.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rigOf = who => new PersonRig(JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8')));
@@ -170,6 +170,28 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
         assert.deepEqual(snapshot(rig), a, id + ': same time and seed, same pose');
     }
 }
+// ---- a change of posture on the spot
+{
+    for (const [who, a, bId] of [['grace', 'people-grace-sit-read', 'people-grace-sit-phone'], ['andre', 'people-andre-stand-phone', 'people-andre-stand-wait'], ['mia', 'people-mia-sit-phone', 'people-mia-stand-phone'], ['noah', 'people-noah-stand-wait', 'people-noah-sit-laptop'], ['maya', 'people-maya-stretch', 'people-maya-stand-phone']]) {
+        const rig = rigOf(who), from = rig.key(a), to = rig.key(bId); assert.ok(from && to, a + ' -> ' + bId);
+        assert.equal(solveChange(rig, from, to, 0).model, 'from'); assert.ok(worst(rig, from) < 1e-9, a + ': starts as built');
+        assert.equal(solveChange(rig, from, to, 1).model, 'to'); assert.ok(worst(rig, to) < 1e-9, bId + ': ends as built');
+        let last = null; const floor = Math.min(from.wp[rig.side.l.leg[2]].y, to.wp[rig.side.l.leg[2]].y, from.wp[rig.side.r.leg[2]].y, to.wp[rig.side.r.leg[2]].y) - .005;
+        for (let w = 0; w <= 1.0001; w += 1 / 90) {
+            solveChange(rig, from, to, w);
+            const now = rig.wp.map(v => v.clone());
+            if (last) for (let i = 0; i < rig.n; i++) assert.ok(now[i].distanceTo(last[i]) < .06, `${a} -> ${bId}: ${rig.names[i]} does not jump at ${w.toFixed(2)} (${now[i].distanceTo(last[i]).toFixed(3)})`);
+            for (const s of ['l', 'r']) {
+                const [thigh, calf, foot] = rig.side[s].leg; assert.ok(rig.wp[foot].y > floor, `${a} -> ${bId}: ${s} foot not under the floor at ${w.toFixed(2)}`);
+                const bend = THREE.MathUtils.radToDeg(rig.wp[thigh].clone().sub(rig.wp[calf]).angleTo(rig.wp[foot].clone().sub(rig.wp[calf]))); assert.ok(bend > 40, `${a} -> ${bId}: knee angle ${bend.toFixed(0)} at ${w.toFixed(2)}`);
+            }
+            assert.ok(rig.wp[rig.b.head].y > rig.wp[rig.b.pelvis].y + .3, 'head above the hips');
+            last = now;
+        }
+        solveChange(rig, from, to, .43); const x = snapshot(rig); solveChange(rig, from, to, .9); solveChange(rig, from, to, .43); assert.deepEqual(snapshot(rig), x, 'same progress, same pose');
+    }
+}
+
 // ---- in the room (room-people.mjs): one person at the desk at every height, their chair, the film's time path
 {
     const entries = new Map(index.props.map(p => [p.id, p])), dataOf = who => JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8'));
@@ -225,9 +247,34 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     live(36, 400); assert.deepEqual(shown(), ['people-maya-stand-type']); assert.equal(actor.state.k, 0, 'a desk stopped at 36 in: standing by');
     live(28, 600); assert.deepEqual(shown(), ['people-maya-sit-type']); assert.ok(actor.state.k === 1 && Math.abs(actor.chair.position.z - 230) < 1, 'seated and typing, the chair back under her');
     await people.setEnabled(false); assert.ok(!actor.chair.visible && shown().length === 0 && chair.visible, 'people off: she and her chair are gone, the room\'s chair is back');
+    // a change of posture inside a shot: two windows that meet are one person whose bones go from one to the other
+    {
+        const two = [{ key: 'reads', id: 'people-grace-sit-read', at: [1500, 900], turn: 20 }, { key: 'phones', id: 'people-grace-sit-phone', at: [1500, 900], turn: 20 }];
+        people.setFilter({ only: [], cast: two, when: { reads: [[0, 5]], phones: [[5, 10]] }, life: false }); await people.setEnabled(true);
+        const see = time => { people.update({ ...desk, height: 28, time, now: 0 }); return shown(); };
+        see(0); await new Promise(r => setTimeout(r, 20)); await Promise.all(people.pairs.map(p => people.readyChange(p)));
+        assert.equal(people.pairs.length, 1, 'the two windows make one change'); const pair = people.pairs[0]; assert.ok(pair.ready && Math.abs(pair.length - 1.4) < .2);
+        assert.deepEqual(see(3), ['people-grace-sit-read']);
+        const arm = key => quat(people.byKey(key), 'lowerarm_l'), builtArm = id => { const d = dataOf('grace'), i = d.bones.indexOf('lowerarm_l'); return d.postures[id].q.slice(i * 4, i * 4 + 4); };
+        assert.ok(close(arm('reads'), builtArm('people-grace-sit-read')), 'before the change she reads, as built');
+        for (let t = 4.2; t <= 5.8; t += .05) { const who = see(t); assert.equal(who.length, 1, 'one model of her at ' + t.toFixed(2)); assert.equal(people.byKey(who[0] === 'people-grace-sit-read' ? 'reads' : 'phones').userData.personAmount, 1, 'whole, not dissolving'); }
+        assert.deepEqual(see(4.8), ['people-grace-sit-read']); assert.ok(!close(arm('reads'), builtArm('people-grace-sit-read'), 1e-3), 'her arm is on its way');
+        assert.deepEqual(see(5.3), ['people-grace-sit-phone']); assert.ok(!close(arm('phones'), builtArm('people-grace-sit-phone'), 1e-3));
+        assert.deepEqual(see(7), ['people-grace-sit-phone']); assert.ok(close(arm('phones'), builtArm('people-grace-sit-phone')), 'after it she is on her phone, as built');
+        assert.deepEqual(see(3), ['people-grace-sit-read']); assert.ok(close(arm('reads'), builtArm('people-grace-sit-read')), 'scrubbed back: reading, as built');
+        // Studio: the same two cast for different dayparts change when the daypart does
+        people.setFilter({ only: [], cast: [{ ...two[0], modes: ['morning'] }, { ...two[1], modes: ['evening'] }], life: false }); await people.setEnabled(true);
+        let clock = 0; const day = (mode, steps = 1) => { for (let i = 0; i < steps; i++) { clock += 1000 / 60; people.update({ ...desk, height: 28, time: null, mode, now: clock }); assert.equal(shown().length, 1, 'one of her in the ' + mode); } return shown(); };
+        day('morning'); await new Promise(r => setTimeout(r, 20)); await Promise.all(people.pairs.map(p => people.readyChange(p)));
+        assert.equal(people.pairs.filter(p => p.ready).length, 2, 'a change each way between the two dayparts');
+        assert.deepEqual(day('morning', 5), ['people-grace-sit-read']); assert.equal(people.moving, false);
+        assert.deepEqual(day('evening', 20), ['people-grace-sit-read'], 'the daypart changes: she is still the reader, turning into the other posture'); assert.ok(people.moving);
+        assert.deepEqual(day('evening', 200), ['people-grace-sit-phone']); assert.ok(close(arm('phones'), builtArm('people-grace-sit-phone')) && !people.moving, 'two seconds later she is on her phone, as built');
+        assert.deepEqual(day('morning', 200), ['people-grace-sit-read']); assert.ok(close(arm('reads'), builtArm('people-grace-sit-read')), 'and back in the morning');
+    }
     // the still models for one use of the room
     people.setFilter({ only: [], cast, motion: false }); await people.setEnabled(true);
     assert.equal(people.actors.length, 0); people.update({ ...desk, height: 36, time: 5 }); assert.deepEqual(shown(), [], 'motion off: nobody between the built heights, as before');
     people.dispose();
 }
-console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top).');
+console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart.');

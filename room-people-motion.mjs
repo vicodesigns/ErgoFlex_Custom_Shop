@@ -397,3 +397,36 @@ export function solveStill(rig, key, input) {
     }
     rig.fk();
 }
+
+// ---- someone who changes posture where they are ------------------------------------------------------------------------
+// From one built posture of a character to another at the same spot (a film's two `when` windows back to back, a
+// room's change of daypart): the bones turn from `from` to `to` as w goes 0..1. The hips lead, the spine and head
+// follow, the arms come last; where the hips rise or sink (sitting down, getting up) the trunk leans in on the way;
+// feet that end somewhere else step there one after the other, and feet that stay are pinned. Exactly `from` at 0
+// and `to` at 1. Pure. Returns { model: 'from' | 'to' } (which of the two built models to draw: they bend alike).
+export function solveChange(rig, from, to, w) {
+    const b = rig.b, t = clamp01(w), hips = ss(0, .72, t), spine = ss(.08, .82, t), head = ss(.15, .92, t), arms = ss(.22, 1, t);
+    if (t <= 0 || t >= 1) { rig.load(t <= 0 ? from : to); rig.fk(); return { model: t <= 0 ? 'from' : 'to' }; }
+    const part = new Float32Array(rig.n).fill(hips);
+    for (const i of [b.spine_01, b.spine_02, b.spine_03]) part[i] = spine;
+    part[b.neck_01] = part[b.head] = head;
+    for (const s of ['l', 'r']) { for (const i of rig.side[s].arm) part[i] = arms; for (const i of rig.side[s].fingers) part[i] = arms; }
+    for (let i = 0; i < rig.n; i++) rig.lq[i].slerpQuaternions(from.q[i], to.q[i], part[i]);
+    rig.lp[b.Root].lerpVectors(from.root, to.root, hips);
+    const a = from.wp[b.pelvis], z = to.wp[b.pelvis], travel = z.y - a.y, rising = travel > 0;
+    // getting up the hips go forward before they go up; sitting down they come down before they go back
+    const along = rising ? ss(0, .8, hips) : ss(.2, 1, hips), high = rising ? ss(.15, 1, hips) : ss(0, .85, hips);
+    spot.set(lerp(a.x, z.x, along), lerp(a.y, z.y, high), lerp(a.z, z.z, along)); rig.placePelvis(spot); rig.fk();
+    const lean = THREE.MathUtils.degToRad(32) * clamp01(Math.abs(travel) / .3) * Math.sin(Math.PI * hips) ** 1.5;
+    if (lean > 1e-4) for (const [bone, share] of [[b.pelvis, .52], [b.spine_01, .2], [b.spine_02, .16], [b.spine_03, .12], [b.neck_01, -.34], [b.head, -.5]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, lean * share)); rig.fk(); }
+    for (const s of ['l', 'r']) {
+        const [thigh, calf, foot] = rig.side[s].leg, far = from.wp[foot].distanceTo(to.wp[foot]);
+        // the feet move while the weight is in the seat: before getting up, after sitting down
+        const window = rising ? (s === 'l' ? [.02, .3] : [.2, .48]) : (s === 'l' ? [.52, .8] : [.7, .98]), step = far < .004 ? hips : ss(window[0], window[1], t);
+        awayAt.lerpVectors(from.wp[foot], to.wp[foot], step); awayAt.y += Math.min(.035, far * .3) * Math.sin(Math.PI * step);
+        footQ.slerpQuaternions(from.wq[foot], to.wq[foot], step);
+        rig.reach(thigh, calf, foot, awayAt); rig.reach(thigh, calf, foot, awayAt); rig.setWorld(foot, footQ);
+    }
+    rig.fk();
+    return { model: t < .5 ? 'from' : 'to' };
+}

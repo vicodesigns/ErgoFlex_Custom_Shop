@@ -31,7 +31,7 @@
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
-import { PersonRig, DeskActor, solveStill, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-20261110a';
+import { PersonRig, DeskActor, solveStill, solveChange, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-20261110a';
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
@@ -154,7 +154,7 @@ const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 export class RoomPeople {
     constructor(room, library) {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
-        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = [];
+        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.lastMode = undefined;
         this.dirty = false;       // dirty: someone moved since the Studio last looked (their shadow has to follow)
         this.ray = new THREE.Raycaster();
     }
@@ -334,7 +334,7 @@ export class RoomPeople {
         this.placed = false;
     }
     // Still on the way up or down, or moving their hands: the Studio keeps drawing at full rate meanwhile.
-    get moving() { return this.enabled && this.actors.some(a => a.moving); }
+    get moving() { return this.enabled && (this.actors.some(a => a.moving) || this.pairs.some(c => c.live)); }
     // Which of an actor's models are in this use of the room, and how far from the keys each stands.
     recast(actor) {
         const members = actor.objects.filter(o => this.people.includes(o) && !o.userData.personMissing && this.allowed(o.userData.person)).map(object => {
@@ -432,7 +432,11 @@ export class RoomPeople {
                 if (Number.isFinite(spot.scale)) this.resize(object, { scale: spot.scale });
             }
             for (const actor of this.actors) this.recast(actor);
+            for (const pair of this.pairs) if (pair.live) { const a = this.people.find(o => o.userData.person === pair.from), b = this.people.find(o => o.userData.person === pair.to); if (a && b) this.endChange(pair, a, b); }
+            this.pairs = this.pairUp();
         }
+        this.lifeClock = time !== null ? time : this.lifeClock + Math.min(.1, Math.max(0, dt));
+        const changing = this.changing(time, mode);
         // the people who move: where each is in sitting, standing and typing at this moment, and which of them the
         // desk belongs to at this height when the cast has more than one (the nearest built height wins)
         const driven = this.actors.filter(a => a.members.length);
@@ -449,7 +453,9 @@ export class RoomPeople {
             const there = this.present(spec, time);
             let on = !object.userData.personMissing && this.allowed(spec) && there > 0 && (!spec.modes || spec.modes.includes(mode));
             object.userData.personAmount = there;
-            const actor = object.userData.personDriven ? object.userData.personActor : null;
+            const actor = object.userData.personDriven ? object.userData.personActor : null, change = changing.get(object);
+            // changing posture on the spot: one of the two models, whole, with the bones on their way
+            if (change) { on = !object.userData.personMissing && this.allowed(spec) && change.shown === object; object.userData.personAmount = 1; }
             // an older cut's stand-in for the gap (a standing-by model of the desk user, cast by hand for the seconds the
             // desk moves): the desk user fills that gap themselves now
             if (on && !spec.desk && spec.extra && driven.length && this.filter?.when?.[this.keyOf(spec)]) {
@@ -500,8 +506,8 @@ export class RoomPeople {
     // Walkers are left alone. filter.life === false: nobody.
     liven(time, dt, now) {
         if (!this.library.rigData || this.filter?.life === false) return;
-        const film = time !== null; this.lifeClock = film ? time : this.lifeClock + Math.min(.1, Math.max(0, dt));
-        const pool = this.people.filter(o => o.visible && !o.userData.personDriven && !o.userData.personStill);
+        const film = time !== null;
+        const pool = this.people.filter(o => o.visible && !o.userData.personDriven && !o.userData.personStill && !o.userData.personChanging);
         let chosen = pool;
         if (!film && pool.length > LIVELY) {
             if (now - this.pickedAt > 500) {
@@ -519,6 +525,82 @@ export class RoomPeople {
             solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: on ? 1 : 0, taps: film || dt < .05 });
             drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = on;
         }
+    }
+    // ---- a change of posture on the spot (room-people-motion.mjs solveChange) instead of a dissolve
+    // Two placements of one character at one spot make a change when one leaves as the other comes:
+    //   film: their `when` windows meet (one ends within .75 s of the other's start);
+    //   Studio: the daypart changes and one is cast for the old one, the other for the new (`modes`).
+    // (Pairs are found when the cast is placed and their skeletons loaded then; a pair that is not ready changes as before.)
+    // The person is then one model, whole, whose bones go from the first posture to the second (1.4 s, 2.4 s where
+    // they get up or sit down), centred on the moment the windows meet. Things held appear and go half way.
+    sameSpot(a, b) {
+        const turn = Math.abs(THREE.MathUtils.euclideanModulo(a.rotation.y - b.rotation.y + Math.PI, Math.PI * 2) - Math.PI);
+        return Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z) < 220 && turn < .3;
+    }
+    character(object) { return this.library.entry?.(object.userData.person.id)?.person?.character || null; }
+    free(object) { const s = object.userData.person; return !s.desk && !s.station && !object.userData.personMissing && this.allowed(s); }
+    pairUp() {
+        const pairs = [], when = this.filter?.when; if (!this.library.rigData || this.filter?.motion === false) return pairs;
+        const free = this.people.filter(o => this.free(o) && this.character(o)), modes = o => o.userData.person.modes;
+        for (const a of free) for (const b of free) {
+            if (a === b || this.character(a) !== this.character(b) || !this.sameSpot(a, b)) continue;
+            const wa = when?.[this.keyOf(a.userData.person)], wb = when?.[this.keyOf(b.userData.person)];
+            if (wa && wb) { for (const [, t1] of wa) for (const [t0] of wb) if (Math.abs(t1 - t0) <= .75) pairs.push({ from: a.userData.person, to: b.userData.person, at: (t1 + t0) / 2 }); }
+            // cast for different dayparts: a change waiting for the daypart to change
+            else if (modes(a) && modes(b) && modes(a).some(m => !modes(b).includes(m)) && modes(b).some(m => !modes(a).includes(m))) pairs.push({ from: a.userData.person, to: b.userData.person, at: null, start: null });
+        }
+        for (const pair of pairs) this.readyChange(pair).catch(error => console.warn('[people]', error));
+        return pairs;
+    }
+    // Who is changing now: Map object -> { shown } for both models of each change under way.
+    changing(time, mode) {
+        const out = new Map(), film = time !== null, find = spec => this.people.find(o => o.userData.person === spec), inMode = (spec, m) => !spec.modes || spec.modes.includes(m);
+        if (!film) {
+            // the daypart changed: whoever leaves and whoever comes at the same spot are one person changing posture
+            if (this.lastMode !== undefined && mode !== this.lastMode) for (const pair of this.pairs) {
+                if (pair.at !== null || !pair.ready) continue;
+                if (inMode(pair.from, this.lastMode) && !inMode(pair.from, mode) && !inMode(pair.to, this.lastMode) && inMode(pair.to, mode)) pair.start = this.lifeClock;
+                else if (pair.start !== null) { pair.start = null; pair.stop = true; }
+            }
+            this.lastMode = mode;
+        }
+        const under = [];
+        for (const pair of this.pairs) {
+            const a = find(pair.from), b = find(pair.to); if (!a || !b || !pair.ready || (film ? pair.at === null : pair.at !== null)) continue;
+            const length = pair.length, w = film ? (time - (pair.at - length / 2)) / length : pair.start === null ? -1 : (this.lifeClock - pair.start) / length, on = w > 0 && w < 1;
+            if (!film && w >= 1) pair.start = null;
+            if (on) under.push([pair, a, b, w]);
+            else if (pair.live || pair.stop) { pair.live = pair.stop = false; this.endChange(pair, a, b); }
+        }
+        for (const [pair, a, b, w] of under) {
+            const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w), shown = model === 'from' ? a : b, ease = THREE.MathUtils.smoothstep(w, 0, .72);
+            shown.position.lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease); shown.rotation.y = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease;
+            drawPose(pair.rig, shown.userData.personRig, 0, shown.userData.person.pose || null);
+            a.userData.personChanging = b.userData.personChanging = true; pair.live = true; this.dirty = true; out.set(a, { shown }); out.set(b, { shown });
+        }
+        return out;
+    }
+    // Both models with their skeletons, and the bone data: until then the two simply dissolve as before.
+    async readyChange(change) {
+        const find = spec => this.people.find(o => o.userData.person === spec), first = find(change.from); if (!first) return;
+        const who = this.character(first), data = await this.library.rigData(who).catch(() => null); if (!data) return;
+        if (!this.rigsOf.has(who)) this.rigsOf.set(who, new PersonRig(data));
+        const rig = this.rigsOf.get(who), a = find(change.from), b = find(change.to); if (!a || !b || !rig.has(change.from.id) || !rig.has(change.to.id)) return;
+        const [ra, rb] = await Promise.all([this.rig(a), this.rig(b)]); if (!ra.userData.personRig || !rb.userData.personRig) return;
+        const home = o => ({ position: o.position.clone(), turn: o.rotation.y });
+        Object.assign(change, { rig, keyFrom: rig.key(change.from.id), keyTo: rig.key(change.to.id), homeFrom: home(ra), homeTo: home(rb) });
+        // a turn the short way round
+        change.homeTo.turn = change.homeFrom.turn + THREE.MathUtils.euclideanModulo(change.homeTo.turn - change.homeFrom.turn + Math.PI, Math.PI * 2) - Math.PI;
+        change.length = 1.4 + THREE.MathUtils.clamp(Math.abs(change.keyTo.wp[rig.b.pelvis].y - change.keyFrom.wp[rig.b.pelvis].y) / .3, 0, 1);
+        change.ready = true;
+    }
+    // After a change both models are as built again, each where it belongs.
+    endChange(change, a, b) {
+        for (const [o, key, home] of [[a, change.keyFrom, change.homeFrom], [b, change.keyTo, change.homeTo]]) {
+            solveChange(change.rig, key, key, 0); drawPose(change.rig, o.userData.personRig, 0, o.userData.person.pose || null);
+            o.position.copy(home.position); o.rotation.y = home.turn; o.userData.personChanging = false;
+        }
+        this.dirty = true;
     }
     get lively() { return this.enabled && this.people.some(o => o.visible && (o.userData.personLife?.live || o.userData.personDriven)); }
     async enliven(object) {
