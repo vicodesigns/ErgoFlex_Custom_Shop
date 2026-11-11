@@ -242,6 +242,12 @@ export async function mountStage(ctx) {
   // Director orbit: none of the Studio's orbit limits (2 m minimum distance, camera above the target), or every frame's
   // controls.update() would pull a closer or lower film camera off its keys and the live view would not be the film's.
   function edit(on){wake();editorMode=!!on;ctx.editCamera(editorMode);if(editorMode){Object.assign(ctx.controls,{minDistance:.01,maxDistance:Infinity,minPolarAngle:0,maxPolarAngle:Math.PI});paused=true;ctx.pause(false);}else ctx.pause(paused);}
+  // Run fn (a seek that re-poses the scene) without it moving the editor's camera.
+  function keepView(fn){
+    if(!editorMode)return fn();
+    const c=ctx.camera,pos=c.position.clone(),target=ctx.controls.target.clone(),fov=c.fov,up=c.up.clone();
+    try{return fn();}finally{c.position.copy(pos);c.up.copy(up);ctx.controls.target.copy(target);c.lookAt(target);c.fov=fov;c.updateProjectionMatrix();ctx.controls.update?.();}
+  }
   function seek(t){wake();const was=paused,editing=editorMode;paused=false;editorMode=false;tick(Math.max(0,Math.min(1,t)));editorMode=editing;paused=was;if(!editing)ctx.pause(paused);}
   let bakeSession=null;
   function beginBake(width,height){
@@ -357,7 +363,9 @@ export async function mountStage(ctx) {
     // Director: a new chapter length without re-preparing (the desk motion samples by chapter seconds).
     secondsTrack:(seconds,id)=>{if(shot?.id===id&&Number.isFinite(seconds)){shot.seconds=seconds;resolveActive();}},
     // Director: the chapter's per-desk clips changed (desk-choreo.mjs); the desks are re-posed at the current time.
-    deskEditsTrack:(edits,id)=>{if(shot?.id!==id)return;shot.deskEdits=edits;deskChoreo.set(edits);seek(lastProgress);},
+    // seek() re-poses the desks at the current time but also puts the camera back on the film's camera; while the
+    // Director is open the view is the user's (they orbited somewhere handy to move things), so it is put back as it was.
+    deskEditsTrack:(edits,id)=>{if(shot?.id!==id)return;shot.deskEdits=edits;deskChoreo.set(edits);keepView(()=>seek(lastProgress));},
     roomDesks:()=>roomDesks(api,deskChoreo),deskBase:id=>deskChoreo.baseOf(id),
     // The Director's People tab: the chapter's cast changed (room-people.mjs filter; true = the room's own people).
     peopleTrack:(people,id)=>{if(shot?.id!==id)return null;if(people)shot.people=people;else delete shot.people;return api.setRoomPeople?.(!!people,people&&typeof people==='object'?people:null);},

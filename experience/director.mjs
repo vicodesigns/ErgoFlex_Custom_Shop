@@ -972,7 +972,7 @@ export function mountDirector(bridge,catalog,initial){
         // Only a different scene needs the chapter re-prepared; everything else is applied like a normal edit.
         const after=project.shots[selected],rebuild=!before||!after||before.id!==after.id||['room','layout','mode','kind','preset','size'].some(k=>before[k]!==after[k]);
         changed();render();if(rebuild){await load();return;}
-        deskEditor.ready();if(!keys().some(k=>k.id===keyId))keyId=null;seekCamera(playhead);status((name==='undo'?'Undone':'Redone')+(moved?': '+editLabel(moved):'')+'.');return;
+        deskEditor.ready();if(!keys().some(k=>k.id===keyId))keyId=null;if(JSON.stringify(before.camera)!==JSON.stringify(after.camera))seekCamera(playhead);status((name==='undo'?'Undone':'Redone')+(moved?': '+editLabel(moved):'')+'.');return;
       }
       if(name==='select'){clearPicks();selected=index;keyId=null;playhead=0;inspector='chapter';render();await load();return;}
       if(name==='up'||name==='down'){move(index,index+(name==='up'?-1:1));return;}
