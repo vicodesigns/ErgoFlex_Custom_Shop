@@ -33,7 +33,7 @@ const DESK = [8240, -1850];
 // The tackboard wall is a bay set back about 5 ft (photos 1 and 3): the far end of the right wall stands proud at
 // PROUD_X and ends in an olive pier that runs back to the glass (FIN_Z); a door sits in the proud face beside it.
 // The desk bay, the glass slot and the tackboard keep their plane (x 9000), so the desk and the film cameras stay put.
-const PROUD_X = XR - 1500, FIN_Z = [-4700, -4200], SIDE_DOOR_Z = [-5760, -4750], PIER_DEPTH = 900;
+const PROUD_X = XR - 1500, FIN_Z = [-5100, -4600], SIDE_DOOR_Z = [-6160, -5150], PIER_DEPTH = 900;
 // The high ceiling slopes from 4800 at the back wall to 7200 at z 5000, then runs flat.
 const SLOPE_Z = 5000, slopeY = z => z < SLOPE_Z ? 4800 + (z - BACK) / (SLOPE_Z - BACK) * 2400 : H, SLOPE = Math.atan2(2400, SLOPE_Z - BACK);
 const rnd = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -78,7 +78,7 @@ export function makeHumboldtLayout() {
     // New seats are appended to preserve every existing furniture edit key.
     for (const x of [4900, 6100]) props.push({ ...chair(x, 500, 0), finish: 'group-forest' }, { ...chair(x, 2700, 180), finish: 'group-forest' });
     // A genuine mobility seat shares the group, rather than an isolated pilot bay.
-    props.push({ id: 'electric-wheelchair', at: [PROUD_X - 850, 0, -6250], turn: 90 });
+    props.push({ id: 'electric-wheelchair', at: [PROUD_X - 1000, 0, -6550], turn: 90 });
     props.push({ id: 'atelier-lamp-mushroom-warm', at: [-2260, 550, 5130] });
     const tables = [
         { id: 'humboldt-table-b1', at: [-800, -5200], size: [2400, 900] },
@@ -109,7 +109,7 @@ export function makeHumboldtLayout() {
             party: { dx: -640, dz: 3450, yaw: 0 }
         },
         stories: ['Opening: standing plans, coffee and book returns', 'Join the research group at the shared table · an open approach and a place for everyone', 'Dusk: quiet reading, annotated books and warm pools of light', 'Closing: return to the wall, stow loose items and fold to 65°', 'Project workshop: bring the ErgoFlex alongside the group for maps, notes and conversation'],
-        groupStudy: { phases: ['afternoon', 'party'], table: 'humboldt-table-l1', desk: [7600, 1600], wheelchair: [7600, 2950], chairPark: [8450, -3700], turningBay: { x: 6500, z: 4350, diameter: 1500 } },
+        groupStudy: { phases: ['afternoon', 'party'], table: 'humboldt-table-l1', desk: [7600, 1600], wheelchair: [7600, 2950], chairPark: [8500, -4200], turningBay: { x: 6500, z: 4350, diameter: 1500 } },
         modes: HUMBOLDT_MODES
     }];
 }
@@ -1024,9 +1024,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const backScallops = [[-3300, 4800], [-1000, 4800], [PROUD_X - 1300, SOFFIT]];
     addMerged(back, backScallops.map(([x, top]) => [[900, 640], [x, top - 520, bz + 6]]), BACKF, T3500, [.08, .07, .24, .08, .26]);
     addMerged(back, backScallops.map(([x, top]) => [[1250, 2600], [x, top - 1500, bz + 6]]), BACKF, T3500, [.06, .05, .17, .05, .18]);
-    // Right wall: the proud end takes a washer under the stepped-in downlight; the desk's own scallop stays up at night.
-    addMerged(right, [[[900, 640], [PROUD_X - 6, SOFFIT - 520, -6200]]], RIGHTF, T3500, [.08, .07, .24, .08, .26]);
-    addMerged(right, [[[1250, 2100], [PROUD_X - 6, SOFFIT - 1300, -6200]]], RIGHTF, T3500, [.06, .05, .17, .05, .18]);
+    // Right wall: the desk's own scallop stays up at night.
     pools.add(right, [XR - 6, SOFFIT - 520, DESK[1]], [780, 600], T4000, [.05, .045, .14, .17, .13], 'right');
     pools.add(right, [XR - 6, SOFFIT - 1300, DESK[1]], [1300, 2100], T4000, [.025, .02, .07, .09, .07], 'right');
     // Tackboard: three scallops across the panel; cork is dark, so it takes more.
@@ -1061,7 +1059,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // A broad, restrained work pool follows the new collaborative zone.
     pools.add(root, [6000, 752, 1600], [3600, 2100], T4000, [.015, .10, .025, 0, .14]);
     pools.add(root, [-2150, 3, 5050], [2500, 2000], T3000, [.02, .035, .12, .015, .065]);
-    pools.add(root, [8050, 3, -3700], [1900, 1700], '#e6edf0', [.12, .14, .03, 0, 0]);
+    pools.add(root, [8050, 3, -3900], [1900, 2000], '#e6edf0', [.12, .14, .03, 0, 0]);
     // Marine-layer daylight: one soft band along each run of glass.
     const glassBands = [[[2800, STEP_Z - GLASS_Z], [XR - 1400, 3, (GLASS_Z + STEP_Z) / 2]], [[2600, SOLID_Z - STEP_Z], [HALL_XR - 1300, 3, (STEP_Z + SOLID_Z) / 2]], [[4400, 2800], [(DOOR[0] + DOOR[1]) / 2, 3, front - 1400]]];
     addMerged(root, glassBands, FLOOR, '#e3ebf0', [.16, .20, 0, 0, 0]);
@@ -1122,7 +1120,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         fc.restore(); sunFloorMap.needsUpdate = sunWallMap.needsUpdate = true;
     };
     // The slot column sits under the soffit with no other light reaching it.
-    pools.add(root, [PROUD_X - 500, 3, -4450], [1400, 1400], T3500, [.04, .04, .11, .09, .1]);
+    pools.add(root, [PROUD_X - 500, 3, (FIN_Z[0] + FIN_Z[1]) / 2], [1400, 1400], T3500, [.04, .04, .11, .09, .1]);
     pools.add(canoe, [0, HULL_Y - 470, 0], [600, 2600], T3000, [.02, .02, .08, .07, .16]);
     pools.add(canoe, [0, 5, 0], [1700, 4200], T3000, [.03, .03, .1, .08, .24]);
     // Soft spill above and around each group (not a halo behind it); the beam spill lands in front of the plinth.

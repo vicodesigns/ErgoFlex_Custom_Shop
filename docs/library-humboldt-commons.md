@@ -298,18 +298,19 @@ around them moved.
   right wall and the tackboard wall do not share a plane (their wall-top and base
   lines miss each other by about 17 % of the distance), and the olive pier between
   them shows a side face wider than its front. So the far end of the right wall
-  (z −7000 to −4700) now stands proud at **x 7500** (`PROUD_X`), solid to the soffit,
-  with a full-height dark glazed door (z −5760 to −4750, lever by the pier) and the
+  (z −7000 to −5100) now stands proud at **x 7500** (`PROUD_X`), solid to the soffit,
+  with a full-height dark glazed door (z −6160 to −5150, lever by the pier) and the
   olive pier as a 500 mm wide fin running the full 1.5 m back to the glass
-  (`FIN_Z` −4700 to −4200). The bay itself (glass slot, desk place, tackboard) stays
-  at x 9000. The glass slot is now one lite, z −4200 to −3200, with a transom at 950.
+  (`FIN_Z` −5100 to −4600). The bay itself (glass slot, desk place, tackboard) stays
+  at x 9000. The glass slot is now one lite, z −4600 to −3200, with a transom at 950. The pier
+  stops at z −4600 so the spare task chair's park (8500, −4200), which the film's chair
+  position is measured from, stays clear of it.
 - **The pier at the junction end of the bay** (z 3400 to 4000) is 900 deep (was 450).
-- **Moved with the wall:** the wheelchair's default park is (6650, −6250) (the old
-  spot is inside the proud wall); the spare task chair parks at (8450, −3700), in
-  front of the glass where the red armchair stands in the photos; the outer downlight
-  row steps in to x 6900 beside the proud wall; one washer scallop on the proud face;
-  the back wall's right scallop moved to x 6200. `migrateSavedTransform` pulls a saved
-  item out of the proud wall (z < −4200, x > 7150).
+- **Moved with the wall:** the wheelchair's default park is (6500, −6550), same turn (the
+  old spot is inside the proud wall; its place at the group table is unchanged); the
+  outer downlight row steps in to x 6900 beside the proud wall; the back wall's right
+  scallop moved to x 6200. `migrateSavedTransform` pulls a saved item out of the proud
+  wall (z < −4600, x > 7150).
 - **The balcony overhangs the canoe wall by 600 mm** on a white 300 mm edge beam
   (photo 2: the wood fascia and a white downstand stand in front of the olive wall).
   Fascia, guard and floor moved out with it; the guard returns to the wall at both
