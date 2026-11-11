@@ -103,7 +103,7 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
         }, metal);
         const diffuser = own(new THREE.MeshStandardMaterial({ name: 'Reading light opal diffuser', color: '#f3eddf', emissive: '#ffe1b5', emissiveIntensity: .3, roughness: .48 }));
         const face = new THREE.Mesh(new THREE.BoxGeometry(260, 4, 38), diffuser); face.position.set(110, 352, 0); g.add(face);
-        const levels = [.12, .08, .75, .025, .5];
+        const levels = [.12, .08, .75, .3, .5]; // left on at night: the commons' night circuit
         pools.add(g, [105, 1.4, 45], [650, 520], '#ffe1b5', levels.map(x => x * .28));
         let light;
         if (actual) { light = new THREE.PointLight('#ffe1b5', 0, root.scale.x * 1100, 2); light.position.set(110, 315, 0); g.add(light); }
@@ -117,10 +117,15 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
                 const k = detailKit(), active = p !== 3 && (p !== 2 || (r + col) % 2 === 0);
                 if (active) for (const side of [-1, 1]) {
                     if (id === 'student-table-2-2' && side > 0) continue; // the owner's violin
-                    const x = side * 310;
-                    sheet(g, p, [x, 2.4, 95], 195, side * .03 + r * .012); pen(k, x + 130, 105, p === 1 ? '#ba6536' : INK);
-                    if (p === 0) notebook(k, x - 30, -95);
-                    if (p === 2 && side < 0) bottle(k, x - 155, -145);
+                    // Each place is its own: some are empty (nobody sits there this
+                    // period), the rest differ in what came out of the bag. Stable per seat.
+                    const x = side * 310, seat = (r * 3 + col) * 2 + (side > 0), v = rand(seat * 7.3 + p * 1.7), skew = (rand(seat * 2.9 + p) - .5) * .5;
+                    if (p < 2 && rand(seat * 3.1 + 4) < .22) continue;
+                    sheet(g, p, [x + skew * 60, 2.4, 95 - skew * 30], 195, side * .03 + skew * .6); pen(k, x + 130 + skew * 40, 105 - (v > .5 ? 60 : 0), p === 1 ? '#ba6536' : INK);
+                    if (p === 0 && v < .55) notebook(k, x - 30, -95);
+                    if (v > .7 && (p === 0 || p >= 2) && p !== 3) { k.box([84, 13, 160], [x - 175, 6.5, -110], '#2d3034', [0, skew, 0], 'rubber'); k.box([66, 2, 34], [x - 175, 14, -150], '#9aa58e', [0, skew, 0]); }
+                    else if (v > .55 && v <= .7 && (p === 0 || p >= 2) && p !== 3) k.box([74, 9, 152], [x - 160, 4.5, -60], '#151617', [0, .4 + skew, 0], 'glass');
+                    if ((p === 2 && side < 0) || (p === 0 && rand(seat * 5.7) > .72)) bottle(k, x - 155, -145);
                     if (p === 4) { k.box([90, 55, 38], [x + 155, 28, -110], '#d6a057'); k.box([20, 80, 20], [x + 155, 67, -110], INK); k.ball(24, [x + 155, 115, -110], '#c9a06b'); }
                 }
                 if (p === 1) {

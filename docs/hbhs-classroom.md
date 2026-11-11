@@ -201,3 +201,13 @@ OCC lab and still expected 12 institutional rooms; all three failed on the
 unmodified code and are corrected. A kindergarten easel height check and the
 room-desk-styles shared-build precedence check also fail on the unmodified
 code and are left for their owners.
+
+## Environment push (10 November 2026)
+
+- Suspended 2 × 4 ft acoustic tile ceiling with diffusers, return grilles,
+  sprinklers and detectors; illuminated exit sign over the door; after hours the
+  corridor light shows through the door's vision panel and lands inside the door.
+- Night is the empty room after the cleaner: every student chair is up on its
+  table (evening keeps every other table, as before).
+- Student places vary per seat (stable between loads): some seats are not laid,
+  the rest differ by notebook, calculator, phone, bottle and paper angle.
