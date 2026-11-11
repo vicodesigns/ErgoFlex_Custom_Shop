@@ -254,7 +254,12 @@ function adoptEditorGroups() {
             members[0].before(section);
             setGroup(section, prefs.groups[key] ?? group.open, false);
         }
-        section.querySelector('.ui-group-body').append(...members);
+        // Members arrive at different moments (some blocks are built after the model loads): keep the listed order.
+        const body = section.querySelector('.ui-group-body');
+        body.append(...members);
+        const inBody = id => { let node = $(id); while (node && node.parentElement !== body) node = node.parentElement; return node; };
+        const ordered = group.members.map(inBody).filter(Boolean);
+        if (ordered.some((node, index) => body.children[index] !== node)) body.append(...ordered);
     }
     // Keep the groups in their intended order whatever order studio.js built the blocks in.
     const sections = EDITOR_GROUPS.map(g => content.querySelector(`:scope > .ui-group[data-ui-group="editor.${g.id}"]`)).filter(Boolean);

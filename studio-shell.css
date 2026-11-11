@@ -1,7 +1,7 @@
 /* Studio UI shell (studio-shell.mjs). Every rule is scoped to html.ui-shell, which the shell sets only when it
    mounts: never in a presentation frame and never on product-demo.html, so those pages are styled as before.
    Colours, radii and type come from the portal tokens (portal-ui.css); nothing here introduces a new palette. */
-html.ui-shell { --vb-h: 34px; --vb-gap: 6px; --vb-radius: 8px; --vb-top: 84px; }
+html.ui-shell { --vb-h: 30px; --vb-gap: 6px; --vb-radius: 8px; --vb-top: 84px; }
 @media (pointer: coarse) { html.ui-shell { --vb-h: 40px; } }
 
 /* ---- Title card: one compact card in the corner instead of a banner. ---- */
@@ -43,7 +43,8 @@ html.ui-shell #scene-controls .scene-switcher { display: flex; flex-wrap: nowrap
 html.ui-shell #viewer-shell #scene-controls .scenes-label { padding: 0 2px 0 4px; background: none; color: var(--ui-muted); font-size: 10px; letter-spacing: 1.1px; }
 html.ui-shell #viewer-shell #scene-controls #room-scene-select { flex: none; width: 168px; max-width: none; min-width: 0; font-weight: 600; }
 html.ui-shell #viewer-shell #scene-controls .measured-room-controls {
-    display: flex; flex-wrap: wrap; align-items: center; gap: var(--vb-gap) 12px; width: auto; max-width: 100%; min-width: 0;
+    /* Beside the scene picker, wrapping inside its own box rather than dropping to a new line as a whole. */
+    flex: 1 1 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--vb-gap) 12px; width: auto; max-width: 100%; min-width: min(100%, 340px);
     margin: 0; padding: 0 0 0 12px; border: 0; border-left: 1px solid var(--ui-border); border-radius: 0; background: none; box-shadow: none;
 }
 html.ui-shell #viewer-shell #scene-controls .measured-room-controls > div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; width: auto; min-width: 0; }
@@ -57,7 +58,8 @@ html.ui-shell #scene-controls .vb-menu > summary { display: inline-flex; align-i
 html.ui-shell #scene-controls .vb-menu > summary::-webkit-details-marker { display: none; }
 html.ui-shell #scene-controls .vb-menu > summary::after { content: ''; width: 6px; height: 6px; margin: -3px 1px 0 2px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); opacity: .7; }
 html.ui-shell #scene-controls .vb-menu[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
-html.ui-shell #scene-controls .vb-menu > summary span { color: inherit; font-weight: 400; opacity: .8; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+html.ui-shell #scene-controls .vb-menu > summary span { color: inherit; font-weight: 400; opacity: .8; max-width: 104px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html.ui-shell #scene-controls .vb-menu > summary span:first-child { font-weight: 500; opacity: 1; }
 html.ui-shell #viewer-shell #scene-controls .vb-menu > .vb-pop {
     position: absolute; z-index: 5; top: 100%; left: 0; right: auto; box-sizing: border-box;
     width: max-content; min-width: 260px; max-width: min(560px, 100%); max-height: min(560px, 70vh); overflow: auto; overscroll-behavior: contain;
