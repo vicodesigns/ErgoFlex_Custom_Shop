@@ -23,7 +23,7 @@ for (const who of characters) {
     const rig = rigOf(who);
     for (const p of index.props.filter(p => p.category === 'people' && p.person?.character === who)) assert.ok(rig.has(p.id), `${p.id} is in ${who}'s rig file (run tools/people/export-rigs.mjs after building people)`);
     for (const s of ['l', 'r']) { assert.ok(rig.side[s].arm.every(i => i >= 0) && rig.side[s].leg.every(i => i >= 0), who + ' has arm and leg bones'); assert.equal(rig.side[s].fingers.length, 15, who + ' has fifteen finger bones a hand'); }
-    assert.ok(rig.has(`people-${who}-stand-wait`), who + ' has the standing-by posture');
+    assert.ok(rig.has(`people-${who}-stand-wait`) || rig.has(`people-${who}-kid-stand-wait`), who + ' has the standing-by posture');
 }
 
 // ---- the driver: a ten second rise, the person up in three

@@ -180,7 +180,15 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   async function swap(key,character,pose,joints=null){
     const e=entry(key),m=e&&modelOf(e.id);if(!e||!catalog)return;
-    const c=character||m?.character,p=pose||m?.pose;if(!c||!p)return;
+    const c=character||m?.character;let p=pose||m?.pose;if(!c||!p)return;
+    // a child swapped in for an adult (or the other way round) takes a posture of their own kind: the others are built on the wrong furniture
+    const kid=catalog.characters[c]?.age==='child';
+    if(/^kid-/.test(p)!==kid){
+      const info=catalog.poses[p]||{},up=info.stance==='standing'||info.stance==='walking',floor=/floor|kneel/.test(p);
+      const to=kid?(info.desk?(up?'kid-stand-desk':'kid-sit-desk'):floor?'kid-sit-floor':up?'kid-stand':'kid-sit-e')
+        :(info.desk?(up?'stand-type':'sit-type'):floor?'sit-floor':up?'stand-wait':'sit-chat');
+      p=catalog.poses[to]?to:kid?'kid-stand':'stand-wait';
+    }
     let id=modelFor(c,p,m?.deskHeight??null);
     if(!id){id=await build(wantedId(c,p));if(!id)return;}
     const info=catalog.poses[p],name=catalog.characters[c]?.name||cap(c);
@@ -322,7 +330,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     charIds=chars.map(([id])=>id);
     const face_=id=>{const any=Object.entries(catalog.models).find(([,x])=>x.character===id);return any?thumb(any[0]):'';};
     const uniq=k=>[...new Set(Object.values(catalog.characters).map(x=>x[k]))];
-    const poses=STANCES.map(st=>[st,Object.entries(catalog.poses).filter(([,x])=>x.stance===st)]).filter(([,l])=>l.length);
+    // children have their own postures (built on child furniture), adults theirs
+    const kid=catalog.characters[m?.character]?.age==='child';
+    const poses=STANCES.map(st=>[st,Object.entries(catalog.poses).filter(([id,x])=>x.stance===st&&/^kid-/.test(id)===kid)]).filter(([,l])=>l.length);
     const built=id=>!!(m&&modelFor(m.character,id));
     const here=!o?'Loading the model…':o.visible?'':s&&!isFree?'':s?`Not in the room at ${r1(time())} s.`:isFree?'':'Not showing now: the desk is between sitting and standing height, where nobody works at it.';
     const head=`<div class="people-head"><img src="${thumb(e.id)}" alt=""><div><strong>${escape(c?.name||personName(e))}</strong><small>${escape(c?[c.sex,c.age,c.height?Math.round(c.height*(e.scale||1))+' cm':''].filter(Boolean).join(' · '):e.id)}</small><small>${escape(doing(e))}${m?.aids?.length?' · '+escape(m.aids.join(', ')):''}</small></div></div>`;

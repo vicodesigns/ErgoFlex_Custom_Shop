@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { createChildDeskKit } from './child-room.mjs?v=child-room-20261104';
 import { surfaceSupportsFootprint } from './desk-shelf-space.mjs';
-import { activityPageMaterial } from './room-activity-print.mjs?v=polish-20261111b';
+import { activityPageMaterial } from './room-activity-print.mjs?v=polish-20261111c';
 
 const education = new Set(['kindergarten','elementary','middleschool','highschool','college','university']);
 const workOnly = new Set(['hospital','laboratory','mobileit','security','police','government', ...education]);

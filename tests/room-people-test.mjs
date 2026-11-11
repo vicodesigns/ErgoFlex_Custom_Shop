@@ -27,11 +27,20 @@ for (const [room, specs] of Object.entries(ROOM_PEOPLE)) for (const spec of LAYO
     if (spec.desk) assert.ok(Number.isFinite(entry.person?.deskHeight), spec.id + ' records the desk height its pose fits');
 }
 
-{   // Rooms without their own cast get a desk user; children's rooms get nobody.
+{   // Rooms without their own cast get a desk user; the children's rooms have children in them, on child furniture.
     const cast = id => new RoomPeople({ id, roomLayout: { id: 'house' } }, null).specs();
     assert.deepEqual(cast('office').map(s => s.desk), ['sit', 'sit', 'stand']);
     for (const spec of cast('office')) assert.ok(entries.get(spec.id)?.person?.deskHeight, spec.id + ' is built');
-    assert.deepEqual(cast('childroom'), []); assert.deepEqual(cast('kindergarten'), []); assert.deepEqual(cast('product'), []);
+    assert.deepEqual(cast('product'), []);
+    const child = id => /^people-(tess|milo|lila|ravi|theo|ines|nora|jun)-kid-/.test(id), grownUp = id => !/-kid-/.test(id) && !/^people-(tess|milo|lila|ravi|theo|ines|nora|jun)-/.test(id);
+    const early = new RoomPeople({ id: 'childroom', roomLayout: { id: 'house', ageStage: 'early', play: [0, 2150], reading: [-1150, 3050], desk: [1050, -250] } }, null).specs();
+    assert.ok(early.some(s => child(s.id)) && early.every(s => child(s.id) || grownUp(s.id)), 'the toddler stage has a child, in child postures only');
+    assert.ok(early.filter(s => s.modes?.includes('night')).length === 0, 'nobody is shown at night: the child is asleep');
+    assert.ok(early.find(s => s.desk === 'stand' && s.reach < 800), 'the youngest stand at the desk on its lowest setting');
+    const primary = new RoomPeople({ id: 'childroom', roomLayout: { id: 'houseprimary', ageStage: 'primary', play: [0, 2150], reading: [-1150, 3050], desk: [1200, -400] } }, null).specs();
+    assert.ok(primary.find(s => s.desk === 'sit' && s.chair === false), 'a school child sits on the room\'s own stool at the desk');
+    for (const room of ['kindergarten', 'elementary']) { const c = cast(room); assert.ok(c.filter(s => child(s.id)).length >= 6 && c.some(s => grownUp(s.id) && s.desk), room + ': children and a teacher at the desk');
+        assert.ok(c.filter(s => child(s.id) && s.on).every(s => s.seat === (room === 'kindergarten' ? 260 : 360)), room + ': children sit on that room\'s chairs'); }
 }
 const library = {
     loadIndex: async () => index, entry: id => entries.get(id) || null,
@@ -44,6 +53,23 @@ function makeRoom(id, layout = { id: 'house' }) {
 }
 const shown = people => people.people.filter(o => o.visible).map(o => o.userData.person.id);
 
+{   // A school child at the desk sits on a copy of the room's own study chair, facing the desk with them; the room's chair
+    // is hidden where the room put it and is never moved (nothing for the Studio to save); it is back when the child leaves.
+    const layout = { id: 'houseprimary', ageStage: 'primary', play: [0, 2150], reading: [-1150, 3050], desk: [1200, -400] };
+    const { room, chair } = makeRoom('childroom', layout); chair.userData.propId = 'desk-stool'; chair.position.set(1200, 0, 550);
+    const people = new RoomPeople(room, library); await people.setEnabled(true);
+    people.update({ mode: 'afternoon', height: 28, pose: { x: 1200, z: -400, yaw: 0 } });
+    const nora = people.people.find(o => o.userData.person.id === 'people-nora-kid-sit-desk');
+    assert.ok(nora?.visible, 'Nora does her homework at the desk in the afternoon');
+    const seat = [...people.kidSeats.values()][0];
+    assert.ok(seat && seat.source === chair && seat.copy.visible && seat.copy.parent === nora.parent, 'she has a seat of the room\'s kind under her');
+    assert.ok(Math.abs(seat.copy.position.x - nora.position.x) < 1 && Math.abs(seat.copy.position.z - nora.position.z) < 1 && Math.abs(seat.copy.rotation.y - nora.rotation.y) < 1e-6, 'under her, facing the way she faces');
+    assert.ok(!chair.visible && chair.position.x === 1200 && chair.position.z === 550 && chair.rotation.y === 0, 'the room\'s chair is hidden, not moved');
+    assert.ok(!room.assets().includes(seat.copy) && seat.copy.userData.propId === undefined, 'the copy is not a piece of the room\'s furniture');
+    people.update({ mode: 'evening', height: 28, pose: { x: 1200, z: -400, yaw: 0 } });
+    assert.ok(!nora.visible && !seat.copy.visible && chair.visible, 'in the evening she reads on the floor: the copy is gone and the room\'s chair is back');
+    await people.setEnabled(false); assert.ok(chair.visible && [...people.kidSeats.values()].every(k => !k.copy.visible), 'people off: the room as it was');
+}
 {   // Home: seated at 28 in, nobody in between, standing at 43.5 in; the person follows the desk and brings a chair.
     const { room, chair } = makeRoom('home'), people = new RoomPeople(room, library);
     assert.ok(people.available); await people.setEnabled(true);

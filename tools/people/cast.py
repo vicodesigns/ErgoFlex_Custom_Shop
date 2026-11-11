@@ -132,32 +132,57 @@ CHARACTERS = {
         'tint': {'toigo_basic_tucked_t-shirt': (.2, .4, .55), 'toigo_wool_pants': (.72, .68, .6), 'toigo_flats': (.15, .15, .2)},
     },
     # Children (MakeHuman age: 0 = 1 year, .1875 = 10 years). Their poses scale with them (k) and sit on child furniture.
+    # `height` is set so each stands about as tall as a child of that age (101 cm at four to 137 cm at ten).
     'tess': {
-        'name': 'Tess', 'phenotype': {'gender': .0, 'age': .0625, 'muscle': .5, 'weight': .55, 'height': .5, 'proportions': .5, 'race': race(.4, .6, 0)},
+        'name': 'Tess', 'phenotype': {'gender': .0, 'age': .0625, 'muscle': .5, 'weight': .55, 'height': 0.71, 'proportions': .5, 'race': race(.4, .6, 0)},
         'skin': 'young_african_female', 'eyes': 'brown', 'hair': 'afro01', 'hair_tint': (.06, .045, .04), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
         'tint': {'toigo_basic_tucked_t-shirt': (.85, .45, .5), 'toigo_wool_pants': (.3, .42, .62)},
     },
     'ravi': {
-        'name': 'Ravi', 'phenotype': {'gender': 1., 'age': .125, 'muscle': .5, 'weight': .5, 'height': .5, 'proportions': .5, 'race': race(.3, .1, .6)},
+        'name': 'Ravi', 'phenotype': {'gender': 1., 'age': .125, 'muscle': .5, 'weight': .5, 'height': 0.625, 'proportions': .5, 'race': race(.3, .1, .6)},
         'skin': 'young_asian_male', 'eyes': 'brown', 'hair': 'short02', 'hair_tint': (.04, .035, .03), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
         'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes04'],
         'tint': {'namuhekam_male_polo_shirt': (.15, .5, .4), 'cortu_cargo_pants': (.25, .25, .3)},
     },
     'nora': {
-        'name': 'Nora', 'phenotype': {'gender': .0, 'age': .1875, 'muscle': .45, 'weight': .48, 'height': .55, 'proportions': .5, 'race': race(1, 0, 0)},
+        'name': 'Nora', 'phenotype': {'gender': .0, 'age': .1875, 'muscle': .45, 'weight': .48, 'height': 0.6, 'proportions': .5, 'race': race(1, 0, 0)},
         'skin': 'young_caucasian_female', 'eyes': 'blue', 'hair': 'ponytail01', 'hair_tint': (.55, .38, .2), 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_fisherman_sweater', 'toigo_wool_pants', 'shoes06', 'spamrakuen_tbm_glasses_frames_01'],
         'tint': {'toigo_fisherman_sweater': (.85, .62, .2), 'toigo_wool_pants': (.18, .22, .35)},
     },
     'jun': {
-        'name': 'Jun', 'phenotype': {'gender': 1., 'age': .18, 'muscle': .5, 'weight': .45, 'height': .5, 'proportions': .5, 'race': race(.05, 0, .95)},
+        'name': 'Jun', 'phenotype': {'gender': 1., 'age': .18, 'muscle': .5, 'weight': .45, 'height': 0.585, 'proportions': .5, 'race': race(.05, 0, .95)},
         'skin': 'young_asian_male', 'eyes': 'brown', 'hair': 'short04', 'hair_tint': (.04, .035, .035), 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
         'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes06'],
         'tint': {'namuhekam_male_polo_shirt': (.75, .22, .15), 'toigo_wool_pants': (.2, .2, .22)},
     },
+    'milo': {
+        'name': 'Milo', 'phenotype': {'gender': 1., 'age': .083, 'muscle': .5, 'weight': .52, 'height': 0.66, 'proportions': .5, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_male', 'eyes': 'blue', 'hair': 'short03', 'hair_tint': (.62, .46, .26), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
+        'clothes': ['toigo_basic_tucked_t-shirt', 'cortu_cargo_pants', 'shoes05'],
+        'tint': {'toigo_basic_tucked_t-shirt': (.2, .45, .75), 'cortu_cargo_pants': (.55, .45, .3)},
+    },
+    'lila': {
+        'name': 'Lila', 'phenotype': {'gender': .0, 'age': .104, 'muscle': .45, 'weight': .5, 'height': 0.7, 'proportions': .5, 'race': race(.1, 0, .9)},
+        'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'toigo_blunt_bob_with_bangs', 'hair_tint': (.05, .04, .04), 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
+        'clothes': ['toigo_fisherman_sweater', 'toigo_wool_pants', 'shoes04'],
+        'tint': {'toigo_fisherman_sweater': (.55, .35, .65), 'toigo_wool_pants': (.85, .82, .75)},
+    },
+    'theo': {
+        'name': 'Theo', 'phenotype': {'gender': 1., 'age': .146, 'muscle': .5, 'weight': .5, 'height': 0.55, 'proportions': .5, 'race': race(.05, .95, 0)},
+        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short01', 'hair_tint': (.05, .04, .035), 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
+        'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes06'],
+        'tint': {'namuhekam_male_polo_shirt': (.9, .75, .2), 'cortu_cargo_pants': (.2, .3, .45)},
+    },
+    'ines': {
+        'name': 'Ines', 'phenotype': {'gender': .0, 'age': .167, 'muscle': .45, 'weight': .47, 'height': 0.635, 'proportions': .5, 'race': race(.6, .15, .25)},
+        'skin': 'young_caucasian_female', 'eyes': 'brown', 'hair': 'braid01', 'hair_tint': (.16, .1, .06), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
+        'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
+        'tint': {'toigo_basic_tucked_t-shirt': (.3, .6, .5), 'toigo_wool_pants': (.45, .25, .3)},
+    },
 }
-CHILDREN = ('tess', 'ravi', 'nora', 'jun')
+CHILDREN = ('tess', 'milo', 'lila', 'ravi', 'theo', 'ines', 'nora', 'jun')
 
 _TYPE_L = {'fingers': (-.12, -1, -.2), 'palm': (0, 0, -1), 'curl': .45, 'thumb': .3, 'spread': .3}
 _TYPE_R = {'fingers': (.12, -1, -.2), 'palm': (0, 0, -1), 'curl': .45, 'thumb': .3, 'spread': .3}
@@ -409,12 +434,42 @@ def kid_play_floor(k):
             'foot_r': {'at': _s(k, -.1, .42, .05), 'toes': (0, -.2, -1), 'pitch': 70, 'knee': (0, -1, -1)}}
 
 
+def kid_sit_stool(seat, top):
+    """A child on a stool or study chair too high for their feet (they rest on the rung), drawing on the desk."""
+    def pose(k):
+        rung = max(.07 * k, seat - .37 * k)
+        return {'pelvis': (0, .0, seat + .075 * k), 'pelvis_pitch': 4, 'spine': (4, 6, 5), 'neck': 10, 'head': 11, 'head_yaw': -4,
+                'hand_r': {'at': (-.07 * k, -.29 * k, top + .03), 'fingers': (.45, -1, -.3), 'palm': (.45, .1, -1), 'elbow': (-.3, .15, -.25), 'curl': .7, 'thumb': .55},
+                'hand_l': {'at': (.14 * k, -.27 * k, top + .022), 'fingers': (-.55, -1, -.05), 'palm': (0, 0, -1), 'elbow': (.3, .15, -.25), 'curl': .15, 'thumb': .1, 'spread': .3},
+                'foot_l': {'at': (.085 * k, -.12 * k, rung), 'toes': (.15, -1, -.25)}, 'foot_r': {'at': (-.085 * k, -.09 * k, rung), 'toes': (-.15, -1, -.25)}}
+    return pose
+
+
+def kid_kneel_table(top):
+    """Kneeling at a low craft table, both hands on the work."""
+    def pose(k):
+        p = kid_play_floor(k)
+        p.update({'pelvis_pitch': 8, 'spine': (6, 6, 5), 'neck': 14, 'head': 12,
+                  'hand_l': {'at': (.11 * k, -.3 * k, top + .025), 'fingers': (-.2, -1, -.1), 'palm': (0, 0, -1), 'elbow': (.3, .25, -.2), 'curl': .3, 'thumb': .2, 'spread': .3},
+                  'hand_r': {'at': (-.1 * k, -.32 * k, top + .035), 'fingers': (.4, -1, -.3), 'palm': (.4, .1, -1), 'elbow': (-.3, .25, -.2), 'curl': .7, 'thumb': .55}})
+        return p
+    return pose
+
+
+def kid_stand(k):
+    """A child standing, looking up a little, one hand half raised as if showing or asking."""
+    return {'spine': (0, 1, 1), 'neck': -6, 'head': -8, 'head_yaw': 8,
+            'hand_r': {'at': _s(k, -.2, -.2, 1.02), 'fingers': (-.1, -.5, .85), 'palm': (.3, -.9, .2), 'elbow': (-.25, .3, -.4), 'curl': .3, 'thumb': .2, 'spread': .3},
+            'hand_l': _hang(k, 'l'),
+            'foot_l': {'at': _s(k, .09, .0, .07 / k), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.1, .03, .07 / k), 'toes': (-.3, -1, 0)}}
+
+
 def kid_stand_desk(inches=28):
     """A child standing at the desk on its lowest setting, drawing on it (the top at chest height for a small child)."""
     top = keys_at(inches) + .04
-    return lambda k: {'spine': (3, 4, 4), 'neck': 12, 'head': 12,
-                      'hand_r': {'at': (-.08 * k, -.28 * k, top), 'fingers': (.45, -1, -.3), 'palm': (.45, .1, -1), 'elbow': (-.3, .2, -.3), 'curl': .7, 'thumb': .55},
-                      'hand_l': {'at': (.13 * k, -.27 * k, top - .008), 'fingers': (-.55, -1, -.05), 'palm': (0, 0, -1), 'elbow': (.3, .2, -.3), 'curl': .15, 'thumb': .1, 'spread': .3},
+    return lambda k: {'spine': (2, 3, 3), 'neck': 6, 'head': 8,
+                      'hand_r': {'at': (-.08 * k, -.36 * k, top), 'fingers': (.45, -1, -.3), 'palm': (.45, .1, -1), 'elbow': (-.35, .1, -.3), 'curl': .7, 'thumb': .55},
+                      'hand_l': {'at': (.14 * k, -.34 * k, top - .008), 'fingers': (-.55, -1, -.05), 'palm': (0, 0, -1), 'elbow': (.35, .1, -.3), 'curl': .15, 'thumb': .1, 'spread': .3},
                       'foot_l': {'at': _s(k, .09, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.09, .05, .07), 'toes': (-.3, -1, 0)}}
 
 
@@ -424,6 +479,8 @@ DESK_POSES = {'sit-type': sit_type, 'stand-type': stand_type, 'wheel-type': whee
               'stand-type-low': lambda inches=28: dict(stand_type(inches, .27), spine=(1, 2, 2), neck=0, head=-4),
               # Standing at a desk set between sitting and standing (35-36 in, bench height): leaning in over the work.
               'kid-stand-desk': kid_stand_desk,
+              # A school-age child on the room's stool or study chair (seat 495 mm) at the desk on its lowest setting.
+              'kid-sit-desk': lambda inches=28: kid_sit_stool(.495, keys_at(inches) + .012),
               'stand-low': lambda inches=35.5: dict(stand_type(inches, .3), pelvis_pitch=9, spine=(4, 5, 4), neck=10, head=8)}
 KEYS_WHEEL = .759    # keyboard top with the desk at 31 in, raised so the knees clear the tray
 
@@ -516,6 +573,15 @@ POSES = {
     'floor-stretch': floor_stretch,
     'sit-mug': sit_mug,
     'sit-chat': sit_chat,
+    # Children (cast.CHILDREN): on the floor, at child furniture (heights measured in the rooms), on their feet.
+    'kid-sit-floor': sit_floor,
+    'kid-read-floor': kid_read_floor,
+    'kid-play-floor': kid_play_floor,
+    'kid-stand': kid_stand,
+    'kid-stand-wait': stand_wait,
+    'kid-sit-k': kid_sit_table(.26, .52),          # kindergarten: 260 mm seat, 520 mm table
+    'kid-sit-e': kid_sit_table(.36, .62),          # elementary: 360 mm seat, 620 mm table
+    'kid-kneel-craft': kid_kneel_table(.45),       # the child's room craft table, 450 mm
 }
 
 # id -> character, pose, library name, what they hold.
@@ -617,10 +683,20 @@ POSE_INFO = {
     'floor-stretch': ('Stretching on a mat', 'seated', '', 0, []),
     'sit-mug': ('Sitting back with a mug', 'seated', '', 420, [('cup', {'side': 'r'})]),
     'sit-chat': ('On a sofa with a drink, chatting', 'seated', '', 420, [('cup', {'side': 'r', 'kind': 'glass'})]),
+    'kid-stand-desk': ('Drawing at the desk, standing', 'standing', 'desk', 0, [('pen', {'side': 'r'})]),
+    'kid-sit-desk': ('Drawing at the desk, on the stool', 'seated', 'desk', 495, [('pen', {'side': 'r'})]),
+    'kid-sit-floor': ('Sitting cross-legged on the floor', 'seated', '', 0, []),
+    'kid-read-floor': ('On the floor with a picture book', 'seated', '', 0, [('book', {'side': 'l'})]),
+    'kid-play-floor': ('Kneeling, building on the floor', 'seated', '', 0, []),
+    'kid-stand': ('Standing, showing something', 'standing', '', 0, []),
+    'kid-stand-wait': ('Standing by', 'standing', '', 0, []),
+    'kid-sit-k': ('Drawing at a kindergarten table', 'seated', '', 260, [('pen', {'side': 'r'})]),
+    'kid-sit-e': ('Drawing at an elementary school table', 'seated', '', 360, [('pen', {'side': 'r'})]),
+    'kid-kneel-craft': ('Kneeling at a low craft table', 'seated', '', 0, [('pen', {'side': 'r'})]),
 }
-DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,)}
+DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
-CHILD_POSES = set()
+CHILD_POSES = {p for p in POSE_INFO if p.startswith('kid-')}
 def suits(who, pose): return (who in CHILDREN) == (pose in CHILD_POSES)
 
 

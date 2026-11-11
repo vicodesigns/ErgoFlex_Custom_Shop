@@ -3,7 +3,7 @@ import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { HOME_SESSIONS, homeSessionPinboard, buildHomeSessionDetail } from './home-session-detail.mjs?v=home-sessions-20261022';
 import { homeComfortDetails } from './home-comfort-detail.mjs?v=commons-home-comfort-20261024';
-import { createSunPatch, createSunLight } from './room-sun-patch.mjs?v=polish-20261111b';
+import { createSunPatch, createSunLight } from './room-sun-patch.mjs?v=polish-20261111c';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 
 // Architectural dimensions and prop positions are millimetres, never resized

@@ -327,11 +327,11 @@
   },
   "tess": {
    "name": "Tess",
-   "sex": "woman",
+   "sex": "girl",
    "age": "child",
    "years": 4,
    "heritage": "Mixed",
-   "height": 151,
+   "height": 103,
    "outfit": [
     "toigo_basic_tucked_t-shirt",
     "toigo_wool_pants",
@@ -345,11 +345,11 @@
   },
   "ravi": {
    "name": "Ravi",
-   "sex": "man",
+   "sex": "boy",
    "age": "child",
    "years": 7,
    "heritage": "Mixed",
-   "height": 180,
+   "height": 122,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "cortu_cargo_pants",
@@ -363,11 +363,11 @@
   },
   "nora": {
    "name": "Nora",
-   "sex": "woman",
+   "sex": "girl",
    "age": "child",
    "years": 10,
    "heritage": "European",
-   "height": 158,
+   "height": 138,
    "outfit": [
     "toigo_fisherman_sweater",
     "toigo_wool_pants",
@@ -382,11 +382,11 @@
   },
   "jun": {
    "name": "Jun",
-   "sex": "man",
+   "sex": "boy",
    "age": "child",
    "years": 10,
    "heritage": "Asian",
-   "height": 180,
+   "height": 138,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "toigo_wool_pants",
@@ -396,6 +396,78 @@
     "top": "#e0806c",
     "bottom": "#7b7b80",
     "hair": "#3b3838"
+   }
+  },
+  "milo": {
+   "name": "Milo",
+   "sex": "boy",
+   "age": "child",
+   "years": 5,
+   "heritage": "European",
+   "height": 108,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "cortu_cargo_pants",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#7bb1e0",
+    "bottom": "#c2b194",
+    "hair": "#cdb38a"
+   }
+  },
+  "lila": {
+   "name": "Lila",
+   "sex": "girl",
+   "age": "child",
+   "years": 6,
+   "heritage": "Asian",
+   "height": 115,
+   "outfit": [
+    "toigo_fisherman_sweater",
+    "toigo_wool_pants",
+    "shoes04"
+   ],
+   "colors": {
+    "top": "#c29ed2",
+    "bottom": "#ede9e0",
+    "hair": "#413b3b"
+   }
+  },
+  "theo": {
+   "name": "Theo",
+   "sex": "boy",
+   "age": "child",
+   "years": 8,
+   "heritage": "African",
+   "height": 129,
+   "outfit": [
+    "namuhekam_male_polo_shirt",
+    "cortu_cargo_pants",
+    "shoes06"
+   ],
+   "colors": {
+    "top": "#f3e07b",
+    "bottom": "#7b94b1",
+    "hair": "#413b38"
+   }
+  },
+  "ines": {
+   "name": "Ines",
+   "sex": "girl",
+   "age": "child",
+   "years": 9,
+   "heritage": "Mixed",
+   "height": 134,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "toigo_wool_pants",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#94caba",
+    "bottom": "#b18894",
+    "hair": "#6f5a47"
    }
   }
  },
@@ -634,6 +706,72 @@
    "stance": "seated",
    "desk": false,
    "seat": 420
+  },
+  "kid-stand-desk": {
+   "label": "Drawing at the desk, standing",
+   "stance": "standing",
+   "desk": true,
+   "seat": 0,
+   "heights": [
+    28
+   ]
+  },
+  "kid-sit-desk": {
+   "label": "Drawing at the desk, on the stool",
+   "stance": "seated",
+   "desk": true,
+   "seat": 495,
+   "heights": [
+    28
+   ]
+  },
+  "kid-sit-floor": {
+   "label": "Sitting cross-legged on the floor",
+   "stance": "seated",
+   "desk": false,
+   "seat": 0
+  },
+  "kid-read-floor": {
+   "label": "On the floor with a picture book",
+   "stance": "seated",
+   "desk": false,
+   "seat": 0
+  },
+  "kid-play-floor": {
+   "label": "Kneeling, building on the floor",
+   "stance": "seated",
+   "desk": false,
+   "seat": 0
+  },
+  "kid-stand": {
+   "label": "Standing, showing something",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "kid-stand-wait": {
+   "label": "Standing by",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "kid-sit-k": {
+   "label": "Drawing at a kindergarten table",
+   "stance": "seated",
+   "desk": false,
+   "seat": 260
+  },
+  "kid-sit-e": {
+   "label": "Drawing at an elementary school table",
+   "stance": "seated",
+   "desk": false,
+   "seat": 360
+  },
+  "kid-kneel-craft": {
+   "label": "Kneeling at a low craft table",
+   "stance": "seated",
+   "desk": false,
+   "seat": 0
   }
  },
  "models": {
@@ -4556,6 +4694,520 @@
    "pose": "stand-low",
    "deskHeight": 35.5,
    "name": "Sofia: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-tess-kid-play-floor": {
+   "character": "tess",
+   "pose": "kid-play-floor",
+   "name": "Tess: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-tess-kid-stand-desk": {
+   "character": "tess",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Tess: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-ravi-kid-read-floor": {
+   "character": "ravi",
+   "pose": "kid-read-floor",
+   "name": "Ravi: on the floor with a picture book",
+   "aids": []
+  },
+  "people-nora-kid-sit-desk": {
+   "character": "nora",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Nora: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-jun-kid-stand": {
+   "character": "jun",
+   "pose": "kid-stand",
+   "name": "Jun: standing, showing something",
+   "aids": []
+  },
+  "people-ravi-kid-sit-e": {
+   "character": "ravi",
+   "pose": "kid-sit-e",
+   "name": "Ravi: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-tess-kid-sit-desk": {
+   "character": "tess",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Tess: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-tess-kid-sit-floor": {
+   "character": "tess",
+   "pose": "kid-sit-floor",
+   "name": "Tess: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-tess-kid-read-floor": {
+   "character": "tess",
+   "pose": "kid-read-floor",
+   "name": "Tess: on the floor with a picture book",
+   "aids": []
+  },
+  "people-tess-kid-stand": {
+   "character": "tess",
+   "pose": "kid-stand",
+   "name": "Tess: standing, showing something",
+   "aids": []
+  },
+  "people-tess-kid-stand-wait": {
+   "character": "tess",
+   "pose": "kid-stand-wait",
+   "name": "Tess: standing by",
+   "aids": []
+  },
+  "people-tess-kid-sit-k": {
+   "character": "tess",
+   "pose": "kid-sit-k",
+   "name": "Tess: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-tess-kid-sit-e": {
+   "character": "tess",
+   "pose": "kid-sit-e",
+   "name": "Tess: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-tess-kid-kneel-craft": {
+   "character": "tess",
+   "pose": "kid-kneel-craft",
+   "name": "Tess: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-ravi-kid-stand-desk": {
+   "character": "ravi",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Ravi: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-ravi-kid-sit-desk": {
+   "character": "ravi",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Ravi: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-ravi-kid-sit-floor": {
+   "character": "ravi",
+   "pose": "kid-sit-floor",
+   "name": "Ravi: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-ravi-kid-play-floor": {
+   "character": "ravi",
+   "pose": "kid-play-floor",
+   "name": "Ravi: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-ravi-kid-stand": {
+   "character": "ravi",
+   "pose": "kid-stand",
+   "name": "Ravi: standing, showing something",
+   "aids": []
+  },
+  "people-ravi-kid-stand-wait": {
+   "character": "ravi",
+   "pose": "kid-stand-wait",
+   "name": "Ravi: standing by",
+   "aids": []
+  },
+  "people-ravi-kid-sit-k": {
+   "character": "ravi",
+   "pose": "kid-sit-k",
+   "name": "Ravi: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-ravi-kid-kneel-craft": {
+   "character": "ravi",
+   "pose": "kid-kneel-craft",
+   "name": "Ravi: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-nora-kid-stand-desk": {
+   "character": "nora",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Nora: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-nora-kid-sit-floor": {
+   "character": "nora",
+   "pose": "kid-sit-floor",
+   "name": "Nora: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-nora-kid-read-floor": {
+   "character": "nora",
+   "pose": "kid-read-floor",
+   "name": "Nora: on the floor with a picture book",
+   "aids": []
+  },
+  "people-nora-kid-play-floor": {
+   "character": "nora",
+   "pose": "kid-play-floor",
+   "name": "Nora: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-nora-kid-stand": {
+   "character": "nora",
+   "pose": "kid-stand",
+   "name": "Nora: standing, showing something",
+   "aids": []
+  },
+  "people-nora-kid-stand-wait": {
+   "character": "nora",
+   "pose": "kid-stand-wait",
+   "name": "Nora: standing by",
+   "aids": []
+  },
+  "people-nora-kid-sit-k": {
+   "character": "nora",
+   "pose": "kid-sit-k",
+   "name": "Nora: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-nora-kid-sit-e": {
+   "character": "nora",
+   "pose": "kid-sit-e",
+   "name": "Nora: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-nora-kid-kneel-craft": {
+   "character": "nora",
+   "pose": "kid-kneel-craft",
+   "name": "Nora: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-jun-kid-stand-desk": {
+   "character": "jun",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Jun: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-jun-kid-sit-desk": {
+   "character": "jun",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Jun: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-jun-kid-sit-floor": {
+   "character": "jun",
+   "pose": "kid-sit-floor",
+   "name": "Jun: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-jun-kid-read-floor": {
+   "character": "jun",
+   "pose": "kid-read-floor",
+   "name": "Jun: on the floor with a picture book",
+   "aids": []
+  },
+  "people-jun-kid-play-floor": {
+   "character": "jun",
+   "pose": "kid-play-floor",
+   "name": "Jun: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-jun-kid-stand-wait": {
+   "character": "jun",
+   "pose": "kid-stand-wait",
+   "name": "Jun: standing by",
+   "aids": []
+  },
+  "people-jun-kid-sit-k": {
+   "character": "jun",
+   "pose": "kid-sit-k",
+   "name": "Jun: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-jun-kid-sit-e": {
+   "character": "jun",
+   "pose": "kid-sit-e",
+   "name": "Jun: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-jun-kid-kneel-craft": {
+   "character": "jun",
+   "pose": "kid-kneel-craft",
+   "name": "Jun: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-milo-kid-stand-desk": {
+   "character": "milo",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Milo: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-milo-kid-sit-desk": {
+   "character": "milo",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Milo: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-milo-kid-sit-floor": {
+   "character": "milo",
+   "pose": "kid-sit-floor",
+   "name": "Milo: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-milo-kid-read-floor": {
+   "character": "milo",
+   "pose": "kid-read-floor",
+   "name": "Milo: on the floor with a picture book",
+   "aids": []
+  },
+  "people-milo-kid-play-floor": {
+   "character": "milo",
+   "pose": "kid-play-floor",
+   "name": "Milo: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-milo-kid-stand": {
+   "character": "milo",
+   "pose": "kid-stand",
+   "name": "Milo: standing, showing something",
+   "aids": []
+  },
+  "people-milo-kid-stand-wait": {
+   "character": "milo",
+   "pose": "kid-stand-wait",
+   "name": "Milo: standing by",
+   "aids": []
+  },
+  "people-milo-kid-sit-k": {
+   "character": "milo",
+   "pose": "kid-sit-k",
+   "name": "Milo: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-milo-kid-sit-e": {
+   "character": "milo",
+   "pose": "kid-sit-e",
+   "name": "Milo: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-milo-kid-kneel-craft": {
+   "character": "milo",
+   "pose": "kid-kneel-craft",
+   "name": "Milo: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-lila-kid-stand-desk": {
+   "character": "lila",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Lila: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-lila-kid-sit-desk": {
+   "character": "lila",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Lila: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-lila-kid-sit-floor": {
+   "character": "lila",
+   "pose": "kid-sit-floor",
+   "name": "Lila: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-lila-kid-read-floor": {
+   "character": "lila",
+   "pose": "kid-read-floor",
+   "name": "Lila: on the floor with a picture book",
+   "aids": []
+  },
+  "people-lila-kid-play-floor": {
+   "character": "lila",
+   "pose": "kid-play-floor",
+   "name": "Lila: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-lila-kid-stand": {
+   "character": "lila",
+   "pose": "kid-stand",
+   "name": "Lila: standing, showing something",
+   "aids": []
+  },
+  "people-lila-kid-stand-wait": {
+   "character": "lila",
+   "pose": "kid-stand-wait",
+   "name": "Lila: standing by",
+   "aids": []
+  },
+  "people-lila-kid-sit-k": {
+   "character": "lila",
+   "pose": "kid-sit-k",
+   "name": "Lila: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-lila-kid-sit-e": {
+   "character": "lila",
+   "pose": "kid-sit-e",
+   "name": "Lila: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-lila-kid-kneel-craft": {
+   "character": "lila",
+   "pose": "kid-kneel-craft",
+   "name": "Lila: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-theo-kid-stand-desk": {
+   "character": "theo",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Theo: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-theo-kid-sit-desk": {
+   "character": "theo",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Theo: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-theo-kid-sit-floor": {
+   "character": "theo",
+   "pose": "kid-sit-floor",
+   "name": "Theo: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-theo-kid-read-floor": {
+   "character": "theo",
+   "pose": "kid-read-floor",
+   "name": "Theo: on the floor with a picture book",
+   "aids": []
+  },
+  "people-theo-kid-play-floor": {
+   "character": "theo",
+   "pose": "kid-play-floor",
+   "name": "Theo: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-theo-kid-stand": {
+   "character": "theo",
+   "pose": "kid-stand",
+   "name": "Theo: standing, showing something",
+   "aids": []
+  },
+  "people-theo-kid-stand-wait": {
+   "character": "theo",
+   "pose": "kid-stand-wait",
+   "name": "Theo: standing by",
+   "aids": []
+  },
+  "people-theo-kid-sit-k": {
+   "character": "theo",
+   "pose": "kid-sit-k",
+   "name": "Theo: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-theo-kid-sit-e": {
+   "character": "theo",
+   "pose": "kid-sit-e",
+   "name": "Theo: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-theo-kid-kneel-craft": {
+   "character": "theo",
+   "pose": "kid-kneel-craft",
+   "name": "Theo: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-ines-kid-stand-desk": {
+   "character": "ines",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Ines: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-ines-kid-sit-desk": {
+   "character": "ines",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Ines: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-ines-kid-sit-floor": {
+   "character": "ines",
+   "pose": "kid-sit-floor",
+   "name": "Ines: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-ines-kid-read-floor": {
+   "character": "ines",
+   "pose": "kid-read-floor",
+   "name": "Ines: on the floor with a picture book",
+   "aids": []
+  },
+  "people-ines-kid-play-floor": {
+   "character": "ines",
+   "pose": "kid-play-floor",
+   "name": "Ines: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-ines-kid-stand": {
+   "character": "ines",
+   "pose": "kid-stand",
+   "name": "Ines: standing, showing something",
+   "aids": []
+  },
+  "people-ines-kid-stand-wait": {
+   "character": "ines",
+   "pose": "kid-stand-wait",
+   "name": "Ines: standing by",
+   "aids": []
+  },
+  "people-ines-kid-sit-k": {
+   "character": "ines",
+   "pose": "kid-sit-k",
+   "name": "Ines: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-ines-kid-sit-e": {
+   "character": "ines",
+   "pose": "kid-sit-e",
+   "name": "Ines: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-ines-kid-kneel-craft": {
+   "character": "ines",
+   "pose": "kid-kneel-craft",
+   "name": "Ines: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-grace-sit-floor": {
+   "character": "grace",
+   "pose": "sit-floor",
+   "name": "Grace: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-maya-sit-floor": {
+   "character": "maya",
+   "pose": "sit-floor",
+   "name": "Maya: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-sofia-sit-floor": {
+   "character": "sofia",
+   "pose": "sit-floor",
+   "name": "Sofia: sitting cross-legged on the floor",
    "aids": []
   }
  }

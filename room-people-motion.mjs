@@ -305,9 +305,10 @@ export class DeskActor {
         const key = m => { m.dz = (anchor - m.behind) / m.scale; m.key = this.rig.key(m.id, m.dz); return m.key; }, byHeight = (a, b) => (a.deskHeight ?? 0) - (b.deskHeight ?? 0);
         const sit = this.members.filter(m => m.role !== 'stand').map(key).sort(byHeight), stand = this.members.filter(m => m.role === 'stand').map(key).sort(byHeight);
         const up = this.members.find(m => m.role === 'stand');
-        this.keys = { sit, stand, wait: this.rig.key(`people-${this.character}-stand-wait`, up ? up.dz : 0) };
+        this.keys = { sit, stand, wait: this.rig.key(`people-${this.character}-stand-wait`, up ? up.dz : 0) || this.rig.key(`people-${this.character}-kid-stand-wait`, up ? up.dz : 0) };   // (children have their own standing-by posture)
         this.desc = deskDescription(sit.map(k => k.deskHeight), stand.map(k => k.deskHeight), stand.some(k => k.pose === 'stand-type-low'));
         // the same models as before (a film re-placing someone else): the person carries on from where they are
+        this.draws = this.members.length > 0 && this.members.every(m => /-kid-(stand|sit)-desk/.test(m.id));
         const sign = this.members.map(m => m.id + ':' + m.role).join();
         if (sign !== this.sign) { this.sign = sign; this.sim = null; this.state = null; this.height = null; }
         return this.members;
@@ -319,10 +320,11 @@ export class DeskActor {
     // or null), track: { seconds, heightAt(seconds), tiltAt(seconds) } (film), tilt (degrees now), dt (Studio, seconds
     // since the last call) }
     drive(input) {
-        const { height } = input, tilt = input.tilt || 0; let state;
+        // a child drawing at the desk works on the tilted top (up to a drafting 12 degrees): the hands stay on it
+        const { height } = input, tilt = this.draws && Math.abs(input.tilt || 0) <= 12 ? 0 : input.tilt || 0; let state;
         if (Number.isFinite(input.time)) {
             // (a desk held somewhere the track does not have it, a pose being previewed in the Director, is taken as it stands)
-            if (input.track && Math.abs(input.track.heightAt(input.time) - height) < .6) { if (!this.sim || this.sim.track !== input.track) { this.sim = simulateDesk(this.desc, input.track.heightAt, input.track.seconds, 60, input.track.tiltAt || null); this.sim.track = input.track; } state = this.sim.at(input.time); }
+            if (input.track && Math.abs(input.track.heightAt(input.time) - height) < .6) { if (!this.sim || this.sim.track !== input.track) { this.sim = simulateDesk(this.desc, input.track.heightAt, input.track.seconds, 60, this.draws ? null : input.track.tiltAt || null); this.sim.track = input.track; } state = this.sim.at(input.time); }
             else state = settleDesk(this.desc, height, tilt);    // a time without the desk's track: no history to stand up from
             this.state = state; this.clock = input.time;
         } else {
@@ -361,10 +363,11 @@ export function drawPose(rig, drawn, dz = 0, pose = null, hold = false) {
 // The posture as built with life in it: breathing, a head that drifts, a shift of weight for those on their feet
 // (feet pinned), typing fingers, a page turned by a reader. Hands that rest on something (keys, a table, a bench, a
 // stick) stay exactly where they are. key: rig.key(id). input: { time, seed, life: 0..1 }. Pure.
-const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-type-low': 'lr', 'wheel-type': 'lr', 'sit-laptop': 'lr', 'sit-write': 'lr', 'sit-listen': 'lr', 'sit-raise': 'l', 'stand-work': 'lr', 'cane-stand': 'r', 'wheel-roll': 'lr', 'wheel-watch': 'lr' };
+const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-type-low': 'lr', 'wheel-type': 'lr', 'sit-laptop': 'lr', 'sit-write': 'lr', 'sit-listen': 'lr', 'sit-raise': 'l', 'stand-work': 'lr', 'cane-stand': 'r', 'wheel-roll': 'lr', 'wheel-watch': 'lr',
+    'kid-stand-desk': 'lr', 'kid-sit-desk': 'lr', 'kid-sit-k': 'lr', 'kid-sit-e': 'lr', 'kid-kneel-craft': 'lr', 'kid-play-floor': 'lr' };
 const TYPES = new Set(['sit-type', 'stand-type', 'stand-type-low', 'wheel-type', 'sit-laptop']);
-const ON_FEET = new Set(['stand-type', 'stand-type-low', 'stand-wait', 'stand-phone', 'stand-present', 'stand-work', 'stand-paint', 'cane-stand']);
-const INTENT = new Set(['sit-read', 'sit-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller']);      // eyes on what the hands hold
+const ON_FEET = new Set(['stand-type', 'stand-type-low', 'stand-wait', 'stand-phone', 'stand-present', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk']);
+const INTENT = new Set(['sit-read', 'sit-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor']);      // eyes on what the hands hold
 export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane';
 export function solveStill(rig, key, input) {
     const time = input.time ?? 0, seed = input.seed | 0, life = input.life ?? 1, b = rig.b, pose = key.pose;

@@ -20,12 +20,15 @@
 //                                                     (`turn` degrees to correct a model; `along` / `depth` mm to slide)
 //   { id, near: [x, z], face: [x, z] }                seated on the chair nearest that spot, facing a point (a table)
 //   { id, by: '<prop id>', reach }                    standing in front of that furniture, facing it
+//   { id, around: ['<prop id>', degrees, mm] }        round a rug, a mat or a table: at that angle and distance from its middle, facing it
 //   { id, at: [x, z], turn, y }                       at a spot (y mm lifts a seated pose onto a seat that is not a prop)
 //   scale: n                                          a factor on the model's size (any placement; 1 = as built)
 //   colors: { top, bottom, shoes, hair: '#rrggbb' }   recolours those parts of the model (the fabric's shading is kept)
 //   pose: { '<bone>': [x, y, z, w] }                  fine tuning: turns that bone of the model's skeleton from the pose it
 //                                                     was built in (a quaternion in the bone's own frame; the Director's
 //                                                     pose mode writes these). Only such a person is drawn skinned.
+//   chair: false                                      at a desk: seated on the room's own kind of seat (a copy of the desk's stool or
+//                                                     study chair, under the child), not on the adults' task chair
 //   seat: mm                                          the seat height the pose was built for; the person is raised or
 //                                                     lowered (a little) onto the real seat
 //   walk: { path: [[x, z], ...] | to: [x, z], start: seconds, pace: steps a second, then: '<model id>' }
@@ -38,7 +41,7 @@
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261111b';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261111c';
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
@@ -105,6 +108,7 @@ const LOOK = {
     hale: { top: '#33465e', bottom: '#2d3036' }, ava: { top: '#2f5f8f', bottom: '#d8d2c4' }, kaiLab: { top: '#3a3d44', bottom: '#5b6470' },
     homeNight: { top: '#5d6b7a', bottom: '#2a2c33' }, benStudio: { top: '#7a5a3a', bottom: '#2b2d33' }, benSchool: { top: '#3d5a4a', bottom: '#30323a' }, graceSchool: { top: '#6a4d7d', bottom: '#2c2a33' }, graceShop: { top: '#3f6a6a', bottom: '#33302c' },
     omarStudio: { top: '#8a3f3a', bottom: '#2a2c31' }, omarSchool: { top: '#2f4d7a', bottom: '#2c2f36' }, omarShop: { top: '#4a5a3a', bottom: '#2b2b2b' },
+    teacherK: { top: '#3f7a6b', bottom: '#2c2f38' }, teacherE: { top: '#8a5a3a', bottom: '#2a2d35' },
     guestA: { top: '#e2c26a', bottom: '#2f3440' }, guestB: { top: '#3f6b4f', bottom: '#d9d3c7' }, guestC: { top: '#8a4a7a', bottom: '#22252b' },
     guestD: { top: '#d76f4a', bottom: '#3a3f4a' }, guestE: { top: '#efe9df', bottom: '#4b3a33' }
 };
@@ -242,6 +246,64 @@ export const ROOM_PEOPLE = {
             
             spot('people-leo-stand-drink', 650, 450, [0, -4225], PARTY), spot('people-eli-stand-drink', 1600, 800, [0, -4225], { ...PARTY, colors: LOOK.guestD }),
             spot('people-ben-stand-drink', -2300, 900, [0, -4225], PARTY)] : []
+    ],
+    // The growing child's room: who lives in it follows the age stage of the layout (L.ageStage), and each hour its
+    // own activity (child-growth-profiles.mjs labels them). The youngest stand at the desk on its lowest setting; school
+    // children sit on the room's own stool. Nobody is shown at night: the child is asleep.
+    childroom: [
+        L => {
+            const age = L.ageStage || 'early', [px, pz] = L.play || [0, 2000], [rx, rz] = L.reading || [-1100, 3000], [dx, dz] = L.desk || [1000, -300];
+            if (age === 'early') return [
+                spot('people-tess-kid-play-floor', px - 260, pz - 120, [px + 300, pz + 150], { modes: ['morning'] }),
+                { id: 'people-tess-kid-stand-desk', desk: 'stand', reach: 540, modes: ['afternoon'] },
+                spot('people-tess-kid-sit-floor', rx + 760, rz - 420, [rx + 100, rz - 100], { modes: ['evening'] }),
+                spot('people-grace-sit-floor', rx + 420, rz - 900, [rx + 760, rz - 420], { modes: ['evening'], colors: { top: '#7d5a6b' } }),   // the grown-up who shares the story, down on the rug with her
+                spot('people-tess-kid-play-floor', px - 320, pz - 60, [px + 250, pz + 40], { key: 'tess-plays-with-a-friend', modes: ['party'] }),
+                spot('people-ravi-kid-sit-floor', px + 480, pz + 120, [px - 150, pz], { modes: ['party'] })];
+            if (age === 'primary') return [
+                spot('people-nora-kid-stand', dx - 900, dz + 1250, [dx - 200, dz + 700], { modes: ['morning'] }),
+                { id: 'people-nora-kid-sit-desk', desk: 'sit', chair: false, modes: ['afternoon'] },
+                spot('people-nora-kid-read-floor', rx + 700, rz - 500, [rx + 1500, rz - 1200], { modes: ['evening'] }),
+                spot('people-nora-kid-play-floor', px - 250, pz + 50, [px + 450, pz + 120], { key: 'nora-builds', modes: ['party'] }),
+                spot('people-jun-kid-sit-floor', px + 600, pz + 150, [px, pz + 80], { modes: ['party'] })];
+            if (age === 'preteen') return [
+                spot('people-jun-kid-stand', dx - 900, dz + 1250, [dx - 200, dz + 700], { modes: ['morning'] }),
+                { id: 'people-jun-kid-sit-desk', desk: 'sit', chair: false, modes: ['afternoon', 'evening'] },
+                spot('people-jun-kid-sit-floor', px - 250, pz + 50, [px + 450, pz + 120], { key: 'jun-with-a-friend', modes: ['party'] }),
+                spot('people-ines-kid-sit-floor', px + 600, pz + 150, [px, pz + 80], { modes: ['party'] })];
+            // High school and college: the room's young person at the desk (an adult's chair and postures), a friend over at the party.
+            const who = age === 'teen' ? 'mia' : 'noah', friend = age === 'teen' ? 'people-zoe-stand-phone' : 'people-eli-stand-drink';
+            return [...crewOf(who, age === 'teen' ? ['morning', 'afternoon', 'evening', 'party'] : ['morning', 'afternoon', 'evening', 'night', 'party']),
+                { id: friend, beside: [1150, 650], modes: ['party'] }];
+        }
+    ],
+    // Kindergarten: circle time on the rug with the teacher in the rocker, discovery at the table, the light table and the
+    // easel, a parent and child at the family evening, nobody during the room reset.
+    kindergarten: [
+        { id: 'people-sofia-sit-read', on: 'story-rocker', seat: 420, modes: ['morning'], colors: LOOK.teacherK },
+        { id: 'people-tess-kid-sit-floor', around: ['circle-rug', 200, 560], modes: ['morning'] }, { id: 'people-milo-kid-sit-floor', around: ['circle-rug', 140, 600], modes: ['morning'] },
+        { id: 'people-lila-kid-sit-floor', around: ['circle-rug', 255, 580], modes: ['morning'] }, { id: 'people-ravi-kid-sit-floor', around: ['circle-rug', 90, 620], modes: ['morning'] },
+        { id: 'people-lila-kid-sit-k', on: 'student-chair-0-0', seat: 260, turn: 180, depth: 30, modes: ['afternoon', 'party'] },
+        { id: 'people-milo-kid-sit-k', on: 'student-chair-1-1', seat: 260, turn: 180, depth: 30, modes: ['afternoon', 'party'] },
+        { id: 'people-ravi-kid-sit-k', on: 'student-chair-2-0', seat: 260, turn: 180, depth: 30, modes: ['afternoon'] },
+        { id: 'people-tess-kid-stand-desk', station: 'art-easel', desk: 'stand', reach: 640, modes: ['afternoon'] },
+        { id: 'people-sofia-stand-low', desk: 'stand', modes: ['afternoon', 'party'], colors: LOOK.teacherK }, ...crewOf('sofia', ['afternoon', 'evening', 'party'], { colors: LOOK.teacherK }),
+        { id: 'people-maya-stand-talk', around: ['circle-rug', 0, 1000], modes: ['evening'], colors: LOOK.homeParty }, { id: 'people-tess-kid-stand', around: ['circle-rug', 40, 650], modes: ['evening'] },
+        { id: 'people-grace-sit-floor', around: ['circle-rug', 170, 520], modes: ['party'], colors: { top: '#7d5a6b' } }, { id: 'people-tess-kid-read-floor', around: ['circle-rug', 250, 380], modes: ['party'] }
+    ],
+    // Elementary school: morning reading on the meeting carpet, project time at the table pods and the science window,
+    // a family evening, the teacher planning alone at night, the class on its feet at the workshop.
+    elementary: [
+        { id: 'people-nora-kid-read-floor', around: ['meeting-carpet', 310, 750], modes: ['morning'] }, { id: 'people-theo-kid-read-floor', around: ['meeting-carpet', 50, 750], modes: ['morning'] },
+        { id: 'people-ines-kid-read-floor', around: ['meeting-carpet', 0, 900], modes: ['morning'] }, { id: 'people-jun-kid-sit-floor', around: ['meeting-carpet', 95, 520], modes: ['morning'] },
+        { id: 'people-lin-stand-low', desk: 'stand', modes: ['morning'], colors: LOOK.teacherE }, ...crewOf('lin', ['morning', 'afternoon', 'evening', 'night'], { colors: LOOK.teacherE }),
+        { id: 'people-nora-kid-sit-e', on: 'student-chair-A-0', seat: 360, turn: 180, depth: 30, modes: ['afternoon', 'party'] }, { id: 'people-theo-kid-sit-e', on: 'student-chair-A-2', seat: 360, turn: 180, depth: 30, modes: ['afternoon'] },
+        { id: 'people-ines-kid-sit-e', on: 'student-chair-B-1', seat: 360, turn: 180, depth: 30, modes: ['afternoon', 'party'] }, { id: 'people-ravi-kid-sit-e', on: 'student-chair-B-3', seat: 360, turn: 180, depth: 30, modes: ['afternoon'] },
+        { id: 'people-lila-kid-sit-e', on: 'student-chair-C-0', seat: 360, turn: 180, depth: 30, modes: ['afternoon'] },
+        { id: 'people-jun-kid-stand-desk', station: 'science-window', desk: 'stand', reach: 700, modes: ['afternoon'] },
+        { id: 'people-noah-stand-talk', around: ['meeting-carpet', 10, 1500], modes: ['evening'], colors: LOOK.guestE }, { id: 'people-ines-kid-stand', around: ['meeting-carpet', 30, 1100], modes: ['evening'] },
+        { id: 'people-lin-stand-talk', around: ['meeting-carpet', 0, 1350], modes: ['party'], colors: LOOK.teacherE },
+        { id: 'people-jun-kid-stand', around: ['meeting-carpet', 75, 650], modes: ['party'] }, { id: 'people-theo-kid-stand', around: ['meeting-carpet', 285, 650], modes: ['party'] }, { id: 'people-lila-kid-stand-wait', around: ['meeting-carpet', 330, 800], modes: ['party'] }
     ],
     library: [
         // The commons: opening with Andre standing at the pilot desk, research together after lunch (Rosa at the desk's
@@ -478,7 +540,7 @@ export class RoomPeople {
         await room.ready; await this.library.loadIndex();
         const specs = this.withFamilies(this.specs());
         const load = async id => { try { return await this.library.instance(id); } catch (error) { console.warn('[people] ' + id + ' did not load:', error?.message || error); return null; } };
-        const loaded = await Promise.all(specs.map(async spec => ({ spec, object: await load(spec.id), chair: spec.desk === 'sit' ? await load(TASK_CHAIR) : null })));
+        const loaded = await Promise.all(specs.map(async spec => ({ spec, object: await load(spec.id), chair: spec.desk === 'sit' && spec.chair !== false ? await load(TASK_CHAIR) : null })));
         const posed = [];
         // (a cast that was replaced while its models loaded is dropped: its people would stay in the room for good)
         if (token !== room.token || root !== room.root || cast !== this.generation) return;
@@ -563,12 +625,12 @@ export class RoomPeople {
     // A fixed placement: on a seat, by a piece of furniture, or at a spot.
     settle(object, spec) {
         let anchor = null;
-        if (spec.on || spec.by) { const [id, n] = [].concat(spec.on || spec.by); anchor = this.props(id)[n || 0] || null; }
+        if (spec.on || spec.by || spec.around) { const [id, n] = [].concat(spec.on || spec.by || spec.around[0]); anchor = this.props(id)[n || 0] || null; }
         else if (spec.near) {
             const spot = new THREE.Vector3(spec.near[0], 0, spec.near[1]);
             anchor = this.room.assets().filter(o => CHAIRS.test((o.userData.propId || '') + ' ' + (o.userData.decorUpgrade || ''))).map(o => ({ o, d: this.centreOf(o).setY(0).distanceTo(spot) })).filter(c => c.d < 450).sort((a, b) => a.d - b.d)[0]?.o || null;
         }
-        if ((spec.on || spec.by || spec.near) && !anchor) { object.userData.personMissing = true; return; }
+        if ((spec.on || spec.by || spec.near || spec.around) && !anchor) { object.userData.personMissing = true; return; }
         object.userData.personMissing = false; object.userData.personAnchor = anchor; object.userData.personAnchorAt = anchor && this.anchorKey(anchor);
         const turn = THREE.MathUtils.degToRad(spec.turn || 0);
         if (spec.on || spec.near) {
@@ -576,6 +638,10 @@ export class RoomPeople {
             if (spec.face) yaw = Math.atan2(spec.face[0] - centre.x, spec.face[1] - centre.z);
             const side = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
             object.position.copy(centre).addScaledVector(side, spec.along || 0).addScaledVector(frontOf(yaw), spec.depth ?? 60); object.position.y = 0; object.rotation.y = yaw;
+        } else if (spec.around) {
+            // round a rug, a mat or a table: at that angle (degrees, 0 = the room's front side of it) and distance (mm) from its middle, facing it
+            const centre = this.centreOf(anchor), a = THREE.MathUtils.degToRad(spec.around[1] || 0), r = spec.around[2] ?? 600;
+            object.position.set(centre.x + Math.sin(a) * r, 0, centre.z + Math.cos(a) * r); object.rotation.y = a + Math.PI + turn;
         } else if (spec.by) {
             const yaw = this.yawOf(anchor); object.position.copy(this.room.root.worldToLocal(anchor.getWorldPosition(new THREE.Vector3()))).addScaledVector(frontOf(yaw), spec.reach ?? 600); object.position.y = 0;
             object.rotation.y = yaw + Math.PI + turn - Math.PI * (spec.turn ? 1 : 0);
@@ -593,7 +659,7 @@ export class RoomPeople {
     resettle(mode) {
         const again = mode !== this.settledMode; this.settledMode = mode;
         for (const object of this.people) {
-            const spec = object.userData.person; if (spec.desk || spec.station || spec.beside || !(spec.on || spec.by || spec.near) || this.filter?.place?.[this.keyOf(spec)] || this.filter?.place?.[spec.id]) continue;
+            const spec = object.userData.person; if (spec.desk || spec.station || spec.beside || !(spec.on || spec.by || spec.near || spec.around) || this.filter?.place?.[this.keyOf(spec)] || this.filter?.place?.[spec.id]) continue;
             const anchor = object.userData.personAnchor;
             if (again || !anchor || this.anchorKey(anchor) !== object.userData.personAnchorAt) this.settle(object, spec);
         }
@@ -737,6 +803,7 @@ export class RoomPeople {
         for (const actor of driven) this.chairOf(actor, state);
         this.liven(time, dt, now);
         this.clearChairs();
+        this.seatChildren();
     }
     // Life in the people who stay where they are (room-people-motion.mjs solveStill): breathing, a drifting head, a
     // shift of weight, typing fingers, a page turned. They are drawn skinned for it. In a film everyone in the shot;
@@ -901,9 +968,32 @@ export class RoomPeople {
             else if (!blocked && this.hidden.has(chair)) { chair.visible = this.hidden.get(chair); this.hidden.delete(chair); }
         }
     }
-    restoreChairs() { for (const [chair, visible] of this.hidden) chair.visible = visible; this.hidden.clear(); }
+    restoreChairs() { for (const [chair, visible] of this.hidden) chair.visible = visible; this.hidden.clear(); this.returnSeats(); }
+    // A child at the desk sits on the room's own seat (chair: false), which the room keeps where its story has it
+    // (pushed back, turned away from the desk). Like the adults' task chair, the seat under the child is the people's
+    // own: a copy of the room's seat, under them and facing the desk with them, while the room's (hidden by
+    // clearChairs) stays where it is, so nothing the Studio saves about the room's furniture changes.
+    seatChildren() {
+        const seats = this.kidSeats ||= new Map();
+        for (const person of this.people) {
+            const spec = person.userData.person, on = person.visible && spec.desk === 'sit' && spec.chair === false; let seat = seats.get(person);
+            if (!on) { if (seat) seat.copy.visible = false; continue; }
+            if (!seat || seat.mode !== this.modeNow || !seat.source.parent) {
+                seat?.copy.removeFromParent(); seats.delete(person);
+                const at = this.room.root.worldToLocal(person.getWorldPosition(new THREE.Vector3())).setY(0);
+                const source = this.room.assets().filter(c => (c.visible || this.hidden.has(c)) && CHAIRS.test((c.userData.propId || '') + ' ' + (c.userData.decorUpgrade || '')) && !/armchair|lounge|sofa|student-chair|^lived-/i.test(c.userData.propId || ''))   // (lived-chair-…: the clothes over the chair back, part of the chair)
+                    .map(c => ({ c, d: this.centreOf(c).setY(0).distanceTo(at) })).filter(x => x.d < 1600).sort((a, b) => a.d - b.d)[0]?.c;
+                if (!source) continue;
+                const copy = source.clone(true); copy.traverse(o => { o.userData = {}; }); copy.name = 'The seat under ' + (spec.key || spec.id);
+                person.parent.add(copy); seat = { source, copy, mode: this.modeNow, y: source.position.y }; seats.set(person, seat);
+            }
+            seat.copy.visible = true; seat.copy.position.set(person.position.x, seat.y, person.position.z); seat.copy.rotation.set(0, person.rotation.y, 0);   // (the child's seats face +z, as the child does)
+        }
+    }
+    returnSeats() { for (const seat of (this.kidSeats || new Map()).values()) seat.copy.visible = false; }
     dispose() {
         this.restoreChairs();
+        for (const seat of (this.kidSeats || new Map()).values()) seat.copy.removeFromParent(); this.kidSeats?.clear();
         for (const object of this.people) { object.userData.personChair?.removeFromParent(); object.removeFromParent(); for (const m of object.userData.personMaterials || []) m.dispose(); object.traverse(o => o.skeleton?.dispose?.()); }
         this.people = []; this.built = null; this.actors = []; this.pairs = []; this.generation++;
     }

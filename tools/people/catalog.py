@@ -42,7 +42,7 @@ for cid, c in cast.CHARACTERS.items():
     tall = max((p['size'][1] for p in built.values() if p['person']['character'] == cid and cast.POSE_INFO.get(p['person']['pose'], ('', ''))[1] in ('standing', 'walking') and not p['person']['pose'].startswith('stretch')), default=None)
     colors = {role(g): hexc(v) for g, v in (c.get('tint') or {}).items()}
     if c.get('hair_tint'): colors['hair'] = hexc(c['hair_tint'])
-    characters[cid] = {'name': c['name'], 'sex': 'woman' if ph['gender'] < .5 else 'man', 'age': age_group(y), 'years': round(y), 'heritage': heritage(ph['race']),
+    characters[cid] = {'name': c['name'], 'sex': ('girl' if ph['gender'] < .5 else 'boy') if y < 13 else 'woman' if ph['gender'] < .5 else 'man', 'age': age_group(y), 'years': round(y), 'heritage': heritage(ph['race']),
                        'height': round(tall / 10) if tall else round((1.287 * ph['height'] + (.87 if ph['gender'] < .5 else 1.16)) * 100),
                        'outfit': c.get('clothes', []), 'colors': colors}
 poses = {pid: {'label': label, 'stance': stance, 'desk': where == 'desk', 'seat': seat, **({'heights': list(cast.DESK_HEIGHTS[pid])} if pid in cast.DESK_HEIGHTS else {})}

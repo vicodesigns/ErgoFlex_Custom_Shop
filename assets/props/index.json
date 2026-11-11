@@ -53505,6 +53505,2761 @@
     "pose": "stand-low",
     "deskHeight": 35.5
    }
+  },
+  {
+   "id": "people-tess-kid-play-floor",
+   "name": "Tess: kneeling, building on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tess-kid-play-floor.glb",
+   "anchor": "floor",
+   "size": [
+    245.6,
+    655.9,
+    594.9
+   ],
+   "min": [
+    -123.1,
+    0,
+    -275.4
+   ],
+   "max": [
+    122.5,
+    655.9,
+    319.5
+   ],
+   "tris": 32684,
+   "bytes": 1139148,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tess",
+    "pose": "kid-play-floor"
+   }
+  },
+  {
+   "id": "people-tess-kid-stand-desk",
+   "name": "Tess: drawing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tess-kid-stand-desk.glb",
+   "anchor": "floor",
+   "size": [
+    354.6,
+    1033.5,
+    392.9
+   ],
+   "min": [
+    -165,
+    0,
+    -77.5
+   ],
+   "max": [
+    189.6,
+    1033.5,
+    315.4
+   ],
+   "tris": 34364,
+   "bytes": 1151504,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tess",
+    "pose": "kid-stand-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-ravi-kid-read-floor",
+   "name": "Ravi: on the floor with a picture book",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ravi-kid-read-floor.glb",
+   "anchor": "floor",
+   "size": [
+    492,
+    638.3,
+    443.4
+   ],
+   "min": [
+    -228.9,
+    0,
+    -93.6
+   ],
+   "max": [
+    263.1,
+    638.3,
+    349.8
+   ],
+   "tris": 34166,
+   "bytes": 842624,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ravi",
+    "pose": "kid-read-floor"
+   }
+  },
+  {
+   "id": "people-nora-kid-sit-desk",
+   "name": "Nora: drawing at the desk, on the stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nora-kid-sit-desk.glb",
+   "anchor": "floor",
+   "size": [
+    487.8,
+    1041.8,
+    476.5
+   ],
+   "min": [
+    -225.5,
+    0,
+    -104.2
+   ],
+   "max": [
+    262.3,
+    1041.8,
+    372.3
+   ],
+   "tris": 38052,
+   "bytes": 1379448,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nora",
+    "pose": "kid-sit-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-jun-kid-stand",
+   "name": "Jun: standing, showing something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jun-kid-stand.glb",
+   "anchor": "floor",
+   "size": [
+    454,
+    1383.3,
+    373
+   ],
+   "min": [
+    -235.7,
+    0,
+    -97.4
+   ],
+   "max": [
+    218.3,
+    1383.3,
+    275.6
+   ],
+   "tris": 34036,
+   "bytes": 821624,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jun",
+    "pose": "kid-stand"
+   }
+  },
+  {
+   "id": "people-ravi-kid-sit-e",
+   "name": "Ravi: drawing at an elementary school table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ravi-kid-sit-e.glb",
+   "anchor": "floor",
+   "size": [
+    433.1,
+    933.4,
+    428.7
+   ],
+   "min": [
+    -190.5,
+    0,
+    -82.2
+   ],
+   "max": [
+    242.6,
+    933.4,
+    346.5
+   ],
+   "tris": 34414,
+   "bytes": 842644,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ravi",
+    "pose": "kid-sit-e"
+   }
+  },
+  {
+   "id": "people-tess-kid-sit-desk",
+   "name": "Tess: drawing at the desk, on the stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tess-kid-sit-desk.glb",
+   "anchor": "floor",
+   "size": [
+    365.9,
+    805.6,
+    356.9
+   ],
+   "min": [
+    -166.3,
+    0,
+    -84.4
+   ],
+   "max": [
+    199.6,
+    805.6,
+    272.5
+   ],
+   "tris": 34310,
+   "bytes": 1154480,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tess",
+    "pose": "kid-sit-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-tess-kid-sit-floor",
+   "name": "Tess: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tess-kid-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    391,
+    596.1,
+    381.2
+   ],
+   "min": [
+    -195.5,
+    0,
+    -91.7
+   ],
+   "max": [
+    195.5,
+    596.1,
+    289.5
+   ],
+   "tris": 28842,
+   "bytes": 1114412,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tess",
+    "pose": "kid-sit-floor"
+   }
+  },
+  {
+   "id": "people-tess-kid-read-floor",
+   "name": "Tess: on the floor with a picture book",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tess-kid-read-floor.glb",
+   "anchor": "floor",
+   "size": [
+    422,
+    560.3,
+    381.5
+   ],
+   "min": [
+    -170,
+    0,
+    -92
+   ],
+   "max": [
+    252,
+    560.3,
+    289.5
+   ],
+   "tris": 33166,
+   "bytes": 1148104,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tess",
+    "pose": "kid-read-floor"
+   }
+  },
+  {
+   "id": "people-tess-kid-stand",
+   "name": "Tess: standing, showing something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tess-kid-stand.glb",
+   "anchor": "floor",
+   "size": [
+    331,
+    1028.2,
+    295.1
+   ],
+   "min": [
+    -170.8,
+    0,
+    -90.7
+   ],
+   "max": [
+    160.2,
+    1028.2,
+    204.4
+   ],
+   "tris": 33770,
+   "bytes": 1146316,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tess",
+    "pose": "kid-stand"
+   }
+  },
+  {
+   "id": "people-tess-kid-stand-wait",
+   "name": "Tess: standing by",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tess-kid-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    343.4,
+    1012.7,
+    264.1
+   ],
+   "min": [
+    -178.2,
+    0,
+    -104.5
+   ],
+   "max": [
+    165.2,
+    1012.7,
+    159.6
+   ],
+   "tris": 31658,
+   "bytes": 1133384,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tess",
+    "pose": "kid-stand-wait"
+   }
+  },
+  {
+   "id": "people-tess-kid-sit-k",
+   "name": "Tess: drawing at a kindergarten table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tess-kid-sit-k.glb",
+   "anchor": "floor",
+   "size": [
+    361.6,
+    765.6,
+    380.5
+   ],
+   "min": [
+    -150.2,
+    0,
+    -83.9
+   ],
+   "max": [
+    211.4,
+    765.6,
+    296.6
+   ],
+   "tris": 34026,
+   "bytes": 1153980,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tess",
+    "pose": "kid-sit-k"
+   }
+  },
+  {
+   "id": "people-tess-kid-sit-e",
+   "name": "Tess: drawing at an elementary school table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tess-kid-sit-e.glb",
+   "anchor": "floor",
+   "size": [
+    361.6,
+    864.3,
+    383.1
+   ],
+   "min": [
+    -150.2,
+    0,
+    -86.5
+   ],
+   "max": [
+    211.4,
+    864.3,
+    296.6
+   ],
+   "tris": 34074,
+   "bytes": 1153068,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tess",
+    "pose": "kid-sit-e"
+   }
+  },
+  {
+   "id": "people-tess-kid-kneel-craft",
+   "name": "Tess: kneeling at a low craft table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tess-kid-kneel-craft.glb",
+   "anchor": "floor",
+   "size": [
+    383.6,
+    767.7,
+    565.9
+   ],
+   "min": [
+    -188.9,
+    0,
+    -270.9
+   ],
+   "max": [
+    194.7,
+    767.7,
+    295
+   ],
+   "tris": 32862,
+   "bytes": 1141336,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tess",
+    "pose": "kid-kneel-craft"
+   }
+  },
+  {
+   "id": "people-ravi-kid-stand-desk",
+   "name": "Ravi: drawing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ravi-kid-stand-desk.glb",
+   "anchor": "floor",
+   "size": [
+    362.8,
+    1215.6,
+    475.1
+   ],
+   "min": [
+    -171.7,
+    0,
+    -108.4
+   ],
+   "max": [
+    191.1,
+    1215.6,
+    366.7
+   ],
+   "tris": 34706,
+   "bytes": 841080,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ravi",
+    "pose": "kid-stand-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-ravi-kid-sit-desk",
+   "name": "Ravi: drawing at the desk, on the stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ravi-kid-sit-desk.glb",
+   "anchor": "floor",
+   "size": [
+    432.7,
+    945,
+    397.6
+   ],
+   "min": [
+    -198.3,
+    0,
+    -82.8
+   ],
+   "max": [
+    234.4,
+    945,
+    314.8
+   ],
+   "tris": 34840,
+   "bytes": 844772,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ravi",
+    "pose": "kid-sit-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-ravi-kid-sit-floor",
+   "name": "Ravi: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ravi-kid-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    448.1,
+    694,
+    442.9
+   ],
+   "min": [
+    -228.9,
+    0,
+    -93.1
+   ],
+   "max": [
+    219.2,
+    694,
+    349.8
+   ],
+   "tris": 31470,
+   "bytes": 820628,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ravi",
+    "pose": "kid-sit-floor"
+   }
+  },
+  {
+   "id": "people-ravi-kid-play-floor",
+   "name": "Ravi: kneeling, building on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ravi-kid-play-floor.glb",
+   "anchor": "floor",
+   "size": [
+    325.9,
+    703.1,
+    722.9
+   ],
+   "min": [
+    -163.3,
+    0,
+    -345
+   ],
+   "max": [
+    162.6,
+    703.1,
+    377.9
+   ],
+   "tris": 32662,
+   "bytes": 826940,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ravi",
+    "pose": "kid-play-floor"
+   }
+  },
+  {
+   "id": "people-ravi-kid-stand",
+   "name": "Ravi: standing, showing something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ravi-kid-stand.glb",
+   "anchor": "floor",
+   "size": [
+    400.9,
+    1221.8,
+    337.5
+   ],
+   "min": [
+    -208.2,
+    0,
+    -93.5
+   ],
+   "max": [
+    192.7,
+    1221.8,
+    244
+   ],
+   "tris": 34438,
+   "bytes": 836796,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ravi",
+    "pose": "kid-stand"
+   }
+  },
+  {
+   "id": "people-ravi-kid-stand-wait",
+   "name": "Ravi: standing by",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ravi-kid-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    386.6,
+    1204.7,
+    328.4
+   ],
+   "min": [
+    -193.5,
+    0,
+    -131.2
+   ],
+   "max": [
+    193.1,
+    1204.7,
+    197.2
+   ],
+   "tris": 32906,
+   "bytes": 828652,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ravi",
+    "pose": "kid-stand-wait"
+   }
+  },
+  {
+   "id": "people-ravi-kid-sit-k",
+   "name": "Ravi: drawing at a kindergarten table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ravi-kid-sit-k.glb",
+   "anchor": "floor",
+   "size": [
+    433.1,
+    834.5,
+    425.3
+   ],
+   "min": [
+    -190.5,
+    0,
+    -78.8
+   ],
+   "max": [
+    242.6,
+    834.5,
+    346.5
+   ],
+   "tris": 34384,
+   "bytes": 843240,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ravi",
+    "pose": "kid-sit-k"
+   }
+  },
+  {
+   "id": "people-ravi-kid-kneel-craft",
+   "name": "Ravi: kneeling at a low craft table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ravi-kid-kneel-craft.glb",
+   "anchor": "floor",
+   "size": [
+    406.1,
+    852.2,
+    676.9
+   ],
+   "min": [
+    -199.6,
+    0,
+    -335.6
+   ],
+   "max": [
+    206.5,
+    852.2,
+    341.3
+   ],
+   "tris": 33038,
+   "bytes": 830772,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ravi",
+    "pose": "kid-kneel-craft"
+   }
+  },
+  {
+   "id": "people-nora-kid-stand-desk",
+   "name": "Nora: drawing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nora-kid-stand-desk.glb",
+   "anchor": "floor",
+   "size": [
+    333.2,
+    1372.8,
+    484.2
+   ],
+   "min": [
+    -164.2,
+    0,
+    -95.6
+   ],
+   "max": [
+    169,
+    1372.8,
+    388.6
+   ],
+   "tris": 38060,
+   "bytes": 1376188,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nora",
+    "pose": "kid-stand-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-nora-kid-sit-floor",
+   "name": "Nora: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nora-kid-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    517,
+    757.6,
+    501.4
+   ],
+   "min": [
+    -258.5,
+    0,
+    -114.8
+   ],
+   "max": [
+    258.5,
+    757.6,
+    386.6
+   ],
+   "tris": 33482,
+   "bytes": 1346700,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nora",
+    "pose": "kid-sit-floor"
+   }
+  },
+  {
+   "id": "people-nora-kid-read-floor",
+   "name": "Nora: on the floor with a picture book",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nora-kid-read-floor.glb",
+   "anchor": "floor",
+   "size": [
+    511.2,
+    723.1,
+    501.8
+   ],
+   "min": [
+    -239.8,
+    0,
+    -115.2
+   ],
+   "max": [
+    271.4,
+    723.1,
+    386.6
+   ],
+   "tris": 36864,
+   "bytes": 1371796,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nora",
+    "pose": "kid-read-floor"
+   }
+  },
+  {
+   "id": "people-nora-kid-play-floor",
+   "name": "Nora: kneeling, building on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nora-kid-play-floor.glb",
+   "anchor": "floor",
+   "size": [
+    335.6,
+    871.3,
+    769.9
+   ],
+   "min": [
+    -167.8,
+    0,
+    -376.6
+   ],
+   "max": [
+    167.8,
+    871.3,
+    393.3
+   ],
+   "tris": 36556,
+   "bytes": 1364696,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nora",
+    "pose": "kid-play-floor"
+   }
+  },
+  {
+   "id": "people-nora-kid-stand",
+   "name": "Nora: standing, showing something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nora-kid-stand.glb",
+   "anchor": "floor",
+   "size": [
+    454.2,
+    1379.7,
+    393.8
+   ],
+   "min": [
+    -232.7,
+    0,
+    -120.7
+   ],
+   "max": [
+    221.5,
+    1379.7,
+    273.1
+   ],
+   "tris": 37760,
+   "bytes": 1371584,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nora",
+    "pose": "kid-stand"
+   }
+  },
+  {
+   "id": "people-nora-kid-stand-wait",
+   "name": "Nora: standing by",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nora-kid-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    443.2,
+    1367.5,
+    301.6
+   ],
+   "min": [
+    -221.6,
+    0,
+    -116.6
+   ],
+   "max": [
+    221.6,
+    1367.5,
+    185
+   ],
+   "tris": 36812,
+   "bytes": 1367164,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nora",
+    "pose": "kid-stand-wait"
+   }
+  },
+  {
+   "id": "people-nora-kid-sit-k",
+   "name": "Nora: drawing at a kindergarten table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nora-kid-sit-k.glb",
+   "anchor": "floor",
+   "size": [
+    495.2,
+    904.7,
+    487.6
+   ],
+   "min": [
+    -220.6,
+    0,
+    -100.8
+   ],
+   "max": [
+    274.6,
+    904.7,
+    386.8
+   ],
+   "tris": 37804,
+   "bytes": 1378496,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nora",
+    "pose": "kid-sit-k"
+   }
+  },
+  {
+   "id": "people-nora-kid-sit-e",
+   "name": "Nora: drawing at an elementary school table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nora-kid-sit-e.glb",
+   "anchor": "floor",
+   "size": [
+    495.2,
+    1004.6,
+    492.4
+   ],
+   "min": [
+    -220.6,
+    0,
+    -103.7
+   ],
+   "max": [
+    274.6,
+    1004.6,
+    388.7
+   ],
+   "tris": 37942,
+   "bytes": 1378536,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nora",
+    "pose": "kid-sit-e"
+   }
+  },
+  {
+   "id": "people-nora-kid-kneel-craft",
+   "name": "Nora: kneeling at a low craft table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nora-kid-kneel-craft.glb",
+   "anchor": "floor",
+   "size": [
+    452.4,
+    993.4,
+    746.9
+   ],
+   "min": [
+    -222.5,
+    0,
+    -371.3
+   ],
+   "max": [
+    229.9,
+    993.4,
+    375.6
+   ],
+   "tris": 36766,
+   "bytes": 1367848,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nora",
+    "pose": "kid-kneel-craft"
+   }
+  },
+  {
+   "id": "people-jun-kid-stand-desk",
+   "name": "Jun: drawing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jun-kid-stand-desk.glb",
+   "anchor": "floor",
+   "size": [
+    376.5,
+    1378.3,
+    486.8
+   ],
+   "min": [
+    -186.6,
+    0,
+    -100.5
+   ],
+   "max": [
+    189.9,
+    1378.3,
+    386.3
+   ],
+   "tris": 34068,
+   "bytes": 824752,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jun",
+    "pose": "kid-stand-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-jun-kid-sit-desk",
+   "name": "Jun: drawing at the desk, on the stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jun-kid-sit-desk.glb",
+   "anchor": "floor",
+   "size": [
+    480.8,
+    1072.2,
+    456.9
+   ],
+   "min": [
+    -221,
+    0,
+    -100.2
+   ],
+   "max": [
+    259.8,
+    1072.2,
+    356.7
+   ],
+   "tris": 34226,
+   "bytes": 828352,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jun",
+    "pose": "kid-sit-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-jun-kid-sit-floor",
+   "name": "Jun: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jun-kid-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    491.3,
+    786.3,
+    511.3
+   ],
+   "min": [
+    -249.9,
+    0,
+    -111.2
+   ],
+   "max": [
+    241.4,
+    786.3,
+    400.1
+   ],
+   "tris": 31032,
+   "bytes": 806216,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jun",
+    "pose": "kid-sit-floor"
+   }
+  },
+  {
+   "id": "people-jun-kid-read-floor",
+   "name": "Jun: on the floor with a picture book",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jun-kid-read-floor.glb",
+   "anchor": "floor",
+   "size": [
+    522.1,
+    729,
+    512
+   ],
+   "min": [
+    -249.9,
+    0,
+    -111.9
+   ],
+   "max": [
+    272.2,
+    729,
+    400.1
+   ],
+   "tris": 33598,
+   "bytes": 826624,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jun",
+    "pose": "kid-read-floor"
+   }
+  },
+  {
+   "id": "people-jun-kid-play-floor",
+   "name": "Jun: kneeling, building on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jun-kid-play-floor.glb",
+   "anchor": "floor",
+   "size": [
+    375.1,
+    796.7,
+    793.3
+   ],
+   "min": [
+    -187.9,
+    0,
+    -383.7
+   ],
+   "max": [
+    187.2,
+    796.7,
+    409.6
+   ],
+   "tris": 32736,
+   "bytes": 816644,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jun",
+    "pose": "kid-play-floor"
+   }
+  },
+  {
+   "id": "people-jun-kid-stand-wait",
+   "name": "Jun: standing by",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jun-kid-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    438.3,
+    1373.8,
+    315.8
+   ],
+   "min": [
+    -219.4,
+    0,
+    -119
+   ],
+   "max": [
+    218.9,
+    1373.8,
+    196.8
+   ],
+   "tris": 33794,
+   "bytes": 821036,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jun",
+    "pose": "kid-stand-wait"
+   }
+  },
+  {
+   "id": "people-jun-kid-sit-k",
+   "name": "Jun: drawing at a kindergarten table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jun-kid-sit-k.glb",
+   "anchor": "floor",
+   "size": [
+    497.4,
+    911.5,
+    474.6
+   ],
+   "min": [
+    -222.3,
+    0,
+    -97.4
+   ],
+   "max": [
+    275.1,
+    911.5,
+    377.2
+   ],
+   "tris": 33802,
+   "bytes": 827100,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jun",
+    "pose": "kid-sit-k"
+   }
+  },
+  {
+   "id": "people-jun-kid-sit-e",
+   "name": "Jun: drawing at an elementary school table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jun-kid-sit-e.glb",
+   "anchor": "floor",
+   "size": [
+    497.4,
+    1011.1,
+    474.6
+   ],
+   "min": [
+    -222.3,
+    0,
+    -97.4
+   ],
+   "max": [
+    275.1,
+    1011.1,
+    377.2
+   ],
+   "tris": 33988,
+   "bytes": 827628,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jun",
+    "pose": "kid-sit-e"
+   }
+  },
+  {
+   "id": "people-jun-kid-kneel-craft",
+   "name": "Jun: kneeling at a low craft table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jun-kid-kneel-craft.glb",
+   "anchor": "floor",
+   "size": [
+    437.2,
+    959.5,
+    756
+   ],
+   "min": [
+    -215.8,
+    0,
+    -377
+   ],
+   "max": [
+    221.4,
+    959.5,
+    379
+   ],
+   "tris": 32732,
+   "bytes": 816804,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jun",
+    "pose": "kid-kneel-craft"
+   }
+  },
+  {
+   "id": "people-milo-kid-stand-desk",
+   "name": "Milo: drawing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-milo-kid-stand-desk.glb",
+   "anchor": "floor",
+   "size": [
+    363.5,
+    1082,
+    428.3
+   ],
+   "min": [
+    -168.8,
+    0,
+    -97.6
+   ],
+   "max": [
+    194.7,
+    1082,
+    330.7
+   ],
+   "tris": 31868,
+   "bytes": 908464,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "milo",
+    "pose": "kid-stand-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-milo-kid-sit-desk",
+   "name": "Milo: drawing at the desk, on the stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-milo-kid-sit-desk.glb",
+   "anchor": "floor",
+   "size": [
+    387.3,
+    842.3,
+    361.5
+   ],
+   "min": [
+    -176.6,
+    0,
+    -76.3
+   ],
+   "max": [
+    210.7,
+    842.3,
+    285.2
+   ],
+   "tris": 31888,
+   "bytes": 910964,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "milo",
+    "pose": "kid-sit-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-milo-kid-sit-floor",
+   "name": "Milo: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-milo-kid-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    395.7,
+    623.5,
+    395.9
+   ],
+   "min": [
+    -198,
+    0,
+    -85.2
+   ],
+   "max": [
+    197.7,
+    623.5,
+    310.7
+   ],
+   "tris": 27628,
+   "bytes": 880108,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "milo",
+    "pose": "kid-sit-floor"
+   }
+  },
+  {
+   "id": "people-milo-kid-read-floor",
+   "name": "Milo: on the floor with a picture book",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-milo-kid-read-floor.glb",
+   "anchor": "floor",
+   "size": [
+    453.3,
+    579.1,
+    396.4
+   ],
+   "min": [
+    -198,
+    0,
+    -85.7
+   ],
+   "max": [
+    255.3,
+    579.1,
+    310.7
+   ],
+   "tris": 31118,
+   "bytes": 907036,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "milo",
+    "pose": "kid-read-floor"
+   }
+  },
+  {
+   "id": "people-milo-kid-play-floor",
+   "name": "Milo: kneeling, building on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-milo-kid-play-floor.glb",
+   "anchor": "floor",
+   "size": [
+    281.1,
+    641,
+    638.4
+   ],
+   "min": [
+    -140.9,
+    0,
+    -303.3
+   ],
+   "max": [
+    140.2,
+    641,
+    335.1
+   ],
+   "tris": 29846,
+   "bytes": 893168,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "milo",
+    "pose": "kid-play-floor"
+   }
+  },
+  {
+   "id": "people-milo-kid-stand",
+   "name": "Milo: standing, showing something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-milo-kid-stand.glb",
+   "anchor": "floor",
+   "size": [
+    354.5,
+    1084,
+    301.6
+   ],
+   "min": [
+    -184.4,
+    0,
+    -84.6
+   ],
+   "max": [
+    170.1,
+    1084,
+    217
+   ],
+   "tris": 31262,
+   "bytes": 903052,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "milo",
+    "pose": "kid-stand"
+   }
+  },
+  {
+   "id": "people-milo-kid-stand-wait",
+   "name": "Milo: standing by",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-milo-kid-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    353.8,
+    1064.5,
+    308.3
+   ],
+   "min": [
+    -182.7,
+    0,
+    -125
+   ],
+   "max": [
+    171.1,
+    1064.5,
+    183.3
+   ],
+   "tris": 29010,
+   "bytes": 888916,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "milo",
+    "pose": "kid-stand-wait"
+   }
+  },
+  {
+   "id": "people-milo-kid-sit-k",
+   "name": "Milo: drawing at a kindergarten table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-milo-kid-sit-k.glb",
+   "anchor": "floor",
+   "size": [
+    369.8,
+    781.3,
+    389.4
+   ],
+   "min": [
+    -155.5,
+    0,
+    -75
+   ],
+   "max": [
+    214.3,
+    781.3,
+    314.4
+   ],
+   "tris": 31490,
+   "bytes": 909504,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "milo",
+    "pose": "kid-sit-k"
+   }
+  },
+  {
+   "id": "people-milo-kid-sit-e",
+   "name": "Milo: drawing at an elementary school table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-milo-kid-sit-e.glb",
+   "anchor": "floor",
+   "size": [
+    369.8,
+    880.1,
+    391.5
+   ],
+   "min": [
+    -155.5,
+    0,
+    -77.1
+   ],
+   "max": [
+    214.3,
+    880.1,
+    314.4
+   ],
+   "tris": 31542,
+   "bytes": 909476,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "milo",
+    "pose": "kid-sit-e"
+   }
+  },
+  {
+   "id": "people-milo-kid-kneel-craft",
+   "name": "Milo: kneeling at a low craft table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-milo-kid-kneel-craft.glb",
+   "anchor": "floor",
+   "size": [
+    384,
+    765.1,
+    602.4
+   ],
+   "min": [
+    -189.1,
+    0,
+    -293.5
+   ],
+   "max": [
+    194.9,
+    765.1,
+    308.9
+   ],
+   "tris": 30176,
+   "bytes": 896024,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "milo",
+    "pose": "kid-kneel-craft"
+   }
+  },
+  {
+   "id": "people-lila-kid-stand-desk",
+   "name": "Lila: drawing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lila-kid-stand-desk.glb",
+   "anchor": "floor",
+   "size": [
+    379.6,
+    1150.5,
+    427.9
+   ],
+   "min": [
+    -178.6,
+    0,
+    -81.5
+   ],
+   "max": [
+    201,
+    1150.5,
+    346.4
+   ],
+   "tris": 37060,
+   "bytes": 1323544,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lila",
+    "pose": "kid-stand-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-lila-kid-sit-desk",
+   "name": "Lila: drawing at the desk, on the stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lila-kid-sit-desk.glb",
+   "anchor": "floor",
+   "size": [
+    418.7,
+    881.8,
+    398.8
+   ],
+   "min": [
+    -192.5,
+    0,
+    -90
+   ],
+   "max": [
+    226.2,
+    881.8,
+    308.8
+   ],
+   "tris": 36936,
+   "bytes": 1325720,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lila",
+    "pose": "kid-sit-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-lila-kid-sit-floor",
+   "name": "Lila: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lila-kid-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    439.4,
+    649.7,
+    426.5
+   ],
+   "min": [
+    -219.7,
+    0,
+    -98.7
+   ],
+   "max": [
+    219.7,
+    649.7,
+    327.8
+   ],
+   "tris": 32084,
+   "bytes": 1290356,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lila",
+    "pose": "kid-sit-floor"
+   }
+  },
+  {
+   "id": "people-lila-kid-read-floor",
+   "name": "Lila: on the floor with a picture book",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lila-kid-read-floor.glb",
+   "anchor": "floor",
+   "size": [
+    453,
+    597.6,
+    426.9
+   ],
+   "min": [
+    -194.3,
+    0,
+    -99.1
+   ],
+   "max": [
+    258.7,
+    597.6,
+    327.8
+   ],
+   "tris": 35928,
+   "bytes": 1319232,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lila",
+    "pose": "kid-read-floor"
+   }
+  },
+  {
+   "id": "people-lila-kid-play-floor",
+   "name": "Lila: kneeling, building on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lila-kid-play-floor.glb",
+   "anchor": "floor",
+   "size": [
+    279.5,
+    706.4,
+    658
+   ],
+   "min": [
+    -140.5,
+    0,
+    -309.3
+   ],
+   "max": [
+    139,
+    706.4,
+    348.7
+   ],
+   "tris": 35450,
+   "bytes": 1312356,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lila",
+    "pose": "kid-play-floor"
+   }
+  },
+  {
+   "id": "people-lila-kid-stand",
+   "name": "Lila: standing, showing something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lila-kid-stand.glb",
+   "anchor": "floor",
+   "size": [
+    384.2,
+    1143.5,
+    320.4
+   ],
+   "min": [
+    -198.8,
+    0,
+    -92.3
+   ],
+   "max": [
+    185.4,
+    1143.5,
+    228.1
+   ],
+   "tris": 36600,
+   "bytes": 1318808,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lila",
+    "pose": "kid-stand"
+   }
+  },
+  {
+   "id": "people-lila-kid-stand-wait",
+   "name": "Lila: standing by",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lila-kid-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    371,
+    1135.2,
+    289.6
+   ],
+   "min": [
+    -185.6,
+    0,
+    -110.8
+   ],
+   "max": [
+    185.4,
+    1135.2,
+    178.8
+   ],
+   "tris": 34908,
+   "bytes": 1309184,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lila",
+    "pose": "kid-stand-wait"
+   }
+  },
+  {
+   "id": "people-lila-kid-sit-k",
+   "name": "Lila: drawing at a kindergarten table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lila-kid-sit-k.glb",
+   "anchor": "floor",
+   "size": [
+    410.4,
+    797.6,
+    416.8
+   ],
+   "min": [
+    -176.7,
+    0,
+    -88.7
+   ],
+   "max": [
+    233.7,
+    797.6,
+    328.1
+   ],
+   "tris": 36698,
+   "bytes": 1324704,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lila",
+    "pose": "kid-sit-k"
+   }
+  },
+  {
+   "id": "people-lila-kid-sit-e",
+   "name": "Lila: drawing at an elementary school table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lila-kid-sit-e.glb",
+   "anchor": "floor",
+   "size": [
+    410.4,
+    896.6,
+    418
+   ],
+   "min": [
+    -176.7,
+    0,
+    -91.1
+   ],
+   "max": [
+    233.7,
+    896.6,
+    326.9
+   ],
+   "tris": 36822,
+   "bytes": 1324372,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lila",
+    "pose": "kid-sit-e"
+   }
+  },
+  {
+   "id": "people-lila-kid-kneel-craft",
+   "name": "Lila: kneeling at a low craft table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lila-kid-kneel-craft.glb",
+   "anchor": "floor",
+   "size": [
+    412.2,
+    847.4,
+    627.5
+   ],
+   "min": [
+    -203.1,
+    0,
+    -304.5
+   ],
+   "max": [
+    209.1,
+    847.4,
+    323
+   ],
+   "tris": 35614,
+   "bytes": 1314520,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lila",
+    "pose": "kid-kneel-craft"
+   }
+  },
+  {
+   "id": "people-theo-kid-stand-desk",
+   "name": "Theo: drawing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-theo-kid-stand-desk.glb",
+   "anchor": "floor",
+   "size": [
+    366,
+    1290.6,
+    493.2
+   ],
+   "min": [
+    -175.2,
+    0,
+    -112.4
+   ],
+   "max": [
+    190.8,
+    1290.6,
+    380.8
+   ],
+   "tris": 34790,
+   "bytes": 1092400,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "theo",
+    "pose": "kid-stand-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-theo-kid-sit-desk",
+   "name": "Theo: drawing at the desk, on the stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-theo-kid-sit-desk.glb",
+   "anchor": "floor",
+   "size": [
+    459.3,
+    1006,
+    410.5
+   ],
+   "min": [
+    -212.1,
+    0,
+    -83.8
+   ],
+   "max": [
+    247.2,
+    1006,
+    326.7
+   ],
+   "tris": 35040,
+   "bytes": 1096824,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "theo",
+    "pose": "kid-sit-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-theo-kid-sit-floor",
+   "name": "Theo: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-theo-kid-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    498.9,
+    749.6,
+    465.3
+   ],
+   "min": [
+    -252.4,
+    0,
+    -97.2
+   ],
+   "max": [
+    246.5,
+    749.6,
+    368.1
+   ],
+   "tris": 32804,
+   "bytes": 1079612,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "theo",
+    "pose": "kid-sit-floor"
+   }
+  },
+  {
+   "id": "people-theo-kid-read-floor",
+   "name": "Theo: on the floor with a picture book",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-theo-kid-read-floor.glb",
+   "anchor": "floor",
+   "size": [
+    518,
+    687.9,
+    465.9
+   ],
+   "min": [
+    -252.4,
+    0,
+    -97.8
+   ],
+   "max": [
+    265.6,
+    687.9,
+    368.1
+   ],
+   "tris": 34264,
+   "bytes": 1093152,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "theo",
+    "pose": "kid-read-floor"
+   }
+  },
+  {
+   "id": "people-theo-kid-play-floor",
+   "name": "Theo: kneeling, building on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-theo-kid-play-floor.glb",
+   "anchor": "floor",
+   "size": [
+    347.5,
+    705.5,
+    759
+   ],
+   "min": [
+    -174,
+    0,
+    -359.7
+   ],
+   "max": [
+    173.5,
+    705.5,
+    399.3
+   ],
+   "tris": 33074,
+   "bytes": 1080236,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "theo",
+    "pose": "kid-play-floor"
+   }
+  },
+  {
+   "id": "people-theo-kid-stand",
+   "name": "Theo: standing, showing something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-theo-kid-stand.glb",
+   "anchor": "floor",
+   "size": [
+    419.4,
+    1289,
+    350.7
+   ],
+   "min": [
+    -218.2,
+    0,
+    -96.9
+   ],
+   "max": [
+    201.2,
+    1289,
+    253.8
+   ],
+   "tris": 34548,
+   "bytes": 1088524,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "theo",
+    "pose": "kid-stand"
+   }
+  },
+  {
+   "id": "people-theo-kid-stand-wait",
+   "name": "Theo: standing by",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-theo-kid-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    403.8,
+    1281.4,
+    333.8
+   ],
+   "min": [
+    -202.1,
+    0,
+    -133.7
+   ],
+   "max": [
+    201.7,
+    1281.4,
+    200.1
+   ],
+   "tris": 33030,
+   "bytes": 1080004,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "theo",
+    "pose": "kid-stand-wait"
+   }
+  },
+  {
+   "id": "people-theo-kid-sit-k",
+   "name": "Theo: drawing at a kindergarten table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-theo-kid-sit-k.glb",
+   "anchor": "floor",
+   "size": [
+    468,
+    877.4,
+    451.3
+   ],
+   "min": [
+    -208.7,
+    0,
+    -84.3
+   ],
+   "max": [
+    259.3,
+    877.4,
+    367
+   ],
+   "tris": 34594,
+   "bytes": 1095512,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "theo",
+    "pose": "kid-sit-k"
+   }
+  },
+  {
+   "id": "people-theo-kid-sit-e",
+   "name": "Theo: drawing at an elementary school table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-theo-kid-sit-e.glb",
+   "anchor": "floor",
+   "size": [
+    468,
+    976.9,
+    452.9
+   ],
+   "min": [
+    -208.7,
+    0,
+    -85.9
+   ],
+   "max": [
+    259.3,
+    976.9,
+    367
+   ],
+   "tris": 34652,
+   "bytes": 1094996,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "theo",
+    "pose": "kid-sit-e"
+   }
+  },
+  {
+   "id": "people-theo-kid-kneel-craft",
+   "name": "Theo: kneeling at a low craft table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-theo-kid-kneel-craft.glb",
+   "anchor": "floor",
+   "size": [
+    424,
+    869.3,
+    701.1
+   ],
+   "min": [
+    -208.5,
+    0,
+    -348.7
+   ],
+   "max": [
+    215.5,
+    869.3,
+    352.4
+   ],
+   "tris": 33232,
+   "bytes": 1082192,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "theo",
+    "pose": "kid-kneel-craft"
+   }
+  },
+  {
+   "id": "people-ines-kid-stand-desk",
+   "name": "Ines: drawing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ines-kid-stand-desk.glb",
+   "anchor": "floor",
+   "size": [
+    321.1,
+    1332.4,
+    482.8
+   ],
+   "min": [
+    -159.7,
+    0,
+    -93.3
+   ],
+   "max": [
+    161.4,
+    1332.4,
+    389.5
+   ],
+   "tris": 37778,
+   "bytes": 805888,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ines",
+    "pose": "kid-stand-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-ines-kid-sit-desk",
+   "name": "Ines: drawing at the desk, on the stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ines-kid-sit-desk.glb",
+   "anchor": "floor",
+   "size": [
+    461.9,
+    1008.3,
+    463.3
+   ],
+   "min": [
+    -211.8,
+    0,
+    -101.3
+   ],
+   "max": [
+    250.1,
+    1008.3,
+    362
+   ],
+   "tris": 37750,
+   "bytes": 808532,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ines",
+    "pose": "kid-sit-desk",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-ines-kid-sit-floor",
+   "name": "Ines: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ines-kid-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    499.2,
+    737.3,
+    488.2
+   ],
+   "min": [
+    -249.6,
+    0,
+    -111.6
+   ],
+   "max": [
+    249.6,
+    737.3,
+    376.6
+   ],
+   "tris": 33154,
+   "bytes": 776524,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ines",
+    "pose": "kid-sit-floor"
+   }
+  },
+  {
+   "id": "people-ines-kid-read-floor",
+   "name": "Ines: on the floor with a picture book",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ines-kid-read-floor.glb",
+   "anchor": "floor",
+   "size": [
+    498.9,
+    689.3,
+    488.6
+   ],
+   "min": [
+    -229.8,
+    0,
+    -112
+   ],
+   "max": [
+    269.1,
+    689.3,
+    376.6
+   ],
+   "tris": 36708,
+   "bytes": 802892,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ines",
+    "pose": "kid-read-floor"
+   }
+  },
+  {
+   "id": "people-ines-kid-play-floor",
+   "name": "Ines: kneeling, building on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ines-kid-play-floor.glb",
+   "anchor": "floor",
+   "size": [
+    322.2,
+    815.7,
+    752.2
+   ],
+   "min": [
+    -161.8,
+    0,
+    -364.7
+   ],
+   "max": [
+    160.4,
+    815.7,
+    387.5
+   ],
+   "tris": 36280,
+   "bytes": 794980,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ines",
+    "pose": "kid-play-floor"
+   }
+  },
+  {
+   "id": "people-ines-kid-stand",
+   "name": "Ines: standing, showing something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ines-kid-stand.glb",
+   "anchor": "floor",
+   "size": [
+    424.6,
+    1342.6,
+    366.5
+   ],
+   "min": [
+    -218.1,
+    0,
+    -101
+   ],
+   "max": [
+    206.5,
+    1342.6,
+    265.5
+   ],
+   "tris": 37478,
+   "bytes": 800972,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ines",
+    "pose": "kid-stand"
+   }
+  },
+  {
+   "id": "people-ines-kid-stand-wait",
+   "name": "Ines: standing by",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ines-kid-stand-wait.glb",
+   "anchor": "floor",
+   "size": [
+    414.1,
+    1325,
+    307.2
+   ],
+   "min": [
+    -207.3,
+    0,
+    -115.6
+   ],
+   "max": [
+    206.8,
+    1325,
+    191.6
+   ],
+   "tris": 36406,
+   "bytes": 796200,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ines",
+    "pose": "kid-stand-wait"
+   }
+  },
+  {
+   "id": "people-ines-kid-sit-k",
+   "name": "Ines: drawing at a kindergarten table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ines-kid-sit-k.glb",
+   "anchor": "floor",
+   "size": [
+    465,
+    874.2,
+    476.1
+   ],
+   "min": [
+    -203.9,
+    0,
+    -98.3
+   ],
+   "max": [
+    261.1,
+    874.2,
+    377.8
+   ],
+   "tris": 37570,
+   "bytes": 809156,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ines",
+    "pose": "kid-sit-k"
+   }
+  },
+  {
+   "id": "people-ines-kid-sit-e",
+   "name": "Ines: drawing at an elementary school table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ines-kid-sit-e.glb",
+   "anchor": "floor",
+   "size": [
+    465,
+    973.9,
+    477.9
+   ],
+   "min": [
+    -203.9,
+    0,
+    -101.1
+   ],
+   "max": [
+    261.1,
+    973.9,
+    376.8
+   ],
+   "tris": 37644,
+   "bytes": 808596,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ines",
+    "pose": "kid-sit-e"
+   }
+  },
+  {
+   "id": "people-ines-kid-kneel-craft",
+   "name": "Ines: kneeling at a low craft table",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ines-kid-kneel-craft.glb",
+   "anchor": "floor",
+   "size": [
+    428.6,
+    957.6,
+    726
+   ],
+   "min": [
+    -210.6,
+    0,
+    -359.4
+   ],
+   "max": [
+    218,
+    957.6,
+    366.6
+   ],
+   "tris": 36468,
+   "bytes": 797460,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ines",
+    "pose": "kid-kneel-craft"
+   }
+  },
+  {
+   "id": "people-grace-sit-floor",
+   "name": "Grace: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-grace-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    575.3,
+    934.7,
+    581.2
+   ],
+   "min": [
+    -289.7,
+    0,
+    -141.5
+   ],
+   "max": [
+    285.6,
+    934.7,
+    439.7
+   ],
+   "tris": 47606,
+   "bytes": 1269564,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "grace",
+    "pose": "sit-floor"
+   }
+  },
+  {
+   "id": "people-maya-sit-floor",
+   "name": "Maya: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    576.8,
+    920.1,
+    607.8
+   ],
+   "min": [
+    -288.4,
+    0,
+    -138
+   ],
+   "max": [
+    288.4,
+    920.1,
+    469.8
+   ],
+   "tris": 34922,
+   "bytes": 985140,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "sit-floor"
+   }
+  },
+  {
+   "id": "people-sofia-sit-floor",
+   "name": "Sofia: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sofia-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    535.2,
+    842.4,
+    550.5
+   ],
+   "min": [
+    -267.6,
+    0,
+    -127.8
+   ],
+   "max": [
+    267.6,
+    842.4,
+    422.7
+   ],
+   "tris": 46665,
+   "bytes": 977260,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sofia",
+    "pose": "sit-floor"
+   }
   }
  ],
  "screens": [

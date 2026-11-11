@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
-import { activityPageMaterial } from './room-activity-print.mjs?v=polish-20261111b';
+import { activityPageMaterial } from './room-activity-print.mjs?v=polish-20261111c';
 
 const phases = ['morning', 'afternoon', 'evening', 'night', 'party'];
 function canvasMap(draw, w = 512, h = 256) {

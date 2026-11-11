@@ -234,3 +234,51 @@ Checking a room: `node tools/rooms/room-stills.cjs <out> <room:layout:daypart> .
 - **Pose mode** works on a moving person: adjustments turn each bone from where the motion has it.
 - Not yet: the people at the room's other desks do not stand up (those desks do not move); nobody walks in the Studio, and a walk does not yet end in a seat.
 - Test: `npm run test:room-people-motion`.
+
+## Children (November 11)
+
+The child's room, the kindergarten and the elementary classroom had nobody in them: every character was an adult or a
+teenager. There are now eight children, each about as tall as a child of that age:
+
+| Child | Age | Height |
+|---|---|---|
+| Tess | 4 | 101 cm |
+| Milo | 5 | 106 cm |
+| Lila | 6 | 114 cm |
+| Ravi | 7 | 121 cm |
+| Theo | 8 | 128 cm |
+| Ines | 9 | 133 cm |
+| Nora | 10 | 137 cm |
+| Jun | 10 | 137 cm |
+
+They have ten postures of their own (`kid-…` in `tools/people/cast.py`), built on child furniture and scaled with the
+child: playing, sitting and reading on the floor, kneeling at a low craft table, standing, waiting, standing at the desk
+on its lowest setting, sitting at the desk on the room's stool, and sitting at the kindergarten table (260 mm seats) and
+the elementary pods (360 mm seats). Adult postures are not built for children and child postures not for adults; the
+Director's posture menu shows each kind its own, and swapping a child for an adult (or back) picks a posture of that kind.
+
+Who is in the room, by hour:
+
+- **Child's room** follows the age stage of the layout. Toddler stage: Tess plays on the mat in the morning, draws
+  standing at the desk in the afternoon, has a story with a grown-up on the rug in the evening, a friend comes to play
+  at the party. Primary: Nora gets ready, does homework at the desk on the room's own chair, reads on the floor, builds
+  with Jun. Pre-teen: Jun, with Ines over. High school and college stages use the teenage and young adult characters at
+  the desk. Nobody is shown at night in the younger stages: the child is asleep.
+- **Kindergarten**: circle time on the rug with the teacher in the rocker; children at the table, the easel, the
+  teacher at the desk; a parent and child at the family evening; nobody during the reset.
+- **Elementary**: readers on the meeting carpet; children at the pods and one at the science window; a parent, a child
+  and the teacher in the evening; the teacher alone at night; the class on its feet at the workshop.
+
+Three things were added for this:
+
+- `chair: false` on a desk placement (`room-people.mjs`): the child sits on the room's own kind of seat. The room keeps
+  its study chair where its story has it (pushed back, turned away from the desk), so the seat under the child is a copy
+  of it, under them and facing the desk with them, while the room's chair is hidden. The room's chair is never moved:
+  nothing the Studio saves about the furniture changes, and it is back when the child leaves or People is turned off.
+- `around: ['<prop id>', degrees, mm]`: round a rug, a mat or a table, facing its middle, wherever the room has put it.
+- A child drawing at the desk keeps their hands on a tilted top (up to 12 degrees): the "hands leave the keys when the
+  top tilts" rule of the typing postures does not apply to them (`room-people-motion.mjs`).
+
+Checked with `tools/people/cast-audit.cjs` over every layout and hour of the three rooms (nobody outside the room,
+nobody through furniture), and by eye for anyone seated the wrong way round on a chair (the kindergarten teacher's
+rocker faces the rug, so she is not turned on it as people on the classroom chairs are).
