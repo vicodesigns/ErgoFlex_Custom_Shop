@@ -1,5 +1,6 @@
 import {cleanPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
 import {createPoseEditor} from './scene-pose-editor.mjs';
+import {stackRows} from './lane-rows.mjs';
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
 // select them, then move / turn / scale them with the gizmo (W / E / T) or the fields, change who they are
 // (character) and what they are doing (posture), set the seconds they are in the room, duplicate or remove them, and
@@ -56,7 +57,13 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   // ---- the view: selection box and gizmo on the selected person's model
   async function boot(){
     const w=win(),t=three();if(!t)throw Error('The stage is still loading.');
-    if(!w.__directorThree)await new Promise((resolve,reject)=>{w.__dirThreeDone=resolve;w.__dirThreeFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="Promise.all([import('three'),import('three/addons/controls/TransformControls.js')]).then(([T,C])=>{window.__directorThree={THREE:T,TransformControls:C.TransformControls};window.__dirThreeDone();},e=>window.__dirThreeFail(e));";w.document.head.append(s);});
+    // three + TransformControls for the stage window, shared with the other editors (window.__directorThree). Whoever
+    // asks first loads them; this editor only waits for them to be there, so two editors starting together never
+    // take each other's "loaded" callback (that left one of them waiting for ever).
+    if(!w.__directorThree){
+      if(!w.__dirThreeDone){w.__dirThreeDone=()=>{};w.__dirThreeFail=()=>{};const s=w.document.createElement('script');s.type='module';s.textContent="Promise.all([import('three'),import('three/addons/controls/TransformControls.js')]).then(([T,C])=>{window.__directorThree={THREE:T,TransformControls:C.TransformControls};window.__dirThreeDone();},e=>window.__dirThreeFail(e));";w.document.head.append(s);}
+      await new Promise((resolve,reject)=>{const end=Date.now()+30000;(function wait(){if(w.__directorThree)resolve();else if(Date.now()>end)reject(Error('The editing tools did not load.'));else setTimeout(wait,50);})();});
+    }
     const {THREE,TransformControls}=w.__directorThree,group=new THREE.Group();group.name='Director people tools';group.userData.directorTools=true;t.scene.add(group);
     const box=new THREE.BoxHelper(undefined,0xff9bd2);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(1.2);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
@@ -117,7 +124,18 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   function deselect(){pose.exit();if(!sel)return;sel=null;rerender();}
   // A click in the view on a person's model (scene-prop-editor.mjs hands it over).
-  function pickObject(o){const people=stagePeople();for(let p=o;p;p=p.parent)if(p.userData?.person){select(people.keyOf(p.userData.person));return true;}return false;}
+  // Two clicks on the same person within a moment are a double-click: pose mode (also caught by the view's dblclick).
+  let lastPick={key:null,t:0};
+  function pickObject(o){
+    const people=stagePeople();
+    for(let p=o;p;p=p.parent)if(p.userData?.person){
+      const key=people.keyOf(p.userData.person),now=performance.now(),twice=key===lastPick.key&&now-lastPick.t<450;lastPick={key,t:now};
+      select(key,{announce:!twice});
+      if(twice&&entry(key))ensure().then(()=>{if(sel===key&&!pose.active())pose.enter(key);}).catch(error=>status(error.message,true));
+      return true;
+    }
+    return false;
+  }
   // ---- changes
   async function swap(key,character,pose){
     const e=entry(key),m=e&&modelOf(e.id);if(!e||!catalog)return;
@@ -296,15 +314,21 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <p class="director-hint">${mine?'This chapter has its own cast.':list.length?'This is the film\'s cast. Your first change copies it into the chapter.':'Add people from the library, or bring in the people who live in this room.'} Click a person in the view or in the list.</p>
       <div class="people-list">${list.map(row).join('')}</div>${e?selectedPanel(e):''}`;
   }
-  // The timeline's People lane: one bar per person over the seconds they are in the room.
+  // The timeline's People lane: one bar per person over the seconds they are in the room. People who are there at the
+  // same time get rows of their own (lane-rows.mjs); the lane grows past two rows so every bar keeps its name.
+  let laneRows=1;
+  const ROW=16;
   function lane(){
-    const T=seconds()||1,list=cast().filter(e=>!e.hide);laneKeys=list.map(e=>e.key);if(!list.length)return '';
-    const h=Math.max(5,Math.min(15,Math.floor(36/list.length)));
-    return list.map((e,i)=>(spans(e.key)||[[0,T]]).map(([a,b])=>{const x=Math.max(0,a)/T*100,w=Math.max(.6,(Math.min(b,T)-Math.max(0,a))/T*100);
-      return `<button type="button" class="people-bar ${e.key===sel?'selected':''}" data-action="pe-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${1+i*(36/list.length)}px;height:${h}px" title="${escape(personName(e))}: ${escape(doing(e))} · ${escape(spanText(spans(e.key),T))}">${h>=10?escape(personName(e)):''}</button>`;}).join('')).join('');
+    const T=seconds()||1,list=cast().filter(e=>!e.hide);laneKeys=list.map(e=>e.key);laneRows=1;if(!list.length)return '';
+    const items=list.flatMap((e,i)=>(spans(e.key)||[[0,T]]).map(([a,b],k)=>({id:i+':'+k,i,e,start:Math.max(0,a),end:Math.max(Math.max(0,a)+.01,Math.min(b,T))})));
+    const layers=stackRows(items);laneRows=layers.count;const step=laneRows<=2?36/laneRows:ROW,h=Math.floor(step)-2;
+    return items.map(it=>{const e=it.e,x=it.start/T*100,w=Math.max(.6,(it.end-it.start)/T*100);
+      return `<button type="button" class="people-bar ${e.key===sel?'selected':''}" data-action="pe-lane" data-index="${it.i}" style="left:${x}%;width:${w}%;top:${1+layers.row.get(it.id)*step}px;height:${h}px" title="${escape(personName(e))}: ${escape(doing(e))} · ${escape(spanText(spans(e.key),T))}">${escape(personName(e))}</button>`;}).join('');
   }
+  // Inline heights for the lane and its row (empty string while two rows fit the standard lane).
+  const laneHeight=()=>{lane();return laneRows>2?laneRows*ROW+4:0;};
   const header=()=>{const e=sel&&entry(sel);return e?{name:personName(e),detail:pose.active()===sel?'Pose mode'+(pose.joint()?' · '+pose.jointLabel():''):doing(e)}:null;};
   // After the film setup is (re)applied or the cut changes: the selection may be gone.
   function applied(){if(sel&&!entry(sel)){pose.exit();sel=null;}ensure().catch(()=>null);}
-  return {panel,lane,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){pose.resetJoint();return;}remove(k);},posing:()=>pose.active(),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
+  return {panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){pose.resetJoint();return;}remove(k);},posing:()=>pose.active(),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
 }

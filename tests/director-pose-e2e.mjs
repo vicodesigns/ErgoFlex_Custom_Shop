@@ -49,7 +49,9 @@ try{
   await until(()=>page.$('#director-panel .people-pose'),'the double-click opens pose mode');
   const rigged=await until(async()=>{const p=await person(key);return p?.rigged&&p.visible?p:null;},'the skeleton is in');
   check(rigged.bones>=50,'double-click on a person opens pose mode with their skeleton ('+rigged.bones+' bones)');
-  check(near(rigged.min,before.min,.004)&&near(rigged.max,before.max,.004),'with the skeleton in, the person fills the same space: '+JSON.stringify([before.min.map(v=>+v.toFixed(3)),rigged.min.map(v=>+v.toFixed(3))]));
+  // (a frame or two after the swap: the skinned bounds follow the skeleton's first update)
+  const same=await until(async()=>{const p=await person(key);return p?.rigged&&near(p.min,before.min,.004)&&near(p.max,before.max,.004)?p:null;},'with the skeleton in, the person fills the same space as before ('+JSON.stringify(before.min.map(v=>+v.toFixed(3)))+')',8000);
+  check(same,'with the skeleton in, the person fills the same space: '+JSON.stringify([before.min.map(v=>+v.toFixed(3)),same.min.map(v=>+v.toFixed(3))]));
   check(!(await edits())?.cast.some(e=>e.pose),'entering pose mode changes nothing in the cut');
   await wait(400);await snap('02-pose-mode');
   // ---- a joint from the fields

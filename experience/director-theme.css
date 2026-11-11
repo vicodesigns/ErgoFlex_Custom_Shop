@@ -448,3 +448,12 @@ body.directing.film-frame .desk-version-badge:not([hidden]){display:block;positi
 /* Narrow blocks: the name keeps its ellipsis and the second line (times) goes instead of being cut mid-number; the tooltip has everything. */
 #director-timeline .timeline-content .desk-clip{container-type:inline-size}
 @container (max-width:74px){#director-timeline .timeline-content .desk-clip small{display:none}#director-timeline .timeline-content .desk-clip{padding-inline:11px 9px}}
+
+/* The inspector's film picker wraps: the cut, then the chapter, then "not exported" on a line of its own (the chip used
+   to squeeze the chapter select and sit on top of it after the first edit). */
+#director-panel .film-chapter-picker{flex-wrap:wrap}
+#director-panel .film-chapter-picker .film-cut{flex:1 0 100%}
+#director-panel .film-chapter-picker label:not(.film-cut){flex:1 1 0;min-width:0}
+#director-panel .film-chapter-picker label select{flex:1;min-width:0}
+#director-panel .film-chapter-picker .film-dirty{flex:1 0 100%;margin:0 0 0 4px}
+#director-panel .film-chapter-picker .film-fresh{flex:1 0 100%}
