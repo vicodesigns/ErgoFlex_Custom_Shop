@@ -166,3 +166,31 @@ The timeline's chapter picker starts with **Cut**: the film's cuts (`exports/fil
 - **Clothes.** The swatches show the colours the model really has (read from its textures on the stage, `RoomPeople.partColors`). Six characters (Mr Hale, Omar, Priya, Jo, Leo, Eli) wear a one-piece outfit: Top now colours it above the waist and Bottom below (`personLower` vertex attribute from the skin weights, `room-people.mjs` `recolor`).
 - **Layout.** One film picker (the inspector's; the timeline shows its own only while the inspector is hidden). Above 2200 px wide the inspector, timeline and top bar are drawn a fifth larger (the 3D view is not zoomed). Lamps and Props show at most two rows of chips and scroll; the timeline's Fit takes 54 % of a window up to 1150 px tall; selecting a person scrolls the People lane into view. A new status light takes the free stretch at the playhead and never lengthens the chapter (refused when there is less than 0.3 s).
 - `VIEW=2560x1440 node tests/director-…-e2e.mjs` runs any Director browser test at that window size.
+
+## People at a desk follow it (late November 10)
+
+Anyone at a desk sits or stands with that desk. Beside the model a placement names, `RoomPeople` loads the same
+character's other desk postures under the same name (`deskFamily` in `room-people.mjs`: typing seated at 28 in and at
+30 in, standing at 43.5 in; a wheelchair user's 28 in and 31 in poses) and shows whichever was built for the desk's
+height now; between sitting and standing height nobody is at the desk. This applies to people a film or the Director
+puts at a desk and to the people at a room's other desks (`station`), not to the rooms' own featured-desk crews, which
+list their postures.
+
+A person at one of the room's other desks reads that desk live (`peopleState().station(id)`, `studio.js`
+`roomPeopleStation`): they stand where the desk stands now and take its height, so moving, turning or raising it in
+the Director's Desks tab (or with a Lift on that desk's lane) takes them along. Before, their place and fit were
+decided once from the layout, and choosing "standing" for someone whose desk was down made them vanish.
+
+In the Director, the posture menu's seated and standing typing postures therefore behave alike at a desk. Pose mode
+fine-tunes the posture that is showing: entering it while the desk has someone in another of their postures makes
+that one the chosen posture first (fine tuning belongs to one posture). Tests: `tests/room-people-test.mjs`,
+`tests/director-people-desk-follow-e2e.mjs`.
+
+## Director Desks: gumball (late November 10)
+
+A selected room desk has a gumball over it (arrows along the room's X and Z, a square for both), the round floor
+handle as before, and a ring around its footprint whose knob turns it (Shift: 15° steps). A tooltip names what is
+under the pointer and shows the numbers while dragging; each drag is one desk edit. The desk tools start with the
+Desks tab. A click on a desk in the view used to leave the orbit controls without their pointerup (the desk tools kept
+the event), so the camera turned with every mouse move until the next click; the tools now release the orbit controls.
+Test: `tests/director-desk-gumball-e2e.mjs`.

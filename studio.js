@@ -63,7 +63,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=label-fix-20261110';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=people-pose-20261110b';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=desk-people-20261110a';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=20261110-stationary-organizer';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=people-vistas-20261110';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=people-vistas-20261110';
@@ -4295,7 +4295,7 @@ function loadModel() {
         applyAccessoryVisibility();
         if (!workspaceRoom) {
             workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
-            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard(), time: roomPeopleTime });
+            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard(), time: roomPeopleTime, station: roomPeopleStation });
         }
         // Startup already chose the room's desktop. Rebuilding the model must
         // retain any explicit size selected since then.
@@ -10784,6 +10784,13 @@ function syncRoomPeople() {
         .then(() => { presentationShadowDirty = true; renderPacing?.invalidate(); }).catch(error => console.warn('[people]', error));
 }
 // filter (film only): { only: [ids], except: [ids] }; not stored.
+// One of the room's other desks as it is now, for the person working at it (room-people.mjs): where it stands and how
+// high it is, in room millimetres and inches. The desk the film or the customer is moving is the featured one.
+function roomPeopleStation(id) {
+    const r = sceneDesks?.records.get('station-' + id); if (!r?.state?.pose) return null;
+    if (r === sceneDesks.active) return { height: liftToHeight(currentLift), pose: sceneDesks.ctx.readLive(r).pose };
+    const g = r.group; return { height: r.state.height, pose: g ? { x: g.position.x, z: g.position.z, yaw: g.rotation.y } : r.state.pose };
+}
 function setRoomPeople(on, filter = null) {
     roomPeopleEnabled = !!on; roomPeopleFilter = filter; roomPeopleTime = null;
     if (!window.__ERGO_PRESENTATION__) writeStore('ergoflex.roomPeople', { v: 1, enabled: roomPeopleEnabled });
