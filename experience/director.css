@@ -624,6 +624,8 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 #director-panel .inspector-global .studio-sync:empty{display:none}
 #director-panel .inspector-global [data-studio-refresh]{flex:1;min-height:30px;padding:4px 10px;border-radius:8px;font-size:12px;white-space:nowrap}
 #director-panel .inspector-global [data-studio-refresh].studio-changed{background:#ffcf8a;color:#1c1203;border-color:#ffcf8a;font-weight:700}
+#studio-changed{background:#ffcf8a!important;color:#1c1203!important;border-color:#ffcf8a!important;font-weight:700}
+#studio-changed[hidden]{display:none!important}
 #desk-permanent,#studio-adopt{position:fixed;width:min(620px,94vw);border-radius:18px;padding:22px;color:#edf6fc;background:#0d1924f8;border:1px solid #8bc5df40;box-shadow:0 20px 80px #000a;font-size:13px;line-height:1.5}
 #desk-permanent::backdrop,#studio-adopt::backdrop{background:#020a11a8;backdrop-filter:blur(6px)}
 #desk-permanent h2,#studio-adopt h2{margin:4px 0 8px;font-size:20px}

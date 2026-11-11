@@ -39,6 +39,16 @@ async function tab(name){
   page.on('pageerror',e=>errors.push(`${name}: ${e.message}`));
   page.on('console',m=>{const t=m.text();if(/not exported|does not provide an export|SyntaxError/.test(t))errors.push(`${name}: ${t}`);if(process.env.LOG)console.log(`[${name}]`,t.slice(0,240));});
   page.on('request',r=>{if(/__studio\/events/.test(r.url()))eventSources.push(name);});
+  // The chapter films carry Director edits of their own (Commons moves this very chair). This test is about one chapter
+  // edit against one Studio change, so the Director is served the films without them (as tests/director-props-e2e.mjs).
+  if(name==='director'){
+    await cdp.send('Fetch.enable',{patterns:[{urlPattern:'*/director-film/*.json*'}]});
+    cdp.on('Fetch.requestPaused',async e=>{
+      try{const film=JSON.parse(fs.readFileSync(path.join(root,HQ,'director-film',e.request.url.match(/director-film\/([\w-]+\.json)/)[1]),'utf8'));film.sceneEdits=(film.sceneEdits||[]).filter(x=>!x.director);
+        await cdp.send('Fetch.fulfillRequest',{requestId:e.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'application/json'},{name:'cache-control',value:'no-store'}],body:Buffer.from(JSON.stringify(film)).toString('base64')});}
+      catch{cdp.send('Fetch.continueRequest',{requestId:e.requestId}).catch(()=>{});}
+    });
+  }
   return page;
 }
 const passed=[],check=(ok,what)=>{assert.ok(ok,what);passed.push(what);console.log('ok  '+what);};
@@ -81,6 +91,7 @@ try{
   // The chapter's own edit of the chair (Delete hides it): an edit and an undo step to keep.
   const at=await director.evaluate(n=>__screen(__find(x=>x.name===n)),CHAIR);await director.mouse.click(at.x,at.y);await wait(900);
   await director.keyboard.press('Delete');await until(async()=>!(await chair()).shown,'the chair is hidden in this chapter');
+  await wait(700);
   const edit0=await director.evaluate(()=>JSON.stringify(__draft().propEdits));
   check(/"hide":true/.test(edit0)&&await undoOn(),'the chapter hides the chair: one prop edit, one undo step');
   // Studio moves the chair 0.4 m (the storage write Studio's own save makes, through Studio's sync client).
@@ -118,10 +129,12 @@ try{
   check(/^Apply \(1 from Studio\)$/.test(await director.$eval('#studio-adopt [data-adopt-go]',b=>b.textContent)),'choosing Studio\'s enables Apply');
   await director.click('#studio-adopt [data-adopt-go]');
   await until(async()=>(await chair()).shown,'the chair shows after taking Studio\'s');
-  const c2=await chair();
-  check(!/steelcase/.test(await director.evaluate(()=>JSON.stringify(__draft().propEdits)))&&Math.abs(c2.p.x-x2)<2e-3/c0.scale,'taking Studio\'s drops the chapter\'s edit: the chair is where Studio has it');
-  await director.click('#director-panel [data-action=undo]');await until(async()=>!(await chair()).shown,'one Undo brings the chapter\'s edit back');
-  check(await director.evaluate(()=>JSON.stringify(__draft().propEdits))===edit0,'one Undo brings the chapter\'s edit back');
+  // The draft is written a moment after an edit, and the stage settles a frame or two after the film layers re-install.
+  await until(async()=>!/steelcase/.test(await director.evaluate(()=>JSON.stringify(__draft().propEdits)))&&Math.abs((await chair()).p.x-x2)<2e-3/c0.scale,'the chair at Studio\'s place without the chapter\'s edit');
+  check(true,'taking Studio\'s drops the chapter\'s edit: the chair is where Studio has it');
+  await director.click('#director-panel [data-action=undo]');await until(async()=>!(await chair()).shown,'one Undo hides the chair again');
+  await until(async()=>await director.evaluate(()=>JSON.stringify(__draft().propEdits))===edit0,'the draft has the chapter\'s edit again');
+  check(true,'one Undo brings the chapter\'s edit back');
   await director.click('#director-panel [data-action=redo]');await wait(500);
   check(eventSources.length===sources0,'two Refreshes and an Adopt opened no EventSource');
 
@@ -148,6 +161,7 @@ try{
   check(!desks1.rooms[ROOM].desks[FILM_MOVED]||JSON.stringify(desks1.rooms[ROOM].desks[FILM_MOVED])===JSON.stringify(desks0.rooms?.[ROOM]?.desks?.[FILM_MOVED]),'the blocked desk was not written');
   const others=d=>JSON.stringify(Object.fromEntries(Object.entries(d.rooms||{}).filter(([k])=>k!==ROOM)));
   check(others(desks1)===others(desks0),'no other room changed in Studio');
+  await wait(600);
   check((await director.evaluate(()=>__draft().deskEdits)).some(e=>e.desk===ID),'the chapter keeps its desk edit');
   const changes=await (await fetch(`${BASE}/api/studio-state/changes?since=${studioRev}&client=studio-tab`)).json();
   check(changes.keys.some(k=>k.key===DESKS&&k.by==='Director'),'Studio\'s poll sees the write (what its "shared edits · Reload to see" badge shows)');
@@ -176,7 +190,8 @@ try{
   await director.evaluate(i=>{document.querySelectorAll('#studio-adopt li')[i].querySelector('input[value=take]').click();},mine);
   await director.click('#studio-adopt [data-adopt-go]');
   const o1=await until(async()=>{const r=await director.evaluate(id=>__rec(id),OTHER);return Math.abs(r.x-studioDesk.x)<1?r:null;},'the stage desk goes to Studio\'s place',30000);
-  check(!!o1&&(await director.evaluate(()=>__draft().deskEdits)).some(e=>e.desk===OTHER&&Math.abs(e.pose.x-studioDesk.x)<1),'taking Studio\'s desk makes it a chapter desk edit and moves the stage desk');
+  await until(async()=>(await director.evaluate(()=>__draft().deskEdits)).some(e=>e.desk===OTHER&&Math.abs(e.pose.x-studioDesk.x)<1),'the chapter desk edit with Studio\'s place');
+  check(!!o1,'taking Studio\'s desk makes it a chapter desk edit and moves the stage desk');
   await director.click('#director-panel [data-action=undo]');
   await until(async()=>Math.abs((await director.evaluate(id=>__rec(id),OTHER)).x-o0.x)<1,'Undo puts the film\'s desk back',30000);
   check(true,'one Undo puts the film\'s desk back');

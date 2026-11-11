@@ -147,9 +147,19 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
   // The shared poll: Studio's keys saved by another tab since the last Refresh are this module's; the rest keep the reload badge.
   sync()?.watch?.(keys=>{
     const mine=keys.filter(k=>STUDIO_KEYS.includes(k.key)&&k.rev>seenRev),count=waiting.length;
-    waiting=mine;if(mine.length!==count)rerender();
+    waiting=mine;if(mine.length!==count)paint();
     return keys.filter(k=>!STUDIO_KEYS.includes(k.key));
   });
+  // The badge also sits in the page's top bar, beside Close editor: the inspector scrolls, a change must not scroll away.
+  const top=document.createElement('button');top.type='button';top.id='studio-changed';top.hidden=true;
+  top.onclick=()=>refresh().catch(error=>status(error.message,true));
+  document.getElementById('director')?.before(top);
+  function paint(){
+    const n=waiting.length;top.hidden=!n||busy;
+    top.textContent=`Studio changed: ${n} edit${n===1?'':'s'} · Refresh`;
+    top.title=`${who()} saved ${n} change${n===1?'':'s'} to Studio's props or desks. Read them into the stage: the chapter's edits and Undo stay.`;
+    rerender();
+  }
   const available=()=>!!sync()?.pull;
   const who=()=>[...new Set(waiting.map(k=>k.by))].join(', ');
   function html(){
@@ -160,7 +170,7 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
   async function refresh(){
     if(busy)return;if(!available())throw Error('Studio\'s shared state is not available on this server.');
     if(!bridge.ready()||bridge.bakeState().baking)throw Error('Wait for this chapter to finish loading.');
-    busy=true;rerender();
+    busy=true;paint();
     try{
       status('Reading Studio…');
       const pulled=await sync().pull(key=>STUDIO_KEYS.includes(key));seenRev=pulled.rev;waiting=[];
@@ -177,7 +187,7 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
       const conflicts=rows.filter(r=>r.conflict).length,here=assetChanges.length+deskChanges.length;
       status(`Refreshed from Studio${here?`: ${assetChanges.length} prop change${assetChanges.length===1?'':'s'} and ${deskChanges.length} desk change${deskChanges.length===1?'':'s'} in this room`:' (nothing in this chapter\'s room changed)'}. The chapter's edits and Undo are as they were.${conflicts?` ${conflicts} also edited in this chapter: choose which to keep.`:''}`);
       if(rows.length)openAdopt();
-    }finally{busy=false;rerender();}
+    }finally{busy=false;paint();}
   }
   // ---- Adopt Studio's version: one row per item, keep the chapter's or take Studio's; one undo step.
   const dialog=document.createElement('dialog');dialog.id='studio-adopt';dialog.setAttribute('aria-labelledby','studio-adopt-title');document.body.append(dialog);
@@ -185,7 +195,7 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
     if(!rows.length){status('Studio and this chapter do not disagree on anything since the last Refresh.');return;}
     const conflicts=rows.filter(r=>r.conflict).length;
     dialog.innerHTML=`<div class="director-heading"><div><span class="director-kicker">STUDIO CHANGED</span><h2 id="studio-adopt-title">${conflicts?'Keep the chapter\'s edit, or take Studio\'s?':'Use Studio\'s desks in this chapter?'}</h2></div></div>
-      <p>${conflicts?'Studio changed something this chapter also edits. ':''}Nothing changes unless you choose it here; one Undo puts it back. Room desks: the film keeps its own desk layout, so Studio's desk shows in a chapter only when you take it.</p>
+      <p>${conflicts?'Studio changed something this chapter also edits. ':''}Nothing changes unless you choose it here; one Undo puts it back.${rows.some(r=>r.kind==='desk')?' Room desks: the film keeps its own desk layout, so Studio\'s desk shows in a chapter only when you take it.':''}</p>
       <ul class="prop-permanent-list studio-adopt-list">${rows.map((r,i)=>`<li class="${r.take?'':'blocked'}"><b>${escape(r.name)}</b>${r.conflict?' <em>edited in both</em>':''}<small>${escape(r.studio)} · the chapter: ${escape(r.chapter)}</small>
         <label class="director-check"><input type="radio" name="adopt-${i}" value="keep" checked><span>Keep ${r.conflict?'the chapter\'s edit':'the film\'s desk'}</span></label>
         ${r.take?`<label class="director-check"><input type="radio" name="adopt-${i}" value="take" data-adopt="${i}"><span>${escape(r.take)}</span></label>`:`<small>${r.gone?'The chapter\'s edit stays: the film still has this desk.':'Only its build changed in Studio: a chapter takes a build in the Build tab.'}</small>`}</li>`).join('')}</ul>
