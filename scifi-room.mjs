@@ -390,7 +390,14 @@ export function buildScifiRoom(room, root, layout, helpers) {
         ['LIFE SUPPORT','THERMAL','GRAVITY','SHIELDS','DOCK CLAMP'].forEach((label,i)=>{t.fillStyle=i===4?'#ffc457':'#47ff9c';t.beginPath();t.arc(716,74+i*36,7,0,7);t.fill();t.fillStyle='#cfe6f2';t.fillText(label,734,80+i*36);});
         teleMap.needsUpdate=true;
     };
+    // The stock bulkhead ribs by the airlock come in a toy palette (white, yellow, blue); in this bay they take the hull's
+    // finish: the same panels in blue-grey composite, their bands kept as a darker amber and navy. Done once the room's
+    // props have loaded (each load of the room), on a copy of the model's material.
+    let refinished=null;
+    const refinish=()=>{root.traverse(o=>{if(o.userData.propId!=='kenney-space-template-wall-half'||o.userData.bayFinish)return;o.userData.bayFinish=true;
+        o.traverse(c=>{if(!c.isMesh||!c.material)return;const mat=c.material.clone();mat.color.set('#66788a');mat.roughness=.5;mat.metalness=.45;if('emissiveIntensity' in mat)mat.emissiveIntensity=0;mat.userData.roomSurface='metal';c.material=mat;});});};
     room.roomAtmosphere=(id,accent=1)=>{
+        if(room.ready&&room.ready!==refinished){refinished=room.ready;room.ready.then(refinish).catch(()=>{});}
         const mode=SCIFI_MODES[id]||SCIFI_MODES.morning;
         drawOrbit(id,mode);orbitMap.needsUpdate=true;drawScreen(mode);
         glowMats.forEach((mat,channel)=>{mat.color.set(mode.colors[channel]);mat.emissive.set(mode.colors[channel]);mat.emissiveIntensity=.15+mode.wash*accent;});

@@ -99,5 +99,11 @@ one helper for a window in either side wall; its slant follows the sun the share
 (`room-refinement.mjs`), its reach stops short of the far wall in a narrow layout, and a room can pass its own table
 of hours. The lounge, bedroom, gallery and coworking space keep the patches they were built with.
 
+Materials, looked at from eye level in every room: one thing stood out. The orbital deck's bulkhead ribs by the airlock
+are a stock model in a toy palette (white, yellow, blue) that read as an unfinished slab beside the detailed hull. In
+this bay they take the hull's finish (blue-grey composite, the bands kept as darker amber and navy), on a copy of the
+model's material, once the room's props have loaded (`scifi-room.mjs`). The lounge's clouded walls are its limewash
+plaster and stay.
+
 Looked at and left as they are: the lounge, coworking space and orbital deck already differ clearly between
 all five hours.
