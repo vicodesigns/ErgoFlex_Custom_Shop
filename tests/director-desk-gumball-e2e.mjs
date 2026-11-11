@@ -89,10 +89,18 @@ try{
   await page.screenshot({path:path.join(shots,'gumball-moved.png')});
   // ---- the camera is still free: an orbit drag on empty floor turns it, and it rests afterwards
   const c0=await page.evaluate(()=>__cam());await page.mouse.move(stage.x+stage.w*.12,stage.y+stage.h*.9);await page.mouse.down();await page.mouse.move(stage.x+stage.w*.2,stage.y+stage.h*.9,{steps:6});await page.mouse.up();
-  let c1=await page.evaluate(()=>__cam());for(let i=0;i<40;i++){await wait(250);const now=await page.evaluate(()=>__cam());if(now===c1)break;c1=now;}   // the orbit's damping runs outfor(let i=0;i<8;i++){await page.mouse.move(stage.x+stage.w*(.3+.04*i),stage.y+stage.h*.5);await wait(50);}await wait(400);
-  const c2=await page.evaluate(()=>__cam());check(c0!==c1&&c1===c2,'an orbit drag still turns the camera and it rests when the button is up'+(c0===c1?' (did not turn)':c1!==c2?` (kept moving: ${c1} -> ${c2})`:''));
-  await page.keyboard.press('Escape');await wait(500);
-  check(!(await page.evaluate(()=>__gum()?.visible)),'Esc puts the gumball away');
+  let c1=await page.evaluate(()=>__cam());for(let i=0;i<40;i++){await wait(250);const now=await page.evaluate(()=>__cam());if(now===c1)break;c1=now;}   // the orbit's damping runs out
+  for(let i=0;i<8;i++){await page.mouse.move(stage.x+stage.w*(.3+.04*i),stage.y+stage.h*.5);await wait(50);}await wait(400);
+  const c2=await page.evaluate(()=>__cam()),still=(a,b)=>a.split(',').every((v,i)=>Math.abs(v-b.split(',')[i])<.01);   // a stuck orbit turns it by tenths; the last of the damping by less than a thousandth
+  check(c0!==c1&&still(c1,c2),'an orbit drag still turns the camera and it rests when the button is up'+(c0===c1?' (did not turn)':!still(c1,c2)?` (kept moving: ${c1} -> ${c2})`:''));
+  // ---- Esc in the middle of an arrow drag: the drag ends there, the camera and the tools are free (TransformControls would
+  // otherwise never hear the release and leave the orbit controls switched off)
+  const ax2=await page.evaluate(()=>__arrow('X'));await page.mouse.move(ax2.x,ax2.y);await wait(300);await page.mouse.down();await page.mouse.move(ax2.x+25,ax2.y+6,{steps:5});await wait(150);
+  await page.keyboard.press('Escape');await wait(400);await page.mouse.up();await wait(600);
+  const free=await page.evaluate(()=>{const {w,t}=__t();return {dragging:!!w.__directorDragging,controls:t.controls.enabled,gum:!!__gum()?.visible,gumDragging:!!__gum()?.dragging};});
+  check(!free.dragging&&free.controls&&!free.gum&&!free.gumDragging,'Esc during an arrow drag ends it and frees the camera: '+JSON.stringify(free));
+  const d0=await page.evaluate(()=>__cam());await page.mouse.move(stage.x+stage.w*.12,stage.y+stage.h*.9);await page.mouse.down();await page.mouse.move(stage.x+stage.w*.22,stage.y+stage.h*.9,{steps:6});await page.mouse.up();await wait(600);
+  check(d0!==await page.evaluate(()=>__cam()),'and the camera orbits again afterwards');
 }catch(e){if(!e.done){failures.push(e.message);console.log('FAIL',e.message);}}
 finally{if(errors.length){failures.push('page errors');console.log('page errors:',errors.slice(0,5));}await close();}
 console.log(failures.length?`\n${failures.length} failed`:'\nall passed','· screenshots in',shots);process.exit(failures.length?1:0);

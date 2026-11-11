@@ -173,7 +173,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const e=entry(key),shown=objectOf(key)?.userData?.person;
     if(e&&shown?.variant&&shown.id!==e.id&&modelOf(shown.id)){
       const label=poseOf(shown.id)?.label?.toLowerCase()||'this posture';
-      edit(key,x=>{x.id=shown.id;x.desk=shown.desk;delete x.pose;},`${personName(e)}: fine-tuning ${label}, the posture the desk has them in now.`);
+      edit(key,x=>{x.id=shown.id;x.desk=shown.desk;delete x.pose;},`${personName(e)}: fine-tuning ${label}, the posture the desk has them in now.${e.pose&&Object.keys(e.pose).length?' The fine tuning of their other posture is set aside (Undo brings it back).':''}`);
       for(let i=0;i<40;i++){const now=objectOf(key)?.userData?.person;if(now&&now.id===shown.id&&!now.variant)break;await new Promise(r=>setTimeout(r,150));}
     }
     poseEditor.enter(key);
@@ -239,7 +239,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-pose'){await swap(sel,null,el.value);return;}
     if(name?.startsWith('pe-color-')){const part=name.slice(9);if(!PARTS.includes(part)||!/^#[0-9a-f]{6}$/i.test(el.value))return;edit(sel,x=>{(x.colors||={})[part]=el.value.toLowerCase();},`${who}: ${part} recoloured.`,{undoKey:'people-color-'+part+sel});return;}
     if(name==='pe-anchor'){
-      if(el.value==='free'){const o=objectOf(sel),spot=o&&tools?read(o):floorSpot();edit(sel,x=>{delete x.desk;delete x.station;delete x.reach;delete x.beside;x.at=spot.at;x.turn=spot.turn;},`${who} stays where they are now and no longer follows the desk.`);}
+      if(el.value==='free'){const o=objectOf(sel),spot=o&&tools?read(o):floorSpot(),shown=o?.userData?.person,as=shown?.variant&&modelOf(shown.id)?shown.id:null;   // they stay as they are now: in the posture the desk has them in
+        edit(sel,x=>{if(as&&as!==x.id){x.id=as;delete x.pose;}delete x.desk;delete x.station;delete x.reach;delete x.beside;x.at=spot.at;x.turn=spot.turn;},`${who} stays where they are now and no longer follows the desk.`);}
       else{const p=poseOf(e.id);edit(sel,x=>{delete x.at;delete x.turn;delete x.y;delete x.beside;x.desk=p?.stance==='seated'?'sit':p?.stance==='wheelchair'?'wheel':'stand';},`${who} is at the film desk and follows it.`);}
       return;
     }

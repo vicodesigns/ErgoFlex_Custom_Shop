@@ -29,7 +29,7 @@ export const CHILD_STAGE_LIGHT = {
         morning: M(1.14, 1.75, .4, ['#93b4d0', '#f2dcc4'], '#ffdcb0', '#c4d2e4', '#efd6bc'),
         afternoon: M(1.14, 1.2, .54, ['#a2bfd4', '#f2eee6'], '#fffaf2', '#ebe8e2', '#efe6d8'),
         evening: M(1.14, .42, .25, ['#28466e', '#e88a5a'], '#ffad7a', '#bcc3d8', '#c68cff'),
-        night: M(1.2, .05, .27, ['#0b1324', '#1e2c48'], '#8e9cc4', '#8f9cc4', '#ffad6a')
+        night: M(1.24, .05, .34, ['#0b1324', '#1e2c48'], '#8e9cc4', '#9aa6cc', '#ffad6a') // round 3: shadows lifted a step (was 1.2 / .27)
     },
     college: {
         morning: M(1.05, 1.7, .38, ['#9cbcd8', '#f4e0c8'], '#ffdfb6', '#c8d4e4', '#efdcc4'),

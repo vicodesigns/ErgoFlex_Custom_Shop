@@ -52961,6 +52961,550 @@
     "pose": "stand-low",
     "deskHeight": 35.5
    }
+  },
+  {
+   "id": "people-maya-stand-low",
+   "name": "Maya: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    465.2,
+    1611.8,
+    544.8
+   ],
+   "min": [
+    -232.6,
+    0,
+    -121.4
+   ],
+   "max": [
+    232.6,
+    1611.8,
+    423.4
+   ],
+   "tris": 37600,
+   "bytes": 997016,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-andre-stand-low",
+   "name": "Andre: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    549.6,
+    1759.6,
+    610.2
+   ],
+   "min": [
+    -274.7,
+    0,
+    -157.5
+   ],
+   "max": [
+    274.9,
+    1759.6,
+    452.7
+   ],
+   "tris": 34634,
+   "bytes": 849000,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-grace-stand-low",
+   "name": "Grace: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-grace-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    510,
+    1568,
+    548.3
+   ],
+   "min": [
+    -255,
+    0,
+    -125.8
+   ],
+   "max": [
+    255,
+    1568,
+    422.5
+   ],
+   "tris": 49384,
+   "bytes": 1275468,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "grace",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-kai-stand-low",
+   "name": "Kai: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-kai-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    470.5,
+    1400.9,
+    543.9
+   ],
+   "min": [
+    -235.5,
+    0,
+    -125.9
+   ],
+   "max": [
+    235,
+    1400.9,
+    418
+   ],
+   "tris": 34152,
+   "bytes": 870164,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "kai",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-zoe-stand-low",
+   "name": "Zoe: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    463.8,
+    1541.7,
+    538.6
+   ],
+   "min": [
+    -231.9,
+    0,
+    -120.4
+   ],
+   "max": [
+    231.9,
+    1541.7,
+    418.2
+   ],
+   "tris": 34400,
+   "bytes": 1128620,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-lin-stand-low",
+   "name": "Lin: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    471.4,
+    1505.8,
+    532.9
+   ],
+   "min": [
+    -235.7,
+    0,
+    -118.8
+   ],
+   "max": [
+    235.7,
+    1505.8,
+    414.1
+   ],
+   "tris": 49373,
+   "bytes": 979236,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-omar-stand-low",
+   "name": "Omar: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-omar-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    541.8,
+    1684.8,
+    578.8
+   ],
+   "min": [
+    -270.9,
+    0,
+    -137.7
+   ],
+   "max": [
+    270.9,
+    1684.8,
+    441.1
+   ],
+   "tris": 34372,
+   "bytes": 791756,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "omar",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-sam-stand-low",
+   "name": "Sam: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    524.2,
+    1689.6,
+    577.5
+   ],
+   "min": [
+    -262,
+    0,
+    -135.1
+   ],
+   "max": [
+    262.2,
+    1689.6,
+    442.4
+   ],
+   "tris": 33484,
+   "bytes": 925680,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-ben-stand-low",
+   "name": "Ben: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ben-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    489,
+    1727.5,
+    572.2
+   ],
+   "min": [
+    -244.5,
+    0,
+    -133.4
+   ],
+   "max": [
+    244.5,
+    1727.5,
+    438.8
+   ],
+   "tris": 38614,
+   "bytes": 1139028,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ben",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-rosa-stand-low",
+   "name": "Rosa: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-rosa-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    469.6,
+    1175.3,
+    534.7
+   ],
+   "min": [
+    -234.8,
+    0,
+    -119.4
+   ],
+   "max": [
+    234.8,
+    1175.3,
+    415.3
+   ],
+   "tris": 48492,
+   "bytes": 973588,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "rosa",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-priya-stand-low",
+   "name": "Priya: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-priya-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    470,
+    1599.8,
+    542.8
+   ],
+   "min": [
+    -235,
+    0,
+    -121
+   ],
+   "max": [
+    235,
+    1599.8,
+    421.8
+   ],
+   "tris": 37046,
+   "bytes": 784644,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "priya",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-mia-stand-low",
+   "name": "Mia: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    477.6,
+    1489,
+    532.1
+   ],
+   "min": [
+    -238.8,
+    0,
+    -118.4
+   ],
+   "max": [
+    238.8,
+    1489,
+    413.7
+   ],
+   "tris": 34744,
+   "bytes": 1383512,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-leo-stand-low",
+   "name": "Leo: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-leo-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    470.8,
+    1408,
+    548.4
+   ],
+   "min": [
+    -235.4,
+    0,
+    -129.3
+   ],
+   "max": [
+    235.4,
+    1408,
+    419.1
+   ],
+   "tris": 38214,
+   "bytes": 1156076,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "leo",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-noah-stand-low",
+   "name": "Noah: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    518.4,
+    1735.6,
+    600.8
+   ],
+   "min": [
+    -259,
+    0,
+    -155.8
+   ],
+   "max": [
+    259.4,
+    1735.6,
+    445
+   ],
+   "tris": 33306,
+   "bytes": 1190328,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-eli-stand-low",
+   "name": "Eli: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-eli-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    504.5,
+    1506.1,
+    553
+   ],
+   "min": [
+    -252.5,
+    0,
+    -129.2
+   ],
+   "max": [
+    252,
+    1506.1,
+    423.8
+   ],
+   "tris": 42859,
+   "bytes": 1274732,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "eli",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-sofia-stand-low",
+   "name": "Sofia: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sofia-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    456,
+    1468.6,
+    535.6
+   ],
+   "min": [
+    -228,
+    0,
+    -121.2
+   ],
+   "max": [
+    228,
+    1468.6,
+    414.4
+   ],
+   "tris": 49974,
+   "bytes": 991196,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sofia",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
   }
  ],
  "screens": [

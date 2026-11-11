@@ -21,7 +21,7 @@ try{
   // Mia as the stage has her now: the model that is showing, where she is, and her desk
   const mia=()=>page.evaluate(D=>{const w=document.getElementById('stage').contentWindow,E=w.ErgoFlex,p=E.workspaceRoom?.people,r=E.sceneDesks?.records.get(D);if(!p||!r?.group)return null;
     const all=p.people.filter(o=>/people-mia-/.test(o.userData.person.id)&&o.userData.person.station==='window-research'&&p.allowed(o.userData.person)),o=all.find(x=>x.visible);
-    return {models:all.length,showing:o?o.userData.person.id:null,at:o?[Math.round(o.position.x),Math.round(o.position.z)]:null,desk:{x:Math.round(r.group.position.x),z:Math.round(r.group.position.z),height:r.state.height}};},DESK);
+    return {models:all.length,chosen:all.find(x=>!x.userData.person.variant)?.userData.person.id||null,showing:o?o.userData.person.id:null,at:o?[Math.round(o.position.x),Math.round(o.position.z)]:null,desk:{x:Math.round(r.group.position.x),z:Math.round(r.group.position.z),height:r.state.height}};},DESK);
   const frame=()=>page.evaluate(D=>{const w=document.getElementById('stage').contentWindow,t=w.ErgoPresentation.three(),r=w.ErgoFlex.sceneDesks.records.get(D),T=w.__directorThree.THREE,b=new T.Box3().setFromObject(r.group),c=b.getCenter(new T.Vector3());const look=c.clone().add(new T.Vector3(.7,.2,0));t.camera.position.set(c.x+3.4,c.y+1.3,c.z+2.2);t.controls.target.copy(look);t.camera.lookAt(look);t.controls.update();},DESK);   // from inside the room, past her shoulder (room z is world x)
   await click('#director-panel [data-inspector-tab="people"]');
   if(await page.$('#director-panel [data-action="pe-room"]'))await click('#director-panel [data-action="pe-room"]');
@@ -35,7 +35,7 @@ try{
   await click(`#director-panel .people-row:nth-child(${idx+1}) .people-pick`);
   await until(()=>page.$('#director-panel [name="pe-pose"]'),'Mia\'s posture menu');
   await setField('pe-pose','stand-type');
-  const m1=await until(async()=>{const m=await mia();return m&&m.models>=3&&m.showing?m:null;},'Mia is still there after choosing the standing posture');
+  const m1=await until(async()=>{const m=await mia();return m&&m.models>=3&&m.chosen==='people-mia-stand-type'&&m.showing?m:null;},'the stage has the standing posture as her chosen one and she is still there');
   check(m1.showing==='people-mia-sit-type','with the standing posture chosen and the desk at 28 in she is there, seated: '+m1.showing);
   check(!/Not showing now/.test(await page.$eval('#director-panel [data-scene-people]',e=>e.textContent)),'the panel does not say she is not showing');
 

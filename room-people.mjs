@@ -216,8 +216,9 @@ export const ROOM_PEOPLE = {
         { id: 'people-andre-sit-mix', station: 'sound-mix-02', desk: 'sit', modes: ['evening'] },
         { id: 'people-lin-sit-type', station: 'digital-art-03', desk: 'sit', modes: ['morning', 'afternoon'] },
         { id: 'people-omar-wheel-type-28', station: 'accessible-edit-04', desk: 'wheel', modes: ['morning', 'afternoon', 'evening'] },
-        { id: 'people-kai-sit-type', station: 'film-edit-01', desk: 'sit', modes: ['afternoon', 'night'], colors: LOOK.kaiLab },
+        { key: 'kai-edit-bay', id: 'people-kai-sit-type', station: 'film-edit-01', desk: 'sit', modes: ['afternoon'], colors: LOOK.kaiLab },
         ...crewOf('ava', ['afternoon', 'evening'], { colors: LOOK.ava }),
+        ...crewOf('kai', ['night'], { colors: LOOK.kaiLab }),   // the late edit is at the featured bay, the one bay the room still lights
         { id: 'people-ava-stand-low', desk: 'stand', modes: ['morning', 'party'], colors: LOOK.ava },   // the desk at 35 in
         { id: 'people-noah-sit-laptop', on: ['ergoflex-designer-chair', 0], seat: 450, modes: ['party'] },
         { id: 'people-sofia-sit-laptop', on: ['ergoflex-designer-chair', 3], seat: 450, modes: ['morning', 'party'] },
@@ -275,14 +276,14 @@ export const castEntries = (id, layout) => {
 };
 const castFor = (id, layout) => { const own = castEntries(id, layout); return own.length ? own : DEFAULT_CREW[id] ? crew(DEFAULT_CREW[id]) : []; };
 
-// The same character's other desk postures, as [id, desk role]: a typist sits at 28 in and at 30 in and stands at
-// 43.5 in, a wheelchair user has a 28 in and a 31 in pose. Poses built for one special desk (low standing) have none.
+// The same character's other desk postures, as [id, desk role]: a typist sits at 28 in and at 30 in, stands low at a
+// bench-height desk (35 to 36 in) and stands at 43.5 in, a wheelchair user has poses for 28 in and 31 in. Poses built for one special desk (low standing) have none.
 export function deskFamily(id) {
     const m = /^people-([a-z]+)-(.+)$/.exec(id || ''); if (!m) return [];
     const [, who, posture] = m, as = (p, desk) => ['people-' + who + '-' + p, desk]; let list = [];
-    if (/^wheel-/.test(posture)) { const base = posture.replace(/-28$/, ''); list = [as(base, 'wheel'), as(base + '-28', 'wheel')]; }
-    else if (/^sit-/.test(posture)) { const base = posture.replace(/-30$/, ''); list = [as(base, 'sit'), as(base + '-30', 'sit'), as('stand-type', 'stand')]; }
-    else if (posture === 'stand-type') list = [as('sit-type', 'sit'), as('sit-type-30', 'sit')];
+    if (/^wheel-/.test(posture)) { const base = posture.replace(/-(28|31)$/, ''); list = [as(base, 'wheel'), as(base + '-28', 'wheel'), as(base + '-31', 'wheel')]; }
+    else if (/^sit-/.test(posture)) { const base = posture.replace(/-30$/, ''); list = [as(base, 'sit'), as(base + '-30', 'sit'), as('stand-low', 'stand'), as('stand-type', 'stand')]; }
+    else if (posture === 'stand-type' || posture === 'stand-low') list = [as('sit-type', 'sit'), as('sit-type-30', 'sit'), as('stand-low', 'stand'), as('stand-type', 'stand')];
     return list.filter(([other]) => other !== id);
 }
 
@@ -428,7 +429,7 @@ export class RoomPeople {
     keyOf(spec) { return spec.key || spec.variant || spec.id; }
     // A film chapter that names someone in `only` shows them whatever the daypart casts (`modes` is the Studio's script).
     named(spec) { const only = this.filter?.only; return !!only && (only.includes(this.keyOf(spec)) || only.includes(spec.id)); }
-    allowed(spec) { const f = this.filter, k = this.keyOf(spec), has = list => list.includes(k) || list.includes(spec.id); return !f || spec.extra || ((!f.only || has(f.only)) && !has(f.except || [])); }
+    allowed(spec) { const f = this.filter, k = this.keyOf(spec), has = list => list.includes(k) || (!spec.variant && list.includes(spec.id)); return !f || spec.extra || ((!f.only || has(f.only)) && !has(f.except || [])); }
     // 0..1: how much of the person is there at this second of the film.
     present(spec, time) {
         const spans = this.filter?.when?.[this.keyOf(spec)]; if (!spans || !Number.isFinite(time)) return 1;
@@ -601,7 +602,8 @@ export class RoomPeople {
                 const desk = on ? this.atStation(object, spec, state) : null, off = !desk || fit === null ? 0 : Math.abs(desk.height - fit);
                 on = on && !!desk && !busy.has(spec.station) && off <= HEIGHT_FIT;
                 if (on) { busy.add(spec.station); object.userData.personAmount = there * (1 - THREE.MathUtils.smoothstep(off, HEIGHT_SOLID, HEIGHT_FIT)); }
-            } else if (spec.beside && (this.filter?.place?.[this.keyOf(spec)] || this.filter?.place?.[spec.id])) {
+            } else if (spec.variant) on = false;   // put somewhere by hand (filter.place): only the posture the placement names
+            else if (spec.beside && (this.filter?.place?.[this.keyOf(spec)] || this.filter?.place?.[spec.id])) {
                 // placed for this use: stays where it was put
             } else if (spec.beside && pose) {
                 const yaw = pose.yaw || 0, c = Math.cos(yaw), s = Math.sin(yaw), [dx, dz] = spec.beside;
@@ -621,11 +623,18 @@ export class RoomPeople {
     clearChairs() {
         const spots = this.people.filter(o => o.visible && o.userData.person.desk).map(o => o.position);
         if (this.chairSpot) spots.push(this.chairSpot, this.chairHome);   // the room's own desk chair stays out while the film's is in the room
-        for (const chair of this.room.assets()) {
-            if (!CHAIRS.test((chair.userData.propId || '') + ' ' + (chair.userData.decorUpgrade || ''))) continue;
+        // anyone standing or sitting on the floor where a chair is (a party guest by the desk): the chair is not there with them
+        const feet = this.people.filter(o => { const s = o.userData.person; return o.visible && !s.desk && !s.on && !s.near; }).map(o => o.position);
+        const chairs = this.room.assets().filter(chair => CHAIRS.test((chair.userData.propId || '') + ' ' + (chair.userData.decorUpgrade || ''))).map(chair => {
             // stools and classroom chairs stay unless someone stands right where they are (the workshop's bar stool)
-            const reach = /student-chair|bar|artist/.test(chair.userData.propId || '') ? 420 : 850;
-            const centre = this.centreOf(chair).setY(0), blocked = spots.some(p => Math.hypot(p.x - centre.x, p.z - centre.z) < reach);
+            const fixed = /student-chair|bar|artist/.test(chair.userData.propId || ''), reach = fixed ? 420 : 850, centre = this.centreOf(chair).setY(0), near = list => list.some(p => Math.hypot(p.x - centre.x, p.z - centre.z) < reach);
+            return { chair, fixed, centre, blocked: near(spots) || feet.some(p => Math.hypot(p.x - centre.x, p.z - centre.z) < 600) };
+        });
+        // The featured desk's user sits on the chair they brought. Where the room has pushed its own desk chair back (an
+        // evening at a tilted top) it is out of the 850 mm: every loose task chair within 1.3 m of them goes.
+        const seat = this.people.find(o => o.visible && o.userData.person.desk === 'sit' && !o.userData.person.station);
+        if (seat) for (const c of chairs) if (!c.fixed && Math.hypot(seat.position.x - c.centre.x, seat.position.z - c.centre.z) < 1300) c.blocked = true;
+        for (const { chair, blocked } of chairs) {
             if (blocked && !this.hidden.has(chair)) { this.hidden.set(chair, chair.visible); chair.visible = false; }
             else if (!blocked && this.hidden.has(chair)) { chair.visible = this.hidden.get(chair); this.hidden.delete(chair); }
         }

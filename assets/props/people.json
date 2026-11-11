@@ -4443,6 +4443,120 @@
    "deskHeight": 35.5,
    "name": "Jo: working standing at a bench-height desk",
    "aids": []
+  },
+  "people-maya-stand-low": {
+   "character": "maya",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Maya: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-andre-stand-low": {
+   "character": "andre",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Andre: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-grace-stand-low": {
+   "character": "grace",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Grace: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-kai-stand-low": {
+   "character": "kai",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Kai: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-zoe-stand-low": {
+   "character": "zoe",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Zoe: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-lin-stand-low": {
+   "character": "lin",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Lin: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-omar-stand-low": {
+   "character": "omar",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Omar: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-sam-stand-low": {
+   "character": "sam",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Sam: working standing at a bench-height desk",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-ben-stand-low": {
+   "character": "ben",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Ben: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-rosa-stand-low": {
+   "character": "rosa",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Rosa: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-priya-stand-low": {
+   "character": "priya",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Priya: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-mia-stand-low": {
+   "character": "mia",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Mia: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-leo-stand-low": {
+   "character": "leo",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Leo: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-noah-stand-low": {
+   "character": "noah",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Noah: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-eli-stand-low": {
+   "character": "eli",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Eli: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-sofia-stand-low": {
+   "character": "sofia",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Sofia: working standing at a bench-height desk",
+   "aids": []
   }
  }
 }

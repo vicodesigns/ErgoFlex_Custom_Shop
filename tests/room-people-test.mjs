@@ -103,7 +103,8 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     const up = people.byKey('people-mia-sit-type');
     assert.equal(up.userData.person.id, 'people-mia-stand-type', 'her name finds whichever of her postures is showing');
     assert.deepEqual([up.position.x, up.position.z], [-4000, 1200 + 890], 'and she is where the desk has been moved to');
-    desk = { height: 36, pose: desk.pose }; people.update(state()); assert.deepEqual(mia(), [], 'nobody works at a desk half way up');
+    desk = { height: 36, pose: desk.pose }; people.update(state()); assert.deepEqual(mia(), ['people-mia-stand-low'], 'at bench height she stands low at it');
+    desk = { height: 39.5, pose: desk.pose }; people.update(state()); assert.deepEqual(mia(), [], 'nobody works at a desk between bench and standing height');
     desk = { height: 30, pose: desk.pose }; people.update(state()); assert.deepEqual(mia(), ['people-mia-sit-type-30'], 'the 30 in seat at 30 in');
     assert.ok(!people.resolved().some(p => /mia-(stand-type|sit-type-30)/.test(p.id)), 'a film keeps the placement, not its other postures');
     // The Director's entry names the standing posture while the desk is down: she is there, seated (she used to vanish).

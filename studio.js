@@ -1,11 +1,11 @@
-import { SceneScreens, SCENE_SCREENS_KEY } from './scene-screens.mjs?v=environment-expert-20261014';
+import { SceneScreens, SCENE_SCREENS_KEY } from './scene-screens.mjs?v=gym-black-red-m1-20261104';
 import { measureRoute, routePose } from './experience/timing.mjs';
 import { ItemGizmo, cloneItem, nodeSnapshot, topLevelItems } from './scene-item-editing.mjs?v=item-gumball-clipboard-20261016';
 import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261008';
 import { normalizeCustomLook, normalizeCustomPalette, importCustomLooks, CUSTOM_LOOKS_KEY, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=commons-group-work-20261016';
-import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=commons-home-comfort-20261024';
+import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=people-gym-20261110';
 import { poseIsClear, grooveDestination } from './room-groove.mjs?v=humboldt-commons-20261015';
 import { SceneDesks } from './scene-desks.mjs?v=drop-flat-align-20261110';
 import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=item-gumball-clipboard-20261016';
@@ -29,9 +29,9 @@ import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pac
 import { SceneTour, tourEnabled } from './scene-tour.mjs?v=highschool-setting-20261104';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
-import { roomPolishLighting } from './room-polish.mjs?v=table-clearance-20261021';
+import { roomPolishLighting } from './room-polish.mjs?v=people-gym-20261110';
 import { roomViewBounds } from './room-view-bounds.mjs?v=table-clearance-20261021';
-import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle } from './room-desk-styles.mjs?v=hbhs-product-classroom-20261014';
+import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle, roomDeskStyle } from './room-desk-styles.mjs?v=gym-black-red-m1-20261104';
 import { RoomLedSpill } from './room-led-spill.mjs?v=commons-group-work-20261016';
 import { SurfaceArtwork, createSceneDeskArtwork } from './surface-artwork.mjs?v=hbhs-product-classroom-20261014';
 import { artworkSummary, cleanArtwork } from './artwork-config.mjs?v=scene-desk-styling-20261010';
@@ -63,7 +63,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=label-fix-20261110';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=people-cast-20261110c';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=people-cast-gym-20261110';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=20261110-stationary-organizer';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=people-vistas-20261110';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=people-vistas-20261110';
@@ -71,7 +71,8 @@ import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from 
 import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=people-vistas-20261110';
 import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
-import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=people-vistas-20261110';
+import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=people-gym-20261110';
+import { GYM_THEMES, gymModes, themeGymDeskStyle, themeGymLights, themeGymDeskState } from './gym-theme.mjs?v=people-gym-20261110';
 import { KITCHEN_MODES, KITCHEN_LAYOUTS, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
 import { LOUNGE_MODES, LOUNGE_LAYOUTS, LOUNGE_STYLES, loungeLayoutsForStyle, loungeModesForStyle, loungeLayoutIdForStyle, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=gaming-gear-20261014';
 import { loungeDeskTheme, upgradeLoungeDesk } from './lounge-design.mjs';
@@ -817,7 +818,7 @@ function initSceneScreenControls(toolbar) {
     toolbar.append(panel);
     const select=panel.querySelector('#scene-screen-select'),enabled=panel.querySelector('#scene-screens-enabled'),single=panel.querySelector('#scene-screen-enabled');let revision=-1;
     sceneScreens=new SceneScreens({
-        context:()=>{const p=measuredRoomProfile();return {scene:selectedRoomScene,layout:p?.layout.id||'product',phase:p?.mode||'morning',label:p?.modes[p.mode]?.label,preset:activeBuildPreset};},
+        context:()=>{const p=measuredRoomProfile();return {scene:selectedRoomScene,layout:p?.layout.id||'product',phase:p?.mode||'morning',label:p?.modes[p.mode]?.label,preset:activeBuildPreset,accent:selectedRoomScene==='gym'&&GYM_THEMES[gymTheme].screenAccent||undefined,mono:selectedRoomScene==='gym'&&GYM_THEMES[gymTheme].screenMono||undefined};},
         room:()=>workspaceRoom,
         sources:()=>{
             const records=[...sceneDesks?.records.values()||[]],sources=[];
@@ -970,13 +971,15 @@ try {
     if (query.get('room') === 'office' && OFFICE_LAYOUTS[query.get('layout')]) officeLayoutId = query.get('layout');
 } catch {}
 function selectedOfficeLayout() { return officeLayoutId ? officeLayoutById(officeLayoutId) : officeLayoutForSize(currentConfig.size); }
-let gymMode = 'morning', gymLayoutId = null;
+let gymMode = 'morning', gymLayoutId = null, gymTheme = 'green';
 try {
-    const layout = localStorage.getItem('ergoflex.gymLayout'), mode = localStorage.getItem('ergoflex.gymMode');
+    const layout = localStorage.getItem('ergoflex.gymLayout'), mode = localStorage.getItem('ergoflex.gymMode'), theme = localStorage.getItem('ergoflex.gymTheme');
     if (GYM_LAYOUTS[layout]) gymLayoutId = layout;
     if (GYM_MODES[mode]) gymMode = mode;
+    if (GYM_THEMES[theme]) gymTheme = theme;
     const query = new URLSearchParams(location.search);
     if (query.get('room') === 'gym' && GYM_LAYOUTS[query.get('layout')]) gymLayoutId = query.get('layout');
+    if (query.get('room') === 'gym' && GYM_THEMES[query.get('gymTheme')]) gymTheme = query.get('gymTheme');
 } catch {}
 function selectedGymLayout() { return gymLayoutId ? gymLayoutById(gymLayoutId) : gymLayoutForSize(currentConfig.size); }
 let kitchenMode = 'morning', kitchenLayoutId = null;
@@ -1101,7 +1104,7 @@ function measuredRoomProfile(id = selectedRoomScene) {
     if (id === 'office') return { id, layouts: OFFICE_LAYOUTS, modes: OFFICE_MODES, layout: selectedOfficeLayout(), mode: officeMode, prefix: 'office' };
     if (id === 'lounge') return { id, layouts: loungeLayoutsForStyle(loungeStyleId), modes: loungeModesForStyle(loungeStyleId), layout: selectedLoungeLayout(), mode: loungeMode, prefix: 'lounge' };
     if (id === 'kitchen') return { id, layouts: KITCHEN_LAYOUTS, modes: KITCHEN_MODES, layout: selectedKitchenLayout(), mode: kitchenMode, prefix: 'kitchen' };
-    if (id === 'gym') return { id, layouts: GYM_LAYOUTS, modes: GYM_MODES, layout: selectedGymLayout(), mode: gymMode, prefix: 'gym' };
+    if (id === 'gym') return { id, layouts: GYM_LAYOUTS, modes: gymModes(gymTheme), layout: selectedGymLayout(), mode: gymMode, prefix: 'gym' };
     if (id === 'study') return { id, layouts: STUDY_LAYOUTS, modes: STUDY_MODES, layout: selectedStudyLayout(), mode: studyMode, prefix: 'study' };
     return null;
 }
@@ -2876,7 +2879,7 @@ function styleDeskForRoom(id, preserve = false) {
     sceneDeskLocation = id;
     syncSceneDeskStyleUI();
 }
-function roomDeskTheme(id){return id==='lounge'?loungeDeskTheme(selectedLoungeLayout()):id==='childroom'?{...childAgeStage(childAgeId).style,name:childAgeStage(childAgeId).short+' workspace'}:ROOM_DESK_STYLES[id];}
+function roomDeskTheme(id){return id==='lounge'?loungeDeskTheme(selectedLoungeLayout()):id==='childroom'?{...childAgeStage(childAgeId).style,name:childAgeStage(childAgeId).short+' workspace'}:roomDeskStyle(id, gymTheme);}
 function syncSceneDeskStyleUI() {
     const button = document.getElementById('room-desk-palette'); if (!button) return;
     const theme = roomDeskTheme(selectedRoomScene); button.hidden = !theme;
@@ -4544,6 +4547,7 @@ function serializeProject() {
                 kitchenLayout: selectedKitchenLayout().id,
                 gymMode,
                 gymLayout: selectedGymLayout().id,
+                gymTheme,
                 officeMode,
                 officeLayout: selectedOfficeLayout().id,
                 studyMode,
@@ -4956,6 +4960,8 @@ function applyProjectPresentation(project) {
     if (KITCHEN_LAYOUTS[presentation.kitchenLayout]) kitchenLayoutId = presentation.kitchenLayout;
     if (GYM_MODES[presentation.gymMode]) gymMode = presentation.gymMode;
     if (GYM_LAYOUTS[presentation.gymLayout]) gymLayoutId = presentation.gymLayout;
+    // Projects saved before the colourway toggle carry none: they reopen green, as authored.
+    gymTheme = GYM_THEMES[presentation.gymTheme] ? presentation.gymTheme : 'green';
     if (OFFICE_MODES[presentation.officeMode]) officeMode = presentation.officeMode;
     if (OFFICE_LAYOUTS[presentation.officeLayout]) officeLayoutId = presentation.officeLayout;
     if (STUDY_MODES[presentation.studyMode]) studyMode = presentation.studyMode;
@@ -11075,6 +11081,7 @@ function syncHomeOfficeUI() {
         panel.querySelector(`#${prefix}-room-size`).value = profile.layout.id;
         panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-mode`) === profile.mode)));
         panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(`data-${prefix}-size`) === currentConfig.size)));
+        if (id === 'gym') panel.querySelectorAll('[data-gym-theme]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.gymTheme === gymTheme)));
     }
     const caption = document.getElementById('room-scene-caption');
     const feet = mm => { const inches = Math.round(mm / 25.4); return `${Math.floor(inches / 12)}′${inches % 12}″`; };
@@ -11147,6 +11154,33 @@ function setWorkshopMode(id, moveDesk = true) { setMeasuredRoomMode('workshop', 
 function setLoungeMode(id, moveDesk = true) { setMeasuredRoomMode('lounge', id, moveDesk); }
 function setKitchenMode(id, moveDesk = true) { setMeasuredRoomMode('kitchen', id, moveDesk); }
 function setGymMode(id, moveDesk = true) { setMeasuredRoomMode('gym', id, moveDesk); }
+// One colourway for the whole gym (every layout and mode). A desk or LED colour
+// still in the other colourway's authored finish follows it; custom ones stay.
+// The swap happens here, on the toggle, and never on load: the black & red desk
+// is also the catalog's Gaming desk, a finish a visitor may choose in green.
+function setGymTheme(id) {
+    if (!GYM_THEMES[id]) return;
+    gymTheme = id;
+    try { localStorage.setItem('ergoflex.gymTheme', id); } catch {}
+    const saved = sceneDeskStyles.gym;
+    if (saved && themeGymDeskStyle(saved, id) !== saved) { delete sceneDeskStyles.gym; try { localStorage.setItem(SCENE_DESK_STYLES_KEY, JSON.stringify(sceneDeskStyles)); } catch {} }
+    const inGym = selectedRoomScene === 'gym';
+    if (inGym) {
+        const live = currentDeskStyle(); if (themeGymDeskStyle(live, id) !== live) applyDeskStyle(GYM_THEMES[id].desk);
+        const lights = themeGymLights({ color: ledColor }, id); if (lights.color !== ledColor) setLedColor(lights.color, false);
+    }
+    // Saved scene desks of every gym size: finish, lights and per-setting lights.
+    if (sceneDesks) {
+        let changed = false;
+        const move = state => { const patch = themeGymDeskState(state, id); if (patch) { Object.assign(state, patch); changed = true; } };
+        if (sceneDesks.key?.startsWith('gym/')) for (const r of sceneDesks.records.values()) move(r.state);
+        for (const [key, room] of Object.entries(sceneDesks.data.rooms || {})) if (key.startsWith('gym/')) Object.values(room.desks || {}).forEach(move);
+        if (changed) sceneDesks.persist();
+    }
+    if (!inGym) { syncHomeOfficeUI(); return; }
+    setRoomScene('gym', false, { preserveDesk: true });
+    syncSceneDeskStyleUI(); sceneScreens?.update(true);
+}
 function setStudyMode(id, moveDesk = true) { setMeasuredRoomMode('study', id, moveDesk); }
 function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
     itemGizmo?.close();
@@ -11275,7 +11309,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
         homeScale = reference.widthUnits > 0 ? reference.widthUnits / (reference.nominalWidth * 25.4) : 1 / (reference.metersPerUnit * 1000);
     }
     roomInteractions?.end();roomInteractions?.select(null);roomLedSpill.dispose();roomCollisionBlocked=false;roomSafety.reset();syncSafetyUI();
-    workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id,
+    workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id, gymTheme,
         createStation: (['office', 'coworking'].includes(choice.id) || INSTITUTIONAL_ROOMS[choice.id]) && loadedModel ? spec => captureOfficeStation(spec, homeScale, measured.layout.stations.indexOf(spec)) : null });
     workspaceRoom?.setCeilingEnabled(ceilingPreviewEnabled);
     syncRoomPeople();
@@ -11295,7 +11329,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     // procedural room standing and is reported in Build checks rather than
     // only in the console.
     const roomReady = workspaceRoom?.ready || Promise.resolve();
-    const dressReady = workspaceAccessories?.dress(choice.id,{ageStage:measured?.layout.ageStage}) || Promise.resolve();
+    const dressReady = workspaceAccessories?.dress(choice.id, choice.id === 'gym' ? GYM_THEMES[gymTheme].dressing : null, { ageStage: measured?.layout.ageStage }) || Promise.resolve();
     const assetsReady = Promise.allSettled([roomReady, dressReady]).then(async results => {
         if(choice.id==='library' && measured?.layout.humboldt)await loadLibraryArtworkRecovery();
         if (results[0].status === 'rejected') {
@@ -12054,6 +12088,8 @@ function initStudio() {
             } else panel.querySelector(`label[for="${prefix}-room-size"]`).textContent = 'Room size';
         }
         panel.querySelector(`#${prefix}-room-size`).onchange = e => setMeasuredRoomLayout(id, e.target.value);
+        if (id === 'gym') { panel.querySelector('.home-time-choices').insertAdjacentHTML('afterend', `<div class="gym-theme-choices" role="group" aria-label="Colourway">${Object.values(GYM_THEMES).map(t => `<button type="button" data-gym-theme="${t.id}" aria-pressed="${t.id === gymTheme}" title="Room colourway. The desk finish follows it (${t.desk.woodFinish} / ${t.desk.baseFinish} base).">${t.label}</button>`).join('')}</div>`);
+            panel.querySelectorAll('[data-gym-theme]').forEach(b => b.onclick = () => setGymTheme(b.dataset.gymTheme)); }
         panel.querySelectorAll(`[data-${prefix}-size]`).forEach(b => b.onclick = () => { sizeSelect.value = b.getAttribute(`data-${prefix}-size`); sizeSelect.dispatchEvent(new Event('change', { bubbles: true })); });
         panel.insertAdjacentHTML('beforeend', '<div class="groove-controls"><button type="button" data-groove-start disabled>Start Groove</button><button type="button" data-groove-stop disabled>Stop</button><button type="button" data-groove-save disabled title="Save the current location, rotation, height, tilt and LED settings for this time of day">Save Groove position</button><button type="button" data-groove-reset disabled title="Restore the original position and lighting preset for this time of day">Reset Groove position</button><span data-groove-saved></span><span data-groove-status role="status">Choose a time, then tap the desk to start its Groove.</span></div>');
         panel.querySelector('.groove-controls').dataset.scene=id;
@@ -12367,6 +12403,8 @@ window.ErgoFlex = {
     get kitchenLayout() { return selectedKitchenLayout().id; },
     setGymMode,
     get gymMode() { return gymMode; },
+    setGymTheme,
+    get gymTheme() { return gymTheme; },
     setGymLayout,
     get gymLayout() { return selectedGymLayout().id; },
     setOfficeMode,
