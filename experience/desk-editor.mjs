@@ -1,30 +1,35 @@
 import {DESK_LANES,POSE_FIELDS,cleanPose,simplifyDeskLane} from './desk-track.mjs';
-import {motionForShot,sampledMotionToClips,legacyMotionToClips,cleanClip,putClip,duplicateClip,findClipInsertion,clipEnd,clipTarget,clipDistance,clipSpeedUnit,clipSpeedPresets,clipSpeedSetting,retimeClipBySpeed,clipSummary,sampleClipMotion,validateClipSchedule} from './desk-clips.mjs';
+import {CHOREO_LANES,sizeLabel,deskLimitNote,limitDeskPose} from './desk-choreo.mjs';
+import {stackRows,rowVar} from './lane-rows.mjs';
+import {motionForShot,sampledMotionToClips,legacyMotionToClips,cleanClip,putClip,duplicateClip,planClipInsertion,clipEnd,clipTarget,clipDistance,clipSpeedUnit,clipSpeedPresets,clipSpeedSetting,retimeClipBySpeed,clipSummary,sampleClipMotion,validateClipSchedule} from './desk-clips.mjs';
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={lift:'Lift',tilt:'Tilt',wheels:'Wheels'};
 const fields=[['height','Height',28,52.5,.1],['tilt','Tilt',-5,65,.1],['x','Sideways',-120,120,.5],['z','Forward / back',-120,120,.5],['yaw','Turn',-3600,3600,1]];
 const round=n=>Number(n.toFixed(3));
 const option=(v,label,current)=>`<option value="${v}" ${v===current?'selected':''}>${escape(label)}</option>`;
-export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,render,status,preview=()=>Promise.resolve(),focus=()=>{},snap=(value)=>Math.round(value*20)/20}){
+export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,render,status,preview=()=>Promise.resolve(),focus=()=>{},snap=(value)=>Math.round(value*20)/20,lengthen=null,choreo=null}){
   let selected=null,drag=null,suppress=0,recording=null,jog=null,lastTiming=null,paletteDrag=null,paletteSuppress=0,dirty=false,pointerAction=false;
   const initial=new Map(),automatic=new Map();
-  const motion=()=>{
-    const s=shot(),saved=automatic.get(s.id);
+  const motionOf=s=>{
+    const saved=automatic.get(s.id);
     if(!s.motion&&saved){if(saved.seconds!==s.seconds){saved.motion=sampledMotionToClips(saved.tracks,s.seconds);saved.seconds=s.seconds;}return saved.motion;}
     return motionForShot(s,initial.get(s.id));
   };
+  const motion=()=>motionOf(shot());
   function captureAutomatic(){
     const s=shot(),tracks=bridge.stage().motionDefaults();
     automatic.set(s.id,{tracks,seconds:s.seconds,motion:sampledMotionToClips(tracks,s.seconds)});
     initial.set(s.id,bridge.stage().capturePose());
   }
   const clip=()=>motion().clips.find(c=>c.id===selected);
+  // A non-featured room desk is open (desk-choreo.mjs): its lift and tilt clips are the timeline; no wheels, recording or built-in animation.
+  const deskInfo=()=>choreo?.info()||null,laneNames=()=>deskInfo()?CHOREO_LANES:DESK_LANES;
   const now=()=>time()*shot().seconds;
   const ready=()=>{if(!bridge.ready())throw Error('Wait for this chapter to finish loading.');};
   const guarded=fn=>{try{fn();}catch(e){dirty=false;lastTiming=null;render();status(e.message,true);}};
   function sync(){
     for(const line of timeline.querySelectorAll('[data-desk-playhead]'))line.style.left=time()*100+'%';
-    const output=panel.querySelector('[data-desk-readout]');if(output){const p=recording?.pose||(bridge.ready()?bridge.stage().capturePose():null)||sampleClipMotion(motion(),now());output.textContent=`${p.height.toFixed(1)}″ height · ${p.tilt.toFixed(1)}° tilt · ${p.yaw.toFixed(1)}° heading`+(clip()?.lane==='wheels'?` · X ${p.x.toFixed(1)}″ · Z ${p.z.toFixed(1)}″`:'');}
+    const output=panel.querySelector('[data-desk-readout]');if(output){const p=recording?.pose||(!deskInfo()&&bridge.ready()?bridge.stage().capturePose():null)||sampleClipMotion(motion(),now());output.textContent=`${p.height.toFixed(1)}″ height · ${p.tilt.toFixed(1)}° tilt · ${p.yaw.toFixed(1)}° heading`+(clip()?.lane==='wheels'?` · X ${p.x.toFixed(1)}″ · Z ${p.z.toFixed(1)}″`:'');}
     const c=clip(),progress=panel.querySelector('[data-movement-progress]');if(c&&progress)progress.textContent=`${round(Math.max(0,Math.min(c.duration,now()-c.start)))} / ${round(c.duration)}s`;
     const play=panel.querySelector('[data-desk-action=preview]');if(play&&c)play.textContent=bridge.playback().playing&&bridge.playback().range?.id==='desk-'+c.id?'❚❚ Pause move':'▶ Play move';
     if(recording)for(const [f] of fields){const el=panel.querySelector(`[name="desk-live-${f}"]`);if(el&&document.activeElement!==el)el.value=round(recording.pose[f]);}
@@ -34,11 +39,13 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
   }
   function select(id){ready();lastTiming=null;selected=id;focus('groove');const c=clip();if(c)seek(c.start/shot().seconds);render();status('Movement selected. Edit its settings in Groove, or drag its block or trim handles.');}
   function add(lane,preferred=now(),kind=lane==='wheels'?'rotate':lane){
-    ready();focus('groove');const m=motion(),space=findClipInsertion(m.clips,lane,preferred,shot().seconds);
+    ready();focus('groove');const m=motion(),space=planClipInsertion(m.clips,lane,preferred,shot().seconds,3,90,kind);
     if(!space)throw Error(`The ${names[lane]} lane is full. Shorten a movement or lengthen this chapter.`);
-    const {start,duration}=space;
+    const {start,duration}=space,longer=space.seconds>shot().seconds+1e-9;
     const from=sampleClipMotion(m,start),c=cleanClip({lane,start,duration,kind,target:lane==='lift'?(from.height<45?52.5:28):(from.tilt<30?35:0),value:kind==='travel'?12:360,direction:kind==='travel'?'forward':'right'});
-    selected=c.id;save(putClip(m,c,shot().seconds),{at:start,message:`${names[lane]} movement added at ${round(start)}s. Set its duration, speed and direction below.`});
+    selected=c.id;
+    if(longer&&lengthen){const next=putClip(m,c,space.seconds);lastTiming=null;dirty=false;lengthen(space.seconds,next,`${names[lane]} added at ${start.toFixed(1)}s`,start);return;}
+    save(putClip(m,c,shot().seconds),{at:start,message:`${names[lane]} movement added at ${round(start)}s. Set its duration, speed and direction below.`});
   }
   function applyForm(){
     const c=clip();if(!c)return;const read=(n,fallback)=>panel.querySelector(`[name="desk-clip-${n}"]`)?.value??fallback;
@@ -65,7 +72,7 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
   }
   function update(changes){const c=clip();if(!c)return;const next=putClip(motion(),{...c,...changes},shot().seconds);save(next,{at:next.clips.find(v=>v.id===c.id).start});}
   function startRecord(){
-    ready();const m=motion(),start=now()>=shot().seconds-.001?0:now();
+    ready();if(deskInfo())throw Error('Recording is for the featured desk. Add Lift and Tilt blocks to this desk instead, or choose Featured desk to record.');const m=motion(),start=now()>=shot().seconds-.001?0:now();
     if(m.clips.some(c=>c.start<=start+.00001&&clipEnd(c)>start+.00001))throw Error('Recording needs an empty gap across all three lanes. Move the playhead past the existing movements.');
     const until=Math.min(shot().seconds,...m.clips.filter(c=>c.start>start).map(c=>c.start));
     if(until-start<.1)throw Error('This gap is too short to record.');
@@ -134,25 +141,45 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
   timeline.addEventListener('click',e=>{if(performance.now()<suppress)return;const b=e.target.closest('[data-desk-clip]');if(b){guarded(()=>select(b.dataset.deskClip));return;}const rail=e.target.closest('[data-desk-lane]');if(rail)guarded(()=>{const box=rail.getBoundingClientRect();seek(Math.max(0,Math.min(1,(e.clientX-box.left)/box.width)));sync();});});
   timeline.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-desk-clip]');if(!b||e.button!==0)return;guarded(()=>{ready();const c=motion().clips.find(c=>c.id===b.dataset.deskClip),rail=b.closest('[data-desk-lane]');drag={id:c.id,original:c,marker:b,rail,start:e.clientX,edge:e.target.closest('[data-resize]')?.dataset.resize,moved:false,candidate:c};rail.setPointerCapture(e.pointerId);e.preventDefault();});});
   timeline.addEventListener('pointermove',e=>{if(!drag)return;const d=drag,box=d.rail.getBoundingClientRect();if(Math.abs(e.clientX-d.start)>3)d.moved=true;if(!d.moved)return;const delta=(e.clientX-d.start)/box.width*shot().seconds,c={...d.original},options={pixels:box.width,bypass:e.altKey,excludeClip:c.id};
-    if(d.edge==='end')c.duration=Math.max(.05,Math.min(shot().seconds-c.start,snap(clipEnd(d.original)+delta,options)-c.start));
+    // Past the chapter end is allowed: letting go there lengthens the chapter (the snap helper stops at the end, so it is bypassed beyond it).
+    const free=v=>v>shot().seconds?(options.bypass?v:Math.round(v*10)/10):snap(v,options),room=90;
+    if(d.edge==='end')c.duration=Math.max(.05,Math.min(room-c.start,free(clipEnd(d.original)+delta)-c.start));
     else if(d.edge==='start'){c.start=Math.max(0,Math.min(clipEnd(d.original)-.05,snap(d.original.start+delta,options)));c.duration=clipEnd(d.original)-c.start;}
-    else c.start=Math.max(0,Math.min(shot().seconds-c.duration,snap(d.original.start+delta,options)));
+    else c.start=Math.max(0,Math.min(room-c.duration,free(d.original.start+delta)));
     d.candidate=c;d.marker.style.left=c.start/shot().seconds*100+'%';d.marker.style.width=c.duration/shot().seconds*100+'%';
-    try{validateClipSchedule([...motion().clips.filter(v=>v.id!==c.id),c],shot().seconds);d.marker.classList.remove('invalid');}catch{d.marker.classList.add('invalid');}
+    try{validateClipSchedule([...motion().clips.filter(v=>v.id!==c.id),c],Math.max(shot().seconds,clipEnd(c)));d.marker.classList.remove('invalid');}catch{d.marker.classList.add('invalid');}
     const text=d.marker.querySelector('small');if(text)text.textContent=`${round(c.start)}s · ${round(c.duration)}s`;
   });
-  timeline.addEventListener('pointerup',()=>{if(!drag)return;const d=drag;drag=null;suppress=performance.now()+250;guarded(()=>{if(!d.moved){select(d.id);return;}selected=d.id;focus('groove');save(putClip(motion(),d.candidate,shot().seconds),{at:d.candidate.start,message:d.edge?'Movement resized; speed updated.':'Movement moved.'});});});
+  timeline.addEventListener('pointerup',()=>{if(!drag)return;const d=drag;drag=null;suppress=performance.now()+250;guarded(()=>{if(!d.moved){select(d.id);return;}selected=d.id;focus('groove');const need=Math.max(shot().seconds,Math.ceil(clipEnd(d.candidate)*1000-1e-6)/1000),message=d.edge?'Movement resized; speed updated.':'Movement moved.';
+    if(need>shot().seconds&&lengthen){lastTiming=null;dirty=false;lengthen(need,putClip(motion(),d.candidate,need),message.replace(/[.;].*$/,''),d.candidate.start);return;}
+    save(putClip(motion(),d.candidate,shot().seconds),{at:d.candidate.start,message});});});
   timeline.addEventListener('pointercancel',()=>{drag=null;render();});
   timeline.addEventListener('keydown',e=>{const b=e.target.closest('[data-desk-clip]');if(!b||!['ArrowLeft','ArrowRight','Delete','Backspace'].includes(e.key))return;e.preventDefault();guarded(()=>{selected=b.dataset.deskClip;if(['Delete','Backspace'].includes(e.key)){action('delete');return;}const c=clip(),start=c.start+(e.shiftKey?1:.1)*(e.key==='ArrowLeft'?-1:1);if(start<0||start+c.duration>shot().seconds+.00001)throw Error('Keep the whole movement inside the chapter.');update({start});timeline.querySelector(`[data-desk-clip="${selected}"]`)?.focus();});});
   timeline.addEventListener('dragover',e=>{const rail=e.target.closest('[data-desk-lane]');if(rail&&[...e.dataTransfer.types].includes('application/x-ergoflex-movement')){e.preventDefault();e.dataTransfer.dropEffect='copy';}});
   timeline.addEventListener('drop',e=>{const lane=e.dataTransfer.getData('application/x-ergoflex-movement'),rail=e.target.closest('[data-desk-lane]');if(!DESK_LANES.includes(lane)||!rail)return;e.preventDefault();guarded(()=>{if(lane!==rail.dataset.deskLane)throw Error(`Drop ${names[lane]} on the ${names[lane]} lane.`);const box=rail.getBoundingClientRect();add(lane,snap((e.clientX-box.left)/box.width*shot().seconds,{pixels:box.width,bypass:e.altKey}));});});
   addEventListener('blur',()=>{jog=null;if(recording)stopRecord();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&recording)stopRecord();});
-  function palette(){return [['lift','lift','Lift'],['tilt','tilt','Tilt'],['wheels','rotate','Turn'],['wheels','travel','Travel'],['wheels','hold','Hold']].map(([lane,kind,label])=>`<button data-desk-action="add-${lane}" data-desk-add="${lane}" data-desk-kind="${kind}" draggable="false" title="Add ${label.toLowerCase()} movement">+ ${label}</button>`).join('');}
+  // ---- every room desk's own timeline (desk-choreo.mjs): the Desk menu and the compact "Other desks" rows
+  const movesOf=id=>(choreo?.edits()||[]).find(e=>e.desk===id)?.clips?.length||0;
+  function picker(){
+    const rows=choreo?.roster()||[];if(rows.length<2)return '';
+    const open=choreo.desk()||'';
+    return `<label class="choreo-pick" title="Which desk the Lift and Tilt lanes edit. Every desk in the room has its own timeline.">Desk <select name="choreo-desk" aria-label="Desk to choreograph">${rows.map(r=>{const n=r.featured?0:movesOf(r.id);return option(r.featured?'':r.id,r.featured?'Featured desk':`${r.name} · ${sizeLabel(r.size)}${n?` · ${n} move${n===1?'':'s'}`:''}`,open);}).join('')}</select></label>`;
+  }
+  function others(){
+    const rows=choreo?.others()||[];if(!rows.length)return '';
+    const secs=shot().seconds;
+    return `<div class="choreo-others" data-choreo-others>${rows.map(r=>`<div class="desk-lane-row choreo-row" data-lane-color="others" data-choreo-row="${escape(r.id)}"><span class="desk-lane-label" title="${escape(r.label)}"><b>${escape(r.label)}</b><small>${r.clips.length} move${r.clips.length===1?'':'s'}</small></span><div class="desk-lane choreo-rail" role="group" aria-label="${escape(r.label)} movements"><div class="desk-lane-line"></div>${r.clips.map(c=>`<button class="choreo-clip" data-lane-color="${c.lane}" data-choreo-clip="${c.id}" data-choreo-desk="${escape(r.id)}" style="left:${c.start/secs*100}%;width:${Math.max(.4,c.duration/secs*100)}%" aria-label="Open ${escape(r.label)}: ${escape(clipSummary(c))}, ${round(c.start)} to ${round(clipEnd(c))} seconds" title="${escape(r.label)} · ${escape(clipSummary(c))} · ${round(c.start)}–${round(clipEnd(c))}s"></button>`).join('')}<div class="camera-track-playhead" data-desk-playhead style="left:${time()*100}%"></div></div></div>`).join('')}</div>`;
+  }
+  timeline.addEventListener('change',e=>{if(e.target.name!=='choreo-desk')return;guarded(()=>{if(!flush())return;ready();choreo.pick(e.target.value||null);const d=deskInfo();status(d?`${d.name||'Room desk'}: its own Lift and Tilt timeline. Add moves, then drag and resize them like the main desk's.`:'Back to the featured desk.');});});
+  timeline.addEventListener('click',e=>{const b=e.target.closest('[data-choreo-clip]');if(!b)return;guarded(()=>{if(!flush())return;choreo.pick(b.dataset.choreoDesk||null);select(b.dataset.choreoClip);});});
+
+  function palette(){return [['lift','lift','Lift'],['tilt','tilt','Tilt'],['wheels','rotate','Turn'],['wheels','travel','Travel'],['wheels','hold','Hold']].filter(([lane])=>laneNames().includes(lane)).map(([lane,kind,label])=>`<button data-desk-action="add-${lane}" data-desk-add="${lane}" data-desk-kind="${kind}" draggable="false" title="Add ${label.toLowerCase()} movement">+ ${label}</button>`).join('');}
   return {
-    flush, duplicate(){if(clip())guarded(()=>action('duplicate'));}, hasSelection:()=>!!clip(), tools:palette, count:()=>motion().clips.length, boundaries:(exclude)=>motion().clips.filter(c=>c.id!==exclude).flatMap(c=>[c.start,clipEnd(c)]), clearSelection(){selected=null;},
+    flush, motion, featuredMotion:()=>motionOf(choreo?.real()||shot()), selectedId:()=>clip()?.id||null, select:id=>guarded(()=>select(id)), duplicate(){if(clip())guarded(()=>action('duplicate'));}, hasSelection:()=>!!clip(), tools:palette, count:()=>motion().clips.length, boundaries:(exclude)=>motion().clips.filter(c=>c.id!==exclude).flatMap(c=>[c.start,clipEnd(c)]), clearSelection(){selected=null;},
     ready(){if(!shot().motion)captureAutomatic();if(!motion().clips.some(c=>c.id===selected))selected=null;},stop:stopRecord,sync,
     panel(){const m=motion(),c=clip(),from=c?sampleClipMotion(m,c.start):m.initial,speed=c?clipDistance(m,c)/c.duration:0,direction=c&&(c.kind==='lift'||c.kind==='tilt')?(c.target>=from[c.kind==='lift'?'height':'tilt']?'up':'down'):c?.direction;
-      return `<hr><h3>Desk Groove · chapter movement</h3><p class="director-hint">Select a block to edit it. Changes apply when you leave a field or press Enter. Drag blocks to move them; drag their edges to resize.</p>
+      const di=deskInfo();
+      return `<hr><h3>Desk Groove · ${di?escape((di.name||'Room desk')+' · '+sizeLabel(di.size)):'chapter movement'}</h3>${di?`<p class="director-hint" data-choreo-note>This desk has its own timeline: lift and tilt moves for ${escape(di.name||'this desk')} only. ${escape(deskLimitNote(di.size,from.height))} Choose Featured desk in the timeline's Desk menu to go back to the main desk.</p>`:''}<p class="director-hint">Select a block to edit it. Changes apply when you leave a field or press Enter. Drag blocks to move them; drag their edges to resize.</p>
       <div class="director-actions movement-palette">${palette()}</div><p class="director-hint">You can also drag these buttons onto their lanes. New chapters start empty.</p>
       ${shot().motion&&!Array.isArray(shot().motion.clips)?'<p class="director-hint">This chapter has movement saved by the earlier editor. It is preserved as clips. Use Clear movements for an empty timeline; Undo restores them.</p>':''}
       ${!shot().motion?`<p class="director-status">${m.clips.length?'Original chapter movements are shown below. Select a block to edit its timing, speed or path. Your first change keeps these movements in a custom timeline.':'This chapter has no built-in desk movement. Add a block to animate it.'}</p>`:''}
@@ -168,11 +195,12 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
         ${c.kind==='rotate'?`<p class="director-status">${c.value}° = ${round(c.value/360)} full turn${c.value===360?'':'s'} ${c.direction}. This is the total rotation for this block.</p>`:''}
         ${c.kind!=='hold'?`<label>Speed<select name="desk-clip-speed-preset">${Object.entries(clipSpeedPresets(c)).map(([key,rate])=>option(key,`${key[0].toUpperCase()+key.slice(1)} · ${rate} ${clipSpeedUnit(c)}/s`,clipSpeedSetting(m,c))).join('')}${option('custom','Custom',clipSpeedSetting(m,c))}</select></label><details data-precise-speed ${clipSpeedSetting(m,c)==='custom'?'open':''}><summary>Precise speed</summary><label>Custom speed (${clipSpeedUnit(c)} / second)<input name="desk-clip-speed" type="number" min=".001" step=".1" value="${round(speed)}"></label></details><p class="director-hint">${round(speed)} ${clipSpeedUnit(c)}/s · ${round(c.duration)}s. Speed changes duration; the movement amount stays exact. Editing duration sets a custom speed.</p>`:''}
         <label>Acceleration<select name="desk-clip-easing">${option('linear','Constant speed',c.easing)}${option('smooth','Ease in / out',c.easing)}${option('hold','Hold, then change',c.easing)}</select></label><div class="director-actions"><button data-desk-action="apply" class="primary">Apply movement</button><button data-desk-action="duplicate" title="Duplicate selected movement (Ctrl/Cmd+D)">Duplicate movement</button><button data-desk-action="delete">Delete movement</button></div></div>`:'<p class="movement-empty-help">Add <b>Lift</b>, <b>Tilt</b>, <b>Turn</b>, <b>Travel</b> or <b>Hold</b>, then select its block to set the timing and movement.</p>'}
-      <details class="desk-start-pose"><summary>Starting desk position</summary><div class="director-grid">${fields.map(([f,label,min,max,step])=>`<label>${label} (${['height','x','z'].includes(f)?'inches':'degrees'})<input name="desk-initial-${f}" type="number" min="${min}" max="${max}" step="${step}" value="${round(m.initial[f])}"></label>`).join('')}</div></details>
-      <div class="director-actions"><button data-desk-action="clear" ${m.clips.length||!shot().motion?'':'disabled'}>Clear movements</button><button data-desk-action="automatic" ${shot().motion?'':'disabled'}>Use built-in animation</button></div>
-      <details class="desk-recorder" ${recording?'open':''}><summary>Record a performance</summary><p class="director-hint">Record into an empty gap across all three lanes. Recording stops before the next movement and keeps existing clips.</p><button data-desk-action="record" class="${recording?'recording':''}">${recording?'■ Stop & keep recording':'● Record movement'}</button>
-      ${recording?`<div class="desk-jogs">${fields.map(([f,label,min,max,step])=>`<div><label>${label}<input name="desk-live-${f}" type="number" min="${min}" max="${max}" step="${step}" value="${round(recording.pose[f])}"></label><button data-desk-jog="${f}" data-sign="-1" aria-label="Record decrease ${f}">−</button><button data-desk-jog="${f}" data-sign="1" aria-label="Record increase ${f}">+</button></div>`).join('')}</div>`:''}</details>`;
+      ${di?'':`<details class="desk-start-pose"><summary>Starting wheel position</summary><p class="director-hint">Starting height and tilt: Chapter tab → Starting position.</p><div class="director-grid">${fields.filter(([f])=>!['height','tilt'].includes(f)).map(([f,label,min,max,step])=>`<label>${label} (${['height','x','z'].includes(f)?'inches':'degrees'})<input name="desk-initial-${f}" type="number" min="${min}" max="${max}" step="${step}" value="${round(m.initial[f])}"></label>`).join('')}</div></details>`}
+      <div class="director-actions"><button data-desk-action="clear" ${m.clips.length||!shot().motion?'':'disabled'}>${di?'Clear this desk’s movements':'Clear movements'}</button>${di?'':`<button data-desk-action="automatic" ${shot().motion?'':'disabled'}>Use built-in animation</button>`}</div>
+      ${di?'':`<details class="desk-recorder" ${recording?'open':''}><summary>Record a performance</summary><p class="director-hint">Record into an empty gap across all three lanes. Recording stops before the next movement and keeps existing clips.</p><button data-desk-action="record" class="${recording?'recording':''}">${recording?'■ Stop & keep recording':'● Record movement'}</button>
+      ${recording?`<div class="desk-jogs">${fields.map(([f,label,min,max,step])=>`<div><label>${label}<input name="desk-live-${f}" type="number" min="${min}" max="${max}" step="${step}" value="${round(recording.pose[f])}"></label><button data-desk-jog="${f}" data-sign="-1" aria-label="Record decrease ${f}">−</button><button data-desk-jog="${f}" data-sign="1" aria-label="Record increase ${f}">+</button></div>`).join('')}</div>`:''}</details>`}`;
     },
-    timeline(){const m=motion(),count=m.clips.length;return `<div class="desk-track-toolbar"><strong>Desk movements · ${count} clip${count===1?'':'s'}</strong><span>Drag blocks to move · edges to resize</span>${palette()}</div><div class="desk-ruler"><span></span><div>${Array.from({length:6},(_,i)=>`<span style="left:${i*20}%">${round(shot().seconds*i/5)}s</span>`).join('')}</div></div><div class="desk-lanes">${DESK_LANES.map(l=>`<div class="desk-lane-row" data-lane-color="${l}"><span class="desk-lane-label">${names[l]}</span><div class="desk-lane" data-desk-lane="${l}" role="group" aria-label="${names[l]} movement timeline"><div class="desk-lane-line"></div>${m.clips.filter(c=>c.lane===l).map(c=>`<button class="desk-clip ${selected===c.id?'selected':''}" data-desk-clip="${c.id}" style="left:${c.start/shot().seconds*100}%;width:${c.duration/shot().seconds*100}%" aria-label="${names[l]} movement: ${escape(clipSummary(c))}, ${round(c.start)} to ${round(clipEnd(c))} seconds" aria-pressed="${selected===c.id}" title="${escape(clipSummary(c))} · ${round(c.start)}–${round(clipEnd(c))}s"><span class="clip-resize" data-resize="start" title="Resize start"></span><strong>${escape(clipSummary(c))}</strong><small>${round(c.start)}–${round(clipEnd(c))}s · ${round(c.duration)}s</small><span class="clip-resize" data-resize="end" title="Resize end"></span></button>`).join('')}${m.clips.some(c=>c.lane===l)?'':`<span class="desk-lane-empty">Drop ${names[l]} here · use ${l==='wheels'?'+ Turn / Travel / Hold':'+ '+names[l]}</span>`}<div class="camera-track-playhead" data-desk-playhead style="left:${time()*100}%"></div></div></div>`).join('')}</div>`;}
+    timeline(){const m=motion(),count=m.clips.length;return `<div class="desk-track-toolbar"><strong>${deskInfo()?escape((deskInfo().name||'Room desk')+' · '):''}Desk movements · ${count} clip${count===1?'':'s'}</strong><span>Drag blocks to move · edges to resize</span>${palette()}</div><div class="desk-ruler"><span></span><div>${Array.from({length:6},(_,i)=>`<span style="left:${i*20}%">${round(shot().seconds*i/5)}s</span>`).join('')}</div></div><div class="desk-lanes">${laneNames().map(l=>{const empty=!m.clips.some(c=>c.lane===l);const layers=stackRows(m.clips.filter(c=>c.lane===l).map(c=>({id:c.id,start:c.start,end:clipEnd(c)})));return `<div class="desk-lane-row ${empty?'empty':''} ${layers.count>1?'layered':''}" data-lane-color="${l}" data-rows="${layers.count}" style="--rows:${layers.count}"><span class="desk-lane-label">${names[l]}${empty?`<button class="lane-add" data-desk-action="add-${l}" data-desk-add="${l}" data-desk-kind="${l==='wheels'?'rotate':l}" title="Add a ${l==='wheels'?'turn':names[l].toLowerCase()} movement at the playhead">+ ${l==='wheels'?'Turn':names[l]}</button>`:''}</span><div class="desk-lane" data-desk-lane="${l}" role="group" aria-label="${names[l]} movement timeline"><div class="desk-lane-line"></div>${m.clips.filter(c=>c.lane===l).map(c=>`<button class="desk-clip ${selected===c.id?'selected':''}" data-desk-clip="${c.id}" style="${rowVar(layers,c.id)}left:${c.start/shot().seconds*100}%;width:${c.duration/shot().seconds*100}%" aria-label="${names[l]} movement: ${escape(clipSummary(c))}, ${round(c.start)} to ${round(clipEnd(c))} seconds" aria-pressed="${selected===c.id}" title="${escape(clipSummary(c))} · ${round(c.start)}–${round(clipEnd(c))}s"><span class="clip-resize" data-resize="start" title="Resize start"></span><strong>${escape(clipSummary(c))}</strong><small>${round(c.start)}–${round(clipEnd(c))}s · ${round(c.duration)}s</small><span class="clip-resize" data-resize="end" title="Resize end"></span></button>`).join('')}${m.clips.some(c=>c.lane===l)?'':`<span class="desk-lane-empty">Drop ${names[l]} here · use ${l==='wheels'?'+ Turn / Travel / Hold':'+ '+names[l]}</span>`}<div class="camera-track-playhead" data-desk-playhead style="left:${time()*100}%"></div></div></div>`;}).join('')}</div>${others()}`;},
+    picker,
   };
 }

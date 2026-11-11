@@ -1,0 +1,52 @@
+// Walls specialist render harness. One browser, runs under flock.
+// node walls-render.mjs <outDir> <prefix> age:layout:phase:view[,...]
+// view: over (review frameRoom), rear, right, left
+import puppeteer from '/home/ergo/ErgoFlex_Custom_Shop_ChildRooms/node_modules/puppeteer/lib/esm/puppeteer/puppeteer.js';
+import {writeFileSync,mkdirSync} from 'node:fs';
+const [outDir,prefix,specList]=process.argv.slice(2);mkdirSync(outDir,{recursive:true});
+const {existsSync}=await import('node:fs');const specs=specList.split(',').map(s=>{const [age,layout,phase,view='over']=s.split(':');return {age,layout,phase,view};});
+const sizes={early:'48x30',primary:'48x30',preteen:'48x30',teen:'60x30',college:'60x30'};
+const browser=await puppeteer.launch({headless:true,protocolTimeout:600000,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader','--disable-dev-shm-usage','--mute-audio']});
+const errors=[];
+try{
+ const page=await browser.newPage();page.setDefaultTimeout(300000);
+ page.on('pageerror',e=>{errors.push(e.message);console.error('page error:',e.message);});
+ page.on('console',m=>{if(m.type()==='error'&&!/404/.test(m.text()))console.error('console:',m.text().slice(0,300));});
+ await page.setViewport({width:1280,height:1100});
+ // Studio live-reload would navigate mid-render when other experts save files.
+ await page.setRequestInterception(true);page.on('request',r=>{if(r.url().includes('/__studio/reload')||r.url().includes('/__studio/events'))r.abort();else r.continue();});
+ await page.goto('http://127.0.0.1:3220/tools/child-growth-review.html?walls='+Date.now(),{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>document.getElementById('status')?.textContent==='Stage ready',{timeout:500000,polling:1000});
+ const frame=page.frames().find(f=>f.url().includes('presentation=1'));
+ for(const {age,layout,phase,view} of specs){
+  if(existsSync(`${outDir}/${prefix}${age}-${layout}-${phase}-${view}.jpg`)&&process.env.SKIP)continue;
+  const id=layout+(age==='early'?'':age);
+  const t0=Date.now();
+  const report=await frame.evaluate(async(phase,size,id,view,extra)=>{
+   const R=window.EnvironmentReview,E=window.ErgoFlex;const report=await R.load('childroom',phase,size,id);
+   R.frameRoom();
+   const THREE=await import('three');
+   if(view!=='over'){
+    const r=E.workspaceRoom,l=r.roomLayout,camera=E.sceneDesks.ctx.camera,controls=E.sceneDesks.ctx.controls;r.root.updateWorldMatrix(true,true);
+    const W=v=>new THREE.Vector3(...v).applyMatrix4(r.root.matrixWorld);let pos,target;
+    if(view==='rear'){pos=W([-l.width*.05,1500,l.back+l.depth*1.05]);target=W([0,1500,l.back]);camera.fov=58;}
+    else if(view==='right'){pos=W([-l.width*.62,1500,l.back+l.depth*.62]);target=W([l.width/2,1450,l.back+l.depth*.62]);camera.fov=62;}
+    else if(view==='left'){pos=W([l.width*.62,1500,l.back+l.depth*.55]);target=W([-l.width/2,1450,l.back+l.depth*.55]);camera.fov=62;}
+    else if(view==='bedwall'){pos=W([l.bed[0]+1700,1400,l.bed[1]+2600]);target=W([l.bed[0]-100,1100,l.back+200]);camera.fov=56;}
+    else if(view==='door'){const d=E.workspaceRoom.root.userData.childWallLife?.door,z=d?d.u:l.back+l.depth*.5;pos=W([-l.width*.1,1450,z-300]);target=W([l.width/2,1150,z+150]);camera.fov=60;}
+    else if(view==='corner'){pos=W([-l.width*.42,1350,l.back+l.depth*.95]);target=W([l.width*.2,1300,l.back+l.depth*.25]);camera.fov=62;}
+    camera.position.copy(pos);camera.updateProjectionMatrix();controls.target.copy(target);controls.update();
+   }
+   if(extra)(0,eval)(extra);
+   await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+   const canvas=document.createElement('canvas');window.ErgoPresentation.capture(canvas);
+   const small=document.createElement('canvas');small.width=1280;small.height=Math.round(1280*canvas.height/canvas.width);small.getContext('2d').drawImage(canvas,0,0,small.width,small.height);
+   const dump=window.__dump?window.__dump():null;
+   return {dump,img:small.toDataURL('image/jpeg',.86),walls:E.workspaceRoom.root.userData.childWallLife||E.workspaceRoom.root.userData.earlyYearsWalls||null,calls:E.renderer?.info?.render?.calls};
+  },phase,sizes[age],id,view,process.env.EXTRA||'');
+  const file=`${outDir}/${prefix}${process.env.TAG||''}${age}-${layout}-${phase}-${view}.jpg`;
+  writeFileSync(file,Buffer.from(report.img.split(',')[1],'base64'));if(report.dump)writeFileSync(file+'.dump.png',Buffer.from(report.dump.split(',')[1],'base64'));
+  console.log(file,((Date.now()-t0)/1000).toFixed(1)+'s','calls',report.calls,JSON.stringify(report.walls)?.slice(0,200));
+ }
+}finally{await browser.close();}
+if(errors.length){console.error('ERRORS',errors.length);process.exitCode=1;}

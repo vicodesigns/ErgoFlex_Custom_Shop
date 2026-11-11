@@ -1,0 +1,99 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Eyebrow,Poppins SemiBold,28,&H00EC8813&,&H00FFFFFF,&H00000000,&HB4000000,0,0,0,0,100,100,6,0,1,0,1.2,1,0,0,0,1
+Style: Title,Poppins SemiBold,86,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,-0.6,0,1,0,2,1,0,0,0,1
+Style: Detail,Poppins,40,&H00E6DED6,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,0.2,0,1,0,1.5,1,0,0,0,1
+Style: Scrim,Poppins,20,&HFF000000,&HFF000000,&HFF000000,&HFF000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: BoxEyebrow,Poppins SemiBold,28,&HFF000000,&HFF000000,&HB0000000,&HB0000000,0,0,0,0,100,100,6,0,3,16,0,1,0,0,0,1
+Style: BoxTitle,Poppins SemiBold,86,&HFF000000,&HFF000000,&HB0000000,&HB0000000,0,0,0,0,100,100,-0.6,0,3,26,0,1,0,0,0,1
+Style: BoxDetail,Poppins,40,&HFF000000,&HFF000000,&HB0000000,&HB0000000,0,0,0,0,100,100,0.2,0,3,20,0,1,0,0,0,1
+Style: CTA,Poppins Medium,46,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,1.5,0,1,0,1.5,5,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:03.60,0:00:09.20,BoxEyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur18}ERGOFLEX
+Dialogue: 1,0:00:03.60,0:00:09.20,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}ERGOFLEX
+Dialogue: 0,0:00:03.74,0:00:09.20,BoxTitle,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur18}Level up your every day.
+Dialogue: 1,0:00:03.74,0:00:09.20,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Level up your every day.
+Dialogue: 0,0:00:03.98,0:00:09.20,BoxDetail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur18}Better health. Clearer focus. More joy in your work.
+Dialogue: 1,0:00:03.98,0:00:09.20,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Better health. Clearer focus. More joy in your work.
+Dialogue: 0,0:00:13.20,0:00:18.40,BoxEyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur18}SAFETY
+Dialogue: 1,0:00:13.20,0:00:18.40,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}SAFETY
+Dialogue: 0,0:00:13.34,0:00:18.40,BoxTitle,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur18}Safe for everyone around it.
+Dialogue: 1,0:00:13.34,0:00:18.40,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Safe for everyone around it.
+Dialogue: 0,0:00:13.58,0:00:18.40,BoxDetail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur18}Light and sound tell the room when it moves.
+Dialogue: 1,0:00:13.58,0:00:18.40,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Light and sound tell the room when it moves.
+Dialogue: 0,0:00:46.95,0:00:52.75,Scrim,,0,0,0,,{\an7\move(0,10,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 122.23 779.62 l 290.2 778.45 l 288.57 813.69 l 121.05 813.26 l 122.23 779.62{\p0}
+Dialogue: 0,0:00:47.09,0:00:52.75,Scrim,,0,0,0,,{\an7\move(0,14,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 121.03 832.2 l 751.22 832.53 l 754.13 907.91 l 120.37 906.36 l 121.03 832.2{\p0}
+Dialogue: 0,0:00:47.33,0:00:52.75,Scrim,,0,0,0,,{\an7\move(0,10,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 122.11 921.84 l 555.58 928.15 l 559.72 969.86 l 119.77 968.32 l 122.11 921.84{\p0}
+Dialogue: 1,0:00:46.95,0:00:52.75,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}SIT · STAND
+Dialogue: 1,0:00:47.09,0:00:52.75,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Your height. Your rhythm.
+Dialogue: 1,0:00:47.33,0:00:52.75,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Sit to focus. Rise to 43.5″ to recharge.
+Dialogue: 0,0:01:03.45,0:01:09.45,Scrim,,0,0,0,,{\an7\move(0,10,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 117.4 780.4 l 183.79 778.34 l 183.26 814.66 l 115.48 816.55 l 117.4 780.4{\p0}
+Dialogue: 0,0:01:03.59,0:01:09.45,Scrim,,0,0,0,,{\an7\move(0,14,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 121.8 840.3 l 589.65 839.72 l 591.13 892.61 l 120.35 901.94 l 121.8 840.3{\p0}
+Dialogue: 0,0:01:03.83,0:01:09.45,Scrim,,0,0,0,,{\an7\move(0,10,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 119.05 926.04 l 745.89 924.11 l 748.45 970.09 l 119.28 973.41 l 119.05 926.04{\p0}
+Dialogue: 1,0:01:03.45,0:01:09.45,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}TILT
+Dialogue: 1,0:01:03.59,0:01:09.45,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Angle it to your art.
+Dialogue: 1,0:01:03.83,0:01:09.45,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}From digital to drafting to oil. Everything within reach.
+Dialogue: 0,0:01:24.50,0:01:30.30,BoxEyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur18}GLIDE
+Dialogue: 1,0:01:24.50,0:01:30.30,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}GLIDE
+Dialogue: 0,0:01:24.64,0:01:30.30,BoxTitle,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur18}A place for everyone.
+Dialogue: 1,0:01:24.64,0:01:30.30,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}A place for everyone.
+Dialogue: 0,0:01:24.88,0:01:30.30,BoxDetail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur18}Same table. Same project. Same team.
+Dialogue: 1,0:01:24.88,0:01:30.30,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Same table. Same project. Same team.
+Dialogue: 0,0:01:39.00,0:01:44.30,Scrim,,0,0,0,,{\an7\move(0,10,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 122.4 782.49 l 224.04 778.76 l 226.64 812.09 l 121.43 812.6 l 122.4 782.49{\p0}
+Dialogue: 0,0:01:39.14,0:01:44.30,Scrim,,0,0,0,,{\an7\move(0,14,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 116.83 834.08 l 666.08 831.4 l 667.83 898.24 l 115.39 898.73 l 116.83 834.08{\p0}
+Dialogue: 0,0:01:39.38,0:01:44.30,Scrim,,0,0,0,,{\an7\move(0,10,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 121.43 923.45 l 665.23 932.29 l 663.17 968.01 l 123.67 971.31 l 121.43 923.45{\p0}
+Dialogue: 1,0:01:39.00,0:01:44.30,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}STUDIO
+Dialogue: 1,0:01:39.14,0:01:44.30,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Ideas become stories.
+Dialogue: 1,0:01:39.38,0:01:44.30,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Your own edit suite inside a shared media lab.
+Dialogue: 0,0:01:52.75,0:01:57.35,BoxEyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur18}CLASSROOM
+Dialogue: 1,0:01:52.75,0:01:57.35,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}CLASSROOM
+Dialogue: 0,0:01:52.89,0:01:57.35,BoxTitle,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur18}Space to discover.
+Dialogue: 1,0:01:52.89,0:01:57.35,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Space to discover.
+Dialogue: 0,0:01:53.13,0:01:57.35,BoxDetail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur18}Built for how each student learns.
+Dialogue: 1,0:01:53.13,0:01:57.35,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Built for how each student learns.
+Dialogue: 0,0:02:04.50,0:02:10.30,BoxEyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur18}WELLNESS
+Dialogue: 1,0:02:04.50,0:02:10.30,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}WELLNESS
+Dialogue: 0,0:02:04.64,0:02:10.30,BoxTitle,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur18}Build movement into your day.
+Dialogue: 1,0:02:04.64,0:02:10.30,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Build movement into your day.
+Dialogue: 0,0:02:04.88,0:02:10.30,BoxDetail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur18}Pause. Stretch. Breathe. Reset.
+Dialogue: 1,0:02:04.88,0:02:10.30,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Pause. Stretch. Breathe. Reset.
+Dialogue: 0,0:02:19.95,0:02:26.15,BoxEyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur18}SENSING
+Dialogue: 1,0:02:19.95,0:02:26.15,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}SENSING
+Dialogue: 0,0:02:20.09,0:02:26.15,BoxTitle,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur18}It sees what’s in its way.
+Dialogue: 1,0:02:20.09,0:02:26.15,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}It sees what’s in its way.
+Dialogue: 0,0:02:20.33,0:02:26.15,BoxDetail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur18}Proximity sensors stop the roll before contact.
+Dialogue: 1,0:02:20.33,0:02:26.15,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Proximity sensors stop the roll before contact.
+Dialogue: 0,0:02:29.50,0:02:35.10,Scrim,,0,0,0,,{\an7\move(0,10,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 117.46 779.59 l 233.7 778.85 l 236.69 815.18 l 111.57 815.68 l 117.46 779.59{\p0}
+Dialogue: 0,0:02:29.64,0:02:35.10,Scrim,,0,0,0,,{\an7\move(0,14,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 111.33 833.41 l 750.75 836.64 l 753 901.22 l 111.85 895.17 l 111.33 833.41{\p0}
+Dialogue: 0,0:02:29.88,0:02:35.10,Scrim,,0,0,0,,{\an7\move(0,10,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 116.25 922.25 l 570.24 924.37 l 569.03 977.28 l 115.96 971.83 l 116.25 922.25{\p0}
+Dialogue: 1,0:02:29.50,0:02:35.10,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}GAMING
+Dialogue: 1,0:02:29.64,0:02:35.10,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Feel the room come alive.
+Dialogue: 1,0:02:29.88,0:02:35.10,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Light that plays along with the game.
+Dialogue: 0,0:02:40.60,0:02:46.20,BoxEyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur18}CINEMA
+Dialogue: 1,0:02:40.60,0:02:46.20,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}CINEMA
+Dialogue: 0,0:02:40.74,0:02:46.20,BoxTitle,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur18}Movie night, upgraded.
+Dialogue: 1,0:02:40.74,0:02:46.20,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Movie night, upgraded.
+Dialogue: 0,0:02:40.98,0:02:46.20,BoxDetail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur18}Ambient color drawn from every scene.
+Dialogue: 1,0:02:40.98,0:02:46.20,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Ambient color drawn from every scene.
+Dialogue: 0,0:02:56.10,0:03:03.10,Scrim,,0,0,0,,{\an7\move(0,10,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 117.05 779.09 l 248.42 777.47 l 259.47 818.5 l 112.3 821.28 l 117.05 779.09{\p0}
+Dialogue: 0,0:02:56.24,0:03:03.10,Scrim,,0,0,0,,{\an7\move(0,14,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 117.72 834.19 l 783.03 829.13 l 783.83 905.04 l 119.65 910.56 l 117.72 834.19{\p0}
+Dialogue: 0,0:02:56.48,0:03:03.10,Scrim,,0,0,0,,{\an7\move(0,10,0,0,0,900)\fad(650,420)\p1\bord0\shad0\1c&H000000&\1a&HB0&\blur18}m 112.88 927.69 l 546.21 922.28 l 544.83 974.04 l 115.76 971.58 l 112.88 927.69{\p0}
+Dialogue: 1,0:02:56.10,0:03:03.10,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}STORAGE
+Dialogue: 1,0:02:56.24,0:03:03.10,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}Make room for what’s next.
+Dialogue: 1,0:02:56.48,0:03:03.10,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}One tap: fold to 65°, roll to the wall.
+Dialogue: 0,0:03:48.82,0:03:54.13,BoxEyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur18}CUSTOM SHOP
+Dialogue: 1,0:03:48.82,0:03:54.13,Eyebrow,,0,0,0,,{\an1\move(128,822,128,812,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}CUSTOM SHOP
+Dialogue: 0,0:03:48.96,0:03:54.13,BoxTitle,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur18}One desk. Every part of your day.
+Dialogue: 1,0:03:48.96,0:03:54.13,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}One desk. Every part of your day.
+Dialogue: 0,0:03:49.20,0:03:54.13,BoxDetail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur18}
+Dialogue: 1,0:03:49.20,0:03:54.13,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}
+Dialogue: 1,0:03:57.31,0:04:02.35,CTA,,0,0,0,,{\an5\move(960,914,960,904,0,1100)\fad(900,1400)\blur4\t(0,800,\blur0)}Let’s build yours.

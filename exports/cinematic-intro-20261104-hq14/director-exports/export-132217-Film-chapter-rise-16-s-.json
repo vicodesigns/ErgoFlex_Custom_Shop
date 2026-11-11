@@ -1,0 +1,351 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "f0c9a843-ea2d-4b9d-bad9-e57148158aab",
+  "name": "Film chapter: rise (16 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "2026-11-06T21:22:13.058Z",
+  "shots": [
+    {
+      "id": "rise",
+      "room": "home",
+      "kind": "lift",
+      "seconds": 16,
+      "title": "Your height. Your rhythm.",
+      "detail": "Sit to focus. Rise to 52.5″ to recharge.",
+      "preset": "office",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 28,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "comfortable-standing",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 3.4,
+            "duration": 4.2,
+            "easing": "smooth",
+            "label": "Rise to comfortable standing",
+            "target": 43.5
+          },
+          {
+            "id": "full-height",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 10,
+            "duration": 3.2,
+            "easing": "smooth",
+            "label": "Back to sitting",
+            "target": 28
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "DAILY NOTES and the sleeping desk",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                -0.019,
+                1.657,
+                0.946
+              ],
+              "target": [
+                -0.49,
+                1.09,
+                0.88
+              ],
+              "fov": 30,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.125,
+            "label": "Desk wakes: lights and screens on",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.076,
+                1.724,
+                0.971
+              ],
+              "target": [
+                -0.5,
+                1.12,
+                0.88
+              ],
+              "fov": 31,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.225,
+            "label": "Pull out: the lift starts",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.021,
+                2.044,
+                1.167
+              ],
+              "target": [
+                -0.56,
+                1.36,
+                0.86
+              ],
+              "fov": 43,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.35,
+            "label": "Desktop and left column rising",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.614,
+                1.66,
+                1.641
+              ],
+              "target": [
+                -1.035,
+                1.55,
+                0.807
+              ],
+              "fov": 50,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.475,
+            "label": "Comfortable standing: whole desk",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.677,
+                1.78,
+                2.2
+              ],
+              "target": [
+                -0.925,
+                1.52,
+                0.64
+              ],
+              "fov": 52,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.625,
+            "label": "Standing, white: lowering starts",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.79,
+                1.74,
+                2.306
+              ],
+              "target": [
+                -0.903,
+                1.52,
+                0.595
+              ],
+              "fov": 51,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.825,
+            "label": "Back to sitting",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.755,
+                1.55,
+                2.165
+              ],
+              "target": [
+                -0.821,
+                1.38,
+                0.469
+              ],
+              "fov": 51,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 0.9625,
+            "label": "Low 3/4, seated, evening warm",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.953,
+                1.48,
+                2.111
+              ],
+              "target": [
+                -0.723,
+                1.34,
+                0.295
+              ],
+              "fov": 50,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 1,
+            "label": "Hero 3/4, drifting",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                3.106,
+                1.46,
+                2.025
+              ],
+              "target": [
+                -0.7,
+                1.34,
+                0.25
+              ],
+              "fov": 49.5,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "propEdits": [
+        {
+          "match": "^Workspace notebook$",
+          "path": "^Room:home > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Workspace notebook$",
+          "label": "Workspace notebook",
+          "hide": true
+        },
+        {
+          "match": "^Daily planning$",
+          "path": "^Room:home > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Groove tabletop · daily materials > Daily planning$",
+          "label": "Daily planning",
+          "space": "local",
+          "position": [
+            -0.098,
+            0,
+            -0.062
+          ],
+          "rotation": [
+            0,
+            44.9,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-thermal-cup$",
+          "label": "Prop:ergoflex-thermal-cup",
+          "space": "local",
+          "position": [
+            -0.52,
+            0,
+            0.392
+          ]
+        }
+      ],
+      "filmTitles": [
+        {
+          "id": "rise-0",
+          "rel_in": 3.6,
+          "rel_out": 9.4,
+          "eyebrow": "SIT · STAND",
+          "title": "Your height. Your rhythm.",
+          "detail": "Sit to focus. Rise to 52.5″ to recharge.",
+          "shadow": {
+            "paths": [
+              {
+                "line": "eyebrow",
+                "points": [
+                  {
+                    "x": -5.77,
+                    "y": -132.38
+                  },
+                  {
+                    "x": 162.2,
+                    "y": -133.55
+                  },
+                  {
+                    "x": 160.57,
+                    "y": -98.31
+                  },
+                  {
+                    "x": -6.95,
+                    "y": -98.74
+                  }
+                ]
+              },
+              {
+                "line": "title",
+                "points": [
+                  {
+                    "x": -6.97,
+                    "y": -79.8
+                  },
+                  {
+                    "x": 623.22,
+                    "y": -79.47
+                  },
+                  {
+                    "x": 626.13,
+                    "y": -4.09
+                  },
+                  {
+                    "x": -7.63,
+                    "y": -5.64
+                  }
+                ]
+              },
+              {
+                "line": "detail",
+                "points": [
+                  {
+                    "x": -5.89,
+                    "y": 9.84
+                  },
+                  {
+                    "x": 427.58,
+                    "y": 16.15
+                  },
+                  {
+                    "x": 431.72,
+                    "y": 57.86
+                  },
+                  {
+                    "x": -8.23,
+                    "y": 56.32
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

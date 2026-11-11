@@ -1,0 +1,129 @@
+{
+ "id": "awareness",
+ "notes": "High rear-quarter stage reveal so the pylon visibly rises ahead of the desk, crane down to a square, nearly locked profile for the roll (desk, gap and pylon all in frame, lower-left clear for the title), then after the stop lands a slow arc to a front three-quarter hero that shows 'Stopped safely' on the screen with the amber pool and the pylon. Length unchanged (12 s).",
+ "set": {
+  "cameraPlan": {
+   "easeIn": false,
+   "easeOut": false,
+   "keys": [
+    {
+     "at": 0,
+     "position": [
+      -2.3,
+      3.35,
+      4.55
+     ],
+     "target": [
+      0.55,
+      0.85,
+      -0.15
+     ],
+     "fov": 37,
+     "label": "High stage reveal: pylon rises ahead of the desk"
+    },
+    {
+     "at": 2.8,
+     "position": [
+      -1.2,
+      2.78,
+      5.45
+     ],
+     "target": [
+      0.5,
+      0.9,
+      -0.07
+     ],
+     "fov": 36
+    },
+    {
+     "at": 5.8,
+     "position": [
+      0.15,
+      2.45,
+      5.85
+     ],
+     "target": [
+      0.42,
+      0.95,
+      0.0
+     ],
+     "fov": 35,
+     "label": "Square profile: desk, gap, pylon; frame nearly locked so the roll reads"
+    },
+    {
+     "at": 8.6,
+     "position": [
+      0.4,
+      2.42,
+      5.8
+     ],
+     "target": [
+      0.51,
+      0.95,
+      0.0
+     ],
+     "fov": 35,
+     "label": "Stopped: amber; camera lets the stop land"
+    },
+    {
+     "at": 9.6,
+     "position": [
+      0.86,
+      2.35,
+      5.68
+     ],
+     "target": [
+      0.62,
+      0.95,
+      0.0
+     ],
+     "fov": 34.9
+    },
+    {
+     "at": 10.6,
+     "position": [
+      1.52,
+      2.23,
+      5.43
+     ],
+     "target": [
+      0.8,
+      1.01,
+      0.0
+     ],
+     "fov": 34.8,
+     "label": "Round to the front: Stopped safely on the screen"
+    },
+    {
+     "at": 11.4,
+     "position": [
+      2.08,
+      2.12,
+      5.14
+     ],
+     "target": [
+      0.78,
+      1.07,
+      0.0
+     ],
+     "fov": 34.9
+    },
+    {
+     "at": 12,
+     "position": [
+      2.34,
+      2.07,
+      4.99
+     ],
+     "target": [
+      0.76,
+      1.1,
+      0.0
+     ],
+     "fov": 35.0,
+     "label": "Hero three-quarter, slow drift"
+    }
+   ]
+  }
+ }
+}

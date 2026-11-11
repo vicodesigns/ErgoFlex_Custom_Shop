@@ -1,0 +1,501 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "8e2d042b-7154-4e5b-b17a-87356b91afb7",
+  "name": "Film chapter: awaken (47.8 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "",
+  "shots": [
+    {
+      "id": "awaken",
+      "room": "product",
+      "kind": "glide",
+      "seconds": 47.8,
+      "title": "Level up your every day.",
+      "detail": "Better health. Clearer focus. More joy in your work.",
+      "preset": "gaming",
+      "transition": 0.35,
+      "size": "60x30",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 28,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "op-roll",
+            "lane": "wheels",
+            "kind": "travel",
+            "start": 2,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Move forward",
+            "value": 12,
+            "direction": "forward"
+          },
+          {
+            "id": "op-lift",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 6.6000000000000005,
+            "duration": 7.1000000000000005,
+            "easing": "smooth",
+            "label": "Lift up",
+            "target": 45.5
+          },
+          {
+            "id": "op-tilt-down",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 15.9,
+            "duration": 4.399999999999999,
+            "easing": "smooth",
+            "label": "Tilt up",
+            "target": 25
+          },
+          {
+            "id": "op-turn",
+            "lane": "wheels",
+            "kind": "rotate",
+            "start": 19.700000000000003,
+            "duration": 6.7,
+            "easing": "smooth",
+            "label": "Rotating left",
+            "value": 100,
+            "direction": "left"
+          },
+          {
+            "id": "op-tilt-back",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 25.700000000000003,
+            "duration": 3.8,
+            "easing": "smooth",
+            "label": "Tilt level",
+            "target": 0
+          },
+          {
+            "id": "op-lower",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 27.5,
+            "duration": 4.300000000000001,
+            "easing": "smooth",
+            "label": "Lift down",
+            "target": 35
+          },
+          {
+            "id": "op-roll-lit",
+            "lane": "wheels",
+            "kind": "travel",
+            "start": 32.4,
+            "duration": 4.400000000000006,
+            "easing": "smooth",
+            "label": "Move forward",
+            "value": 24,
+            "direction": "forward"
+          },
+          {
+            "id": "op-lift-end",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 35.75,
+            "duration": 3.75,
+            "easing": "smooth",
+            "label": "Lift up",
+            "target": 48
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Wheel macro, desk dark",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                1.1243557917222935,
+                0.22029182931173952,
+                1.7860701540487618
+              ],
+              "target": [
+                0.09299999999999962,
+                0.179,
+                0.9720000000000002
+              ],
+              "fov": 24,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.03765690376569038,
+            "label": "Wheels start",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4,
+                0.09,
+                1.3
+              ],
+              "target": [
+                0.172,
+                0.154,
+                0.969
+              ],
+              "fov": 24,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "a616ef8e-bc12-4db3-a2dc-801140393ff3",
+            "time": 0.041841004184100423,
+            "label": "Wheels start copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4,
+                0.09,
+                1.3
+              ],
+              "target": [
+                0.172,
+                0.154,
+                0.969
+              ],
+              "fov": 24,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.09205,
+            "label": "Roll lands, pull back",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.2306734335452023,
+                0.7245842302833143,
+                1.9925220262495822
+              ],
+              "target": [
+                0.5787085020188099,
+                0.41111551341630403,
+                0.7892220156815152
+              ],
+              "fov": 25,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "36422faf-e62b-4c0d-9668-fa1c585a5ef9",
+            "time": 0.10460251046025106,
+            "label": "Roll lands, pull back copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.2306734335452023,
+                0.7245842302833143,
+                1.9925220262495822
+              ],
+              "target": [
+                0.5787085020188099,
+                0.41111551341630403,
+                0.7892220156815152
+              ],
+              "fov": 25,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.1380753138075314,
+            "label": "Whole desk framed: lights on",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.066,
+                0.72,
+                3.126
+              ],
+              "target": [
+                0.315,
+                1.26,
+                0.41
+              ],
+              "fov": 31.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "8358d227-6b34-4163-acbb-288599898775",
+            "time": 0.1506276150627615,
+            "label": "Whole desk framed: lights on copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.066,
+                0.72,
+                3.126
+              ],
+              "target": [
+                0.315,
+                1.26,
+                0.41
+              ],
+              "fov": 31.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.19665271966527198,
+            "label": "Lift starts: foot rest lights",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.983230546045883,
+                1.9955727517674275,
+                3.9339368349814827
+              ],
+              "target": [
+                0.46356440373003627,
+                1.2701102148725245,
+                0.22145059668161052
+              ],
+              "fov": 31.5,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 0.27196652719665276,
+            "label": "Desktop layer: crane with the rise",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.338618130406764,
+                3.777147291078691,
+                4.7976968851038055
+              ],
+              "target": [
+                0.6597748132679785,
+                1.3664815568820323,
+                0.10643007048818752
+              ],
+              "fov": 32,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "156e3cf1-eb7d-41dc-972c-29cac3f06dc7",
+            "time": 0.301255230125523,
+            "label": "Desktop layer: crane with the rise copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.338618130406764,
+                3.777147291078691,
+                4.7976968851038055
+              ],
+              "target": [
+                0.6597748132679785,
+                1.3664815568820323,
+                0.10643007048818752
+              ],
+              "fov": 32,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 0.32217573221757323,
+            "label": "Full height, whole desk",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.363537087601809,
+                1.803577933065165,
+                4.449784282657693
+              ],
+              "target": [
+                0.33,
+                1.64,
+                0.22
+              ],
+              "fov": 32,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "cccfffbe-bc15-42a9-afb0-4ca74b0aa0b5",
+            "time": 0.4058577405857741,
+            "label": "Full height, whole desk copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.7267500027224754,
+                1.659882924854162,
+                4.264146942007215
+              ],
+              "target": [
+                0.39164669406793523,
+                1.525549724795617,
+                0.20344605479481864
+              ],
+              "fov": 32,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "43326d71-7f13-401d-b383-aac0b3832cc0",
+            "time": 0.4184100418410042,
+            "label": "Full height, whole desk copy copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.7267500027224754,
+                1.659882924854162,
+                4.264146942007215
+              ],
+              "target": [
+                0.39164669406793523,
+                1.525549724795617,
+                0.20344605479481864
+              ],
+              "fov": 32,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "1df968cd-f3ee-400a-85a2-ca1b610f56e8",
+            "time": 0.5313807531380754,
+            "label": "Full height, whole desk copy copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.489407127954048,
+                2.4016009703350525,
+                5.4808190945029285
+              ],
+              "target": [
+                0.5191914010465724,
+                1.350067640661369,
+                0.15600136214083035
+              ],
+              "fov": 32,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "cce6f616-73ff-42b8-ac2f-e18d833891c3",
+            "time": 0.5449788765690378,
+            "label": "Full height, whole desk copy copy copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.489407127954048,
+                2.4016009703350525,
+                5.4808190945029285
+              ],
+              "target": [
+                0.5191914010465724,
+                1.350067640661369,
+                0.15600136214083035
+              ],
+              "fov": 32,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "plan-14",
+            "time": 0.6276150627615064,
+            "label": "3/4: red lowering",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.450865086738622,
+                1.6143908805010205,
+                5.385896773261421
+              ],
+              "target": [
+                0.5406299714238744,
+                1.4223512715807753,
+                0.012592262794990606
+              ],
+              "fov": 33,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "4a3f7709-6d79-4ef1-a61f-ee3b5426835f",
+            "time": 0.6537656903765691,
+            "label": "3/4: red lowering copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.450865086738622,
+                1.6143908805010205,
+                5.385896773261421
+              ],
+              "target": [
+                0.5406299714238744,
+                1.4223512715807753,
+                0.012592262794990606
+              ],
+              "fov": 33,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "5601057e-c3fe-4bb7-8279-7cb506e04fa4",
+            "time": 0.7008368451882845,
+            "label": "3/4: red lowering copy copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.7707000932916337,
+                2.1677327214780444,
+                4.71756276496068
+              ],
+              "target": [
+                0.7093093174535957,
+                1.213576826305871,
+                -0.05388442936418742
+              ],
+              "fov": 33,
+              "aspect": 2.533013205282113
+            }
+          },
+          {
+            "id": "plan-17",
+            "time": 0.8158995815899582,
+            "label": "Roll lands",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -4.130665016602991,
+                2.64729801028646,
+                4.810278241810546
+              ],
+              "target": [
+                -0.09350341039328895,
+                1.406949532588596,
+                0.9384948259647146
+              ],
+              "fov": 33.5,
+              "aspect": 2.533013205282113
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

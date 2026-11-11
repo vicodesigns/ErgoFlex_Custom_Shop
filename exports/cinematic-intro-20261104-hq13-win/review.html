@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ErgoFlex · Refined intro</title>
+<style>
+:root{color-scheme:dark;font:15px/1.5 system-ui;background:#070c12;color:#e6f1fa}body{margin:0}main{max-width:1280px;margin:auto;padding:28px 24px 64px}h1{font-size:30px;margin:4px 0}.eyebrow{color:#63d8f5;font-size:12px;letter-spacing:.16em;text-transform:uppercase}.sub{color:#9cb0c0}video{display:block;width:100%;aspect-ratio:16/9;background:#000;border:1px solid #243849;border-radius:12px}.bar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}button,a{font:inherit;border-radius:8px;border:1px solid #36546a;background:#102332;color:inherit;padding:10px 16px;text-decoration:none;cursor:pointer}button[aria-pressed=true],a.primary{border-color:#63d8f5;background:#12384a}button:focus-visible,a:focus-visible{outline:3px solid #63d8f5;outline-offset:3px}ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;list-style:none;padding:0}li button{text-align:left;width:100%;height:100%}li b,li small{display:block}li small{color:#9cb0c0}#error{color:#ffbe9d}details{margin-top:24px}summary{cursor:pointer}
+</style><main>
+<div class="eyebrow">ErgoFlex · Film review</div><h1>Let’s build yours.</h1>
+<p class="sub">Refined intro HQ13 · 3:23 · 12 chapters · 1080p / 30 fps · GPU render · original score</p>
+<video id="film" controls playsinline preload="metadata" src="../cinematic-intro-20261104-hq13-win/final/ErgoFlex-Intro-1080p-HQ13.mp4"></video>
+<p id="error" hidden>Video unavailable. Please check that the local server is running.</p>
+<div class="bar" style="flex-wrap:wrap"><button data-src="../cinematic-intro-20261104-hq13b-win/final/ErgoFlex-Intro-1080p-HQ13b.mp4" aria-pressed="false">HQ13b 1080p · GPU, motion fixed</button><button data-src="../cinematic-intro-20261104-hq13-win/final/ErgoFlex-Intro-1080p-HQ13.mp4" aria-pressed="true">HQ13 1080p · GPU (no motion: Windows bug)</button><button data-src="../cinematic-intro-20261104-hq12/final/ErgoFlex-Intro-1440p-HQ12.mp4" aria-pressed="false">HQ12 1440p</button><button data-src="../cinematic-intro-20261103-hq11/final/ErgoFlex-Intro-1440p-HQ11.mp4" aria-pressed="false">HQ11 1440p</button><button data-src="../cinematic-intro-20261103-hq10/final/ErgoFlex-Intro-1440p-HQ10.mp4" aria-pressed="false">HQ10 1440p</button><button data-src="../cinematic-intro-20261103-hq9/final/ErgoFlex-Intro-1080p-HQ9.mp4" aria-pressed="false">HQ9 1080p</button></div>
+<p class="sub" id="version" aria-live="polite">Viewing the latest refinement.</p>
+<h2>Jump to a chapter</h2><ol id="chapters"></ol>
+<details open><summary>What changed since HQ12 (GPU quality upgrades a–f)</summary><ul><li>Rendered on the Windows PC (RX 6900 XT) in 53 min; 64 min end to end.</li>
+<li>Sharper frames (2× supersampling) and smoother motion blur (8 samples).</li>
+<li>4× shadow detail, sharper textures at an angle, real room reflections on metal and glass.</li>
+<li>Soft contact shading under desks and in corners; a light glow on screens, LEDs and light fixtures.</li>
+<li>Your latest saved scene edits (studio-state rev 406) are in every chapter.</li></ul><p class="sub">Same edit, timing and score as HQ12. Notes 2–14 still to come.</p></details>
+<script type="module">
+const film=document.querySelector('#film'),version=document.querySelector('#version');
+film.addEventListener('error',()=>document.querySelector('#error').hidden=false);
+film.addEventListener('loadeddata',()=>document.querySelector('#error').hidden=true);
+for(const b of document.querySelectorAll('[data-src]'))b.onclick=()=>{const t=film.currentTime,playing=!film.paused;film.src=b.dataset.src;film.addEventListener('loadedmetadata',()=>{film.currentTime=t;if(playing)film.play().catch(()=>{});},{once:true});document.querySelectorAll('[data-src]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));version.textContent=b.textContent;};
+const edl=await fetch('edl.json').then(r=>r.json()),titles=await fetch('final/titles.json').then(r=>r.json());
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+for(const c of edl.chapters){const t=titles.titles.find(t=>t.chapter===c.id),li=document.createElement('li'),b=document.createElement('button'),at=c.index===1?0:c.start+.75;b.innerHTML=`<small>${String(c.index).padStart(2,'0')} · ${fmt(at)}</small><b>${t?.title||c.id}</b><small>${t?.detail||''}</small>`;b.onclick=()=>{film.currentTime=at;film.play().catch(()=>{});};li.append(b);document.querySelector('#chapters').append(li);}
+</script></main></html>

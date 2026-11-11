@@ -1,0 +1,146 @@
+{
+ "fps": 30,
+ "dissolve": 1.5,
+ "total": 208.85,
+ "chapters": [
+  {
+   "index": 1,
+   "id": "awaken",
+   "duration": 44.85,
+   "start": 0.0,
+   "end": 44.85
+  },
+  {
+   "index": 2,
+   "id": "rise",
+   "duration": 16,
+   "start": 43.35,
+   "end": 59.35
+  },
+  {
+   "index": 3,
+   "id": "create",
+   "duration": 18,
+   "start": 57.85,
+   "end": 75.85
+  },
+  {
+   "index": 4,
+   "id": "commons",
+   "duration": 14,
+   "start": 74.35,
+   "end": 88.35
+  },
+  {
+   "index": 5,
+   "id": "coast",
+   "duration": 9.5,
+   "start": 86.85,
+   "end": 96.35
+  },
+  {
+   "index": 6,
+   "id": "oilers",
+   "duration": 11,
+   "start": 94.85,
+   "end": 105.85
+  },
+  {
+   "index": 7,
+   "id": "wellness",
+   "duration": 13,
+   "start": 104.35,
+   "end": 117.35
+  },
+  {
+   "index": 8,
+   "id": "awareness",
+   "duration": 12,
+   "start": 115.85,
+   "end": 127.85
+  },
+  {
+   "index": 9,
+   "id": "music",
+   "duration": 11,
+   "start": 126.35,
+   "end": 137.35
+  },
+  {
+   "index": 10,
+   "id": "media",
+   "duration": 11,
+   "start": 135.85,
+   "end": 146.85
+  },
+  {
+   "index": 11,
+   "id": "storage",
+   "duration": 17,
+   "start": 145.35,
+   "end": 162.35
+  },
+  {
+   "index": 12,
+   "id": "hero",
+   "duration": 48,
+   "start": 160.85,
+   "end": 208.85
+  }
+ ],
+ "beats": [
+  {
+   "at": 1.5,
+   "what": "awaken title A: Level up your every day."
+  },
+  {
+   "at": 13.2,
+   "what": "awaken title B: Safe for everyone around it."
+  },
+  {
+   "at": 202.01,
+   "what": "end card: ErgoFlex wordmark"
+  },
+  {
+   "at": 208.85,
+   "what": "cut to black / onboarding"
+  }
+ ],
+ "notes": "Chapter i plays from start to end; consecutive chapters overlap by `dissolve` seconds. Desk-motion hits per chapter are listed in hits once renders lock. transitions: per-transition dissolve length, centred on the same dissolve centres.",
+ "transitions": [
+  [
+   0.8,
+   -0.35
+  ],
+  0.8,
+  [
+   0.8,
+   0,
+   "smoothleft"
+  ],
+  0.8,
+  1.5,
+  [
+   0.8,
+   0,
+   "smoothleft"
+  ],
+  [
+   0.8,
+   0,
+   "fadeblack"
+  ],
+  [
+   0.8,
+   0,
+   "fadeblack"
+  ],
+  1.0,
+  [
+   1.0,
+   0,
+   "fadeblack"
+  ],
+  1.5
+ ]
+}

@@ -56,7 +56,7 @@ export const SCENE_PRODUCT_REFERENCE = {
     "accessory-artist-easel": {"role":"desktop","added":false,"removed":false,"label":"Artist easel & artwork","custom":true,"transform":{"p":{"x":0.22941318651146503,"y":-58,"z":8},"q":{"x":4.809127292090444e-19,"y":0.9999691576447897,"z":0.007853900888711334,"w":6.123045140778833e-17},"s":{"x":1,"y":1,"z":1}}},
     "accessory-painter-shelf": {"role":"desktop","added":false,"removed":false,"label":"Painter accessory shelf","custom":true,"transform":{"p":{"x":635.5576800042716,"y":-143.5,"z":204.6346119793668},"q":{"x":-0.6427876096865393,"y":0,"z":0,"w":0.766044443118978},"s":{"x":1,"y":1,"z":1}}},
     "accessory-monitor-arm": {"role":"shelf","added":false,"removed":false,"label":"Single monitor arm","custom":true,"transform":{"p":{"x":-2.4725840256095015,"y":0,"z":-109.87578473302995},"q":{"x":0,"y":0,"z":0,"w":1},"s":{"x":1,"y":1,"z":1}}},
-    "accessory-shelf-organizer": {"role":"lower-shelf","added":false,"removed":false,"label":"Shelf organizer","custom":true,"transform":{"p":{"x":-491.74756917023916,"y":-1250,"z":133.37233774140287},"q":{"x":0,"y":-0.7071067811865475,"z":0,"w":0.7071067811865476},"s":{"x":1,"y":1,"z":1}}},
+    "accessory-shelf-organizer": {"role":"base-shelf","added":false,"removed":false,"label":"Shelf organizer","custom":true,"transform":{"p":{"x":-485.4903591652852,"y":-2.0828908087664786,"z":-93.62175885514537},"q":{"x":0,"y":-0.7071067811865475,"z":0,"w":0.7071067811865476},"s":{"x":1,"y":1,"z":1}}},
     "accessory-flat-monitor": {"role":"shelf","added":false,"removed":false,"label":"ProVision Ultra 32\u2033 landscape","custom":true,"transform":{"p":{"x":2.4243205691231844,"y":-89.84162887782995,"z":264.152319794674},"q":{"x":0,"y":0,"z":-7.850462293418876e-17,"w":1},"s":{"x":1.1,"y":1.1,"z":1.1}}},
    }
   },
@@ -67,7 +67,7 @@ export const SCENE_PRODUCT_REFERENCE = {
     "accessory-artist-easel": {"role":"desktop","added":false,"removed":false,"label":"Artist easel & artwork","custom":true,"artworkVisible":false,"transform":{"p":{"x":0.2867664831393313,"y":-59.5,"z":8},"q":{"x":4.809127292090444e-19,"y":0.9999691576447897,"z":0.007853900888711334,"w":6.123045140778833e-17},"s":{"x":1,"y":1,"z":1}}},
     "accessory-painter-shelf": {"role":"desktop","added":false,"removed":false,"label":"Painter accessory shelf","custom":true,"transform":{"p":{"x":794.4471000053394,"y":-143.5,"z":204.6346119793668},"q":{"x":-0.6427876096865393,"y":0,"z":0,"w":0.766044443118978},"s":{"x":1,"y":1,"z":1}}},
     "accessory-monitor-arm": {"role":"shelf","added":false,"removed":false,"label":"Single monitor arm","custom":true,"transform":{"p":{"x":-3.0907300320118765,"y":0,"z":-109.87578473302995},"q":{"x":0,"y":0,"z":0,"w":1},"s":{"x":1,"y":1,"z":1}}},
-    "accessory-shelf-organizer": {"role":"lower-shelf","added":false,"removed":false,"label":"Shelf organizer","custom":true,"transform":{"p":{"x":-614.6844614627989,"y":-1250,"z":133.37233774140287},"q":{"x":0,"y":-0.7071067811865475,"z":0,"w":0.7071067811865476},"s":{"x":1,"y":1,"z":1}}},
+    "accessory-shelf-organizer": {"role":"base-shelf","added":false,"removed":false,"label":"Shelf organizer","custom":true,"transform":{"p":{"x":-606.8640533097873,"y":-2.0828908087664786,"z":-93.62175885514537},"q":{"x":0,"y":-0.7071067811865475,"z":0,"w":0.7071067811865476},"s":{"x":1,"y":1,"z":1}}},
     "accessory-flat-monitor": {"role":"shelf","added":false,"removed":false,"label":"ProVision Ultra 32\u2033 landscape","custom":true,"transform":{"p":{"x":3.0304007114039804,"y":-89.84162887782995,"z":264.152319794674},"q":{"x":0,"y":0,"z":-7.850462293418876e-17,"w":1},"s":{"x":1.1,"y":1.1,"z":1.1}}},
    }
   },
@@ -198,7 +198,7 @@ export const SCENE_PRODUCT_REFERENCE = {
    objects: {
     "accessory-drafting-kit": {"role":"desktop","added":false,"removed":false,"label":"Architect drafting board & tools","custom":true,"transform":{"p":{"x":0,"y":0,"z":0},"q":{"x":0,"y":0,"z":0,"w":1},"s":{"x":1,"y":1,"z":1}}},
     "accessory-task-light": {"role":"desktop","added":false,"removed":false,"label":"Clamp task light","custom":true,"clampMount":"rear-edge-v1","transform":{"p":{"x":558.7775779164817,"y":0,"z":-47.59230709676979},"q":{"x":0,"y":-0.7071067811865475,"z":0,"w":0.7071067811865476},"s":{"x":1,"y":1,"z":1}}},
-    "accessory-shelf-organizer": {"role":"lower-shelf","added":false,"removed":false,"label":"Shelf organizer","custom":true,"transform":{"p":{"x":-485.49477657800855,"y":-1050,"z":117.1976943256154},"q":{"x":0,"y":-0.7071067811865475,"z":0,"w":0.7071067811865476},"s":{"x":1,"y":1,"z":1}}},
+    "accessory-shelf-organizer": {"role":"base-shelf","added":false,"removed":false,"label":"Shelf organizer","custom":true,"transform":{"p":{"x":-485.4903591652852,"y":-2.0828908087664786,"z":-93.62175885514537},"q":{"x":0,"y":-0.7071067811865475,"z":0,"w":0.7071067811865476},"s":{"x":1,"y":1,"z":1}}},
     "accessory-easel-rail": {"role":"desktop","added":false,"removed":false,"label":"Easel accessory rail","custom":true,"transform":{"p":{"x":0,"y":-66,"z":300},"q":{"x":0,"y":1,"z":0,"w":6.123233995736766e-17},"s":{"x":1,"y":1,"z":1}}},
    }
   },
@@ -207,7 +207,7 @@ export const SCENE_PRODUCT_REFERENCE = {
    objects: {
     "accessory-drafting-kit": {"role":"desktop","added":false,"removed":false,"label":"Architect drafting board & tools","custom":true,"transform":{"p":{"x":0,"y":0,"z":0},"q":{"x":0,"y":0,"z":0,"w":1},"s":{"x":1,"y":1,"z":1}}},
     "accessory-task-light": {"role":"desktop","added":false,"removed":false,"label":"Clamp task light","custom":true,"clampMount":"rear-edge-v1","transform":{"p":{"x":650.3465744090538,"y":0,"z":-20.995928006463032},"q":{"x":0,"y":-0.7071067811865475,"z":0,"w":0.7071067811865476},"s":{"x":1,"y":1,"z":1}}},
-    "accessory-shelf-organizer": {"role":"lower-shelf","added":false,"removed":false,"label":"Shelf organizer","custom":true,"transform":{"p":{"x":-606.8684707225107,"y":-1050,"z":117.1976943256154},"q":{"x":0,"y":-0.7071067811865475,"z":0,"w":0.7071067811865476},"s":{"x":1,"y":1,"z":1}}},
+    "accessory-shelf-organizer": {"role":"base-shelf","added":false,"removed":false,"label":"Shelf organizer","custom":true,"transform":{"p":{"x":-606.8640533097873,"y":-2.0828908087664786,"z":-93.62175885514537},"q":{"x":0,"y":-0.7071067811865475,"z":0,"w":0.7071067811865476},"s":{"x":1,"y":1,"z":1}}},
     "accessory-easel-rail": {"role":"desktop","added":false,"removed":false,"label":"Easel accessory rail","custom":true,"transform":{"p":{"x":0,"y":-66,"z":300},"q":{"x":0,"y":1,"z":0,"w":6.123233995736766e-17},"s":{"x":1,"y":1,"z":1}}},
    }
   },

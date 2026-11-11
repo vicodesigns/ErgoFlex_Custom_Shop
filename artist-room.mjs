@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { artistStudyMaps, artistSessionDetails } from './artist-studio-detail.mjs?v=artist-studio-20261025';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
@@ -391,6 +392,8 @@ export function buildArtistRoom(room, root, layout, helpers) {
     const skyCanvas = document.createElement('canvas'); skyCanvas.width = skyCanvas.height = 512;
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const pane = mesh(entry, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]);
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'studio-garden'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     for (const z of [a, wz, b]) box(entry, [55, wh + 50, 24], [-w / 2 + 8, low + wh / 2, z], chalk);
     for (const y of [low, low + wh]) box(entry, [70, 28, ww + 50], [-w / 2 + 8, y, wz], chalk);
@@ -744,7 +747,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = ARTIST_MODES[modeId] || ARTIST_MODES.afternoon;
         session.apply(modeId);
-        drawSky(skyCanvas.getContext('2d'), mode, modeId); skyMap.needsUpdate = true;
+        drawSky(skyCanvas.getContext('2d'), mode, modeId); skyMap.needsUpdate = true; windowVista.setPhase(modeId);
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .08 + mode.wash * accent; });
         lights.forEach(spec => { spec.light.color.set(spec.task ? '#f2f4ee' : mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent; });
         lamp.emissiveIntensity = .15 + mode.practical * .7;

@@ -1,0 +1,1311 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-storage",
+  "name": "Film chapter: storage (21.5 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "2026-11-10T05:51:11.288Z",
+  "shots": [
+    {
+      "id": "storage",
+      "room": "workshop",
+      "kind": "storage",
+      "seconds": 23.5,
+      "title": "Make room for what’s next.",
+      "detail": "One tap: fold to 65°, roll to the wall.",
+      "preset": "library",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 43.5,
+          "tilt": 0,
+          "x": 55.118,
+          "z": 25.591,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "builtin-tilt-0",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 2.5,
+            "duration": 10,
+            "easing": "linear",
+            "label": "Fold to 65°",
+            "target": 65,
+            "path": [
+              {
+                "time": 0,
+                "pose": {
+                  "tilt": 0
+                }
+              },
+              {
+                "time": 0.01,
+                "pose": {
+                  "tilt": 0.0576
+                }
+              },
+              {
+                "time": 0.02,
+                "pose": {
+                  "tilt": 0.2305
+                }
+              },
+              {
+                "time": 0.03,
+                "pose": {
+                  "tilt": 0.5186
+                }
+              },
+              {
+                "time": 0.04,
+                "pose": {
+                  "tilt": 0.922
+                }
+              },
+              {
+                "time": 0.05,
+                "pose": {
+                  "tilt": 1.4406
+                }
+              },
+              {
+                "time": 0.06,
+                "pose": {
+                  "tilt": 2.0745
+                }
+              },
+              {
+                "time": 0.07,
+                "pose": {
+                  "tilt": 2.766
+                }
+              },
+              {
+                "time": 0.08,
+                "pose": {
+                  "tilt": 3.4574
+                }
+              },
+              {
+                "time": 0.09,
+                "pose": {
+                  "tilt": 4.1489
+                }
+              },
+              {
+                "time": 0.1,
+                "pose": {
+                  "tilt": 4.8404
+                }
+              },
+              {
+                "time": 0.11,
+                "pose": {
+                  "tilt": 5.5319
+                }
+              },
+              {
+                "time": 0.12,
+                "pose": {
+                  "tilt": 6.2234
+                }
+              },
+              {
+                "time": 0.13,
+                "pose": {
+                  "tilt": 6.9149
+                }
+              },
+              {
+                "time": 0.14,
+                "pose": {
+                  "tilt": 7.6064
+                }
+              },
+              {
+                "time": 0.15,
+                "pose": {
+                  "tilt": 8.2979
+                }
+              },
+              {
+                "time": 0.16,
+                "pose": {
+                  "tilt": 8.9894
+                }
+              },
+              {
+                "time": 0.17,
+                "pose": {
+                  "tilt": 9.6809
+                }
+              },
+              {
+                "time": 0.18,
+                "pose": {
+                  "tilt": 10.3723
+                }
+              },
+              {
+                "time": 0.19,
+                "pose": {
+                  "tilt": 11.0638
+                }
+              },
+              {
+                "time": 0.2,
+                "pose": {
+                  "tilt": 11.7553
+                }
+              },
+              {
+                "time": 0.21,
+                "pose": {
+                  "tilt": 12.4468
+                }
+              },
+              {
+                "time": 0.22,
+                "pose": {
+                  "tilt": 13.1383
+                }
+              },
+              {
+                "time": 0.23,
+                "pose": {
+                  "tilt": 13.8298
+                }
+              },
+              {
+                "time": 0.24,
+                "pose": {
+                  "tilt": 14.5213
+                }
+              },
+              {
+                "time": 0.25,
+                "pose": {
+                  "tilt": 15.2128
+                }
+              },
+              {
+                "time": 0.26,
+                "pose": {
+                  "tilt": 15.9043
+                }
+              },
+              {
+                "time": 0.27,
+                "pose": {
+                  "tilt": 16.5957
+                }
+              },
+              {
+                "time": 0.28,
+                "pose": {
+                  "tilt": 17.2872
+                }
+              },
+              {
+                "time": 0.29,
+                "pose": {
+                  "tilt": 17.9787
+                }
+              },
+              {
+                "time": 0.3,
+                "pose": {
+                  "tilt": 18.6702
+                }
+              },
+              {
+                "time": 0.31,
+                "pose": {
+                  "tilt": 19.3617
+                }
+              },
+              {
+                "time": 0.32,
+                "pose": {
+                  "tilt": 20.0532
+                }
+              },
+              {
+                "time": 0.33,
+                "pose": {
+                  "tilt": 20.7447
+                }
+              },
+              {
+                "time": 0.34,
+                "pose": {
+                  "tilt": 21.4362
+                }
+              },
+              {
+                "time": 0.35,
+                "pose": {
+                  "tilt": 22.1277
+                }
+              },
+              {
+                "time": 0.36,
+                "pose": {
+                  "tilt": 22.8191
+                }
+              },
+              {
+                "time": 0.37,
+                "pose": {
+                  "tilt": 23.5106
+                }
+              },
+              {
+                "time": 0.38,
+                "pose": {
+                  "tilt": 24.2021
+                }
+              },
+              {
+                "time": 0.39,
+                "pose": {
+                  "tilt": 24.8936
+                }
+              },
+              {
+                "time": 0.4,
+                "pose": {
+                  "tilt": 25.5851
+                }
+              },
+              {
+                "time": 0.41,
+                "pose": {
+                  "tilt": 26.2766
+                }
+              },
+              {
+                "time": 0.42,
+                "pose": {
+                  "tilt": 26.9681
+                }
+              },
+              {
+                "time": 0.43,
+                "pose": {
+                  "tilt": 27.6596
+                }
+              },
+              {
+                "time": 0.44,
+                "pose": {
+                  "tilt": 28.3511
+                }
+              },
+              {
+                "time": 0.45,
+                "pose": {
+                  "tilt": 29.0426
+                }
+              },
+              {
+                "time": 0.46,
+                "pose": {
+                  "tilt": 29.734
+                }
+              },
+              {
+                "time": 0.47,
+                "pose": {
+                  "tilt": 30.4255
+                }
+              },
+              {
+                "time": 0.48,
+                "pose": {
+                  "tilt": 31.117
+                }
+              },
+              {
+                "time": 0.49,
+                "pose": {
+                  "tilt": 31.8085
+                }
+              },
+              {
+                "time": 0.5,
+                "pose": {
+                  "tilt": 32.5
+                }
+              },
+              {
+                "time": 0.51,
+                "pose": {
+                  "tilt": 33.1915
+                }
+              },
+              {
+                "time": 0.52,
+                "pose": {
+                  "tilt": 33.883
+                }
+              },
+              {
+                "time": 0.53,
+                "pose": {
+                  "tilt": 34.5745
+                }
+              },
+              {
+                "time": 0.54,
+                "pose": {
+                  "tilt": 35.266
+                }
+              },
+              {
+                "time": 0.55,
+                "pose": {
+                  "tilt": 35.9574
+                }
+              },
+              {
+                "time": 0.56,
+                "pose": {
+                  "tilt": 36.6489
+                }
+              },
+              {
+                "time": 0.57,
+                "pose": {
+                  "tilt": 37.3404
+                }
+              },
+              {
+                "time": 0.58,
+                "pose": {
+                  "tilt": 38.0319
+                }
+              },
+              {
+                "time": 0.59,
+                "pose": {
+                  "tilt": 38.7234
+                }
+              },
+              {
+                "time": 0.6,
+                "pose": {
+                  "tilt": 39.4149
+                }
+              },
+              {
+                "time": 0.61,
+                "pose": {
+                  "tilt": 40.1064
+                }
+              },
+              {
+                "time": 0.62,
+                "pose": {
+                  "tilt": 40.7979
+                }
+              },
+              {
+                "time": 0.63,
+                "pose": {
+                  "tilt": 41.4894
+                }
+              },
+              {
+                "time": 0.64,
+                "pose": {
+                  "tilt": 42.1809
+                }
+              },
+              {
+                "time": 0.65,
+                "pose": {
+                  "tilt": 42.8723
+                }
+              },
+              {
+                "time": 0.66,
+                "pose": {
+                  "tilt": 43.5638
+                }
+              },
+              {
+                "time": 0.67,
+                "pose": {
+                  "tilt": 44.2553
+                }
+              },
+              {
+                "time": 0.68,
+                "pose": {
+                  "tilt": 44.9468
+                }
+              },
+              {
+                "time": 0.69,
+                "pose": {
+                  "tilt": 45.6383
+                }
+              },
+              {
+                "time": 0.7,
+                "pose": {
+                  "tilt": 46.3298
+                }
+              },
+              {
+                "time": 0.71,
+                "pose": {
+                  "tilt": 47.0213
+                }
+              },
+              {
+                "time": 0.72,
+                "pose": {
+                  "tilt": 47.7128
+                }
+              },
+              {
+                "time": 0.73,
+                "pose": {
+                  "tilt": 48.4043
+                }
+              },
+              {
+                "time": 0.74,
+                "pose": {
+                  "tilt": 49.0957
+                }
+              },
+              {
+                "time": 0.75,
+                "pose": {
+                  "tilt": 49.7872
+                }
+              },
+              {
+                "time": 0.76,
+                "pose": {
+                  "tilt": 50.4787
+                }
+              },
+              {
+                "time": 0.77,
+                "pose": {
+                  "tilt": 51.1702
+                }
+              },
+              {
+                "time": 0.78,
+                "pose": {
+                  "tilt": 51.8617
+                }
+              },
+              {
+                "time": 0.79,
+                "pose": {
+                  "tilt": 52.5532
+                }
+              },
+              {
+                "time": 0.8,
+                "pose": {
+                  "tilt": 53.2447
+                }
+              },
+              {
+                "time": 0.81,
+                "pose": {
+                  "tilt": 53.9362
+                }
+              },
+              {
+                "time": 0.82,
+                "pose": {
+                  "tilt": 54.6277
+                }
+              },
+              {
+                "time": 0.83,
+                "pose": {
+                  "tilt": 55.3191
+                }
+              },
+              {
+                "time": 0.84,
+                "pose": {
+                  "tilt": 56.0106
+                }
+              },
+              {
+                "time": 0.85,
+                "pose": {
+                  "tilt": 56.7021
+                }
+              },
+              {
+                "time": 0.86,
+                "pose": {
+                  "tilt": 57.3936
+                }
+              },
+              {
+                "time": 0.87,
+                "pose": {
+                  "tilt": 58.0851
+                }
+              },
+              {
+                "time": 0.88,
+                "pose": {
+                  "tilt": 58.7766
+                }
+              },
+              {
+                "time": 0.89,
+                "pose": {
+                  "tilt": 59.4681
+                }
+              },
+              {
+                "time": 0.9,
+                "pose": {
+                  "tilt": 60.1596
+                }
+              },
+              {
+                "time": 0.91,
+                "pose": {
+                  "tilt": 60.8511
+                }
+              },
+              {
+                "time": 0.92,
+                "pose": {
+                  "tilt": 61.5426
+                }
+              },
+              {
+                "time": 0.93,
+                "pose": {
+                  "tilt": 62.234
+                }
+              },
+              {
+                "time": 0.94,
+                "pose": {
+                  "tilt": 62.9255
+                }
+              },
+              {
+                "time": 0.95,
+                "pose": {
+                  "tilt": 63.5594
+                }
+              },
+              {
+                "time": 0.96,
+                "pose": {
+                  "tilt": 64.078
+                }
+              },
+              {
+                "time": 0.97,
+                "pose": {
+                  "tilt": 64.4814
+                }
+              },
+              {
+                "time": 0.98,
+                "pose": {
+                  "tilt": 64.7695
+                }
+              },
+              {
+                "time": 0.99,
+                "pose": {
+                  "tilt": 64.9424
+                }
+              },
+              {
+                "time": 1,
+                "pose": {
+                  "tilt": 65
+                }
+              }
+            ]
+          },
+          {
+            "id": "5ea0ea02-1cb2-449a-8034-814879e82b98",
+            "lane": "wheels",
+            "kind": "travel",
+            "start": 7.7,
+            "duration": 5.5,
+            "easing": "linear",
+            "label": "",
+            "value": 57,
+            "direction": "forward"
+          },
+          {
+            "id": "storage-roll",
+            "lane": "wheels",
+            "kind": "travel",
+            "start": 13.2,
+            "duration": 5.1,
+            "easing": "linear",
+            "label": "",
+            "value": 60,
+            "direction": "right"
+          },
+          {
+            "id": "fd16bf28-f7a4-4fe5-bde7-e3afcc94628e",
+            "lane": "wheels",
+            "kind": "rotate",
+            "start": 18.3,
+            "duration": 3.6000000000000014,
+            "easing": "linear",
+            "label": "",
+            "value": 90,
+            "direction": "left"
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Window light across the tool wall",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                4.84424371304072,
+                1.8744391909157971,
+                2.6052659453341875
+              ],
+              "target": [
+                0.7788471192075741,
+                0.871669587194933,
+                -1.9570335282695601
+              ],
+              "fov": 40,
+              "aspect": 1.7767527675276753
+            }
+          },
+          {
+            "id": "cea63728-5948-4278-b700-70c235d10a66",
+            "time": 0.029787234042553193,
+            "label": "Window light across the tool wall copy",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                4.84424371304072,
+                1.8744391909157971,
+                2.6052659453341875
+              ],
+              "target": [
+                0.7788471192075741,
+                0.871669587194933,
+                -1.9570335282695601
+              ],
+              "fov": 40,
+              "aspect": 1.7767527675276753
+            }
+          },
+          {
+            "id": "53e41f4a-5158-43b7-89af-ffb6f59604b1",
+            "time": 0.06808510638297872,
+            "label": "Window light across the tool wall copy copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.159297764659966,
+                2.7235813727213336,
+                1.2643207830039704
+              ],
+              "target": [
+                0.5256611326326303,
+                1.1446985081077254,
+                -1.9265657590504877
+              ],
+              "fov": 39.99986961316583,
+              "aspect": 1.7767527675276753
+            }
+          },
+          {
+            "id": "237cca6d-2e5a-46c1-ad04-8726d40f687d",
+            "time": 0.09787234042553193,
+            "label": "Window light across the tool wall copy copy copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.159297764659966,
+                2.7235813727213336,
+                1.2643207830039704
+              ],
+              "target": [
+                0.5256611326326303,
+                1.1446985081077254,
+                -1.9265657590504877
+              ],
+              "fov": 39.99986961316583,
+              "aspect": 1.7767527675276753
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.14893617021276595,
+            "label": "Window light across the tool wall copy copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.6589,
+                2.9253,
+                -0.7451
+              ],
+              "target": [
+                0.4121,
+                0.6464,
+                -0.2623
+              ],
+              "fov": 40.001,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "ecdbd01d-8222-4031-aa20-dc0e404dbef9",
+            "time": 0.1829787234042553,
+            "label": "Window light across the tool wall copy copy copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.6589,
+                2.9253,
+                -0.7451
+              ],
+              "target": [
+                0.4121,
+                0.6464,
+                -0.2623
+              ],
+              "fov": 40.001,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.2553193617021276,
+            "label": "Desk folding, centred (no dip)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.399774518199843,
+                2.014419193160368,
+                -2.8835783727178907
+              ],
+              "target": [
+                1.2667277423978585,
+                1.0404323805934745,
+                0.24171977395240862
+              ],
+              "fov": 43.99975919943126,
+              "aspect": 1.777027027027027
+            }
+          },
+          {
+            "id": "2e927565-8857-436b-b890-7c6ebc3832b1",
+            "time": 0.3531914893617022,
+            "label": "Desk folding, centred (no dip) copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.399774518199843,
+                2.014419193160368,
+                -2.8835783727178907
+              ],
+              "target": [
+                1.2667277423978585,
+                1.0404323805934745,
+                0.24171977395240862
+              ],
+              "fov": 43.99975919943126,
+              "aspect": 1.777027027027027
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.4255316595744681,
+            "label": "Roll begins",
+            "easing": "linear",
+            "view": {
+              "position": [
+                7.365675928691772,
+                1.715238215771651,
+                -0.27422241229807603
+              ],
+              "target": [
+                0.6550591843087494,
+                1.1780552182925854,
+                -0.3825798703506394
+              ],
+              "fov": 42.00024455271499,
+              "aspect": 1.777027027027027
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.5617021276595744,
+            "label": "Track the roll",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.678996830256377,
+                1.48462446845121,
+                2.9449464273261974
+              ],
+              "target": [
+                1.5261074919017916,
+                0.8919080454243009,
+                -1.7141712785710086
+              ],
+              "fov": 41.00040001659876,
+              "aspect": 1.7767527675276753
+            }
+          },
+          {
+            "id": "67c61413-93e1-4533-b76c-79e6a06d6a63",
+            "time": 0.5957446808510638,
+            "label": "Track the roll copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.678996830256377,
+                1.48462446845121,
+                2.9449464273261974
+              ],
+              "target": [
+                1.5261074919017916,
+                0.8919080454243009,
+                -1.7141712785710086
+              ],
+              "fov": 41.00040001659876,
+              "aspect": 1.7767527675276753
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 0.7361702127659575,
+            "label": "Parked: floor clear, matched to the finale",
+            "easing": "linear",
+            "view": {
+              "position": [
+                7.126877264902884,
+                1.454836734967428,
+                1.4060400661060728
+              ],
+              "target": [
+                3.919347857073128,
+                1.3035053285965763,
+                -0.9017222693931608
+              ],
+              "fov": 41.9962083015676,
+              "aspect": 1.7767527675276753
+            }
+          },
+          {
+            "id": "dee54d07-ff55-4799-a41a-71228b398372",
+            "time": 0.8340425531914893,
+            "label": "Drift with the finale orbit into the dissolve copy",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                6.456201547164879,
+                1.3923263573954778,
+                2.4319545807872323
+              ],
+              "target": [
+                3.5490723151281043,
+                1.3322894268761811,
+                -0.5909817398430904
+              ],
+              "fov": 41.99999996942317,
+              "aspect": 1.7776484284051222
+            }
+          },
+          {
+            "id": "55bf830e-2b44-4610-8dfe-e2c4f89b9364",
+            "time": 0.8723404255319149,
+            "label": "Drift with the finale orbit into the dissolve copy copy",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                6.456201547164879,
+                1.3923263573954778,
+                2.4319545807872323
+              ],
+              "target": [
+                3.5490723151281043,
+                1.3322894268761811,
+                -0.5909817398430904
+              ],
+              "fov": 41.99999996942317,
+              "aspect": 1.7776484284051222
+            }
+          },
+          {
+            "id": "3385f69d-117a-4ee3-b3b6-27eabf509ee9",
+            "time": 0.9404255319148938,
+            "label": "Ending hold",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                6.703923166396544,
+                1.0229182605407892,
+                1.7199390386330076
+              ],
+              "target": [
+                3.2880204725539155,
+                1.4152751188494959,
+                -1.5488612433793243
+              ],
+              "fov": 41.99999999997601,
+              "aspect": 1.777027027027027
+            }
+          },
+          {
+            "id": "5b6325c0-f4c3-465f-adf9-6288ad3f11d7",
+            "time": 0.9574468085106383,
+            "label": "Ending hold copy",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                6.703923166396544,
+                1.0229182605407892,
+                1.7199390386330076
+              ],
+              "target": [
+                3.2880204725539155,
+                1.4152751188494959,
+                -1.5488612433793243
+              ],
+              "fov": 41.99999999997601,
+              "aspect": 1.777027027027027
+            }
+          },
+          {
+            "id": "4ca6b687-91bc-4d61-867d-330b90e75fe8",
+            "time": 1,
+            "label": "Ending hold",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                6.703923166396544,
+                1.0229182605407892,
+                1.7199390386330076
+              ],
+              "target": [
+                3.2880204725539155,
+                1.4152751188494959,
+                -1.5488612433793243
+              ],
+              "fov": 41.99999999997601,
+              "aspect": 1.777027027027027
+            }
+          }
+        ]
+      },
+      "ledStatus": [
+        {
+          "at": 2.5,
+          "dur": 5.2,
+          "kind": "tilt-retract"
+        },
+        {
+          "at": 7.7,
+          "dur": 5.5,
+          "kind": "wheels",
+          "mode": 3,
+          "reverse": true
+        },
+        {
+          "at": 13.2,
+          "dur": 5.1,
+          "kind": "wheels",
+          "fade": 1,
+          "fadeIn": 0.6,
+          "mode": 2
+        },
+        {
+          "at": 18.3,
+          "dur": 3.678,
+          "kind": "wheels",
+          "fade": 1,
+          "fadeIn": 0.6,
+          "mode": 5
+        }
+      ],
+      "ledColor": "#242424",
+      "timeOfDay": [
+        {
+          "at": 0,
+          "mode": "night"
+        },
+        {
+          "at": 0,
+          "mode": "morning"
+        },
+        {
+          "at": 8.3,
+          "mode": "morning"
+        },
+        {
+          "at": 22.2,
+          "mode": "evening"
+        }
+      ],
+      "sceneGlobals": {
+        "roomLight": 0.8
+      },
+      "propEdits": [
+        {
+          "match": "^Prop:kenney-furniture-stool-bar-square$",
+          "asset": "workshop:house:room:7:kenney-furniture-stool-bar-square",
+          "label": "Prop:kenney-furniture-stool-bar-square",
+          "position": [
+            0.423,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:oscilloscope$",
+          "asset": "workshop:house:room:3:oscilloscope",
+          "label": "Prop:oscilloscope",
+          "scale": [
+            0.35,
+            0.35,
+            0.35
+          ]
+        },
+        {
+          "match": "^Prop:toolbox-industrial$",
+          "asset": "workshop:house:room:10:toolbox-industrial",
+          "label": "Prop:toolbox-industrial",
+          "position": [
+            -0.474,
+            0,
+            5.518
+          ],
+          "rotation": [
+            0,
+            -90,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:tool-cart$",
+          "asset": "workshop:house:room:6:tool-cart",
+          "label": "Prop:tool-cart",
+          "position": [
+            0,
+            0,
+            5.975
+          ],
+          "rotation": [
+            0,
+            -180,
+            0
+          ]
+        },
+        {
+          "match": "^Air compressor and hose reel$",
+          "asset": "workshop:house:fixture:air-compressor",
+          "label": "Air compressor and hose reel",
+          "position": [
+            0.552,
+            0,
+            6.024
+          ],
+          "rotation": [
+            0,
+            -180,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:shop-machine$",
+          "asset": "workshop:house:room:9:shop-machine",
+          "label": "Prop:shop-machine",
+          "position": [
+            0.347,
+            0.009,
+            0
+          ],
+          "scale": [
+            1.5,
+            1.5,
+            1.5
+          ]
+        },
+        {
+          "match": "^$",
+          "asset": "workshop:house:placement:2:0:",
+          "label": "Unnamed prop",
+          "position": [
+            3.047,
+            0,
+            -6.3
+          ]
+        },
+        {
+          "match": "^Shop clock and safe-days board$",
+          "asset": "workshop:house:fixture:shop-clock",
+          "label": "Shop clock and safe-days board",
+          "position": [
+            0.533,
+            0.252,
+            0
+          ]
+        },
+        {
+          "match": "^Workshop project drawings and build checklist$",
+          "asset": "workshop:house:fixture:project-board",
+          "label": "Workshop project drawings and build checklist",
+          "position": [
+            -0.084,
+            -0.088,
+            0
+          ],
+          "scale": [
+            0.86,
+            0.86,
+            0.86
+          ]
+        },
+        {
+          "match": "^Accessory:easel-rail$",
+          "label": "Accessory:easel-rail",
+          "hide": true
+        },
+        {
+          "match": "^Tool checklist$",
+          "path": "^Room:workshop > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Groove tabletop · daily materials > Tool checklist$",
+          "label": "Tool checklist",
+          "hide": true
+        },
+        {
+          "match": "^Companion droid prototype$",
+          "asset": "workshop:toy-story:droid-prototype",
+          "label": "Companion droid prototype",
+          "space": "local",
+          "position": [
+            0.079,
+            0,
+            0.058
+          ],
+          "scale": [
+            0.75,
+            0.75,
+            0.75
+          ]
+        },
+        {
+          "match": "^Smart robot figure · Robo-Pal$",
+          "asset": "workshop:toy-story:robo-pal",
+          "label": "Smart robot figure · Robo-Pal",
+          "rotation": [
+            0,
+            47,
+            0
+          ],
+          "scale": [
+            0.75,
+            0.75,
+            0.75
+          ]
+        },
+        {
+          "match": "^Robot diagnostic test dock$",
+          "asset": "workshop:toy-story:test-dock",
+          "label": "Robot diagnostic test dock",
+          "space": "local",
+          "position": [
+            0,
+            0,
+            -0.133
+          ]
+        },
+        {
+          "match": "^Maker building bricks$",
+          "asset": "workshop:toy-story:lego-bricks",
+          "label": "Maker building bricks",
+          "space": "local",
+          "position": [
+            -0.2,
+            0,
+            0.122
+          ]
+        },
+        {
+          "match": "^Servo arm sub-assembly$",
+          "asset": "workshop:toy-story:servo-arm",
+          "label": "Servo arm sub-assembly",
+          "space": "local",
+          "position": [
+            0.08,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Workshop multi-tool$",
+          "asset": "workshop:toy-story:multi-tool",
+          "label": "Workshop multi-tool",
+          "space": "local",
+          "position": [
+            -0.512,
+            0.021,
+            0
+          ],
+          "rotation": [
+            95.1,
+            18.5,
+            91
+          ]
+        },
+        {
+          "match": "^Robot RC test controller$",
+          "asset": "workshop:toy-story:rc-controller",
+          "label": "Robot RC test controller",
+          "space": "local",
+          "position": [
+            0.408,
+            1.669,
+            -0.197
+          ],
+          "scale": [
+            0.85,
+            0.85,
+            0.85
+          ]
+        }
+      ],
+      "deskBuild": {
+        "woodFinish": "Natural Birch",
+        "trimColor": "#f19c00"
+      }
+    }
+  ]
+}

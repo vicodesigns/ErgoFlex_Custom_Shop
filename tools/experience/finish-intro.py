@@ -10,6 +10,11 @@ to <dir>/standin/NN.* for pipeline tests), <dir>/score/score.wav (optional),
   ErgoFlex-Intro-1080p.mp4 / -textless.mp4, ErgoFlex-Intro-720p.mp4 / -textless.mp4
   titles.json (absolute in/out for app overlays), titles.ass, poster.jpg
 --draft renders a fast 960×540 preview (final/draft.mp4) instead.
+--title-still T --bg IMG --out PNG renders one titled frame (T: film seconds, or <chapter>:<chapter seconds>) over IMG
+  with the same titles.ass (pairs with --draft for 960x540), e.g. to compare a title against a Director Mode still.
+Title shadows: a title's optional 'shadow' {blur, opacity, paths} (Director Mode's shadow editor) replaces the fitted
+  line boxes with ASS vector drawings (m / l / b) at the same darkness and softness; blur / opacity alone
+  restyle the fitted boxes. Path points are 1920x1080 pixels relative to the title anchor (128, 912).
 --size 2560x1440 masters at that size (chapter renders must match); the HQ file is ErgoFlex-Intro-<H>p.mp4 with the
   bitrate cap scaled by pixel count. Titles stay authored on the 1920×1080 grid (libass scales PlayRes to the frame).
 """
@@ -17,7 +22,26 @@ import json, os, subprocess, sys, glob
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 FONTS = os.path.join(ROOT, 'app-reference/assets/google_fonts')
-BLUE = '&H00EC8813&'  # #1388ec as ASS BGR
+BLUE = '&H00EC8813&'
+BOX_A, BOX_BLUR, SCRIM_BLOCK = 'B0', 18, False   # title line boxes: alpha B0 = 31% black, soft edge (HQ20 F); SCRIM_BLOCK True = the old block scrim  # #1388ec as ASS BGR
+
+ANCHOR = (128, 912)   # title anchor: the headline's left edge / bottom line (Director Mode's film-titles.mjs ANCHOR)
+LINE_TIMING = {'eyebrow': (0, 10), 'title': (140, 14), 'detail': (380, 10)}   # (delay ms, rise px) as below
+
+def ass_num(v):
+    v = round(float(v) + 0.0, 2); return str(int(v)) if v == int(v) else f'{v:g}'
+
+def ass_drawing(path):
+    """A shadow path as an ASS drawing in absolute 1920x1080 coordinates (film-titles.mjs assDrawing())."""
+    P, (ax, ay) = path['points'], ANCHOR
+    xy = lambda x, y: f'{ass_num(x + ax)} {ass_num(y + ay)}'
+    out = ['m ' + xy(P[0]['x'], P[0]['y'])]
+    for i, p in enumerate(P):
+        q = P[(i + 1) % len(P)]
+        if not p.get('out') and not q.get('in'): out.append('l ' + xy(q['x'], q['y'])); continue
+        o, n = p.get('out') or [0, 0], q.get('in') or [0, 0]
+        out.append(f"b {xy(p['x'] + o[0], p['y'] + o[1])} {xy(q['x'] + n[0], q['y'] + n[1])} {xy(q['x'], q['y'])}")
+    return ' '.join(out)
 
 def run(cmd):
     print('$', ' '.join(c if len(c) < 120 else c[:117] + '…' for c in cmd), flush=True)
@@ -43,15 +67,16 @@ def main():
     hq_only = '--hq-only' in sys.argv  # full master and the 1080p (CRF 18, 9.5 Mbps cap) + poster; skips textless/720p
     only = sys.argv[sys.argv.index('--only') + 1] if '--only' in sys.argv else None
     d = os.path.abspath(args[0]); out = os.path.join(d, 'final'); os.makedirs(out, exist_ok=True)
-    edl = json.load(open(os.path.join(d, 'edl.json')))
-    src = json.load(open(os.path.join(d, 'titles-src.json')))
-    grade = json.load(open(os.path.join(d, 'grade.json'))) if os.path.exists(os.path.join(d, 'grade.json')) else {}
+    edl = json.load(open(os.path.join(d, 'edl.json'), encoding='utf-8'))
+    src = json.load(open(os.path.join(d, 'titles-src.json'), encoding='utf-8'))
+    grade = json.load(open(os.path.join(d, 'grade.json'), encoding='utf-8')) if os.path.exists(os.path.join(d, 'grade.json')) else {}
     ch = edl['chapters']; X = edl['dissolve']; total = edl['total']; fps = edl['fps']
     start = {c['id']: c['start'] for c in ch}
 
     # ---- titles.json (absolute) + ASS -------------------------------------
     titles = [dict(id=f"{t['chapter']}-{i}", chapter=t['chapter'], start=round(start[t['chapter']] + t['rel_in'], 3),
-                   end=round(start[t['chapter']] + t['rel_out'], 3), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'], scrim=t.get('scrim'))
+                   end=round(start[t['chapter']] + t['rel_out'], 3), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'], scrim=t.get('scrim'),
+                   shadow=t.get('shadow') or {})
               for i, t in enumerate(src['titles'])]
     logo_at = start[src['logo']['chapter']] + src['logo']['rel_in']
     cta = dict(id='cta', chapter=src['cta']['chapter'], start=round(start[src['cta']['chapter']] + src['cta']['rel_in'], 3),
@@ -59,8 +84,8 @@ def main():
     json.dump(dict(schema='ergoflex.intro-titles', version=1, duration=total, fps=fps,
                    placement=dict(anchor='bottom-left', safeArea=0.9, eyebrowColor='#1388EC',
                                   note='Coordinates for a 1920×1080 frame: text left edge x=128; eyebrow/title/detail bottoms at y=812/912/970. Wordmark centered at y=788 (22% of width); CTA centered at y=904.'),
-                   titles=[{k: v for k, v in t.items() if k != 'scrim'} for t in titles], cta=cta, logo=dict(start=round(logo_at, 3))),
-              open(os.path.join(out, 'titles.json'), 'w'), indent=1, ensure_ascii=False)
+                   titles=[{k: v for k, v in t.items() if k not in ('scrim', 'shadow')} for t in titles], cta=cta, logo=dict(start=round(logo_at, 3))),
+              open(os.path.join(out, 'titles.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
 
     size = sys.argv[sys.argv.index('--size') + 1] if '--size' in sys.argv else '1920x1080'
     W, H = (960, 540) if draft else tuple(int(v) for v in size.split('x'))
@@ -73,24 +98,50 @@ def main():
         'Style: Title,Poppins SemiBold,86,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,-0.6,0,1,0,2,1,0,0,0,1',
         'Style: Detail,Poppins,40,&H00E6DED6,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,0.2,0,1,0,1.5,1,0,0,0,1',
         'Style: Scrim,Poppins,20,&HFF000000,&HFF000000,&HFF000000,&HFF000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1',
+        # HQ20 (Vico: the title scrim was "a giant box ... it should be fitting to the background of the text"; picked F):
+        # each line gets its own soft box sized to its own text (BorderStyle 3: an opaque box from the line's glyph extents,
+        # Outline = padding, OutlineColour = 30% black), same font / size / spacing as the line it sits behind.
+        f'Style: BoxEyebrow,Poppins SemiBold,28,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,6,0,3,16,0,1,0,0,0,1',
+        f'Style: BoxTitle,Poppins SemiBold,86,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,-0.6,0,3,26,0,1,0,0,0,1',
+        f'Style: BoxDetail,Poppins,40,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,0.2,0,3,20,0,1,0,0,0,1',
         'Style: CTA,Poppins Medium,46,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,1.5,0,1,0,1.5,5,0,0,0,1', '',
         '[Events]', 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text']
     X0 = 128
     CTA_Y = 904
     for t in titles:
         a, b = t['start'], t['end']
-        # Soft, blurred scrim behind the text block; fades with it.
-        ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
+        # (Until HQ20: one soft, blurred 1300 x 350 scrim behind the text block, per-title 'scrim' alpha; now fitted line boxes.)
+        if SCRIM_BLOCK: ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
         def line(layer, style, y, text, delay, rise=14):
             dur = int((b - a) * 1000)
             return (f'Dialogue: {layer},{ts(a + delay / 1000)},{ts(b)},{style},,0,0,0,,'
                     f'{{\\an1\\move({X0},{y + rise},{X0},{y},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
-        ass.append(line(1, 'Eyebrow', 812, t['eyebrow'], 0, 10))
-        ass.append(line(1, 'Title', 912, t['title'], 140))
-        ass.append(line(1, 'Detail', 970, t['detail'], 380, 10))
+        # Director Mode's shadow: blur / opacity restyle the boxes; paths replace them (one drawing each, timed like its line).
+        sh = t['shadow']; blur = ass_num(sh.get('blur', BOX_BLUR))
+        alpha = f"{max(0, min(255, round(255 * (1 - float(sh['opacity']))))):02X}" if 'opacity' in sh else BOX_A
+        tint = f'\\3a&H{alpha}&' if alpha != BOX_A else ''
+        def box(style, y, text, delay, rise=14):
+            return (f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Box{style},,0,0,0,,'
+                    f'{{\\an1\\move({X0},{y + rise},{X0},{y},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
+        for p in sh.get('paths') or []:
+            delay, rise = LINE_TIMING.get(p.get('line'), (0, 10))
+            ass.append(f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Scrim,,0,0,0,,{{\\an7\\move(0,{rise},0,0,0,900)\\fad(650,420)\\p1\\bord0\\shad0'
+                       f'\\1c&H000000&\\1a&H{alpha}&\\blur{blur}}}{ass_drawing(p)}{{\\p0}}')
+        for style, y, key, delay, rise in (('Eyebrow', 812, 'eyebrow', 0, 10), ('Title', 912, 'title', 140, 14), ('Detail', 970, 'detail', 380, 10)):
+            if not SCRIM_BLOCK and not sh.get('paths'): ass.append(box(style, y, t[key], delay, rise))
+            ass.append(line(1, style, y, t[key], delay, rise))
     ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad(900,1400)\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
-    open(os.path.join(out, 'titles.ass'), 'w').write('\n'.join(ass) + '\n')
+    open(os.path.join(out, 'titles.ass'), 'w', encoding='utf-8').write('\n'.join(ass) + '\n')
 
+    if '--title-still' in sys.argv:
+        v = sys.argv[sys.argv.index('--title-still') + 1]
+        at = start[v.split(':')[0]] + float(v.split(':')[1]) if ':' in v else float(v)
+        bg, png = sys.argv[sys.argv.index('--bg') + 1], sys.argv[sys.argv.index('--out') + 1]
+        fp = (lambda p: os.path.relpath(p).replace(os.sep, '/')) if os.name == 'nt' else (lambda p: p)
+        run(['ffmpeg', '-v', 'error', '-y', '-loop', '1', '-framerate', str(fps), '-i', bg, '-vf',
+             f"scale={W}:{H}:flags=lanczos,setpts=PTS+{at:.4f}/TB,subtitles=filename={fp(os.path.join(out, 'titles.ass'))}:fontsdir={fp(FONTS)}",
+             '-frames:v', '1', png])
+        return
     if '--titles-only' in sys.argv: return
     # ---- master: grade + dissolves + end card -------------------------------
     master = os.path.join(out, 'draft-textless.mkv' if draft else 'wip-textless.mkv' if wip else 'master-textless.mkv')
@@ -154,15 +205,17 @@ def main():
             # Light luma grain dithers gradients in the dark voids.
             f'noise=c0s={3 if not draft else 0}:c0f=t,format=yuv420p,trim=0:{total}[v]')
         filters.append(look)
-        script = os.path.join(out, 'filter.txt'); open(script, 'w').write(';\n'.join(filters))
+        script = os.path.join(out, 'filter.txt'); open(script, 'w', encoding='utf-8').write(';\n'.join(filters))
         enc = ['-c:v', 'libx264', '-preset', 'ultrafast' if draft else 'veryfast' if wip else 'slow', '-crf', '23' if draft else '14' if wip else '9', '-pix_fmt', 'yuv420p'] + COLOR
-        run(['ffmpeg', '-v', 'error', '-stats', '-y', *inputs, '-filter_complex_script', script, '-map', '[v]', '-r', str(fps), *enc, master])
+        run(['ffmpeg', '-v', 'error', '-stats', '-y', *inputs, *FILTER_SCRIPT(script), '-map', '[v]', '-r', str(fps), *enc, master])
 
     if only == 'master': return
     # ---- deliverables -------------------------------------------------------
     score = os.path.join(d, 'score', 'score.wav')
     audio_in = ['-i', score] if os.path.exists(score) else ['-f', 'lavfi', '-t', str(total), '-i', 'anullsrc=r=48000:cl=stereo']
-    subs = f"subtitles=filename={os.path.join(out, 'titles.ass')}:fontsdir={FONTS}"
+    # Filter args can't hold a Windows drive colon: use cwd-relative forward-slash paths there.
+    fp = (lambda p: os.path.relpath(p).replace(os.sep, '/')) if os.name == 'nt' else (lambda p: p)
+    subs = f"subtitles=filename={fp(os.path.join(out, 'titles.ass'))}:fontsdir={fp(FONTS)}"
     if wip:
         run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-vf', subs, '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '19', '-pix_fmt', 'yuv420p', *COLOR, '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', os.path.join(out, 'ErgoFlex-Intro-WIP.mp4')])
         return
@@ -179,13 +232,18 @@ def main():
         dst = os.path.join(out, name); log = os.path.join(out, 'x264pass-' + name)
         common = ['-vf', vf, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-b:v', rate, '-maxrate', str(int(float(rate[:-1]) * 1.6)) + rate[-1], '-bufsize', str(int(float(rate[:-1]) * 3)) + rate[-1],
                   '-pix_fmt', 'yuv420p', '-g', str(fps * 2), '-x264-params', 'aq-mode=3', '-passlogfile', log] + COLOR
-        run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, '-map', '0:v', *common, '-pass', '1', '-an', '-f', 'null', '/dev/null'])
+        run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, '-map', '0:v', *common, '-pass', '1', '-an', '-f', 'null', os.devnull])
         run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', *common, '-pass', '2',
              '-c:a', 'aac', '-b:a', ab, '-ar', '48000', '-shortest', '-movflags', '+faststart', dst])
         for f in glob.glob(log + '*'): os.remove(f)
     # Poster: the clean end-card frame (desk + wordmark), no burned-in text.
     run(['ffmpeg', '-v', 'error', '-y', '-i', master, '-vf', f'select=gte(t\\,{total - 2.6:.2f}),scale={W}:{H}', '-frames:v', '1', '-q:v', '2', os.path.join(out, 'poster.jpg')])
 
+def _ffmpeg_major():
+    try: return int(subprocess.run(['ffmpeg', '-version'], capture_output=True, text=True).stdout.split()[2].split('.')[0].lstrip('n'))
+    except Exception: return 6
+# -filter_complex_script was replaced by the '-/filter_complex file' form in ffmpeg 7 and later removed (Win box runs 9.x).
+FILTER_SCRIPT = (lambda f: ['-/filter_complex', f]) if _ffmpeg_major() >= 7 else (lambda f: ['-filter_complex_script', f])
 COLOR = ['-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-color_range', 'tv']
 if __name__ == '__main__':
     main()

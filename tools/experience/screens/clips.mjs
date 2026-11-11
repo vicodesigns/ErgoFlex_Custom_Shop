@@ -6,8 +6,13 @@ const SCREENS = '/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-2026103
 // target = the harness screen target from INVENTORY.md
 export const CLIPS = [
   {id: '01-main', chapter: 1, target: 'main-landscape', role: 'curved main: digital-twin control', w: 2560, h: 1072, scene: 'ch01'},
+  // Round 8 alternative for the same monitor (Vico: wellness / how the desk helps, no twin): same size, same shot timing.
+  {id: '01-wellness', chapter: 1, target: 'main-landscape', role: 'curved main: wellness routine + focus, no twin', w: 2560, h: 1072, scene: 'ch01w'},
   {id: '02-portrait', chapter: 2, target: 'main-portrait', role: 'portrait: wellness app height + stand', w: 1080, h: 1856, scene: 'ch02p'},
   {id: '02-curved', chapter: 2, target: 'main-landscape', role: 'curved: the workday', w: 2560, h: 1072, scene: 'ch02l'},
+  // HQ37 (Vico, 2026-11-06): the phone on the desk's charger opens the chapter: charge ring to 100 %, then the lock screen
+  // (charged overnight, the Daily notes card), then an always-on dim as the desk wakes. The phone's whole front glass.
+  {id: '02-phone', chapter: 2, target: 'phone', role: 'phone on the charger: 100 % charge, lock screen, Daily notes', w: 720, h: 1516, scene: 'ch02ph'},
   {id: '02-tablet', chapter: 2, target: 'tablet', role: 'tablet: desk remote', w: 1620, h: 1080, scene: 'ch02t'},
   {id: '03-landscape', chapter: 3, target: 'main-landscape', role: 'flat: painting app timelapse', w: 1920, h: 1120, scene: 'ch03l'},
   {id: '03-portrait', chapter: 3, target: 'main-portrait', role: 'portrait: reference board + palette', w: 1080, h: 1856, scene: 'ch03p'},

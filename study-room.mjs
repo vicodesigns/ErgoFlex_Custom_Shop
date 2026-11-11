@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
 
@@ -371,6 +372,8 @@ export function buildStudyRoom(room, root, layout, helpers) {
     const skyCanvas = document.createElement('canvas'); skyCanvas.width = skyCanvas.height = 512;
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const pane = mesh(entry, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]); pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'campus'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     // Six-light casement: frame, glazing bars and sill baked as one walnut piece.
     const casement = kit();
     for (const z of [a, wz, b]) casement.box([65, wh + 45, 28], [-w / 2 + 8, low + wh / 2, z]);
@@ -670,7 +673,7 @@ export function buildStudyRoom(room, root, layout, helpers) {
     };
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = STUDY_MODES[modeId] || STUDY_MODES.afternoon;
-        paintView(skyCanvas.getContext('2d'), mode, modeId); skyMap.needsUpdate = true;
+        paintView(skyCanvas.getContext('2d'), mode, modeId); skyMap.needsUpdate = true; windowVista.setPhase(modeId);
         // Shelf strips stay on for late reading even when the room wash is low.
         glow.forEach(mat => { mat.color.set(mode.colors[0]); mat.emissive.set(mode.colors[0]); mat.emissiveIntensity = .08 + Math.max(mode.wash, mode.practical * .7) * accent; });
         lights.forEach(spec => { spec.light.color.set(spec.task ? '#f8dbac' : mode.colors[0]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent; });

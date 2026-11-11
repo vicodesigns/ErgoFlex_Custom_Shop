@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""Write assets/props/people.json: who the people are and what they can do, for the Director's People tab.
+
+    python3 tools/people/catalog.py        (build.py runs it after every build)
+
+  characters: { id: { name, sex, age, years, heritage, height (cm), outfit: [garments], colors: { top, bottom, shoes, hair } } }
+  poses:      { id: { label, stance, desk: bool, seat (mm), heights: [inches] } }
+  models:     { '<library id>': { character, pose, deskHeight?, aids: [...] } }       what is built (assets/props/index.json)
+Any character can be built in any pose on request: python3 tools/people/build.py people-<character>-<pose>.
+"""
+import json, os, sys
+HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.path.join(HERE, '..', '..')); sys.path.insert(0, HERE)
+import cast  # noqa: E402
+
+
+def years(a):      # MakeHuman's age setting: 0 = 1 year, .1875 = 10, .5 = 25, 1 = 90
+    return 1 + a / .1875 * 9 if a < .1875 else 10 + (a - .1875) / .3125 * 15 if a < .5 else 25 + (a - .5) / .5 * 65
+
+
+def age_group(y): return 'child' if y < 13 else 'teen' if y < 20 else 'young adult' if y < 40 else 'adult' if y < 62 else 'senior'
+
+
+def heritage(race):
+    top = max(race, key=race.get)
+    return {'caucasian': 'European', 'african': 'African', 'asian': 'Asian'}[top] if race[top] >= .7 else 'Mixed'
+
+
+def role(garment):
+    g = garment.lower()
+    return ('glasses' if 'glasses' in g else 'shoes' if 'shoe' in g or 'flats' in g or 'boot' in g else
+            'bottom' if 'pants' in g or 'skirt' in g or 'jeans' in g or 'shorts' in g else 'top')
+
+
+def hexc(c): return '#%02x%02x%02x' % tuple(round(max(0, min(1, v)) ** (1 / 2.2) * 255) for v in c)
+
+
+index = json.load(open(os.path.join(ROOT, 'assets/props/index.json')))['props']
+built = {p['id']: p for p in index if p.get('category') == 'people' and p.get('person')}
+characters = {}
+for cid, c in cast.CHARACTERS.items():
+    ph = c['phenotype']; y = years(ph['age'])
+    tall = max((p['size'][1] for p in built.values() if p['person']['character'] == cid and cast.POSE_INFO.get(p['person']['pose'], ('', ''))[1] in ('standing', 'walking') and not p['person']['pose'].startswith('stretch')), default=None)
+    colors = {role(g): hexc(v) for g, v in (c.get('tint') or {}).items()}
+    if c.get('hair_tint'): colors['hair'] = hexc(c['hair_tint'])
+    characters[cid] = {'name': c['name'], 'sex': 'woman' if ph['gender'] < .5 else 'man', 'age': age_group(y), 'years': round(y), 'heritage': heritage(ph['race']),
+                       'height': round(tall / 10) if tall else round((1.287 * ph['height'] + (.87 if ph['gender'] < .5 else 1.16)) * 100),
+                       'outfit': c.get('clothes', []), 'colors': colors}
+poses = {pid: {'label': label, 'stance': stance, 'desk': where == 'desk', 'seat': seat, **({'heights': list(cast.DESK_HEIGHTS[pid])} if pid in cast.DESK_HEIGHTS else {})}
+         for pid, (label, stance, where, seat, _held) in cast.POSE_INFO.items()}
+models = {}
+for mid, p in built.items():
+    try: o = cast.output(mid)
+    except KeyError: o = {}
+    aids = sorted({('white cane' if h[1].get('white') else 'walking stick') if h[0] == 'cane' else h[0] for h in o.get('held', []) if h[0] in ('wheelchair', 'cane', 'prosthesis')})
+    models[mid] = {**p['person'], 'name': p['name'], 'aids': aids}
+out = os.path.join(ROOT, 'assets/props/people.json')
+json.dump({'v': 1, 'characters': characters, 'poses': poses, 'models': models}, open(out, 'w'), indent=1); open(out, 'a').write('\n')
+print('people catalog: %d characters, %d poses, %d models built' % (len(characters), len(poses), len(models)))

@@ -1,8 +1,8 @@
 import * as government from './institutional-government.mjs?v=scene-desk-styling-20261010';
-import * as education from './institutional-education.mjs?v=surface-seating-20261021';
+import * as education from './institutional-education.mjs?v=highschool-setting-20261104';
 import * as healthcare from './institutional-healthcare.mjs?v=scene-desk-styling-20261010';
 import * as it from './institutional-it.mjs?v=scene-desk-styling-20261010';
-import * as media from './institutional-media.mjs?v=campus-life-20261019';
+import * as media from './institutional-media.mjs?v=occ-medialab-20261105';
 
 // Measured public service, education and mobile work settings. Units are mm.
 // Scene IDs intentionally contain only letters, matching saved Groove keys.
@@ -22,7 +22,7 @@ const definitions = [
     ['middleschool', 'Middle school', 'Education', 'Flexible stations for the next stage of learning.', 'secondary', '#e0e8ea', '#498698', [7200, 8800], ['Morning seminar', 'Team projects', 'After-school study', 'Lesson planning', 'STEM workshop']],
     ['highschool', 'High school', 'Education', 'A classroom ready for independent thinking.', 'secondary', '#e7e4de', '#567081', [8200, 9800], ['Morning class', 'Group research', 'Evening study', 'Lesson planning', 'Project review']],
     ['college', 'College classroom', 'Education', 'Teaching, discussion and practical learning.', 'college', '#e8e4db', '#866653', [9200, 10800], ['Morning lecture', 'Working seminar', 'Evening class', 'Independent study', 'Group presentation']],
-    ['university', 'University classroom', 'Education', 'A mobile teaching station for shared discovery.', 'university', '#e6e7dd', '#285c4b', [10200, 11800], ['Morning lecture', 'Research seminar', 'Evening lecture', 'Graduate study', 'Symposium']],
+    ['university', 'University classroom', 'Education', 'A mobile teaching station for shared discovery.', 'university', '#e6e7dd', '#285c4b', [10200, 11800], ['Morning lecture hall', 'Research seminar', 'Evening lecture', 'Graduate study', 'Symposium']],
     ['laboratory', 'Science laboratory', 'Clinical & technical', 'Move between analysis, teaching and experiments.', 'lab', '#dde8e4', '#408d89', [6600, 8000], ['Lab preparation', 'Practical session', 'Analysis', 'Instrument watch', 'Research review']],
     ['hospital', 'Hospital workspace', 'Clinical & technical', 'A mobile documentation station beside the care space.', 'hospital', '#e8efeb', '#608e9d', [6200, 7600], ['Morning rounds', 'Care coordination', 'Evening handover', 'Night observation', 'Team review']],
     ['mobileit', 'Mobile IT', 'Clinical & technical', 'Bring diagnostics and support to the equipment.', 'it', '#dce3e8', '#467eaa', [5800, 7200], ['System checks', 'Service session', 'Maintenance', 'Overnight monitoring', 'Team deployment']],

@@ -11,9 +11,13 @@
 //          'wheels'       FX36 comet, travel red with caution amber; mode = drive mode 1-10
 //                         1 strafe L, 2 strafe R, 3 fwd, 4 back, 5 CW, 6 CCW,
 //                         7 diag L-fwd, 8 diag L-back, 9 diag R-fwd, 10 diag R-back
-//                         Rotation (5/6): the wings (strips 5, 6) run like the real desk's
-//                         (firmware fxWheels), every other strip keeps the preview's reversal.
+//                         Rotation (5/6): every strip runs the firmware direction (fxWheels; the viewer's
+//                         reversal was wrong, Vico 2026-11-04). Forward/back: the foot rest runs the wings' comet.
+//          reverse:true   (any animated kind) every strip runs its animation the other way along its length (Vico, HQ16e:
+//                         storage's roll moves right on screen while the visualizer map ran the floor comet left).
 //          'collision'    latched breathing red, the app's roomSafety 'collision' look
+//          'off'          all strips dark (and their spill); the event's fade is the switch-on to the regular look
+//     fadeIn:s (any kind, default 0)  the regular look fades out under the state over its first s seconds (else it cuts).
 //          'proximity'    latched amber, the desk's FX2 breathe (sx 150: one breath per ~3.1 s,
 //                         ERGOLED_BREATHE_SHAPE 1, dark at the bottom), starting dark
 //     No arrival light: when a state ends the strips fade (fade s, default 1) back to the
@@ -27,6 +31,9 @@
 //   obstacles:[{x=0, ahead=.4, from='desk'|'base', radius=.09, height=.5, rise:[t0,t1]}]
 //     at:[x, z] places it in world space; heading (deg, + = left turn) and travel (scene units rolled along it) place the pylon
 //     ahead of the desk after a turn and a roll; without them it is ahead along +x.
+//     person:'<library id>' puts that posed person (assets/props, category people) there instead of the pylon,
+//     facing the desk, from the first frame (rise is ignored); turn (deg) adds to the facing. prepareObstacles(shot)
+//     loads them first (film-fx awaits it).
 //     A simulated pylon, styled like the stage's proximity pylons. ahead is the gap
 //     in scene units between the desk's (or, from:'base', the base's front at the pylon's height) initial front (+x) edge and the pylon's near
 //     face; x is sideways from the desk's centre. rise eases its scale in.
@@ -42,23 +49,45 @@ function movement(ev) {
   if (ev.kind === 'lift-down') return { fx: 34, ix: 128, sx: 160, colors: [RED, RED, ZERO], dark: [2] };
   if (ev.kind === 'tilt-extend') return { fx: 35, ix: 0, sx: 160, colors: [YELLOW, YELLOW, ZERO] };
   if (ev.kind === 'tilt-retract') return { fx: 35, ix: 128, sx: 160, colors: [PURPLE, PURPLE, ZERO] };
-  if (ev.kind === 'wheels') return { fx: 36, ix: ev.mode, sx: 180, reverseRotation: ev.mode === 5 || ev.mode === 6, colors: [RED, RED, AMBER] };
+  // Rotation comets run the firmware direction on every strip (Vico confirmed 2026-11-04: the viewer's
+  // "preview correction" reverseRotation flip was wrong; Polish removed it from the demo).
+  if (ev.kind === 'wheels') return { fx: 36, ix: ev.mode, sx: 180, reverseRotation: false, colors: [RED, RED, AMBER] };
   return null;
+}
+
+// People who stand in for a pylon: loaded through the film's prop library before installStatus places them.
+const obstaclePeople = new WeakMap();
+export async function prepareObstacles(shot) {
+  const wanted = (shot.obstacles || []).filter(o => o?.person); if (!wanted.length) return 0;
+  const { propLibrary } = await import('./film-edits.mjs'), library = await propLibrary();
+  await Promise.all(wanted.map(async o => { try { obstaclePeople.set(o, await library.instance(o.person)); } catch (error) { console.warn('[film-status] obstacle person ' + o.person + ' did not load', error); } }));
+  return wanted.length;
 }
 
 export function installStatus(shot) {
   const game = api.ledGameMode, counts = game.counts;
   const frame = counts.map(n => new Uint8Array(n * 4)), events = (shot.ledStatus || []).map(e => ({ ...e }));
   const group = new THREE.Group(); group.name = 'Film status'; group.userData.filmFx = true;
-  const pylons = [], regular = api.ledColor || '#ffffff';
-  const regularRgb = [1, 3, 5].map(i => parseInt(regular.slice(i, i + 2), 16));
+  const pylons = [], regular0 = api.ledColor || '#ffffff';
+  const rgbOf = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
   // The status frames go to the strips through the game path, which uploads them as LINEAR bytes
   // (led-pixel-renderer linearByteToSrgb), while the regular look is the sRGB colour regularRgb. So the
   // fade aims at the linear byte that the upload turns back into regularRgb: fading to regularRgb itself
   // ended about 7x too bright (#2b2b2b as linear 43 is sRGB 114), and the floor and desk spill popped off
   // in one frame at the handoff (cinematography final review 8, film 35.43).
   const toSrgbByte = v => { const x = v / 255; return Math.round(255 * (x <= .0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - .055)); };
-  const regularLinear = regularRgb.map(c => { let best = 0; for (let b = 0; b < 256; b++) if (Math.abs(toSrgbByte(b) - c) < Math.abs(toSrgbByte(best) - c)) best = b; return best; });
+  const linearOf = rgb => rgb.map(c => { let best = 0; for (let b = 0; b < 256; b++) if (Math.abs(toSrgbByte(b) - c) < Math.abs(toSrgbByte(best) - c)) best = b; return best; });
+  // ledNeutral:[[seconds, '#hex'], ...] (optional): the regular look changes over the chapter, smoothstep between keys
+  // (Vico, HQ14k: the app's time-based white, true white in the morning, warm white from sunset). Without it the
+  // regular look is the shot's ledColor throughout.
+  const neutral = (shot.ledNeutral || []).map(([at, c]) => [at, rgbOf(c)]).sort((a, b) => a[0] - b[0]);
+  const regularAt = s => {
+    if (!neutral.length) return rgbOf(regular0);
+    const i = neutral.findIndex(k => k[0] > s);
+    if (i === 0) return neutral[0][1]; if (i < 0) return neutral.at(-1)[1];
+    const [a, ca] = neutral[i - 1], [b, cb] = neutral[i], k = smooth((s - a) / (b - a));
+    return ca.map((v, c) => Math.round(v + (cb[c] - v) * k));
+  };
   let fill = null;
   if (shot.ledFill) {
     const b = new THREE.Box3().setFromObject(api.loadedModel), c = b.getCenter(new THREE.Vector3()), f = shot.ledFill;
@@ -85,7 +114,8 @@ export function installStatus(shot) {
     };
     for (const o of shot.obstacles) {
       const r = o.radius ?? .09, h = o.height ?? .5;
-      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r * .85, r, h, 24),
+      const person = o.person && obstaclePeople.get(o);
+      const mesh = person || new THREE.Mesh(new THREE.CylinderGeometry(r * .85, r, h, 24),
         new THREE.MeshStandardMaterial({ color: 0x163344, metalness: .6, roughness: .3, emissive: 0x0873a4, emissiveIntensity: .6 }));
       // The desk's forward (director +z, the app's wheel mode 3) is world +x; x here is sideways in world z.
       const front = (o.from === 'base' ? frontAt(h) : box.max.x) + (o.ahead ?? .4) + r;
@@ -96,6 +126,13 @@ export function installStatus(shot) {
         mesh.position.set(pv.x + Math.cos(a) * d - Math.sin(a) * (o.x ?? 0), box.min.y + h / 2, pv.z + Math.sin(a) * d + Math.cos(a) * (o.x ?? 0));
       } else mesh.position.set(front, box.min.y + h / 2, c.z + (o.x ?? 0));
       mesh.castShadow = true; mesh.name = 'Film obstacle'; mesh.userData.filmFx = true;
+      if (person) {
+        // A library instance is millimetres at scale 1000: bring it to scene units, feet on the stage floor, facing the desk.
+        const k = api.workspaceAccessories?.scale || api.workspaceRoom?.scale || .001;
+        person.scale.setScalar(1000 * k); person.position.y = box.min.y;
+        person.rotation.y = Math.atan2(c.x - person.position.x, c.z - person.position.z) + THREE.MathUtils.degToRad(o.turn || 0);
+        person.traverse(m => { if (m.isMesh) m.castShadow = true; }); group.add(person); continue;
+      }
       pylons.push({ mesh, h, y0: box.min.y, rise: o.rise || [0, 0] }); group.add(mesh);
     }
     scene.add(group);
@@ -108,7 +145,9 @@ export function installStatus(shot) {
       }
       const ev = events.find(e => seconds >= e.at && seconds < e.at + e.dur);
       const hex = c => '#' + c.slice(0, 3).map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+      const regularRgb = regularAt(seconds), regular = hex(regularRgb);
       if (!ev) {
+        const regularLinear = linearOf(regularRgb);
         // Fade from the last state's final frame back to the regular look, ending on what it renders.
         const done = events.filter(e => e.at + e.dur <= seconds).at(-1), u = done ? (seconds - done.at - done.dur) / (done.fade ?? 1) : 1;
         if (!done?.last || u >= 1) { api.setLedColor(regular, false); if (fill) fill.intensity = 0; game.active = false; delete game.sample; return; }
@@ -121,13 +160,36 @@ export function installStatus(shot) {
       }
       const t = seconds - ev.at, m = movement(ev);
       if (m) {
-        sampleMovementInto(frame, { ...m, elapsedMs: t * 1000 });
+        // Lift (FX34): one wavefront per move, foot rest to top shelf going up and top to foot going down,
+        // spread over the event (Vico, round 8: the desk sweeps once with the move). The app's own FX34 frames
+        // are kept; only their clock is mapped: head travel 0 -> 4 layers = phase 0 -> .8, reached at 90% of dur.
+        // sweep:false keeps the firmware's free-running loop.
+        let ms = t * 1000;
+        // Stepped (Vico, HQ14g: "the second layer lights up so fast ... it looks almost like one light"): the head rests on
+        // each layer (hold, default .5 of its step) and then moves on, and gamma (default 2.5) on the frame shrinks the
+        // overlap, so the foot rest lights, fades out, and only then the desktop layer comes up. steps:false = the glide.
+        const stepped = m.fx === 34 && ev.sweep !== false && ev.steps !== false;
+        if (m.fx === 34 && ev.sweep !== false) {
+          let travel = Math.min(1, t / (ev.dur * .9)) * 4;
+          if (stepped) { const hold = ev.hold ?? .5, k = Math.min(3, Math.floor(travel)), f = travel - k; travel = k + (f < hold ? 0 : smooth((f - hold) / (1 - hold))); }
+          ms = travel / 5 / (.12 + m.sx / 255 * .28) * 1000;
+        }
+        sampleMovementInto(frame, { ...m, elapsedMs: ms });
+        if (stepped) { const g = ev.gamma ?? 2.5; for (const row of frame) for (let p = 0; p < row.length; p++) row[p] = Math.round(255 * (row[p] / 255) ** g); }
         if (m.reverseRotation) {
           // The wings run like the real desk's: re-sample rows 5 and 6 with the physical mode.
           const wings = counts.map(n => new Uint8Array(n * 4));
           sampleMovementInto(wings, { ...m, reverseRotation: false, elapsedMs: t * 1000 });
           frame[5].set(wings[5]); frame[6].set(wings[6]);
         }
+        if (ev.kind === 'wheels' && (ev.mode === 3 || ev.mode === 4) && ev.footComet !== false) {
+          // Vico (HQ14c): on forward/back the firmware gives the foot rest a slow red pulse that starts dark and read
+          // as off, so it runs the wings' comet there (sampled at the foot's own length). Other modes keep the firmware's.
+          const foot = counts.map((n, i) => new Uint8Array((i === 5 ? counts[7] : 1) * 4));
+          sampleMovementInto(foot, { ...m, reverseRotation: false, elapsedMs: t * 1000 });
+          frame[7].set(foot[5]);
+        }
+        if (ev.reverse) for (const row of frame) { const n = row.length / 4, tmp = row.slice(); for (let p = 0; p < n; p++) row.set(tmp.subarray((n - 1 - p) * 4, (n - p) * 4), p * 4); }
         for (const id of m.dark || []) frame[id].fill(0);
       } else {
         let rgb, gain;
@@ -135,11 +197,25 @@ export function installStatus(shot) {
           // FX2 breathe: +0.0671 rad per 33 ms frame (sx 150), pulse = sin(angle / 2).
           const angle = (t * 1000 / 33 * (0.02 + 150 / 255 * 0.08)) % (2 * Math.PI);
           gain = Math.sin(angle / 2); rgb = [255, 145, 8];
-        } else { gain = .72 + .28 * Math.sin(t * 3) ** 2; rgb = [255, 16, 12]; } // the app's roomSafety pulse
+        } else if (ev.kind === 'off') { gain = 0; rgb = [0, 0, 0]; } // lights off (the opener's dark desk); its fade is the switch-on
+        else { gain = .72 + .28 * Math.sin(t * 3) ** 2; rgb = [255, 16, 12]; } // the app's roomSafety pulse
         for (const row of frame) for (let p = 0; p < row.length; p += 4) row.set([Math.round(rgb[0] * gain), Math.round(rgb[1] * gain), Math.round(rgb[2] * gain), 0], p);
       }
       // The spill on the desk and floor follows the indicator colour, as the app's solid colour does.
-      ev.spill = m ? (ev.kind === 'wheels' ? RED : m.colors[0]).slice(0, 3) : ev.kind === 'proximity' ? [255, 145, 8] : [255, 16, 12];
+      ev.spill = m ? (ev.kind === 'wheels' ? RED : m.colors[0]).slice(0, 3) : ev.kind === 'proximity' ? [255, 145, 8] : ev.kind === 'off' ? [0, 0, 0] : [255, 16, 12];
+      // fadeIn (s, default 0): the regular look fades out under the state over its first fadeIn seconds instead of
+      // vanishing on the event's first frame (Vico, HQ18: the white "goes boom, dark really fast" into the lift light;
+      // match the fade back). The state itself plays unscaled on top.
+      const into = Number(ev.fadeIn) || 0;
+      if (into > 0 && t < into) {
+        const k = 1 - smooth(t / into), reg = linearOf(regularRgb);
+        for (const row of frame) for (let p = 0; p < row.length; p += 4) for (let c = 0; c < 3; c++) row[p + c] = Math.min(255, Math.round(row[p + c] + reg[c] * k));
+        const spill = ev.spill.map((v, c) => v * (1 - k) + regularRgb[c] * k);
+        ev.last = frame.map(r => r.slice());
+        api.setLedColor(hex(spill), false); lightFill(spill, frame);
+        game.sample = out => { out.forEach((row, i) => row.set(frame[i])); return true; };
+        game.active = true; return;
+      }
       ev.last = frame.map(r => r.slice());
       api.setLedColor(hex(ev.spill), false); lightFill(ev.spill, frame);
       game.sample = out => { out.forEach((row, i) => row.set(frame[i])); return true; };

@@ -1,0 +1,117 @@
+{
+ "id": "media",
+ "notes": "Music studio at night: open on the piano corner and city window with the movie glowing at right, arc across the room front past the guitar/record wall, then push in square and centred on the ultrawide (same 1.5 m wide-monitor as ch9, ~50% of frame vs ~38% in ch9's end). Chair moved off-camera to the live-room rug (it read as a dark shape at the rack); piano bench tucked 0.35 toward the piano. 11 s unchanged, 60 samples, peak 0.48 u/s, 9 deg/s. FP4 final pass: the ultrawide's movie at 90% (screensAdd), matching its picture-driven LED light (ledGain = mediaBaseGain x 0.9, build-round8-leds.py).",
+ "set": {
+  "cameraPlan": {
+   "easeIn": false,
+   "easeOut": false,
+   "samples": 60,
+   "keys": [
+    {
+     "at": 0,
+     "position": [
+      3.6,
+      1.82,
+      -0.7
+     ],
+     "target": [
+      1.3,
+      1.32,
+      1.4
+     ],
+     "fov": 46,
+     "label": "Piano corner and the city at night"
+    },
+    {
+     "at": 4,
+     "position": [
+      3.45,
+      1.85,
+      0.15
+     ],
+     "target": [
+      0.0,
+      1.4,
+      0.72
+     ],
+     "fov": 44
+    },
+    {
+     "at": 7.5,
+     "position": [
+      2.95,
+      1.86,
+      0.92
+     ],
+     "target": [
+      -0.75,
+      1.48,
+      0.0
+     ],
+     "fov": 40,
+     "label": "Guitar wall and records"
+    },
+    {
+     "at": 9.5,
+     "position": [
+      2.2,
+      1.87,
+      0.55
+     ],
+     "target": [
+      -0.68,
+      1.57,
+      0.16
+     ],
+     "fov": 37,
+     "label": "Settle on the movie"
+    },
+    {
+     "at": 11,
+     "position": [
+      1.92,
+      1.86,
+      0.45
+     ],
+     "target": [
+      -0.66,
+      1.58,
+      0.18
+     ],
+     "fov": 36
+    }
+   ]
+  }
+ },
+ "sceneEditsAdd": [
+  {
+   "match": "^Prop:steelcase-leap-v2$",
+   "position": [
+    2.92,
+    0,
+    -1.8
+   ],
+   "rotation": [
+    0,
+    35,
+    0
+   ]
+  },
+  {
+   "match": "^Piano bench$",
+   "position": [
+    0,
+    0,
+    0.35
+   ]
+  }
+ ],
+ "screensAdd": [
+  {
+   "target": "main-landscape",
+   "src": "app-reference/assets/desk_viewer/media/ambient-clip.mp4",
+   "offset": 40,
+   "brightness": 0.9
+  }
+ ]
+}

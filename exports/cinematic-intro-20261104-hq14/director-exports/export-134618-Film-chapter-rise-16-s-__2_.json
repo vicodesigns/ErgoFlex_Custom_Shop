@@ -1,0 +1,311 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "f0c9a843-ea2d-4b9d-bad9-e57148158aab",
+  "name": "Film chapter: rise (16 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "2026-11-06T21:46:15.463Z",
+  "shots": [
+    {
+      "id": "rise",
+      "room": "home",
+      "kind": "lift",
+      "seconds": 16,
+      "title": "Your height. Your rhythm.",
+      "detail": "Sit to focus. Rise to 52.5″ to recharge.",
+      "preset": "office",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 28,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "comfortable-standing",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 3.4,
+            "duration": 4.2,
+            "easing": "smooth",
+            "label": "Rise to comfortable standing",
+            "target": 43.5
+          },
+          {
+            "id": "full-height",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 10,
+            "duration": 3.2,
+            "easing": "smooth",
+            "label": "Back to sitting",
+            "target": 28
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "DAILY NOTES and the sleeping desk",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                0.14148306748932715,
+                1.5808533152580795,
+                1.0242989554549016
+              ],
+              "target": [
+                -0.4735368643950818,
+                1.0652403301229472,
+                0.9431015884855715
+              ],
+              "fov": 30.000000000000004,
+              "aspect": 1.7767584097859328
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.125,
+            "label": "Desk wakes: lights and screens on",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.076,
+                1.724,
+                0.971
+              ],
+              "target": [
+                -0.5,
+                1.12,
+                0.88
+              ],
+              "fov": 31,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.2625,
+            "label": "Up and back off the notebook: desk top and window",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4,
+                2.25,
+                1.5
+              ],
+              "target": [
+                -0.86,
+                1.32,
+                0.78
+              ],
+              "fov": 41,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.36875,
+            "label": "High wide: window, ficus, shelves, clock and pinboard",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.036,
+                2.4,
+                2.095
+              ],
+              "target": [
+                -1.008,
+                1.65,
+                0.706
+              ],
+              "fov": 48,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.475,
+            "label": "Standing, white: camera at rest",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.79,
+                1.85,
+                2.306
+              ],
+              "target": [
+                -0.903,
+                1.55,
+                0.595
+              ],
+              "fov": 51,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.790625,
+            "label": "Settle in as it lowers: shelves and pinboard behind",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.235,
+                1.65,
+                2.156
+              ],
+              "target": [
+                -0.754,
+                1.36,
+                0.334
+              ],
+              "fov": 50.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 1,
+            "label": "Seated, evening window: slow push",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                1.88,
+                1.55,
+                2.057
+              ],
+              "target": [
+                -0.7,
+                1.3,
+                0.25
+              ],
+              "fov": 51,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "propEdits": [
+        {
+          "match": "^Workspace notebook$",
+          "path": "^Room:home > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Workspace notebook$",
+          "label": "Workspace notebook",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-thermal-cup$",
+          "label": "Prop:ergoflex-thermal-cup",
+          "space": "local",
+          "position": [
+            1.248,
+            0,
+            0.109
+          ]
+        },
+        {
+          "match": "^Daily planning$",
+          "path": "^Room:home > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Groove tabletop · daily materials > Daily planning$",
+          "label": "Daily planning",
+          "space": "local",
+          "position": [
+            -0.163,
+            0,
+            -0.021
+          ],
+          "rotation": [
+            0,
+            44.2,
+            0
+          ]
+        }
+      ],
+      "filmTitles": [
+        {
+          "id": "rise-0",
+          "rel_in": 3.6,
+          "rel_out": 9.4,
+          "eyebrow": "SIT · STAND",
+          "title": "Your height. Your rhythm.",
+          "detail": "Sit to focus. Rise to 52.5″ to recharge.",
+          "shadow": {
+            "paths": [
+              {
+                "line": "eyebrow",
+                "points": [
+                  {
+                    "x": -5.77,
+                    "y": -132.38
+                  },
+                  {
+                    "x": 162.2,
+                    "y": -133.55
+                  },
+                  {
+                    "x": 160.57,
+                    "y": -98.31
+                  },
+                  {
+                    "x": -6.95,
+                    "y": -98.74
+                  }
+                ]
+              },
+              {
+                "line": "title",
+                "points": [
+                  {
+                    "x": -6.97,
+                    "y": -79.8
+                  },
+                  {
+                    "x": 623.22,
+                    "y": -79.47
+                  },
+                  {
+                    "x": 626.13,
+                    "y": -4.09
+                  },
+                  {
+                    "x": -7.63,
+                    "y": -5.64
+                  }
+                ]
+              },
+              {
+                "line": "detail",
+                "points": [
+                  {
+                    "x": -5.89,
+                    "y": 9.84
+                  },
+                  {
+                    "x": 427.58,
+                    "y": 16.15
+                  },
+                  {
+                    "x": 431.72,
+                    "y": 57.86
+                  },
+                  {
+                    "x": -8.23,
+                    "y": 56.32
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

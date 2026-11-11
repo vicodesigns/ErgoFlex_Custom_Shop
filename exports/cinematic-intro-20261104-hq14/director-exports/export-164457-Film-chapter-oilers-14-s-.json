@@ -1,0 +1,197 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "f9bb5488-141e-4a29-a9bc-a9942999854e",
+  "name": "Film chapter: oilers (14 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "2026-11-07T00:44:52.445Z",
+  "shots": [
+    {
+      "id": "oilers",
+      "room": "highschool",
+      "kind": "room",
+      "seconds": 14,
+      "title": "Space to discover.",
+      "detail": "Built for how each student learns.",
+      "preset": "hbhs",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 30,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": []
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Home of the Oilers: banner, surf-team longboard, trophies",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                5.005831592014246,
+                0.6010750919420045,
+                3.240665485233638
+              ],
+              "target": [
+                10.047814049666863,
+                1.6662896238980351,
+                7.829690744330202
+              ],
+              "fov": 42,
+              "aspect": 1.7779578606158832
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.185714,
+            "label": "Over the APA set-design desk",
+            "easing": "linear",
+            "view": {
+              "position": [
+                7.6,
+                2.5,
+                4.05
+              ],
+              "target": [
+                6,
+                2.45,
+                7.4
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.385714,
+            "label": "Along the window: bell tower, toward the teacher corner",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.995925201529473,
+                3.6530539092787477,
+                -1.4301092505050148
+              ],
+              "target": [
+                -0.5696009122007464,
+                1.9627096766871062,
+                7.003182949747434
+              ],
+              "fov": 41.99999999999999,
+              "aspect": 1.7779578606158832
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.6,
+            "label": "Turn to the demonstration desk",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.153875525416252,
+                1.6029752490432445,
+                2.4887872645880815
+              ],
+              "target": [
+                -2.8353014180331275,
+                1.424866278837414,
+                5.824693085403795
+              ],
+              "fov": 42.0000444921982,
+              "aspect": 1.7779578606158832
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.8,
+            "label": "Key 5 at 11.2 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.75,
+                2.4,
+                3.25
+              ],
+              "target": [
+                -2.95,
+                1.5,
+                5.8
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 1,
+            "label": "Settle on the demonstration desk",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                0.2,
+                2.33,
+                3.45
+              ],
+              "target": [
+                -3,
+                1.48,
+                5.78
+              ],
+              "fov": 41.5,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "propEdits": [
+        {
+          "match": "^Prop:ergoflex-small-bookshelf$",
+          "asset": "highschool:house:room:24:ergoflex-small-bookshelf",
+          "label": "Prop:ergoflex-small-bookshelf",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-designer-chair$",
+          "asset": "highschool:house:room:13:ergoflex-designer-chair",
+          "label": "Prop:ergoflex-designer-chair",
+          "position": [
+            -0.471,
+            0,
+            -0.286
+          ]
+        },
+        {
+          "match": "^Prop:water-bottle$",
+          "asset": "highschool:house:room:7:water-bottle",
+          "label": "Prop:water-bottle",
+          "position": [
+            0.289,
+            0,
+            -0.172
+          ]
+        },
+        {
+          "match": "^Task chair$",
+          "asset": "highschool:house:fixture:mobile-desk-chair",
+          "label": "Task chair",
+          "position": [
+            0,
+            0,
+            -0.745
+          ]
+        }
+      ]
+    }
+  ]
+}

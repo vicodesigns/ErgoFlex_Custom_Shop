@@ -1,0 +1,141 @@
+{
+ "schema": "ergoflex.intro-titles",
+ "version": 1,
+ "duration": 203.5,
+ "fps": 30,
+ "placement": {
+  "anchor": "bottom-left",
+  "safeArea": 0.9,
+  "eyebrowColor": "#1388EC",
+  "note": "Coordinates for a 1920×1080 frame: text left edge x=128; eyebrow/title/detail bottoms at y=812/912/970. Wordmark centered at y=788 (22% of width); CTA centered at y=904."
+ },
+ "titles": [
+  {
+   "id": "awaken-0",
+   "chapter": "awaken",
+   "start": 3.6,
+   "end": 9.2,
+   "eyebrow": "ERGOFLEX",
+   "title": "Level up your every day.",
+   "detail": "Better health. Clearer focus. More joy in your work."
+  },
+  {
+   "id": "awaken-1",
+   "chapter": "awaken",
+   "start": 12.4,
+   "end": 18.8,
+   "eyebrow": "SAFETY",
+   "title": "Safe for everyone around it.",
+   "detail": "Light and sound tell the room when it moves."
+  },
+  {
+   "id": "rise-2",
+   "chapter": "rise",
+   "start": 39.6,
+   "end": 45.4,
+   "eyebrow": "SIT · STAND",
+   "title": "Your height. Your rhythm.",
+   "detail": "Sit to focus. Rise to 52.5″ to recharge."
+  },
+  {
+   "id": "create-3",
+   "chapter": "create",
+   "start": 54.1,
+   "end": 60.1,
+   "eyebrow": "TILT",
+   "title": "Angle it to your art.",
+   "detail": "From drafting to digital painting. Everything within reach."
+  },
+  {
+   "id": "commons-4",
+   "chapter": "commons",
+   "start": 71.4,
+   "end": 77.2,
+   "eyebrow": "GLIDE",
+   "title": "A place for everyone.",
+   "detail": "Same table. Same project. Same team."
+  },
+  {
+   "id": "coast-5",
+   "chapter": "coast",
+   "start": 83.1,
+   "end": 88.4,
+   "eyebrow": "STUDIO",
+   "title": "Ideas become stories.",
+   "detail": "Your own edit suite inside a shared media lab."
+  },
+  {
+   "id": "oilers-6",
+   "chapter": "oilers",
+   "start": 93.8,
+   "end": 98.8,
+   "eyebrow": "CLASSROOM",
+   "title": "Space to discover.",
+   "detail": "Built for how each student learns."
+  },
+  {
+   "id": "wellness-7",
+   "chapter": "wellness",
+   "start": 100.6,
+   "end": 106.4,
+   "eyebrow": "WELLNESS",
+   "title": "Build movement into your day.",
+   "detail": "Pause. Stretch. Breathe. Reset."
+  },
+  {
+   "id": "awareness-8",
+   "chapter": "awareness",
+   "start": 114.1,
+   "end": 120.3,
+   "eyebrow": "SENSING",
+   "title": "It sees what’s in its way.",
+   "detail": "Proximity sensors stop the roll before contact."
+  },
+  {
+   "id": "music-9",
+   "chapter": "music",
+   "start": 122.6,
+   "end": 128.2,
+   "eyebrow": "GAMING",
+   "title": "Feel the room come alive.",
+   "detail": "Light that plays along with the game."
+  },
+  {
+   "id": "media-10",
+   "chapter": "media",
+   "start": 132.1,
+   "end": 137.7,
+   "eyebrow": "CINEMA",
+   "title": "Movie night, upgraded.",
+   "detail": "Ambient color drawn from every scene."
+  },
+  {
+   "id": "storage-11",
+   "chapter": "storage",
+   "start": 142.6,
+   "end": 149.6,
+   "eyebrow": "STORAGE",
+   "title": "Make room for what’s next.",
+   "detail": "One tap: fold to 65°, roll to the wall."
+  },
+  {
+   "id": "hero-12",
+   "chapter": "hero",
+   "start": 189.97,
+   "end": 195.28,
+   "eyebrow": "CUSTOM SHOP",
+   "title": "One desk. Every part of your day.",
+   "detail": ""
+  }
+ ],
+ "cta": {
+  "id": "cta",
+  "chapter": "hero",
+  "start": 198.46,
+  "end": 203.5,
+  "text": "Let’s build yours."
+ },
+ "logo": {
+  "start": 197.04
+ }
+}

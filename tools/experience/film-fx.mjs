@@ -12,23 +12,69 @@
 // Shot fields (all optional; a shot without them renders exactly as before):
 //   screens:[{target, src, offset=0, fit='cover'|'contain'|'stretch', loop=true,
 //             rotate=0|90|180|270, flipX=false, brightness=1, rate=1}]
+//             brightness may be keyframed [[chapterSeconds, gain], …] (linear), e.g. a screen waking from black.
+//             blend:'add' draws the picture additively over the glass (black = the glass's own reflections stay),
+//             for a small screen in the frame such as the phone on the desk (target 'phone').
+//   screenGain:1   multiplies every screen's brightness (HQ20: 1.3 with film-quality screenBloom .25, the screens' glow cut to a quarter).
 //   ledMode:'media'  ledSource=<target or index into screens>  ledPreset='normal'|'calm'|'intense'|'full'
 //   ledGlow:0…1   LED brightness as a fraction of full (stage default .35)
 //   ledSurfaces:{desktopStrength:0…200, floorStrength, shelfStrength, …}  the app's LED surface sliders
 //   deskObjects:{<object id>: {p:{x,y,z}, q:{x,y,z,w}}}  place the featured desk's objects as saved
+//   deskFinish:{wood:'<wood finish name, catalog.mjs>', trim:'#hex (a TRIM_COLORS value)'}  the featured desk's wood and
+//     trim for this shot, through the configurator's own swatches (#wood-finishes / #trim-palette clicks: the app's
+//     species tint, grain photo and trim material), restored after. E.g. the gaming desk: {wood:'Black Birch', trim:'#dc0909'}.
 //     in a studio state (the stage resets a layout room's saved desks to the authored defaults)
+//   featuredBuild:{woodFinish, baseFinish, trimColor, accessories:[{id, slot}]}  Director Build tab on the featured desk
+//     (shot.deskBuild -> importer director-camera 'build' -> here): finishes via the swatches, the desk's complete accessory
+//     set with the slot of each (desktop | shelf | lower-shelf | base-shelf), restored after (installFeaturedBuild).
+//   sceneDeskPoses:[{desk:'<regex on a room desk's id or name>', height:43.5, tilt:65}]  the room's other ErgoFlex desks
+//     (scene-desks.mjs stations, never the featured desk: its pose is the motion model's) set to a height / tilt for the
+//     shot, through the app's own rig (rig.updatePose) and auto-stow (desk-auto-stow.mjs), restored after. tilt 65 at
+//     43.5 is the Custom Shop's 65° Storage Mode: the desktop's loose objects are put away or hidden as in Studio.
+//   sceneBranding:{room, artwork:{surfaces:{<surface>:{<layer>:{name, surface?, enabled?, x?, y?, scale?, rotation?}}}}}  the
+//     school stickers / logos of EVERY desk in the room (the featured one too): a sparse overlay on each desk's own artwork
+//     (experience/branding-edits.mjs, Director's Branding tab), through the scene desks' artwork rigs, restored after.
+//   sceneDeskEdits:[{desk:'<scene desk record id>', size?, pose?:{x,z,yaw}, initial?:{height,tilt}, clips?, build?}]  Director
+//     desk edits (experience/desk-edits.mjs, film-desk-edits.mjs): the room's other desks resized, placed and started at a
+//     height / tilt, applied after sceneDeskPoses and restored after.
 //   ledColor:'#f19c00'  the LED colour for the shot (the app's colour picker), restored after
 //   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
-//   sceneGlobals:{environmentScale, exposure}  image-based ambient multiplier (or [[s, scale], …]), renderer exposure
+//   sceneGlobals:{environmentScale, exposure, exposureScale}  image-based ambient multiplier (or [[s, scale], …]), renderer
+//     exposure, and a multiplier on whatever exposure is set (the room's daypart, timeOfDay's blend; number or [[s, k], …]),
+//     roomLight: k (or [[s, k], …])  the room's own light (its lights, image-based ambient and architectural bounce) x k,
+//     on top of whatever the room/timeOfDay/sceneEdits write (and its painted additive light pools). The desk's LED light (strips, spill, floor bounce, the
+//     room LED spill), screens, windows and emissive practicals keep their level, so the desk light reads against a
+//     lower-key room the way it does on the dark stage.
+//     ledRoomSpill: k  the app's room LED spill (room-led-spill.mjs: the desk strips' light on the room's walls and floor
+//     within ~2 m, and their share of the architectural bounce across the room) x k; the desk's own receivers are
+//     ledSurfaces / ledReceivers (Vico, HQ16b: the status light "bounces off too many walls").
+//     ledWallGlow: k (or [[s, k], …])  the Director's "LED glow on the walls": the room LED spill on everything but the
+//     floor (walls, furniture, the LEDs' share of the architectural bounce) x k on top of ledRoomSpill.
+//     ledFloorGlow: k (or [[s, k], …])  the Director's "LED glow on the floor": the desk's LED light on the floor and
+//     rugs x k: the room LED spill on floor surfaces (at ledRoomSpill x k, whatever the walls take), the visualizer floor
+//     bounce and the app's foot glow. Both default to 1, the film's approved look (Vico, 2026-11-06: "the ground is
+//     usually a different setting than the walls"). roomLight is the room's OWN light, not the desk's LEDs.
+//     ledFloorSources: {foot, center, left, right: {on, x, z (cm; x toward the right wing, z toward the front), spread,
+//     length, edge (softness), brightness, saturation (x)}}  the floor reflection of each LED source (film-viewer-leds:
+//     the foot glow and the floor bounce's strips); fields left out are the film's (experience/film-lighting.mjs).
 //   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
 //   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
 //   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
 //   floorLight:{gain, foot, wings, lobe, max, soft, radius, hideApp}  foot + wing strips lighting the
 //     floor (replaces the app's boxed foot glow), see 'floor light' below
+//   ledReceivers:'viewer' | {mode:'viewer', …}  the app visualizer's LED receivers (floor bounce, wing glow down the
+//     side plates, its wing / desktop constants, indicator level), see film-viewer-leds.mjs. Use instead of floorLight.
 //   accessories:{add:['tablet-pc' | {id, role='desktop', x, y, z, rotation, tilt, roll, scale}], remove:[id]}
 //     catalog accessories (drafting-kit, artist-easel, keyboards…) are toggled
 //     on the prepared desk (and placed if x/z/… are given); library props
 //     (e.g. tablet-pc) are added as desk objects. Both after prepare, both undone.
+//     visible:[[chapterSeconds, 0|1], …] on an add entry (catalog or library): from each key on, the item is held
+//     hidden (0) or shown (1) whatever the app writes (auto-stow, day phases); null hands it back to the app, as
+//     before the first key.
+//     A library prop with a screen (PROP_SCREENS: 'ergoflex-phone') joins the screen targets as 'phone' ('phone-2', …),
+//     so screens:[{target:'phone', src, blend:'add'}] lights its glass; it rides the desk like any desk object.
+//     A catalog id already on the preset's desk is listed in add just to time it. E.g. a side shelf that pops in
+//     during a tilt the app would hide it at: {id:'painter-shelf', visible:[[0,0],[9.5,1]]}.
 import * as THREE from 'three';
 import { sampleScreenColours } from '../../led-screen-sampler.mjs';
 import { accessory } from '../../catalog.mjs';
@@ -50,6 +96,28 @@ const ALIASES = {
   'curved-monitor': /wide-monitor.*monitor-screen|stage media/i, media: /stage media/i
 };
 
+// Library props whose glass can take a screen clip. The phone's GLB has no single front-glass mesh (its top is a body
+// slab plus a bezel rim), so the film adds its own glass: a rounded rectangle in the prop's own metres (rect x0, z0,
+// x1, z1 at height y), invisible itself, that the picture is fitted to like any screen mesh. normal / up: the picture's
+// facing and up in the prop's axes (the phone lies screen up, +y, its top, the camera end, toward +z).
+const PROP_SCREENS = {
+  'ergoflex-phone': { rect: [-.0338, -.0712, .0338, .0712], y: .01205, radius: .0088, normal: [0, 1, 0], up: [0, 0, 1], alias: 'phone', label: 'Smartphone screen' }
+};
+function propGlass(prop, ps) {
+  let glass = prop.children.find(c => c.userData.filmFxGlass);
+  if (glass) return glass;
+  const [x0, z0, x1, z1] = ps.rect, r = ps.radius, shape = new THREE.Shape();
+  // In the shape's x/y = the prop's x and -z (rotateX below lays it flat, facing +y).
+  shape.moveTo(x0 + r, -z1); shape.lineTo(x1 - r, -z1); shape.quadraticCurveTo(x1, -z1, x1, -z1 + r);
+  shape.lineTo(x1, -z0 - r); shape.quadraticCurveTo(x1, -z0, x1 - r, -z0); shape.lineTo(x0 + r, -z0);
+  shape.quadraticCurveTo(x0, -z0, x0, -z0 - r); shape.lineTo(x0, -z1 + r); shape.quadraticCurveTo(x0, -z1, x0 + r, -z1);
+  const geo = new THREE.ShapeGeometry(shape, 6); geo.rotateX(-Math.PI / 2); geo.translate(0, ps.y, 0);
+  glass = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+  glass.name = ps.label + ' glass'; glass.userData.filmFxGlass = true; glass.userData.screenNormal = ps.normal; glass.userData.screenUp = ps.up;
+  glass.castShadow = glass.receiveShadow = false; glass.raycast = () => {};
+  prop.add(glass); return glass;
+}
+
 // ---------- discovery ----------
 function discover(shot) {
   const scene = sceneRoot(); scene.updateMatrixWorld(true);
@@ -65,6 +133,13 @@ function discover(shot) {
     const main = /:main:/.test(e.key), acc = e.key.split(':').pop();
     push(e.obj, { source: 'scene-screens', key: e.key, label: e.label, portrait: !!e.info?.portrait, main, id: main ? 'main/' + slug(acc) : null });
   }
+  // Screens of library props added by accessories.add (the phone on the desk): their glass, with its own frame axes.
+  const propN = {};
+  scene.traverse(o => {
+    const ps = PROP_SCREENS[o.userData.filmFxProp]; if (!ps) return;
+    const glass = propGlass(o, ps), n = propN[ps.alias] = (propN[ps.alias] || 0) + 1;
+    push(glass, { source: 'prop', label: ps.label, id: 'prop/' + o.userData.filmFxProp + (n > 1 ? '-' + n : ''), alias: ps.alias + (n > 1 ? '-' + n : '') });
+  });
   scene.traverse(o => {
     if (!o.isMesh || within(o, desk) || seen.has(o)) return;
     const mats = [].concat(o.material).map(m => m?.name || '').join(' ');
@@ -104,7 +179,8 @@ function analyse(obj, room) {
   const pts = []; for (let i = 0; i < pos.count; i += step) pts.push(v.fromBufferAttribute(pos, i).applyMatrix4(M).clone());
   const centre = new THREE.Box3().setFromPoints(pts).getCenter(new THREE.Vector3());
   let n = null;
-  if (obj.userData.screenFront) n = new THREE.Vector3(0, 0, obj.userData.screenFront).applyMatrix3(NM).normalize();
+  if (obj.userData.screenNormal) n = new THREE.Vector3(...obj.userData.screenNormal).applyMatrix3(NM).normalize();
+  else if (obj.userData.screenFront) n = new THREE.Vector3(0, 0, obj.userData.screenFront).applyMatrix3(NM).normalize();
   else if (nrm) { const avg = new THREE.Vector3(); let c = 0; for (let i = 0; i < nrm.count; i += step, c++) avg.add(v.fromBufferAttribute(nrm, i).applyMatrix3(NM).normalize()); if (avg.length() > .3 * c) n = avg.normalize(); }
   if (!n) {
     // Closed or two-sided slabs: the thinnest principal axis of the points.
@@ -112,7 +188,9 @@ function analyse(obj, room) {
     const toward = room ? new THREE.Box3().setFromObject(room).getCenter(new THREE.Vector3()) : new THREE.Vector3(0, centre.y, 0);
     if (n.dot(toward.sub(centre)) < 0) n.negate();
   }
-  const up = new THREE.Vector3(0, 1, 0).addScaledVector(n, -n.y);
+  // screenUp (the mesh's own axes): the picture's up for glass lying flat, where world up has no say.
+  const up = obj.userData.screenUp ? new THREE.Vector3(...obj.userData.screenUp).transformDirection(M) : new THREE.Vector3(0, 1, 0);
+  up.addScaledVector(n, -up.dot(n));
   if (up.length() < .3) up.set(0, 1, 0).applyMatrix3(NM).addScaledVector(n, -new THREE.Vector3(0, 1, 0).applyMatrix3(NM).dot(n));
   up.normalize(); const right = new THREE.Vector3().crossVectors(up, n).normalize();
   let rmin = Infinity, rmax = -Infinity, umin = Infinity, umax = -Infinity, dmin = Infinity, dmax = -Infinity;
@@ -246,9 +324,10 @@ async function installScreens(shot, list) {
     if (f.aspect >= 1) { canvas.width = long; canvas.height = Math.max(2, Math.round(long / f.aspect)); } else { canvas.height = long; canvas.width = Math.max(2, Math.round(long * f.aspect)); }
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = api.renderer?.capabilities.getMaxAnisotropy?.() || 1; texture.minFilter = THREE.LinearMipmapLinearFilter;
-    const clearEdge = inset.some(x => x > 0);
-    const material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4, transparent: clearEdge, alphaTest: clearEdge ? .5 : 0 });
-    material.color.setScalar(Number(spec.brightness ?? 1));
+    const clearEdge = inset.some(x => x > 0), add = spec.blend === 'add';
+    const material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4, transparent: clearEdge || add, alphaTest: clearEdge ? .5 : 0,
+      ...(add ? { blending: THREE.AdditiveBlending, depthWrite: false } : {}) });
+    material.color.setScalar((Array.isArray(spec.brightness) ? Number(spec.brightness[0][1]) : Number(spec.brightness ?? 1)) * (Number(shot.screenGain) || 1));
     const mesh = new THREE.Mesh(pictureGeometry(target.obj, f), material); mesh.name = 'Film screen · ' + target.id; mesh.userData.filmFx = true; mesh.castShadow = mesh.receiveShadow = false; mesh.renderOrder = 2;
     target.obj.add(mesh);
     const sc = { spec, target, inset, media, canvas, ctx2d: canvas.getContext('2d', { willReadFrequently: true }), texture, mesh };
@@ -259,6 +338,7 @@ async function installScreens(shot, list) {
 }
 async function updateScreens(screens, chapterSeconds) {
   await Promise.all(screens.map(async sc => {
+    if (Array.isArray(sc.spec.brightness)) sc.mesh.material.color.setScalar(keyAt(sc.spec.brightness, chapterSeconds) * (Number(active?.shot?.screenGain) || 1));
     const v = sc.media; if (!(v instanceof HTMLVideoElement)) return;
     const rate = Number(sc.spec.rate ?? 1), raw = chapterSeconds * rate + (Number(sc.spec.offset) || 0), d = v.duration;
     const time = sc.spec.loop === false ? THREE.MathUtils.clamp(raw, 0, Math.max(0, d - .02)) : ((raw % d) + d) % d;
@@ -381,7 +461,7 @@ const PROP_DEFAULTS = { 'tablet-pc': { x: -330, z: 230, rotation: 15 } };
 export function beforePrepare() {}
 export function unhookPreset() {}
 async function installDeskObjects(shot) {
-  const spec = shot.accessories, out = { added: [], hidden: [], toggled: [] }; if (!spec) return out;
+  const spec = shot.accessories, out = { added: [], hidden: [], toggled: [], timed: [] }; if (!spec) return out;
   const objects = api.sceneDesks?.objects, records = api.sceneDesks?.active?.objects;
   // Catalog accessories: toggle on the prepared desk, wait for the layout,
   // then optionally place them like any desk object (key accessory-<id>).
@@ -407,15 +487,115 @@ async function installDeskObjects(shot) {
     objects.setEditing(false); objects.select(null);
     const obj = records?.get(key)?.obj; if (obj) { obj.userData.filmFxProp = a.id; obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); }
     out.added.push(key);
+    if (Array.isArray(a.visible)) timeVisible(out, records?.get(key)?.obj, a);
   }
+  for (const a of catalogAdd) if (Array.isArray(a.visible)) timeVisible(out, records?.get('accessory-' + a.id)?.obj, a);
   for (const id of spec.remove || []) {
     if (isCatalog(id)) continue;
     for (const [key, item] of records || []) if (key === id || item.saved?.propId === id) { out.hidden.push([item.obj, item.obj.visible]); item.obj.visible = false; }
   }
   return out;
 }
+// accessories.add[].visible: a sticky visibility override (like sceneEdits' hide) switched by chapter time in frame().
+function timeVisible(out, obj, a) {
+  if (!obj) { console.warn('[film-fx] accessories.add: no desk object for ' + a.id + ' to time'); return; }
+  const keys = [...a.visible].sort((p, q) => p[0] - q[0]), cell = { force: null }; let raw = obj.visible;
+  Object.defineProperty(obj, 'visible', { configurable: true, enumerable: true, get: () => cell.force === null ? raw : cell.force, set: v => { raw = v; } });
+  out.timed.push({ keys, cell, undo: () => { delete obj.visible; obj.visible = raw; } });
+}
+const visibleAt = (keys, s) => { let v = null; for (const [at, on] of keys) if (s >= at) v = on === null ? null : !!on; return v; };
+function installSceneDeskPoses(list) {
+  const desks = api.sceneDesks, undo = [], posed = [];
+  for (const p of list) {
+    const re = new RegExp(p.desk, 'i'); let hit = 0;
+    for (const r of desks?.records?.values() || []) {
+      if (r.id === desks.selected || r.primary || !(re.test(r.id) || re.test(r.state?.name || ''))) continue;
+      if (!r.rig) desks.ensureRig(r);
+      const was = { height: r.state.height, tilt: r.state.tilt, poseAt: r.poseAt };
+      if (Number.isFinite(p.height)) r.state.height = p.height;
+      if (Number.isFinite(p.tilt)) r.state.tilt = p.tilt;
+      r.rig.updatePose(r.state.height, r.state.tilt); r.poseAt = `${r.state.height}:${r.state.tilt}`;
+      desks.objects?.stow?.update(r); hit++; posed.push(r.id);
+      undo.push(() => { r.state.height = was.height; r.state.tilt = was.tilt; r.rig.updatePose(was.height, was.tilt); r.poseAt = was.poseAt; desks.objects?.stow?.update(r); });
+    }
+    if (!hit) console.warn('[film-fx] sceneDeskPoses: no room desk matches ' + p.desk);
+  }
+  return { posed, restore() { for (const f of undo.reverse()) f(); } };
+}
+function installDeskFinish(spec) {
+  const was = { wood: api.currentConfig.woodFinish, trim: api.currentConfig.trimColor };
+  const click = sel => { const el = document.querySelector(sel); if (!el) { console.warn('[film-fx] deskFinish: no swatch ' + sel); return false; } el.click(); return true; };
+  const was2 = { base: api.currentConfig.baseFinish };
+  const wood = name => click(`#wood-finishes [data-finish="${CSS.escape(name)}"]`);
+  const base = name => click(`#base-finishes [data-finish="${CSS.escape(name)}"]`);
+  const trim = hex => click(`#trim-palette [data-trim-color="${CSS.escape(String(hex).toLowerCase())}"]`);
+  const syncActiveDeskFinish = () => {
+    const r = api.sceneDesks?.active;
+    if (!r) return;
+    if (r.state?.style) {
+      if (api.currentConfig?.woodFinish) r.state.style.woodFinish = api.currentConfig.woodFinish;
+      if (api.currentConfig?.baseFinish) r.state.style.baseFinish = api.currentConfig.baseFinish;
+      if (api.currentConfig?.trimColor) r.state.style.trimColor = api.currentConfig.trimColor;
+    }
+    r.rig?.restyle?.();
+    r.peripherals?.update?.();
+    let liveWood = null;
+    api.loadedModel?.traverse?.(o => { if (!liveWood && o.isMesh && o.name === 'Desktop_3' && o.material) liveWood = o.material; });
+    if (liveWood && r.rig?.mounts) {
+      for (const m of Object.values(r.rig.mounts)) {
+        m?.traverse?.(o => {
+          if (o.isMesh && (o.userData?.artistShelfWood || o.name === 'Organizer desk finish')) {
+            o.material.copy(liveWood);
+            o.material.name = 'Artist shelf wood';
+            o.material.userData.sharedTextures = true;
+            o.material.needsUpdate = true;
+          }
+        });
+      }
+    }
+  };
+  const info = { wood: spec.wood ? wood(spec.wood) && spec.wood : undefined, base: spec.base ? base(spec.base) && spec.base : undefined, trim: spec.trim ? trim(spec.trim) && spec.trim : undefined };
+  syncActiveDeskFinish();
+  console.log('[film-fx] deskFinish', JSON.stringify(info), 'was', JSON.stringify(was));
+  return { info, restore() { if (info.wood && was.wood) wood(was.wood); if (info.base && was2.base) base(was2.base); if (info.trim && was.trim) trim(was.trim); syncActiveDeskFinish(); } };
+}
+// The featured desk's build (Director Build tab, shot.featuredBuild = {woodFinish, baseFinish, trimColor, accessories:[{id, slot}]}):
+// finishes through the configurator's swatches (installDeskFinish), accessories toggled in / out like accessories.add / remove
+// until the desk has exactly this set, each moved onto its slot (desktop / shelf / lower-shelf / base-shelf). Restored by clear().
+async function installFeaturedBuild(build) {
+  const DB = await import('../../experience/desk-build.mjs'), objects = api.sceneDesks?.objects, rec = () => api.sceneDesks?.active;
+  const frames = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const finish = (build.woodFinish || build.baseFinish || build.trimColor) ? installDeskFinish({ wood: build.woodFinish, base: build.baseFinish, trim: build.trimColor }) : null;
+  const was = { accessories: [...api.currentConfig.accessories], roles: {} }, fresh = new Set(), flip = id => { try { api.toggleAccessory(id); } catch (e) { console.warn('[film-fx] featuredBuild toggle', id, e); } };
+  if (build.accessories) {
+    const want = new Set(build.accessories.map(a => a.id));
+    for (const id of want) if (!api.currentConfig.accessories.includes(id)) { flip(id); if (api.currentConfig.accessories.includes(id)) fresh.add(id); else console.warn('[film-fx] featuredBuild: ' + id + ' does not fit this desk size'); }
+    for (const id of [...api.currentConfig.accessories]) if (!want.has(id)) flip(id);
+    await api.workspaceAccessories?.ready; await objects?.ready; objects?.syncAccessories(); await frames();
+    const r = rec(), per = {};
+    for (const { id, slot } of build.accessories) {
+      const item = r?.objects?.get('accessory-' + id);
+      if (!item || !objects || DB.slotless(id) || item.saved.role === slot) continue;
+      was.roles[id] = { role: item.saved.role, transform: structuredClone(item.saved.transform) };
+      item.saved.role = slot; item.saved.removed = false;
+      if (!(fresh.has(id) && slot === DB.naturalSlot(id))) item.saved.transform = DB.spot(r, slot, per[slot] = per[slot] || 0), per[slot]++;
+      objects.register(r, item.id, item.obj, item.saved, item.baseScale);
+    }
+    if (Object.keys(was.roles).length || fresh.size) { await frames(); api.sceneDesks?.sync?.(); }
+  }
+  return {
+    info: { finish: finish?.info, accessories: build.accessories?.map(a => a.id + '@' + a.slot) },
+    restore() {
+      const r = rec(), now = api.currentConfig.accessories;
+      for (const [id, o] of Object.entries(was.roles)) { const item = r?.objects?.get('accessory-' + id); if (!item || !objects) continue; item.saved.role = o.role; item.saved.transform = o.transform; objects.register(r, item.id, item.obj, item.saved, item.baseScale); }
+      if (build.accessories) { for (const id of [...now]) if (!was.accessories.includes(id)) flip(id); for (const id of was.accessories) if (!api.currentConfig.accessories.includes(id)) flip(id); }
+      finish?.restore();
+    },
+  };
+}
 function clearDeskObjects(d) {
   if (!d) return; const objects = api.sceneDesks?.objects;
+  for (const v of d.timed || []) v.undo();
   for (const id of [...d.toggled].reverse()) { try { api.toggleAccessory(id); } catch (e) { console.warn('[film-fx] untoggle', id, e); } }
   for (const [obj, v] of d.hidden) obj.visible = v;
   for (const key of d.added) { try { if (api.sceneDesks?.active?.objects?.has(key)) { objects.select(key); objects.remove(); objects.select(null); } } catch (e) { console.warn('[film-fx] remove', key, e); } }
@@ -438,14 +618,75 @@ function clearDeskObjects(d) {
 // Strengths are the app's live uniforms (ledGlow × floor/leftWing/rightWing
 // Strength), so ledGlow and ledSurfaces keep driving it. Hue-preserving roll-off:
 // alpha = max·(1−e^(−m/max)) on the brightest channel, so nothing clips to white.
-//   floorLight:{gain=1, foot=1, wings=1, footLift=.25, lobe=1, max=.6, soft=.04, radius=3.2, hideApp=true}
+//   floorLight:{gain=1, foot=1, wings=1, center=wings (desktop centre strip, id 4), footLift=.25, lobe=1, max=.6, soft=.04, radius=3.2, hideApp=true}
 //     gain: overall; foot / wings: per source; footLift: the foot strip's virtual height gain (scene
 //     units; it hangs only .175 up under the footrest, so its true pool is a narrow band the footrest
 //     hides; the lift stands in for the diffuser and the glossy floor's spread); soft: source radius
 //     (softens the pool right under a strip); radius: fade-out disc around the desk.
-const FLOOR_SEGS = 3, FLOOR_STEPS = 24;
+const FLOOR_SEGS = 4, FLOOR_STEPS = 24;
+// Wheel spin on travel after a turn (Vico, HQ14c: on the roll forward the front and back wheels spun opposite ways).
+// The app spins each mecanum wheel by (dx + latSign * dz) / radius from the desk's WORLD step (studio.js
+// applyGlideOffset), which is right only at yaw 0: after the 90 degree turn a forward roll is spun as a strafe.
+// Each rendered frame this adds the difference to the same formula in the desk's own frame (the step rotated by
+// -yaw), so all four wheels roll forward together. Steps that change the yaw are the app's turn spin and are left alone.
+// The app (studio.js) is unchanged; restore() puts the render back. shot.wheelFix:false turns it off.
+function installWheelFix(shot) {
+  const desk = api.loadedModel, LAT = { Wheel_F_L: 1, Wheel_F_R: -1, Wheel_R_L: -1, Wheel_R_R: 1 }, rigs = [], matUndo = [];
+  const hubMat = new THREE.MeshPhysicalMaterial({ color: 0xf4f7fb, metalness: 0.92, roughness: 0.16, clearcoat: 0.35, clearcoatRoughness: 0.12, ior: 2.4, envMapIntensity: 1.6 });
+  const rollerMat = new THREE.MeshPhysicalMaterial({ color: 0x525862, metalness: 0.52, roughness: 0.24, clearcoat: 0.48, clearcoatRoughness: 0.16, ior: 1.8, envMapIntensity: 1.55 });
+  desk.traverse(o => {
+    const m = /^wheelRig_(Wheel_[FR]_[LR])$/.exec(o.name); if (!m) return;
+    // The app's radius: half the world height of the largest disc, measured unspun.
+    const z = o.rotation.z; o.rotation.z = 0; o.updateMatrixWorld(true);
+    let hub = null, area = 0;
+    for (const c of o.children) {
+      if (!c.isMesh || !c.geometry) continue;
+      c.geometry.computeBoundingBox();
+      const b = c.geometry.boundingBox, a = (b.max.x - b.min.x) * (b.max.y - b.min.y);
+      if (a > area) { area = a; hub = c; }
+      const mat = c.material, hex = mat?.color?.getHexString?.()?.toLowerCase?.() || '';
+      const isHubPlate = hex === 'a38c8c' || hex === '5e4343' || hex === 'ffffff' || (mat?.roughness >= 0.9 && mat?.metalness >= 0.9);
+      matUndo.push({ mesh: c, mat });
+      c.material = isHubPlate ? hubMat : rollerMat;
+    }
+    const hb = hub ? new THREE.Box3().setFromObject(hub) : null; o.rotation.z = z; o.updateMatrixWorld(true);
+    if (hb) rigs.push({ o, name: m[1], lat: LAT[m[1]], r: Math.max(.02, (hb.max.y - hb.min.y) / 2), corr: 0, base: z, written: z });
+  });
+  if (!rigs.length) { hubMat.dispose(); rollerMat.dispose(); return null; }
+  const renderer = api.renderer, direct = renderer.render, log = shot.wheelFixDebug ? [] : null;
+  let prev = null;
+  const apply = () => {
+    const p = desk.position, yaw = desk.rotation.y;
+    if (prev) {
+      const dx = p.x - prev.x, dz = p.z - prev.z;
+      var travel = Math.abs(yaw - prev.yaw) < 1e-7 && (dx || dz);
+      if (travel) {
+        const c = Math.cos(yaw), s = Math.sin(yaw), lx = dx * c - dz * s, lz = dx * s + dz * c;
+        for (const g of rigs) g.corr -= ((lx - dx) + g.lat * (lz - dz)) / g.r;
+      }
+    }
+    prev = { x: p.x, z: p.z, yaw };
+    for (const g of rigs) {
+      const was = g.written; if (g.o.rotation.z !== g.written) g.base = g.o.rotation.z; g.written = g.base + g.corr; g.o.rotation.z = g.written;
+      if (log && travel) { g.dApp = (g.dApp || 0) + (g.o.rotation.z - was) - (g.corr - (g.corrWas ?? g.corr)); g.dFix = (g.dFix || 0) + (g.written - was); }
+      g.corrWas = g.corr;
+    }
+    if (log) log.push(1);
+  };
+  renderer.render = function (sc, cam) { apply(); return direct.call(this, sc, cam); };
+  return {
+    count: rigs.length,
+    restore() {
+      renderer.render = direct;
+      for (const u of matUndo) u.mesh.material = u.mat;
+      hubMat.dispose(); rollerMat.dispose();
+      if (log?.length > 1) console.error('[film-fx] wheels app/fixed spin on travel steps: ' + rigs.map(g => g.name.slice(6) + ' ' + (g.dApp || 0).toFixed(2) + '/' + (g.dFix || 0).toFixed(2)).join(', '));
+    }
+  };
+}
 function installFloorLight(shot) {
   const spec = { gain: 1, foot: 1, wings: 1, footLift: .25, lobe: 1, max: .6, soft: .04, radius: 3.2, hideApp: true, ...shot.floorLight };
+  spec.center ??= spec.wings; // round 8: the desktop centre strip (id 4) lights the floor under the desk too
   const scene = sceneRoot(), desk = api.loadedModel; scene.updateMatrixWorld(true);
   let app = null; desk.traverse(o => { if (o.name === 'Foot LED floor glow') app = o; });
   if (!app?.material?.uniforms?.efPixelTexture) { console.warn('[film-fx] floorLight: no bound Foot LED floor glow'); return null; }
@@ -465,6 +706,9 @@ function installFloorLight(shot) {
   }).filter(Boolean);
   const wingStrips = [...strips(5), ...strips(6)];
   const foot = { mat: app.material, row: 7, meshes: strips(7) };
+  // Desk Top Center (physical id 4, layer 3): under the desktop, facing down; strength = the app's desktop spill uniform.
+  let centreMat = null; desk.traverse(o => { if (!centreMat && o.material?.uniforms?.strength && /^Desktop(_3)? LED reflection$|Desktop base LED underside reflection/.test(o.name)) centreMat = o.material; });
+  const centre = { mat: centreMat, meshes: strips(4) };
   const U = app.material.uniforms, v3 = () => new THREE.Vector3(), arr = f => Array.from({ length: FLOOR_SEGS }, f);
   const uniforms = {
     efPixelTexture: U.efPixelTexture, efPixelActive: U.efPixelActive, efPixelRows: U.efPixelRows, efPixelWidth: U.efPixelWidth, efPixelCounts: U.efPixelCounts,
@@ -520,7 +764,10 @@ function installFloorLight(shot) {
       }`
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2 * spec.radius, 2 * spec.radius), material);
-  mesh.name = 'Film floor light'; mesh.userData.filmFx = true; mesh.rotation.x = -Math.PI / 2; mesh.renderOrder = 1; mesh.frustumCulled = false; mesh.raycast = () => {};
+  mesh.name = 'Film floor light'; mesh.userData.filmFx = true; mesh.rotation.x = -Math.PI / 2;
+  // Drawn after the product rig's contact shadow (renderOrder 2), which otherwise blacked out the LED light under the
+  // desk: the dark gap between the wing pools and no hot spot under the foot rest (Vico, HQ14d).
+  mesh.renderOrder = 3; mesh.frustumCulled = false; mesh.raycast = () => {};
   scene.add(mesh);
   // K: irradiance → alpha scale, set on the opener's dark stage (status chases light 3-4 of 11-13 LEDs at a time,
   // the regular look sits at linear ~.09), so gain 1 gives pools as bright as the lit wing panels above them.
@@ -537,6 +784,16 @@ function installFloorLight(shot) {
     const fm = live(foot.meshes);
     // The lift keeps the foot pool's energy (∫E ∝ I), so footLift only spreads it.
     if (fm) { setSeg(0, fm, 'z', 7, K * spec.foot * foot.mat.uniforms.strength.value, null); uniforms.segLift.value[0].set(0, spec.footLift, 0); } else uniforms.segGain.value[0] = 0;
+    const cm = live(centre.meshes);
+    if (cm && centre.mat && spec.center > 0) {
+      setSeg(3, cm, 'z', 4, K * spec.center * centre.mat.uniforms.strength.value, null);
+      // HQ14d (Vico: a dark gap in the floor between the wing pools): straight down, the centre strip's pool lands
+      // under the foot shelf, which hides it. centerAhead (scene units) moves the source toward the desk front and
+      // centerTilt aims it forward, so the pool fills the floor in front of the shelf. The desk front is +x at yaw 0.
+      const yaw = desk.rotation.y, front = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+      uniforms.segLift.value[3].copy(front).multiplyScalar(spec.centerAhead || 0);
+      if (spec.centerTilt) uniforms.segDir.value[3].addScaledVector(front, spec.centerTilt).normalize();
+    } else uniforms.segGain.value[3] = 0;
     wings.forEach((w, j) => {
       const i = j + 1; w.panel.updateWorldMatrix(true, false);
       const pc = w.pc.clone().applyMatrix4(w.panel.matrixWorld);
@@ -557,21 +814,157 @@ function installFloorLight(shot) {
         { occP: O, occN: n, occU: Uv, occV: Vv, occM: new THREE.Vector2(.04 / Uv.length(), .04 / Vv.length()) });
     });
   };
+  if (shot.floorLightDebug) { const ob = mesh.onBeforeRender; let n = 0; mesh.onBeforeRender = (...a) => { ob(...a); if (n++ === 0) console.error('[film-fx] floorLight segs gain ' + uniforms.segGain.value.map(v => v.toFixed(3)).join(',') + ' centre ' + !!live(centre.meshes) + '/' + (centreMat?.name || centreMat?.type || 'none') + ' strips4 ' + centre.meshes.map(m => m.name).join('|').slice(0, 120) + ' foot ' + foot.meshes.length); }; }
   const hidden = spec.hideApp ? [app, app.visible] : null; if (hidden) app.visible = false;
   return { restore() { mesh.removeFromParent(); mesh.geometry.dispose(); material.dispose(); if (hidden) hidden[0].visible = hidden[1]; } };
 }
 
 // ---------- public API ----------
+// Multiply obj[field] by factor() for every reader, chaining to an accessor already there (film-edits' light
+// multipliers): writers (the app, timeOfDay) keep setting the raw value. Returns the undo.
+function scaleProp(obj, field, factor) {
+  const own = Object.getOwnPropertyDescriptor(obj, field); let raw = obj[field];
+  const get = own?.get ? () => own.get.call(obj) : () => raw, set = own?.set ? v => own.set.call(obj, v) : v => { raw = v; };
+  Object.defineProperty(obj, field, { configurable: true, enumerable: true, get: () => get() * factor(), set });
+  const undo = () => { const v = get(); delete obj[field]; if (own) Object.defineProperty(obj, field, own); else obj[field] = v; };
+  undo.raw = get;   // the value as written, before this factor
+  return undo;
+}
+// The desk's LED light in the room (sceneGlobals.ledRoomSpill, ledWallGlow, ledFloorGlow; the Director's "LED glow on the
+// walls" / "LED glow on the floor"). The room LED spill's uniforms live only in its patched materials' shaders (the app
+// does not expose the RoomLedSpill), so they are found through the renderer once a patched material has compiled; the
+// gain the app writes every frame is scaled: ledRoomSpill (the film's approved level) x ledWallGlow. The room's floor
+// surfaces (the floor and rugs: thin, at floor level, patched by the spill) take their own copy of the spill's light
+// at ledRoomSpill x ledFloorGlow, and ledFloorGlow scales the desk's own floor light too (the visualizer floor bounce
+// and the app's foot glow; per render through film-viewer-leds, else on the foot glow's strength). 1 = the film as approved.
+const FLOOR_LED_KEY = '|film-floor-led-v1';
+const roomSpillFields = g => !!g && ['ledRoomSpill', 'ledWallGlow', 'ledFloorGlow'].some(k => g[k] !== undefined);
+const keysOf = v => v === undefined || v === null ? null : Array.isArray(v) ? v : [[0, Number(v)]];
+// The spill's light, again, with its own gain: a second copy of efRoomLight for the floor's shader.
+function floorSpillMaterial(spill, gain, onGain) {
+  const mat = spill.clone(), prior = spill.onBeforeCompile, key = spill.customProgramCacheKey();
+  mat.onBeforeCompile = (shader, renderer) => {
+    prior.call(mat, shader, renderer); onGain(shader.uniforms.efRoomGain);
+    const fn = shader.fragmentShader.match(/vec3 efRoomLight\(vec3 albedo\) \{[\s\S]*?\n\}\n/), call = 'outgoingLight+=efRoomLight(diffuseColor.rgb);';
+    if (!fn || !shader.fragmentShader.includes(call)) { console.warn('[film-fx] ledFloorGlow: the room LED spill shader changed; ' + (spill.name || spill.type) + ' keeps the wall level'); return; }
+    shader.uniforms.efFilmFloorGain = gain;
+    shader.fragmentShader = shader.fragmentShader.replace(fn[0], fn[0] + 'uniform float efFilmFloorGain;\n' + fn[0].replace('vec3 efRoomLight(', 'vec3 efRoomLightFloor(').replace(/efRoomGain/g, 'efFilmFloorGain'))
+      .replace(call, 'outgoingLight+=efRoomLightFloor(diffuseColor.rgb);');
+  };
+  mat.customProgramCacheKey = () => key + FLOOR_LED_KEY;
+  return mat;
+}
+function installLedRoomSpill(g) {
+  const cell = {}, undo = [];
+  const retune = g => {
+    cell.base = g.ledRoomSpill !== undefined && g.ledRoomSpill !== null && Number.isFinite(Number(g.ledRoomSpill)) ? Number(g.ledRoomSpill) : 1;
+    cell.wk = keysOf(g.ledWallGlow); cell.fk = keysOf(g.ledFloorGlow);
+    cell.wall = cell.wk ? keyAt(cell.wk, 0) : 1; cell.floor = cell.fk ? keyAt(cell.fk, 0) : 1;
+  };
+  retune(g);
+  // Which parts this install set up (floor surfaces split, foot glow scaled): a live edit keeping them retunes in place.
+  const shape = g => `${!!keysOf(g.ledWallGlow)}|${!!keysOf(g.ledFloorGlow)}`, shape0 = shape(g);
+  let gainU = null, gainUndo = null;
+  const rawGain = () => gainUndo ? gainUndo.raw() : gainU ? gainU.value : 0;
+  const find = () => {
+    let u = null; sceneRoot().traverse(o => { if (u || !o.isMesh) return; for (const m of [].concat(o.material || [])) if (!u && m?.customProgramCacheKey?.().includes('room-led-spill') && !m.customProgramCacheKey().includes(FLOOR_LED_KEY)) u = api.renderer.properties.get(m)?.uniforms?.efRoomGain; });
+    if (u) { gainU = u; gainUndo = scaleProp(u, 'value', () => cell.base * cell.wall); undo.push(gainUndo); }
+  };
+  // Floor surfaces: only when the split is in use (a shot with ledRoomSpill alone renders exactly as before).
+  const floors = [];
+  if (cell.wk || cell.fk) {
+    const floorGain = { get value() { return rawGain() * cell.base * cell.floor; }, set value(v) {} };
+    const room = api.workspaceRoom?.root;
+    if (room) {
+      room.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(room), mm = Math.abs(room.getWorldScale(new THREE.Vector3()).x) || 1, b = new THREE.Box3(), made = new Map();
+      // Authored in millimetres (the spill's own ranges): thinner than 50 mm, within 80 mm of the room's lowest point,
+      // over 0.1 m².
+      room.traverse(o => {
+        if (!o.isMesh || !o.visible) return;
+        const mats = [].concat(o.material || []); if (!mats.some(m => m?.customProgramCacheKey?.().includes('room-led-spill'))) return;
+        b.setFromObject(o); if (b.isEmpty()) return;
+        const h = b.max.y - b.min.y, area = (b.max.x - b.min.x) * (b.max.z - b.min.z);
+        if (h > 50 * mm || b.max.y - box.min.y > 80 * mm || area < 1e5 * mm * mm) return;
+        const swap = m => { if (!m?.customProgramCacheKey?.().includes('room-led-spill')) return m; if (!made.has(m)) made.set(m, floorSpillMaterial(m, floorGain, u => { if (!gainU && u) gainU = u; })); return made.get(m); };
+        const original = o.material; o.material = Array.isArray(original) ? original.map(swap) : swap(original);
+        floors.push({ o, original, mine: o.material });
+      });
+      undo.push(() => { for (const f of floors) if (f.o.material === f.mine) f.o.material = f.original; for (const m of made.values()) m.dispose(); });
+    }
+  }
+  // The desk's own floor light: the viewer receivers take the gain per render; without them, the foot glow's strength.
+  if (active?.viewerLeds?.setFloorGain) { active.viewerLeds.setFloorGain(() => cell.floor); undo.push(() => active?.viewerLeds?.setFloorGain(null)); }
+  else if (cell.fk) {
+    let foot = null; api.loadedModel?.traverse(o => { if (!foot && o.name === 'Foot LED floor glow' && o.material?.uniforms?.strength) foot = o; });
+    if (foot) undo.push(scaleProp(foot.material.uniforms.strength, 'value', () => cell.floor));
+  }
+  return {
+    floors: floors.length,
+    frame(s = 0) { if (!gainUndo) find(); if (cell.wk) cell.wall = keyAt(cell.wk, s); if (cell.fk) cell.floor = keyAt(cell.fk, s); },
+    // Director live edits: new values in place while the same parts are in use.
+    retune(g) { if (!roomSpillFields(g) || shape(g) !== shape0) return false; retune(g); return true; },
+    restore: () => { for (const f of undo.reverse()) f(); }
+  };
+}
+function installRoomLight(keys) {
+  const k = Array.isArray(keys) ? keys : [[0, keys]], cell = { value: keyAt(k, 0) }, f = () => cell.value, undo = [];
+  const scene = sceneRoot(), inDesk = o => { for (let p = o; p; p = p.parent) if (p === api.loadedModel || p.userData?.filmFx) return true; return false; };
+  let n = 0, pools = 0; const seen = new Set();
+  scene.traverse(o => {
+    if (inDesk(o)) return;
+    if (o.isLight) { undo.push(scaleProp(o, 'intensity', f)); n++; return; }
+    // The rooms' painted light (lamp pools on tables, window sun patches, wall washes) is additive unlit overlays:
+    // light too, so it dims with the lights. Screens and LED-named parts keep theirs.
+    if (!(o.isMesh || o.isSprite) || /\bLEDs?\b|screen|display|monitor/i.test(o.name || '')) return;
+    for (const m of [].concat(o.material || [])) if (m && !seen.has(m) && m.blending === THREE.AdditiveBlending && (m.isMeshBasicMaterial || m.isSpriteMaterial)) { seen.add(m); undo.push(scaleProp(m, 'opacity', f)); pools++; }
+  });
+  undo.push(scaleProp(scene, 'environmentIntensity', f));
+  const gain = api.workspaceRoom?.bounce?.uniforms?.efBounceGain; if (gain) undo.push(scaleProp(gain, 'value', f));
+  return { lights: n, pools, frame: s => { cell.value = keyAt(k, s); }, restore: () => { for (const u of undo.reverse()) u(); } };
+}
+// Piecewise-linear [[seconds, value], …] (held before the first key and after the last).
+const keyAt = (k, s) => { const i = k.findIndex(p => p[0] > s); return i < 0 ? k.at(-1)[1] : i === 0 ? k[0][1] : k[i - 1][1] + (k[i][1] - k[i - 1][1]) * (s - k[i - 1][0]) / (k[i][0] - k[i - 1][0]); };
 export const Box3 = THREE.Box3;
+// Director: the floor reflections' pools (world-space outlines per source: foot, center, left, right) on the live stage,
+// and a preview of ledFloorSources while a handle is dragged (undefined: back to the installed shot's).
+export const floorPools = () => active?.viewerLeds?.pools?.() ?? [];
+export const previewFloorSources = (v) => active?.viewerLeds?.setSources?.(v === undefined ? active.shot.sceneGlobals?.ledFloorSources ?? null : v);
 // The desk's bounding-box centre in world space (render-cut --list-objects).
 export function deskBox() { const b = new THREE.Box3().setFromObject(api.loadedModel), c = b.getCenter(new THREE.Vector3()); return [c.x, b.min.y, c.z]; }
+// sceneGlobals: {environmentScale, exposure} — the image-based ambient and the
+// renderer exposure, multiplied/set for this shot and restored after.
+function installGlobals(shot) {
+  if (!shot.sceneGlobals) return;
+  let sc = api.loadedModel; while (sc.parent) sc = sc.parent; const g = shot.sceneGlobals;
+  active.globals = { env: sc.environmentIntensity, exposure: api.renderer.toneMappingExposure, scene: sc };
+  if (Number.isFinite(g.environmentScale)) sc.environmentIntensity *= g.environmentScale;
+  // Keyframed [[seconds, scale], …] (e.g. lights out at the end of a chapter), applied per frame.
+  else if (Array.isArray(g.environmentScale)) active.globals.envKeys = g.environmentScale;
+  if (Number.isFinite(g.exposure)) api.renderer.toneMappingExposure = g.exposure;
+  // exposureScale: a grade on top of the room's own exposure. An instance accessor, so timeOfDay's per-frame
+  // blend and the app's mode switches keep writing the raw value and the render reads raw x scale.
+  if (g.exposureScale !== undefined) {
+    const r = api.renderer, own = Object.getOwnPropertyDescriptor(r, 'toneMappingExposure'); let raw = r.toneMappingExposure;
+    const k = Array.isArray(g.exposureScale) ? g.exposureScale : [[0, g.exposureScale]], cell = { value: keyAt(k, 0) };
+    Object.defineProperty(r, 'toneMappingExposure', { configurable: true, enumerable: true, get: () => raw * cell.value, set: v => { raw = v; } });
+    active.globals.exposureCell = { cell, keys: k, capture: cell.value, undo: () => { delete r.toneMappingExposure; if (own) Object.defineProperty(r, 'toneMappingExposure', own); r.toneMappingExposure = raw; } };
+  }
+}
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length || shot.featuredBuild;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
+  if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
+  if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild);
+  if (shot.room === 'workshop') active.workshopToyStory = await (await import('./workshop-toy-story.mjs?v=20261110-stationary-organizer')).installWorkshopToyStory(api);
+  if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
+  if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
+  // School branding on every room desk (after the poses: a rig re-poses its artwork with it).
+  if (shot.sceneBranding) { active.branding = (await import('../../experience/branding-live.mjs')).installBranding(shot.sceneBranding, window); await active.branding.ready; }
   if (shot.deskObjects) {
     // The app's own object editor, as stage.mjs places the keyboard: select, change, deselect.
     const objects = api.sceneDesks?.objects, deg = THREE.MathUtils.radToDeg; active.desk.placed = [];
@@ -589,40 +982,128 @@ export async function install(shot) {
     active.led = await makeLed(shot, active.screens, list);
     api.setLedEffect({ mode: 'solid', period: 6 }, false);
   }
-  // sceneGlobals: {environmentScale, exposure} — the image-based ambient and the
-  // renderer exposure, multiplied/set for this shot and restored after.
-  if (shot.sceneGlobals) {
-    let sc = api.loadedModel; while (sc.parent) sc = sc.parent; const g = shot.sceneGlobals;
-    active.globals = { env: sc.environmentIntensity, exposure: api.renderer.toneMappingExposure, scene: sc };
-    if (Number.isFinite(g.environmentScale)) sc.environmentIntensity *= g.environmentScale;
-    // Keyframed [[seconds, scale], …] (e.g. lights out at the end of a chapter), applied per frame.
-    else if (Array.isArray(g.environmentScale)) active.globals.envKeys = g.environmentScale;
-    if (Number.isFinite(g.exposure)) api.renderer.toneMappingExposure = g.exposure;
-  }
+  installGlobals(shot);
   // ledSurfaces: the app's LED surface sliders (desktopStrength, floorStrength, …), restored after the shot.
   if (shot.ledSurfaces) { active.surfaces = api.ledSurfaces; for (const [k, v] of Object.entries(shot.ledSurfaces)) api.setLedSurface(k, v, false); }
+  active.ledColor0 = api.ledColor;   // the stage's own colour (Director update)
   if (shot.ledColor) { active.ledColor = api.ledColor; api.setLedColor(shot.ledColor, false); }
   // ledGlow: the app's LED brightness slider as a fraction of full (the stage uses .35).
   if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
-  if (shot.ledStatus || shot.obstacles) active.status = (await import('./film-status.mjs')).installStatus(shot);
+  if (shot.ledStatus || shot.obstacles) { const S = await import('./film-status.mjs'); await S.prepareObstacles(shot); active.status = S.installStatus(shot); }
   if (shot.floorLight) active.floor = installFloorLight(shot);
+  if (shot.ledReceivers) active.viewerLeds = (await import('./film-viewer-leds.mjs')).installViewerLeds(shot);   // before wheels: both wrap render
+  if (shot.sceneGlobals?.ledFloorSources) active.viewerLeds?.setSources?.(shot.sceneGlobals.ledFloorSources);
+  if (shot.motion && shot.wheelFix !== false) active.wheels = installWheelFix(shot);   // before quality: its compositor wraps this render
+  // quality: GPU render-box overrides (shadow maps, anisotropy, room reflections, GTAO, selective bloom); film-quality.mjs.
+  if (shot.quality) { active.quality = await (await import('./film-quality.mjs')).installQuality(shot, { screens: active.screens }); if (active.quality) console.log('[film-quality]', JSON.stringify(active.quality.info)); }
   if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
   if (shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
-  if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) active.edits = E.installEdits(shot); if (shot.lights) active.lights = E.installLights(shot); }
-  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor };
+  if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) { await E.prepareAdds(shot); active.edits = E.installEdits(shot); } if (shot.lights) active.lights = E.installLights(shot); }
+  // After timeOfDay (which snapshots the raw light levels) and sceneEdits (whose light multipliers it chains to).
+  if (shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
+  if (roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }
+  // lightEdits: Director changes to existing lights (experience/light-edits.mjs), after the shot's own lights and edits.
+  if (shot.lightEdits?.length) { active.lightEdits = (await import('../../experience/light-edits.mjs')).installLightEdits(shot.lightEdits, sceneRoot()); if (active.lightEdits.missing.length) console.warn('[film-fx] lightEdits: no light at ' + active.lightEdits.missing.join(' | ')); }
+  return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledRoomSpill: active.roomSpill ? { floors: active.roomSpill.floors } : undefined, ledReceivers: active.viewerLeds?.info, deskEdits: active.deskEdits ? { desks: active.deskEdits.desks, missing: active.deskEdits.missing } : undefined };
 }
-export async function frame(t, chapterSeconds, { video = false } = {}) {
+// Director live edits: apply changed lighting fields in place, without clear() / prepare, so props, screens,
+// accessories and sceneEdits stay. Per-frame data (status, desk white, keyed scales, time-of-day times, light
+// edits) is swapped; layers that chain onto each other are undone and re-installed together, last first.
+// Returns 'ok' (in place, synchronous for data-only changes), 'slow' (time-of-day modes or a scene-globals
+// shape change re-captured the room: onSlow() ran first so the caller can hold the frame) or 'full' (a field
+// that needs install: the caller runs clear() + install()).
+// sceneEdits too (the Director's prop edits): the edits layer and everything chained after it re-install in place.
+const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding', 'sceneDeskEdits', 'featuredBuild'];
+const TAIL = ['tod', 'edits', 'lights', 'roomLight', 'roomSpill', 'lightEdits'];
+export async function update(shot, { onSlow } = {}) {
+  if (!active) return 'full';
+  const prev = active.shot, bare = v => JSON.stringify(v, (k, x) => k === '__count' ? undefined : x), same = (a, b) => bare(a) === bare(b), changed = k => !same(prev[k], shot[k]);
+  for (const k of new Set([...Object.keys(prev), ...Object.keys(shot)])) if (!LIVE_FIELDS.includes(k) && changed(k)) return 'full';
+  const g0 = prev.sceneGlobals || {}, g1 = shot.sceneGlobals || {}, gChanged = k => !same(g0[k], g1[k]);
+  let tail = TAIL.length, globals = false, status = false;
+  if (gChanged('exposure') || gChanged('environmentScale') || gChanged('exposureScale')) {
+    const G = active.globals, envFast = !gChanged('environmentScale') || (Array.isArray(g0.environmentScale) && Array.isArray(g1.environmentScale) && G?.envKeys);
+    const expFast = !gChanged('exposureScale') || (G?.exposureCell && g1.exposureScale !== undefined);
+    if (!gChanged('exposure') && envFast && expFast) {
+      if (gChanged('environmentScale')) G.envKeys = g1.environmentScale;
+      if (gChanged('exposureScale')) {
+        let k = Array.isArray(g1.exposureScale) ? g1.exposureScale : [[0, g1.exposureScale]];
+        // timeOfDay snapshotted the exposure through the scale it saw at install and writes that back as the raw
+        // value, so a fresh install multiplies by the new scale twice. Match it without re-capturing the room.
+        if (active.tod && G.exposureCell.capture) { const f = keyAt(k, 0) / G.exposureCell.capture; k = k.map(([t, v]) => [t, v * f]); }
+        G.exposureCell.keys = k; G.exposureCell.cell.value = keyAt(k, 0);
+      }
+    } else { globals = true; tail = 0; }
+  }
+  if (changed('ledColor') || changed('ledStatus') || changed('ledNeutral') || changed('obstacles')) status = true;
+  // Floor reflections per source: data only, in place.
+  if (gChanged('ledFloorSources')) active.viewerLeds?.setSources?.(g1.ledFloorSources ?? null);
+  if (changed('timeOfDay')) {
+    const seq = x => [...(x || [])].sort((a, b) => a.at - b.at).map(k => k.mode).join();
+    if (!(active.tod?.retime && prev.timeOfDay?.length && shot.timeOfDay?.length && seq(prev.timeOfDay) === seq(shot.timeOfDay) && active.tod.retime(shot.timeOfDay))) tail = 0;
+  }
+  if (changed('sceneEdits')) tail = Math.min(tail, 1);
+  if (changed('lights')) tail = Math.min(tail, 2);
+  if (gChanged('roomLight')) tail = Math.min(tail, 3);
+  if ((gChanged('ledRoomSpill') || gChanged('ledWallGlow') || gChanged('ledFloorGlow')) && !(tail > 4 && active.roomSpill?.retune(g1))) tail = Math.min(tail, 4);
+  if (changed('lightEdits')) tail = Math.min(tail, 5);
+  // sceneBranding (the Director's Branding tab) is independent of the lighting chain: re-applied on its own, in place.
+  if (changed('sceneBranding')) {
+    await active.branding?.restore(); active.branding = null;
+    if (shot.sceneBranding) { active.branding = (await import('../../experience/branding-live.mjs')).installBranding(shot.sceneBranding, window); await active.branding.ready; }
+  }
+  const slow = globals || tail === 0; if (slow) onSlow?.();
+  for (let i = TAIL.length - 1; i >= tail; i--) { active[TAIL[i]]?.restore(); active[TAIL[i]] = null; }
+  if (globals && active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; active.globals = null; }
+  if (status) { active.status?.clear(); active.status = null; }
+  active.shot = shot;
+  // sceneDeskEdits (the Director's desk edits): restore and re-apply on the room's desks, in place.
+  if (changed('sceneDeskEdits')) {
+    active.deskEdits?.restore(); active.deskEdits = null;
+    if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
+  }
+  // featuredBuild (the Director's Build tab on the featured desk): swatches and accessories back, then applied again.
+  if (changed('featuredBuild')) {
+    active.featured?.restore(); active.featured = null;
+    if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild);
+  }
+  if (globals) installGlobals(shot);
+  if (status) {
+    if (shot.ledColor && active.ledColor === undefined) active.ledColor = active.ledColor0;
+    api.setLedColor(shot.ledColor || active.ledColor || active.ledColor0, false);
+    if (shot.ledStatus || shot.obstacles) { const S = await import('./film-status.mjs'); await S.prepareObstacles(shot); active.status = S.installStatus(shot); }
+  }
+  for (let i = tail; i < TAIL.length; i++) {
+    const k = TAIL[i];
+    if (k === 'tod' && shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
+    if (k === 'edits' && shot.sceneEdits) { const E = await import('./film-edits.mjs'); await E.prepareAdds(shot); active.edits = E.installEdits(shot); }
+    if (k === 'lights' && shot.lights) active.lights = (await import('./film-edits.mjs')).installLights(shot);
+    if (k === 'roomLight' && shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
+    if (k === 'roomSpill' && roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }
+    if (k === 'lightEdits' && shot.lightEdits?.length) active.lightEdits = (await import('../../experience/light-edits.mjs')).installLightEdits(shot.lightEdits, sceneRoot());
+  }
+  return slow ? 'slow' : 'ok';
+}
+export async function frame(t, chapterSeconds, { video = false, screens = true, timing = null } = {}) {
   if (!active) return;
-  if (active.tod) active.tod.apply(chapterSeconds);
+  let mark = timing ? performance.now() : 0; const lap = name => { if (!timing) return; const now = performance.now(); timing[name] = (timing[name] || 0) + now - mark; mark = now; };
+  for (const v of active.desk?.timed || []) v.cell.force = visibleAt(v.keys, chapterSeconds);
+  if (active.tod) active.tod.apply(chapterSeconds); lap('timeOfDay');
+  active.workshopToyStory?.frame(chapterSeconds);
+  active.deskEdits?.frame(chapterSeconds);   // the other desks' own moves by chapter time (film-desk-edits.mjs)
+  active.roomLight?.frame(chapterSeconds);
+  active.roomSpill?.frame(chapterSeconds);
+  if (active.globals?.exposureCell) active.globals.exposureCell.cell.value = keyAt(active.globals.exposureCell.keys, chapterSeconds);
   if (active.globals?.envKeys) {
     const k = active.globals.envKeys, i = k.findIndex(p => p[0] > chapterSeconds);
     const v = i < 0 ? k.at(-1)[1] : i === 0 ? k[0][1] : k[i - 1][1] + (k[i][1] - k[i - 1][1]) * (chapterSeconds - k[i - 1][0]) / (k[i][0] - k[i - 1][0]);
     active.globals.scene.environmentIntensity = active.globals.env * v;
   }
-  active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds);
-  if (active.screens.length) await updateScreens(active.screens, chapterSeconds);
+  active.quality?.frame();
+  active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds); active.lightEdits?.apply(); lap('lights');
+  if (active.screens.length && screens) { await updateScreens(active.screens, chapterSeconds); lap('screens'); }
   if (active.clocks.length) setClocks(active.clocks, active.shot.clock, active.shot, chapterSeconds);
-  active.status?.frame(chapterSeconds);
+  active.status?.frame(chapterSeconds); lap('status');
   if (active.led) {
     const led = active.led; await sampleLed(led, chapterSeconds, video);
     api.setLedColor(led.avg, false);
@@ -643,14 +1124,25 @@ export function clear() {
   for (const sc of active.screens) { sc.mesh.removeFromParent(); sc.mesh.geometry.dispose(); sc.material?.dispose(); sc.mesh.material.dispose(); sc.texture.dispose(); if (sc.media instanceof HTMLVideoElement) { sc.media.removeAttribute('src'); sc.media.load(); } }
   if (active.led?.source.sampler) { active.led.source.media.removeAttribute('src'); active.led.source.media.load(); }
   if (active.clocks.length) restoreClocks(active.clocks);
-  if (active.globals) { active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; }
+  if (active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; }
   if (active.surfaces) for (const [k, v] of Object.entries(active.surfaces)) api.setLedSurface(k, v, false);
   if (active.ledColor) api.setLedColor(active.ledColor, false);
   active.status?.clear();
+  active.quality?.restore();
   active.floor?.restore();
+  active.wheels?.restore();   // after quality.restore, which hands the render back to this wrapper
+  active.viewerLeds?.restore();   // after wheels.restore (installed first, so wrapped by it)
+  active.lightEdits?.restore();   // first: its intensity accessor chains over the edits' and roomLight's
+  active.roomSpill?.restore(); active.roomLight?.restore();   // before edits / timeOfDay: it chains to their accessors
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
+  active.workshopToyStory?.restore();
+  active.featured?.restore();   // before the film's own accessories / finish go back
   clearDeskObjects(active.desk);
+  active.finish?.restore();
+  active.branding?.restore();   // before the poses go back: it only swaps the desks' artwork
+  active.deskEdits?.restore();   // before deskPoses (installed after it)
+  active.deskPoses?.restore();
   active = null;
 }
 export { discover };

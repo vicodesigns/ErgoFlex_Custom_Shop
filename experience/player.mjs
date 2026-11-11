@@ -5,12 +5,48 @@ import {BakeCache,bakeKey,bakeDefinition,sourceSnapshot,renderBake,BAKE_PROFILE}
 import {score,safeReturn} from './score.mjs';
 import {ShotClock} from './timing.mjs';
 import {cleanCut,decodeCut} from './cuts.mjs';
-const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search);
+import {filmLink,loadFilmChapters,loadFilmShot,liveFilmShot} from './film-chapters.mjs';
+import {effectiveDeskEdits} from './desk-edits.mjs';
+import {latestFilmCut,withCut,filmFresh} from './film-fresh.mjs';
+import {exportLighting} from './film-lighting.mjs';
+import {filmCamera} from './film-render.mjs';
+import {deskVersions,versionAt,versionShot,loadFilmSubshots,loadStorageSeed} from './desk-versions.mjs';
+const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search), linkQuery=new URLSearchParams(location.hash.slice(1));
 let cut=query.get('cut')==='social'?'social':'full',shots=score(cut),index=-1,playing=true,busy=true,finished=false,generation=0,sound=false,app=null,preparation=Promise.resolve(),hasFrame=false,lastUI=0;
 const clock=new ShotClock(),cover=$('transition-frame');
 let director=null,directorOpen=false,previewOnly=false,clientCut=null,preparedShot=null,previewRange=null,loopPreview=false;
-try{const linked=new URLSearchParams(location.hash.slice(1)).get('cut');if(linked){clientCut=decodeCut(linked);cut='client';shots=clientCut.shots;}}
+try{const linked=linkQuery.get('cut');if(linked){clientCut=decodeCut(linked);cut='client';shots=clientCut.shots;}}
 catch(error){$('cut-error').hidden=false;$('cut-error').textContent=error.message;}
+// A film chapter tab reloaded after an import takes the film's newer cut, not the one its hash was opened with
+// (film-fresh.mjs); the hash is rewritten so later reloads stay current. A stage 'ready' that arrives during the
+// check is replayed once the message listener below exists.
+let earlyReady=null;const holdReady=e=>{if(e.data?.ergoPresentation==='ready')earlyReady=e;};
+if(clientCut&&filmLink(location.hash)?.director)try{
+  addEventListener('message',holdReady);
+  const latest=await Promise.race([latestFilmCut(filmLink(location.hash).film,location.hash),new Promise((_,reject)=>setTimeout(()=>reject(Error('timed out')),15000))]);
+  if(latest){filmFresh.state=latest;if(latest.newer){history.replaceState(history.state,'',withCut(location.hash,latest.enc));clientCut=decodeCut(latest.enc);shots=clientCut.shots;}}
+}catch(error){console.warn('[film fresh]',error.message);}
+finally{removeEventListener('message',holdReady);}
+// Film chapter links: the chapter list's "shot" (the full built film shot) dresses the live
+// stage with the film's own setup (props, hidden objects, desk finish, screens, room light).
+const filmShots=new Map(),film=filmLink(location.hash);
+// Chapters the film renders as sub-shots (the finale): their sub-shots file (desk-versions.mjs). The stage shows the
+// desk of the sub-shot the Director picked (deskVersion), else the one at the chapter's start.
+const filmSubshots=new Map(),deskVersion=new Map();
+const subshotsOf=(id,url,s)=>s?.subshots?loadFilmSubshots(url,id).then(list=>filmSubshots.set(id,list)).catch(error=>{console.warn('[desk versions]',error.message);filmSubshots.set(id,null);}):null;
+const filmReady=film&&clientCut?loadFilmChapters(film.film).then(list=>Promise.all(list.filter(c=>c.shot&&clientCut.shots.some(s=>s.id===c.id)).map(c=>loadFilmShot(c.shot,c.id).then(s=>{filmShots.set(c.id,s);return subshotsOf(c.id,c.shot,s);})))).catch(error=>console.warn('[film setup]',error.message)):Promise.resolve();
+function activeVersion(id){if(deskVersion.has(id))return deskVersion.get(id);const list=deskVersions(filmShots.get(id),filmSubshots.get(id));return list.length?versionAt(list,0):null;}
+const filmSetup=id=>{const v=activeVersion(id);return v?.setup||filmShots.get(id);};
+// The finale renders with a storage seed (its saved builds are the presets' desks): the stage's memory-only storage
+// takes the seed's keys while a desk version is on and gets its own values back after.
+const seeds=new Map();let seededKeys=null,fxError=null;
+function storageSeed(id){const url=filmSubshots.get(id)?.storage;if(!url)return null;if(!seeds.has(url))seeds.set(url,loadStorageSeed(url).then(values=>({url,values}),error=>{seeds.delete(url);console.warn('[desk versions] seed',error.message);return null;}));return seeds.get(url);}
+const seedNow=id=>{const url=filmSubshots.get(id)?.storage,p=url&&seeds.get(url);return p?.done||null;};
+function seedStage(seed){
+  const win=frame.contentWindow;if(!win?.__ERGO_PRESENTATION__)return;const ls=win.localStorage;
+  if(seededKeys){for(const [k,v] of seededKeys)if(v===null)ls.removeItem(k);else ls.setItem(k,v);seededKeys=null;}
+  if(!seed)return;seededKeys=new Map();for(const [k,v] of Object.entries(seed.values)){seededKeys.set(k,ls.getItem(k));ls.setItem(k,v);}
+}
 const nextPaint=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const track=new Audio('../assets/led/music/neon-flight-demo.mp3');track.loop=true;track.volume=.32;
@@ -49,6 +85,73 @@ function chime(final=false){
   }catch{}
 }
 const stage=()=>frame.contentWindow.ErgoPresentation;
+// ?perf=1: where the time goes while editing (Director seeks, film-fx frames), summed every 2 s in the console.
+const perf=query.get('perf')==='1',perfSum={seek:0,n:0,fx:0,fxn:0};let perfAt=performance.now(),perfBusy=false;
+function perfNote(kind,ms){if(kind==='seek'){perfSum.seek+=ms;perfSum.n++;}else{perfSum.fx+=ms;perfSum.fxn++;}
+  if(performance.now()-perfAt>2000){const parts=Object.entries(perfSum).filter(([k])=>k.startsWith('fx:')).map(([k,v])=>`${k.slice(3)} ${(v/Math.max(1,perfSum.fxn)).toFixed(1)}`).join(', ');console.log(`[perf] ${perfSum.n} seeks ${(perfSum.seek/Math.max(1,perfSum.n)).toFixed(1)} ms each · ${perfSum.fxn} film-fx frames ${(perfSum.fx/Math.max(1,perfSum.fxn)).toFixed(1)} ms each (${parts})`);perfAt=performance.now();for(const k of Object.keys(perfSum))perfSum[k]=0;}}
+let fxLast=0,fxScreensAt=0,fxScrubbed=false,liveFx=null,fxShot=null,fxAt=-1,fxPending=null,fxLights=null,fxTimer=null;
+// Film layers the Director edits in place (film-fx update): lighting and its prop edits.
+let fxPeople='null';
+const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay,l.propEdits,l.brandingEdits,l.deskEdits,l.deskBuild]);};
+// film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
+async function stageFx(){
+  const win=frame.contentWindow;if(win.__filmFx)return win.__filmFx;
+  await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs?v=20261110-stationary-organizer').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
+  return win.__filmFx;
+}
+// Film chapters: the live camera is the film's (film-render.mjs filmCamera, what Render still and the 4K use):
+// the Director keys baked through the film shot's cameraPlan. Re-baked only when the keys or the length change.
+function filmCameraBake(setup){
+  let last=null,out=null;
+  return (keys,seconds)=>{const key=JSON.stringify([keys,seconds]);if(key!==last){out=filmCamera(setup,keys,seconds).camera.keys;last=key;}return out;};
+}
+// The renderer's order around prepare: clear, beforePrepare, prepare, unhookPreset, install.
+async function prepareStage(next){
+  await filmReady;await fxRefresh;while(fxBusy)await fxRefresh;await fxPending;const version=activeVersion(next.id),setup=filmSetup(next.id),fx=setup?await stageFx().catch(error=>{console.warn('[film fx]',error.message);return null;}):frame.contentWindow.__filmFx;
+  liveFx=null;fxShot=null;frame.contentWindow.__directorLightsRestore?.();frame.contentWindow.__directorPropsRestore?.();fx?.clear();
+  stage().filmCamera?.(setup?filmCameraBake(setup):null);
+  next=versionShot(next,version);
+  if(setup&&next.deskEdits===undefined&&setup.sceneDeskEdits?.length)next={...next,deskEdits:effectiveDeskEdits(setup,next)};   // an import's room-desk clips (desk-choreo.mjs)
+  const seed=version?await storageSeed(next.id):null;if(seed)seeds.get(seed.url).done=seed;seedStage(seed);
+  if(!setup||!fx)return stage().prepare(next);
+  const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);
+  // The stage casts the room from the shot it prepares: the film's people with the Director's cast over them.
+  fxPeople=JSON.stringify(shot.people??null);
+  let result;try{result=await stage().prepare(shot.people?{...next,people:shot.people}:next);}finally{fx.unhookPreset();}
+  fxError=null;try{await fx.install(shot);liveFx=fx;fxShot=next.id;fxAt=-1;fxLights=lightsKey(next);director?.filmApplied?.();}catch(error){console.error('[film fx]',error);fx.clear();fxError=error.message;director?.setStatus('The film setup could not be applied: '+error.message);}
+  return result;
+}
+// Lighting edits re-install the film layers (no re-prepare), so the live strips follow the Director.
+// Lighting edits update the film layers in place (film-fx update): no clear(), so props, screens and scene
+// edits stay. Slow paths (new daypart modes, a full re-install) hold the last frame until the new setup is in.
+// Requests coalesce: one update in flight, the latest cut applied when it finishes.
+let fxRefresh=Promise.resolve(),fxBusy=false,fxAgain=false;
+function refreshFilmLights(){if(fxBusy){fxAgain=true;return fxRefresh;}fxBusy=true;fxRefresh=(async()=>{try{do{fxAgain=false;await reinstallFilmLights();}while(fxAgain);}finally{fxBusy=false;}})();return fxRefresh;}
+async function reinstallFilmLights(){
+  // Not under a Director gizmo drag: the dragged light would jump back mid-gesture.
+  while(frame.contentWindow.__directorDragging)await new Promise(r=>setTimeout(r,100));
+  await fxPending;const s=shots[index],setup=s&&filmSetup(s.id),fx=liveFx;if(!fx||busy||!setup||s.id!==fxShot||activeBake||bakeController)return;
+  const shot=liveFilmShot(setup,s);let held=false;const hold=()=>{if(!held){held=true;stage().hold?.(true);}};
+  liveFx=null;
+  try{
+    frame.contentWindow.__directorLightsRestore?.();frame.contentWindow.__directorPropsRestore?.();
+    let result='full';try{result=fx.update?await fx.update(shot,{onSlow:hold}):'full';}catch(error){console.error('[film fx] update',error);}
+    if(result==='full'){hold();fx.clear();await fx.install(shot);}
+    liveFx=fx;fxAt=-1;director?.filmApplied?.();
+  }catch(error){console.error('[film fx]',error);}
+  finally{if(held)stage().hold(false);}
+}
+// Time-varying film parts (screens, time of day, keyed lights) follow the chapter clock.
+function filmFrame(){
+  requestAnimationFrame(filmFrame);
+  if(!liveFx||fxPending||busy||index<0||activeBake||bakeController||shots[index]?.id!==fxShot)return;
+  const s=shots[index],at=clock.progress(performance.now(),s.seconds)*s.seconds,fx=liveFx,now=performance.now(),scrubbing=director?.scrubbing?.();
+  if(scrubbing&&now-fxLast<100)return;if(!scrubbing&&fxScrubbed){fxScrubbed=false;fxAt=-1;}if(scrubbing)fxScrubbed=true;
+  if(Math.abs(at-fxAt)<1/30)return;fxLast=now;stage()?.wake?.();
+  const drawScreens=!scrubbing&&(!playing||now-fxScreensAt>=250);if(drawScreens)fxScreensAt=now;
+  fxAt=at;const fxStart=performance.now(),timing=perf?{}:null;fxPending=fx.frame(at,at,{video:false,screens:drawScreens,timing}).then(()=>{fx.after();if(perf){perfNote('fx',performance.now()-fxStart);for(const [k,v] of Object.entries(timing))perfSum['fx:'+k]=(perfSum['fx:'+k]||0)+v;}}).catch(error=>console.warn('[film fx]',error.message)).finally(()=>{fxPending=null;});
+}
+requestAnimationFrame(filmFrame);
 const seen=()=>{try{localStorage.setItem('ergoflex.cinematicSeen.v1','1');}catch{}};
 const returnTo=safeReturn(query.get('return'),location.href);
 function exit(){seen();track.pause();location.assign(returnTo);}
@@ -98,7 +201,7 @@ async function playShot(i,{position=0,forceLive=false,range=null}={}){
     if(token!==generation)return;
     if(record){try{await showBaked(record,position);}catch{record=null;clearBaked();}}
     if(!record){
-      preparation=preparation.catch(()=>{}).then(()=>token===generation?stage().prepare(next):null);
+      preparation=preparation.catch(()=>{}).then(()=>token===generation?prepareStage(next):null);
       await preparation;if(token!==generation)return;clearBaked();
       stage().reduced(reduced.matches);stage().pause(false);stage().tick(position);stage().pause(!playing||document.hidden);
     }
@@ -252,6 +355,17 @@ async function openDirector(){
   director=mountDirector({
     stage,
     ready:()=>!busy,
+    filmShot:id=>filmShots.get(id)||null,
+    filmSubshots:id=>filmSubshots.get(id)||null,deskVersion:id=>activeVersion(id),deskStorage:id=>activeVersion(id)?seedNow(id):null,
+    // A different desk version: re-prepare the stage with that sub-shot's film shot at the same position (the cover
+    // holds the last frame meanwhile), playing on if it was playing.
+    async setDeskVersion(value,i,version){
+      if(bakeController||busy)throw Error('Wait for this chapter to finish loading.');
+      const id=value.shots[i]?.id;if(!id)return false;deskVersion.set(id,version||null);
+      const position=index===i?Math.min(1,clock.progress(performance.now(),shots[index].seconds)):0;applyClient(value);
+      if(!await playShot(i,{position,forceLive:true,range:previewRange}))throw Error('The chapter could not be loaded with this desk.');
+      if(fxError)throw Error('the film setup could not be applied: '+fxError);return true;
+    },
     playback:()=>({playing,busy,index,range:previewRange,loop:loopPreview}),toggleChapter,
     setPreviewLoop(on){loopPreview=!!on;director?.transportChanged();},
     async previewRange(value,i,range){
@@ -277,11 +391,13 @@ async function openDirector(){
     },
     async downloadBake(){const {record}=await cachedBake(shots[index]);if(!record)throw Error('Bake this chapter first.');const url=URL.createObjectURL(record.blob),a=document.createElement('a');a.href=url;a.download='ergoflex-'+shots[index].id+'.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);},
     editMode(on){if(bakeController)return;directorOpen=on;if(!on)previewOnly=false;playing=false;clock.setRunning(false,performance.now());stage().edit(on);stage().pause(true);frame.inert=!on;$('pause').textContent='Play';$('director').textContent=on?'Close editor':'Director Mode';syncAudio();},
-    update(value){const position=index>=0?clock.progress(performance.now(),shots[index].seconds):0;applyClient(value);clearTimeout(bakeRefreshTimer);bakeRefreshTimer=setTimeout(refreshBakeStatus,200);if(activeBake){liveAt(position);return;}if(shots[index]){stage().cameraTrack(shots[index].camera,shots[index].id);stage().motionTrack(shots[index].motion,shots[index].id);}if(directorOpen){playing=false;clock.setRunning(false,performance.now());stage().edit(true);frame.inert=false;$('pause').textContent='Play';syncAudio();}},
+    update(value){stage()?.wake?.();const position=index>=0?clock.progress(performance.now(),shots[index].seconds):0;applyClient(value);
+      {const s=shots[index],setup=s&&filmSetup(s.id);if(setup){const cast=liveFilmShot(setup,s).people??null,pk=JSON.stringify(cast);if(pk!==fxPeople){fxPeople=pk;stage().peopleTrack?.(cast,s.id);}}}
+      if(fxShot&&shots[index]?.id===fxShot){const key=lightsKey(shots[index]);if(key!==fxLights){fxLights=key;cancelAnimationFrame(fxTimer);fxTimer=requestAnimationFrame(()=>refreshFilmLights());}}clearTimeout(bakeRefreshTimer);bakeRefreshTimer=setTimeout(refreshBakeStatus,200);if(activeBake){liveAt(position);return;}if(shots[index]){stage().secondsTrack?.(shots[index].seconds,shots[index].id);stage().cameraTrack(shots[index].camera,shots[index].id);stage().motionTrack(shots[index].motion,shots[index].id);stage().deskEditsTrack?.(effectiveDeskEdits(filmSetup(shots[index].id),shots[index]),shots[index].id);}if(directorOpen){playing=false;clock.setRunning(false,performance.now());stage().edit(true);frame.inert=false;$('pause').textContent='Play';syncAudio();}},
     async editShot(value,i){applyClient(value);previewOnly=true;playing=false;if(!await playShot(i,{forceLive:true}))throw Error('The chapter could not be loaded. Choose a different layout or retry.');},
     async preview(value,i){applyClient(value);previewOnly=true;playing=true;stage().edit(false);await playShot(i);},
     play(value){applyClient(value);previewOnly=false;playing=true;stage().edit(false);playShot(0);},
-    seek(t){if(busy)return;previewRange=null;if(activeBake){liveAt(t);return;}playing=false;clock.setRunning(false,performance.now());clock.seek(t*shots[index].seconds,performance.now());stage().seek(t);stage().edit(true);frame.inert=false;$('pause').textContent='Play';caption(shots[index],t);const elapsed=shots.slice(0,index).reduce((n,s)=>n+s.seconds,0)+t*shots[index].seconds,total=shots.reduce((n,s)=>n+s.seconds,0),format=n=>Math.floor(n/60)+':'+String(Math.floor(n%60)).padStart(2,'0');$('progress').value=elapsed;$('time').textContent=format(elapsed)+' / '+format(total);syncAudio();},
+    seek(t){if(busy)return;if(perf&&!perfBusy){perfBusy=true;const a=performance.now();try{this.seek(t);}finally{perfBusy=false;perfNote('seek',performance.now()-a);}return;}previewRange=null;if(activeBake){liveAt(t);return;}playing=false;clock.setRunning(false,performance.now());clock.seek(t*shots[index].seconds,performance.now());stage().seek(t);stage().edit(true);frame.inert=false;$('pause').textContent='Play';caption(shots[index],t);const elapsed=shots.slice(0,index).reduce((n,s)=>n+s.seconds,0)+t*shots[index].seconds,total=shots.reduce((n,s)=>n+s.seconds,0),format=n=>Math.floor(n/60)+':'+String(Math.floor(n%60)).padStart(2,'0');$('progress').value=elapsed;$('time').textContent=format(elapsed)+' / '+format(total);syncAudio();},
     pose(value){if(busy)return null;if(activeBake){liveAt(clock.progress(performance.now(),shots[index].seconds));return null;}stage().edit(true);return stage().previewPose(value);}
   },stage().catalog(),clientCut);
   director.open();
@@ -294,7 +410,8 @@ addEventListener('message',e=>{
     $('director').disabled=false;
     stage().clock(()=>busy||index<0?0:Math.min(previewRange?previewRange.end/shots[index].seconds:1,clock.progress(performance.now(),shots[index].seconds)));
     if(clientCut){try{applyClient(cleanCut(clientCut,stage().catalog()));}catch(error){$('cut-error').hidden=false;$('cut-error').textContent=error.message;clientCut=null;cut='full';shots=score();chapters();}}
-    if(query.get('director')==='1'){openDirector().catch(error=>{$('cut-error').hidden=false;$('cut-error').textContent=error.message;});return;}
+    // Film chapter links (#cut=…&director=1) open straight into Director Mode.
+    if(query.get('director')==='1'||linkQuery.get('director')==='1'){if(!director)openDirector().catch(error=>{$('cut-error').hidden=false;$('cut-error').textContent=error.message;});return;}
     if(query.get('app')==='1'){playing=false;playShot(shots.length-1).then(openApp);}else {
       playing=!reduced.matches&&query.get('paused')!=='1';
       const chapter=shots.findIndex(s=>s.id===query.get('chapter'));playShot(chapter<0?0:chapter);
@@ -306,3 +423,4 @@ addEventListener('message',e=>{
   }
 });
 chapters();document.body.classList.add('loading');requestAnimationFrame(draw);
+if(earlyReady)dispatchEvent(new MessageEvent('message',{data:earlyReady.data,origin:earlyReady.origin,source:earlyReady.source}));

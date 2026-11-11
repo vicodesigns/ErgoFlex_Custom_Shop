@@ -62,9 +62,9 @@ export async function installTimeOfDay(shot) {
   sceneRoot().traverse(o => { if (!before.objs.has(o) && !o.isScene) o.visible = false; });
   for (const [img, c] of before.canv) { const x = img.getContext('2d'); x.clearRect(0, 0, img.width, img.height); x.drawImage(c.copy, 0, 0); for (const t of c.textures) t.needsUpdate = true; }
 
-  // Channels: only properties that differ between at least two keyed modes.
+  // Channels: properties that differ between keyed modes or from the prepared state (e.g. storage prepares 'night' for its route).
   const S = keys.map(k => states.get(k.mode)), channels = [], base = S[0];
-  const add = (read, set, scratch) => { const vals = S.map(read); if (vals.some(v => v === undefined) || vals.every(v => same(v, vals[0]))) return; channels.push({ vals, set, scratch }); };
+  const add = (read, set, scratch) => { const vals = S.map(read); if (vals.some(v => v === undefined) || (vals.every(v => same(v, vals[0])) && same(vals[0], read(before)))) return; channels.push({ vals, set, scratch }); };
   for (const [o] of base.lights) {
     const L = s => s.lights.get(o);
     add(s => L(s)?.color, v => o.color.copy(v), new THREE.Color()); add(s => L(s)?.intensity, v => { o.intensity = v; });
@@ -79,7 +79,7 @@ export async function installTimeOfDay(shot) {
     add(s => R(s)?.repeat, v => m.map?.repeat.copy(v), new THREE.Vector2());
     // A material that is invisible in one mode fades via its opacity; it is
     // visible whenever any neighbouring key shows it.
-    const vis = S.map(s => R(s)?.visible); if (vis.some(v => v !== vis[0])) channels.push({ vals: vis, set: v => { m.visible = v; }, any: true });
+    const vis = S.map(s => R(s)?.visible); if (vis.some(v => v !== vis[0]) || vis[0] !== before.mats.get(m)?.visible) channels.push({ vals: vis, set: v => { m.visible = v; }, any: true });
     for (const k of Object.keys(R(base)?.uniforms || {})) add(s => R(s)?.uniforms?.[k], v => { const u = m.uniforms[k]; if (typeof v === 'number') u.value = v; else u.value.copy(v); }, R(base).uniforms[k]?.clone?.());
   }
   // Scale-only object changes (window blinds). Moving or appearing objects are dressing, not light.
@@ -92,11 +92,11 @@ export async function installTimeOfDay(shot) {
   const bounce = api.workspaceRoom?.bounce?.uniforms || {};
   for (const k of Object.keys(base.g.bounce)) {
     const v0 = base.g.bounce[k]; if (v0 === undefined) continue;
-    if (Array.isArray(v0)) { const vals = S.map(s => s.g.bounce[k]); if (vals.every(v => same(v, vals[0]))) continue; channels.push({ vals, set: v => { const u = bounce[k].value; v.forEach((x, j) => { if (typeof x === 'number') u[j] = x; else u[j].copy(x); }); }, array: true }); }
+    if (Array.isArray(v0)) { const vals = S.map(s => s.g.bounce[k]); if (vals.every(v => same(v, vals[0])) && same(vals[0], before.g.bounce[k])) continue; channels.push({ vals, set: v => { const u = bounce[k].value; v.forEach((x, j) => { if (typeof x === 'number') u[j] = x; else u[j].copy(x); }); }, array: true }); }
     else add(s => s.g.bounce[k], v => { if (typeof v === 'number') bounce[k].value = v; else bounce[k].value.copy(v); }, v0.clone?.());
   }
-  const canvases = [];
-  for (const [img] of base.canv) { const copies = S.map(s => s.canv.get(img)?.copy); if (copies.some(c => !c)) continue; const d = copies.map(c => c.getContext('2d').getImageData(0, 0, Math.min(64, c.width), Math.min(64, c.height)).data.join()); if (d.every(x => x === d[0])) continue; canvases.push({ img, copies, textures: before.canv.get(img)?.textures || new Set() }); }
+  const canvases = [], sampleCanvas = c => c.getContext('2d').getImageData(0, 0, Math.min(64, c.width), Math.min(64, c.height)).data.join();
+  for (const [img] of base.canv) { const copies = S.map(s => s.canv.get(img)?.copy), bCopy = before.canv.get(img)?.copy; if (copies.some(c => !c)) continue; const d = copies.map(sampleCanvas); if (d.every(x => x === d[0]) && (!bCopy || d[0] === sampleCanvas(bCopy))) continue; canvases.push({ img, copies, textures: before.canv.get(img)?.textures || new Set() }); }
 
   const segment = seconds => {
     if (seconds <= keys[0].at) return [0, 0, 0]; const last = keys.length - 1; if (seconds >= keys[last].at) return [last, last, 0];
@@ -106,6 +106,8 @@ export async function installTimeOfDay(shot) {
   };
   return {
     channels: channels.length, canvases: canvases.length,
+    // Director: new times / blends for the same daypart sequence, without re-capturing the room.
+    retime(next) { const n = [...next].sort((a, b) => a.at - b.at); if (n.length !== keys.length || n.some((k, i) => k.mode !== keys[i].mode)) return false; n.forEach((k, i) => { keys[i] = { ...keys[i], at: k.at, ease: k.ease }; }); return true; },
     apply(seconds) {
       const [a, b, u] = segment(seconds);
       for (const c of channels) {

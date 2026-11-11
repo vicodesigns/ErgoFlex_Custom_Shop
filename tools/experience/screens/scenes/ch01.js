@@ -1,13 +1,29 @@
 // Chapter 1 · awaken (product void). ErgoFlex app "digital twin" control screen.
-// Readouts follow shots/01.json: roll-in 1.4-4.1, lift 28->41 + strafe 8-10.9, turn 45° 12.4-15.1,
-// lift 45.5 + tilt 8° 15.5-18.4, lift 52.5 + turn back + tilt 0 at 25-28.5.
+// Readouts, the activity log and the beats follow the shot's motion clips (CAPTURE_SHOT or shots/01.json):
+// "Twin synced" sits in the longest pause between moves, the end wordmark comes after the last move's light
+// has settled (the rules reproduce the 2026-10-30 clip's 19-24.4 s and 30.4 s exactly).
+// With TWIN=<video> (capture.mjs) the DIGITAL TWIN card shows the real 3D desk (twinCard) instead of the
+// drawn side view (schematic).
 (function () {
-  const BOOT = 1.5;
+  let BOOT = 1.5, ON = 0, EARLY = 10;   // ON: the desk's lights-on (SHOT.lightsOn); the screen is black before it
+  // Merged busy spans of every clip; the longest gap between them is the hold for the "Twin synced" moment.
+  function beats() {
+    const spans = SHOT.clips.map(c => [c.start, c.start + c.duration]).sort((a, b) => a[0] - b[0]), busy = [];
+    for (const s of spans) { const last = busy[busy.length - 1]; if (last && s[0] <= last[1]) last[1] = Math.max(last[1], s[1]); else busy.push(s.slice()); }
+    let gap = null;
+    for (let i = 1; i < busy.length; i++) if (!gap || busy[i][0] - busy[i - 1][1] > gap[1] - gap[0]) gap = [busy[i - 1][1], busy[i][0]];
+    const lastEnd = busy.length ? busy[busy.length - 1][1] : 0;
+    const synced = gap ? [Math.max(gap[0] + .9, gap[1] - 6), gap[1] - .6] : [-1, -1];
+    return {synced, end: Math.max(SHOT.seconds - 3.6, lastEnd + 1)};
+  }
+  let B = null;
   function logEntries() {
     return SHOT.clips.filter(c => c.duration >= .3).map(c => {
       let text, icn, col;
       if (c.lane === 'lift') { text = `Lift to ${(+c.target).toFixed(1)} in`; icn = 'up'; col = C.blue2; }
       else if (c.lane === 'tilt') { text = c.target > .5 ? `Tilt to ${Math.round(c.target)}°` : 'Level surface'; icn = 'tilt'; col = C.violet; }
+      else if (c.kind === 'rotate') { text = `Turn ${c.direction || 'right'} ${Math.round(+c.value || 0)}°`; icn = 'wheel'; col = C.teal; }
+      else if (c.kind === 'travel') { text = `Roll ${c.direction || 'forward'} ${Math.round(+c.value || 0)} in`; icn = 'wheel'; col = C.teal; }
       else { const y = c.target && c.target.yaw; text = /Turn/.test(c.label) ? `${c.label} to ${Math.round(y)}°` : c.label; icn = 'wheel'; col = C.teal; }
       return {t: c.start, end: c.start + c.duration, text, icn, col};
     });
@@ -64,6 +80,31 @@
       T(`${p.tilt.toFixed(0)}°`, cx + 350, topY + 90, 44, {w: 700, c: C.violet});
     }
   }
+  // The real desk: frame round(t * 30) of the twin render (build-round8-twin.py), cover-fitted into the card,
+  // with the card's label, Live pill and the height / tilt chips the side view had.
+  const twinOn = () => !!(SHOT.videos && SHOT.videos.twin);
+  const twinIdx = t => clamp(Math.round(t * 30), 0, SHOT.videos.twin.count - 1);
+  function twinCard(t, x, y, w, h) {
+    const p = pose(t);
+    card(x, y, w, h, {r: 36, top: '#0c1628', bot: '#08101d'});
+    clip(x, y, w, h, 36, () => {
+      drawCover(frameImg('twin', twinIdx(t)), x, y, w, h);
+      g.fillStyle = lin(0, y, 0, y + 170, [[0, 'rgba(5,10,18,0.72)'], [1, 'rgba(5,10,18,0)']]); g.fillRect(x, y, w, 170);
+      g.fillStyle = lin(0, y + h - 150, 0, y + h, [[0, 'rgba(5,10,18,0)'], [1, 'rgba(5,10,18,0.6)']]); g.fillRect(x, y + h - 150, w, 150);
+      const sx = x + w * fract(t * .12);   // soft both sides: a hard edge over the picture reads as a seam
+      g.fillStyle = lin(sx - 180, 0, sx + 180, 0, [[0, 'rgba(82,178,255,0)'], [.5, 'rgba(82,178,255,0.06)'], [1, 'rgba(82,178,255,0)']]); g.fillRect(sx - 180, y, 360, h);
+    });
+    strokeR(x + .5, y + .5, w - 1, h - 1, 36, C.line2, 2);
+    T('DIGITAL TWIN', x + 44, y + 70, 30, {w: 600, c: C.dim, ls: 4});
+    pill(x + w - 44, y + 34, 'Live', 28, {a: 'right', dot: C.green, bg: hexA(C.green, .16), c: C.green});
+    const cy = y + h - 64;
+    fillR(x + 40, cy - 34, 190, 68, 20, 'rgba(255,178,46,0.16)');
+    T(`${p.height.toFixed(1)} in`, x + 135, cy + 14, 40, {w: 700, a: 'center', c: C.amber});
+    alpha(sm(seg(p.tilt, .3, 1.5)), () => {
+      fillR(x + 246, cy - 34, 130, 68, 20, hexA(C.violet, .18));
+      T(`${p.tilt.toFixed(0)}°`, x + 311, cy + 14, 40, {w: 700, a: 'center', c: C.violet});
+    });
+  }
   function minimap(t, x, y, w, h) {
     card(x, y, w, h, {r: 32});
     T('POSITION', x + 34, y + 56, 26, {w: 600, c: C.dim, ls: 3});
@@ -91,9 +132,13 @@
     if (sub) T(sub, x + 34, y + 222, 30, {w: 500, c: col});
   }
   SCENES.ch01 = {
+    prefetch(t) { return twinOn() ? [['twin', twinIdx(t)]] : []; },
     draw(t) {
+      if (SHOT.lightsOn && !ON) { ON = SHOT.lightsOn; BOOT = ON + 1.5; EARLY = BOOT + 5; }
+      if (t < ON) { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); return; }
+      if (!B) B = beats();
       backdrop(t, {top: '#08101e', bot: '#04060b', blobs: [[C.blue, .16], [C.violet, .06]]});
-      const p = pose(t), ui = eo(seg(t, BOOT - .2, BOOT + .8)), endLogo = sm(seg(t, 30.4, 31.6));
+      const p = pose(t), ui = eo(seg(t, BOOT - .2, BOOT + .8)), endLogo = sm(seg(t, B.end, B.end + 1.2));
       // ---- main UI
       alpha(ui * (1 - endLogo * .85), () => {
         at(0, (1 - ui) * 40, 1, () => {
@@ -104,7 +149,7 @@
           const syncPulse = .5 + .5 * Math.sin(t * 4);
           pill(W - 40, 40, 'Connected', 28, {a: 'right', dot: hexA(C.green, .6 + .4 * syncPulse), bg: hexA(C.green, .14), c: C.green});
           const RW = Math.min(1000, W * .42), rx = W - 40 - RW, SW = rx - 70, HW = (SW - 20) / 2;
-          schematic(t, 40, 130, SW, 640);
+          (twinOn() ? twinCard : schematic)(t, 40, 130, SW, 640);
           minimap(t, 40, 790, HW, 260);
           // height history sparkline
           const sx0 = 60 + HW;
@@ -143,27 +188,28 @@
           });
         });
       });
-      // "Digital twin synced" moment during the beat-B hold (~19-24 s)
-      const tw_ = win(t, 19, 24.4, .6);
+      // "Digital twin synced" moment in the longest hold between moves. Over the real desk it sits small at the
+      // card's bottom right instead of across the middle.
+      const [s0, s1] = B.synced, tw_ = win(t, s0, s1, .6), twin = twinOn();
       alpha(tw_ * (1 - endLogo), () => {
-        const k = eo(seg(t, 19, 19.8));
-        at(40 + (W - 1110) / 2, 480, lerp(.9, 1, k), () => {
+        const k = eo(seg(t, s0, s0 + .8));
+        at(twin ? W - Math.min(1000, W * .42) - 70 - 216 : 40 + (W - 1110) / 2, twin ? 130 + 640 - 74 : 480, lerp(.9, 1, k) * (twin ? .62 : 1), () => {
           fillR(-300, -70, 600, 140, 70, 'rgba(6,14,28,0.82)'); strokeR(-300, -70, 600, 140, 70, hexA(C.blue2, .6), 3);
           iconBadge('check', -220, 0, 40, C.green);
           T('Twin synced', -160, 0, 50, {w: 700});
           T('every move mirrored', -160, 44, 28, {w: 500, c: C.dim});
         });
-        ringStroke(40 + (W - 1110) / 2, 480, 320 + 200 * fract(t * .6), hexA(C.blue2, .35 * (1 - fract(t * .6))), 4);
+        if (!twin) ringStroke(40 + (W - 1110) / 2, 480, 320 + 200 * fract(t * .6), hexA(C.blue2, .35 * (1 - fract(t * .6))), 4);
       });
       // ---- boot logo and end logo
       const bootA = 1 - sm(seg(t, BOOT - .3, BOOT + .5));
-      const la = Math.max(bootA * sm(seg(t, 0, .7)), endLogo);
+      const la = Math.max(bootA * sm(seg(t, ON, ON + .7)), endLogo);
       alpha(la, () => {
-        const k = t < 10 ? eo(seg(t, 0, 1.2)) : eo(seg(t, 30.4, 32));
+        const k = t < EARLY ? eo(seg(t, ON, ON + 1.2)) : eo(seg(t, B.end, B.end + 1.6));
         g.fillStyle = rad(W / 2, H / 2, 700, [[0, hexA(C.blue, .22 * la)], [1, 'rgba(0,0,0,0)']]); g.fillRect(0, 0, W, H);
         logo(W / 2, H / 2 - 30, lerp(760, 820, k), 1, {glow: hexA(C.blue2, .6), glowR: 50});
-        T(t < 10 ? 'Connecting to your desk' : 'Your partner in health', W / 2, H / 2 + 120, 40, {w: 500, a: 'center', c: C.soft});
-        if (t < 10) bar(W / 2 - 220, H / 2 + 170, 440, 10, eo(seg(t, .2, BOOT)), C.blue);
+        T(t < EARLY ? 'Connecting to your desk' : 'Your partner in health', W / 2, H / 2 + 120, 40, {w: 500, a: 'center', c: C.soft});
+        if (t < EARLY) bar(W / 2 - 220, H / 2 + 170, 440, 10, eo(seg(t, ON + .2, BOOT)), C.blue);
         else { T(`${p.height.toFixed(1)} in  ·  ${Math.round(p.tilt)}°  ·  synced`, W / 2, H / 2 + 180, 32, {w: 600, a: 'center', c: C.blue2}); }
       });
       vignette(.45);

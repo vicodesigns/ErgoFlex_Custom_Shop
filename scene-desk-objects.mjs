@@ -1,7 +1,8 @@
 import {headphoneSocketTransform,headphoneHookState,finishDeskHeadphones} from './desk-headphone-hook.mjs';
 import * as THREE from 'three';
 import { DoubleItemTap, cloneItem, nodeSnapshot } from './scene-item-editing.mjs?v=item-gumball-clipboard-20261016';
-import { surfaceDrop } from './item-surface-drop.mjs';
+import { surfaceDrop, usable, mmOf } from './item-surface-drop.mjs';
+import { dropToSurface as dropShared } from './experience/drop-to-surface.mjs';
 import { notebookTransform } from './notebook-transform.mjs';
 import { matchingHighschoolDefault } from './hbhs-design.mjs';
 import { DeskAutoStow } from './desk-auto-stow.mjs?v=middle-shelf-stow-20261026';
@@ -156,9 +157,19 @@ export class SceneDeskObjects {
         if(Number.isFinite(values.scale))o.scale.copy(item.baseScale).multiplyScalar(Math.max(1,Math.min(500,values.scale))/100);
         o.updateMatrixWorld(true);m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
     }
-    dropToSurface(){
+    // mode 'drop': straight down. 'flat': level it first, then drop. 'align': tilt it to the surface under it, then drop
+    // (the Director's shared experience/drop-to-surface.mjs; mm = world units per millimetre from the item's parent).
+    dropToSurface(mode='drop'){
         const m=this.manager,item=this.current;
         if(!this.editing||m.ctx.objectsEditable?.()===false||!item||!shown(item.obj)||m.playing||m.recording||this.drag)return false;
+        if(mode!=='drop'){
+            const before=m.serialize(),o=item.obj;o.updateWorldMatrix(true,false);
+            const r=dropShared({THREE,scene:m.ctx.scene,obj:o,mode,mm:mmOf(o),skip:x=>!usable(x)});
+            if(!r.ok){m.ctx.status(r.reason);return true;}
+            if(m.active.product&&o.userData.accessoryId)item.saved.custom=true;
+            m.persist();m.ctx.edit?.(before,m.serialize());m.sync();
+            m.ctx.status(item.saved.label+(mode==='align'?' tilted to the surface below and placed on it.':' levelled and placed on the surface below.')+' Ctrl+Z to undo.');return true;
+        }
         const target=surfaceDrop([item.obj],m.ctx.scene);
         if(!target){m.ctx.status('No surface below this item.');return true;}
         if(Math.abs(target.delta)<=target.epsilon)return true;

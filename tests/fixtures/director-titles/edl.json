@@ -1,0 +1,35 @@
+{
+ "fps": 30,
+ "dissolve": 1.5,
+ "total": 59.35,
+ "chapters": [
+  {
+   "index": 1,
+   "id": "awaken",
+   "duration": 44.85,
+   "start": 0.0,
+   "end": 44.85
+  },
+  {
+   "index": 2,
+   "id": "rise",
+   "duration": 16,
+   "start": 43.35,
+   "end": 59.35
+  },
+  {
+   "index": 3,
+   "id": "create",
+   "duration": 22.5,
+   "start": 57.85,
+   "end": 80.35
+  }
+ ],
+ "transitions": [
+  [
+   0.8,
+   -0.35
+  ],
+  0.8
+ ]
+}

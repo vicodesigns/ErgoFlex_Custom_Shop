@@ -1,0 +1,578 @@
+{
+ "id": "oilers",
+ "notes": "Opens square on the HOME OF THE OILERS spirit wall (banner, surf-team longboard, trophies), glides along the window wall over the APA set-design desk past the bell-tower view, turns to the teacher corner and settles on the demonstration desk with a slow push. 11 s -> 14 s for the reveal (no moves, status or offsets to shift). The desk's task chair is moved 1.26 m toward the window so it no longer covers the hero desk. HQ (Vico 16:52, his new low opening on the spirit wall: 'the background, which looks like a blank wall, needs to be improved, and the desk should be put into storage mode, nothing on top of it, and fully tilted'): the APA set-design review desk stays in the app's 65 deg Storage Mode at 43.5 in for the whole chapter (set.sceneDeskPoses, film-fx: the app's rig pose and auto-stow, so its desktop is put away as in Studio); the featured demonstration desk the camera settles on keeps working, so no move and no status light. The room's open front (x 12.07, the misty void left of the opening frame) is closed for this chapter with a wall in the room's beige, charcoal wainscot and orange rail, five HBHS black-and-orange lockers, team balls and a trophy on top, two bulletin boards and team photos. | Final pass (FP3): opener clutter cleared (the student work table, its two stools, its activity dressing and backpack stood in front of the lockers in the 0 s frame); the broad-leaf planter right of the demonstration desk swapped for a ficus; pencil cup on the teacher's desk (decor P3); the black Leap chair moved 0.4 m further (x 0.37 -> 0.77) so it leaves the hero frame's lower left.",
+ "set": {
+  "seconds": 14,
+  "cameraPlan": {
+   "easeIn": false,
+   "easeOut": false,
+   "keys": [
+    {
+     "at": 0,
+     "position": [
+      9.8,
+      2.35,
+      4.6
+     ],
+     "target": [
+      9.95,
+      2.95,
+      7.4
+     ],
+     "fov": 42,
+     "label": "Home of the Oilers: banner, surf-team longboard, trophies"
+    },
+    {
+     "at": 2.6,
+     "position": [
+      7.6,
+      2.5,
+      4.05
+     ],
+     "target": [
+      6.0,
+      2.45,
+      7.4
+     ],
+     "fov": 42,
+     "label": "Over the APA set-design desk"
+    },
+    {
+     "at": 5.4,
+     "position": [
+      4.4,
+      2.6,
+      3.6
+     ],
+     "target": [
+      -0.6,
+      2.1,
+      7.0
+     ],
+     "fov": 42,
+     "label": "Along the window: bell tower, toward the teacher corner"
+    },
+    {
+     "at": 8.4,
+     "position": [
+      1.7,
+      2.5,
+      3.1
+     ],
+     "target": [
+      -2.7,
+      1.55,
+      6.0
+     ],
+     "fov": 42,
+     "label": "Turn to the demonstration desk"
+    },
+    {
+     "at": 11.2,
+     "position": [
+      0.75,
+      2.4,
+      3.25
+     ],
+     "target": [
+      -2.95,
+      1.5,
+      5.8
+     ],
+     "fov": 42
+    },
+    {
+     "at": 14,
+     "position": [
+      0.2,
+      2.33,
+      3.45
+     ],
+     "target": [
+      -3.0,
+      1.48,
+      5.78
+     ],
+     "fov": 41.5,
+     "label": "Settle on the demonstration desk"
+    }
+   ]
+  },
+  "sceneDeskPoses": [
+   {
+    "desk": "^station-project-review$|APA set and costume",
+    "height": 43.5,
+    "tilt": 65
+   }
+  ]
+ },
+ "sceneEditsAdd": [
+  {
+   "match": "^Task chair$",
+   "near": [
+    -1.222,
+    5.452,
+    0.3
+   ],
+   "position": [
+    0.77,
+    0,
+    1.2
+   ]
+  },
+  {
+   "add": {
+    "asset": "kenney-furniture-wall"
+   },
+   "id": "oilfw",
+   "match": "^Added prop:kenney-furniture-wall#oilfw$",
+   "label": "Front wall",
+   "parent": "room",
+   "position": [
+    0,
+    0,
+    12.14
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    7.7,
+    1.9,
+    1
+   ]
+  },
+  {
+   "match": "^Added prop:kenney-furniture-wall#oilfw$",
+   "clone": true,
+   "material": {
+    "color": "#e9e2d3",
+    "roughness": 0.9
+   }
+  },
+  {
+   "add": {
+    "asset": "kenney-furniture-paneling"
+   },
+   "id": "oilwn",
+   "match": "^Added prop:kenney-furniture-paneling#oilwn$",
+   "label": "Front wainscot",
+   "parent": "room",
+   "position": [
+    0,
+    0,
+    12.074
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    15.4,
+    1.143,
+    0.5
+   ]
+  },
+  {
+   "match": "^Added prop:kenney-furniture-paneling#oilwn$",
+   "clone": true,
+   "material": {
+    "color": "#2a2c30",
+    "roughness": 0.8
+   }
+  },
+  {
+   "add": {
+    "asset": "kenney-furniture-paneling"
+   },
+   "id": "oilrl",
+   "match": "^Added prop:kenney-furniture-paneling#oilrl$",
+   "label": "Front orange rail",
+   "parent": "room",
+   "position": [
+    0,
+    1.345,
+    12.07
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    15.4,
+    0.025,
+    0.6
+   ]
+  },
+  {
+   "match": "^Added prop:kenney-furniture-paneling#oilrl$",
+   "clone": true,
+   "material": {
+    "color": "#e8721c",
+    "roughness": 0.6
+   }
+  },
+  {
+   "add": {
+    "asset": "campus-lockers-compact-hbhs"
+   },
+   "id": "oilk0",
+   "match": "^Added prop:campus-lockers-compact-hbhs#oilk0$",
+   "label": "HBHS lockers",
+   "parent": "room",
+   "position": [
+    -6.62,
+    0,
+    11.9125
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "campus-lockers-compact-hbhs"
+   },
+   "id": "oilk1",
+   "match": "^Added prop:campus-lockers-compact-hbhs#oilk1$",
+   "label": "HBHS lockers",
+   "parent": "room",
+   "position": [
+    -5.81,
+    0,
+    11.9125
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "campus-lockers-compact-hbhs"
+   },
+   "id": "oilk2",
+   "match": "^Added prop:campus-lockers-compact-hbhs#oilk2$",
+   "label": "HBHS lockers",
+   "parent": "room",
+   "position": [
+    -5.0,
+    0,
+    11.9125
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "campus-lockers-compact-hbhs"
+   },
+   "id": "oilm0",
+   "match": "^Added prop:campus-lockers-compact-hbhs#oilm0$",
+   "label": "HBHS lockers",
+   "parent": "room",
+   "position": [
+    -2.4,
+    0,
+    11.9125
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "campus-lockers-compact-hbhs"
+   },
+   "id": "oilm1",
+   "match": "^Added prop:campus-lockers-compact-hbhs#oilm1$",
+   "label": "HBHS lockers",
+   "parent": "room",
+   "position": [
+    -1.59,
+    0,
+    11.9125
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "basketball"
+   },
+   "id": "oilbb",
+   "match": "^Added prop:basketball#oilbb$",
+   "label": "Basketball",
+   "parent": "room",
+   "position": [
+    -6.75,
+    1.86,
+    11.9125
+   ],
+   "rotation": [
+    0,
+    30,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "gold-award"
+   },
+   "id": "oilga",
+   "match": "^Added prop:gold-award#oilga$",
+   "label": "Golden ball award",
+   "parent": "room",
+   "position": [
+    -5.85,
+    1.86,
+    11.9125
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "football-match"
+   },
+   "id": "oilfb",
+   "match": "^Added prop:football-match#oilfb$",
+   "label": "Match football",
+   "parent": "room",
+   "position": [
+    -5.15,
+    1.86,
+    11.9125
+   ],
+   "rotation": [
+    0,
+    70,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "cork-board"
+   },
+   "id": "oilcb",
+   "match": "^Added prop:cork-board#oilcb$",
+   "label": "Bulletin board",
+   "parent": "room",
+   "position": [
+    -5.8,
+    2.75,
+    12.078
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    1.7,
+    1.7,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "photo-frames"
+   },
+   "id": "oilpf",
+   "match": "^Added prop:photo-frames#oilpf$",
+   "label": "Team photos",
+   "parent": "room",
+   "position": [
+    -3.4,
+    2.6,
+    12.078
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    1.5,
+    1.5,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "cork-board"
+   },
+   "id": "oilcc",
+   "match": "^Added prop:cork-board#oilcc$",
+   "label": "Bulletin board",
+   "parent": "room",
+   "position": [
+    -2.0,
+    2.75,
+    12.078
+   ],
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "scale": [
+    1.5,
+    1.5,
+    1
+   ]
+  },
+  {
+   "match": "^Student work table$",
+   "near": [
+    6.789,
+    3.131,
+    0.3
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "match": "^Student investigation & work in progress",
+   "near": [
+    6.789,
+    3.131,
+    0.3
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "match": "^Task chair$",
+   "near": [
+    7.649,
+    3.598,
+    0.25
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "match": "^Task chair$",
+   "near": [
+    7.649,
+    2.663,
+    0.25
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "match": "^Prop:backpack$",
+   "near": [
+    7.015,
+    2.761,
+    0.25
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "match": "^Prop:ergoflex-plant-2$",
+   "near": [
+    -5.582,
+    5.054,
+    0.3
+   ],
+   "hide": true,
+   "fp3": true
+  },
+  {
+   "add": {
+    "asset": "ficus"
+   },
+   "id": "oilfc",
+   "match": "^Added prop:ficus#oilfc$",
+   "label": "Ficus (planter swap)",
+   "parent": "room",
+   "position": [
+    -5.054,
+    0,
+    -5.582
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "fp3": true
+  }
+ ],
+ "screenShift": 2,
+ "accessoriesAdd": [
+  {
+   "id": "ergoflex-pencil-cup",
+   "x": 600,
+   "z": -230,
+   "rotation": 0
+  }
+ ]
+}

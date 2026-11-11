@@ -74,7 +74,9 @@ export function cleanSceneDeskVariant(v) {
         ...(cleanDeskStyle(v.style)?{style:cleanDeskStyle(v.style)}:{}),
         ...(accessories?{accessories,accessoryFinishes:finishes}:{}),
         ...(deskId(v.peripheralRecipe)?{peripheralRecipe:v.peripheralRecipe}:{}),
-        ...(v.peripheralSetup==='product-reference-v1'?{peripheralSetup:v.peripheralSetup}:{}),
+        ...(['product-reference-v1','child-growth-v1'].includes(v.peripheralSetup)?{peripheralSetup:v.peripheralSetup}:{}),
+        ...(v.childDecorRevision===2?{childDecorRevision:2}:{}),
+        ...([1,2].includes(v.loungeDesignRevision)?{loungeDesignRevision:v.loungeDesignRevision}:{}),
         ...(v.classroomDesign==='hbhs-mixed-classroom-v1'?{classroomDesign:v.classroomDesign}:{}),
         ...(v.shelfStation==='shelf-first-v1'?{shelfStation:v.shelfStation}:{}),
         ...(['occ','hbhs'].includes(v.productArtwork?.id) && ['48x30','60x30'].includes(v.productArtwork.size) && Number.isSafeInteger(v.productArtwork.revision) && v.productArtwork.revision>=0

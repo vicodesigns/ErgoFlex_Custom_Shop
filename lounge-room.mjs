@@ -1,5 +1,9 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
+import {loungeDesign} from './lounge-design.mjs';
+import {buildLoungeDetails} from './lounge-reset-detail.mjs';
+import {buildContemporaryLounge} from './lounge-contemporary.mjs';
 
 const tiers = [
     ['apartment', 'Apartment living lounge', 3600, 4200, 2600],
@@ -10,20 +14,20 @@ const tiers = [
 ];
 export const LOUNGE_LAYOUTS = Object.fromEntries(tiers.map(([id, name, width, depth, height], tier) => {
     const back = -1700, front = back + depth;
-    const desk = [-width / 2 + (tier ? 1250 : 1100), back + 900];
-    const loungeZ = front - (tier ? 1500 : 1200), sofaX = -width / 2 + (tier ? 540 : 460), tableX = -width / 2 + (tier ? 1630 : 1320);
+    const desk = [0, back + 1000];
+    const loungeZ = front - (tier ? 1500 : 1200), sofaX = -width / 2 + (tier ? 540 : 460), tableX = -width / 2 + (tier ? 1700 : 1460);
     const props = [
-        { id: 'kenney-furniture-chair-cushion', at: [desk[0], 0, desk[1] + 980], turn: 180 },
+        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180 },
         { id: tier ? 'sofa-fabric' : 'sofa-leather-wood', at: [sofaX, 0, loungeZ], turn: 90 },
         { id: 'coffee-table', at: [tableX, 0, loungeZ], turn: 90 },
-        { id: 'game-controller', at: [tableX + 60, 391.2, loungeZ - 230], turn: 90 },
+        { id: 'game-controller', at: [tableX + 60, 402, loungeZ - 210], turn: 90 },
         { id: 'journal', at: [tableX - 80, 391.2, loungeZ + 175], turn: 85 },
-        { id: 'tea-cup', at: [tableX + 140, 391.2, loungeZ + 220] },
+        { id: 'tea-cup', at: [tableX + 160, 391.2, loungeZ + 220] },
         { id: 'samsung-neo-tv', at: [width / 2 - 200, 650, loungeZ], turn: -90 },
         { id: 'arcade-orbit-runner', at: [width / 2 - 520, 0, back + 560], turn: -90 },
         { id: 'decor-plant2', at: [0, 0, front - 240] }
     ];
-    if (tier) props.push({ id: 'jukebox', at: [width / 2 - 560, 0, back + (tier >= 2 ? 2700 : 1770)], turn: -90 });
+    if (tier) props.push({ id: 'jukebox', at: [width / 2 - 560, 0, back + (tier >= 2 ? 2700 : 1490)], turn: -90 });
     if (tier >= 2) props.push(
         { id: 'arcade-pixel-garden', at: [width / 2 - 520, 0, back + 1600], turn: -90 },
         { id: 'armchair-poppi', at: [width / 2 - 900, 0, front - 690], turn: -135 },
@@ -31,25 +35,45 @@ export const LOUNGE_LAYOUTS = Object.fromEntries(tiers.map(([id, name, width, de
     );
     if (tier >= 3) props.push(
         { id: 'foosball', at: [tier === 4 ? 2400 : 600, 0, front - (tier === 4 ? 2300 : 3700)] },
-        { id: 'bar-stool-brass', at: [-width / 2 + 920, 0, back + 3200] },
-        { id: 'bar-stool-brass', at: [-width / 2 + 920, 0, back + 3900] },
-        { id: 'kenney-furniture-kitchen-coffee-machine', at: [-width / 2 + 350, 930, back + 3380], turn: 90 }
+        { id: 'bar-stool-brass', at: [-width / 2 + 1050, 0, back + 3950] },
+        { id: 'bar-stool-brass', at: [-width / 2 + 1050, 0, back + 4650] },
+        { id: 'kenney-furniture-kitchen-coffee-machine', at: [-width / 2 + 350, 930, back + 4130], turn: 90 }
     );
     if (tier === 4) props.push({ id: 'arcade-night-drive', at: [width / 2 - 560, 0, back + 3650], turn: -90 });
-    return [id, { id, name, width, depth, height, back, desk, loungeZ, sofaX, tableX, tier, props,
+    return [id, { id, baseLayoutId:id,style:'earthy',name:'Earthy · '+name, width, depth, height, back, desk, loungeZ, sofaX, tableX, tier, props,barZ:back+4300,
+        groovePoses:{morning:{dx:0,dz:120,yaw:.04},afternoon:{dx:0,dz:0,yaw:0},evening:{dx:0,dz:80,yaw:0},night:{dx:0,dz:80,yaw:0},party:{dx:0,dz:240,yaw:-.08}},
+        initialDeskPostures:{morning:{height:43.5,tilt:-5},afternoon:{height:28,tilt:0},evening:{height:28,tilt:0},night:{height:28,tilt:0},party:{height:43.5,tilt:-5}},
         daylight: [-width / 2 + 100, back + 2400] }];
 }));
+export const LOUNGE_STYLES={contemporary:'Ultra-contemporary',earthy:'Earthy & textured'};
+for(const base of Object.values(LOUNGE_LAYOUTS)){
+ const id=base.id+'contemporary',props=base.props.filter(p=>!/^arcade-|^jukebox$|^foosball$|^bar-stool-brass$/.test(p.id)).map(p=>({...p,at:[...p.at]}));
+ const sofaX=base.tier?base.sofaX:-base.width/2+540,tableX=base.tier?base.tableX:-base.width/2+1650;
+ if(!base.tier){for(const p of props){if(p.id==='sofa-leather-wood'){p.id='sofa-fabric';p.at[0]=sofaX;}if(['coffee-table','game-controller','journal','tea-cup'].includes(p.id))p.at[0]+=tableX-base.tableX;}}
+ if(base.tier>=2)for(const placement of props){if(placement.id==='armchair-poppi'){placement.at=[tableX+1200,0,base.loungeZ+750];placement.turn=-135;}if(placement.id==='decor-plant2')placement.at=[base.width/2-700,0,base.back+base.depth-240];}
+ LOUNGE_LAYOUTS[id]={...base,id,sofaX,tableX,style:'contemporary',name:'Contemporary · '+({apartment:'Apartment lounge',house:'Home lounge & cinema',spacious:'Gallery lounge & media',premium:'Social lounge & games room',executive:'Private entertainment suite'}[base.id]),props};
+}
+export const loungeLayoutsForStyle=style=>Object.fromEntries(Object.entries(LOUNGE_LAYOUTS).filter(([,l])=>l.style===style));
+export const loungeLayoutIdForStyle=(id,style='contemporary')=>(LOUNGE_LAYOUTS[id]?.baseLayoutId||id||'apartment')+(style==='contemporary'?'contemporary':'');
 export const loungeLayoutById = id => LOUNGE_LAYOUTS[id] || LOUNGE_LAYOUTS.apartment;
-export const loungeLayoutForSize = size => LOUNGE_LAYOUTS[size === '60x30' ? 'house' : 'apartment'];
+export const loungeLayoutForSize = (size,style='contemporary') => LOUNGE_LAYOUTS[loungeLayoutIdForStyle(size === '60x30' ? 'house' : 'apartment',style)];
 // colors: [warm practicals, media bias, arcade neon]. sun/sunColor/sunLength drive the
 // window's light pool on the floor, fire the hearth glow and neon the arcade cove.
 export const LOUNGE_MODES = {
-    morning: { label: 'Morning', description: 'Coffee & daylight · standing desk for a fresh start', key: '#fff0d6', fill: '#dceaf2', accent: '#d8d7b4', power: 1.6, ambient: .48, bounce: .65, exposure: 1.07, sky: ['#9cc2dc', '#f1e2c2'], practical: .25, wash: .18, colors: ['#efcd9c', '#b8d4c4', '#9fd3cc'], neon: .12, sun: .3, sunColor: '#fff0d4', sunLength: 1500, sunShift: -260, fire: 0, height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
-    afternoon: { label: 'Afternoon', description: 'Reading & conversation · relaxed seated desk', key: '#fff2dc', fill: '#e0e9f1', accent: '#e1d3b7', power: 1.25, ambient: .45, bounce: .6, exposure: 1.08, sky: ['#9fc0db', '#ebe6d6'], practical: .4, wash: .35, colors: ['#efd5ae', '#c9d6c6', '#a8d0c8'], neon: .18, sun: .2, sunColor: '#fff4e2', sunLength: 950, sunShift: 120, fire: .08, height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
-    evening: { label: 'Evening', description: 'Golden-hour listening · warm lamps and cabinet lights', key: '#ffbf7c', fill: '#c6cde0', accent: '#f4a764', power: 1.1, ambient: .27, bounce: .34, exposure: 1.1, sky: ['#7b6f9f', '#f6a35d'], practical: 1, wash: .75, colors: ['#ffc785', '#f0b98a', '#ff9f7a'], neon: .45, sun: .42, sunColor: '#ffad5c', sunLength: 2000, sunShift: 420, fire: .75, height: 28, tilt: 0, offset: [0, 70], yaw: 0, leds: true, color: '#ffd8a3' },
-    night: { label: 'Movie night', description: 'Low-glare cinema · soft media bias lights', key: '#a9bde0', fill: '#b4c3dc', accent: '#8ea3dc', power: .14, ambient: .15, bounce: .18, exposure: 1.12, sky: ['#0d1a2e', '#2d4262'], practical: .5, wash: 1.15, colors: ['#f0be86', '#7f9fe0', '#8d8ff0'], neon: .5, sun: 0, sunColor: '#9fb6e6', sunLength: 900, sunShift: 0, fire: 1, height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: true, color: '#9bb8e8' },
-    party: { label: 'Game night', description: 'Arcade & friends · desk turned toward the room', key: '#d9cbe6', fill: '#c2d2ea', accent: '#d59ade', power: .4, ambient: .25, bounce: .3, exposure: 1.12, sky: ['#2e3a62', '#8f6f9c'], practical: .85, wash: 1.2, colors: ['#ffc98f', '#c792ea', '#5fe0d6'], neon: 1.45, sun: 0, sunColor: '#d6b6f0', sunLength: 900, sunShift: 0, fire: .55, height: 43.5, tilt: -5, offset: [60, 260], yaw: -12, leds: true, color: '#d0a2ee' }
+    morning: { label: 'Morning', description: 'Coffee & daylight · standing desk for a fresh start', key: '#fff0d6', fill: '#dceaf2', accent: '#d8d7b4', power: 1.45, ambient: .4, bounce: .58, exposure: 1.04, sky: ['#9cc2dc', '#f1e2c2'], practical: .12, wash: .14, colors: ['#efcd9c', '#b8d4c4', '#9fd3cc'], neon: .025, sun: .28, sunColor: '#fff0d4', sunLength: 1500, sunShift: -260, fire: 0, height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
+    afternoon: { label: 'Afternoon', description: 'Reading & conversation · relaxed seated desk', key: '#fff2dc', fill: '#e0e9f1', accent: '#e1d3b7', power: 1.18, ambient: .4, bounce: .56, exposure: 1.04, sky: ['#9fc0db', '#ebe6d6'], practical: .24, wash: .24, colors: ['#efd5ae', '#c9d6c6', '#a8d0c8'], neon: .045, sun: .2, sunColor: '#fff4e2', sunLength: 950, sunShift: 120, fire: 0, height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
+    evening: { label: 'Evening', description: 'Golden-hour listening · warm lamps and cabinet lights', key: '#ffe0b7', fill: '#cad2dd', accent: '#d9b38c', power: .8, ambient: .28, bounce: .36, exposure: 1.05, sky: ['#7b6f9f', '#f6a35d'], practical: .78, wash: .46, colors: ['#ffc785', '#f0b98a', '#ff9f7a'], neon: .15, sun: .26, sunColor: '#ffad5c', sunLength: 2000, sunShift: 420, fire: .48, height: 28, tilt: 0, offset: [0, 70], yaw: 0, leds: true, color: '#ffd8a3' },
+    night: { label: 'Movie night', description: 'Low-glare cinema · soft media bias lights', key: '#bac9dc', fill: '#c4cddd', accent: '#95a7bf', power: .17, ambient: .18, bounce: .23, exposure: 1.05, sky: ['#0d1a2e', '#2d4262'], practical: .2, wash: .48, colors: ['#f0be86', '#7f9fe0', '#8d8ff0'], neon: .08, sun: 0, sunColor: '#9fb6e6', sunLength: 900, sunShift: 0, fire: .26, height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: true, color: '#9bb8e8' },
+    party: { label: 'Game night', description: 'Arcade & friends · desk turned toward the room', key: '#d9cbe6', fill: '#c2d2ea', accent: '#d59ade', power: .46, ambient: .28, bounce: .34, exposure: 1.06, sky: ['#2e3a62', '#8f6f9c'], practical: .65, wash: .7, colors: ['#ffc98f', '#c792ea', '#5fe0d6'], neon: .68, sun: 0, sunColor: '#d6b6f0', sunLength: 900, sunShift: 0, fire: .32, height: 43.5, tilt: -5, offset: [60, 260], yaw: -12, leds: true, color: '#c6b3dd' }
 };
+export function loungeModesForStyle(style){
+ if(style!=='contemporary')return LOUNGE_MODES;
+ const light={
+  evening:{key:'#fff0dc',fill:'#d7e1e7',accent:'#c7b99e',power:.9,ambient:.4,bounce:.52,practical:.84,wash:.52,colors:['#ffe0af','#91c1c6','#b68d9f'],neon:.28,description:'Evening lounge · cognac leather, walnut and warm conversation pools'},
+  party:{label:'Party lounge',key:'#ffe7d4',fill:'#cbd8e6',accent:'#bc94b0',power:.74,ambient:.36,bounce:.46,practical:.9,wash:.78,colors:['#ffd39b','#80bec8','#be88a6'],neon:.7,color:'#64d7d7',description:'After hours · amber bar light, petrol accents and a colorful social lounge'}
+ };
+ return Object.fromEntries(Object.entries(LOUNGE_MODES).map(([id,m])=>[id,{...m,...light[id]}]));
+}
 function texture(draw, width = 512, height = 512) {
     const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; draw(canvas.getContext('2d'), width, height);
     const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4; return map;
@@ -67,10 +91,12 @@ const PRINT_ART = [
     (c, s) => { c.fillStyle = '#e6ebe6'; c.fillRect(0, 0, s, s); c.lineWidth = s * .035; ['#3f6d86', '#5f8fa2', '#93b6be'].forEach((col, i) => { c.strokeStyle = col; c.beginPath(); for (let x = 0; x <= s; x += 4) c.lineTo(x, s * (.35 + i * .17) + Math.sin(x * .03 + i) * s * .05); c.stroke(); }); }
 ];
 export function buildLoungeRoom(room, root, layout, helpers) {
+    if(layout.style==='contemporary')return buildContemporaryLounge(room,root,layout,helpers,loungeModesForStyle('contemporary'));
     const { material, mesh, box, rod, sphere, markSceneAsset } = helpers;
     const { width: w, depth: d, height: h, back: bz, tier, loungeZ } = layout, front = bz + d;
-    const cream = material('#ffffff', { roughness: .92 }), sage = material('#5f776d', { roughness: .85 });
-    const dark = material('#293b3d', { roughness: .7 }), brass = material('#b7975c', { metalness: .75, roughness: .32 });
+    const design=loungeDesign(layout);
+    const cream = material(design.wall, { roughness: .96 }), sage = material(design.feature, { roughness: .95 });
+    const dark = material(design.dark, { roughness: .62 }), brass = material(design.metal, { metalness: .84, roughness: .36 });
     const trim = material('#ebe4d5', { roughness: .8 });
     // Repeated dressing (slats, records, books, leaves, fringe) is instanced:
     // one draw call per batch, with per-instance colour on a white base material.
@@ -116,11 +142,11 @@ export function buildLoungeRoom(room, root, layout, helpers) {
         instanced(parent, cyl, tint, stems.map(({ rot, len }) => ({ at: along(base, rot, len / 2), size: [3, len, 3], rot, color: '#a58d66' })));
         instanced(parent, ball, tint, stems.map(({ rot, len }) => ({ at: along(base, rot, len + 30), size: [24, 80, 24], rot, color: '#eadfc6' }))); };
     const leafMat = material('#ffffff', { roughness: .62, side: THREE.DoubleSide }), tint = material('#ffffff', { roughness: .8 }), glaze = material('#ffffff', { roughness: .32 });
-    const woodMap = texture((c, tw, th) => { c.fillStyle = '#836548'; c.fillRect(0, 0, tw, th); for (let i = 0; i < 6; i++) { c.fillStyle = ['#977658','#816346','#a1815f'][i%3];c.fillRect(i*tw/6,0,tw/6-2,th); c.strokeStyle = '#35251532'; for(let j=0;j<16;j++){const x=i*tw/6+j*5;c.beginPath();c.moveTo(x,0);c.bezierCurveTo(x+5,th*.3,x-4,th*.7,x,th);c.stroke();} } },512,1024);
-    const walnut = material('#ffffff', { map: woodMap, roughness: .62 }), slatWood = material('#ffffff', { map: woodMap, roughness: .66 });
+    const woodMap = texture((c, tw, th) => { c.fillStyle = '#e5ded5'; c.fillRect(0, 0, tw, th); for(let j=0;j<110;j++){const x=j*tw/110;c.strokeStyle=j%3?'#88796916':'#fff9ec25';c.lineWidth=.7+j%3*.3;c.beginPath();c.moveTo(x,0);c.bezierCurveTo(x+5,th*.3,x-4,th*.7,x,th);c.stroke();} },512,1024);
+    const walnut = material(design.wood, { map: woodMap, roughness: .58 }), slatWood = material(design.wood, { map: woodMap, roughness: .64 });
     // Wide oak planks with staggered butt joints, knots and a satin finish.
     const plankMap = texture((c, tw, th) => {
-        const cols = 8, bw = tw / cols, len = th / 2, tones = ['#93704f', '#8a684b', '#9b7855', '#8e6c4d', '#a07d5a', '#86654a'];
+        const cols = 8, bw = tw / cols, len = th / 2, tones = design.floor;
         c.fillStyle = '#4b3526'; c.fillRect(0, 0, tw, th);
         for (let i = 0; i < cols; i++) for (let k = -1; k < 3; k++) {
             const y0 = rand(i * 3.7) * len + k * len, x0 = i * bw, tone = tones[Math.floor(rand(i * 11 + k * 5) * tones.length)];
@@ -138,18 +164,13 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     box(root,[w,30,d],[0,-15,bz+d/2],floorMat);
     // Hand-knotted wool rug: ivory field, terracotta and ochre borders, diamond lattice.
     const rugMap = texture((c, tw, th) => {
-        c.fillStyle = '#e2d5bd'; c.fillRect(0, 0, tw, th);
+        c.fillStyle = design.rug; c.fillRect(0, 0, tw, th);
         for (let i = 0; i < 9000; i++) { c.fillStyle = rand(i) > .5 ? 'rgba(120,96,70,.09)' : 'rgba(255,255,255,.12)'; c.fillRect(rand(i * 3.1) * tw, rand(i * 5.7) * th, 3, 3); }
         const band = (inset, width, col) => { c.strokeStyle = col; c.lineWidth = width; c.strokeRect(inset, inset, tw - inset * 2, th - inset * 2); };
-        band(30, 30, '#a55a3c'); band(66, 9, '#3f4b47'); band(90, 16, '#c79a57'); band(112, 5, '#3f4b47');
+        band(35, 10, design.accent); band(68, 3, design.accent);
         c.save(); c.beginPath(); c.rect(122, 122, tw - 244, th - 244); c.clip();
-        const step = 128; c.lineWidth = 6; c.strokeStyle = '#46504b';
-        for (let n = -th; n < tw + th; n += step) { c.beginPath(); c.moveTo(n, 0); c.lineTo(n + th, th); c.stroke(); c.beginPath(); c.moveTo(n, th); c.lineTo(n + th, 0); c.stroke(); }
-        for (let i = -10; i < 10; i++) for (let j = 0; j < 20; j++) {
-            const x = (i + j + 1) * step / 2, y = (j - i) * step / 2, r = step * .17; if (x < 0 || x > tw || y < 0 || y > th) continue;
-            c.fillStyle = (i + j) % 3 === 0 ? '#b7623f' : (i + j) % 3 === 1 ? '#7f9384' : '#d0a35e';
-            c.beginPath(); c.moveTo(x, y - r); c.lineTo(x + r, y); c.lineTo(x, y + r); c.lineTo(x - r, y); c.fill();
-        }
+        c.globalAlpha=.18;c.lineWidth=9;c.strokeStyle=design.accent;
+        for(let i=0;i<4;i++){c.beginPath();c.moveTo(tw*.2+i*70,th*.2);c.bezierCurveTo(tw*.8,th*.25+i*70,tw*.15,th*.7,tw*.8,th*.8-i*35);c.stroke();}c.globalAlpha=1;
         c.restore();
     }, 1024, 1024);
     const rugSize = tier ? 2700 : 2250, rugX = -w/2+(tier?1430:1190);
@@ -158,6 +179,24 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     for (const side of [-1, 1]) for (let x = rugX - rugSize / 2 + 30; x < rugX + rugSize / 2 - 20; x += 24) fringe.push({ at: [x, 1.5, loungeZ + side * (rugSize / 2 + 30)], size: [7, 3, 60 + rand(x) * 18], rot: [0, (rand(x * 3) - .5) * .25, 0], color: '#e8dcc6' });
     instanced(root, unit, tint, fringe);
     const group = (id,name,at=[0,0,0],turn=0,parent=root) => {const g=new THREE.Group();g.name=name;g.position.set(...at);g.rotation.y=turn;parent.add(g);g.userData.propId=id;g.userData.sceneAssetName=name;markSceneAsset(g,{key:`lounge:${layout.id}:fixture:${id}`});return g;};
+    room.migrateSavedTransform=(object,transform)=>{
+        const id=object.userData.propId,oldTableX=-w/2+(tier?1630:1320),sources={
+            'coffee-table':[oldTableX,0,loungeZ],
+            'game-controller':[oldTableX+60,391.2,loungeZ-230],
+            'journal':[oldTableX-80,391.2,loungeZ+175],
+            'tea-cup':[oldTableX+140,391.2,loungeZ+220],
+            'kenney-furniture-chair-cushion':[-w/2+(tier?1250:1100),0,bz+1880],
+            'lounge-bar':[-w/2+350,0,bz+3550],
+            'bar-stool-brass':[-w/2+920,0,bz+(Math.abs(object.position.z-(bz+3950))<10?3200:3900)],
+            'kenney-furniture-kitchen-coffee-machine':[-w/2+350,930,bz+3380],
+            ...(tier===0?{'reading-lamp':[layout.sofaX+140,0,loungeZ-1270]}:{}),
+            ...(tier===1?{'listening-station':[w/2-230,0,bz+2585],'jukebox':[w/2-560,0,bz+1770]}:{})
+        },old=sources[id];
+        if(!old||!transform?.p||!old.every((v,i)=>Math.abs(transform.p[['x','y','z'][i]]-v)<.1))return transform;
+        if(!transform.s||!['x','y','z'].every(a=>Math.abs(transform.s[a]-object.scale[a])<.00001))return transform;
+        const q=object.quaternion;if(!transform.q||Math.abs(q.dot(new THREE.Quaternion(transform.q.x,transform.q.y,transform.q.z,transform.q.w)))<.99999)return transform;
+        return {...transform,p:{x:object.position.x,y:object.position.y,z:object.position.z}};
+    };
     // Emissive channels: 0 warm practicals, 1 media bias, 2 arcade neon.
     const glowMats = [], glowMat = channel => glowMats[channel] ||= material('#efd0a3', { emissive: '#efd0a3', emissiveIntensity: .3 });
     const strip=(parent,size,at,channel=0)=>{const o=box(parent,size,at,glowMat(channel),2);o.castShadow=false;return o;};
@@ -175,9 +214,9 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     const cell = (i, inset = 0) => { const u = (i % 4) / 4, v = 1 - (Math.floor(i / 4) + 1) / 2; return [u + inset, v + inset, u + .25 - inset, v + .5 - inset]; };
     const back=new THREE.Group();back.name='Lounge walnut and sage feature wall';root.add(back);
     box(back,[w,h,80],[0,h/2,bz-40],sage);box(back,[w,100,30],[0,50,bz+15],walnut);
-    const slats=[];for(let x=-w/2+45;x<w/2;x+=85)slats.push({at:[x,h/2+20,bz+11],size:[28,h-150,22]});instanced(back,unit,slatWood,slats,true);
+    const slats=[];for(let x=-1060;x<=1060;x+=85)slats.push({at:[x,h/2+20,bz+11],size:[28,h-150,22]});instanced(back,unit,slatWood,slats,true);
     strip(back,[w-100,12,12],[0,h-120,bz+35]);room.walls.push({obj:back,axis:'x',limit:bz*root.scale.x});
-    const artW=tier?1600:1240,art=group('lounge-landscape','Original evening landscape',[tier>=2?0:layout.desk[0],h-540,bz+40],0,back);
+    const artW=tier?1600:1240,art=group('lounge-landscape','Original evening landscape',[tier>=2?0:layout.desk[0],h-680,bz+40],0,back);
     const artMap=texture((c,tw,th)=>{
         const sky=c.createLinearGradient(0,0,0,th*.7);sky.addColorStop(0,'#c9b7a8');sky.addColorStop(.6,'#ecc18b');sky.addColorStop(1,'#f3d5a2');c.fillStyle=sky;c.fillRect(0,0,tw,th);
         const sun=c.createRadialGradient(tw*.7,th*.36,0,tw*.7,th*.36,th*.55);sun.addColorStop(0,'rgba(255,236,190,.95)');sun.addColorStop(.2,'rgba(250,206,138,.55)');sun.addColorStop(1,'rgba(250,206,138,0)');c.fillStyle=sun;c.fillRect(0,0,tw,th);
@@ -210,7 +249,7 @@ export function buildLoungeRoom(room, root, layout, helpers) {
         ledge(shelf,length,[[280,380,2,'#2c2a29'],[220,290,6,'#b7975c'],[300,300,3,'#7a5a3e'],[180,240,7,'#e9e2d4']]);
     }
     if(tier>=2){
-        const hearth=group('electric-hearth','Stone electric fireplace and hearth',[0,0,bz+160]);
+        const hearthX=-w*.32,hearth=group('electric-hearth','Stone electric fireplace and hearth',[hearthX,0,bz+160]);
         const stone=material('#b3a690',{roughness:.88});stone.userData.roomSurface='stone';
         box(hearth,[1760,70,450],[0,35,70],dark,4);box(hearth,[1600,750,300],[0,445,0],stone,5);box(hearth,[1400,360,12],[0,430,157],dark,5);
         const flameMap=texture((c,tw,th)=>{c.fillStyle='#120c0a';c.fillRect(0,0,tw,th);const ember=c.createLinearGradient(0,th*.55,0,th);ember.addColorStop(0,'rgba(0,0,0,0)');ember.addColorStop(1,'#ff7a2e');c.fillStyle=ember;c.fillRect(0,0,tw,th);for(let i=0;i<26;i++){c.fillStyle=['#f6c062','#e9813c','#ffdb8a'][i%3];c.beginPath();const x=i*tw/26;c.moveTo(x,th-30);c.quadraticCurveTo(x+50,th*.65,x+25,th*(.15+i%4*.12));c.quadraticCurveTo(x+10,th*.8,x-22,th-30);c.fill();}for(let i=0;i<9;i++){c.fillStyle='#3a2a22';c.beginPath();c.ellipse(60+i*tw/9,th-24,60,14,0,0,Math.PI*2);c.fill();}},1024,256);
@@ -222,12 +261,12 @@ export function buildLoungeRoom(room, root, layout, helpers) {
         instanced(hearth,cyl,tint,candles);instanced(hearth,ball,flame,candles.map(c=>({at:[c.at[0],880+c.size[1]+16,60],size:[9,18,9]})));
         instanced(hearth,cyl,glaze,[{at:[460,1000,40],size:[60,240,60],color:'#3f5f5c'},{at:[560,950,70],size:[48,140,48],color:'#c8b79a'},{at:[640,975,30],size:[40,190,40],color:'#b86a48'}],true);
         pampas(hearth,[460,1110,40],7,260,11);
-        ledge(group('mantel-photos','Mantel photos',[-120,880,bz+160+30],0,root),470,[[200,260,5,'#2c2a29'],[150,200,1,'#b7975c']]);
+        ledge(group('mantel-photos','Mantel photos',[hearthX-120,880,bz+160+30],0,root),470,[[200,260,5,'#2c2a29'],[150,200,1,'#b7975c']]);
         quads(hearth,additive(radial,'fire',.9),[{at:[0,7,560],size:[1700,560],rot:[-Math.PI/2,0,0]},{at:[0,430,168],size:[1500,560]}]);
     }
     const right=new THREE.Group();right.name='Lounge media and arcade wall';root.add(right);
     // Warm limewash plaster with soft clouding.
-    const plasterMap=texture((c,tw,th)=>{c.fillStyle='#ddd3c0';c.fillRect(0,0,tw,th);for(let i=0;i<70;i++){const g=c.createRadialGradient(0,0,0,0,0,60+rand(i)*120);g.addColorStop(0,rand(i*3)>.5?'rgba(244,236,222,.22)':'rgba(190,175,152,.12)');g.addColorStop(1,'rgba(0,0,0,0)');c.save();c.translate(rand(i*7)*tw,rand(i*11)*th);c.scale(1.6,1);c.fillStyle=g;c.fillRect(-200,-200,400,400);c.restore();}},512,512);
+    const plasterMap=texture((c,tw,th)=>{c.fillStyle='#f4f2ec';c.fillRect(0,0,tw,th);for(let i=0;i<70;i++){const g=c.createRadialGradient(0,0,0,0,0,60+rand(i)*120);g.addColorStop(0,rand(i*3)>.5?'rgba(255,253,247,.15)':'rgba(170,160,145,.06)');g.addColorStop(1,'rgba(0,0,0,0)');c.save();c.translate(rand(i*7)*tw,rand(i*11)*th);c.scale(1.6,1);c.fillStyle=g;c.fillRect(-200,-200,400,400);c.restore();}},512,512);
     cream.map=plasterMap;
     box(right,[80,h,d],[w/2+40,h/2,bz+d/2],cream);box(right,[20,100,d],[w/2-10,50,bz+d/2],walnut);
     box(right,[22,28,d],[w/2-11,2080,bz+d/2],walnut);box(right,[70,70,d],[w/2-35,h-35,bz+d/2],trim);
@@ -240,7 +279,7 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     if(tier>=3){
         // Framed print gallery between the arcade lineup and the media wall.
         const gw=tier===4?1900:1500,gallery=group('print-gallery','Framed print gallery',[w/2-10,1150,bz+(tier===4?5100:3850)],-Math.PI/2,right),frames=[],cards=[];
-        [[-gw*.34,560,420,560,0],[0,520,360,360,3],[gw*.34,580,420,560,6],[-gw*.34,0,420,420,4],[0,0,360,500,1],[gw*.34,40,420,420,7]].forEach(([x,y,fw,fh,art],i)=>{
+        [[-gw*.34,280,390,540,0],[0,280,330,430,3],[gw*.34,280,390,540,7]].forEach(([x,y,fw,fh,art],i)=>{
             frames.push({at:[x,y,12],size:[fw,fh,24],color:['#2c2a29','#b7975c','#7a5a3e'][i%3]});cards.push({at:[x,y,25],size:[fw-60,fh-60],uv:cell(art,.004)});});
         instanced(gallery,unit,tint,frames,true);quads(gallery,printMat,cards);
     }
@@ -250,6 +289,8 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     box(left,[20,100,a-bz],[-w/2+10,50,(a+bz)/2],walnut);box(left,[20,100,front-b],[-w/2+10,50,(front+b)/2],walnut);box(left,[70,70,d],[-w/2+35,h-35,bz+d/2],trim);
     const skyCanvas=document.createElement('canvas');skyCanvas.width=skyCanvas.height=512;const skyMap=new THREE.CanvasTexture(skyCanvas);skyMap.colorSpace=THREE.SRGBColorSpace;
     const pane=mesh(left,new THREE.PlaneGeometry(ww,wh),new THREE.MeshBasicMaterial({map:skyMap}),[-w/2-52,low+wh/2,wz]);pane.rotation.y=Math.PI/2;pane.castShadow=pane.receiveShadow=false;
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'city'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     for(const z of [a,wz,b])box(left,[65,wh+50,30],[-w/2+10,low+wh/2,z],walnut);for(const y of [low,low+wh])box(left,[65,30,ww+60],[-w/2+10,y,wz],walnut);box(left,[170,30,ww+80],[-w/2+50,low-15,wz],walnut,3);
     const curtains=[];for(const z of [a-75,b+75])for(let i=0;i<5;i++)curtains.push({at:[-w/2+60+(i%2)*14,1200,z-60+i*30],size:[24,2100,24],color:'#bdb39d'});
     instanced(left,new THREE.CylinderGeometry(1,1,1,10),material('#ffffff',{roughness:.95}),curtains,true);
@@ -294,7 +335,7 @@ export function buildLoungeRoom(room, root, layout, helpers) {
         const dressing=instanced(object,pillowGeo,pillow,pillows.map(([x,col,yaw])=>({at:[x,seat+.16,bk+.06],size:[.18,.17,.075],rot:[-.3,yaw,(x>0?-1:1)*.06],color:col})),true);dressing.name='Lounge throw pillows';
         const fold=box(object,[.4,.07,.3],[arm-.24,seat+.035,fr-.19],knit,.025);fold.rotation.y=.12;fold.name='Lounge knit throw';
     };
-    const lamp=group('reading-lamp','Brass reading lamp',[layout.sofaX+140,0,loungeZ-(tier?1550:1270)]);
+    const lamp=group('reading-lamp','Satin-metal reading lamp',[layout.sofaX+(tier>=3?1000:tier?140:240),0,loungeZ-(tier>=3?1300:tier?1550:1270)]);
     mesh(lamp,new THREE.CylinderGeometry(110,125,20,24),brass,[0,10,0]);rod(lamp,[0,20,0],[0,1550,0],12,brass);
     mesh(lamp,new THREE.CylinderGeometry(130,200,250,24,1,true),shadeMat,[0,1580,0]);strip(lamp,[60,8,60],[0,1460,0]);
     mesh(lamp,new THREE.CylinderGeometry(132,132,6,24),brass,[0,1706,0]);
@@ -310,7 +351,7 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     const succulent=[];foliage(succulent,[93,602,58],12,{length:90,width:30,seed:3});instanced(side,ball,leafMat,succulent);
     sphere(side,[8,16,8],[-50,686,-40],flame).castShadow=false;
     // Listening station: record cabinet, turntable and album wall.
-    const station=tier<2?group('listening-station','Walnut record cabinet and turntable',[w/2-230,0,tier?bz+2585:bz+1500],-Math.PI/2):group('listening-station','Walnut record cabinet and turntable',[(880+arcadeX)/2,0,bz+230]);
+    const station=tier<2?group('listening-station','Walnut record cabinet and turntable',[w/2-230,0,tier?bz+2385:bz+1500],-Math.PI/2):group('listening-station','Walnut record cabinet and turntable',[(880+arcadeX)/2,0,bz+230]);
     instanced(station,unit,slatWood,[{at:[0,568,0],size:[920,24,410]},{at:[0,122,0],size:[900,24,400]},{at:[-440,345,0],size:[24,430,400]},{at:[440,345,0],size:[24,430,400]},{at:[0,345,0],size:[20,430,390]},{at:[0,345,-194],size:[880,430,12]}],true);
     instanced(station,cyl,brass,[-400,400].flatMap(x=>[-160,160].map(z=>({at:[x,55,z],size:[11,110,11]}))));
     const SLEEVES=['#2f2a29','#b86a48','#d6a756','#3f5f5c','#e9e2d4','#6f8a7a','#7c3f52','#26323c','#c8b79a','#9b4f3f'],records=[];
@@ -324,29 +365,29 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     pampas(station,[260,810,-20],9,360,2);
     const covers=group('album-wall','Album wall above the record cabinet',[0,1220,-228],0,station);
     box(covers,[940,26,60],[0,0,30],walnut,2);box(covers,[940,30,10],[0,22,58],walnut,2);
-    quads(covers,printMat,[[-310,0],[0,4],[310,5]].map(([x,i])=>({at:[x,13+150,30],size:[290,290],rot:[-.12,0,0],uv:cell(i)})));
-    box(covers,[760,26,200],[0,520,100],walnut,3);
+    quads(covers,printMat,(tier?[[-310,0],[0,4],[310,5]]:[[-160,0],[160,4]]).map(([x,i])=>({at:[x,13+150,30],size:[290,290],rot:[-.12,0,0],uv:cell(i)})));
+    if(tier){box(covers,[760,26,200],[0,520,100],walnut,3);
     instanced(covers,unit,tint,[...Array(16)].map((_,i)=>({at:[-340+i*24+(i>9?40:0),533+90+(rand(i)-.5)*30,100],size:[20,170+rand(i*5)*40,150+rand(i)*30],rot:[0,0,i===15?.32:0],color:SLEEVES[(i*3)%SLEEVES.length]})),true);
     instanced(covers,cyl,glaze,[{at:[230,533+55,100],size:[60,110,60],color:'#b86a48'}],true);
     const pothos=[];for(let i=0;i<24;i++){const vine=i%3,t=Math.floor(i/3)/8;pothos.push({at:[200+vine*40+Math.sin(i)*20,533+70-t*560,212+vine*8+Math.cos(i*1.3)*10],size:[30,4,22],rot:[.9,i*1.7,.4],color:GREENS[i%GREENS.length]});}
-    foliage(pothos,[230,533+110,122],10,{length:130,width:50,seed:7});instanced(covers,ball,leafMat,pothos);
+    foliage(pothos,[230,533+110,122],10,{length:130,width:50,seed:7});instanced(covers,ball,leafMat,pothos);}
     const arcSign=group('arcade-sign','PLAY TOGETHER illuminated sign',[w/2-36,2250,bz+1100],-Math.PI/2,right);
     const signMap=texture((c,tw,th)=>{c.fillStyle='#1f2b33';c.fillRect(0,0,tw,th);c.strokeStyle='#6fd6cf';c.lineWidth=6;c.shadowColor='#6fd6cf';c.shadowBlur=16;c.strokeRect(22,22,tw-44,th-44);c.font='bold 64px sans-serif';c.textAlign='center';c.shadowColor='#ffcf8a';c.shadowBlur=22;c.fillStyle='#ffe2ad';c.fillText('PLAY TOGETHER',tw/2,102);},1024,160);
     const signMat=material('#ffffff',{map:signMap,emissive:'#ffffff',emissiveMap:signMap,emissiveIntensity:.4});
     box(arcSign,[tier?1800:1060,220,18],[0,0,0],brass,4);box(arcSign,[tier?1750:1010,175,4],[0,0,13],signMat);
     if(tier>=3){
-        const bar=group('lounge-bar','Walnut refreshments bar and display',[ -w/2+350,0,bz+3550],Math.PI/2);
+        const bar=group('lounge-bar','Walnut refreshments bar and display',[ -w/2+350,0,layout.barZ],Math.PI/2);
         box(bar,[1640,820,550],[0,440,0],walnut,4);box(bar,[1570,60,480],[0,30,0],dark);box(bar,[1740,50,650],[0,905,0],material('#ad9c81'),4);
         instanced(bar,unit,slatWood,[...Array(25)].map((_,i)=>({at:[-740+i*60,440,283],size:[22,760,15]})));
         box(bar,[1660,16,30],[0,935,320],brass,2);
         const bottles=[],caps=[],BOTTLES=['#65796a','#ac815c','#7c3f52','#c9a35b','#3f5f5c','#d9cbb0'];
-        for(const [row,y] of [[0,1530],[1,1970]])for(let i=0;i<11;i++){const tall=170+rand(i+row*20)*90,r=26+rand(i*3+row)*16,x=-700+i*140+(row?40:0);bottles.push({at:[x,y+17.5+tall/2,-80],size:[r,tall,r],color:BOTTLES[(i+row*3)%BOTTLES.length]});caps.push({at:[x,y+17.5+tall+20,-80],size:[11,40,11]});}
+        for(const [row,y] of [[0,1530],[1,1970]])for(let i=0;i<4;i++){const tall=170+rand(i+row*20)*90,r=26+rand(i*3+row)*16,x=-540+i*330+(row?60:0);bottles.push({at:[x,y+17.5+tall/2,-80],size:[r,tall,r],color:BOTTLES[(i+row*3)%BOTTLES.length]});caps.push({at:[x,y+17.5+tall+20,-80],size:[11,40,11]});}
         instanced(bar,cyl,material('#ffffff',{roughness:.22,metalness:.1}),bottles,true);instanced(bar,cyl,brass,caps);
         for(const y of [1530,1970]){box(bar,[1660,35,290],[0,y,-100],walnut,3);strip(bar,[1550,8,10],[0,y-24,45]);}
         instanced(bar,cyl,material('#e8eef0',{roughness:.12,metalness:.2}),[-420,-340,-260,380,450].map((x,i)=>({at:[x,930+(i<3?55:70),40+(i%2)*60],size:[i<3?36:30,i<3?110:140,i<3?36:30]})),true);
     }
     if(tier===4){
-        const pool=group('billiard-table','Original billiard table and cue stand',[1100,0,bz+3600]);
+        const pool=group('billiard-table','Original billiard table and cue stand',[1900,0,bz+3600]);
         for(const x of [-850,850])for(const z of [-450,450])box(pool,[140,650,140],[x,325,z],walnut,5);
         box(pool,[2280,230,1300],[0,695,0],walnut,8);box(pool,[2070,18,1090],[0,819,0],material('#3e7e72',{roughness:1}),5);
         for(const z of [-610,610])box(pool,[2190,70,85],[0,820,z],dark,8);for(const x of [-1100,1100])box(pool,[85,70,1140],[x,820,0],dark,8);
@@ -359,7 +400,7 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     for(let i=0;i<5;i++){const angle=i*Math.PI*2/5,x=center[0]+Math.cos(angle)*260,z=center[1]+Math.sin(angle)*260,y=h-500-i%2*100;rod(ceiling,[center[0],h,center[1]],[x,y,z],5,brass);sphere(ceiling,[95,95,95],[x,y-70,z],opal).castShadow=false;strip(ceiling,[40,8,40],[x,y-165,z]);}
     if(tier===4){
         // Billiard pendant: three green enamel shades on a brass bar.
-        const [px,pz]=[1100,bz+3600];rod(ceiling,[px-600,h,pz],[px-600,h-1650,pz],4,brass);rod(ceiling,[px+600,h,pz],[px+600,h-1650,pz],4,brass);box(ceiling,[1500,24,24],[px,h-1650,pz],brass,3);
+        const [px,pz]=[1900,bz+3600];rod(ceiling,[px-600,h,pz],[px-600,h-1650,pz],4,brass);rod(ceiling,[px+600,h,pz],[px+600,h-1650,pz],4,brass);box(ceiling,[1500,24,24],[px,h-1650,pz],brass,3);
         for(const x of [-550,0,550]){mesh(ceiling,new THREE.CylinderGeometry(70,210,170,28,1,true),material('#2f5e4f',{side:THREE.DoubleSide,roughness:.45,metalness:.3}),[px+x,h-1750,pz]);sphere(ceiling,[60,40,60],[px+x,h-1810,pz],opal).castShadow=false;}
     }
     const lights=[{at:[layout.desk[0],1800,layout.desk[1]-130],power:2.9,task:true},{at:[w/2-480,1250,loungeZ],power:3,channel:1},{at:[lamp.position.x,1450,lamp.position.z],power:2.6,task:true},{at:[tier>=3?-w/2+700:layout.tableX,1800,tier>=3?bz+3500:loungeZ],power:3.4}].map(spec=>{const light=new THREE.PointLight('#f3cf9e',0,4500*root.scale.x,2);light.position.set(...spec.at);root.add(light);return {...spec,light,power:spec.power*(root.scale.x*1000)**2};});
@@ -379,7 +420,7 @@ export function buildLoungeRoom(room, root, layout, helpers) {
         v.hills.slice(0,1).forEach(col=>{c.fillStyle=col;c.beginPath();c.moveTo(0,s);for(let x=0;x<=s;x+=8)c.lineTo(x,s*.62+Math.sin(x*.011)*22+Math.sin(x*.037)*8);c.lineTo(s,s);c.fill();});
         c.fillStyle=v.city;for(let i=0;i<16;i++){const bw=18+rand(i)*26,bh=40+rand(i*7)*110,x=i*34+rand(i*3)*10;c.fillRect(x,s*.78-bh,bw,bh+s*.3);if(v.windows)for(let wy=s*.78-bh+8;wy<s*.78;wy+=12)for(let wx=x+4;wx<x+bw-4;wx+=8)if(rand(wx*wy)>.55){c.fillStyle=`rgba(255,214,150,${v.windows*.9})`;c.fillRect(wx,wy,3,5);c.fillStyle=v.city;}}
         v.hills.slice(1).forEach((col,i)=>{c.fillStyle=col;c.beginPath();c.moveTo(0,s);for(let x=0;x<=s;x+=6)c.lineTo(x,s*(.8+i*.08)+Math.sin(x*.05+i)*10+(rand(Math.floor(x/18)+i*40)-.5)*16);c.lineTo(s,s);c.fill();});
-        skyMap.needsUpdate=true;
+        skyMap.needsUpdate=true; windowVista.setPhase(id);
         // Window light pool: two soft panes, skewed with the sun's sweep.
         const p=sunCanvas.getContext('2d');p.clearRect(0,0,256,256);p.filter='blur(7px)';const skew=mode.sunShift/(mode.sunLength||1)*.6,falloff=p.createLinearGradient(0,0,256,0);falloff.addColorStop(0,'#ffffff');falloff.addColorStop(.6,'rgba(255,255,255,.75)');falloff.addColorStop(1,'rgba(255,255,255,.1)');p.fillStyle=falloff;
         for(const [z0,z1] of [[.06,.47],[.53,.94]]){p.beginPath();p.moveTo(16,z0*256);p.lineTo(16,z1*256);p.lineTo(240,(z1+skew)*256);p.lineTo(240,(z0+skew)*256);p.fill();}
@@ -387,7 +428,10 @@ export function buildLoungeRoom(room, root, layout, helpers) {
         sunPool.scale.set(mode.sunLength,ww,1);sunPool.position.set(-w/2+180+mode.sunLength/2,7,wz+mode.sunShift*.25);sunPool.visible=mode.sun>0;
     };
     const tone={practical:()=>'#ffd29a',bias:m=>m.colors[1],neon:m=>m.colors[2],sun:m=>m.sunColor,fire:()=>'#ff9a4a'};
-    room.roomAtmosphere=(id,accent=1)=>{const mode=LOUNGE_MODES[id]||LOUNGE_MODES.afternoon;drawSky(mode,id);
+    const details=buildLoungeDetails({room,root,layout,helpers,materials:{walnut,brass,flame},groups:{left,right,back}}),originalDecorate=room.decorateProp;
+    room.decorateProp=(object,placement)=>{originalDecorate?.(object,placement);details.decorate(object,placement);};
+    let lastSky=null;
+    room.roomAtmosphere=(id,accent=1)=>{const mode=LOUNGE_MODES[id]||LOUNGE_MODES.afternoon;if(lastSky!==id){drawSky(mode,id);lastSky=id;}details.update(id);
         glowMats.forEach((mat,channel)=>{if(!mat)return;const color=mode.colors[channel]||mode.colors[0];mat.color.set(color);mat.emissive.set(color);mat.emissiveIntensity=.1+(channel===2?mode.neon:mode.wash)*accent;});
         practicals.forEach(({mat,k,fire})=>{mat.emissiveIntensity=fire?.15+mode.fire*1.4*accent:.05+k*mode.practical*accent;});
         signMat.emissiveIntensity=.15+mode.neon*.9*accent;
@@ -396,6 +440,6 @@ export function buildLoungeRoom(room, root, layout, helpers) {
         lights.forEach(spec=>{spec.light.color.set(spec.task?'#ffe0b6':mode.colors[spec.channel||0]);spec.light.intensity=spec.power*(spec.task?mode.practical:mode.wash)*accent;});root.userData.atmosphere=id;};
     interiorCraftFinishes(room,{ceramic:[glaze],linen:[shadeMat,pillow,knit],wood:[walnut,slatWood],metal:[brass]});
     // Explicit surface roles keep detail off artwork and imported models.
-    for (const [mat, surface] of [[cream, 'plaster'], [trim, 'plaster'], [sage, 'powder'], [dark, 'powder'], [brass, 'metal'], [walnut, 'wood'], [floorMat, 'wood']]) mat.userData.roomSurface = surface;
+    for (const [mat, surface] of [[cream, 'plaster'], [trim, 'plaster'], [sage, 'plaster'], [dark, 'powder'], [brass, 'metal'], [walnut, 'wood'], [floorMat, 'wood']]) mat.userData.roomSurface = surface;
     room.roomAtmosphere('afternoon');root.userData.dimensionsMm={width:w,depth:d,height:h};
 }

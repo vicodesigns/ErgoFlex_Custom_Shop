@@ -1,0 +1,376 @@
+{
+ "source": "/home/ergo/Downloads/Film-chapter-awaken-47-8-s- (2).json",
+ "seconds": 47.8,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    1.1243557917222935,
+    0.22029182931173952,
+    1.7860701540487618
+   ],
+   "target": [
+    0.09299999999999962,
+    0.179,
+    0.9720000000000002
+   ],
+   "fov": 24,
+   "label": "Wheel macro, desk dark"
+  },
+  {
+   "at": 1.8,
+   "position": [
+    1.4,
+    0.09,
+    1.3
+   ],
+   "target": [
+    0.172,
+    0.154,
+    0.969
+   ],
+   "fov": 24,
+   "label": "Wheels start"
+  },
+  {
+   "at": 2.0,
+   "position": [
+    1.4,
+    0.09,
+    1.3
+   ],
+   "target": [
+    0.172,
+    0.154,
+    0.969
+   ],
+   "fov": 24,
+   "label": "Wheels start copy"
+  },
+  {
+   "at": 4.4,
+   "position": [
+    3.2306734335452023,
+    0.7245842302833143,
+    1.9925220262495822
+   ],
+   "target": [
+    0.5787085020188099,
+    0.41111551341630403,
+    0.7892220156815152
+   ],
+   "fov": 25,
+   "label": "Roll lands, pull back"
+  },
+  {
+   "at": 5.0,
+   "position": [
+    3.2306734335452023,
+    0.7245842302833143,
+    1.9925220262495822
+   ],
+   "target": [
+    0.5787085020188099,
+    0.41111551341630403,
+    0.7892220156815152
+   ],
+   "fov": 25,
+   "label": "Roll lands, pull back copy"
+  },
+  {
+   "at": 6.6,
+   "position": [
+    5.066,
+    0.72,
+    3.126
+   ],
+   "target": [
+    0.315,
+    1.26,
+    0.41
+   ],
+   "fov": 31.5,
+   "label": "Whole desk framed: lights on"
+  },
+  {
+   "at": 7.2,
+   "position": [
+    5.066,
+    0.72,
+    3.126
+   ],
+   "target": [
+    0.315,
+    1.26,
+    0.41
+   ],
+   "fov": 31.5,
+   "label": "Whole desk framed: lights on copy"
+  },
+  {
+   "at": 9.4,
+   "position": [
+    4.983230546045883,
+    1.9955727517674275,
+    3.9339368349814827
+   ],
+   "target": [
+    0.46356440373003627,
+    1.2701102148725245,
+    0.22145059668161052
+   ],
+   "fov": 31.5,
+   "label": "Lift starts: foot rest lights"
+  },
+  {
+   "at": 13.0,
+   "position": [
+    4.338618130406764,
+    3.777147291078691,
+    4.7976968851038055
+   ],
+   "target": [
+    0.6597748132679785,
+    1.3664815568820323,
+    0.10643007048818752
+   ],
+   "fov": 32,
+   "label": "Desktop layer: crane with the rise"
+  },
+  {
+   "at": 14.4,
+   "position": [
+    4.338618130406764,
+    3.777147291078691,
+    4.7976968851038055
+   ],
+   "target": [
+    0.6597748132679785,
+    1.3664815568820323,
+    0.10643007048818752
+   ],
+   "fov": 32,
+   "label": "Desktop layer: crane with the rise copy"
+  },
+  {
+   "at": 15.4,
+   "position": [
+    3.363537087601809,
+    1.803577933065165,
+    4.449784282657693
+   ],
+   "target": [
+    0.33,
+    1.64,
+    0.22
+   ],
+   "fov": 32,
+   "label": "Full height, whole desk"
+  },
+  {
+   "at": 19.4,
+   "position": [
+    1.7267500027224754,
+    1.659882924854162,
+    4.264146942007215
+   ],
+   "target": [
+    0.39164669406793523,
+    1.525549724795617,
+    0.20344605479481864
+   ],
+   "fov": 32,
+   "label": "Full height, whole desk copy"
+  },
+  {
+   "at": 20.0,
+   "position": [
+    1.7267500027224754,
+    1.659882924854162,
+    4.264146942007215
+   ],
+   "target": [
+    0.39164669406793523,
+    1.525549724795617,
+    0.20344605479481864
+   ],
+   "fov": 32,
+   "label": "Full height, whole desk copy copy"
+  },
+  {
+   "at": 25.4,
+   "position": [
+    3.489407127954048,
+    2.4016009703350525,
+    5.4808190945029285
+   ],
+   "target": [
+    0.5191914010465724,
+    1.350067640661369,
+    0.15600136214083035
+   ],
+   "fov": 32,
+   "label": "Full height, whole desk copy copy"
+  },
+  {
+   "at": 26.05,
+   "position": [
+    3.489407127954048,
+    2.4016009703350525,
+    5.4808190945029285
+   ],
+   "target": [
+    0.5191914010465724,
+    1.350067640661369,
+    0.15600136214083035
+   ],
+   "fov": 32,
+   "label": "Full height, whole desk copy copy copy"
+  },
+  {
+   "at": 30.0,
+   "position": [
+    3.450865086738622,
+    1.6143908805010205,
+    5.385896773261421
+   ],
+   "target": [
+    0.5406299714238744,
+    1.4223512715807753,
+    0.012592262794990606
+   ],
+   "fov": 33,
+   "label": "3/4: red lowering"
+  },
+  {
+   "at": 31.25,
+   "position": [
+    3.450865086738622,
+    1.6143908805010205,
+    5.385896773261421
+   ],
+   "target": [
+    0.5406299714238744,
+    1.4223512715807753,
+    0.012592262794990606
+   ],
+   "fov": 33,
+   "label": "3/4: red lowering copy"
+  },
+  {
+   "at": 33.5,
+   "position": [
+    3.7707000932916337,
+    2.1677327214780444,
+    4.71756276496068
+   ],
+   "target": [
+    0.7093093174535957,
+    1.213576826305871,
+    -0.05388442936418742
+   ],
+   "fov": 33,
+   "label": "3/4: red lowering copy copy"
+  },
+  {
+   "at": 39.0,
+   "position": [
+    -4.130665016602991,
+    2.64729801028646,
+    4.810278241810546
+   ],
+   "target": [
+    -0.09350341039328895,
+    1.406949532588596,
+    0.9384948259647146
+   ],
+   "fov": 33.5,
+   "label": "Roll lands"
+  }
+ ],
+ "clips": [
+  {
+   "id": "op-roll",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 2,
+   "duration": 2.6,
+   "easing": "smooth",
+   "label": "Move forward",
+   "value": 12,
+   "direction": "forward"
+  },
+  {
+   "id": "op-lift",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 6.6000000000000005,
+   "duration": 7.1000000000000005,
+   "easing": "smooth",
+   "label": "Lift up",
+   "target": 45.5
+  },
+  {
+   "id": "op-tilt-down",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 15.9,
+   "duration": 4.399999999999999,
+   "easing": "smooth",
+   "label": "Tilt up",
+   "target": 25
+  },
+  {
+   "id": "op-turn",
+   "lane": "wheels",
+   "kind": "rotate",
+   "start": 19.700000000000003,
+   "duration": 6.7,
+   "easing": "smooth",
+   "label": "Rotating left",
+   "value": 100,
+   "direction": "left"
+  },
+  {
+   "id": "op-tilt-back",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 25.700000000000003,
+   "duration": 3.8,
+   "easing": "smooth",
+   "label": "Tilt level",
+   "target": 0
+  },
+  {
+   "id": "op-lower",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 27.5,
+   "duration": 4.300000000000001,
+   "easing": "smooth",
+   "label": "Lift down",
+   "target": 35
+  },
+  {
+   "id": "op-roll-lit",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 32.4,
+   "duration": 4.400000000000006,
+   "easing": "smooth",
+   "label": "Move forward",
+   "value": 24,
+   "direction": "forward"
+  },
+  {
+   "id": "op-lift-end",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 35.75,
+   "duration": 3.75,
+   "easing": "smooth",
+   "label": "Lift up",
+   "target": 48
+  }
+ ]
+}

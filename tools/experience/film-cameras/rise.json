@@ -1,0 +1,178 @@
+{
+ "id": "rise",
+ "notes": "HQ36: notebook open and wake kept (0-2 s). The pull-out cranes up to a high wide from the ficus corner while the desk rises (window, fairy lights, ficus, wall shelves with books, clock, pinboard), then comes down to the eye-line 3/4 at rest through the 1.25 s white (7.6-9.45). Lowering and evening: a slow push in (4.05 to 3.15 u) on the same side, so the pinboard, shelves and sideboard lamp come forward behind the desk. The front and the far side were tested: the chair blocks the desk there. HQ37 (Vico, 2026-11-06: the phone on the charging pad next to the notes, \"starts with a 100% charge icon animated, then the screen kind of loads ... charged overnight, that you have your notes, and then the whole scene starts\"): the ErgoFlex phone lies screen up on the desk's own wireless charger (the Power_7 insert of the desktop CAD, desk-local mm), long side along the notebook's edge, top toward the monitors; a desk object, so it rides the lift. Its glass plays screens/02-phone.mp4 (tools/experience/screens/scenes/ch02ph.js) additively: charge ring 0-1.2 s, lock screen 1.2-2.3, always-on dim from 3.4, tapered to 60 % by 5 s. The opening camera is unchanged.",
+ "set": {
+  "cameraPlan": {
+   "easeIn": false,
+   "easeOut": false,
+   "keys": [
+    {
+     "at": 0.0,
+     "position": [
+      -0.019,
+      1.657,
+      0.946
+     ],
+     "target": [
+      -0.49,
+      1.09,
+      0.88
+     ],
+     "fov": 30,
+     "label": "DAILY NOTES and the sleeping desk"
+    },
+    {
+     "at": 2.0,
+     "position": [
+      0.076,
+      1.724,
+      0.971
+     ],
+     "target": [
+      -0.5,
+      1.12,
+      0.88
+     ],
+     "fov": 31,
+     "label": "Desk wakes: lights and screens on"
+    },
+    {
+     "at": 4.2,
+     "position": [
+      1.4,
+      2.25,
+      1.5
+     ],
+     "target": [
+      -0.86,
+      1.32,
+      0.78
+     ],
+     "fov": 41,
+     "label": "Up and back off the notebook: desk top and window"
+    },
+    {
+     "at": 5.9,
+     "position": [
+      2.036,
+      2.4,
+      2.095
+     ],
+     "target": [
+      -1.008,
+      1.65,
+      0.706
+     ],
+     "fov": 48,
+     "label": "High wide: window, ficus, shelves, clock and pinboard"
+    },
+    {
+     "at": 7.6,
+     "position": [
+      2.79,
+      1.85,
+      2.306
+     ],
+     "target": [
+      -0.903,
+      1.55,
+      0.595
+     ],
+     "fov": 51,
+     "label": "Standing, white: camera at rest",
+     "hold": 1.85
+    },
+    {
+     "at": 12.65,
+     "position": [
+      2.235,
+      1.65,
+      2.156
+     ],
+     "target": [
+      -0.754,
+      1.36,
+      0.334
+     ],
+     "fov": 50.5,
+     "label": "Settle in as it lowers: shelves and pinboard behind"
+    },
+    {
+     "at": 16.0,
+     "position": [
+      1.88,
+      1.55,
+      2.057
+     ],
+     "target": [
+      -0.7,
+      1.3,
+      0.25
+     ],
+     "fov": 51,
+     "label": "Seated, evening window: slow push"
+    }
+   ]
+  }
+ },
+ "sceneEditsAdd": [
+  {
+   "match": "^Supplied_phone_part_1$",
+   "path": "Prop:ergoflex-phone",
+   "label": "Phone: no puck under its back",
+   "note": "The supplied iPhone's white-metal frame mesh (Mesh_1, Metal_Textured_White_#2) carries a MagSafe-style disc on the back plane (74 mm, file metres y 0-3.2 mm), 5.6 mm wider than the body on one side: lying screen up it shows as a white, silver-rimmed half-circle beside the phone. Cut out here; the frame stays.",
+   "dropFaces": {
+    "min": [
+     -0.0395,
+     -0.0005,
+     -0.048
+    ],
+    "max": [
+     0.035,
+     0.00325,
+     0.0268
+    ]
+   }
+  }
+ ],
+ "accessoriesAdd": [
+  {
+   "id": "ergoflex-phone",
+   "x": -390.2,
+   "y": 12.4,
+   "z": 191.2,
+   "rotation": 141,
+   "scale": 100
+  },
+  {
+   "id": "backpack-leather",
+   "role": "base-shelf",
+   "x": 320,
+   "z": 20,
+   "rotation": -18
+  }
+ ],
+ "screensAdd": [
+  {
+   "target": "phone",
+   "src": "exports/cinematic-intro-20261104-hq14/screens/02-phone.mp4",
+   "offset": 0,
+   "loop": false,
+   "blend": "add",
+   "brightness": [
+    [
+     0,
+     1
+    ],
+    [
+     3.4,
+     1
+    ],
+    [
+     5,
+     0.6
+    ]
+   ]
+  }
+ ]
+}

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { roomSurfaceFinish } from './room-polish.mjs?v=gym-black-red-m1-20261104';
+import { roomSurfaceFinish } from './room-polish.mjs?v=people-gym-20261110';
 
 // A single sun shadow map serves each measured room. Architectural coordinates
 // are millimetres; targets, shadow bounds and relief are converted through the
@@ -23,7 +23,13 @@ export function configureRoomLightRig(room, lights, mode) {
     const window = layout.daylight || [0, back];
     const outward = layout.daylight ? new THREE.Vector3(Math.sign(window[0]), 0, 0) : new THREE.Vector3(0, 0, -1);
     const along = new THREE.Vector3(-outward.z, 0, outward.x);
-    const angle = DAY_ANGLES[mode] || DAY_ANGLES.afternoon;
+    const contemporary = room.id === 'lounge' && layout.style === 'contemporary';
+    const workshopDay = room.id === 'workshop' && ['morning', 'afternoon'].includes(mode);
+    const angle = workshopDay ? {elevation:.95,sweep:-.22,softness:12} : contemporary && mode === 'evening' ? {elevation:1.0,sweep:.2,softness:16} : DAY_ANGLES[mode] || DAY_ANGLES.afternoon;
+    // Broad workshop daylight keeps the folding mechanism legible without
+    // letting hard lumber-rack shadows dominate the product shot.
+    if (workshopDay) { lights.key.intensity *= .78; lights.fill.intensity *= 1.35; }
+    if(contemporary && mode === 'evening'){lights.key.intensity *= .85;lights.fill.intensity *= 1.22;}
     const distance = Math.hypot(w, d, h) * 1.4;
     const direction = outward.clone().addScaledVector(along, angle.sweep);
     direction.y = angle.elevation;
@@ -55,7 +61,7 @@ export function configureRoomLightRig(room, lights, mode) {
     camera.near = Math.max(.01, -bounds.max.z - margin);
     camera.far = -bounds.min.z + margin;
     camera.updateProjectionMatrix();
-    shadow.radius = angle.softness;
+    shadow.radius = room.id === 'lounge' && layout.style === 'contemporary' ? 16 : angle.softness;
     shadow.normalBias = 1.2 * root.scale.x;
     shadow.bias = -.00012;
     shadow.needsUpdate = true;

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
 
@@ -321,6 +322,8 @@ export function buildMusicRoom(room, root, layout, helpers) {
     const skyCanvas = document.createElement('canvas'); skyCanvas.width = skyCanvas.height = 512;
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const pane = mesh(entry, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]);
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'city'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     for (const z of [a, wz, b]) box(entry, [65, wh + 50, 35], [-w / 2 + 8, low + wh / 2, z], trim);
     for (const y of [low, low + wh]) box(entry, [70, 35, ww + 50], [-w / 2 + 8, y, wz], trim);
@@ -615,7 +618,7 @@ export function buildMusicRoom(room, root, layout, helpers) {
         }
         c.fillStyle = dark ? '#0d1410' : dusk ? '#33362c' : '#5f7362';
         for (let x = 0; x < 540; x += 26) { c.beginPath(); c.arc(x, 512, 24 + (x * 7 % 13), Math.PI, 0); c.fill(); }
-        skyMap.needsUpdate = true;
+        skyMap.needsUpdate = true; windowVista.setPhase(modeId);
     };
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = MUSIC_MODES[modeId] || MUSIC_MODES.afternoon;

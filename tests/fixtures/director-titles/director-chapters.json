@@ -1,0 +1,27 @@
+{
+ "chapters": [
+  {
+   "n": 1,
+   "id": "awaken",
+   "title": "Level up your every day.",
+   "seconds": 44.85,
+   "page": "/tests/fixtures/director-film/director-ch01-awaken.html",
+   "shot": "/tests/fixtures/director-film/director-film/awaken.json"
+  },
+  {
+   "n": 2,
+   "id": "rise",
+   "title": "Your height. Your rhythm.",
+   "seconds": 16,
+   "page": "/tests/fixtures/director-titles/director-ch02-rise.html",
+   "shot": "/tests/fixtures/director-film/director-film/rise.json"
+  },
+  {
+   "n": 3,
+   "id": "create",
+   "title": "Create your way.",
+   "seconds": 8,
+   "page": "/tests/fixtures/director-film/director-ch03-create.html"
+  }
+ ]
+}

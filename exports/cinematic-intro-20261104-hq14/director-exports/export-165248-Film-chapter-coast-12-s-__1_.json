@@ -1,0 +1,285 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "10db6c7b-923f-4e82-bc3a-093518d45844",
+  "name": "Film chapter: coast (12 s)",
+  "client": "ErgoFlex intro film",
+  "volume": 0.32,
+  "updated": "2026-11-07T00:52:45.924Z",
+  "shots": [
+    {
+      "id": "coast",
+      "room": "occmedialab",
+      "kind": "room",
+      "seconds": 12,
+      "title": "Ideas become stories.",
+      "detail": "Your own edit suite inside a shared media lab.",
+      "preset": "occ",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 30,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "86afbf47-6f6c-4a57-b6c4-0cfa72d38af8",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 0,
+            "duration": 0.8,
+            "easing": "linear",
+            "label": "",
+            "target": -5
+          },
+          {
+            "id": "db2144e8-100f-4932-83c9-07f6e054a086",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 4.4,
+            "duration": 3,
+            "easing": "linear",
+            "label": "",
+            "target": 38
+          },
+          {
+            "id": "6f9864d3-8b26-40e2-a116-772647d8b6b9",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 9.600000000000001,
+            "duration": 1.5999999999999996,
+            "easing": "linear",
+            "label": "",
+            "target": 5
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "The lab: reel wall, signage, edit bays",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                2.440885415884126,
+                2.4343043506315922,
+                -6.074726224315202
+              ],
+              "target": [
+                -5.166542188972585,
+                1.4110994122313911,
+                0.9892677295392931
+              ],
+              "fov": 44,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.275,
+            "label": "Key 2 at 3.3 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.8689506955463182,
+                2.220011459976885,
+                -0.7762335830781629
+              ],
+              "target": [
+                -6.311189617949341,
+                1.2451292351670058,
+                0.6280769584745728
+              ],
+              "fov": 43.999940543075105,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.591667,
+            "label": "Key 3 at 7.1 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.445971928811657,
+                2.239503264410431,
+                3.4906173015960027
+              ],
+              "target": [
+                -4.300041550931697,
+                1.5499560287642828,
+                3.5998598587885033
+              ],
+              "fov": 42.9999303200776,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.841667,
+            "label": "Hero edit suite",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.31831579291601786,
+                2.509451022909987,
+                7.383016277522144
+              ],
+              "target": [
+                -2.734638596641161,
+                1.1871048992405668,
+                4.676342254737932
+              ],
+              "fov": 40.000429622497585,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.908333,
+            "label": "Hero edit suite copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -0.6954224586592272,
+                2.154603628348709,
+                6.777405610518962
+              ],
+              "target": [
+                -2.89985011426538,
+                1.4106027974177704,
+                4.722919827171998
+              ],
+              "fov": 39.999502785497576,
+              "aspect": 1.7774011299435029
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 1,
+            "label": "Key 5 at 12.0 s",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                -0.33389593443050636,
+                2.1628363972273497,
+                6.295850250379214
+              ],
+              "target": [
+                -2.90000000000016,
+                1.41999999999773,
+                4.7200000000007725
+              ],
+              "fov": 40,
+              "aspect": 1.7774011299435029
+            }
+          }
+        ]
+      },
+      "ledStatus": [
+        {
+          "at": 4.4,
+          "dur": 3,
+          "kind": "lift-up",
+          "fade": 1,
+          "fadeIn": 0.6
+        }
+      ],
+      "ledColor": "#ffffff",
+      "propEdits": [
+        {
+          "match": "^Workspace notebook$",
+          "path": "^Room:occmedialab > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Workspace notebook$",
+          "label": "Workspace notebook",
+          "hide": true
+        }
+      ],
+      "filmTitles": [
+        {
+          "id": "coast-0",
+          "rel_in": 2.65,
+          "rel_out": 7.95,
+          "eyebrow": "STUDIO",
+          "title": "Ideas become stories.",
+          "detail": "Your own edit suite inside a shared media lab.",
+          "shadow": {
+            "paths": [
+              {
+                "line": "eyebrow",
+                "points": [
+                  {
+                    "x": -5.6,
+                    "y": -129.51
+                  },
+                  {
+                    "x": 96.04,
+                    "y": -133.24
+                  },
+                  {
+                    "x": 98.64,
+                    "y": -99.91
+                  },
+                  {
+                    "x": -6.57,
+                    "y": -99.4
+                  }
+                ]
+              },
+              {
+                "line": "title",
+                "points": [
+                  {
+                    "x": -11.17,
+                    "y": -77.92
+                  },
+                  {
+                    "x": 538.08,
+                    "y": -80.6
+                  },
+                  {
+                    "x": 539.83,
+                    "y": -13.76
+                  },
+                  {
+                    "x": -12.61,
+                    "y": -13.27
+                  }
+                ]
+              },
+              {
+                "line": "detail",
+                "points": [
+                  {
+                    "x": -6.57,
+                    "y": 11.45
+                  },
+                  {
+                    "x": 537.23,
+                    "y": 20.29
+                  },
+                  {
+                    "x": 535.17,
+                    "y": 56.01
+                  },
+                  {
+                    "x": -4.33,
+                    "y": 59.31
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -33,6 +33,7 @@ const server = http.createServer((req, res) => {
         await page.waitForFunction(()=>ErgoFlex.wheelRigs.length===4 && getComputedStyle(document.querySelector('#loader')).display==='none',{timeout:120000});
         const result = await page.evaluate(async only => {
             const {ROOM_DESK_STYLES,cleanDeskStyle} = await import('./room-desk-styles.mjs?v=hbhs-classroom-20261013');
+            const {loungeDeskTheme}=await import('./lounge-design.mjs');
             const THREE=await import('three');
             const ef=ErgoFlex, failures=[], gymFailures=[], phases=['morning','afternoon','evening','night','party'];
             const canvas=document.createElement('canvas');canvas.width=canvas.height=8;
@@ -40,10 +41,11 @@ const server = http.createServer((req, res) => {
             ef.surfaceArtwork.setState({version:1,surfaces:{desktop:{logo:{name:'Test graphic',image:canvas.toDataURL('image/png')}}}});
             ef.surfaceArtwork.commit();
             const original=JSON.stringify(ef.currentConfig), artwork=JSON.stringify(ef.currentConfig.artwork);
-            for (const [id,style] of Object.entries(ROOM_DESK_STYLES)) {
+            for (const [id,defaultStyle] of Object.entries(ROOM_DESK_STYLES)) {
                 if(only && !only.includes(id))continue;
-                if (!cleanDeskStyle(style)) failures.push(id+': catalog palette invalid');
+                if (!cleanDeskStyle(defaultStyle)) failures.push(id+': catalog palette invalid');
                 ef.setRoomScene(id,false);await ef.workspaceRoom.ready;
+                const style=id==='lounge'?loungeDeskTheme(ef.workspaceRoom.roomLayout):defaultStyle;
                 for(const key of ['woodFinish','baseFinish','trimColor']) if(ef.currentConfig[key]!==style[key]) failures.push(id+': wrong '+key);
                 if(JSON.stringify(ef.currentConfig.artwork)!==artwork) failures.push(id+': artwork overwritten');
                 const kit=ef.workspaceAccessories.dressAssets().find(o=>o.userData.dayKit);

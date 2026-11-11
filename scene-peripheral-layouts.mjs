@@ -1,4 +1,4 @@
-import { SCENE_PRODUCT_REFERENCE } from './scene-product-reference.mjs';
+import { SCENE_PRODUCT_REFERENCE } from './scene-product-reference.mjs?v=20261110-stationary-organizer';
 import { cleanDeskObjects, seedSceneDeskSize } from './scene-desk-data.mjs?v=item-gumball-clipboard-20261016';
 
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -41,7 +41,7 @@ export function peripheralReference(recipe,size) {
 }
 export function seedScenePeripherals(state,sceneId,station='main') {
     state.artwork||={v:1,surfaces:{}};
-    if(state.peripheralSetup==='product-reference-v1')return state;
+    if(['product-reference-v1','child-growth-v1'].includes(state.peripheralSetup))return state;
     const recipe=scenePeripheralRecipe(sceneId,station),ref=peripheralReference(recipe,state.size);
     state.accessories=ref.config.accessories;
     state.accessoryFinishes=ref.config.accessoryFinishes||{};

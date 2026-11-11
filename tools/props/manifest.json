@@ -18344,6 +18344,430 @@
    "attribution": "Owner-supplied Atelier conference side chair model",
    "sizeNote": "Generated to real-world dimensions in metres; height and depth are not stretched. Frame, molded shell and upholstery are finished separately. Shared room chair footprints are tested at both desk widths.",
    "revision": "conference-chairs-20261015"
+  },
+  {
+   "id": "people-maya-sit-type",
+   "name": "Maya, typing at the desk (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-maya-stand-type",
+   "name": "Maya, typing at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-andre-sit-type",
+   "name": "Andre, typing at the desk (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-andre-stand-type",
+   "name": "Andre, typing at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-andre-stand-phone",
+   "name": "Andre, with the desk app on his phone",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-grace-sit-read",
+   "name": "Grace, reading in an armchair",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-kai-sit-write",
+   "name": "Kai, writing at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-zoe-sit-laptop",
+   "name": "Zoe, at a laptop",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-zoe-walk",
+   "name": "Zoe, walking with a backpack",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-hale-stand-present",
+   "name": "Mr Hale, presenting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-omar-wheel-type",
+   "name": "Omar, typing at the desk (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-omar-wheel-roll",
+   "name": "Omar, rolling (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-stand-paint",
+   "name": "Lin, painting at an easel",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sam-sit-game",
+   "name": "Sam, gaming at the desk",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sam-stand-type",
+   "name": "Sam, at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-kai-sit-controller",
+   "name": "Kai, on the sofa with a controller",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-priya-stretch",
+   "name": "Priya, stretching",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-jo-stand-work",
+   "name": "Jo, working at the bench",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-grace-cane-stand",
+   "name": "Grace, standing with a walking stick",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-ben-white-cane",
+   "name": "Ben, walking with a white cane",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-rosa-stand-type-low",
+   "name": "Rosa, at the desk on its lowest setting (standing)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-kai-wheel-type",
+   "name": "Kai, at the desk (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-zoe-stand-type",
+   "name": "Zoe, at a standing desk (41 in)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-mia-sit-listen",
+   "name": "Mia, listening at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-mia-sit-type",
+   "name": "Mia, typing at the desk (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-leo-sit-raise",
+   "name": "Leo, hand up at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-leo-sit-write",
+   "name": "Leo, writing at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-sit-laptop",
+   "name": "Noah, at a laptop",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-sit-type",
+   "name": "Noah, typing at the desk (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-sit-type",
+   "name": "Lin, typing at the desk (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-priya-sit-phone",
+   "name": "Priya, seated with her phone",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-omar-wheel-type-28",
+   "name": "Omar, typing at the desk at 28 in (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-sit-phone",
+   "name": "Lin, seated with her phone",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-ava-sit-write",
+   "name": "Ava, writing at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-eli-sit-listen",
+   "name": "Eli, listening at a table",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sofia-sit-laptop",
+   "name": "Sofia, at a laptop",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-maya-sit-type-30",
+   "name": "Maya, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-maya-stand-phone",
+   "name": "Maya, with the desk app on her phone",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-andre-sit-type-30",
+   "name": "Andre, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-sit-type-30",
+   "name": "Lin, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sam-sit-game-30",
+   "name": "Sam, gaming at the desk at 30 in",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-rosa-stand-type-30",
+   "name": "Rosa, at the desk at 30 in (standing)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-stand-type",
+   "name": "Lin, typing at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-sit-type-30",
+   "name": "Noah, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-stand-type",
+   "name": "Noah, typing at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-mia-sit-type-30",
+   "name": "Mia, typing at the desk at 30 in (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-mia-stand-type",
+   "name": "Mia, typing at the desk (standing)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-mia-sit-phone",
+   "name": "Mia, seated with her phone",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-kai-wheel-roll",
+   "name": "Kai, rolling (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-maya-stretch",
+   "name": "Maya, stretching at her desk",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-omar-wheel-watch",
+   "name": "Omar, watching a screen (wheelchair)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-maya-stand-wait",
+   "name": "Maya, on her feet while the desk moves",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-stand-wait",
+   "name": "Noah, on his feet while the desk moves",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
   }
  ],
  "screens": [

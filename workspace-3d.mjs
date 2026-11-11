@@ -7,40 +7,41 @@ import { atelierSceneDecor, bindDeskDecor, applyDeskDecorLighting } from './atel
 import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from './campus-scene-furniture.mjs?v=campus-furniture-20261014';
 import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atelier-scene-beds.mjs?v=atelier-beds-20261014';
 import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=gallery-bedroom-20261025';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=hbhs-product-classroom-20261014';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=campus-life-20261019';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=label-fix-20261110';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=people-vistas-20261110';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
-import { polishRoomProp } from './room-polish.mjs?v=gym-black-red-m1-20261104';
-import { RoomLife } from './room-life.mjs?v=gym-black-red-m1-20261104';
+import { polishRoomProp } from './room-polish.mjs?v=people-gym-20261110';
+import { RoomLife } from './room-life.mjs?v=people-gym-20261110';
+import { RoomPeople } from './room-people.mjs?v=room-people-20261110f';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
 import { migrateHighschoolFixtureTransform } from './hbhs-design.mjs';
 import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=gym-black-red-m1-20261104';
 import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=commons-home-comfort-20261024';
-import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=groove-routines-20261002';
+import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=people-vistas-20261110';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
-import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=gallery-bedroom-20261025';
+import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=people-vistas-20261110';
 import { buildChildRoom, CHILD_MODES, childLayoutForSize, childLayoutById } from './child-room.mjs?v=child-room-20261104';
-import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=gallery-bedroom-20261025';
-import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=groove-routines-20261002';
+import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=people-vistas-20261110';
+import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=people-vistas-20261110';
 import * as THREE from 'three';
 import { RoomBounceLight } from './room-bounce-light.mjs?v=commons-group-work-20261016';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-size-setups-20261012';
-import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrateHomeReadingFurniture } from './home-office.mjs?v=commons-home-comfort-20261024';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=gaming-sessions-20261022';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=curved-pair-20261012';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=artist-studio-20261025';
-import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=scene-desk-styling-20261010';
+import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrateHomeReadingFurniture } from './home-office.mjs?v=people-vistas-20261110';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=people-vistas-20261110';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=people-vistas-20261110';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=people-vistas-20261110';
+import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=people-vistas-20261110';
 
-import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=curved-pair-20261012';
-import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=gym-black-red-m1-20261104';
-import { themedGymLayout } from './gym-theme.mjs?v=gym-black-red-m1-20261104';
-import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=groove-routines-20261002';
-import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=milano-seating-20261014';
+import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=people-vistas-20261110';
+import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=people-gym-20261110';
+import { themedGymLayout } from './gym-theme.mjs?v=people-gym-20261110';
+import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=people-vistas-20261110';
+import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=people-vistas-20261110';
 
 // Original geometry in millimetres: X is user-right, Z is toward the user.
 // The CAD desk uses X for depth and Z for width. Only the mounting layer maps
@@ -94,16 +95,18 @@ export const disposeWorkspaceObject = disposeTree;
 // geometry and materials, so they are never disposed with a room.
 const PROP_BASE = './assets/props/';
 export const PROP_LIBRARY = {
-    loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(),
+    loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(), rigs: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=headphone-hook-20261103').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=people-vistas-20261110').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
         }
         return this.indexPromise;
     },
+    // After a model was built on request (the Director's People tab): read the index again.
+    reloadIndex() { this.indexPromise = fetch(PROP_BASE + 'index.json?t=' + Date.now(), { cache: 'no-store' }).then(r => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }).then(index => { this.index = index; return index; }); return this.indexPromise; },
     entry(id) { return this.index?.props.find(p => p.id === id) || null; },
     load(id) {
         if (!this.cache.has(id)) {
@@ -111,6 +114,29 @@ export const PROP_LIBRARY = {
             const entry = this.entry(id);
             const url = entry ? './' + entry.file + '?v=' + encodeURIComponent(entry.revision || 'prop-unit-scale-20261013') : `${PROP_BASE}${id}.glb?v=prop-unit-scale-20261013`;
             this.cache.set(id, new Promise((resolve, reject) => this.loader.load(url, gltf => {
+                // A model with a skeleton (the people: baked in their pose, which is the skeleton's rest pose) is used as
+                // plain meshes; the skinned original is kept for rigInstance() (the Director's pose fine-tuning).
+                let skinned = false; gltf.scene.traverse(obj => { if (obj.isSkinnedMesh) skinned = true; });
+                if (skinned) {
+                    const rig = gltf.scene, still = new THREE.Group(); still.name = rig.name; rig.updateMatrixWorld(true);
+                    rig.traverse(obj => {
+                        if (!obj.isMesh) return;
+                        obj.castShadow = true; obj.receiveShadow = true;
+                        // personLower: how much of each vertex hangs on the hips and legs, so a one-piece outfit can take one
+                        // colour above the waist and another below (room-people.mjs recolor)
+                        const g = obj.geometry, si = g.getAttribute('skinIndex'), sw = g.getAttribute('skinWeight');
+                        if (obj.isSkinnedMesh && si && sw && !g.getAttribute('personLower')) {
+                            const low = obj.skeleton.bones.map(bone => /^(pelvis|thigh|calf|foot|ball)(_|$)/.test(bone.name)), part = new Float32Array(si.count);
+                            for (let i = 0; i < si.count; i++) { let sum = 0; for (let k = 0; k < 4; k++) { const w = sw.getComponent(i, k); if (w && low[si.getComponent(i, k)]) sum += w; } part[i] = sum; }
+                            g.setAttribute('personLower', new THREE.BufferAttribute(part, 1));
+                        }
+                        const mesh = new THREE.Mesh(obj.geometry, obj.material); mesh.name = obj.name;
+                        // where the rest pose puts the vertices (a skinned mesh's own node is ignored; compressed positions are unpacked by the bind matrices)
+                        const bind = obj.isSkinnedMesh ? new THREE.Matrix4().multiplyMatrices(obj.skeleton.bones[0].matrixWorld, obj.skeleton.boneInverses[0]) : obj.matrixWorld;
+                        bind.decompose(mesh.position, mesh.quaternion, mesh.scale); still.add(mesh);
+                    });
+                    this.rigs.set(id, rig); gltf.scene = still;
+                }
                 gltf.scene.traverse(obj => {
                     if (!obj.isMesh) return;
                     obj.castShadow = true; obj.receiveShadow = true;
@@ -130,6 +156,16 @@ export const PROP_LIBRARY = {
             }, undefined, err => { this.cache.delete(id); this.failures.set(id, err); reject(err); })));
         }
         return this.cache.get(id);
+    },
+    // A fresh instance with its own skeleton (null for a model without one): bones by name under the returned root.
+    async rigInstance(id) {
+        const source = await this.load(id), rig = this.rigs.get(id); if (!rig) return null;
+        const { clone: skeletonClone } = await import('three/addons/utils/SkeletonUtils.js');
+        let clone = skeletonClone(rig); const factor = source.userData.propUnitCorrection;
+        if (factor) { const normalized = new THREE.Group(); clone.scale.multiplyScalar(factor); normalized.add(clone); normalized.userData.propUnitCorrection = factor; clone = normalized; }
+        clone.name = `Prop:${id}`; clone.userData.propId = id; clone.traverse(obj => { obj.userData.sharedProp = true; if (obj.isSkinnedMesh) obj.frustumCulled = false; });
+        clone.scale.setScalar(1000);
+        return clone;
     },
     // A fresh instance in millimetres, ready to be parented into a room.
     async instance(id) {
@@ -427,8 +463,10 @@ function prepareArtistPainting(root) {
     const uv = new Float32Array(position.count * 2), point = new THREE.Vector3();
     for (let i=0;i<position.count;i++) {
         point.fromBufferAttribute(position,i).applyMatrix4(toRoot);
-        uv[i*2]=(point.x-bounds.min.x)/(bounds.max.x-bounds.min.x);
-        uv[i*2+1]=(point.z-bounds.min.z)/(bounds.max.z-bounds.min.z);
+        // The easel's board faces the opposite way the painting image was
+        // authored, so the image reads upside down without this 180° turn.
+        uv[i*2]=1-(point.x-bounds.min.x)/(bounds.max.x-bounds.min.x);
+        uv[i*2+1]=1-(point.z-bounds.min.z)/(bounds.max.z-bounds.min.z);
     }
     geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2)); canvas.geometry=geometry; canvas.userData.sharedProp=false;
     const sheet=document.createElement('canvas'); sheet.width=1600;sheet.height=Math.round(1600*(bounds.max.z-bounds.min.z)/(bounds.max.x-bounds.min.x));
@@ -971,7 +1009,8 @@ export class WorkspaceAccessories {
     // follow the desktop as it lifts and tilts. Never priced, never exported
     // to AR, and replaced wholesale when the room changes.
     // dressing (optional, e.g. the gym black & red colourway): { accent, print, props: { propId: { materialName: colour | { color, untextured } } } }.
-    async dress(sceneId, dressing = null) {
+    // context (optional): { ageStage } for the child room's stage-specific dressing.
+    async dress(sceneId, dressing = null, context = {}) {
         const scene = ROOM_SCENES.find(s => s.id === sceneId);
         const token = ++this.dressToken;
         for (const mount of this.mounts.values()) {
@@ -979,8 +1018,10 @@ export class WorkspaceAccessories {
             for (const child of [...mount.dress.children]) disposeTree(child);
         }
         if (!scene || (!scene.desk?.length && !scene.shelf?.length && sceneId!=='childroom')) return;
-        const wanted = [...(scene.desk || []).map(p => ({ ...p, role: 'desktop' })), ...(scene.shelf || []).map(p => ({ ...p, role: 'shelf' }))]
-            .map((placement, index) => ({ ...placement, sceneAssetKey: `${scene.id}:${placement.role}:${index}:${placement.id}` }));
+        const placements=[...(scene.desk||[]).map(p=>({...p,role:'desktop'})),...(scene.shelf||[]).map(p=>({...p,role:'shelf'}))];
+        if(sceneId==='childroom'&&['preteen','teen','college'].includes(context.ageStage))placements.push({id:'ergoflex-headphones-2',role:'shelf',at:[430,0,-180]});
+        const assetPrefix=sceneId==='childroom'&&context.ageStage&&context.ageStage!=='early'?sceneId+':'+context.ageStage:sceneId;
+        const wanted=placements.map((placement,index)=>({...placement,sceneAssetKey:`${assetPrefix}:${placement.role}:${index}:${placement.id}`}));
         await PROP_LIBRARY.loadIndex();
         const loaded = await Promise.all(wanted.map(async placement => {
             try { return { placement, object: placement.procedural === 'midi' ? createMusicKeyboard()
@@ -1019,9 +1060,9 @@ export class WorkspaceAccessories {
         }
         const desktop = this.mounts.get('desktop');
         if (desktop && sceneId !== 'product') {
-            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material, accent: dressing?.accent, print: dressing?.print });
+            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material, accent: dressing?.accent, print: dressing?.print, ageStage: context.ageStage });
             placeDailyDeskKit(kit, desktop.dress.children, desktop.supportSpace);
-            markSceneAsset(kit, { key: `${sceneId}:desktop:daily-kit`, role: 'desktop' });
+            markSceneAsset(kit, { key: `${assetPrefix}:desktop:daily-kit`, role: 'desktop' });
             desktop.dress.add(kit);
         }
         this.update();
@@ -1291,12 +1332,16 @@ export class WorkspaceRoom {
         this.root = null; this.walls = []; this.token = 0; this.ready = Promise.resolve();
         this.missingProps = [];
         this.ceilingEnabled = false; this.ceilingSurface = null;
+        // People in the room (room-people.mjs): the Studio sets peopleState to a function returning the featured desk's
+        // { height, mode, pose }.
+        this.peopleEnabled = false; this.people = null; this.peopleState = null;
         this.ownedMaterials = new Set();
     }
     set(id, options = {}) {
         if (!ROOM_SCENES.some(s => s.id === id)) id = 'product';
         // Any prop load still in flight belongs to the room being replaced.
         this.token++;
+        this.people?.dispose(); this.people = null;
         this.grounding?.dispose(); this.grounding = null;
         this.ownedMaterials.forEach(mat => mat.dispose()); this.ownedMaterials.clear();
         // Upgraded fixtures can share their old surface maps with furnishings
@@ -1404,11 +1449,14 @@ export class WorkspaceRoom {
                 await upgradeCampusFurniture(this,PROP_LIBRARY,token);
                 await upgradeArtistFixtures(this,PROP_LIBRARY,token);
                 if(token!==this.token)return;
+                if(id==='workshop')polishWorkshopEquipment(this);
                 this.life?.bind();
                 const life=this.life;
                 if (life) { await PROP_LIBRARY.loadIndex(); if(token===this.token) await life.decorate(PROP_LIBRARY,()=>token===this.token); }
             }
         });
+        this.people = new RoomPeople(this, PROP_LIBRARY);
+        if (this.peopleEnabled) this.people.setEnabled(true).catch(error => console.warn('[people]', error));
     }
     // Extra ErgoFlex desks (office, coworking and institutional layouts).
     // Station spec: { id, name, at: [x, z], size?: '48x30'|'60x30', turn?: degrees,
@@ -1745,6 +1793,8 @@ export class WorkspaceRoom {
     }
     applyAtelierLighting(mode,accent) { applyAtelierLighting(this,mode,accent); applyAtelierBedLighting(this,mode,accent); applyCampusLighting(this,mode,accent); applyDeskDecorLighting(this,mode,accent); applyGamingGearLighting(this,mode,accent); }
     setCeilingEnabled(enabled) { this.ceilingEnabled = !!enabled; }
+    // Resolves once the room's people are loaded and placed (or hidden).
+    setPeopleEnabled(enabled, filter = null) { this.peopleEnabled = !!enabled; this.people?.setFilter(filter); return this.people ? this.people.setEnabled(this.peopleEnabled) : Promise.resolve(); }
     update(camera) {
         this.grounding?.update();
         for (const wall of this.walls) wall.obj.visible = (wall.sign || 1) * (camera.position[wall.axis] - wall.limit) > .05;
@@ -1757,5 +1807,6 @@ export class WorkspaceRoom {
                 if (group === this.ceilingSurface) group.visible = this.ceilingEnabled && below;
                 else if (group === this.ceilingFixture || /^Ceiling /i.test(group.name)) group.visible = below;
         }
+        if (this.people?.enabled) this.people.update(this.peopleState?.());
     }
 }

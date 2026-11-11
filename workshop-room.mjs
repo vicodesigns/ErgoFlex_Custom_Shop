@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
@@ -101,8 +102,8 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     const plaster = material('#ffffff', { map: blockMap, roughness: .93 }), paintLow = material('#9fb2ae', { map: blockMap, roughness: .86 });
     const steel = material('#34474b', { metalness: .5, roughness: .48 });
     const silver = material('#a8b2b4', { metalness: .75, roughness: .35 }), orange = material('#d58b45', { roughness: .7 });
-    const teal = material('#508884', { roughness: .75 }), rubber = material('#293335', { roughness: .95 });
-    const red = material('#b63a2e', { roughness: .45, metalness: .1 }), yellow = material('#e0ad34', { roughness: .5 });
+    const teal = material('#467571', { roughness: .75 }), rubber = material('#293335', { roughness: .95 });
+    const red = material('#8c5143', { roughness: .45, metalness: .1 }), yellow = material('#c49b49', { roughness: .5 });
     const paper = material('#ebe7dc', { roughness: .85 }), cardboard = material('#b28b5b', { roughness: .95 });
     const handle = material('#a8784a', { roughness: .55 }), pine = material('#d4ae79', { roughness: .74 }), oak = material('#a1734a', { roughness: .68 }), walnut = material('#6c4a33', { roughness: .62 });
     const enamel = material('#e8ebe6', { roughness: .38, metalness: 0 });
@@ -220,6 +221,8 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     wallBox(left,[2,940,a-bz],[-w/2+1,630,(a+bz)/2],paintLow);wallBox(left,[2,940,front-b],[-w/2+1,630,(front+b)/2],paintLow);wallBox(left,[2,890,ww],[-w/2+1,605,wz],paintLow);
     const skyCanvas=document.createElement('canvas');skyCanvas.width=skyCanvas.height=512;const skyMap=new THREE.CanvasTexture(skyCanvas);skyMap.colorSpace=THREE.SRGBColorSpace;
     const pane=mesh(left,new THREE.PlaneGeometry(ww,wh),new THREE.MeshBasicMaterial({map:skyMap}),[-w/2-52,low+wh/2,wz]);pane.rotation.y=Math.PI/2;pane.castShadow=pane.receiveShadow=false;
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'yard'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     for(const z of [a,wz,b])box(left,[65,wh+50,30],[-w/2+10,low+wh/2,z],steel);for(const y of [low,low+wh])box(left,[65,30,ww+60],[-w/2+10,y,wz],steel);box(left,[170,30,ww+80],[-w/2+50,low-15,wz],ply);
     for(const z of [(a+wz)/2,(wz+b)/2])kbox(left,[30,16,ww/2-40],[-w/2+10,low+wh*.55,z],steel);
     // Window sill: a potted cutting, a jar of pencils and a coffee can of brushes.
@@ -229,17 +232,79 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
 
     const plans=group('project-board','Workshop project drawings and build checklist',[w/2-30,tier>=3?1800:1580,bz+d*.52],-Math.PI/2,right);
     const planMap=texture((c,tw,th)=>{
-        c.fillStyle='#d8ded4';c.fillRect(0,0,tw,th);c.fillStyle='#2b555b';c.font='bold 40px sans-serif';c.fillText('IN THE MAKING',38,65);
-        c.strokeStyle='#668c8e';c.lineWidth=2;for(let x=35;x<tw*.59;x+=38){c.beginPath();c.moveTo(x,100);c.lineTo(x,th-40);c.stroke();}for(let y=100;y<th-35;y+=38){c.beginPath();c.moveTo(35,y);c.lineTo(tw*.58,y);c.stroke();}
-        c.strokeStyle='#315a60';c.lineWidth=5;c.strokeRect(85,145,390,210);c.strokeRect(140,198,280,105);c.beginPath();c.moveTo(85,145);c.lineTo(140,198);c.moveTo(475,145);c.lineTo(420,198);c.moveTo(85,355);c.lineTo(140,303);c.moveTo(475,355);c.lineTo(420,303);c.stroke();
-        c.lineWidth=2;c.setLineDash([8,6]);c.beginPath();c.moveTo(85,385);c.lineTo(475,385);c.moveTo(505,145);c.lineTo(505,355);c.stroke();c.setLineDash([]);c.font='20px sans-serif';c.fillText('1200',260,410);c.save();c.translate(530,270);c.rotate(-Math.PI/2);c.fillText('600',0,0);c.restore();
-        c.font='27px sans-serif';['01  MEASURE','02  MAKE','03  REFINE','04  SHARE'].forEach((text,i)=>{c.strokeRect(650,142+i*63,22,22);c.fillText(text,695,163+i*63);});
-        c.strokeStyle='#b77e43';c.lineWidth=4;for(const i of [0,1]){c.beginPath();c.moveTo(653,150+i*63);c.lineTo(661,160+i*63);c.lineTo(676,138+i*63);c.stroke();}
-        c.fillStyle='#b77e43';c.fillRect(38,th-32,tw-76,7);
+        c.fillStyle='#1d3b47';c.fillRect(0,0,tw,th);
+        c.strokeStyle='#2c5666';c.lineWidth=2;c.strokeRect(18,18,tw-36,th-36);
+        c.strokeStyle='rgba(125,195,215,0.16)';c.lineWidth=1;
+        for(let x=34;x<tw*.64;x+=28){c.beginPath();c.moveTo(x,84);c.lineTo(x,th-36);c.stroke();}
+        for(let y=84;y<th-36;y+=28){c.beginPath();c.moveTo(34,y);c.lineTo(tw*.64,y);c.stroke();}
+        c.fillStyle='#e8f4f8';c.font='bold 31px sans-serif';c.fillText('IN THE MAKING · ROBO-PAL MK-I',36,56);
+        c.fillStyle='#7fd4e8';c.font='bold 16px monospace';c.fillText('SMART COMPANION TOY  ·  12-DOF ARTICULATED CHASSIS  ·  SCALE 1:1 (265 MM)',38,77);
+        // Front orthographic robot schematic (centred at x=215)
+        c.strokeStyle='#8ce7ff';c.lineWidth=3;
+        // Head + curved visor + twin sensor antennae
+        c.strokeRect(168,118,94,68);c.strokeRect(180,134,70,28);
+        c.fillStyle='#3cf0ff';c.beginPath();c.arc(198,148,7,0,Math.PI*2);c.arc(232,148,7,0,Math.PI*2);c.fill();
+        c.beginPath();c.moveTo(182,118);c.lineTo(174,96);c.moveTo(248,118);c.lineTo(256,96);c.stroke();
+        c.beginPath();c.arc(174,93,4,0,Math.PI*2);c.arc(256,93,4,0,Math.PI*2);c.stroke();
+        // Neck + Torso + Smart Heart Core reactor
+        c.strokeRect(202,186,26,14);c.strokeRect(152,200,126,118);c.strokeRect(166,214,98,68);
+        c.strokeStyle='#ffb347';c.lineWidth=3;c.beginPath();c.arc(215,248,22,0,Math.PI*2);c.stroke();
+        c.fillStyle='rgba(255,185,71,0.35)';c.beginPath();c.arc(215,248,15,0,Math.PI*2);c.fill();
+        // Posable shoulders, elbows, forearms & hands
+        c.strokeStyle='#8ce7ff';c.lineWidth=3;
+        for(const s of [-1,1]){
+            const sx=215+s*76;
+            c.beginPath();c.arc(sx,216,13,0,Math.PI*2);c.stroke();
+            c.strokeRect(sx-11,230,22,48);c.beginPath();c.arc(sx,284,10,0,Math.PI*2);c.stroke();
+            c.strokeRect(sx-12,294,24,46);c.strokeRect(sx-10,342,20,16);
+        }
+        // Pelvis + articulated legs + knee servos + boots
+        c.strokeRect(168,318,94,26);
+        for(const lx of [186,244]){
+            c.beginPath();c.arc(lx,354,10,0,Math.PI*2);c.stroke();
+            c.strokeRect(lx-14,364,28,48);c.beginPath();c.arc(lx,418,10,0,Math.PI*2);c.stroke();
+            c.strokeRect(lx-15,428,30,42);c.strokeRect(lx-20,470,40,16);
+        }
+        // Side profile & Heart Core detail on the right of the grid (x=445)
+        c.strokeStyle='#63bdd6';c.lineWidth=2.5;
+        c.strokeRect(420,122,56,64);c.strokeRect(398,210,22,74);c.strokeRect(420,200,66,116);
+        c.strokeRect(432,320,44,148);c.strokeRect(426,468,62,18);
+        // Dimension lines & callouts
+        c.setLineDash([6,5]);c.strokeStyle='#9be3f5';c.lineWidth=1.8;
+        c.beginPath();c.moveTo(112,118);c.lineTo(112,486);c.moveTo(104,118);c.lineTo(122,118);c.moveTo(104,486);c.lineTo(122,486);c.stroke();
+        c.setLineDash([]);c.fillStyle='#b8f0ff';c.font='bold 15px monospace';
+        c.save();c.translate(102,320);c.rotate(-Math.PI/2);c.fillText('265 MM',0,0);c.restore();
+        c.fillText('HEART CORE LED',345,252);c.fillText('OPTIC VISOR',345,148);c.fillText('SERVO JOINTS',345,395);
+        // Build checklist column on the right
+        c.fillStyle='#162e38';c.fillRect(660,90,334,376);c.strokeStyle='#3c7385';c.lineWidth=2;c.strokeRect(660,90,334,376);
+        c.fillStyle='#ffb347';c.font='bold 20px sans-serif';c.fillText('GIFT BUILD CHECKLIST',682,124);
+        c.font='bold 19px sans-serif';
+        ['01  CHASSIS & JOINTS','02  LED VISOR & CORE','03  WAVE SERVO TEST','04  BIRTHDAY WRAP'].forEach((text,i)=>{
+            c.strokeStyle='#7fd4e8';c.lineWidth=2.5;c.strokeRect(682,148+i*54,22,22);
+            c.fillStyle='#e8f4f8';c.fillText(text,718,166+i*54);
+        });
+        c.strokeStyle='#ffb347';c.lineWidth=4;for(const i of [0,1,2]){c.beginPath();c.moveTo(685,158+i*54);c.lineTo(692,167+i*54);c.lineTo(705,146+i*54);c.stroke();}
+        c.fillStyle='#ffb347';c.fillRect(36,th-30,tw-72,6);
     },1024,512);
     box(plans,[tier?1800:1200,670,18],[0,0,0],steel,4);box(plans,[tier?1740:1140,610,4],[0,0,12],material('#ffffff',{map:planMap,roughness:.9}));
-    // Pinned sketches and a hanging steel rule along the board's top edge.
-    for(let i=0;i<3;i++){const x=(tier?480:260)+i*(tier?120:95);kbox(plans,[150,190,2],[x,-215+i*12,17+i],paper,[0,0,(i-1)*.06]);kball(plans,[7,7,5],[x,-130+i*12,22],red);}
+    // Pinned sketches (including child's crayon robot drawing) and a hanging steel rule along the board's top edge.
+    const kidSketchMap=texture((c,tw,th)=>{
+        c.fillStyle='#fff9eb';c.fillRect(0,0,tw,th);
+        c.fillStyle='#e0483e';c.font='bold 24px sans-serif';c.fillText('ROBO-PAL + ME!',22,38);
+        // Kid's crayon robot drawing + big red heart
+        c.strokeStyle='#2a7b88';c.lineWidth=6;c.strokeRect(48,68,78,60);c.strokeRect(38,134,98,92);
+        c.fillStyle='#24c8e8';c.fillRect(62,84,18,18);c.fillRect(94,84,18,18);
+        c.fillStyle='#ff5252';c.beginPath();c.arc(87,178,18,0,Math.PI*2);c.fill();
+        c.strokeStyle='#e87a24';c.lineWidth=7;c.beginPath();c.moveTo(38,150);c.lineTo(14,118);c.moveTo(136,150);c.lineTo(164,180);
+        c.moveTo(62,226);c.lineTo(62,272);c.moveTo(112,226);c.lineTo(112,272);c.stroke();
+        // Stick-figure child holding hands
+        c.strokeStyle='#3b5998';c.lineWidth=5;c.beginPath();c.arc(195,148,20,0,Math.PI*2);c.stroke();
+        c.beginPath();c.moveTo(195,168);c.lineTo(195,232);c.moveTo(195,188);c.lineTo(164,180);c.moveTo(195,188);c.lineTo(224,168);
+        c.moveTo(195,232);c.lineTo(178,274);c.moveTo(195,232);c.lineTo(212,274);c.stroke();
+        c.fillStyle='#d9383a';c.font='bold 22px sans-serif';c.fillText('LOVE LEO <3',48,304);
+    },256,320);
+    const kidPaper=material('#ffffff',{map:kidSketchMap,roughness:.92});
+    for(let i=0;i<3;i++){const x=(tier?480:260)+i*(tier?120:95);kbox(plans,[150,190,2],[x,-215+i*12,17+i],i===1?kidPaper:paper,[0,0,(i-1)*.06]);kball(plans,[7,7,5],[x,-130+i*12,22],red);}
     kbox(plans,[tier?900:600,28,3],[0,-352,14],silver);
     for(const z of [bz+90,front-80])rod(right,[w/2-25,180,z],[w/2-25,h-90,z],12,silver);
     rod(right,[w/2-25,h-90,bz+90],[w/2-25,h-90,front-80],12,silver);
@@ -500,7 +565,7 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     }
     const lights=[
         {at:[0,1880,bz+520],power:4.4,level:'practical'},
-        {at:[layout.desk[0],h-450,layout.desk[1]],power:4.2,level:'practical'},
+        {at:[layout.desk[0],h-450,layout.desk[1]],power:5,level:'practical'},
         {at:[tier>=2?500:0,h-450,bz+d*.7],power:4,level:'tubes',tube:true},
         {at:[w/2-700,1850,bz+d*.4],power:3.1,level:'wash',channel:1}
     ].map(spec=>{const light=new THREE.PointLight('#e4f3f5',0,4800*root.scale.x,2);light.position.set(...spec.at);root.add(light);return {...spec,light,power:spec.power*(root.scale.x*1000)**2};});
@@ -513,7 +578,7 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
         c.fillStyle=near;c.fillRect(250,330,190,182);c.beginPath();c.moveTo(236,334);c.lineTo(345,270);c.lineTo(454,334);c.fill();
         c.fillStyle=night||id==='evening'?'#f2c46e':'#a7b9bd';c.fillRect(290,370,46,40);c.fillRect(370,370,46,40);
         c.fillStyle=near;for(let x=0;x<512;x+=26)c.fillRect(x,446,18,66);c.fillRect(0,462,512,8);
-        skyMap.needsUpdate=true;
+        skyMap.needsUpdate=true; windowVista.setPhase(id);
     };
     room.roomAtmosphere=(id,accent=1)=>{
         const mode=WORKSHOP_MODES[id]||WORKSHOP_MODES.morning;paintSky(mode,id);
@@ -533,5 +598,37 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     creativeMaterialDetail(root, [[plaster, 'plaster'], [paintLow, 'plaster'], [steel, 'powder'], [silver, 'brushed'],
         [orange, 'powder'], [teal, 'powder'], [red, 'powder'], [yellow, 'powder'], [enamel, 'ceramic'], [rubber, 'rubber'],
         [ply, 'oak'], [block, 'oak'], [pine, 'oak'], [oak, 'oak'], [walnut, 'walnut'], [handle, 'oak'], [slab, 'limestone']]);
+    // Keep the shared physical-scale detail maps; tune only this room's finishes.
+    // The concrete remains satin-matte while enamel and steel catch soft highlights.
+    slab.roughness = .65;
+    teal.roughness = .48; red.roughness = .48; enamel.roughness = .34;
+    steel.metalness = .55; steel.roughness = .43;
+    block.roughness = .53; ply.roughness = .67;
     room.roomAtmosphere('morning');root.userData.dimensionsMm={width:w,depth:d,height:h};
+}
+
+// Library props load after the shell. Clone paint materials so this palette
+// cannot affect the same equipment in another room or its library preview.
+export function polishWorkshopEquipment(room) {
+    const hsl = {};
+    for (const prop of room.assets()) {
+        if (!['tool-cart', 'toolbox-industrial', 'shop-machine'].includes(prop.userData.propId)) continue;
+        const paints = new Map();
+        prop.traverse(obj => {
+            if (!obj.isMesh) return;
+            const tune = mat => {
+                if (!mat?.color || mat.userData.workshopPaint) return mat;
+                if (paints.has(mat)) return paints.get(mat);
+                mat.color.getHSL(hsl);
+                if (hsl.s < .45 || hsl.l < .12 || hsl.l > .8) return mat;
+                const copy = mat.clone();
+                if (hsl.h > .52 && hsl.h < .75) copy.color.set('#435e68');
+                else if (hsl.h < .06 || hsl.h > .95) copy.color.set('#865044');
+                else copy.color.lerp(new THREE.Color('#77796c'), .3);
+                copy.roughness = .48; copy.userData.workshopPaint = true;
+                paints.set(mat, copy); return copy;
+            };
+            obj.material = Array.isArray(obj.material) ? obj.material.map(tune) : tune(obj.material);
+        });
+    }
 }

@@ -4,13 +4,18 @@
 //   "A > B > C" path>' (optional, narrows), materialName:'<regex>',
 //   materialColor:'#hex', materialType:'Basic' (optional: only those
 //   materials), hide:true,
-//   position:[dx,dy,dz] (world metres, added once), rotation:[dx,dy,dz] (deg),
-//   scale:s, material:{color, emissive, roughness, metalness, clearcoat,
+//   position:[dx,dy,dz] (world metres, added once; with space:'local' metres along the parent's own axes, for props
+//   riding on the desk: they keep the offset through lift and tilt whatever pose the edit is installed at), rotation:[dx,dy,dz] (deg,
+//   added to the local Euler), scale:s or [sx,sy,sz] (local, multiplied), hide:false
+//   shows an object an earlier edit hid (back to whatever the app sets), material:{color, emissive, roughness, metalness, clearcoat,
 //   clearcoatRoughness, envMapIntensity, emissiveIntensity, opacity,
 //   emissiveScale, opacityScale, colorScale (unlit backdrops), mapBlur (mip
-//   LOD, ~2^lod texels)}, opacity:<multiplier or [[sec,value],…]>,
+//   LOD, ~2^lod texels), mapRotation (deg: the colour map turned about its centre, e.g. 180 for a picture
+//   the right way up on a prop placed upside down)}, opacity:<multiplier or [[sec,value],…]>,
 //   radialFade:[r0,r1] (lines/meshes fade out between r0 and r1 metres from
 //   the object's own origin), clone:false}]
+//   dropFaces:{min:[x,y,z], max:[x,y,z]}: removes the matched meshes' triangles lying wholly inside that box, in each
+//   mesh's glTF node space (metres of the supplied file), e.g. the MagSafe-style puck merged into the phone's frame.
 //   Material values may be keyframed: [[chapterSeconds, value], …] (linear).
 //   emissiveScale / opacityScale / opacity multiply whatever the app or the
 //   stage writes each frame (time-of-day, the stage's pulse fade …).
@@ -20,9 +25,28 @@
 //   minArea (m²): skip matched meshes smaller than this.
 //   near:[x, z, r]: keep only matches whose world origin lies within r (scene units, xz) of (x, z),
 //   for one of several same-named props (e.g. a single chair at a table).
+//   asset:'<Studio scene asset key>' keeps only the object whose userData.sceneAssetKey is that key (one of many
+//   same-named room props, wherever it stands; the Director targets Studio props this way).
+//   add:{asset:'<assets/props id>'}, id, parent:'desk'|'room', position, rotation, scale (with director:true): a library
+//   prop the film doesn't have (experience/prop-edits.mjs cleanAddEdit), placed in its parent's frame (desk: the
+//   featured desk's desktop dressing, riding lift and tilt; room: the room's asset root, else the stage). Loaded by
+//   prepareAdds(shot) (await it before installEdits; film-fx does) through Studio's own PROP_LIBRARY (workspace-3d.mjs,
+//   the same module instance and GLB cache as the app), named 'Added prop:<asset>#<id>', removed by restore().
+//   director:true marks the Director's own prop edits (experience/prop-edits.mjs): offsets from the film's
+//   placement, applied after every hand-made edit; build-round8-director.py replaces them on import.
 //   lightType:'<regex on light type>' (PointLight|SpotLight|HemisphereLight|
 //   DirectionalLight|RectAreaLight) selects lights instead; then intensity:
 //   <multiplier | keyframes> and color:'#hex'.
+//   materialType:'!Basic' (leading !) keeps only materials whose type lacks it.
+//   recolor:[{hue:[h0,h1], minChroma, maxChroma, h, s, sScale, l}, …] remaps
+//   colours in sRGB HSL on the matched objects: material color/emissive,
+//   InstancedMesh per-instance colours, canvas/image colour maps (map,
+//   emissiveMap; copied, alpha kept) and, with lightType, light color/
+//   groundColor. Per colour the first rule whose hue band (degrees; [340,20]
+//   wraps) and chroma (max-min of sRGB, 0…1) hold applies: h = new hue, s = new
+//   HSL saturation (or sScale ×), l = lightness × number or a [[in,out],…]
+//   piecewise curve. Unmatched colours stay. Off unless given (film-only
+//   room recolours, e.g. tools/experience/gym-black-red.json).
 // lights:[{preset:'productRig', …overrides} | {type:'rect'|'spot'|'point'|
 //   'directional', position:[x,y,z] | at:{az,el,dist} (degrees/metres around
 //   the desk; az 0 = desk front, + = desk's left), target:[x,y,z], color,
@@ -54,6 +78,8 @@ function stageObjects() {
   scene.traverse(o => { if (o.isMesh && o.material?.isShadowMaterial) out.floor.push(o); });
   return out;
 }
+// The objects one sceneEdit acts on (the Director checks its prop targets with this, in the stage frame).
+export function editTargets(edit) { return targets(edit); }
 function targets(edit) {
   const scene = sceneRoot(), m = String(edit.match || '');
   if (m === '@window') { const w = WINDOWS[api.roomScene]; if (!w) { console.warn('[film-fx] @window: no exterior backdrop known for room', api.roomScene); return []; } return targets({ ...edit, ...w, match: '' }); }
@@ -69,6 +95,7 @@ function targets(edit) {
     if (mok) { if (o.isMesh && o.visible && [].concat(o.material).some(x => x && mok(x)) && re.test(o.name) && (!pre || pre.test(pathOf(o, scene)))) out.push(o); return; }
     if (re.test(o.name) && (!pre || pre.test(pathOf(o, scene)))) out.push(o);
   });
+  if (edit.asset) for (let i = out.length - 1; i >= 0; i--) if (out[i].userData.sceneAssetKey !== edit.asset) out.splice(i, 1);
   if (edit.near) { const [nx, nz, nr] = edit.near, w = new THREE.Vector3(); scene.updateMatrixWorld(true); for (let i = out.length - 1; i >= 0; i--) { out[i].getWorldPosition(w); if (Math.hypot(w.x - nx, w.z - nz) > nr) out.splice(i, 1); } }
   if (edit.minArea) { const sz = new THREE.Vector3(); for (let i = out.length - 1; i >= 0; i--) { new THREE.Box3().setFromObject(out[i]).getSize(sz); if (Math.max(sz.x * sz.y, sz.y * sz.z, sz.x * sz.z) < edit.minArea) out.splice(i, 1); } }
   // Drop descendants of other matches (a group and its children both matching).
@@ -80,7 +107,8 @@ function targets(edit) {
 function materialFilter(edit) {
   if (!edit.materialName && !edit.materialColor && !edit.materialType) return null;
   const re = edit.materialName ? new RegExp(edit.materialName, 'i') : null, col = edit.materialColor ? new THREE.Color(edit.materialColor).getHex() : null;
-  return m => (!re || re.test(m.name || '')) && (col === null || m.color?.getHex() === col) && (!edit.materialType || m.type.includes(edit.materialType));
+  const not = String(edit.materialType || '').startsWith('!'), type = not ? edit.materialType.slice(1) : edit.materialType;
+  return m => (!re || re.test(m.name || '')) && (col === null || m.color?.getHex() === col) && (!type || m.type.includes(type) !== not);
 }
 // Window exteriors (painted backdrops behind the glazing) per room, found by
 // --list-screens-style probing: unlit canvas backdrops, or the HBHS emissive pane.
@@ -90,6 +118,70 @@ const WINDOWS = {
   gym: { path: 'daylight and entry wall', materialType: 'Basic', minArea: 3 },
   highschool: { path: 'Daylight window', materialType: 'Standard', minArea: 10 }
 };
+// A room whose window is a photographed vista (window-vista.mjs) takes `vista: { brightness, soften, zoom, horizon }`
+// on its @window edit: brightness multiplies the daypart grade, the others replace the vista's own values. The
+// painted-backdrop keys of the same edit (material.brightness, mapBlur) were tuned for the canvas and are skipped.
+function vistaEdit(edit, undo) {
+  const panes = []; sceneRoot().traverse(o => { if (o.isMesh && o.userData.windowVista && o.material?.uniforms?.gain) panes.push(o); });
+  if (!panes.length) return false;
+  for (const pane of panes) {
+    const u = pane.material.uniforms, v = edit.vista || {};
+    if (v.brightness !== undefined) { const before = u.gain.value.clone(); u.gain.value.multiplyScalar(Number(v.brightness)); undo.push(() => u.gain.value.copy(before)); }
+    for (const [key, name] of [['soften', 'soften'], ['zoom', 'zoom'], ['horizon', 'horizon']]) if (v[key] !== undefined) { const before = u[name].value; u[name].value = Number(v[key]); undo.push(() => { u[name].value = before; }); }
+  }
+  return true;
+}
+// ---------- added props (sceneEdits[].add) ----------
+// Studio's prop library, the very module the app imported (same URL, so the same PROP_LIBRARY and GLB cache).
+let library = null;
+export function propLibrary() {
+  return library ||= (async () => {
+    let url = performance.getEntriesByType('resource').map(e => e.name).find(n => /\/workspace-3d\.mjs(\?|$)/.test(n));
+    if (!url) { try { const src = await (await fetch('/studio.js', { cache: 'force-cache' })).text(), m = /from '\.\/(workspace-3d\.mjs[^']*)'/.exec(src); if (m) url = '/' + m[1]; } catch {} }
+    const mod = await import(url || '/workspace-3d.mjs');
+    await mod.PROP_LIBRARY.loadIndex(); return mod.PROP_LIBRARY;
+  })().catch(error => { library = null; throw error; });
+}
+const prepared = new WeakMap();
+// Load every added prop of the shot (cached GLBs, fresh instances) so installEdits can place them synchronously.
+export async function prepareAdds(shot, library = null) {   // library: tests pass a stand-in for PROP_LIBRARY
+  const adds = (shot.sceneEdits || []).filter(e => e?.add);
+  if (!adds.length) return 0;
+  const lib = library || await propLibrary();
+  await Promise.all(adds.map(async e => {
+    const asset = typeof e.add === 'string' ? e.add : e.add.asset;
+    if (!lib.entry(asset)) { console.warn('[film-fx] sceneEdits add: no library prop ' + asset); return; }
+    try { prepared.set(e, await lib.instance(asset)); } catch (error) { console.warn('[film-fx] sceneEdits add: ' + asset + ' could not load', error); }
+  }));
+  return adds.length;
+}
+const shownTree = o => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
+const inScene = (o, scene) => { for (let p = o; p; p = p.parent) if (p === scene) return true; return false; };
+// Where an added prop lives: 'desk' = the featured desk's desktop (a scene desk's dressing, else the product desk's
+// accessory mount); 'room' = the room's asset root, else the stage.
+export function addParent(kind) {
+  const scene = sceneRoot();
+  if (kind === 'desk') {
+    const rig = api.sceneDesks?.active?.rig?.mounts?.desktop; if (rig && inScene(rig, scene)) return rig;
+    const m = api.workspaceAccessories?.mounts?.get('desktop'); if (m?.group && inScene(m.group, scene)) return m.group;
+    return null;
+  }
+  const root = api.workspaceRoom?.root; return root && inScene(root, scene) && shownTree(root) ? root : scene;
+}
+// Scene units per millimetre (a library instance is in millimetres at scale 1000 under a millimetre parent).
+export const mmScale = () => api.workspaceAccessories?.scale || api.workspaceRoom?.scale || .001;
+function installAdd(edit, n, undo) {
+  const o = prepared.get(edit); if (!o) { console.warn(`[film-fx] sceneEdits[${n}] add: ${edit.add?.asset || edit.add} not loaded (prepareAdds first)`); return; }
+  const parent = addParent(edit.parent); if (!parent) { console.warn(`[film-fx] sceneEdits[${n}] add: no desk to put ${edit.add?.asset || edit.add} on`); return; }
+  const asset = typeof edit.add === 'string' ? edit.add : edit.add.asset;
+  parent.updateWorldMatrix(true, false); const k = parent.getWorldScale(new THREE.Vector3()).x || 1, base = 1000 * mmScale() / k;
+  o.name = `Added prop:${asset}#${edit.id}`; o.userData.directorAdd = { asset, id: edit.id, label: edit.label || asset, parent: edit.parent === 'desk' ? 'desk' : 'room' };
+  const p = edit.position || [0, 0, 0], r = edit.rotation || [0, 0, 0], s = edit.scale || [1, 1, 1], d = THREE.MathUtils.degToRad;
+  o.position.set(p[0] / k, p[1] / k, p[2] / k); o.rotation.set(d(r[0]), d(r[1]), d(r[2])); o.scale.set(base * s[0], base * s[1], base * s[2]);
+  parent.add(o); o.updateMatrixWorld(true);
+  (o.userData.__filmFxEdits ||= []).push(edit); edit.__count = 1;
+  undo.push(() => { o.removeFromParent(); delete o.userData.__filmFxEdits; prepared.delete(edit); });
+}
 const PHYSICAL = new Set(['clearcoat', 'clearcoatRoughness', 'sheen', 'transmission', 'iridescence']);
 export function installEdits(shot) {
   const undo = [], live = [], swapped = new Map();
@@ -100,12 +192,25 @@ export function installEdits(shot) {
     undo.push(() => { delete m[field]; if (own) Object.defineProperty(m, field, own); m[field] = raw; });
   };
   for (const [n, edit] of (shot.sceneEdits || []).entries()) {
+    if (edit?.add) { installAdd(edit, n, undo); continue; }
+    if (edit?.match === '@window' && vistaEdit(edit, undo)) continue;
     const found = targets(edit);
     if (!found.length) { console.warn(`[film-fx] sceneEdits[${n}] matched nothing: ${edit.match}`); continue; }
     edit.__count = found.length;
     for (const o of found) {
-      if (edit.hide) { const v = o.visible; o.visible = false; undo.push(() => { o.visible = v; }); }
-      if (edit.position) { const p = o.position.clone(), w = o.getWorldPosition(new THREE.Vector3()), to = w.clone().add(new THREE.Vector3(...edit.position)); if (o.parent) { o.parent.worldToLocal(w); o.parent.worldToLocal(to); } o.position.add(to.sub(w)); undo.push(() => o.position.copy(p)); }
+      // Which edits act on each object (the Director reads its own director:true entry and the film's moves here).
+      (o.userData.__filmFxEdits ||= []).push(edit); undo.push(() => { const a = o.userData.__filmFxEdits, i = a ? a.lastIndexOf(edit) : -1; if (i >= 0) a.splice(i, 1); if (a && !a.length) delete o.userData.__filmFxEdits; });
+      // Sticky hide: the app's own per-frame sync (desk dressing, day kits) sets visible back, so hold it false.
+      // hide:false (a later edit, e.g. the Director's) shows it again: the raw value under an earlier sticky hide.
+      if (typeof edit.hide === 'boolean' && (edit.hide || o.userData.__filmFxRawVisible)) {
+        const own = Object.getOwnPropertyDescriptor(o, 'visible'), prior = o.userData.__filmFxRawVisible, hidden = edit.hide;
+        let raw = prior ? prior() : o.visible;
+        Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => hidden ? false : raw, set: v => { raw = v; own?.set?.call(o, v); } });
+        o.userData.__filmFxRawVisible = () => raw;
+        undo.push(() => { delete o.visible; if (own?.get || own?.set) Object.defineProperty(o, 'visible', own); else o.visible = raw; if (prior) o.userData.__filmFxRawVisible = prior; else delete o.userData.__filmFxRawVisible; });
+      }
+      if (edit.position && edit.space === 'local') { const p = o.position.clone(), s = o.parent ? (o.parent.updateWorldMatrix(true, false), o.parent.getWorldScale(new THREE.Vector3())) : new THREE.Vector3(1, 1, 1); o.position.add(new THREE.Vector3(...edit.position).divide(s)); undo.push(() => o.position.copy(p)); }
+      else if (edit.position) { const p = o.position.clone(), w = o.getWorldPosition(new THREE.Vector3()), to = w.clone().add(new THREE.Vector3(...edit.position)); if (o.parent) { o.parent.worldToLocal(w); o.parent.worldToLocal(to); } o.position.add(to.sub(w)); undo.push(() => o.position.copy(p)); }
       if (edit.rotation) { const r = o.rotation.clone(); o.rotation.x += THREE.MathUtils.degToRad(edit.rotation[0] || 0); o.rotation.y += THREE.MathUtils.degToRad(edit.rotation[1] || 0); o.rotation.z += THREE.MathUtils.degToRad(edit.rotation[2] || 0); undo.push(() => o.rotation.copy(r)); }
       if (o.isLight && edit.intensity !== undefined) {
         // Multiplier on whatever the room/app writes (mode switches, time of day).
@@ -113,9 +218,26 @@ export function installEdits(shot) {
         if (keyed(edit.intensity)) live.push(s => { cell.value = sample(edit.intensity, s); });
       }
       if (o.isLight && edit.color) { const c = o.color.clone(); o.color.set(edit.color); undo.push(() => o.color.copy(c)); }
+      if (o.isLight && edit.recolor) for (const k of ['color', 'groundColor']) if (o[k]?.isColor) recolorColor(o[k], recolorFn(edit.recolor), undo);
       if (Number.isFinite(edit.scale)) { const s = o.scale.clone(); o.scale.multiplyScalar(edit.scale); undo.push(() => o.scale.copy(s)); }
+      else if (Array.isArray(edit.scale) && edit.scale.length === 3 && edit.scale.every(Number.isFinite)) { const s = o.scale.clone(); o.scale.multiply(new THREE.Vector3(...edit.scale)); undo.push(() => o.scale.copy(s)); }
+      if (edit.dropFaces) {
+        // Cut triangles out of a supplied model: those whose three corners lie in the box {min,max}, in the mesh's
+        // node space (its own glTF transform applied, so quantized models measure in the file's metres).
+        const lo = new THREE.Vector3(...edit.dropFaces.min), hi = new THREE.Vector3(...edit.dropFaces.max), box = new THREE.Box3(lo, hi), v = new THREE.Vector3();
+        o.traverse(mesh => {
+          if (!mesh.isMesh || mesh.userData.filmFx || !mesh.geometry?.attributes.position) return;
+          const g = mesh.geometry, pos = g.attributes.position, idx = g.index, n = idx ? idx.count : pos.count, kept = [];
+          mesh.updateMatrix(); const inside = i => box.containsPoint(v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrix));
+          for (let t = 0; t < n; t += 3) { const a = idx ? idx.getX(t) : t, b = idx ? idx.getX(t + 1) : t + 1, c = idx ? idx.getX(t + 2) : t + 2; if (!(inside(a) && inside(b) && inside(c))) kept.push(a, b, c); }
+          if (kept.length === n) return;
+          const cut = g.clone(); cut.setIndex(kept); mesh.geometry = cut; edit.__dropped = (edit.__dropped || 0) + (n - kept.length) / 3;
+          undo.push(() => { mesh.geometry = g; cut.dispose(); });
+        });
+      }
       const mat = { ...(edit.material || {}) }; if (edit.opacity !== undefined) mat.opacityScale = edit.opacity;
-      if (!Object.keys(mat).length && !edit.radialFade) continue;
+      if (!Object.keys(mat).length && !edit.radialFade && !edit.recolor) continue;
+      const rc = edit.recolor && !o.isLight ? recolorFn(edit.recolor) : null;
       const mok = materialFilter(edit);
       o.traverse(mesh => {
         if (!mesh.material || mesh.userData.filmFx) return;
@@ -133,14 +255,22 @@ export function installEdits(shot) {
         // An opaque surface made fadeable joins the transparent pass; keep it
         // drawn first there, as in the opaque pass (otherwise e.g. the shadow-
         // catcher floor 2 mm above the grid can win the depth sort and hide it).
+        if (rc && mesh.isInstancedMesh && mesh.instanceColor && !mesh.userData.__filmFxRecolor?.has(n) && next.some(m => m && (!mok || mok(m)))) {
+          (mesh.userData.__filmFxRecolor ||= new Set()).add(n); undo.push(() => mesh.userData.__filmFxRecolor?.delete(n));
+          const a = mesh.instanceColor, before = a.array.slice(), c = new THREE.Color();
+          for (let i = 0; i < a.count; i++) { c.fromBufferAttribute(a, i); recolorColor(c, rc); a.setXYZ(i, c.r, c.g, c.b); }
+          a.needsUpdate = true; undo.push(() => { a.array.set(before); a.needsUpdate = true; });
+        }
         if (('opacityScale' in mat || 'opacity' in mat || edit.radialFade) && next.some(m => m && !m.transparent)) { const ro = mesh.renderOrder; mesh.renderOrder = Math.min(ro, -1); undo.push(() => { mesh.renderOrder = ro; }); }
         for (const m of next) {
           if (!m || (mok && !mok(m) && !m.userData.filmFxCopy) || m.userData.__filmFxEdited?.has(n)) continue;
           (m.userData.__filmFxEdited ||= new Set()).add(n); undo.push(() => m.userData.__filmFxEdited?.delete(n));
+          if (rc) { recolorColor(m.color, rc, undo); if (m.emissive?.isColor && m.emissive.getHex() !== 0) recolorColor(m.emissive, rc, undo); for (const k of ['map', 'emissiveMap']) recolorMap(m[k], rc, undo, n); }
           for (const [k, v] of Object.entries(mat)) {
             if (k === 'brightness') { if (m.isMeshBasicMaterial) { const c = m.color.clone(); m.color.multiplyScalar(Number(v)); undo.push(() => m.color.copy(c)); } else { const cell = { value: Number(v) }; wrap(m, 'emissiveIntensity', () => cell.value); } continue; }
             if (k === 'colorScale') { if (m.color) { const c = m.color.clone(); m.color.multiplyScalar(Number(v)); undo.push(() => m.color.copy(c)); } continue; }
             if (k === 'mapBlur') { if (m.map) mapBlur(m, Number(v), undo); continue; }
+            if (k === 'mapRotation') { const t = m.map; if (t) { const c = t.center.clone(), r = t.rotation; t.center.set(.5, .5); t.rotation = THREE.MathUtils.degToRad(Number(v)); undo.push(() => { t.center.copy(c); t.rotation = r; }); } continue; }
             if (k === 'emissiveScale' || k === 'opacityScale') {
               const field = k === 'emissiveScale' ? 'emissiveIntensity' : 'opacity', cell = { value: sample(v, 0) };
               if (field === 'opacity' && !m.transparent) { m.transparent = true; m.needsUpdate = true; undo.push(() => { m.transparent = false; m.needsUpdate = true; }); }
@@ -164,6 +294,47 @@ export function installEdits(shot) {
     apply(seconds) { for (const f of live) f(seconds); },
     restore() { for (const f of undo.reverse()) f(); for (const c of swapped.values()) c.dispose(); }
   };
+}
+// ---------- recolor (sceneEdits[].recolor) ----------
+const lcurve = (v, l) => { if (l === undefined) return v; if (!Array.isArray(l)) return v * l; if (v <= l[0][0]) return l[0][1]; for (let i = 1; i < l.length; i++) if (v <= l[i][0]) { const [a, b] = l[i - 1], [c, d] = l[i]; return b + (d - b) * (v - a) / Math.max(1e-6, c - a); } return l[l.length - 1][1]; };
+const hsl2rgb = (h, s, l, o) => { const q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q, f = t => { t = (t % 1 + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; }; o[0] = f(h + 1 / 3); o[1] = f(h); o[2] = f(h - 1 / 3); };
+// sRGB 0…1 in, out[] written; false when no rule applies.
+function recolorFn(spec) {
+  const rules = Array.isArray(spec) ? spec : spec.rules || [];
+  return (r, g, b, out) => {
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), C = max - min, L = (max + min) / 2;
+    let H = 0; if (C > 1e-6) H = 60 * (max === r ? ((g - b) / C + 6) % 6 : max === g ? (b - r) / C + 2 : (r - g) / C + 4);
+    for (const u of rules) {
+      if (C < (u.minChroma ?? 0) || C > (u.maxChroma ?? 1)) continue;
+      if (u.hue) { const [a, z] = u.hue; if (a <= z ? (H < a || H > z) : (H < a && H > z)) continue; }
+      const den = 1 - Math.abs(2 * L - 1), S = den < 1e-6 ? 0 : Math.min(1, C / den);
+      hsl2rgb((u.h ?? H) / 360, Math.min(1, u.s ?? S * (u.sScale ?? 1)), Math.min(1, Math.max(0, lcurve(L, u.l))), out); return true;
+    }
+    return false;
+  };
+}
+function recolorColor(col, rc, undo) {
+  if (!col?.isColor) return;
+  const s = col.getRGB({}, THREE.SRGBColorSpace), o = [0, 0, 0];
+  if (!rc(s.r, s.g, s.b, o)) return; const before = col.clone(); col.setRGB(o[0], o[1], o[2], THREE.SRGBColorSpace); undo?.push(() => col.copy(before));
+}
+const recolored = new WeakMap();   // source image → { [edit index]: recoloured copy }
+function recolorMap(t, rc, undo, n) {
+  const img = t?.image; if (!img || !(img instanceof HTMLCanvasElement || img instanceof HTMLImageElement || (typeof ImageBitmap !== 'undefined' && img instanceof ImageBitmap))) return;
+  if (img.__filmFxRecolorOf !== undefined) return;   // already a recoloured copy
+  const per = recolored.get(img) || {}; recolored.set(img, per);
+  if (!per[n]) {
+    const w = img.width, h = img.height; if (!w || !h) return;
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, w, h), p = d.data, o = [0, 0, 0], cache = new Map();
+    for (let i = 0; i < p.length; i += 4) {
+      const key = p[i] << 16 | p[i + 1] << 8 | p[i + 2]; let v = cache.get(key);
+      if (v === undefined) { v = rc(p[i] / 255, p[i + 1] / 255, p[i + 2] / 255, o) ? (Math.round(o[0] * 255) << 16 | Math.round(o[1] * 255) << 8 | Math.round(o[2] * 255)) : key; cache.set(key, v); }
+      p[i] = v >> 16 & 255; p[i + 1] = v >> 8 & 255; p[i + 2] = v & 255;
+    }
+    g.putImageData(d, 0, 0); c.__filmFxRecolorOf = n; per[n] = c;
+  }
+  t.image = per[n]; t.needsUpdate = true; undo.push(() => { t.image = img; t.needsUpdate = true; });
 }
 // Out-of-focus backdrop: sample the colour map at a fixed mip LOD (≈ 2^lod texels).
 function mapBlur(m, lod, undo) {

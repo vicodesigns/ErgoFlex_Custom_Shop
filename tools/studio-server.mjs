@@ -18,6 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import send from 'send';
+import { execFile } from 'node:child_process';
 import chokidar from 'chokidar';
 import { SPECS, SHARED_KEY, mergeWrite, changedEntries } from './studio-state/merge.mjs';
 import { load, write } from './studio-state/file.mjs';
@@ -64,7 +65,7 @@ const readBody = (req, limit = 64 << 20) => new Promise((ok, fail) => {
   req.on('data', c => { n += c.length; if (n > limit) { fail(Error('body too large')); req.destroy(); } else parts.push(c); });
   req.on('end', () => ok(Buffer.concat(parts).toString('utf8'))); req.on('error', fail);
 });
-const clients = new Set();
+const clients = new Set(), peopleBuilds = new Map();
 const CLIENT_JS = fs.readFileSync(path.join(here, 'studio-state/sync.js'), 'utf8');
 const RELOAD_JS = `(()=>{const es=new EventSource('/__studio/events');es.onmessage=e=>{if(e.data==='css'){for(const l of document.querySelectorAll('link[rel=stylesheet]')){const u=new URL(l.href);u.searchParams.set('_r',Date.now());l.href=u.href;}}else if(e.data==='reload')location.reload();};})();`;
 
@@ -87,6 +88,37 @@ async function handle(req, res) {
     save();
     return json(res, 200, { rev: state.rev, results });
   }
+  // People built on request (the Director's People tab): a character in a posture nobody has built yet.
+  //   POST /__people/build?id=people-<character>-<posture>   -> { id, built }   (tools/people/build.py, then a thumbnail)
+  // Only from this machine, only ids the cast knows; one build at a time per id. Writes assets/props only (not watched).
+  if (p === '/__people/build' && req.method === 'POST') {
+    const id = url.searchParams.get('id') || '', local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+    if (!local) return json(res, 403, { error: 'People are built from the desk machine only.' });
+    if (!/^people-[a-z]{2,20}-[a-z][a-z0-9_.-]{1,50}$/.test(id)) return json(res, 400, { error: 'Not a people model id.' });
+    const glb = path.join(root, 'assets/props', id + '.glb'), had = fs.existsSync(glb);
+    if (!had) {
+      if (!peopleBuilds.has(id)) peopleBuilds.set(id, new Promise((ok, fail) => execFile('python3', [path.join(root, 'tools/people/build.py'), id, '--jobs', '1', '--no-manifest'], { cwd: root, timeout: 180000, maxBuffer: 8 << 20 },
+        (error, out, err) => error ? fail(Error((out + err).split('\n').filter(Boolean).slice(-3).join(' ') || error.message)) : ok()))
+        .then(() => new Promise(ok => execFile('node', [path.join(root, 'tools/props/thumbnails.mjs'), '--only', id], { cwd: root, timeout: 120000 }, () => ok())))
+        .finally(() => peopleBuilds.delete(id)));
+      try { await peopleBuilds.get(id); } catch (e) { return json(res, 500, { error: String(e.message).slice(0, 400) }); }
+    }
+    return json(res, 200, { id, built: !had });
+  }
+  //   POST /__film/duplicate?from=/exports/<cut dir>&name=<name>   -> { id, dir, chapters }   (tools/experience/film-cuts.py)
+  // A copy of a film cut as a new cut the Director can open. Only from this machine; writes exports/ only (not watched).
+  if (p === '/__film/duplicate' && req.method === 'POST') {
+    const from = (url.searchParams.get('from') || '').replace(/^\//, ''), name = (url.searchParams.get('name') || '').trim().slice(0, 60);
+    if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return json(res, 403, { error: 'Cuts are made from the desk machine only.' });
+    if (!/^exports\/[A-Za-z0-9][A-Za-z0-9._-]{0,80}$/.test(from) || !fs.existsSync(path.join(root, from, 'review-cut.json'))) return json(res, 400, { error: 'Not a film cut.' });
+    if (!name) return json(res, 400, { error: 'The new cut needs a name.' });
+    try {
+      const dir = await new Promise((ok, fail) => execFile('flock', ['-w', '120', '/tmp/claude-1000/hq14-cut.lock', 'python3', path.join(root, 'tools/experience/film-cuts.py'), 'duplicate', from, name], { cwd: root, timeout: 180000, maxBuffer: 8 << 20 },
+        (error, out, err) => error ? fail(Error((out + err).split('\n').filter(Boolean).slice(-2).join(' ') || error.message)) : ok(out.trim().split('\n').pop())));
+      const cut = JSON.parse(fs.readFileSync(path.join(root, dir, 'cut.json'), 'utf8'));
+      return json(res, 200, { id: cut.id, name: cut.name, dir: '/' + dir, chapters: '/' + dir + '/director-chapters.json' });
+    } catch (e) { return json(res, 500, { error: String(e.message).slice(0, 400) }); }
+  }
   if (p === '/__studio/sync.js') { res.writeHead(200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }); return res.end(CLIENT_JS); }
   if (p === '/__studio/reload.js') { res.writeHead(200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }); return res.end(RELOAD_JS); }
   if (p === '/__studio/events') {
@@ -103,6 +135,7 @@ async function handle(req, res) {
     html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, '<script src="/__studio/reload.js"></script>\n</body>') : html + '<script src="/__studio/reload.js"></script>';
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(html);
   }
+  if (/\.(m?js|cjs|json|css)$/i.test(p)) res.setHeader('cache-control', 'no-store');
   send(req, p, { root, index: ['index.html'], dotfiles: 'deny' })
     .on('error', e => { res.statusCode = e.status || 500; res.end(); })
     .on('directory', () => { res.statusCode = 301; res.setHeader('location', p + '/'); res.end(); })
@@ -113,7 +146,9 @@ async function handle(req, res) {
 const IGNORED = ['exports', 'node_modules', '.git', 'assets/props', 'models', 'scene-shots'].map(d => path.join(root, d));
 const ignored = f => { const a = path.resolve(f); return a === stateFile || a === stateFile + '.tmp' || IGNORED.some(d => a === d || a.startsWith(d + path.sep)); };
 let reloadTimer = null, pendingCss = true;
-chokidar.watch(root, { ignored, ignoreInitial: true }).on('all', (event, f) => {
+// --no-watch: no live reload (tests: each watching server takes thousands of the machine's file watches, and a
+// server that cannot get one dies with ENOSPC).
+if (!process.argv.includes('--no-watch')) chokidar.watch(root, { ignored, ignoreInitial: true }).on('error', e => console.error('[studio server] live reload is off:', e.message)).on('all', (event, f) => {
   if (ignored(f)) return;
   pendingCss = pendingCss && f.endsWith('.css');
   clearTimeout(reloadTimer);

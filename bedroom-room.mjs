@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { bedroomSessionDetails } from './gallery-bedroom-detail.mjs?v=gallery-bedroom-20261025';
 
@@ -205,6 +206,8 @@ export function buildBedroomRoom(room, root, layout, helpers) {
     box(right,[20,110,a-bz],[w/2-10,55,(a+bz)/2],oak);box(right,[20,110,front-b],[w/2-10,55,(front+b)/2],oak);
     const skyCanvas=document.createElement('canvas');skyCanvas.width=skyCanvas.height=512;const skyMap=new THREE.CanvasTexture(skyCanvas);skyMap.colorSpace=THREE.SRGBColorSpace;
     const pane=mesh(right,new THREE.PlaneGeometry(ww,wh),new THREE.MeshBasicMaterial({map:skyMap}),[w/2+52,low+wh/2,wz]);pane.rotation.y=-Math.PI/2;pane.castShadow=pane.receiveShadow=false;
+    // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
+    const windowVista = attachVista(pane, 'garden'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     for(const z of [a,wz,b])box(right,[65,wh+50,30],[w/2-10,low+wh/2,z],oak);for(const y of [low,low+wh])box(right,[65,30,ww+60],[w/2-10,y,wz],oak);box(right,[170,30,ww+80],[w/2-50,low-15,wz],oak,3);
     // Layered window: a linen roman shade, café sheers and full-height pleated drapes.
     const shadeMap=texture((c,tw,th)=>{c.fillStyle='#e9e0cf';c.fillRect(0,0,tw,th);for(let y=0;y<th;y+=128){const g=c.createLinearGradient(0,y,0,y+128);g.addColorStop(0,'#f8f2e6');g.addColorStop(.8,'#ebe2d0');g.addColorStop(1,'#cdc1aa');c.fillStyle=g;c.fillRect(0,y,tw,128);}for(let i=0;i<tw;i+=3){c.fillStyle='rgba(150,135,110,.12)';c.fillRect(i,0,1,th);}},128,512);
@@ -369,7 +372,7 @@ export function buildBedroomRoom(room, root, layout, helpers) {
         for(let i=0;i<7;i++){const x=i*80-20+rnd(i+60)*20,bw=60+rnd(i+70)*30,bh=50+rnd(i+80)*50,y=450-bh;c.fillStyle=scene.roofs;c.fillRect(x,y,bw,bh+80);c.beginPath();c.moveTo(x-6,y);c.lineTo(x+bw/2,y-26-rnd(i)*10);c.lineTo(x+bw+6,y);c.fill();
             if(scene.lit)for(let j=0;j<3;j++)if(rnd(i*3+j)>.35){c.fillStyle=`rgba(255,${190+(j*20)},${110+j*20},${scene.lit*(.6+rnd(j+i)*.4)})`;c.fillRect(x+10+j*(bw-24)/3,y+14,10,13);}}
         c.fillStyle=scene.trees;for(let i=0;i<14;i++){c.beginPath();c.arc(i*40,500,46+(i%3)*12+rnd(i)*8,0,Math.PI*2);c.fill();}
-        skyMap.needsUpdate=true;};
+        skyMap.needsUpdate=true;windowVista.setPhase(id);};
     room.roomAtmosphere=(id,accent=1)=>{const mode=BEDROOM_MODES[id]||BEDROOM_MODES.morning,f=BEDROOM_FIXTURES[id]||BEDROOM_FIXTURES.morning;current=[BEDROOM_MODES[id]?id:'morning',accent];
         session.update(id);
         paintSky(current[0],mode);placeSun(f);romanShade.scale.y=Math.max(70,wh*f.shade+70);romanShade.position.y=low+wh-romanShade.scale.y/2+10;shadeMap.repeat.set(1,romanShade.scale.y/880);

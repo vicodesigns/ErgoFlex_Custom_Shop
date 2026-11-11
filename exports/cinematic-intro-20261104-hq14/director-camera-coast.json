@@ -1,0 +1,163 @@
+{
+ "source": "/tmp/claude-1000/-home-ergo-ErgoFlex-Custom-Shop/415ac7b2-6cf6-4cc4-9386-66d6bb6f1395/scratchpad/finalpass/out/Film-chapter-coast-final.json",
+ "seconds": 14.5,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    2.4409,
+    2.4343,
+    -6.0747
+   ],
+   "target": [
+    -5.1665,
+    1.4111,
+    0.9893
+   ],
+   "fov": 44,
+   "label": "The lab: reel wall, signage, edit bays"
+  },
+  {
+   "at": 3.3,
+   "position": [
+    1.869,
+    2.22,
+    -0.7762
+   ],
+   "target": [
+    -6.3112,
+    1.2451,
+    0.6281
+   ],
+   "fov": 44.0,
+   "label": "Down the aisle: the edit bays"
+  },
+  {
+   "at": 5.9,
+   "position": [
+    1.446,
+    2.2395,
+    3.4906
+   ],
+   "target": [
+    -4.3,
+    1.55,
+    4.5999
+   ],
+   "fov": 43.0,
+   "label": "Lift: the hero suite rises, left third"
+  },
+  {
+   "at": 7.4,
+   "position": [
+    1.1534,
+    2.2044,
+    3.5471
+   ],
+   "target": [
+    -4.3,
+    1.55,
+    4.5999
+   ],
+   "fov": 43.0,
+   "label": "Lift lands: gentle push"
+  },
+  {
+   "at": 11.25,
+   "position": [
+    -0.6954,
+    1.95,
+    6.7774
+   ],
+   "target": [
+    -2.9,
+    1.41,
+    4.72
+   ],
+   "fov": 40,
+   "label": "Hero edit suite: lands as the tilt ends"
+  },
+  {
+   "at": 13.5,
+   "position": [
+    -0.6954,
+    1.95,
+    6.7774
+   ],
+   "target": [
+    -2.9,
+    1.41,
+    4.72
+   ],
+   "fov": 40,
+   "label": "Hero edit suite: settled white, camera at rest"
+  },
+  {
+   "at": 14.5,
+   "position": [
+    -0.9113,
+    1.8971,
+    6.5759
+   ],
+   "target": [
+    -2.9,
+    1.41,
+    4.72
+   ],
+   "fov": 40,
+   "label": "Straight push into the dissolve"
+  }
+ ],
+ "clips": [
+  {
+   "id": "db2144e8-100f-4932-83c9-07f6e054a086",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 4.4,
+   "duration": 3,
+   "easing": "linear",
+   "label": "Edit suite rises",
+   "target": 38
+  },
+  {
+   "id": "6f9864d3-8b26-40e2-a116-772647d8b6b9",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 9.65,
+   "duration": 1.6,
+   "easing": "linear",
+   "label": "Board tilts up",
+   "target": 5
+  }
+ ],
+ "initial": {
+  "height": 30,
+  "tilt": -5
+ },
+ "lighting": {
+  "ledStatus": [
+   {
+    "at": 4.4,
+    "dur": 3,
+    "kind": "lift-up",
+    "fade": 1,
+    "fadeIn": 0.6
+   },
+   {
+    "at": 9.65,
+    "dur": 1.6,
+    "kind": "tilt-retract",
+    "fade": 1,
+    "fadeIn": 0.6
+   }
+  ]
+ },
+ "props": [
+  {
+   "match": "^Workspace notebook$",
+   "path": "^Room:occmedialab > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Workspace notebook$",
+   "label": "Workspace notebook",
+   "hide": true
+  }
+ ]
+}

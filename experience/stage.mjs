@@ -8,11 +8,26 @@ import { accessory } from '../catalog.mjs';
 import { SHARED_BUILD_PRESETS } from '../preset-defaults.mjs';
 import { OPENING_VIEWS } from './opening.mjs';
 import {cleanPose,cleanCamera,defaultPreset} from './cuts.mjs';
+import {createDeskChoreo,roomDesks} from './desk-choreo.mjs';
 
 // This adapter exists only in a disposable, memory-backed preview iframe.
 export async function mountStage(ctx) {
+  // hold(): keep showing the last drawn frame (no render loop) while the Director re-applies film layers, so the
+  // view never shows a half-dressed room. Pause requests made meanwhile are kept and applied on release.
+  const rawPause=ctx.pause.bind(ctx);let held=0,wantPause=false,sleeping=false,sleepTimer=0;
+  ctx.pause=on=>{wantPause=!!on;if(!held&&!(sleeping&&!on))rawPause(on);if(!on)wake();};
+  const hold=on=>{if(on){if(!held++)rawPause(true);}else if(held&&!--held)rawPause(wantPause||sleeping);};
+  // Render on demand while editing: after 800 ms with no input, seek, edit or film-fx change the loop stops
+  // (the last frame stays); wake() restarts it. Playback, bakes and preparing never sleep.
+  function wake(ms=800){
+    if(sleeping){sleeping=false;if(!held&&!wantPause)rawPause(false);}
+    clearTimeout(sleepTimer);sleepTimer=setTimeout(()=>{if(editorMode&&paused&&!held&&!preparing&&!window.__ERGO_BAKING__&&!wantPause){sleeping=true;rawPause(true);}},ms);
+  }
+  for(const type of ['pointerdown','pointermove','wheel','keydown'])addEventListener(type,()=>wake(),{capture:true,passive:true});
   if (!window.__ERGO_PRESENTATION__) return;
   const api = window.ErgoFlex;
+  // Every room desk's own lift / tilt clips (shot.deskEdits, desk-choreo.mjs), sampled with the chapter clock.
+  const deskChoreo = createDeskChoreo(api);
   const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
   const wait = async predicate => {
     const deadline = performance.now() + 120000;
@@ -22,16 +37,28 @@ export async function mountStage(ctx) {
   await api.presetReady;
   api.sceneTour.setFull(true,false);
   const style=document.createElement('style');
-  style.textContent='html[data-portal-page=shop] body>header.portal-header,#scene-tour,#motion-dock,.scene-tour-full button,.scene-tour-full [role="status"]{display:none!important}html[data-portal-page=shop] body #viewer-shell.scene-tour-full{top:0!important}body{background:#050a10!important}';
+  // The viewer fills this frame exactly. Under 1050 px wide (Director Mode's 16:9 frame on most screens) the shop's
+  // narrow-layout rule (portal-ui.css: #viewer-shell 780 px tall, 12 px down) outranks scene-tour's full screen, so
+  // the canvas was taller than the frame and the frame showed only its top: never the film's framing.
+  style.textContent='html[data-portal-page=shop] body>header.portal-header,#scene-tour,#motion-dock,.scene-tour-full button,.scene-tour-full [role="status"]{display:none!important}html[data-portal-page=shop] body #viewer-shell.scene-tour-full{top:0!important}'
+    +'html[data-portal-page=shop] body.shell-layout #viewer-shell.scene-tour-full{top:0!important;margin:0!important;height:100vh!important;height:100dvh!important;min-height:0!important}body{background:#050a10!important}';
   document.head.append(style);
   ctx.controls.enabled=false;
   ctx.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
   const extras = new THREE.Group(); extras.name='Cinematic effects'; ctx.scene.add(extras);
-  let shot=null, start=null, media=null, video=null, hidden=[], grid=null, pylons=[], sweep=null, light=null, pulse=null, floorCenter=null, trace=null;
+  const ringAt = new THREE.Vector3();
+  let shot=null, start=null, media=null, video=null, hidden=[], grid=null, pylons=[], sweep=null, light=null, pulse=null, floorCenter=null, trace=null, ringHome=null;
   let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let paused=false, sounds=false, mirror=null, sequence=-1, session=null, preparing=false,lastProgress=0;
   let readProgress=()=>0,deskSpan=1,lastMediaColour=0;
-  let editorMode=false,authoredCamera=null,defaultCameraKeys=[],activeCameraKeys=[];
+  let editorMode=false,authoredCamera=null,defaultCameraKeys=[],activeCameraKeys=[],cameraBake=null;
+  // Film chapters (player.mjs filmCameraBake): the stage plays the film's own camera, the Director keys baked through the
+  // film's cameraPlan (holds, spline, timing) exactly as the still renderer and the 4K get them. cameraKeys() stays the
+  // editable keys.
+  function resolveActive(){
+    const keys=resolveCameraKeys(shot?.camera,defaultCameraKeys);activeCameraKeys=keys;
+    if(cameraBake&&keys.length)try{activeCameraKeys=cameraBake(keys,shot.seconds);}catch(error){console.warn('[stage] film camera',error.message);}
+  }
   const cameraPosition=new THREE.Vector3(),cameraTarget=new THREE.Vector3(),cameraEndPosition=new THREE.Vector3(),cameraEndTarget=new THREE.Vector3();
   const focus=new THREE.Vector3(),offset=new THREE.Vector3();
   const intervals=[];let lastRendered=0;
@@ -53,7 +80,7 @@ export async function mountStage(ctx) {
   }
   function cam(t) {
     if(!start||editorMode)return;
-    if(shot?.camera&&authoredCamera){
+    if((shot?.camera||cameraBake)&&authoredCamera){
       const view=sampleCamera(activeCameraKeys,t);if(!view)return;
       cameraPosition.fromArray(view.position);cameraTarget.fromArray(view.target);
       cameraPosition.sub(cameraTarget).multiplyScalar(Math.min(1,view.aspect)/Math.min(1,ctx.camera.aspect)).add(cameraTarget);
@@ -72,6 +99,8 @@ export async function mountStage(ctx) {
     floorCenter=new THREE.Vector3(c.x,b.min.y+sz.y*.12,c.z);
     pulse=new THREE.Mesh(new THREE.RingGeometry(w*.5,w*.51,96),new THREE.MeshBasicMaterial({color:0x27c6ff,side:THREE.DoubleSide,transparent:true,opacity:.8,depthWrite:false}));
     pulse.rotation.x=-Math.PI/2;pulse.position.set(c.x,b.min.y+.003,c.z);extras.add(pulse);
+    // The rings are the desk's: they stay centred under it when it rolls (ringHome: the centre and the desk's place at the start).
+    ringHome={c:c.clone(),p:ctx.loadedModel.getWorldPosition(new THREE.Vector3())};
     light=new THREE.PointLight(0x46ceff,w*2,w*5,2);light.position.set(c.x+w,b.min.y+w,c.z+w);extras.add(light);
     ctx.scene.background=new THREE.Color('#050a10');
     return {b,w,c};
@@ -144,6 +173,8 @@ export async function mountStage(ctx) {
     ctx.pose(next.kind==='tilt'?43.5:30,0);
     if(next.room==='product')ctx.resetProductOrigin(preset+':'+(next.size||'60x30'));
     api.workspaceRoom?.setCeilingEnabled(false);
+    // People in the room (room-people.mjs): shot.people is true, or { only: [ids], except: [ids] }. Off unless the shot asks.
+    await api.setRoomPeople?.(!!next.people,next.people&&typeof next.people==='object'?next.people:null);
     if(next.mode)api.setMeasuredRoomMode(next.room,next.mode,false);
     if(['music','media'].includes(next.kind))api.setMeasuredRoomMode(next.room,'night',false);
     ctx.controls.enabled=false;api.haltAllMotion();
@@ -172,7 +203,8 @@ export async function mountStage(ctx) {
       const p=next.motion.clips?sampleClipMotion(next.motion,0):sampleDeskTracks(tracks,0);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);start=frame(envelope,false);
     }
     defaultCameraKeys=(next.kind==='glide'?[0,.3,.6,1]:[0,1]).map((time,i)=>{cam(time);return{id:'auto-camera-'+i,time,label:time===0?'Start view':time===1?'End view':'Movement view '+i,easing:'smooth',view:captureCamera()};});
-    cam(0);authoredCamera=captureCamera();shot={...next,motion:next.motion?(next.motion.clips?next.motion:{tracks:next.motion.tracks||tracksFromPoses(next.motion.from,next.motion.to)}):undefined};activeCameraKeys=resolveCameraKeys(shot.camera,defaultCameraKeys);cam(0);
+    cam(0);authoredCamera=captureCamera();shot={...next,motion:next.motion?(next.motion.clips?next.motion:{tracks:next.motion.tracks||tracksFromPoses(next.motion.from,next.motion.to)}):undefined};resolveActive();cam(0);
+    deskChoreo.restore();deskChoreo.set(next.deskEdits);
     await ctx.warm();await nextFrame();
     lastRendered=0;intervals.length=0;
     return {id:next.id,room:api.roomScene};
@@ -198,14 +230,25 @@ export async function mountStage(ctx) {
     }
     if(kind==='wellness'&&!shot.motion)ctx.pose(28+15.5*ease((t-.25)/.45),0);
     if(shot.motion){const p=shot.motion.clips?sampleClipMotion(shot.motion,t*shot.seconds):sampleDeskTracks(shot.motion.tracks,t);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);}
+    if(ringHome&&(pulse||sweep)){const d=ctx.loadedModel.getWorldPosition(ringAt).sub(ringHome.p);for(const ring of [pulse,sweep])if(ring){ring.position.x=ringHome.c.x+d.x;ring.position.z=ringHome.c.z+d.z;}}
+    if(deskChoreo.count())deskChoreo.apply(t*shot.seconds);
+    if(shot.people)api.setRoomPeopleTime?.(t*shot.seconds);
     if(kind==='media'&&media){const now=performance.now(),updated=media.update(now);if(updated&&now-lastMediaColour>=100){lastMediaColour=now;try{const p=media.ctx2d.getImageData(Math.floor(media.canvas.width/2),Math.floor(media.canvas.height/2),1,1).data;api.setLedColor('#'+[p[0],p[1],p[2]].map(v=>Math.max(25,v).toString(16).padStart(2,'0')).join(''),false);}catch{}}}
     cam(t);
   }
   async function sound(on){sounds=on;if(shot?.kind==='music'){api.ledMusicMode.setSound(on);if(on)await api.ledMusicMode.start();else api.ledMusicMode.stop();}}
   function pause(on){paused=on;if(preparing)return;ctx.pause(on&&(!editorMode||document.hidden));if(video){if(on)video.pause();else video.play().catch(()=>{});}if(on)api.ledMusicMode?.pause();else if(shot?.kind==='music'&&sounds)api.ledMusicMode?.start();}
   function captureCamera(){return cleanCamera({position:ctx.camera.position.toArray(),target:ctx.controls.target.toArray(),fov:ctx.camera.fov,aspect:ctx.camera.aspect});}
-  function edit(on){editorMode=!!on;ctx.editCamera(editorMode);if(editorMode){paused=true;ctx.pause(false);}else ctx.pause(paused);}
-  function seek(t){const was=paused,editing=editorMode;paused=false;editorMode=false;tick(Math.max(0,Math.min(1,t)));editorMode=editing;paused=was;if(!editing)ctx.pause(paused);}
+  // Director orbit: none of the Studio's orbit limits (2 m minimum distance, camera above the target), or every frame's
+  // controls.update() would pull a closer or lower film camera off its keys and the live view would not be the film's.
+  function edit(on){wake();editorMode=!!on;ctx.editCamera(editorMode);if(editorMode){Object.assign(ctx.controls,{minDistance:.01,maxDistance:Infinity,minPolarAngle:0,maxPolarAngle:Math.PI});paused=true;ctx.pause(false);}else ctx.pause(paused);}
+  // Run fn (a seek that re-poses the scene) without it moving the editor's camera.
+  function keepView(fn){
+    if(!editorMode)return fn();
+    const c=ctx.camera,pos=c.position.clone(),target=ctx.controls.target.clone(),fov=c.fov,up=c.up.clone();
+    try{return fn();}finally{c.position.copy(pos);c.up.copy(up);ctx.controls.target.copy(target);c.lookAt(target);c.fov=fov;c.updateProjectionMatrix();ctx.controls.update?.();}
+  }
+  function seek(t){wake();const was=paused,editing=editorMode;paused=false;editorMode=false;tick(Math.max(0,Math.min(1,t)));editorMode=editing;paused=was;if(!editing)ctx.pause(paused);}
   let bakeSession=null;
   function beginBake(width,height){
     if(bakeSession)throw Error('A bake is already running.');
@@ -248,6 +291,8 @@ export async function mountStage(ctx) {
   // Same-origin parent owns this preview; no arbitrary postMessage action dispatcher.
   window.ErgoPresentation={prepare:async next=>{preparing=true;try{return await prepare(next);}finally{preparing=false;}},tick,sound,pause,receive,
     catalog:()=>ctx.catalog(),edit,seek,captureCamera,beginBake,bakeFrame,endBake,
+    // Director scene-light tools (markers, gizmo) work on the live scene, camera and orbit controls.
+    three:()=>({scene:ctx.scene,camera:ctx.camera,renderer:ctx.renderer,controls:ctx.controls}),hold,wake:ms=>wake(ms),sleeping:()=>sleeping,
     motionDefaults:()=>{
       const result={lift:[],tilt:[],wheels:[]},savedReduced=reduced;
       // Sample the real staged performance, including room routes, in its
@@ -312,7 +357,18 @@ export async function mountStage(ctx) {
       }finally{seek(0);}
       return keys;
     },
-    cameraTrack:(camera,id)=>{if(shot?.id!==id)return;shot.camera=camera;activeCameraKeys=resolveCameraKeys(camera,defaultCameraKeys);},
+    cameraTrack:(camera,id)=>{if(shot?.id!==id)return;shot.camera=camera;resolveActive();},
+    // Set before prepare (player.mjs prepareStage); null for chapters without a film shot.
+    filmCamera:bake=>{cameraBake=typeof bake==='function'?bake:null;},
+    // Director: a new chapter length without re-preparing (the desk motion samples by chapter seconds).
+    secondsTrack:(seconds,id)=>{if(shot?.id===id&&Number.isFinite(seconds)){shot.seconds=seconds;resolveActive();}},
+    // Director: the chapter's per-desk clips changed (desk-choreo.mjs); the desks are re-posed at the current time.
+    // seek() re-poses the desks at the current time but also puts the camera back on the film's camera; while the
+    // Director is open the view is the user's (they orbited somewhere handy to move things), so it is put back as it was.
+    deskEditsTrack:(edits,id)=>{if(shot?.id!==id)return;shot.deskEdits=edits;deskChoreo.set(edits);keepView(()=>seek(lastProgress));},
+    roomDesks:()=>roomDesks(api,deskChoreo),deskBase:id=>deskChoreo.baseOf(id),
+    // The Director's People tab: the chapter's cast changed (room-people.mjs filter; true = the room's own people).
+    peopleTrack:(people,id)=>{if(shot?.id!==id)return null;if(people)shot.people=people;else delete shot.people;return api.setRoomPeople?.(!!people,people&&typeof people==='object'?people:null);},
     motionTrack:(motion,id)=>{if(shot?.id===id)shot.motion=motion?(motion.clips?motion:{tracks:motion.tracks||tracksFromPoses(motion.from,motion.to)}):undefined;},
     previewPose:value=>{const p=cleanPose(value);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);return ctx.readDirector();},capturePose:()=>ctx.readDirector(),
     clock:callback=>{readProgress=callback;},capture:canvas=>ctx.capture(canvas),

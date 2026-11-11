@@ -1,0 +1,87 @@
+{
+ "id": "music",
+ "notes": "Opens high and wide on the gaming room's best details (hex light panels, posters, the Night Squad stream TV, Orbit Runner arcade), then pans left and cranes down past the arcade to settle on the desk and its ultrawide montage, with the arcade on the right and the LED floor glow under the desk; ends on a slow 0.11 u/s push through the dissolve. Chapter lengthened 11 -> 12.5 s so the hero holds about 3 s before the dissolve (no motion/ledStatus/screen offsets to shift).",
+ "set": {
+  "seconds": 12.5,
+  "cameraPlan": {
+   "easeIn": false,
+   "easeOut": false,
+   "keys": [
+    {
+     "at": 0,
+     "position": [
+      3.6,
+      2.75,
+      2.3
+     ],
+     "target": [
+      1.0,
+      2.05,
+      -2.0
+     ],
+     "fov": 48,
+     "label": "Light panels, posters, stream wall"
+    },
+    {
+     "at": 4.5,
+     "position": [
+      3.2,
+      2.3,
+      2.0
+     ],
+     "target": [
+      -0.1,
+      1.75,
+      -1.0
+     ],
+     "fov": 46,
+     "label": "Past Orbit Runner"
+    },
+    {
+     "at": 8,
+     "position": [
+      2.85,
+      1.9,
+      1.8
+     ],
+     "target": [
+      -0.72,
+      1.34,
+      0.27
+     ],
+     "fov": 43.5,
+     "label": "The desk plays along"
+    },
+    {
+     "at": 10.5,
+     "position": [
+      2.62,
+      1.8,
+      1.72
+     ],
+     "target": [
+      -0.74,
+      1.31,
+      0.31
+     ],
+     "fov": 42.8
+    },
+    {
+     "at": 12.5,
+     "position": [
+      2.42,
+      1.72,
+      1.66
+     ],
+     "target": [
+      -0.75,
+      1.29,
+      0.34
+     ],
+     "fov": 42.2,
+     "label": "Slow push, dissolve"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,297 @@
+{
+ "source": "/home/ergo/Downloads/Film-chapter-awaken-41-8-s-.json",
+ "seconds": 41.8,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    1.1244,
+    0.2203,
+    1.7861
+   ],
+   "target": [
+    0.093,
+    0.179,
+    0.972
+   ],
+   "fov": 24,
+   "label": "Wheel macro, desk dark"
+  },
+  {
+   "at": 1.8,
+   "position": [
+    1.4,
+    0.09,
+    1.3
+   ],
+   "target": [
+    0.172,
+    0.154,
+    0.969
+   ],
+   "fov": 24,
+   "label": "Wheels start",
+   "hold": 0.2
+  },
+  {
+   "at": 4.4,
+   "position": [
+    3.2307,
+    0.7246,
+    1.9925
+   ],
+   "target": [
+    0.5787,
+    0.4111,
+    0.7892
+   ],
+   "fov": 25,
+   "label": "Roll lands, pull back"
+  },
+  {
+   "at": 4.8,
+   "position": [
+    3.3408,
+    0.7243,
+    2.0605
+   ],
+   "target": [
+    0.5629,
+    0.462,
+    0.7665
+   ],
+   "fov": 25.39,
+   "label": "Roll landed, keep pulling back",
+   "hold": 1.1
+  },
+  {
+   "at": 6.1,
+   "position": [
+    5.066,
+    0.72,
+    3.126
+   ],
+   "target": [
+    0.315,
+    1.26,
+    0.41
+   ],
+   "fov": 31.5,
+   "label": "Whole desk framed: lights on"
+  },
+  {
+   "at": 7.4,
+   "position": [
+    4.9832,
+    1.9956,
+    3.9339
+   ],
+   "target": [
+    0.4636,
+    1.2701,
+    0.2215
+   ],
+   "fov": 31.5,
+   "label": "Lift starts: foot rest lights",
+   "hold": 1
+  },
+  {
+   "at": 8.9,
+   "position": [
+    4.9832,
+    1.9956,
+    3.9339
+   ],
+   "target": [
+    0.4636,
+    1.2701,
+    0.2215
+   ],
+   "fov": 31.5,
+   "label": "Lift starts: foot rest lights copy"
+  },
+  {
+   "at": 13.0,
+   "position": [
+    4.3386,
+    3.7771,
+    4.7977
+   ],
+   "target": [
+    0.6598,
+    1.3665,
+    0.1064
+   ],
+   "fov": 32,
+   "label": "Desktop layer: crane over the rise"
+  },
+  {
+   "at": 15.9,
+   "position": [
+    3.764921225317342,
+    1.5360702312299301,
+    4.8491135423212794
+   ],
+   "target": [
+    0.4111220162666021,
+    1.3552242359211797,
+    0.17283294216994793
+   ],
+   "fov": 33,
+   "label": "Down to board height",
+   "hold": 0.6
+  },
+  {
+   "at": 19.4,
+   "position": [
+    1.6737197079508819,
+    1.5918447919036658,
+    4.031060590538882
+   ],
+   "target": [
+    0.41348475353168107,
+    1.465048549003432,
+    0.1982041585020545
+   ],
+   "fov": 33.5,
+   "label": "Tilt down (purple), turn starts",
+   "hold": 0.65
+  },
+  {
+   "at": 25.4,
+   "position": [
+    3.4894,
+    2.4016,
+    5.4808
+   ],
+   "target": [
+    0.5192,
+    1.3501,
+    0.156
+   ],
+   "fov": 32,
+   "label": "Far-side 3/4: turn lands",
+   "hold": 1.25
+  },
+  {
+   "at": 30.0,
+   "position": [
+    3.4509,
+    1.6144,
+    5.3859
+   ],
+   "target": [
+    0.5406,
+    1.4224,
+    0.0126
+   ],
+   "fov": 33,
+   "label": "3/4: red lowering"
+  },
+  {
+   "at": 32.2,
+   "position": [
+    3.2631,
+    2.1677,
+    5.0705
+   ],
+   "target": [
+    0.7438,
+    1.2136,
+    -0.0081
+   ],
+   "fov": 33,
+   "label": "Lit roll toward the lens: swing starts"
+  },
+  {
+   "at": 35.6,
+   "position": [
+    -3.33682312282008,
+    1.4610228847361606,
+    5.482471865459589
+   ],
+   "target": [
+    -0.02869060317657913,
+    1.286316679682381,
+    1.014650670022758
+   ],
+   "fov": 33.54,
+   "label": "Hero 3/4: slow push into the dissolve"
+  }
+ ],
+ "clips": [
+  {
+   "id": "op-roll",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 2,
+   "duration": 2.6,
+   "easing": "smooth",
+   "label": "Move forward",
+   "value": 12,
+   "direction": "forward"
+  },
+  {
+   "id": "op-lift",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 8.200000000000001,
+   "duration": 6.9,
+   "easing": "smooth",
+   "label": "Lift up",
+   "target": 45.5
+  },
+  {
+   "id": "op-tilt-down",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 15.9,
+   "duration": 4.399999999999999,
+   "easing": "smooth",
+   "label": "Tilt up",
+   "target": 25
+  },
+  {
+   "id": "op-turn",
+   "lane": "wheels",
+   "kind": "rotate",
+   "start": 19.700000000000003,
+   "duration": 6.7,
+   "easing": "smooth",
+   "label": "Rotating left",
+   "value": 100,
+   "direction": "left"
+  },
+  {
+   "id": "op-tilt-back",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 25.700000000000003,
+   "duration": 3.8,
+   "easing": "smooth",
+   "label": "Tilt level",
+   "target": 0
+  },
+  {
+   "id": "op-lower",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 27.5,
+   "duration": 4.300000000000001,
+   "easing": "smooth",
+   "label": "Lift down",
+   "target": 35
+  },
+  {
+   "id": "op-roll-lit",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 31.200000000000003,
+   "duration": 4.400000000000006,
+   "easing": "smooth",
+   "label": "Move forward",
+   "value": 24,
+   "direction": "forward"
+  }
+ ]
+}

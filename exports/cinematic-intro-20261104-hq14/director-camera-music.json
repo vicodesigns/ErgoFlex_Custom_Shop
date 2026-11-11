@@ -1,0 +1,178 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-20261104-hq14/director-exports/export-278c7d19b775-Film-chapter-music-12-5-s- (1).json",
+ "seconds": 12.5,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    3.9449,
+    2.652,
+    2.7808
+   ],
+   "target": [
+    0.3978,
+    1.0792,
+    -0.745
+   ],
+   "fov": 48,
+   "label": "Light panels, posters, stream wall"
+  },
+  {
+   "at": 4.5,
+   "position": [
+    2.8395,
+    2.1043,
+    2.5687
+   ],
+   "target": [
+    -0.401,
+    1.0365,
+    -0.3556
+   ],
+   "fov": 46,
+   "label": "Past Orbit Runner"
+  },
+  {
+   "at": 4.6,
+   "position": [
+    2.8395,
+    2.1043,
+    2.5687
+   ],
+   "target": [
+    -0.401,
+    1.0365,
+    -0.3556
+   ],
+   "fov": 46,
+   "label": "Past Orbit Runner (hold)"
+  },
+  {
+   "at": 9.2,
+   "position": [
+    3.0953,
+    2.1937,
+    0.2528
+   ],
+   "target": [
+    -0.7328,
+    1.4731,
+    0.2124
+   ],
+   "fov": 43.501,
+   "label": "The desk plays along"
+  },
+  {
+   "at": 9.4,
+   "position": [
+    3.0953,
+    2.1937,
+    0.2528
+   ],
+   "target": [
+    -0.7328,
+    1.4731,
+    0.2124
+   ],
+   "fov": 43.501,
+   "label": "The desk plays along (hold)"
+  },
+  {
+   "at": 10.65,
+   "position": [
+    3.0953,
+    2.1937,
+    0.2528
+   ],
+   "target": [
+    -0.7328,
+    1.4731,
+    0.2124
+   ],
+   "fov": 43.501,
+   "label": "The desk plays along: at rest 1.25 s"
+  },
+  {
+   "at": 12.5,
+   "position": [
+    2.6453,
+    2.0937,
+    0.248
+   ],
+   "target": [
+    -0.7328,
+    1.52,
+    0.2124
+   ],
+   "fov": 41.8,
+   "label": "One slow push into the dissolve"
+  }
+ ],
+ "clips": [
+  {
+   "id": "122d4193-3cc9-4b70-96c5-10c0f0c6beb3",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 6.3,
+   "duration": 3,
+   "easing": "linear",
+   "label": "",
+   "target": 47
+  },
+  {
+   "id": "a3ba9010-22a1-48cc-9890-395fc2898545",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 6.3,
+   "duration": 3,
+   "easing": "linear",
+   "label": "",
+   "target": 5
+  }
+ ],
+ "initial": {
+  "height": 30,
+  "tilt": 0
+ },
+ "props": [
+  {
+   "match": "^$",
+   "asset": "gaming:house:placement:0:0:",
+   "label": "Unnamed prop",
+   "position": [
+    -0.374,
+    0,
+    -0.07
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-plant-2$",
+   "label": "Broad leaf planter (film: swapped)",
+   "hide": true
+  },
+  {
+   "add": {
+    "asset": "ergoflex-plant-1"
+   },
+   "id": "fp9p",
+   "match": "^Added prop:ergoflex-plant-1#fp9p$",
+   "label": "Tall indoor planter",
+   "parent": "room",
+   "position": [
+    -2.308,
+    0,
+    -1.705
+   ],
+   "rotation": [
+    0,
+    15,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  }
+ ]
+}
