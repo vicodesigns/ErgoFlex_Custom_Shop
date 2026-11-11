@@ -227,7 +227,8 @@ const EDITOR_GROUPS = [
     { id: 'lift', label: 'Lift & tilt', open: false, members: ['assign-lift', 'tilt-configs-list'] },
     { id: 'rigs', label: 'Actuator rigs', open: false, members: ['rig-list'] },
     { id: 'tree', label: 'Scene hierarchy', open: true, members: ['scene-tree-header'] },   // keeps its own disclosure inside
-    { id: 'project', label: 'Project & recovery', open: false, members: ['project-tools'] }
+    // studio.js builds the project block inside the tilt card (beside Export Animations): it gets a group of its own.
+    { id: 'project', label: 'Project & recovery', open: false, members: ['project-tools'], own: true }
 ];
 function setGroup(section, open, persist = true) {
     const head = section.querySelector(':scope > .ui-group-head'), body = section.querySelector(':scope > .ui-group-body');
@@ -244,14 +245,15 @@ function adoptEditorGroups() {
     for (const group of EDITOR_GROUPS) {
         const key = `editor.${group.id}`;
         let section = content.querySelector(`:scope > .ui-group[data-ui-group="${key}"]`);
-        const members = group.members.map(id => topChild($(id))).filter(node => node && !node.classList.contains('ui-group'));
+        const members = group.own ? group.members.map($).filter(node => node && node.closest('.ui-group')?.dataset.uiGroup !== key)
+            : group.members.map(id => topChild($(id))).filter(node => node && !node.classList.contains('ui-group'));
         if (!members.length) continue;
         if (!section) {
             const bodyId = `ui-group-${group.id}`;
             const head = h('button', { type: 'button', class: 'ui-group-head', 'aria-controls': bodyId, 'aria-expanded': 'true' }, h('span', { text: group.label }));
             section = h('section', { class: 'ui-group', 'data-ui-group': key, 'aria-label': group.label }, head, h('div', { class: 'ui-group-body', id: bodyId }));
             head.onclick = () => setGroup(section, section.querySelector('.ui-group-body').hidden);
-            members[0].before(section);
+            if (group.own) content.append(section); else members[0].before(section);
             setGroup(section, prefs.groups[key] ?? group.open, false);
         }
         // Members arrive at different moments (some blocks are built after the model loads): keep the listed order.

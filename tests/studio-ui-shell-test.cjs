@@ -80,7 +80,8 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
         // 2. Closed menus and groups: every control still answers a script.
         const closed = await page.evaluate(async () => {
-            const visible = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+            // Rendered or not: a closed <details> keeps boxes for its content, so ask the browser rather than measure.
+            const visible = el => el.checkVisibility({ visibilityProperty: true });
             const out = { hiddenFirst: {} };
             for (const id of ['camera-view', 'rotate-scene', 'grid-toggle', 'studio-exposure', 'room-ceiling-toggle', 'assign-lift', 'led-floor-reach', 'project-save'])
                 out.hiddenFirst[id] = visible(document.getElementById(id));
@@ -125,7 +126,8 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         // 3. Menus.
         const before = await canvasBox(page);
         await page.click('#vb-camera-menu > summary');
-        await page.waitForFunction(() => document.getElementById('vb-camera-menu').open);
+        // The native toggle event (which sets aria-expanded and closes the other menus) follows the click by a task.
+        await page.waitForFunction(() => document.querySelector('#vb-camera-menu[open] > summary[aria-expanded=true]'));
         const camera = await page.evaluate(() => {
             const menu = document.getElementById('vb-camera-menu'), summary = menu.querySelector('summary'), pop = document.getElementById(summary.getAttribute('aria-controls'));
             const r = pop.getBoundingClientRect(), shell = document.getElementById('viewer-shell').getBoundingClientRect();
@@ -135,6 +137,7 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         assert.deepEqual(camera, { expanded: 'true', inside: true, select: true }, 'the Camera menu opens inside the viewer with aria-expanded');
         assert.deepEqual(await canvasBox(page), before, 'opening a menu does not move or resize the canvas');
         await page.click('#vb-light-menu > summary, .render-settings:not(.scene-screen-controls) > summary');
+        await page.waitForFunction(() => document.querySelector('#vb-light-menu[open] > summary[aria-expanded=true]') && !document.getElementById('vb-camera-menu').open && document.querySelector('#vb-camera-menu > summary').getAttribute('aria-expanded') === 'false');
         assert.deepEqual(await page.evaluate(() => [document.getElementById('vb-camera-menu').open, document.getElementById('studio-exposure').closest('details').open,
             document.querySelector('#vb-camera-menu > summary').getAttribute('aria-expanded')]), [false, true, 'false'], 'one menu at a time');
         await page.keyboard.press('Escape');
@@ -225,7 +228,7 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         assert.deepEqual(phone.small, [], 'bar targets are at least 40 px on touch');
         await page.evaluate(() => document.getElementById('viewer-shell').scrollIntoView({ block: 'start' }));
         await page.tap('#vb-camera-menu > summary');
-        await page.waitForFunction(() => document.getElementById('vb-camera-menu').open);
+        await page.waitForFunction(() => document.querySelector('#vb-camera-menu[open] > summary[aria-expanded=true]'));
         const sheet = await page.evaluate(() => { const r = document.querySelector('#vb-camera-menu > .vb-pop').getBoundingClientRect(); return { left: Math.round(r.left), right: Math.round(r.right), bottom: Math.round(r.bottom), height: r.height, vw: innerWidth, vh: innerHeight }; });
         assert.deepEqual([sheet.left, sheet.right, sheet.bottom], [0, sheet.vw, sheet.vh], 'a menu is a bottom sheet on a phone');
         assert.ok(sheet.height <= sheet.vh * .63, 'that leaves the 3D view in sight');

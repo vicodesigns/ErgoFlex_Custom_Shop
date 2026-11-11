@@ -197,7 +197,7 @@ html.ui-shell #setup-sidebar .ui-more > .ui-more-body > :first-child { border-to
     html.ui-shell #scene-controls .vb-find kbd, html.ui-shell #scene-controls #ui-panel-toggle { display: none; }
     html.ui-shell #viewer-shell #scene-controls .vb-menu > .vb-pop {
         position: fixed; inset: auto 0 0 0 !important; z-index: 90; width: auto !important; min-width: 0; max-width: none;
-        max-height: min(62dvh, 560px) !important; padding: 14px 14px calc(16px + env(safe-area-inset-bottom));
+        max-height: min(50dvh, 480px) !important;   /* half the screen: the 3D view stays in sight above it */ padding: 14px 14px calc(16px + env(safe-area-inset-bottom));
         border-radius: 18px 18px 0 0; border-width: 1px 0 0; box-shadow: 0 -12px 40px #0b1a1450;
     }
     html.ui-shell #scene-controls .vb-pop-head { position: sticky; top: -14px; z-index: 1; margin: -14px -14px 0; padding: 12px 14px 8px; background: var(--ui-panel); }
