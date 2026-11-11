@@ -3,6 +3,7 @@
 //
 //   node tools/rooms/room-stills.cjs <out dir> <room:layout:daypart[:size]> [...] --port 3123
 //        [--views asloaded,overview,eyeL,eyeR,desk,reverse,top] [--people] [--mode-height] [--eval file.js] [--w 1280 --h 720]
+//        [--storage ergoflex.gymTheme=blackred,key=value]   localStorage set before the Studio starts (the gym's colourway)
 //
 // Needs a server of this checkout on --port (node tools/studio-server.mjs --port 3123 --host 127.0.0.1 --no-watch
 // --state /tmp/some-state.json) and Chrome at /usr/bin/google-chrome with the GPU (run under the stills lock).
@@ -16,7 +17,7 @@ const path = require('path'), fs = require('fs');
 const ROOT = path.resolve(__dirname, '..', '..');
 const puppeteer = require(fs.existsSync(path.join(ROOT, 'node_modules/puppeteer')) ? path.join(ROOT, 'node_modules/puppeteer') : '/home/ergo/ErgoFlex_Custom_Shop/node_modules/puppeteer');
 const args = process.argv.slice(2), flag = n => { const i = args.indexOf('--' + n); if (i < 0) return null; const v = args[i + 1]; args.splice(i, 2); return v; }, bool = n => { const i = args.indexOf('--' + n); if (i < 0) return false; args.splice(i, 1); return true; };
-const port = flag('port') || 3123, evalFile = flag('eval'), W = +(flag('w') || 1280), H = +(flag('h') || 720), people = bool('people'), modeHeight = bool('mode-height');
+const port = flag('port') || 3123, storage = (flag('storage') || '').split(',').filter(Boolean).map(kv => kv.split('=')), evalFile = flag('eval'), W = +(flag('w') || 1280), H = +(flag('h') || 720), people = bool('people'), modeHeight = bool('mode-height');
 const views = (flag('views') || 'overview,eyeL,eyeR,desk').split(';').flatMap(v => v.startsWith('cam=') ? [v] : v.split(','));
 const out = args.shift(), specs = args;
 if (!out || !specs.length) { console.error('usage: room-stills.cjs <out dir> <room:layout:daypart[:size]> ... --port N'); process.exit(2); }
@@ -27,6 +28,7 @@ fs.mkdirSync(out, { recursive: true });
     const page = await browser.newPage();
     page.on('pageerror', e => console.log('[pageerror]', e.message.slice(0, 300)));
     await page.goto(`http://127.0.0.1:${port}/package.json`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+    if (storage.length) await page.evaluate(items => { for (const [k, v] of items) localStorage.setItem(k, v ?? ''); }, storage);
     // The Studio's stage only starts inside a frame.
     await page.evaluate((W, H) => { document.documentElement.innerHTML = `<body style="margin:0;background:#000"><iframe id="s" style="width:${W}px;height:${H}px;border:0" src="/?room=home&view=room&layout=house&presentation=1&tour=1"></iframe></body>`; }, W, H);
     const frame = await (await page.waitForSelector('#s')).contentFrame();

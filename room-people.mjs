@@ -182,7 +182,7 @@ export const ROOM_PEOPLE = {
         { id: 'people-maya-sit-type', desk: 'sit', modes: ['morning', 'evening'], colors: LOOK.gymMaya }, { id: 'people-maya-sit-type-30', desk: 'sit', modes: ['morning', 'evening'], colors: LOOK.gymMaya },
         ...crewOf('noah', ['afternoon'], { colors: LOOK.gymNoah }),
         { id: 'people-priya-sit-floor', by: 'training-zone', reach: 300, turn: 180, modes: ['afternoon'] },
-        { id: 'people-priya-floor-stretch', by: 'training-zone', reach: 350, turn: 180, modes: ['evening'] },
+        { id: 'people-priya-floor-stretch', by: 'training-zone', reach: 150, turn: 180, modes: ['evening'] },   // (350 put her feet past the open front edge of the three smaller rooms)
         // the circuit: on both sides of the equipment laid out down the middle of the training zone
         L => { const circuit = [['people-priya-stretch', { key: 'priya-circuit' }], ['people-zoe-stretch-open', { colors: { top: '#e0553f', bottom: '#1f2228' } }], ['people-kai-floor-stretch', { colors: { top: '#2f2f35', bottom: '#3c4f6b' } }]];
             if (L.id === 'house') return [spot(circuit[0][0], -380, 2000, [-380, 1000], { ...PARTY, ...circuit[0][1] }), spot(circuit[1][0], -380, 3000, [-380, 1000], { ...PARTY, ...circuit[1][1] }), spot(circuit[2][0], 720, 2250, [720, 3250], { ...PARTY, ...circuit[2][1] })];
