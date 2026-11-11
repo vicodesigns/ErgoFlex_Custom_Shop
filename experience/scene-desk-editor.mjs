@@ -111,7 +111,9 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     const onHandle=ev=>{if(!group.visible)return false;return pointer(ev).intersectObject(disc,false).length>0||ray.intersectObject(ring,false).length>0;};
     w.addEventListener('pointerdown',ev=>{
       down=null;if(ev.button!==0||!editing()||w.__directorDragging)return;
-      if(sel&&group.visible&&gizmo.axis)return;                                   // an arrow of the gumball: TransformControls takes it
+      // an arrow of the gumball: TransformControls takes it. What is under the pointer is read now (its own hover only follows
+      // the mouse, so after a zoom or a camera move under a resting pointer it would be out of date).
+      if(sel&&group.visible&&gizmo.enabled){const r=dom.getBoundingClientRect();gizmo.pointerHover({x:(ev.clientX-r.left)/r.width*2-1,y:-(ev.clientY-r.top)/r.height*2+1,button:ev.button});if(gizmo.axis)return;}
       if(sel&&onTurn(ev)){startTurn(ev);ev.stopImmediatePropagation();ev.preventDefault();return;}
       if(sel&&onHandle(ev)){startDrag(ev);ev.stopImmediatePropagation();ev.preventDefault();return;}
       down={x:ev.clientX,y:ev.clientY};
@@ -121,7 +123,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
       if(turning&&ev.pointerId===turning.pointer){moveTurn(ev);ev.stopImmediatePropagation();ev.preventDefault();return;}
       if(drag&&ev.pointerId===drag.pointer){moveDrag(ev);ev.stopImmediatePropagation();ev.preventDefault();}
     },true);
-    w.document.addEventListener('mouseleave',()=>{hover=null;});
+    dom.addEventListener('pointerleave',()=>{hover=null;});
     w.addEventListener('pointerup',ev=>{
       if(turning&&ev.pointerId===turning.pointer){endTurn(ev);ev.stopImmediatePropagation();ev.preventDefault();return;}
       if(drag&&ev.pointerId===drag.pointer){endDrag(ev);ev.stopImmediatePropagation();ev.preventDefault();return;}
@@ -132,16 +134,17 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
       if(at&&(!at.onItem||inTab())&&(at.id||sel||inTab())){ev.stopImmediatePropagation();ev.preventDefault();release(ev);select(at.id||featured());return;}
       if(sel&&!at?.id){deselect();status('Back to the featured desk. Click a desk to edit it.');}
     },true);
-    w.addEventListener('pointercancel',ev=>{if(turning&&ev.pointerId===turning.pointer)endTurn(ev,true);if(drag&&ev.pointerId===drag.pointer)endDrag(ev,true);},true);
+    // a pointer the browser takes away (touch, pen, a system gesture) ends whatever it was dragging; TransformControls does not hear it
+    w.addEventListener('pointercancel',ev=>{if(turning&&ev.pointerId===turning.pointer)endTurn(ev,true);if(drag&&ev.pointerId===drag.pointer)endDrag(ev,true);if(gz&&gizmo.dragging)gizmo.dragging=false;},true);
     tools={THREE,group,box,foot,handle,ray,pointer,scene:t.scene,t,gizmo,proxy,turn,ringT,grab,knob,disc,ring,tip};requestAnimationFrame(tick);return tools;
   }
   const ensure=()=>booting||=boot().then(t=>t,error=>{booting=null;throw error;});
   function tick(){
     requestAnimationFrame(tick);if(!tools)return;
-    const t=three();if(!t||t.scene!==tools.scene){tools.group.removeFromParent();tools.gizmo.detach();tools.gizmo.removeFromParent();tools.gizmo.dispose?.();tools.proxy.removeFromParent();tools.tip.remove();gz=turning=null;tools=null;booting=null;if(t&&open())ensure().catch(e=>console.warn("[desk tools]",e));return;}
+    const t=three();if(!t||t.scene!==tools.scene){stopDrags();tools.group.removeFromParent();tools.gizmo.detach();tools.gizmo.removeFromParent();tools.gizmo.dispose?.();tools.proxy.removeFromParent();tools.tip.remove();gz=turning=null;tools=null;booting=null;if(t&&open())ensure().catch(e=>console.warn("[desk tools]",e));return;}
     muteStudio();
     const id=sync(),r=id&&editing()?rec(id):null,{group,box,foot,handle,THREE,gizmo,proxy,turn,ringT,grab,knob,tip}=tools;
-    if(!r?.group){group.visible=false;tip.style.display='none';if(gizmo.object){gizmo.detach();proxy.removeFromParent();}gizmo.visible=gizmo.enabled=false;return;}
+    if(!r?.group){stopDrags();group.visible=false;tip.style.display='none';if(gizmo.object){gizmo.detach();proxy.removeFromParent();}gizmo.visible=gizmo.enabled=false;return;}
     group.visible=true;r.group.updateMatrixWorld(true);box.setFromObject(r.group);
     const b=new THREE.Box3().setFromObject(r.group),c=b.getCenter(new THREE.Vector3()),s=b.getSize(new THREE.Vector3()),y=b.min.y+.004;
     foot.position.set(c.x,y,c.z);foot.scale.set(Math.max(.3,s.x),Math.max(.3,s.z),1);
@@ -192,6 +195,15 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     if(cancel||!d.changed){r.state.pose={x:d.start.x,z:d.start.z,yaw:r.state.pose.yaw};desks()?.place(r);return;}
     const p=r.state.pose;
     put(d.id,{pose:{x:Math.round(p.x*10)/10,z:Math.round(p.z*10)/10,yaw:p.yaw}},`${name(r)} moved to x ${r1(p.x/IN)}″, z ${r1(p.z/IN)}″.`);
+  }
+  // The selection can go while something is being dragged (Esc, playback starting, the chapter changing). The drag ends there:
+  // what the gumball has moved so far is kept as the edit, a handle or ring drag is put back, and the camera and the other tools
+  // are free again. (TransformControls ignores the pointerup once it is switched off, so its drag is ended by hand.)
+  function stopDrags(){
+    if(!tools)return;
+    if(gz){if(tools.gizmo.dragging)tools.gizmo.dragging=false;if(gz)endGizmo();}
+    if(turning)endTurn(null,true);
+    if(drag)endDrag(null,true);
   }
   // ---- the gumball's arrows and square (TransformControls on the proxy): the desk follows; the edit is written on release
   function startGizmo(){

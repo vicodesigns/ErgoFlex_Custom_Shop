@@ -77,6 +77,8 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     if(!key)return;
     const people=stagePeople(),o=people?.byKey?.(key);
     if(!o||!entry(key)){exit();return;}
+    // someone at a desk changes posture with its height: the joints here belong to the posture pose mode was opened on
+    if(o.userData.person?.variant&&o.userData.person.id!==entry(key).id){exit();status('The desk has them in another posture now: pose mode is closed, the pose is kept.');return;}
     if(!o.userData.personRig){if(!rigging){rigging=true;people.rig(o).catch(()=>null).finally(()=>{rigging=false;});}if(h)h.group.visible=false;return;}
     if(!h||h.object!==o)build(o);
     const {THREE,t}=tools(),on=o.visible&&editing();h.group.visible=on;
