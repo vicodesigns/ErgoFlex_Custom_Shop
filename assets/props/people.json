@@ -324,6 +324,79 @@
     "bottom": "#dcd6ca",
     "shoes": "#6c6c7b"
    }
+  },
+  "tess": {
+   "name": "Tess",
+   "sex": "woman",
+   "age": "child",
+   "years": 4,
+   "heritage": "Mixed",
+   "height": 151,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "toigo_wool_pants",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#edb1ba",
+    "bottom": "#94accd",
+    "hair": "#473e3b"
+   }
+  },
+  "ravi": {
+   "name": "Ravi",
+   "sex": "man",
+   "age": "child",
+   "years": 7,
+   "heritage": "Mixed",
+   "height": 180,
+   "outfit": [
+    "namuhekam_male_polo_shirt",
+    "cortu_cargo_pants",
+    "shoes04"
+   ],
+   "colors": {
+    "top": "#6cbaa8",
+    "bottom": "#888894",
+    "hair": "#3b3834"
+   }
+  },
+  "nora": {
+   "name": "Nora",
+   "sex": "woman",
+   "age": "child",
+   "years": 10,
+   "heritage": "European",
+   "height": 158,
+   "outfit": [
+    "toigo_fisherman_sweater",
+    "toigo_wool_pants",
+    "shoes06",
+    "spamrakuen_tbm_glasses_frames_01"
+   ],
+   "colors": {
+    "top": "#edcd7b",
+    "bottom": "#75809e",
+    "hair": "#c2a47b"
+   }
+  },
+  "jun": {
+   "name": "Jun",
+   "sex": "man",
+   "age": "child",
+   "years": 10,
+   "heritage": "Asian",
+   "height": 180,
+   "outfit": [
+    "namuhekam_male_polo_shirt",
+    "toigo_wool_pants",
+    "shoes06"
+   ],
+   "colors": {
+    "top": "#e0806c",
+    "bottom": "#7b7b80",
+    "hair": "#3b3838"
+   }
   }
  },
  "poses": {
@@ -479,6 +552,79 @@
    "stance": "wheelchair",
    "desk": false,
    "seat": 0
+  },
+  "sit-coffee": {
+   "label": "Coffee at the desk, seated",
+   "stance": "seated",
+   "desk": true,
+   "seat": 435,
+   "heights": [
+    28,
+    30
+   ]
+  },
+  "stand-coffee": {
+   "label": "Coffee at the desk, standing",
+   "stance": "standing",
+   "desk": true,
+   "seat": 0,
+   "heights": [
+    43.5
+   ]
+  },
+  "stand-mug": {
+   "label": "Standing with a coffee",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-drink": {
+   "label": "Standing with a drink, chatting",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-talk": {
+   "label": "Standing, explaining something",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "carry-box": {
+   "label": "Carrying a box",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "kneel-shelf": {
+   "label": "Kneeling at a low shelf",
+   "stance": "seated",
+   "desk": false,
+   "seat": 0
+  },
+  "sit-floor": {
+   "label": "Sitting cross-legged on the floor",
+   "stance": "seated",
+   "desk": false,
+   "seat": 0
+  },
+  "floor-stretch": {
+   "label": "Stretching on a mat",
+   "stance": "seated",
+   "desk": false,
+   "seat": 0
+  },
+  "sit-mug": {
+   "label": "Sitting back with a mug",
+   "stance": "seated",
+   "desk": false,
+   "seat": 420
+  },
+  "sit-chat": {
+   "label": "On a sofa with a drink, chatting",
+   "stance": "seated",
+   "desk": false,
+   "seat": 420
   }
  },
  "models": {
@@ -3859,6 +4005,414 @@
    "aids": [
     "wheelchair"
    ]
+  },
+  "people-maya-stand-coffee": {
+   "character": "maya",
+   "pose": "stand-coffee",
+   "deskHeight": 43.5,
+   "name": "Maya: coffee at the desk, standing",
+   "aids": []
+  },
+  "people-andre-stand-mug": {
+   "character": "andre",
+   "pose": "stand-mug",
+   "name": "Andre: standing with a coffee",
+   "aids": []
+  },
+  "people-zoe-stand-drink": {
+   "character": "zoe",
+   "pose": "stand-drink",
+   "name": "Zoe: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-noah-stand-talk": {
+   "character": "noah",
+   "pose": "stand-talk",
+   "name": "Noah: standing, explaining something",
+   "aids": []
+  },
+  "people-jo-carry-box": {
+   "character": "jo",
+   "pose": "carry-box",
+   "name": "Jo: carrying a box",
+   "aids": []
+  },
+  "people-lin-kneel-shelf": {
+   "character": "lin",
+   "pose": "kneel-shelf",
+   "name": "Lin: kneeling at a low shelf",
+   "aids": []
+  },
+  "people-priya-sit-floor": {
+   "character": "priya",
+   "pose": "sit-floor",
+   "name": "Priya: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-priya-floor-stretch": {
+   "character": "priya",
+   "pose": "floor-stretch",
+   "name": "Priya: stretching on a mat",
+   "aids": []
+  },
+  "people-grace-sit-mug": {
+   "character": "grace",
+   "pose": "sit-mug",
+   "name": "Grace: sitting back with a mug",
+   "aids": []
+  },
+  "people-sofia-sit-chat": {
+   "character": "sofia",
+   "pose": "sit-chat",
+   "name": "Sofia: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-mia-sit-coffee": {
+   "character": "mia",
+   "pose": "sit-coffee",
+   "deskHeight": 28,
+   "name": "Mia: coffee at the desk, seated",
+   "aids": []
+  },
+  "people-noah-stand-drink": {
+   "character": "noah",
+   "pose": "stand-drink",
+   "name": "Noah: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-ava-stand-drink": {
+   "character": "ava",
+   "pose": "stand-drink",
+   "name": "Ava: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-eli-stand-drink": {
+   "character": "eli",
+   "pose": "stand-drink",
+   "name": "Eli: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-sofia-stand-drink": {
+   "character": "sofia",
+   "pose": "stand-drink",
+   "name": "Sofia: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-leo-stand-drink": {
+   "character": "leo",
+   "pose": "stand-drink",
+   "name": "Leo: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-mia-stand-drink": {
+   "character": "mia",
+   "pose": "stand-drink",
+   "name": "Mia: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-kai-stand-drink": {
+   "character": "kai",
+   "pose": "stand-drink",
+   "name": "Kai: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-grace-stand-drink": {
+   "character": "grace",
+   "pose": "stand-drink",
+   "name": "Grace: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-ben-stand-drink": {
+   "character": "ben",
+   "pose": "stand-drink",
+   "name": "Ben: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-rosa-stand-drink": {
+   "character": "rosa",
+   "pose": "stand-drink",
+   "name": "Rosa: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-sam-stand-drink": {
+   "character": "sam",
+   "pose": "stand-drink",
+   "name": "Sam: standing with a drink, chatting",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-andre-stand-drink": {
+   "character": "andre",
+   "pose": "stand-drink",
+   "name": "Andre: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-lin-stand-drink": {
+   "character": "lin",
+   "pose": "stand-drink",
+   "name": "Lin: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-zoe-stand-talk": {
+   "character": "zoe",
+   "pose": "stand-talk",
+   "name": "Zoe: standing, explaining something",
+   "aids": []
+  },
+  "people-priya-stand-talk": {
+   "character": "priya",
+   "pose": "stand-talk",
+   "name": "Priya: standing, explaining something",
+   "aids": []
+  },
+  "people-andre-stand-talk": {
+   "character": "andre",
+   "pose": "stand-talk",
+   "name": "Andre: standing, explaining something",
+   "aids": []
+  },
+  "people-lin-stand-talk": {
+   "character": "lin",
+   "pose": "stand-talk",
+   "name": "Lin: standing, explaining something",
+   "aids": []
+  },
+  "people-jo-stand-talk": {
+   "character": "jo",
+   "pose": "stand-talk",
+   "name": "Jo: standing, explaining something",
+   "aids": []
+  },
+  "people-hale-stand-talk": {
+   "character": "hale",
+   "pose": "stand-talk",
+   "name": "Mr Hale: standing, explaining something",
+   "aids": []
+  },
+  "people-maya-stand-talk": {
+   "character": "maya",
+   "pose": "stand-talk",
+   "name": "Maya: standing, explaining something",
+   "aids": []
+  },
+  "people-grace-sit-chat": {
+   "character": "grace",
+   "pose": "sit-chat",
+   "name": "Grace: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-mia-sit-chat": {
+   "character": "mia",
+   "pose": "sit-chat",
+   "name": "Mia: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-leo-sit-chat": {
+   "character": "leo",
+   "pose": "sit-chat",
+   "name": "Leo: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-ben-sit-chat": {
+   "character": "ben",
+   "pose": "sit-chat",
+   "name": "Ben: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-lin-stand-mug": {
+   "character": "lin",
+   "pose": "stand-mug",
+   "name": "Lin: standing with a coffee",
+   "aids": []
+  },
+  "people-jo-stand-mug": {
+   "character": "jo",
+   "pose": "stand-mug",
+   "name": "Jo: standing with a coffee",
+   "aids": []
+  },
+  "people-hale-stand-mug": {
+   "character": "hale",
+   "pose": "stand-mug",
+   "name": "Mr Hale: standing with a coffee",
+   "aids": []
+  },
+  "people-priya-stand-mug": {
+   "character": "priya",
+   "pose": "stand-mug",
+   "name": "Priya: standing with a coffee",
+   "aids": []
+  },
+  "people-noah-stand-mug": {
+   "character": "noah",
+   "pose": "stand-mug",
+   "name": "Noah: standing with a coffee",
+   "aids": []
+  },
+  "people-omar-stand-mug": {
+   "character": "omar",
+   "pose": "stand-mug",
+   "name": "Omar: standing with a coffee",
+   "aids": []
+  },
+  "people-mia-sit-mug": {
+   "character": "mia",
+   "pose": "sit-mug",
+   "name": "Mia: sitting back with a mug",
+   "aids": []
+  },
+  "people-ben-sit-mug": {
+   "character": "ben",
+   "pose": "sit-mug",
+   "name": "Ben: sitting back with a mug",
+   "aids": []
+  },
+  "people-andre-sit-mug": {
+   "character": "andre",
+   "pose": "sit-mug",
+   "name": "Andre: sitting back with a mug",
+   "aids": []
+  },
+  "people-maya-sit-coffee": {
+   "character": "maya",
+   "pose": "sit-coffee",
+   "deskHeight": 28,
+   "name": "Maya: coffee at the desk, seated",
+   "aids": []
+  },
+  "people-maya-sit-coffee-30": {
+   "character": "maya",
+   "pose": "sit-coffee",
+   "deskHeight": 30,
+   "name": "Maya: coffee at the desk, seated",
+   "aids": []
+  },
+  "people-ava-sit-coffee": {
+   "character": "ava",
+   "pose": "sit-coffee",
+   "deskHeight": 28,
+   "name": "Ava: coffee at the desk, seated",
+   "aids": []
+  },
+  "people-ava-sit-coffee-30": {
+   "character": "ava",
+   "pose": "sit-coffee",
+   "deskHeight": 30,
+   "name": "Ava: coffee at the desk, seated",
+   "aids": []
+  },
+  "people-sam-sit-coffee": {
+   "character": "sam",
+   "pose": "sit-coffee",
+   "deskHeight": 28,
+   "name": "Sam: coffee at the desk, seated",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-sit-coffee-30": {
+   "character": "sam",
+   "pose": "sit-coffee",
+   "deskHeight": 30,
+   "name": "Sam: coffee at the desk, seated",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-noah-sit-coffee": {
+   "character": "noah",
+   "pose": "sit-coffee",
+   "deskHeight": 28,
+   "name": "Noah: coffee at the desk, seated",
+   "aids": []
+  },
+  "people-noah-sit-coffee-30": {
+   "character": "noah",
+   "pose": "sit-coffee",
+   "deskHeight": 30,
+   "name": "Noah: coffee at the desk, seated",
+   "aids": []
+  },
+  "people-sam-stand-coffee": {
+   "character": "sam",
+   "pose": "stand-coffee",
+   "deskHeight": 43.5,
+   "name": "Sam: coffee at the desk, standing",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-lin-stand-coffee": {
+   "character": "lin",
+   "pose": "stand-coffee",
+   "deskHeight": 43.5,
+   "name": "Lin: coffee at the desk, standing",
+   "aids": []
+  },
+  "people-jo-stand-coffee": {
+   "character": "jo",
+   "pose": "stand-coffee",
+   "deskHeight": 43.5,
+   "name": "Jo: coffee at the desk, standing",
+   "aids": []
+  },
+  "people-priya-stand-coffee": {
+   "character": "priya",
+   "pose": "stand-coffee",
+   "deskHeight": 43.5,
+   "name": "Priya: coffee at the desk, standing",
+   "aids": []
+  },
+  "people-zoe-sit-floor": {
+   "character": "zoe",
+   "pose": "sit-floor",
+   "name": "Zoe: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-jo-kneel-shelf": {
+   "character": "jo",
+   "pose": "kneel-shelf",
+   "name": "Jo: kneeling at a low shelf",
+   "aids": []
+  },
+  "people-noah-carry-box": {
+   "character": "noah",
+   "pose": "carry-box",
+   "name": "Noah: carrying a box",
+   "aids": []
+  },
+  "people-leo-carry-box": {
+   "character": "leo",
+   "pose": "carry-box",
+   "name": "Leo: carrying a box",
+   "aids": []
+  },
+  "people-andre-sit-mix": {
+   "character": "andre",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Andre, mixing at the desk with headphones (seated)",
+   "aids": []
+  },
+  "people-andre-sit-mix-30": {
+   "character": "andre",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Andre, mixing at the desk at 30 in with headphones (seated)",
+   "aids": []
+  },
+  "people-kai-floor-stretch": {
+   "character": "kai",
+   "pose": "floor-stretch",
+   "name": "Kai: stretching on a mat",
+   "aids": []
+  },
+  "people-lin-sit-chat": {
+   "character": "lin",
+   "pose": "sit-chat",
+   "name": "Lin: on a sofa with a drink, chatting",
+   "aids": []
   }
  }
 }

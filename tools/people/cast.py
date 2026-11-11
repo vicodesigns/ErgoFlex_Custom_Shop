@@ -131,7 +131,33 @@ CHARACTERS = {
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'toigo_flats'],
         'tint': {'toigo_basic_tucked_t-shirt': (.2, .4, .55), 'toigo_wool_pants': (.72, .68, .6), 'toigo_flats': (.15, .15, .2)},
     },
+    # Children (MakeHuman age: 0 = 1 year, .1875 = 10 years). Their poses scale with them (k) and sit on child furniture.
+    'tess': {
+        'name': 'Tess', 'phenotype': {'gender': .0, 'age': .0625, 'muscle': .5, 'weight': .55, 'height': .5, 'proportions': .5, 'race': race(.4, .6, 0)},
+        'skin': 'young_african_female', 'eyes': 'brown', 'hair': 'afro01', 'hair_tint': (.06, .045, .04), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
+        'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
+        'tint': {'toigo_basic_tucked_t-shirt': (.85, .45, .5), 'toigo_wool_pants': (.3, .42, .62)},
+    },
+    'ravi': {
+        'name': 'Ravi', 'phenotype': {'gender': 1., 'age': .125, 'muscle': .5, 'weight': .5, 'height': .5, 'proportions': .5, 'race': race(.3, .1, .6)},
+        'skin': 'young_asian_male', 'eyes': 'brown', 'hair': 'short02', 'hair_tint': (.04, .035, .03), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
+        'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes04'],
+        'tint': {'namuhekam_male_polo_shirt': (.15, .5, .4), 'cortu_cargo_pants': (.25, .25, .3)},
+    },
+    'nora': {
+        'name': 'Nora', 'phenotype': {'gender': .0, 'age': .1875, 'muscle': .45, 'weight': .48, 'height': .55, 'proportions': .5, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_female', 'eyes': 'blue', 'hair': 'ponytail01', 'hair_tint': (.55, .38, .2), 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
+        'clothes': ['toigo_fisherman_sweater', 'toigo_wool_pants', 'shoes06', 'spamrakuen_tbm_glasses_frames_01'],
+        'tint': {'toigo_fisherman_sweater': (.85, .62, .2), 'toigo_wool_pants': (.18, .22, .35)},
+    },
+    'jun': {
+        'name': 'Jun', 'phenotype': {'gender': 1., 'age': .18, 'muscle': .5, 'weight': .45, 'height': .5, 'proportions': .5, 'race': race(.05, 0, .95)},
+        'skin': 'young_asian_male', 'eyes': 'brown', 'hair': 'short04', 'hair_tint': (.04, .035, .035), 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
+        'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes06'],
+        'tint': {'namuhekam_male_polo_shirt': (.75, .22, .15), 'toigo_wool_pants': (.2, .2, .22)},
+    },
 }
+CHILDREN = ('tess', 'ravi', 'nora', 'jun')
 
 _TYPE_L = {'fingers': (-.12, -1, -.2), 'palm': (0, 0, -1), 'curl': .45, 'thumb': .3, 'spread': .3}
 _TYPE_R = {'fingers': (.12, -1, -.2), 'palm': (0, 0, -1), 'curl': .45, 'thumb': .3, 'spread': .3}
@@ -222,6 +248,86 @@ def white_cane(k):
             'foot_r': {'at': _s(k, -.085, -.22, .085 / k), 'toes': (-.08, -1, 0), 'pitch': -10, 'knee': (-.03, -.6, .1)}}
 
 
+def _cup(k, side, at, lift=0.):
+    """A hand round a cup in front of the body: thumb up, palm toward the middle, fingers forward."""
+    s = 1 if side == 'l' else -1
+    return {'at': _s(k, *at), 'fingers': (-s * .45, -.88, .15 + lift), 'palm': (-s, .1, 0), 'elbow': (s * .12, .35, -.8), 'curl': .6, 'thumb': .35}
+
+
+def _feet(k, w=1.):
+    return {'foot_l': {'at': _s(k, .10 * w, .0, .07 / k), 'toes': (.3, -1, 0)}, 'foot_r': {'at': _s(k, -.12 * w, .04, .07 / k), 'toes': (-.35, -1, 0)}}
+
+
+def stand_mug(k):
+    """Standing with a coffee in the right hand at chest height, weight on one leg, the other hand loose."""
+    return {'pelvis_offset': (.015, 0, -.005), 'pelvis_roll': -2, 'spine': (0, 1, 2), 'neck': 5, 'head': 4, 'head_yaw': -4,
+            'hand_r': _cup(k, 'r', (-.12, -.16, 1.13)), 'hand_l': _hang(k, 'l', -.02), **_feet(k)}
+
+
+def stand_drink(k):
+    """Standing with a drink, chatting: glass low in the right hand, head turned a little toward the other person."""
+    return {'pelvis_offset': (-.015, 0, -.005), 'pelvis_roll': 2, 'spine': (0, 1, 1), 'spine_twist': 4, 'neck': 0, 'head': -2, 'head_yaw': 10,
+            'hand_r': _cup(k, 'r', (-.15, -.15, 1.04)), 'hand_l': _hang(k, 'l', .01), **_feet(k)}
+
+
+def stand_talk(k):
+    """Standing in a conversation, explaining: the right hand out in front, palm up; the left hand loose."""
+    return {'spine': (1, 1, 1), 'spine_twist': -5, 'neck': 2, 'head': 0, 'head_yaw': -6, 'head_roll': 3,
+            'hand_r': {'at': _s(k, -.16, -.3, 1.0), 'fingers': (.25, -1, .05), 'palm': (.15, 0, 1), 'elbow': (-.25, .25, -.35), 'curl': .25, 'thumb': .15, 'spread': .35},
+            'hand_l': _hang(k, 'l', .02),
+            'foot_l': {'at': _s(k, .12, -.03, .07 / k), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.11, .05, .07 / k), 'toes': (-.4, -1, 0)}}
+
+
+def carry_box(k):
+    """Carrying a box in front in both hands, on the way somewhere."""
+    return {'spine': (-2, -1, 1), 'neck': 6, 'head': 6,
+            'hand_l': {'at': _s(k, .19, -.3, .98), 'fingers': (-.1, -1, .05), 'palm': (-1, 0, .1), 'elbow': (.25, .25, -.2), 'curl': .3, 'thumb': .2},
+            'hand_r': {'at': _s(k, -.19, -.3, .98), 'fingers': (.1, -1, .05), 'palm': (1, 0, .1), 'elbow': (-.25, .25, -.2), 'curl': .3, 'thumb': .2},
+            'foot_l': {'at': _s(k, .1, -.1, .07 / k), 'toes': (.2, -1, 0)}, 'foot_r': {'at': _s(k, -.11, .1, .07 / k), 'toes': (-.25, -1, 0)}}
+
+
+def kneel_shelf(k):
+    """On one knee at a low shelf or crate, reaching into it with the right hand, the left forearm on the left knee."""
+    return {'pelvis': _s(k, 0, .08, .5), 'pelvis_pitch': 10, 'spine': (8, 8, 6), 'neck': 12, 'head': 10,
+            'hand_r': {'at': _s(k, -.12, -.5, .42), 'fingers': (.1, -1, -.4), 'palm': (0, -.2, -1), 'elbow': (-.3, .2, -.2), 'curl': .5, 'thumb': .3},
+            'hand_l': {'at': _s(k, .2, -.28, .5), 'fingers': (-.1, -1, -.6), 'palm': (0, 0, -1), 'elbow': (.3, .3, 0), 'curl': .45, 'thumb': .3},
+            'foot_l': {'at': _s(k, .14, -.3, .07 / k), 'toes': (.1, -1, 0), 'knee': (.15, -1, .3)},
+            'foot_r': {'at': _s(k, -.12, .42, .05 / k), 'toes': (0, -.2, -1), 'pitch': 60, 'knee': (0, -1, -1)}}
+
+
+def sit_floor(k):
+    """Sitting cross-legged on the floor or a mat, hands resting on the knees."""
+    return {'pelvis': _s(k, 0, .02, .16), 'pelvis_pitch': 6, 'spine': (4, 3, 2), 'neck': 6, 'head': 4,
+            'hand_l': {'at': _s(k, .22, -.28, .2), 'fingers': (-.2, -1, -.3), 'palm': (0, 0, -1), 'elbow': (.4, .3, 0), 'curl': .35, 'thumb': .2},
+            'hand_r': {'at': _s(k, -.22, -.28, .2), 'fingers': (.2, -1, -.3), 'palm': (0, 0, -1), 'elbow': (-.4, .3, 0), 'curl': .35, 'thumb': .2},
+            'foot_l': {'at': _s(k, -.13, -.24, .07), 'toes': (-.6, -.6, 0), 'knee': (1, -.5, .3)},
+            'foot_r': {'at': _s(k, .13, -.33, .07), 'toes': (.6, -.6, 0), 'knee': (-1, -.5, .3)}}
+
+
+def floor_stretch(k):
+    """On a mat, seated forward fold: legs out long, reaching for the toes."""
+    return {'pelvis': _s(k, 0, .02, .14), 'pelvis_pitch': 30, 'spine': (12, 12, 10), 'neck': 6, 'head': 4,
+            'hand_l': {'at': _s(k, .1, -.75, .17), 'fingers': (0, -1, -.2), 'palm': (0, 0, -1), 'elbow': (.3, .2, .2), 'curl': .3, 'thumb': .2},
+            'hand_r': {'at': _s(k, -.1, -.75, .17), 'fingers': (0, -1, -.2), 'palm': (0, 0, -1), 'elbow': (-.3, .2, .2), 'curl': .3, 'thumb': .2},
+            'foot_l': {'at': _s(k, .1, -.9, .08), 'toes': (0, -.3, 1), 'pitch': -70, 'knee': (0, 0, 1)}, 'foot_r': {'at': _s(k, -.1, -.9, .08), 'toes': (0, -.3, 1), 'pitch': -70, 'knee': (0, 0, 1)}}
+
+
+def sit_mug(k):
+    """In an armchair or on a sofa, sitting back with a mug in the right hand, the left hand on the thigh."""
+    return {'pelvis': (0, .03, LOUNGE + .09), 'pelvis_pitch': -7, 'spine': (-1, 3, 5), 'neck': 6, 'head': 6, 'head_yaw': -5,
+            'hand_r': {**_cup(1, 'r', (-.11, -.2, LOUNGE + .36)), 'elbow': (-.25, .3, -.6)},
+            'hand_l': {'at': (.15, -.3, LOUNGE + .17), 'fingers': (-.2, -1, -.25), 'palm': (0, 0, -1), 'elbow': (.3, .3, -.1), 'curl': .35, 'thumb': .2},
+            'foot_l': {'at': (.15, -.42, .075), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.13, -.46, .075), 'toes': (-.2, -1, 0)}}
+
+
+def sit_chat(k):
+    """On a sofa or chair, turned a little to talk, a glass in the right hand and the left forearm on the armrest side."""
+    return {'pelvis': (0, .03, LOUNGE + .09), 'pelvis_pitch': -4, 'spine': (1, 3, 4), 'spine_twist': 8, 'neck': 0, 'head': -2, 'head_yaw': 14,
+            'hand_r': {**_cup(1, 'r', (-.12, -.22, LOUNGE + .32)), 'elbow': (-.25, .3, -.6)},
+            'hand_l': {'at': (.17, -.25, LOUNGE + .17), 'fingers': (-.1, -1, -.25), 'palm': (0, 0, -1), 'elbow': (.3, .3, -.1), 'curl': .35, 'thumb': .2},
+            'foot_l': {'at': (.14, -.44, .075), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.12, -.4, .075), 'toes': (-.2, -1, 0)}}
+
+
 WHEEL_SEAT = .5      # manual wheelchair seat
 
 
@@ -257,8 +363,26 @@ def wheel_type(inches=31):
             'foot_l': {'at': (.085, -.41, .235), 'toes': (.1, -1, 0)}, 'foot_r': {'at': (-.085, -.41, .235), 'toes': (-.1, -1, 0)}}
 
 
+def sit_coffee(inches=28):
+    """Seated at the desk, sitting back a little: the left hand on the keyboard, a mug in the right, reading the screen."""
+    keys = keys_at(inches)
+    return {'pelvis': (0, .03, SEAT + .09), 'pelvis_pitch': -2, 'spine': (1, 2, 3), 'neck': 2, 'head': -1,
+            'hand_l': {'at': (.12, -.39, keys + .04), 'elbow': (.16, .28, -.3), **_TYPE_L},
+            'hand_r': {**_cup(1, 'r', (-.13, -.27, max(keys + .1, SEAT + .4))), 'elbow': (-.25, .25, -.35)},
+            'foot_l': {'at': (.12, -.40, .075), 'toes': (.2, -1, 0)}, 'foot_r': {'at': (-.13, -.36, .075), 'toes': (-.22, -1, 0)}}
+
+
+def stand_coffee(inches=43.5):
+    """Standing at the raised desk with the first coffee: the left hand on the keyboard, the mug in the right."""
+    keys = keys_at(inches)
+    return {'spine': (1, 2, 2), 'neck': 6, 'head': 4, 'pelvis_roll': -1,
+            'hand_l': {'at': (.13, -.33, keys + .04), 'elbow': (.2, .3, -.35), **_TYPE_L},
+            'hand_r': {**_cup(1, 'r', (-.13, -.24, keys + .02)), 'elbow': (-.22, .25, -.45)},
+            'foot_l': {'at': (.11, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.13, .07, .07), 'toes': (-.35, -1, 0)}}
+
+
 # Desk poses take the desk height (inches) from the output's 'height'.
-DESK_POSES = {'sit-type': sit_type, 'stand-type': stand_type, 'wheel-type': wheel_type,
+DESK_POSES = {'sit-type': sit_type, 'stand-type': stand_type, 'wheel-type': wheel_type, 'sit-coffee': sit_coffee, 'stand-coffee': stand_coffee,
               # Standing at the desk's lowest setting: the working height for a person of short stature.
               'stand-type-low': lambda inches=28: dict(stand_type(inches, .27), spine=(1, 2, 2), neck=0, head=-4)}
 KEYS_WHEEL = .759    # keyboard top with the desk at 31 in, raised so the knees clear the tray
@@ -343,6 +467,15 @@ POSES = {
     'stand-wait': stand_wait,
     'stand-present': stand_present,
     'walk': walk,
+    'stand-mug': stand_mug,
+    'stand-drink': stand_drink,
+    'stand-talk': stand_talk,
+    'carry-box': carry_box,
+    'kneel-shelf': kneel_shelf,
+    'sit-floor': sit_floor,
+    'floor-stretch': floor_stretch,
+    'sit-mug': sit_mug,
+    'sit-chat': sit_chat,
 }
 
 # id -> character, pose, library name, what they hold.
@@ -399,6 +532,8 @@ OUTPUTS = [
     {'id': 'people-jo-stand-work', 'character': 'jo', 'pose': 'stand-work', 'name': 'Jo, working at the bench', 'held': [('screwdriver', {'side': 'r'})]},
     {'id': 'people-ben-white-cane', 'character': 'ben', 'pose': 'white-cane', 'name': 'Ben, walking with a white cane', 'held': [('cane', {'side': 'r', 'white': True})]},
     {'id': 'people-rosa-stand-type-low', 'character': 'rosa', 'pose': 'stand-type-low', 'height': 28, 'name': 'Rosa, at the desk on its lowest setting (standing)'},
+    {'id': 'people-andre-sit-mix', 'character': 'andre', 'pose': 'sit-type', 'height': 28, 'name': 'Andre, mixing at the desk with headphones (seated)', 'held': [('headphones', {})]},
+    {'id': 'people-andre-sit-mix-30', 'character': 'andre', 'pose': 'sit-type', 'height': 30, 'name': 'Andre, mixing at the desk at 30 in with headphones (seated)', 'held': [('headphones', {})]},
     {'id': 'people-rosa-stand-type-30', 'character': 'rosa', 'pose': 'stand-type-low', 'height': 30, 'name': 'Rosa, at the desk at 30 in (standing)'},
 ]
 
@@ -430,8 +565,22 @@ POSE_INFO = {
     'sit-controller': ('On a sofa with a game controller', 'seated', '', 420, [('gamepad', {})]),
     'wheel-roll': ('Rolling, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {})]),
     'wheel-watch': ('Watching a screen, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {})]),
+    'sit-coffee': ('Coffee at the desk, seated', 'seated', 'desk', 435, [('cup', {'side': 'r'})]),
+    'stand-coffee': ('Coffee at the desk, standing', 'standing', 'desk', 0, [('cup', {'side': 'r'})]),
+    'stand-mug': ('Standing with a coffee', 'standing', '', 0, [('cup', {'side': 'r'})]),
+    'stand-drink': ('Standing with a drink, chatting', 'standing', '', 0, [('cup', {'side': 'r', 'kind': 'glass'})]),
+    'stand-talk': ('Standing, explaining something', 'standing', '', 0, []),
+    'carry-box': ('Carrying a box', 'standing', '', 0, [('carton', {})]),
+    'kneel-shelf': ('Kneeling at a low shelf', 'seated', '', 0, []),
+    'sit-floor': ('Sitting cross-legged on the floor', 'seated', '', 0, []),
+    'floor-stretch': ('Stretching on a mat', 'seated', '', 0, []),
+    'sit-mug': ('Sitting back with a mug', 'seated', '', 420, [('cup', {'side': 'r'})]),
+    'sit-chat': ('On a sofa with a drink, chatting', 'seated', '', 420, [('cup', {'side': 'r', 'kind': 'glass'})]),
 }
-DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31)}
+DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,)}
+# Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
+CHILD_POSES = set()
+def suits(who, pose): return (who in CHILDREN) == (pose in CHILD_POSES)
 
 
 def output(model_id):
@@ -462,6 +611,7 @@ def all_outputs():
     have = {(o['character'], o['pose'], o.get('height')) for o in OUTPUTS}; ids = {o['id'] for o in OUTPUTS}; out = list(OUTPUTS)
     for who in CHARACTERS:
         for pose, (_label, _stance, where, _seat, _held) in POSE_INFO.items():
+            if not suits(who, pose): continue
             for h in (DESK_HEIGHTS[pose] if where == 'desk' else (None,)):
                 if (who, pose, h) in have: continue
                 inches = None if h is None else str(h).replace('.', '_')
