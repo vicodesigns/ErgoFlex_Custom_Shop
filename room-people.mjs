@@ -154,7 +154,7 @@ const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 export class RoomPeople {
     constructor(room, library) {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
-        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.lastMode = undefined;
+        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.lastMode = undefined; this.generation = 0;
         this.dirty = false;       // dirty: someone moved since the Studio last looked (their shadow has to follow)
         this.ray = new THREE.Raycaster();
     }
@@ -291,12 +291,13 @@ export class RoomPeople {
         else this.update(this.room.peopleState?.());
     }
     async build() {
-        const room = this.room, token = room.token, root = room.root, specs = this.specs();
+        const room = this.room, token = room.token, root = room.root, specs = this.specs(), cast = this.generation;
         await room.ready; await this.library.loadIndex();
         const load = async id => { try { return await this.library.instance(id); } catch (error) { console.warn('[people] ' + id + ' did not load:', error?.message || error); return null; } };
         const loaded = await Promise.all(specs.map(async spec => ({ spec, object: await load(spec.id), chair: spec.desk === 'sit' ? await load(TASK_CHAIR) : null })));
         const posed = [];
-        if (token !== room.token || root !== room.root) return;
+        // (a cast that was replaced while its models loaded is dropped: its people would stay in the room for good)
+        if (token !== room.token || root !== room.root || cast !== this.generation) return;
         for (const { spec, object, chair } of loaded) {
             if (!object) continue;
             object.name = 'Person:' + spec.id; object.userData.person = spec; object.userData.personFit = this.library.entry(spec.id)?.person?.deskHeight ?? null; object.visible = false;
@@ -308,14 +309,14 @@ export class RoomPeople {
             else if (!spec.desk && !spec.beside) this.settle(object, spec);
         }
         await Promise.all(posed.map(object => this.rig(object)));
-        await this.cast(token, root);
+        if (cast === this.generation) await this.cast(token, root);
     }
     // The people at the featured desk who can move (room-people-motion.mjs): the models of one character there become
     // one person, drawn skinned, who sits, stands and takes their hands off the keys with the desk. Needs the
     // character's bone data (library.rigData); without it they stay still models that show at their own height.
     //   filter.motion === false keeps the still models for one use of the room.
     async cast(token, root) {
-        this.actors = [];
+        const generation = this.generation; this.actors = [];
         if (!this.library.rigData || this.filter?.motion === false) return;
         const groups = new Map();
         for (const object of this.people) {
@@ -323,9 +324,10 @@ export class RoomPeople {
             if (who) { if (!groups.has(who)) groups.set(who, []); groups.get(who).push(object); }
         }
         for (const [who, objects] of groups) {
-            const data = await this.library.rigData(who).catch(() => null); if (!data) continue;
+            const data = await this.library.rigData(who).catch(() => null); if (generation !== this.generation) return; if (!data) continue;
             const rig = new PersonRig(data); if (objects.some(o => !rig.has(o.userData.person.id))) continue;
             const drawn = await Promise.all(objects.map(o => this.rig(o)));
+            if (generation !== this.generation) return;
             if (token !== this.room.token || root !== this.room.root || drawn.some(o => !o.userData.personRig || !this.people.includes(o))) continue;
             const actor = new DeskActor(rig); actor.objects = drawn; actor.chair = null;
             for (const o of drawn) { o.userData.personActor = actor; if (o.userData.personChair) { if (!actor.chair) actor.chair = o.userData.personChair; else o.userData.personChair.visible = false; } }
@@ -642,6 +644,6 @@ export class RoomPeople {
     dispose() {
         this.restoreChairs();
         for (const object of this.people) { object.userData.personChair?.removeFromParent(); object.removeFromParent(); for (const m of object.userData.personMaterials || []) m.dispose(); }
-        this.people = []; this.built = null; this.actors = [];
+        this.people = []; this.built = null; this.actors = []; this.pairs = []; this.generation++;
     }
 }

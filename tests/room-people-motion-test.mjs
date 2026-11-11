@@ -272,6 +272,12 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
         assert.deepEqual(day('evening', 200), ['people-grace-sit-phone']); assert.ok(close(arm('phones'), builtArm('people-grace-sit-phone')) && !people.moving, 'two seconds later she is on her phone, as built');
         assert.deepEqual(day('morning', 200), ['people-grace-sit-read']); assert.ok(close(arm('reads'), builtArm('people-grace-sit-read')), 'and back in the morning');
     }
+    // a cast replaced while its models are still loading leaves nobody behind
+    {
+        people.setFilter({ only: [], cast: [{ key: 'o', id: 'people-omar-wheel-type-28', desk: 'wheel' }] }); const first = people.setEnabled(true);
+        people.setFilter({ only: [], cast }); await people.setEnabled(true); await first; await new Promise(r => setTimeout(r, 20));
+        assert.ok(!people.people.some(o => /omar/.test(o.userData.person.id)) && !room.root.children.some(o => /omar/.test(o.name)), 'the replaced cast is not in the room');
+    }
     // the still models for one use of the room
     people.setFilter({ only: [], cast, motion: false }); await people.setEnabled(true);
     assert.equal(people.actors.length, 0); people.update({ ...desk, height: 36, time: 5 }); assert.deepEqual(shown(), [], 'motion off: nobody between the built heights, as before');
