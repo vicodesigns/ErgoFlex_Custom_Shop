@@ -3,7 +3,7 @@ import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { HOME_SESSIONS, homeSessionPinboard, buildHomeSessionDetail } from './home-session-detail.mjs?v=home-sessions-20261022';
 import { homeComfortDetails } from './home-comfort-detail.mjs?v=commons-home-comfort-20261024';
-import { createSunPatch } from './room-sun-patch.mjs?v=sun-patch-20261110';
+import { createSunPatch, createSunLight } from './room-sun-patch.mjs?v=sun-light-20261110';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 
 // Architectural dimensions and prop positions are millimetres, never resized
@@ -121,7 +121,7 @@ export const HOME_MODES = {
     morning: { label: 'Morning', description: 'Fresh daylight · standing work', key: '#ffe8c4', fill: '#d9e8ff', accent: '#ffd6a4', power: 1.85, ambient: .4, bounce: .66, exposure: 1.05, sky: ['#8dbfe2', '#fde4c2'], practical: .12, height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
     afternoon: { label: 'Afternoon', description: 'Soft daylight · seated focus', key: '#fff3dd', fill: '#e4edf6', accent: '#ffd1a1', power: 1.35, ambient: .42, bounce: .65, exposure: 1.08, sky: ['#8cb9d8', '#f4ecdc'], practical: .3, height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
     evening: { label: 'Evening', description: 'Golden hour · reading and planning', key: '#ffaa66', fill: '#bdc5e6', accent: '#ffbd80', power: .82, ambient: .24, bounce: .4, exposure: 1.1, sky: ['#5a6795', '#f6a066'], practical: 1.05, height: 28, tilt: 12, offset: [0, 80], yaw: -4, leds: true, color: '#ffd29b' },
-    night: { label: 'Night', description: 'One task light · the house settles', key: '#a7bde8', fill: '#a3b7de', accent: '#ffc883', power: .14, ambient: .13, bounce: .22, exposure: 1.12, sky: ['#0d1630', '#2a3d62'], practical: 1.1, height: 28, tilt: 0, offset: [0, 120], yaw: 0, leds: true, color: '#776c60' },
+    night: { label: 'Night', description: 'One task light · the house settles', key: '#a7bde8', fill: '#a3b7de', accent: '#ffc883', power: .1, ambient: .08, bounce: .13, exposure: 1.0, sky: ['#0d1630', '#2a3d62'], practical: 1.1, height: 28, tilt: 0, offset: [0, 120], yaw: 0, leds: true, color: '#776c60' },
     party: { label: 'At home with friends', description: 'Warm shared light · drinks and conversation', key: '#d4c7b5', fill: '#a6b9cd', accent: '#e4b486', power: .38, ambient: .28, bounce: .4, exposure: 1.1, sky: ['#191a44', '#4a3570'], practical: .75, height: 43.5, tilt: 0, offset: [50, 200], yaw: -12, leds: true, color: '#e3b884' }
 };
 // Window view, practical fixtures and textiles per daypart. Emissive and
@@ -806,11 +806,19 @@ export function buildHomeOffice(room, root, layout, helpers) {
     const sun = createSunPatch(root, layout, [{ wall: 'back', at: bz, from: left + 20, to: right - 20, bottom: bottom + 20, top: bottom + wh - 20, bars: 1, rows: 2 }], {
         levels: { morning: ['#ffd9a8', .85], afternoon: ['#fff0d8', .5], evening: ['#ff9a52', .95], night: ['#000000', 0], party: ['#000000', 0] }
     });
+    // The real thing: a shadow-casting sun through the glazing (one per room).
+    // globalThis.__efSun = 'patch' | 'none' switches back for A/B checks.
+    const sunWindow = [{ wall: 'back', at: bz, from: left + 18, to: right - 18, bottom: bottom + 18, top: bottom + wh - 18, bars: 1, rows: 2 }];
+    const sunLight = createSunLight(root, layout, sunWindow);
+    const sunMode = () => globalThis.__efSun || 'light';
     const pools = createPoolLayer(root, 'Home lamp light pools'), poolGain = { v: 1 };
     const lampLevel = (k, by) => i => Math.min(.55, by[i] * .5 * poolGain.v) * k;
-    pools.add(root, [layout.readingLight[0] + 120, 4, layout.readingLight[1] - 120], [1700, 1700], '#ffd9a6', lampLevel(1, [0, 0, .7, .85, .7]));
-    pools.add(root, [-w / 2 + 6, 1250, layout.readingLight[1]], [1400, 1500], '#ffd9a6', lampLevel(.7, [0, 0, .6, .8, .6]), 'left');
-    pools.add(root, [cx, 4, bz + 650], [1500, 1100], '#ffcf96', lampLevel(.55, [0, 0, .35, .6, .45]));
+    // Pools are sized and placed per layout: the apartment's reading lamp
+    // stands mid-room (no wall beside it) and its floor is a third the size.
+    const small = house ? 1 : .6;
+    pools.add(root, [layout.readingLight[0] + 120, 4, layout.readingLight[1] - 120], [1700 * small, 1700 * small], '#ffd9a6', lampLevel(small, [0, 0, .7, .85, .7]));
+    if (layout.readingLight[0] < -w / 2 + 500) pools.add(root, [-w / 2 + 6, 1250, layout.readingLight[1]], [1400, 1500], '#ffd9a6', lampLevel(.7, [0, 0, .6, .8, .6]), 'left');
+    if (house) pools.add(root, [cx, 4, bz + 650], [1500, 1100], '#ffcf96', lampLevel(.55, [0, 0, .35, .6, .45]));
     if (house) pools.add(root, [w / 2 - 6, 1150, boardZ[0] + 170], [1100, 1100], '#ffd29c', lampLevel(.8, [0, 0, .55, .7, .6]), 'right');
     pools.add(root, [0, 4, 370], [2600, 2600], '#ffe2b8', lampLevel(.5, [0, 0, .25, 0, .55]));
     const dropZone = homeDropZone(root, entry, layout, helpers, { brass, joinery, sage, clay, ceramic });
@@ -819,7 +827,8 @@ export function buildHomeOffice(room, root, layout, helpers) {
     room.homeAtmosphere = (modeId, accent = 1) => {
         const mode = HOME_MODES[modeId] || HOME_MODES.afternoon, look = HOME_LOOKS[modeId] || HOME_LOOKS.afternoon;
         updateSession(modeId);updateBoard(modeId);comfort.update(modeId);
-        poolGain.v = accent; pools.apply(modeId); sun.update(modeId); dropZone(modeId);
+        poolGain.v = accent; pools.apply(modeId); dropZone(modeId);
+        const sm = sunMode(); sun.update(sm === 'patch' ? modeId : 'night'); sunLight.update(sm === 'light' ? modeId : 'night');
         paintView(skyCanvas.getContext('2d'), skyCanvas.width, skyCanvas.height, mode, look);
         skyMap.needsUpdate = true; windowVista.setPhase(modeId);
         // The garden photograph is a daylight picture: grade it down to golden hour in the evening.

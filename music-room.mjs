@@ -628,17 +628,19 @@ export function buildMusicRoom(room, root, layout, helpers) {
     const pools = createPoolLayer(root, 'Music lamp light pools'), poolGain = { v: 1 };
     const level = (k, by) => i => Math.min(.55, by[i] * .5 * poolGain.v) * k;
     const floorLamp = layout.props.find(p => p.id === 'kenney-furniture-lamp-round-floor').at;
-    pools.add(root, [floorLamp[0] + 250, 4, floorLamp[2] - 250], [1900, 1700], '#ffcf98', level(1, [0, 0, .6, .75, .55]));
+    const small = layout.compact ? .65 : 1;
+    pools.add(root, [floorLamp[0] + 250, 4, floorLamp[2] - 250], [1900 * small, 1700 * small], '#ffcf98', level(small, [0, 0, .6, .75, .55]));
     pools.add(root, [floorLamp[0] - 168, 1250, floorLamp[2] - 200], [1400, 1500], '#ffcf98', level(.6, [0, 0, .5, .65, .5]), 'left');
     pools.add(root, [rx - 150, 4, rz + 300], [1300, 1100], '#f4c493', level(.7, [0, 0, .5, .6, .45]));
-    pools.add(root, [layout.performance[0], 4, layout.performance[1]], [1900, 1900], '#c7a6ec', level(.7, [0, 0, .35, .4, .7]));
+    // The coloured performance wash is a party light; it is off for the quiet night mix.
+    if (!layout.compact) pools.add(root, [layout.performance[0], 4, layout.performance[1]], [1900, 1900], '#c7a6ec', level(.7, [0, 0, .25, 0, .7]));
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = MUSIC_MODES[modeId] || MUSIC_MODES.afternoon;
         session.mode = modeId in MUSIC_MODES ? modeId : 'afternoon'; session.accent = accent;
         drawSky(modeId, mode);
         poolGain.v = accent; pools.apply(modeId); sun.update(modeId);
         // The city photograph after dark is a dusk exposure: take it down to night.
-        if (modeId === 'night') { const u = windowVista.material.uniforms; u.gain.value.multiply(new THREE.Vector3(.36, .38, .48)); u.saturation.value *= .8; }
+        if (modeId === 'night') { const u = windowVista.material.uniforms; u.gain.value.multiply(new THREE.Vector3(.17, .18, .26)); u.saturation.value *= .7; u.contrast.value *= 1.25; u.lift.value.set(0, 0, .004); }
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .06 + mode.wash * accent * 1.25; });
         lights.forEach(spec => { if (spec.wash) spec.light.color.set(mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.wash ? mode.wash : mode.practical) * accent; });
         diffuser.emissiveIntensity = .2 + mode.practical * .65;
