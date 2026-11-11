@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
+import { gymTheme } from './gym-theme.mjs?v=env-living-20261111';
 
 // Fictional session dressing, not a prescribed exercise programme.
 export const GYM_SESSIONS = {
@@ -43,37 +44,39 @@ export function migrateGymSavedFurniture(obj, saved, l) {
     return {...saved,p:{x:placement.at[0],y:placement.at[1],z:placement.at[2]},q:{x:0,y:Math.sin(b),z:0,w:Math.cos(b)}};
 }
 
-export function gymProgramMaps() {
+export function gymProgramMaps(T = gymTheme()) {
     const make = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; return map; };
     const board = make(768, 720), timer = make(512, 176);
     const update = phase => {
         const s = GYM_SESSIONS[phase] || GYM_SESSIONS.morning, c = board.image.getContext('2d');
-        c.fillStyle = '#202b2c'; c.fillRect(0, 0, 768, 720);
+        const { board: B, timer: D } = T.sessions, accent = T.sessions.accents[GYM_SESSIONS[phase] ? phase : 'morning'];
+        c.fillStyle = B.background; c.fillRect(0, 0, 768, 720);
         // Faint erased chalk marks leave evidence of previous use.
-        for (let i = 0; i < 40; i++) { c.fillStyle = '#dbe8d904'; c.fillRect(i * 137 % 700, 120 + i * 53 % 510, 130, 8); }
-        c.fillStyle = s.accent; c.font = '600 22px sans-serif'; c.fillText('TODAY / YOUR DAILY MOMENTUM', 46, 61);
-        c.fillStyle = '#edf0e4'; c.font = 'bold 69px sans-serif'; c.fillText(s.title, 43, 143);
-        c.fillStyle = '#abbdb4'; c.font = '25px sans-serif'; c.fillText(s.subtitle, 47, 192);
-        c.fillStyle = s.accent; c.fillRect(46, 220, 676, 3);
-        s.rows.forEach((line, i) => { c.fillStyle = '#dfe6da'; c.font = '31px sans-serif'; c.fillText(line, 50, 300 + i * 82); });
-        c.strokeStyle = '#62786d'; c.lineWidth = 2; c.strokeRect(46, 540, 676, 114);
-        c.fillStyle = s.accent; c.font = '600 22px sans-serif'; c.fillText(s.footer, 65, 582);
-        c.fillStyle = '#b6c6b8'; c.font = '22px sans-serif'; c.fillText('WATER  /  TOWEL  /  ROOM TO MOVE', 65, 623); board.needsUpdate = true;
-        const t = timer.image.getContext('2d'); t.fillStyle = '#090f11'; t.fillRect(0, 0, 512, 176);
-        t.fillStyle = '#17211d'; t.font = 'bold 108px monospace'; t.fillText('88:88', 20, 126);
-        t.fillStyle = s.accent; t.fillText(s.timer, 20, 126); t.font = 'bold 23px sans-serif'; t.fillText(s.status, 376, 76);
-        t.fillStyle = '#9caca6'; t.font = '17px sans-serif'; t.fillText(phase === 'night' ? 'STANDBY' : 'SESSION', 376, 110); timer.needsUpdate = true;
+        for (let i = 0; i < 40; i++) { c.fillStyle = B.erased; c.fillRect(i * 137 % 700, 120 + i * 53 % 510, 130, 8); }
+        c.fillStyle = accent; c.font = '600 22px sans-serif'; c.fillText('TODAY / YOUR DAILY MOMENTUM', 46, 61);
+        c.fillStyle = B.title; c.font = 'bold 69px sans-serif'; c.fillText(s.title, 43, 143);
+        c.fillStyle = B.subtitle; c.font = '25px sans-serif'; c.fillText(s.subtitle, 47, 192);
+        c.fillStyle = accent; c.fillRect(46, 220, 676, 3);
+        s.rows.forEach((line, i) => { c.fillStyle = B.rows; c.font = '31px sans-serif'; c.fillText(line, 50, 300 + i * 82); });
+        c.strokeStyle = B.frame; c.lineWidth = 2; c.strokeRect(46, 540, 676, 114);
+        c.fillStyle = accent; c.font = '600 22px sans-serif'; c.fillText(s.footer, 65, 582);
+        c.fillStyle = B.note; c.font = '22px sans-serif'; c.fillText('WATER  /  TOWEL  /  ROOM TO MOVE', 65, 623); board.needsUpdate = true;
+        const t = timer.image.getContext('2d'); t.fillStyle = D.background; t.fillRect(0, 0, 512, 176);
+        t.fillStyle = D.ghost; t.font = 'bold 108px monospace'; t.fillText('88:88', 20, 126);
+        t.fillStyle = accent; t.fillText(s.timer, 20, 126); t.font = 'bold 23px sans-serif'; t.fillText(s.status, 376, 76);
+        t.fillStyle = D.status; t.font = '17px sans-serif'; t.fillText(phase === 'night' ? 'STANDBY' : 'SESSION', 376, 110); timer.needsUpdate = true;
         return s;
     };
     update('morning'); return { board, timer, update };
 }
 
-export function buildGymSessionDetail(room, layout, h, anchors) {
+export function buildGymSessionDetail(room, layout, h, anchors, T = gymTheme()) {
     const { group, box, mesh, rod, material, label } = h;
     const { mat, weights, hydrate } = anchors, root = room.root;
-    const rubber = material('#293c3c', { roughness: .94 }), cork = material('#b18e60', { roughness: .89 });
-    const linen = material('#c8d1c6', { roughness: .98 }), trim = material('#93a982', { roughness: .74 });
-    const steel = material('#a8b3b5', { metalness: .88, roughness: .38 }), dark = material('#283238', { roughness: .75 });
+    const S = T.sessions, SM = S.materials;
+    const rubber = material(...SM.rubber), cork = material(...SM.cork);
+    const linen = material(...SM.linen), trim = material(...SM.trim);
+    const steel = material(...SM.steel), dark = material(...SM.dark);
     for (const [m, kind] of [[rubber, 'rubber'], [cork, 'wood'], [linen, 'fabric'], [steel, 'metal'], [dark, 'powder']]) m.userData.roomSurface = kind;
     const own = new THREE.Group(); own.name = 'Session equipment · follows the training bay'; mat.add(own);
     h.markSceneAsset(own, { key: `gym:${layout.id}:fixture:session-equipment` });
@@ -120,7 +123,7 @@ export function buildGymSessionDetail(room, layout, h, anchors) {
         }
     }
     // Rack labels and end caps make the repeated free weights read as usable kit.
-    for (let i = 0; i < 5; i++) label(weights, String(8 + i * 4).padStart(2, '0') + ' KG', [160, 44], [-470 + i * 235, 350, 155], '#d5dece', '#293536');
+    for (let i = 0; i < 5; i++) label(weights, String(8 + i * 4).padStart(2, '0') + ' KG', [160, 44], [-470 + i * 235, 350, 155], ...S.rackLabel);
     const tray = group('gym-cleaning-tray', 'Wipe-down supplies on the hydration counter', [0, 960, 105], 0, hydrate);
     box(tray, [170, 8, 115], [0, 4, 0], dark, 8);
     // Spray bottle and cloth, sized to leave the existing bottle and journal clear.
@@ -129,7 +132,7 @@ export function buildGymSessionDetail(room, layout, h, anchors) {
     towel(tray, [38, 8, 0], 55).scale.set(.85, .4, .45);
 
     // A narrow ventilated cubby fits under the counter's central front bay.
-    label(hydrate, 'WIPE / RETURN / RESET', [layout.tier ? 410 : 350, 35], [0, 130, 246], '#abbfb2', '#263735');
+    label(hydrate, 'WIPE / RETURN / RESET', [layout.tier ? 410 : 350, 35], [0, 130, 246], ...S.wipeLabel);
     const stored = group('gym-recovery-kit', 'Stored recovery kit', [layout.width / 2 - 250, 40, layout.back + layout.depth - 270]);
     // One folded towel on the existing roller plinth, clear of all three rollers.
     towel(stored, [0, 0, 160], 220);
@@ -139,13 +142,13 @@ export function buildGymSessionDetail(room, layout, h, anchors) {
         if (layout.tier === 2) poster.scale.setScalar(.8);
         box(poster, [690, 1010, 30], [0, 0, 0], cork, 5);
         const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 768;
-        const c = canvas.getContext('2d'); c.fillStyle = '#e0dfcc'; c.fillRect(0, 0, 512, 768);
-        c.fillStyle = '#304d48'; c.font = 'bold 44px sans-serif'; c.fillText('MOVE WELL', 42, 74); c.font = '18px sans-serif'; c.fillText('SPACE / RHYTHM / RECOVERY', 44, 111);
+        const c = canvas.getContext('2d'); c.fillStyle = S.poster.paper; c.fillRect(0, 0, 512, 768);
+        c.fillStyle = S.poster.ink; c.font = 'bold 44px sans-serif'; c.fillText('MOVE WELL', 42, 74); c.font = '18px sans-serif'; c.fillText('SPACE / RHYTHM / RECOVERY', 44, 111);
         for (let i = 0; i < 3; i++) {
-            const y = 220 + i * 168; c.strokeStyle = ['#5d7e6d', '#a78351', '#447979'][i]; c.lineWidth = 8; c.lineCap = 'round';
+            const y = 220 + i * 168; c.strokeStyle = S.poster.strokes[i]; c.lineWidth = 8; c.lineCap = 'round';
             c.beginPath(); c.arc(130, y - 25, 18, 0, 7); c.stroke();
             c.beginPath(); c.moveTo(130, y); c.lineTo(130, y + 42); c.lineTo(90, y + 85); c.moveTo(130, y + 42); c.lineTo(180, y + 78); c.moveTo(70, y + 15); c.lineTo(130, y + 7); c.lineTo(180, y + (i - 1) * 32); c.stroke();
-            c.fillStyle = '#304d48'; c.font = 'bold 25px sans-serif'; c.fillText(['MOBILITY', 'STRENGTH', 'RECOVERY'][i], 235, y + 18);
+            c.fillStyle = S.poster.ink; c.font = 'bold 25px sans-serif'; c.fillText(['MOBILITY', 'STRENGTH', 'RECOVERY'][i], 235, y + 18);
             c.font = '18px sans-serif'; c.fillText(['Start with space', 'Make it your session', 'Leave time to reset'][i], 235, y + 51);
         }
         const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace;
@@ -159,9 +162,21 @@ export function buildGymSessionDetail(room, layout, h, anchors) {
             // Imported furniture arrives after the first surface-detail pass.
             // Its new towel needs an untextured material so the second pass
             // can assign physical fabric UVs at this smaller parent scale.
-            const fabric = material('#c8d1c6', { roughness: .98 }); fabric.userData.roomSurface = 'fabric';
+            const fabric = material(...SM.linen); fabric.userData.roomSurface = 'fabric';
             dressing.scale.setScalar(.001); towel(dressing, [-230, 400, 0], 250, fabric);
         }
+        // Black & red recolours the imported kit by material name, on
+        // instance-owned copies so the cached GLB materials stay untouched.
+        const tint = T.props?.[placement.id], copies = new Map();
+        const recolour = m => {
+            if (!tint?.[m?.name]) return m;
+            if (!copies.has(m)) {
+                const own = m.clone(); own.color.set(tint[m.name]); if (m.emissiveMap) own.emissive.set(tint[m.name]);
+                own.userData.sharedTextures = true; room.ownedMaterials.add(own); copies.set(m, own);
+            }
+            return copies.get(m);
+        };
+        if (tint) object.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(recolour) : recolour(o.material); });
         apply(current);
     };
     let current = 'morning';
@@ -169,7 +184,7 @@ export function buildGymSessionDetail(room, layout, h, anchors) {
         current = phase;
         variants.forEach(g => { g.visible = g.userData.gymSession === phase; });
         for (const o of equipment) for (const child of o.children) child.visible = originalVisible.get(child) && ['afternoon', 'party'].includes(phase);
-        root.userData.gymSession = { phase, ...GYM_SESSIONS[phase], floorClear: phase === 'night' };
+        root.userData.gymSession = { phase, ...GYM_SESSIONS[phase], accent: S.accents[phase], floorClear: phase === 'night' };
     }
     interiorCraftFinishes(room,{linen:[linen],metal:[steel],rubber:[rubber]});
     apply(current); return { apply, equipment, variants };

@@ -88,3 +88,16 @@ The existing exhaustive width audit, run with `--scenes=occmedialab`, checks all
 node tests/occ-media-lab-test.cjs
 node tests/scene-size-layouts-test.cjs --scenes=occmedialab
 ```
+
+## Night and party restaged (environment push, 10 November 2026)
+
+- **Late edit** (night, was *Screening*): one late session. House lights off,
+  the reel display asleep, blinds half down; the featured bay keeps its task
+  light and a warm pool, the other bays only their screens. The lit corridor
+  shows through the door's vision panel; the exit sign stays on.
+- **Screening & wrap** (party, was *Portfolio critique*): house lights at 4 %,
+  projector beam and blackout blinds, the screen's spill lights the front of the
+  room, food and notes on the critique table.
+- Shell: a suspended 2 × 4 ft acoustic tile ceiling (T-bar grid, square supply
+  diffusers, return grilles, sprinklers, smoke detector, occupancy sensor) and an
+  illuminated exit sign over the entry (`institutional-room.mjs`, `TILE_CEILINGS`).

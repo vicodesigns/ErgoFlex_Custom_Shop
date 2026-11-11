@@ -103,7 +103,7 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
         }, metal);
         const diffuser = own(new THREE.MeshStandardMaterial({ name: 'Reading light opal diffuser', color: '#f3eddf', emissive: '#ffe1b5', emissiveIntensity: .3, roughness: .48 }));
         const face = new THREE.Mesh(new THREE.BoxGeometry(260, 4, 38), diffuser); face.position.set(110, 352, 0); g.add(face);
-        const levels = [.12, .08, .75, .025, .5];
+        const levels = [.12, .08, .75, .3, .5]; // left on at night: the commons' night circuit
         pools.add(g, [105, 1.4, 45], [650, 520], '#ffe1b5', levels.map(x => x * .28));
         let light;
         if (actual) { light = new THREE.PointLight('#ffe1b5', 0, root.scale.x * 1100, 2); light.position.set(110, 315, 0); g.add(light); }
@@ -117,9 +117,13 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
                 const k = detailKit(), active = p !== 3 && (p !== 2 || (r + col) % 2 === 0);
                 if (active) for (const side of [-1, 1]) {
                     if (id === 'student-table-2-2' && side > 0) continue; // the owner's violin
-                    const x = side * 310;
-                    sheet(g, p, [x, 2.4, 95], 195, side * .03 + r * .012); pen(k, x + 130, 105, p === 1 ? '#ba6536' : INK);
-                    if (p === 0) notebook(k, x - 30, -95);
+                    // Each place is its own: some are empty (nobody sits there this
+                    // period), the rest differ in what came out of the bag. Stable per seat.
+                    const x = side * 310, seat = (r * 3 + col) * 2 + (side > 0), v = rand(seat * 7.3 + p * 1.7), skew = (rand(seat * 2.9 + p) - .5) * .5;
+                    if (p < 2 && rand(seat * 3.1 + 4) < .22) continue;
+                    sheet(g, p, [x + skew * 60, 2.4, 95 - skew * 30], 195, side * .03 + skew * .6); pen(k, x + 130 + skew * 40, 105 - (v > .5 ? 60 : 0), p === 1 ? '#ba6536' : INK);
+                    if (p === 0 && v < .55) notebook(k, x - 30, -95);
+                    // Calculators and phones are library props (HS_SEAT_PROPS in institutional-education.mjs).
                     if (p === 2 && side < 0) bottle(k, x - 155, -145);
                     if (p === 4) { k.box([90, 55, 38], [x + 155, 28, -110], '#d6a057'); k.box([20, 80, 20], [x + 155, 67, -110], INK); k.ball(24, [x + 155, 115, -110], '#c9a06b'); }
                 }
@@ -132,6 +136,26 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
                     for (let n = 0; n < 28; n++) k.box([1.5, 1, n % 5 ? 8 : 18], [-260 + n * 19, 9, -151], INK);
                 }
                 if (p === 3 && r === 0 && col === 0) { notebook(k, 0, -80); notebook(k, 7, -76, 20); }
+                if (p === 4) {
+                    // Showcase: a tri-fold project board on the edge of the table
+                    // away from the visitors (side tables stand against the walls,
+                    // the middle row is turned to face the room).
+                    const B = new THREE.Group(); B.position.set(col === 0 ? -470 : col === 2 ? 470 : 0, 0, col === 1 ? 230 : 0); B.rotation.y = col === 0 ? Math.PI / 2 : col === 2 ? -Math.PI / 2 : Math.PI; g.add(B);
+                    const b = detailKit(), tone = ['#e8702a', '#2e6f8e', '#1d1d1f', '#9cc3b6'][(r * 3 + col) % 4];
+                    b.box([560, 760, 8], [0, 382, 0], '#f4f2ea', null, 'paper');
+                    for (const s of [-1, 1]) b.box([280, 760, 8], [s * (280 + 280 * Math.cos(.7)) / 2 + s * 2, 382, 140 * Math.sin(.7) / 1.05], '#f4f2ea', [0, -s * .7, 0], 'paper');
+                    b.box([520, 90, 3], [0, 700, 6], tone, null, 'paper');
+                    // what a project board carries: a photograph, a chart, two blocks of text; different on every board
+                    const seed = r * 3 + col, photo = ['#7fa3b8', '#c9a36a', '#8fae8a', '#b98a9a'][seed % 4], bars = ['#e8702a', '#2e6f8e', '#3f8f6a', '#c9a227'];
+                    for (let n = 0; n < 4; n++) {
+                        const x = -125 + (n % 2) * 250, y = 520 - Math.floor(n / 2) * 210, kind = (n + seed) % 4;
+                        b.box([230, 170, 2], [x, y, 6], kind === 0 ? photo : '#ffffff', null, 'paper');
+                        if (kind === 1) for (let q = 0; q < 4; q++) { const h = 40 + ((seed * 7 + q * 37) % 90); b.box([34, h, 2], [x - 72 + q * 48, y - 75 + h / 2, 8], bars[(q + seed) % 4], null, 'paper'); }
+                        if (kind >= 2) for (let q = 0; q < 6; q++) b.box([q === 0 ? 120 : 190 - (q * 23 + seed * 11) % 60, q === 0 ? 9 : 4, 2], [x - (q === 0 ? 45 : (((q * 23 + seed * 11) % 60) / 2)), y + 62 - q * 22, 8], q === 0 ? '#2b2d31' : '#6a6d72', null, 'paper');
+                    }
+                    b.box([380, 70, 2], [0, 120, 6], tone, null, 'paper');
+                    b.build(B, matte);
+                }
                 k.build(g, matte);
             });
         }
@@ -156,6 +180,9 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
             if (p === 1) { k.box([100, 17, 64], [290, 8.5, -145], SILVER, undefined, 'metal'); k.box([80, 2, 40], [290, 18, -145], INK, undefined, 'rubber'); headphone(k, -180, -130); pen(k, 100, -115); }
             if (p === 2) { headphone(k, 110, -90); k.box([180, 40, 105], [400, 20, -130], INK, undefined, 'metal'); for (let n = 0; n < 4; n++) k.cyl(8, 8, 7, [340 + n * 40, 44, -130], n ? SILVER : '#d98a3e', 'metal'); for (let n = 0; n < 8; n++) k.box([17, 2, 45], [-180 + n * 25, 2, -120], ['#ddddce', '#a6aaa6', '#708c94', '#314654'][n % 4], undefined, 'paper'); }
             if (p === 3) { for (let n = 0; n < 4; n++) pen(k, -190 + n * 180, -125); }
+            if (p === 4) {
+                // Wrap food (takeout boxes, coffee cups, soda) is library props: see institutional-media.mjs.
+            }
             if (p === 4) { for (let n = 0; n < 4; n++) { k.box([55, 1, 60], [-100 + n * 85, 2, -150], ['#d8bc68', '#95b7ba', '#b8c9a4'][n % 3], undefined, 'paper'); pen(k, 490, 90); } }
             k.build(g, matte);
         });

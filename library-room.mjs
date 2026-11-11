@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { detailFinish } from './institutional-detail.mjs?v=material-realism-20261104';
-import { roomLifeBaseTransform } from './room-life.mjs?v=commons-home-comfort-20261024';
+import { roomLifeBaseTransform } from './room-life.mjs?v=env-living-20261111';
 import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=library-floorplan-20261013';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
-import { makeHumboldtLayout, buildHumboldtCommons } from './library-humboldt-commons.mjs?v=commons-home-comfort-20261024';
+import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
+import { makeHumboldtLayout, buildHumboldtCommons } from './library-humboldt-commons.mjs?v=env-living-20261111';
 
 // Campus-library concepts, not a survey of the Humboldt pilot site.
 // Architecture and furniture coordinates are millimetres.
@@ -378,11 +379,17 @@ export function buildLibraryRoom(room, root, layout, helpers) {
         campusImage.src = new URL('./assets/rooms/library/campus-window.png', import.meta.url).href;
     });
     const pane = mesh(window, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]); pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
+    // The photographed campus outlook (window-vista.mjs) replaces the painted
+    // picture once it loads, like the other rooms' windows; the painting stays
+    // as the fallback. The photograph has no glazing bars, so real ones are added.
+    const vista = attachVista(pane, 'campus', 'morning'); room.windowViewReady = Promise.all([room.windowViewReady, vista.ready]);
     const frame = kit();
     // The supplied picture includes its glazing bars. Keep only the physical
     // perimeter so a second, differently spaced grid does not cross the view.
     for (const z of [a, b]) frame.box([60, wh + 35, 32], [-w / 2 + 16, low + wh / 2, z]);
     for (const y of [low, low + wh]) frame.box([60, 35, ww + 40], [-w / 2 + 16, y, wz]);
+    for (const k of [-1, 1]) frame.box([50, wh, 45], [-w / 2 + 16, low + wh / 2, wz + k * ww / 6]);
+    frame.box([50, 40, ww], [-w / 2 + 16, low + wh * .74, wz]);
     baked(window, frame, dark);
     const sill = kit(); sill.box([160, 30, ww + 70], [-w / 2 + 40, low - 15, wz]).box([25, 100, d], [-w / 2 + 12.5, 50, bz + d / 2]).box([34, 40, a - bz], [-w / 2 + 17, low, (a + bz) / 2]).box([34, 40, front - b], [-w / 2 + 17, low, (front + b) / 2]);
     baked(window, sill, oak);
@@ -709,7 +716,7 @@ export function buildLibraryRoom(room, root, layout, helpers) {
     ].map(spec => { const light = new THREE.PointLight('#efd8b5', 0, spec.range * root.scale.x, 2); light.position.set(...spec.at); root.add(light); return { ...spec, light, power: spec.power * (root.scale.x * 1000) ** 2 }; });
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = LIBRARY_MODES[modeId] || LIBRARY_MODES.morning;
-        windowMode = modeId; drawWindow(modeId);
+        windowMode = modeId; drawWindow(modeId); vista.setPhase(modeId);
         const time = { morning: [9, 15], afternoon: [14, 20], evening: [18, 30], night: [22, 10], party: [16, 0] }[modeId] || [9, 15];
         hourHand.rotation.z = -(time[0] % 12 + time[1] / 60) / 12 * Math.PI * 2; minuteHand.rotation.z = -time[1] / 60 * Math.PI * 2;
         clock.userData.libraryTime = time; operations.setMode(modeId); campus.setMode(modeId);

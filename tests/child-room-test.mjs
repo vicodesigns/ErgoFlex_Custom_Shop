@@ -133,6 +133,16 @@ for(const l of Object.values(CHILD_ALL_LAYOUTS)){
   for(const phase of Object.keys(CHILD_MODES)){room.roomAtmosphere(phase);root.updateMatrixWorld(true);let drawn=0;root.traverse(o=>{if(o.isMesh&&shown(o)){let lived=false;for(let a=o;a&&a!==root;a=a.parent)if(a.userData.childLivedIn)lived=true;if(lived)drawn++;}});
    assert(drawn<=70,'Lived-in belongings stay batched: '+drawn+' meshes in '+phase);if(phase==='night')assert.equal(li.looseOut,0,'Loose belongings put away at bedtime');}
   room.roomAtmosphere('morning');}
+ // Round-3 finisher: no coplanar shell under the window-wall skin, cabinet tops low enough for the wall
+ // art above them, the giant bear put away at bedtime, and the college lamp found by its tag, not its size.
+ {const inv=root.matrixWorld.clone().invert(),mm=o=>new THREE.Box3().setFromObject(o).applyMatrix4(inv),wl=root.userData.childWallLife;
+  let skin=null;root.traverse(o=>{if(o.name==='Window wall plaster skin')skin=o;});assert(skin,'Window-wall plaster skin');
+  for(const o of skin.parent.children)if(o.isMesh&&o.geometry?.parameters?.width===80)assert(mm(o).min.x>=l.width/2+5-.01,'Window-wall shell sits 5 mm+ behind the skin (no z-fighting)');
+  for(const id of ['personality-cabinet','growth-cabinet-top-'+l.ageStage]){const o=get(id);if(o)assert(mm(o).max.y<=906,id+' stays under the wall art above the cabinet');}
+  if(['teen','college'].includes(l.ageStage)&&/^house/.test(l.id))assert(wl.fixtures.includes('wall-'+l.ageStage+'-guitar'),'The guitar keeps its wall');
+  if(l.ageStage==='early'){const bear=get('lived-nook-early'),shown=o=>{for(let a=o;a&&a!==root;a=a.parent)if(!a.visible)return false;return true;};let onChest=null;root.traverse(o=>{if(o.name==='Giant bear put away on the toy chest')onChest=o;});
+   room.roomAtmosphere('night');if(bear)bear.traverse(o=>{if(o.isMesh)assert(!shown(o),'Giant bear off the floor cushion at bedtime');});if(onChest)assert(shown(onChest),'Giant bear sat on the toy chest at bedtime');room.roomAtmosphere('morning');}
+  if(get('lived-nook-college')){let shade=null;get('lived-nook-college').traverse(o=>{if(o.userData.lampShade)shade=o;});assert(shade,'College lamp shade is tagged');assert.equal(root.userData.childLighting.readingLamp,'nook side-table lamp','Reading light lives in the tagged shade');assert(mm(shade).max.y<1000,'The reading lamp is a low corner lamp, not a pole');}}
  root.traverse(o=>{if(o.geometry)for(const n of o.geometry.attributes.position.array)assert(Number.isFinite(n));});
  const kit=createChildDeskKit({...helpers,ageStage:l.ageStage});assert.equal(kit.children.length,5);let nightCrayons=0;kit.children[3].traverse(o=>{if(o.geometry?.type==='CylinderGeometry')nightCrayons++;});assert.equal(nightCrayons,0,'Bedtime desk supplies put away');
  const m=material('#ffffff',{roughness:.31});m.userData.roomFinishLocked=true;roomSurfaceFinish(room,m,'powder');assert.equal(m.roughness,.31,'Authored glaze must survive shared finishing');
