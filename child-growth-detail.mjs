@@ -141,14 +141,38 @@ export function enhanceChildGrowth({room,root,layout,helpers,materials,groups}) 
         box(shelf,[90,2,6],[330,391,0],coverMats[1],1);
     }
     const top=fixture(cubby,'growth-cabinet-top-'+stage,`${ageName[stage]} personal shelf`);
-    let stackY=616;for(let i=0;i<3;i++){const h=22+i%2*4;book(top,'stack-'+i,-390+i*8,stackY,-20,210-i*12,h,250-i*8,i,true);stackY+=h;}
+    // Round 3: every stage's cabinet top is its own still life (it was the same
+    // book stack, lamp and framed print four times over).
+    const tmat=c=>clone(materials.cream,c,.7);
+    if(stage==='primary'){
+        // Comics fanned out, and a pig-shaped money box.
+        for(let i=0;i<4;i++){const g=box(top,[170,6,240],[-410+i*26,619+i*7,-10+i*14],coverMats[i%coverMats.length],1);g.rotation.y=-.35+i*.22;}
+        const pig=tmat('#e7a1a0');sphere(top,[78,62,58],[-200,680,40],pig);sphere(top,[26,22,22],[-128,690,40],pig);for(const z of [18,62])for(const x of [-235,-165])mesh(top,new THREE.CylinderGeometry(11,11,20,10),pig,[x,626,z]);box(top,[34,3,10],[-200,741,40],dark,1);
+    }else if(stage==='preteen'){
+        // A lidded jewellery box with a ribbon.
+        box(top,[230,95,160],[-380,664,10],tmat('#d9b7c4'),8);box(top,[240,26,170],[-380,724,10],tmat('#c99aac'),8);box(top,[22,6,174],[-380,739,10],tmat('#f4ead6'),1);box(top,[244,22,6],[-380,700,96],tmat('#f4ead6'),1);
+    }else if(stage==='teen'){
+        let stackY=616;for(let i=0;i<3;i++){const h=22+i%2*4;book(top,'stack-'+i,-390+i*8,stackY,-20,210-i*12,h,250-i*8,i,true);stackY+=h;}
+        // A cap thrown on the textbooks.
+        const cap=tmat(palette.accent);sphere(top,[82,34,90],[-390,stackY,-30],cap);box(top,[150,6,95],[-390,stackY+3,80],cap,3).rotation.x=-.08;
+    }else{
+        // Books stood upright between two cast bookends.
+        const end=material('#3f4446',{roughness:.45,metalness:.55});end.userData.roomFinishLocked=true;
+        for(const x of [-560,-270]){box(top,[14,180,140],[x,706,-120],end,2);box(top,[90,10,140],[x+(x<-400?-38:38),621,-120],end,2);}
+        let x=-545;for(let i=0;i<9;i++){const w=22+(i*7)%13,h=200-(i*13)%55;box(top,[w,h,150],[x+w/2,616+h/2,-120],coverMats[i%coverMats.length],1);x+=w+2;}
+    }
     if(stage==='primary'){
         mesh(top,new THREE.CylinderGeometry(68,68,18,24),materials.oak,[440,625,40]);rod(top,[440,634,40],[440,744,40],9,steel);
         const globeMap=canvasMap('globe',(c,w,h)=>{c.fillStyle='#91b4bc';c.fillRect(0,0,w,h);c.fillStyle='#b1bb8c';for(const [x,y,sx,sy,a]of [[.2,.32,.12,.2,.3],[.57,.55,.1,.23,-.4],[.83,.27,.14,.14,.25]]){c.beginPath();c.ellipse(w*x,h*y,w*sx,h*sy,a,0,Math.PI*2);c.fill();}},512,256);
         mesh(top,new THREE.SphereGeometry(70,28,18),material('#ffffff',{map:globeMap,roughness:.65}),[440,814,40]);
-    }else if(stage==='preteen'||stage==='teen'){
-        box(top,[230,180,22],[440,706,80],materials.oak,4);box(top,[210,160,2],[440,706,92],printMat(artwork(stage==='teen'?0:1)));
-        box(top,[190,18,95],[440,625,70],materials.oak,4);
+    }else if(stage==='preteen'){
+        // Friendship bracelets on a little T-bar stand (no framed print).
+        mesh(top,new THREE.CylinderGeometry(60,66,14,20),materials.oak,[440,623,40]);rod(top,[440,630,40],[440,830,40],7,materials.oak);rod(top,[355,830,40],[525,830,40],7,materials.oak);
+        ['#d9604a','#e8c25a','#5aa0a8','#c47bb4','#7fb26b','#f0f0e6'].forEach((col,i)=>{const r=mesh(top,new THREE.TorusGeometry(34-i%2*4,5,6,18),tmat(col),[370+i*28,806-i%3*6,40]);r.rotation.y=Math.PI/2;r.scale.y=1.5;});
+    }else if(stage==='teen'){
+        // A favourite record sleeve leaning on the wall, invented art (no framed print).
+        const sleeve=canvasMap('teen-sleeve',(c,w,h)=>{c.fillStyle='#1f2b3a';c.fillRect(0,0,w,h);for(let i=0;i<9;i++){c.fillStyle=['#e0794e','#f1c75b','#3d8f8c'][i%3];c.fillRect(0,h*(.08+i*.075),w*(.25+((i*37)%50)/100),h*.035);}c.fillStyle='#f3ead7';c.font='bold 44px sans-serif';c.fillText('LATE BUS',24,h-70);c.font='26px sans-serif';c.fillText('HOME',26,h-34);},256,256);
+        const s=box(top,[260,260,4],[430,752,-205],printMat(sleeve),1);s.rotation.x=-.12;s.rotation.z=.03;
     }else{
         const glaze=material('#aab3a4',{roughness:.36,metalness:0});glaze.userData.roomFinishLocked=true;
         mesh(top,new THREE.LatheGeometry([[0,0],[40,0],[50,105],[44,105],[37,38],[0,38]].map(([r,y])=>new THREE.Vector2(r,y)),24),glaze,[450,616,60]);
