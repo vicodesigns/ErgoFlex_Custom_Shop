@@ -255,6 +255,13 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     people.setFilter({ only: [], cast: cast.map(c => c.key === 'stands' ? { ...c, pose: { head: [0, .2, 0, .98] } } : c), life: false }); await people.built; at(13);
     const tuned = new THREE.Quaternion().fromArray(built('people-maya-stand-type', 'head')).multiply(new THREE.Quaternion(0, .2, 0, .98)).normalize().toArray();
     assert.ok(close(quat(people.byKey('stands'), 'head'), tuned), 'a pose adjustment sits on top of the motion');
+    // a tilted top stows its keyboard: she stays where she stood, hands off the keys
+    {
+        const flat = { seconds: 14, heightAt: () => 43.5, tiltAt: t => t > 4 ? 30 : 0 };
+        people.update({ ...desk, height: 43.5, tilt: 0, time: 1, track: flat, now: 0 }); const stood = people.byKey('stands').position.clone(); assert.equal(actor.state.k, 1);
+        people.update({ pose: desk.pose, keyboard: { x: -400, z: -900 }, height: 43.5, tilt: 30, time: 8, track: flat, now: 0 });
+        assert.deepEqual(shown(), ['people-maya-stand-type']); assert.ok(people.byKey('stands').position.distanceTo(stood) < 1 && actor.state.k === 0, 'she has not followed the stowed keyboard, and her hands are off');
+    }
     // a parked chair (the film's people.chair) is where the film puts it while she stands
     people.setFilter({ only: [], cast, life: false, chair: { back: 300, side: 760, turn: -42 } }); await people.built; at(13);
     assert.ok(Math.abs(actor.chair.position.x - (60 + 760)) < 2 && Math.abs(actor.chair.position.z - 530) < 2, 'parked where the chapter says');

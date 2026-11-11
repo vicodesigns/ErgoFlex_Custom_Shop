@@ -158,7 +158,7 @@ const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 export class RoomPeople {
     constructor(room, library) {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
-        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.lastMode = undefined; this.generation = 0;
+        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.lastMode = undefined; this.generation = 0; this.keysHome = null;
         this.dirty = false;       // dirty: someone moved since the Studio last looked (their shadow has to follow)
         this.ray = new THREE.Raycaster();
     }
@@ -423,6 +423,13 @@ export class RoomPeople {
         if (!this.enabled || !this.people.length) return;
         const height = state?.height ?? 28, pose = state?.pose, mode = state?.mode, time = state?.time ?? null; let working = false, seated = 0;
         const now = state?.now ?? (typeof performance !== 'undefined' ? performance.now() : 0), dt = this.clock === null ? 0 : (now - this.clock) / 1000; this.clock = now;
+        // A tilted top stows its keyboard somewhere else: the person stays where the keyboard was while the top was flat
+        // (kept in the desk's own frame), or lines up on the desk itself if it never was.
+        if (state?.keyboard && pose && Number.isFinite(state.tilt)) {
+            const c = Math.cos(pose.yaw || 0), sn = Math.sin(pose.yaw || 0);
+            if (Math.abs(state.tilt) <= 2) { const dx = state.keyboard.x - pose.x, dz = state.keyboard.z - pose.z; this.keysHome = { side: dx * c - dz * sn, ahead: dx * sn + dz * c }; }
+            else state = { ...state, keyboard: this.keysHome ? { x: pose.x + this.keysHome.side * c + this.keysHome.ahead * sn, z: pose.z - this.keysHome.side * sn + this.keysHome.ahead * c } : null };
+        }
         if (!this.placed) {
             this.placed = true;
             for (const object of this.people) {
