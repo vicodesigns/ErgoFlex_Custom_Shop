@@ -50731,6 +50731,2780 @@
     "character": "sofia",
     "pose": "wheel-watch"
    }
+  },
+  {
+   "id": "people-maya-stand-coffee",
+   "name": "Maya: coffee at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-stand-coffee.glb",
+   "anchor": "floor",
+   "size": [
+    484.7,
+    1649.3,
+    583.8
+   ],
+   "min": [
+    -253.2,
+    0,
+    -130.4
+   ],
+   "max": [
+    231.5,
+    1649.3,
+    453.4
+   ],
+   "tris": 37780,
+   "bytes": 1001504,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "stand-coffee",
+    "deskHeight": 43.5
+   }
+  },
+  {
+   "id": "people-andre-stand-mug",
+   "name": "Andre: standing with a coffee",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-mug.glb",
+   "anchor": "floor",
+   "size": [
+    577.5,
+    1812.6,
+    441
+   ],
+   "min": [
+    -283.3,
+    0,
+    -139.8
+   ],
+   "max": [
+    294.2,
+    1812.6,
+    301.2
+   ],
+   "tris": 33886,
+   "bytes": 848424,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-mug"
+   }
+  },
+  {
+   "id": "people-zoe-stand-drink",
+   "name": "Zoe: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    447.8,
+    1580.8,
+    353.5
+   ],
+   "min": [
+    -203.6,
+    0,
+    -116.1
+   ],
+   "max": [
+    244.2,
+    1580.8,
+    237.4
+   ],
+   "tris": 34390,
+   "bytes": 1132504,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-noah-stand-talk",
+   "name": "Noah: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-talk.glb",
+   "anchor": "floor",
+   "size": [
+    557.2,
+    1789,
+    635.3
+   ],
+   "min": [
+    -280.1,
+    0,
+    -147.1
+   ],
+   "max": [
+    277.1,
+    1789,
+    488.2
+   ],
+   "tris": 33204,
+   "bytes": 1189972,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-talk"
+   }
+  },
+  {
+   "id": "people-jo-carry-box",
+   "name": "Jo: carrying a box",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jo-carry-box.glb",
+   "anchor": "floor",
+   "size": [
+    522.4,
+    1677.7,
+    695.2
+   ],
+   "min": [
+    -261.2,
+    0,
+    -188.9
+   ],
+   "max": [
+    261.2,
+    1677.7,
+    506.3
+   ],
+   "tris": 41956,
+   "bytes": 952316,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jo",
+    "pose": "carry-box"
+   }
+  },
+  {
+   "id": "people-lin-kneel-shelf",
+   "name": "Lin: kneeling at a low shelf",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-kneel-shelf.glb",
+   "anchor": "floor",
+   "size": [
+    452.3,
+    1125.9,
+    896.7
+   ],
+   "min": [
+    -199.2,
+    0,
+    -423.4
+   ],
+   "max": [
+    253.1,
+    1125.9,
+    473.3
+   ],
+   "tris": 44693,
+   "bytes": 950428,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "kneel-shelf"
+   }
+  },
+  {
+   "id": "people-priya-sit-floor",
+   "name": "Priya: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-priya-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    571.6,
+    918,
+    580.8
+   ],
+   "min": [
+    -285.8,
+    0,
+    -113.7
+   ],
+   "max": [
+    285.8,
+    918,
+    467.1
+   ],
+   "tris": 34344,
+   "bytes": 772336,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "priya",
+    "pose": "sit-floor"
+   }
+  },
+  {
+   "id": "people-priya-floor-stretch",
+   "name": "Priya: stretching on a mat",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-priya-floor-stretch.glb",
+   "anchor": "floor",
+   "size": [
+    410.1,
+    637.8,
+    971.6
+   ],
+   "min": [
+    -206.8,
+    0,
+    -110.7
+   ],
+   "max": [
+    203.3,
+    637.8,
+    860.9
+   ],
+   "tris": 35896,
+   "bytes": 780288,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "priya",
+    "pose": "floor-stretch"
+   }
+  },
+  {
+   "id": "people-grace-sit-mug",
+   "name": "Grace: sitting back with a mug",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-grace-sit-mug.glb",
+   "anchor": "floor",
+   "size": [
+    454,
+    1289.1,
+    798.3
+   ],
+   "min": [
+    -230.4,
+    0,
+    -151.1
+   ],
+   "max": [
+    223.6,
+    1289.1,
+    647.2
+   ],
+   "tris": 49523,
+   "bytes": 1282464,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "grace",
+    "pose": "sit-mug"
+   }
+  },
+  {
+   "id": "people-sofia-sit-chat",
+   "name": "Sofia: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sofia-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    420.8,
+    1212.4,
+    769.2
+   ],
+   "min": [
+    -211.4,
+    0,
+    -155.7
+   ],
+   "max": [
+    209.4,
+    1212.4,
+    613.5
+   ],
+   "tris": 50148,
+   "bytes": 998460,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sofia",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-mia-sit-coffee",
+   "name": "Mia: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-sit-coffee.glb",
+   "anchor": "floor",
+   "size": [
+    439.3,
+    1224.6,
+    709.1
+   ],
+   "min": [
+    -248.8,
+    0,
+    -141.9
+   ],
+   "max": [
+    190.5,
+    1224.6,
+    567.2
+   ],
+   "tris": 34880,
+   "bytes": 1389744,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "sit-coffee",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-noah-stand-drink",
+   "name": "Noah: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    537.5,
+    1788.2,
+    418.7
+   ],
+   "min": [
+    -256.6,
+    0,
+    -143.8
+   ],
+   "max": [
+    280.9,
+    1788.2,
+    274.9
+   ],
+   "tris": 33272,
+   "bytes": 1193548,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-ava-stand-drink",
+   "name": "Ava: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ava-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    436.6,
+    1511.7,
+    339.3
+   ],
+   "min": [
+    -198.6,
+    0,
+    -107
+   ],
+   "max": [
+    238,
+    1511.7,
+    232.3
+   ],
+   "tris": 37788,
+   "bytes": 953556,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ava",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-eli-stand-drink",
+   "name": "Eli: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-eli-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    487.8,
+    1555.1,
+    371.2
+   ],
+   "min": [
+    -233,
+    0,
+    -130.9
+   ],
+   "max": [
+    254.8,
+    1555.1,
+    240.3
+   ],
+   "tris": 42806,
+   "bytes": 1277272,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "eli",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-sofia-stand-drink",
+   "name": "Sofia: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sofia-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    433.4,
+    1508.9,
+    336
+   ],
+   "min": [
+    -197.1,
+    0,
+    -105.6
+   ],
+   "max": [
+    236.3,
+    1508.9,
+    230.4
+   ],
+   "tris": 49940,
+   "bytes": 994848,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sofia",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-leo-stand-drink",
+   "name": "Leo: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-leo-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    450.3,
+    1451.6,
+    348.4
+   ],
+   "min": [
+    -216.1,
+    0,
+    -120
+   ],
+   "max": [
+    234.2,
+    1451.6,
+    228.4
+   ],
+   "tris": 37958,
+   "bytes": 1157156,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "leo",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-mia-stand-drink",
+   "name": "Mia: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    453.3,
+    1519.2,
+    344.5
+   ],
+   "min": [
+    -208.6,
+    0,
+    -114.6
+   ],
+   "max": [
+    244.7,
+    1519.2,
+    229.9
+   ],
+   "tris": 34724,
+   "bytes": 1386404,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-kai-stand-drink",
+   "name": "Kai: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-kai-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    451.1,
+    1444.6,
+    351.1
+   ],
+   "min": [
+    -218.3,
+    0,
+    -123.8
+   ],
+   "max": [
+    232.8,
+    1444.6,
+    227.3
+   ],
+   "tris": 33894,
+   "bytes": 871560,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "kai",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-grace-stand-drink",
+   "name": "Grace: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-grace-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    479.9,
+    1572.9,
+    340.1
+   ],
+   "min": [
+    -228.1,
+    0,
+    -99.7
+   ],
+   "max": [
+    251.8,
+    1572.9,
+    240.4
+   ],
+   "tris": 48978,
+   "bytes": 1276228,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "grace",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-ben-stand-drink",
+   "name": "Ben: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ben-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    549.8,
+    1783.1,
+    399.5
+   ],
+   "min": [
+    -259.3,
+    0,
+    -123.4
+   ],
+   "max": [
+    290.5,
+    1783.1,
+    276.1
+   ],
+   "tris": 38704,
+   "bytes": 1142624,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ben",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-rosa-stand-drink",
+   "name": "Rosa: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-rosa-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    412.9,
+    1218,
+    311.2
+   ],
+   "min": [
+    -206.2,
+    0,
+    -109.3
+   ],
+   "max": [
+    206.7,
+    1218,
+    201.9
+   ],
+   "tris": 47045,
+   "bytes": 969384,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "rosa",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-sam-stand-drink",
+   "name": "Sam: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    540.1,
+    1752.5,
+    407.2
+   ],
+   "min": [
+    -260.8,
+    0,
+    -133.8
+   ],
+   "max": [
+    279.3,
+    1752.5,
+    273.4
+   ],
+   "tris": 33426,
+   "bytes": 928048,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-andre-stand-drink",
+   "name": "Andre: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    580.5,
+    1820.6,
+    452.5
+   ],
+   "min": [
+    -280.9,
+    0,
+    -162.5
+   ],
+   "max": [
+    299.6,
+    1820.6,
+    290
+   ],
+   "tris": 34536,
+   "bytes": 851484,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-lin-stand-drink",
+   "name": "Lin: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    448.9,
+    1541.2,
+    338.3
+   ],
+   "min": [
+    -208.4,
+    0,
+    -105.6
+   ],
+   "max": [
+    240.5,
+    1541.2,
+    232.7
+   ],
+   "tris": 49221,
+   "bytes": 981676,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-zoe-stand-talk",
+   "name": "Zoe: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-stand-talk.glb",
+   "anchor": "floor",
+   "size": [
+    475.3,
+    1581.9,
+    530.9
+   ],
+   "min": [
+    -234,
+    0,
+    -106.5
+   ],
+   "max": [
+    241.3,
+    1581.9,
+    424.4
+   ],
+   "tris": 34200,
+   "bytes": 1128004,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "stand-talk"
+   }
+  },
+  {
+   "id": "people-priya-stand-talk",
+   "name": "Priya: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-priya-stand-talk.glb",
+   "anchor": "floor",
+   "size": [
+    503.1,
+    1649.6,
+    556.8
+   ],
+   "min": [
+    -248.2,
+    0,
+    -110.4
+   ],
+   "max": [
+    254.9,
+    1649.6,
+    446.4
+   ],
+   "tris": 36928,
+   "bytes": 783692,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "priya",
+    "pose": "stand-talk"
+   }
+  },
+  {
+   "id": "people-andre-stand-talk",
+   "name": "Andre: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-talk.glb",
+   "anchor": "floor",
+   "size": [
+    594.6,
+    1821.5,
+    665.4
+   ],
+   "min": [
+    -304.2,
+    0,
+    -150.8
+   ],
+   "max": [
+    290.4,
+    1821.5,
+    514.6
+   ],
+   "tris": 34432,
+   "bytes": 848076,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-talk"
+   }
+  },
+  {
+   "id": "people-lin-stand-talk",
+   "name": "Lin: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-stand-talk.glb",
+   "anchor": "floor",
+   "size": [
+    469.9,
+    1543.1,
+    523.1
+   ],
+   "min": [
+    -233.1,
+    0,
+    -105.9
+   ],
+   "max": [
+    236.8,
+    1543.1,
+    417.2
+   ],
+   "tris": 49084,
+   "bytes": 978028,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "stand-talk"
+   }
+  },
+  {
+   "id": "people-jo-stand-talk",
+   "name": "Jo: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jo-stand-talk.glb",
+   "anchor": "floor",
+   "size": [
+    508.8,
+    1679,
+    595.7
+   ],
+   "min": [
+    -252.8,
+    0,
+    -141.6
+   ],
+   "max": [
+    256,
+    1679,
+    454.1
+   ],
+   "tris": 41460,
+   "bytes": 946276,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jo",
+    "pose": "stand-talk"
+   }
+  },
+  {
+   "id": "people-hale-stand-talk",
+   "name": "Mr Hale: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-hale-stand-talk.glb",
+   "anchor": "floor",
+   "size": [
+    559.2,
+    1752.2,
+    618.5
+   ],
+   "min": [
+    -270,
+    0,
+    -133.2
+   ],
+   "max": [
+    289.2,
+    1752.2,
+    485.3
+   ],
+   "tris": 34398,
+   "bytes": 1373156,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "hale",
+    "pose": "stand-talk"
+   }
+  },
+  {
+   "id": "people-maya-stand-talk",
+   "name": "Maya: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-stand-talk.glb",
+   "anchor": "floor",
+   "size": [
+    503.1,
+    1657,
+    562.9
+   ],
+   "min": [
+    -247.2,
+    0,
+    -113.3
+   ],
+   "max": [
+    255.9,
+    1657,
+    449.6
+   ],
+   "tris": 37398,
+   "bytes": 995452,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "stand-talk"
+   }
+  },
+  {
+   "id": "people-grace-sit-chat",
+   "name": "Grace: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-grace-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    449.3,
+    1273,
+    776.7
+   ],
+   "min": [
+    -235.5,
+    0,
+    -152.9
+   ],
+   "max": [
+    213.8,
+    1273,
+    623.8
+   ],
+   "tris": 49384,
+   "bytes": 1281032,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "grace",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-mia-sit-chat",
+   "name": "Mia: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    447.3,
+    1203.8,
+    748.8
+   ],
+   "min": [
+    -223.4,
+    0,
+    -140.5
+   ],
+   "max": [
+    223.9,
+    1203.8,
+    608.3
+   ],
+   "tris": 34796,
+   "bytes": 1388756,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-leo-sit-chat",
+   "name": "Leo: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-leo-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    429.7,
+    1209.4,
+    752.7
+   ],
+   "min": [
+    -216.6,
+    0,
+    -143.9
+   ],
+   "max": [
+    213.1,
+    1209.4,
+    608.8
+   ],
+   "tris": 38336,
+   "bytes": 1161352,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "leo",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-ben-sit-chat",
+   "name": "Ben: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ben-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    554.1,
+    1317.8,
+    800.6
+   ],
+   "min": [
+    -271.2,
+    0,
+    -146.6
+   ],
+   "max": [
+    282.9,
+    1317.8,
+    654
+   ],
+   "tris": 37546,
+   "bytes": 1137548,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ben",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-lin-stand-mug",
+   "name": "Lin: standing with a coffee",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-stand-mug.glb",
+   "anchor": "floor",
+   "size": [
+    441.6,
+    1541.5,
+    347.6
+   ],
+   "min": [
+    -202.5,
+    0,
+    -105.4
+   ],
+   "max": [
+    239.1,
+    1541.5,
+    242.2
+   ],
+   "tris": 48085,
+   "bytes": 976120,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "stand-mug"
+   }
+  },
+  {
+   "id": "people-jo-stand-mug",
+   "name": "Jo: standing with a coffee",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jo-stand-mug.glb",
+   "anchor": "floor",
+   "size": [
+    485.4,
+    1672.2,
+    389.5
+   ],
+   "min": [
+    -227,
+    0,
+    -125.6
+   ],
+   "max": [
+    258.4,
+    1672.2,
+    263.9
+   ],
+   "tris": 40478,
+   "bytes": 944016,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jo",
+    "pose": "stand-mug"
+   }
+  },
+  {
+   "id": "people-hale-stand-mug",
+   "name": "Mr Hale: standing with a coffee",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-hale-stand-mug.glb",
+   "anchor": "floor",
+   "size": [
+    537.3,
+    1747,
+    415.2
+   ],
+   "min": [
+    -246.4,
+    0,
+    -132.5
+   ],
+   "max": [
+    290.9,
+    1747,
+    282.7
+   ],
+   "tris": 34182,
+   "bytes": 1375728,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "hale",
+    "pose": "stand-mug"
+   }
+  },
+  {
+   "id": "people-priya-stand-mug",
+   "name": "Priya: standing with a coffee",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-priya-stand-mug.glb",
+   "anchor": "floor",
+   "size": [
+    468.7,
+    1639,
+    361.2
+   ],
+   "min": [
+    -212.1,
+    0,
+    -101.9
+   ],
+   "max": [
+    256.6,
+    1639,
+    259.3
+   ],
+   "tris": 36660,
+   "bytes": 786092,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "priya",
+    "pose": "stand-mug"
+   }
+  },
+  {
+   "id": "people-noah-stand-mug",
+   "name": "Noah: standing with a coffee",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-mug.glb",
+   "anchor": "floor",
+   "size": [
+    535.6,
+    1780.6,
+    422.3
+   ],
+   "min": [
+    -256.3,
+    0,
+    -136.6
+   ],
+   "max": [
+    279.3,
+    1780.6,
+    285.7
+   ],
+   "tris": 32650,
+   "bytes": 1190532,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-mug"
+   }
+  },
+  {
+   "id": "people-omar-stand-mug",
+   "name": "Omar: standing with a coffee",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-omar-stand-mug.glb",
+   "anchor": "floor",
+   "size": [
+    568.2,
+    1734.7,
+    417.4
+   ],
+   "min": [
+    -262.7,
+    0,
+    -134.8
+   ],
+   "max": [
+    305.5,
+    1734.7,
+    282.6
+   ],
+   "tris": 33784,
+   "bytes": 792380,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "omar",
+    "pose": "stand-mug"
+   }
+  },
+  {
+   "id": "people-mia-sit-mug",
+   "name": "Mia: sitting back with a mug",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-sit-mug.glb",
+   "anchor": "floor",
+   "size": [
+    443.2,
+    1201,
+    771.5
+   ],
+   "min": [
+    -217.3,
+    0,
+    -139.8
+   ],
+   "max": [
+    225.9,
+    1201,
+    631.7
+   ],
+   "tris": 34884,
+   "bytes": 1390532,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "sit-mug"
+   }
+  },
+  {
+   "id": "people-ben-sit-mug",
+   "name": "Ben: sitting back with a mug",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ben-sit-mug.glb",
+   "anchor": "floor",
+   "size": [
+    506.5,
+    1316.9,
+    841.4
+   ],
+   "min": [
+    -263.9,
+    0,
+    -164.5
+   ],
+   "max": [
+    242.6,
+    1316.9,
+    676.9
+   ],
+   "tris": 36768,
+   "bytes": 1133244,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ben",
+    "pose": "sit-mug"
+   }
+  },
+  {
+   "id": "people-andre-sit-mug",
+   "name": "Andre: sitting back with a mug",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-sit-mug.glb",
+   "anchor": "floor",
+   "size": [
+    572.3,
+    1353.7,
+    833.9
+   ],
+   "min": [
+    -285.1,
+    0,
+    -160
+   ],
+   "max": [
+    287.2,
+    1353.7,
+    673.9
+   ],
+   "tris": 33824,
+   "bytes": 851084,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "sit-mug"
+   }
+  },
+  {
+   "id": "people-maya-sit-coffee",
+   "name": "Maya: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-sit-coffee.glb",
+   "anchor": "floor",
+   "size": [
+    463.6,
+    1293.7,
+    736.3
+   ],
+   "min": [
+    -255.6,
+    0,
+    -152.1
+   ],
+   "max": [
+    208,
+    1293.7,
+    584.2
+   ],
+   "tris": 37790,
+   "bytes": 1003380,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "sit-coffee",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-maya-sit-coffee-30",
+   "name": "Maya: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-sit-coffee-30.glb",
+   "anchor": "floor",
+   "size": [
+    467.6,
+    1293.7,
+    736.3
+   ],
+   "min": [
+    -255.6,
+    0,
+    -152.1
+   ],
+   "max": [
+    212,
+    1293.7,
+    584.2
+   ],
+   "tris": 37792,
+   "bytes": 1003372,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "sit-coffee",
+    "deskHeight": 30
+   }
+  },
+  {
+   "id": "people-ava-sit-coffee",
+   "name": "Ava: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ava-sit-coffee.glb",
+   "anchor": "floor",
+   "size": [
+    429.3,
+    1204.7,
+    711.2
+   ],
+   "min": [
+    -240.5,
+    0,
+    -145.3
+   ],
+   "max": [
+    188.8,
+    1204.7,
+    565.9
+   ],
+   "tris": 37990,
+   "bytes": 956832,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ava",
+    "pose": "sit-coffee",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-ava-sit-coffee-30",
+   "name": "Ava: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ava-sit-coffee-30.glb",
+   "anchor": "floor",
+   "size": [
+    430.7,
+    1204.7,
+    711.2
+   ],
+   "min": [
+    -240.5,
+    0,
+    -145.3
+   ],
+   "max": [
+    190.2,
+    1204.7,
+    565.9
+   ],
+   "tris": 37988,
+   "bytes": 956852,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ava",
+    "pose": "sit-coffee",
+    "deskHeight": 30
+   }
+  },
+  {
+   "id": "people-sam-sit-coffee",
+   "name": "Sam: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-sit-coffee.glb",
+   "anchor": "floor",
+   "size": [
+    526.6,
+    1341.5,
+    741.7
+   ],
+   "min": [
+    -280.7,
+    0,
+    -137.1
+   ],
+   "max": [
+    245.9,
+    1341.5,
+    604.6
+   ],
+   "tris": 33746,
+   "bytes": 932284,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "sit-coffee",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-sam-sit-coffee-30",
+   "name": "Sam: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-sit-coffee-30.glb",
+   "anchor": "floor",
+   "size": [
+    527.7,
+    1341.5,
+    741.7
+   ],
+   "min": [
+    -280.7,
+    0,
+    -137.1
+   ],
+   "max": [
+    247,
+    1341.5,
+    604.6
+   ],
+   "tris": 33748,
+   "bytes": 932280,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "sit-coffee",
+    "deskHeight": 30
+   }
+  },
+  {
+   "id": "people-noah-sit-coffee",
+   "name": "Noah: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-sit-coffee.glb",
+   "anchor": "floor",
+   "size": [
+    524.8,
+    1363.9,
+    734.7
+   ],
+   "min": [
+    -281.2,
+    0,
+    -126.6
+   ],
+   "max": [
+    243.6,
+    1363.9,
+    608.1
+   ],
+   "tris": 33660,
+   "bytes": 1198596,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "sit-coffee",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-noah-sit-coffee-30",
+   "name": "Noah: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-sit-coffee-30.glb",
+   "anchor": "floor",
+   "size": [
+    525.6,
+    1363.9,
+    734.7
+   ],
+   "min": [
+    -281.2,
+    0,
+    -126.6
+   ],
+   "max": [
+    244.4,
+    1363.9,
+    608.1
+   ],
+   "tris": 33664,
+   "bytes": 1198512,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "sit-coffee",
+    "deskHeight": 30
+   }
+  },
+  {
+   "id": "people-sam-stand-coffee",
+   "name": "Sam: coffee at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-stand-coffee.glb",
+   "anchor": "floor",
+   "size": [
+    541.8,
+    1746.1,
+    616.5
+   ],
+   "min": [
+    -283.6,
+    0,
+    -144.1
+   ],
+   "max": [
+    258.2,
+    1746.1,
+    472.4
+   ],
+   "tris": 33652,
+   "bytes": 930340,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "stand-coffee",
+    "deskHeight": 43.5
+   }
+  },
+  {
+   "id": "people-lin-stand-coffee",
+   "name": "Lin: coffee at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-stand-coffee.glb",
+   "anchor": "floor",
+   "size": [
+    471,
+    1542.9,
+    564.6
+   ],
+   "min": [
+    -241.6,
+    0,
+    -120.5
+   ],
+   "max": [
+    229.4,
+    1542.9,
+    444.1
+   ],
+   "tris": 49532,
+   "bytes": 984300,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "stand-coffee",
+    "deskHeight": 43.5
+   }
+  },
+  {
+   "id": "people-jo-stand-coffee",
+   "name": "Jo: coffee at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jo-stand-coffee.glb",
+   "anchor": "floor",
+   "size": [
+    494.4,
+    1671.5,
+    614.9
+   ],
+   "min": [
+    -259.1,
+    0,
+    -159.1
+   ],
+   "max": [
+    235.3,
+    1671.5,
+    455.8
+   ],
+   "tris": 42066,
+   "bytes": 953384,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jo",
+    "pose": "stand-coffee",
+    "deskHeight": 43.5
+   }
+  },
+  {
+   "id": "people-priya-stand-coffee",
+   "name": "Priya: coffee at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-priya-stand-coffee.glb",
+   "anchor": "floor",
+   "size": [
+    487.8,
+    1638.4,
+    581.8
+   ],
+   "min": [
+    -254.6,
+    0,
+    -130
+   ],
+   "max": [
+    233.2,
+    1638.4,
+    451.8
+   ],
+   "tris": 37194,
+   "bytes": 788964,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "priya",
+    "pose": "stand-coffee",
+    "deskHeight": 43.5
+   }
+  },
+  {
+   "id": "people-zoe-sit-floor",
+   "name": "Zoe: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-sit-floor.glb",
+   "anchor": "floor",
+   "size": [
+    571.2,
+    886.5,
+    570.6
+   ],
+   "min": [
+    -285.6,
+    0,
+    -129.5
+   ],
+   "max": [
+    285.6,
+    886.5,
+    441.1
+   ],
+   "tris": 31566,
+   "bytes": 1117092,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "sit-floor"
+   }
+  },
+  {
+   "id": "people-jo-kneel-shelf",
+   "name": "Jo: kneeling at a low shelf",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jo-kneel-shelf.glb",
+   "anchor": "floor",
+   "size": [
+    496.5,
+    1231.5,
+    997
+   ],
+   "min": [
+    -221.7,
+    0,
+    -480
+   ],
+   "max": [
+    274.8,
+    1231.5,
+    517
+   ],
+   "tris": 40956,
+   "bytes": 946700,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jo",
+    "pose": "kneel-shelf"
+   }
+  },
+  {
+   "id": "people-noah-carry-box",
+   "name": "Noah: carrying a box",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-carry-box.glb",
+   "anchor": "floor",
+   "size": [
+    578.8,
+    1790.4,
+    730.9
+   ],
+   "min": [
+    -289.3,
+    0,
+    -202.5
+   ],
+   "max": [
+    289.5,
+    1790.4,
+    528.4
+   ],
+   "tris": 33448,
+   "bytes": 1194316,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "carry-box"
+   }
+  },
+  {
+   "id": "people-leo-carry-box",
+   "name": "Leo: carrying a box",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-leo-carry-box.glb",
+   "anchor": "floor",
+   "size": [
+    480.2,
+    1458.1,
+    621.3
+   ],
+   "min": [
+    -240.1,
+    0,
+    -157.3
+   ],
+   "max": [
+    240.1,
+    1458.1,
+    464
+   ],
+   "tris": 38330,
+   "bytes": 1159852,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "leo",
+    "pose": "carry-box"
+   }
+  },
+  {
+   "id": "people-andre-sit-mix",
+   "name": "Andre, mixing at the desk with headphones (seated)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-sit-mix.glb",
+   "anchor": "floor",
+   "size": [
+    559.6,
+    1371.6,
+    731.1
+   ],
+   "min": [
+    -280,
+    0,
+    -125.6
+   ],
+   "max": [
+    279.6,
+    1371.6,
+    605.5
+   ],
+   "tris": 35354,
+   "bytes": 858916,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "sit-type",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-andre-sit-mix-30",
+   "name": "Andre, mixing at the desk at 30 in with headphones (seated)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-sit-mix-30.glb",
+   "anchor": "floor",
+   "size": [
+    564.2,
+    1371.6,
+    731.1
+   ],
+   "min": [
+    -282.4,
+    0,
+    -125.6
+   ],
+   "max": [
+    281.8,
+    1371.6,
+    605.5
+   ],
+   "tris": 35374,
+   "bytes": 859080,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "sit-type",
+    "deskHeight": 30
+   }
+  },
+  {
+   "id": "people-kai-floor-stretch",
+   "name": "Kai: stretching on a mat",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-kai-floor-stretch.glb",
+   "anchor": "floor",
+   "size": [
+    428.3,
+    563.2,
+    902.6
+   ],
+   "min": [
+    -214.6,
+    0,
+    -133
+   ],
+   "max": [
+    213.7,
+    563.2,
+    769.6
+   ],
+   "tris": 32070,
+   "bytes": 857420,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "kai",
+    "pose": "floor-stretch"
+   }
+  },
+  {
+   "id": "people-lin-sit-chat",
+   "name": "Lin: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    428.4,
+    1249.2,
+    762.9
+   ],
+   "min": [
+    -218.7,
+    0,
+    -146.8
+   ],
+   "max": [
+    209.7,
+    1249.2,
+    616.1
+   ],
+   "tris": 49535,
+   "bytes": 986284,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-ava-stand-low",
+   "name": "Ava: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ava-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    457,
+    1466.6,
+    536.8
+   ],
+   "min": [
+    -228.5,
+    0,
+    -121.8
+   ],
+   "max": [
+    228.5,
+    1466.6,
+    415
+   ],
+   "tris": 37764,
+   "bytes": 950132,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ava",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-hale-stand-low",
+   "name": "Mr Hale: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-hale-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    487.4,
+    1700.6,
+    574
+   ],
+   "min": [
+    -245,
+    0,
+    -135.5
+   ],
+   "max": [
+    242.4,
+    1700.6,
+    438.5
+   ],
+   "tris": 34536,
+   "bytes": 1373168,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "hale",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-jo-stand-low",
+   "name": "Jo: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jo-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    475.2,
+    1634.7,
+    574.2
+   ],
+   "min": [
+    -237.6,
+    0,
+    -148.4
+   ],
+   "max": [
+    237.6,
+    1634.7,
+    425.8
+   ],
+   "tris": 41864,
+   "bytes": 948284,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jo",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-maya-stand-low",
+   "name": "Maya: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    465.2,
+    1611.8,
+    544.8
+   ],
+   "min": [
+    -232.6,
+    0,
+    -121.4
+   ],
+   "max": [
+    232.6,
+    1611.8,
+    423.4
+   ],
+   "tris": 37600,
+   "bytes": 997016,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-andre-stand-low",
+   "name": "Andre: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    549.6,
+    1759.6,
+    610.2
+   ],
+   "min": [
+    -274.7,
+    0,
+    -157.5
+   ],
+   "max": [
+    274.9,
+    1759.6,
+    452.7
+   ],
+   "tris": 34634,
+   "bytes": 849000,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-grace-stand-low",
+   "name": "Grace: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-grace-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    510,
+    1568,
+    548.3
+   ],
+   "min": [
+    -255,
+    0,
+    -125.8
+   ],
+   "max": [
+    255,
+    1568,
+    422.5
+   ],
+   "tris": 49384,
+   "bytes": 1275468,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "grace",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-kai-stand-low",
+   "name": "Kai: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-kai-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    470.5,
+    1400.9,
+    543.9
+   ],
+   "min": [
+    -235.5,
+    0,
+    -125.9
+   ],
+   "max": [
+    235,
+    1400.9,
+    418
+   ],
+   "tris": 34152,
+   "bytes": 870164,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "kai",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-zoe-stand-low",
+   "name": "Zoe: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    463.8,
+    1541.7,
+    538.6
+   ],
+   "min": [
+    -231.9,
+    0,
+    -120.4
+   ],
+   "max": [
+    231.9,
+    1541.7,
+    418.2
+   ],
+   "tris": 34400,
+   "bytes": 1128620,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-lin-stand-low",
+   "name": "Lin: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    471.4,
+    1505.8,
+    532.9
+   ],
+   "min": [
+    -235.7,
+    0,
+    -118.8
+   ],
+   "max": [
+    235.7,
+    1505.8,
+    414.1
+   ],
+   "tris": 49373,
+   "bytes": 979236,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-omar-stand-low",
+   "name": "Omar: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-omar-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    541.8,
+    1684.8,
+    578.8
+   ],
+   "min": [
+    -270.9,
+    0,
+    -137.7
+   ],
+   "max": [
+    270.9,
+    1684.8,
+    441.1
+   ],
+   "tris": 34372,
+   "bytes": 791756,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "omar",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-sam-stand-low",
+   "name": "Sam: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    524.2,
+    1689.6,
+    577.5
+   ],
+   "min": [
+    -262,
+    0,
+    -135.1
+   ],
+   "max": [
+    262.2,
+    1689.6,
+    442.4
+   ],
+   "tris": 33484,
+   "bytes": 925680,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-ben-stand-low",
+   "name": "Ben: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ben-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    489,
+    1727.5,
+    572.2
+   ],
+   "min": [
+    -244.5,
+    0,
+    -133.4
+   ],
+   "max": [
+    244.5,
+    1727.5,
+    438.8
+   ],
+   "tris": 38614,
+   "bytes": 1139028,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ben",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-rosa-stand-low",
+   "name": "Rosa: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-rosa-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    469.6,
+    1175.3,
+    534.7
+   ],
+   "min": [
+    -234.8,
+    0,
+    -119.4
+   ],
+   "max": [
+    234.8,
+    1175.3,
+    415.3
+   ],
+   "tris": 48492,
+   "bytes": 973588,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "rosa",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-priya-stand-low",
+   "name": "Priya: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-priya-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    470,
+    1599.8,
+    542.8
+   ],
+   "min": [
+    -235,
+    0,
+    -121
+   ],
+   "max": [
+    235,
+    1599.8,
+    421.8
+   ],
+   "tris": 37046,
+   "bytes": 784644,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "priya",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-mia-stand-low",
+   "name": "Mia: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    477.6,
+    1489,
+    532.1
+   ],
+   "min": [
+    -238.8,
+    0,
+    -118.4
+   ],
+   "max": [
+    238.8,
+    1489,
+    413.7
+   ],
+   "tris": 34744,
+   "bytes": 1383512,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-leo-stand-low",
+   "name": "Leo: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-leo-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    470.8,
+    1408,
+    548.4
+   ],
+   "min": [
+    -235.4,
+    0,
+    -129.3
+   ],
+   "max": [
+    235.4,
+    1408,
+    419.1
+   ],
+   "tris": 38214,
+   "bytes": 1156076,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "leo",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-noah-stand-low",
+   "name": "Noah: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    518.4,
+    1735.6,
+    600.8
+   ],
+   "min": [
+    -259,
+    0,
+    -155.8
+   ],
+   "max": [
+    259.4,
+    1735.6,
+    445
+   ],
+   "tris": 33306,
+   "bytes": 1190328,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-eli-stand-low",
+   "name": "Eli: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-eli-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    504.5,
+    1506.1,
+    553
+   ],
+   "min": [
+    -252.5,
+    0,
+    -129.2
+   ],
+   "max": [
+    252,
+    1506.1,
+    423.8
+   ],
+   "tris": 42859,
+   "bytes": 1274732,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "eli",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-sofia-stand-low",
+   "name": "Sofia: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sofia-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    456,
+    1468.6,
+    535.6
+   ],
+   "min": [
+    -228,
+    0,
+    -121.2
+   ],
+   "max": [
+    228,
+    1468.6,
+    414.4
+   ],
+   "tris": 49974,
+   "bytes": 991196,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sofia",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
   }
  ],
  "screens": [

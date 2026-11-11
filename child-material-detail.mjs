@@ -263,7 +263,13 @@ export function enhanceChildMaterials({room,root,layout:l,helpers:h,materials:m,
  m.oak.map=canvasMap(256,256,(c,w,hh,r)=>drawTimber(c,w,hh,r));m.oak.color.set(story.wood);m.oak.roughness=story.woodRough;m.oak.userData.roomCraftFinish={early:'birch',primary:'honey oak',preteen:'limed oak',teen:'smoked oak',college:'oiled walnut'}[stage];m.oak.needsUpdate=true;
  // The tall wardrobe carcass was trim paint and read as a blank block in the
  // larger rooms; it takes the stage timber, its painted doors stay.
- root.traverse(o=>{if(o.userData.propId==='personal-wardrobe')for(const c of o.children)if(c.isMesh&&c.material===m.cream)c.material=m.oak;});
+ // Round 3: the shared 256 px timber map stretched over a 2 m face read as
+ // strong vertical stripes; the wardrobe gets a tall, finer, softer panel grain.
+ {const ward=[];root.traverse(o=>{if(o.userData.propId==='personal-wardrobe')ward.push(o);});
+  if(ward.length){const panel=m.oak.clone();lock(panel);panel.map=canvasMap(256,1024,(c,w,hh,r)=>{c.fillStyle='rgb(222,222,222)';c.fillRect(0,0,w,hh);
+    for(let i=0;i<110;i++){const x0=r()*w,amp=1+r()*4,k=.5+r()*2.5,ph=r()*6;c.strokeStyle=`rgba(125,125,125,${(.035+r()*.07).toFixed(3)})`;c.lineWidth=.4+r()*1.1;c.beginPath();for(let y=0;y<=hh;y+=8){const x=x0+Math.sin(y/hh*Math.PI*k+ph)*amp;y?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();}
+    for(let i=0;i<500;i++){c.fillStyle=`rgba(110,110,110,${(.1*r()).toFixed(3)})`;c.fillRect(r()*w,r()*hh,1,2+r()*5);}});
+   for(const o of ward)for(const c of o.children)if(c.isMesh&&(c.material===m.cream||c.material===m.oak))c.material=panel;}}
  // Upholstery that used to be the shared sage now follows the stage.
  m.green.color.set(story.upholstery||p.cloth);
 
@@ -299,7 +305,14 @@ export function enhanceChildMaterials({room,root,layout:l,helpers:h,materials:m,
   // The foot corner nearest the room is turned back, showing the lining.
   const top=(x,z)=>377+4*Math.sin(x*.009)*Math.sin((z+230)*.009)-5*Math.pow(Math.abs(x)/555,10)-3*Math.pow(Math.abs(z-300)/660,10)+9;
   const pts=[[255,960],[555,660],[265,670]],fg=new THREE.BufferGeometry();fg.setAttribute('position',new THREE.Float32BufferAttribute(pts.flatMap(([x,z])=>[x,top(x,z),z]),3));fg.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,1,1],2));fg.setIndex([0,1,2]);fg.computeVertexNormals();
-  const flap=h.mesh(bed,fg,std({early:'#f3e6cf',primary:p.feature,preteen:'#ebe4d6',teen:p.accent,college:'#d8ccb5'}[stage],.95,{side:THREE.DoubleSide},'fabric'));flap.name='Quilt corner turned back';flap.castShadow=false;flap.userData.presentationOnly=true;flap.position.set(0,0,0);
+  const flap=h.mesh(bed,fg,std({early:'#f3e6cf',primary:p.feature,preteen:'#ebe4d6',teen:'#b9bcc4',college:'#d8ccb5'}[stage],.95,{side:THREE.DoubleSide},'fabric'));flap.name='Quilt corner turned back';flap.castShadow=false;flap.userData.presentationOnly=true;flap.position.set(0,0,0);
+  // Round 3: the corner tucks UNDER the personal throw. The throw (and its stitching) is lifted
+  // over the folded triangle, easing back down within 70 mm, so the fold reads beneath it.
+  {const tri=pts,side=(ax,az,bx,bz,px,pz)=>(bx-ax)*(pz-az)-(bz-az)*(px-ax),segD=(ax,az,bx,bz,px,pz)=>{const dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/(dx*dx+dz*dz)));return Math.hypot(px-ax-t*dx,pz-az-t*dz);};
+   const dist=(x,z)=>{const s0=side(...tri[0],...tri[1],x,z),s1=side(...tri[1],...tri[2],x,z),s2=side(...tri[2],...tri[0],x,z);if((s0>=0&&s1>=0&&s2>=0)||(s0<=0&&s1<=0&&s2<=0))return 0;return Math.min(segD(...tri[0],...tri[1],x,z),segD(...tri[1],...tri[2],x,z),segD(...tri[2],...tri[0],x,z));};
+   bed.traverse(o=>{if(!o.isMesh||!(o.name==='Woven throw following quilt crown'||o.geometry?.type==='TubeGeometry'&&o.parent?.userData.propId==='personality-bedding'))return;const pp=o.geometry.attributes.position;
+    for(let i=0;i<pp.count;i++){const x=pp.getX(i),y=pp.getY(i),z=pp.getZ(i),d=dist(x,z);if(d>=70)continue;const f=d<=0?1:.5+.5*Math.cos(Math.PI*d/70),want=top(x,z)+5;if(y<want)pp.setY(i,y+(want-y)*f);}
+    pp.needsUpdate=true;o.geometry.computeVertexNormals();o.geometry.computeBoundingSphere();});}
  }
  const sheet=std(story.sheet,.95,{bumpMap:m.linen.bumpMap||null,bumpScale:.1*mm},'fabric');
  for(const o of bed?.children||[]){

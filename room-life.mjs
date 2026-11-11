@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { activityPageMaterial } from './room-activity-print.mjs?v=table-clearance-20261021';
 import { ROOM_DETAIL_PALETTES } from './room-finish-palettes.mjs?v=environment-expert-20261014';
 import { enrichActivityKit } from './room-life-detail.mjs?v=environment-realism-20261019';
-import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=label-fix-20261110';
+import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261111';
 import { settleActivitySupports, bindMeetingSeats, meetingSeatPose } from './room-activity-support.mjs?v=table-clearance-20261021';
 import { detailKit } from './institutional-detail.mjs';
 
@@ -118,9 +118,9 @@ export class RoomLife {
         group.userData.propId = `${room.id}-daily-activity`; group.userData.sceneAssetName = 'Daily activity · ' + l.name;
         h.markSceneAsset(group, { key: `${room.id}:${l.id}:life:activity` }); this.activity = group;
         const mat = (c, kind, extra = {}) => { const m = h.material(c, extra); if (kind) m.userData.roomSurface = kind; return m; };
-        const [textile, accent, paper, ceramic] = ROOM_DETAIL_PALETTES[room.id];
+        const [textile, accent, paper, ceramic] = l.detailPalette || ROOM_DETAIL_PALETTES[room.id];
         this.mats = { paper: mat(paper, null, { roughness: .96 }), ink: mat('#34434a'), clay: mat(accent), linen: mat(textile, 'fabric'), wood: mat('#997653', 'wood'), cream: mat(ceramic, null, { roughness: .28 }), brass: mat('#ac9270', 'metal', { metalness: .8 }), green: mat(textile), liquid: mat('#442d1d', null, { roughness: .18 }), ferrule: mat('#b4bcc0', 'metal', { metalness: .9, roughness: .26 }) };
-        room.root.userData.decorationFinish = { palette: [...ROOM_DETAIL_PALETTES[room.id]], phases: 5, version: 1 };
+        room.root.userData.decorationFinish = { palette: [...(l.detailPalette || ROOM_DETAIL_PALETTES[room.id])], phases: 5, version: 1 };
         for (let phase = 0; phase < DAY_PHASES.length; phase++) {
             const variant = new THREE.Group(); variant.name = ROOM_STORIES[room.id][phase]; group.add(variant); this.kits.push(variant);
             this.kitPhase = phase; this.makeKit(variant, phase, a.small);
@@ -203,7 +203,7 @@ export class RoomLife {
                 if (id === 'ergoflex-notebook') {
                     o.material = [].concat(o.material).map(m => {
                         if (!/cover/i.test(m.name)) return m;
-                        const own=m.clone(); own.color.set(ROOM_DETAIL_PALETTES[this.room.id][1]); own.userData.sharedTextures=true;
+                        const own=m.clone(); own.color.set((this.room.roomLayout?.detailPalette || ROOM_DETAIL_PALETTES[this.room.id])[1]); own.userData.sharedTextures=true;
                         o.ownedMaterials ||= []; o.ownedMaterials.push(own); return own;
                     });
                     if (o.material.length===1) o.material=o.material[0];
@@ -276,7 +276,7 @@ export class RoomLife {
         } else if (id === 'gym') {
             for (let i = 0; i < (quiet ? 3 : 1); i++) h.box(g, [140, 22, 100], [0, y + 11 + i * 23, 0], m.linen, 5);
             for (const x of [-57, 57]) h.box(g, [2, .6, 86], [x, y + (quiet ? 68 : 22.3), 0], m.paper);
-            if (!quiet) this.book(g, [0, y + 22, 0], '#61796c', active || social);
+            if (!quiet) this.book(g, [0, y + 22, 0], this.room.roomLayout?.detailBook || '#61796c', active || social);
         } else if (id === 'creative') {
             if (quiet || social) this.book(g, [0, 0, 0], '#89705c', social);
             else {

@@ -115,7 +115,7 @@ try{
   await until(async()=>(await edits())?.cast.find(c=>c.key===key)?.pose?.head,'the head is turned');
   await saveAs('Leaning in');
   const two=await until(async()=>{const l=await saved();return l.length===2?l:null;},'a second pose is saved');
-  check(two[0].name==='Leaning in'&&two[1].name==='Leaning in 2'&&!two[0].joints.head&&two[1].joints.head&&two[0].posture==='stand-type','Save pose keeps each pose under its own name and never replaces one: '+two.map(p=>p.name).join(', '));
+  check(two[0].name==='Leaning in'&&two[1].name==='Leaning in 2'&&!two[0].joints.head&&two[1].joints.head&&/^stand-/.test(two[0].posture),'Save pose keeps each pose under its own name and never replaces one: '+two.map(p=>p.name).join(', '));
   // ---- Done keeps the pose; the model stays as posed
   await click('#director-panel [data-action="pe-pose-done"]');
   await until(async()=>!(await page.$('#director-panel .people-pose')),'Done leaves pose mode');

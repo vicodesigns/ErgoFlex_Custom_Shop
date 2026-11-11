@@ -167,6 +167,57 @@ The timeline's chapter picker starts with **Cut**: the film's cuts (`exports/fil
 - **Layout.** One film picker (the inspector's; the timeline shows its own only while the inspector is hidden). Above 2200 px wide the inspector, timeline and top bar are drawn a fifth larger (the 3D view is not zoomed). Lamps and Props show at most two rows of chips and scroll; the timeline's Fit takes 54 % of a window up to 1150 px tall; selecting a person scrolls the People lane into view. A new status light takes the free stretch at the playhead and never lengthens the chapter (refused when there is less than 0.3 s).
 - `VIEW=2560x1440 node tests/director-…-e2e.mjs` runs any Director browser test at that window size.
 
+## People at a desk follow it (late November 10)
+
+Anyone at a desk sits or stands with that desk. Beside the model a placement names, `RoomPeople` loads the same
+character's other desk postures under the same name (`deskFamily` in `room-people.mjs`: typing seated at 28 in and at
+30 in, standing at 43.5 in; a wheelchair user's 28 in and 31 in poses) and shows whichever was built for the desk's
+height now; between sitting and standing height nobody is at the desk. This applies to people a film or the Director
+puts at a desk and to the people at a room's other desks (`station`), not to the rooms' own featured-desk crews, which
+list their postures.
+
+A person at one of the room's other desks reads that desk live (`peopleState().station(id)`, `studio.js`
+`roomPeopleStation`): they stand where the desk stands now and take its height, so moving, turning or raising it in
+the Director's Desks tab (or with a Lift on that desk's lane) takes them along. Before, their place and fit were
+decided once from the layout, and choosing "standing" for someone whose desk was down made them vanish.
+
+In the Director, the posture menu's seated and standing typing postures therefore behave alike at a desk. Pose mode
+fine-tunes the posture that is showing: entering it while the desk has someone in another of their postures makes
+that one the chosen posture first (fine tuning belongs to one posture). Tests: `tests/room-people-test.mjs`,
+`tests/director-people-desk-follow-e2e.mjs`.
+
+## Director Desks: gumball (late November 10)
+
+A selected room desk has a gumball over it (arrows along the room's X and Z, a square for both), the round floor
+handle as before, and a ring around its footprint whose knob turns it (Shift: 15° steps). A tooltip names what is
+under the pointer and shows the numbers while dragging; each drag is one desk edit. The desk tools start with the
+Desks tab. A click on a desk in the view used to leave the orbit controls without their pointerup (the desk tools kept
+the event), so the camera turned with every mouse move until the next click; the tools now release the orbit controls.
+Test: `tests/director-desk-gumball-e2e.mjs`.
+
+## A cast for every hour (November 11)
+
+The nine film rooms have a cast per daypart (`ROOM_PEOPLE` / `castEntries` in `room-people.mjs`; placements carry
+`modes: [...]`, and `modes: []` keeps a placement only for film cuts that name it). Morning is an early start (standing,
+a coffee), the afternoon seated work, the evening company or winding down, night one person or nobody (schools and the
+gym are empty), the party a group with the desk left free. Clothes are recoloured per room (`LOOK`). New postures in
+`tools/people/cast.py`: coffee at the desk seated and standing, standing with a mug or a drink, explaining, carrying a
+box, kneeling at a shelf, sitting on the floor, a floor stretch, chatting seated, mixing with headphones, and
+`stand-low`, a standing pose at a bench-height desk (35.5 in) that every character has and that is part of the desk
+family. Rooms without a cast of their own keep one desk user, who is not there at night in offices, schools, galleries
+and labs.
+
+Rules the casts rely on: a person cast `on`, `near` or `by` furniture settles again when the daypart changes or that
+furniture moves; a film chapter that names someone in `only` shows them whatever the daypart (`named`), and a model id
+in such a list means the placement without a key of its own; a chapter that takes the room's people over
+(`resolved()`) takes the current hour's cast; a tilted top stows its keyboard under the desk, so the desk user stays
+where the keyboard was while the top was flat (`peopleState().tilt`); room chairs make way for a seated desk user's own
+chair (1.3 m), for anyone standing within 600 mm, never for a seat somebody is on.
+
+Checking a room: `node tools/rooms/room-stills.cjs <out> <room:layout:daypart> ... --port N --people --mode-height
+--views asloaded,overview` (`asloaded` is the Studio's own opening view), `node tools/people/cast-audit.cjs --film`.
+
+
 ## People who move (added November 10, 2026, night)
 
 `room-people-motion.mjs` (pure, tested without a browser) + `RoomPeople.cast()` / `chairOf()` in `room-people.mjs`.

@@ -1,8 +1,8 @@
 import * as government from './institutional-government.mjs?v=scene-desk-styling-20261010';
-import * as education from './institutional-education.mjs?v=highschool-setting-20261104';
+import * as education from './institutional-education.mjs?v=env-shared-20261111';
 import * as healthcare from './institutional-healthcare.mjs?v=scene-desk-styling-20261010';
 import * as it from './institutional-it.mjs?v=scene-desk-styling-20261010';
-import * as media from './institutional-media.mjs?v=occ-medialab-20261105';
+import * as media from './institutional-media.mjs?v=env-shared-20261111';
 
 // Measured public service, education and mobile work settings. Units are mm.
 // Scene IDs intentionally contain only letters, matching saved Groove keys.
@@ -26,7 +26,7 @@ const definitions = [
     ['laboratory', 'Science laboratory', 'Clinical & technical', 'Move between analysis, teaching and experiments.', 'lab', '#dde8e4', '#408d89', [6600, 8000], ['Lab preparation', 'Practical session', 'Analysis', 'Instrument watch', 'Research review']],
     ['hospital', 'Hospital workspace', 'Clinical & technical', 'A mobile documentation station beside the care space.', 'hospital', '#e8efeb', '#608e9d', [6200, 7600], ['Morning rounds', 'Care coordination', 'Evening handover', 'Night observation', 'Team review']],
     ['mobileit', 'Mobile IT', 'Clinical & technical', 'Bring diagnostics and support to the equipment.', 'it', '#dce3e8', '#467eaa', [5800, 7200], ['System checks', 'Service session', 'Maintenance', 'Overnight monitoring', 'Team deployment']],
-    ['occmedialab', 'OCC Multimedia Art Lab', 'Educational', 'Make films, mix sound and share your next idea.', 'media', '#e4e7e8', '#ec8b23', [8400, 10800], ['Pre-production', 'Edit & create', 'Sound & colour', 'Screening', 'Portfolio critique']]
+    ['occmedialab', 'OCC Multimedia Art Lab', 'Educational', 'Make films, mix sound and share your next idea.', 'media', '#e4e7e8', '#ec8b23', [8400, 10800], ['Pre-production', 'Edit & create', 'Sound & colour', 'Late edit', 'Screening & wrap']]
 ];
 const phases = ['morning', 'afternoon', 'evening', 'night', 'party'];
 export const EDUCATIONAL_LEVELS = {

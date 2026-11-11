@@ -99,6 +99,35 @@ def mug(rig, side, color=(.86, .84, .8)):
     return [tube('mug', .04, (0, 0, -.045), (0, 0, .05), m, w, 20), tube('coffee', .035, (0, 0, .049), (0, 0, .051), material('coffee', (.16, .09, .05), .3), w, 20)]
 
 
+def cup(rig, side, kind='mug', color=None):
+    """A drink held the way people hold one: fingers round it, thumb on top, upright whatever the wrist does.
+    kind: 'mug' (coffee), 'glass' (a tumbler), 'wine' (a stemmed glass)."""
+    w = hand_frame(rig, side, 0); n = w.to_3x3() @ Vector((0, 0, 1))
+    z = Vector((0, 0, 1)); x = n - z * n.dot(z)
+    if x.length < 1e-3: x = Vector((1, 0, 0))
+    x.normalize(); y = z.cross(x)
+    m = Matrix((x, y, z)).transposed().to_4x4()
+    if kind == 'mug':
+        m.translation = w.translation + x * .05 + Vector((0, 0, .005)); mat = material('mug ' + str(color), color or (.86, .84, .8), .35)
+        return [tube('mug', .04, (0, 0, -.05), (0, 0, .045), mat, m, 20), tube('coffee', .035, (0, 0, .041), (0, 0, .046), material('coffee', (.16, .09, .05), .3), m, 20),
+                box('mug handle', (.012, .012, .055), mat, m, at=(-.046, 0, 0))]
+    m.translation = w.translation + x * .045
+    glass = material('glass', (.8, .86, .88), .05)
+    if kind == 'wine':
+        return [tube('wine stem', .004, (0, 0, -.11), (0, 0, .0), glass, m, 8), tube('wine foot', .032, (0, 0, -.114), (0, 0, -.11), glass, m, 16),
+                tube('wine bowl', .024, (0, 0, .0), (0, 0, .085), glass, m, 16, radius2=.038), tube('wine', .029, (0, 0, .012), (0, 0, .045), material('wine ' + str(color), color or (.35, .03, .08), .15), m, 16)]
+    return [tube('glass', .033, (0, 0, -.055), (0, 0, .055), glass, m, 16, radius2=.037), tube('drink', .031, (0, 0, -.05), (0, 0, .025), material('drink ' + str(color), color or (.62, .3, .08), .15), m, 16)]
+
+
+def carton(rig, size=(.42, .3, .28), color=(.62, .47, .3)):
+    """A cardboard box carried in front in both hands, held by its sides."""
+    a = hand_frame(rig, 'l', 0).translation; b = hand_frame(rig, 'r', 0).translation
+    x = a - b; x.z = 0; x.normalize(); z = Vector((0, 0, 1)); y = z.cross(x)
+    w = Matrix((x, y, z)).transposed().to_4x4(); w.translation = (a + b) / 2
+    return [box('carton', (min(size[0], (a - b).length - .02), size[1], size[2]), material('cardboard', color, .85), w, bevel=.004),
+            box('carton tape', (.06, size[1] + .002, .002), material('tape', (.72, .62, .46), .4), w, at=(0, 0, size[2] / 2))]
+
+
 def gamepad(rig, color=(.08, .08, .09)):
     """Held between both hands."""
     a = hand_frame(rig, 'l', .03); b = hand_frame(rig, 'r', .03); mid = (a.translation + b.translation) / 2
@@ -241,7 +270,7 @@ def prosthesis(rig, side):
 
 
 BUILDERS = {'phone': phone, 'tablet': tablet, 'book': book, 'pen': pen, 'mug': mug, 'gamepad': gamepad, 'brush': brush, 'palette': palette,
-            'cane': cane, 'backpack': backpack, 'headphones': headphones,
+            'cane': cane, 'backpack': backpack, 'headphones': headphones, 'cup': cup, 'carton': carton,
             'wheelchair': wheelchair, 'crutch': crutch, 'screwdriver': screwdriver, 'prosthesis': prosthesis}
 
 

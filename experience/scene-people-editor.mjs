@@ -74,7 +74,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     // Double-click a person: pose mode (the first click of the pair has selected them). Double-click elsewhere leaves it.
     t.renderer.domElement.addEventListener('dblclick',ev=>{
       if(!editing()||lightsShowing())return;const k=pose.personAt(ev);
-      if(k&&entry(k)){ev.preventDefault();ev.stopPropagation();if(sel!==k)select(k,{announce:false});pose.enter(k);}
+      if(k&&entry(k)){ev.preventDefault();ev.stopPropagation();if(sel!==k)select(k,{announce:false});enterPose(k);}
       else if(k){select(k);status('Their first change copies the film\'s cast into this chapter: move or change them once, then double-click to pose.');}
       else if(pose.active())pose.exit();
     },true);
@@ -132,7 +132,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     for(let p=o;p;p=p.parent)if(p.userData?.person){
       const key=people.keyOf(p.userData.person),now=performance.now(),twice=key===lastPick.key&&now-lastPick.t<450;lastPick={key,t:now};
       select(key,{announce:!twice});
-      if(twice&&entry(key))ensure().then(()=>{if(sel===key&&!pose.active())pose.enter(key);}).catch(error=>status(error.message,true));
+      if(twice&&entry(key))ensure().then(()=>{if(sel===key&&!pose.active())return enterPose(key);}).catch(error=>status(error.message,true));
       return true;
     }
     return false;
@@ -167,6 +167,17 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     rerender();
   }
   // ---- changes
+  // Someone at a desk sits and stands with it, so the desk may have them in another of their desk postures than the one chosen
+  // here. Fine tuning is for the posture that is showing: that one becomes the chosen posture first.
+  async function enterPose(key){
+    const e=entry(key),shown=objectOf(key)?.userData?.person;
+    if(e&&shown?.variant&&shown.id!==e.id&&modelOf(shown.id)){
+      const label=poseOf(shown.id)?.label?.toLowerCase()||'this posture';
+      edit(key,x=>{x.id=shown.id;x.desk=shown.desk;delete x.pose;},`${personName(e)}: fine-tuning ${label}, the posture the desk has them in now.${e.pose&&Object.keys(e.pose).length?' The fine tuning of their other posture is set aside (Undo brings it back).':''}`);
+      for(let i=0;i<40;i++){const now=objectOf(key)?.userData?.person;if(now&&now.id===shown.id&&!now.variant)break;await new Promise(r=>setTimeout(r,150));}
+    }
+    poseEditor.enter(key);
+  }
   async function swap(key,character,pose,joints=null){
     const e=entry(key),m=e&&modelOf(e.id);if(!e||!catalog)return;
     const c=character||m?.character,p=pose||m?.pose;if(!c||!p)return;
@@ -228,7 +239,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-pose'){await swap(sel,null,el.value);return;}
     if(name?.startsWith('pe-color-')){const part=name.slice(9);if(!PARTS.includes(part)||!/^#[0-9a-f]{6}$/i.test(el.value))return;edit(sel,x=>{(x.colors||={})[part]=el.value.toLowerCase();},`${who}: ${part} recoloured.`,{undoKey:'people-color-'+part+sel});return;}
     if(name==='pe-anchor'){
-      if(el.value==='free'){const o=objectOf(sel),spot=o&&tools?read(o):floorSpot();edit(sel,x=>{delete x.desk;delete x.station;delete x.reach;delete x.beside;x.at=spot.at;x.turn=spot.turn;},`${who} stays where they are now and no longer follows the desk.`);}
+      if(el.value==='free'){const o=objectOf(sel),spot=o&&tools?read(o):floorSpot(),shown=o?.userData?.person,as=shown?.variant&&modelOf(shown.id)?shown.id:null;   // they stay as they are now: in the posture the desk has them in
+        edit(sel,x=>{if(as&&as!==x.id){x.id=as;delete x.pose;}delete x.desk;delete x.station;delete x.reach;delete x.beside;x.at=spot.at;x.turn=spot.turn;},`${who} stays where they are now and no longer follows the desk.`);}
       else{const p=poseOf(e.id);edit(sel,x=>{delete x.at;delete x.turn;delete x.y;delete x.beside;x.desk=p?.stance==='seated'?'sit':p?.stance==='wheelchair'?'wheel':'stand';},`${who} is at the film desk and follows it.`);}
       return;
     }
@@ -244,7 +256,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   async function action(name,index){
     if(pose.action(name,index))return;
-    if(name==='pe-pose-enter'){if(sel){await ensure();pose.enter(sel);}return;}
+    if(name==='pe-pose-enter'){if(sel){await ensure();await enterPose(sel);}return;}
     if(name==='pe-pose-save'){savePose();return;}
     if(name==='pe-pose-apply'){await applySaved(index);return;}
     if(name==='pe-pose-delete'){deleteSaved(index);return;}
@@ -312,7 +324,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const uniq=k=>[...new Set(Object.values(catalog.characters).map(x=>x[k]))];
     const poses=STANCES.map(st=>[st,Object.entries(catalog.poses).filter(([,x])=>x.stance===st)]).filter(([,l])=>l.length);
     const built=id=>!!(m&&modelFor(m.character,id));
-    const here=!o?'Loading the model…':o.visible?'':s&&!isFree?'':s?`Not in the room at ${r1(time())} s.`:isFree?'':'Not showing now: a desk posture shows only while the desk is at the height it was built for.';
+    const here=!o?'Loading the model…':o.visible?'':s&&!isFree?'':s?`Not in the room at ${r1(time())} s.`:isFree?'':'Not showing now: the desk is between sitting and standing height, where nobody works at it.';
     const head=`<div class="people-head"><img src="${thumb(e.id)}" alt=""><div><strong>${escape(c?.name||personName(e))}</strong><small>${escape(c?[c.sex,c.age,c.height?Math.round(c.height*(e.scale||1))+' cm':''].filter(Boolean).join(' · '):e.id)}</small><small>${escape(doing(e))}${m?.aids?.length?' · '+escape(m.aids.join(', ')):''}</small></div></div>`;
     if(pose.active()===e.key)return pose.panel(head);
     const tuned=Object.keys(e.pose||{}).length;
@@ -331,7 +343,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <h4>Place</h4>
       ${select_('pe-anchor',isFree?'free':'desk',[['free','Free spot (move by hand)'],['desk',e.station?'At a desk in the room':'At the film desk (follows it)']])}
       ${isFree?`<div class="director-row people-fields">${field('X',`pe-x`,e.at[0],{step:10,unit:'mm'})}${field('Z','pe-z',e.at[1],{step:10,unit:'mm'})}${field('Turn','pe-turn',e.turn||0,{step:5,min:-360,max:360,unit:'°'})}${field('Lift','pe-y',e.y||0,{step:5,unit:'mm',title:'Raises a seated person onto a seat, or anyone onto a step'})}</div>
-      <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:'<p class="director-hint">They stand or sit where the desk needs them and move with it. A desk posture shows only while the desk is at the height it was built for.</p>'}
+      <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:'<p class="director-hint">They work at the desk and move with it, and they sit or stand as its height changes: seated at 28 to 30 in, standing at 43.5 in, out of the way while it travels between.</p>'}
       <div class="director-row people-fields">${field('Size','pe-scale',Math.round((e.scale||1)*100),{step:1,min:20,max:300,unit:'%',title:'100 % is the size the character was built at'})}</div>
       <h4>Clothes and hair</h4>
       <div class="people-colors">${PARTS.map((part,i)=>{const mine=e.colors?.[part],was=asBuilt?.[part]||c?.colors?.[part]||'#8a8f96';return `<label title="${mine?'Recoloured':'As built'}: ${part}">${cap(part)}<span><input type="color" name="pe-color-${part}" value="${escape(mine||was)}">${mine?`<button type="button" data-action="pe-color-reset" data-index="${i}" title="Back to the colour the character was built with">↺</button>`:''}</span></label>`;}).join('')}</div>

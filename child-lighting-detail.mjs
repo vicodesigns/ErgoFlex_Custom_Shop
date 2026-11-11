@@ -26,7 +26,7 @@ export { CHILD_STAGE_LIGHT, childStageLight } from './child-lighting-profiles.mj
 // reading stays 0 because the authored cue is 0); the rest drive emissives and
 // decals in this file.
 const STAGE = {
-    early: { warm: '#ffc48a', moonTint: '#ffc27e', reading: [1, 1, 1, 1, 1], moon: [1, 1, .7, .5, 1], cabinet: [1, 1, 1, 1, 1], stars: [0, 0, .12, 1, 0], window: [.26, .17, .07, .012, .18] },
+    early: { warm: '#ffc48a', moonTint: '#ffc27e', reading: [1, 1, 1, 1, 1], moon: [1, 1, .55, .3, 1], cabinet: [1, 1, 1, 1, 1], stars: [0, 0, .12, 1, 0], window: [.26, .17, .07, .012, .18] },
     primary: { warm: '#ffcb8f', moonTint: '#ffb870', reading: [1, 1, 1.05, 1, 1], moon: [1, 1, .9, 1.1, 1], cabinet: [1, 1, 1, 1, 1], rocket: [0, 0, .45, 1, 0], hall: [0, 0, 0, 1, 0], sky: [0, 0, .25, 1, 0], window: [.27, .18, .07, .012, .18] },
     preteen: { warm: '#ffc08e', moonTint: '#ffbf96', reading: [1, 1, .85, 1, 1], moon: [1, 1, .9, 1.1, 1], cabinet: [1, 1, .7, 1, 1], fairy: [0, .05, 1, .45, .8], lilac: [0, 0, .5, 1, .3], window: [.24, .17, .07, .012, .18] },
     teen: { warm: '#ffc38c', moonTint: '#ff9a52', reading: [1, 1, .7, 1, 1], moon: [1, 1, .8, 1.3, 1], cabinet: [1, 1, .55, 1, 1], strip: [0, 0, 1, .6, .45], neon: [0, 0, 1, 0, .5], street: [0, 0, 0, 1, 0], window: [.22, .16, .06, .012, .17] },
@@ -102,7 +102,7 @@ export function enhanceChildLighting({ root, layout: l, helpers: h, groups, skyM
     decal(root, [l.reading[0] - 150, 160, l.reading[1] - 40], [1500, 1150], pool, S.warm, [0, .02, .32, 0, .12], FLOOR);
     // The personal cabinet lamp throws a scallop up the right wall (only where that lamp exists).
     const cabinetLamp = root.getObjectByName('Child room · personal cabinet lamp');
-    if (cabinetLamp) { root.updateMatrixWorld(true); const at = root.worldToLocal(cabinetLamp.getWorldPosition(new THREE.Vector3())); decal(right, [XR, at.y + 450, at.z], [760, 900], scallop, '#ffcf98', [0, 0, .09, .015, .04], RIGHT); }
+    if (cabinetLamp) { root.updateMatrixWorld(true); const at = root.worldToLocal(cabinetLamp.getWorldPosition(new THREE.Vector3())); decal(right, [XR, at.y + 450, at.z], [760, 900], scallop, '#ffcf98', [0, 0, .065, .015, .04], RIGHT); }
 
     // ---- Stage practicals and the bed wall as the night hero ----
     const bedX = bed[0], bayL = Math.max(-w / 2 + 60, bedX - 650), bayR = bedX + 650;
@@ -128,7 +128,7 @@ export function enhanceChildLighting({ root, layout: l, helpers: h, groups, skyM
         const side = decal(right, [XR, 1750, back + 900], [1500, 1300], starMap, '#ffffff', S.stars.map(v => v * .7), RIGHT); side.material.map = side.material.map.clone(); side.material.map.repeat.set(.5, .7); side.material.map.offset.set(.5, .15); side.material.map.needsUpdate = true; own(side.material.map);
         decal(rear, [p.position.x, 330, back + 28], [520, 520], pool, '#cfdcff', S.stars.map(v => v * .35));
         // The crescent keeps its light but no longer scorches the wall: a soft halo instead.
-        decal(rear, [bedX, 1040, RW], [900, 900], pool, '#ffbf7a', [0, 0, .06, .1, 0]);
+        decal(rear, [bedX, 1040, RW], [760, 760], pool, '#ffbf7a', [0, 0, .03, .045, 0]); // round 3: a nightlight, not a fire
     } else if (age === 'primary') {
         // Rocket night-light on the wall over the bedside table is now the bedtime light.
         const r = fixture(rear, 'light-rocket-nightlight-primary', 'Rocket night-light', [Math.min(bayR + 170, w / 2 - 300), 690, back + 14]);
@@ -214,8 +214,8 @@ export function enhanceChildLighting({ root, layout: l, helpers: h, groups, skyM
     const info = {};
     let hallDone = age !== 'primary';
     const hallLight = () => {
-        hallDone = true; const wl = root.userData.childWallLife; let door = wl?.door;
-        if (!door) { const r = wl?.rects?.right?.find(x => x.id === `wall-${age}-door`); if (r) door = { wall: 'right', u: (r.u0 + r.u1) / 2, width: Math.max(700, r.u1 - r.u0 - 180) }; }
+        // Only the door the walls layer publishes (root.userData.childWallLife.door); no door, no hall light.
+        hallDone = true; const door = root.userData.childWallLife?.door;
         if (!door || door.wall !== 'right') return;
         // The door is closed: hall light spills in under it as a short bright fan on the floor.
         const width = door.width || 860;
@@ -228,13 +228,16 @@ export function enhanceChildLighting({ root, layout: l, helpers: h, groups, skyM
     let nookDone = false;
     const adoptNookLamp = () => {
         nookDone = true; let nook = null; root.traverse(x => { if (x.userData.propId === `lived-nook-${age}`) nook = x; }); if (!nook) return;
-        let shade = null; nook.traverse(x => { const p = x.geometry?.parameters; if (x.isMesh && x.geometry.type === 'CylinderGeometry' && p.radiusTop === 150 && p.radiusBottom === 190) shade = x; }); if (!shade) return;
+        // The dresser tags its lamp shade explicitly (userData.lampShade on the baked shade mesh).
+        let shade = null; nook.traverse(x => { if (x.isMesh && x.userData.lampShade) shade = x; }); if (!shade) return;
         const reading = root.getObjectByName('Child room · reading'); if (!reading) return;
         shade.material = glowing(shade.material.clone(), 1.05, [0, 0, 1, 0, .4]); shade.material.emissive.set('#ffcf96'); shade.material.emissiveIntensity = 0; shade.material.side = THREE.DoubleSide;
-        shade.add(reading); reading.position.set(0, -60, 0);
-        root.updateMatrixWorld(true); const at = root.worldToLocal(shade.getWorldPosition(new THREE.Vector3()));
-        decal(root, [at.x, 10.5, at.z], [1700, 1700], pool, '#ffc98a', [0, 0, .3, 0, .12], FLOOR);
-        info.readingLamp = 'nook floor lamp';
+        // A baked shade sits at its group origin: hang the light at the shade's own centre.
+        shade.geometry.computeBoundingBox(); const c = shade.geometry.boundingBox.getCenter(new THREE.Vector3());
+        shade.add(reading); reading.position.set(c.x, c.y - 60, c.z);
+        root.updateMatrixWorld(true); const at = root.worldToLocal(shade.localToWorld(c.clone()));
+        decal(root, [at.x, 10.5, at.z], [1500, 1500], pool, '#ffc98a', [0, 0, .14, 0, .06], FLOOR);
+        info.readingLamp = 'nook side-table lamp';
     };
 
     let moonDone = false;
@@ -258,6 +261,8 @@ export function enhanceChildLighting({ root, layout: l, helpers: h, groups, skyM
             if (!o.isPointLight) return;
             const ch = o.name === 'Child room · reading' ? 'reading' : o.name === 'Child room · moon' ? 'moon' : o.name === 'Child room · personal cabinet lamp' ? 'cabinet' : null;
             if (!ch) return; o.intensity *= S[ch][i];
+            // The adopted side-table lamp hangs ~0.8 m over the floor in the foreground (the sconce was 1.15 m up a wall): half power.
+            if (ch === 'reading' && info.readingLamp) o.intensity *= .45;
             o.color.set(ch === 'moon' ? S.moonTint : phase === 'afternoon' || phase === 'morning' ? '#f3e4cb' : S.warm);
         });
         if (skyMat) skyMat.emissiveIntensity = S.window[i];

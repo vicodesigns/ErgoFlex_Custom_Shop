@@ -112,9 +112,21 @@ export function enhanceChildPersonality({room,root,layout,helpers,materials,grou
   for(let i=0;i<4;i++){const pencil=mesh(personal,new THREE.CylinderGeometry(4,4,125+i%2*20,8),[accent,secondary,ink,paper][i],[35+i*15,696+i%2*10,-15]);pencil.rotation.z=.06*(i-1);}
   box(personal,[75,105,12],[-53,686,12],paper,3);box(personal,[65,70,1],[-53,693,18.5],accent,2);
  }else{
-  const base=mesh(personal,new THREE.CylinderGeometry(65,70,14,28),metal,[0,623,0]);rod(personal,[0,630,0],[0,780,0],8,metal);
-  const shade=mesh(personal,new THREE.CylinderGeometry(82,110,140,32,1,true),cloth,[0,837,0]);shade.material.side=THREE.DoubleSide;
-  lampGlow=mat('#ffe1aa',.8,{emissive:'#ffd19a',emissiveIntensity:0});mesh(personal,new THREE.SphereGeometry(22,16,12),lampGlow,[0,792,0]);
+  // Round 3: one lamp per person (it was the same drum lamp from preteen to college).
+  lampGlow=mat('#ffe1aa',.8,{emissive:'#ffd19a',emissiveIntensity:0});
+  if(age==='preteen'){// A pleated blush shade on a brass stem.
+   mesh(personal,new THREE.CylinderGeometry(58,64,12,28),metal,[0,622,0]);rod(personal,[0,628,0],[0,760,0],7,metal);
+   const g=new THREE.CylinderGeometry(70,112,150,48,1,true),pp=g.attributes.position;for(let i=0;i<pp.count;i++){const x=pp.getX(i),z=pp.getZ(i),a=Math.atan2(z,x),k=1+.07*Math.cos(a*16);pp.setX(i,x*k);pp.setZ(i,z*k);}g.computeVertexNormals();
+   mesh(personal,g,mat('#e6b8b7',.95,{side:THREE.DoubleSide}),[0,822,0]);mesh(personal,new THREE.SphereGeometry(22,16,12),lampGlow,[0,785,0]);
+  }else if(age==='teen'){// A lava lamp: warm wax in violet liquid.
+   // Kept under 905 mm overall: the walls layer hangs the teen guitar above this cabinet.
+   const alu=mat('#3a3d44',.35,{metalness:.8});mesh(personal,new THREE.CylinderGeometry(32,56,84,24),alu,[0,658,0]);
+   lampGlow=mat('#7a3fb0',.25,{emissive:'#c26cff',emissiveIntensity:0,transparent:true,opacity:.8});mesh(personal,new THREE.LatheGeometry([[32,0],[42,62],[40,118],[27,170],[0,171]].map(([r,y])=>new THREE.Vector2(r,y)),24),lampGlow,[0,700,0]);
+   mesh(personal,new THREE.CylinderGeometry(12,27,34,20),alu,[0,887,0]);for(const [y,r] of [[728,22],[782,15],[835,11]])sphere(personal,[r,r*1.3,r],[(y%3)*3-3,y,0],mat('#ff8a3c',.5,{emissive:'#ff7a2a',emissiveIntensity:.25}));
+  }else{// A ginger-jar ceramic lamp with a linen drum shade.
+   mesh(personal,new THREE.LatheGeometry([[0,0],[48,0],[70,60],[72,110],[52,170],[24,190],[0,190]].map(([r,y])=>new THREE.Vector2(r,y)),28),mat(p.ink,.35),[0,616,0]);rod(personal,[0,806,0],[0,815,0],6,metal);
+   mesh(personal,new THREE.CylinderGeometry(108,108,120,32,1,true),mat('#efe6d4',.96,{side:THREE.DoubleSide}),[0,845,0]);mesh(personal,new THREE.SphereGeometry(22,16,12),lampGlow,[0,815,0]);
+  }
   lampLight=new THREE.PointLight('#ffd6a4',0,2000*root.scale.x,2);lampLight.name='Child room · personal cabinet lamp';lampLight.position.set(0,785,30);personal.add(lampLight);
  }
  root.userData.childPersonality={age,...(early?{profile:early.id,interest:early.interest}:{}),palette:{wall:p.wall,dado:p.dado,feature:p.feature},posters:early?1:5,mirror:true,bag:true,cloth:true};

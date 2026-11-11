@@ -132,6 +132,8 @@ export function enhanceChildLivedIn({room,root,layout:l,helpers:h,materials:m,gr
   return g;};
  const amp=(p,at,rotY,body)=>{const g=new THREE.Group();g.position.set(...at);g.rotation.y=rotY;p.add(g);rbox(g,[420,360,230],[0,180,0],body,14);rbox(g,[360,230,6],[0,155,116],fin('#3a3a36',.98),6);rbox(g,[380,40,6],[0,315,116],C.cream,4);for(let i=0;i<5;i++)cyl(g,9,9,14,[-140+i*48,315,124],C.black,[Math.PI/2,0,0]);rod(g,[-120,362,0],[120,362,0],10,C.black);return g;};
  const fridge=(p,at,rotY)=>{const g=new THREE.Group();g.position.set(...at);g.rotation.y=rotY;p.add(g);rbox(g,[460,500,460],[0,260,0],fin('#e5e2da',.5),12);for(const x of [-180,180])for(const z of [-180,180])cyl(g,12,12,10,[x,5,z],C.black);rbox(g,[452,4,6],[0,360,232],fin('#c9c5bb',.6),2);rbox(g,[24,120,22],[190,250,240],C.steel,6);
+  // Round 3: magnets, a photo and a sticker on the door, a postcard on the side, so it reads as a fridge from any side.
+  rbox(g,[110,140,2],[-90,390,233],C.paper,1);rbox(g,[92,96,1],[-90,398,234.5],C.second,.5);for(const [x,y,mat] of [[-150,455,C.red],[-30,455,C.yellow],[60,300,C.blue],[-120,180,C.green]])cyl(g,13,13,8,[x,y,236],mat,[Math.PI/2,0,0],12);cyl(g,34,34,2,[40,420,233],C.accent,[Math.PI/2,0,0],18);rbox(g,[2,110,150],[-232,330,-20],C.paper,1);rbox(g,[2,60,90],[-233.5,345,-20],C.feature,.5);
   // Kettle, two mugs and a tin of tea on top.
   lathe(g,[[0,0],[85,0],[95,60],[80,150],[45,175],[0,178]],[-90,510,-30],C.charcoal);rod(g,[-160,640,-30],[-140,560,-30],9,C.charcoal);rod(g,[-20,560,-30],[10,610,-30],8,C.charcoal);
   mug(g,[90,510,60],C.accent,38,90);mug(g,[140,510,-90],C.cream,36,86);cyl(g,45,45,120,[60,570,-150],C.second);return g;};
@@ -208,7 +210,7 @@ export function enhanceChildLivedIn({room,root,layout:l,helpers:h,materials:m,gr
   for(const o of drop){o.removeFromParent();o.geometry.dispose();}
   for(let pass=0;pass<5;pass++)group.traverse(o=>{if(o!==group&&!o.isMesh&&!o.userData.livedPhases&&!hasMesh(o))o.userData.livedDrop=true;});
   const dead=[];group.traverse(o=>{if(o.userData.livedDrop)dead.push(o);});dead.forEach(o=>o.removeFromParent());
-  for(const [key,list] of buckets){const merged=mergeGeometries(list,false);list.forEach(g=>g.dispose());if(!merged)continue;const mat=typeof key==='string'?paintMat(key):key;const o=new THREE.Mesh(merged,mat);o.castShadow=!mat.transparent;o.receiveShadow=true;o.name='Lived-in · '+group.name;group.add(o);}};
+  for(const [key,list] of buckets){const merged=mergeGeometries(list,false);list.forEach(g=>g.dispose());if(!merged)continue;const mat=typeof key==='string'?paintMat(key):key;const o=new THREE.Mesh(merged,mat);o.castShadow=!mat.transparent;o.receiveShadow=true;o.name='Lived-in · '+group.name;if(mat.userData.lampShade)o.userData.lampShade=true;group.add(o);}};
  const bakeAll=g=>{const parts=[];g.traverse(o=>{if(o.userData.livedPhases)parts.push(o);});parts.reverse().forEach(bake);};
 
  // --- measured placement --------------------------------------------------------
@@ -325,7 +327,13 @@ export function enhanceChildLivedIn({room,root,layout:l,helpers:h,materials:m,gr
  const armchair=(p,at,rotY,body,throwMat)=>{const g=new THREE.Group();g.position.set(...at);g.rotation.y=rotY;p.add(g);for(const x of [-300,300])for(const z of [-130,130])cyl(g,16,12,140,[x,70,z],C.wood);
   rbox(g,[700,170,480],[0,225,0],body,50);rbox(g,[700,520,130],[0,470,-175],body,55).rotation.x=-.12;for(const x of [-310,310])rbox(g,[110,330,480],[x,360,0],body,45);rbox(g,[480,90,360],[0,350,40],body,40);
   const t=sheet(g,300,520,[-120,0,-60],(u,v)=>0,throwMat,4,8);t.geometry.dispose();t.geometry=new THREE.BoxGeometry(320,14,600,3,1,6);t.position.set(-140,470,-90);t.rotation.set(-.9,.0,.12);return g;};
- const floorLamp=(p,at)=>{cyl(p,120,130,22,[at[0],11,at[2]],C.black);rod(p,[at[0],22,at[2]],[at[0],1420,at[2]],10,C.black);const s=cyl(p,150,190,220,[at[0],1420,at[2]],fin('#efe4cf',.95),null,24);};
+ // Round 3: the reading light is a low lamp on a little side table beside the
+ // armchair (the 1.5 m floor-lamp pole read as a post in the foreground). The
+ // shade material carries userData.lampShade so the lighting layer finds it
+ // explicitly after the bake (it keeps its own material: double-sided).
+ const shadeMat=fin('#efe4cf',.95,{side:THREE.DoubleSide});shadeMat.userData.lampShade=true;
+ const readingLamp=(p,at)=>{const [x,,z]=at;cyl(p,80,88,14,[x,7,z],C.wood,null,24);rod(p,[x,14,z],[x,545,z],13,C.wood);cyl(p,95,95,18,[x,551,z],C.wood,null,28);
+  lathe(p,[[0,0],[42,0],[50,55],[34,125],[14,142],[0,142]],[x,560,z],C.accent);rod(p,[x,700,z],[x,770,z],5,C.brass);cyl(p,72,95,150,[x,830,z],shadeMat,null,28);};
  const outfit=(p,x,z,top,bottom,rotY=0)=>{// clothes laid out flat for the day: a shirt and trousers.
   const g=new THREE.Group();g.position.set(x,bedTop(x,z)+1,z);g.rotation.y=rotY;p.add(g);const sh=new THREE.Shape();sh.moveTo(-150,-210);sh.lineTo(150,-210);sh.lineTo(150,90);sh.lineTo(250,40);sh.lineTo(290,120);sh.lineTo(170,210);sh.lineTo(60,210);sh.quadraticCurveTo(0,170,-60,210);sh.lineTo(-170,210);sh.lineTo(-290,120);sh.lineTo(-250,40);sh.lineTo(-150,90);sh.closePath();
   const shirt=add(g,new THREE.ExtrudeGeometry(sh,{depth:10,bevelEnabled:false}),top,[0,0,-180]);shirt.rotation.x=-Math.PI/2;
@@ -381,14 +389,14 @@ export function enhanceChildLivedIn({room,root,layout:l,helpers:h,materials:m,gr
   restyled.rack=f;};
 
  const stageNook=()=>{const nook=groups.nook;if(!nook)return;
-  if(early){const f=fixture(nook,'lived-nook-early','Giant bear slumped on the floor cushion'),a=phase(f,ALL,'Giant bear');const b=plushBear(a,[-120,150,-130],1.9,C.plush,C.plushLight,true,.35);b.rotation.z=.12;restyled.nook=f;return;}
+  if(early){const f=fixture(nook,'lived-nook-early','Giant bear slumped on the floor cushion'),a=loose(phase(f,AWAKE,'Giant bear'));const b=plushBear(a,[-120,150,-130],1.9,C.plush,C.plushLight,true,.35);b.rotation.z=.12;restyled.nook=f;return;}
   hideFrame(nook,()=>true);
-  const f=fixture(nook,'lived-nook-'+age,{primary:'Brick-building table · a town in progress',preteen:'Beanbag corner · round shag cushion & skateboard',teen:'Practice drum kit & road case',college:'Reading armchair, ottoman & floor lamp'}[age]),a=phase(f,ALL,'Stage corner');let read=[0,0,0];
+  const f=fixture(nook,'lived-nook-'+age,{primary:'Brick-building table · a town in progress',preteen:'Beanbag corner · round shag cushion & skateboard',teen:'Practice drum kit & road case',college:'Reading armchair, ottoman & a lamp on the side table'}[age]),a=phase(f,ALL,'Stage corner');let read=[0,0,0];
   if(age==='primary'){rbox(a,[940,40,640],[0,430,20],C.wood,10);for(const x of [-430,430])for(const z of [-270,310])rod(a,[x,0,z],[x,410,z],20,C.wood);legoBuild(a,[-120,450,-120],640,330,3);legoBuild(a,[300,450,-170],240,220,11);for(let k=0;k<6;k++)rbox(a,[64,38,32],[250+hash(k)*180,479,-200+hash(k+5)*140],[C.red,C.yellow,C.blue,C.green][k%4],2).rotation.y=hash(k+2)*3;cyl(a,150,130,170,[330,85,-120],C.yellow);read=[0,310,150];}
   if(age==='preteen'){const shag=fin(pal.feature,.99);const cush=lump(a,[340,70,250],[-110,0,62],shag,71,.06);const bb=lump(a,[200,190,180],[230,0,-120],C.second,73,.12);lump(a,[150,100,90],[250,160,-190],C.second,75,.1);
    read=[-73,0,0];}
   if(age==='teen'){drumKit(a,[0,0,0]);flightCase(a,[-40,0,210],[640,300,300]);read=[-40,150,100];}
-  if(age==='college'){armchair(a,[60,0,-20],0,stagePaint(pal.second,.95),C.cloth);rbox(a,[620,330,260],[-40,165,245],stagePaint(pal.cloth,.97),40);floorLamp(a,[-300,0,-110]);read=[-40,180,170];}
+  if(age==='college'){armchair(a,[60,0,-20],0,stagePaint(pal.second,.95),C.cloth);rbox(a,[620,330,260],[-40,165,245],stagePaint(pal.cloth,.97),40);readingLamp(a,[-395,0,-60]);read=[-40,180,170];}
   for(const o of nook.children)if(o.userData.childActivity)o.position.set(...read);
   restyled.nook=f;};
 
@@ -419,6 +427,8 @@ export function enhanceChildLivedIn({room,root,layout:l,helpers:h,materials:m,gr
   // Foot of the bed: a chunky toy chest; the rocking horse where it fits.
   placeFloor('lived-toychest-early','Painted toy chest · everything has a home',r=>frontAnchors(r,Math.PI).concat(rightAnchors(r,false,Math.PI/2),footAnchors(r)),g=>{
    const shut=phase(g,['evening','night'],'Toy chest closed for the night');toyChest(shut,[0,0,0],0,false,C.second);
+   // Bedtime: the giant bear leaves the floor cushion and is sat on the closed lid (lid top 407 mm).
+   const bedtime=phase(g,['night'],'Giant bear put away on the toy chest');plushBear(bedtime,[0,407,-20],1.6,C.plush,C.plushLight,true,Math.PI);
    const open=phase(g,DAY,'Toy chest open');toyChest(open,[0,0,0],0,true,C.second);lump(open,[330,80,165],[0,230,0],C.cloth,61,.25);ball(open,[70,70,70],[-210,372,30],C.red);rbox(open,[110,110,110],[20,362,-60],C.yellow,10).rotation.set(.3,.5,.2);plushBear(open,[210,300,20],.55,C.plush,C.plushLight,true,-.5);
   });
   placeFloor('lived-rocker-early','Rocking horse · first big ride',r=>rightAnchors(r,false,Math.PI/2).concat(footAnchors(r),footAnchors(r,Math.PI/2)),g=>{const a=phase(g,ALL,'Rocking horse');rockingHorse(a,[0,0,0],0,C.cream,C.accent);});
@@ -426,7 +436,8 @@ export function enhanceChildLivedIn({room,root,layout:l,helpers:h,materials:m,gr
   const r=fixture(root,'lived-rug-early','Chunky toys on the play mat',[l.play[0],9.2,l.play[1]]);
   const rm=loose(phase(r,['morning'],'Stacking rings by the mat edge'));stackingRings(rm,R(860,600));
   const ra=loose(phase(r,['afternoon'],'Big soft ball rolled to the corner'));softBall(ra,R(860,600),120,C.red,C.cream);
-  const rw=loose(phase(r,DAY,'Push-along walker loaded with blocks'));walker(rw,R(780,-330),.5,C.accent,true);
+  // Round 3: on the open back-right of the mat, turned side-on to the camera (the front half put it behind the pouf, the back-left behind the book rack); out for morning and afternoon only.
+  const rw=loose(phase(r,['morning','afternoon'],'Push-along walker loaded with blocks'));walker(rw,tier?R(640,-560):R(780,-330),-.35,C.accent,true).scale.setScalar(tier?.9:1);
   const rp=loose(phase(r,['party'],'Soft friends watching the railway'));plushBear(rp,R(920,620),.9,C.plush,C.plushLight,true,-.6);rabbit(rp,R(700,700),.8,-.4);
   settleRug(r);
  }
@@ -447,7 +458,8 @@ export function enhanceChildLivedIn({room,root,layout:l,helpers:h,materials:m,gr
    const after=loose(phase(g,['afternoon','party'],'Bag dropped and shoes kicked off'));backpack(after,[230,420,0],-.1,C.second,C.accent,false,false);shoePair(after,[-180,0,280],-.6,C.blue,4,.7);
    const ready=phase(g,['evening','night'],'Packed for tomorrow');backpack(ready,[220,420,0],0,C.second,C.accent,false,false);shoePair(ready,[-150,0,270],0,C.blue,7,0);
   });
-  placeFloor('lived-sport-primary','Scooter, football & boots',r=>rightAnchors(r,true).concat(footAnchors(r,Math.PI/2)),g=>{
+  // Round 3: where the door takes the window wall, the front strip (in full view) comes before the bed foot (behind the rack).
+  placeFloor('lived-sport-primary','Scooter, football & boots',r=>rightAnchors(r,true).concat(frontAnchors(r,Math.PI/2),frontAnchors(r,-Math.PI/2),footAnchors(r,Math.PI/2)),g=>{
    const a=phase(g,ALL,'Scooter on its stand');scooter(a,[0,0,0],-Math.PI/2,C.accent);
    const b=loose(phase(g,['morning','afternoon','party'],'Football waiting by the scooter'));soccer(b,[-80,0,-290]);shoePair(b,[60,0,330],2.6,C.green,9,.4);
    const c=phase(g,['evening','night'],'Ball put by the wall');soccer(c,[110,0,-300]);
@@ -503,11 +515,11 @@ export function enhanceChildLivedIn({room,root,layout:l,helpers:h,materials:m,gr
    const tidy=phase(g,['night'],'Trainers paired for the morning');shoePair(tidy,[220,0,0],0,C.accent,35,0);shoePair(tidy,[220,0,-240],0,C.white,37,0);
    const bag=loose(phase(g,['afternoon','evening'],'Track bag dumped'));duffel(bag,[260,0,-180],.15,C.ink,C.accent);
   });
-  placeFloor('lived-guitar-teen','Electric guitar, practice amp & pedal',r=>rightAnchors(r,true).concat(footAnchors(r,Math.PI/2)),g=>{
+  placeFloor('lived-guitar-teen','Electric guitar, practice amp & pedal',r=>rightAnchors(r,true).concat(frontAnchors(r,-Math.PI/2),frontAnchors(r,Math.PI/2),footAnchors(r,Math.PI/2)),g=>{
    const a=phase(g,ALL,'Guitar on its stand');guitarStand(a,[0,0,-200],0,C.accent);amp(a,[0,0,240],-Math.PI/2,C.charcoal);
    const c=loose(phase(g,['afternoon','evening','party'],'Lead plugged in, pedal on the floor'));rbox(c,[110,50,150],[-180,25,40],C.feature,8);cable(c,[[-20,250,-200],[-110,40,-160],[-150,14,-60],[-180,30,40]],C.black);cable(c,[[-180,30,100],[-150,14,170],[-80,30,250],[-100,200,240]],C.black);
   },{tall:true});
-  if(cubby){const s=fixture(cubby,'lived-shelf-teen','Mixtapes, medals and a small trophy');const a=phase(s,ALL);cassettes(a,[-230,322,90],6);cassettes(a,[-90,322,80],4);trophy(a,[230,616,40],fin('#b9babb',.3,{metalness:.85}),.85);medal(a,[150,402,276],C.accent);}
+  if(cubby){const s=fixture(cubby,'lived-shelf-teen','Mixtapes, medals and a small trophy');const a=phase(s,ALL);cassettes(a,[-230,322,90],6);cassettes(a,[-90,322,80],4);{const box=fin('#e0793f',.8);rbox(a,[280,120,190],[250,676,30],box,4);const lid=rbox(a,[290,24,200],[250,748,-8],box,4);lid.rotation.x=-.18;rbox(a,[150,4,2],[250,690,126],C.white,1);lump(a,[110,30,80],[250,736,40],C.white,52,.15);}/* a sneaker box, lid pushed back (no second trophy) */medal(a,[150,402,276],C.accent);}
   const r=fixture(root,'lived-rug-teen','Records and the study group',[l.play[0],9.2,l.play[1]]);
   const ra=loose(phase(r,['afternoon'],'Record sleeves spread out'));crate(ra,R(860,430),.2,7,[0,1,2,3].map(i=>sleeveMat(i)));for(let i=0;i<3;i++){const sl=rbox(ra,[300,4,300],R(140+i*230,360+(i%2)*80).map((v,k)=>k===1?2+i*4:v),sleeveMat(i+1),1);sl.rotation.y=(hash(i)-.5)*.8;}
   const rp=loose(phase(r,['party'],'Floor seats, pizza and notes'));pizzaBox(rp,R(450,360),.2,true);[[R(90,430),C.ink],[R(860,380),C.accent],[R(470,760),C.second]].forEach(([at,col],i)=>floorCushion(rp,at,col,i,7+i,[170,55,170]));[R(240,90),R(680,110),R(900,700)].forEach((at,i)=>cup(rp,at,[C.red,C.white,C.second][i]));openBook(rp,R(140,720),C.feature,-.3);
@@ -529,10 +541,14 @@ export function enhanceChildLivedIn({room,root,layout:l,helpers:h,materials:m,gr
    const bag=loose(phase(g,['morning','afternoon','evening'],'Weekend bag on the floor'));duffel(bag,[200,0,262],-.12,C.ink,C.cloth);
    const shoes=phase(g,ALL,'Boots by the bench');shoePair(shoes,[-250,0,262],.15,fin('#6d4f3a',.7),45,.2);
   });
-  placeFloor('lived-kitchenette-college','Mini fridge, kettle & a big plant',r=>rightAnchors(r,true).concat(footAnchors(r,Math.PI/2)),g=>{
+  // Against the window wall when it has room; otherwise along the front strip, the fridge
+  // turned so its door faces the cabinet side (and the camera), the plant beside it.
+  if(!placeFloor('lived-kitchenette-college','Mini fridge, kettle & a big plant',r=>rightAnchors(r,true),g=>{
    const a=phase(g,ALL,'Mini fridge & plant');fridge(a,[0,0,-250],-Math.PI/2);floorPlant(a,[-10,0,260],C.terracotta,3,true);
+  },{tall:true,front:false}))placeFloor('lived-kitchenette-college','Mini fridge, kettle & a big plant',r=>frontAnchors(r,0).concat(footAnchors(r,Math.PI/2)),g=>{
+   const a=phase(g,ALL,'Mini fridge & plant');fridge(a,[150,0,0],Math.PI/2);floorPlant(a,[-330,0,-20],C.terracotta,3,true);
   },{tall:true});
-  if(cubby){const s=fixture(cubby,'lived-shelf-college','Trailing pothos, candle & a photo');const a=phase(s,ALL);pothos(a,[-185,322,110],C.cream,2);candle(a,[-60,322,60]);frame(a,[230,616,30],-.2,sleeveMat(1));}
+  if(cubby){const s=fixture(cubby,'lived-shelf-college','Trailing pothos, candle & a photo');const a=phase(s,ALL);pothos(a,[-185,322,110],C.cream,2);candle(a,[-60,322,60]);frame(a,[230,616,30],-.2,fin('#ffffff',.9,{map:canvasMap((c,w,hh)=>{c.fillStyle='#efe8da';c.fillRect(0,0,w,hh);c.strokeStyle='#4f6b52';c.lineWidth=3;c.beginPath();c.moveTo(w*.5,hh*.92);c.quadraticCurveTo(w*.46,hh*.5,w*.56,hh*.1);c.stroke();for(let i=0;i<9;i++){const t=.18+i*.08,y=hh*(.9-t*.85),x=w*(.5+.04*Math.sin(t*3));for(const s of [-1,1]){c.fillStyle=i%2?'#7d9a6e':'#5f7f5a';c.beginPath();c.ellipse(x+s*w*(.1-i*.006),y,w*(.11-i*.007),hh*.025,s*.5,0,7);c.fill();}}c.fillStyle='#4f4a40';c.font='14px serif';c.fillText('Pteridium, pressed',w*.18,hh*.97);},192,256)}));/* a pressed-fern print, the only framed piece on any cabinet */}
   const r=fixture(root,'lived-rug-college','Yoga mat, notes and a shared project',[l.play[0],9.2,l.play[1]]);
   const rm=loose(phase(r,['morning'],'Yoga mat out before class'));yogaMat(rm,R(430,400),Math.PI/2-.05,C.second);
   const rp=loose(phase(r,['party'],'Cushions, snacks and a laptop'));[[R(110,380),C.cloth],[R(880,360),C.second]].forEach(([at,col],i)=>floorCushion(rp,at,col,i,51+i,[180,55,180]));snackBowl(rp,R(480,300),120,C.feature,9);laptop(rp,R(480,660),2.9,true,screenMat('doc'));

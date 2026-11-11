@@ -7,18 +7,18 @@ import { atelierSceneDecor, bindDeskDecor, applyDeskDecorLighting } from './atel
 import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from './campus-scene-furniture.mjs?v=campus-furniture-20261014';
 import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atelier-scene-beds.mjs?v=atelier-beds-20261014';
 import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=gallery-bedroom-20261025';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=label-fix-20261110';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=people-vistas-20261110';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261111';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=env-shared-20261111';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
-import { polishRoomProp } from './room-polish.mjs?v=table-clearance-20261021';
-import { RoomLife } from './room-life.mjs?v=commons-home-comfort-20261024';
-import { RoomPeople } from './room-people.mjs?v=room-people-20261110g';
+import { polishRoomProp } from './room-polish.mjs?v=env-shared-20261111';
+import { RoomLife } from './room-life.mjs?v=env-shared-20261111';
+import { RoomPeople } from './room-people.mjs?v=people-motion-20261111';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
 import { migrateHighschoolFixtureTransform } from './hbhs-design.mjs';
-import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=environment-expert-20261014';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=commons-home-comfort-20261024';
+import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=gym-black-red-m1-20261104';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=env-shared-20261111';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=people-vistas-20261110';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=people-vistas-20261110';
@@ -38,7 +38,8 @@ import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=people-vistas-20261110';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=people-vistas-20261110';
-import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=people-vistas-20261110';
+import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=people-gym-20261110';
+import { themedGymLayout } from './gym-theme.mjs?v=people-gym-20261110';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=people-vistas-20261110';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=people-vistas-20261110';
 
@@ -97,7 +98,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(), rigs: new Map(), rigFiles: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=people-vistas-20261110').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=people-cast-20261110b').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -1013,7 +1014,9 @@ export class WorkspaceAccessories {
     // Scene dressing on the desk itself: mugs, papers and the like, which
     // follow the desktop as it lifts and tilts. Never priced, never exported
     // to AR, and replaced wholesale when the room changes.
-    async dress(sceneId,context={}) {
+    // dressing (optional, e.g. the gym black & red colourway): { accent, print, props: { propId: { materialName: colour | { color, untextured } } } }.
+    // context (optional): { ageStage } for the child room's stage-specific dressing.
+    async dress(sceneId, dressing = null, context = {}) {
         const scene = ROOM_SCENES.find(s => s.id === sceneId);
         const token = ++this.dressToken;
         for (const mount of this.mounts.values()) {
@@ -1028,13 +1031,24 @@ export class WorkspaceAccessories {
         await PROP_LIBRARY.loadIndex();
         const loaded = await Promise.all(wanted.map(async placement => {
             try { return { placement, object: placement.procedural === 'midi' ? createMusicKeyboard()
-                : placement.id === 'journal' ? createDeskNotebook(sceneId, { box, mesh, material }) : await loadDeskProp(placement.id) }; }
+                : placement.id === 'journal' ? createDeskNotebook(sceneId, { box, mesh, material, accent: dressing?.accent }) : await loadDeskProp(placement.id) }; }
             catch { return { placement, object: null }; }
         }));
         if (token !== this.dressToken) return;
         for (const { placement, object } of loaded) {
             const mount = this.mounts.get(placement.role);
             if (!object || !mount?.dress) continue;
+            // Recolour by material name on owned copies; the cached GLB materials stay shared.
+            const tint = dressing?.props?.[placement.id];
+            if (tint) object.traverse(obj => {
+                if (!obj.isMesh) return;
+                const own = m => {
+                    const t = tint[m?.name]; if (!t) return m;
+                    const spec = typeof t === 'string' ? { color: t } : t, c = m.clone(); c.color.set(spec.color); if (spec.untextured) c.map = null;
+                    c.userData.sharedTextures = true; (obj.ownedMaterials ||= []).push(c); return c;
+                };
+                obj.material = Array.isArray(obj.material) ? obj.material.map(own) : own(obj.material);
+            });
             object.position.set(...placement.at);
             object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
             markSceneAsset(object, { key: placement.sceneAssetKey, role: placement.role });
@@ -1052,7 +1066,7 @@ export class WorkspaceAccessories {
         }
         const desktop = this.mounts.get('desktop');
         if (desktop && sceneId !== 'product') {
-            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material, ageStage:context.ageStage });
+            const kit = createDailyDeskKit(sceneId, { box, mesh, rod, material, accent: dressing?.accent, print: dressing?.print, ageStage: context.ageStage });
             placeDailyDeskKit(kit, desktop.dress.children, desktop.supportSpace);
             markSceneAsset(kit, { key: `${assetPrefix}:desktop:daily-kit`, role: 'desktop' });
             desktop.dress.add(kit);
@@ -1395,7 +1409,7 @@ export class WorkspaceRoom {
             this.roomLayout = options.layout ? kitchenLayoutById(options.layout) : kitchenLayoutForSize(options.size);
             scene = { ...scene, props: this.roomLayout.props, physical: true };
         } else if (id === 'gym') {
-            this.roomLayout = options.layout ? gymLayoutById(options.layout) : gymLayoutForSize(options.size);
+            this.roomLayout = themedGymLayout(options.layout ? gymLayoutById(options.layout) : gymLayoutForSize(options.size), options.gymTheme);
             scene = { ...scene, props: this.roomLayout.props, physical: true };
         } else if (id === 'study') {
             this.roomLayout = options.layout ? studyLayoutById(options.layout) : studyLayoutForSize(options.size);

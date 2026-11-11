@@ -32,6 +32,13 @@ export const lighting = {
 };
 
 // Desk prop placement: [x, y, z] in the desktop/shelf frame (+z toward the user).
+// Things left at single student places, by daypart (library props, so they
+// read as what they are): calculators and phones. Each rests on its student
+// table and travels with it (propSupports), e.g. to the showcase walls.
+const HS_SEAT_PROPS = [
+    ['calculator', -410, 390, 8, ['morning', 'evening']], ['calculator', 2360, 2390, -12, ['morning']], ['calculator', -2560, 4390, 4, ['morning', 'evening']],
+    ['ergoflex-phone', 2335, 440, 30, ['morning', 'party']], ['ergoflex-phone', -2585, 2440, -20, ['morning', 'afternoon']], ['ergoflex-phone', 185, 4440, 15, ['evening']]
+];
 const p = (id, x, z, turn = 0, y = 0, extra = {}) => ({ id, at: [x, y, z], ...(turn ? { turn } : {}), ...extra });
 const notEvening = { phases: ['morning', 'afternoon', 'night', 'party'] };
 
@@ -102,7 +109,8 @@ const STAGES = {
         pose: [[43.5, 0], [28, 0], [35, 10], [28, 0], [43.5, 0, 25]],
         activity: [-3400, 7400],
         // Room props are keyed by index (`room:${index}`): new ones are appended after the originals.
-        props: [p('backpack-daypack', -1830, 650, 20), p('backpack', 320, 2650, -30), p('backpack-daypack', 2470, 4650, 160), p('backpack', -1830, 4650, 10),
+        // Bags stand on the aisle side of their owner's chair, not under the seat.
+        props: [p('backpack-daypack', -1430, 1150, 90), p('backpack', 715, 3150, 80), p('backpack-daypack', 2470, 4650, 160), p('backpack', -1830, 4650, 10),
             p('water-bottle', -2520, 360, 0, 740), p('water-bottle', 520, 2360, 0, 740), p('water-bottle', 1780, 360, 0, 740), p('water-bottle', -2420, 4360, 0, 740),
             // Teacher corner: tall plant, waste bin and a conference chair at the desk end.
             p('ergoflex-plant-2', -3350, -3700), p('ergoflex-trash-can', -2580, -2700), p('ergoflex-designer-chair', -2420, -1550, -90),
@@ -112,7 +120,7 @@ const STAGES = {
             // Front: drafting chair at the design review desk, the media desk's production PC, trash and recycling by the lockers.
             p('ergoflex-tall-office-chair', -1000, 7560, 180), p('ergoflex-desktop-pc', 2480, 6620, -90), p('ergoflex-trash-can', 3400, 7760), p('ergoflex-trash-can', 3850, 7760),
             // An orchestra student's violin on a table (APA), and the APA script and score library under the spirit wall.
-            p('ergoflex-violin', 2420, 4520, 20, 740), p('ergoflex-small-bookshelf', -4700, 6350, 90)],
+            p('ergoflex-violin', 2420, 4520, 20, 740), p('ergoflex-small-bookshelf', -4700, 6350, 90), ...HS_SEAT_PROPS.map(([id, x, z, turn, phases]) => p(id, x, z, turn, 742, { phases }))],
         stations: [
             { id: 'demonstration-desk', name: 'Wave and energy demonstration desk', size: '60x30', at: [0, -2600], turn: 180, height: 43.5, tilt: 0, chair: false,
                 desktop: [p('oscilloscope', -480, 170), p('voltage-regulator', 40, -110), p('ergoflex-laptop', 470, 30), p('multi-tool', -120, 160)] },
@@ -224,10 +232,10 @@ const LIGHT = {
         modes: [mode('#eef1f2', '#dde6ea', ['#c4ccd2', '#ebe6dc'], 1.05, .46, 1.02, .42, .2, .78, ['#f4efe6', '#c9d2d6']),
             mode('#fff5e6', '#e2eef3', ['#7fb6da', '#e4eff2'], 1.32, .4, .99, .27, .16, .72, ['#f6f0e4', '#c3d0d6']),
             mode('#ffcea0', '#d6d2e6', ['#6f78a6', '#f5a463'], .48, .28, 1.06, .66, .34, .5, ['#ffdfb9', '#c9c3cf']),
-            mode('#b0c4e0', '#9cb6d4', ['#0d1a2e', '#26364b'], .1, .07, 1.1, .32, .1, .2, ['#ffd4a0', '#88a2be'], true, '#292724'),
+            mode('#b0c4e0', '#9cb6d4', ['#0d1a2e', '#26364b'], .06, .045, 1.02, .07, .04, .1, ['#ffd4a0', '#88a2be'], true, '#292724'), // after hours: room lights off
             mode('#ffe0b6', '#dfe0e2', ['#93c0dc', '#f4d3a6'], .86, .36, 1.09, .7, .46, .56, ['#ffe6c6', '#d8d2c8'], true, '#4a200e')],
         // Overcast morning: almost no patch; a long orange patch at sunset.
-        sun: [.03, .42, .17, .02, .13], desk: [1, 1, .55, .3, .6], view: [.74, .97, .9, .72, .92], ceiling: ['#f4f6f6', [.62, .3, .6, .05, .62]], lamps: [[.12, .16, .7, .34, .5]]
+        sun: [.12, .42, .17, .02, .13], desk: [1, 1, .55, .12, .6], view: [.74, .97, .9, .72, .92], ceiling: ['#f4f6f6', [.62, .3, .6, 0, .62]], lamps: [[.12, .16, .7, .02, .5]]
     },
     college: {
         // 3500K pendant clusters over the team tables, track spots on the teaching wall, lounge floor lamp.
@@ -2078,7 +2086,13 @@ const BUILD = {
             // black and white ErgoFlex stations without tinting their papers.
             for(const sx of [-1,1])kit.box(t,[8,28,620],[sx*625,740,0],E.M(HB.orange,'powder'),2);
             for(const sz of [-1,1])kit.box(t,[1250,28,8],[0,740,sz*310],E.M(HB.orange,'powder'),2);
-            [-310, 310].forEach((dx, n) => { const col = shells[(r * 6 + c * 2 + n) % 3], ch = E.recolor(kit.chair(`student-chair-${r}-${c}-${n}`, [x + dx, 0, z + 570], 480, 0), col); if ((r + c) % 2) E.chairUp(ch, t, [dx, 60], [2, 3], 480, col); });
+            const chairs = [-310, 310].map((dx, n) => { const col = shells[(r * 6 + c * 2 + n) % 3], ch = E.recolor(kit.chair(`student-chair-${r}-${c}-${n}`, [x + dx, 0, z + 570], 480, 0), col); E.chairUp(ch, t, [dx, 60], (r + c) % 2 ? [2, 3] : [3], 480, col); return ch; }); // after the cleaner every chair is up
+            // Oiler showcase (party): the side columns slide to the walls, the
+            // middle column becomes a demo row in front of the board turned to
+            // face the room, so the floor between them is clear for visitors.
+            const show = c === 0 ? kit.pivotMove(x, z, -675, 0) : c === 2 ? kit.pivotMove(x, z, 725, 0) : kit.pivotMove(x, z, [-1300, 0, 1300][r] - x, -1000 - z, Math.PI);
+            for (const [id, px, pz] of HS_SEAT_PROPS) if (Math.abs(px - x) < 625 && Math.abs(pz - z) < 310) kit.room.propSupports.push({ obj: t, id, at: [px, 742, pz] });
+            (E.mover ||= kit.phaseMover()).add([t, ...chairs], [[x, z, 640, 330], [x, z + 750, 1050, 500, -10, 250, /backpack|bag/]], i => i === 4 ? show : null);
         }));
         E.edge(E.flat('demo-floor-inlay', 'Demonstration zone slate inlay', [0, -2600], [2400, 1600], E.S.slate(), { height: 4 }), [2400, 1600], HB.orange, 26, 6);
         // Lab wall bench with a sink along the door wall (back third): charcoal HPL doors, black epoxy top, stainless sink.
@@ -2750,13 +2764,35 @@ function sunPatch(kit, E) {
     map.wrapS = map.wrapT = THREE.ClampToEdgeWrapping;
     const geo = new THREE.PlaneGeometry(1, 1, 16, 16); geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
     const mat = new THREE.MeshBasicMaterial({ map, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    // High school: aluminium venetian blinds, one per pane, set by the hour
+    // (up for the overcast first bell, half down against the afternoon sun,
+    // uneven at dusk, closed by the cleaner, up for the showcase). The sun
+    // patch only passes the open part, so its length changes with them.
+    const drops = kit.spec.id === 'highschool' ? { morning: [.12, .22], afternoon: [.58, .42], evening: [.3, .66], night: [.92, .92], party: [.14, .14] } : null, blinds = [];
+    if (drops && kit.window) {
+        const slats = canvasTexture((c, W, H) => {
+            c.fillStyle = '#d9dcd8'; c.fillRect(0, 0, W, H);
+            for (let y = 0; y < H; y += 16) { c.fillStyle = '#f3f4f0'; c.fillRect(0, y + 2, W, 9); c.fillStyle = '#a9afb3'; c.fillRect(0, y + 12, W, 2); }
+            for (const x of [.12, .5, .88]) { c.fillStyle = '#8a9096'; c.fillRect(x * W, 0, 2, H); }
+        }, 128, 256);
+        slats.wrapT = THREE.RepeatWrapping;
+        const pane = d * .24 - 40;
+        for (const side of [-1, 1]) {
+            const m = kit.material('#ffffff', { map: slats.clone(), roughness: .6, metalness: .2, side: THREE.DoubleSide }); m.map.needsUpdate = true; m.map.wrapT = THREE.RepeatWrapping;
+            const b = kit.mesh(kit.window, new THREE.PlaneGeometry(pane, 1750), m, [side * d * .12, 0, 34]); b.castShadow = false; b.name = 'Venetian blind';
+            kit.box(kit.window, [pane + 30, 40, 50], [side * d * .12, 885, 40], kit.mat('#c9ccc8', 'metal'), 3);
+            blinds.push(b);
+        }
+    }
     const sun = new THREE.Mesh(geo, mat); sun.name = 'Window daylight patch'; sun.renderOrder = 2; sun.raycast = noRay; sun.castShadow = sun.receiveShadow = false; sun.frustumCulled = false; kit.root.add(sun);
     E.sun = (phase, color, strength) => {
+        const drop = drops?.[phase] || [0, 0];
+        blinds.forEach((b, n) => { const v = Math.max(.04, drop[n]); b.scale.y = v; b.position.y = 875 * (1 - v); b.material.map.repeat.y = 6 * v; });
         const angle = SUN_ANGLE[phase]; sun.visible = !!angle && strength > .01; if (!sun.visible) return;
         const [elevation, sweep] = angle, pos = geo.attributes.position, uv = geo.attributes.uv, col = geo.attributes.color;
         for (let i = 0; i < pos.count; i++) {
             // uv.y = 1 at the window head (2600), 0 at the sill (800).
-            const y = 800 + uv.getY(i) * 1800, z = z0 - half + uv.getX(i) * half * 2, t = y / elevation, x = -w / 2 + 25 + t, zz = z + sweep * t;
+            const top = 2600 - drop[uv.getX(i) < .5 ? 1 : 0] * 1800, y = 800 + uv.getY(i) * (top - 800), z = z0 - half + uv.getX(i) * half * 2, t = y / elevation, x = -w / 2 + 25 + t, zz = z + sweep * t;
             // Fade the low sun before the cutaway edge instead of drawing a bright
             // stripe right up to a wall. The moon wash uses the shadow rig's direction.
             const edge = Math.min(w / 2 - 40 - x, zz - bz - 30, front - 30 - zz);
@@ -2889,6 +2925,9 @@ export function decorate(kit) {
     const E = eduKit(kit);
     DECOR[kit.spec.id]?.(kit, E); eventBanner(kit, E);
     FIXTURES[kit.spec.id]?.(kit, E); sunPatch(kit, E);
+    // After hours the high-school window wall is the room's main light: a cool
+    // dusk-blue spill from the glazing across the floor and the first desks.
+    if (kit.spec.id === 'highschool') E.pool(kit.root, [-kit.w / 2 + 1300, 7, kit.bz + kit.d * .54], [2600, kit.d * .55], '#7d9cd0', [0, 0, .04, .09, 0]);   // the blinds are almost down at night
     WALLS[kit.spec.id]?.(kit, E, E.S); doorServices(kit, E);
     if (CABINET[kit.spec.id]) glazeCabinet(kit, E, kit.byId('storage'), CABINET[kit.spec.id]);
     applyUV(kit.root);
@@ -2984,6 +3023,7 @@ export function atmosphere(phase, gain, kit) {
     }
     for (const { obj, phases } of E.shows) obj.visible = phases.includes(i);
     for (const { chair, up, phases } of E.chairsUp) { const on = phases.includes(i); up.visible = on; chair.visible = !on; }
+    E.mover?.apply(i);
     kit.root.userData.eduPhase = { i, gain };
     for (const station of kit.root.children) if (station.userData.officeStation) applyStationPhase(station, i, gain);
 }

@@ -34,8 +34,8 @@ export const sceneOverrides = {
             morning:{description:'Daylight planning · call sheets, shot lists and equipment checkout',power:1.1,ambient:.32,exposure:1.0,height:35,tilt:0,leds:false},
             afternoon:{description:'Balanced work light · rough cuts, print proofs and shared edit notes',power:1.3,ambient:.35,exposure:1.0,height:28,tilt:0,leds:false},
             evening:{description:'Neutral grading surround · reference swatches, cue sheets and headphone mixing',key:'#e6edf7',fill:'#c9d3df',power:.24,ambient:.22,bounce:.3,practical:.36,exposure:1.0,colors:['#f2f4f7','#9fb2c6'],height:28,tilt:0,color:'#637788',leds:true},
-            night:{description:'Screening · dim workstations, projection and written audience feedback',key:'#8ea6c4',fill:'#7f97b5',power:.1,ambient:.16,bounce:.2,practical:.14,exposure:1.02,height:28,tilt:0,color:'#344653',leds:true},
-            party:{description:'Student reel showcase · portfolio critique and shared notes',key:'#ffe2bf',fill:'#d9cbb8',power:.7,ambient:.25,bounce:.45,practical:.8,exposure:.98,colors:['#ffd9a8','#e3c7a6'],height:35,tilt:0,color:'#f3bd79',leds:true}
+            night:{description:'Late edit · one bay lit by its screens and a task light, the lab dark around it',key:'#8ea6c4',fill:'#7f97b5',power:.06,ambient:.09,bounce:.11,practical:.14,exposure:1.04,height:28,tilt:0,color:'#344653',leds:true},
+            party:{description:'Screening & wrap · student reels on the big screen, house lights down, food on the critique table',key:'#ffe2bf',fill:'#d9cbb8',power:.12,ambient:.14,bounce:.2,practical:.8,exposure:1.02,colors:['#ffd9a8','#e3c7a6'],height:35,tilt:0,color:'#f3bd79',leds:true}
         },
         layout(tier,l){
             l.name=NAMES[l.index]+' · '+COUNTS[l.index]+' desks';
@@ -65,9 +65,19 @@ export const sceneOverrides = {
                 l.media.lounge={at:[w*.22,lz],display:[w*.22,front-(l.index===3?2600:3800)]};
                 l.props.push(prop('ergoflex-couch',w*.22,lz),prop('ergoflex-designer-chair',w*.22-1500,lz+500,0,25,.8),prop('ergoflex-designer-chair',w*.22+1500,lz+500,0,-25,.8));
             }
+            // Screening & wrap: food on the critique table (party only).
+            for(const [id,dx,dz,turn] of WRAP_FOOD)l.props.push({...prop(id,ax+dx,az+dz,742,turn),phases:['party']});
+            // Bags at the feet of every other bay, on the side away from the chair's swing.
+            for(const [n,s] of (l.stations||[]).entries()){
+                if(n%3===1||(l.desk&&Math.hypot(s.at[0]-l.desk[0],s.at[1]-l.desk[1])<2600))continue;   // none at the bays next to the featured desk: the film's cameras were set against that corner as it was
+                const a=(s.turn||0)*Math.PI/180,side=n%2?1:-1,ox=side*(s.size==='48x30'?920:1080),oz=180;
+                // (from the afternoon on, when the bays are in use: the film's morning keeps its floor as its cameras were set against it)
+                l.props.push({...prop(n%3?'backpack':'backpack-daypack',s.at[0]+Math.cos(a)*ox+Math.sin(a)*oz,s.at[1]-Math.sin(a)*ox+Math.cos(a)*oz,0,(s.turn||0)+side*70),phases:['afternoon','evening']});
+            }
         }
     }
 };
+const WRAP_FOOD=[['takeout-boxes',-430,-40,15],['coffee-cups',440,-150,0],['soda-bottle',560,60,0]];
 export function stations(_id,l){
     const i=l.index, columns=i===0?2:i<3?3:4;
     const xs=columns===2?[-l.width/2+1800,l.width/2-2100]:Array.from({length:columns},(_,n)=>-l.width/2+1800+n*(l.width-3600)/(columns-1));
@@ -76,7 +86,9 @@ export function stations(_id,l){
         const role=roles[n],narrow=role==='accessible-edit'||(i===0&&role==='digital-art');
         return {id:role+'-'+String(n+1).padStart(2,'0'),name:roleName[role]+' '+(n+1),role,
             at,size:narrow?'48x30':'60x30',turn:i>=3&&Math.floor((n+1)/columns)===2?180:0,height:28,tilt:0,chair:role!=='accessible-edit',
-            desktop:[prop('headphones',narrow?-470:-610,-130),...(role==='digital-art'||role==='animation'?[prop('sketchbook',narrow?430:620,110,1)]:[])],shelf:[]};
+            // Each bay is someone's: a mug, a bottle or loose notes, by seat.
+            desktop:[prop('headphones',narrow?-470:-610,-130),...(role==='digital-art'||role==='animation'?[prop('sketchbook',narrow?430:620,110,1)]:[]),
+                ...[[prop('insulated-mug',narrow?-280:-360,190)],[prop('water-bottle',narrow?300:400,200)],[],[prop('papers',narrow?230:300,170,0,-12)],[prop('insulated-mug',narrow?260:330,200)]][n%5]],shelf:[]};
     });
 }
 export const finish = spec => ({name:spec.name+' · acoustic carpet, navy felt & silver metal',ground:'#626c7c',wood:.58,metal:.3,stone:.58,night:.92,partyDay:true});
@@ -451,7 +463,15 @@ export function furnish(kit){
     const sg=l.media.stage,stage=asset('capture-stage','Capture stage · camera, backdrop & softboxes',[l.media.capture[0],0,l.media.capture[1]]);
     stage.rotation.y=Math.PI;const back=sg.backdrop,cam=sg.camera,mid=(back+cam)/2,padW=sg.depth===3000?2800:2600;
     box(stage,[padW,15,sg.depth],[0,7.5,mid],mat('#7b828a','stone'),14);
-    const chroma=kit.material('#1fa64a',{roughness:.92,side:THREE.DoubleSide});chroma.userData.roomSurface='fabric';
+    // Chroma muslin: three sewn widths with seams, soft hanging folds and a
+    // little light fall-off toward the hem, not a flat painted plane.
+    const chromaMap=(()=>{const c=document.createElement('canvas');c.width=256;c.height=256;const g=c.getContext('2d');
+        g.fillStyle='#1fa64a';g.fillRect(0,0,256,256);
+        for(let n=0;n<26;n++){const x=(n*37.3)%256,w=6+(n*13)%14,gr=g.createLinearGradient(x-w,0,x+w,0);gr.addColorStop(0,'rgba(0,40,10,0)');gr.addColorStop(.5,n%3?'rgba(0,40,10,.16)':'rgba(190,255,200,.10)');gr.addColorStop(1,'rgba(0,40,10,0)');g.fillStyle=gr;g.fillRect(x-w,0,2*w,256);}
+        const v=g.createLinearGradient(0,0,0,256);v.addColorStop(0,'rgba(255,255,255,.06)');v.addColorStop(.7,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,30,10,.18)');g.fillStyle=v;g.fillRect(0,0,256,256);
+        for(const x of [85,171]){g.fillStyle='rgba(8,60,25,.55)';g.fillRect(x,0,2,256);g.fillStyle='rgba(150,230,170,.25)';g.fillRect(x+2,0,1,256);}
+        const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t;})();
+    const chroma=kit.material('#ffffff',{map:chromaMap,roughness:.92,side:THREE.DoubleSide});chroma.userData.roomSurface='fabric';chroma.userData.roomPaletteLocked=chroma.userData.roomFinishLocked=true;
     const roll=box(stage,[2350,2220,24],[0,1130,back-4],chroma,4);
     // Dark charcoal acoustic/light-block backing on the rear of the chroma wall
     // so reverse views see a tailored studio flat rather than raw green bleed.
@@ -459,7 +479,8 @@ export function furnish(kit){
     // Cove sweep and floor sheet so the key never shows a hard corner.
     const cove=kit.mesh(stage,new THREE.CylinderGeometry(450,450,2350,16,1,true,Math.PI*1.5,Math.PI/2),chroma,[0,465,back-465]);cove.rotation.z=Math.PI/2;
     const sweepLen=Math.max(700,back-cam-1700);
-    box(stage,[2350,4,sweepLen],[0,17,back-465-sweepLen/2],chroma,2);
+    const chromaFloor=kit.material('#1c9a45',{roughness:.94});chromaFloor.userData.roomSurface='fabric';chromaFloor.userData.roomPaletteLocked=chromaFloor.userData.roomFinishLocked=true;
+    box(stage,[2350,4,sweepLen],[0,17,back-465-sweepLen/2],chromaFloor,2);   // the floor sweep lies flat: no hanging folds on it
     // Heavy-duty goal-post studio truss & weighted base plates.
     box(stage,[2540,42,56],[0,2265,back+6],kit.metal,6);
     for(const x of [-1240,1240]){
@@ -868,13 +889,41 @@ export function decorate(kit){
     }
     pools(kit);
 }
+// Daylight through the ocean window: the open part of the glazing (below the
+// blind) projected on the carpet along the shared sun direction
+// (room-refinement DAY_ANGLES), so its place and length follow the hour and
+// the blind. Soft in the morning, a short bright patch in the afternoon, long
+// and warm at dusk, none at night or behind the screening blackout.
+const SUN_DIR={morning:[.62,-.36],afternoon:[1.45,.12],evening:[.32,.48]},SUN_LEVEL={morning:.03,afternoon:.11,evening:.045};   // a read of daylight on the carpet, not a spotlight: the film's morning keeps its mood
+const BLIND_DROP=[.15,.35,.75,.55,1];
+function mediaSun(kit){
+    const {w,d,bz,front}=kit,z0=bz+d*.54,half=d*.24;
+    const c=document.createElement('canvas');c.width=256;c.height=128;const g=c.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,256,128);g.filter='blur(13px)';   // a wide penumbra: the glass is metres from the floor it lights
+    for(const [a,b] of [[.06,.31],[.37,.63],[.69,.94]]){g.fillStyle='#fff';g.fillRect(a*256,26,(b-a)*256,76);}
+    const map=new THREE.CanvasTexture(c);map.colorSpace=THREE.SRGBColorSpace;
+    const geo=new THREE.PlaneGeometry(1,1,12,12);geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count*3),3));
+    const mat=new THREE.MeshBasicMaterial({map,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
+    const sun=new THREE.Mesh(geo,mat);sun.name='Window daylight patch';sun.renderOrder=2;sun.raycast=()=>{};sun.castShadow=sun.receiveShadow=false;sun.frustumCulled=false;kit.root.add(sun);
+    return (phase,color,gain)=>{
+        const dir=SUN_DIR[phase];sun.visible=!!dir;if(!dir)return;
+        const [elevation,sweep]=dir,top=2600-BLIND_DROP[phaseIndex(phase)]*1750,pos=geo.attributes.position,uv=geo.attributes.uv,col=geo.attributes.color;
+        for(let i=0;i<pos.count;i++){
+            const y=800+uv.getY(i)*(top-800),z=z0-half+uv.getX(i)*half*2,t=y/elevation,x=-w/2+25+t,zz=z+sweep*t;
+            const edge=Math.min(w/2-40-x,zz-bz-30,front-30-zz),v=THREE.MathUtils.smoothstep(edge,0,420)/(1+t/6000);
+            pos.setXYZ(i,Math.min(x,w/2-40),9,THREE.MathUtils.clamp(zz,bz+30,front-30));col.setXYZ(i,v,v,v);
+        }
+        pos.needsUpdate=col.needsUpdate=true;geo.computeBoundingSphere();mat.color.set(color).multiplyScalar(SUN_LEVEL[phase]*gain);
+    };
+}
 // Additive pools for the screen, desk columns and the work wall; no lights.
 function pools(kit){
     const {w,bz,layout:l}=kit,layer=createPoolLayer(kit.root,'Media lab light pools');kit.mediaPools=layer;
-    layer.add(kit.root,[0,4,bz+1400],[4400,2600],'#6f93c8',[.05,.04,.1,.36,.18]);
+    layer.add(kit.root,[0,4,bz+1400],[4400,2600],'#6f93c8',[.05,.04,.1,.03,.4]);
     const columns=l.index===0?2:l.index<3?3:4,xs=columns===2?[-w/2+1800,w/2-2100]:Array.from({length:columns},(_,n)=>-w/2+1800+n*(w-3600)/(columns-1));
     // Only occupied workstation slots get a task-light pool.
-    for(let n=0;n<COUNTS[l.index];n++)layer.add(kit.root,[xs[n%columns],3,bz+2400+Math.floor(n/columns)*4000+300],[1900,1500],'#eef3fb',[.04,.04,.14,.1,.18]);
+    // Late edit: only the featured bay is in use; the others are asleep.
+    for(let n=0;n<COUNTS[l.index];n++)layer.add(kit.root,[xs[n%columns],3,bz+2400+Math.floor(n/columns)*4000+300],[1900,1500],'#eef3fb',[.04,.04,.14,n?.012:.3,.05]);
+    layer.add(kit.root,[xs[0]+250,2,bz+2400-150],[1500,1100],'#ffd9ad',[0,0,0,.34,0]);
     if(kit.mediaGallery)layer.add(kit.mediaGallery,[0,100,40],[2200,1400],'#ffd6a2',[.03,.03,.05,.04,.6],'back');
     const critique=kit.byId('activity-table');if(critique)layer.add(critique,[0,4,0],[2400,1600],'#ffd9a8',[0,0,.05,.04,.35]);
 }
@@ -903,29 +952,45 @@ export function activityMaterials(k,phase,y){
     // Printed call sheets, edit tools, grading references and critique papers
     // are separate editable furniture-local kits in campus-lived-in.mjs.
 }
+// Screening & wrap (party): the critique table's review chairs leave the
+// table and form a short row facing the screen; larger labs move the end
+// chairs into a second row. Reversible (room-life's dailyDelta convention).
+function wrapSeating(kit){
+    const m=kit.phaseMover(),[ax,az]=kit.layout.activity,find=(x,z)=>{let chair=null;return ()=>[chair&&chair.parent===kit.root?chair:(chair=kit.root.children.find(o=>o.userData.propId==='ergoflex-designer-chair'&&!o.userData.dailyDelta&&Math.hypot(o.position.x-x,o.position.z-z)<120)||null)];};   // found once, at its own place: after the move it is somewhere else
+    const seats=[[-400,-700,0,-1200],[400,-700,0,-400],[-400,700,1,400],[400,700,1,1200]];
+    for(const [dx,dz,back,rx] of seats)m.add(find(ax+dx,az+dz),null,i=>i===4?kit.pivotMove(ax+dx,az+dz,rx-dx,-1500-dz,back?0:Math.PI):null);
+    // (the two end chairs of the larger labs stay at the table: the rows would put them into the edit bay in front)
+    return m;
+}
 export function atmosphere(phase,gain,kit){
+    (kit.mediaWrap??=wrapSeating(kit)).apply(phaseIndex(phase));
+    // House lights: full for planning and editing, dimmed to a grading surround,
+    // off for the screening (exit signs, screens and projection carry the room).
+    if(kit.glow)kit.glow.emissiveIntensity=[.5,.56,.16,.012,.04][phaseIndex(phase)]*gain;
     for(const m of kit.mediaDiffusers||[])m.emissiveIntensity=phase==='afternoon'?.65:phase==='night'?0:phase==='party'?.3:.18;
     const p=phaseIndex(phase);
-    for(const m of kit.screenMats)if(m.userData.screenVariant===3)m.emissiveIntensity=[.24,.26,.4,.8,.68][p];
-    if(kit.lights?.[0])kit.lights[0].intensity*=[.85,.8,.55,.3,.7][p];
+    for(const m of kit.screenMats)if(m.userData.screenVariant===3)m.emissiveIntensity=[.24,.26,.4,.06,.9][p];
+    if(kit.lights?.[0])kit.lights[0].intensity*=[.85,.8,.55,1.2,.3][p];
     if(kit.mediaBoardPhase!==phase){
         const face=kit.board?.children.find(o=>o.isMesh&&o.geometry.type==='PlaneGeometry'&&o.material.map?.image?.getContext);
         if(face){const c=face.material.map.image;drawBoard(c.getContext('2d'),c.width,c.height,kit.spec,0,phase);face.material.map.needsUpdate=true;}
         kit.mediaBoardPhase=phase;
     }
-    // Screening and showcase: room light 1 becomes the screen's spill.
+    // Screening: room light 1 becomes the screen's spill. Late edit: it is
+    // the lab's one remaining night light, so the dark bays still read.
     const spill=kit.lights?.[1];if(spill){
         spill.userData.authored??={at:spill.position.clone()};
-        if(phase==='night'||phase==='party'){spill.position.set(0,1500,kit.bz+1600);spill.color.set(phase==='night'?'#8fb3e0':'#ffd6aa');spill.intensity=(kit.root.scale.x*1000)**2*(phase==='night'?3.5:2.2)*gain;}
-        else spill.position.copy(spill.userData.authored.at);
+        if(phase==='party'){spill.position.set(0,1500,kit.bz+1600);spill.color.set('#9fbbe4');spill.intensity=(kit.root.scale.x*1000)**2*3.5*gain;}
+        else{spill.position.copy(spill.userData.authored.at);if(phase==='night')spill.intensity*=.2;}
     }
     if(kit.sky?.map?.image?.getContext){
         const c=kit.sky.map.image.getContext('2d'),W=c.canvas.width,H=c.canvas.height;
         drawOccCampusView(c,W,H,phase);
         kit.sky.map.needsUpdate=true;
     }
-    if(kit.mediaBlind){const drop=[.15,.35,.75,1,.85][p],b=kit.mediaBlind;b.scale.y=drop;b.position.y=875*(1-drop);b.material.map.repeat.y=6*drop;}
-    if(kit.mediaBeam)kit.mediaBeam.color.setScalar([0,0,0,.09,.05][p]);
+    kit.mediaSun??=mediaSun(kit);kit.mediaSun(phase,kit.spec.modes[phase]?.key||'#fff4e0',gain);
+    if(kit.mediaBlind){const drop=BLIND_DROP[p],b=kit.mediaBlind;b.scale.y=drop;b.position.y=875*(1-drop);b.material.map.repeat.y=6*drop;}
+    if(kit.mediaBeam)kit.mediaBeam.color.setScalar([0,0,0,0,.09][p]);
     if(kit.mediaOnAir)kit.mediaOnAir.emissiveIntensity=[.04,.12,.7,.015,.04][p];
     kit.mediaPools?.apply(p,gain);
     if(kit.room.ceilingFixture)for(const g of kit.mediaCeiling||[])if(g.parent!==kit.room.ceilingFixture)kit.room.ceilingFixture.attach(g);

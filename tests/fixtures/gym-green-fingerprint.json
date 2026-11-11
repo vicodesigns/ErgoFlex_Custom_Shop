@@ -1,0 +1,162 @@
+{
+ "apartment": {
+  "morning": {
+   "meshes": 368,
+   "materials": "7c5951bd",
+   "instances": "29b15d4a",
+   "lights": "d8d29f0e"
+  },
+  "afternoon": {
+   "meshes": 368,
+   "materials": "c9fdb9ef",
+   "instances": "29b15d4a",
+   "lights": "68ec4983"
+  },
+  "evening": {
+   "meshes": 368,
+   "materials": "b34a607b",
+   "instances": "29b15d4a",
+   "lights": "29add640"
+  },
+  "night": {
+   "meshes": 368,
+   "materials": "1b27b7e8",
+   "instances": "29b15d4a",
+   "lights": "0a40734d"
+  },
+  "party": {
+   "meshes": 368,
+   "materials": "e0935728",
+   "instances": "29b15d4a",
+   "lights": "b049fd6b"
+  }
+ },
+ "house": {
+  "morning": {
+   "meshes": 398,
+   "materials": "eb2d3e71",
+   "instances": "29b15d4a",
+   "lights": "d8d29f0e"
+  },
+  "afternoon": {
+   "meshes": 398,
+   "materials": "01799f05",
+   "instances": "29b15d4a",
+   "lights": "68ec4983"
+  },
+  "evening": {
+   "meshes": 398,
+   "materials": "b0c293f9",
+   "instances": "29b15d4a",
+   "lights": "29add640"
+  },
+  "night": {
+   "meshes": 398,
+   "materials": "ea98f162",
+   "instances": "29b15d4a",
+   "lights": "0a40734d"
+  },
+  "party": {
+   "meshes": 398,
+   "materials": "56093fcf",
+   "instances": "29b15d4a",
+   "lights": "b049fd6b"
+  }
+ },
+ "spacious": {
+  "morning": {
+   "meshes": 437,
+   "materials": "ae70260f",
+   "instances": "f039bf5a",
+   "lights": "d8d29f0e"
+  },
+  "afternoon": {
+   "meshes": 437,
+   "materials": "71f12213",
+   "instances": "f039bf5a",
+   "lights": "68ec4983"
+  },
+  "evening": {
+   "meshes": 437,
+   "materials": "37ad53a3",
+   "instances": "f039bf5a",
+   "lights": "29add640"
+  },
+  "night": {
+   "meshes": 437,
+   "materials": "5f27692c",
+   "instances": "f039bf5a",
+   "lights": "0a40734d"
+  },
+  "party": {
+   "meshes": 437,
+   "materials": "1b9049e0",
+   "instances": "f039bf5a",
+   "lights": "b049fd6b"
+  }
+ },
+ "premium": {
+  "morning": {
+   "meshes": 452,
+   "materials": "24b8c0a3",
+   "instances": "f039bf5a",
+   "lights": "d8d29f0e"
+  },
+  "afternoon": {
+   "meshes": 452,
+   "materials": "9993560b",
+   "instances": "f039bf5a",
+   "lights": "68ec4983"
+  },
+  "evening": {
+   "meshes": 452,
+   "materials": "fd303ca3",
+   "instances": "f039bf5a",
+   "lights": "29add640"
+  },
+  "night": {
+   "meshes": 452,
+   "materials": "2adb0d5c",
+   "instances": "f039bf5a",
+   "lights": "0a40734d"
+  },
+  "party": {
+   "meshes": 452,
+   "materials": "8ce7520d",
+   "instances": "f039bf5a",
+   "lights": "b049fd6b"
+  }
+ },
+ "executive": {
+  "morning": {
+   "meshes": 458,
+   "materials": "10735c69",
+   "instances": "f039bf5a",
+   "lights": "d8d29f0e"
+  },
+  "afternoon": {
+   "meshes": 458,
+   "materials": "3707183b",
+   "instances": "f039bf5a",
+   "lights": "68ec4983"
+  },
+  "evening": {
+   "meshes": 458,
+   "materials": "e4ee7213",
+   "instances": "f039bf5a",
+   "lights": "29add640"
+  },
+  "night": {
+   "meshes": 458,
+   "materials": "7486b8d8",
+   "instances": "f039bf5a",
+   "lights": "0a40734d"
+  },
+  "party": {
+   "meshes": 458,
+   "materials": "8f631ee1",
+   "instances": "f039bf5a",
+   "lights": "b049fd6b"
+  }
+ }
+}

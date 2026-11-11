@@ -245,7 +245,8 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     for (let t = 0; t <= 14; t += .1) assert.equal(at(t).length, 1, 'one model of her at ' + t.toFixed(1) + ' s');
     assert.deepEqual(at(2.2), ['people-maya-sit-type-30'], 'at 29.9 in the 30 in model is the one drawn'); assert.ok(actor.chair.position.z > 230 + 150 && actor.chair.position.z < 230 + 340, 'the chair rolls back with her');
     assert.ok(people.dirty, 'she moved: the film redraws her shadow');
-    assert.deepEqual(at(6), ['people-maya-stand-type']); assert.ok(close(quat(people.byKey('stands'), 'upperarm_l'), built('people-maya-stand-wait', 'upperarm_l')), 'standing by while the desk rises');
+    // (half way up she is drawn as her bench-height model, one of her desk postures, with her arms loose)
+    assert.deepEqual(at(6), ['people-maya-stand-low']); assert.ok(close(quat(people.people.find(o => o.visible), 'upperarm_l'), built('people-maya-stand-wait', 'upperarm_l')), 'standing by while the desk rises');
     assert.ok(Math.abs(actor.chair.position.z - (230 + 505)) < 2 && actor.chair.visible, 'the chair is left 505 mm back');
     assert.deepEqual(at(13), ['people-maya-stand-type']); assert.ok(close(quat(people.byKey('stands'), 'upperarm_l'), built('people-maya-stand-type', 'upperarm_l')), 'typing again at 43.5 in, as built');
     assert.deepEqual([people.byKey('stands').position.x, people.byKey('stands').position.z], [60, 175]);
@@ -271,7 +272,7 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     live(28, 2); assert.deepEqual(shown(), ['people-maya-sit-type']); assert.equal(people.moving, false);
     live(43.5, 120); assert.ok(people.moving, 'on her way up two seconds after the desk set off');
     live(43.5, 600); assert.deepEqual(shown(), ['people-maya-stand-type']); assert.ok(!people.moving && actor.state.k === 1);
-    live(36, 400); assert.deepEqual(shown(), ['people-maya-stand-type']); assert.equal(actor.state.k, 0, 'a desk stopped at 36 in: standing by');
+    live(36, 400); assert.deepEqual(shown(), ['people-maya-stand-low']); assert.equal(actor.state.k, 1, 'a desk stopped at 36 in: she works at it standing low, hands on the keys');
     live(28, 600); assert.deepEqual(shown(), ['people-maya-sit-type']); assert.ok(actor.state.k === 1 && Math.abs(actor.chair.position.z - 230) < 1, 'seated and typing, the chair back under her');
     await people.setEnabled(false); assert.ok(!actor.chair.visible && shown().length === 0 && chair.visible, 'people off: she and her chair are gone, the room\'s chair is back');
     // a change of posture inside a shot: two windows that meet are one person whose bones go from one to the other
@@ -321,7 +322,7 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     }
     // the still models for one use of the room
     people.setFilter({ only: [], cast, motion: false }); await people.setEnabled(true);
-    assert.equal(people.actors.length, 0); people.update({ ...desk, height: 36, time: 5 }); assert.deepEqual(shown(), [], 'motion off: nobody between the built heights, as before');
+    assert.equal(people.actors.length, 0); people.update({ ...desk, height: 39.5, time: 5 }); assert.deepEqual(shown(), [], 'motion off: nobody between the built heights, as before');
     people.dispose();
 }
 console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path.');

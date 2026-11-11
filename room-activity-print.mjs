@@ -62,8 +62,9 @@ function printMaterial(canvas, cloth = false) {
     material.userData.activityFinish = cloth ? 'woven-bookcloth' : 'paper-fibre';
     return material;
 }
-export function activityPageMaterial(id, phase = 0, coverColor = null) {
-    const [title, subtitle, accent] = THEMES[id] || THEMES.home;
+// printAccent (optional) replaces the room's print colour, e.g. the gym black & red colourway.
+export function activityPageMaterial(id, phase = 0, coverColor = null, printAccent = null) {
+    const [title, subtitle, roomAccent] = THEMES[id] || THEMES.home, accent = printAccent || roomAccent;
     if (coverColor) {
         const canvas = document.createElement('canvas'); canvas.width = 384; canvas.height = 512;
         const c = canvas.getContext('2d');
