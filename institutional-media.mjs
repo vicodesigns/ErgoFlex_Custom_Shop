@@ -71,7 +71,8 @@ export const sceneOverrides = {
             for(const [n,s] of (l.stations||[]).entries()){
                 if(n%3===1||(l.desk&&Math.hypot(s.at[0]-l.desk[0],s.at[1]-l.desk[1])<2600))continue;   // none at the bays next to the featured desk: the film's cameras were set against that corner as it was
                 const a=(s.turn||0)*Math.PI/180,side=n%2?1:-1,ox=side*(s.size==='48x30'?920:1080),oz=180;
-                l.props.push(prop(n%3?'backpack':'backpack-daypack',s.at[0]+Math.cos(a)*ox+Math.sin(a)*oz,s.at[1]-Math.sin(a)*ox+Math.cos(a)*oz,0,(s.turn||0)+side*70));
+                // (from the afternoon on, when the bays are in use: the film's morning keeps its floor as its cameras were set against it)
+                l.props.push({...prop(n%3?'backpack':'backpack-daypack',s.at[0]+Math.cos(a)*ox+Math.sin(a)*oz,s.at[1]-Math.sin(a)*ox+Math.cos(a)*oz,0,(s.turn||0)+side*70),phases:['afternoon','evening']});
             }
         }
     }
