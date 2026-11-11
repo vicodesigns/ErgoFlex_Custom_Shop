@@ -463,15 +463,21 @@ export function mountDirector(bridge,catalog,initial){
   function propsGroup(){if(!filmShot())return '';return `${laneGroupHead('props')}<div class="lane-group-body desk-lanes prop-lanes" data-lane-body="props" ${groupClosed('props')?'hidden':''}><div class="desk-lane-row ${sceneProps.editedCount()?'':'empty'}" data-lane-color="props"><span class="desk-lane-label" title="Props moved, turned, scaled or hidden in this chapter (click a prop in the view to edit one)">Props <small data-props-count>${propCount()}</small></span><div class="desk-lane lamps-lane props-lane" data-props-lane>${sceneProps.lane()}</div></div><div class="desk-lane-row ${scenePeople.count()?'':'empty'}" data-lane-color="people" style="${peopleLaneStyle(4)}"><span class="desk-lane-label" title="The people in this chapter and the seconds each one is in the room (click a bar to select them)">People <small data-people-count>${scenePeople.count()||''}</small></span><div class="desk-lane people-lane" data-people-lane style="${peopleLaneStyle(0)}">${scenePeople.lane()}</div></div></div>`;}
   // The People lane grows with the people who are in the room at the same time (scene-people-editor.mjs lane()).
   const peopleLaneStyle=extra=>{const h=scenePeople.laneHeight();return h?`height:${h+extra}px`:'';};
-  function sizePeopleLane(){const lane=timeline.querySelector('[data-people-lane]'),h=scenePeople.laneHeight();if(!lane)return;lane.style.height=h?h+'px':'';const row=lane.closest('.desk-lane-row');if(row)row.style.height=h?h+4+'px':'';}
+  let peopleLaneFor=null;
+  function sizePeopleLane(){
+    const lane=timeline.querySelector('[data-people-lane]'),h=scenePeople.laneHeight();if(!lane)return;lane.style.height=h?h+'px':'';const row=lane.closest('.desk-lane-row');if(row)row.style.height=h?h+4+'px':'';
+    // a newly selected person: their lane scrolls into the timeline's view (it is the last lane, often below the fold)
+    const now=scenePeople.selected();if(now&&now!==peopleLaneFor&&row&&!row.closest('[hidden]'))row.scrollIntoView({block:'nearest'});peopleLaneFor=now;
+  }
   function titlesGroup(){if(!titleEditor.has())return '';return `${laneGroupHead('titles')}<div class="lane-group-body desk-lanes title-lanes" data-lane-body="titles" ${groupClosed('titles')?'hidden':''}>${titleEditor.lane()}</div>`;}
   function revealLighting(){const v=timeline.querySelector('.timeline-viewport'),head=timeline.querySelector('[data-lane-group="lighting"]');if(!v||!head)return;if(groupClosed('lighting')){laneGroups.lighting=false;saveGroups();renderTimeline();return revealLighting();}const top=head.offsetTop-timeline.querySelector('.time-ruler-row').offsetHeight;if(top<v.scrollTop||top+head.parentElement.offsetHeight>v.scrollTop+v.clientHeight)v.scrollTop=top;}
   function saveGroups(){try{localStorage.setItem('ergoflex.director.laneGroups',JSON.stringify(laneGroups));}catch{}}
   // Fit: the timeline tall enough for every lane (capped by the layout); film chapters open fitted.
   let timelineFitted=false;
   function fitTimeline(){
-    const v=timeline.querySelector('.timeline-viewport');if(!v)return;const need=timeline.getBoundingClientRect().height+(v.scrollHeight-v.clientHeight)+2;
-    resizeTimeline(Math.min(need,innerHeight*.5));timelineFitted=true;
+    const v=timeline.querySelector('.timeline-viewport');if(!v)return;const Z=uiScale(),need=timeline.getBoundingClientRect().height+(v.scrollHeight-v.clientHeight)*Z+2;
+    // half the window; a little more of a short one (the lanes of a film chapter did not fit in half of a 1080p window)
+    resizeTimeline(Math.min(need,innerHeight*(innerHeight<=1150?.54:.5)));timelineFitted=true;
   }
   // Brightness of the desk white over the chapter as a line in the lane (L*, top = 100 %).
   function whiteLine(L,s){const pts=Array.from({length:49},(_,i)=>{const t=i/48*s;return `${(i/48*1000).toFixed(1)},${(30-lightnessOf(neutralAt(L.neutral,t))/100*26).toFixed(2)}`;}).join(' ');return `<svg class="white-line" viewBox="0 0 1000 34" preserveAspectRatio="none" aria-hidden="true"><polyline class="under" points="${pts}"/><polyline points="${pts}"/></svg>`;}
@@ -557,7 +563,9 @@ export function mountDirector(bridge,catalog,initial){
       const near=L.neutral.find(k=>Math.abs(k[0]-t)<.001);if(near){selectLight('neutrals',near[2]);return;}
       const k=[t,neutralAt(L.neutral,t),crypto.randomUUID()];putLighting({neutral:[...L.neutral,k]});selectLight('neutrals',k[2]);status('Colour key added at '+r2(t)+'s. Set its colour, brightness and warmth in Lighting.');return;
     }
-    const space=planClipInsertion(L.status.map(e=>({lane:'light',start:e.at,duration:e.dur})),'light',t,s,3);if(!space)throw Error('The lighting lane is full. Shorten a light state first.');
+    let space=planClipInsertion(L.status.map(e=>({lane:'light',start:e.at,duration:e.dur})),'light',t,s,3);if(!space)throw Error('The lighting lane is full. Shorten a light state first.');
+    // A light state never lengthens the chapter: it takes the free stretch that is there (at least 0.3 s), or is refused.
+    if(space.seconds>s+1e-9){const room=Math.floor((s-space.start)*1000)/1000;if(room<.3)throw Error(`There is no free stretch for another light state after ${r2(space.start)} s: the desk shows one state at a time. Shorten a state, or move the playhead to a gap.`);space={...space,duration:room,seconds:s};}
     const e={id:crypto.randomUUID(),at:Math.round(space.start*1000)/1000,dur:Math.round(space.duration*1000)/1000,kind:'lift-up',fade:1,fadeIn:.6};
     if(space.seconds>s+1e-9){resizeChapter(space.seconds,{message:'Light state added at '+e.at.toFixed(1)+'s',at:e.at,apply:()=>writeLighting(L,{status:[...L.status,e]})});selectLight('lights',e.id);return;}
     putLighting({status:[...L.status,e]});selectLight('lights',e.id);status('Light state added at '+r2(e.at)+'s. Choose its state and fades in Lighting.');
@@ -1152,7 +1160,9 @@ export function mountDirector(bridge,catalog,initial){
   },true);
   // Shift+L: jump to the lighting lanes.
   document.addEventListener('keydown',event=>{if(!open||!event.shiftKey||event.ctrlKey||event.metaKey||event.altKey||event.key.toLowerCase()!=='l'||event.target.closest?.('input,select,textarea,[contenteditable]'))return;event.preventDefault();revealLighting();});
-  function resizeTimeline(height){document.body.style.setProperty('--director-timeline-height',Math.max(300,Math.min(innerHeight*.65,720,height))+'px');}
+  // The interface's scale on a big screen (director-theme.css zooms the panel and the timeline above 2200 px wide).
+  function uiScale(){return Number(getComputedStyle(timeline).zoom)||1;}
+  function resizeTimeline(height){document.body.style.setProperty('--director-timeline-height',Math.max(300,Math.min(innerHeight*.65,720*uiScale(),height))+'px');}
   let scrubWant=null,scrubFrame=0;
   function scrubRuler(event){
     const box=scrub.getBoundingClientRect();scrubWant=snapTime((event.clientX-box.left)/box.width*shot().seconds,{pixels:box.width,bypass:event.altKey,excludePlayhead:true})/shot().seconds;

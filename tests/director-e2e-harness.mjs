@@ -16,7 +16,9 @@ export const chapterList=()=>{const f=path.join(root,HQ,'director-chapters.json'
 export const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const freePort=()=>new Promise(r=>{const s=net.createServer().listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>r(p));});});
 
-export async function openDirectorBrowser({width=1600,height=1000}={}){
+// VIEW=2560x1440 (env) runs any Director e2e at that window size (the big-screen scale, the 1080p layout).
+const VIEW=(process.env.VIEW||'').match(/^(\d+)x(\d+)$/);
+export async function openDirectorBrowser({width=VIEW?Number(VIEW[1]):1600,height=VIEW?Number(VIEW[2]):1000}={}){
   let server=null,base=process.env.BASE;
   if(!base){
     const port=await freePort(),state=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'director-e2e-')),'studio-state.json');

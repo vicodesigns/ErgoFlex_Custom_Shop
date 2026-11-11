@@ -43,20 +43,32 @@ const CHAIRS = /chair|stool|steelcase-leap|aeron/i;
 // Which part of a person a material is (MakeHuman names: 'Human.<asset>'); null = skin, eyes, teeth, things held.
 const NOT_WORN = /^(body|low-poly|teeth|tongue|eyebrow|eyelashes|eyes)/i, PARTS = { glasses: /glasses/i, shoes: /shoe|flats|boot|sneaker/i, bottom: /pants|skirt|jeans|shorts|trousers/i, hair: /hair|ponytail|afro|bob|braid|bun|^short\d|^long\d|mohawk|pigtail/i };
 export const partOf = name => { if (!/^Human\./.test(name || '')) return null; const n = name.slice(6); if (NOT_WORN.test(n)) return null; for (const [part, re] of Object.entries(PARTS)) if (re.test(n)) return part; return 'top'; };
-const lumCache = new WeakMap();
-// The average brightness of a garment's texture (linear), so a new colour keeps the weave and the folds at their contrast.
-function textureLuminance(map) {
-    const image = map?.image; if (!image || typeof document === 'undefined') return .2;
-    if (lumCache.has(image)) return lumCache.get(image);
-    let value = .2;
+// What a garment looks like as built: its average colour and brightness (linear), over all of it and separately above
+// and below the waist (personLower, workspace-3d.mjs), read from its texture where its vertices sit.
+const statCache = new WeakMap();
+function garmentStats(object, material) {
+    const blank = { color: [.25, .26, .28], lum: .2 }, none = { all: blank, up: blank, low: blank };
+    const image = material.map?.image; if (!image || typeof document === 'undefined') return none;
+    let mesh = null; object.traverse(o => { if (!mesh && o.isMesh && [].concat(o.material).includes(material)) mesh = o; });
+    const uv = mesh?.geometry.getAttribute('uv'); if (!uv) return none;
+    if (statCache.has(mesh.geometry)) return statCache.get(mesh.geometry);
+    let out = none;
     try {
-        const c = document.createElement('canvas'); c.width = c.height = 24; const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(image, 0, 0, 24, 24);
-        const d = g.getImageData(0, 0, 24, 24).data, lin = v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; let sum = 0, n = 0;
-        for (let i = 0; i < d.length; i += 4) { if (d[i + 3] < 128) continue; const l = .2126 * lin(d[i]) + .7152 * lin(d[i + 1]) + .0722 * lin(d[i + 2]); if (l > .004 && l < .97) { sum += l; n++; } }
-        if (n > 20) value = sum / n;
+        const N = 96, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(image, 0, 0, N, N);
+        const d = g.getImageData(0, 0, N, N).data, lin = v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }, lower = mesh.geometry.getAttribute('personLower');
+        const sums = { all: [0, 0, 0, 0], up: [0, 0, 0, 0], low: [0, 0, 0, 0] }, step = Math.max(1, Math.floor(uv.count / 4000)), k = material.color || { r: 1, g: 1, b: 1 };
+        for (let i = 0; i < uv.count; i += step) {
+            const x = Math.min(N - 1, Math.max(0, Math.floor((uv.getX(i) % 1 + 1) % 1 * N))), y = Math.min(N - 1, Math.max(0, Math.floor((uv.getY(i) % 1 + 1) % 1 * N))), at = (y * N + x) * 4;
+            if (d[at + 3] < 128) continue;
+            const rgb = [lin(d[at]) * k.r, lin(d[at + 1]) * k.g, lin(d[at + 2]) * k.b];
+            for (const key of ['all', lower && lower.getX(i) > .5 ? 'low' : 'up']) { const t = sums[key]; t[0] += rgb[0]; t[1] += rgb[1]; t[2] += rgb[2]; t[3]++; }
+        }
+        const mean = t => t[3] > 8 ? { color: [t[0] / t[3], t[1] / t[3], t[2] / t[3]], lum: Math.max(.01, (.2126 * t[0] + .7152 * t[1] + .0722 * t[2]) / t[3]) } : null;
+        const all = mean(sums.all) || blank; out = { all, up: mean(sums.up) || all, low: mean(sums.low) || all };
     } catch { /* a texture the canvas cannot read keeps the default */ }
-    lumCache.set(image, value); return value;
+    statCache.set(mesh.geometry, out); return out;
 }
+const hexOf = rgb => '#' + rgb.map(v => Math.round(Math.max(0, Math.min(1, v <= .0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - .055)) * 255).toString(16).padStart(2, '0')).join('');
 
 export const ROOM_PEOPLE = {
     home: [
@@ -192,26 +204,44 @@ export class RoomPeople {
         const base = object.userData.personBase ||= object.scale.clone(), k = Number.isFinite(spec.scale) && spec.scale > 0 ? spec.scale : 1;
         object.scale.copy(base).multiplyScalar(k); object.userData.personChair?.scale.copy(object.userData.personChairBase ||= object.userData.personChair.scale.clone()).multiplyScalar(k);
     }
-    // spec.colors: each named part takes the new colour, shaded by the brightness of its own texture.
+    // spec.colors: each named part takes the new colour, shaded by the brightness of its own texture. A one-piece outfit
+    // (no garment of its own below the waist) takes `top` above the waist and `bottom` below it.
     recolor(object, spec) {
         const colors = spec.colors || null; if (!colors && !object.userData.personTinted) return;
         if (!object.userData.personMaterials) this.ownMaterials(object);
         object.userData.personTinted = !!colors;
+        const onePiece = !object.userData.personMaterials.some(m => partOf(m.name) === 'bottom');
         for (const m of object.userData.personMaterials) {
-            const hex = colors?.[partOf(m.name)];
+            const part = partOf(m.name), split = onePiece && part === 'top', hex = colors?.[part], lowHex = split ? colors?.bottom : hex;
             if (!m.userData.tint) {
-                if (!hex) continue;
-                const tint = m.userData.tint = { color: { value: new THREE.Vector4(1, 1, 1, .2) }, on: { value: 0 } };
+                if (!hex && !lowHex) continue;
+                const tint = m.userData.tint = { color: { value: new THREE.Vector4(1, 1, 1, .2) }, on: { value: 0 }, low: { value: new THREE.Vector4(1, 1, 1, .2) }, lowOn: { value: 0 } };
                 m.onBeforeCompile = shader => {
-                    shader.uniforms.personTint = tint.color; shader.uniforms.personTintOn = tint.on;
-                    shader.fragmentShader = 'uniform vec4 personTint;\nuniform float personTintOn;\n' + shader.fragmentShader.replace('#include <map_fragment>',
-                        '#include <map_fragment>\n\tif (personTintOn > .5) { float pl = dot(diffuseColor.rgb, vec3(.2126, .7152, .0722)); diffuseColor.rgb = personTint.rgb * clamp(pl / max(personTint.a, .01), 0., 2.4); }');
+                    shader.uniforms.personTint = tint.color; shader.uniforms.personTintOn = tint.on; shader.uniforms.personTintLow = tint.low; shader.uniforms.personTintLowOn = tint.lowOn;
+                    shader.vertexShader = 'attribute float personLower;\nvarying float vPersonLower;\n' + shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvPersonLower = personLower;');
+                    shader.fragmentShader = 'uniform vec4 personTint;\nuniform float personTintOn;\nuniform vec4 personTintLow;\nuniform float personTintLowOn;\nvarying float vPersonLower;\n' + shader.fragmentShader.replace('#include <map_fragment>',
+                        '#include <map_fragment>\n\t{ bool pLow = vPersonLower > .5; if ((pLow ? personTintLowOn : personTintOn) > .5) { vec4 pt = pLow ? personTintLow : personTint; float pl = dot(diffuseColor.rgb, vec3(.2126, .7152, .0722)); diffuseColor.rgb = pt.rgb * clamp(pl / max(pt.a, .01), 0., 2.4); } }');
                 };
-                m.customProgramCacheKey = () => 'person-tint'; m.needsUpdate = true;
+                m.customProgramCacheKey = () => 'person-tint-2'; m.needsUpdate = true;
             }
-            const tint = m.userData.tint; tint.on.value = hex ? 1 : 0;
-            if (hex) { const c = new THREE.Color(hex); tint.color.value.set(c.r, c.g, c.b, textureLuminance(m.map)); }
+            const tint = m.userData.tint, stats = garmentStats(object, m), set = (v, value, lum) => { const c = new THREE.Color(value); v.value.set(c.r, c.g, c.b, lum); };
+            tint.on.value = hex ? 1 : 0; tint.lowOn.value = lowHex ? 1 : 0;
+            if (hex) set(tint.color, hex, split ? stats.up.lum : stats.all.lum);
+            if (lowHex) set(tint.low, lowHex, split ? stats.low.lum : stats.all.lum);
         }
+    }
+    // The colours a person's clothes and hair have as built ('#rrggbb' per part they have; a one-piece outfit gives
+    // top and bottom from above and below its waist), for the Director's swatches.
+    partColors(key) {
+        const object = this.byKey(key); if (!object) return null;
+        const mats = []; object.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) if (!mats.includes(m)) mats.push(m); });
+        const onePiece = !mats.some(m => partOf(m.name) === 'bottom'), out = {};
+        for (const m of mats) {
+            const part = partOf(m.name); if (!part || part === 'glasses') continue; const stats = garmentStats(object, m);
+            if (part === 'top' && onePiece) { out.top = hexOf(stats.up.color); out.bottom = hexOf(stats.low.color); }
+            else if (!out[part] || part !== 'top') out[part] = hexOf(stats.all.color);
+        }
+        return out;
     }
     // The person shown under that key (a film's own entry wins over a room person of the same name it has replaced).
     byKey(key) { const all = this.people.filter(o => this.keyOf(o.userData.person) === key); return all.find(o => this.allowed(o.userData.person)) || all[0] || null; }

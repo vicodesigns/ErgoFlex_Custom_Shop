@@ -457,3 +457,27 @@ body.directing.film-frame .desk-version-badge:not([hidden]){display:block;positi
 #director-panel .film-chapter-picker label select{flex:1;min-width:0}
 #director-panel .film-chapter-picker .film-dirty{flex:1 0 100%;margin:0 0 0 4px}
 #director-panel .film-chapter-picker .film-fresh{flex:1 0 100%}
+
+/* One film picker: the inspector's (Cut, Film chapter, "not exported"). The timeline shows its own only while the
+   inspector is hidden, so the cut and chapter can always be switched. */
+body.directing:not(.inspector-hidden) #director-timeline .film-chapter-picker{display:none}
+@media(max-width:700px){body.directing:not(.inspector-hidden) #director-timeline .film-chapter-picker{display:flex}}
+
+/* Big screens (2560 x 1440 and up): the inspector, the timeline and the bars around the view are drawn a fifth larger.
+   The 3D view is not zoomed (it would lose sharpness): the layout variables stay in screen pixels and the zoomed
+   boxes divide by --ui. director.mjs uiScale() reads the zoom for the timeline's fit. */
+@media(min-width:2200px) and (min-height:1200px){
+  body.directing{--ui:1.2;--director-inset:461px;--timeline-space:min(var(--director-timeline-height,520px),65dvh)}
+  body.directing.film-frame{--frame-left:461px;--frame-top:88px}
+  body.directing.film-frame.inspector-hidden{--frame-left:19px}
+  #director-panel{zoom:var(--ui)}
+  #director-timeline{zoom:var(--ui);height:calc(var(--timeline-space,520px) / var(--ui));left:calc(var(--director-inset,461px) / var(--ui))}
+  body.directing.inspector-hidden #director-timeline{left:16px}
+  body.directing header{zoom:var(--ui)}
+  #people-library,#prop-library,#film-switch,#film-cut-new,#film-stale{zoom:var(--ui)}
+}
+
+/* Lamps & sun / Props: at most two rows of chips, the rest scroll inside the lane (a long list pushed the People lane
+   far below the timeline's fold). In a short window the group heads are a little lower too. */
+#director-timeline .timeline-content .desk-lane-row[data-lane-color=lamps]>.lamps-lane,#director-timeline .timeline-content .desk-lane-row[data-lane-color=props]>.lamps-lane{max-height:62px;overflow-y:auto;scrollbar-width:thin;align-content:flex-start}
+@media(max-height:1150px) and (min-width:701px){#director-timeline .lane-group-head{height:20px}}

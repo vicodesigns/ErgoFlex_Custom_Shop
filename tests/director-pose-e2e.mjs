@@ -87,9 +87,15 @@ try{
   check(moved>.05,'dragging the hand moves it ('+moved.toFixed(2)+' stage units) and the shoulder and elbow follow: '+Object.keys(e2).join(', '));
   await snap('03-hand-dragged');
   // ---- fingers, mirror, reset joint, undo
-  await click('#director-panel [data-action="pe-grip"][data-index="3"]');
-  await until(async()=>(await edits())?.cast.find(c=>c.key===key)?.pose?.index_01_r,'the right hand closes a little');
-  passed.push('Close bends the fingers of that hand');
+  await setField('pe-grip-r',100);
+  await until(async()=>(await edits())?.cast.find(c=>c.key===key)?.pose?.index_02_r,'the right hand closes');
+  const fist=await until(async()=>{const v=Number(await page.$eval('#director-panel [name="pe-grip-r"]',e=>e.value));return v>=85?v:null;},'the slider stands at the fist');
+  const curl=await person(key,'index_02_r');
+  check(curl.turn>55,'the fingers slider closes the hand to a fist (index middle joint turned '+curl.turn.toFixed(0)+'°, slider at '+fist+')');
+  fs.writeFileSync(path.join(shots,'fist-pose.json'),JSON.stringify((await edits()).cast.find(c=>c.key===key).pose));
+  await setField('pe-grip-r',0);
+  await until(async()=>!(await edits())?.cast.find(c=>c.key===key)?.pose?.index_02_r,'the slider at 0 is the hand as built');
+  passed.push('the slider back at 0 is the hand as built');
   await setField('pe-joint','lowerarm_l');await until(()=>page.$('#director-panel [data-action="pe-pose-mirror"]'),'mirror button');
   await click('#director-panel [data-action="pe-pose-mirror"]');
   const e3=await until(async()=>{const p=(await edits())?.cast.find(c=>c.key===key)?.pose;return p&&Math.abs(p.lowerarm_r[0]-p.lowerarm_l[0])<1e-3&&Math.abs(p.lowerarm_r[1]+p.lowerarm_l[1])<1e-3?p:null;},'the left arm\'s adjustment is mirrored to the right');
@@ -101,10 +107,26 @@ try{
   await until(async()=>(await edits())?.cast.find(c=>c.key===key)?.pose?.lowerarm_l,'undo brings the elbow back');
   await until(async()=>{const p=await person(key,'lowerarm_l');return p?.turn>23;},'the stage follows the undo');
   passed.push('undo steps back one adjustment, on the stage too');
+  // ---- save the pose under a name: a second save of the same name does not replace the first
+  const saved=()=>page.evaluate(()=>{try{return JSON.parse(localStorage.getItem('ergoflex.peoplePoses.v1')).poses;}catch{return [];}});
+  const saveAs=async name=>{await page.evaluate(n=>{document.querySelector('#director-panel [name="pe-pose-name"]').value=n;},name);await click('#director-panel [data-action="pe-pose-save"]');};
+  await saveAs('Leaning in');await until(async()=>(await saved()).length===1,'the pose is saved');
+  await setField('pe-joint','head');await setField('pe-ry',18);
+  await until(async()=>(await edits())?.cast.find(c=>c.key===key)?.pose?.head,'the head is turned');
+  await saveAs('Leaning in');
+  const two=await until(async()=>{const l=await saved();return l.length===2?l:null;},'a second pose is saved');
+  check(two[0].name==='Leaning in'&&two[1].name==='Leaning in 2'&&!two[0].joints.head&&two[1].joints.head&&two[0].posture==='stand-type','Save pose keeps each pose under its own name and never replaces one: '+two.map(p=>p.name).join(', '));
   // ---- Done keeps the pose; the model stays as posed
   await click('#director-panel [data-action="pe-pose-done"]');
   await until(async()=>!(await page.$('#director-panel .people-pose')),'Done leaves pose mode');
   check(await page.$eval('#director-panel .people-tuned',e=>/joints adjusted/.test(e.textContent)),'the People tab says the pose is adjusted');
+  // ---- a saved pose is a starting point: applied from the People tab it puts the joints back as saved
+  await page.evaluate(()=>[...document.querySelectorAll('#director-panel [data-action="pe-pose-apply"]')].find(b=>b.textContent==='Leaning in').click());
+  await until(async()=>{const p=(await edits())?.cast.find(c=>c.key===key)?.pose;return p&&!p.head&&p.lowerarm_l?p:null;},'the first saved pose is applied');
+  passed.push('a saved pose is applied from the People tab as a starting point');
+  await page.evaluate(()=>[...document.querySelectorAll('#director-panel .pose-saved-item')].find(b=>/Leaning in 2/.test(b.textContent)).querySelector('.pose-saved-x').click());
+  await until(async()=>(await saved()).length===1,'a saved pose can be deleted');
+  check((await edits()).cast.find(c=>c.key===key).pose.lowerarm_l,'deleting a saved pose leaves the people who have it alone');
   await wait(300);await snap('04-done');
   // ---- Export cut -> import -> the film chapter's people carry the pose
   await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());

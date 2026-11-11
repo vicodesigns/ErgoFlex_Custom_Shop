@@ -1,6 +1,7 @@
 import {cleanPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
 import {createPoseEditor} from './scene-pose-editor.mjs';
 import {stackRows} from './lane-rows.mjs';
+import {loadSavedPoses,storeSavedPoses,addSavedPose} from './saved-poses.mjs';
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
 // select them, then move / turn / scale them with the gizmo (W / E / T) or the fields, change who they are
 // (character) and what they are doing (posture), set the seconds they are in the room, duplicate or remove them, and
@@ -112,7 +113,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     return {at:[Math.round(p.x),Math.round(p.z)],turn:r1(THREE.MathUtils.radToDeg(Math.atan2(eye.x-p.x,eye.z-p.z)))};
   }
   // ---- pose mode (scene-pose-editor.mjs)
-  const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,rerender,personName:e=>e?personName(e):'',editing});
+  const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e)});
   const poseEditor=pose;     // swap() has a `pose` argument of its own
   // ---- selection
   function select(key,{announce=true}={}){
@@ -136,8 +137,37 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     }
     return false;
   }
+  // ---- saved poses (saved-poses.mjs): kept under a name, applied to anyone as a starting point
+  const store=()=>globalThis.localStorage;
+  let savedList=[];
+  function savedHTML(e){
+    savedList=loadSavedPoses(store());const p=poseOf(e.id);
+    if(!savedList.length)return '<p class="director-hint">No saved poses yet. Adjust the pose, name it and press Save pose: it can then be put on anyone as a starting point.</p>';
+    const order=savedList.map((x,i)=>[x,i]).sort((a,b)=>(b[0].posture===p?.id)-(a[0].posture===p?.id));
+    return `<div class="pose-saved" role="list" aria-label="Saved poses">${order.map(([x,i])=>{const same=x.posture===p?.id,label=catalog?.poses[x.posture]?.label||x.posture,n=Object.keys(x.joints).length;
+      return `<span class="pose-saved-item ${same?'':'other'}" role="listitem"><button type="button" data-action="pe-pose-apply" data-index="${i}" title="${escape(`${label} with ${n} joint${n===1?'':'s'} adjusted${x.from?' · made on '+x.from:''}${same?'':' · changes the posture to this one'}`)}">${escape(x.name)}</button><button type="button" class="pose-saved-x" data-action="pe-pose-delete" data-index="${i}" aria-label="Delete the saved pose ${escape(x.name)}" title="Delete this saved pose (people who have it keep it)">×</button></span>`;}).join('')}</div>`;
+  }
+  function savePose(){
+    const e=sel&&entry(sel),p=e&&poseOf(e.id);if(!e||!p)return;
+    if(!e.pose){status('Adjust a joint first: there is nothing to save yet.',true);return;}
+    const typed=document.querySelector('#director-panel [name="pe-pose-name"]')?.value||'';
+    try{const {poses,saved}=addSavedPose(loadSavedPoses(store()),{name:typed.trim()||p.label,posture:p.id,joints:e.pose,from:personName(e)});storeSavedPoses(store(),poses);
+      status(`Saved as “${saved.name}”. It is under Saved poses for anyone, and never replaces another saved pose.`);rerender();}
+    catch(error){status(error.message.includes('quota')?'The browser storage is full: the pose was not saved.':error.message,true);}
+  }
+  async function applySaved(index){
+    const x=savedList[index],e=sel&&entry(sel);if(!x||!e||!catalog)return;
+    if(!catalog.poses[x.posture]){status('That saved pose was made on a posture this library no longer has.',true);return;}
+    await swap(sel,null,x.posture,x.joints);
+    if(entry(sel)?.pose)status(`${personName(entry(sel))}: saved pose “${x.name}”. Fine-tune from here; the saved pose stays as it is.`);
+  }
+  function deleteSaved(index){
+    const x=savedList[index];if(!x)return;
+    try{storeSavedPoses(store(),loadSavedPoses(store()).filter(p=>p.id!==x.id));status(`Deleted the saved pose “${x.name}”. People who have it keep it.`);}catch(error){status(error.message,true);}
+    rerender();
+  }
   // ---- changes
-  async function swap(key,character,pose){
+  async function swap(key,character,pose,joints=null){
     const e=entry(key),m=e&&modelOf(e.id);if(!e||!catalog)return;
     const c=character||m?.character,p=pose||m?.pose;if(!c||!p)return;
     let id=modelFor(c,p,m?.deskHeight??null);
@@ -146,6 +176,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(p!==m?.pose)poseEditor.exit();
     edit(key,x=>{
       x.id=id;if(p!==m?.pose)delete x.pose;      // fine tuning belongs to the posture it was made on
+      if(joints)x.pose=structuredClone(joints);  // a saved pose: its posture and its joints in one step
       if(info.desk){const role=info.stance==='seated'?'sit':info.stance==='wheelchair'?'wheel':'stand';if(!x.desk){x.desk=role;delete x.at;delete x.turn;delete x.y;delete x.beside;}else x.desk=role;}
       else if(x.desk){const o=objectOf(key),spot=o&&tools?read(o):floorSpot();delete x.desk;delete x.station;delete x.reach;x.at=spot.at;x.turn=spot.turn;}
     },`${name}: ${info.label.toLowerCase()}.`);
@@ -214,6 +245,10 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   async function action(name,index){
     if(pose.action(name,index))return;
     if(name==='pe-pose-enter'){if(sel){await ensure();pose.enter(sel);}return;}
+    if(name==='pe-pose-save'){savePose();return;}
+    if(name==='pe-pose-apply'){await applySaved(index);return;}
+    if(name==='pe-pose-delete'){deleteSaved(index);return;}
+    if(name==='pe-lane'&&performance.now()<barSuppress)return;
     if(name==='pe-add'){openLibrary();return;}
     if(name==='pe-row'){const key=rowKeys[index];if(key)select(key);return;}
     if(name==='pe-lane'){const key=laneKeys[index];if(key)select(key);return;}
@@ -281,6 +316,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const head=`<div class="people-head"><img src="${thumb(e.id)}" alt=""><div><strong>${escape(c?.name||personName(e))}</strong><small>${escape(c?[c.sex,c.age,c.height?Math.round(c.height*(e.scale||1))+' cm':''].filter(Boolean).join(' · '):e.id)}</small><small>${escape(doing(e))}${m?.aids?.length?' · '+escape(m.aids.join(', ')):''}</small></div></div>`;
     if(pose.active()===e.key)return pose.panel(head);
     const tuned=Object.keys(e.pose||{}).length;
+    // the colours the model really has (read from its textures on the stage), and whether its outfit is one piece
+    const asBuilt=o?stagePeople()?.partColors?.(e.key):null,onePiece=(c?.outfit||[]).every(g=>!/pants|skirt|jeans|shorts|trousers/i.test(g));
     return `<section class="people-selected" data-reveal="person">
       <div class="people-head"><img src="${thumb(e.id)}" alt=""><div><strong>${escape(c?.name||personName(e))}</strong><small>${escape(c?[c.sex,c.age,c.height?Math.round(c.height*(e.scale||1))+' cm':''].filter(Boolean).join(' · '):e.id)}</small><small>${escape(doing(e))}${m?.aids?.length?' · '+escape(m.aids.join(', ')):''}</small></div></div>
       ${busy?`<p class="director-hint people-busy">Building ${escape(busy.replace(/^people-/,''))}…</p>`:''}${here?`<p class="director-hint">${escape(here.trim())}</p>`:''}
@@ -290,14 +327,15 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <h4>Posture</h4>
       <select name="pe-pose" aria-label="Posture">${poses.map(([st,list])=>`<optgroup label="${cap(st)}">${list.map(([id,x])=>`<option value="${id}" ${id===p?.id?'selected':''}>${escape(x.label)}${x.desk?' · at the desk':''}${built(id)?'':' · built on request'}</option>`).join('')}</optgroup>`).join('')}</select>
       <div class="director-actions"><button type="button" data-action="pe-pose-enter" title="Turn joints and drag hands and feet to get the posture just right (or double-click the person in the view)">Fine-tune pose…</button><span class="director-hint people-tuned">${tuned?`${tuned} joint${tuned===1?'':'s'} adjusted`:'or double-click them in the view'}</span></div>
+      ${loadSavedPoses(store()).length?`<h4>Saved poses</h4>${savedHTML(e)}`:''}
       <h4>Place</h4>
       ${select_('pe-anchor',isFree?'free':'desk',[['free','Free spot (move by hand)'],['desk',e.station?'At a desk in the room':'At the film desk (follows it)']])}
       ${isFree?`<div class="director-row people-fields">${field('X',`pe-x`,e.at[0],{step:10,unit:'mm'})}${field('Z','pe-z',e.at[1],{step:10,unit:'mm'})}${field('Turn','pe-turn',e.turn||0,{step:5,min:-360,max:360,unit:'°'})}${field('Lift','pe-y',e.y||0,{step:5,unit:'mm',title:'Raises a seated person onto a seat, or anyone onto a step'})}</div>
       <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:'<p class="director-hint">They stand or sit where the desk needs them and move with it. A desk posture shows only while the desk is at the height it was built for.</p>'}
       <div class="director-row people-fields">${field('Size','pe-scale',Math.round((e.scale||1)*100),{step:1,min:20,max:300,unit:'%',title:'100 % is the size the character was built at'})}</div>
       <h4>Clothes and hair</h4>
-      <div class="people-colors">${PARTS.map((part,i)=>{const mine=e.colors?.[part],was=c?.colors?.[part]||'#8a8f96';return `<label title="${mine?'Recoloured':'As built'}: ${part}">${cap(part)}<span><input type="color" name="pe-color-${part}" value="${escape(mine||was)}">${mine?`<button type="button" data-action="pe-color-reset" data-index="${i}" title="Back to the colour the character was built with">↺</button>`:''}</span></label>`;}).join('')}</div>
-      <p class="director-hint">Outfit: ${escape((c?.outfit||[]).map(g=>g.replace(/^[a-z]+_/,'').replace(/[_-]+/g,' ').replace(/\d+$/,'').trim()).join(', ')||'as built')}. A colour keeps the fabric's folds and weave.</p>
+      <div class="people-colors">${PARTS.map((part,i)=>{const mine=e.colors?.[part],was=asBuilt?.[part]||c?.colors?.[part]||'#8a8f96';return `<label title="${mine?'Recoloured':'As built'}: ${part}">${cap(part)}<span><input type="color" name="pe-color-${part}" value="${escape(mine||was)}">${mine?`<button type="button" data-action="pe-color-reset" data-index="${i}" title="Back to the colour the character was built with">↺</button>`:''}</span></label>`;}).join('')}</div>
+      <p class="director-hint">Outfit: ${escape((c?.outfit||[]).map(g=>g.replace(/^[a-z]+_/,'').replace(/[_-]+/g,' ').replace(/\d+$/,'').trim()).join(', ')||'as built')}. ${onePiece?' It is one piece: Top colours it above the waist, Bottom below.':''} A colour keeps the fabric's folds and weave.</p>
       <h4>In the room</h4>
       <label class="director-check"><input type="checkbox" name="pe-whole" ${s?'':'checked'}>The whole chapter</label>
       ${s?`<div class="director-row people-fields">${field('In','pe-in',s[0],{step:.1,min:0,max:T,unit:'s'})}${field('Out','pe-out',Math.min(s[1],T),{step:.1,min:0,max:T,unit:'s'})}${field('Fade in','pe-fin',s[2]??.5,{step:.1,min:0,max:5,unit:'s'})}${field('Fade out','pe-fout',s[3]??.5,{step:.1,min:0,max:5,unit:'s'})}</div>
@@ -323,8 +361,33 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const items=list.flatMap((e,i)=>(spans(e.key)||[[0,T]]).map(([a,b],k)=>({id:i+':'+k,i,e,start:Math.max(0,a),end:Math.max(Math.max(0,a)+.01,Math.min(b,T))})));
     const layers=stackRows(items);laneRows=layers.count;const step=laneRows<=2?36/laneRows:ROW,h=Math.floor(step)-2;
     return items.map(it=>{const e=it.e,x=it.start/T*100,w=Math.max(.6,(it.end-it.start)/T*100);
-      return `<button type="button" class="people-bar ${e.key===sel?'selected':''}" data-action="pe-lane" data-index="${it.i}" style="left:${x}%;width:${w}%;top:${1+layers.row.get(it.id)*step}px;height:${h}px" title="${escape(personName(e))}: ${escape(doing(e))} · ${escape(spanText(spans(e.key),T))}">${escape(personName(e))}</button>`;}).join('');
+      return `<button type="button" class="people-bar ${e.key===sel?'selected':''} ${spans(e.key)?'':'whole'}" data-action="pe-lane" data-index="${it.i}" style="left:${x}%;width:${w}%;top:${1+layers.row.get(it.id)*step}px;height:${h}px" title="${escape(personName(e))}: ${escape(doing(e))} · ${escape(spanText(spans(e.key),T))}">${escape(personName(e))}</button>`;}).join('');
   }
+  // A bar's ends drag to set when the person comes in and goes out; its middle drags the whole stay along the chapter
+  // (snapped to a tenth of a second). A bar pulled back to the whole chapter loses its span again.
+  let barDrag=null,barSuppress=0;
+  document.addEventListener('pointerdown',ev=>{
+    const bar=ev.target.closest?.('.people-bar');if(!bar||ev.button!==0||!editing())return;
+    const key=laneKeys[Number(bar.dataset.index)],T=seconds(),r=bar.getBoundingClientRect(),lane=bar.parentElement.getBoundingClientRect();if(!key||!T||!lane.width)return;
+    const s=spans(key)?.[0]||[0,T],grip=Math.min(8,r.width/3),edge=ev.clientX-r.left<grip?'in':r.right-ev.clientX<grip?'out':'move';
+    barDrag={key,bar,edge,x:ev.clientX,width:lane.width,T,from:[Math.max(0,s[0]),Math.min(s[1],T)],now:null,whole:!spans(key)};
+  },true);
+  document.addEventListener('pointermove',ev=>{
+    const d=barDrag;if(!d||(!d.now&&Math.abs(ev.clientX-d.x)<3))return;
+    const dt=(ev.clientX-d.x)/d.width*d.T,snap=v=>Math.round(v*10)/10;let [a,b]=d.from;
+    if(d.edge==='in')a=Math.max(0,Math.min(b-.2,snap(a+dt)));
+    else if(d.edge==='out')b=Math.min(d.T,Math.max(a+.2,snap(b+dt)));
+    else if(!d.whole){const len=b-a;a=Math.max(0,Math.min(d.T-len,snap(a+dt)));b=a+len;}
+    d.now=[a,b];d.bar.style.left=a/d.T*100+'%';d.bar.style.width=Math.max(.6,(b-a)/d.T*100)+'%';
+    status(`${personName(entry(d.key))}: in the room from ${r1(a)} to ${r1(b)} s.`);
+  },true);
+  const endBar=()=>{
+    const d=barDrag;barDrag=null;if(!d?.now)return;barSuppress=performance.now()+350;
+    const [a,b]=d.now,name=personName(entry(d.key));
+    if(a<=.001&&b>=d.T-.001){if(d.whole)rerender();else write(p=>{if(p.when)delete p.when[d.key];},`${name} is in the room for the whole chapter.`);return;}
+    setSpan(d.key,s=>{s[0]=a;s[1]=b;});status(`${name}: in the room from ${r1(a)} to ${r1(b)} s. Drag the bar's ends to change it.`);
+  };
+  document.addEventListener('pointerup',endBar,true);document.addEventListener('pointercancel',()=>{if(barDrag?.now)rerender();barDrag=null;},true);
   // Inline heights for the lane and its row (empty string while two rows fit the standard lane).
   const laneHeight=()=>{lane();return laneRows>2?laneRows*ROW+4:0;};
   const header=()=>{const e=sel&&entry(sel);return e?{name:personName(e),detail:pose.active()===sel?'Pose mode'+(pose.joint()?' · '+pose.jointLabel():''):doing(e)}:null;};

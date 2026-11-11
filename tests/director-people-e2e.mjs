@@ -78,6 +78,14 @@ try{
   const e1=await until(async()=>{const e=await edits();return e?.when&&Object.values(e.when)[0]?.[0]?.[1]===9?e:null;},'the span is in the cut');
   check(Object.values(e1.when)[0][0][0]===2,'a person can be given seconds in the room: '+JSON.stringify(Object.values(e1.when)[0]));
 
+  // the People lane: drag a bar's right end to take the person out earlier
+  const bar=await until(()=>page.evaluate(()=>{const b=[...document.querySelectorAll('#director-timeline .people-bar')].find(b=>!b.classList.contains('whole'));if(!b)return null;b.scrollIntoView({block:'nearest'});const r=b.getBoundingClientRect();return {x:r.right-3,y:r.top+r.height/2,w:b.parentElement.getBoundingClientRect().width};}),'a bar with a span in the People lane');
+  await page.mouse.move(bar.x,bar.y);await page.mouse.down();for(let i=1;i<=6;i++){await page.mouse.move(bar.x-i*20,bar.y);await wait(20);}await page.mouse.up();
+  const trimmed=await until(async()=>{const w=Object.values((await edits())?.when||{})[0]?.[0];return w&&w[1]<8.9&&w[0]===2?w:null;},'the dragged end changes the span');
+  check(Math.abs(trimmed[1]-(9-120/bar.w*18))<.15,'dragging the end of a bar in the People lane changes when the person leaves: '+JSON.stringify(trimmed));
+  // the swatches show the model's own colours, not one placeholder
+  const swatches=await page.$$eval('#director-panel .people-colors input',l=>l.map(i=>i.value));
+  check(new Set(swatches).size>=3,'the clothes swatches show the colours the model has: '+swatches.join(' '));
   // add from the library
   const n0=(await page.$$('#director-panel .people-row')).length;
   await click('#director-panel [data-action="pe-add"]');await until(()=>page.$('#people-library[open] .pl-card'),'the people library opens');

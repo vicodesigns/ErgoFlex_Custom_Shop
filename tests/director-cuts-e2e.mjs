@@ -14,9 +14,9 @@ const {base,page,errors,close}=await openDirectorBrowser();
 const passed=[],check=(ok,what)=>{assert.ok(ok,what);passed.push(what);};
 const until=async(fn,what,ms=120000)=>{const end=Date.now()+ms;for(;;){const v=await fn().catch(()=>null);if(v)return v;if(Date.now()>end)throw Error('timed out: '+what+' · status: '+await status(page));await wait(250);}};
 const live=()=>page.evaluate(()=>location.pathname==='/experience/'&&/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''));
-const cutSelect=()=>page.evaluate(()=>{const el=document.querySelector('#director-timeline select[name="film-cut"]');return el?{value:el.value,options:[...el.options].map(o=>o.value)}:null;});
+const cutSelect=()=>page.evaluate(()=>{const el=document.querySelector('#director-panel select[name="film-cut"]');return el?{value:el.value,options:[...el.options].map(o=>o.value)}:null;});
 const project=()=>page.evaluate(()=>{try{const h=new URLSearchParams(location.hash.slice(1)),c=h.get('cut').replaceAll('-','+').replaceAll('_','/');return {id:JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(c),x=>x.charCodeAt(0)))).id,film:h.get('film')};}catch{return null;}});
-const choose=v=>page.evaluate(v=>{const el=document.querySelector('#director-timeline select[name="film-cut"]');el.value=v;el.dispatchEvent(new Event('change',{bubbles:true}));},v);
+const choose=v=>page.evaluate(v=>{const el=document.querySelector('#director-panel select[name="film-cut"]');el.value=v;el.dispatchEvent(new Event('change',{bubbles:true}));},v);
 let made=null;
 try{
   await openChapter(page,base,chapterList().find(c=>c.id==='rise'));
@@ -27,7 +27,7 @@ try{
   await until(async()=>(await project())?.film?.includes(ALT)&&await live(),'the alternate cut\'s chapter opens');
   const alt=await project(),sel=await until(cutSelect,'the Cut menu in the other cut');
   check(alt.id==='film-alt-rise'&&sel.value==='alt','switching opens the same chapter of the other cut as its own project: '+alt.id);
-  check(await page.evaluate(()=>/rise/.test(document.querySelector('#director-timeline select[name="film-chapter"]')?.selectedOptions[0]?.textContent||'')),'the chapter picker follows the cut');
+  check(await page.evaluate(()=>/rise/.test(document.querySelector('#director-panel select[name="film-chapter"]')?.selectedOptions[0]?.textContent||'')),'the chapter picker follows the cut');
   // ---- duplicate it
   await choose('__new');
   await until(()=>page.$('#film-cut-new[open] input[name="cut-name"]'),'the new cut dialog');

@@ -12,7 +12,7 @@ import { buildInstitutionalRoom } from './institutional-room.mjs?v=people-vistas
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
 import { polishRoomProp } from './room-polish.mjs?v=table-clearance-20261021';
 import { RoomLife } from './room-life.mjs?v=commons-home-comfort-20261024';
-import { RoomPeople } from './room-people.mjs?v=room-people-20261110e';
+import { RoomPeople } from './room-people.mjs?v=room-people-20261110f';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
@@ -121,6 +121,14 @@ export const PROP_LIBRARY = {
                     rig.traverse(obj => {
                         if (!obj.isMesh) return;
                         obj.castShadow = true; obj.receiveShadow = true;
+                        // personLower: how much of each vertex hangs on the hips and legs, so a one-piece outfit can take one
+                        // colour above the waist and another below (room-people.mjs recolor)
+                        const g = obj.geometry, si = g.getAttribute('skinIndex'), sw = g.getAttribute('skinWeight');
+                        if (obj.isSkinnedMesh && si && sw && !g.getAttribute('personLower')) {
+                            const low = obj.skeleton.bones.map(bone => /^(pelvis|thigh|calf|foot|ball)(_|$)/.test(bone.name)), part = new Float32Array(si.count);
+                            for (let i = 0; i < si.count; i++) { let sum = 0; for (let k = 0; k < 4; k++) { const w = sw.getComponent(i, k); if (w && low[si.getComponent(i, k)]) sum += w; } part[i] = sum; }
+                            g.setAttribute('personLower', new THREE.BufferAttribute(part, 1));
+                        }
                         const mesh = new THREE.Mesh(obj.geometry, obj.material); mesh.name = obj.name;
                         // where the rest pose puts the vertices (a skinned mesh's own node is ignored; compressed positions are unpacked by the bind matrices)
                         const bind = obj.isSkinnedMesh ? new THREE.Matrix4().multiplyMatrices(obj.skeleton.bones[0].matrixWorld, obj.skeleton.boneInverses[0]) : obj.matrixWorld;

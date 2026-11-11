@@ -581,3 +581,20 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 #film-cut-new::backdrop{background:#02080cb8}
 #film-cut-new label{display:grid;gap:4px;margin:10px 0 14px;font-size:11px;color:#9fb7c6}
 #film-cut-new input{min-height:34px;padding:5px 9px;font-size:14px}
+/* People lane bars: grab the ends to set in / out, the middle to slide the stay */
+.people-bar{cursor:grab;touch-action:none}.people-bar.whole{cursor:pointer}
+.people-bar::before,.people-bar::after{content:"";position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize}
+.people-bar::before{left:0;border-left:2px solid #ffd0ea}.people-bar::after{right:0;border-right:2px solid #ffd0ea}
+/* Pose mode: fingers slider, save a pose, saved poses */
+.pose-grip{grid-template-columns:1fr 1fr 1fr}
+#director-panel .pose-grip label{grid-column:1/-1;display:grid;grid-template-columns:1fr;gap:2px;margin:0;font-size:11px;color:#9fb7c6;text-align:left}
+.pose-grip input[type=range]{width:100%;accent-color:#ffb44a}
+.pose-grip small{font-size:9.5px;color:#7f97a6;text-align:center}.pose-grip small:first-of-type{text-align:left}.pose-grip small:last-of-type{text-align:right}
+.pose-save{display:flex;gap:6px}.pose-save input{flex:1;min-width:0;min-height:30px;padding:4px 8px}
+.pose-saved{display:flex;flex-wrap:wrap;gap:5px}
+.pose-saved-item{display:inline-flex;border:1px solid #ffb44a66;border-radius:8px;overflow:hidden;background:#1d1608}
+.pose-saved-item.other{border-color:#8bc5df40;background:#0b1820}
+.pose-saved-item button{min-height:26px;padding:2px 9px;border:0;border-radius:0;background:none;color:#ffe2b0;font-size:11.5px;cursor:pointer}
+.pose-saved-item.other button{color:#cfe6f2}
+.pose-saved-item .pose-saved-x{padding:2px 7px;border-left:1px solid #ffffff1f;color:#9fb7c6}
+.pose-saved-item button:hover{background:#ffffff14}
