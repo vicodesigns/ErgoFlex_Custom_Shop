@@ -34,8 +34,8 @@ export const sceneOverrides = {
             morning:{description:'Daylight planning · call sheets, shot lists and equipment checkout',power:1.1,ambient:.32,exposure:1.0,height:35,tilt:0,leds:false},
             afternoon:{description:'Balanced work light · rough cuts, print proofs and shared edit notes',power:1.3,ambient:.35,exposure:1.0,height:28,tilt:0,leds:false},
             evening:{description:'Neutral grading surround · reference swatches, cue sheets and headphone mixing',key:'#e6edf7',fill:'#c9d3df',power:.24,ambient:.22,bounce:.3,practical:.36,exposure:1.0,colors:['#f2f4f7','#9fb2c6'],height:28,tilt:0,color:'#637788',leds:true},
-            night:{description:'Screening · dim workstations, projection and written audience feedback',key:'#8ea6c4',fill:'#7f97b5',power:.1,ambient:.16,bounce:.2,practical:.14,exposure:1.02,height:28,tilt:0,color:'#344653',leds:true},
-            party:{description:'Student reel showcase · portfolio critique and shared notes',key:'#ffe2bf',fill:'#d9cbb8',power:.7,ambient:.25,bounce:.45,practical:.8,exposure:.98,colors:['#ffd9a8','#e3c7a6'],height:35,tilt:0,color:'#f3bd79',leds:true}
+            night:{description:'Late edit · one bay lit by its screens and a task light, the lab dark around it',key:'#8ea6c4',fill:'#7f97b5',power:.06,ambient:.09,bounce:.11,practical:.14,exposure:1.04,height:28,tilt:0,color:'#344653',leds:true},
+            party:{description:'Screening & wrap · student reels on the big screen, house lights down, food on the critique table',key:'#ffe2bf',fill:'#d9cbb8',power:.12,ambient:.14,bounce:.2,practical:.8,exposure:1.02,colors:['#ffd9a8','#e3c7a6'],height:35,tilt:0,color:'#f3bd79',leds:true}
         },
         layout(tier,l){
             l.name=NAMES[l.index]+' · '+COUNTS[l.index]+' desks';
@@ -871,10 +871,12 @@ export function decorate(kit){
 // Additive pools for the screen, desk columns and the work wall; no lights.
 function pools(kit){
     const {w,bz,layout:l}=kit,layer=createPoolLayer(kit.root,'Media lab light pools');kit.mediaPools=layer;
-    layer.add(kit.root,[0,4,bz+1400],[4400,2600],'#6f93c8',[.05,.04,.1,.36,.18]);
+    layer.add(kit.root,[0,4,bz+1400],[4400,2600],'#6f93c8',[.05,.04,.1,.03,.4]);
     const columns=l.index===0?2:l.index<3?3:4,xs=columns===2?[-w/2+1800,w/2-2100]:Array.from({length:columns},(_,n)=>-w/2+1800+n*(w-3600)/(columns-1));
     // Only occupied workstation slots get a task-light pool.
-    for(let n=0;n<COUNTS[l.index];n++)layer.add(kit.root,[xs[n%columns],3,bz+2400+Math.floor(n/columns)*4000+300],[1900,1500],'#eef3fb',[.04,.04,.14,.1,.18]);
+    // Late edit: only the featured bay is in use; the others are asleep.
+    for(let n=0;n<COUNTS[l.index];n++)layer.add(kit.root,[xs[n%columns],3,bz+2400+Math.floor(n/columns)*4000+300],[1900,1500],'#eef3fb',[.04,.04,.14,n?.012:.3,.05]);
+    layer.add(kit.root,[xs[0]+250,2,bz+2400-150],[1500,1100],'#ffd9ad',[0,0,0,.34,0]);
     if(kit.mediaGallery)layer.add(kit.mediaGallery,[0,100,40],[2200,1400],'#ffd6a2',[.03,.03,.05,.04,.6],'back');
     const critique=kit.byId('activity-table');if(critique)layer.add(critique,[0,4,0],[2400,1600],'#ffd9a8',[0,0,.05,.04,.35]);
 }
@@ -904,28 +906,32 @@ export function activityMaterials(k,phase,y){
     // are separate editable furniture-local kits in campus-lived-in.mjs.
 }
 export function atmosphere(phase,gain,kit){
+    // House lights: full for planning and editing, dimmed to a grading surround,
+    // off for the screening (exit signs, screens and projection carry the room).
+    if(kit.glow)kit.glow.emissiveIntensity=[.5,.56,.16,.012,.04][phaseIndex(phase)]*gain;
     for(const m of kit.mediaDiffusers||[])m.emissiveIntensity=phase==='afternoon'?.65:phase==='night'?0:phase==='party'?.3:.18;
     const p=phaseIndex(phase);
-    for(const m of kit.screenMats)if(m.userData.screenVariant===3)m.emissiveIntensity=[.24,.26,.4,.8,.68][p];
-    if(kit.lights?.[0])kit.lights[0].intensity*=[.85,.8,.55,.3,.7][p];
+    for(const m of kit.screenMats)if(m.userData.screenVariant===3)m.emissiveIntensity=[.24,.26,.4,.06,.9][p];
+    if(kit.lights?.[0])kit.lights[0].intensity*=[.85,.8,.55,1.2,.3][p];
     if(kit.mediaBoardPhase!==phase){
         const face=kit.board?.children.find(o=>o.isMesh&&o.geometry.type==='PlaneGeometry'&&o.material.map?.image?.getContext);
         if(face){const c=face.material.map.image;drawBoard(c.getContext('2d'),c.width,c.height,kit.spec,0,phase);face.material.map.needsUpdate=true;}
         kit.mediaBoardPhase=phase;
     }
-    // Screening and showcase: room light 1 becomes the screen's spill.
+    // Screening: room light 1 becomes the screen's spill. Late edit: it is
+    // the lab's one remaining night light, so the dark bays still read.
     const spill=kit.lights?.[1];if(spill){
         spill.userData.authored??={at:spill.position.clone()};
-        if(phase==='night'||phase==='party'){spill.position.set(0,1500,kit.bz+1600);spill.color.set(phase==='night'?'#8fb3e0':'#ffd6aa');spill.intensity=(kit.root.scale.x*1000)**2*(phase==='night'?3.5:2.2)*gain;}
-        else spill.position.copy(spill.userData.authored.at);
+        if(phase==='party'){spill.position.set(0,1500,kit.bz+1600);spill.color.set('#9fbbe4');spill.intensity=(kit.root.scale.x*1000)**2*3.5*gain;}
+        else{spill.position.copy(spill.userData.authored.at);if(phase==='night')spill.intensity*=.2;}
     }
     if(kit.sky?.map?.image?.getContext){
         const c=kit.sky.map.image.getContext('2d'),W=c.canvas.width,H=c.canvas.height;
         drawOccCampusView(c,W,H,phase);
         kit.sky.map.needsUpdate=true;
     }
-    if(kit.mediaBlind){const drop=[.15,.35,.75,1,.85][p],b=kit.mediaBlind;b.scale.y=drop;b.position.y=875*(1-drop);b.material.map.repeat.y=6*drop;}
-    if(kit.mediaBeam)kit.mediaBeam.color.setScalar([0,0,0,.09,.05][p]);
+    if(kit.mediaBlind){const drop=[.15,.35,.75,.55,1][p],b=kit.mediaBlind;b.scale.y=drop;b.position.y=875*(1-drop);b.material.map.repeat.y=6*drop;}
+    if(kit.mediaBeam)kit.mediaBeam.color.setScalar([0,0,0,0,.09][p]);
     if(kit.mediaOnAir)kit.mediaOnAir.emissiveIntensity=[.04,.12,.7,.015,.04][p];
     kit.mediaPools?.apply(p,gain);
     if(kit.room.ceilingFixture)for(const g of kit.mediaCeiling||[])if(g.parent!==kit.room.ceilingFixture)kit.room.ceilingFixture.attach(g);
