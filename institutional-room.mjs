@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom, detailKit } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
-import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261110';
-import { addCampusLife } from './campus-lived-in.mjs?v=env-shared-20261110';
+import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261110b';
+import { addCampusLife } from './campus-lived-in.mjs?v=env-shared-20261110b';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 
@@ -73,9 +73,11 @@ function dressTileCeiling(room, layout) {
         k.box([120, 6, 120], [x, y - 40, z], '#d6d5cf', null, 'powder');
     }
     for (const z of [mid - 610, mid + 1830]) {
-        // Return grille: dark slots behind a white frame, one tile wide.
+        // Return grille seen from below: an off-white frame, a shaded plenum
+        // behind and off-white louvre blades, so it reads grey, not as a hole.
         k.box([595, 6, 595], [0, y - 3, z - 305], WHITE, null, 'powder');
-        for (let n = 0; n < 11; n++) k.box([520, 4, 24], [0, y - 7, z - 305 - 250 + n * 50], '#3a3d40', null, 'metal');
+        k.box([530, 4, 530], [0, y - 7, z - 305], '#a9a8a2', null, 'powder');
+        for (let n = 0; n < 11; n++) k.box([520, 14, 30], [0, y - 14, z - 305 - 250 + n * 50], '#e6e5df', [.5, 0, 0], 'powder');
     }
     // Pendent sprinklers on a ~3 m grid, a smoke detector and an occupancy sensor.
     for (let x = -w / 2 + 1500; x < w / 2 - 600; x += 3000) for (let z = bz + 1500; z < bz + d - 600; z += 3000) {
@@ -86,6 +88,73 @@ function dressTileCeiling(room, layout) {
     k.build(group, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .55 }));
     group.children.at(-1).name = 'Ceiling services · diffusers, returns, sprinklers, detectors';
     group.children.at(-1).castShadow = false;
+}
+
+// Reversible daypart moves for furnishings that room-life does not stage
+// (student tables, review chairs). Each move is a root-space matrix stored as
+// userData.dailyDelta, the same convention room-life uses, so saved Studio
+// transforms stay the owner's base arrangement. A move can carry what stands
+// on a support: props resting inside [x, z, halfX, halfZ] of its base
+// footprint at 250-1000 mm are adopted, including props that load later.
+function phaseMover(root, room) {
+    const entries = [], I = new THREE.Matrix4();
+    let last = 0, seen = null;
+    const api = {
+        add(objects, carry, target) { entries.push({ objects, carry, target, D: new THREE.Matrix4(), carried: new Set() }); return api; },
+        apply(i) {
+            last = i;
+            for (const e of entries) {
+                const objects = (typeof e.objects === 'function' ? e.objects() : e.objects).filter(Boolean);
+                // carry: one box [x, z, halfX, halfZ] (things on the top) or a list of
+                // [x, z, halfX, halfZ, yMin, yMax, idPattern] boxes (e.g. bags at the chairs).
+                for (const box of e.carry ? (Array.isArray(e.carry[0]) ? e.carry : [e.carry]) : []) {
+                    const [x, z, hx, hz, y0 = 250, y1 = 1000, only = null] = box;
+                    for (const o of root.children) {
+                        if (e.carried.has(o) || objects.includes(o) || o.userData.phaseCarried || !o.userData.propId || (only && !only.test(o.userData.propId))) continue;
+                        const p = o.position;
+                        if (p.y > y0 && p.y < y1 && Math.abs(p.x - x) < hx && Math.abs(p.z - z) < hz) { o.updateMatrix(); e.D.clone().multiply(o.matrix).decompose(o.position, o.quaternion, o.scale); o.userData.phaseCarried = true; e.carried.add(o); }
+                    }
+                }
+                const T = e.target(i) || I, change = T.clone().multiply(e.D.clone().invert()), still = T.equals(I);
+                for (const o of [...objects, ...e.carried]) {
+                    o.updateMatrix(); change.clone().multiply(o.matrix).decompose(o.position, o.quaternion, o.scale);
+                    if (still) delete o.userData.dailyDelta; else o.userData.dailyDelta = T.toArray();
+                    o.updateMatrixWorld(true);
+                }
+                if (objects.length || !e.objects.call) e.D.copy(T); else e.D.copy(I);
+            }
+            // Props arrive after the shell: stage them once they have loaded.
+            if (room.ready && room.ready !== seen) { seen = room.ready; room.ready.then(() => api.apply(last)).catch(() => {}); }
+            return api;
+        }
+    };
+    return api;
+}
+// Pivot a furnishing group: move its centre [x, z] by [dx, dz] and turn it by `turn` radians.
+export const pivotMove = (x, z, dx, dz, turn = 0) => new THREE.Matrix4().makeTranslation(x + dx, 0, z + dz).multiply(new THREE.Matrix4().makeRotationY(turn)).multiply(new THREE.Matrix4().makeTranslation(-x, 0, -z));
+
+// Power where powered desks stand: duplex sockets at 400 mm along the back
+// and side walls (and a switch bank by the door), flush floor boxes under each
+// free-standing ErgoFlex station and table group. One merged mesh per wall,
+// so cutaway walls take their sockets with them.
+function addPower(kit, floorAt) {
+    const { w, d, bz, front, back, right, left } = kit, mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .5 });
+    const socket = (k, place, y = 400) => { k.box(...place([80, 120, 8], y, 0), '#ecebe6', null, 'powder'); for (const o of [-26, 26]) k.box(...place([30, 4, 3], y + o, 5), '#3b3d40'); };
+    const wb = detailKit();
+    for (let x = -w / 2 + 900; x < w / 2 - 600; x += 2400) socket(wb, (size, y, dz) => [size, [x, y, bz + 4 + dz]]);
+    wb.build(back, mat);
+    const rb = detailKit(), doorZ = front - 1600;
+    for (let z = bz + 1200; z < front - 600; z += 2400) if (Math.abs(z - doorZ) > 900) socket(rb, (size, y, dz) => [[size[2], size[1], size[0]], [w / 2 - 4 - dz, y, z]]);
+    // Light switches and the occupancy-sensor dimmer beside the door, at 1100 mm.
+    for (const o of [0, 1]) { rb.box([10, 120, 75], [w / 2 - 5, 1100, doorZ - 700 - o * 85], '#ecebe6', null, 'powder'); rb.box([12, 40, 22], [w / 2 - 9, 1100, doorZ - 700 - o * 85], '#d9d8d2', null, 'powder'); }
+    rb.build(right, mat);
+    const lb = detailKit();
+    for (const z of [bz + 900, front - 900]) socket(lb, (size, y, dz) => [[size[2], size[1], size[0]], [-w / 2 + 4 + dz, y, z]]);
+    lb.build(left, mat);
+    const fb = detailKit();
+    for (const [x, z] of floorAt) { fb.box([170, 4, 170], [x, 2, z], '#8d8a80', null, 'metal'); fb.box([120, 5, 60], [x, 3, z - 25], '#3b3d40', null, 'rubber'); fb.box([60, 5, 30], [x + 40, 3, z + 40], '#b59a5a', null, 'metal'); }
+    const floorGroup = new THREE.Group(); floorGroup.name = 'Floor power boxes'; floorGroup.userData.grooveMarker = true; kit.root.add(floorGroup); fb.build(floorGroup, mat);
+    floorGroup.traverse(o => { if (o.isMesh) { o.castShadow = false; o.raycast = () => {}; } });
 }
 
 export function buildInstitutionalRoom(room, root, layout, h) {
@@ -248,10 +317,21 @@ export function buildInstitutionalRoom(room, root, layout, h) {
         w, d, ceiling, bz, front, index,
         wall, trim, accent, metal, ink, oak, paper, seat, glow, taskSeat, floor,
         asset, canvasMat, label, chair, table, monitor, cabinet, cart, byId, drawBoard, drawScreen,
+        phaseMover: () => phaseMover(root, room), pivotMove,
         back, right, left, window, door, board, sky, screenMats
     };
     group.furnish(kit);
+    if (TILE_CEILINGS.has(spec.id)) {
+        // Floor boxes under the stations (towards the back edge of each desk) and the student tables.
+        const at = [...(layout.stations || []).map(st => { const a = (st.turn || 0) * Math.PI / 180; return [st.at[0] - Math.sin(a) * 250, st.at[1] - Math.cos(a) * 250]; }),
+            ...root.children.filter(o => /^student-table-/.test(o.userData.propId || '')).map(o => [o.position.x, o.position.z])];
+        addPower(kit, at);
+    }
     const dressAtmosphere = enrichInstitutionalRoom(kit);
+    // Library props may belong to some dayparts only (placement.phases, as on
+    // desks): a calculator left at first bell, the takeout boxes at the wrap.
+    const decorate = room.decorateProp;
+    room.decorateProp = (object, placement) => { if (placement.phases) object.userData.propPhases = placement.phases; decorate?.(object, placement); };
     // The photographed outlook takes over the daylight pane once it has loaded, whichever material a group module left on it.
     const windowVista = attachVista(skyPane, WINDOW_VISTAS[spec.id] || 'campus'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     const campusLife = addCampusLife({ room, root, layout, asset, byId });
@@ -289,6 +369,8 @@ export function buildInstitutionalRoom(room, root, layout, h) {
         if (TILE_CEILINGS.has(spec.id)) dressTileCeiling(room, layout);
         visionPanel.emissiveIntensity = TILE_CEILINGS.has(spec.id) ? [0, 0, .15, .85, .3][Math.max(0, ['morning', 'afternoon', 'evening', 'night', 'party'].indexOf(phase))] : 0;
         corridor?.apply(phase, gain);
+        for (const o of root.children) if (o.userData.propPhases) o.visible = o.userData.propPhases.includes(phase);
+        root.traverse(o => { if (o.userData.propPhases && o.parent !== root) o.visible = o.userData.propPhases.includes(phase); });
         dressAtmosphere(phase, gain);
         campusLife.apply(phase, gain);
         root.userData.atmosphere = phase;

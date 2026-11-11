@@ -65,9 +65,18 @@ export const sceneOverrides = {
                 l.media.lounge={at:[w*.22,lz],display:[w*.22,front-(l.index===3?2600:3800)]};
                 l.props.push(prop('ergoflex-couch',w*.22,lz),prop('ergoflex-designer-chair',w*.22-1500,lz+500,0,25,.8),prop('ergoflex-designer-chair',w*.22+1500,lz+500,0,-25,.8));
             }
+            // Screening & wrap: food on the critique table (party only).
+            for(const [id,dx,dz,turn] of WRAP_FOOD)l.props.push({...prop(id,ax+dx,az+dz,742,turn),phases:['party']});
+            // Bags at the feet of every other bay, on the side away from the chair's swing.
+            for(const [n,s] of (l.stations||[]).entries()){
+                if(n%3===1)continue;
+                const a=(s.turn||0)*Math.PI/180,side=n%2?1:-1,ox=side*(s.size==='48x30'?920:1080),oz=180;
+                l.props.push(prop(n%3?'backpack':'backpack-daypack',s.at[0]+Math.cos(a)*ox+Math.sin(a)*oz,s.at[1]-Math.sin(a)*ox+Math.cos(a)*oz,0,(s.turn||0)+side*70));
+            }
         }
     }
 };
+const WRAP_FOOD=[['takeout-boxes',-430,-40,15],['coffee-cups',440,-150,0],['soda-bottle',560,60,0]];
 export function stations(_id,l){
     const i=l.index, columns=i===0?2:i<3?3:4;
     const xs=columns===2?[-l.width/2+1800,l.width/2-2100]:Array.from({length:columns},(_,n)=>-l.width/2+1800+n*(l.width-3600)/(columns-1));
@@ -76,7 +85,9 @@ export function stations(_id,l){
         const role=roles[n],narrow=role==='accessible-edit'||(i===0&&role==='digital-art');
         return {id:role+'-'+String(n+1).padStart(2,'0'),name:roleName[role]+' '+(n+1),role,
             at,size:narrow?'48x30':'60x30',turn:i>=3&&Math.floor((n+1)/columns)===2?180:0,height:28,tilt:0,chair:role!=='accessible-edit',
-            desktop:[prop('headphones',narrow?-470:-610,-130),...(role==='digital-art'||role==='animation'?[prop('sketchbook',narrow?430:620,110,1)]:[])],shelf:[]};
+            // Each bay is someone's: a mug, a bottle or loose notes, by seat.
+            desktop:[prop('headphones',narrow?-470:-610,-130),...(role==='digital-art'||role==='animation'?[prop('sketchbook',narrow?430:620,110,1)]:[]),
+                ...[[prop('insulated-mug',narrow?-280:-360,190)],[prop('water-bottle',narrow?300:400,200)],[],[prop('papers',narrow?230:300,170,0,-12)],[prop('insulated-mug',narrow?260:330,200)]][n%5]],shelf:[]};
     });
 }
 export const finish = spec => ({name:spec.name+' · acoustic carpet, navy felt & silver metal',ground:'#626c7c',wood:.58,metal:.3,stone:.58,night:.92,partyDay:true});
@@ -451,7 +462,15 @@ export function furnish(kit){
     const sg=l.media.stage,stage=asset('capture-stage','Capture stage · camera, backdrop & softboxes',[l.media.capture[0],0,l.media.capture[1]]);
     stage.rotation.y=Math.PI;const back=sg.backdrop,cam=sg.camera,mid=(back+cam)/2,padW=sg.depth===3000?2800:2600;
     box(stage,[padW,15,sg.depth],[0,7.5,mid],mat('#7b828a','stone'),14);
-    const chroma=kit.material('#1fa64a',{roughness:.92,side:THREE.DoubleSide});chroma.userData.roomSurface='fabric';
+    // Chroma muslin: three sewn widths with seams, soft hanging folds and a
+    // little light fall-off toward the hem, not a flat painted plane.
+    const chromaMap=(()=>{const c=document.createElement('canvas');c.width=256;c.height=256;const g=c.getContext('2d');
+        g.fillStyle='#1fa64a';g.fillRect(0,0,256,256);
+        for(let n=0;n<26;n++){const x=(n*37.3)%256,w=6+(n*13)%14,gr=g.createLinearGradient(x-w,0,x+w,0);gr.addColorStop(0,'rgba(0,40,10,0)');gr.addColorStop(.5,n%3?'rgba(0,40,10,.16)':'rgba(190,255,200,.10)');gr.addColorStop(1,'rgba(0,40,10,0)');g.fillStyle=gr;g.fillRect(x-w,0,2*w,256);}
+        const v=g.createLinearGradient(0,0,0,256);v.addColorStop(0,'rgba(255,255,255,.06)');v.addColorStop(.7,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,30,10,.18)');g.fillStyle=v;g.fillRect(0,0,256,256);
+        for(const x of [85,171]){g.fillStyle='rgba(8,60,25,.55)';g.fillRect(x,0,2,256);g.fillStyle='rgba(150,230,170,.25)';g.fillRect(x+2,0,1,256);}
+        const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t;})();
+    const chroma=kit.material('#ffffff',{map:chromaMap,roughness:.92,side:THREE.DoubleSide});chroma.userData.roomSurface='fabric';chroma.userData.roomPaletteLocked=chroma.userData.roomFinishLocked=true;
     const roll=box(stage,[2350,2220,24],[0,1130,back-4],chroma,4);
     // Dark charcoal acoustic/light-block backing on the rear of the chroma wall
     // so reverse views see a tailored studio flat rather than raw green bleed.
@@ -868,6 +887,32 @@ export function decorate(kit){
     }
     pools(kit);
 }
+// Daylight through the ocean window: the open part of the glazing (below the
+// blind) projected on the carpet along the shared sun direction
+// (room-refinement DAY_ANGLES), so its place and length follow the hour and
+// the blind. Soft in the morning, a short bright patch in the afternoon, long
+// and warm at dusk, none at night or behind the screening blackout.
+const SUN_DIR={morning:[.62,-.36],afternoon:[1.45,.12],evening:[.32,.48]},SUN_LEVEL={morning:.16,afternoon:.3,evening:.2};
+const BLIND_DROP=[.15,.35,.75,.55,1];
+function mediaSun(kit){
+    const {w,d,bz,front}=kit,z0=bz+d*.54,half=d*.24;
+    const c=document.createElement('canvas');c.width=256;c.height=128;const g=c.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,256,128);g.filter='blur(5px)';
+    for(const [a,b] of [[.03,.32],[.35,.65],[.68,.97]]){g.fillStyle='#fff';g.fillRect(a*256,10,(b-a)*256,108);}
+    const map=new THREE.CanvasTexture(c);map.colorSpace=THREE.SRGBColorSpace;
+    const geo=new THREE.PlaneGeometry(1,1,12,12);geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count*3),3));
+    const mat=new THREE.MeshBasicMaterial({map,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
+    const sun=new THREE.Mesh(geo,mat);sun.name='Window daylight patch';sun.renderOrder=2;sun.raycast=()=>{};sun.castShadow=sun.receiveShadow=false;sun.frustumCulled=false;kit.root.add(sun);
+    return (phase,color,gain)=>{
+        const dir=SUN_DIR[phase];sun.visible=!!dir;if(!dir)return;
+        const [elevation,sweep]=dir,top=2600-BLIND_DROP[phaseIndex(phase)]*1750,pos=geo.attributes.position,uv=geo.attributes.uv,col=geo.attributes.color;
+        for(let i=0;i<pos.count;i++){
+            const y=800+uv.getY(i)*(top-800),z=z0-half+uv.getX(i)*half*2,t=y/elevation,x=-w/2+25+t,zz=z+sweep*t;
+            const edge=Math.min(w/2-40-x,zz-bz-30,front-30-zz),v=THREE.MathUtils.smoothstep(edge,0,420)/(1+t/6000);
+            pos.setXYZ(i,Math.min(x,w/2-40),9,THREE.MathUtils.clamp(zz,bz+30,front-30));col.setXYZ(i,v,v,v);
+        }
+        pos.needsUpdate=col.needsUpdate=true;geo.computeBoundingSphere();mat.color.set(color).multiplyScalar(SUN_LEVEL[phase]*gain);
+    };
+}
 // Additive pools for the screen, desk columns and the work wall; no lights.
 function pools(kit){
     const {w,bz,layout:l}=kit,layer=createPoolLayer(kit.root,'Media lab light pools');kit.mediaPools=layer;
@@ -905,7 +950,18 @@ export function activityMaterials(k,phase,y){
     // Printed call sheets, edit tools, grading references and critique papers
     // are separate editable furniture-local kits in campus-lived-in.mjs.
 }
+// Screening & wrap (party): the critique table's review chairs leave the
+// table and form a short row facing the screen; larger labs move the end
+// chairs into a second row. Reversible (room-life's dailyDelta convention).
+function wrapSeating(kit){
+    const m=kit.phaseMover(),[ax,az]=kit.layout.activity,find=(x,z)=>()=>[kit.root.children.find(o=>o.userData.propId==='ergoflex-designer-chair'&&Math.hypot(o.position.x-x,o.position.z-z)<120)];
+    const seats=[[-400,-700,0,-1200],[400,-700,0,-400],[-400,700,1,400],[400,700,1,1200]];
+    for(const [dx,dz,back,rx] of seats)m.add(find(ax+dx,az+dz),null,i=>i===4?kit.pivotMove(ax+dx,az+dz,rx-dx,-1500-dz,back?0:Math.PI):null);
+    if(kit.layout.index>=2)for(const side of [-1,1])m.add(find(ax+side*1000,az),null,i=>i===4?kit.pivotMove(ax+side*1000,az,side*600-side*1000,-2300,-side*Math.PI/2):null);
+    return m;
+}
 export function atmosphere(phase,gain,kit){
+    (kit.mediaWrap??=wrapSeating(kit)).apply(phaseIndex(phase));
     // House lights: full for planning and editing, dimmed to a grading surround,
     // off for the screening (exit signs, screens and projection carry the room).
     if(kit.glow)kit.glow.emissiveIntensity=[.5,.56,.16,.012,.04][phaseIndex(phase)]*gain;
@@ -930,7 +986,8 @@ export function atmosphere(phase,gain,kit){
         drawOccCampusView(c,W,H,phase);
         kit.sky.map.needsUpdate=true;
     }
-    if(kit.mediaBlind){const drop=[.15,.35,.75,.55,1][p],b=kit.mediaBlind;b.scale.y=drop;b.position.y=875*(1-drop);b.material.map.repeat.y=6*drop;}
+    kit.mediaSun??=mediaSun(kit);kit.mediaSun(phase,kit.spec.modes[phase]?.key||'#fff4e0',gain);
+    if(kit.mediaBlind){const drop=BLIND_DROP[p],b=kit.mediaBlind;b.scale.y=drop;b.position.y=875*(1-drop);b.material.map.repeat.y=6*drop;}
     if(kit.mediaBeam)kit.mediaBeam.color.setScalar([0,0,0,0,.09][p]);
     if(kit.mediaOnAir)kit.mediaOnAir.emissiveIntensity=[.04,.12,.7,.015,.04][p];
     kit.mediaPools?.apply(p,gain);

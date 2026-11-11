@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { activityPageMaterial } from './room-activity-print.mjs?v=table-clearance-20261021';
 import { ROOM_DETAIL_PALETTES } from './room-finish-palettes.mjs?v=environment-expert-20261014';
 import { enrichActivityKit } from './room-life-detail.mjs?v=environment-realism-20261019';
-import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261110';
+import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261110b';
 import { settleActivitySupports, bindMeetingSeats, meetingSeatPose } from './room-activity-support.mjs?v=table-clearance-20261021';
 import { detailKit } from './institutional-detail.mjs';
 

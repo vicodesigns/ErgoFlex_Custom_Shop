@@ -364,9 +364,12 @@ const PLANS = {
     'humboldt-table-l1': { fixedOrder: true, tent: 'tentGroup', morning: ['A'], afternoon: ['L', 'G', 'R', 'G'], evening: ['R'], party: ['G', 'L', 'G', 'R'], extras: { afternoon: ['group'], party: ['fieldkit'] } }
 };
 const genericPlan = t => ({ afternoon: ['L', 'R'], evening: t.size[0] * t.size[1] > 2e6 ? ['R'] : [] });
+// One plan per café table (by index, so it is stable between loads): every
+// table tells its own story, some stay empty, none is laid like its neighbour.
 const CAFE_PLANS = [
-    { morning: 'news', afternoon: 'laptop', party: 'cups' }, { afternoon: 'read', evening: 'mugbook' }, { morning: 'cupphone', afternoon: 'tote', party: 'cups' },
-    { afternoon: 'laptop', evening: 'mugbook' }, { afternoon: 'read', party: 'cups' }, { morning: 'cupphone' }, { afternoon: 'cupphone', evening: 'laptop' }, {}
+    { morning: 'news', afternoon: 'laptop', evening: 'tray', party: 'cups' }, { afternoon: 'read', evening: 'mugbook' }, { morning: 'cupphone', afternoon: 'tote', party: 'cups' },
+    { morning: 'tray', afternoon: 'laptop', evening: 'mugbook' }, { afternoon: 'read', party: 'cups' }, { morning: 'cupphone', afternoon: 'plate' }, { afternoon: 'cupphone', evening: 'laptop' }, {},
+    { morning: 'plate', afternoon: 'news', party: 'tray' }, { afternoon: 'tray', evening: 'read' }
 ];
 const SCREEN_GLOW = { morning: .55, afternoon: .6, evening: .95, night: 0, party: .7 };
 
@@ -558,7 +561,7 @@ export function buildHumboldtLife(ctx) {
         const table = root.children.find(o => o.userData.propId === `humboldt-cafe-${i}`);
         const g = group(`humboldt-cafe-kit-${i}`, 'Café reading place', [0, 750, 0], table || root);
         if (!table) g.position.set(cx, 750, cz);
-        const plan = CAFE_PLANS[i % CAFE_PLANS.length], seats = cafeSeats[i].map(c => {
+        const plan = CAFE_PLANS[i] || CAFE_PLANS[i % CAFE_PLANS.length], seats = cafeSeats[i].map(c => {
             const dx = c.at[0] - cx, dz = c.at[2] - cz, d = Math.hypot(dx, dz) || 1, n = [dx / d, dz / d];
             seatInfo.set(key(c.at[0], c.at[2]), { x: c.at[0], z: c.at[2], n, states: states(c.at[0], c.at[2]), dress: PHASE.map(() => null), cafe: true });
             return { chair: c, n, yaw: Math.atan2(n[0], n[1]) };
@@ -575,6 +578,8 @@ export function buildHumboldtLife(ctx) {
                 else if (kind === 'news') { items.newspaper(b, F(M0, -40, 0, -230, .25)); items.cup(b, F(M0, 180, 0, -130)); use(s0); }
                 else if (kind === 'cupphone') { items.cup(b, F(M0, -80, 0, -140), 'cupTeal'); items.phone(b, F(M0, 80, 0, -120, -.3), 'caseCoral'); use(s0); }
                 else if (kind === 'tote') { items.cup(b, F(M0, -60, 0, -150)); items.snack(b, F(M0, 120, 0, -200, .5)); const info = use(s0); info.states[p] = 'away'; info.dress[p] = { tote: true }; }
+                else if (kind === 'tray') { const T = F(M0, 0, 0, -235, (rnd(seed) - .5) * .7); b.box(T, [360, 14, 220], [0, 7, 0], ZERO, sw('oak')); for (let k = 0; k < 3; k++) items.cup(b, F(T, -110 + k * 110, 14, k % 2 ? 40 : -30), pick(['kraft', 'cupTeal', 'cupTerra'], seed + k)); use(s0); if (seats[1]) use(s1); }
+                else if (kind === 'plate') { b.cyl(F(M0, -40, 0, -190), 105, 95, 14, [0, 7, 0], ZERO, sw('ceramic'), 18); b.box(F(M0, -40, 14, -190, .6), [120, 20, 70], [0, 10, 0], ZERO, sw('ochre')); items.mug(b, F(M0, 150, 0, -150)); b.box(F(M0, 110, 0, -260, .3), [110, 2, 110], [0, 1, 0], ZERO, sw('white')); use(s0); }
                 else if (kind === 'cups') seats.forEach((s, k) => { items.cup(b, F(I, s.n[0] * 260, 0, s.n[1] * 260), k % 2 ? 'kraft' : 'cupTeal'); });
             }
             bake(item, b, `Café life · ${i} · ${phase}`);

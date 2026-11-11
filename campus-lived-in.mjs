@@ -123,9 +123,8 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
                     if (p < 2 && rand(seat * 3.1 + 4) < .22) continue;
                     sheet(g, p, [x + skew * 60, 2.4, 95 - skew * 30], 195, side * .03 + skew * .6); pen(k, x + 130 + skew * 40, 105 - (v > .5 ? 60 : 0), p === 1 ? '#ba6536' : INK);
                     if (p === 0 && v < .55) notebook(k, x - 30, -95);
-                    if (v > .7 && (p === 0 || p >= 2) && p !== 3) { k.box([84, 13, 160], [x - 175, 6.5, -110], '#2d3034', [0, skew, 0], 'rubber'); k.box([66, 2, 34], [x - 175, 14, -150], '#9aa58e', [0, skew, 0]); }
-                    else if (v > .55 && v <= .7 && (p === 0 || p >= 2) && p !== 3) k.box([74, 9, 152], [x - 160, 4.5, -60], '#151617', [0, .4 + skew, 0], 'glass');
-                    if ((p === 2 && side < 0) || (p === 0 && rand(seat * 5.7) > .72)) bottle(k, x - 155, -145);
+                    // Calculators and phones are library props (HS_SEAT_PROPS in institutional-education.mjs).
+                    if (p === 2 && side < 0) bottle(k, x - 155, -145);
                     if (p === 4) { k.box([90, 55, 38], [x + 155, 28, -110], '#d6a057'); k.box([20, 80, 20], [x + 155, 67, -110], INK); k.ball(24, [x + 155, 115, -110], '#c9a06b'); }
                 }
                 if (p === 1) {
@@ -137,6 +136,19 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
                     for (let n = 0; n < 28; n++) k.box([1.5, 1, n % 5 ? 8 : 18], [-260 + n * 19, 9, -151], INK);
                 }
                 if (p === 3 && r === 0 && col === 0) { notebook(k, 0, -80); notebook(k, 7, -76, 20); }
+                if (p === 4) {
+                    // Showcase: a tri-fold project board on the edge of the table
+                    // away from the visitors (side tables stand against the walls,
+                    // the middle row is turned to face the room).
+                    const B = new THREE.Group(); B.position.set(col === 0 ? -470 : col === 2 ? 470 : 0, 0, col === 1 ? 230 : 0); B.rotation.y = col === 0 ? Math.PI / 2 : col === 2 ? -Math.PI / 2 : Math.PI; g.add(B);
+                    const b = detailKit(), tone = ['#e8702a', '#2e6f8e', '#1d1d1f', '#9cc3b6'][(r * 3 + col) % 4];
+                    b.box([560, 760, 8], [0, 382, 0], '#f4f2ea', null, 'paper');
+                    for (const s of [-1, 1]) b.box([280, 760, 8], [s * (280 + 280 * Math.cos(.7)) / 2 + s * 2, 382, 140 * Math.sin(.7) / 1.05], '#f4f2ea', [0, -s * .7, 0], 'paper');
+                    b.box([520, 90, 3], [0, 700, 6], tone, null, 'paper');
+                    for (let n = 0; n < 4; n++) b.box([230, 170, 2], [-125 + (n % 2) * 250, 520 - Math.floor(n / 2) * 210, 6], ['#ffffff', '#e9e3d2', '#dfe9ee', '#ffffff'][n], null, 'paper');
+                    b.box([380, 70, 2], [0, 120, 6], tone, null, 'paper');
+                    b.build(B, matte);
+                }
                 k.build(g, matte);
             });
         }
@@ -161,6 +173,9 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
             if (p === 1) { k.box([100, 17, 64], [290, 8.5, -145], SILVER, undefined, 'metal'); k.box([80, 2, 40], [290, 18, -145], INK, undefined, 'rubber'); headphone(k, -180, -130); pen(k, 100, -115); }
             if (p === 2) { headphone(k, 110, -90); k.box([180, 40, 105], [400, 20, -130], INK, undefined, 'metal'); for (let n = 0; n < 4; n++) k.cyl(8, 8, 7, [340 + n * 40, 44, -130], n ? SILVER : '#d98a3e', 'metal'); for (let n = 0; n < 8; n++) k.box([17, 2, 45], [-180 + n * 25, 2, -120], ['#ddddce', '#a6aaa6', '#708c94', '#314654'][n % 4], undefined, 'paper'); }
             if (p === 3) { for (let n = 0; n < 4; n++) pen(k, -190 + n * 180, -125); }
+            if (p === 4) {
+                // Wrap food (takeout boxes, coffee cups, soda) is library props: see institutional-media.mjs.
+            }
             if (p === 4) { for (let n = 0; n < 4; n++) { k.box([55, 1, 60], [-100 + n * 85, 2, -150], ['#d8bc68', '#95b7ba', '#b8c9a4'][n % 3], undefined, 'paper'); pen(k, 490, 90); } }
             k.build(g, matte);
         });

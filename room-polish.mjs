@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=env-shared-20261110';
+import { INSTITUTIONAL_ROOMS } from './institutional-scenes.mjs?v=env-shared-20261110b';
 import { ROOM_DETAIL_PALETTES } from './room-finish-palettes.mjs?v=environment-expert-20261014';
 
 // Authored art, imported GLBs and user transforms are left in their own systems.

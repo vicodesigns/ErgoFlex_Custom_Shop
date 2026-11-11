@@ -7,8 +7,8 @@ import { atelierSceneDecor, bindDeskDecor, applyDeskDecorLighting } from './atel
 import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from './campus-scene-furniture.mjs?v=campus-furniture-20261014';
 import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atelier-scene-beds.mjs?v=atelier-beds-20261014';
 import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=gallery-bedroom-20261025';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261110';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=env-shared-20261110';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261110b';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=env-shared-20261110b';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
 import { polishRoomProp } from './room-polish.mjs?v=table-clearance-20261021';
 import { RoomLife } from './room-life.mjs?v=commons-home-comfort-20261024';
@@ -18,7 +18,7 @@ import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chai
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
 import { migrateHighschoolFixtureTransform } from './hbhs-design.mjs';
 import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=environment-expert-20261014';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=env-shared-20261110';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=env-shared-20261110b';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=people-vistas-20261110';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=people-vistas-20261110';
