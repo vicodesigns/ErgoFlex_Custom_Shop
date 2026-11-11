@@ -63,7 +63,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=label-fix-20261110';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=people-cast-gym-20261110';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=people-cast-20261111a';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=20261110-stationary-organizer';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=people-vistas-20261110';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=people-vistas-20261110';
@@ -4298,7 +4298,7 @@ function loadModel() {
         applyAccessoryVisibility();
         if (!workspaceRoom) {
             workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
-            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard(), time: roomPeopleTime, station: roomPeopleStation });
+            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard(), tilt: primaryTiltConfig()?.currentDeg || 0, time: roomPeopleTime, station: roomPeopleStation });
         }
         // Startup already chose the room's desktop. Rebuilding the model must
         // retain any explicit size selected since then.

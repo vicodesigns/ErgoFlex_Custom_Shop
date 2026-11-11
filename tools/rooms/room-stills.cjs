@@ -45,7 +45,7 @@ fs.mkdirSync(out, { recursive: true });
             return { height: m.height, tilt: m.tilt ?? null };
         }, phase);
         if (people) report.people = await frame.evaluate(async () => { const E = window.ErgoFlex; await E.setRoomPeople(true); const p = E.workspaceRoom.people; if (p?.built) await p.built; await new Promise(r => setTimeout(r, 1200)); return p ? p.people.filter(o => o.visible).map(o => o.userData.person.id.replace(/^people-/, '')) : []; });
-        if (evalFile) await frame.evaluate(fs.readFileSync(evalFile, 'utf8'));
+        if (evalFile) report.eval = await frame.evaluate(fs.readFileSync(evalFile, 'utf8'));   // a script run in the Studio after the room loads; what it returns is printed
         await new Promise(r => setTimeout(r, 2200));
         for (const view of views) {
             await frame.evaluate(async view => {
