@@ -39,7 +39,7 @@ async function inspect(room, layout, phase, size, survey) {
     const deskObj = E.loadedModel; if (deskObj) { const boxes = boxesOf(deskObj); if (boxes.length) furniture.push({ id: 'featured-desk', object: deskObj, boxes, box: boxes.reduce((s, b) => s.union(b), new T.Box3()) }); }
     const state = r.peopleState?.() || {}, mode = state.mode, height = state.height;
     // the featured desk's keyboard (tray or desktop), for "are the desk user's hands on it" at this height and tilt
-    let keys = null; for (const [k, item] of E.sceneDesks?.active?.objects || []) { const label = k + ' ' + (item.obj?.userData?.propId || '') + ' ' + (item.obj?.name || ''); if (!/keyboard/i.test(label) || /tray/i.test(label) || item.saved?.removed || !item.obj?.visible) continue; const b = new T.Box3().setFromObject(item.obj).applyMatrix4(inv); if (!b.isEmpty()) { keys = b; break; } }
+    let keys = null; for (const [k, item] of E.sceneDesks?.active?.objects || []) { const label = k + ' ' + (item.obj?.userData?.propId || '') + ' ' + (item.obj?.name || ''); if (!/keyboard/i.test(label) || /tray/i.test(label) || item.saved?.removed || !item.obj?.visible) continue; item.obj.updateWorldMatrix(true, true); const b = new T.Box3().setFromObject(item.obj).applyMatrix4(inv); if (!b.isEmpty()) { keys = b; break; } }
     const anchorOf = spec => { const id = [].concat(spec.on || spec.by || [])[0]; return id || null; };
     const rows = people.map(o => {
         const s = o.userData.person, fit = o.userData.personFit, key = s.key || s.id;
@@ -52,7 +52,11 @@ async function inspect(room, layout, phase, size, survey) {
         const pb = new T.Box3().setFromPoints(pts);
         if (s.desk && !s.station && keys) {   // the closest the person comes to the keyboard (mm): hands on it are within ~40
             const near = []; o.traverse(c => { if (!c.isMesh || !c.geometry?.attributes?.position) return; const p = c.geometry.attributes.position, step = Math.max(1, Math.floor(p.count / 6000)); for (let i = 0; i < p.count; i += step) near.push(new T.Vector3().fromBufferAttribute(p, i).applyMatrix4(c.matrixWorld).applyMatrix4(inv)); });
-            row.hands = Math.round(Math.min(...near.map(p => keys.distanceToPoint(p))));
+            let best = null, bd = Infinity; for (const p of near) { const d = keys.distanceToPoint(p); if (d < bd) { bd = d; best = p; } }
+            row.hands = Math.round(bd); row.handAt = best.toArray().map(Math.round); row.keyboard = [keys.min.toArray().map(Math.round), keys.max.toArray().map(Math.round)];
+            // the lowest point of the person's hands region in front of the body, for "above or behind the keys"
+            const front = near.filter(p => p.y > keys.min.y - 250 && p.y < keys.max.y + 250 && Math.hypot(p.x - o.position.x, p.z - o.position.z) > 250);
+            if (front.length) { const lo = front.reduce((a, b) => (a.y < b.y ? a : b)); row.handLow = lo.toArray().map(Math.round); }
         } row.box = [pb.min.toArray().map(Math.round), pb.max.toArray().map(Math.round)];
         const cx = l.id === 'humboldt' ? 2300 : 0;   // the commons is not centred on x = 0
         row.inside = pb.min.x > cx - l.width / 2 - 5 && pb.max.x < cx + l.width / 2 + 5 && pb.min.z > l.back - 5 && pb.max.z < l.back + l.depth + 5;

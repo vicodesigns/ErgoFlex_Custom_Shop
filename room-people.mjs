@@ -105,10 +105,10 @@ export const ROOM_PEOPLE = {
         { id: 'people-maya-stand-coffee', desk: 'stand', modes: ['morning'] },
         { id: 'people-maya-sit-coffee', desk: 'sit', modes: ['evening'] }, { id: 'people-maya-sit-coffee-30', desk: 'sit', modes: ['evening'] },
         { id: 'people-maya-sit-type', desk: 'sit', modes: DAY }, { id: 'people-maya-sit-type-30', desk: 'sit', modes: DAY }, { id: 'people-maya-stand-type', desk: 'stand', modes: DAY },
-        { id: 'people-grace-sit-read', on: 'armchair-poppi', seat: 420, modes: ['evening'] },
-        { id: 'people-grace-sit-chat', on: 'armchair-poppi', seat: 420, modes: ['party'], colors: { top: '#2f4f6f' } },
+        { id: 'people-grace-sit-read', on: 'armchair-poppi', seat: 420, depth: -20, modes: ['evening'] },
+        { id: 'people-grace-sit-chat', on: 'armchair-poppi', seat: 420, depth: -20, modes: ['party'], colors: { top: '#2f4f6f' } },
         L => L.id === 'apartment' ? ring([-620, 1250], 420, [['people-maya-stand-talk', { colors: LOOK.homeParty }], ['people-noah-stand-drink', { colors: LOOK.guestE }]], PARTY, 300)
-            : ring(L.id === 'house' ? [780, 1150] : [L.width * .14, L.back + L.depth * .62], 540, [['people-maya-stand-talk', { colors: LOOK.homeParty }], ['people-noah-stand-drink', { colors: LOOK.guestE }], ['people-zoe-stand-drink', { colors: LOOK.guestB }]], PARTY, 200)
+            : ring(L.id === 'house' ? [650, 1200] : [L.width * .14, L.back + L.depth * .62], 540, [['people-maya-stand-talk', { colors: LOOK.homeParty }], ['people-noah-stand-drink', { colors: LOOK.guestE }], ['people-zoe-stand-drink', { colors: LOOK.guestB }]], PARTY, 200)
     ],
     // Sam's gaming room: coffee and a fresh setup in the morning, practice alone after lunch, co-op on the sofa with
     // Kai in the evening, headphones on at night, game night with friends (Kai and Sofia on the sofa, two standing).
@@ -137,13 +137,13 @@ export const ROOM_PEOPLE = {
     // Two artists share the studio: Sofia at the desk by day, Lin at the easel in the morning and at golden hour, Lin
     // alone reviewing at the desk at night; the open studio has visitors looking at the work.
     creative: [
-        { id: 'people-lin-stand-paint', by: 'artist-easel', reach: 640, modes: ['morning', 'evening'] },
+        { id: 'people-lin-stand-paint', by: 'artist-easel', reach: 640, modes: ['morning', 'evening'] },   // the film's key (its chapter places her itself)
         { id: 'people-maya-stand-type', desk: 'stand', modes: [] }, { id: 'people-maya-sit-type', desk: 'sit', modes: [] },
         { id: 'people-grace-sit-read', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 380, modes: [] },   // the sofa faces the open front: feet would leave the room
         ...crewOf('sofia', ['morning', 'afternoon', 'evening'], { colors: LOOK.sofia }),
         ...crewOf('lin', ['night'], { colors: LOOK.linNight }),
-        L => L.id === 'premium' ? [spot('people-lin-stand-talk', -1150, 1350, [-400, 1500], PARTY), spot('people-ben-stand-drink', -450, 950, [-1150, 1350], PARTY),
-            spot('people-ava-stand-drink', -300, 1900, [-1150, 1350], { ...PARTY, colors: LOOK.guestD }), spot('people-omar-wheel-watch', 1950, 2550, [2600, 2550], PARTY),
+        L => L.id === 'premium' ? [spot('people-lin-stand-talk', -1150, 1350, [-400, 1500], PARTY), spot('people-ben-stand-drink', -350, 800, [-1150, 1350], PARTY),
+            spot('people-ava-stand-drink', -300, 1900, [-1150, 1350], { ...PARTY, colors: LOOK.guestB }), spot('people-omar-wheel-watch', 1950, 2550, [2600, 2550], PARTY),
             spot('people-sofia-stand-drink', 1450, 1250, [1950, 2550], { ...PARTY, colors: LOOK.sofia })]
             : ring([-L.width * .08, L.back + L.depth * .55], 480, ['people-lin-stand-talk', 'people-ben-stand-drink', ['people-ava-stand-drink', { colors: LOOK.guestD }]], PARTY, 30)
     ],

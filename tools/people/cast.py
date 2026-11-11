@@ -381,11 +381,49 @@ def stand_coffee(inches=43.5):
             'foot_l': {'at': (.11, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.13, .07, .07), 'toes': (-.35, -1, 0)}}
 
 
+# ---- children: poses take the child's size (k) and the measured child furniture ---------------------------------
+def kid_sit_table(seat, table):
+    """A child on a small chair at a low table, drawing with a crayon, the other hand holding the paper."""
+    def pose(k):
+        return {'pelvis': (0, .0, seat + .075 * k), 'pelvis_pitch': 6, 'spine': (6, 8, 8), 'neck': 14, 'head': 14, 'head_yaw': -5,
+                'hand_r': {'at': (-.07 * k, -.27 * k, table + .03), 'fingers': (.45, -1, -.3), 'palm': (.45, .1, -1), 'elbow': (-.3, .15, -.25), 'curl': .7, 'thumb': .55},
+                'hand_l': {'at': (.14 * k, -.25 * k, table + .022), 'fingers': (-.55, -1, -.05), 'palm': (0, 0, -1), 'elbow': (.3, .15, -.25), 'curl': .15, 'thumb': .1, 'spread': .3},
+                'foot_l': {'at': (.09 * k, -.2 * k, .07 * k), 'toes': (.2, -1, 0)}, 'foot_r': {'at': (-.09 * k, -.16 * k, .07 * k), 'toes': (-.2, -1, 0)}}
+    return pose
+
+
+def kid_read_floor(k):
+    """Cross-legged on the floor or a rug with a picture book open in both hands."""
+    p = sit_floor(k); p.update({'neck': 16, 'head': 16, 'spine': (8, 6, 4),
+        'hand_l': {'at': _s(k, .1, -.26, .34), 'fingers': (-.35, -.45, .8), 'palm': (-.25, .75, .6), 'elbow': (.25, .2, -.3), 'curl': .3, 'thumb': .1},
+        'hand_r': {'at': _s(k, -.1, -.26, .34), 'fingers': (.35, -.45, .8), 'palm': (.25, .75, .6), 'elbow': (-.25, .2, -.3), 'curl': .3, 'thumb': .1}})
+    return p
+
+
+def kid_play_floor(k):
+    """Kneeling up on the floor, building: both hands down at a toy in front."""
+    return {'pelvis': _s(k, 0, .12, .36), 'pelvis_pitch': 18, 'spine': (12, 12, 8), 'neck': 18, 'head': 14,
+            'hand_l': {'at': _s(k, .1, -.3, .12), 'fingers': (-.1, -1, -.5), 'palm': (0, 0, -1), 'elbow': (.3, .3, 0), 'curl': .45, 'thumb': .3},
+            'hand_r': {'at': _s(k, -.12, -.33, .15), 'fingers': (.1, -1, -.4), 'palm': (0, 0, -1), 'elbow': (-.3, .3, 0), 'curl': .55, 'thumb': .4},
+            'foot_l': {'at': _s(k, .1, .42, .05), 'toes': (0, -.2, -1), 'pitch': 70, 'knee': (0, -1, -1)},
+            'foot_r': {'at': _s(k, -.1, .42, .05), 'toes': (0, -.2, -1), 'pitch': 70, 'knee': (0, -1, -1)}}
+
+
+def kid_stand_desk(inches=28):
+    """A child standing at the desk on its lowest setting, drawing on it (the top at chest height for a small child)."""
+    top = keys_at(inches) + .04
+    return lambda k: {'spine': (3, 4, 4), 'neck': 12, 'head': 12,
+                      'hand_r': {'at': (-.08 * k, -.28 * k, top), 'fingers': (.45, -1, -.3), 'palm': (.45, .1, -1), 'elbow': (-.3, .2, -.3), 'curl': .7, 'thumb': .55},
+                      'hand_l': {'at': (.13 * k, -.27 * k, top - .008), 'fingers': (-.55, -1, -.05), 'palm': (0, 0, -1), 'elbow': (.3, .2, -.3), 'curl': .15, 'thumb': .1, 'spread': .3},
+                      'foot_l': {'at': _s(k, .09, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.09, .05, .07), 'toes': (-.3, -1, 0)}}
+
+
 # Desk poses take the desk height (inches) from the output's 'height'.
 DESK_POSES = {'sit-type': sit_type, 'stand-type': stand_type, 'wheel-type': wheel_type, 'sit-coffee': sit_coffee, 'stand-coffee': stand_coffee,
               # Standing at the desk's lowest setting: the working height for a person of short stature.
               'stand-type-low': lambda inches=28: dict(stand_type(inches, .27), spine=(1, 2, 2), neck=0, head=-4),
               # Standing at a desk set between sitting and standing (35-36 in, bench height): leaning in over the work.
+              'kid-stand-desk': kid_stand_desk,
               'stand-low': lambda inches=35.5: dict(stand_type(inches, .3), pelvis_pitch=9, spine=(4, 5, 4), neck=10, head=8)}
 KEYS_WHEEL = .759    # keyboard top with the desk at 31 in, raised so the knees clear the tray
 
