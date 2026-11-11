@@ -168,7 +168,7 @@ export class RoomPeople {
     // Only a change of who is in the cast (model, key, desk role) rebuilds; moving, turning, scaling or re-timing an
     // extra person re-places the model that is already there (the Director edits these live).
     setFilter(filter) {
-        const cast = JSON.stringify((filter?.cast || []).map(c => [c.key || c.id, c.id, c.desk || '', c.station || ''])) + JSON.stringify(Object.keys(filter?.when || {}));
+        const cast = JSON.stringify((filter?.cast || []).map(c => [c.key || c.id, c.id, c.desk || '', c.station || ''])) + JSON.stringify(Object.keys(filter?.when || {})) + (filter?.motion === false ? 'still' : '');
         if (this.built && cast !== this.castKey) this.dispose();
         this.castKey = cast; this.filter = filter || null; this.placed = false;
         // someone already in the room who now has a pose gets their skeleton before anyone waiting on `built` goes on
@@ -447,6 +447,12 @@ export class RoomPeople {
             let on = !object.userData.personMissing && this.allowed(spec) && there > 0 && (!spec.modes || spec.modes.includes(mode));
             object.userData.personAmount = there;
             const actor = object.userData.personDriven ? object.userData.personActor : null;
+            // an older cut's stand-in for the gap (a standing-by model of the desk user, cast by hand for the seconds the
+            // desk moves): the desk user fills that gap themselves now
+            if (on && !spec.desk && spec.extra && driven.length && this.filter?.when?.[this.keyOf(spec)]) {
+                const person = this.library.entry(spec.id)?.person;
+                if (person?.pose === 'stand-wait' && driven.some(a => a.mobile && a.character === person.character)) on = false;
+            }
             if (actor) {
                 // one moving person: drawn as the model built for the stance they are in, always there
                 on = on && !!pose && actor.shown?.object === object && actor.cover > 0;

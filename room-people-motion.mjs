@@ -25,7 +25,7 @@ const ss = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (
 const lerp = (a, b, t) => a + (b - a) * t;
 const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0), Z = new THREE.Vector3(0, 0, 1);
 
-export const STAND_UP = 2.9;           // seconds from seated to standing
+export const STAND_UP = 2.6;           // seconds from seated to standing
 export const INCH_KEYS = .0269;        // metres the keyboard rises per inch of desk height (tools/people/cast.py keys_at)
 export const HANDS_FIT = 1.4;          // inches below a built desk height the hands still reach the keys
 const SIT_REACH_UP = 2;                // a seated typist's forearms follow the keys this far above the built height, then they stand
@@ -294,7 +294,9 @@ export class DeskActor {
         const up = this.members.find(m => m.role === 'stand');
         this.keys = { sit, stand, wait: this.rig.key(`people-${this.character}-stand-wait`, up ? up.dz : 0) };
         this.desc = deskDescription(sit.map(k => k.deskHeight), stand.map(k => k.deskHeight), stand.some(k => k.pose === 'stand-type-low'));
-        this.sim = null; this.state = null; this.height = null;
+        // the same models as before (a film re-placing someone else): the person carries on from where they are
+        const sign = this.members.map(m => m.id + ':' + m.role).join();
+        if (sign !== this.sign) { this.sign = sign; this.sim = null; this.state = null; this.height = null; }
         return this.members;
     }
     get mobile() { return this.keys.sit.length > 0 && this.keys.stand.length > 0; }
