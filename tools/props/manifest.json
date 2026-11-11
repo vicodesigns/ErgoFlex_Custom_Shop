@@ -18768,6 +18768,382 @@
    "scenes": [],
    "converter": "people-generator",
    "collection": "people"
+  },
+  {
+   "id": "people-maya-stand-coffee",
+   "name": "Maya: coffee at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-maya-sit-coffee",
+   "name": "Maya: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-maya-sit-coffee-30",
+   "name": "Maya: coffee at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-grace-sit-chat",
+   "name": "Grace: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-maya-stand-talk",
+   "name": "Maya: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-stand-drink",
+   "name": "Noah: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-zoe-stand-drink",
+   "name": "Zoe: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sam-stand-coffee",
+   "name": "Sam: coffee at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sam-sit-controller",
+   "name": "Sam: on a sofa with a game controller",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sofia-sit-chat",
+   "name": "Sofia: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sam-stand-drink",
+   "name": "Sam: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-andre-sit-mix",
+   "name": "Andre, mixing at the desk with headphones (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-andre-sit-mix-30",
+   "name": "Andre, mixing at the desk at 30 in with headphones (seated)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-mia-stand-phone",
+   "name": "Mia: standing, phone in hand",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-andre-stand-talk",
+   "name": "Andre: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-sit-chat",
+   "name": "Lin: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-eli-stand-drink",
+   "name": "Eli: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sofia-sit-type",
+   "name": "Sofia: typing at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sofia-sit-type-30",
+   "name": "Sofia: typing at the desk, seated (desk at 30 in)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sofia-stand-type",
+   "name": "Sofia: typing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-stand-talk",
+   "name": "Lin: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-ben-stand-drink",
+   "name": "Ben: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-ava-stand-drink",
+   "name": "Ava: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-sofia-stand-drink",
+   "name": "Sofia: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-priya-sit-floor",
+   "name": "Priya: sitting cross-legged on the floor",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-priya-floor-stretch",
+   "name": "Priya: stretching on a mat",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-zoe-stretch-open",
+   "name": "Zoe: stretching, hands behind the head",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-kai-floor-stretch",
+   "name": "Kai: stretching on a mat",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-jo-sit-type",
+   "name": "Jo: typing at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-jo-sit-type-30",
+   "name": "Jo: typing at the desk, seated (desk at 30 in)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-jo-stand-type",
+   "name": "Jo: typing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-leo-carry-box",
+   "name": "Leo: carrying a box",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-jo-stand-talk",
+   "name": "Jo: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-stand-mug",
+   "name": "Noah: standing with a coffee",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-hale-stand-type",
+   "name": "Mr Hale: typing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-leo-sit-type",
+   "name": "Leo: typing at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-leo-sit-type-30",
+   "name": "Leo: typing at the desk, seated (desk at 30 in)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-ava-stand-type",
+   "name": "Ava: typing at the desk, standing",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-lin-stand-drink",
+   "name": "Lin: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-mia-stand-drink",
+   "name": "Mia: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-kai-sit-type",
+   "name": "Kai: typing at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-ava-sit-type",
+   "name": "Ava: typing at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-ava-sit-type-30",
+   "name": "Ava: typing at the desk, seated (desk at 30 in)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-leo-stand-drink",
+   "name": "Leo: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-carry-box",
+   "name": "Noah: carrying a box",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-mia-sit-mug",
+   "name": "Mia: sitting back with a mug",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-ben-sit-read",
+   "name": "Ben: reading",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
   }
  ],
  "screens": [
