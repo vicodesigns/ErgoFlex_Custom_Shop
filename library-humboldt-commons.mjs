@@ -30,6 +30,10 @@ const SOFFIT = 3600, SOFFIT_X = 4800, BAND_Z = 5000, GLASS_Z = 4400;
 // café soffit. Figures start at HALL_Z; the mezzanine runs over the junction.
 const HALL_XR = 6000, STEP_Z = 9000, HALL_Z = 12000, CAFE_SOFFIT = 3000, CAFE_SOFFIT_X = 2200, SOLID_Z = 20000, MEZ = [-3000, 12000];
 const DESK = [8240, -1850];
+// The tackboard wall is a bay set back about 5 ft (photos 1 and 3): the far end of the right wall stands proud at
+// PROUD_X and ends in an olive pier that runs back to the glass (FIN_Z); a door sits in the proud face beside it.
+// The desk bay, the glass slot and the tackboard keep their plane (x 9000), so the desk and the film cameras stay put.
+const PROUD_X = XR - 1500, FIN_Z = [-4700, -4200], SIDE_DOOR_Z = [-5760, -4750], PIER_DEPTH = 900;
 // The high ceiling slopes from 4800 at the back wall to 7200 at z 5000, then runs flat.
 const SLOPE_Z = 5000, slopeY = z => z < SLOPE_Z ? 4800 + (z - BACK) / (SLOPE_Z - BACK) * 2400 : H, SLOPE = Math.atan2(2400, SLOPE_Z - BACK);
 const rnd = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -74,7 +78,7 @@ export function makeHumboldtLayout() {
     // New seats are appended to preserve every existing furniture edit key.
     for (const x of [4900, 6100]) props.push({ ...chair(x, 500, 0), finish: 'group-forest' }, { ...chair(x, 2700, 180), finish: 'group-forest' });
     // A genuine mobility seat shares the group, rather than an isolated pilot bay.
-    props.push({ id: 'electric-wheelchair', at: [8500, 0, -5500], turn: 90 });
+    props.push({ id: 'electric-wheelchair', at: [PROUD_X - 850, 0, -6250], turn: 90 });
     props.push({ id: 'atelier-lamp-mushroom-warm', at: [-2260, 550, 5130] });
     const tables = [
         { id: 'humboldt-table-b1', at: [-800, -5200], size: [2400, 900] },
@@ -105,7 +109,7 @@ export function makeHumboldtLayout() {
             party: { dx: -640, dz: 3450, yaw: 0 }
         },
         stories: ['Opening: standing plans, coffee and book returns', 'Join the research group at the shared table · an open approach and a place for everyone', 'Dusk: quiet reading, annotated books and warm pools of light', 'Closing: return to the wall, stow loose items and fold to 65°', 'Project workshop: bring the ErgoFlex alongside the group for maps, notes and conversation'],
-        groupStudy: { phases: ['afternoon', 'party'], table: 'humboldt-table-l1', desk: [7600, 1600], wheelchair: [7600, 2950], chairPark: [8500, -4200], turningBay: { x: 6500, z: 4350, diameter: 1500 } },
+        groupStudy: { phases: ['afternoon', 'party'], table: 'humboldt-table-l1', desk: [7600, 1600], wheelchair: [7600, 2950], chairPark: [8450, -3700], turningBay: { x: 6500, z: 4350, diameter: 1500 } },
         modes: HUMBOLDT_MODES
     }];
 }
@@ -479,15 +483,32 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const columns = kit(); for (const x of [1000, 4600]) columns.box([500, h, 500], [x, h / 2, bz + 250]);
     baked(back, columns, own(tag(material('#6b6c63', { roughness: .9 }), 'plaster')));
     const glassBack = { x0: 1250, x1: 4350, y1: 4600 };
-    const backBase = kit(); backBase.box([750 - XL - 250, 100, 12], [(XL + 750 - 250) / 2, 50, bz + 6]).box([XR - 4850 - 250, 100, 12], [(XR + 4850 + 250) / 2, 50, bz + 6]); base(back, backBase);
+    const backBase = kit(); backBase.box([750 - XL - 250, 100, 12], [(XL + 750 - 250) / 2, 50, bz + 6]).box([PROUD_X - 4850 - 250, 100, 12], [(PROUD_X + 4850 + 250) / 2, 50, bz + 6]); base(back, backBase);
     room.walls.push({ obj: back, axis: 'x', limit: bz * s });
     // Right wall: glass slot with olive column, the desk bay, the tackboard, an olive pilaster.
     const right = new THREE.Group(); right.name = 'Humboldt commons tackboard wall'; root.add(right);
     const rightSeg = (z0, z1, y0 = 0, y1 = h) => box(right, [80, y1 - y0, z1 - z0], [XR + 40, (y0 + y1) / 2, (z0 + z1) / 2], paint('#ebeae5', z1 - z0, y1 - y0));
     // Solid in the commons; past the olive pilaster the junction is glazed below the soffit.
-    rightSeg(bz, -4800); rightSeg(-4800, -3200, SOFFIT, h); rightSeg(-3200, GLASS_Z); rightSeg(GLASS_Z, STEP_Z, SOFFIT, h);
-    box(right, [500, SOFFIT, 500], [XR - 300, SOFFIT / 2, -4450], olive);
-    box(right, [450, SOFFIT, 600], [XR - 225, SOFFIT / 2, 3700], olive);
+    rightSeg(bz, FIN_Z[1]); rightSeg(FIN_Z[1], -3200, SOFFIT, h); rightSeg(-3200, GLASS_Z); rightSeg(GLASS_Z, STEP_Z, SOFFIT, h);
+    // The proud end of the wall (to the soffit): a painted face at PROUD_X with a full-height glazed door opening
+    // beside the pier, and the solid mass behind it, so the plan reads as wall, not as a hollow, from above.
+    for (const [z0, z1] of [[bz, SIDE_DOOR_Z[0]], [SIDE_DOOR_Z[1], FIN_Z[0]]]) box(right, [80, SOFFIT, z1 - z0], [PROUD_X + 40, SOFFIT / 2, (z0 + z1) / 2], paint('#ebeae5'));
+    box(right, [XR - PROUD_X - 80, SOFFIT, FIN_Z[0] - bz], [(PROUD_X + 80 + XR) / 2, SOFFIT / 2, (bz + FIN_Z[0]) / 2], whiteFlat);
+    const darkGlass = own(material('#262c31', { roughness: .06, metalness: 0, envMapIntensity: .5 }));
+    {
+        const dz = SIDE_DOOR_Z[1] - SIDE_DOOR_Z[0], mid = (SIDE_DOOR_Z[0] + SIDE_DOOR_Z[1]) / 2, HEAD = 2150, frame = kit(), lever = kit();
+        box(right, [10, SOFFIT, dz], [PROUD_X + 65, SOFFIT / 2, mid], darkGlass).castShadow = false;
+        for (const z of [SIDE_DOOR_Z[0] + 25, SIDE_DOOR_Z[1] - 25]) frame.box([70, SOFFIT, 50], [PROUD_X + 35, SOFFIT / 2, z]);
+        frame.box([70, 50, dz], [PROUD_X + 35, HEAD, mid]).box([70, 40, dz], [PROUD_X + 35, SOFFIT - 20, mid]);
+        // The leaf's stiles and bottom rail, hinged at the far jamb, lever by the pier (photo 3).
+        for (const z of [SIDE_DOOR_Z[0] + 95, SIDE_DOOR_Z[1] - 95]) frame.box([40, HEAD - 60, 90], [PROUD_X + 45, (HEAD - 10) / 2, z]);
+        frame.box([40, 220, dz - 100], [PROUD_X + 45, 120, mid]).box([40, 90, dz - 100], [PROUD_X + 45, HEAD - 80, mid]);
+        lever.cyl(26, 26, 14, [PROUD_X + 18, 1020, SIDE_DOOR_Z[1] - 95], { rot: [0, 0, Math.PI / 2], seg: 14 }).box([18, 18, 120], [PROUD_X + 2, 1020, SIDE_DOOR_Z[1] - 150]);
+        baked(right, frame, bronze, false); baked(right, lever, pilotGold, false);
+    }
+    // The olive pier at the step: 500 wide, as deep as the bay; and the pier at the junction end of the bay.
+    box(right, [XR - PROUD_X, SOFFIT, FIN_Z[1] - FIN_Z[0]], [(XR + PROUD_X) / 2, SOFFIT / 2, (FIN_Z[0] + FIN_Z[1]) / 2], olive);
+    box(right, [PIER_DEPTH, SOFFIT, 600], [XR - PIER_DEPTH / 2, SOFFIT / 2, 3700], olive);
     // The step: a white return wall to the narrower hall, an olive corner column,
     // then the hall's glass side at x 6000 and a solid run with a dark slot to the end.
     box(right, [XR - HALL_XR, h, 80], [(XR + HALL_XR) / 2, h / 2, STEP_Z + 40], paint('#ebeae5', XR - HALL_XR, h));
@@ -559,7 +580,9 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         c.fillStyle = '#32453e'; c.font = '34px sans-serif'; c.fillText('Forest  /  Brass  /  Oak  /  Charcoal', 55, 400);
         c.font = '30px sans-serif'; c.fillText('Quiet materials. Flexible workspace.', 55, 465);
     });
-    const rightBase = kit(); rightBase.box([12, 100, -4800 - bz], [XR - 6, 50, (bz - 4800) / 2]).box([12, 100, GLASS_Z + 3200], [XR - 6, 50, (GLASS_Z - 3200) / 2])
+    const rightBase = kit(); rightBase.box([12, 100, SIDE_DOOR_Z[0] - bz], [PROUD_X - 6, 50, (bz + SIDE_DOOR_Z[0]) / 2]).box([12, 100, GLASS_Z + 3200], [XR - 6, 50, (GLASS_Z - 3200) / 2])
+        .box([12, 100, FIN_Z[1] - SIDE_DOOR_Z[1]], [PROUD_X - 6, 50, (SIDE_DOOR_Z[1] + FIN_Z[1]) / 2]).box([XR - PROUD_X, 100, 12], [(XR + PROUD_X) / 2, 50, FIN_Z[1] + 6])
+        .box([12, 100, 600], [XR - PIER_DEPTH - 6, 50, 3700]).box([PIER_DEPTH, 100, 12], [XR - PIER_DEPTH / 2, 50, 3394]).box([PIER_DEPTH, 100, 12], [XR - PIER_DEPTH / 2, 50, 4006])
         .box([XR - HALL_XR, 100, 12], [(XR + HALL_XR) / 2, 50, STEP_Z - 6]).box([12, 100, front - SOLID_Z], [HALL_XR - 6, 50, (SOLID_Z + front) / 2]); base(right, rightBase);
     room.walls.push({ obj: right, axis: 'z', limit: -XR * s });
     // Left wall: plain commons wall under the mezzanine balcony, the olive
@@ -694,8 +717,11 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const bayFrame = kit(); for (const x of [glassBack.x0, 2280, 3320, glassBack.x1]) bayFrame.box([60, glassBack.y1, 150], [x, glassBack.y1 / 2, bz + 20]);
     for (const y of [40, 2400, glassBack.y1 - 30]) bayFrame.box([glassBack.x1 - glassBack.x0, 60, 150], [(glassBack.x0 + glassBack.x1) / 2, y, bz + 20]);
     baked(back, bayFrame, bronze, false);
-    pane(right, [1600, SOFFIT], [XR + 30, SOFFIT / 2, -4000], -Math.PI / 2);
-    const slotFrame = kit(); for (const z of [-4800, -4000, -3200]) slotFrame.box([150, SOFFIT, 60], [XR - 20, SOFFIT / 2, z]); slotFrame.box([150, 60, 1600], [XR - 20, 30, -4000]);
+    // The slot between the pier and the desk bay: one lite with a transom at 950 (photo 3).
+    const SLOT = [FIN_Z[1], -3200], slotMid = (SLOT[0] + SLOT[1]) / 2, slotW = SLOT[1] - SLOT[0];
+    pane(right, [slotW, SOFFIT], [XR + 30, SOFFIT / 2, slotMid], -Math.PI / 2);
+    const slotFrame = kit(); for (const z of [SLOT[0] + 30, SLOT[1]]) slotFrame.box([150, SOFFIT, 60], [XR - 20, SOFFIT / 2, z]);
+    for (const y of [30, 950]) slotFrame.box([150, y < 100 ? 60 : 50, slotW], [XR - 20, y, slotMid]);
     baked(right, slotFrame, bronze, false);
     // The junction's curtain wall (x 9000) and the hall's (x 6000, to z 20000):
     // silver aluminium verticals every 1.5 m, transoms at 900 and 2300, a white
@@ -715,7 +741,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const vestSides = kit(); for (const x of [DOOR[0], DOOR[1]]) vestSides.box([40, TRANSOM, 600], [x, TRANSOM / 2, front + 300]);
     baked(frontWall, vestSides, whiteFlat, false);
     // Tall narrow dark-glass slot in the hall's solid run.
-    box(right, [20, CAFE_SOFFIT - 50, 900], [HALL_XR + 10, (CAFE_SOFFIT - 50) / 2, 23500], own(material('#262c31', { roughness: .06, metalness: 0, envMapIntensity: .5 }))).castShadow = false;
+    box(right, [20, CAFE_SOFFIT - 50, 900], [HALL_XR + 10, (CAFE_SOFFIT - 50) / 2, 23500], darkGlass).castShadow = false;
 
     // ---------- Suspended black light frames (two switching circuits) ----------
     const ceiling = new THREE.Group(); ceiling.name = 'Ceiling light frames'; root.add(ceiling); room.ceilingFixture = ceiling;
@@ -755,7 +781,8 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     }
     // ---------- Recessed downlights (one instanced draw) ----------
     const cans = [];
-    for (const x of [5900, 7700]) for (let z = -6200; z < STEP_Z - 400; z += 1800) cans.push([x, SOFFIT - 3, z, soffit]);
+    // Two rows under the soffit; by the proud end of the wall the outer row steps in with it.
+    for (const x of [5900, 7700]) for (let z = -6200; z < STEP_Z - 400; z += 1800) cans.push([z < FIN_Z[1] ? Math.min(x, PROUD_X - 600) : x, SOFFIT - 3, z, soffit]);
     cans.push([7700, SOFFIT - 3, -1700, soffit]);
     for (const [x, z] of HUMBOLDT_CAFE.filter(([x, z]) => z > STEP_Z && x > CAFE_SOFFIT_X)) cans.push([x, CAFE_SOFFIT - 3, z, soffit]);
     for (let z = 10200; z < front - 600; z += 2400) cans.push([2900, CAFE_SOFFIT - 3, z, soffit]);
@@ -952,7 +979,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         decal(lw, 'base', [6000, 300], [XL + 1.5, 150, 1500], ON_LEFT); decal(lw, 'base', [1600, 300], [XL + 1.5, 150, 4500], ON_LEFT);
         decal(lw, 'rub', [1100, 260], [XL + 1.5, 820, 3700], ON_LEFT); wearOut(left, lw, 'Gallery wall base grime');
         const rw = kit(); decal(rw, 'base', [5000, 300], [XR - 1.5, 150, 800], ON_RIGHT); wearOut(right, rw, 'Tackboard wall base grime');
-        const bw = kit(); decal(bw, 'base', [750 - XL, 300], [(XL + 750) / 2, 150, bz + 1.5], ON_BACK); decal(bw, 'base', [XR - 4850, 300], [(XR + 4850) / 2, 150, bz + 1.5], ON_BACK);
+        const bw = kit(); decal(bw, 'base', [750 - XL, 300], [(XL + 750) / 2, 150, bz + 1.5], ON_BACK); decal(bw, 'base', [PROUD_X - 4850, 300], [(PROUD_X + 4850) / 2, 150, bz + 1.5], ON_BACK);
         wearOut(back, bw, 'Back wall base grime');
         const fw = kit(); decal(fw, 'base', [3000, 300], [-1500, 150, front - 1.5], ON_FRONT); decal(fw, 'rub', [2200, 260], [-1500, 820, front - 1.5], ON_FRONT);
         wearOut(frontWall, fw, 'End wall base grime');
@@ -981,13 +1008,12 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const rampPool = (parent, at, size, face, color, levels, map) => { const o = pools.add(parent, at, size, color, levels, face); o.material.map = map; o.material.userData.sharedTextures = false; return o; };
     const edges = [[0, 0], [.03, 1], [.97, 1], [1, 0]];
     // Back-wall washer scallops (apex + long tail), avoiding the glass bay.
-    const backScallops = [[-3300, 4800], [-1000, 4800], [7000, SOFFIT]];
+    const backScallops = [[-3300, 4800], [-1000, 4800], [PROUD_X - 1300, SOFFIT]];
     addMerged(back, backScallops.map(([x, top]) => [[900, 640], [x, top - 520, bz + 6]]), BACKF, T3500, [.08, .07, .24, .08, .26]);
     addMerged(back, backScallops.map(([x, top]) => [[1250, 2600], [x, top - 1500, bz + 6]]), BACKF, T3500, [.06, .05, .17, .05, .18]);
-    // Right-wall scallops phased to the desk; the desk's own scallop stays up at night.
-    const rightScallops = [DESK[1] - 3600, DESK[1] + 5400, DESK[1] + 7200, DESK[1] + 9000].filter(z => z > bz + 400 && z < GLASS_Z - 400 && (z < -1000 || z > 2700));
-    addMerged(right, rightScallops.map(z => [[900, 640], [XR - 6, SOFFIT - 520, z]]), RIGHTF, T3500, [.08, .07, .24, .08, .26]);
-    addMerged(right, rightScallops.map(z => [[1250, 2100], [XR - 6, SOFFIT - 1300, z]]), RIGHTF, T3500, [.06, .05, .17, .05, .18]);
+    // Right wall: the proud end takes a washer under the stepped-in downlight; the desk's own scallop stays up at night.
+    addMerged(right, [[[900, 640], [PROUD_X - 6, SOFFIT - 520, -6200]]], RIGHTF, T3500, [.08, .07, .24, .08, .26]);
+    addMerged(right, [[[1250, 2100], [PROUD_X - 6, SOFFIT - 1300, -6200]]], RIGHTF, T3500, [.06, .05, .17, .05, .18]);
     pools.add(right, [XR - 6, SOFFIT - 520, DESK[1]], [780, 600], T4000, [.05, .045, .14, .17, .13], 'right');
     pools.add(right, [XR - 6, SOFFIT - 1300, DESK[1]], [1300, 2100], T4000, [.025, .02, .07, .09, .07], 'right');
     // Tackboard: three scallops across the panel; cork is dark, so it takes more.
@@ -1022,7 +1048,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // A broad, restrained work pool follows the new collaborative zone.
     pools.add(root, [6000, 752, 1600], [3600, 2100], T4000, [.015, .10, .025, 0, .14]);
     pools.add(root, [-2150, 3, 5050], [2500, 2000], T3000, [.02, .035, .12, .015, .065]);
-    pools.add(root, [8000, 3, -4000], [2400, 2000], '#e6edf0', [.12, .14, .03, 0, 0]);
+    pools.add(root, [8050, 3, -3700], [1900, 1700], '#e6edf0', [.12, .14, .03, 0, 0]);
     // Marine-layer daylight: one soft band along each run of glass.
     const glassBands = [[[2800, STEP_Z - GLASS_Z], [XR - 1400, 3, (GLASS_Z + STEP_Z) / 2]], [[2600, SOLID_Z - STEP_Z], [HALL_XR - 1300, 3, (STEP_Z + SOLID_Z) / 2]], [[4400, 2800], [(DOOR[0] + DOOR[1]) / 2, 3, front - 1400]]];
     addMerged(root, glassBands, FLOOR, '#e3ebf0', [.16, .20, 0, 0, 0]);
@@ -1083,7 +1109,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         fc.restore(); sunFloorMap.needsUpdate = sunWallMap.needsUpdate = true;
     };
     // The slot column sits under the soffit with no other light reaching it.
-    pools.add(root, [8450, 3, -4450], [1400, 1400], T3500, [.04, .04, .11, .09, .1]);
+    pools.add(root, [PROUD_X - 500, 3, -4450], [1400, 1400], T3500, [.04, .04, .11, .09, .1]);
     pools.add(canoe, [0, HULL_Y - 470, 0], [600, 2600], T3000, [.02, .02, .08, .07, .16]);
     pools.add(canoe, [0, 5, 0], [1700, 4200], T3000, [.03, .03, .1, .08, .24]);
     // Soft spill above and around each group (not a halo behind it); the beam spill lands in front of the plinth.
@@ -1115,7 +1141,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         if ((obj.userData.conferenceChair || obj.userData.humboldtChair || obj.userData.decorUpgrade === 'ergoflex-designer-chair') && saved.s && ['x', 'y', 'z'].every(a => Math.abs(saved.s[a] - 1) < .00001))
             saved = { ...saved, s: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z } };
         saved = migrateHumboldtGroupFurniture(obj, saved);
-        const m = 350, z = THREE.MathUtils.clamp(saved.p.z, bz + m, front - m), right = z > STEP_Z - m ? HALL_XR : XR, x = THREE.MathUtils.clamp(saved.p.x, XL + m, right - m);
+        const m = 350, z = THREE.MathUtils.clamp(saved.p.z, bz + m, front - m), right = z > STEP_Z - m ? HALL_XR : z < FIN_Z[1] ? PROUD_X : XR, x = THREE.MathUtils.clamp(saved.p.x, XL + m, right - m);
         return x === saved.p.x && z === saved.p.z ? saved : { ...saved, p: { ...saved.p, x, z } };
     };
     const weave = repeating(canvasMap((c, w, h) => {
