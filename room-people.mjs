@@ -664,7 +664,7 @@ export class RoomPeople {
             actor.off = Math.min(...actor.members.map(m => m.key.deskHeight === null ? 0 : Math.abs(height - m.key.deskHeight)));
             if (actor.mobile) { const fits = actor.members.map(m => m.key.deskHeight); if (height >= Math.min(...fits) && height <= Math.max(...fits)) actor.off = 0; }
         }
-        const others = this.people.filter(o => o.userData.person.desk && !o.userData.person.station && !o.userData.personDriven && !o.userData.personMissing && this.allowed(o.userData.person) && o.userData.personFit !== null).map(o => Math.abs(height - o.userData.personFit));
+        const others = this.people.filter(o => o.userData.person.desk && !o.userData.person.station && !o.userData.personDriven && !o.userData.personMissing && this.allowed(o.userData.person) && o.userData.personFit !== null && (!o.userData.person.modes || o.userData.person.modes.includes(mode) || this.named(o.userData.person)))   /* (only who is cast for this hour can share the desk) */.map(o => Math.abs(height - o.userData.personFit));
         for (const actor of driven) { const rival = Math.min(...driven.filter(a => a !== actor).map(a => a.off), ...others, Infinity); actor.cover = rival === Infinity ? 1 : THREE.MathUtils.smoothstep(rival - actor.off, -.5, .5); }
         this.resettle(mode);
         for (const object of this.people) {

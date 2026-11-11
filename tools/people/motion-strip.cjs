@@ -41,7 +41,7 @@ fs.mkdirSync(out, { recursive: true });
         return { who: who?.userData.person.id || null, actors: p.actors?.length ?? null, eye, look };
     }, room, layout, phase, from, cam);
     console.log(JSON.stringify(info));
-    await frame.evaluate(to => { window.ErgoFlex.setHeight(to); }, to);
+    await frame.evaluate(to => { const E = window.ErgoFlex; (E.goToHeight || E.setHeight)(to); }, to);   // on its motor, as a customer's preset sends it
     for (let i = 0; i < frames; i++) {
         const t0 = Date.now();
         const shot = await frame.evaluate(async W => { const E = window.ErgoFlex, P = window.ErgoPresentation, p = E.workspaceRoom.people; P.wake?.(900); const data = EnvironmentReview.capture(W);

@@ -12441,6 +12441,8 @@ window.ErgoFlex = {
         if (selectedPartsCount) selectedPartsCount.innerText = movingObjects.length;
         return count;
     },
+    // the desk travels there on its motor (setHeight puts it there at once)
+    goToHeight: inches => goToHeight(inches),
     setHeight(h) {
         if (roomGroove?.run || sceneDesks?.playing) haltAllMotion();
         manualLiftOverride = true;
