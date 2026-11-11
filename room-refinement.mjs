@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { roomSurfaceFinish } from './room-polish.mjs?v=polish-20261111c';
+import { roomSurfaceFinish } from './room-polish.mjs?v=polish-20261111d';
 
 // A single sun shadow map serves each measured room. Architectural coordinates
 // are millimetres; targets, shadow bounds and relief are converted through the

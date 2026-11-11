@@ -63,7 +63,7 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     assert.ok(nora?.visible, 'Nora does her homework at the desk in the afternoon');
     const seat = [...people.kidSeats.values()][0];
     assert.ok(seat && seat.source === chair && seat.copy.visible && seat.copy.parent === nora.parent, 'she has a seat of the room\'s kind under her');
-    assert.ok(Math.abs(seat.copy.position.x - nora.position.x) < 1 && Math.abs(seat.copy.position.z - nora.position.z) < 1 && Math.abs(seat.copy.rotation.y - nora.rotation.y) < 1e-6, 'under her, facing the way she faces');
+    assert.ok(Math.abs(seat.copy.position.x - nora.position.x) < 1 && Math.abs(seat.copy.position.z - nora.position.z) < 1 && Math.abs(seat.copy.rotation.y - nora.rotation.y - Math.PI) < 1e-6, 'under her, facing the way she faces (room seats face -z, people +z)');
     assert.ok(!chair.visible && chair.position.x === 1200 && chair.position.z === 550 && chair.rotation.y === 0, 'the room\'s chair is hidden, not moved');
     assert.ok(!room.assets().includes(seat.copy) && seat.copy.userData.propId === undefined, 'the copy is not a piece of the room\'s furniture');
     people.update({ mode: 'evening', height: 28, pose: { x: 1200, z: -400, yaw: 0 } });

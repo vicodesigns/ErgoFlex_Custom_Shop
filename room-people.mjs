@@ -41,7 +41,7 @@
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261111c';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261111d';
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
@@ -259,18 +259,18 @@ export const ROOM_PEOPLE = {
             if (age === 'early') return [
                 spot('people-tess-kid-play-floor', px - 260, pz - 120, [px + 300, pz + 150], { modes: ['morning'] }),
                 { id: 'people-tess-kid-stand-desk', desk: 'stand', reach: 540, modes: ['afternoon'] },
-                spot('people-tess-kid-sit-floor', rx + 760, rz - 420, [rx + 100, rz - 100], { modes: ['evening'] }),
-                spot('people-grace-sit-floor', rx + 420, rz - 900, [rx + 760, rz - 420], { modes: ['evening'], colors: { top: '#7d5a6b' } }),   // the grown-up who shares the story, down on the rug with her
+                spot('people-tess-kid-sit-floor', px - 50, pz - 100, [px - 600, pz - 150], { modes: ['evening'] }),   // story time on the mat (the nook itself is out of the Studio's opening view)
+                spot('people-grace-sit-floor', px - 450, pz - 380, [px - 50, pz - 100], { modes: ['evening'], colors: { top: '#7d5a6b' } }),   // the grown-up who shares the story, down on the rug with her
                 spot('people-tess-kid-play-floor', px - 320, pz - 60, [px + 250, pz + 40], { key: 'tess-plays-with-a-friend', modes: ['party'] }),
                 spot('people-ravi-kid-sit-floor', px + 480, pz + 120, [px - 150, pz], { modes: ['party'] })];
             if (age === 'primary') return [
-                spot('people-nora-kid-stand', dx - 900, dz + 1250, [dx - 200, dz + 700], { modes: ['morning'] }),
+                { id: 'people-nora-kid-stand-desk', desk: 'stand', reach: 600, modes: ['morning'] },   // on her feet at the desk, getting her things together
                 { id: 'people-nora-kid-sit-desk', desk: 'sit', chair: false, modes: ['afternoon'] },
                 spot('people-nora-kid-read-floor', rx + 700, rz - 500, [rx + 1500, rz - 1200], { modes: ['evening'] }),
                 spot('people-nora-kid-play-floor', px - 250, pz + 50, [px + 450, pz + 120], { key: 'nora-builds', modes: ['party'] }),
                 spot('people-jun-kid-sit-floor', px + 600, pz + 150, [px, pz + 80], { modes: ['party'] })];
             if (age === 'preteen') return [
-                spot('people-jun-kid-stand', dx - 900, dz + 1250, [dx - 200, dz + 700], { modes: ['morning'] }),
+                { id: 'people-jun-kid-stand-desk', desk: 'stand', reach: 600, modes: ['morning'] },
                 { id: 'people-jun-kid-sit-desk', desk: 'sit', chair: false, modes: ['afternoon', 'evening'] },
                 spot('people-jun-kid-sit-floor', px - 250, pz + 50, [px + 450, pz + 120], { key: 'jun-with-a-friend', modes: ['party'] }),
                 spot('people-ines-kid-sit-floor', px + 600, pz + 150, [px, pz + 80], { modes: ['party'] })];
@@ -999,7 +999,7 @@ export class RoomPeople {
             if (seat.copy.parent !== person.parent) person.parent.add(seat.copy);
             // the room's own chair is out while its copy is under the child, however far the room has pushed it back
             if (!this.hidden.has(seat.source)) { this.hidden.set(seat.source, seat.source.visible); seat.source.visible = false; }
-            seat.copy.visible = true; seat.copy.position.set(person.position.x, seat.y, person.position.z); seat.copy.rotation.set(0, person.rotation.y, 0);   // (the child's seats face +z, as the child does)
+            seat.copy.visible = true; seat.copy.position.set(person.position.x, seat.y, person.position.z); seat.copy.rotation.set(0, person.rotation.y + Math.PI, 0);   // (a room seat faces -z, the desk side; the child faces +z)
         }
         for (const [key, seat] of seats) if (!live.has(key)) seat.copy.visible = false;
     }

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_FINISHES } from './room-polish.mjs?v=polish-20261111c';
+import { ROOM_FINISHES } from './room-polish.mjs?v=polish-20261111d';
 
 // One diffuse bounce from twelve large architectural patches. This is an
 // unoccluded radiosity approximation, not path tracing. Patch illumination is

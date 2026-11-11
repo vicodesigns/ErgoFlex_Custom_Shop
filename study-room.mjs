@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
-import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261111c';
+import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261111d';
 
 const names = ['Apartment writing nook', 'Home study & reading room', 'Writer’s study & library', 'Private library & lounge', 'Library & conversation suite'];
 export const STUDY_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map((home, index) => {

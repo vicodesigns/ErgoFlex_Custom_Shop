@@ -284,11 +284,11 @@ export function enhanceChildLivedIn({room,root,layout:l,helpers:h,materials:m,gr
  const screenMat=(kind)=>{const map=canvasMap((c,w,hh)=>{c.fillStyle=kind==='music'?'#1f2a33':'#f1eee6';c.fillRect(0,0,w,hh);if(kind==='music'){for(let t=0;t<6;t++){c.fillStyle=[pal.accent,pal.second,pal.feature][t%3];c.fillRect(16,20+t*26,40+hash(t)*150,16);}c.strokeStyle='#e9e3d4';c.lineWidth=2;c.beginPath();for(let x=0;x<w;x+=4)c.lineTo(x,hh*.82+Math.sin(x*.21)*10*hash(x));c.stroke();}else{c.fillStyle='#d9d4c7';c.fillRect(0,0,w,18);c.fillStyle=pal.ink;for(let t=0;t<9;t++)c.fillRect(20,32+t*14,(t%3===0?120:200)-hash(t)*60,6);c.fillStyle=pal.second;c.fillRect(w*.62,34,w*.3,hh*.4);}},256,170);return fin('#ffffff',.5,{map,emissive:'#ffffff',emissiveMap:map,emissiveIntensity:.32});};
  const bedLayer=bed?fixture(bed,'lived-bed-'+age,'Bed as it was left · '+age):null;
  const chair=(()=>{let s;root.traverse(o=>{if(o.userData.propId==='desk-stool')s=o;});return s;})();
- const drape=(p,col,hood=true)=>{// Clothes over the study-chair backrest.
+ const drape=(p,col,hood=true)=>{// Clothes over the study-chair backrest (on the chair's room side, +z: the chair faces the desk).
   const g=new THREE.Group();p.add(g);const path=[[640,-150],[860,-158],[922,-185],[922,-235],[880,-262],[560,-268]],pts=path.map(([y,z])=>new THREE.Vector2(z,y)),curve=new THREE.SplineCurve(pts);
-  const geo=new THREE.PlaneGeometry(410,1,14,30),pos=geo.attributes.position;for(let i=0;i<pos.count;i++){const x=pos.getX(i),t=(pos.getY(i)+.5);const q=curve.getPoint(t),wave=Math.sin(x*.03+t*5)*5*(1-Math.abs(.45-t));pos.setXYZ(i,x*(1+.08*Math.abs(t-.45)),q.y+wave*.4,q.x+wave);}geo.computeVertexNormals();const dm=col.clone();dm.side=THREE.DoubleSide;dm.userData.roomFinishLocked=true;add(g,geo,dm);
-  for(const s of [-1,1])tube(g,[[s*190,905,-245],[s*235,760,-275],[s*215,600,-290],[s*190,470,-276]],34,col);
-  if(hood)lump(g,[150,70,110],[0,895,-262],col,13,.12,0);return g;};
+  const geo=new THREE.PlaneGeometry(410,1,14,30),pos=geo.attributes.position;for(let i=0;i<pos.count;i++){const x=pos.getX(i),t=(pos.getY(i)+.5);const q=curve.getPoint(t),wave=Math.sin(x*.03+t*5)*5*(1-Math.abs(.45-t));pos.setXYZ(i,x*(1+.08*Math.abs(t-.45)),q.y+wave*.4,-(q.x+wave));}geo.computeVertexNormals();const dm=col.clone();dm.side=THREE.DoubleSide;dm.userData.roomFinishLocked=true;add(g,geo,dm);
+  for(const s of [-1,1])tube(g,[[s*190,905,245],[s*235,760,275],[s*215,600,290],[s*190,470,276]],34,col);
+  if(hood)lump(g,[150,70,110],[0,895,262],col,13,.12,0);return g;};
 
  const SHEET=345;// exposed sheet strip between the pillows and the quilt's top edge
  // A small blanket over a plush that has been put to bed: a smooth cloth tent.

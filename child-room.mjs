@@ -12,7 +12,7 @@ import {drawEarlyMotif} from './early-years-art.mjs';
 import {enhanceEarlyYearsWalls} from './early-years-wall-life.mjs';
 import {enhanceChildLighting} from './child-lighting-detail.mjs';
 import {enhanceChildWalls} from './child-wall-life.mjs';
-import {enhanceChildLivedIn} from './child-lived-in-detail.mjs';
+import {enhanceChildLivedIn} from './child-lived-in-detail.mjs?v=child-room-20261111';
 
 const tiers=[
  ['apartment','Little explorer · cozy room',3800,4400,2700],
@@ -215,7 +215,7 @@ export function buildChildRoom(room,root,l,h){
  else{
   const frame=material('#424c50',{roughness:.42,metalness:.65});mesh(seat,new THREE.CylinderGeometry(35,45,340,20),frame,[0,260,0]);
   for(let i=0;i<5;i++){const a=i*Math.PI*2/5,x=Math.sin(a)*260,z=Math.cos(a)*260;rod(seat,[0,100,0],[x,35,z],16,frame);const wheel=mesh(seat,new THREE.CylinderGeometry(25,25,18,16),ink,[x,25,z]);wheel.rotation.z=Math.PI/2;}
-  box(seat,[455,30,430],[0,440,0],frame,15);box(seat,[440,35,420],[0,472.5,0],green,20);const back=box(seat,[430,420,65],[0,695,-195],green,24);back.rotation.x=-.06;
+  box(seat,[455,30,430],[0,440,0],frame,15);box(seat,[440,35,420],[0,472.5,0],green,20);const back=box(seat,[430,420,65],[0,695,195],green,24);back.rotation.x=.06;   // the backrest is on the room side: the chair faces the desk (it stood with its back to it)
   for(const x of [-245,245]){rod(seat,[x,445,0],[x,570,0],13,frame);box(seat,[55,28,220],[x,584,0],ink,12);}
  }
  const lights=[],moonGlow=material('#fff0d1',{emissive:'#ffd1a0',emissiveIntensity:0,roughness:.9}),readingGlow=moonGlow.clone();

@@ -262,9 +262,9 @@ Director's posture menu shows each kind its own, and swapping a child for an adu
 Who is in the room, by hour:
 
 - **Child's room** follows the age stage of the layout. Toddler stage: Tess plays on the mat in the morning, draws
-  standing at the desk in the afternoon, has a story with a grown-up on the rug in the evening, a friend comes to play
-  at the party. Primary: Nora gets ready, does homework at the desk on the room's own chair, reads on the floor, builds
-  with Jun. Pre-teen: Jun, with Ines over. High school and college stages use the teenage and young adult characters at
+  standing at the desk in the afternoon, has a story with a grown-up on the play mat in the evening, a friend comes to
+  play at the party. Primary: Nora is on her feet at the desk in the morning getting her things together, does homework
+  there on the room's own chair, reads on the floor, builds with Jun. Pre-teen: Jun, the same day, with Ines over. High school and college stages use the teenage and young adult characters at
   the desk. Nobody is shown at night up to the high school stage (asleep); the college student is still at the desk.
 - **Kindergarten**: circle time on the rug with the teacher in the rocker; children at the table, the easel, the
   teacher at the desk; a parent and child at the family evening; nobody during the reset.
@@ -278,6 +278,9 @@ Three things were added for this:
   its study chair where its story has it (pushed back, turned away from the desk), so the seat under the child is a copy
   of it, under them and facing the desk with them, while the room's chair is hidden. The room's chair is never moved:
   nothing the Studio saves about the furniture changes, and it is back when the child leaves or People is turned off.
+- The child room's study chair itself now faces the desk (`child-room.mjs`: the backrest was on the desk side, so the
+  empty chair stood with its back to the desk; the clothes over its back moved with it in `child-lived-in-detail.mjs`).
+  Room seats face -z and people +z, so the copy is turned half a turn from the child.
 - `around: ['<prop id>', degrees, mm]`: round a rug, a mat or a table, facing its middle, wherever the room has put it.
 - A child drawing at the desk keeps their hands on a tilted top (up to 12 degrees, in the Studio and along a film's
   desk track; the hands are where the flat top was, a few centimetres off at the far edge of a 12 degree tilt): the
