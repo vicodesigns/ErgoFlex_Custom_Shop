@@ -51,7 +51,15 @@ try{
   check(await page.$('#director-panel .people-row.selected'),'their row is marked in the People tab');
   await snap('02b-clicked');
   // select the reader (a free spot), move, turn, scale with the fields
-  const idx=await page.$$eval('#director-panel .people-row',l=>l.findIndex(r=>/free spot/.test(r.textContent)));
+  const freeRow=()=>page.$$eval('#director-panel .people-row',l=>l.findIndex(r=>/free spot/.test(r.textContent)));
+  let idx=await freeRow();
+  if(idx<0){   // the home's morning cast is all at the desk: the seated posture (not showing at this height) goes to a free spot
+    const seated=await page.$$eval('#director-panel .people-row',l=>l.findIndex(r=>/seated \(desk at 28 in\)/.test(r.textContent)));
+    check(seated>=0,'the morning cast has a seated desk posture to take off the desk');
+    await click(`#director-panel .people-row:nth-child(${seated+1}) .people-pick`);
+    await until(()=>page.$('#director-panel [name="pe-anchor"]'),'the Place menu');await setField('pe-anchor','free');
+    idx=await until(async()=>{const i=await freeRow();return i>=0?i+1:0;},'Place: Free spot takes a desk person off the desk')-1;
+  }
   check(idx>=0,'someone stands or sits at a free spot');
   await click(`#director-panel .people-row:nth-child(${idx+1}) .people-pick`);
   await until(()=>page.$('#director-panel [name="pe-x"]'),'the selected person\'s fields');

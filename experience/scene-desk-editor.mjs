@@ -7,7 +7,8 @@ import {clampStartPose,startPoseLimits,START_PRESETS} from './start-pose.mjs';
 // live stage, Render still and the film as the film shot's sceneDeskEdits. Studio is never written.
 // Selecting the featured desk (list, click, Esc, empty click) leaves the desk selection: the Groove tab is its editor.
 // The view: a teal box and floor footprint on the selected desk, and a round handle under it: drag it on the floor to
-// move the desk (the numbers follow). Clicks reach this editor before the Props editor (a window capture listener on the
+// move the desk (the numbers follow), a gumball on it (arrows along the room's X and Z, a square for both) and a ring around it
+// with a knob that turns it; each says what it does when the pointer is over it. Clicks reach this editor before the Props editor (a window capture listener on the
 // stage): a click on a bare desk selects it; a click on something riding the desk (monitor, plant, a dressing item) is
 // the Props editor's unless the Desks tab is open. Studio's own click editing is off in the Director (as for props).
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -16,7 +17,7 @@ const wrapDeg=d=>{d=((d%360)+540)%360-180;return Math.abs(d)<1e-9?0:d;};
 const sizeLabel=s=>s?String(s).slice(0,2)+'″':'';
 const MUTED=Symbol('director-desks');
 export function createSceneDeskEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},onPick=()=>{},lightsShowing=()=>false,inTab=()=>false,showFeatured=()=>{}}){
-  let sel=null,tools=null,booting=null,drag=null,gesture=0,shotId=null;
+  let sel=null,tools=null,booting=null,drag=null,gz=null,turning=null,hover=null,gesture=0,shotId=null;
   const frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow;
   const api=()=>win()?.ErgoFlex,desks=()=>api()?.sceneDesks,three=()=>bridge.stage()?.three?.();
   const editing=()=>open()&&bridge.ready()&&!bridge.playback().playing&&!bridge.bakeState().baking;
@@ -49,7 +50,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     sync();const r=rec(id);if(!r)return;
     if(id===featured()){const had=!!sel;sel=null;if(had){rerender();onPick(null);}showFeatured();status('Featured desk selected: its moves and starting position are in the Groove tab.');return;}
     sel=id;onSelect();onPick(id);rerender();ensure().catch(e=>console.warn("[desk tools]",e));
-    if(announce)status(`${name(r)} selected · ${sizeLabel(view(id).size)} · drag the round handle under it to move it · Esc goes back to the featured desk.`);
+    if(announce)status(`${name(r)} selected · ${sizeLabel(view(id).size)} · drag an arrow or the round handle to move it, the ring to turn it · Esc goes back to the featured desk.`);
   }
   function deselect(){if(!sel)return;sel=null;onPick(null);rerender();}
   const selected=()=>sync();
@@ -79,7 +80,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     // Our own callbacks: the Props and Lights editors boot the same module with shared names, and a second booter would orphan the first.
     if(!w.__directorThree)await new Promise((resolve,reject)=>{w.__dirThreeDoneDesk=resolve;w.__dirThreeFailDesk=reject;const s=w.document.createElement('script');s.type='module';s.textContent="Promise.all([import('three'),import('three/addons/controls/TransformControls.js')]).then(([T,C])=>{window.__directorThree=window.__directorThree||{THREE:T,TransformControls:C.TransformControls};window.__dirThreeDoneDesk();},e=>window.__dirThreeFailDesk(e));";w.document.head.append(s);});
     muteStudio();
-    const {THREE}=w.__directorThree,group=new THREE.Group();group.name='Director desk tools';group.userData.directorTools=true;group.visible=false;t.scene.add(group);
+    const {THREE,TransformControls}=w.__directorThree,group=new THREE.Group();group.name='Director desk tools';group.userData.directorTools=true;group.visible=false;t.scene.add(group);
     const COLOR=0x45cfac,box=new THREE.BoxHelper(undefined,COLOR);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;group.add(box);
     const mat=(opacity)=>new THREE.MeshBasicMaterial({color:COLOR,transparent:true,opacity,depthTest:false,depthWrite:false,side:THREE.DoubleSide});
     const foot=new THREE.Mesh(new THREE.PlaneGeometry(1,1),mat(.16));foot.rotation.x=-Math.PI/2;foot.renderOrder=996;foot.userData.directorTools=true;group.add(foot);
@@ -88,38 +89,84 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     for(const m of [disc,ring]){m.rotation.x=-Math.PI/2;m.renderOrder=999;m.userData.directorTools=true;handle.add(m);}
     group.add(handle);
     const ray=new THREE.Raycaster(),dom=t.renderer.domElement;let down=null;
+    // The gumball. It floats over the middle of the desk, clear of the round handle on the floor, and its arrows keep to the room's X
+    // and Z whichever way the desk faces: TransformControls moves a proxy that sits there, in the desk's parent and unturned, and the
+    // desk moves by as much as the proxy has.
+    const proxy=new THREE.Object3D();proxy.userData.directorTools=true;
+    const gizmo=new TransformControls(t.camera,dom);gizmo.userData.directorTools=true;gizmo.setSize(1.35);gizmo.setSpace('local');gizmo.setMode('translate');gizmo.showY=false;gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
+    gizmo.addEventListener('dragging-changed',ev=>{if(ev.value)startGizmo();else endGizmo();});
+    gizmo.addEventListener('objectChange',()=>moveGizmo());
+    // The turn ring: a thin ring around the desk on the floor with a knob on the user's side; `grab` is its wider, unseen pick area.
+    const flat=m=>{m.rotation.x=-Math.PI/2;m.userData.directorTools=true;return m;};
+    const turn=new THREE.Group();turn.userData.directorTools=true;
+    const ringT=flat(new THREE.Mesh(new THREE.RingGeometry(.988,1.012,96),mat(.6))),grab=flat(new THREE.Mesh(new THREE.RingGeometry(.94,1.06,64),mat(0))),knob=flat(new THREE.Mesh(new THREE.CircleGeometry(.085,32),mat(1)));
+    ringT.renderOrder=997;knob.renderOrder=999;grab.material.colorWrite=false;turn.add(ringT,grab,knob);group.add(turn);
+    const onTurn=ev=>{if(!group.visible)return false;pointer(ev);return ray.intersectObject(knob,false).length>0||ray.intersectObject(grab,false).length>0;};
+    // What the pointer is over says what it does; while something is dragged it shows the numbers.
+    const tip=w.document.createElement('div');tip.style.cssText='position:fixed;z-index:60;pointer-events:none;display:none;padding:4px 9px;border-radius:7px;border:1px solid #45cfac;background:rgba(6,14,22,.93);color:#e6fff8;font:12px/1.35 system-ui,sans-serif;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.45)';w.document.body.append(tip);
+    // A click the desk tools keep to themselves never reaches the orbit controls' pointerup, which would leave them turning the
+    // camera with every move of the mouse: tell them the pointer is gone.
+    const release=ev=>{try{dom.dispatchEvent(new w.PointerEvent('pointercancel',{pointerId:ev.pointerId,pointerType:ev.pointerType,bubbles:true}));}catch{}};
     const pointer=ev=>{const r=dom.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);return ray;};
     const onHandle=ev=>{if(!group.visible)return false;return pointer(ev).intersectObject(disc,false).length>0||ray.intersectObject(ring,false).length>0;};
     w.addEventListener('pointerdown',ev=>{
       down=null;if(ev.button!==0||!editing()||w.__directorDragging)return;
+      // an arrow of the gumball: TransformControls takes it. What is under the pointer is read now (its own hover only follows
+      // the mouse, so after a zoom or a camera move under a resting pointer it would be out of date).
+      if(sel&&group.visible&&gizmo.enabled){const r=dom.getBoundingClientRect();gizmo.pointerHover({x:(ev.clientX-r.left)/r.width*2-1,y:-(ev.clientY-r.top)/r.height*2+1,button:ev.button});if(gizmo.axis)return;}
+      if(sel&&onTurn(ev)){startTurn(ev);ev.stopImmediatePropagation();ev.preventDefault();return;}
       if(sel&&onHandle(ev)){startDrag(ev);ev.stopImmediatePropagation();ev.preventDefault();return;}
       down={x:ev.clientX,y:ev.clientY};
     },true);
-    w.addEventListener('pointermove',ev=>{if(drag&&ev.pointerId===drag.pointer){moveDrag(ev);ev.stopImmediatePropagation();ev.preventDefault();}},true);
+    w.addEventListener('pointermove',ev=>{
+      hover={x:ev.clientX,y:ev.clientY,on:ev.target===dom,shift:ev.shiftKey};
+      if(turning&&ev.pointerId===turning.pointer){moveTurn(ev);ev.stopImmediatePropagation();ev.preventDefault();return;}
+      if(drag&&ev.pointerId===drag.pointer){moveDrag(ev);ev.stopImmediatePropagation();ev.preventDefault();}
+    },true);
+    dom.addEventListener('pointerleave',()=>{hover=null;});
     w.addEventListener('pointerup',ev=>{
+      if(turning&&ev.pointerId===turning.pointer){endTurn(ev);ev.stopImmediatePropagation();ev.preventDefault();return;}
       if(drag&&ev.pointerId===drag.pointer){endDrag(ev);ev.stopImmediatePropagation();ev.preventDefault();return;}
       const d=down;down=null;if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||w.__directorDragging||lightsShowing()||!editing())return;
       if(ev.target!==dom)return;
       const hit=pointer(ev).intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!h.object.material?.isShaderMaterial);
       const at=hit&&deskAt(hit);
-      if(at&&(!at.onItem||inTab())&&(at.id||sel||inTab())){ev.stopImmediatePropagation();ev.preventDefault();select(at.id||featured());return;}
+      if(at&&(!at.onItem||inTab())&&(at.id||sel||inTab())){ev.stopImmediatePropagation();ev.preventDefault();release(ev);select(at.id||featured());return;}
       if(sel&&!at?.id){deselect();status('Back to the featured desk. Click a desk to edit it.');}
     },true);
-    w.addEventListener('pointercancel',ev=>{if(drag&&ev.pointerId===drag.pointer)endDrag(ev,true);},true);
-    tools={THREE,group,box,foot,handle,ray,pointer,scene:t.scene,t};requestAnimationFrame(tick);return tools;
+    // a pointer the browser takes away (touch, pen, a system gesture) ends whatever it was dragging; TransformControls does not hear it
+    w.addEventListener('pointercancel',ev=>{if(turning&&ev.pointerId===turning.pointer)endTurn(ev,true);if(drag&&ev.pointerId===drag.pointer)endDrag(ev,true);if(gz&&gizmo.dragging)gizmo.dragging=false;},true);
+    tools={THREE,group,box,foot,handle,ray,pointer,scene:t.scene,t,gizmo,proxy,turn,ringT,grab,knob,disc,ring,tip};requestAnimationFrame(tick);return tools;
   }
   const ensure=()=>booting||=boot().then(t=>t,error=>{booting=null;throw error;});
   function tick(){
     requestAnimationFrame(tick);if(!tools)return;
-    const t=three();if(!t||t.scene!==tools.scene){tools.group.removeFromParent();tools=null;booting=null;if(t&&open())ensure().catch(e=>console.warn("[desk tools]",e));return;}
+    const t=three();if(!t||t.scene!==tools.scene){stopDrags();tools.group.removeFromParent();tools.gizmo.detach();tools.gizmo.removeFromParent();tools.gizmo.dispose?.();tools.proxy.removeFromParent();tools.tip.remove();gz=turning=null;tools=null;booting=null;if(t&&open())ensure().catch(e=>console.warn("[desk tools]",e));return;}
     muteStudio();
-    const id=sync(),r=id&&editing()?rec(id):null,{group,box,foot,handle,THREE}=tools;
-    if(!r?.group){group.visible=false;return;}
+    const id=sync(),r=id&&editing()?rec(id):null,{group,box,foot,handle,THREE,gizmo,proxy,turn,ringT,grab,knob,tip}=tools;
+    if(!r?.group){stopDrags();group.visible=false;tip.style.display='none';if(gizmo.object){gizmo.detach();proxy.removeFromParent();}gizmo.visible=gizmo.enabled=false;return;}
     group.visible=true;r.group.updateMatrixWorld(true);box.setFromObject(r.group);
     const b=new THREE.Box3().setFromObject(r.group),c=b.getCenter(new THREE.Vector3()),s=b.getSize(new THREE.Vector3()),y=b.min.y+.004;
     foot.position.set(c.x,y,c.z);foot.scale.set(Math.max(.3,s.x),Math.max(.3,s.z),1);
     handle.position.set(c.x,y+.002,c.z);
-    if(drag)bridge.stage()?.wake?.(300);
+    // the gumball sits where the desk stands; the ring runs round the desk's footprint with its knob on the user's side
+    const parent=r.group.parent;
+    if(parent&&!gz){if(proxy.parent!==parent)parent.add(proxy);parent.updateWorldMatrix(true,false);proxy.position.copy(parent.worldToLocal(new THREE.Vector3(c.x,b.max.y+.05,c.z)));proxy.rotation.set(0,0,0);proxy.updateMatrixWorld(true);if(gizmo.object!==proxy)gizmo.attach(proxy);}
+    gizmo.visible=gizmo.enabled=!!parent&&!drag&&!turning;
+    const R=Math.hypot(s.x,s.z)/2+.12,front=new THREE.Vector3(0,0,1).applyQuaternion(r.group.getWorldQuaternion(new THREE.Quaternion())).setY(0).normalize();
+    turn.position.set(c.x,y+.003,c.z);ringT.scale.setScalar(R);grab.scale.setScalar(R);knob.position.set(front.x*R,.001,front.z*R);
+    // what the pointer is over, or the numbers of what is being dragged
+    const p=r.state.pose;let text='';
+    if(gz||drag)text=`x ${r1(p.x/IN)}″ · z ${r1(p.z/IN)}″`;
+    else if(turning)text=`${r1(wrapDeg(deg(p.yaw)))}°${hover?.shift?'':' · hold Shift for 15° steps'}`;
+    else if(hover?.on&&!win().__directorDragging){
+      if(gizmo.axis==='X')text='Slide along X';else if(gizmo.axis==='Z')text='Slide along Z';else if(gizmo.axis==='XZ')text='Move on the floor';
+      else{tools.pointer({clientX:hover.x,clientY:hover.y});const ry=tools.ray;
+        if(ry.intersectObject(knob,false).length||ry.intersectObject(grab,false).length)text='Turn the desk · Shift for 15° steps';
+        else if(ry.intersectObject(tools.disc,false).length||ry.intersectObject(tools.ring,false).length)text='Move on the floor';}
+    }
+    if(text&&hover){tip.textContent=text;tip.style.display='block';tip.style.left=Math.max(4,Math.min(hover.x+16,win().innerWidth-tip.offsetWidth-6))+'px';tip.style.top=(hover.y+18)+'px';}else tip.style.display='none';
+    if(drag||gz||turning||hover?.on)bridge.stage()?.wake?.(300);
   }
   // ---- dragging the handle: the desk follows the floor point; the edit is written when the pointer lets go
   function startDrag(ev){
@@ -148,6 +195,55 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     if(cancel||!d.changed){r.state.pose={x:d.start.x,z:d.start.z,yaw:r.state.pose.yaw};desks()?.place(r);return;}
     const p=r.state.pose;
     put(d.id,{pose:{x:Math.round(p.x*10)/10,z:Math.round(p.z*10)/10,yaw:p.yaw}},`${name(r)} moved to x ${r1(p.x/IN)}″, z ${r1(p.z/IN)}″.`);
+  }
+  // The selection can go while something is being dragged (Esc, playback starting, the chapter changing). The drag ends there:
+  // what the gumball has moved so far is kept as the edit, a handle or ring drag is put back, and the camera and the other tools
+  // are free again. (TransformControls ignores the pointerup once it is switched off, so its drag is ended by hand.)
+  function stopDrags(){
+    if(!tools)return;
+    if(gz){if(tools.gizmo.dragging)tools.gizmo.dragging=false;if(gz)endGizmo();}
+    if(turning)endTurn(null,true);
+    if(drag)endDrag(null,true);
+  }
+  // ---- the gumball's arrows and square (TransformControls on the proxy): the desk follows; the edit is written on release
+  function startGizmo(){
+    const r=rec(sel),{t}=tools,w=win();if(!r?.group)return;w.__directorDragging=true;
+    gz={id:sel,controls:t.controls.enabled,changed:false,start:{x:r.group.position.x,z:r.group.position.z},from:{x:tools.proxy.position.x,z:tools.proxy.position.z}};t.controls.enabled=false;status(`Moving ${name(r)}…`);
+  }
+  function moveGizmo(){
+    if(!gz)return;const r=rec(gz.id),{proxy}=tools;if(!r?.group)return;
+    r.group.position.x=gz.start.x+proxy.position.x-gz.from.x;r.group.position.z=gz.start.z+proxy.position.z-gz.from.z;r.group.updateMatrixWorld(true);gz.changed=true;
+    r.state.pose={x:r.group.position.x,z:r.group.position.z,yaw:r.group.rotation.y};
+    status(`Moving ${name(r)}: x ${r1(r.state.pose.x/IN)}″, z ${r1(r.state.pose.z/IN)}″.`);
+  }
+  function endGizmo(){
+    const d=gz;gz=null;if(!d)return;const {t}=tools;t.controls.enabled=d.controls;win().__directorDragging=false;
+    const r=rec(d.id);if(!r||!d.changed)return;const p=r.state.pose;
+    put(d.id,{pose:{x:Math.round(p.x*10)/10,z:Math.round(p.z*10)/10,yaw:p.yaw}},`${name(r)} moved to x ${r1(p.x/IN)}″, z ${r1(p.z/IN)}″.`);
+  }
+  // ---- the turn ring: the desk turns by the angle the pointer has swept round it on the floor (Shift: 15° steps)
+  const sweep=(r,point)=>{const a=r.group.parent.worldToLocal(point.clone());return Math.atan2(a.x-r.group.position.x,a.z-r.group.position.z);};
+  function startTurn(ev){
+    const r=rec(sel),{THREE,t,ray}=tools;if(!r?.group?.parent)return;
+    const y=r.group.getWorldPosition(new THREE.Vector3()).y,plane=new THREE.Plane(new THREE.Vector3(0,1,0),-y),point=new THREE.Vector3();
+    if(!ray.ray.intersectPlane(plane,point))return;r.group.parent.updateWorldMatrix(true,false);
+    win().__directorDragging=true;turning={pointer:ev.pointerId,id:sel,plane,from:sweep(r,point),yaw:r.state.pose.yaw,controls:t.controls.enabled,changed:false};
+    t.controls.enabled=false;try{t.renderer.domElement.setPointerCapture(ev.pointerId);}catch{}status(`Turning ${name(r)}…`);
+  }
+  function moveTurn(ev){
+    const {THREE,ray,pointer}=tools,r=rec(turning.id);if(!r?.group?.parent)return;pointer(ev);
+    const point=new THREE.Vector3();if(!ray.ray.intersectPlane(turning.plane,point))return;
+    let yaw=turning.yaw+(sweep(r,point)-turning.from);if(ev.shiftKey)yaw=rad(Math.round(deg(yaw)/15)*15);yaw=rad(wrapDeg(deg(yaw)));
+    r.group.rotation.y=yaw;r.group.updateMatrixWorld(true);r.state.pose={...r.state.pose,yaw};turning.changed=true;
+    status(`Turning ${name(r)}: ${r1(wrapDeg(deg(yaw)))}°.`);
+  }
+  function endTurn(ev,cancel=false){
+    const d=turning;turning=null;if(!d)return;const {t}=tools;
+    try{t.renderer.domElement.releasePointerCapture(d.pointer);}catch{}
+    t.controls.enabled=d.controls;win().__directorDragging=false;
+    const r=rec(d.id);if(!r)return;
+    if(cancel||!d.changed){r.state.pose={...r.state.pose,yaw:d.yaw};desks()?.place(r);return;}
+    const p=r.state.pose;put(d.id,{pose:{x:p.x,z:p.z,yaw:Math.round(p.yaw*1e4)/1e4}},`${name(r)} turned to ${r1(wrapDeg(deg(p.yaw)))}°.`);
   }
   // ---- the panel's controls
   function nudge(id,axis,by){
@@ -201,6 +297,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     sync();
     const list=records();
     if(!three()?.scene||!list.length)return `<h3>Desks</h3><p class="director-hint">${three()?.scene?'This room has no ErgoFlex desks other than the featured one.':'Loading the chapter…'}</p>`;
+    if(!tools&&editing())ensure().catch(e=>console.warn("[desk tools]",e));   // the view tools are there as soon as the tab is: a click on a desk is this editor's
     const n=editedCount(),fid=featured();
     const rows=list.map(r=>{
       const e=editOf(r.id),isF=r.id===fid,on=r.id===sel;
@@ -218,7 +315,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
       <p class="director-hint">${e?escape(describeDeskEdit(e,was(r))):'As the film has it.'}</p>
       <div class="director-actions desk-size" role="group" aria-label="Desk size">${['48x30','60x30'].map(s=>`<button data-action="dk-size" data-section="${s}" aria-pressed="${v.size===s}" title="${sizeLabel(s)} wide ErgoFlex desk">${sizeLabel(s)}</button>`).join('')}</div>
       <div class="desk-pos">${num('dk-x','Position X',r1(p.x/IN),1,'in')}${nudgeRow('x',[-12,-1,1,12])}${num('dk-z','Position Z',r1(p.z/IN),1,'in')}${nudgeRow('z',[-12,-1,1,12])}${num('dk-yaw','Rotate',yaw,1,'°')}${nudgeRow('yaw',[-15,-5,5,15])}</div>
-      <p class="director-hint">X runs along the room's left-right, Z front-back, from the room's origin. Drag the round handle under the desk in the view to move it.</p>
+      <p class="director-hint">X runs along the room's left-right, Z front-back, from the room's origin. In the view: drag an arrow to slide the desk along X or Z, the square or the round handle to move it freely, the ring around it to turn it.</p>
       <fieldset class="chapter-pacing start-pose" data-desk-start><legend>Starting height and tilt</legend>
         ${row('height','Height',L.heightMin,L.heightMax,.5,'in',v.initial.height)}${row('tilt','Tilt',L.tiltMin,L.tiltMax,.5,'°',v.initial.tilt)}
         <div class="director-actions start-pose-presets"><button data-action="dk-preset" data-section="sitting" title="Sitting: 28″, 0°">Sitting</button><button data-action="dk-preset" data-section="standing" title="Standing: 43.5″, −5°">Standing</button></div>

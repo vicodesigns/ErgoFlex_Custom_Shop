@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom, detailKit } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
-import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261110b';
-import { addCampusLife } from './campus-lived-in.mjs?v=env-shared-20261110b';
+import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261111';
+import { addCampusLife } from './campus-lived-in.mjs?v=env-shared-20261111';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 

@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { detailFinish } from './institutional-detail.mjs?v=material-realism-20261104';
-import { roomLifeBaseTransform } from './room-life.mjs?v=commons-home-comfort-20261024';
+import { roomLifeBaseTransform } from './room-life.mjs?v=env-shared-20261111';
 import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=library-floorplan-20261013';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
-import { makeHumboldtLayout, buildHumboldtCommons } from './library-humboldt-commons.mjs?v=env-shared-20261110b';
+import { makeHumboldtLayout, buildHumboldtCommons } from './library-humboldt-commons.mjs?v=env-shared-20261111';
 
 // Campus-library concepts, not a survey of the Humboldt pilot site.
 // Architecture and furniture coordinates are millimetres.

@@ -957,7 +957,7 @@ function wrapSeating(kit){
     const m=kit.phaseMover(),[ax,az]=kit.layout.activity,find=(x,z)=>()=>[kit.root.children.find(o=>o.userData.propId==='ergoflex-designer-chair'&&Math.hypot(o.position.x-x,o.position.z-z)<120)];
     const seats=[[-400,-700,0,-1200],[400,-700,0,-400],[-400,700,1,400],[400,700,1,1200]];
     for(const [dx,dz,back,rx] of seats)m.add(find(ax+dx,az+dz),null,i=>i===4?kit.pivotMove(ax+dx,az+dz,rx-dx,-1500-dz,back?0:Math.PI):null);
-    if(kit.layout.index>=2)for(const side of [-1,1])m.add(find(ax+side*1000,az),null,i=>i===4?kit.pivotMove(ax+side*1000,az,side*600-side*1000,-2300,-side*Math.PI/2):null);
+    // (the two end chairs of the larger labs stay at the table: the rows would put them into the edit bay in front)
     return m;
 }
 export function atmosphere(phase,gain,kit){

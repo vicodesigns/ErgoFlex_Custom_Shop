@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { migrateHumboldtGroupFurniture } from './humboldt-furniture-migration.mjs?v=commons-home-comfort-20261024';
-import { buildHumboldtLife } from './library-humboldt-life.mjs?v=env-shared-20261110b';
-import { addCampusLife } from './campus-lived-in.mjs?v=env-shared-20261110b';
+import { buildHumboldtLife } from './library-humboldt-life.mjs?v=env-shared-20261111';
+import { addCampusLife } from './campus-lived-in.mjs?v=env-shared-20261111';
 import { humboldtStudyChairs, humboldtReadingDetails } from './humboldt-commons-detail.mjs?v=commons-home-comfort-20261024';
 
 // A sixth Library layout inspired by the ground-floor commons of Cal Poly

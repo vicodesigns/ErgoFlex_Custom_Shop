@@ -653,7 +653,12 @@ export function enhanceChildWalls({root,layout:l,helpers:h,materials:m,groups}){
   const shell=right.children.find(o=>o.isMesh&&o.geometry?.parameters?.width===80&&Math.abs(o.geometry.parameters.height-low)<1),skin=mesh(right,g,shell?.material||m.plaster,[W-1,0,0]);
   // The shell boxes keep their colour but lose the stipple bump: each box face restarts the
   // bump UVs, and those seams at sill and head height showed through as dotted lines.
-  if(shell){const flat=shell.material.clone();flat.bumpMap=null;flat.needsUpdate=true;for(const o of right.children)if(o.isMesh&&o.material===shell.material&&o.geometry?.parameters?.width===80)o.material=flat;}skin.rotation.y=-Math.PI/2;skin.name='Window wall plaster skin';skin.castShadow=false;skin.receiveShadow=true;skin.userData.presentationOnly=true;skin.userData.dropSurface=false;}
+  // Round 3 root cause of the dotted lines: z-fighting. At the wide camera (near 0.01 m, ~12 m
+  // away) one depth step is ~0.6 room-mm, so the shell's up-facing band faces at sill (850) and
+  // head (2300) height, 1-1.6 mm behind this skin, won every other pixel along the wall. The
+  // shell steps 6 mm back behind the skin; the window trim covers the reveal edges.
+  // (Every shell box: the lower band can carry a different material from the upper ones.)
+  {const flats=new Map();for(const o of right.children)if(o.isMesh&&o.geometry?.parameters?.width===80&&o!==skin){if(o.material.bumpMap){if(!flats.has(o.material)){const f=o.material.clone();f.bumpMap=null;f.needsUpdate=true;flats.set(o.material,f);}o.material=flats.get(o.material);}o.position.x+=6;}}skin.rotation.y=-Math.PI/2;skin.name='Window wall plaster skin';skin.castShadow=false;skin.receiveShadow=true;skin.userData.presentationOnly=true;skin.userData.dropSurface=false;}
  // Matching skirting on the window wall, stopping at the door casing.
  {const k=cluster('right','wall-'+stage+'-skirting','Painted skirting board',(back+front)/2,50),segs=door?[[back+2,door.u-DW/2-CAS-6],[door.u+DW/2+CAS+6,front-2]]:[[back+2,front-2]];
   for(const [a,b] of segs)if(b-a>20)k.solid(new THREE.BoxGeometry(b-a,100,20),'#efe7d4',(a+b)/2-(back+front)/2,0,10);}

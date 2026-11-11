@@ -135,7 +135,7 @@ if who.get('limbs'):
     if 'pelvis' not in pose: off = pose.get('pelvis_offset', (0, 0, 0)); pose['pelvis_offset'] = (off[0], off[1], off[2] - drop)
 pose_lib.apply_pose(rig, pose)
 # What each held thing follows when the Director fine-tunes the pose (the wheelchair stays where it is).
-HELD_BONE = {'gamepad': 'hand_r', 'backpack': 'spine_03', 'headphones': 'head', 'wheelchair': None, 'prosthesis': 'calf_{side}'}
+HELD_BONE = {'gamepad': 'hand_r', 'carton': 'hand_r', 'backpack': 'spine_03', 'headphones': 'head', 'wheelchair': None, 'prosthesis': 'calf_{side}'}
 extras, extra_bone = [], {}
 for kind, kw in spec.get('held', []):
     made = held.BUILDERS[kind](rig, **dict(kw)); extras += made
