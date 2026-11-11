@@ -98,7 +98,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(), rigs: new Map(), rigFiles: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=people-cast-20261110b').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=polish-20261111b').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
