@@ -892,7 +892,7 @@ export function decorate(kit){
 // (room-refinement DAY_ANGLES), so its place and length follow the hour and
 // the blind. Soft in the morning, a short bright patch in the afternoon, long
 // and warm at dusk, none at night or behind the screening blackout.
-const SUN_DIR={morning:[.62,-.36],afternoon:[1.45,.12],evening:[.32,.48]},SUN_LEVEL={morning:.16,afternoon:.3,evening:.2};
+const SUN_DIR={morning:[.62,-.36],afternoon:[1.45,.12],evening:[.32,.48]},SUN_LEVEL={morning:.075,afternoon:.2,evening:.05};   // a read of daylight on the carpet, not a spotlight: the film's morning keeps its mood
 const BLIND_DROP=[.15,.35,.75,.55,1];
 function mediaSun(kit){
     const {w,d,bz,front}=kit,z0=bz+d*.54,half=d*.24;
