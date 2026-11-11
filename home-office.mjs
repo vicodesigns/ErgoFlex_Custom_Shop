@@ -431,12 +431,18 @@ function homeDropZone(root, entry, layout, h, { brass, joinery, sage, clay, cera
     const rail = new THREE.Group(); rail.name = 'Entry coat hooks'; entry.add(rail);
     box(rail, [22, 90, 620], [x + 11, 1690, z], joinery, 4);
     for (const dz of [-210, 0, 210]) { const peg = mesh(rail, new THREE.CylinderGeometry(9, 12, 85, 12), brass, [x + 60, 1700, z + dz]); peg.rotation.z = Math.PI / 2 - .35; }
+    // A jacket on its peg, seen flat against the wall: shoulders, two sleeves hanging, the hem, a collar notch.
     const coat = (parent, dz, color, long = 1) => {
-        const g = new THREE.Group(); g.name = 'Hung jacket'; parent.add(g); g.position.set(x + 70, 1690, z + dz);
+        const g = new THREE.Group(); g.name = 'Hung jacket'; parent.add(g); g.position.set(x + 34, 1700, z + dz);
         const cloth = material(color, { roughness: .95 }); cloth.userData.roomSurface = 'fabric';
-        const body = mesh(g, new THREE.CapsuleGeometry(105, 520 * long, 6, 14), cloth, [8, -330 * long - 60, 0]); body.scale.set(.42, 1, 1.05);
-        const collar = mesh(g, new THREE.TorusGeometry(60, 22, 8, 16, Math.PI * 1.3), cloth, [10, -40, 0]); collar.rotation.set(0, Math.PI / 2, Math.PI * .85);
-        for (const s of [-1, 1]) { const arm = mesh(g, new THREE.CapsuleGeometry(38, 470 * long, 4, 10), cloth, [22, -330 * long - 30, s * 105]); arm.rotation.x = s * .06; }
+        const L = long, cut = new THREE.Shape();
+        cut.moveTo(-62, 0); cut.lineTo(-205, -55); cut.lineTo(-262, -545 * L); cut.lineTo(-188, -560 * L); cut.lineTo(-166, -190);
+        cut.lineTo(-176, -650 * L); cut.lineTo(176, -650 * L); cut.lineTo(166, -190); cut.lineTo(188, -560 * L); cut.lineTo(262, -545 * L);
+        cut.lineTo(205, -55); cut.lineTo(62, 0); cut.quadraticCurveTo(0, -70, -62, 0);
+        const body = mesh(g, new THREE.ExtrudeGeometry(cut, { depth: 46, bevelEnabled: true, bevelThickness: 14, bevelSize: 12, bevelSegments: 3, curveSegments: 8 }), cloth, [0, 0, 0]); body.rotation.y = Math.PI / 2;
+        // the front edge and a pocket flap, a shade darker: enough to read as a garment at room distance
+        const trim = material(new THREE.Color(color).multiplyScalar(.72), { roughness: .95 }); trim.userData.roomSurface = 'fabric';
+        box(g, [8, 600 * L, 10], [66, -335 * L - 20, 0], trim, 2); box(g, [8, 26, 96], [66, -470 * L, 92], trim, 2);
         return quiet(g);
     };
     const tote = (parent, at, color, turn = 0) => {

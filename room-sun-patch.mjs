@@ -13,13 +13,16 @@ import * as THREE from 'three';
 const PHASE_LEVELS = {
     morning: ['#ffdcae', .42], afternoon: ['#fff1da', .26], evening: ['#ff9d58', .5], night: ['#000000', 0], party: ['#000000', 0]
 };
+const SOFT = .45;      // a read of daylight on the floor, not a spotlight (the flat patch cannot light what stands in it)
 const MAPS = new Map();
 function paneMap(bars, rows) {
     const key = bars + ':' + rows; if (MAPS.has(key)) return MAPS.get(key);
     const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-    const g = c.getContext('2d'); g.filter = 'blur(5px)'; g.fillStyle = '#ffffff';
-    const m = 10, cols = bars + 1, cw = (256 - m * 2) / cols, rh = (256 - m * 2) / rows;
-    for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) g.fillRect(m + i * cw + 4, m + j * rh + 4, cw - 8, rh - 8);
+    // a wide penumbra: the glass is a metre or more from the floor it lights, so the panes' edges are soft and the
+    // glazing bars only a dip in brightness; a hard-edged patch reads as something laid on the floor
+    const g = c.getContext('2d'); g.filter = 'blur(15px)'; g.fillStyle = '#ffffff';
+    const m = 34, cols = bars + 1, cw = (256 - m * 2) / cols, rh = (256 - m * 2) / rows;
+    for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) g.fillRect(m + i * cw + 3, m + j * rh + 3, cw - 6, rh - 6);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; MAPS.set(key, t); return t;
 }
 // Sutherland-Hodgman against the floor rectangle, carrying uv.
@@ -79,7 +82,7 @@ export function createSunPatch(root, layout, windows, { levels = PHASE_LEVELS, a
                 geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geometry.setIndex(index);
                 geometry.computeBoundingSphere();
                 // Longer, lower sun spreads the same light over more floor.
-                material.color.set(color).multiplyScalar(strength * gain * Math.min(1, .55 + dir.y * .5));
+                material.color.set(color).multiplyScalar(SOFT * strength * gain * Math.min(1, .55 + dir.y * .5));
             }
         }
     };
