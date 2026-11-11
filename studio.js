@@ -11850,6 +11850,26 @@ function setMotionTab(tab) {
     if (tab === 'glide') document.getElementById('glide-pad')?.focus();
     if (tab !== 'glide') releaseGlideInput();
 }
+// Send to Director. Studio's edits are already in the shared state (tools/studio-state/sync.js), so the hand-off
+// is only a matter of opening the right page: the Director records which chapter page shows which room
+// ('ergoflex.director.roomLinks.v1', experience/studio-sync.mjs). A Director tab this button opened before is
+// brought forward as it is (a reload would cost it its undo history); there, Refresh from Studio takes the edits.
+async function sendToDirector() {
+    const KEY='ergoflex.director.roomLinks.v1',tab=window.open('','ergoflex-director');   // opened inside the click, before any wait
+    if(!tab){notifyUser('The browser blocked the new tab. Allow pop-ups for this page, or open Watch intro and choose Director Mode.');return;}
+    let open=false;try{open=/\/experience\/$/.test(tab.location.pathname);}catch{}
+    if(open){tab.focus();notifyUser('The Director is already open in another tab. Press Refresh from Studio there to see your latest edits.');return;}
+    let links=null;
+    try{links=JSON.parse(localStorage.getItem(KEY)||'null');}catch{}
+    try{await window.__studioState?.flush?.();const r=await fetch('/api/studio-state',{cache:'no-store'});if(r.ok){const raw=(await r.json()).values?.[KEY];if(raw)links=JSON.parse(raw);}}catch{}
+    const safe=l=>l&&typeof l.url==='string'&&/^\/(?!\/)/.test(l.url)?l:null;
+    const here=safe(links?.rooms?.[selectedRoomScene]),target=here||safe(links?.last);
+    tab.location.href=target?target.url:new URL('./experience/',location.href).href;tab.focus();
+    notifyUser(here?`Opening the Director on “${here.title||here.id}”, the chapter of this room.`
+        :target?`No film chapter of this room has been opened in the Director yet: opening its last chapter, “${target.title||target.id}”.`
+        :'Opening the film. Choose a chapter in Director Mode; after that this button goes straight to the chapter of the room you are in.');
+}
+
 function initStudio() {
     const toast = document.createElement('div'); toast.id = 'studio-toast'; toast.role = 'status'; toast.hidden = true; document.body.append(toast);
     // V2 adds the accessories axis. A V1 payload is a valid V2 with an empty
@@ -12041,6 +12061,12 @@ function initStudio() {
         ['room-redo-btn','Redo','Ctrl+Y / Ctrl+Shift+Z / Cmd+Shift+Z',performRedo]]){
         const button=document.createElement('button');button.id=id;button.type='button';button.textContent=label;
         button.title=shortcut;button.hidden=true;button.disabled=true;button.onclick=action;toolbar.append(button);
+    }
+    // Send to Director (docs/director-studio-sync-pr-draft.md): one click from this room to its film chapter.
+    if(!EVENT_DEMO&&!window.__ERGO_PRESENTATION__){
+        const send=document.createElement('button');send.id='send-to-director';send.type='button';send.textContent='Send to Director ↗';
+        send.title='Open the Director on the film chapter of this room. Your Studio edits are already shared: press Refresh from Studio there.';
+        send.onclick=sendToDirector;toolbar.append(send);
     }
     const saveStatus=document.createElement('span');saveStatus.id='room-save-status';saveStatus.setAttribute('role','status');
     saveStatus.textContent='Auto-saves in this browser';saveStatus.hidden=true;toolbar.append(saveStatus);

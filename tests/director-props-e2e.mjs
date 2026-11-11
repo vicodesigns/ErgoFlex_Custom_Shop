@@ -210,6 +210,15 @@ try{
   check(!!edited&&JSON.stringify(edited)!==JSON.stringify(old.transforms['scene:library:humboldt:room:0:steelcase-leap-v2']),'Studio state: the chair\'s transform written through POST /api/studio-state');
   const changedKeys=Object.keys(studio1).filter(k=>JSON.stringify(studio1[k])!==JSON.stringify(JSON.parse(studio0)[k]));check(changedKeys.join()==='library:humboldt','only the library:humboldt room changed');
   check(JSON.stringify(Object.fromEntries(Object.entries(studio1['library:humboldt'].transforms).filter(([k])=>!/steelcase/.test(k))))===JSON.stringify(Object.fromEntries(Object.entries(old.transforms).filter(([k])=>!/steelcase/.test(k)))),'no other prop changed in Studio');
+  // ---- Studio <-> Director sync (experience/studio-sync.mjs): Studio's poll sees the Director's write (its "shared edits
+  // · Reload to see" badge), and Refresh from Studio right after reports nothing new: the stage already has it.
+  const seen=await (await fetch(`${BASE}/api/studio-state/changes?since=0&client=a-studio-tab`)).json();
+  check(seen.keys.some(k=>k.key==='ergoflex.sceneAssets.v1'&&k.by==='Director'),'Studio\'s poll lists the write as the Director\'s');
+  check(/^Refresh from Studio$/.test(await page.$eval('[data-studio-refresh]',b=>b.textContent)),'the Director\'s own write raises no "Studio changed" badge');
+  const beforeRefresh=[JSON.stringify(await draft()),JSON.stringify((await pose(CHAIR)).p)];
+  await page.click('[data-studio-refresh]');
+  await until(async()=>/^Studio has nothing new for this stage\./.test(await status()),'Refresh from Studio with nothing new',20000);
+  check(JSON.stringify(await draft())===beforeRefresh[0]&&JSON.stringify((await pose(CHAIR)).p)===beforeRefresh[1],'Refresh from Studio after Make permanent: nothing new, the draft and the stage as they were');
   d=await draft();check(d.length===1&&/wide-monitor/.test(d[0].match),'the chair\'s chapter edit is folded in; the accessory hide stays');
   const chairAfter=await pose(CHAIR);check(near(chairAfter.p,chairBefore.p)&&near(chairAfter.s,chairBefore.s),'the chair stays where he put it on the stage');
   }

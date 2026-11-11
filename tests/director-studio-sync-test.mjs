@@ -28,6 +28,9 @@ const desks=diffSceneDesks(d0,d1,'office/house');
 assert.deepEqual(desks.map(c=>[c.desk,c.what.join('+')]),[['main','start'],['station-a','size+place'],['station-c','removed']],'what changed on each desk of this room');
 assert.deepEqual(desks[1].studio,{name:'Station A',size:'48x30',pose:{x:500,z:-200,yaw:1},height:30,tilt:0});
 assert.deepEqual(diffSceneDesks(d0,d0,'office/house'),[]);
+// Studio saves a room for the first time: only desks that differ from the room's own are changes.
+const first=diffSceneDesks(null,d1,'office/house',{'station-a':{size:'60x30',pose:{x:0,z:0,yaw:0},height:30,tilt:0},'station-b':{size:'60x30',pose:{x:0,z:0,yaw:0},height:30,tilt:0}});
+assert.deepEqual(first.filter(c=>c.desk!=='main').map(c=>[c.desk,c.what.join('+')]),[['station-a','size+place'],['station-c','removed']],'a first save lists only the desks Studio really changed');
 
 // ---- the Adopt rows
 const chair={match:'^Prop:chair$',asset:'office:chair',label:'Prop:steelcase-leap-v2',position:[.2,0,0]},rug={match:'^Rug$',position:[0,0,1]};

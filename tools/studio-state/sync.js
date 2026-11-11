@@ -88,8 +88,10 @@
     const s = await r.json(), changed = [];
     for (const [k, v] of Object.entries(s.values)) {
       if (!SHARED.test(k) || !only(k) || pending.has(k)) continue;
-      const before = getItem.call(ls, k);
-      if (before !== v) { try { setItem.call(ls, k, v); } catch (e) { console.warn('[studio-state] could not store', k, e); continue; } changed.push({ key: k, before, after: v }); }
+      // Storage is shared by this browser's tabs: a value this page did not put there is another tab's newer save
+      // (that tab sends it itself), so it is never replaced by the server's older one.
+      const before = getItem.call(ls, k), mine = before === (base.has(k) ? base.get(k) : null);
+      if (before !== v && mine) { try { setItem.call(ls, k, v); } catch (e) { console.warn('[studio-state] could not store', k, e); continue; } changed.push({ key: k, before, after: v }); }
       base.set(k, v);
     }
     for (const k of s.deleted || []) {

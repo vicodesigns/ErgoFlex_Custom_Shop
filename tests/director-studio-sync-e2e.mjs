@@ -51,8 +51,9 @@ try{
   const status=()=>director.$eval('#director-panel [data-status]',e=>e.textContent).catch(()=>'');
   const refreshLabel=()=>director.$eval('[data-studio-refresh]',e=>e.textContent).catch(()=>'');
   const undoOn=()=>director.$eval('#director-panel [data-action=undo]',b=>!b.disabled);
+  // A background tab gets no animation frames: whichever tab is being driven is in front, as it is for a person.
   async function openChapter(chapter){
-    await director.goto(BASE+chapter.page);
+    await director.bringToFront();await director.goto(BASE+chapter.page);
     await director.waitForFunction(()=>location.pathname==='/experience/'&&/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:300000});
     await director.waitForFunction(()=>!!document.getElementById('stage').contentWindow.__filmEdits,{timeout:60000});await wait(1200);
   }
@@ -69,7 +70,7 @@ try{
   });
 
   // ================================================================ props (Commons)
-  await studio.goto(BASE+'/?view=product');   // any Studio page: it only has to be Studio's storage and Studio's sync client
+  await studio.bringToFront();await studio.goto(BASE+'/?view=product');   // any Studio page: it only has to be Studio's storage and Studio's sync client
   await studio.waitForFunction(()=>!!window.__studioState&&!!window.ErgoFlex?.wheelRigs,{timeout:180000});
   await openChapter(commons);
   check(/^Refresh from Studio$/.test(await refreshLabel()),'the Director has a Refresh from Studio button');
@@ -150,11 +151,12 @@ try{
   check((await director.evaluate(()=>__draft().deskEdits)).some(e=>e.desk===ID),'the chapter keeps its desk edit');
   const changes=await (await fetch(`${BASE}/api/studio-state/changes?since=${studioRev}&client=studio-tab`)).json();
   check(changes.keys.some(k=>k.key===DESKS&&k.by==='Director'),'Studio\'s poll sees the write (what its "shared edits · Reload to see" badge shows)');
-  await studio.goto(BASE+'/?room=highschool&layout=house');
+  await studio.bringToFront();await studio.goto(BASE+'/?room=highschool&layout=house');
   await studio.waitForFunction(()=>window.ErgoFlex?.wheelRigs?.length===4&&getComputedStyle(document.querySelector('#loader')).display==='none'&&window.ErgoFlex.sceneDesks?.key==='highschool/house',{timeout:240000});
   const inStudio=await until(()=>studio.evaluate(id=>{const r=ErgoFlex.sceneDesks.records.get(id);return r?.group?{x:r.group.position.x,z:r.group.position.z}:null;},ID),'the desk in Studio');
   check(Math.abs(inStudio.x-r1.x)<1&&Math.abs(inStudio.z-r1.z)<1,'after a reload Studio shows the desk where the Director put it');
   await studio.screenshot({path:path.join(shots,'sync-4-studio-after.png')});
+  await director.bringToFront();
   const sources1=eventSources.length;
   // Studio moves another desk: the Director offers it, and takes it only when asked.
   const o0=await director.evaluate(id=>__rec(id),OTHER);

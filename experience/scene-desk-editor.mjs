@@ -1,6 +1,6 @@
 import {cleanDeskEdit,effectiveDeskEdits,describeDeskEdit} from './desk-edits.mjs';
 import {clampStartPose,startPoseLimits,START_PRESETS} from './start-pose.mjs';
-import {writeSceneDesks,DESKS_KEY} from './studio-sync.mjs';
+import {writeSceneDesks,DESKS_KEY,noteStudioValue} from './studio-sync.mjs';
 // Director "Desks": every ErgoFlex desk in the room, not only the featured one (the chapter's hero desk, edited in the
 // Groove tab). Select a desk in the Desks list or by clicking it in the view; its panel sets Size (48″ / 60″), Position
 // X / Z in inches, Rotate in degrees, the starting Height and Tilt (start-pose.mjs clamps them to the real desk), and
@@ -326,7 +326,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     const posted=await fetch('/api/studio-state',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({client:shared?.client||'director-'+Math.random().toString(36).slice(2,10),by:'Director',changes:[{key:DESKS_KEY,value,base}]})});
     if(!posted.ok)throw Error(`Studio did not take the change (${posted.status}).`);const result=(await posted.json()).results?.[0];if(!result||result.skipped||result.error)throw Error('Studio did not take the change: '+(result?.skipped||result?.error||'no answer'));
     // This page's copy of the shared state (no second write: the sync script sees it as its own base).
-    try{const stored=(await (await fetch('/api/studio-state',{cache:'no-store'})).json()).values?.[DESKS_KEY];if(stored){shared?.base?.set(DESKS_KEY,stored);localStorage.setItem(DESKS_KEY,stored);}}catch{}
+    try{const stored=(await (await fetch('/api/studio-state',{cache:'no-store'})).json()).values?.[DESKS_KEY];if(stored){shared?.base?.set(DESKS_KEY,stored);localStorage.setItem(DESKS_KEY,stored);bridge.stageStorage?.(DESKS_KEY,stored);noteStudioValue(DESKS_KEY,stored);}}catch{}
     status(`Wrote ${rows.length} desk${rows.length===1?'':'s'} to Studio (${key}): ${rows.map(r=>r.name).join(', ')}. Studio shows ${rows.length===1?'it':'them'} after a reload; the chapter keeps its own edits.`);
     rerender();
   }

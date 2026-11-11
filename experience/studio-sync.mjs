@@ -50,18 +50,20 @@ export function diffSceneAssets(beforeRaw,afterRaw,sceneIds){
 const deskFacts=d=>d?{name:d.name||'ErgoFlex desk',size:d.size,pose:d.pose&&{x:d.pose.x,z:d.pose.z,yaw:d.pose.yaw},height:d.height,tilt:d.tilt}:null;
 const near=(a,b,eps)=>Math.abs((a??0)-(b??0))<=eps;
 // Desks of the chapter's room: [{desk, what:['size','place','start','build'], gone?:true, studio:{name,size,pose,height,tilt}|null}]
-export function diffSceneDesks(beforeRaw,afterRaw,roomKey){
+// known: {desk: {size,pose,height,tilt}} for desks Studio had not saved before (the room's own desks, as the stage has
+// them): Studio saving a room for the first time is not a change to every desk in it.
+export function diffSceneDesks(beforeRaw,afterRaw,roomKey,known={}){
   const b=decode(beforeRaw).rooms?.[roomKey]||{},a=decode(afterRaw).rooms?.[roomKey]||{},bd=b.desks||{},ad=a.desks||{},out=[];
   const gone=new Set(a.deleted||[]),wasGone=new Set(b.deleted||[]);
   for(const id of new Set([...Object.keys(bd),...Object.keys(ad),...gone])){
-    const x=bd[id],y=ad[id];
+    const fresh=!bd[id]&&!!known[id],x=bd[id]||known[id],y=ad[id];
     if(gone.has(id)){if(!wasGone.has(id))out.push({desk:id,what:['removed'],gone:true,studio:null});continue;}
     if(!y)continue;
     const what=[];
     if(!x||x.size!==y.size)what.push('size');
     if(!x||!near(x.pose?.x,y.pose?.x,.5)||!near(x.pose?.z,y.pose?.z,.5)||!near(x.pose?.yaw,y.pose?.yaw,1e-4))what.push('place');
     if(!x||!near(x.height,y.height,.01)||!near(x.tilt,y.tilt,.01))what.push('start');
-    if(!x||!same(x.style,y.style)||!same(x.accessories,y.accessories))what.push('build');
+    if(!fresh&&(!x||!same(x.style,y.style)||!same(x.accessories,y.accessories)))what.push('build');
     if(what.length)out.push({desk:id,what,studio:deskFacts(y)});
   }
   return out;
@@ -132,11 +134,16 @@ export function writeSceneDesks(raw,roomKey,rows){
   return encodeStoredJSON(all);
 }
 
+// What the stage was last given for Studio's keys: the page's copy when the Director opened, then every Refresh and
+// every Make permanent. The stage's own storage is no measure: the app rewrites it as rooms come and go.
+const shown=new Map();
+export function noteStudioValue(key,value){shown.set(key,value??null);}
 // ---- the Director's controller
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createStudioSync({bridge,project,index,shot,film,commit,status,rerender,render}){
   const sync=()=>window.__studioState,frame=()=>document.getElementById('stage'),api=()=>frame()?.contentWindow?.ErgoFlex;
   let waiting=[],seenRev=sync()?.rev||0,busy=false,rows=[];
+  for(const key of STUDIO_KEYS)if(!shown.has(key))try{shown.set(key,localStorage.getItem(key));}catch{shown.set(key,null);}
   // The shared poll: Studio's keys saved by another tab since the last Refresh are this module's; the rest keep the reload badge.
   sync()?.watch?.(keys=>{
     const mine=keys.filter(k=>STUDIO_KEYS.includes(k.key)&&k.rev>seenRev),count=waiting.length;
@@ -157,12 +164,15 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
     try{
       status('Reading Studio…');
       const pulled=await sync().pull(key=>STUDIO_KEYS.includes(key));seenRev=pulled.rev;waiting=[];
-      const values=Object.fromEntries(STUDIO_KEYS.map(k=>[k,localStorage.getItem(k)]));
-      const s=shot(),roomKey=api()?.sceneDesks?.key||null,featured=api()?.sceneDesks?.selected??null;
-      const result=await bridge.refreshStudio(project(),index(),values);
-      if(!result.changed.length){status('Studio has nothing new for this stage.');return;}
-      const assetChanges=result.changed.includes(ASSETS_KEY)?diffSceneAssets(result.before[ASSETS_KEY],values[ASSETS_KEY],studioSceneIds(s)):[];
-      const deskChanges=roomKey&&result.changed.includes(DESKS_KEY)?diffSceneDesks(result.before[DESKS_KEY],values[DESKS_KEY],roomKey):[];
+      const values=Object.fromEntries(STUDIO_KEYS.map(k=>[k,localStorage.getItem(k)])),changed=STUDIO_KEYS.filter(k=>shown.get(k)!==values[k]);
+      if(!changed.length){status('Studio has nothing new for this stage.');return;}
+      const s=shot(),roomKey=api()?.sceneDesks?.key||null,featured=api()?.sceneDesks?.selected??null,before=Object.fromEntries(changed.map(k=>[k,shown.get(k)]));
+      await bridge.refreshStudio(project(),index(),Object.fromEntries(changed.map(k=>[k,values[k]])));
+      for(const k of changed)shown.set(k,values[k]);
+      const assetChanges=changed.includes(ASSETS_KEY)?diffSceneAssets(before[ASSETS_KEY],values[ASSETS_KEY],studioSceneIds(s)):[];
+      // The room's desks as the film has them (under the chapter's edits), for desks Studio saves for the first time.
+      const known={};for(const r of api()?.sceneDesks?.records?.values()||[]){const st=r.deskEditWas?.state||r.state;if(st?.pose)known[r.id]={size:st.size,pose:{...st.pose},height:st.height,tilt:st.tilt};}
+      const deskChanges=roomKey&&changed.includes(DESKS_KEY)?diffSceneDesks(before[DESKS_KEY],values[DESKS_KEY],roomKey,known):[];
       rows=adoptRows({assetChanges,deskChanges,propEdits:effectivePropEdits(film(),s),deskEdits:effectiveDeskEdits(film(),s),featured});
       const conflicts=rows.filter(r=>r.conflict).length,here=assetChanges.length+deskChanges.length;
       status(`Refreshed from Studio${here?`: ${assetChanges.length} prop change${assetChanges.length===1?'':'s'} and ${deskChanges.length} desk change${deskChanges.length===1?'':'s'} in this room`:' (nothing in this chapter\'s room changed)'}. The chapter's edits and Undo are as they were.${conflicts?` ${conflicts} also edited in this chapter: choose which to keep.`:''}`);
