@@ -395,7 +395,7 @@ export function buildScifiRoom(room, root, layout, helpers) {
     // props have loaded (each load of the room), on a copy of the model's material.
     let refinished=null;
     const refinish=()=>{root.traverse(o=>{if(o.userData.propId!=='kenney-space-template-wall-half'||o.userData.bayFinish)return;o.userData.bayFinish=true;
-        o.traverse(c=>{if(!c.isMesh||!c.material)return;const mat=c.material.clone();mat.color.set('#66788a');mat.roughness=.5;mat.metalness=.45;if('emissiveIntensity' in mat)mat.emissiveIntensity=0;mat.userData.roomSurface='metal';c.material=mat;});});};
+        o.traverse(c=>{if(!c.isMesh||!c.material)return;const mat=c.material.clone();mat.color.set('#66788a');mat.roughness=.5;mat.metalness=.45;if('emissiveIntensity' in mat)mat.emissiveIntensity=0;mat.userData.roomSurface='metal';room.ownedMaterials?.add(mat);c.material=mat;});});};   // (the room owns the copy: it goes when the room is rebuilt)
     room.roomAtmosphere=(id,accent=1)=>{
         if(room.ready&&room.ready!==refinished){refinished=room.ready;room.ready.then(refinish).catch(()=>{});}
         const mode=SCIFI_MODES[id]||SCIFI_MODES.morning;
