@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
+import { createSunPatch } from './room-sun-patch.mjs?v=polish-20261111b';
+import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
-import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
+import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261111b';
 
 const names = ['Apartment recording nook', 'Home production studio', 'Writing & recording room', 'Producer studio & lounge', 'Production & performance suite'];
 export const MUSIC_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map((home, index) => {
@@ -620,10 +622,24 @@ export function buildMusicRoom(room, root, layout, helpers) {
         for (let x = 0; x < 540; x += 26) { c.beginPath(); c.arc(x, 512, 24 + (x * 7 % 13), Math.PI, 0); c.fill(); }
         skyMap.needsUpdate = true; windowVista.setPhase(modeId);
     };
+    // Day: sun through the two-light window. After dark: the floor lamp, the
+    // rack lamp and the coloured wash land where those fixtures are.
+    const sun = createSunPatch(root, layout, [{ wall: 'left', at: -w / 2, from: a + 20, to: b - 20, bottom: low + 20, top: low + wh - 20, bars: 1, rows: 1 }]);
+    const pools = createPoolLayer(root, 'Music lamp light pools'), poolGain = { v: 1 };
+    const level = (k, by) => i => Math.min(.55, by[i] * .5 * poolGain.v) * k;
+    const floorLamp = layout.props.find(p => p.id === 'kenney-furniture-lamp-round-floor').at;
+    const small = layout.compact ? .65 : 1;
+    pools.add(root, [floorLamp[0] + 250, 4, floorLamp[2] - 250], [1900 * small, 1700 * small], '#ffcf98', level(small, [0, 0, .6, .75, .55]));
+    pools.add(root, [floorLamp[0] - 168, 1250, floorLamp[2] - 200], [1400, 1500], '#ffcf98', level(.6, [0, 0, .5, .65, .5]), 'left');
+    pools.add(root, [rx - 150, 4, rz + 300], [1300, 1100], '#f4c493', level(.7, [0, 0, .5, .6, .45]));
+    // The coloured performance wash is a party light; it is off for the quiet night mix.
+    if (!layout.compact) pools.add(root, [layout.performance[0], 4, layout.performance[1]], [1900, 1900], '#c7a6ec', level(.7, [0, 0, .25, 0, .7]));
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = MUSIC_MODES[modeId] || MUSIC_MODES.afternoon;
         session.mode = modeId in MUSIC_MODES ? modeId : 'afternoon'; session.accent = accent;
         drawSky(modeId, mode);
+        poolGain.v = accent * (layout.id === 'apartment' ? .45 : 1); pools.apply(modeId); sun.update(modeId);   // the small room's lamp lights a small room
+        // (The city photograph after dark is a dusk exposure. It stays as it is: the film's night chapter was shot against it.)
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .06 + mode.wash * accent * 1.25; });
         lights.forEach(spec => { if (spec.wash) spec.light.color.set(mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.wash ? mode.wash : mode.practical) * accent; });
         diffuser.emissiveIntensity = .2 + mode.practical * .65;

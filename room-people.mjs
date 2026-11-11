@@ -38,7 +38,7 @@
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-20261110a';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261111b';
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).

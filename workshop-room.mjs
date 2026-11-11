@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
+import { createSunPatch } from './room-sun-patch.mjs?v=polish-20261111b';
+import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
@@ -580,8 +582,19 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
         c.fillStyle=near;for(let x=0;x<512;x+=26)c.fillRect(x,446,18,66);c.fillRect(0,462,512,8);
         skyMap.needsUpdate=true; windowVista.setPhase(id);
     };
+    // The garage window prints its four lights on the slab: low and long in the
+    // morning, short at midday, gone at night when the bench lamps take over.
+    const sun = createSunPatch(root, layout, [{ wall: 'left', at: -w / 2, from: a + 20, to: b - 20, bottom: low + 20, top: low + wh - 20, bars: 1, rows: 2 }], {
+        levels: { morning: ['#ffdfb0', .28], afternoon: ['#fff3e0', .3], evening: ['#ffa060', .45], night: ['#000000', 0], party: ['#000000', 0] },   // no sun at the after-dark party; a quiet morning print beside the film's desk
+        angles: { morning: { elevation: .6, sweep: -.38 }, afternoon: { elevation: 1.25, sweep: .14 } }
+    });
+    const pools = createPoolLayer(root, 'Workshop bench light pools'), poolGain = { v: 1 };
+    const level = (k, by) => i => Math.min(.55, by[i] * .5 * poolGain.v) * k;
+    pools.add(root, [0, 4, bz + 900], [Math.min(3600, w - 600), 1500], '#f3f1e6', level(.8, [0, 0, .45, .7, .4]));
+    pools.add(root, [0, 1500, bz + 6], [Math.min(3400, w - 600), 1300], '#f3f1e6', level(.55, [0, 0, .4, .6, .35]), 'back');
+    pools.add(root, [layout.desk[0], 4, layout.desk[1]], [2000, 1700], '#ffe6c2', level(.6, [0, 0, .4, .55, .45]));
     room.roomAtmosphere=(id,accent=1)=>{
-        const mode=WORKSHOP_MODES[id]||WORKSHOP_MODES.morning;paintSky(mode,id);
+        const mode=WORKSHOP_MODES[id]||WORKSHOP_MODES.morning;paintSky(mode,id);poolGain.v=accent;pools.apply(id);sun.update(id);
         glow.forEach(({mat,kind})=>{
             if(kind==='sign'){mat.emissiveIntensity=mode.sign*1.7*accent;return;}
             if(kind==='screen'){mat.emissiveIntensity=(.45+.5*mode.wash)*accent;return;}

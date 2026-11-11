@@ -7,39 +7,39 @@ import { atelierSceneDecor, bindDeskDecor, applyDeskDecorLighting } from './atel
 import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from './campus-scene-furniture.mjs?v=campus-furniture-20261014';
 import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atelier-scene-beds.mjs?v=atelier-beds-20261014';
 import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=gallery-bedroom-20261025';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=env-shared-20261111';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=env-shared-20261111';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111b';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=polish-20261111b';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
-import { polishRoomProp } from './room-polish.mjs?v=env-shared-20261111';
-import { RoomLife } from './room-life.mjs?v=env-shared-20261111';
-import { RoomPeople } from './room-people.mjs?v=people-motion-20261111';
+import { polishRoomProp } from './room-polish.mjs?v=polish-20261111b';
+import { RoomLife } from './room-life.mjs?v=polish-20261111b';
+import { RoomPeople } from './room-people.mjs?v=polish-20261111b';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
 import { migrateHighschoolFixtureTransform } from './hbhs-design.mjs';
-import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=gym-black-red-m1-20261104';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=env-shared-20261111';
+import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=polish-20261111b';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=polish-20261111b';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=people-vistas-20261110';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=people-vistas-20261110';
 import { buildChildRoom, CHILD_MODES, childLayoutForSize, childLayoutById } from './child-room.mjs?v=child-room-20261104';
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=people-vistas-20261110';
-import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=people-vistas-20261110';
+import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=polish-20261111b';
 import * as THREE from 'three';
 import { RoomBounceLight } from './room-bounce-light.mjs?v=commons-group-work-20261016';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-size-setups-20261012';
-import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrateHomeReadingFurniture } from './home-office.mjs?v=people-vistas-20261110';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=people-vistas-20261110';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=people-vistas-20261110';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=people-vistas-20261110';
-import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=people-vistas-20261110';
+import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrateHomeReadingFurniture } from './home-office.mjs?v=polish-20261111b';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=polish-20261111b';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=polish-20261111b';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261111b';
+import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261111b';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=people-vistas-20261110';
 import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=people-gym-20261110';
-import { themedGymLayout } from './gym-theme.mjs?v=people-gym-20261110';
+import { themedGymLayout } from './gym-theme.mjs?v=polish-20261111b';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=people-vistas-20261110';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=people-vistas-20261110';
 
@@ -160,7 +160,7 @@ export const PROP_LIBRARY = {
     // The bones of every posture of one character (tools/people/export-rigs.mjs), for moving a person between them
     // (room-people-motion.mjs). Rejects when the character has no such file.
     rigData(character) {
-        if (!this.rigFiles.has(character)) this.rigFiles.set(character, fetch(`${PROP_BASE}people-rigs/${encodeURIComponent(character)}.json?v=people-motion-20261110a`).then(r => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }));
+        if (!this.rigFiles.has(character)) this.rigFiles.set(character, fetch(`${PROP_BASE}people-rigs/${encodeURIComponent(character)}.json?v=polish-20261111b`).then(r => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }));
         return this.rigFiles.get(character);
     },
     // A fresh instance with its own skeleton (null for a model without one): bones by name under the returned root.

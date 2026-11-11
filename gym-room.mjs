@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
-import { gymProgramMaps, buildGymSessionDetail, migrateGymSavedFurniture } from './gym-session-detail.mjs?v=gym-black-red-m1-20261104';
-import { GYM_MODES, gymTheme } from './gym-theme.mjs?v=people-gym-20261110';
+import { gymProgramMaps, buildGymSessionDetail, migrateGymSavedFurniture } from './gym-session-detail.mjs?v=polish-20261111b';
+import { GYM_MODES, gymTheme } from './gym-theme.mjs?v=polish-20261111b';
 
 // All architecture and original equipment below is authored in millimetres.
 const tiers = [
