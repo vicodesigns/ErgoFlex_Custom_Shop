@@ -116,7 +116,8 @@ export const ROOM_PEOPLE = {
         { id: 'people-maya-stand-coffee', desk: 'stand', modes: ['morning'] },
         // evening: she finishes up while Grace reads; night: alone with a tea, in the jumper she has put on
         { id: 'people-maya-sit-coffee', desk: 'sit', modes: ['night'], colors: LOOK.homeNight }, { id: 'people-maya-sit-coffee-30', desk: 'sit', modes: ['night'], colors: LOOK.homeNight },
-        { id: 'people-maya-sit-type', desk: 'sit', modes: ['morning', 'afternoon', 'evening'] }, { id: 'people-maya-sit-type-30', desk: 'sit', modes: ['morning', 'afternoon', 'evening'] }, { id: 'people-maya-stand-type', desk: 'stand', modes: DAY },
+        { id: 'people-maya-sit-type', desk: 'sit', modes: ['morning', 'afternoon', 'evening'] }, { id: 'people-maya-sit-type-30', desk: 'sit', modes: ['morning', 'afternoon', 'evening'] }, { id: 'people-maya-stand-type', desk: 'stand', modes: ['afternoon', 'evening'] },
+        { key: 'maya-night-stand', id: 'people-maya-stand-coffee', desk: 'stand', modes: ['night'], colors: LOOK.homeNight },   // the tea stays in her hand if the desk goes up
         { id: 'people-grace-sit-read', on: 'armchair-poppi', seat: 420, depth: -20, modes: ['evening'] },
         { id: 'people-grace-sit-chat', on: 'armchair-poppi', seat: 420, depth: -20, modes: ['party'], colors: { top: '#2f4f6f' } },
         L => L.id === 'apartment' ? [spot('people-maya-stand-talk', -950, 250, [750, 450], { ...PARTY, colors: LOOK.homeParty }), spot('people-noah-stand-drink', 780, 420, [-950, 250], { ...PARTY, colors: LOOK.guestE })]   // either side of the desk's front, the desk in view between them
@@ -129,7 +130,7 @@ export const ROOM_PEOPLE = {
         // after lunch he watches the replays with a drink in his hand; the headset goes on for the night's session
         { id: 'people-sam-sit-coffee', desk: 'sit', modes: ['afternoon'] }, { id: 'people-sam-sit-coffee-30', desk: 'sit', modes: ['afternoon'] },
         { id: 'people-sam-sit-game', desk: 'sit', modes: ['morning', 'night'] }, { id: 'people-sam-sit-game-30', desk: 'sit', modes: ['morning', 'night'] },
-        { id: 'people-sam-stand-type', desk: 'stand', modes: ['morning', 'afternoon', 'night'] },
+        { id: 'people-sam-stand-type', desk: 'stand', modes: ['night'] }, { key: 'sam-afternoon-stand', id: 'people-sam-stand-coffee', desk: 'stand', modes: ['afternoon'] },   // the drink stays in his hand if the desk goes up
         { id: 'people-kai-sit-controller', on: 'kenney-furniture-lounge-sofa', seat: 420, along: -330, depth: -150, modes: ['morning', 'evening', 'party'] },
         { id: 'people-sam-sit-controller', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 330, depth: -150, modes: ['evening'] },
         { id: 'people-sofia-sit-chat', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 330, depth: -150, modes: ['party'], colors: LOOK.guestC },
@@ -139,7 +140,7 @@ export const ROOM_PEOPLE = {
     // Andre's music studio: standing warm-up in the morning, seated mixing after lunch, a vocalist reading lyrics at the
     // mic in the evening, headphones on for the late mix, a small live set at the party (Andre at the mic, guests).
     music: [
-        { id: 'people-andre-stand-type', desk: 'stand', modes: ['morning'] },
+        { id: 'people-andre-stand-type', desk: 'stand', modes: ['morning', 'afternoon', 'evening', 'night'] },   // he stands when the desk goes up, at any hour
         { id: 'people-andre-sit-type', desk: 'sit', modes: ['morning', 'afternoon', 'evening'] }, { id: 'people-andre-sit-type-30', desk: 'sit', modes: ['morning', 'afternoon', 'evening'] },
         { id: 'people-andre-sit-mix', desk: 'sit', modes: ['night'] }, { id: 'people-andre-sit-mix-30', desk: 'sit', modes: ['night'] },
         { id: 'people-mia-stand-phone', by: 'music-vocal-mic', reach: 420, modes: ['evening'], colors: { top: '#6b4a7a', bottom: '#22242a' } },
@@ -298,7 +299,8 @@ export function deskFamily(id) {
     const m = /^people-([a-z]+)-(.+)$/.exec(id || ''); if (!m) return [];
     const [, who, posture] = m, as = (p, desk) => ['people-' + who + '-' + p, desk]; let list = [];
     if (/^wheel-/.test(posture)) { const base = posture.replace(/-(28|31)$/, ''); list = [as(base, 'wheel'), as(base + '-28', 'wheel'), as(base + '-31', 'wheel')]; }
-    else if (/^sit-/.test(posture)) { const base = posture.replace(/-30$/, ''); list = [as(base, 'sit'), as(base + '-30', 'sit'), as('stand-low', 'stand'), as('stand-type', 'stand')]; }
+    // (the standing counterpart of the seated posture first, so what is in the hand stays there: sit-coffee stands as stand-coffee)
+    else if (/^sit-/.test(posture)) { const base = posture.replace(/-30$/, ''); list = [as(base, 'sit'), as(base + '-30', 'sit'), as('stand-low', 'stand'), as(base.replace(/^sit-/, 'stand-'), 'stand'), as('stand-type', 'stand')]; }
     else if (posture === 'stand-type' || posture === 'stand-low') list = [as('sit-type', 'sit'), as('sit-type-30', 'sit'), as('stand-low', 'stand'), as('stand-type', 'stand')];
     return list.filter(([other]) => other !== id);
 }
@@ -527,7 +529,9 @@ export class RoomPeople {
             const spec = object.userData.person;
             return { object, id: spec.id, role: spec.desk, behind: BEHIND_KEYS[spec.desk] + (spec.reach ?? REACH[spec.desk]) - REACH[spec.desk], scale: object.scale.z || 1000 };
         });
-        const used = actor.configure(members); for (const o of actor.objects) o.userData.personDriven = used.some(m => m.object === o);
+        // two models of one stance built for one height (coffee in hand and typing, both at 43.5 in): the first one cast is her
+        const fit = m => m.role + '|' + (this.library.entry(m.id)?.person?.deskHeight ?? ''), kept = members.filter((m, i) => members.findIndex(n => fit(n) === fit(m)) === i);
+        const used = actor.configure(kept); for (const o of actor.objects) o.userData.personDriven = used.some(m => m.object === o);
     }
     // The featured desk's people fade with the desk height, so they need materials of their own (textures stay shared).
     ownMaterials(object) {
@@ -649,6 +653,7 @@ export class RoomPeople {
                 object.position.set(spot.at[0], spot.y ?? 0, spot.at[1]); object.rotation.y = THREE.MathUtils.degToRad(spot.turn || 0); object.userData.personMissing = false;
                 if (Number.isFinite(spot.scale)) this.resize(object, { scale: spot.scale });
             }
+            for (const object of this.people) object.userData.personChanging = false;   // a re-placed cast is not half way through a change of posture
             for (const actor of this.actors) this.recast(actor);
             for (const pair of this.pairs) if (pair.live) { const a = this.people.find(o => o.userData.person === pair.from), b = this.people.find(o => o.userData.person === pair.to); if (a && b) this.endChange(pair, a, b); }
             this.pairs = this.pairUp();
@@ -657,7 +662,8 @@ export class RoomPeople {
         const changing = this.changing(time, mode);
         // the people who move: where each is in sitting, standing and typing at this moment, and which of them the
         // desk belongs to at this height when the cast has more than one (the nearest built height wins)
-        const driven = this.actors.filter(a => a.members.length);
+        const there = actor => Math.max(0, ...actor.members.map(m => this.present(m.object.userData.person, time)));
+        const driven = this.actors.filter(a => a.members.length && there(a) > 0);   // (a film hands the desk from one person to the next with `when`: who is not there yet is no rival)
         for (const actor of driven) {
             actor.drive({ height, target: state?.target, tilt: state?.tilt, time, track: state?.track || null, dt, life: this.filter?.life === false ? false : undefined, taps: time !== null || dt < .05 });
             const sign = actor.state.tau.toFixed(3) + '|' + actor.state.k.toFixed(3) + '|' + actor.shown?.id; if (sign !== actor.drawnAs) { actor.drawnAs = sign; this.dirty = true; }
@@ -665,7 +671,14 @@ export class RoomPeople {
             if (actor.mobile) { const fits = actor.members.map(m => m.key.deskHeight); if (height >= Math.min(...fits) && height <= Math.max(...fits)) actor.off = 0; }
         }
         const others = this.people.filter(o => o.userData.person.desk && !o.userData.person.station && !o.userData.personDriven && !o.userData.personMissing && this.allowed(o.userData.person) && o.userData.personFit !== null && (!o.userData.person.modes || o.userData.person.modes.includes(mode) || this.named(o.userData.person)))   /* (only who is cast for this hour can share the desk) */.map(o => Math.abs(height - o.userData.personFit));
-        for (const actor of driven) { const rival = Math.min(...driven.filter(a => a !== actor).map(a => a.off), ...others, Infinity); actor.cover = rival === Infinity ? 1 : THREE.MathUtils.smoothstep(rival - actor.off, -.5, .5); }
+        for (const [n, actor] of driven.entries()) {
+            const rivals = driven.filter(a => a !== actor), rival = Math.min(...rivals.map(a => a.off), ...others, Infinity);
+            // two who fit the height equally: the first cast has the desk (they used to share it, each half there)
+            const tied = rivals.some((a, i) => Math.abs(a.off - actor.off) < 1e-6 && driven.indexOf(a) < n);
+            actor.cover = rival === Infinity ? 1 : tied ? 0 : Math.abs(rival - actor.off) < 1e-6 ? 1 : THREE.MathUtils.smoothstep(rival - actor.off, -.5, .5);
+            // someone with one stance only (seated, with the desk gone up past them) is not at the desk beyond the heights their poses reach
+            if (!actor.mobile) actor.cover *= 1 - THREE.MathUtils.smoothstep(actor.off, HEIGHT_SOLID, HEIGHT_FIT);
+        }
         this.resettle(mode);
         for (const object of this.people) {
             const spec = object.userData.person, fit = object.userData.personFit;
@@ -831,7 +844,7 @@ export class RoomPeople {
     // A film's walker (a placement with `walk`): at the start of the path until `start`, then walking it, then standing
     // at its end. Footprints are planned once per path, so the same second is always the same stride.
     walkAlong(object, life, walk, time, hold) {
-        const sign = JSON.stringify(walk);
+        const sign = JSON.stringify(walk) + '|' + JSON.stringify(object.userData.person.at || null);
         if (life.walkSign !== sign) {
             const path = (walk.path || [walk.from || [object.position.x, object.position.z], walk.to]).map(([x, z]) => [x / 1000, z / 1000]);
             life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined }) : null;
@@ -891,7 +904,7 @@ export class RoomPeople {
     restoreChairs() { for (const [chair, visible] of this.hidden) chair.visible = visible; this.hidden.clear(); }
     dispose() {
         this.restoreChairs();
-        for (const object of this.people) { object.userData.personChair?.removeFromParent(); object.removeFromParent(); for (const m of object.userData.personMaterials || []) m.dispose(); }
+        for (const object of this.people) { object.userData.personChair?.removeFromParent(); object.removeFromParent(); for (const m of object.userData.personMaterials || []) m.dispose(); object.traverse(o => o.skeleton?.dispose?.()); }
         this.people = []; this.built = null; this.actors = []; this.pairs = []; this.generation++;
     }
 }

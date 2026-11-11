@@ -278,7 +278,7 @@ export function solveDesk(rig, keys, input) {
         // between the two the wrist comes up and over the desk's edge: on the way to the keys it rises first and then
         // goes forward, on the way off it draws back before it drops
         if (between) {
-            const upFirst = 1 - (1 - ke) ** 2.4, thenIn = ke ** 2.2;
+            const upFirst = 1 - (1 - ke) ** 1.8, thenIn = ke ** 1.25;   // forward as it rises: a wrist lifted at the hip first throws the elbow out behind
             spot.set(lerp(awayAt.x, keysAt.x, ke), lerp(awayAt.y, keysAt.y, upFirst) + .03 * Math.sin(Math.PI * ke), lerp(awayAt.z, keysAt.z, thenIn));
             handQ.copy(rig.wq[hand]); rig.reach(upper, lower, hand, spot); rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ);
         }
@@ -350,8 +350,8 @@ export function drawPose(rig, drawn, dz = 0, pose = null, hold = false) {
     if (!drawn) return;
     for (let i = 0; i < rig.n; i++) {
         const name = rig.names[i], bone = drawn.bones.get(name); if (!bone || name === 'still') continue;
+        if (hold) continue;   // (the pose editor measures its turns from `rest`: it stays with the bones while one is dragged)
         const rest = drawn.rest.get(name); rest.copy(rig.lq[i]);
-        if (hold) continue;
         bone.quaternion.copy(rest); const d = pose?.[name]; if (Array.isArray(d) && d.length === 4) bone.quaternion.multiply(tq.fromArray(d)).normalize();
         if (name === 'Root') { bone.position.copy(rig.lp[i]); bone.position.z -= dz; } else if (name === 'pelvis') bone.position.copy(rig.lp[i]);
     }
