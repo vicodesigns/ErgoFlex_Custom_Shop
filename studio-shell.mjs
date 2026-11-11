@@ -161,7 +161,7 @@ function buildBar() {
     // (it is positioned out of the row by CSS) puts that panel in the menus where it belongs.
     toolbar.append(...[cameraMenu, light, screens, bar.querySelector('.scene-desk-panel'), hint, $('room-desk-palette'), $('room-people-control'),
         $('room-rearrange-desks-control'), $('room-rearrange-control'), $('room-undo-btn'), $('room-redo-btn'), $('room-save-status'),
-        h('span', { class: 'vb-spacer', 'aria-hidden': 'true' }), $('send-to-director'), panelToggle, find].filter(Boolean));
+        h('span', { class: 'vb-end' }, ...[$('send-to-director'), panelToggle, find].filter(Boolean))].filter(Boolean));
 
     const objectControls = $('room-object-controls');
     bar.append(...[rowScene, toolbar, objectControls].filter(Boolean));

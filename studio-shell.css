@@ -22,15 +22,17 @@ html.ui-shell #viewer-shell #scene-controls.vb {
 html.ui-shell #viewer-shell #scene-controls.vb.vb-menu-open { z-index: 60; }
 html.ui-shell #scene-controls .vb-row { position: static; display: flex; flex-wrap: wrap; align-items: center; gap: var(--vb-gap); min-width: 0; margin: 0; padding: 6px 8px; }
 html.ui-shell #scene-controls .vb-row + .vb-row { border-top: 1px solid var(--ui-border); }
-html.ui-shell #scene-controls .vb-spacer { flex: 1 1 0; min-width: 0; }
+html.ui-shell #scene-controls .vb-row-scene { align-items: flex-start; }
+/* Send to Director, Hide panel and Find stay together at the end of whichever line they land on. */
+html.ui-shell #scene-controls .vb-end { display: flex; flex-wrap: wrap; align-items: center; gap: var(--vb-gap); margin-left: auto; }
 
 /* One control family for everything on the bar and in its menus. */
-html.ui-shell #viewer-shell #scene-controls :is(.vb-row > button, .vb-row > label, .vb-menu > summary, .vb-pop button, .vb-pop select, .measured-room-controls button, .measured-room-controls select, #room-scene-select) {
+html.ui-shell #viewer-shell #scene-controls :is(.vb-row > button, .vb-end > button, .vb-row > label, .vb-menu > summary, .vb-pop button, .vb-pop select, .measured-room-controls button, .measured-room-controls select, #room-scene-select) {
     box-sizing: border-box; min-height: var(--vb-h); padding: 5px 10px; margin: 0;
     border: 1px solid var(--ui-border); border-radius: var(--vb-radius); background: var(--ui-card); color: var(--ui-text);
     font: inherit; font-size: 12px; line-height: 1.3; box-shadow: none;
 }
-html.ui-shell #viewer-shell #scene-controls :is(.vb-row > button, .vb-menu > summary, .vb-pop button, .measured-room-controls button):hover:not(:disabled) { background: var(--ui-soft); border-color: var(--ui-muted); }
+html.ui-shell #viewer-shell #scene-controls :is(.vb-row > button, .vb-end > button, .vb-menu > summary, .vb-pop button, .measured-room-controls button):hover:not(:disabled) { background: var(--ui-soft); border-color: var(--ui-muted); }
 html.ui-shell #viewer-shell #scene-controls :is(button[aria-pressed=true], .vb-menu[open] > summary) { background: var(--ui-accent); border-color: var(--ui-accent); color: var(--ui-on-accent); font-weight: 600; }
 html.ui-shell #viewer-shell #scene-controls .vb-row > label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
 html.ui-shell #viewer-shell #scene-controls .vb-row > label > span { color: var(--ui-text); font-size: 12px; }
@@ -113,7 +115,7 @@ html.ui-shell #viewer-shell #scene-controls .vb-hint {
     pointer-events: none;
 }
 html.ui-shell #viewer-shell #scene-controls .vb-hint[hidden] { display: none; }
-html.ui-shell #scene-controls:has(#room-object-controls:not([hidden])) .vb-hint, html.ui-shell #scene-controls.vb-menu-open .vb-hint { display: none; }
+html.ui-shell #viewer-shell #scene-controls:has(#room-object-controls:not([hidden])) .vb-hint, html.ui-shell #viewer-shell #scene-controls.vb-menu-open .vb-hint { display: none; }
 
 /* Panel and Find, at the end of the tools row. */
 html.ui-shell #scene-controls .vb-find { display: inline-flex; align-items: center; gap: 7px; }
@@ -178,16 +180,21 @@ html.ui-shell #setup-sidebar .ui-more > .ui-more-body > :first-child { border-to
 
 /* ---- Phones: rows scroll sideways instead of stacking; menus open as bottom sheets. ---- */
 @media (max-width: 760px) {
-    html.ui-shell { --vb-top: 78px; }
-    html.ui-shell #viewer-shell .viewer-heading { top: 10px; left: 10px; max-width: calc(100% - 76px); }
+    /* The bar is always two scrolling rows here (105 px). The owner's tour bar, when it is there, has the top line;
+       the title card sits on the canvas under the bar, where a tap passes through it. */
+    html.ui-shell { --vb-top: 10px; }
+    html.ui-shell:has(#scene-tour) { --vb-top: 78px; }
+    html.ui-shell #viewer-shell .viewer-heading { top: calc(var(--vb-top) + 124px); left: 10px; max-width: calc(100% - 76px); }
     html.ui-shell #viewer-shell #scene-controls.vb { left: 8px; right: 62px; }
-    html.ui-shell #scene-controls .vb-row { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding: 6px; -webkit-overflow-scrolling: touch;
-        mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent); -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent); }
+    /* No mask or filter on a row: it would also clip the bottom sheets of the menus inside it. */
+    html.ui-shell #scene-controls .vb-row { flex-wrap: nowrap; align-items: center; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding: 6px; -webkit-overflow-scrolling: touch; }
+    html.ui-shell #viewer-shell #scene-controls .measured-room-controls { flex: none; min-width: 0; }
+    html.ui-shell #scene-controls .vb-end { flex-wrap: nowrap; margin-left: 0; }
     html.ui-shell #scene-controls .vb-row::-webkit-scrollbar { display: none; }
-    html.ui-shell #scene-controls .vb-row > *, html.ui-shell #scene-controls .measured-room-controls > *, html.ui-shell #scene-controls .measured-room-controls > div > * { flex: none; }
+    html.ui-shell #scene-controls .vb-row > *, html.ui-shell #scene-controls .vb-end > *, html.ui-shell #scene-controls .measured-room-controls > *, html.ui-shell #scene-controls .measured-room-controls > div > * { flex: none; }
     html.ui-shell #viewer-shell #scene-controls :is(.measured-room-controls, .measured-room-controls > div) { flex-wrap: nowrap; max-width: none; }
     html.ui-shell #viewer-shell #scene-controls .studio-toolbar { padding-right: 6px; }
-    html.ui-shell #scene-controls .vb-spacer, html.ui-shell #scene-controls .vb-find kbd, html.ui-shell #scene-controls #ui-panel-toggle { display: none; }
+    html.ui-shell #scene-controls .vb-find kbd, html.ui-shell #scene-controls #ui-panel-toggle { display: none; }
     html.ui-shell #viewer-shell #scene-controls .vb-menu > .vb-pop {
         position: fixed; inset: auto 0 0 0 !important; z-index: 90; width: auto !important; min-width: 0; max-width: none;
         max-height: min(62dvh, 560px) !important; padding: 14px 14px calc(16px + env(safe-area-inset-bottom));

@@ -215,7 +215,7 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         await ready(page);
         const phone = await page.evaluate(() => {
             const box = el => el.getBoundingClientRect(), bar = box(document.getElementById('scene-controls')), canvas = box(document.getElementById('model-canvas')), viewer = box(document.getElementById('viewer-shell'));
-            const small = [...document.querySelectorAll('#scene-controls .vb-row > button, #scene-controls .vb-row > label, #scene-controls .vb-menu > summary, #scene-controls .measured-room-controls button, #scene-controls select')]
+            const small = [...document.querySelectorAll('#scene-controls .vb-row > button, #scene-controls .vb-end > button, #scene-controls .vb-row > label, #scene-controls .vb-menu > summary, #scene-controls .measured-room-controls button, #scene-controls select')]
                 .filter(el => box(el).height > 0 && box(el).height < 40).map(el => el.id || el.textContent.trim().slice(0, 20));
             return { overflow: document.documentElement.scrollWidth - innerWidth, barInside: bar.left >= 0 && bar.right <= innerWidth, barHeight: bar.height, canvasTop: canvas.top - viewer.top, canvasHeight: canvas.height, small };
         });
