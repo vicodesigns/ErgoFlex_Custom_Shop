@@ -12,7 +12,7 @@ import { buildInstitutionalRoom } from './institutional-room.mjs?v=people-vistas
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
 import { polishRoomProp } from './room-polish.mjs?v=table-clearance-20261021';
 import { RoomLife } from './room-life.mjs?v=commons-home-comfort-20261024';
-import { RoomPeople } from './room-people.mjs?v=room-people-20261110f';
+import { RoomPeople } from './room-people.mjs?v=room-people-20261110g';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
@@ -94,7 +94,7 @@ export const disposeWorkspaceObject = disposeTree;
 // geometry and materials, so they are never disposed with a room.
 const PROP_BASE = './assets/props/';
 export const PROP_LIBRARY = {
-    loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(), rigs: new Map(),
+    loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(), rigs: new Map(), rigFiles: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
             this.indexPromise = fetch(PROP_BASE + 'index.json?v=people-vistas-20261110').then(r => {
@@ -155,6 +155,12 @@ export const PROP_LIBRARY = {
             }, undefined, err => { this.cache.delete(id); this.failures.set(id, err); reject(err); })));
         }
         return this.cache.get(id);
+    },
+    // The bones of every posture of one character (tools/people/export-rigs.mjs), for moving a person between them
+    // (room-people-motion.mjs). Rejects when the character has no such file.
+    rigData(character) {
+        if (!this.rigFiles.has(character)) this.rigFiles.set(character, fetch(`${PROP_BASE}people-rigs/${encodeURIComponent(character)}.json?v=people-motion-20261110a`).then(r => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }));
+        return this.rigFiles.get(character);
     },
     // A fresh instance with its own skeleton (null for a model without one): bones by name under the returned root.
     async rigInstance(id) {

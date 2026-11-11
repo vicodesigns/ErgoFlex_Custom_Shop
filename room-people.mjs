@@ -31,6 +31,7 @@
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
+import { PersonRig, DeskActor } from './room-people-motion.mjs?v=people-motion-20261110a';
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
@@ -152,6 +153,7 @@ const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 export class RoomPeople {
     constructor(room, library) {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
+        this.actors = []; this.clock = null;
         this.ray = new THREE.Raycaster();
     }
     specs() { return [...castFor(this.room.id, this.room.roomLayout?.id), ...(this.filter?.cast || []).map(spec => ({ ...spec, extra: true }))]; }
@@ -304,6 +306,40 @@ export class RoomPeople {
             else if (!spec.desk && !spec.beside) this.settle(object, spec);
         }
         await Promise.all(posed.map(object => this.rig(object)));
+        await this.cast(token, root);
+    }
+    // The people at the featured desk who can move (room-people-motion.mjs): the models of one character there become
+    // one person, drawn skinned, who sits, stands and takes their hands off the keys with the desk. Needs the
+    // character's bone data (library.rigData); without it they stay still models that show at their own height.
+    //   filter.motion === false keeps the still models for one use of the room.
+    async cast(token, root) {
+        this.actors = [];
+        if (!this.library.rigData || this.filter?.motion === false) return;
+        const groups = new Map();
+        for (const object of this.people) {
+            const spec = object.userData.person, who = spec.desk && !spec.station ? this.library.entry(spec.id)?.person?.character : null;
+            if (who) { if (!groups.has(who)) groups.set(who, []); groups.get(who).push(object); }
+        }
+        for (const [who, objects] of groups) {
+            const data = await this.library.rigData(who).catch(() => null); if (!data) continue;
+            const rig = new PersonRig(data); if (objects.some(o => !rig.has(o.userData.person.id))) continue;
+            const drawn = await Promise.all(objects.map(o => this.rig(o)));
+            if (token !== this.room.token || root !== this.room.root || drawn.some(o => !o.userData.personRig || !this.people.includes(o))) continue;
+            const actor = new DeskActor(rig); actor.objects = drawn; actor.chair = null;
+            for (const o of drawn) { o.userData.personActor = actor; if (o.userData.personChair) { if (!actor.chair) actor.chair = o.userData.personChair; else o.userData.personChair.visible = false; } }
+            this.actors.push(actor);
+        }
+        this.placed = false;
+    }
+    // Still on the way up or down, or moving their hands: the Studio keeps drawing at full rate meanwhile.
+    get moving() { return this.enabled && this.actors.some(a => a.moving); }
+    // Which of an actor's models are in this use of the room, and how far from the keys each stands.
+    recast(actor) {
+        const members = actor.objects.filter(o => this.people.includes(o) && !o.userData.personMissing && this.allowed(o.userData.person)).map(object => {
+            const spec = object.userData.person;
+            return { object, id: spec.id, role: spec.desk, behind: BEHIND_KEYS[spec.desk] + (spec.reach ?? REACH[spec.desk]) - REACH[spec.desk], scale: object.scale.z || 1000 };
+        });
+        const used = actor.configure(members); for (const o of actor.objects) o.userData.personDriven = used.some(m => m.object === o);
     }
     // The featured desk's people fade with the desk height, so they need materials of their own (textures stay shared).
     ownMaterials(object) {
@@ -313,7 +349,7 @@ export class RoomPeople {
     fade(object, amount) {
         if (object.userData.personFade === amount) return; object.userData.personFade = amount;
         for (const m of object.userData.personMaterials || []) { const solid = amount >= 1; m.transparent = solid ? m.userData.solid.transparent : true; m.opacity = m.userData.solid.opacity * amount; m.needsUpdate = true; }
-        const chair = object.userData.personChair; if (chair) chair.visible = object.visible && amount > .5;
+        const chair = object.userData.personChair; if (chair && !object.userData.personDriven) chair.visible = object.visible && amount > .5;
         object.traverse(o => { if (o.isMesh) o.castShadow = amount > .5; });
     }
     props(id) { return this.room.assets().filter(o => o.userData.propId === id || o.userData.decorUpgrade === id); }
@@ -357,12 +393,12 @@ export class RoomPeople {
         object.visible = on;
         const chair = object.userData.personChair;
         // the chair faces the way its user faces: toward the desk (it was turned half round, backrest against the user's chest)
-        if (chair) { chair.visible = on; if (on) { chair.position.set(object.position.x, 0, object.position.z); chair.rotation.y = object.rotation.y; } }
+        if (chair && !object.userData.personDriven) { chair.visible = on; if (on) { chair.position.set(object.position.x, 0, object.position.z); chair.rotation.y = object.rotation.y; } }
     }
     // filter.chair: one task chair that stays. It is under the seated desk user while they are there (`seated` 0..1)
     // and slides back from the desk when they are not.
     stayChair(state, seated, yaw) {
-        const park = this.filter?.chair, chairs = this.people.filter(o => o.userData.personChair && o.userData.person.desk === 'sit' && !o.userData.person.station && this.allowed(o.userData.person));
+        const park = this.filter?.chair, chairs = this.people.filter(o => o.userData.personChair && !o.userData.personDriven && o.userData.person.desk === 'sit' && !o.userData.person.station && this.allowed(o.userData.person));
         if (!park || !chairs.length || !state?.pose) return;
         const keep = chairs[0].userData.personChair, front = frontOf(yaw), side = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
         const base = state.keyboard ? new THREE.Vector3(state.keyboard.x, 0, state.keyboard.z).addScaledVector(front, BEHIND_KEYS.sit) : new THREE.Vector3(state.pose.x - 6, 0, state.pose.z).addScaledVector(front, REACH.sit);
@@ -378,6 +414,7 @@ export class RoomPeople {
     update(state) {
         if (!this.enabled || !this.people.length) return;
         const height = state?.height ?? 28, pose = state?.pose, mode = state?.mode, time = state?.time ?? null; let working = false, seated = 0;
+        const now = state?.now ?? (typeof performance !== 'undefined' ? performance.now() : 0), dt = this.clock === null ? 0 : (now - this.clock) / 1000; this.clock = now;
         if (!this.placed) {
             this.placed = true;
             for (const object of this.people) {
@@ -392,13 +429,36 @@ export class RoomPeople {
                 object.position.set(spot.at[0], spot.y ?? 0, spot.at[1]); object.rotation.y = THREE.MathUtils.degToRad(spot.turn || 0); object.userData.personMissing = false;
                 if (Number.isFinite(spot.scale)) this.resize(object, { scale: spot.scale });
             }
+            for (const actor of this.actors) this.recast(actor);
         }
+        // the people who move: where each is in sitting, standing and typing at this moment, and which of them the
+        // desk belongs to at this height when the cast has more than one (the nearest built height wins)
+        const driven = this.actors.filter(a => a.members.length);
+        for (const actor of driven) {
+            actor.drive({ height, target: state?.target, tilt: state?.tilt, time, track: state?.track || null, dt, life: this.filter?.life === false ? false : undefined });
+            actor.off = Math.min(...actor.members.map(m => m.key.deskHeight === null ? 0 : Math.abs(height - m.key.deskHeight)));
+            if (actor.mobile) { const fits = actor.members.map(m => m.key.deskHeight); if (height >= Math.min(...fits) && height <= Math.max(...fits)) actor.off = 0; }
+        }
+        const others = this.people.filter(o => o.userData.person.desk && !o.userData.person.station && !o.userData.personDriven && !o.userData.personMissing && this.allowed(o.userData.person) && o.userData.personFit !== null).map(o => Math.abs(height - o.userData.personFit));
+        for (const actor of driven) { const rival = Math.min(...driven.filter(a => a !== actor).map(a => a.off), ...others, Infinity); actor.cover = rival === Infinity ? 1 : THREE.MathUtils.smoothstep(rival - actor.off, -.5, .5); }
         for (const object of this.people) {
             const spec = object.userData.person, fit = object.userData.personFit;
             const there = this.present(spec, time);
             let on = !object.userData.personMissing && this.allowed(spec) && there > 0 && (!spec.modes || spec.modes.includes(mode));
             object.userData.personAmount = there;
-            if (spec.desk && !spec.station) {
+            const actor = object.userData.personDriven ? object.userData.personActor : null;
+            if (actor) {
+                // one moving person: drawn as the model built for the stance they are in, always there
+                on = on && !!pose && actor.shown?.object === object && actor.cover > 0;
+                if (on) {
+                    object.userData.personAmount = there * actor.cover;
+                    const yaw = pose.yaw || 0, front = frontOf(yaw), keys = state.keyboard, short = (spec.reach ?? REACH[spec.desk]) - REACH[spec.desk];
+                    if (keys) object.position.set(keys.x, 0, keys.z).addScaledVector(front, BEHIND_KEYS[spec.desk] + short);
+                    else object.position.set(pose.x - 6, 0, pose.z).addScaledVector(front, REACH[spec.desk] + short);
+                    object.rotation.y = yaw + Math.PI; working = true;
+                    actor.apply(actor.shown, spec.pose || null, typeof window !== 'undefined' && !!window.__directorDragging);
+                }
+            } else if (spec.desk && !spec.station) {
                 const off = fit === null ? 0 : Math.abs(height - fit);
                 on = on && !!pose && !working && off <= HEIGHT_FIT;
                 if (on) {
@@ -421,7 +481,22 @@ export class RoomPeople {
         }
         this.chairSpot = this.chairHome = null;
         if (this.filter?.chair) this.stayChair(state, seated, pose?.yaw || 0);
+        for (const actor of driven) this.chairOf(actor, state);
         this.clearChairs();
+    }
+    // A moving person's task chair: under them while they sit, rolled back with them before they stand, and left a
+    // little further back (or where filter.chair parks it) while they are on their feet.
+    chairOf(actor, state) {
+        const chair = actor.chair, pose = state?.pose; if (!chair) return;
+        const there = actor.objects.some(o => o.visible);
+        chair.visible = there && !!pose; if (!chair.visible) return;
+        const yaw = pose.yaw || 0, front = frontOf(yaw), side = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)), sitter = actor.members.find(m => m.role === 'sit');
+        const short = sitter ? sitter.behind - BEHIND_KEYS.sit : 0;
+        const home = state.keyboard ? new THREE.Vector3(state.keyboard.x, 0, state.keyboard.z).addScaledVector(front, BEHIND_KEYS.sit + short) : new THREE.Vector3(pose.x - 6, 0, pose.z).addScaledVector(front, REACH.sit + short);
+        const out = actor.out.chair, park = this.filter?.chair, parked = park ? THREE.MathUtils.smoothstep(actor.state.tau, 1.3, 2.7) : 0, back = out.back * 1000;
+        chair.position.copy(home).addScaledVector(front, park ? back + ((park.back ?? 620) - back) * parked : back).addScaledVector(side, (park?.side ?? 0) * parked);
+        chair.rotation.y = yaw + Math.PI + THREE.MathUtils.degToRad(park ? (park.turn ?? 0) * parked : out.turn);
+        this.chairSpot = chair.position; this.chairHome = home;
     }
     // The room's own chairs make way wherever someone is working at a desk (they brought the chair the pose fits,
     // stand where the chair was, or roll in on their own wheels).
@@ -439,6 +514,6 @@ export class RoomPeople {
     dispose() {
         this.restoreChairs();
         for (const object of this.people) { object.userData.personChair?.removeFromParent(); object.removeFromParent(); for (const m of object.userData.personMaterials || []) m.dispose(); }
-        this.people = []; this.built = null;
+        this.people = []; this.built = null; this.actors = [];
     }
 }

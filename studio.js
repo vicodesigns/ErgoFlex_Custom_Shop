@@ -63,7 +63,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=label-fix-20261110';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=people-pose-20261110b';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=people-motion-20261110a';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=20261110-stationary-organizer';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=people-vistas-20261110';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=people-vistas-20261110';
@@ -587,7 +587,7 @@ let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'prod
 let ceilingPreviewEnabled = new URLSearchParams(location.search).get('ceiling') === 'on' || readStore('ergoflex.ceilingPreview', 1, null)?.enabled === true;
 // People living and working in the room (room-people.mjs). Off by default: the models load on first use.
 let roomPeopleEnabled = new URLSearchParams(location.search).get('people') === 'on' || readStore('ergoflex.roomPeople', 1, null)?.enabled === true;
-let roomPeopleMode = null, roomPeopleFilter = null, roomPeopleTime = null;   // time: seconds into a film chapter (the stage sets it), else null
+let roomPeopleMode = null, roomPeopleFilter = null, roomPeopleTime = null, roomPeopleTrack = null;   // time: seconds into a film chapter (the stage sets it), else null
 let roomBounceEnabled = readStore('ergoflex.roomBounce', 1, null)?.enabled !== false;
 let sceneDesks=null,sceneDeskUI=null,sceneDeskInternal=false;
 let roomInteractions = null, roomFurnitureSaveTimer = null, roomCollisionBlocked = false;
@@ -4295,7 +4295,9 @@ function loadModel() {
         applyAccessoryVisibility();
         if (!workspaceRoom) {
             workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
-            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard(), time: roomPeopleTime });
+            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard(), time: roomPeopleTime,
+                // for the person at the desk (room-people-motion.mjs): where the desk is travelling to, its tilt, and in a film the desk's whole track
+                target: Math.abs(targetLift - currentLift) > .001 ? liftToHeight(targetLift) : null, tilt: primaryTiltConfig()?.currentDeg || 0, track: roomPeopleTime === null ? null : roomPeopleTrack });
         }
         // Startup already chose the room's desktop. Rebuilding the model must
         // retain any explicit size selected since then.
@@ -10516,7 +10518,7 @@ function renderActivity() {
     const motion = `${currentLift}|${deskYaw}|${glideOffset.x}|${glideOffset.z}|${screenProgress}|${primaryTiltConfig()?.currentDeg ?? 0}`;
     const moved = motion !== pacedMotion; pacedMotion = motion;
     const moving = !!(moved || glideActive || yawCommand || liftJog || tiltJog || roomGroove?.run || sceneDesks?.playing
-        || sceneDesks?.drag || roomInteractions?.drag || isDraggingTransform);
+        || sceneDesks?.drag || roomInteractions?.drag || isDraggingTransform || workspaceRoom?.people?.moving);
     const animating = !!(cameraTween.active || controls?.autoRotate || marquee.active || sceneDesks?.recording || roomSafety.alert
         || ledEffect.mode !== 'solid' || ledDiagnostic.strip !== null || ledPixels?.active || ledMotion.owner || ledMotion.completionUntil || ledGame.active || ledMusic.active);
     // Cutaway walls and the ceiling are shadow casters that hide as the camera moves.
@@ -12307,7 +12309,7 @@ window.ErgoFlex = {
     resetSceneDeskStyle,
     get sceneDeskStyles() { return JSON.parse(JSON.stringify(sceneDeskStyles)); },
     get measuredRoom() { return measuredRoomProfile(); },
-    setRoomPeople, get roomPeople() { return roomPeopleEnabled; }, setRoomPeopleTime(seconds) { roomPeopleTime = Number.isFinite(seconds) ? seconds : null; },
+    setRoomPeople, get roomPeople() { return roomPeopleEnabled; }, setRoomPeopleTime(seconds, track = null) { roomPeopleTime = Number.isFinite(seconds) ? seconds : null; roomPeopleTrack = track; },
     setRoomScene,
     setHomeMode,
     get homeMode() { return homeMode; },

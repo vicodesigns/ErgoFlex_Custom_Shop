@@ -209,6 +209,25 @@ export async function mountStage(ctx) {
     lastRendered=0;intervals.length=0;
     return {id:next.id,room:api.roomScene};
   }
+  // The desk's height and tilt over the whole chapter, for the person at the desk (room-people-motion.mjs): they get
+  // up, wait and sit down by where the desk is going, the same at every second however the film is scrubbed. One
+  // object per track: a new one whenever the chapter, its length or its desk movement changes.
+  let peopleTrack=null;
+  function deskAt(seconds){
+    const t=shot.seconds>0?Math.min(1,Math.max(0,seconds/shot.seconds)):0,u=ease(t),kind=shot.kind;
+    if(shot.motion)return shot.motion.clips?sampleClipMotion(shot.motion,t*shot.seconds):sampleDeskTracks(shot.motion.tracks,t);
+    if(kind==='lift')return{height:28+15.5*u,tilt:0};
+    if(kind==='tilt')return{height:43.5,tilt:65*u};
+    if(kind==='storage')return{height:43.5,tilt:65*ease(t/.4)};
+    if(kind==='wellness')return{height:28+15.5*ease((t-.25)/.45),tilt:0};
+    const now=ctx.readDirector();return{height:now.height,tilt:now.tilt};
+  }
+  function deskTrack(){
+    let sign=shot.seconds+'';for(let i=0;i<=8;i++){const p=deskAt(shot.seconds*i/8);sign+='|'+(+p.height).toFixed(2)+','+(+p.tilt||0).toFixed(1);}
+    if(!peopleTrack||peopleTrack.shot!==shot||peopleTrack.motion!==shot.motion||peopleTrack.sign!==sign)
+      peopleTrack={shot,motion:shot.motion,sign,seconds:shot.seconds,heightAt:s=>deskAt(s).height,tiltAt:s=>deskAt(s).tilt||0};
+    return peopleTrack;
+  }
   function tick(t) {
     if(paused||!shot)return;
     lastProgress=t;
@@ -232,7 +251,7 @@ export async function mountStage(ctx) {
     if(shot.motion){const p=shot.motion.clips?sampleClipMotion(shot.motion,t*shot.seconds):sampleDeskTracks(shot.motion.tracks,t);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);}
     if(ringHome&&(pulse||sweep)){const d=ctx.loadedModel.getWorldPosition(ringAt).sub(ringHome.p);for(const ring of [pulse,sweep])if(ring){ring.position.x=ringHome.c.x+d.x;ring.position.z=ringHome.c.z+d.z;}}
     if(deskChoreo.count())deskChoreo.apply(t*shot.seconds);
-    if(shot.people)api.setRoomPeopleTime?.(t*shot.seconds);
+    if(shot.people)api.setRoomPeopleTime?.(t*shot.seconds,deskTrack());
     if(kind==='media'&&media){const now=performance.now(),updated=media.update(now);if(updated&&now-lastMediaColour>=100){lastMediaColour=now;try{const p=media.ctx2d.getImageData(Math.floor(media.canvas.width/2),Math.floor(media.canvas.height/2),1,1).data;api.setLedColor('#'+[p[0],p[1],p[2]].map(v=>Math.max(25,v).toString(16).padStart(2,'0')).join(''),false);}catch{}}}
     cam(t);
   }
