@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
-import { gymTheme } from './gym-theme.mjs?v=polish-20261111e';
+import { gymTheme } from './gym-theme.mjs?v=polish-20261111f';
 
 // Fictional session dressing, not a prescribed exercise programme.
 export const GYM_SESSIONS = {

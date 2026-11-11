@@ -78,3 +78,26 @@ all-scene review and regression run is recorded in
 `docs/scene-desk-styling-20261010.md`, with current evidence in
 `/tmp/ef-desk-styling-20261010/`. Current entrypoint imports use
 `scene-desk-styling-20261010`.
+
+## Light by the hour in the living and working rooms (November 11, 2026)
+
+A pass over the study, office, kitchen, lounge, bedroom, gallery, coworking space and orbital deck, by hour, after
+they got their people. These rooms already change their light with the daypart; what was wrong or missing:
+
+- **Bedroom, weekend hour.** The hour is "a slow morning" with sun on the floor, but the window showed the night
+  sky the other rooms' parties have. It now shows the morning view.
+- **Gallery at night.** Closed, yet its track lights washed the walls almost as by day. The wash is down from .68 to
+  .3 (ambient .12, exposure 1.06): the displays are softly lit and the room is dim.
+- **Office at night.** Closed, yet every station's task light was on. One lamp is left on, with the desk's LEDs and
+  the city outside (practical .22, wash .2, lamp .6, ambient .12, exposure 1.08).
+- **Office, study and kitchen by day.** No daylight came through their windows onto the floor (the lounge, bedroom,
+  gallery and coworking space had it). They now have the patch the panes let in: long and low in the morning,
+  short after lunch, long and orange in the evening, none after dark.
+
+The patch is `room-window-sun.mjs` (`windowSun(parent, { x, inward, from, to, panes, span })`, `set(daypart, accent)`),
+one helper for a window in either side wall; its slant follows the sun the shared light rig uses for shadows
+(`room-refinement.mjs`), its reach stops short of the far wall in a narrow layout, and a room can pass its own table
+of hours. The lounge, bedroom, gallery and coworking space keep the patches they were built with.
+
+Looked at and left as they are: the lounge, coworking space and orbital deck already differ clearly between
+all five hours.

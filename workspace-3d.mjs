@@ -7,40 +7,40 @@ import { atelierSceneDecor, bindDeskDecor, applyDeskDecorLighting } from './atel
 import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from './campus-scene-furniture.mjs?v=campus-furniture-20261014';
 import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atelier-scene-beds.mjs?v=atelier-beds-20261014';
 import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=gallery-bedroom-20261025';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111e';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=polish-20261111e';
-import { refineRoomSurfaces } from './room-refinement.mjs?v=polish-20261111e';
-import { polishRoomProp } from './room-polish.mjs?v=polish-20261111e';
-import { RoomLife } from './room-life.mjs?v=polish-20261111e';
-import { RoomPeople } from './room-people.mjs?v=polish-20261111e';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=polish-20261111f';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=polish-20261111f';
+import { polishRoomProp } from './room-polish.mjs?v=polish-20261111f';
+import { RoomLife } from './room-life.mjs?v=polish-20261111f';
+import { RoomPeople } from './room-people.mjs?v=polish-20261111f';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
 import { migrateHighschoolFixtureTransform } from './hbhs-design.mjs';
-import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=polish-20261111e';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=polish-20261111e';
+import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=polish-20261111f';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=polish-20261111f';
 import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=people-vistas-20261110';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=scene-screen-themes-20261013-final';
-import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=people-vistas-20261110';
+import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=polish-20261111f';
 import { buildChildRoom, CHILD_MODES, childLayoutForSize, childLayoutById } from './child-room.mjs?v=child-room-20261111';
-import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=people-vistas-20261110';
-import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=polish-20261111e';
+import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=polish-20261111f';
+import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=polish-20261111f';
 import * as THREE from 'three';
 import { RoomBounceLight } from './room-bounce-light.mjs?v=commons-group-work-20261016';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-size-setups-20261012';
-import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrateHomeReadingFurniture } from './home-office.mjs?v=polish-20261111e';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=polish-20261111e';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=polish-20261111e';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261111e';
-import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261111e';
+import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrateHomeReadingFurniture } from './home-office.mjs?v=polish-20261111f';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=polish-20261111f';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=polish-20261111f';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261111f';
+import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261111f';
 
-import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=people-vistas-20261110';
+import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=polish-20261111f';
 import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=people-gym-20261110';
-import { themedGymLayout } from './gym-theme.mjs?v=polish-20261111e';
-import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=people-vistas-20261110';
+import { themedGymLayout } from './gym-theme.mjs?v=polish-20261111f';
+import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=polish-20261111f';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=people-vistas-20261110';
 
 // Original geometry in millimetres: X is user-right, Z is toward the user.
@@ -98,7 +98,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(), rigs: new Map(), rigFiles: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=polish-20261111e').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=polish-20261111f').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });
@@ -160,7 +160,7 @@ export const PROP_LIBRARY = {
     // The bones of every posture of one character (tools/people/export-rigs.mjs), for moving a person between them
     // (room-people-motion.mjs). Rejects when the character has no such file.
     rigData(character) {
-        if (!this.rigFiles.has(character)) this.rigFiles.set(character, fetch(`${PROP_BASE}people-rigs/${encodeURIComponent(character)}.json?v=polish-20261111e`).then(r => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }));
+        if (!this.rigFiles.has(character)) this.rigFiles.set(character, fetch(`${PROP_BASE}people-rigs/${encodeURIComponent(character)}.json?v=polish-20261111f`).then(r => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }));
         return this.rigFiles.get(character);
     },
     // A fresh instance with its own skeleton (null for a model without one): bones by name under the returned root.

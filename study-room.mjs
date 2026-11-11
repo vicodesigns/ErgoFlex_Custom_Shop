@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
+import { windowSun } from './room-window-sun.mjs?v=polish-20261111f';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
-import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261111e';
+import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261111f';
 
 const names = ['Apartment writing nook', 'Home study & reading room', 'Writer’s study & library', 'Private library & lounge', 'Library & conversation suite'];
 export const STUDY_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map((home, index) => {
@@ -374,6 +375,8 @@ export function buildStudyRoom(room, root, layout, helpers) {
     const pane = mesh(entry, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]); pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
     const windowVista = attachVista(pane, 'campus'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // Daylight from the window on the floor, reshaped for each daypart in roomAtmosphere.
+    const sun = windowSun(root, { x: -w / 2, from: a, to: b, panes: 2, span: w, name: 'Study window daylight patch' });
     // Six-light casement: frame, glazing bars and sill baked as one walnut piece.
     const casement = kit();
     for (const z of [a, wz, b]) casement.box([65, wh + 45, 28], [-w / 2 + 8, low + wh / 2, z]);
@@ -672,6 +675,7 @@ export function buildStudyRoom(room, root, layout, helpers) {
         c.fillStyle = tone('#56704a', '#3a4636', '#0f1512'); for (let x = 0; x < S; x += 26) { c.beginPath(); c.arc(x, 420, 30 + rnd(x) * 12, 0, Math.PI * 2); c.fill(); }
     };
     room.roomAtmosphere = (modeId, accent = 1) => {
+        sun.set(modeId, accent);
         const mode = STUDY_MODES[modeId] || STUDY_MODES.afternoon;
         paintView(skyCanvas.getContext('2d'), mode, modeId); skyMap.needsUpdate = true; windowVista.setPhase(modeId);
         // Shelf strips stay on for late reading even when the room wash is low.

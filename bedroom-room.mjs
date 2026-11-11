@@ -372,7 +372,7 @@ export function buildBedroomRoom(room, root, layout, helpers) {
         for(let i=0;i<7;i++){const x=i*80-20+rnd(i+60)*20,bw=60+rnd(i+70)*30,bh=50+rnd(i+80)*50,y=450-bh;c.fillStyle=scene.roofs;c.fillRect(x,y,bw,bh+80);c.beginPath();c.moveTo(x-6,y);c.lineTo(x+bw/2,y-26-rnd(i)*10);c.lineTo(x+bw+6,y);c.fill();
             if(scene.lit)for(let j=0;j<3;j++)if(rnd(i*3+j)>.35){c.fillStyle=`rgba(255,${190+(j*20)},${110+j*20},${scene.lit*(.6+rnd(j+i)*.4)})`;c.fillRect(x+10+j*(bw-24)/3,y+14,10,13);}}
         c.fillStyle=scene.trees;for(let i=0;i<14;i++){c.beginPath();c.arc(i*40,500,46+(i%3)*12+rnd(i)*8,0,Math.PI*2);c.fill();}
-        skyMap.needsUpdate=true;windowVista.setPhase(id);};
+        skyMap.needsUpdate=true;windowVista.setPhase(id==='party'?'morning':id);};   // (the weekend hour is a slow morning: daylight outside, not the night the other rooms' parties have)
     room.roomAtmosphere=(id,accent=1)=>{const mode=BEDROOM_MODES[id]||BEDROOM_MODES.morning,f=BEDROOM_FIXTURES[id]||BEDROOM_FIXTURES.morning;current=[BEDROOM_MODES[id]?id:'morning',accent];
         session.update(id);
         paintSky(current[0],mode);placeSun(f);romanShade.scale.y=Math.max(70,wh*f.shade+70);romanShade.position.y=low+wh-romanShade.scale.y/2+10;shadeMap.repeat.set(1,romanShade.scale.y/880);

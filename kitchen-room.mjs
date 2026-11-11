@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
+import { windowSun } from './room-window-sun.mjs?v=polish-20261111f';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -182,6 +183,8 @@ export function buildKitchenRoom(room, root, layout, helpers) {
     const pane = mesh(left, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 53, low + wh / 2, wz]); pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
     const windowVista = attachVista(pane, 'garden'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // Daylight from the window on the floor, reshaped for each daypart in roomAtmosphere.
+    const sun = windowSun(root, { x: -w / 2, from: a, to: b, panes: 2, span: w, name: 'Kitchen window daylight patch' });
     for (const z of [a, wz, b]) box(left, [65, wh + 45, 30], [-w / 2 + 10, low + wh / 2, z], oak);
     for (const y of [low, low + wh]) box(left, [65, 30, ww + 50], [-w / 2 + 10, y, wz], oak);
     // Slim glazing bars divide each sash into café-style panes.
@@ -541,6 +544,7 @@ export function buildKitchenRoom(room, root, layout, helpers) {
         skyMap.needsUpdate = true; windowVista.setPhase(id);
     };
     room.roomAtmosphere = (id, accent = 1) => {
+        sun.set(id, accent);
         const mode = KITCHEN_MODES[id] || KITCHEN_MODES.morning;
         drawSky(id, mode); drawClock(mode.clock);
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .12 + mode.wash * accent; });

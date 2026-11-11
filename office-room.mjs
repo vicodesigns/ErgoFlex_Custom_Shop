@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
+import { windowSun } from './room-window-sun.mjs?v=polish-20261111f';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 
 // Shared offices are intentionally larger than home rooms: each station has a
@@ -64,7 +65,7 @@ export const OFFICE_MODES = {
     morning: { label: 'Morning', description: 'Fresh daylight · standing focus', key: '#ffe9cc', fill: '#d9e9f3', accent: '#b4cebc', power: 1.7, ambient: .46, bounce: .66, exposure: 1.08, sky: ['#8fc1de', '#f7e6cc'], practical: .22, wash: .18, colors: ['#ecdab8', '#91beb1'], lamp: 0, strip: '#ffe7c4', city: 0, height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
     afternoon: { label: 'Afternoon', description: 'Teamwork in daylight · seated work', key: '#fff3e2', fill: '#d7e7ed', accent: '#b6d7cb', power: 1.35, ambient: .46, bounce: .64, exposure: 1.08, sky: ['#9ccbe2', '#eef0e0'], practical: .4, wash: .35, colors: ['#efdbba', '#9bbfb2'], lamp: .08, strip: '#fff0d8', city: 0, height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
     evening: { label: 'Evening', description: 'Warm task lights · review and sketching', key: '#f7bb88', fill: '#bccde2', accent: '#d2ab7e', power: .66, ambient: .29, bounce: .36, exposure: 1.13, sky: ['#6d7ea6', '#efae7f'], practical: .95, wash: .7, colors: ['#f1caa0', '#a3c4b8'], lamp: 1, strip: '#ffc786', city: .45, height: 43.5, tilt: 18, offset: [0, 100], yaw: 0, leds: true, color: '#43392e' },
-    night: { label: 'Night', description: 'Quiet focus · low ambient and task lighting', key: '#b3c7e0', fill: '#a8b8cf', accent: '#e7c193', power: .17, ambient: .16, bounce: .2, exposure: 1.16, sky: ['#0f2034', '#2f4864'], practical: 1.2, wash: .55, colors: ['#ecc79a', '#94bcb5'], lamp: 1.2, strip: '#ffcf92', city: 1, height: 28, tilt: 0, offset: [0, 120], yaw: 0, leds: true, color: '#2b2925' },
+    night: { label: 'Night', description: 'After hours · one lamp left on and the city outside', key: '#b3c7e0', fill: '#a8b8cf', accent: '#e7c193', power: .17, ambient: .12, bounce: .15, exposure: 1.08, sky: ['#0f2034', '#2f4864'], practical: .22, wash: .2, colors: ['#ecc79a', '#94bcb5'], lamp: .6, strip: '#ffcf92', city: 1, height: 28, tilt: 0, offset: [0, 120], yaw: 0, leds: true, color: '#2b2925' },
     party: { label: 'Team social', description: 'After hours · turn the main desk toward the team', key: '#d9cfc6', fill: '#b3c6e2', accent: '#71c6b5', power: .45, ambient: .27, bounce: .34, exposure: 1.12, sky: ['#2c3d62', '#9a7690'], practical: .65, wash: 1, colors: ['#8dd5bc', '#b2a2f2'], lamp: .85, strip: '#42d89c', city: .8, height: 43.5, tilt: -5, offset: [120, 300], yaw: -12, leds: true, color: '#276c55' }
 };
 function canvasMap(draw, w = 512, h = 512) {
@@ -333,6 +334,8 @@ export function buildOfficeRoom(room, root, layout, helpers) {
     const sill = group(windowWall, 'Office window sill herbs');
     plants(sill, [-.3, .05, .34].map((t, i) => ({ at: [-w / 2 + 72, low, wz + t * ww], pot: [44, 95], leaves: 9, leaf: [22, 170], spread: 1.1, color: ['#b57a5a', '#e7e1d4', '#466b67'][i] })));
     room.walls.push({ obj: windowWall, axis: 'z', limit: w / 2 * root.scale.x, sign: -1 });
+    // Daylight from the three panes on the floor, reshaped for each daypart in roomAtmosphere.
+    const sun = windowSun(root, { x: -w / 2, from: a, to: b, panes: 3, span: w, name: 'Office window daylight patch' });
 
     // Shared coffee cabinet with a tray of cups and a fruit bowl.
     const coffee = new THREE.Group(); coffee.name = 'Office coffee cabinet'; root.add(coffee); register(coffee, 'office-coffee-bar', 'Shared coffee cabinet');
@@ -482,6 +485,7 @@ export function buildOfficeRoom(room, root, layout, helpers) {
             spec.light.color.set(spec.task ? (day ? '#f1eee5' : '#efd8b5') : spec.lamp ? (lampLevel > .3 ? '#ffd3a0' : mode.colors[1]) : mode.colors[1]);
             spec.light.intensity = spec.power * (spec.task ? mode.practical : spec.lamp ? Math.max(mode.wash * .55, lampLevel * .8) : mode.wash) * accent;
         });
+        sun.set(modeId, accent);
         root.userData.atmosphere = modeId;
     };
     interiorCraftFinishes(room,{ceramic:[ceramic,glaze],linen:[linen,...lamps],wood:[oak],metal:[bronze]});
