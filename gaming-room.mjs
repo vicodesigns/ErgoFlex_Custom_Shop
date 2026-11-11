@@ -4,7 +4,7 @@ import { createSunPatch } from './room-sun-patch.mjs?v=sun-patch-20261110';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { gamingSessionMaps, buildGamingSessionDetail, migrateGamingSavedFurniture, migrateGamingSavedAssetKeys } from './gaming-session-detail.mjs?v=gaming-sessions-20261022';
-import { HOME_LAYOUTS } from './home-office.mjs?v=env-living-20261110a';
+import { HOME_LAYOUTS } from './home-office.mjs?v=env-living-20261110b';
 
 // The same measured room tiers as Home Office, with independent furnishings
 // and saved edits. All dimensions are millimetres; props retain their size.

@@ -473,7 +473,7 @@ function homeDropZone(root, entry, layout, h, { brass, joinery, sage, clay, cera
     coat(dayWall, -210, '#4f5d6b'); tote(day, [fx + 30, 0, z + 170], '#d8c9a8', .35); shoes(day, [fx + 40, 0, z - 230], '#e9e4dc', '#f6f3ee', 1.2);
     const post = parcel(root, [fx + 110, 0, z - 30], -.25);
     const [night, nightWall] = pair('Put away by the door');
-    tote(nightWall, [x + 120, 1460, z + 210], '#d8c9a8', Math.PI / 2).rotation.z = .05;
+    tote(nightWall, [x + 120, 1250, z + 210], '#d8c9a8', Math.PI / 2).rotation.z = .05;
     shoes(night, [fx - 30, 0, z - 120], '#e9e4dc', '#f6f3ee', Math.PI / 2, 0); shoes(night, [fx - 30, 0, z + 140], '#5a4335', '#3a2c22', Math.PI / 2, 0);
     const [guests, guestsWall] = pair('Guests\' coats and shoes');
     coat(guestsWall, -210, '#4f5d6b'); coat(guestsWall, 0, '#8a4b3c', 1.15); coat(guestsWall, 210, '#2f3b36', .95);
@@ -802,7 +802,10 @@ export function buildHomeOffice(room, root, layout, helpers) {
     ];
     // Sun through the window glazing (between the mullions), and the visible
     // landing of the lamps that are on. Both are additive overlays, not lights.
-    const sun = createSunPatch(root, layout, [{ wall: 'back', at: bz, from: left + 20, to: right - 20, bottom: bottom + 20, top: bottom + wh - 20, bars: 1, rows: 2 }]);
+    // Pale oak and a cream rug need a stronger print than the darker rooms to read.
+    const sun = createSunPatch(root, layout, [{ wall: 'back', at: bz, from: left + 20, to: right - 20, bottom: bottom + 20, top: bottom + wh - 20, bars: 1, rows: 2 }], {
+        levels: { morning: ['#ffd9a8', .85], afternoon: ['#fff0d8', .5], evening: ['#ff9a52', .95], night: ['#000000', 0], party: ['#000000', 0] }
+    });
     const pools = createPoolLayer(root, 'Home lamp light pools'), poolGain = { v: 1 };
     const lampLevel = (k, by) => i => Math.min(.55, by[i] * .5 * poolGain.v) * k;
     pools.add(root, [layout.readingLight[0] + 120, 4, layout.readingLight[1] - 120], [1700, 1700], '#ffd9a6', lampLevel(1, [0, 0, .7, .85, .7]));

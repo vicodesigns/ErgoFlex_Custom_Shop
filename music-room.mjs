@@ -3,7 +3,7 @@ import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { createSunPatch } from './room-sun-patch.mjs?v=sun-patch-20261110';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
-import { HOME_LAYOUTS } from './home-office.mjs?v=env-living-20261110a';
+import { HOME_LAYOUTS } from './home-office.mjs?v=env-living-20261110b';
 
 const names = ['Apartment recording nook', 'Home production studio', 'Writing & recording room', 'Producer studio & lounge', 'Production & performance suite'];
 export const MUSIC_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map((home, index) => {
