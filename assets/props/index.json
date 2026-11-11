@@ -56260,6 +56260,369 @@
     "character": "sofia",
     "pose": "sit-floor"
    }
+  },
+  {
+   "id": "people-rosa-stand-mug",
+   "name": "Rosa: standing with a coffee",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-rosa-stand-mug.glb",
+   "anchor": "floor",
+   "size": [
+    407.9,
+    1212.8,
+    318.3
+   ],
+   "min": [
+    -201.8,
+    0,
+    -109
+   ],
+   "max": [
+    206.1,
+    1212.8,
+    209.3
+   ],
+   "tris": 47036,
+   "bytes": 969288,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "rosa",
+    "pose": "stand-mug"
+   }
+  },
+  {
+   "id": "people-andre-sit-chat",
+   "name": "Andre: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    600.2,
+    1353.3,
+    795.1
+   ],
+   "min": [
+    -289.4,
+    0,
+    -144.2
+   ],
+   "max": [
+    310.8,
+    1353.3,
+    650.9
+   ],
+   "tris": 33730,
+   "bytes": 850368,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-rosa-sit-mug",
+   "name": "Rosa: sitting back with a mug",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-rosa-sit-mug.glb",
+   "anchor": "floor",
+   "size": [
+    406.7,
+    1098.2,
+    630.3
+   ],
+   "min": [
+    -200.9,
+    0,
+    -170.3
+   ],
+   "max": [
+    205.8,
+    1098.2,
+    460
+   ],
+   "tris": 48538,
+   "bytes": 979368,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "rosa",
+    "pose": "sit-mug"
+   }
+  },
+  {
+   "id": "people-hale-sit-chat",
+   "name": "Mr Hale: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-hale-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    529.7,
+    1315,
+    793.2
+   ],
+   "min": [
+    -257.1,
+    0,
+    -146.7
+   ],
+   "max": [
+    272.6,
+    1315,
+    646.5
+   ],
+   "tris": 33562,
+   "bytes": 1372080,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "hale",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-zoe-sit-mug",
+   "name": "Zoe: sitting back with a mug",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-sit-mug.glb",
+   "anchor": "floor",
+   "size": [
+    440,
+    1234.5,
+    779.2
+   ],
+   "min": [
+    -211.5,
+    0,
+    -141.9
+   ],
+   "max": [
+    228.5,
+    1234.5,
+    637.3
+   ],
+   "tris": 34562,
+   "bytes": 1136404,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "sit-mug"
+   }
+  },
+  {
+   "id": "people-kai-sit-chat",
+   "name": "Kai: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-kai-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    443.3,
+    1195.7,
+    734.2
+   ],
+   "min": [
+    -220.7,
+    0,
+    -125.6
+   ],
+   "max": [
+    222.6,
+    1195.7,
+    608.6
+   ],
+   "tris": 34266,
+   "bytes": 876072,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "kai",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-ava-sit-chat",
+   "name": "Ava: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ava-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    431.1,
+    1185.5,
+    755.6
+   ],
+   "min": [
+    -213.5,
+    0,
+    -148.3
+   ],
+   "max": [
+    217.6,
+    1185.5,
+    607.3
+   ],
+   "tris": 37932,
+   "bytes": 956400,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ava",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-jo-sit-chat",
+   "name": "Jo: on a sofa with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jo-sit-chat.glb",
+   "anchor": "floor",
+   "size": [
+    461.5,
+    1308.5,
+    771
+   ],
+   "min": [
+    -234.2,
+    0,
+    -143.3
+   ],
+   "max": [
+    227.3,
+    1308.5,
+    627.7
+   ],
+   "tris": 41090,
+   "bytes": 949476,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jo",
+    "pose": "sit-chat"
+   }
+  },
+  {
+   "id": "people-hale-stand-drink",
+   "name": "Mr Hale: standing with a drink, chatting",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-hale-stand-drink.glb",
+   "anchor": "floor",
+   "size": [
+    541.3,
+    1750.6,
+    404.4
+   ],
+   "min": [
+    -248.6,
+    0,
+    -132.5
+   ],
+   "max": [
+    292.7,
+    1750.6,
+    271.9
+   ],
+   "tris": 34528,
+   "bytes": 1376640,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "hale",
+    "pose": "stand-drink"
+   }
+  },
+  {
+   "id": "people-rosa-stand-talk",
+   "name": "Rosa: standing, explaining something",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-rosa-stand-talk.glb",
+   "anchor": "floor",
+   "size": [
+    411.1,
+    1219,
+    465.1
+   ],
+   "min": [
+    -208.5,
+    0,
+    -109.6
+   ],
+   "max": [
+    202.6,
+    1219,
+    355.5
+   ],
+   "tris": 47511,
+   "bytes": 968236,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "rosa",
+    "pose": "stand-talk"
+   }
+  },
+  {
+   "id": "people-sam-stand-mug",
+   "name": "Sam: standing with a coffee",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-stand-mug.glb",
+   "anchor": "floor",
+   "size": [
+    535.6,
+    1746.2,
+    402.3
+   ],
+   "min": [
+    -258.4,
+    0,
+    -118.2
+   ],
+   "max": [
+    277.2,
+    1746.2,
+    284.1
+   ],
+   "tris": 32832,
+   "bytes": 926452,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "stand-mug"
+   }
   }
  ],
  "screens": [

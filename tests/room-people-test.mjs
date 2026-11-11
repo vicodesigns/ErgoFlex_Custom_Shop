@@ -29,8 +29,21 @@ for (const [room, specs] of Object.entries(ROOM_PEOPLE)) for (const spec of LAYO
 
 {   // Rooms without their own cast get a desk user; the children's rooms have children in them, on child furniture.
     const cast = id => new RoomPeople({ id, roomLayout: { id: 'house' } }, null).specs();
-    assert.deepEqual(cast('office').map(s => s.desk), ['sit', 'sit', 'stand']);
-    for (const spec of cast('office')) assert.ok(entries.get(spec.id)?.person?.deskHeight, spec.id + ' is built');
+    assert.deepEqual(cast('hospital').map(s => s.desk), ['sit', 'sit', 'stand']);
+    for (const spec of cast('hospital')) assert.ok(entries.get(spec.id)?.person?.deskHeight, spec.id + ' is built');
+    // the living and working rooms keep that desk user and add the people their furniture is there for, by a piece of furniture each
+    for (const room of ['study', 'office', 'kitchen', 'lounge', 'bedroom', 'gallery', 'coworking', 'scifi']) {
+        const c = cast(room), desk = c.filter(s => s.desk), others = c.filter(s => !s.desk);
+        assert.deepEqual(desk.map(s => s.desk), ['sit', 'sit', 'stand'], room + ': the desk user it always had');
+        assert.ok(others.length >= 3 && others.every(s => s.on || s.by || s.around), room + ': everyone else is placed by a piece of furniture (absent where a layout lacks it)');
+        assert.ok(others.every(s => s.modes?.length), room + ': each for their hours');
+        assert.ok(others.filter(s => s.on).every(s => s.toward || /armchair|bench/.test(String(s.on))), room + ': a seated person faces what the seat belongs to');
+        assert.ok(others.filter(s => s.by).every(s => s.clear) && others.filter(s => s.around && !/island/.test(s.around[0])).every(s => s.clear), room + ': whoever stands takes a free spot by their furniture (the cook stays at the island)');
+        // the smallest layout has other furniture: it still has people in it, on what it does have
+        const small = new RoomPeople({ id: room, roomLayout: { id: 'apartment' } }, null).specs().filter(s => !s.desk);
+        assert.ok(small.length >= 2 && !small.some(s => /lounge-sofa|chair-modern-cushion|armchair-poppi|stone-island|^coffee-bar$/.test(String([].concat(s.on || s.by || s.around)[0])) && ['office', 'kitchen', 'bedroom'].includes(room)), room + ': the smallest layout is cast on its own furniture');
+    }
+    assert.ok(cast('office').every(s => !s.modes?.includes('night')) && cast('lounge').some(s => !s.desk && s.modes.includes('night')), 'the office is closed at night, the lounge has its movie night');
     assert.deepEqual(cast('product'), []);
     const child = id => /^people-(tess|milo|lila|ravi|theo|ines|nora|jun)-kid-/.test(id), grownUp = id => !/-kid-/.test(id) && !/^people-(tess|milo|lila|ravi|theo|ines|nora|jun)-/.test(id);
     const early = new RoomPeople({ id: 'childroom', roomLayout: { id: 'house', ageStage: 'early', play: [0, 2150], reading: [-1150, 3050], desk: [1050, -250] } }, null).specs();
@@ -90,6 +103,59 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     const kid = other.people.find(o => o.userData.person.id === 'people-jun-kid-sit-desk'), under = [...other.kidSeats.values()][0];
     assert.ok(kid.visible && under?.source === leap && Math.abs(under.copy.rotation.y - kid.rotation.y) < 1e-6, 'a child at an office desk sits on that room\'s chair the right way round');
     other.dispose();
+}
+{   // A free spot: a guest whose place round the bench is taken by a sculpture in this size of the room stands at the
+    // nearest free place round it instead, still facing it, clear of the others; with nowhere to stand they are not there.
+    const prop = (room, id, size, at) => { const g = new THREE.Group(), m = new THREE.Mesh(new THREE.BoxGeometry(...size)); m.position.y = size[1] / 2; g.add(m); g.position.set(at[0], 0, at[1]); g.userData.propId = id; room.root.add(g); return g; };
+    const { room } = makeRoom('gallery', { id: 'house', width: 4800, depth: 5800, back: -1800 });
+    prop(room, 'gallery-bench', [1800, 505, 480], [0, 1200]);
+    const a = THREE.MathUtils.degToRad(300), loop = prop(room, 'marble-loop', [631, 826, 620], [Math.sin(a) * 1400, 1200 + Math.cos(a) * 1400]);
+    // a loose chair near where Andre would stand: clear of its box, but close enough that the room would take the chair away
+    const stool = prop(room, 'kenney-furniture-chair-modern-cushion', [510, 781, 608], [Math.sin(Math.PI / 3) * 1400 + 560, 1200 + Math.cos(Math.PI / 3) * 1400]);
+    const people = new RoomPeople(room, library); await people.setEnabled(true); people.update({ mode: 'party', height: 43.5, pose: { x: 1501, z: -795, yaw: 0 } });
+    const guests = people.people.filter(o => o.visible && o.userData.person.around), rosa = guests.find(o => o.userData.person.id === 'people-rosa-stand-drink');
+    assert.equal(guests.length, 3, 'the three opening night guests are there');
+    for (const g of guests) assert.ok(Math.hypot(g.position.x - stool.position.x, g.position.z - stool.position.z) >= 619, 'nobody stands where the room would have to take a chair away');
+    assert.ok(stool.visible, 'and the chair is still there');
+    const gap = (o, g) => Math.hypot(Math.max(Math.abs(o.position.x - g.position.x) - 631 / 2, 0), Math.max(Math.abs(o.position.z - g.position.z) - 620 / 2, 0));
+    assert.ok(gap(rosa, loop) >= 259, 'Rosa stands clear of the sculpture that is where she was put');
+    const far = Math.hypot(rosa.position.x, rosa.position.z - 1200), facing = new THREE.Vector3(Math.sin(rosa.rotation.y), 0, Math.cos(rosa.rotation.y)), toBench = new THREE.Vector3(-rosa.position.x, 0, 1200 - rosa.position.z).normalize();
+    assert.ok(far > 1150 && far < 1650 && facing.dot(toBench) > .999, 'still round the bench, facing it');
+    for (const g of guests) for (const h of guests) if (g !== h) assert.ok(Math.hypot(g.position.x - h.position.x, g.position.z - h.position.z) >= 649, 'the guests keep their distance from each other');
+    for (const g of guests) assert.ok(Math.abs(g.position.x) < 2400 - 300 && g.position.z > -1800 + 300 && g.position.z < 4000 - 250, 'inside the room, off its walls');
+    for (const g of guests) { const dx = g.position.x - 1501, dz = g.position.z + 795; assert.ok(!(Math.abs(dx) < 1150 && dz > -750 && dz < 1350), 'and out of the way of the desk and whoever is at it'); }
+    people.dispose();
+    const tiny = makeRoom('gallery', { id: 'house', width: 1000, depth: 1000, back: 700 }).room; prop(tiny, 'gallery-bench', [1800, 505, 480], [0, 1200]);
+    const none = new RoomPeople(tiny, library); await none.setEnabled(true); none.update({ mode: 'party', height: 43.5, pose: { x: 0, z: 0, yaw: 0 } });
+    assert.ok(none.people.filter(o => o.userData.person.around).every(o => !o.visible && o.userData.personMissing), 'no room to stand: the guests are not shown inside the furniture');
+    none.dispose();
+}
+{   // A free spot along a counter: Priya's place at the service counter has the robot dog in it, so she stands further
+    // along the counter, still facing it; when the desk is moved to where she is, she looks for a place again.
+    const prop = (room, id, size, at, turn = 0) => { const g = new THREE.Group(), m = new THREE.Mesh(new THREE.BoxGeometry(...size)); m.position.y = size[1] / 2; g.add(m); g.position.set(at[0], 0, at[1]); g.rotation.y = turn; g.userData.propId = id; room.root.add(g); return g; };
+    const { room } = makeRoom('scifi', { id: 'house', width: 5200, depth: 6200, back: -1800 });
+    prop(room, 'service-counter', [1880, 1270, 793], [-2186, 350], Math.PI / 2); prop(room, 'robot-dog', [550, 315, 700], [-1436, 350]);
+    const people = new RoomPeople(room, library); await people.setEnabled(true); people.update({ mode: 'morning', height: 43.5, pose: { x: 1701, z: -795, yaw: 0 } });
+    const priya = people.people.find(o => o.userData.person.id === 'people-priya-stand-work');
+    assert.ok(priya.visible && Math.abs(priya.position.x + 1436) < 1 && Math.abs(priya.position.z - 350) >= 609, 'Priya stands at the counter, along from the dog');
+    assert.ok(new THREE.Vector3(Math.sin(priya.rotation.y), 0, Math.cos(priya.rotation.y)).dot(new THREE.Vector3(-1, 0, 0)) > .999, 'facing the counter');
+    const was = priya.position.clone(), desk = { x: was.x, z: was.z - 200, yaw: 0 };
+    people.update({ mode: 'morning', height: 43.5, pose: desk });
+    const dx = priya.position.x - desk.x, dz = priya.position.z - desk.z;
+    assert.ok(!priya.visible || !(Math.abs(dx) < 1150 && dz > -750 && dz < 1350), 'the desk moved to where she stood: she is out of its way (or gone), in the same hour');
+    people.dispose();
+}
+{   // toward: a chair far along a long table faces the table (its nearest edge), not the table's middle from the side.
+    const prop = (room, id, size, at) => { const g = new THREE.Group(), m = new THREE.Mesh(new THREE.BoxGeometry(...size)); m.position.y = size[1] / 2; g.add(m); g.position.set(at[0], 0, at[1]); g.userData.propId = id; room.root.add(g); return g; };
+    const { room } = makeRoom('kitchen', { id: 'executive', width: 8200, depth: 9000, back: -2000 });
+    prop(room, 'dining-table', [2813, 740, 1019], [28, 5681]);
+    for (const at of [[-982, 4922], [-960, 6477], [17, 4900], [39, 6454]]) prop(room, 'kenney-furniture-chair-modern-cushion', [510, 781, 608], at);
+    const people = new RoomPeople(room, library); await people.setEnabled(true); people.update({ mode: 'party', height: 38, pose: { x: -3199, z: 255, yaw: 0 } });
+    const hale = people.people.find(o => o.userData.person.id === 'people-hale-sit-chat'), andre = people.people.find(o => o.userData.person.key === 'andre-dinner');
+    const yaw = o => Math.atan2(Math.sin(o.rotation.y), Math.cos(o.rotation.y));
+    assert.ok(hale.visible && Math.abs(Math.abs(yaw(hale)) - Math.PI) < .01, 'Hale, on the chair at the far end of the front side, faces the table (not along it)');
+    assert.ok(andre.visible && Math.abs(yaw(andre)) < .01, 'Andre, on the back side, faces it from there');
+    people.dispose();
 }
 {   // Round a rug: at that angle and distance from its middle, facing it; a room without the rug leaves the person out.
     const { room } = makeRoom('kindergarten', { id: 'apartment' }), rug = new THREE.Group(); rug.add(new THREE.Mesh(new THREE.BoxGeometry(1800, 10, 1800))); rug.position.set(-1745, 0, 3300); rug.userData.propId = 'circle-rug'; room.root.add(rug);

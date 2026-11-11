@@ -5209,6 +5209,74 @@
    "pose": "sit-floor",
    "name": "Sofia: sitting cross-legged on the floor",
    "aids": []
+  },
+  "people-rosa-stand-mug": {
+   "character": "rosa",
+   "pose": "stand-mug",
+   "name": "Rosa: standing with a coffee",
+   "aids": []
+  },
+  "people-andre-sit-chat": {
+   "character": "andre",
+   "pose": "sit-chat",
+   "name": "Andre: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-rosa-sit-mug": {
+   "character": "rosa",
+   "pose": "sit-mug",
+   "name": "Rosa: sitting back with a mug",
+   "aids": []
+  },
+  "people-hale-sit-chat": {
+   "character": "hale",
+   "pose": "sit-chat",
+   "name": "Mr Hale: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-zoe-sit-mug": {
+   "character": "zoe",
+   "pose": "sit-mug",
+   "name": "Zoe: sitting back with a mug",
+   "aids": []
+  },
+  "people-kai-sit-chat": {
+   "character": "kai",
+   "pose": "sit-chat",
+   "name": "Kai: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-ava-sit-chat": {
+   "character": "ava",
+   "pose": "sit-chat",
+   "name": "Ava: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-jo-sit-chat": {
+   "character": "jo",
+   "pose": "sit-chat",
+   "name": "Jo: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-hale-stand-drink": {
+   "character": "hale",
+   "pose": "stand-drink",
+   "name": "Mr Hale: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-rosa-stand-talk": {
+   "character": "rosa",
+   "pose": "stand-talk",
+   "name": "Rosa: standing, explaining something",
+   "aids": []
+  },
+  "people-sam-stand-mug": {
+   "character": "sam",
+   "pose": "stand-mug",
+   "name": "Sam: standing with a coffee",
+   "aids": [
+    "prosthesis"
+   ]
   }
  }
 }

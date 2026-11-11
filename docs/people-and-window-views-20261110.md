@@ -218,6 +218,43 @@ Checking a room: `node tools/rooms/room-stills.cjs <out> <room:layout:daypart> .
 --views asloaded,overview` (`asloaded` is the Studio's own opening view), `node tools/people/cast-audit.cjs --film`.
 
 
+## The living and working rooms (November 11)
+
+The study, office, kitchen, lounge, bedroom, gallery, coworking space and orbital deck had one person each: whoever is
+at the desk. They keep that person and now have the people their furniture is there for, by the hour:
+
+| Room | Morning | Afternoon | Evening | Night | Party / social |
+|---|---|---|---|---|---|
+| Study | | | Grace reads in the leather armchair | | Grace talks from the armchair, Hale has come by with a mug (not in the smallest study) |
+| Office | Rosa with a mug at the coffee bar | Lin reads on the sofa | Hale takes a call by the credenza | closed | Lin on the sofa, Rosa and Hale round the coffee table |
+| Kitchen | Andre with a mug at the table | | Grace cooks at the island (at the counter where there is none) | | Andre, Rosa and Hale at the table, Grace by the coffee bar |
+| Lounge | | | Zoe reads on the sofa | Zoe and Kai on the sofa (movie night) | Kai and Sam with controllers, Eli watching from the end of the sofa with a drink (not in the smallest lounge) |
+| Bedroom | | | Ava reads in the armchair | | Ava talks from the armchair, Zoe by her on her phone |
+| Gallery | | Hale rests on the bench, Jo before the Thinker | Ben by the vase | closed | Rosa, Andre and Grace round the bench |
+| Coworking | Hale with a mug at the cafe counter | Rosa and Sam work at the meeting table | Jo reads on the sofa | closed | Jo on the sofa, Hale and Rosa round the coffee table, Sam at the counter |
+| Orbital deck | Priya at the service counter | | Kai briefs at the mission console | | Priya and Kai at the console (Priya only on the smallest deck) |
+
+Everyone is placed by a piece of the room's furniture, so they follow it when a layout or an hour moves it. The
+smallest layouts lack some of it and are cast on what they have: an armchair for the office sofa, the banquette for
+the kitchen's dining chairs (two at its table, Grace standing by it), the bench at the foot of the bed for the bedroom armchair, a lounge chair for the
+coworking sofa. Eleven models were built for these casts (the library has 672).
+
+Two placement rules were added in `room-people.mjs` for this:
+
+- `toward: '<prop id>'` with `on`: of the four ways a seat can be sat on, the person takes the one facing that prop
+  (a chair faces its table, a sofa its coffee table). Chair models do not agree on which way is their front.
+- `clear: true` with `by` or `around` (the helpers `standBy` and `standRound`): the person takes the nearest spot along
+  or round that prop where a standing person is clear of the furniture (260 mm), the walls, the desk and the place of
+  whoever is at it, and anyone else there at that hour (650 mm). A fixed angle that suits one size of a room put guests
+  in a sculpture, a drafting station and through a wall in other sizes. With nowhere free the person is not shown.
+  The spot is chosen when the room is built and again when the hour changes; furniture the user moves in between does
+  not move the guest until then. Casts written before this (the film rooms, the school rooms) do not use it and stand
+  where they stood.
+
+`tools/people/cast-audit.cjs` now measures people as they are posed. It used to read the stored (bind pose) vertices of
+a skinned model, which made every person about 2 m tall: it over-reported seated people as outside the room and as
+touching furniture, and its "hands off the keyboard" distances were not real.
+
 ## People who move (added November 10, 2026, night)
 
 `room-people-motion.mjs` (pure, tested without a browser) + `RoomPeople.cast()` / `chairOf()` in `room-people.mjs`.

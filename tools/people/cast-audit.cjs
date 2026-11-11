@@ -41,17 +41,19 @@ async function inspect(room, layout, phase, size, survey) {
     // the featured desk's keyboard (tray or desktop), for "are the desk user's hands on it" at this height and tilt
     let keys = null; for (const [k, item] of E.sceneDesks?.active?.objects || []) { const label = k + ' ' + (item.obj?.userData?.propId || '') + ' ' + (item.obj?.name || ''); if (!/keyboard/i.test(label) || /tray/i.test(label) || item.saved?.removed || !item.obj?.visible) continue; item.obj.updateWorldMatrix(true, true); const b = new T.Box3().setFromObject(item.obj).applyMatrix4(inv); if (!b.isEmpty()) { keys = b; break; } }
     const anchorOf = spec => { const id = [].concat(spec.on || spec.by || [])[0]; return id || null; };
+    // a vertex as it is posed, in room millimetres (a skinned mesh's stored positions are its bind pose, in its own units)
+    const vertex = (c, p, i) => (c.isSkinnedMesh ? c.getVertexPosition(i, new T.Vector3()) : new T.Vector3().fromBufferAttribute(p, i)).applyMatrix4(c.matrixWorld).applyMatrix4(inv);
     const rows = people.map(o => {
         const s = o.userData.person, fit = o.userData.personFit, key = s.key || s.id;
         let why = 'shown';
         if (!o.visible) why = o.userData.personMissing ? (s.station ? 'station missing or its height does not fit' : 'anchor not found') : !P.allowed(s) ? 'filtered' : (s.modes && !s.modes.includes(mode)) ? 'not this daypart' : (s.desk && !s.station) ? (fit !== null && Math.abs(height - fit) > 1.4 ? `cast but hidden: desk at ${height} in, pose for ${fit} in` : !state.pose ? 'cast but hidden: the featured desk has no pose' : 'another desk user is at the desk') : 'hidden';
         const row = { key, id: s.id, desk: !!(s.desk && !s.station), visible: o.visible, why, at: [Math.round(o.position.x), Math.round(o.position.z)], y: Math.round(o.position.y), turn: Math.round(T.MathUtils.radToDeg(o.rotation.y)) };
         if (!o.visible) return row;
-        o.updateWorldMatrix(true, true);
-        const pts = []; o.traverse(c => { if (!c.isMesh || !c.geometry?.attributes?.position) return; const p = c.geometry.attributes.position, step = Math.max(1, Math.floor(p.count / 700)); for (let i = 0; i < p.count; i += step) pts.push(new T.Vector3().fromBufferAttribute(p, i).applyMatrix4(c.matrixWorld).applyMatrix4(inv)); });
+        o.updateWorldMatrix(true, false); o.updateMatrixWorld(true); o.traverse(c => c.isSkinnedMesh && c.skeleton.update());   // updateMatrixWorld also refreshes a skinned mesh's bind inverse
+        const pts = []; o.traverse(c => { if (!c.isMesh || !c.geometry?.attributes?.position) return; const p = c.geometry.attributes.position, step = Math.max(1, Math.floor(p.count / 700)); for (let i = 0; i < p.count; i += step) pts.push(vertex(c, p, i)); });
         const pb = new T.Box3().setFromPoints(pts);
         if (s.desk && !s.station && keys) {   // the closest the person comes to the keyboard (mm): hands on it are within ~40
-            const near = []; o.traverse(c => { if (!c.isMesh || !c.geometry?.attributes?.position) return; const p = c.geometry.attributes.position, step = Math.max(1, Math.floor(p.count / 6000)); for (let i = 0; i < p.count; i += step) near.push(new T.Vector3().fromBufferAttribute(p, i).applyMatrix4(c.matrixWorld).applyMatrix4(inv)); });
+            const near = []; o.traverse(c => { if (!c.isMesh || !c.geometry?.attributes?.position) return; const p = c.geometry.attributes.position, step = Math.max(1, Math.floor(p.count / 6000)); for (let i = 0; i < p.count; i += step) near.push(vertex(c, p, i)); });
             let best = null, bd = Infinity; for (const p of near) { const d = keys.distanceToPoint(p); if (d < bd) { bd = d; best = p; } }
             row.hands = Math.round(bd); row.handAt = best.toArray().map(Math.round); row.keyboard = [keys.min.toArray().map(Math.round), keys.max.toArray().map(Math.round)];
             // the lowest point of the person's hands region in front of the body, for "above or behind the keys"
