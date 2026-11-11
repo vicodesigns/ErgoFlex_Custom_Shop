@@ -9,7 +9,7 @@ import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atel
 import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=gallery-bedroom-20261025';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111b';
 import { buildInstitutionalRoom } from './institutional-room.mjs?v=polish-20261111b';
-import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
+import { refineRoomSurfaces } from './room-refinement.mjs?v=polish-20261111b';
 import { polishRoomProp } from './room-polish.mjs?v=polish-20261111b';
 import { RoomLife } from './room-life.mjs?v=polish-20261111b';
 import { RoomPeople } from './room-people.mjs?v=polish-20261111b';
