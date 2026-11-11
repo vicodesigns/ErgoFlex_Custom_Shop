@@ -639,8 +639,7 @@ export function buildMusicRoom(room, root, layout, helpers) {
         session.mode = modeId in MUSIC_MODES ? modeId : 'afternoon'; session.accent = accent;
         drawSky(modeId, mode);
         poolGain.v = accent; pools.apply(modeId); sun.update(modeId);
-        // The city photograph after dark is a dusk exposure: take it down to night.
-        if (modeId === 'night') { const u = windowVista.material.uniforms; u.gain.value.multiply(new THREE.Vector3(.17, .18, .26)); u.saturation.value *= .7; u.contrast.value *= 1.25; u.lift.value.set(0, 0, .004); }
+        // (The city photograph after dark is a dusk exposure. It stays as it is: the film's night chapter was shot against it.)
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .06 + mode.wash * accent * 1.25; });
         lights.forEach(spec => { if (spec.wash) spec.light.color.set(mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.wash ? mode.wash : mode.practical) * accent; });
         diffuser.emissiveIntensity = .2 + mode.practical * .65;
