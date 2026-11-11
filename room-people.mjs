@@ -11,7 +11,10 @@
 // Placements, in room millimetres:
 //   { id, desk: 'sit' | 'stand' | 'wheel' }           at the featured desk, while its height suits the model
 //                                                     (the model's library entry carries person.deskHeight, inches)
-//   { id, station: '<id>', desk: ... }                at one of the room's other ErgoFlex desks (layout.stations)
+//   { id, station: '<id>', desk: ... }                at one of the room's other ErgoFlex desks (layout.stations); they
+//                                                     follow that desk as the featured desk's user follows theirs
+// Anyone at a desk sits or stands with it: beside the model a placement names, the same character's other desk
+// postures are loaded under the same key (deskFamily) and whichever was built for the desk's height now is shown.
 //   { id, beside: [dx, dz] }                          near the featured desk (its own frame), facing it
 //   { id, on: '<prop id>' | ['<prop id>', n] }        seated on that piece of furniture, facing the way it faces
 //                                                     (`turn` degrees to correct a model; `along` / `depth` mm to slide)
@@ -272,6 +275,17 @@ export const castEntries = (id, layout) => {
 };
 const castFor = (id, layout) => { const own = castEntries(id, layout); return own.length ? own : DEFAULT_CREW[id] ? crew(DEFAULT_CREW[id]) : []; };
 
+// The same character's other desk postures, as [id, desk role]: a typist sits at 28 in and at 30 in and stands at
+// 43.5 in, a wheelchair user has a 28 in and a 31 in pose. Poses built for one special desk (low standing) have none.
+export function deskFamily(id) {
+    const m = /^people-([a-z]+)-(.+)$/.exec(id || ''); if (!m) return [];
+    const [, who, posture] = m, as = (p, desk) => ['people-' + who + '-' + p, desk]; let list = [];
+    if (/^wheel-/.test(posture)) { const base = posture.replace(/-28$/, ''); list = [as(base, 'wheel'), as(base + '-28', 'wheel')]; }
+    else if (/^sit-/.test(posture)) { const base = posture.replace(/-30$/, ''); list = [as(base, 'sit'), as(base + '-30', 'sit'), as('stand-type', 'stand')]; }
+    else if (posture === 'stand-type') list = [as('sit-type', 'sit'), as('sit-type-30', 'sit')];
+    return list.filter(([other]) => other !== id);
+}
+
 const down = new THREE.Vector3(0, -1, 0), poseTurn = new THREE.Quaternion();
 const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 
@@ -303,7 +317,25 @@ export class RoomPeople {
         await Promise.all(this.people.map(object => { const now = this.current(object); return now && this.posed(now) && !object.userData.personRig ? this.rig(object) : null; }));
     }
     // The placement the filter has now for an extra person (it may have been edited since the model was built).
-    current(object) { const spec = object.userData.person; return spec.extra ? (this.filter?.cast || []).find(c => this.keyOf(c) === this.keyOf(spec)) || null : null; }
+    current(object) { const spec = object.userData.person, now = spec.extra ? (this.filter?.cast || []).find(c => this.keyOf(c) === this.keyOf(spec)) || null : null; return now && this.asVariant(now, spec); }
+    // A placement as one of its desk postures wears it: the same place, size, clothes and timing, its own model and
+    // role. The fine-tuned joints belong to the posture the placement names, so the others do not take them.
+    asVariant(now, spec) { return spec.variant ? { ...now, id: spec.id, desk: spec.desk, variant: spec.variant, pose: undefined } : now; }
+    // Everyone to build: the placements, and for each person a film or the Director put at a desk, or who works at one
+    // of the room's other desks, the character's other desk postures (deskFamily) that are in the library and not
+    // already placed at that desk by the same hand (a film's cast and the room's own are told apart: a film often
+    // leaves the room's own out).
+    withFamilies(list) {
+        const at = spec => (spec.extra ? 'film ' : 'room ') + (spec.station || '') + '|', seen = new Set(list.filter(s => s.desk).map(s => at(s) + s.id)), out = [];
+        for (const spec of list) {
+            out.push(spec); if (!spec.desk || !(spec.extra || spec.station)) continue;   // the rooms' own featured-desk crews name their postures
+            for (const [id, desk] of deskFamily(spec.id)) {
+                if (seen.has(at(spec) + id) || !this.library.entry?.(id)) continue;
+                seen.add(at(spec) + id); out.push({ ...spec, id, desk, variant: this.keyOf(spec), pose: undefined });
+            }
+        }
+        return out;
+    }
     // The same person with a skeleton, in the same place (the Director's pose mode, a placement with `pose`).
     rig(object) {
         if (object.userData.personRig) return Promise.resolve(object);
@@ -370,17 +402,18 @@ export class RoomPeople {
         return out;
     }
     // The person shown under that key (a film's own entry wins over a room person of the same name it has replaced).
-    byKey(key) { const all = this.people.filter(o => this.keyOf(o.userData.person) === key); return all.find(o => this.allowed(o.userData.person)) || all[0] || null; }
+    // Of a person's desk postures it is the one showing now, else the one the placement names.
+    byKey(key) { const all = this.people.filter(o => this.keyOf(o.userData.person) === key && this.allowed(o.userData.person)), any = all.length ? all : this.people.filter(o => this.keyOf(o.userData.person) === key); return any.find(o => o.visible) || any.find(o => !o.userData.person.variant) || any[0] || null; }
     // Who is in the room now (for the Director's People tab), room millimetres and degrees.
     list() {
         return this.people.map(o => { const s = o.userData.person; return { key: this.keyOf(s), id: s.id, extra: !!s.extra, desk: s.desk || null, station: s.station || null,
             at: [Math.round(o.position.x), Math.round(o.position.z)], y: Math.round(o.position.y), turn: Math.round(THREE.MathUtils.radToDeg(o.rotation.y) * 10) / 10, scale: s.scale || 1,
-            allowed: this.allowed(s), missing: !!o.userData.personMissing, visible: o.visible, amount: o.userData.personAmount ?? 1, rigged: !!o.userData.personRig }; });
+            allowed: this.allowed(s), missing: !!o.userData.personMissing, visible: o.visible, amount: o.userData.personAmount ?? 1, rigged: !!o.userData.personRig, variant: s.variant || null }; });
     }
     // The cast as plain placements a film can keep: desk and station people as they are (they follow their desk),
     // everyone else at the spot and facing they have settled into (`on`, `by`, `near` resolved).
     resolved() {
-        return this.people.filter(o => this.allowed(o.userData.person) && !o.userData.personMissing).map(o => {
+        return this.people.filter(o => this.allowed(o.userData.person) && !o.userData.personMissing && !o.userData.person.variant).map(o => {
             const s = o.userData.person, out = { key: this.keyOf(s), id: s.id };
             if (s.desk) { out.desk = s.desk; if (s.station) out.station = s.station; if (s.reach !== undefined) out.reach = s.reach; }
             else if (s.beside && !s.at) out.beside = s.beside;
@@ -391,7 +424,8 @@ export class RoomPeople {
             return out;
         });
     }
-    keyOf(spec) { return spec.key || spec.id; }
+    // A placement's name: its `key`, else its model's id; one of its other desk postures (variant) answers to the same name.
+    keyOf(spec) { return spec.key || spec.variant || spec.id; }
     // A film chapter that names someone in `only` shows them whatever the daypart casts (`modes` is the Studio's script).
     named(spec) { const only = this.filter?.only; return !!only && (only.includes(this.keyOf(spec)) || only.includes(spec.id)); }
     allowed(spec) { const f = this.filter, k = this.keyOf(spec), has = list => list.includes(k) || list.includes(spec.id); return !f || spec.extra || ((!f.only || has(f.only)) && !has(f.except || [])); }
@@ -415,8 +449,9 @@ export class RoomPeople {
         else this.update(this.room.peopleState?.());
     }
     async build() {
-        const room = this.room, token = room.token, root = room.root, specs = this.specs();
+        const room = this.room, token = room.token, root = room.root;
         await room.ready; await this.library.loadIndex();
+        const specs = this.withFamilies(this.specs());
         const load = async id => { try { return await this.library.instance(id); } catch (error) { console.warn('[people] ' + id + ' did not load:', error?.message || error); return null; } };
         const loaded = await Promise.all(specs.map(async spec => ({ spec, object: await load(spec.id), chair: spec.desk === 'sit' ? await load(TASK_CHAIR) : null })));
         const posed = [];
@@ -425,7 +460,7 @@ export class RoomPeople {
             if (!object) continue;
             object.name = 'Person:' + spec.id; object.userData.person = spec; object.userData.personFit = this.library.entry(spec.id)?.person?.deskHeight ?? null; object.visible = false;
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
-            if ((spec.desk && !spec.station) || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
+            if (spec.desk || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
             root.add(object); this.people.push(object); this.resize(object, spec); this.recolor(object, spec);
             if (this.posed(spec)) posed.push(object);
             if (spec.station) this.atStation(object, spec);
@@ -446,12 +481,19 @@ export class RoomPeople {
     }
     props(id) { return this.room.assets().filter(o => o.userData.propId === id || o.userData.decorUpgrade === id); }
     centreOf(object) { return this.room.root.worldToLocal(new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3())); }
-    // At one of the room's other desks: fixed, if that desk's height suits the model.
-    atStation(object, spec) {
-        const station = this.room.roomLayout?.stations?.find(s => s.id === spec.station), fit = object.userData.personFit;
-        if (!station || (fit !== null && Math.abs((station.height ?? 28) - fit) > HEIGHT_FIT)) { object.userData.personMissing = true; return; }
-        const yaw = THREE.MathUtils.degToRad(station.turn || 0);
-        object.position.set(station.at[0], 0, station.at[1]).addScaledVector(frontOf(yaw), spec.reach ?? REACH[spec.desk]); object.rotation.y = yaw + Math.PI;
+    // At one of the room's other desks. That desk as it is now (state.station: where it stands, how high it is; the
+    // Director moves and raises these desks) decides where the person is and whether their pose suits it (update);
+    // without a live desk it is the layout's station as designed.
+    stationNow(spec, state) {
+        const live = state?.station?.(spec.station); if (live?.pose) return live;
+        const station = this.room.roomLayout?.stations?.find(s => s.id === spec.station);
+        return station ? { height: station.height ?? 28, pose: { x: station.at[0], z: station.at[1], yaw: THREE.MathUtils.degToRad(station.turn || 0) } } : null;
+    }
+    atStation(object, spec, state = null) {
+        const desk = this.stationNow(spec, state); if (!desk) { object.userData.personMissing = true; return null; }
+        const yaw = desk.pose.yaw || 0;
+        object.position.set(desk.pose.x, 0, desk.pose.z).addScaledVector(frontOf(yaw), spec.reach ?? REACH[spec.desk]); object.rotation.y = yaw + Math.PI;
+        return desk;
     }
     // A fixed placement: on a seat, by a piece of furniture, or at a spot.
     settle(object, spec) {
@@ -522,14 +564,14 @@ export class RoomPeople {
     // time: seconds into a film chapter (null in the Studio), for the filter's `when`.
     update(state) {
         if (!this.enabled || !this.people.length) return;
-        const height = state?.height ?? 28, pose = state?.pose, mode = state?.mode, time = state?.time ?? null; let working = false, seated = 0;
+        const height = state?.height ?? 28, pose = state?.pose, mode = state?.mode, time = state?.time ?? null, busy = new Set(); let working = false, seated = 0;
         if (!this.placed) {
             this.placed = true;
             for (const object of this.people) {
                 // an extra person takes the placement the filter has for it now (it may have been moved since it was built)
                 const now = object.userData.person.extra && (this.filter?.cast || []).find(c => this.keyOf(c) === this.keyOf(object.userData.person));
                 if (now) {
-                    const spec = object.userData.person = { ...now, extra: true }; object.userData.personMissing = false; this.resize(object, spec); this.recolor(object, spec);
+                    const spec = object.userData.person = { ...this.asVariant(now, object.userData.person), extra: true }; object.userData.personMissing = false; this.resize(object, spec); this.recolor(object, spec);
                     if (object.userData.personRig) this.pose(object, spec); else if (this.posed(spec)) this.rig(object);
                     if (spec.station) this.atStation(object, spec); else if (!spec.desk && !spec.beside) this.settle(object, spec);
                 }
@@ -554,6 +596,11 @@ export class RoomPeople {
                     else object.position.set(pose.x - 6, 0, pose.z).addScaledVector(front, REACH[spec.desk] + short);
                     object.rotation.y = yaw + Math.PI; working = true;
                 }
+            } else if (spec.desk && spec.station && !(this.filter?.place?.[this.keyOf(spec)] || this.filter?.place?.[spec.id])) {
+                // at another desk of the room: there while that desk is at the height the pose was built for, and where it stands now
+                const desk = on ? this.atStation(object, spec, state) : null, off = !desk || fit === null ? 0 : Math.abs(desk.height - fit);
+                on = on && !!desk && !busy.has(spec.station) && off <= HEIGHT_FIT;
+                if (on) { busy.add(spec.station); object.userData.personAmount = there * (1 - THREE.MathUtils.smoothstep(off, HEIGHT_SOLID, HEIGHT_FIT)); }
             } else if (spec.beside && (this.filter?.place?.[this.keyOf(spec)] || this.filter?.place?.[spec.id])) {
                 // placed for this use: stays where it was put
             } else if (spec.beside && pose) {

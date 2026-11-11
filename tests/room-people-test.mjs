@@ -90,6 +90,28 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     const zoe = people.people.find(o => o.userData.person.id === 'people-zoe-stand-type');
     assert.deepEqual([zoe.position.x, zoe.position.z], [4380, 1890]);
 }
+{   // A person at one of the room's other desks follows that desk as it is now: where it stands, and sitting or standing with its height.
+    const stations = [{ id: 'window-research', at: [-4300, 1000], turn: 0, height: 28 }];
+    const { room } = makeRoom('highschool', { id: 'house', stations }), people = new RoomPeople(room, library);
+    let desk = { height: 28, pose: { x: -4300, z: 1000, yaw: 0 } };
+    const state = () => ({ mode: 'morning', height: 30, pose: { x: 0, z: 0, yaw: 0 }, station: id => id === 'window-research' ? desk : null });
+    await people.setEnabled(true); people.update(state());
+    const mia = () => people.people.filter(o => o.visible && /mia/.test(o.userData.person.id)).map(o => o.userData.person.id);
+    assert.deepEqual(mia(), ['people-mia-sit-type'], 'seated while her desk is at 28 in');
+    desk = { height: 43.5, pose: { x: -4000, z: 1200, yaw: 0 } }; people.update(state());
+    assert.deepEqual(mia(), ['people-mia-stand-type'], 'she stands when her desk is raised');
+    const up = people.byKey('people-mia-sit-type');
+    assert.equal(up.userData.person.id, 'people-mia-stand-type', 'her name finds whichever of her postures is showing');
+    assert.deepEqual([up.position.x, up.position.z], [-4000, 1200 + 890], 'and she is where the desk has been moved to');
+    desk = { height: 36, pose: desk.pose }; people.update(state()); assert.deepEqual(mia(), [], 'nobody works at a desk half way up');
+    desk = { height: 30, pose: desk.pose }; people.update(state()); assert.deepEqual(mia(), ['people-mia-sit-type-30'], 'the 30 in seat at 30 in');
+    assert.ok(!people.resolved().some(p => /mia-(stand-type|sit-type-30)/.test(p.id)), 'a film keeps the placement, not its other postures');
+    // The Director's entry names the standing posture while the desk is down: she is there, seated (she used to vanish).
+    people.setFilter({ only: [], cast: [{ key: 'm', id: 'people-mia-stand-type', desk: 'stand', station: 'window-research' }] }); await people.setEnabled(true);
+    desk = { height: 28, pose: { x: -4300, z: 1000, yaw: 0 } }; people.update(state());
+    assert.deepEqual(mia(), ['people-mia-sit-type']); assert.equal(people.keyOf(people.byKey('m').userData.person), 'm');
+    assert.deepEqual(people.list().filter(p => p.key === 'm' && p.visible).map(p => p.variant), ['m']);
+}
 {   // Film casting: extra people (one model twice, by key), the seconds each is there for, and a chair that stays.
     const { room, chair } = makeRoom('creative'), people = new RoomPeople(room, library);
     people.setFilter({ only: [], cast: [{ key: 'at-easel', id: 'people-lin-stand-paint', at: [-1700, 2500], turn: 0 }, { key: 'at-desk', id: 'people-lin-stand-paint', at: [-200, -130], turn: 180, y: 40 }],
