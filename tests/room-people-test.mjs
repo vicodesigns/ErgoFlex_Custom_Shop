@@ -107,7 +107,7 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     people.update({ height: 43.5, pose: { x: 0, z: 0, yaw: 0 } }); assert.deepEqual(keys(), ['at-easel', 'at-desk'], 'without a film time everyone is there');
     // A different cast rebuilds the room's people.
     people.setFilter({ only: ['people-maya-sit-type', 'people-maya-stand-type'], chair: { back: 300, side: 760, turn: -42 } }); await people.setEnabled(true);
-    assert.ok(!people.people.some(o => o.userData.person.key), 'the earlier chapter\'s extras are gone');
+    assert.ok(!people.people.some(o => o.userData.person.extra), 'the earlier chapter\'s extras are gone');
     people.update({ height: 28, pose: { x: 100, z: -500, yaw: 0 }, keyboard: { x: 100, z: -30 } });
     const seat = people.people.find(o => o.userData.person.id === 'people-maya-sit-type').userData.personChair;
     assert.deepEqual([seat.visible, seat.position.x, seat.position.z], [true, 100, 440], 'under her while she sits');

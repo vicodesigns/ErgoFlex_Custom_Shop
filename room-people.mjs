@@ -137,10 +137,14 @@ export const ROOM_PEOPLE = {
     // Two artists share the studio: Sofia at the desk by day, Lin at the easel in the morning and at golden hour, Lin
     // alone reviewing at the desk at night; the open studio has visitors looking at the work.
     creative: [
-        { id: 'people-lin-stand-paint', by: 'artist-easel', reach: 640, modes: ['morning', 'evening'] },   // the film's key (its chapter places her itself)
+        // the film's painter (as its chapters know her); in the Studio she stands a little nearer the easel, clear of the worktable
+        { id: 'people-lin-stand-paint', by: 'artist-easel', reach: 640, modes: [] },
+        { key: 'lin-at-easel', id: 'people-lin-stand-paint', by: 'artist-easel', reach: 500, modes: ['morning', 'evening'] },
         { id: 'people-maya-stand-type', desk: 'stand', modes: [] }, { id: 'people-maya-sit-type', desk: 'sit', modes: [] },
         { id: 'people-grace-sit-read', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 380, modes: [] },   // the sofa faces the open front: feet would leave the room
-        ...crewOf('sofia', ['morning', 'afternoon', 'evening'], { colors: LOOK.sofia }),
+        // the evening's 30 degree drawing tilt brings the top through a standing typist: Lin paints alone until the desk
+        // user can follow the tilt
+        ...crewOf('sofia', ['morning', 'afternoon'], { colors: LOOK.sofia }),
         ...crewOf('lin', ['night'], { colors: LOOK.linNight }),
         L => L.id === 'premium' ? [spot('people-lin-stand-talk', -1150, 1350, [-400, 1500], PARTY), spot('people-ben-stand-drink', -350, 800, [-1150, 1350], PARTY),
             spot('people-ava-stand-drink', -300, 1900, [-1150, 1350], { ...PARTY, colors: LOOK.guestB }), spot('people-omar-wheel-watch', 1950, 2550, [2600, 2550], PARTY),
@@ -152,8 +156,8 @@ export const ROOM_PEOPLE = {
     // night, and the power circuit with three on the floor.
     gym: [
         { id: 'people-priya-stretch', by: 'training-zone', reach: 0, turn: 180, modes: ['morning'] },
-        { id: 'people-maya-stand-type', desk: 'stand', modes: ['morning', 'evening', 'party'], colors: LOOK.gymMaya },
-        { id: 'people-maya-sit-type', desk: 'sit', modes: ['morning', 'evening', 'party'], colors: LOOK.gymMaya }, { id: 'people-maya-sit-type-30', desk: 'sit', modes: ['morning', 'evening', 'party'], colors: LOOK.gymMaya },
+        { id: 'people-maya-stand-type', desk: 'stand', modes: ['morning', 'evening'], colors: LOOK.gymMaya },
+        { id: 'people-maya-sit-type', desk: 'sit', modes: ['morning', 'evening'], colors: LOOK.gymMaya }, { id: 'people-maya-sit-type-30', desk: 'sit', modes: ['morning', 'evening'], colors: LOOK.gymMaya },
         ...crewOf('noah', ['afternoon'], { colors: LOOK.gymNoah }),
         { id: 'people-priya-sit-floor', by: 'training-zone', reach: 300, turn: 180, modes: ['afternoon'] },
         { id: 'people-priya-floor-stretch', by: 'training-zone', reach: 350, turn: 180, modes: ['evening'] },
@@ -571,8 +575,10 @@ export class RoomPeople {
         const spots = this.people.filter(o => o.visible && o.userData.person.desk).map(o => o.position);
         if (this.chairSpot) spots.push(this.chairSpot, this.chairHome);   // the room's own desk chair stays out while the film's is in the room
         for (const chair of this.room.assets()) {
-            if (!CHAIRS.test((chair.userData.propId || '') + ' ' + (chair.userData.decorUpgrade || '')) || /student-chair|bar|artist/.test(chair.userData.propId || '')) continue;
-            const centre = this.centreOf(chair).setY(0), blocked = spots.some(p => Math.hypot(p.x - centre.x, p.z - centre.z) < 850);
+            if (!CHAIRS.test((chair.userData.propId || '') + ' ' + (chair.userData.decorUpgrade || ''))) continue;
+            // stools and classroom chairs stay unless someone stands right where they are (the workshop's bar stool)
+            const reach = /student-chair|bar|artist/.test(chair.userData.propId || '') ? 420 : 850;
+            const centre = this.centreOf(chair).setY(0), blocked = spots.some(p => Math.hypot(p.x - centre.x, p.z - centre.z) < reach);
             if (blocked && !this.hidden.has(chair)) { this.hidden.set(chair, chair.visible); chair.visible = false; }
             else if (!blocked && this.hidden.has(chair)) { chair.visible = this.hidden.get(chair); this.hidden.delete(chair); }
         }
