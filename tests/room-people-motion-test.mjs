@@ -223,10 +223,10 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     assert.deepEqual([sits.position.x, sits.position.z], [60, 230], 'seated 470 mm behind the keys');
     assert.ok(actor.chair.visible && actor.chair.position.distanceTo(sits.position) < 1 && chair.visible === false, 'on her chair; the room\'s own chair has stepped aside');
     for (let t = 0; t <= 14; t += .1) assert.equal(at(t).length, 1, 'one model of her at ' + t.toFixed(1) + ' s');
-    assert.deepEqual(at(2.2), ['people-maya-sit-type-30'], 'at 29.9 in the 30 in model is the one drawn'); assert.ok(actor.chair.position.z > 230 + 150 && actor.chair.position.z < 230 + 300, 'the chair rolls back with her');
+    assert.deepEqual(at(2.2), ['people-maya-sit-type-30'], 'at 29.9 in the 30 in model is the one drawn'); assert.ok(actor.chair.position.z > 230 + 150 && actor.chair.position.z < 230 + 340, 'the chair rolls back with her');
     assert.ok(people.dirty, 'she moved: the film redraws her shadow');
     assert.deepEqual(at(6), ['people-maya-stand-type']); assert.ok(close(quat(people.byKey('stands'), 'upperarm_l'), built('people-maya-stand-wait', 'upperarm_l')), 'standing by while the desk rises');
-    assert.ok(Math.abs(actor.chair.position.z - (230 + 415)) < 2 && actor.chair.visible, 'the chair is left 415 mm back');
+    assert.ok(Math.abs(actor.chair.position.z - (230 + 505)) < 2 && actor.chair.visible, 'the chair is left 505 mm back');
     assert.deepEqual(at(13), ['people-maya-stand-type']); assert.ok(close(quat(people.byKey('stands'), 'upperarm_l'), built('people-maya-stand-type', 'upperarm_l')), 'typing again at 43.5 in, as built');
     assert.deepEqual([people.byKey('stands').position.x, people.byKey('stands').position.z], [60, 175]);
     at(2.2); const again = quat(people.byKey('sits30'), 'thigh_l'); at(9); at(2.2);

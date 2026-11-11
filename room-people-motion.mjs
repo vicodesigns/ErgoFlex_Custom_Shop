@@ -35,6 +35,7 @@ const LEAD = 3.2;                      // sitting down starts when a lowering de
 const NEAR = 1.3;                      // the hands go back to the keys when the desk is this close to where it stops
 const ROLL = .265;                     // metres the chair rolls back before its user stands (their feet end under them)
 const SWAP = 1.45;                     // seconds into standing up at which the standing model takes over from the seated one
+const SCOOT = .09;                     // they slide to the front of the seat as they lean in (the chair's base clears their heels)
 const NUDGE = .15;                     // and how much further the calves push it as the knees straighten
 
 // ---- driver --------------------------------------------------------------------------------------------------
@@ -287,7 +288,7 @@ export function solveDesk(rig, keys, input) {
         if (life > 0 && ke > .98 && keyed && input.taps !== false) tapKeys(rig, s, time, seed, life);
     }
     rig.fk();
-    return { stance: standing ? 'stand' : 'sit', chair: { back: ROLL * roll + NUDGE * ss(1.15, 2.05, tau), turn: 0 }, lean };
+    return { stance: standing ? 'stand' : 'sit', chair: { back: ROLL * roll + SCOOT * ss(.55, 1.1, tau) + NUDGE * ss(1.15, 2.05, tau), turn: 0 }, lean };
 }
 
 // ---- one person at the featured desk, over one or more of their models ---------------------------------------------
