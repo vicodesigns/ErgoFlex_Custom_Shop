@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
+import { createSunPatch } from './room-sun-patch.mjs?v=sun-patch-20261110';
+import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { gamingSessionMaps, buildGamingSessionDetail, migrateGamingSavedFurniture, migrateGamingSavedAssetKeys } from './gaming-session-detail.mjs?v=gaming-sessions-20261022';
-import { HOME_LAYOUTS } from './home-office.mjs?v=scene-desk-styling-20261010';
+import { HOME_LAYOUTS } from './home-office.mjs?v=env-living-20261110a';
 
 // The same measured room tiers as Home Office, with independent furnishings
 // and saved edits. All dimensions are millimetres; props retain their size.
@@ -62,7 +64,7 @@ export const GAMING_MODES = {
     morning: { label: 'Morning', description: 'Daylight reset · charging, coffee and a fresh setup', key: '#ffe9cb', fill: '#d5ebff', accent: '#80dce1', power: 1.8, ambient: .6, bounce: .85, exposure: 1.1, sky: ['#89bbd6', '#e8e1cb'], practical: .3, rgb: .1, live: 0, stream: .05, height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false, colors: ['#63d8ef', '#a39ff0'] },
     afternoon: { label: 'Afternoon', description: 'Practice & stream · balanced daylight and session notes', key: '#f6eedf', fill: '#d8e6f7', accent: '#99d5e6', power: 1.35, ambient: .52, bounce: .78, exposure: 1.08, sky: ['#a6c5db', '#e9e4d6'], practical: .55, rgb: .24, live: .8, stream: .65, height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false, colors: ['#5be3ec', '#a092ef'] },
     evening: { label: 'Evening', description: 'Co-op adventure · warm lounge light and shared play', key: '#ffcb94', fill: '#bdc8ef', accent: '#b192f0', power: .78, ambient: .3, bounce: .42, exposure: 1.15, sky: ['#8c85ac', '#dfac89'], practical: .85, rgb: .62, balance: [.65, .8], live: .15, stream: .12, height: 28, tilt: 0, offset: [0, 80], yaw: 0, leds: true, color: '#40eaff', colors: ['#75b8ca', '#b29acb'] },
-    night: { label: 'Night', description: 'Solo exploration · quiet headphones and soft bias lighting', key: '#bbc9f4', fill: '#bdc8ec', accent: '#af91ed', power: .23, ambient: .25, bounce: .34, exposure: 1.1, sky: ['#17263f', '#344b6b'], practical: .26, rgb: .38, balance: [.7, .8], live: .05, stream: .03, height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: true, color: '#8b6cff', colors: ['#8baabc', '#a29cbd'] },
+    night: { label: 'Night', description: 'Solo exploration · quiet headphones and soft bias lighting', key: '#bbc9f4', fill: '#bdc8ec', accent: '#af91ed', power: .18, ambient: .15, bounce: .22, exposure: 1.1, sky: ['#17263f', '#344b6b'], practical: .26, rgb: .38, balance: [.7, .8], live: .05, stream: .03, height: 28, tilt: 0, offset: [0, 100], yaw: 0, leds: true, color: '#8b6cff', colors: ['#8baabc', '#a29cbd'] },
     party: { label: 'Game night', description: 'Local game night · shared scores and lounge play', key: '#c7d1f7', fill: '#c7b6ee', accent: '#eea0d5', power: .66, ambient: .37, bounce: .48, exposure: 1.1, sky: ['#20283f', '#575076'], practical: .8, rgb: .85, live: .35, stream: .15, height: 43.5, tilt: -5, offset: [60, 300], yaw: -12, leds: true, color: '#ff75cf', colors: ['#8fc4ca', '#d3a0bc'] }
 };
 
@@ -491,10 +493,22 @@ export function buildGamingRoom(room, root, layout, helpers) {
     // architecture, not another editable floor furnishing.
     const sessions = buildGamingSessionDetail(room,layout,helpers);
     const tile = new THREE.Color(), frost = new THREE.Color('#c7cad6');
+    // Morning sun through the city window is what makes this room read as day;
+    // after dark the floor lamp and the lounge screen are what land on the floor.
+    const sun = createSunPatch(root, layout, [{ wall: 'left', at: -w / 2, from: rearEnd + 20, to: forwardEnd - 20, bottom: low + 20, top: low + wh - 20, bars: 1, rows: 1 }], {
+        levels: { morning: ['#ffe1b4', .42], afternoon: ['#fff0da', .46], evening: ['#ff9f5e', .45], night: ['#000000', 0], party: ['#000000', 0] }
+    });
+    const pools = createPoolLayer(root, 'Gaming lamp and screen light'), poolGain = { v: 1 };
+    const level = (k, by) => i => Math.min(.55, by[i] * .5 * poolGain.v) * k;
+    const floorLamp = layout.props.find(p => p.id === 'kenney-furniture-lamp-square-floor').at;
+    pools.add(root, [floorLamp[0], 4, floorLamp[2] - 250], [1800, 1500], '#ffd8a8', level(1, [0, 0, .6, .45, .6]));
+    if (!layout.compact) pools.add(root, [w / 2 - 1000, 4, layout.loungeZ], [1700, 1600], '#a9c7ff', level(.8, [0, 0, .45, .3, .55]));
+    pools.add(root, [layout.cabinetX - 80, 4, layout.cabinetZ + 600], [1300, 1000], '#c4a6ff', level(.6, [0, .1, .45, .5, .6]));
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = GAMING_MODES[modeId] || GAMING_MODES.evening, dark = mode.power < .5;
         atmosphere = [modeId, accent];
         sessionMaps.update(modeId); sessions.apply(modeId);
+        poolGain.v = accent; pools.apply(modeId); sun.update(modeId);
         // Window: sky gradient, sun or moon, and a skyline that lights up after dark.
         const c = skyCanvas.getContext('2d'), gradient = c.createLinearGradient(0, 0, 0, 512);
         gradient.addColorStop(0, mode.sky[0]); gradient.addColorStop(1, mode.sky[1]); c.fillStyle = gradient; c.fillRect(0, 0, 512, 512);
