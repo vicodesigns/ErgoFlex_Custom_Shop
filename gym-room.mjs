@@ -216,9 +216,10 @@ export function buildGymRoom(room, root, layout, helpers) {
     for (const y of [low, low + wh]) box(left, [65, 30, ww + 40], [-w / 2 + 10, y, wz], steel);
     box(left, [180, 30, ww + 70], [-w / 2 + 50, low - 15, wz], oak, 3);
     const door = front - 470;
-    box(left, [25, 2100, 800], [-w / 2 + 18, 1050, door], steel, 3);
-    box(left, [12, 1950, 720], [-w / 2 + 38, 975, door], oak, 3);
-    rod(left, [-w / 2 + 55, 980, door - 260], [-w / 2 + 55, 1110, door - 260], 10, silver);
+    // A full-size door: an 810 x 2040 leaf in an 880 x 2110 steel frame (was a 720 x 1950 leaf).
+    box(left, [25, 2110, 880], [-w / 2 + 18, 1055, door], steel, 3);
+    box(left, [12, 2040, 810], [-w / 2 + 38, 1020, door], oak, 3);
+    rod(left, [-w / 2 + 55, 980, door - 300], [-w / 2 + 55, 1110, door - 300], 10, silver);
     room.walls.push({ obj: left, axis: 'z', limit: w / 2 * root.scale.x, sign: -1 });
     // Window sun on the floor: two panes projected along the mode's sun angle.
     const sunMap = texture((c, tw, th) => {

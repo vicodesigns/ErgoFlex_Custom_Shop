@@ -389,8 +389,8 @@ export function buildArtistRoom(room, root, layout, helpers) {
     box(entry, [80, low, ww], [-w / 2 - 40, low / 2, wz], wallMat);
     box(entry, [80, h - low - wh, ww], [-w / 2 - 40, (h + low + wh) / 2, wz], wallMat);
     const doorZ = front - 480;
-    box(entry, [12, dado, doorZ - 410 - bz], [-w / 2 + 6, dado / 2, (bz + doorZ - 410) / 2], wainscot(doorZ - 410 - bz));
-    box(entry, [30, 28, doorZ - 410 - bz], [-w / 2 + 15, dado + 14, (bz + doorZ - 410) / 2], chalk, 3);
+    box(entry, [12, dado, doorZ - 440 - bz], [-w / 2 + 6, dado / 2, (bz + doorZ - 440) / 2], wainscot(doorZ - 440 - bz));
+    box(entry, [30, 28, doorZ - 440 - bz], [-w / 2 + 15, dado + 14, (bz + doorZ - 440) / 2], chalk, 3);
     const skyCanvas = document.createElement('canvas'); skyCanvas.width = skyCanvas.height = 512;
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const pane = mesh(entry, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]);
@@ -425,9 +425,10 @@ export function buildArtistRoom(room, root, layout, helpers) {
     });
     instanced(entry, new THREE.CylinderGeometry(1, .78, 1, 16), tint, sillPots);
     instanced(entry, ball, leafy, sillLeaves);
-    const doorFrame = box(entry, [28, 2100, 800], [-w / 2 + 20, 1050, doorZ], oak, 4); doorFrame.name = 'Artist studio door frame';
-    box(entry, [18, 1970, 720], [-w / 2 + 43, 985, doorZ], chalk, 4);
-    rod(entry, [-w / 2 + 65, 1000, doorZ - 270], [-w / 2 + 65, 1000, doorZ - 180], 8, brass);
+    // A full-size door: an 810 x 2040 leaf in an 880 x 2110 frame (was a 720 x 1970 leaf).
+    const doorFrame = box(entry, [28, 2110, 880], [-w / 2 + 20, 1055, doorZ], oak, 4); doorFrame.name = 'Artist studio door frame';
+    box(entry, [18, 2040, 810], [-w / 2 + 43, 1020, doorZ], chalk, 4);
+    rod(entry, [-w / 2 + 65, 1000, doorZ - 315], [-w / 2 + 65, 1000, doorZ - 225], 8, brass);
     room.walls.push({ obj: entry, axis: 'z', limit: w / 2 * root.scale.x, sign: -1 });
 
     const brushCup = (parent, at, pot = blueGlaze, id) => {

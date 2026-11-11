@@ -336,9 +336,10 @@ export function buildMusicRoom(room, root, layout, helpers) {
     }
     rod(entry, [-w / 2 + 90, 2305, a - 180], [-w / 2 + 90, 2305, b + 180], 12, metal);
     const doorZ = front - 490;
-    box(entry, [24, 2110, 800], [-w / 2 + 20, 1055, doorZ], wood, 4);
-    box(entry, [18, 1980, 730], [-w / 2 + 42, 990, doorZ], moss, 4);
-    rod(entry, [-w / 2 + 58, 1000, doorZ - 265], [-w / 2 + 58, 1000, doorZ - 185], 8, metal);
+    // A full-size door: an 810 x 2040 leaf in an 880 x 2110 frame (was a 730 x 1980 leaf).
+    box(entry, [24, 2110, 880], [-w / 2 + 20, 1055, doorZ], wood, 4);
+    box(entry, [18, 2040, 810], [-w / 2 + 42, 1020, doorZ], moss, 4);
+    rod(entry, [-w / 2 + 58, 1000, doorZ - 305], [-w / 2 + 58, 1000, doorZ - 225], 8, metal);
     room.walls.push({ obj: entry, axis: 'z', limit: w / 2 * root.scale.x, sign: -1 });
 
     // Real support heights match the recorder, monitor speakers, and shelves.
