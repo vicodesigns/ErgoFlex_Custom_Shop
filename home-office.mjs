@@ -3,6 +3,8 @@ import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { HOME_SESSIONS, homeSessionPinboard, buildHomeSessionDetail } from './home-session-detail.mjs?v=home-sessions-20261022';
 import { homeComfortDetails } from './home-comfort-detail.mjs?v=commons-home-comfort-20261024';
+import { createSunPatch } from './room-sun-patch.mjs?v=sun-patch-20261110';
+import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 
 // Architectural dimensions and prop positions are millimetres, never resized
 // to make the larger desk fit. The open front is a viewing cutaway.
@@ -119,7 +121,7 @@ export const HOME_MODES = {
     morning: { label: 'Morning', description: 'Fresh daylight · standing work', key: '#ffe8c4', fill: '#d9e8ff', accent: '#ffd6a4', power: 1.85, ambient: .4, bounce: .66, exposure: 1.05, sky: ['#8dbfe2', '#fde4c2'], practical: .12, height: 43.5, tilt: -5, offset: [0, 0], yaw: 0, leds: false },
     afternoon: { label: 'Afternoon', description: 'Soft daylight · seated focus', key: '#fff3dd', fill: '#e4edf6', accent: '#ffd1a1', power: 1.35, ambient: .42, bounce: .65, exposure: 1.08, sky: ['#8cb9d8', '#f4ecdc'], practical: .3, height: 28, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
     evening: { label: 'Evening', description: 'Golden hour · reading and planning', key: '#ffaa66', fill: '#bdc5e6', accent: '#ffbd80', power: .82, ambient: .24, bounce: .4, exposure: 1.1, sky: ['#5a6795', '#f6a066'], practical: 1.05, height: 28, tilt: 12, offset: [0, 80], yaw: -4, leds: true, color: '#ffd29b' },
-    night: { label: 'Night', description: 'One task light · the house settles', key: '#a7bde8', fill: '#a3b7de', accent: '#ffc883', power: .18, ambient: .21, bounce: .32, exposure: 1.15, sky: ['#0d1630', '#2a3d62'], practical: 1.05, height: 28, tilt: 0, offset: [0, 120], yaw: 0, leds: true, color: '#776c60' },
+    night: { label: 'Night', description: 'One task light · the house settles', key: '#a7bde8', fill: '#a3b7de', accent: '#ffc883', power: .14, ambient: .13, bounce: .22, exposure: 1.12, sky: ['#0d1630', '#2a3d62'], practical: 1.1, height: 28, tilt: 0, offset: [0, 120], yaw: 0, leds: true, color: '#776c60' },
     party: { label: 'At home with friends', description: 'Warm shared light · drinks and conversation', key: '#d4c7b5', fill: '#a6b9cd', accent: '#e4b486', power: .38, ambient: .28, bounce: .4, exposure: 1.1, sky: ['#191a44', '#4a3570'], practical: .75, height: 43.5, tilt: 0, offset: [50, 200], yaw: -12, leds: true, color: '#e3b884' }
 };
 // Window view, practical fixtures and textiles per daypart. Emissive and
@@ -418,6 +420,69 @@ function paintClock(c, S, [hours, minutes]) {
     c.restore();
 }
 
+// The entry drop zone tells the hour: a jacket, bag and trainers by day,
+// post on the floor after lunch, everything put away at night, guests' coats
+// and shoes at a party. Hooks are on the entry wall (they hide with it); the
+// floor kit stands clear of the door swing and the reading rug.
+function homeDropZone(root, entry, layout, h, { brass, joinery, sage, clay, ceramic }) {
+    const { material, mesh, box } = h, w = layout.width, apartment = layout.id === 'apartment';
+    const z = layout.entryZ + (apartment ? -700 : layout.id === 'executive' ? 1000 : 1200), x = -w / 2;
+    const quiet = o => { o.traverse(m => { m.castShadow = false; }); return o; };
+    const rail = new THREE.Group(); rail.name = 'Entry coat hooks'; entry.add(rail);
+    box(rail, [22, 90, 620], [x + 11, 1690, z], joinery, 4);
+    for (const dz of [-210, 0, 210]) { const peg = mesh(rail, new THREE.CylinderGeometry(9, 12, 85, 12), brass, [x + 60, 1700, z + dz]); peg.rotation.z = Math.PI / 2 - .35; }
+    const coat = (parent, dz, color, long = 1) => {
+        const g = new THREE.Group(); g.name = 'Hung jacket'; parent.add(g); g.position.set(x + 70, 1690, z + dz);
+        const cloth = material(color, { roughness: .95 }); cloth.userData.roomSurface = 'fabric';
+        const body = mesh(g, new THREE.CapsuleGeometry(105, 520 * long, 6, 14), cloth, [8, -330 * long - 60, 0]); body.scale.set(.42, 1, 1.05);
+        const collar = mesh(g, new THREE.TorusGeometry(60, 22, 8, 16, Math.PI * 1.3), cloth, [10, -40, 0]); collar.rotation.set(0, Math.PI / 2, Math.PI * .85);
+        for (const s of [-1, 1]) { const arm = mesh(g, new THREE.CapsuleGeometry(38, 470 * long, 4, 10), cloth, [22, -330 * long - 30, s * 105]); arm.rotation.x = s * .06; }
+        return quiet(g);
+    };
+    const tote = (parent, at, color, turn = 0) => {
+        const g = new THREE.Group(); g.name = 'Tote bag'; parent.add(g); g.position.set(...at); g.rotation.y = turn;
+        const canvas = material(color, { roughness: .92 }); canvas.userData.roomSurface = 'fabric';
+        box(g, [360, 330, 120], [0, 165, 0], canvas, 30);
+        for (const s of [-1, 1]) { const strap = mesh(g, new THREE.TorusGeometry(95, 10, 6, 18, Math.PI), canvas, [s * 70, 330, 0]); strap.rotation.z = s * .25; }
+        return quiet(g);
+    };
+    const shoes = (parent, at, color, sole = '#ece8e0', turn = 0, splay = .2) => {
+        const g = new THREE.Group(); g.name = 'Pair of shoes'; parent.add(g); g.position.set(...at); g.rotation.y = turn;
+        const up = material(color, { roughness: .85 }), base = material(sole, { roughness: .7 });
+        for (const [s, a] of [[-1, splay], [1, -splay * .4]]) {
+            const shoe = new THREE.Group(); shoe.position.set(s * 62, 0, s * 18); shoe.rotation.y = a; g.add(shoe);
+            box(shoe, [95, 28, 275], [0, 14, 0], base, 12);
+            const upper = mesh(shoe, new THREE.CapsuleGeometry(46, 160, 4, 12), up, [0, 62, 10]); upper.rotation.x = Math.PI / 2; upper.scale.set(1, 1, .75);
+            box(shoe, [80, 60, 85], [0, 70, -88], up, 20);
+        }
+        return quiet(g);
+    };
+    const parcel = (parent, at, turn) => {
+        const g = new THREE.Group(); g.name = 'Parcel and post'; parent.add(g); g.position.set(...at); g.rotation.y = turn;
+        box(g, [340, 190, 260], [0, 95, 0], material('#b88f62', { roughness: .95 }), 3);
+        box(g, [345, 2, 70], [0, 191, 0], material('#d9cfb7', { roughness: .8 }));
+        for (let i = 0; i < 3; i++) { const env = box(g, [230, 4, 160], [40 - i * 25, 195 + i * 5, -10 + i * 20], material(['#f1ece2', '#e8dccb', '#dfe6ea'][i], { roughness: .9 })); env.rotation.y = .3 - i * .35; }
+        return quiet(g);
+    };
+    // Floor kit sits 170 mm off the wall; the hooks are above it.
+    const fx = x + 190, phases = {};
+    // Anything hung on the wall belongs to the entry wall group, so it is cut
+    // away with the wall instead of floating in the overview.
+    const pair = name => { const floor = new THREE.Group(), wall = new THREE.Group(); floor.name = wall.name = name; root.add(floor); entry.add(wall); return [floor, wall]; };
+    const [day, dayWall] = pair('Day by the door');
+    coat(dayWall, -210, '#4f5d6b'); tote(day, [fx + 30, 0, z + 170], '#d8c9a8', .35); shoes(day, [fx + 40, 0, z - 230], '#e9e4dc', '#f6f3ee', 1.2);
+    const post = parcel(root, [fx + 110, 0, z - 30], -.25);
+    const [night, nightWall] = pair('Put away by the door');
+    tote(nightWall, [x + 120, 1460, z + 210], '#d8c9a8', Math.PI / 2).rotation.z = .05;
+    shoes(night, [fx - 30, 0, z - 120], '#e9e4dc', '#f6f3ee', Math.PI / 2, 0); shoes(night, [fx - 30, 0, z + 140], '#5a4335', '#3a2c22', Math.PI / 2, 0);
+    const [guests, guestsWall] = pair('Guests\' coats and shoes');
+    coat(guestsWall, -210, '#4f5d6b'); coat(guestsWall, 0, '#8a4b3c', 1.15); coat(guestsWall, 210, '#2f3b36', .95);
+    shoes(guests, [fx - 10, 0, z - 260], '#1f1f22', '#2a2a2a', 1.4, .1); shoes(guests, [fx + 60, 0, z + 20], '#7d5a3c', '#3d2a1c', 1.75, .3); shoes(guests, [fx + 10, 0, z + 270], '#e9e4dc', '#f6f3ee', 1.1, .2);
+    const all = [day, dayWall, post, night, nightWall, guests, guestsWall];
+    const map = { morning: [day, dayWall], afternoon: [day, dayWall, post], evening: [day, dayWall], night: [night, nightWall], party: [guests, guestsWall] };
+    return phase => { const on = map[phase] || map.afternoon; for (const g of all) g.visible = on.includes(g); };
+}
+
 export function buildHomeOffice(room, root, layout, helpers) {
     const { material, mesh, box, rod, sphere } = helpers;
     const comfort = homeComfortDetails(room, helpers);
@@ -553,6 +618,19 @@ export function buildHomeOffice(room, root, layout, helpers) {
     rod(entry, [-w / 2 + 52, 1000, doorZ - 310], [-w / 2 + 52, 1000, doorZ - 240], 9, brass);
     deco(mesh(entry, new THREE.CylinderGeometry(26, 26, 14, 20), brass, [-w / 2 + 50, 1000, doorZ - 275])).rotation.z = Math.PI / 2;
     room.walls.push({ obj: entry, axis: 'z', limit: w / 2 * root.scale.x, sign: -1 });
+    // A light switch on the latch side of the door, and double sockets where
+    // the desk and the sideboard lamp plug in (plates sit proud of the battens).
+    const plate = material('#f3efe6', { roughness: .45 }), rocker = material('#e6e0d4', { roughness: .4 });
+    plate.userData.roomSurface = rocker.userData.roomSurface = 'powder';
+    const switchZ = doorZ - 410 - 110;
+    deco(box(entry, [10, 86, 86], [-w / 2 + 5, 1060, switchZ], plate, 3)); deco(box(entry, [6, 40, 22], [-w / 2 + 12, 1060, switchZ], rocker, 2));
+    const socket = (parent, at, rotY) => {
+        const g = new THREE.Group(); g.name = 'Double socket'; g.position.set(...at); g.rotation.y = rotY; parent.add(g);
+        deco(box(g, [146, 86, 10], [0, 0, 5], plate, 3));
+        for (const dx of [-36, 36]) deco(box(g, [24, 24, 4], [dx, 0, 11], material('#d9d3c7', { roughness: .6 }), 2));
+    };
+    socket(back, [layout.desk[0] - 560, 300, bz + 24], 0);
+
 
     const cabinet = new THREE.Group(); cabinet.name = 'Oak storage'; root.add(cabinet);
     const doorFace = material('#ffffff', { map: panelTexture('#647769'), roughness: .62 });
@@ -668,6 +746,7 @@ export function buildHomeOffice(room, root, layout, helpers) {
         rod(storage, [sx, top + 200, lampZ], [sx, top + 330, lampZ], 6, brass);
         const lampShade = deco(mesh(storage, new THREE.CylinderGeometry(105, 135, 170, 28, 1, true), lampGlow, [sx, top + 385, lampZ]));
         lampShade.name = 'Sideboard lamp shade';
+        socket(side, [w / 2 - 24, 300, lampZ - 260], -Math.PI / 2);
         for (const [i, color] of ['#5f7468', '#b98b5a', '#e4d9c3'].entries()) deco(box(storage, [230 - i * 18, 38, 160 - i * 8], [sx + 10, top + 19 + i * 38, lampZ + 300], material(color, { roughness: .85 }), 3));
     }
     if (premium) {
@@ -721,13 +800,27 @@ export function buildHomeOffice(room, root, layout, helpers) {
         makeLight([w / 2 - 500, 150, front - 600], '#b18bdf', 1.5, 2300),
         makeLight([layout.readingLight[0], 1520, layout.readingLight[1]], '#ffdcaa', 2.5, 2600)
     ];
+    // Sun through the window glazing (between the mullions), and the visible
+    // landing of the lamps that are on. Both are additive overlays, not lights.
+    const sun = createSunPatch(root, layout, [{ wall: 'back', at: bz, from: left + 20, to: right - 20, bottom: bottom + 20, top: bottom + wh - 20, bars: 1, rows: 2 }]);
+    const pools = createPoolLayer(root, 'Home lamp light pools'), poolGain = { v: 1 };
+    const lampLevel = (k, by) => i => Math.min(.55, by[i] * .5 * poolGain.v) * k;
+    pools.add(root, [layout.readingLight[0] + 120, 4, layout.readingLight[1] - 120], [1700, 1700], '#ffd9a6', lampLevel(1, [0, 0, .7, .85, .7]));
+    pools.add(root, [-w / 2 + 6, 1250, layout.readingLight[1]], [1400, 1500], '#ffd9a6', lampLevel(.7, [0, 0, .6, .8, .6]), 'left');
+    pools.add(root, [cx, 4, bz + 650], [1500, 1100], '#ffcf96', lampLevel(.55, [0, 0, .35, .6, .45]));
+    if (house) pools.add(root, [w / 2 - 6, 1150, boardZ[0] + 170], [1100, 1100], '#ffd29c', lampLevel(.8, [0, 0, .55, .7, .6]), 'right');
+    pools.add(root, [0, 4, 370], [2600, 2600], '#ffe2b8', lampLevel(.5, [0, 0, .25, 0, .55]));
+    const dropZone = homeDropZone(root, entry, layout, helpers, { brass, joinery, sage, clay, ceramic });
     const updateSession=buildHomeSessionDetail(room,layout,helpers);
     // Light sources are owned by this room and disappear on scene replacement.
     room.homeAtmosphere = (modeId, accent = 1) => {
         const mode = HOME_MODES[modeId] || HOME_MODES.afternoon, look = HOME_LOOKS[modeId] || HOME_LOOKS.afternoon;
         updateSession(modeId);updateBoard(modeId);comfort.update(modeId);
+        poolGain.v = accent; pools.apply(modeId); sun.update(modeId); dropZone(modeId);
         paintView(skyCanvas.getContext('2d'), skyCanvas.width, skyCanvas.height, mode, look);
         skyMap.needsUpdate = true; windowVista.setPhase(modeId);
+        // The garden photograph is a daylight picture: grade it down to golden hour in the evening.
+        if (modeId === 'evening') windowVista.material.uniforms.gain.value.multiply(new THREE.Vector3(.72, .6, .52));
         paintClock(clockCanvas.getContext('2d'), 256, look.time); clockMap.needsUpdate = true;
         const drop = Math.max(60, look.shade * wh); blind.scale.y = drop; shadeMap.repeat.set(1, Math.max(1, drop / 210));
         lights.forEach(({light,power},i)=>{light.intensity=power*mode.practical*accent*(HOME_SESSIONS[modeId]||HOME_SESSIONS.afternoon).light[i];});
