@@ -52859,6 +52859,108 @@
     "character": "lin",
     "pose": "sit-chat"
    }
+  },
+  {
+   "id": "people-ava-stand-low",
+   "name": "Ava: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ava-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    457,
+    1466.6,
+    536.8
+   ],
+   "min": [
+    -228.5,
+    0,
+    -121.8
+   ],
+   "max": [
+    228.5,
+    1466.6,
+    415
+   ],
+   "tris": 37764,
+   "bytes": 950132,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ava",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-hale-stand-low",
+   "name": "Mr Hale: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-hale-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    487.4,
+    1700.6,
+    574
+   ],
+   "min": [
+    -245,
+    0,
+    -135.5
+   ],
+   "max": [
+    242.4,
+    1700.6,
+    438.5
+   ],
+   "tris": 34536,
+   "bytes": 1373168,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "hale",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
+  },
+  {
+   "id": "people-jo-stand-low",
+   "name": "Jo: working standing at a bench-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jo-stand-low.glb",
+   "anchor": "floor",
+   "size": [
+    475.2,
+    1634.7,
+    574.2
+   ],
+   "min": [
+    -237.6,
+    0,
+    -148.4
+   ],
+   "max": [
+    237.6,
+    1634.7,
+    425.8
+   ],
+   "tris": 41864,
+   "bytes": 948284,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jo",
+    "pose": "stand-low",
+    "deskHeight": 35.5
+   }
   }
  ],
  "screens": [

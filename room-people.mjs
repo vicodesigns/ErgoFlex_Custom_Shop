@@ -119,7 +119,7 @@ export const ROOM_PEOPLE = {
         { id: 'people-kai-sit-controller', on: 'kenney-furniture-lounge-sofa', seat: 420, along: -330, depth: -150, modes: ['morning', 'evening', 'party'] },
         { id: 'people-sam-sit-controller', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 330, depth: -150, modes: ['evening'] },
         { id: 'people-sofia-sit-chat', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 330, depth: -150, modes: ['party'], colors: LOOK.guestC },
-        L => L.id === 'house' ? [spot('people-sam-stand-drink', 350, 620, [1100, 950], PARTY), spot('people-noah-stand-drink', 1100, 950, [350, 620], { ...PARTY, colors: LOOK.guestA })]
+        L => L.id === 'house' ? [spot('people-sam-stand-drink', 480, 700, [1180, 1050], PARTY), spot('people-noah-stand-drink', 1180, 1050, [480, 700], { ...PARTY, colors: LOOK.guestA })]
             : ring([L.width * .12, L.back + L.depth * .58], 420, ['people-sam-stand-drink', ['people-noah-stand-drink', { colors: LOOK.guestA }]], PARTY, 60)
     ],
     // Andre's music studio: standing warm-up in the morning, seated mixing after lunch, a vocalist reading lyrics at the
@@ -131,7 +131,7 @@ export const ROOM_PEOPLE = {
         { id: 'people-mia-stand-phone', by: 'music-vocal-mic', reach: 420, modes: ['evening'], colors: { top: '#6b4a7a', bottom: '#22242a' } },
         { id: 'people-andre-stand-talk', by: 'music-vocal-mic', reach: -330, turn: 360, modes: ['party'] },
         { id: 'people-lin-sit-chat', on: 'music-piano-bench', seat: 470, turn: 180, modes: ['party'], colors: LOOK.guestB },
-        L => L.id === 'house' ? [spot('people-zoe-stand-drink', 330, 2300, [1025, 1486], { ...PARTY, colors: LOOK.guestD }), spot('people-eli-stand-drink', 1600, 2380, [1025, 1486], PARTY)]
+        L => L.id === 'house' ? [spot('people-zoe-stand-drink', 330, 2300, [1025, 1486], { ...PARTY, colors: LOOK.guestD }), spot('people-eli-stand-drink', 1450, 2250, [1025, 1486], PARTY)]
             : ring([L.width * .1, L.back + L.depth * .72], 480, [['people-zoe-stand-drink', { colors: LOOK.guestD }], 'people-eli-stand-drink'], PARTY, 120)
     ],
     // Two artists share the studio: Sofia at the desk by day, Lin at the easel in the morning and at golden hour, Lin
@@ -151,22 +151,26 @@ export const ROOM_PEOPLE = {
     // session after lunch while Priya rests on the mat, recovery stretching and notes in the evening, an empty room at
     // night, and the power circuit with three on the floor.
     gym: [
-        { id: 'people-priya-stretch', by: 'training-zone', reach: 0, turn: 180, modes: ['morning', 'party'] },
+        { id: 'people-priya-stretch', by: 'training-zone', reach: 0, turn: 180, modes: ['morning'] },
         { id: 'people-maya-stand-type', desk: 'stand', modes: ['morning', 'evening', 'party'], colors: LOOK.gymMaya },
         { id: 'people-maya-sit-type', desk: 'sit', modes: ['morning', 'evening', 'party'], colors: LOOK.gymMaya }, { id: 'people-maya-sit-type-30', desk: 'sit', modes: ['morning', 'evening', 'party'], colors: LOOK.gymMaya },
         ...crewOf('noah', ['afternoon'], { colors: LOOK.gymNoah }),
         { id: 'people-priya-sit-floor', by: 'training-zone', reach: 300, turn: 180, modes: ['afternoon'] },
         { id: 'people-priya-floor-stretch', by: 'training-zone', reach: 350, turn: 180, modes: ['evening'] },
-        { id: 'people-zoe-stretch-open', by: 'training-zone', reach: 800, turn: 180, modes: ['party'], colors: { top: '#e0553f', bottom: '#1f2228' } },
-        { id: 'people-kai-floor-stretch', by: 'training-zone', reach: -700, turn: 90, modes: ['party'], colors: { top: '#2f2f35', bottom: '#3c4f6b' } }
+        // the circuit: on both sides of the equipment laid out down the middle of the training zone
+        L => { const circuit = [['people-priya-stretch', { key: 'priya-circuit' }], ['people-zoe-stretch-open', { colors: { top: '#e0553f', bottom: '#1f2228' } }], ['people-kai-floor-stretch', { colors: { top: '#2f2f35', bottom: '#3c4f6b' } }]];
+            if (L.id === 'house') return [spot(circuit[0][0], -380, 2000, [-380, 1000], { ...PARTY, ...circuit[0][1] }), spot(circuit[1][0], -380, 3000, [-380, 1000], { ...PARTY, ...circuit[1][1] }), spot(circuit[2][0], 720, 2250, [720, 3250], { ...PARTY, ...circuit[2][1] })];
+            return [{ id: circuit[0][0], by: 'training-zone', reach: 0, turn: 180, ...PARTY, ...circuit[0][1] }, { id: circuit[1][0], by: 'training-zone', reach: 800, turn: 180, ...PARTY, ...circuit[1][1] }, { id: circuit[2][0], by: 'training-zone', reach: -700, turn: 90, ...PARTY, ...circuit[2][1] }]; }
     ],
-    // Jo's workshop: Jo at the bench and Andre driving the desk from his phone in the morning, Jo at the desk with
-    // Leo bringing stock in the afternoon, detail work at the desk in the evening, Jo alone at the bench at night, an
-    // open workshop with visitors watching a demonstration.
+    // Jo's workshop: Jo planning standing at the desk in the morning, at bench height with Leo bringing stock in the
+    // afternoon, seated detail work in the evening, alone at the desk at night, an open workshop with visitors
+    // watching a demonstration.
     workshop: [
-        { id: 'people-jo-stand-work', at: [560, -790], turn: 180, modes: ['morning', 'night'] },
-        { id: 'people-andre-stand-phone', beside: [1050, 520], modes: ['morning'] },
-        ...crewOf('jo', ['afternoon', 'evening']),
+        // the film's morning (Jo at the bench, Andre driving the desk from his phone): shown when a chapter names them
+        { id: 'people-jo-stand-work', at: [560, -790], turn: 180, modes: [] },
+        { id: 'people-andre-stand-phone', beside: [1050, 520], modes: [] },
+        { id: 'people-jo-stand-low', desk: 'stand', modes: ['afternoon'] },
+        ...crewOf('jo', DAY),
         L => { const [x, z] = L.desk || [0, 0]; return [
             spot('people-leo-carry-box', x + 1700, z + 1000, [x + 1700, z - 1500], { modes: ['afternoon'] }),
             spot('people-jo-stand-talk', x + 650, z + 750, [x + 300, z + 1900], PARTY),
@@ -188,6 +192,7 @@ export const ROOM_PEOPLE = {
         { id: 'people-hale-stand-present', layout: 'house', at: [2600, -3250], turn: 0, modes: ['morning'] },
         { id: 'people-hale-stand-type', station: 'demonstration-desk', desk: 'stand', modes: ['afternoon', 'party'], colors: LOOK.hale },
         { id: 'people-leo-sit-type', desk: 'sit', modes: ['afternoon'] }, { id: 'people-leo-sit-type-30', desk: 'sit', modes: ['afternoon'] },
+        { id: 'people-hale-stand-low', desk: 'stand', modes: ['evening'], colors: LOOK.hale },   // after school, the desk at 35 in
         // The Oiler showcase: students at their projects, families standing at the demos.
         { id: 'people-ava-stand-type', station: 'project-review', desk: 'stand', modes: ['party'], colors: LOOK.ava },
         { id: 'people-grace-cane-stand', layout: 'house', at: [-1350, 5850], turn: 0, modes: ['party'] },
@@ -206,6 +211,7 @@ export const ROOM_PEOPLE = {
         { id: 'people-omar-wheel-type-28', station: 'accessible-edit-04', desk: 'wheel', modes: ['morning', 'afternoon', 'evening'] },
         { id: 'people-kai-sit-type', station: 'film-edit-01', desk: 'sit', modes: ['afternoon', 'night'], colors: LOOK.kaiLab },
         ...crewOf('ava', ['afternoon', 'evening'], { colors: LOOK.ava }),
+        { id: 'people-ava-stand-low', desk: 'stand', modes: ['morning', 'party'], colors: LOOK.ava },   // the desk at 35 in
         { id: 'people-noah-sit-laptop', on: ['ergoflex-designer-chair', 0], seat: 450, modes: ['party'] },
         { id: 'people-sofia-sit-laptop', on: ['ergoflex-designer-chair', 3], seat: 450, modes: ['morning', 'party'] },
         { id: 'people-zoe-walk', layout: 'house', at: [1900, 4300], turn: -90, modes: ['morning'] },
@@ -222,7 +228,7 @@ export const ROOM_PEOPLE = {
         { id: 'people-rosa-stand-type-30', layout: 'humboldt', desk: 'stand', reach: 830, modes: ['afternoon', 'party'] },
         { id: 'people-andre-stand-type', layout: 'humboldt', desk: 'stand', modes: ['morning'], colors: { top: '#3b4c66', bottom: '#2a2b2f' } },
         { id: 'people-omar-wheel-type', layout: 'humboldt', desk: 'wheel', modes: ['evening'] },
-        { id: 'people-lin-sit-phone', layout: 'humboldt', on: 'electric-wheelchair', seat: 420, modes: ['morning', 'afternoon', 'party'] },
+        { id: 'people-lin-sit-phone', layout: 'humboldt', on: 'electric-wheelchair', seat: 420, modes: [] },   // the parked chair faces the wall: her feet would be in it
         { id: 'people-leo-sit-write', layout: 'humboldt', near: [-800, -5970], face: [-800, -5200], seat: 450, modes: ['morning', 'afternoon', 'night'] },
         { id: 'people-zoe-sit-laptop', layout: 'humboldt', near: [-814, -4428], face: [-814, -5200], seat: 450, modes: ['morning', 'afternoon'] },
         { id: 'people-eli-sit-listen', layout: 'humboldt', near: [550, 2945], face: [550, 3700], seat: 450, modes: ['morning', 'afternoon'] },

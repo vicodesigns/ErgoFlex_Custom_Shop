@@ -384,7 +384,9 @@ def stand_coffee(inches=43.5):
 # Desk poses take the desk height (inches) from the output's 'height'.
 DESK_POSES = {'sit-type': sit_type, 'stand-type': stand_type, 'wheel-type': wheel_type, 'sit-coffee': sit_coffee, 'stand-coffee': stand_coffee,
               # Standing at the desk's lowest setting: the working height for a person of short stature.
-              'stand-type-low': lambda inches=28: dict(stand_type(inches, .27), spine=(1, 2, 2), neck=0, head=-4)}
+              'stand-type-low': lambda inches=28: dict(stand_type(inches, .27), spine=(1, 2, 2), neck=0, head=-4),
+              # Standing at a desk set between sitting and standing (35-36 in, bench height): leaning in over the work.
+              'stand-low': lambda inches=35.5: dict(stand_type(inches, .3), pelvis_pitch=9, spine=(4, 5, 4), neck=10, head=8)}
 KEYS_WHEEL = .759    # keyboard top with the desk at 31 in, raised so the knees clear the tray
 
 POSES = {
@@ -565,6 +567,7 @@ POSE_INFO = {
     'sit-controller': ('On a sofa with a game controller', 'seated', '', 420, [('gamepad', {})]),
     'wheel-roll': ('Rolling, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {})]),
     'wheel-watch': ('Watching a screen, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {})]),
+    'stand-low': ('Working standing at a bench-height desk', 'standing', 'desk', 0, []),
     'sit-coffee': ('Coffee at the desk, seated', 'seated', 'desk', 435, [('cup', {'side': 'r'})]),
     'stand-coffee': ('Coffee at the desk, standing', 'standing', 'desk', 0, [('cup', {'side': 'r'})]),
     'stand-mug': ('Standing with a coffee', 'standing', '', 0, [('cup', {'side': 'r'})]),
@@ -577,7 +580,7 @@ POSE_INFO = {
     'sit-mug': ('Sitting back with a mug', 'seated', '', 420, [('cup', {'side': 'r'})]),
     'sit-chat': ('On a sofa with a drink, chatting', 'seated', '', 420, [('cup', {'side': 'r', 'kind': 'glass'})]),
 }
-DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,)}
+DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,)}
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
 CHILD_POSES = set()
 def suits(who, pose): return (who in CHILDREN) == (pose in CHILD_POSES)

@@ -12,7 +12,7 @@ import { buildInstitutionalRoom } from './institutional-room.mjs?v=people-vistas
 import { refineRoomSurfaces } from './room-refinement.mjs?v=table-clearance-20261021';
 import { polishRoomProp } from './room-polish.mjs?v=table-clearance-20261021';
 import { RoomLife } from './room-life.mjs?v=commons-home-comfort-20261024';
-import { RoomPeople } from './room-people.mjs?v=room-people-20261110-cast1';
+import { RoomPeople } from './room-people.mjs?v=room-people-20261110-cast2';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
@@ -97,7 +97,7 @@ export const PROP_LIBRARY = {
     loader: null, index: null, indexPromise: null, cache: new Map(), failures: new Map(), rigs: new Map(),
     async loadIndex() {
         if (!this.indexPromise) {
-            this.indexPromise = fetch(PROP_BASE + 'index.json?v=people-cast-20261110a').then(r => {
+            this.indexPromise = fetch(PROP_BASE + 'index.json?v=people-cast-20261110b').then(r => {
                 if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
                 return r.json();
             }).then(index => { this.index = index; return index; });

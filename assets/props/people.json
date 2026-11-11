@@ -553,6 +553,15 @@
    "desk": false,
    "seat": 0
   },
+  "stand-low": {
+   "label": "Working standing at a bench-height desk",
+   "stance": "standing",
+   "desk": true,
+   "seat": 0,
+   "heights": [
+    35.5
+   ]
+  },
   "sit-coffee": {
    "label": "Coffee at the desk, seated",
    "stance": "seated",
@@ -4412,6 +4421,27 @@
    "character": "lin",
    "pose": "sit-chat",
    "name": "Lin: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-ava-stand-low": {
+   "character": "ava",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Ava: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-hale-stand-low": {
+   "character": "hale",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Mr Hale: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-jo-stand-low": {
+   "character": "jo",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Jo: working standing at a bench-height desk",
    "aids": []
   }
  }

@@ -38,6 +38,8 @@ async function inspect(room, layout, phase, size, survey) {
     for (const a of r.assets()) { if (personParts.has(a) || /^Person/.test(a.name)) continue; const boxes = boxesOf(a); if (!boxes.length) continue; const all = boxes.reduce((s, b) => s.union(b), new T.Box3()); furniture.push({ id: name(a), object: a, boxes, box: all }); }
     const deskObj = E.loadedModel; if (deskObj) { const boxes = boxesOf(deskObj); if (boxes.length) furniture.push({ id: 'featured-desk', object: deskObj, boxes, box: boxes.reduce((s, b) => s.union(b), new T.Box3()) }); }
     const state = r.peopleState?.() || {}, mode = state.mode, height = state.height;
+    // the featured desk's keyboard (tray or desktop), for "are the desk user's hands on it" at this height and tilt
+    let keys = null; for (const [k, item] of E.sceneDesks?.active?.objects || []) { const label = k + ' ' + (item.obj?.userData?.propId || '') + ' ' + (item.obj?.name || ''); if (!/keyboard/i.test(label) || /tray/i.test(label) || item.saved?.removed || !item.obj?.visible) continue; const b = new T.Box3().setFromObject(item.obj).applyMatrix4(inv); if (!b.isEmpty()) { keys = b; break; } }
     const anchorOf = spec => { const id = [].concat(spec.on || spec.by || [])[0]; return id || null; };
     const rows = people.map(o => {
         const s = o.userData.person, fit = o.userData.personFit, key = s.key || s.id;
@@ -47,7 +49,11 @@ async function inspect(room, layout, phase, size, survey) {
         if (!o.visible) return row;
         o.updateWorldMatrix(true, true);
         const pts = []; o.traverse(c => { if (!c.isMesh || !c.geometry?.attributes?.position) return; const p = c.geometry.attributes.position, step = Math.max(1, Math.floor(p.count / 700)); for (let i = 0; i < p.count; i += step) pts.push(new T.Vector3().fromBufferAttribute(p, i).applyMatrix4(c.matrixWorld).applyMatrix4(inv)); });
-        const pb = new T.Box3().setFromPoints(pts); row.box = [pb.min.toArray().map(Math.round), pb.max.toArray().map(Math.round)];
+        const pb = new T.Box3().setFromPoints(pts);
+        if (s.desk && !s.station && keys) {   // the closest the person comes to the keyboard (mm): hands on it are within ~40
+            const near = []; o.traverse(c => { if (!c.isMesh || !c.geometry?.attributes?.position) return; const p = c.geometry.attributes.position, step = Math.max(1, Math.floor(p.count / 6000)); for (let i = 0; i < p.count; i += step) near.push(new T.Vector3().fromBufferAttribute(p, i).applyMatrix4(c.matrixWorld).applyMatrix4(inv)); });
+            row.hands = Math.round(Math.min(...near.map(p => keys.distanceToPoint(p))));
+        } row.box = [pb.min.toArray().map(Math.round), pb.max.toArray().map(Math.round)];
         const cx = l.id === 'humboldt' ? 2300 : 0;   // the commons is not centred on x = 0
         row.inside = pb.min.x > cx - l.width / 2 - 5 && pb.max.x < cx + l.width / 2 + 5 && pb.min.z > l.back - 5 && pb.max.z < l.back + l.depth + 5;
         const own = new Set([anchorOf(s)].filter(Boolean)); if (s.desk && !s.station) own.add('featured-desk'); if (s.station) for (const f of furniture) if (f.id.endsWith('station-' + s.station)) own.add(f.id);
@@ -104,9 +110,9 @@ async function inspect(room, layout, phase, size, survey) {
         let rep; try { rep = await frame.evaluate(`(${inspect})(${JSON.stringify(room)},${JSON.stringify(layout)},${JSON.stringify(phase)},${JSON.stringify(size)},${survey})`); }
         catch (e) { rep = { room, layout, phase, error: String(e.message || e).slice(0, 300) }; }
         reports.push(rep);
-        const bad = (rep.people || []).filter(p => p.visible && (!p.inside || p.hits.some(h => h.share >= 3) || (p.nearest && p.nearest.mm < 600)));
+        const bad = (rep.people || []).filter(p => p.visible && ((p.hands ?? 0) > 60 || !p.inside || p.hits.some(h => h.share >= 3) || (p.nearest && p.nearest.mm < 600)));
         const hiddenDesk = (rep.people || []).filter(p => /cast but hidden/.test(p.why)).map(p => p.key + ' (' + p.why + ')');
-        console.log(`${room}:${layout}:${phase} desk ${rep.deskHeight} in, ${(rep.people || []).some(p => p.visible && /desk/.test(p.why) === false && rep.people) ? '' : ''}${(rep.people || []).filter(p => p.visible).length}/${(rep.people || []).length} shown` + (rep.error ? ' ERROR ' + rep.error : '') + ((rep.people || []).some(p => p.visible && p.desk) ? '' : hiddenDesk.length ? '  DESK EMPTY: ' + hiddenDesk.join(', ') : '') + (bad.length ? '  PROBLEMS: ' + bad.map(p => `${p.key}${p.inside ? '' : ' outside'}${p.hits.filter(h => h.share >= 3).map(h => ` in ${h.id} ${h.share}%`).join('')}${p.nearest && p.nearest.mm < 600 ? ` ${p.nearest.mm}mm from ${p.nearest.key}` : ''}`).join('; ') : ''));
+        console.log(`${room}:${layout}:${phase} desk ${rep.deskHeight} in, ${(rep.people || []).some(p => p.visible && /desk/.test(p.why) === false && rep.people) ? '' : ''}${(rep.people || []).filter(p => p.visible).length}/${(rep.people || []).length} shown` + (rep.error ? ' ERROR ' + rep.error : '') + ((rep.people || []).some(p => p.visible && p.desk) ? '' : hiddenDesk.length ? '  DESK EMPTY: ' + hiddenDesk.join(', ') : '') + (bad.length ? '  PROBLEMS: ' + bad.map(p => `${p.key}${p.inside ? '' : ' outside'}${p.hits.filter(h => h.share >= 3).map(h => ` in ${h.id} ${h.share}%`).join('')}${p.nearest && p.nearest.mm < 600 ? ` ${p.nearest.mm}mm from ${p.nearest.key}` : ''}${(p.hands ?? 0) > 60 ? ` hands ${p.hands}mm off the keyboard (tilt ${rep.deskTilt})` : ''}`).join('; ') : ''));
     }
     if (outFile) fs.writeFileSync(outFile, JSON.stringify(reports, null, 1));
     await browser.close();
