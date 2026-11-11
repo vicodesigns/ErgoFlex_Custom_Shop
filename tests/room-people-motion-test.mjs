@@ -224,6 +224,7 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     live(43.5, 600); assert.deepEqual(shown(), ['people-maya-stand-type']); assert.ok(!people.moving && actor.state.k === 1);
     live(36, 400); assert.deepEqual(shown(), ['people-maya-stand-type']); assert.equal(actor.state.k, 0, 'a desk stopped at 36 in: standing by');
     live(28, 600); assert.deepEqual(shown(), ['people-maya-sit-type']); assert.ok(actor.state.k === 1 && Math.abs(actor.chair.position.z - 230) < 1, 'seated and typing, the chair back under her');
+    await people.setEnabled(false); assert.ok(!actor.chair.visible && shown().length === 0 && chair.visible, 'people off: she and her chair are gone, the room\'s chair is back');
     // the still models for one use of the room
     people.setFilter({ only: [], cast, motion: false }); await people.setEnabled(true);
     assert.equal(people.actors.length, 0); people.update({ ...desk, height: 36, time: 5 }); assert.deepEqual(shown(), [], 'motion off: nobody between the built heights, as before');

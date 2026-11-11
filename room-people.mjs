@@ -287,7 +287,7 @@ export class RoomPeople {
         this.enabled = !!on;
         if (this.enabled && !this.built) this.built = this.build();
         await this.built;
-        if (!this.enabled) { for (const object of this.people) this.show(object, false); this.restoreChairs(); }
+        if (!this.enabled) { for (const object of this.people) this.show(object, false); for (const actor of this.actors) if (actor.chair) actor.chair.visible = false; this.restoreChairs(); }
         else this.update(this.room.peopleState?.());
     }
     async build() {
