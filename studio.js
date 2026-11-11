@@ -12734,6 +12734,13 @@ if (window.__ERGO_PRESENTATION__) {
             canvas.getContext('2d',{alpha:false}).drawImage(source,0,0);
         },
         clearRoomRecipe(room,layout){delete sceneDesks.data.rooms[`${room}/${layout}`];},
+        // Director "Refresh from Studio" (experience/studio-sync.mjs): this frame's storage holds Studio's props as
+        // they are now. Forget what the open room registered (so the next prepare does not save the old places over
+        // them) and read them again. Room desks are not read: a chapter builds its own (clearRoomRecipe above).
+        reloadStudioState(){
+            discardSceneAssetUndoEntries();clearSceneAssetRegistration();
+            try{restoreSceneAssetStates(JSON.parse(localStorage.getItem(SCENE_ASSET_STATE_KEY)||'{}'));}catch{}
+        },
         captureRecipe(){
             sceneDesks.capture();
             return structuredClone({...sceneDesks.active?.state,size:currentConfig.size,

@@ -366,6 +366,24 @@ async function openDirector(){
       if(!await playShot(i,{position,forceLive:true,range:previewRange}))throw Error('The chapter could not be loaded with this desk.');
       if(fxError)throw Error('the film setup could not be applied: '+fxError);return true;
     },
+    // Refresh from Studio (studio-sync.mjs): the stage's storage takes Studio's keys as they are now (under a desk
+    // version's seed when one is in force), the app forgets what it read at load, and the chapter is prepared again
+    // at the same position, playing on if it was playing. -> {changed:[key], before:{key: what the stage had}}
+    async refreshStudio(value,i,values){
+      if(bakeController||busy)throw Error('Wait for this chapter to finish loading.');
+      const ls=frame.contentWindow.localStorage,changed=[],before={};
+      for(const [k,v] of Object.entries(values)){
+        const seeded=!!seededKeys?.has(k),now=seeded?seededKeys.get(k):ls.getItem(k);
+        if(now===v)continue;changed.push(k);before[k]=now;
+        if(seeded)seededKeys.set(k,v);else if(v===null)ls.removeItem(k);else ls.setItem(k,v);
+      }
+      if(!changed.length)return {changed,before};
+      const position=index===i?Math.min(1,clock.progress(performance.now(),shots[index].seconds)):0;applyClient(value);
+      stage().reloadStudio?.();
+      if(!await playShot(i,{position,forceLive:true,range:previewRange}))throw Error('The chapter could not be loaded again.');
+      if(fxError)throw Error('the film setup could not be applied: '+fxError);
+      return {changed,before};
+    },
     playback:()=>({playing,busy,index,range:previewRange,loop:loopPreview}),toggleChapter,
     setPreviewLoop(on){loopPreview=!!on;director?.transportChanged();},
     async previewRange(value,i,range){

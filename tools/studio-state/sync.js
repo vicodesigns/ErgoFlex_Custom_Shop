@@ -71,6 +71,32 @@
     const who = [...new Set(keys.map(k => k.by))].join(', ');
     badge.textContent = `${keys.length} shared edit${keys.length === 1 ? '' : 's'} from ${who} · Reload to see`;
   };
-  if (online) setInterval(() => fetch(`/api/studio-state/changes?since=${rev}&client=${client}`).then(r => r.json()).then(r => { if (r.keys.length) show(r.keys); }).catch(() => {}), 5000);
-  window.__studioState = { client, by, flush, pending, base, get rev() { return rev; } };
+  // A page that can take others' saves without a reload (the Director: "Refresh from Studio") watches for them:
+  // watch(fn) hands every poll's keys to fn, which returns the ones it did NOT take; only those get the reload badge.
+  let watcher = null;
+  if (online) setInterval(() => fetch(`/api/studio-state/changes?since=${rev}&client=${client}`).then(r => r.json()).then(r => {
+    let keys = r.keys; if (watcher) { try { keys = watcher(keys) || []; } catch (e) { console.warn('[studio-state] watcher', e); } }
+    if (keys.length) show(keys); else if (badge) { badge.remove(); badge = null; }
+  }).catch(() => {}), 5000);
+  // pull(only): read the shared state again into this page's storage, for the keys `only(key)` accepts. Nothing is
+  // pushed back (the pulled value becomes the key's base). A key with an unsent local write is left alone.
+  // -> { rev, changed: [{ key, before, after }] }   (after null: deleted for everyone)
+  // It reuses the page's ordinary fetch: no extra connection is held open.
+  async function pull(only = () => true) {
+    await flush();
+    const r = await fetch('/api/studio-state', { cache: 'no-store' }); if (!r.ok) throw Error('HTTP ' + r.status);
+    const s = await r.json(), changed = [];
+    for (const [k, v] of Object.entries(s.values)) {
+      if (!SHARED.test(k) || !only(k) || pending.has(k)) continue;
+      const before = getItem.call(ls, k);
+      if (before !== v) { try { setItem.call(ls, k, v); } catch (e) { console.warn('[studio-state] could not store', k, e); continue; } changed.push({ key: k, before, after: v }); }
+      base.set(k, v);
+    }
+    for (const k of s.deleted || []) {
+      if (!SHARED.test(k) || !only(k) || pending.has(k) || !base.has(k)) continue;
+      const before = getItem.call(ls, k); removeItem.call(ls, k); base.delete(k); if (before !== null) changed.push({ key: k, before, after: null });
+    }
+    return { rev: s.rev, changed };
+  }
+  window.__studioState = { client, by, flush, pending, base, pull, watch(fn) { watcher = typeof fn === 'function' ? fn : null; }, get rev() { return rev; } };
 })();

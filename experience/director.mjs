@@ -24,6 +24,7 @@ import {effectiveDeskEdits} from './desk-edits.mjs';
 import {createStartPose} from './start-pose.mjs';
 import {createRenderRequest} from './render-request.mjs';
 import {createSceneDeskEditor} from './scene-desk-editor.mjs';
+import {createStudioSync} from './studio-sync.mjs';
 import {createDeskVersions,deskVersions as deskVersionList} from './desk-versions.mjs';
 import {createDeskBuildPanel} from './desk-build-panel.mjs';
 import {createTitleEditor,loadTitleSource} from './title-editor.mjs';
@@ -222,7 +223,7 @@ export function mountDirector(bridge,catalog,initial){
   });
   function renderFilm(){for(const el of document.querySelectorAll('[data-film-picker]'))el.outerHTML=filmPicker();syncTransport();}
   if(film)fetch('/exports/film-cuts.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(v=>{filmCuts=Array.isArray(v?.cuts)?v.cuts.filter(c=>c&&typeof c.id==='string'&&typeof c.name==='string'&&typeof c.dir==='string'&&typeof c.chapters==='string'):null;},()=>{}).finally(()=>renderFilm());
-  if(film)loadFilmChapters(film.film).then(list=>{filmChapters=list;filmError='';},error=>{filmError='Film chapters unavailable: '+error.message;}).finally(renderFilm);
+  if(film)loadFilmChapters(film.film).then(list=>{filmChapters=list;filmError='';studioSync.remember(list[filmIndex()]);},error=>{filmError='Film chapters unavailable: '+error.message;}).finally(renderFilm);
   const switcher=document.createElement('dialog');switcher.id='film-switch';switcher.setAttribute('aria-labelledby','film-switch-title');document.body.append(switcher);
   let switchTarget=null;const targetLabel=t=>(t.cut?t.cut+' · ':'')+filmChapterLabel(t);
   function switchFilm(n){const target=filmChapters?.[n];if(!target||n===filmIndex()){syncFilm();return;}switchTo(target);}
@@ -746,6 +747,9 @@ export function mountDirector(bridge,catalog,initial){
     if(!key||group!==key){const before=copy(project);undo.push(before);undo=undo.slice(-40);undoLabels.push({before,after:null,text:null});undoLabels=undoLabels.slice(-40);redo=[];redoLabels=[];}
     group=key;fn();const top=undoLabels.at(-1);if(top){top.after=copy(project);top.text=null;labelPending=top;setTimeout(()=>{if(labelPending===top)labelPending=null;});}changed();if(render)renderPanel();
   }
+  // Studio <-> Director (studio-sync.mjs): the "Studio changed" badge, Refresh from Studio, Adopt Studio's version.
+  function renderStudioSync(){for(const el of panel.querySelectorAll('[data-studio-sync]'))el.innerHTML=studioSync.html();}
+  const studioSync=createStudioSync({bridge,project:()=>project,index:()=>selected,shot,film:filmShot,commit,status,rerender:renderStudioSync,render:()=>render()});
   function loadProject(value,keepDraft=true){if(keepDraft)draft();project=cleanCut(value,catalog);for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId=null;playhead=0;undo=[];redo=[];undoLabels=[];redoLabels=[];labelPending=null;group=null;changed();render();load();}
   function render(){renderPanel();renderTimeline();}
   function renderPanel(){
@@ -756,7 +760,7 @@ export function mountDirector(bridge,catalog,initial){
     const cuts=[...library.data.cuts];for(const draft of Object.values(library.data.drafts))if(!cuts.some(c=>c.id===draft.id))cuts.push(draft);
     panel.innerHTML=`
       <div class="director-heading"><div><span class="director-kicker">DIRECTOR MODE</span><h2>Director studio.</h2></div><button data-action="inspector" aria-label="Hide inspector" title="Hide inspector; keep the timeline open">‹</button></div>
-      <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button><span class="saved-indicator" data-saved title="Draft kept in this browser"></span></div>${filmPicker()}
+      <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button><span class="studio-sync" data-studio-sync>${studioSync.html()}</span><span class="saved-indicator" data-saved title="Draft kept in this browser"></span></div>${filmPicker()}
       <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['props','people','layers','desks']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(filmShot()&&deskVersions.has()?['version']:[]),...(film?['render']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab==='version'?'Desk version':tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
       <p data-status role="status" class="director-status">${escape(titleEditor.editHint?.()||`${project.shots.length} chapters · ${Math.round(duration(project.shots))} seconds`)}</p>
       <div data-inspector-page="project">
@@ -847,6 +851,7 @@ export function mountDirector(bridge,catalog,initial){
       if(name.startsWith('ly-')){const r=await layers.action(name,index);if(r==='show'){showInspector('layers');renderLayers();panel.querySelector('[name="ly-name"]')?.focus();}else renderLayers();return;}
       if(name.startsWith('br-')){await branding.action(name,index);return;}
       if(name.startsWith('dk-')){await deskSel.action(name,index);return;}
+      if(name.startsWith('ss-')){await studioSync.action(name);return;}
       if(name.startsWith('fr-')){await floorRefl.action(name,index);return;}
       if(name==='light-add'||name==='light-key-add'){addLight(name==='light-key-add');return;}
       if(name==='tod-add'){

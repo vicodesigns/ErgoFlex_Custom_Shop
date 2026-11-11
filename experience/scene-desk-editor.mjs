@@ -1,10 +1,12 @@
 import {cleanDeskEdit,effectiveDeskEdits,describeDeskEdit} from './desk-edits.mjs';
 import {clampStartPose,startPoseLimits,START_PRESETS} from './start-pose.mjs';
+import {writeSceneDesks,DESKS_KEY} from './studio-sync.mjs';
 // Director "Desks": every ErgoFlex desk in the room, not only the featured one (the chapter's hero desk, edited in the
 // Groove tab). Select a desk in the Desks list or by clicking it in the view; its panel sets Size (48″ / 60″), Position
 // X / Z in inches, Rotate in degrees, the starting Height and Tilt (start-pose.mjs clamps them to the real desk), and
 // Reset desk. Edits go to the chapter's cut shot (shot.deskEdits, experience/desk-edits.mjs); film-fx applies them to the
-// live stage, Render still and the film as the film shot's sceneDeskEdits. Studio is never written.
+// live stage, Render still and the film as the film shot's sceneDeskEdits. Studio is written only by "Make permanent in
+// Studio…" (below), row by row, when Vico confirms it; the chapter keeps its edits either way.
 // Selecting the featured desk (list, click, Esc, empty click) leaves the desk selection: the Groove tab is its editor.
 // The view: a teal box and floor footprint on the selected desk, and a round handle under it: drag it on the floor to
 // move the desk (the numbers follow), a gumball on it (arrows along the room's X and Z, a square for both) and a ring around it
@@ -269,11 +271,71 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     const n=editedCount();if(!n){status('No desk edits in this chapter: the desks are the film\'s.');return;}
     commit(()=>{shot().deskEdits=[];},{render:false});status('All desks back to the film in this chapter.');rerender();
   }
+  // ---- Make permanent in Studio: the confirmed desks go into Studio's own desk records for this room, through the
+  // studio server (never the file). The film builds a chapter's room desks from the room, not from Studio's saved
+  // desks, so the chapter keeps its edits: Studio and the chapter then agree, and neither depends on the other.
+  const FEATURED_WHY='The featured desk is the chapter\'s hero desk: its build, start and moves stay with the chapter (Groove and Build tabs).';
+  const copyOf=v=>JSON.parse(JSON.stringify(v));
+  const filmMoves=id=>{const n=name(rec(id));return (film()?.sceneDeskPoses||[]).some(p=>{try{const re=new RegExp(p.desk,'i');return re.test(id)||re.test(n);}catch{return false;}});};
+  // [{desk, name, change, edit, ok, why | roomKey, state}]
+  function plan(){
+    const d=desks(),key=d?.key||'',fid=featured();
+    const rows=edits().map(e=>{
+      const r=rec(e.desk),row={edit:e,desk:e.desk,name:e.name||name(r),change:describeDeskEdit(e,was(r)||{})};
+      if(!r)return {...row,ok:false,why:'Not in the room right now: the film setup did not find this desk.'};
+      if(e.desk===fid||r.primary||r.product)return {...row,ok:false,why:FEATURED_WHY};
+      if(!/^[a-z]+\/[a-z]+$/.test(key))return {...row,ok:false,why:'This room is not a saved Studio room layout.'};
+      if(e.clips?.length)return {...row,ok:false,why:'It has moves in this chapter: they stay chapter edits, so Studio and the film would disagree. Keep it as a chapter edit.'};
+      if(filmMoves(e.desk))return {...row,ok:false,why:'The film\'s own setup also moves this desk in this chapter, so Studio and the film would disagree. Keep it as a chapter edit.'};
+      if(drag||gz||turning)return {...row,ok:false,why:'Finish the drag first.'};
+      return {...row,ok:true,roomKey:key,state:copyOf(r.state)};
+    });
+    if(rows.length&&fid){const f=rec(fid);rows.push({desk:fid,name:(f?name(f):'Featured desk')+' ★',change:'the chapter\'s hero desk',ok:false,why:FEATURED_WHY});}
+    return rows;
+  }
+  function permanentState(){
+    if(!three()?.scene||!desks())return {ok:false,why:'The stage is still loading.'};
+    if(!editedCount())return {ok:false,why:'No desk edits in this chapter yet.'};
+    const rows=plan(),n=rows.filter(r=>r.ok).length;return n?{ok:true,n,rows}:{ok:false,why:rows[0]?.why||'Nothing to write.',rows};
+  }
+  let dialogPlan=[];
+  const dialog=document.createElement('dialog');dialog.id='desk-permanent';dialog.setAttribute('aria-labelledby','desk-permanent-title');document.body.append(dialog);
+  const count=n=>`Write ${n} desk${n===1?'':'s'} to Studio`;
+  function openPermanent(){
+    const st=permanentState();if(!st.rows){status(st.why,true);return;}
+    dialogPlan=st.rows;
+    dialog.innerHTML=`<div class="director-heading"><div><span class="director-kicker">MAKE PERMANENT IN STUDIO</span><h2 id="desk-permanent-title">Write these desks to Studio?</h2></div></div>
+      <p>Studio's <b>${escape(desks()?.key||'')}</b> room keeps these desks as they are here: size, place, start and build. Nothing else in Studio changes. The chapter keeps its own edits (the film does not read Studio's desks), so the film stays exactly as it is.</p>
+      <ul class="prop-permanent-list">${st.rows.map((r,i)=>`<li class="${r.ok?'':'blocked'}"><label class="director-check"><input type="checkbox" data-permanent="${i}" ${r.ok?'checked':'disabled'}><span><b title="${escape(r.desk)}">${escape(r.name)}</b> · ${escape(r.change)}${r.ok?'':`<small>${escape(r.why)}</small>`}</span></label></li>`).join('')}</ul>
+      <div class="director-actions"><button data-permanent-go class="primary" ${st.ok?'':'disabled'}>${count(st.n||0)}</button><button data-permanent-cancel>Cancel</button></div><p class="director-hint" data-permanent-status role="status"></p>`;
+    dialog.showModal();dialog.querySelector('[data-permanent-cancel]').focus();
+  }
+  dialog.addEventListener('change',()=>{const n=dialog.querySelectorAll('[data-permanent]:checked').length,b=dialog.querySelector('[data-permanent-go]');if(b){b.disabled=!n;b.textContent=count(n);}});
+  dialog.addEventListener('click',async event=>{
+    if(event.target.closest('[data-permanent-cancel]')){dialog.close();return;}
+    const go=event.target.closest('[data-permanent-go]');if(!go)return;
+    const rows=[...dialog.querySelectorAll('[data-permanent]:checked')].map(el=>dialogPlan[Number(el.dataset.permanent)]).filter(r=>r?.ok);if(!rows.length)return;
+    go.disabled=true;const say=t=>{const el=dialog.querySelector('[data-permanent-status]');if(el)el.textContent=t;};say('Writing to Studio…');
+    try{await makePermanent(rows);dialog.close();}catch(error){say(error.message);go.disabled=false;status(error.message,true);}
+  });
+  async function makePermanent(rows){
+    const key=rows[0].roomKey,shared=window.__studioState;
+    const got=await fetch('/api/studio-state',{cache:'no-store'});if(!got.ok)throw Error(`Studio's state is unavailable (${got.status}).`);
+    // The write carries the value it started from, so the server keeps every other room as another tab saved it.
+    const base=(await got.json()).values?.[DESKS_KEY]??null,value=writeSceneDesks(base,key,rows.map(r=>({desk:r.desk,edit:r.edit,state:r.state})));
+    const posted=await fetch('/api/studio-state',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({client:shared?.client||'director-'+Math.random().toString(36).slice(2,10),by:'Director',changes:[{key:DESKS_KEY,value,base}]})});
+    if(!posted.ok)throw Error(`Studio did not take the change (${posted.status}).`);const result=(await posted.json()).results?.[0];if(!result||result.skipped||result.error)throw Error('Studio did not take the change: '+(result?.skipped||result?.error||'no answer'));
+    // This page's copy of the shared state (no second write: the sync script sees it as its own base).
+    try{const stored=(await (await fetch('/api/studio-state',{cache:'no-store'})).json()).values?.[DESKS_KEY];if(stored){shared?.base?.set(DESKS_KEY,stored);localStorage.setItem(DESKS_KEY,stored);}}catch{}
+    status(`Wrote ${rows.length} desk${rows.length===1?'':'s'} to Studio (${key}): ${rows.map(r=>r.name).join(', ')}. Studio shows ${rows.length===1?'it':'them'} after a reload; the chapter keeps its own edits.`);
+    rerender();
+  }
   async function action(act,arg){
     sync();
     if(act==='dk-select'){select(String(arg));return;}
     if(act==='dk-featured'){if(sel)onPick(null);sel=null;rerender();showFeatured();status('Featured desk: its moves and starting position are in the Groove tab.');return;}
     if(act==='dk-reset-all'){resetAll();return;}
+    if(act==='dk-permanent'){openPermanent();return;}
     if(!sel)return;
     if(act==='dk-size'){setSize(sel,String(arg));return;}
     if(act==='dk-nudge'){const [axis,by]=String(arg).split(':');nudge(sel,axis,Number(by));return;}
@@ -298,14 +360,14 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     const list=records();
     if(!three()?.scene||!list.length)return `<h3>Desks</h3><p class="director-hint">${three()?.scene?'This room has no ErgoFlex desks other than the featured one.':'Loading the chapter…'}</p>`;
     if(!tools&&editing())ensure().catch(e=>console.warn("[desk tools]",e));   // the view tools are there as soon as the tab is: a click on a desk is this editor's
-    const n=editedCount(),fid=featured();
+    const n=editedCount(),fid=featured(),st=permanentState();
     const rows=list.map(r=>{
       const e=editOf(r.id),isF=r.id===fid,on=r.id===sel;
       return `<li><button data-action="${isF?'dk-featured':'dk-select'}" data-section="${escape(r.id)}" class="desk-row ${isF?'is-featured':''} ${e?'is-edited':''}" aria-pressed="${on}" title="${escape(r.id)}"><span class="desk-star">${isF?'★':e?'●':'○'}</span><span class="desk-name">${escape(name(r))}</span><small>${sizeLabel(r.state.size)}${isF?' · featured desk':e?' · edited':''}</small></button></li>`;
     }).join('');
     const head=`<h3>Desks</h3><p class="director-hint">Click a desk in the view, or pick one here. The featured desk (★) is the chapter's hero desk: its moves and starting position are in the Groove tab. Edits stay in this chapter.</p>
       <ul class="desk-list" data-desk-list>${rows}</ul>
-      <div class="director-actions"><button data-action="dk-reset-all" ${n?'':'disabled'} title="Every other desk back to the film in this chapter: one step, Undo brings them back">Reset all desks to the film${n?' ('+n+')':''}</button></div>`;
+      <div class="director-actions"><button data-action="dk-reset-all" ${n?'':'disabled'} title="Every other desk back to the film in this chapter: one step, Undo brings them back">Reset all desks to the film${n?' ('+n+')':''}</button><button data-action="dk-permanent" ${st.rows?'':'disabled'} title="${escape(st.ok?'Write these desks into Studio\'s room (you confirm each one). The chapter keeps its edits.':st.why)}">Make permanent in Studio…</button></div>${st.rows||!n?'':`<p class="director-hint" data-permanent-why>${escape(st.why)}</p>`}`;
     if(!sel)return head+'<p class="director-hint">No desk selected: the featured desk is what you edit.</p>';
     const r=rec(sel),v=view(sel),e=editOf(sel),L=startPoseLimits(v.size),p=v.pose,yaw=r1(wrapDeg(deg(p.yaw)));
     const num=(nm,text,value,step,unit,extra='')=>`<label class="desk-num">${text}<span><input name="${nm}" type="number" step="${step}" value="${value}" ${extra}><em>${unit}</em></span></label>`;
@@ -322,7 +384,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
         <p class="director-hint">${sizeLabel(v.size)} desk: ${L.heightMin}–${L.heightMax}″, ${L.tiltMin}° to ${L.tiltMax}°. Full ${L.tiltMax}° needs ${L.fullTiltHeight}″ or more.</p></fieldset>
       <div class="director-actions"><button data-action="dk-reset" ${e?'':'disabled'} title="This desk back to the film: its size, place and start">Reset desk</button><button data-action="dk-featured" title="Back to the featured desk (Esc)">Featured desk</button></div></div>`;
   }
-  return {panel,action,changed,select,deselect,selected,header,reset,resetAll,editedCount,edits,ensure,
+  return {panel,action,changed,select,deselect,selected,header,reset,resetAll,editedCount,edits,ensure,permanentPlan:plan,
     applied:()=>{if(open()&&film()&&!tools)ensure().catch(e=>console.warn("[desk tools]",e));},
     ids:()=>records().map(r=>r.id),featuredId:featured};
 }

@@ -616,3 +616,17 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .pose-saved-item.other button{color:#cfe6f2}
 .pose-saved-item .pose-saved-x{padding:2px 7px;border-left:1px solid #ffffff1f;color:#9fb7c6}
 .pose-saved-item button:hover{background:#ffffff14}
+
+/* Studio <-> Director (studio-sync.mjs): the Refresh button and its "Studio changed" state, the desks and adopt dialogs. */
+#director-panel .inspector-global .studio-sync{display:inline-flex;margin-left:8px}
+#director-panel .inspector-global [data-studio-refresh]{min-height:28px;padding:3px 10px;border-radius:8px;font-size:12px;white-space:nowrap}
+#director-panel .inspector-global [data-studio-refresh].studio-changed{background:#ffcf8a;color:#1c1203;border-color:#ffcf8a;font-weight:700}
+#desk-permanent,#studio-adopt{position:fixed;width:min(620px,94vw);border-radius:18px;padding:22px;color:#edf6fc;background:#0d1924f8;border:1px solid #8bc5df40;box-shadow:0 20px 80px #000a;font-size:13px;line-height:1.5}
+#desk-permanent::backdrop,#studio-adopt::backdrop{background:#020a11a8;backdrop-filter:blur(6px)}
+#desk-permanent h2,#studio-adopt h2{margin:4px 0 8px;font-size:20px}
+#desk-permanent button,#studio-adopt button{min-height:34px;border-radius:9px;padding:6px 12px;font-size:12px}
+#desk-permanent .primary,#studio-adopt .primary{background:#65dcff;color:#041018;font-weight:700;border:0}
+#desk-permanent .primary:disabled,#studio-adopt .primary:disabled{opacity:.45}
+.studio-adopt-list li em{font-style:normal;font-size:11px;color:#ffcf8a;margin-left:6px}
+.studio-adopt-list li small{color:#a9c3d2}
+.studio-adopt-list li .director-check{display:flex;gap:8px;align-items:center;margin-top:5px}

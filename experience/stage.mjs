@@ -309,6 +309,8 @@ export async function mountStage(ctx) {
   });
   // Same-origin parent owns this preview; no arbitrary postMessage action dispatcher.
   window.ErgoPresentation={prepare:async next=>{preparing=true;try{return await prepare(next);}finally{preparing=false;}},tick,sound,pause,receive,
+    // Refresh from Studio (studio-sync.mjs): the app reads Studio's props and desks again from this frame's storage; the next prepare builds the room from them.
+    reloadStudio:()=>ctx.reloadStudioState?.(),
     catalog:()=>ctx.catalog(),edit,seek,captureCamera,beginBake,bakeFrame,endBake,
     // Director scene-light tools (markers, gizmo) work on the live scene, camera and orbit controls.
     three:()=>({scene:ctx.scene,camera:ctx.camera,renderer:ctx.renderer,controls:ctx.controls}),hold,wake:ms=>wake(ms),sleeping:()=>sleeping,
