@@ -69,7 +69,7 @@ export const sceneOverrides = {
             for(const [id,dx,dz,turn] of WRAP_FOOD)l.props.push({...prop(id,ax+dx,az+dz,742,turn),phases:['party']});
             // Bags at the feet of every other bay, on the side away from the chair's swing.
             for(const [n,s] of (l.stations||[]).entries()){
-                if(n%3===1)continue;
+                if(n%3===1||(l.desk&&Math.hypot(s.at[0]-l.desk[0],s.at[1]-l.desk[1])<2600))continue;   // none at the bays next to the featured desk: the film's cameras were set against that corner as it was
                 const a=(s.turn||0)*Math.PI/180,side=n%2?1:-1,ox=side*(s.size==='48x30'?920:1080),oz=180;
                 l.props.push(prop(n%3?'backpack':'backpack-daypack',s.at[0]+Math.cos(a)*ox+Math.sin(a)*oz,s.at[1]-Math.sin(a)*ox+Math.cos(a)*oz,0,(s.turn||0)+side*70));
             }
@@ -478,7 +478,8 @@ export function furnish(kit){
     // Cove sweep and floor sheet so the key never shows a hard corner.
     const cove=kit.mesh(stage,new THREE.CylinderGeometry(450,450,2350,16,1,true,Math.PI*1.5,Math.PI/2),chroma,[0,465,back-465]);cove.rotation.z=Math.PI/2;
     const sweepLen=Math.max(700,back-cam-1700);
-    box(stage,[2350,4,sweepLen],[0,17,back-465-sweepLen/2],chroma,2);
+    const chromaFloor=kit.material('#1c9a45',{roughness:.94});chromaFloor.userData.roomSurface='fabric';chromaFloor.userData.roomPaletteLocked=chromaFloor.userData.roomFinishLocked=true;
+    box(stage,[2350,4,sweepLen],[0,17,back-465-sweepLen/2],chromaFloor,2);   // the floor sweep lies flat: no hanging folds on it
     // Heavy-duty goal-post studio truss & weighted base plates.
     box(stage,[2540,42,56],[0,2265,back+6],kit.metal,6);
     for(const x of [-1240,1240]){
@@ -892,12 +893,12 @@ export function decorate(kit){
 // (room-refinement DAY_ANGLES), so its place and length follow the hour and
 // the blind. Soft in the morning, a short bright patch in the afternoon, long
 // and warm at dusk, none at night or behind the screening blackout.
-const SUN_DIR={morning:[.62,-.36],afternoon:[1.45,.12],evening:[.32,.48]},SUN_LEVEL={morning:.075,afternoon:.2,evening:.05};   // a read of daylight on the carpet, not a spotlight: the film's morning keeps its mood
+const SUN_DIR={morning:[.62,-.36],afternoon:[1.45,.12],evening:[.32,.48]},SUN_LEVEL={morning:.03,afternoon:.11,evening:.045};   // a read of daylight on the carpet, not a spotlight: the film's morning keeps its mood
 const BLIND_DROP=[.15,.35,.75,.55,1];
 function mediaSun(kit){
     const {w,d,bz,front}=kit,z0=bz+d*.54,half=d*.24;
-    const c=document.createElement('canvas');c.width=256;c.height=128;const g=c.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,256,128);g.filter='blur(5px)';
-    for(const [a,b] of [[.03,.32],[.35,.65],[.68,.97]]){g.fillStyle='#fff';g.fillRect(a*256,10,(b-a)*256,108);}
+    const c=document.createElement('canvas');c.width=256;c.height=128;const g=c.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,256,128);g.filter='blur(13px)';   // a wide penumbra: the glass is metres from the floor it lights
+    for(const [a,b] of [[.06,.31],[.37,.63],[.69,.94]]){g.fillStyle='#fff';g.fillRect(a*256,26,(b-a)*256,76);}
     const map=new THREE.CanvasTexture(c);map.colorSpace=THREE.SRGBColorSpace;
     const geo=new THREE.PlaneGeometry(1,1,12,12);geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count*3),3));
     const mat=new THREE.MeshBasicMaterial({map,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
@@ -954,7 +955,7 @@ export function activityMaterials(k,phase,y){
 // table and form a short row facing the screen; larger labs move the end
 // chairs into a second row. Reversible (room-life's dailyDelta convention).
 function wrapSeating(kit){
-    const m=kit.phaseMover(),[ax,az]=kit.layout.activity,find=(x,z)=>()=>[kit.root.children.find(o=>o.userData.propId==='ergoflex-designer-chair'&&Math.hypot(o.position.x-x,o.position.z-z)<120)];
+    const m=kit.phaseMover(),[ax,az]=kit.layout.activity,find=(x,z)=>{let chair=null;return ()=>[chair&&chair.parent===kit.root?chair:(chair=kit.root.children.find(o=>o.userData.propId==='ergoflex-designer-chair'&&!o.userData.dailyDelta&&Math.hypot(o.position.x-x,o.position.z-z)<120)||null)];};   // found once, at its own place: after the move it is somewhere else
     const seats=[[-400,-700,0,-1200],[400,-700,0,-400],[-400,700,1,400],[400,700,1,1200]];
     for(const [dx,dz,back,rx] of seats)m.add(find(ax+dx,az+dz),null,i=>i===4?kit.pivotMove(ax+dx,az+dz,rx-dx,-1500-dz,back?0:Math.PI):null);
     // (the two end chairs of the larger labs stay at the table: the rows would put them into the edit bay in front)

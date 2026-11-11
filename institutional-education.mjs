@@ -2927,7 +2927,7 @@ export function decorate(kit) {
     FIXTURES[kit.spec.id]?.(kit, E); sunPatch(kit, E);
     // After hours the high-school window wall is the room's main light: a cool
     // dusk-blue spill from the glazing across the floor and the first desks.
-    if (kit.spec.id === 'highschool') E.pool(kit.root, [-kit.w / 2 + 1300, 7, kit.bz + kit.d * .54], [2600, kit.d * .55], '#7d9cd0', [0, 0, .04, .2, 0]);
+    if (kit.spec.id === 'highschool') E.pool(kit.root, [-kit.w / 2 + 1300, 7, kit.bz + kit.d * .54], [2600, kit.d * .55], '#7d9cd0', [0, 0, .04, .09, 0]);   // the blinds are almost down at night
     WALLS[kit.spec.id]?.(kit, E, E.S); doorServices(kit, E);
     if (CABINET[kit.spec.id]) glazeCabinet(kit, E, kit.byId('storage'), CABINET[kit.spec.id]);
     applyUV(kit.root);

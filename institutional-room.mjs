@@ -290,7 +290,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     // After hours the corridor stays lit: its light comes through the door's
     // vision panel and lands as a soft patch on the floor inside the door.
     const corridor = TILE_CEILINGS.has(spec.id) ? createPoolLayer(root, 'Corridor light through the door') : null;
-    corridor?.add(root, [w / 2 - 700, 3, front - 1600], [1300, 900], '#ffe9c8', [0, 0, .03, .2, .05]);
+    corridor?.add(root, [w / 2 - 700, 3, front - 1500], [560, 1700], '#ffe9c8', [0, 0, .03, .15, .05]);   // a long narrow wedge, as a slit of glass throws
     if (TILE_CEILINGS.has(spec.id)) {
         // Illuminated exit sign over the entry door: stays lit after hours.
         const exitCanvas = document.createElement('canvas'); exitCanvas.width = 256; exitCanvas.height = 128; const ec = exitCanvas.getContext('2d');
@@ -367,7 +367,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
             l.intensity = (root.scale.x * 1000) ** 2 * power * gain;
         });
         if (TILE_CEILINGS.has(spec.id)) dressTileCeiling(room, layout);
-        visionPanel.emissiveIntensity = TILE_CEILINGS.has(spec.id) ? [0, 0, .15, .85, .3][Math.max(0, ['morning', 'afternoon', 'evening', 'night', 'party'].indexOf(phase))] : 0;
+        visionPanel.emissiveIntensity = TILE_CEILINGS.has(spec.id) ? [0, 0, .1, .36, .18][Math.max(0, ['morning', 'afternoon', 'evening', 'night', 'party'].indexOf(phase))] : 0;
         corridor?.apply(phase, gain);
         for (const o of root.children) if (o.userData.propPhases) o.visible = o.userData.propPhases.includes(phase);
         root.traverse(o => { if (o.userData.propPhases && o.parent !== root) o.visible = o.userData.propPhases.includes(phase); });

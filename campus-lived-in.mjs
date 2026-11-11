@@ -145,7 +145,14 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id 
                     b.box([560, 760, 8], [0, 382, 0], '#f4f2ea', null, 'paper');
                     for (const s of [-1, 1]) b.box([280, 760, 8], [s * (280 + 280 * Math.cos(.7)) / 2 + s * 2, 382, 140 * Math.sin(.7) / 1.05], '#f4f2ea', [0, -s * .7, 0], 'paper');
                     b.box([520, 90, 3], [0, 700, 6], tone, null, 'paper');
-                    for (let n = 0; n < 4; n++) b.box([230, 170, 2], [-125 + (n % 2) * 250, 520 - Math.floor(n / 2) * 210, 6], ['#ffffff', '#e9e3d2', '#dfe9ee', '#ffffff'][n], null, 'paper');
+                    // what a project board carries: a photograph, a chart, two blocks of text; different on every board
+                    const seed = r * 3 + col, photo = ['#7fa3b8', '#c9a36a', '#8fae8a', '#b98a9a'][seed % 4], bars = ['#e8702a', '#2e6f8e', '#3f8f6a', '#c9a227'];
+                    for (let n = 0; n < 4; n++) {
+                        const x = -125 + (n % 2) * 250, y = 520 - Math.floor(n / 2) * 210, kind = (n + seed) % 4;
+                        b.box([230, 170, 2], [x, y, 6], kind === 0 ? photo : '#ffffff', null, 'paper');
+                        if (kind === 1) for (let q = 0; q < 4; q++) { const h = 40 + ((seed * 7 + q * 37) % 90); b.box([34, h, 2], [x - 72 + q * 48, y - 75 + h / 2, 8], bars[(q + seed) % 4], null, 'paper'); }
+                        if (kind >= 2) for (let q = 0; q < 6; q++) b.box([q === 0 ? 120 : 190 - (q * 23 + seed * 11) % 60, q === 0 ? 9 : 4, 2], [x - (q === 0 ? 45 : (((q * 23 + seed * 11) % 60) / 2)), y + 62 - q * 22, 8], q === 0 ? '#2b2d31' : '#6a6d72', null, 'paper');
+                    }
                     b.box([380, 70, 2], [0, 120, 6], tone, null, 'paper');
                     b.build(B, matte);
                 }

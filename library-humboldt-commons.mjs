@@ -884,7 +884,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     for (const [i, [z, along, ph, figs]] of FIGURES.entries()) {
         const g = group(`humboldt-sculpture-${i}`, 'Bleached wood figure group on plinth', [XL + 500, 0, z], root, Math.PI / 2), k = kit();
         box(g, [along, ph, 700], [0, ph / 2, 0], plinthWhite, 4);
-        const tones = ['#e4d8c4', '#d6c6ab', '#e8e0d2', '#cbb796', '#dccdb6'];
+        const tones = ['#f3eee4', '#ece4d5', '#f5f1e9', '#e7dcc9', '#efe8db'];   // limed, pale: the figures stay the hall's light notes (the film's morning was graded with them white)
         for (const [n, [dz, height, seated, turn]] of figs.entries()) figure(k, -dz, ph, height, seated, turn || 0, tones[(i * 2 + n) % tones.length]);
         baked(g, k, sculptureWhite);
         // A bronze caption plate on the plinth face, as a gallery would label the work.
@@ -1035,7 +1035,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // A short, high, near-white patch in the afternoon; at dusk faint, soft,
     // red-amber bars of the last sun that cross the café and reach the gallery wall.
     // Morning stays overcast. One floor and one wall overlay, redrawn per daypart.
-    const SUN = { afternoon: { elevation: 1.45, sweep: .12, color: '#fff0d8', level: .22 }, evening: { elevation: .32, sweep: .48, color: '#ff8a5c', level: .15 } };
+    const SUN = { afternoon: { elevation: 1.45, sweep: .12, color: '#fff0d8', level: .22 }, evening: { elevation: .32, sweep: .48, color: '#ffb98a', level: .1 } };
     const sunRuns = [{ x: XR, z0: GLASS_Z, z1: STEP_Z, top: SOFFIT }, { x: HALL_XR, z0: STEP_Z + 600, z1: SOLID_Z, top: CAFE_SOFFIT }];
     const sunColumns = [[HALL_XR - 250, 12500, 250], [HALL_XR - 250, 18500, 250]];
     const SUN_F = { x0: XL, x1: XR, z0: GLASS_Z - 4200, z1: SOLID_Z + 600 }, SUN_W = { z0: GLASS_Z - 4200, z1: SOLID_Z + 600, y1: 3600 };
@@ -1060,7 +1060,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         const quad = (c, pts) => { c.beginPath(); pts.forEach(([u, v], i) => i ? c.lineTo(u, v) : c.moveTo(u, v)); c.closePath(); c.fill(); };
         // The building outline clips the floor (the hall glass steps in at STEP_Z).
         fc.save(); fc.beginPath(); [[XL, SUN_F.z0], [XR, SUN_F.z0], [XR, STEP_Z], [HALL_XR, STEP_Z], [HALL_XR, SUN_F.z1], [XL, SUN_F.z1]].map(fp).forEach(([u, v], i) => i ? fc.lineTo(u, v) : fc.moveTo(u, v)); fc.closePath(); fc.clip();
-        fc.filter = `blur(${modeId === 'evening' ? 6 : 2}px)`; wc.filter = 'blur(4px)';
+        fc.filter = `blur(${modeId === 'evening' ? 14 : 5}px)`; wc.filter = 'blur(4px)';
         fc.fillStyle = wc.fillStyle = '#ffffff';
         for (const run of sunRuns) {
             const zs = []; for (let z = run.z0; z <= run.z1 + 1; z += 1500) zs.push(Math.min(Math.max(z, run.z0 + 25), run.z1 - 25));
