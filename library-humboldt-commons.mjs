@@ -593,29 +593,42 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     leftSeg(bz, MEZ[0], 0, h); leftSeg(MEZ[0], OLIVE_Z, 0, 3800); leftSeg(OLIVE_Z, MEZ[1], 0, 3800, olive); leftSeg(MEZ[1], front, 0, h);
     // A 450 mm honey-oak fascia band along the balcony slab edge (photo 2's dark wood band).
     const fasciaMap = honeyOakMap.clone(); fasciaMap.repeat.set(MEZ_LEN / 1200, 450 / 300);
-    box(left, [60, 450, MEZ_LEN], [XL - 30, 3800 + 225, MEZ_MID], tag(own(material('#ffffff', { map: fasciaMap, roughness: .51 })), 'wood'));
-    // Olive pilasters break the long commons run; thin dark reveals line the olive and figure walls.
-    const leftTrim = kit(); for (const z of [-1000, 3000]) leftTrim.box([300, 3800, 450], [XL + 150, 1900, z]);
+    // The balcony stands OH forward of the wall on a white edge beam (photo 2: the wood fascia and a white
+    // downstand in front of the olive wall), so the canoe wall is a bay under the overhang, not a flat plane.
+    const OH = 600, BEAM = 300, EDGE = XL + OH, fasciaWood = tag(own(material('#ffffff', { map: fasciaMap, roughness: .51 })), 'wood');
+    box(left, [60, 450, MEZ_LEN + 120], [EDGE - 30, 3800 + 225, MEZ_MID], fasciaWood);
+    for (const z of [MEZ[0] - 30, MEZ[1] + 30]) box(left, [OH - 60, 450, 60], [XL + (OH - 60) / 2, 3800 + 225, z], honeyOak);
+    // Olive piers carry the edge beam: two along the commons and one where the olive wall meets the white
+    // figure wall, standing proud of it with a return face toward the hall.
+    const leftTrim = kit(); for (const [z, wide] of [[-1000, 450], [3000, 450], [MEZ[1] - 150, 300]]) leftTrim.box([OH - 40, 3800, wide], [XL + (OH - 40) / 2, 1900, z]);
     baked(left, leftTrim, olive);
-    const reveals = kit(); for (const y of [1100, 2600]) reveals.box([6, 10, MEZ[1] - OLIVE_Z], [XL + 2, y, (OLIVE_Z + MEZ[1]) / 2]);
+    // Two short datum lines at the hall end of the olive wall (chair rail and door-head height, photo 2).
+    const reveals = kit(); for (const y of [950, 2100]) reveals.box([6, 10, 1500], [XL + 2, y, MEZ[1] - 300 - 750]);
     for (const y of [3000, 4800]) reveals.box([6, 10, front - MEZ[1]], [XL + 2, y, (MEZ[1] + front) / 2]);
     reveals.box([6, 3800, 20], [XL + 2, 1900, MEZ[1]]);
     // Veneered fascia panels: 2440 mm long, with hairline joints.
-    for (let z = MEZ[0] + 2440; z < MEZ[1]; z += 2440) reveals.box([4, 450, 4], [XL + 1, 3800 + 225, z]);
+    for (let z = MEZ[0] + 2440; z < MEZ[1]; z += 2440) reveals.box([4, 450, 4], [EDGE + 1, 3800 + 225, z]);
     baked(left, reveals, own(material('#8d8a80', { roughness: .9 })), false);
     // Mezzanine just outside the rectangle: floor slab, olive back wall, side walls and a ceiling.
-    const mez = kit(); mez.box([3000, 400, MEZ_LEN], [XL - 1500, 4000, MEZ_MID]);
+    const mez = kit(); mez.box([3000 + OH - 60, 400, MEZ_LEN], [XL - 1500 + (OH - 60) / 2, 4000, MEZ_MID]).box([250, BEAM, MEZ_LEN - 20], [EDGE - 125, 3800 - BEAM / 2, MEZ_MID]);
     baked(left, mez, whiteFlat);
-    const mezFloor = broadloomMap.clone(); mezFloor.repeat.set(3000 / BROADLOOM_MM, MEZ_LEN / BROADLOOM_MM);
-    box(left, [3000, 6, MEZ_LEN], [XL - 1500, 4203, MEZ_MID], tag(own(material('#ffffff', { map: mezFloor, roughness: .96 })), 'fabric')).castShadow = false;
+    const mezFloor = broadloomMap.clone(); mezFloor.repeat.set((3000 + OH) / BROADLOOM_MM, MEZ_LEN / BROADLOOM_MM);
+    box(left, [3000 + OH - 60, 6, MEZ_LEN], [XL - 1500 + (OH - 60) / 2, 4203, MEZ_MID], tag(own(material('#ffffff', { map: mezFloor, roughness: .96 })), 'fabric')).castShadow = false;
     box(left, [80, h - 4200, MEZ_LEN], [XL - 3040, (h + 4200) / 2, MEZ_MID], olive);
     for (const z of MEZ) box(left, [3000, h - 4200, 80], [XL - 1500, (h + 4200) / 2, z + (z < 0 ? -40 : 40)], whiteFlat);
     box(left, [3080, 80, MEZ_LEN + 160], [XL - 1540, h + 40, MEZ_MID], whiteFlat).castShadow = false;
     const guard = kit(), guardCap = kit();
-    for (let z = MEZ[0] + 50; z <= MEZ[1] - 50; z += 1500) guard.box([50, 1070, 50], [XL + 50, 4200 + 535, z]);
-    for (const y of [4250, 5200]) guard.box([10, 40, MEZ_LEN - 100], [XL + 50, y, MEZ_MID]);
-    for (let z = MEZ[0] + 100; z < MEZ[1] - 40; z += 100) guard.box([12, 950, 12], [XL + 50, 4725, z]);
-    guardCap.box([80, 50, MEZ_LEN - 60], [XL + 50, 5245, MEZ_MID]);
+    const GX = EDGE - 90;
+    for (let z = MEZ[0] + 50; z <= MEZ[1] - 50; z += 1500) guard.box([50, 1070, 50], [GX, 4200 + 535, z]);
+    for (const y of [4250, 5200]) guard.box([10, 40, MEZ_LEN - 100], [GX, y, MEZ_MID]);
+    for (let z = MEZ[0] + 100; z < MEZ[1] - 40; z += 100) guard.box([12, 950, 12], [GX, 4725, z]);
+    guardCap.box([80, 50, MEZ_LEN - 60], [GX, 5245, MEZ_MID]);
+    // The guard returns to the wall at both ends of the overhang.
+    for (const z of [MEZ[0] + 50, MEZ[1] - 50]) {
+        for (const y of [4250, 5200]) guard.box([GX - XL, 40, 10], [(GX + XL) / 2, y, z]);
+        for (let x = XL + 100; x < GX - 40; x += 100) guard.box([12, 950, 12], [x, 4725, z]);
+        guardCap.box([GX - XL + 40, 50, 80], [(GX + XL) / 2, 5245, z]);
+    }
     baked(left, guard, bronze, false); baked(left, guardCap, honeyOak, false);
     // Generic framed landscape prints and a blank placard on the olive wall, above the canoe.
     const print = (seed, Wp, Hp) => canvasMap((c, cw, ch) => {
@@ -634,15 +647,15 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // Gallery track: under the balcony fascia over the canoe, then hung from the
     // high ceiling along the figure wall. Heads aim at the canoe and figures.
     // Track heads: [x, y, z, lean]. lean > 0 aims toward +x, < 0 toward the wall.
-    const track = kit(), trackHeads = kit(), trackLensKit = kit(), TRACK_Y = 3780, HALL_TRACK_Y = 5200;
+    const track = kit(), trackHeads = kit(), trackLensKit = kit(), TRACK_Y = 3482, HALL_TRACK_Y = 5200;
     const head = (k, lk, x, y, z, lean) => {
         k.cyl(8, 8, 90, [x, y - 60, z], { seg: 6 });
         trackHeads.cyl(45, 45, 150, [x + Math.sign(lean) * 55, y - 140, z], { rot: [0, 0, lean], seg: 14 });
         lk.cyl(38, 38, 4, [x + Math.sign(lean) * 115, y - 185, z], { rot: [0, 0, lean], seg: 14 });
     };
     // Under the balcony fascia, aimed out at the canoe.
-    track.box([35, 35, 5800], [XL + 60, TRACK_Y, 8700]);
-    for (const z of CANOE_HEADS) head(track, trackLensKit, XL + 60, TRACK_Y, z, .9);
+    track.box([35, 35, 5800], [EDGE - 125, TRACK_Y, 8700]);
+    for (const z of CANOE_HEADS) head(track, trackLensKit, EDGE - 125, TRACK_Y, z, .45);
     baked(left, track, frameBlack, false); baked(left, trackHeads, frameBlack, false); baked(left, trackLensKit, trackLens, false);
     // Down the figure hall two tracks hang from the high ceiling: the gallery run
     // aimed back at the figures, and an aisle run. Hidden with the other
@@ -1117,7 +1130,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     addMerged(root, FIGURES.map(([z, along]) => [[1300, along + 900], [-3150, 3, z]]), FLOOR, '#fff0de', [.025, .025, .06, .015, .08]);
     // Event: warm uplight grazes on the olive columns and pilasters.
     addMerged(right, [12500, 18500].map(z => [[700, 2800], [HALL_XR - 506, 1300, z]]), RIGHTF, '#ffc890', [0, 0, 0, 0, .22]);
-    addMerged(left, [-1000, 3000].map(z => [[700, 2800], [XL + 306, 1300, z]]), LEFTF, '#ffc890', [0, 0, 0, 0, .22]);
+    addMerged(left, [-1000, 3000].map(z => [[700, 2800], [XL + 566, 1300, z]]), LEFTF, '#ffc890', [0, 0, 0, 0, .22]);
     pools.add(frontWall, [EXIT[0], EXIT[1] - 180, front - 4], [600, 400], '#ff4a3a', [0, 0, .02, .04, .03], 'back');
 
     // ---------- Real lights: exactly five, no shadows ----------

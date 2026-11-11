@@ -51,7 +51,7 @@ const server = http.createServer((req, res) => {
                     lightLevels.add(room.root.children.filter(o => o.isPointLight).map(o => o.intensity.toFixed(3)).join(','));
                     const wheelchair = room.assets().find(o => o.userData.propId === 'electric-wheelchair');
                     const group = l.groupStudy.phases.includes(phase);
-                    check(wheelchair.position.distanceTo(new T.Vector3(...(group ? [7600, 0, 2950] : [8500, 0, -5500]))) < 1, phase + ' mobility seat not in its bay');
+                    check(wheelchair.position.distanceTo(new T.Vector3(...(group ? [7600, 0, 2950] : [6650, 0, -6250]))) < 1, phase + ' mobility seat not in its bay');
                     if (group) {
                         check(l.modes[phase].tilt === 0 && Math.abs(l.modes[phase].height * 25.4 - 750) < 1, 'Work surface not level with peers');
                         const edge = table.position.x + l.tables[6].size[0] / 2;

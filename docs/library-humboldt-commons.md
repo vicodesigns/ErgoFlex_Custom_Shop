@@ -285,3 +285,41 @@ Results are in `scene-shots/humboldt-seating-20261024/`.
   wall scallops low, the three table task lamps on, less ambient and bounce; the
   custodian's cart and mop bucket stand behind the wet-floor sign.
 - Evening has less ambient and bounce so the frames and task lights carry the room.
+
+## Architecture pass: receded bays (11 November 2026)
+
+The owner's note: the real walls are not flat planes; "the place where the demo unit
+is, is receded, like 5 feet", and the wall behind the canoe steps too. Read from the
+three reference photos and built by evolution: the desk, the tackboard, the glass
+slot, the film cameras and every saved furniture key keep their places; the walls
+around them moved.
+
+- **The tackboard bay is set back 1.5 m.** In photo 3 the far, scalloped end of the
+  right wall and the tackboard wall do not share a plane (their wall-top and base
+  lines miss each other by about 17 % of the distance), and the olive pier between
+  them shows a side face wider than its front. So the far end of the right wall
+  (z −7000 to −4700) now stands proud at **x 7500** (`PROUD_X`), solid to the soffit,
+  with a full-height dark glazed door (z −5760 to −4750, lever by the pier) and the
+  olive pier as a 500 mm wide fin running the full 1.5 m back to the glass
+  (`FIN_Z` −4700 to −4200). The bay itself (glass slot, desk place, tackboard) stays
+  at x 9000. The glass slot is now one lite, z −4200 to −3200, with a transom at 950.
+- **The pier at the junction end of the bay** (z 3400 to 4000) is 900 deep (was 450).
+- **Moved with the wall:** the wheelchair's default park is (6650, −6250) (the old
+  spot is inside the proud wall); the spare task chair parks at (8450, −3700), in
+  front of the glass where the red armchair stands in the photos; the outer downlight
+  row steps in to x 6900 beside the proud wall; one washer scallop on the proud face;
+  the back wall's right scallop moved to x 6200. `migrateSavedTransform` pulls a saved
+  item out of the proud wall (z < −4200, x > 7150).
+- **The balcony overhangs the canoe wall by 600 mm** on a white 300 mm edge beam
+  (photo 2: the wood fascia and a white downstand stand in front of the olive wall).
+  Fascia, guard and floor moved out with it; the guard returns to the wall at both
+  ends. The olive wall's face did not move (the saved pictures hang on it).
+- **Olive piers carry the edge beam:** the two along the commons are 560 deep (were
+  300), and a new 300 mm wide pier stands where the olive wall meets the white figure
+  wall (z 11700 to 12000), proud of it, with a return face toward the hall.
+- **Two short datum lines** (950 and 2100, 1.5 m long) replace the full-length
+  reveals on the olive wall; the canoe track hangs under the edge beam.
+- **Not built, for the owner to choose:** in photo 2 the olive wall is frontal to the
+  camera while the figure wall recedes, so in the real building the figure hall
+  leaves the junction at 90° (an L-shaped plan with an outside corner at the canoe
+  wall). The build stays linear, as asked for on 15 October.
