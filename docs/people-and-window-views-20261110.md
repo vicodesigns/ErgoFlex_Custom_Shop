@@ -280,7 +280,10 @@ Three things were added for this:
   nothing the Studio saves about the furniture changes, and it is back when the child leaves or People is turned off.
 - The child room's study chair itself now faces the desk (`child-room.mjs`: the backrest was on the desk side, so the
   empty chair stood with its back to the desk; the clothes over its back moved with it in `child-lived-in-detail.mjs`).
-  Room seats face -z and people +z, so the copy is turned half a turn from the child.
+  That chair is built facing the desk as it stands (-z) and says so (`userData.seatFront = '-z'`), so its copy is
+  turned half a turn from the child; library chairs (the task chair of any other room) are built facing +z like the
+  people and their copy is not turned. While a child sits, the clothes over the chair back are not shown (they stay
+  on the room's hidden chair).
 - `around: ['<prop id>', degrees, mm]`: round a rug, a mat or a table, facing its middle, wherever the room has put it.
 - A child drawing at the desk keeps their hands on a tilted top (up to 12 degrees, in the Studio and along a film's
   desk track; the hands are where the flat top was, a few centimetres off at the far edge of a 12 degree tilt): the

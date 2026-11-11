@@ -26,6 +26,11 @@ for(const l of Object.values(CHILD_ALL_LAYOUTS)){
  assert.equal(l.desktopSize,CHILD_AGE_STAGES[l.ageStage].deskSize);const root=new THREE.Group();root.scale.setScalar(.001);const room={root,id:'childroom',roomLayout:l,walls:[],propSupports:[]};buildChildRoom(room,root,l,helpers);root.updateMatrixWorld(true);
  const get=id=>root.getObjectByProperty('name',id)||(()=>{let found;root.traverse(o=>{if(o.userData.propId===id)found=o;});return found;})();
  for(const id of ['house-bed','desk-stool'])assert(Math.abs(new THREE.Box3().setFromObject(get(id)).min.y)<.00001,id+' contacts floor');
+ {// the study chair faces the desk: its backrest (the highest part) is on the room side of the seat, and it says which way it faces
+  const stool=get('desk-stool'),inv=stool.matrixWorld.clone().invert();stool.updateWorldMatrix(true,true);inv.copy(stool.matrixWorld).invert();
+  if(l.ageStage!=='early'){let top=null;stool.traverse(o=>{if(!o.isMesh)return;const b=new THREE.Box3().setFromObject(o).applyMatrix4(inv);if(!top||b.max.y>top.max.y)top=b;});
+   assert(top.getCenter(new THREE.Vector3()).z>100,l.id+': the study chair has its back to the room, not to the desk');assert(stool.position.z>l.desk[1],l.id+': the chair is on the room side of the desk');}
+  assert.equal(stool.userData.seatFront,'-z');}
  const rack=get('story-rack'),old={p:{x:-l.width/2+260,y:0,z:l.back+l.depth-1150},q:{x:0,y:Math.SQRT1_2,z:0,w:Math.SQRT1_2},s:{x:1,y:1,z:1}};assert.equal(migrateChildRack(rack,old,l).p.x,rack.position.x);const edited=structuredClone(old);edited.p.x+=25;assert.equal(migrateChildRack(rack,edited,l),edited,'Retain a deliberately moved rack');
  const second=structuredClone(old);second.p={x:-l.width/2+700,y:0,z:l.back+l.depth-1150};second.q={x:0,y:0,z:0,w:1};assert.equal(migrateChildRack(rack,second,l).p.z,l.storage[1]);
  const placements=root.userData.childRoom.furnitureBounds;

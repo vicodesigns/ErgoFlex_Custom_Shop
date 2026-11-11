@@ -210,7 +210,7 @@ export function buildChildRoom(room,root,l,h){
  const bunny=group('cloth-rabbit','Soft linen story rabbit',[230,150,40],nook);sphere(bunny,[78,105,63],[0,100,0],linen);sphere(bunny,[65,62,57],[0,235,0],linen);for(const x of [-28,28]){sphere(bunny,[20,90,20],[x,352,0],linen);sphere(bunny,[11,67,9],[x,352,18],coral);}for(const x of [-22,22])sphere(bunny,[4,4,3],[x,245,53],ink);
  // Adjustable family workstation stool with a foot rail. The ErgoFlex itself
  // remains the real 48-inch product and retains its physical height limits.
- const seat=group('desk-stool',young?'Family workstation stool':'Adjustable study chair',[l.desk[0],0,l.desk[1]+(young?800:950)]);footprint(seat,young?225:310,young?225:330);
+ const seat=group('desk-stool',young?'Family workstation stool':'Adjustable study chair',[l.desk[0],0,l.desk[1]+(young?800:950)]);seat.userData.seatFront='-z';// built facing the desk as it stands (library chairs face +z and are turned to it)footprint(seat,young?225:310,young?225:330);
  if(young){box(seat,[420,50,400],[0,435,0],oak,18);box(seat,[395,35,375],[0,477.5,0],green,14);for(const x of [-170,170])for(const z of [-160,160])rod(seat,[x,20,z],[x*.85,415,z*.85],23,oak);for(const x of [-170,170])for(const z of [-160,160])mesh(seat,new THREE.CylinderGeometry(27,27,20,16),oak,[x,10,z]);for(const z of [-150,150])rod(seat,[-165,220,z],[165,220,z],16,oak);}
  else{
   const frame=material('#424c50',{roughness:.42,metalness:.65});mesh(seat,new THREE.CylinderGeometry(35,45,340,20),frame,[0,260,0]);

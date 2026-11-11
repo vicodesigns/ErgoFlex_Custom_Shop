@@ -56,14 +56,14 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
 {   // A school child at the desk sits on a copy of the room's own study chair, facing the desk with them; the room's chair
     // is hidden where the room put it and is never moved (nothing for the Studio to save); it is back when the child leaves.
     const layout = { id: 'houseprimary', ageStage: 'primary', play: [0, 2150], reading: [-1150, 3050], desk: [1200, -400] };
-    const { room, chair } = makeRoom('childroom', layout); chair.userData.propId = 'desk-stool'; chair.position.set(1200, 0, 550);
+    const { room, chair } = makeRoom('childroom', layout); chair.userData.propId = 'desk-stool'; chair.userData.seatFront = '-z'; chair.position.set(1200, 0, 550);   // (as child-room.mjs builds it: facing the desk)
     const people = new RoomPeople(room, library); await people.setEnabled(true);
     people.update({ mode: 'afternoon', height: 28, pose: { x: 1200, z: -400, yaw: 0 } });
     const nora = people.people.find(o => o.userData.person.id === 'people-nora-kid-sit-desk');
     assert.ok(nora?.visible, 'Nora does her homework at the desk in the afternoon');
     const seat = [...people.kidSeats.values()][0];
     assert.ok(seat && seat.source === chair && seat.copy.visible && seat.copy.parent === nora.parent, 'she has a seat of the room\'s kind under her');
-    assert.ok(Math.abs(seat.copy.position.x - nora.position.x) < 1 && Math.abs(seat.copy.position.z - nora.position.z) < 1 && Math.abs(seat.copy.rotation.y - nora.rotation.y - Math.PI) < 1e-6, 'under her, facing the way she faces (room seats face -z, people +z)');
+    assert.ok(Math.abs(seat.copy.position.x - nora.position.x) < 1 && Math.abs(seat.copy.position.z - nora.position.z) < 1 && Math.abs(seat.copy.rotation.y - nora.rotation.y - Math.PI) < 1e-6, 'under her, facing the way she faces (this seat is built facing -z, she faces +z)');
     assert.ok(!chair.visible && chair.position.x === 1200 && chair.position.z === 550 && chair.rotation.y === 0, 'the room\'s chair is hidden, not moved');
     assert.ok(!room.assets().includes(seat.copy) && seat.copy.userData.propId === undefined, 'the copy is not a piece of the room\'s furniture');
     people.update({ mode: 'evening', height: 28, pose: { x: 1200, z: -400, yaw: 0 } });
@@ -83,6 +83,13 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     assert.ok(jun?.visible && !jun.userData.personChair && film.actors.every(a => !a.chair), 'a child at the film desk brings no task chair');
     assert.ok([...film.kidSeats.values()].some(k => k.copy.visible && k.source === chair) && !chair.visible, 'and sits on a copy of the room\'s seat');
     film.dispose();
+    // any other room's desk chair is a library chair, built facing +z like the people: its copy is not turned
+    const { room: office, chair: leap } = makeRoom('office'), other = new RoomPeople(office, library); leap.position.set(0, 0, 600);
+    other.setFilter({ only: [], cast: [{ key: 'kid', id: 'people-jun-kid-sit-desk', desk: 'sit' }] }); await other.setEnabled(true);
+    other.update({ mode: 'afternoon', height: 28, pose: { x: 0, z: -400, yaw: 0 }, time: 1, now: 0 });
+    const kid = other.people.find(o => o.userData.person.id === 'people-jun-kid-sit-desk'), under = [...other.kidSeats.values()][0];
+    assert.ok(kid.visible && under?.source === leap && Math.abs(under.copy.rotation.y - kid.rotation.y) < 1e-6, 'a child at an office desk sits on that room\'s chair the right way round');
+    other.dispose();
 }
 {   // Round a rug: at that angle and distance from its middle, facing it; a room without the rug leaves the person out.
     const { room } = makeRoom('kindergarten', { id: 'apartment' }), rug = new THREE.Group(); rug.add(new THREE.Mesh(new THREE.BoxGeometry(1800, 10, 1800))); rug.position.set(-1745, 0, 3300); rug.userData.propId = 'circle-rug'; room.root.add(rug);

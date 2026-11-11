@@ -993,13 +993,14 @@ export class RoomPeople {
                 // the clothes the room hangs over the chair back by the hour stay on the room's chair: nobody sits against them
                 for (const o of [...copy.children]) if (/^lived-/.test(o.userData.propId || '') || o.userData.childLivedIn) copy.remove(o);
                 copy.traverse(o => { o.userData = {}; }); copy.name = 'The seat under ' + (spec.key || spec.id);
-                seat = { source, copy, mode: this.modeNow, y: source.position.y }; seats.set(key, seat);
+                // which way the seat faces as built: library chairs face +z, as people do; a room's own seat built facing its desk says so
+                seat = { source, copy, mode: this.modeNow, y: source.position.y, turn: source.userData.seatFront === '-z' ? Math.PI : 0 }; seats.set(key, seat);
             }
             live.add(key);
             if (seat.copy.parent !== person.parent) person.parent.add(seat.copy);
             // the room's own chair is out while its copy is under the child, however far the room has pushed it back
             if (!this.hidden.has(seat.source)) { this.hidden.set(seat.source, seat.source.visible); seat.source.visible = false; }
-            seat.copy.visible = true; seat.copy.position.set(person.position.x, seat.y, person.position.z); seat.copy.rotation.set(0, person.rotation.y + Math.PI, 0);   // (a room seat faces -z, the desk side; the child faces +z)
+            seat.copy.visible = true; seat.copy.position.set(person.position.x, seat.y, person.position.z); seat.copy.rotation.set(0, person.rotation.y + seat.turn, 0);
         }
         for (const [key, seat] of seats) if (!live.has(key)) seat.copy.visible = false;
     }
