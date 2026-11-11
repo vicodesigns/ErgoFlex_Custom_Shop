@@ -5,6 +5,7 @@
 //   --music-layout executive --music-mode party
 //   --artist-layout premium --artist-mode afternoon
 //   --office-layout spacious --office-mode afternoon
+//   --gym-layout premium --gym-mode party --gym-theme blackred
 // Starts its own static server and loads the real app, so it needs network
 // access for Three.js and the desk model, like the smoke test.
 import puppeteer from 'puppeteer';
@@ -102,6 +103,9 @@ for (const id of scenes) {
         if (opt('--gym-layout')) await page.evaluate(async layout => {
             ErgoFlex.setGymLayout(layout); await ErgoFlex.workspaceRoom.ready;
         }, opt('--gym-layout'));
+        if (opt('--gym-theme')) await page.evaluate(async theme => {
+            ErgoFlex.setGymTheme(theme); await ErgoFlex.workspaceRoom.ready;
+        }, opt('--gym-theme'));
         if (opt('--gym-mode')) await page.evaluate(mode => ErgoFlex.setGymMode(mode), opt('--gym-mode'));
     }
     if (id === 'kitchen') {

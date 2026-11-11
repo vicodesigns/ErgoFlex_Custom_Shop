@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { createChildDeskKit } from './child-room.mjs?v=child-room-20261104';
 import { surfaceSupportsFootprint } from './desk-shelf-space.mjs';
-import { activityPageMaterial } from './room-activity-print.mjs?v=environment-expert-20261014';
+import { activityPageMaterial } from './room-activity-print.mjs?v=gym-black-red-m1-20261104';
 
 const education = new Set(['kindergarten','elementary','middleschool','highschool','college','university']);
 const workOnly = new Set(['hospital','laboratory','mobileit','security','police','government', ...education]);
@@ -34,10 +34,10 @@ const titles = {
 
 // One stable scene asset, five children selected by setDayDress. Keep the
 // existing daily-kit footprint and mount, so rearrangement keys still restore.
-export function createDailyDeskKit(id, { box, mesh, rod, material, ageStage }) {
+export function createDailyDeskKit(id, { box, mesh, rod, material, accent: themed, print, ageStage }) {
     if(id==='childroom')return createChildDeskKit({box,mesh,rod,material,ageStage});
     const kit = new THREE.Group(); kit.name = 'Groove tabletop · daily materials'; kit.userData.dayKit = true;
-    const accent = accents[id] || '#52746c', cover = material(accent), paper = material('#e9dfc8'), ink = material('#354b50');
+    const accent = themed || accents[id] || '#52746c', cover = material(accent), paper = material('#e9dfc8'), ink = material('#354b50');
     const ceramic = material('#e6d6b8');
     const names = education.has(id) ? ['Lesson plan','Learning materials','Review notes','Closed teaching journal','Workshop cards'] : titles[id] || titles.home;
     for (let phase = 0; phase < 5; phase++) {
@@ -47,7 +47,7 @@ export function createDailyDeskKit(id, { box, mesh, rod, material, ageStage }) {
         box(g,[open ? 150 : 100,9,120],[0,8.5,0],paper,1);
         if (!open) box(g,[104,4,125],[0,15,0],cover,2);
         const page = mesh(g, new THREE.PlaneGeometry(open ? 149 : 100,119),
-            activityPageMaterial(id,phase,open ? null : accent),[0,open ? 13.1 : 17.1,0]);
+            activityPageMaterial(id,phase,open ? null : accent,print),[0,open ? 13.1 : 17.1,0]);
         page.rotation.x = -Math.PI/2; page.castShadow = false; page.userData.presentationOnly = true;
         if (open) rod(g,[-47,3,73],[48,3,73],2,cover);
         if (phase === 4 && ['kindergarten','elementary','creative'].includes(id)) {
@@ -65,8 +65,8 @@ export function createDailyDeskKit(id, { box, mesh, rod, material, ageStage }) {
 
 // The stock journal has an ornate fantasy cover. Keep its horizontal footprint
 // and prop ID, with a plain printed notebook suited to the current workspace.
-export function createDeskNotebook(id, { box, mesh, material }) {
-    const g = new THREE.Group(), accent = accents[id] || '#52746c';
+export function createDeskNotebook(id, { box, mesh, material, accent: themed }) {
+    const g = new THREE.Group(), accent = themed || accents[id] || '#52746c';
     g.name = 'Workspace notebook'; g.userData.propId = 'journal'; g.userData.authoredDeskNotebook = true;
     const cover = material(accent), paper = material('#e9dfc8');
     box(g,[141.6,2,230],[0,1,0],cover,2);
