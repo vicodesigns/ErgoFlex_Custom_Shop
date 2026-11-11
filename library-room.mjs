@@ -3,7 +3,7 @@ import { detailFinish } from './institutional-detail.mjs?v=material-realism-2026
 import { roomLifeBaseTransform } from './room-life.mjs?v=commons-home-comfort-20261024';
 import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=library-floorplan-20261013';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
-import { makeHumboldtLayout, buildHumboldtCommons } from './library-humboldt-commons.mjs?v=commons-home-comfort-20261024';
+import { makeHumboldtLayout, buildHumboldtCommons } from './library-humboldt-commons.mjs?v=env-shared-20261110';
 
 // Campus-library concepts, not a survey of the Humboldt pilot site.
 // Architecture and furniture coordinates are millimetres.

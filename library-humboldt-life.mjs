@@ -662,7 +662,21 @@ export function buildHumboldtLife(ctx) {
         const b = baker(), I = new THREE.Matrix4();
         for (const s of [-1, 1]) b.box(I, [300, 620, 8], [0, 305, s * 62], [-s * .2, 0, 0], sw('caution'));
         b.box(I, [300, 20, 40], [0, 615, 0], ZERO, sw('caution')).plane(I, [250, 125], [0, 380, 81], [-.2, 0, 0], tileUV('wet'));
-        bake(phaseGroups(wet, 'Wet floor')[3], b, 'Wet floor sign');
+        // The custodian's cart parked behind the sign: chassis, caddy, a lined
+        // bin hoop and a mop bucket with its wringer and handle.
+        const C = F(I, 0, 0, -820, Math.PI / 2);
+        b.box(C, [920, 40, 480], [0, 170, 0], ZERO, sw('binGrey'));
+        for (const x of [-400, 400]) for (const z of [-190, 190]) b.cyl(C, 45, 45, 30, [x, 45, z], [Math.PI / 2, 0, 0], sw('rubber')).box(C, [24, 110, 24], [x, 115, z], ZERO, sw('steel'));
+        b.box(C, [380, 880, 460], [-260, 630, 0], ZERO, sw('binGrey')).box(C, [400, 30, 480], [-260, 1085, 0], ZERO, sw('binGrey'));
+        b.box(C, [340, 6, 400], [-260, 500, 232], ZERO, sw('caution'));
+        b.cyl(C, 205, 195, 740, [190, 560, 0], ZERO, sw('packBlack'), 14).cyl(C, 215, 215, 20, [190, 935, 0], ZERO, sw('binGrey'), 14);
+        for (const [x, z, s] of [[-360, -120, 'binBlue'], [-290, -120, 'caution'], [-200, -130, 'bottleWhite']]) b.cyl(C, 32, 32, 210, [x, 1205, z], ZERO, sw(s)).box(C, [26, 50, 36], [x, 1330, z], ZERO, sw(s));
+        b.box(C, [240, 180, 200], [-240, 1190, 110], ZERO, sw('binBlue'));
+        const P = F(I, 520, 0, -420, .4);
+        b.cyl(P, 200, 165, 330, [0, 165, 0], ZERO, sw('caution'), 16).box(P, [300, 170, 150], [0, 410, -60], ZERO, sw('binGrey'));
+        b.seg(P, [60, 280, 40], [-80, 1500, -200], 26, sw('steel')).cyl(P, 70, 120, 140, [60, 260, 40], ZERO, sw('cotton'), 10);
+        for (const [x, z] of [[-170, -120], [170, -120], [-170, 120], [170, 120]]) b.cyl(P, 26, 26, 20, [x, 10, z], [Math.PI / 2, 0, 0], sw('rubber'));
+        bake(phaseGroups(wet, 'Wet floor')[3], b, 'Wet floor sign and custodian cart');
     }
 
     // Lounge side table: phone, cup and a paperback left face-down.

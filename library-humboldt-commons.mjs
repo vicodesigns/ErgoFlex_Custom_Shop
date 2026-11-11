@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { migrateHumboldtGroupFurniture } from './humboldt-furniture-migration.mjs?v=commons-home-comfort-20261024';
-import { buildHumboldtLife } from './library-humboldt-life.mjs?v=commons-group-work-20261016';
-import { addCampusLife } from './campus-lived-in.mjs?v=campus-life-20261019';
+import { buildHumboldtLife } from './library-humboldt-life.mjs?v=env-shared-20261110';
+import { addCampusLife } from './campus-lived-in.mjs?v=env-shared-20261110';
 import { humboldtStudyChairs, humboldtReadingDetails } from './humboldt-commons-detail.mjs?v=commons-home-comfort-20261024';
 
 // A sixth Library layout inspired by the ground-floor commons of Cal Poly
@@ -117,8 +117,8 @@ export function makeHumboldtLayout() {
 export const HUMBOLDT_MODES = {
     morning: { label: 'Opening / stand', description: 'Marine-layer daylight · standing study at the proposed pilot', key: '#e4ecf0', fill: '#dde6ec', accent: '#efe3d1', power: 1, ambient: .52, bounce: .58, exposure: 1.1, sky: ['#b7c4cb', '#e2e6e3'], practical: .45, wash: .35, colors: ['#fff0de', '#f6efe4'], height: 43.5, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
     afternoon: { label: 'Research / together', description: 'Roll alongside the shared research table · everyone works at the same height', key: '#f6f4ef', fill: '#e0e8ec', accent: '#eadccb', power: 1.25, ambient: .55, bounce: .62, exposure: 1.08, sky: ['#c3d0d7', '#eef0ec'], practical: .5, wash: .4, colors: ['#fff0de', '#f6efe4'], height: 29.53, tilt: 0, offset: [0, 0], yaw: 0, leds: false },
-    evening: { label: 'Dusk / reading', description: 'Warm frames and task light · an 8° reading surface', key: '#d9b597', fill: '#b9bcc4', accent: '#f0caa2', power: .24, ambient: .3, bounce: .46, exposure: 1.22, sky: ['#4a5a7e', '#d49a7a'], practical: 1.05, wash: .8, colors: ['#ffecd6', '#ece4d6'], height: 32, tilt: 8, offset: [0, 0], yaw: 0, leds: true, color: '#4f4232' },
-    night: { label: 'Closing / storage', description: '65° Storage Mode · parked at the wall, clear floor for cleaning', key: '#d6d0c6', fill: '#9eaac0', accent: '#efc79a', power: .1, ambient: .2, bounce: .3, exposure: 1.08, sky: ['#06090f', '#111824'], practical: .7, wash: .26, colors: ['#ffe9d0', '#ece4d6'], height: 43, tilt: 65, offset: [0, 0], yaw: 0, leds: false, color: '#3a3226' },
+    evening: { label: 'Dusk / reading', description: 'Warm frames and task light · an 8° reading surface', key: '#d9b597', fill: '#b9bcc4', accent: '#f0caa2', power: .24, ambient: .22, bounce: .34, exposure: 1.22, sky: ['#4a5a7e', '#d49a7a'], practical: 1.05, wash: .8, colors: ['#ffecd6', '#ece4d6'], height: 32, tilt: 8, offset: [0, 0], yaw: 0, leds: true, color: '#4f4232' },
+    night: { label: 'Closing / storage', description: '65° Storage Mode · parked at the wall, clear floor for cleaning', key: '#d6d0c6', fill: '#9eaac0', accent: '#efc79a', power: .1, ambient: .13, bounce: .18, exposure: 1.08, sky: ['#06090f', '#111824'], practical: .7, wash: .26, colors: ['#ffe9d0', '#ece4d6'], height: 43, tilt: 65, offset: [0, 0], yaw: 0, leds: false, color: '#3a3226' },
     party: { label: 'Project / together', description: 'An evening mapping workshop · bring your workstation into the group', key: '#f0d4b4', fill: '#b6bed4', accent: '#f5c58e', power: .22, ambient: .26, bounce: .5, exposure: 1.1, sky: ['#141d30', '#3e3d55'], practical: .8, wash: .95, colors: ['#ffe6c8', '#ffdcb4'], height: 29.53, tilt: 0, offset: [0, 0], yaw: 0, leds: true, color: '#5c4a2c' }
 };
 // White figures along the hall's inner wall: [z, plinth height, seated].
@@ -954,12 +954,12 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const edges = [[0, 0], [.03, 1], [.97, 1], [1, 0]];
     // Back-wall washer scallops (apex + long tail), avoiding the glass bay.
     const backScallops = [[-3300, 4800], [-1000, 4800], [7000, SOFFIT]];
-    addMerged(back, backScallops.map(([x, top]) => [[900, 640], [x, top - 520, bz + 6]]), BACKF, T3500, [.08, .07, .24, .2, .26]);
-    addMerged(back, backScallops.map(([x, top]) => [[1250, 2600], [x, top - 1500, bz + 6]]), BACKF, T3500, [.06, .05, .17, .14, .18]);
+    addMerged(back, backScallops.map(([x, top]) => [[900, 640], [x, top - 520, bz + 6]]), BACKF, T3500, [.08, .07, .24, .08, .26]);
+    addMerged(back, backScallops.map(([x, top]) => [[1250, 2600], [x, top - 1500, bz + 6]]), BACKF, T3500, [.06, .05, .17, .05, .18]);
     // Right-wall scallops phased to the desk; the desk's own scallop stays up at night.
     const rightScallops = [DESK[1] - 3600, DESK[1] + 5400, DESK[1] + 7200, DESK[1] + 9000].filter(z => z > bz + 400 && z < GLASS_Z - 400 && (z < -1000 || z > 2700));
-    addMerged(right, rightScallops.map(z => [[900, 640], [XR - 6, SOFFIT - 520, z]]), RIGHTF, T3500, [.08, .07, .24, .2, .26]);
-    addMerged(right, rightScallops.map(z => [[1250, 2100], [XR - 6, SOFFIT - 1300, z]]), RIGHTF, T3500, [.06, .05, .17, .14, .18]);
+    addMerged(right, rightScallops.map(z => [[900, 640], [XR - 6, SOFFIT - 520, z]]), RIGHTF, T3500, [.08, .07, .24, .08, .26]);
+    addMerged(right, rightScallops.map(z => [[1250, 2100], [XR - 6, SOFFIT - 1300, z]]), RIGHTF, T3500, [.06, .05, .17, .05, .18]);
     pools.add(right, [XR - 6, SOFFIT - 520, DESK[1]], [780, 600], T4000, [.05, .045, .14, .17, .13], 'right');
     pools.add(right, [XR - 6, SOFFIT - 1300, DESK[1]], [1300, 2100], T4000, [.025, .02, .07, .09, .07], 'right');
     // Tackboard: three scallops across the panel; cork is dark, so it takes more.
@@ -983,9 +983,9 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const frameFloor = circuit => frames.filter(f => f.circuit === circuit).map(f => [[f.size[0] + 1600, f.size[1] + 1600], [f.c[0], 3, f.c[1]]]);
     addMerged(root, frameFloor('A'), FLOOR, T3500, [.05, .05, .15, .13, .17]);
     addMerged(root, frameFloor('B'), FLOOR, T3500, [.05, .05, .15, 0, .17]);
-    addMerged(root, cans.filter(([, , z]) => Math.abs(z - DESK[1]) > 700 && z < GLASS_Z).map(([x, , z]) => [[2200, 2200], [x, 3, z]]), FLOOR, T3500, [.04, .04, .11, .09, .1]);
+    addMerged(root, cans.filter(([, , z]) => Math.abs(z - DESK[1]) > 700 && z < GLASS_Z).map(([x, , z]) => [[2200, 2200], [x, 3, z]]), FLOOR, T3500, [.04, .04, .11, .02, .1]);
     // Café cans sit near the hall glass, so their pools stay small enough to end at the floor edge.
-    addMerged(root, cans.filter(([, , z]) => z > GLASS_Z && z < STEP_Z).map(([x, , z]) => [[1500, 1500], [x, 3, z]]), FLOOR, T3500, [.03, .03, .09, .07, .09]);
+    addMerged(root, cans.filter(([, , z]) => z > GLASS_Z && z < STEP_Z).map(([x, , z]) => [[1500, 1500], [x, 3, z]]), FLOOR, T3500, [.03, .03, .09, .015, .09]);
     // The café reads warmer than the study zone: a 3000 K can over each table, a cooler circulation row.
     addMerged(root, cans.filter(([x, , z]) => z > STEP_Z && x > 4000).map(([x, , z]) => [[1900, 1900], [x, 3, z]]), FLOOR, T3000, [.02, .02, .11, .015, .16]);
     addMerged(root, cans.filter(([x, , z]) => z > STEP_Z && x < 4000).map(([x, , z]) => [[1500, 1500], [x, 3, z]]), FLOOR, '#fff0de', [.02, .02, .07, .02, .06]);
@@ -1000,6 +1000,60 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     addMerged(root, glassBands, FLOOR, '#e3ebf0', [.16, .20, 0, 0, 0]);
     // Blue hour: cool at the glass, warm inside.
     addMerged(root, glassBands, FLOOR, '#9fb2d4', [0, 0, .04, 0, .015]);
+    // Sun through the junction and hall curtain walls once the marine layer
+    // burns off: every pane between mullions, transoms and the sill heater is
+    // projected along the room's own key-light direction (room-refinement
+    // DAY_ANGLES, outward +x), so the patches agree with furniture shadows.
+    // A short, high, near-white patch in the afternoon; long golden bars at
+    // dusk that cross the café and climb the gallery wall behind the figures.
+    // Morning stays overcast. One floor and one wall overlay, redrawn per daypart.
+    const SUN = { afternoon: { elevation: 1.45, sweep: .12, color: '#fff2dc', level: .32 }, evening: { elevation: .32, sweep: .48, color: '#ffad66', level: .42 } };
+    const sunRuns = [{ x: XR, z0: GLASS_Z, z1: STEP_Z, top: SOFFIT }, { x: HALL_XR, z0: STEP_Z + 600, z1: SOLID_Z, top: CAFE_SOFFIT }];
+    const sunColumns = [[HALL_XR - 250, 12500, 250], [HALL_XR - 250, 18500, 250]];
+    const SUN_F = { x0: XL, x1: XR, z0: GLASS_Z - 4200, z1: SOLID_Z + 600 }, SUN_W = { z0: GLASS_Z - 4200, z1: SOLID_Z + 600, y1: 3600 };
+    const sunCanvas = (cw, ch) => { const c = document.createElement('canvas'); c.width = cw; c.height = ch; const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4; return map; };
+    const sunFloorMap = sunCanvas(768, 1024), sunWallMap = sunCanvas(1024, 256);
+    const sunFloor = pools.add(root, [(SUN_F.x0 + SUN_F.x1) / 2, 4, (SUN_F.z0 + SUN_F.z1) / 2], [SUN_F.x1 - SUN_F.x0, SUN_F.z1 - SUN_F.z0], '#ffffff', [0, SUN.afternoon.level, SUN.evening.level, 0, 0], FLOOR);
+    const sunWall = pools.add(root, [XL + 5, SUN_W.y1 / 2, (SUN_W.z0 + SUN_W.z1) / 2], [SUN_W.z1 - SUN_W.z0, SUN_W.y1], '#ffffff', [0, 0, SUN.evening.level * .8, 0, 0], LEFTF);
+    for (const [o, map] of [[sunFloor, sunFloorMap], [sunWall, sunWallMap]]) { o.material.map = map; o.material.userData.sharedTextures = false; o.name = 'Sun through the curtain wall'; }
+    let sunDrawn = null;
+    const drawSun = modeId => {
+        const sun = SUN[modeId]; if (!sun) return; sunFloor.userData.lightPool.color.set(sun.color); sunWall.userData.lightPool.color.set(sun.color);
+        if (sunDrawn === modeId) return; sunDrawn = modeId;
+        const hz = Math.hypot(1, sun.sweep), tanE = sun.elevation / hz, ca = 1 / hz, sa = sun.sweep / hz;
+        // Floor hit of a glass point, and its hit on the gallery wall (x = XL).
+        const onFloor = (x, y, z) => { const r = y / tanE; return [x - ca * r, z - sa * r]; };
+        const onWall = (x, y, z) => { const r = (x - XL) / ca; return [z - sa * r, y - r * tanE]; };
+        const fc = sunFloorMap.image.getContext('2d'), FW = fc.canvas.width, FH = fc.canvas.height;
+        const wc = sunWallMap.image.getContext('2d'), WW = wc.canvas.width, WH = wc.canvas.height;
+        const fp = ([x, z]) => [(x - SUN_F.x0) / (SUN_F.x1 - SUN_F.x0) * FW, (z - SUN_F.z0) / (SUN_F.z1 - SUN_F.z0) * FH];
+        const wp = ([z, y]) => [(SUN_W.z1 - z) / (SUN_W.z1 - SUN_W.z0) * WW, (SUN_W.y1 - y) / SUN_W.y1 * WH];
+        for (const [c, cw, chh] of [[fc, FW, FH], [wc, WW, WH]]) { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cw, chh); }
+        const quad = (c, pts) => { c.beginPath(); pts.forEach(([u, v], i) => i ? c.lineTo(u, v) : c.moveTo(u, v)); c.closePath(); c.fill(); };
+        // The building outline clips the floor (the hall glass steps in at STEP_Z).
+        fc.save(); fc.beginPath(); [[XL, SUN_F.z0], [XR, SUN_F.z0], [XR, STEP_Z], [HALL_XR, STEP_Z], [HALL_XR, SUN_F.z1], [XL, SUN_F.z1]].map(fp).forEach(([u, v], i) => i ? fc.lineTo(u, v) : fc.moveTo(u, v)); fc.closePath(); fc.clip();
+        fc.filter = `blur(${modeId === 'evening' ? 3 : 1.5}px)`; wc.filter = 'blur(2px)';
+        fc.fillStyle = wc.fillStyle = '#ffffff';
+        for (const run of sunRuns) {
+            const zs = []; for (let z = run.z0; z <= run.z1 + 1; z += 1500) zs.push(Math.min(Math.max(z, run.z0 + 25), run.z1 - 25));
+            if (zs.at(-1) < run.z1 - 30) zs.push(run.z1 - 25);
+            const ys = [[372, 878], [922, 2278], [2322, run.top - 42]];
+            for (let n = 0; n + 1 < zs.length; n++) for (const [y0, y1] of ys) {
+                const za = zs[n] + 25, zb = zs[n + 1] - 25, corners = [[run.x, y0, za], [run.x, y0, zb], [run.x, y1, zb], [run.x, y1, za]];
+                quad(fc, corners.map(p => fp(onFloor(...p))));
+                if (run.x === HALL_XR) quad(wc, corners.map(p => wp(onWall(...p))));
+            }
+        }
+        // Hall columns stand inside the glass: their shadows cut the bars.
+        for (const c of [fc, wc]) c.globalCompositeOperation = 'destination-out';
+        fc.fillStyle = wc.fillStyle = '#000';
+        for (const [x, z, r] of sunColumns) {
+            const far = 30000; quad(fc, [[x, z - r], [x, z + r], [x - ca * far, z + r - sa * far], [x - ca * far, z - r - sa * far]].map(fp));
+            const shift = sa * (x - XL) / ca; quad(wc, [[z - r - shift, -100], [z + r - shift, -100], [z + r - shift, SUN_W.y1], [z - r - shift, SUN_W.y1]].map(wp));
+        }
+        for (const c of [fc, wc]) { c.globalCompositeOperation = 'source-over'; c.filter = 'none'; }
+        fc.restore(); sunFloorMap.needsUpdate = sunWallMap.needsUpdate = true;
+    };
     // The slot column sits under the soffit with no other light reaching it.
     pools.add(root, [8450, 3, -4450], [1400, 1400], T3500, [.04, .04, .11, .09, .1]);
     pools.add(canoe, [0, HULL_Y - 470, 0], [600, 2600], T3000, [.02, .02, .08, .07, .16]);
@@ -1016,10 +1070,10 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // Levels per daypart [morning, afternoon, evening, night, party]. The back row
     // relies on frame F2's pool, so its light serves the figure hall and café instead.
     const lights = [
-        { at: [DESK[0] - 700, 2600, DESK[1]], power: 4.5, range: 3400, color: T4000, levels: [.45, .5, 1.05, .4, .8] },
-        { at: [1000, 3250, -800], power: 11.8, range: 16000, color: T3500, levels: [.35, .4, .72, .28, .6] },
-        { at: [-1400, 3400, 18500], power: 5, range: 9500, color: T3500, levels: [.3, .3, .85, .2, 1] },
-        { at: [-2600, 3600, 9800], power: 4.5, range: 8000, color: T3000, levels: [.35, .4, .85, .2, 1.15] },
+        { at: [DESK[0] - 700, 2600, DESK[1]], power: 4.5, range: 3400, color: T4000, levels: [.45, .5, 1.05, .3, .8] },
+        { at: [1000, 3250, -800], power: 11.8, range: 16000, color: T3500, levels: [.35, .4, .72, .1, .6] },
+        { at: [-1400, 3400, 18500], power: 5, range: 9500, color: T3500, levels: [.3, .3, .85, .07, 1] },
+        { at: [-2600, 3600, 9800], power: 4.5, range: 8000, color: T3000, levels: [.35, .4, .85, .06, 1.15] },
         { at: [5900, 2850, 1750], power: 5, range: 4900, color: T4000, levels: [.22, .95, .35, .08, 1.15] }
     ].map(spec => { const light = new THREE.PointLight('#ffe7cc', 0, spec.range * s, 2); light.position.set(...spec.at); light.castShadow = false; root.add(light); return { ...spec, light, power: spec.power * (s * 1000) ** 2 }; });
 
@@ -1078,9 +1132,9 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         life.apply(modeId, mode); readingDetails(modeId); frontGlass.color.set(modeId === 'evening' ? '#c8c8c8' : '#ffffff');
         campusLife.apply(modeId, accent);
         lensA.emissiveIntensity = (.06 + mode.wash * .35) * accent; lensB.emissiveIntensity = night ? .04 : lensA.emissiveIntensity;
-        canLens.emissiveIntensity = (.25 + mode.wash * 1.1) * accent * (night ? .45 : 1); trackLens.emissiveIntensity = (.2 + mode.wash * 1.3) * accent * (night ? .3 : 1);
+        canLens.emissiveIntensity = (.25 + mode.wash * 1.1) * accent * (night ? .12 : 1); trackLens.emissiveIntensity = (.2 + mode.wash * 1.3) * accent * (night ? .08 : 1);
         grazerLens.emissiveIntensity = (.15 + mode.wash * .9) * accent * (night ? .5 : 1);
-        pools.apply(modeId, accent);
+        drawSun(modeId); pools.apply(modeId, accent);
         const phase = Math.max(0, PHASE.indexOf(modeId));
         lights.forEach(spec => { spec.light.color.set(spec.color); spec.light.intensity = spec.power * spec.levels[phase] * accent; });
         // Five virtual spots from the aisle track, converted to world space (root carries the scale).

@@ -272,3 +272,16 @@ Verified 24 October: all seating and access checks passed on both widths;
 the complete closing movement reached 65° after the setup checks. Fifteen
 review views cover all five activities with no browser errors or missing props.
 Results are in `scene-shots/humboldt-seating-20261024/`.
+
+## Sun and night circuit (environment push, 10 November 2026)
+
+- Afternoon and evening sun through the junction and hall curtain walls: each pane
+  between mullions, transoms and the sill heater is projected along the room's own
+  key-light direction (`DAY_ANGLES` in `room-refinement.mjs`), with the hall
+  columns' shadows cut out. A short near-white patch in the afternoon; long golden
+  bars across the café and up the gallery wall at dusk. Morning stays overcast.
+  Two overlays (floor and gallery wall), redrawn on a daypart change.
+- Closing (night) runs on a night circuit: most downlights and track heads off,
+  wall scallops low, the three table task lamps on, less ambient and bounce; the
+  custodian's cart and mop bucket stand behind the wet-floor sign.
+- Evening has less ambient and bounce so the frames and task lights carry the room.
