@@ -151,6 +151,7 @@ function buildBar() {
     const hint = $('room-interaction-hint');
     if (hint) hint.classList.add('vb-hint');
 
+    $('send-to-director')?.setAttribute('aria-label', 'Send to Director: open the film chapter of this room');   // studio.js copies the long title into aria-label
     const panelToggle = h('button', { type: 'button', id: 'ui-panel-toggle', class: 'vb-panel-toggle', 'aria-controls': 'setup-sidebar', 'aria-expanded': 'true', text: 'Hide panel' });
     panelToggle.onclick = toggleSidebar;
     const find = h('button', { type: 'button', id: 'ui-find-open', class: 'vb-find', 'aria-haspopup': 'dialog', title: 'Find any control (Ctrl+K or /)' },
