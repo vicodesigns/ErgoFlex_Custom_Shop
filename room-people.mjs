@@ -364,18 +364,21 @@ export const ROOM_PEOPLE = {
                 spot('people-tess-kid-sit-floor', px - 50, pz - 100, [px - 600, pz - 150], { modes: ['evening'] }),   // story time on the mat (the nook itself is out of the Studio's opening view)
                 spot('people-grace-sit-floor', px - 450, pz - 380, [px - 50, pz - 100], { modes: ['evening'], colors: { top: '#7d5a6b' } }),   // the grown-up who shares the story, down on the rug with her
                 spot('people-tess-kid-play-floor', px - 320, pz - 60, [px + 250, pz + 40], { key: 'tess-plays-with-a-friend', modes: ['party'] }),
-                spot('people-ravi-kid-sit-floor', px + 480, pz + 120, [px - 150, pz], { modes: ['party'] })];
+                spot('people-ravi-kid-sit-floor', px + 480, pz + 120, [px - 150, pz], { modes: ['party'] }),
+                spot('people-zuri-kid-sit-floor', px + 80, pz + 560, [px - 100, pz], { modes: ['party'], clear: true })];   // (a third on the mat, where there is room)
             if (age === 'primary') return [
                 { id: 'people-nora-kid-stand-desk', desk: 'stand', reach: 600, modes: ['morning'] },   // on her feet at the desk, getting her things together
                 { id: 'people-nora-kid-sit-desk', desk: 'sit', chair: false, modes: ['afternoon'] },
                 spot('people-nora-kid-read-floor', rx + 700, rz - 500, [rx + 1500, rz - 1200], { modes: ['evening'] }),
                 spot('people-nora-kid-play-floor', px - 250, pz + 50, [px + 450, pz + 120], { key: 'nora-builds', modes: ['party'] }),
-                spot('people-jun-kid-sit-floor', px + 600, pz + 150, [px, pz + 80], { modes: ['party'] })];
+                spot('people-jun-kid-sit-floor', px + 600, pz + 150, [px, pz + 80], { modes: ['party'] }),
+                spot('people-lucia-kid-play-floor', px + 150, pz + 700, [px + 100, pz + 80], { modes: ['party'], clear: true })];
             if (age === 'preteen') return [
                 { id: 'people-jun-kid-stand-desk', desk: 'stand', reach: 600, modes: ['morning'] },
                 { id: 'people-jun-kid-sit-desk', desk: 'sit', chair: false, modes: ['afternoon', 'evening'] },
                 spot('people-jun-kid-sit-floor', px - 250, pz + 50, [px + 450, pz + 120], { key: 'jun-with-a-friend', modes: ['party'] }),
-                spot('people-ines-kid-sit-floor', px + 600, pz + 150, [px, pz + 80], { modes: ['party'] })];
+                spot('people-ines-kid-sit-floor', px + 600, pz + 150, [px, pz + 80], { modes: ['party'] }),
+                spot('people-kian-kid-sit-floor', px + 150, pz + 700, [px + 100, pz + 80], { modes: ['party'], clear: true })];
             // High school and college: the room's young person at the desk (an adult's chair and postures), a friend over at the party.
             const who = age === 'teen' ? 'mia' : 'noah', friend = age === 'teen' ? 'people-zoe-stand-phone' : 'people-eli-stand-drink';
             return [...crewOf(who, age === 'teen' ? ['morning', 'afternoon', 'evening', 'party'] : ['morning', 'afternoon', 'evening', 'night', 'party']),
@@ -394,7 +397,15 @@ export const ROOM_PEOPLE = {
         { id: 'people-tess-kid-stand-desk', station: 'art-easel', desk: 'stand', reach: 640, modes: ['afternoon'] },
         { id: 'people-sofia-stand-low', desk: 'stand', modes: ['afternoon', 'party'], colors: LOOK.teacherK }, ...crewOf('sofia', ['afternoon', 'evening', 'party'], { colors: LOOK.teacherK }),
         { id: 'people-maya-stand-talk', around: ['circle-rug', 0, 1000], modes: ['evening'], colors: LOOK.homeParty }, { id: 'people-tess-kid-stand', around: ['circle-rug', 40, 650], modes: ['evening'] },
-        { id: 'people-grace-sit-floor', around: ['circle-rug', 170, 520], modes: ['party'], colors: { top: '#7d5a6b' } }, { id: 'people-tess-kid-read-floor', around: ['circle-rug', 250, 380], modes: ['party'] }
+        { id: 'people-grace-sit-floor', around: ['circle-rug', 170, 520], modes: ['party'], colors: { top: '#7d5a6b' } }, { id: 'people-tess-kid-read-floor', around: ['circle-rug', 250, 380], modes: ['party'] },
+        // three more in the class (Zuri, Hugo, Yuki), and two parents at the family evening
+        { id: 'people-zuri-kid-sit-floor', around: ['circle-rug', 310, 600], modes: ['morning'] }, { id: 'people-yuki-kid-sit-floor', around: ['circle-rug', 5, 600], modes: ['morning'] }, { id: 'people-hugo-kid-sit-floor', around: ['circle-rug', 48, 880], modes: ['morning'] },
+        { id: 'people-zuri-kid-sit-k', on: 'student-chair-0-1', seat: 260, turn: 180, depth: 30, modes: ['afternoon'] }, { id: 'people-hugo-kid-sit-k', on: 'student-chair-1-0', seat: 260, turn: 180, depth: 30, modes: ['afternoon'] },
+        { id: 'people-yuki-kid-kneel-craft', around: ['circle-rug', 200, 450], modes: ['afternoon'] },
+        { id: 'people-hugo-kid-stand', around: ['circle-rug', 300, 700], modes: ['evening'] }, standRound('people-kofi-stand-talk', 'circle-rug', 320, 1200, { modes: ['evening'], key: 'kofi-family' }),
+        { id: 'people-yuki-kid-stand-wait', around: ['circle-rug', 200, 800], modes: ['evening'] }, standRound('people-elena-stand-mug', 'circle-rug', 180, 1300, { modes: ['evening'], key: 'elena-family' }),
+        { id: 'people-zuri-kid-play-floor', around: ['circle-rug', 90, 450], modes: ['party'] }, { id: 'people-yuki-kid-sit-floor', around: ['circle-rug', 20, 520], modes: ['party'], key: 'yuki-shared' },
+        { id: 'people-hugo-kid-sit-k', on: 'student-chair-2-1', seat: 260, turn: 180, depth: 30, modes: ['party'], key: 'hugo-shared' }
     ],
     // Elementary school: morning reading on the meeting carpet, project time at the table pods and the science window,
     // a family evening, the teacher planning alone at night, the class on its feet at the workshop.
@@ -408,7 +419,15 @@ export const ROOM_PEOPLE = {
         { id: 'people-jun-kid-stand-desk', station: 'science-window', desk: 'stand', reach: 700, modes: ['afternoon'] },
         { id: 'people-noah-stand-talk', around: ['meeting-carpet', 10, 1500], modes: ['evening'], colors: LOOK.guestE }, { id: 'people-ines-kid-stand', around: ['meeting-carpet', 30, 1100], modes: ['evening'] },
         { id: 'people-lin-stand-talk', around: ['meeting-carpet', 0, 1350], modes: ['party'], colors: LOOK.teacherE },
-        { id: 'people-jun-kid-stand', around: ['meeting-carpet', 75, 650], modes: ['party'] }, { id: 'people-theo-kid-stand', around: ['meeting-carpet', 285, 650], modes: ['party'] }, { id: 'people-lila-kid-stand-wait', around: ['meeting-carpet', 330, 800], modes: ['party'] }
+        { id: 'people-jun-kid-stand', around: ['meeting-carpet', 75, 650], modes: ['party'] }, { id: 'people-theo-kid-stand', around: ['meeting-carpet', 285, 650], modes: ['party'] }, { id: 'people-lila-kid-stand-wait', around: ['meeting-carpet', 330, 800], modes: ['party'] },
+        // three more in the class (Karim, Lucia, Kian), a parent and a grandmother at the family evening
+        { id: 'people-karim-kid-sit-floor', around: ['meeting-carpet', 180, 700], modes: ['morning'] }, { id: 'people-lucia-kid-read-floor', around: ['meeting-carpet', 272, 780], modes: ['morning'] }, { id: 'people-kian-kid-sit-floor', around: ['meeting-carpet', 140, 720], modes: ['morning'] },
+        { id: 'people-karim-kid-sit-e', on: 'student-chair-A-1', seat: 360, turn: 180, depth: 30, modes: ['afternoon'] }, { id: 'people-lucia-kid-sit-e', on: 'student-chair-B-0', seat: 360, turn: 180, depth: 30, modes: ['afternoon'] },
+        { id: 'people-kian-kid-sit-e', on: 'student-chair-C-2', seat: 360, turn: 180, depth: 30, modes: ['afternoon'] },
+        { id: 'people-lucia-kid-stand', around: ['meeting-carpet', 330, 1050], modes: ['evening'] }, standRound('people-mina-stand-talk', 'meeting-carpet', 345, 1550, { modes: ['evening'], key: 'mina-family' }),
+        { id: 'people-kian-kid-read-floor', around: ['meeting-carpet', 200, 700], modes: ['evening'] }, standRound('people-ivy-stand-wait', 'meeting-carpet', 250, 1450, { modes: ['evening'], key: 'ivy-family' }),
+        { id: 'people-karim-kid-stand', around: ['meeting-carpet', 180, 700], modes: ['party'], key: 'karim-workshop' }, { id: 'people-lucia-kid-stand-wait', around: ['meeting-carpet', 130, 820], modes: ['party'] },
+        { id: 'people-kian-kid-kneel-craft', around: ['meeting-carpet', 105, 420], modes: ['party'] }
     ],
     // ---- The living and working rooms: the desk user the room always had, and the people the furniture is there for.
     // Everyone is placed by a piece of furniture; the smallest layouts have other seats (a banquette, a bench, one armchair).

@@ -65,7 +65,7 @@ for (const [room, specs] of Object.entries(ROOM_PEOPLE)) for (const spec of LAYO
     }
     assert.ok(cast('office').every(s => !s.modes?.includes('night')) && cast('lounge').some(s => !s.desk && s.modes.includes('night')), 'the office is closed at night, the lounge has its movie night');
     assert.deepEqual(cast('product'), []);
-    const child = id => /^people-(tess|milo|lila|ravi|theo|ines|nora|jun)-kid-/.test(id), grownUp = id => !/-kid-/.test(id) && !/^people-(tess|milo|lila|ravi|theo|ines|nora|jun)-/.test(id);
+    const child = id => /^people-(tess|milo|lila|ravi|theo|ines|nora|jun|zuri|hugo|yuki|karim|lucia|kian)-kid-/.test(id), grownUp = id => !/-kid-/.test(id) && !/^people-(tess|milo|lila|ravi|theo|ines|nora|jun|zuri|hugo|yuki|karim|lucia|kian)-/.test(id);
     const early = new RoomPeople({ id: 'childroom', roomLayout: { id: 'house', ageStage: 'early', play: [0, 2150], reading: [-1150, 3050], desk: [1050, -250] } }, null).specs();
     assert.ok(early.some(s => child(s.id)) && early.every(s => child(s.id) || grownUp(s.id)), 'the toddler stage has a child, in child postures only');
     assert.ok(early.filter(s => s.modes?.includes('night')).length === 0, 'nobody is shown at night: the child is asleep');

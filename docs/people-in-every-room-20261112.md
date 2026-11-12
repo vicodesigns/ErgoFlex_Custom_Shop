@@ -85,6 +85,6 @@ Nothing in the film changes:
 
 ## Not in this change
 
-- More children (the kindergarten, the elementary classroom and the child's room draw on eight).
+- Six more children (Zuri, Hugo, Yuki, Karim, Lucia, Kian) joined later the same day: the kindergarten has 8 by day, the elementary classroom 8 to 10.
 - Poses on gym equipment (cycling, running, lifting): the larger gyms have people warming up beside it.
 - The role garments are smooth shells with painted detail; real cloth assets would need a download.
