@@ -1,29 +1,46 @@
-// Desk versions, editable (chapter 12 / hero): the order, the time and the model of each of the film's six desks.
-// Pure data code, shared by the Director (browser) and tools/experience/desk-versions-apply.mjs (the importer's pass),
-// so the live stage and the film resolve the same sub-shots.
+// Desk versions, editable (chapter 12 / hero): which desks the chapter shows, in which order, for how long and as
+// which model. Pure data code, shared by the Director (browser) and tools/experience/desk-versions-apply.mjs (the
+// importer's pass), so the live stage and the film resolve the same sub-shots.
 //
-// A version is {n, preset, name, start, end}: n is the slot's letter (A..F, always in time order), start / end its
-// sub-shot's renderRange in chapter seconds, preset the desk model and name the label on the lane and the frame badge.
-// The slots (renderRange widths and the crossfade overlaps between neighbours) belong to the time line; a desk is the
-// bundle of fields that belong to its model: preset, kind, screens (with their clip offsets), accessories, desk
-// dressing (sceneEdits that are not the shared room's), kicker light and exposure. Moving a desk to another slot moves
-// its bundle; a model that has no bundle in the film yet gets its preset's defaults (model-specific dressing reset)
-// while the slot keeps camera, light rig and the desk performance. The desk changes at the middle of each overlap.
+// A version is {n, preset, name, start, end}: n is its id, start / end its sub-shot's renderRange in chapter seconds,
+// preset the desk model and name the label on the lane and the frame badge. The list is in time order and is the whole
+// statement of the chapter: one sub-shot per entry, 1 to MAX_VERSIONS of them.
+//
+// Ids: the film's own six are 'A'..'F'. A version added in the Director gets the next id after every id the cut has
+// used ('G', 'H', … 'Z', 'AA', …; nextVersionId, shot.deskVersionsLast remembers the highest handed out), so an id is
+// never given to a second version: a duplicate has its own id, and the id of a removed version is not handed out
+// again. The id belongs to the version and travels with it when the order changes (props can be scoped to a version
+// by it).
+//
+// The time line (the seams where the desk changes and the crossfade overlap at each seam) is positional: reordering
+// moves versions between the windows, a seam drag moves one seam, adding a version splits the time of the one before
+// it and removing one gives its time to the one before it.
+//
+// What a version renders: its sub-shot in the film when its id has one (camera, light rig and desk performance are
+// the chapter's and the same in every sub-shot), else a copy of the film sub-shot of its model. A desk is the bundle
+// of fields that belong to the model: preset, kind, screens (with their clip offsets), accessories, desk dressing
+// (sceneEdits that are not the shared room's), kicker light and exposure; it is looked up by model in the film's
+// sub-shots, then in the library (film sub-shots an earlier import dropped: build-round8-director.py keeps their
+// bundles). A model with no bundle anywhere gets its preset's defaults (model-specific dressing reset).
+// The desk changes at the middle of each overlap.
 export const NAMES={artist:'Artist',occ:'OCC',architect:'Architect',hbhs:'HBHS',office:'Office',gaming:'Gaming',library:'Library',music:'Music',compact:'Compact',creative:'Creative'};
 export const labelOf=id=>NAMES[id]||(String(id||'Desk')[0].toUpperCase()+String(id||'Desk').slice(1));
 export const MIN_SHOWN=2;                       // s a desk is shown at least
+export const MAX_VERSIONS=12;                   // desks in one chapter at most
+export const DEFAULT_OVERLAP=.6;                // s of crossfade at a new seam when the chapter has none to copy
 const BUNDLE=['kind','preset','lights','sceneEdits','screens','sceneGlobals','accessories'];
 const DARK=new Set(['gaming','hbhs']),DARK_TOP={clearcoat:0,specularIntensity:0.05},EXPOSURE={gaming:.95,hbhs:.95,office:.85,occ:.85,architect:.70,artist:.65};
+const ID=/^[A-Z]{1,2}$/;
 const num=(v,lo,hi)=>Number.isFinite(Number(v))?Math.max(lo,Math.min(hi,Number(v))):null;
 const r2=x=>Math.round(x*100)/100;
 const clone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v));
 
 // shot.deskVersions as the cut keeps it: [{n,preset,name,start,end}] in time order; invalid entries drop the list.
 export function cleanDeskVersionList(value){
-  if(!Array.isArray(value)||value.length<2||value.length>12)return null;
+  if(!Array.isArray(value)||value.length<1||value.length>MAX_VERSIONS)return null;
   const out=[];
   for(const e of value){
-    if(!e||typeof e!=='object'||!/^[A-Z]$/.test(String(e.n||'')))return null;
+    if(!e||typeof e!=='object'||!ID.test(String(e.n||'')))return null;
     const preset=String(e.preset||'');if(!/^[a-z0-9-]{1,40}$/.test(preset))return null;
     const start=num(e.start,0,600),end=num(e.end,0,600);if(start===null||end===null||end<=start)return null;
     const name=String(e.name??'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,40);
@@ -33,7 +50,19 @@ export function cleanDeskVersionList(value){
   out.sort((a,b)=>a.start-b.start||a.n.localeCompare(b.n));
   return out;
 }
-export const cleanDeskVersionsField=v=>{const l=v&&cleanDeskVersionList(v.deskVersions);return l?{deskVersions:l}:{};};
+export const cleanDeskVersionsField=v=>{
+  const l=v&&cleanDeskVersionList(v.deskVersions),last=v&&ID.test(String(v.deskVersionsLast||''))?v.deskVersionsLast:null;
+  return {...(l?{deskVersions:l}:{}),...(last?{deskVersionsLast:last}:{})};
+};
+
+// Ids in order: A..Z, then AA..ZZ. The next id is the one after the highest in `used` (the film's ids, the list's, the
+// cut's deskVersionsLast and any id something still refers to), null when they have run out.
+const idIndex=id=>id.length===1?id.charCodeAt(0)-65:26+(id.charCodeAt(0)-65)*26+id.charCodeAt(1)-65;
+const idAt=k=>k<26?String.fromCharCode(65+k):String.fromCharCode(65+Math.floor((k-26)/26))+String.fromCharCode(65+(k-26)%26);
+export function nextVersionId(used){
+  let k=-1;for(const id of used||[])if(typeof id==='string'&&ID.test(id))k=Math.max(k,idIndex(id));
+  return k+1<26+26*26?idAt(k+1):null;
+}
 
 // Seams: where the desk changes (the middle of each overlap) and how wide each overlap is.
 export function seamsOf(list){
@@ -46,13 +75,14 @@ export function windowsFrom(seams,overlaps,total){
   const n=seams.length+1;
   return Array.from({length:n},(_,i)=>[i?r2(seams[i-1]-overlaps[i-1]/2):0,i<n-1?r2(seams[i]+overlaps[i]/2):r2(total)]);
 }
-// A list with the desks in slots `order` (indices into list), slot windows and letters untouched.
-const withWindows=(list,wins,fn)=>list.map((v,i)=>({...fn(v,i),n:list[i].n,start:wins[i][0],end:wins[i][1]}));
-// Drag a desk to another place in the order: the others shift along; the time slots stay where they are.
+// `desks` (id, model, name) in time order over the windows `wins`.
+const place=(desks,wins)=>desks.map((v,i)=>({n:v.n,preset:v.preset,name:v.name||'',start:wins[i][0],end:wins[i][1]}));
+// Drag a desk to another place in the order: the others shift along; the time windows stay where they are and each
+// desk keeps its id.
 export function moveVersion(list,from,to){
   if(from===to||from<0||to<0||from>=list.length||to>=list.length)return list;
   const order=list.map((_,i)=>i);order.splice(to,0,order.splice(from,1)[0]);
-  return withWindows(list,list.map(v=>[v.start,v.end]),(v,i)=>({...list[order[i]]}));
+  return place(order.map(i=>list[i]),list.map(v=>[v.start,v.end]));
 }
 // Move the seam between versions i and i+1 to `seconds`; every desk keeps at least MIN_SHOWN s; overlaps keep their width.
 export function moveSeam(list,i,seconds,total){
@@ -60,20 +90,55 @@ export function moveSeam(list,i,seconds,total){
   const lo=(i?seams[i-1]:0)+MIN_SHOWN,hi=(i<seams.length-1?seams[i+1]:total)-MIN_SHOWN;
   if(hi<lo)return list;
   const next=seams.slice();next[i]=r2(Math.max(lo,Math.min(hi,seconds)));
-  const wins=windowsFrom(next,overlaps,total);
-  return withWindows(list,wins,v=>({...v}));
+  return place(list,windowsFrom(next,overlaps,total));
 }
 // Panel fields: a desk's shown time (seam to seam) -> list.
 export const shown=(list,i)=>{const {seams}=seamsOf(list);return [i?seams[i-1]:0,i<seams.length?seams[i]:list.at(-1).end];};
 
-// The sub-shots for `versions`, from the sub-shots as the film has them now. Pure; `subs` is not changed.
-export function resolveSubshots(subs,versions){
-  const cur=subs.filter(s=>s&&typeof s.subshot==='string');
+// Whether one more desk fits: under the limit, and every desk could still show MIN_SHOWN s.
+export const canAddVersion=(list,total)=>list.length<MAX_VERSIONS&&total>=(list.length+1)*MIN_SHOWN-1e-9;
+// A copy of version `src` (model and name) with the id `id`, as the desk number `at` (1..length: after the desk
+// before it). It takes the second half of the time of the desk before it (the seam on a tenth of a second); when that
+// desk is too short to share,
+// every desk gives part of what it has above the minimum. The new seam crossfades as wide as its neighbour.
+// null when it does not fit (canAddVersion) or the id is taken.
+export function addVersion(list,src,at,id,total){
+  if(!list[src]||!Number.isInteger(at)||at<1||at>list.length||!ID.test(String(id||''))||list.some(v=>v.n===id)||!canAddVersion(list,total))return null;
+  const {seams,overlaps}=seamsOf(list),edges=[0,...seams,total],lens=edges.slice(1).map((e,i)=>e-edges[i]),give=at-1;
+  let mine;
+  if(lens[give]>=2*MIN_SHOWN){
+    // The new seam on the 0.1 s grid: whole frames at 30 fps, like the film's own seams.
+    const a=edges[give],b=edges[give+1],seam=Math.max(a+MIN_SHOWN,Math.min(b-MIN_SHOWN,Math.round((a+b)/2*10+1e-6)/10));
+    mine=b-seam;lens[give]=seam-a;
+  }
+  else{
+    const slack=lens.reduce((s,l)=>s+Math.max(0,l-MIN_SHOWN),0);mine=Math.min(MIN_SHOWN,slack);
+    for(const [i,l] of lens.entries())lens[i]=l-(slack>0?Math.max(0,l-MIN_SHOWN)*mine/slack:0);
+  }
+  lens.splice(at,0,mine);
+  const next=[];let t=0;for(const l of lens.slice(0,-1)){t+=l;next.push(r2(t));}
+  const near=[overlaps[at-1],overlaps[at-2]].find(o=>o>0)??DEFAULT_OVERLAP,ov=overlaps.slice();ov.splice(at-1,0,near);
+  const desks=list.slice();desks.splice(at,0,{n:id,preset:list[src].preset,name:list[src].name||''});
+  return place(desks,windowsFrom(next,ov,total));
+}
+// Without version i: the desk before it stays on for its time (the next one, when it was the first). null when it is
+// the only one.
+export function removeVersion(list,i,total){
+  if(list.length<2||!list[i])return null;
+  const {seams,overlaps}=seamsOf(list),k=Math.max(0,i-1);seams.splice(k,1);overlaps.splice(k,1);
+  return place(list.filter((_,j)=>j!==i),windowsFrom(seams,overlaps,total));
+}
+
+// The sub-shots for `versions`, from the sub-shots as the film has them now (and `library`: bundles of film sub-shots
+// an earlier import dropped). Pure; `subs` is not changed.
+export function resolveSubshots(subs,versions,library=[]){
+  const cur=subs.filter(s=>s&&typeof s.subshot==='string'),lib=(Array.isArray(library)?library:[]).filter(s=>s&&typeof s.preset==='string'&&Array.isArray(s.renderRange));
   const common=(cur[0]?.sceneEdits||[]).filter(e=>cur.every(s=>(s.sceneEdits||[]).some(x=>JSON.stringify(x)===JSON.stringify(e))));
   const mainScreen=cur.flatMap(s=>s.screens||[]).find(x=>x.target==='main-landscape'&&x.offset===undefined&&x.rate===undefined);
   return versions.map(v=>{
-    const slot=cur.find(s=>s.subshot===v.n)||cur[0];if(!slot)return null;
-    const donor=slot.preset===v.preset?slot:cur.find(s=>s.preset===v.preset);
+    // Its own sub-shot in the film, else (a version added in the Director) a copy of its model's.
+    const own=cur.find(s=>s.subshot===v.n),donor=own?.preset===v.preset?own:cur.find(s=>s.preset===v.preset)||lib.find(s=>s.preset===v.preset);
+    const slot=own||(donor&&cur.includes(donor)?donor:cur[0]);if(!slot)return null;
     const out=clone(slot);out.subshot=v.n;out.renderRange=[v.start,v.end];
     if(donor){
       for(const k of BUNDLE){const d=clone(donor[k]);if(d===undefined)delete out[k];else out[k]=d;}
@@ -94,12 +159,12 @@ export function resolveSubshots(subs,versions){
 }
 // The film's own shot: the subshots map and the presets in time order.
 export const resolveFilm=(film,versions)=>({...film,subshots:Object.fromEntries(versions.map(v=>[v.n,[v.start,v.end]])),presets:versions.map(v=>v.preset)});
+// What a film sub-shot leaves behind when an import drops it: its model's bundle (resolveSubshots' `library`).
+export const libraryEntry=s=>({id:s.id,subshot:s.subshot,renderRange:clone(s.renderRange),...Object.fromEntries(BUNDLE.filter(k=>s[k]!==undefined).map(k=>[k,clone(s[k])]))});
 
-// The list the Director shows: the film's own, with shot.deskVersions over it when it names the same slots.
+// The list the Director shows: the cut's own (shot.deskVersions) when it has a valid one, else the film's.
 export function effectiveVersions(base,edits){
-  const e=cleanDeskVersionList(edits);
-  if(!e||e.length!==base.length||!e.every((v,i)=>v.n===base[i].n))return base.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end}));
-  return e;
+  return cleanDeskVersionList(edits)||base.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end}));
 }
 // "Model-specific dressing" a model change resets, for the panel's hint.
 export const RESET_NOTE='Model-specific screens and dressing reset to this model’s defaults; camera and light are kept.';
