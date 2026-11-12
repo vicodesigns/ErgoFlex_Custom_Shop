@@ -186,7 +186,9 @@ export const ROOM_PEOPLE = {
         { id: 'people-sam-sit-controller', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 330, depth: -150, modes: ['evening'] },
         { id: 'people-sofia-sit-chat', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 330, depth: -150, modes: ['party'], colors: LOOK.guestC },
         L => L.id === 'house' ? [spot('people-sam-stand-drink', 480, 700, [1180, 1050], PARTY), spot('people-noah-stand-drink', 1180, 1050, [480, 700], { ...PARTY, colors: LOOK.guestA })]
-            : ring([L.width * .12, L.back + L.depth * .58], 420, ['people-sam-stand-drink', ['people-noah-stand-drink', { colors: LOOK.guestA }]], PARTY, 60),
+            : ring([L.width * .12, L.back + L.depth * .58], 420, ['people-sam-stand-drink', ['people-noah-stand-drink', { colors: LOOK.guestA }]], { ...PARTY, clear: true }, 60),
+        // (the smallest den has no sofa: in the evening he plays at the desk)
+        L => L.id !== 'apartment' ? [] : [{ key: 'sam-evening', id: 'people-sam-sit-game', desk: 'sit', modes: ['evening'] }, { key: 'sam-evening-30', id: 'people-sam-sit-game-30', desk: 'sit', modes: ['evening'] }, { key: 'sam-evening-stand', id: 'people-sam-stand-type', desk: 'stand', modes: ['evening'] }],
         // the two largest dens: a friend in the lounge chair, another at the game table
         L => tier(L) < 3 ? [] : [
             { id: 'people-leo-sit-controller', on: 'kenney-furniture-lounge-chair', seat: 420, modes: ['afternoon', 'night'], key: 'leo-chair' },
@@ -202,7 +204,7 @@ export const ROOM_PEOPLE = {
         { id: 'people-andre-stand-talk', by: 'music-vocal-mic', reach: -330, turn: 360, modes: ['party'] },
         { id: 'people-lin-sit-chat', on: 'music-piano-bench', seat: 470, turn: 180, modes: ['party'], colors: LOOK.guestB },
         L => L.id === 'house' ? [spot('people-zoe-stand-drink', 330, 2300, [1025, 1486], { ...PARTY, colors: LOOK.guestD }), spot('people-eli-stand-drink', 1450, 2250, [1025, 1486], PARTY)]
-            : ring([L.width * .1, L.back + L.depth * .72], 480, [['people-zoe-stand-drink', { colors: LOOK.guestD }], 'people-eli-stand-drink'], PARTY, 120),
+            : ring([L.width * .1, L.back + L.depth * .72], 480, [['people-zoe-stand-drink', { colors: LOOK.guestD }], 'people-eli-stand-drink'], { ...PARTY, clear: true }, 120),
         // the two largest studios: someone listening on the sofa, and in the largest a drummer waiting for the take
         L => tier(L) < 3 ? [] : [
             seated('people-zoe-sit-listen', 'kenney-furniture-lounge-sofa', 'ergoflex-coffee-table', { along: -420, modes: ['afternoon', 'evening'], key: 'zoe-sofa' }),
@@ -223,7 +225,9 @@ export const ROOM_PEOPLE = {
         L => L.id === 'premium' ? [spot('people-lin-stand-talk', -950, 1600, [-300, 1700], PARTY), spot('people-ben-stand-drink', -300, 1250, [-950, 1600], { ...PARTY, colors: LOOK.benStudio }),
             spot('people-ava-stand-drink', -550, 2250, [-950, 1600], { ...PARTY, colors: LOOK.guestB }), spot('people-omar-wheel-watch', 1950, 2550, [2600, 2550], { ...PARTY, colors: LOOK.omarStudio }),
             spot('people-sofia-stand-drink', 1450, 1250, [1950, 2550], { ...PARTY, colors: LOOK.sofia })]
-            : ring([-L.width * .08, L.back + L.depth * .55], 480, ['people-lin-stand-talk', 'people-ben-stand-drink', ['people-ava-stand-drink', { colors: LOOK.guestD }]], PARTY, 30),
+            : ring([-L.width * .08, L.back + L.depth * .55], 480, ['people-lin-stand-talk', 'people-ben-stand-drink', ['people-ava-stand-drink', { colors: LOOK.guestD }]], { ...PARTY, clear: true }, 30),
+        // (the smallest atelier has no easel: in the evening someone sorts brushes at the cabinet)
+        L => L.id !== 'apartment' ? [] : [standBy('people-jo-stand-work', 'artist-brushes-cabinet', 750, { modes: ['evening'], key: 'jo-cabinet' })],
         // the largest atelier (the film's is the one before it): someone at the worktable, a visitor on the sofa
         L => tier(L) < 4 ? [] : [
             standRound('people-priya-stand-work', 'artist-worktable', 180, 1000, { modes: ['afternoon'], key: 'priya-worktable' }),
@@ -261,9 +265,10 @@ export const ROOM_PEOPLE = {
         { id: 'people-jo-stand-low', desk: 'stand', modes: ['afternoon'] },
         ...crewOf('jo', ['morning', 'afternoon', 'evening']),
         // night: back at the bench under the strip light, the desk left as she had it
-        { key: 'jo-night-bench', id: 'people-jo-stand-work', at: [560, -790], turn: 180, modes: ['night'] },
+        L => L.id === 'house' ? [{ key: 'jo-night-bench', id: 'people-jo-stand-work', at: [560, -790], turn: 180, modes: ['night'] }]
+            : [standBy('people-jo-stand-work', 'bench-run', 750, { modes: ['night'], key: 'jo-night-bench' })],   // (the bench stands elsewhere in the other sizes)
         L => { const [x, z] = L.desk || [0, 0]; return [
-            spot('people-leo-carry-box', x + 1700, z + 1000, [x + 1700, z - 1500], { modes: ['afternoon'] }),
+            spot('people-leo-carry-box', x + 1700, z + 1000, [x + 1700, z - 1500], { modes: ['afternoon'], ...(L.id === 'house' ? {} : { clear: true }) }),
             spot('people-jo-stand-talk', x + 650, z + 750, [x + 300, z + 1900], PARTY),
             spot('people-noah-stand-mug', x - 200, z + 1750, [x + 650, z + 750], { ...PARTY, colors: LOOK.guestB }),
             spot('people-grace-cane-stand', x + 650, z + 1950, [x + 650, z + 750], { ...PARTY, colors: LOOK.graceShop }),
