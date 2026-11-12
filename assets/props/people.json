@@ -1299,6 +1299,109 @@
     "bottom": "#7b8578",
     "hair": "#473e3b"
    }
+  },
+  "zuri": {
+   "name": "Zuri",
+   "sex": "girl",
+   "age": "child",
+   "years": 4,
+   "heritage": "African",
+   "height": 104,
+   "outfit": [
+    "toigo_fisherman_sweater",
+    "female_casualsuit01",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#f3d67b",
+    "hair": "#413834"
+   }
+  },
+  "hugo": {
+   "name": "Hugo",
+   "sex": "boy",
+   "age": "child",
+   "years": 5,
+   "heritage": "European",
+   "height": 111,
+   "outfit": [
+    "male_casualsuit04",
+    "shoes06"
+   ],
+   "colors": {
+    "top": "#80ba94",
+    "hair": "#ba8051"
+   }
+  },
+  "yuki": {
+   "name": "Yuki",
+   "sex": "girl",
+   "age": "child",
+   "years": 6,
+   "heritage": "Asian",
+   "height": 115,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "toigo_wool_pants",
+    "shoes04"
+   ],
+   "colors": {
+    "bottom": "#7b88ac",
+    "top": "#e98a8a",
+    "hair": "#413b3b"
+   }
+  },
+  "karim": {
+   "name": "Karim",
+   "sex": "boy",
+   "age": "child",
+   "years": 7,
+   "heritage": "Mixed",
+   "height": 124,
+   "outfit": [
+    "namuhekam_male_polo_shirt",
+    "cortu_cargo_pants",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#687bac",
+    "bottom": "#cabda4",
+    "hair": "#473e38"
+   }
+  },
+  "lucia": {
+   "name": "Lucia",
+   "sex": "girl",
+   "age": "child",
+   "years": 8,
+   "heritage": "Mixed",
+   "height": 129,
+   "outfit": [
+    "female_casualsuit01",
+    "shoes06"
+   ],
+   "colors": {
+    "top": "#e494c2",
+    "hair": "#5a473b"
+   }
+  },
+  "kian": {
+   "name": "Kian",
+   "sex": "boy",
+   "age": "child",
+   "years": 10,
+   "heritage": "Mixed",
+   "height": 139,
+   "outfit": [
+    "male_casualsuit02",
+    "cortu_cargo_pants",
+    "shoes06"
+   ],
+   "colors": {
+    "bottom": "#858894",
+    "top": "#6cb1ba",
+    "hair": "#413b38"
+   }
   }
  },
  "poses": {
@@ -11196,6 +11299,378 @@
    "pose": "stand-mid",
    "deskHeight": 39,
    "name": "Jack: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-zuri-kid-stand-desk": {
+   "character": "zuri",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Zuri: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-zuri-kid-sit-desk": {
+   "character": "zuri",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Zuri: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-zuri-kid-sit-floor": {
+   "character": "zuri",
+   "pose": "kid-sit-floor",
+   "name": "Zuri: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-zuri-kid-read-floor": {
+   "character": "zuri",
+   "pose": "kid-read-floor",
+   "name": "Zuri: on the floor with a picture book",
+   "aids": []
+  },
+  "people-zuri-kid-play-floor": {
+   "character": "zuri",
+   "pose": "kid-play-floor",
+   "name": "Zuri: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-zuri-kid-stand": {
+   "character": "zuri",
+   "pose": "kid-stand",
+   "name": "Zuri: standing, showing something",
+   "aids": []
+  },
+  "people-zuri-kid-stand-wait": {
+   "character": "zuri",
+   "pose": "kid-stand-wait",
+   "name": "Zuri: standing by",
+   "aids": []
+  },
+  "people-zuri-kid-sit-k": {
+   "character": "zuri",
+   "pose": "kid-sit-k",
+   "name": "Zuri: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-zuri-kid-sit-e": {
+   "character": "zuri",
+   "pose": "kid-sit-e",
+   "name": "Zuri: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-zuri-kid-kneel-craft": {
+   "character": "zuri",
+   "pose": "kid-kneel-craft",
+   "name": "Zuri: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-hugo-kid-stand-desk": {
+   "character": "hugo",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Hugo: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-hugo-kid-sit-desk": {
+   "character": "hugo",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Hugo: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-hugo-kid-sit-floor": {
+   "character": "hugo",
+   "pose": "kid-sit-floor",
+   "name": "Hugo: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-hugo-kid-read-floor": {
+   "character": "hugo",
+   "pose": "kid-read-floor",
+   "name": "Hugo: on the floor with a picture book",
+   "aids": []
+  },
+  "people-hugo-kid-play-floor": {
+   "character": "hugo",
+   "pose": "kid-play-floor",
+   "name": "Hugo: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-hugo-kid-stand": {
+   "character": "hugo",
+   "pose": "kid-stand",
+   "name": "Hugo: standing, showing something",
+   "aids": []
+  },
+  "people-hugo-kid-stand-wait": {
+   "character": "hugo",
+   "pose": "kid-stand-wait",
+   "name": "Hugo: standing by",
+   "aids": []
+  },
+  "people-hugo-kid-sit-k": {
+   "character": "hugo",
+   "pose": "kid-sit-k",
+   "name": "Hugo: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-hugo-kid-sit-e": {
+   "character": "hugo",
+   "pose": "kid-sit-e",
+   "name": "Hugo: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-hugo-kid-kneel-craft": {
+   "character": "hugo",
+   "pose": "kid-kneel-craft",
+   "name": "Hugo: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-yuki-kid-stand-desk": {
+   "character": "yuki",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Yuki: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-yuki-kid-sit-desk": {
+   "character": "yuki",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Yuki: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-yuki-kid-sit-floor": {
+   "character": "yuki",
+   "pose": "kid-sit-floor",
+   "name": "Yuki: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-yuki-kid-read-floor": {
+   "character": "yuki",
+   "pose": "kid-read-floor",
+   "name": "Yuki: on the floor with a picture book",
+   "aids": []
+  },
+  "people-yuki-kid-play-floor": {
+   "character": "yuki",
+   "pose": "kid-play-floor",
+   "name": "Yuki: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-yuki-kid-stand": {
+   "character": "yuki",
+   "pose": "kid-stand",
+   "name": "Yuki: standing, showing something",
+   "aids": []
+  },
+  "people-yuki-kid-stand-wait": {
+   "character": "yuki",
+   "pose": "kid-stand-wait",
+   "name": "Yuki: standing by",
+   "aids": []
+  },
+  "people-yuki-kid-sit-k": {
+   "character": "yuki",
+   "pose": "kid-sit-k",
+   "name": "Yuki: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-yuki-kid-sit-e": {
+   "character": "yuki",
+   "pose": "kid-sit-e",
+   "name": "Yuki: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-yuki-kid-kneel-craft": {
+   "character": "yuki",
+   "pose": "kid-kneel-craft",
+   "name": "Yuki: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-karim-kid-stand-desk": {
+   "character": "karim",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Karim: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-karim-kid-sit-desk": {
+   "character": "karim",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Karim: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-karim-kid-sit-floor": {
+   "character": "karim",
+   "pose": "kid-sit-floor",
+   "name": "Karim: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-karim-kid-read-floor": {
+   "character": "karim",
+   "pose": "kid-read-floor",
+   "name": "Karim: on the floor with a picture book",
+   "aids": []
+  },
+  "people-karim-kid-play-floor": {
+   "character": "karim",
+   "pose": "kid-play-floor",
+   "name": "Karim: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-karim-kid-stand": {
+   "character": "karim",
+   "pose": "kid-stand",
+   "name": "Karim: standing, showing something",
+   "aids": []
+  },
+  "people-karim-kid-stand-wait": {
+   "character": "karim",
+   "pose": "kid-stand-wait",
+   "name": "Karim: standing by",
+   "aids": []
+  },
+  "people-karim-kid-sit-k": {
+   "character": "karim",
+   "pose": "kid-sit-k",
+   "name": "Karim: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-karim-kid-sit-e": {
+   "character": "karim",
+   "pose": "kid-sit-e",
+   "name": "Karim: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-karim-kid-kneel-craft": {
+   "character": "karim",
+   "pose": "kid-kneel-craft",
+   "name": "Karim: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-lucia-kid-stand-desk": {
+   "character": "lucia",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Lucia: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-lucia-kid-sit-desk": {
+   "character": "lucia",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Lucia: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-lucia-kid-sit-floor": {
+   "character": "lucia",
+   "pose": "kid-sit-floor",
+   "name": "Lucia: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-lucia-kid-read-floor": {
+   "character": "lucia",
+   "pose": "kid-read-floor",
+   "name": "Lucia: on the floor with a picture book",
+   "aids": []
+  },
+  "people-lucia-kid-play-floor": {
+   "character": "lucia",
+   "pose": "kid-play-floor",
+   "name": "Lucia: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-lucia-kid-stand": {
+   "character": "lucia",
+   "pose": "kid-stand",
+   "name": "Lucia: standing, showing something",
+   "aids": []
+  },
+  "people-lucia-kid-stand-wait": {
+   "character": "lucia",
+   "pose": "kid-stand-wait",
+   "name": "Lucia: standing by",
+   "aids": []
+  },
+  "people-lucia-kid-sit-k": {
+   "character": "lucia",
+   "pose": "kid-sit-k",
+   "name": "Lucia: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-lucia-kid-sit-e": {
+   "character": "lucia",
+   "pose": "kid-sit-e",
+   "name": "Lucia: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-lucia-kid-kneel-craft": {
+   "character": "lucia",
+   "pose": "kid-kneel-craft",
+   "name": "Lucia: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-kian-kid-stand-desk": {
+   "character": "kian",
+   "pose": "kid-stand-desk",
+   "deskHeight": 28,
+   "name": "Kian: drawing at the desk, standing",
+   "aids": []
+  },
+  "people-kian-kid-sit-desk": {
+   "character": "kian",
+   "pose": "kid-sit-desk",
+   "deskHeight": 28,
+   "name": "Kian: drawing at the desk, on the stool",
+   "aids": []
+  },
+  "people-kian-kid-sit-floor": {
+   "character": "kian",
+   "pose": "kid-sit-floor",
+   "name": "Kian: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-kian-kid-read-floor": {
+   "character": "kian",
+   "pose": "kid-read-floor",
+   "name": "Kian: on the floor with a picture book",
+   "aids": []
+  },
+  "people-kian-kid-play-floor": {
+   "character": "kian",
+   "pose": "kid-play-floor",
+   "name": "Kian: kneeling, building on the floor",
+   "aids": []
+  },
+  "people-kian-kid-stand": {
+   "character": "kian",
+   "pose": "kid-stand",
+   "name": "Kian: standing, showing something",
+   "aids": []
+  },
+  "people-kian-kid-stand-wait": {
+   "character": "kian",
+   "pose": "kid-stand-wait",
+   "name": "Kian: standing by",
+   "aids": []
+  },
+  "people-kian-kid-sit-k": {
+   "character": "kian",
+   "pose": "kid-sit-k",
+   "name": "Kian: drawing at a kindergarten table",
+   "aids": []
+  },
+  "people-kian-kid-sit-e": {
+   "character": "kian",
+   "pose": "kid-sit-e",
+   "name": "Kian: drawing at an elementary school table",
+   "aids": []
+  },
+  "people-kian-kid-kneel-craft": {
+   "character": "kian",
+   "pose": "kid-kneel-craft",
+   "name": "Kian: kneeling at a low craft table",
    "aids": []
   }
  }

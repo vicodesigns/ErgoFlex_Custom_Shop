@@ -21,7 +21,7 @@ argv = sys.argv[sys.argv.index('--') + 1:]
 OUT_ID, OUT_DIR = argv[0], argv[1]
 PREVIEW = argv[argv.index('--preview') + 1] if '--preview' in argv else None
 spec = cast.output(OUT_ID)
-who = cast.CHARACTERS[spec['character']]
+who = dict(cast.CHARACTERS[spec['character']], **spec.get('as', {}))       # ('as': this model's own outfit, cast.VARIANTS)
 LOOK = who.get('look', 2)       # 3: round three's materials (cast.py); the people built before it keep theirs until they are given it
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -57,6 +57,30 @@ rig = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
 meshes = [o for o in bpy.data.objects if o.type == 'MESH']
 base_name = base.name
 
+_copies = [0]
+def save_copy(image, px, tag):
+    w, h = image.size; copy = bpy.data.images.new(image.name + tag, w, h, alpha=True); copy.pixels.foreach_set(px.ravel()); _copies[0] += 1
+    path = os.path.join(OUT_DIR, 'tex', f'{OUT_ID}--{_copies[0]}-{image.name}.png'); os.makedirs(os.path.dirname(path), exist_ok=True)
+    copy.filepath_raw = path; copy.file_format = 'PNG'; copy.save(); return copy
+
+
+def eye_image(image, colour):
+    """Eyes that sit in the head instead of looking painted on: the white is shaded toward the lids and a little
+    warm (a pure white eyeball glows in a room), the iris gets its dark rim, the reddish brown iris becomes brown."""
+    w, h = image.size; px = np.empty(w * h * 4, dtype=np.float32); image.pixels.foreach_get(px); px = px.reshape(h, w, 4)
+    v, u = np.mgrid[0:h, 0:w]; u = (u + .5) / w; v = (v + .5) / h; lum = px[..., :3].mean(axis=2)
+    for cu, cv in ((.29, .29), (.71, .705)):                      # the two eyeballs of the texture (rows from the bottom)
+        near = (np.hypot(u - cu, v - cv) < .07) & (lum < .12)
+        if near.sum() > 20: cu, cv = float(u[near].mean()), float(v[near].mean())      # the pupil's middle
+        r = np.hypot(u - cu, v - cv); R = .118; ball = r < .27
+        iris = np.clip((R - r) / .012, 0, 1)[..., None]; white = (1 - iris) * ball[..., None]
+        shade = 1 - .5 * np.clip((r - R * .9) / (R * 1.5), 0, 1) ** .8           # darker away from the iris: under the lids, in the corners
+        px[..., :3] = px[..., :3] * (1 - white) + px[..., :3] * shade[..., None] * np.array([.93, .9, .87], dtype=np.float32) * white
+        rim = np.exp(-((r - R * .96) / (R * .09)) ** 2)[..., None] * ball[..., None]; px[..., :3] *= 1 - .45 * rim
+        if colour.startswith('brown'): px[..., :3] = px[..., :3] * (1 - iris) + px[..., :3] * np.array([.62, .6, .56] if colour == 'brown' else [.8, .74, .62], dtype=np.float32) * iris
+    return save_copy(image, px.reshape(-1, 4), '_eye')
+
+
 # Eye colour: the eye material's texture is swapped for the named iris.
 for o in meshes:
     if 'low-poly' in o.name and who.get('eyes'):
@@ -65,6 +89,7 @@ for o in meshes:
                 if n.type == 'TEX_IMAGE' and n.image:
                     folder = os.path.dirname(n.image.filepath_from_user()); want = os.path.join(folder, who['eyes'] + '_eye.png')
                     if os.path.exists(want): n.image = bpy.data.images.load(want)
+                    if LOOK >= 3: n.image = eye_image(n.image, who.get('eyes', ''))
 
 
 # ---- an outfit in parts (cast 'parts': {outfit: 'top' | 'bottom' | 'both'}) -------------------------------------
@@ -121,13 +146,6 @@ def texel_mean(o, image, slot):
     return px[rows, cols, :3].mean(axis=0)
 
 
-_copies = [0]
-def save_copy(image, px, tag):
-    w, h = image.size; copy = bpy.data.images.new(image.name + tag, w, h, alpha=True); copy.pixels.foreach_set(px.ravel()); _copies[0] += 1
-    path = os.path.join(OUT_DIR, 'tex', f'{OUT_ID}--{_copies[0]}-{image.name}.png'); os.makedirs(os.path.dirname(path), exist_ok=True)
-    copy.filepath_raw = path; copy.file_format = 'PNG'; copy.save(); return copy
-
-
 def dye_image(image, rgb, mean):
     """Dye a texture: the fabric takes the colour, as light or dark as it was against its average; what was white on
     a darker fabric (the light stripe of a shirt, the wear on denim) stays white. Stripes, prints and seams survive."""
@@ -143,7 +161,7 @@ def tone_image(image, rgb):
     px[:, :3] = np.clip(px[:, :3] * np.array(rgb, dtype=np.float32), 0, 1); return save_copy(image, px, '_tone')
 
 
-PRINTED = ('male_casualsuit02', 'male_casualsuit04', 'female_casualsuit01', 'female_casualsuit02')      # the same logo on every chest
+PRINTED = ('male_casualsuit02', 'male_casualsuit04', 'female_casualsuit01', 'female_casualsuit02', 'male_casualsuit06')      # the same logo on every chest (and across the back of the white T-shirt)
 
 
 def plain_chest(o, image, mean):
@@ -154,10 +172,11 @@ def plain_chest(o, image, mean):
     chest = np.zeros((h, w), dtype=bool)
     for f in o.data.polygons:
         c = world @ f.center
-        if f.material_index or not low < c.z < high or abs(c.x) > .16 * k or (turn @ f.normal).y > -.3: continue
+        if f.material_index or not low < c.z < high or abs(c.x) > .16 * k or abs((turn @ f.normal).y) < .3 or (turn @ f.normal).y > 0 and 'suit06' not in o.name: continue
         us = [uv[i].uv.x % 1 for i in f.loop_indices]; vs = [uv[i].uv.y % 1 for i in f.loop_indices]
         chest[max(0, int(min(vs) * h) - 2):int(max(vs) * h) + 3, max(0, int(min(us) * w) - 2):int(max(us) * w) + 3] = True
     rgb = px[..., :3]; cast_ = rgb / np.maximum(rgb.mean(axis=2, keepdims=True), .02); off = np.abs(cast_ - mean / max(float(mean.mean()), .02)).max(axis=2) > .28
+    if 'suit06' in o.name: rel = rgb.mean(axis=2) / max(float(mean.mean()), .02); off |= (rel < .86) | (rel > 1.3)      # (grey letters on white)
     grown = off.copy()
     for d in range(1, 5):
         for axis in (0, 1): grown |= np.roll(off, d, axis) | np.roll(off, -d, axis)
@@ -178,6 +197,42 @@ def tint_image(image, rgb):
     return save_copy(image, px, '_tint')
 
 
+def hair_image(image, rgb):
+    """Hair in a colour that still has strands: darker and lighter than the colour as the texture is, and the
+    lightest strands catch the light (black hair tinted flat is a helmet)."""
+    w, h = image.size; px = np.empty(w * h * 4, dtype=np.float32); image.pixels.foreach_get(px); px = px.reshape(-1, 4)
+    lum = px[:, :3].mean(axis=1, keepdims=True); solid = px[:, 3:4] > .5; mean = max(float(lum[solid].mean()) if solid.any() else float(lum.mean()), 1e-3)
+    spread = max(float(lum[solid].std()) if solid.any() else 0., 1e-3) / mean
+    rel = np.clip(1 + (lum / mean - 1) * min(2.2, .3 / spread), .35, 1.9)           # (every texture's strands as far apart as a detailed one's)
+    rel = 1 + (rel - 1) * np.clip((px[:, 3:4] - .5) / .4, 0, 1)                    # (a strand's soft edge carries the painter's matte, not hair)
+    c = np.array(rgb, dtype=np.float32); c = c + max(0., .085 - float(c.mean())) * .5        # (black hair is not black: about a tenth)
+    sheen = (c / max(float(c.max()), 1e-3) * .45 + .55) * (.16 + .2 * float(c.max()))
+    px[:, :3] = np.clip(c * (.25 + .75 * rel) + sheen * np.clip(rel - 1.02, 0, .9) ** 1.2, 0, 1); return save_copy(image, px, '_hair')
+
+
+def stripe_image(o, image, slot, colour, width=.022, gap=.03, upright=False):
+    """Stripes woven into a fabric (cast 'stripes': {garment: {...}}): bands of a second colour by height on the body
+    as it stands (or, upright, by the way round it), so they run level across seams whatever the garment's UV layout."""
+    w, h = image.size; px = np.empty(w * h * 4, dtype=np.float32); image.pixels.foreach_get(px); px = px.reshape(h, w, 4); uv = o.data.uv_layers.active.data
+    world = o.matrix_world; along = np.full((h, w), np.nan, dtype=np.float32)
+    def place(v): p = world @ o.data.vertices[v].co; return (math.atan2(p.x, -p.y) * .16 if abs(p.x) < .2 else p.x) if upright else p.z
+    for f in o.data.polygons:
+        if f.material_index != slot: continue
+        pts = [(uv[i].uv.x % 1 * w, uv[i].uv.y % 1 * h, place(o.data.loops[i].vertex_index)) for i in f.loop_indices]
+        for a, b, c in ((pts[0], pts[i], pts[i + 1]) for i in range(1, len(pts) - 1)):
+            x0, x1 = max(0, int(min(a[0], b[0], c[0])) - 1), min(w, int(max(a[0], b[0], c[0])) + 2); y0, y1 = max(0, int(min(a[1], b[1], c[1])) - 1), min(h, int(max(a[1], b[1], c[1])) + 2)
+            det = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])
+            if abs(det) < 1e-9 or x1 <= x0 or y1 <= y0 or (x1 - x0) * (y1 - y0) > w * h / 6: continue
+            yy, xx = np.mgrid[y0:y1, x0:x1]; xx = xx + .5; yy = yy + .5
+            la = ((b[1] - c[1]) * (xx - c[0]) + (c[0] - b[0]) * (yy - c[1])) / det; lb = ((c[1] - a[1]) * (xx - c[0]) + (a[0] - c[0]) * (yy - c[1])) / det; lc = 1 - la - lb
+            inside = (la >= -.15) & (lb >= -.15) & (lc >= -.15)                 # (a little over the edge: no bare seam between islands)
+            along[y0:y1, x0:x1][inside] = (la * a[2] + lb * b[2] + lc * c[2])[inside]
+    band = (np.nan_to_num(along, nan=-1.) % (width + gap)) < width; band &= ~np.isnan(along)
+    lum = px[..., :3].mean(axis=2, keepdims=True); mean = float(lum[~np.isnan(along)].mean()) if (~np.isnan(along)).any() else 1.
+    px[band, :3] = np.clip(np.array(colour, dtype=np.float32) * (.4 + .6 * lum[band] / max(mean, .02)), 0, 1)
+    return save_copy(image, px.reshape(-1, 4), '_stripes')
+
+
 ALPHA_CUT = ('hair', 'eyebrow', 'eyelash')
 tints = who.get('tint', {})
 for o in meshes:
@@ -186,12 +241,14 @@ for o in meshes:
         tree = m.node_tree; bsdf = next(n for n in tree.nodes if n.type == 'BSDF_PRINCIPLED')
         cut = any(k in o.name.lower() for k in ALPHA_CUT) or bool(who.get('hair')) and who['hair'] in o.name
         m['alpha'] = 'MASK' if cut else 'OPAQUE'
+        # (round three: a brow keeps more of its soft edge, or it is a drawn line)
+        if LOOK >= 3 and 'eyebrow' in o.name: m['cutoff'] = .3
         if not cut:
             for link in list(bsdf.inputs['Alpha'].links): tree.links.remove(link)
             bsdf.inputs['Alpha'].default_value = 1
         rough = .5
-        if o is base: rough = .58
-        elif 'low-poly' in o.name: rough = .12
+        if o is base: rough = .7 if LOOK >= 3 else .58
+        elif 'low-poly' in o.name: rough = .3 if LOOK >= 3 else .12
         elif 'shoes' in o.name or 'boots' in o.name or 'flats' in o.name: rough = .55
         elif cut: rough = .5
         else: rough = .82
@@ -202,18 +259,24 @@ for o in meshes:
         # A height map is not a normal map: exported as one it turns the fabric nearly black (the tucked T-shirt).
         for link in list(bsdf.inputs['Normal'].links) if LOOK >= 3 else []:
             if link.from_node.type == 'BUMP' and link.from_node.inputs['Height'].links and not link.from_node.inputs['Normal'].links: tree.links.remove(link)
+            # ... nor is an object-space normal map a tangent-space one (the messy short hair came out in grey patches)
+            elif any(n.type == 'TEX_IMAGE' and n.image and 'objnorm' in n.image.name for n in tree.nodes): tree.links.remove(link)
         slot = list(o.data.materials).index(m); key = kind + (':bottom' if slot and kind in who.get('parts', {}) else '')
         tint = tints.get(key) or (who.get('hair_tint') if who.get('hair') and who['hair'] in o.name else None)
         dye = who.get('dye', {}).get(key) or (who.get('skin_tone') if o is base else None)
-        if tint or dye or LOOK >= 3 and kind in PRINTED and not slot:
+        # (round three: the brows are the hair's colour, a shade darker; fair or grey hair over black brows is a mask)
+        if LOOK >= 3 and 'eyebrow' in o.name and (who.get('brow_tint') or who.get('hair_tint')): tint = who.get('brow_tint') or tuple(v * (.6 if max(who['hair_tint']) > .2 else 1) for v in who['hair_tint'])
+        stripes = who.get('stripes', {}).get(key)
+        if tint or dye or stripes or LOOK >= 3 and kind in PRINTED and not slot:
             for link in bsdf.inputs['Base Color'].links:
                 node = LOOK >= 3 and tree.nodes.get('diffuseTexture') or link.from_node       # (not the ambient occlusion map mixed over it)
                 while node and node.type != 'TEX_IMAGE':
                     ins = [l.from_node for i in node.inputs for l in i.links]; node = next((n for n in ins if n.type == 'TEX_IMAGE'), ins[0] if ins else None)
                 if not node or not node.image: continue
                 if LOOK >= 3 and kind in PRINTED and not slot: node.image = plain_chest(o, node.image, texel_mean(o, node.image, slot))
-                if tint: node.image = tint_image(node.image, tint)
+                if tint: node.image = (hair_image if LOOK >= 3 and tint is who.get('hair_tint') and key not in tints else tint_image)(node.image, tint)
                 elif dye: node.image = tone_image(node.image, dye) if o is base else dye_image(node.image, dye, texel_mean(o, node.image, slot))
+                if stripes: node.image = stripe_image(o, node.image, slot, **stripes)
 
 # ---- glasses as frames only (safety glasses): the faces the texture leaves clear go (cast: 'frames': [glasses, ...])
 for o in meshes:
@@ -273,6 +336,8 @@ if who.get('limbs'):
     drop = sum(rig.data.bones[b].length for b in ('thigh_l', 'calf_l')) * (1 - who['limbs'][0])
     pose = dict(pose, limbs=who['limbs'])
     if 'pelvis' not in pose: off = pose.get('pelvis_offset', (0, 0, 0)); pose['pelvis_offset'] = (off[0], off[1], off[2] - drop)
+for limb, by in getattr(cast, 'NUDGE', {}).get((spec['character'], spec['pose']), {}).items():
+    pose = dict(pose); pose[limb] = dict(pose[limb], at=tuple(a + b for a, b in zip(pose[limb]['at'], by)))
 pose_lib.apply_pose(rig, pose)
 # A hand that rests on the body is kept outside this character's clothes (worn.clear_hands): posed again, moved out.
 cleared = worn.clear_hands(rig, meshes, who, pose)
@@ -323,22 +388,35 @@ def tree_of(o):
     bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); t = BVHTree.FromBMesh(bm); bm.free(); return t
 
 
-def cull_under(o, trees, reach, through=.018, corners=False, whole=False):
+def cull_under(o, trees, reach, through=.018, corners=False, whole=False, tuck=False):
     if not trees: return
     bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); bm.normal_update()
     # Covered: a layer above lies just outside the face (within `reach`), or the face has pushed out through that
     # layer (by up to `through`). corners: a face with only a corner through the layer above goes too. whole: a face
     # goes only if all of it is covered (skin at the edge of a neckline stays, or the opening shows holes).
+    # tuck (round three, instead of corners): a corner that has come through the layer above is put back under it.
+    # Taking the whole face away for one corner left a notch at every hem (a sleeve's end, a sweater's edge); leaving
+    # it left a fleck of skin or trouser on the garment. The hands are never under cloth: they are left alone.
+    def behind(p, n, far): return any(t.ray_cast(p - n * .0005, -n, far)[0] is not None for t in trees)
     def under(p, n): return any(t.ray_cast(p + n * .0005, n, reach)[0] is not None or t.ray_cast(p - n * .0005, -n, through)[0] is not None for t in trees)
+    weights = bm.verts.layers.deform.active; hand = {g.index for g in o.vertex_groups if g.name.startswith(('hand_', 'thumb_', 'index_', 'middle_', 'ring_', 'pinky_'))}
+    def of_hand(v): return bool(tuck and weights and hand) and sum(w for g, w in v[weights].items() if g in hand) > .5
     def hidden(f):
         c = f.calc_center_median()
-        # (round three: a face that has pushed out through the layer, or has a corner through it, goes)
-        if whole and LOOK >= 3 and any(t.ray_cast(p - f.normal * .0005, -f.normal, through)[0] is not None for t in trees for p in [c] + [v.co for v in f.verts]): return True
+        if tuck and all(of_hand(v) for v in f.verts): return False
+        if whole and tuck and behind(c, f.normal, max(through, .03)): return True          # (all of it has pushed out through the layer)
         if whole: return under(c, f.normal) and all(under(v.co, f.normal) for v in f.verts)
         if any(t.ray_cast(c + f.normal * .0005, f.normal, reach)[0] is not None or t.ray_cast(c - f.normal * .0005, -f.normal, through)[0] is not None for t in trees): return True
-        return corners and any(t.ray_cast(v.co - f.normal * .0005, -f.normal, through)[0] is not None for v in f.verts for t in trees)
+        return corners and not tuck and any(t.ray_cast(v.co - f.normal * .0005, -f.normal, through)[0] is not None for v in f.verts for t in trees)
     covered = [f for f in bm.faces if hidden(f)]
-    bmesh.ops.delete(bm, geom=covered, context='FACES'); bm.transform(o.matrix_world.inverted()); bm.to_mesh(o.data); bm.free()
+    bmesh.ops.delete(bm, geom=covered, context='FACES')
+    if tuck:
+        bm.normal_update()
+        for v in bm.verts:
+            if of_hand(v) or not v.link_faces: continue
+            hits = [h for h in (t.ray_cast(v.co - v.normal * .0005, -v.normal, min(through, .02)) for t in trees) if h[0] is not None]
+            if hits: v.co = min(hits, key=lambda h: h[3])[0] - v.normal * .003
+    bm.transform(o.matrix_world.inverted()); bm.to_mesh(o.data); bm.free()
 
 
 # Heavy garments (knitwear, long skirts) come down to a budget; the silhouette survives it.
@@ -350,11 +428,12 @@ for c in cloth:
 trees = [tree_of(c) for c in cloth]
 made = len(garments.names(who))      # (garments made from the base mesh: smooth shells with cut necklines)
 # (round three: skin goes only where all of a face is covered, so a collar's edge has no notches of missing neck)
-cull_under(body, trees, .035, whole=made > 0 or LOOK >= 3)
+cull_under(body, trees, .035, whole=made > 0 or LOOK >= 3, tuck=LOOK >= 3)
 # A garment can push further out through the one over it than skin does (a trouser yoke through the back of a shirt).
 # (what is under a shell shows at every corner that pokes through it)
 # (a headscarf is laid over the clothes as they are: nothing under it needs to go)
-for i, c in enumerate(cloth[1:], 1): cull_under(c, [t for t, b in zip(trees[:i], cloth) if b.name.split('.', 1)[-1].replace('.baked', '') not in garments.OVER], .025, .045, corners=i >= 1 and made > 0 and c.name.split('.', 1)[-1].replace('.baked', '') in who['clothes'])
+# (round three: a corner of what is under a garment that pokes through it is tucked back under: the flecks of trouser along a sweater's hem)
+for i, c in enumerate(cloth[1:], 1): cull_under(c, [t for t, b in zip(trees[:i], cloth) if b.name.split('.', 1)[-1].replace('.baked', '') not in garments.OVER], .025, .045, corners=i >= 1 and made > 0 and c.name.split('.', 1)[-1].replace('.baked', '') in who['clothes'], tuck=LOOK >= 3)
 bpy.ops.object.select_all(action='DESELECT')
 for b in baked: b.select_set(True)
 bpy.context.view_layer.objects.active = baked[0]; bpy.ops.object.join(); person = bpy.context.object; person.name = OUT_ID
@@ -378,7 +457,7 @@ result = {'id': OUT_ID, 'ok': True, 'tris': len(person.data.loop_triangles),
           # glTF axes (Y up): x = x, y = z, z = -y; millimetres.
           'min': [round(float(co[:, 0].min()) * 1000, 1), round(float(co[:, 2].min()) * 1000, 1), round(float(-co[:, 1].max()) * 1000, 1)],
           'max': [round(float(co[:, 0].max()) * 1000, 1), round(float(co[:, 2].max()) * 1000, 1), round(float(-co[:, 1].min()) * 1000, 1)],
-          'alpha': {m.name: m.get('alpha', 'OPAQUE') for m in person.data.materials}, 'bones': len(rig.data.bones), 'loose': len(loose)}
+          'alpha': {m.name: m.get('alpha', 'OPAQUE') for m in person.data.materials}, 'cutoff': {m.name: m['cutoff'] for m in person.data.materials if m.get('cutoff')}, 'bones': len(rig.data.bones), 'loose': len(loose)}
 result['size'] = [round(result['max'][i] - result['min'][i], 1) for i in range(3)]
 
 os.makedirs(OUT_DIR, exist_ok=True)

@@ -45,7 +45,7 @@ def blender(o):
     line = next((l for l in r.stdout.splitlines() if l.startswith('RESULT ')), None)
     if r.returncode or not line: return o, None, 'Blender failed\n' + (r.stdout[-1500:] + r.stderr[-1500:])
     result = json.loads(line[7:]); raw = os.path.join(work, o['id'] + '.glb'); out = os.path.join(ROOT, 'assets/props', o['id'] + '.glb')
-    set_alpha(raw, result['alpha'])
+    set_alpha(raw, result['alpha'], result.get('cutoff', {}))
     r = subprocess.run([gltf_transform, 'optimize', raw, out, '--compress', 'meshopt', '--texture-compress', 'webp', '--texture-size', str(o.get('textureSize', 1024)),
                         '--simplify', 'false', '--palette', 'false', '--join', 'false'], capture_output=True, text=True)
     if r.returncode: return o, None, 'optimize failed\n' + r.stderr[-800:]
@@ -55,13 +55,13 @@ def blender(o):
     return o, result, None
 
 
-def set_alpha(path, alpha):
+def set_alpha(path, alpha, cutoff={}):
     """Rewrite the GLB's JSON chunk: hair, brows and lashes are cut-outs, everything else is opaque."""
     data = open(path, 'rb').read(); magic, version, _ = struct.unpack_from('<4sII', data, 0)
     length, kind = struct.unpack_from('<I4s', data, 12); doc = json.loads(data[20:20 + length]); rest = data[20 + length:]
     for m in doc.get('materials', []):
         mode = alpha.get(m.get('name'), 'OPAQUE'); m['alphaMode'] = mode; m.pop('alphaCutoff', None)
-        if mode == 'MASK': m['alphaCutoff'] = .4; m['doubleSided'] = True
+        if mode == 'MASK': m['alphaCutoff'] = cutoff.get(m.get('name'), .4); m['doubleSided'] = True
     body = json.dumps(doc, separators=(',', ':')).encode(); body += b' ' * (-len(body) % 4)
     out = struct.pack('<4sII', magic, version, 12 + 8 + len(body) + len(rest)) + struct.pack('<I4s', len(body), kind) + body + rest
     open(path, 'wb').write(out)
