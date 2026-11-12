@@ -35,7 +35,11 @@ const laneBox=()=>page.$eval('.desk-versions-lane',e=>{const r=e.getBoundingClie
 async function drag(from,to,steps=12){await page.mouse.move(from.x,from.y);await page.mouse.down();for(let i=1;i<=steps;i++){await page.mouse.move(from.x+(to.x-from.x)*i/steps,from.y+(to.y-from.y)*i/steps);await wait(20);}await page.mouse.up();await wait(600);}
 // Seek and wait until the stage has the desk the badge names.
 // (the switch starts up to 220 ms after the seek; `top`: the desktop finish the stage must show)
-async function at(t,label,top=null){await seek(page,t);await wait(400);await until(async()=>await settled()&&await badge()===label&&(!top||await wood()===top),`${label} at ${t} s (badge "${await badge()}", top ${await wood()})`);await wait(900);await until(settled,'the stage settles');}
+// A seek is refused while the stage is still switching desks: wait for it, and seek again if the playhead did not move.
+async function at(t,label,top=null){
+  for(let i=0;i<6;i++){await wait(500);await until(settled,'the stage settles before the seek');await seek(page,t);if(Math.abs(await playhead()-t)<.06)break;}
+  await wait(400);await until(async()=>await settled()&&await badge()===label&&(!top||await wood()===top),`${label} at ${t} s (playhead ${await playhead()} s, badge "${await badge()}", top ${await wood()})`);await wait(900);await until(settled,'the stage settles');
+}
 try{
   await openChapter(page,base,chapter);
   check((await laneText())==='A · Gaming, B · Artist, C · Office, D · HBHS, E · OCC, F · Architect','the film\'s six: '+await laneText());
@@ -65,7 +69,8 @@ try{
   check(await badge()==='Desk G · Gaming'&&await wood()===gaming,`at ${await playhead()} s the frame reads "${await badge()}" and the stage shows the gaming top (${await wood()})`);
   const said=await statusOf(page);
   check(/^Desk G · Gaming added at the end, a copy of Desk A: it shows 40\.9–48 s and Desk F · Architect now 33\.7–40\.9 s\./.test(said),'status: '+said);
-  check((await lane()).find(x=>x.n==='G')?.picked&&await page.$eval('#director-panel .inspector-subtitle',e=>e.textContent).catch(()=>'')==='G · Gaming','G is the picked desk in the lane and the tab');
+  const subtitle=await page.$eval('#director-panel [data-inspector-page="version"] .inspector-subtitle',e=>e.textContent).catch(()=>'');
+  check((await lane()).find(x=>x.n==='G')?.picked&&subtitle==='G · Gaming',`G is the picked desk in the lane (${(await lane()).filter(x=>x.picked).map(x=>x.n).join()||'none'}) and the tab ("${subtitle}")`);
   check(await page.$$eval('#director-timeline .desk-version-fade',e=>e.length)===6&&await page.$$eval('#director-timeline [data-desk-seam]',e=>e.length)===6,'six crossfades, six seams');
   await page.screenshot({path:path.join(shots,'2-seven.png')});
   // the live desk follows the lane: F is the architect, G the gamer again

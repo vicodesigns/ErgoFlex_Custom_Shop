@@ -66,7 +66,7 @@ export async function loadStorageSeed(url,fetcher=globalThis.fetch){
 
 // Director UI: the lane, the frame badge and the switching (debounced while scrubbing; one switch in flight).
 export function createDeskVersions({bridge,shot,project,selected,seek,status,escape,scrubbing,isOpen,panel=null,commit=null,endGroup=()=>{},showTab=()=>{},rerender=()=>{}}){
-  let timer=0,busy=false,want=null,lastText='',pickedN=null,lastPlayhead=0,drag=null,memo=null,said=null,tipKey='';   // said: an add / remove / reset's status line, shown again once the stage has switched desks at that playhead
+  let timer=0,busy=false,want=null,lastText='',pickedN=null,lastPlayhead=0,drag=null,memo=null,said=null,tipKey='',lastStatus='';   // said: an add / remove / reset's status line, shown again once the stage has switched desks at that playhead
   const badge=document.createElement('div');badge.className='desk-version-badge';badge.hidden=true;badge.setAttribute('role','status');badge.setAttribute('aria-live','polite');document.body.append(badge);
   // The film's six desks with the cut's edits (shot.deskVersions) on top; kept until the film data or the edits change.
   const list=()=>{
@@ -125,7 +125,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
   function write(next,text,{key=null,last=null,tab=false}={}){
     commit(()=>{shot().deskVersions=next;if(last)shot().deskVersionsLast=last;},{key});
     if(tab)showTab('version');else if(!key)rerender();
-    status(text);tipKey='';sync(lastPlayhead);
+    status(text);lastStatus=text;tipKey='';sync(lastPlayhead);
   }
   const models=()=>PRESETS.map(p=>({id:p.id,label:presetLabel(p.id),name:p.name}));
   const byN=n=>list().find(x=>x.n===n)||null;
@@ -205,7 +205,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
   function up(){
     removeEventListener('pointermove',move);const d=drag;drag=null;document.querySelector('.desk-version-drop')?.remove();
     if(!d)return;
-    if(d.kind==='seam'){endGroup();return;}
+    if(d.kind==='seam'){endGroup();if(lastStatus){rerender();status(lastStatus);}return;}      // the tab's Shown from / until follow the drag
     if(d.moved){swallow=Date.now();if(d.to!==null)reorder(d.n,d.to);}
   }
   function click(event){
