@@ -42,6 +42,7 @@
 //                                                     the posture of `then` if given; they face along the path at both ends
 //   layout: '<layout id>'                             only in that room layout;  modes: [...] only in those dayparts
 //   key: '<name>'                                     a name for this placement when one model is used twice
+//   studio: true                                      only in the Studio: left out whenever a film casts the room (its chapters stay as they were)
 // Not scene assets: the Studio's Rearrange mode and saved room edits leave them
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
@@ -318,7 +319,14 @@ export const ROOM_PEOPLE = {
             ...staffAt(L, [['colour-grade-05', 'priya', ['afternoon', 'evening']], ['animation-06', 'zoe', ['morning', 'afternoon']], ['film-edit-07', 'mia', ['afternoon', 'evening']],
                 ['sound-design-08', 'eli', ['afternoon']], ['digital-art-09', 'sofia', ['afternoon']], ['film-edit-10', 'leo', ['afternoon']], ['animation-11', 'noah', ['afternoon', 'evening']]]),
             { id: 'people-rosa-sit-laptop', on: 'ergoflex-couch', seat: 420, modes: ['afternoon'], key: 'rosa-couch' },
-            standBy('people-hale-stand-present', 'mobile-review-display', 1200, { modes: ['evening'], colors: LOOK.hale, key: 'hale-review' })]
+            standBy('people-hale-stand-present', 'mobile-review-display', 1200, { modes: ['evening'], colors: LOOK.hale, key: 'hale-review' })],
+        // every size, in the Studio only (the film's chapter takes the room's cast as it was): someone at the capture stage,
+        // and the reel showcase in the sizes that had none
+        L => [standBy('people-sam-stand-work', 'capture-stage', 1000, { modes: ['morning', 'evening'], key: 'sam-stage', studio: true }),
+            standBy('people-jo-stand-talk', 'capture-stage', 1300, { modes: ['afternoon'], key: 'jo-stage', studio: true }),
+            ...(L.id === 'house' ? [] : [...chat(L, .42, .3, [['people-mia-stand-drink', { key: 'mia-showcase' }], ['people-leo-stand-drink', { key: 'leo-showcase' }], ['people-eli-stand-drink', { key: 'eli-showcase' }]], { modes: ['party'], studio: true }, 650),
+                ...chat(L, .62, .34, [['people-ben-stand-drink', { key: 'ben-showcase' }], ['people-grace-stand-drink', { key: 'grace-showcase' }]], { modes: ['party'], studio: true }),
+                spot('people-omar-wheel-watch', -1300, L.back + L.depth * .32, [0, L.back], { clear: true, modes: ['party'], key: 'omar-showcase', studio: true })])]
     ],
     // The growing child's room: who lives in it follows the age stage of the layout (L.ageStage), and each hour its
     // own activity (child-growth-profiles.mjs labels them). The youngest stand at the desk on its lowest setting; school
@@ -911,7 +919,29 @@ export const ROOM_PEOPLE = {
         { key: 'zoe-study-night', id: 'people-zoe-sit-laptop', layout: 'humboldt', near: [-1851, 1650], face: [-1087, 1650], seat: 450, modes: ['party'] },
         { key: 'eli-study-night', id: 'people-eli-sit-listen', layout: 'humboldt', near: [-300, 1638], face: [-1087, 1638], seat: 450, modes: ['party'] },
         spot('people-noah-stand-mug', -1087, 3400, [-1087, 1500], { layout: 'humboldt', modes: ['party'], colors: LOOK.guestC }),
-        spot('people-ava-stand-drink', -2550, 1950, [-1087, 1500], { layout: 'humboldt', modes: ['party'] })
+        spot('people-ava-stand-drink', -2550, 1950, [-1087, 1500], { layout: 'humboldt', modes: ['party'] }),
+        // The rest of the hall (thirty-five metres of it): readers at the other tables and down the cafe tables, someone at the
+        // information point, people on their way through. The film's chapter names its own six, so these are the Studio's.
+        L => { if (L.id !== 'humboldt') return []; const M = 'morning', A = 'afternoon', E = 'evening', N = 'night', P = 'party';
+            const sit = (who, pose, chair, face, modes) => ({ id: `people-${who}-${pose}`, near: chair, face, seat: /sit-(read|phone|chat|coffee|mug)/.test(pose) ? 420 : 450, modes, key: `${who}-hall-${pose}-${modes[0]}` });
+            return [
+                sit('priya', 'sit-laptop', [2555, -4349], [2555, -5199], [M]), sit('sam', 'sit-write', [3437, -5974], [3437, -5199], [M]),
+                sit('maya', 'sit-coffee', [6621, 5496], [7450, 5500], [M]), sit('hale', 'sit-read', [3641, 10511], [4500, 10500], [M, A]),
+                sit('kai', 'sit-laptop', [208, -1590], [1186, -1590], [M, A, E, P]), sit('ava', 'sit-write', [1807, -1595], [1186, -1595], [M]),
+                sit('sofia', 'sit-read', [4915, 416], [4915, 1613], [M, A]),
+                standBy('people-lin-stand-present', 'humboldt-info-point', 900, { modes: [M, A], key: 'lin-information' }),
+                sit('maya', 'sit-laptop', [-1939, -170], [-1102, -170], [A, P]), sit('priya', 'sit-write', [-277, -143], [-1102, -143], [A, P]), sit('sam', 'sit-listen', [-2012, 766], [-1102, 766], [A]),
+                sit('ava', 'sit-laptop', [3131, -1404], [4285, -1404], [A]), sit('mia', 'sit-phone', [3699, 15404], [4500, 15400], [A]), sit('grace', 'sit-read', [1400, 13385], [1400, 14200], [A]),
+                { id: 'people-jo-walk', at: [2300, 8000], turn: 180, clear: true, modes: [A], key: 'jo-hall-walk' },
+                sit('maya', 'sit-read', [6646, 7803], [7450, 7800], [E]), sit('sam', 'sit-laptop', [1440, 2895], [1440, 3887], [E]), sit('priya', 'sit-read', [6095, 442], [6095, 1613], [E]),
+                sit('ava', 'sit-read', [4117, -2385], [4117, -1397], [E]), sit('sofia', 'sit-chat', [3671, 12944], [4500, 12950], [E]), sit('jo', 'sit-chat', [4890, 13615], [4500, 12950], [E]),
+                spot('people-hale-stand-phone', -2250, 8600, [-3450, 8600], { clear: true, modes: [E], colors: LOOK.hale, key: 'hale-hall-canoe' }),
+                standBy('people-jo-stand-work', 'humboldt-returns-cart', 750, { modes: [N], key: 'jo-hall-returns' }),
+                spot('people-priya-stand-phone', 2500, 6000, [2500, 9000], { clear: true, modes: [N], key: 'priya-hall-leaving' }),
+                spot('people-hale-stand-talk', 400, 3300, [-1087, 1500], { clear: true, modes: [P], colors: LOOK.hale, key: 'hale-hall-project' }),
+                spot('people-jo-stand-present', -3000, 800, [-1087, 800], { clear: true, modes: [P], key: 'jo-hall-project' }),
+                spot('people-sam-stand-mug', -1100, 4300, [-1087, 1500], { clear: true, modes: [P], key: 'sam-hall-project' })
+            ].map(s => ({ ...s, layout: 'humboldt' })); }
     ]
 };
 
@@ -960,7 +990,8 @@ export class RoomPeople {
         this.dirty = false;       // dirty: someone moved since the Studio last looked (their shadow has to follow)
         this.ray = new THREE.Raycaster();
     }
-    specs() { return [...castFor(this.room.id, this.room.roomLayout || null), ...(this.filter?.cast || []).map(spec => ({ ...spec, extra: true }))]; }
+    // (a placement marked `studio` is in the Studio's room only: a film that takes "everyone except" does not get it)
+    specs() { return [...castFor(this.room.id, this.room.roomLayout || null).filter(spec => !(spec.studio && this.filter)), ...(this.filter?.cast || []).map(spec => ({ ...spec, extra: true }))]; }
     // filter, for one use of the room (a film chapter):
     //   only: [keys], except: [keys]          who of the room's cast is shown (a key is a placement's `key`, or its id)
     //   place: { '<key>': { at: [x, z], turn, y } }   moves someone (clear of a camera path, onto a prop the film moved)
