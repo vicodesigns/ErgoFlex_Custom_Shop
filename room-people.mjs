@@ -226,9 +226,9 @@ export const ROOM_PEOPLE = {
         L => L.id === 'premium' ? [spot('people-lin-stand-talk', -950, 1600, [-300, 1700], PARTY), spot('people-ben-stand-drink', -300, 1250, [-950, 1600], { ...PARTY, colors: LOOK.benStudio }),
             spot('people-ava-stand-drink', -550, 2250, [-950, 1600], { ...PARTY, colors: LOOK.guestB }), spot('people-omar-wheel-watch', 1950, 2550, [2600, 2550], { ...PARTY, colors: LOOK.omarStudio }),
             spot('people-sofia-stand-drink', 1450, 1250, [1950, 2550], { ...PARTY, colors: LOOK.sofia })]
-            : ring([-L.width * .08, L.back + L.depth * .55], 480, ['people-lin-stand-talk', 'people-ben-stand-drink', ['people-ava-stand-drink', { colors: LOOK.guestD }]], { ...PARTY, clear: true }, 30),
-        // (the smallest atelier has no easel: in the evening someone sorts brushes at the cabinet)
-        L => L.id !== 'apartment' ? [] : [standBy('people-jo-stand-work', 'artist-brushes-cabinet', 750, { modes: ['evening'], key: 'jo-cabinet' })],
+            : ring([-L.width * .08, L.back + L.depth * .55], 480, ['people-lin-stand-talk', 'people-ben-stand-drink', ['people-ava-stand-drink', { colors: LOOK.guestD }]], PARTY, 30),
+        // (the smallest atelier has no easel: in the evening Sofia sketches sitting on the floor)
+        L => L.id !== 'apartment' ? [] : chat(L, .6, .62, [['people-sofia-sit-floor', { key: 'sofia-floor', colors: LOOK.sofia }]], { modes: ['evening'] }, 250),
         // the largest atelier (the film's is the one before it): someone at the worktable, a visitor on the sofa
         L => tier(L) < 4 ? [] : [
             standRound('people-priya-stand-work', 'artist-worktable', 180, 1000, { modes: ['afternoon'], key: 'priya-worktable' }),
@@ -346,7 +346,7 @@ export const ROOM_PEOPLE = {
             standBy('people-hale-stand-present', 'mobile-review-display', 1200, { modes: ['evening'], colors: LOOK.hale, key: 'hale-review' })],
         // every size, in the Studio only (the film's chapter takes the room's cast as it was): someone at the capture stage,
         // and the reel showcase in the sizes that had none
-        L => [standRound('people-sam-stand-work', 'capture-stage', 180, 1500, { modes: ['morning', 'evening'], key: 'sam-stage', studio: true }),
+        L => [standRound('people-sam-stand-work', 'capture-stage', 180, 2200, { modes: ['morning', 'evening'], key: 'sam-stage', studio: true }),
             standRound('people-jo-stand-talk', 'capture-stage', 140, 1700, { modes: ['afternoon'], key: 'jo-stage', studio: true }),
             ...(L.id === 'house' ? [] : [...chat(L, .42, .3, [['people-mia-stand-drink', { key: 'mia-showcase' }], ['people-leo-stand-drink', { key: 'leo-showcase' }], ['people-eli-stand-drink', { key: 'eli-showcase' }]], { modes: ['party'], studio: true }, 650),
                 ...chat(L, .62, .34, [['people-ben-stand-drink', { key: 'ben-showcase' }], ['people-grace-stand-drink', { key: 'grace-showcase' }]], { modes: ['party'], studio: true }),
