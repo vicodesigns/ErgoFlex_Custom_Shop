@@ -24,17 +24,20 @@ def race(caucasian=0., african=0., asian=0.):
 # The role characters' outfits and the postures built of each (stage 1: the desk family and the everyday ones).
 POLICE_NAVY, SECURITY_BLACK = (.055, .075, .15), (.04, .04, .045)
 SCRUBS_TEAL, SCRUBS_BLUE, SCRUBS_PLUM = (.08, .42, .44), (.13, .27, .5), (.38, .13, .32)
-POLICE_GEAR = [('belt', {'items': [('keys', 42), ('radio', 118), ('cuffs', 172), ('light', -122), ('pouch', -52)]}), ('badge', {}), ('nameplate', {}), ('shoulder_patch', {}), ('shoulder_mic', {})]
-SECURITY_GEAR = [('belt', {'items': [('radio', 118), ('pouch', -55)], 'width': .045}), ('chest_patch', {}), ('back_text', {}), ('shoulder_patch', {'color': (.85, .85, .82), 'field': (.75, .12, .1)}), ('lanyard', {'color': (.85, .7, .1)})]
-EVERYDAY = ['sit-type', 'stand-low', 'stand-type', 'stand-wait', 'stand-talk', 'stand-phone', 'stand-present', 'stand-work', 'walk', 'sit-write', 'sit-listen', 'sit-laptop', 'sit-read']
-POLICE_POSTURES = EVERYDAY
-NURSE_POSTURES = EVERYDAY
-DOCTOR_POSTURES = EVERYDAY
-LAB_POSTURES = EVERYDAY
-IT_POSTURES = EVERYDAY
-CLERK_POSTURES = EVERYDAY
+# (items_in: where the belt's things are in one posture: at ease the thumbs are hooked where the keys and a pouch hang)
+POLICE_GEAR = [('belt', {'items': [('keys', 42), ('radio', 118), ('cuffs', 172), ('light', -122), ('pouch', -52)],
+                         'items_in': {'stand-brief': [('keys', 64), ('radio', 118), ('cuffs', 172), ('light', -126), ('pouch', -68)]}}), ('badge', {}), ('nameplate', {}), ('shoulder_patch', {}),
+               ('shoulder_mic', {'not_in': ('stand-radio',)})]       # (calling in, the microphone is in the hand)
+SECURITY_GEAR = [('belt', {'items': [('radio', 118), ('pouch', -55)], 'items_in': {'stand-brief': [('radio', 118), ('pouch', -68)]}, 'width': .045}), ('chest_patch', {}), ('back_text', {}), ('shoulder_patch', {'color': (.85, .85, .82), 'field': (.75, .12, .1)}), ('lanyard', {'color': (.85, .7, .1)})]
+EVERYDAY = ['sit-type', 'stand-low', 'stand-mid', 'stand-type', 'stand-wait', 'stand-talk', 'stand-phone', 'stand-present', 'stand-work', 'walk', 'sit-write', 'sit-listen', 'sit-laptop', 'sit-read']
+POLICE_POSTURES = EVERYDAY + ['stand-brief', 'stand-radio']
+NURSE_POSTURES = EVERYDAY + ['stand-chart', 'push-cart']
+DOCTOR_POSTURES = EVERYDAY + ['stand-chart']
+LAB_POSTURES = EVERYDAY + ['stand-chart', 'sit-microscope']
+IT_POSTURES = EVERYDAY + ['push-cart']
+CLERK_POSTURES = EVERYDAY + ['stand-counter']
 STUDENT_POSTURES = EVERYDAY + ['sit-raise']
-PATIENT_POSTURES = ['sit-read', 'sit-listen', 'stand-wait', 'walk']
+PATIENT_POSTURES = ['sit-read', 'sit-listen', 'stand-wait', 'walk', 'lie-bed']
 
 CHARACTERS = {
     'maya': {
@@ -534,6 +537,78 @@ def sit_chat(k):
             'foot_l': {'at': (.14, -.44, .075), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.12, -.4, .075), 'toes': (-.2, -1, 0)}}
 
 
+# ---- the roles' own postures (any character can take them; built for the roles that list them) --------------
+def stand_brief(k):
+    """At ease at a briefing or on a post: feet apart, thumbs hooked at the belt, chest up, eyes on the room."""
+    return {'spine': (-1, -1, -1), 'neck': 0, 'head': -2, 'head_yaw': 8,
+            'hand_l': {'at': _s(k, .105, -.19, 1.035), 'fingers': (-.45, .1, -1), 'palm': (.1, 1, .15), 'elbow': (.45, .2, .0), 'curl': .45, 'thumb': .5, 'clear': .034},
+            'hand_r': {'at': _s(k, -.105, -.19, 1.035), 'fingers': (.45, .1, -1), 'palm': (-.1, 1, .15), 'elbow': (-.45, .2, .0), 'curl': .45, 'thumb': .5, 'clear': .034},
+            'foot_l': {'at': _s(k, .15, .0, .07 / k), 'toes': (.3, -1, 0)}, 'foot_r': {'at': _s(k, -.15, .0, .07 / k), 'toes': (-.3, -1, 0)}}
+
+
+def stand_radio(k):
+    """Calling in: the left hand holds the radio upright at the collarbone, the head turned and tipped toward it."""
+    return {'pelvis_offset': (-.01, 0, -.004), 'pelvis_roll': 1.5, 'spine': (0, 1, 1), 'spine_twist': 4, 'neck': 6, 'head': 8, 'head_yaw': 30, 'head_roll': 9,
+            'hand_l': {'at': _s(k, .235, -.19, 1.335), 'fingers': (-1, .15, .22), 'palm': (-.1, 1, -.1), 'elbow': (.35, .15, -.45), 'curl': .6, 'thumb': .3, 'clear': .055},
+            'hand_r': _hang(k, 'r', -.02), **_feet(k)}
+
+
+def stand_chart(k):
+    """Reading a chart: a clipboard on the left hand at chest height, the right hand writing on it, eyes down."""
+    return {'spine': (1, 2, 3), 'neck': 12, 'head': 14, 'head_yaw': 3,
+            'hand_l': {'at': _s(k, .13, -.25, 1.1), 'fingers': (-.8, -.55, .2), 'palm': (.05, .45, .9), 'elbow': (.3, .25, -.35), 'curl': .2, 'thumb': .1},
+            'hand_r': {'at': _s(k, -.13, -.27, 1.2), 'fingers': (.6, -.6, -.45), 'palm': (.5, .2, -.8), 'elbow': (-.3, .2, -.3), 'curl': .7, 'thumb': .55},
+            **_feet(k)}
+
+
+CART_HANDLE = .95    # a ward or equipment cart's push handle (m); it is 0.48 m in front of the pelvis
+
+
+def push_cart(k):
+    """Pushing a cart: both hands on its handle, leaning into it a little, mid-step."""
+    def hand(s): return {'at': (s * .2 * k, -.4 * k, CART_HANDLE + .053), 'fingers': (-s * .1, -1, -.35), 'palm': (0, -.3, -1), 'elbow': (s * .25, .35, -.2), 'curl': .8, 'thumb': .55}
+    return {'pelvis_offset': (0, 0, -.02 * k), 'pelvis_pitch': 4, 'spine': (4, 4, 2), 'neck': -2, 'head': -4, 'hand_l': hand(1), 'hand_r': hand(-1),
+            'foot_l': {'at': _s(k, .09, -.16, .08 / k), 'toes': (.08, -1, 0), 'pitch': -6, 'knee': (.03, -.6, .1)},
+            'foot_r': {'at': _s(k, -.09, .2, .11 / k), 'toes': (-.08, -1, 0), 'pitch': 26, 'knee': (-.03, -.7, -.1)}}
+
+
+# The hospital's care bed (institutional-healthcare.mjs buildBed): the linen top is 663 mm up; the back section is
+# hinged 250 mm toward the head from the bed's middle and raised .33 rad (19 degrees); a pillow lies on it, 105 mm thick.
+BED, BED_HINGE = .663, .08     # the mattress top (m); how far behind the pelvis (toward the head) the hinge is
+
+
+def lie_bed(k):
+    """In the hospital bed, on the back: the trunk on the raised back section, head and shoulders on the pillow
+    (about 25 degrees up), arms at the sides on the mattress, legs out long, heels on the folded blanket."""
+    def hand(s): return {'at': (s * .27 * k, -.2 * k, BED + .032), 'fingers': (s * .08, -1, -.04), 'palm': (0, 0, -1), 'elbow': (s * .3, .3, .12), 'curl': .3, 'thumb': .2, 'spread': .2}
+    def foot(s): return {'at': (s * .075 * k, -.8 * k, BED + .046 + .058), 'toes': (s * .18, -1, 0), 'pitch': -8, 'knee': (s * .03, 0, 1)}
+    return {'pelvis': (0, 0, BED + .112), 'pelvis_pitch': -68, 'spine': (2, 1, 0), 'neck': 14, 'head': 10, 'head_yaw': -4,
+            'hand_l': hand(1), 'hand_r': hand(-1), 'foot_l': foot(1), 'foot_r': foot(-1)}
+
+
+STOOL, EYEPIECE = .65, 1.2     # a laboratory stool's seat and a bench microscope's eyepieces (m)
+
+
+def sit_microscope(k):
+    """On a lab stool, leaning in to a microscope: eyes at the eyepieces (1.2 m up, 0.40 to 0.44 m in front of the
+    pelvis, looking down into them at 45 degrees), both hands at its focus knobs (0.97 m up, 0.55 m in front), feet on
+    the stool's ring (0.25 m up)."""
+    def hand(s): return {'at': (s * .13, -.47, EYEPIECE - .23), 'fingers': (-s * .25, -1, -.15), 'palm': (-s, .05, -.25), 'elbow': (s * .3, .25, -.3), 'curl': .5, 'thumb': .3}
+    return {'pelvis': (0, .0, STOOL + .09), 'pelvis_pitch': 10, 'spine': (8, 9, 8), 'neck': 10, 'head': 6,
+            'hand_l': hand(1), 'hand_r': hand(-1),
+            'foot_l': {'at': (.11, -.14, .32), 'toes': (.2, -1, 0), 'pitch': 12}, 'foot_r': {'at': (-.11, -.1, .32), 'toes': (-.2, -1, 0), 'pitch': 12}}
+
+
+COUNTER = 1.05       # a service counter's top (m); its near edge is 0.27 m in front of the pelvis
+
+
+def stand_counter(k):
+    """Serving at a counter: standing square to it, both hands resting on the top, head up to the person across."""
+    def hand(s): return {'at': (s * .2 * k, -.36, COUNTER + .028), 'fingers': (-s * .3, -1, -.06), 'palm': (0, 0, -1), 'elbow': (s * .3, .3, -.25), 'curl': .25, 'thumb': .15, 'spread': .3}
+    return {'spine': (3, 3, 2), 'neck': -2, 'head': -4, 'head_yaw': -3, 'hand_l': hand(1), 'hand_r': hand(-1),
+            'foot_l': {'at': (.12, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.12, .04, .07), 'toes': (-.3, -1, 0)}}
+
+
 WHEEL_SEAT = .5      # manual wheelchair seat
 
 
@@ -662,7 +737,9 @@ DESK_POSES = {'sit-type': sit_type, 'stand-type': stand_type, 'wheel-type': whee
               'kid-stand-desk': kid_stand_desk,
               # A school-age child on the room's stool or study chair (seat 495 mm) at the desk on its lowest setting.
               'kid-sit-desk': lambda inches=28: kid_sit_stool(.495, keys_at(inches) + .012),
-              'stand-low': lambda inches=35.5: dict(stand_type(inches, .3), pelvis_pitch=9, spine=(4, 5, 4), neck=10, head=8)}
+              'stand-low': lambda inches=35.5: dict(stand_type(inches, .3), pelvis_pitch=9, spine=(4, 5, 4), neck=10, head=8),
+              # Standing at a desk set a hand below full standing height (38 to 40 in): the stations that stand there.
+              'stand-mid': lambda inches=39: dict(stand_type(inches, .31), pelvis_pitch=3, spine=(3, 4, 3), neck=8, head=6)}
 KEYS_WHEEL = .759    # keyboard top with the desk at 31 in, raised so the knees clear the tray
 
 POSES = {
@@ -763,6 +840,13 @@ POSES = {
     'kid-sit-k': kid_sit_table(.26, .52),          # kindergarten: 260 mm seat, 520 mm table
     'kid-sit-e': kid_sit_table(.36, .62),          # elementary: 360 mm seat, 620 mm table
     'kid-kneel-craft': kid_kneel_table(.45),       # the child's room craft table, 450 mm
+    'stand-brief': stand_brief,
+    'stand-radio': stand_radio,
+    'stand-chart': stand_chart,
+    'push-cart': push_cart,
+    'lie-bed': lie_bed,
+    'sit-microscope': sit_microscope,
+    'stand-counter': stand_counter,
 }
 
 # id -> character, pose, library name, what they hold.
@@ -874,14 +958,32 @@ POSE_INFO = {
     'kid-sit-k': ('Drawing at a kindergarten table', 'seated', '', 260, [('pen', {'side': 'r'})]),
     'kid-sit-e': ('Drawing at an elementary school table', 'seated', '', 360, [('pen', {'side': 'r'})]),
     'kid-kneel-craft': ('Kneeling at a low craft table', 'seated', '', 0, [('pen', {'side': 'r'})]),
+    'stand-mid': ('Typing standing at a mid-height desk', 'standing', 'desk', 0, []),
+    'stand-brief': ('Standing at ease, thumbs at the belt', 'standing', '', 0, []),
+    'stand-radio': ('On the radio, hand at the shoulder', 'standing', '', 0, [('radio', {'side': 'l'})]),
+    'stand-chart': ('Reading a chart on a clipboard', 'standing', '', 0, [('clipboard', {'side': 'l'}), ('pen', {'side': 'r'})]),
+    'push-cart': ('Pushing a cart', 'walking', '', 0, []),
+    'lie-bed': ('Lying in a hospital bed', 'seated', '', 663, []),
+    'sit-microscope': ('At a microscope, on a lab stool', 'seated', '', 650, []),
+    'stand-counter': ('Serving at a counter', 'standing', '', 0, []),
 }
-DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
+# The roles' postures: built for the characters that list them ('postures'), for anyone else on request.
+ROLE_POSES = {'stand-brief', 'stand-radio', 'stand-chart', 'push-cart', 'lie-bed', 'sit-microscope', 'stand-counter'}
+# Built where the pose puts them, not dropped until something touches the floor (a body lying on a bed has nothing on it).
+RAISED = {'lie-bed', 'sit-microscope'}       # (and feet on a stool's ring are not on the floor either)
+DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'stand-mid': (39,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
 CHILD_POSES = {p for p in POSE_INFO if p.startswith('kid-')}
 def suits(who, pose): return (who in CHILDREN) == (pose in CHILD_POSES)
 # What the library holds of a character: everything that suits them, or, for a role character, their own list
 # ('postures'). Any other posture is still built on request (output()).
-def listed(who, pose): return pose in CHARACTERS[who]['postures'] if 'postures' in CHARACTERS[who] else True
+# (the mid-height desk is at the shoulders of someone of short stature: Rosa works at 28 and 30 in)
+def listed(who, pose): return pose in CHARACTERS[who]['postures'] if 'postures' in CHARACTERS[who] else pose not in ROLE_POSES and not (pose == 'stand-mid' and CHARACTERS[who].get('limbs'))
+
+
+# Built besides: Sam's listed seated desk models wear his gaming headphones (sit-game), these are him at any other
+# desk; Grace and Ben in a hospital bed, so a ward of three has three different people.
+ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed', 'people-ben-lie-bed']
 
 
 def output(model_id):
@@ -899,9 +1001,11 @@ def output(model_id):
     label, _stance, where, _seat, held = POSE_INFO[pose]
     out = {'id': model_id, 'character': who, 'pose': pose, 'name': '%s: %s' % (CHARACTERS[who]['name'], label[0].lower() + label[1:]), 'held': list(held)}
     if CHARACTERS[who].get('prosthesis'): out['held'].append(('prosthesis', {'side': CHARACTERS[who]['prosthesis']}))
+    if pose in RAISED: out['ground'] = False
     if where == 'desk':
         extra = tail[len(pose) + 1:]; out['height'] = float(extra.replace('_', '.')) if extra else DESK_HEIGHTS[pose][0]
         if out['height'] == int(out['height']): out['height'] = int(out['height'])
+        if out['height'] != DESK_HEIGHTS[pose][0]: out['name'] += ' (desk at %s in)' % out['height']
     elif tail not in (pose, pose + '-2'): raise KeyError(model_id)      # '-2': the plain id is a listed model in another pose
     return out
 
@@ -919,7 +1023,6 @@ def all_outputs():
                 mid = 'people-%s-%s' % (who, pose) + ('' if h is None or h == DESK_HEIGHTS[pose][0] else '-' + inches)
                 if mid in ids: mid = 'people-%s-%s-%s' % (who, pose, inches or '2')
                 o = output(mid); assert (o['character'], o['pose'], o.get('height')) == (who, pose, h), mid
-                if h is not None and h != DESK_HEIGHTS[pose][0]: o['name'] += ' (desk at %s in)' % h
                 ids.add(mid); out.append(o)
-    return out
+    return out + [output(mid) for mid in ALSO if mid not in ids]
 

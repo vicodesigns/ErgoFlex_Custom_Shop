@@ -14,7 +14,7 @@ import math
 import bpy, bmesh
 from mathutils import Matrix, Vector
 from mathutils.bvhtree import BVHTree
-import held
+import held, pose_lib
 
 ARM = ('upperarm', 'lowerarm', 'hand', 'index', 'middle', 'ring', 'pinky', 'thumb'); LEG = ('thigh', 'calf', 'foot', 'ball')
 SKIP = ('low-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses')
@@ -234,10 +234,10 @@ def _ring(body, z, n=36, bone='pelvis'):
     return spot, n
 
 
-def belt(body, color=(.03, .03, .032), width=.05, buckle='silver', items=(), tuck=True, **_):
+def belt(body, color=(.03, .03, .032), width=.05, buckle='silver', items=(), items_in=None, pose=None, **_):
     """A belt round the waist with what hangs on it. items: [(kind, degrees round from the front toward the left hip), ...]:
-    'radio', 'pouch', 'cuffs', 'light', 'tools', 'badge', 'keys'."""
-    k = body.k; P = _points(body, k); ring = _ring(body, P['belt'])
+    'radio', 'pouch', 'cuffs', 'light', 'tools', 'badge', 'keys'. items_in: { posture: items } where a posture needs them elsewhere."""
+    items = (items_in or {}).get(pose, items); k = body.k; P = _points(body, k); ring = _ring(body, P['belt'])
     if not ring: return []
     spot, n = ring; mat = held.material('belt ' + str(color), color, .55); thick = .006; verts, faces = [], []
     for i in range(n):
@@ -363,9 +363,28 @@ BUILDERS = {'badge': badge, 'nameplate': nameplate, 'chest_patch': chest_patch, 
             'lanyard': lanyard, 'id_badge': id_badge, 'stethoscope': stethoscope, 'shoulder_mic': shoulder_mic}
 
 
+def clear_hands(rig, meshes, who, pose):
+    """A pose with a hand at the body (thumbs at the belt, a radio at the collarbone) is written for an average build.
+    hand: {'clear': metres} keeps that palm that far outside the clothes of this character: -> the pose with the
+    hand's target moved out, or None when nothing had to move."""
+    sides = [s for s in 'lr' if (pose.get('hand_' + s) or {}).get('clear')]
+    if not sides: return None
+    body = Body(rig, meshes, who); tree = body.trees['trunk']; out = dict(pose); moved = False
+    axis = pose_lib.bone_world(rig, 'spine_02').translation
+    for s in sides:
+        spec = dict(pose['hand_' + s]); palm = held.hand_frame(rig, s, 0).translation
+        d = Vector((palm.x - axis.x, palm.y - axis.y, 0))
+        if d.length < 1e-3 or not tree: continue
+        d.normalize(); hit = tree.ray_cast(palm + d * .5, -d, 1.)
+        if hit[0] is None: continue
+        short = spec['clear'] - (palm - hit[0]).dot(d)
+        if short > .002: spec['at'] = tuple(Vector(spec['at']) + d * short); out['hand_' + s] = spec; moved = True
+    return out if moved else None
+
+
 def build(rig, meshes, who, spec):
     gear = [g for g in who.get('gear', []) if spec['pose'] not in g[1].get('not_in', ())]
     if not gear: return []
     body = Body(rig, meshes, who); out = []
-    for kind, kw in gear: out += [(o, bone) for o, bone in BUILDERS[kind](body, **kw) if o is not None]
+    for kind, kw in gear: out += [(o, bone) for o, bone in BUILDERS[kind](body, **dict(kw, pose=spec['pose'])) if o is not None]
     return out

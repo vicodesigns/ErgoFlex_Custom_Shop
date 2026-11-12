@@ -477,7 +477,7 @@
    "age": "young adult",
    "years": 34,
    "heritage": "Mixed",
-   "height": 168,
+   "height": 169,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "toigo_wool_pants",
@@ -497,7 +497,7 @@
    "age": "young adult",
    "years": 28,
    "heritage": "African",
-   "height": 183,
+   "height": 184,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "toigo_wool_pants",
@@ -574,7 +574,7 @@
    "age": "adult",
    "years": 46,
    "heritage": "European",
-   "height": 184,
+   "height": 185,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "toigo_wool_pants",
@@ -652,7 +652,7 @@
    "age": "adult",
    "years": 45,
    "heritage": "Mixed",
-   "height": 160,
+   "height": 161,
    "outfit": [
     "coat",
     "joepal_crude_t-shirt_female",
@@ -1284,6 +1284,57 @@
   "kid-kneel-craft": {
    "label": "Kneeling at a low craft table",
    "stance": "seated",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-mid": {
+   "label": "Typing standing at a mid-height desk",
+   "stance": "standing",
+   "desk": true,
+   "seat": 0,
+   "heights": [
+    39
+   ]
+  },
+  "stand-brief": {
+   "label": "Standing at ease, thumbs at the belt",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-radio": {
+   "label": "On the radio, hand at the shoulder",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-chart": {
+   "label": "Reading a chart on a clipboard",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "push-cart": {
+   "label": "Pushing a cart",
+   "stance": "walking",
+   "desk": false,
+   "seat": 0
+  },
+  "lie-bed": {
+   "label": "Lying in a hospital bed",
+   "stance": "seated",
+   "desk": false,
+   "seat": 663
+  },
+  "sit-microscope": {
+   "label": "At a microscope, on a lab stool",
+   "stance": "seated",
+   "desk": false,
+   "seat": 650
+  },
+  "stand-counter": {
+   "label": "Serving at a counter",
+   "stance": "standing",
    "desk": false,
    "seat": 0
   }
@@ -8075,6 +8126,537 @@
    "pose": "stand-talk",
    "name": "Fern: standing, explaining something",
    "aids": []
+  },
+  "people-reyes-stand-brief": {
+   "character": "reyes",
+   "pose": "stand-brief",
+   "name": "Officer Reyes: standing at ease, thumbs at the belt",
+   "aids": []
+  },
+  "people-brandt-stand-brief": {
+   "character": "brandt",
+   "pose": "stand-brief",
+   "name": "Sergeant Brandt: standing at ease, thumbs at the belt",
+   "aids": []
+  },
+  "people-reyes-stand-radio": {
+   "character": "reyes",
+   "pose": "stand-radio",
+   "name": "Officer Reyes: on the radio, hand at the shoulder",
+   "aids": []
+  },
+  "people-walsh-stand-radio": {
+   "character": "walsh",
+   "pose": "stand-radio",
+   "name": "Walsh: on the radio, hand at the shoulder",
+   "aids": []
+  },
+  "people-nina-stand-chart": {
+   "character": "nina",
+   "pose": "stand-chart",
+   "name": "Nina: reading a chart on a clipboard",
+   "aids": []
+  },
+  "people-stone-stand-chart": {
+   "character": "stone",
+   "pose": "stand-chart",
+   "name": "Dr Stone: reading a chart on a clipboard",
+   "aids": []
+  },
+  "people-nina-push-cart": {
+   "character": "nina",
+   "pose": "push-cart",
+   "name": "Nina: pushing a cart",
+   "aids": []
+  },
+  "people-walter-lie-bed": {
+   "character": "walter",
+   "pose": "lie-bed",
+   "name": "Walter: lying in a hospital bed",
+   "aids": []
+  },
+  "people-june-lie-bed": {
+   "character": "june",
+   "pose": "lie-bed",
+   "name": "June: lying in a hospital bed",
+   "aids": []
+  },
+  "people-vega-sit-microscope": {
+   "character": "vega",
+   "pose": "sit-microscope",
+   "name": "Vega: at a microscope, on a lab stool",
+   "aids": []
+  },
+  "people-helen-stand-counter": {
+   "character": "helen",
+   "pose": "stand-counter",
+   "name": "Helen: serving at a counter",
+   "aids": []
+  },
+  "people-mei-stand-counter": {
+   "character": "mei",
+   "pose": "stand-counter",
+   "name": "Mei: serving at a counter",
+   "aids": []
+  },
+  "people-reyes-stand-mid": {
+   "character": "reyes",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Officer Reyes: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-yusuf-sit-microscope": {
+   "character": "yusuf",
+   "pose": "sit-microscope",
+   "name": "Yusuf: at a microscope, on a lab stool",
+   "aids": []
+  },
+  "people-chen-sit-microscope": {
+   "character": "chen",
+   "pose": "sit-microscope",
+   "name": "Chen: at a microscope, on a lab stool",
+   "aids": []
+  },
+  "people-maya-stand-mid": {
+   "character": "maya",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Maya: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-andre-stand-mid": {
+   "character": "andre",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Andre: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-grace-stand-mid": {
+   "character": "grace",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Grace: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-kai-stand-mid": {
+   "character": "kai",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Kai: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-zoe-stand-mid": {
+   "character": "zoe",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Zoe: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-hale-stand-mid": {
+   "character": "hale",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Mr Hale: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-lin-stand-mid": {
+   "character": "lin",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Lin: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-omar-stand-mid": {
+   "character": "omar",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Omar: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-sam-stand-mid": {
+   "character": "sam",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Sam: typing standing at a mid-height desk",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-ben-stand-mid": {
+   "character": "ben",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Ben: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-priya-stand-mid": {
+   "character": "priya",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Priya: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-jo-stand-mid": {
+   "character": "jo",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Jo: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-mia-stand-mid": {
+   "character": "mia",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Mia: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-leo-stand-mid": {
+   "character": "leo",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Leo: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-noah-stand-mid": {
+   "character": "noah",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Noah: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-ava-stand-mid": {
+   "character": "ava",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Ava: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-eli-stand-mid": {
+   "character": "eli",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Eli: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-sofia-stand-mid": {
+   "character": "sofia",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Sofia: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-cole-stand-mid": {
+   "character": "cole",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Officer Cole: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-cole-stand-brief": {
+   "character": "cole",
+   "pose": "stand-brief",
+   "name": "Officer Cole: standing at ease, thumbs at the belt",
+   "aids": []
+  },
+  "people-cole-stand-radio": {
+   "character": "cole",
+   "pose": "stand-radio",
+   "name": "Officer Cole: on the radio, hand at the shoulder",
+   "aids": []
+  },
+  "people-brandt-stand-mid": {
+   "character": "brandt",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Sergeant Brandt: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-brandt-stand-radio": {
+   "character": "brandt",
+   "pose": "stand-radio",
+   "name": "Sergeant Brandt: on the radio, hand at the shoulder",
+   "aids": []
+  },
+  "people-tran-stand-mid": {
+   "character": "tran",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Detective Tran: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-tran-stand-brief": {
+   "character": "tran",
+   "pose": "stand-brief",
+   "name": "Detective Tran: standing at ease, thumbs at the belt",
+   "aids": []
+  },
+  "people-tran-stand-radio": {
+   "character": "tran",
+   "pose": "stand-radio",
+   "name": "Detective Tran: on the radio, hand at the shoulder",
+   "aids": []
+  },
+  "people-okoye-stand-mid": {
+   "character": "okoye",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Okoye: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-okoye-stand-brief": {
+   "character": "okoye",
+   "pose": "stand-brief",
+   "name": "Okoye: standing at ease, thumbs at the belt",
+   "aids": []
+  },
+  "people-okoye-stand-radio": {
+   "character": "okoye",
+   "pose": "stand-radio",
+   "name": "Okoye: on the radio, hand at the shoulder",
+   "aids": []
+  },
+  "people-walsh-stand-mid": {
+   "character": "walsh",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Walsh: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-walsh-stand-brief": {
+   "character": "walsh",
+   "pose": "stand-brief",
+   "name": "Walsh: standing at ease, thumbs at the belt",
+   "aids": []
+  },
+  "people-nina-stand-mid": {
+   "character": "nina",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Nina: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-mateo-stand-mid": {
+   "character": "mateo",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Mateo: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-mateo-stand-chart": {
+   "character": "mateo",
+   "pose": "stand-chart",
+   "name": "Mateo: reading a chart on a clipboard",
+   "aids": []
+  },
+  "people-mateo-push-cart": {
+   "character": "mateo",
+   "pose": "push-cart",
+   "name": "Mateo: pushing a cart",
+   "aids": []
+  },
+  "people-amara-stand-mid": {
+   "character": "amara",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Amara: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-amara-stand-chart": {
+   "character": "amara",
+   "pose": "stand-chart",
+   "name": "Amara: reading a chart on a clipboard",
+   "aids": []
+  },
+  "people-amara-push-cart": {
+   "character": "amara",
+   "pose": "push-cart",
+   "name": "Amara: pushing a cart",
+   "aids": []
+  },
+  "people-patel-stand-mid": {
+   "character": "patel",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Dr Patel: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-patel-stand-chart": {
+   "character": "patel",
+   "pose": "stand-chart",
+   "name": "Dr Patel: reading a chart on a clipboard",
+   "aids": []
+  },
+  "people-stone-stand-mid": {
+   "character": "stone",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Dr Stone: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-vega-stand-mid": {
+   "character": "vega",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Vega: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-vega-stand-chart": {
+   "character": "vega",
+   "pose": "stand-chart",
+   "name": "Vega: reading a chart on a clipboard",
+   "aids": []
+  },
+  "people-yusuf-stand-mid": {
+   "character": "yusuf",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Yusuf: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-yusuf-stand-chart": {
+   "character": "yusuf",
+   "pose": "stand-chart",
+   "name": "Yusuf: reading a chart on a clipboard",
+   "aids": []
+  },
+  "people-chen-stand-mid": {
+   "character": "chen",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Chen: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-chen-stand-chart": {
+   "character": "chen",
+   "pose": "stand-chart",
+   "name": "Chen: reading a chart on a clipboard",
+   "aids": []
+  },
+  "people-devi-stand-mid": {
+   "character": "devi",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Devi: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-devi-push-cart": {
+   "character": "devi",
+   "pose": "push-cart",
+   "name": "Devi: pushing a cart",
+   "aids": []
+  },
+  "people-tomas-stand-mid": {
+   "character": "tomas",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Tomas: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-tomas-push-cart": {
+   "character": "tomas",
+   "pose": "push-cart",
+   "name": "Tomas: pushing a cart",
+   "aids": []
+  },
+  "people-helen-stand-mid": {
+   "character": "helen",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Helen: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-darius-stand-mid": {
+   "character": "darius",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Darius: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-darius-stand-counter": {
+   "character": "darius",
+   "pose": "stand-counter",
+   "name": "Darius: serving at a counter",
+   "aids": []
+  },
+  "people-mei-stand-mid": {
+   "character": "mei",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Mei: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-aiden-stand-mid": {
+   "character": "aiden",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Aiden: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-bella-stand-mid": {
+   "character": "bella",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Bella: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-carlos-stand-mid": {
+   "character": "carlos",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Carlos: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-dina-stand-mid": {
+   "character": "dina",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Dina: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-emeka-stand-mid": {
+   "character": "emeka",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Emeka: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-fern-stand-mid": {
+   "character": "fern",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Fern: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-grace-lie-bed": {
+   "character": "grace",
+   "pose": "lie-bed",
+   "name": "Grace: lying in a hospital bed",
+   "aids": []
+  },
+  "people-ben-lie-bed": {
+   "character": "ben",
+   "pose": "lie-bed",
+   "name": "Ben: lying in a hospital bed",
+   "aids": []
+  },
+  "people-sam-sit-type": {
+   "character": "sam",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Sam: typing at the desk, seated",
+   "aids": [
+    "prosthesis"
+   ]
+  },
+  "people-sam-sit-type-30": {
+   "character": "sam",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Sam: typing at the desk, seated (desk at 30 in)",
+   "aids": [
+    "prosthesis"
+   ]
   }
  }
 }

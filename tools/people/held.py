@@ -119,6 +119,20 @@ def cup(rig, side, kind='mug', color=None):
     return [tube('glass', .033, (0, 0, -.055), (0, 0, .055), glass, m, 16, radius2=.037), tube('drink', .031, (0, 0, -.05), (0, 0, .025), material('drink ' + str(color), color or (.62, .3, .08), .15), m, 16)]
 
 
+def radio(rig, side, color=(.04, .04, .045)):
+    """A handheld radio gripped in the fist, upright when the thumb is up: its length lies across the palm."""
+    w = hand_frame(rig, side, .022) @ T(.012, .0, 0); m = material('radio', color, .5)
+    return [box('handheld radio', (.105, .056, .03), m, w, bevel=.004), box('handheld radio grille', (.034, .036, .002), material('mic grille', (.2, .2, .21), .6), w, at=(.022, 0, -.016)),
+            tube('handheld radio antenna', .0045, (.052, -.016, 0), (.125, -.016, 0), m, w, 8), tube('handheld radio knob', .007, (.052, .016, 0), (.068, .016, 0), m, w, 8)]
+
+
+def clipboard(rig, side, color=(.34, .23, .13)):
+    """A clipboard with a sheet on it, lying on the palm and along the fingers."""
+    w = hand_frame(rig, side, .009) @ T(.03, .085, 0)
+    return [box('clipboard', (.235, .325, .005), material('clipboard ' + str(color), color, .6), w, bevel=.002), box('clipboard sheet', (.21, .297, .002), material('paper', (.94, .94, .91), .9), w, at=(0, -.008, .0035)),
+            box('clipboard clip', (.1, .028, .012), material('badge silver', (.8, .81, .83), .3, 1.), w, at=(0, .145, .008), bevel=.002)]
+
+
 def carton(rig, size=(.42, .3, .28), color=(.62, .47, .3)):
     """A cardboard box carried in front in both hands, held by its sides."""
     a = hand_frame(rig, 'l', 0).translation; b = hand_frame(rig, 'r', 0).translation
@@ -270,7 +284,7 @@ def prosthesis(rig, side):
 
 
 BUILDERS = {'phone': phone, 'tablet': tablet, 'book': book, 'pen': pen, 'mug': mug, 'gamepad': gamepad, 'brush': brush, 'palette': palette,
-            'cane': cane, 'backpack': backpack, 'headphones': headphones, 'cup': cup, 'carton': carton,
+            'cane': cane, 'backpack': backpack, 'headphones': headphones, 'cup': cup, 'carton': carton, 'radio': radio, 'clipboard': clipboard,
             'wheelchair': wheelchair, 'crutch': crutch, 'screwdriver': screwdriver, 'prosthesis': prosthesis}
 
 

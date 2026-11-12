@@ -161,6 +161,9 @@ if who.get('limbs'):
     pose = dict(pose, limbs=who['limbs'])
     if 'pelvis' not in pose: off = pose.get('pelvis_offset', (0, 0, 0)); pose['pelvis_offset'] = (off[0], off[1], off[2] - drop)
 pose_lib.apply_pose(rig, pose)
+# A hand that rests on the body is kept outside this character's clothes (worn.clear_hands): posed again, moved out.
+cleared = worn.clear_hands(rig, meshes, who, pose)
+if cleared: pose = cleared; pose_lib.apply_pose(rig, pose)
 # What each held thing follows when the Director fine-tunes the pose (the wheelchair stays where it is).
 HELD_BONE = {'gamepad': 'hand_r', 'carton': 'hand_r', 'backpack': 'spine_03', 'headphones': 'head', 'wheelchair': None, 'prosthesis': 'calf_{side}'}
 extras, extra_bone = [], {}
