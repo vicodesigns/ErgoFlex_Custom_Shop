@@ -104,7 +104,9 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const text=`Desk ${v.n} · ${v.label}`;if(text!==lastText||badge.dataset.sig!==v.sig){badge.dataset.sig=v.sig;lastText=text;badge.textContent=text;badge.title=`Film sub-shot ${v.n}: the ${v.preset} preset (${fmt(v.start)}–${fmt(v.end)} s)`;}
     const now=document.querySelector('#director-timeline [data-desk-version-now]');if(now&&now.textContent!==v.n)now.textContent=v.n;
     for(const b of document.querySelectorAll('#director-timeline [data-desk-version]'))b.classList.toggle('current',b.dataset.deskVersion===v.n);
-    const key=`${pickedN}|${v.n}|${list().length}`;if(key!==tipKey){tipKey=key;const plus=document.querySelector('#director-timeline [data-dv-add]');if(plus)plus.title=addTip();}
+    // The picked desk's outline and the + button's tooltip (the desk it would copy) follow the selection and the playhead.
+    const key=`${pickedN}|${v.n}|${list().length}`;if(key!==tipKey){tipKey=key;const plus=document.querySelector('#director-timeline [data-dv-add]');if(plus)plus.title=addTip();
+      for(const b of document.querySelectorAll('#director-timeline [data-desk-version]'))b.classList.toggle('picked',b.dataset.deskVersion===pickedN);}
     want={id:s.id,v};if(bridge.deskVersion?.(s.id)?.sig!==v.sig)schedule();
   }
   function schedule(ms){clearTimeout(timer);timer=setTimeout(apply,ms??(scrubbing()?220:40));}
