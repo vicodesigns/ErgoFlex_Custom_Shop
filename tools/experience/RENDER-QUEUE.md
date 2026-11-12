@@ -60,6 +60,11 @@ With your existing pipeline, from the clone with the overlay, at the job's resol
   `render-cut.cjs --cut <job.cut> --shots 0 --video --size <WxH> --quality hq13 --storage exports/cinematic-intro-20261104-hq14/post/<seed>.json --state-keys ergoflex.sceneAssets.v1`
   (seed: coast `occ-seed`, hero `finale-seed`, every other chapter `college-seed`), then the chapter's usual finishing (grade from
   `grade.json`, titles from `titles-src.json`, its score) to an MP4. Hero keeps its sub-shot handling.
+  The number of hero sub-shots is not fixed: `shots/13-subshots.json` lists one per desk version (six in the film as built; the
+  Director can add or remove them, 1 to 12). Render every shot of that file (`render-cut.cjs --cut shots/13-subshots.json --shots all`
+  writes `01.mkv` .. `NN.mkv`) and join them with `join-subshots.py <that file> <render dir> <out.mkv> --transition fade`, which
+  crossfades each overlap for any count (one sub-shot: no crossfade). `join-subshots.py ... --plan` prints the inputs and
+  crossfades it expects without rendering. A pipeline that names six files or six windows must read the count from the file.
 * **scope film**: `job.cut` is the whole review cut (identical to `hq14/review-cut.json` in the manifest). Render every chapter,
   then assemble with `finish-intro.py` as for HQ14 (`edl.json`, `titles-src.json`, `score/` are in the manifest).
 
