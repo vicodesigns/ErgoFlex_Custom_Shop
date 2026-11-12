@@ -58,7 +58,7 @@ try:
     # per-chapter epoch: only that chapter's key moves
     real = ck.read_chapter_epochs; k8 = keys()
     try:
-        ck.read_chapter_epochs = lambda d: {'rise': '9'}; k9 = keys()
+        ck.read_chapter_epochs = lambda d: {**real(d), 'rise': '9'}; k9 = keys()
     finally: ck.read_chapter_epochs = real
     check(changed(k8, k9) == ['rise'], 'a per-chapter epoch changes only that chapter\'s key')
     # CLI
