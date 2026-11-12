@@ -20,7 +20,7 @@ people whatever their size.
 | Middle school, College, University | 16, 15, 19 | lessons, seminars, an evening class, a presentation |
 | High school (Studio only) | 17 | eight more students beside the film's |
 | Classic library | 17 | readers at every table; one librarian at night |
-| Library commons | 25 or so by day | the film's hall: readers down the cafe tables to the far end |
+| Library commons | 29 | the film's hall: readers and pairs down the cafe tables to the far end, visitors at the sculptures |
 | Office, coworking, gallery, orbital deck, media lab | 9, 17, 14, 12, 13 | people are added with the floor area |
 | Gym, workshop, lounge, kitchen and the private rooms | 3 to 10 | one or two more in the largest sizes |
 
