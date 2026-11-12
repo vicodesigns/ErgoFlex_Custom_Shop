@@ -66,7 +66,7 @@ export async function loadStorageSeed(url,fetcher=globalThis.fetch){
 
 // Director UI: the lane, the frame badge and the switching (debounced while scrubbing; one switch in flight).
 export function createDeskVersions({bridge,shot,project,selected,seek,status,escape,scrubbing,isOpen,panel=null,commit=null,endGroup=()=>{},showTab=()=>{},rerender=()=>{}}){
-  let timer=0,busy=false,want=null,lastText='',pickedN=null,lastPlayhead=0,drag=null,memo=null,said=null,tipKey='';
+  let timer=0,busy=false,want=null,lastText='',pickedN=null,lastPlayhead=0,drag=null,memo=null,said=null,tipKey='';   // said: an add / remove / reset's status line, shown again once the stage has switched desks at that playhead
   const badge=document.createElement('div');badge.className='desk-version-badge';badge.hidden=true;badge.setAttribute('role','status');badge.setAttribute('aria-live','polite');document.body.append(badge);
   // The film's six desks with the cut's edits (shot.deskVersions) on top; kept until the film data or the edits change.
   const list=()=>{
@@ -116,7 +116,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const {id,v}=want,i=selected();if(project().shots[i]?.id!==id||bridge.deskVersion?.(id)?.sig===v.sig)return;
     busy=true;const started=performance.now();
     try{status(`Switching the desk to ${v.n} · ${v.label}…`);await bridge.setDeskVersion(project(),i,v);
-      status(said&&Date.now()<said.until?said.text:`Desk ${v.n} · ${v.label}: the film's sub-shot ${v.n} desk (${v.preset}${v.setup?'':', preset only'}), ${((performance.now()-started)/1000).toFixed(1)} s to switch.`);said=null;}
+      status(said&&Date.now()<said.until&&said.at===lastPlayhead?said.text:`Desk ${v.n} · ${v.label}: the film's sub-shot ${v.n} desk (${v.preset}${v.setup?'':', preset only'}), ${((performance.now()-started)/1000).toFixed(1)} s to switch.`);said=null;}
     catch(error){status('The desk version could not load: '+error.message,true);}
     finally{busy=false;if(want&&bridge.deskVersion?.(want.id)?.sig!==want.v.sig)schedule();}
   }
@@ -163,20 +163,21 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const src=l.indexOf(v),at=after?src+1:l.length,id=nextVersionId(usedIds()),next=id&&addVersion(asEdits(l),src,at,id,total());
     if(!next){status('The desk version could not be added.',true);return;}
     const before=l[at-1],text=`Desk ${id} · ${v.label} added ${after?`after Desk ${v.n}`:'at the end'}, a copy of Desk ${v.n}: it shows ${span(next,at)} and Desk ${before.n} · ${before.label} now ${span(next,at-1)}. Change its model in the Desk version tab, drag it in the lane to reorder; Undo takes it back.`;
-    pickedN=id;said={text,until:Date.now()+15000};
+    pickedN=id;said=null;
     write(next,text,{last:id,tab:true});
-    // Show it: the playhead goes to where the new desk starts (the stage switches to it).
+    // Show it: the playhead goes to where the new desk starts (the stage switches to it, then this status line returns).
     try{if(bridge.ready())seek(Math.min(1,(shown(next,at)[0]+.01)/total()));}catch{}
+    said={text,until:Date.now()+15000,at:lastPlayhead};
   }
   function remove(n=null){
     const l=list(),v=picked(n);if(!v)return;
     if(l.length<2){status('A chapter shows at least one desk.',true);return;}
     const i=l.indexOf(v),next=removeVersion(asEdits(l),i,total());if(!next)return;
     const k=Math.max(0,i-1),heir=l[i?i-1:1],text=`${tag(v)} removed: ${tag(heir)} now shows ${span(next,k)}. Undo brings it back.`;
-    pickedN=heir.n;said={text,until:Date.now()+15000};
+    pickedN=heir.n;said={text,until:Date.now()+15000,at:lastPlayhead};
     write(next,text);
   }
-  function reset(){const text='Desk versions are back to the film’s desks, order, lengths and models.';commit(()=>{delete shot().deskVersions;});rerender();said={text,until:Date.now()+15000};status(text);tipKey='';sync(lastPlayhead);}
+  function reset(){const text='Desk versions are back to the film’s desks, order, lengths and models.';commit(()=>{delete shot().deskVersions;});rerender();said={text,until:Date.now()+15000,at:lastPlayhead};status(text);tipKey='';sync(lastPlayhead);}
   const timeAt=event=>{const r=document.querySelector('#director-timeline .desk-versions-lane').getBoundingClientRect();return Math.max(0,Math.min(total(),(event.clientX-r.left)/r.width*total()));};
   function down(event){
     if(event.button!==0)return;
