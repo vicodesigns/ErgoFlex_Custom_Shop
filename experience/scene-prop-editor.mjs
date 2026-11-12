@@ -236,7 +236,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   const library=createPropLibrary({status,room:()=>shot()?.room,roomName:()=>shot()?.room,
     load:async()=>{await ensure();return (await win().__filmEdits.propLibrary()).index.props;},
     onPick:entry=>{addProp(entry).catch(error=>status(error.message,true));}});
-  function objOf(m){if(m.obj&&!inScene(m.obj))m.obj=null;if(!m.obj&&tools)m.obj=find(m.key,m.target);return m.obj;}
+  // The object a selected prop is on stage now: none while another desk shows (a same-named item there is that desk's).
+  function objOf(m){const d=(editOfKey(m.key)||m.target)?.desk;if(d&&d!==deskNow()?.preset){m.obj=null;return null;}if(m.obj&&!inScene(m.obj))m.obj=null;if(!m.obj&&tools)m.obj=find(m.key,m.target);return m.obj;}
   const current=()=>sel?objOf(sel):null;
   const members=()=>sel?[...others,sel]:[];
   const isSel=key=>members().some(m=>m.key===key);

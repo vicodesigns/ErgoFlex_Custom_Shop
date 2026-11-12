@@ -140,8 +140,9 @@ try{
   await page.evaluate(()=>document.querySelector('#director-panel [name=pp-hide]').click());await wait(1000);
   check(/^Hid Wide monitor in this chapter/.test(await status())&&!(await pose('Accessory:wide-monitor')).visible,'Hide in this chapter (checkbox)');
   // ---- lane chips
-  const chips=await page.$$eval('[data-props-lane] button',l=>l.map(b=>[b.textContent,b.className]));
-  check(chips.length===3&&/Reset all props/.test(chips[2][0])&&/prop-hidden/.test(chips[1][1]),'Props lane: 2 chips (the hidden one struck through) + reset-all: '+chips.map(c=>c[0]).join(' | '));
+  const chips=await page.$$eval('[data-props-lane] .prop-chip',l=>l.map(b=>[b.textContent,b.className]));
+  check(chips.length===2&&chips.filter(c=>/prop-hidden/.test(c[1])).length===1&&chips.every(c=>/prop-bar/.test(c[1])),'Props lane: 2 edited bars (the hidden one struck through): '+chips.map(c=>c[0]).join(' | '));
+  check(await page.$$eval('[data-props-lane] .prop-bar.film',l=>l.length)>0,'and the desk\'s untouched items as bars of their own');
   await page.click('[data-props-lane] .prop-chip:not(.prop-hidden)');await wait(700);
   check(await page.evaluate(()=>__gizmo()?.object?.name)==='Prop:steelcase-leap-v2'&&/Steelcase/.test(await page.$eval('[data-selected-header]',e=>e.textContent)),'clicking a chip selects its prop');
   check(/PROPS/i.test(await page.$eval('[data-lane-group=props]',e=>e.textContent)),'PROPS lane group');
