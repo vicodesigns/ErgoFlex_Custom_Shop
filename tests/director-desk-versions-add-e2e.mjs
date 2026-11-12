@@ -35,6 +35,9 @@ const laneBox=()=>page.$eval('.desk-versions-lane',e=>{const r=e.getBoundingClie
 async function drag(from,to,steps=12){await page.mouse.move(from.x,from.y);await page.mouse.down();for(let i=1;i<=steps;i++){await page.mouse.move(from.x+(to.x-from.x)*i/steps,from.y+(to.y-from.y)*i/steps);await wait(20);}await page.mouse.up();await wait(600);}
 // Seek and wait until the stage has the desk the badge names.
 // (the switch starts up to 220 ms after the seek; `top`: the desktop finish the stage must show)
+// Click a desk in the lane once the stage is quiet; the Desk version tab shows it.
+async function pick(n){await wait(500);await until(settled,'the stage settles before the click');await page.evaluate(n=>document.querySelector(`#director-timeline [data-desk-version="${n}"]`).click(),n);await wait(600);
+  const shown=await page.$eval('#director-panel [data-inspector-page="version"] .inspector-subtitle',e=>e.textContent).catch(()=>'');if(!shown.startsWith(n+' · '))throw Error(`the Desk version tab shows "${shown}" after a click on ${n}`);}
 // A seek is refused while the stage is still switching desks: wait for it, and seek again if the playhead did not move.
 async function at(t,label,top=null){
   for(let i=0;i<6;i++){await wait(500);await until(settled,'the stage settles before the seek');await seek(page,t);if(Math.abs(await playhead()-t)<.06)break;}
@@ -48,7 +51,7 @@ try{
   check(gaming&&architect&&gaming!==architect,`the stage shows the gaming top at 2 s (${gaming}) and the architect's at 44 s (${architect})`);
 
   // ---- the controls: + in the lane's label, + Desk version / Duplicate / Remove in the Desk version tab, each with a tooltip
-  await page.evaluate(()=>document.querySelector('#director-timeline [data-desk-version="A"]').click());await wait(600);
+  await pick('A');
   check(await page.$eval('#director-panel [data-inspector-tab="version"]',b=>b.getAttribute('aria-pressed')==='true').catch(()=>false),'clicking Gaming opens the Desk version tab');
   const tips={lane:await title('#director-timeline [data-dv-add]'),add:await title('#director-panel [data-dv-add]'),dup:await title('#director-panel [data-dv-duplicate]'),remove:await title('#director-panel [data-dv-remove]')};
   check(/copy of Desk A · Gaming/.test(tips.lane)&&/at the end/.test(tips.lane)&&/Desk F · Architect/.test(tips.lane)&&/Undo/.test(tips.lane),'the lane\'s + says what it will do: '+tips.lane);
@@ -83,7 +86,7 @@ try{
   await click('#director-panel [data-action=redo]');check((await laneText()).endsWith('F · Architect, G · Gaming'),'Redo brings it back: '+await laneText());
 
   // ---- Duplicate: a copy of B right after it; then Undo
-  await page.evaluate(()=>document.querySelector('#director-timeline [data-desk-version="B"]').click());await wait(600);
+  await pick('B');
   await click('#director-panel [data-dv-duplicate]');
   await until(async()=>(await lane()).length===8,'eight segments');
   dv=await until(async()=>{const v=await versions();return v?.length===8&&v;},'draft with eight');
@@ -102,7 +105,7 @@ try{
   check((await laneText())==='A · Gaming, B · Artist, C · Office, D · HBHS, E · OCC, F · Architect, G · Gaming','and back to the end: '+await laneText());
 
   // ---- rename G, move its seam (40.9 -> about 43)
-  await page.evaluate(()=>document.querySelector('#director-timeline [data-desk-version="G"]').click());await wait(600);
+  await pick('G');
   await page.click('#director-panel [name="dv-name"]',{clickCount:3});await page.keyboard.type('Gaming finale');await page.keyboard.press('Tab');await wait(600);
   check((await laneText()).endsWith('G · Gaming finale'),'renamed on the lane: '+await laneText());
   L=await laneBox();await drag({x:L.x+40.9/48*L.w,y:L.y+L.h/2},{x:L.x+43/48*L.w,y:L.y+L.h/2});
@@ -145,7 +148,7 @@ try{
   fs.writeFileSync(path.join(shots,'subshots-summary.txt'),sub.map(s=>`${s.subshot} ${s.preset} ${s.renderRange} ${s.name||''}`).join('\n'));
 
   // ---- Remove: G, then one of the film's own (C), then down to one
-  await page.evaluate(()=>document.querySelector('#director-timeline [data-desk-version="G"]').click());await wait(600);
+  await pick('G');
   await click('#director-panel [data-dv-remove]');
   await until(async()=>(await lane()).length===6,'six segments');
   check((await laneText())==='A · Gaming, B · Artist, C · Office, D · HBHS, E · OCC, F · Architect','G removed: '+await laneText());
@@ -153,7 +156,7 @@ try{
   await until(async()=>await settled()&&await badge()==='Desk F · Architect'&&await wood()===architect,'F at the playhead, on the stage');
   check(await badge()==='Desk F · Architect'&&await wood()===architect,'the architect is back on the stage where G was');
   await click('#director-panel [data-action=undo]');check((await lane()).length===7,'Undo brings G back in one step');await click('#director-panel [data-action=redo]');
-  await page.evaluate(()=>document.querySelector('#director-timeline [data-desk-version="C"]').click());await wait(600);
+  await pick('C');
   await click('#director-panel [data-dv-remove]');
   await until(async()=>(await lane()).length===5,'five segments');
   dv=await until(async()=>{const v=await versions();return v?.length===5&&v;},'draft with five');

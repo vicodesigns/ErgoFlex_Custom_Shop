@@ -213,7 +213,8 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const b=event.target.closest?.('[data-desk-version]');if(!b)return;
     if(Date.now()-swallow<400){event.preventDefault();return;}
     const v=list().find(x=>x.n===b.dataset.deskVersion);if(!v)return;event.preventDefault();
-    try{select(v.n,{open:false});seek(Math.min(1,v.from/shot().seconds));showTab('version');}catch(error){status(error.message,true);}
+    // The tab shows the clicked desk first: a seek the stage refuses (it is still switching desks) must not leave the tab on another one.
+    select(v.n);try{seek(Math.min(1,v.from/shot().seconds));}catch(error){status(error.message,true);}
   }
   const fmtIn=x=>String(fmt(x));
   function panelHtml(){
