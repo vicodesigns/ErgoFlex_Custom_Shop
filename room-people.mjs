@@ -327,11 +327,11 @@ export const ROOM_PEOPLE = {
             standBy('people-hale-stand-present', 'mobile-review-display', 1200, { modes: ['evening'], colors: LOOK.hale, key: 'hale-review' })],
         // every size, in the Studio only (the film's chapter takes the room's cast as it was): someone at the capture stage,
         // and the reel showcase in the sizes that had none
-        L => [standBy('people-sam-stand-work', 'capture-stage', 1000, { modes: ['morning', 'evening'], key: 'sam-stage', studio: true }),
-            standBy('people-jo-stand-talk', 'capture-stage', 1300, { modes: ['afternoon'], key: 'jo-stage', studio: true }),
+        L => [standRound('people-sam-stand-work', 'capture-stage', 180, 1500, { modes: ['morning', 'evening'], key: 'sam-stage', studio: true }),
+            standRound('people-jo-stand-talk', 'capture-stage', 140, 1700, { modes: ['afternoon'], key: 'jo-stage', studio: true }),
             ...(L.id === 'house' ? [] : [...chat(L, .42, .3, [['people-mia-stand-drink', { key: 'mia-showcase' }], ['people-leo-stand-drink', { key: 'leo-showcase' }], ['people-eli-stand-drink', { key: 'eli-showcase' }]], { modes: ['party'], studio: true }, 650),
                 ...chat(L, .62, .34, [['people-ben-stand-drink', { key: 'ben-showcase' }], ['people-grace-stand-drink', { key: 'grace-showcase' }]], { modes: ['party'], studio: true }),
-                spot('people-omar-wheel-watch', -1300, L.back + L.depth * .32, [0, L.back], { clear: true, modes: ['party'], key: 'omar-showcase', studio: true })])]
+                ...chat(L, .3, .42, [['people-omar-wheel-watch', { key: 'omar-showcase' }], ['people-kai-stand-drink', { key: 'kai-showcase' }]], { modes: ['party'], studio: true }, 600)])]
     ],
     // The growing child's room: who lives in it follows the age stage of the layout (L.ageStage), and each hour its
     // own activity (child-growth-profiles.mjs labels them). The youngest stand at the desk on its lowest setting; school
@@ -913,7 +913,7 @@ export const ROOM_PEOPLE = {
                 ...(big > 2 ? [reader('maya', 'sit-write', 8, ['morning', 'afternoon']), reader('sam', 'sit-laptop', 9, ['afternoon', 'evening']), reader('priya', 'sit-read', 11, ['afternoon'])] : []),
                 ...(big > 3 ? [reader('noah', 'sit-laptop', 12, ['afternoon']), reader('sofia', 'sit-write', 14, ['afternoon', 'evening']), reader('leo', 'sit-read', 16, ['morning', 'afternoon'])] : []),
                 big ? seated('people-jo-sit-read', 'sofa-leather-couch', 'coffee-table', { along: -420, modes: ['afternoon', 'evening'], key: 'jo-sofa' }) : { id: 'people-jo-sit-read', on: 'armchair-leather', seat: 420, modes: ['afternoon', 'evening'], key: 'jo-armchair' },
-                standBy('people-rosa-stand-work', 'book-return-cart', 700, { modes: ['morning', 'evening'], key: 'rosa-returns' }),
+                standBy('people-rosa-stand-work', 'book-return-cart', 700, { modes: ['morning', 'evening', 'night'], key: 'rosa-returns' }),   // (at night she is the last one in, shelving the returns)
                 standBy('people-hale-stand-present', 'stack-0-0', 750, { modes: ['afternoon'], colors: LOOK.hale, key: 'hale-stacks' }),
                 standBy('people-lin-kneel-shelf', 'current-periodicals', 700, { modes: ['afternoon'], key: 'lin-periodicals' }),
                 standRound('people-omar-wheel-watch', 'globe', 180, 1150, { modes: ['morning', 'afternoon'], key: 'omar-globe' }),
