@@ -37,7 +37,7 @@ for (const [room, specs] of Object.entries(ROOM_PEOPLE)) for (const spec of LAYO
         for (const spec of desk) assert.ok(entries.get(spec.id)?.person?.deskHeight, spec.id + ' is built');
         assert.ok(others.length >= 6 && others.every(s => s.modes?.length), room + ': a cast, each for their hours');
         assert.ok(others.every(s => s.on || s.by || s.around || (s.at && s.clear)), room + ': placed on a seat, by furniture, or at a spot that is checked for room');
-        assert.ok(others.filter(s => s.on).every(s => s.toward || /armchair|waiting-seats|briefing-seat|lounge-seat|chair-modern-cushion/.test(String(s.on))), room + ': a seated person faces what the seat belongs to');
+        assert.ok(others.filter(s => s.on).every(s => s.toward || /armchair|waiting-seats|briefing-seat|lounge-seat|chair-modern-cushion|care-bed/.test(String(s.on))), room + ': a seated person faces what the seat belongs to');
     }
     {   // with the layout's other desks: staff at them, nobody twice in a daypart, one person to a desk
         const { INSTITUTIONAL_ROOMS } = await import('../institutional-scenes.mjs');
