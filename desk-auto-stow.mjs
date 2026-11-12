@@ -62,6 +62,9 @@ export class DeskAutoStow {
     restore(r){for(const item of r.objects?.values()||[]){this.restoreItem(item);if(item.obj.userData.keepShelfDetail&&!item.saved.removed)item.obj.visible=true;}delete r.stowSignature;r.stowStatus=null;}
     authored(item){return item.autoStow?.transform||deskTransform(item.obj);}
     mount(r,role,item){return r.product&&item?.obj.userData.accessoryId?this.editor.purchaseMount(role):r.rig?.mounts[role];}
+    // Items the tilt rule puts away (easel, painter shelf, drafting kit). The mark lets a film edit that gives the prop its
+    // own time on screen (film-edits.mjs installShow) keep it up for that window.
+    hideItems(items,angle,recipe){for(const i of items){const hide=deskItemDisposition(i,angle,recipe)==='hide';i.obj.userData.stowHidden=hide;if(hide)i.obj.visible=false;}}
     update(r){
         let editing=this.editor.editing&&r.id===this.editor.manager.selected;
         const angle=Number(r.state.tilt)||0;
@@ -75,11 +78,11 @@ export class DeskAutoStow {
         if(edited)this.restoreItem(r.objects?.get(edited)||{});
         const items=[...(r.objects?.values()||[])];
         const wanted=items.filter(i=>i.id!==edited&&i.obj.visible&&!i.saved.removed&&deskItemDisposition(i,angle,recipe)==='stow');
-        for(const i of items)if(deskItemDisposition(i,angle,recipe)==='hide')i.obj.visible=false;
+        this.hideItems(items,angle,recipe);
         const signature=JSON.stringify([r.state.size,angle>=EASEL_ANGLE?'easel':'drafting',recipe,edited,this.editor.manager.ctx.phase(),items.map(i=>[i.id,i.obj.visible,i.obj.children.filter(c=>c.visible).map(c=>c.uuid),this.authored(i)])]);
         if(r.stowSignature===signature){if(r.stowStatus)r.stowStatus.angle=angle;for(const i of wanted)if(i.autoStow?.hidden||i.autoStow?.parts)i.obj.visible=false;return;}
         this.restore(r);r.stowSignature=signature;
-        for(const i of items)if(deskItemDisposition(i,angle,recipe)==='hide')i.obj.visible=false;
+        this.hideItems(items,angle,recipe);
         const packing=[];
         for(const item of wanted){
             const parts=compactStowParts(item);

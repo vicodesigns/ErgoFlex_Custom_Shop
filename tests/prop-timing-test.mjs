@@ -69,6 +69,15 @@ const edits=[{match:'^Accessory:wide-monitor$',desk:'office',show:{from:0,to:6.1
 // a timed prop the film hides stays hidden; hidden wins inside the window too
 {const fx=E.installEdits({seconds:10,sceneEdits:[{match:'^Accessory:mug$',hide:true},{match:'^Accessory:mug$',show:{from:2,to:4},director:true}]});
   fx.apply(3);assert.equal(mug.visible,false,'hide wins');fx.restore();assert.equal(mug.visible,true);}
+// a prop the desk's auto-stow put away (userData.stowHidden, the easel under 50 deg) stays up through its own window
+{const fx=E.installEdits({seconds:10,sceneEdits:[{match:'^Accessory:mug$',show:{from:2,to:6},director:true}]});
+  mug.userData.stowHidden=true;mug.visible=false;   // what DeskAutoStow.hideItems does
+  fx.apply(3);assert.equal(mug.visible,true,'inside its window the stowed prop is up');
+  fx.apply(7);assert.equal(mug.visible,false,'outside the window it is gone');
+  mug.userData.stowHidden=false;mug.visible=false;fx.apply(3);assert.equal(mug.visible,false,'a prop hidden for any other reason stays hidden');
+  fx.restore();mug.visible=true;delete mug.userData.stowHidden;}
+{const fx=E.installEdits({seconds:10,sceneEdits:[{match:'^Accessory:mug$',hide:true},{match:'^Accessory:mug$',show:{from:2,to:6},director:true}]});
+  mug.userData.stowHidden=true;fx.apply(3);assert.equal(mug.visible,false,'the film\'s own hide still wins over a window');fx.restore();mug.visible=true;delete mug.userData.stowHidden;}
 // installed while paused: right for the last time applied, before the next frame
 {const fx0=E.installEdits({seconds:10,sceneEdits:[]});fx0.apply(7);fx0.restore();
   const fx=E.installEdits({seconds:10,sceneEdits:[{match:'^Accessory:mug$',show:{from:2,to:4},director:true}]});assert.equal(mug.visible,false,'outside its window at 7 s without a frame');fx.restore();}

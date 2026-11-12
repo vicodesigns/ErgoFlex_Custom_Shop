@@ -161,14 +161,18 @@ export function showFactor(edit, shot, s) {
   return Math.max(0, Math.min(1, f));
 }
 let lastSeconds = 0;   // the last chapter time applied: a timed prop installed while paused is right before the next frame
-// A timed edit on its objects: not drawn outside the window (a getter over whatever else sets visible), and while a
+// A timed edit on its objects: not drawn outside the window (a getter over whatever else sets visible; inside it a prop
+// the desk's auto-stow hid stays up), and while a
 // fade runs the meshes wear see-through copies of their materials (shared maps, so a playing screen keeps playing).
 function installShow(edit, objects, shot, undo, live) {
   const cell = { f: 1 }, fades = [];
   for (const o of objects) {
     const own = Object.getOwnPropertyDescriptor(o, 'visible'); let raw = own && !('value' in own) ? undefined : o.visible;
     const get = own?.get ? () => own.get.call(o) : () => raw, set = own?.set ? v => own.set.call(o, v) : v => { raw = v; };
-    Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => cell.f > 0 && get(), set });
+    // A prop given its own time on screen stays up for that window even where the desk's auto-stow would put it away
+    // (the artist desk's easel under 50 deg of tilt): the window is the Director's word. A film hide or hide:true still wins.
+    const keep = edit.hide !== true && !o.userData.__filmFxRawVisible;
+    Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => cell.f > 0 && (get() || (keep && o.userData.stowHidden === true)), set });
     undo.push(() => { delete o.visible; if (own && !('value' in own)) Object.defineProperty(o, 'visible', own); else o.visible = raw; });
     o.traverse(mesh => { if (mesh.material && !mesh.userData.filmFx) fades.push({ mesh, orig: null, copy: null }); });
   }
