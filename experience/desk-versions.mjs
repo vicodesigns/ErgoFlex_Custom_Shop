@@ -184,7 +184,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const seam=event.target.closest?.('[data-desk-seam]'),seg=event.target.closest?.('[data-desk-version]'),lane=event.target.closest?.('.desk-versions-lane');
     if(!lane||!(seam||seg))return;
     drag=seam?{kind:'seam',i:Number(seam.dataset.deskSeam),lane}:{kind:'move',n:seg.dataset.deskVersion,x:event.clientX,moved:false,lane,to:null};
-    if(seam)event.preventDefault();
+    if(seam){event.preventDefault();lastStatus='';}
     addEventListener('pointermove',move);addEventListener('pointerup',up,{once:true});addEventListener('pointercancel',up,{once:true});
   }
   function slotAt(t){const l=list();const i=l.findIndex(x=>t<x.to);return i<0?l.length-1:i;}
