@@ -187,8 +187,9 @@ export const ROOM_PEOPLE = {
         { id: 'people-sofia-sit-chat', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 330, depth: -150, modes: ['party'], colors: LOOK.guestC },
         L => L.id === 'house' ? [spot('people-sam-stand-drink', 480, 700, [1180, 1050], PARTY), spot('people-noah-stand-drink', 1180, 1050, [480, 700], { ...PARTY, colors: LOOK.guestA })]
             : ring([L.width * .12, L.back + L.depth * .58], 420, ['people-sam-stand-drink', ['people-noah-stand-drink', { colors: LOOK.guestA }]], { ...PARTY, clear: true }, 60),
-        // (the smallest den has no sofa: in the evening he plays at the desk)
-        L => L.id !== 'apartment' ? [] : [{ key: 'sam-evening', id: 'people-sam-sit-game', desk: 'sit', modes: ['evening'] }, { key: 'sam-evening-30', id: 'people-sam-sit-game-30', desk: 'sit', modes: ['evening'] }, { key: 'sam-evening-stand', id: 'people-sam-stand-type', desk: 'stand', modes: ['evening'] }],
+        // (the smallest den has no sofa: in the evening and on game night he plays at the desk, a friend on the ottoman)
+        L => L.id !== 'apartment' ? [] : [{ key: 'sam-evening', id: 'people-sam-sit-game', desk: 'sit', modes: ['evening', 'party'] }, { key: 'sam-evening-30', id: 'people-sam-sit-game-30', desk: 'sit', modes: ['evening', 'party'] }, { key: 'sam-evening-stand', id: 'people-sam-stand-type', desk: 'stand', modes: ['evening', 'party'] },
+            { id: 'people-leo-sit-controller', on: 'kenney-furniture-lounge-sofa-ottoman', seat: 420, modes: ['evening', 'party'], key: 'leo-ottoman' }],
         // the two largest dens: a friend in the lounge chair, another at the game table
         L => tier(L) < 3 ? [] : [
             { id: 'people-leo-sit-controller', on: 'kenney-furniture-lounge-chair', seat: 420, modes: ['afternoon', 'night'], key: 'leo-chair' },
