@@ -365,14 +365,13 @@ export const ROOM_PEOPLE = {
                 spot('people-grace-sit-floor', px - 450, pz - 380, [px - 50, pz - 100], { modes: ['evening'], colors: { top: '#7d5a6b' } }),   // the grown-up who shares the story, down on the rug with her
                 spot('people-tess-kid-play-floor', px - 320, pz - 60, [px + 250, pz + 40], { key: 'tess-plays-with-a-friend', modes: ['party'] }),
                 spot('people-ravi-kid-sit-floor', px + 480, pz + 120, [px - 150, pz], { modes: ['party'] }),
-                spot('people-zuri-kid-sit-floor', px + 80, pz + 560, [px - 100, pz], { modes: ['party'], clear: true })];   // (a third on the mat, where there is room)
+                spot('people-zuri-kid-sit-floor', px - 250, pz + 720, [px, pz], { modes: ['party'], clear: true })];   // (a third on the mat, where there is room)
             if (age === 'primary') return [
                 { id: 'people-nora-kid-stand-desk', desk: 'stand', reach: 600, modes: ['morning'] },   // on her feet at the desk, getting her things together
                 { id: 'people-nora-kid-sit-desk', desk: 'sit', chair: false, modes: ['afternoon'] },
                 spot('people-nora-kid-read-floor', rx + 700, rz - 500, [rx + 1500, rz - 1200], { modes: ['evening'] }),
                 spot('people-nora-kid-play-floor', px - 250, pz + 50, [px + 450, pz + 120], { key: 'nora-builds', modes: ['party'] }),
-                spot('people-jun-kid-sit-floor', px + 600, pz + 150, [px, pz + 80], { modes: ['party'] }),
-                spot('people-lucia-kid-play-floor', px + 150, pz + 700, [px + 100, pz + 80], { modes: ['party'], clear: true })];
+                spot('people-jun-kid-sit-floor', px + 600, pz + 150, [px, pz + 80], { modes: ['party'] })];
             if (age === 'preteen') return [
                 { id: 'people-jun-kid-stand-desk', desk: 'stand', reach: 600, modes: ['morning'] },
                 { id: 'people-jun-kid-sit-desk', desk: 'sit', chair: false, modes: ['afternoon', 'evening'] },
