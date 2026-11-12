@@ -1,0 +1,124 @@
+{
+ "chapters": [
+  {
+   "n": 1,
+   "id": "awaken",
+   "title": "Level up your every day.",
+   "seconds": 44.85,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch01.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/awaken.json",
+   "version": "5fea4f332fa3",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 2,
+   "id": "rise",
+   "title": "Your height. Your rhythm.",
+   "seconds": 18.0,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch02-rise.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/rise.json",
+   "version": "5325ac0b58ed",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 3,
+   "id": "create",
+   "title": "Angle it to your art.",
+   "seconds": 23.5,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch03-create.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/create.json",
+   "version": "efc52f8fa5d4",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 4,
+   "id": "commons",
+   "title": "A place for everyone.",
+   "seconds": 16.0,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch04-commons.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/commons.json",
+   "version": "9909840155d1",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 5,
+   "id": "coast",
+   "title": "Ideas become stories.",
+   "seconds": 14.5,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch05-coast.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/coast.json",
+   "version": "7a59250a6830",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 6,
+   "id": "oilers",
+   "title": "Space to discover.",
+   "seconds": 14.0,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch06-oilers.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/oilers.json",
+   "version": "ea75bb03f5ad",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 7,
+   "id": "wellness",
+   "title": "Build movement into your day.",
+   "seconds": 16.0,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch07-wellness.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/wellness.json",
+   "version": "9d4597e99973",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 8,
+   "id": "awareness",
+   "title": "It sees what\u2019s in its way.",
+   "seconds": 12.0,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch08-awareness.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/awareness.json",
+   "version": "413e4af1ede7",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 9,
+   "id": "music",
+   "title": "Feel the room come alive.",
+   "seconds": 12.5,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch09-music.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/music.json",
+   "version": "39216984096f",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 10,
+   "id": "media",
+   "title": "Movie night, upgraded.",
+   "seconds": 17.0,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch10-media.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/media.json",
+   "version": "c0477f869421",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 11,
+   "id": "storage",
+   "title": "Make room for what\u2019s next.",
+   "seconds": 24.978,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch11-storage.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/storage.json",
+   "version": "c9d2f5c6c559",
+   "updated": "2026-11-11T01:45:51Z"
+  },
+  {
+   "n": 12,
+   "id": "hero",
+   "title": "One desk. Every part of your day.",
+   "seconds": 48.0,
+   "page": "/exports/cinematic-intro-20261110-alt/director-ch12-hero.html",
+   "shot": "/exports/cinematic-intro-20261110-alt/director-film/hero.json",
+   "version": "faacad45fd36",
+   "updated": "2026-11-12T04:01:11Z"
+  }
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "v": 1,
+ "cuts": [
+  {
+   "id": "vico",
+   "name": "Vico's cut",
+   "note": "The film as it renders today.",
+   "master": true,
+   "dir": "/exports/cinematic-intro-20261104-hq14",
+   "chapters": "/exports/cinematic-intro-20261104-hq14/director-chapters.json",
+   "seconds": 261.33,
+   "updated": "2026-11-10T06:51:38Z",
+   "created": ""
+  },
+  {
+   "id": "people",
+   "name": "Vico's cut with people",
+   "note": "Vico's cameras and timing with the cast added; the commons desk starts on the green carpet.",
+   "from": "exports/cinematic-intro-20261104-hq14",
+   "dir": "/exports/cinematic-intro-20261110-people",
+   "chapters": "/exports/cinematic-intro-20261110-people/director-chapters.json",
+   "seconds": 261.33,
+   "updated": "2026-11-10T22:36:44Z",
+   "created": "2026-11-10T23:16:03Z"
+  },
+  {
+   "id": "alt",
+   "name": "Alternate cut",
+   "note": "Reworked cameras and cuts with the same people.",
+   "from": "exports/cinematic-intro-20261104-hq14",
+   "dir": "/exports/cinematic-intro-20261110-alt",
+   "chapters": "/exports/cinematic-intro-20261110-alt/director-chapters.json",
+   "seconds": 261.33,
+   "updated": "2026-11-12T04:01:10Z",
+   "created": "2026-11-10T23:16:07Z"
+  }
+ ]
+}
