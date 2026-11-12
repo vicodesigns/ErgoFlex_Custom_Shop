@@ -336,7 +336,8 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     }
     // the still models for one use of the room
     people.setFilter({ only: [], cast, motion: false }); await people.setEnabled(true);
-    assert.equal(people.actors.length, 0); people.update({ ...desk, height: 39.5, time: 5 }); assert.deepEqual(shown(), [], 'motion off: nobody between the built heights, as before');
+    assert.equal(people.actors.length, 0); people.update({ ...desk, height: 39.5, time: 5 }); assert.deepEqual(shown(), ['people-maya-stand-mid'], 'motion off: at 38 to 40 in the mid-height standing model');
+    people.update({ ...desk, height: 33, time: 5 }); assert.deepEqual(shown(), [], 'motion off: nobody between the built heights, as before');
     people.dispose();
 }
 console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path.');

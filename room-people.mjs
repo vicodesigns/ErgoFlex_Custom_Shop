@@ -970,14 +970,14 @@ export const castEntries = (id, layout) => {
 const castFor = (id, layout) => { const own = castEntries(id, layout); return own.length ? own : DEFAULT_CREW[id] ? crew(DEFAULT_CREW[id], id) : []; };
 
 // The same character's other desk postures, as [id, desk role]: a typist sits at 28 in and at 30 in, stands low at a
-// bench-height desk (35 to 36 in) and stands at 43.5 in, a wheelchair user has poses for 28 in and 31 in. Poses built for one special desk (low standing) have none.
+// bench-height desk (35 to 36 in), at a mid-height one (38 to 40 in: stand-mid, built for 39 in) and at 43.5 in, a wheelchair user has poses for 28 in and 31 in. Poses built for one special desk (low standing) have none.
 export function deskFamily(id) {
     const m = /^people-([a-z]+)-(.+)$/.exec(id || ''); if (!m) return [];
     const [, who, posture] = m, as = (p, desk) => ['people-' + who + '-' + p, desk]; let list = [];
     if (/^wheel-/.test(posture)) { const base = posture.replace(/-(28|31)$/, ''); list = [as(base, 'wheel'), as(base + '-28', 'wheel'), as(base + '-31', 'wheel')]; }
     // (the standing counterpart of the seated posture first, so what is in the hand stays there: sit-coffee stands as stand-coffee)
-    else if (/^sit-/.test(posture)) { const base = posture.replace(/-30$/, ''); list = [as(base, 'sit'), as(base + '-30', 'sit'), as('stand-low', 'stand'), as(base.replace(/^sit-/, 'stand-'), 'stand'), as('stand-type', 'stand')]; }
-    else if (posture === 'stand-type' || posture === 'stand-low') list = [as('sit-type', 'sit'), as('sit-type-30', 'sit'), as('stand-low', 'stand'), as('stand-type', 'stand')];
+    else if (/^sit-/.test(posture)) { const base = posture.replace(/-30$/, ''); list = [as(base, 'sit'), as(base + '-30', 'sit'), as('stand-low', 'stand'), as('stand-mid', 'stand'), as(base.replace(/^sit-/, 'stand-'), 'stand'), as('stand-type', 'stand')]; }
+    else if (posture === 'stand-type' || posture === 'stand-low' || posture === 'stand-mid') list = [as('sit-type', 'sit'), as('sit-type-30', 'sit'), as('stand-low', 'stand'), as('stand-mid', 'stand'), as('stand-type', 'stand')];
     return list.filter(([other]) => other !== id);
 }
 

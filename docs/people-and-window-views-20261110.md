@@ -330,3 +330,45 @@ Three things were added for this:
 Checked with `tools/people/cast-audit.cjs` over every layout and hour of the three rooms (nobody outside the room,
 nobody through furniture), and by eye for anyone seated the wrong way round on a chair (the kindergarten teacher's
 rocker faces the rug, so she is not turned on it as people on the classroom chairs are).
+
+## People of the institutional rooms (12 November)
+
+The police squad room, the hospital, the laboratory, the IT room, the government office and the middle school have
+people of their own in `tools/people/cast.py`: Officers Reyes and Cole, Sergeant Brandt, Detective Tran, Okoye and Walsh
+(security), the nurses Nina, Mateo and Amara, Dr Patel and Dr Stone, the patients Walter and June, Vega, Yusuf and Chen
+(laboratory), Devi and Tomas (IT), the clerks Helen, Darius and Mei, and six students of 12 to 13 (Aiden, Bella, Carlos,
+Dina, Emeka, Fern). The catalog gives each a `role`; the students are `teen` and take the adults' postures.
+
+MakeHuman has no scrubs, coat or gown, and nothing to hang on a uniform, so a character can name:
+
+- `wear`: garments cut from the base mesh's own helper geometry (`tools/people/garments.py`): `coat`, `scrubs`, `gown`,
+  `socks`, and `gloves` (the hands' faces in a second material). They are weighted like the body, so they follow every
+  posture. MPFB keeps the phenotype as shape keys on the base mesh: the copy a garment is cut from has them mixed down
+  first (edited with the keys on, the armature deforms the keys' mix and the garment ends up inside the body in some
+  builds and not in others).
+- `gear`: what the role wears on the body (`tools/people/worn.py`): `belt` (with `radio`, `pouch`, `cuffs`, `light`,
+  `keys`, `tools`, `badge` at an angle round the waist), `badge`, `nameplate`, `shoulder_patch` (with `chevrons`),
+  `shoulder_mic`, `chest_patch`, `back_text`, `lanyard`, `id_badge`, `stethoscope`, `hip_badge`. Each is described on
+  the rest pose and dropped onto the posed clothes with a ray.
+- `tuck` (a top ends under the belt), `frames` (glasses lose their lenses: safety glasses), `carry` (held in one
+  posture), `postures` (what the library holds of the character; `build.py --all` builds only those, any other on
+  request).
+
+Recolouring (`colors` on a placement): the shirts, the scrubs top and the gown are the `top`, trousers the `bottom`,
+Walter's socks the `shoes`. The white coat (`Worn.coat`), the gloves and everything in `gear` (`Held.*`) keep their colour.
+
+Postures the roles brought (anyone can take them: `python3 tools/people/build.py people-<character>-<posture>`):
+
+| Posture | Built on |
+|---|---|
+| `stand-mid` | a desk at 39 in (keys 0.974 m): the stations that stand at 38 to 40 in. `deskFamily` loads it with the other desk postures. |
+| `stand-brief` | nothing: at ease, thumbs at the belt (the hands are moved out to this character's waist: `clear` on a hand) |
+| `stand-radio` | nothing: a handheld radio upright at the left collarbone, head turned to it |
+| `stand-chart` | nothing: a clipboard on the left hand at chest height, a pen in the right |
+| `push-cart` | a handle 0.95 m up, 0.48 m in front of the pelvis, hands 0.4 m apart; mid-step, so it does not breathe and shift |
+| `lie-bed` | the hospital's `care-bed-N`: linen top 663 mm, back section raised 19 degrees from a hinge 80 mm behind the pelvis, head and shoulders on the pillow. Not dropped to the floor: place it `on: 'care-bed-N'` with `depth: -170` (the pelvis 170 mm toward the head from the bed's middle). |
+| `sit-microscope` | a stool 0.65 m high, feet on its ring 0.25 m up; eyes 1.2 m up and 0.40 to 0.44 m in front of the pelvis, hands at 0.97 m, 0.55 m in front. Not dropped to the floor either. |
+| `stand-counter` | a counter 1.05 m high whose near edge is 0.27 m in front of the pelvis; hands 0.44 m in front |
+
+`build.py --who a,b` and `--pose p,q` narrow `--all`. Builds here run with `--jobs 4`: nine Blender processes beside a
+browser audit ran the machine out of memory.

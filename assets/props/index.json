@@ -68735,6 +68735,2691 @@
     "character": "fern",
     "pose": "stand-talk"
    }
+  },
+  {
+   "id": "people-reyes-stand-brief",
+   "name": "Officer Reyes: standing at ease, thumbs at the belt",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-reyes-stand-brief.glb",
+   "anchor": "floor",
+   "size": [
+    632.4,
+    1675.1,
+    347.3
+   ],
+   "min": [
+    -316.2,
+    0,
+    -138.8
+   ],
+   "max": [
+    316.2,
+    1675.1,
+    208.5
+   ],
+   "tris": 38146,
+   "bytes": 704200,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "reyes",
+    "pose": "stand-brief"
+   }
+  },
+  {
+   "id": "people-brandt-stand-brief",
+   "name": "Sergeant Brandt: standing at ease, thumbs at the belt",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-brandt-stand-brief.glb",
+   "anchor": "floor",
+   "size": [
+    671.2,
+    1811.4,
+    346
+   ],
+   "min": [
+    -335.6,
+    0,
+    -119
+   ],
+   "max": [
+    335.6,
+    1811.4,
+    227
+   ],
+   "tris": 38528,
+   "bytes": 1068380,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "brandt",
+    "pose": "stand-brief"
+   }
+  },
+  {
+   "id": "people-reyes-stand-radio",
+   "name": "Officer Reyes: on the radio, hand at the shoulder",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-reyes-stand-radio.glb",
+   "anchor": "floor",
+   "size": [
+    638.9,
+    1686.9,
+    322.5
+   ],
+   "min": [
+    -255.9,
+    0,
+    -112.8
+   ],
+   "max": [
+    383,
+    1686.9,
+    209.7
+   ],
+   "tris": 38530,
+   "bytes": 705084,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "reyes",
+    "pose": "stand-radio"
+   }
+  },
+  {
+   "id": "people-walsh-stand-radio",
+   "name": "Walsh: on the radio, hand at the shoulder",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-walsh-stand-radio.glb",
+   "anchor": "floor",
+   "size": [
+    698.4,
+    1839.6,
+    346.2
+   ],
+   "min": [
+    -285.8,
+    0,
+    -115.4
+   ],
+   "max": [
+    412.6,
+    1839.6,
+    230.8
+   ],
+   "tris": 39031,
+   "bytes": 1045012,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "walsh",
+    "pose": "stand-radio"
+   }
+  },
+  {
+   "id": "people-nina-stand-chart",
+   "name": "Nina: reading a chart on a clipboard",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nina-stand-chart.glb",
+   "anchor": "floor",
+   "size": [
+    589.4,
+    1657.4,
+    638.5
+   ],
+   "min": [
+    -302,
+    0,
+    -110.9
+   ],
+   "max": [
+    287.4,
+    1657.4,
+    527.6
+   ],
+   "tris": 39070,
+   "bytes": 1020696,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nina",
+    "pose": "stand-chart"
+   }
+  },
+  {
+   "id": "people-stone-stand-chart",
+   "name": "Dr Stone: reading a chart on a clipboard",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-stone-stand-chart.glb",
+   "anchor": "floor",
+   "size": [
+    655.8,
+    1792.5,
+    704.1
+   ],
+   "min": [
+    -336.1,
+    0,
+    -154.8
+   ],
+   "max": [
+    319.7,
+    1792.5,
+    549.3
+   ],
+   "tris": 37518,
+   "bytes": 786516,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "stone",
+    "pose": "stand-chart"
+   }
+  },
+  {
+   "id": "people-nina-push-cart",
+   "name": "Nina: pushing a cart",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nina-push-cart.glb",
+   "anchor": "floor",
+   "size": [
+    547,
+    1656.8,
+    789.8
+   ],
+   "min": [
+    -273.5,
+    0,
+    -269.6
+   ],
+   "max": [
+    273.5,
+    1656.8,
+    520.2
+   ],
+   "tris": 38864,
+   "bytes": 1012648,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nina",
+    "pose": "push-cart"
+   }
+  },
+  {
+   "id": "people-walter-lie-bed",
+   "name": "Walter: lying in a hospital bed",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-walter-lie-bed.glb",
+   "anchor": "floor",
+   "size": [
+    592,
+    634.6,
+    1620.2
+   ],
+   "min": [
+    -296,
+    596.9,
+    -671.9
+   ],
+   "max": [
+    296,
+    1231.5,
+    948.3
+   ],
+   "tris": 34004,
+   "bytes": 1092164,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "walter",
+    "pose": "lie-bed"
+   }
+  },
+  {
+   "id": "people-june-lie-bed",
+   "name": "June: lying in a hospital bed",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-june-lie-bed.glb",
+   "anchor": "floor",
+   "size": [
+    594.8,
+    582.4,
+    1617.7
+   ],
+   "min": [
+    -297.4,
+    641.9,
+    -685.4
+   ],
+   "max": [
+    297.4,
+    1224.3,
+    932.3
+   ],
+   "tris": 37632,
+   "bytes": 766748,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "june",
+    "pose": "lie-bed"
+   }
+  },
+  {
+   "id": "people-vega-sit-microscope",
+   "name": "Vega: at a microscope, on a lab stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-vega-sit-microscope.glb",
+   "anchor": "floor",
+   "size": [
+    581.6,
+    1123.5,
+    700.1
+   ],
+   "min": [
+    -290.8,
+    246.2,
+    -118.5
+   ],
+   "max": [
+    290.8,
+    1369.7,
+    581.6
+   ],
+   "tris": 45848,
+   "bytes": 888612,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "vega",
+    "pose": "sit-microscope"
+   }
+  },
+  {
+   "id": "people-helen-stand-counter",
+   "name": "Helen: serving at a counter",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-helen-stand-counter.glb",
+   "anchor": "floor",
+   "size": [
+    605.3,
+    1612.3,
+    602.7
+   ],
+   "min": [
+    -304.1,
+    0,
+    -96.9
+   ],
+   "max": [
+    301.2,
+    1612.3,
+    505.8
+   ],
+   "tris": 47190,
+   "bytes": 1069604,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "helen",
+    "pose": "stand-counter"
+   }
+  },
+  {
+   "id": "people-mei-stand-counter",
+   "name": "Mei: serving at a counter",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mei-stand-counter.glb",
+   "anchor": "floor",
+   "size": [
+    591.5,
+    1547.4,
+    624.5
+   ],
+   "min": [
+    -295.7,
+    0,
+    -127.9
+   ],
+   "max": [
+    295.8,
+    1547.4,
+    496.6
+   ],
+   "tris": 50346,
+   "bytes": 1342296,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mei",
+    "pose": "stand-counter"
+   }
+  },
+  {
+   "id": "people-reyes-stand-mid",
+   "name": "Officer Reyes: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-reyes-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    492.1,
+    1677.3,
+    553.1
+   ],
+   "min": [
+    -245.6,
+    0,
+    -120.4
+   ],
+   "max": [
+    246.5,
+    1677.3,
+    432.7
+   ],
+   "tris": 39520,
+   "bytes": 710740,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "reyes",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-yusuf-sit-microscope",
+   "name": "Yusuf: at a microscope, on a lab stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-yusuf-sit-microscope.glb",
+   "anchor": "floor",
+   "size": [
+    637.6,
+    1180.7,
+    719.9
+   ],
+   "min": [
+    -318.8,
+    217.9,
+    -117.8
+   ],
+   "max": [
+    318.8,
+    1398.6,
+    602.1
+   ],
+   "tris": 41288,
+   "bytes": 804464,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "yusuf",
+    "pose": "sit-microscope"
+   }
+  },
+  {
+   "id": "people-chen-sit-microscope",
+   "name": "Chen: at a microscope, on a lab stool",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-chen-sit-microscope.glb",
+   "anchor": "floor",
+   "size": [
+    624.6,
+    1158,
+    713.1
+   ],
+   "min": [
+    -312.3,
+    230.2,
+    -111
+   ],
+   "max": [
+    312.3,
+    1388.2,
+    602.1
+   ],
+   "tris": 39474,
+   "bytes": 878064,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "chen",
+    "pose": "sit-microscope"
+   }
+  },
+  {
+   "id": "people-maya-stand-mid",
+   "name": "Maya: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-maya-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    475.2,
+    1630.5,
+    553.9
+   ],
+   "min": [
+    -237.6,
+    0,
+    -120.5
+   ],
+   "max": [
+    237.6,
+    1630.5,
+    433.4
+   ],
+   "tris": 37610,
+   "bytes": 996504,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "maya",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-andre-stand-mid",
+   "name": "Andre: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    563.2,
+    1791,
+    619.3
+   ],
+   "min": [
+    -281.5,
+    0,
+    -156.6
+   ],
+   "max": [
+    281.7,
+    1791,
+    462.7
+   ],
+   "tris": 34606,
+   "bytes": 848532,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-grace-stand-mid",
+   "name": "Grace: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-grace-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    506.4,
+    1581.9,
+    558.1
+   ],
+   "min": [
+    -253.2,
+    0,
+    -125.6
+   ],
+   "max": [
+    253.2,
+    1581.9,
+    432.5
+   ],
+   "tris": 49370,
+   "bytes": 1274952,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "grace",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-kai-stand-mid",
+   "name": "Kai: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-kai-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    468.7,
+    1427.7,
+    552.7
+   ],
+   "min": [
+    -234.6,
+    0,
+    -124.7
+   ],
+   "max": [
+    234.1,
+    1427.7,
+    428
+   ],
+   "tris": 34162,
+   "bytes": 870304,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "kai",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-zoe-stand-mid",
+   "name": "Zoe: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    465.2,
+    1559.5,
+    547.6
+   ],
+   "min": [
+    -232.6,
+    0,
+    -119.4
+   ],
+   "max": [
+    232.6,
+    1559.5,
+    428.2
+   ],
+   "tris": 34416,
+   "bytes": 1128608,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-hale-stand-mid",
+   "name": "Mr Hale: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-hale-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    505.2,
+    1730.5,
+    583.5
+   ],
+   "min": [
+    -251.4,
+    0,
+    -135
+   ],
+   "max": [
+    253.8,
+    1730.5,
+    448.5
+   ],
+   "tris": 34524,
+   "bytes": 1373348,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "hale",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-lin-stand-mid",
+   "name": "Lin: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    472,
+    1529.2,
+    537.3
+   ],
+   "min": [
+    -236,
+    0,
+    -113.2
+   ],
+   "max": [
+    236,
+    1529.2,
+    424.1
+   ],
+   "tris": 49367,
+   "bytes": 978856,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-omar-stand-mid",
+   "name": "Omar: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-omar-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    553.6,
+    1714.8,
+    584.5
+   ],
+   "min": [
+    -276.8,
+    0,
+    -133.4
+   ],
+   "max": [
+    276.8,
+    1714.8,
+    451.1
+   ],
+   "tris": 34356,
+   "bytes": 791320,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "omar",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-sam-stand-mid",
+   "name": "Sam: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    531.4,
+    1721.2,
+    586.4
+   ],
+   "min": [
+    -265.9,
+    0,
+    -134
+   ],
+   "max": [
+    265.5,
+    1721.2,
+    452.4
+   ],
+   "tris": 33466,
+   "bytes": 925188,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-ben-stand-mid",
+   "name": "Ben: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ben-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    511.2,
+    1753.8,
+    582.2
+   ],
+   "min": [
+    -255.6,
+    0,
+    -133.4
+   ],
+   "max": [
+    255.6,
+    1753.8,
+    448.8
+   ],
+   "tris": 38606,
+   "bytes": 1138500,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ben",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-priya-stand-mid",
+   "name": "Priya: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-priya-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    479.2,
+    1622.7,
+    551.9
+   ],
+   "min": [
+    -239.6,
+    0,
+    -120.1
+   ],
+   "max": [
+    239.6,
+    1622.7,
+    431.8
+   ],
+   "tris": 37032,
+   "bytes": 783984,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "priya",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-jo-stand-mid",
+   "name": "Jo: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-jo-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    484.8,
+    1653.4,
+    585.4
+   ],
+   "min": [
+    -242.4,
+    0,
+    -149.6
+   ],
+   "max": [
+    242.4,
+    1653.4,
+    435.8
+   ],
+   "tris": 41894,
+   "bytes": 948312,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "jo",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-mia-stand-mid",
+   "name": "Mia: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    480.2,
+    1510.5,
+    541.1
+   ],
+   "min": [
+    -240.1,
+    0,
+    -117.4
+   ],
+   "max": [
+    240.1,
+    1510.5,
+    423.7
+   ],
+   "tris": 34724,
+   "bytes": 1383124,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-leo-stand-mid",
+   "name": "Leo: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-leo-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    467.2,
+    1433.8,
+    557.2
+   ],
+   "min": [
+    -233.6,
+    0,
+    -128.1
+   ],
+   "max": [
+    233.6,
+    1433.8,
+    429.1
+   ],
+   "tris": 38250,
+   "bytes": 1156012,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "leo",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-noah-stand-mid",
+   "name": "Noah: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    527.1,
+    1759.7,
+    606.8
+   ],
+   "min": [
+    -263.7,
+    0,
+    -155.1
+   ],
+   "max": [
+    263.4,
+    1759.7,
+    451.7
+   ],
+   "tris": 33286,
+   "bytes": 1190060,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-ava-stand-mid",
+   "name": "Ava: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ava-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    459.4,
+    1486.7,
+    545.9
+   ],
+   "min": [
+    -229.7,
+    0,
+    -120.9
+   ],
+   "max": [
+    229.7,
+    1486.7,
+    425
+   ],
+   "tris": 37772,
+   "bytes": 950120,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ava",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-eli-stand-mid",
+   "name": "Eli: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-eli-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    501,
+    1536,
+    561.7
+   ],
+   "min": [
+    -250.7,
+    0,
+    -127.9
+   ],
+   "max": [
+    250.3,
+    1536,
+    433.8
+   ],
+   "tris": 42862,
+   "bytes": 1274096,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "eli",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-sofia-stand-mid",
+   "name": "Sofia: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sofia-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    457.8,
+    1487.5,
+    540.6
+   ],
+   "min": [
+    -228.9,
+    0,
+    -116.2
+   ],
+   "max": [
+    228.9,
+    1487.5,
+    424.4
+   ],
+   "tris": 49979,
+   "bytes": 991072,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sofia",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-cole-stand-mid",
+   "name": "Officer Cole: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-cole-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    563,
+    1799.6,
+    601.5
+   ],
+   "min": [
+    -281.3,
+    0,
+    -138.8
+   ],
+   "max": [
+    281.7,
+    1799.6,
+    462.7
+   ],
+   "tris": 37984,
+   "bytes": 704344,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "cole",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-cole-stand-brief",
+   "name": "Officer Cole: standing at ease, thumbs at the belt",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-cole-stand-brief.glb",
+   "anchor": "floor",
+   "size": [
+    747.8,
+    1836.6,
+    346.4
+   ],
+   "min": [
+    -373.9,
+    0,
+    -112.8
+   ],
+   "max": [
+    373.9,
+    1836.6,
+    233.6
+   ],
+   "tris": 37356,
+   "bytes": 701260,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "cole",
+    "pose": "stand-brief"
+   }
+  },
+  {
+   "id": "people-cole-stand-radio",
+   "name": "Officer Cole: on the radio, hand at the shoulder",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-cole-stand-radio.glb",
+   "anchor": "floor",
+   "size": [
+    714.5,
+    1823.4,
+    352.9
+   ],
+   "min": [
+    -292.2,
+    0,
+    -121.7
+   ],
+   "max": [
+    422.3,
+    1823.4,
+    231.2
+   ],
+   "tris": 37278,
+   "bytes": 699876,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "cole",
+    "pose": "stand-radio"
+   }
+  },
+  {
+   "id": "people-brandt-stand-mid",
+   "name": "Sergeant Brandt: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-brandt-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    516.2,
+    1781.5,
+    577.7
+   ],
+   "min": [
+    -257.5,
+    0,
+    -128.1
+   ],
+   "max": [
+    258.7,
+    1781.5,
+    449.6
+   ],
+   "tris": 39378,
+   "bytes": 1072364,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "brandt",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-brandt-stand-radio",
+   "name": "Sergeant Brandt: on the radio, hand at the shoulder",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-brandt-stand-radio.glb",
+   "anchor": "floor",
+   "size": [
+    678.3,
+    1801.6,
+    345.5
+   ],
+   "min": [
+    -278.8,
+    0,
+    -119.6
+   ],
+   "max": [
+    399.5,
+    1801.6,
+    225.9
+   ],
+   "tris": 38848,
+   "bytes": 1069204,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "brandt",
+    "pose": "stand-radio"
+   }
+  },
+  {
+   "id": "people-tran-stand-mid",
+   "name": "Detective Tran: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tran-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    476.6,
+    1526.1,
+    542.8
+   ],
+   "min": [
+    -236.9,
+    0,
+    -116.9
+   ],
+   "max": [
+    239.7,
+    1526.1,
+    425.9
+   ],
+   "tris": 39092,
+   "bytes": 1133180,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tran",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-tran-stand-brief",
+   "name": "Detective Tran: standing at ease, thumbs at the belt",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tran-stand-brief.glb",
+   "anchor": "floor",
+   "size": [
+    588.9,
+    1554.6,
+    315.3
+   ],
+   "min": [
+    -295.4,
+    0,
+    -105.6
+   ],
+   "max": [
+    293.5,
+    1554.6,
+    209.7
+   ],
+   "tris": 37278,
+   "bytes": 1122980,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tran",
+    "pose": "stand-brief"
+   }
+  },
+  {
+   "id": "people-tran-stand-radio",
+   "name": "Detective Tran: on the radio, hand at the shoulder",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tran-stand-radio.glb",
+   "anchor": "floor",
+   "size": [
+    618.6,
+    1544.6,
+    309
+   ],
+   "min": [
+    -255.7,
+    0,
+    -106
+   ],
+   "max": [
+    362.9,
+    1544.6,
+    203
+   ],
+   "tris": 38340,
+   "bytes": 1131932,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tran",
+    "pose": "stand-radio"
+   }
+  },
+  {
+   "id": "people-okoye-stand-mid",
+   "name": "Okoye: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-okoye-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    501.3,
+    1695.6,
+    563.6
+   ],
+   "min": [
+    -250.5,
+    0,
+    -124.4
+   ],
+   "max": [
+    250.8,
+    1695.6,
+    439.2
+   ],
+   "tris": 39997,
+   "bytes": 708936,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "okoye",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-okoye-stand-brief",
+   "name": "Okoye: standing at ease, thumbs at the belt",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-okoye-stand-brief.glb",
+   "anchor": "floor",
+   "size": [
+    657.6,
+    1729.1,
+    341.7
+   ],
+   "min": [
+    -328.8,
+    0,
+    -124.4
+   ],
+   "max": [
+    328.8,
+    1729.1,
+    217.3
+   ],
+   "tris": 38607,
+   "bytes": 701800,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "okoye",
+    "pose": "stand-brief"
+   }
+  },
+  {
+   "id": "people-okoye-stand-radio",
+   "name": "Okoye: on the radio, hand at the shoulder",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-okoye-stand-radio.glb",
+   "anchor": "floor",
+   "size": [
+    664.3,
+    1713.2,
+    337.1
+   ],
+   "min": [
+    -266.1,
+    0,
+    -118.5
+   ],
+   "max": [
+    398.2,
+    1713.2,
+    218.6
+   ],
+   "tris": 39103,
+   "bytes": 705976,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "okoye",
+    "pose": "stand-radio"
+   }
+  },
+  {
+   "id": "people-walsh-stand-mid",
+   "name": "Walsh: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-walsh-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    525.8,
+    1818.2,
+    588.3
+   ],
+   "min": [
+    -262.7,
+    0,
+    -133.3
+   ],
+   "max": [
+    263.1,
+    1818.2,
+    455
+   ],
+   "tris": 39405,
+   "bytes": 1046260,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "walsh",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-walsh-stand-brief",
+   "name": "Walsh: standing at ease, thumbs at the belt",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-walsh-stand-brief.glb",
+   "anchor": "floor",
+   "size": [
+    697.4,
+    1849,
+    351.7
+   ],
+   "min": [
+    -348.7,
+    0,
+    -119.5
+   ],
+   "max": [
+    348.7,
+    1849,
+    232.2
+   ],
+   "tris": 38631,
+   "bytes": 1041944,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "walsh",
+    "pose": "stand-brief"
+   }
+  },
+  {
+   "id": "people-nina-stand-mid",
+   "name": "Nina: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-nina-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    505.9,
+    1654,
+    556.9
+   ],
+   "min": [
+    -253,
+    0,
+    -122.7
+   ],
+   "max": [
+    252.9,
+    1654,
+    434.2
+   ],
+   "tris": 38728,
+   "bytes": 1012048,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "nina",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-mateo-stand-mid",
+   "name": "Mateo: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mateo-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    536,
+    1716.7,
+    586.4
+   ],
+   "min": [
+    -268,
+    0,
+    -133.6
+   ],
+   "max": [
+    268,
+    1716.7,
+    452.8
+   ],
+   "tris": 33632,
+   "bytes": 873424,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mateo",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-mateo-stand-chart",
+   "name": "Mateo: reading a chart on a clipboard",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mateo-stand-chart.glb",
+   "anchor": "floor",
+   "size": [
+    623.3,
+    1723.8,
+    654.9
+   ],
+   "min": [
+    -317.5,
+    0,
+    -115.3
+   ],
+   "max": [
+    305.8,
+    1723.8,
+    539.6
+   ],
+   "tris": 33994,
+   "bytes": 882460,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mateo",
+    "pose": "stand-chart"
+   }
+  },
+  {
+   "id": "people-mateo-push-cart",
+   "name": "Mateo: pushing a cart",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mateo-push-cart.glb",
+   "anchor": "floor",
+   "size": [
+    570.4,
+    1708.1,
+    838.9
+   ],
+   "min": [
+    -285.2,
+    0,
+    -290.4
+   ],
+   "max": [
+    285.2,
+    1708.1,
+    548.5
+   ],
+   "tris": 33778,
+   "bytes": 873660,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mateo",
+    "pose": "push-cart"
+   }
+  },
+  {
+   "id": "people-amara-stand-mid",
+   "name": "Amara: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-amara-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    511.2,
+    1650.5,
+    569.2
+   ],
+   "min": [
+    -255.6,
+    0,
+    -130.8
+   ],
+   "max": [
+    255.6,
+    1650.5,
+    438.4
+   ],
+   "tris": 36764,
+   "bytes": 911376,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "amara",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-amara-stand-chart",
+   "name": "Amara: reading a chart on a clipboard",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-amara-stand-chart.glb",
+   "anchor": "floor",
+   "size": [
+    585.3,
+    1654.7,
+    640.1
+   ],
+   "min": [
+    -298.9,
+    0,
+    -116.3
+   ],
+   "max": [
+    286.4,
+    1654.7,
+    523.8
+   ],
+   "tris": 37086,
+   "bytes": 920084,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "amara",
+    "pose": "stand-chart"
+   }
+  },
+  {
+   "id": "people-amara-push-cart",
+   "name": "Amara: pushing a cart",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-amara-push-cart.glb",
+   "anchor": "floor",
+   "size": [
+    559.6,
+    1649.1,
+    783.2
+   ],
+   "min": [
+    -279.8,
+    0,
+    -266.8
+   ],
+   "max": [
+    279.8,
+    1649.1,
+    516.4
+   ],
+   "tris": 36882,
+   "bytes": 911676,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "amara",
+    "pose": "push-cart"
+   }
+  },
+  {
+   "id": "people-patel-stand-mid",
+   "name": "Dr Patel: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-patel-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    523.8,
+    1597.3,
+    559.7
+   ],
+   "min": [
+    -261.9,
+    0,
+    -130.5
+   ],
+   "max": [
+    261.9,
+    1597.3,
+    429.2
+   ],
+   "tris": 49919,
+   "bytes": 838044,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "patel",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-patel-stand-chart",
+   "name": "Dr Patel: reading a chart on a clipboard",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-patel-stand-chart.glb",
+   "anchor": "floor",
+   "size": [
+    595.4,
+    1606.9,
+    615.3
+   ],
+   "min": [
+    -304.8,
+    0,
+    -105.1
+   ],
+   "max": [
+    290.6,
+    1606.9,
+    510.2
+   ],
+   "tris": 50157,
+   "bytes": 845760,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "patel",
+    "pose": "stand-chart"
+   }
+  },
+  {
+   "id": "people-stone-stand-mid",
+   "name": "Dr Stone: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-stone-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    521.2,
+    1785.6,
+    620
+   ],
+   "min": [
+    -260.6,
+    0,
+    -171
+   ],
+   "max": [
+    260.6,
+    1785.6,
+    449
+   ],
+   "tris": 37088,
+   "bytes": 776320,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "stone",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-vega-stand-mid",
+   "name": "Vega: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-vega-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    529.6,
+    1589.4,
+    550.6
+   ],
+   "min": [
+    -264.8,
+    0,
+    -121.1
+   ],
+   "max": [
+    264.8,
+    1589.4,
+    429.5
+   ],
+   "tris": 46106,
+   "bytes": 885764,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "vega",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-vega-stand-chart",
+   "name": "Vega: reading a chart on a clipboard",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-vega-stand-chart.glb",
+   "anchor": "floor",
+   "size": [
+    607.8,
+    1592.3,
+    625
+   ],
+   "min": [
+    -311.3,
+    0,
+    -110.5
+   ],
+   "max": [
+    296.5,
+    1592.3,
+    514.5
+   ],
+   "tris": 46350,
+   "bytes": 894808,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "vega",
+    "pose": "stand-chart"
+   }
+  },
+  {
+   "id": "people-yusuf-stand-mid",
+   "name": "Yusuf: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-yusuf-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    539.4,
+    1753.5,
+    603.5
+   ],
+   "min": [
+    -269.7,
+    0,
+    -152.1
+   ],
+   "max": [
+    269.7,
+    1753.5,
+    451.4
+   ],
+   "tris": 40824,
+   "bytes": 796288,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "yusuf",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-yusuf-stand-chart",
+   "name": "Yusuf: reading a chart on a clipboard",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-yusuf-stand-chart.glb",
+   "anchor": "floor",
+   "size": [
+    661.8,
+    1760.8,
+    682.8
+   ],
+   "min": [
+    -338.7,
+    0,
+    -139.9
+   ],
+   "max": [
+    323.1,
+    1760.8,
+    542.9
+   ],
+   "tris": 41266,
+   "bytes": 806928,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "yusuf",
+    "pose": "stand-chart"
+   }
+  },
+  {
+   "id": "people-chen-stand-mid",
+   "name": "Chen: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-chen-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    549.2,
+    1668.1,
+    584.8
+   ],
+   "min": [
+    -274.6,
+    0,
+    -133.5
+   ],
+   "max": [
+    274.6,
+    1668.1,
+    451.3
+   ],
+   "tris": 39828,
+   "bytes": 876568,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "chen",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-chen-stand-chart",
+   "name": "Chen: reading a chart on a clipboard",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-chen-stand-chart.glb",
+   "anchor": "floor",
+   "size": [
+    642.6,
+    1674,
+    653.4
+   ],
+   "min": [
+    -328.5,
+    0,
+    -124.5
+   ],
+   "max": [
+    314.1,
+    1674,
+    528.9
+   ],
+   "tris": 40108,
+   "bytes": 885792,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "chen",
+    "pose": "stand-chart"
+   }
+  },
+  {
+   "id": "people-devi-stand-mid",
+   "name": "Devi: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-devi-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    482.9,
+    1565.4,
+    557.4
+   ],
+   "min": [
+    -241,
+    0,
+    -130.3
+   ],
+   "max": [
+    241.9,
+    1565.4,
+    427.1
+   ],
+   "tris": 41014,
+   "bytes": 922584,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "devi",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-devi-push-cart",
+   "name": "Devi: pushing a cart",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-devi-push-cart.glb",
+   "anchor": "floor",
+   "size": [
+    556,
+    1564.6,
+    743.1
+   ],
+   "min": [
+    -278,
+    0,
+    -254.6
+   ],
+   "max": [
+    278,
+    1564.6,
+    488.5
+   ],
+   "tris": 41026,
+   "bytes": 922608,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "devi",
+    "pose": "push-cart"
+   }
+  },
+  {
+   "id": "people-tomas-stand-mid",
+   "name": "Tomas: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tomas-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    532,
+    1800.9,
+    597.3
+   ],
+   "min": [
+    -265.9,
+    0,
+    -137.5
+   ],
+   "max": [
+    266.1,
+    1800.9,
+    459.8
+   ],
+   "tris": 38934,
+   "bytes": 775416,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tomas",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-tomas-push-cart",
+   "name": "Tomas: pushing a cart",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-tomas-push-cart.glb",
+   "anchor": "floor",
+   "size": [
+    547.2,
+    1802,
+    883.4
+   ],
+   "min": [
+    -273.6,
+    0,
+    -310.2
+   ],
+   "max": [
+    273.6,
+    1802,
+    573.2
+   ],
+   "tris": 39078,
+   "bytes": 775280,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "tomas",
+    "pose": "push-cart"
+   }
+  },
+  {
+   "id": "people-helen-stand-mid",
+   "name": "Helen: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-helen-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    487.5,
+    1602.3,
+    550.9
+   ],
+   "min": [
+    -243.7,
+    0,
+    -117.7
+   ],
+   "max": [
+    243.8,
+    1602.3,
+    433.2
+   ],
+   "tris": 47192,
+   "bytes": 1068132,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "helen",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-darius-stand-mid",
+   "name": "Darius: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-darius-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    542.6,
+    1825.4,
+    596.2
+   ],
+   "min": [
+    -271.2,
+    0,
+    -134.8
+   ],
+   "max": [
+    271.4,
+    1825.4,
+    461.4
+   ],
+   "tris": 41780,
+   "bytes": 829744,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "darius",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-darius-stand-counter",
+   "name": "Darius: serving at a counter",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-darius-stand-counter.glb",
+   "anchor": "floor",
+   "size": [
+    655.2,
+    1842.3,
+    651.4
+   ],
+   "min": [
+    -328.7,
+    0,
+    -113.2
+   ],
+   "max": [
+    326.5,
+    1842.3,
+    538.2
+   ],
+   "tris": 41768,
+   "bytes": 828600,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "darius",
+    "pose": "stand-counter"
+   }
+  },
+  {
+   "id": "people-mei-stand-mid",
+   "name": "Mei: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mei-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    486.3,
+    1539.4,
+    555.4
+   ],
+   "min": [
+    -243.4,
+    0,
+    -129.8
+   ],
+   "max": [
+    242.9,
+    1539.4,
+    425.6
+   ],
+   "tris": 50371,
+   "bytes": 1343308,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mei",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-aiden-stand-mid",
+   "name": "Aiden: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-aiden-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    473,
+    1478.8,
+    552.1
+   ],
+   "min": [
+    -236.5,
+    0,
+    -124.9
+   ],
+   "max": [
+    236.5,
+    1478.8,
+    427.2
+   ],
+   "tris": 30236,
+   "bytes": 809768,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "aiden",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-bella-stand-mid",
+   "name": "Bella: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-bella-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    466.8,
+    1395.7,
+    551
+   ],
+   "min": [
+    -233.4,
+    0,
+    -131.5
+   ],
+   "max": [
+    233.4,
+    1395.7,
+    419.5
+   ],
+   "tris": 35030,
+   "bytes": 1286460,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "bella",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-carlos-stand-mid",
+   "name": "Carlos: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-carlos-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    462.7,
+    1448.6,
+    568.9
+   ],
+   "min": [
+    -231.6,
+    0,
+    -143.6
+   ],
+   "max": [
+    231.1,
+    1448.6,
+    425.3
+   ],
+   "tris": 32210,
+   "bytes": 948936,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "carlos",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-dina-stand-mid",
+   "name": "Dina: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-dina-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    468.6,
+    1428.7,
+    552.2
+   ],
+   "min": [
+    -234.3,
+    0,
+    -131.4
+   ],
+   "max": [
+    234.3,
+    1428.7,
+    420.8
+   ],
+   "tris": 35732,
+   "bytes": 1341604,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "dina",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-emeka-stand-mid",
+   "name": "Emeka: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-emeka-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    462.6,
+    1454.6,
+    568.2
+   ],
+   "min": [
+    -231.3,
+    0,
+    -142.9
+   ],
+   "max": [
+    231.3,
+    1454.6,
+    425.3
+   ],
+   "tris": 32958,
+   "bytes": 780164,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "emeka",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-fern-stand-mid",
+   "name": "Fern: typing standing at a mid-height desk",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-fern-stand-mid.glb",
+   "anchor": "floor",
+   "size": [
+    443.6,
+    1414.9,
+    538.7
+   ],
+   "min": [
+    -221.8,
+    0,
+    -118.7
+   ],
+   "max": [
+    221.8,
+    1414.9,
+    420
+   ],
+   "tris": 36764,
+   "bytes": 871176,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "fern",
+    "pose": "stand-mid",
+    "deskHeight": 39
+   }
+  },
+  {
+   "id": "people-grace-lie-bed",
+   "name": "Grace: lying in a hospital bed",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-grace-lie-bed.glb",
+   "anchor": "floor",
+   "size": [
+    565.6,
+    591.2,
+    1592.6
+   ],
+   "min": [
+    -282.8,
+    632,
+    -705.2
+   ],
+   "max": [
+    282.8,
+    1223.2,
+    887.4
+   ],
+   "tris": 48178,
+   "bytes": 1267432,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "grace",
+    "pose": "lie-bed"
+   }
+  },
+  {
+   "id": "people-ben-lie-bed",
+   "name": "Ben: lying in a hospital bed",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-ben-lie-bed.glb",
+   "anchor": "floor",
+   "size": [
+    668,
+    626.8,
+    1754.1
+   ],
+   "min": [
+    -334,
+    626.9,
+    -708
+   ],
+   "max": [
+    334,
+    1253.7,
+    1046.1
+   ],
+   "tris": 38616,
+   "bytes": 1139700,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "ben",
+    "pose": "lie-bed"
+   }
+  },
+  {
+   "id": "people-sam-sit-type",
+   "name": "Sam: typing at the desk, seated",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-sit-type.glb",
+   "anchor": "floor",
+   "size": [
+    518.1,
+    1329,
+    725.7
+   ],
+   "min": [
+    -259.2,
+    0,
+    -125.6
+   ],
+   "max": [
+    258.9,
+    1329,
+    600.1
+   ],
+   "tris": 33554,
+   "bytes": 927716,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "sit-type",
+    "deskHeight": 28
+   }
+  },
+  {
+   "id": "people-sam-sit-type-30",
+   "name": "Sam: typing at the desk, seated (desk at 30 in)",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sam-sit-type-30.glb",
+   "anchor": "floor",
+   "size": [
+    523.9,
+    1329,
+    725.7
+   ],
+   "min": [
+    -262.2,
+    0,
+    -125.6
+   ],
+   "max": [
+    261.7,
+    1329,
+    600.1
+   ],
+   "tris": 33572,
+   "bytes": 927944,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sam",
+    "pose": "sit-type",
+    "deskHeight": 30
+   }
   }
  ],
  "screens": [
