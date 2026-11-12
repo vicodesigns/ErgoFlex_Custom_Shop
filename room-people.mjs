@@ -618,7 +618,8 @@ export const ROOM_PEOPLE = {
                     ['aiden', 'sit-listen', C(0, 0), T(0), M], ['aiden', 'sit-write', C(0, 0), T(0), A], ['bella', 'sit-write', C(0, 1), T(0), MA], ['carlos', 'sit-raise', C(0, 2), T(0), M], ['fern', 'sit-listen', C(0, 3), T(0), MA],
                     ['leo', 'sit-write', C(1, 0), T(1), MA], ['ava', 'sit-listen', C(1, 1), T(1), M], ['ava', 'sit-laptop', C(1, 1), T(1), A], ['mia', 'sit-laptop', C(1, 2), T(1), MA], ['eli', 'sit-listen', C(1, 3), T(1), MA],
                     ['emeka', 'sit-write', C(2, 0), T(2), M], ['sofia', 'sit-listen', C(2, 1), T(2), MA], ['zoe', 'sit-write', C(2, 2), T(2), MA],
-                    ['bella', 'sit-laptop', C(3, 0), T(3), E], ['emeka', 'sit-write', C(3, 1), T(3), E], ['leo', 'sit-read', C(4, 0), T(4), E], ['dina', 'sit-write', C(4, 1), T(4), E], ['fern', 'sit-read', C(3, 3), T(3), E],
+                    // (after school the chairs of the three far groups go up on the tables: the homework club sits at the two near ones)
+                    ['bella', 'sit-laptop', C(0, 1), T(0), E], ['emeka', 'sit-write', C(0, 2), T(0), E], ['fern', 'sit-read', C(0, 3), T(0), E], ['leo', 'sit-read', C(1, 0), T(1), E], ['dina', 'sit-write', C(1, 1), T(1), E],
                     ['hale', 'sit-write', C(1, 2), T(1), ['night'], { colors: LOOK.hale }]]),
                 ...besideStation(L, 'presentation-desk', 'people-hale-stand-present', 950, { modes: M, colors: LOOK.hale, key: 'hale-presents' }),
                 ...besideStation(L, 'presentation-desk', 'people-bella-stand-present', 950, { modes: P, key: 'bella-presents' }),
@@ -1299,6 +1300,8 @@ export class RoomPeople {
             anchor = this.room.assets().filter(o => CHAIRS.test((o.userData.propId || '') + ' ' + (o.userData.decorUpgrade || ''))).map(o => ({ o, d: this.centreOf(o).setY(0).distanceTo(spot) })).filter(c => c.d < 450).sort((a, b) => a.d - b.d)[0]?.o || null;
         }
         if ((spec.on || spec.by || spec.near || spec.around) && !anchor) { object.userData.personMissing = true; return; }
+        // (the Studio: a seat the room has put away for the hour, chairs up on the tables after school, has nobody on it)
+        if (!this.filter && (spec.on || spec.near) && anchor) { for (let o = anchor; o && o !== this.room.root; o = o.parent) if (!o.visible) { object.userData.personMissing = true; return; } }
         object.userData.personMissing = false; object.userData.personAnchor = anchor; object.userData.personAnchorAt = anchor && this.anchorKey(anchor);
         const turn = THREE.MathUtils.degToRad(spec.turn || 0);
         if (spec.on || spec.near) {
