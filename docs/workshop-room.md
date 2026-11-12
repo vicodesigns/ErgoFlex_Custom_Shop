@@ -39,3 +39,7 @@ transforms, desk movement and film exposure controls continue to apply.
 Verification: `npm run test:workshop`. The screenshot helper supports
 `--workshop-layout` and `--workshop-mode`. The website package file list includes
 the module. This local update does not publish it.
+
+## Architecture pass (11 November 2026)
+
+A precast concrete lintel (215 mm, one block course, 200 mm bearing each side, painted with the wall) carries the blockwork over the window. The room has no door on its three built walls: the open fourth side is the garage door side.

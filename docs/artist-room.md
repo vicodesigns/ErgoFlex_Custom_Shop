@@ -79,3 +79,7 @@ Verification:
 - `node tests/artist-studio-groove-test.cjs`: 50 clear routes across all layouts,
   five activities, and both 48″/60″ widths, using isolated browser storage.
 - Visual review: overview and easel/storage views for every layout/activity.
+
+## Architecture pass (11 November 2026)
+
+The studio door is a full-size door in every layout: an 810 x 2040 mm leaf in an 880 x 2110 mm oak frame (it was a 720 x 1970 leaf). The beadboard wainscot stops at the new frame. The door stands outside the film's views of this room.

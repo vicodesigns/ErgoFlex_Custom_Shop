@@ -47,3 +47,7 @@ The session equipment is an editable child of the training bay. Moving the bay c
 - Review captures: `scene-shots/gym-sessions-20261022/`.
 
 This local update does not publish the website.
+
+## Architecture pass (11 November 2026)
+
+The door is a full-size door in every layout: an 810 x 2040 mm leaf in an 880 x 2110 mm steel frame (it was a 720 x 1950 leaf), with the pull moved to the new stile. The door stands outside the film's views of this room.

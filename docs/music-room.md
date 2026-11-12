@@ -82,3 +82,7 @@ For a larger-room visual review:
 ```
 node tools/props/scene-shots.mjs --only music --music-layout executive --music-mode party --views room --out /tmp/ef-music-final
 ```
+
+## Architecture pass (11 November 2026)
+
+The door is a full-size door in every layout: an 810 x 2040 mm leaf in an 880 x 2110 mm frame (it was a 730 x 1980 leaf). The door stands outside the film's views of this room.
