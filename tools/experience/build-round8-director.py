@@ -337,7 +337,7 @@ def clean_add(e):
     name = f'Added prop:{asset}#{e["id"]}'
     d = {'add': {'asset': asset}, 'id': e['id'], 'match': '^' + re.sub(r'([.*+?^${}()|\[\]\\/])', r'\\\1', name) + '$'}
     if isinstance(e.get('label'), str) and len(e['label']) <= 120: d['label'] = e['label']
-    d['parent'] = 'desk' if e.get('parent') == 'desk' else 'room'
+    d['parent'] = e['parent'] if e.get('parent') in ('desk', 'shelf', 'lower-shelf', 'base-shelf') else 'room'
     d['position'] = vec(e.get('position'), [0, 0, 0]); d['rotation'] = vec(e.get('rotation'), [0, 0, 0])
     sc = vec(e.get('scale'), None)
     d['scale'] = sc if sc and all(.001 <= x <= 1000 for x in sc) else [1, 1, 1]

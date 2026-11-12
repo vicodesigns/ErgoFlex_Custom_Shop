@@ -27,7 +27,7 @@
 //   for one of several same-named props (e.g. a single chair at a table).
 //   asset:'<Studio scene asset key>' keeps only the object whose userData.sceneAssetKey is that key (one of many
 //   same-named room props, wherever it stands; the Director targets Studio props this way).
-//   add:{asset:'<assets/props id>'}, id, parent:'desk'|'room', position, rotation, scale (with director:true): a library
+//   add:{asset:'<assets/props id>'}, id, parent:'desk'|'shelf'|'lower-shelf'|'base-shelf'|'room', position, rotation, scale (with director:true): a library
 //   prop the film doesn't have (experience/prop-edits.mjs cleanAddEdit), placed in its parent's frame (desk: the
 //   featured desk's desktop dressing, riding lift and tilt; room: the room's asset root, else the stage). Loaded by
 //   prepareAdds(shot) (await it before installEdits; film-fx does) through Studio's own PROP_LIBRARY (workspace-3d.mjs,
@@ -202,13 +202,15 @@ export async function prepareAdds(shot, library = null) {   // library: tests pa
 }
 const shownTree = o => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
 const inScene = (o, scene) => { for (let p = o; p; p = p.parent) if (p === scene) return true; return false; };
-// Where an added prop lives: 'desk' = the featured desk's desktop (a scene desk's dressing, else the product desk's
-// accessory mount); 'room' = the room's asset root, else the stage.
+// Where an added prop lives: 'desk' = the featured desk's desktop, 'shelf' / 'lower-shelf' / 'base-shelf' = that shelf
+// (a scene desk's dressing, else the product desk's accessory mount: it rides the surface through lift and tilt);
+// 'room' = the room's asset root, else the stage.
+export const DESK_SURFACES = { desk: 'desktop', shelf: 'shelf', 'lower-shelf': 'lower-shelf', 'base-shelf': 'base-shelf' };
 export function addParent(kind) {
-  const scene = sceneRoot();
-  if (kind === 'desk') {
-    const rig = api.sceneDesks?.active?.rig?.mounts?.desktop; if (rig && inScene(rig, scene)) return rig;
-    const m = api.workspaceAccessories?.mounts?.get('desktop'); if (m?.group && inScene(m.group, scene)) return m.group;
+  const scene = sceneRoot(), role = Object.hasOwn(DESK_SURFACES, kind) ? DESK_SURFACES[kind] : null;
+  if (role) {
+    const rig = api.sceneDesks?.active?.rig?.mounts?.[role]; if (rig && inScene(rig, scene)) return rig;
+    const m = api.workspaceAccessories?.mounts?.get(role); if (m?.group && inScene(m.group, scene)) return m.group;
     return null;
   }
   const root = api.workspaceRoom?.root; return root && inScene(root, scene) && shownTree(root) ? root : scene;
@@ -220,7 +222,7 @@ function installAdd(edit, n, undo) {
   const parent = addParent(edit.parent); if (!parent) { console.warn(`[film-fx] sceneEdits[${n}] add: no desk to put ${edit.add?.asset || edit.add} on`); return null; }
   const asset = typeof edit.add === 'string' ? edit.add : edit.add.asset;
   parent.updateWorldMatrix(true, false); const k = parent.getWorldScale(new THREE.Vector3()).x || 1, base = 1000 * mmScale() / k;
-  o.name = `Added prop:${asset}#${edit.id}`; o.userData.directorAdd = { asset, id: edit.id, label: edit.label || asset, parent: edit.parent === 'desk' ? 'desk' : 'room' };
+  o.name = `Added prop:${asset}#${edit.id}`; o.userData.directorAdd = { asset, id: edit.id, label: edit.label || asset, parent: Object.hasOwn(DESK_SURFACES, edit.parent) ? edit.parent : 'room' };
   const p = edit.position || [0, 0, 0], r = edit.rotation || [0, 0, 0], s = edit.scale || [1, 1, 1], d = THREE.MathUtils.degToRad;
   o.position.set(p[0] / k, p[1] / k, p[2] / k); o.rotation.set(d(r[0]), d(r[1]), d(r[2])); o.scale.set(base * s[0], base * s[1], base * s[2]);
   parent.add(o); o.updateMatrixWorld(true);

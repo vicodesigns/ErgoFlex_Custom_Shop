@@ -27,6 +27,9 @@ early or move without the Gaming desk's wide monitor changing. The edit follows 
 and holds each time that desk appears. While another desk is on stage a selected prop has no gizmo, and its
 inspector says which desk it belongs to.
 
+**Shelves.** An added prop can sit on the desktop, the top shelf, the lower shelf or the base shelf ("Put it on" in
+its inspector, or "Place on a surface…" and a click on the shelf). It rides that surface through lift and tilt.
+
 ## Data
 
 A prop edit (`shot.propEdits`, `experience/prop-edits.mjs`) has two new optional fields:
@@ -37,6 +40,8 @@ A prop edit (`shot.propEdits`, `experience/prop-edits.mjs`) has two new optional
 - `show: {from, to, fadeIn?, fadeOut?}` — seconds. Chapter seconds; for an edit with a `desk`, seconds after that
   desk's sub-shot begins (its `renderRange` start), which is what makes the timing travel with the desk. `to: 100000`
   means "until the desk or the chapter ends". A window alone is an edit.
+
+- an added prop's `parent` may be `desk` (the desktop), `shelf`, `lower-shelf`, `base-shelf` or `room`.
 
 ## Stage and film
 

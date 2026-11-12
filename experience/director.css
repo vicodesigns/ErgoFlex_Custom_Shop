@@ -599,6 +599,7 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 #director-timeline .prop-bar:not(.ghost)::after{right:0;border-right:2px solid color-mix(in srgb,var(--bar) 80%,#fff)}
 #director-timeline .prop-bar:hover{filter:brightness(1.25)}
 #director-timeline .prop-bar:focus-visible{outline:2px solid #fff;outline-offset:1px}
+#director-panel .prop-put{align-items:center;gap:6px}#director-panel .prop-put .director-hint{margin:0 4px 0 0}#director-panel .prop-put button[aria-pressed=true]{border-color:#65dcff;color:#dff7ff}
 #director-panel .prop-timing{margin:12px 0 8px;padding:10px 10px 4px;border:1px solid #9fe3c433;border-radius:8px;background:#9fe3c40d}
 #director-panel .prop-timing h5{margin:0 0 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#bfeeda;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 #director-panel .prop-timing h5 small{font-size:10px;letter-spacing:0;text-transform:none;color:#94afbf;font-weight:400}

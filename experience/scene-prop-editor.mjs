@@ -1,4 +1,4 @@
-import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
+import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
 import {stackRows} from './lane-rows.mjs';
 import {createPropLibrary,deskItem} from './prop-library.mjs';
 import {groupPanelHtml,groupCentreDelta,pickMode} from './prop-selection.mjs';
@@ -214,12 +214,14 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // Click-to-place: the surface under the cursor. On the featured desk's top it rides the desk; anywhere else it stands
   // in the room at that point (a table, a shelf, the floor), keeping the way it faces.
   function placeAt(o,e,point){
-    const {THREE}=tools,E=win().__filmEdits,top=E.addParent('desk');let kind='room';
-    if(top){top.updateWorldMatrix(true,false);const l=top.worldToLocal(point.clone()),size=top.userData.surfaceSize;if(Math.abs(l.y)<40&&(!size||Math.abs(l.x)<=size.width/2+20&&Math.abs(l.z)<=size.depth/2+20))kind='desk';}
-    const parent=E.addParent(kind);parent.updateWorldMatrix(true,false);const k=parent.getWorldScale(new THREE.Vector3()).x||1,local=parent.worldToLocal(point.clone());if(kind==='desk')local.y=0;
+    const {THREE}=tools,E=win().__filmEdits;let kind='room',best=40;
+    // The desk surface the point lies on (within 40 mm of its plane and inside its outline): the nearest one wins.
+    for(const s of Object.keys(DESK_SURFACES)){const top=E.addParent(s);if(!top)continue;top.updateWorldMatrix(true,false);const l=top.worldToLocal(point.clone()),size=top.userData.surfaceSize;
+      if(Math.abs(l.y)<best&&(!size||Math.abs(l.x)<=size.width/2+20&&Math.abs(l.z)<=size.depth/2+20)){best=Math.abs(l.y);kind=s;}}
+    const parent=E.addParent(kind);parent.updateWorldMatrix(true,false);const k=parent.getWorldScale(new THREE.Vector3()).x||1,local=parent.worldToLocal(point.clone());if(onDesk(kind))local.y=0;
     let rotation=e.rotation;
     if(kind!==e.parent){const q=parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(o.getWorldQuaternion(new THREE.Quaternion())),r=new THREE.Euler().setFromQuaternion(q);rotation=[r.x,r.y,r.z].map(v=>r1(wrapDeg(v*180/Math.PI)));}
-    write(sel.key,cleanAddEdit({...e,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation}),`Placed ${label(o)} ${kind==='desk'?'on the desk (it rides the lift and tilt)':'there, in the room'}.`);
+    write(sel.key,cleanAddEdit({...e,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation}),`Placed ${label(o)} ${onDesk(kind)?`on ${DESK_SURFACES[kind]} (it rides the desk's lift and tilt)`:'there, in the room'}.`);
   }
   async function addProp(entry){
     await ensure();if(!editing()){status('Pause the chapter first: props are added on the paused frame.',true);return;}
@@ -562,7 +564,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   // An added prop becomes a new Studio item in the room (as Studio's own library Add makes one); not on the desk.
   function addPlan(row,e,o,room,i){
-    if(e.parent==='desk')return {...row,ok:false,why:'Added on the desk: it travels with the desk, so Studio\'s room layout can\'t hold it. Keep it as a chapter edit.'};
+    if(onDesk(e.parent))return {...row,ok:false,why:'Added on the desk: it travels with the desk, so Studio\'s room layout can\'t hold it. Keep it as a chapter edit.'};
     if(room.reason)return {...row,ok:false,why:room.reason};
     if(!o)return {...row,ok:false,why:'Not on the stage right now (still loading).'};
     if(o.parent!==room.api.workspaceRoom?.root)return {...row,ok:false,why:'Not in this room\'s Studio layout (the stage has no room here).'};
@@ -663,7 +665,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function addPanel(o,e){
     const {THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),fac=e.scale,uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4,studio=plan().find(r=>r.key===sel.key);
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
-    return `<div class="movement-inspector prop-inspector prop-added" data-reveal="prop"><h4>${escape(label(o))}</h4><p class="director-hint prop-name">+ Added in this chapter · ${escape(e.add.asset)} · ${e.parent==='desk'?'on the desk (rides lift and tilt)':'in the room'}</p>
+    return `<div class="movement-inspector prop-inspector prop-added" data-reveal="prop"><h4>${escape(label(o))}</h4><p class="director-hint prop-name">+ Added in this chapter · ${escape(e.add.asset)} · ${onDesk(e.parent)?`on ${DESK_SURFACES[e.parent]} (rides lift and tilt)`:'in the room'}</p>
       <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'T'})">${t}</button>`).join('')}</div>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]),.01)).join('')}</div>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-r'+k,'Turn '+k+' (°)',r1(e.rotation[i]),1)).join('')}</div>
@@ -671,8 +673,21 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
       ${dropButtons()}
       ${timingHtml()}
-      <div class="director-actions"><button data-action="pp-place" aria-pressed="${placing}" title="Then click a surface in the view: the desktop (it rides the desk), a table, a shelf or the floor">Place on a surface…</button><button data-action="pp-remove" title="Take it out of this chapter (Delete): Undo brings it back">Remove from this chapter</button></div>
+      ${putButtons(e)}
+      <div class="director-actions"><button data-action="pp-place" aria-pressed="${placing}" title="Then click a surface in the view: the desktop or one of the desk's shelves (it rides the desk), a table or the floor">Place on a surface…</button><button data-action="pp-remove" title="Take it out of this chapter (Delete): Undo brings it back">Remove from this chapter</button></div>
       <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be added to the room for good (Make permanent in Studio…).':'Studio: '+escape(studio.why)):''}</p></div>`;
+  }
+  // An added prop: straight onto one of the desk's surfaces (its middle; then move it with the gizmo).
+  const surfaces=()=>{const E=win()?.__filmEdits;return E?Object.keys(DESK_SURFACES).filter(s=>E.addParent(s)):[];};
+  const putButtons=e=>{const list=surfaces();return list.length?`<div class="director-actions prop-put"><span class="director-hint">Put it on</span>${list.map(s=>`<button data-action="pp-put-${s}" aria-pressed="${e.parent===s}" title="Onto ${DESK_SURFACES[s]}: it rides the desk's lift and tilt">${s==='desk'?'Desktop':s==='shelf'?'Top shelf':s==='lower-shelf'?'Lower shelf':'Base shelf'}</button>`).join('')}</div>`:'';};
+  function putOn(kind){
+    const o=current(),e=sel&&editOfKey(sel.key);if(!o||!isAddEdit(e)||!DESK_SURFACES[kind])return;
+    const {THREE}=tools,parent=win().__filmEdits.addParent(kind);if(!parent){status(`This desk has no ${DESK_SURFACES[kind].replace('the ','')} to put it on.`,true);return;}
+    // Where it is now, if that is over the surface; else the surface's middle. It keeps the way it faces.
+    parent.updateWorldMatrix(true,false);const local=parent.worldToLocal(o.getWorldPosition(new THREE.Vector3())),size=parent.userData.surfaceSize,k=parent.getWorldScale(new THREE.Vector3()).x||1;
+    if(!size||Math.abs(local.x)>size.width/2||Math.abs(local.z)>size.depth/2)local.set(0,0,0);local.y=0;
+    const q=parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(o.getWorldQuaternion(new THREE.Quaternion())),r=new THREE.Euler().setFromQuaternion(q);
+    write(sel.key,cleanAddEdit({...e,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation:[0,r1(wrapDeg(r.y*180/Math.PI)),0]}),`Put ${label(o)} on ${DESK_SURFACES[kind]}: it rides the desk's lift and tilt. Move it with the gizmo.`);
   }
   const dropButtons=()=>`<div class="director-actions prop-drop"><button data-action="pp-drop" title="Move it straight down until it rests on the surface below (End)">Drop to surface</button><button data-action="pp-drop-flat" title="Level it (no tilt or roll), then drop it onto the surface below (Shift+End)">Drop flat</button><button data-action="pp-drop-align" title="Tilt it to the surface under it (a ramp, the tilted desktop), then drop it (Alt+End)">Align to surface</button></div>`;
   async function action(name,arg){
@@ -682,6 +697,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(name==='pp-drop'||name==='pp-drop-flat'||name==='pp-drop-align'){await dropSelected(name==='pp-drop-flat'?'flat':name==='pp-drop-align'?'align':'drop');return;}
     if(name==='pp-place'){const o=current();if(!o||!isAddEdit(editOfKey(sel.key)))return;placing=!placing;rerender();status(placing?`Click a surface in the view to put ${label(o)} there (the desktop, a table, the floor). Click Place again to cancel.`:'Placing cancelled.');return;}
     if(name==='pp-pick'){select(arg);return;}
+    if(name.startsWith('pp-put-')){putOn(name.slice(7));return;}
     if(name==='pp-lane'){if(performance.now()<barSuppress)return;laneClick(laneList[Number(arg)]);return;}
     if(name==='pp-t-from-now'){setTiming({from:r2(time())});return;}
     if(name==='pp-t-to-now'){setTiming({to:r2(time())});return;}

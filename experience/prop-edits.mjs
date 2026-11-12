@@ -10,7 +10,8 @@
 // build-round8-director.py) are the Director's edits. Present (even []): they replace those entries.
 // Added props (the library browser, prop-library.mjs): a prop the film doesn't have, installed by film-edits.mjs
 //   {add:{asset:'<assets/props id>'}, id:'<short id>', match:'^Added prop:<asset>#<id>$' (its object's name on the stage),
-//    label:'<library name>', parent:'desk' | 'room', position:[x,y,z], rotation:[x,y,z] degrees, scale:[sx,sy,sz]}
+//    label:'<library name>', parent:'desk' | 'shelf' | 'lower-shelf' | 'base-shelf' | 'room', position:[x,y,z],
+//    rotation:[x,y,z] degrees, scale:[sx,sy,sz]}
 //   The transform is the prop's own, in its parent's frame (not an offset): position = scene units along the parent's
 //   axes from its origin (desk: the featured desk's desktop dressing, so it rides lift and tilt; room: the room's
 //   asset root, or the stage when there is no room), rotation = local Euler degrees, scale = factors on the library
@@ -49,13 +50,16 @@ export function showFactor(show,seconds){
   return Math.max(0,Math.min(1,f));
 }
 export const isAddEdit=e=>!!e?.add;
+// The featured desk's surfaces an added prop can ride ('desk' = the desktop), and how the Director names them.
+export const DESK_SURFACES={desk:'the desktop','shelf':'the top shelf','lower-shelf':'the lower shelf','base-shelf':'the base shelf'};
+export const onDesk=parent=>!!DESK_SURFACES[parent];
 export const addName=(asset,id)=>`Added prop:${asset}#${id}`;
 export const addMatch=(asset,id)=>'^'+escapeRegex(addName(asset,id))+'$';
 export const newAddId=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3);
 export function cleanAddEdit(e){
   const asset=typeof e?.add==='string'?e.add:e?.add?.asset;if(typeof asset!=='string'||!ASSET.test(asset)||typeof e.id!=='string'||!ADD_ID.test(e.id))return null;
   const out={add:{asset},id:e.id,match:addMatch(asset,e.id)},label=text(e.label,120);if(label)out.label=label;
-  out.parent=e.parent==='desk'?'desk':'room';
+  out.parent=DESK_SURFACES[e.parent]?e.parent:'room';
   out.position=vec(e.position)||[0,0,0];out.rotation=vec(e.rotation)||[0,0,0];
   out.scale=Array.isArray(e.scale)?vec(e.scale,n=>n>=.001&&n<=1000)||[1,1,1]:finite(e.scale)&&e.scale>=.001&&e.scale<=1000?[e.scale,e.scale,e.scale].map(r4):[1,1,1];
   const desk=cleanDesk(e.desk),show=cleanShow(e.show);if(desk)out.desk=desk;if(show)out.show=show;
@@ -106,7 +110,7 @@ export function describeShow(e){
 }
 // "moved 0.32 m (x +0.20, z −0.25), turned 15° about y, scaled ×1.2, hidden".
 export function describePropEdit(e){
-  if(isAddEdit(e)){const s=e.scale||[1,1,1],k=Math.abs(s[0]-s[1])<1e-4&&Math.abs(s[1]-s[2])<1e-4?s[0]:null;return `added ${e.parent==='desk'?'on the desk':'to the room'}${k!==null&&Math.abs(k-1)>1e-4?`, scaled ×${Number(k.toFixed(3))}`:k===null?`, scaled ×${s.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`:''}${e.show?', '+describeShow(e):''}`;}
+  if(isAddEdit(e)){const s=e.scale||[1,1,1],k=Math.abs(s[0]-s[1])<1e-4&&Math.abs(s[1]-s[2])<1e-4?s[0]:null;return `added ${e.parent==='desk'?'on the desk':onDesk(e.parent)?'on '+DESK_SURFACES[e.parent]:'to the room'}${k!==null&&Math.abs(k-1)>1e-4?`, scaled ×${Number(k.toFixed(3))}`:k===null?`, scaled ×${s.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`:''}${e.show?', '+describeShow(e):''}`;}
   const parts=[],axes=v=>v.map((n,i)=>Math.abs(n)<5e-4?'':`${'xyz'[i]} ${n>0?'+':'−'}${m(Math.abs(n))}`).filter(Boolean).join(', ');
   if(e.position)parts.push(`moved ${m(len(e.position))} m${e.space==='local'?' on the desk':''} (${axes(e.position)})`);
   if(e.rotation){const r=e.rotation.map((n,i)=>Math.abs(n)<.05?'':`${deg(n)}° about ${'xyz'[i]}`).filter(Boolean);parts.push('turned '+r.join(', '));}

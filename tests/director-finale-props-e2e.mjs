@@ -74,6 +74,23 @@ try{
   const two=await props();check(two.length===2&&two.some(x=>x.desk==='gaming'&&x.hide===true)&&two.some(x=>x.desk==='office'&&x.show),'hiding it is the Gaming desk\'s own edit: '+JSON.stringify(two.map(x=>[x.desk,Object.keys(x).filter(k=>!['match','label','desk'].includes(k))])));
   check(await shown('Accessory:wide-monitor')===false,'hidden on the Gaming desk');
   await go(14);await waitDesk('Office');check(await shown('Accessory:wide-monitor')===true,'still on the Office desk');
+  // ---- + Add prop in the finale: the Office desk's own, from the playhead; then onto the top shelf
+  await go(16);await wait(800);
+  await page.click('#director-panel [data-action=pp-add]');await page.waitForFunction(()=>document.querySelectorAll('#prop-library .pl-card').length>100,{timeout:40000});
+  await page.evaluate(()=>{const el=document.querySelector('#prop-library [name=pl-search]');el.value='phone';el.dispatchEvent(new Event('input',{bubbles:true}));});await wait(700);
+  await page.evaluate(()=>[...document.querySelectorAll('#prop-library .pl-card')].find(c=>/Smartphone/.test(c.title)||/Smartphone/.test(c.textContent)).click());await wait(400);
+  if(await page.evaluate(()=>!!document.getElementById('prop-library')?.open))await page.keyboard.press('Enter');
+  await page.waitForFunction(()=>(__props()||[]).some(e=>e.add),{timeout:30000});await wait(2500);
+  let added=(await props()).find(x=>x.add);
+  check(added.desk==='office'&&added.parent==='desk'&&added.show&&Math.abs(added.show.from-3.5)<.3&&added.show.to===100000,'+ Add prop at 16 s: the Office desk\'s own, on the desktop, from the playhead to the end of its desk: '+JSON.stringify({desk:added.desk,parent:added.parent,show:added.show}));
+  check((await bars()).some(b=>b.text==='+Smartphone'&&/prop-added/.test(b.cls)&&/timed/.test(b.cls)&&b.left>30),'its bar starts at the playhead');
+  const name=await page.evaluate(()=>{let n=null;__t().t.scene.traverse(o=>{if(!n&&/^Added prop:/.test(o.name))n=o.name;});return n;});
+  const put=await page.$$eval('#director-panel .prop-put button',l=>l.map(b=>b.textContent+(b.getAttribute('aria-pressed')==='true'?'*':'')));
+  check(put.includes('Desktop*')&&put.includes('Top shelf'),'the inspector offers the desk\'s surfaces: '+put.join(', '));
+  await press('pp-put-shelf');added=(await props()).find(x=>x.add);
+  const onShelf=await page.evaluate(n=>{const o=__find(n);return {parent:o?.parent?.name,y:o?o.getWorldPosition(new (__t().T.Vector3)()).y:null};},name);
+  check(added.parent==='shelf'&&/^(Accessory mount|Scene dressing|Desk dressing):shelf$/.test(onShelf.parent)&&/top shelf/.test(await status(page)),'Put it on · Top shelf: it rides the shelf now: '+JSON.stringify(onShelf));
+  await go(4);await waitDesk('Gaming');check(await page.evaluate(n=>!__find(n),name),'the added prop is not on the Gaming desk');
   check(!errors.length,'no page errors: '+errors.join(' | ').slice(0,300));
   console.log(`\nDirector finale props e2e: ${passed.length} checks passed.`);
 }finally{await close();}
