@@ -618,7 +618,7 @@ export const ROOM_PEOPLE = {
                 standRound('people-lin-stand-talk', 'activity-table', 120, 1200, { modes: shop, key: 'lin-workshop' }),
                 standRound('people-priya-stand-mug', 'activity-table', 240, 1200, { modes: shop, key: 'priya-workshop' }),
                 ...(big ? [standRound('people-rosa-stand-talk', 'activity-table', 70, 1250, { modes: shop, key: 'rosa-workshop' }),
-                    standRound('people-omar-wheel-watch', 'activity-table', 290, 1350, { modes: shop, key: 'omar-workshop' })] : [])
+                    standRound('people-omar-wheel-watch', 'activity-table', 215, 1600, { modes: shop, key: 'omar-workshop' })] : [])
             ]; }
     ],
     // Middle school. The morning seminar with three tables of twelve-year-olds and Ms Jo at the mobile desk; team projects
@@ -626,7 +626,7 @@ export const ROOM_PEOPLE = {
     // teacher planning lessons alone at night; and the STEM workshop: projects shown standing, a parent or two.
     middleschool: [
         () => deskCrew('jo'),
-        L => { const M = ['morning'], A = ['afternoon'], MA = ['morning', 'afternoon'], E = ['evening'], P = ['party'], C = (g, n) => `student-chair-${g}-${n}`, T = g => `student-table-${g}-a`;
+        L => { const M = ['morning'], A = ['afternoon'], MA = ['morning', 'afternoon'], E = ['evening'], P = ['party'], C = (g, n) => `student-chair-${g}-${n}`, T = g => [`student-table-${g}-`];   // (each group is two tables pushed together: a chair faces the nearer one)
             return [
                 ...staffAt(L, [
                     
@@ -876,7 +876,7 @@ export const ROOM_PEOPLE = {
                 standBy('people-lin-stand-work', 'fume-hood', 800, { modes: ['morning', 'afternoon'], key: 'lin-hood', ...coat }),
                 standBy('people-sam-stand-work', 'wash-station', 800, { modes: M, key: 'sam-wash', ...coat }),
                 standBy('people-maya-stand-present', 'sample-cart', 750, { modes: M, key: 'maya-samples', ...coat }),
-                { id: 'people-yusuf-sit-microscope', on: 'lab-seat-0-3', y: 0, depth: -120, toward: 'lab-bench-0', modes: M, key: 'yusuf-microscope' },
+                { id: 'people-yusuf-sit-microscope', on: 'lab-seat-0-3', y: 0, depth: -240, toward: 'lab-bench-0', modes: M, key: 'yusuf-microscope' },
                 ...besideStation(L, 'teaching-demo', 'people-jo-stand-present', 950, { modes: A, key: 'jo-teaches', ...coat }),
                 // the practical
                 stool('zoe', 'sit-write', 0, 0, A), stool('kai', 'sit-listen', 0, 1, A), stool('mia', 'sit-write', 0, 2, A), stool('leo', 'sit-listen', 0, 3, A),
@@ -886,7 +886,7 @@ export const ROOM_PEOPLE = {
                 // analysis and the watch
                 stool('maya', 'sit-write', 0, 0, E), stool('sam', 'sit-laptop', 0, 1, E),
                 standBy('people-lin-stand-present', 'sample-fridge', 800, { modes: E, key: 'lin-fridge', ...coat }),
-                { id: 'people-yusuf-sit-microscope', on: 'lab-seat-0-3', y: 0, depth: -120, toward: 'lab-bench-0', modes: ['night'], key: 'yusuf-night' },
+                { id: 'people-yusuf-sit-microscope', on: 'lab-seat-0-3', y: 0, depth: -240, toward: 'lab-bench-0', modes: ['night'], key: 'yusuf-night' },
                 standBy('people-chen-stand-chart', 'fume-hood', 900, { modes: N, key: 'chen-watch' }),
                 // the review
                 standRound('people-yusuf-stand-chart', 'activity-table', 180, 1150, { modes: P, key: 'yusuf-review' }),
@@ -911,7 +911,7 @@ export const ROOM_PEOPLE = {
                     ['tech-bar-walkup', 'maya', ['morning', 'afternoon'], polo]]),
                 ...(L.stations?.some(d => d.id === 'rack-console') ? [] : [standBy('people-tomas-stand-work', 'server-rack-1', 800, { modes: ['morning', 'evening'], key: 'tomas-rack' })]),
                 { id: 'people-tomas-push-cart', by: 'diagnostic-cart-1', reach: 730, modes: N, key: 'tomas-cart-night' },
-                standBy('people-priya-stand-present', 'planning-board', 1000, { modes: M, key: 'priya-plan', ...polo }),
+                ...(big > 1 ? [standBy('people-priya-stand-present', 'planning-board', 1000, { modes: M, key: 'priya-plan', ...polo })] : []),
                 standBy('people-jo-stand-work', 'server-rack-0', 800, { modes: M, key: 'jo-rack-morning', ...polo }),
                 standBy('people-maya-stand-phone', 'device-drop-box', 900, { modes: E, key: 'maya-dropbox', ...polo }),
                 standBy('people-jo-kneel-shelf', 'server-rack-0', 700, { modes: E, key: 'jo-rack', ...polo }),
