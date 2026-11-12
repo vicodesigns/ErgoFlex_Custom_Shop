@@ -29,8 +29,29 @@ for (const [room, specs] of Object.entries(ROOM_PEOPLE)) for (const spec of LAYO
 
 {   // Rooms without their own cast get a desk user; the children's rooms have children in them, on child furniture.
     const cast = id => new RoomPeople({ id, roomLayout: { id: 'house' } }, null).specs();
-    assert.deepEqual(cast('hospital').map(s => s.desk), ['sit', 'sit', 'stand']);
-    for (const spec of cast('hospital')) assert.ok(entries.get(spec.id)?.person?.deskHeight, spec.id + ' is built');
+    // the institutional rooms have casts of their own: the person at the mobile desk at each of its four heights, the others
+    // at the room's other desks (in the layouts that have them), on its seats and by its furniture, each for their hours
+    for (const room of ['government', 'police', 'security', 'hospital', 'laboratory', 'mobileit', 'middleschool', 'college', 'university']) {
+        const c = cast(room), desk = c.filter(s => s.desk && !s.station), others = c.filter(s => !s.desk);
+        assert.deepEqual(desk.map(s => s.desk), ['sit', 'sit', 'stand', 'stand'], room + ': someone at the mobile desk, seated and standing');
+        for (const spec of desk) assert.ok(entries.get(spec.id)?.person?.deskHeight, spec.id + ' is built');
+        assert.ok(others.length >= 6 && others.every(s => s.modes?.length), room + ': a cast, each for their hours');
+        assert.ok(others.every(s => s.on || s.by || s.around || (s.at && s.clear)), room + ': placed on a seat, by furniture, or at a spot that is checked for room');
+        assert.ok(others.filter(s => s.on).every(s => s.toward || /armchair|waiting-seats|briefing-seat|lounge-seat|chair-modern-cushion/.test(String(s.on))), room + ': a seated person faces what the seat belongs to');
+    }
+    {   // with the layout's other desks: staff at them, nobody twice in a daypart, one person to a desk
+        const { INSTITUTIONAL_ROOMS } = await import('../institutional-scenes.mjs');
+        for (const [room, def] of Object.entries(INSTITUTIONAL_ROOMS)) for (const L of Object.values(def.layouts)) {
+            const specs = castEntries(room, L); if (!specs.length) continue;
+            for (const phase of PHASES) {
+                const shown = specs.filter(s => !s.modes || s.modes.includes(phase)), where = new Map(), at = new Map();
+                for (const s of shown) { const who = s.id.split('-')[1], spot = s.desk && !s.station ? 'desk' : s.station ? 'station ' + s.station : s.key || s.id; where.set(who, (where.get(who) || new Set()).add(spot)); if (s.station) at.set(s.station, (at.get(s.station) || new Set()).add(who)); }
+                for (const [who, spots] of where) assert.equal(spots.size, 1, `${room} ${L.id} ${phase}: ${who} is in one place (${[...spots].join(', ')})`);
+                for (const [station, who] of at) assert.equal(who.size, 1, `${room} ${L.id} ${phase}: one person at ${station}`);
+            }
+            for (const s of specs.filter(s => s.station)) assert.ok(L.stations.some(d => d.id === s.station), `${room} ${L.id}: ${s.station} is a desk of this layout`);
+        }
+    }
     // the living and working rooms keep that desk user and add the people their furniture is there for, by a piece of furniture each
     for (const room of ['study', 'office', 'kitchen', 'lounge', 'bedroom', 'gallery', 'coworking', 'scifi']) {
         const c = cast(room), desk = c.filter(s => s.desk), others = c.filter(s => !s.desk);

@@ -21,10 +21,12 @@
 //   { id, near: [x, z], face: [x, z] }                seated on the chair nearest that spot, facing a point (a table)
 //   { id, by: '<prop id>', reach }                    standing in front of that furniture, facing it
 //   { id, around: ['<prop id>', degrees, mm] }        round a rug, a mat or a table: at that angle and distance from its middle, facing it
-//   toward: '<prop id>'                               with on / near: seated the way the seat allows that faces that prop
+//   toward: '<prop id>' | ['<id prefix>', ...]        with on / near: seated the way the seat allows that faces that prop
+//                                                     (a list: the nearest piece whose id starts with one of them)
 //   clear: true                                       with by / around: the nearest spot along / round that prop that is free of
 //                                                     furniture, walls, the desk and the others there then (none: not there)
-//   { id, at: [x, z], turn, y }                       at a spot (y mm lifts a seated pose onto a seat that is not a prop)
+//   { id, at: [x, z], turn, y }                       at a spot (y mm lifts a seated pose onto a seat that is not a prop);
+//                                                     with clear: true there or the nearest free place within half a metre
 //   scale: n                                          a factor on the model's size (any placement; 1 = as built)
 //   colors: { top, bottom, shoes, hair: '#rrggbb' }   recolours those parts of the model (the fabric's shading is kept)
 //   pose: { '<bone>': [x, y, z, w] }                  fine tuning: turns that bone of the model's skeleton from the pose it
@@ -53,6 +55,7 @@ const BEHIND_KEYS = { sit: 470, wheel: 460, stand: 415 };
 const HEIGHT_FIT = 1.4;                       // inches either side of the height a desk pose was built for
 const LIVELY = 4;                             // Studio: how many people besides the desk user breathe and shift (the nearest to the camera)
 const HEIGHT_SOLID = .45;                     // within this the person is fully there; beyond it they fade out to HEIGHT_FIT
+const NEARBY = [[0, 0], [250, 0], [-250, 0], [0, 250], [0, -250], [350, 350], [-350, 350], [350, -350], [-350, -350], [550, 0], [-550, 0], [0, 550], [0, -550]];   // where a person at a spot looks for room (mm)
 const TASK_CHAIR = 'steelcase-leap-v2';       // seat 435 mm: what the seated desk poses were built on
 // A child's seated desk posture is built on the room's own study seat (495 mm), not on the task chair: said with
 // chair: false, and implied by the model (a film or the Director placing a child at the desk needs no flag).
@@ -107,6 +110,24 @@ const ring = (centre, radius, people, extra = {}, from = 0) => people.map((p, i)
     return spot(id, centre[0] + Math.sin(a) * radius, centre[1] + Math.cos(a) * radius, centre, { ...extra, ...(more || {}) });
 });
 const PARTY = { modes: ['party'] };
+const NO_SEATED_TYPING = /^sam$/;   // built without the seated typing postures: only at desks that stand
+// Rooms with several ErgoFlex desks (layout.stations): the people at them, as [station, who, dayparts, extra]. Each sits
+// or stands with the height of that desk; a station the layout does not have (a smaller room) has nobody.
+const staffAt = (L, rows) => rows.flatMap(([station, who, modes, extra]) => L.stations?.some(s => s.id === station)
+    ? [{ id: `people-${who}-${extra?.desk === 'wheel' ? 'wheel-type' : NO_SEATED_TYPING.test(who) ? 'stand-type' : 'sit-type'}`, station, desk: NO_SEATED_TYPING.test(who) ? 'stand' : 'sit', ...(modes ? { modes } : {}), ...extra }] : []);
+// Someone across a station's desk from its user (a visitor at a counter): `mm` from the desk, facing it.
+const across = (L, station, id, mm, extra = {}) => { const s = L.stations?.find(s => s.id === station); if (!s) return [];
+    const a = THREE.MathUtils.degToRad(s.turn || 0), { side = 0, ...rest } = extra;
+    return [spot(id, s.at[0] - Math.sin(a) * mm - Math.cos(a) * side, s.at[1] - Math.cos(a) * mm + Math.sin(a) * side, s.at, { clear: true, ...rest })]; };
+// The person at the featured desk at every height it is set to: seated at 28 and 30 in, standing at 35.5 and 43.5 in.
+const deskCrew = (who, modes, extra = {}) => [['sit-type', 'sit'], ['sit-type-30', 'sit'], ['stand-low', 'stand'], ['stand-type', 'stand']].map(([pose, desk]) => ({ id: `people-${who}-${pose}`, desk, ...(modes ? { modes } : {}), ...extra }));
+// A class at its tables, as [who, posture, chair, table, dayparts]: each on that chair, facing that table.
+const atTables = rows => rows.map(([who, pose, chair, table, modes, extra]) => seated(`people-${who}-${pose}`, chair, table, { modes, key: `${who}-${chair}-${pose}`, ...extra }));
+// Two or three talking in the open floor: at a place given as fractions of the room (0..1 across, 0..1 from the back
+// wall to the front), each where there is room to stand (whoever finds none is not there).
+const chat = (L, across, deep, people, extra = {}, radius = 520, from = 90) => ring([(L.left ?? -L.width / 2) + across * L.width, L.back + deep * L.depth], radius, people, { clear: true, ...extra }, from);
+// How full a room is: 0 the smallest layout, 1 the middle one, 2 and up the large ones (people are added with the floor area).
+const tier = L => Number.isFinite(L.index) ? L.index : Math.max(0, ['apartment', 'house', 'spacious', 'premium', 'executive'].indexOf(L.id));
 // on a seat, sitting the way that faces what the seat belongs to (its table, the coffee table, the screen)
 const seated = (id, on, toward, extra = {}) => ({ id, on, seat: /sit-(laptop|write|listen|raise)/.test(id) ? 450 : 420, toward, ...extra });
 const DINING = 'kenney-furniture-chair-modern-cushion';
@@ -122,7 +143,11 @@ const LOOK = {
     omarStudio: { top: '#8a3f3a', bottom: '#2a2c31' }, omarSchool: { top: '#2f4d7a', bottom: '#2c2f36' }, omarShop: { top: '#4a5a3a', bottom: '#2b2b2b' },
     teacherK: { top: '#3f7a6b', bottom: '#2c2f38' }, teacherE: { top: '#8a5a3a', bottom: '#2a2d35' },
     guestA: { top: '#e2c26a', bottom: '#2f3440' }, guestB: { top: '#3f6b4f', bottom: '#d9d3c7' }, guestC: { top: '#8a4a7a', bottom: '#22252b' },
-    guestD: { top: '#d76f4a', bottom: '#3a3f4a' }, guestE: { top: '#efe9df', bottom: '#4b3a33' }
+    guestD: { top: '#d76f4a', bottom: '#3a3f4a' }, guestE: { top: '#efe9df', bottom: '#4b3a33' },
+    // work clothes: the rest of a squad or a watch beside the uniformed characters, a ward's staff, a lab's coats
+    police: { top: '#1c2942', bottom: '#171b24', shoes: '#101114' }, guard: { top: '#25282d', bottom: '#1a1c20', shoes: '#101114' },
+    scrubsTeal: { top: '#2f8f8a', bottom: '#2f8f8a', shoes: '#e9e9e6' }, scrubsBlue: { top: '#3d6fae', bottom: '#3d6fae', shoes: '#e9e9e6' }, scrubsPlum: { top: '#7a4a78', bottom: '#7a4a78', shoes: '#e9e9e6' },
+    labCoat: { top: '#eef0ee', bottom: '#3a4250' }, techPolo: { top: '#2d5f8f', bottom: '#2b2f38' }
 };
 
 export const ROOM_PEOPLE = {
@@ -195,7 +220,14 @@ export const ROOM_PEOPLE = {
         // the circuit: on both sides of the equipment laid out down the middle of the training zone
         L => { const circuit = [['people-priya-stretch', { key: 'priya-circuit' }], ['people-zoe-stretch-open', { colors: { top: '#e0553f', bottom: '#1f2228' } }], ['people-kai-floor-stretch', { colors: { top: '#2f2f35', bottom: '#3c4f6b' } }]];
             if (L.id === 'house') return [spot(circuit[0][0], -380, 2000, [-380, 1000], { ...PARTY, ...circuit[0][1] }), spot(circuit[1][0], -380, 3000, [-380, 1000], { ...PARTY, ...circuit[1][1] }), spot(circuit[2][0], 720, 2250, [720, 3250], { ...PARTY, ...circuit[2][1] })];
-            return [{ id: circuit[0][0], by: 'training-zone', reach: 0, turn: 180, ...PARTY, ...circuit[0][1] }, { id: circuit[1][0], by: 'training-zone', reach: 800, turn: 180, ...PARTY, ...circuit[1][1] }, { id: circuit[2][0], by: 'training-zone', reach: -700, turn: 90, ...PARTY, ...circuit[2][1] }]; }
+            return [{ id: circuit[0][0], by: 'training-zone', reach: 0, turn: 180, ...PARTY, ...circuit[0][1] }, { id: circuit[1][0], by: 'training-zone', reach: 800, turn: 180, ...PARTY, ...circuit[1][1] }, { id: circuit[2][0], by: 'training-zone', reach: -700, turn: 90, ...PARTY, ...circuit[2][1] }]; },
+        // the larger gyms: others warming up by the rack, the treadmill and the bag, someone at the water
+        L => tier(L) < 2 ? [] : [
+            standRound('people-lin-stretch', 'power-rack', 180, 1500, { modes: ['morning', 'evening'], key: 'lin-rack', colors: { top: '#3a4a5c', bottom: '#1f2228' } }),
+            standRound('people-andre-stretch-open', 'treadmill', 90, 1350, { modes: ['afternoon'], key: 'andre-treadmill', colors: { top: '#30343c', bottom: '#22252b' } }),
+            standBy('people-sam-stand-phone', 'hydration-station', 800, { modes: ['afternoon', 'evening'], key: 'sam-water' }),
+            standRound('people-sofia-sit-floor', 'boxing-station', 200, 1400, { modes: ['evening'], key: 'sofia-bag' }),
+            standRound('people-ben-stand-wait', 'weight-bench', 270, 1100, { modes: ['morning'], key: 'ben-bench' })]
     ],
     // Jo's workshop: Jo planning standing at the desk in the morning, at bench height with Leo bringing stock in the
     // afternoon, seated detail work in the evening, alone at the desk at night, an open workshop with visitors
@@ -213,7 +245,14 @@ export const ROOM_PEOPLE = {
             spot('people-jo-stand-talk', x + 650, z + 750, [x + 300, z + 1900], PARTY),
             spot('people-noah-stand-mug', x - 200, z + 1750, [x + 650, z + 750], { ...PARTY, colors: LOOK.guestB }),
             spot('people-grace-cane-stand', x + 650, z + 1950, [x + 650, z + 750], { ...PARTY, colors: LOOK.graceShop }),
-            spot('people-omar-wheel-watch', x + 1450, z + 1450, [x + 650, z + 750], { ...PARTY, colors: LOOK.omarShop })]; }
+            spot('people-omar-wheel-watch', x + 1450, z + 1450, [x + 650, z + 750], { ...PARTY, colors: LOOK.omarShop })]; },
+        // the larger workshops: two at the assembly island, others at the machines
+        L => tier(L) < 2 ? [] : [
+            standRound('people-andre-stand-work', 'assembly-island', 180, 1050, { modes: ['morning', 'afternoon'], key: 'andre-island' }),
+            standRound('people-priya-stand-present', 'assembly-island', 0, 1100, { modes: ['afternoon'], key: 'priya-island' }),
+            standBy('people-sam-stand-work', 'cnc-router', 950, { modes: ['afternoon', 'evening'], key: 'sam-cnc' }),
+            standBy('people-lin-stand-present', 'laser-bay', 950, { modes: ['morning'], key: 'lin-laser' }),
+            standBy('people-ben-stand-work', 'shop-machine', 900, { modes: ['evening'], key: 'ben-machine' })]
     ],
     highschool: [
         { id: 'people-maya-stand-type', desk: 'stand', modes: [] }, { id: 'people-maya-sit-type', desk: 'sit', modes: [] },
@@ -257,7 +296,13 @@ export const ROOM_PEOPLE = {
         L => L.id === 'house' ? [spot('people-omar-wheel-watch', -1300, 350, [0, -4225], PARTY), { id: 'people-mia-stand-drink', beside: [1050, 450], ...PARTY, colors: LOOK.guestB },   // by the featured bay, a drink in her hand
             
             spot('people-leo-stand-drink', 650, 450, [0, -4225], PARTY), spot('people-eli-stand-drink', 1600, 800, [0, -4225], { ...PARTY, colors: LOOK.guestD }),
-            spot('people-ben-stand-drink', -2300, 900, [0, -4225], PARTY)] : []
+            spot('people-ben-stand-drink', -2300, 900, [0, -4225], PARTY)] : [],
+        // the larger labs (not the film's): a student at every other bay, one on the couch
+        L => tier(L) < 2 ? [] : [
+            ...staffAt(L, [['colour-grade-05', 'priya', ['afternoon', 'evening']], ['animation-06', 'zoe', ['morning', 'afternoon']], ['film-edit-07', 'mia', ['afternoon', 'evening']],
+                ['sound-design-08', 'eli', ['afternoon']], ['digital-art-09', 'sofia', ['afternoon']], ['film-edit-10', 'leo', ['afternoon']], ['animation-11', 'noah', ['afternoon', 'evening']]]),
+            { id: 'people-rosa-sit-laptop', on: 'ergoflex-couch', seat: 420, modes: ['afternoon'], key: 'rosa-couch' },
+            standBy('people-hale-stand-present', 'mobile-review-display', 1200, { modes: ['evening'], colors: LOOK.hale, key: 'hale-review' })]
     ],
     // The growing child's room: who lives in it follows the age stage of the layout (L.ageStage), and each hour its
     // own activity (child-growth-profiles.mjs labels them). The youngest stand at the desk on its lowest setting; school
@@ -340,7 +385,16 @@ export const ROOM_PEOPLE = {
                 standBy('people-hale-stand-phone', 'office-credenza', 800, { modes: ['evening'] }),
                 sit('people-lin-sit-chat', { modes: ['party'], key: 'lin-social' }),
                 standRound('people-rosa-stand-drink', table, small ? 110 : 150, 1100, { modes: ['party'], key: 'rosa-social' }),
-                standRound('people-hale-stand-talk', table, small ? 180 : 215, 1100, { modes: ['party'], key: 'hale-social' })]; }   // (in the smallest office across the side table from Lin, not behind her chair)
+                standRound('people-hale-stand-talk', table, small ? 180 : 215, 1100, { modes: ['party'], key: 'hale-social' })]; },   // (in the smallest office across the side table from Lin, not behind her chair)
+        // the larger offices: someone at each of the other desks, a review at the long table
+        L => { const big = tier(L); return [
+            ...staffAt(L, [['drafter', 'jo', ['morning', 'afternoon']], ['designer', 'priya', ['morning', 'afternoon', 'evening']], ['prototype', 'sam', ['afternoon']],
+                ['architect', 'maya', ['morning', 'afternoon']], ['analyst', 'omar', ['afternoon', 'evening'], { desk: 'wheel' }]]),
+            ...(big > 3 ? [...atTables([['ben', 'sit-write', [DINING, 0], 'office-review-table', ['afternoon']], ['grace', 'sit-listen', [DINING, 2], 'office-review-table', ['afternoon']],
+                ['maya', 'sit-listen', [DINING, 1], 'office-review-table', ['evening']], ['sam', 'sit-laptop', [DINING, 3], 'office-review-table', ['evening']], ['ben', 'sit-listen', [DINING, 5], 'office-review-table', ['evening']]]),
+                standRound('people-jo-stand-present', 'office-review-table', 270, 1900, { modes: ['evening'], key: 'jo-review' })] : []),
+            ...(big > 1 ? [standBy('people-priya-stand-mug', 'office-coffee-bar', 900, { modes: ['party'], key: 'priya-social' }), standRound('people-jo-stand-talk', 'coffee-table', 300, 1300, { modes: ['party'], key: 'jo-social' })] : []),
+            ...(big > 2 ? [standBy('people-sam-stand-mug', 'office-bookshelf', 900, { modes: ['party'], key: 'sam-social' }), standBy('people-maya-stand-talk', 'office-bookshelf', 1100, { modes: ['party'], key: 'maya-social' })] : [])]; }
     ],
     // Kitchen: Andre with a mug at the table in the morning, Grace cooking in the evening (at the island where there is
     // one, at the counter where not), a dinner party. The smallest kitchen has a banquette at its table. (Of the
@@ -355,7 +409,11 @@ export const ROOM_PEOPLE = {
                 sit('people-andre-sit-chat', 2, -300, { modes: ['party'], key: 'andre-dinner' }),
                 sit('people-rosa-sit-mug', 3, 300, { modes: ['party'] }),
                 ...(small ? [] : [sit('people-hale-sit-chat', 1, 0, { modes: ['party'] })]),
-                small ? standRound('people-grace-stand-drink', 'dining-table', 90, 1150, { modes: ['party'], key: 'grace-hosts' }) : standBy('people-grace-stand-drink', 'coffee-bar', 750, { modes: ['party'], key: 'grace-hosts' })]; }
+                small ? standRound('people-grace-stand-drink', 'dining-table', 90, 1150, { modes: ['party'], key: 'grace-hosts' }) : standBy('people-grace-stand-drink', 'coffee-bar', 750, { modes: ['party'], key: 'grace-hosts' })]; },
+        // the kitchens with an island: breakfast on its stools
+        L => tier(L) < 2 ? [] : [
+            { id: 'people-zoe-sit-mug', on: ['bar-stool-brass', 0], seat: 435, rise: 400, toward: 'stone-island', modes: ['morning'], key: 'zoe-island' },
+            { id: 'people-ben-sit-mug', on: ['bar-stool-brass', 1], seat: 435, rise: 400, toward: 'stone-island', modes: ['morning', 'afternoon'], key: 'ben-island' }]
     ],
     // Lounge: Zoe reading on the sofa in the evening, two on the sofa at movie night, controllers out at game night.
     lounge: [
@@ -367,7 +425,16 @@ export const ROOM_PEOPLE = {
             seated('people-kai-sit-controller', sofa, 'coffee-table', { along: 420, modes: ['party'], key: 'kai-plays' }),
             seated('people-sam-sit-controller', sofa, 'coffee-table', { along: -420, modes: ['party'] })]; },
         // Eli stands at the end of the sofa, watching the screen with them (not in the smallest lounge: a side table is there)
-        L => L.id === 'apartment' ? [] : [standRound('people-eli-stand-drink', 'sofa-fabric', 180, 1550, { turn: 90, modes: ['party'] })]
+        L => L.id === 'apartment' ? [] : [standRound('people-eli-stand-drink', 'sofa-fabric', 180, 1550, { turn: 90, modes: ['party'] })],
+        // the largest lounges: two at the bar, a game of table football, the billiard table, someone at the arcade
+        L => tier(L) < 3 ? [] : [
+            { id: 'people-andre-sit-mug', on: ['bar-stool-brass', 0], seat: 435, rise: 400, toward: 'lounge-bar', modes: ['evening', 'party'], key: 'andre-bar' },
+            { id: 'people-rosa-sit-mug', on: ['bar-stool-brass', 1], seat: 435, rise: 400, toward: 'lounge-bar', modes: ['party'], key: 'rosa-bar' },
+            standRound('people-leo-stand-work', 'foosball', 0, 850, { modes: ['evening', 'party'], key: 'leo-foosball' }),
+            standRound('people-mia-stand-work', 'foosball', 180, 850, { modes: ['evening', 'party'], key: 'mia-foosball' }),
+            standRound('people-hale-stand-wait', 'billiard-table', 90, 1500, { modes: ['party'], key: 'hale-billiards' }),
+            standRound('people-lin-stand-talk', 'billiard-table', 270, 1500, { modes: ['party'], key: 'lin-billiards' }),
+            standBy('people-ava-stand-work', 'arcade-pixel-garden', 750, { modes: ['afternoon', 'night'], key: 'ava-arcade' })]
     ],
     // Bedroom: Ava reads in the armchair in the evening (on the bench at the foot of the bed in the smallest bedroom);
     // at the weekend she stays to talk and Zoe stands by her, on her phone.
@@ -387,7 +454,24 @@ export const ROOM_PEOPLE = {
         standRound('people-ben-stand-wait', 'vase-plinth', 90, 1150, { modes: ['evening'] }),
         standRound('people-rosa-stand-drink', 'gallery-bench', 300, 1400, { modes: ['party'] }),
         standRound('people-andre-stand-talk', 'gallery-bench', 60, 1400, { modes: ['party'] }),
-        standRound('people-grace-stand-drink', 'gallery-bench', 180, 1300, { modes: ['party'] })
+        standRound('people-grace-stand-drink', 'gallery-bench', 180, 1300, { modes: ['party'] }),
+        // the larger galleries: visitors at each of the other works, a guide in the morning, someone resting on the sofa
+        L => { const big = tier(L); return big ? [
+            standRound('people-priya-stand-present', 'aphrodite-plinth', 90, 1350, { modes: ['morning'], key: 'priya-guide' }),
+            standRound('people-sofia-stand-wait', 'aphrodite-plinth', 60, 1400, { modes: ['afternoon', 'evening'], key: 'sofia-aphrodite' }),
+            standRound('people-maya-stand-talk', 'mercury-plinth', 250, 1500, { modes: ['afternoon'], key: 'maya-mercury' }),
+            standRound('people-nora-kid-stand', 'mercury-plinth', 290, 1400, { modes: ['afternoon'], key: 'nora-mercury' }),
+            standRound('people-ben-cane-stand', 'mercury-plinth', 270, 1500, { modes: ['morning'], key: 'ben-mercury' }),
+            standRound('people-omar-wheel-watch', 'thinker-plinth', 140, 1600, { modes: ['afternoon', 'evening'], key: 'omar-thinker' }),
+            standRound('people-zoe-stand-phone', 'collection-case', 180, 1250, { modes: ['afternoon'], key: 'zoe-case' }),
+            standRound('people-eli-stand-phone', 'collection-case', 0, 1250, { modes: ['evening'], key: 'eli-case' }),
+            standRound('people-sam-stand-wait', 'ribbon-sculpture', 200, 1500, { modes: ['afternoon', 'evening'], key: 'sam-ribbon' }),
+            seated('people-mia-sit-phone', 'sofa-fabric', 'coffee-table', { along: -420, modes: ['afternoon', 'evening'], key: 'mia-sofa' }),
+            ...(big > 1 ? [standRound('people-hale-stand-talk', 'mercury-plinth', 240, 1500, { modes: ['party'], key: 'hale-social' }), standRound('people-jo-stand-talk', 'mercury-plinth', 300, 1500, { modes: ['party'], key: 'jo-social' }),
+                standRound('people-noah-stand-drink', 'collection-case', 180, 1300, { modes: ['party'], key: 'noah-social' }), standRound('people-zoe-stand-drink', 'collection-case', 140, 1350, { modes: ['party'], key: 'zoe-social' })] : []),
+            ...(big > 2 ? [...chat(L, .62, .62, [['people-kai-stand-phone', { key: 'kai-floor' }], ['people-ava-stand-wait', { key: 'ava-floor' }]], { modes: ['afternoon'] }),
+                ...chat(L, .3, .8, [['people-leo-stand-wait', { key: 'leo-floor' }], ['people-grace-cane-stand', { key: 'grace-floor' }]], { modes: ['afternoon', 'evening'] }),
+                ...chat(L, .62, .62, [['people-priya-stand-talk', { key: 'priya-social' }], ['people-sam-stand-drink', { key: 'sam-social' }], ['people-mia-stand-drink', { key: 'mia-social' }]], { modes: ['party'] }, 620)] : [])] : []; }
     ],
     // Coworking: coffee at the counter, two at the meeting table after lunch, Jo on the sofa in the evening, the community
     // social round the coffee table. Closed at night. (The smallest space has a lounge chair for the sofa and its table.)
@@ -403,7 +487,20 @@ export const ROOM_PEOPLE = {
                 sit('people-jo-sit-chat', { modes: ['party'], key: 'jo-social' }),
                 standRound('people-hale-stand-drink', middle, 150, small ? 1250 : 1100, { modes: ['party'], key: 'hale-social' }),
                 standRound('people-rosa-stand-talk', middle, 215, small ? 1250 : 1100, { modes: ['party'], key: 'rosa-social' })]; },
-        standBy('people-sam-stand-mug', 'cafe-counter', 850, { modes: ['party'], key: 'sam-social' })
+        standBy('people-sam-stand-mug', 'cafe-counter', 850, { modes: ['party'], key: 'sam-social' }),
+        // the larger spaces: members at the other desks, two more at the meeting table, people standing at the long table
+        L => { const big = tier(L); return [
+            ...staffAt(L, [['digital', 'andre', ['morning', 'afternoon', 'evening']], ['remote', 'priya', ['morning', 'afternoon']], ['illustrator', 'maya', ['afternoon', 'evening']],
+                ['research', 'omar', ['morning', 'afternoon'], { desk: 'wheel' }], ['founder', 'ben', ['afternoon']]]),
+            ...(big ? atTables([['kai', 'sit-laptop', [DINING, 2], 'meeting-table', ['afternoon']], ['ava', 'sit-write', [DINING, 3], 'meeting-table', ['afternoon', 'evening']]]) : []),
+            standRound('people-zoe-stand-phone', 'communal-table', 0, 1150, { modes: ['afternoon'], key: 'zoe-communal' }),
+            standRound('people-noah-stand-mug', 'communal-table', 180, 1150, { modes: ['morning', 'afternoon'], key: 'noah-communal' }),
+            standBy('people-grace-stand-phone', 'call-booth', 1100, { modes: ['afternoon'], key: 'grace-call' }),
+            ...(big > 1 ? [standRound('people-andre-stand-drink', 'coffee-table', 60, 1250, { modes: ['party'], key: 'andre-social' }), standBy('people-ben-stand-drink', 'cafe-counter', 1000, { modes: ['party'], key: 'ben-social' })] : []),
+            ...(big > 2 ? [standRound('people-maya-stand-talk', 'communal-table', 150, 1200, { modes: ['party'], key: 'maya-social' }), standRound('people-priya-stand-mug', 'communal-table', 210, 1200, { modes: ['party'], key: 'priya-social' }),
+                ...chat(L, .45, .78, [['people-mia-stand-phone', { key: 'mia-floor' }], ['people-leo-stand-wait', { key: 'leo-floor' }]], { modes: ['afternoon'] }),
+                ...chat(L, .3, .45, [['people-eli-stand-wait', { key: 'eli-floor' }], ['people-sofia-stand-present', { key: 'sofia-floor' }]], { modes: ['morning', 'afternoon'] }),
+                ...chat(L, .45, .78, [['people-zoe-stand-drink', { key: 'zoe-social' }], ['people-noah-stand-drink', { key: 'noah-social' }], ['people-kai-stand-drink', { key: 'kai-social' }]], { modes: ['party'] }, 620)] : [])]; }
     ],
     // Orbital deck: Priya at the service counter on the dawn watch, Kai briefing at the mission console in the evening,
     // both at the console for the jump (the smallest deck has room there for one of them).
@@ -412,9 +509,366 @@ export const ROOM_PEOPLE = {
         standBy('people-priya-stand-work', 'service-counter', 750, { modes: ['morning'] }),
         standRound('people-kai-stand-present', 'mission-console', 0, 1150, { modes: ['evening'] }),
         standRound('people-priya-stand-talk', 'mission-console', 340, 1250, { modes: ['party'], key: 'priya-jump' }),
-        standRound('people-kai-stand-phone', 'mission-console', 15, 1350, { modes: ['party'], key: 'kai-jump' })
+        standRound('people-kai-stand-phone', 'mission-console', 15, 1350, { modes: ['party'], key: 'kai-jump' }),
+        // the larger decks: more of the crew, at the research core, the tactical table, the fabrication floor and the cargo
+        L => { const big = tier(L); return big ? [
+            standBy('people-noah-carry-box', 'cargo-cases', 950, { modes: ['morning'], key: 'noah-cargo' }),
+            standBy('people-zoe-stand-wait', 'crew-lockers', 900, { modes: ['evening'], key: 'zoe-lockers' }),
+            standRound('people-lin-stand-work', 'research-core', 90, 1150, { modes: ['morning', 'afternoon'], key: 'lin-core' }),
+            standRound('people-sam-stand-present', 'tactical-table', 180, 1300, { modes: ['afternoon', 'evening'], key: 'sam-tactical' }),
+            standRound('people-jo-stand-talk', 'tactical-table', 90, 1300, { modes: ['afternoon', 'party'], key: 'jo-tactical' }),
+            standRound('people-omar-stand-work', 'fabrication-floor', 90, 1700, { modes: ['afternoon'], key: 'omar-fabrication' }),
+            standBy('people-leo-carry-box', 'cargo-cradle', 1100, { modes: ['afternoon'], key: 'leo-cradle' }),
+            ...(big > 1 ? [...chat(L, .5, .36, [['people-maya-stand-talk', { key: 'maya-deck' }], ['people-rosa-stand-talk', { key: 'rosa-deck' }]], { modes: ['afternoon', 'evening'] }),
+                ...chat(L, .5, .36, [['people-maya-stand-talk', { key: 'maya-jump' }], ['people-ben-stand-drink', { key: 'ben-jump' }], ['people-grace-stand-drink', { key: 'grace-jump' }]], { modes: ['party'] }, 620)] : []),
+            ...(big > 2 ? [standRound('people-hale-stand-talk', 'tactical-table', 270, 1300, { modes: ['party'], key: 'hale-jump' }), standRound('people-lin-stand-talk', 'research-core', 90, 1200, { modes: ['party'], key: 'lin-jump' }),
+                ...chat(L, .68, .55, [['people-ben-stand-wait', { key: 'ben-deck' }], ['people-mia-stand-phone', { key: 'mia-deck' }]], { modes: ['morning', 'afternoon'] }),
+                ...chat(L, .3, .3, [['people-eli-stand-present', { key: 'eli-deck' }], ['people-ava-stand-wait', { key: 'ava-deck' }]], { modes: ['afternoon'] })] : [])] : []; }
+    ],
+    // Government office. Daily planning before the doors open (the team at their desks, the day's plan at the board,
+    // coffee at the credenza); public service after lunch (every counter staffed, people at the counters, the kiosk
+    // and the waiting seats); a review round the team table in the evening; one person finishing up at night; the
+    // whole team standing round the table for the workshop. Larger offices have more desks, and more people at them.
+    government: [
+        () => deskCrew('andre'),
+        L => { const big = tier(L), day = ['morning', 'afternoon'], open = ['afternoon'], review = ['evening'], shop = ['party'];
+            return [
+                ...staffAt(L, [
+                    ['plan-review', 'jo', ['morning', 'afternoon', 'party']],
+                    ['service-counter', 'lin', day], ['counter-standing', 'lin', day],
+                    ['counter-accessible', 'priya', open],
+                    ['records-lead', 'hale', ['morning', 'afternoon', 'evening', 'night']],
+                    ['team-huddle', 'sam', ['morning', 'party']],
+                    ['consultation', 'rosa', ['afternoon', 'evening']],
+                    ['language-access', 'omar', day, { desk: 'wheel' }]]),
+                { id: 'people-sam-sit-laptop', on: 'operator-chair-0', seat: 450, toward: 'workstation-0', modes: big > 1 ? ['afternoon'] : ['morning', 'afternoon'], key: 'sam-workstation' },
+                standBy('people-priya-stand-present', 'planning-board', 900, { modes: ['morning'] }),
+                ...(big ? [standBy('people-rosa-stand-mug', 'staff-credenza', 800, { modes: ['morning'] })] : []),
+                ...(big > 1 ? [standBy('people-maya-stand-talk', 'planning-board', 1500, { modes: ['morning'], key: 'maya-plan' })] : []),
+                // the public, in opening hours
+                ...across(L, 'service-counter', 'people-ben-stand-wait', 1000, { modes: open }),
+                ...across(L, 'counter-standing', 'people-ben-stand-wait', 1000, { modes: open }),
+                ...across(L, 'counter-accessible', 'people-kai-wheel-watch', 1050, { modes: open }),
+                { id: 'people-grace-sit-read', on: 'waiting-seats', seat: 420, along: -420, modes: open },
+                ...(big ? [{ id: 'people-mia-sit-phone', on: 'waiting-seats', seat: 420, along: 420, modes: open }] : []),
+                standBy('people-zoe-stand-phone', 'queue-kiosk', 750, { modes: open }),
+                standBy('people-sofia-stand-wait', 'brochure-rack', 750, { modes: open }),
+                standBy('people-eli-stand-work', 'self-service', 750, { modes: open }),
+                { id: 'people-ava-sit-phone', on: 'armchair-poppi', seat: 420, modes: open },
+                { id: 'people-maya-sit-listen', on: [DINING, 0], seat: 450, depth: -90, modes: open },
+                { id: 'people-noah-sit-listen', on: [DINING, 1], seat: 450, depth: -90, modes: open },
+                // the review: round the team table
+                { id: 'people-jo-sit-listen', on: 'team-chair-0', seat: 450, toward: 'activity-table', modes: review },
+                { id: 'people-priya-sit-write', on: 'team-chair-1', seat: 450, toward: 'activity-table', modes: review },
+                { id: 'people-lin-sit-laptop', on: 'team-chair-2', seat: 450, toward: 'activity-table', modes: review },
+                standRound('people-sam-stand-present', 'activity-table', 180, 1150, { modes: review, key: 'sam-review' }),
+                // the workshop: everyone on their feet round it
+                standRound('people-hale-stand-talk', 'activity-table', 180, 1150, { modes: shop, key: 'hale-workshop' }),
+                standRound('people-lin-stand-talk', 'activity-table', 120, 1200, { modes: shop, key: 'lin-workshop' }),
+                standRound('people-priya-stand-mug', 'activity-table', 240, 1200, { modes: shop, key: 'priya-workshop' }),
+                ...(big ? [standRound('people-rosa-stand-talk', 'activity-table', 70, 1250, { modes: shop, key: 'rosa-workshop' }),
+                    standRound('people-omar-wheel-watch', 'activity-table', 290, 1350, { modes: shop, key: 'omar-workshop' })] : [])
+            ]; }
+    ],
+    // Middle school. The morning seminar with three tables of twelve-year-olds and Ms Jo at the mobile desk; team projects
+    // after lunch (the same groups, two at the robotics mat, one at the maker bench); a homework club after school; the
+    // teacher planning lessons alone at night; and the STEM workshop: projects shown standing, a parent or two.
+    middleschool: [
+        () => deskCrew('jo'),
+        L => { const M = ['morning'], A = ['afternoon'], MA = ['morning', 'afternoon'], E = ['evening'], P = ['party'], C = (g, n) => `student-chair-${g}-${n}`, T = g => `student-table-${g}-a`;
+            return [
+                ...staffAt(L, [
+                    ['presentation-desk', 'hale', M, { colors: LOOK.hale }], ['presentation-desk', 'bella', P, { key: 'bella-presents' }],
+                    ['accessible-student', 'kai', MA, { desk: 'wheel' }],
+                    ['standing-student', 'dina', MA], ['maker-bench', 'emeka', ['afternoon', 'party']]]),
+                ...atTables([
+                    ['aiden', 'sit-listen', C(0, 0), T(0), M], ['aiden', 'sit-write', C(0, 0), T(0), A], ['bella', 'sit-write', C(0, 1), T(0), MA], ['carlos', 'sit-raise', C(0, 2), T(0), M], ['fern', 'sit-listen', C(0, 3), T(0), MA],
+                    ['leo', 'sit-write', C(1, 0), T(1), MA], ['ava', 'sit-listen', C(1, 1), T(1), M], ['ava', 'sit-laptop', C(1, 1), T(1), A], ['mia', 'sit-laptop', C(1, 2), T(1), MA], ['eli', 'sit-listen', C(1, 3), T(1), MA],
+                    ['emeka', 'sit-write', C(2, 0), T(2), M], ['sofia', 'sit-listen', C(2, 1), T(2), MA], ['zoe', 'sit-write', C(2, 2), T(2), MA],
+                    ['bella', 'sit-laptop', C(3, 0), T(3), E], ['emeka', 'sit-write', C(3, 1), T(3), E], ['leo', 'sit-read', C(4, 0), T(4), E], ['dina', 'sit-write', C(4, 1), T(4), E], ['fern', 'sit-read', C(3, 3), T(3), E],
+                    ['hale', 'sit-write', C(1, 2), T(1), ['night'], { colors: LOOK.hale }]]),
+                standRound('people-carlos-stand-talk', 'robotics-mat', 120, 1000, { modes: A, key: 'carlos-robots' }),
+                standRound('people-noah-stand-work', 'robotics-mat', 240, 1000, { modes: A, key: 'noah-robots' }),
+                standBy('people-hale-stand-talk', 'brainstorm-wall', 1000, { modes: A, colors: LOOK.hale, key: 'hale-wall' }),
+                // the workshop
+                standRound('people-aiden-stand-work', 'robotics-mat', 0, 1000, { modes: P, key: 'aiden-workshop' }),
+                standRound('people-carlos-stand-talk', 'robotics-mat', 90, 1050, { modes: P, key: 'carlos-workshop' }),
+                standRound('people-fern-stand-present', 'robotics-mat', 270, 1050, { modes: P, key: 'fern-workshop' }),
+                standRound('people-dina-stand-wait', 'robotics-mat', 180, 1100, { modes: P, key: 'dina-workshop' }),
+                standRound('people-hale-stand-talk', 'activity-table', 180, 1150, { modes: P, colors: LOOK.hale, key: 'hale-workshop' }),
+                standRound('people-grace-cane-stand', 'activity-table', 120, 1200, { modes: P, key: 'grace-workshop' }),
+                standRound('people-andre-stand-phone', 'activity-table', 240, 1200, { modes: P, key: 'andre-workshop' }),
+                standBy('people-leo-carry-box', 'lockers', 900, { modes: P, key: 'leo-workshop' })
+            ]; }
+    ],
+    // College classroom. A morning lecture (Mr Hale at the podium, three tables of students, Lin at the help desk, Kai at
+    // the accessible desk); the working seminar after lunch (the same groups, two at the team whiteboards, Sam at the
+    // pitch desk); an evening class of adult learners with Ben teaching; three students studying on their own at
+    // night; and the group presentation: Sam and Priya presenting at the back, the class turned round to watch.
+    college: [
+        () => deskCrew('noah'),
+        L => { const M = ['morning'], A = ['afternoon'], MA = ['morning', 'afternoon'], E = ['evening'], N = ['night'], P = ['party'];
+            return [
+                ...staffAt(L, [
+                    ['instructor-podium', 'hale', M, { colors: LOOK.hale }], ['instructor-podium', 'ben', E, { key: 'ben-podium' }],
+                    ['ta-help', 'lin', ['morning', 'afternoon', 'evening']],
+                    ['accessible-student', 'kai', MA, { desk: 'wheel' }], ['accessible-student', 'omar', E, { desk: 'wheel', key: 'omar-accessible' }],
+                    ['team-pitch', 'sam', ['afternoon', 'party']]]),
+                ...atTables([
+                    ['zoe', 'sit-write', 'student-chair-0-1', 'student-table-0', MA], ['mia', 'sit-listen', 'student-chair-0-3', 'student-table-0', M],
+                    ['mia', 'sit-laptop', 'student-chair-0-3', 'student-table-0', A], ['leo', 'sit-laptop', 'student-chair-0-5', 'student-table-0', MA],
+                    ['ava', 'sit-raise', 'student-chair-0-0', 'student-table-0', M],
+                    ['eli', 'sit-listen', 'student-chair-1-1', 'student-table-1', MA], ['sofia', 'sit-write', 'student-chair-1-3', 'student-table-1', MA],
+                    ['maya', 'sit-laptop', 'student-chair-1-5', 'student-table-1', ['morning', 'afternoon', 'evening']], ['andre', 'sit-listen', 'student-chair-1-0', 'student-table-1', M],
+                    ['priya', 'sit-write', 'student-chair-2-1', 'student-table-2', M], ['priya', 'sit-laptop', 'student-chair-2-1', 'student-table-2', E],
+                    ['rosa', 'sit-listen', 'student-chair-2-3', 'student-table-2', ['morning', 'evening']], ['sam', 'sit-laptop', 'student-chair-2-5', 'student-table-2', ['morning', 'evening']],
+                    ['andre', 'sit-laptop', 'student-chair-3-1', 'student-table-3', ['afternoon', 'evening']], ['ava', 'sit-write', 'student-chair-3-3', 'student-table-3', A],
+                    ['grace', 'sit-write', 'student-chair-3-5', 'student-table-3', E],
+                    ['sofia', 'sit-laptop', 'student-chair-0-2', 'student-table-0', N],
+                    // the presentation: the far side of the back tables, facing the pitch desk
+                    ['zoe', 'sit-listen', 'student-chair-2-0', 'student-table-2', P], ['mia', 'sit-listen', 'student-chair-2-2', 'student-table-2', P],
+                    ['leo', 'sit-raise', 'student-chair-2-4', 'student-table-2', P], ['jo', 'sit-listen', 'student-chair-3-0', 'student-table-3', P],
+                    ['ava', 'sit-write', 'student-chair-3-2', 'student-table-3', P], ['eli', 'sit-listen', 'student-chair-3-4', 'student-table-3', P]]),
+                standBy('people-priya-stand-present', 'team-whiteboard-1', 900, { modes: A, key: 'priya-board' }),
+                standBy('people-rosa-stand-talk', 'team-whiteboard-2', 900, { modes: A, key: 'rosa-board' }),
+                standRound('people-jo-stand-talk', 'student-table-2', 270, 1500, { modes: A, key: 'jo-seminar' }),
+                { id: 'people-eli-sit-read', on: 'lounge-seat-1', seat: 420, modes: N, key: 'eli-lounge' },
+                { id: 'people-grace-sit-read', on: 'lounge-seat-2', seat: 420, modes: ['afternoon', 'party'], key: 'grace-lounge' },
+                spot('people-priya-stand-present', 1900, 6700, [1200, 4300], { modes: P, clear: true, key: 'priya-pitch' }),
+                spot('people-hale-stand-wait', -2700, 5900, [600, 6900], { modes: P, clear: true, colors: LOOK.hale, key: 'hale-watch' }),
+                spot('people-kai-wheel-watch', 600, 5450, [600, 7000], { modes: P, clear: true, key: 'kai-watch' })
+            ]; }
+    ],
+    // University classroom. The morning lecture (the seminar tables' far side and flanks face the lectern); the research
+    // seminar round the tables with three of the faculty, readers at the long table; an evening lecture; graduate
+    // study at night (the research assistant, a carrel, the reading table); and the symposium: Ben chairing, Andre at
+    // the poster desk, people standing in groups by the model and the reading table.
+    university: [
+        () => deskCrew('lin'),
+        L => { const M = ['morning'], A = ['afternoon'], MA = ['morning', 'afternoon'], E = ['evening'], N = ['night'], P = ['party'], T = n => 'seminar-table-' + n, C = n => 'seminar-chair-' + n;
+            return [
+                ...staffAt(L, [
+                    ['lecturer-lectern', 'hale', M, { colors: LOOK.hale }], ['lecturer-lectern', 'jo', E, { key: 'jo-lectern' }], ['lecturer-lectern', 'ben', P, { key: 'ben-lectern' }],
+                    ['accessible-seminar', 'omar', ['morning', 'afternoon', 'party'], { desk: 'wheel' }],
+                    ['research-assistant', 'priya', ['morning', 'afternoon', 'evening', 'night']],
+                    ['poster-review', 'andre', ['afternoon', 'party']],
+                    ['graduate-carrel-1', 'maya', ['afternoon', 'evening', 'night']],
+                    ['graduate-carrel-2', 'sam', ['morning', 'afternoon', 'evening']]]),
+                ...atTables([
+                    ['zoe', 'sit-write', C(12), T('front-left'), MA], ['eli', 'sit-listen', C(13), T('front-left'), M],
+                    ['sofia', 'sit-laptop', C(14), T('front-right'), MA], ['ava', 'sit-raise', C(15), T('front-right'), M],
+                    ['mia', 'sit-listen', C(6), T('left'), M], ['mia', 'sit-laptop', C(6), T('left'), A], ['leo', 'sit-write', C(7), T('left'), M], ['leo', 'sit-listen', C(8), T('left'), A],
+                    ['noah', 'sit-laptop', C(9), T('right'), MA], ['rosa', 'sit-listen', C(10), T('right'), M], ['kai', 'sit-write', C(11), T('right'), MA],
+                    ['jo', 'sit-listen', C(0), T('back'), A], ['grace', 'sit-write', C(2), T('back'), A], ['ben', 'sit-listen', C(4), T('back'), A],
+                    ['grace', 'sit-write', C(12), T('front-left'), E], ['ben', 'sit-listen', C(13), T('front-left'), E], ['andre', 'sit-laptop', C(14), T('front-right'), E],
+                    ['rosa', 'sit-listen', C(15), T('front-right'), E], ['hale', 'sit-listen', C(7), T('left'), E, { colors: LOOK.hale }], ['noah', 'sit-write', C(10), T('right'), E],
+                    ['eli', 'sit-read', 'reading-chair-1-0', 'reading-table', A], ['ava', 'sit-write', 'reading-chair-2-1', 'reading-table', A],
+                    ['zoe', 'sit-laptop', 'reading-chair-0-0', 'reading-table', E], ['eli', 'sit-laptop', 'reading-chair-2-0', 'reading-table', N],
+                    ['sofia', 'sit-listen', C(12), T('front-left'), P], ['kai', 'sit-listen', C(15), T('front-right'), P]]),
+                standBy('people-hale-stand-present', 'presentation-display', 1000, { modes: A, colors: LOOK.hale, key: 'hale-seminar' }),
+                { id: 'people-rosa-sit-read', on: ['armchair-leather', 0], seat: 420, modes: A, key: 'rosa-armchair' },
+                { id: 'people-andre-sit-read', on: ['armchair-leather', 1], seat: 420, modes: N, key: 'andre-armchair' },
+                // the symposium
+                standRound('people-grace-cane-stand', 'model-vitrine', 200, 1300, { modes: P, key: 'grace-model' }),
+                standRound('people-hale-stand-talk', 'model-vitrine', 140, 1300, { modes: P, colors: LOOK.hale, key: 'hale-model' }),
+                standRound('people-zoe-stand-drink', 'model-vitrine', 260, 1350, { modes: P, key: 'zoe-model' }),
+                standRound('people-jo-stand-talk', 'reading-table', 180, 1450, { modes: P, key: 'jo-symposium' }),
+                standRound('people-sam-stand-mug', 'reading-table', 150, 1500, { modes: P, key: 'sam-symposium' }),
+                standRound('people-mia-stand-drink', 'reading-table', 210, 1500, { modes: P, key: 'mia-symposium' }),
+                ...across(L, 'poster-review', 'people-priya-stand-present', 1100, { modes: P, side: 500, key: 'priya-poster' }),
+                ...across(L, 'poster-review', 'people-noah-stand-drink', 1250, { modes: P, side: -500, key: 'noah-poster' }),
+                standBy('people-rosa-stand-talk', 'library-shelf-1', 900, { modes: P, key: 'rosa-shelf' })
+            ]; }
+    ],
+    // Police squad room. Morning briefing: the sergeant at the lectern (in the smallest room at his own desk), the squad
+    // on the briefing seats; case review after lunch: every desk in use, the detective at the analyst's desk, two at
+    // the evidence table, someone from the public at the intake desk; a thinner evening shift, two on their break at
+    // the table; four on the night shift; and the team briefing on their feet at the planning board.
+    police: [
+        () => deskCrew('reyes'),
+        L => { const big = tier(L), M = ['morning'], A = ['afternoon'], E = ['evening'], N = ['night'], P = ['party'], U = { colors: LOOK.police };
+            const seat = (who, pose, n, modes) => ({ id: `people-${who}-${pose}`, on: 'briefing-seat-' + n, seat: 450, modes, key: `${who}-briefing-${n}`, ...(/^(reyes|cole|brandt|tran|hale)$/.test(who) ? {} : U) });
+            return [
+                ...staffAt(L, [
+                    ['briefing-lectern', 'brandt', ['morning', 'party']],
+                    ['duty-sergeant', 'brandt', big ? ['afternoon', 'evening', 'night'] : null, { key: 'brandt-duty' }],
+                    ['intake-officer', 'cole', ['afternoon', 'evening']], ['intake-officer', 'lin', ['morning', 'night'], { ...U, key: 'lin-intake' }],
+                    ['report-writing-2', 'andre', ['afternoon', 'evening'], U],
+                    ['crime-analyst', 'tran', ['afternoon', 'evening']],
+                    ['report-writing-3', 'priya', ['afternoon', 'night'], U]]),
+                { id: 'people-sam-sit-laptop', on: 'operator-chair-0', seat: 450, toward: 'workstation-0', modes: ['afternoon', 'evening', 'night'], key: 'sam-workstation', ...U },
+                // the morning briefing
+                ...(big ? [seat('cole', 'sit-listen', 0, M), seat('andre', 'sit-write', 1, M), seat('priya', 'sit-listen', 2, M), seat('tran', 'sit-write', 3, M), seat('sam', 'sit-listen', 4, M), seat('jo', 'sit-listen', 5, M),
+                    seat('omar', 'sit-write', 6, M), seat('maya', 'sit-listen', 7, M), seat('hale', 'sit-listen', 8, M)]
+                    : [{ id: 'people-cole-sit-listen', on: 'briefing-chair-0', seat: 450, toward: 'activity-table', modes: M }, { id: 'people-andre-sit-write', on: 'briefing-chair-1', seat: 450, toward: 'activity-table', modes: M, ...U }]),
+                // case review
+                { id: 'people-jo-sit-write', on: 'evidence-chair-0', seat: 450, toward: 'evidence-table', modes: A, key: 'jo-evidence' },
+                { id: 'people-hale-sit-listen', on: 'evidence-chair-1', seat: 450, toward: 'evidence-table', modes: A, key: 'hale-evidence' },
+                ...across(L, 'intake-officer', 'people-grace-cane-stand', 1000, { modes: A }),
+                standRound('people-ben-stand-wait', 'walk-off-mat', 200, 900, { modes: A }),
+                // the evening shift
+                standBy('people-maya-stand-work', 'kit-bench', 700, { modes: E, key: 'maya-kit', ...U }),
+                standBy('people-omar-stand-wait', 'vest-rail', 800, { modes: E, key: 'omar-vests', ...U }),
+                { id: 'people-jo-sit-chat', on: 'briefing-chair-0', seat: 420, toward: 'activity-table', modes: E, key: 'jo-break', ...U },
+                { id: 'people-lin-sit-chat', on: 'briefing-chair-1', seat: 420, toward: 'activity-table', modes: E, key: 'lin-break', ...U },
+                // the team briefing, standing
+                standBy('people-cole-stand-wait', 'planning-board', 1700, { modes: P, key: 'cole-team' }),
+                standBy('people-tran-stand-phone', 'planning-board', 1900, { modes: P, key: 'tran-team' }),
+                standBy('people-andre-stand-talk', 'planning-board', 2100, { modes: P, key: 'andre-team', ...U }),
+                ...(big ? [standBy('people-priya-stand-mug', 'planning-board', 2300, { modes: P, key: 'priya-team', ...U }), standBy('people-sam-stand-mug', 'planning-board', 2500, { modes: P, key: 'sam-team', ...U })] : []),
+                ...(big > 1 ? [standBy('people-jo-stand-talk', 'planning-board', 2700, { modes: P, key: 'jo-team', ...U }), standBy('people-omar-stand-wait', 'planning-board', 2900, { modes: P, key: 'omar-team', ...U })] : [])
+            ]; }
+    ],
+    // Security operations. The shift briefing on the briefing chairs with the supervisor standing at her desk; the
+    // active watch with every console manned and two at the incident map; the evening and night watches thinning
+    // out; the handover on their feet at the incident board.
+    security: [
+        () => deskCrew('okoye'),
+        L => { const big = tier(L), M = ['morning'], A = ['afternoon'], E = ['evening'], N = ['night'], P = ['party'], watch = ['afternoon', 'evening', 'night'], G = { colors: LOOK.guard };
+            const brief = (who, pose, n) => ({ id: `people-${who}-${pose}`, on: 'briefing-chair-' + n, seat: 450, toward: big > 1 ? 'briefing-table' : 'activity-table', modes: M, key: `${who}-briefing`, ...G });
+            return [
+                ...staffAt(L, [
+                    ['shift-supervisor', 'walsh', null],
+                    ['operator-2', 'andre', watch, G], ['operator-3', 'lin', watch, G],
+                    ['intel-analyst', 'priya', ['afternoon', 'evening']],
+                    ['incident-lead', 'hale', ['afternoon', 'party']],
+                    ['radio-dispatch', 'rosa', ['afternoon', 'evening'], G]]),
+                { id: 'people-jo-sit-laptop', on: 'operator-chair-0', seat: 450, toward: 'workstation-0', modes: ['afternoon', 'evening'], key: 'jo-workstation', ...G },
+                brief('andre', 'sit-listen', 0), brief('lin', 'sit-write', 1), brief('sam', 'sit-listen', 2), brief('jo', 'sit-listen', 3), brief('priya', 'sit-write', 4),
+                standBy('people-omar-stand-mug', 'coffee-point', 800, { modes: M, key: 'omar-coffee', ...G }),
+                { id: 'people-maya-sit-write', on: 'map-stool-0', seat: 450, toward: 'incident-map-table', modes: ['afternoon', 'evening'], key: 'maya-map', ...G },
+                standRound('people-noah-stand-talk', 'incident-map-table', 0, 1150, { modes: ['afternoon', 'evening'], key: 'noah-map', ...G }),
+                { id: 'people-omar-sit-phone', on: 'armchair-leather', seat: 420, modes: N, key: 'omar-break', ...G },
+                // the handover
+                standBy('people-andre-stand-wait', 'incident-board', 1700, { modes: P, key: 'andre-handover', ...G }),
+                standBy('people-lin-stand-talk', 'incident-board', 1900, { modes: P, key: 'lin-handover', ...G }),
+                ...(big ? [standBy('people-jo-stand-talk', 'incident-board', 2100, { modes: P, key: 'jo-handover', ...G }), standBy('people-priya-stand-mug', 'incident-board', 2300, { modes: P, key: 'priya-handover' })] : []),
+                ...(big > 1 ? [standBy('people-sam-stand-mug', 'coffee-point', 800, { modes: P, key: 'sam-handover', ...G }), standBy('people-maya-stand-wait', 'incident-board', 2500, { modes: P, key: 'maya-handover', ...G })] : [])
+            ]; }
+    ],
+    // Hospital ward. Morning rounds: the doctors and the charge nurse at the first bed, nurses at the medication and
+    // linen trolleys; care coordination after lunch with every desk in use, a visitor and her child at a bedside, a
+    // family member at the discharge desk; the evening handover standing round the team table; night observation with
+    // the lights low (the charge nurse, one at the medication station, one on rounds); the team review.
+    hospital: [
+        () => deskCrew('nina'),
+        L => { const big = tier(L), M = ['morning'], A = ['afternoon'], E = ['evening'], N = ['night'], P = ['party'];
+            const teal = { colors: LOOK.scrubsTeal }, blue = { colors: LOOK.scrubsBlue }, plum = { colors: LOOK.scrubsPlum }, coat = { colors: LOOK.labCoat };
+            return [
+                ...staffAt(L, [
+                    ['medication-station', 'mateo', ['morning', 'afternoon', 'evening']], ['medication-station', 'lin', N, { ...blue, key: 'lin-medication' }],
+                    ['physician-charting', 'patel', ['afternoon', 'party']], ['physician-charting', 'stone', E, { key: 'stone-charting' }],
+                    ['charge-nurse', 'amara', ['morning', 'afternoon', 'evening', 'night']],
+                    ['telehealth-consult', 'stone', A],
+                    ['pharmacist-verify', 'priya', ['morning', 'afternoon'], coat],
+                    ['discharge-planning', 'jo', A]]),
+                // rounds at the first bed
+                standBy('people-stone-stand-present', 'care-bed-0', 1500, { modes: M, key: 'stone-rounds' }),
+                standBy('people-patel-stand-talk', 'care-bed-0', 1650, { modes: M, key: 'patel-rounds' }),
+                ...(big ? [standBy('people-sam-stand-wait', 'care-bed-0', 1900, { modes: M, key: 'sam-rounds', ...coat })] : []),
+                standBy('people-andre-stand-work', 'clinical-cart', 650, { modes: ['morning', 'night'], key: 'andre-cart', ...teal }),
+                standBy('people-lin-stand-work', 'linen-trolley', 650, { modes: M, key: 'lin-linen', ...blue }),
+                // visitors
+                standBy('people-maya-stand-talk', 'care-bed-1', 1500, { modes: A, key: 'maya-visit' }),
+                standBy('people-nora-kid-stand', 'care-bed-1', 1500, { modes: A, key: 'nora-visit' }),
+                { id: 'people-ben-sit-read', on: ['armchair-poppi', 0], seat: 420, modes: ['afternoon', 'evening'], key: 'ben-visit' },
+                { id: 'people-grace-sit-listen', on: DINING, seat: 450, depth: -90, modes: A, key: 'grace-discharge' },
+                // the handover, and the team review, round the team table
+                standRound('people-mateo-stand-talk', 'activity-table', 180, 1150, { modes: P, key: 'mateo-review' }),
+                standRound('people-lin-stand-talk', 'activity-table', 120, 1200, { modes: ['evening', 'party'], key: 'lin-handover', ...blue }),
+                standRound('people-andre-stand-wait', 'activity-table', 240, 1200, { modes: ['evening', 'party'], key: 'andre-handover', ...teal }),
+                ...(big ? [standRound('people-priya-stand-mug', 'activity-table', 60, 1250, { modes: ['evening', 'party'], key: 'priya-handover', ...plum }),
+                    standRound('people-stone-stand-present', 'activity-table', 300, 1250, { modes: P, key: 'stone-review' }),
+                    standRound('people-amara-stand-talk', 'activity-table', 0, 1250, { modes: P, key: 'amara-review' })] : [])
+            ]; }
+    ],
+    // Science laboratory. Preparation: the scientist at the mobile desk, others at the fume hood, the sink and the
+    // sample cart; the practical session with a class on the bench stools and two teaching; analysis in the evening at
+    // the instruments; one on the instrument watch at night; the research review round the team table.
+    laboratory: [
+        () => deskCrew('vega'),
+        L => { const big = tier(L), M = ['morning'], A = ['afternoon'], E = ['evening'], N = ['night'], P = ['party'], coat = { colors: LOOK.labCoat };
+            const stool = (who, pose, bench, n, modes) => ({ id: `people-${who}-${pose}`, on: `lab-seat-${bench}-${n}`, seat: 450, toward: 'lab-bench-' + bench, modes, key: `${who}-bench-${bench}-${n}`, ...coat });
+            return [
+                ...staffAt(L, [
+                    ['instrument-control', 'andre', A, coat], ['instrument-control', 'yusuf', ['evening', 'night'], { key: 'yusuf-instruments' }],
+                    ['microscopy', 'chen', ['morning', 'afternoon', 'evening']],
+                    ['sample-prep', 'priya', ['morning', 'afternoon'], coat],
+                    ['teaching-demo', 'jo', A, coat],
+                    ['data-review', 'andre', ['evening', 'party'], { ...coat, key: 'andre-data' }],
+                    ['pi-review', 'hale', ['evening', 'party']]]),
+                standBy('people-lin-stand-work', 'fume-hood', 800, { modes: ['morning', 'afternoon'], key: 'lin-hood', ...coat }),
+                standBy('people-sam-stand-work', 'wash-station', 800, { modes: M, key: 'sam-wash', ...coat }),
+                standBy('people-maya-stand-present', 'sample-cart', 750, { modes: M, key: 'maya-samples', ...coat }),
+                standBy('people-yusuf-stand-work', 'lab-bench-0', 900, { modes: M, key: 'yusuf-bench' }),
+                // the practical
+                stool('zoe', 'sit-write', 0, 0, A), stool('kai', 'sit-listen', 0, 1, A), stool('mia', 'sit-write', 0, 2, A), stool('leo', 'sit-listen', 0, 3, A),
+                stool('ava', 'sit-write', 1, 0, A), stool('eli', 'sit-listen', 1, 1, A), stool('sofia', 'sit-write', 1, 2, A), stool('noah', 'sit-listen', 1, 3, A),
+                stool('maya', 'sit-write', 2, 0, A), stool('sam', 'sit-laptop', 2, 1, A),
+                standRound('people-yusuf-stand-talk', 'lab-bench-0', 90, 1500, { modes: A, key: 'yusuf-teaching' }),
+                // analysis and the watch
+                stool('maya', 'sit-write', 0, 0, E), stool('sam', 'sit-laptop', 0, 1, E),
+                standBy('people-lin-stand-present', 'sample-fridge', 800, { modes: E, key: 'lin-fridge', ...coat }),
+                standBy('people-chen-stand-present', 'fume-hood', 800, { modes: N, key: 'chen-watch' }),
+                // the review
+                standRound('people-yusuf-stand-present', 'activity-table', 180, 1150, { modes: P, key: 'yusuf-review' }),
+                standRound('people-chen-stand-talk', 'activity-table', 120, 1200, { modes: P, key: 'chen-review' }),
+                standRound('people-priya-stand-mug', 'activity-table', 240, 1200, { modes: P, key: 'priya-review', ...coat }),
+                ...(big ? [standRound('people-lin-stand-talk', 'activity-table', 60, 1250, { modes: P, key: 'lin-review', ...coat }), standRound('people-jo-stand-talk', 'activity-table', 300, 1250, { modes: P, key: 'jo-review', ...coat })] : [])
+            ]; }
+    ],
+    // Mobile IT. System checks at the racks first thing; the service session with the tech bar open and people queuing
+    // at it, every bench busy; maintenance in the evening (one kneeling at a rack); one on the monitoring desk
+    // overnight; and the team deployment: a briefing on their feet, boxes carried out.
+    mobileit: [
+        () => deskCrew('devi'),
+        L => { const big = tier(L), M = ['morning'], A = ['afternoon'], E = ['evening'], N = ['night'], P = ['party'], polo = { colors: LOOK.techPolo };
+            return [
+                ...staffAt(L, [
+                    ['noc-monitoring', 'lin', ['afternoon', 'evening', 'night'], polo],
+                    ['repair-bench', 'omar', ['morning', 'afternoon', 'evening'], polo],
+                    ['imaging-deployment', 'andre', ['morning', 'afternoon', 'party'], polo],
+                    ['asset-intake', 'priya', A, polo],
+                    ['tech-bar-walkup', 'maya', ['morning', 'afternoon'], polo]]),
+                standBy('people-tomas-stand-work', 'server-rack-1', 800, { modes: ['morning', 'evening', 'night'], key: 'tomas-rack' }),
+                standBy('people-jo-kneel-shelf', 'server-rack-0', 700, { modes: E, key: 'jo-rack', ...polo }),
+                standBy('people-tomas-stand-present', 'diagnostic-cart-0', 700, { modes: A, key: 'tomas-cart' }),
+                ...across(L, 'tech-bar-walkup', 'people-ben-stand-wait', 1000, { modes: A, key: 'ben-techbar' }),
+                ...across(L, 'tech-bar-walkup', 'people-zoe-stand-phone', 1700, { modes: A, side: 350, key: 'zoe-techbar' }),
+                ...(big ? across(L, 'tech-bar-walkup', 'people-hale-stand-wait', 2400, { modes: A, side: -200, key: 'hale-techbar' }) : []),
+                standBy('people-sam-stand-work', 'packing-bench', 750, { modes: ['morning', 'afternoon'], key: 'sam-packing', ...polo }),
+                standBy('people-rosa-stand-phone', 'charging-locker', 800, { modes: A, key: 'rosa-locker' }),
+                // the deployment
+                standRound('people-tomas-stand-present', 'briefing-zone', 180, 900, { modes: P, key: 'tomas-briefing' }),
+                standRound('people-sam-stand-wait', 'briefing-zone', 110, 1000, { modes: P, key: 'sam-briefing', ...polo }),
+                standRound('people-lin-stand-talk', 'briefing-zone', 250, 1000, { modes: P, key: 'lin-briefing', ...polo }),
+                ...(big ? [standRound('people-priya-stand-mug', 'briefing-zone', 40, 1050, { modes: P, key: 'priya-briefing', ...polo }),
+                    standBy('people-noah-carry-box', 'deployment-bay', 900, { modes: P, key: 'noah-boxes', ...polo }), standBy('people-jo-carry-box', 'device-drop-box', 900, { modes: P, key: 'jo-boxes', ...polo })] : [])
+            ]; }
     ],
     library: [
+        // The reading rooms (every library but the commons): readers at the tables and carrels from opening to dusk, one
+        // or two on the sofa, people at the stacks, the catalogue and the periodicals, a librarian shelving returns; a
+        // study group at the tables on the late evening. Larger rooms have more tables, and more readers at them.
+        L => { if (L.id === 'humboldt') return []; const big = tier(L), T = ['reading-table-', 'carrel-'], open = ['morning', 'afternoon', 'evening'];
+            const reader = (who, pose, n, modes) => ({ id: `people-${who}-${pose}`, on: [DINING, n], seat: /sit-read|sit-phone/.test(pose) ? 420 : 450, toward: T, modes, key: `${who}-table-${n}-${pose}` });
+            return [
+                ...deskCrew('mia', ['morning', 'afternoon', 'evening', 'party']),
+                reader('zoe', 'sit-read', 0, ['morning', 'afternoon']), reader('eli', 'sit-laptop', 1, ['afternoon', 'evening']), reader('grace', 'sit-write', 2, ['afternoon']), reader('ben', 'sit-read', 3, ['morning', 'evening']),
+                ...(big > 1 ? [reader('kai', 'sit-write', 4, ['afternoon']), reader('ava', 'sit-laptop', 5, ['morning', 'afternoon']), reader('andre', 'sit-read', 6, ['afternoon', 'evening'])] : []),
+                ...(big > 2 ? [reader('maya', 'sit-write', 8, ['morning', 'afternoon']), reader('sam', 'sit-laptop', 9, ['afternoon', 'evening']), reader('priya', 'sit-read', 11, ['afternoon'])] : []),
+                ...(big > 3 ? [reader('noah', 'sit-laptop', 12, ['afternoon']), reader('sofia', 'sit-write', 14, ['afternoon', 'evening']), reader('leo', 'sit-read', 16, ['morning', 'afternoon'])] : []),
+                big ? seated('people-jo-sit-read', 'sofa-leather-couch', 'coffee-table', { along: -420, modes: ['afternoon', 'evening'], key: 'jo-sofa' }) : { id: 'people-jo-sit-read', on: 'armchair-leather', seat: 420, modes: ['afternoon', 'evening'], key: 'jo-armchair' },
+                standBy('people-rosa-stand-work', 'book-return-cart', 700, { modes: ['morning', 'evening'], key: 'rosa-returns' }),
+                standBy('people-hale-stand-present', 'stack-0-0', 750, { modes: ['afternoon'], colors: LOOK.hale, key: 'hale-stacks' }),
+                standBy('people-lin-kneel-shelf', 'current-periodicals', 700, { modes: ['afternoon'], key: 'lin-periodicals' }),
+                standRound('people-omar-wheel-watch', 'globe', 180, 1150, { modes: ['morning', 'afternoon'], key: 'omar-globe' }),
+                standBy('people-priya-stand-talk', 'research-help-counter', 850, { modes: ['morning'], key: 'priya-help' }),
+                standRound('people-noah-stand-work', 'digital-research-table', 180, 1250, { modes: ['evening'], key: 'noah-digital' }),
+                // the study night
+                reader('ava', 'sit-laptop', 0, ['party']), reader('leo', 'sit-write', 1, ['party']), reader('sofia', 'sit-listen', 2, ['party']), reader('eli', 'sit-laptop', 3, ['party']),
+                ...(big ? [standRound('people-noah-stand-drink', 'coffee-table', 150, 1250, { modes: ['party'], key: 'noah-night' }), standRound('people-zoe-stand-drink', 'coffee-table', 210, 1250, { modes: ['party'], key: 'zoe-night' })] : [])
+            ]; },
         // The commons: opening with Andre standing at the pilot desk, research together after lunch (Rosa at the desk's
         // low setting), reading at dusk (Omar at the desk at 32 in), one student at a table lamp at closing, and a
         // study night around the long table.
@@ -482,7 +936,7 @@ const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 export class RoomPeople {
     constructor(room, library) {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
-        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.pending = new Set(); this.lastMode = undefined; this.generation = 0; this.keysHome = null;
+        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.pending = new Set(); this.waiting = []; this.lastMode = undefined; this.generation = 0; this.keysHome = null;
         this.dirty = false;       // dirty: someone moved since the Studio last looked (their shadow has to follow)
         this.ray = new THREE.Raycaster();
     }
@@ -647,12 +1101,23 @@ export class RoomPeople {
     async build() {
         const room = this.room, token = room.token, root = room.root, cast = this.generation;
         await room.ready; await this.library.loadIndex();
-        const specs = this.withFamilies(this.specs());
+        // The Studio loads the people of the hour (and whoever is at the featured desk); the rest of the cast comes when
+        // its hour does (bringFor): a room with fifty placements over the day holds the dozen who are there now. A film
+        // or a review frame loads its whole cast at once: its frames may not wait for a model.
+        const all = this.withFamilies(this.specs()), hour = room.peopleState?.()?.mode;
+        const lazy = !this.filter && !!hour && (globalThis.__PEOPLE_LAZY__ ?? !globalThis.__ERGO_PRESENTATION__);
+        const now = s => !lazy || !s.modes || s.modes.includes(hour) || (s.desk && !s.station);
+        this.waiting = all.filter(s => !now(s)); this.loadedFor = hour;
+        if (await this.bring(all.filter(now), token, root, cast)) await this.cast(token, root);
+    }
+    // Loads these placements' models and puts them in the room; false when the cast was replaced meanwhile.
+    async bring(specs, token, root, cast) {
+        const room = this.room;
         const load = async id => { try { return await this.library.instance(id); } catch (error) { console.warn('[people] ' + id + ' did not load:', error?.message || error); return null; } };
         const loaded = await Promise.all(specs.map(async spec => ({ spec, object: await load(spec.id), chair: spec.desk === 'sit' && !ownSeat(spec) ? await load(TASK_CHAIR) : null })));
         const posed = [];
         // (a cast that was replaced while its models loaded is dropped: its people would stay in the room for good)
-        if (token !== room.token || root !== room.root || cast !== this.generation) return;
+        if (token !== room.token || root !== room.root || cast !== this.generation) return false;
         for (const { spec, object, chair } of loaded) {
             if (!object) continue;
             object.name = 'Person:' + spec.id; object.userData.person = spec; object.userData.personFit = this.library.entry(spec.id)?.person?.deskHeight ?? null; object.visible = false;
@@ -665,7 +1130,14 @@ export class RoomPeople {
         }
         this.blocked = null;
         await Promise.all(posed.map(object => this.rig(object)));
-        if (cast === this.generation) await this.cast(token, root);
+        return cast === this.generation;
+    }
+    // Another hour of the day: whoever of the cast is there then and not loaded yet.
+    bringFor(mode) {
+        this.loadedFor = mode; const due = this.waiting.filter(s => s.modes.includes(mode)); if (!due.length) return;
+        this.waiting = this.waiting.filter(s => !due.includes(s));
+        const room = this.room, cast = this.generation;
+        this.later(this.bring(due, room.token, room.root, cast).then(here => { if (here) { this.placed = false; this.dirty = true; } }));
     }
     // The people at the featured desk who can move (room-people-motion.mjs): the models of one character there become
     // one person, drawn skinned, who sits, stands and takes their hands off the keys with the desk. Needs the
@@ -718,6 +1190,15 @@ export class RoomPeople {
     }
     props(id) { return this.room.assets().filter(o => o.userData.propId === id || o.userData.decorUpgrade === id); }
     centreOf(object) { return this.room.root.worldToLocal(new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3())); }
+    // The nearest piece of furniture whose id starts with one of these (a chair's own table, of the room's several).
+    nearest(prefixes, at) {
+        let best = null, least = Infinity;
+        for (const o of this.room.assets()) {
+            const id = o.userData.propId || o.userData.decorUpgrade; if (!id || !prefixes.some(p => id.startsWith(p))) continue;
+            const c = this.centreOf(o), d = Math.hypot(c.x - at.x, c.z - at.z); if (d < least) { least = d; best = o; }
+        }
+        return best;
+    }
     // At one of the room's other desks. That desk as it is now (state.station: where it stands, how high it is; the
     // Director moves and raises these desks) decides where the person is and whether their pose suits it (update);
     // without a live desk it is the layout's station as designed.
@@ -749,7 +1230,7 @@ export class RoomPeople {
             // toward: of the four ways a seat can be sat on, the one that faces that prop (a chair at its table, a sofa and
             // its coffee table). Chair models do not agree on which way is front; what they belong to does. It is the
             // nearest part of the prop that is faced, not its middle: a chair far along a long table faces the table.
-            const to = spec.toward && this.props(spec.toward)[0];
+            const to = spec.toward && (Array.isArray(spec.toward) ? this.nearest(spec.toward, centre) : this.props(spec.toward)[0]);
             if (to) {
                 this.room.root.updateWorldMatrix(true, false);
                 const box = new THREE.Box3().setFromObject(to).applyMatrix4(this.room.root.matrixWorld.clone().invert()), c = box.containsPoint(new THREE.Vector3(centre.x, (box.min.y + box.max.y) / 2, centre.z)) ? this.centreOf(to) : box.clampPoint(centre, new THREE.Vector3());
@@ -779,7 +1260,16 @@ export class RoomPeople {
             if (!found) { object.userData.personMissing = true; return; }   // nowhere to stand: not there
             object.position.copy(at(along, out));
             object.rotation.y = yaw + Math.PI + turn - Math.PI * (spec.turn ? 1 : 0);
-        } else { object.position.set(spec.at[0], spec.y || 0, spec.at[1]); object.rotation.y = turn; }
+        } else {
+            // at a spot; with clear: there, or the nearest free place within about half a metre (none: not there)
+            let x = spec.at[0], z = spec.at[1];
+            if (spec.clear) {
+                const hit = NEARBY.find(([dx, dz]) => this.spotFree(new THREE.Vector3(x + dx, 0, z + dz), object, spec));
+                if (!hit) { object.userData.personMissing = true; return; }
+                x += hit[0]; z += hit[1];
+            }
+            object.position.set(x, spec.y || 0, z); object.rotation.y = turn;
+        }
         if (spec.seat && anchor) object.position.y = this.seatLift(object, spec, anchor);
     }
     // ---- A free spot. A fixed angle that suits one size of a room puts a guest in a sculpture or through a wall in
@@ -842,9 +1332,9 @@ export class RoomPeople {
         const d = this.deskAt, deskKey = d ? `${Math.round(d.x / 100)},${Math.round(d.z / 100)},${Math.round((d.yaw || 0) * 10)}` : '', moved = deskKey !== this.deskKey; this.deskKey = deskKey;
         this.blocked = null;   // (what is in the way is looked up once per pass: the room moves its furniture with the hour, the user at any time)
         for (const object of this.people) {
-            const spec = object.userData.person; if (spec.desk || spec.station || spec.beside || !(spec.on || spec.by || spec.near || spec.around) || this.filter?.place?.[this.keyOf(spec)] || this.filter?.place?.[spec.id]) continue;
+            const spec = object.userData.person; if (spec.desk || spec.station || spec.beside || !(spec.on || spec.by || spec.near || spec.around || (spec.at && spec.clear)) || this.filter?.place?.[this.keyOf(spec)] || this.filter?.place?.[spec.id]) continue;
             const anchor = object.userData.personAnchor;
-            if (again || !anchor || this.anchorKey(anchor) !== object.userData.personAnchorAt || (spec.clear && moved)) this.settle(object, spec);
+            if (spec.at ? again || moved : again || !anchor || this.anchorKey(anchor) !== object.userData.personAnchorAt || (spec.clear && moved)) this.settle(object, spec);
         }
         this.blocked = null;
     }
@@ -888,6 +1378,7 @@ export class RoomPeople {
             if (Math.abs(state.tilt) <= 2) { const dx = state.keyboard.x - pose.x, dz = state.keyboard.z - pose.z; this.keysHome = { side: dx * c - dz * sn, ahead: dx * sn + dz * c }; }
             else state = { ...state, keyboard: this.keysHome ? { x: pose.x + this.keysHome.side * c + this.keysHome.ahead * sn, z: pose.z - this.keysHome.side * sn + this.keysHome.ahead * c } : null };
         }
+        if (this.waiting?.length && mode !== this.loadedFor) this.bringFor(mode);
         if (mode !== this.modeNow) { this.modeNow = mode; if (this.placed) for (const actor of this.actors) this.recast(actor); }   // another hour: the person at the desk is recast from that hour's models
         if (!this.placed) {
             this.placed = true;
@@ -1196,6 +1687,6 @@ export class RoomPeople {
         this.restoreChairs();
         for (const seat of (this.kidSeats || new Map()).values()) seat.copy.removeFromParent(); this.kidSeats?.clear();
         for (const object of this.people) { object.userData.personChair?.removeFromParent(); object.removeFromParent(); for (const m of object.userData.personMaterials || []) m.dispose(); object.traverse(o => o.skeleton?.dispose?.()); }
-        this.people = []; this.built = null; this.actors = []; this.pairs = []; this.generation++;
+        this.people = []; this.built = null; this.actors = []; this.pairs = []; this.waiting = []; this.generation++;
     }
 }
