@@ -416,3 +416,18 @@ What a character can now say besides the MakeHuman phenotype (all in `build_peop
   map is no longer exported as a normal map (it turned the tucked T-shirt nearly black), and skin is only removed where
   a whole face is under cloth or has come through it (no notches of missing neck along a collar). People built before
   this round do not have the key and build as they did.
+
+## Six more children (12 November, round three, part C)
+
+| Child | Age | Height |
+|---|---|---|
+| Zuri | 4 | 104 cm |
+| Hugo | 5 | 111 cm |
+| Yuki | 6 | 115 cm |
+| Karim | 7 | 124 cm |
+| Lucia | 8 | 129 cm |
+| Kian | 10 | 139 cm |
+
+In `cast.CHILDREN`, so the catalog marks them `child` and they are built in the ten `kid-` postures like the other
+eight (`people-<name>-kid-<posture>`). `tests/room-people-test.mjs` names the children in a regular expression where it
+checks that the children's rooms are cast with children: a room that casts one of the six needs the name added there.

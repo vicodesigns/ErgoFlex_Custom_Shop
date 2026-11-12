@@ -326,7 +326,7 @@ def headscarf(who, base, rig, out_dir, out_id, color=(.8, .76, .68), name='heads
         row = []
         for j in range(n):
             x, y = aim(j); hem = neck - k * (.04 + (.1 if y < 0 else .06) * abs(y) ** 1.5); z = C.z + (hem - C.z) * i / down; step = (C.z - hem) / down
-            axis = Vector((0, cy, z)); body = reach(axis + Vector((x, y, 0)) * .6, axis) + push + (full(j) if z > chin else 0) + .012 * min(1, max(0, (neck + .02 - z) / .06))
+            axis = Vector((0, cy, z)); body = reach(axis + Vector((x, y, 0)) * .6, axis) + push + (full(j) if z > chin else 0) + .018 * min(1, max(0, (neck + .02 - z) / .06))
             # under the jaw it goes in to the neck; anywhere else it hangs nearly straight from what is above
             r = min(.21 * k, max(body, last[j] - step * (1.15 if y < -.25 and chin - .05 * k < z < chin + .005 else .1))); last[j] = r
             row.append(Vector((x * r, cy + y * r, z)))
