@@ -75,7 +75,8 @@ def main(H):
     if hero:
         sp = os.path.join(H, 'shots', '13-subshots.json'); sub = json.load(open(sp))
         shots = sub['shots'] if isinstance(sub, dict) else sub
-        for i, o in hero.items(): apply(shots[int(i)], o)
+        for i, o in hero.items():      # by place in the film's own six; the Director's desk versions may leave fewer (its pass re-resolves them)
+            if int(i) < len(shots): apply(shots[int(i)], o)
         json.dump(sub, open(sp, 'w'), indent=1)
     print('cameras:', ', '.join(sorted(over)) or 'none')
 

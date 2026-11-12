@@ -35,10 +35,15 @@
       shadow) rewrites that chapter's entries in <hq>/titles-src.json (backup first: titles-src.pre-director-<id>-<time>.json;
       unchanged titles leave the file alone). Titles he retimed get director_timing: true, which titles-after-cut.py
       keeps as set (it only flags a break of the 1.5 s-after-cut rule).
-      Desk versions (hero): an export whose shot has 'deskVersions' ([{n, preset, name, start, end}] in time order: the six
-      sub-shots' desk model, label and renderRange) keeps them in director-camera-hero.json as 'versions' (an export without
-      the field keeps the earlier import's). The pass rewrites shots/13-subshots.json (preset, renderRange, name and the
-      model's dressing per sub-shot) and the film shot's subshots map + presets (tools/experience/desk-versions-apply.mjs).
+      Desk versions (hero): an export whose shot has 'deskVersions' ([{n, preset, name, start, end}] in time order: the
+      chapter's desks, one sub-shot each: its id, desk model, label and renderRange) keeps them in director-camera-hero.json
+      as 'versions' (an export without the field keeps the earlier import's). The list is the whole chapter: 1 to 12
+      versions; ids the film does not have yet ('G', 'H', ...) are versions added in the Director (copies of their model's
+      sub-shot), film ids missing from it are versions he removed. The pass rewrites shots/13-subshots.json (one sub-shot per
+      version: preset, renderRange, name and the model's dressing) and the film shot's subshots map + presets
+      (tools/experience/desk-versions-apply.mjs). The bundle of a film sub-shot whose model the list no longer shows is kept
+      in director-camera-hero.json as 'versionLibrary' (and offered to the Director in director-film/hero-subshots.json as
+      'library'), so the model gets the film's dressing back when a later list shows it again.
       Props: an export whose shot has 'propEdits' (Director Mode's Props: move / turn / scale / hide, film sceneEdits
       format, experience/prop-edits.mjs) keeps them in director-camera-<id>.json as 'props' (an export without the
       field keeps the props imported before). The pass writes them into the chapter's sceneEdits after the hand-made
@@ -550,12 +555,12 @@ def apply_featured_build(cid, f, build):
 
 
 def clean_versions(v):
-    """Desk versions as the Director cleaned them (experience/desk-versions-edit.mjs cleanDeskVersionList): hero's six
-    desks [{n, preset, name, start, end}] in time order, or None."""
-    if not isinstance(v, list) or not 2 <= len(v) <= 12: return None
+    """Desk versions as the Director cleaned them (experience/desk-versions-edit.mjs cleanDeskVersionList): hero's
+    desks [{n, preset, name, start, end}] in time order (1 to 12; ids A..Z, AA..ZZ), or None."""
+    if not isinstance(v, list) or not 1 <= len(v) <= 12: return None
     out = []
     for e in v:
-        if not isinstance(e, dict) or not re.match(r'^[A-Z]$', str(e.get('n', ''))) or not re.match(r'^[a-z0-9-]{1,40}$', str(e.get('preset', ''))): return None
+        if not isinstance(e, dict) or not re.match(r'^[A-Z]{1,2}$', str(e.get('n', ''))) or not re.match(r'^[a-z0-9-]{1,40}$', str(e.get('preset', ''))): return None
         try: a, b = float(e['start']), float(e['end'])
         except (KeyError, TypeError, ValueError): return None
         if not (0 <= a < b <= 600): return None
@@ -569,16 +574,23 @@ def apply_versions(cid, f, versions):
     """Chapter 12 (hero): the Director's Desk versions (order, length, model, name) -> shots/13-subshots.json (each
     sub-shot's preset, renderRange, name and the model's own dressing: experience/desk-versions-edit.mjs, run through
     node so the film and the live stage resolve the same thing) and the film shot's subshots map + presets (review-cut.json,
-    shots/13.json). Idempotent. The slots keep the camera, light rig and desk performance; seams stay at overlap midpoints."""
+    shots/13.json). Idempotent. Every sub-shot keeps the chapter's camera, light rig and desk performance; seams stay at
+    overlap midpoints. The list is the whole chapter: a version the film has no sub-shot for yet is added (a copy of its
+    model's sub-shot), a film sub-shot the list does not name is dropped; a dropped model's bundle goes to the director
+    file's 'versionLibrary' so a later list can show that model with the film's dressing again."""
     sp = os.path.join(H, 'shots', '13-subshots.json')
     if cid != 'hero' or not os.path.exists(sp): return []
-    sub = load(sp)
+    sub = load(sp); dp = director_file(cid); dc = load(dp) if os.path.exists(dp) else {}
     r = subprocess.run(['node', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'desk-versions-apply.mjs')],
-                       input=json.dumps({'subshots': sub['shots'], 'versions': versions}), capture_output=True, text=True)
+                       input=json.dumps({'subshots': sub['shots'], 'versions': versions, 'library': dc.get('versionLibrary') or []}), capture_output=True, text=True)
     if r.returncode: sys.exit(f'{cid}: desk versions could not be applied: {r.stderr.strip().splitlines()[-1] if r.stderr.strip() else r.returncode}')
     out = json.loads(r.stdout); wrote = []
+    if len(out['subshots']) != len(sub['shots']): print(f'    {cid}: {len(sub["shots"])} -> {len(out["subshots"])} sub-shots ({" ".join(s["subshot"] + "=" + s["preset"] for s in out["subshots"])})')
     sub['shots'] = out['subshots']
     if dump(sp, sub, indent=None): wrote.append('shots/13-subshots.json')
+    if out.get('library') and out['library'] != dc.get('versionLibrary') and os.path.exists(dp):
+        dc['versionLibrary'] = out['library']
+        if dump(dp, dc): wrote.append(os.path.basename(dp))
     for p in [CUT] + ([f] if f else []):
         if not os.path.exists(p): continue
         d = load(p)
@@ -674,8 +686,11 @@ def film_list(rows):
             # The finale renders with --storage post/finale-seed.json (render-finale.sh): its saved builds are the
             # presets' desks, so the Director's stage takes them too (in its memory-only storage).
             seed = os.path.join(H, 'post', 'finale-seed.json')
+            # Bundles of film sub-shots an import dropped (apply_versions): the Director dresses that model from them.
+            dp = director_file(cid); lib = (load(dp).get('versionLibrary') or []) if os.path.exists(dp) else []
+            lib = [dict(x, screens=[dict(sc, src=c) for sc in x['screens'] for c in [local_clip(sc.get('src', ''))] if c]) if 'screens' in x else x for x in lib]
             dump(os.path.join(H, 'director-film', f'{cid}-subshots.json'), {'name': load(sp).get('name', ''), 'shots': subs,
-                 **({'storage': f'{base}/post/finale-seed.json'} if os.path.exists(seed) else {})}, indent=None)
+                 **({'storage': f'{base}/post/finale-seed.json'} if os.path.exists(seed) else {}), **({'library': lib} if lib else {})}, indent=None)
         items.append({'n': n, 'id': cid, 'title': src.get('title', ''), 'seconds': float(src['seconds']),
                       'page': f'{base}/{page}', 'shot': f'{base}/director-film/{cid}.json'})
         pf = os.path.join(H, page); h = open(pf).read()
@@ -860,6 +875,7 @@ def run_import(export):
         if clean_versions(shot['deskVersions']): dc['versions'] = clean_versions(shot['deskVersions'])
         else: print(f'{cid}: Director desk versions ignored (not a valid list)', file=sys.stderr)
     elif 'versions' in before: dc['versions'] = before['versions']
+    if 'versionLibrary' in before: dc['versionLibrary'] = before['versionLibrary']      # the pass's (apply_versions): dropped film desks' bundles
     dump(director_file(cid), dc)
     if 'versions' in dc: print(f'{cid}: Director desk versions ({" ".join(v["n"] + "=" + v["preset"] for v in dc["versions"])}) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'build' in dc: print(f'{cid}: Director featured desk build kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
