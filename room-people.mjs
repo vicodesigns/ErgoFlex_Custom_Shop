@@ -482,7 +482,7 @@ const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 export class RoomPeople {
     constructor(room, library) {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
-        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.lastMode = undefined; this.generation = 0; this.keysHome = null;
+        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.pending = new Set(); this.lastMode = undefined; this.generation = 0; this.keysHome = null;
         this.dirty = false;       // dirty: someone moved since the Studio last looked (their shadow has to follow)
         this.ray = new THREE.Raycaster();
     }
@@ -896,7 +896,7 @@ export class RoomPeople {
                 const now = object.userData.person.extra && (this.filter?.cast || []).find(c => this.keyOf(c) === this.keyOf(object.userData.person));
                 if (now) {
                     const spec = object.userData.person = { ...this.asVariant(now, object.userData.person), extra: true }; object.userData.personMissing = false; this.resize(object, spec); this.recolor(object, spec);
-                    if (object.userData.personRig) this.pose(object, spec); else if (this.posed(spec)) this.rig(object);
+                    if (object.userData.personRig) this.pose(object, spec); else if (this.posed(spec)) this.later(this.rig(object));
                     if (spec.station) this.atStation(object, spec); else if (!spec.desk && !spec.beside) this.settle(object, spec);
                 }
                 const spot = this.filter?.place?.[this.keyOf(object.userData.person)] || this.filter?.place?.[object.userData.person.id]; if (!spot) continue;
@@ -1008,7 +1008,7 @@ export class RoomPeople {
         const hold = typeof window !== 'undefined' && !!window.__directorDragging;
         for (const object of pool) {
             const life = object.userData.personLife, on = chosen.includes(object);
-            if (life === undefined) { if (on) { object.userData.personLife = null; this.enliven(object).catch(error => console.warn('[people]', error)); } continue; }
+            if (life === undefined) { if (on) { object.userData.personLife = null; this.later(this.enliven(object)); } continue; }
             if (!life || !object.userData.personRig || (!on && !life.live)) continue;
             if (object.userData.person.walk && on) { this.walkAlong(object, life, object.userData.person.walk, film ? time : null, hold); continue; }
             // out of the nearest few: back to the posture as built, once
@@ -1028,6 +1028,12 @@ export class RoomPeople {
         return Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z) < 220 && turn < .3;
     }
     character(object) { return this.library.entry?.(object.userData.person.id)?.person?.character || null; }
+    // Work left running in the background: rig() swaps a person for the rigged model and frees the old materials when it
+    // lands. settled() resolves when none is under way (at most `limit` ms); the film's warm-up waits for it.
+    later(work) { const job = work.catch(error => console.warn('[people]', error)).finally(() => this.pending.delete(job)); this.pending.add(job); return job; }
+    async settled(limit = 20000) {
+        for (const until = performance.now() + limit; this.pending.size && performance.now() < until;) await Promise.race([Promise.all(this.pending), new Promise(done => setTimeout(done, 250))]);
+    }
     free(object) { const s = object.userData.person; return !s.desk && !s.station && !object.userData.personMissing && this.allowed(s); }
     pairUp() {
         const pairs = [], when = this.filter?.when; if (!this.library.rigData || this.filter?.motion === false) return pairs;
@@ -1039,7 +1045,7 @@ export class RoomPeople {
             // cast for different dayparts: a change waiting for the daypart to change
             else if (modes(a) && modes(b) && modes(a).some(m => !modes(b).includes(m)) && modes(b).some(m => !modes(a).includes(m))) pairs.push({ from: a.userData.person, to: b.userData.person, at: null, start: null });
         }
-        for (const pair of pairs) this.readyChange(pair).catch(error => console.warn('[people]', error));
+        for (const pair of pairs) this.later(this.readyChange(pair));
         return pairs;
     }
     // Who is changing now: Map object -> { shown } for both models of each change under way.

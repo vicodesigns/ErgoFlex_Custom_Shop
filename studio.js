@@ -12738,8 +12738,17 @@ if (window.__ERGO_PRESENTATION__) {
                 o.shadow.map?.dispose();o.shadow.map=null;
                 o.shadow.mapPass?.dispose();o.shadow.mapPass=null;
             });
-            if(renderer.compileAsync)await renderer.compileAsync(scene,camera);
-            else renderer.compile(scene,camera);
+            // People who change posture swap in their rigged models in the background (room-people.mjs readyChange): wait for
+            // that, so the swap is not in the middle of the warm-up or of the first frames.
+            await workspaceRoom?.people?.settled?.();
+            // Not renderer.compileAsync: it reads each material's program on a timer, and a material freed while it waits
+            // (any late swap of a model) has none, which throws inside the timer and leaves the warm-up waiting for ever.
+            // It showed on the render PC, where D3D11 shader compiles take seconds. A freed material is simply dropped.
+            const compiling=renderer.compile(scene,camera);
+            for(const until=performance.now()+120000;compiling?.size&&performance.now()<until;){
+                for(const material of compiling){const program=renderer.properties.get(material).currentProgram;if(!program||program.isReady())compiling.delete(material);}
+                if(compiling.size)await new Promise(done=>setTimeout(done,10));
+            }
             renderer.shadowMap.autoUpdate=true;renderer.render(scene,camera);presentationShadowDirty=false;
         },
         beginBake(width,height){
