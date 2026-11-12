@@ -44087,7 +44087,7 @@
       0
      ],
      "scale": [
-      7.7,
+      4.816,
       1.9,
       1
      ]
@@ -44119,8 +44119,8 @@
       0
      ],
      "scale": [
-      15.4,
-      1.143,
+      9.633,
+      0.9697,
       0.5
      ]
     },
@@ -44142,7 +44142,7 @@
      "parent": "room",
      "position": [
       0,
-      1.345,
+      1.358,
       12.07
      ],
      "rotation": [
@@ -44151,8 +44151,8 @@
       0
      ],
      "scale": [
-      15.4,
-      0.025,
+      9.633,
+      0.00789,
       0.6
      ]
     },
@@ -44514,6 +44514,36 @@
      "fp3": true
     },
     {
+     "match": "^Task chair$",
+     "near": [
+      7.649,
+      0.355,
+      0.25
+     ],
+     "asset": "highschool:house:fixture:student-chair-2-1-0",
+     "position": [
+      0,
+      0,
+      -0.36
+     ],
+     "label": "Student chair (clear of the APA desk)"
+    },
+    {
+     "match": "^Task chair$",
+     "near": [
+      7.649,
+      -0.581,
+      0.25
+     ],
+     "asset": "highschool:house:fixture:student-chair-2-1-1",
+     "position": [
+      0,
+      0,
+      -0.12
+     ],
+     "label": "Student chair (makes room for its neighbour)"
+    },
+    {
      "match": "^Prop:ergoflex-small-bookshelf$",
      "asset": "highschool:house:room:24:ergoflex-small-bookshelf",
      "label": "Prop:ergoflex-small-bookshelf",
@@ -44828,16 +44858,6 @@
       "id": "people-leo-sit-raise",
       "at": [
        -235,
-       1011
-      ],
-      "turn": -180.0,
-      "y": 60
-     },
-     {
-      "key": "people-ava-sit-write",
-      "id": "people-ava-sit-write",
-      "at": [
-       -1765,
        1011
       ],
       "turn": -180.0,
