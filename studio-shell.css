@@ -184,7 +184,8 @@ html.ui-shell #setup-sidebar .ui-more > .ui-more-body > :first-child { border-to
        the title card sits on the canvas under the bar, where a tap passes through it. */
     html.ui-shell { --vb-top: 10px; }
     html.ui-shell:has(#scene-tour) { --vb-top: 78px; }
-    html.ui-shell #viewer-shell .viewer-heading { top: calc(var(--vb-top) + 124px); left: 10px; max-width: calc(100% - 76px); }
+    /* 105 px of bar, 12 px to the canvas, then the two-line rearrange hint when it is showing: the card goes under that. */
+    html.ui-shell #viewer-shell .viewer-heading { top: calc(var(--vb-top) + 182px); left: 10px; max-width: calc(100% - 76px); }
     html.ui-shell #viewer-shell #scene-controls.vb { left: 8px; right: 62px; }
     /* No mask or filter on a row: it would also clip the bottom sheets of the menus inside it. */
     html.ui-shell #scene-controls .vb-row { flex-wrap: nowrap; align-items: center; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding: 6px; -webkit-overflow-scrolling: touch; }
