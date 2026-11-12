@@ -227,6 +227,8 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     const windowVista = attachVista(pane, 'yard'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     for(const z of [a,wz,b])box(left,[65,wh+50,30],[-w/2+10,low+wh/2,z],steel);for(const y of [low,low+wh])box(left,[65,30,ww+60],[-w/2+10,y,wz],steel);box(left,[170,30,ww+80],[-w/2+50,low-15,wz],ply);
     for(const z of [(a+wz)/2,(wz+b)/2])kbox(left,[30,16,ww/2-40],[-w/2+10,low+wh*.55,z],steel);
+    // A precast concrete lintel carries the blockwork over the opening: 215 deep (one course), 200 bearing each side.
+    wallBox(left,[10,215,ww+400],[-w/2+5,low+wh+15+107.5,wz],material('#c7c8c2',{roughness:.9})).castShadow=false;
     // Window sill: a potted cutting, a jar of pencils and a coffee can of brushes.
     kcyl(left,[55,42,110],[-w/2+60,low+55,wz-ww*.3],orange);kball(left,[80,70,80],[-w/2+60,low+150,wz-ww*.3],material('#5d8a55',{roughness:.85}));
     kcyl(left,[38,38,120],[-w/2+60,low+60,wz+ww*.25],silver);for(let i=0;i<5;i++)krod(left,[-w/2+60,low+80,wz+ww*.25+(i-2)*10],[-w/2+60+(i-2)*12,low+230,wz+ww*.25+(i-2)*16],5,i%2?yellow:handle);
