@@ -162,7 +162,11 @@ export const ROOM_PEOPLE = {
         { id: 'people-grace-sit-read', on: 'armchair-poppi', seat: 420, depth: -20, modes: ['evening'] },
         { id: 'people-grace-sit-chat', on: 'armchair-poppi', seat: 420, depth: -20, modes: ['party'], colors: { top: '#2f4f6f' } },
         L => L.id === 'apartment' ? [spot('people-maya-stand-talk', -950, 250, [750, 450], { ...PARTY, colors: LOOK.homeParty }), spot('people-noah-stand-drink', 780, 420, [-950, 250], { ...PARTY, colors: LOOK.guestE })]   // either side of the desk's front, the desk in view between them
-            : ring(L.id === 'house' ? [450, 1150] : [L.width * .14, L.back + L.depth * .62], L.id === 'house' ? 600 : 540, [['people-maya-stand-talk', { colors: LOOK.homeParty }], ['people-noah-stand-drink', { colors: LOOK.guestE }], ['people-zoe-stand-drink', { colors: LOOK.guestB }]], PARTY, 200)
+            : ring(L.id === 'house' ? [450, 1150] : [L.width * .14, L.back + L.depth * .62], L.id === 'house' ? 600 : 540, [['people-maya-stand-talk', { colors: LOOK.homeParty }], ['people-noah-stand-drink', { colors: LOOK.guestE }], ['people-zoe-stand-drink', { colors: LOOK.guestB }]], PARTY, 200),
+        // the two largest homes have a lounge end: someone on the sofa after lunch, coffee being made in the morning
+        L => tier(L) < 3 ? [] : [
+            { id: 'people-noah-sit-laptop', on: 'sofa-fabric', seat: 450, along: -420, modes: ['afternoon'], key: 'noah-sofa' },
+            standBy('people-andre-stand-mug', 'kenney-furniture-kitchen-coffee-machine', 850, { modes: ['morning'], key: 'andre-coffee' })]
     ],
     // Sam's gaming room: coffee and a fresh setup in the morning, practice alone after lunch, co-op on the sofa with
     // Kai in the evening, headphones on at night, game night with friends (Kai and Sofia on the sofa, two standing).
@@ -176,7 +180,11 @@ export const ROOM_PEOPLE = {
         { id: 'people-sam-sit-controller', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 330, depth: -150, modes: ['evening'] },
         { id: 'people-sofia-sit-chat', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 330, depth: -150, modes: ['party'], colors: LOOK.guestC },
         L => L.id === 'house' ? [spot('people-sam-stand-drink', 480, 700, [1180, 1050], PARTY), spot('people-noah-stand-drink', 1180, 1050, [480, 700], { ...PARTY, colors: LOOK.guestA })]
-            : ring([L.width * .12, L.back + L.depth * .58], 420, ['people-sam-stand-drink', ['people-noah-stand-drink', { colors: LOOK.guestA }]], PARTY, 60)
+            : ring([L.width * .12, L.back + L.depth * .58], 420, ['people-sam-stand-drink', ['people-noah-stand-drink', { colors: LOOK.guestA }]], PARTY, 60),
+        // the two largest dens: a friend in the lounge chair, another at the game table
+        L => tier(L) < 3 ? [] : [
+            { id: 'people-leo-sit-controller', on: 'kenney-furniture-lounge-chair', seat: 420, modes: ['afternoon', 'night'], key: 'leo-chair' },
+            { id: 'people-ava-sit-phone', on: 'gaming-stool-0', seat: 435, rise: 300, toward: 'ergoflex-game-table', modes: ['evening'], key: 'ava-stool' }]
     ],
     // Andre's music studio: standing warm-up in the morning, seated mixing after lunch, a vocalist reading lyrics at the
     // mic in the evening, headphones on for the late mix, a small live set at the party (Andre at the mic, guests).
@@ -188,7 +196,11 @@ export const ROOM_PEOPLE = {
         { id: 'people-andre-stand-talk', by: 'music-vocal-mic', reach: -330, turn: 360, modes: ['party'] },
         { id: 'people-lin-sit-chat', on: 'music-piano-bench', seat: 470, turn: 180, modes: ['party'], colors: LOOK.guestB },
         L => L.id === 'house' ? [spot('people-zoe-stand-drink', 330, 2300, [1025, 1486], { ...PARTY, colors: LOOK.guestD }), spot('people-eli-stand-drink', 1450, 2250, [1025, 1486], PARTY)]
-            : ring([L.width * .1, L.back + L.depth * .72], 480, [['people-zoe-stand-drink', { colors: LOOK.guestD }], 'people-eli-stand-drink'], PARTY, 120)
+            : ring([L.width * .1, L.back + L.depth * .72], 480, [['people-zoe-stand-drink', { colors: LOOK.guestD }], 'people-eli-stand-drink'], PARTY, 120),
+        // the two largest studios: someone listening on the sofa, and in the largest a drummer waiting for the take
+        L => tier(L) < 3 ? [] : [
+            seated('people-zoe-sit-listen', 'kenney-furniture-lounge-sofa', 'ergoflex-coffee-table', { along: -420, modes: ['afternoon', 'evening'], key: 'zoe-sofa' }),
+            standBy('people-noah-stand-phone', 'music-drum-kit', 1100, { modes: ['afternoon'], key: 'noah-drums' })]
     ],
     // Two artists share the studio: Sofia at the desk by day, Lin at the easel in the morning and at golden hour, Lin
     // alone reviewing at the desk at night; the open studio has visitors looking at the work.
@@ -205,7 +217,11 @@ export const ROOM_PEOPLE = {
         L => L.id === 'premium' ? [spot('people-lin-stand-talk', -950, 1600, [-300, 1700], PARTY), spot('people-ben-stand-drink', -300, 1250, [-950, 1600], { ...PARTY, colors: LOOK.benStudio }),
             spot('people-ava-stand-drink', -550, 2250, [-950, 1600], { ...PARTY, colors: LOOK.guestB }), spot('people-omar-wheel-watch', 1950, 2550, [2600, 2550], { ...PARTY, colors: LOOK.omarStudio }),
             spot('people-sofia-stand-drink', 1450, 1250, [1950, 2550], { ...PARTY, colors: LOOK.sofia })]
-            : ring([-L.width * .08, L.back + L.depth * .55], 480, ['people-lin-stand-talk', 'people-ben-stand-drink', ['people-ava-stand-drink', { colors: LOOK.guestD }]], PARTY, 30)
+            : ring([-L.width * .08, L.back + L.depth * .55], 480, ['people-lin-stand-talk', 'people-ben-stand-drink', ['people-ava-stand-drink', { colors: LOOK.guestD }]], PARTY, 30),
+        // the largest atelier (the film's is the one before it): someone at the worktable, a visitor on the sofa
+        L => tier(L) < 4 ? [] : [
+            standRound('people-priya-stand-work', 'artist-worktable', 180, 1000, { modes: ['afternoon'], key: 'priya-worktable' }),
+            seated('people-ben-sit-read', 'kenney-furniture-lounge-sofa', 'ergoflex-coffee-table', { along: -420, modes: ['afternoon', 'evening'], key: 'ben-sofa' })]
     ],
     // Home gym: coached mobility at sunrise (Maya at the standing desk, Priya stretching), Noah logging a strength
     // session after lunch while Priya rests on the mat, recovery stretching and notes in the evening, an empty room at
@@ -370,7 +386,9 @@ export const ROOM_PEOPLE = {
         { id: 'people-grace-sit-read', on: 'armchair-leather', seat: 420, depth: -30, modes: ['evening'] },
         { id: 'people-grace-sit-chat', on: 'armchair-leather', seat: 420, depth: -30, modes: ['party'], key: 'grace-talks', colors: { top: '#2f4f6f' } },
         // (not in the smallest study: the only free floor there is in front of the camera the room opens with)
-        L => L.id === 'apartment' ? [] : [standRound('people-hale-stand-mug', 'armchair-leather', 250, 1300, { modes: ['party'] })]
+        L => L.id === 'apartment' ? [] : [standRound('people-hale-stand-mug', 'armchair-leather', 250, 1300, { modes: ['party'] })],
+        // the two largest studies have a sofa: someone reading on it after lunch
+        L => tier(L) < 3 ? [] : [seated('people-ben-sit-read', 'sofa-leather-wood', 'coffee-table', { along: -420, modes: ['afternoon'], key: 'ben-sofa' })]
     ],
     // Office: coffee at the bar first thing, someone reading on the sofa after lunch, a late call by the credenza, the
     // team round the coffee table at the social. Closed at night. (The smallest office has an armchair and a side table
@@ -443,7 +461,9 @@ export const ROOM_PEOPLE = {
         L => { const seat = L.id === 'apartment' ? 'bedroom-bench' : 'armchair-poppi', extra = L.id === 'apartment' ? { along: -250 } : { depth: 10, rise: 130 }; return [   // (the armchair's cushion is a high one)
             { id: 'people-ava-sit-read', on: seat, seat: 420, ...extra, modes: ['evening'] },
             { id: 'people-ava-sit-chat', on: seat, seat: 420, ...extra, modes: ['party'], key: 'ava-weekend' },
-            standRound('people-zoe-stand-phone', seat, 25, 1200, { modes: ['party'] })]; }   // (by Ava, not across the room from her)
+            standRound('people-zoe-stand-phone', seat, 25, 1200, { modes: ['party'] })]; },   // (by Ava, not across the room from her)
+        // the largest bedroom has a sitting end
+        L => tier(L) < 4 ? [] : [seated('people-zoe-sit-phone', 'sofa-fabric', 'coffee-table', { along: -420, modes: ['afternoon'], key: 'zoe-sofa' })]
     ],
     // Gallery: a visitor resting on the bench and another before the Thinker in the afternoon, a last visitor by the
     // vase in the evening, the opening night guests round the bench. Closed at night.
