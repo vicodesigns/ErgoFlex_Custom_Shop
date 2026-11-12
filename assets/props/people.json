@@ -983,6 +983,322 @@
    "colors": {
     "hair": "#ba805a"
    }
+  },
+  "elena": {
+   "name": "Elena",
+   "sex": "woman",
+   "age": "adult",
+   "years": 45,
+   "heritage": "European",
+   "height": 166,
+   "outfit": [
+    "female_elegantsuit01",
+    "toigo_wool_pants",
+    "toigo_ankle_boots_female"
+   ],
+   "colors": {
+    "bottom": "#5a5a61",
+    "shoes": "#5a4c41",
+    "top": "#7ba8ac",
+    "hair": "#5a473b"
+   }
+  },
+  "kofi": {
+   "name": "Kofi",
+   "sex": "man",
+   "age": "young adult",
+   "years": 32,
+   "heritage": "African",
+   "height": 182,
+   "outfit": [
+    "male_casualsuit03",
+    "shoes04"
+   ],
+   "colors": {
+    "top": "#9cb3cd",
+    "bottom": "#5a657b",
+    "hair": "#383432"
+   }
+  },
+  "mina": {
+   "name": "Mina",
+   "sex": "woman",
+   "age": "young adult",
+   "years": 28,
+   "heritage": "Asian",
+   "height": 155,
+   "outfit": [
+    "joepal_crude_t-shirt_female",
+    "toigo_harem_pants",
+    "toigo_ballet_flats"
+   ],
+   "colors": {
+    "shoes": "#514c4c",
+    "hair": "#3b3838"
+   }
+  },
+  "raj": {
+   "name": "Raj",
+   "sex": "man",
+   "age": "adult",
+   "years": 55,
+   "heritage": "Mixed",
+   "height": 170,
+   "outfit": [
+    "male_elegantsuit01",
+    "shoes03",
+    "frankyaye_glasses_library_male"
+   ],
+   "colors": {
+    "shoes": "#3b3834",
+    "hair": "#7b7876"
+   }
+  },
+  "sara": {
+   "name": "Sara",
+   "sex": "woman",
+   "age": "young adult",
+   "years": 35,
+   "heritage": "Mixed",
+   "height": 164,
+   "outfit": [
+    "headscarf",
+    "toigo_fisherman_sweater",
+    "toigo_wool_pants",
+    "toigo_flats"
+   ],
+   "colors": {
+    "top": "#e6d9c7",
+    "bottom": "#656c83",
+    "shoes": "#5a514c",
+    "hair": "#a4c2c7"
+   }
+  },
+  "tom": {
+   "name": "Tom",
+   "sex": "man",
+   "age": "senior",
+   "years": 68,
+   "heritage": "European",
+   "height": 173,
+   "outfit": [
+    "male_casualsuit05",
+    "toigo_wool_pants",
+    "shoes01"
+   ],
+   "colors": {
+    "bottom": "#65656c",
+    "top": "#a09685",
+    "hair": "#d9d9d7"
+   }
+  },
+  "ivy": {
+   "name": "Ivy",
+   "sex": "woman",
+   "age": "adult",
+   "years": 60,
+   "heritage": "African",
+   "height": 168,
+   "outfit": [
+    "toigo_female_suit_2",
+    "toigo_flats",
+    "spamrakuen_sagerfrogs_glasses_01"
+   ],
+   "colors": {
+    "shoes": "#474141",
+    "top": "#94789a",
+    "hair": "#acaaa8"
+   }
+  },
+  "luca": {
+   "name": "Luca",
+   "sex": "man",
+   "age": "young adult",
+   "years": 28,
+   "heritage": "European",
+   "height": 178,
+   "outfit": [
+    "male_casualsuit06",
+    "toigo_ankle_boots_male"
+   ],
+   "colors": {
+    "top": "#72857b",
+    "bottom": "#4c4c51",
+    "hair": "#55473b"
+   }
+  },
+  "bruno": {
+   "name": "Bruno",
+   "sex": "man",
+   "age": "adult",
+   "years": 48,
+   "heritage": "Mixed",
+   "height": 172,
+   "outfit": [
+    "namuhekam_male_polo_shirt",
+    "male_casualsuit04",
+    "shoes01"
+   ],
+   "colors": {
+    "top": "#b15a55",
+    "shoes": "#615147",
+    "hair": "#5a5553"
+   }
+  },
+  "dee": {
+   "name": "Dee",
+   "sex": "woman",
+   "age": "young adult",
+   "years": 25,
+   "heritage": "Mixed",
+   "height": 168,
+   "outfit": [
+    "joepal_crude_t-shirt_female",
+    "female_sportsuit01",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#eda094",
+    "bottom": "#51515a",
+    "hair": "#4c3e34"
+   }
+  },
+  "nia": {
+   "name": "Nia",
+   "sex": "woman",
+   "age": "teen",
+   "years": 17,
+   "heritage": "African",
+   "height": 161,
+   "outfit": [
+    "female_casualsuit01",
+    "shoes06"
+   ],
+   "colors": {
+    "top": "#f3dc7b",
+    "hair": "#413834"
+   }
+  },
+  "max": {
+   "name": "Max",
+   "sex": "man",
+   "age": "teen",
+   "years": 18,
+   "heritage": "European",
+   "height": 176,
+   "outfit": [
+    "male_casualsuit02",
+    "cortu_cargo_pants",
+    "shoes05"
+   ],
+   "colors": {
+    "bottom": "#aca494",
+    "top": "#80a894",
+    "hair": "#c7b18a"
+   }
+  },
+  "yara": {
+   "name": "Yara",
+   "sex": "woman",
+   "age": "teen",
+   "years": 19,
+   "heritage": "Mixed",
+   "height": 157,
+   "outfit": [
+    "toigo_fisherman_sweater",
+    "female_casualsuit01",
+    "toigo_ankle_boots_female"
+   ],
+   "colors": {
+    "top": "#d98f80",
+    "shoes": "#a88d72",
+    "bottom": "#616c80",
+    "hair": "#554438"
+   }
+  },
+  "finn": {
+   "name": "Finn",
+   "sex": "man",
+   "age": "teen",
+   "years": 16,
+   "heritage": "European",
+   "height": 167,
+   "outfit": [
+    "male_casualsuit04",
+    "shoes06"
+   ],
+   "colors": {
+    "top": "#dc7b6c",
+    "hair": "#ba7b4c"
+   }
+  },
+  "suki": {
+   "name": "Suki",
+   "sex": "woman",
+   "age": "teen",
+   "years": 17,
+   "heritage": "Asian",
+   "height": 159,
+   "outfit": [
+    "toigo_basic_tucked_t-shirt",
+    "toigo_wool_pants",
+    "shoes04"
+   ],
+   "colors": {
+    "bottom": "#e9e6de",
+    "top": "#d9caed",
+    "hair": "#3e383b"
+   }
+  },
+  "diego": {
+   "name": "Diego",
+   "sex": "man",
+   "age": "teen",
+   "years": 19,
+   "heritage": "Mixed",
+   "height": 173,
+   "outfit": [
+    "male_casualsuit02",
+    "shoes05"
+   ],
+   "colors": {
+    "top": "#7b7b83",
+    "hair": "#4c413b"
+   }
+  },
+  "amal": {
+   "name": "Amal",
+   "sex": "woman",
+   "age": "teen",
+   "years": 18,
+   "heritage": "Mixed",
+   "height": 159,
+   "outfit": [
+    "female_elegantsuit01",
+    "female_casualsuit01",
+    "toigo_ballet_flats"
+   ],
+   "colors": {
+    "shoes": "#a85a61",
+    "hair": "#3b3434"
+   }
+  },
+  "jack": {
+   "name": "Jack",
+   "sex": "man",
+   "age": "teen",
+   "years": 19,
+   "heritage": "Mixed",
+   "height": 181,
+   "outfit": [
+    "male_casualsuit06",
+    "cortu_cargo_pants",
+    "shoes02"
+   ],
+   "colors": {
+    "bottom": "#7b8578",
+    "hair": "#473e3b"
+   }
   }
  },
  "poses": {
@@ -8657,6 +8973,2230 @@
    "aids": [
     "prosthesis"
    ]
+  },
+  "people-elena-stand-talk": {
+   "character": "elena",
+   "pose": "stand-talk",
+   "name": "Elena: standing, explaining something",
+   "aids": []
+  },
+  "people-kofi-stand-talk": {
+   "character": "kofi",
+   "pose": "stand-talk",
+   "name": "Kofi: standing, explaining something",
+   "aids": []
+  },
+  "people-mina-stand-talk": {
+   "character": "mina",
+   "pose": "stand-talk",
+   "name": "Mina: standing, explaining something",
+   "aids": []
+  },
+  "people-raj-stand-talk": {
+   "character": "raj",
+   "pose": "stand-talk",
+   "name": "Raj: standing, explaining something",
+   "aids": []
+  },
+  "people-sara-stand-talk": {
+   "character": "sara",
+   "pose": "stand-talk",
+   "name": "Sara: standing, explaining something",
+   "aids": []
+  },
+  "people-tom-stand-talk": {
+   "character": "tom",
+   "pose": "stand-talk",
+   "name": "Tom: standing, explaining something",
+   "aids": []
+  },
+  "people-ivy-stand-talk": {
+   "character": "ivy",
+   "pose": "stand-talk",
+   "name": "Ivy: standing, explaining something",
+   "aids": []
+  },
+  "people-luca-stand-talk": {
+   "character": "luca",
+   "pose": "stand-talk",
+   "name": "Luca: standing, explaining something",
+   "aids": []
+  },
+  "people-bruno-stand-talk": {
+   "character": "bruno",
+   "pose": "stand-talk",
+   "name": "Bruno: standing, explaining something",
+   "aids": []
+  },
+  "people-dee-stand-talk": {
+   "character": "dee",
+   "pose": "stand-talk",
+   "name": "Dee: standing, explaining something",
+   "aids": []
+  },
+  "people-nia-stand-talk": {
+   "character": "nia",
+   "pose": "stand-talk",
+   "name": "Nia: standing, explaining something",
+   "aids": []
+  },
+  "people-max-stand-talk": {
+   "character": "max",
+   "pose": "stand-talk",
+   "name": "Max: standing, explaining something",
+   "aids": []
+  },
+  "people-yara-stand-talk": {
+   "character": "yara",
+   "pose": "stand-talk",
+   "name": "Yara: standing, explaining something",
+   "aids": []
+  },
+  "people-finn-stand-talk": {
+   "character": "finn",
+   "pose": "stand-talk",
+   "name": "Finn: standing, explaining something",
+   "aids": []
+  },
+  "people-suki-stand-talk": {
+   "character": "suki",
+   "pose": "stand-talk",
+   "name": "Suki: standing, explaining something",
+   "aids": []
+  },
+  "people-diego-stand-talk": {
+   "character": "diego",
+   "pose": "stand-talk",
+   "name": "Diego: standing, explaining something",
+   "aids": []
+  },
+  "people-amal-stand-talk": {
+   "character": "amal",
+   "pose": "stand-talk",
+   "name": "Amal: standing, explaining something",
+   "aids": []
+  },
+  "people-jack-stand-talk": {
+   "character": "jack",
+   "pose": "stand-talk",
+   "name": "Jack: standing, explaining something",
+   "aids": []
+  },
+  "people-sara-sit-type": {
+   "character": "sara",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Sara: typing at the desk, seated",
+   "aids": []
+  },
+  "people-sara-sit-read": {
+   "character": "sara",
+   "pose": "sit-read",
+   "name": "Sara: reading",
+   "aids": []
+  },
+  "people-sara-stand-phone": {
+   "character": "sara",
+   "pose": "stand-phone",
+   "name": "Sara: standing, phone in hand",
+   "aids": []
+  },
+  "people-bruno-sit-type": {
+   "character": "bruno",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Bruno: typing at the desk, seated",
+   "aids": []
+  },
+  "people-ivy-sit-read": {
+   "character": "ivy",
+   "pose": "sit-read",
+   "name": "Ivy: reading",
+   "aids": []
+  },
+  "people-mina-sit-laptop": {
+   "character": "mina",
+   "pose": "sit-laptop",
+   "name": "Mina: at a laptop",
+   "aids": []
+  },
+  "people-kofi-wheel-type": {
+   "character": "kofi",
+   "pose": "wheel-type",
+   "deskHeight": 28,
+   "name": "Kofi: typing at the desk, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-tom-cane-stand": {
+   "character": "tom",
+   "pose": "cane-stand",
+   "name": "Tom: standing with a walking stick",
+   "aids": [
+    "walking stick"
+   ]
+  },
+  "people-dee-walk": {
+   "character": "dee",
+   "pose": "walk",
+   "name": "Dee: walking",
+   "aids": []
+  },
+  "people-nia-walk": {
+   "character": "nia",
+   "pose": "walk",
+   "name": "Nia: walking",
+   "aids": []
+  },
+  "people-elena-sit-chat": {
+   "character": "elena",
+   "pose": "sit-chat",
+   "name": "Elena: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-raj-sit-write": {
+   "character": "raj",
+   "pose": "sit-write",
+   "name": "Raj: writing at a table",
+   "aids": []
+  },
+  "people-amal-sit-raise": {
+   "character": "amal",
+   "pose": "sit-raise",
+   "name": "Amal: hand raised",
+   "aids": []
+  },
+  "people-luca-stand-work": {
+   "character": "luca",
+   "pose": "stand-work",
+   "name": "Luca: working at a bench",
+   "aids": []
+  },
+  "people-yara-sit-phone": {
+   "character": "yara",
+   "pose": "sit-phone",
+   "name": "Yara: seated, phone in hand",
+   "aids": []
+  },
+  "people-yara-sit-read": {
+   "character": "yara",
+   "pose": "sit-read",
+   "name": "Yara: reading",
+   "aids": []
+  },
+  "people-ivy-stand-phone": {
+   "character": "ivy",
+   "pose": "stand-phone",
+   "name": "Ivy: standing, phone in hand",
+   "aids": []
+  },
+  "people-tom-sit-type": {
+   "character": "tom",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Tom: typing at the desk, seated",
+   "aids": []
+  },
+  "people-elena-sit-type": {
+   "character": "elena",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Elena: typing at the desk, seated",
+   "aids": []
+  },
+  "people-elena-sit-type-30": {
+   "character": "elena",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Elena: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-elena-stand-type": {
+   "character": "elena",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Elena: typing at the desk, standing",
+   "aids": []
+  },
+  "people-elena-stand-wait": {
+   "character": "elena",
+   "pose": "stand-wait",
+   "name": "Elena: standing by, arms loose",
+   "aids": []
+  },
+  "people-elena-stand-phone": {
+   "character": "elena",
+   "pose": "stand-phone",
+   "name": "Elena: standing, phone in hand",
+   "aids": []
+  },
+  "people-elena-stand-present": {
+   "character": "elena",
+   "pose": "stand-present",
+   "name": "Elena: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-elena-stand-work": {
+   "character": "elena",
+   "pose": "stand-work",
+   "name": "Elena: working at a bench",
+   "aids": []
+  },
+  "people-elena-walk": {
+   "character": "elena",
+   "pose": "walk",
+   "name": "Elena: walking",
+   "aids": []
+  },
+  "people-elena-sit-write": {
+   "character": "elena",
+   "pose": "sit-write",
+   "name": "Elena: writing at a table",
+   "aids": []
+  },
+  "people-elena-sit-laptop": {
+   "character": "elena",
+   "pose": "sit-laptop",
+   "name": "Elena: at a laptop",
+   "aids": []
+  },
+  "people-elena-sit-read": {
+   "character": "elena",
+   "pose": "sit-read",
+   "name": "Elena: reading",
+   "aids": []
+  },
+  "people-elena-sit-listen": {
+   "character": "elena",
+   "pose": "sit-listen",
+   "name": "Elena: listening at a table",
+   "aids": []
+  },
+  "people-elena-sit-phone": {
+   "character": "elena",
+   "pose": "sit-phone",
+   "name": "Elena: seated, phone in hand",
+   "aids": []
+  },
+  "people-elena-stand-low": {
+   "character": "elena",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Elena: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-elena-stand-mug": {
+   "character": "elena",
+   "pose": "stand-mug",
+   "name": "Elena: standing with a coffee",
+   "aids": []
+  },
+  "people-elena-stand-drink": {
+   "character": "elena",
+   "pose": "stand-drink",
+   "name": "Elena: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-elena-stand-mid": {
+   "character": "elena",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Elena: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-kofi-sit-type": {
+   "character": "kofi",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Kofi: typing at the desk, seated",
+   "aids": []
+  },
+  "people-kofi-sit-type-30": {
+   "character": "kofi",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Kofi: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-kofi-stand-type": {
+   "character": "kofi",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Kofi: typing at the desk, standing",
+   "aids": []
+  },
+  "people-kofi-wheel-type-31": {
+   "character": "kofi",
+   "pose": "wheel-type",
+   "deskHeight": 31,
+   "name": "Kofi: typing at the desk, in a wheelchair (desk at 31 in)",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-kofi-stand-wait": {
+   "character": "kofi",
+   "pose": "stand-wait",
+   "name": "Kofi: standing by, arms loose",
+   "aids": []
+  },
+  "people-kofi-stand-phone": {
+   "character": "kofi",
+   "pose": "stand-phone",
+   "name": "Kofi: standing, phone in hand",
+   "aids": []
+  },
+  "people-kofi-stand-present": {
+   "character": "kofi",
+   "pose": "stand-present",
+   "name": "Kofi: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-kofi-stand-work": {
+   "character": "kofi",
+   "pose": "stand-work",
+   "name": "Kofi: working at a bench",
+   "aids": []
+  },
+  "people-kofi-walk": {
+   "character": "kofi",
+   "pose": "walk",
+   "name": "Kofi: walking",
+   "aids": []
+  },
+  "people-kofi-sit-write": {
+   "character": "kofi",
+   "pose": "sit-write",
+   "name": "Kofi: writing at a table",
+   "aids": []
+  },
+  "people-kofi-sit-laptop": {
+   "character": "kofi",
+   "pose": "sit-laptop",
+   "name": "Kofi: at a laptop",
+   "aids": []
+  },
+  "people-kofi-sit-read": {
+   "character": "kofi",
+   "pose": "sit-read",
+   "name": "Kofi: reading",
+   "aids": []
+  },
+  "people-kofi-sit-listen": {
+   "character": "kofi",
+   "pose": "sit-listen",
+   "name": "Kofi: listening at a table",
+   "aids": []
+  },
+  "people-kofi-sit-phone": {
+   "character": "kofi",
+   "pose": "sit-phone",
+   "name": "Kofi: seated, phone in hand",
+   "aids": []
+  },
+  "people-kofi-wheel-watch": {
+   "character": "kofi",
+   "pose": "wheel-watch",
+   "name": "Kofi: watching a screen, in a wheelchair",
+   "aids": [
+    "wheelchair"
+   ]
+  },
+  "people-kofi-stand-low": {
+   "character": "kofi",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Kofi: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-kofi-stand-mug": {
+   "character": "kofi",
+   "pose": "stand-mug",
+   "name": "Kofi: standing with a coffee",
+   "aids": []
+  },
+  "people-kofi-stand-drink": {
+   "character": "kofi",
+   "pose": "stand-drink",
+   "name": "Kofi: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-kofi-sit-chat": {
+   "character": "kofi",
+   "pose": "sit-chat",
+   "name": "Kofi: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-kofi-stand-mid": {
+   "character": "kofi",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Kofi: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-mina-sit-type": {
+   "character": "mina",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Mina: typing at the desk, seated",
+   "aids": []
+  },
+  "people-mina-sit-type-30": {
+   "character": "mina",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Mina: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-mina-stand-type": {
+   "character": "mina",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Mina: typing at the desk, standing",
+   "aids": []
+  },
+  "people-mina-stand-wait": {
+   "character": "mina",
+   "pose": "stand-wait",
+   "name": "Mina: standing by, arms loose",
+   "aids": []
+  },
+  "people-mina-stand-phone": {
+   "character": "mina",
+   "pose": "stand-phone",
+   "name": "Mina: standing, phone in hand",
+   "aids": []
+  },
+  "people-mina-stand-present": {
+   "character": "mina",
+   "pose": "stand-present",
+   "name": "Mina: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-mina-stand-work": {
+   "character": "mina",
+   "pose": "stand-work",
+   "name": "Mina: working at a bench",
+   "aids": []
+  },
+  "people-mina-walk": {
+   "character": "mina",
+   "pose": "walk",
+   "name": "Mina: walking",
+   "aids": []
+  },
+  "people-mina-sit-write": {
+   "character": "mina",
+   "pose": "sit-write",
+   "name": "Mina: writing at a table",
+   "aids": []
+  },
+  "people-mina-sit-read": {
+   "character": "mina",
+   "pose": "sit-read",
+   "name": "Mina: reading",
+   "aids": []
+  },
+  "people-mina-sit-listen": {
+   "character": "mina",
+   "pose": "sit-listen",
+   "name": "Mina: listening at a table",
+   "aids": []
+  },
+  "people-mina-sit-phone": {
+   "character": "mina",
+   "pose": "sit-phone",
+   "name": "Mina: seated, phone in hand",
+   "aids": []
+  },
+  "people-mina-stand-low": {
+   "character": "mina",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Mina: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-mina-stand-mug": {
+   "character": "mina",
+   "pose": "stand-mug",
+   "name": "Mina: standing with a coffee",
+   "aids": []
+  },
+  "people-mina-stand-drink": {
+   "character": "mina",
+   "pose": "stand-drink",
+   "name": "Mina: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-mina-sit-chat": {
+   "character": "mina",
+   "pose": "sit-chat",
+   "name": "Mina: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-mina-stand-mid": {
+   "character": "mina",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Mina: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-raj-sit-type": {
+   "character": "raj",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Raj: typing at the desk, seated",
+   "aids": []
+  },
+  "people-raj-sit-type-30": {
+   "character": "raj",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Raj: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-raj-stand-type": {
+   "character": "raj",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Raj: typing at the desk, standing",
+   "aids": []
+  },
+  "people-raj-stand-wait": {
+   "character": "raj",
+   "pose": "stand-wait",
+   "name": "Raj: standing by, arms loose",
+   "aids": []
+  },
+  "people-raj-stand-phone": {
+   "character": "raj",
+   "pose": "stand-phone",
+   "name": "Raj: standing, phone in hand",
+   "aids": []
+  },
+  "people-raj-stand-present": {
+   "character": "raj",
+   "pose": "stand-present",
+   "name": "Raj: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-raj-stand-work": {
+   "character": "raj",
+   "pose": "stand-work",
+   "name": "Raj: working at a bench",
+   "aids": []
+  },
+  "people-raj-walk": {
+   "character": "raj",
+   "pose": "walk",
+   "name": "Raj: walking",
+   "aids": []
+  },
+  "people-raj-sit-laptop": {
+   "character": "raj",
+   "pose": "sit-laptop",
+   "name": "Raj: at a laptop",
+   "aids": []
+  },
+  "people-raj-sit-read": {
+   "character": "raj",
+   "pose": "sit-read",
+   "name": "Raj: reading",
+   "aids": []
+  },
+  "people-raj-sit-listen": {
+   "character": "raj",
+   "pose": "sit-listen",
+   "name": "Raj: listening at a table",
+   "aids": []
+  },
+  "people-raj-sit-phone": {
+   "character": "raj",
+   "pose": "sit-phone",
+   "name": "Raj: seated, phone in hand",
+   "aids": []
+  },
+  "people-raj-stand-low": {
+   "character": "raj",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Raj: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-raj-stand-mug": {
+   "character": "raj",
+   "pose": "stand-mug",
+   "name": "Raj: standing with a coffee",
+   "aids": []
+  },
+  "people-raj-stand-drink": {
+   "character": "raj",
+   "pose": "stand-drink",
+   "name": "Raj: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-raj-sit-chat": {
+   "character": "raj",
+   "pose": "sit-chat",
+   "name": "Raj: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-raj-stand-mid": {
+   "character": "raj",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Raj: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-sara-sit-type-30": {
+   "character": "sara",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Sara: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-sara-stand-type": {
+   "character": "sara",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Sara: typing at the desk, standing",
+   "aids": []
+  },
+  "people-sara-stand-wait": {
+   "character": "sara",
+   "pose": "stand-wait",
+   "name": "Sara: standing by, arms loose",
+   "aids": []
+  },
+  "people-sara-stand-present": {
+   "character": "sara",
+   "pose": "stand-present",
+   "name": "Sara: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-sara-stand-work": {
+   "character": "sara",
+   "pose": "stand-work",
+   "name": "Sara: working at a bench",
+   "aids": []
+  },
+  "people-sara-walk": {
+   "character": "sara",
+   "pose": "walk",
+   "name": "Sara: walking",
+   "aids": []
+  },
+  "people-sara-sit-write": {
+   "character": "sara",
+   "pose": "sit-write",
+   "name": "Sara: writing at a table",
+   "aids": []
+  },
+  "people-sara-sit-laptop": {
+   "character": "sara",
+   "pose": "sit-laptop",
+   "name": "Sara: at a laptop",
+   "aids": []
+  },
+  "people-sara-sit-listen": {
+   "character": "sara",
+   "pose": "sit-listen",
+   "name": "Sara: listening at a table",
+   "aids": []
+  },
+  "people-sara-sit-phone": {
+   "character": "sara",
+   "pose": "sit-phone",
+   "name": "Sara: seated, phone in hand",
+   "aids": []
+  },
+  "people-sara-stand-low": {
+   "character": "sara",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Sara: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-sara-stand-mug": {
+   "character": "sara",
+   "pose": "stand-mug",
+   "name": "Sara: standing with a coffee",
+   "aids": []
+  },
+  "people-sara-stand-drink": {
+   "character": "sara",
+   "pose": "stand-drink",
+   "name": "Sara: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-sara-sit-chat": {
+   "character": "sara",
+   "pose": "sit-chat",
+   "name": "Sara: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-sara-stand-mid": {
+   "character": "sara",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Sara: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-tom-sit-type-30": {
+   "character": "tom",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Tom: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-tom-stand-type": {
+   "character": "tom",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Tom: typing at the desk, standing",
+   "aids": []
+  },
+  "people-tom-stand-wait": {
+   "character": "tom",
+   "pose": "stand-wait",
+   "name": "Tom: standing by, arms loose",
+   "aids": []
+  },
+  "people-tom-stand-phone": {
+   "character": "tom",
+   "pose": "stand-phone",
+   "name": "Tom: standing, phone in hand",
+   "aids": []
+  },
+  "people-tom-stand-present": {
+   "character": "tom",
+   "pose": "stand-present",
+   "name": "Tom: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-tom-stand-work": {
+   "character": "tom",
+   "pose": "stand-work",
+   "name": "Tom: working at a bench",
+   "aids": []
+  },
+  "people-tom-walk": {
+   "character": "tom",
+   "pose": "walk",
+   "name": "Tom: walking",
+   "aids": []
+  },
+  "people-tom-sit-write": {
+   "character": "tom",
+   "pose": "sit-write",
+   "name": "Tom: writing at a table",
+   "aids": []
+  },
+  "people-tom-sit-laptop": {
+   "character": "tom",
+   "pose": "sit-laptop",
+   "name": "Tom: at a laptop",
+   "aids": []
+  },
+  "people-tom-sit-read": {
+   "character": "tom",
+   "pose": "sit-read",
+   "name": "Tom: reading",
+   "aids": []
+  },
+  "people-tom-sit-listen": {
+   "character": "tom",
+   "pose": "sit-listen",
+   "name": "Tom: listening at a table",
+   "aids": []
+  },
+  "people-tom-sit-phone": {
+   "character": "tom",
+   "pose": "sit-phone",
+   "name": "Tom: seated, phone in hand",
+   "aids": []
+  },
+  "people-tom-stand-low": {
+   "character": "tom",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Tom: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-tom-stand-mug": {
+   "character": "tom",
+   "pose": "stand-mug",
+   "name": "Tom: standing with a coffee",
+   "aids": []
+  },
+  "people-tom-stand-drink": {
+   "character": "tom",
+   "pose": "stand-drink",
+   "name": "Tom: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-tom-sit-chat": {
+   "character": "tom",
+   "pose": "sit-chat",
+   "name": "Tom: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-tom-stand-mid": {
+   "character": "tom",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Tom: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-ivy-sit-type": {
+   "character": "ivy",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Ivy: typing at the desk, seated",
+   "aids": []
+  },
+  "people-ivy-sit-type-30": {
+   "character": "ivy",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Ivy: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-ivy-stand-type": {
+   "character": "ivy",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Ivy: typing at the desk, standing",
+   "aids": []
+  },
+  "people-ivy-stand-wait": {
+   "character": "ivy",
+   "pose": "stand-wait",
+   "name": "Ivy: standing by, arms loose",
+   "aids": []
+  },
+  "people-ivy-stand-present": {
+   "character": "ivy",
+   "pose": "stand-present",
+   "name": "Ivy: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-ivy-stand-work": {
+   "character": "ivy",
+   "pose": "stand-work",
+   "name": "Ivy: working at a bench",
+   "aids": []
+  },
+  "people-ivy-walk": {
+   "character": "ivy",
+   "pose": "walk",
+   "name": "Ivy: walking",
+   "aids": []
+  },
+  "people-ivy-sit-write": {
+   "character": "ivy",
+   "pose": "sit-write",
+   "name": "Ivy: writing at a table",
+   "aids": []
+  },
+  "people-ivy-sit-laptop": {
+   "character": "ivy",
+   "pose": "sit-laptop",
+   "name": "Ivy: at a laptop",
+   "aids": []
+  },
+  "people-ivy-sit-listen": {
+   "character": "ivy",
+   "pose": "sit-listen",
+   "name": "Ivy: listening at a table",
+   "aids": []
+  },
+  "people-ivy-sit-phone": {
+   "character": "ivy",
+   "pose": "sit-phone",
+   "name": "Ivy: seated, phone in hand",
+   "aids": []
+  },
+  "people-ivy-stand-low": {
+   "character": "ivy",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Ivy: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-ivy-stand-mug": {
+   "character": "ivy",
+   "pose": "stand-mug",
+   "name": "Ivy: standing with a coffee",
+   "aids": []
+  },
+  "people-ivy-stand-drink": {
+   "character": "ivy",
+   "pose": "stand-drink",
+   "name": "Ivy: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-ivy-sit-chat": {
+   "character": "ivy",
+   "pose": "sit-chat",
+   "name": "Ivy: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-ivy-stand-mid": {
+   "character": "ivy",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Ivy: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-luca-sit-type": {
+   "character": "luca",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Luca: typing at the desk, seated",
+   "aids": []
+  },
+  "people-luca-sit-type-30": {
+   "character": "luca",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Luca: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-luca-stand-type": {
+   "character": "luca",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Luca: typing at the desk, standing",
+   "aids": []
+  },
+  "people-luca-stand-wait": {
+   "character": "luca",
+   "pose": "stand-wait",
+   "name": "Luca: standing by, arms loose",
+   "aids": []
+  },
+  "people-luca-stand-phone": {
+   "character": "luca",
+   "pose": "stand-phone",
+   "name": "Luca: standing, phone in hand",
+   "aids": []
+  },
+  "people-luca-stand-present": {
+   "character": "luca",
+   "pose": "stand-present",
+   "name": "Luca: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-luca-walk": {
+   "character": "luca",
+   "pose": "walk",
+   "name": "Luca: walking",
+   "aids": []
+  },
+  "people-luca-sit-write": {
+   "character": "luca",
+   "pose": "sit-write",
+   "name": "Luca: writing at a table",
+   "aids": []
+  },
+  "people-luca-sit-laptop": {
+   "character": "luca",
+   "pose": "sit-laptop",
+   "name": "Luca: at a laptop",
+   "aids": []
+  },
+  "people-luca-sit-read": {
+   "character": "luca",
+   "pose": "sit-read",
+   "name": "Luca: reading",
+   "aids": []
+  },
+  "people-luca-sit-listen": {
+   "character": "luca",
+   "pose": "sit-listen",
+   "name": "Luca: listening at a table",
+   "aids": []
+  },
+  "people-luca-sit-phone": {
+   "character": "luca",
+   "pose": "sit-phone",
+   "name": "Luca: seated, phone in hand",
+   "aids": []
+  },
+  "people-luca-stand-low": {
+   "character": "luca",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Luca: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-luca-stand-mug": {
+   "character": "luca",
+   "pose": "stand-mug",
+   "name": "Luca: standing with a coffee",
+   "aids": []
+  },
+  "people-luca-stand-drink": {
+   "character": "luca",
+   "pose": "stand-drink",
+   "name": "Luca: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-luca-sit-chat": {
+   "character": "luca",
+   "pose": "sit-chat",
+   "name": "Luca: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-luca-stand-mid": {
+   "character": "luca",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Luca: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-bruno-sit-type-30": {
+   "character": "bruno",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Bruno: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-bruno-stand-type": {
+   "character": "bruno",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Bruno: typing at the desk, standing",
+   "aids": []
+  },
+  "people-bruno-stand-wait": {
+   "character": "bruno",
+   "pose": "stand-wait",
+   "name": "Bruno: standing by, arms loose",
+   "aids": []
+  },
+  "people-bruno-stand-phone": {
+   "character": "bruno",
+   "pose": "stand-phone",
+   "name": "Bruno: standing, phone in hand",
+   "aids": []
+  },
+  "people-bruno-stand-present": {
+   "character": "bruno",
+   "pose": "stand-present",
+   "name": "Bruno: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-bruno-stand-work": {
+   "character": "bruno",
+   "pose": "stand-work",
+   "name": "Bruno: working at a bench",
+   "aids": []
+  },
+  "people-bruno-walk": {
+   "character": "bruno",
+   "pose": "walk",
+   "name": "Bruno: walking",
+   "aids": []
+  },
+  "people-bruno-sit-write": {
+   "character": "bruno",
+   "pose": "sit-write",
+   "name": "Bruno: writing at a table",
+   "aids": []
+  },
+  "people-bruno-sit-laptop": {
+   "character": "bruno",
+   "pose": "sit-laptop",
+   "name": "Bruno: at a laptop",
+   "aids": []
+  },
+  "people-bruno-sit-read": {
+   "character": "bruno",
+   "pose": "sit-read",
+   "name": "Bruno: reading",
+   "aids": []
+  },
+  "people-bruno-sit-listen": {
+   "character": "bruno",
+   "pose": "sit-listen",
+   "name": "Bruno: listening at a table",
+   "aids": []
+  },
+  "people-bruno-sit-phone": {
+   "character": "bruno",
+   "pose": "sit-phone",
+   "name": "Bruno: seated, phone in hand",
+   "aids": []
+  },
+  "people-bruno-stand-low": {
+   "character": "bruno",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Bruno: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-bruno-stand-mug": {
+   "character": "bruno",
+   "pose": "stand-mug",
+   "name": "Bruno: standing with a coffee",
+   "aids": []
+  },
+  "people-bruno-stand-drink": {
+   "character": "bruno",
+   "pose": "stand-drink",
+   "name": "Bruno: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-bruno-sit-chat": {
+   "character": "bruno",
+   "pose": "sit-chat",
+   "name": "Bruno: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-bruno-stand-mid": {
+   "character": "bruno",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Bruno: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-dee-sit-type": {
+   "character": "dee",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Dee: typing at the desk, seated",
+   "aids": []
+  },
+  "people-dee-sit-type-30": {
+   "character": "dee",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Dee: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-dee-stand-type": {
+   "character": "dee",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Dee: typing at the desk, standing",
+   "aids": []
+  },
+  "people-dee-stand-wait": {
+   "character": "dee",
+   "pose": "stand-wait",
+   "name": "Dee: standing by, arms loose",
+   "aids": []
+  },
+  "people-dee-stand-phone": {
+   "character": "dee",
+   "pose": "stand-phone",
+   "name": "Dee: standing, phone in hand",
+   "aids": []
+  },
+  "people-dee-stand-present": {
+   "character": "dee",
+   "pose": "stand-present",
+   "name": "Dee: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-dee-stand-work": {
+   "character": "dee",
+   "pose": "stand-work",
+   "name": "Dee: working at a bench",
+   "aids": []
+  },
+  "people-dee-sit-write": {
+   "character": "dee",
+   "pose": "sit-write",
+   "name": "Dee: writing at a table",
+   "aids": []
+  },
+  "people-dee-sit-laptop": {
+   "character": "dee",
+   "pose": "sit-laptop",
+   "name": "Dee: at a laptop",
+   "aids": []
+  },
+  "people-dee-sit-read": {
+   "character": "dee",
+   "pose": "sit-read",
+   "name": "Dee: reading",
+   "aids": []
+  },
+  "people-dee-sit-listen": {
+   "character": "dee",
+   "pose": "sit-listen",
+   "name": "Dee: listening at a table",
+   "aids": []
+  },
+  "people-dee-sit-phone": {
+   "character": "dee",
+   "pose": "sit-phone",
+   "name": "Dee: seated, phone in hand",
+   "aids": []
+  },
+  "people-dee-stand-low": {
+   "character": "dee",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Dee: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-dee-stand-mug": {
+   "character": "dee",
+   "pose": "stand-mug",
+   "name": "Dee: standing with a coffee",
+   "aids": []
+  },
+  "people-dee-stand-drink": {
+   "character": "dee",
+   "pose": "stand-drink",
+   "name": "Dee: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-dee-sit-chat": {
+   "character": "dee",
+   "pose": "sit-chat",
+   "name": "Dee: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-dee-stand-mid": {
+   "character": "dee",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Dee: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-nia-sit-type": {
+   "character": "nia",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Nia: typing at the desk, seated",
+   "aids": []
+  },
+  "people-nia-sit-type-30": {
+   "character": "nia",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Nia: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-nia-stand-type": {
+   "character": "nia",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Nia: typing at the desk, standing",
+   "aids": []
+  },
+  "people-nia-stand-wait": {
+   "character": "nia",
+   "pose": "stand-wait",
+   "name": "Nia: standing by, arms loose",
+   "aids": []
+  },
+  "people-nia-stand-phone": {
+   "character": "nia",
+   "pose": "stand-phone",
+   "name": "Nia: standing, phone in hand",
+   "aids": []
+  },
+  "people-nia-stand-present": {
+   "character": "nia",
+   "pose": "stand-present",
+   "name": "Nia: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-nia-stand-work": {
+   "character": "nia",
+   "pose": "stand-work",
+   "name": "Nia: working at a bench",
+   "aids": []
+  },
+  "people-nia-sit-write": {
+   "character": "nia",
+   "pose": "sit-write",
+   "name": "Nia: writing at a table",
+   "aids": []
+  },
+  "people-nia-sit-laptop": {
+   "character": "nia",
+   "pose": "sit-laptop",
+   "name": "Nia: at a laptop",
+   "aids": []
+  },
+  "people-nia-sit-read": {
+   "character": "nia",
+   "pose": "sit-read",
+   "name": "Nia: reading",
+   "aids": []
+  },
+  "people-nia-sit-listen": {
+   "character": "nia",
+   "pose": "sit-listen",
+   "name": "Nia: listening at a table",
+   "aids": []
+  },
+  "people-nia-sit-raise": {
+   "character": "nia",
+   "pose": "sit-raise",
+   "name": "Nia: hand raised",
+   "aids": []
+  },
+  "people-nia-sit-phone": {
+   "character": "nia",
+   "pose": "sit-phone",
+   "name": "Nia: seated, phone in hand",
+   "aids": []
+  },
+  "people-nia-stand-low": {
+   "character": "nia",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Nia: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-nia-stand-mug": {
+   "character": "nia",
+   "pose": "stand-mug",
+   "name": "Nia: standing with a coffee",
+   "aids": []
+  },
+  "people-nia-stand-drink": {
+   "character": "nia",
+   "pose": "stand-drink",
+   "name": "Nia: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-nia-sit-chat": {
+   "character": "nia",
+   "pose": "sit-chat",
+   "name": "Nia: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-nia-stand-mid": {
+   "character": "nia",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Nia: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-max-sit-type": {
+   "character": "max",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Max: typing at the desk, seated",
+   "aids": []
+  },
+  "people-max-sit-type-30": {
+   "character": "max",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Max: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-max-stand-type": {
+   "character": "max",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Max: typing at the desk, standing",
+   "aids": []
+  },
+  "people-max-stand-wait": {
+   "character": "max",
+   "pose": "stand-wait",
+   "name": "Max: standing by, arms loose",
+   "aids": []
+  },
+  "people-max-stand-phone": {
+   "character": "max",
+   "pose": "stand-phone",
+   "name": "Max: standing, phone in hand",
+   "aids": []
+  },
+  "people-max-stand-present": {
+   "character": "max",
+   "pose": "stand-present",
+   "name": "Max: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-max-stand-work": {
+   "character": "max",
+   "pose": "stand-work",
+   "name": "Max: working at a bench",
+   "aids": []
+  },
+  "people-max-walk": {
+   "character": "max",
+   "pose": "walk",
+   "name": "Max: walking",
+   "aids": []
+  },
+  "people-max-sit-write": {
+   "character": "max",
+   "pose": "sit-write",
+   "name": "Max: writing at a table",
+   "aids": []
+  },
+  "people-max-sit-laptop": {
+   "character": "max",
+   "pose": "sit-laptop",
+   "name": "Max: at a laptop",
+   "aids": []
+  },
+  "people-max-sit-read": {
+   "character": "max",
+   "pose": "sit-read",
+   "name": "Max: reading",
+   "aids": []
+  },
+  "people-max-sit-listen": {
+   "character": "max",
+   "pose": "sit-listen",
+   "name": "Max: listening at a table",
+   "aids": []
+  },
+  "people-max-sit-raise": {
+   "character": "max",
+   "pose": "sit-raise",
+   "name": "Max: hand raised",
+   "aids": []
+  },
+  "people-max-sit-phone": {
+   "character": "max",
+   "pose": "sit-phone",
+   "name": "Max: seated, phone in hand",
+   "aids": []
+  },
+  "people-max-stand-low": {
+   "character": "max",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Max: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-max-stand-mug": {
+   "character": "max",
+   "pose": "stand-mug",
+   "name": "Max: standing with a coffee",
+   "aids": []
+  },
+  "people-max-stand-drink": {
+   "character": "max",
+   "pose": "stand-drink",
+   "name": "Max: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-max-sit-chat": {
+   "character": "max",
+   "pose": "sit-chat",
+   "name": "Max: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-max-stand-mid": {
+   "character": "max",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Max: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-yara-sit-type": {
+   "character": "yara",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Yara: typing at the desk, seated",
+   "aids": []
+  },
+  "people-yara-sit-type-30": {
+   "character": "yara",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Yara: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-yara-stand-type": {
+   "character": "yara",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Yara: typing at the desk, standing",
+   "aids": []
+  },
+  "people-yara-stand-wait": {
+   "character": "yara",
+   "pose": "stand-wait",
+   "name": "Yara: standing by, arms loose",
+   "aids": []
+  },
+  "people-yara-stand-phone": {
+   "character": "yara",
+   "pose": "stand-phone",
+   "name": "Yara: standing, phone in hand",
+   "aids": []
+  },
+  "people-yara-stand-present": {
+   "character": "yara",
+   "pose": "stand-present",
+   "name": "Yara: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-yara-stand-work": {
+   "character": "yara",
+   "pose": "stand-work",
+   "name": "Yara: working at a bench",
+   "aids": []
+  },
+  "people-yara-walk": {
+   "character": "yara",
+   "pose": "walk",
+   "name": "Yara: walking",
+   "aids": []
+  },
+  "people-yara-sit-write": {
+   "character": "yara",
+   "pose": "sit-write",
+   "name": "Yara: writing at a table",
+   "aids": []
+  },
+  "people-yara-sit-laptop": {
+   "character": "yara",
+   "pose": "sit-laptop",
+   "name": "Yara: at a laptop",
+   "aids": []
+  },
+  "people-yara-sit-listen": {
+   "character": "yara",
+   "pose": "sit-listen",
+   "name": "Yara: listening at a table",
+   "aids": []
+  },
+  "people-yara-sit-raise": {
+   "character": "yara",
+   "pose": "sit-raise",
+   "name": "Yara: hand raised",
+   "aids": []
+  },
+  "people-yara-stand-low": {
+   "character": "yara",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Yara: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-yara-stand-mug": {
+   "character": "yara",
+   "pose": "stand-mug",
+   "name": "Yara: standing with a coffee",
+   "aids": []
+  },
+  "people-yara-stand-drink": {
+   "character": "yara",
+   "pose": "stand-drink",
+   "name": "Yara: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-yara-sit-chat": {
+   "character": "yara",
+   "pose": "sit-chat",
+   "name": "Yara: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-yara-stand-mid": {
+   "character": "yara",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Yara: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-finn-sit-type": {
+   "character": "finn",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Finn: typing at the desk, seated",
+   "aids": []
+  },
+  "people-finn-sit-type-30": {
+   "character": "finn",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Finn: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-finn-stand-type": {
+   "character": "finn",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Finn: typing at the desk, standing",
+   "aids": []
+  },
+  "people-finn-stand-wait": {
+   "character": "finn",
+   "pose": "stand-wait",
+   "name": "Finn: standing by, arms loose",
+   "aids": []
+  },
+  "people-finn-stand-phone": {
+   "character": "finn",
+   "pose": "stand-phone",
+   "name": "Finn: standing, phone in hand",
+   "aids": []
+  },
+  "people-finn-stand-present": {
+   "character": "finn",
+   "pose": "stand-present",
+   "name": "Finn: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-finn-stand-work": {
+   "character": "finn",
+   "pose": "stand-work",
+   "name": "Finn: working at a bench",
+   "aids": []
+  },
+  "people-finn-walk": {
+   "character": "finn",
+   "pose": "walk",
+   "name": "Finn: walking",
+   "aids": []
+  },
+  "people-finn-sit-write": {
+   "character": "finn",
+   "pose": "sit-write",
+   "name": "Finn: writing at a table",
+   "aids": []
+  },
+  "people-finn-sit-laptop": {
+   "character": "finn",
+   "pose": "sit-laptop",
+   "name": "Finn: at a laptop",
+   "aids": []
+  },
+  "people-finn-sit-read": {
+   "character": "finn",
+   "pose": "sit-read",
+   "name": "Finn: reading",
+   "aids": []
+  },
+  "people-finn-sit-listen": {
+   "character": "finn",
+   "pose": "sit-listen",
+   "name": "Finn: listening at a table",
+   "aids": []
+  },
+  "people-finn-sit-raise": {
+   "character": "finn",
+   "pose": "sit-raise",
+   "name": "Finn: hand raised",
+   "aids": []
+  },
+  "people-finn-sit-phone": {
+   "character": "finn",
+   "pose": "sit-phone",
+   "name": "Finn: seated, phone in hand",
+   "aids": []
+  },
+  "people-finn-stand-low": {
+   "character": "finn",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Finn: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-finn-stand-mug": {
+   "character": "finn",
+   "pose": "stand-mug",
+   "name": "Finn: standing with a coffee",
+   "aids": []
+  },
+  "people-finn-stand-drink": {
+   "character": "finn",
+   "pose": "stand-drink",
+   "name": "Finn: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-finn-sit-chat": {
+   "character": "finn",
+   "pose": "sit-chat",
+   "name": "Finn: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-finn-stand-mid": {
+   "character": "finn",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Finn: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-suki-sit-type": {
+   "character": "suki",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Suki: typing at the desk, seated",
+   "aids": []
+  },
+  "people-suki-sit-type-30": {
+   "character": "suki",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Suki: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-suki-stand-type": {
+   "character": "suki",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Suki: typing at the desk, standing",
+   "aids": []
+  },
+  "people-suki-stand-wait": {
+   "character": "suki",
+   "pose": "stand-wait",
+   "name": "Suki: standing by, arms loose",
+   "aids": []
+  },
+  "people-suki-stand-phone": {
+   "character": "suki",
+   "pose": "stand-phone",
+   "name": "Suki: standing, phone in hand",
+   "aids": []
+  },
+  "people-suki-stand-present": {
+   "character": "suki",
+   "pose": "stand-present",
+   "name": "Suki: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-suki-stand-work": {
+   "character": "suki",
+   "pose": "stand-work",
+   "name": "Suki: working at a bench",
+   "aids": []
+  },
+  "people-suki-walk": {
+   "character": "suki",
+   "pose": "walk",
+   "name": "Suki: walking",
+   "aids": []
+  },
+  "people-suki-sit-write": {
+   "character": "suki",
+   "pose": "sit-write",
+   "name": "Suki: writing at a table",
+   "aids": []
+  },
+  "people-suki-sit-laptop": {
+   "character": "suki",
+   "pose": "sit-laptop",
+   "name": "Suki: at a laptop",
+   "aids": []
+  },
+  "people-suki-sit-read": {
+   "character": "suki",
+   "pose": "sit-read",
+   "name": "Suki: reading",
+   "aids": []
+  },
+  "people-suki-sit-listen": {
+   "character": "suki",
+   "pose": "sit-listen",
+   "name": "Suki: listening at a table",
+   "aids": []
+  },
+  "people-suki-sit-raise": {
+   "character": "suki",
+   "pose": "sit-raise",
+   "name": "Suki: hand raised",
+   "aids": []
+  },
+  "people-suki-sit-phone": {
+   "character": "suki",
+   "pose": "sit-phone",
+   "name": "Suki: seated, phone in hand",
+   "aids": []
+  },
+  "people-suki-stand-low": {
+   "character": "suki",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Suki: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-suki-stand-mug": {
+   "character": "suki",
+   "pose": "stand-mug",
+   "name": "Suki: standing with a coffee",
+   "aids": []
+  },
+  "people-suki-stand-drink": {
+   "character": "suki",
+   "pose": "stand-drink",
+   "name": "Suki: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-suki-sit-chat": {
+   "character": "suki",
+   "pose": "sit-chat",
+   "name": "Suki: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-suki-stand-mid": {
+   "character": "suki",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Suki: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-diego-sit-type": {
+   "character": "diego",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Diego: typing at the desk, seated",
+   "aids": []
+  },
+  "people-diego-sit-type-30": {
+   "character": "diego",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Diego: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-diego-stand-type": {
+   "character": "diego",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Diego: typing at the desk, standing",
+   "aids": []
+  },
+  "people-diego-stand-wait": {
+   "character": "diego",
+   "pose": "stand-wait",
+   "name": "Diego: standing by, arms loose",
+   "aids": []
+  },
+  "people-diego-stand-phone": {
+   "character": "diego",
+   "pose": "stand-phone",
+   "name": "Diego: standing, phone in hand",
+   "aids": []
+  },
+  "people-diego-stand-present": {
+   "character": "diego",
+   "pose": "stand-present",
+   "name": "Diego: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-diego-stand-work": {
+   "character": "diego",
+   "pose": "stand-work",
+   "name": "Diego: working at a bench",
+   "aids": []
+  },
+  "people-diego-walk": {
+   "character": "diego",
+   "pose": "walk",
+   "name": "Diego: walking",
+   "aids": []
+  },
+  "people-diego-sit-write": {
+   "character": "diego",
+   "pose": "sit-write",
+   "name": "Diego: writing at a table",
+   "aids": []
+  },
+  "people-diego-sit-laptop": {
+   "character": "diego",
+   "pose": "sit-laptop",
+   "name": "Diego: at a laptop",
+   "aids": []
+  },
+  "people-diego-sit-read": {
+   "character": "diego",
+   "pose": "sit-read",
+   "name": "Diego: reading",
+   "aids": []
+  },
+  "people-diego-sit-listen": {
+   "character": "diego",
+   "pose": "sit-listen",
+   "name": "Diego: listening at a table",
+   "aids": []
+  },
+  "people-diego-sit-raise": {
+   "character": "diego",
+   "pose": "sit-raise",
+   "name": "Diego: hand raised",
+   "aids": []
+  },
+  "people-diego-sit-phone": {
+   "character": "diego",
+   "pose": "sit-phone",
+   "name": "Diego: seated, phone in hand",
+   "aids": []
+  },
+  "people-diego-stand-low": {
+   "character": "diego",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Diego: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-diego-stand-mug": {
+   "character": "diego",
+   "pose": "stand-mug",
+   "name": "Diego: standing with a coffee",
+   "aids": []
+  },
+  "people-diego-stand-drink": {
+   "character": "diego",
+   "pose": "stand-drink",
+   "name": "Diego: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-diego-sit-chat": {
+   "character": "diego",
+   "pose": "sit-chat",
+   "name": "Diego: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-diego-stand-mid": {
+   "character": "diego",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Diego: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-amal-sit-type": {
+   "character": "amal",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Amal: typing at the desk, seated",
+   "aids": []
+  },
+  "people-amal-sit-type-30": {
+   "character": "amal",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Amal: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-amal-stand-type": {
+   "character": "amal",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Amal: typing at the desk, standing",
+   "aids": []
+  },
+  "people-amal-stand-wait": {
+   "character": "amal",
+   "pose": "stand-wait",
+   "name": "Amal: standing by, arms loose",
+   "aids": []
+  },
+  "people-amal-stand-phone": {
+   "character": "amal",
+   "pose": "stand-phone",
+   "name": "Amal: standing, phone in hand",
+   "aids": []
+  },
+  "people-amal-stand-present": {
+   "character": "amal",
+   "pose": "stand-present",
+   "name": "Amal: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-amal-stand-work": {
+   "character": "amal",
+   "pose": "stand-work",
+   "name": "Amal: working at a bench",
+   "aids": []
+  },
+  "people-amal-walk": {
+   "character": "amal",
+   "pose": "walk",
+   "name": "Amal: walking",
+   "aids": []
+  },
+  "people-amal-sit-write": {
+   "character": "amal",
+   "pose": "sit-write",
+   "name": "Amal: writing at a table",
+   "aids": []
+  },
+  "people-amal-sit-laptop": {
+   "character": "amal",
+   "pose": "sit-laptop",
+   "name": "Amal: at a laptop",
+   "aids": []
+  },
+  "people-amal-sit-read": {
+   "character": "amal",
+   "pose": "sit-read",
+   "name": "Amal: reading",
+   "aids": []
+  },
+  "people-amal-sit-listen": {
+   "character": "amal",
+   "pose": "sit-listen",
+   "name": "Amal: listening at a table",
+   "aids": []
+  },
+  "people-amal-sit-phone": {
+   "character": "amal",
+   "pose": "sit-phone",
+   "name": "Amal: seated, phone in hand",
+   "aids": []
+  },
+  "people-amal-stand-low": {
+   "character": "amal",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Amal: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-amal-stand-mug": {
+   "character": "amal",
+   "pose": "stand-mug",
+   "name": "Amal: standing with a coffee",
+   "aids": []
+  },
+  "people-amal-stand-drink": {
+   "character": "amal",
+   "pose": "stand-drink",
+   "name": "Amal: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-amal-sit-chat": {
+   "character": "amal",
+   "pose": "sit-chat",
+   "name": "Amal: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-amal-stand-mid": {
+   "character": "amal",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Amal: typing standing at a mid-height desk",
+   "aids": []
+  },
+  "people-jack-sit-type": {
+   "character": "jack",
+   "pose": "sit-type",
+   "deskHeight": 28,
+   "name": "Jack: typing at the desk, seated",
+   "aids": []
+  },
+  "people-jack-sit-type-30": {
+   "character": "jack",
+   "pose": "sit-type",
+   "deskHeight": 30,
+   "name": "Jack: typing at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-jack-stand-type": {
+   "character": "jack",
+   "pose": "stand-type",
+   "deskHeight": 43.5,
+   "name": "Jack: typing at the desk, standing",
+   "aids": []
+  },
+  "people-jack-stand-wait": {
+   "character": "jack",
+   "pose": "stand-wait",
+   "name": "Jack: standing by, arms loose",
+   "aids": []
+  },
+  "people-jack-stand-phone": {
+   "character": "jack",
+   "pose": "stand-phone",
+   "name": "Jack: standing, phone in hand",
+   "aids": []
+  },
+  "people-jack-stand-present": {
+   "character": "jack",
+   "pose": "stand-present",
+   "name": "Jack: presenting, tablet on the arm",
+   "aids": []
+  },
+  "people-jack-stand-work": {
+   "character": "jack",
+   "pose": "stand-work",
+   "name": "Jack: working at a bench",
+   "aids": []
+  },
+  "people-jack-walk": {
+   "character": "jack",
+   "pose": "walk",
+   "name": "Jack: walking",
+   "aids": []
+  },
+  "people-jack-sit-write": {
+   "character": "jack",
+   "pose": "sit-write",
+   "name": "Jack: writing at a table",
+   "aids": []
+  },
+  "people-jack-sit-laptop": {
+   "character": "jack",
+   "pose": "sit-laptop",
+   "name": "Jack: at a laptop",
+   "aids": []
+  },
+  "people-jack-sit-read": {
+   "character": "jack",
+   "pose": "sit-read",
+   "name": "Jack: reading",
+   "aids": []
+  },
+  "people-jack-sit-listen": {
+   "character": "jack",
+   "pose": "sit-listen",
+   "name": "Jack: listening at a table",
+   "aids": []
+  },
+  "people-jack-sit-raise": {
+   "character": "jack",
+   "pose": "sit-raise",
+   "name": "Jack: hand raised",
+   "aids": []
+  },
+  "people-jack-sit-phone": {
+   "character": "jack",
+   "pose": "sit-phone",
+   "name": "Jack: seated, phone in hand",
+   "aids": []
+  },
+  "people-jack-stand-low": {
+   "character": "jack",
+   "pose": "stand-low",
+   "deskHeight": 35.5,
+   "name": "Jack: working standing at a bench-height desk",
+   "aids": []
+  },
+  "people-jack-stand-mug": {
+   "character": "jack",
+   "pose": "stand-mug",
+   "name": "Jack: standing with a coffee",
+   "aids": []
+  },
+  "people-jack-stand-drink": {
+   "character": "jack",
+   "pose": "stand-drink",
+   "name": "Jack: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-jack-sit-chat": {
+   "character": "jack",
+   "pose": "sit-chat",
+   "name": "Jack: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-jack-stand-mid": {
+   "character": "jack",
+   "pose": "stand-mid",
+   "deskHeight": 39,
+   "name": "Jack: typing standing at a mid-height desk",
+   "aids": []
   }
  }
 }

@@ -22,6 +22,7 @@ OUT_ID, OUT_DIR = argv[0], argv[1]
 PREVIEW = argv[argv.index('--preview') + 1] if '--preview' in argv else None
 spec = cast.output(OUT_ID)
 who = cast.CHARACTERS[spec['character']]
+LOOK = who.get('look', 2)       # 3: round three's materials (cast.py); the people built before it keep theirs until they are given it
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.preferences.addon_enable(module='bl_ext.user_default.mpfb')
@@ -43,6 +44,12 @@ if who.get('hair'): info['hair'] = asset(who['hair'])
 info['clothes'] = [asset(c) for c in who['clothes']]
 info['skin_mhmat'] = asset(who['skin'], 'mhmat')
 info['eyes_material_settings'] = {}
+# A face of their own (cast 'face': {target: value}; 'lr-...' is the left and the right target of a pair).
+info['targets'] = [{'target': t.replace('lr-', side, 1) if t.startswith('lr-') else t, 'value': v}
+                   for t, v in who.get('face', {}).items() for side in (('l-', 'r-') if t.startswith('lr-') else ('',))]
+from bl_ext.user_default.mpfb.services.targetservice import TargetService  # noqa: E402
+for t in info['targets']:
+    if not TargetService.target_full_path(t['target']): raise KeyError('no face target ' + t['target'])
 info['skin_material_type'] = 'MAKESKIN'; info['eyes_material_type'] = 'MAKESKIN'; info['clothes_material_type'] = 'MAKESKIN'
 settings = HumanService.get_default_deserialization_settings(); settings['subdiv_levels'] = 0
 base = HumanService.deserialize_from_dict(info, settings)
@@ -60,7 +67,107 @@ for o in meshes:
                     if os.path.exists(want): n.image = bpy.data.images.load(want)
 
 
+# ---- an outfit in parts (cast 'parts': {outfit: 'top' | 'bottom' | 'both'}) -------------------------------------
+# The one-piece outfits are a top and a bottom that do not touch. 'top' or 'bottom' keeps that half (jeans under
+# another shirt); 'both' keeps both and gives the bottom a material of its own ('..._pants': the Studio's bottom).
+def split_outfit(o, want):
+    import bmesh as _bm
+    waist = (rig.matrix_world @ rig.data.bones['spine_01'].head_local).z; k = (rig.matrix_world @ rig.data.bones['head'].head_local).z / 1.47
+    bm = _bm.new(); bm.from_mesh(o.data); bm.verts.ensure_lookup_table(); world = o.matrix_world; seen = set(); parts = []
+    for v in bm.verts:
+        if v.index in seen: continue
+        stack = [v]; seen.add(v.index); part = []
+        while stack:
+            x = stack.pop(); part.append(x)
+            for e in x.link_edges:
+                y = e.other_vert(x)
+                if y.index not in seen: seen.add(y.index); stack.append(y)
+        parts.append(part)
+    at = {v.index: world @ v.co for v in bm.verts}
+    def low(part): zs = [at[v.index].z for v in part]; return sum(zs) / len(zs) < waist and max(zs) < waist + .1 * k and max(abs(at[v.index].x) for v in part) < .34 * k
+    big = [(part, low(part)) for part in parts if len(part) >= 300]; bottom = {v.index for part, is_low in big if is_low for v in part}
+    if not bottom or len(bottom) == sum(len(part) for part, _l in big): bm.free(); raise RuntimeError(o.name + ': no separate top and bottom')
+    for part in parts:      # buttons, a belt, a tie: with the big piece they lie on
+        if len(part) >= 300: continue
+        c = sum((at[v.index] for v in part), Vector()) / len(part)
+        if min(((at[v.index] - c).length, is_low) for big_part, is_low in big for v in big_part)[1]: bottom |= {v.index for v in part}
+    is_low = lambda f: all(v.index in bottom for v in f.verts)
+    if want != 'both': _bm.ops.delete(bm, geom=[f for f in bm.faces if is_low(f) != (want == 'bottom')], context='FACES')
+    else:
+        for f in bm.faces:
+            if is_low(f): f.material_index = 1
+    bm.to_mesh(o.data); bm.free(); m = o.data.materials[0]
+    if want == 'bottom': m.name += '_pants'
+    elif want == 'both': m2 = m.copy(); m2.name = m.name + '_pants'; o.data.materials.append(m2)
+    # the outfit hid the skin under all of it: the skin under the half that is not worn comes back
+    group = base.vertex_groups.get('Delete.' + o.name.split('.', 1)[-1])
+    if group and want != 'both':
+        names = {g.index: g.name for g in base.vertex_groups}; shape = garments._shape(base)
+        def legs(v): return sum(g.weight for g in v.groups if names[g.group].startswith(('thigh', 'calf', 'foot', 'ball'))) > .5
+        hidden = [v for v in base.data.vertices if any(g.group == group.index for g in v.groups)]
+        group.remove([v.index for v in hidden if (legs(v) or shape[v.index].z < waist - .12 * k if want == 'top' else not legs(v) and shape[v.index].z > waist + .02 * k)])
+
+
+for o in meshes:
+    if o.name.split('.', 1)[-1] in who.get('parts', {}): split_outfit(o, who['parts'][o.name.split('.', 1)[-1]])
+
+
 # ---- materials: plain PBR that survives glTF ----------------------------------------------------
+def texel_mean(o, image, slot):
+    """The average colour of a texture where this object's faces of one material slot use it."""
+    w, h = image.size; px = np.empty(w * h * 4, dtype=np.float32); image.pixels.foreach_get(px); px = px.reshape(h, w, 4); uv = o.data.uv_layers.active.data
+    at = [uv[i].uv for p in o.data.polygons if p.material_index == slot for i in p.loop_indices][::3]
+    rows = np.clip((np.array([v.y for v in at]) % 1 * h).astype(int), 0, h - 1); cols = np.clip((np.array([v.x for v in at]) % 1 * w).astype(int), 0, w - 1)
+    return px[rows, cols, :3].mean(axis=0)
+
+
+_copies = [0]
+def save_copy(image, px, tag):
+    w, h = image.size; copy = bpy.data.images.new(image.name + tag, w, h, alpha=True); copy.pixels.foreach_set(px.ravel()); _copies[0] += 1
+    path = os.path.join(OUT_DIR, 'tex', f'{OUT_ID}--{_copies[0]}-{image.name}.png'); os.makedirs(os.path.dirname(path), exist_ok=True)
+    copy.filepath_raw = path; copy.file_format = 'PNG'; copy.save(); return copy
+
+
+def dye_image(image, rgb, mean):
+    """Dye a texture: the fabric takes the colour, as light or dark as it was against its average; what was white on
+    a darker fabric (the light stripe of a shirt, the wear on denim) stays white. Stripes, prints and seams survive."""
+    w, h = image.size; px = np.empty(w * h * 4, dtype=np.float32); image.pixels.foreach_get(px); px = px.reshape(-1, 4)
+    rel = px[:, :3].mean(axis=1, keepdims=True) / max(float(np.mean(mean)), .04)
+    white = np.clip((px[:, :3].min(axis=1, keepdims=True) - .55) / .3, 0, 1) * np.clip((rel - 1.15) / .3, 0, 1)
+    px[:, :3] = np.clip(np.array(rgb, dtype=np.float32) * np.minimum(rel, 1.7), 0, 1) * (1 - white) + .93 * white; return save_copy(image, px, '_dye')
+
+
+def tone_image(image, rgb):
+    """A skin tone: a factor per channel on the skin as it is (1 leaves the channel alone)."""
+    w, h = image.size; px = np.empty(w * h * 4, dtype=np.float32); image.pixels.foreach_get(px); px = px.reshape(-1, 4)
+    px[:, :3] = np.clip(px[:, :3] * np.array(rgb, dtype=np.float32), 0, 1); return save_copy(image, px, '_tone')
+
+
+PRINTED = ('male_casualsuit02', 'male_casualsuit04', 'female_casualsuit01', 'female_casualsuit02')      # the same logo on every chest
+
+
+def plain_chest(o, image, mean):
+    """Take the print off the chest: texels there that are not the fabric's colour are filled from the fabric beside them."""
+    w, h = image.size; px = np.empty(w * h * 4, dtype=np.float32); image.pixels.foreach_get(px); px = px.reshape(h, w, 4); uv = o.data.uv_layers.active.data
+    world = o.matrix_world; turn = world.to_3x3(); k = (rig.matrix_world @ rig.data.bones['head'].head_local).z / 1.47
+    low, high = (rig.matrix_world @ rig.data.bones['spine_01'].head_local).z + .04 * k, (rig.matrix_world @ rig.data.bones['neck_01'].head_local).z - .05 * k
+    chest = np.zeros((h, w), dtype=bool)
+    for f in o.data.polygons:
+        c = world @ f.center
+        if f.material_index or not low < c.z < high or abs(c.x) > .16 * k or (turn @ f.normal).y > -.3: continue
+        us = [uv[i].uv.x % 1 for i in f.loop_indices]; vs = [uv[i].uv.y % 1 for i in f.loop_indices]
+        chest[max(0, int(min(vs) * h) - 2):int(max(vs) * h) + 3, max(0, int(min(us) * w) - 2):int(max(us) * w) + 3] = True
+    rgb = px[..., :3]; cast_ = rgb / np.maximum(rgb.mean(axis=2, keepdims=True), .02); off = np.abs(cast_ - mean / max(float(mean.mean()), .02)).max(axis=2) > .28
+    grown = off.copy()
+    for d in range(1, 5):
+        for axis in (0, 1): grown |= np.roll(off, d, axis) | np.roll(off, -d, axis)
+    todo = chest & grown
+    for dy, dx in ((0, 257), (0, -257), (211, 0), (-211, 0), (173, 173), (-173, -173), (0, 419), (397, 0)):      # the weave from beside it
+        src = np.roll(px, (dy, dx), axis=(0, 1)); ok = todo & np.roll(chest & ~grown, (dy, dx), axis=(0, 1)); px[ok] = src[ok]; todo &= ~ok
+    px[todo, :3] = mean
+    return save_copy(image, px.reshape(-1, 4), '_plain')
+
+
 def tint_image(image, rgb):
     """Multiply a texture by a colour (clothes come in one colourway each)."""
     w, h = image.size; px = np.empty(w * h * 4, dtype=np.float32); image.pixels.foreach_get(px); px = px.reshape(-1, 4)
@@ -68,9 +175,7 @@ def tint_image(image, rgb):
     mean = max(float(lum[solid].mean()) if solid.any() else float(lum.mean()), 1e-3)
     # Shading relative to the fabric's average, compressed so folds stay soft, times the colour.
     px[:, :3] = np.clip((.35 + .65 * lum / mean) * np.array(rgb, dtype=np.float32), 0, 1)
-    copy = bpy.data.images.new(image.name + '_tint', w, h, alpha=True); copy.pixels.foreach_set(px.ravel())
-    path = os.path.join(OUT_DIR, 'tex', f'{OUT_ID}-{image.name}.png'); os.makedirs(os.path.dirname(path), exist_ok=True)
-    copy.filepath_raw = path; copy.file_format = 'PNG'; copy.save(); return copy
+    return save_copy(image, px, '_tint')
 
 
 ALPHA_CUT = ('hair', 'eyebrow', 'eyelash')
@@ -94,13 +199,21 @@ for o in meshes:
         bsdf.inputs['Roughness'].default_value = rough
         for link in list(bsdf.inputs['Metallic'].links): tree.links.remove(link)
         bsdf.inputs['Metallic'].default_value = 0
-        tint = tints.get(kind) or (who.get('hair_tint') if who.get('hair') and who['hair'] in o.name else None)
-        if tint:
+        # A height map is not a normal map: exported as one it turns the fabric nearly black (the tucked T-shirt).
+        for link in list(bsdf.inputs['Normal'].links) if LOOK >= 3 else []:
+            if link.from_node.type == 'BUMP' and link.from_node.inputs['Height'].links and not link.from_node.inputs['Normal'].links: tree.links.remove(link)
+        slot = list(o.data.materials).index(m); key = kind + (':bottom' if slot and kind in who.get('parts', {}) else '')
+        tint = tints.get(key) or (who.get('hair_tint') if who.get('hair') and who['hair'] in o.name else None)
+        dye = who.get('dye', {}).get(key) or (who.get('skin_tone') if o is base else None)
+        if tint or dye or LOOK >= 3 and kind in PRINTED and not slot:
             for link in bsdf.inputs['Base Color'].links:
-                node = link.from_node
+                node = LOOK >= 3 and tree.nodes.get('diffuseTexture') or link.from_node       # (not the ambient occlusion map mixed over it)
                 while node and node.type != 'TEX_IMAGE':
                     ins = [l.from_node for i in node.inputs for l in i.links]; node = next((n for n in ins if n.type == 'TEX_IMAGE'), ins[0] if ins else None)
-                if node and node.image: node.image = tint_image(node.image, tint)
+                if not node or not node.image: continue
+                if LOOK >= 3 and kind in PRINTED and not slot: node.image = plain_chest(o, node.image, texel_mean(o, node.image, slot))
+                if tint: node.image = tint_image(node.image, tint)
+                elif dye: node.image = tone_image(node.image, dye) if o is base else dye_image(node.image, dye, texel_mean(o, node.image, slot))
 
 # ---- glasses as frames only (safety glasses): the faces the texture leaves clear go (cast: 'frames': [glasses, ...])
 for o in meshes:
@@ -219,6 +332,8 @@ def cull_under(o, trees, reach, through=.018, corners=False, whole=False):
     def under(p, n): return any(t.ray_cast(p + n * .0005, n, reach)[0] is not None or t.ray_cast(p - n * .0005, -n, through)[0] is not None for t in trees)
     def hidden(f):
         c = f.calc_center_median()
+        # (round three: a face that has pushed out through the layer, or has a corner through it, goes)
+        if whole and LOOK >= 3 and any(t.ray_cast(p - f.normal * .0005, -f.normal, through)[0] is not None for t in trees for p in [c] + [v.co for v in f.verts]): return True
         if whole: return under(c, f.normal) and all(under(v.co, f.normal) for v in f.verts)
         if any(t.ray_cast(c + f.normal * .0005, f.normal, reach)[0] is not None or t.ray_cast(c - f.normal * .0005, -f.normal, through)[0] is not None for t in trees): return True
         return corners and any(t.ray_cast(v.co - f.normal * .0005, -f.normal, through)[0] is not None for v in f.verts for t in trees)
@@ -234,10 +349,12 @@ for c in cloth:
         dg2 = bpy.context.evaluated_depsgraph_get(); me = bpy.data.meshes.new_from_object(c.evaluated_get(dg2), preserve_all_data_layers=True, depsgraph=dg2); c.modifiers.clear(); old = c.data; c.data = me; bpy.data.meshes.remove(old)
 trees = [tree_of(c) for c in cloth]
 made = len(garments.names(who))      # (garments made from the base mesh: smooth shells with cut necklines)
-cull_under(body, trees, .035, whole=made > 0)
+# (round three: skin goes only where all of a face is covered, so a collar's edge has no notches of missing neck)
+cull_under(body, trees, .035, whole=made > 0 or LOOK >= 3)
 # A garment can push further out through the one over it than skin does (a trouser yoke through the back of a shirt).
 # (what is under a shell shows at every corner that pokes through it)
-for i, c in enumerate(cloth[1:], 1): cull_under(c, trees[:i], .025, .045, corners=i >= 1 and made > 0 and c.name.split('.', 1)[-1].replace('.baked', '') in who['clothes'])
+# (a headscarf is laid over the clothes as they are: nothing under it needs to go)
+for i, c in enumerate(cloth[1:], 1): cull_under(c, [t for t, b in zip(trees[:i], cloth) if b.name.split('.', 1)[-1].replace('.baked', '') not in garments.OVER], .025, .045, corners=i >= 1 and made > 0 and c.name.split('.', 1)[-1].replace('.baked', '') in who['clothes'])
 bpy.ops.object.select_all(action='DESELECT')
 for b in baked: b.select_set(True)
 bpy.context.view_layer.objects.active = baked[0]; bpy.ops.object.join(); person = bpy.context.object; person.name = OUT_ID
