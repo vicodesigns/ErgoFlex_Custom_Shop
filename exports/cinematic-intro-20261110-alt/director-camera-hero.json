@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-20261110-alt/director-exports/export-e8e62cfa7b40-Film-chapter-hero-48-s-__4_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-20261110-alt/director-exports/export-92ded3631cf6-Film-chapter-hero-48-s-__5_.json",
  "seconds": 48.0,
  "keys": [
   {
@@ -556,21 +556,6 @@
    ],
    "fov": 28,
    "label": "Key 37 at 36.0 s"
-  },
-  {
-   "at": 36.6,
-   "position": [
-    5.262361436349543,
-    2.4741945529733504,
-    -4.447259916302737
-   ],
-   "target": [
-    0.06853807983155108,
-    1.0812234412270356,
-    1.063861658561829
-   ],
-   "fov": 27.99920800501867,
-   "label": "Camera view 50"
   },
   {
    "at": 37.0,
@@ -2977,9 +2962,16 @@
   },
   {
    "n": "F",
-   "preset": "gaming",
+   "preset": "occ",
    "name": "",
    "start": 34.7,
+   "end": 42.33
+  },
+  {
+   "n": "G",
+   "preset": "gaming",
+   "name": "",
+   "start": 41.73,
    "end": 48.0
   }
  ]
