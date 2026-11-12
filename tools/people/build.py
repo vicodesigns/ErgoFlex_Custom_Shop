@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Build the posed people in tools/people/cast.py into library props.
 
-    python3 tools/people/build.py [id ...] [--all] [--jobs 4] [--keep]
+    python3 tools/people/build.py [id ...] [--all] [--who a,b] [--pose p,q] [--jobs 4] [--keep]
 
 --all: every character in every posture (cast.all_outputs(): about 500 models, a few minutes), the library the
-Director's People tab swaps between. Only the listed cast (cast.OUTPUTS) is entered in tools/props/manifest.json.
+Director's People tab swaps between; --who and --pose narrow it to some characters or postures. Only the listed cast (cast.OUTPUTS) is entered in tools/props/manifest.json.
 
 For each output: Blender + MPFB makes a posed static GLB (build_people.py), its
 materials get the right alpha mode, gltf-transform compresses it into
@@ -28,9 +28,13 @@ jobs = int(args[args.index('--jobs') + 1]) if '--jobs' in args else 4
 keep = '--keep' in args
 preview = args[args.index('--preview') + 1] if '--preview' in args else None   # folder for two Cycles views per person
 no_manifest = '--no-manifest' in args                      # built on request: leave tools/props/manifest.json alone
-only = [a for i, a in enumerate(args) if not a.startswith('--') and (i == 0 or args[i - 1] not in ('--jobs', '--preview'))]
+who = args[args.index('--who') + 1].split(',') if '--who' in args else None     # with --all: only these characters
+poses = args[args.index('--pose') + 1].split(',') if '--pose' in args else None   # with --all: only these postures
+only = [a for i, a in enumerate(args) if not a.startswith('--') and (i == 0 or args[i - 1] not in ('--jobs', '--preview', '--who', '--pose'))]
 gltf_transform = os.path.join(ROOT, 'node_modules/.bin/gltf-transform')
 outputs = [cast.output(i) for i in only] if only else cast.all_outputs() if '--all' in args else list(cast.OUTPUTS)
+if who: outputs = [o for o in outputs if o['character'] in who]
+if poses: outputs = [o for o in outputs if o['pose'] in poses]
 listed = {o['id'] for o in cast.OUTPUTS}      # an id nobody listed: people-<character>-<pose>
 work = os.path.join(tempfile.gettempdir(), 'ergoflex-people'); os.makedirs(work, exist_ok=True)
 

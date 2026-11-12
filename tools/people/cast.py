@@ -21,6 +21,21 @@ def race(caucasian=0., african=0., asian=0.):
     return {'caucasian': caucasian / total, 'african': african / total, 'asian': asian / total}
 
 
+# The role characters' outfits and the postures built of each (stage 1: the desk family and the everyday ones).
+POLICE_NAVY, SECURITY_BLACK = (.055, .075, .15), (.04, .04, .045)
+SCRUBS_TEAL, SCRUBS_BLUE, SCRUBS_PLUM = (.08, .42, .44), (.13, .27, .5), (.38, .13, .32)
+POLICE_GEAR = [('belt', {'items': [('keys', 42), ('radio', 118), ('cuffs', 172), ('light', -122), ('pouch', -52)]}), ('badge', {}), ('nameplate', {}), ('shoulder_patch', {}), ('shoulder_mic', {})]
+SECURITY_GEAR = [('belt', {'items': [('radio', 118), ('pouch', -55)], 'width': .045}), ('chest_patch', {}), ('back_text', {}), ('shoulder_patch', {'color': (.85, .85, .82), 'field': (.75, .12, .1)}), ('lanyard', {'color': (.85, .7, .1)})]
+EVERYDAY = ['sit-type', 'stand-low', 'stand-type', 'stand-wait', 'stand-talk', 'stand-phone', 'stand-present', 'stand-work', 'walk', 'sit-write', 'sit-listen', 'sit-laptop', 'sit-read']
+POLICE_POSTURES = EVERYDAY
+NURSE_POSTURES = EVERYDAY
+DOCTOR_POSTURES = EVERYDAY
+LAB_POSTURES = EVERYDAY
+IT_POSTURES = EVERYDAY
+CLERK_POSTURES = EVERYDAY
+STUDENT_POSTURES = EVERYDAY + ['sit-raise']
+PATIENT_POSTURES = ['sit-read', 'sit-listen', 'stand-wait', 'walk']
+
 CHARACTERS = {
     'maya': {
         'name': 'Maya', 'phenotype': {'gender': .0, 'age': .42, 'muscle': .45, 'weight': .5, 'height': .61, 'proportions': .6, 'race': race(.55, .2, .25)},
@@ -180,6 +195,172 @@ CHARACTERS = {
         'skin': 'young_caucasian_female', 'eyes': 'brown', 'hair': 'braid01', 'hair_tint': (.16, .1, .06), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
         'tint': {'toigo_basic_tucked_t-shirt': (.3, .6, .5), 'toigo_wool_pants': (.45, .25, .3)},
+    },
+    # ---- the institutional rooms' own people: police, security, hospital, laboratory, IT, government, middle school.
+    # 'wear': garments made from the base mesh (garments.py: white coat, scrubs top, gown, socks, gloves);
+    # 'gear': what the role wears on the body (worn.py: duty belt, badge, patches, radio, lanyard, stethoscope);
+    # 'tuck': tops that end under the belt; 'carry': what they hold in one posture; 'postures': what is built of them.
+    'reyes': {
+        'name': 'Officer Reyes', 'role': 'police officer', 'phenotype': {'gender': .0, 'age': .57, 'muscle': .6, 'weight': .5, 'height': .55, 'proportions': .6, 'race': race(.6, .15, .25)},
+        'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'rehmanpolanski_hair_bun_brown', 'hair_tint': (.07, .045, .03), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
+        'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes03'], 'tuck': ['namuhekam_male_polo_shirt'],
+        'tint': {'namuhekam_male_polo_shirt': POLICE_NAVY, 'toigo_wool_pants': POLICE_NAVY, 'shoes03': (.03, .03, .03)}, 'gear': POLICE_GEAR, 'postures': POLICE_POSTURES,
+    },
+    'cole': {
+        'name': 'Officer Cole', 'role': 'police officer', 'phenotype': {'gender': 1., 'age': .52, 'muscle': .65, 'weight': .5, 'height': 0.52, 'proportions': .62, 'race': race(.05, .9, .05)},
+        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short02', 'hair_tint': (.04, .035, .03), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
+        'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes04'], 'tuck': ['namuhekam_male_polo_shirt'],
+        'tint': {'namuhekam_male_polo_shirt': POLICE_NAVY, 'toigo_wool_pants': POLICE_NAVY, 'shoes04': (.03, .03, .03)}, 'gear': POLICE_GEAR, 'postures': POLICE_POSTURES,
+    },
+    'brandt': {
+        'name': 'Sergeant Brandt', 'role': 'police sergeant', 'phenotype': {'gender': 1., 'age': .73, 'muscle': .55, 'weight': .62, 'height': .54, 'proportions': .5, 'race': race(1, 0, 0)},
+        'skin': 'middleage_caucasian_male', 'eyes': 'blue', 'hair': 'short01', 'hair_tint': (.42, .41, .4), 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes01',
+        'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes03'], 'tuck': ['namuhekam_male_polo_shirt'],
+        'tint': {'namuhekam_male_polo_shirt': POLICE_NAVY, 'toigo_wool_pants': POLICE_NAVY, 'shoes03': (.03, .03, .03)},
+        'gear': [g if g[0] != 'shoulder_patch' else ('shoulder_patch', {'chevrons': 3}) for g in POLICE_GEAR], 'postures': POLICE_POSTURES,
+    },
+    'tran': {
+        'name': 'Detective Tran', 'role': 'detective', 'phenotype': {'gender': .0, 'age': .655, 'muscle': .5, 'weight': .48, 'height': 0.535, 'proportions': .55, 'race': race(.05, 0, .95)},
+        'skin': 'middleage_asian_female', 'eyes': 'brown', 'hair': 'toigo_blunt_bob', 'hair_tint': (.05, .045, .045), 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
+        'clothes': ['toigo_female_double-breasted_suit', 'shoes03'], 'tint': {'shoes03': (.03, .03, .03)},
+        'gear': [('hip_badge', {}), ('lanyard', {'color': (.04, .04, .05), 'stripe': (.1, .2, .5)})], 'postures': POLICE_POSTURES,
+    },
+    'okoye': {
+        'name': 'Okoye', 'role': 'security officer', 'phenotype': {'gender': .0, 'age': .57, 'muscle': .6, 'weight': .55, 'height': 0.56, 'proportions': .6, 'race': race(.05, .9, .05)},
+        'skin': 'young_african_female', 'eyes': 'brown', 'hair': 'braid01', 'hair_tint': (.04, .035, .03), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
+        'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes04'], 'tuck': ['namuhekam_male_polo_shirt'],
+        'tint': {'namuhekam_male_polo_shirt': SECURITY_BLACK, 'toigo_wool_pants': (.1, .1, .11), 'shoes04': (.03, .03, .03)}, 'gear': SECURITY_GEAR, 'postures': POLICE_POSTURES,
+    },
+    'walsh': {
+        'name': 'Walsh', 'role': 'security officer', 'phenotype': {'gender': 1., 'age': .66, 'muscle': .6, 'weight': .6, 'height': 0.56, 'proportions': .55, 'race': race(1, 0, 0)},
+        'skin': 'middleage_caucasian_male', 'eyes': 'green', 'hair': 'short01', 'hair_tint': (.3, .2, .12), 'eyebrows': 'eyebrow008', 'eyelashes': 'eyelashes01',
+        'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes03'], 'tuck': ['namuhekam_male_polo_shirt'],
+        'tint': {'namuhekam_male_polo_shirt': SECURITY_BLACK, 'toigo_wool_pants': (.1, .1, .11), 'shoes03': (.03, .03, .03)}, 'gear': SECURITY_GEAR, 'postures': POLICE_POSTURES,
+    },
+    'nina': {
+        'name': 'Nina', 'role': 'nurse', 'phenotype': {'gender': .0, 'age': .51, 'muscle': .45, 'weight': .47, 'height': .56, 'proportions': .6, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_female', 'eyes': 'blue', 'hair': 'ponytail01', 'hair_tint': (.55, .4, .22), 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
+        'wear': [('scrubs', {'color': SCRUBS_TEAL})], 'clothes': ['toigo_wool_pants', 'shoes05'], 'tint': {'toigo_wool_pants': SCRUBS_TEAL},
+        'gear': [('stethoscope', {}), ('id_badge', {'low': True})], 'postures': NURSE_POSTURES,
+    },
+    'mateo': {
+        'name': 'Mateo', 'role': 'nurse', 'phenotype': {'gender': 1., 'age': .57, 'muscle': .55, 'weight': .55, 'height': .5, 'proportions': .55, 'race': race(.6, .15, .25)},
+        'skin': 'young_caucasian_male2', 'eyes': 'brown', 'hair': 'short04', 'hair_tint': (.06, .045, .035), 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes01',
+        'wear': [('scrubs', {'color': SCRUBS_BLUE})], 'clothes': ['toigo_wool_pants', 'shoes06'], 'tint': {'toigo_wool_pants': SCRUBS_BLUE},
+        'gear': [('id_badge', {})], 'postures': NURSE_POSTURES,
+    },
+    'amara': {
+        'name': 'Amara', 'role': 'charge nurse', 'phenotype': {'gender': .0, 'age': .73, 'muscle': .45, 'weight': .62, 'height': .48, 'proportions': .5, 'race': race(.05, .95, 0)},
+        'skin': 'middleage_african_female', 'eyes': 'brown', 'hair': 'culturalibre_hair_02', 'hair_tint': (.1, .09, .09), 'eyebrows': 'eyebrow004', 'eyelashes': 'eyelashes01',
+        'wear': [('scrubs', {'color': SCRUBS_PLUM})], 'clothes': ['toigo_wool_pants', 'shoes05', 'spamrakuen_tbm_glasses_frames_01'], 'tint': {'toigo_wool_pants': SCRUBS_PLUM},
+        'gear': [('lanyard', {'color': (.75, .75, .78), 'stripe': (.45, .12, .35)})], 'postures': NURSE_POSTURES,
+    },
+    'patel': {
+        'name': 'Dr Patel', 'role': 'doctor', 'phenotype': {'gender': .0, 'age': .655, 'muscle': .45, 'weight': .5, 'height': .52, 'proportions': .55, 'race': race(.4, .15, .45)},
+        'skin': 'middleage_asian_female', 'eyes': 'brown', 'hair': 'rehmanpolanski_hair_bun_brown', 'hair_tint': (.05, .04, .035), 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes02',
+        'wear': [('coat', {})], 'clothes': ['joepal_crude_t-shirt_female', 'toigo_wool_pants', 'toigo_flats'], 'tuck': ['joepal_crude_t-shirt_female'],
+        'tint': {'joepal_crude_t-shirt_female': (.2, .5, .55), 'toigo_wool_pants': (.12, .13, .17), 'toigo_flats': (.05, .05, .05)},
+        'gear': [('stethoscope', {}), ('id_badge', {})], 'postures': DOCTOR_POSTURES,
+    },
+    'stone': {
+        'name': 'Dr Stone', 'role': 'doctor', 'phenotype': {'gender': 1., 'age': .8, 'muscle': .45, 'weight': .55, 'height': .56, 'proportions': .5, 'race': race(1, 0, 0)},
+        'skin': 'old_caucasian_male', 'eyes': 'grey', 'hair': 'short03', 'hair_tint': (.62, .62, .62), 'eyebrows': 'eyebrow010', 'eyelashes': 'eyelashes01',
+        'wear': [('coat', {})], 'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes03', 'spamrakuen_tbm_glasses_frames_01'], 'tuck': ['namuhekam_male_polo_shirt'],
+        'tint': {'namuhekam_male_polo_shirt': (.55, .68, .8), 'toigo_wool_pants': (.16, .16, .18), 'shoes03': (.05, .04, .04)},
+        'gear': [('stethoscope', {}), ('id_badge', {})], 'postures': DOCTOR_POSTURES,
+    },
+    'walter': {
+        'name': 'Walter', 'role': 'patient', 'phenotype': {'gender': 1., 'age': .88, 'muscle': .35, 'weight': .5, 'height': .47, 'proportions': .45, 'race': race(.1, 0, .9)},
+        'skin': 'old_asian_male', 'eyes': 'brown', 'hair': 'short01', 'hair_tint': (.7, .7, .7), 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes01',
+        'wear': [('gown', {}), ('socks', {'color': (.55, .57, .6)})], 'clothes': [], 'postures': PATIENT_POSTURES,
+    },
+    'june': {
+        'name': 'June', 'role': 'patient', 'phenotype': {'gender': .0, 'age': .57, 'muscle': .4, 'weight': .5, 'height': 0.54, 'proportions': .55, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_female', 'eyes': 'green', 'hair': 'long01', 'hair_tint': (.3, .15, .08), 'eyebrows': 'eyebrow011', 'eyelashes': 'eyelashes03',
+        'wear': [('gown', {'color': (.7, .82, .72), 'print_color': (.42, .6, .5)})], 'clothes': [], 'postures': PATIENT_POSTURES,
+    },
+    'vega': {
+        'name': 'Vega', 'role': 'lab scientist', 'phenotype': {'gender': .0, 'age': .57, 'muscle': .5, 'weight': .48, 'height': .5, 'proportions': .6, 'race': race(.6, .2, .2)},
+        'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'elvs_reverse_french_braid_bun', 'hair_tint': (.09, .06, .045), 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes03',
+        'wear': [('coat', {'hem': .03}), ('gloves', {})], 'clothes': ['joepal_crude_t-shirt_female', 'toigo_wool_pants', 'shoes04', 'kwnet_at_optical_glasses'], 'frames': ['kwnet_at_optical_glasses'], 'tuck': ['joepal_crude_t-shirt_female'],
+        'tint': {'joepal_crude_t-shirt_female': (.6, .25, .35), 'toigo_wool_pants': (.15, .16, .2)}, 'gear': [('id_badge', {})], 'postures': LAB_POSTURES,
+    },
+    'yusuf': {
+        'name': 'Yusuf', 'role': 'lab scientist', 'phenotype': {'gender': 1., 'age': .655, 'muscle': .5, 'weight': .58, 'height': 0.52, 'proportions': .5, 'race': race(.6, .25, .15)},
+        'skin': 'middleage_caucasian_male', 'eyes': 'brown', 'hair': 'short02', 'hair_tint': (.05, .045, .04), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
+        'wear': [('coat', {'hem': .03}), ('gloves', {'color': (.42, .28, .62)})], 'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes03', 'kwnet_at_optical_glasses'], 'frames': ['kwnet_at_optical_glasses'], 'tuck': ['namuhekam_male_polo_shirt'],
+        'tint': {'namuhekam_male_polo_shirt': (.3, .36, .3), 'cortu_cargo_pants': (.3, .28, .25)}, 'gear': [('id_badge', {})], 'postures': LAB_POSTURES,
+    },
+    'chen': {
+        'name': 'Chen', 'role': 'lab technician', 'phenotype': {'gender': 1., 'age': .51, 'muscle': .45, 'weight': .45, 'height': 0.54, 'proportions': .55, 'race': race(.05, 0, .95)},
+        'skin': 'young_asian_male', 'eyes': 'brown', 'hair': 'cortu_short_messy_hair', 'hair_tint': (.05, .045, .045), 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
+        'wear': [('coat', {'hem': .03}), ('gloves', {})], 'clothes': ['elvs_crude_t-shirt_male', 'toigo_wool_pants', 'shoes06', 'kwnet_at_optical_glasses'], 'frames': ['kwnet_at_optical_glasses'], 'tuck': ['elvs_crude_t-shirt_male'],
+        'tint': {'elvs_crude_t-shirt_male': (.36, .4, .46), 'toigo_wool_pants': (.2, .22, .3)}, 'gear': [('id_badge', {})], 'postures': LAB_POSTURES,
+    },
+    'devi': {
+        'name': 'Devi', 'role': 'IT technician', 'phenotype': {'gender': .0, 'age': .51, 'muscle': .45, 'weight': .46, 'height': .5, 'proportions': .6, 'race': race(.4, .15, .45)},
+        'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'elvs_double_mh_braid', 'hair_tint': (.045, .035, .03), 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes02',
+        'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes06'], 'tint': {'namuhekam_male_polo_shirt': (.08, .32, .42), 'cortu_cargo_pants': (.14, .15, .17)},
+        'gear': [('lanyard', {'color': (.8, .15, .1)})], 'postures': IT_POSTURES,
+    },
+    'tomas': {
+        'name': 'Tomas', 'role': 'IT technician', 'phenotype': {'gender': 1., 'age': .57, 'muscle': .55, 'weight': .56, 'height': .57, 'proportions': .55, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_male2', 'eyes': 'blue', 'hair': 'culturalibre_hair_05', 'eyebrows': 'eyebrow008', 'eyelashes': 'eyelashes01',
+        'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes04'], 'tuck': ['namuhekam_male_polo_shirt'],
+        'tint': {'namuhekam_male_polo_shirt': (.2, .22, .26), 'toigo_wool_pants': (.42, .38, .3)},
+        'gear': [('belt', {'color': (.1, .08, .06), 'items': [('tools', -62)], 'width': .04}), ('lanyard', {'color': (.15, .5, .25)})], 'postures': IT_POSTURES,
+    },
+    'helen': {
+        'name': 'Helen', 'role': 'government clerk', 'phenotype': {'gender': .0, 'age': .73, 'muscle': .4, 'weight': .58, 'height': .48, 'proportions': .5, 'race': race(1, 0, 0)},
+        'skin': 'middleage_caucasian_female', 'eyes': 'bluegreen', 'hair': 'toigo_curled_under_bob', 'hair_tint': (.5, .42, .34), 'eyebrows': 'eyebrow004', 'eyelashes': 'eyelashes01',
+        'clothes': ['female_elegantsuit01', 'toigo_flats', 'spamrakuen_tbm_glasses_frames_01'], 'tint': {'toigo_flats': (.05, .05, .05)},
+        'gear': [('lanyard', {'color': (.1, .25, .6)})], 'postures': CLERK_POSTURES,
+    },
+    'darius': {
+        'name': 'Darius', 'role': 'government clerk', 'phenotype': {'gender': 1., 'age': .57, 'muscle': .5, 'weight': .52, 'height': 0.53, 'proportions': .6, 'race': race(.1, .85, .05)},
+        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short04', 'hair_tint': (.04, .035, .03), 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
+        'clothes': ['male_casualsuit01', 'shoes03'], 'tint': {'male_casualsuit01': (.5, .55, .62)},
+        'gear': [('lanyard', {'color': (.1, .25, .6)})], 'postures': CLERK_POSTURES,
+    },
+    'mei': {
+        'name': 'Mei', 'role': 'government clerk', 'phenotype': {'gender': .0, 'age': .51, 'muscle': .45, 'weight': .44, 'height': 0.55, 'proportions': .6, 'race': race(.05, 0, .95)},
+        'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'toigo_inverted_bob', 'hair_tint': (.05, .045, .045), 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
+        'clothes': ['toigo_female_suit', 'toigo_ballet_flats'], 'gear': [('lanyard', {'color': (.1, .25, .6)})], 'postures': CLERK_POSTURES,
+    },
+    # Middle-school students, 12 to 13 (MakeHuman age .23 to .25), in the adults' postures on the school's furniture.
+    'aiden': {
+        'name': 'Aiden', 'role': 'student', 'phenotype': {'gender': 1., 'age': .25, 'muscle': .5, 'weight': .48, 'height': 0.555, 'proportions': .5, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_male', 'eyes': 'blue', 'hair': 'cortu_short_messy_hair', 'hair_tint': (.4, .28, .16), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
+        'clothes': ['male_casualsuit02', 'shoes02'], 'carry': {'walk': [('backpack', {'color': (.5, .12, .1)})]}, 'postures': STUDENT_POSTURES,
+    },
+    'bella': {
+        'name': 'Bella', 'role': 'student', 'phenotype': {'gender': .0, 'age': .23, 'muscle': .45, 'weight': .48, 'height': 0.595, 'proportions': .5, 'race': race(.5, .3, .2)},
+        'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'ponytail01', 'hair_tint': (.14, .09, .06), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
+        'clothes': ['toigo_fisherman_sweater', 'cortu_cargo_pants', 'shoes05'], 'tint': {'toigo_fisherman_sweater': (.85, .45, .4), 'cortu_cargo_pants': (.22, .3, .45)},
+        'carry': {'walk': [('backpack', {'color': (.25, .45, .5)})]}, 'postures': STUDENT_POSTURES,
+    },
+    'carlos': {
+        'name': 'Carlos', 'role': 'student', 'phenotype': {'gender': 1., 'age': .24, 'muscle': .5, 'weight': .55, 'height': 0.555, 'proportions': .5, 'race': race(.6, .15, .25)},
+        'skin': 'young_caucasian_male2', 'eyes': 'brown', 'hair': 'short04', 'hair_tint': (.05, .04, .03), 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes01',
+        'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes06'], 'tint': {'namuhekam_male_polo_shirt': (.2, .5, .25), 'cortu_cargo_pants': (.3, .3, .34)},
+        'carry': {'walk': [('backpack', {})]}, 'postures': STUDENT_POSTURES,
+    },
+    'dina': {
+        'name': 'Dina', 'role': 'student', 'phenotype': {'gender': .0, 'age': .25, 'muscle': .45, 'weight': .45, 'height': 0.62, 'proportions': .5, 'race': race(.3, .1, .6)},
+        'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'toigo_blunt_bob_with_bangs', 'hair_tint': (.05, .04, .04), 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
+        'clothes': ['toigo_fisherman_sweater', 'cortu_cargo_pants', 'shoes04', 'spamrakuen_tbm_glasses_frames_01'], 'tint': {'toigo_fisherman_sweater': (.6, .5, .78), 'cortu_cargo_pants': (.2, .2, .24)},
+        'carry': {'walk': [('backpack', {'color': (.55, .3, .5)})]}, 'postures': STUDENT_POSTURES,
+    },
+    'emeka': {
+        'name': 'Emeka', 'role': 'student', 'phenotype': {'gender': 1., 'age': .23, 'muscle': .5, 'weight': .5, 'height': 0.52, 'proportions': .5, 'race': race(.05, .95, 0)},
+        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short02', 'hair_tint': (.04, .035, .03), 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
+        'clothes': ['elvs_crude_t-shirt_male', 'cortu_cargo_pants', 'shoes05'], 'tint': {'elvs_crude_t-shirt_male': (.9, .6, .15), 'cortu_cargo_pants': (.16, .2, .32)},
+        'carry': {'walk': [('backpack', {'color': (.1, .1, .12)})]}, 'postures': STUDENT_POSTURES,
+    },
+    'fern': {
+        'name': 'Fern', 'role': 'student', 'phenotype': {'gender': .0, 'age': .24, 'muscle': .45, 'weight': .47, 'height': 0.6, 'proportions': .5, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_female', 'eyes': 'green', 'hair': 'braid01', 'hair_tint': (.5, .22, .1), 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
+        'clothes': ['female_casualsuit01', 'shoes06'], 'carry': {'walk': [('backpack', {'color': (.2, .5, .3)})]}, 'postures': STUDENT_POSTURES,
     },
 }
 CHILDREN = ('tess', 'milo', 'lila', 'ravi', 'theo', 'ines', 'nora', 'jun')
@@ -698,6 +879,9 @@ DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
 CHILD_POSES = {p for p in POSE_INFO if p.startswith('kid-')}
 def suits(who, pose): return (who in CHILDREN) == (pose in CHILD_POSES)
+# What the library holds of a character: everything that suits them, or, for a role character, their own list
+# ('postures'). Any other posture is still built on request (output()).
+def listed(who, pose): return pose in CHARACTERS[who]['postures'] if 'postures' in CHARACTERS[who] else True
 
 
 def output(model_id):
@@ -728,7 +912,7 @@ def all_outputs():
     have = {(o['character'], o['pose'], o.get('height')) for o in OUTPUTS}; ids = {o['id'] for o in OUTPUTS}; out = list(OUTPUTS)
     for who in CHARACTERS:
         for pose, (_label, _stance, where, _seat, _held) in POSE_INFO.items():
-            if not suits(who, pose): continue
+            if not suits(who, pose) or not listed(who, pose): continue
             for h in (DESK_HEIGHTS[pose] if where == 'desk' else (None,)):
                 if (who, pose, h) in have: continue
                 inches = None if h is None else str(h).replace('.', '_')
