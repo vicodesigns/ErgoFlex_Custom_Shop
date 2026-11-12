@@ -27,6 +27,12 @@ early or move without the Gaming desk's wide monitor changing. The edit follows 
 and holds each time that desk appears. While another desk is on stage a selected prop has no gizmo, and its
 inspector says which desk it belongs to.
 
+**Items the desk puts away.** A desk item the film does not time still leaves when the desk's auto-stow hides it: the
+artist desk's easel and painter shelf once its tilt falls below 50°, the architect desk's drafting kit once it rises to
+50°. Its bar ends there (`experience/prop-stow-window.mjs`, read from the chapter's tilt moves), not at the end of the
+desk's stretch; the tooltip says so. An edit with its own time on screen replaces that window. Hardware that stays
+(monitor arm, task light, trays) keeps the whole stretch.
+
 **Shelves.** An added prop can sit on the desktop, the top shelf, the lower shelf or the base shelf ("Put it on" in
 its inspector, or "Place on a surface…" and a click on the shelf). It rides that surface through lift and tilt.
 

@@ -1,6 +1,8 @@
 import {noteStudioValue} from './studio-sync.mjs';
 import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
 import {stackRows} from './lane-rows.mjs';
+import {stowWindow,EASEL_ANGLE} from './prop-stow-window.mjs';
+import {legacyMotionToClips,sampleClipMotion} from './desk-clips.mjs';
 import {createPropLibrary,deskItem} from './prop-library.mjs';
 import {groupPanelHtml,groupCentreDelta,pickMode} from './prop-selection.mjs';
 import {dropToSurface} from './drop-to-surface.mjs';
@@ -719,7 +721,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   try{for(const [k,v] of Object.entries(JSON.parse(sessionStorage.getItem('directorPropItems')||'{}')))if(Array.isArray(v))seen.set(k,v);}catch{}
   function learn(){
     if(!tools||!three()?.scene)return;const d=deskNow();if(versions().length&&!d)return;
-    const list=items().filter(i=>i.desk&&!i.obj?.userData?.directorAdd&&(!i.hidden||editOfKey(i.key))).map(i=>({key:i.key,target:i.target,name:i.name}));
+    const list=items().filter(i=>i.desk&&!i.obj?.userData?.directorAdd&&(!i.hidden||editOfKey(i.key))).map(i=>({key:i.key,target:i.target,name:i.name,id:`${i.obj?.userData?.accessoryId||''} ${i.obj?.userData?.propId||''} ${i.obj?.name||''}`.trim()}));
     const k=seenKey(d?.preset),was=JSON.stringify(seen.get(k)||null);if(JSON.stringify(list)===was)return false;
     seen.set(k,list);try{sessionStorage.setItem('directorPropItems',JSON.stringify(Object.fromEntries(seen)));}catch{}
     return true;
@@ -728,11 +730,17 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   let laneList=[],laneRows=1,barDrag=null,barSuppress=0,wanted=null;const ROW=17,MAX_ROWS=9;
   function laneItems(){
     const T=seconds()||1,vs=versions(),out=[],chapter={t0:0,lo:0,hi:T},all=edits();
-    const push=(span,row)=>{const s=onScreen(row.e,span);out.push({id:row.key+'|'+(span.n||''),...row,span,start:s.from,end:Math.max(s.from+.01,s.to),timed:s.timed,fadeIn:s.fadeIn,fadeOut:s.fadeOut});};
+    let tiltAt=null;
+    try{const sh=shot(),m=sh?.motion?legacyMotionToClips(sh.motion,sh.seconds):null;if(m)tiltAt=t=>sampleClipMotion(m,t).tilt;}catch{}
+    // A film item the desk puts away (easel and painter shelf under 50 deg of tilt): its bar ends where the stow hides it.
+    const stowed=(row,span)=>{if(!tiltAt||!span.desk||row.e?.show)return null;
+      const text=`${row.id||''} ${row.name||''} ${row.target?.match||''} ${row.target?.path||''}`.replace(/\\/g,'');
+      try{return stowWindow(text,span.desk,tiltAt,span.lo,span.hi);}catch{return null;}};
+    const push=(span,row)=>{const s=onScreen(row.e,span),nat=stowed(row,span),from=nat?nat.from:s.from,to=nat?nat.to:s.to;out.push({id:row.key+'|'+(span.n||''),...row,span,start:from,end:Math.max(from+.01,to),timed:s.timed,fadeIn:s.fadeIn,fadeOut:s.fadeOut,stowed:!!nat});};
     const spans=vs.length?vs.map(v=>({t0:v.start,lo:v.from,hi:Math.min(T,v.to),n:v.n,label:v.label,desk:v.preset})):[chapter];
     for(const span of spans){
       const rows=new Map(),known=seen.get(seenKey(span.desk));
-      for(const k of known||[])rows.set(k.key,{key:k.key,target:k.target,name:k.name,e:editOfKey(k.key)});
+      for(const k of known||[])rows.set(k.key,{key:k.key,target:k.target,name:k.name,id:k.id,e:editOfKey(k.key)});
       for(const e of all){if(vs.length&&e.desk!==span.desk)continue;const k=propKey(e);if(!rows.has(k))rows.set(k,{key:k,target:propTarget(e),name:laneName(e),e});}
       for(const r of rows.values())push(span,r);
       if(vs.length&&!known)out.push({id:'ghost|'+span.n,ghost:true,span,start:span.lo,end:span.hi,name:`Desk ${span.n} · ${span.label}: click to see its items`});
@@ -749,7 +757,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const e=it.e,x=it.start/T*100,w=Math.max(.5,(it.end-it.start)/T*100),top=1+layers.row.get(it.id)*ROW;
       if(it.ghost)return `<button type="button" class="prop-bar ghost" data-action="pp-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px" title="Go to this desk: its items are listed here once it has been on stage">${escape(it.name)}</button>`;
       const hiddenBar=e?.hide===true,added=isAddEdit(e),fi=it.fadeIn>0?Math.min(100,it.fadeIn/(it.end-it.start)*100):0,fo=it.fadeOut>0?Math.min(100,it.fadeOut/(it.end-it.start)*100):0;
-      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
+      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''}${it.stowed?` · the desk puts it away once its tilt crosses ${EASEL_ANGLE}°`:''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
       return `<button type="button" class="prop-bar ${e?'prop-chip':'film'} ${hiddenBar?'prop-hidden':''} ${added?'prop-added':''} ${it.timed?'timed':''} ${isSel(it.key)?'selected':''}" data-action="pp-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px;--fade-in:${fi}%;--fade-out:${fo}%" title="${escape(tip)}">${added?'<b aria-label="added">+</b>':''}${escape(it.name)}</button>`;}).join('');
   }
   const laneHeight=()=>Math.min(MAX_ROWS,Math.max(2,laneRows))*ROW+4;
