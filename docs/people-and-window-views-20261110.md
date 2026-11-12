@@ -417,6 +417,46 @@ What a character can now say besides the MakeHuman phenotype (all in `build_peop
   a whole face is under cloth or has come through it (no notches of missing neck along a collar). People built before
   this round do not have the key and build as they did.
 
+## A better look for the people who were already there (12 November, round three, part B)
+
+Every character now builds with `look: 3` (set for all at the end of the character list in `cast.py`). Ids, postures,
+sex, age, heritage, build and height are as they were. What changed:
+
+- **Faces.** The people of rounds one and two were MakeHuman's average face for their sex, age and heritage, so several
+  were near twins. `own_face(name, age)` gives each a head shape, one trait each for the nose (two), cheeks, chin, mouth,
+  eyes or brows, ears or forehead, and one small asymmetry, picked by the name and kept moderate; from the fifties on,
+  bags under the eyes and the corners of the mouth, from the seventies a fuller neck. A `face` written on a character
+  replaces it (Sergeant Brandt has one).
+- **Eyes.** The eye texture is reworked per model (`eye_image`): the white is shaded toward the lids and slightly warm,
+  the iris has a dark rim, the reddish "brown" iris is brown; the eyeball is less glossy (roughness .3, was .12).
+- **Brows** keep more of their soft edge (alpha cut-off .3, was .4: they were drawn lines) and take the hair's colour
+  (`brow_tint` where the hair keeps its own texture).
+- **Hair.** A hair colour (`hair_tint`) no longer flattens the texture to one tone (`hair_image`): strands stay darker
+  and lighter than the colour, the lightest catch the light, and black is a tenth grey, not zero. Two hair assets came
+  with object-space normal maps, which glTF reads as tangent-space: the messy short hair (Sam, Chen, Aiden) was grey
+  patches. Those maps are dropped.
+- **Skin** is less glossy (roughness .7, was .58). Women and girls on the pale skin sets get a little warmth; people
+  whose heritage lies between the pale and the dark sets get a `skin_tone` (Omar, Priya, Leo, Sofia, Rosa, Officer
+  Reyes, Dr Patel, Vega, Yusuf, Devi, Mateo, Bella, Carlos, Dina, Ravi, Ines).
+- **Clothes.** The tucked T-shirt (Maya, Zoe, Lin, Rosa, Ava, Sofia, Tess, Milo, Ines) was exported with its height
+  map as a normal map and came out nearly black whatever its colour: it now has the colour `cast.py` gives it. The
+  MakeHuman logo is off the chest of Aiden's and Fern's T-shirts. Collars have no notches of missing neck, and the
+  flecks of trouser along the hem of a sweater or a T-shirt are gone (Grace, Mia, Nora, Emeka): a corner of skin or
+  of an under-garment that pokes through the layer over it is tucked back under it (`cull_under(..., tuck=True)`),
+  where a whole face used to be removed or left; the hands are never touched. Kai and Mia wear
+  jeans, Theo a T-shirt and jeans; Noah, Sofia, Carlos and Ines have a stripe woven into their top (`stripes`:
+  bands by height on the body as it stands, so they run level across seams). Darius' tint, which never reached his
+  denim, is gone.
+- **Hair styles.** Where five shared one: Eli (wavy), Cole, Mateo, Darius, Emeka, Carlos, Bella, Dina, Fern.
+- **In bed.** `people-grace-lie-bed` and `people-ben-lie-bed` wear a gown (`cast.VARIANTS`: an outfit of its own
+  for one model).
+
+`_ROUND3` in `cast.py` lists the per-person changes: remove a line and that person is dressed and combed as before.
+Before and after, same camera: `node tools/people/before-after.mjs --before <folder with the old assets/props>
+--after . --ids people-maya-stand-wait,... --out sheet.png` (three.js in headless Chrome, as the Studio draws them;
+each model whole at room distance and close on the face, old next to new). The old models come out of git:
+`git show <commit>:assets/props/<id>.glb`.
+
 ## Six more children (12 November, round three, part C)
 
 | Child | Age | Height |

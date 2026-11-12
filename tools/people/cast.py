@@ -396,7 +396,7 @@ CHARACTERS = {
     },
     'raj': {
         'name': 'Raj', 'phenotype': {'gender': 1., 'age': .73, 'muscle': .45, 'weight': .6, 'height': .43, 'proportions': .5, 'race': race(.45, .15, .4)},
-        'skin': 'middleage_asian_male', 'skin_tone': (.8, .66, .55), 'eyes': 'brown', 'hair': 'short01', 'hair_tint': (.2, .19, .185), 'eyebrows': 'eyebrow010', 'eyelashes': 'eyelashes01',
+        'skin': 'middleage_asian_male', 'skin_tone': (.82, .7, .61), 'eyes': 'brown', 'hair': 'short01', 'hair_tint': (.2, .19, .185), 'eyebrows': 'eyebrow010', 'eyelashes': 'eyelashes01',
         'face': {'head-rectangular': .5, 'nose-hump-incr': .5, 'nose-scale-horiz-incr': .3, 'nose-point-down': .4, 'lr-eye-bag-incr': .6, 'eyebrows-trans-down': .3, 'neck-double-incr': .3, 'mouth-angles-down': .2, 'chin-width-incr': .2},
         'clothes': ['male_elegantsuit01', 'shoes03', 'frankyaye_glasses_library_male'], 'frames': ['frankyaye_glasses_library_male'], 'tint': {'shoes03': (.04, .035, .03)}, 'look': 3, 'postures': CROWD,
     },
@@ -419,7 +419,7 @@ CHARACTERS = {
         'name': 'Ivy', 'phenotype': {'gender': .0, 'age': .77, 'muscle': .4, 'weight': .6, 'height': .45, 'proportions': .5, 'race': race(.05, .95, 0)},
         'skin': 'middleage_african_female', 'eyes': 'brown', 'hair': 'rehmanpolanski_hair_bun_brown', 'hair_tint': (.42, .41, .4), 'eyebrows': 'eyebrow004', 'eyelashes': 'eyelashes01',
         'face': {'head-round': .4, 'lr-cheek-volume-incr': .5, 'nose-width2-incr': .3, 'mouth-scale-horiz-incr': .3, 'lr-eye-bag-incr': .4, 'chin-height-decr': .3, 'neck-double-incr': .25, 'mouth-angles-up': .3},
-        'clothes': ['toigo_female_suit_2', 'toigo_flats', 'spamrakuen_sagerfrogs_glasses_01'], 'frames': ['spamrakuen_sagerfrogs_glasses_01'],
+        'clothes': ['toigo_female_suit_2', 'toigo_flats', 'kwnet_at_optical_glasses'], 'frames': ['kwnet_at_optical_glasses'],
         'dye': {'toigo_female_suit_2': (.3, .19, .33)}, 'tint': {'toigo_flats': (.06, .05, .05)}, 'look': 3, 'postures': CROWD,
     },
     'luca': {
@@ -431,14 +431,14 @@ CHARACTERS = {
     },
     'bruno': {
         'name': 'Bruno', 'phenotype': {'gender': 1., 'age': .68, 'muscle': .5, 'weight': .9, 'height': .48, 'proportions': .45, 'race': race(.65, .15, .2)},
-        'skin': 'middleage_caucasian_male', 'skin_tone': (.86, .74, .63), 'eyes': 'brown', 'hair': 'short04', 'hair_tint': (.1, .09, .085), 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes01',
+        'skin': 'middleage_caucasian_male', 'skin_tone': (.88, .77, .67), 'eyes': 'brown', 'hair': 'short04', 'hair_tint': (.1, .09, .085), 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes01',
         'face': {'head-fat-incr': .7, 'head-round': .5, 'neck-double-incr': .7, 'lr-cheek-volume-incr': .6, 'nose-volume-incr': .4, 'nose-scale-horiz-incr': .4, 'chin-width-incr': .5, 'mouth-scale-horiz-incr': .3, 'neck-scale-horiz-incr': .5},
         'clothes': ['namuhekam_male_polo_shirt', 'male_casualsuit04', 'shoes01'], 'parts': {'male_casualsuit04': 'bottom'},
         'tint': {'namuhekam_male_polo_shirt': (.45, .1, .09), 'shoes01': (.12, .08, .06)}, 'look': 3, 'postures': CROWD,
     },
     'dee': {
         'name': 'Dee', 'phenotype': {'gender': .0, 'age': .5, 'muscle': .8, 'weight': .42, 'height': .52, 'proportions': .7, 'race': race(.4, .5, .1)},
-        'skin': 'young_caucasian_female', 'skin_tone': (.7, .56, .45), 'eyes': 'brown', 'hair': 'faydaen_hair_1', 'hair_tint': (.07, .045, .03), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
+        'skin': 'young_caucasian_female', 'skin_tone': (.72, .59, .5), 'eyes': 'brown', 'hair': 'faydaen_hair_1', 'hair_tint': (.07, .045, .03), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
         'face': {'head-triangular': .4, 'lr-cheek-bones-incr': .5, 'chin-prominent-incr': .2, 'nose-scale-horiz-incr': .25, 'nose-point-up': .2, 'mouth-lowerlip-volume-incr': .3, 'mouth-upperlip-volume-incr': .3,
                  'forehead-scale-vert-decr': .2, 'lr-eye-corner2-up': .3},
         'clothes': ['joepal_crude_t-shirt_female', 'female_sportsuit01', 'shoes05'], 'parts': {'female_sportsuit01': 'bottom'},
@@ -483,14 +483,14 @@ CHARACTERS = {
     },
     'diego': {
         'name': 'Diego', 'phenotype': {'gender': 1., 'age': .375, 'muscle': .6, 'weight': .55, 'height': .61, 'proportions': .55, 'race': race(.6, .15, .25)},
-        'skin': 'young_caucasian_male2', 'skin_tone': (.82, .68, .56), 'eyes': 'brown', 'hair': 'cortu_short_messy_hair', 'hair_tint': (.07, .05, .04), 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
+        'skin': 'young_caucasian_male2', 'skin_tone': (.86, .74, .64), 'eyes': 'brown', 'hair': 'cortu_short_messy_hair', 'hair_tint': (.07, .05, .04), 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
         'face': {'head-square': .4, 'chin-width-incr': .4, 'chin-prominent-incr': .3, 'nose-scale-horiz-incr': .3, 'nose-hump-incr': .2, 'eyebrows-trans-down': .4, 'mouth-lowerlip-volume-incr': .2, 'neck-scale-horiz-incr': .3},
         'clothes': ['male_casualsuit02', 'shoes05'], 'parts': {'male_casualsuit02': 'both'}, 'dye': {'male_casualsuit02': (.2, .2, .23)},
         'carry': {'walk': [('backpack', {'color': (.5, .15, .1)})]}, 'look': 3, 'postures': CROWD + ['sit-raise'],
     },
     'amal': {
         'name': 'Amal', 'phenotype': {'gender': .0, 'age': .355, 'muscle': .42, 'weight': .46, 'height': .63, 'proportions': .55, 'race': race(.45, .15, .4)},
-        'skin': 'young_asian_female', 'skin_tone': (.76, .62, .5), 'eyes': 'brown', 'hair': 'culturalibre_hair_01', 'hair_tint': (.04, .03, .03), 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes03',
+        'skin': 'young_asian_female', 'skin_tone': (.8, .67, .57), 'eyes': 'brown', 'hair': 'culturalibre_hair_01', 'hair_tint': (.04, .03, .03), 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes03',
         'face': {'head-oval': .5, 'nose-scale-vert-incr': .25, 'nose-point-down': .2, 'lr-eye-scale-incr': .35, 'eyebrows-trans-down': .2, 'mouth-upperlip-volume-incr': .3, 'lr-cheek-volume-incr': .2, 'chin-height-incr': .2},
         'clothes': ['female_elegantsuit01', 'female_casualsuit01', 'toigo_ballet_flats'], 'parts': {'female_elegantsuit01': 'top', 'female_casualsuit01': 'bottom'},
         'tint': {'toigo_ballet_flats': (.4, .1, .12)}, 'look': 3, 'postures': CROWD + ['sit-raise'],
@@ -550,6 +550,71 @@ CHARACTERS = {
     },
 }
 CHILDREN = ('tess', 'milo', 'lila', 'ravi', 'theo', 'ines', 'nora', 'jun', 'zuri', 'hugo', 'yuki', 'karim', 'lucia', 'kian')
+
+
+# ---- a face of their own for the people of rounds one and two (round three's are written out above) -------------
+# They were MakeHuman's average face for their sex, age and heritage, so several were near twins. Each gets a head
+# shape and one trait of the nose (two), the cheeks, the chin, the mouth, the eyes and brows, the ears or forehead,
+# and one small asymmetry, picked by the name (always the same for a name) and kept moderate: whoever knew them
+# still knows them. Age shows from the fifties on (bags under the eyes, the corners of the mouth, a fuller neck).
+_HEADS = ['head-oval', 'head-round', 'head-rectangular', 'head-square', 'head-triangular', 'head-invertedtriangular', 'head-diamond']
+_TRAITS = [
+    ['nose-scale-vert-incr', 'nose-scale-vert-decr', 'nose-hump-incr', 'nose-curve-concave', 'nose-greek-incr'],
+    ['nose-scale-horiz-incr', 'nose-scale-horiz-decr', 'nose-point-up', 'nose-point-down', 'nose-width2-incr', 'nose-volume-incr'],
+    ['lr-cheek-bones-incr', 'lr-cheek-bones-decr', 'lr-cheek-volume-incr', 'lr-cheek-volume-decr', 'lr-cheek-inner-decr'],
+    ['chin-width-incr', 'chin-width-decr', 'chin-height-incr', 'chin-height-decr', 'chin-prominent-incr', 'chin-triangle', 'chin-cleft-incr'],
+    ['mouth-scale-horiz-incr', 'mouth-scale-horiz-decr', 'mouth-lowerlip-volume-incr', 'mouth-upperlip-volume-incr', 'mouth-upperlip-volume-decr', 'mouth-angles-up'],
+    ['lr-eye-scale-incr', 'lr-eye-scale-decr', 'lr-eye-corner2-up', 'lr-eye-corner2-down', 'eyebrows-angle-up', 'eyebrows-angle-down', 'eyebrows-trans-down', 'eyebrows-trans-up'],
+    ['lr-ear-wing-incr', 'lr-ear-scale-incr', 'lr-ear-scale-decr', 'lr-ear-lobe-incr', 'forehead-scale-vert-incr', 'forehead-scale-vert-decr', 'forehead-temple-incr'],
+    ['asym-nose-1-l', 'asym-nose-2-r', 'asym-mouth-1-l', 'asym-mouth-2-r', 'asym-jaw-1-l', 'asym-jaw-2-r', 'asym-brown-1-l', 'asym-brown-2-r', 'asym-eye-3-l', 'asym-eye-5-r', 'asym-cheek-1-r', 'asym-top-1-l'],
+]
+
+
+def own_face(name, age=.5):
+    import hashlib
+    h = hashlib.sha256(name.encode()).digest(); amount = lambda i, lo=.18, hi=.38: round(lo + (hi - lo) * h[i + 16] / 255, 2)
+    face = {_HEADS[h[0] % len(_HEADS)]: amount(0, .25, .45)}
+    for i, names in enumerate(_TRAITS, 1): face[names[h[i] % len(names)]] = amount(i)
+    if age > .62: face.update({'lr-eye-bag-incr': round(min(.75, (age - .5) * 1.7), 2), 'mouth-angles-down': round(min(.35, (age - .55) * .9), 2)})
+    if age > .75: face.update({'neck-double-incr': round(min(.4, (age - .7) * 1.6), 2), 'lr-ear-lobe-incr': .35})
+    return face
+
+
+# What else changed for them in round three (remove a line and that person is dressed and combed as before):
+# jeans and a knit where everyone wore the same wool trousers, a stripe woven into a plain top ('stripes': bands by
+# height on the body), a hair style of their own where five shared one, and a skin tone for those whose heritage
+# lies between the pale and the dark skin sets.
+_POLO, _TEE, _SWEATER, _JEANS_M, _JEANS_F = 'namuhekam_male_polo_shirt', 'toigo_basic_tucked_t-shirt', 'toigo_fisherman_sweater', 'male_casualsuit04', 'female_casualsuit01'
+_ROUND3 = {
+    'kai': {'clothes': [_POLO, _JEANS_M, 'shoes06'], 'parts': {_JEANS_M: 'bottom'}, 'tint': {_POLO: (.72, .3, .12)}, 'dye': {_JEANS_M: (.13, .15, .2)}},
+    'mia': {'brow_tint': (.3, .16, .09), 'clothes': [_SWEATER, _JEANS_F, 'shoes06'], 'parts': {_JEANS_F: 'bottom'}, 'tint': {_SWEATER: (.3, .45, .4)}, 'dye': {_JEANS_F: (.2, .22, .3)}},
+    'noah': {'stripes': {_POLO: {'colour': (.16, .2, .3), 'width': .012, 'gap': .05}}},
+    'sofia': {'stripes': {_TEE: {'colour': (.86, .86, .82), 'width': .018, 'gap': .03}}, 'skin_tone': (.93, .84, .76)},
+    'eli': {'hair': 'culturalibre_hair_05'},
+    'omar': {'skin_tone': (.9, .8, .71)}, 'priya': {'skin_tone': (.88, .76, .65)}, 'leo': {'skin_tone': (.93, .84, .76)}, 'rosa': {'skin_tone': (.95, .87, .8)},
+    'maya': {'brow_tint': (.22, .12, .07)},
+    'theo': {'clothes': [_JEANS_M, 'shoes06'], 'parts': {_JEANS_M: 'both'}, 'tint': {}, 'dye': {_JEANS_M: (.92, .48, .16)}},
+    'ines': {'stripes': {_TEE: {'colour': (.93, .93, .88), 'width': .014, 'gap': .024}}, 'skin_tone': (.94, .86, .78)},
+    'ravi': {'skin_tone': (.88, .77, .68)},
+    'reyes': {'skin_tone': (.92, .82, .74)}, 'patel': {'skin_tone': (.82, .7, .62)}, 'vega': {'skin_tone': (.93, .84, .76)}, 'devi': {'skin_tone': (.82, .7, .61)},
+    'cole': {'hair': 'short04'},
+    'yusuf': {'hair_tint': (.1, .09, .085), 'skin_tone': (.86, .76, .66)},
+    'mateo': {'hair': 'short02', 'skin_tone': (.9, .8, .71)},
+    'brandt': {'face': {'head-square': .4, 'nose-volume-incr': .3, 'lr-cheek-volume-incr': .3, 'chin-width-incr': .35, 'mouth-upperlip-volume-decr': .3, 'eyebrows-trans-down': .3, 'asym-nose-1-l': .25,
+                        'lr-eye-bag-incr': .4, 'mouth-angles-down': .16}},
+    'darius': {'hair': 'culturalibre_hair_02', 'tint': {}},        # (his tint never reached the denim: it went to the occlusion map)
+    'bella': {'hair': 'toigo_curled_under_bob_with_bangs', 'skin_tone': (.84, .73, .64)},
+    'carlos': {'hair': 'cortu_short_messy_hair', 'skin_tone': (.88, .78, .69), 'stripes': {_POLO: {'colour': (.88, .88, .82), 'width': .03, 'gap': .05}}},
+    'dina': {'hair': 'toigo_inverted_bob_with_bangs', 'skin_tone': (.94, .86, .78)},
+    'emeka': {'hair': 'culturalibre_hair_02'},
+    'fern': {'hair': 'elvs_double_mh_braid'},
+}
+for _name, _c in CHARACTERS.items():
+    _c.update(_ROUND3.get(_name, {}))
+    _c.setdefault('look', 3)             # (round three's material handling for everyone: build_people.py LOOK)
+    if 'face' not in _c: _c['face'] = own_face(_name, _c['phenotype']['age'])
+    # the pale skin sets are chalk white on a woman or a girl: a little warmth
+    if 'skin_tone' not in _c and 'female' in _c['skin'] and 'african' not in _c['skin']: _c['skin_tone'] = (.97, .92, .87)
 
 _TYPE_L = {'fingers': (-.12, -1, -.2), 'palm': (0, 0, -1), 'curl': .45, 'thumb': .3, 'spread': .3}
 _TYPE_R = {'fingers': (.12, -1, -.2), 'palm': (0, 0, -1), 'curl': .45, 'thumb': .3, 'spread': .3}
@@ -1167,6 +1232,15 @@ def listed(who, pose): return pose in CHARACTERS[who]['postures'] if 'postures' 
 # Built besides: Sam's listed seated desk models wear his gaming headphones (sit-game), these are him at any other
 # desk; Grace and Ben in a hospital bed, so a ward of three has three different people.
 ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed', 'people-ben-lie-bed']
+# A posture nudged for one person (metres added to a hand's or a foot's place): the clipboard lies as the left hand
+# holds it, and on Yusuf's broader chest it tips into the writing hand.
+NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)}}
+# A model in an outfit of its own ('as' on its output: these keys replace the character's): in a hospital bed Grace
+# and Ben wear a gown like the ward's patients, not their day clothes.
+VARIANTS = {
+    'people-grace-lie-bed': {'wear': [('gown', {'color': (.76, .72, .86), 'print_color': (.54, .48, .7)})], 'clothes': ['spamrakuen_tbm_glasses_frames_01'], 'tint': {}},
+    'people-ben-lie-bed': {'wear': [('gown', {'color': (.84, .8, .68), 'print_color': (.62, .54, .4)})], 'clothes': ['toigo_round_glasses_leopard'], 'tint': {'toigo_round_glasses_leopard': (.03, .03, .03)}},
+}
 
 
 def output(model_id):
@@ -1185,6 +1259,7 @@ def output(model_id):
     out = {'id': model_id, 'character': who, 'pose': pose, 'name': '%s: %s' % (CHARACTERS[who]['name'], label[0].lower() + label[1:]), 'held': list(held)}
     if CHARACTERS[who].get('prosthesis'): out['held'].append(('prosthesis', {'side': CHARACTERS[who]['prosthesis']}))
     if pose in RAISED: out['ground'] = False
+    if model_id in VARIANTS: out['as'] = VARIANTS[model_id]
     if where == 'desk':
         extra = tail[len(pose) + 1:]; out['height'] = float(extra.replace('_', '.')) if extra else DESK_HEIGHTS[pose][0]
         if out['height'] == int(out['height']): out['height'] = int(out['height'])

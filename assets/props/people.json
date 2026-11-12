@@ -7,7 +7,7 @@
    "age": "young adult",
    "years": 21,
    "heritage": "Mixed",
-   "height": 166,
+   "height": 167,
    "outfit": [
     "toigo_basic_tucked_t-shirt",
     "toigo_wool_pants",
@@ -24,7 +24,7 @@
    "age": "young adult",
    "years": 25,
    "heritage": "African",
-   "height": 182,
+   "height": 183,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "cortu_cargo_pants",
@@ -65,12 +65,12 @@
    "height": 145,
    "outfit": [
     "namuhekam_male_polo_shirt",
-    "toigo_wool_pants",
+    "male_casualsuit04",
     "shoes06"
    ],
    "colors": {
     "top": "#dc9461",
-    "bottom": "#656872"
+    "bottom": "#656c7b"
    }
   },
   "zoe": {
@@ -96,7 +96,7 @@
    "age": "adult",
    "years": 51,
    "heritage": "European",
-   "height": 175,
+   "height": 176,
    "outfit": [
     "male_casualsuit03",
     "shoes01",
@@ -131,7 +131,7 @@
    "age": "young adult",
    "years": 38,
    "heritage": "Mixed",
-   "height": 175,
+   "height": 174,
    "outfit": [
     "male_casualsuit05",
     "shoes02"
@@ -146,7 +146,7 @@
    "age": "young adult",
    "years": 22,
    "heritage": "European",
-   "height": 176,
+   "height": 175,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "cortu_cargo_pants",
@@ -184,7 +184,7 @@
    "age": "young adult",
    "years": 25,
    "heritage": "European",
-   "height": 122,
+   "height": 123,
    "outfit": [
     "toigo_basic_tucked_t-shirt",
     "toigo_wool_pants",
@@ -216,7 +216,7 @@
    "age": "adult",
    "years": 41,
    "heritage": "European",
-   "height": 168,
+   "height": 169,
    "outfit": [
     "male_worksuit01",
     "shoes02"
@@ -234,7 +234,7 @@
    "height": 152,
    "outfit": [
     "toigo_fisherman_sweater",
-    "toigo_wool_pants",
+    "female_casualsuit01",
     "shoes06"
    ],
    "colors": {
@@ -248,7 +248,7 @@
    "age": "teen",
    "years": 16,
    "heritage": "Mixed",
-   "height": 146,
+   "height": 145,
    "outfit": [
     "male_casualsuit06",
     "shoes04"
@@ -280,7 +280,7 @@
    "age": "teen",
    "years": 17,
    "heritage": "Asian",
-   "height": 152,
+   "height": 151,
    "outfit": [
     "toigo_basic_tucked_t-shirt",
     "toigo_wool_pants",
@@ -404,7 +404,7 @@
    "age": "child",
    "years": 5,
    "heritage": "European",
-   "height": 108,
+   "height": 109,
    "outfit": [
     "toigo_basic_tucked_t-shirt",
     "cortu_cargo_pants",
@@ -440,15 +440,13 @@
    "age": "child",
    "years": 8,
    "heritage": "African",
-   "height": 129,
+   "height": 130,
    "outfit": [
-    "namuhekam_male_polo_shirt",
-    "cortu_cargo_pants",
+    "male_casualsuit04",
     "shoes06"
    ],
    "colors": {
     "top": "#f6b76f",
-    "bottom": "#7b94b1",
     "hair": "#413b38"
    }
   },
@@ -497,7 +495,7 @@
    "age": "young adult",
    "years": 28,
    "heritage": "African",
-   "height": 184,
+   "height": 182,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "toigo_wool_pants",
@@ -574,7 +572,7 @@
    "age": "adult",
    "years": 46,
    "heritage": "European",
-   "height": 185,
+   "height": 184,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "toigo_wool_pants",
@@ -613,7 +611,7 @@
    "age": "young adult",
    "years": 34,
    "heritage": "Mixed",
-   "height": 174,
+   "height": 175,
    "outfit": [
     "scrubs",
     "toigo_wool_pants",
@@ -728,7 +726,7 @@
    "age": "young adult",
    "years": 34,
    "heritage": "Mixed",
-   "height": 163,
+   "height": 164,
    "outfit": [
     "coat",
     "gloves",
@@ -750,7 +748,7 @@
    "age": "adult",
    "years": 45,
    "heritage": "Mixed",
-   "height": 179,
+   "height": 180,
    "outfit": [
     "coat",
     "gloves",
@@ -762,7 +760,7 @@
    "colors": {
     "top": "#94a094",
     "bottom": "#948f88",
-    "hair": "#413e3b"
+    "hair": "#5a5553"
    }
   },
   "chen": {
@@ -855,7 +853,6 @@
     "shoes03"
    ],
    "colors": {
-    "top": "#bac2cd",
     "hair": "#3b3834"
    }
   },
@@ -866,7 +863,7 @@
    "age": "young adult",
    "years": 26,
    "heritage": "Asian",
-   "height": 155,
+   "height": 156,
    "outfit": [
     "toigo_female_suit",
     "toigo_ballet_flats"
@@ -882,7 +879,7 @@
    "age": "teen",
    "years": 13,
    "heritage": "European",
-   "height": 151,
+   "height": 152,
    "outfit": [
     "male_casualsuit02",
     "shoes02"
@@ -898,7 +895,7 @@
    "age": "teen",
    "years": 12,
    "heritage": "Mixed",
-   "height": 142,
+   "height": 143,
    "outfit": [
     "toigo_fisherman_sweater",
     "cortu_cargo_pants",
@@ -917,7 +914,7 @@
    "age": "teen",
    "years": 13,
    "heritage": "Mixed",
-   "height": 147,
+   "height": 149,
    "outfit": [
     "namuhekam_male_polo_shirt",
     "cortu_cargo_pants",
@@ -975,7 +972,7 @@
    "age": "teen",
    "years": 13,
    "heritage": "European",
-   "height": 144,
+   "height": 145,
    "outfit": [
     "female_casualsuit01",
     "shoes06"
@@ -1102,7 +1099,7 @@
    "outfit": [
     "toigo_female_suit_2",
     "toigo_flats",
-    "spamrakuen_sagerfrogs_glasses_01"
+    "kwnet_at_optical_glasses"
    ],
    "colors": {
     "shoes": "#474141",
@@ -5416,7 +5413,7 @@
    "character": "maya",
    "pose": "sit-coffee",
    "deskHeight": 30,
-   "name": "Maya: coffee at the desk, seated",
+   "name": "Maya: coffee at the desk, seated (desk at 30 in)",
    "aids": []
   },
   "people-ava-sit-coffee": {
@@ -5430,7 +5427,7 @@
    "character": "ava",
    "pose": "sit-coffee",
    "deskHeight": 30,
-   "name": "Ava: coffee at the desk, seated",
+   "name": "Ava: coffee at the desk, seated (desk at 30 in)",
    "aids": []
   },
   "people-sam-sit-coffee": {
@@ -5446,7 +5443,7 @@
    "character": "sam",
    "pose": "sit-coffee",
    "deskHeight": 30,
-   "name": "Sam: coffee at the desk, seated",
+   "name": "Sam: coffee at the desk, seated (desk at 30 in)",
    "aids": [
     "prosthesis"
    ]
@@ -5462,7 +5459,7 @@
    "character": "noah",
    "pose": "sit-coffee",
    "deskHeight": 30,
-   "name": "Noah: coffee at the desk, seated",
+   "name": "Noah: coffee at the desk, seated (desk at 30 in)",
    "aids": []
   },
   "people-sam-stand-coffee": {
