@@ -716,15 +716,17 @@ export const ROOM_PEOPLE = {
         () => deskCrew('reyes'),
         L => { const big = tier(L), M = ['morning'], A = ['afternoon'], E = ['evening'], N = ['night'], P = ['party'], U = { colors: LOOK.police };
             const seat = (who, pose, n, modes) => ({ id: `people-${who}-${pose}`, on: 'briefing-seat-' + n, seat: 450, modes, key: `${who}-briefing-${n}`, ...(/^(reyes|cole|brandt|tran|hale)$/.test(who) ? {} : U) });
+            // (the lectern stands a metre from the display wall: whoever briefs stands beside it, not behind it)
+            const lectern = L.stations?.find(d => d.id === 'briefing-lectern')?.at, row = (who, pose, n, extra = {}) => lectern ? [spot(`people-${who}-${pose}`, lectern[0] - 3000 + n * 680, lectern[1] + 1700, lectern, { clear: true, modes: P, key: `${who}-team`, ...extra })] : [];
             return [
+                ...(lectern ? [spot('people-brandt-stand-present', lectern[0] - 150, lectern[1] - 950, [lectern[0] - 1800, lectern[1]], { clear: true, modes: ['morning', 'party'], key: 'brandt-briefs' })] : []),
                 ...staffAt(L, [
-                    ['briefing-lectern', 'brandt', ['morning', 'party']],
                     ['duty-sergeant', 'brandt', big ? ['afternoon', 'evening', 'night'] : null, { key: 'brandt-duty' }],
                     ['intake-officer', 'cole', ['afternoon', 'evening']], ['intake-officer', 'lin', ['morning', 'night'], { ...U, key: 'lin-intake' }],
                     ['report-writing-2', 'andre', ['afternoon', 'evening'], U],
                     ['crime-analyst', 'tran', ['afternoon', 'evening']],
                     ['report-writing-3', 'priya', ['afternoon', 'night'], U]]),
-                { id: 'people-sam-sit-laptop', on: 'operator-chair-0', seat: 450, toward: 'workstation-0', modes: ['afternoon', 'evening', 'night'], key: 'sam-workstation', ...U },
+                { id: 'people-sam-sit-laptop', on: 'operator-chair-0', seat: 450, toward: 'workstation-0', modes: big ? ['afternoon', 'evening', 'night'] : ['afternoon', 'night'], key: 'sam-workstation', ...U },
                 // the morning briefing
                 ...(big ? [seat('cole', 'sit-listen', 0, M), seat('andre', 'sit-write', 1, M), seat('priya', 'sit-listen', 2, M), seat('tran', 'sit-write', 3, M), seat('sam', 'sit-listen', 4, M), seat('jo', 'sit-listen', 5, M),
                     seat('omar', 'sit-write', 6, M), seat('maya', 'sit-listen', 7, M), seat('hale', 'sit-listen', 8, M)]
@@ -739,12 +741,11 @@ export const ROOM_PEOPLE = {
                 standBy('people-omar-stand-wait', 'vest-rail', 800, { modes: E, key: 'omar-vests', ...U }),
                 { id: 'people-jo-sit-chat', on: 'briefing-chair-0', seat: 420, toward: 'activity-table', modes: E, key: 'jo-break', ...U },
                 { id: 'people-lin-sit-chat', on: 'briefing-chair-1', seat: 420, toward: 'activity-table', modes: E, key: 'lin-break', ...U },
-                // the team briefing, standing
-                standBy('people-cole-stand-wait', 'planning-board', 1700, { modes: P, key: 'cole-team' }),
-                standBy('people-tran-stand-phone', 'planning-board', 1900, { modes: P, key: 'tran-team' }),
-                standBy('people-andre-stand-talk', 'planning-board', 2100, { modes: P, key: 'andre-team', ...U }),
-                ...(big ? [standBy('people-priya-stand-mug', 'planning-board', 2300, { modes: P, key: 'priya-team', ...U }), standBy('people-sam-stand-mug', 'planning-board', 2500, { modes: P, key: 'sam-team', ...U })] : []),
-                ...(big > 1 ? [standBy('people-jo-stand-talk', 'planning-board', 2700, { modes: P, key: 'jo-team', ...U }), standBy('people-omar-stand-wait', 'planning-board', 2900, { modes: P, key: 'omar-team', ...U })] : [])
+                // the team briefing: on their feet behind the seats, facing the sergeant (in the smallest room round the table)
+                ...row('cole', 'stand-wait', 0), ...row('tran', 'stand-phone', 1), ...row('andre', 'stand-talk', 2, U), ...row('priya', 'stand-mug', 3, U), ...row('sam', 'stand-mug', 4, U),
+                ...(big > 1 ? [...row('jo', 'stand-talk', 5, U), ...row('omar', 'stand-wait', 6, U)] : []),
+                ...(big ? [] : [standRound('people-cole-stand-wait', 'activity-table', 180, 1150, { modes: P, key: 'cole-team' }), standRound('people-tran-stand-phone', 'activity-table', 110, 1200, { modes: P, key: 'tran-team' }),
+                    standRound('people-andre-stand-talk', 'activity-table', 250, 1200, { modes: P, key: 'andre-team', ...U })])
             ]; }
     ],
     // Security operations. The shift briefing on the briefing chairs with the supervisor standing at her desk; the
