@@ -638,7 +638,7 @@ export const ROOM_PEOPLE = {
                     ['leo', 'sit-write', C(1, 0), T(1), MA], ['ava', 'sit-listen', C(1, 1), T(1), M], ['ava', 'sit-laptop', C(1, 1), T(1), A], ['mia', 'sit-laptop', C(1, 2), T(1), MA], ['eli', 'sit-listen', C(1, 3), T(1), MA],
                     ['emeka', 'sit-write', C(2, 0), T(2), M], ['sofia', 'sit-listen', C(2, 1), T(2), MA], ['zoe', 'sit-write', C(2, 2), T(2), MA],
                     // (after school the chairs of the three far groups go up on the tables: the homework club sits at the two near ones)
-                    ['bella', 'sit-laptop', C(0, 1), T(0), E], ['emeka', 'sit-write', C(0, 2), T(0), E], ['fern', 'sit-read', C(0, 3), T(0), E], ['leo', 'sit-read', C(1, 0), T(1), E], ['dina', 'sit-write', C(1, 1), T(1), E],
+                    ['bella', 'sit-laptop', C(0, 1), T(0), E], ['emeka', 'sit-write', C(0, 2), T(0), E, { depth: -60 }], ['fern', 'sit-read', C(0, 3), T(0), E], ['leo', 'sit-read', C(1, 0), T(1), E], ['dina', 'sit-write', C(1, 1), T(1), E],
                     ['hale', 'sit-write', C(1, 2), T(1), ['night'], { colors: LOOK.hale }]]),
                 ...besideStation(L, 'presentation-desk', 'people-hale-stand-present', 950, { modes: M, colors: LOOK.hale, key: 'hale-presents' }),
                 ...besideStation(L, 'presentation-desk', 'people-bella-stand-present', 950, { modes: P, key: 'bella-presents' }),

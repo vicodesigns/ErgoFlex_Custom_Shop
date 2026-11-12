@@ -78,7 +78,8 @@ try{
   if(other.find(v=>v!==pose0)){await setField('pe-pose',other.find(v=>v!==pose0));await until(async()=>(await page.$eval('#director-panel [name="pe-pose"]',e=>e.value))!==pose0,'posture changed');passed.push('posture changes to another built one');}
   await setField('pe-sex','man');
   await until(async()=>(await page.$$('#director-panel .people-chars button')).length>0,'characters filtered');
-  check(await page.$$eval('#director-panel .people-chars button',l=>l.length>0&&l.length<19),'the character list filters by sex');
+  const everyone=Object.keys(JSON.parse(fs.readFileSync(path.join(root,'assets/props/people.json'),'utf8')).characters).length;   // (19 at first; the role and everyday characters came later)
+  check(await page.$$eval('#director-panel .people-chars button',(l,n)=>l.length>0&&l.length<n,everyone),'the character list filters by sex');
 
   // seconds in the room
   await setField('pe-whole',false);await until(()=>page.$('#director-panel [name="pe-in"]'),'timing fields');
