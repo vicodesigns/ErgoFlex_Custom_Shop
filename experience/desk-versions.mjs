@@ -10,7 +10,7 @@
 // The desk changes at the middle of each overlap: the centre of the film's crossfade.
 //
 // The cut can change the list (shot.deskVersions, desk-versions-edit.mjs): reorder, retime, another model or name, and
-// add or remove versions. An added version (id 'G', 'H', …: never one the cut has used) is a copy of an existing one:
+// add or remove versions. An added version (a new time slot: letter 'G', 'H', …, never one the cut has used) is a copy of an existing one:
 // the film renders it as one more sub-shot, a copy of its model's film sub-shot in its own window.
 import {PRESETS,PRODUCT_CONFIG} from '../catalog.mjs';
 import {SHARED_BUILD_PRESETS} from '../preset-defaults.mjs';

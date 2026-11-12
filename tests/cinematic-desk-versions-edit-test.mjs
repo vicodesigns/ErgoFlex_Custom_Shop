@@ -88,11 +88,11 @@ assert.deepEqual(one,[{n:'A',preset:'gaming',name:'',start:0,end:T}]);assert.equ
 // the id of a removed version is not given to the next one (the cut remembers the highest handed out)
 assert.equal(nextVersionId([...removeVersion(seven,6,T).map(v=>v.n),'G']),'H');
 
-// ---- reorder and retime work on the longer list; a desk keeps its id when it moves
+// ---- reorder and retime work on the longer list; the slots (letters, windows) stay, the desks move between them
 const moved=moveVersion(seven,6,0);
-assert.equal(ids(moved),'G A B C D E F');assert.equal(models(moved),'gaming gaming artist office hbhs occ architect');
+assert.equal(ids(moved),'A B C D E F G');assert.equal(models(moved),'gaming gaming artist office hbhs occ architect');
 assert.deepEqual(moved.map(v=>[v.start,v.end]),seven.map(v=>[v.start,v.end]),'the time windows stay');
-assert.equal(ids(moveVersion(six,0,5)),'B C D E F A','Gaming to the end: its id goes with it');
+assert.equal(ids(moveVersion(six,0,5)),'A B C D E F');assert.equal(models(moveVersion(six,0,5)),'artist office hbhs occ architect gaming','Gaming to the end: the letters stay in time order');
 const retimed=moveSeam(seven,5,44,T);assert.equal(seamsOf(retimed).seams[5],44);assert.deepEqual([retimed[5].end,retimed[6].start],[44.3,43.7]);
 assert.equal(seamsOf(moveSeam(seven,5,47.5,T)).seams[5],46,'a seam stops 2 s before the end');
 
@@ -121,9 +121,10 @@ same({...lib2[6],subshot:'D',renderRange:lib2[3].renderRange},lib2[3],'a copy of
 assert.equal(lib2[6].preset,'music');assert.deepEqual(lib2[6].sceneEdits,[common]);
 // a renamed copy carries its name
 assert.equal(resolveSubshots(subs,seven.map(v=>v.n==='G'?{...v,name:'Finale'}:v))[6].name,'Finale');
-// reorder: ids travel, each sub-shot keeps its own bundle; the first one's window starts the chapter
+// reorder: each slot renders the desk that moved into it, with that model's bundle
 const outMoved=resolveSubshots(subs,moved);
-assert.equal(outMoved.map(s=>s.subshot+':'+s.preset).join(' '),'G:gaming A:gaming B:artist C:office D:hbhs E:occ F:architect');
+assert.equal(outMoved.map(s=>s.subshot+':'+s.preset).join(' '),'A:gaming B:gaming C:artist D:office E:hbhs F:occ G:architect');
+assert.deepEqual(outMoved[3].accessories,subs[2].accessories,'the office in slot D has the office dressing');
 assert.deepEqual(outMoved[0].renderRange,[0,5.3]);assert.equal(outMoved[0].kind,'glide');
 
 // ---- removing one of the film's own, and getting its dressing back later from the library

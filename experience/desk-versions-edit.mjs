@@ -6,15 +6,14 @@
 // preset the desk model and name the label on the lane and the frame badge. The list is in time order and is the whole
 // statement of the chapter: one sub-shot per entry, 1 to MAX_VERSIONS of them.
 //
-// Ids: the film's own six are 'A'..'F'. A version added in the Director gets the next id after every id the cut has
-// used ('G', 'H', … 'Z', 'AA', …; nextVersionId, shot.deskVersionsLast remembers the highest handed out), so an id is
-// never given to a second version: a duplicate has its own id, and the id of a removed version is not handed out
-// again. The id belongs to the version and travels with it when the order changes (props can be scoped to a version
-// by it).
+// Ids are the letters of the time slots: the film's own six are 'A'..'F' in time order. A slot added in the Director
+// gets the next letter after every one the cut has used ('G', 'H', … 'Z', 'AA', …; nextVersionId,
+// shot.deskVersionsLast remembers the highest handed out), so a letter is never given to a second slot. As before,
+// reordering moves the desks (model and name) between the slots: the letters and the windows stay where they are.
 //
-// The time line (the seams where the desk changes and the crossfade overlap at each seam) is positional: reordering
-// moves versions between the windows, a seam drag moves one seam, adding a version splits the time of the one before
-// it and removing one gives its time to the one before it.
+// The time line (the seams where the desk changes and the crossfade overlap at each seam) is positional: a seam drag
+// moves one seam, adding a version splits the time of the one before it and removing one gives its time to the one
+// before it.
 //
 // What a version renders: its sub-shot in the film when its id has one (camera, light rig and desk performance are
 // the chapter's and the same in every sub-shot), else a copy of the film sub-shot of its model. A desk is the bundle
@@ -77,12 +76,11 @@ export function windowsFrom(seams,overlaps,total){
 }
 // `desks` (id, model, name) in time order over the windows `wins`.
 const place=(desks,wins)=>desks.map((v,i)=>({n:v.n,preset:v.preset,name:v.name||'',start:wins[i][0],end:wins[i][1]}));
-// Drag a desk to another place in the order: the others shift along; the time windows stay where they are and each
-// desk keeps its id.
+// Drag a desk to another place in the order: the others shift along; the time slots (letters and windows) stay where they are.
 export function moveVersion(list,from,to){
   if(from===to||from<0||to<0||from>=list.length||to>=list.length)return list;
   const order=list.map((_,i)=>i);order.splice(to,0,order.splice(from,1)[0]);
-  return place(order.map(i=>list[i]),list.map(v=>[v.start,v.end]));
+  return place(order.map((j,i)=>({...list[j],n:list[i].n})),list.map(v=>[v.start,v.end]));
 }
 // Move the seam between versions i and i+1 to `seconds`; every desk keeps at least MIN_SHOWN s; overlaps keep their width.
 export function moveSeam(list,i,seconds,total){

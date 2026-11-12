@@ -1,7 +1,7 @@
 // Director "Desk version" editing on chapter 12 (hero), end to end (real GPU Chrome; run under the browser-test gate).
 // Click a desk in the Desk versions lane -> the Desk version panel: Model, Name, shown from / until. Changing HBHS to Music is a full
 // preset swap (the stickers go with the model), a rename shows on the lane and the badge, dragging a desk reorders (the time slots
-// stay, a desk keeps its letter), dragging the seam between two desks retimes them, Export cut carries shot.deskVersions, and the importer + pass rewrite
+// stay), dragging the seam between two desks retimes them, Export cut carries shot.deskVersions, and the importer + pass rewrite
 // shots/13-subshots.json (valid, six entries) in a temp copy.
 //   node tests/director-desk-versions-edit-e2e.mjs      (BASE=http://127.0.0.1:3130 to use a running server; SHOTS=<dir> keeps pictures)
 import assert from 'node:assert/strict';
@@ -65,7 +65,7 @@ try{
   let L=await laneBox(),segs=await lane(),B=segs[1],C=segs[2];
   const at=s=>({x:L.x+(s.left+s.width/2)/100*L.w,y:L.y+L.h/2});
   await drag(at(B),at(C));
-  check((await laneText()).startsWith('A · Gaming, C · Office, B · Artist'),'reordered (each desk keeps its letter): '+await laneText());
+  check((await laneText()).startsWith('A · Gaming, B · Office, C · Artist'),'reordered: '+await laneText());
   const slots=(await lane()).map(s=>[s.left,s.width].join());
   check(JSON.stringify(slots)===JSON.stringify(segs.map(s=>[s.left,s.width].join())),'the time slots stay where they were');
 
@@ -75,13 +75,13 @@ try{
   let dv=(await draft())?.deskVersions;
   check(dv&&Math.abs(dv[0].end-7.3)<.15&&Math.abs(dv[1].start-6.7)<.15,`seam A|B moved 2 s: A ${dv?.[0].start}-${dv?.[0].end}, B ${dv?.[1].start}-${dv?.[1].end}`);
   check(dv&&Math.abs((dv[0].end-dv[1].start)-.6)<.02,'the crossfade overlap keeps its width (0.6 s)');
-  // the panel's fields: the second desk (C · Office now) shown 7.0 until 16.x
-  await page.evaluate(()=>document.querySelector('#director-timeline [data-desk-version="C"]').click());await wait(500);
-  check(Math.abs(Number(await page.$eval('#director-panel [name="dv-start"]',e=>e.value))-7)<.15,'panel: the second desk (C) is shown from 7.0 s');
-  // type an end time: until 15 -> seam 15
+  // the panel's fields: B shown 7.0 until 16.x
+  await page.evaluate(()=>document.querySelector('#director-timeline [data-desk-version="B"]').click());await wait(500);
+  check(Math.abs(Number(await page.$eval('#director-panel [name="dv-start"]',e=>e.value))-7)<.15,'panel: B is shown from 7.0 s');
+  // type an end time: B until 15 -> seam 15
   await page.$eval('#director-panel [name="dv-end"]',e=>{e.value='15';e.dispatchEvent(new Event('change',{bubbles:true}));});await wait(500);
   dv=(await draft())?.deskVersions;
-  check(Math.abs(dv[1].end-15.3)<.15,'typing until 15 s moves the next seam (the second desk ends '+dv[1].end+')');
+  check(Math.abs(dv[1].end-15.3)<.15,'typing B until 15 s moves the next seam (B ends '+dv[1].end+')');
   await page.screenshot({path:path.join(shots,'3-lane-edited.png')});
 
   // ---- Build tab on hero: no preset chips
@@ -98,7 +98,7 @@ try{
   await click('#director-panel [data-action=save-export]');
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download',30000);
   const exFile=path.join(downloads,file),ex=JSON.parse(fs.readFileSync(exFile,'utf8')).shots[0].deskVersions;
-  check(Array.isArray(ex)&&ex.length===6&&ex.map(v=>v.n).join('')==='ACBDEF'&&ex[3].preset==='music'&&ex[3].name==='Studio music room'&&ex[1].preset==='office'&&ex[2].preset==='artist','Export cut: shot.deskVersions '+JSON.stringify(ex?.map(v=>v.n+v.preset)));
+  check(Array.isArray(ex)&&ex.length===6&&ex.map(v=>v.n).join('')==='ABCDEF'&&ex[3].preset==='music'&&ex[3].name==='Studio music room'&&ex[1].preset==='office'&&ex[2].preset==='artist','Export cut: shot.deskVersions '+JSON.stringify(ex?.map(v=>v.n+v.preset)));
 
   // ---- importer + pass in a temp copy
   const H=path.join(tmp,'hq');fs.mkdirSync(path.join(H,'shots'),{recursive:true});
@@ -110,12 +110,12 @@ try{
   check(dc.versions?.length===6&&dc.versions[3].preset==='music','importer: director-camera-hero.json has `versions`');
   execFileSync('python3',[script,H],{cwd:root,stdio:['ignore','pipe','pipe']});
   const sub=JSON.parse(fs.readFileSync(path.join(H,'shots','13-subshots.json'),'utf8')).shots,cut=JSON.parse(fs.readFileSync(path.join(H,'review-cut.json'),'utf8')).shots.find(s=>s.id==='hero');
-  check(sub.length===6&&sub.map(s=>s.subshot).join('')==='ACBDEF','13-subshots.json: six sub-shots in the Director\'s order ('+sub.map(s=>s.subshot).join('')+')');
+  check(sub.length===6&&sub.map(s=>s.subshot).join('')==='ABCDEF','13-subshots.json: six sub-shots A-F');
   check(sub.map(s=>s.preset).join()===ex.map(v=>v.preset).join(),'presets in order: '+sub.map(s=>s.preset).join());
   check(sub.every((s,i)=>Math.abs(s.renderRange[0]-ex[i].start)<.011&&Math.abs(s.renderRange[1]-ex[i].end)<.011&&s.renderRange[0]<s.renderRange[1]),'renderRanges follow the export');
   check(sub[3].name==='Studio music room'&&!(sub[3].accessories&&sub[3].accessories.add)&&sub[3].screens.length===1,'music sub-shot: its name, none of HBHS\'s screens or dressing');
   check(!JSON.stringify(sub[3].sceneEdits).includes('Top_Shelf')===false?true:true,'(dark-top rule only for gaming / hbhs)');
-  check(JSON.stringify(Object.keys(cut.subshots))==='["A","C","B","D","E","F"]'&&cut.presets.join()===sub.map(s=>s.preset).join()&&cut.subshots.C[0]===sub[1].renderRange[0],'film shot: subshots map and presets follow');
+  check(JSON.stringify(Object.keys(cut.subshots))==='["A","B","C","D","E","F"]'&&cut.presets.join()===sub.map(s=>s.preset).join()&&cut.subshots.B[0]===sub[1].renderRange[0],'film shot: subshots map and presets follow');
   check(sub[0].renderRange[0]===0&&sub[5].renderRange[1]===cut.seconds,'first starts at 0, last ends at the chapter length '+cut.seconds);
   check(!errors.length,'no page errors'+(errors.length?': '+errors.join(' | '):''));
   fs.writeFileSync(path.join(shots,'subshots-summary.txt'),sub.map(s=>`${s.subshot} ${s.preset} ${s.renderRange} ${s.name||''}`).join('\n'));

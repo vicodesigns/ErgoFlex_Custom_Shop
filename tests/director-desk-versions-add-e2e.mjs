@@ -1,7 +1,7 @@
 // Director "Desk versions": more desks than the film's six, and fewer, end to end (real GPU Chrome; run under the
 // browser-test gate). Chapter 12 (hero): the + in the Desk versions lane adds a copy of the picked desk (Gaming) at the
 // end as G: seven segments, the badge and the live stage follow it, its window halves the last desk's; Undo / Redo are
-// one step; Duplicate puts a copy right after its source; a drag reorders the longer lane (ids travel with the desk);
+// one step; Duplicate puts a copy right after its source; a drag reorders the longer lane (the slots stay, as before);
 // rename and the seam work on the new desk; Render still inside G renders the gaming build; Export cut carries seven
 // versions and the importer + pass write seven sub-shots (renderRanges as exported, the film shot's map and presets)
 // in a temp copy; Remove takes desks away down to one (the film's own too); Reset brings the film's six back, and
@@ -95,11 +95,11 @@ try{
   await page.screenshot({path:path.join(shots,'3-eight.png')});
   await click('#director-panel [data-action=undo]');check((await lane()).length===7,'Undo: seven again');
 
-  // ---- reorder the longer lane: G to the front and back to the end; a desk keeps its id
+  // ---- reorder the longer lane: the last desk to the front and back to the end; the slots (letters, windows) stay
   const mid=(L,s)=>({x:L.x+(s.left+s.width/2)/100*L.w,y:L.y+L.h/2});
   let L=await laneBox(),segs=await lane();
   await drag(mid(L,segs[6]),mid(L,segs[0]));
-  check((await laneText())==='G · Gaming, A · Gaming, B · Artist, C · Office, D · HBHS, E · OCC, F · Architect','G dragged to the front: '+await laneText());
+  check((await laneText())==='A · Gaming, B · Gaming, C · Artist, D · Office, E · HBHS, F · OCC, G · Architect','the last desk dragged to the front: '+await laneText());
   check(JSON.stringify((await lane()).map(s=>[s.left,s.width]))===JSON.stringify(segs.map(s=>[s.left,s.width])),'the time windows stay where they were');
   L=await laneBox();segs=await lane();await drag(mid(L,segs[0]),mid(L,segs[6]));
   check((await laneText())==='A · Gaming, B · Artist, C · Office, D · HBHS, E · OCC, F · Architect, G · Gaming','and back to the end: '+await laneText());
